@@ -275,3 +275,17 @@ port.
   fall back to the penalty method.
 * The torch-directml route has not been benchmarked here; the RX 7700 XT's
   ROCm-on-Windows support should be checked before committing to DirectML.
+
+## 12. Findings from implementation
+
+Implementing section 5's coarse-to-fine fit (`fit_ris(scan="adaptive")`) surfaced a
+modelling assumption the RIS discretisation makes silently: that each state pair's
+energy, taken as a basin minimum, sits at an interior critical point of a well. For
+PVDF's CF2-centred (G+,G-) pair under `SimpleFF` this is false; the energy falls off
+monotonically as the dihedral approaches the neighbouring trans basin, with no turning
+point. The reported pair energy is then a property of the basin convention rather than
+of the potential alone: 8.17 kcal/mol on a step=10 deg grid, versus 4.85 kcal/mol as the
+true constrained infimum at the basin edge. A principled fix, if this matters
+scientifically, is to define each RIS pair energy as -kT ln of the Boltzmann integral
+over its basin rather than as a basin minimum; that is the classical RIS definition, and
+it is insensitive to where (or whether) the minimum sits.
