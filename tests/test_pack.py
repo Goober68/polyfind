@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from polyfind.pack import periodic_chain, periodic_chain_from_torsions, CrystalPacker, pack, to_cif, default_bounds
+from polyfind.pack import periodic_chain, periodic_chain_from_torsions, CrystalPacker, pack, polish, to_cif, default_bounds
 from polyfind.polymers import PE, PVDF, THREE_STATE
 
 T, GP, GM = 0, 1, 2
@@ -68,6 +68,45 @@ def test_pe_packing_recovers_orthorhombic_cell():
     assert 0.85 < best.density < 1.15
     cif = to_cif(best)
     assert "_cell_length_a" in cif and cif.count("\nC") == 4
+
+
+def test_polish_lbfgs_reaches_the_nelder_mead_minimum_with_fewer_calls():
+    ch = periodic_chain(PE, [T], THREE_STATE)
+    packer = CrystalPacker(ch, n_chains=2)
+    b = default_bounds(ch)
+    keys = ["a", "b", "gamma", "phi1", "phi2", "dz"]
+    lo = np.array([b[k][0] for k in keys])
+    hi = np.array([b[k][1] for k in keys])
+    free = [i for i in range(6) if hi[i] > lo[i]]
+    rng = np.random.default_rng(0)
+    cont = lo + (hi - lo) * rng.random((300, 6))
+    params = np.concatenate([cont, np.zeros((300, 1))], axis=1)
+    starts = params[np.argsort(packer.energy(params))[:2]]
+    for start in starts:
+        packer.n_energy_calls = 0
+        x_nm = polish(packer, start, lo, hi, free, 1500, method="nelder-mead")
+        calls_nm = packer.n_energy_calls
+        packer.n_energy_calls = 0
+        x_lb = polish(packer, start, lo, hi, free, 1500, method="lbfgs")
+        calls_lb = packer.n_energy_calls
+        e_nm = float(packer.energy(x_nm[None])[0])
+        e_lb = float(packer.energy(x_lb[None])[0])
+        assert e_lb <= e_nm + 1e-3
+        assert calls_lb * 5 <= calls_nm  # at least a 5x reduction in kernel calls
+        assert np.abs(x_lb[:2] - x_nm[:2]).max() < 0.02  # a, b
+        for i in (3, 4):  # setting angles, modulo 360
+            assert abs(((x_lb[i] - x_nm[i] + 180.0) % 360.0) - 180.0) < 0.5
+        assert lo[0] <= x_lb[0] <= hi[0] and 0.0 <= x_lb[3] < 360.0 and 0.0 <= x_lb[5] < ch.c
+    with pytest.raises(ValueError):
+        polish(packer, starts[0], lo, hi, free, method="powell")
+
+
+def test_pack_accepts_either_polish_method():
+    ch = periodic_chain(PE, [T], THREE_STATE)
+    kw = dict(n_chains=2, n_random=300, n_refine=2, maxfev=400)
+    a = pack(ch, rng=np.random.default_rng(0), method="lbfgs", **kw)
+    b = pack(ch, rng=np.random.default_rng(0), method="nelder-mead", **kw)
+    assert a[0].energy_per_cell <= b[0].energy_per_cell + 1e-3
 
 
 def test_default_bounds_cover_known_cells():
