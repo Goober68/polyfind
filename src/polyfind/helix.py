@@ -10,7 +10,8 @@ searched in a handful of variables.
 
 Also here: canonicalisation of periodic sequences under the symmetry
 operations of the isolated chain (cyclic shift by a whole repeat unit, chain
-reversal, mirror image), used to deduplicate candidates.
+reversal, mirror image), used to deduplicate candidates.  Which of those are
+symmetries depends on the repeat: see :func:`sequence_images`.
 """
 from __future__ import annotations
 
@@ -184,16 +185,53 @@ def rotation_to_z(n: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------- symmetry
-def sequence_images(seq, states: RISStates, bonds_per_repeat: int, reversal: bool = True, mirror: bool = True):
-    """All images of a periodic sequence under shift (by whole repeats), reversal, mirror."""
+def sequence_images(
+    seq,
+    states: RISStates,
+    bonds_per_repeat: int,
+    reversal: bool = True,
+    mirror: bool = True,
+    chiral: bool = False,
+):
+    """All images of a periodic sequence under the symmetries of the isolated chain.
+
+    A shift by a whole repeat unit is always one of them.  Which of chain reversal
+    and reflection (the G+/G- state mirror) are is a property of the *repeat*:
+
+    * an **achiral** repeat (PE, PVDF, PVDC) has both separately, so the images are
+      shifts of ``{seq, reversed, mirrored, mirrored-and-reversed}``;
+    * a **chiral** repeat (CFE, CDFE: a backbone atom with two different pendants is
+      a stereocentre, and the builder makes the isotactic chain) has *neither*
+      separately, only their composition.  Reflection maps the chain to its
+      enantiomer; and reading an isotactic chain backwards swaps ``prev`` and
+      ``next`` at every stereocentre, which flips each configuration relative to the
+      chain direction, so plain reversal lands on the enantiomer too --
+      ``E(phi_N..phi_1) == E(-phi_1..-phi_N)`` exactly, and both differ from
+      ``E(phi_1..phi_N)`` (measured at up to 750 kcal/mol on a 24-bond CFE oligomer,
+      against 0 for PVDF).  What survives is reflection *composed with* reversal,
+      ``E(phi_1..phi_N) == E(-phi_N..-phi_1)``, the same operation that
+      :func:`polyfind.forcefield.fit_ris` symmetrises a chiral fit over.  Pass
+      ``chiral=True`` for that group: a sequence and its mirror are then distinct
+      candidates, as they must be, since they are the right- and left-handed helices
+      of a one-handed chain and have genuinely different energies.
+
+    ``reversal`` and ``mirror`` switch off the corresponding generator; with
+    ``chiral=True`` the surviving operation needs both, so switching off either
+    leaves only the shifts.
+    """
     seq = tuple(int(s) for s in seq)
     P = len(seq)
     B = bonds_per_repeat
+    mirrored = lambda t: tuple(states.mirror[s] for s in t)  # noqa: E731
     base = [seq]
-    if reversal:
-        base.append(tuple(reversed(seq)))
-    if mirror:
-        base += [tuple(states.mirror[s] for s in b) for b in list(base)]
+    if chiral:
+        if reversal and mirror:
+            base.append(mirrored(reversed(seq)))
+    else:
+        if reversal:
+            base.append(tuple(reversed(seq)))
+        if mirror:
+            base += [mirrored(b) for b in list(base)]
     out = set()
     for b in base:
         for r in range(0, P, B):
@@ -201,9 +239,20 @@ def sequence_images(seq, states: RISStates, bonds_per_repeat: int, reversal: boo
     return out
 
 
-def canonical_sequence(seq, states: RISStates, bonds_per_repeat: int, reversal: bool = True, mirror: bool = True) -> tuple:
-    """Lexicographically smallest image (a hashable canonical form)."""
-    return min(sequence_images(seq, states, bonds_per_repeat, reversal, mirror))
+def canonical_sequence(
+    seq,
+    states: RISStates,
+    bonds_per_repeat: int,
+    reversal: bool = True,
+    mirror: bool = True,
+    chiral: bool = False,
+) -> tuple:
+    """Lexicographically smallest image (a hashable canonical form).
+
+    ``chiral`` selects the smaller symmetry group of a chiral repeat; see
+    :func:`sequence_images`.
+    """
+    return min(sequence_images(seq, states, bonds_per_repeat, reversal, mirror, chiral))
 
 
 def is_primitive(seq, bonds_per_repeat: int) -> bool:

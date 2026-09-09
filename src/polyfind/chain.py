@@ -151,9 +151,11 @@ def warn_if_chiral(polymer: Polymer) -> None:
     Emitted from :func:`build_chain`, which every path into the funnel goes through
     (the batched builder, ``pack.periodic_chain``, ``pack._template`` and hence the
     packing search all build a template with it), so a user who fits or packs one of
-    these chemistries is told before they get numbers back.  ``fit_ris`` lives in a
-    module this cannot reach from here, and the unsound default -- ``symmetrize=True``
-    -- is *its* default, so the warning names it explicitly.
+    these chemistries is told before they get numbers back.  What the tacticity costs
+    the user is the choice of enantiomer, which the model cannot express; the places
+    that used to assume an achiral repeat (``fit_ris``'s ``symmetrize``,
+    ``enumerate_periodic``'s deduplication and ``linegroup``'s glide) now take it from
+    :attr:`~polyfind.polymers.Polymer.is_chiral` themselves.
     """
     if not polymer.is_chiral or polymer.name in _CHIRAL_WARNED:
         return
@@ -163,14 +165,11 @@ def warn_if_chiral(polymer: Polymer) -> None:
         "stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side "
         "of the local frame at every backbone atom); syndiotactic and atactic chains are not "
         "expressible in this model. Because the repeat is chiral, G+ and G- conformers are no "
-        "longer mirror-equivalent, so fit_ris's default symmetrize=True (and its adapt_angles "
-        "mirror averaging) would average two genuinely inequivalent states -- exactly the "
-        "asymmetry that makes an isotactic chain pick a one-handed helix. Fit with "
-        "symmetrize=False; the relation that does still hold is mirror composed with chain "
-        "reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). For the same reason "
-        "enumerate_periodic's mirror deduplication "
-        "(helix.canonical_sequence) and linegroup's glide symmetry treat conformers as "
-        "equivalent that are not; both still assume an achiral repeat. "
+        "longer mirror-equivalent: they are the two handednesses of a one-handed helix and "
+        "have genuinely different energies. The relation that does hold is mirror composed "
+        "with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize="
+        "'auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so "
+        "forcing symmetrize=True is the one way left to average the asymmetry away. "
         "See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.",
         UserWarning,
         stacklevel=3,

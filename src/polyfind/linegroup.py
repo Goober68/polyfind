@@ -25,6 +25,19 @@ RIS states (``G+ <-> G-``, ``T -> T``).  Then
   ``P/Q`` turns of a *screw* and the torsions inherit ``phi[j+Q] = phi[j]``;
 * otherwise no pattern is recognised and every torsion stays free.
 
+A glide contains a reflection, and a chiral object admits no improper isometry:
+a chain whose repeat carries a stereocentre (CFE, CDFE -- see
+:attr:`polyfind.polymers.Polymer.is_chiral`) therefore does *not* have one, however
+glide-like its state sequence reads, because the pendants break it even where the
+torsions do not.  Imposing ``phi[j+Q] = -phi[j]`` there would restrict the
+refinement to a subspace the true minimum need not lie in, so glide detection is
+conditional on the repeat being achiral (``torsion_pattern(..., chiral=True)``,
+which :func:`line_group` passes for a chiral polymer).  A screw is a proper
+isometry -- a rotation and a translation -- and stays valid for both.  A chiral
+sequence that would have matched a glide falls through to the screw test and then
+to ``"free"``, i.e. to the penalty method, which is the documented behaviour for
+any unrecognised sequence.
+
 For PVDF this gives: ``TT`` -> glide with ``Q = 1``, one free deflection;
 ``TG+TG-`` (alpha) -> glide with ``Q = 2``, free ``(t, g)`` expanding to
 ``(t, g, -t, -g)``; ``TTTG+TTTG-`` (gamma) -> glide with ``Q = 4``, free
@@ -138,17 +151,23 @@ def state_sequence(name: str, states: RISStates, length: int | None = None) -> l
     return seq
 
 
-def torsion_pattern(seq, states: RISStates, bonds_per_repeat: int = 1) -> TorsionPattern:
-    """Symmetry pattern of a periodic state sequence (see the module docstring)."""
+def torsion_pattern(seq, states: RISStates, bonds_per_repeat: int = 1, chiral: bool = False) -> TorsionPattern:
+    """Symmetry pattern of a periodic state sequence (see the module docstring).
+
+    ``chiral`` marks a repeat with a stereocentre, whose chain has no improper
+    symmetry: glide detection is then skipped and such a sequence falls back to the
+    screw test and, failing that, to ``"free"``.
+    """
     seq = [int(s) for s in seq]
     P = len(seq)
     name = "".join(states.names[s] for s in seq)
-    canon = "".join(states.names[s] for s in canonical_sequence(seq, states, bonds_per_repeat)) if P else ""
-    for Q in range(1, P):  # glide: mirror composed with a shift by Q bonds
-        if P % (2 * Q) == 0 and all(seq[(j + Q) % P] == states.mirror[seq[j]] for j in range(P)):
-            group = tuple(j % Q for j in range(P))
-            signs = tuple(1.0 if (j // Q) % 2 == 0 else -1.0 for j in range(P))
-            return TorsionPattern("glide", Q, group, signs, name, canon)
+    canon = "".join(states.names[s] for s in canonical_sequence(seq, states, bonds_per_repeat, chiral=chiral)) if P else ""
+    if not chiral:  # a chiral chain has no improper symmetry, so no glide
+        for Q in range(1, P):  # glide: mirror composed with a shift by Q bonds
+            if P % (2 * Q) == 0 and all(seq[(j + Q) % P] == states.mirror[seq[j]] for j in range(P)):
+                group = tuple(j % Q for j in range(P))
+                signs = tuple(1.0 if (j // Q) % 2 == 0 else -1.0 for j in range(P))
+                return TorsionPattern("glide", Q, group, signs, name, canon)
     for Q in range(1, P):  # screw: a plain shift by Q bonds
         if P % Q == 0 and all(seq[(j + Q) % P] == seq[j] for j in range(P)):
             return TorsionPattern("screw", Q, tuple(j % Q for j in range(P)), (1.0,) * P, name, canon)
@@ -403,13 +422,16 @@ def line_group(
 
     Raises :class:`LineGroupError` when the sequence has no recognised pattern, when
     the given torsions are not of that pattern, or when nothing is left free after
-    the closure condition -- the caller then falls back to the penalty method.
+    the closure condition -- the caller then falls back to the penalty method.  A
+    chiral repeat has no glide (see the module docstring), so a glide-patterned
+    sequence of e.g. CFE takes that fallback rather than a symmetry its chain does
+    not have.
     """
     states = states or polymer.states
     tors0 = np.asarray(torsions, dtype=float)
     P = len(tors0)
     seq = state_sequence(name, states, length=P)
-    pattern = torsion_pattern(seq, states, polymer.bonds_per_repeat)
+    pattern = torsion_pattern(seq, states, polymer.bonds_per_repeat, chiral=bool(polymer.is_chiral))
     if pattern.kind == "free":
         raise LineGroupError(f"no line-group pattern for sequence {name!r}")
     p0, err = pattern.params_from_torsions(tors0)

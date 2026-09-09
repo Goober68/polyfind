@@ -13,7 +13,7 @@ from polyfind.linegroup import (
     wrap180,
 )
 from polyfind.pack import periodic_chain, repeat_chains_from_torsions
-from polyfind.polymers import PE, PVDF, THREE_STATE
+from polyfind.polymers import PE, PVDF, THREE_STATE, get_polymer
 
 T, GP, GM = 0, 1, 2
 
@@ -93,6 +93,39 @@ def test_pattern_is_read_off_the_state_sequence():
 
     p = torsion_pattern([T, T, GP, T, GM, T], THREE_STATE, 2)  # no symmetry
     assert p.kind == "free"
+
+
+def test_a_chiral_repeat_has_no_glide_but_keeps_its_screws():
+    """A glide contains a reflection, which a chiral chain cannot have.
+
+    The state sequence still *reads* like a glide -- it is the pendants, not the
+    torsions, that break the symmetry -- so the pattern has to be told.  Imposing
+    ``phi[j+Q] = -phi[j]`` on CFE would confine the refinement to a subspace its true
+    minimum need not lie in; the documented fallback for an unrecognised sequence
+    (free torsions plus the penalty method) is the right answer instead.  A screw is a
+    proper isometry and survives for both.
+    """
+    cfe = get_polymer("cfe")
+    assert cfe.is_chiral and not PVDF.is_chiral
+
+    for name in ("TG+TG-", "TTTG+TTTG-"):
+        assert torsion_pattern(SEQUENCES[name], THREE_STATE, 2).kind == "glide"
+        assert torsion_pattern(SEQUENCES[name], THREE_STATE, 2, chiral=True).kind == "free"
+
+    # TT reads as a glide with Q = 1, but it is equally a screw, and the screw is what a
+    # chiral chain keeps (both torsions equal, rather than 180 -+ d)
+    assert torsion_pattern(SEQUENCES["TT"], THREE_STATE, 2).kind == "glide"
+    chiral_tt = torsion_pattern(SEQUENCES["TT"], THREE_STATE, 2, chiral=True)
+    assert (chiral_tt.kind, chiral_tt.period, chiral_tt.signs) == ("screw", 1, (1.0, 1.0))
+    for seq in ([T, GP] * 3, [T, GP]):  # screws are proper: unchanged
+        assert torsion_pattern(seq, THREE_STATE, 2, chiral=True) == torsion_pattern(seq, THREE_STATE, 2)
+
+    # and line_group takes the chirality from the polymer, so alpha-PVDF's sequence is
+    # parametrised for PVDF and falls back to the penalty method for CFE
+    tors = np.array([180.0, 60.0, 180.0, -60.0])
+    assert line_group(PVDF, "TG+TG-", tors).pattern.kind == "glide"
+    with pytest.raises(LineGroupError, match="no line-group pattern"):
+        line_group(cfe, "TG+TG-", tors)
 
 
 def test_pattern_reproduces_the_ideal_torsions():

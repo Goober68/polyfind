@@ -1,9 +1,18 @@
+import warnings
+
 import numpy as np
 import pytest
 
 from polyfind.chain import build_chain, build_chain_batch
-from polyfind.forcefield import SimpleFF, fit_ris, erfc_approx
-from polyfind.polymers import PE, PVDF, THREE_STATE
+from polyfind.forcefield import (
+    SimpleFF,
+    _reversal_angle_residual,
+    _reversal_image3,
+    _reversal_images,
+    erfc_approx,
+    fit_ris,
+)
+from polyfind.polymers import PE, PVDF, THREE_STATE, get_polymer
 from scipy.special import erfc
 
 
@@ -43,6 +52,88 @@ def test_pvdf_fit_has_two_pair_types_and_is_mirror_symmetric():
     assert np.allclose(m.second_order, m.second_order[:, mir][:, :, mir])
     # the two pair matrices differ (CH2- vs CF2-centred)
     assert not np.allclose(m.second_order[0], m.second_order[1])
+
+
+# ------------------------------------------------ reflection-with-reversal, orders 1-3
+def _raw_fit(name, third_order=True, step=20.0):
+    """An unsymmetrised fit, so the relations can be measured rather than assumed."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # the chiral polymers warn once on build_chain
+        return fit_ris(get_polymer(name), SimpleFF(), step=step, n_monomers=3,
+                       third_order=third_order, symmetrize=False)
+
+
+@pytest.mark.parametrize("name", ["pvdf", "pvdc", "cfe", "cdfe"])
+def test_third_order_terms_obey_reflection_with_reversal(name):
+    """The third-order image of E(phi_1..phi_N) == E(-phi_N..-phi_1), measured.
+
+    Reversal reverses the order of a triple as well as mirroring its states, and shifts
+    the bond type by one more than the pair term does, so
+
+        e3[b, x, y, z] == e3[(c - 2 - b) % B, m(z), m(y), m(x)].
+
+    PVDF and PVDC are achiral controls: any true symmetry of the model has to hold there
+    too, and does.  The near misses -- mirroring without reversing the triple, reversing
+    without mirroring, and the right form at the wrong bond-type shift -- are all wrong
+    for the chiral pair, which is what makes this a measurement and not a relabelling.
+    """
+    p = get_polymer(name)
+    rep = _raw_fit(name)
+    e1, e2, e3 = rep.model.first_order, rep.model.second_order, rep.model.third_order
+    B, m = p.bonds_per_repeat, np.array(THREE_STATE.mirror)
+    *_, c = _reversal_images(e1, e2, THREE_STATE.mirror, B)
+    assert c == 1  # for B = 2 the shift is decided by the first- and second-order fit
+
+    _, resid = _reversal_image3(e3, THREE_STATE.mirror, B, c)
+    assert resid < 0.5, resid  # grid noise: 0.00 (pvdf, cfe, cdfe), 0.02 (pvdc)
+
+    plain = float(np.abs(e3 - e3[:, m][:, :, m][:, :, :, m]).max())
+    wrong_shift = _reversal_image3(e3, THREE_STATE.mirror, B, c + 1)[1]
+    no_reverse = float(np.abs(e3 - e3[[(c - 2 - b) % B for b in range(B)]][:, m][:, :, m][:, :, :, m]).max())
+    no_mirror = float(np.abs(e3 - np.transpose(e3[[(c - 2 - b) % B for b in range(B)]], (0, 3, 2, 1))).max())
+    if p.is_chiral:
+        assert plain > 5.0 and wrong_shift > 5.0 and no_reverse > 5.0 and no_mirror > 5.0
+    else:
+        assert plain < 0.5  # an achiral chain has the plain mirror as well
+
+
+@pytest.mark.parametrize("name", ["cfe", "cdfe"])
+def test_a_chiral_fit_symmetrises_all_three_orders(name):
+    """The default fit averages a chiral model over the operation it just validated."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        model = fit_ris(get_polymer(name), SimpleFF(), step=20.0, n_monomers=3, third_order=True).model
+    B, m = model.B, np.array(model.states.mirror)
+    *_, c = _reversal_images(model.first_order, model.second_order, model.states.mirror, B)
+    assert _reversal_image3(model.third_order, model.states.mirror, B, c)[1] < 1e-9
+    # and the real G+/G- asymmetry is still there, in the third order too
+    assert np.abs(model.third_order - model.third_order[:, m][:, :, m][:, :, :, m]).max() > 5.0
+
+
+@pytest.mark.parametrize("name", ["pvdf", "pvdc", "cfe", "cdfe"])
+def test_state_angles_obey_reflection_with_reversal(name):
+    """``adapt_angles``' mirror pairing is valid for a chiral fit too, and is checked.
+
+    The 1-D scan of a bond of type ``b`` is the scan of type ``(c - b) % B`` read at the
+    negated angle, so ``arg1[b, s] == -arg1[(c - b) % B, m(s)]``.  Averaging that over the
+    bond types (a bijection) is what makes the adapted angles of a mirror pair equal and
+    opposite -- for a chiral chain as much as an achiral one, even though the *per bond
+    type* minima are wildly asymmetric there (80 deg apart for CFE and CDFE).
+    """
+    p = get_polymer(name)
+    rep = _raw_fit(name, third_order=False)
+    B = p.bonds_per_repeat
+    *_, c = _reversal_images(rep.model.first_order, rep.model.second_order, THREE_STATE.mirror, B)
+    assert _reversal_angle_residual(rep.argmin1, THREE_STATE, B, c) == 0.0  # on a dense grid, exactly
+
+    gp, gm = THREE_STATE.names[1], THREE_STATE.names[2]
+    per_type = max(abs(rep.argmin1[b][gp] + rep.argmin1[b][gm]) for b in range(B))
+    assert (per_type > 10.0) if p.is_chiral else (per_type == 0.0)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        model = fit_ris(get_polymer(name), SimpleFF(), step=20.0, n_monomers=3).model
+    assert model.states.angles[1] == -model.states.angles[2]  # aggregated: exactly paired
 
 
 def test_energy_coords_matches_energy_batch_list_and_single():
