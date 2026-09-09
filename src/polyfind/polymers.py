@@ -406,12 +406,25 @@ class Polymer:
 PVDF = Polymer(
     name="pvdf",
     formula="-(CH2-CF2)n-",
+    # Queued improvement, deliberately not applied yet: the DFT Form I structure gives a
+    # C-C distance of 1.528 A, which puts the computed chain repeat at 2.563 A against an
+    # experimental 2.56, where the 1.54 A used here gives 2.583.  Changing it shifts every
+    # PVDF energy, so it belongs with the next full re-measurement of the documented
+    # tables rather than on its own; the potential is unfitted and contributes 3-6% cell
+    # errors, which dwarf this 0.9%.
     bond_length=1.54,
     backbone=(
-        # Equal backbone angles: with rigid geometry and exact 180 deg dihedrals, unequal
-        # angles (real PVDF: ~112 at CH2, ~116-118 at CF2) make the all-trans chain curve;
-        # the real chain compensates by deflecting its dihedrals (~ +/-172 deg). That
-        # deflection belongs to the continuous refinement stage, not the discrete RIS model.
+        # Equal backbone angles at both carbons, and exactly trans, is not a compromise:
+        # it is what the accepted beta-PVDF structure has.  A DFT study of Form I gives a
+        # C-C-C angle of 114.4 deg at *both* backbone carbons and an internal rotation
+        # angle of exactly 180 deg (Nakhmanson-style periodic calculations agree), against
+        # 112 deg and 2.534 A for polyethylene.  Hasegawa's alternately-deflected zigzag,
+        # in which the CF2 carbons alternate out of the plane to relieve F...F crowding
+        # (the F-F distance along the chain is 2.56 A against a van der Waals 2.70 A), is a
+        # proposal rather than a refinement result: the deflection would double the chain
+        # repeat to 5.12 A, and the intermediate layer line that doubling requires is not
+        # present in the diffraction pattern.  Hasegawa's own fit used a statistically
+        # disordered structure at c = 2.56 A.
         BackboneAtom("C", "H", 1.09, 114.0, 108.0, -0.20, +0.10),  # CH2
         BackboneAtom("C", "F", 1.35, 114.0, 106.0, +0.40, -0.20),  # CF2
     ),

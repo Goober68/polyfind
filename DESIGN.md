@@ -437,6 +437,42 @@ it.
 The fitted parameters ship as an opt-in preset carrying this warning.  The
 defaults are unchanged.
 
+### 5.8 A withdrawn claim about beta-PVDF's geometry
+
+This document twice asserted that beta-PVDF's experimental geometry is
+unreachable under rigid bonds, because unequal backbone angles near 112 and 118
+degrees combined with torsions near +/-172 degrees cannot give a straight chain.
+Checked against the literature, the premise was wrong and the claim is
+withdrawn.
+
+The accepted Form I structure has **equal** backbone angles at both carbons and
+torsions of exactly 180 degrees.  A density-functional study of the crystal
+gives a C-C-C angle of 114.4 degrees at both backbone carbons and an internal
+rotation angle of 180 degrees, against 112 degrees and a 2.534 A repeat for
+polyethylene, the difference attributed to repulsion between fluorines on
+neighbouring carbons.  So the equal 114-degree angles and exact trans this
+package uses are not a compromise at all; they are the structure.
+
+The alternately-deflected zigzag, in which the CF2 carbons alternate out of the
+plane to relieve crowding between fluorines 2.56 A apart against a van der Waals
+contact of 2.70 A, is a proposal rather than a refinement result.  The
+deflection would double the chain repeat to 5.12 A, and the intermediate layer
+line that doubling requires is absent from the diffraction pattern; the original
+fit used a statistically disordered structure at 2.56 A instead.  Treating it as
+the experimental geometry, as this document did, was a misreading.
+
+What survives is smaller and concrete.  The C-C distance in the DFT structure is
+1.528 A rather than the 1.54 A used here, and adopting it moves the computed
+chain repeat from 2.583 to 2.563 A against an experimental 2.56.  That change is
+queued rather than applied: it shifts every PVDF energy and would invalidate the
+tables above, and the unfitted potential contributes cell errors of 3 to 6%,
+which dwarf this 0.9%.  It belongs with the next full re-measurement.
+
+The general lesson is the same one section 5.7 records about the fit.  Both this
+and the "unreachable geometry" argument were careful reasoning from a number
+written in a code comment that nobody had checked.  Published structures for
+these polymers exist and are not hard to consult.
+
 ## 6. Limitations and roadmap
 
 * RIS uses rigid bond geometry and discrete states; the continuous refinement
