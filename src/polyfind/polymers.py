@@ -84,7 +84,35 @@ PE = Polymer(
     backbone=(BackboneAtom("C", "H", 1.09, 112.0, 108.0, -0.12, +0.06),),
 )
 
-POLYMERS: dict[str, Polymer] = {"pvdf": PVDF, "pe": PE}
+# Poly(vinylidene chloride).  The chlorine analogue of PVDF and the only other
+# chemistry of interest that the present monomer model can express exactly: two
+# identical single-atom substituents per backbone atom.  Chlorine is bulkier than
+# fluorine (UFF x_i 3.95 vs 3.36 A) and its C-Cl bond much longer (1.77 vs 1.35 A),
+# so steric crowding rather than electrostatics dominates its conformational
+# preferences.  Charges are illustrative and each backbone atom is neutral, as for
+# PVDF; the C-Cl dipole is set smaller than C-F, chlorine being the less
+# electronegative.  Backbone angles are kept equal for the reason given above.
+#
+# Caveat, measured rather than assumed: with these rigid angles the all-trans
+# chain carries about 313 kcal/mol of Lennard-Jones strain (PVDF: 9), because a
+# planar zigzag cannot relieve Cl...Cl contact when the angles cannot open.
+# Every rotation away from trans lowers the energy, so all-trans is not a
+# sensible RIS reference for this chemistry and its fitted energies should not
+# be trusted.  That is qualitatively right -- PVDC does not adopt the planar
+# zigzag that PVDF's beta phase does -- but the magnitude is an artifact of
+# frozen bond angles.  Making the backbone angles refinement variables is the
+# principled fix; see docs/CHEMISTRY_EXTENSION.md.
+PVDC = Polymer(
+    name="pvdc",
+    formula="-(CH2-CCl2)n-",
+    bond_length=1.54,
+    backbone=(
+        BackboneAtom("C", "H", 1.09, 114.0, 108.0, -0.20, +0.10),  # CH2
+        BackboneAtom("C", "Cl", 1.77, 114.0, 110.0, +0.20, -0.10),  # CCl2
+    ),
+)
+
+POLYMERS: dict[str, Polymer] = {"pvdf": PVDF, "pe": PE, "pvdc": PVDC}
 
 
 def get_polymer(name: str) -> Polymer:

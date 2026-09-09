@@ -33,10 +33,33 @@ of topology rather than a substituent at all.
 
 ## 2. Phased extension
 
-**Phase 1, symmetric drop-in (VDC, CH2-CCl2).** No model change: chlorine is
-already parameterised. Add a `Polymer` entry with bond lengths, angles and
-illustrative charges chosen the way PVDF's were. Its value is validating the
-multi-chemistry path end to end at zero geometry risk. Trivial.
+**Phase 1, symmetric drop-in (VDC, CH2-CCl2). Done.** No model change was
+needed: chlorine was already parameterised, so PVDC is a `Polymer` entry with
+bond lengths, angles and illustrative charges chosen the way PVDF's were. The
+geometry builds exactly as specified, the whole funnel runs on it (fit,
+enumerate, helix analysis, packing), and the flipped-chain fix holds for it.
+`tests/test_pvdc.py` covers all of that.
+
+It also produced the first real finding of this exercise, and it is a caution
+about the phases that follow. With bond angles frozen, the all-trans PVDC chain
+carries about 313 kcal/mol of Lennard-Jones strain, against 9 for PVDF: a
+planar zigzag simply cannot relieve Cl...Cl contact when the angles cannot
+open. Every rotation away from trans then lowers the energy, the fitted
+first-order energies come out around -15 kcal/mol relative to a reference that
+is not even metastable, and the RIS convention of measuring from all-trans
+breaks down. The *direction* is correct, since PVDC is known not to adopt the
+planar zigzag that PVDF's beta phase does, but the magnitude is an artifact of
+rigid geometry rather than a property of the polymer.
+
+The lesson generalises: the rigid-bond-angle assumption is already flagged as a
+compromise for PVDF, where it is second order. For any substituent bulkier than
+fluorine it becomes first order, and both the chlorine chemistries here and the
+multi-atom pendant groups of phase 3 will need variable backbone angles from the
+start, not merely at the final refinement stage. Performance-plan item 5 adds
+exactly that capability; the chemistry work should build on it rather than
+duplicate it. A second question it raises: for chemistries whose planar chain is
+not metastable, the RIS reference state itself may need to be something other
+than all-trans.
 
 **Phase 2, asymmetric single-atom substituents (CFE CH2-C(F)(Cl), CDFE
 CHCl-CF2).** Give `BackboneAtom` two independent substituent specifications
