@@ -9,7 +9,9 @@ candidates; every other stage runs on the cheap RIS / rigid-chain models.
 """
 from __future__ import annotations
 
+import os
 import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -55,6 +57,7 @@ class PipelineConfig:
     n_chains: int = 2000
     n_bonds: int = 200
     seed: int = 0
+    workers: int | None = None  # candidates packed/refined in parallel processes; None = min(n_candidates, cpu_count-1); 1 = serial
 
 
 @dataclass
@@ -106,6 +109,41 @@ class PipelineResult:
         return "\n".join(out)
 
 
+def _pack_and_refine_one(
+    polymer_name: str,
+    model_dict: dict,
+    seq: tuple,
+    seed: int,
+    n_random: int,
+    n_refine: int,
+    refine: bool,
+    refine_maxfev: int,
+    n_chains: int = 2,
+) -> tuple[str | None, PackResult | None, RefineResult | None]:
+    """Pack (and, if requested, refine) one candidate chain conformation.
+
+    Top-level and picklable (importable as ``polyfind.pipeline._pack_and_refine_one``) so
+    it can run in a worker process under Windows' spawn model: it takes only plain,
+    picklable data -- no ``Candidate``/``RISModel``/``Polymer`` objects -- and rebuilds the
+    ``RISModel`` and the ``PeriodicChain`` itself. Doing both stages for one candidate here
+    means a candidate's refinement never has to wait for another candidate's packing.
+
+    Returns ``(error, pack_result, refine_result)``; on a chain-build failure ``error`` is
+    the message and the other two are ``None`` (mirrors the try/except the serial code used
+    to have around ``periodic_chain``).
+    """
+    polymer = get_polymer(polymer_name)
+    model = RISModel.from_dict(model_dict)
+    try:
+        chain = periodic_chain(polymer, seq, model.states)
+    except (ValueError, RuntimeError) as e:
+        return str(e), None, None
+    rng = np.random.default_rng(seed)
+    pack_res = pack(chain, n_chains=n_chains, n_random=n_random, n_refine=n_refine, rng=rng)[0]
+    refine_res = refine_crystal(polymer, pack_res, maxfev=refine_maxfev) if refine else None
+    return None, pack_res, refine_res
+
+
 def run_pipeline(cfg: PipelineConfig, verbose: bool = True) -> PipelineResult:
     log = print if verbose else (lambda *a, **k: None)
     polymer = get_polymer(cfg.polymer)
@@ -130,8 +168,11 @@ def run_pipeline(cfg: PipelineConfig, verbose: bool = True) -> PipelineResult:
     timings["enumerate"] = time.time() - t0
     log(f"[2/5] {len(cands)} distinct periodic chain conformations up to period {cfg.max_period} ({timings['enumerate']:.2f} s)")
 
-    # 3. packing
+    # 3+4. packing and refinement -- candidates are independent, so each candidate's pack
+    # and refine run together in one worker (process or, for workers<=1, this process),
+    # so a candidate's refinement never waits on another candidate's packing.
     t0 = time.time()
+
     def n_atoms(c):
         return 3 * c.period * (c.helix.periods_per_repeat or 0)
 
@@ -144,28 +185,82 @@ def run_pipeline(cfg: PipelineConfig, verbose: bool = True) -> PipelineResult:
         for c in packable:
             if c.known_as and c not in to_pack:
                 to_pack.append(c)
-    packed = []
-    for cand in to_pack:
-        try:
-            chain = periodic_chain(polymer, cand.seq, model.states, helix=cand.helix)
-        except (ValueError, RuntimeError) as e:
-            log(f"      skip {cand.name}: {e}")
-            continue
-        res = pack(chain, n_chains=2, n_random=cfg.n_random, n_refine=cfg.n_refine, rng=rng)
-        packed.append((cand, res[0]))
-        log(f"      packed {cand.name:<14s} E/mon={res[0].energy_per_monomer:8.3f}  a={res[0].a:.2f} b={res[0].b:.2f} c={res[0].c:.2f}")
-    timings["pack"] = time.time() - t0
-    log(f"[3/5] packed {len(packed)} chain conformations ({timings['pack']:.1f} s)")
 
-    # 4. refinement
+    model_dict = model.to_dict()
+    jobs = [
+        dict(
+            polymer_name=polymer.name,
+            model_dict=model_dict,
+            seq=cand.seq,
+            # per-candidate seed, independent of worker count: workers=1 and workers=N
+            # must produce byte-identical results.
+            seed=cfg.seed + 1000 * i,
+            n_random=cfg.n_random,
+            n_refine=cfg.n_refine,
+            refine=cfg.refine,
+            refine_maxfev=cfg.refine_maxfev,
+        )
+        for i, cand in enumerate(to_pack)
+    ]
+    n_workers = cfg.workers
+    if n_workers is None:
+        n_workers = min(len(to_pack), max(1, (os.cpu_count() or 1) - 1)) if to_pack else 1
+    n_workers = max(1, n_workers)
+
+    outcomes: list[tuple] = [None] * len(jobs)
+
+    def log_outcome(i, err, pr, rr):
+        cand = to_pack[i]
+        if err is not None:
+            log(f"      skip {cand.name}: {err}")
+        else:
+            log(f"      packed {pr.chain:<14s} E/mon={pr.energy_per_monomer:8.3f}  a={pr.a:.2f} b={pr.b:.2f} c={pr.c:.2f}")
+
+    def run_serial():
+        for i, job in enumerate(jobs):
+            err, pr, rr = _pack_and_refine_one(**job)
+            outcomes[i] = (err, pr, rr)
+            log_outcome(i, err, pr, rr)
+
+    if not jobs:
+        pass
+    elif n_workers <= 1:
+        run_serial()
+    else:
+        try:
+            with ProcessPoolExecutor(max_workers=n_workers) as ex:
+                futs = {ex.submit(_pack_and_refine_one, **job): i for i, job in enumerate(jobs)}
+                for fut in as_completed(futs):
+                    i = futs[fut]
+                    err, pr, rr = fut.result()
+                    outcomes[i] = (err, pr, rr)
+                    log_outcome(i, err, pr, rr)
+        except (OSError, RuntimeError, NotImplementedError) as e:
+            # e.g. a sandbox without process/spawn support, or a broken process pool:
+            # fall back to serial rather than failing the whole pipeline.
+            log(f"      warning: process pool unavailable ({e!r}); falling back to serial packing/refinement")
+            outcomes = [None] * len(jobs)
+            run_serial()
+
+    # keep candidate order (not completion order) in the report
+    packed = []
     refined = []
-    t0 = time.time()
+    for i in range(len(jobs)):
+        outc = outcomes[i]
+        if outc is None or outc[0] is not None:
+            continue
+        _, pr, rr = outc
+        packed.append((to_pack[i], pr))
+        if rr is not None:
+            refined.append(rr)
     if cfg.refine:
-        for cand, res in packed:
-            refined.append(refine_crystal(polymer, res, maxfev=cfg.refine_maxfev))
         # replace packed energies by refined ones for the ranking
         packed = [(cand, r.result) for (cand, _), r in zip(packed, refined)]
-    timings["refine"] = time.time() - t0
+    timings["pack"] = time.time() - t0
+    log(f"[3/5] packed {len(packed)} chain conformations ({timings['pack']:.1f} s)")
+    # packing and refinement are fused per candidate (see above), so both stages share
+    # the same measured wall time.
+    timings["refine"] = timings["pack"] if cfg.refine else 0.0
     log(f"[4/5] refinement done ({timings['refine']:.1f} s)")
 
     # 5. amorphous ensemble

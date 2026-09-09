@@ -78,7 +78,7 @@ def cmd_sample(args):
 def cmd_pipeline(args):
     from .pipeline import PipelineConfig, run_pipeline
 
-    cfg = PipelineConfig(polymer=args.polymer, max_period=args.max_period, top_k_pack=args.top, n_random=args.n_random, refine=not args.no_refine, temperature=args.temperature, seed=args.seed)
+    cfg = PipelineConfig(polymer=args.polymer, max_period=args.max_period, top_k_pack=args.top, n_random=args.n_random, refine=not args.no_refine, temperature=args.temperature, seed=args.seed, workers=args.workers)
     if args.model:
         from .ris import RISModel
 
@@ -139,6 +139,7 @@ def main(argv=None):
     p.add_argument("--no-refine", action="store_true")
     p.add_argument("--temperature", type=float, default=450.0)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--workers", type=int, default=None, help="processes for packing+refinement; default min(candidates, cpu_count-1); 1 = serial")
     p.set_defaults(func=cmd_pipeline)
 
     args = ap.parse_args(argv)
