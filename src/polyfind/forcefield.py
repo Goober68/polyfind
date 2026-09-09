@@ -583,6 +583,33 @@ class FitReport:
     argmin2: dict  # bond type -> {(s, s'): (angle, angle)}
 
 
+
+def _reversal_images(e1: np.ndarray, e2: np.ndarray, mirror, B: int):
+    """Image of a fitted model under reflection composed with chain reversal.
+
+    Reflection alone maps a chain to its enantiomer, so it is a symmetry only of an
+    achiral repeat.  Reversing the chain direction swaps each stereocentre's
+    neighbours and undoes that, so reflection-with-reversal is a symmetry of *any*
+    linear repeat: E(phi_1..phi_N) == E(-phi_N..-phi_1).  In model terms that is a
+    state mirror plus a bond-type shift on the first-order term, and a state mirror
+    plus a transpose on the pair term.
+
+    The bond-type shift depends on where the repeat is phased, so every shift is
+    tried and the best returned along with its residual; the caller applies the
+    averaging only if that residual is at grid-noise level.
+    """
+    m = np.asarray(mirror)
+    e2_img = np.transpose(e2[:, m][:, :, m], (0, 2, 1))
+    best = None
+    for c in range(B):
+        rb = [(c - b) % B for b in range(B)]
+        e1_img = e1[rb][:, m]
+        resid = max(float(np.abs(e1 - e1_img).max()), float(np.abs(e2 - e2_img).max()))
+        if best is None or resid < best[2]:
+            best = (e1_img, e2_img, resid)
+    return best
+
+
 def fit_ris(
     polymer: Polymer,
     calc: Calculator,
@@ -594,6 +621,7 @@ def fit_ris(
     adapt_angles: bool = True,
     third_order: bool = False,
     cap: float = 50.0,
+    reversal_tol: float = 0.5,
     scan: str = "dense",
     coarse_step: float = 30.0,
 ) -> FitReport:
@@ -610,9 +638,16 @@ def fit_ris(
     therefore mirrors only when ``polymer.is_chiral`` is false; ``True`` and
     ``False`` force it either way, and ``True`` on a chiral polymer warns.  The
     symmetry that does survive reflection for a chiral chain is reflection composed
-    with chain reversal; its expression in terms of the model's bond-type indices was
-    not established here (a naive index swap leaves a large residual even for achiral
-    polymers, where it must vanish), so no substitute averaging is applied.  With ``adapt_angles``
+    with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1), and ``"auto"`` averages
+    over that instead for a chiral polymer: a state mirror with a bond-type shift on
+    the first-order term, and a state mirror with a transpose on the pair term.  It is
+    checked numerically before use (every bond-type shift is tried, and the averaging
+    is applied only if the residual is within ``reversal_tol``), so it cannot be
+    applied where it does not hold.  Measured residuals are 0.02-0.09 kcal/mol at
+    step = 20 deg for PE, PVDF, PVDC, CFE and CDFE alike, against 32-47 for plain
+    mirroring of the chiral pair.  Third-order terms and the ``adapt_angles`` mirror
+    are symmetrised only under plain mirroring, their reversal images not having been
+    established.  With ``adapt_angles``
     the state dihedral angles are moved to the 1D-scan basin minima (averaged over
     bond types and mirror pairs), as in classical RIS parametrisations.  With
     ``third_order`` triplet corrections are added (see :func:`_fit_third_order`),
@@ -686,20 +721,41 @@ def fit_ris(
         bn = (b + 1) % B
         e2[b] = e2[b] - e1[b][:, None] - e1[bn][None, :]
     chiral = bool(getattr(polymer, "is_chiral", False))
-    if symmetrize == "auto":
-        symmetrize = not chiral
-    elif symmetrize and chiral:
-        warnings.warn(
-            f"symmetrize=True on chiral polymer {polymer.name!r}: reflection maps the chain "
-            "to its enantiomer, so averaging G+ with G- destroys a real energy difference. "
-            "Use symmetrize='auto' (the default) or False.",
-            UserWarning,
-            stacklevel=2,
-        )
-    if symmetrize:
+    mode = symmetrize
+    if mode == "auto":
+        mode = "reversal" if chiral else "mirror"
+    elif mode is True:
+        mode = "mirror"
+        if chiral:
+            warnings.warn(
+                f"symmetrize=True on chiral polymer {polymer.name!r}: reflection maps the chain "
+                "to its enantiomer, so averaging G+ with G- destroys a real energy difference. "
+                "Use symmetrize='auto' (the default), which averages over reflection-with-reversal "
+                "instead, or False.",
+                UserWarning,
+                stacklevel=2,
+            )
+    elif mode is False:
+        mode = "none"
+    if mode not in ("mirror", "reversal", "none"):
+        raise ValueError(f"symmetrize must be 'auto', 'mirror', 'reversal', True or False; got {symmetrize!r}")
+    if mode == "mirror":
         m = np.array(states.mirror)
         e1 = 0.5 * (e1 + e1[:, m])
         e2 = 0.5 * (e2 + e2[:, m][:, :, m])
+    elif mode == "reversal":
+        e1_img, e2_img, resid = _reversal_images(e1, e2, states.mirror, B)
+        if resid <= reversal_tol:
+            e1 = 0.5 * (e1 + e1_img)
+            e2 = 0.5 * (e2 + e2_img)
+        else:
+            warnings.warn(
+                f"reflection-with-reversal does not hold for {polymer.name!r} to within "
+                f"{reversal_tol} kcal/mol (residual {resid:.3f}); leaving the fit unsymmetrised.",
+                UserWarning,
+                stacklevel=2,
+            )
+            mode = "none"
     e1 = np.minimum(e1, cap)
     e2 = np.minimum(e2, cap)
     if adapt_angles:
@@ -710,7 +766,7 @@ def fit_ris(
             ang = np.degrees(np.arctan2(np.sin(np.deg2rad(vals)).mean(), np.cos(np.deg2rad(vals)).mean()))
             angs.append(ang)
         angs = np.array(angs)
-        if symmetrize:  # mirror pairs get equal magnitude and opposite sign
+        if mode == "mirror":  # mirror pairs get equal magnitude and opposite sign
             m = np.array(states.mirror)
             self_mirror = m == np.arange(states.n)
             angs = np.where(self_mirror, angs, np.sign(angs) * 0.5 * (np.abs(angs) + np.abs(angs[m])))
@@ -721,7 +777,7 @@ def fit_ris(
     if third_order:
         e3 = np.clip(_fit_third_order(polymer, calc, states, N, base), -cap, cap)
         n_eval += B * states.n ** 3 * 4
-        if symmetrize:
+        if mode == "mirror":
             m = np.array(states.mirror)
             e3 = 0.5 * (e3 + e3[:, m][:, :, m][:, :, :, m])
     model = RISModel(states, B, e1, e2, e3, name=name or f"{polymer.name}-fit")

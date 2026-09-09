@@ -141,14 +141,22 @@ deduplication, which treats a sequence and its mirror image as the same
 candidate, and the glide patterns in `linegroup`. Both are correct for PE,
 PVDF and PVDC and wrong for CFE and CDFE.
 
-A caution about the replacement symmetry: the relation that survives
-reflection for a chiral chain is reflection composed with chain reversal,
-which holds at the level of the energy function. Its expression in terms of
-the model's bond-type indices was *not* established. The obvious index swap
-leaves a residual of about 15 kcal/mol even for PVDF, where it must vanish
-identically, so the mapping is subtler than it looks and no substitute
-averaging is applied. Deriving it properly would restore noise-averaging for
-chiral fits and is worth doing before phase 3, where every chemistry is chiral.
+The replacement symmetry is implemented and is the default for chiral
+polymers. An earlier note here said its index mapping was unresolved, because a
+first check left a large residual even for PVDF where it must vanish. That
+check was wrong: it swapped the bond-type index on the pair term, which the
+relation does not do. With the correct form -- a state mirror plus a bond-type
+shift on the first-order term, a state mirror plus a transpose on the pair term
+-- the residual is 0.02 to 0.09 kcal/mol at step = 20 deg for PE, PVDF, PVDC,
+CFE and CDFE alike, against 32 to 47 for plain mirroring of the chiral pair.
+
+`fit_ris` now averages over reflection-with-reversal whenever the polymer is
+chiral, and validates the relation numerically before applying it: every
+bond-type shift is tried, and the averaging is used only if the residual is
+within `reversal_tol`, otherwise the fit is left unsymmetrised with a warning.
+So the noise averaging is restored for chiral fits without the physics being
+assumed. Third-order terms and the `adapt_angles` mirror are still symmetrised
+only under plain mirroring, their reversal images not having been derived.
 
 **Phase 3, multi-atom pendant groups (AN CH2-CH(CN), VDCN CH2-C(CN)2, FANOME
 CH2-C(CN)(OCH3)).** A substituent becomes a small rigid fragment rather than an

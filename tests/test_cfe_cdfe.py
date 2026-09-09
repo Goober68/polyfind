@@ -328,3 +328,31 @@ def test_symmetrize_auto_protects_chiral_polymers():
     # and forcing it on a chiral polymer warns
     with pytest.warns(UserWarning, match="enantiomer"):
         fit_ris(get_polymer("cfe"), ff, step=60.0, n_monomers=3, third_order=False, symmetrize=True)
+
+
+def test_chiral_fits_are_symmetrised_over_reflection_with_reversal():
+    """The symmetry a chiral chain does have is reflection composed with reversal.
+
+    Reversing the chain swaps each stereocentre's neighbours and undoes the
+    reflection, so E(phi_1..phi_N) == E(-phi_N..-phi_1) holds for any linear repeat.
+    The default uses it for chiral polymers, which restores noise averaging without
+    destroying the real G+/G- difference.
+    """
+    import warnings as _w
+
+    import numpy as np
+
+    from polyfind.forcefield import SimpleFF, fit_ris
+    from polyfind.polymers import get_polymer
+
+    ff = SimpleFF()
+    for name in ("cfe", "cdfe"):
+        with _w.catch_warnings():
+            _w.simplefilter("ignore")
+            m = fit_ris(get_polymer(name), ff, step=20.0, n_monomers=4, third_order=False).model
+        mir = np.array(m.states.mirror)
+        e2 = m.second_order
+        reversal = np.abs(e2 - np.transpose(e2[:, mir][:, :, mir], (0, 2, 1))).max()
+        plain = np.abs(e2 - e2[:, mir][:, :, mir]).max()
+        assert reversal < 1e-9, "reversal symmetry should be enforced exactly"
+        assert plain > 1.0, "the real mirror asymmetry must survive"

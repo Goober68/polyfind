@@ -363,3 +363,13 @@ wrapped index, so an angle wrapping to exactly 360 degrees received weights of
 -47 and +48. Oblique cells scored -670 kcal/mol where the exact kernel gives
 -6.5. Right-angled cells were unaffected, so no previously reported packing
 result changed, but every non-orthogonal cell would have been nonsense.
+
+A note on how that last finding was nearly lost. The subagent that found the
+chirality problem also proposed the correct replacement symmetry and gave its
+index form. Checking it, I mapped the bond-type index on the pair term when the
+relation does not, got a large residual on a polymer where it must vanish, and
+recorded the relation as unresolved. The agent was right and the check was
+wrong. Two lessons: a verification that fails on the case where the answer is
+known is evidence about the verification, not only about the claim; and the
+fix was to make the code validate the relation itself at fit time, so it is
+applied only where it measurably holds, rather than to trust either of us.
