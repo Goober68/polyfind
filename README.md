@@ -89,5 +89,8 @@ about 10% and the right chain repeats, but its energy *differences* between
 polymorphs are not quantitative. The design puts a real potential in exactly
 one place (the RIS fit and final re-scoring), which is where it should go.
 
-Tests: `pytest` (about 70 tests, including brute-force checks of every
-dynamic-programming routine).
+Tests: `pytest` (76 tests, including brute-force checks of every
+dynamic-programming routine; `tests/test_gpu.py` runs only when CuPy and a CUDA
+device are present).  `python examples/benchmark.py` prints per-kernel timings
+for the active backend; `bash examples/runpod_gpu_bench.sh` does the whole GPU
+validation on a fresh CUDA machine.

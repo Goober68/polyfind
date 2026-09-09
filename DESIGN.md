@@ -162,11 +162,18 @@ so the packing screen that takes 10-60 s per conformation on this CPU becomes
 sub-second on a data-centre GPU, at which point the coarse screen can afford
 10^5-10^6 cells and a finer grid, and the polishing stage mostly disappears.
 The 10^5-chain amorphous ensemble similarly drops from seconds to well under a
-second.  These are projections: no GPU was available in the environment where
-this was built, and the CuPy path has not been executed; the kernels use only
-functions CuPy provides, but the first GPU run should start with the tests
-under `POLYFIND_DEVICE=cuda`.  Candidates are independent of each other, so
-multi-GPU parallelism is a loop over candidates (not implemented).
+second.  These are projections.  The container this was built in has no GPU
+(no CUDA driver or device), so the CuPy path has been reviewed but not
+executed.  Validating it on a GPU machine (a RunPod pod, for example) is one
+command:
+
+    bash examples/runpod_gpu_bench.sh
+
+which installs the package and CuPy, runs `tests/test_gpu.py` (every batched
+kernel compared with its NumPy result), the full test suite on the CuPy
+backend, and `examples/benchmark.py` on both backends for a side-by-side
+timing table.  Candidates are independent of each other, so multi-GPU
+parallelism is a loop over candidates (not implemented).
 
 ## 5. Validation
 
@@ -204,7 +211,31 @@ A with gauche angles at the potential's own minimum (+/-80 deg); gamma relaxes
 to c = 9.27 A (experiment 9.20) with the deflected trans angles (171-189 deg)
 and reduced gauche (+/-64 deg) that the real gamma chain has.
 
-### 5.3 What the illustrative potential gets wrong
+### 5.3 One full funnel run (PVDF, built-in potential, third-order RIS)
+
+`examples/pvdf_polymorphs.py`, Part B, on 4 CPU cores.  Stage wall times:
+fit 7.6 s (2,881 single points), enumeration 3.6 s (120 distinct periodic
+conformations up to period 8), packing of 4 conformations 81 s, refinement
+88 s, amorphous statistics 0.4 s.  Packing and refinement are where a GPU
+matters; everything else is already seconds.
+
+The fitted model moves the gauche state to +/-80 deg, at which the TG+ chain
+becomes an 18/5 helix and gamma is no longer commensurate within 8 periods, so
+neither is packed; three candidates with 72-144 atoms per chain repeat are
+listed but skipped as too large for the packing kernel.  Lattice energies per
+monomer relative to beta: T3G+TG- +2.8, alpha +3.9, TG+TG+TG-TG- +4.4 (all
+polar, parallel-chain packings with this potential).  Refinement changes the
+alpha energy by -0.12 kcal/mol and the 8-bond glide chain by -0.45 kcal/mol
+per monomer, with commensurability residuals below 0.4 deg.
+
+The melt-like ensemble at 450 K has 51% trans bonds, a mean trans run of 1.2
+bonds and a TTTT tetrad fraction of 0.002; chains leaving an all-trans stem
+advance 9.3 A on average along the stem axis, turn back with probability 0.32,
+and show no trans excess in their first free bond.  These numbers are what the
+funnel produces for *this* potential; with a fitted or machine-learned
+potential the same run costs the same three minutes.
+
+### 5.4 What the illustrative potential gets wrong
 
 `SimpleFF` (UFF Lennard-Jones, unscreened point charges, one Fourier torsion)
 is there so the pipeline runs and can be tested; its energy *differences* are
