@@ -6,9 +6,15 @@ Two roles:
    transparent intramolecular potential (Fourier torsion on the backbone
    dihedral + UFF Lennard-Jones + Coulomb for 1-4 and beyond) that exists so the
    whole pipeline runs and can be tested without heavy dependencies.  Its
-   parameters are *illustrative*.  :class:`ASECalculator` wraps any ASE
-   calculator (e.g. a MACE machine-learned potential) behind the same
-   interface, which is the intended production path.
+   default parameters are *illustrative* -- they were chosen to be reasonable,
+   not fitted -- but they are now all constructor arguments, and
+   :mod:`polyfind.fitting` fits them to experimental crystal data and offers the
+   result as a named preset (the defaults are untouched by that, so nothing
+   changes for anyone who does not ask for one).  :class:`ASECalculator` wraps
+   any ASE calculator (e.g. a MACE machine-learned potential) behind the same
+   interface; per DESIGN.md 2.5 that is a validator at the end of the funnel and
+   deliberately not a dependency, and fitting this potential is the productive
+   direction instead.
 
 2. :func:`fit_ris`: derive the RIS first- and second-order energies from a
    calculator by scanning one and two consecutive backbone dihedrals of a short
@@ -28,7 +34,7 @@ import numpy as np
 
 from . import backend as bk
 from .chain import Structure, build_chain, build_chain_batch
-from .polymers import Polymer, RISStates, THREE_STATE, lj_params
+from .polymers import Polymer, RISStates, THREE_STATE, UFF_LJ, lj_params
 from .ris import RISModel
 
 COULOMB = 332.0637  # kcal A / (mol e^2)
@@ -72,27 +78,120 @@ class _Topology:
     lj_d: np.ndarray
     qq: np.ndarray  # per pair q_i q_j * scale
     torsions: np.ndarray  # (n_tors, 4) backbone quadruples
+    tors_V: np.ndarray  # (n_tors, 3) Fourier coefficients of each of those dihedrals
+
+
+# The illustrative defaults, named so that "what the potential was before anyone fitted
+# it" is a value and not a literal repeated in three modules.  Nothing here changes when
+# a fitted preset is selected: a preset is a *different* SimpleFF, built on request.
+DEFAULT_TORSION: tuple[float, float, float] = (1.3, -0.05, 2.5)
+DEFAULT_SCALE14 = 0.5
+DEFAULT_EPS_R = 1.0
+
+# Named parameter sets.  Each maps to :class:`SimpleFF` keyword arguments, so
+# ``SimpleFF(**PRESETS[name])`` and :meth:`SimpleFF.from_preset` are the same thing.
+# ``"illustrative"`` is the unfitted potential every default in this package still uses;
+# the fitted entries are added by :mod:`polyfind.fitting`, which is where the data,
+# the objective and the provenance of the numbers live.
+PRESETS: dict[str, dict] = {
+    "illustrative": {"torsion": DEFAULT_TORSION, "scale14": DEFAULT_SCALE14, "eps_r": DEFAULT_EPS_R},
+}
 
 
 @dataclass
 class SimpleFF:
-    """Illustrative intramolecular potential (kcal/mol).
+    """Small, transparent intramolecular potential (kcal/mol), with settable parameters.
 
     torsion = (V1, V2, V3) Fourier terms on each backbone C-C-C-C dihedral:
         V(phi) = 1/2 [V1 (1 + cos phi) + V2 (1 - cos 2 phi) + V3 (1 + cos 3 phi)]
     Nonbonded (LJ 12-6 with UFF radii/well depths, geometric combining; Coulomb with
     relative permittivity eps_r) for all pairs separated by >= 3 bonds, with 1-4 pairs
     scaled by ``scale14``.
+
+    Every parameter is a constructor argument and every default is the illustrative
+    value this potential has always had, so a default-constructed ``SimpleFF()`` is
+    bit-for-bit the potential of every earlier run (``tests/test_forcefield.py``
+    asserts exactly that against recorded energies):
+
+    ``torsion``
+        the shared Fourier triple.
+    ``torsion_by_bond``
+        one triple *per bond type* of the repeat, indexed by ``dihedral % B`` with
+        ``B = polymer.bonds_per_repeat`` -- the same bond-type convention
+        :func:`fit_ris` scans with.  ``None`` (the default) means "``torsion`` for
+        every bond", which is what the potential did before this existed.
+    ``eps_r``
+        relative permittivity dividing every Coulomb term.
+    ``charge_scale``
+        multiplies the polymer's point charges, so Coulomb energies scale as
+        ``charge_scale**2`` while dipoles and polarizations scale linearly.  It is
+        exactly degenerate with ``eps_r`` in *energies* (only ``charge_scale**2 /
+        eps_r`` enters) and only polarization data can tell the two apart; see
+        :mod:`polyfind.fitting`.
+    ``lj``
+        per-element ``{symbol: (x_i, D_i)}`` overrides of the UFF table, merged over
+        :data:`polyfind.polymers.UFF_LJ` for this instance only.  The module-level
+        table is never touched, so two calculators with different parameters can be
+        alive at once and nothing global changes underneath anyone.
     """
 
-    torsion: tuple[float, float, float] = (1.3, -0.05, 2.5)
-    scale14: float = 0.5
-    eps_r: float = 1.0
+    torsion: tuple[float, float, float] = DEFAULT_TORSION
+    scale14: float = DEFAULT_SCALE14
+    eps_r: float = DEFAULT_EPS_R
+    torsion_by_bond: tuple[tuple[float, float, float], ...] | None = None
+    charge_scale: float = 1.0
+    lj: dict[str, tuple[float, float]] | None = None
     _cache: dict = field(default_factory=dict, repr=False)
+
+    @classmethod
+    def from_preset(cls, name: str) -> "SimpleFF":
+        """The named parameter set from :data:`PRESETS` (e.g. ``"illustrative"``)."""
+        try:
+            kw = PRESETS[name]
+        except KeyError as e:
+            raise KeyError(f"unknown SimpleFF preset {name!r}; known: {sorted(PRESETS)}") from e
+        return cls(**{k: v for k, v in kw.items() if not k.startswith("_")})
+
+    # --- parameters -----------------------------------------------------------
+    def lj_table(self) -> dict[str, tuple[float, float]]:
+        """The effective ``{element: (x_i, D_i)}`` table: UFF with this instance's overrides."""
+        return {**UFF_LJ, **(self.lj or {})}
+
+    def _lj_arrays(self, elements) -> tuple[np.ndarray, np.ndarray]:
+        """Per-atom ``(x_i, D_i)`` with the overrides applied; ``UFF_LJ`` is left alone."""
+        x, d = lj_params(elements)
+        if self.lj:
+            elements = list(elements)
+            for sym, (xi, di) in self.lj.items():
+                where = np.array([e == sym for e in elements])
+                x = np.where(where, xi, x)
+                d = np.where(where, di, d)
+        return x, d
+
+    def torsion_coefficients(self, polymer: Polymer, n_dihedrals: int) -> np.ndarray:
+        """``(n_dihedrals, 3)`` Fourier coefficients, one row per backbone dihedral.
+
+        Dihedral ``j`` belongs to bond type ``j % polymer.bonds_per_repeat`` -- the
+        convention :func:`fit_ris` uses when it picks which bond to scan for each type.
+        """
+        if self.torsion_by_bond is None:
+            return np.tile(np.asarray(self.torsion, dtype=float), (n_dihedrals, 1))
+        V = np.asarray(self.torsion_by_bond, dtype=float)
+        B = polymer.bonds_per_repeat
+        if V.shape != (B, 3):
+            raise ValueError(f"torsion_by_bond must be {B} triples for {polymer.name}, got shape {V.shape}")
+        return V[[j % B for j in range(n_dihedrals)]]
+
+    def _param_key(self) -> tuple:
+        """Everything a cached :class:`_Topology` depends on besides the structure."""
+        lj = tuple(sorted((k, float(v[0]), float(v[1])) for k, v in (self.lj or {}).items()))
+        tbb = None if self.torsion_by_bond is None else tuple(tuple(float(x) for x in t) for t in self.torsion_by_bond)
+        return (tuple(float(x) for x in self.torsion), tbb, float(self.scale14),
+                float(self.eps_r), float(self.charge_scale), lj)
 
     # --- topology -------------------------------------------------------------
     def _topology(self, struct: Structure) -> _Topology:
-        key = (struct.polymer.name, struct.n_dihedrals, len(struct.elements))
+        key = (struct.polymer.name, struct.n_dihedrals, len(struct.elements), self._param_key())
         top = self._cache.get(key)
         if top is not None:
             return top
@@ -118,12 +217,14 @@ class SimpleFF:
         keep = dist[iu, ju] >= 3
         iu, ju = iu[keep], ju[keep]
         scale = np.where(dist[iu, ju] == 3, self.scale14, 1.0)
-        x, d = lj_params(struct.elements)
+        x, d = self._lj_arrays(struct.elements)
         lj_x = np.sqrt(x[iu] * x[ju])
         lj_d = np.sqrt(d[iu] * d[ju]) * scale
-        qq = struct.charges[iu] * struct.charges[ju] * scale * COULOMB / self.eps_r
+        q = struct.charges if self.charge_scale == 1.0 else struct.charges * self.charge_scale
+        qq = q[iu] * q[ju] * scale * COULOMB / self.eps_r
         tors = np.array([struct.dihedral_atoms(j) for j in range(struct.n_dihedrals)], dtype=int).reshape(-1, 4)
-        top = _Topology(iu, ju, lj_x, lj_d, qq, tors)
+        tors_V = self.torsion_coefficients(struct.polymer, struct.n_dihedrals).reshape(-1, 3)
+        top = _Topology(iu, ju, lj_x, lj_d, qq, tors, tors_V)
         self._cache[key] = top
         return top
 
@@ -149,7 +250,12 @@ class SimpleFF:
             x = (n1 * n2).sum(-1)
             y = xp.sqrt((b1 * b1).sum(-1)) * (b0 * n2).sum(-1)
             phi = xp.arctan2(y, x)
-            V1, V2, V3 = self.torsion
+            # (n_tors,) coefficients, broadcast against phi's (M, n_tors): with one shared
+            # triple every row holds the same number, so this is arithmetically identical
+            # to the scalar form it replaces (the dtype cast keeps a float32 GPU batch in
+            # float32, which a float64 coefficient array would silently promote).
+            V = xp.asarray(top.tors_V, dtype=phi.dtype)
+            V1, V2, V3 = V[:, 0], V[:, 1], V[:, 2]
             e_t = (0.5 * (V1 * (1 + xp.cos(phi)) + V2 * (1 - xp.cos(2 * phi)) + V3 * (1 + xp.cos(3 * phi)))).sum(axis=1)
         return e_lj + e_c + e_t
 

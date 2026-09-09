@@ -249,3 +249,119 @@ def test_adaptive_pvdf_g_plus_g_minus_has_no_interior_minimum():
     phi, psi = adap.argmin2[1][("G+", "G-")]
     assert phi != 120.0 and psi != -120.0
     assert min(abs(phi - 120.0), abs(psi + 120.0)) < 1e-3
+
+
+# ------------------------------------------------------- the settable parameters
+def _probe_dihedrals(n, k):
+    """Deterministic conformers for the golden-energy test; ``k = 0`` is all-trans."""
+    if k == 0:
+        return np.full(n, 180.0)
+    return -180.0 + ((np.arange(n) * (71 + 40 * k) + 29 * k) % 360).astype(float)
+
+
+# Energies (total, LJ, Coulomb) of a default-constructed SimpleFF, in hex float so the
+# comparison is bit-for-bit rather than "close".  Recorded from the code as it stood
+# before the parameters became settable; every default in SimpleFF is still that
+# potential, and this is what says so.
+GOLDEN_ENERGIES = {
+    ("pe", 0): ("0x1.1e3fc00e8da83p+2", "0x1.6da9b630c824dp-1", "0x1.e1151290e9472p+1"),
+    ("pe", 1): ("0x1.a3b106a39b6b4p+11", "0x1.a2304c690a679p+11", "0x1.3f6baf81062a0p+1"),
+    ("pe", 2): ("0x1.339abec54a8d0p+9", "0x1.2b05af4b379bap+9", "0x1.27a0f2f1adc5ap+1"),
+    ("pvdf", 0): ("-0x1.3fde07fe80080p+3", "0x1.d9cf7d9295a83p+2", "-0x1.1662e363e56e1p+4"),
+    ("pvdf", 1): ("0x1.ed8901cec023ep+15", "0x1.ed9ea3604bb38p+15", "-0x1.457c33b4de016p+4"),
+    ("pvdf", 2): ("0x1.f424484648882p+10", "0x1.f74621458c1f0p+10", "-0x1.b62410b50e2b7p+4"),
+    ("pvdc", 0): ("0x1.6cd76b45a239ep+7", "0x1.790398e958758p+7", "-0x1.8585b476c774fp+2"),
+    ("pvdc", 1): ("0x1.0b7800064280cp+20", "0x1.0b780f7b4dc39p+20", "-0x1.dcce6531704c4p+2"),
+    ("pvdc", 2): ("0x1.36594713d009cp+14", "0x1.365185143630cp+14", "-0x1.4a35315572436p+3"),
+}
+_PROBES = {"pe": (PE, 8), "pvdf": (PVDF, 8), "pvdc": (get_polymer("pvdc"), 6)}
+
+
+@pytest.mark.parametrize("name,k", sorted(GOLDEN_ENERGIES))
+def test_default_simpleff_is_bit_for_bit_the_illustrative_potential(name, k):
+    """A default ``SimpleFF()`` must reproduce the pre-parameterisation energies exactly.
+
+    Not ``approx``: the point of the defaults is that selecting a fitted preset is the
+    *only* way the potential changes, so any drift at all -- a reordered sum, a promoted
+    dtype -- is a regression, and the last bit is where such a change shows up first.
+    """
+    poly, n = _PROBES[name]
+    s = build_chain(poly, _probe_dihedrals(n, k))
+    e, lj, coulomb = (float.fromhex(v) for v in GOLDEN_ENERGIES[(name, k)])
+    ff = SimpleFF()
+    assert ff.energy(s) == e
+    comp = ff.components(s)
+    assert comp["lj"] == lj
+    assert comp["coulomb"] == coulomb
+    assert SimpleFF.from_preset("illustrative").energy(s) == e
+
+
+def test_torsion_by_bond_defaults_to_the_shared_triple():
+    """Per-bond-type coefficients, with the same triple everywhere, change nothing."""
+    s = build_chain(PVDF, _probe_dihedrals(8, 2))
+    shared = SimpleFF()
+    per_bond = SimpleFF(torsion_by_bond=(shared.torsion, shared.torsion))
+    assert per_bond.energy(s) == shared.energy(s)
+    assert per_bond.torsion_coefficients(PVDF, 8).shape == (8, 3)
+    # bond type of dihedral j is j % bonds_per_repeat, the convention fit_ris scans with
+    V = SimpleFF(torsion_by_bond=((1.0, 0.0, 0.0), (0.0, 0.0, 2.0))).torsion_coefficients(PVDF, 4)
+    assert np.array_equal(V, np.array([[1.0, 0, 0], [0, 0, 2.0], [1.0, 0, 0], [0, 0, 2.0]]))
+
+
+def test_torsion_by_bond_separates_the_two_bond_types():
+    """Each dihedral is driven by its own bond type's triple, summed by hand."""
+    dih = _probe_dihedrals(8, 1)
+    s = build_chain(PVDF, dih)
+    a, b = (2.0, 0.3, 1.0), (-1.0, 0.7, 3.0)
+    nb = SimpleFF(torsion=(0.0, 0.0, 0.0)).energy(s)  # the nonbonded part alone
+    mixed = SimpleFF(torsion_by_bond=(a, b)).energy(s)
+
+    def V(t, phi):
+        return 0.5 * (t[0] * (1 + np.cos(phi)) + t[1] * (1 - np.cos(2 * phi)) + t[2] * (1 + np.cos(3 * phi)))
+
+    phi = np.deg2rad(dih)
+    expect = nb + sum(V(a if j % 2 == 0 else b, phi[j]) for j in range(len(dih)))
+    assert mixed == pytest.approx(expect, abs=1e-9)
+    assert mixed != SimpleFF(torsion=a).energy(s) and mixed != SimpleFF(torsion=b).energy(s)
+    with pytest.raises(ValueError, match="must be 2 triples"):
+        SimpleFF(torsion_by_bond=((1.0, 0.0, 0.0),)).energy(s)
+
+
+def test_charge_scale_and_eps_r_are_degenerate_in_the_energy():
+    """Coulomb goes as charge_scale^2 / eps_r -- the degeneracy the fit has to live with."""
+    s = build_chain(PVDF, _probe_dihedrals(8, 2))
+    base = SimpleFF().components(s)["coulomb"]
+    scaled = SimpleFF(charge_scale=0.8).components(s)
+    assert scaled["coulomb"] == pytest.approx(0.64 * base, rel=1e-12)
+    assert SimpleFF(charge_scale=0.8).energy(s) == pytest.approx(SimpleFF(eps_r=1 / 0.64).energy(s), rel=1e-12)
+    assert SimpleFF(eps_r=2.0).components(s)["coulomb"] == pytest.approx(0.5 * base, rel=1e-12)
+
+
+def test_lj_overrides_are_per_instance_and_never_touch_the_global_table():
+    from polyfind.polymers import UFF_LJ
+
+    before = dict(UFF_LJ)
+    s = build_chain(PVDF, _probe_dihedrals(8, 0))
+    plain = SimpleFF()
+    fat = SimpleFF(lj={"F": (3.9, 0.050)})
+    assert fat.energy(s) != plain.energy(s)
+    assert fat.lj_table()["F"] == (3.9, 0.050)
+    assert fat.lj_table()["C"] == UFF_LJ["C"]
+    assert UFF_LJ == before  # the module-level table is untouched
+    assert plain.lj_table() == UFF_LJ
+    assert plain.energy(s) == float.fromhex(GOLDEN_ENERGIES[("pvdf", 0)][0])  # still exact
+
+
+def test_topology_cache_is_keyed_on_the_parameters():
+    """Two calculators differing only in a parameter must not share a cached topology."""
+    s = build_chain(PE, _probe_dihedrals(8, 1))
+    a, b = SimpleFF(), SimpleFF(scale14=0.25, eps_r=3.0, lj={"H": (3.1, 0.044)})
+    ea, eb = a.energy(s), b.energy(s)
+    assert ea != eb
+    assert a.energy(s) == ea and b.energy(s) == eb  # cached values are still each its own
+    assert len(a._cache) == 1 and len(b._cache) == 1
+
+
+def test_unknown_preset_names_are_rejected():
+    with pytest.raises(KeyError, match="unknown SimpleFF preset"):
+        SimpleFF.from_preset("no-such-preset")
