@@ -235,7 +235,7 @@ minimum, 0.01 kcal/mol per CH2 above a parallel arrangement, i.e. within the
 potential's accuracy.
 
 The orientation column is now meaningful, which it was not before the defect of
-section 5.5 was fixed, and it is worth reading carefully because two of the four
+section 5.6 was fixed, and it is worth reading carefully because two of the four
 entries are not a prediction at all.  For PE and for beta the two orientations
 are *exactly* degenerate, to the last digit.  That is a symmetry, not a
 coincidence: both chains are mirror-symmetric about their own axis, so flipping
@@ -245,10 +245,21 @@ crystallographic polarity is not the same question as this flag: two chains
 pointing the same way can still oppose their transverse dipoles through their
 setting angles.
 
-For the two chains where the flip is a real degree of freedom the search gets
-both right.  Alpha prefers antiparallel by 0.18 kcal/mol per monomer and gamma
-prefers parallel by 0.78, matching the antipolar alpha and polar gamma phases.
+For the two chains where the flip is a real degree of freedom, alpha prefers
+antiparallel by 0.18 kcal/mol per monomer and gamma prefers parallel by 0.78.
 Neither answer was reachable before the fix.
+
+**A correction to what that means for alpha.**  An earlier version of this
+paragraph read the antiparallel preference as reproducing the antipolar alpha
+phase.  Measuring the cell dipole directly (section 5.5) shows it does not.
+Flipping chain 2 reverses its *axial* dipole, and those do cancel exactly, but
+the two chains' *transverse* dipoles still align, leaving a net polarization of
+0.078 C/m^2.  The genuinely antipolar arrangement is reachable in this
+parametrisation - flip with equal setting angles cancels the transverse part
+too, and a constrained polish reaches zero - but it costs 1.76 kcal/mol per
+monomer more, so the illustrative potential prefers the polar one.  The chain
+orientation flag and crystallographic polarity are different questions, and
+only the second is the one the alpha phase is named for.
 
 Continuous refinement then does what it is meant to: alpha relaxes to c = 4.70
 A with gauche angles at the potential's own minimum (+/-80 deg); gamma relaxes
@@ -268,7 +279,7 @@ becomes an 18/5 helix and gamma is no longer commensurate within 8 periods, so
 neither is packed; three candidates with 72-144 atoms per chain repeat are
 listed but skipped as too large for the packing kernel.  Lattice energies per
 monomer relative to beta: T3G+TG- +2.8, alpha +3.9, TG+TG+TG-TG- +4.4.  All
-four came out as parallel packings, but see section 5.5: antiparallel was
+four came out as parallel packings, but see section 5.6: antiparallel was
 unreachable when this run was made, so that is an artifact, not a result.  Refinement changes the
 alpha energy by -0.12 kcal/mol and the 8-bond glide chain by -0.45 kcal/mol
 per monomer, with commensurability residuals below 0.4 deg.
@@ -298,9 +309,38 @@ design routes a better potential to exactly the two places that fix them: the
 RIS fit and the final re-scoring.  A third claim once stood here, that the
 search predicts the alpha packing as polar rather than antipolar; it has been
 withdrawn, because the comparison it rested on was impossible to make at the
-time (section 5.5).
+time (section 5.6).
 
-### 5.5 A defect that invalidated every polarity result
+### 5.5 Polarization, and a field term
+
+The cell dipole is well defined here only because every repeat unit is built
+neutral, so the sum of charge times position does not move with the origin;
+`CrystalPacker` asserts that.  Spontaneous polarizations of the packed
+reference chains, with the illustrative potential:
+
+| Chain | \|P\| (C/m^2) | direction | expectation |
+|---|---|---|---|
+| PE all-trans | 0.0000 | - | exactly zero, and for every configuration, not only the minimum |
+| PVDF beta TT | 0.1405 | perpendicular to c | about 0.13 experimentally |
+| PVDF alpha TG+TG- | 0.0777 | perpendicular to c | should be near zero: **disagrees** |
+| PVDF gamma T3GT3G' | 0.0910 | 34 deg out of ab | polar, weaker than beta |
+
+Three of the four are right, and beta landing within a few percent of the
+experimental value is better than this potential deserves.  Alpha is wrong, and
+the reason is already documented: unscreened Coulomb over-rewards dipole
+alignment (section 5.4), and the damped-shifted-force sum carries no
+depolarisation energy (section 6).  It is a property of the charges, not of the
+search, since the antipolar cell is reachable and merely scores worse.
+
+A uniform field enters as minus the dipole dotted with the field, computed per
+configuration from the placed coordinates so it follows the setting angles, the
+flip and the torsions, and `pack` and `refine_crystal` both optimise in it.
+Beta responds linearly along its own polar axis and does not move, being already
+saturated; a field opposing it finds the 180-degree-rotated cell at equal energy,
+which is polarization reversal.  A transverse field does move the structure: at
+0.5 V/A the setting angles rotate by 6.6 degrees and b opens from 8.61 to 8.85 A.
+
+### 5.6 A defect that invalidated every polarity result
 
 Chain 2 of a two-chain cell is made antiparallel by mirroring it to
 (x, -y, -z).  That mirror maps the chain's z-image k onto image -k, so the

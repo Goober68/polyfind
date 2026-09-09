@@ -302,7 +302,7 @@ over its basin rather than as a basin minimum; that is the classical RIS definit
 it is insensitive to where (or whether) the minimum sits.
 
 Implementing section 1's tabulated chain-pair interaction surfaced a correctness bug in
-the packing kernel, described in DESIGN.md section 5.5: every antiparallel configuration
+the packing kernel, described in DESIGN.md section 5.6: every antiparallel configuration
 carried a spurious constant of thousands of kcal/mol, so the antipolar half of the search
 space had never been reachable and every packed result in the documentation was parallel
 by construction rather than by energetics. It was found precisely because the tabulated
