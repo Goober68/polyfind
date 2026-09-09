@@ -92,5 +92,7 @@ one place (the RIS fit and final re-scoring), which is where it should go.
 Tests: `pytest` (76 tests, including brute-force checks of every
 dynamic-programming routine; `tests/test_gpu.py` runs only when CuPy and a CUDA
 device are present).  `python examples/benchmark.py` prints per-kernel timings
-for the active backend; `bash examples/runpod_gpu_bench.sh` does the whole GPU
-validation on a fresh CUDA machine.
+for the active backend; `bash examples/runpod_gpu_bench.sh` (Linux, e.g. a RunPod
+pod) or `.\examples\gpu_bench.ps1` (Windows PowerShell) does the whole GPU
+validation: CuPy install, GPU tests, full suite on the CuPy backend, CPU vs GPU
+timings.
