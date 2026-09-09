@@ -1,7 +1,19 @@
+import dataclasses
+
 import numpy as np
 import pytest
 
-from polyfind.pack import periodic_chain, periodic_chain_from_torsions, CrystalPacker, pack, polish, to_cif, default_bounds
+from polyfind.pack import (
+    EV_TO_KCAL,
+    CrystalPacker,
+    default_bounds,
+    pack,
+    periodic_chain,
+    periodic_chain_from_torsions,
+    polish,
+    repeat_chains_from_torsions,
+    to_cif,
+)
 from polyfind.polymers import PE, PVDF, THREE_STATE
 
 T, GP, GM = 0, 1, 2
@@ -205,6 +217,163 @@ def test_pair_table_cache_reuses_the_table_in_memory_and_on_disk(tmp_path):
     # the key covers the potential and grid, not the cell: a different cutoff is a miss
     assert lt.table_key(ch, **kw) != lt.table_key(ch, cutoff=7.0, **kw)
     assert lt.table_key(ch, **kw) == lt.table_key(ch, symmetry=False, n_threads=1, **kw)
+
+
+# ------------------------------------------------------------------ dipole and field coupling
+# Lattice energies measured with the fieldless code (commit 12a817d) at fixed cells, as a
+# regression guard that adding the field term left the zero-field kernel alone.
+FIELDLESS_ENERGIES = {
+    "pe": (-5.610711164309272, -4.205273674665557),
+    "beta": (-1.1715837780098868, -9.859895741455485),
+    "alpha": (92.75378910310668, 10.399320548352355),
+    "gamma": (80.30868931961102, 160.00684801113476),
+}
+
+
+def _fixed_cells(c):
+    return np.array([[4.9, 8.7, 90.0, 30.0, 210.0, 0.4 * c, 0.0],
+                     [5.3, 9.1, 97.0, 145.0, 25.0, 0.8 * c, 1.0]])
+
+
+@pytest.mark.parametrize("tag,poly,seq", [
+    ("pe", PE, [T]), ("beta", PVDF, [T, T]),
+    ("alpha", PVDF, [T, GP, T, GM]), ("gamma", PVDF, [T, T, T, GP, T, T, T, GM]),
+])
+def test_zero_field_energies_are_exactly_the_fieldless_ones(tag, poly, seq):
+    """No field, no change: the kernel must not even see the coupling term."""
+    ch = periodic_chain(poly, seq, THREE_STATE)
+    p = _fixed_cells(ch.c)
+    e = CrystalPacker(ch).energy(p)
+    np.testing.assert_allclose(e, FIELDLESS_ENERGIES[tag], rtol=0, atol=1e-9)
+    # an explicitly zero field is the same code path and gives bit-identical numbers
+    for field in (None, (0.0, 0.0, 0.0), np.zeros(3)):
+        assert np.array_equal(CrystalPacker(ch, field=field).energy(p), e)
+    assert np.array_equal(CrystalPacker(ch, field=(0.0, 0.0, 0.0)).field_energy(p), np.zeros(2))
+    assert CrystalPacker(ch).result(p[0]).field_energy == 0.0
+
+
+def test_cell_dipole_is_neutral_origin_and_shift_independent():
+    ch = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
+    pk = CrystalPacker(ch)
+    assert pk.cell_charge == pytest.approx(0.0, abs=1e-12) and pk.is_neutral
+    p = _fixed_cells(ch.c)
+    mu = pk.dipole(p)
+    # dz translates a neutral chain, which cannot change the cell dipole
+    q = p.copy()
+    q[:, 5] += 1.234
+    np.testing.assert_allclose(pk.dipole(q), mu, atol=1e-12)
+    # rotating both chains together rotates mu rigidly about z
+    d = 37.0
+    r = p.copy()
+    r[:, 3] += d
+    r[:, 4] += d
+    ca, sa = np.cos(np.deg2rad(d)), np.sin(np.deg2rad(d))
+    expect = np.column_stack([ca * mu[:, 0] - sa * mu[:, 1], sa * mu[:, 0] + ca * mu[:, 1], mu[:, 2]])
+    np.testing.assert_allclose(pk.dipole(r), expect, atol=1e-10)
+    # P = mu / V with 1 e/A^2 = 16.0218 C/m^2
+    V = p[:, 0] * p[:, 1] * np.sin(np.deg2rad(p[:, 2])) * ch.c
+    np.testing.assert_allclose(pk.polarization(p), mu / V[:, None] * 16.0218, rtol=1e-12)
+
+
+def test_a_charged_cell_has_no_dipole_and_no_field():
+    """sum q_i r_i moves with the origin unless the cell is neutral, so it is refused."""
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    charged = dataclasses.replace(ch, charges=ch.charges + 0.05)
+    pk = CrystalPacker(charged)
+    assert not pk.is_neutral and pk.cell_charge == pytest.approx(2 * 0.05 * ch.n_atoms)
+    with pytest.raises(ValueError, match="origin"):
+        pk.dipole(_fixed_cells(ch.c))
+    with pytest.raises(ValueError, match="origin"):
+        CrystalPacker(charged, field=(0.1, 0.0, 0.0))
+    assert pk.result(_fixed_cells(ch.c)[0]).polarization is None
+
+
+def test_pe_polarization_is_exactly_zero_by_symmetry():
+    """All-trans PE has a CH2 dipole at every backbone atom and they cancel in pairs.
+
+    The repeat holds two CH2 groups whose bisectors point opposite ways, so the sum is
+    zero identically -- for every setting angle, shift and flip, not just at the minimum.
+    """
+    ch = periodic_chain(PE, [T], THREE_STATE)
+    for n_chains in (1, 2):
+        pk = CrystalPacker(ch, n_chains=n_chains)
+        rng = np.random.default_rng(3)
+        M = 10
+        p = np.column_stack([rng.uniform(4.5, 9, M), rng.uniform(4.5, 9, M), rng.uniform(80, 100, M),
+                             rng.uniform(0, 360, M), rng.uniform(0, 360, M), rng.uniform(0, ch.c, M),
+                             rng.integers(0, 2, M).astype(float)])
+        assert np.abs(pk.dipole(p)).max() < 1e-12
+        assert np.abs(pk.polarization(p)).max() < 1e-12
+        # ... so no field can do work on a PE cell either
+        assert np.abs(CrystalPacker(ch, n_chains=n_chains, field=(0.4, -0.3, 0.2)).energy(p) - pk.energy(p)).max() < 1e-9
+    assert pk.result(p[0]).polarization_magnitude < 1e-12
+
+
+def test_a_field_along_the_dipole_lowers_the_energy_and_against_it_raises_it_equally():
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    p = np.array([[4.65, 8.61, 90.0, 0.0, 0.0, 1.29, 0.0]])
+    pk = CrystalPacker(ch)
+    mu = pk.dipole(p)[0]
+    assert np.linalg.norm(mu) > 0.1  # beta really is polar
+    u = mu / np.linalg.norm(mu)
+    e0 = float(pk.energy(p)[0])
+    s = 0.25
+    down = float(CrystalPacker(ch, field=s * u).energy(p)[0])
+    up = float(CrystalPacker(ch, field=-s * u).energy(p)[0])
+    expect = s * np.linalg.norm(mu) * EV_TO_KCAL
+    assert down < e0 < up
+    assert e0 - down == pytest.approx(expect, rel=1e-9)
+    assert up - e0 == pytest.approx(expect, rel=1e-9)
+    # reversing the field reverses the coupling; doubling it doubles it; and it is
+    # exactly the difference the kernel makes
+    for E in (np.array([0.3, -0.1, 0.05]), s * u):
+        pk_f = CrystalPacker(ch, field=E)
+        pk_r = CrystalPacker(ch, field=-E)
+        pk_2 = CrystalPacker(ch, field=2 * E)
+        w = float(pk_f.field_energy(p)[0])
+        assert w != pytest.approx(0.0, abs=1e-6)
+        assert float(pk_r.field_energy(p)[0]) == pytest.approx(-w, rel=1e-12)
+        assert float(pk_2.field_energy(p)[0]) == pytest.approx(2 * w, rel=1e-12)
+        assert float(pk_f.energy(p)[0]) - e0 == pytest.approx(w, abs=1e-9)
+        assert pk_f.result(p[0]).field_energy == pytest.approx(w, abs=1e-9)
+
+
+def test_the_field_term_follows_the_configuration_not_the_chain_alone():
+    """The dipole must be recomputed per row: setting angle and flip move the atoms."""
+    ch = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
+    pk = CrystalPacker(ch, field=(0.2, 0.1, -0.15))
+    rng = np.random.default_rng(5)
+    M = 9
+    p = np.column_stack([rng.uniform(4.8, 9, M), rng.uniform(4.8, 9, M), np.full(M, 90.0),
+                         rng.uniform(0, 360, M), rng.uniform(0, 360, M), rng.uniform(0, ch.c, M),
+                         rng.integers(0, 2, M).astype(float)])
+    w = pk.field_energy(p)
+    assert w.std() > 0.1  # it genuinely varies over the batch
+    # one batched call agrees with row-by-row calls, and with energy() minus the fieldless energy
+    for i in range(M):
+        assert float(pk.field_energy(p[i : i + 1])[0]) == pytest.approx(w[i], rel=1e-12)
+    np.testing.assert_allclose(pk.energy(p) - CrystalPacker(ch).energy(p), w, atol=1e-9)
+    # per-row chain geometries carry their own dipoles too
+    chains = repeat_chains_from_torsions(PVDF, "TG+TG-", ch.dihedrals + rng.uniform(-10, 10, (M, 4)), align_to=ch)
+    kw = pk.chain_batch(chains)
+    got = pk.energy(p, **kw) - CrystalPacker(ch).energy(p, **kw)
+    np.testing.assert_allclose(got, pk.field_energy(p, coords=kw["coords"], c=kw["c"]), atol=1e-9)
+
+
+def test_pack_honours_the_field_and_reports_the_polarization():
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    kw = dict(n_chains=2, n_random=500, n_refine=2, maxfev=400, screen="random")
+    zero = pack(ch, rng=np.random.default_rng(0), **kw)[0]
+    assert zero.polarization is not None and zero.field == (0.0, 0.0, 0.0)
+    assert f"|P|={zero.polarization_magnitude:5.3f}" in zero.row()
+    u = zero.polarization / np.linalg.norm(zero.polarization)
+    with_field = pack(ch, rng=np.random.default_rng(0), field=0.3 * u, **kw)[0]
+    assert with_field.field == pytest.approx(tuple(0.3 * u))
+    assert with_field.field_energy < 0.0  # the cell it picks is aligned with the field
+    # the reported energy is the field-aware kernel's own value
+    pk = CrystalPacker(ch, field=0.3 * u)
+    assert float(pk.energy(with_field.params[None])[0]) == pytest.approx(with_field.energy_per_cell, abs=1e-9)
+    assert with_field.energy_per_cell < zero.energy_per_cell
 
 
 def test_pack_api_is_unchanged():

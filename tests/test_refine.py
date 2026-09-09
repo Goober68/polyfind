@@ -4,6 +4,7 @@ from scipy.optimize import approx_fprime
 
 from polyfind.pack import (
     CrystalPacker,
+    EV_TO_KCAL,
     FD_STEPS,
     cell_value_and_grad,
     periodic_chain,
@@ -218,6 +219,40 @@ def test_unknown_parametrisation_rejected():
     start = packer.result(np.array([4.65, 8.61, 90.0, 0.0, 0.0, 2.58, 0.0]))
     with pytest.raises(ValueError):
         refine_crystal(PVDF, start, parametrisation="symmetry")
+
+
+# ------------------------------------------------------------------ applied field
+def test_refinement_honours_and_inherits_an_applied_field():
+    """The field reaches the refinement, and is not silently dropped by a plain call."""
+    chain = periodic_chain(PVDF, [T, T], THREE_STATE)
+    p = np.array([4.65, 8.61, 90.0, 0.0, 0.0, 1.29, 0.0])
+    plain = CrystalPacker(chain)
+    mu = plain.dipole(p[None])[0]
+    E = 0.3 * mu / np.linalg.norm(mu)
+    packer = CrystalPacker(chain, field=E)
+    start = packer.result(p)
+    assert start.field == pytest.approx(tuple(E)) and start.field_energy < 0.0
+
+    res = refine_crystal(PVDF, start, maxfev=20, maxiter=20)  # field inherited from start
+    assert res.result.field == pytest.approx(tuple(E))
+    assert res.result.energy_per_monomer <= start.energy_per_monomer + 1e-9
+    # the refined result carries the coupling of its own (relaxed) dipole
+    assert res.result.field_energy == pytest.approx(-float(res.result.dipole @ E) * EV_TO_KCAL, rel=1e-12)
+    assert res.result.field_energy < 0.0
+
+    # an explicit zero field overrides the inheritance
+    off = refine_crystal(PVDF, start, field=(0.0, 0.0, 0.0), maxfev=20, maxiter=20)
+    assert off.result.field == (0.0, 0.0, 0.0) and off.result.field_energy == 0.0
+    # the field really changed the answer: it beats the fieldless minimum by roughly -mu.E
+    assert res.result.energy_per_cell < off.result.energy_per_cell + res.result.field_energy + 1e-6
+
+    # a fieldless start refines exactly as before: no field anywhere
+    plain_start = plain.result(p)
+    base = refine_crystal(PVDF, plain_start, maxfev=20, maxiter=20)
+    assert base.result.field == (0.0, 0.0, 0.0) and base.result.field_energy == 0.0
+    # ... and the opposed field costs the same as the aligned one gains, at the start cell
+    against = CrystalPacker(chain, field=-E).result(p)
+    assert against.field_energy == pytest.approx(-start.field_energy, rel=1e-12)
 
 
 def test_nelder_mead_works_with_the_line_group_too():

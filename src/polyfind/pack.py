@@ -28,6 +28,15 @@ conformation makes the whole ``(phi1, phi2, dz)`` landscape of an ``(a, b)``
 cell one inverse FFT, so the screen is exhaustive rather than sampled.  Both
 hand their best cells to the same exact-kernel polish, so the energies that
 come back are exact either way and only the choice of starts differs.
+
+A uniform applied electric field is optional (``field=(Ex, Ey, Ez)`` in V/A).  It
+adds ``-mu_cell . E`` to the cell energy, where ``mu_cell = sum_i q_i r_i`` is the
+dipole moment of the placed cell; the dipole depends on the setting angles and the
+flip, so it is recomputed per configuration inside the kernel.  This is the cheap
+screening heuristic of ``docs/CHEMISTRY_EXTENSION.md`` section 3, not a
+Berry-phase or DFT treatment: the charges are fixed point charges, so the cell has
+no polarizability and no depolarisation field, and only the *orientational* and
+packing response to the field is captured.
 """
 from __future__ import annotations
 
@@ -44,6 +53,11 @@ from .polymers import Polymer, RISStates, lj_params
 
 MASS = {"C": 12.011, "H": 1.008, "F": 18.998, "Cl": 35.45}
 _TOPO_CACHE: dict = {}
+
+# 1 e/A^2 in C/m^2:  1.602176634e-19 C / (1e-10 m)^2.
+E_PER_A2_TO_C_PER_M2 = 16.0218
+# 1 eV in kcal/mol; converts (mu in e.A) . (E in V/A) to the kernel's energy unit.
+EV_TO_KCAL = 23.0605
 
 # Working-set target for one chunk of the pair kernel on the CPU.  The kernel is
 # memory-bound, so the fastest chunk is the one whose temporaries stay resident:
@@ -344,24 +358,43 @@ class PackResult:
     dihedrals: np.ndarray | None = None
     cell_coords: np.ndarray | None = None
     cell_elements: list[str] | None = None
+    dipole: np.ndarray | None = None  # cell dipole mu = sum_i q_i r_i (e.A); None if the cell is not neutral
+    polarization: np.ndarray | None = None  # P = mu / V (C/m^2)
+    field: tuple[float, float, float] = (0.0, 0.0, 0.0)  # applied uniform field (V/A)
+    field_energy: float = 0.0  # the -mu.E term already included in energy_per_cell (kcal/mol)
 
     @property
     def params(self) -> np.ndarray:
         return np.array([self.a, self.b, self.gamma, self.phi1, self.phi2, self.dz, self.flip], dtype=float)
 
+    @property
+    def polarization_magnitude(self) -> float:
+        """|P| in C/m^2 (0 when the cell charge made the dipole undefined)."""
+        return 0.0 if self.polarization is None else float(np.linalg.norm(self.polarization))
+
     def row(self) -> str:
+        pol = "" if self.polarization is None else f"  |P|={self.polarization_magnitude:5.3f}"
         return (
             f"{self.chain:<14s} E/mon={self.energy_per_monomer:8.3f}  a={self.a:5.2f} b={self.b:5.2f} c={self.c:5.2f} "
             f"gamma={self.gamma:5.1f}  phi=({self.phi1:5.1f},{self.phi2:5.1f}) dz={self.dz:4.2f} {'anti' if self.flip else 'para'}  rho={self.density:5.3f}"
+            + pol
         )
 
 
 class CrystalPacker:
-    """Batched lattice-energy evaluator for a rigid periodic chain."""
+    """Batched lattice-energy evaluator for a rigid periodic chain.
+
+    ``field`` is an optional uniform applied electric field ``(Ex, Ey, Ez)`` in V/A,
+    which adds ``-mu_cell . E`` to every configuration's energy; see :meth:`dipole`
+    and :meth:`field_energy`.  ``field=None`` (the default) leaves the kernel exactly
+    as it was -- the field term is not evaluated at all -- so zero-field energies are
+    bit-for-bit those of the fieldless code.
+    """
 
     PARAMS = ("a", "b", "gamma", "phi1", "phi2", "dz", "flip")
+    NEUTRAL_TOL = 1e-6  # |cell charge| (e) above which the dipole is origin-dependent
 
-    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None):
+    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None):
         self.n_chains = n_chains
         self.rc = cutoff
         self.rc2 = cutoff ** 2
@@ -374,6 +407,7 @@ class CrystalPacker:
         self.n_energy_rows = 0  # configurations evaluated in total
         self._setup_topology(chain)
         self.update_chain(chain)
+        self.set_field(field)
 
     # --- setup -----------------------------------------------------------------
     def _setup_topology(self, chain: PeriodicChain) -> None:
@@ -423,6 +457,9 @@ class CrystalPacker:
         self.n, self.N = n, N
         self._scale_cache: dict[int, object] = {}
         self._image_cache: dict = {}
+        # charges of the whole cell, in the atom order :meth:`_place` produces
+        self._q_cell = np.tile(np.asarray(chain.charges, dtype=float), n_chains)
+        self._q_cell_xp = xp.asarray(self._q_cell, dtype=dt)
 
     def update_chain(self, chain: PeriodicChain) -> None:
         """Replace the chain-dependent state, keeping the topology-dependent tables.
@@ -448,6 +485,90 @@ class CrystalPacker:
         V1, V2, V3 = self.torsion
         phi = np.deg2rad(np.asarray(dihedrals, dtype=float))
         return float((0.5 * (V1 * (1 + np.cos(phi)) + V2 * (1 - np.cos(2 * phi)) + V3 * (1 + np.cos(3 * phi)))).sum())
+
+    # --- dipole, polarization and the applied field --------------------------------
+    @property
+    def cell_charge(self) -> float:
+        """Total charge of the cell (e).  Zero for chains built from neutral repeat units."""
+        return float(self._q_cell.sum())
+
+    @property
+    def is_neutral(self) -> bool:
+        return abs(self.cell_charge) <= self.NEUTRAL_TOL
+
+    def _require_neutral(self, what: str) -> None:
+        if not self.is_neutral:
+            raise ValueError(
+                f"{what} needs a neutral cell: sum_i q_i = {self.cell_charge:+.3e} e for this chain, and for a "
+                "charged cell sum_i q_i r_i depends on where the origin is put, so it is not a dipole moment at all"
+            )
+
+    def set_field(self, field) -> None:
+        """Set (``(Ex, Ey, Ez)`` in V/A) or clear (``None``) the uniform applied field."""
+        if field is None:
+            self.field, self._field_on, self._field_xp = None, False, None
+            return
+        f = np.asarray(field, dtype=float).reshape(3)
+        self.field = f
+        self._field_on = bool(np.any(f != 0.0))
+        self._field_xp = self.xp.asarray(f, dtype=self._dt) if self._field_on else None
+        if self._field_on:
+            self._require_neutral("an applied field")
+
+    def dipole(self, params, coords=None, c=None) -> np.ndarray:
+        """Cell dipole moment ``mu = sum_i q_i r_i`` in e.A, one (3,) row per configuration.
+
+        ``params`` is (M, 7) as for :meth:`energy`; ``coords`` (M, n, 3) and ``c`` (M,)
+        optionally give a different chain geometry per row.  The sum runs over the atoms
+        of the cell *as placed*: each chain's crystallographic repeat is kept whole (the
+        pendant atoms that overhang the repeat are not wrapped back into it), which is
+        the molecular choice of branch for the polarization -- wrapping an atom by a
+        lattice vector would shift ``mu`` by ``q`` times that vector, the usual
+        polarization quantum.
+
+        **This is only well defined because every repeat unit of these polymers is
+        constructed neutral.**  ``sum_i q_i r_i`` changes by ``Q * d`` when the origin
+        moves by ``d``, so for a cell of total charge ``Q != 0`` it is not a property of
+        the cell at all; the method therefore refuses to compute it (see
+        :attr:`cell_charge`).  Being neutral, the result is independent of the origin,
+        of which periodic image of each chain is used, and of ``dz`` (translating a
+        neutral chain does not change the cell dipole) -- but *not* of the setting
+        angles or the flip, which rotate and mirror the charge distribution.
+        """
+        self._require_neutral("the cell dipole")
+        params = np.atleast_2d(np.asarray(params, dtype=float))
+        P, _ = self._place(params, coords, c)
+        return np.einsum("n,mnc->mc", self._q_cell, np.asarray(bk.to_numpy(P), dtype=float))
+
+    def cell_volume(self, params, c=None) -> np.ndarray:
+        """Cell volume ``a b sin(gamma) c`` in A^3, one entry per row of ``params``."""
+        params = np.atleast_2d(np.asarray(params, dtype=float))
+        cz = np.full(params.shape[0], self.chain.c) if c is None else np.broadcast_to(
+            np.asarray(c, dtype=float).ravel(), (params.shape[0],))
+        return params[:, 0] * params[:, 1] * np.sin(np.deg2rad(params[:, 2])) * cz
+
+    def polarization(self, params, coords=None, c=None) -> np.ndarray:
+        """Cell polarization ``P = mu / V`` in C/m^2, one (3,) row per configuration.
+
+        The conversion is ``1 e/A^2 = 16.0218 C/m^2``.  The caveats of :meth:`dipole`
+        apply, and one more: these are fixed point charges, so this is the *rigid-ion*
+        polarization of the illustrative charge model, not a Berry-phase polarization,
+        and it carries no electronic contribution.
+        """
+        return self.dipole(params, coords, c) / self.cell_volume(params, c)[:, None] * E_PER_A2_TO_C_PER_M2
+
+    def field_energy(self, params, coords=None, c=None) -> np.ndarray:
+        """The ``-mu . E`` coupling of each configuration, in kcal/mol per cell.
+
+        ``mu`` in e.A dotted with a field in V/A is an energy in eV, hence the factor
+        :data:`EV_TO_KCAL`.  Zeros (without touching the coordinates) when no field is
+        set: this is the term :meth:`energy` adds, so it is exactly what the field
+        contributes to a reported lattice energy.
+        """
+        M = np.atleast_2d(np.asarray(params, dtype=float)).shape[0]
+        if not self._field_on:
+            return np.zeros(M)
+        return -(self.dipole(params, coords, c) @ self.field) * EV_TO_KCAL
 
     def chain_batch(self, chains) -> dict:
         """``coords``/``c``/``e_torsion`` keyword arguments of :meth:`energy` for a list of chains."""
@@ -577,6 +698,9 @@ class CrystalPacker:
         *different chain geometry per row*, so that a gradient batch over torsions is a
         single call; without them the packer's own chain is used for every row and its
         intra-chain energy is the constant computed in :meth:`update_chain`.
+
+        When a ``field`` is set, ``-mu . E`` (:meth:`field_energy`) is added per row from
+        that row's placed coordinates.  With no field the kernel is untouched.
         """
         xp = self.xp
         params = np.atleast_2d(np.asarray(params, dtype=float))
@@ -638,7 +762,13 @@ class CrystalPacker:
                 r2 = dx * dx + dy * dy + dzz * dzz  # (m, I, N, N)
                 v = self._pair_energy(r2, self._A, self._B, self._qq, self._qqf, self._const)
                 e = e + v.sum(axis=(1, 2, 3))
-            out[s : s + m_chunk] = bk.to_numpy(0.5 * e)
+            if self._field_on:
+                # -mu . E, from the placed coordinates of this chunk: the dipole follows
+                # the setting angles and the flip, so it is a per-row quantity.
+                mu = (P * self._q_cell_xp[None, :, None]).sum(axis=1)  # (m, 3), e.A
+                out[s : s + m_chunk] = bk.to_numpy(0.5 * e - EV_TO_KCAL * (mu * self._field_xp[None, :]).sum(axis=1))
+            else:
+                out[s : s + m_chunk] = bk.to_numpy(0.5 * e)
         res = np.empty_like(out)
         res[order] = out
         return res + e_add
@@ -656,6 +786,14 @@ class CrystalPacker:
         e = float(self.energy(params[None])[0])
         P, _ = self._place(params[None])
         a, b, gam, phi1, phi2, dz, flip = params
+        cell = np.asarray(bk.to_numpy(P[0]), dtype=float)
+        mu = pol = None
+        e_field = 0.0
+        if self.is_neutral:
+            mu = np.einsum("n,nc->c", self._q_cell, cell)
+            pol = mu / float(self.cell_volume(params[None])[0]) * E_PER_A2_TO_C_PER_M2
+            if self._field_on:
+                e_field = float(-(mu @ self.field) * EV_TO_KCAL)
         return PackResult(
             chain=self.chain.name,
             energy_per_cell=e,
@@ -665,8 +803,12 @@ class CrystalPacker:
             n_chains=self.n_chains,
             density=self.density(a, b, gam),
             dihedrals=self.chain.dihedrals.copy(),
-            cell_coords=bk.to_numpy(P[0]),
+            cell_coords=cell,
             cell_elements=list(self.chain.elements) * self.n_chains,
+            dipole=mu,
+            polarization=pol,
+            field=(0.0, 0.0, 0.0) if self.field is None else tuple(float(x) for x in self.field),
+            field_energy=e_field,
         )
 
 
@@ -827,7 +969,7 @@ def _random_starts(packer, lo, hi, n_random, n_refine, flips, n_chains, rng, ver
     return _distinct_starts(params, E, n_refine)
 
 
-def _table_starts(chain, lo, hi, n_refine, flips, step, gammas, table, cutoff, alpha, eps_r,
+def _table_starts(packer, chain, lo, hi, n_refine, flips, step, gammas, table, cutoff, alpha, eps_r,
                   cache_dir, table_kw, verbose):
     """The exhaustive screen: every ``(phi1, phi2, dz)`` of a tabulated ``W``, per ``(a, b)``.
 
@@ -839,6 +981,15 @@ def _table_starts(chain, lo, hi, n_refine, flips, step, gammas, table, cutoff, a
     basins ahead of the near-degenerate deep ones that matter).  No exact-kernel evaluation
     happens here: the selected cells are handed to the same :func:`polish` as the random
     screen, so the returned energies are exact either way.
+
+    The tabulated interaction knows nothing about an applied field, so with one set the
+    ``(phi1, phi2, dz)`` minimisation inside each ``(a, b, flip)`` cell is still the
+    *field-free* one.  Four times as many candidates are then taken from the screen and
+    re-ranked with their exact ``-mu . E`` before the starts are chosen, and the polish
+    that follows is fully field-aware -- but a field large enough to reorder the setting
+    angles within a cell can still hide a basin from this screen, and ``screen="random"``
+    (whose every evaluation goes through the field-aware kernel) is the honest choice
+    there.
     """
     from .lattice_table import fft_screen, pair_table
 
@@ -854,12 +1005,13 @@ def _table_starts(chain, lo, hi, n_refine, flips, step, gammas, table, cutoff, a
     # redundant -- but only when both axes are screened over the same values, otherwise
     # skipping b < a would drop cells whose mirror image is not on the grid at all.
     same_grid = a_values.shape == b_values.shape and np.allclose(a_values, b_values)
+    n_top = 4 * n_refine if packer._field_on else n_refine
     rows, es, tags = [], [], []
     for g in gammas:
-        res = fft_screen(table, a_values, b_values, gamma=float(g), flips=tuple(flips), n_top=n_refine,
+        res = fft_screen(table, a_values, b_values, gamma=float(g), flips=tuple(flips), n_top=n_top,
                          min_separation=0.5, ab_symmetry=same_grid and abs(float(g) - 90.0) < 1e-9)
         rows.append(res.top)
-        es.append(res.top_energy)
+        es.append(res.top_energy + packer.field_energy(res.top) if packer._field_on else res.top_energy)
         tags += [(float(p[6]), round(float(g), 6)) for p in res.top]
         if verbose:
             n_pts = len(a_values) * len(b_values) * len(flips) * table.n_angle ** 2 * table.n_z
@@ -890,6 +1042,7 @@ def pack(
     table=None,
     table_cache_dir: str | None = "env",
     table_kw: dict | None = None,
+    field=None,
 ) -> list[PackResult]:
     """Coarse screen of the cell parameters followed by local polishing of the best cells.
 
@@ -916,11 +1069,17 @@ def pack(
     the return type, the ordering and the deduplication of near-identical minima are the
     same.  ``method`` selects the polisher: ``"lbfgs"`` (default, batched-gradient
     L-BFGS-B) or ``"nelder-mead"``.
+
+    ``field=(Ex, Ey, Ez)`` (V/A) applies a uniform electric field: the cell is screened
+    and polished against the lattice energy *plus* ``-mu_cell . E``, so what comes back
+    is the cell the field selects, and every :class:`PackResult` carries its dipole and
+    polarization.  ``screen="random"`` is field-aware throughout; ``screen="table"``
+    screens field-free and re-ranks (see :func:`_table_starts`).
     """
     if screen not in ("table", "random"):
         raise ValueError(f"unknown screen {screen!r} (expected 'table' or 'random')")
     rng = rng or np.random.default_rng(0)
-    packer = CrystalPacker(chain, n_chains=n_chains, cutoff=cutoff, alpha=alpha, eps_r=eps_r)
+    packer = CrystalPacker(chain, n_chains=n_chains, cutoff=cutoff, alpha=alpha, eps_r=eps_r, field=field)
     bounds = bounds or default_bounds(chain, gamma_free)
     keys = ["a", "b", "gamma", "phi1", "phi2", "dz"]
     lo = np.array([bounds[k][0] for k in keys])
@@ -929,7 +1088,7 @@ def pack(
     if screen == "table" and n_chains == 2:
         if screen_gammas is None:
             screen_gammas = [lo[2]] if hi[2] <= lo[2] + 1e-9 else np.linspace(lo[2], hi[2], 5)
-        starts = _table_starts(chain, lo, hi, n_refine, flips, screen_step, screen_gammas, table,
+        starts = _table_starts(packer, chain, lo, hi, n_refine, flips, screen_step, screen_gammas, table,
                                cutoff, alpha, eps_r, table_cache_dir, table_kw, verbose)
     else:
         starts = _random_starts(packer, lo, hi, n_random, n_refine, flips, n_chains, rng, verbose)
