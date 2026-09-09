@@ -304,6 +304,17 @@ not quantitative:
   does not form;
 * it puts the polar beta cell too low for the same reason.
 
+**The screening diagnosis above is probably wrong, and a fit says so.**  Both
+bullets blame unscreened electrostatics over-rewarding dipole alignment.  If
+that were the mechanism, fitting the potential against the crystal data should
+have pulled the electrostatics *down*.  It did the opposite: the fit chose a
+stronger net charge-to-permittivity ratio, 1.42 against 1.0, and alpha stayed
+polar at every point in the search box.  So whatever makes alpha come out polar
+here is not simply a missing screening factor, and section 5.5's explanation
+should be treated as unproven.  A likelier candidate is the absent
+depolarisation energy noted in section 6, which no adjustment of the charges
+can supply.
+
 The first two are properties of the potential, not of the search, and the
 design routes a better potential to exactly the two places that fix them: the
 RIS fit and the final re-scoring.  A third claim once stood here, that the
@@ -373,6 +384,58 @@ correct result for alpha-PVDF, and it was unreachable before.  For gamma the
 parallel packing still wins.  For PE and beta the two orientations are exactly
 degenerate at the minimum, which is not a coincidence: both chains are
 mirror-symmetric about their own axis, so for them a flip is a rotation.
+
+### 5.7 Fitting the potential to crystal data, and why it did not work
+
+The search is now fast enough to sit inside a parameter fit, which it was not
+before: one pack-and-refine of a reference chain is seconds, so a few hundred
+objective evaluations are affordable.  Five parameters were fitted - relative
+permittivity, a charge scale, the hydrogen and fluorine Lennard-Jones radii,
+and the leading torsion coefficient - against PE, beta and alpha cell edges,
+densities, the beta polarization and the alpha/beta energy gap, with **gamma
+held out entirely**.  Eighty-six evaluations, twenty-five minutes.
+
+Two of the five parameters turned out to be structurally unidentifiable before
+any data was involved.  At ideal torsion angles the third Fourier coefficient
+vanishes identically and only the sum of the first two enters, so they cannot
+be separated; and the permittivity and the charge scale enter every energy only
+through the ratio of charge squared to permittivity, so they are exactly
+degenerate there and separable only by the polarizations.
+
+The fit halved its objective, from 100.8 to 56.5, and **it does not
+generalise**.  Nearly all of the gain sits in the three targets that each have
+their own private knob: PE's a axis is set by the hydrogen radius, alpha's b
+axis by the fluorine radius, and the alpha-beta energy gap by the torsion
+coefficient.  Targets without a dedicated knob got *worse*, including beta's
+polarization, which was a fitted target and drifted from 0.140 to 0.160 against
+an experimental 0.13.
+
+An ablation settles which parameters are real.  The two Lennard-Jones radii
+alone deliver essentially the whole held-out improvement (gamma root-mean-square
+error 3.73% against 3.48% for the full fit) while keeping beta's polarization at
+0.128.  The other three alone cut the fitted objective to 89.0 while making the
+held-out gamma *worse than not fitting at all*, 5.96% against 5.80%.  So two
+parameters transfer and three fit noise, on twelve independent observations.
+
+The conclusion is about the data, not the optimiser: **crystal structures alone
+cannot determine this potential**.  Twelve numbers, several of them not
+independent, cannot pin five parameters, and the quantities that would
+discriminate - torsion profiles, and the relative energies of conformers - are
+simply not in the training set.  The isolated-chain conformational ranking,
+which the objective never constrained, degraded further during the fit.
+
+What follows is a sharpening of section 2.5's decision rather than a reversal of
+it.  That decision was not to make a machine-learned potential a *runtime
+dependency*, and that stands.  Using a high-quality method once, offline, to
+generate a few hundred reference torsion energies to fit a classical potential
+against is a different activity: it is ordinary force-field development, the
+expensive method appears as a data source rather than as the engine, and the
+fitted result still evaluates in microseconds.  That is the missing ingredient,
+and this fit is the evidence that crystal data by itself will not substitute for
+it.
+
+The fitted parameters ship as an opt-in preset carrying this warning.  The
+defaults are unchanged.
 
 ## 6. Limitations and roadmap
 
