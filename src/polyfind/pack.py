@@ -20,6 +20,14 @@ the coarse search evaluates thousands of candidate cells in one call (a GPU
 does this in a fraction of a second), and only the best few are polished with
 a local optimiser.  Per configuration only the lateral images whose chain axes
 can lie within the cutoff are evaluated.
+
+:func:`pack` offers two coarse screens.  ``screen="random"`` samples cells
+uniformly and scores them with this kernel.  ``screen="table"`` uses
+:mod:`polyfind.lattice_table`: a chain-pair interaction tabulated once per
+conformation makes the whole ``(phi1, phi2, dz)`` landscape of an ``(a, b)``
+cell one inverse FFT, so the screen is exhaustive rather than sampled.  Both
+hand their best cells to the same exact-kernel polish, so the energies that
+come back are exact either way and only the choice of starts differs.
 """
 from __future__ import annotations
 
@@ -678,6 +686,15 @@ def default_bounds(chain: PeriodicChain, gamma_free: bool = False) -> dict:
 # finite-difference steps for the cell variables (a, b, gamma, phi1, phi2, dz)
 FD_STEPS = np.array([1e-3, 1e-3, 0.05, 0.05, 0.05, 1e-3])
 
+# Grid of the chain-pair table built for the ``screen="table"`` path.  It is coarser than
+# :meth:`polyfind.lattice_table.PairTable.build`'s own default (5 deg, c/16, 0.05 A),
+# which is sized for *evaluating* lattice energies; here the table only has to say which
+# cells are worth polishing, and the polish is exact.  Measured on PE all-trans and beta-,
+# alpha- and gamma-PVDF: this grid selects starts that polish to the same global minimum
+# as the fine one, for 1/6 of the build cost (PE 6.1 s vs 35 s, gamma 23 s vs 147 s) and
+# 1/9 of the memory.  Pass ``table_kw`` to override it.
+SCREEN_TABLE = {"n_angle": 48, "n_z": 8, "dr": 0.1}
+
 
 def cell_value_and_grad(packer: CrystalPacker, x: np.ndarray, free, lo=None, hi=None, steps=None):
     """Energy and its gradient w.r.t. the free cell parameters from ONE batched call.
@@ -770,6 +787,88 @@ def polish(
     return x
 
 
+def _distinct_starts(params: np.ndarray, energies: np.ndarray, n: int, min_separation: float = 0.5,
+                     sort_ab: bool = False, tags=None) -> list[np.ndarray]:
+    """The ``n`` lowest rows of ``params`` that are not near-duplicates of one another.
+
+    Two cells count as duplicates when ``|da| + |db| <= min_separation`` and they share a
+    tag (the flip, plus gamma when several are screened).  ``sort_ab`` compares the
+    *sorted* pair, so that ``(a, b)`` and ``(b, a)`` -- the same lattice rotated by
+    90 deg -- are one cell.
+    """
+    order = np.argsort(energies)
+    starts, keys = [], []
+    for idx in order:
+        p = params[idx]
+        ab = (min(p[0], p[1]), max(p[0], p[1])) if sort_ab else (p[0], p[1])
+        k = ab + (p[6] if tags is None else tags[idx],)
+        if all(abs(k[0] - q[0]) + abs(k[1] - q[1]) > min_separation or k[2] != q[2] for q in keys):
+            starts.append(p)
+            keys.append(k)
+        if len(starts) >= n:
+            break
+    return starts
+
+
+def _random_starts(packer, lo, hi, n_random, n_refine, flips, n_chains, rng, verbose):
+    """The original screen: ``n_random`` uniform cells per flip through the exact kernel."""
+    cont = lo + (hi - lo) * rng.random((n_random, 6))
+    if n_chains == 1:
+        cont[:, 4] = 0.0
+        cont[:, 5] = 0.0
+    Es, Ps = [], []
+    for f in flips:
+        params = np.concatenate([cont, np.full((n_random, 1), float(f))], axis=1)
+        Es.append(packer.energy(params))
+        Ps.append(params)
+    E, params = np.concatenate(Es), np.concatenate(Ps)
+    if verbose:
+        print(f"coarse search: {len(E)} cells, best E/cell = {E.min():.3f}")
+    return _distinct_starts(params, E, n_refine)
+
+
+def _table_starts(chain, lo, hi, n_refine, flips, step, gammas, table, cutoff, alpha, eps_r,
+                  cache_dir, table_kw, verbose):
+    """The exhaustive screen: every ``(phi1, phi2, dz)`` of a tabulated ``W``, per ``(a, b)``.
+
+    One inverse FFT per ``(a, b, flip)`` covers the whole angle/z landscape, so the grid
+    the starts come from is the full search space at the table's resolution rather than a
+    random sample of it.  The starts are the lowest grid cells that are not near-duplicates
+    of one another, by the same rule the random screen uses (an (a, b) landscape minimum
+    rather than plain energy order was tried and is worse: it promotes shallow far-away
+    basins ahead of the near-degenerate deep ones that matter).  No exact-kernel evaluation
+    happens here: the selected cells are handed to the same :func:`polish` as the random
+    screen, so the returned energies are exact either way.
+    """
+    from .lattice_table import fft_screen, pair_table
+
+    if table is None:
+        table = pair_table(chain, cutoff=cutoff, alpha=alpha, eps_r=eps_r, cache_dir=cache_dir,
+                           verbose=verbose, **{**SCREEN_TABLE, **(table_kw or {})})
+    elif abs(table.c - chain.c) > 1e-6 or abs(table.rc - cutoff) > 1e-9:
+        raise ValueError(f"the given table is for c={table.c:.4f}, cutoff={table.rc}, "
+                         f"not c={chain.c:.4f}, cutoff={cutoff}")
+    a_values = np.arange(lo[0], hi[0] + 1e-9, step)
+    b_values = np.arange(lo[1], hi[1] + 1e-9, step)
+    # (a, b) and (b, a) are the same lattice rotated by 90 deg, so half the grid is
+    # redundant -- but only when both axes are screened over the same values, otherwise
+    # skipping b < a would drop cells whose mirror image is not on the grid at all.
+    same_grid = a_values.shape == b_values.shape and np.allclose(a_values, b_values)
+    rows, es, tags = [], [], []
+    for g in gammas:
+        res = fft_screen(table, a_values, b_values, gamma=float(g), flips=tuple(flips), n_top=n_refine,
+                         min_separation=0.5, ab_symmetry=same_grid and abs(float(g) - 90.0) < 1e-9)
+        rows.append(res.top)
+        es.append(res.top_energy)
+        tags += [(float(p[6]), round(float(g), 6)) for p in res.top]
+        if verbose:
+            n_pts = len(a_values) * len(b_values) * len(flips) * table.n_angle ** 2 * table.n_z
+            print(f"table screen gamma={g:.1f}: {len(a_values)}x{len(b_values)} cells, {n_pts / 1e6:.0f} M "
+                  f"landscape points in {res.time:.2f} s, best E/cell = {res.top_energy[0]:.3f}")
+    params, E = np.concatenate(rows), np.concatenate(es)
+    return _distinct_starts(params, E, n_refine, sort_ab=True, tags=tags)
+
+
 def pack(
     chain: PeriodicChain,
     n_chains: int = 2,
@@ -784,40 +883,56 @@ def pack(
     maxfev: int = 1500,
     verbose: bool = False,
     method: str = "lbfgs",
+    screen: str = "table",
+    alpha: float = 0.2,
+    screen_step: float = 0.25,
+    screen_gammas=None,
+    table=None,
+    table_cache_dir: str | None = "env",
+    table_kw: dict | None = None,
 ) -> list[PackResult]:
-    """Coarse batched random search followed by local polishing of the best cells.
+    """Coarse screen of the cell parameters followed by local polishing of the best cells.
 
-    ``method`` selects the polisher: ``"lbfgs"`` (default, batched-gradient L-BFGS-B) or
-    ``"nelder-mead"``.
+    ``screen`` selects how the starts are found:
+
+    * ``"table"`` (default) -- the exhaustive screen of :mod:`polyfind.lattice_table`.
+      A tabulated chain-pair interaction ``W`` (built once per conformation and cached by
+      :func:`~polyfind.lattice_table.pair_table`) turns each ``(a, b, flip)`` into one
+      inverse FFT that evaluates the *entire* ``(phi1, phi2, dz)`` landscape, so the screen
+      covers 10^7-10^8 cells in a second or two instead of sampling ``2 n_random`` of them
+      with the exact kernel, and no basin can be missed by bad luck.  ``screen_step`` is the
+      ``(a, b)`` grid spacing in A; ``screen_gammas`` (default: the gamma bounds, five
+      values when they are free) the gammas screened; ``table`` accepts a prebuilt
+      :class:`~polyfind.lattice_table.PairTable`; ``table_cache_dir`` and ``table_kw``
+      (defaulting to :data:`SCREEN_TABLE`) are passed to the cached builder.  The build is
+      the one real cost -- 5-25 s per conformation -- and it is paid once: the table
+      depends only on the chain and the potential, so a second ``pack()`` of the same
+      conformation is free, and setting ``$POLYFIND_TABLE_CACHE`` (or ``table_cache_dir``)
+      shares it with other processes and later runs.  Only for ``n_chains == 2``; a
+      one-chain cell falls back to ``"random"``.
+    * ``"random"`` -- ``n_random`` uniform random cells per flip through the exact kernel.
+
+    Either way the starts are polished with the exact kernel, so the returned energies,
+    the return type, the ordering and the deduplication of near-identical minima are the
+    same.  ``method`` selects the polisher: ``"lbfgs"`` (default, batched-gradient
+    L-BFGS-B) or ``"nelder-mead"``.
     """
+    if screen not in ("table", "random"):
+        raise ValueError(f"unknown screen {screen!r} (expected 'table' or 'random')")
     rng = rng or np.random.default_rng(0)
-    packer = CrystalPacker(chain, n_chains=n_chains, cutoff=cutoff, eps_r=eps_r)
+    packer = CrystalPacker(chain, n_chains=n_chains, cutoff=cutoff, alpha=alpha, eps_r=eps_r)
     bounds = bounds or default_bounds(chain, gamma_free)
     keys = ["a", "b", "gamma", "phi1", "phi2", "dz"]
     lo = np.array([bounds[k][0] for k in keys])
     hi = np.array([bounds[k][1] for k in keys])
     flips = list(flips) if n_chains == 2 else [0]
-    cont = lo + (hi - lo) * rng.random((n_random, 6))
-    if n_chains == 1:
-        cont[:, 4] = 0.0
-        cont[:, 5] = 0.0
-    Es, Ps = [], []
-    for f in flips:
-        params = np.concatenate([cont, np.full((n_random, 1), float(f))], axis=1)
-        Es.append(packer.energy(params))
-        Ps.append(params)
-    E = np.concatenate(Es)
-    params = np.concatenate(Ps)
-    order = np.argsort(E)
-    starts = []
-    for idx in order:
-        p = params[idx]
-        if all(abs(p[0] - s[0]) + abs(p[1] - s[1]) > 0.5 or p[6] != s[6] for s in starts):
-            starts.append(p)
-        if len(starts) >= n_refine:
-            break
-    if verbose:
-        print(f"coarse search: {len(E)} cells, best E/cell = {E[order[0]]:.3f}")
+    if screen == "table" and n_chains == 2:
+        if screen_gammas is None:
+            screen_gammas = [lo[2]] if hi[2] <= lo[2] + 1e-9 else np.linspace(lo[2], hi[2], 5)
+        starts = _table_starts(chain, lo, hi, n_refine, flips, screen_step, screen_gammas, table,
+                               cutoff, alpha, eps_r, table_cache_dir, table_kw, verbose)
+    else:
+        starts = _random_starts(packer, lo, hi, n_random, n_refine, flips, n_chains, rng, verbose)
     free = [i for i in range(6) if hi[i] > lo[i] and not (n_chains == 1 and i in (4, 5))]
     results = [packer.result(polish(packer, p, lo, hi, free, maxfev, method=method)) for p in starts]
     results.sort(key=lambda r: r.energy_per_cell)
