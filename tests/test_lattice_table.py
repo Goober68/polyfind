@@ -218,6 +218,23 @@ def test_beta_pvdf_screen_finds_known_cell():
     assert _rank_of_cell(res.top, 4.65, 8.6, tol=0.35) >= 0, f"top cells {np.round(res.top[:, :2], 2)}"
 
 
+def test_ab_symmetry_halves_the_grid_without_changing_the_answer():
+    """(a, b) and (b, a) are the same lattice rotated by 90 deg, so half the FFTs are free."""
+    tab = _table(PE_T, n_angle=24, n_z=4, dr=0.4)
+    av = np.arange(4.4, 8.01, 0.4)
+    full = fft_screen(tab, av, av, flips=(0, 1), n_top=5)
+    half = fft_screen(tab, av, av, flips=(0, 1), n_top=5, ab_symmetry=True)
+    assert np.abs(half.top_energy - full.top_energy).max() < 1e-4
+    assert np.isinf(half.energy[-1, 0, 0]) and np.isfinite(half.energy[0, -1, 0])
+    for p in half.top:
+        assert p[1] >= p[0] - 1e-9
+    # every screened cell agrees with its transpose in the full screen
+    fin = np.isfinite(half.energy)
+    assert np.abs(half.energy[fin] - np.swapaxes(full.energy, 0, 1)[fin]).max() < 1e-3
+    with pytest.raises(ValueError):
+        fft_screen(tab, av, av, gamma=100.0, ab_symmetry=True)
+
+
 def test_screen_wrapper_returns_rows_with_energies():
     chain = _chain(PE_T)
     tab = _table(PE_T, n_angle=24, n_z=4, dr=0.4)

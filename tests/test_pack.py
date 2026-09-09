@@ -150,7 +150,7 @@ def test_polish_lbfgs_reaches_the_nelder_mead_minimum_with_fewer_calls():
 
 def test_pack_accepts_either_polish_method():
     ch = periodic_chain(PE, [T], THREE_STATE)
-    kw = dict(n_chains=2, n_random=300, n_refine=2, maxfev=400)
+    kw = dict(n_chains=2, n_random=300, n_refine=2, maxfev=400, screen="random")
     a = pack(ch, rng=np.random.default_rng(0), method="lbfgs", **kw)
     b = pack(ch, rng=np.random.default_rng(0), method="nelder-mead", **kw)
     assert a[0].energy_per_cell <= b[0].energy_per_cell + 1e-3
@@ -159,3 +159,67 @@ def test_pack_accepts_either_polish_method():
 def test_default_bounds_cover_known_cells():
     b = default_bounds(periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE))
     assert b["a"][0] < 4.96 < b["a"][1] and b["b"][0] < 9.64 < b["b"][1]
+
+
+# ------------------------------------------------------------------ the table screen
+@pytest.mark.parametrize("poly,seq", [(PE, [T]), (PVDF, [T, T])])
+def test_table_screen_is_no_worse_than_the_random_screen(poly, seq):
+    """The exhaustive screen must not lose minima the 6,000-cell random sample finds.
+
+    Both paths polish their starts with the exact kernel, so the comparison is between
+    final, exact energies; the table only decides which cells are polished.
+    """
+    ch = periodic_chain(poly, seq, THREE_STATE)
+    rnd = pack(ch, screen="random", n_random=1200, n_refine=4, rng=np.random.default_rng(0), maxfev=600)
+    tab = pack(ch, screen="table", n_refine=4, maxfev=600, table_cache_dir=None)
+    assert tab[0].energy_per_monomer <= rnd[0].energy_per_monomer + 1e-3
+    # the table path returns the same kind of answer: sorted, deduplicated, exact
+    assert [r.energy_per_cell for r in tab] == sorted(r.energy_per_cell for r in tab)
+    assert all(abs(u.energy_per_cell - v.energy_per_cell) > 1e-3 for i, u in enumerate(tab) for v in tab[i + 1:])
+    pk = CrystalPacker(ch, n_chains=2)
+    assert pk.energy(tab[0].params[None])[0] == pytest.approx(tab[0].energy_per_cell, abs=1e-9)
+
+
+def test_pair_table_cache_reuses_the_table_in_memory_and_on_disk(tmp_path):
+    from polyfind import lattice_table as lt
+
+    ch = periodic_chain(PE, [T], THREE_STATE)
+    kw = dict(n_angle=24, n_z=4, dr=0.5)
+    lt.clear_pair_table_cache()
+    n0 = lt.pair_table_cache_info()["builds"]
+    first = lt.pair_table(ch, cache_dir=str(tmp_path), **kw)
+    assert lt.pair_table_cache_info()["builds"] == n0 + 1
+    second = lt.pair_table(ch, cache_dir=str(tmp_path), **kw)
+    assert second is first  # identical table, not rebuilt
+    assert lt.pair_table_cache_info()["builds"] == n0 + 1
+    # a fresh process (here: an empty in-process cache) picks the table up from disk
+    files = list(tmp_path.glob("*.npz"))
+    assert len(files) == 1 and lt.table_key(ch, **kw) in files[0].name
+    lt.clear_pair_table_cache()
+    third = lt.pair_table(ch, cache_dir=str(tmp_path), **kw)
+    assert lt.pair_table_cache_info()["builds"] == n0 + 1
+    assert np.array_equal(third.W, first.W) and third.W.dtype == first.W.dtype
+    assert np.array_equal(third.e_intra, first.e_intra)
+    for attr in ("r_min", "dr", "n_angle", "n_z", "c", "rc", "cap"):
+        assert getattr(third, attr) == getattr(first, attr)
+    # the key covers the potential and grid, not the cell: a different cutoff is a miss
+    assert lt.table_key(ch, **kw) != lt.table_key(ch, cutoff=7.0, **kw)
+    assert lt.table_key(ch, **kw) == lt.table_key(ch, symmetry=False, n_threads=1, **kw)
+
+
+def test_pack_api_is_unchanged():
+    """Every pre-existing call signature keeps working and keeps its old behaviour."""
+    ch = periodic_chain(PE, [T], THREE_STATE)
+    kw = dict(n_chains=2, n_random=200, n_refine=2, maxfev=300)
+    a = pack(ch, screen="random", rng=np.random.default_rng(0), **kw)
+    b = pack(ch, screen="random", rng=np.random.default_rng(0), **kw)
+    assert [r.energy_per_cell for r in a] == [r.energy_per_cell for r in b]  # deterministic
+    assert a[0].chain == "T" and a[0].n_chains == 2 and a[0].cell_coords.shape == (12, 3)
+    # the positional form that predates the screen argument (screen is keyword-only in effect)
+    assert pack(ch, 2, 200, 1, None, False, (0, 1), np.random.default_rng(1), 8.0, 1.0, 300, False, "lbfgs",
+                screen="random")
+    # a one-chain cell has no chain-pair table; it falls back to the random screen
+    one = pack(ch, n_chains=1, n_random=200, n_refine=1, maxfev=300, rng=np.random.default_rng(0))
+    assert one[0].n_chains == 1 and one[0].phi2 == 0.0 and one[0].dz == 0.0
+    with pytest.raises(ValueError):
+        pack(ch, screen="exhaustive", **kw)

@@ -58,6 +58,11 @@ __all__ = [
     "table_energy",
     "fft_screen",
     "screen",
+    "table_key",
+    "pair_table",
+    "pair_table_cache_info",
+    "clear_pair_table_cache",
+    "default_cache_dir",
 ]
 
 
@@ -196,18 +201,23 @@ def direct_lattice_energy(packer1: CrystalPacker, params, e_intra=None, r_max: f
 
 
 # ------------------------------------------------------------------ the table
-def _pot_batch(lj_x, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, dtype=np.float32):
+def _pot_batch(lj_x6, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, dtype=np.float32):
     """The same pair potential, for per-triple parameter vectors broadcast against r2.
 
-    ``r2`` is floored at (0.05 A)^2 inside the potential so that ``(x/r)^12`` cannot
-    overflow float32; that only affects pairs whose energy is astronomically large
-    and therefore clipped to the table's cap.  Exactly coincident atoms give 0, as
-    in the packer.
+    ``lj_x6`` is ``lj_x ** 6`` (the LJ part is a function of ``r^2`` alone, so the
+    sixth power is taken once per pair type instead of once per grid point: ``**6``
+    on the (pairs, n_angle, n_angle) array is `pow`, and removing it is a third of
+    the builder's arithmetic).  ``r2`` is floored at (0.05 A)^2 so that ``(x/r)^12``
+    cannot overflow float32; that only affects pairs whose energy is astronomically
+    large and therefore clipped to the table's cap.  Exactly coincident atoms give 0,
+    as in the packer.
     """
     with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
         mask = (r2 < dtype(rc * rc)) & (r2 > dtype(1e-8))
-        rr = np.sqrt(np.where(mask, np.maximum(r2, dtype(2.5e-3)), dtype(1.0)))
-        s6 = (lj_x / rr) ** 6
+        r2s = np.where(mask, np.maximum(r2, dtype(2.5e-3)), dtype(1.0))
+        ir2 = dtype(1.0) / r2s
+        s6 = lj_x6 * (ir2 * ir2 * ir2)
+        rr = np.sqrt(r2s)
         v = lj_d * (s6 * s6 - 2 * s6) - lj_shift
         v = v + qq * (erfc_approx(dtype(alpha) * rr, np) / rr - dtype(dsf_shift) + dtype(dsf_force) * (rr - dtype(rc)))
         return np.where(mask, v, dtype(0.0))
@@ -260,13 +270,23 @@ class PairTable:
 
         Each grid point is an exact sum over all atom pairs and all z-images
         (``|k| <= K`` as in the packer).  Only the (pair, z-image) terms that can
-        reach within the cutoff at that radius are evaluated, and with
-        ``symmetry=True`` the exchange relations
+        reach within the cutoff at that radius are evaluated (the z-window of
+        section 6 of the performance review: a pair whose closest possible lateral
+        approach is ``r - rad_p - rad_q`` can only reach z-images with
+        ``|z_p - z_q - k c| < sqrt(rc^2 - d^2)``), and with ``symmetry=True`` the
+        exchange relations
 
             flip 0:  W(r, a1, a2, dz) = W(r, a2 + 180, a1 + 180, -dz)
             flip 1:  W(r, a1, a2, dz) = W(r, 180 - a2, 180 - a1, dz)
 
-        halve the flip-0 work (only ``dz`` planes up to ``c/2`` are summed).
+        halve *both* flips.  Both are the same underlying symmetry -- swapping which
+        chain sits at the origin -- but they act differently on the sum, so they are
+        applied differently: exchange maps the term ``(p, q, t)`` (atom pair, z-image
+        index) to ``(q, p, -t)`` for flip 0 and to ``(q, p, t)`` for flip 1.  For
+        flip 0 that is a relation between the ``dz`` planes ``j`` and ``-j``, so only
+        planes up to ``c/2`` are summed and the rest are filled in; for flip 1 it acts
+        inside each plane, so only the ``p <= q`` half of the atom pairs is summed
+        (the diagonal at half weight) and the finished block is symmetrised.
         """
         import os
         import time
@@ -290,14 +310,24 @@ class PairTable:
         psi = np.arctan2(X[:, 1], X[:, 0])
         zc = X[:, 2]
         n = len(rad)
-        P, Q = (v.ravel() for v in np.meshgrid(np.arange(n), np.arange(n), indexing="ij"))
         ang = (2 * np.pi * np.arange(n_angle) / n_angle).astype(dtype)
         m_half = n_angle // 2
-        lx, ld, lq, ls = (np.asarray(a[P, Q], dtype=dtype) for a in (pk1.lj_x, pk1.lj_d, pk1.qq, pk1.lj_shift))
-        rp, rq = rad[P].astype(dtype), rad[Q].astype(dtype)
         batch = max(1, chunk_elems // (n_angle * n_angle))
+        pot = tuple(np.asarray(a, dtype=float) for a in (pk1.lj_x, pk1.lj_d, pk1.qq, pk1.lj_shift))
 
         for flip in (0, 1):
+            if symmetry and flip == 1:
+                P, Q = np.triu_indices(n)  # exchange maps (p, q, t) -> (q, p, t) here
+                half = P == Q
+            else:
+                P, Q = (v.ravel() for v in np.meshgrid(np.arange(n), np.arange(n), indexing="ij"))
+                half = None
+            lxb, ldb, lqb, lsb = (a[P, Q] for a in pot)
+            if half is not None:  # v is linear in (lj_d, qq, lj_shift): halve the diagonal terms
+                ldb, lqb, lsb = (np.where(half, 0.5 * a, a) for a in (ldb, lqb, lsb))
+            lx6 = (lxb ** 6).astype(dtype)
+            ld, lq, ls = (a.astype(dtype) for a in (ldb, lqb, lsb))
+            rp, rq = rad[P].astype(dtype), rad[Q].astype(dtype)
             psi_q = -psi if flip else psi
             z_q = -zc if flip else zc
             pp, pq = psi[P].astype(dtype), psi_q[Q].astype(dtype)
@@ -313,7 +343,8 @@ class PairTable:
             gap = rp[pair_i].astype(float) + rq[pair_i].astype(float)  # closest possible xy approach is r - gap
             zt2 = zt ** 2
 
-            def radial_block(irs, flip=flip, pp=pp, pq=pq, pair_i=pair_i, zt=zt, zt2=zt2, j_f=j_f, gap=gap):
+            def radial_block(irs, flip=flip, pp=pp, pq=pq, pair_i=pair_i, zt=zt, zt2=zt2, j_f=j_f, gap=gap,
+                             lx6=lx6, ld=ld, lq=lq, ls=ls, rp=rp, rq=rq):
                 for ir in irs:
                     r = r_values[ir]
                     keep = np.maximum(0.0, r - gap) ** 2 + zt2 < rc * rc
@@ -339,7 +370,7 @@ class PairTable:
                             eb = 2 * rd * rqb * cv
                             pref = (-2 * rp[b] * rq[b])[:, None, None]
                             r2 = ea[:, :, None] + eb[:, None, :] + pref * (cu[:, :, None] * cv[:, None, :] + su[:, :, None] * sv[:, None, :])
-                            v = _pot_batch(lx[b][:, None, None], ld[b][:, None, None], lq[b][:, None, None], ls[b][:, None, None],
+                            v = _pot_batch(lx6[b][:, None, None], ld[b][:, None, None], lq[b][:, None, None], ls[b][:, None, None],
                                            r2, rc, alpha, pk1.dsf_shift, pk1.dsf_force, dtype)
                             plane += v.sum(axis=0)
                         W[flip, ir, :, :, j] += plane.astype(np.float32)
@@ -354,6 +385,11 @@ class PairTable:
                 for j in range(n_z // 2 + 1, n_z):
                     src = W[0, :, :, :, (-j) % n_z]
                     W[0, :, :, :, j] = np.roll(np.swapaxes(src, 1, 2), (m_half, m_half), axis=(1, 2))
+            elif symmetry and flip == 1:
+                # W1 = V + S[V] with S[X][i1, i2] = X[m_half - i2, m_half - i1] and V the
+                # p <= q half sum (diagonal at half weight)
+                V = W[1]
+                W[1] = V + np.roll(np.swapaxes(V, 1, 2)[:, ::-1, ::-1, :], (m_half + 1, m_half + 1), axis=(1, 2))
         np.minimum(W, np.float32(cap), out=W)
         dt = time.perf_counter() - t_start
         if verbose:
@@ -422,6 +458,139 @@ class PairTable:
         return i0, fr - i0
 
 
+# ------------------------------------------------------------------ table cache
+# A table costs 5-25 s to build on the screen grid of :data:`polyfind.pack.SCREEN_TABLE`
+# and 35-150 s on this module's finer default, and depends only on the chain geometry
+# (coordinates, elements, charges, bonded-exclusion topology, repeat length) and on the
+# potential and grid parameters -- never on the cell.  So one build serves every
+# ``pack()`` call on the same conformation, and (through the optional on-disk copy) every
+# process of a multi-candidate run and every later run.
+_KEY_PARAMS = ("cutoff", "alpha", "eps_r", "r_min", "dr", "n_angle", "n_z", "cap", "dtype")
+_TABLE_CACHE: dict[str, PairTable] = {}
+_TABLE_STATS = {"builds": 0, "memory_hits": 0, "disk_hits": 0}
+
+
+def _build_defaults() -> dict:
+    import inspect
+
+    sig = inspect.signature(PairTable.build)
+    return {k: sig.parameters[k].default for k in _KEY_PARAMS}
+
+
+def table_key(chain: PeriodicChain, **kw) -> str:
+    """Cache key of the ``W`` table for ``chain`` and the given potential/grid settings.
+
+    Everything the table's *contents* depend on goes in: the chain's coordinates,
+    elements, charges, repeat length and bonded-exclusion matrices, and the potential
+    parameters (``cutoff``, ``alpha``, ``eps_r``) and grid (``r_min``, ``dr``,
+    ``n_angle``, ``n_z``, ``cap``, ``dtype``).  ``symmetry``, ``chunk_elems``,
+    ``n_threads`` and ``verbose`` only change how the same numbers are produced and are
+    deliberately not part of the key.  The cell parameters are not part of it either --
+    that is the point of the table.
+    """
+    import hashlib
+
+    p = _build_defaults()
+    for k, v in kw.items():
+        if k in p:
+            p[k] = v
+    h = hashlib.blake2b(digest_size=12)
+    h.update(np.ascontiguousarray(chain.coords, dtype=np.float64).tobytes())
+    h.update(np.ascontiguousarray(chain.charges, dtype=np.float64).tobytes())
+    h.update("|".join(chain.elements).encode())
+    for k in sorted(chain.same_site_scale):
+        h.update(f"{k}:".encode())
+        h.update(np.ascontiguousarray(chain.same_site_scale[k], dtype=np.float64).tobytes())
+    h.update(repr((float(chain.c),) + tuple(
+        np.dtype(p[k]).name if k == "dtype" else float(p[k]) for k in _KEY_PARAMS)).encode())
+    tag = "".join(ch if ch.isalnum() else "_" for ch in str(chain.name))[:24]
+    return f"{tag}-{h.hexdigest()}"
+
+
+def default_cache_dir() -> "str | None":
+    """On-disk table cache directory, from ``$POLYFIND_TABLE_CACHE``; ``None`` if unset."""
+    import os
+
+    return os.environ.get("POLYFIND_TABLE_CACHE") or None
+
+
+def _load_npz(path, chain: PeriodicChain) -> PairTable:
+    with np.load(path) as z:
+        m = z["meta"]
+        return PairTable(chain=chain, W=z["W"], r_min=float(m[0]), dr=float(m[1]), n_angle=int(m[2]),
+                         n_z=int(m[3]), c=float(m[4]), rc=float(m[5]), cap=float(m[6]),
+                         e_intra=z["e_intra"], build_time=float(m[7]))
+
+
+def _save_npz(path, table: PairTable) -> None:
+    import os
+
+    tmp = f"{path}.{os.getpid()}.tmp.npz"
+    np.savez(tmp, W=table.W, e_intra=np.asarray(table.e_intra, dtype=float),
+             meta=np.array([table.r_min, table.dr, table.n_angle, table.n_z, table.c, table.rc,
+                            table.cap, table.build_time], dtype=float))
+    os.replace(tmp, path)  # atomic: concurrent builders never see a half-written table
+
+
+def pair_table(chain: PeriodicChain, cache_dir: "str | None" = "env", memory: bool = True,
+               verbose: bool = False, **build_kw) -> PairTable:
+    """:meth:`PairTable.build`, memoised on :func:`table_key`.
+
+    Repeated calls for the same conformation and potential return *the same object*
+    (``memory=False`` disables the in-process cache).  ``cache_dir`` adds an on-disk
+    copy (``<key>.npz``, 7 MB on the screen grid, ~110 MB on the fine one) so that a
+    fresh process -- one worker of a multi-candidate run, or the next run of the
+    pipeline -- pays the build once too; the default ``"env"`` means
+    "``$POLYFIND_TABLE_CACHE`` if it is set, else no disk cache" (opt-in, so nothing is
+    written to a user's disk unasked), ``None`` disables it and any other value is used
+    as the directory.  The write is atomic, so concurrent builders cannot read a
+    half-written file, and an unreadable one is ignored rather than fatal.
+    """
+    import os
+
+    key = table_key(chain, **build_kw)
+    if memory and key in _TABLE_CACHE:
+        _TABLE_STATS["memory_hits"] += 1
+        return _TABLE_CACHE[key]
+    if cache_dir == "env":
+        cache_dir = default_cache_dir()
+    path = os.path.join(cache_dir, key + ".npz") if cache_dir else None
+    if path and os.path.exists(path):
+        try:
+            table = _load_npz(path, chain)
+            _TABLE_STATS["disk_hits"] += 1
+            if verbose:
+                print(f"table {chain.name}: loaded {table.nbytes / 1e6:.0f} MB from {path}")
+            if memory:
+                _TABLE_CACHE[key] = table
+            return table
+        except Exception as exc:  # a truncated or stale file must not be fatal
+            if verbose:
+                print(f"table {chain.name}: ignoring unreadable cache file {path} ({exc!r})")
+    table = PairTable.build(chain, verbose=verbose, **build_kw)
+    _TABLE_STATS["builds"] += 1
+    if memory:
+        _TABLE_CACHE[key] = table
+    if path:
+        os.makedirs(cache_dir, exist_ok=True)
+        try:
+            _save_npz(path, table)
+        except OSError as exc:
+            if verbose:
+                print(f"table {chain.name}: could not write {path} ({exc!r})")
+    return table
+
+
+def pair_table_cache_info() -> dict:
+    """``{'entries', 'bytes', 'builds', 'memory_hits', 'disk_hits'}`` for the in-process cache."""
+    return {"entries": len(_TABLE_CACHE), "bytes": sum(t.nbytes for t in _TABLE_CACHE.values()), **_TABLE_STATS}
+
+
+def clear_pair_table_cache() -> None:
+    """Drop the in-process tables (the on-disk copies, if any, are left alone)."""
+    _TABLE_CACHE.clear()
+
+
 # ------------------------------------------------------------------ lattice sums
 def _self_sign(flip) -> float:
     """Sign of the setting angle in the self term of chain 2.
@@ -488,7 +657,8 @@ def _shift_multiplier(theta_deg: float, n_angle: int) -> np.ndarray:
 
 
 def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=(0, 1), n_top: int = 20,
-               min_separation: float = 0.5, batch: int = 16, n_threads: int | None = None) -> ScreenResult:
+               min_separation: float = 0.5, batch: int = 16, n_threads: int | None = None,
+               ab_symmetry: bool = False) -> ScreenResult:
     """Evaluate the lattice energy on the *whole* ``(phi1, phi2, dz)`` grid for every
     ``(a, b)`` by one inverse FFT per cell.
 
@@ -499,6 +669,14 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
     terms depend on a single angle each and are interpolated directly on the phi
     grid.  The energies are identical (to float32) to :func:`table_energy` at the
     same grid points.
+
+    ``ab_symmetry=True`` skips the cells with ``b < a``: at ``gamma = 90`` swapping the
+    axes is a 90 deg rotation of the same lattice (``phi1, phi2 -> phi1 + 90, phi2 + 90``
+    leaves the energy unchanged), so the minimum over the angle/dz grid at ``(b, a)``
+    equals the one at ``(a, b)`` and half the FFTs are redundant.  Skipped cells are
+    left at ``+inf`` in :attr:`ScreenResult.energy`.  It is only valid at ``gamma = 90``
+    (elsewhere the swap is a reflection, which a chiral chain does not admit) and is
+    rejected otherwise.
     """
     import os
     import time
@@ -510,6 +688,8 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
     a_values = np.atleast_1d(np.asarray(a_values, dtype=float))
     b_values = np.atleast_1d(np.asarray(b_values, dtype=float))
     flips = tuple(int(f) for f in flips)
+    if ab_symmetry and abs(gamma - 90.0) > 1e-9:
+        raise ValueError("ab_symmetry is only a symmetry at gamma = 90 deg")
     na, nz, c = table.n_angle, table.n_z, table.c
     nz2 = nz // 2 + 1
     phi = 360.0 * np.arange(na) / na
@@ -541,6 +721,8 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
             for ia in ias:
                 a = a_values[ia]
                 for ib, b in enumerate(b_values):
+                    if ab_symmetry and b < a - 1e-9:
+                        continue
                     rs, ts = lattice_sites(a, b, gamma, r_max, centred=False)
                     da = phi[:, None] - ts[None, :]
                     self1 = 0.5 * table.interpolate(rs[None, :], da, da, 0.0, 0).sum(axis=1)
@@ -578,6 +760,8 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
     rows, es, keys = [], [], []
     for idx in order:
         ia, ib, fi = np.unravel_index(idx, shape)
+        if not np.isfinite(energy[ia, ib, fi]):
+            break
         a, b = float(a_values[ia]), float(b_values[ib])
         p = np.array([a, b, gamma, best[ia, ib, fi, 0], best[ia, ib, fi, 1], best[ia, ib, fi, 2], flips[fi]])
         k = (min(a, b), max(a, b), flips[fi])
@@ -593,20 +777,23 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
 
 
 def screen(chain: PeriodicChain, n_top: int = 20, a_range=None, b_range=None, da: float = 0.1, db: float = 0.1,
-           gamma: float = 90.0, flips=(0, 1), table: PairTable | None = None, **build_kw):
+           gamma: float = 90.0, flips=(0, 1), table: PairTable | None = None, min_separation: float = 0.5,
+           ab_symmetry: bool = False, **build_kw):
     """Exhaustive table screen over ``(a, b, phi1, phi2, dz, flip)``.
 
     Returns ``(params, energies, result)``: ``params`` is an ``(n_top, 7)`` array of
     candidate cells in the :class:`CrystalPacker` convention, ``energies`` their
     table energies (comparable with ``CrystalPacker.energy``), and ``result`` the
-    full :class:`ScreenResult`.
+    full :class:`ScreenResult`.  Without an explicit ``table`` the cached builder
+    :func:`pair_table` is used, so a second call on the same conformation is free.
     """
     if table is None:
-        table = PairTable.build(chain, **build_kw)
+        table = pair_table(chain, **build_kw)
     bounds = default_bounds(chain)
     a_range = a_range or bounds["a"]
     b_range = b_range or bounds["b"]
     a_values = np.arange(a_range[0], a_range[1] + 1e-9, da)
     b_values = np.arange(b_range[0], b_range[1] + 1e-9, db)
-    res = fft_screen(table, a_values, b_values, gamma=gamma, flips=flips, n_top=n_top)
+    res = fft_screen(table, a_values, b_values, gamma=gamma, flips=flips, n_top=n_top,
+                     min_separation=min_separation, ab_symmetry=ab_symmetry)
     return res.top, res.top_energy, res
