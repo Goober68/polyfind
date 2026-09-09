@@ -1,6 +1,6 @@
 # Extending polyfind beyond PVDF: a design
 
-Status: phase 1 is implemented; everything after it is design. The design was
+Status: phases 1 and 2 are implemented; everything after them is design. The design was
 produced as discussion during the performance-optimisation session and is
 recorded here so it does not disappear with the transcript. Claims about the
 current code have been checked against the code and are marked as such; the
@@ -12,12 +12,14 @@ potential (MACE with D3) as the expensive validator.
 
 ## 1. What the current model cannot express
 
-Verified against `src/polyfind/polymers.py` and `src/polyfind/pack.py`:
+Verified against `src/polyfind/polymers.py` and `src/polyfind/pack.py` as the code
+stood before phase 2; the first bullet has since been lifted, see phase 2 below.
 
-* `BackboneAtom` carries **one** `substituent` element, **one** `sub_bond`
+* `BackboneAtom` carried **one** `substituent` element, **one** `sub_bond`
   length and **one** `sub_charge`, all shared by both pendant atoms. The model
-  is therefore restricted to a backbone atom bearing two identical, single-atom
-  substituents.
+  was therefore restricted to a backbone atom bearing two identical, single-atom
+  substituents. *(Lifted in phase 2: each of the three now takes one value or a
+  pair. Still one atom per pendant, and still no tacticity.)*
 * `UFF_LJ` defines parameters for carbon, hydrogen, fluorine and chlorine only.
   Nitrogen and oxygen are absent, so nitrile and methoxy groups cannot be
   scored at all.
@@ -62,11 +64,59 @@ not metastable, the RIS reference state itself may need to be something other
 than all-trans.
 
 **Phase 2, asymmetric single-atom substituents (CFE CH2-C(F)(Cl), CDFE
-CHCl-CF2).** Give `BackboneAtom` two independent substituent specifications
-instead of one shared set. Default both to the same value so PE, PVDF and VDC
-are untouched and every existing test still passes. The change is confined to
-the dataclass and to wherever `chain.py` places the two pendants assuming they
-are identical. Small to medium.
+CHCl-CF2). Done.** `BackboneAtom`'s three per-pendant fields (`substituent`,
+`sub_bond`, `sub_charge`) each now accept *either* one value shared by both
+pendants *or* an explicit `(first, second)` pair; the positional signature and
+its old meaning are unchanged, so PE, PVDF and PVDC build byte-identical
+coordinates and charges (asserted by digest in `tests/test_cfe_cdfe.py`).
+`substituent_positions` takes the same one-or-two form for the bond length, which
+is why the coordinate builders in `pack.py` and `linegroup.py` -- which forward
+`spec.sub_bond` themselves rather than going through `build_chain` -- needed no
+change. The two pendants keep an **equal split** of `sub_angle` about the
+backbone bisector: any split preserves the specified inter-substituent angle, and
+an unequal one (VSEPR would tilt the bisector towards the smaller pendant) would
+need a parameter the monomer model does not carry. CFE and CDFE are registered
+with illustrative geometry and charges chosen the way PVDF's and PVDC's were.
+
+The finding, and it is the important part. A backbone atom with two different
+pendants is a stereocentre, so the chain now has a tacticity, and the builder
+silently picks one: pendants are placed on a fixed side of the local frame
+`(previous, this, next)`, so the invariant `(s1 - C).[(prev - C) x (next - C)]`
+has the same sign at every backbone atom, conformation-independently. **The chain
+built is the isotactic one** (verified two ways in the tests: the sign invariant,
+and the classical planar-zigzag same-side check). Syndiotactic and atactic chains
+are not expressible; a `Polymer.backbone` holding an explicit multi-monomer
+sequence, as already proposed for copolymers in section 3, is the natural way in.
+
+The consequence is that **`fit_ris`'s `symmetrize=True` default is no longer
+sound** for these chemistries. Mirror symmetrisation is exact for an achiral
+chain because reflecting a conformer maps `phi -> -phi` and returns the same
+molecule; for a chiral repeat the reflection returns the *enantiomeric chain*, so
+`E(phi)` and `E(-phi)` are energies of diastereomers and genuinely differ -- by
+hundreds of kcal/mol with the illustrative potential, against exactly zero for
+PVDF. Averaging them destroys precisely the asymmetry that makes an isotactic
+chain select a one-handed helix. Fit these with `symmetrize=False`.
+`Polymer.is_chiral` reports it, and `build_chain` warns once per polymer, because
+`fit_ris` is where the unsound default lives and the warning has to reach a user
+who never reads the polymer definition. Two further places still assume an
+achiral repeat and are left as they are: `helix.canonical_sequence` (hence
+`enumerate_periodic`) deduplicates a sequence against its G+/G- mirror, which for
+a chiral chain discards a distinct conformer rather than a redundant one, and
+`linegroup` counts a glide as a chain symmetry, which a chiral chain lacks.
+Both belong with tacticity support rather than with this phase.
+
+There is a correct replacement for `symmetrize`, and it is cheap. The symmetry a
+chiral chain does possess is mirror *composed with chain reversal*, since
+reversing the chain direction swaps `prev` and `next` and flips every
+stereocentre's configuration back: `E(phi_1..phi_N) = E(-phi_N..-phi_1)`, verified
+to machine precision here for CFE, CDFE and PVDF alike. In fitted-model terms,
+measured for B = 2, that reads `e1[b, s] = e1[1 - b, m(s)]` and
+`e2[b, s, s'] = e2[b, m(s'), m(s)]` -- a transpose and a bond-type swap on top of
+the state mirror. Both hold to grid noise (< 0.1 kcal/mol at step = 30 deg) for
+CFE and CDFE, while plain mirroring is violated by 12-45 kcal/mol; for PVDF both
+hold, which is why the existing code is right for the achiral chemistries.
+Teaching `symmetrize` that operation is a small change to `fit_ris`, left out of
+this phase only because it touches a file phase 2 did not own.
 
 **Phase 3, multi-atom pendant groups (AN CH2-CH(CN), VDCN CH2-C(CN)2, FANOME
 CH2-C(CN)(OCH3)).** A substituent becomes a small rigid fragment rather than an
