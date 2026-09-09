@@ -19,7 +19,8 @@ package plus the polarizations of DESIGN.md 5.5:
 
 * PE orthorhombic, beta-PVDF and alpha-PVDF: the cell edges, the repeat ``c`` and the
   density from :data:`polyfind.pipeline.EXPERIMENTAL_CELLS`;
-* beta-PVDF's spontaneous polarization, about 0.13 C/m^2;
+* beta-PVDF's spontaneous polarization, about 0.13 C/m^2 (but see the caveat at
+  ``P_BETA_EXPERIMENT``: that figure is a model estimate, not a measurement);
 * that alpha-PVDF's ground state is the *antipolar* cell (|P| = 0), expressed as the
   energy of the antipolar cell relative to the polar one -- the discriminator for the
   electrostatics, since alpha is the one entry of DESIGN.md 5.5 that the illustrative
@@ -65,9 +66,18 @@ from .refine import refine_crystal
 
 T, GP, GM = 0, 1, 2
 
-# Spontaneous polarizations (C/m^2).  Experimental value for beta-PVDF; alpha is the
-# antipolar phase, whose polarization is zero by symmetry.  DESIGN.md section 5.5.
-P_BETA_EXPERIMENT = 0.13
+# Spontaneous polarizations (C/m^2).  Alpha is the antipolar phase, whose polarization
+# is zero by symmetry.
+#
+# The beta value is a fit target and its provenance is now known to be shakier than the
+# name suggests: 0.13 is a *rigid-dipole model* estimate, not a measurement (docs/
+# REFERENCES.md, entry on the beta polarization).  Measured remanent polarizations for
+# the polymer span roughly 0.05 to 0.14 depending on orientation and preparation, while
+# perfect-crystal DFT gives 0.176 to 0.188 -- and a perfect crystal is what this package
+# actually computes, so the DFT range is arguably the right comparison.  The value is
+# left alone because changing it moves fitted parameters, and the fit it feeds did not
+# generalise anyway; it is queued for the next re-measurement.
+P_BETA_EXPERIMENT = 0.13  # see the caveat above before trusting this as "experimental"
 
 
 # --------------------------------------------------------------------- parameters
