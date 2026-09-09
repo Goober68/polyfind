@@ -13,17 +13,73 @@ from dataclasses import dataclass, field
 import numpy as np
 
 
+def pendant_pair(value, what: str) -> tuple:
+    """One value shared by both pendants, or an explicit ``(first, second)`` pair.
+
+    A bare scalar (or element symbol) means "both pendants are this", which is what
+    every symmetric monomer -- CH2, CF2, CCl2 -- wants and what every existing call
+    site passes positionally.  A 2-tuple/list gives the two pendants independently.
+    Strings are scalars here, not sequences (``"Cl"`` is one element, not two).
+    """
+    if isinstance(value, (tuple, list)):
+        if len(value) != 2:
+            raise ValueError(f"{what} must be one value or a pair of two, got {value!r}")
+        return (value[0], value[1])
+    return (value, value)
+
+
 @dataclass(frozen=True)
 class BackboneAtom:
-    """One backbone atom of the repeat unit and its two pendant substituents."""
+    """One backbone atom of the repeat unit and its two pendant substituents.
+
+    Each of ``substituent``, ``sub_bond`` and ``sub_charge`` is either a single value
+    shared by both pendants (the symmetric case: CH2, CF2, CCl2 -- and the original
+    meaning of the positional signature, kept unchanged) or an explicit
+    ``(first, second)`` pair for a backbone atom bearing two *different* pendants
+    (CFCl, CHCl).  Use the :attr:`substituents` / :attr:`sub_bonds` /
+    :attr:`sub_charges` properties to read them as normalised 2-tuples; the raw
+    fields are left as given so that consumers which only need the symmetric case
+    (and the pair-aware :func:`polyfind.chain.substituent_positions`) can go on
+    passing ``spec.sub_bond`` straight through.
+
+    ``sub_angle`` stays a single number: it is the angle *between* the two pendants,
+    which is one quantity however different they are.  See
+    :func:`polyfind.chain.substituent_positions` for how it is split between them.
+
+    A backbone atom whose two pendants differ is a stereocentre
+    (:attr:`is_stereocentre`); read :attr:`Polymer.is_chiral` before fitting an RIS
+    model for such a polymer.
+    """
 
     element: str
-    substituent: str  # element of both pendant atoms (H or F here)
-    sub_bond: float  # backbone-substituent bond length (A)
+    substituent: str | tuple[str, str]  # pendant element(s) (H, F, Cl here)
+    sub_bond: float | tuple[float, float]  # backbone-substituent bond length(s) (A)
     backbone_angle: float  # C(prev)-X-C(next) angle (deg)
     sub_angle: float  # substituent-X-substituent angle (deg)
     charge: float  # partial charge on the backbone atom (e)
-    sub_charge: float  # partial charge on each substituent (e)
+    sub_charge: float | tuple[float, float]  # partial charge(s) on the substituent(s) (e)
+
+    @property
+    def substituents(self) -> tuple[str, str]:
+        return pendant_pair(self.substituent, "substituent")
+
+    @property
+    def sub_bonds(self) -> tuple[float, float]:
+        return pendant_pair(self.sub_bond, "sub_bond")
+
+    @property
+    def sub_charges(self) -> tuple[float, float]:
+        return pendant_pair(self.sub_charge, "sub_charge")
+
+    @property
+    def is_stereocentre(self) -> bool:
+        """True when the two pendants differ, so the atom's configuration is a real
+        degree of freedom (strictly a pseudo-asymmetric centre in an infinite chain,
+        but it is what fixes the chain's tacticity)."""
+        e1, e2 = self.substituents
+        b1, b2 = self.sub_bonds
+        q1, q2 = self.sub_charges
+        return e1 != e2 or b1 != b2 or q1 != q2
 
 
 @dataclass(frozen=True)
@@ -59,7 +115,54 @@ class Polymer:
 
     @property
     def atoms_per_repeat(self) -> int:
+        # still exactly two pendants per backbone atom, identical or not
         return 3 * len(self.backbone)
+
+    @property
+    def is_chiral(self) -> bool:
+        """True when any backbone atom bears two *different* pendants.
+
+        Such an atom is a stereocentre, so the chain has a tacticity.  The builder
+        in :mod:`polyfind.chain` places pendant 1 on a fixed side of the local frame
+        ``(previous, this, next)`` at every backbone atom, which gives the same
+        configuration at every stereocentre relative to the chain direction: the
+        chain it builds is the **isotactic** one.  Syndiotactic and atactic chains
+        are not expressible in this model (see ``docs/CHEMISTRY_EXTENSION.md``).
+
+        The consequence for RIS fitting, and the reason this flag exists: for an
+        achiral chain, reflecting a conformer maps ``phi -> -phi`` and gives back
+        the *same* molecule, so ``E(G+) == E(G-)`` exactly and
+        :func:`polyfind.forcefield.fit_ris`'s ``symmetrize=True`` (which averages
+        the fitted energies with their G+/G- mirror image, and forces mirror-pair
+        state angles to equal magnitude) is exact.  For a chiral chain the mirror
+        image is the *enantiomeric* chain, a different molecule, so ``E(G+)`` and
+        ``E(G-)`` genuinely differ -- that difference is exactly what makes an
+        isotactic chain choose a one-handed helix.  Averaging it away is unsound
+        here: fit with ``symmetrize=False``.
+
+        What *does* survive, exactly, is mirror composed with chain reversal:
+        ``E(phi_1..phi_N) == E(-phi_N..-phi_1)``, because reversing the chain
+        direction swaps ``prev`` and ``next`` and so flips every stereocentre's
+        configuration back.  In fitted-model terms (measured, B = 2), that reads
+        ``e1[b, s] == e1[1 - b, m(s)]`` and ``e2[b, s, s'] == e2[b, m(s'), m(s)]``
+        -- a transpose and a bond-type swap on top of the state mirror.  Both hold
+        to grid noise for CFE and CDFE while plain mirroring is violated by tens of
+        kcal/mol, so a corrected ``symmetrize`` is available and cheap; it is just
+        not what :func:`polyfind.forcefield.fit_ris` currently does.  For an achiral
+        chain reversal is a symmetry on its own, which is why plain mirroring is
+        exact there and the existing code is right for PE, PVDF and PVDC.
+
+        The same assumption is baked in two more places, both left as they are:
+        :func:`polyfind.helix.canonical_sequence` (and hence
+        :func:`polyfind.enumerate.enumerate_periodic`) deduplicates a sequence
+        against its G+/G- mirror, which for a chiral chain discards a genuinely
+        distinct conformer rather than a redundant one; and
+        :mod:`polyfind.linegroup` counts a glide (mirror plus shift) as a chain
+        symmetry, which a chiral chain does not possess.  Both are correct for the
+        achiral chemistries and conservative-but-lossy for these; fixing them
+        properly belongs with tacticity support.
+        """
+        return any(a.is_stereocentre for a in self.backbone)
 
 
 # Illustrative point charges; each repeat unit is neutral.
@@ -112,7 +215,45 @@ PVDC = Polymer(
     ),
 )
 
-POLYMERS: dict[str, Polymer] = {"pvdf": PVDF, "pe": PE, "pvdc": PVDC}
+# --- Phase 2: asymmetric single-atom substituents (see docs/CHEMISTRY_EXTENSION.md).
+#
+# CFE and CDFE each carry a backbone atom with two *different* pendants, which the
+# monomer model could not express before.  Geometry and charges are illustrative and
+# chosen exactly the way PVDF's and PVDC's were: textbook C-F (1.35 A) and C-Cl
+# (1.77 A) bond lengths, an F-C-Cl / H-C-Cl angle interpolated between PVDF's F-C-F
+# (106 deg) and PVDC's Cl-C-Cl (110 deg), backbone angles kept equal for the reason
+# given at PVDF, and modest point charges that leave every backbone atom's group
+# (the atom plus its two pendants) exactly neutral, with the C-Cl dipole smaller
+# than C-F because chlorine is the less electronegative.  They are good enough to
+# exercise the pipeline; production numbers should be re-fitted with fit_ris.
+#
+# BOTH ARE CHIRAL (``Polymer.is_chiral``).  The pendant *order* below picks which
+# enantiomer of the isotactic chain gets built: swapping the two entries of a pair
+# gives the other one, whose energy landscape is this one's mirror image (the same
+# minima, at mirrored conformations), so the choice is arbitrary but has to be made.
+# What is not arbitrary is that G+ and G- are no longer equivalent for these chains:
+# fit them with ``fit_ris(..., symmetrize=False)``.
+CFE = Polymer(
+    name="cfe",
+    formula="-(CH2-CFCl)n-",
+    bond_length=1.54,
+    backbone=(
+        BackboneAtom("C", "H", 1.09, 114.0, 108.0, -0.20, +0.10),  # CH2
+        BackboneAtom("C", ("F", "Cl"), (1.35, 1.77), 114.0, 108.0, +0.30, (-0.20, -0.10)),  # CFCl
+    ),
+)
+
+CDFE = Polymer(
+    name="cdfe",
+    formula="-(CHCl-CF2)n-",
+    bond_length=1.54,
+    backbone=(
+        BackboneAtom("C", ("H", "Cl"), (1.09, 1.77), 114.0, 109.0, 0.00, (+0.10, -0.10)),  # CHCl
+        BackboneAtom("C", "F", 1.35, 114.0, 106.0, +0.40, -0.20),  # CF2
+    ),
+)
+
+POLYMERS: dict[str, Polymer] = {"pvdf": PVDF, "pe": PE, "pvdc": PVDC, "cfe": CFE, "cdfe": CDFE}
 
 
 def get_polymer(name: str) -> Polymer:

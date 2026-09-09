@@ -1,8 +1,17 @@
 import numpy as np
 import pytest
 
-from polyfind.chain import build_backbone, build_chain, build_chain_batch, distance, angle, dihedral, nerf
-from polyfind.polymers import PVDF, PE
+from polyfind.chain import (
+    build_backbone,
+    build_chain,
+    build_chain_batch,
+    distance,
+    angle,
+    dihedral,
+    nerf,
+    substituent_positions,
+)
+from polyfind.polymers import BackboneAtom, PVDF, PE
 
 
 def test_backbone_geometry_reproduced():
@@ -66,6 +75,50 @@ def test_build_chain_batch_matches_build_chain(polymer, n_dih, cap):
         np.testing.assert_allclose(coords[m], single.coords, atol=1e-9)
     # row 0 is exactly the template used to build it
     np.testing.assert_allclose(coords[0], template.coords, atol=1e-9)
+
+
+def test_substituent_positions_accepts_one_bond_length_or_two():
+    """A pair of bond lengths puts each pendant at its own distance and keeps the angle.
+
+    A single length must give exactly the old answer, bit for bit -- that is what lets
+    the callers in ``pack``/``linegroup`` go on forwarding ``spec.sub_bond`` unchanged.
+    """
+    p, x, n = np.array([-1.2, 0.9, 0.0]), np.zeros(3), np.array([1.3, 0.8, 0.2])
+    s1, s2 = substituent_positions(p, x, n, 1.35, 108.0)
+    t1, t2 = substituent_positions(p, x, n, (1.35, 1.35), 108.0)
+    assert s1.tobytes() == t1.tobytes() and s2.tobytes() == t2.tobytes()
+
+    a1, a2 = substituent_positions(p, x, n, (1.35, 1.77), 108.0)
+    assert np.linalg.norm(a1 - x) == pytest.approx(1.35, abs=1e-12)
+    assert np.linalg.norm(a2 - x) == pytest.approx(1.77, abs=1e-12)
+    # the inter-substituent angle is the specified one whatever the bond lengths...
+    cos = (a1 - x) @ (a2 - x) / np.linalg.norm(a1 - x) / np.linalg.norm(a2 - x)
+    assert np.degrees(np.arccos(cos)) == pytest.approx(108.0, abs=1e-9)
+    # ...and the equal-angle split means only the length changed: same direction as before
+    assert np.allclose(_unit_vec(a1 - x), _unit_vec(s1 - x), atol=1e-12)
+    assert np.allclose(_unit_vec(a2 - x), _unit_vec(s2 - x), atol=1e-12)
+
+
+def _unit_vec(v):
+    return v / np.linalg.norm(v)
+
+
+def test_substituent_positions_rejects_a_bad_pair():
+    p, x, n = np.array([-1.2, 0.9, 0.0]), np.zeros(3), np.array([1.3, 0.8, 0.2])
+    with pytest.raises(ValueError):
+        substituent_positions(p, x, n, (1.0, 1.2, 1.4), 108.0)
+
+
+def test_backbone_atom_scalar_and_pair_specs():
+    sym = BackboneAtom("C", "Cl", 1.77, 114.0, 110.0, +0.20, -0.10)
+    assert sym.substituents == ("Cl", "Cl")  # a two-letter symbol is one element, not two
+    assert sym.sub_bonds == (1.77, 1.77) and sym.sub_charges == (-0.10, -0.10)
+    assert not sym.is_stereocentre
+
+    asym = BackboneAtom("C", ("F", "Cl"), (1.35, 1.77), 114.0, 108.0, +0.30, (-0.20, -0.10))
+    assert asym.substituents == ("F", "Cl")
+    assert asym.sub_bonds == (1.35, 1.77) and asym.sub_charges == (-0.20, -0.10)
+    assert asym.is_stereocentre
 
 
 def test_all_trans_pvdf_rise():

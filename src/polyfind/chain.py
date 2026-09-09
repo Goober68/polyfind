@@ -15,15 +15,20 @@ Conventions
 * Consecutive RIS bonds ``j, j+1`` share atom ``j+2``; so pair type ``b``
   in :class:`polyfind.ris.RISModel` is centred on a backbone atom of type
   ``(b + 2) mod B``.
+* A backbone atom's two pendants may differ (CFCl, CHCl); each then has its own
+  element, bond length and charge, and pendant 1 always goes on the ``+w`` side of
+  the local frame, which makes every such chain isotactic.  See
+  :func:`substituent_positions` and :attr:`polyfind.polymers.Polymer.is_chiral`.
 """
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 
 import numpy as np
 
 from . import backend as bk
-from .polymers import Polymer
+from .polymers import Polymer, pendant_pair
 
 
 def _unit(v, xp):
@@ -97,15 +102,79 @@ def build_backbone(polymer: Polymer, dihedrals_deg, xp=None, bond_angles=None):
 
 
 def substituent_positions(x_prev, x, x_next, bond, sub_angle_deg, xp=np):
-    """Two substituents on atom x with backbone neighbours x_prev, x_next; shapes (..., 3)."""
+    """Two substituents on atom x with backbone neighbours x_prev, x_next; shapes (..., 3).
+
+    Both pendants lie in the plane through ``x`` spanned by the backbone-angle bisector
+    ``u`` and the backbone-plane normal ``w`` (i.e. the plane perpendicular to the
+    backbone plane), one on each side of ``u``, and the angle between them is exactly
+    ``sub_angle_deg``.
+
+    ``bond`` is either one length, shared by both pendants (the symmetric case, and
+    what every existing caller passes as ``spec.sub_bond``), or a ``(first, second)``
+    pair for a backbone atom bearing two different pendants -- so a caller that simply
+    forwards ``spec.sub_bond`` stays correct for asymmetric monomers too.
+
+    Angle-splitting convention: **equal split**, i.e. each pendant sits at
+    ``sub_angle_deg / 2`` from the bisector, whatever its bond length.  This is
+    defensible and is what the model can actually support: the pendants' bond lengths
+    do not by themselves determine how the angle should be shared, and a physically
+    motivated unequal split (VSEPR: the bulkier pendant pushes the smaller one, so the
+    bisector tilts towards the smaller one) would need a further per-monomer parameter
+    -- the two backbone-substituent angles separately -- that :class:`BackboneAtom`
+    does not carry.  Any split preserves the specified inter-substituent angle, since
+    the two directions are unit vectors at +/- half from ``u`` regardless of ``bond``;
+    only the placement relative to the backbone changes.  The equal split also keeps
+    the symmetric case bit-for-bit as it was.
+
+    Handedness, and hence tacticity: pendant 1 always goes on the ``+w`` side, with
+    ``w = unit((x_prev - x) x (x_next - x))`` fixed by the chain direction, so every
+    stereocentre of a chain gets the same configuration -- the chain built is the
+    isotactic one.  See :attr:`polyfind.polymers.Polymer.is_chiral`.
+    """
     n1 = _unit(x_prev - x, xp)
     n2 = _unit(x_next - x, xp)
     u = -_unit(n1 + n2, xp)  # bisector, pointing away from the backbone
     w = _unit(xp.cross(n1, n2), xp)  # normal to the backbone plane
+    b1, b2 = pendant_pair(bond, "bond")
     half = np.deg2rad(sub_angle_deg) / 2.0
-    s1 = x + bond * (np.cos(half) * u + np.sin(half) * w)
-    s2 = x + bond * (np.cos(half) * u - np.sin(half) * w)
+    s1 = x + b1 * (np.cos(half) * u + np.sin(half) * w)
+    s2 = x + b2 * (np.cos(half) * u - np.sin(half) * w)
     return s1, s2
+
+
+_CHIRAL_WARNED: set[str] = set()
+
+
+def warn_if_chiral(polymer: Polymer) -> None:
+    """Warn once per polymer that a chain with stereocentres has a tacticity.
+
+    Emitted from :func:`build_chain`, which every path into the funnel goes through
+    (the batched builder, ``pack.periodic_chain``, ``pack._template`` and hence the
+    packing search all build a template with it), so a user who fits or packs one of
+    these chemistries is told before they get numbers back.  ``fit_ris`` lives in a
+    module this cannot reach from here, and the unsound default -- ``symmetrize=True``
+    -- is *its* default, so the warning names it explicitly.
+    """
+    if not polymer.is_chiral or polymer.name in _CHIRAL_WARNED:
+        return
+    _CHIRAL_WARNED.add(polymer.name)
+    warnings.warn(
+        f"polymer {polymer.name!r} has backbone atoms with two different substituents, i.e. "
+        "stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side "
+        "of the local frame at every backbone atom); syndiotactic and atactic chains are not "
+        "expressible in this model. Because the repeat is chiral, G+ and G- conformers are no "
+        "longer mirror-equivalent, so fit_ris's default symmetrize=True (and its adapt_angles "
+        "mirror averaging) would average two genuinely inequivalent states -- exactly the "
+        "asymmetry that makes an isotactic chain pick a one-handed helix. Fit with "
+        "symmetrize=False; the relation that does still hold is mirror composed with chain "
+        "reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). For the same reason "
+        "enumerate_periodic's mirror deduplication "
+        "(helix.canonical_sequence) and linegroup's glide symmetry treat conformers as "
+        "equivalent that are not; both still assume an achiral repeat. "
+        "See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.",
+        UserWarning,
+        stacklevel=3,
+    )
 
 
 @dataclass
@@ -147,7 +216,11 @@ def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_angles=N
     ``bond_angles`` (shape ``(R,)``, see :func:`backbone_angle_lookup`) overrides the
     polymer's frozen backbone angles; the substituents are placed from the *actual*
     backbone neighbours, so they follow the changed geometry automatically.
+
+    For a polymer with stereocentres the chain built is the isotactic one; a warning
+    says so once (see :func:`warn_if_chiral`).
     """
+    warn_if_chiral(polymer)
     dih = np.asarray(dihedrals_deg, dtype=float)
     N = len(dih)
     B = polymer.bonds_per_repeat
@@ -173,10 +246,10 @@ def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_angles=N
             bonds.append((backbone_idx[k - 1], idx))
         s1, s2 = substituent_positions(bb_ext[k], x, bb_ext[k + 2], spec.sub_bond, spec.sub_angle, xp=np)
         subs = []
-        for s in (s1, s2):
-            elements.append(spec.substituent)
+        for s, s_el, s_q in zip((s1, s2), spec.substituents, spec.sub_charges):
+            elements.append(s_el)
             coords.append(s)
-            charges.append(spec.sub_charge)
+            charges.append(s_q)
             bonds.append((idx, len(elements) - 1))
             subs.append(len(elements) - 1)
         subs_of[idx] = subs
