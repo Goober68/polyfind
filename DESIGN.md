@@ -287,6 +287,14 @@ from the per-configuration kernel entirely.  Regression tests assert that a
 flip beyond the cutoff is free and that an isolated pair of chains costs
 exactly twice one chain.
 
+With the antiparallel branch reachable, the answer changes: **alpha-PVDF packs
+antiparallel**, and wins outright at 0.62 against 0.80 kcal/mol per monomer for
+the best parallel cell, at the experimental antipolar cell.  That is the
+correct result for alpha-PVDF, and it was unreachable before.  For gamma the
+parallel packing still wins.  For PE and beta the two orientations are exactly
+degenerate at the minimum, which is not a coincidence: both chains are
+mirror-symmetric about their own axis, so for them a flip is a rotation.
+
 ## 6. Limitations and roadmap
 
 * RIS uses rigid bond geometry and discrete states; the continuous refinement

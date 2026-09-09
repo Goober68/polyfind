@@ -121,8 +121,19 @@ exactly 180 deg).
 the state sequence: TT and T are 2/1 screws or mirror zigzags, TG+TG- has a
 glide, TTTG+TTTG- has a glide, TG+TG+ is a screw. Parametrise the repeat with
 that symmetry imposed (e.g. alpha: two free torsions (t, g) with the pattern
-(t, g, t, -g); beta: one deflection and two bond angles), so that the repeat
-transform is a pure translation *by construction* and the penalty disappears.
+(t, g, t, -g); beta: one deflection and two bond angles), so that the penalty
+has far less work to do.
+
+**Correction, established during implementation.** The claim originally made
+here, that imposing the symmetry makes the repeat transform a pure translation
+*by construction*, is wrong. A glide's repeat transform is the square of an
+improper isometry, which is a rotation by twice the glide's angle, not the
+identity. What the symmetry actually buys is a reduction in the number of
+closure conditions, from three scalar equations to one, and that one still has
+to be solved. The implementation therefore measures the rank of the closure
+Jacobian and solves the remaining conditions by a damped batched Newton step,
+which reaches a rotation residual of 1e-14 to 1e-11 degrees, against the ~2e-6
+floor of the arccos-based measure used elsewhere.
 Add the backbone bond angles of the repeat as variables (two for PVDF). The
 variable count drops from 6 + P to 6 + 2-4, and the refined geometry can
 finally reproduce the deflected zigzag.
@@ -314,3 +325,41 @@ more than evaluating it, and batching the builds alone made the fit 30x faster w
 bit-identical energies. The adaptive scan therefore ships as an opt-in for genuinely
 expensive calculators, where its evaluation count is what matters, rather than as the
 default.
+
+Section 3's implementation also settled a question the section raised, in the
+negative. Adding bond angles as variables does **not** let the beta chain
+reproduce its experimental geometry, and the reason is a constraint rather than
+a limitation of the optimiser. With one monomer per repeat, an all-trans
+chain's rotation residual is exactly the difference between its two backbone
+angles, and no choice of torsions can cancel it, so exact periodicity forces
+equal angles and exact trans. Allowing a two-monomer repeat does admit unequal
+angles through the glide, but the required torsion deflection is steep: the
+experimental 6-degree angle difference needs dihedrals near 153 and 207 degrees
+rather than the observed +/-172, at a cost of about 2.2 kcal/mol per monomer.
+With rigid, equal-length bonds the experimental combination of angles and
+torsions is simply not realisable. Relaxing bond lengths, not just angles, is
+what that would take.
+
+Wiring the tabulated screen into `pack()` produced the strongest scientific
+result of the exercise, and it depended on the flip fix above. With the
+antiparallel branch reachable for the first time, alpha-PVDF now packs
+antiparallel and wins outright, 0.62 against 0.80 kcal/mol per monomer for the
+best parallel cell, at the experimental antipolar cell. That is the correct
+answer for alpha-PVDF and the code could not previously express it. Both
+screens find it, so it is a consequence of the correctness fix rather than of
+the exhaustive search.
+
+The exhaustive screen matched the random screen's global minimum on all four
+chains while using five to nine times fewer exact-kernel evaluations, and it is
+three to six times faster once a table is cached. Its advantage is not a lower
+minimum but determinism: it cannot be unlucky. The two screens differ in which
+*secondary* minima they surface, and interestingly the random screen sometimes
+finds shallow distant basins the exhaustive one does not, because the latter's
+best cells concentrate near the deepest region.
+
+A second latent bug surfaced during that work, again through a reformulation
+rather than a test: the table's angular interpolation took its weight from the
+wrapped index, so an angle wrapping to exactly 360 degrees received weights of
+-47 and +48. Oblique cells scored -670 kcal/mol where the exact kernel gives
+-6.5. Right-angled cells were unaffected, so no previously reported packing
+result changed, but every non-orthogonal cell would have been nonsense.
