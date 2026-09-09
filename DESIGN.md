@@ -100,10 +100,39 @@ follows from the torsions.
 | Final re-scoring / relaxation of the top few | O(10) |
 
 The scan and the re-scoring can be run with the built-in potential, with any ASE
-calculator (a MACE or similar machine-learned potential is the intended
-production path: `ASECalculator`), or with DFT; everything downstream inherits
-that accuracy.  The scan is a batch of independent single points and goes
-through `energy_batch`, so a GPU-resident potential evaluates it as one batch.
+calculator via `ASECalculator`, or with DFT; everything downstream inherits that
+accuracy.  The scan is a batch of independent single points and goes through
+`energy_batch`, so a GPU-resident potential evaluates it as one batch.
+
+**Decision: no machine-learned-potential dependency, deliberately.**  An earlier
+version of this section called a foundation MLIP "the intended production path".
+That is withdrawn.  The reasoning, recorded here so it is not relitigated by
+someone arriving without the context:
+
+* The novelty of this package is the *search* - exact dynamic programming over
+  torsion states, the screw decomposition, the tabulated chain-pair interaction
+  with FFT lattice sums, the line-group parametrisation.  The potential is an
+  input to that machinery, not part of it, and reaching for a heavier input is
+  not progress on the method.
+* A foundation MLIP is not obviously more trustworthy here than a classical
+  potential.  Such models are trained overwhelmingly on inorganic crystals;
+  semicrystalline fluoropolymers are far outside that distribution, so an
+  unvalidated foundation model is a slower and more opaque unknown, not a
+  better one.  It has to be validated against known structures before it has
+  any authority, and if it is being validated against the same reference data a
+  classical potential could be fitted to, fitting is the cheaper answer.
+* What is actually wrong with `SimpleFF` is not that it is cheap, it is that it
+  is *unfitted*.  The funnel asks very little of a potential: torsion profiles
+  for a few bond types and nonbonded parameters for a handful of element pairs.
+  That is a small, well-posed fitting problem - a few hundred well-chosen
+  reference points, not thousands - and the result stays at microseconds per
+  evaluation, which is what keeps the exhaustive search viable.
+
+So `ASECalculator` stays, because supporting an external calculator costs
+nothing and an MLIP is a reasonable *validator* at the end of the funnel.  But
+no MLIP is a dependency of this package, none is installed, and the productive
+direction is fitting the cheap potential to the chemistry class of interest
+against reference data that already exists.
 
 ### 2.6 The amorphous fraction from the same transfer matrix (`amorphous.py`)
 
@@ -248,8 +277,8 @@ The melt-like ensemble at 450 K has 51% trans bonds, a mean trans run of 1.2
 bonds and a TTTT tetrad fraction of 0.002; chains leaving an all-trans stem
 advance 9.3 A on average along the stem axis, turn back with probability 0.32,
 and show no trans excess in their first free bond.  These numbers are what the
-funnel produces for *this* potential; with a fitted or machine-learned
-potential the same run costs the same three minutes.
+funnel produces for *this* potential; with a properly fitted one the same run
+costs the same three minutes.
 
 ### 5.4 What the illustrative potential gets wrong
 
