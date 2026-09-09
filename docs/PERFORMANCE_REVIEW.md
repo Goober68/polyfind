@@ -289,3 +289,28 @@ true constrained infimum at the basin edge. A principled fix, if this matters
 scientifically, is to define each RIS pair energy as -kT ln of the Boltzmann integral
 over its basin rather than as a basin minimum; that is the classical RIS definition, and
 it is insensitive to where (or whether) the minimum sits.
+
+Implementing section 1's tabulated chain-pair interaction surfaced a correctness bug in
+the packing kernel, described in DESIGN.md section 5.5: every antiparallel configuration
+carried a spurious constant of thousands of kcal/mol, so the antipolar half of the search
+space had never been reachable and every packed result in the documentation was parallel
+by construction rather than by energetics. It was found precisely because the tabulated
+formulation forces the intra-chain term to be isolated and named, where the direct kernel
+folded it into a per-configuration sum and hid it. That is worth recording as an argument
+for the reformulation independent of its speed: making a decomposition explicit exposes
+terms that an aggregate never checks. The fix and its regression tests are in `pack.py`.
+
+Section 4's process parallelism measured 1.3x, not the 4-8x estimated here. The estimate
+assumed candidates of comparable cost; in practice one candidate dominates (the gamma
+chain has 24 atoms per repeat against beta's 6), so wall time is set by the slowest
+candidate and adding workers cannot help. Speeding that stage further has to come from
+making the expensive candidate cheaper, which is what sections 1 and 2 do, or from
+parallelising within a candidate across its polish starts.
+
+Section 5's estimate was also wrong in an instructive direction. The projected win was a
+3-4x reduction in expensive-potential calls from the coarse-to-fine scan, and that held
+(2.84x). But it was not the bottleneck: building each scan conformer in Python cost far
+more than evaluating it, and batching the builds alone made the fit 30x faster with
+bit-identical energies. The adaptive scan therefore ships as an opt-in for genuinely
+expensive calculators, where its evaluation count is what matters, rather than as the
+default.

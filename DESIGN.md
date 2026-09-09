@@ -200,11 +200,16 @@ the search does not know which is a and which is b.
 | PVDF gamma TTTG+TTTG- | 5.40 x 8.92 x 9.11, 1.94 | 4.96 x 9.67 x 9.20, 1.94 |
 
 Cell edges are within about 7% and densities within about 5% with a potential
-that was never fitted to any of this.  The beta cell comes out with parallel
-(polar) chains, as it should.  For PE the herringbone arrangement (setting
-angles +/-48 deg from a, chain 2 offset by c/2) is found as the second minimum,
-0.01 kcal/mol per CH2 above a parallel arrangement, i.e. within the potential's
-accuracy.
+that was never fitted to any of this.  For PE the herringbone arrangement
+(setting angles +/-48 deg from a, chain 2 offset by c/2) is found as the second
+minimum, 0.01 kcal/mol per CH2 above a parallel arrangement, i.e. within the
+potential's accuracy.
+
+These runs predate the defect described in section 5.5, so their chain-to-chain
+*orientations* are not evidence of anything: every antiparallel arrangement
+carried a spurious penalty of thousands of kcal/mol and could never be
+selected.  The cell dimensions and densities in the table are unaffected,
+because they come from parallel packings, which were scored correctly.
 
 Continuous refinement then does what it is meant to: alpha relaxes to c = 4.70
 A with gauche angles at the potential's own minimum (+/-80 deg); gamma relaxes
@@ -223,8 +228,9 @@ The fitted model moves the gauche state to +/-80 deg, at which the TG+ chain
 becomes an 18/5 helix and gamma is no longer commensurate within 8 periods, so
 neither is packed; three candidates with 72-144 atoms per chain repeat are
 listed but skipped as too large for the packing kernel.  Lattice energies per
-monomer relative to beta: T3G+TG- +2.8, alpha +3.9, TG+TG+TG-TG- +4.4 (all
-polar, parallel-chain packings with this potential).  Refinement changes the
+monomer relative to beta: T3G+TG- +2.8, alpha +3.9, TG+TG+TG-TG- +4.4.  All
+four came out as parallel packings, but see section 5.5: antiparallel was
+unreachable when this run was made, so that is an artifact, not a result.  Refinement changes the
 alpha energy by -0.12 kcal/mol and the 8-bond glide chain by -0.45 kcal/mol
 per monomer, with commensurability residuals below 0.4 deg.
 
@@ -246,12 +252,40 @@ not quantitative:
   dipole alignment in the polar beta cell is over-rewarded;
 * its isolated-chain RIS ranking prefers the TG+ 3/1-type helix, which PVDF
   does not form;
-* it predicts the alpha packing as polar rather than antipolar, the antipolar
-  arrangement being 0.17 kcal/mol per monomer higher.
+* it puts the polar beta cell too low for the same reason.
 
-Every one of these is a property of the potential, not of the search, and the
+The first two are properties of the potential, not of the search, and the
 design routes a better potential to exactly the two places that fix them: the
-RIS fit and the final re-scoring.
+RIS fit and the final re-scoring.  A third claim once stood here, that the
+search predicts the alpha packing as polar rather than antipolar; it has been
+withdrawn, because the comparison it rested on was impossible to make at the
+time (section 5.5).
+
+### 5.5 A defect that invalidated every polarity result
+
+Chain 2 of a two-chain cell is made antiparallel by mirroring it to
+(x, -y, -z).  That mirror maps the chain's z-image k onto image -k, so the
+bonded-exclusion matrices, which are indexed by the unmirrored k, stopped
+excluding the flipped chain's own 1-2 and 1-3 pairs.  Those pairs sit 1.1 to
+1.5 A apart, so their Lennard-Jones repulsion landed in the total: a constant
+of about 3,200 kcal/mol per cell for PE and 6,290 for the PVDF chains, added
+to every antiparallel configuration and to nothing else.
+
+The test that exposes it is one line of physics: two chains 60 A apart cannot
+interact, so flipping one must cost nothing.  It cost 3,155 kcal/mol.
+
+Consequence: the antipolar half of the search space was unreachable in every
+run recorded above, which is why every packed result is parallel.  Nothing
+else was affected, since parallel configurations never touched the faulty
+term, and all previously reported energies for them are unchanged to nine
+decimal places.
+
+The fix follows from the same symmetry: a flip is an isometry of the chain, so
+its intra-chain sum cannot depend on orientation.  It is now computed once per
+chain and added as a constant, which also removes the exclusion bookkeeping
+from the per-configuration kernel entirely.  Regression tests assert that a
+flip beyond the cutoff is free and that an isolated pair of chains costs
+exactly twice one chain.
 
 ## 6. Limitations and roadmap
 
