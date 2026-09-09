@@ -431,10 +431,9 @@ class CrystalPacker:
         self.reach = self.rc + 2 * chain.radius + 0.5  # axis-axis distance beyond which no atom pair is within the cutoff
         self.e_torsion = self.torsion_energy(chain.dihedrals) * self.n_chains
         self._image_cache.clear()
-        # the intra-chain (same-site, (0,0,k)) sum is a constant for a rigid chain
-        v0, vf = bk.to_numpy(self._intra_column(self.X0[None], np.array([chain.c]), self.K, both=True))[:, 0]
-        self.e_intra = 0.5 * self.n_chains * v0
-        self.e_intra_flip = 0.5 * (v0 + vf) if self.n_chains == 2 else self.e_intra
+        # The intra-chain (same-site, (0,0,k)) sum is a constant for a rigid chain, and a
+        # flip is an isometry of the chain, so one value serves both orientations.
+        self.e_intra = 0.5 * self.n_chains * float(bk.to_numpy(self._intra_column(self.X0[None], np.array([chain.c]), self.K))[0])
 
     def torsion_energy(self, dihedrals) -> float:
         """Fourier torsion energy of one chain's repeat (kcal/mol)."""
@@ -538,34 +537,26 @@ class CrystalPacker:
         v = ir6 * (A * ir6 - B) + qq * (_erfc_pos(self.alpha * rr, xp) / rr) + qqf * rr + const
         return xp.where(mask, v, 0.0)
 
-    def _intra_column(self, coords, c, K: int, both: bool = False):
+    def _intra_column(self, coords, c, K: int):
         """Same-site (0,0,k) energy of ONE chain, per row of ``coords`` (M, n, 3).
 
-        With ``both`` also returns the value for the *flipped* chain, i.e. the mirrored
-        coordinates (x, -y, -z) scored with the unmirrored exclusion tensor.  Mirroring
-        maps block ``k`` onto block ``-k``, so the bonded exclusions of the flipped
-        chain should be ``S[-k]``; the kernel this replaces applied ``S[k]`` to both
-        chains, which leaves bonded pairs of an antiparallel chain unexcluded and adds
-        a large positive constant to every ``flip = 1`` configuration.  That constant is
-        reproduced here exactly so that energies are unchanged.
+        This is the only place the bonded-exclusion scales are needed.  Evaluating it
+        once per chain rather than once per configuration is what removes them from the
+        kernel -- and it is also a correctness fix: a flipped chain's coordinates are
+        mirrored to (x, -y, -z), which maps its z-image ``k`` onto image ``-k``, so
+        scoring it with ``S[k]`` (as a per-configuration (0,0,k) column must, having one
+        scale tensor for both chains) fails to exclude its bonded pairs and adds
+        thousands of kcal/mol to every antiparallel cell.  A flip is an isometry of the
+        chain, so the constant computed here is the same for either orientation.
         """
         xp = self.xp
         ks = xp.asarray(np.arange(-K, K + 1, dtype=float), dtype=self._dt)
         cz = xp.asarray(np.asarray(c, dtype=float), dtype=self._dt)
-        S = self._scale_column(K)[None]
-
-        def column(X):
-            D = X[:, :, None, :] - X[:, None, :, :]  # (M, n, n, 3)
-            dz = D[:, None, :, :, 2] - ks[None, :, None, None] * cz[:, None, None, None]
-            r2 = D[:, None, :, :, 0] ** 2 + D[:, None, :, :, 1] ** 2 + dz * dz
-            v = self._pair_energy(r2, self._A_nn, self._B_nn, self._qq_nn, self._qqf_nn, self._const_nn)
-            return (v * S).sum(axis=(1, 2, 3))
-
-        e0 = column(coords)
-        if not both:
-            return e0
-        mirror = xp.stack([coords[..., 0], -coords[..., 1], -coords[..., 2]], axis=-1)
-        return xp.stack([e0, column(mirror)])
+        D = coords[:, :, None, :] - coords[:, None, :, :]  # (M, n, n, 3)
+        dz = D[:, None, :, :, 2] - ks[None, :, None, None] * cz[:, None, None, None]
+        r2 = D[:, None, :, :, 0] ** 2 + D[:, None, :, :, 1] ** 2 + dz * dz
+        v = self._pair_energy(r2, self._A_nn, self._B_nn, self._qq_nn, self._qqf_nn, self._const_nn)
+        return (v * self._scale_column(K)[None]).sum(axis=(1, 2, 3))
 
     def energy(self, params, chunk_elems: int | None = None, coords=None, c=None, e_torsion=None) -> np.ndarray:
         """Lattice energy per cell (kcal/mol) for each row of params (M, 7).
@@ -597,17 +588,16 @@ class CrystalPacker:
             K = int(np.ceil(self.rc / float(c_arr.min()))) + 1
             reach = self.rc + 2 * float(np.linalg.norm(coords[:, :, :2], axis=2).max()) + 0.5
             e_add = np.full(M, self.e_torsion) if e_torsion is None else np.broadcast_to(np.asarray(e_torsion, dtype=float).ravel(), (M,)).copy()
-            i_chunk = max(1, chunk_elems // (2 * (2 * K + 1) * self.n * self.n))
+            i_chunk = max(1, chunk_elems // ((2 * K + 1) * self.n * self.n))
             intra = np.concatenate([
-                bk.to_numpy(self._intra_column(xp.asarray(coords[t : t + i_chunk], dtype=self._dt), c_arr[t : t + i_chunk], K, both=True))
+                bk.to_numpy(self._intra_column(xp.asarray(coords[t : t + i_chunk], dtype=self._dt), c_arr[t : t + i_chunk], K))
                 for t in range(0, M, i_chunk)
-            ], axis=1)  # (2, M): unflipped, flipped
-            anti = (params[:, 6] > 0.5) & (self.n_chains == 2)
-            e_add = e_add + np.where(anti, 0.5 * (intra[0] + intra[1]), 0.5 * self.n_chains * intra[0])
+            ])
+            e_add = e_add + 0.5 * self.n_chains * intra
         else:
             c_arr = None
             K, reach = self.K, self.reach
-            e_add = self.e_torsion + np.where(params[:, 6] > 0.5, self.e_intra_flip, self.e_intra)
+            e_add = np.full(M, self.e_torsion + self.e_intra)
         order = np.argsort(params[:, 0] * params[:, 1] * np.sin(np.deg2rad(params[:, 2])))
         params = params[order]
         out = np.empty(M)

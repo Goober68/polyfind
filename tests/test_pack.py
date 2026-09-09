@@ -70,6 +70,53 @@ def test_pe_packing_recovers_orthorhombic_cell():
     assert "_cell_length_a" in cif and cif.count("\nC") == 4
 
 
+@pytest.mark.parametrize("poly,seq", [(PE, [T]), (PVDF, [T, T]), (PVDF, [T, GP, T, GM]), (PVDF, [T, T, T, GP, T, T, T, GM])])
+def test_flipping_a_chain_beyond_the_cutoff_costs_nothing(poly, seq):
+    """A flip is an isometry of the chain, so at infinite separation it is free.
+
+    The chain-2 coordinates are mirrored to (x, -y, -z), which maps its z-image k onto
+    image -k; scoring it with the unmirrored exclusion matrices left its bonded pairs
+    unexcluded and put thousands of kcal/mol on every antiparallel cell, so the
+    antiparallel half of the search space was unreachable.
+    """
+    ch = periodic_chain(poly, seq, THREE_STATE)
+    pk = CrystalPacker(ch, n_chains=2)
+    far = 60.0  # >> cutoff + 2 * chain radius: the two chains cannot interact
+    para = np.array([[far, far, 90.0, 37.0, 111.0, 0.7, 0.0]])
+    anti = para.copy()
+    anti[0, 6] = 1.0
+    e_para, e_anti = float(pk.energy(para)[0]), float(pk.energy(anti)[0])
+    assert e_anti == pytest.approx(e_para, abs=1e-9)
+    # and both are exactly the two isolated chains: intra + torsion, no interaction
+    assert e_para == pytest.approx(pk.e_intra + pk.e_torsion, abs=1e-9)
+    single = CrystalPacker(ch, n_chains=1)
+    assert e_para == pytest.approx(2.0 * float(single.energy(np.array([[far, far, 90.0, 0.0, 0.0, 0.0, 0.0]]))[0]), abs=1e-9)
+
+
+def test_antiparallel_packing_is_competitive_at_contact():
+    """At a realistic cell the two orientations differ by ordinary packing energies.
+
+    The exclusion bug put ~3200 (PE) to ~6290 (PVDF) kcal/mol per cell on flip=1, so
+    antiparallel could never win; the honest difference is a few kcal/mol per monomer,
+    and for alpha-PVDF antiparallel is the lower of the two once relaxed.
+    """
+    keys = ["a", "b", "gamma", "phi1", "phi2", "dz"]
+    for poly, seq, cell in ((PE, [T], [4.95, 7.42]), (PVDF, [T, GP, T, GM], [4.96, 9.64])):
+        ch = periodic_chain(poly, seq, THREE_STATE)
+        pk = CrystalPacker(ch)
+        bd = default_bounds(ch)
+        lo = np.array([bd[k][0] for k in keys])
+        hi = np.array([bd[k][1] for k in keys])
+        free = [i for i in range(6) if hi[i] > lo[i]]
+        e = {}
+        for flip in (0.0, 1.0):
+            p = np.array([cell[0], cell[1], 90.0, 45.0, 135.0, 0.5 * ch.c, flip])
+            assert abs(float(pk.energy(p[None])[0])) < 500.0  # not the bug's ~3000-6300
+            x = polish(pk, p, lo, hi, free)
+            e[flip] = float(pk.energy(x[None])[0]) / (pk.n_chains * ch.n_monomers)
+        assert abs(e[1.0] - e[0.0]) < 5.0  # kcal/mol per monomer
+
+
 def test_polish_lbfgs_reaches_the_nelder_mead_minimum_with_fewer_calls():
     ch = periodic_chain(PE, [T], THREE_STATE)
     packer = CrystalPacker(ch, n_chains=2)
