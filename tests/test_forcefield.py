@@ -84,25 +84,21 @@ def test_dense_scan_batched_matches_unbatched_reference():
 
 @pytest.mark.parametrize("polymer,n_monomers", [(PE, 8), (PVDF, 6)])
 def test_adaptive_matches_dense_10deg_fit(polymer, n_monomers):
-    """The adaptive (coarse-to-fine) fit must reproduce the dense 10-degree scan's first-
-    and second-order energies: never meaningfully worse, often better since it is not
-    confined to a grid, with the same mirror symmetry, the same basin-angle signs, and
-    several times fewer calculator evaluations.
+    """The adaptive (coarse-to-fine) fit must reproduce the dense (default) 10-degree
+    scan's first- and second-order energies: never meaningfully worse, often better since
+    it is not confined to a grid, with the same mirror symmetry, the same basin-angle
+    signs, and several times fewer calculator evaluations.
 
-    The lower bound on second_order is wider than first_order's, for one documented case:
-    PVDF's CF2-centred G+/G- pair (bond type 1). Its energy has no interior critical point
-    near the G+/T basin boundary -- scanning phi from 100 to 140 deg (crossing straight
-    through the boundary at 120) at each point's own best psi gives a smooth, monotonically
-    *decreasing* profile (E ~= 7.8, 5.1, 4.88 (at phi=120), 4.7, 4.04 (at phi=140), ...; no
-    kink, no minimum). So the true infimum of a *correctly* bounded search of the G+/G-
-    basin (open at 120, matching ``_basins``' tie-break -- see ``_basin_bounds``) sits
-    right at that basin edge, at ~4.85 kcal/mol: excluding the single boundary point cannot
-    raise the infimum of a continuous, monotonic function approaching it. The dense scan
-    reports a much higher 8.17 kcal/mol only because step=10 deg is too coarse to sample
-    anywhere near that edge (its adjacent grid points are 110 deg, E ~= 10.2, and 120 deg
-    itself, excluded by the same tie-break). Adaptive is not confined to that resolution
-    limit and correctly finds the lower, edge-of-basin value; everywhere else the two agree
-    closely.
+    One matrix entry is excluded from the ``second_order`` comparison here: PVDF's
+    CF2-centred G+/G- pair (bond type 1), whose basin has no interior minimum -- see
+    ``test_adaptive_pvdf_g_plus_g_minus_has_no_interior_minimum``, which checks it
+    explicitly instead. Everywhere else -- including PE's own G+/G- pair (whose basin
+    *does* have an interior minimum, just close to the basin edge) and PVDF's CH2-centred
+    G+/G+ pair (a real, fairly sharp bowl around (86, 86) deg that the dense grid samples
+    only at (90, 80), verified by a 2-degree brute-force scan) -- adaptive matches dense
+    within [-0.6, +0.1] kcal/mol: it is never meaningfully worse, and where it is better
+    by more than refinement noise, that reflects genuine sub-grid curvature dense's grid
+    is too coarse to resolve, not an error.
     """
     dense = fit_ris(polymer, SimpleFF(), step=10.0, n_monomers=n_monomers, third_order=True, scan="dense")
     adap = fit_ris(polymer, SimpleFF(), step=10.0, n_monomers=n_monomers, third_order=True, scan="adaptive")
@@ -110,10 +106,15 @@ def test_adaptive_matches_dense_10deg_fit(polymer, n_monomers):
     d1, a1 = dense.model.first_order, adap.model.first_order
     d2, a2 = dense.model.second_order, adap.model.second_order
 
+    mask = np.ones_like(d2, dtype=bool)
+    if polymer is PVDF:
+        gp, gm = THREE_STATE.index("G+"), THREE_STATE.index("G-")
+        mask[1, gp, gm] = mask[1, gm, gp] = False
+
     assert np.all(a1 <= d1 + 0.1)
     assert np.all(a1 >= d1 - 0.5)
-    assert np.all(a2 <= d2 + 0.1)
-    assert np.all(a2 >= d2 - 5.0)
+    assert np.all(a2[mask] <= d2[mask] + 0.1)
+    assert np.all(a2[mask] >= d2[mask] - 0.6)
 
     mir = np.array(polymer.states.mirror)
     assert np.allclose(a1, a1[:, mir], atol=1e-8)
@@ -124,3 +125,36 @@ def test_adaptive_matches_dense_10deg_fit(polymer, n_monomers):
         assert np.sign(adap.argmin1[b]["G-"]) == np.sign(dense.argmin1[b]["G-"])
 
     assert dense.n_evaluations >= 2.5 * adap.n_evaluations
+
+
+def test_adaptive_pvdf_g_plus_g_minus_has_no_interior_minimum():
+    """PVDF's CF2-centred (bond type 1) G+/G- pair is the one place adaptive and dense
+    disagree by more than grid/refinement noise, and it is expected, not a bug: this
+    basin has no interior critical point near the G+/T boundary. Scanning phi from 100 to
+    140 deg (crossing straight through the nominal boundary at 120) at each point's own
+    best psi gives a smooth, monotonically *decreasing* profile (E ~= 7.8, 5.1, 4.88 (at
+    phi=120), 4.7, 4.04 (at phi=140), ...; no kink, no minimum). So the true infimum of a
+    correctly bounded search of the open G+/G- basin (matching ``_basins``' tie-break --
+    see ``_basin_bounds``) sits at its own edge, at ~4.85 kcal/mol; excluding the single
+    boundary point cannot raise the infimum of a continuous, monotonic function
+    approaching it. The dense step=10 deg scan reports a much higher ~8.17 kcal/mol only
+    because it is too coarse to sample anywhere near that edge (its neighbouring grid
+    points are 110 deg, E ~= 10.2, and 120 deg itself, excluded by the same tie-break).
+    This is asserted explicitly, as expected behaviour, rather than folded into a widened
+    tolerance in the general accuracy test above.
+    """
+    dense = fit_ris(PVDF, SimpleFF(), step=10.0, n_monomers=6, scan="dense")
+    adap = fit_ris(PVDF, SimpleFF(), step=10.0, n_monomers=6, scan="adaptive")
+    gp, gm = THREE_STATE.index("G+"), THREE_STATE.index("G-")
+
+    d = dense.model.second_order[1, gp, gm]
+    a = adap.model.second_order[1, gp, gm]
+    assert d == pytest.approx(8.17, abs=0.2)
+    assert a == pytest.approx(4.85, abs=0.2)
+    assert a - d < -3.0  # a large, expected improvement -- not refinement noise
+
+    # neither coordinate sits exactly on the G+/T (or G-/T) tie boundary that _basins
+    # would reassign to T, but adaptive does ride right up against one of them
+    phi, psi = adap.argmin2[1][("G+", "G-")]
+    assert phi != 120.0 and psi != -120.0
+    assert min(abs(phi - 120.0), abs(psi + 120.0)) < 1e-3

@@ -593,7 +593,7 @@ def fit_ris(
     adapt_angles: bool = True,
     third_order: bool = False,
     cap: float = 50.0,
-    scan: str = "adaptive",
+    scan: str = "dense",
     coarse_step: float = 30.0,
 ) -> FitReport:
     """Derive an RIS model from dihedral scans of a short oligomer.
@@ -615,13 +615,21 @@ def fit_ris(
 
     ``scan`` selects the search strategy:
 
-    * ``"dense"``: the original ``step``-degree grid over the full 360 deg, basin minima
-      read off the grid -- exact and reproducible, but most points are far from any basin.
-    * ``"adaptive"`` (default): a coarse (``coarse_step``, default 30 deg) grid locates each
-      basin, then a bounded quadratic-interpolation refinement (not restricted to a grid, so
-      it can find basin minima at least as good as the dense scan's, usually better) polishes
-      each basin's minimum at ``step`` resolution. Several times fewer evaluations than the
-      dense scan for comparable or better accuracy.
+    * ``"dense"`` (default): the original ``step``-degree grid over the full 360 deg,
+      basin minima read off the grid -- exact and reproducible, but most points are far
+      from any basin.
+    * ``"adaptive"``: a coarse (``coarse_step``, default 30 deg) grid locates each basin,
+      then a bounded local refinement (not restricted to a grid) polishes each basin's
+      minimum at ``step`` resolution, for several times fewer evaluations.
+
+    Dense is the default because, once batched, it is already cheap with the built-in
+    potential (0.29 s vs. adaptive's 0.22 s for a full PVDF fit) -- adaptive's ~2.8x fewer
+    evaluations only pays for itself when the calculator is expensive (an MLIP or DFT).
+    In exchange, adaptive is not confined to the grid at all: where a state pair's basin
+    has no interior minimum (its energy just falls monotonically towards a neighbouring
+    state), adaptive reports the true basin-edge infimum rather than the grid's best
+    sample, which can materially change that pair's fitted energy. So treat ``"adaptive"``
+    as an informed opt-in for expensive calculators, not a drop-in speedup.
     """
     B = polymer.bonds_per_repeat
     N = max(n_monomers * B, 2 * B + 6)
