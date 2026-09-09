@@ -114,8 +114,9 @@ class SimpleFF:
     # --- energies -------------------------------------------------------------
     def _energy_from_coords(self, top: _Topology, coords, xp):
         """coords: (M, n, 3) on the active backend -> (M,) energies."""
-        ri = coords[:, top.pairs_i]
-        rj = coords[:, top.pairs_j]
+        pi, pj = xp.asarray(top.pairs_i), xp.asarray(top.pairs_j)
+        ri = coords[:, pi]
+        rj = coords[:, pj]
         r = xp.sqrt(((ri - rj) ** 2).sum(axis=-1))
         lj_x = xp.asarray(top.lj_x)
         lj_d = xp.asarray(top.lj_d)
@@ -125,7 +126,8 @@ class SimpleFF:
         e_c = (qq / r).sum(axis=1)
         e_t = xp.zeros(coords.shape[0])
         if top.torsions.size:
-            a, b, c, d = (coords[:, top.torsions[:, k]] for k in range(4))
+            tors = xp.asarray(top.torsions)
+            a, b, c, d = (coords[:, tors[:, k]] for k in range(4))
             b0, b1, b2 = b - a, c - b, d - c
             n1, n2 = xp.cross(b0, b1), xp.cross(b1, b2)
             x = (n1 * n2).sum(-1)

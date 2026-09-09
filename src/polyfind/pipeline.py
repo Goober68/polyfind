@@ -46,6 +46,7 @@ class PipelineConfig:
     k_per_period: int = 60
     top_k_pack: int = 3
     pack_known: bool = True  # always pack the known polymorph chains too (for validation)
+    max_atoms_per_chain: int = 48  # skip candidates whose crystallographic repeat is larger (cost ~ atoms^2)
     n_random: int = 3000
     n_refine: int = 4
     refine: bool = True
@@ -131,7 +132,13 @@ def run_pipeline(cfg: PipelineConfig, verbose: bool = True) -> PipelineResult:
 
     # 3. packing
     t0 = time.time()
-    packable = [c for c in cands if c.helix.c is not None]
+    def n_atoms(c):
+        return 3 * c.period * (c.helix.periods_per_repeat or 0)
+
+    packable = [c for c in cands if c.helix.c is not None and n_atoms(c) <= cfg.max_atoms_per_chain]
+    skipped = [c for c in cands if c.helix.c is not None and n_atoms(c) > cfg.max_atoms_per_chain]
+    for c in skipped[:5]:
+        log(f"      not packing {c.name} ({n_atoms(c)} atoms per chain repeat > {cfg.max_atoms_per_chain})")
     to_pack = list(packable[: cfg.top_k_pack])
     if cfg.pack_known:
         for c in packable:
