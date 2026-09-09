@@ -373,3 +373,25 @@ wrong. Two lessons: a verification that fails on the case where the answer is
 known is evidence about the verification, not only about the claim; and the
 fix was to make the code validate the relation itself at fit time, so it is
 applied only where it measurably holds, rather than to trust either of us.
+
+The chirality work corrected my brief a second time, in the same direction. I
+told that agent that "chain reversal stays a symmetry in both cases". It does
+not. Reading an isotactic chain backwards swaps each stereocentre's neighbours,
+so plain reversal returns the enantiomer just as reflection does; measured on
+24-bond oligomers, reversal alone and reflection alone give bit-identical
+energies, both differing from the original by up to 749 kcal/mol for CFE and
+5103 for CDFE, while the two composed give zero to machine precision. All three
+are zero for PE, PVDF and PVDC, which is why the achiral cases never exposed
+it. The symmetry group of a chiral repeat is therefore shifts plus
+reflection-with-reversal, and nothing else - exactly the operation the fitting
+code had already been driven to.
+
+The same agent's own achiral control caught a false alarm before it reached me.
+Its first angle check reported a 120-degree symmetry violation for PVDC, an
+achiral polymer where the residual must vanish. Rather than report it, it looked
+again and found the cause: that polymer's trans basin is a degenerate double
+well whose two minima differ by 4e-13 kcal/mol, so the choice between them is an
+argmin tie-break, not a physical asymmetry. The check was wrong, not the claim.
+That is the second time on this project that a verification failing on a known
+case was evidence about the verification, and the first time the discipline was
+applied without me having to intervene.
