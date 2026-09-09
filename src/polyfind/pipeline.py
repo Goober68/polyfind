@@ -26,6 +26,12 @@ from .refine import RefineResult, refine_crystal
 from .ris import RISModel
 
 # Reference unit cells (a, b, c in A, density g/cm^3), literature values, approximate.
+# Every entry is sourced and given a verdict in docs/REFERENCES.md section 1; consult
+# that before treating any of these as ground truth.  Two caveats recorded there:
+#   * the gamma cell is monoclinic with beta ~ 93 deg, which this table does not carry
+#     (the search fits the cell angle freely, so nothing computed depends on it);
+#   * the gamma density of 1.94 does not follow from the gamma cell beside it, which
+#     gives 1.93.  Left alone deliberately -- changing it shifts a reported table.
 EXPERIMENTAL_CELLS = {
     "pvdf": {
         "beta (TTTT)": (8.58, 4.91, 2.56, 1.97),

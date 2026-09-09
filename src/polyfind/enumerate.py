@@ -19,7 +19,9 @@ from .polymers import Polymer
 from .ris import RISModel
 
 # Known polymorph chain conformations (canonical forms are compared, so any
-# equivalent writing of the sequence matches).
+# equivalent writing of the sequence matches).  All three assignments, and the
+# alpha/delta and gamma/epsilon pairings, are confirmed against the crystallography
+# in docs/REFERENCES.md sections 2.1 and 4.2.
 KNOWN_CHAINS: dict[str, dict[str, str]] = {
     "pvdf": {"beta (TTTT)": "TT", "alpha/delta (TGTG')": "TG+TG-", "gamma/epsilon (T3GT3G')": "TTTG+TTTG-"},
     "pe": {"orthorhombic (all-trans)": "T"},

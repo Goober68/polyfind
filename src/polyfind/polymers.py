@@ -425,6 +425,11 @@ PVDF = Polymer(
         # repeat to 5.12 A, and the intermediate layer line that doubling requires is not
         # present in the diffraction pattern.  Hasegawa's own fit used a statistically
         # disordered structure at c = 2.56 A.
+        #
+        # Every sentence of the paragraph above is sourced in docs/REFERENCES.md
+        # sections 2.2 and 2.3.  Note the spread there: 114.4 deg is one DFT value,
+        # and determinations range over 112.1-114.4 deg, so the 114.0 used here sits
+        # near the top of the range rather than at a single agreed number.
         BackboneAtom("C", "H", 1.09, 114.0, 108.0, -0.20, +0.10),  # CH2
         BackboneAtom("C", "F", 1.35, 114.0, 106.0, +0.40, -0.20),  # CF2
     ),
@@ -445,6 +450,14 @@ PE = Polymer(
 # preferences.  Charges are illustrative and each backbone atom is neutral, as for
 # PVDF; the C-Cl dipole is set smaller than C-F, chlorine being the less
 # electronegative.  Backbone angles are kept equal for the reason given above.
+#
+# That last sentence borrows PVDF's justification, and for PVDC it does not hold.
+# The published structure (Takahagi, Chatani, Kusumoto & Tadokoro, Polym. J. 20,
+# 883 (1988)) has *unequal* backbone angles, C-CH2-C = 123 deg and C-CCl2-C = 114
+# deg, the wide one being exactly how the real chain relieves the Cl...Cl crowding
+# that the strain note below measures.  Applying it would shift every PVDC energy,
+# so it is queued rather than changed; see docs/REFERENCES.md, "Changes that need
+# re-measurement".
 #
 # Caveat, measured rather than assumed: with these rigid angles the all-trans
 # chain carries about 313 kcal/mol of Lennard-Jones strain (PVDF: 9), because a

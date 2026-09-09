@@ -54,6 +54,15 @@ breaks down. The *direction* is correct, since PVDC is known not to adopt the
 planar zigzag that PVDF's beta phase does, but the magnitude is an artifact of
 rigid geometry rather than a property of the polymer.
 
+That direction has since been checked against the crystallography and holds:
+PVDC's crystal conformation is a *glide TGTG' form* with internal rotation
+angles of 175 deg and 49 deg, in a monoclinic cell with the fibre axis at
+4.68 A. The same structure also shows that the diagnosis above is right for a
+concrete reason - the real chain relieves the Cl...Cl crowding by opening the
+C-CH2-C backbone angle to 123 deg, against 114 deg at the CCl2 carbon, which is
+precisely the degree of freedom this model freezes. See `docs/REFERENCES.md`
+section 6.
+
 The lesson generalises: the rigid-bond-angle assumption is already flagged as a
 compromise for PVDF, where it is second order. For any substituent bulkier than
 fluorine it becomes first order, and both the chlorine chemistries here and the

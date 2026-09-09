@@ -82,7 +82,11 @@ coarse random screen is followed by Nelder-Mead polishing of the best few.
 ### 2.4 Continuous refinement inside the basin (`refine.py`)
 
 The discrete stage uses ideal angles and rigid geometry; real chains deflect
-(beta-PVDF dihedrals near +/-172 deg, alpha gauche near +/-45 deg).  The
+from the ideal RIS angles.  (This sentence used to give two examples,
+"beta-PVDF dihedrals near +/-172 deg, alpha gauche near +/-45 deg".  The first
+is withdrawn - beta's torsions are exactly trans, section 5.8 - and the second is
+unverified, sources putting alpha's gauche anywhere from 45 to 62 deg:
+`docs/REFERENCES.md` sections 2.2 and 2.4.)  The
 torsions of one crystallographic repeat and the cell are relaxed together
 against the lattice energy, with the chain kept periodic by a quadratic penalty
 on the residual rotation of the repeat transform (the linked-atom / helical-
@@ -161,7 +165,7 @@ Measured on this machine (4 CPU cores, NumPy, no GPU), PVDF three-state model.
 | High-fidelity potential calls | 10^6+ | ~3k for the fit + O(10) at the end |
 
 All dynamic-programming routines are checked against brute-force enumeration in
-the test suite (72 tests).
+the test suite (290 tests, 4 skipped).
 
 ## 4. GPU design
 
@@ -206,6 +210,10 @@ parallelism is a loop over candidates (not implemented).
 
 ## 5. Validation
 
+Every experimental number quoted in this section is sourced, claim by claim,
+in `docs/REFERENCES.md`, together with a verdict on whether it survived the
+check.  Read that file before building an argument on any of them.
+
 ### 5.1 Chain repeats from the screw decomposition (rigid textbook geometry)
 
 | Chain | polyfind c (A) | experiment (A) |
@@ -215,6 +223,14 @@ parallelism is a loop over candidates (not implemented).
 | PVDF alpha TG+TG- | 4.56 | 4.62 |
 | PVDF gamma TTTG+TTTG- | 9.11 | 9.20 |
 | PE TG (isotactic-polypropylene-type 3/1 helix) | 6.35 | 6.50 (iPP) |
+
+One note on the "experiment" column: the last row compares a hypothetical
+polyethylene helix with a *different* polymer, whose backbone angles are wider.
+6.50 A is the confirmed chain-axis repeat of alpha-iPP, but the row tests the
+screw decomposition rather than predicting a structure.  Everything else in the
+column is sourced and confirmed, including the PE 2.55 A, which is the modern
+room-temperature value (Bunn's older 2.534 A is the outlier, not the standard).
+See `docs/REFERENCES.md` sections 1.4 and 8.
 
 ### 5.2 Packing the known chain conformations (built-in potential, ideal angles)
 
@@ -232,7 +248,17 @@ Cell edges are within about 7% and densities within about 5% with a potential
 that was never fitted to any of this.  For PE the herringbone arrangement
 (setting angles +/-48 deg from a, chain 2 offset by c/2) is found as the second
 minimum, 0.01 kcal/mol per CH2 above a parallel arrangement, i.e. within the
-potential's accuracy.
+potential's accuracy.  Two qualifications on that parenthesis.  The setting angle
+has no single accepted value: measured from a - and naming the axis matters,
+because much of the polyethylene literature measures from b instead, and near
+45 deg the two conventions are indistinguishable - published determinations run
+41 to 48.8 deg, so 48 deg is inside the range and near its room-temperature end.
+The "chain 2 offset by c/2", on the other hand, is not a prediction: the accepted
+Pnam structure puts both chains' carbons at the same two z levels, with no
+stagger, and an all-trans chain's own 2_1 screw makes a c/2 shift identical to a
+180-degree rotation about the chain axis, so the offset is degenerate with the
+setting angle in this parametrisation rather than a feature of the crystal.  See
+`docs/REFERENCES.md` section 1.5.
 
 The orientation column is now meaningful, which it was not before the defect of
 section 5.6 was fixed, and it is worth reading carefully because two of the four
@@ -263,8 +289,12 @@ only the second is the one the alpha phase is named for.
 
 Continuous refinement then does what it is meant to: alpha relaxes to c = 4.70
 A with gauche angles at the potential's own minimum (+/-80 deg); gamma relaxes
-to c = 9.27 A (experiment 9.20) with the deflected trans angles (171-189 deg)
-and reduced gauche (+/-64 deg) that the real gamma chain has.
+to c = 9.27 A (experiment 9.20) with deflected trans angles (171-189 deg) and
+reduced gauche (+/-64 deg).  An earlier version of this sentence added "that the
+real gamma chain has"; that is withdrawn, because no published torsion set for
+the gamma chain was found to support it - the one crystal-structure figure
+available, a DFT internal rotation of 59.2 deg, does not
+(`docs/REFERENCES.md` section 2.5).
 
 ### 5.3 One full funnel run (PVDF, built-in potential, third-order RIS)
 
@@ -298,7 +328,11 @@ is there so the pipeline runs and can be tested; its energy *differences* are
 not quantitative:
 
 * it puts beta 3.9 kcal/mol per monomer below alpha in the crystal (the real
-  ordering is nearly degenerate, alpha slightly favoured), because unscreened
+  ordering is nearly degenerate, alpha slightly favoured: across five exchange-
+  correlation functionals and four independent studies beta sits 2.6 to 6.5
+  kJ/mol per monomer *above* alpha, i.e. 0.6 to 1.6 kcal/mol, with delta
+  essentially degenerate with alpha and gamma in between -
+  `docs/REFERENCES.md` section 5), because unscreened
   dipole alignment in the polar beta cell is over-rewarded;
 * its isolated-chain RIS ranking prefers the TG+ 3/1-type helix, which PVDF
   does not form;
@@ -332,12 +366,25 @@ reference chains, with the illustrative potential:
 | Chain | \|P\| (C/m^2) | direction | expectation |
 |---|---|---|---|
 | PE all-trans | 0.0000 | - | exactly zero, and for every configuration, not only the minimum |
-| PVDF beta TT | 0.1405 | perpendicular to c | about 0.13 experimentally |
+| PVDF beta TT | 0.1405 | perpendicular to c | 0.13 rigid-dipole, 0.176-0.188 from DFT, 0.050-0.100 measured |
 | PVDF alpha TG+TG- | 0.0777 | perpendicular to c | should be near zero: **disagrees** |
-| PVDF gamma T3GT3G' | 0.0910 | 34 deg out of ab | polar, weaker than beta |
+| PVDF gamma T3GT3G' | 0.0910 | 34 deg out of ab | polar, weaker than beta (DFT 0.071) |
 
-Three of the four are right, and beta landing within a few percent of the
-experimental value is better than this potential deserves.  Alpha is wrong, and
+**A correction to the beta target.**  This table and sections 5.4 and 5.7 used
+to call 0.13 C/m^2 the *experimental* polarization of beta-PVDF.  It is not a
+measurement: it is the oldest and crudest calculated estimate, the sum of rigid
+monomer dipoles over the cell volume.  Modern Berry-phase and Wannier DFT put a
+perfect beta crystal at 0.176-0.188 C/m^2, some 35-45% higher, while *measured*
+remanent polarizations of poled PVDF films run 0.050-0.100 C/m^2 (up to 0.140
+for a biaxially oriented pure-beta film).  0.13 sits between the two and belongs
+to neither.  See `docs/REFERENCES.md` section 3 for the full ladder of estimates,
+the measurements, and their sources.  Nothing computed changes - 0.13 only ever
+appeared as a comparison target in prose and as one fit target in section 5.7 -
+but the agreement claimed below is with a calculation, and not a good one.
+
+Three of the four are right in sign and rough magnitude, and beta landing near
+the rigid-dipole estimate is better than this potential deserves.  Alpha is
+wrong, and
 the reason is already documented: unscreened Coulomb over-rewards dipole
 alignment (section 5.4), and the damped-shifted-force sum carries no
 depolarisation energy (section 6).  It is a property of the charges, not of the
@@ -408,7 +455,10 @@ their own private knob: PE's a axis is set by the hydrogen radius, alpha's b
 axis by the fluorine radius, and the alpha-beta energy gap by the torsion
 coefficient.  Targets without a dedicated knob got *worse*, including beta's
 polarization, which was a fitted target and drifted from 0.140 to 0.160 against
-an experimental 0.13.
+the 0.13 target it was fitted to.  (That 0.13 is the rigid-dipole estimate, not
+an experimental value; see section 5.5 and `docs/REFERENCES.md` section 3.
+Against the DFT value of 0.176-0.188 the drift was towards the truth, which
+makes this a weaker piece of evidence than it looked, not a stronger one.)
 
 An ablation settles which parameters are real.  The two Lennard-Jones radii
 alone deliver essentially the whole held-out improvement (gamma root-mean-square
@@ -473,6 +523,11 @@ and the "unreachable geometry" argument were careful reasoning from a number
 written in a code comment that nobody had checked.  Published structures for
 these polymers exist and are not hard to consult.
 
+That consultation has since been done for every load-bearing number in this
+document, and the result is `docs/REFERENCES.md`: one entry per claim, with the
+source and a verdict of confirmed, corrected, unverified or wrong.  Every
+statement in this section 5.8 is confirmed there (sections 2.2 and 2.3).
+
 ## 6. Limitations and roadmap
 
 * RIS uses rigid bond geometry and discrete states; the continuous refinement
@@ -483,9 +538,11 @@ these polymers exist and are not hard to consult.
 * Thermodynamic ranking says nothing about which polymorph forms kinetically;
   the amorphous-ensemble statistics (trans-run supply) are the nucleation-side
   proxy provided here.
-* Head-to-head / tail-to-tail defects (a few percent in PVDF, known to
-  stabilise beta) need an extra bond type in the model; the code supports
-  arbitrary bond-type periods but no defect placement yet.
+* Head-to-head / tail-to-tail defects (4 to 6% in typical PVDF, with 5 to 10%
+  quoted across the literature) need an extra bond type in the model; the code
+  supports arbitrary bond-type periods but no defect placement yet.  Whether
+  they *stabilise* beta, as this bullet used to assert flatly, is disputed in
+  the sources: see `docs/REFERENCES.md` section 7.1.
 * The lattice energy uses a damped-shifted-force Coulomb sum, not Ewald; fine
   for ranking neutral chains, not for absolute lattice energies or the
   depolarisation energy of polar cells.
@@ -512,6 +569,6 @@ src/polyfind/
   backend.py      NumPy / CuPy selection for the batched kernels
   pipeline.py     the funnel and the report
   cli.py          polyfind fit | enumerate | pack | sample | pipeline
-tests/            72 tests: every DP routine vs brute force, geometry, helices, packing, pipeline
+tests/            290 tests: every DP routine vs brute force, geometry, helices, packing, pipeline
 examples/         pvdf_polymorphs.py reproduces Section 5
 ```
