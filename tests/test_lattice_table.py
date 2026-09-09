@@ -218,6 +218,44 @@ def test_beta_pvdf_screen_finds_known_cell():
     assert _rank_of_cell(res.top, 4.65, 8.6, tol=0.35) >= 0, f"top cells {np.round(res.top[:, :2], 2)}"
 
 
+def test_interpolation_survives_the_angle_wrap():
+    """A tiny negative angle wraps to exactly 360.0, whose grid index is 0 but whose
+    interpolation weight must be 0 and not n_angle.  Taking the weight from the wrapped
+    index put -47/+48 on two table entries; oblique lattices hit it routinely, because
+    ``arctan2`` puts a site angle a rounding error above a grid angle."""
+    tab = _table(PE_T, n_angle=24, n_z=4, dr=0.4)
+    assert (-1e-16) % 360.0 == 360.0 and (-1e-17) % tab.c == tab.c  # the trap is real
+    for bad, good in ((-1e-16, 0.0), (-1e-17, 0.0)):
+        assert tab.interpolate(6.0, bad, 40.0, 0.5, 0) == pytest.approx(
+            tab.interpolate(6.0, good, 40.0, 0.5, 0), abs=1e-9)
+        assert tab.interpolate(6.0, 40.0, bad, 0.5, 0) == pytest.approx(
+            tab.interpolate(6.0, 40.0, good, 0.5, 0), abs=1e-9)
+    assert tab.interpolate(6.0, 30.0, 60.0, -1e-17, 0) == pytest.approx(
+        tab.interpolate(6.0, 30.0, 60.0, 0.0, 0), abs=1e-9)
+    # every interpolated value stays inside the table's own range
+    rng = np.random.default_rng(11)
+    n = 4000
+    v = tab.interpolate(rng.uniform(3.0, tab.r_max, n), rng.uniform(-720, 720, n),
+                        rng.uniform(-720, 720, n), rng.uniform(-3 * tab.c, 3 * tab.c, n),
+                        rng.integers(0, 2, n))
+    assert v.min() >= tab.W.min() - 1e-4 and v.max() <= tab.cap + 1e-4
+
+
+@pytest.mark.parametrize("gamma", [60.0, 75.0, 105.0, 120.0])
+def test_oblique_cells_score_correctly(gamma):
+    """Oblique lattices put site angles on the grid to within a rounding error; the screen
+    must still agree with the exact kernel there (it used to be hundreds of kcal/mol low)."""
+    chain = _chain(PE_T)
+    pk2 = CrystalPacker(chain, n_chains=2)
+    tab = _table(PE_T, n_angle=36, n_z=8, dr=0.1)
+    av = np.arange(4.4, 9.61, 0.4)
+    res = fft_screen(tab, av, av, gamma=gamma, flips=(0, 1), n_top=4)
+    assert np.isfinite(res.top_energy).all()
+    d = np.abs(pk2.energy(res.top) - res.top_energy)
+    assert d.max() < 1.0, f"screen vs exact: {np.round(d, 3)}"
+    assert np.abs(table_energy(tab, res.top) - res.top_energy).max() < 1e-3
+
+
 def test_ab_symmetry_halves_the_grid_without_changing_the_answer():
     """(a, b) and (b, a) are the same lattice rotated by 90 deg, so half the FFTs are free."""
     tab = _table(PE_T, n_angle=24, n_z=4, dr=0.4)

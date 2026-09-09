@@ -415,6 +415,14 @@ class PairTable:
 
         ``r`` below ``r_min`` is clamped (the wall is capped anyway); beyond
         ``r_max`` the result is exactly zero.  Fully vectorised.
+
+        The interpolation weight is taken from the *unwrapped* grid coordinate, not from
+        the wrapped index: a tiny negative angle (``phi - theta_s`` when a lattice site
+        sits a rounding error above a grid angle, which an oblique cell produces readily)
+        gives ``a1 % 360.0 == 360.0`` exactly, whose wrapped index is 0 but whose fraction
+        must be 0 and not ``n_angle``.  Getting that wrong put weights of -47 and +48 on
+        two neighbouring table entries and made whole cells score hundreds of kcal/mol
+        below anything physical.
         """
         r, a1, a2, z, f = np.broadcast_arrays(
             np.asarray(r, dtype=float), np.asarray(alpha1, dtype=float), np.asarray(alpha2, dtype=float),
@@ -425,8 +433,9 @@ class PairTable:
         tr = fr - i0
         ja, jb = (a1 % 360.0) * (na / 360.0), (a2 % 360.0) * (na / 360.0)
         jz = (z % self.c) * (nz / self.c)
-        ia, ib, iz = ja.astype(np.int64) % na, jb.astype(np.int64) % na, jz.astype(np.int64) % nz
-        ta, tb, tz = ja - ia, jb - ib, jz - iz
+        fa, fb, fz = ja.astype(np.int64), jb.astype(np.int64), jz.astype(np.int64)  # >= 0, so floor
+        ta, tb, tz = ja - fa, jb - fb, jz - fz
+        ia, ib, iz = fa % na, fb % na, fz % nz
         out = np.zeros(np.shape(r), dtype=float)
         for da in (0, 1):
             wa = 1 - ta if da == 0 else ta
@@ -677,6 +686,14 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
     left at ``+inf`` in :attr:`ScreenResult.energy`.  It is only valid at ``gamma = 90``
     (elsewhere the swap is a reflection, which a chiral chain does not admit) and is
     rejected otherwise.
+
+    A cell that puts two chain axes closer than ``table.r_min`` is left at ``+inf``:
+    :meth:`PairTable.interpolate` *clamps* below ``r_min``, and W at ``r_min`` is a real
+    (often attractive) value rather than the wall the true geometry would have, so such a
+    cell would otherwise be scored far too low and win the screen.  With ``r_min = 3 A``
+    and any real chain the two chains overlap there anyway, so nothing packable is lost;
+    the effect is invisible at ``gamma = 90`` but dominates an oblique lattice, whose
+    centred site ``(a_vec + b_vec)/2`` gets short quickly as gamma leaves 90.
     """
     import os
     import time
@@ -724,10 +741,12 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
                     if ab_symmetry and b < a - 1e-9:
                         continue
                     rs, ts = lattice_sites(a, b, gamma, r_max, centred=False)
+                    rc_, tc = lattice_sites(a, b, gamma, r_max, centred=True)
+                    if min(rs.min(initial=np.inf), rc_.min(initial=np.inf)) < table.r_min:
+                        continue  # no table data there; left at +inf (see the docstring)
                     da = phi[:, None] - ts[None, :]
                     self1 = 0.5 * table.interpolate(rs[None, :], da, da, 0.0, 0).sum(axis=1)
                     self2 = self1 if sgn2 > 0 else 0.5 * table.interpolate(rs[None, :], -da, -da, 0.0, 0).sum(axis=1)
-                    rc_, tc = lattice_sites(a, b, gamma, r_max, centred=True)
                     i0, tr = table.radial_weights(rc_)
                     acc = buf[len(meta)]
                     acc[...] = 0
