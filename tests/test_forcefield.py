@@ -89,15 +89,20 @@ def test_adaptive_matches_dense_10deg_fit(polymer, n_monomers):
     confined to a grid, with the same mirror symmetry, the same basin-angle signs, and
     several times fewer calculator evaluations.
 
-    The lower bound on second_order is wider than first_order's: the dense scan's own
-    basin bucketing (``_basins``, nearest ideal angle) excludes a grid point that ties
-    exactly between two states' ideal angles (assigned to the lower-index state instead),
-    which happens at every multiple of 120 deg on a step=10 grid -- exactly a gauche
-    basin's outer edge. PVDF's CF2-centred G+/G- pair (the "pentane effect" steric clash)
-    has its true continuum minimum right at that edge: a direct 2-degree brute-force scan
-    of that basin finds ~5.0 kcal/mol there, versus the dense grid's own reachable best of
-    8.17 kcal/mol. Adaptive is not confined to that grid-alignment artifact and correctly
-    finds the lower value; everywhere else the two agree closely.
+    The lower bound on second_order is wider than first_order's, for one documented case:
+    PVDF's CF2-centred G+/G- pair (bond type 1). Its energy has no interior critical point
+    near the G+/T basin boundary -- scanning phi from 100 to 140 deg (crossing straight
+    through the boundary at 120) at each point's own best psi gives a smooth, monotonically
+    *decreasing* profile (E ~= 7.8, 5.1, 4.88 (at phi=120), 4.7, 4.04 (at phi=140), ...; no
+    kink, no minimum). So the true infimum of a *correctly* bounded search of the G+/G-
+    basin (open at 120, matching ``_basins``' tie-break -- see ``_basin_bounds``) sits
+    right at that basin edge, at ~4.85 kcal/mol: excluding the single boundary point cannot
+    raise the infimum of a continuous, monotonic function approaching it. The dense scan
+    reports a much higher 8.17 kcal/mol only because step=10 deg is too coarse to sample
+    anywhere near that edge (its adjacent grid points are 110 deg, E ~= 10.2, and 120 deg
+    itself, excluded by the same tie-break). Adaptive is not confined to that resolution
+    limit and correctly finds the lower, edge-of-basin value; everywhere else the two agree
+    closely.
     """
     dense = fit_ris(polymer, SimpleFF(), step=10.0, n_monomers=n_monomers, third_order=True, scan="dense")
     adap = fit_ris(polymer, SimpleFF(), step=10.0, n_monomers=n_monomers, third_order=True, scan="adaptive")

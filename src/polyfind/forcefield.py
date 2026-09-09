@@ -258,24 +258,35 @@ def _wrap180(x):
     return ((np.asarray(x, dtype=float) + 180.0) % 360.0) - 180.0
 
 
-def _basin_bounds(states: RISStates) -> list[tuple[float, float]]:
-    """Per-state ``(lo, hi)`` offsets (deg, ``lo <= 0 <= hi``) from the state's own ideal
-    angle to the midpoint of the nearest neighbouring state on each side of the circle --
-    the same basin definition as :func:`_basins` (nearest ideal angle), expressed as an
-    interval so a continuous angle can be clipped into the basin without a grid.
+def _basin_bounds(states: RISStates, eps: float = 1e-6) -> list[tuple[float, float]]:
+    """Per-state ``(lo, hi)`` offsets (deg) from the state's own ideal angle to the
+    boundary with its nearest neighbour on each side of the circle, matching
+    :func:`_basins`'s tie-break EXACTLY: ``argmin`` over ``|grid - ideal|`` hands an exact
+    boundary point to the lowest-index state. So a boundary shared with a lower-indexed
+    neighbour belongs to that neighbour, not this state -- this state's interval is
+    nudged open on that side by ``eps``; a boundary shared with a higher-indexed
+    neighbour belongs to this state, so that side stays closed. Without this, a
+    continuous local search can sit exactly on a boundary the discrete (dense-grid)
+    bucketing would have assigned to the other state, comparing two different basins.
     """
     angs = np.array(states.angles, dtype=float)
     bounds = []
     for s in range(states.n):
-        lo, hi = -180.0, 180.0
+        hi, hi_sp = 180.0, None
+        lo, lo_sp = -180.0, None
         for sp in range(states.n):
             if sp == s:
                 continue
             d = float(_wrap180(angs[sp] - angs[s]))  # signed shortest distance a_s -> a_sp
-            if d > 0:
-                hi = min(hi, d / 2.0)
-            elif d < 0:
-                lo = max(lo, d / 2.0)
+            half = d / 2.0
+            if d > 0 and half < hi:
+                hi, hi_sp = half, sp
+            elif d < 0 and half > lo:
+                lo, lo_sp = half, sp
+        if hi_sp is not None and hi_sp < s:
+            hi -= eps
+        if lo_sp is not None and lo_sp < s:
+            lo += eps
         bounds.append((lo, hi))
     return bounds
 
