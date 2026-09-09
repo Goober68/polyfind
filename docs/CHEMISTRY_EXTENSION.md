@@ -118,6 +118,38 @@ hold, which is why the existing code is right for the achiral chemistries.
 Teaching `symmetrize` that operation is a small change to `fit_ris`, left out of
 this phase only because it touches a file phase 2 did not own.
 
+**Phase 2 outcome: chirality, which the model had no way to express.** A
+backbone carbon bearing two different substituents is a stereocentre, so CFE
+and CDFE chains have a tacticity. The chain this code builds is unambiguously
+the isotactic one: the first pendant always sits on the same side of the local
+backbone frame, independent of conformation. Syndiotactic and atactic chains
+are not expressible, and nothing warned about that before.
+
+More seriously, reflecting a chiral chain gives its enantiomer rather than the
+same molecule, so its G+ and G- conformers are genuinely inequivalent. The
+fitting step averaged them by default, which for these two chemistries destroys
+a real asymmetry of 24 kcal/mol (CFE) and 45 (CDFE) - and that asymmetry is
+precisely what makes an isotactic chain choose a one-handed helix, so averaging
+it away removes the physics the chemistry was added to study. `fit_ris` now
+defaults to `symmetrize="auto"`, which mirrors only achiral polymers and warns
+if mirroring is forced on a chiral one. `Polymer.is_chiral` exposes the
+distinction and `build_chain` warns once per chiral polymer.
+
+Two related places still assume achirality and are left alone for now, since
+fixing them is its own piece of work: `helix.canonical_sequence`'s mirror
+deduplication, which treats a sequence and its mirror image as the same
+candidate, and the glide patterns in `linegroup`. Both are correct for PE,
+PVDF and PVDC and wrong for CFE and CDFE.
+
+A caution about the replacement symmetry: the relation that survives
+reflection for a chiral chain is reflection composed with chain reversal,
+which holds at the level of the energy function. Its expression in terms of
+the model's bond-type indices was *not* established. The obvious index swap
+leaves a residual of about 15 kcal/mol even for PVDF, where it must vanish
+identically, so the mapping is subtler than it looks and no substitute
+averaging is applied. Deriving it properly would restore noise-averaging for
+chiral fits and is worth doing before phase 3, where every chemistry is chiral.
+
 **Phase 3, multi-atom pendant groups (AN CH2-CH(CN), VDCN CH2-C(CN)2, FANOME
 CH2-C(CN)(OCH3)).** A substituent becomes a small rigid fragment rather than an
 atom. Nitrile is easy: it is linear, so it is two more atoms colinear with the

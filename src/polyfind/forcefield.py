@@ -20,6 +20,7 @@ Two roles:
 """
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 from typing import Protocol, Sequence
 
@@ -589,7 +590,7 @@ def fit_ris(
     step: float = 10.0,
     n_monomers: int = 5,
     name: str | None = None,
-    symmetrize: bool = True,
+    symmetrize: bool | str = "auto",
     adapt_angles: bool = True,
     third_order: bool = False,
     cap: float = 50.0,
@@ -601,8 +602,17 @@ def fit_ris(
     First-order energies come from a 1D scan of one bond of each type (all other
     bonds trans); pair energies from a 2D scan of two consecutive bonds, minus the
     first-order terms.  Energies are basin minima, relative to all-trans.  With
-    ``symmetrize`` the model is averaged with its mirror image (G+ <-> G-), which is
-    exact for achiral chains and removes grid/refinement noise.  With ``adapt_angles``
+    ``symmetrize`` averages the model with its mirror image (G+ <-> G-).  That is
+    exact for an achiral chain and removes grid/refinement noise, but it is *wrong*
+    for a chiral one: reflecting a chiral chain gives its enantiomer, not the same
+    molecule, so G+ and G- genuinely differ and averaging destroys a real asymmetry
+    (measured at 24 kcal/mol for CFE and 45 for CDFE).  The default ``"auto"``
+    therefore mirrors only when ``polymer.is_chiral`` is false; ``True`` and
+    ``False`` force it either way, and ``True`` on a chiral polymer warns.  The
+    symmetry that does survive reflection for a chiral chain is reflection composed
+    with chain reversal; its expression in terms of the model's bond-type indices was
+    not established here (a naive index swap leaves a large residual even for achiral
+    polymers, where it must vanish), so no substitute averaging is applied.  With ``adapt_angles``
     the state dihedral angles are moved to the 1D-scan basin minima (averaged over
     bond types and mirror pairs), as in classical RIS parametrisations.  With
     ``third_order`` triplet corrections are added (see :func:`_fit_third_order`),
@@ -675,6 +685,17 @@ def fit_ris(
     for b in range(B):
         bn = (b + 1) % B
         e2[b] = e2[b] - e1[b][:, None] - e1[bn][None, :]
+    chiral = bool(getattr(polymer, "is_chiral", False))
+    if symmetrize == "auto":
+        symmetrize = not chiral
+    elif symmetrize and chiral:
+        warnings.warn(
+            f"symmetrize=True on chiral polymer {polymer.name!r}: reflection maps the chain "
+            "to its enantiomer, so averaging G+ with G- destroys a real energy difference. "
+            "Use symmetrize='auto' (the default) or False.",
+            UserWarning,
+            stacklevel=2,
+        )
     if symmetrize:
         m = np.array(states.mirror)
         e1 = 0.5 * (e1 + e1[:, m])

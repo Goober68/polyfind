@@ -290,3 +290,41 @@ def test_the_whole_funnel_runs(polymer):
     pk = CrystalPacker(ch, n_chains=2)
     e = pk.energy(np.array([[6.5, 10.0, 90.0, 30.0, 200.0, 1.0, 0]]))
     assert np.isfinite(e).all()
+
+
+def test_symmetrize_auto_protects_chiral_polymers():
+    """Mirror averaging is exact for an achiral chain and destructive for a chiral one.
+
+    Reflecting a chiral chain gives its enantiomer, so G+ and G- genuinely differ;
+    averaging them silently deletes that. The default must mirror PVDF and must not
+    mirror CFE or CDFE.
+    """
+    import warnings as _w
+
+    import numpy as np
+
+    from polyfind.forcefield import SimpleFF, fit_ris
+    from polyfind.polymers import get_polymer
+
+    ff = SimpleFF()
+
+    def mirror_residual(model):
+        m = np.array(model.states.mirror)
+        return float(np.abs(model.second_order - model.second_order[:, m][:, :, m]).max())
+
+    # achiral: the default mirrors, and it was exact anyway
+    pvdf = fit_ris(get_polymer("pvdf"), ff, step=30.0, n_monomers=4, third_order=False).model
+    assert mirror_residual(pvdf) < 1e-9
+
+    # chiral: the default must PRESERVE the asymmetry rather than average it away
+    for name, floor in (("cfe", 1.0), ("cdfe", 1.0)):
+        with _w.catch_warnings():
+            _w.simplefilter("ignore")
+            auto = fit_ris(get_polymer(name), ff, step=30.0, n_monomers=4, third_order=False).model
+            forced = fit_ris(get_polymer(name), ff, step=30.0, n_monomers=4, third_order=False, symmetrize=True).model
+        assert mirror_residual(auto) > floor, f"{name}: real G+/G- asymmetry was averaged away"
+        assert mirror_residual(forced) < 1e-9  # forcing it still works, but is wrong
+
+    # and forcing it on a chiral polymer warns
+    with pytest.warns(UserWarning, match="enantiomer"):
+        fit_ris(get_polymer("cfe"), ff, step=60.0, n_monomers=3, third_order=False, symmetrize=True)
