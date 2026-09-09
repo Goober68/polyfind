@@ -19,6 +19,23 @@ Conventions
   element, bond length and charge, and pendant 1 always goes on the ``+w`` side of
   the local frame, which makes every such chain isotactic.  See
   :func:`substituent_positions` and :attr:`polyfind.polymers.Polymer.is_chiral`.
+* A pendant is either a single atom or a small rigid fragment (nitrile, methoxy);
+  the fragment's atoms are placed at fixed coordinates in the pendant frame built by
+  :func:`pendant_frames`, of which the single atom is the degenerate case -- it sits
+  on the frame's first axis at the bond length, which is exactly where
+  :func:`substituent_positions` has always put it.  Atom order within a backbone atom
+  is: the backbone atom, then pendant 1's atoms in order, then pendant 2's.
+
+Two things elsewhere have not caught up with multi-atom pendants
+---------------------------------------------------------------
+``pack._batch_block_coords`` and ``linegroup._block_coords`` build coordinates
+themselves and index them as ``3 * k + {0, 1, 2}``, so they support single-atom
+pendants only; ``pack.repeat_chains_from_torsions`` and hence the continuous
+refinement stage are limited to those chemistries until they are generalised the way
+:func:`build_chain_batch` is here.  ``pack.MASS`` likewise has no entry for N or O, so
+``PeriodicChain.mass`` (and the densities derived from it) raises for the phase-3
+chemistries.  Everything that goes through :func:`build_chain` -- fitting,
+``pack.periodic_chain``, ``CrystalPacker.energy`` -- is already general.
 """
 from __future__ import annotations
 
@@ -130,6 +147,11 @@ def substituent_positions(x_prev, x, x_next, bond, sub_angle_deg, xp=np):
     ``w = unit((x_prev - x) x (x_next - x))`` fixed by the chain direction, so every
     stereocentre of a chain gets the same configuration -- the chain built is the
     isotactic one.  See :attr:`polyfind.polymers.Polymer.is_chiral`.
+
+    This places one atom per pendant, which is all a pendant used to be.  For a pendant
+    that is a rigid *fragment* it places the fragment's first atom -- the one bonded to
+    the backbone -- and :func:`pendant_positions` places the rest, off the frame that
+    :func:`pendant_frames` builds around these same two directions.
     """
     n1 = _unit(x_prev - x, xp)
     n2 = _unit(x_next - x, xp)
@@ -140,6 +162,74 @@ def substituent_positions(x_prev, x, x_next, bond, sub_angle_deg, xp=np):
     s1 = x + b1 * (np.cos(half) * u + np.sin(half) * w)
     s2 = x + b2 * (np.cos(half) * u - np.sin(half) * w)
     return s1, s2
+
+
+def pendant_frames(x_prev, x, x_next, sub_angle_deg, xp=np):
+    """Orthonormal frame ``(e1, e2, e3)`` per pendant of atom x; shapes (..., 3).
+
+    Returns ``((e1, e2, e3), (e1, e2, e3))``, one triple per pendant, in which a
+    fragment's local coordinates are read: an atom at local ``(lx, ly, lz)`` sits at
+    ``x + lx e1 + ly e2 + lz e3``.  The axes are
+
+    * ``e1``: the pendant bond direction, ``cos(a/2) u +- sin(a/2) w`` with ``u`` the
+      backbone-angle bisector and ``w`` the backbone-plane normal, exactly the direction
+      :func:`substituent_positions` uses -- so an atom at ``(bond, 0, 0)`` lands
+      bit-for-bit where a single-atom substituent always did;
+    * ``e2``: perpendicular to ``e1`` in the ``(u, w)`` plane, on the ``u`` side;
+    * ``e3``: ``+e1 x e2`` for pendant 1 and ``-e1 x e2`` for pendant 2.
+
+    That sign on ``e3`` is the one real choice here, and it is made so that the two
+    pendant frames are **mirror images of one another** through the local backbone plane
+    (the plane through ``x`` containing its two backbone neighbours).  The consequence is
+    that two *identical* fragments leave the backbone atom locally mirror-symmetric,
+    exactly as two identical single atoms do -- so VDCN, with two nitriles, is achiral
+    for the same reason PVDF is, and
+    :attr:`polyfind.polymers.BackboneAtom.is_stereocentre` can go on
+    being a plain comparison of the two pendants.  With the other sign, two identical
+    fragments would be placed as a *rotation* of one another and a symmetric monomer
+    would come out spuriously chiral.
+
+    The price is that pendant 2's frame is left-handed, so a fragment placed there is the
+    *reflection* of its local specification.  That is invisible for a fragment with a
+    mirror plane of its own, which nitrile and methoxy both have, but it means a genuinely
+    chiral fragment would appear as its enantiomer on pendant 2 -- and two identical
+    chiral fragments would be placed as a meso pair rather than as two of the same hand.
+    Getting that case right needs the fragment to declare its own handedness; nothing
+    here does yet.
+    """
+    n1 = _unit(x_prev - x, xp)
+    n2 = _unit(x_next - x, xp)
+    u = -_unit(n1 + n2, xp)
+    w = _unit(xp.cross(n1, n2), xp)
+    half = np.deg2rad(sub_angle_deg) / 2.0
+    c, s = np.cos(half), np.sin(half)
+    e1_a, e2_a = c * u + s * w, s * u - c * w
+    e1_b, e2_b = c * u - s * w, s * u + c * w
+    return (e1_a, e2_a, xp.cross(e1_a, e2_a)), (e1_b, e2_b, -xp.cross(e1_b, e2_b))
+
+
+def pendant_positions(x_prev, x, x_next, spec, xp=np):
+    """Positions of every pendant atom of backbone atom ``x``; shapes (..., 3).
+
+    Returns one list of positions per pendant, in the pendant's own atom order, from the
+    frames of :func:`pendant_frames`.  A single-atom pendant gives a one-element list
+    holding exactly ``substituent_positions``' answer, bit for bit: its only atom is at
+    local ``(bond, 0, 0)`` and the zero components are skipped rather than added.
+    """
+    frames = pendant_frames(x_prev, x, x_next, spec.sub_angle, xp=xp)
+    out = []
+    for pendant, (e1, e2, e3) in zip(spec.pendants, frames):
+        positions = []
+        for atom in pendant.atoms:
+            lx, ly, lz = atom.offset
+            p = x + lx * e1
+            if ly:
+                p = p + ly * e2
+            if lz:
+                p = p + lz * e3
+            positions.append(p)
+        out.append(positions)
+    return tuple(out)
 
 
 _CHIRAL_WARNED: set[str] = set()
@@ -188,7 +278,9 @@ class Structure:
     backbone: np.ndarray  # indices of the real backbone atoms in chain order
     n_dihedrals: int
     dihedrals: np.ndarray  # (N,) the RIS dihedrals used to build it
-    subs_of: dict = field(default_factory=dict)  # backbone atom index -> substituent atom indices
+    # backbone atom index -> its pendant atom indices: pendant 1's atoms then pendant 2's,
+    # each in the pendant's own order (one index per pendant unless a pendant is a fragment)
+    subs_of: dict = field(default_factory=dict)
 
     def dihedral_atoms(self, j: int) -> tuple[int, int, int, int]:
         bb = self.backbone
@@ -243,14 +335,17 @@ def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_angles=N
         backbone_idx.append(idx)
         if k > 0:
             bonds.append((backbone_idx[k - 1], idx))
-        s1, s2 = substituent_positions(bb_ext[k], x, bb_ext[k + 2], spec.sub_bond, spec.sub_angle, xp=np)
+        groups = pendant_positions(bb_ext[k], x, bb_ext[k + 2], spec, xp=np)
         subs = []
-        for s, s_el, s_q in zip((s1, s2), spec.substituents, spec.sub_charges):
-            elements.append(s_el)
-            coords.append(s)
-            charges.append(s_q)
-            bonds.append((idx, len(elements) - 1))
-            subs.append(len(elements) - 1)
+        for pendant, positions in zip(spec.pendants, groups):
+            first = len(elements)
+            for atom, pos in zip(pendant.atoms, positions):
+                elements.append(atom.element)
+                coords.append(pos)
+                charges.append(atom.charge)
+                subs.append(len(elements) - 1)
+            bonds.append((idx, first))  # backbone atom to the pendant's first atom
+            bonds.extend((first + i, first + j) for i, j in pendant.bonds)
         subs_of[idx] = subs
     if cap:
         for k, virt in ((0, bb_ext[0]), (N + 2, bb_ext[N + 4])):
@@ -310,10 +405,10 @@ def build_chain_batch(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_an
         idx = int(template.backbone[k])
         x = bb_ext[:, k + 1]
         coords[:, idx] = x
-        s1, s2 = substituent_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec.sub_bond, spec.sub_angle, xp=np)
-        s1_idx, s2_idx = template.subs_of[idx]
-        coords[:, s1_idx] = s1
-        coords[:, s2_idx] = s2
+        groups = pendant_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec, xp=np)
+        # ``subs_of`` lists the pendant atoms in the same order pendant_positions returns
+        for sub_idx, pos in zip(template.subs_of[idx], [p for g in groups for p in g]):
+            coords[:, sub_idx] = pos
     if cap:
         cap0 = template.n_atoms - 2
         for i, (k, virt) in enumerate(((0, bb_ext[:, 0]), (N + 2, bb_ext[:, N + 4]))):
@@ -326,7 +421,12 @@ def build_chain_batch(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_an
 
 def set_dihedrals(struct: Structure, dihedrals_deg) -> Structure:
     """Rebuild the same oligomer with new dihedrals (cheap: rigid geometry)."""
-    cap = len(struct.elements) > 3 * (struct.n_dihedrals + 3)
+    # backbone atoms plus every pendant atom; the only extras are the two end caps, so
+    # anything beyond that count means the structure was capped.  Counted from the
+    # structure itself rather than as ``3 * (N + 3)``, which held only while every
+    # pendant was a single atom.
+    uncapped = len(struct.backbone) + sum(len(v) for v in struct.subs_of.values())
+    cap = len(struct.elements) > uncapped
     return build_chain(struct.polymer, dihedrals_deg, cap=cap)
 
 

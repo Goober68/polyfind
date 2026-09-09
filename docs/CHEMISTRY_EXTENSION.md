@@ -1,6 +1,6 @@
 # Extending polyfind beyond PVDF: a design
 
-Status: phases 1 and 2 are implemented; everything after them is design. The design was
+Status: phases 1, 2 and 3 are implemented; everything after them is design. The design was
 produced as discussion during the performance-optimisation session and is
 recorded here so it does not disappear with the transcript. Claims about the
 current code have been checked against the code and are marked as such; the
@@ -22,7 +22,8 @@ stood before phase 2; the first bullet has since been lifted, see phase 2 below.
   pair. Still one atom per pendant, and still no tacticity.)*
 * `UFF_LJ` defines parameters for carbon, hydrogen, fluorine and chlorine only.
   Nitrogen and oxygen are absent, so nitrile and methoxy groups cannot be
-  scored at all.
+  scored at all. *(Lifted in phase 3: N and O added from the same UFF table.
+  `pack.MASS` still has neither.)*
 * `CrystalPacker` places one or two chains per cell; `_place` has an explicit
   two-chain branch.
 * Nothing anywhere couples the structure to an applied electric field.
@@ -196,16 +197,52 @@ the third-order check (residual 1.94 kcal/mol, from inclusion-exclusion between
 two clashing conformers at +-45 deg), and the code declines to symmetrise there.
 
 **Phase 3, multi-atom pendant groups (AN CH2-CH(CN), VDCN CH2-C(CN)2, FANOME
-CH2-C(CN)(OCH3)).** A substituent becomes a small rigid fragment rather than an
-atom. Nitrile is easy: it is linear, so it is two more atoms colinear with the
-substituent bond and adds no rotational degree of freedom. Methoxy is the hard
-one, because it has its own internal C-O rotation; the defensible first cut is
-to freeze it at one representative rotamer, at the same level of simplification
-as the rest of the rigid-geometry model, and to flag that explicitly rather
-than adding an RIS dimension immediately. Needs nitrogen and oxygen nonbonded
-parameters and illustrative charges for the nitrile and methoxy dipoles,
-refitted through the existing `fit_ris` machinery exactly as PVDF's were.
-Medium.
+CH2-C(CN)(OCH3)). Done.** A substituent is now a `Pendant`: an ordered set of
+`PendantAtom`s at fixed local coordinates in a per-pendant frame
+(`chain.pendant_frames`) whose first axis is the pendant bond direction. A
+single atom is the degenerate case -- one atom at `(bond, 0, 0)`, exactly where
+`substituent_positions` always put it -- so `BackboneAtom`'s positional
+signature is unchanged and PE, PVDF, PVDC, CFE and CDFE build byte-identical
+coordinates and charges (asserted by digest in `tests/test_an_vdcn_fanome.py`).
+A fragment may supply its own bond length and charges, in which case
+`sub_bond`/`sub_charge` may be `None` and are filled in from it, which keeps
+`spec.sub_bond` numeric for the callers in `pack`/`linegroup` that forward it.
+`atoms_per_repeat` is now a sum over pendants rather than `3 * len(backbone)`.
+Nitrile needs no new degrees of freedom (linear, both atoms on the pendant
+axis); methoxy's two internal rotations are frozen -- methyl carbon anti to the
+other pendant about the C-O bond, methyl itself staggered -- and the freezing is
+stated in `methoxy`'s docstring and in the polymer comment. Nitrogen (3.660,
+0.069) and oxygen (3.500, 0.060) come from the same UFF table as the existing
+entries. `is_chiral`: AN and FANOME true, VDCN false -- two identical fragments
+are placed as mirror images of one another, so a multi-atom pendant does not by
+itself create a stereocentre.
+
+The finding is the phase-1 one again, worse. All-trans Lennard-Jones strain, on
+the same 10-bond oligomer that gave PVDF 9 kcal/mol and PVDC 313: **AN 88,
+VDCN 176, FANOME 1.0e6**. AN and VDCN are strained but finite and comparable
+with CFE (162) and CDFE (199); every rotation away from trans still lowers the
+energy by tens of kcal/mol, so all-trans remains a poor RIS reference for them,
+though a usable-if-suspect one in the same sense it is for the chlorine
+chemistries. FANOME's all-trans chain is not a physical structure at all: methyl
+hydrogens of methoxy groups on consecutive substituted carbons end up 0.80 A
+apart. That is not an artifact of the frozen rotamer -- scanning the C-O
+azimuth over 360 degrees gives between 7e3 and 2e8 kcal/mol, with no value
+below 7e3 -- it is the frozen backbone angles again, and a pendant that reaches
+2.4 A cannot get out of its 1-3 neighbour's way when they cannot open. So the
+funnel is exercised end to end on VDCN and AN only; FANOME is registered and its
+geometry tested, but fitting it against an all-trans reference would produce
+numbers with no meaning. Variable backbone angles, and for FANOME a reference
+state other than all-trans, are the prerequisites rather than the polish.
+
+Two things elsewhere have not caught up, both out of the phase's file ownership
+and both one-liners: `pack._batch_block_coords` and `linegroup._block_coords`
+build coordinates themselves and index them as `3k + {0,1,2}`, so
+`repeat_chains_from_torsions` and the continuous refinement stage still accept
+single-atom pendants only; and `pack.MASS` has no N or O entry, so
+`PeriodicChain.mass` and the densities derived from it raise for these three.
+`build_chain`, `build_chain_batch`, the bond-angle override, `fit_ris`,
+`enumerate_periodic`, `pack.periodic_chain` and `CrystalPacker.energy` are all
+general.
 
 **Phase 4, ring backbone (CNEPO).** The epoxide bridges two backbone carbons.
 The cheapest path is to reuse `RISModel`'s existing `clamp` mechanism, already
