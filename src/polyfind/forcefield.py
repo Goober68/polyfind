@@ -584,30 +584,85 @@ class FitReport:
 
 
 
+def _type_shift(t: np.ndarray, k: int, B: int) -> np.ndarray:
+    """``t[(k - b) % B]`` along the leading bond-type axis (the reversal's type map)."""
+    return t[[(k - b) % B for b in range(B)]]
+
+
 def _reversal_images(e1: np.ndarray, e2: np.ndarray, mirror, B: int):
     """Image of a fitted model under reflection composed with chain reversal.
 
     Reflection alone maps a chain to its enantiomer, so it is a symmetry only of an
     achiral repeat.  Reversing the chain direction swaps each stereocentre's
     neighbours and undoes that, so reflection-with-reversal is a symmetry of *any*
-    linear repeat: E(phi_1..phi_N) == E(-phi_N..-phi_1).  In model terms that is a
-    state mirror plus a bond-type shift on the first-order term, and a state mirror
-    plus a transpose on the pair term.
+    linear repeat: E(phi_1..phi_N) == E(-phi_N..-phi_1).
 
-    The bond-type shift depends on where the repeat is phased, so every shift is
-    tried and the best returned along with its residual; the caller applies the
-    averaging only if that residual is at grid-noise level.
+    Writing the reversal as ``j -> K - j`` on the bonds, a term over ``n`` consecutive
+    bonds starting at ``j`` maps to the term starting at ``K - n + 1 - j``, so each
+    order gets its own bond-type shift, one lower than the order below it, together
+    with the state mirror and a reversal of the term's own index order:
+
+        e1[b, s]         == e1[(c - b) % B, m(s)]
+        e2[b, s, s']     == e2[(c - 1 - b) % B, m(s'), m(s)]
+        e3[b, s, s', s'']== e3[(c - 2 - b) % B, m(s''), m(s'), m(s)]
+
+    ``c`` depends on where the repeat is phased, so every shift is tried and the one
+    with the smallest residual is returned along with that residual and ``c`` itself;
+    the caller applies the averaging only if the residual is at grid-noise level.
+    For ``B = 2`` the shift is decided unambiguously (measured residuals 0.03-0.09
+    kcal/mol at ``c = 1`` against 14-58 at ``c = 0``, for PVDF, PVDC, CFE and CDFE),
+    and ``c = 1`` gives the swap-mirror on ``e1``, the plain transpose-mirror on
+    ``e2`` and the swap-mirror-reverse on ``e3``.
+
+    Returns ``(e1_img, e2_img, resid, c)``; :func:`_reversal_image3` builds the
+    matching third-order image once ``e3`` has been fitted.
     """
     m = np.asarray(mirror)
-    e2_img = np.transpose(e2[:, m][:, :, m], (0, 2, 1))
     best = None
     for c in range(B):
-        rb = [(c - b) % B for b in range(B)]
-        e1_img = e1[rb][:, m]
+        e1_img = _type_shift(e1, c, B)[:, m]
+        e2_img = np.transpose(_type_shift(e2, c - 1, B)[:, m][:, :, m], (0, 2, 1))
         resid = max(float(np.abs(e1 - e1_img).max()), float(np.abs(e2 - e2_img).max()))
         if best is None or resid < best[2]:
-            best = (e1_img, e2_img, resid)
+            best = (e1_img, e2_img, resid, c)
     return best
+
+
+def _reversal_image3(e3: np.ndarray, mirror, B: int, c: int):
+    """Third-order image under reflection-with-reversal, and its residual.
+
+    ``e3_img[b, x, y, z] = e3[(c - 2 - b) % B, m(z), m(y), m(x)]`` -- the state mirror,
+    the triple read backwards (reversal reverses the order of a triple as well as
+    mirroring its states) and a bond-type shift two below the first-order one.  The
+    caller checks the residual before averaging over it.
+    """
+    m = np.asarray(mirror)
+    img = np.transpose(_type_shift(e3, c - 2, B)[:, m][:, :, m][:, :, :, m], (0, 3, 2, 1))
+    return img, float(np.abs(e3 - img).max())
+
+
+def _reversal_angle_residual(argmin1: dict, states: RISStates, B: int, c: int) -> float:
+    """How far the fitted basin minima are from ``arg1[b, s] == -arg1[(c - b) % B, m(s)]``.
+
+    The 1-D scan of a bond of type ``b`` maps, under reflection-with-reversal, onto the
+    scan of a bond of type ``(c - b) % B`` at the negated angle, so the basin minima of
+    ``s`` and ``m(s)`` on the two types are negatives of each other.  Only the states
+    :func:`fit_ris`'s ``adapt_angles`` averaging actually moves -- those with
+    ``m(s) != s`` -- are checked: a self-mirror state (T) can sit in a symmetric double
+    well whose two minima are degenerate, where the reported argmin is a tie-break
+    rather than a measurement.  PVDC's trans basin is one: its planar zigzag is not even
+    metastable, so the minimum runs out to both basin edges, at -120 and +120 deg, which
+    differ by 4e-13 kcal/mol and are resolved opposite ways on the two bond types.
+    Degrees.
+    """
+    worst = 0.0
+    for b in range(B):
+        for s, nm in enumerate(states.names):
+            if states.mirror[s] == s:
+                continue
+            d = argmin1[b][nm] + argmin1[(c - b) % B][states.names[states.mirror[s]]]
+            worst = max(worst, abs((d + 180.0) % 360.0 - 180.0))
+    return worst
 
 
 def fit_ris(
@@ -622,6 +677,7 @@ def fit_ris(
     third_order: bool = False,
     cap: float = 50.0,
     reversal_tol: float = 0.5,
+    angle_tol: float | None = None,
     scan: str = "dense",
     coarse_step: float = 30.0,
 ) -> FitReport:
@@ -640,16 +696,23 @@ def fit_ris(
     symmetry that does survive reflection for a chiral chain is reflection composed
     with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1), and ``"auto"`` averages
     over that instead for a chiral polymer: a state mirror with a bond-type shift on
-    the first-order term, and a state mirror with a transpose on the pair term.  It is
-    checked numerically before use (every bond-type shift is tried, and the averaging
-    is applied only if the residual is within ``reversal_tol``), so it cannot be
-    applied where it does not hold.  Measured residuals are 0.02-0.09 kcal/mol at
-    step = 20 deg for PE, PVDF, PVDC, CFE and CDFE alike, against 32-47 for plain
-    mirroring of the chiral pair.  Third-order terms and the ``adapt_angles`` mirror
-    are symmetrised only under plain mirroring, their reversal images not having been
-    established.  With ``adapt_angles``
+    the first-order term, a state mirror with a transpose on the pair term, and a state
+    mirror with the triple read backwards on the third-order term (see
+    :func:`_reversal_images`).  Each is checked numerically before use (every bond-type
+    shift is tried, and the averaging is applied only if the residual is within
+    ``reversal_tol``), so none can be applied where it does not hold.  Measured
+    residuals at step = 20 deg are 0.03-0.09 kcal/mol on the first and second order and
+    0.00-0.05 on the third for PE, PVDF, PVDC, CFE and CDFE alike, against 32-47 (pair)
+    and 100 (triple, i.e. the ``cap``) for plain mirroring of the chiral pair.
+    With ``adapt_angles``
     the state dihedral angles are moved to the 1D-scan basin minima (averaged over
-    bond types and mirror pairs), as in classical RIS parametrisations.  With
+    bond types and mirror pairs), as in classical RIS parametrisations.  Forcing a
+    mirror pair to equal magnitude is valid under reflection-with-reversal too -- it
+    follows from the same relation applied to the basin minima -- and is likewise
+    validated first, against ``angle_tol`` degrees (default: the scan resolution
+    ``step``, which is the quantum the basin minima are located to; measured 0.00 deg
+    on a dense grid and <= 0.1 deg with ``scan="adaptive"``, against 80 deg for plain
+    mirroring of CFE and CDFE).  With
     ``third_order`` triplet corrections are added (see :func:`_fit_third_order`),
     which is what distinguishes e.g. TG+TG+ (3/1 helix) from TG+TG- (alpha-PVDF).
     Energies above ``cap`` (steric overlap) are clipped to ``cap``.
@@ -739,12 +802,13 @@ def fit_ris(
         mode = "none"
     if mode not in ("mirror", "reversal", "none"):
         raise ValueError(f"symmetrize must be 'auto', 'mirror', 'reversal', True or False; got {symmetrize!r}")
+    rev_shift = 0
     if mode == "mirror":
         m = np.array(states.mirror)
         e1 = 0.5 * (e1 + e1[:, m])
         e2 = 0.5 * (e2 + e2[:, m][:, :, m])
     elif mode == "reversal":
-        e1_img, e2_img, resid = _reversal_images(e1, e2, states.mirror, B)
+        e1_img, e2_img, resid, rev_shift = _reversal_images(e1, e2, states.mirror, B)
         if resid <= reversal_tol:
             e1 = 0.5 * (e1 + e1_img)
             e2 = 0.5 * (e2 + e2_img)
@@ -766,7 +830,26 @@ def fit_ris(
             ang = np.degrees(np.arctan2(np.sin(np.deg2rad(vals)).mean(), np.cos(np.deg2rad(vals)).mean()))
             angs.append(ang)
         angs = np.array(angs)
-        if mode == "mirror":  # mirror pairs get equal magnitude and opposite sign
+        # Mirror pairs get equal magnitude and opposite sign.  Under plain mirroring that
+        # is immediate.  Under reflection-with-reversal it follows from the per-bond-type
+        # relation arg1[b, s] == -arg1[(c - b) % B, m(s)]: averaging it over b (a bijection
+        # of the bond types) gives angle(m(s)) == -angle(s) for the aggregated angles too.
+        # So the same averaging is right for a chiral fit -- but only if that relation
+        # actually holds, which is measured here rather than assumed.
+        pair_angles = mode == "mirror"
+        if mode == "reversal":
+            ang_tol = step if angle_tol is None else angle_tol
+            ang_resid = _reversal_angle_residual(arg1, states, B, rev_shift)
+            pair_angles = ang_resid <= ang_tol + 1e-9
+            if not pair_angles:
+                warnings.warn(
+                    f"the state basin minima of {polymer.name!r} do not obey "
+                    f"reflection-with-reversal to within {ang_tol} deg (residual "
+                    f"{ang_resid:.2f} deg); leaving the adapted state angles unsymmetrised.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        if pair_angles:
             m = np.array(states.mirror)
             self_mirror = m == np.arange(states.n)
             angs = np.where(self_mirror, angs, np.sign(angs) * 0.5 * (np.abs(angs) + np.abs(angs[m])))
@@ -780,6 +863,18 @@ def fit_ris(
         if mode == "mirror":
             m = np.array(states.mirror)
             e3 = 0.5 * (e3 + e3[:, m][:, :, m][:, :, :, m])
+        elif mode == "reversal":
+            e3_img, resid3 = _reversal_image3(e3, states.mirror, B, rev_shift)
+            if resid3 <= reversal_tol:
+                e3 = 0.5 * (e3 + e3_img)
+            else:
+                warnings.warn(
+                    f"reflection-with-reversal does not hold for the third-order terms of "
+                    f"{polymer.name!r} to within {reversal_tol} kcal/mol (residual "
+                    f"{resid3:.3f}); leaving them unsymmetrised.",
+                    UserWarning,
+                    stacklevel=2,
+                )
     model = RISModel(states, B, e1, e2, e3, name=name or f"{polymer.name}-fit")
     return FitReport(report_grid, scan1, scan2, n_eval, model, arg1, arg2)
 

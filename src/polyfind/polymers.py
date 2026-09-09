@@ -138,29 +138,34 @@ class Polymer:
         image is the *enantiomeric* chain, a different molecule, so ``E(G+)`` and
         ``E(G-)`` genuinely differ -- that difference is exactly what makes an
         isotactic chain choose a one-handed helix.  Averaging it away is unsound
-        here: fit with ``symmetrize=False``.
+        here, and ``symmetrize="auto"`` (the default) does not.
 
         What *does* survive, exactly, is mirror composed with chain reversal:
         ``E(phi_1..phi_N) == E(-phi_N..-phi_1)``, because reversing the chain
         direction swaps ``prev`` and ``next`` and so flips every stereocentre's
         configuration back.  In fitted-model terms (measured, B = 2), that reads
-        ``e1[b, s] == e1[1 - b, m(s)]`` and ``e2[b, s, s'] == e2[b, m(s'), m(s)]``
-        -- a transpose and a bond-type swap on top of the state mirror.  Both hold
-        to grid noise for CFE and CDFE while plain mirroring is violated by tens of
-        kcal/mol, so a corrected ``symmetrize`` is available and cheap; it is just
-        not what :func:`polyfind.forcefield.fit_ris` currently does.  For an achiral
-        chain reversal is a symmetry on its own, which is why plain mirroring is
-        exact there and the existing code is right for PE, PVDF and PVDC.
+        ``e1[b, s] == e1[1 - b, m(s)]``, ``e2[b, s, s'] == e2[b, m(s'), m(s)]`` and
+        ``e3[b, x, y, z] == e3[1 - b, m(z), m(y), m(x)]`` -- a state mirror with a
+        bond-type shift that drops by one at each order, and the term's own indices
+        read backwards.  All three hold to grid noise for CFE and CDFE while plain
+        mirroring is violated by tens of kcal/mol, and
+        :func:`polyfind.forcefield.fit_ris` averages a chiral fit over them after
+        measuring each.  For an achiral chain reversal is a symmetry on its own,
+        which is why plain mirroring is exact there and is what PE, PVDF and PVDC
+        get.
 
-        The same assumption is baked in two more places, both left as they are:
-        :func:`polyfind.helix.canonical_sequence` (and hence
-        :func:`polyfind.enumerate.enumerate_periodic`) deduplicates a sequence
-        against its G+/G- mirror, which for a chiral chain discards a genuinely
-        distinct conformer rather than a redundant one; and
-        :mod:`polyfind.linegroup` counts a glide (mirror plus shift) as a chain
-        symmetry, which a chiral chain does not possess.  Both are correct for the
-        achiral chemistries and conservative-but-lossy for these; fixing them
-        properly belongs with tacticity support.
+        Note that plain *reversal* is no more a symmetry of a chiral chain than
+        plain mirroring is: reading an isotactic chain backwards flips every
+        stereocentre relative to the chain direction, so ``E(phi_N..phi_1)`` equals
+        ``E(-phi_1..-phi_N)``, the enantiomer's energy, and both differ from
+        ``E(phi_1..phi_N)`` (measured at up to 750 kcal/mol on a 24-bond CFE
+        oligomer, against 0 for PVDF).  That is why
+        :func:`polyfind.helix.sequence_images` -- and hence
+        :func:`polyfind.enumerate.enumerate_periodic` -- uses only shifts and the
+        composition for a chiral repeat, keeping a sequence and its mirror as two
+        candidates, and why :func:`polyfind.linegroup.torsion_pattern` does not
+        offer a chiral chain a glide (an improper isometry, which no chiral object
+        has), leaving it the screws and the free/penalty fallback.
         """
         return any(a.is_stereocentre for a in self.backbone)
 

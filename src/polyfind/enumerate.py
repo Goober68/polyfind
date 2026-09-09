@@ -2,7 +2,9 @@
 
 Uses the cyclic k-best dynamic program of :class:`polyfind.ris.RISModel` per
 period, then collapses symmetry-equivalent sequences (shift by a repeat unit,
-reversal, mirror), discards non-primitive repetitions of shorter periods,
+and -- for an achiral repeat -- reversal and mirror; for a chiral one only their
+composition, see :func:`polyfind.helix.sequence_images`), discards non-primitive
+repetitions of shorter periods,
 computes helix descriptors, and filters out chains that do not propagate
 (rings, rise per bond below ``min_rise_per_bond``).
 """
@@ -58,8 +60,14 @@ def enumerate_periodic(
     Helices needing more than ``max_m`` sequence periods per crystallographic repeat are
     kept (with ``helix.c = None``) unless ``require_commensurate``; they are real chain
     conformations but too large to pack cheaply.
+
+    Deduplication uses the symmetry group of ``polymer``'s repeat: for a chiral one
+    (:attr:`polyfind.polymers.Polymer.is_chiral`) a sequence and its G+/G- mirror are
+    *distinct* conformations -- a right- and a left-handed helix with different
+    energies -- so both are kept.  See :func:`polyfind.helix.sequence_images`.
     """
     B = polymer.bonds_per_repeat
+    chiral = bool(polymer.is_chiral)
     states = model.states
     seen: dict[tuple, Candidate] = {}
     for P in range(B, max_period + 1, B):
@@ -67,7 +75,7 @@ def enumerate_periodic(
             seq = tuple(int(s) for s in seq)
             if not is_primitive(seq, B):
                 continue
-            key = canonical_sequence(seq, states, B)
+            key = canonical_sequence(seq, states, B, chiral=chiral)
             if key in seen:
                 continue
             h = helix_parameters(polymer, np.array(key), states, max_m=max_m)
@@ -84,7 +92,10 @@ def enumerate_periodic(
                 helix=h,
             )
             seen[key] = cand
-    known = {canonical_sequence(model.parse(s), states, B): lbl for lbl, s in KNOWN_CHAINS.get(polymer.name, {}).items()}
+    known = {
+        canonical_sequence(model.parse(s), states, B, chiral=chiral): lbl
+        for lbl, s in KNOWN_CHAINS.get(polymer.name, {}).items()
+    }
     out = sorted(seen.values(), key=lambda c: (c.energy_per_monomer, c.period))
     for i, c in enumerate(out):
         c.rank = i + 1

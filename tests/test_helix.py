@@ -83,6 +83,30 @@ def test_canonical_form_symmetries():
     assert len(imgs) <= 8
 
 
+def test_a_chiral_repeat_keeps_a_sequence_and_its_mirror_apart():
+    """For a chiral chain a sequence and its G+/G- mirror are distinct conformers.
+
+    Reflection maps a chiral chain to its enantiomer; and reading an isotactic chain
+    backwards swaps ``prev`` and ``next`` at every stereocentre, so plain reversal
+    lands on the enantiomer too (measured: for CFE, E(reversed) equals E(mirrored)
+    exactly and both differ from E(seq) by hundreds of kcal/mol).  Only the
+    composition survives, and that is the group ``chiral=True`` selects.
+    """
+    st = THREE_STATE
+    # achiral: mirror and reversal are each symmetries, so TG+ and TG- are one candidate
+    assert canonical_sequence([T, GP], st, 2) == canonical_sequence([T, GM], st, 2)
+    # chiral: they are two -- a right- and a left-handed helix, with different energies
+    assert canonical_sequence([T, GP], st, 2, chiral=True) != canonical_sequence([T, GM], st, 2, chiral=True)
+    # what does survive is mirror o reversal: TG+G+T -> mirror TG-G-T -> reverse TG-G-T
+    assert canonical_sequence([T, GP, GP, T], st, 2, chiral=True) == canonical_sequence([T, GM, GM, T], st, 2, chiral=True)
+    imgs = sequence_images([T, GP, GP, GM], st, 2, chiral=True)
+    assert (GP, GM, GM, T) in imgs  # mirror of the reversal
+    assert (GM, GP, GP, T) not in imgs and (T, GM, GM, GP) not in imgs  # not reversal, not mirror
+    # the chiral group is a subgroup of the achiral one, so it can only ever refine
+    for seq in ([T, GP], [T, GP, T, GM], [T, GP, GP, GM], [T, T, T, GP]):
+        assert sequence_images(seq, st, 2, chiral=True) <= sequence_images(seq, st, 2)
+
+
 def test_is_primitive():
     assert is_primitive([T, GP, T, GM], 2)
     assert not is_primitive([T, T, T, T], 2)

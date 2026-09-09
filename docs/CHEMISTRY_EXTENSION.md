@@ -88,8 +88,10 @@ and the classical planar-zigzag same-side check). Syndiotactic and atactic chain
 are not expressible; a `Polymer.backbone` holding an explicit multi-monomer
 sequence, as already proposed for copolymers in section 3, is the natural way in.
 
-The consequence is that **`fit_ris`'s `symmetrize=True` default is no longer
-sound** for these chemistries. Mirror symmetrisation is exact for an achiral
+*(Written during phase 2; the three places it lists as still assuming an achiral
+repeat have since been fixed, see "Phase 2 outcome" below.)* The consequence is
+that **`fit_ris`'s `symmetrize=True` default is no longer sound** for these
+chemistries. Mirror symmetrisation is exact for an achiral
 chain because reflecting a conformer maps `phi -> -phi` and returns the same
 molecule; for a chiral repeat the reflection returns the *enantiomeric chain*, so
 `E(phi)` and `E(-phi)` are energies of diastereomers and genuinely differ -- by
@@ -135,11 +137,28 @@ defaults to `symmetrize="auto"`, which mirrors only achiral polymers and warns
 if mirroring is forced on a chiral one. `Polymer.is_chiral` exposes the
 distinction and `build_chain` warns once per chiral polymer.
 
-Two related places still assume achirality and are left alone for now, since
-fixing them is its own piece of work: `helix.canonical_sequence`'s mirror
-deduplication, which treats a sequence and its mirror image as the same
-candidate, and the glide patterns in `linegroup`. Both are correct for PE,
-PVDF and PVDC and wrong for CFE and CDFE.
+The two related places that also assumed achirality are now fixed as well, and
+one of them corrected a claim made here. `helix.sequence_images` takes a
+`chiral` flag that `enumerate_periodic` fills in from `Polymer.is_chiral`;
+`linegroup.torsion_pattern` takes the same flag from `line_group`. The claim
+that needed correcting was that chain reversal remains a symmetry of a chiral
+chain on its own. It does not: reading an isotactic chain backwards swaps `prev`
+and `next` at every stereocentre, so `E(phi_N..phi_1) == E(-phi_1..-phi_N)` --
+the *enantiomer's* energy. Measured on 24-bond oligomers, reversal alone and
+mirroring alone give bit-identical energies and both differ from the original by
+up to 750 kcal/mol for CFE and 5100 for CDFE, against exactly zero for PE, PVDF
+and PVDC. So the chiral group is shifts plus reflection-with-reversal and
+nothing else, which is the same operation the fit uses. With it, PVDF's and
+PVDC's candidate lists are unchanged to the name, CFE's grows from 69 to 90
+candidates and CDFE's from 66 to 92, and the largest energy difference between a
+candidate and its mirror partner is 31.1 kcal/mol per monomer for CFE and 38.8
+for CDFE -- exactly zero for the achiral ones, as it must be.
+
+A glide is an improper isometry and a chiral object has none, whatever its state
+sequence reads like, so `torsion_pattern` no longer offers one to a chiral
+repeat: `TG+TG-` and `TTTG+TTTG-` fall back to `free` (the penalty method),
+while `TT` and `TG+` keep the screw they also have. Screws are proper isometries
+and are unaffected.
 
 The replacement symmetry is implemented and is the default for chiral
 polymers. An earlier note here said its index mapping was unresolved, because a
@@ -155,8 +174,26 @@ chiral, and validates the relation numerically before applying it: every
 bond-type shift is tried, and the averaging is used only if the residual is
 within `reversal_tol`, otherwise the fit is left unsymmetrised with a warning.
 So the noise averaging is restored for chiral fits without the physics being
-assumed. Third-order terms and the `adapt_angles` mirror are still symmetrised
-only under plain mirroring, their reversal images not having been derived.
+assumed.
+
+The third-order terms and the `adapt_angles` mirror now follow the same
+operation, each measured before it is used. Writing the reversal as `j -> K - j`
+on the bonds, a term over `n` consecutive bonds maps to the term starting `n - 1`
+bonds earlier, so each order carries a bond-type shift one lower than the order
+below it, together with the state mirror and its own indices read backwards:
+`e3[b, x, y, z] == e3[(c-2-b) % B, m(z), m(y), m(x)]`. At `step = 20 deg` that
+residual is 0.00 kcal/mol for PVDF, CFE and CDFE, 0.02 for PVDC and 0.01 for PE,
+against 40-100 (the cap) for every near miss -- mirroring without reversing the
+triple, reversing without mirroring, or the right form at the wrong bond-type
+shift -- on the chiral pair. The state angles obey `arg1[b, s] ==
+-arg1[(c-b) % B, m(s)]` to 0.00 deg on a dense grid and 0.09 deg with the
+adaptive scan, which is what makes the aggregated mirror-pair angles equal and
+opposite for a chiral fit as well; the per-bond-type minima are 80 deg from
+mirror-symmetric for CFE and CDFE, so it is the reversal that carries it, not
+mirroring. Both checks are run at fit time against `reversal_tol` and
+`angle_tol` and warn rather than guess: PVDC at `step = 45 deg` really does miss
+the third-order check (residual 1.94 kcal/mol, from inclusion-exclusion between
+two clashing conformers at +-45 deg), and the code declines to symmetrise there.
 
 **Phase 3, multi-atom pendant groups (AN CH2-CH(CN), VDCN CH2-C(CN)2, FANOME
 CH2-C(CN)(OCH3)).** A substituent becomes a small rigid fragment rather than an
