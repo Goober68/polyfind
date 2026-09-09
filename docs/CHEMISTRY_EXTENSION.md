@@ -328,3 +328,42 @@ holds qualitatively there, but it is untested for nitrile, ring and copolymer
 chemistries. It is also directly checkable, by calibrating against relaxations
 that already exist for PVDF and CFE before trusting the approach on the rest.
 That check should come before the compute-saving claim is believed.
+
+### Phase 3 follow-up: the two gaps are closed
+
+Phase 3 could not touch `pack.py` or `linegroup.py`, and left two things broken
+for the new chemistries. Both are now fixed.
+
+The batched block builders in both files laid atoms out at a fixed stride of
+three per backbone atom, which silently assumed single-atom pendants. They now
+compute the stride from each backbone atom's pendant sizes, matching
+`build_chain`'s layout exactly, so `repeat_chains_from_torsions` and the
+gradient path inside continuous refinement accept multi-atom pendants.
+`pack.MASS` gained nitrogen and oxygen, without which any density involving a
+nitrile or methoxy raised. Verified for AN and VDCN: chains build, masses and
+densities come out, batched torsion perturbations reproduce the unperturbed
+chain exactly, and the per-row gradient path returns finite energies.
+
+The strain finding from phase 1 has now recurred twice more and is worth
+stating as a general limit rather than a per-chemistry quirk. All-trans
+Lennard-Jones strain, same measurement each time: PVDF 9, CFE 162, CDFE 199,
+PVDC 313, AN 88, VDCN 176, FANOME about 1e6 kcal/mol. Only PVDF has an
+all-trans chain that is a sensible RIS reference. For everything bulkier the
+planar zigzag is strained enough that any rotation lowers the energy, so the
+convention of measuring RIS energies from all-trans is measuring from a state
+the polymer would never occupy.
+
+FANOME is the extreme case and is instructive: its all-trans chain puts methyl
+hydrogens of methoxy groups on consecutive substituted carbons 0.80 A apart.
+That is not an artifact of freezing the methoxy rotamer, which was the obvious
+suspect -- scanning the C-O azimuth through a full turn never drops the energy
+below about 7e3 kcal/mol. It is the frozen backbone angles again, the same
+limitation phase 1 identified, now severe enough to make the structure
+unphysical rather than merely strained. FANOME is registered and its geometry
+tested, but deliberately not fitted.
+
+Two things follow for the roadmap. First, the RIS reference state needs to
+become the relaxed chain rather than all-trans for these chemistries, or their
+fitted energies are relative to nothing meaningful. Second, variable backbone
+angles are no longer a refinement nicety; for anything past PVDF they are a
+precondition for the model to describe a real molecule at all.

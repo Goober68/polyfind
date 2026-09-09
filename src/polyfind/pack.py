@@ -51,7 +51,7 @@ from .forcefield import COULOMB, erfc_approx
 from .helix import HelixParams, helix_parameters, kabsch, rotation_to_z
 from .polymers import Polymer, RISStates, lj_params
 
-MASS = {"C": 12.011, "H": 1.008, "F": 18.998, "Cl": 35.45}
+MASS = {"C": 12.011, "H": 1.008, "N": 14.007, "O": 15.999, "F": 18.998, "Cl": 35.45}
 _TOPO_CACHE: dict = {}
 
 # 1 e/A^2 in C/m^2:  1.602176634e-19 C / (1e-10 m)^2.
@@ -257,7 +257,7 @@ def _batch_block_coords(polymer: Polymer, tors_batch: np.ndarray) -> np.ndarray:
     the batch instead of once per chain, which is what makes a gradient over torsions
     affordable.
     """
-    from .chain import build_backbone, nerf, substituent_positions
+    from .chain import build_backbone, nerf, pendant_positions
 
     M, nb = tors_batch.shape
     dih = np.tile(tors_batch, (1, 5))
@@ -267,12 +267,23 @@ def _batch_block_coords(polymer: Polymer, tors_batch: np.ndarray) -> np.ndarray:
     v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, polymer.backbone[0].backbone_angle, 180.0, xp=np)
     v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, polymer.backbone[(N + 2) % B].backbone_angle, 180.0, xp=np)
     bb_ext = np.concatenate([v0[:, None], bb, v1[:, None]], axis=1)  # (M, N+5, 3)
-    out = np.empty((M, 3 * (N + 3), 3))
+    # A pendant is a group of one or more atoms (phase 3), so the stride is per backbone
+    # atom rather than a fixed 3; the layout matches build_chain's exactly (backbone atom,
+    # then each pendant's atoms in order).
+    widths = [1 + polymer.backbone[k % B].n_pendant_atoms for k in range(N + 3)]
+    starts = np.concatenate([[0], np.cumsum(widths)])
+    out = np.empty((M, int(starts[-1]), 3))
     for k in range(N + 3):
         spec = polymer.backbone[k % B]
         x = bb_ext[:, k + 1]
-        s1, s2 = substituent_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec.sub_bond, spec.sub_angle, xp=np)
-        out[:, 3 * k], out[:, 3 * k + 1], out[:, 3 * k + 2] = x, s1, s2
+        at = int(starts[k])
+        out[:, at] = x
+        groups = pendant_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec, xp=np)
+        at += 1
+        for positions in groups:
+            for pos in positions:
+                out[:, at] = pos
+                at += 1
     return out
 
 

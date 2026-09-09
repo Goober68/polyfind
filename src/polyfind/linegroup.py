@@ -63,7 +63,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .chain import backbone_angle_lookup, build_backbone, nerf, substituent_positions
+from .chain import backbone_angle_lookup, build_backbone, nerf, pendant_positions, substituent_positions
 from .helix import HelixParams, canonical_sequence, kabsch, rotation_to_z
 from .pack import (
     PeriodicChain,
@@ -229,12 +229,21 @@ def _block_coords(polymer: Polymer, tors_batch: np.ndarray, angles_batch=None) -
     v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, ang_of(0), 180.0, xp=np)
     v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, ang_of(N + 2), 180.0, xp=np)
     bb_ext = np.concatenate([np.broadcast_to(v0, (M, 3))[:, None], bb, np.broadcast_to(v1, (M, 3))[:, None]], axis=1)
-    out = np.empty((M, 3 * (N + 3), 3))
+    # A pendant is a group of one or more atoms (phase 3), so the stride is per backbone
+    # atom rather than a fixed 3; the layout matches build_chain's exactly.
+    widths = [1 + polymer.backbone[k % B].n_pendant_atoms for k in range(N + 3)]
+    starts = np.concatenate([[0], np.cumsum(widths)])
+    out = np.empty((M, int(starts[-1]), 3))
     for k in range(N + 3):
         spec = polymer.backbone[k % B]
         x = bb_ext[:, k + 1]
-        s1, s2 = substituent_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec.sub_bond, spec.sub_angle, xp=np)
-        out[:, 3 * k], out[:, 3 * k + 1], out[:, 3 * k + 2] = x, s1, s2
+        at = int(starts[k])
+        out[:, at] = x
+        at += 1
+        for positions in pendant_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec, xp=np):
+            for pos in positions:
+                out[:, at] = pos
+                at += 1
     return out
 
 

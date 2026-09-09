@@ -500,3 +500,37 @@ def test_the_whole_funnel_runs(polymer):
     pk = CrystalPacker(ch, n_chains=2)
     e = pk.energy(np.array([[6.5, 10.0, 90.0, 30.0, 200.0, 1.0, 0]]))
     assert np.isfinite(e).all()
+
+
+def test_packing_and_refinement_paths_accept_multi_atom_pendants():
+    """The block builders used to index atoms as 3k+{0,1,2}, so they only ever
+    handled single-atom pendants. Densities also needed masses for N and O."""
+    import warnings as _w
+
+    import numpy as np
+
+    from polyfind.pack import CrystalPacker, periodic_chain, repeat_chains_from_torsions
+    from polyfind.polymers import THREE_STATE, get_polymer
+
+    with _w.catch_warnings():
+        _w.simplefilter("ignore")
+        for name, n_atoms in (("vdcn", 8), ("an", 7)):
+            poly = get_polymer(name)
+            ch = periodic_chain(poly, [0, 0], THREE_STATE)
+            assert ch.n_atoms == n_atoms
+            assert ch.mass > 0  # needs N in the mass table
+            pk = CrystalPacker(ch, n_chains=2)
+            assert pk.density(7.0, 11.0, 90.0) > 0
+
+            # the batched torsion path feeds refinement's gradients
+            tors = np.tile(ch.dihedrals, (3, 1)) + np.array([[0.0], [2.0], [-2.0]])
+            chains = repeat_chains_from_torsions(poly, ch.name, tors)
+            assert len(chains) == 3
+            assert all(c.n_atoms == n_atoms for c in chains)
+            # the unperturbed row must reproduce the original chain exactly
+            assert np.allclose(chains[0].coords, ch.coords, atol=1e-9)
+
+            p = np.array([[7.0, 11.0, 90.0, 20.0, 200.0, 1.0, 0]])
+            e = pk.energy(np.repeat(p, 3, axis=0), coords=np.stack([c.coords for c in chains]),
+                          c=np.array([c.c for c in chains]))
+            assert np.isfinite(e).all()
