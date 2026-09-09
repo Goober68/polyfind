@@ -152,3 +152,79 @@ def test_refinement_without_torsions_only_moves_the_cell():
     res = refine_crystal(PVDF, start, refine_torsions=False, maxfev=20, maxiter=20)
     np.testing.assert_allclose(res.torsions, start.dihedrals, atol=1e-12)
     assert res.result.energy_per_monomer <= start.energy_per_monomer + 1e-9
+
+
+# ------------------------------------------------- line-group parametrisation (item 5)
+def test_linegroup_is_the_default_and_needs_no_penalty():
+    chain = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
+    packer = CrystalPacker(chain)
+    start = packer.result(np.array([5.29, 8.99, 90.0, 209.5, 209.5, 0.0, 0.0]))
+    lgr = refine_crystal(PVDF, start, maxfev=40, maxiter=40)
+    free = refine_crystal(PVDF, start, maxfev=40, maxiter=40, parametrisation="free", refine_angles=False)
+    assert lgr.parametrisation == "linegroup" and free.parametrisation == "free"
+    # exactly periodic by construction, with fewer variables than the free path
+    assert lgr.rotation_error < 1e-5
+    assert lgr.n_variables < free.n_variables
+    # the penalty term is inactive: it contributes less than a micro-kcal/mol
+    assert 5.0 * lgr.rotation_error ** 2 < 1e-6
+    # ... and a run with the penalty switched off entirely lands in the same minimum
+    off = refine_crystal(PVDF, start, maxfev=40, maxiter=40, penalty=0.0)
+    assert off.result.energy_per_monomer == pytest.approx(lgr.result.energy_per_monomer, abs=1e-3)
+    assert off.rotation_error < 1e-5
+    # the objective (lattice energy + bond-angle strain) is no worse than the free path's
+    assert lgr.result.energy_per_monomer + lgr.angle_energy <= free.result.energy_per_monomer + 1e-6
+
+
+def test_linegroup_refines_the_bond_angles_within_their_bounds():
+    chain = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
+    packer = CrystalPacker(chain)
+    start = packer.result(np.array([5.29, 8.99, 90.0, 209.5, 209.5, 0.0, 0.0]))
+    res = refine_crystal(PVDF, start, maxfev=60, maxiter=60, max_angle_change=5.0)
+    assert len(res.angles) == PVDF.bonds_per_repeat
+    assert np.abs(res.angles - 114.0).max() <= 5.0 + 1e-6
+    assert np.abs(res.angles - 114.0).max() > 0.1  # they actually moved
+    assert res.angle_energy > 0.0
+    assert res.result.c != pytest.approx(chain.c, abs=1e-3)  # and the repeat followed them
+    frozen = refine_crystal(PVDF, start, maxfev=60, maxiter=60, refine_angles=False, parametrisation="free")
+    np.testing.assert_allclose(frozen.angles, 114.0, atol=1e-12)
+    assert frozen.angle_energy == 0.0
+
+
+def test_beta_linegroup_forces_equal_angles_and_exact_trans():
+    """One monomer per repeat: a straight all-trans chain must have equal angles."""
+    chain = periodic_chain(PVDF, [T, T], THREE_STATE)
+    packer = CrystalPacker(chain)
+    start = packer.result(np.array([4.65, 8.61, 90.0, 0.0, 0.0, 2.58, 0.0]))
+    res = refine_crystal(PVDF, start, maxfev=40, maxiter=40)
+    assert res.n_variables == 6  # 5 cell + a single free parameter, the common angle
+    np.testing.assert_allclose(res.torsions, 180.0, atol=1e-5)
+    assert res.angles[0] == pytest.approx(res.angles[1], abs=1e-5)
+    assert res.rotation_error < 1e-5
+
+
+def test_linegroup_falls_back_to_the_penalty_method_for_an_unpatterned_sequence():
+    chain = periodic_chain(PVDF, [T, T, GP, T, GM, T], THREE_STATE)
+    packer = CrystalPacker(chain)
+    start = packer.result(np.array([5.5, 9.0, 90.0, 100.0, 100.0, 1.0, 0.0]))
+    res = refine_crystal(PVDF, start, maxfev=15, maxiter=15)
+    assert res.parametrisation == "free"
+    assert res.n_variables == 5 + len(start.dihedrals) + PVDF.bonds_per_repeat
+    assert res.result.energy_per_monomer <= start.energy_per_monomer + 1e-9
+
+
+def test_unknown_parametrisation_rejected():
+    chain = periodic_chain(PVDF, [T, T], THREE_STATE)
+    packer = CrystalPacker(chain)
+    start = packer.result(np.array([4.65, 8.61, 90.0, 0.0, 0.0, 2.58, 0.0]))
+    with pytest.raises(ValueError):
+        refine_crystal(PVDF, start, parametrisation="symmetry")
+
+
+def test_nelder_mead_works_with_the_line_group_too():
+    chain = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
+    packer = CrystalPacker(chain)
+    start = packer.result(np.array([5.29, 8.99, 90.0, 209.5, 209.5, 0.0, 0.0]))
+    res = refine_crystal(PVDF, start, maxfev=80, method="nelder-mead")
+    assert res.parametrisation == "linegroup"
+    assert res.rotation_error < 1e-5
+    assert res.result.energy_per_monomer <= start.energy_per_monomer + 1e-9

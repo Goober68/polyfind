@@ -44,10 +44,38 @@ def nerf(a, b, c, bond, angle_deg, dihedral_deg, xp=np):
     return c + d2[..., 0:1] * bc + d2[..., 1:2] * m + d2[..., 2:3] * n
 
 
-def build_backbone(polymer: Polymer, dihedrals_deg, xp=None):
+def backbone_angle_lookup(polymer: Polymer, bond_angles=None, xp=np):
+    """``k -> backbone angle at backbone atom k`` for an optional per-repeat override.
+
+    ``bond_angles`` is ``None`` (use the polymer's own frozen angles), an array of
+    shape ``(R,)``, or a batch of shape ``(M, R)``; entry ``r`` is the angle of every
+    backbone atom ``k`` with ``k % R == r``, i.e. the override is broadcast along the
+    chain exactly as the polymer's own repeat is.  ``R`` need not equal
+    ``polymer.bonds_per_repeat``: a crystallographic repeat of several monomers can
+    carry one angle per backbone atom of the repeat.
+
+    The returned callable gives a Python float when no override is in force (so the
+    frozen :class:`~polyfind.polymers.Polymer` path is bit-for-bit unchanged) and an
+    array of shape ``(M,)`` or ``(1,)`` otherwise, which every consumer here
+    broadcasts against the batch dimension.
+    """
+    B = polymer.bonds_per_repeat
+    if bond_angles is None:
+        return lambda k: polymer.backbone[k % B].backbone_angle
+    ba = xp.asarray(bond_angles, dtype=float)
+    if ba.ndim == 1:
+        ba = ba[None, :]
+    if ba.ndim != 2 or ba.shape[1] == 0:
+        raise ValueError("bond_angles must have shape (R,) or (M, R) with R >= 1")
+    R = ba.shape[1]
+    return lambda k: ba[:, k % R]
+
+
+def build_backbone(polymer: Polymer, dihedrals_deg, xp=None, bond_angles=None):
     """Backbone coordinates for a dihedral array of shape (N,) or (M, N).
 
-    Returns (N+3, 3) or (M, N+3, 3).
+    Returns (N+3, 3) or (M, N+3, 3).  ``bond_angles`` optionally overrides the
+    polymer's frozen backbone angles; see :func:`backbone_angle_lookup`.
     """
     xp = xp or bk.get_backend()
     dih = xp.asarray(dihedrals_deg, dtype=float)
@@ -55,17 +83,16 @@ def build_backbone(polymer: Polymer, dihedrals_deg, xp=None):
     if not batched:
         dih = dih[None, :]
     M, N = dih.shape
-    B = polymer.bonds_per_repeat
     L = polymer.bond_length
-    angles = [polymer.backbone[k % B].backbone_angle for k in range(N + 3)]
+    ang_of = backbone_angle_lookup(polymer, bond_angles, xp=xp)
     coords = xp.zeros((M, N + 3, 3), dtype=float)
     # first three atoms in the xy plane
     coords[:, 1, 0] = L
-    a1 = np.deg2rad(angles[1])
-    coords[:, 2, 0] = L - L * np.cos(a1)
-    coords[:, 2, 1] = L * np.sin(a1)
+    a1 = xp.deg2rad(xp.asarray(ang_of(1), dtype=float))
+    coords[:, 2, 0] = L - L * xp.cos(a1)
+    coords[:, 2, 1] = L * xp.sin(a1)
     for k in range(3, N + 3):
-        coords[:, k] = nerf(coords[:, k - 3], coords[:, k - 2], coords[:, k - 1], L, angles[k - 1], dih[:, k - 3], xp=xp)
+        coords[:, k] = nerf(coords[:, k - 3], coords[:, k - 2], coords[:, k - 1], L, ang_of(k - 1), dih[:, k - 3], xp=xp)
     return coords if batched else coords[0]
 
 
@@ -110,23 +137,28 @@ class Structure:
         return "\n".join(lines) + "\n"
 
 
-def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True) -> Structure:
+def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_angles=None) -> Structure:
     """All-atom oligomer for ``N`` RIS dihedrals (N+3 backbone atoms), H-capped by default.
 
     The chain is built with one virtual backbone atom beyond each end (trans) so
     that terminal substituents are placed consistently; with ``cap=True`` an H atom
     is placed along each virtual bond, i.e. CH3-/CH2F-type end groups.
+
+    ``bond_angles`` (shape ``(R,)``, see :func:`backbone_angle_lookup`) overrides the
+    polymer's frozen backbone angles; the substituents are placed from the *actual*
+    backbone neighbours, so they follow the changed geometry automatically.
     """
     dih = np.asarray(dihedrals_deg, dtype=float)
     N = len(dih)
     B = polymer.bonds_per_repeat
     L = polymer.bond_length
-    bb = build_backbone(polymer, dih, xp=np)  # (N+3, 3) real atoms, canonical frame
+    ang_of = backbone_angle_lookup(polymer, bond_angles, xp=np)
+    bb = build_backbone(polymer, dih, xp=np, bond_angles=bond_angles)  # (N+3, 3) real atoms, canonical frame
     # virtual (trans) backbone atoms beyond each end, in the *same* frame as ``bb`` so that
     # coordinates agree with build_backbone (helix analysis relies on this)
-    v0 = nerf(bb[2], bb[1], bb[0], L, polymer.backbone[0].backbone_angle, 180.0, xp=np)
-    v1 = nerf(bb[N], bb[N + 1], bb[N + 2], L, polymer.backbone[(N + 2) % B].backbone_angle, 180.0, xp=np)
-    bb_ext = np.vstack([v0[None], bb, v1[None]])  # (N+5, 3); real atom k sits at bb_ext[k+1]
+    v0 = nerf(bb[2], bb[1], bb[0], L, ang_of(0), 180.0, xp=np)
+    v1 = nerf(bb[N], bb[N + 1], bb[N + 2], L, ang_of(N + 2), 180.0, xp=np)
+    bb_ext = np.vstack([np.reshape(v0, 3)[None], bb, np.reshape(v1, 3)[None]])  # (N+5, 3); real atom k sits at bb_ext[k+1]
     elements, coords, charges, bonds = [], [], [], []
     backbone_idx, subs_of = [], {}
     for k in range(N + 3):
@@ -171,7 +203,7 @@ def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True) -> Structure:
     )
 
 
-def build_chain_batch(polymer: Polymer, dihedrals_deg, cap: bool = True) -> tuple[Structure, np.ndarray]:
+def build_chain_batch(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_angles=None) -> tuple[Structure, np.ndarray]:
     """Batched version of :func:`build_chain`.
 
     ``dihedrals_deg`` has shape ``(M, N)``.  Returns ``(template, coords)`` where
@@ -184,15 +216,21 @@ def build_chain_batch(polymer: Polymer, dihedrals_deg, cap: bool = True) -> tupl
     and :func:`nerf`, both of which already accept a leading batch dimension, so the whole
     oligomer (backbone, substituents, end caps) is placed in a handful of vectorised calls
     instead of one Python loop per conformer.
+
+    ``bond_angles`` optionally overrides the polymer's frozen backbone angles, either
+    once for the whole batch (shape ``(R,)``) or per row (shape ``(M, R)``), which is
+    what makes a finite-difference gradient over the bond angles one batched call.
     """
     dih = np.asarray(dihedrals_deg, dtype=float)
     M, N = dih.shape
     B = polymer.bonds_per_repeat
     L = polymer.bond_length
-    template = build_chain(polymer, dih[0], cap)
-    bb = build_backbone(polymer, dih, xp=np)  # (M, N+3, 3)
-    v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, polymer.backbone[0].backbone_angle, 180.0, xp=np)
-    v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, polymer.backbone[(N + 2) % B].backbone_angle, 180.0, xp=np)
+    ang_of = backbone_angle_lookup(polymer, bond_angles, xp=np)
+    row0 = None if bond_angles is None else np.atleast_2d(np.asarray(bond_angles, dtype=float))[0]
+    template = build_chain(polymer, dih[0], cap, bond_angles=row0)
+    bb = build_backbone(polymer, dih, xp=np, bond_angles=bond_angles)  # (M, N+3, 3)
+    v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, ang_of(0), 180.0, xp=np)
+    v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, ang_of(N + 2), 180.0, xp=np)
     bb_ext = np.concatenate([v0[:, None, :], bb, v1[:, None, :]], axis=1)  # (M, N+5, 3)
     coords = np.zeros((M, template.n_atoms, 3), dtype=float)
     for k in range(N + 3):
