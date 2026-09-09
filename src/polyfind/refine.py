@@ -86,6 +86,7 @@ def refine_crystal(
     refine_angles: bool = True,
     max_angle_change: float = 8.0,
     angle_stiffness: float = 105.0,
+    field=None,
 ) -> RefineResult:
     """Relax cell (a, b, [gamma], phi1, phi2, dz) and the repeat's conformation.
 
@@ -106,6 +107,13 @@ def refine_crystal(
     ``method="lbfgs"`` (default) uses batched finite-difference gradients; ``maxfev``
     caps Nelder-Mead's function evaluations and is mapped onto L-BFGS-B's iteration
     limit.  ``method="nelder-mead"`` is the original simplex search.
+
+    ``field=(Ex, Ey, Ez)`` (V/A) relaxes the cell *and* the conformation in the presence
+    of a uniform applied field, the lattice energy carrying the ``-mu_cell . E`` term of
+    :meth:`polyfind.pack.CrystalPacker.field_energy`; the dipole follows the torsions and
+    the setting angles, so the field acts on both.  ``field=None`` (the default) inherits
+    the field ``start`` was packed under, so a refinement never silently drops it; pass
+    ``field=(0, 0, 0)`` to refine a field-packed cell at zero field.
     """
     if method not in ("lbfgs", "l-bfgs-b", "nelder-mead", "nelder_mead"):
         raise ValueError(f"unknown refine method {method!r}")
@@ -168,7 +176,10 @@ def refine_crystal(
     # makes the map conformation -> coordinates continuous (the raw principal-axis
     # frame flips by 180 deg as the torsions vary, which no gradient can follow).
     ref = repeat_chains(polymer, start.chain, tors0[None], angles0)[0]
-    packer = CrystalPacker(ref, n_chains=start.n_chains, cutoff=cutoff, eps_r=eps_r)
+    if field is None:
+        field = getattr(start, "field", (0.0, 0.0, 0.0))
+    field = None if not np.any(np.asarray(field, dtype=float)) else field
+    packer = CrystalPacker(ref, n_chains=start.n_chains, cutoff=cutoff, eps_r=eps_r, field=field)
     count = {"n": 0}
 
     def chains_for(S) -> tuple[list[PeriodicChain], np.ndarray, np.ndarray]:
