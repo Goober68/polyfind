@@ -192,12 +192,12 @@ parallelism is a loop over candidates (not implemented).
 `examples/pvdf_polymorphs.py`, Part A.  Axes are listed as sorted pairs since
 the search does not know which is a and which is b.
 
-| Chain | predicted a x b x c (A), density | experiment (A), density |
-|---|---|---|
-| PE T | 4.61 x 7.35 x 2.55, 1.08 | 4.95 x 7.42 x 2.55, 1.00 |
-| PVDF beta TT | 4.65 x 8.61 x 2.58, 2.06 | 4.91 x 8.58 x 2.56, 1.97 |
-| PVDF alpha TG+TG- | 5.08 x 9.32 x 4.56, 1.97 | 4.96 x 9.64 x 4.62, 1.92 |
-| PVDF gamma TTTG+TTTG- | 5.40 x 8.92 x 9.11, 1.94 | 4.96 x 9.67 x 9.20, 1.94 |
+| Chain | predicted a x b x c (A), density | orientation | experiment (A), density |
+|---|---|---|---|
+| PE T | 4.61 x 7.35 x 2.55, 1.08 | degenerate | 4.95 x 7.42 x 2.55, 1.00 |
+| PVDF beta TT | 4.65 x 8.61 x 2.58, 2.06 | degenerate | 4.91 x 8.58 x 2.56, 1.97 |
+| PVDF alpha TG+TG- | 5.09 x 9.14 x 4.56, 2.01 | **antiparallel** | 4.96 x 9.64 x 4.62, 1.92 |
+| PVDF gamma TTTG+TTTG- | 5.40 x 8.92 x 9.11, 1.94 | **parallel** | 4.96 x 9.67 x 9.20, 1.94 |
 
 Cell edges are within about 7% and densities within about 5% with a potential
 that was never fitted to any of this.  For PE the herringbone arrangement
@@ -205,11 +205,21 @@ that was never fitted to any of this.  For PE the herringbone arrangement
 minimum, 0.01 kcal/mol per CH2 above a parallel arrangement, i.e. within the
 potential's accuracy.
 
-These runs predate the defect described in section 5.5, so their chain-to-chain
-*orientations* are not evidence of anything: every antiparallel arrangement
-carried a spurious penalty of thousands of kcal/mol and could never be
-selected.  The cell dimensions and densities in the table are unaffected,
-because they come from parallel packings, which were scored correctly.
+The orientation column is now meaningful, which it was not before the defect of
+section 5.5 was fixed, and it is worth reading carefully because two of the four
+entries are not a prediction at all.  For PE and for beta the two orientations
+are *exactly* degenerate, to the last digit.  That is a symmetry, not a
+coincidence: both chains are mirror-symmetric about their own axis, so flipping
+one is the same as rotating it, and the setting angle already covers rotations.
+The flag the search reports for them is arbitrary.  Note also that
+crystallographic polarity is not the same question as this flag: two chains
+pointing the same way can still oppose their transverse dipoles through their
+setting angles.
+
+For the two chains where the flip is a real degree of freedom the search gets
+both right.  Alpha prefers antiparallel by 0.18 kcal/mol per monomer and gamma
+prefers parallel by 0.78, matching the antipolar alpha and polar gamma phases.
+Neither answer was reachable before the fix.
 
 Continuous refinement then does what it is meant to: alpha relaxes to c = 4.70
 A with gauche angles at the potential's own minimum (+/-80 deg); gamma relaxes
