@@ -1,10 +1,10 @@
 # Extending polyfind beyond PVDF: a design
 
-Status: design only. None of this is implemented. It was produced as discussion
-during the performance-optimisation session and is recorded here so it does not
-disappear with the transcript. Claims about the current code have been checked
-against the code and are marked as such; the compute estimate in section 4 is
-an estimate and is marked as one.
+Status: phase 1 is implemented; everything after it is design. The design was
+produced as discussion during the performance-optimisation session and is
+recorded here so it does not disappear with the transcript. Claims about the
+current code have been checked against the code and are marked as such; the
+compute estimate in section 4 is an estimate and is marked as one.
 
 Target chemistries: PVDF plus CFE, CDFE, AN, VDCN, VDC, CNEPO and FANOME, for
 field-driven polarization-to-mechanical-work conversion, with a machine-learned
