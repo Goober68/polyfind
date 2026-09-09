@@ -171,6 +171,49 @@ def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True) -> Structure:
     )
 
 
+def build_chain_batch(polymer: Polymer, dihedrals_deg, cap: bool = True) -> tuple[Structure, np.ndarray]:
+    """Batched version of :func:`build_chain`.
+
+    ``dihedrals_deg`` has shape ``(M, N)``.  Returns ``(template, coords)`` where
+    ``template`` is ``build_chain(polymer, dihedrals_deg[0], cap)`` (topology,
+    elements, bonds -- identical for every row since only the dihedrals vary)
+    and ``coords`` is an ``(M, n_atoms, 3)`` array whose row ``m`` equals
+    ``build_chain(polymer, dihedrals_deg[m], cap).coords`` to numerical precision.
+
+    Implemented with the batched :func:`build_backbone` plus :func:`substituent_positions`
+    and :func:`nerf`, both of which already accept a leading batch dimension, so the whole
+    oligomer (backbone, substituents, end caps) is placed in a handful of vectorised calls
+    instead of one Python loop per conformer.
+    """
+    dih = np.asarray(dihedrals_deg, dtype=float)
+    M, N = dih.shape
+    B = polymer.bonds_per_repeat
+    L = polymer.bond_length
+    template = build_chain(polymer, dih[0], cap)
+    bb = build_backbone(polymer, dih, xp=np)  # (M, N+3, 3)
+    v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, polymer.backbone[0].backbone_angle, 180.0, xp=np)
+    v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, polymer.backbone[(N + 2) % B].backbone_angle, 180.0, xp=np)
+    bb_ext = np.concatenate([v0[:, None, :], bb, v1[:, None, :]], axis=1)  # (M, N+5, 3)
+    coords = np.zeros((M, template.n_atoms, 3), dtype=float)
+    for k in range(N + 3):
+        spec = polymer.backbone[k % B]
+        idx = int(template.backbone[k])
+        x = bb_ext[:, k + 1]
+        coords[:, idx] = x
+        s1, s2 = substituent_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec.sub_bond, spec.sub_angle, xp=np)
+        s1_idx, s2_idx = template.subs_of[idx]
+        coords[:, s1_idx] = s1
+        coords[:, s2_idx] = s2
+    if cap:
+        cap0 = template.n_atoms - 2
+        for i, (k, virt) in enumerate(((0, bb_ext[:, 0]), (N + 2, bb_ext[:, N + 4]))):
+            idx = int(template.backbone[k])
+            x = coords[:, idx]
+            v = virt - x
+            coords[:, cap0 + i] = x + 1.09 * v / np.linalg.norm(v, axis=-1, keepdims=True)
+    return template, coords
+
+
 def set_dihedrals(struct: Structure, dihedrals_deg) -> Structure:
     """Rebuild the same oligomer with new dihedrals (cheap: rigid geometry)."""
     cap = len(struct.elements) > 3 * (struct.n_dihedrals + 3)

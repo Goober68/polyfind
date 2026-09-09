@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from polyfind.chain import build_backbone, build_chain, distance, angle, dihedral, nerf
+from polyfind.chain import build_backbone, build_chain, build_chain_batch, distance, angle, dihedral, nerf
 from polyfind.polymers import PVDF, PE
 
 
@@ -48,6 +48,24 @@ def test_full_chain_substituents_and_caps():
     # no two atoms overlap
     d = np.linalg.norm(s.coords[:, None] - s.coords[None], axis=-1) + np.eye(s.n_atoms) * 10
     assert d.min() > 1.0
+
+
+@pytest.mark.parametrize("polymer,n_dih", [(PE, 8), (PVDF, 8)])
+@pytest.mark.parametrize("cap", [True, False])
+def test_build_chain_batch_matches_build_chain(polymer, n_dih, cap):
+    rng = np.random.default_rng(42)
+    M = 7
+    dih = rng.uniform(-180, 180, size=(M, n_dih))
+    template, coords = build_chain_batch(polymer, dih, cap=cap)
+    assert coords.shape == (M, template.n_atoms, 3)
+    for m in range(M):
+        single = build_chain(polymer, dih[m], cap=cap)
+        assert single.n_atoms == template.n_atoms
+        assert single.elements == template.elements
+        assert single.bonds == template.bonds
+        np.testing.assert_allclose(coords[m], single.coords, atol=1e-9)
+    # row 0 is exactly the template used to build it
+    np.testing.assert_allclose(coords[0], template.coords, atol=1e-9)
 
 
 def test_all_trans_pvdf_rise():
