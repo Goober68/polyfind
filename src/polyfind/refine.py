@@ -49,6 +49,14 @@ The objective is smooth, so the default method is L-BFGS-B with gradients, and
 Either way the packer's topology-dependent tables (tiled force-field parameters,
 exclusion scales, shift tables) are built once and kept across evaluations by
 :meth:`polyfind.pack.CrystalPacker.update_chain`.
+
+This stage is on the **direct-kernel** side of the split :mod:`polyfind.pack` describes: it
+never touches the tabulated chain-pair interaction, which is a rigid-chain screen, and it is
+the natural place to give the chain real valence energy.  ``valence=`` (opt-in, default off)
+forwards fitted stretch and bend terms into the kernel, and then the backbone angles relax
+against a *fitted* restoring force instead of against ``angle_stiffness``, the invented
+UFF-like constant that exists only because the kernel had none.  ``angle_stiffness=None``
+(the default) picks one or the other rather than applying both.
 """
 from __future__ import annotations
 
@@ -102,10 +110,12 @@ def refine_crystal(
     parametrisation: str = "linegroup",
     refine_angles: bool = True,
     max_angle_change: float = 8.0,
-    angle_stiffness: float = 105.0,
+    angle_stiffness: float | None = None,
     field=None,
     gradient: str = "analytic",
     probe: dict | None = None,
+    valence=None,
+    lj_cutoff: str = "energy",
 ) -> RefineResult:
     """Relax cell (a, b, [gamma], phi1, phi2, dz) and the repeat's conformation.
 
@@ -117,11 +127,23 @@ def refine_crystal(
 
     ``angle_stiffness`` (kcal/mol/rad^2, UFF-like for sp3 carbon) is the harmonic
     bond-angle term ``0.5 k (theta - theta_0)^2`` summed over the repeat's backbone
-    angles.  The packing kernel has no valence terms at all, so without it nothing
-    resists opening the angles and they run straight to their bounds; it plays the
-    same role for the angles as the Fourier torsion term does for the torsions.  It
-    is reported separately as :attr:`RefineResult.angle_energy` and is *not* part of
-    the lattice energy in :attr:`RefineResult.result`.
+    angles.  The packing kernel has no valence terms *unless it is given some*, so
+    without it nothing resists opening the angles and they run straight to their bounds;
+    it plays the same role for the angles as the Fourier torsion term does for the
+    torsions.  It is an invented number, and it is reported separately as
+    :attr:`RefineResult.angle_energy` and is *not* part of the lattice energy in
+    :attr:`RefineResult.result`.  ``None`` (the default) means 105.0 when there are no
+    ``valence`` terms and 0.0 when there are -- with fitted bend terms in the kernel the
+    restraint would be a second bend term on the same angles, which is double counting,
+    so the fitted one wins and this one switches itself off.
+
+    ``valence`` (anything with ``bond_table()`` and ``angle_table()``, e.g.
+    ``SimpleFF.from_preset("pvdf-dft-valence")``) and ``lj_cutoff`` are handed straight to
+    :class:`polyfind.pack.CrystalPacker`; both are off by default and both change the
+    energy, so a refinement that uses them is not comparable with one that does not.  With
+    ``valence`` set, the bend energy is part of the lattice energy the refinement minimises
+    and part of :attr:`RefineResult.result` -- which is the point: the angles then relax
+    against a *fitted* restoring force rather than an invented one.
 
     ``method="lbfgs"`` (default) is L-BFGS-B with gradients; ``gradient="analytic"``
     (default) takes them from :meth:`polyfind.pack.CrystalPacker.energy_and_grad` in one
@@ -150,6 +172,9 @@ def refine_crystal(
         raise ValueError(f"unknown parametrisation {parametrisation!r}")
     if gradient not in ("analytic", "fd"):
         raise ValueError(f"unknown refine gradient {gradient!r} (expected 'analytic' or 'fd')")
+    if angle_stiffness is None:
+        has_bend = valence is not None and bool(valence.angle_table())
+        angle_stiffness = 0.0 if has_bend else 105.0
     tors0 = np.asarray(start.dihedrals if torsions is None else torsions, dtype=float)
     B = polymer.bonds_per_repeat
     angles0 = np.array([polymer.backbone[k].backbone_angle for k in range(B)])
@@ -210,7 +235,8 @@ def refine_crystal(
     if field is None:
         field = getattr(start, "field", (0.0, 0.0, 0.0))
     field = None if not np.any(np.asarray(field, dtype=float)) else field
-    packer = CrystalPacker(ref, n_chains=start.n_chains, cutoff=cutoff, eps_r=eps_r, field=field)
+    packer = CrystalPacker(ref, n_chains=start.n_chains, cutoff=cutoff, eps_r=eps_r, field=field,
+                           valence=valence, lj_cutoff=lj_cutoff)
     count = {"n": 0}
 
     def chains_for(S) -> tuple[list[PeriodicChain], np.ndarray, np.ndarray]:

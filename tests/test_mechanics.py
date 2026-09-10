@@ -1,15 +1,21 @@
 """Tests for :mod:`polyfind.mechanics`.
 
-Three groups: that adding this module changed no energy at all, that the strain machinery
+Four groups: that adding this module changed no energy at all, that the strain machinery
 is what it claims to be (the reachable/unreachable split, the map and its analytic
-derivative), and that the physics comes out -- the two piezoelectric routes agree, a
-crystal with no dipoles has exactly no piezoelectric response, and the axial constant is a
-report of an invented bend constant rather than of the potential.
+derivative), that the physics comes out on the rigid path -- the two piezoelectric routes
+agree, a crystal with no dipoles has exactly no piezoelectric response, and the axial
+constant there is a report of an invented bend constant rather than of the potential -- and
+that the deformable path removes exactly that contamination: with fitted valence terms in
+the kernel, ``C_33`` stops moving when the invented constant is swept, the reference becomes
+axially stress-free, and the diagonal piezoelectric columns appear for a helix and provably
+cannot for a planar zigzag.
 """
 import numpy as np
 import pytest
 
 from polyfind import mechanics as M
+from polyfind.fitting import FITTED_VALENCE
+from polyfind.forcefield import SimpleFF
 from polyfind.pack import CrystalPacker, periodic_chain
 from polyfind.polymers import PE, PVDF, THREE_STATE
 
@@ -222,3 +228,183 @@ def test_axial_c33_is_a_report_of_the_invented_bend_constant(beta):
     slope = (values[-1] - values[0]) / (ks[-1] - ks[0])
     assert values == pytest.approx(values[0] + slope * (np.array(ks) - ks[0]), rel=1e-3)
     assert ax.bend_fraction > 0.5  # most of it is the constant, not the potential
+
+
+# --- the deformable chain: what valence terms in the kernel buy -----------------------------
+def _valence_ff():
+    import polyfind.fitting  # noqa: F401 - registers the fitted presets
+
+    return SimpleFF.from_preset("pvdf-dft-valence")
+
+
+def _deformable(polymer, seq, label, angle_stiffness=None):
+    """Refine with valence terms in the kernel, then relax cell *and* chain to zero stress."""
+    ff = _valence_ff()
+    refine_kw = {"valence": ff}
+    if angle_stiffness is not None:
+        refine_kw["angle_stiffness"] = angle_stiffness
+    ref, rr = M.refined_reference(polymer, seq, label=label, valence=ff, refine_kw=refine_kw)
+    shape = M.shape_of(polymer, ref, angles=rr.angles)
+    return M.relax_reference_deformable(ref, shape)
+
+
+@pytest.fixture(scope="module")
+def beta_deformable():
+    with FITTED_VALENCE.applied():
+        yield _deformable(PVDF, [T, T], "beta")
+
+
+@pytest.fixture(scope="module")
+def alpha_deformable():
+    with FITTED_VALENCE.applied():
+        yield _deformable(PVDF, [T, GP, T, GM], "alpha")
+
+
+def test_a_shape_relaxation_without_valence_terms_is_refused(beta):
+    """The rigid kernel has no restoring force for an angle, and says so rather than answering."""
+    shape = M.shape_of(PVDF, beta, angles=[112.0, 112.0])
+    with pytest.raises(ValueError, match="needs a packer with valence terms"):
+        M.relax_deformable(beta, shape, beta.params, shape.x0)
+
+
+def test_the_deformable_reference_is_stress_free_along_the_chain_too(beta_deformable):
+    """What the rigid path could not have: a reference at zero *axial* stress.
+
+    The multiplier of the constraint that holds ``c`` is ``dE/dc`` of the relaxed crystal,
+    so a reference relaxed over ``c`` has it at zero -- against the rigid path's residual
+    ``sigma_zz`` of several GPa, which was the sign that nothing resisted the deformation.
+    """
+    ref, shape = beta_deformable
+    with FITTED_VALENCE.applied():
+        el = M.elastic_constants(ref, shape=shape)
+    assert np.abs(el.residual_stress[[0, 1, 2, 5]]).max() < 1e-4  # GPa, all four reachable
+    assert el.reachable == M.WITH_AXIAL
+    assert np.allclose(el.block, el.block.T)
+    assert np.linalg.eigvalsh(el.block).min() > 0.0
+    assert el.asymmetry < 0.05  # GPa: the multiplier route against the analytic-stress route
+    assert el.C[2, 2] == pytest.approx(el.c33_from_energy, rel=2e-3)  # and against the curvature
+    assert 100.0 < el.C[2, 2] < 1000.0
+
+
+def test_c33_is_no_longer_affine_in_the_invented_bend_constant():
+    """The test that the number has become physical.
+
+    On the rigid path ``C_33`` was exactly affine in ``refine_crystal``'s invented
+    ``angle_stiffness``, four fifths of beta's value coming from it.  Here the same constant
+    is swept over the same range: it still moves the structure the refinement hands over --
+    the assertion on the refined ``c`` checks that it does -- but the relaxation against the
+    *fitted* valence terms puts it back, and ``C_33`` does not move at all.
+    """
+    with FITTED_VALENCE.applied():
+        out = []
+        for k in (0.0, 210.0):
+            ref, shape = _deformable(PVDF, [T, T], "beta", angle_stiffness=k)
+            out.append((ref.c, M.elastic_constants(ref, shape=shape).C[2, 2]))
+    (c_soft, c33_soft), (c_stiff, c33_stiff) = out
+    assert c33_soft == pytest.approx(c33_stiff, rel=1e-4)
+    assert c_soft == pytest.approx(c_stiff, rel=1e-6)  # the relaxed repeat forgets it as well
+
+
+def test_a_planar_zigzag_cannot_change_its_dipole_by_bending(beta_deformable):
+    """Why beta's diagonal piezoelectric columns are still exactly zero.
+
+    Not "the chain is rigid" any more -- it deforms.  With bond-charge-increment charges the
+    cell dipole is a sum over bonds, every bond length is fixed, and the mirror symmetry of a
+    planar all-trans zigzag pins the bisector of each pendant pair perpendicular to the chain
+    axis whatever the backbone angle is.  So the one internal coordinate beta has moves ``c``
+    and leaves ``mu`` exactly where it was, and no dilation can be piezoelectric.
+    """
+    ref, shape = beta_deformable
+    with FITTED_VALENCE.applied():
+        mus = []
+        for dx in (-2.0, 0.0, 2.0):
+            chain = shape.chains(np.full((1, shape.n), dx))[0]
+            ref.packer.update_chain(chain)
+            mus.append((chain.c, ref.packer.dipole(ref.params[None])[0].copy()))
+    cs = [c for c, _ in mus]
+    assert max(cs) - min(cs) > 0.05  # the chain really did change length
+    assert np.abs(mus[0][1] - mus[2][1]).max() < 1e-10  # and the dipole did not move at all
+
+
+def test_beta_has_no_diagonal_piezoelectric_column_and_alpha_does(beta_deformable, alpha_deformable):
+    """The informative negative and the positive beside it.
+
+    Beta's chain has one shape parameter and the fixed-``eps_zz`` constraint uses it up, and
+    even the axial column cannot help (the test above).  Alpha's helix has three, so a
+    dilation does relax the conformation and does change the dipole -- the first non-zero
+    diagonal column this package has produced.
+    """
+    with FITTED_VALENCE.applied():
+        out = {}
+        for name, (ref, shape) in (("beta", beta_deformable), ("alpha", alpha_deformable)):
+            el = M.elastic_constants(ref, shape=shape)
+            out[name] = (el, M.piezoelectric(ref, el, shape=shape, converse=(name == "alpha")))
+    diag = [M.WITH_AXIAL.index(K) for K in (0, 1, 2)]
+    el_b, pz_b = out["beta"]
+    el_a, pz_a = out["alpha"]
+    assert np.abs(pz_b.e[:, diag]).max() < 1e-6  # C/m^2: exactly zero, not merely small
+    assert np.abs(pz_a.e[:, diag]).max() > 1e-2
+    # and the two routes still agree where there is something to agree about
+    assert pz_a.relative_difference < 0.02
+    # the improper column of a rigid dipole array is still exactly -P, on both
+    for pz, ref_shape in ((pz_b, beta_deformable), (pz_a, alpha_deformable)):
+        with FITTED_VALENCE.applied():
+            P = ref_shape[0].polarization()
+        for n in diag:
+            assert pz.e_improper[:, n] - pz.e[:, n] == pytest.approx(-P, abs=2e-3)
+
+
+def test_polyethylene_has_no_piezoelectric_response_when_the_chain_deforms_either():
+    """The null control, on the harder path: the cancellation has to survive a relaxation."""
+    with FITTED_VALENCE.applied():
+        ref, shape = _deformable(PE, [T], "PE")
+        resp = M.electromechanical_response(ref, shape=shape, relax_first=False)
+    assert resp.elastic.reachable == M.WITH_AXIAL
+    assert np.abs(resp.piezo.e).max() < 1e-12
+    assert np.abs(resp.piezo.d_from_e).max() < 1e-9
+    assert np.abs(resp.piezo.d_improper).max() < 1e-9
+    # The converse route survives too, at 1e-12 pC/N -- but only because its Newton stops at
+    # the reference's own residual stress rather than at a fixed 1e-8 GPa.  Chasing a
+    # tolerance below the constrained relaxation's noise floor ran to the iteration cap and
+    # came back at 1e-6 instead, which is how the floor came to be measured.
+    assert np.abs(resp.piezo.d_direct).max() < 1e-9
+    assert resp.actuator.work_density < 1e-12
+    assert np.linalg.eigvalsh(resp.elastic.block).min() > 0.0  # the elastic block is ordinary
+    assert 100.0 < resp.elastic.C[2, 2] < 1000.0
+
+
+def test_d_improper_is_the_dimensional_term_and_nothing_else(beta_deformable):
+    """``d_improper`` on a diagonal column is ``-P`` contracted with the compliance.
+
+    That is the thickness effect of the Broadhurst-Davis model and not a piezoelectric
+    constant; the test pins the identity so that nobody reads it as one.
+    """
+    ref, shape = beta_deformable
+    with FITTED_VALENCE.applied():
+        el = M.elastic_constants(ref, shape=shape)
+        pz = M.piezoelectric(ref, el, shape=shape, converse=False)
+        P = ref.polarization()
+    diag = [M.WITH_AXIAL.index(K) for K in (0, 1, 2)]
+    for n in diag:
+        expect = -float(P[0]) * el.S[diag, n].sum() * M.C_PER_M2_PER_GPA_TO_PC_PER_N
+        assert pz.d_improper[0, n] == pytest.approx(expect, rel=1e-3, abs=1e-6)
+    assert pz.d_improper[0, diag].max() < 0.0  # a fixed dipole array always loses P on dilation
+
+
+# --- the Lennard-Jones cutoff ---------------------------------------------------------------
+def test_force_shifting_the_cutoff_removes_the_step_dependence(beta):
+    """The diagnosis of :func:`test_step_dependence_of_C22_is_the_lennard_jones_cutoff`, acted on.
+
+    Force-shifting makes the pair force continuous at ``rc``, and the finite difference stops
+    seeing a jump.  It does *not* make the value converge faster -- it is further from the
+    long-cutoff answer at the same ``rc``, because it subtracts a tail as well -- so it is a
+    fix for the derivative, not for the truncation.
+    """
+    def spread(ref):
+        return abs(M.elastic_constants(ref, step=1e-3).C[1, 1] - M.elastic_constants(ref, step=4e-3).C[1, 1])
+
+    shifted = M.relax_reference(M.reference_from_chain(beta.packer.chain, beta.params, n_chains=2,
+                                                       lj_cutoff="force"))
+    assert spread(beta) > 1.0  # GPa, energy-shifted at the default cutoff
+    assert spread(shifted) < 0.5  # and much smaller once the force is continuous too
+    assert M.elastic_constants(shifted).C[1, 1] < M.elastic_constants(beta).C[1, 1] + 1.0

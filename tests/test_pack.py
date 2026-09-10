@@ -3,9 +3,11 @@ import dataclasses
 import numpy as np
 import pytest
 
+from polyfind.forcefield import SimpleFF
 from polyfind.pack import (
     EV_TO_KCAL,
     CrystalPacker,
+    chain_valence,
     default_bounds,
     pack,
     periodic_chain,
@@ -501,3 +503,151 @@ def test_pack_api_is_unchanged():
     assert one[0].n_chains == 1 and one[0].phi2 == 0.0 and one[0].dz == 0.0
     with pytest.raises(ValueError):
         pack(ch, screen="exhaustive", **kw)
+
+
+# --- valence terms on the lattice side (opt-in) -----------------------------------------
+def _valence_ff():
+    import polyfind.fitting  # noqa: F401 - registers the fitted presets
+
+    return SimpleFF.from_preset("pvdf-dft-valence")
+
+
+@pytest.mark.parametrize("poly,seq,n_bonds,n_angles", [
+    # one repeat of PE is two CH2 groups: 2 C-C bonds + 4 C-H, and 6 angles at each carbon
+    (PE, [T], 6, 12),
+    (PVDF, [T, T], 6, 12),
+    (PVDF, [T, GP, T, GM], 12, 24),
+])
+def test_periodic_valence_counts_one_representative_of_every_term(poly, seq, n_bonds, n_angles):
+    """The bonds and angles of the *infinite* chain, counted once each per repeat.
+
+    A backbone bond joins the last atom of the repeat to the first atom of the next one, so
+    the terms do not stop at the block's edges and the count is a real check on the image
+    bookkeeping rather than a formality.
+    """
+    ch = periodic_chain(poly, seq, THREE_STATE)
+    ff = _valence_ff()
+    cv = chain_valence(ch, ff.bond_table(), ff.angle_table())
+    assert (cv.n_bonds, cv.n_angles) == (n_bonds, n_angles)
+    assert set(cv.bond_s) <= {-1.0, 0.0, 1.0} and set(cv.ang_si) <= {-1.0, 0.0, 1.0}
+    assert (cv.ang_j < ch.n_atoms).all() and (cv.bond_i < ch.n_atoms).all()
+    # translating the repeat cannot change it, and neither can a whole-cell rotation about z
+    e0 = cv.energy(ch.coords[None], np.array([ch.c]))[0]
+    shifted = ch.coords + np.array([0.31, -0.22, 0.53])
+    assert cv.energy(shifted[None], np.array([ch.c]))[0] == pytest.approx(e0, abs=1e-12)
+    assert chain_valence(ch, {}, {}) is None
+
+
+@pytest.mark.parametrize("poly,seq", [(PE, [T]), (PVDF, [T, T]), (PVDF, [T, GP, T, GM])])
+def test_periodic_valence_gradient_matches_central_differences(poly, seq):
+    ch = periodic_chain(poly, seq, THREE_STATE)
+    ff = _valence_ff()
+    cv = chain_valence(ch, ff.bond_table(), ff.angle_table())
+    E, gX, gc = cv.energy_and_grad(ch.coords, ch.c)
+    assert E == pytest.approx(float(cv.energy(ch.coords[None], np.array([ch.c]))[0]), abs=1e-12)
+    h = 1e-6
+    for i in range(ch.n_atoms):
+        for d in range(3):
+            X = ch.coords.copy()
+            X[i, d] += h
+            ep = cv.energy(X[None], np.array([ch.c]))[0]
+            X[i, d] -= 2 * h
+            em = cv.energy(X[None], np.array([ch.c]))[0]
+            assert gX[i, d] == pytest.approx((ep - em) / (2 * h), abs=1e-6)
+    fd = (cv.energy(ch.coords[None], np.array([ch.c + h]))[0]
+          - cv.energy(ch.coords[None], np.array([ch.c - h]))[0]) / (2 * h)
+    assert gc == pytest.approx(fd, abs=1e-6)
+    assert abs(gc) > 1e-3  # c really does have a restoring force now
+
+
+def test_valence_terms_change_the_energy_only_when_asked_for():
+    """The default packer is untouched, and an empty valence table changes nothing either."""
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    p = np.array([[5.0, 9.6, 92.0, 20.0, 50.0, 1.0, 0.0]])
+    plain = float(CrystalPacker(ch).energy(p)[0])
+    assert float(CrystalPacker(ch, valence=SimpleFF()).energy(p)[0]) == plain  # no terms: no change
+    pk = CrystalPacker(ch, valence=_valence_ff())
+    assert pk.e_valence > 0.0
+    assert float(pk.energy(p)[0]) == pytest.approx(plain + pk.e_valence, abs=1e-9)
+    # and the gradient path returns the same value bit for bit, as it does without them
+    assert pk.energy_and_grad(p[0])[0] == float(pk.energy(p)[0])
+
+
+@pytest.mark.parametrize("poly,seq", [(PE, [T]), (PVDF, [T, GP, T, GM])])
+def test_valence_gradient_reaches_the_kernel_gradient(poly, seq):
+    """``energy_and_grad`` carries the valence derivative in ``g_coords`` and ``g_c``.
+
+    That is the whole of the plumbing: a refinement's chain rule and the axial relaxation
+    read those two arrays and nothing else, so if the valence term is in them it is in
+    every consumer.
+    """
+    ch = periodic_chain(poly, seq, THREE_STATE)
+    ff = _valence_ff()
+    pk_plain, pk_val = CrystalPacker(ch), CrystalPacker(ch, valence=ff)
+    cv = chain_valence(ch, ff.bond_table(), ff.angle_table())
+    p = np.array([5.1, 9.3, 97.0, 37.0, 212.0, 0.4 * ch.c, 1.0])
+    kw = dict(coords=ch.coords, c=np.array([ch.c]))
+    _, gc0, gX0, gz0 = pk_plain.energy_and_grad(p, **kw)
+    _, gc1, gX1, gz1 = pk_val.energy_and_grad(p, **kw)
+    _, vX, vz = cv.energy_and_grad(ch.coords, ch.c)
+    assert gc1 == pytest.approx(gc0, abs=1e-9)  # the cell gradient cannot see an internal term
+    assert gX1 - gX0 == pytest.approx(pk_val.n_chains * vX, abs=1e-9)
+    assert gz1 - gz0 == pytest.approx(pk_val.n_chains * vz, abs=1e-9)
+
+
+# --- the Lennard-Jones cutoff -------------------------------------------------------------
+def test_force_shifted_lennard_jones_reaches_the_cutoff_with_zero_force():
+    """Value *and* force vanish at ``rc``; with the default form only the value does."""
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    r2 = np.array([[(8.0 - 1e-6) ** 2]])
+    for shift, force_at_cutoff in (("energy", False), ("force", True)):
+        pk = CrystalPacker(ch, lj_cutoff=shift)
+        args = (pk._A_nn[:1, :1], pk._B_nn[:1, :1], pk._qq_nn[:1, :1], pk._qqf_nn[:1, :1],
+                pk._const_nn[:1, :1])
+        v, dv = pk._pair_energy_and_dv(r2, *args)
+        assert abs(float(v[0, 0])) < 1e-7  # both forms are energy-continuous
+        # dV/dr = 2 r dV/d(r^2); the LJ well depth sets the scale of what "not zero" means
+        dvdr = abs(2.0 * 8.0 * float(dv[0, 0]))
+        assert (dvdr < 1e-6) == force_at_cutoff
+    with pytest.raises(ValueError, match="unknown lj_cutoff"):
+        CrystalPacker(ch, lj_cutoff="switch")
+
+
+def test_force_shift_changes_the_energy_and_only_when_asked_for():
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    p = np.array([[4.6, 8.6, 90.0, 0.0, 0.0, 1.0, 0.0]])
+    e_shift = float(CrystalPacker(ch).energy(p)[0])
+    assert float(CrystalPacker(ch, lj_cutoff="energy").energy(p)[0]) == e_shift
+    assert abs(float(CrystalPacker(ch, lj_cutoff="force").energy(p)[0]) - e_shift) > 0.1
+
+
+# --- the rigid table and the deformable kernel stay apart ----------------------------------
+def test_the_table_screen_refuses_a_packer_it_cannot_describe():
+    """The tabulated interaction is rigid and energy-shifted; anything else is refused.
+
+    ``chain_pair_energy`` rebuilds the pair potential from ``lj_shift`` and the two DSF
+    constants and knows nothing about a valence term or a force-shifted tail, so a table
+    screen of such a packer would be screening a different potential from the one polished.
+    """
+    ch = periodic_chain(PE, [T], THREE_STATE)
+    kw = dict(n_chains=2, n_refine=1, maxfev=200, screen="table")
+    from polyfind.pack import CrystalPacker as _CP, _table_starts
+
+    for bad in (dict(valence=_valence_ff()), dict(lj_cutoff="force")):
+        pk = _CP(ch, n_chains=2, **bad)
+        with pytest.raises(ValueError, match="screen='table' cannot be used"):
+            _table_starts(pk, ch, np.array([4.0, 6.0, 90.0, 0.0, 0.0, 0.0]),
+                          np.array([5.0, 8.0, 90.0, 360.0, 360.0, ch.c]), 1, [0, 1], 0.5, [90.0],
+                          None, 8.0, 0.2, 1.0, None, None, False)
+    assert pack(ch, **kw)  # and the rigid, energy-shifted packer is still screened by table
+
+
+def test_the_table_screen_refuses_a_table_built_for_another_conformation():
+    from polyfind.lattice_table import pair_table
+
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    bent = repeat_chains_from_torsions(PVDF, ch.name, (ch.dihedrals - 6.0)[None], align_to=ch)[0]
+    table = pair_table(ch, cutoff=8.0, cache_dir=None, n_angle=16, n_z=4, dr=0.4)
+    assert pack(ch, n_refine=1, maxfev=200, screen="table", table=table)
+    with pytest.raises(ValueError, match="different chain coordinates"):
+        pack(bent, n_refine=1, maxfev=200, screen="table", table=table)

@@ -29,6 +29,17 @@ cell one inverse FFT, so the screen is exhaustive rather than sampled.  Both
 hand their best cells to the same exact-kernel polish, so the energies that
 come back are exact either way and only the choice of starts differs.
 
+**Rigid table, deformable kernel.**  That tabulated interaction is built for one
+fixed set of chain coordinates and one energy-shifted pair potential: it is a
+*screen*, and it stays rigid.  Everything that lets the chain deform --
+:class:`ChainValence`'s bond and angle terms, and the force-shifted Lennard-Jones
+form -- is opt-in on :class:`CrystalPacker` and lives on the direct-kernel path
+(:meth:`CrystalPacker.energy` and :meth:`CrystalPacker.energy_and_grad`), which is
+what :mod:`polyfind.refine` and :mod:`polyfind.mechanics` call.  The two are kept
+apart by :func:`_table_starts`, which refuses a packer carrying either and refuses
+a table whose chain is not the chain being packed, so a deformed chain can never
+reach a rigid tabulation by accident.
+
 A uniform applied electric field is optional (``field=(Ex, Ey, Ez)`` in V/A).  It
 adds ``-mu_cell . E`` to the cell energy, where ``mu_cell = sum_i q_i r_i`` is the
 dipole moment of the placed cell; the dipole depends on the setting angles and the
@@ -47,7 +58,7 @@ from scipy.optimize import minimize
 
 from . import backend as bk
 from .chain import build_chain
-from .forcefield import COULOMB, erfc_approx
+from .forcefield import COULOMB, _valence_lookup, erfc_approx, valence_topology
 from .helix import HelixParams, helix_parameters, kabsch, rotation_to_z
 from .polymers import Polymer, RISStates, lj_params
 
@@ -369,6 +380,176 @@ def periodic_chain_from_torsions(polymer: Polymer, name: str, torsions, states: 
     return repeat_chains_from_torsions(polymer, name, np.asarray(torsions, dtype=float)[None], scale14=scale14, align_to=align_to)[0]
 
 
+# ------------------------------------------------------------------ valence terms
+@dataclass
+class ChainValence:
+    """Harmonic bond and angle terms of **one repeat** of an infinite periodic chain.
+
+    The chain the packer carries is one crystallographic repeat, and the bonds and angles
+    of the infinite chain do not stop at its edges: a backbone bond joins the last atom of
+    the repeat to the first atom of the *next* one, which is the same atom translated by
+    ``c`` along z.  Every term here therefore carries the image index of each of its atoms
+    (``0`` for the repeat itself, ``+/-1`` for a neighbouring one), and the energy depends
+    on ``c`` as well as on the coordinates -- which is exactly the dependence that gives an
+    axial strain something to push against.
+
+    One representative per term per repeat: a bond is kept when the lower of its two image
+    indices is 0, an angle when its *central* atom is in the repeat.  Both rules pick each
+    term of the infinite chain exactly once, so :meth:`energy` is the valence energy *per
+    repeat* and adding it to a lattice energy per cell needs one factor of ``n_chains`` and
+    nothing else.
+
+    **Bond stretching is inert here, and that is a property of the geometry, not of this
+    class.**  :func:`polyfind.chain.build_chain` places every atom at the polymer's own bond
+    length, so ``r - r0`` is fixed by the chemistry and the stretch block contributes a
+    constant and a zero gradient.  It is evaluated anyway, because leaving it out would make
+    the reported energy not the potential's, and because a future flexible builder would
+    need nothing changed here.
+    """
+
+    bond_i: np.ndarray  # (nb,) atom in the repeat
+    bond_j: np.ndarray  # (nb,) the other atom, in image ``bond_s``
+    bond_s: np.ndarray  # (nb,) image of ``bond_j``, in units of c along z
+    bond_k: np.ndarray  # (nb,) kcal/(mol A^2)
+    bond_r0: np.ndarray  # (nb,) A
+    ang_i: np.ndarray  # (na,)
+    ang_j: np.ndarray  # (na,) the central atom, always in the repeat
+    ang_k: np.ndarray  # (na,)
+    ang_si: np.ndarray  # (na,) image of ``ang_i``
+    ang_sk: np.ndarray  # (na,) image of ``ang_k``
+    ang_kk: np.ndarray  # (na,) kcal/(mol rad^2)
+    ang_t0: np.ndarray  # (na,) radians
+
+    @property
+    def n_bonds(self) -> int:
+        return int(self.bond_i.size)
+
+    @property
+    def n_angles(self) -> int:
+        return int(self.ang_i.size)
+
+    def _bond_vectors(self, X: np.ndarray, cz: np.ndarray) -> np.ndarray:
+        d = X[:, self.bond_i] - X[:, self.bond_j]
+        d[..., 2] -= self.bond_s[None, :] * cz[:, None]
+        return d
+
+    def _angle_vectors(self, X: np.ndarray, cz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        u = X[:, self.ang_i] - X[:, self.ang_j]
+        v = X[:, self.ang_k] - X[:, self.ang_j]
+        u[..., 2] += self.ang_si[None, :] * cz[:, None]
+        v[..., 2] += self.ang_sk[None, :] * cz[:, None]
+        return u, v
+
+    def energy(self, coords, c) -> np.ndarray:
+        """Valence energy per repeat (kcal/mol), one entry per row of ``coords`` (M, n, 3)."""
+        X = np.array(coords, dtype=float)
+        if X.ndim == 2:
+            X = X[None]
+        M = X.shape[0]
+        cz = np.broadcast_to(np.asarray(c, dtype=float).ravel(), (M,))
+        out = np.zeros(M)
+        if self.n_bonds:
+            r = np.linalg.norm(self._bond_vectors(X, cz), axis=-1)
+            out += 0.5 * (self.bond_k * (r - self.bond_r0) ** 2).sum(axis=1)
+        if self.n_angles:
+            u, v = self._angle_vectors(X, cz)
+            nu, nv = np.linalg.norm(u, axis=-1), np.linalg.norm(v, axis=-1)
+            cos = np.clip((u * v).sum(-1) / (nu * nv), -1.0, 1.0)
+            da = np.arccos(cos) - self.ang_t0
+            out += 0.5 * (self.ang_kk * da * da).sum(axis=1)
+        return out
+
+    def energy_and_grad(self, coords, c, n_atoms: int | None = None):
+        """``(E, dE/dcoords (n, 3), dE/dc)`` for ONE repeat geometry.
+
+        Closed form throughout: a stretch contributes ``k (r - r0) rhat`` along its own
+        separation, a bend the usual ``dtheta/dx`` of the two arms and minus their sum at
+        the centre.  ``c`` enters through the image offsets alone, so its derivative is the
+        z components of those forces weighted by the image indices.
+        """
+        X = np.asarray(coords, dtype=float).reshape(1, -1, 3)
+        n = X.shape[1] if n_atoms is None else int(n_atoms)
+        cz = np.asarray(c, dtype=float).reshape(1)
+        E = 0.0
+        gX = np.zeros((n, 3))
+        gc = 0.0
+        if self.n_bonds:
+            d = self._bond_vectors(X, cz)[0]
+            r = np.linalg.norm(d, axis=-1)
+            dr = r - self.bond_r0
+            E += 0.5 * float((self.bond_k * dr * dr).sum())
+            f = (self.bond_k * dr / r)[:, None] * d  # dE/d(separation vector)
+            np.add.at(gX, self.bond_i, f)
+            np.add.at(gX, self.bond_j, -f)
+            gc -= float((self.bond_s * f[:, 2]).sum())
+        if self.n_angles:
+            u, v = self._angle_vectors(X, cz)
+            u, v = u[0], v[0]
+            nu, nv = np.linalg.norm(u, axis=-1), np.linalg.norm(v, axis=-1)
+            uh, vh = u / nu[:, None], v / nv[:, None]
+            cos = np.clip((uh * vh).sum(-1), -1.0, 1.0)
+            theta = np.arccos(cos)
+            da = theta - self.ang_t0
+            E += 0.5 * float((self.ang_kk * da * da).sum())
+            s = np.maximum(np.sqrt(1.0 - cos * cos), 1e-9)
+            gi = (cos[:, None] * uh - vh) / (nu * s)[:, None]
+            gk = (cos[:, None] * vh - uh) / (nv * s)[:, None]
+            w = (self.ang_kk * da)[:, None]
+            fi, fk = w * gi, w * gk
+            np.add.at(gX, self.ang_i, fi)
+            np.add.at(gX, self.ang_k, fk)
+            np.add.at(gX, self.ang_j, -(fi + fk))
+            gc += float((self.ang_si * fi[:, 2]).sum() + (self.ang_sk * fk[:, 2]).sum())
+        return E, gX, gc
+
+
+def chain_valence(chain: PeriodicChain, bond_table: dict, angle_table: dict) -> ChainValence | None:
+    """The :class:`ChainValence` of ``chain`` for ``{type: (k, r0)}`` / ``{type: (k, theta0_deg)}``.
+
+    ``None`` when both tables are empty, which is what keeps a packer without valence terms
+    computing exactly the expression it always did.  Only the *topology* of the chain is
+    used, so the result survives any change of conformation: the same object serves every
+    geometry of the same repeat, which is what a refinement needs.
+    """
+    if not bond_table and not angle_table:
+        return None
+    nb_block = len(chain.dihedrals)
+    tpl = _template(chain.polymer, nb_block)
+    where: dict[int, tuple[int, int]] = {}
+    for k in (-2, -1, 0, 1, 2):
+        for p, idx in enumerate(_block_atoms(tpl, nb_block, k)[1]):
+            where[int(idx)] = (p, k)
+    bl, al = valence_topology(tpl.elements, tpl.bonds)
+    bi, bj, bs, bk, br = [], [], [], [], []
+    for i, j, name in bl:
+        wi, wj = where.get(i), where.get(j)
+        if wi is None or wj is None or min(wi[1], wj[1]) != 0:
+            continue  # the representative of this bond sits in another repeat
+        if not bond_table:
+            continue
+        (p, _), (q, s) = (wi, wj) if wi[1] == 0 else (wj, wi)
+        k, r0 = _valence_lookup(bond_table, name, "bond")
+        bi.append(p), bj.append(q), bs.append(s), bk.append(k), br.append(r0)
+    ai, aj, ak, asi, ask, akk, at = [], [], [], [], [], [], []
+    for i, j, k, name in al:
+        wj = where.get(j)
+        if wj is None or wj[1] != 0 or not angle_table:
+            continue
+        wi, wk = where.get(i), where.get(k)
+        if wi is None or wk is None:
+            continue  # pragma: no cover - a neighbour of a block-0 atom is always in -1..1
+        kk, t0 = _valence_lookup(angle_table, name, "angle")
+        ai.append(wi[0]), aj.append(wj[0]), ak.append(wk[0])
+        asi.append(wi[1]), ask.append(wk[1]), akk.append(kk), at.append(t0)
+    ints = lambda v: np.array(v, dtype=int)  # noqa: E731
+    reals = lambda v: np.array(v, dtype=float)  # noqa: E731
+    return ChainValence(
+        bond_i=ints(bi), bond_j=ints(bj), bond_s=reals(bs), bond_k=reals(bk), bond_r0=reals(br),
+        ang_i=ints(ai), ang_j=ints(aj), ang_k=ints(ak), ang_si=reals(asi), ang_sk=reals(ask),
+        ang_kk=reals(akk), ang_t0=np.deg2rad(reals(at)),
+    )
+
+
 # ------------------------------------------------------------------ energy kernel
 @dataclass
 class PackResult:
@@ -419,18 +600,49 @@ class CrystalPacker:
     and :meth:`field_energy`.  ``field=None`` (the default) leaves the kernel exactly
     as it was -- the field term is not evaluated at all -- so zero-field energies are
     bit-for-bit those of the fieldless code.
+
+    **Two opt-in changes to the potential, both off by default.**  A default-constructed
+    packer is bit-for-bit the one every number in this package was measured with
+    (``tests/test_pack.py`` and ``tests/test_mechanics.py`` assert it with ``==``), and
+    each of these has to be asked for by name:
+
+    ``valence``
+        anything with ``bond_table()`` and ``angle_table()`` methods -- a
+        :class:`polyfind.forcefield.SimpleFF`, typically
+        ``SimpleFF.from_preset("pvdf-dft-valence")``.  Its harmonic stretch and bend terms
+        are then evaluated on the chain *as a periodic object* (:class:`ChainValence`) and
+        added to every configuration, gradient included.  Within a rigid packing that is a
+        constant per chain, which is why :meth:`polyfind.fitting.FFParameters.applied`
+        does not forward it; it stops being a constant the moment the chain is allowed to
+        deform, which is what :func:`polyfind.mechanics.axial_response` needs and what
+        makes ``dE/dc`` a restoring force rather than a report of an invented restraint.
+    ``lj_cutoff``
+        ``"energy"`` (default) shifts the Lennard-Jones term by ``V(rc)``, leaving its
+        *force* discontinuous at the cutoff; ``"force"`` subtracts the tangent instead,
+        ``V(r) - V(rc) - (r - rc) V'(rc)``, so value and force both reach zero at ``rc``.
+        The damped-shifted-force Coulomb term is already force-shifted, so with
+        ``"force"`` the whole pair potential is C1 and a strain no longer walks pairs
+        across a jump in the force (see :meth:`_pair_energy_and_dv`).
+
+    Both change the energy, so both are refused by the tabulated screen
+    (:func:`_table_starts`), which is a rigid-chain, energy-shifted object by construction.
     """
 
     PARAMS = ("a", "b", "gamma", "phi1", "phi2", "dz", "flip")
     NEUTRAL_TOL = 1e-6  # |cell charge| (e) above which the dipole is origin-dependent
+    LJ_CUTOFFS = ("energy", "force")
 
-    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None):
+    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy"):
         self.n_chains = n_chains
         self.rc = cutoff
         self.rc2 = cutoff ** 2
         self.alpha = alpha
         self.eps_r = eps_r
         self.torsion = tuple(torsion)
+        if lj_cutoff not in self.LJ_CUTOFFS:
+            raise ValueError(f"unknown lj_cutoff {lj_cutoff!r} (expected one of {self.LJ_CUTOFFS})")
+        self.lj_cutoff = lj_cutoff
+        self.valence = valence
         self.xp = xp or bk.get_backend()
         self._dt = bk.float_dtype()
         self.n_energy_calls = 0  # batched kernel calls (one per ``energy()`` invocation)
@@ -464,6 +676,15 @@ class CrystalPacker:
         B = 2.0 * ds * xs ** 6
         qq_f = qq * self.dsf_force
         const = -lj_shift - qq * (self.dsf_shift + self.dsf_force * rc)
+        if self.lj_cutoff == "force":
+            # Force-shifted Lennard-Jones: subtract the tangent at rc, not just the value.
+            # ``qq_f`` is already the linear coefficient the damped-shifted-force Coulomb
+            # term needs, so the LJ force shift rides in the same array at no extra cost --
+            # after this it is no longer "qq times something", which is why the kernel
+            # calls it a linear coefficient and not a Coulomb term.
+            lj_f = 12.0 * A / rc ** 13 - 6.0 * B / rc ** 7  # = -V_LJ'(rc)
+            qq_f = qq_f + lj_f
+            const = const - lj_f * rc
         tile = lambda Z: np.tile(Z, (n_chains, n_chains))  # noqa: E731
         self._A, self._B = xp.asarray(tile(A), dtype=dt), xp.asarray(tile(B), dtype=dt)
         self._qq, self._qqf = xp.asarray(tile(qq), dtype=dt), xp.asarray(tile(qq_f), dtype=dt)
@@ -491,6 +712,10 @@ class CrystalPacker:
         # charges of the whole cell, in the atom order :meth:`_place` produces
         self._q_cell = np.tile(np.asarray(chain.charges, dtype=float), n_chains)
         self._q_cell_xp = xp.asarray(self._q_cell, dtype=dt)
+        # Valence terms depend on the topology alone, so they are resolved once here and
+        # re-evaluated (not rebuilt) by every :meth:`update_chain`.
+        self._valence = None if self.valence is None else chain_valence(
+            chain, self.valence.bond_table(), self.valence.angle_table())
 
     def update_chain(self, chain: PeriodicChain) -> None:
         """Replace the chain-dependent state, keeping the topology-dependent tables.
@@ -510,6 +735,11 @@ class CrystalPacker:
         # The intra-chain (same-site, (0,0,k)) sum is a constant for a rigid chain, and a
         # flip is an isometry of the chain, so one value serves both orientations.
         self.e_intra = 0.5 * self.n_chains * float(bk.to_numpy(self._intra_column(self.X0[None], np.array([chain.c]), self.K))[0])
+        # The valence energy of the *whole cell*: one repeat's worth per chain (a flip is an
+        # isometry, so both orientations cost the same).  Unlike ``e_intra`` this is a
+        # constant only while the chain is; it moves as soon as an angle does.
+        self.e_valence = 0.0 if self._valence is None else self.n_chains * float(
+            self._valence.energy(chain.coords[None], np.array([chain.c]))[0])
 
     def torsion_energy(self, dihedrals) -> float:
         """Fourier torsion energy of one chain's repeat (kcal/mol)."""
@@ -707,10 +937,12 @@ class CrystalPacker:
             dV/du = 3 u^-3 (B - 2 A u^-3) / u + (qq f'(r) + qq_f) / (2 r),
             f(r)  = erfc(a r) / r,   f'(r) = a erfc'(a r) / r - erfc(a r) / r^2.
 
-        Outside the cutoff both are zero: the shifted-force Coulomb term is smooth there
-        by construction, the Lennard-Jones term is only energy-shifted, so its force has
-        a (pre-existing) jump at ``r = rc`` that a finite difference straddling the
-        cutoff will see and this derivative will not.
+        Outside the cutoff both are zero.  The shifted-force Coulomb term is smooth there by
+        construction; the Lennard-Jones term is smooth there only with ``lj_cutoff="force"``.
+        At the default ``lj_cutoff="energy"`` it is energy-shifted alone, so its force has a
+        jump at ``r = rc`` that a finite difference straddling the cutoff sees and this
+        derivative does not -- measurably, in an elastic constant: see
+        :class:`polyfind.mechanics.Elastic`.
         """
         xp = self.xp
         mask = (r2 < self.rc2) & (r2 > 1e-8)
@@ -806,10 +1038,14 @@ class CrystalPacker:
                 for t in range(0, M, i_chunk)
             ])
             e_add = e_add + 0.5 * self.n_chains * intra
+            if self._valence is not None:
+                e_add = e_add + self.n_chains * self._valence.energy(coords, c_arr)
         else:
             c_arr = None
             K, reach = self.K, self.reach
             e_add = np.full(M, self.e_torsion + self.e_intra)
+            if self._valence is not None:
+                e_add = e_add + self.e_valence
         order = np.argsort(params[:, 0] * params[:, 1] * np.sin(np.deg2rad(params[:, 2])))
         params = params[order]
         out = np.empty(M)
@@ -919,6 +1155,17 @@ class CrystalPacker:
         # identical arithmetic to ``energy``'s two branches, so the value matches bit for bit
         e_add = (e_t + pref * float(bk.to_numpy(intra)[0])) if per_row else (self.e_torsion + self.e_intra)
         gX, gc = pref * gX, pref * gc
+        if self._valence is not None:
+            # One repeat's valence energy per chain, with its exact derivatives with respect
+            # to the repeat's coordinates and to c.  This is the whole of the plumbing the
+            # deformable path needs: every consumer of ``g_coords``/``g_c`` -- the
+            # refinement's chain rule, the axial relaxation -- now sees a restoring force.
+            Ev, gXv, gcv = self._valence.energy_and_grad(
+                Xn if per_row else self.chain.coords, cz, n_atoms=n)
+            # ``self.e_valence`` rather than ``nc * Ev`` off the per-row path, so that the
+            # value stays bit-for-bit the one :meth:`energy` returns for the same row.
+            e_add = e_add + (nc * Ev if per_row else self.e_valence)
+            gX, gc = gX + nc * gXv, gc + nc * gcv
 
         P, lat = self._place(sub, X, c_arr)
         latn = np.asarray(bk.to_numpy(lat), dtype=float)[0]
@@ -1248,9 +1495,36 @@ def _table_starts(packer, chain, lo, hi, n_refine, flips, step, gammas, table, c
     angles within a cell can still hide a basin from this screen, and ``screen="random"``
     (whose every evaluation goes through the field-aware kernel) is the honest choice
     there.
+
+    **The table is a rigid-chain, energy-shifted object, and this is where that is
+    enforced.**  ``W(r, alpha1, alpha2, dz, flip)`` is tabulated for *one* set of chain
+    coordinates and re-used at every ``(a, b)``, and
+    :func:`polyfind.lattice_table.chain_pair_energy` rebuilds the pair potential from
+    ``packer.lj_shift`` and the two DSF constants -- it knows nothing about a force-shifted
+    Lennard-Jones term and nothing about valence energy.  So a packer carrying either is
+    refused outright, and so is a table built for coordinates other than the chain's.  Both
+    are the same rule: **the table serves the screen and the screen is rigid; deformation
+    belongs to the direct kernel** (:meth:`CrystalPacker.energy_and_grad`), which is what
+    :mod:`polyfind.refine` and :mod:`polyfind.mechanics` use.  Nothing here quietly averages
+    a deformed chain into a rigid tabulation.
     """
     from .lattice_table import fft_screen, pair_table
 
+    if packer.valence is not None or packer.lj_cutoff != "energy":
+        what = "valence terms" if packer.valence is not None else f"lj_cutoff={packer.lj_cutoff!r}"
+        raise ValueError(
+            f"screen='table' cannot be used with a packer carrying {what}: the tabulated chain-pair "
+            "interaction is built for a rigid chain from the energy-shifted pair potential, so it "
+            "would not be the potential being polished.  Use screen='random' (every evaluation goes "
+            "through the exact kernel), or screen a rigid, energy-shifted packer and hand the result "
+            "to the direct-kernel path (refine_crystal, polyfind.mechanics) for the deformable part."
+        )
+    if table is not None and (table.chain.coords.shape != chain.coords.shape
+                              or float(np.abs(table.chain.coords - chain.coords).max()) > 1e-6):
+        raise ValueError(
+            "the given table was built for different chain coordinates than the chain being packed: "
+            "W is tabulated for one rigid conformation and says nothing about a deformed one"
+        )
     if table is None:
         table = pair_table(chain, cutoff=cutoff, alpha=alpha, eps_r=eps_r, cache_dir=cache_dir,
                            verbose=verbose, **{**SCREEN_TABLE, **(table_kw or {})})

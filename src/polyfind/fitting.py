@@ -207,6 +207,13 @@ class FFParameters:
         number.  The one place bond angles do move is :func:`polyfind.refine.refine_crystal`,
         which has carried its own harmonic bend term since before this fit and is left exactly
         as it was, so that nothing here can be confused with a change to the refinement stage.
+
+        A caller who *does* want them in the lattice energy -- because the chain is going to be
+        deformed, and then they are not a constant -- asks for them by name and by object:
+        ``CrystalPacker(chain, valence=SimpleFF.from_preset("pvdf-dft-valence"))``, and
+        ``refine_crystal(..., valence=...)``.  That is opt-in, it changes every energy it
+        touches, and it is refused by the tabulated screen, which is rigid.  See
+        :mod:`polyfind.pack` and ``docs/ELECTROMECHANICS.md`` section 4.2.
         """
         from . import pack as pack_mod
         from . import refine as refine_mod
