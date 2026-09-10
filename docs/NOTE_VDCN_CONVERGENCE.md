@@ -108,8 +108,10 @@ currently failing.
 
 Sarco adopted the fixed-cell-then-full-cell protocol and obtained an accepted
 local VDCN/PVDF reference at 0.000079 eV/A maximum force and 0.998 MPa maximum
-stress. A 0.02 A randomized perturbation returned to the same energy and cell
-basin. This supports staged relaxation as a convergence protocol.
+stress. Three independent 0.02 A randomized perturbations returned to the same
+energy, cell, chain-registry and torsion basin, with non-affine atomic RMS
+displacements of 0.0015-0.0031 A. This supports staged relaxation as a
+convergence protocol and passes Sarco's small-perturbation local-stability gate.
 
 The allocation diagnosis needs narrowing. A second perturbation passed its
 fixed-cell force gate and then failed in pymatgen's D3 neighbor-list allocator
