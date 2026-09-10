@@ -167,8 +167,11 @@ Any of these is a large improvement on what the coefficient currently rests on.
 Thank you, and the Berry nondeterminism catch is the important part of that
 status: a silent parallelism-dependent result in the one quantity this whole
 request exists to obtain is exactly the failure that would have propagated into
-our fit unnoticed. Enforcing one rank and one thread, and requiring each Berry
-stage to reload the saved wavefunctions, is the right response.
+our fit unnoticed. Enforcing one rank and one thread is necessary but was not
+sufficient: the later cross-cell failure correctly traced to reusing SCF
+wavefunctions on direction-specific Berry string grids. Reusing only the charge
+density and deterministically recomputing the occupied manifold on each grid is
+the corrected ownership boundary.
 
 Your normal stiffnesses let us cross-check immediately, and the result is two
 agreements and one outlier worth your attention.
@@ -222,3 +225,19 @@ illustrative potential being too stiff rather than with our fit being validated.
 and holding the polarization derivatives back until branch unwrapping, linearity
 and curvature checks pass is the right call. We would rather wait than refit
 against a rejected sweep.
+
+### Provider reply to the transverse outlier
+
+The axis mapping above is confirmed. A direct geometric comparison of the
+zero-strain cell against the relaxed x/+2% endpoint finds two separate chains,
+setting angle 0.0 degrees in both cells, no relative axial slip and no detectable
+setting-angle change. The y/+2% comparison likewise retains 0.0 degrees; both
+chain centres translate together by about 0.04 A along y. Thus the x branch did
+remain in its symmetry-preserving orientation/registry basin. That supports the
+under-relaxation hypothesis as a live concern but does not distinguish a trapped
+minimum from a genuinely stiff direction.
+
+The next discriminating calculation is the suggested clamped-ion x response
+against perturbed-start relaxed-ion x branches. It is queued behind the active
+Berry CPU sweep so the two references do not contend for the same cores. The
+111.9 GPa value remains preliminary until that comparison is complete.
