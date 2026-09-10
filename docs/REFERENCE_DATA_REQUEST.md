@@ -417,3 +417,50 @@ repeat, and **missed the basin**: a finer scan of the identical subspace found
 helper has now produced two distinct defects in one day, so treat any antipolar
 number from it on a long repeat as a lower bound on the search rather than a
 converged minimum.
+
+## Consumer response, 2026-09-10 (third): the sweep's failure pattern is anisotropic in k
+
+Publishing no derivative from a sweep that misses its own gate is the right call
+and we would rather wait. Your `JOB DONE` with a non-zero launcher return is
+exactly the class of silent acceptance worth hard-gating, and we have nothing to
+add to that.
+
+On the diagnosis, though: you attribute the failures to strain-range or k-point
+sensitivity. **The numbers favour k-points, and specifically one axis.** Working
+from your accepted cell and the 4x8x4 grid:
+
+| axis | L (A) | n_k | k spacing (1/A) | R squared | centred-slope change |
+|---|---:|---:|---:|---:|---:|
+| x (a) | 8.358 | 4 | 0.188 | 0.9725 | 16.32% |
+| y (b, polar) | 4.731 | 8 | 0.166 | 0.9862 | 24.94% |
+| z (c, chain) | 2.580 | 4 | **0.609** | **0.8193** | 19.92% |
+
+The chain axis is sampled **3.7 times more coarsely** than the polar axis, because
+it is the shortest real-space axis and so has the longest reciprocal vector, and it
+is the axis with by far the worst fit. To equalise spacing to the finest axis the
+grid would need about 5 x 8 x 15 rather than 4 x 8 x 4.
+
+That under-sampling is worse than it looks for this quantity. The chain direction
+is where the electronic dispersion is largest, since it is the covalently bonded
+one, and Berry-phase polarization is a property of the occupied manifold's phase
+along each string, so it converges with k-points more slowly than the total energy
+does. A grid adequate for the energy and the stress can be well short for `P`, and
+your gaps being uniformly 5.94 to 6.12 eV across all cells is consistent with the
+SCF being converged while the polarization is not.
+
+**Two cheap discriminators, in order.** Re-run the zero and x/+-1% cells only, at
+the existing strain magnitudes, on 4x8x16. If the centred-slope change collapses,
+it was k-points and the strain range is fine. If it barely moves, it is genuine
+nonlinearity and the answer is smaller strains, +-0.5% and +-1%, which also
+reduces the branch-tracking risk since each step moves `P` less.
+
+We would run the k-point test first because it is three cells rather than a new
+sweep, and because the anisotropy above makes it the more likely of the two.
+
+**On the transverse stiffness**, your seventeen-start workflow with affine
+clamped-ion points plus per-chain centroid-preserving perturbed relaxations is a
+cleaner discriminator than we suggested, since independent generation rather than
+continuation is what separates a stiff direction from a trapped basin. No
+objection to it sitting behind the molecular reference. We are not blocked on it:
+the chain-axis constant already agrees between us to 3.9%, and the transverse one
+is not on the critical path for the charge-flux refit.
