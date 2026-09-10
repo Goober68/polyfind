@@ -391,3 +391,54 @@ that turns the response columns from an ordering into values; relaxed backbone a
 which CFE, CDFE and FANOME are being scored against reference states they cannot occupy; and a
 shape parametrisation that does not require an exact line-group pattern, without which no
 deflected chain — PVDC's real structure among them — gets a response at all.
+
+
+## Addendum: the polar/antipolar column is not trustworthy, and design rule 1 may be an artifact
+
+Checked independently after this screen was produced, because the screen's
+verdict that beta-PVDF packs antipolar contradicts the fact that beta *is* the
+ferroelectric phase. Same test, both potentials, unconstrained best against the
+best antipolar arrangement:
+
+| potential | best \|P\| (C/m^2) | E(antipolar) - E(polar), kcal/mol per monomer | verdict |
+|---|---|---|---|
+| illustrative default | 0.1416 | **+1.73** | polar, correct |
+| `pvdf-dft-valence-flux` | 0.1155 | **-0.125** | antipolar, **wrong** |
+
+So fitting the potential flipped it. That fit improved held-out energies from
+3.32 to 1.36 kcal/mol, corrected the alpha/beta ordering, and gave d31 its
+experimentally correct sign - and it broke the most application-relevant
+qualitative fact about the material.
+
+**The right conclusion is not that the default potential is better.** The margin
+is 0.125 kcal/mol per monomer against a 1.73 the other way, so this is a
+near-degenerate balance being tipped, and the physics that decides it is a
+long-range dipole-dipole lattice sum. Those decay as 1/r^3, which is
+conditionally convergent: a truncated sum cannot evaluate them, whatever the
+cutoff, and this package uses a damped-shifted-force sum at 8 A rather than
+Ewald. DESIGN.md section 6 has listed that as a limitation since the beginning;
+this is the first measurement of what it costs. The default getting beta right is
+luck, not skill.
+
+**Two consequences for how this screen should be read.**
+
+The `arrangement` and `antipolar gap` columns are **not resolved by the model**
+and should not be used. That is a change from what the screen's own summary says
+it would stand behind.
+
+More seriously, **design rule 1 is suspect for the same reason**. It says a large
+pendant dipole forces antipolar packing, with no exceptions across eight
+chemistries, and it is the rule the screen leans on hardest as a reject filter.
+But chemistries with large dipoles are exactly where a truncated electrostatic
+sum errs most, so the rule may be reporting the truncation rather than the
+physics. It should be re-tested with Ewald before being used to reject anything.
+
+Design rule 2 - that ranking by work density alone inverts the answer, because it
+correlates positively with how inaccessible the polar phase is - does not depend
+on the polar/antipolar determination and stands.
+
+**What would settle it:** proper Ewald summation, which has been on the roadmap
+as a known gap and now has a concrete symptom attached to it. It is also a
+prerequisite for the bulk reference data requested in
+`docs/REFERENCE_DATA_REQUEST.md` to be usable, since comparing a Berry-phase
+polarization against a truncated-electrostatics model would confound the two.
