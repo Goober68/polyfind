@@ -263,13 +263,24 @@ setting angle in this parametrisation rather than a feature of the crystal.  See
 The orientation column is now meaningful, which it was not before the defect of
 section 5.6 was fixed, and it is worth reading carefully because two of the four
 entries are not a prediction at all.  For PE and for beta the two orientations
-are *exactly* degenerate, to the last digit.  That is a symmetry, not a
-coincidence: both chains are mirror-symmetric about their own axis, so flipping
-one is the same as rotating it, and the setting angle already covers rotations.
-The flag the search reports for them is arbitrary.  Note also that
-crystallographic polarity is not the same question as this flag: two chains
-pointing the same way can still oppose their transverse dipoles through their
-setting angles.
+are *exactly* degenerate, to the last digit, and the reason is sharper than an
+earlier version of this paragraph claimed.
+
+Measured: applying the flip to a planar-zigzag chain maps its atom set onto
+itself, residual 3e-15 A, with **no** accompanying rotation or z-shift at all.
+The flip is simply a symmetry operation of that chain.  It has to be: a planar
+zigzag lies in a plane, so reflecting across that plane does nothing to it, and
+the remaining reversal along the chain is absorbed by its own two-fold screw
+axis.  For alpha and gamma the flip is not a symmetry - the best match over all
+rotations and z-shifts leaves 0.8 A and 3.1 A - so there it is a real degree of
+freedom.
+
+This paragraph previously said the chains were mirror-symmetric about their axis
+so that a flip was equivalent to a rotation absorbed by the setting angle.  The
+intuition about the mirror plane was right and the mechanism was wrong; no
+rotation is involved.  Note separately that crystallographic polarity is not the
+same question as this flag: two chains pointing the same way can still oppose
+their transverse dipoles through their setting angles.
 
 For the two chains where the flip is a real degree of freedom, alpha prefers
 antiparallel by 0.18 kcal/mol per monomer and gamma prefers parallel by 0.78.
