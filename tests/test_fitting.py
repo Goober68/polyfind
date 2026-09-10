@@ -326,6 +326,156 @@ def test_the_dft_preset_is_registered_and_the_defaults_are_untouched():
     assert UFF_LJ["F"] == (3.364, 0.050)
 
 
+# ================================ valence terms, Cartesian forces, off-site charges
+def _valence_x(seed=5, offset=0.16):
+    """A parameter vector off the starting point, inside the bounds, with a real offset."""
+    rng = np.random.default_rng(seed)
+    x = np.clip(F.VAL_X0 + 0.3 * rng.normal(0, F.VAL_SIGMA), F.VAL_BOUNDS[:, 0], F.VAL_BOUNDS[:, 1])
+    x[-1] = offset
+    return x
+
+
+def test_the_valence_vector_extends_the_previous_one_exactly():
+    """The first 27 parameters are the previous fit's, unchanged and in the same order, so
+    "what did the new terms buy" is a question about this vector and not about two."""
+    assert F.VAL_VARIABLES[:len(F.REF_VARIABLES)] == F.REF_VARIABLES
+    assert np.array_equal(F.VAL_X0[:len(F.REF_X0)], F.REF_X0)
+    assert np.array_equal(F.VAL_BOUNDS[:len(F.REF_X0)], F.REF_BOUNDS)
+    # and the valence block starts at textbook values, not at averages of the reference data
+    p = F.valence_unpack(F.VAL_X0)
+    assert p["offset"] == 0.0
+    assert dict(zip(F.VAL_BOND_TYPES, p["bond_r0"]))["C-H"] == pytest.approx(1.090)
+    assert F.valence_ff_parameters(F.VAL_X0).charge_offsets == ()  # zero offset ships as none
+
+
+@pytest.mark.parametrize("offset", [0.0, 0.17, -0.21])
+def test_valence_design_reproduces_the_reference_implementation(offset):
+    """Energies, *Cartesian forces* and torques, against ``SimpleFF``'s own finite differences.
+
+    Same contract as the rigid design: the fast design exists only for speed, and if it
+    drifted from the shipped potential the fit would be optimising something else.  The
+    forces are the new part -- they are what the objective now uses instead of the torsional
+    projection -- so they are checked component by component.
+    """
+    frames = _synthetic_frames()
+    design = F.ValenceDesign(frames)
+    x = _valence_x(offset=offset)
+    p = F.valence_unpack(x)
+    energy, forces, torque = design.evaluate(p)
+    ff = F.valence_ff_parameters(x).simple_ff()
+    for i, f in enumerate(frames):
+        V = p["torsion"][F.torsion_types(f)]
+        assert energy[i] == pytest.approx(ff.energy_frame(f, torsion=V), abs=1e-8)
+        assert np.allclose(forces[design.atom_frame == i], ff.forces_frame(f, torsion=V), atol=2e-5)
+        assert np.allclose(torque[design.dih_frame == i], ff.frame_torques(f, torsion=V), atol=1e-4)
+
+
+def test_the_valence_design_carries_the_full_force_signal():
+    """The reason the objective changed: with valence terms the reference forces are no
+    longer 93% unrepresentable, so the residual block is Cartesian and not a projection."""
+    design = F.ValenceDesign(_synthetic_frames())
+    x = _valence_x()
+    r_no_force = design.residuals(x, force_weight=0.0, ridge=0.0)
+    r_force = design.residuals(x, force_weight=0.03, ridge=0.0)
+    assert r_no_force.size == design.n_frames
+    assert r_force.size == design.n_frames + 3 * design.n_atoms
+    assert design.bond_r.size > 0 and design.angle_theta.size > 0
+
+
+def test_the_analytic_angle_and_dihedral_gradients_match_finite_differences():
+    """A sign error in either would quietly corrupt every fitted valence and torsion term."""
+    from polyfind.chain import angle as chain_angle
+    from polyfind.forcefield import dihedral_angles
+
+    rng = np.random.default_rng(2)
+    c = rng.normal(size=(4, 3))
+    theta, g = F._angle_gradient(c, np.array([[0, 1, 2]]))
+    phi, gd = F._dihedral_gradient(c, np.array([[0, 1, 2, 3]]))
+    assert np.degrees(theta[0]) == pytest.approx(chain_angle(c, 0, 1, 2))
+    assert np.degrees(phi[0]) == pytest.approx(dihedral_angles(c, [[0, 1, 2, 3]])[0])
+    h = 1e-6
+    for i in range(4):
+        for a in range(3):
+            cp, cm = c.copy(), c.copy()
+            cp[i, a] += h
+            cm[i, a] -= h
+            d = np.radians(dihedral_angles(cp, [[0, 1, 2, 3]])[0] - dihedral_angles(cm, [[0, 1, 2, 3]])[0])
+            assert gd[0, i, a] == pytest.approx(d / (2 * h), abs=1e-6)
+            if i < 3:
+                da = np.radians(chain_angle(cp, 0, 1, 2) - chain_angle(cm, 0, 1, 2))
+                assert g[0, i, a] == pytest.approx(da / (2 * h), abs=1e-6)
+
+
+def test_the_charge_permittivity_degeneracy_survives_the_off_site_charge():
+    """Measured, not assumed.  Moving a charge site does not touch the argument that only
+    ``q_i q_j / eps_r`` enters an energy, so the degeneracy is expected to be exactly as
+    exact as it was -- and the offset is expected to be separable from the charge, because
+    only their *product* is fixed at long range and these contacts are not long range."""
+    design = F.ValenceDesign(_synthetic_frames())
+    d = F.valence_degeneracies(design, _valence_x())
+    assert d["charge_permittivity_max_energy_change"] < 1e-9  # still exact
+    assert d["charge_offset_max_energy_change"] > 0.1  # and this one is not a degeneracy
+    assert d["max_bent_angle_deg"] < 170.0  # no harmonic is being asked to work near linear
+
+
+def test_valence_terms_do_not_reach_the_packer_and_the_offset_does():
+    """Inside a packing the valence energy is a constant, so ``applied`` deliberately does
+    not forward it; the off-site charges do reach the lattice, as their dipole-equivalent
+    projection, because a charge model that stopped at the oligomer would make the crystal
+    numbers mean something different from the fitted ones."""
+    chain = _alpha_chain()
+    p = np.array([[5.09, 9.14, 90.0, 90.0, 270.0, 2.24, 1]])
+    from dataclasses import replace
+
+    base = F.FFParameters(charge_increments=(("C", "H", -0.10), ("C", "F", 0.20)))
+    with_valence = replace(base, bond_terms=(("C-C", 620.0, 1.526), ("*", 500.0, 1.5)),
+                           angle_terms=(("*", 120.0, 109.5),))
+    with_offset = replace(base, charge_offsets=(("F", 0.18),))
+    with base.applied():
+        e0 = pack_mod.CrystalPacker(chain, n_chains=2).energy(p)[0]
+        q0 = pack_mod.CrystalPacker(chain, n_chains=2).chain.charges.copy()
+    with with_valence.applied():
+        assert pack_mod.CrystalPacker(chain, n_chains=2).energy(p)[0] == e0
+    with with_offset.applied():
+        packer = pack_mod.CrystalPacker(chain, n_chains=2)
+        assert packer.energy(p)[0] != e0
+        assert packer.chain.charges.sum() == pytest.approx(q0.sum(), abs=1e-12)
+        assert not np.allclose(packer.chain.charges, q0)
+
+
+def test_the_valence_preset_is_registered_and_the_defaults_are_untouched():
+    assert "pvdf-dft-valence" in PRESETS
+    assert F.FITTED_VALENCE.preset_kwargs() == PRESETS["pvdf-dft-valence"]
+    default = SimpleFF()
+    assert (default.torsion, default.eps_r, default.charge_scale, default.lj,
+            default.charge_increments, default.bond_terms, default.angle_terms,
+            default.charge_offsets) == (DEFAULT_TORSION, 1.0, 1.0, None, None, None, None, None)
+    fitted = SimpleFF.from_preset("pvdf-dft-valence")
+    assert fitted.bond_terms and fitted.angle_terms and fitted.charge_offsets
+    assert {t for t, _, _ in fitted.bond_terms} == set(F.VAL_BOND_TYPES)
+    assert {t for t, _, _ in fitted.angle_terms} == set(F.VAL_ANGLE_TYPES)
+    assert UFF_LJ["F"] == (3.364, 0.050)  # selecting a preset never edits the global table
+
+
+def test_the_fitted_fluorine_charge_is_physical_and_off_its_bound():
+    """The finding the valence terms were supposed to produce, pinned as a number.
+
+    DESIGN.md 5.9 records the previous fit sitting on the 0.02 e floor for ``q_C-F`` and
+    turning fluorine *positive* once released.  This asserts the shipped vector is on the
+    right side of that and is not being held there by a bound.
+    """
+    i = F.VAL_VARIABLES.index("q_C-F")
+    q = F.VAL_FITTED_X[i]
+    lo, hi = F.VAL_BOUNDS[i]
+    assert q > 0.10  # fluorine negative, carbon positive, and not marginally
+    assert min(abs(q - lo), abs(q - hi)) > 0.05  # nowhere near either bound
+    inc = {(a, b): v for a, b, v in F.FITTED_VALENCE.charge_increments}
+    assert inc[("C", "H")] < 0 and inc[("C", "F")] > 0  # H positive, F negative
+    # and the rigid vector really is the old model: no valence, charge on the nucleus
+    assert F.valence_ff_parameters(F.rigid_vector()).charge_offsets == ()
+    assert all(k == 0.0 for _, k, _ in F.valence_ff_parameters(F.rigid_vector()).bond_terms)
+
+
 @pytest.mark.skipif(not os.environ.get(F.REFERENCE_ENV),
                     reason=f"set ${F.REFERENCE_ENV} to the reference set to run this")
 def test_the_reference_set_matches_the_package_chain_for_pvdf():

@@ -5,7 +5,13 @@ Two roles:
 1. A pluggable :class:`Calculator` protocol.  :class:`SimpleFF` is a small,
    transparent intramolecular potential (Fourier torsion on the backbone
    dihedral + UFF Lennard-Jones + Coulomb for 1-4 and beyond) that exists so the
-   whole pipeline runs and can be tested without heavy dependencies.  Its
+   whole pipeline runs and can be tested without heavy dependencies.  It can
+   optionally carry harmonic bond and angle terms and an off-site charge position
+   (``bond_terms``, ``angle_terms``, ``charge_offsets``), which is what makes the
+   reference *forces* fittable and lets a strained chain relieve a contact by
+   opening an angle; all three are off by default, so a default-constructed
+   instance is the rigid, atom-centred potential it has always been.  See
+   docs/VALENCE_FIT.md for what they bought and what they did not.  Its
    default parameters are *illustrative* -- they were chosen to be reasonable,
    not fitted -- but they are now all constructor arguments, and
    :mod:`polyfind.fitting` fits them to experimental crystal data and offers the
@@ -196,6 +202,159 @@ def bci_charges(elements, bonds, increments) -> np.ndarray:
             d = -increments.get((eb, ea), 0.0)
         q[a] += d
         q[b] -= d
+    return q
+
+
+# ------------------------------------------------------------------ valence terms
+#
+# Harmonic bond stretching and angle bending, typed by the bond graph rather than by the
+# polymer, so that one table serves a built :class:`~polyfind.chain.Structure`, a periodic
+# block and an arbitrary :class:`Frame`.  They are **off by default**: a
+# default-constructed :class:`SimpleFF` has no valence terms at all, which is the rigid
+# potential every earlier number in this package was computed with.  What they buy is
+# recorded in docs/VALENCE_FIT.md; the two things they are for are (i) making the
+# reference *forces* representable, 93% of which are bond stretching, and (ii) letting a
+# strained all-trans chain relieve itself by opening an angle instead of carrying hundreds
+# of kcal/mol of Lennard-Jones contact.
+#
+# Inside a packing they change nothing, and that is by construction rather than by
+# accident: :mod:`polyfind.pack` builds rigid chains, so every bond length and every bond
+# angle is fixed and the valence energy is one additive constant per chain.  It therefore
+# cancels from every lattice-energy *difference* and from every RIS energy, which are
+# measured from all-trans.  ``tests/test_forcefield.py`` asserts exactly that.
+
+# Elements that, when they carry a single bond in the graph, are terminal atoms of a
+# multiple bond: a one-coordinate nitrogen is a nitrile and a one-coordinate oxygen a
+# carbonyl or a sulfonyl.  They need their own stretch type because their length (C#N
+# 1.14 A) has nothing to do with the single bond of the same element pair (C-N 1.47 A) --
+# measured on the reference set, typing them together gives one "C-N" population spanning
+# 1.16 to 1.52 A, which no single harmonic describes.
+MULTIPLE_TERMINAL: tuple[str, ...] = ("N", "O")
+WILDCARD = "*"  # the catch-all entry of a valence table
+
+
+def bond_type_name(elements, adj, i: int, j: int) -> str:
+    """Stretch type of the bond ``i-j``: ``"C-F"``, ``"C=N"`` (terminal multiple), ...
+
+    The element pair in alphabetical order, joined by ``-`` for a single bond and ``=``
+    for a bond to a one-coordinate :data:`MULTIPLE_TERMINAL` atom.  Purely a function of
+    the graph and the elements, so it means the same thing for a built chain and for an
+    inferred :class:`Frame`.
+    """
+    ei, ej = elements[i], elements[j]
+    multiple = ((len(adj[i]) == 1 and ei in MULTIPLE_TERMINAL)
+                or (len(adj[j]) == 1 and ej in MULTIPLE_TERMINAL))
+    a, b = sorted((ei, ej))
+    return f"{a}={b}" if multiple else f"{a}-{b}"
+
+
+def angle_type_name(elements, adj, i: int, j: int, k: int) -> str | None:
+    """Bend type of the angle ``i-j-k`` (``j`` central): ``"C-C-C"``, ``"F-C-H"``, ...
+
+    The two outer elements in alphabetical order around the central one.  ``None`` for a
+    **two-coordinate centre**, which is a linear group (a nitrile carbon, an isocyanate
+    nitrogen): its reference angles sit at 179-180 degrees, where the derivative of
+    ``arccos`` is singular and a harmonic in the angle is the wrong functional form.  Such
+    groups are rigid in :mod:`polyfind.polymers` by construction too (``nitrile()`` adds
+    atoms but no degrees of freedom), so leaving them without a bend term is the same
+    modelling choice made in the same place twice, not a new approximation.
+    """
+    if len(adj[j]) < 3:
+        return None
+    a, b = sorted((elements[i], elements[k]))
+    return f"{a}-{elements[j]}-{b}"
+
+
+def valence_topology(elements, bonds) -> tuple[list, list]:
+    """``(bonds, angles)`` with their type names: ``[(i, j, name)]`` and ``[(i, j, k, name)]``.
+
+    Angles are every pair of neighbours of every atom with at least three of them; ``j``
+    is the central atom.  Deterministic order (by central atom, then by neighbour index)
+    so that two calls on the same topology give the same arrays.
+    """
+    adj = neighbour_lists(len(elements), bonds)
+    bl = [(int(i), int(j), bond_type_name(elements, adj, int(i), int(j))) for i, j in bonds]
+    al = []
+    for j in range(len(elements)):
+        nb = sorted(adj[j])
+        for x in range(len(nb)):
+            for y in range(x + 1, len(nb)):
+                name = angle_type_name(elements, adj, nb[x], j, nb[y])
+                if name is not None:
+                    al.append((int(nb[x]), int(j), int(nb[y]), name))
+    return bl, al
+
+
+def _valence_lookup(table: dict, name: str, what: str) -> tuple[float, ...]:
+    """``table[name]``, falling back to the :data:`WILDCARD` entry; raises if neither."""
+    if name in table:
+        return table[name]
+    if WILDCARD in table:
+        return table[WILDCARD]
+    raise KeyError(f"no {what} parameters for type {name!r} and no {WILDCARD!r} entry; "
+                   f"known: {sorted(table)}")
+
+
+def offset_sites(elements, bonds, offsets) -> list[tuple[int, int, float]]:
+    """``(atom, neighbour, distance)`` for every atom carrying an off-site charge.
+
+    ``offsets`` maps an element symbol to a displacement along the bond *away from* its
+    one neighbour (so positive moves the charge outward, beyond the nucleus).  Only
+    one-coordinate atoms may carry one -- the construction is "slide the charge along the
+    bond", and an atom with two bonds has no single bond to slide along -- and an element
+    in the table that appears with more than one neighbour raises rather than being
+    silently skipped.
+    """
+    if not offsets:
+        return []
+    adj = neighbour_lists(len(elements), bonds)
+    out = []
+    for i, e in enumerate(elements):
+        d = offsets.get(e)
+        if d is None:
+            continue
+        if len(adj[i]) != 1:
+            raise ValueError(f"off-site charge asked for {e} atom {i}, which has "
+                             f"{len(adj[i])} neighbours; only terminal atoms can carry one")
+        out.append((int(i), int(adj[i][0]), float(d)))
+    return out
+
+
+def charge_site_coords(coords, sites) -> np.ndarray:
+    """``coords`` with every :func:`offset_sites` atom moved along its bond (n, 3)."""
+    coords = np.asarray(coords, dtype=float)
+    if not sites:
+        return coords
+    out = coords.copy()
+    for a, nb, d in sites:
+        u = coords[a] - coords[nb]
+        out[a] = coords[a] + d * u / np.linalg.norm(u)
+    return out
+
+
+def project_offset_charges(coords, charges, sites) -> np.ndarray:
+    """Atom-centred charges with the same total dipole as the off-site model.
+
+    Moving charge ``q`` a distance ``d`` along a bond of length ``r`` adds ``q d`` to the
+    dipole along that bond; putting ``q d / r`` more charge on the atom and the same amount
+    less on its neighbour adds exactly the same thing, with the total charge unchanged.  So
+    this is the *exact* dipole-equivalent of the off-site model, and it differs from it only
+    in the quadrupole and above.
+
+    It exists because :mod:`polyfind.pack` and :mod:`polyfind.refine` carry one charge per
+    atom and no off-site machinery, so a fitted off-site model reaches a crystal through
+    its dipole-equivalent projection rather than exactly.  At the 3 A and longer separations
+    a lattice sum is made of, the dipole is the term that matters; at the 2.5 A intramolecular
+    contacts the fit is done on, it is not, which is the whole point of having the off-site
+    site in the first place.  Both facts are measured in docs/VALENCE_FIT.md.
+    """
+    q = np.array(charges, dtype=float)
+    coords = np.asarray(coords, dtype=float)
+    for a, nb, d in sites:
+        r = float(np.linalg.norm(coords[a] - coords[nb]))
+        delta = q[a] * d / r
+        q[a] += delta
+        q[nb] -= delta
     return q
 
 
@@ -515,6 +674,18 @@ class _Topology:
     qq: np.ndarray  # per pair q_i q_j * scale
     torsions: np.ndarray  # (n_tors, 4) backbone quadruples
     tors_V: np.ndarray  # (n_tors, 3) Fourier coefficients of each of those dihedrals
+    # Valence and off-site-charge terms.  Empty arrays mean "this potential has none",
+    # which is the default and the only state every number recorded before them was
+    # computed in; the kernel skips the blocks entirely rather than adding zeros.
+    bond_idx: np.ndarray = field(default_factory=lambda: np.empty((0, 2), dtype=int))
+    bond_k: np.ndarray = field(default_factory=lambda: np.empty(0))
+    bond_r0: np.ndarray = field(default_factory=lambda: np.empty(0))
+    angle_idx: np.ndarray = field(default_factory=lambda: np.empty((0, 3), dtype=int))
+    angle_k: np.ndarray = field(default_factory=lambda: np.empty(0))
+    angle_t0: np.ndarray = field(default_factory=lambda: np.empty(0))  # radians
+    off_atom: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=int))
+    off_nb: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=int))
+    off_d: np.ndarray = field(default_factory=lambda: np.empty(0))
 
 
 # The illustrative defaults, named so that "what the potential was before anyone fitted
@@ -589,6 +760,24 @@ class SimpleFF:
         has always done.  When set, charges are derived from the bond graph instead,
         so the *same* numbers describe a built chain, a periodic block and an
         arbitrary :class:`Frame`; ``charge_scale`` still multiplies the result.
+    ``bond_terms``
+        ``((type, k, r0), ...)`` harmonic bond stretching, ``0.5 k (r - r0)^2`` with
+        ``k`` in kcal/(mol A^2) and ``r0`` in A, typed by :func:`bond_type_name` with
+        :data:`WILDCARD` as the catch-all.  ``None`` (the default) means no stretch
+        term, which is what a rigid-geometry potential has and what every number
+        recorded in this package before them was computed with.
+    ``angle_terms``
+        ``((type, k, theta0), ...)`` harmonic angle bending, ``0.5 k (theta - theta0)^2``
+        with ``k`` in kcal/(mol rad^2) and ``theta0`` in *degrees*, typed by
+        :func:`angle_type_name`.  ``None`` (the default) means no bend term.
+    ``charge_offsets``
+        ``((element, distance), ...)`` off-site charge positions: the named element's
+        point charge sits ``distance`` angstrom along its own bond, away from its
+        neighbour, while its Lennard-Jones centre stays on the nucleus.  That
+        separation is the point -- one atom-centred site has to serve both, and the
+        C-F dipole is what suffers for it (docs/VALENCE_FIT.md).  ``None`` (the default)
+        keeps every charge on its nucleus.  Only terminal atoms may carry one
+        (:func:`offset_sites`).
     """
 
     torsion: tuple[float, float, float] = DEFAULT_TORSION
@@ -598,6 +787,9 @@ class SimpleFF:
     charge_scale: float = 1.0
     lj: dict[str, tuple[float, float]] | None = None
     charge_increments: tuple[tuple[str, str, float], ...] | None = None
+    bond_terms: tuple[tuple[str, float, float], ...] | None = None
+    angle_terms: tuple[tuple[str, float, float], ...] | None = None
+    charge_offsets: tuple[tuple[str, float], ...] | None = None
     _cache: dict = field(default_factory=dict, repr=False)
 
     @classmethod
@@ -663,14 +855,63 @@ class SimpleFF:
         q = np.asarray(fallback, dtype=float) if inc is None else bci_charges(elements, bonds, inc)
         return q * self.charge_scale if self.charge_scale != 1.0 else np.asarray(q, dtype=float)
 
+    def bond_table(self) -> dict[str, tuple[float, float]]:
+        """:attr:`bond_terms` as ``{type: (k, r0)}``; empty when there are none."""
+        return {} if self.bond_terms is None else {t: (float(k), float(r0)) for t, k, r0 in self.bond_terms}
+
+    def angle_table(self) -> dict[str, tuple[float, float]]:
+        """:attr:`angle_terms` as ``{type: (k, theta0_deg)}``; empty when there are none."""
+        return {} if self.angle_terms is None else {t: (float(k), float(t0)) for t, k, t0 in self.angle_terms}
+
+    def offset_table(self) -> dict[str, float]:
+        """:attr:`charge_offsets` as ``{element: distance}``; empty when there are none."""
+        return {} if self.charge_offsets is None else {e: float(d) for e, d in self.charge_offsets}
+
+    def has_valence(self) -> bool:
+        return bool(self.bond_terms) or bool(self.angle_terms)
+
+    def valence_arrays(self, elements, bonds) -> tuple:
+        """``(bond_idx, bond_k, bond_r0, angle_idx, angle_k, angle_t0_rad)`` for a topology.
+
+        Empty arrays when this potential has no valence terms, which is what keeps the
+        rigid path bit-for-bit what it was: the kernel then skips the blocks rather than
+        adding zeros.
+        """
+        bt, at = self.bond_table(), self.angle_table()
+        if not bt and not at:
+            return (np.empty((0, 2), dtype=int), np.empty(0), np.empty(0),
+                    np.empty((0, 3), dtype=int), np.empty(0), np.empty(0))
+        bl, al = valence_topology(elements, bonds)
+        if bt:
+            b_idx = np.array([[i, j] for i, j, _ in bl], dtype=int).reshape(-1, 2)
+            kr = np.array([_valence_lookup(bt, n, "bond") for _, _, n in bl], dtype=float).reshape(-1, 2)
+        else:
+            b_idx, kr = np.empty((0, 2), dtype=int), np.empty((0, 2))
+        if at:
+            a_idx = np.array([[i, j, k] for i, j, k, _ in al], dtype=int).reshape(-1, 3)
+            kt = np.array([_valence_lookup(at, n, "angle") for _, _, _, n in al], dtype=float).reshape(-1, 2)
+        else:
+            a_idx, kt = np.empty((0, 3), dtype=int), np.empty((0, 2))
+        return b_idx, kr[:, 0], kr[:, 1], a_idx, kt[:, 0], np.deg2rad(kt[:, 1])
+
+    def offset_arrays(self, elements, bonds) -> tuple:
+        """``(atoms, neighbours, distances)`` of the off-site charges; empty when none."""
+        sites = offset_sites(elements, bonds, self.offset_table())
+        if not sites:
+            return np.empty(0, dtype=int), np.empty(0, dtype=int), np.empty(0)
+        arr = np.array(sites, dtype=float)
+        return arr[:, 0].astype(int), arr[:, 1].astype(int), arr[:, 2]
+
     def _param_key(self) -> tuple:
         """Everything a cached :class:`_Topology` depends on besides the structure."""
         lj = tuple(sorted((k, float(v[0]), float(v[1])) for k, v in (self.lj or {}).items()))
         tbb = None if self.torsion_by_bond is None else tuple(tuple(float(x) for x in t) for t in self.torsion_by_bond)
         inc = None if self.charge_increments is None else tuple(
             sorted((a, b, float(d)) for a, b, d in self.charge_increments))
+        val = (tuple(sorted(self.bond_table().items())), tuple(sorted(self.angle_table().items())),
+               tuple(sorted(self.offset_table().items())))
         return (tuple(float(x) for x in self.torsion), tbb, float(self.scale14),
-                float(self.eps_r), float(self.charge_scale), lj, inc)
+                float(self.eps_r), float(self.charge_scale), lj, inc, val)
 
     # --- topology -------------------------------------------------------------
     def _pair_terms(self, elements, dist: np.ndarray, charges) -> tuple:
@@ -716,7 +957,9 @@ class SimpleFF:
         iu, ju, lj_x, lj_d, qq = self._pair_terms(struct.elements, dist, q)
         tors = np.array([struct.dihedral_atoms(j) for j in range(struct.n_dihedrals)], dtype=int).reshape(-1, 4)
         tors_V = self.torsion_coefficients(struct.polymer, struct.n_dihedrals).reshape(-1, 3)
-        top = _Topology(iu, ju, lj_x, lj_d, qq, tors, tors_V)
+        top = _Topology(iu, ju, lj_x, lj_d, qq, tors, tors_V,
+                        *self.valence_arrays(struct.elements, struct.bonds),
+                        *self.offset_arrays(struct.elements, struct.bonds))
         self._cache[key] = top
         return top
 
@@ -739,7 +982,9 @@ class SimpleFF:
         iu, ju, lj_x, lj_d, qq = self._pair_terms(frame.elements, frame.graph_distances(), q)
         V = (np.tile(np.asarray(self.torsion, dtype=float), (frame.n_dihedrals, 1))
              if torsion is None else np.asarray(torsion, dtype=float).reshape(-1, 3))
-        return _Topology(iu, ju, lj_x, lj_d, qq, np.asarray(frame.torsions, dtype=int).reshape(-1, 4), V)
+        return _Topology(iu, ju, lj_x, lj_d, qq, np.asarray(frame.torsions, dtype=int).reshape(-1, 4), V,
+                         *self.valence_arrays(frame.elements, frame.bonds),
+                         *self.offset_arrays(frame.elements, frame.bonds))
 
     def energy_frame(self, frame: Frame, torsion=None) -> float:
         """Energy (kcal/mol) of an arbitrary geometry, topology inferred from coordinates.
@@ -785,7 +1030,15 @@ class SimpleFF:
         qq = xp.asarray(top.qq)
         s6 = (lj_x / r) ** 6
         e_lj = (lj_d * (s6 * s6 - 2.0 * s6)).sum(axis=1)
-        e_c = (qq / r).sum(axis=1)
+        if top.off_atom.size:
+            # Off-site charges: the Coulomb term is evaluated between charge *sites*, the
+            # Lennard-Jones one between nuclei.  Separating the two is the whole reason the
+            # offset exists, so the two distances are genuinely different arrays here.
+            cc = self._site_coords(top, coords, xp)
+            rc = xp.sqrt(((cc[:, pi] - cc[:, pj]) ** 2).sum(axis=-1))
+            e_c = (qq / rc).sum(axis=1)
+        else:
+            e_c = (qq / r).sum(axis=1)
         e_t = xp.zeros(coords.shape[0])
         if top.torsions.size:
             tors = xp.asarray(top.torsions)
@@ -802,7 +1055,32 @@ class SimpleFF:
             V = xp.asarray(top.tors_V, dtype=phi.dtype)
             V1, V2, V3 = V[:, 0], V[:, 1], V[:, 2]
             e_t = (0.5 * (V1 * (1 + xp.cos(phi)) + V2 * (1 - xp.cos(2 * phi)) + V3 * (1 + xp.cos(3 * phi)))).sum(axis=1)
-        return e_lj + e_c + e_t
+        out = e_lj + e_c + e_t
+        # The valence blocks are added only when there are any, so a potential without them
+        # computes and returns exactly the expression it always did.
+        if top.bond_idx.size:
+            bi, bj = xp.asarray(top.bond_idx[:, 0]), xp.asarray(top.bond_idx[:, 1])
+            rb = xp.sqrt(((coords[:, bi] - coords[:, bj]) ** 2).sum(axis=-1))
+            db = rb - xp.asarray(top.bond_r0, dtype=rb.dtype)
+            out = out + (0.5 * xp.asarray(top.bond_k, dtype=rb.dtype) * db * db).sum(axis=1)
+        if top.angle_idx.size:
+            ai, aj, ak = (xp.asarray(top.angle_idx[:, c]) for c in range(3))
+            u = coords[:, ai] - coords[:, aj]
+            v = coords[:, ak] - coords[:, aj]
+            cos = ((u * v).sum(-1) / xp.sqrt((u * u).sum(-1) * (v * v).sum(-1)))
+            theta = xp.arccos(xp.clip(cos, -1.0, 1.0))
+            da = theta - xp.asarray(top.angle_t0, dtype=theta.dtype)
+            out = out + (0.5 * xp.asarray(top.angle_k, dtype=theta.dtype) * da * da).sum(axis=1)
+        return out
+
+    def _site_coords(self, top: _Topology, coords, xp):
+        """``coords`` with each off-site charge slid along its bond; batched, backend-agnostic."""
+        a, nb = xp.asarray(top.off_atom), xp.asarray(top.off_nb)
+        u = coords[:, a] - coords[:, nb]
+        u = u / xp.sqrt((u * u).sum(axis=-1, keepdims=True))
+        out = coords.copy()
+        out[:, a] = coords[:, a] + xp.asarray(top.off_d, dtype=coords.dtype)[None, :, None] * u
+        return out
 
     def energy(self, struct: Structure) -> float:
         top = self._topology(struct)
@@ -848,11 +1126,48 @@ class SimpleFF:
         c = struct.coords
         r = np.linalg.norm(c[top.pairs_i] - c[top.pairs_j], axis=1)
         s6 = (top.lj_x / r) ** 6
+        lj = float((top.lj_d * (s6 * s6 - 2 * s6)).sum())
+        if top.off_atom.size:
+            cc = charge_site_coords(c, list(zip(top.off_atom, top.off_nb, top.off_d)))
+            coulomb = float((top.qq / np.linalg.norm(cc[top.pairs_i] - cc[top.pairs_j], axis=1)).sum())
+        else:
+            coulomb = float((top.qq / r).sum())
+        bond = angle = 0.0
+        if top.bond_idx.size:
+            rb = np.linalg.norm(c[top.bond_idx[:, 0]] - c[top.bond_idx[:, 1]], axis=1)
+            bond = float((0.5 * top.bond_k * (rb - top.bond_r0) ** 2).sum())
+        if top.angle_idx.size:
+            u = c[top.angle_idx[:, 0]] - c[top.angle_idx[:, 1]]
+            v = c[top.angle_idx[:, 2]] - c[top.angle_idx[:, 1]]
+            cos = (u * v).sum(1) / np.sqrt((u * u).sum(1) * (v * v).sum(1))
+            angle = float((0.5 * top.angle_k * (np.arccos(np.clip(cos, -1, 1)) - top.angle_t0) ** 2).sum())
         return {
-            "lj": float((top.lj_d * (s6 * s6 - 2 * s6)).sum()),
-            "coulomb": float((top.qq / r).sum()),
-            "torsion": self.energy(struct) - float((top.lj_d * (s6 * s6 - 2 * s6)).sum()) - float((top.qq / r).sum()),
+            "lj": lj,
+            "coulomb": coulomb,
+            "torsion": self.energy(struct) - lj - coulomb - bond - angle,
+            "bond": bond,
+            "angle": angle,
         }
+
+    def forces_frame(self, frame: Frame, torsion=None, step: float = 1e-5) -> np.ndarray:
+        """Cartesian forces ``-dE/dx`` (kcal/(mol A)) of a :class:`Frame`, shape (n, 3).
+
+        Central differences on :meth:`energy_frame`, so this cannot drift away from the
+        energy it differentiates: it is the reference implementation the analytic forces in
+        :mod:`polyfind.fitting` are tested against, the same arrangement
+        :meth:`frame_torques` already has.  With no valence terms these forces are the
+        nonbonded-plus-torsion part only -- which is why fitting *Cartesian* forces needed
+        the valence terms first, and is the measurement docs/DFT_FIT.md section 3 records.
+        """
+        out = np.zeros((frame.n_atoms, 3))
+        for i in range(frame.n_atoms):
+            for a in range(3):
+                cp, cm = frame.coords.copy(), frame.coords.copy()
+                cp[i, a] += step
+                cm[i, a] -= step
+                out[i, a] = -(self.energy_frame(frame.with_coords(cp), torsion)
+                              - self.energy_frame(frame.with_coords(cm), torsion)) / (2 * step)
+        return out
 
 
 class ASECalculator:
@@ -1509,7 +1824,7 @@ def fit_ris(
         states = RISStates(states.names, tuple(float(a) for a in angs), states.mirror)
     e3 = None
     if third_order:
-        e3 = np.clip(_fit_third_order(polymer, calc, states, N, base), -cap, cap)
+        e3 = np.clip(_fit_third_order(polymer, calc, states, N, base, ref=ref, cap=cap), -cap, cap)
         n_eval += B * states.n ** 3 * 4
         if mode == "mirror":
             m = np.array(states.mirror)
@@ -1530,7 +1845,8 @@ def fit_ris(
     return FitReport(report_grid, scan1, scan2, n_eval, model, arg1, arg2)
 
 
-def _fit_third_order(polymer: Polymer, calc: Calculator, states: RISStates, N: int, base: np.ndarray) -> np.ndarray:
+def _fit_third_order(polymer: Polymer, calc: Calculator, states: RISStates, N: int, base: np.ndarray,
+                     ref: float = 0.0, cap: float = 50.0) -> np.ndarray:
     """Triplet corrections by inclusion-exclusion at the state angles:
 
         e3[b, a, c, d] = E(a c d) - E(a c T) - E(T c d) + E(T c T)
@@ -1538,6 +1854,25 @@ def _fit_third_order(polymer: Polymer, calc: Calculator, states: RISStates, N: i
     i.e. the part of the energy of three consecutive states not captured by the
     pairs (dominated by 1,6-type contacts).  4 * S^3 evaluations per bond type, built
     and evaluated as one batch per bond type.
+
+    An energy above ``ref + cap`` is a steric overlap -- the same reading :func:`fit_ris`
+    gives one for the first- and second-order terms -- and *differences* between overlaps
+    carry no information, so the inclusion-exclusion is not applied across them:
+
+    * if the triple itself overlaps, ``e3 = +cap``: the triple is impossible and the model
+      should say so, whatever the sub-terms do;
+    * if one of the *subtracted* terms overlaps but the triple does not, ``e3 = 0``: the
+      correction is unresolvable and the pair terms are left to speak for themselves.
+
+    This is not hypothetical bookkeeping.  With rigid geometry a clashing triple is worth
+    about 1e6 kcal/mol, so subtracting one such number from another leaves a spurious well
+    of 1e6 that the outer clip turns into a flat ``-cap`` -- a large **bonus** for a
+    conformation that is in fact impossible.  It is exactly what a potential whose fitted
+    gauche basin sits at 60 rather than 80 degrees produces for (G+, G+, G-), where the
+    pair term is measured at a relieved *basin minimum* while the triple is evaluated at
+    the fixed state angles, so the two disagree by whatever the clash is worth.  Where
+    nothing overlaps -- which is every triple of the illustrative potential's PVDF fit --
+    the arithmetic is unchanged.
     """
     B, S = polymer.bonds_per_repeat, states.n
     t_idx = states.index("T") if "T" in states.names else 0
@@ -1556,9 +1891,58 @@ def _fit_third_order(polymer: Polymer, calc: Calculator, states: RISStates, N: i
         dihs = np.array(rows)
         template, coords = build_chain_batch(polymer, dihs)
         E = calc.energy_batch((template, coords)).reshape(-1, 4)
-        for (a, c, d), row in zip(keys, E):
-            e3[b, a, c, d] = row[0] - row[1] - row[2] + row[3]
+        over = E > ref + cap
+        for (a, c, d), row, ov in zip(keys, E, over):
+            if ov[0]:
+                e3[b, a, c, d] = cap
+            elif ov[1] or ov[2] or ov[3]:
+                e3[b, a, c, d] = 0.0
+            else:
+                e3[b, a, c, d] = row[0] - row[1] - row[2] + row[3]
     return e3
+
+
+def relax_backbone_angles(polymer: Polymer, calc: Calculator, dihedrals,
+                          lo: float = 95.0, hi: float = 135.0, x0=None) -> dict:
+    """Minimise ``calc`` over the repeat's backbone angles at fixed torsions.
+
+    One variable per backbone atom of the repeat, broadcast along the chain the way
+    :func:`~polyfind.chain.backbone_angle_lookup` does, so a five-monomer PVDF oligomer has
+    two: the angle at every CH2 and the angle at every CF2.  The substituents follow the
+    changed backbone automatically (:func:`~polyfind.chain.build_chain` places them from
+    the actual neighbours), so this really is the chain relaxing rather than a rigid chain
+    being re-labelled.
+
+    Only meaningful for a calculator that has an angle term.  Without one nothing resists
+    opening an angle and the minimum runs to whichever bound relieves the most contact,
+    which is the same thing :func:`polyfind.refine.refine_crystal` says about the cell:
+    the bend term plays for the angles the role the Fourier term plays for the torsions.
+
+    Returns the starting and relaxed angles, energies and Lennard-Jones components.  The
+    energy is the calculator's own, so with valence terms present it includes the strain
+    the relaxation is *buying* the contact relief with, which is the honest accounting.
+    """
+    from scipy.optimize import minimize
+
+    B = polymer.bonds_per_repeat
+    a0 = (np.array([polymer.backbone[k].backbone_angle for k in range(B)], dtype=float)
+          if x0 is None else np.asarray(x0, dtype=float))
+    dih = np.asarray(dihedrals, dtype=float)
+
+    def energy_at(a):
+        return float(calc.energy(build_chain(polymer, dih, bond_angles=np.asarray(a, dtype=float))))
+
+    res = minimize(energy_at, a0, method="Nelder-Mead",
+                   bounds=[(lo, hi)] * B, options={"xatol": 1e-3, "fatol": 1e-6, "maxfev": 800})
+    best = np.clip(np.asarray(res.x, dtype=float), lo, hi)
+    if energy_at(best) > energy_at(a0):  # a failed search must not report a worse minimum
+        best = a0
+    start = build_chain(polymer, dih)
+    end = build_chain(polymer, dih, bond_angles=best)
+    return {"angles0": a0, "angles": best,
+            "energy0": float(calc.energy(start)), "energy": float(calc.energy(end)),
+            "lj0": float(calc.components(start)["lj"]), "lj": float(calc.components(end)["lj"]),
+            "n_evaluations": int(res.nfev)}
 
 
 def oligomer_energy_of_sequence(polymer: Polymer, calc: Calculator, seq, states: RISStates = THREE_STATE, n_periods: int = 6) -> float:

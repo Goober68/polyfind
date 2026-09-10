@@ -6,7 +6,7 @@ machine-learned potential is or will be a dependency here.  The search around th
 potential is now fast enough (a pack-and-refine of a reference chain is seconds) that
 a parameter fit can sit on top of it, so that is what this module is.
 
-**There are two fits here, and they are not equals.**  The first, described in the rest of
+**There are three fits here, and they are not equals.**  The first, described in the rest of
 this docstring, fits five parameters to the experimental crystal data already in the
 package; DESIGN.md 5.7 records that it did not generalise and why -- the discriminating
 quantities, torsion profiles and conformer energies, were not in the training data.  The
@@ -16,7 +16,18 @@ conformers of VDF oligomers, split by chemistry rather than by frame, and it doe
 generalise: held-out energy error over ten unseen chemistries falls from 3.32 to 1.76
 kcal/mol, and alpha-PVDF finally comes out below beta by an amount the literature agrees
 with.  It ships as the preset ``pvdf-dft-fit``; ``examples/fit_dft.py`` reproduces it and
-docs/DFT_FIT.md says what it is and is not worth.  Neither fit changes any default.
+docs/DFT_FIT.md says what it is and is not worth.
+
+The third (:class:`ValenceDesign`, :func:`fit_valence`, the section after that one) adds what
+DESIGN.md 5.9 said the *functional form* was missing: harmonic bond and angle terms, full
+Cartesian forces in the objective instead of a torsional projection, and an off-site charge
+site for fluorine.  56 parameters, same split.  Held-out energy error falls to 1.36 kcal/mol
+and held-out force error from 13.9 to 5.2 kcal/(mol A) against a reference whose own RMS is
+14.0; fluorine's charge comes out physical and off its bound; the all-trans strain that made
+the RIS reference state meaningless for five chemistries is relieved by letting the angles
+relax.  Two of the three acceptance tests still fail.  It ships as ``pvdf-dft-valence``;
+``examples/fit_valence.py`` reproduces it and docs/VALENCE_FIT.md is blunt about which
+numbers did not move.  **No fit here changes any default.**
 
 **What is fitted** (five numbers, :data:`VARIABLES`)::
 
@@ -71,7 +82,8 @@ import numpy as np
 from scipy.optimize import least_squares, minimize
 
 from .forcefield import (COULOMB, DEFAULT_SCALE14, DEFAULT_TORSION, PRESETS, TRAINSET_ENV,
-                         UFF_LJ_EXTRA, Frame, SimpleFF, read_frames)
+                         UFF_LJ_EXTRA, Frame, SimpleFF, offset_sites, project_offset_charges,
+                         read_frames, valence_topology)
 from .pack import CrystalPacker, PackResult, pack, periodic_chain
 from .pipeline import EXPERIMENTAL_CELLS
 from .polymers import PE, PVDF, UFF_LJ, Polymer, THREE_STATE
@@ -110,6 +122,11 @@ class FFParameters:
     lj: tuple[tuple[str, float, float], ...] = ()  # (element, x_i, D_i) overrides; hashable
     scale14: float = 0.5
     charge_increments: tuple[tuple[str, str, float], ...] = ()  # bond-charge increments
+    # Valence terms and off-site charges (docs/VALENCE_FIT.md).  Empty means "none", which
+    # is the rigid, atom-centred potential everything above this fit was measured with.
+    bond_terms: tuple[tuple[str, float, float], ...] = ()  # (type, k, r0)
+    angle_terms: tuple[tuple[str, float, float], ...] = ()  # (type, k, theta0 deg)
+    charge_offsets: tuple[tuple[str, float], ...] = ()  # (element, offset A)
 
     @property
     def lj_dict(self) -> dict[str, tuple[float, float]]:
@@ -118,7 +135,9 @@ class FFParameters:
     def simple_ff(self) -> SimpleFF:
         return SimpleFF(torsion=tuple(self.torsion), scale14=self.scale14, eps_r=self.eps_r,
                         charge_scale=self.charge_scale, lj=self.lj_dict or None,
-                        charge_increments=self.charge_increments or None)
+                        charge_increments=self.charge_increments or None,
+                        bond_terms=self.bond_terms or None, angle_terms=self.angle_terms or None,
+                        charge_offsets=self.charge_offsets or None)
 
     def preset_kwargs(self) -> dict:
         """:class:`~polyfind.forcefield.SimpleFF` keyword arguments, for :data:`PRESETS`."""
@@ -128,14 +147,26 @@ class FFParameters:
             kw["lj"] = {e: (float(x), float(d)) for e, x, d in self.lj}
         if self.charge_increments:
             kw["charge_increments"] = tuple((a, b, float(d)) for a, b, d in self.charge_increments)
+        for name in ("bond_terms", "angle_terms"):
+            v = getattr(self, name)
+            if v:
+                kw[name] = tuple((t, float(a), float(b)) for t, a, b in v)
+        if self.charge_offsets:
+            kw["charge_offsets"] = tuple((e, float(d)) for e, d in self.charge_offsets)
         return kw
 
     def describe(self) -> str:
         lj = ", ".join(f"{e} x_i={x:.3f}" for e, x, _ in self.lj) or "UFF unchanged"
         q = ("; ".join(f"d{a}{b}={d:+.3f}" for a, b, d in self.charge_increments)
              or "polymer charges")
+        val = (f" [{len(self.bond_terms)} stretch, {len(self.angle_terms)} bend types]"
+               if self.has_valence() else " [rigid: no valence terms]")
+        off = "".join(f" [{e} charge {d:+.3f} A off its nucleus]" for e, d in self.charge_offsets)
         return (f"torsion=({self.torsion[0]:+.3f}, {self.torsion[1]:+.3f}, {self.torsion[2]:+.3f}) "
-                f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]")
+                f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}")
+
+    def has_valence(self) -> bool:
+        return bool(self.bond_terms) or bool(self.angle_terms)
 
     @contextmanager
     def applied(self):
@@ -167,6 +198,15 @@ class FFParameters:
         C-C and a same-element bond carries no increment, so the bonds that cross the
         periodic boundary contribute nothing and a single block gives the same charges as
         an infinite chain would.
+
+        :attr:`bond_terms` and :attr:`angle_terms` are deliberately *not* forwarded, and that
+        is not an omission.  ``pack`` builds rigid chains, so inside a packing every bond
+        length and every bond angle is fixed and the valence energy is one additive constant
+        per chain: it cancels from every lattice-energy difference, from every polarization and
+        from every cell parameter, and forwarding it would change nothing but the absolute
+        number.  The one place bond angles do move is :func:`polyfind.refine.refine_crystal`,
+        which has carried its own harmonic bend term since before this fit and is left exactly
+        as it was, so that nothing here can be confused with a change to the refinement stage.
         """
         from . import pack as pack_mod
         from . import refine as refine_mod
@@ -175,11 +215,22 @@ class FFParameters:
         ff = self.simple_ff()
         q_scale, torsion, eps_r = self.charge_scale, tuple(self.torsion), self.eps_r
         increments = ff.increments()
+        offsets = ff.offset_table()
 
         class _FittedPacker(pack_mod.CrystalPacker):
             def __init__(self, chain, **kw):
                 if increments is not None:
-                    q = bci_charges(chain.elements, infer_bonds(chain.elements, chain.coords), increments)
+                    bonds = infer_bonds(chain.elements, chain.coords)
+                    q = bci_charges(chain.elements, bonds, increments)
+                    if offsets:
+                        # pack carries one charge per atom and no off-site machinery, so an
+                        # off-site model reaches the lattice as its exact dipole-equivalent
+                        # projection.  See project_offset_charges: same total charge, same
+                        # total dipole, different quadrupole -- and at the 3 A and longer
+                        # separations a lattice sum is made of, the dipole is the term that
+                        # matters.  docs/VALENCE_FIT.md measures what the difference costs.
+                        q = project_offset_charges(chain.coords, q,
+                                                   offset_sites(chain.elements, bonds, offsets))
                     chain = replace(chain, charges=q * q_scale)
                 elif q_scale != 1.0:
                     chain = replace(chain, charges=np.asarray(chain.charges, dtype=float) * q_scale)
@@ -1418,3 +1469,705 @@ def reference_ablations() -> dict[str, np.ndarray]:
         v[idx] = REF_FITTED_X[idx]
         out[name] = v
     return out
+
+
+# =====================================================================================
+# Valence terms, full Cartesian forces and off-site charges (docs/VALENCE_FIT.md)
+# =====================================================================================
+#
+# DESIGN.md 5.9 ends by saying where the binding constraint had moved to: not the data any
+# more but the functional form, which lacked (i) bond and angle terms, without which 93% of
+# the reference force signal is unrepresentable and an all-trans chain cannot relieve a
+# contact by opening an angle, and (ii) electrostatics richer than fixed atom-centred point
+# charges, with the fit wanting a *positive* fluorine as the evidence.  This section is
+# both, fitted together:
+#
+# * harmonic bond stretching and angle bending, typed by the bond graph
+#   (:data:`VAL_BOND_TYPES`, :data:`VAL_ANGLE_TYPES`), with every equilibrium value and
+#   every stiffness a fitted parameter rather than an invented one;
+# * an **off-site charge for fluorine**: the charge slides along the C-F bond while the
+#   Lennard-Jones centre stays on the nucleus, which is one parameter (``d_F``) and the one
+#   thing atom-centred charges structurally cannot do -- the same point had to carry
+#   fluorine's van der Waals size and the C-F dipole's centroid, and the fit resolved that
+#   conflict by switching the dipole off;
+# * the objective's force block is now the **full Cartesian forces**, every component of
+#   every atom, not the torsional projection the rigid form had to fall back on.
+#
+# The first 27 entries of the vector are exactly :data:`REF_VARIABLES` in the same order,
+# so "the previous fit" is this fit with the new blocks switched off, and
+# :func:`valence_ablations` can say what each block bought.
+
+# Bond stretch types (:func:`polyfind.forcefield.bond_type_name`), chosen by coverage of
+# the reference set: C-C 4561 bonds / 31 systems, C-H 5081 / 31, C-F 5328 / 31, C-Cl 80 / 4,
+# C-O 80 / 3, C=N (the nitrile, typed apart from single C-N because its length is 1.14 A
+# against 1.47 and no one harmonic covers both) 171 / 10.  The wildcard takes the 235
+# remaining bonds -- C-S, S=O, N=O, C-I, C-Br, the isocyanate's C-N -- which belong to
+# two or three systems of nuisance data each and do not deserve a type of their own.
+VAL_BOND_TYPES: tuple[str, ...] = ("C-C", "C-H", "C-F", "C-Cl", "C-O", "C=N", "*")
+
+# Angle bend types (:func:`polyfind.forcefield.angle_type_name`).  The six carbon-centred
+# ones cover 95.7% of the 29,954 angles in the set; the wildcard takes the rest.  Angles
+# about a two-coordinate centre (a nitrile carbon) get no term at all -- see
+# ``angle_type_name`` for why a harmonic in the angle is the wrong form there.
+VAL_ANGLE_TYPES: tuple[str, ...] = ("C-C-C", "C-C-H", "C-C-F", "H-C-H", "F-C-F", "F-C-H", "*")
+
+# The element whose charge is allowed off its nucleus.  Fluorine, because it is the element
+# the diagnosis is about and the one this package's polarization results turn on; and one
+# element means one parameter, which is the smallest change that can answer the question.
+VAL_OFFSET_ELEMENT = "F"
+
+_NB, _NA = len(VAL_BOND_TYPES), len(VAL_ANGLE_TYPES)
+
+VAL_VARIABLES: tuple[str, ...] = tuple(
+    list(REF_VARIABLES)
+    + [f"kb_{t}" for t in VAL_BOND_TYPES] + [f"r0_{t}" for t in VAL_BOND_TYPES]
+    + [f"ka_{t}" for t in VAL_ANGLE_TYPES] + [f"t0_{t}" for t in VAL_ANGLE_TYPES]
+    + [f"d_{VAL_OFFSET_ELEMENT}"])
+
+# Starting values for the valence block: textbook (GAFF/AMBER-like) stiffnesses and
+# equilibrium lengths and angles, *not* averages of the reference geometries -- starting at
+# the data's own means would make the weak ridge toward X0 a second, hidden fit to it.  In
+# the convention used here the energy is 0.5 k (r - r0)^2, so k is twice the "K" of a force
+# field that writes K (r - r0)^2.
+VAL_BOND_K0 = (620.0, 680.0, 740.0, 440.0, 640.0, 1400.0, 500.0)
+VAL_BOND_R0 = (1.526, 1.090, 1.380, 1.766, 1.410, 1.150, 1.600)
+VAL_ANGLE_K0 = (120.0, 100.0, 120.0, 70.0, 160.0, 100.0, 110.0)
+VAL_ANGLE_T0 = (112.7, 109.5, 109.0, 107.8, 107.0, 107.0, 109.5)
+VAL_OFFSET0 = 0.0  # start with the charge on the nucleus: the old model is the starting point
+
+VAL_X0 = np.concatenate([REF_X0, VAL_BOND_K0, VAL_BOND_R0, VAL_ANGLE_K0, VAL_ANGLE_T0,
+                         [VAL_OFFSET0]])
+
+# Bounds.  The first 27 are REF_BOUNDS unchanged, so a comparison with the previous fit is a
+# comparison of forms and not of boxes.  For the new block:
+#
+# * stretch stiffness 100-3000 and bend stiffness 10-500 kcal/(mol A^2 | rad^2): loose
+#   enough to be uninformative for the types with thousands of bonds behind them, present
+#   only so the wildcard type cannot run away on 200 bonds of nuisance data;
+# * equilibrium lengths 0.9-2.6 A and angles 90-135 deg: the range of a real single bond and
+#   of a real bond angle.  These are the parameters the fit is being *asked* for, so the
+#   bounds are deliberately far from where any of them is expected to land;
+# * the fluorine charge offset +/- 0.6 A, up to about 40% of a C-F bond in either direction.
+#   Zero is the atom-centred model, so the sign the fit chooses is the physical statement:
+#   negative pulls the charge back towards carbon (a shorter dipole than the nuclei
+#   suggest), positive pushes it beyond the nucleus (a longer one).
+VAL_BOUNDS = np.vstack([REF_BOUNDS,
+                        np.array([(100.0, 3000.0)] * _NB + [(0.90, 2.60)] * _NB
+                                 + [(10.0, 500.0)] * _NA + [(90.0, 135.0)] * _NA
+                                 + [(-0.60, 0.60)])])
+VAL_SIGMA = np.concatenate([REF_SIGMA, [300.0] * _NB, [0.08] * _NB,
+                            [80.0] * _NA, [4.0] * _NA, [0.15]])
+
+# How many kcal^2/mol^2 of energy error one kcal^2/(mol A)^2 of *Cartesian force* error is
+# worth.  Chosen by held-out energy error, measured in docs/VALENCE_FIT.md; unlike the rigid
+# fit's torque weight, this one is not a formality.
+VAL_FORCE_WEIGHT = 0.03
+
+
+def valence_unpack(x) -> dict:
+    """The fit vector as the arrays :meth:`ValenceDesign.evaluate` wants.
+
+    The first 27 entries go through :func:`reference_unpack` unchanged -- same parameters,
+    same order, same meaning -- and the rest are the valence block and the charge offset.
+    """
+    x = np.asarray(x, dtype=float)
+    p = reference_unpack(x[:len(REF_X0)])
+    off = len(REF_X0)
+    p["bond_k"] = x[off:off + _NB]
+    p["bond_r0"] = x[off + _NB:off + 2 * _NB]
+    off += 2 * _NB
+    p["angle_k"] = x[off:off + _NA]
+    p["angle_t0"] = np.deg2rad(x[off + _NA:off + 2 * _NA])
+    p["offset"] = float(x[-1])
+    return p
+
+
+def valence_ff_parameters(x, eps_r: float = 1.0) -> FFParameters:
+    """The fit vector as an :class:`FFParameters`: valence terms and charge offset included."""
+    base = reference_ff_parameters(np.asarray(x, dtype=float)[:len(REF_X0)], eps_r=eps_r)
+    p = valence_unpack(x)
+    bonds = tuple((t, float(k), float(r0))
+                  for t, k, r0 in zip(VAL_BOND_TYPES, p["bond_k"], p["bond_r0"]))
+    angles = tuple((t, float(k), float(np.degrees(t0)))
+                   for t, k, t0 in zip(VAL_ANGLE_TYPES, p["angle_k"], p["angle_t0"]))
+    offs = () if p["offset"] == 0.0 else ((VAL_OFFSET_ELEMENT, float(p["offset"])),)
+    return replace(base, bond_terms=bonds, angle_terms=angles, charge_offsets=offs)
+
+
+def _unit_rows(v: np.ndarray) -> np.ndarray:
+    return v / np.linalg.norm(v, axis=-1, keepdims=True)
+
+
+def _angle_gradient(coords, idx: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """``(theta, dtheta/dx)`` for angle triples ``idx`` (n, 3): radians and (n, 3, 3).
+
+    Analytic: with ``u = x_i - x_j``, ``v = x_k - x_j`` and ``s = sin theta``,
+    ``dtheta/dx_i = (cos theta * uhat - vhat) / (|u| s)``, the mirror expression for
+    ``x_k``, and minus their sum for the central atom -- which is what makes the gradient of
+    a rigid translation vanish.  ``tests/test_fitting.py`` checks it against the
+    finite-difference forces of :meth:`polyfind.forcefield.SimpleFF.forces_frame`.
+    """
+    u = coords[idx[:, 0]] - coords[idx[:, 1]]
+    v = coords[idx[:, 2]] - coords[idx[:, 1]]
+    nu, nv = np.linalg.norm(u, axis=1), np.linalg.norm(v, axis=1)
+    uh, vh = u / nu[:, None], v / nv[:, None]
+    cos = np.clip((uh * vh).sum(1), -1.0, 1.0)
+    theta = np.arccos(cos)
+    s = np.maximum(np.sqrt(1.0 - cos ** 2), 1e-9)
+    gi = (cos[:, None] * uh - vh) / (nu * s)[:, None]
+    gk = (cos[:, None] * vh - uh) / (nv * s)[:, None]
+    return theta, np.stack([gi, -(gi + gk), gk], axis=1)
+
+
+def _dihedral_gradient(coords, idx: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """``(phi, dphi/dx)`` for torsion quadruples ``idx`` (n, 4): radians and (n, 4, 3).
+
+    The standard result for the dihedral of ``i-j-k-l``, in the same sign convention as
+    :func:`polyfind.forcefield.dihedral_angles` (IUPAC, trans = 180).  Checked against
+    finite differences in the tests, because a sign error here would quietly corrupt every
+    fitted torsion coefficient.
+    """
+    b1 = coords[idx[:, 1]] - coords[idx[:, 0]]
+    b2 = coords[idx[:, 2]] - coords[idx[:, 1]]
+    b3 = coords[idx[:, 3]] - coords[idx[:, 2]]
+    n1, n2 = np.cross(b1, b2), np.cross(b2, b3)
+    nb2 = np.linalg.norm(b2, axis=1)
+    s1, s2 = (n1 * n1).sum(1), (n2 * n2).sum(1)
+    phi = np.arctan2((nb2[:, None] * b1 * n2).sum(1), (n1 * n2).sum(1))
+    gi = -nb2[:, None] * n1 / s1[:, None]
+    gl = nb2[:, None] * n2 / s2[:, None]
+    f = ((b1 * b2).sum(1) / nb2 ** 2)[:, None]
+    g = ((b3 * b2).sum(1) / nb2 ** 2)[:, None]
+    gj = -(1.0 + f) * gi + g * gl
+    gk = f * gi - (1.0 + g) * gl
+    return phi, np.stack([gi, gj, gk, gl], axis=1)
+
+
+class ValenceDesign:
+    """Every geometry-dependent quantity of a set of frames, for the valence fit.
+
+    The same idea as :class:`ReferenceDesign` -- the frames never move, so distances,
+    angles, dihedrals and all their Cartesian derivatives are constants and only the
+    parameters change -- extended with what the new terms need: bond and angle lists with
+    their analytic gradients, the full Cartesian reference forces, and the geometry of the
+    off-site charge.
+
+    The charge offset deserves a note, because it is the one parameter that moves an
+    interaction *site*.  Writing the site separation as ``A + d U``, with ``A`` the nuclear
+    separation and ``U`` the difference of the two unit offset directions, the Coulomb
+    distance is ``sqrt(c0 + c1 d + c2 d^2)`` for three constants per pair -- so a parameter
+    that changes the geometry still costs no geometry rebuild.  The Cartesian force needs
+    the chain rule through the site's own dependence on its two atoms, which is a constant
+    3x3 projector per off-site atom; both are precomputed here.
+
+    :meth:`evaluate` reproduces :meth:`polyfind.forcefield.SimpleFF.energy_frame` and
+    :meth:`~polyfind.forcefield.SimpleFF.forces_frame` to rounding, and
+    ``tests/test_fitting.py`` asserts it rather than trusting it.
+    """
+
+    def __init__(self, frames: Sequence[Frame]):
+        frames = list(frames)
+        if not frames:
+            raise ValueError("no frames")
+        self.frames = frames
+        self.systems = sorted({f.system for f in frames})
+        sidx = {s: i for i, s in enumerate(self.systems)}
+        self.elements = sorted(_UFF_ALL)
+        el_index = {e: i for i, e in enumerate(self.elements)}
+        b_type = {t: i for i, t in enumerate(VAL_BOND_TYPES)}
+        a_type = {t: i for i, t in enumerate(VAL_ANGLE_TYPES)}
+
+        p_i, p_j, p_s14, p_r, p_frame, p_A, p_U = [], [], [], [], [], [], []
+        b_i, b_j, b_t, b_r, b_u = [], [], [], [], []
+        a_idx, a_t, a_theta, a_grad = [], [], [], []
+        d_frame, d_type, d_phi, d_idx, d_grad, d_tau = [], [], [], [], [], []
+        r_dih, r_atom, r_vec = [], [], []
+        o_atom, o_nb, o_proj = [], [], []
+        a_el, a_M, f_ref, energies, f_sys, atom_frame = [], [], [], [], [], []
+        n_atoms = n_dih = 0
+        for fi, f in enumerate(frames):
+            base = n_atoms
+            c = f.coords
+            a_el.extend(el_index[e] for e in f.elements)
+            atom_frame.extend([fi] * f.n_atoms)
+            a_M.append(_increment_matrix(f))
+            f_ref.append(np.zeros((f.n_atoms, 3)) if f.forces is None else f.forces)
+            # --- nonbonded pairs, and the off-site geometry they need
+            dist = f.graph_distances()
+            iu, ju = np.triu_indices(f.n_atoms, 1)
+            keep = dist[iu, ju] >= 3
+            iu, ju = iu[keep], ju[keep]
+            p_i.append(iu + base)
+            p_j.append(ju + base)
+            p_s14.append(dist[iu, ju] == 3)
+            p_r.append(np.linalg.norm(c[iu] - c[ju], axis=1))
+            p_frame.append(np.full(len(iu), fi))
+            u_dir = np.zeros((f.n_atoms, 3))
+            for at, nb, _ in offset_sites(f.elements, f.bonds, {VAL_OFFSET_ELEMENT: 1.0}):
+                rv = c[at] - c[nb]
+                n = float(np.linalg.norm(rv))
+                uh = rv / n
+                u_dir[at] = uh
+                o_atom.append(at + base)
+                o_nb.append(nb + base)
+                o_proj.append((np.eye(3) - np.outer(uh, uh)) / n)
+            p_A.append(c[iu] - c[ju])
+            p_U.append(u_dir[iu] - u_dir[ju])
+            # --- valence lists
+            bl, al = valence_topology(f.elements, f.bonds)
+            if bl:
+                ii = np.array([b[0] for b in bl])
+                jj = np.array([b[1] for b in bl])
+                b_i.append(ii + base)
+                b_j.append(jj + base)
+                b_t.append(np.array([b_type.get(b[2], b_type["*"]) for b in bl]))
+                b_r.append(np.linalg.norm(c[ii] - c[jj], axis=1))
+                b_u.append(_unit_rows(c[ii] - c[jj]))
+            if al:
+                idx = np.array([[a[0], a[1], a[2]] for a in al])
+                theta, grad = _angle_gradient(c, idx)
+                a_idx.append(idx + base)
+                a_t.append(np.array([a_type.get(a[3], a_type["*"]) for a in al]))
+                a_theta.append(theta)
+                a_grad.append(grad)
+            # --- torsions: angle, type, Cartesian gradient, and the rotor projection
+            tors = np.asarray(f.torsions, dtype=int).reshape(-1, 4)
+            if len(tors):
+                phi, grad = _dihedral_gradient(c, tors)
+                d_frame.append(np.full(len(tors), fi))
+                d_type.append(torsion_types(f))
+                d_phi.append(phi)
+                d_idx.append(tors + base)
+                d_grad.append(grad)
+                d_tau.append(f.reference_torques() if f.forces is not None else np.zeros(len(tors)))
+                rot = f.rotors()
+                for k in range(len(tors)):
+                    nz = np.flatnonzero(np.abs(rot[k]).sum(1) > 1e-12)
+                    r_dih.append(np.full(len(nz), n_dih + k))
+                    r_atom.append(nz + base)
+                    r_vec.append(rot[k][nz])
+                n_dih += len(tors)
+            n_atoms += f.n_atoms
+            energies.append(f.energy)
+            f_sys.append(sidx[f.system])
+
+        cat = lambda xs: (np.concatenate(xs) if xs else np.empty(0))  # noqa: E731
+        self.n_frames, self.n_atoms, self.n_torsions = len(frames), n_atoms, n_dih
+        self.pair_i, self.pair_j = np.concatenate(p_i), np.concatenate(p_j)
+        self.pair_s14 = np.concatenate(p_s14)
+        self.pair_r = np.concatenate(p_r)
+        self.inv_r = 1.0 / self.pair_r
+        A, U = np.concatenate(p_A), np.concatenate(p_U)
+        self.pair_rhat = _unit_rows(A)
+        self.pair_frame = np.concatenate(p_frame).astype(int)
+        self.site_A, self.site_U = A, U
+        self.site_c0 = (A * A).sum(1)
+        self.site_c1 = 2.0 * (A * U).sum(1)
+        self.site_c2 = (U * U).sum(1)
+        self.bond_i = cat(b_i).astype(int)
+        self.bond_j = cat(b_j).astype(int)
+        self.bond_type = cat(b_t).astype(int)
+        self.bond_r = cat(b_r)
+        self.bond_u = np.concatenate(b_u) if b_u else np.empty((0, 3))
+        self.angle_idx = (np.concatenate(a_idx) if a_idx else np.empty((0, 3), dtype=int)).astype(int)
+        self.angle_type = cat(a_t).astype(int)
+        self.angle_theta = cat(a_theta)
+        self.angle_grad = np.concatenate(a_grad) if a_grad else np.empty((0, 3, 3))
+        self.dih_frame = cat(d_frame).astype(int)
+        self.dih_type = cat(d_type).astype(int)
+        self.dih_phi = cat(d_phi)
+        self.dih_idx = (np.concatenate(d_idx) if d_idx else np.empty((0, 4), dtype=int)).astype(int)
+        self.dih_grad = np.concatenate(d_grad) if d_grad else np.empty((0, 4, 3))
+        self.torque_ref = cat(d_tau)
+        self.rot_dih = cat(r_dih).astype(int)
+        self.rot_atom = cat(r_atom).astype(int)
+        self.rot_vec = np.concatenate(r_vec) if r_vec else np.empty((0, 3))
+        self.off_atom = np.array(o_atom, dtype=int)
+        self.off_nb = np.array(o_nb, dtype=int)
+        self.off_proj = np.array(o_proj).reshape(-1, 3, 3)
+        self.atom_el = np.array(a_el, dtype=int)
+        self.atom_frame = np.array(atom_frame, dtype=int)
+        self.increment_matrix = np.vstack(a_M)
+        self.force_ref = np.vstack(f_ref)
+        self.energy_ref = np.array(energies)
+        self.frame_system = np.array(f_sys, dtype=int)
+        self.system_count = np.bincount(self.frame_system, minlength=len(self.systems))
+        self.energy_ref_centred = self.centre(self.energy_ref)
+
+    # --- the objective's pieces -------------------------------------------------
+    def centre(self, x: np.ndarray) -> np.ndarray:
+        """Subtract each system's own mean (see :meth:`ReferenceDesign.centre`)."""
+        m = np.bincount(self.frame_system, weights=x, minlength=len(self.systems)) / self.system_count
+        return x - m[self.frame_system]
+
+    def _scatter(self, idx_list, val_list) -> np.ndarray:
+        """Sum per-interaction 3-vectors onto atoms: one bincount per Cartesian component."""
+        idx = np.concatenate(idx_list)
+        val = np.concatenate(val_list)
+        return np.stack([np.bincount(idx, weights=val[:, c], minlength=self.n_atoms)
+                         for c in range(3)], axis=1)
+
+    def evaluate(self, p: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """``(energies, forces, torques)``: per frame (kcal/mol), per atom (kcal/(mol A))
+        and per backbone torsion (kcal/(mol rad), the rotor projection of those forces)."""
+        x = p["lj_x"][self.atom_el]
+        d = p["lj_d"][self.atom_el]
+        q = self.increment_matrix @ p["increments"]
+        scale = np.where(self.pair_s14, p["scale14"], 1.0)
+        lj_x = np.sqrt(x[self.pair_i] * x[self.pair_j])
+        lj_d = np.sqrt(d[self.pair_i] * d[self.pair_j]) * scale
+        qq = q[self.pair_i] * q[self.pair_j] * scale * COULOMB
+        s6 = (lj_x * self.inv_r) ** 6
+        e_lj = lj_d * (s6 * s6 - 2.0 * s6)
+        dlj_dr = (12.0 * lj_d * self.inv_r) * (s6 - s6 * s6)  # d(LJ)/dr
+        f_lj = (-dlj_dr)[:, None] * self.pair_rhat
+        # Coulomb between charge sites: the separation is A + d U, so the distance and its
+        # direction both move with the one offset parameter and no geometry is rebuilt.
+        dq = p["offset"]
+        if dq == 0.0:
+            r_c, sep = self.pair_r, self.site_A
+        else:
+            r_c = np.sqrt(self.site_c0 + dq * self.site_c1 + dq * dq * self.site_c2)
+            sep = self.site_A + dq * self.site_U
+        e_c = qq / r_c
+        f_c = (qq / r_c ** 3)[:, None] * sep  # force on site i, i.e. -dE/dS_i
+        energy = (np.bincount(self.pair_frame, weights=e_lj, minlength=self.n_frames)
+                  + np.bincount(self.pair_frame, weights=e_c, minlength=self.n_frames))
+        # Coulomb forces act on sites; map them onto atoms through the site's own Jacobian
+        forces = self._scatter([self.pair_i, self.pair_j], [f_c, -f_c])
+        idx_list, val_list = [self.pair_i, self.pair_j], [f_lj, -f_lj]
+        if dq != 0.0 and self.off_atom.size:
+            corr = dq * np.einsum("nab,nb->na", self.off_proj, forces[self.off_atom])
+            idx_list += [self.off_atom, self.off_nb]
+            val_list += [corr, -corr]
+        forces = forces + self._scatter(idx_list, val_list)
+        # --- valence
+        if self.bond_i.size:
+            k, r0 = p["bond_k"][self.bond_type], p["bond_r0"][self.bond_type]
+            dr = self.bond_r - r0
+            energy += np.bincount(self.atom_frame[self.bond_i], weights=0.5 * k * dr * dr,
+                                  minlength=self.n_frames)
+            fb = (-k * dr)[:, None] * self.bond_u
+            forces += self._scatter([self.bond_i, self.bond_j], [fb, -fb])
+        if self.angle_idx.size:
+            k, t0 = p["angle_k"][self.angle_type], p["angle_t0"][self.angle_type]
+            dt = self.angle_theta - t0
+            energy += np.bincount(self.atom_frame[self.angle_idx[:, 1]], weights=0.5 * k * dt * dt,
+                                  minlength=self.n_frames)
+            g = (-k * dt)[:, None, None] * self.angle_grad  # (n, 3 atoms, 3 components)
+            forces += self._scatter([self.angle_idx[:, c] for c in range(3)],
+                                    [g[:, c] for c in range(3)])
+        # --- torsion
+        V = p["torsion"][self.dih_type]
+        phi = self.dih_phi
+        e_t = 0.5 * (V[:, 0] * (1 + np.cos(phi)) + V[:, 1] * (1 - np.cos(2 * phi))
+                     + V[:, 2] * (1 + np.cos(3 * phi)))
+        dt_dphi = 0.5 * (-V[:, 0] * np.sin(phi) + 2 * V[:, 1] * np.sin(2 * phi)
+                         - 3 * V[:, 2] * np.sin(3 * phi))
+        energy += np.bincount(self.dih_frame, weights=e_t, minlength=self.n_frames)
+        gt = (-dt_dphi)[:, None, None] * self.dih_grad
+        forces += self._scatter([self.dih_idx[:, c] for c in range(4)], [gt[:, c] for c in range(4)])
+        torque = np.bincount(self.rot_dih,
+                             weights=(forces[self.rot_atom] * self.rot_vec).sum(1),
+                             minlength=self.n_torsions)
+        return energy, forces, torque
+
+    def residuals(self, x, force_weight: float = VAL_FORCE_WEIGHT,
+                  ridge: float = REF_RIDGE) -> np.ndarray:
+        """Relative energies, full Cartesian forces and the ridge, in the usual scaled units.
+
+        Each block is divided by the square root of its own length, so the energy block's sum
+        of squares is a mean squared error in kcal^2/mol^2 and ``force_weight`` reads as "how
+        many of those one kcal^2/(mol A)^2 of force error is worth".
+        """
+        p = valence_unpack(x)
+        energy, forces, _ = self.evaluate(p)
+        blocks = [(self.centre(energy) - self.energy_ref_centred) / np.sqrt(self.n_frames)]
+        if force_weight > 0:
+            blocks.append(np.sqrt(force_weight) * (forces - self.force_ref).ravel()
+                          / np.sqrt(3 * self.n_atoms))
+        if ridge > 0:
+            blocks.append(np.sqrt(ridge / len(x)) * (np.asarray(x, dtype=float) - VAL_X0) / VAL_SIGMA)
+        return np.concatenate(blocks)
+
+    def errors(self, x) -> dict:
+        """Energy, force and torque root-mean-square errors, overall and per system."""
+        p = valence_unpack(x)
+        energy, forces, torque = self.evaluate(p)
+        de = self.centre(energy) - self.energy_ref_centred
+        df = forces - self.force_ref
+        dt = torque - self.torque_ref
+        per, per_f = {}, {}
+        for i, s in enumerate(self.systems):
+            m = self.frame_system == i
+            per[s] = float(np.sqrt((de[m] ** 2).mean()))
+            sel = m[self.atom_frame]
+            per_f[s] = float(np.sqrt((df[sel] ** 2).mean()))
+        return {"energy_rms": float(np.sqrt((de ** 2).mean())),
+                "energy_max": float(np.abs(de).max()),
+                "force_rms": float(np.sqrt((df ** 2).mean())),
+                "torque_rms": float(np.sqrt((dt ** 2).mean())),
+                "force_ref_rms": float(np.sqrt((self.force_ref ** 2).mean())),
+                "force_corr": float(np.corrcoef(forces.ravel(), self.force_ref.ravel())[0, 1]),
+                "per_system": per, "per_system_force": per_f}
+
+
+@dataclass
+class ValenceFit:
+    """One fit of :data:`VAL_VARIABLES` to reference data, with its held-out score."""
+
+    x: np.ndarray
+    force_weight: float
+    train_systems: list[str]
+    test_systems: list[str]
+    train: dict
+    test: dict
+    n_evaluations: int
+    seconds: float
+
+    @property
+    def parameters(self) -> FFParameters:
+        return valence_ff_parameters(self.x)
+
+    def table(self) -> str:
+        rows = [f"{'system':<12s} {'E rms':>9s} {'F rms':>9s}  set", "-" * 44]
+        for s in self.train_systems:
+            if s in self.train["per_system"]:
+                rows.append(f"{s:<12s} {self.train['per_system'][s]:9.3f} "
+                            f"{self.train['per_system_force'][s]:9.3f}  train")
+        for s in self.test_systems:
+            if s in self.test["per_system"]:
+                rows.append(f"{s:<12s} {self.test['per_system'][s]:9.3f} "
+                            f"{self.test['per_system_force'][s]:9.3f}  HELD OUT")
+        rows.append("-" * 44)
+        rows.append(f"{'train':<12s} {self.train['energy_rms']:9.3f} {self.train['force_rms']:9.3f}")
+        rows.append(f"{'held out':<12s} {self.test['energy_rms']:9.3f} {self.test['force_rms']:9.3f}")
+        return "\n".join(rows)
+
+
+def fit_valence(frames: Sequence[Frame] | None = None, force_weight: float = VAL_FORCE_WEIGHT,
+                path: str | None = None, n_starts: int = 3, seed: int = 0,
+                free: Sequence[int] | None = None, x0=None, ridge: float = REF_RIDGE,
+                designs: tuple["ValenceDesign", "ValenceDesign"] | None = None,
+                verbose: bool = True) -> ValenceFit:
+    """Fit :data:`VAL_VARIABLES` to the reference set, holding whole chemistries out.
+
+    The same optimiser, the same split and the same ridge as :func:`fit_reference` -- what
+    changes is the model (valence terms, off-site charge) and the force block (full
+    Cartesian forces instead of the torsional projection).  ``free`` restricts the fit to a
+    subset of the parameter indices, the rest held at ``x0``, which is how
+    :func:`valence_ablations` asks what each block bought; ``designs`` reuses a
+    (train, held-out) pair that has already been built, which is worth doing because
+    building one is a second of work and a sweep builds none of it twice.
+    """
+    if designs is None:
+        if frames is None:
+            frames = load_reference(path)
+        frames = list(frames)
+        train_sys, test_sys = split_systems(frames)
+        design = ValenceDesign([f for f in frames if f.system in train_sys])
+        held = ValenceDesign([f for f in frames if f.system in test_sys])
+    else:
+        design, held = designs
+        train_sys, test_sys = list(design.systems), list(held.systems)
+    x0 = VAL_X0 if x0 is None else np.asarray(x0, dtype=float)
+    idx = np.arange(len(VAL_X0)) if free is None else np.asarray(free, dtype=int)
+    lo, hi = VAL_BOUNDS[idx, 0], VAL_BOUNDS[idx, 1]
+    calls = {"n": 0}
+
+    def expand(v):
+        full = x0.copy()
+        full[idx] = v
+        return full
+
+    def f(v):
+        calls["n"] += 1
+        return design.residuals(expand(v), force_weight, ridge)
+
+    rng = np.random.default_rng(seed)
+    starts = [x0[idx]] + [np.clip(x0[idx] + rng.normal(0, VAL_SIGMA[idx]), lo, hi)
+                          for _ in range(n_starts)]
+    t0 = time.time()
+    best, best_cost = None, np.inf
+    for k, s in enumerate(starts):
+        res = least_squares(f, s, bounds=(lo, hi), x_scale=VAL_SIGMA[idx], max_nfev=6000)
+        if verbose:
+            print(f"  start {k}: cost {res.cost:.6f} in {res.nfev} evaluations", flush=True)
+        if res.cost < best_cost:
+            best, best_cost = res.x.copy(), float(res.cost)
+    x = expand(best)
+    return ValenceFit(x=x, force_weight=force_weight, train_systems=train_sys,
+                      test_systems=test_sys, train=design.errors(x), test=held.errors(x),
+                      n_evaluations=calls["n"], seconds=time.time() - t0)
+
+
+def rigid_vector(x27=None) -> np.ndarray:
+    """A :data:`VAL_VARIABLES` vector that *is* the old rigid form: no valence, no offset.
+
+    Zero stiffnesses and a zero charge offset reduce the new potential to exactly the one
+    :data:`REF_VARIABLES` describes, which is what lets :class:`ValenceDesign` score the
+    previous fit and this one on the same footing -- same frames, same centring, same
+    Cartesian force block -- instead of comparing two numbers from two objectives.
+    """
+    x = VAL_X0.copy()
+    if x27 is not None:
+        x[:len(REF_X0)] = np.asarray(x27, dtype=float)
+    off = len(REF_X0)
+    x[off:off + _NB] = 0.0
+    x[off + 2 * _NB:off + 2 * _NB + _NA] = 0.0
+    x[-1] = 0.0
+    return x
+
+
+def valence_degeneracies(design: "ValenceDesign", x=None, s: float = 1.7) -> dict:
+    """Measure the degeneracies of the *new* electrostatics rather than assuming them.
+
+    Three questions, each answered by moving parameters and looking at what changes:
+
+    * **charge scale against permittivity** -- exactly degenerate in the old form.  Moving
+      the charge site does not touch that argument (every energy still depends on the
+      charges only through ``q_i q_j``, and on ``eps_r`` only as a divisor), so the
+      prediction is that it is *still* exact.  Reported as the largest change in any frame
+      energy after multiplying every increment by ``s`` and dividing the Coulomb term by
+      ``s^2``.
+    * **charge against offset** -- new, and the one worth worrying about: at long range only
+      the product ``q d`` (the dipole) enters, so a fit could trade one against the other.
+      Reported as the largest energy change when ``q_C-F`` is scaled by ``s`` and ``d_F``
+      divided by it, holding the C-F bond dipole fixed.  A number far above rounding means
+      the short-range part separates them; a number near rounding means it does not.
+    * **the near-linear angle guard** -- reported as the largest bend angle carrying a term,
+      so that a reader can see the harmonic is never being asked to work near 180 degrees.
+    """
+    x = VAL_X0 if x is None else np.asarray(x, dtype=float)
+    p = valence_unpack(x)
+    e0, f0, _ = design.evaluate(p)
+    no_q = dict(p)
+    no_q["increments"] = np.zeros_like(p["increments"])
+    e_bare = design.evaluate(no_q)[0]
+    q = dict(p)
+    q["increments"] = p["increments"] * s
+    e1 = design.evaluate(q)[0]
+    e1_bare = design.evaluate({**q, "increments": np.zeros_like(p["increments"])})[0]
+    eps = float(np.abs((e1 - e1_bare) / s ** 2 - (e0 - e_bare)).max())
+    # q_C-F against d_F at fixed bond dipole.  q d is what survives at long range; if the
+    # short range separates them, holding q d fixed still moves the energy.
+    i_qf = REF_VARIABLES.index("q_C-F")
+    y = x.copy()
+    y[i_qf] = x[i_qf] * s
+    d0 = x[-1] if x[-1] != 0.0 else 0.10
+    y[-1] = d0 / s
+    z = x.copy()
+    z[-1] = d0
+    dip = float(np.abs(design.centre(design.evaluate(valence_unpack(y))[0])
+                       - design.centre(design.evaluate(valence_unpack(z))[0])).max())
+    return {"scale": s, "charge_permittivity_max_energy_change": eps,
+            "charge_offset_max_energy_change": dip,
+            "max_bent_angle_deg": float(np.degrees(design.angle_theta.max())),
+            "n_angles": int(design.angle_theta.size), "n_bonds": int(design.bond_r.size)}
+
+
+# ------------------------------------------------------------------ the result
+#
+# The fit ``examples/fit_valence.py`` reproduces: 56 parameters, force weight 0.03, four
+# starts (all four land on the same cost to six figures), 21 training chemistries and 10
+# held out, about 260 s.  Numbers and provenance in docs/VALENCE_FIT.md.  Like every other
+# fit here it is a *named* alternative and never a default: ``SimpleFF()`` is still the
+# illustrative rigid potential and nothing selects this unless a caller asks for it.
+#
+# READ THIS BEFORE USING IT.  Scored by the same design over the same frames:
+#
+#   model                                   train E  held E  train F  held F   r(F)
+#   illustrative (rigid)                      3.156   3.316    13.93   14.37  +0.06
+#   pvdf-dft-fit (rigid)                      1.498   1.757    13.70   14.06  +0.10
+#   the rigid form refitted to these forces   1.580   1.995    13.48   13.86  +0.17
+#   this fit                                  1.022   1.359     4.64    5.23  +0.93
+#   this fit, force weight 0                  0.859   1.157    41.98   44.29  +0.77
+#
+# (energies kcal/mol, forces kcal/(mol A); the reference forces themselves have RMS 14.05
+# held out, which is what predicting *zero* would score.)
+#
+# * **The valence terms are what made the forces usable.**  Same objective, same optimiser,
+#   only the functional form differs: the rigid form fitted to full Cartesian forces still
+#   scores 13.86 against the reference's own 14.05, i.e. no better than predicting nothing,
+#   while this one scores 5.23 with a correlation of +0.93.  That is the 93%-of-the-signal
+#   claim of docs/DFT_FIT.md section 3 cashed out.
+# * **The forces still do not help the energies.**  Held-out energy is *better* without
+#   them (1.157 against 1.359), and the sweep is monotone from 0.003 upwards.  The reason is
+#   the one the previous fit already diagnosed and this fit now measures: the reference
+#   geometries were relaxed at some other level and labelled with PBE-D3, so the forces
+#   record a systematic bond-length disagreement -- the fitted C-F equilibrium comes out
+#   0.11 A *longer* than the geometries and C-C 0.08 A shorter -- and reproducing that pulls
+#   the same parameters the relative energies want elsewhere.  Weight 0.03 is shipped anyway
+#   because a potential whose gradients are wrong is not usable by anything that takes one,
+#   and ``refine_crystal`` does; the energy it costs, 0.2 kcal/mol, is stated rather than
+#   hidden.
+# * **Fluorine's charge is physical again**: ``q_C-F`` comes out +0.114 e, off its bound,
+#   where the previous fit sat on the 0.02 floor and an unbounded version of it turned
+#   fluorine positive.  Six of 56 parameters sit on a bound (``x_H``, the three well depths,
+#   and two stretch stiffnesses at their floor), against five of 27 before -- but none of
+#   the six is an electrostatic parameter now, which is the one that mattered.
+# * **The off-site charge is nearly free and buys nearly nothing.**  With ``d_F`` held at
+#   zero the held-out energy is 1.347 against 1.359, and ``q_C-F`` is +0.115 rather than
+#   +0.114.  So it is the valence terms, not the off-site site, that made the electrostatics
+#   behave; the offset earns its keep only as the thing that shows the charge is no longer
+#   fighting the repulsion, and it is reported as a null result.
+# * **Acceptance**: test 1 passes (-2.96 kJ/mol per monomer, inside -6.5 to -2.6, against
+#   the previous fit's -4.54).  Test 2 still fails: the isolated-chain ranking still puts
+#   TG+ first, though its margin over the next candidate falls from 1.64 (illustrative) to
+#   0.23 (previous fit) to 0.18 here.  Test 3 still fails, and barely moved: +0.085 kcal/mol
+#   per monomer against +0.091.  Two of three still fail and the electrostatics change did
+#   not fix the one it was aimed at.
+VAL_FITTED_X = np.array([
+    -0.45895730339776053, -0.4822495465560268, 1.7238990579737528,      # V1-3 [CF2-CH2]
+    -0.26594448635740686, -0.5101634076419305, 0.81360756199377,        # V1-3 [CF2-CHF]
+    -1.7452730586791623, 0.10165433247810902, 1.7683612752865407,       # V1-3 [CF2-CF2]
+    -0.1458670286033234, -0.6126486958804321, 1.5119133250038446,       # V1-3 [other]
+    0.9265637493571174, 0.9000000000000001, 1.054557911972751, 0.9751545700904893,   # x
+    0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 1.062609075380776,   # D
+    -0.11925595971322667, 0.11364575244497159, 0.12446382203875808,     # q C-H, C-F, C-Cl
+    0.36992912294510616, 0.1038657564132131, -0.14782354168138115,      # q C-N, C-O, C-S
+    0.9229004452808719,                                                 # scale14
+    100.00000000000001, 544.5777681680139, 259.5906378151254, 415.5067435646117,
+    520.699033323524, 1385.4077330667221, 100.0000000000219,            # kb
+    1.4575381757261119, 1.0998399522884275, 1.4673820422843398, 1.7861811855100675,
+    1.4230352561726245, 1.1933496481543355, 1.7567790900302314,         # r0
+    77.10439889761436, 60.36021994798029, 78.62988041171613, 84.67686115253565,
+    110.28664551905766, 129.53166130565626, 43.91212924577346,          # ka
+    108.81342550717888, 111.02523291095487, 109.11136328641616, 110.92307973586375,
+    109.90112341671663, 109.28749731412486, 107.3248298127191,          # theta0
+    0.17745728103468422,                                                # d_F
+])
+
+FITTED_VALENCE = valence_ff_parameters(VAL_FITTED_X)
+register_preset("pvdf-dft-valence", FITTED_VALENCE)
+
+
+def valence_ablations() -> dict[str, np.ndarray]:
+    """``free`` index sets for :func:`fit_valence`: which block of the new form did the work.
+
+    Everything outside the named block is held at :data:`VAL_X0` -- the illustrative
+    nonbonded potential plus *textbook* valence terms -- so these say what fitting a block
+    buys, not what having it buys.  For the latter, :func:`rigid_vector` gives the form with
+    no valence terms at all, and the note above ``VAL_FITTED_X`` records what that scores.
+
+    Measured held-out energy / force RMS, one start each, force weight 0.03:
+
+        nonbonded + torsion only          1.432 / 20.27   (valence present but not fitted)
+        + valence, no off-site charge     1.347 /  5.24
+        + off-site charge, no valence     1.435 / 20.27
+        valence only, nonbonded left as is 2.729 /  7.08
+        everything                        1.359 /  5.23
+
+    The pattern is not the previous fit's.  There, different parameter groups carried
+    different acceptance tests and none carried two; here one block -- the valence terms --
+    carries the entire force result and most of the energy one, and the off-site charge is
+    within noise of doing nothing at all.
+    """
+    off = len(REF_X0)
+    groups = {
+        "nonbonded + torsion only": np.arange(len(REF_X0)),
+        "valence, no off-site charge": np.arange(len(VAL_X0) - 1),
+        "off-site charge, no valence": np.concatenate([np.arange(len(REF_X0)), [len(VAL_X0) - 1]]),
+        "valence only": np.arange(off, len(VAL_X0) - 1),
+    }
+    return {name: idx for name, idx in groups.items()}

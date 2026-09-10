@@ -468,6 +468,15 @@ PE = Polymer(
 # zigzag that PVDF's beta phase does -- but the magnitude is an artifact of
 # frozen bond angles.  Making the backbone angles refinement variables is the
 # principled fix; see docs/CHEMISTRY_EXTENSION.md.
+#
+# That fix now exists on the potential side and the artifact is confirmed as one.
+# :class:`polyfind.forcefield.SimpleFF` can carry harmonic bond and angle terms, and
+# with them :func:`polyfind.forcefield.relax_backbone_angles` lets the all-trans chain
+# open its angles: PVDC's 313 kcal/mol falls to 12, and the relaxed backbone angles come
+# out 123.1 deg at CH2 and 102.1 at CCl2 against the published 123 and 114 -- the wide
+# angle to a tenth of a degree, the narrow one 12 deg too closed.  The 114/114 written
+# here is still what the *rigid* builder uses, so nothing above moves; docs/VALENCE_FIT.md
+# section 4 has the table and the caveats.
 PVDC = Polymer(
     name="pvdc",
     formula="-(CH2-CCl2)n-",
@@ -548,6 +557,13 @@ CDFE = Polymer(
 # energies should not be read as physics.  Variable backbone angles, and for FANOME a
 # reference state other than all-trans, are the principled fix; see
 # docs/CHEMISTRY_EXTENSION.md.
+#
+# Re-measured with a potential that has angle terms and the angles free to relax
+# (docs/VALENCE_FIT.md section 4): AN falls from 88 to 2 kcal/mol and VDCN from 176 to
+# about zero, so for those two all-trans becomes a state the chain could occupy and the
+# reference-state objection is answered.  It is not answered for FANOME, which still
+# carries 4.8e3 kcal/mol with both angles pinned at the 135 deg relaxation bound; the
+# verdict on it is unchanged and it stays registered and deliberately unfitted.
 NITRILE = nitrile()
 METHOXY = methoxy()
 

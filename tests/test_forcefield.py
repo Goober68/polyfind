@@ -505,3 +505,148 @@ def test_read_frames_needs_a_path_or_the_environment_variable(monkeypatch):
     monkeypatch.delenv(TRAINSET_ENV, raising=False)
     with pytest.raises(FileNotFoundError, match=TRAINSET_ENV):
         read_frames()
+
+
+# ------------------------------------------- valence terms and off-site charges
+BOND_TERMS = (("C-C", 620.0, 1.526), ("C-H", 680.0, 1.090), ("C-F", 740.0, 1.380), ("*", 500.0, 1.6))
+ANGLE_TERMS = (("C-C-C", 120.0, 112.7), ("C-C-H", 100.0, 109.5), ("C-C-F", 120.0, 109.0),
+               ("H-C-H", 70.0, 107.8), ("F-C-F", 160.0, 107.0), ("F-C-H", 100.0, 107.0),
+               ("*", 110.0, 109.5))
+PVDF_INC = (("C", "H", -0.10), ("C", "F", 0.20))
+
+
+def test_valence_terms_are_off_by_default():
+    """The rigid potential is still the default, and nothing about it moved."""
+    ff = SimpleFF()
+    assert ff.bond_terms is None and ff.angle_terms is None and ff.charge_offsets is None
+    assert ff.bond_table() == {} and ff.angle_table() == {} and ff.offset_table() == {}
+    s = build_chain(PVDF, np.full(8, 180.0))
+    assert ff.components(s)["bond"] == 0.0 and ff.components(s)["angle"] == 0.0
+    # the golden test above already pins the energy itself, bit for bit
+
+
+def test_valence_energy_is_an_additive_constant_on_a_rigid_chain():
+    """Why the packing side cannot be disturbed by this, measured rather than argued.
+
+    Every bond length and every bond angle of a ``build_chain`` chain is frozen, so a
+    valence term is one number per topology however the torsions are set.  A lattice
+    energy *difference*, an RIS energy (measured from all-trans) and a polarization
+    therefore cannot move -- which is what lets the valence terms be added without
+    re-measuring a single packing result.
+    """
+    plain = SimpleFF()
+    valence = SimpleFF(bond_terms=BOND_TERMS, angle_terms=ANGLE_TERMS)
+    dihedrals = _CONFORMERS + [np.full(7, 180.0), np.array([60.0, -60.0] * 3 + [180.0])]
+    pairs = [(valence.energy(build_chain(PVDF, d)), plain.energy(build_chain(PVDF, d)))
+             for d in dihedrals]
+    offsets = [v - p for v, p in pairs]
+    scale = max(abs(p) for _, p in pairs)  # the G+G- clash conformer is ~1e5 kcal/mol
+    assert max(offsets) - min(offsets) < 1e-11 * scale  # i.e. rounding, not a torsion dependence
+    comp = valence.components(build_chain(PVDF, _CONFORMERS[1]))
+    assert comp["bond"] > 0 and comp["angle"] > 0
+    assert comp["lj"] == plain.components(build_chain(PVDF, _CONFORMERS[1]))["lj"]
+
+
+def test_valence_terms_are_the_harmonics_they_claim_to_be():
+    """Hand-summed over the bond graph, against the potential's own number."""
+    from polyfind.chain import angle as chain_angle, distance
+    from polyfind.forcefield import valence_topology
+
+    ff = SimpleFF(bond_terms=BOND_TERMS, angle_terms=ANGLE_TERMS)
+    s = build_chain(PVDF, _CONFORMERS[2])
+    bl, al = valence_topology(s.elements, s.bonds)
+    bt, at = ff.bond_table(), ff.angle_table()
+    e_b = sum(0.5 * bt.get(n, bt["*"])[0] * (distance(s.coords, i, j) - bt.get(n, bt["*"])[1]) ** 2
+              for i, j, n in bl)
+    e_a = sum(0.5 * at.get(n, at["*"])[0]
+              * np.radians(chain_angle(s.coords, i, j, k) - at.get(n, at["*"])[1]) ** 2
+              for i, j, k, n in al)
+    comp = ff.components(s)
+    assert comp["bond"] == pytest.approx(e_b, abs=1e-9)
+    assert comp["angle"] == pytest.approx(e_a, abs=1e-9)
+
+
+def test_bond_and_angle_types_come_from_the_graph():
+    """A nitrile's C-N is not a single C-N, and a linear centre gets no bend term."""
+    from polyfind.forcefield import valence_topology
+
+    s = build_chain(get_polymer("vdcn"), np.full(5, 180.0))
+    bl, al = valence_topology(s.elements, s.bonds)
+    assert "C=N" in {n for _, _, n in bl}  # the nitrile, typed apart from a single C-N
+    assert "C-N" not in {n for _, _, n in bl}
+    # the nitrile carbon has two neighbours, so its 180-degree angle carries no term
+    nitrile_c = [i for i, e in enumerate(s.elements)
+                 if e == "C" and sorted(s.elements[j] for a, b in s.bonds
+                                        for j in (b,) if a == i) == ["N"]]
+    centres = {j for _, j, _, _ in al}
+    assert nitrile_c and not (set(nitrile_c) & centres)
+    pvdf = build_chain(PVDF, np.full(7, 180.0))
+    assert {n for _, _, n in valence_topology(pvdf.elements, pvdf.bonds)[0]} == {"C-C", "C-H", "C-F"}
+    # F-C-H is there because build_chain caps the last CF2 with a hydrogen
+    assert {n for _, _, _, n in valence_topology(pvdf.elements, pvdf.bonds)[1]} == {
+        "C-C-C", "C-C-H", "C-C-F", "H-C-H", "F-C-F", "F-C-H"}
+
+
+def test_an_off_site_charge_moves_the_coulomb_term_and_nothing_else():
+    """The point of the offset: fluorine's charge and its van der Waals centre come apart."""
+    s = build_chain(PVDF, _CONFORMERS[1])
+    plain = SimpleFF(charge_increments=PVDF_INC)
+    zero = SimpleFF(charge_increments=PVDF_INC, charge_offsets=(("F", 0.0),))
+    moved = SimpleFF(charge_increments=PVDF_INC, charge_offsets=(("F", 0.18),))
+    assert zero.energy(s) == plain.energy(s)  # d = 0 is exactly the atom-centred model
+    assert moved.components(s)["lj"] == plain.components(s)["lj"]  # LJ stays on the nucleus
+    assert abs(moved.components(s)["coulomb"] - plain.components(s)["coulomb"]) > 0.5
+
+
+def test_only_terminal_atoms_may_carry_an_off_site_charge():
+    from polyfind.forcefield import offset_sites
+
+    s = build_chain(PVDF, np.full(7, 180.0))
+    sites = offset_sites(s.elements, s.bonds, {"F": 0.2})
+    assert len(sites) == 10 and all(s.elements[a] == "F" for a, _, _ in sites)
+    with pytest.raises(ValueError, match="only terminal atoms"):
+        offset_sites(s.elements, s.bonds, {"C": 0.2})
+
+
+def test_the_lattice_projection_keeps_the_charge_and_the_dipole():
+    """How an off-site model reaches ``pack``, which has one charge per atom and no sites."""
+    from polyfind.forcefield import bci_charges, charge_site_coords, offset_sites, project_offset_charges
+
+    s = build_chain(PVDF, _CONFORMERS[3])
+    q = bci_charges(s.elements, s.bonds, {("C", "H"): -0.10, ("C", "F"): 0.20})
+    sites = offset_sites(s.elements, s.bonds, {"F": 0.18})
+    q_proj = project_offset_charges(s.coords, q, sites)
+    mu_off = (q[:, None] * charge_site_coords(s.coords, sites)).sum(0)
+    mu_proj = (q_proj[:, None] * s.coords).sum(0)
+    assert q_proj.sum() == pytest.approx(q.sum(), abs=1e-12)
+    assert np.allclose(mu_proj, mu_off, atol=1e-12)  # same dipole, exactly
+    assert not np.allclose(q_proj, q)  # and it is a real change of the charges
+
+
+def test_forces_frame_is_the_gradient_the_torques_are_projected_from():
+    """The Cartesian forces the fit now uses, checked against what was already tested."""
+    ff = SimpleFF(charge_increments=PVDF_INC, bond_terms=BOND_TERMS, angle_terms=ANGLE_TERMS,
+                  charge_offsets=(("F", 0.15),))
+    frame, _ = _frame_from_chain(PVDF, _CONFORMERS[1])
+    F = ff.forces_frame(frame)
+    assert np.abs(F.sum(axis=0)).max() < 1e-5  # no net force: the energy is translation-invariant
+    assert np.allclose(np.einsum("kia,ia->k", frame.rotors(), F), ff.frame_torques(frame), atol=1e-4)
+
+
+def test_relaxing_the_backbone_angles_needs_a_bend_term_and_then_relieves_strain():
+    """The strain finding, and what having an angle term does to it.
+
+    PVDC's all-trans chain is the case ``polymers.py`` records at ~313 kcal/mol of
+    Lennard-Jones strain with the angles frozen.  Given a bend term the angles can open,
+    which is what a real chain does; the test asserts the direction and the mechanism, not
+    a fitted number (those are in docs/VALENCE_FIT.md).
+    """
+    from polyfind.forcefield import relax_backbone_angles
+
+    pvdc = get_polymer("pvdc")
+    ff = SimpleFF(bond_terms=BOND_TERMS, angle_terms=ANGLE_TERMS + (("Cl-C-Cl", 120.0, 109.5),
+                                                                   ("C-C-Cl", 120.0, 109.0)))
+    r = relax_backbone_angles(pvdc, ff, np.full(10, 180.0))
+    assert r["energy"] < r["energy0"] - 100.0  # the strain was real and relaxing removes much of it
+    assert r["lj"] < r["lj0"]
+    assert r["angles"][0] > r["angles0"][0] + 3.0  # the CH2 angle is the one that opens
