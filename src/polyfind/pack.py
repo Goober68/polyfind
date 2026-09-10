@@ -77,6 +77,25 @@ def _erfc_pos(x, xp=np):
     return poly * xp.exp(-x * x)
 
 
+def _derfc_pos(x, xp=np):
+    """d/dx of :func:`_erfc_pos`, for x >= 0.
+
+    The *approximation* is differentiated, not ``erfc`` itself: the kernel's Coulomb
+    term is ``_erfc_pos``, so this is what makes the analytic gradient the exact
+    gradient of the function the kernel evaluates (to within rounding) rather than of
+    the function it approximates.  It matters more than the 1.5e-7 accuracy of the
+    polynomial's *value* suggests: its derivative differs from the true
+    ``-2/sqrt(pi) exp(-x^2)`` by 1.2e-5 relative over the range used here, and
+    substituting the true one costs an order of magnitude on the measured gradient
+    error (see docs/PERFORMANCE_REVIEW.md section 13).
+    """
+    c1, c2, c3, c4, c5 = 0.254829592, -0.284496736, 1.421413741, -1.453152027, 1.061405429
+    t = 1.0 / (1.0 + 0.3275911 * x)
+    poly = t * (c1 + t * (c2 + t * (c3 + t * (c4 + t * c5))))
+    dpoly = c1 + t * (2.0 * c2 + t * (3.0 * c3 + t * (4.0 * c4 + t * 5.0 * c5)))
+    return (dpoly * (-0.3275911 * t * t) - 2.0 * x * poly) * xp.exp(-x * x)
+
+
 # ------------------------------------------------------------------ periodic chain
 @dataclass
 class PeriodicChain:
@@ -416,6 +435,7 @@ class CrystalPacker:
         self._dt = bk.float_dtype()
         self.n_energy_calls = 0  # batched kernel calls (one per ``energy()`` invocation)
         self.n_energy_rows = 0  # configurations evaluated in total
+        self.n_grad_calls = 0  # :meth:`energy_and_grad` invocations (one configuration each)
         self._setup_topology(chain)
         self.update_chain(chain)
         self.set_field(field)
@@ -677,6 +697,55 @@ class CrystalPacker:
         v = ir6 * (A * ir6 - B) + qq * (_erfc_pos(self.alpha * rr, xp) / rr) + qqf * rr + const
         return xp.where(mask, v, 0.0)
 
+    def _pair_energy_and_dv(self, r2, A, B, qq, qqf, const):
+        """:meth:`_pair_energy` together with ``dV/d(r^2)``, on the same mask.
+
+        The value expression is character for character the one in :meth:`_pair_energy`,
+        so the energies built from this routine are bit-identical to the kernel's.  With
+        ``V = A u^-6 - B u^-3 + qq erfc(a r)/r + qq_f r + const`` and ``u = r^2``,
+
+            dV/du = 3 u^-3 (B - 2 A u^-3) / u + (qq f'(r) + qq_f) / (2 r),
+            f(r)  = erfc(a r) / r,   f'(r) = a erfc'(a r) / r - erfc(a r) / r^2.
+
+        Outside the cutoff both are zero: the shifted-force Coulomb term is smooth there
+        by construction, the Lennard-Jones term is only energy-shifted, so its force has
+        a (pre-existing) jump at ``r = rc`` that a finite difference straddling the
+        cutoff will see and this derivative will not.
+        """
+        xp = self.xp
+        mask = (r2 < self.rc2) & (r2 > 1e-8)
+        r2s = xp.where(mask, r2, 1.0)
+        rr = xp.sqrt(r2s)
+        ir6 = 1.0 / (r2s * r2s * r2s)
+        ar = self.alpha * rr
+        ef = _erfc_pos(ar, xp)
+        v = ir6 * (A * ir6 - B) + qq * (ef / rr) + qqf * rr + const
+        dcoul = self.alpha * _derfc_pos(ar, xp) / rr - ef / r2s
+        dv = 3.0 * ir6 * (B - 2.0 * A * ir6) / r2s + (qq * dcoul + qqf) / (2.0 * rr)
+        return xp.where(mask, v, 0.0), xp.where(mask, dv, 0.0)
+
+    def _intra_column_and_grad(self, coords, c, K: int):
+        """:meth:`_intra_column` for ONE row, plus its gradient w.r.t. the coordinates and ``c``.
+
+        Returns ``(intra, dintra/dcoords (n, 3), dintra/dc)``; the ``0.5 n_chains``
+        prefactor of :attr:`e_intra` is the caller's business.
+        """
+        xp = self.xp
+        kz = np.arange(-K, K + 1, dtype=float)
+        ks = xp.asarray(kz, dtype=self._dt)
+        cz = xp.asarray(np.asarray(c, dtype=float), dtype=self._dt)
+        D = coords[:, :, None, :] - coords[:, None, :, :]  # (1, n, n, 3)
+        dz = D[:, None, :, :, 2] - ks[None, :, None, None] * cz[:, None, None, None]
+        r2 = D[:, None, :, :, 0] ** 2 + D[:, None, :, :, 1] ** 2 + dz * dz
+        v, gv = self._pair_energy_and_dv(r2, self._A_nn, self._B_nn, self._qq_nn, self._qqf_nn, self._const_nn)
+        S = self._scale_column(K)[None]
+        intra = (v * S).sum(axis=(1, 2, 3))
+        t = 2.0 * gv * S  # dV/d(separation vector) = 2 dV/dr2 * (separation vector)
+        f = [np.asarray(bk.to_numpy(t * w), dtype=float) for w in (D[:, None, :, :, 0], D[:, None, :, :, 1], dz)]
+        gX = np.stack([q.sum(axis=(0, 1, 3)) - q.sum(axis=(0, 1, 2)) for q in f], axis=1)
+        gc = -float((f[2] * kz[None, :, None, None]).sum())
+        return intra, gX, gc
+
     def _intra_column(self, coords, c, K: int):
         """Same-site (0,0,k) energy of ONE chain, per row of ``coords`` (M, n, 3).
 
@@ -784,6 +853,163 @@ class CrystalPacker:
         res[order] = out
         return res + e_add
 
+    def energy_and_grad(self, params, coords=None, c=None, e_torsion=None):
+        """Energy of ONE configuration and its analytic gradient, in a single pass.
+
+        Returns ``(E, g_cell, g_coords, g_c)``:
+
+        ``E``
+            the lattice energy of this configuration -- bit for bit the number
+            :meth:`energy` returns for the same row, because the value is built from the
+            same expressions in the same order (``tests/test_pack.py`` asserts equality
+            with ``==``, not a tolerance).
+        ``g_cell``
+            ``dE/d(a, b, gamma, phi1, phi2, dz)``, per A for the lengths and the shift and
+            per *degree* for the angles (the units the optimiser's variables are in).
+            ``flip`` is discrete and has no entry.
+        ``g_coords``
+            ``dE/d(chain coordinates)``, ``(n, 3)``, including the intra-chain
+            ``(0, 0, k)`` term that :attr:`e_intra` carries.  This is the quantity a
+            refinement over torsions needs: the chain rule from here to any
+            conformational parametrisation involves no further kernel evaluation.
+        ``g_c``
+            ``dE/dc``, the repeat along z, which enters both the lattice vector and the
+            ``(0, 0, k)`` image shifts.
+
+        The derivatives are closed-form throughout.  Each pair term contributes
+        ``2 (dV/dr^2) * (separation vector)`` to the two atoms it joins (and, for an
+        image, minus that to the image shift); from there
+
+        * ``a``, ``b`` and ``gamma`` enter through the lattice vectors and through
+          chain 2's ``(avec + bvec) / 2`` offset,
+        * ``dz`` through chain 2's offset alone,
+        * ``phi1`` and ``phi2`` through ``dr/dphi = z_hat x r``, r measured from each
+          chain's own axis,
+        * the applied field through ``-mu . E`` with ``mu = sum_i q_i r_i``, whose
+          coordinate gradient is just ``-q_i E``.
+
+        ``coords`` / ``c`` / ``e_torsion`` override the packer's chain exactly as in
+        :meth:`energy`; ``e_torsion`` only shifts the value, never the gradient.
+        """
+        xp, dt = self.xp, self._dt
+        p = np.asarray(params, dtype=float).reshape(-1)
+        if p.shape[0] != 7:
+            raise ValueError("energy_and_grad evaluates one configuration: params must have 7 entries")
+        self.n_grad_calls += 1
+        self.n_energy_calls += 1
+        self.n_energy_rows += 1
+        n, N, nc = self.n, self.N, self.n_chains
+        sub = p[None]
+        per_row = coords is not None
+        if per_row:
+            Xn = np.asarray(coords, dtype=float).reshape(1, n, 3)
+            cz = float(self.chain.c if c is None else np.asarray(c, dtype=float).ravel()[0])
+            K = int(np.ceil(self.rc / cz)) + 1
+            reach = self.rc + 2.0 * float(np.linalg.norm(Xn[:, :, :2], axis=2).max()) + 0.5
+            e_t = self.e_torsion if e_torsion is None else float(np.asarray(e_torsion, dtype=float).ravel()[0])
+            c_arr = np.array([cz])
+            X, intra_in = Xn, xp.asarray(Xn, dtype=dt)
+        else:
+            X, c_arr = None, None
+            cz = float(self.chain.c)
+            K, reach, e_t = self.K, self.reach, self.e_torsion
+            intra_in = self.X0[None]
+        intra, gX, gc = self._intra_column_and_grad(intra_in, np.array([cz]), K)
+        pref = 0.5 * nc
+        # identical arithmetic to ``energy``'s two branches, so the value matches bit for bit
+        e_add = (e_t + pref * float(bk.to_numpy(intra)[0])) if per_row else (self.e_torsion + self.e_intra)
+        gX, gc = pref * gX, pref * gc
+
+        P, lat = self._place(sub, X, c_arr)
+        latn = np.asarray(bk.to_numpy(lat), dtype=float)[0]
+        Pn = np.asarray(bk.to_numpy(P), dtype=float)[0]
+        gP = np.zeros((N, 3))
+        e = xp.zeros(1, dtype=dt)
+        kz = np.arange(-K, K + 1, dtype=float)
+        if nc == 2:
+            # (0, 0, k) column: chain1-chain2 only, counted twice (the (2,1) block equals (1,2))
+            Dh = P[:, :n, None, :] - P[:, None, n:, :]
+            ks = xp.asarray(kz, dtype=dt)
+            czl = lat[:, 2, 2]
+            dzh = Dh[:, None, :, :, 2] - ks[None, :, None, None] * czl[:, None, None, None]
+            r2h = Dh[:, None, :, :, 0] ** 2 + Dh[:, None, :, :, 1] ** 2 + dzh * dzh
+            vh, gh = self._pair_energy_and_dv(r2h, self._A_nn, self._B_nn, self._qq_nn, self._qqf_nn, self._const_nn)
+            e = e + 2.0 * vh.sum(axis=(1, 2, 3))
+            # E gets 0.5 * (2 * sum vh) = sum vh, so the prefactor on dV/dw is exactly 1
+            t = 2.0 * gh
+            f = [np.asarray(bk.to_numpy(t * w), dtype=float)
+                 for w in (Dh[:, None, :, :, 0], Dh[:, None, :, :, 1], dzh)]
+            for d, q in enumerate(f):
+                gP[:n, d] += q.sum(axis=(0, 1, 3))
+                gP[n:, d] -= q.sum(axis=(0, 1, 2))
+            gc += -float((f[2] * kz[None, :, None, None]).sum())
+            del f, t, vh, gh, r2h, dzh, Dh
+        glat = np.zeros((3, 3))
+        ijk_np, L = self._select_images(sub, K, reach)
+        if L:
+            ijk = xp.asarray(ijk_np, dtype=dt)
+            D = P[:, :, None, :] - P[:, None, :, :]
+            shift = xp.einsum("mic,mcd->mid", ijk, lat)
+            dx = D[:, None, :, :, 0] - shift[:, :, None, None, 0]
+            dy = D[:, None, :, :, 1] - shift[:, :, None, None, 1]
+            dzz = D[:, None, :, :, 2] - shift[:, :, None, None, 2]
+            r2 = dx * dx + dy * dy + dzz * dzz
+            v, gv = self._pair_energy_and_dv(r2, self._A, self._B, self._qq, self._qqf, self._const)
+            e = e + v.sum(axis=(1, 2, 3))
+            del v, r2
+            # E gets 0.5 * sum v, so dE/d(separation) = 0.5 * 2 * gv * separation = gv * separation
+            gsh = np.zeros((ijk_np.shape[1], 3))
+            for d, w in enumerate((dx, dy, dzz)):
+                q = np.asarray(bk.to_numpy(gv * w), dtype=float)
+                gP[:, d] += q.sum(axis=(0, 1, 3)) - q.sum(axis=(0, 1, 2))
+                gsh[:, d] = -q.sum(axis=(0, 2, 3))
+            glat = ijk_np[0].T @ gsh
+            del dx, dy, dzz, gv, q, gsh
+
+        if self._field_on:
+            mu = (P * self._q_cell_xp[None, :, None]).sum(axis=1)
+            out = float(bk.to_numpy(0.5 * e - EV_TO_KCAL * (mu * self._field_xp[None, :]).sum(axis=1))[0])
+            gP += -EV_TO_KCAL * self._q_cell[:, None] * np.asarray(self.field, dtype=float)[None, :]
+        else:
+            out = float(bk.to_numpy(0.5 * e)[0])
+
+        # --- chain rule: placed coordinates -> cell parameters and chain coordinates ---
+        a, b, gam, phi1, phi2, dz, flip = p
+        g = np.deg2rad(gam)
+        cg, sg = np.cos(g), np.sin(g)
+        g1, g2 = gP[:n], gP[n:]
+        P1 = Pn[:n]
+        rad = np.pi / 180.0
+        g_cell = np.zeros(6)
+        g_cell[0] = glat[0, 0]
+        g_cell[1] = cg * glat[1, 0] + sg * glat[1, 1]
+        g_cell[2] = rad * b * (-sg * glat[1, 0] + cg * glat[1, 1])
+        # dr/dphi = z_hat x r about each chain's own axis (which passes through the origin
+        # of that chain's own coordinates, i.e. before the cell offset is added)
+        g_cell[3] = rad * float((g1[:, 0] * -P1[:, 1] + g1[:, 1] * P1[:, 0]).sum())
+        g_c = gc + glat[2, 2]
+        # rotation back out of the placed frame: Rz(phi)^T, and the flip's mirror
+        ca, sa = np.cos(np.deg2rad(phi1)), np.sin(np.deg2rad(phi1))
+        gX[:, 0] += ca * g1[:, 0] + sa * g1[:, 1]
+        gX[:, 1] += -sa * g1[:, 0] + ca * g1[:, 1]
+        gX[:, 2] += g1[:, 2]
+        if nc == 2:
+            off = 0.5 * (latn[0] + latn[1]) + np.array([0.0, 0.0, dz])
+            Q2 = Pn[n:] - off[None, :]
+            G2 = g2.sum(axis=0)
+            g_cell[0] += 0.5 * G2[0]
+            g_cell[1] += 0.5 * (cg * G2[0] + sg * G2[1])
+            g_cell[2] += rad * 0.5 * b * (-sg * G2[0] + cg * G2[1])
+            g_cell[4] = rad * float((g2[:, 0] * -Q2[:, 1] + g2[:, 1] * Q2[:, 0]).sum())
+            g_cell[5] = G2[2]
+            ca, sa = np.cos(np.deg2rad(phi2)), np.sin(np.deg2rad(phi2))
+            gf = np.stack([ca * g2[:, 0] + sa * g2[:, 1], -sa * g2[:, 0] + ca * g2[:, 1], g2[:, 2]], axis=1)
+            if flip > 0.5:  # chain 2 carries (x, -y, -z) of the chain, an involution
+                gf[:, 1] *= -1.0
+                gf[:, 2] *= -1.0
+            gX += gf
+        return out + e_add, g_cell, gX, g_c
+
     def energy_per_monomer(self, params) -> np.ndarray:
         return self.energy(params) / (self.n_chains * self.chain.n_monomers)
 
@@ -875,6 +1101,19 @@ def cell_value_and_grad(packer: CrystalPacker, x: np.ndarray, free, lo=None, hi=
     return float(E[0]), grad
 
 
+def cell_value_and_grad_analytic(packer: CrystalPacker, x: np.ndarray, free):
+    """Energy and the analytic gradient w.r.t. the free cell parameters, from ONE row.
+
+    The same interface as :func:`cell_value_and_grad` (minus the bounds, which only
+    existed to keep a finite difference from stepping outside them), backed by
+    :meth:`CrystalPacker.energy_and_grad`: one configuration per function evaluation
+    instead of ``1 + 2 n_free``.
+    """
+    x = np.asarray(x, dtype=float)
+    E, g_cell, _, _ = packer.energy_and_grad(x)
+    return float(E), g_cell[np.asarray(list(free), dtype=int)]
+
+
 def polish(
     packer: CrystalPacker,
     params: np.ndarray,
@@ -884,17 +1123,22 @@ def polish(
     maxfev: int = 1500,
     method: str = "lbfgs",
     maxiter: int = 200,
+    gradient: str = "analytic",
 ) -> np.ndarray:
     """Local minimisation of the continuous cell parameters (flip fixed).
 
-    ``method="lbfgs"`` (default) runs L-BFGS-B on batched central-difference gradients:
-    one kernel call of ``1 + 2 n_free`` configurations per function evaluation instead of
-    the ~10-50x more sequential single-cell evaluations Nelder-Mead needs.
-    ``method="nelder-mead"`` is the original simplex search with bounds by penalty.
+    ``method="lbfgs"`` (default) runs L-BFGS-B with ``gradient="analytic"``
+    (:meth:`CrystalPacker.energy_and_grad`: one kernel row per function evaluation) or
+    ``gradient="fd"`` (the original batched central differences: one call of
+    ``1 + 2 n_free`` rows).  Either way that is far fewer sequential evaluations than
+    Nelder-Mead needs; ``method="nelder-mead"`` is the original simplex search with
+    bounds by penalty.
     """
     x0 = np.asarray(params, dtype=float).copy()
     if method not in ("lbfgs", "l-bfgs-b", "nelder-mead", "nelder_mead"):
         raise ValueError(f"unknown polish method {method!r}")
+    if gradient not in ("analytic", "fd"):
+        raise ValueError(f"unknown polish gradient {gradient!r} (expected 'analytic' or 'fd')")
     if method.startswith("nelder"):
         def objective(xf):
             x = x0.copy()
@@ -926,6 +1170,8 @@ def polish(
     def fun(xf):
         x = x0.copy()
         x[free] = xf
+        if gradient == "analytic":
+            return cell_value_and_grad_analytic(packer, x, free)
         return cell_value_and_grad(packer, x, free, lo_fd, hi_fd)
 
     res = minimize(
@@ -1055,6 +1301,7 @@ def pack(
     table_cache_dir: str | None = "env",
     table_kw: dict | None = None,
     field=None,
+    gradient: str = "analytic",
 ) -> list[PackResult]:
     """Coarse screen of the cell parameters followed by local polishing of the best cells.
 
@@ -1080,8 +1327,10 @@ def pack(
 
     Either way the starts are polished with the exact kernel, so the returned energies,
     the return type, the ordering and the deduplication of near-identical minima are the
-    same.  ``method`` selects the polisher: ``"lbfgs"`` (default, batched-gradient
-    L-BFGS-B) or ``"nelder-mead"``.
+    same.  ``method`` selects the polisher: ``"lbfgs"`` (default, gradient L-BFGS-B) or
+    ``"nelder-mead"``; ``gradient`` selects where an L-BFGS-B polish gets its gradient,
+    ``"analytic"`` (default, one kernel row per evaluation) or ``"fd"`` (batched central
+    differences, ``1 + 2 n_free`` rows).
 
     ``field=(Ex, Ey, Ez)`` (V/A) applies a uniform electric field: the cell is screened
     and polished against the lattice energy *plus* ``-mu_cell . E``, so what comes back
@@ -1106,7 +1355,7 @@ def pack(
     else:
         starts = _random_starts(packer, lo, hi, n_random, n_refine, flips, n_chains, rng, verbose)
     free = [i for i in range(6) if hi[i] > lo[i] and not (n_chains == 1 and i in (4, 5))]
-    results = [packer.result(polish(packer, p, lo, hi, free, maxfev, method=method)) for p in starts]
+    results = [packer.result(polish(packer, p, lo, hi, free, maxfev, method=method, gradient=gradient)) for p in starts]
     results.sort(key=lambda r: r.energy_per_cell)
     uniq = []
     for r in results:

@@ -24,14 +24,31 @@ Two parametrisations of "the chain stays periodic":
     helical-constraint idea of fibre-diffraction refinement).  Used automatically
     when the sequence has no recognised line-group pattern.
 
-The objective is smooth, so the default method is L-BFGS-B on finite-difference
-gradients obtained from *one* batched kernel call per iteration: the cell
-displacements reuse the current chain, and each conformational displacement is a
-different chain, all of them carried as per-row coordinates by
-:meth:`polyfind.pack.CrystalPacker.energy`.  The chains of one gradient batch are
-built in a single NeRF pass, and the packer's topology-dependent tables (tiled
-force-field parameters, exclusion scales, shift tables) are built once and kept
-across evaluations by :meth:`polyfind.pack.CrystalPacker.update_chain`.
+The objective is smooth, so the default method is L-BFGS-B with gradients, and
+``gradient`` chooses where they come from.
+
+``gradient="analytic"`` (default)
+    :meth:`polyfind.pack.CrystalPacker.energy_and_grad` returns the energy of the
+    current configuration together with closed-form derivatives with respect to the
+    cell parameters, to the repeat's atom coordinates and to ``c``, from **one**
+    kernel row.  The cell variables are then analytic outright.  For the
+    conformational variables the remaining link is ``d(coords, c)/d(shape)``, which
+    runs through the NeRF build, the closure solve and the Kabsch alignment; that
+    Jacobian is taken by central differences of the *geometry only*, contracted
+    against the exact ``dE/d(coords)`` and ``dE/dc``.  No kernel row is spent on it,
+    so an iteration costs one row instead of ``1 + 2 n_vars`` (29 for the gamma
+    chain), and the chains of the displacement batch are built in the single NeRF
+    pass they were built in before.
+``gradient="fd"``
+    The original route: central differences of the *energy*, evaluated as one batched
+    kernel call of ``1 + 2 n_vars`` configurations per iteration -- the cell
+    displacements reusing the current chain and each conformational displacement a
+    different chain, all carried as per-row coordinates by
+    :meth:`polyfind.pack.CrystalPacker.energy`.
+
+Either way the packer's topology-dependent tables (tiled force-field parameters,
+exclusion scales, shift tables) are built once and kept across evaluations by
+:meth:`polyfind.pack.CrystalPacker.update_chain`.
 """
 from __future__ import annotations
 
@@ -87,6 +104,8 @@ def refine_crystal(
     max_angle_change: float = 8.0,
     angle_stiffness: float = 105.0,
     field=None,
+    gradient: str = "analytic",
+    probe: dict | None = None,
 ) -> RefineResult:
     """Relax cell (a, b, [gamma], phi1, phi2, dz) and the repeat's conformation.
 
@@ -104,9 +123,12 @@ def refine_crystal(
     is reported separately as :attr:`RefineResult.angle_energy` and is *not* part of
     the lattice energy in :attr:`RefineResult.result`.
 
-    ``method="lbfgs"`` (default) uses batched finite-difference gradients; ``maxfev``
-    caps Nelder-Mead's function evaluations and is mapped onto L-BFGS-B's iteration
-    limit.  ``method="nelder-mead"`` is the original simplex search.
+    ``method="lbfgs"`` (default) is L-BFGS-B with gradients; ``gradient="analytic"``
+    (default) takes them from :meth:`polyfind.pack.CrystalPacker.energy_and_grad` in one
+    kernel row per iteration, ``gradient="fd"`` from a batched central difference of
+    ``1 + 2 n_vars`` rows (see the module docstring).  ``maxfev`` caps Nelder-Mead's
+    function evaluations and is mapped onto L-BFGS-B's iteration limit.
+    ``method="nelder-mead"`` is the original simplex search.
 
     ``field=(Ex, Ey, Ez)`` (V/A) relaxes the cell *and* the conformation in the presence
     of a uniform applied field, the lattice energy carrying the ``-mu_cell . E`` term of
@@ -114,11 +136,20 @@ def refine_crystal(
     the setting angles, so the field acts on both.  ``field=None`` (the default) inherits
     the field ``start`` was packed under, so a refinement never silently drops it; pass
     ``field=(0, 0, 0)`` to refine a field-packed cell at zero field.
+
+    ``probe``, if a dict is given, is filled before the optimiser runs with the objective
+    (``value``), both gradient routes (``value_and_grad_analytic``,
+    ``value_and_grad_fd``), the starting vector and the variable labels.  That is how the
+    analytic gradient is checked component by component against a central difference of
+    the very function the optimiser minimises, at an arbitrary point, rather than against
+    a re-implementation of it; see ``tests/test_refine.py``.
     """
     if method not in ("lbfgs", "l-bfgs-b", "nelder-mead", "nelder_mead"):
         raise ValueError(f"unknown refine method {method!r}")
     if parametrisation not in ("linegroup", "free"):
         raise ValueError(f"unknown parametrisation {parametrisation!r}")
+    if gradient not in ("analytic", "fd"):
+        raise ValueError(f"unknown refine gradient {gradient!r} (expected 'analytic' or 'fd')")
     tors0 = np.asarray(start.dihedrals if torsions is None else torsions, dtype=float)
     B = polymer.bonds_per_repeat
     angles0 = np.array([polymer.backbone[k].backbone_angle for k in range(B)])
@@ -227,18 +258,54 @@ def refine_crystal(
         res = minimize(objective, x0, method="Nelder-Mead", options={"xatol": 1e-3, "fatol": 1e-4, "maxfev": maxfev, "adaptive": True})
         xbest = res.x
     else:
-        def value_and_grad(x):
-            count["n"] += 1
-            s, p = unpack(x)
-            # one NeRF pass (and one closure solve) for the centre chain and both
-            # displacements of every conformational variable, then one kernel call
+        def shape_batch(s):
+            """The centre conformation and both displacements of every shape variable.
+
+            One NeRF pass (and one closure solve) for the whole batch, as before; what
+            changes between the two gradient routes is only what the chains are used for.
+            """
             batch = [s]
             for j in range(n_shape):
                 for sgn in (1.0, -1.0):
                     sj = s.copy()
                     sj[j] += sgn * s_step[j]
                     batch.append(sj)
-            chains, tors, angs = chains_for(np.array(batch) if n_shape else s[None])
+            return chains_for(np.array(batch) if n_shape else s[None])
+
+        def value_and_grad_analytic(x):
+            count["n"] += 1
+            s, p = unpack(x)
+            chains, tors, angs = shape_batch(s)
+            packer.update_chain(chains[0])
+            # one kernel row: the energy and its closed-form derivatives w.r.t. the cell
+            # parameters, the repeat's coordinates and the repeat length c
+            E, g_cell, gX, gc = packer.energy_and_grad(p)
+            grad = np.empty(n_cell + n_shape)
+            grad[:n_cell] = g_cell[cell_idx]
+            if n_shape:
+                # The lattice energy sees a conformation only through (coords, c), and
+                # dE/dcoords, dE/dc are exact here, so
+                #     S(s) = gX . coords(s) + gc c(s) + E_torsion(s) + restraints(s)
+                # has the same gradient in s as the objective does at this point.  Its
+                # central difference therefore needs the geometry of each displacement
+                # but not its energy: the remaining numerical link is the Jacobian of the
+                # chain build (NeRF + closure solve + Kabsch alignment), not the kernel.
+                S = np.array([
+                    float((gX * ch.coords).sum()) + gc * ch.c
+                    + packer.torsion_energy(ch.dihedrals) * packer.n_chains
+                    + restraints(tors[j], angs[j], ch)
+                    for j, ch in enumerate(chains)
+                ])
+                for j in range(n_shape):
+                    grad[n_cell + j] = (S[1 + 2 * j] - S[2 + 2 * j]) / (2 * s_step[j])
+            return float(E) + restraints(tors[0], angs[0], chains[0]), grad
+
+        def value_and_grad_fd(x):
+            count["n"] += 1
+            s, p = unpack(x)
+            # one NeRF pass (and one closure solve) for the centre chain and both
+            # displacements of every conformational variable, then one kernel call
+            chains, tors, angs = shape_batch(s)
             packer.update_chain(chains[0])
             rows, which = [p], [0]
             for idx in cell_idx:
@@ -262,6 +329,24 @@ def refine_crystal(
                 grad[n_cell + j] = (F[1 + 2 * n_cell + 2 * j] - F[2 + 2 * n_cell + 2 * j]) / (2 * s_step[j])
             return float(F[0]), grad
 
+        def value_only(x):
+            """The objective alone -- what both routes above return as their value."""
+            s, p = unpack(x)
+            chains, tors, angs = chains_for(s[None])
+            packer.update_chain(chains[0])
+            return float(packer.energy(p[None])[0]) + restraints(tors[0], angs[0], chains[0])
+
+        value_and_grad = value_and_grad_analytic if gradient == "analytic" else value_and_grad_fd
+        if probe is not None:
+            shape_labels = [] if not n_shape else (
+                lg.labels() if mode == "linegroup" else
+                [f"t{j}" for j in range(len(tors0))] + ([f"angle{j}" for j in range(B)] if refine_angles else []))
+            probe.update(
+                x0=x0.copy(), value=value_only, value_and_grad_analytic=value_and_grad_analytic,
+                value_and_grad_fd=value_and_grad_fd, n_cell=n_cell, n_shape=n_shape, mode=mode,
+                cell_idx=list(cell_idx), s_step=np.asarray(s_step, dtype=float), packer=packer,
+                labels=[CrystalPacker.PARAMS[i] for i in cell_idx] + shape_labels,
+            )
         bounds = []
         for idx in cell_idx:
             bounds.append((2.0, None) if idx in (0, 1) else ((60.0, 120.0) if idx == 2 else (None, None)))

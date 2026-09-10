@@ -160,6 +160,115 @@ def test_polish_lbfgs_reaches_the_nelder_mead_minimum_with_fewer_calls():
         polish(packer, starts[0], lo, hi, free, method="powell")
 
 
+def test_polish_analytic_and_fd_gradients_reach_the_same_minimum():
+    """The analytic polish lands where the finite-difference one does, in far fewer rows."""
+    ch = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
+    packer = CrystalPacker(ch, n_chains=2)
+    b = default_bounds(ch)
+    keys = ["a", "b", "gamma", "phi1", "phi2", "dz"]
+    lo = np.array([b[k][0] for k in keys])
+    hi = np.array([b[k][1] for k in keys])
+    free = [i for i in range(6) if hi[i] > lo[i]]
+    for start in ([5.3, 9.0, 90.0, 209.0, 209.0, 0.1, 0.0], [5.0, 9.8, 90.0, 40.0, 220.0, 1.5, 1.0]):
+        rows = {}
+        x = {}
+        for g in ("fd", "analytic"):
+            packer.n_energy_rows = 0
+            x[g] = polish(packer, np.array(start), lo, hi, free, 1500, gradient=g)
+            rows[g] = packer.n_energy_rows
+        e = {g: float(packer.energy(x[g][None])[0]) for g in x}
+        assert e["analytic"] <= e["fd"] + 1e-6
+        assert np.abs(x["analytic"][:2] - x["fd"][:2]).max() < 0.01
+        for i in (3, 4):
+            assert abs(((x["analytic"][i] - x["fd"][i] + 180.0) % 360.0) - 180.0) < 0.2
+        # 1 row per evaluation instead of 1 + 2 * 5
+        assert rows["analytic"] * 5 <= rows["fd"]
+    with pytest.raises(ValueError):
+        polish(packer, np.array(start), lo, hi, free, gradient="autodiff")
+
+
+@pytest.mark.parametrize("poly,seq", [
+    (PE, [T]),
+    (PVDF, [T, T]),
+    (PVDF, [T, GP, T, GM]),
+    (PVDF, [T, T, T, GP, T, T, T, GM]),
+])
+def test_energy_and_grad_value_is_bit_identical_to_energy(poly, seq):
+    ch = periodic_chain(poly, seq, THREE_STATE)
+    rng = np.random.default_rng(4)
+    tors = ch.dihedrals + rng.uniform(-5, 5, len(ch.dihedrals))
+    other = repeat_chains_from_torsions(poly, ch.name, tors[None], align_to=ch)[0]
+    for field in (None, (0.14, -0.06, 0.19)):
+        for n_chains in (1, 2):
+            pk = CrystalPacker(ch, n_chains=n_chains, field=field)
+            for flip in (0.0, 1.0) if n_chains == 2 else (0.0,):
+                p = np.array([5.1, 9.3, 97.0, 37.0, 212.0, 0.4 * ch.c, flip])
+                E, _, _, _ = pk.energy_and_grad(p)
+                assert E == float(pk.energy(p[None])[0])  # exactly, not to a tolerance
+                kw = dict(coords=other.coords, c=np.array([other.c]))
+                E2, _, _, _ = pk.energy_and_grad(p, **kw)
+                assert E2 == float(pk.energy(p[None], **kw)[0])
+    with pytest.raises(ValueError):
+        CrystalPacker(ch).energy_and_grad(np.zeros((2, 7)))
+
+
+@pytest.mark.parametrize("poly,seq", [
+    (PE, [T]),
+    (PVDF, [T, T]),
+    (PVDF, [T, GP, T, GM]),
+    (PVDF, [T, T, T, GP, T, T, T, GM]),
+])
+def test_energy_and_grad_matches_central_differences(poly, seq):
+    """Every component of the analytic gradient, against a central difference.
+
+    The steps are swept and the closest agreement is taken: the Lennard-Jones term is
+    energy-shifted but not force-shifted, so a step that straddles the cutoff sees a jump
+    in the *difference* that the derivative correctly does not have.  Away from that, the
+    agreement is at the finite-difference floor, ~1e-6 relative.
+    """
+    ch = periodic_chain(poly, seq, THREE_STATE)
+    rng = np.random.default_rng(7)
+    tors = ch.dihedrals + rng.uniform(-5, 5, len(ch.dihedrals))
+    other = repeat_chains_from_torsions(poly, ch.name, tors[None], align_to=ch)[0]
+    coords, cz = other.coords, np.array([other.c])
+    for field in (None, (0.14, -0.06, 0.19)):
+        pk = CrystalPacker(ch, field=field)
+        for flip in (0.0, 1.0):
+            p = np.array([5.1, 9.3, 97.0, 37.0, 212.0, 0.4 * ch.c, flip])
+            _, g_cell, g_coords, g_c = pk.energy_and_grad(p, coords=coords, c=cz)
+            scale = max(np.abs(g_cell).max(), np.abs(g_coords).max(), 1e-6)
+
+            def fd(bump, steps):
+                best = None
+                for h in steps:
+                    d = (bump(h) - bump(-h)) / (2 * h)
+                    if best is None or abs(d - ref) < abs(best - ref):
+                        best = d
+                return best
+
+            def energy_of(pp=None, cc=None, zz=None):
+                return float(pk.energy((p if pp is None else pp)[None],
+                                       coords=coords if cc is None else cc,
+                                       c=cz if zz is None else zz)[0])
+
+            # 1e-4 of the component, plus 1e-6 of the gradient's own scale so that a
+            # component near zero is not held to an absolute impossibility
+            def close(got, ref):
+                assert abs(got - ref) <= 1e-4 * abs(ref) + 1e-6 * scale, (got, ref)
+
+            for i in range(6):
+                steps = (3e-2, 1e-2, 3e-3, 1e-3) if i in (2, 3, 4) else (3e-3, 1e-3, 3e-4, 1e-4)
+                ref = g_cell[i]
+                close(fd(lambda h, i=i: energy_of(pp=p + h * np.eye(7)[i]), steps), ref)
+            for i in rng.choice(coords.shape[0], min(4, coords.shape[0]), replace=False):
+                for d in range(3):
+                    ref = g_coords[i, d]
+                    close(fd(lambda h, i=int(i), d=d: energy_of(cc=coords + h * np.eye(coords.size)[
+                        3 * i + d].reshape(coords.shape)), (3e-3, 1e-3, 3e-4, 1e-4)), ref)
+            ref = g_c
+            close(fd(lambda h: energy_of(zz=cz + h), (3e-3, 1e-3, 3e-4, 1e-4)), ref)
+
+
 def test_pack_accepts_either_polish_method():
     ch = periodic_chain(PE, [T], THREE_STATE)
     kw = dict(n_chains=2, n_random=300, n_refine=2, maxfev=400, screen="random")

@@ -112,6 +112,92 @@ def test_batched_torsion_gradient_matches_finite_differences():
     assert E[0] == pytest.approx(energy_of(t0), abs=1e-9)
 
 
+# --------------------------------------------- analytic gradients (docs section 13)
+@pytest.mark.parametrize("poly,seq,cell,par", [
+    (PE, [T], [4.93, 7.40, 90.0, 45.0, 135.0, 0.60, 0.0], "linegroup"),
+    (PE, [T], [4.93, 7.40, 90.0, 45.0, 135.0, 0.60, 0.0], "free"),
+    (PVDF, [T, T], [4.65, 8.61, 90.0, 8.0, 26.0, 1.10, 0.0], "linegroup"),
+    (PVDF, [T, T], [4.65, 8.61, 90.0, 8.0, 26.0, 1.10, 0.0], "free"),
+    (PVDF, [T, GP, T, GM], [5.29, 8.99, 90.0, 209.5, 150.0, 0.40, 1.0], "linegroup"),
+    (PVDF, [T, GP, T, GM], [5.29, 8.99, 90.0, 209.5, 150.0, 0.40, 1.0], "free"),
+    (PVDF, [T, T, T, GP, T, T, T, GM], [4.96, 9.67, 90.0, 30.0, 200.0, 2.50, 0.0], "linegroup"),
+    (PVDF, [T, T, T, GP, T, T, T, GM], [4.96, 9.67, 90.0, 30.0, 200.0, 2.50, 0.0], "free"),
+    (PVDF, [T, T, GP, T, GM, T], [5.5, 9.0, 90.0, 100.0, 100.0, 1.0, 0.0], "free"),
+])
+@pytest.mark.parametrize("field", [None, (0.12, -0.07, 0.2)])
+def test_analytic_refinement_gradient_matches_central_differences(poly, seq, cell, par, field):
+    """Every component of the analytic gradient, against a central difference of the
+    objective L-BFGS-B actually minimises (energy + restraints), at two points.
+
+    The cell variables are analytic outright and agree to ~1e-7; the conformational ones
+    still contract the exact ``dE/d(coords)`` with a finite-difference Jacobian of the
+    chain build, so they agree to ~1e-5.  Steps are swept and the closest taken: a coarse
+    step straddles the Lennard-Jones cutoff, where the *difference* has a jump the
+    derivative correctly does not.
+    """
+    chain = periodic_chain(poly, seq, THREE_STATE)
+    start = CrystalPacker(chain, field=field).result(np.array(cell))
+    probe = {}
+    refine_crystal(poly, start, maxfev=1, maxiter=1, parametrisation=par, field=field,
+                   gamma_free=True, probe=probe)
+    f, van, vfd = probe["value"], probe["value_and_grad_analytic"], probe["value_and_grad_fd"]
+    n_cell, n_shape = probe["n_cell"], probe["n_shape"]
+    rng = np.random.default_rng(5)
+    for x in (probe["x0"],
+              probe["x0"] + np.concatenate([rng.uniform(-0.15, 0.15, n_cell), rng.uniform(-3, 3, n_shape)])):
+        E, g = van(x)
+        E_fd, g_fd = vfd(x)
+        assert E == f(x) == E_fd  # the value is the same function, bit for bit
+        scale = max(np.abs(g).max(), 1e-6)
+        for i in range(len(x)):
+            steps = (3e-2, 1e-2, 3e-3, 1e-3) if (i >= n_cell or probe["labels"][i] not in ("a", "b", "dz")) \
+                else (3e-3, 1e-3, 3e-4, 1e-4)
+            best = None
+            for h in steps:
+                xp_, xm = x.copy(), x.copy()
+                xp_[i] += h
+                xm[i] -= h
+                d = (f(xp_) - f(xm)) / (2 * h)
+                if best is None or abs(d - g[i]) < abs(best - g[i]):
+                    best = d
+            tol = (1e-5 if i < n_cell else 1e-3) * abs(g[i]) + 1e-5 * scale
+            assert abs(best - g[i]) <= tol, (probe["labels"][i], g[i], best)
+        # ... and the two routes agree with each other on every component
+        np.testing.assert_allclose(g, g_fd, atol=2e-3 * scale)
+
+
+def test_refinement_reaches_the_same_minimum_on_either_gradient_route():
+    chain = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
+    packer = CrystalPacker(chain)
+    start = packer.result(np.array([5.29, 8.99, 90.0, 209.5, 209.5, 0.0, 0.0]))
+    an = refine_crystal(PVDF, start, maxfev=60, maxiter=60)
+    fd = refine_crystal(PVDF, start, maxfev=60, maxiter=60, gradient="fd")
+    assert an.result.energy_per_monomer == pytest.approx(fd.result.energy_per_monomer, abs=1e-3)
+    assert an.result.a == pytest.approx(fd.result.a, abs=5e-3)
+    assert an.result.b == pytest.approx(fd.result.b, abs=5e-3)
+    assert an.result.c == pytest.approx(fd.result.c, abs=5e-3)
+    np.testing.assert_allclose(an.torsions, fd.torsions, atol=0.5)
+    with pytest.raises(ValueError):
+        refine_crystal(PVDF, start, gradient="autodiff")
+
+
+def test_analytic_gradient_costs_one_kernel_row_per_iteration():
+    """The point of the change: rows per iteration drop from 1 + 2 n_vars to 1."""
+    chain = periodic_chain(PVDF, [T, T, T, GP, T, T, T, GM], THREE_STATE)
+    start = CrystalPacker(chain).result(np.array([4.96, 9.67, 90.0, 30.0, 200.0, 2.50, 0.0]))
+    rows, evals, nvars = {}, {}, {}
+    for g in ("fd", "analytic"):
+        probe = {}
+        res = refine_crystal(PVDF, start, maxfev=20, maxiter=20, gradient=g, probe=probe)
+        rows[g] = probe["packer"].n_energy_rows
+        evals[g] = res.n_evaluations
+        nvars[g] = res.n_variables
+    assert nvars["fd"] == nvars["analytic"]
+    assert rows["fd"] >= (1 + 2 * nvars["fd"]) * evals["fd"]
+    assert rows["analytic"] <= evals["analytic"] + 2  # the final result() evaluation
+    assert rows["analytic"] * 10 < rows["fd"]
+
+
 def test_alpha_refinement_lowers_the_energy_and_stays_commensurate():
     chain = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
     packer = CrystalPacker(chain)
