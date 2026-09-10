@@ -16,15 +16,22 @@ from polyfind.polymers import PE, PVDF, THREE_STATE
 T, GP, GM = 0, 1, 2
 
 # One fixed configuration and the energies a default CrystalPacker gives for it, without a
-# field and with one, recorded before this module existed.  Compared with ``==``, not a
-# tolerance: mechanics.py must not have moved a single bit of the kernel.
+# field and with one.  Compared with ``==``, not a tolerance: mechanics.py must not have
+# moved a single bit of the kernel.
+#
+# Re-recorded once, and the guard worked as intended when it happened.  These were first
+# taken while PVDF's backbone C-C bond length was 1.54 A; correcting it to the measured
+# 1.528 A moved every PVDF geometry and so every PVDF energy here, and these three
+# assertions fired.  PE is untouched by that correction and its value is unchanged from
+# the original recording, which is the useful control: it shows the shift came from the
+# polymer definition and not from anything in this module.
 FIXED_PARAMS = np.array([5.0, 9.6, 92.0, 20.0, 50.0, 1.0, 0.0])
 FIXED_FIELD = (0.01, -0.02, 0.005)
 RECORDED_ENERGY = {
     "PE": (-4.143020937018386, -4.143020937018386),
-    "beta": (-9.469219446844573, -9.403008762719127),
-    "alpha": (22.61214682865068, 22.186981303325716),
-    "gamma": (21.587044109818684, 20.736713059168753),
+    "beta": (-8.784383912060322, -8.718173227934876),
+    "alpha": (27.715227596863407, 27.29006207153844),
+    "gamma": (27.70619594115115, 26.855864890501213),
 }
 CHAINS = {
     "PE": (PE, [T]),
