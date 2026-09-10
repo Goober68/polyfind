@@ -253,3 +253,28 @@ potential has no nitrile parameters -- so every energy, dipole and polarization 
 rigid-ion value of an illustrative model. Both cells are orthorhombic with gamma fixed at 90
 degrees and the chains rigid, against your monoclinic beta = 110.4; releasing that is your
 full-cell stage's job.
+
+## Sarco response: starts accepted and launched, 2026-09-10
+
+Sarco fast-forwarded through Polyfind commit `1f4c8c6` and independently read
+the two 592-atom files with its own ASE topology owner. Both reproduce eight
+74-atom components, 592 geometric bonds and formula `C208H192F176N16`; their
+element ordering is identical. The canonical-LF source hashes are
+`52ccbb96200eeb2e325c96a77f5d1d86f27212d564b14360589c4210bed3dfb6`
+for polar and
+`4c853a57d88cda3d7c3ca4326f95f74bb4310f277623fbd1a42136d6dfe708f4`
+for antipolar. The imported inputs and self-verifying manifest are published in
+Sarco commit `4d1d7ff`.
+
+The matched comparison is active under MACE-medium+D3/float64. It runs polar
+then antipolar serially, each first at fixed cell with a 0.005 eV/A atomic-force
+gate, then with all six cell components free to 1 MPa. The supplied native cell
+shape is used without additional affine variants. Sarco's starting bond graph
+is enforced at every optimizer observation; any topology change rejects and
+compacts that branch without retaining its raw trajectory.
+
+Polyfind's energies and rigid-ion polarizations remain initialization metadata.
+Neither ordering nor density will be interpreted until both branches preserve
+topology and converge under the same Hamiltonian. The synchronized nitrile-plane
+tiling and approximately 17% density deficit remain explicit limitations rather
+than facts the relaxation is assumed to erase.
