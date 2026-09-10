@@ -5,10 +5,11 @@ other half of the measurement need: how much mechanical work the crystal does in
 `src/polyfind/mechanics.py` computes the elastic stiffness, the piezoelectric coefficients
 in both directions, and the three numbers an actuator is judged by — blocking stress, free
 strain, work density. `examples/electromechanics.py` produces every table below:
-`--preset illustrative|fitted|valence` for section 5, `--axial` for section 4.1,
+`--preset illustrative|fitted|valence|flux` for section 5, `--axial` for section 4.1,
 `--stiffness-sweep` for section 4.3, `--cutoff` for section 6.
+`examples/fit_charge_flux.py` produces section 5.6.
 
-**Two paths, and the difference between them is one opt-in flag.**
+**Three paths, and the difference between them is two opt-in flags.**
 
 * The **rigid path** is what this module did before, and it is still the default and the
   only thing available under the illustrative potential. The chain is a rigid body, three
@@ -19,10 +20,15 @@ strain, work density. `examples/electromechanics.py` produces every table below:
   restoring force it never had. Four of six strains are then reachable, `C_33` is a
   constant of the potential rather than of an invented number, and the diagonal columns can
   be non-zero — though for beta-PVDF, for a reason that is itself a result, they are not.
+* The **fluxing path** additionally lets the bond-charge increments depend on the local
+  geometry (`CrystalPacker(charge_flux=...)`, also opt-in). That is the one change that
+  makes a *planar zigzag's* dipole respond to strain at all, so it is the only path on which
+  beta-PVDF — the phase the material is used in — has a non-zero `d_33` or `d_31`. Section
+  5.6 has the result and the reasons to distrust its magnitude.
 
-Sections 1 to 3 set up both. Section 4 is the axial constant and the evidence that it has
-stopped being an artifact. Section 5 has the tables. Sections 6 to 9 are convergence, cost,
-literature and what is still missing.
+Sections 1 to 3 set up all three. Section 4 is the axial constant and the evidence that it
+has stopped being an artifact. Section 5 has the tables. Sections 6 to 9 are convergence,
+cost, literature and what is still missing.
 
 ## 1. Which strains this cell can express
 
@@ -328,12 +334,12 @@ and `d = e S` in pC/N, same layout:
 Every "0" above is a machine zero: the largest of beta's diagonal `e` entries is 8e-12 C/m²
 and PE's whole tensor is below 2e-14.
 
-**Beta's diagonal columns are still exactly zero, and the reason has changed.** It is no
-longer "the chain is rigid" — the chain deforms; `c` moves. It is that for a **planar
-all-trans zigzag with bond-charge-increment charges, the cell dipole is exactly independent
-of the backbone angle.** With BCI charges the dipole is a sum over bonds of `delta_ij
-(r_i - r_j)`; a backbone C-C bond carries no increment; every C-H and C-F bond has a fixed
-length; and the mirror symmetry of the zigzag pins the bisector of each pendant pair
+**Beta's diagonal columns are exactly zero with fixed charges, and the reason has changed.**
+It is no longer "the chain is rigid" — the chain deforms; `c` moves. It is that for a
+**planar all-trans zigzag with bond-charge-increment charges, the cell dipole is exactly
+independent of the backbone angle.** With BCI charges the dipole is a sum over bonds of
+`delta_ij (r_i - r_j)`; a backbone C-C bond carries no increment; every C-H and C-F bond has
+a fixed length; and the mirror symmetry of the zigzag pins the bisector of each pendant pair
 perpendicular to the chain axis whatever the backbone angle is. So the one internal
 coordinate beta and PE have moves `c` and leaves `mu` where it was — measured directly over
 a ±2° sweep of the shape parameter, over which `c` runs from −1.17% to +1.14% and beta's
@@ -341,7 +347,12 @@ a ±2° sweep of the shape parameter, over which `c` runs from −1.17% to +1.14
 1e-13, the numerical asymmetry of the chain build and not a response) — and asserted in
 `tests/test_mechanics.py::test_a_planar_zigzag_cannot_change_its_dipole_by_bending`. Alpha
 and gamma are helices, their conformations have no such mirror, and their diagonal columns
-are the first non-zero ones this package has produced.
+are the first non-zero ones this package produced.
+
+**Section 5.6 is what breaks that symmetry**, and it breaks it exactly where the argument
+above says it must: give the increments a dependence on the backbone angle and the same ±2°
+sweep moves `mu_x` monotonically instead of holding every digit. Everything in 5.1 to 5.5 is
+the fixed-charge model and is unchanged by it.
 
 ### 5.3 d33 and d31 for beta-PVDF: the answer, and its sign
 
@@ -372,12 +383,128 @@ it is `-P` times a positive compliance sum for any stable crystal — so getting
 is not evidence that the mechanism is right, it is arithmetic. The real `d_31 = +20` is
 positive, which the dimensional term alone cannot produce at all, and which is exactly the
 literature's argument against the dimensional model being the whole story. The intrinsic
-part it is missing — a dipole that changes with strain — needs the chain's pendant geometry
-or its bond lengths to relax, and neither is a degree of freedom in this model.
+part it is missing — a dipole that changes with strain — needs the chain's pendant geometry,
+its bond lengths, or its *charges* to move, and only the last of those is reachable without
+a new chain builder. Section 5.6 makes it reachable.
 
 `d_improper` is reported by `Piezoelectric` and labelled, in the code and in the tables, as
 not being a piezoelectric constant. `d = e S` is the coefficient; this is the term that
 would be added to it by a model this package does not implement.
+
+### 5.6 Charge flux: beta's `d_33` and `d_31` stop being zero
+
+`CrystalPacker(charge_flux=ff)` makes each bond-charge increment a function of the local
+geometry (`polyfind.forcefield.FluxTopology`):
+
+    delta_ij = delta0(e_i, e_j) + k_angle(e_i, e_j) * G_ij + k_bond(e_i, e_j) * (r_ij - r0_ij)
+
+with `i` the atom that *gains* `delta0` and `G_ij` the sum, over the other bonds at `i`, of
+`cos(theta) + 1/3` — a driver whose zero is the ideal sp3 geometry, so the flux needs no
+fitted reference angle of its own. Neutrality is automatic: whatever `delta_ij` is, `i`
+gains it and `j` loses it. Homonuclear pairs are refused rather than fluxed, because which
+of the two atoms gains would be decided by the arbitrary order of the bond list.
+
+**The symmetry breaks, measurably.** The same ±2° sweep of beta's shape parameter, with one
+coefficient set to unity and everything else fixed:
+
+| | `c` range | `dmu_x/deps_zz` (e·A per unit strain) |
+|---|---|---|
+| fixed increments | −1.17% … +1.14% | **0.000** (`mu_x` holds all ten printed digits) |
+| `k_angle(C-H) = +1` | −1.23% … +1.20% | **+3.543** |
+| `k_angle(C-F) = +1` | −1.04% … +1.01% | **−6.469** |
+| `k_bond(C-H) = +1` | −1.17% … +1.14% | 0.000 (bond lengths are rigid: the channel is inert) |
+| `k_bond(C-F) = +1` | −1.18% … +1.15% | 0.000 |
+
+The two angle coefficients have opposite signs for the same geometric reason that made the
+fixed model exactly zero: a zigzag's CH2 and CF2 bisectors point opposite ways.
+
+**The fit.** `examples/fit_charge_flux.py`, against `dmu/d(axial strain)` for PVDF, VDCN, AN
+and CNEPO from the sibling project's `field_neighborhood_refined` — four systems, three
+components, **twelve observations for two parameters**. The result is
+`k_angle(C-H) = −1.2139`, `k_angle(C-F) = −0.0975`, shipped as the preset
+`pvdf-dft-valence-flux`. Read `polyfind.fitting.FITTED_VALENCE_FLUX` before quoting
+anything from it; the short version is in `docs/BENCHMARK.md`'s "what the response can and
+cannot deliver", and the four things that matter are that the reference is an **exploratory
+GFN2-xTB finite-oligomer** calculation and not a bulk crystal, that the fit's **R² is
+0.39**, that a bond-flux channel and a plain charge-magnitude scale both fit the same data
+better while being unusable here, and that fitting the angle channel *alongside* the bond
+one changes it by a factor of six and flips both proper signs.
+
+**beta-PVDF, `pvdf-dft-valence-flux`.** Cell 4.492 × 8.482 A, gamma 90.00, `c` 2.6052,
+`|P| = 0.1497` C/m² (against 4.596 × 8.556, `c` 2.5469, `|P| = 0.1157` without flux):
+
+| | `C_11` | `C_22` | `C_33` | `C_12` | `C_13` | `C_23` | `C_66` |
+|---|---|---|---|---|---|---|---|
+| `pvdf-dft-valence` | 22.79 | 17.92 | 328.4 | 2.21 | 12.72 | 2.30 | 3.41 |
+| `pvdf-dft-valence-flux` | 28.37 | 20.07 | 330.4 | 3.67 | 23.52 | 6.75 | 5.09 |
+
+`e` in C/m², rows `x, y, z`, columns `eps_xx eps_yy eps_zz eps_xy`, and `d = e S` in pC/N:
+
+| | `e_x` | `e_y` | `e_z` |
+|---|---|---|---|
+| PVDF beta, flux | 0, 0, **−0.7239**, 0 | 0, 0, 0, **+0.0059** | 0, 0, 0, 0 |
+
+| | `d_x` | `d_y` | `d_z` |
+|---|---|---|---|
+| PVDF beta, flux | **+1.877, +0.442, −2.333**, 0 | 0, 0, 0, **+1.162** | 0, 0, 0, 0 |
+
+Direct and converse agree to **0.33%**, which is the load-bearing check: `d_from_e`
+differentiates the dipole and `d_direct` drives the analytic stress to zero in a field, so
+they only agree if the flux entered the *energy gradient* and the *dipole derivative*
+consistently. The elastic asymmetry, the constraint residual and the two `C_33` routes are
+as converged as they are without flux (`C_33` = 330.42 by the multiplier route, 330.38 by
+the energy curvature).
+
+In the film convention (axis 3 = poling = the packer's `x`, axis 1 = draw = the chain axis
+`z`), poling axis along `+P`:
+
+| beta-PVDF | film `d_33` | film `d_32` | film `d_31` |
+|---|---|---|---|
+| `pvdf-dft-valence`, proper | 0 | 0 | 0 |
+| `pvdf-dft-valence`, plus the dimensional term | −4.43 | −5.90 | **−0.14** |
+| `pvdf-dft-valence-flux`, proper | −1.88 | −0.44 | **+2.33** |
+| `pvdf-dft-valence-flux`, plus the dimensional term | −6.29 | −7.09 | **+2.33** |
+| measured (Nix and Ward 1986) | −32 | +1.5 | **+20** |
+
+**`d_31`'s sign is now right**, and that is the informative half: `d_33`'s sign was already
+right by arithmetic, and a positive `d_31` is precisely what a dimensional model cannot
+produce. The magnitudes are 5x and 9x too small. Sensitivity of that answer, measured
+rather than assumed: scaling both coefficients by 0.25, 0.5, 1, 2 gives `d_31` = +0.52,
++1.08, +2.33, +6.34; leaving one chemistry out of the fit gives +2.16, +1.72, +0.50 (and one
+run that does not converge); fitting the angle channel alongside a bond channel gives
+**−0.06**. So the sign is stable within the family of fits that a rigid-bonded chain can be
+fitted with, and not stable outside it.
+
+**The other three crystals, and one of them does not converge.**
+
+| | cell (A, deg) | `C_33` | largest \|e\| | largest \|d\| | work density | residual `sigma_zz` |
+|---|---|---|---|---|---|---|
+| PVDF beta | 4.492, 8.482, 90.00, 2.6052 | 330.4 | 0.7239 | 2.33 | 4.22 kJ/m³ | 3e−8 GPa |
+| PVDF alpha | 4.789, 9.430, 90.00, 4.6882 | 152.9 | — | — | — | **−0.54 GPa** |
+| PVDF gamma | 5.447, 8.706, 81.99, 9.2727 | 99.3 | 0.3610 | 8.93 | 7.34 kJ/m³ | 2e−6 GPa |
+| PE | 4.164, 7.199, 90.00, 2.4482 | 371.4 | < 1e−12 | < 1e−9 | 6e−26 kJ/m³ | 2e−9 GPa |
+
+**Alpha's row is not a measurement and is left blank on purpose.** The flux is linear in the
+geometry with no saturation, so opening the backbone angle buys electrostatic energy without
+limit; for alpha that beats the fitted bend terms and the relaxation runs to the line
+group's ±8° cap, leaving a shape gradient of 0.24 and a residual axial stress of −0.54 GPa.
+The two piezoelectric routes then disagree by 100%, which is the check catching it rather
+than the model working. The same thing happens to beta at twice the fitted coefficient. Beta
+at the fitted coefficient sits at +4.07° of its ±8° range with a shape gradient of 2e−9.
+
+**Polyethylene is still exactly zero**, and it is a better null control than it was: the
+flux moves PE's charges (it has C-H bonds) and changes its packing — `c` 2.4928 → 2.4482,
+`C_33` 288.0 → 371.4 GPa — but every CH2 group stays neutral and the all-trans repeat stays
+centrosymmetric, so the cell dipole cancels for every configuration and the whole
+piezoelectric tensor stays at machine zero. A flux that manufactured a dipole there would
+be a bug in the periodic topology, not new physics.
+
+**What the flux costs.** It is not a passive addition to the dipole: the charges enter the
+Coulomb sum, so every energy, every cell and every elastic constant moves. Beta's `c` grows
+2.3%, its `C_11` by 24%, its `C_13` by 85%; PE's `C_33` by 29%, away from the measured range
+of section 8.2 rather than towards it. None of that is fitted to anything. The flux path is
+therefore an opt-in *third* preset and neither `pvdf-dft-valence` nor any number measured
+with it is changed by its existence.
 
 ### 5.4 Blocking stress, free strain, work density (E = 0.01 V/A = 100 MV/m)
 
@@ -508,8 +635,14 @@ separately:
 |---|---|---|---|---|
 | response, rigid path | 0.8 s | 2.3 s | 18.8 s | 1.6 s |
 | response, deformable path | 4.8 s | 18.5 s | 124 s | 2.3 s |
+| response, fluxing path | 1.6 s | 8.4 s | 89 s | 1.6 s |
 | kernel rows, deformable | 81 | 277 | 673 | 108 |
 | pack + refine (once, beforehand) | 2.7-10 s | 4.9-13 s | 22-48 s | 3.6-6.8 s |
+
+The fluxing row is not faster than the deformable one for any structural reason: the flux
+adds a per-atom charge evaluation and one extra reduction per kernel block, and the two rows
+were taken on differently loaded machines. Read them as "the same order", which is the only
+thing the timings support.
 
 The rigid path is affordable because of the analytic gradient: `polish(...,
 gradient="analytic")` spends one kernel row per function evaluation where the
@@ -666,13 +799,17 @@ parametrisation is naturally strongest, has nothing to be checked against.
 > `d_31 = 20-28` pC/N by Harrison, J. S.; Ounaies, Z., "Piezoelectric polymers",
 > NASA/CR-2001-211422 (2001).
 
-*Against this package:* section 5.3 has the comparison in full. `d_33` and `d_31` are
-identically zero in the proper coefficient, on every path and under every preset, and the
-dimensional term that a Broadhurst-Davis model would add gives −4.43, −5.90 and −0.14 pC/N
-for `d_33`, `d_32`, `d_31`. **Verdict: `d_33`'s sign reproduced but by arithmetic rather than
-by mechanism (the dimensional term is negative on every diagonal column for any stable
-crystal), its magnitude 7x too small, and `d_31`'s sign wrong.** `d_15` and `d_24` are among
-the constants this cell cannot express at all (section 1).
+*Against this package:* sections 5.3 and 5.6 have the comparison in full. With fixed
+charges `d_33` and `d_31` are identically zero in the proper coefficient on every path and
+under every preset, and the dimensional term that a Broadhurst-Davis model would add gives
+−4.43, −5.90 and −0.14 pC/N. With charge flux the proper coefficients exist and the totals
+are −6.29, −7.09 and **+2.33**. **Verdict, fixed charges: `d_33`'s sign reproduced but by
+arithmetic rather than by mechanism, its magnitude 7x too small, and `d_31`'s sign wrong.
+Verdict, charge flux: both signs reproduced, `d_33` 5x too small and `d_31` 9x too small —
+and the sign of `d_31` is stable only within the family of fits a rigid-bonded chain admits
+(section 5.6), so it is evidence that the mechanism is the right kind and not that the
+coefficient is right.** `d_15` and `d_24` are among the constants this cell cannot express
+at all (section 1).
 
 The largest coefficient this module does produce for beta is `|d_y6| = 18.4` pC/N
 (illustrative), 2.3 (`pvdf-dft-fit`), 4.4 (`pvdf-dft-valence`) — the same order as a measured
@@ -707,13 +844,19 @@ dipole moment at constant thickness.
 *Against this package:* the dimensional term is present and is exactly the difference between
 the proper and improper coefficients, quantified in section 5.3. The intrinsic third needs
 the dipole to change with strain, and **the deformable path shows precisely which degrees of
-freedom that requires.** Letting the backbone angles move is not enough for a planar zigzag:
-the dipole is exactly invariant under it (section 5.2). It *is* enough for a helix, where
-alpha and gamma get diagonal `e` entries of 0.10 to 0.19 C/m² and diagonal `d` of 0.5 to 2.7
-pC/N. So the intrinsic channel is not absent from the model in principle — it is absent from
-beta in particular, because beta's chain has no internal coordinate that changes its dipole.
-Reaching it would need the pendant geometry or the bond lengths to relax, or polarizable
-charges, none of which this model has.
+freedom that requires.** Letting the backbone angles move is not enough for a planar zigzag
+*with fixed charges*: the dipole is exactly invariant under it (section 5.2). It *is* enough
+for a helix, where alpha and gamma get diagonal `e` entries of 0.10 to 0.19 C/m² and diagonal
+`d` of 0.5 to 2.7 pC/N.
+
+**Section 5.6 supplies the intrinsic channel for beta**, by letting the increments move with
+the backbone angle instead of the geometry alone. The decomposition then comes out on the
+literature's side of the argument rather than the dimensional model's: beta's film `d_31`
+is +2.33 pC/N of which the dimensional part is ~0.00, and its `d_33` is −6.29 of which the
+dimensional part is −4.41. So the intrinsic term is the whole of `d_31` and about a third of
+`d_33`, which is the shape of the Broadhurst-Davis split (two thirds dimensional) even
+though the absolute sizes are an order of magnitude short. That agreement in *shape* is
+worth exactly as much as the fit behind it, which is R² = 0.39 on twelve GFN2 numbers.
 
 *A caveat on the helices' diagonal columns.* Alpha's and gamma's largest diagonal `e` is the
 `eps_zz` one, 0.10 and 0.19 C/m², and it comes from a conformation change under axial
@@ -746,11 +889,20 @@ describe the cell this potential produces, not the phase it is named after.
   the reachable block (3×3 rigid, 4×4 deformable), so `d` is clamped in whatever is outside
   it.
 * Electronic polarizability, depolarisation, and any field-induced change in the charges:
-  the model is fixed point charges, so the dielectric constant is 1 by construction and the
-  piezoelectric response has no electronic contribution.
-* Any change in the *molecular* dipole with strain for a planar zigzag. Section 5.2 shows
-  this is exact rather than approximate for bond-charge-increment charges, and it is what
-  puts beta-PVDF's `d_33` and `d_31` out of reach.
+  the charges depend on the *geometry* on the fluxing path but never on the field, so the
+  dielectric constant is 1 by construction and the piezoelectric response still has no
+  electronic contribution.
+* Charge transfer along the backbone. The increments are typed by element pair, so a
+  backbone C-C bond is homonuclear and carries neither an increment nor a flux;
+  `flux_topology` refuses to orient one rather than letting the arbitrary order of the bond
+  list decide which carbon gains. That is the channel most likely to carry an *axial* dipole
+  response and it is outside this model — which is also why, on the four reference
+  chemistries of section 5.6, the angle channel explains only 39% of the residual and a
+  bond-stretch channel explains 86%.
+* Any change in the *molecular* dipole with strain for a planar zigzag **with fixed
+  charges**. Section 5.2 shows this is exact rather than approximate for
+  bond-charge-increment charges; section 5.6 is what removes it, and section 5.6 also says
+  how far the coefficient that removes it can be trusted.
 * Temperature. Everything is a zero-kelvin second derivative; no phonons, no thermal
   expansion, no pyroelectric coefficient.
 * Electrostriction. The response reported is strictly linear in the field; DESIGN.md section

@@ -30,10 +30,11 @@ hand their best cells to the same exact-kernel polish, so the energies that
 come back are exact either way and only the choice of starts differs.
 
 **Rigid table, deformable kernel.**  That tabulated interaction is built for one
-fixed set of chain coordinates and one energy-shifted pair potential: it is a
-*screen*, and it stays rigid.  Everything that lets the chain deform --
-:class:`ChainValence`'s bond and angle terms, and the force-shifted Lennard-Jones
-form -- is opt-in on :class:`CrystalPacker` and lives on the direct-kernel path
+fixed set of chain coordinates, one set of point charges and one energy-shifted pair
+potential: it is a *screen*, and it stays rigid.  Everything that lets the chain deform
+-- :class:`ChainValence`'s bond and angle terms, the force-shifted Lennard-Jones
+form, and the geometry-dependent charges of :func:`chain_flux` -- is opt-in on
+:class:`CrystalPacker` and lives on the direct-kernel path
 (:meth:`CrystalPacker.energy` and :meth:`CrystalPacker.energy_and_grad`), which is
 what :mod:`polyfind.refine` and :mod:`polyfind.mechanics` call.  The two are kept
 apart by :func:`_table_starts`, which refuses a packer carrying either and refuses
@@ -45,9 +46,11 @@ adds ``-mu_cell . E`` to the cell energy, where ``mu_cell = sum_i q_i r_i`` is t
 dipole moment of the placed cell; the dipole depends on the setting angles and the
 flip, so it is recomputed per configuration inside the kernel.  This is the cheap
 screening heuristic of ``docs/CHEMISTRY_EXTENSION.md`` section 3, not a
-Berry-phase or DFT treatment: the charges are fixed point charges, so the cell has
+Berry-phase or DFT treatment: the charges never depend on the field, so the cell has
 no polarizability and no depolarisation field, and only the *orientational* and
-packing response to the field is captured.
+packing response to the field is captured.  With ``charge_flux`` they do depend on
+the chain's own geometry, which is a different thing and is what gives a planar
+zigzag a piezoelectric response at all (:func:`chain_flux`).
 """
 from __future__ import annotations
 
@@ -550,6 +553,43 @@ def chain_valence(chain: PeriodicChain, bond_table: dict, angle_table: dict) -> 
     )
 
 
+# ------------------------------------------------------------------ charge flux
+def _repeat_images(chain: PeriodicChain) -> tuple:
+    """``(template, {template atom: (position in the repeat, image)})`` for ``chain``.
+
+    The same five-block template :func:`chain_valence` walks, mapped so that a term of
+    the infinite chain can be written in the repeat's own atom order with an image index
+    for each atom.  Blocks -2..2 are enough: every neighbour of an atom of block 0 is in
+    block -1, 0 or 1, and every neighbour of *those* in -2..2.
+    """
+    tpl = _template(chain.polymer, len(chain.dihedrals))
+    where: dict[int, tuple[int, int]] = {}
+    for k in (-2, -1, 0, 1, 2):
+        for p, idx in enumerate(_block_atoms(tpl, len(chain.dihedrals), k)[1]):
+            where[int(idx)] = (p, k)
+    return tpl, where
+
+
+def chain_flux(chain: PeriodicChain, ff):
+    """The :class:`~polyfind.forcefield.FluxTopology` of one repeat of ``chain``.
+
+    ``ff`` is anything with :meth:`~polyfind.forcefield.SimpleFF.flux_topology` -- a
+    :class:`~polyfind.forcefield.SimpleFF` carrying ``charge_increments`` and
+    ``charge_flux``.  ``None`` when the potential has no non-zero flux coefficient, which
+    is what keeps a packer without flux computing exactly the expression it always did.
+
+    Only the *topology* of the chain is used, so the result survives any change of
+    conformation, exactly as :func:`chain_valence` does.  The flux's drivers reach across
+    the repeat boundary -- a pendant bond's angle driver involves the backbone neighbours
+    of its own carbon, one of which belongs to the next repeat -- so the charges depend on
+    ``c`` as well as on the coordinates, and both derivatives are carried.
+    """
+    if ff is None or not ff.has_flux():
+        return None
+    tpl, where = _repeat_images(chain)
+    return ff.flux_topology(tpl.elements, tpl.bonds, images=where)
+
+
 # ------------------------------------------------------------------ energy kernel
 @dataclass
 class PackResult:
@@ -624,15 +664,30 @@ class CrystalPacker:
         ``"force"`` the whole pair potential is C1 and a strain no longer walks pairs
         across a jump in the force (see :meth:`_pair_energy_and_dv`).
 
-    Both change the energy, so both are refused by the tabulated screen
-    (:func:`_table_starts`), which is a rigid-chain, energy-shifted object by construction.
+    ``charge_flux``
+        a :class:`~polyfind.forcefield.SimpleFF` carrying ``charge_increments`` **and**
+        ``charge_flux``, typically ``SimpleFF.from_preset("pvdf-dft-valence-flux")``.  The
+        chain's point charges then stop being constants: they are recomputed from the
+        chain's own geometry at every :meth:`update_chain` and per row wherever a row
+        carries its own ``coords``, and every derivative of the energy and of the dipole
+        carries the extra ``dE/dq . dq/dgeometry`` term
+        (:class:`~polyfind.forcefield.FluxTopology`).  Without it a planar all-trans
+        zigzag's dipole is *exactly* independent of its backbone angle and beta-PVDF's
+        ``d_33`` and ``d_31`` are identically zero; see ``docs/ELECTROMECHANICS.md``.  The
+        charges it starts from are the potential's own bond-charge increments, so a packer
+        given flux **replaces** whatever charges the chain carried, and a mismatch between
+        the two at zero flux is refused rather than absorbed.
+
+    All three change the energy, so all three are refused by the tabulated screen
+    (:func:`_table_starts`), which is a rigid-chain, energy-shifted, fixed-charge object by
+    construction.
     """
 
     PARAMS = ("a", "b", "gamma", "phi1", "phi2", "dz", "flip")
     NEUTRAL_TOL = 1e-6  # |cell charge| (e) above which the dipole is origin-dependent
     LJ_CUTOFFS = ("energy", "force")
 
-    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy"):
+    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy", charge_flux=None):
         self.n_chains = n_chains
         self.rc = cutoff
         self.rc2 = cutoff ** 2
@@ -643,6 +698,7 @@ class CrystalPacker:
             raise ValueError(f"unknown lj_cutoff {lj_cutoff!r} (expected one of {self.LJ_CUTOFFS})")
         self.lj_cutoff = lj_cutoff
         self.valence = valence
+        self.charge_flux = charge_flux
         self.xp = xp or bk.get_backend()
         self._dt = bk.float_dtype()
         self.n_energy_calls = 0  # batched kernel calls (one per ``energy()`` invocation)
@@ -665,7 +721,6 @@ class CrystalPacker:
         x, d = lj_params(chain.elements)
         xs = np.sqrt(np.outer(x, x))
         ds = np.sqrt(np.outer(d, d))
-        qq = np.outer(chain.charges, chain.charges) * COULOMB / self.eps_r
         erc = float(erfc_approx(np.array(alpha * rc)))
         self.dsf_shift = erc / rc
         self.dsf_force = erc / rc ** 2 + 2 * alpha / np.sqrt(np.pi) * np.exp(-(alpha * rc) ** 2) / rc
@@ -674,29 +729,21 @@ class CrystalPacker:
         # per-pair constants: v = ir6 (A ir6 - B) + qq erfc(alpha r)/r + qq_f r + const
         A = ds * xs ** 12
         B = 2.0 * ds * xs ** 6
-        qq_f = qq * self.dsf_force
-        const = -lj_shift - qq * (self.dsf_shift + self.dsf_force * rc)
-        if self.lj_cutoff == "force":
-            # Force-shifted Lennard-Jones: subtract the tangent at rc, not just the value.
-            # ``qq_f`` is already the linear coefficient the damped-shifted-force Coulomb
-            # term needs, so the LJ force shift rides in the same array at no extra cost --
-            # after this it is no longer "qq times something", which is why the kernel
-            # calls it a linear coefficient and not a Coulomb term.
-            lj_f = 12.0 * A / rc ** 13 - 6.0 * B / rc ** 7  # = -V_LJ'(rc)
-            qq_f = qq_f + lj_f
-            const = const - lj_f * rc
+        # Force-shifted Lennard-Jones: subtract the tangent at rc, not just the value.
+        # ``qq_f`` is already the linear coefficient the damped-shifted-force Coulomb term
+        # needs, so the LJ force shift rides in the same array at no extra cost -- after
+        # this it is no longer "qq times something", which is why the kernel calls it a
+        # linear coefficient and not a Coulomb term.
+        self._lj_shift_np = lj_shift
+        self._lj_f_np = (12.0 * A / rc ** 13 - 6.0 * B / rc ** 7) if self.lj_cutoff == "force" else None
         tile = lambda Z: np.tile(Z, (n_chains, n_chains))  # noqa: E731
         self._A, self._B = xp.asarray(tile(A), dtype=dt), xp.asarray(tile(B), dtype=dt)
-        self._qq, self._qqf = xp.asarray(tile(qq), dtype=dt), xp.asarray(tile(qq_f), dtype=dt)
-        self._const = xp.asarray(tile(const), dtype=dt)
         # the same n x n block also serves the (0,0,k) chain1-chain2 column and the intra sum
         self._A_nn, self._B_nn = xp.asarray(A, dtype=dt), xp.asarray(B, dtype=dt)
-        self._qq_nn, self._qqf_nn = xp.asarray(qq, dtype=dt), xp.asarray(qq_f, dtype=dt)
-        self._const_nn = xp.asarray(const, dtype=dt)
+        self._set_charge_tables(chain.charges)
         # kept for backwards compatibility / introspection
         self.lj_x = xp.asarray(tile(xs), dtype=dt)
         self.lj_d = xp.asarray(tile(ds), dtype=dt)
-        self.qq = self._qq
         self.lj_shift = xp.asarray(tile(lj_shift), dtype=dt)
         N = n * n_chains
         self.same_site = {}
@@ -709,13 +756,83 @@ class CrystalPacker:
         self.n, self.N = n, N
         self._scale_cache: dict[int, object] = {}
         self._image_cache: dict = {}
-        # charges of the whole cell, in the atom order :meth:`_place` produces
-        self._q_cell = np.tile(np.asarray(chain.charges, dtype=float), n_chains)
-        self._q_cell_xp = xp.asarray(self._q_cell, dtype=dt)
         # Valence terms depend on the topology alone, so they are resolved once here and
         # re-evaluated (not rebuilt) by every :meth:`update_chain`.
         self._valence = None if self.valence is None else chain_valence(
             chain, self.valence.bond_table(), self.valence.angle_table())
+        # Charge flux likewise: the topology is resolved once, the charges are recomputed.
+        self._flux = chain_flux(chain, self.charge_flux)
+        if self._flux is not None:
+            self._check_flux_base(chain)
+
+    def _set_charge_tables(self, q) -> None:
+        """(Re)build every charge-dependent pair table from the repeat's charges ``q`` (n,).
+
+        Called once from :meth:`_setup_topology` with the chain's own charges -- which is the
+        only thing that happens without charge flux, so the tables are bit-for-bit what they
+        always were -- and again from :meth:`update_chain` whenever the flux has moved them.
+        """
+        xp, dt, rc = self.xp, self._dt, self.rc
+        qq = np.outer(q, q) * COULOMB / self.eps_r
+        qq_f = qq * self.dsf_force
+        const = -self._lj_shift_np - qq * (self.dsf_shift + self.dsf_force * rc)
+        if self._lj_f_np is not None:
+            qq_f = qq_f + self._lj_f_np
+            const = const - self._lj_f_np * rc
+        tile = lambda Z: np.tile(Z, (self.n_chains, self.n_chains))  # noqa: E731
+        self._qq, self._qqf = xp.asarray(tile(qq), dtype=dt), xp.asarray(tile(qq_f), dtype=dt)
+        self._const = xp.asarray(tile(const), dtype=dt)
+        self._qq_nn, self._qqf_nn = xp.asarray(qq, dtype=dt), xp.asarray(qq_f, dtype=dt)
+        self._const_nn = xp.asarray(const, dtype=dt)
+        self.qq = self._qq  # kept for backwards compatibility / introspection
+        # charges of the whole cell, in the atom order :meth:`_place` produces
+        self._q_cell = np.tile(np.asarray(q, dtype=float), self.n_chains)
+        self._q_cell_xp = xp.asarray(self._q_cell, dtype=dt)
+
+    def _row_charge_tables(self, q, cell: bool):
+        """``(qq, qq_f, const)`` for per-row charges ``q`` (M, n); shapes (M, 1, n, n).
+
+        The kernel's pair arrays are indexed ``(row, image, atom, atom)``, so a leading row
+        axis and a broadcast image axis is all a per-row charge needs: every expression in
+        :meth:`_pair_energy` is already elementwise.  ``cell=True`` tiles the block up to
+        the whole cell, as :meth:`_set_charge_tables` does for the fixed case.
+        """
+        xp, dt, rc = self.xp, self._dt, self.rc
+        q = np.asarray(q, dtype=float)
+        qq = q[:, :, None] * q[:, None, :] * COULOMB / self.eps_r
+        if cell:
+            qq = np.tile(qq, (1, self.n_chains, self.n_chains))
+        qq_f = qq * self.dsf_force
+        shift = self._lj_shift_np if not cell else np.tile(self._lj_shift_np, (self.n_chains, self.n_chains))
+        const = -shift[None] - qq * (self.dsf_shift + self.dsf_force * rc)
+        if self._lj_f_np is not None:
+            f = self._lj_f_np if not cell else np.tile(self._lj_f_np, (self.n_chains, self.n_chains))
+            qq_f = qq_f + f[None]
+            const = const - f[None] * rc
+        to = lambda Z: xp.asarray(Z[:, None], dtype=dt)  # noqa: E731 -- the broadcast image axis
+        return to(qq), to(qq_f), to(const)
+
+    def _check_flux_base(self, chain: PeriodicChain) -> None:
+        """Refuse a flux whose zero-coefficient charges are not the chain's own.
+
+        The flux is a perturbation of the potential's bond-charge increments, so at zero
+        coefficient it must reproduce exactly the charges the chain already carries.  If it
+        does not, the packer has been given a chain built for a different charge model and
+        switching it on would quietly change the electrostatics as well as add the flux.
+        """
+        from dataclasses import replace as _replace
+
+        base = _replace(self._flux, ka=np.zeros_like(self._flux.ka), kb=np.zeros_like(self._flux.kb),
+                        ea=self._flux.ea[:0], ek=self._flux.ek[:0], eks=self._flux.eks[:0])
+        q0 = base.charges(chain.coords, chain.c)[0]
+        err = float(np.abs(q0 - np.asarray(chain.charges, dtype=float)).max())
+        if err > 1e-9:
+            raise ValueError(
+                f"charge flux: at zero coefficients the potential's increments give charges that "
+                f"differ from the chain's by {err:.3e} e.  The flux perturbs the increments, so "
+                "the chain must already carry them -- build it inside FFParameters.applied() (or "
+                "pass the same preset's charges), rather than letting the flux silently replace a "
+                "different charge model.")
 
     def update_chain(self, chain: PeriodicChain) -> None:
         """Replace the chain-dependent state, keeping the topology-dependent tables.
@@ -723,10 +840,15 @@ class CrystalPacker:
         Used by the refinement, where only the torsions (hence the coordinates, the
         repeat ``c``, the torsion energy, the intra-chain constant and the image
         selection) change from one evaluation to the next.
+
+        With charge flux the *charges* move too -- they are a function of the conformation
+        -- so the charge-dependent pair tables are rebuilt here as well.
         """
         if list(chain.elements) != getattr(self, "elements", list(chain.elements)):
             raise ValueError("update_chain requires a chain with the same element list")
         self.chain = chain
+        if getattr(self, "_flux", None) is not None:
+            self._set_charge_tables(self._flux.charges(chain.coords, chain.c)[0])
         self.X0 = self.xp.asarray(chain.coords, dtype=self._dt)
         self.K = int(np.ceil(self.rc / chain.c)) + 1
         self.reach = self.rc + 2 * chain.radius + 0.5  # axis-axis distance beyond which no atom pair is within the cutoff
@@ -795,11 +917,32 @@ class CrystalPacker:
         of which periodic image of each chain is used, and of ``dz`` (translating a
         neutral chain does not change the cell dipole) -- but *not* of the setting
         angles or the flip, which rotate and mirror the charge distribution.
+
+        With charge flux the charges are a function of the chain's geometry, so a row that
+        carries its own ``coords`` carries its own charges too, and that is where
+        beta-PVDF's piezoelectric response comes from: the fixed-increment dipole of a
+        planar zigzag is exactly invariant under the one internal coordinate an axial
+        strain moves.
         """
         self._require_neutral("the cell dipole")
         params = np.atleast_2d(np.asarray(params, dtype=float))
         P, _ = self._place(params, coords, c)
-        return np.einsum("n,mnc->mc", self._q_cell, np.asarray(bk.to_numpy(P), dtype=float))
+        Pn = np.asarray(bk.to_numpy(P), dtype=float)
+        if self._flux is not None and coords is not None:
+            q = self._row_charges(coords, c, Pn.shape[0])
+            return np.einsum("mn,mnc->mc", np.tile(q, (1, self.n_chains)), Pn)
+        return np.einsum("n,mnc->mc", self._q_cell, Pn)
+
+    def _row_charges(self, coords, c, M: int) -> np.ndarray:
+        """The repeat's fluxed charges for each of ``M`` rows, ``(M, n)``."""
+        X = np.asarray(coords, dtype=float)
+        if X.ndim == 2:
+            X = X[None]
+        if X.shape[0] == 1 and M > 1:
+            X = np.broadcast_to(X, (M, self.n, 3))
+        cz = np.full(M, self.chain.c) if c is None else np.broadcast_to(
+            np.asarray(c, dtype=float).ravel(), (M,))
+        return self._flux.charges(X, cz)
 
     def cell_volume(self, params, c=None) -> np.ndarray:
         """Cell volume ``a b sin(gamma) c`` in A^3, one entry per row of ``params``."""
@@ -956,29 +1099,57 @@ class CrystalPacker:
         dv = 3.0 * ir6 * (B - 2.0 * A * ir6) / r2s + (qq * dcoul + qqf) / (2.0 * rr)
         return xp.where(mask, v, 0.0), xp.where(mask, dv, 0.0)
 
-    def _intra_column_and_grad(self, coords, c, K: int):
-        """:meth:`_intra_column` for ONE row, plus its gradient w.r.t. the coordinates and ``c``.
+    def _pair_phi(self, r2):
+        """The charge-bilinear factor of the pair potential: ``v_coulomb = qq * phi(r)``.
 
-        Returns ``(intra, dintra/dcoords (n, 3), dintra/dc)``; the ``0.5 n_chains``
-        prefactor of :attr:`e_intra` is the caller's business.
+        Everything in :meth:`_pair_energy` that is proportional to ``qq`` collected into one
+        expression -- the damped complementary error function, the shifted-force linear term,
+        and the two constants that live in ``qq_f`` and ``const``.  It is what
+        ``dE/dq`` needs: with charge flux the charges are functions of the geometry, so every
+        derivative of the energy picks up ``sum_a (dE/dq_a)(dq_a/dgeometry)`` and
+        ``dE/dq_a = (COULOMB/eps_r) sum_b q_b phi(r_ab)`` is the electrostatic potential at
+        ``a``.  Evaluated only when the flux is on; the fixed-charge kernel never calls it.
         """
         xp = self.xp
+        mask = (r2 < self.rc2) & (r2 > 1e-8)
+        r2s = xp.where(mask, r2, 1.0)
+        rr = xp.sqrt(r2s)
+        v = (_erfc_pos(self.alpha * rr, xp) / rr + self.dsf_force * rr
+             - (self.dsf_shift + self.dsf_force * self.rc))
+        return xp.where(mask, v, 0.0)
+
+    def _intra_column_and_grad(self, coords, c, K: int, tables=None, q_repeat=None):
+        """:meth:`_intra_column` for ONE row, plus its gradient w.r.t. the coordinates and ``c``.
+
+        Returns ``(intra, dintra/dcoords (n, 3), dintra/dc, dintra/dq (n,) or None)``; the
+        ``0.5 n_chains`` prefactor of :attr:`e_intra` is the caller's business.  ``tables``
+        overrides the packer's ``(qq, qq_f, const)`` for a row carrying its own charges, and
+        ``q_repeat`` (the repeat's charges) asks for the ``dq`` term; ``None`` skips it, which
+        is the fixed-charge path and costs nothing.
+        """
+        xp = self.xp
+        qq, qqf, const = tables if tables is not None else (self._qq_nn, self._qqf_nn, self._const_nn)
         kz = np.arange(-K, K + 1, dtype=float)
         ks = xp.asarray(kz, dtype=self._dt)
         cz = xp.asarray(np.asarray(c, dtype=float), dtype=self._dt)
         D = coords[:, :, None, :] - coords[:, None, :, :]  # (1, n, n, 3)
         dz = D[:, None, :, :, 2] - ks[None, :, None, None] * cz[:, None, None, None]
         r2 = D[:, None, :, :, 0] ** 2 + D[:, None, :, :, 1] ** 2 + dz * dz
-        v, gv = self._pair_energy_and_dv(r2, self._A_nn, self._B_nn, self._qq_nn, self._qqf_nn, self._const_nn)
+        v, gv = self._pair_energy_and_dv(r2, self._A_nn, self._B_nn, qq, qqf, const)
         S = self._scale_column(K)[None]
         intra = (v * S).sum(axis=(1, 2, 3))
+        gq = None
+        if q_repeat is not None:
+            W = np.asarray(bk.to_numpy(self._pair_phi(r2) * S), dtype=float).sum(axis=(0, 1))
+            qc = np.asarray(q_repeat, dtype=float) * (COULOMB / self.eps_r)
+            gq = W @ qc + W.T @ qc
         t = 2.0 * gv * S  # dV/d(separation vector) = 2 dV/dr2 * (separation vector)
         f = [np.asarray(bk.to_numpy(t * w), dtype=float) for w in (D[:, None, :, :, 0], D[:, None, :, :, 1], dz)]
         gX = np.stack([q.sum(axis=(0, 1, 3)) - q.sum(axis=(0, 1, 2)) for q in f], axis=1)
         gc = -float((f[2] * kz[None, :, None, None]).sum())
-        return intra, gX, gc
+        return intra, gX, gc, gq
 
-    def _intra_column(self, coords, c, K: int):
+    def _intra_column(self, coords, c, K: int, tables=None):
         """Same-site (0,0,k) energy of ONE chain, per row of ``coords`` (M, n, 3).
 
         This is the only place the bonded-exclusion scales are needed.  Evaluating it
@@ -996,7 +1167,8 @@ class CrystalPacker:
         D = coords[:, :, None, :] - coords[:, None, :, :]  # (M, n, n, 3)
         dz = D[:, None, :, :, 2] - ks[None, :, None, None] * cz[:, None, None, None]
         r2 = D[:, None, :, :, 0] ** 2 + D[:, None, :, :, 1] ** 2 + dz * dz
-        v = self._pair_energy(r2, self._A_nn, self._B_nn, self._qq_nn, self._qqf_nn, self._const_nn)
+        qq, qqf, const = tables if tables is not None else (self._qq_nn, self._qqf_nn, self._const_nn)
+        v = self._pair_energy(r2, self._A_nn, self._B_nn, qq, qqf, const)
         return (v * self._scale_column(K)[None]).sum(axis=(1, 2, 3))
 
     def energy(self, params, chunk_elems: int | None = None, coords=None, c=None, e_torsion=None) -> np.ndarray:
@@ -1033,8 +1205,13 @@ class CrystalPacker:
             reach = self.rc + 2 * float(np.linalg.norm(coords[:, :, :2], axis=2).max()) + 0.5
             e_add = np.full(M, self.e_torsion) if e_torsion is None else np.broadcast_to(np.asarray(e_torsion, dtype=float).ravel(), (M,)).copy()
             i_chunk = max(1, chunk_elems // ((2 * K + 1) * self.n * self.n))
+            # With charge flux each row's charges follow that row's conformation, so the
+            # pair tables become per-row arrays with a broadcast image axis.
+            q_row = self._row_charges(coords, c_arr, M) if self._flux is not None else None
             intra = np.concatenate([
-                bk.to_numpy(self._intra_column(xp.asarray(coords[t : t + i_chunk], dtype=self._dt), c_arr[t : t + i_chunk], K))
+                bk.to_numpy(self._intra_column(
+                    xp.asarray(coords[t : t + i_chunk], dtype=self._dt), c_arr[t : t + i_chunk], K,
+                    tables=None if q_row is None else self._row_charge_tables(q_row[t : t + i_chunk], False)))
                 for t in range(0, M, i_chunk)
             ])
             e_add = e_add + 0.5 * self.n_chains * intra
@@ -1042,6 +1219,7 @@ class CrystalPacker:
                 e_add = e_add + self.n_chains * self._valence.energy(coords, c_arr)
         else:
             c_arr = None
+            q_row = None
             K, reach = self.K, self.reach
             e_add = np.full(M, self.e_torsion + self.e_intra)
             if self._valence is not None:
@@ -1057,6 +1235,10 @@ class CrystalPacker:
             sub_coords = coords[sl] if per_row else None
             sub_c = c_arr[sl] if per_row else None
             P, lat = self._place(sub, sub_coords, sub_c)
+            t_nn = self._row_charge_tables(q_row[sl], False) if q_row is not None else None
+            t_cell = self._row_charge_tables(q_row[sl], True) if q_row is not None else None
+            qc_xp = (xp.asarray(np.tile(q_row[sl], (1, self.n_chains)), dtype=self._dt)
+                     if q_row is not None else None)
             e = xp.zeros(sub.shape[0], dtype=self._dt)
             if self.n_chains == 2:
                 # (0, 0, k) column: chain1-chain2 only; the (2,1) block equals the (1,2) block
@@ -1065,7 +1247,8 @@ class CrystalPacker:
                 cz = lat[:, 2, 2]
                 dzh = Dh[:, None, :, :, 2] - ks[None, :, None, None] * cz[:, None, None, None]
                 r2h = Dh[:, None, :, :, 0] ** 2 + Dh[:, None, :, :, 1] ** 2 + dzh * dzh
-                vh = self._pair_energy(r2h, self._A_nn, self._B_nn, self._qq_nn, self._qqf_nn, self._const_nn)
+                qq, qqf, cst = t_nn if t_nn is not None else (self._qq_nn, self._qqf_nn, self._const_nn)
+                vh = self._pair_energy(r2h, self._A_nn, self._B_nn, qq, qqf, cst)
                 e = e + 2.0 * vh.sum(axis=(1, 2, 3))
             ijk_np, L = self._select_images(sub, K, reach)
             if L:
@@ -1076,12 +1259,14 @@ class CrystalPacker:
                 dy = D[:, None, :, :, 1] - shift[:, :, None, None, 1]
                 dzz = D[:, None, :, :, 2] - shift[:, :, None, None, 2]
                 r2 = dx * dx + dy * dy + dzz * dzz  # (m, I, N, N)
-                v = self._pair_energy(r2, self._A, self._B, self._qq, self._qqf, self._const)
+                qq, qqf, cst = t_cell if t_cell is not None else (self._qq, self._qqf, self._const)
+                v = self._pair_energy(r2, self._A, self._B, qq, qqf, cst)
                 e = e + v.sum(axis=(1, 2, 3))
             if self._field_on:
                 # -mu . E, from the placed coordinates of this chunk: the dipole follows
                 # the setting angles and the flip, so it is a per-row quantity.
-                mu = (P * self._q_cell_xp[None, :, None]).sum(axis=1)  # (m, 3), e.A
+                q_use = self._q_cell_xp[None, :, None] if qc_xp is None else qc_xp[:, :, None]
+                mu = (P * q_use).sum(axis=1)  # (m, 3), e.A
                 out[s : s + m_chunk] = bk.to_numpy(0.5 * e - EV_TO_KCAL * (mu * self._field_xp[None, :]).sum(axis=1))
             else:
                 out[s : s + m_chunk] = bk.to_numpy(0.5 * e)
@@ -1150,11 +1335,28 @@ class CrystalPacker:
             cz = float(self.chain.c)
             K, reach, e_t = self.K, self.reach, self.e_torsion
             intra_in = self.X0[None]
-        intra, gX, gc = self._intra_column_and_grad(intra_in, np.array([cz]), K)
+        # Charge flux: this row's charges and their exact derivatives with respect to the
+        # repeat's coordinates and to c.  ``gq`` accumulates dE/dq alongside the usual
+        # dE/dX, and the two are combined at the end, so ``g_coords`` and ``g_c`` come back
+        # as *total* derivatives -- which is what lets every consumer's chain rule through
+        # (coords, c) stay exactly as it was.
+        flux_q = flux_dq = flux_dqc = None
+        t_nn = t_cell = None
+        q_cell = self._q_cell
+        if self._flux is not None:
+            Xf = Xn[0] if per_row else np.asarray(self.chain.coords, dtype=float)
+            flux_q, flux_dq, flux_dqc = self._flux.charges_and_grad(Xf, cz)
+            if per_row:
+                t_nn = self._row_charge_tables(flux_q[None], False)
+                t_cell = self._row_charge_tables(flux_q[None], True)
+                q_cell = np.tile(flux_q, nc)
+        intra, gX, gc, gq = self._intra_column_and_grad(
+            intra_in, np.array([cz]), K, tables=t_nn, q_repeat=flux_q)
         pref = 0.5 * nc
         # identical arithmetic to ``energy``'s two branches, so the value matches bit for bit
         e_add = (e_t + pref * float(bk.to_numpy(intra)[0])) if per_row else (self.e_torsion + self.e_intra)
         gX, gc = pref * gX, pref * gc
+        gq_chain = None if gq is None else pref * gq
         if self._valence is not None:
             # One repeat's valence energy per chain, with its exact derivatives with respect
             # to the repeat's coordinates and to c.  This is the whole of the plumbing the
@@ -1180,8 +1382,15 @@ class CrystalPacker:
             czl = lat[:, 2, 2]
             dzh = Dh[:, None, :, :, 2] - ks[None, :, None, None] * czl[:, None, None, None]
             r2h = Dh[:, None, :, :, 0] ** 2 + Dh[:, None, :, :, 1] ** 2 + dzh * dzh
-            vh, gh = self._pair_energy_and_dv(r2h, self._A_nn, self._B_nn, self._qq_nn, self._qqf_nn, self._const_nn)
+            qq, qqf, cst = t_nn if t_nn is not None else (self._qq_nn, self._qqf_nn, self._const_nn)
+            vh, gh = self._pair_energy_and_dv(r2h, self._A_nn, self._B_nn, qq, qqf, cst)
             e = e + 2.0 * vh.sum(axis=(1, 2, 3))
+            if gq_chain is not None:
+                # Chain 1 sees this block as rows, chain 2 as columns; both carry the *same*
+                # repeat charges, so both roles add into the one dE/dq per repeat atom.
+                W = np.asarray(bk.to_numpy(self._pair_phi(r2h)), dtype=float).sum(axis=(0, 1))
+                qc = flux_q * (COULOMB / self.eps_r)
+                gq_chain = gq_chain + W @ qc + W.T @ qc
             # E gets 0.5 * (2 * sum vh) = sum vh, so the prefactor on dV/dw is exactly 1
             t = 2.0 * gh
             f = [np.asarray(bk.to_numpy(t * w), dtype=float)
@@ -1201,8 +1410,16 @@ class CrystalPacker:
             dy = D[:, None, :, :, 1] - shift[:, :, None, None, 1]
             dzz = D[:, None, :, :, 2] - shift[:, :, None, None, 2]
             r2 = dx * dx + dy * dy + dzz * dzz
-            v, gv = self._pair_energy_and_dv(r2, self._A, self._B, self._qq, self._qqf, self._const)
+            qq, qqf, cst = t_cell if t_cell is not None else (self._qq, self._qqf, self._const)
+            v, gv = self._pair_energy_and_dv(r2, self._A, self._B, qq, qqf, cst)
             e = e + v.sum(axis=(1, 2, 3))
+            if gq_chain is not None:
+                # E gets 0.5 * sum v; the image set is closed under negation, so the (a, b)
+                # and (b, a) sums are equal and the 0.5 cancels against counting both.
+                Wc = np.asarray(bk.to_numpy(self._pair_phi(r2)), dtype=float).sum(axis=(0, 1))
+                qq_c = q_cell * (COULOMB / self.eps_r)
+                gq_cell = 0.5 * (Wc @ qq_c + Wc.T @ qq_c)
+                gq_chain = gq_chain + gq_cell[:n] + (gq_cell[n:] if nc == 2 else 0.0)
             del v, r2
             # E gets 0.5 * sum v, so dE/d(separation) = 0.5 * 2 * gv * separation = gv * separation
             gsh = np.zeros((ijk_np.shape[1], 3))
@@ -1214,11 +1431,20 @@ class CrystalPacker:
             del dx, dy, dzz, gv, q, gsh
 
         if self._field_on:
-            mu = (P * self._q_cell_xp[None, :, None]).sum(axis=1)
+            q_use = self._q_cell_xp if t_cell is None else xp.asarray(q_cell, dtype=dt)
+            mu = (P * q_use[None, :, None]).sum(axis=1)
             out = float(bk.to_numpy(0.5 * e - EV_TO_KCAL * (mu * self._field_xp[None, :]).sum(axis=1))[0])
-            gP += -EV_TO_KCAL * self._q_cell[:, None] * np.asarray(self.field, dtype=float)[None, :]
+            gP += -EV_TO_KCAL * q_cell[:, None] * np.asarray(self.field, dtype=float)[None, :]
+            if gq_chain is not None:
+                # d(-mu . E)/dq_a = -(r_a . E): the field term's charge derivative, which is
+                # what carries the *intrinsic* piezoelectric response of a fluxing chain.
+                w = -EV_TO_KCAL * (Pn @ np.asarray(self.field, dtype=float))
+                gq_chain = gq_chain + w[:n] + (w[n:] if nc == 2 else 0.0)
         else:
             out = float(bk.to_numpy(0.5 * e)[0])
+        if gq_chain is not None:
+            gX = gX + np.einsum("a,abd->bd", gq_chain, flux_dq)
+            gc = gc + float(gq_chain @ flux_dqc)
 
         # --- chain rule: placed coordinates -> cell parameters and chain coordinates ---
         a, b, gam, phi1, phi2, dz, flip = p
@@ -1510,11 +1736,12 @@ def _table_starts(packer, chain, lo, hi, n_refine, flips, step, gammas, table, c
     """
     from .lattice_table import fft_screen, pair_table
 
-    if packer.valence is not None or packer.lj_cutoff != "energy":
-        what = "valence terms" if packer.valence is not None else f"lj_cutoff={packer.lj_cutoff!r}"
+    if packer.valence is not None or packer.lj_cutoff != "energy" or packer._flux is not None:
+        what = ("valence terms" if packer.valence is not None else
+                "charge flux" if packer._flux is not None else f"lj_cutoff={packer.lj_cutoff!r}")
         raise ValueError(
             f"screen='table' cannot be used with a packer carrying {what}: the tabulated chain-pair "
-            "interaction is built for a rigid chain from the energy-shifted pair potential, so it "
+            "interaction is built for a rigid chain with fixed charges from the energy-shifted pair potential, so it "
             "would not be the potential being polished.  Use screen='random' (every evaluation goes "
             "through the exact kernel), or screen a rigid, energy-shifted packer and hand the result "
             "to the direct-kernel path (refine_crystal, polyfind.mechanics) for the deformable part."

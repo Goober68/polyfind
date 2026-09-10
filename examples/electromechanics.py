@@ -6,6 +6,7 @@ control, and prints the tables ``docs/ELECTROMECHANICS.md`` records.
     python examples/electromechanics.py                        # every potential, all four cases
     python examples/electromechanics.py --preset illustrative  # the built-in potential only
     python examples/electromechanics.py --preset valence       # the one preset with valence terms
+    python examples/electromechanics.py --preset flux          # ... and with charge flux as well
     python examples/electromechanics.py --axial                # add the rigid axial diagnosis
     python examples/electromechanics.py --stiffness-sweep      # is C_33 still an invented constant?
     python examples/electromechanics.py --cutoff               # the Lennard-Jones cutoff sweep
@@ -19,6 +20,13 @@ The three potentials are not interchangeable and the table says which is which:
   force and makes ``eps_zz`` and the diagonal columns computable.  That path costs a
   constrained relaxation per strain state and is a few seconds per case rather than a
   fraction of one.
+* ``pvdf-dft-valence-flux`` adds the geometry dependence of the charges
+  (``CrystalPacker(charge_flux=...)``, also opt-in).  It is the one thing that makes a
+  *planar zigzag's* dipole respond to strain at all, so it is the only column in which
+  beta-PVDF has a non-zero ``d_33`` or ``d_31``.  Read ``FITTED_VALENCE_FLUX`` in
+  ``polyfind.fitting`` before quoting either: two parameters fitted to an exploratory GFN2
+  finite-oligomer response with R^2 = 0.39, and the sign of ``d_31`` follows the fitting
+  choice.
 
 A few seconds per case for the rigid runs; beta 5 s, alpha 20 s and gamma 100 s for the
 deformable one, the packing and refinement included.
@@ -42,7 +50,7 @@ CASES = [
 VOIGT = {0: "1", 1: "2", 2: "3", 5: "6"}
 
 
-def build(polymer, seq, label, valence=None, angle_stiffness=None):
+def build(polymer, seq, label, valence=None, angle_stiffness=None, charge_flux=None):
     """Pack, refine and wrap one polymorph; returns ``(reference, refine result, shape, seconds)``.
 
     ``table_cache_dir=None`` is load bearing whenever more than one potential is run in one
@@ -63,8 +71,14 @@ def build(polymer, seq, label, valence=None, angle_stiffness=None):
         refine_kw = {"valence": valence}
         if angle_stiffness is not None:
             refine_kw["angle_stiffness"] = angle_stiffness
+    # ``charge_flux`` reaches the *mechanics* packer only.  The refinement and the screen
+    # stay on the fixed-increment model on purpose: the flux moves the structure (beta's
+    # ``c`` by +2.3%), and ``relax_reference_deformable`` relaxes cell and chain against the
+    # flux-carrying energy anyway, so the refined structure is a starting point and nothing
+    # more.  What must not happen is a *tabulated* screen seeing it, and ``_table_starts``
+    # refuses that outright.
     ref, rr = M.refined_reference(polymer, seq, label=label, valence=valence, refine_kw=refine_kw,
-                                  pack_kw={"table_cache_dir": None})
+                                  charge_flux=charge_flux, pack_kw={"table_cache_dir": None})
     shape = None if valence is None else M.shape_of(polymer, ref, angles=rr.angles)
     return ref, rr, shape, time.time() - t0
 
@@ -151,7 +165,7 @@ def cutoff_sweep(cases=("PVDF beta (TTTT)",), cutoffs=(8.0, 10.0, 12.0, 16.0, 20
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--preset", default="all",
-                    choices=["all", "illustrative", "fitted", "valence"],
+                    choices=["all", "illustrative", "fitted", "valence", "flux"],
                     help="which potential(s) to run")
     ap.add_argument("--axial", action="store_true", help="also run the rigid axial diagnosis")
     ap.add_argument("--stiffness-sweep", action="store_true",
@@ -163,25 +177,32 @@ def main():
 
     runs = []
     if args.preset in ("all", "illustrative"):
-        runs.append(("illustrative", None, None))
+        runs.append(("illustrative", None, None, None))
     if args.preset in ("all", "fitted"):
         from polyfind.fitting import FITTED_DFT
 
-        runs.append(("pvdf-dft-fit", FITTED_DFT, None))
+        runs.append(("pvdf-dft-fit", FITTED_DFT, None, None))
     if args.preset in ("all", "valence"):
         from polyfind.fitting import FITTED_VALENCE
 
-        runs.append(("pvdf-dft-valence", FITTED_VALENCE, SimpleFF.from_preset("pvdf-dft-valence")))
+        runs.append(("pvdf-dft-valence", FITTED_VALENCE, SimpleFF.from_preset("pvdf-dft-valence"), None))
+    if args.preset in ("all", "flux"):
+        from polyfind.fitting import FITTED_VALENCE
+
+        runs.append(("pvdf-dft-valence-flux", FITTED_VALENCE, SimpleFF.from_preset("pvdf-dft-valence"),
+                     SimpleFF.from_preset("pvdf-dft-valence-flux")))
 
     if args.cutoff:
         cutoff_sweep(cases=tuple(label for _, _, label in CASES))
         return
 
-    for pot_name, params, valence in runs:
+    for pot_name, params, valence, flux in runs:
         print("=" * 100)
         print(f"potential: {pot_name}"
-              + ("   [valence terms forwarded into the lattice kernel: the chain can deform]"
-                 if valence is not None else "   [rigid chain]"))
+              + ("   [rigid chain]" if valence is None else
+                 "   [valence terms + charge flux in the lattice kernel: the chain deforms and "
+                 "its charges move with it]" if flux is not None else
+                 "   [valence terms forwarded into the lattice kernel: the chain can deform]"))
         if params is not None:
             print("  " + params.describe())
         print("=" * 100)
@@ -198,7 +219,7 @@ def main():
                 stiffness_sweep(valence)
                 continue
             for polymer, seq, label in CASES:
-                ref, rr, shape, t_build = build(polymer, seq, label, valence=valence)
+                ref, rr, shape, t_build = build(polymer, seq, label, valence=valence, charge_flux=flux)
                 # ``axial_report`` is the *rigid* diagnosis: it adds an invented bend
                 # restraint to a lattice energy that is supposed not to have one, so running
                 # it on a packer that already carries fitted bend terms would mix the two.

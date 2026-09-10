@@ -657,3 +657,104 @@ def test_the_table_screen_refuses_a_table_built_for_another_conformation():
     assert pack(ch, n_refine=1, maxfev=200, screen="table", table=table)
     with pytest.raises(ValueError, match="different chain coordinates"):
         pack(bent, n_refine=1, maxfev=200, screen="table", table=table)
+
+
+# --------------------------------------------------------------------- charge flux
+#
+# The kernel with geometry-dependent charges.  Three things have to hold: the fixed-charge
+# kernel is untouched (asserted with ``==``, as everywhere else in this file), the value
+# ``energy_and_grad`` returns is still bit for bit ``energy``'s, and ``g_coords`` / ``g_c``
+# are still the *total* derivatives -- which now means they carry the extra
+# ``dE/dq . dq/dgeometry`` term, and getting that wrong is the failure this whole change
+# is most exposed to.
+
+def _flux_chain_and_packer(flux, valence=True, **packer_kw):
+    """A beta-PVDF chain carrying ``pvdf-dft-valence``'s own charges, and a packer for it."""
+    import polyfind.fitting  # noqa: F401 - registers the preset
+    from polyfind.forcefield import bci_charges, infer_bonds, offset_sites, project_offset_charges
+
+    base = SimpleFF.from_preset("pvdf-dft-valence")
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    bonds = infer_bonds(ch.elements, ch.coords)
+    q = bci_charges(ch.elements, bonds, base.increments())
+    q = project_offset_charges(ch.coords, q, offset_sites(ch.elements, bonds, base.offset_table()))
+    ch = dataclasses.replace(ch, charges=q * base.charge_scale)
+    ff = None if flux is None else SimpleFF(
+        **{**{k: v for k, v in base.__dict__.items() if k != "_cache"}, "charge_flux": flux})
+    return ch, CrystalPacker(ch, n_chains=2, valence=base if valence else None,
+                             charge_flux=ff, **packer_kw)
+
+
+FLUX_PARAMS = np.array([4.6, 8.6, 90.0, 12.0, 43.0, 0.4, 1.0])
+
+
+def test_a_zero_coefficient_flux_leaves_every_energy_exactly_where_it_was():
+    """The guard that says the machinery is inert until a coefficient turns it on."""
+    ch, plain = _flux_chain_and_packer(None)
+    _, zero = _flux_chain_and_packer((("C", "H", 0.0, 0.0), ("C", "F", 0.0, 0.0)))
+    assert zero._flux is None  # all-zero coefficients do not even build a topology
+    assert float(zero.energy(FLUX_PARAMS[None])[0]) == float(plain.energy(FLUX_PARAMS[None])[0])
+    assert np.abs(zero._q_cell - plain._q_cell).max() == 0.0
+
+
+def test_a_flux_whose_base_charges_are_not_the_chains_is_refused():
+    import polyfind.fitting  # noqa: F401
+
+    base = SimpleFF.from_preset("pvdf-dft-valence")
+    ff = SimpleFF(**{**{k: v for k, v in base.__dict__.items() if k != "_cache"},
+                     "charge_flux": (("C", "H", -0.5, 0.0),)})
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)  # the polymer's own charges, not the fit's
+    with pytest.raises(ValueError, match="at zero coefficients"):
+        CrystalPacker(ch, n_chains=2, charge_flux=ff)
+
+
+@pytest.mark.parametrize("field", [None, (0.004, -0.002, 0.003)])
+def test_the_flux_kernels_value_and_analytic_gradient_agree_with_the_slow_routes(field):
+    flux = (("C", "H", -0.9, 0.4), ("C", "F", 0.5, -0.25))
+    ch, pk = _flux_chain_and_packer(flux, field=field)
+    E, g_cell, gX, gc = pk.energy_and_grad(FLUX_PARAMS)
+    assert E == float(pk.energy(FLUX_PARAMS[None])[0])
+    # ... and the per-row path agrees with the packer's own chain, charges included
+    assert E == float(pk.energy(FLUX_PARAMS[None], coords=ch.coords[None], c=np.array([ch.c]))[0])
+
+    h = 1e-6
+    X0 = np.asarray(ch.coords, dtype=float)
+
+    def energy_at(X, c):
+        return float(pk.energy(FLUX_PARAMS[None], coords=X[None], c=np.array([c]))[0])
+
+    num = np.zeros_like(gX)
+    for a in range(pk.n):
+        for d in range(3):
+            Xp, Xm = X0.copy(), X0.copy()
+            Xp[a, d] += h
+            Xm[a, d] -= h
+            num[a, d] = (energy_at(Xp, ch.c) - energy_at(Xm, ch.c)) / (2 * h)
+    assert np.abs(gX - num).max() < 1e-5 * max(1.0, np.abs(num).max())
+    assert gc == pytest.approx((energy_at(X0, ch.c + h) - energy_at(X0, ch.c - h)) / (2 * h), rel=1e-6)
+
+    for i in range(6):
+        step = 1e-5 if i == 2 else 1e-6
+        p, m = FLUX_PARAMS.copy(), FLUX_PARAMS.copy()
+        p[i] += step
+        m[i] -= step
+        fd = (float(pk.energy(p[None])[0]) - float(pk.energy(m[None])[0])) / (2 * step)
+        assert g_cell[i] == pytest.approx(fd, rel=2e-5, abs=1e-6)
+
+
+def test_the_flux_moves_the_dipole_and_keeps_the_cell_neutral():
+    flux = (("C", "H", -0.9, 0.4), ("C", "F", 0.5, -0.25))
+    ch, pk = _flux_chain_and_packer(flux)
+    _, plain = _flux_chain_and_packer(None)
+    assert abs(pk.cell_charge) < 1e-12
+    assert np.abs(pk.dipole(FLUX_PARAMS[None]) - plain.dipole(FLUX_PARAMS[None])).max() > 1e-3
+
+
+def test_the_table_screen_refuses_charge_flux():
+    from polyfind.pack import _table_starts
+
+    ch, pk = _flux_chain_and_packer((("C", "H", -0.9, 0.0),), valence=False)
+    with pytest.raises(ValueError, match="charge flux"):
+        _table_starts(pk, ch, np.array([4.0, 6.0, 90.0, 0.0, 0.0, 0.0]),
+                      np.array([5.0, 8.0, 90.0, 360.0, 360.0, ch.c]), 1, [0, 1], 0.5, [90.0],
+                      None, 8.0, 0.2, 1.0, None, None, False)

@@ -419,3 +419,102 @@ def test_force_shifting_the_cutoff_removes_the_step_dependence(beta):
     assert spread(beta) > 1.0  # GPa, energy-shifted at the default cutoff
     assert spread(shifted) < 0.5  # and much smaller once the force is continuous too
     assert M.elastic_constants(shifted).C[1, 1] < M.elastic_constants(beta).C[1, 1] + 1.0
+
+
+# --- charge flux: the symmetry that kept beta at zero, and what breaking it costs ----------
+def _flux_ff():
+    import polyfind.fitting  # noqa: F401 - registers the fitted presets
+
+    return SimpleFF.from_preset("pvdf-dft-valence-flux")
+
+
+def _deformable_flux(polymer, seq, label, flux=None):
+    ff = _valence_ff()
+    ref, rr = M.refined_reference(polymer, seq, label=label, valence=ff, refine_kw={"valence": ff},
+                                  charge_flux=flux if flux is not None else _flux_ff())
+    shape = M.shape_of(polymer, ref, angles=rr.angles)
+    return M.relax_reference_deformable(ref, shape)
+
+
+@pytest.fixture(scope="module")
+def beta_flux():
+    with FITTED_VALENCE.applied():
+        yield _deformable_flux(PVDF, [T, T], "beta")
+
+
+def test_charge_flux_breaks_the_planar_zigzags_dipole_symmetry(beta_flux):
+    """The same sweep as the fixed-charge test above, and the opposite answer.
+
+    With fixed increments the dipole holds every printed digit while ``c`` runs over
+    +/-1.2%; with the increments allowed to move with the backbone angle it does not.  The
+    transverse components stay at the numerical floor either way, so what moves is ``mu_x``
+    -- the polar component -- and it moves monotonically, which is what makes ``e_x,zz``
+    and with it ``d_31`` non-zero.
+    """
+    ref, shape = beta_flux
+    with FITTED_VALENCE.applied():
+        saved = ref.packer.chain
+        rows = []
+        try:
+            for dx in (-2.0, 0.0, 2.0):
+                chain = shape.chains(np.full((1, shape.n), dx))[0]
+                ref.packer.update_chain(chain)
+                rows.append((chain.c, ref.packer.dipole(ref.params[None])[0].copy()))
+        finally:
+            ref.packer.update_chain(saved)
+    cs = np.array([c for c, _ in rows])
+    mu = np.array([m for _, m in rows])
+    assert cs.max() - cs.min() > 0.05  # the chain changed length, as before
+    assert np.abs(mu[0, 0] - mu[2, 0]) > 1e-2  # and now the dipole moved with it
+    assert (mu[0, 0] - mu[1, 0]) * (mu[1, 0] - mu[2, 0]) > 0  # monotonically
+    assert np.abs(mu[:, 1:]).max() < 1e-9  # the transverse components are still symmetry zeros
+
+
+def test_charge_flux_gives_beta_a_positive_d31_and_a_negative_d33(beta_flux):
+    """The result this was built for, and the sharper half of it is ``d_31``'s sign.
+
+    Film axes: 3 is the poling direction (the packer's polar x) and 1 the draw direction
+    (the chain axis z), so the film's ``d_33`` is ``d_x,xx`` and its ``d_31`` is ``d_x,zz``.
+    Measured on a poled uniaxially oriented beta film: ``d_33 = -32``, ``d_31 = +20`` pC/N.
+
+    Without flux both are *identically* zero and the only thing with the right units is the
+    dimensional term, which is negative on every diagonal column by construction and so gets
+    ``d_33``'s sign right by arithmetic and ``d_31``'s wrong.  With flux the proper
+    coefficients exist, and ``d_31`` comes out positive -- an order of magnitude short of
+    +20, and calibrated to an exploratory GFN2 oligomer response whose fit is poor
+    (``polyfind.fitting.FITTED_VALENCE_FLUX`` says how poor), but with the sign that the
+    dimensional model cannot produce at all.
+    """
+    ref, shape = beta_flux
+    with FITTED_VALENCE.applied():
+        resp = M.electromechanical_response(ref, shape=shape)
+    ref, el, pz = resp.reference, resp.elastic, resp.piezo
+    assert np.abs(el.residual_stress[[0, 1, 2, 5]]).max() < 1e-4  # a real stationary point
+    cols = list(el.reachable)
+    ixx, izz = cols.index(0), cols.index(2)
+    sgn = 1.0 if ref.polarization()[0] >= 0 else -1.0  # quote with the poling axis along +P
+    d33, d31 = sgn * pz.d_from_e[0, ixx], sgn * pz.d_from_e[0, izz]
+    assert d31 > 0.5  # pC/N: the sign the fixed-charge model could not produce
+    assert d33 < -0.5
+    assert abs(d31) < 20.0 and abs(d33) < 32.0  # and both still far short of the measurement
+    # the two independent routes still agree, which is what says the flux entered the energy
+    # gradient and the dipole derivative consistently rather than only one of them
+    assert pz.relative_difference < 0.02
+
+
+def test_polyethylene_is_still_exactly_zero_with_charge_flux():
+    """The null control, now a test of the flux machinery as well as of the dipole sum.
+
+    PE's atoms carry charges and the flux moves them, but every CH2 group stays neutral and
+    the all-trans repeat stays centrosymmetric, so the cell dipole cancels for *every*
+    configuration.  A flux that manufactured a dipole here would be a bug in the topology
+    resolution, not new physics.
+    """
+    with FITTED_VALENCE.applied():
+        ref, shape = _deformable_flux(PE, [T], "PE")
+        resp = M.electromechanical_response(ref, shape=shape)
+        el, pz = resp.elastic, resp.piezo
+        assert np.abs(resp.polarization).max() < 1e-12
+    assert np.abs(pz.e).max() < 1e-10  # C/m^2
+    assert np.abs(pz.d_from_e).max() < 1e-9 and np.abs(pz.d_direct).max() < 1e-9  # pC/N
+    assert el.C[2, 2] > 100.0  # while the elastic constants are perfectly ordinary

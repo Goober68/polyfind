@@ -150,11 +150,11 @@ whole-pipeline cost per chemistry, structure search included, it is roughly 2 to
 speed target is met, comfortably, for the response calculation itself, and that
 the response calculation is not the whole job.
 
-**And the speed is not the binding constraint.** What limits this package for
-the intended application is in the next section: the piezoelectric response of
-the phase the material is actually used in cannot be computed at all, at any
-speed. A fast wrong answer is not progress, so the target should be read as met
-on the axis it measures and not yet met as a whole.
+**And the speed is not the binding constraint.** What limited this package for the
+intended application was the next section: the piezoelectric response of the phase
+the material is actually used in was identically zero, for a reason that was a
+symmetry statement rather than a numerical failure. That is now addressed, at a
+cost the next section states in full.
 
 ### What the response can and cannot deliver
 
@@ -163,24 +163,122 @@ on the axis it measures and not yet met as a whole.
 | In-plane elastic constants C11, C22, C12, C16, C26, C66 | computed |
 | Axial constant C33 | computed, and demonstrated free of the invented-stiffness contamination that made an earlier attempt refuse it |
 | Shear constants C44, C55, C45 and mixed 4/5 | structurally absent: the chain axis is fixed along z, so no variable expresses those shears |
-| Piezoelectric response of helical chains (alpha, gamma) | computed, d up to 2.7 pC/N |
-| Piezoelectric response of beta, the ferroelectric phase | **exactly zero, and provably so** |
+| Piezoelectric response of helical chains (alpha, gamma) | computed; d up to 2.7 pC/N with fixed charges, 8.9 for gamma with charge flux (alpha's flux run does not converge, below) |
+| Piezoelectric response of beta, the ferroelectric phase | **non-zero with charge flux**, with the measured signs and an order of magnitude short; exactly zero with fixed charges, and provably so |
 | Polarization, blocking stress, free strain, work density | computed |
 
-The beta result is the one that matters for the application and it is not a
-numerical failure. With bond-charge-increment charges, a planar all-trans
-zigzag's dipole is *exactly* independent of its backbone angle: measured, the
-dipole holds every digit while the chain repeat is driven from minus 1.17% to
-plus 1.14%. Axial strain changes the backbone angle and nothing else, since bonds
-are rigid, so the dipole cannot respond and d33 and d31 are identically zero.
+#### Why beta was exactly zero
 
-The dimensional term alone gives d33 = -4.4 pC/N against a measured -32. Its sign
+With bond-charge-increment charges, a planar all-trans zigzag's dipole is *exactly*
+independent of its backbone angle: the cell dipole is a sum over bonds of
+`delta_ij (r_i - r_j)`, a backbone C-C bond carries no increment, the pendant bonds
+have fixed lengths, and the zigzag's mirror pins each pendant pair's bisector
+perpendicular to the chain axis whatever the backbone angle is. Measured, the
+dipole held all ten printed digits (`mu_x = -0.7234964088` e.A) while the chain
+repeat was driven from minus 1.17% to plus 1.14%. Axial strain changes the backbone
+angle and nothing else, since bonds are rigid, so the dipole could not respond and
+d33 and d31 were identically zero.
+
+The dimensional term alone gave d33 = -4.43 pC/N against a measured -32. Its sign
 is right, but that is arithmetic rather than physics: that term is negative on
-every diagonal column for any stable crystal. The same term gives d31 = -0.14
-against a measured +20, with the **wrong sign**, which is the honest read on how
-much of the physics is present.
+every diagonal column for any stable crystal. The same term gave d31 = -0.14
+against a measured +20, with the **wrong sign**.
 
-Reaching PVDF's piezoelectricity therefore needs the dipole to respond to strain,
-which requires bond stretching combined with charge flux, or charges that depend
-on the backbone angle, or explicit polarizability. Fixed atom-centred charges on
-a rigid-bonded chain cannot produce it in principle, not merely in practice.
+#### What charge flux changes, and what it does not
+
+`CrystalPacker(charge_flux=...)` lets the bond-charge increments depend on the local
+geometry (`forcefield.FluxTopology`), which is the smallest change that breaks that
+symmetry. The preset `pvdf-dft-valence-flux` carries two fitted coefficients;
+`examples/fit_charge_flux.py` reproduces the fit and every number below.
+
+**The symmetry does break, and by a measured amount.** Per unit `k_angle`, beta's
+cell dipole gains +3.543 (C-H) and -6.469 (C-F) e.A per unit axial strain, against a
+fixed-increment dipole that does not move at all. The two coefficients have opposite
+signs because a zigzag's CH2 and CF2 bisectors point opposite ways -- the same
+geometry that made the fixed model exactly zero.
+
+**beta-PVDF, film convention** (axis 3 = poling = the crystal's polar x, axis 1 =
+draw = the chain axis z), quoted with the poling axis along +P:
+
+| | d33 | d32 | d31 |
+|---|---|---|---|
+| fixed charges, proper `d = e S` | 0 | 0 | 0 |
+| fixed charges, plus the dimensional term | −4.43 | −5.90 | **−0.14** |
+| charge flux, proper `d = e S` | −1.88 | −0.44 | **+2.33** |
+| charge flux, plus the dimensional term | −6.29 | −7.09 | **+2.33** |
+| measured (Nix and Ward 1986) | −32 | +1.5 | **+20** |
+
+**d31's sign has turned positive**, which is the sharper test: d33's sign was
+already right by arithmetic, while a positive d31 is something the dimensional term
+cannot produce at all. The magnitudes are 5x (d33) and 9x (d31) too small. The two
+independent routes to `d` -- a dipole derivative and a zero-stress root find --
+agree to 0.33%, which is what says the flux entered the energy gradient and the
+dipole derivative consistently rather than only one of them.
+
+**And here is the honest reading of that +2.33.** Its sign is a property of the
+fitting choice as much as of the data:
+
+* The fit has **two parameters for twelve observations** and its `R^2` is **0.39**.
+  The target is `dmu/d(axial strain)` for four chemistries from the sibling
+  project's `field_neighborhood_refined`, an **exploratory GFN2-xTB** calculation on
+  a *finite* two-chain pair in vacuum with the terminal backbone atoms pinned; its
+  own `interpretation` field reads "finite-size, packing, stereochemistry and
+  higher-level DFT validation outstanding. Strain is relative to fixed seed span,
+  not a stress-free bulk lattice." It is not the PBE-D3 the rest of this potential
+  is fitted to. It calibrates a mechanism and an order of magnitude, not a
+  coefficient.
+* Two things fit that data *better* and **neither is available to this model**: a
+  bond-length flux channel (R² 0.86 on two parameters), inert here because
+  `build_chain` places every atom at the polymer's own bond length -- measured, a
+  bond-flux coefficient leaves beta's dipole holding every digit over the whole
+  shape sweep -- and a plain charge-magnitude scale of x1.36 (R² 0.75 on one), which
+  is not a flux at all but a statement that the increments are too small.
+* **Fitted with a bond channel present the angle coefficient changes by a factor of
+  six and both proper signs flip**: d33 = +0.03 and d31 = −0.06, dimensional total
+  d31 = −0.33. What is shipped is the fit of *the model that is deployed* -- a
+  rigid-bonded chain has only the angle channel -- so R² = 0.39 is honestly its own
+  rather than borrowed from a channel that does nothing. The argument for that
+  choice beyond self-consistency is that the angle-only family reproduces two
+  experimental signs the fit never saw (d33 < 0 and d31 > 0) and the
+  angle-plus-bond family reproduces neither.
+* Leave one chemistry out and `k_angle(C-H)` moves over −1.62 .. −0.15, a factor of
+  eleven. Every *converged* leave-one-out run keeps d31 positive (+0.50 to +2.16)
+  and d33 negative, so the sign survives that resampling even though the magnitude
+  spans a factor of four.
+* Scaling the fitted coefficients by 0.25, 0.5, 1, 2 gives d31 = +0.52, +1.08,
+  +2.33, +6.34. The magnitude is proportional to a badly determined number, and
+  nothing about the value 2.33 means anything beyond its sign and its order.
+
+**The flux is not free, and this is the part to read before using it.** The charges
+enter the Coulomb sum, so the structure moves: beta's `c` goes 2.5469 -> 2.6052 A
+(+2.3%), `a` 4.596 -> 4.492 A, `|P_x|` 0.116 -> 0.150 C/m², `C_11` 22.8 -> 28.4 and
+`C_66` 3.4 -> 5.1 GPa, while `C_33` holds at 328 -> 330. Polyethylene stays
+**exactly** zero (dipole below 1e-12 e.A, every `d` below 1e-9 pC/N) because its
+repeat is centrosymmetric whatever the charges do, which is the null control the
+flux had to pass and did. The model is **linear in the geometry with no
+saturation**, so far from the reference it produces an unbounded electrostatic gain
+from opening the backbone angle: at twice the fitted coefficient, and for
+**alpha-PVDF at the fitted coefficient**, the relaxation runs to the line group's
++/-8 degree cap, the reference stops being axially stress-free and the two
+piezoelectric routes disagree completely. Those rows are reported as non-measurements
+rather than quoted.
+
+#### What is still missing
+
+* **Charge transfer along the backbone.** The increments are typed by element pair
+  and a homonuclear pair has no orientation, so a C-C bond carries neither an
+  increment nor a flux (`flux_topology` refuses one rather than orienting it by the
+  arbitrary order of the bond list). That is the channel most likely to carry an
+  *axial* dipole response, and it is outside this model.
+* **Bond stretching**, hence the bond-flux channel, hence roughly half of a real
+  chain modulus as well.
+* **Electronic polarizability**: the dielectric constant is still 1 by construction.
+* **The charge magnitude itself.** The single best one-parameter explanation of the
+  reference residual is that the fitted increments are 36% too small, which is a
+  statement about `docs/DFT_FIT.md`'s objective (no polarization data in it) rather
+  than about flux.
+
+So the honest statement is that beta's piezoelectric response has gone from
+*structurally impossible* to *computable, with both measured signs and an order of
+magnitude short*, and that the coefficient which gets it there is determined to
+about a factor of four by data that does not describe a bulk crystal.

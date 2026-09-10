@@ -358,6 +358,297 @@ def project_offset_charges(coords, charges, sites) -> np.ndarray:
     return q
 
 
+# ------------------------------------------------------------------ charge flux
+#
+# Fixed bond-charge increments on a rigid-bonded chain cannot produce a piezoelectric
+# response for a planar all-trans zigzag, and the reason is a symmetry statement rather
+# than a numerical limit: the cell dipole is a sum over bonds of ``delta_ij (r_i - r_j)``,
+# a backbone C-C bond carries no increment, the pendant bonds have fixed lengths, and the
+# zigzag's mirror pins each pendant pair's bisector perpendicular to the chain axis
+# whatever the backbone angle is.  Axial strain moves only the backbone angle, so the
+# dipole cannot move (docs/ELECTROMECHANICS.md 5.2, docs/BENCHMARK.md).
+#
+# **Charge flux** is the standard way out: let the increment itself depend on the local
+# geometry, so that charge redistributes as the chain deforms.  The form here is
+#
+#     delta_ij = delta0(e_i, e_j) + ka(e_i, e_j) * G_ij + kb(e_i, e_j) * (r_ij - r0_ij)
+#
+# with ``i`` the atom that *gains* ``delta0`` (the first element of the ordered pair in
+# :attr:`SimpleFF.charge_increments`, so C for C-H and C-F), and
+#
+#     G_ij = sum over k bonded to i, k != j, of (cos theta_kij - cos theta_tet)
+#
+# the **angle driver**: the sum of the angles this bond makes at its own atom, measured
+# from the ideal sp3 value ``cos theta_tet = -1/3``.  Two properties earn it that form.
+# It has a *natural zero* -- an ideal tetrahedral centre gives ``G = 0`` exactly, so the
+# flux needs no fitted reference angle of its own and the base charges are the BCI ones at
+# ideal geometry -- and it is a function of the bond graph and the coordinates alone, so
+# the same expression serves a built chain, one repeat of a periodic chain and an
+# arbitrary :class:`Frame`.  The **bond driver** ``r_ij - r0_ij`` takes its reference from
+# the fitted stretch terms (:meth:`SimpleFF.bond_table`), which is where a reference bond
+# length already lives.  It is **inert in a crystal**: :func:`polyfind.chain.build_chain`
+# places every atom at the polymer's own bond length, so ``r - r0`` is a constant of the
+# chemistry and contributes a constant charge shift with zero gradient -- exactly the
+# same way the stretch energy is inert (docs/ELECTROMECHANICS.md 4.2).  It is kept
+# because it is the channel a flexible builder would need and because fitting it
+# *alongside* the angle channel is what stops the angle channel from absorbing a
+# stretch-driven signal it cannot reproduce.
+#
+# Neutrality is preserved for free: whatever ``delta_ij`` is, ``q_i += delta`` and
+# ``q_j -= delta``, so the block's total charge is unchanged and the dipole stays a
+# property of the block rather than of where the origin is.  Homonuclear pairs are
+# **refused** rather than fluxed: the two atoms of a C-C bond would need an orientation to
+# tell which one gains, and the only thing available to choose it with is the arbitrary
+# index order of the bond list.
+
+FLUX_COS_TET = -1.0 / 3.0  # cos of the ideal sp3 angle: the angle driver's natural zero
+
+
+@dataclass
+class FluxTopology:
+    """Geometry-driven bond-charge increments of one block, resolved to index arrays.
+
+    Built by :meth:`SimpleFF.flux_topology` for a molecule and by
+    :func:`polyfind.pack.chain_flux` for one repeat of a periodic chain, which is why
+    every atom carries an **image index**: a backbone bond joining the last atom of the
+    repeat to the first atom of the next one has its partner at ``+1``, and the driver of
+    such a bond depends on the repeat ``c`` as well as on the coordinates.  ``bsi == 0``
+    marks the bonds whose gaining atom is in this repeat and ``bsj == 0`` those whose
+    losing atom is; a bond wholly inside the repeat has both.
+
+    ``off_*`` carry the off-site charge projection of :func:`project_offset_charges`,
+    applied *after* the flux so that a fitted off-site model reaches a lattice as its
+    exact dipole-equivalent, as it did before flux existed.
+    """
+
+    n_atoms: int
+    bi: np.ndarray  # (nb,) the atom that gains the increment
+    bj: np.ndarray  # (nb,) the other atom
+    bsi: np.ndarray  # (nb,) image of bi, in units of c along z
+    bsj: np.ndarray  # (nb,) image of bj
+    d0: np.ndarray  # (nb,) base increment (e)
+    ka: np.ndarray  # (nb,) angle-flux coefficient (e per unit of the dimensionless driver)
+    kb: np.ndarray  # (nb,) bond-flux coefficient (e/A)
+    r0: np.ndarray  # (nb,) reference bond length (A)
+    ea: np.ndarray  # (ne,) which bond each angle entry drives
+    ek: np.ndarray  # (ne,) the third atom of that angle
+    eks: np.ndarray  # (ne,) its image
+    off_a: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=int))
+    off_n: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=int))
+    off_d: np.ndarray = field(default_factory=lambda: np.empty(0))
+    scale: float = 1.0  # SimpleFF.charge_scale, applied to the finished charges
+
+    @property
+    def n_bonds(self) -> int:
+        return int(self.bi.size)
+
+    @property
+    def fluxes(self) -> bool:
+        """Whether any coefficient is non-zero (a topology of all zeros is the BCI model)."""
+        return bool(np.any(self.ka != 0.0) or np.any(self.kb != 0.0))
+
+    # --- geometry -------------------------------------------------------------
+    def _positions(self, X, cz):
+        """Image-shifted positions of the three atom roles; ``X`` (M, n, 3), ``cz`` (M,)."""
+        z = np.zeros(3)
+        def at(idx, img):
+            P = X[:, idx, :].copy()
+            P[..., 2] += img[None, :] * cz[:, None]
+            return P
+        return at(self.bi, self.bsi), at(self.bj, self.bsj), at(self.ek, self.eks)
+
+    def increments(self, coords, c) -> np.ndarray:
+        """``delta_ij`` for every oriented bond, one row per row of ``coords`` (M, nb)."""
+        X = np.asarray(coords, dtype=float)
+        if X.ndim == 2:
+            X = X[None]
+        cz = np.broadcast_to(np.asarray(c, dtype=float).ravel(), (X.shape[0],))
+        Pi, Pj, Pk = self._positions(X, cz)
+        u = Pj - Pi
+        r = np.linalg.norm(u, axis=-1)
+        G = np.zeros((self.n_bonds, X.shape[0]))
+        if self.ea.size:
+            # The same expressions, in the same order, as :meth:`charges_and_grad` -- so the
+            # two agree bit for bit and the kernel's value stays the number ``energy`` gives.
+            uh = u / r[..., None]
+            v = Pk - Pi[:, self.ea, :]
+            vh = v / np.linalg.norm(v, axis=-1)[..., None]
+            cosang = (uh[:, self.ea, :] * vh).sum(-1)
+            np.add.at(G, self.ea, (cosang - FLUX_COS_TET).T)
+        return self.d0[None, :] + self.ka[None, :] * G.T + self.kb[None, :] * (r - self.r0[None, :])
+
+    def _project(self, q, X, dq=None, dc=None):
+        """Apply the off-site dipole-equivalent projection, with its derivatives.
+
+        ``q`` (n,), ``dq`` (n, n, 3), ``dc`` (n,) are modified in place and returned.  The
+        projection moves ``q_a d / r`` from the terminal atom's neighbour onto the atom, so
+        it depends on the geometry twice over -- through ``q_a``, which now fluxes, and
+        through the bond length ``r`` -- and both derivatives are carried.
+        """
+        for a, nb, d in zip(self.off_a, self.off_n, self.off_d):
+            w = X[a] - X[nb]
+            r = float(np.linalg.norm(w))
+            f = d / r
+            if dq is not None:
+                # delta = q_a f; d(delta) = f dq_a - q_a (f / r) d(r)
+                dr = np.zeros_like(dq[a])
+                dr[a] = w / r
+                dr[nb] = -w / r
+                dd = f * dq[a] - q[a] * f / r * dr
+                dq[a] = dq[a] + dd
+                dq[nb] = dq[nb] - dd
+            if dc is not None:
+                ddc = f * dc[a]  # the off-site bond never crosses the repeat boundary
+                dc[a] = dc[a] + ddc
+                dc[nb] = dc[nb] - ddc
+            delta = q[a] * f
+            q[a] += delta
+            q[nb] -= delta
+        return q, dq, dc
+
+    def charges(self, coords, c=0.0) -> np.ndarray:
+        """Fluxed point charges, one row per row of ``coords`` (M, n_atoms)."""
+        X = np.asarray(coords, dtype=float)
+        if X.ndim == 2:
+            X = X[None]
+        delta = self.increments(X, c)
+        qT = np.zeros((self.n_atoms, X.shape[0]))
+        mi, mj = self.bsi == 0, self.bsj == 0
+        np.add.at(qT, self.bi[mi], delta[:, mi].T)
+        np.add.at(qT, self.bj[mj], -delta[:, mj].T)
+        q = np.ascontiguousarray(qT.T)
+        if self.off_a.size:
+            for m in range(X.shape[0]):
+                self._project(q[m], X[m])
+        return q * self.scale
+
+    def charges_and_grad(self, coords, c=0.0):
+        """``(q (n,), dq/dcoords (n, n, 3), dq/dc (n,))`` for ONE geometry.
+
+        Closed form.  ``dq[a, b]`` is ``dq_a / dX_b``; ``c`` enters only through the image
+        offsets, so its derivative is the z components of the same terms weighted by the
+        image indices.  Verified against a central difference in ``tests/test_forcefield.py``
+        and, through the lattice kernel, in ``tests/test_pack.py``.
+        """
+        X = np.asarray(coords, dtype=float).reshape(1, self.n_atoms, 3)
+        cz = np.asarray(c, dtype=float).reshape(1)
+        n, nb = self.n_atoms, self.n_bonds
+        Pi, Pj, Pk = self._positions(X, cz)
+        Pi, Pj, Pk = Pi[0], Pj[0], Pk[0]
+        u = Pj - Pi
+        r = np.linalg.norm(u, axis=-1)
+        uh = u / r[:, None]
+        G = np.zeros(nb)
+        D = np.zeros((nb, n, 3))  # d(delta_b) / dX
+        Dc = np.zeros(nb)  # d(delta_b) / dc
+        rows = np.arange(nb)
+        if self.kb.any():
+            np.add.at(D, (rows, self.bj), self.kb[:, None] * uh)
+            np.add.at(D, (rows, self.bi), -self.kb[:, None] * uh)
+            Dc += self.kb * uh[:, 2] * (self.bsj - self.bsi)
+        if self.ea.size:
+            e = self.ea
+            v = Pk - Pi[e]
+            nv = np.linalg.norm(v, axis=-1)
+            vh = v / nv[:, None]
+            cosang = (uh[e] * vh).sum(-1)
+            np.add.at(G, e, cosang - FLUX_COS_TET)
+            ka = self.ka[e][:, None]
+            gj = ka * (vh - cosang[:, None] * uh[e]) / r[e][:, None]
+            gk = ka * (uh[e] - cosang[:, None] * vh) / nv[:, None]
+            np.add.at(D, (e, self.bj[e]), gj)
+            np.add.at(D, (e, self.ek), gk)
+            np.add.at(D, (e, self.bi[e]), -(gj + gk))
+            np.add.at(Dc, e, gj[:, 2] * self.bsj[e] + gk[:, 2] * self.eks
+                      - (gj[:, 2] + gk[:, 2]) * self.bsi[e])
+        delta = self.d0 + self.ka * G + self.kb * (r - self.r0)
+        q = np.zeros(n)
+        dq = np.zeros((n, n, 3))
+        dqc = np.zeros(n)
+        mi, mj = self.bsi == 0, self.bsj == 0
+        np.add.at(q, self.bi[mi], delta[mi])
+        np.add.at(q, self.bj[mj], -delta[mj])
+        np.add.at(dq, self.bi[mi], D[mi])
+        np.add.at(dq, self.bj[mj], -D[mj])
+        np.add.at(dqc, self.bi[mi], Dc[mi])
+        np.add.at(dqc, self.bj[mj], -Dc[mj])
+        if self.off_a.size:
+            self._project(q, X[0], dq, dqc)
+        s = self.scale
+        return q * s, dq * s, dqc * s
+
+
+def flux_topology(elements, bonds, increments, flux, bond_r0=None, offsets=None,
+                  images=None, scale: float = 1.0) -> FluxTopology:
+    """Resolve a :class:`FluxTopology` for one block.
+
+    ``increments`` is the bond-charge-increment mapping :func:`bci_charges` takes, ``flux``
+    maps the same *ordered* element pairs to ``(k_angle, k_bond)``, and ``bond_r0`` is
+    :meth:`SimpleFF.bond_table` -- ``{bond type: (k, r0)}``, of which only ``r0`` is read.
+    ``images`` is ``{atom index: (position in the repeat, image)}`` for a periodic block;
+    ``None`` means every atom is its own, at image 0, which is what a molecule wants.
+    Atoms outside ``images`` are dropped, as are bonds with no endpoint in the repeat.
+    """
+    adj = neighbour_lists(len(elements), bonds)
+    flux = {k: (float(a), float(b)) for k, (a, b) in (flux or {}).items()}
+    for (ea, eb), (ka, kb) in flux.items():
+        if ea == eb and (ka or kb):
+            raise ValueError(
+                f"charge flux asked for the homonuclear pair {ea}-{eb}: which of the two atoms "
+                "gains the increment is then decided by the arbitrary order of the bond list, "
+                "not by the chemistry, so it is refused rather than silently oriented")
+    where = {i: (i, 0) for i in range(len(elements))} if images is None else dict(images)
+    r0t = dict(bond_r0 or {})
+    bi, bj, bsi, bsj, d0, ka, kb, r0 = [], [], [], [], [], [], [], []
+    ea_, ek_, eks_ = [], [], []
+    for a, b in bonds:
+        if a not in where or b not in where:
+            continue
+        pa, pb = elements[a], elements[b]
+        fwd = (pa, pb) in increments or (pa, pb) in flux
+        rev = (pb, pa) in increments or (pb, pa) in flux
+        if fwd and rev and pa != pb:
+            raise ValueError(f"both ({pa}, {pb}) and ({pb}, {pa}) carry a charge increment or a "
+                             "flux coefficient; one ordered pair per bond type")
+        if fwd:
+            i, j = a, b
+        elif rev:
+            i, j = b, a
+        else:
+            continue  # no increment and no flux: contributes nothing either way
+        (pi, si), (pj, sj) = where[i], where[j]
+        if si != 0 and sj != 0:
+            continue  # the representative of this bond belongs to another repeat
+        key = (elements[i], elements[j])
+        fka, fkb = flux.get(key, (0.0, 0.0))
+        name = bond_type_name(elements, adj, i, j)
+        if fkb and name not in r0t and WILDCARD not in r0t:
+            raise ValueError(f"bond charge flux on {key} needs a reference length for bond type "
+                             f"{name!r}; give the potential bond_terms (or a {WILDCARD!r} entry)")
+        nb_idx = len(bi)
+        bi.append(pi), bj.append(pj), bsi.append(si), bsj.append(sj)
+        d0.append(increments.get(key, 0.0)), ka.append(fka), kb.append(fkb)
+        r0.append(r0t.get(name, r0t.get(WILDCARD, (0.0, 0.0)))[1] if fkb else 0.0)
+        if fka:
+            for k in adj[i]:
+                if k == j or k not in where:
+                    continue
+                pk, sk = where[k]
+                ea_.append(nb_idx), ek_.append(pk), eks_.append(sk)
+    ints = lambda v: np.array(v, dtype=int)  # noqa: E731
+    reals = lambda v: np.array(v, dtype=float)  # noqa: E731
+    off = offset_sites(elements, bonds, offsets or {})
+    off = [(where[a][0], where[nb][0], d) for a, nb, d in off
+           if a in where and nb in where and where[a][1] == 0 and where[nb][1] == 0]
+    return FluxTopology(
+        n_atoms=len(elements) if images is None else 1 + max(p for p, _ in where.values()),
+        bi=ints(bi), bj=ints(bj), bsi=reals(bsi), bsj=reals(bsj),
+        d0=reals(d0), ka=reals(ka), kb=reals(kb), r0=reals(r0),
+        ea=ints(ea_), ek=ints(ek_), eks=reals(eks_),
+        off_a=ints([o[0] for o in off]), off_n=ints([o[1] for o in off]),
+        off_d=reals([o[2] for o in off]), scale=float(scale))
+
+
 def rotor_field(coords, far_mask: np.ndarray, b: int, c: int) -> np.ndarray:
     """Displacement field of a unit rotation about the bond ``b-c`` (n_atoms, 3).
 
@@ -778,6 +1069,15 @@ class SimpleFF:
         C-F dipole is what suffers for it (docs/VALENCE_FIT.md).  ``None`` (the default)
         keeps every charge on its nucleus.  Only terminal atoms may carry one
         (:func:`offset_sites`).
+    ``charge_flux``
+        ``((element, element, k_angle, k_bond), ...)`` geometry dependence of the bond
+        charge increments, on the same *ordered* pairs as ``charge_increments`` (see
+        :class:`FluxTopology` for the form and for why it exists).  ``None`` (the
+        default) is the fixed-increment model every earlier number was computed with.
+        It is read by the **lattice** side -- ``CrystalPacker(charge_flux=ff)`` -- and by
+        :meth:`charges_at`; the oligomer energy path resolves one fixed charge per
+        topology and *refuses* a fluxing potential rather than silently using the base
+        increments (:meth:`_topology`).
     """
 
     torsion: tuple[float, float, float] = DEFAULT_TORSION
@@ -790,6 +1090,7 @@ class SimpleFF:
     bond_terms: tuple[tuple[str, float, float], ...] | None = None
     angle_terms: tuple[tuple[str, float, float], ...] | None = None
     charge_offsets: tuple[tuple[str, float], ...] | None = None
+    charge_flux: tuple[tuple[str, str, float, float], ...] | None = None
     _cache: dict = field(default_factory=dict, repr=False)
 
     @classmethod
@@ -870,6 +1171,52 @@ class SimpleFF:
     def has_valence(self) -> bool:
         return bool(self.bond_terms) or bool(self.angle_terms)
 
+    # --- charge flux ----------------------------------------------------------
+    def flux_table(self) -> dict[tuple[str, str], tuple[float, float]]:
+        """:attr:`charge_flux` as ``{(element, element): (k_angle, k_bond)}``; empty when none."""
+        if not self.charge_flux:
+            return {}
+        return {(a, b): (float(ka), float(kb)) for a, b, ka, kb in self.charge_flux}
+
+    def has_flux(self) -> bool:
+        """Whether any charge-flux coefficient is non-zero."""
+        return any(ka or kb for ka, kb in self.flux_table().values())
+
+    def flux_topology(self, elements, bonds, images=None) -> FluxTopology:
+        """The :class:`FluxTopology` this potential resolves for one block.
+
+        ``images`` is the periodic map :func:`polyfind.pack.chain_flux` supplies; ``None``
+        treats the block as a molecule.  Needs :attr:`charge_increments`, because a flux is
+        a perturbation of an increment and there is nothing to perturb without one.
+        """
+        if self.charge_increments is None:
+            raise ValueError("charge flux needs charge_increments: the flux is a geometry "
+                             "dependence *of* the bond-charge increments, so there is nothing "
+                             "for it to modify without them")
+        return flux_topology(elements, bonds, self.increments(), self.flux_table(),
+                             bond_r0=self.bond_table(), offsets=self.offset_table(),
+                             images=images, scale=self.charge_scale)
+
+    def charges_at(self, elements, bonds, coords) -> np.ndarray:
+        """Point charges of one geometry, flux included, ``charge_scale`` applied.
+
+        The geometry-dependent counterpart of :meth:`charges_for`, and the *only* way to
+        get a fluxed charge out of this class: everything that needs one has coordinates,
+        and everything that does not is by definition using the fixed model.
+        """
+        top = self.flux_topology(elements, bonds)
+        return top.charges(np.asarray(coords, dtype=float))[0]
+
+    def _refuse_flux(self, what: str) -> None:
+        if self.has_flux():
+            raise ValueError(
+                f"{what} resolves one fixed charge per topology and this potential has charge "
+                "flux, whose charges depend on the coordinates.  Silently using the base "
+                "increments would make the energy disagree with the dipole, so it is refused: "
+                "use SimpleFF.charges_at(...) for the charges, or the lattice kernel "
+                "(CrystalPacker(charge_flux=ff)), which carries the geometry dependence and "
+                "its derivatives.")
+
     def valence_arrays(self, elements, bonds) -> tuple:
         """``(bond_idx, bond_k, bond_r0, angle_idx, angle_k, angle_t0_rad)`` for a topology.
 
@@ -909,7 +1256,7 @@ class SimpleFF:
         inc = None if self.charge_increments is None else tuple(
             sorted((a, b, float(d)) for a, b, d in self.charge_increments))
         val = (tuple(sorted(self.bond_table().items())), tuple(sorted(self.angle_table().items())),
-               tuple(sorted(self.offset_table().items())))
+               tuple(sorted(self.offset_table().items())), tuple(sorted(self.flux_table().items())))
         return (tuple(float(x) for x in self.torsion), tbb, float(self.scale14),
                 float(self.eps_r), float(self.charge_scale), lj, inc, val)
 
@@ -931,6 +1278,7 @@ class SimpleFF:
         return iu, ju, lj_x, lj_d, qq
 
     def _topology(self, struct: Structure) -> _Topology:
+        self._refuse_flux("the oligomer energy path")
         key = (struct.polymer.name, struct.n_dihedrals, len(struct.elements), self._param_key())
         top = self._cache.get(key)
         if top is not None:
@@ -972,6 +1320,7 @@ class SimpleFF:
         substituents on the two central carbons and passes the rows in -- because a
         frame names no polymer and so has no ``bonds_per_repeat`` to index by.
         """
+        self._refuse_flux("the Frame energy path")
         if self.charge_increments is None:
             raise ValueError(
                 "scoring a Frame needs charge_increments: a frame carries no polymer charge "

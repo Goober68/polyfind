@@ -669,3 +669,81 @@ def test_relaxing_the_backbone_angles_needs_a_bend_term_and_then_relieves_strain
     assert r["lj"] < r["lj0"]
     assert r["angles"][0] > r["angles0"][0]  # the CH2 angle is still the one that opens
     assert r["angles"][1] < r["angles0"][1] - 3.0  # the CCl2 angle closes to compensate
+
+
+# --------------------------------------------------------------------- charge flux
+#
+# The four things a geometry-dependent charge has to get right before anything downstream
+# of it is worth reading: it reduces to the fixed model at zero coefficient, its analytic
+# derivative is the derivative of its value, it stays neutral (or the dipole it feeds is not
+# a dipole at all), and it refuses the cases where it is ill-defined.
+
+def _flux_ff(**kw):
+    """``pvdf-dft-valence`` with the given extra keyword arguments."""
+    import polyfind.fitting  # noqa: F401 - registers the preset
+
+    base = SimpleFF.from_preset("pvdf-dft-valence")
+    return SimpleFF(**{**{k: v for k, v in base.__dict__.items() if k != "_cache"}, **kw})
+
+
+def _pvdf_geometry():
+    from polyfind.forcefield import infer_bonds
+
+    st = build_chain(PVDF, [180.0] * 6)
+    el, X = list(st.elements), np.asarray(st.coords, dtype=float)
+    return el, X, infer_bonds(el, X)
+
+
+def test_zero_charge_flux_is_exactly_the_fixed_increment_model():
+    from polyfind.forcefield import bci_charges, offset_sites, project_offset_charges
+
+    el, X, bonds = _pvdf_geometry()
+    base = _flux_ff()
+    q = bci_charges(el, bonds, base.increments())
+    q = project_offset_charges(X, q, offset_sites(el, bonds, base.offset_table())) * base.charge_scale
+    ff = _flux_ff(charge_flux=(("C", "H", 0.0, 0.0), ("C", "F", 0.0, 0.0)))
+    assert np.abs(ff.flux_topology(el, bonds).charges(X)[0] - q).max() == 0.0
+    assert not ff.has_flux()  # all-zero coefficients are not a flux
+
+
+def test_charge_flux_derivatives_match_a_finite_difference():
+    el, X, bonds = _pvdf_geometry()
+    ff = _flux_ff(charge_flux=(("C", "H", -0.7, 0.31), ("C", "F", 0.45, -0.22)))
+    top = ff.flux_topology(el, bonds)
+    q, dq, _ = top.charges_and_grad(X, 0.0)
+    assert np.abs(q - ff.charges_at(el, bonds, X)).max() == 0.0
+    h = 1e-6
+    num = np.empty_like(dq)
+    for b in range(len(el)):
+        for d in range(3):
+            Xp, Xm = X.copy(), X.copy()
+            Xp[b, d] += h
+            Xm[b, d] -= h
+            num[:, b, d] = (top.charges(Xp)[0] - top.charges(Xm)[0]) / (2 * h)
+    assert np.abs(dq - num).max() < 1e-7
+    assert abs(q.sum()) < 1e-12  # neutral whatever the flux does
+    assert np.abs(dq.sum(axis=0)).max() < 1e-12  # and neutral for every displacement
+
+
+def test_charge_flux_refuses_what_it_cannot_orient_or_evaluate():
+    el, X, bonds = _pvdf_geometry()
+    with pytest.raises(ValueError, match="homonuclear"):
+        _flux_ff(charge_flux=(("C", "C", 0.3, 0.0),)).flux_topology(el, bonds)
+    # a bond channel needs a reference length, which comes from the stretch terms
+    with pytest.raises(ValueError, match="reference length"):
+        SimpleFF(charge_increments=(("C", "H", -0.1),),
+                 charge_flux=(("C", "H", 0.0, 0.5),)).flux_topology(el, bonds)
+    # and the flux needs increments to perturb at all
+    with pytest.raises(ValueError, match="charge_increments"):
+        SimpleFF(charge_flux=(("C", "H", 0.3, 0.0),)).flux_topology(el, bonds)
+
+
+def test_the_oligomer_energy_path_refuses_a_fluxing_potential():
+    """Loud rather than silent: one fixed charge per topology cannot carry a flux.
+
+    Using the base increments there would make the energy disagree with the dipole, which
+    is exactly the failure mode this whole change exists to avoid.
+    """
+    ff = _flux_ff(charge_flux=(("C", "H", -0.7, 0.0),))
+    with pytest.raises(ValueError, match="charge flux"):
+        ff.energy(build_chain(PVDF, [180.0] * 6))

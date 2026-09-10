@@ -127,6 +127,10 @@ class FFParameters:
     bond_terms: tuple[tuple[str, float, float], ...] = ()  # (type, k, r0)
     angle_terms: tuple[tuple[str, float, float], ...] = ()  # (type, k, theta0 deg)
     charge_offsets: tuple[tuple[str, float], ...] = ()  # (element, offset A)
+    # Charge flux (element, element, k_angle, k_bond); see FITTED_VALENCE_FLUX and
+    # forcefield.FluxTopology.  Like the valence terms it is *not* forwarded by
+    # :meth:`applied` -- it is opt-in per packer, ``CrystalPacker(charge_flux=...)``.
+    charge_flux: tuple[tuple[str, str, float, float], ...] = ()
 
     @property
     def lj_dict(self) -> dict[str, tuple[float, float]]:
@@ -137,7 +141,8 @@ class FFParameters:
                         charge_scale=self.charge_scale, lj=self.lj_dict or None,
                         charge_increments=self.charge_increments or None,
                         bond_terms=self.bond_terms or None, angle_terms=self.angle_terms or None,
-                        charge_offsets=self.charge_offsets or None)
+                        charge_offsets=self.charge_offsets or None,
+                        charge_flux=self.charge_flux or None)
 
     def preset_kwargs(self) -> dict:
         """:class:`~polyfind.forcefield.SimpleFF` keyword arguments, for :data:`PRESETS`."""
@@ -153,6 +158,8 @@ class FFParameters:
                 kw[name] = tuple((t, float(a), float(b)) for t, a, b in v)
         if self.charge_offsets:
             kw["charge_offsets"] = tuple((e, float(d)) for e, d in self.charge_offsets)
+        if self.charge_flux:
+            kw["charge_flux"] = tuple((a, b, float(ka), float(kb)) for a, b, ka, kb in self.charge_flux)
         return kw
 
     def describe(self) -> str:
@@ -162,8 +169,10 @@ class FFParameters:
         val = (f" [{len(self.bond_terms)} stretch, {len(self.angle_terms)} bend types]"
                if self.has_valence() else " [rigid: no valence terms]")
         off = "".join(f" [{e} charge {d:+.3f} A off its nucleus]" for e, d in self.charge_offsets)
+        flx = ("" if not self.charge_flux else " [charge flux: " + "; ".join(
+            f"{a}-{b} ka={ka:+.4f} kb={kb:+.4f}" for a, b, ka, kb in self.charge_flux) + "]")
         return (f"torsion=({self.torsion[0]:+.3f}, {self.torsion[1]:+.3f}, {self.torsion[2]:+.3f}) "
-                f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}")
+                f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}{flx}")
 
     def has_valence(self) -> bool:
         return bool(self.bond_terms) or bool(self.angle_terms)
@@ -2147,6 +2156,72 @@ VAL_FITTED_X = np.array([
 
 FITTED_VALENCE = valence_ff_parameters(VAL_FITTED_X)
 register_preset("pvdf-dft-valence", FITTED_VALENCE)
+
+
+# --------------------------------------------------------------------- charge flux
+#
+# ``pvdf-dft-valence`` with the geometry dependence of its bond-charge increments turned
+# on (:class:`polyfind.forcefield.FluxTopology`).  Everything else -- torsions,
+# Lennard-Jones, the increments themselves, the valence terms, the off-site charge -- is
+# untouched, and the flux is opt-in per packer (``CrystalPacker(charge_flux=...)``) exactly
+# as the valence terms are, so ``pvdf-dft-valence`` and every number measured with it are
+# unchanged.
+#
+# WHY IT EXISTS.  With fixed increments a planar all-trans zigzag's dipole is *exactly*
+# independent of its backbone angle, and the backbone angle is the only internal coordinate
+# an axial strain moves when bond lengths are rigid.  So beta-PVDF -- the phase the material
+# is used in -- has ``d_33 = d_31 = 0`` identically, and no amount of relaxation changes it
+# (docs/ELECTROMECHANICS.md 5.2).  A charge that moves with the geometry is the smallest
+# change that breaks that symmetry, and measured on beta it does: per unit ``k_angle`` the
+# cell dipole gains ``+3.543`` (C-H) and ``-6.469`` (C-F) e.A per unit axial strain, against
+# a fixed-increment dipole that holds all ten printed digits over the same sweep.
+#
+# HOW IT WAS FITTED, AND WHAT THAT IS WORTH.  ``examples/fit_charge_flux.py`` reproduces it.
+# The target is ``dmu/d(axial strain)`` for four chemistries (PVDF, VDCN, AN, CNEPO) from
+# ``sarco/materials/gpu_bundle/results/field_neighborhood_refined``: twelve numbers, three
+# vector components each.  **Two parameters for twelve observations, 6:1** -- deliberately,
+# after DESIGN.md 5.7, where five parameters on twelve dependent observations fitted noise.
+#
+#   * The reference is an **exploratory GFN2-xTB** calculation on a *finite* two-chain pair
+#     in vacuum with the terminal backbone atoms pinned, and its own ``interpretation``
+#     field says "finite-size, packing, stereochemistry and higher-level DFT validation
+#     outstanding.  Strain is relative to fixed seed span, not a stress-free bulk lattice."
+#     It calibrates a mechanism and an order of magnitude, not a bulk coefficient.  It is
+#     also not the PBE-D3 the rest of this potential is fitted to.
+#   * **The fit is poor: R^2 = 0.39** against the fixed-increment residual (rms 3.43 -> 2.68
+#     e.A per unit strain).  Two things fit that residual *better* and neither is available
+#     to this model: a bond-length flux channel (R^2 = 0.86 on two parameters), which is
+#     inert here because ``build_chain`` places every atom at the polymer's own bond length,
+#     and a plain charge-magnitude scale of x1.36 (R^2 = 0.75 on one), which is not a flux
+#     at all but a statement that the increments are too small.
+#   * **The angle coefficient is not separable from the bond one.**  Fitted with a bond
+#     channel present it comes out ``k_angle(C-H) = -0.213`` instead of ``-1.214``, and the
+#     sign of beta's ``d_31`` follows the choice: positive with this fit, negative with that
+#     one.  What is shipped is the fit of *the model that is deployed* -- a rigid-bonded
+#     chain has only the angle channel, so only the angle channel is fitted -- and R^2 =
+#     0.39 is then honestly its own rather than borrowed from a channel that does nothing.
+#   * Leave-one-chemistry-out moves ``k_angle(C-H)`` over ``-1.62 .. -0.15``, a factor of
+#     eleven, though the *sign* of every converged beta ``d_31`` stays positive.
+#   * The backbone C-C bond carries neither an increment nor a flux, because the increments
+#     are typed by element pair and a homonuclear pair has no orientation
+#     (:func:`polyfind.forcefield.flux_topology` refuses one).  Charge transfer *along* the
+#     backbone is therefore outside this model, and it is the channel most likely to carry
+#     an axial response.
+#
+# WHAT IT CHANGES IN THE CRYSTAL, which is not only the dipole.  The charges enter the
+# Coulomb sum, so beta's relaxed structure moves: ``c`` 2.5469 -> 2.6052 A (+2.3%), ``a``
+# 4.596 -> 4.492, ``|P_x|`` 0.116 -> 0.150 C/m^2, while ``C_33`` holds at 328 -> 330 GPa.
+# The relaxation is a genuine stationary point (shape gradient 2e-9, residual axial stress
+# 3e-8 GPa); at coefficients about a third larger the line group's +/-8 degree cap binds and
+# the reference stops being stress-free, which ``examples/fit_charge_flux.py`` reports as a
+# residual axial stress rather than hiding.
+FLUX_ANGLE_CH = -1.2139  # e per unit of the dimensionless angle driver
+FLUX_ANGLE_CF = -0.0975
+FITTED_VALENCE_FLUX = replace(FITTED_VALENCE, charge_flux=(
+    ("C", "H", FLUX_ANGLE_CH, 0.0),
+    ("C", "F", FLUX_ANGLE_CF, 0.0),
+))
+register_preset("pvdf-dft-valence-flux", FITTED_VALENCE_FLUX)
 
 
 def valence_ablations() -> dict[str, np.ndarray]:

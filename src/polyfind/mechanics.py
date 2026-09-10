@@ -129,6 +129,17 @@ length whose bisectors the zigzag's mirror symmetry pins perpendicular to the ax
 *exactly* independent of the backbone angle -- beta-PVDF's and PE's diagonal columns stay
 zero for that reason and not for the old one.  The helices are different: alpha and gamma
 have three and five shape parameters and do show a diagonal response.
+
+**The third path removes that last obstacle and brings its own.**
+``CrystalPacker(charge_flux=...)`` lets the increments themselves depend on the backbone
+angle (:class:`polyfind.forcefield.FluxTopology`), which is what a planar zigzag needs and
+what gives beta a non-zero ``d_33`` and ``d_31`` -- with the measured signs and about an
+order of magnitude short.  Nothing in this module branches on it: the flux reaches every
+stress, every dipole derivative and every gradient through the kernel, and the agreement
+between the two independent routes to ``d`` is what says so.  What it does *not* come with
+is a trustworthy magnitude; ``polyfind.fitting.FITTED_VALENCE_FLUX`` and
+``docs/ELECTROMECHANICS.md`` section 5.6 say how the two coefficients were fitted, how
+poorly, and which of the resulting numbers are signs rather than values.
 ``examples/electromechanics.py`` runs the whole thing on the reference polymorphs.
 """
 from __future__ import annotations
