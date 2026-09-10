@@ -128,3 +128,16 @@ does not touch the VDCN center and arose during the long packed-cell relaxation
 from the registered all-trans seed. That does not contradict the homopolymer
 enumeration, but it makes the all-trans homopolymer-guided branch and this
 kinked 8.33 mol% copolymer basin separate candidates for electronic comparison.
+
+Sarco then tested its existing registered 100%-trans 8.33 mol% copolymer seed at
+the same 592-atom size. During fixed-cell relaxation it changed geometric bond
+topology: eight 74-atom chains became components of 72, 224 and 296 atoms, with
+eight new interchain cutoff bonds, two lost expected bonds and 3.39 eV/A maximum
+force. The run was rejected at step 77; no energy comparison is valid.
+
+So the offered copolymer generalisation would now be useful. The requested
+handoff is an explicit periodic 11 VDF : 1 VDCN sequence with topology-checked
+all-trans starts in independently constructed polar and antipolar packings. The
+starts should be screened for interchain close contacts before Sarco applies its
+fixed-cell/full-cell MACE+D3 protocol. The existing kinked Sarco reference is the
+comparison basin, not an input to that construction.
