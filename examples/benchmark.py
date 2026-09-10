@@ -16,7 +16,8 @@ from polyfind import backend as bk
 from polyfind.amorphous import sample_ensemble
 from polyfind.chain import build_chain
 from polyfind.forcefield import SimpleFF
-from polyfind.pack import CrystalPacker, periodic_chain
+from polyfind.lattice_table import PairTable, physical_cores, shutdown_table_pool
+from polyfind.pack import SCREEN_TABLE, CrystalPacker, periodic_chain
 from polyfind.polymers import PVDF, THREE_STATE, PE
 from polyfind.ris import RISModel, polyethylene_like_model
 
@@ -69,6 +70,30 @@ def main():
             params = np.column_stack([r.uniform(4.5, 10, M), r.uniform(4.5, 10, M), np.full(M, 90.0), r.uniform(0, 360, M), r.uniform(0, 360, M), r.uniform(0, ch.c, M), r.integers(0, 2, M)])
             dt = timeit(lambda: pk.energy(params), 2)
             print(f"  {lbl}: M={M:5d}: {dt:6.2f} s  = {1e3 * dt / M:6.2f} ms/cell")
+
+    # The table build is the packing path's one real cost, and it is the stage process
+    # parallelism helps: the radial axis splits cleanly and the result is bit-identical,
+    # so the only question is how far the machine's memory bandwidth lets it scale.
+    cores = physical_cores()
+    counts = sorted({1, 2, max(2, cores // 2), cores, cores * 2})
+    print(f"\nchain-pair table build, screen grid ({cores} physical cores; radial axis split across processes):")
+    for poly, seq, lbl in [(PE, [T], "PE all-trans  "), (PVDF, [T, T, T, GP, T, T, T, GM], "PVDF gamma    ")]:
+        ch = periodic_chain(poly, seq, THREE_STATE)
+        ref, base, row = None, None, []
+        for p in counts:
+            best = float("inf")
+            for _ in range(2 if p > 1 else 1):  # the second pass has the pool already up
+                t0 = time.perf_counter()
+                tab = PairTable.build(ch, n_procs=p, **SCREEN_TABLE)
+                best = min(best, time.perf_counter() - t0)
+            if ref is None:
+                ref, base = tab.W, best
+            elif not np.array_equal(ref, tab.W):
+                row.append(f"{p}: NOT BIT-IDENTICAL")
+                continue
+            row.append(f"{p:2d} proc {best:6.2f} s ({base / best:4.2f}x)")
+        print(f"  {lbl} {tab.nbytes / 1e6:3.0f} MB:  " + "  ".join(row))
+    shutdown_table_pool()
 
 
 if __name__ == "__main__":

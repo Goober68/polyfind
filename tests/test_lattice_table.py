@@ -1,6 +1,12 @@
+import json
+import os
+import subprocess
+import sys
+
 import numpy as np
 import pytest
 
+from polyfind import lattice_table as lt
 from polyfind.lattice_table import (
     PairTable,
     chain_pair_energy,
@@ -271,6 +277,114 @@ def test_ab_symmetry_halves_the_grid_without_changing_the_answer():
     assert np.abs(half.energy[fin] - np.swapaxes(full.energy, 0, 1)[fin]).max() < 1e-3
     with pytest.raises(ValueError):
         fft_screen(tab, av, av, gamma=100.0, ab_symmetry=True)
+
+
+# ------------------------------------------------------------------ (f) the parallel build
+_PAR_KW = dict(n_angle=24, n_z=4, dr=0.4)  # ~25 radii: enough for several workers to share
+
+
+@pytest.mark.parametrize("symmetry", [True, False])
+def test_parallel_build_is_bit_identical_to_the_serial_one(symmetry):
+    """Splitting the radial axis across processes must reproduce the serial table *exactly*.
+
+    Not "to within float32": radii are independent, and the split changes only which
+    worker evaluates which radius, never what is summed inside one or in what order.  If
+    this ever fails it means something in the build couples radii, which would also make
+    the cached tables of different runs disagree.
+    """
+    chain = _chain(PVDF_A)
+    kw = dict(_PAR_KW, symmetry=symmetry)
+    serial = PairTable.build(chain, n_procs=1, n_threads=1, **kw)
+    assert serial.n_r > 8
+    for how in (dict(n_procs=1, n_threads=3), dict(n_procs=2), dict(n_procs=3)):
+        got = PairTable.build(chain, **how, **kw)
+        assert got.W.dtype == serial.W.dtype and got.W.shape == serial.W.shape
+        assert np.array_equal(got.W, serial.W), f"{how} is not bit-identical to the serial build"
+        assert np.array_equal(np.asarray(got.e_intra), np.asarray(serial.e_intra))
+
+
+def test_radius_chunks_partition_the_radial_axis():
+    for n_r, n_chunks in ((1, 1), (7, 3), (12, 12), (5, 9), (99, 24)):
+        chunks = lt._radius_chunks(n_r, n_chunks)
+        assert sorted(int(i) for c in chunks for i in c) == list(range(n_r))
+        assert all(len(c) for c in chunks)
+        assert max(len(c) for c in chunks) - min(len(c) for c in chunks) <= 1  # balanced
+
+
+def test_build_falls_back_to_the_in_process_path_when_no_pool_can_be_made(monkeypatch):
+    """A sandbox without process support must still get a table, and the same one."""
+    chain = _chain(PE_T)
+    kw = dict(n_angle=24, n_z=4, dr=0.5)
+    ref = PairTable.build(chain, n_procs=1, n_threads=1, **kw)
+
+    def no_pool(n):
+        raise OSError("no process pool here")
+
+    monkeypatch.setattr(lt, "_table_pool", no_pool)
+    got = PairTable.build(chain, n_procs=4, **kw)
+    assert np.array_equal(got.W, ref.W)
+
+
+def test_default_table_procs_respects_the_environment(monkeypatch):
+    monkeypatch.setenv("POLYFIND_TABLE_PROCS", "3")
+    assert lt.default_table_procs() == 3
+    assert lt.default_table_procs(2) == 2  # never more workers than radii
+    monkeypatch.setenv("POLYFIND_TABLE_PROCS", "nonsense")
+    assert lt.default_table_procs() == 1
+    monkeypatch.delenv("POLYFIND_TABLE_PROCS")
+    assert 1 <= lt.physical_cores() <= (os.cpu_count() or 1)
+    assert lt.default_table_procs() == lt.physical_cores()  # the test runs in the main process
+    lt.shutdown_table_pool()
+    lt.shutdown_table_pool()  # idempotent
+
+
+# The cross-process cache is checked in real processes rather than by faking one: the
+# question is whether two *concurrently building* processes leave one clean entry behind,
+# and an in-process stand-in cannot answer it.
+_CACHE_PROBE = """
+import hashlib, json, sys
+from polyfind import lattice_table as lt
+from polyfind.pack import periodic_chain
+from polyfind.polymers import PE, THREE_STATE
+
+ch = periodic_chain(PE, [0], THREE_STATE)
+t = lt.pair_table(ch, cache_dir=sys.argv[1], n_angle=12, n_z=2, dr=1.0)
+info = lt.pair_table_cache_info()
+print(json.dumps({"digest": hashlib.blake2b(t.W.tobytes(), digest_size=8).hexdigest(),
+                  "builds": info["builds"], "disk_hits": info["disk_hits"],
+                  "key": lt.table_key(ch, n_angle=12, n_z=2, dr=1.0)}))
+"""
+
+
+def _probe(cache_dir, env_extra=None):
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path), POLYFIND_TABLE_PROCS="2", **(env_extra or {}))
+    return subprocess.Popen([sys.executable, "-c", _CACHE_PROBE, str(cache_dir)],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, text=True)
+
+
+def _result(proc):
+    out, err = proc.communicate(timeout=300)
+    assert proc.returncode == 0, err
+    return json.loads(out.strip().splitlines()[-1])
+
+
+def test_disk_cache_is_safe_and_shared_across_concurrently_building_processes(tmp_path):
+    """Two processes building the same table at once, then a third that must not build.
+
+    The parallel build writes through the same atomic ``os.replace``, so the concurrent
+    pair must leave exactly one entry and no temporary files, both must agree bit for bit,
+    and the process that comes afterwards must load rather than rebuild -- which is what
+    lets a multi-candidate run (or the next run) skip a build entirely.
+    """
+    a, b = _probe(tmp_path), _probe(tmp_path)
+    ra, rb = _result(a), _result(b)
+    assert ra["digest"] == rb["digest"]
+    assert ra["builds"] + ra["disk_hits"] == 1 and rb["builds"] + rb["disk_hits"] == 1
+    files = list(tmp_path.glob("*"))
+    assert [f.name for f in files] == [ra["key"] + ".npz"], f"cache directory holds {files}"
+    third = _result(_probe(tmp_path))
+    assert third["builds"] == 0 and third["disk_hits"] == 1
+    assert third["digest"] == ra["digest"]
 
 
 def test_screen_wrapper_returns_rows_with_energies():

@@ -39,9 +39,17 @@ using the fact that rotating a site by ``theta_s`` multiplies the Fourier
 coefficient ``(m1, m2, n)`` of ``W`` by ``exp(-i (m1 + m2) theta_s)`` (here by
 the Fourier image of the *linearly interpolated* rotation, so that the FFT
 landscape is the same function as :func:`table_energy`, not merely close to it).
+
+The build is the one expensive step, and it is a pure function of the chain geometry and
+the potential parameters over a grid in which *radii do not interact*, so the radial axis
+is split across a process pool (one worker per physical core; see
+:func:`default_table_procs`) and the result is bit-identical to the serial build at any
+worker count.  It is also memoised, in process and optionally on disk, by
+:func:`pair_table`.
 """
 from __future__ import annotations
 
+import atexit
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -63,6 +71,8 @@ __all__ = [
     "pair_table_cache_info",
     "clear_pair_table_cache",
     "default_cache_dir",
+    "default_table_procs",
+    "shutdown_table_pool",
 ]
 
 
@@ -223,6 +233,354 @@ def _pot_batch(lj_x6, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, d
         return np.where(mask, v, dtype(0.0))
 
 
+# Working set of one call of the build's inner kernel, in array elements.  That kernel
+# builds a dozen or so temporaries of this size per call, so 16,384 elements is about 1 MB
+# of live data per worker and stays inside a shared 12 MB L3 with one worker per core.
+# The previous 131,072 was 8 MB per worker, which made the build DRAM-bandwidth-bound --
+# and *that*, not the GIL alone, is why threads saturated at 1.3x: measured here, six
+# processes each running the whole build concurrently delivered 1.8x the throughput of one
+# at 131,072 and 3.9x at 16,384.  Serial build of the gamma-PVDF screen table: 30.4 s at
+# 131,072, 28.2 s at 16,384; with six workers, 23.4 s against 6.4 s.  Going smaller loses
+# to Python call overhead (8,192: 40.7 s serial).  It is deliberately not part of
+# :func:`table_key`, but it does fix the order of the float32 pair sums, so a table built
+# at a different value differs from this one in its last bits (~1e-4 kcal/mol).
+BUILD_CHUNK_ELEMS = 16_384
+
+
+# ------------------------------------------------------------------ the build, by radius
+# The build is a pure function of the chain geometry and the potential parameters over a
+# grid, and *nothing in it couples one radius to another*: the (pair, z-image) selection,
+# the angular planes, the two exchange symmetries and the cap all act within a single
+# radius.  So the radial axis is the clean split, and a slice of it is a pure function --
+# :func:`_build_block` -- of a small, picklable description of the problem
+# (:func:`_build_spec`, ~30 kB) and a list of radius indices.  Assembling the slices in any
+# order, from any number of threads or processes, reproduces the serial table bit for bit,
+# which ``test_parallel_build_is_bit_identical_to_the_serial_one`` asserts as exact equality
+# rather than as a tolerance.
+def _build_spec(chain: PeriodicChain, cutoff: float, alpha: float, eps_r: float, r_min: float, dr: float,
+                n_angle: int, n_z: int, cap: float, chunk_elems: int, symmetry: bool, dtype) -> dict:
+    """Everything a radius block of the build needs, as small picklable plain data.
+
+    The four ``(n, n)`` pair-parameter matrices, the chain's coordinates and the radial
+    grid: about 30 kB for a 24-atom chain, so a work item can carry the whole problem to a
+    worker process without the serialisation eating the parallel gain -- and, in
+    particular, without the worker having to rebuild a :class:`CrystalPacker`, which is
+    the expensive thing to do per item.
+    """
+    pk1 = CrystalPacker(chain, n_chains=1, cutoff=cutoff, alpha=alpha, eps_r=eps_r)
+    r_max = pk1.rc + 2 * chain.radius
+    n_r = int(np.ceil((r_max - r_min) / dr)) + 1
+    return {
+        "key": f"{id(chain):x}-{_next_spec_serial()}",
+        "coords": np.ascontiguousarray(chain.coords, dtype=float),
+        "lj_x": np.asarray(pk1.lj_x, dtype=float),
+        "lj_d": np.asarray(pk1.lj_d, dtype=float),
+        "qq": np.asarray(pk1.qq, dtype=float),
+        "lj_shift": np.asarray(pk1.lj_shift, dtype=float),
+        "rc": float(pk1.rc),
+        "alpha": float(alpha),
+        "dsf_shift": float(pk1.dsf_shift),
+        "dsf_force": float(pk1.dsf_force),
+        "K": int(pk1.K),
+        "c": float(chain.c),
+        "r_values": r_min + dr * np.arange(n_r),
+        "n_angle": int(n_angle),
+        "n_z": int(n_z),
+        "cap": float(cap),
+        "chunk_elems": int(chunk_elems),
+        "symmetry": bool(symmetry),
+        "dtype": np.dtype(dtype).name,
+    }
+
+
+_SPEC_SERIAL = [0]
+_PAIR_CACHE: dict = {}
+
+
+def _next_spec_serial() -> int:
+    _SPEC_SERIAL[0] += 1
+    return _SPEC_SERIAL[0]
+
+
+def _pair_arrays(spec: dict, flip: int) -> dict:
+    """The per-flip atom-pair / z-image arrays of the build, memoised per process.
+
+    A worker gets several radius blocks of the same build, so these are computed once per
+    process and reused; they are also what would be far too large to send per work item
+    (millions of entries for the fine grid, against 30 kB for the spec they come from).
+    """
+    ck = (spec["key"], int(flip))
+    hit = _PAIR_CACHE.get(ck)
+    if hit is not None:
+        return hit
+    dtype = np.dtype(spec["dtype"]).type
+    X = spec["coords"]
+    rad = np.hypot(X[:, 0], X[:, 1])
+    psi = np.arctan2(X[:, 1], X[:, 0])
+    zc = X[:, 2]
+    n, n_z, K, c = len(rad), spec["n_z"], spec["K"], spec["c"]
+    if spec["symmetry"] and flip == 1:
+        P, Q = np.triu_indices(n)  # exchange maps (p, q, t) -> (q, p, t) here
+        half = P == Q
+    else:
+        P, Q = (v.ravel() for v in np.meshgrid(np.arange(n), np.arange(n), indexing="ij"))
+        half = None
+    pot = (spec["lj_x"], spec["lj_d"], spec["qq"], spec["lj_shift"])
+    lxb, ldb, lqb, lsb = (a[P, Q] for a in pot)
+    if half is not None:  # v is linear in (lj_d, qq, lj_shift): halve the diagonal terms
+        ldb, lqb, lsb = (np.where(half, 0.5 * a, a) for a in (ldb, lqb, lsb))
+    lx6 = (lxb ** 6).astype(dtype)
+    ld, lq, ls = (a.astype(dtype) for a in (ldb, lqb, lsb))
+    rp, rq = rad[P].astype(dtype), rad[Q].astype(dtype)
+    psi_q = -psi if flip else psi
+    z_q = -zc if flip else zc
+    pp, pq = psi[P].astype(dtype), psi_q[Q].astype(dtype)
+    dzpq = zc[P] - z_q[Q]
+    # (pair, t) grid with t = j + k n_z, i.e. the z offset of the image is dz_j + k c
+    t_all = np.arange(-K * n_z, (K + 1) * n_z)
+    zt = (dzpq[:, None] - t_all[None, :] * (c / n_z)).ravel()
+    pair_i = np.repeat(np.arange(len(P)), len(t_all))
+    j_f = np.tile(np.mod(t_all, n_z), len(P))
+    if spec["symmetry"] and flip == 0:
+        sel0 = j_f <= n_z // 2
+        pair_i, zt, j_f = pair_i[sel0], zt[sel0], j_f[sel0]
+    gap = rp[pair_i].astype(float) + rq[pair_i].astype(float)  # closest possible xy approach is r - gap
+    out = {"lx6": lx6, "ld": ld, "lq": lq, "ls": ls, "rp": rp, "rq": rq, "pp": pp, "pq": pq,
+           "pair_i": pair_i, "zt": zt, "zt2": zt ** 2, "j_f": j_f, "gap": gap}
+    if len(_PAIR_CACHE) >= 8:  # one build at a time; never let a long-lived worker grow
+        _PAIR_CACHE.clear()
+    _PAIR_CACHE[ck] = out
+    return out
+
+
+def _build_block(spec: dict, irs) -> np.ndarray:
+    """``W`` for the radii ``irs``: ``(2, len(irs), n_angle, n_angle, n_z)`` float32, finished.
+
+    "Finished" means both exchange symmetries have been applied and the cap taken, so the
+    caller only has to write the block into place.  Only the (pair, z-image) terms that can
+    reach within the cutoff at that radius are evaluated (the z-window of section 6 of the
+    performance review: a pair whose closest possible lateral approach is
+    ``r - rad_p - rad_q`` can only reach z-images with ``|z_p - z_q - k c| < sqrt(rc^2 - d^2)``),
+    and with ``symmetry`` set the exchange relations
+
+        flip 0:  W(r, a1, a2, dz) = W(r, a2 + 180, a1 + 180, -dz)
+        flip 1:  W(r, a1, a2, dz) = W(r, 180 - a2, 180 - a1, dz)
+
+    halve *both* flips.  Both are the same underlying symmetry -- swapping which chain sits
+    at the origin -- but they act differently on the sum, so they are applied differently:
+    exchange maps the term ``(p, q, t)`` (atom pair, z-image index) to ``(q, p, -t)`` for
+    flip 0 and to ``(q, p, t)`` for flip 1.  For flip 0 that is a relation between the ``dz``
+    planes ``j`` and ``-j``, so only planes up to ``c/2`` are summed and the rest are filled
+    in; for flip 1 it acts inside each plane, so only the ``p <= q`` half of the atom pairs
+    is summed (the diagonal at half weight) and the finished block is symmetrised.  Both act
+    within one radius, which is why the radial axis is the split.
+    """
+    irs = np.atleast_1d(np.asarray(irs, dtype=np.int64))
+    na, nz = spec["n_angle"], spec["n_z"]
+    dtype = np.dtype(spec["dtype"]).type
+    rc, alpha, cap = spec["rc"], spec["alpha"], spec["cap"]
+    r_values = spec["r_values"]
+    ang = (2 * np.pi * np.arange(na) / na).astype(dtype)
+    m_half = na // 2
+    batch = max(1, spec["chunk_elems"] // (na * na))
+    out = np.zeros((2, len(irs), na, na, nz), dtype=np.float32)
+    for flip in (0, 1):
+        A = _pair_arrays(spec, flip)
+        pp, pq, pair_i, zt, zt2, j_f, gap = (A[k] for k in ("pp", "pq", "pair_i", "zt", "zt2", "j_f", "gap"))
+        lx6, ld, lq, ls, rp, rq = (A[k] for k in ("lx6", "ld", "lq", "ls", "rp", "rq"))
+        for m, ir in enumerate(irs):
+            r = r_values[ir]
+            keep = np.maximum(0.0, r - gap) ** 2 + zt2 < rc * rc
+            if not keep.any():
+                continue
+            pi, zz, jj = pair_i[keep], zt[keep].astype(dtype), j_f[keep]
+            order = np.argsort(jj, kind="stable")
+            pi, zz, jj = pi[order], zz[order], jj[order]
+            edges = np.searchsorted(jj, np.arange(nz + 1))
+            rd = dtype(r)
+            for j in range(nz):
+                lo_j, hi_j = int(edges[j]), int(edges[j + 1])
+                if hi_j <= lo_j:
+                    continue
+                plane = np.zeros((na, na))
+                for s in range(lo_j, hi_j, batch):
+                    sl = slice(s, min(s + batch, hi_j))
+                    b = pi[sl]
+                    cu, su = np.cos(pp[b][:, None] + ang), np.sin(pp[b][:, None] + ang)
+                    cv, sv = np.cos(pq[b][:, None] + ang), np.sin(pq[b][:, None] + ang)
+                    rpb, rqb = rp[b][:, None], rq[b][:, None]
+                    ea = rpb ** 2 + rqb ** 2 + rd * rd + zz[sl][:, None] ** 2 - 2 * rd * rpb * cu
+                    eb = 2 * rd * rqb * cv
+                    pref = (-2 * rp[b] * rq[b])[:, None, None]
+                    r2 = ea[:, :, None] + eb[:, None, :] + pref * (cu[:, :, None] * cv[:, None, :] + su[:, :, None] * sv[:, None, :])
+                    v = _pot_batch(lx6[b][:, None, None], ld[b][:, None, None], lq[b][:, None, None], ls[b][:, None, None],
+                                   r2, rc, alpha, spec["dsf_shift"], spec["dsf_force"], dtype)
+                    plane += v.sum(axis=0)
+                out[flip, m, :, :, j] += plane.astype(np.float32)
+        if spec["symmetry"] and flip == 0:
+            for j in range(nz // 2 + 1, nz):
+                src = out[0, :, :, :, (-j) % nz]
+                out[0, :, :, :, j] = np.roll(np.swapaxes(src, 1, 2), (m_half, m_half), axis=(1, 2))
+        elif spec["symmetry"] and flip == 1:
+            # W1 = V + S[V] with S[X][i1, i2] = X[m_half - i2, m_half - i1] and V the
+            # p <= q half sum (diagonal at half weight)
+            V = out[1]
+            out[1] = V + np.roll(np.swapaxes(V, 1, 2)[:, ::-1, ::-1, :], (m_half + 1, m_half + 1), axis=(1, 2))
+    np.minimum(out, np.float32(cap), out=out)
+    return out
+
+
+# ------------------------------------------------------------------ the process pool
+# Threads could never have worked here, and not only because of the GIL: with the old
+# 131,072-element inner chunk the build was DRAM-bandwidth-bound, so there was no headroom
+# for *any* form of parallelism to use (see :data:`BUILD_CHUNK_ELEMS`).  With the chunk
+# cache-sized, the radial split across processes gives 4.6x on six cores -- and saturates
+# there, at the memory system rather than at the core count.  Windows spawns, so the worker
+# function is module-level and its arguments are plain picklable data; the pool is kept
+# alive between builds because spawning six interpreters that import NumPy costs about
+# 2 s, which is more than a small table's whole build.
+_POOL: dict = {"ex": None, "n": 0}
+_POOL_LOCK = None
+
+
+def _pool_lock():
+    global _POOL_LOCK
+    if _POOL_LOCK is None:
+        import threading
+
+        _POOL_LOCK = threading.Lock()
+    return _POOL_LOCK
+
+
+def physical_cores() -> int:
+    """Number of *physical* cores, falling back to :func:`os.cpu_count` if unknown.
+
+    Not the logical count: the build is DRAM-bandwidth-bound (see
+    :data:`BUILD_CHUNK_ELEMS`), so an SMT sibling brings no extra load/store capacity and
+    only adds pressure on the shared L3.  Measured on this 6-core / 12-thread i7-8700K,
+    12 workers are 15-20% *slower* than 6 (gamma-PVDF screen grid: 7.7 s against 6.4 s).
+    """
+    import os
+    import sys
+
+    try:  # if psutil happens to be installed, it already knows
+        import psutil
+
+        n = psutil.cpu_count(logical=False)
+        if n:
+            return int(n)
+    except Exception:
+        pass
+    try:
+        if sys.platform == "win32":
+            import ctypes
+            from ctypes import wintypes
+
+            k = ctypes.windll.kernel32
+            size = wintypes.DWORD(0)
+            k.GetLogicalProcessorInformation(None, ctypes.byref(size))
+            buf = (ctypes.c_byte * size.value)()
+            if k.GetLogicalProcessorInformation(buf, ctypes.byref(size)):
+                raw = bytes(bytearray(buf))
+                # SYSTEM_LOGICAL_PROCESSOR_INFORMATION on x64: 8-byte mask, 4-byte
+                # relationship (0 = RelationProcessorCore), 16-byte union, 32 in all
+                n = sum(int.from_bytes(raw[i + 8 : i + 12], "little") == 0 for i in range(0, size.value, 32))
+                if n:
+                    return n
+        else:
+            import glob
+
+            sib = {open(p).read().strip() for p in
+                   glob.glob("/sys/devices/system/cpu/cpu[0-9]*/topology/thread_siblings_list")}
+            if sib:
+                return len(sib)
+    except Exception:
+        pass
+    return os.cpu_count() or 1
+
+
+def default_table_procs(n_r: int | None = None) -> int:
+    """Worker processes the table build should use: ``$POLYFIND_TABLE_PROCS``, or one per
+    physical core (:func:`physical_cores`).
+
+    Returns 1 -- "build it here, in this process" -- inside a worker of an outer process
+    pool (``multiprocessing.parent_process()`` is not ``None``), because nesting the two
+    levels only oversubscribes the machine: a parallel
+    :func:`~polyfind.pipeline.run_pipeline` already has one process per candidate, and
+    measured on the PVDF funnel, five candidate workers each building with two table
+    workers ran past 600 s against 223 s unnested.  One worker per physical core is where
+    the memory system saturates, wherever that worker comes from.  Set
+    ``$POLYFIND_TABLE_PROCS`` to override in either direction.  Capped at ``n_r``, the
+    number of radii, since that is the axis being split.
+    """
+    import multiprocessing
+    import os
+
+    env = os.environ.get("POLYFIND_TABLE_PROCS")
+    if env:
+        try:
+            n = int(env)
+        except ValueError:
+            n = 1
+    elif multiprocessing.parent_process() is not None:
+        n = 1
+    else:
+        n = physical_cores()
+    if n_r is not None:
+        n = min(n, int(n_r))
+    return max(1, n)
+
+
+def _table_pool(n: int):
+    """The shared build pool, created on demand and reused across builds."""
+    from concurrent.futures import ProcessPoolExecutor
+
+    with _pool_lock():
+        if _POOL["ex"] is not None and _POOL["n"] == n:
+            return _POOL["ex"]
+        _shutdown_pool_locked()
+        _POOL["ex"], _POOL["n"] = ProcessPoolExecutor(max_workers=n), n
+        return _POOL["ex"]
+
+
+def _shutdown_pool_locked() -> None:
+    ex = _POOL["ex"]
+    _POOL["ex"], _POOL["n"] = None, 0
+    if ex is not None:
+        ex.shutdown(wait=False, cancel_futures=True)
+
+
+def shutdown_table_pool() -> None:
+    """Stop the shared table-build worker processes (they are recreated on demand)."""
+    with _pool_lock():
+        _shutdown_pool_locked()
+
+
+atexit.register(shutdown_table_pool)
+
+
+def _radius_chunks(n_r: int, n_chunks: int) -> list:
+    """Strided partitions of the radial axis.
+
+    Strided, not contiguous: the cost of a radius falls steeply with ``r`` (the z-window
+    admits far fewer image pairs as the chains separate), so contiguous blocks would leave
+    the worker holding the small radii idle for most of the build.
+    """
+    return [c for c in (np.arange(i, n_r, n_chunks) for i in range(n_chunks)) if len(c)]
+
+
+def _build_parallel(spec: dict, n_r: int, n_procs: int, W: np.ndarray) -> None:
+    """Fill ``W`` from a process pool.  Raises if the pool cannot be created or used."""
+    chunks = _radius_chunks(n_r, min(n_r, 4 * n_procs))
+    ex = _table_pool(n_procs)
+    try:
+        for irs, block in zip(chunks, ex.map(_build_block, [spec] * len(chunks), chunks)):
+            W[:, irs] = block
+    except BaseException:
+        shutdown_table_pool()  # a broken pool must not be handed to the next build
+        raise
+
+
 @dataclass
 class PairTable:
     """``W(r, alpha1, alpha2, dz, flip)`` on a regular grid, stored as float32.
@@ -260,142 +618,76 @@ class PairTable:
         n_angle: int = 72,
         n_z: int = 16,
         cap: float = 50.0,
-        chunk_elems: int = 131_072,
+        chunk_elems: int = BUILD_CHUNK_ELEMS,
         symmetry: bool = True,
         n_threads: int | None = None,
+        n_procs: int | None = None,
         dtype=np.float32,
         verbose: bool = False,
     ) -> "PairTable":
         """Tabulate ``W`` with the exact pair potential of :class:`CrystalPacker`.
 
         Each grid point is an exact sum over all atom pairs and all z-images
-        (``|k| <= K`` as in the packer).  Only the (pair, z-image) terms that can
-        reach within the cutoff at that radius are evaluated (the z-window of
-        section 6 of the performance review: a pair whose closest possible lateral
-        approach is ``r - rad_p - rad_q`` can only reach z-images with
-        ``|z_p - z_q - k c| < sqrt(rc^2 - d^2)``), and with ``symmetry=True`` the
-        exchange relations
+        (``|k| <= K`` as in the packer); see :func:`_build_block` for the z-window and the
+        two exchange symmetries that make one radius cheap.
 
-            flip 0:  W(r, a1, a2, dz) = W(r, a2 + 180, a1 + 180, -dz)
-            flip 1:  W(r, a1, a2, dz) = W(r, 180 - a2, 180 - a1, dz)
-
-        halve *both* flips.  Both are the same underlying symmetry -- swapping which
-        chain sits at the origin -- but they act differently on the sum, so they are
-        applied differently: exchange maps the term ``(p, q, t)`` (atom pair, z-image
-        index) to ``(q, p, -t)`` for flip 0 and to ``(q, p, t)`` for flip 1.  For
-        flip 0 that is a relation between the ``dz`` planes ``j`` and ``-j``, so only
-        planes up to ``c/2`` are summed and the rest are filled in; for flip 1 it acts
-        inside each plane, so only the ``p <= q`` half of the atom pairs is summed
-        (the diagonal at half weight) and the finished block is symmetrised.
+        The radial axis is split across ``n_procs`` worker processes (default
+        :func:`default_table_procs`: one per physical core, or 1 inside an outer pool's
+        worker).  Radii are independent, so the table is **bit-identical** to the serial
+        build whatever the worker count -- the split changes only which worker evaluates
+        which radius, never what is summed inside one or in what order.  ``n_procs=1``
+        builds in this process (with ``n_threads`` threads, 1 by default), and so does a
+        machine or sandbox where a process pool cannot be created.
         """
-        import os
         import time
-        from concurrent.futures import ThreadPoolExecutor
 
         t_start = time.perf_counter()
-        if n_threads is None:  # NumPy releases the GIL inside the ufuncs, but the loop is
-            n_threads = max(1, min(4, (os.cpu_count() or 1)))  # call-bound: 4 threads measured best
         if n_angle % 2 or n_z % 2:
             raise ValueError("n_angle and n_z must be even (the exchange symmetries map grid to grid)")
-        pk1 = CrystalPacker(chain, n_chains=1, cutoff=cutoff, alpha=alpha, eps_r=eps_r)
-        pk2 = CrystalPacker(chain, n_chains=2, cutoff=cutoff, alpha=alpha, eps_r=eps_r)
-        rc, c, K = pk1.rc, chain.c, pk1.K
-        r_max = rc + 2 * chain.radius
-        n_r = int(np.ceil((r_max - r_min) / dr)) + 1
-        r_values = r_min + dr * np.arange(n_r)
-        W = np.zeros((2, n_r, n_angle, n_angle, n_z), dtype=np.float32)
+        spec = _build_spec(chain, cutoff, alpha, eps_r, r_min, dr, n_angle, n_z, cap, chunk_elems, symmetry, dtype)
+        n_r = len(spec["r_values"])
+        W = np.empty((2, n_r, n_angle, n_angle, n_z), dtype=np.float32)
+        if n_procs is None:
+            n_procs = default_table_procs(n_r)
+        n_procs = max(1, min(int(n_procs), n_r))
+        fell_back = False
+        if n_procs > 1:
+            try:
+                _build_parallel(spec, n_r, n_procs, W)
+            except (OSError, RuntimeError, NotImplementedError, ImportError, EOFError) as exc:
+                # e.g. a sandbox without process/spawn support, or a broken pool: fall back
+                # to the in-process build rather than failing (as pipeline.py does).
+                if verbose:
+                    print(f"table {chain.name}: process pool unavailable ({exc!r}); building in this process")
+                n_procs, fell_back = 1, True
+        if n_procs == 1:
+            from concurrent.futures import ThreadPoolExecutor
 
-        X = np.asarray(chain.coords, dtype=float)
-        rad = np.hypot(X[:, 0], X[:, 1])
-        psi = np.arctan2(X[:, 1], X[:, 0])
-        zc = X[:, 2]
-        n = len(rad)
-        ang = (2 * np.pi * np.arange(n_angle) / n_angle).astype(dtype)
-        m_half = n_angle // 2
-        batch = max(1, chunk_elems // (n_angle * n_angle))
-        pot = tuple(np.asarray(a, dtype=float) for a in (pk1.lj_x, pk1.lj_d, pk1.qq, pk1.lj_shift))
-
-        for flip in (0, 1):
-            if symmetry and flip == 1:
-                P, Q = np.triu_indices(n)  # exchange maps (p, q, t) -> (q, p, t) here
-                half = P == Q
-            else:
-                P, Q = (v.ravel() for v in np.meshgrid(np.arange(n), np.arange(n), indexing="ij"))
-                half = None
-            lxb, ldb, lqb, lsb = (a[P, Q] for a in pot)
-            if half is not None:  # v is linear in (lj_d, qq, lj_shift): halve the diagonal terms
-                ldb, lqb, lsb = (np.where(half, 0.5 * a, a) for a in (ldb, lqb, lsb))
-            lx6 = (lxb ** 6).astype(dtype)
-            ld, lq, ls = (a.astype(dtype) for a in (ldb, lqb, lsb))
-            rp, rq = rad[P].astype(dtype), rad[Q].astype(dtype)
-            psi_q = -psi if flip else psi
-            z_q = -zc if flip else zc
-            pp, pq = psi[P].astype(dtype), psi_q[Q].astype(dtype)
-            dzpq = zc[P] - z_q[Q]
-            # (pair, t) grid with t = j + k n_z, i.e. the z offset of the image is dz_j + k c
-            t_all = np.arange(-K * n_z, (K + 1) * n_z)
-            zt = (dzpq[:, None] - t_all[None, :] * (c / n_z)).ravel()
-            pair_i = np.repeat(np.arange(len(P)), len(t_all))
-            j_f = np.tile(np.mod(t_all, n_z), len(P))
-            if symmetry and flip == 0:
-                sel0 = j_f <= n_z // 2
-                pair_i, zt, j_f = pair_i[sel0], zt[sel0], j_f[sel0]
-            gap = rp[pair_i].astype(float) + rq[pair_i].astype(float)  # closest possible xy approach is r - gap
-            zt2 = zt ** 2
-
-            def radial_block(irs, flip=flip, pp=pp, pq=pq, pair_i=pair_i, zt=zt, zt2=zt2, j_f=j_f, gap=gap,
-                             lx6=lx6, ld=ld, lq=lq, ls=ls, rp=rp, rq=rq):
-                for ir in irs:
-                    r = r_values[ir]
-                    keep = np.maximum(0.0, r - gap) ** 2 + zt2 < rc * rc
-                    if not keep.any():
-                        continue
-                    pi, zz, jj = pair_i[keep], zt[keep].astype(dtype), j_f[keep]
-                    order = np.argsort(jj, kind="stable")
-                    pi, zz, jj = pi[order], zz[order], jj[order]
-                    edges = np.searchsorted(jj, np.arange(n_z + 1))
-                    rd = dtype(r)
-                    for j in range(n_z):
-                        lo_j, hi_j = int(edges[j]), int(edges[j + 1])
-                        if hi_j <= lo_j:
-                            continue
-                        plane = np.zeros((n_angle, n_angle))
-                        for s in range(lo_j, hi_j, batch):
-                            sl = slice(s, min(s + batch, hi_j))
-                            b = pi[sl]
-                            cu, su = np.cos(pp[b][:, None] + ang), np.sin(pp[b][:, None] + ang)
-                            cv, sv = np.cos(pq[b][:, None] + ang), np.sin(pq[b][:, None] + ang)
-                            rpb, rqb = rp[b][:, None], rq[b][:, None]
-                            ea = rpb ** 2 + rqb ** 2 + rd * rd + zz[sl][:, None] ** 2 - 2 * rd * rpb * cu
-                            eb = 2 * rd * rqb * cv
-                            pref = (-2 * rp[b] * rq[b])[:, None, None]
-                            r2 = ea[:, :, None] + eb[:, None, :] + pref * (cu[:, :, None] * cv[:, None, :] + su[:, :, None] * sv[:, None, :])
-                            v = _pot_batch(lx6[b][:, None, None], ld[b][:, None, None], lq[b][:, None, None], ls[b][:, None, None],
-                                           r2, rc, alpha, pk1.dsf_shift, pk1.dsf_force, dtype)
-                            plane += v.sum(axis=0)
-                        W[flip, ir, :, :, j] += plane.astype(np.float32)
-
-            if n_threads > 1 and n_r > 1:
-                blocks = [np.arange(n_r)[i::n_threads] for i in range(n_threads)]
+            # Threads used to be worth 1.3x here, with a 131,072-element inner chunk.  They
+            # are now worse than useless: the cache-sized chunk of :data:`BUILD_CHUNK_ELEMS`
+            # makes each NumPy call eight times shorter, so the loop is pure GIL contention
+            # -- measured on the gamma-PVDF screen grid, 35.2 s on one thread against 61.3 s
+            # on four.  Kept as an option because a future coarser grid could reverse that.
+            if n_threads is None:
+                n_threads = 1
+            n_threads = max(1, min(int(n_threads), n_r))
+            if n_threads > 1:
+                chunks = _radius_chunks(n_r, n_threads)
                 with ThreadPoolExecutor(max_workers=n_threads) as ex:
-                    list(ex.map(radial_block, blocks))
+                    for irs, block in zip(chunks, ex.map(_build_block, [spec] * len(chunks), chunks)):
+                        W[:, irs] = block
             else:
-                radial_block(range(n_r))
-            if symmetry and flip == 0:
-                for j in range(n_z // 2 + 1, n_z):
-                    src = W[0, :, :, :, (-j) % n_z]
-                    W[0, :, :, :, j] = np.roll(np.swapaxes(src, 1, 2), (m_half, m_half), axis=(1, 2))
-            elif symmetry and flip == 1:
-                # W1 = V + S[V] with S[X][i1, i2] = X[m_half - i2, m_half - i1] and V the
-                # p <= q half sum (diagonal at half weight)
-                V = W[1]
-                W[1] = V + np.roll(np.swapaxes(V, 1, 2)[:, ::-1, ::-1, :], (m_half + 1, m_half + 1), axis=(1, 2))
-        np.minimum(W, np.float32(cap), out=W)
+                W[...] = _build_block(spec, np.arange(n_r))
         dt = time.perf_counter() - t_start
         if verbose:
-            print(f"table {chain.name}: {tuple(W.shape)} = {W.nbytes / 1e6:.0f} MB in {dt:.1f} s")
-        return cls(chain=chain, W=W, r_min=r_min, dr=dr, n_angle=n_angle, n_z=n_z, c=c, rc=rc, cap=cap,
-                   e_intra=intra_constants(pk2), build_time=dt)
+            how = (f"{n_procs} worker processes" if n_procs > 1 else
+                   f"this process, {n_threads} thread" + ("" if n_threads == 1 else "s"))
+            if fell_back:
+                how += ", after the pool failed"
+            print(f"table {chain.name}: {tuple(W.shape)} = {W.nbytes / 1e6:.0f} MB in {dt:.1f} s ({how})")
+        pk2 = CrystalPacker(chain, n_chains=2, cutoff=cutoff, alpha=alpha, eps_r=eps_r)
+        return cls(chain=chain, W=W, r_min=r_min, dr=dr, n_angle=n_angle, n_z=n_z, c=chain.c, rc=spec["rc"],
+                   cap=cap, e_intra=intra_constants(pk2), build_time=dt)
 
     # --- lookup ---------------------------------------------------------------
     @property
@@ -468,8 +760,9 @@ class PairTable:
 
 
 # ------------------------------------------------------------------ table cache
-# A table costs 5-25 s to build on the screen grid of :data:`polyfind.pack.SCREEN_TABLE`
-# and 35-150 s on this module's finer default, and depends only on the chain geometry
+# A table costs 1.6-8 s to build on the screen grid of :data:`polyfind.pack.SCREEN_TABLE`
+# and 18-87 s on this module's finer default (six worker processes on a 6-core i7-8700K;
+# 5-25 s and 40-160 s before the build was parallelised), and depends only on the chain geometry
 # (coordinates, elements, charges, bonded-exclusion topology, repeat length) and on the
 # potential and grid parameters -- never on the cell.  So one build serves every
 # ``pack()`` call on the same conformation, and (through the optional on-disk copy) every
@@ -493,7 +786,8 @@ def table_key(chain: PeriodicChain, **kw) -> str:
     elements, charges, repeat length and bonded-exclusion matrices, and the potential
     parameters (``cutoff``, ``alpha``, ``eps_r``) and grid (``r_min``, ``dr``,
     ``n_angle``, ``n_z``, ``cap``, ``dtype``).  ``symmetry``, ``chunk_elems``,
-    ``n_threads`` and ``verbose`` only change how the same numbers are produced and are
+    ``n_threads``, ``n_procs`` and ``verbose`` only change how the same numbers are
+    produced -- the parallel build is bit-identical to the serial one -- and are
     deliberately not part of the key.  The cell parameters are not part of it either --
     that is the point of the table.
     """

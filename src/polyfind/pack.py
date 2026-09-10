@@ -844,8 +844,9 @@ FD_STEPS = np.array([1e-3, 1e-3, 0.05, 0.05, 0.05, 1e-3])
 # which is sized for *evaluating* lattice energies; here the table only has to say which
 # cells are worth polishing, and the polish is exact.  Measured on PE all-trans and beta-,
 # alpha- and gamma-PVDF: this grid selects starts that polish to the same global minimum
-# as the fine one, for 1/6 of the build cost (PE 6.1 s vs 35 s, gamma 23 s vs 147 s) and
-# 1/9 of the memory.  Pass ``table_kw`` to override it.
+# as the fine one, for about 1/10 of the build cost (on six worker processes: PE 1.9 s
+# against 18 s, gamma 8.2 s against 87 s) and 1/9 of the memory.  Pass ``table_kw`` to
+# override it.
 SCREEN_TABLE = {"n_angle": 48, "n_z": 8, "dr": 0.1}
 
 
@@ -1069,11 +1070,12 @@ def pack(
       values when they are free) the gammas screened; ``table`` accepts a prebuilt
       :class:`~polyfind.lattice_table.PairTable`; ``table_cache_dir`` and ``table_kw``
       (defaulting to :data:`SCREEN_TABLE`) are passed to the cached builder.  The build is
-      the one real cost -- 5-25 s per conformation -- and it is paid once: the table
-      depends only on the chain and the potential, so a second ``pack()`` of the same
-      conformation is free, and setting ``$POLYFIND_TABLE_CACHE`` (or ``table_cache_dir``)
-      shares it with other processes and later runs.  Only for ``n_chains == 2``; a
-      one-chain cell falls back to ``"random"``.
+      the largest single cost of this path -- 1.6-8 s per conformation, on as many worker
+      processes as the machine has physical cores -- and it is paid once: the table depends
+      only on the chain and the potential, so a second ``pack()`` of the same conformation
+      is free, and setting ``$POLYFIND_TABLE_CACHE`` (or ``table_cache_dir``) shares it
+      with other processes and later runs.  Only for ``n_chains == 2``; a one-chain cell
+      falls back to ``"random"``.
     * ``"random"`` -- ``n_random`` uniform random cells per flip through the exact kernel.
 
     Either way the starts are polished with the exact kernel, so the returned energies,
