@@ -2,12 +2,15 @@
 
 Scope: the algorithms, not the constant factors. The question for each stage is
 whether the work being done is the *right* work, and what formulation would make
-the same answer cheap. Numbers quoted for the current code are the ones from
-the funnel run recorded in DESIGN.md section 5.3 (4-core cloud box): fit 7.6 s,
+the same answer cheap. The numbers the review was *written* against are the
+funnel run recorded in DESIGN.md section 5.3 (4-core cloud box): fit 7.6 s,
 enumeration 3.6 s, packing of four conformations 81 s, refinement 88 s,
-amorphous statistics 0.4 s. Packing and refinement are 95% of the wall time,
-so the review starts there. Expected gains below are reasoned estimates, not
-measurements.
+amorphous statistics 0.4 s; the expected gains in sections 1-9 are the reasoned
+estimates made at that time, not measurements. **Every "today" number in
+sections 1-9 is stale: section 10 now carries a measured stage-by-stage profile
+of the current code and is the only profile to plan from.** What it says, in one
+line: the table build is no longer the bottleneck and torsion refinement is
+69% of the funnel.
 
 Hardware note: the target machine has an AMD Radeon RX 7700 XT. The current
 GPU backend is CuPy, which needs CUDA (or ROCm on Linux) and cannot run on
@@ -72,6 +75,12 @@ Effort: medium (table builder reusing `CrystalPacker`, interpolation, FFT
 lattice sum, symmetry bookkeeping). Risk: interpolation near the repulsive
 wall; mitigated by the fine radial grid and by polishing with the exact kernel.
 GPU: the table build is embarrassingly parallel and the natural GPU job.
+
+**Measured (screen grid of `pack.SCREEN_TABLE`, 6 worker processes, cold cache).**
+PE all-trans 1.9 s, beta-PVDF 1.6 s, alpha-PVDF 3.7 s, gamma-PVDF 8.2 s; the FFT
+screen itself 1.4-1.8 s per conformation for a 10^8-point landscape. On the finer
+grid that `PairTable.build` defaults to, PE 18 s and gamma 87 s. See section 10
+for the split across worker counts and for what the build was before.
 
 ## 2. Polishing and refinement: gradients, batched, instead of Nelder-Mead one cell at a time
 
@@ -154,6 +163,17 @@ passed by JSON) gives 4-8x on the pipeline's wall time immediately. On a GPU
 the same independence becomes batching across candidates. Effort: small.
 Risk: none.
 
+**Measured, and twice wrong.** It gave 1.3x, because candidate costs are
+unequal (section 12). And "12 cores" is 6 physical cores with SMT: the kernels
+are bound by memory bandwidth, not by instruction issue, so `cpu_count() - 1`
+workers oversubscribe. Measured on the PVDF funnel, same code and same cold
+cache: 5 candidate workers 223 s, 3 workers 179 s. The pipeline's default
+worker count should be the *physical* core count at most, and fewer when the
+inner stages are themselves parallel: one worker per physical core already
+saturates the memory system, and every level of nesting after that is pure
+contention (5 candidate workers x 2 table workers ran past 600 s before it was
+abandoned, against 223 s unnested).
+
 ## 5. RIS fitting: make the expensive potential's job small
 
 The fit is the *only* stage that calls the expensive potential, so its
@@ -196,6 +216,13 @@ keep the dense scan as an option.
   configuration, and vectorise the per-configuration Python loop.
 * **float32 for the screen** (results within 1e-3 kcal/mol); float64 only in
   the final polish. Halves memory traffic, which is what bounds the kernel.
+  Memory traffic being the bound is now measured rather than asserted (section
+  10), and the *working-set size* turned out to matter more than the element
+  width: the table build's inner chunk went from 131,072 elements to 16,384 and
+  gained 1.3x on one core and 4x on six, because 1 MB of live temporaries per
+  worker fits in a shared 12 MB L3 and 8 MB does not. `pack.CPU_CHUNK_ELEMS`
+  (60,000) has never been re-examined under that light and is the cheapest
+  experiment left in this section.
 * **Search-space symmetry.** Use the chain's own screw symmetry (2/1: phi ->
   phi + 180 with dz -> dz + c/2), the a <-> b swap with a 90 deg rotation, and
   the periodicity of dz to cut the search domain by 4-8x for any sampling
@@ -251,29 +278,122 @@ the exactness is worth having.
   sampling loop is batched over chains but sequential in bonds: 200 steps of
   a few launches each is fine on CUDA and marginal on DirectML; keep it on the
   CPU unless ensembles exceed ~10^5 chains.
-* **Projected end-to-end effect.** With sections 1-4 implemented, the CPU
-  pipeline is already dominated by the table builds and final polishes; the
-  GPU then turns the table builds from tens of seconds into seconds and
-  makes per-candidate refinement with autodiff interactive. All of this is
-  projected: nothing has been run on the GPU beyond a device test.
+* **Projected end-to-end effect.** This bullet predicted that the CPU pipeline
+  would end up dominated by the table builds and the final polishes, and that a
+  GPU would then matter most for the table builds. The first half is now wrong
+  and the second follows it: with the build split across processes it is 10% of
+  the funnel and refinement is 69% (section 10), so the gradient batches of
+  section 2, not the table build, are what a GPU should take. Still projected:
+  nothing has been run on the GPU beyond a device test.
 
-## 10. Recommended order and expected cumulative effect
+## 10. Where the time actually goes (measured), and what to do next
 
-| Step | Change | pack() per conformation | refine per candidate | fit | full PVDF run |
-|---|---|---|---|---|---|
-| 0 | today | 20-60 s | 3-90 s | 7.6 s | ~3 min |
-| 1 | section 4: parallel candidates | same | same | same | ~40 s |
-| 2 | section 2: batched-gradient polish and refinement, hoisted invariants | 5-15 s | 1-5 s | same | ~15 s |
-| 3 | section 6: intra constant, z-windows, tabulated pair potentials, float32 screen | 2-6 s | 0.5-2 s | same | ~8 s |
-| 4 | section 1: tabulated W + FFT lattice sums, exhaustive screen | table 10-60 s once, then < 1 s | same | same | dominated by table builds |
-| 5 | section 3: symmetry-parametrised refinement with bond angles | same | 0.2-1 s, better minima | same | |
-| 6 | section 5: coarse-to-fine fit, batched conformers | | | 0.7 s; 3-4x fewer expensive calls | |
-| 7 | section 9: torch backend on the AMD GPU | table builds in seconds; batched refinement | | batched MLIP calls | seconds |
+All numbers below were measured on the target machine -- Windows 11, Python
+3.12, **Intel i7-8700K, 6 physical cores / 12 threads**, `OMP_NUM_THREADS=1`,
+with another agent's work running alongside -- as the minimum of repeats, and
+each "before" was taken back to back with its "after". The "before" column is
+commit `bb2e4de`. The workload is the default `PipelineConfig` for PVDF with
+`SimpleFF`: a fit, enumeration to period 8, and five conformations packed and
+refined (TG+TG+TG-TG-, TTTG+TG-, TTG+TG-G-TG+, TG+TG-, TT).
 
-Steps 1-3 are small changes to existing code; step 4 is the one real
-reformulation and the largest algorithmic gain; step 7 is where the GPU
-finally matters, and it should be built as a torch kernel rather than a CuPy
-port.
+### The funnel, stage by stage
+
+One process, no candidate parallelism, cold table cache -- so the columns are
+CPU work, not a wall time with contention in it:
+
+| Stage | before | after | share of the funnel now |
+|---|---|---|---|
+| RIS fit (`fit_ris`, step 10 deg, 6 monomers, third order) | 0.31 s | 0.30 s | 0.1% |
+| enumeration (period <= 8, k = 60) | 4.9 s | 4.4 s | 1.9% |
+| periodic chain construction (5) | 0.12 s | 0.14 s | 0.1% |
+| **chain-pair table builds (5, screen grid)** | **66.1 s** | **24.8 s** | **10%** |
+| FFT screen (5 conformations, ~10^8 landscape points each) | 8.1 s | 7.9 s | 3% |
+| exact-kernel polish (4 starts per conformation) | 33.8 s | 34.7 s | 15% |
+| **torsion + cell refinement (5)** | 155.7 s | **165.0 s** | **69%** |
+| amorphous + interface statistics | 0.38 s | 0.38 s | 0.2% |
+| total | 269.4 s | 237.5 s | |
+
+Refinement is now the stage to attack, and it is lopsided: of its 165 s, 112 s
+is one candidate (TTG+TG-G-TG+, an 8-bond 24-atom repeat), i.e. 47% of the whole
+funnel sits in one L-BFGS run. The polish is the second target at 15%.
+
+### End to end
+
+| Run | before | after |
+|---|---|---|
+| `run_pipeline(pvdf)`, default workers (5), cold cache | 289.1 s | 222.7 s (**1.30x**) |
+| same, `workers=3` (one per physical core, minus the main process) | - | 179.0 s |
+| same, `workers=3`, warm on-disk table cache | - | 146.3 s |
+
+The refined cell is unchanged: beta-PVDF TT wins at -8.153 kcal/mol per monomer,
+a = 4.60, b = 8.59, c = 2.63 A, antipolar, in all four runs.
+
+### The table build against worker count
+
+gamma-PVDF, screen grid, warm pool, **bit-identical `W` at every worker count**:
+
+| workers | 1 (serial) | 4 threads | 2 proc | 3 proc | 4 proc | 6 proc | 8 proc | 12 proc |
+|---|---|---|---|---|---|---|---|---|
+| time | 35.2 s | 61.3 s | 15.1 s | 10.7 s | 7.6 s | 7.9 s | 7.4 s | 7.7 s |
+| speedup | 1.00x | 0.57x | 2.34x | 3.31x | 4.62x | 4.48x | 4.75x | 4.60x |
+
+Not linear, and it saturates at four workers on six cores: the build is bound by
+memory bandwidth, not by cores. The default is one worker per *physical* core
+(`lattice_table.default_table_procs`), 1 inside an outer process pool, and
+`$POLYFIND_TABLE_PROCS` overrides both; `$POLYFIND_TABLE_CACHE` still names the
+directory the finished tables are kept in, and has to be set for the warm-cache
+row above to happen at all. Two things follow from the shape of the curve, and
+both were surprises.
+
+First, **the chunk size was the real bottleneck, not the GIL.** The inner kernel
+held a 131,072-element working set, about 8 MB of live temporaries, so even one
+worker streamed from DRAM. A probe of pure headroom -- N processes each running
+the *whole* build concurrently -- showed six processes delivering only 1.8x one
+process's throughput at that chunk, and 3.9x once the chunk was cut to 16,384
+elements (~1 MB, L3-resident for six workers). Cutting it also made the serial
+build faster (gamma 30.4 s -> 28.2 s). Threads were never going to get past
+1.3x, and processes would not have either.
+
+Second, **with the smaller chunk, threads are worse than useless**: each NumPy
+call is eight times shorter, so the loop is pure GIL contention (gamma 35.2 s on
+one thread against 61.3 s on four). The in-process fallback is now single-threaded.
+
+Cold builds, screen grid, before (4 threads) vs after (6 processes): PE all-trans
+5.14 -> 1.86 s, beta-PVDF 4.98 -> 1.59 s, alpha-PVDF 13.81 -> 3.65 s, gamma-PVDF
+23.70 -> 8.22 s. On the finer default grid: PE 40.1 -> 18.3 s, gamma 157.4 ->
+87.1 s (the 2x rather than 4x there is a first-call pool spawn of ~2 s plus a
+72 x 72 angle grid that leaves only three atom pairs per kernel call).
+
+### Next, in order
+
+1. **Refinement (69%).** Its L-BFGS iterations are sequential, but each iteration
+   is one batched kernel call of `1 + 2 n_vars` configurations with per-row
+   coordinates -- embarrassingly parallel across rows, exactly like the radial
+   axis of the table. Before splitting it, repeat the chunk-size experiment on
+   `pack.CPU_CHUNK_ELEMS` (60,000, i.e. ~4 MB of temporaries): the table build
+   gained 1.3x serially and 4x in parallel from that one constant, and the
+   packing kernel has the same shape. Cutting the iteration count is the other
+   half: 112 s in one candidate is an optimiser-conditioning problem.
+2. **Polish (15%).** Four independent L-BFGS runs per conformation, each a
+   sequence of small batched calls: parallel across starts, with the same
+   caveat about the kernel's working set.
+3. **Pipeline worker count.** `cpu_count() - 1` is 11 on a 6-core machine and
+   oversubscribes it; 3 workers beat 5 by 1.24x (section 4).
+4. **GPU (section 9).** The table build is no longer where a GPU would pay;
+   the refinement gradient batches are.
+
+### Status of the earlier plan
+
+| Step | Change | state |
+|---|---|---|
+| 1 | section 4: parallel candidates | done; 1.3x, not 4-8x, and oversubscribed at the default worker count |
+| 2 | section 2: batched-gradient polish and refinement, hoisted invariants | done |
+| 3 | section 6: intra constant, z-windows, float32 screen | done; tabulated pair potentials not done |
+| 4 | section 1: tabulated W + FFT lattice sums, exhaustive screen | done; the screen is 3% of the funnel |
+| 5 | section 3: symmetry-parametrised refinement with bond angles | done; still 69% of the funnel |
+| 6 | section 5: coarse-to-fine fit, batched conformers | done; the fit is 0.1% of the funnel |
+| 7 | section 9: torch backend on the AMD GPU | not done |
+| 8 | process-parallel table build (this section) | done; 2.8-3.8x on the build, 1.30x end to end |
 
 ## 11. Open points
 
@@ -395,3 +515,39 @@ argmin tie-break, not a physical asymmetry. The check was wrong, not the claim.
 That is the second time on this project that a verification failing on a known
 case was evidence about the verification, and the first time the discipline was
 applied without me having to intervene.
+
+Splitting the table build across processes produced the most instructive
+correction of the exercise, and it corrected a *diagnosis* rather than an
+estimate. The build's own note said it was "threaded but GIL-bound, so eleven of
+twelve cores sit idle", and the obvious reading -- replace the threads with
+processes and the cores fill up -- is what the work set out to do. It did not
+work: the first correct process build was no faster than the threaded one, and at
+twelve workers it was slower. The GIL was the second bottleneck, not the first.
+The inner kernel carried a 131,072-element working set, about 8 MB of live
+temporaries, so a single worker was already streaming from DRAM and there was
+nothing for more workers to use. One probe settled it: N processes each running
+the *whole* build concurrently, which at that chunk size gave six processes only
+1.8x the throughput of one. Cutting the chunk to 16,384 elements -- about 1 MB,
+so six workers' temporaries fit in the 12 MB L3 -- raised that to 3.9x and made
+the serial build faster as well, and only then did splitting the radial axis give
+4.6x. The same change then inverted the threading result: with each NumPy call
+eight times shorter the GIL really does dominate, and four threads became 1.7x
+slower than one, so the in-process fallback is now single-threaded. "Parallelise
+it" was the right instruction and the wrong first step, and the experiment that
+would have said so in a minute -- run the existing code N times at once and look
+at the throughput, not at one worker's time -- is the measurement to take before
+parallelising any numerical kernel, because it separates "no parallelism" from
+"no headroom".
+
+Two smaller findings came with it. Bit-identity was free rather than hard-won:
+radii are independent in the build, including under both exchange symmetries and
+the cap, so any partition gives the same bits and the test asserts exact equality
+rather than a tolerance -- worth recording because the instinct with float32
+accumulation is to reach for `allclose`, which would have hidden a real coupling
+had one existed. And "12 cores" on this machine is 6 physical cores with SMT,
+which matters for a bandwidth-bound kernel: the build saturates at four workers,
+and the pipeline's default of `cpu_count() - 1` candidate workers is a 1.24x
+*loss* against three (section 4). Nesting the two levels of parallelism is worse
+again. The on-disk table cache, by contrast, needed nothing: its writes were
+already atomic, its keys are per conformation so a multi-candidate run has no
+duplicates to remove, and a warm cache takes the PVDF funnel from 179 s to 146 s.
