@@ -730,3 +730,35 @@ A smaller fix was applied alongside: the pipeline's worker count defaulted to
 logical cores minus one, which oversubscribes a bandwidth-bound workload. On
 this machine three workers beat five by 1.24x, so the default is now derived
 from physical cores.
+
+## 14. GPU status on this machine, measured, and the decision
+
+Probed rather than assumed, so nobody repeats it:
+
+| Check | Result |
+|---|---|
+| ROCm / HIP tooling on Windows | absent: no `rocminfo`, `hipcc`, `rocm-smi`, no ROCm install directory |
+| PyTorch build present | 2.4.1+cpu; `torch.version.hip` is None, `cuda.is_available()` False |
+| WSL2 Ubuntu 24.04 | present, exposes `/dev/dxg` but **not** `/dev/kfd` |
+| torch-directml | works; sees the RX 7700 XT and executes kernels |
+
+`/dev/kfd` is the ROCm compute device, so ROCm cannot run in this WSL instance
+whatever is installed; what is exposed is DirectX paravirtualisation, which is
+what DirectML uses. The card is gfx1101, which generally needs a version override
+to pass as the officially supported gfx1100.
+
+**Decision: no GPU work here.** A separate machine has HIP and ROCm working and
+is committed to simulation work; large runs will go to rented GPUs when they are
+needed. The local payoff also shrank sharply during this effort. A GPU looked
+attractive while packing and refinement took minutes; after the analytic
+gradients and the parallel table build the whole pipeline is 25 s warm and 77 s
+cold, split between the table build at 34% and refinement at 36%. Refinement is
+now latency-bound with few kernel rows, which is the shape a GPU serves worst, so
+even a tenfold win on the table build saves about eight seconds.
+
+The payoff returns with scale: many chemistries crossed with strain and field
+grids multiplies the throughput-bound work and the table build dominates again.
+At that point the torch route is the lower-risk one, since it already runs on
+this card through DirectML, and it doubles as the automatic-differentiation path
+section 2 wanted. CuPy remains unusable on an AMD card and should not be the
+plan.
