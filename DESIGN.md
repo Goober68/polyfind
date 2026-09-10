@@ -528,6 +528,59 @@ document, and the result is `docs/REFERENCES.md`: one entry per claim, with the
 source and a verdict of confirmed, corrected, unverified or wrong.  Every
 statement in this section 5.8 is confirmed there (sections 2.2 and 2.3).
 
+### 5.9 Refitting against first-principles data, and where the wall moved to
+
+Section 5.7's fit failed for a diagnosable reason: crystal data does not contain
+the quantities that discriminate.  Those quantities existed in a sibling
+project - 566 frames of PBE-D3 energies and forces from relaxed torsion scans
+and conformer sampling on five-monomer oligomers across 37 systems, every one of
+them a VDF backbone carrying a single substituted unit.  Refitting against them,
+with ten chemistries held out **whole** rather than frames held out at random:
+
+| | section 5.7 (crystal data) | this fit (DFT data) |
+|---|---|---|
+| observations | 12, several dependent | 467 frames, 31 systems |
+| held out | one polymorph | ten entire chemistries |
+| held-out error | worse than not fitting | 3.32 -> 1.76 kcal/mol |
+| parameters that transfer | 2 of 5 | all 27 groups contribute |
+
+So the data diagnosis was right, and the fit now generalises.  The headline
+physical result is one the objective never saw: **alpha now falls below beta by
+4.54 kJ/mol per monomer**, inside the 2.6 to 6.5 range that four independent
+studies agree on, where the illustrative potential had beta below alpha by 7.38.
+That is the polymorph ordering this package exists to get right.
+
+Two other acceptance tests still fail, and the way they fail is the finding.
+The isolated-chain ranking still prefers a 3/1 helix PVDF does not form, and
+alpha's cell still packs polar rather than antipolar.  An ablation shows why
+more fitting will not help: **different parameter groups carry different tests
+and no setting carries both.**  Lennard-Jones parameters alone fix the chain
+ranking and halve the polarity error, but only the full parameter vector fixes
+the alpha/beta ordering, and doing that puts the wrong helix back on top.  The
+three targets are in tension inside this functional form.
+
+Two independent diagnostics point the same way.  Five of the 27 parameters sit
+on their bounds, and released from those bounds the fit drives **fluorine's
+partial charge positive** - physically absurd for the most electronegative
+element, and a clear sign that atom-centred charges are being used to do work
+the repulsion and dispersion terms should be doing.  Separately, the forces
+contributed almost nothing, 0.3% of the held-out improvement, because 93% of the
+force signal is bond stretching, which a rigid-geometry potential cannot
+represent at all.
+
+**The binding constraint has therefore moved from the data to the functional
+form.**  That is progress, and it points somewhere specific.  A form that could
+satisfy these targets together would need at least: explicit bond and angle
+terms, which would make the force data usable instead of 93% wasted and would
+also remove the strained-reference problem section 5.8 and the chemistry
+extension both ran into; and electrostatics richer than fixed atom-centred point
+charges, since the carbon-fluorine dipole is exactly what such charges
+represent worst.  Both are ordinary force-field technology, and both are larger
+changes than a refit.
+
+The fitted parameters ship as the preset `pvdf-dft-fit`.  `SimpleFF()`'s
+defaults are unchanged and still the default, so nothing silently moves.
+
 ## 6. Limitations and roadmap
 
 * RIS uses rigid bond geometry and discrete states; the continuous refinement
