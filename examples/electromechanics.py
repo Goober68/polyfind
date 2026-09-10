@@ -43,14 +43,28 @@ VOIGT = {0: "1", 1: "2", 2: "3", 5: "6"}
 
 
 def build(polymer, seq, label, valence=None, angle_stiffness=None):
-    """Pack, refine and wrap one polymorph; returns ``(reference, refine result, shape, seconds)``."""
+    """Pack, refine and wrap one polymorph; returns ``(reference, refine result, shape, seconds)``.
+
+    ``table_cache_dir=None`` is load bearing whenever more than one potential is run in one
+    process.  :func:`polyfind.lattice_table.pair_table` keys its cache on the chain and on
+    ``(cutoff, alpha, eps_r)`` and **not** on the Lennard-Jones table
+    (:meth:`polyfind.fitting.FFParameters.applied` says so), so a table built under the first
+    preset would be handed to the second as its screen.  The polish is exact either way, so
+    the energies would still be right -- but the *starts* would be the wrong potential's, and
+    for a crystal with near-degenerate packings that changes which minimum is reported.
+    Measured, on polyethylene under ``pvdf-dft-valence``: with the illustrative table it
+    lands at 4.34 x 6.77 A, gamma 86.9, and with its own it lands at 4.11 x 7.13, gamma 90 --
+    the same 29.3 A^2 cross-section and the same ``C_33`` to 0.4%, but transverse moduli
+    three times apart.  The cache is cleared per preset in :func:`main` for the same reason.
+    """
     t0 = time.time()
     refine_kw = None
     if valence is not None or angle_stiffness is not None:
         refine_kw = {"valence": valence}
         if angle_stiffness is not None:
             refine_kw["angle_stiffness"] = angle_stiffness
-    ref, rr = M.refined_reference(polymer, seq, label=label, valence=valence, refine_kw=refine_kw)
+    ref, rr = M.refined_reference(polymer, seq, label=label, valence=valence, refine_kw=refine_kw,
+                                  pack_kw={"table_cache_dir": None})
     shape = None if valence is None else M.shape_of(polymer, ref, angles=rr.angles)
     return ref, rr, shape, time.time() - t0
 
@@ -171,6 +185,11 @@ def main():
         if params is not None:
             print("  " + params.describe())
         print("=" * 100)
+        # The in-process table cache is not keyed on the potential (see ``build``), so it is
+        # dropped between presets rather than carried across them.
+        from polyfind.lattice_table import clear_pair_table_cache
+
+        clear_pair_table_cache()
         ctx = params.applied() if params is not None else None
         if ctx is not None:
             ctx.__enter__()
@@ -180,7 +199,11 @@ def main():
                 continue
             for polymer, seq, label in CASES:
                 ref, rr, shape, t_build = build(polymer, seq, label, valence=valence)
-                resp = M.electromechanical_response(ref, polymer=polymer, axial=args.axial, shape=shape)
+                # ``axial_report`` is the *rigid* diagnosis: it adds an invented bend
+                # restraint to a lattice energy that is supposed not to have one, so running
+                # it on a packer that already carries fitted bend terms would mix the two.
+                resp = M.electromechanical_response(ref, polymer=polymer, shape=shape,
+                                                    axial=args.axial and shape is None)
                 show(resp, rr, t_build)
         finally:
             if ctx is not None:

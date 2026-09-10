@@ -943,7 +943,13 @@ def free_strain(ref: Reference, field_lab, elastic: Elastic, iterations: int = 1
     converged point satisfies ``sigma = 0`` whatever Jacobian got it there, so using
     ``elastic.S`` here only makes the iteration short -- the answer is still an independent
     measurement of the zero-stress strain and not the ``S e^T`` it is compared against.  The
-    internal coordinates are relaxed at every iterate.  Returns ``(eps6, iterations used)``.
+    internal coordinates are relaxed at every iterate, and with a :class:`Shape` so is the
+    chain's conformation.  Returns ``(eps6, iterations used)``.
+
+    ``tol`` should not be set below the reference's own residual stress: past that the
+    iteration is chasing the relaxation's noise rather than a root.  :func:`piezoelectric`
+    picks it from ``elastic.residual_stress`` for that reason; ``step_tol`` is the second
+    stopping rule, on the size of the Newton step.
     """
     eps = np.zeros(6)
     idx = list(elastic.reachable)
@@ -971,10 +977,12 @@ def piezoelectric(ref: Reference, elastic: Elastic, step: float = 2e-3, field: f
                   converse: bool = True) -> Piezoelectric:
     """``e`` at fixed field, ``d = deps/dE`` at zero in-plane stress, and the check between them.
 
-    The direct route strains the cell, relaxes the internal coordinates at each strain, and
+    The direct route strains the cell, relaxes the internal coordinates (and, with a
+    :class:`Shape`, the chain's conformation at fixed ``eps_zz``) at each strain, and
     differentiates the cell dipole per reference volume.  The converse route hands each field
-    axis in turn to :func:`free_strain`, which drives the analytic in-plane stress to zero
-    (internal coordinates relaxed at every iterate) and returns the strain it lands on.  The
+    axis in turn to :func:`free_strain`, which drives the analytic stress to zero over the
+    reachable components (relaxing the same things at every iterate) and returns the strain
+    it lands on.  The
     identity ``d = e S`` follows from ``d^2 h / de dE`` being symmetric; the two numbers come
     from disjoint machinery -- a dipole derivative against a stress root-find -- so agreeing
     is evidence and not bookkeeping.  It caught two sign-and-magnitude errors while this was

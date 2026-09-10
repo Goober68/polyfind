@@ -395,7 +395,11 @@ def test_d_improper_is_the_dimensional_term_and_nothing_else(beta_deformable):
     for n in diag:
         expect = -float(P[0]) * el.S[diag, n].sum() * M.C_PER_M2_PER_GPA_TO_PC_PER_N
         assert pz.d_improper[0, n] == pytest.approx(expect, rel=1e-3, abs=1e-6)
-    assert pz.d_improper[0, diag].max() < 0.0  # a fixed dipole array always loses P on dilation
+    # A fixed dipole array always loses P on dilation -- but only once the poling axis is
+    # taken along +P.  Which way P points is the domain the packing happened to land in, so
+    # the sign is a statement about the *projection* and not about a column of the array.
+    n_hat = P / np.linalg.norm(P)
+    assert (n_hat @ pz.d_improper[:, diag]).max() < 0.0
 
 
 # --- the Lennard-Jones cutoff ---------------------------------------------------------------

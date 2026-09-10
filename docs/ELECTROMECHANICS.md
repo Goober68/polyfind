@@ -106,10 +106,10 @@ machinery, so agreement is evidence.
 
 | | illustrative | `pvdf-dft-fit` | `pvdf-dft-valence` (deformable) |
 |---|---|---|---|
-| PVDF beta | 0.65% | 0.50% | 0.03% |
-| PVDF alpha | 0.43% | 0.35% | 0.34% |
-| PVDF gamma | 1.03% | 1.54% | 0.29% |
-| PE | both routes zero, difference < 1e-11 pC/N | both zero, < 1e-11 pC/N | both zero, < 2e-12 pC/N |
+| PVDF beta | 0.65% | 0.52% | 0.03% |
+| PVDF alpha | 0.37% | 0.51% | 0.72% |
+| PVDF gamma | 0.17% | 0.59% | 0.52% |
+| PE | both routes zero, difference < 5e-13 pC/N | both zero, < 7e-12 pC/N | both zero, < 2e-11 pC/N |
 
 (Largest `|d_from_e - d_direct|` as a fraction of the largest coefficient. The residual is
 finite-difference error in `e` at `deps = 2e-3` and Newton tolerance in `d`. On the
@@ -128,10 +128,10 @@ several per cent in both directions:
 
 | | reachable `eps_zz` (illustrative) | residual `sigma_zz` at fixed chain shape |
 |---|---|---|
-| PVDF beta | −6.5% … +2.4% | −4.51 GPa |
-| PVDF alpha | −11.8% … +2.1% | −4.75 GPa |
-| PVDF gamma | −10.3% … +3.5% | −3.59 GPa |
-| PE | −5.8% … +3.6% | −2.27 GPa |
+| PVDF beta | −6.59% … +2.30% | −4.97 GPa |
+| PVDF alpha | −11.98% … +1.87% | −5.13 GPa |
+| PVDF gamma | −10.51% … +3.28% | −3.92 GPa |
+| PE | −5.76% … +3.57% | −2.27 GPa |
 
 So the obstacle is not geometry. It is that **nothing in the rigid potential resists the
 deformation.** Three separate facts said so, and they are still true of the rigid path.
@@ -148,9 +148,9 @@ carbon" and excluded from the reported lattice energy.
 
 | k (kcal/mol/rad²) | 0 | 52.5 | 105 | 210 | share of `C_33(105)` from k |
 |---|---|---|---|---|---|
-| PVDF beta | 83.8 | 242.4 | 401.1 | 718.4 | 79% |
-| PVDF alpha | 203.4 | 266.1 | 328.8 | 454.3 | 38% |
-| PVDF gamma | 792.6 | 851.9 | 911.1 | 1029.6 | 13% |
+| PVDF beta | 89.4 | 251.1 | 412.9 | 736.4 | 78% |
+| PVDF alpha | 218.1 | 282.2 | 346.4 | 474.8 | 37% |
+| PVDF gamma | 996.7 | 1057.1 | 1117.5 | 1238.3 | 11% |
 | PE | 60.5 | 220.5 | 380.5 | 700.4 | 84% |
 
 **(c) The reference was axially stress-free *only because of* that restraint.** Along the
@@ -158,10 +158,10 @@ same path, `sigma_zz` (GPa):
 
 | k | 0 | 52.5 | 105 | 210 |
 |---|---|---|---|---|
-| PVDF beta | −5.30 | −2.64 | **+0.03** | +5.35 |
+| PVDF beta | −5.74 | −2.86 | **+0.02** | +5.78 |
 | PE | −2.37 | −1.03 | **+0.30** | +2.97 |
 
-The refinement's stationary point in `c` sat at `k = 105` (beta to 0.03 GPa, PE to 0.3 GPa)
+The refinement's stationary point in `c` sat at `k = 105` (beta to 0.02 GPa, PE to 0.3 GPa)
 and nowhere else: at `k = 0` the crystal wanted to contract along the chain at several GPa
 and keep going, the lattice energy alone having no axial minimum at all. `axial_report`
 still measures all of this and still returns `computable=False`, because for a packer
@@ -197,32 +197,33 @@ to put it back:
 
 | k (kcal/mol/rad²) | 0 | 52.5 | 105 | 210 | spread | refined `c` moved by | relaxed `c` |
 |---|---|---|---|---|---|---|---|
-| PVDF beta | 317.5990 | 317.5990 | 317.5990 | 317.5990 | 6e−6 GPa | 2.5632 → 2.5758 (+0.49%) | 2.56317 always |
-| PVDF alpha | 250.1032 | 250.1032 | 250.1032 | 250.1032 | 2e−5 GPa | 4.6789 → 4.6624 (−0.35%) | 4.67892 always |
-| PVDF gamma | 92.3652 | 92.3652 | 92.3651 | 92.3652 | 7e−5 GPa | 9.1174 → 9.1606 (+0.47%) | 9.07362 always |
-| PE | 286.7916 | 286.7917 | 286.7916 | 286.7916 | 4e−5 GPa | 2.4934 → 2.5350 (+1.67%) | 2.49233 always |
+| PVDF beta | 328.4079 | 328.4079 | 328.4079 | 328.4079 | 2e−5 GPa | 2.5469 → 2.5570 (+0.40%) | 2.54689 always |
+| PVDF alpha | 260.4331 | 260.4327 | 260.4308 | 260.4307 | 2e−3 GPa | 4.6541 → 4.6352 (−0.41%) | 4.65408 always |
+| PVDF gamma | 95.3393 | 95.3393 | 95.3392 | 95.3393 | 1e−4 GPa | 9.0516 → 9.0879 (+0.40%) | 9.01172 always |
+| PE | 287.9797 | 287.9797 | 287.9797 | 287.9798 | 1e−4 GPa | 2.4928 → 2.5348 (+1.68%) | 2.49283 always |
 
-`C_33` in GPa. The spread over the sweep is 1e−6 to 8e−5 *per cent* of the value — the
-relaxation's own reproducibility, not a physical dependence — against a factor of 8.6 on the
+`C_33` in GPa. The spread over the sweep is 6e−6 to 9e−4 *per cent* of the value — the
+relaxation's own reproducibility, not a physical dependence — against a factor of 8.2 on the
 rigid path. **The invented constant is no longer in the answer.** It cannot be: it enters
 only through the starting structure, and the relaxation over `c` has a stationary point of
-its own to find.
+its own to find, which it reaches from every start in the sweep to five decimal places in
+`c`.
 
 Three further checks that this number is what it says it is.
 
 * **The reference is axially stress-free by measurement, not by construction.** The
-  residual `sigma_zz` at the relaxed reference is below 1e-5 GPa for all four crystals,
+  residual `sigma_zz` at the relaxed reference is below 2e-5 GPa for all four crystals,
   against several GPa on the rigid path (section 4.1). The multiplier route is what reports
   it, so this is also a check on the multiplier.
 * **`C_33` is measured twice by different routes** — the derivative of the constraint
-  multiplier, and the curvature of the relaxed energy itself — and they agree to 0.02-0.04%
-  (beta 317.599 / 317.718, alpha 250.103 / 250.062, gamma 92.365 / 92.336, PE 286.792 /
-  286.675).
+  multiplier, and the curvature of the relaxed energy itself — and they agree to 0.004-0.07%
+  (beta 328.408 / 328.395, alpha 260.433 / 260.284, gamma 95.339 / 95.322, PE 287.980 /
+  288.173).
 * **The axial row and column of the 4×4 are also measured twice**: `C_J3` from the analytic
   cell gradient over the axial column, `C_3J` from the multiplier over the in-plane columns.
-  The largest disagreement before symmetrising is 0.004 GPa for beta, 0.016 for alpha, 0.043
-  for gamma and 0.199 for PE. PE's is 0.07% of its `C_33` but 3% of its `C_36 = 5.9`, which
-  is the one entry of the set that should be read as two significant figures at most.
+  The largest disagreement before symmetrising is 0.004 GPa for beta, 0.11 for alpha, 0.054
+  for gamma and 0.28 for PE — 0.1% or less of each `C_33`, but a tenth of PE's `C_66 = 1.11`,
+  which is the one entry of the set that should be read as one significant figure.
 
 **What it is still not.** `C_33` here is an **upper bound**, on three counts, all of them
 constraints that can only stiffen a path: bond lengths are rigid, so the stretch channel is
@@ -240,28 +241,34 @@ Illustrative potential, **rigid chain, `eps_zz` clamped**:
 
 | | a, b, gamma, c (A, deg) | `C_11` | `C_22` | `C_12` | `C_66` | `C_16` | `C_26` |
 |---|---|---|---|---|---|---|---|
-| PVDF beta | 4.597, 8.587, 90.00, 2.630 | 44.42 | 37.76 | 2.25 | 3.10 | 0.00 | 0.00 |
-| PVDF alpha | 5.096, 8.865, 90.00, 4.829 | 28.66 | 22.51 | 7.31 | 12.03 | 0.00 | 0.00 |
-| PVDF gamma | 5.216, 8.892, 91.59, 9.566 | 29.56 | 31.58 | 9.15 | 9.25 | 2.19 | −0.48 |
-| PE | 4.750, 7.080, 92.73, 2.575 | 27.46 | 30.46 | 16.14 | 15.83 | 4.57 | −4.29 |
+| PVDF beta | 4.592, 8.593, 90.00, 2.6128 | 45.29 | 38.43 | 2.31 | 3.12 | 0.00 | 0.00 |
+| PVDF alpha | 5.096, 8.840, 90.00, 4.8030 | 29.21 | 23.43 | 7.89 | 12.23 | 0.00 | 0.00 |
+| PVDF gamma | 5.209, 8.887, 88.49, 9.5106 | 29.78 | 31.86 | 9.34 | 9.28 | −2.31 | 0.41 |
+| PE | 4.750, 7.080, 87.27, 2.5753 | 27.46 | 30.46 | 16.14 | 15.83 | −4.57 | 4.28 |
 
 `pvdf-dft-fit`, **rigid chain, `eps_zz` clamped**:
 
 | | a, b, gamma, c (A, deg) | `C_11` | `C_22` | `C_12` | `C_66` | `C_16` | `C_26` |
 |---|---|---|---|---|---|---|---|
-| PVDF beta | 4.544, 8.621, 90.00, 2.618 | 21.60 | 15.47 | 1.84 | 2.90 | 0.00 | 0.00 |
-| PVDF alpha | 5.062, 9.006, 90.00, 4.740 | 13.87 | 11.10 | 4.04 | 5.24 | 0.00 | 0.00 |
-| PVDF gamma | 5.322, 8.869, 93.84, 9.410 | 11.56 | 12.72 | 3.44 | 4.30 | 0.47 | 0.37 |
-| PE | 3.917, 6.788, 90.06, 2.534 | 36.22 | 32.43 | 16.69 | 24.04 | 14.76 | −11.48 |
+| PVDF beta | 4.538, 8.627, 90.00, 2.6008 | 21.97 | 15.58 | 1.87 | 2.93 | 0.00 | 0.00 |
+| PVDF alpha | 5.061, 8.997, 90.00, 4.7121 | 14.00 | 11.16 | 4.06 | 5.25 | 0.00 | 0.00 |
+| PVDF gamma | 5.331, 8.868, 94.00, 9.3438 | 11.89 | 12.85 | 3.55 | 4.39 | 0.38 | 0.32 |
+| PE | 3.917, 6.788, 89.94, 2.5339 | 36.22 | 32.43 | 16.69 | 24.04 | −14.76 | 11.48 |
 
 `pvdf-dft-valence`, **deformable chain**, the full reachable 4×4:
 
 | | a, b, gamma, c (A, deg) | `C_11` | `C_22` | `C_33` | `C_12` | `C_13` | `C_23` | `C_66` | `C_16` | `C_26` | `C_36` |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| PVDF beta | 4.603, 8.550, 90.00, 2.5632 | 22.46 | 17.59 | **317.6** | 2.17 | 12.57 | 2.28 | 3.36 | 0.00 | 0.00 | 0.00 |
-| PVDF alpha | 5.072, 8.923, 90.00, 4.6789 | 14.87 | 11.48 | **250.1** | 5.17 | 0.63 | 7.73 | 5.45 | 0.00 | 0.00 | 0.00 |
-| PVDF gamma | 5.447, 8.887, 95.96, 9.0736 | 12.46 | 12.36 | **92.4** | 3.61 | 10.77 | 4.45 | 4.14 | 0.33 | −0.43 | −4.38 |
-| PE | 4.343, 6.766, 86.95, 2.4923 | 17.99 | 16.96 | **286.8** | 9.97 | 9.05 | 10.86 | 11.01 | −4.92 | 3.87 | 5.93 |
+| PVDF beta | 4.596, 8.556, 90.00, 2.5469 | 22.79 | 17.92 | **328.4** | 2.21 | 12.72 | 2.30 | 3.41 | 0.00 | 0.00 | 0.00 |
+| PVDF alpha | 5.069, 8.907, 90.00, 4.6541 | 15.10 | 11.33 | **260.4** | 5.27 | 0.49 | 8.10 | 5.53 | 0.00 | 0.00 | 0.00 |
+| PVDF gamma | 5.453, 8.891, 84.00, 9.0117 | 12.69 | 12.49 | **95.3** | 3.70 | 10.50 | 4.47 | 4.22 | 0.28 | −0.43 | −4.18 |
+| PE | 4.108, 7.130, 90.00, 2.4928 | 22.52 | 26.99 | **288.0** | 0.78 | 14.89 | 5.49 | 1.11 | 0.00 | 0.00 | 0.00 |
+
+The overall sign of the polarization is the domain the packing happened to land in, and it
+is arbitrary: flipping it flips every coefficient with an odd number of polar indices —
+every `e` and `d` below, and none of the `C`. The signs are quoted as computed, and the one
+place where a sign is a *result* rather than a convention (section 5.3) fixes the poling
+axis along `+P` explicitly before quoting it.
 
 Beta and alpha come out orthorhombic in these axes (`C_16 = C_26 = 0` to rounding), a
 symmetry the calculation was not told about and recovers. Gamma and PE relax to
@@ -270,12 +277,12 @@ symmetry the calculation was not told about and recovers. Gamma and PE relax to
 **What the deformation itself changes**, same potential and same relaxed reference, rigid
 against deformable:
 
-| | `C_11` rigid → deformable | `C_22` | `C_12` | largest \|e\| (C/m²) |
-|---|---|---|---|---|
-| PVDF beta | 22.464 → 22.464 | 17.594 → 17.594 | 2.166 → 2.166 | 0.0145 → 0.0145 |
-| PVDF alpha | 16.327 → 14.867 (−9%) | 12.176 → 11.479 (−6%) | 4.223 → 5.171 | 0.0065 → 0.0992 (×15) |
-| PVDF gamma | 13.873 → 12.455 (−10%) | 13.794 → 12.360 (−10%) | 4.429 → 3.613 | 0.0156 → 0.1900 (×12) |
-| PE | 17.990 → 17.990 | 16.956 → 16.956 | 9.967 → 9.968 | 0 → 0 |
+| | `C_11` rigid → deformable | `C_22` | `C_12` | `C_66` | largest \|e\| (C/m²) |
+|---|---|---|---|---|---|
+| PVDF beta | 22.790 → 22.790 | 17.919 → 17.919 | 2.208 → 2.208 | 3.408 → 3.408 | 0.0149 → 0.0149 |
+| PVDF alpha | 16.478 → 15.096 (−8%) | 12.098 → 11.332 (−6%) | 4.313 → 5.269 | 5.532 → 5.531 | 0.0077 → 0.1039 (×13) |
+| PVDF gamma | 14.025 → 12.691 (−10%) | 13.982 → 12.493 (−11%) | 4.499 → 3.696 | 4.809 → 4.222 | 0.0154 → 0.1863 (×12) |
+| PE | 22.514 → 22.515 | 26.991 → 26.991 | 0.778 → 0.778 | 1.110 → 1.111 | 0 → 0 |
 
 Beta and PE are *identical* to five figures, and that is not a coincidence or a
 convergence accident — it is the mechanism. Their line group leaves exactly one free shape
@@ -292,9 +299,9 @@ one. `d` is `e S`, with `d_direct` agreeing to the percentages in section 3.
 
 | | illustrative `e` | illustrative `d` | `pvdf-dft-fit` `e` | `pvdf-dft-fit` `d` |
 |---|---|---|---|---|
-| PVDF beta | `e_y6 = +0.0564` | `d_y6 = +18.17` | `e_y6 = +0.0071` | `d_y6 = +2.46` |
-| PVDF alpha | `e_y6 = −0.0204` | `d_y6 = −1.70` | `e_y6 = +0.0146` | `d_y6 = +2.79` |
-| PVDF gamma | `e_x1 = +0.0277`, `e_x2 = −0.0275`, `e_x6 = +0.0170`, `e_y1 = −0.0155`, `e_y2 = +0.0154`, `e_y6 = −0.0095` | `d_x1 = +1.20`, `d_x2 = −1.19`, `d_x6 = +1.49`, `d_y1 = −0.67`, `d_y2 = +0.67`, `d_y6 = −0.83` | `e_x1 = +0.0081`, `e_x2 = −0.0080`, `e_x6 = +0.0053`, `e_y1 = −0.0043`, `e_y2 = +0.0043`, `e_y6 = −0.0028` | `d_x1 = +0.92`, `d_x2 = −0.91`, `d_x6 = +1.21`, `d_y1 = −0.49`, `d_y2 = +0.49`, `d_y6 = −0.65` |
+| PVDF beta | `e_y6 = −0.0575` | `d_y6 = −18.41` | `e_y6 = −0.0067` | `d_y6 = −2.29` |
+| PVDF alpha | `e_y6 = −0.0229` | `d_y6 = −1.87` | `e_y6 = −0.0157` | `d_y6 = −2.99` |
+| PVDF gamma | `e_x1 = −0.0286`, `e_x2 = +0.0286`, `e_x6 = +0.0176`, `e_y1 = −0.0160`, `e_y2 = +0.0160`, `e_y6 = +0.0098` | `d_x1 = −1.23`, `d_x2 = +1.24`, `d_x6 = +1.53`, `d_y1 = −0.69`, `d_y2 = +0.70`, `d_y6 = +0.86` | `e_x1 = +0.0090`, `e_x2 = −0.0089`, `e_x6 = +0.0060`, `e_y1 = −0.0048`, `e_y2 = +0.0047`, `e_y6 = −0.0032` | `d_x1 = +1.01`, `d_x2 = −1.00`, `d_x6 = +1.36`, `d_y1 = −0.54`, `d_y2 = +0.54`, `d_y6 = −0.73` |
 | PE | all zero (< 1e-12 C/m²) | all zero (< 1e-11 pC/N) | all zero | all zero |
 
 `pvdf-dft-valence`, deformable, full rows (`e` in C/m², rows `x, y, z`, columns
@@ -302,22 +309,22 @@ one. `d` is `e S`, with `d_direct` agreeing to the percentages in section 3.
 
 | | `e_x` | `e_y` | `e_z` |
 |---|---|---|---|
-| PVDF beta | 0, 0, 0, 0 | 0, 0, 0, **+0.01452** | 0, 0, 0, 0 |
-| PVDF alpha | **+0.03844, −0.02522, +0.09915**, 0 | 0, 0, 0, **−0.00644** | 0, 0, 0, 0 |
-| PVDF gamma | **+0.02920, −0.01081, −0.09725, +0.00502** | **+0.01896, +0.01730, −0.18995, −0.01789** | **−0.00693, +0.00338, +0.13565, +0.00714** |
+| PVDF beta | 0, 0, 0, 0 | 0, 0, 0, **−0.01490** | 0, 0, 0, 0 |
+| PVDF alpha | **+0.03783, −0.02684, +0.10394**, 0 | 0, 0, 0, **−0.00770** | 0, 0, 0, 0 |
+| PVDF gamma | **+0.02864, −0.01044, −0.09534, +0.00548** | **+0.01787, +0.01758, −0.18625, −0.01684** | **−0.00637, +0.00337, +0.13401, +0.00680** |
 | PE | 0, 0, 0, 0 | 0, 0, 0, 0 | 0, 0, 0, 0 |
 
 and `d = e S` in pC/N, same layout:
 
 | | `d_x` | `d_y` | `d_z` |
 |---|---|---|---|
-| PVDF beta | 0, 0, 0, 0 | 0, 0, 0, **+4.319** | 0, 0, 0, 0 |
-| PVDF alpha | **+4.091, −4.391, +0.522**, 0 | 0, 0, 0, **−1.182** | 0, 0, 0, 0 |
-| PVDF gamma | **+4.118, −1.568, −1.499, −0.866** | **+3.960, +1.034, −2.930, −7.637** | **−2.452, +0.436, +1.923, +4.004** |
+| PVDF beta | 0, 0, 0, 0 | 0, 0, 0, **−4.372** | 0, 0, 0, 0 |
+| PVDF alpha | **+4.114, −4.662, +0.536**, 0 | 0, 0, 0, **−1.392** | 0, 0, 0, 0 |
+| PVDF gamma | **+3.833, −1.493, −1.372, −0.469** | **+3.448, +1.111, −2.681, −6.741** | **−2.176, +0.398, +1.783, +3.559** |
 | PE | 0, 0, 0, 0 | 0, 0, 0, 0 | 0, 0, 0, 0 |
 
-Every "0" above is a machine zero: the largest of beta's diagonal `e` entries is 1e-11 C/m²
-and PE's whole tensor is below 1e-14.
+Every "0" above is a machine zero: the largest of beta's diagonal `e` entries is 8e-12 C/m²
+and PE's whole tensor is below 2e-14.
 
 **Beta's diagonal columns are still exactly zero, and the reason has changed.** It is no
 longer "the chain is rigid" — the chain deforms; `c` moves. It is that for a **planar
@@ -326,9 +333,10 @@ of the backbone angle.** With BCI charges the dipole is a sum over bonds of `del
 (r_i - r_j)`; a backbone C-C bond carries no increment; every C-H and C-F bond has a fixed
 length; and the mirror symmetry of the zigzag pins the bisector of each pendant pair
 perpendicular to the chain axis whatever the backbone angle is. So the one internal
-coordinate beta and PE have moves `c` and leaves `mu` bit-for-bit where it was — measured
-directly over a ±2° sweep of the shape parameter, `|Δmu| < 1e-10 e·A` while `c` moves by
-2.3%, and asserted in
+coordinate beta and PE have moves `c` and leaves `mu` where it was — measured directly over
+a ±2° sweep of the shape parameter, over which `c` runs from −1.17% to +1.14% and beta's
+`mu_x` stays at −0.7234964088 e·A in every digit printed (its transverse components sit at
+1e-13, the numerical asymmetry of the chain build and not a response) — and asserted in
 `tests/test_mechanics.py::test_a_planar_zigzag_cannot_change_its_dipole_by_bending`. Alpha
 and gamma are helices, their conformations have no such mirror, and their diagonal columns
 are the first non-zero ones this package has produced.
@@ -352,7 +360,7 @@ the only thing here with the right units to be compared:
 | beta-PVDF, `pvdf-dft-valence` | film `d_33` | film `d_32` | film `d_31` |
 |---|---|---|---|
 | proper (this module's `d`) | 0 | 0 | 0 |
-| dimensional term (`d_improper`, poling axis along +P) | **−4.46** | −5.96 | −0.14 |
+| dimensional term (`d_improper`, poling axis along +P) | **−4.43** | −5.90 | −0.14 |
 | measured (Nix and Ward 1986) | −32 | +1.5 | +20 |
 
 **The sign of `d_33` comes out right and the magnitude is seven times too small; `d_31`'s
@@ -373,25 +381,25 @@ would be added to it by a model this package does not implement.
 
 | potential | | poling direction | free strain | blocking stress (MPa) | work density (kJ/m³) |
 |---|---|---|---|---|---|
-| illustrative | PVDF beta | ±y | `e_xy = ±1.82e−3` | ±5.6 | 2.56 |
-| | PVDF alpha | ±y | `e_xy = ∓1.70e−4` | ∓2.0 | 0.087 |
-| | PVDF gamma | (0.873, −0.488, 0) | `e_xx = +1.37e−4`, `e_yy = −1.37e−4`, `e_xy = +1.71e−4` | +3.2, −3.1, +1.9 | 0.299 |
+| illustrative | PVDF beta | ±y | `e_xy = ∓1.84e−3` | ∓5.7 | 2.645 |
+| | PVDF alpha | ±y | `e_xy = ∓1.87e−4` | ∓2.3 | 0.107 |
+| | PVDF gamma | (0.872, 0.489, 0) | `e_xx = −1.41e−4`, `e_yy = +1.42e−4`, `e_xy = +1.76e−4` | −3.3, +3.3, +2.0 | 0.321 |
 | | PE | any | 0 | 0 | 0 |
-| `pvdf-dft-fit` | PVDF beta | ±y | `e_xy = ±2.46e−4` | ±0.7 | 0.044 |
-| | PVDF alpha | ±y | `e_xy = ±2.79e−4` | ±1.5 | 0.102 |
-| | PVDF gamma | (0.882, −0.471, 0) | `e_xx = +1.04e−4`, `e_yy = −1.03e−4`, `e_xy = +1.37e−4` | +0.9, −0.9, +0.6 | 0.068 |
+| `pvdf-dft-fit` | PVDF beta | ±y | `e_xy = ∓2.29e−4` | ∓0.7 | 0.038 |
+| | PVDF alpha | ±y | `e_xy = ∓2.99e−4` | ∓1.6 | 0.117 |
+| | PVDF gamma | (0.883, −0.470, 0) | `e_xx = +1.15e−4`, `e_yy = −1.14e−4`, `e_xy = +1.55e−4` | +1.0, −1.0, +0.7 | 0.084 |
 | | PE | any | 0 | 0 | 0 |
-| `pvdf-dft-valence` | PVDF beta | ±y | `e_xy = ±4.32e−4` | ±1.5 | 0.157 |
-| | PVDF alpha | ±x | `e_xx = ±4.09e−4`, `e_yy = ∓4.39e−4`, `e_zz = ±5.2e−5` | ±3.8, ∓2.5, ±9.9 | 0.799 |
-| | PVDF gamma | (−0.397, −0.777, +0.488) | `e_xx = −5.91e−4`, `e_yy = +3.2e−6`, `e_zz = +3.81e−4`, `e_xy = +8.23e−4` | −3.0, −0.8, +25.3, +1.5 | 3.16 |
+| `pvdf-dft-valence` | PVDF beta | ±y | `e_xy = ∓4.37e−4` | ∓1.5 | 0.163 |
+| | PVDF alpha | ±x | `e_xx = ±4.11e−4`, `e_yy = ∓4.66e−4`, `e_zz = ±5.4e−5` | ±3.8, ∓2.7, ±10.4 | 0.841 |
+| | PVDF gamma | (−0.397, +0.775, −0.493) | `e_xx = +5.26e−4`, `e_yy = +7.3e−6`, `e_zz = −3.50e−4`, `e_xy = +7.16e−4` | +2.8, +0.8, −24.8, +1.4 | 2.80 |
 | | PE | any | 0 | 0 | 0 |
 
 The poling direction is the leading eigenvector of `d C d^T`, whose overall sign is
 arbitrary; flipping the field flips the free strain and the blocking stress together and
 leaves the work density alone, hence the ±. The full elastic triangle is twice the work
-density. Gamma's 3.16 kJ/m³ is the largest figure in the set and it is the deformable path
-that produces it: the same crystal gives 0.30 kJ/m³ rigid under the illustrative potential
-and 0.068 under `pvdf-dft-fit`, because an axial channel it could not previously use is
+density. Gamma's 2.80 kJ/m³ is the largest figure in the set and it is the deformable path
+that produces it: the same crystal gives 0.32 kJ/m³ rigid under the illustrative potential
+and 0.084 under `pvdf-dft-fit`, because an axial channel it could not previously use is
 where most of the work now comes from (`e_zz` and a blocking stress of 25 MPa along the
 chain).
 
@@ -401,7 +409,7 @@ PE's atoms do carry charges (C −0.12, H +0.06 e). What vanishes is the cell di
 vanishes for *every* configuration, not only at the minimum: each CH2 group is neutral and
 the all-trans repeat is centrosymmetric. The cancellation is exact to 1.7e−16 e·A over
 random cells. So every piezoelectric number comes out at machine precision zero — `e` below
-1e−12 C/m², `d` below 1e−11 pC/N by both routes on both paths (2e−12 deformable), work
+1e−12 C/m², `d` below 1e−11 pC/N by both routes on both paths (2e−11 deformable), work
 density below 1e−24 kJ/m³ — while the elastic constants are
 perfectly ordinary, `C_33 = 286.8` GPa included. It is a real test of the whole chain
 (dipole, frame rotation, both derivative routes, and now the constrained relaxation as
@@ -439,14 +447,16 @@ smallest over `deps = 5e-4, 2e-3, 4e-3`), GPa:
 
 | | rc = 8, energy-shifted | rc = 8, force-shifted | rc = 12, energy-shifted | rc = 12, force-shifted |
 |---|---|---|---|---|
-| PVDF beta | **3.725** | 0.432 | 0.115 | 0.047 |
-| PVDF alpha | 0.827 | 0.117 | 0.061 | 0.019 |
-| PVDF gamma | 0.174 | 0.113 | 0.040 | 0.049 |
-| PE | 0.092 | 0.032 | 0.345 | 0.022 |
+| PVDF beta | **3.742** | 0.422 | 0.039 | 0.059 |
+| PVDF alpha | 0.886 | 0.090 | 0.028 | 0.031 |
+| PVDF gamma | 0.303 | 0.063 | 0.039 | 0.045 |
+| PE | 0.092 | 0.030 | 0.054 | 0.022 |
 
-Force-shifting improves it everywhere except gamma at 12 A, where both are already at the
-0.04 GPa floor of the relaxation. PE at 12 A energy-shifted is the worst cell of the set
-(0.345 GPa) and force-shifting takes it to 0.022, so this is not a beta-specific fix.
+The fix works where the fault is: at the default cutoff, where beta's `b = 8.59` and alpha's
+lattice put pairs right on `rc`, force-shifting takes the spread down by a factor of nine
+and ten. Everywhere else the spread is already 0.02-0.09 GPa, which is the relaxation's own
+run-to-run scatter — repeating the sweep moves those entries by that much, so nothing should
+be read into the differences between them.
 
 *Fault two: the tail is truncated,* and force-shifting does not help that at all — it is
 slightly worse, because it removes a tail as well as a value. Beta, illustrative potential,
@@ -454,27 +464,27 @@ slightly worse, because it removes a tail as well as a value. Beta, illustrative
 
 | cutoff (A) | shift | relaxed a, b | E/monomer | `C_11` | `C_22` | `C_12` | `C_66` |
 |---|---|---|---|---|---|---|---|
-| 8 (package default) | energy | 4.5973, 8.5867 | −8.153 | 44.42 | 37.77 | 2.25 | 3.10 |
-| 12 | energy | 4.5882, 8.5532 | −9.181 | 45.72 | 42.09 | 2.56 | 3.36 |
-| 16 | energy | 4.5850, 8.5465 | −9.407 | 46.55 | 42.73 | 2.58 | 3.38 |
-| 20 | energy | 4.5840, 8.5445 | −9.486 | 46.82 | 42.95 | 2.60 | 3.41 |
-| 8 | force | 4.6095, 8.6125 | −7.331 | 42.11 | 37.08 | 2.13 | 2.97 |
-| 12 | force | 4.5917, 8.5604 | −8.906 | 44.90 | 41.25 | 2.56 | 3.35 |
-| 16 | force | 4.5865, 8.5496 | −9.287 | 46.23 | 42.36 | 2.58 | 3.39 |
-| 20 | force | 4.5847, 8.5460 | −9.424 | 46.63 | 42.76 | 2.59 | 3.40 |
+| 8 (package default) | energy | 4.5918, 8.5935 | −7.943 | 45.29 | 38.43 | 2.31 | 3.12 |
+| 12 | energy | 4.5824, 8.5600 | −8.982 | 46.42 | 42.80 | 2.65 | 3.42 |
+| 16 | energy | 4.5792, 8.5533 | −9.209 | 47.29 | 43.43 | 2.63 | 3.39 |
+| 20 | energy | 4.5782, 8.5513 | −9.289 | 47.54 | 43.67 | 2.66 | 3.43 |
+| 8 | force | 4.6039, 8.6192 | −7.115 | 42.50 | 37.56 | 2.16 | 2.97 |
+| 12 | force | 4.5859, 8.5672 | −8.705 | 45.60 | 41.93 | 2.62 | 3.38 |
+| 16 | force | 4.5808, 8.5564 | −9.089 | 46.95 | 43.07 | 2.65 | 3.41 |
+| 20 | force | 4.5790, 8.5529 | −9.227 | 47.36 | 43.48 | 2.66 | 3.42 |
 
 Both forms converge to the same place. At the package default `C_22` is 12% low; at 12 A it
 is 2% low. **So the force shift fixes the derivative and the cutoff length fixes the value,
 and the recommendation is to use both**: `reference_from_chain(..., cutoff=12.0,
-lj_cutoff="force")` gives a step spread of 0.05 GPa and a `C_22` within 4% of the 20 A
+lj_cutoff="force")` gives a step spread of 0.06 GPa and a `C_22` within 4% of the 20 A
 answer.
 
 **What adopting either as a default would cost.** Both change the lattice energy, which is
-why both are opt-in. Force-shifting at the default cutoff moves E/monomer by +0.82 kcal/mol
-for beta (10%) and lengthening the cutoff to 12 A moves it by −1.03; the cells move by 0.3%
+why both are opt-in. Force-shifting at the default cutoff moves E/monomer by +0.83 kcal/mol
+for beta (10%) and lengthening the cutoff to 12 A moves it by −1.04; the cells move by 0.3%
 and 0.2% respectively. The relative quantity the package is actually judged on survives
-both: alpha minus beta per monomer is +1.008 kcal/mol at the default, +1.032 at cutoff 12,
-+0.965 force-shifted at 8, +1.019 force-shifted at 12 — a 4% spread on a number whose
+both: alpha minus beta per monomer is +0.929 kcal/mol at the default, +0.953 at cutoff 12,
++0.887 force-shifted at 8, +0.941 force-shifted at 12 — a 7% spread on a number whose
 acceptance window is much wider than that. What would have to be re-measured to make either
 the default: the DESIGN 5.2 packing table and 5.3 funnel run (cell parameters and energies
 per monomer for every polymorph), the fitted presets themselves (`docs/DFT_FIT.md`,
@@ -490,10 +500,10 @@ separately:
 
 | | beta | alpha | gamma | PE |
 |---|---|---|---|---|
-| response, rigid path | 0.32 s | 1.44 s | 7.8 s | 0.56 s |
-| response, deformable path | 1.2 s | 6.7 s | 53 s | 1.3 s |
-| kernel rows, deformable | 124 | 273 | 725 | 137 |
-| pack + refine (once, beforehand) | 1.7-2.9 s | 2.7-5.0 s | 10-18 s | 1.7-3.2 s |
+| response, rigid path | 0.8 s | 2.3 s | 18.8 s | 1.6 s |
+| response, deformable path | 4.8 s | 18.5 s | 124 s | 2.3 s |
+| kernel rows, deformable | 81 | 277 | 673 | 108 |
+| pack + refine (once, beforehand) | 2.7-10 s | 4.9-13 s | 22-48 s | 3.6-6.8 s |
 
 The rigid path is affordable because of the analytic gradient: `polish(...,
 gradient="analytic")` spends one kernel row per function evaluation where the
@@ -502,9 +512,11 @@ deformable path costs a constrained SLSQP minimisation per strain state — nine
 stiffness and `e`, plus two or three per field direction for the converse route — and each
 objective evaluation is one kernel row plus one batched chain build. It scales with the
 number of shape parameters (1 for beta and PE, 3 for alpha, 5 for gamma), which is why gamma
-is 40 times beta. The shape gradient itself is free of kernel rows: the chain build is
-differenced, not the energy, exactly as `refine_crystal` does it. Two hundred to seven
-hundred kernel rows for a whole deformable response, against a hundred for a rigid one.
+is 25 times beta. The shape gradient itself is free of kernel rows: the chain build is
+differenced, not the energy, exactly as `refine_crystal` does it. Eighty to seven hundred
+kernel rows for a whole deformable response, against a hundred for a rigid one. The timings
+above were taken with other work on the same machine, so the ratios are steadier than the
+absolute numbers.
 
 ## 8. Literature, for order of magnitude only
 
@@ -526,10 +538,15 @@ Engineering moduli, GPa. Illustrative | `pvdf-dft-fit` (both axially clamped) |
 
 | | `E_a = 1/S_11` | `E_b = 1/S_22` | `E_c = 1/S_33` | `G_ab = 1/S_66` |
 |---|---|---|---|---|
-| PVDF beta | 44.3 \| 21.4 \| 21.7 | 37.7 \| 15.3 \| 17.4 | — \| — \| **310.5** | 3.10 \| 2.90 \| 3.36 |
-| PVDF alpha | 26.3 \| 12.4 \| 12.5 | 20.7 \| 9.9 \| 9.5 | — \| — \| **244.2** | 12.03 \| 5.24 \| 5.45 |
-| PVDF gamma | 26.3 \| 10.6 \| 10.2 | 28.6 \| 11.7 \| 11.2 | — \| — \| **77.7** | 9.04 \| 4.27 \| 3.85 |
-| PE | 15.8 \| 6.3 \| 6.9 | 17.7 \| 6.2 \| 6.9 | — \| — \| **274.9** | 12.75 \| 4.52 \| 5.77 |
+| PVDF beta | 45.2 \| 21.8 \| 22.1 | 38.3 \| 15.4 \| 17.7 | — \| — \| **321.3** | 3.12 \| 2.93 \| 3.41 |
+| PVDF alpha | 26.6 \| 12.5 \| 12.6 | 21.3 \| 10.0 \| 9.3 | — \| — \| **253.8** | 12.23 \| 5.25 \| 5.53 |
+| PVDF gamma | 26.4 \| 10.9 \| 10.5 | 28.8 \| 11.8 \| 11.4 | — \| — \| **82.0** | 9.06 \| 4.37 \| 3.97 |
+| PE | 15.8 \| 6.3 \| 21.7 | 17.8 \| 6.2 \| 26.9 | — \| — \| **277.2** | 12.76 \| 4.52 \| 1.11 |
+
+(The rigid columns are `1/S` of the 3×3 in-plane block, so they are *axially clamped*; the
+deformable column inverts the 4×4 and is the free modulus. PE's deformable column is not
+comparable with its rigid ones at all: under `pvdf-dft-valence` PE packs into a different
+cell from the one the other two potentials find — see section 8.3.)
 
 ### 8.1 Beta-PVDF transverse stiffness
 
@@ -542,17 +559,17 @@ Bulk modulus 11.18 GPa (PBE) / 25.25 GPa (PBE-D2).
 > density functional theory study." *J. Appl. Phys.* **109**, 093514 (2011).
 > [10.1063/1.3574653](https://doi.org/10.1063/1.3574653)
 
-*Against this package:* the illustrative potential's 44 / 38 GPa is 2-5x too stiff. Both
+*Against this package:* the illustrative potential's 45 / 38 GPa is 2-5x too stiff. Both
 fitted presets land within about 1.5x of the stress-strain DFT numbers and bracket the
-energy-strain ones — `pvdf-dft-fit` at 22 / 15 and `pvdf-dft-valence` at 22 / 18, which is a
-better showing than either fit deserves, since no elastic data entered either objective.
-Neither is a prediction; both are the right order. **Verdict: order of magnitude confirmed,
-nothing finer.**
+energy-strain ones — `pvdf-dft-fit` at 22.0 / 15.6 and `pvdf-dft-valence` at 22.8 / 17.9,
+which is a better showing than either fit deserves, since no elastic data entered either
+objective. Neither is a prediction; both are the right order. **Verdict: order of magnitude
+confirmed, nothing finer.**
 
 *Not found:* `C_12`, `C_13`, `C_23`, `C_44`, `C_55`, `C_66` for beta-PVDF. Pei and Zeng put the
 full 6x6 matrices in AIP supplementary deposit E-JAPIAU-109-105107, which could not be
 retrieved, so `C_12`, `C_13`, `C_23` and `C_66` have nothing to be compared against — and
-`C_13 = 12.6` GPa is one of the new numbers, so this is a gap that matters more than it did.
+`C_13 = 12.7` GPa is one of the new numbers, so this is a gap that matters more than it did.
 The lattice-dynamics paper that would give both elastic *and* piezoelectric constants —
 Tashiro, K.; Kobayashi, M.; Tadokoro, H.; Fukada, E., *Macromolecules* **13**, 691 (1980),
 [10.1021/ma60075a040](https://doi.org/10.1021/ma60075a040) — is paywalled and was not read.
@@ -581,15 +598,16 @@ in Kaji).
 
 | | this package `E_c` | this package `C_33` | published |
 |---|---|---|---|
-| beta-PVDF | **310.5** | 317.6 | 287 (PBE), 341 (PBE-D2); measured 177 |
-| PE | **274.9** | 286.8 | 235-255 X-ray, 329 neutron, 305-360 calculated, 333 DFT |
-| alpha-PVDF | 244.2 | 250.1 | not found |
-| gamma-PVDF | 77.7 | 92.4 | not found |
+| beta-PVDF | **321.3** | 328.4 | 287 (PBE), 341 (PBE-D2); measured 177 |
+| PE | **277.2** | 288.0 | 235-255 X-ray, 329 neutron, 305-360 calculated, 333 DFT |
+| alpha-PVDF | 253.8 | 260.4 | not found |
+| gamma-PVDF | 82.0 | 95.3 | not found |
 
-Beta sits between the two DFT values and 1.75x above the one measurement; PE sits inside the
-measured range and below the calculated one. **Verdict: confirmed to the accuracy the
-comparison can support**, which is not much — the calculated and measured chain moduli of PE
-differ from each other by 50%, so anything in 230-360 GPa agrees with something.
+Beta sits between the two DFT values (287 and 341) and 1.8x above the one measurement; PE
+sits inside the measured range and below the calculated one. **Verdict: confirmed to the
+accuracy the comparison can support**, which is not much — the calculated and measured chain
+moduli of PE differ from each other by 50%, so anything in 230-360 GPa agrees with
+something.
 
 **Read this before quoting either number.** Three things make it an upper bound and none of
 them is small: bond lengths cannot stretch (in a real chain, stretching is roughly half the
@@ -610,15 +628,19 @@ Nakamae, via Kurita's Table 3); `E_a` and `E_b` both about 6 GPa by neutron scat
 *Calculated:* 10.9 / 7.8 GPa (Kurita 2018, B3LYP-D, 0 K); 6.9 / 8.6 GPa (Tashiro 1978);
 5.9-13.7 GPa across older lattice-dynamics work.
 
-*Against this package:* the illustrative potential gives 15.8 / 17.7 GPa, roughly 5x the X-ray
-values and 1.5-2x the stiffest calculation. `pvdf-dft-fit` gives 6.3 / 6.2 and
-`pvdf-dft-valence` 6.9 / 6.9, both sitting on top of the neutron measurement — and both
-agreements should be **discounted entirely**, because the same presets squeeze PE's ab
-cross-section to 26.6 A² and 29.3 A² against an experimental 36.7 (7.42 × 4.95; the a/b
-labels are the packer's and need not match the crystallographic setting, so the area is the
-comparison that means anything). A potential fitted to PVDF chains that gets PE's cell 20-28%
-too dense has not earned a transverse modulus. **Verdict: unverified, and the apparent
-agreement is not evidence.**
+*Against this package:* the illustrative potential gives 15.8 / 17.8 GPa, roughly 5x the X-ray
+values and 1.5-2x the stiffest calculation. `pvdf-dft-fit` gives 6.3 / 6.2, sitting on top of
+the neutron measurement, and `pvdf-dft-valence` gives 21.7 / 26.9, three times the stiffest
+calculation. Both should be **discounted entirely**, and the disagreement *between* them is
+why: the two presets squeeze PE's ab cross-section to 26.6 A² and 29.3 A² against an
+experimental 36.7 (7.42 × 4.95; the a/b labels are the packer's and need not match the
+crystallographic setting, so the area is the comparison that means anything), and they do it
+into two different cells — 3.92 × 6.79 at gamma 90 against 4.11 × 7.13 at gamma 90, with
+`C_66` 24.0 against 1.11. A potential fitted to PVDF chains that gets PE's cell 20-28% too
+dense has not earned a transverse modulus, and the axial one is the only number in this
+column that is stable across the two packings (288.0 against 286.8 GPa, 0.4% apart, for two
+cells whose transverse constants differ by a factor of three). **Verdict: unverified, and
+the apparent agreement of one of them is not evidence.**
 
 *Not found:* the Karasawa, Dasgupta and Goddard `C_ij` table (*J. Phys. Chem.* **95**, 2260
 (1991), [10.1021/j100159a031](https://doi.org/10.1021/j100159a031)) is paywalled with no open
@@ -640,14 +662,14 @@ parametrisation is naturally strongest, has nothing to be checked against.
 
 *Against this package:* section 5.3 has the comparison in full. `d_33` and `d_31` are
 identically zero in the proper coefficient, on every path and under every preset, and the
-dimensional term that a Broadhurst-Davis model would add gives −4.5, −6.0 and −0.14 pC/N for
-`d_33`, `d_32`, `d_31`. **Verdict: `d_33`'s sign reproduced but by arithmetic rather than by
-mechanism (the dimensional term is negative on every diagonal column for any stable
+dimensional term that a Broadhurst-Davis model would add gives −4.43, −5.90 and −0.14 pC/N
+for `d_33`, `d_32`, `d_31`. **Verdict: `d_33`'s sign reproduced but by arithmetic rather than
+by mechanism (the dimensional term is negative on every diagonal column for any stable
 crystal), its magnitude 7x too small, and `d_31`'s sign wrong.** `d_15` and `d_24` are among
 the constants this cell cannot express at all (section 1).
 
-The largest coefficient this module does produce for beta is `d_y6 = +18.2` pC/N
-(illustrative), 2.5 (`pvdf-dft-fit`), 4.3 (`pvdf-dft-valence`) — the same order as a measured
+The largest coefficient this module does produce for beta is `|d_y6| = 18.4` pC/N
+(illustrative), 2.3 (`pvdf-dft-fit`), 4.4 (`pvdf-dft-valence`) — the same order as a measured
 `d_31`, and **not the same coefficient**. `d_y6` couples a transverse field to a shear.
 Reading the agreement in magnitude as a match would be a category error.
 
@@ -681,11 +703,20 @@ the proper and improper coefficients, quantified in section 5.3. The intrinsic t
 the dipole to change with strain, and **the deformable path shows precisely which degrees of
 freedom that requires.** Letting the backbone angles move is not enough for a planar zigzag:
 the dipole is exactly invariant under it (section 5.2). It *is* enough for a helix, where
-alpha and gamma get diagonal `e` entries of 0.1 to 0.19 C/m² and diagonal `d` of 0.5 to 2.9
+alpha and gamma get diagonal `e` entries of 0.10 to 0.19 C/m² and diagonal `d` of 0.5 to 2.7
 pC/N. So the intrinsic channel is not absent from the model in principle — it is absent from
 beta in particular, because beta's chain has no internal coordinate that changes its dipole.
 Reaching it would need the pendant geometry or the bond lengths to relax, or polarizable
 charges, none of which this model has.
+
+*A caveat on the helices' diagonal columns.* Alpha's and gamma's largest diagonal `e` is the
+`eps_zz` one, 0.10 and 0.19 C/m², and it comes from a conformation change under axial
+strain. Their `d` from the two routes agree to 0.5-0.7%, and the entries are stable in sign
+and to about 10% between the 1.54 A and 1.528 A backbone geometries (alpha `d_x,zz` 0.52 →
+0.54, gamma `d_z,zz` 1.92 → 1.78). But alpha packs *polar* under this preset, which is one of
+the three acceptance tests the fit fails (DESIGN.md section 5.10); a real alpha crystal is
+antipolar and its diagonal response would cancel between the two chains. So alpha's numbers
+describe the cell this potential produces, not the phase it is named after.
 
 ## 9. What is not computed
 
