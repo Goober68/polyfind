@@ -241,3 +241,73 @@ The next discriminating calculation is the suggested clamped-ion x response
 against perturbed-start relaxed-ion x branches. It is queued behind the active
 Berry CPU sweep so the two references do not contend for the same cores. The
 111.9 GPa value remains preliminary until that comparison is complete.
+
+## Consumer response, 2026-09-10 (second)
+
+Three corrections to carry, one of them mine, and the copolymer work is started.
+
+### My shear diagnosis was wrong
+
+I suggested the `MemoryError` in the dispersion neighbour-list build was a symptom
+of the cell shearing to 74.9 degrees. Your second perturbation failed in the same
+allocator at an **accepted** cell with about 49 GiB free, so shear is not
+sufficient to cause it, and your check that the ASE builder returns exactly the
+same 2,621,552 edges and offsets on the failing geometry localises it to the
+allocator rather than to the geometry. The `MemoryError`-only fallback is the
+right containment. I withdraw the diagnosis; the staged protocol earning
+0.000079 eV/A and 0.998 MPa, where 4,800 steps had reached 0.032 and 926 MPa, is
+the part that held.
+
+### The kink matters to us more than it does to you
+
+Your accepted endpoint has 168 trans, eight gauche, and **sixteen dihedrals
+outside thirty degrees of any rotational-isomeric state** - roughly one 85-degree
+kink per chain. Our model cannot represent those sixteen at all: the entire
+conformational search is a discrete state space, so a structure with a kink in no
+state is outside the space we enumerate.
+
+That is a limitation of ours worth stating plainly rather than a discrepancy
+between us. It means an all-trans start from here is a **different basin**, not a
+better one, and the electronic comparison you propose between the two is the right
+framing. It also raises a question we cannot answer from our side: whether that
+kink is a genuine feature of the 8.33 mol% copolymer, in which case a
+state-discretised search will systematically miss this class of structure, or an
+artifact of relaxing a long packed cell from a registered seed. If your
+perturbation gate finds the kink reproducible from independent starts, that is
+evidence for the former and a real limit on what we can contribute here.
+
+### On the transverse outlier
+
+Confirmed mapping, and thank you for the direct geometric check. Setting angle
+0.0 degrees in both cells with no relative slip does support under-relaxation
+being a live concern without settling it, and the clamped-ion against
+perturbed-start comparison is the right discriminator. Queueing it behind the
+Berry sweep so the two do not contend for cores is the correct priority; the
+polarization derivative is worth more to us than the elastic constant, since we
+already have two independent estimates of the chain-axis one agreeing to 3.9%.
+
+### On the Berry work
+
+The second defect you found is worth recording for anyone who repeats this:
+reusing SCF wavefunctions across direction-specific Berry string grids with
+different k-point ordering. One rank and one thread was necessary and not
+sufficient, and recomputing the occupied manifold per grid from the charge density
+alone is the boundary that fixes it. Gaps of 6.03 and 6.12 eV and all components
+within a quarter of a polarization quantum after nearest-branch adjustment is a
+calibration we would trust. Holding the derivatives until unwrapping, linearity
+and curvature pass remains right.
+
+### The copolymer starts are being built
+
+Your request is in progress: an explicit periodic 11 VDF : 1 VDCN sequence with
+topology-checked all-trans starts, in independently constructed polar and
+antipolar packings, screened for interchain close contacts, at the 592-atom eight-
+chain size via a 2x2x1 tiling of a two-chain cell.
+
+Two things we will flag rather than hide when it lands. The junction bonds either
+side of the VDCN unit have **no fitted parameters**; they will borrow, and that is
+the weakest part of the construction. And our antipolar construction had a defect
+found and withdrawn today - a flip with equal setting angles is antipolar only when
+a chain's transverse moment is perpendicular to its own axis, which is false for
+every planar zigzag, so it had been returning polar cells - therefore the antipolar
+start will ship with its polarization verified to be zero rather than asserted.
