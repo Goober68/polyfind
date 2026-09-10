@@ -169,6 +169,11 @@ number for it would be reporting noise.
 started there slides back out of it. The gap is E(antipolar) − E(polar) per monomer, so
 negative means the crystal wants to be antipolar and the net polarization is zero.
 
+> **WITHDRAWN — the `arrangement` and `antipolar gap` columns of this table and of the
+> candidate table below are not what they say.** `antipolar_cell`'s cell is not antipolar
+> for a planar zigzag, so every all-trans row compares two polar cells. See addendum 2 at
+> the end of this document for the corrected measurement.
+
 | polymer | phase | a × b × c (A) | ρ | arrangement | antipolar gap | ΔE lattice |
 |---|---|---|---|---|---|---|
 | PVDF | TG+TG- (α) | 4.99 × 9.04 × 4.71 | 2.000 | polar | +0.09 | +0.000 |
@@ -442,3 +447,128 @@ as a known gap and now has a concrete symptom attached to it. It is also a
 prerequisite for the bulk reference data requested in
 `docs/REFERENCE_DATA_REQUEST.md` to be usable, since comparing a Berry-phase
 polarization against a truncated-electrostatics model would confound the two.
+
+
+## Addendum 2: Ewald, and why the column was wrong for a different reason
+
+Ewald summation is now implemented and validated (`polyfind.ewald`, `DESIGN.md`
+section 5.11: the rock-salt Madelung constant to every published digit, energies
+independent of the splitting parameter to 1e-10, gradients against finite
+differences to 1e-9). It was re-run over the same chemistries. **Three results,
+and the last is the one that matters.**
+
+### beta-PVDF is polar, under both potentials and under either sum
+
+Addendum 1's table is superseded. Same quantity — the best exactly-antipolar cell
+minus the best cell overall, rigid, two chains, gamma = 90° — with the antipolar
+branch constructed from the chain's own moment rather than assumed:
+
+| potential | sum | E(antipolar) − E(best), kcal/mol per monomer | verdict |
+|---|---|---|---|
+| illustrative default | truncated (8 Å DSF) | **+1.729** | polar, correct |
+| illustrative default | Ewald, tinfoil | **+1.758** | polar, correct |
+| illustrative default | Ewald, vacuum | −1.004 | antipolar |
+| `pvdf-dft-valence-flux` | truncated (8 Å DSF) | **+1.018** | polar, correct |
+| `pvdf-dft-valence-flux` | Ewald, tinfoil | **+1.021** | polar, correct |
+| `pvdf-dft-valence-flux` | Ewald, vacuum | −0.769 | antipolar |
+
+The fitted potential does **not** get beta wrong. Addendum 1's −0.125 came from
+the old antipolar construction — which for a planar zigzag is not antipolar at all
+(below) — together with a search of it that had not converged; the same
+construction reproduces addendum 1's +1.73 for the default potential by
+coincidence, because for that potential the converged value happens to agree.
+Both rows of addendum 1's table are withdrawn. The one thing addendum 1 got right
+is that the boundary condition matters: switch from the bulk (tinfoil) convention
+to an isolated sample in vacuum and beta does flip to antipolar, because the
+vacuum convention charges it 1.17 kcal/mol per monomer of depolarisation energy
+for being polar. That is a statement about unelectroded slabs, not about the
+crystal; `DESIGN.md` 5.11 says why tinfoil is the default.
+
+### Ewald is not what was wrong
+
+Three polymorphs whose experimental polarity is known, under Ewald (tinfoil), both
+potentials: **beta polar +1.76 / +1.02 (correct), gamma polar +1.67 / +0.68
+(correct), alpha polar +0.22 / +0.09 (wrong — it is antipolar)**. Alpha's margin
+is an order of magnitude below the potential's own held-out error, so the model
+does not decide alpha rather than getting it wrong with conviction, and correct
+electrostatics did not move it (+0.20 / +0.08 truncated).
+
+Across chemistries the same holds. Re-measured over the nine whose all-trans packs
+at all, under `pvdf-dft-valence`, with the truncated sum and with Ewald (tinfoil),
+on an identical protocol: **Ewald moves every antipolar gap by at most 0.09
+kcal/mol per monomer and changes no verdict anywhere.**
+
+| chemistry | μ⊥ (e.A/monomer) | truncated gap | Ewald gap | verdict, both |
+|---|---|---|---|---|
+| pvdf | 0.362 | +1.018 | +1.021 | polar |
+| cfe | 0.386 | +1.524 | +1.501 | polar |
+| cdfe | 0.325 | +0.410 | +0.390 | polar |
+| an | 0.561 | +0.065 | +0.047 | polar |
+| vdcn | 0.645 | −0.558 | −0.645 | **antipolar** |
+| pvf-cand | 0.302 | +0.175 | +0.206 | polar |
+| trfe-cand | 0.305 | +0.034 | +0.051 | polar |
+| vfcn-cand | 0.548 | +0.282 | +0.264 | polar |
+| vclcn-cand | 0.557 | +0.103 | +0.134 | polar |
+
+So the suspicion recorded in addendum 1 — that the arrangement column was
+reporting the truncation — **is not supported**. A truncated dipole sum still
+cannot be defended as a matter of principle, and the boundary convention still
+changes beta's lattice energy by 1.17 kcal/mol per monomer (above), but on these
+structures the truncated and the correct sum agree on the sign of every gap and
+nearly on its size.
+
+### What was wrong was the antipolar cell itself
+
+`fitting.antipolar_cell` builds the antipolar branch as "chain 2 flipped, setting
+angles equal". That is the antipolar subspace only when the chain's transverse
+dipole is perpendicular to the chain's own `x` axis. It is, for a TG+TG- helix,
+whose `m_x` is exactly zero. **It is not, for any planar zigzag**: an all-trans
+chain's moment lies along its own `x`, the flip `(x, −y, −z)` leaves that
+component alone, and the "antipolar" cell comes back carrying the *full*
+polarization of the polar minimum at an energy degenerate with it. Measured on
+beta-PVDF: `|P| = 0.1416 C/m^2` and a gap of −0.0000.
+
+**Every all-trans antipolar gap in this document was therefore a comparison
+between two polar cells**, and the −1.48 for β-PVDF, −1.86 for AN and −7.60 for
+VDCN are not antipolar gaps. That is not an inference from one case: the correct
+offset, derived from each chain's own moment, is 180° for every all-trans chain in
+the table above and 302° for CDFE's, and never the 0° the old construction uses.
+(They are also not gaps between cells searched alike: `antipolar_cell` polishes
+from two starts with `(a, b)` unbounded, while the polar branch is screened inside
+`default_bounds`.) The corrected construction
+is `fitting.antipolar_offsets` / `antipolar_cell_exact`, which derives the
+subspace from the chain's own moment and searches it with a grid screen plus a
+polish of the best distinct cells; the table above is measured with it, and the
+zero dipole is checked at every answer rather than assumed (max |P| < 1e-15).
+
+### So: does design rule 1 survive? No.
+
+The rule was "every chemistry whose all-trans carries μ⊥ above 0.5 e.A per
+monomer packs that all-trans antipolar, without exception" — four for four. Under
+the corrected comparison it is **one for four** (VDCN), with the same numbers
+under either sum. The Pearson correlation of μ⊥ against the antipolar gap is
+−0.49 truncated, −0.51 Ewald: the *sign* of the tendency survives and the
+exceptionless form does not.
+
+**And the three that changed sides did not change to "polar" — they changed to
+"not resolved".** AN +0.047, vclcn +0.134, vfcn +0.264 kcal/mol per monomer are
+inside the noise of everything else in this model (the potential's own held-out
+error is 1.36 kcal/mol, and the α/β polymorph gap it gets right is 0.75). Only
+two chemistries here have a margin worth quoting: VDCN is antipolar by 0.6, and
+PVDF and CFE are polar by 1.0 and 1.5.
+
+**Rule 1 must not be used as a reject filter.** Not because the electrostatics
+were truncated, but because the quantity it was fitted against was not measuring
+what it was named after, and because the corrected quantity is below this model's
+resolution for most of the sample. The `arrangement` and `antipolar gap` columns
+of the tables above stay withdrawn.
+
+Rule 2 is unaffected, as addendum 1 said. The trfe-cand result rests on the same
+withdrawn column: its "+1.66 for TT, +1.87 for TG+TG-, +1.96 for T3GT3G', the
+largest *minimum* of any chemistry here" was measured the old way, and re-measured
+with the corrected construction its all-trans gap is +0.034 (truncated) / +0.051
+(Ewald) — **not resolved**. The two helical phases were not re-measured, so the
+claim that trfe has "no antipolar escape route" now rests on nothing that has been
+checked, and is withdrawn with the column it came from. What survives for trfe is
+the part that never used the antipolar branch: its all-trans sits +0.42 kcal/mol
+per monomer above its own lattice ground state, the closest of anything screened.

@@ -526,7 +526,7 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
     # screen that only ever proposes polar starts would otherwise miss it), then continuous
     # refinement of torsions, backbone angles and cell, with the bond-angle strain added
     # back into the reported energy.
-    from polyfind.fitting import antipolar_cell
+    from polyfind.fitting import antipolar_cell_exact
     from polyfind.pack import CrystalPacker
     from polyfind.pack import pack as _pack
     from polyfind.refine import refine_crystal
@@ -545,7 +545,14 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
             try:
                 rigid = _pack(chain, n_chains=2, table_cache_dir=None)[0]
                 packer = CrystalPacker(chain, n_chains=2)
-                anti_params, anti_e = antipolar_cell(packer, rigid)
+                # ``antipolar_cell_exact``, not ``antipolar_cell``: the latter's
+                # "flip and equal setting angles" is the antipolar subspace only when the
+                # chain's transverse moment is perpendicular to its own x, which is false
+                # for every planar zigzag, so it compared two *polar* cells for every
+                # all-trans row this script has ever printed (docs/SCREEN.md addendum 2).
+                # The corrected search costs about 10 s per conformation instead of 1.
+                anti_params, anti_e, anti_pol = antipolar_cell_exact(packer)
+                assert anti_pol < 1e-9, f"antipolar branch is not antipolar: |P| = {anti_pol:.2e}"
                 polar_gap = anti_e - rigid.energy_per_monomer
                 if polar_gap < 0.0:
                     rigid = packer.result(anti_params)
@@ -562,7 +569,7 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
                    "a": round(res.a, 3), "b": round(res.b, 3), "c": round(res.c, 4),
                    "gamma": round(res.gamma, 2), "density": round(res.density, 4),
                    # Judged on the *rigid* comparison, which is the one that means something:
-                   # ``antipolar_cell`` measures the symmetric antipolar subspace explicitly,
+                   # ``antipolar_cell_exact`` measures the symmetric antipolar subspace explicitly,
                    # while a refinement started there slides back out of it (the subspace is
                    # not stationary), so the refined cell's own flip flag is not the answer.
                    "arrangement": "antipolar" if polar_gap < 0.0 else "polar",

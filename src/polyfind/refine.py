@@ -116,6 +116,8 @@ def refine_crystal(
     probe: dict | None = None,
     valence=None,
     lj_cutoff: str = "energy",
+    coulomb: str = "dsf",
+    ewald=None,
 ) -> RefineResult:
     """Relax cell (a, b, [gamma], phi1, phi2, dz) and the repeat's conformation.
 
@@ -138,8 +140,11 @@ def refine_crystal(
     so the fitted one wins and this one switches itself off.
 
     ``valence`` (anything with ``bond_table()`` and ``angle_table()``, e.g.
-    ``SimpleFF.from_preset("pvdf-dft-valence")``) and ``lj_cutoff`` are handed straight to
-    :class:`polyfind.pack.CrystalPacker`; both are off by default and both change the
+    ``SimpleFF.from_preset("pvdf-dft-valence")``), ``lj_cutoff`` and
+    ``coulomb``/``ewald`` (``"ewald"`` replaces the truncated Coulomb sum with
+    :mod:`polyfind.ewald`, which is what a polar cell's energy needs and what the
+    tabulated screen cannot have) are handed straight to
+    :class:`polyfind.pack.CrystalPacker`; all are off by default and all change the
     energy, so a refinement that uses them is not comparable with one that does not.  With
     ``valence`` set, the bend energy is part of the lattice energy the refinement minimises
     and part of :attr:`RefineResult.result` -- which is the point: the angles then relax
@@ -236,7 +241,7 @@ def refine_crystal(
         field = getattr(start, "field", (0.0, 0.0, 0.0))
     field = None if not np.any(np.asarray(field, dtype=float)) else field
     packer = CrystalPacker(ref, n_chains=start.n_chains, cutoff=cutoff, eps_r=eps_r, field=field,
-                           valence=valence, lj_cutoff=lj_cutoff)
+                           valence=valence, lj_cutoff=lj_cutoff, coulomb=coulomb, ewald=ewald)
     count = {"n": 0}
 
     def chains_for(S) -> tuple[list[PeriodicChain], np.ndarray, np.ndarray]:

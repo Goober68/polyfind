@@ -75,6 +75,7 @@ model = fit_ris(PVDF, ASECalculator(mace_mp()), third_order=True).model
 | `enumerate.py` | periodic candidate generation, dedupe, ranking |
 | `forcefield.py` | `SimpleFF` (illustrative), `ASECalculator` adapter, `fit_ris` |
 | `pack.py` | rigid-helix crystal packing: batched lattice-energy kernel, search, CIF export |
+| `ewald.py` | Ewald lattice electrostatics (`CrystalPacker(coulomb="ewald")`), tinfoil or vacuum boundary |
 | `refine.py` | continuous refinement of torsions + cell with a commensurability penalty |
 | `amorphous.py` | Boltzmann ensembles, run statistics, lamella-interface sampling |
 | `backend.py` | NumPy / CuPy selection for the batched kernels |

@@ -483,6 +483,17 @@ alignment (section 5.4), and the damped-shifted-force sum carries no
 depolarisation energy (section 6).  It is a property of the charges, not of the
 search, since the antipolar cell is reachable and merely scores worse.
 
+**Half of that diagnosis is now testable, and it holds.**  Section 5.11 adds an
+Ewald sum in which the depolarisation energy of an isolated sample is a
+selectable term.  Switched on (the vacuum convention), alpha's ground state does
+become the antipolar cell, `|P| = 0.0000`, which is the experimental answer;
+switched off (tinfoil, the bulk convention and the default), alpha still packs
+polar, by +0.22 kcal/mol per monomer against +0.20 truncated.  So the missing
+depolarisation energy would indeed fix alpha -- and it is the wrong thing to add,
+because that term is a property of an unelectroded sample's *shape*, not of the
+bulk crystal, and a real ferroelectric answers it with domains.  The remaining
+half of the diagnosis, the charges, is where alpha still fails.
+
 A uniform field enters as minus the dipole dotted with the field, computed per
 configuration from the placed coordinates so it follows the setting angles, the
 flip and the torsions, and `pack` and `refine_crystal` both optimise in it.
@@ -792,6 +803,165 @@ would have faked a pass on that test.  The fitting code now refuses such terms.
 An agent found it while checking its own acceptance test rather than reporting
 the pass.
 
+### 5.11 Ewald summation, and what it settles
+
+`docs/SCREEN.md`'s addendum recorded a symptom: the two potentials disagree about
+whether beta-PVDF -- the ferroelectric phase, so polar -- packs polar or
+antipolar, by margins of order 1 kcal/mol per monomer, and what decides such a
+margin is a dipole-dipole lattice sum.  Those decay as `1/r^3` against `r^2`
+pairs per shell, so they are only conditionally convergent: **a truncated sum
+does not evaluate them at any cutoff**, and every number in this package up to
+that point came from a damped-shifted-force sum at 8 A.  `polyfind.ewald` is the
+fix, and `CrystalPacker(coulomb="ewald")` is how it is asked for.
+
+**The form.**  The textbook split, with `erfc` in real space out to the packer's
+own cutoff, a reciprocal-space sum over `|k| < kmax`, the self term, the
+neutralising-background term for a charged cell (zero here, every repeat being
+built neutral), and the surface term.  `alpha` and `kmax` default to the
+accuracy-driven choice `alpha = sqrt(-ln(acc))/rc`, `kmax = 2 alpha
+sqrt(-ln(acc))` with `acc = 1e-8`; both are overridable, which is what makes the
+splitting-independence check possible.  Two things the package's own potential
+adds to the textbook sum:
+
+* **Bonded exclusions.**  Ewald evaluates every pair at full weight; this
+  potential excludes 1-2 and 1-3 pairs and halves 1-4 pairs, across the periodic
+  boundary too.  `ewald.exclusion_correction` subtracts the *whole* `1/r` of
+  those pairs (not only its `erf` part), which keeps the correction independent
+  of `alpha` and so inside the coverage of that check.  Like `e_intra` it is a
+  per-chain constant while the chain is rigid, and a flip is an isometry, so one
+  value serves both orientations.
+* **The molecular branch.**  The real and reciprocal sums are invariant under
+  moving any atom by a lattice vector; the surface term is not, and the choice
+  that makes it well defined is to keep each neutral chain whole -- the same
+  branch `CrystalPacker.dipole` already uses.  Ewald gradients are therefore
+  taken at fixed *Cartesian* coordinates with respect to the lattice vectors,
+  which is the convention the truncated kernel's `glat` already used, so the
+  existing chain rule to `(a, b, gamma, c, phi, dz)` carries them unchanged.
+
+**The boundary convention is physics, and the default is tinfoil.**  The
+conditionally convergent part of the sum is exactly the `k -> 0` limit, and its
+value depends on the shape of the macroscopic sample and on what surrounds it
+rather than on the crystal.  `"tinfoil"` (metallic, zero surface term) is the
+default: it is the bulk limit of a short-circuited or fully screened crystal,
+which is the condition under which a ferroelectric's spontaneous polarization is
+defined and measured, and the convention every Berry-phase or Wannier
+polarization this package compares itself against is computed in.  It is also the
+only one in which the energy is a property of the crystal rather than of the
+sample's outline.  `"vacuum"` (spherical boundary, `2 pi |M|^2 / 3 V`) is
+selectable and is a real situation -- an isolated sample carrying its own
+depolarising field -- but it is a shape factor times `P^2` that penalises *every*
+polar cell, and a real unelectroded ferroelectric answers it by forming domains
+rather than by paying it.  For beta-PVDF's cell that term is **4.66 kcal/mol per
+cell, 1.17 per monomer**, which is several times the margin the polar/antipolar
+question turns on, so the convention is not a detail and no energy from this
+module is quotable without it.
+
+**Where it is used, and where it is refused.**  Ewald's reciprocal-space half is a
+sum over the whole cell, not over pairs, so it cannot be tabulated as a chain-pair
+interaction -- and `polyfind.lattice_table`'s screen is exactly such a tabulation.
+The division is the one the rigid table and the deformable direct kernel already
+had: **the screen stays truncated, the polish and everything after it can be
+Ewald.**  `pack(coulomb="ewald")` builds a `"dsf"` twin for the screen and the
+Ewald packer for the polish, so the energies that come back are Ewald energies and
+only the *starts* came from a truncated sum; `refine_crystal(coulomb="ewald")` and
+`mechanics.reference_from_chain(coulomb="ewald")` pass it through to the direct
+kernel.  `CrystalPacker._require_dsf` is the enforcement, and it is called from
+every caller that assumes a pair potential -- the table builder, the chain-pair
+interaction, the isolated-chain constants -- so an Ewald packer cannot reach one by
+accident and be silently tabulated with no electrostatics at all.  The cost is in
+`docs/BENCHMARK.md`: two to five times the truncated kernel per configuration,
+1.6 to 1.8 times per refinement, and nothing at all on the screen.
+
+**Validated before being used.**  Ewald is easy to get subtly wrong and the
+failure mode is a plausible number, so `tests/test_ewald.py` checks it against
+things known independently of this package.
+
+| check | result |
+|---|---|
+| Madelung constant, rock salt (published 1.747564594633) | **1.747564594633**, `acc=1e-16`, `rc=12`: agrees to every digit of the published value, and bit-for-bit in float64 |
+| the same at `acc` 1e-12 / 1e-8 / 1e-6 | error 2.7e-13 / 2.9e-9 / 2.9e-7 |
+| the same at `rc` = 8, 10, 12, 16, 20 A | all within 1e-12 of the published value at `acc=1e-14` |
+| Madelung constant, CsCl (published 1.762674773) | 1.762674773071 |
+| Madelung constant, zinc blende (published 1.6380550533) | 1.638055053389 |
+| independence of the splitting parameter | beta-PVDF's cell at `rc=12`: `alpha` = 0.45, 0.536, 0.65, 0.80, 1.00 give -10.7270549226 to all ten digits; a disordered 14-charge cell holds to 1e-13 over `alpha` = 0.45 .. 0.90 |
+| reciprocal cutoff convergence | beta's cell, `alpha=0.536`: `kmax` = 2, 3, 4, 4.605 (the default), 6 give errors -1.5e-1, -6.2e-3, -9.3e-6, +3e-8, 0 |
+| real-space cutoff at the default setting | `rc=8`, `alpha=0.536` is 6e-8 kcal/mol per cell from the `rc=12` answer |
+| translating any one atom by a lattice vector (tinfoil) | 0 to 2.3e-13 kcal/mol |
+| translating a whole neutral chain by a lattice vector (`dz -> dz + c`) | free in both conventions, to 1e-13 |
+| gradients against central differences | coordinates, lattice and charges, both conventions, to 1e-9 relative; and to 1e-9 again with valence terms and charge flux on, which is the combination the response uses |
+| against an independent brute-force sum | summing the charge-charge lattice sum over spherical shells of whole cells out to 100 A gives beta's electrostatic energy as -6.2175 kcal/mol per cell, and the Ewald **vacuum** total is -6.2174: a spherical truncation converges to the spherical-boundary convention, and the 4.66 it differs from tinfoil by is the surface term to four digits |
+
+That last row is the conditional convergence of the dipole sum, measured rather
+than asserted: the same lattice sum has two different values depending on how it
+is summed, and which one is right is the boundary condition.
+
+**A second defect found on the way, and it matters more than the summation.**
+`fitting.antipolar_cell` builds its antipolar cell as "chain 2 flipped, setting
+angles equal".  That is the antipolar subspace only when the chain's transverse
+moment is perpendicular to the chain's own `x` axis.  It is, for the alpha helix,
+whose `m_x` is exactly zero -- which is why the test asserting `|P| = 0` for it
+passes.  It is not, for a planar zigzag: beta-PVDF's chain moment lies *along*
+its own `x`, so the flip is a rotation (section 5.6 records the same symmetry for
+the energy) and reverses nothing.  Measured: `antipolar_cell` on beta returns a
+cell carrying `|P| = 0.1416 C/m^2`, the full polarization of the polar minimum,
+at an energy degenerate with it to four decimal places.  **Every all-trans
+"antipolar gap" in `docs/SCREEN.md` is therefore a comparison between two polar
+cells.**  `fitting.antipolar_offsets` now derives the subspace from the chain's
+own moment -- `flip = 1, phi2 = phi1 + 180 + 2 theta` works for any chain, and
+`flip = 0, phi2 = phi1 + 180` whenever the axial moment vanishes --
+and `fitting.antipolar_cell_exact` searches it the way `pack()` searches the
+unconstrained space, with a grid screen and a polish of the best distinct cells
+rather than two unbounded starts.  `antipolar_cell` is left exactly as it was,
+because the fit and the numbers in 5.7, 5.9 and 5.10 were measured with it -- and
+because the one case the fit uses it on is the alpha helix, where it is right.
+
+**The answer to the question that motivated all this.**  Three polymorphs whose
+experimental polarity is known, both potentials, the truncated sum against Ewald.
+`E(best antipolar) - E(best overall)`, kcal/mol per monomer, rigid chains, two per
+cell, gamma = 90 deg, positive meaning polar:
+
+| potential | phase | experiment | truncated, 8 A | Ewald, tinfoil | Ewald, vacuum |
+|---|---|---|---|---|---|
+| illustrative | beta | polar | **+1.729** correct | **+1.758** correct | −1.004 wrong |
+| illustrative | alpha | antipolar | +0.202 wrong | +0.220 wrong | 0.000, and the ground state *is* the antipolar cell (zero dipole) -- correct |
+| illustrative | gamma | polar | **+1.638** correct | **+1.674** correct | +0.432 correct |
+| `pvdf-dft-valence-flux` | beta | polar | **+1.018** correct | **+1.021** correct | −0.769 wrong |
+| `pvdf-dft-valence-flux` | alpha | antipolar | +0.084 wrong | +0.094 wrong | 0.000, antipolar ground state -- correct |
+| `pvdf-dft-valence-flux` | gamma | polar | **+0.665** correct | **+0.683** correct | −0.115 wrong |
+
+The margin that addendum 1 of `docs/SCREEN.md` called a near-degenerate balance
+tipped by the truncation turns out not to have been one.  Under a correctly
+constructed antipolar cell **both potentials put beta polar, under either sum**,
+by 1.0 to 1.8 kcal/mol per monomer, and Ewald moves that number by at most 0.04.
+The recorded `-0.125` was the old construction's comparison of two polar cells
+under a search that was not converged; it is withdrawn.
+
+What Ewald does change is the absolute lattice energy -- by about -1.1 kcal/mol
+per monomer for beta, -1.1 for alpha, -1.1 for gamma -- and almost nothing else.
+A refinement under Ewald moves beta's cell from 4.592 x 8.593 x 2.6128 A to
+4.593 x 8.584 x 2.6141 and its `|P|` from 0.1408 to 0.1409 C/m^2.  **The
+structures were not wrong; the energies were, by a nearly constant amount, and
+energy differences between arrangements of the same chain were wrong by a few
+hundredths.**
+
+Alpha is the one that stays wrong.  It should be antipolar and comes out polar by
++0.20 (illustrative, truncated), +0.22 (illustrative, Ewald), +0.08 (fitted,
+truncated) and +0.09 (fitted, Ewald).  Those margins are an order of magnitude
+below the potential's own held-out error of 1.36 kcal/mol, so the honest reading
+is not that the model says alpha is polar but that **it cannot decide alpha**, and
+correct electrostatics did not change that.  Gamma comes out polar, which is
+right, by a margin that does survive: +1.64 truncated and +1.67 Ewald with the
+illustrative potential, +0.66 and +0.68 with the fitted one.
+
+So of three polymorphs whose answer is known, Ewald gets two right and cannot
+decide the third, and that is exactly what the truncated sum already did.  **The
+conclusion this section was opened to test -- that the polarity column was
+reporting the truncation -- is not supported.**  The vacuum convention buys
+alpha and loses beta, and with the fitted potential loses gamma as well (two of
+three, then one of three), which is the clearest way to see that the surface term
+is not a free parameter to be turned until the answers come out right: it is a
+boundary condition, the bulk one is tinfoil, and tinfoil is what is reported.
+
 ## 6. Limitations and roadmap
 
 * RIS uses rigid bond geometry and discrete states; the continuous refinement
@@ -807,12 +977,23 @@ the pass.
   supports arbitrary bond-type periods but no defect placement yet.  Whether
   they *stabilise* beta, as this bullet used to assert flatly, is disputed in
   the sources: see `docs/REFERENCES.md` section 7.1.
-* The lattice energy uses a damped-shifted-force Coulomb sum, not Ewald; fine
-  for ranking neutral chains, not for absolute lattice energies or the
-  depolarisation energy of polar cells.
+* The lattice energy uses a damped-shifted-force Coulomb sum **by default**;
+  `CrystalPacker(coulomb="ewald")` is the Ewald sum of `polyfind.ewald`, with the
+  boundary convention selectable and tinfoil as its default (section 5.11).  The
+  truncated sum remains the default and remains what the tabulated screen uses,
+  because Ewald's reciprocal-space half is not pairwise and cannot be tabulated
+  as a chain-pair interaction; `CrystalPacker._require_dsf` is where that
+  boundary is enforced.  What is still missing: Ewald for a *charged* cell is
+  implemented (the neutralising background term) but untested against anything,
+  and nothing here computes the polarizability, so the model's response to its
+  own depolarising field is still absent even under the vacuum convention.
 * One and two chains per cell with chain 2 at (1/2, 1/2) are implemented;
   general chain positions and more chains per cell are a small extension of
-  the parameter vector.
+  the parameter vector.  This is now a limit on the *polarity* answer as well:
+  with only two chains and `gamma = 90`, a polar and an antipolar cell of beta
+  are distinguishable, but freeing `gamma` finds them exactly degenerate at
+  `gamma = 118.4 deg` under either sum, so the verdict of section 5.11 is a
+  verdict about the parametrisation it was measured in.
 * Free energies of crystals (phonons, thermal expansion) are not computed.
 * The CuPy backend is untested on hardware.
 
@@ -827,6 +1008,7 @@ src/polyfind/
   helix.py        screw decomposition, helix descriptors, symmetry canonicalisation
   enumerate.py    periodic candidate generation, dedupe, ranking, known-polymorph labels
   forcefield.py   SimpleFF, ASECalculator adapter, fit_ris (1D/2D scans + triplet corrections)
+  ewald.py        Ewald lattice electrostatics: real/reciprocal split, self, surface term
   pack.py         periodic chain construction, batched lattice-energy kernel, search, CIF
   refine.py       torsions + cell refinement with a commensurability penalty
   amorphous.py    Boltzmann ensembles, run statistics, lamella-interface sampling

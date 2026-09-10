@@ -332,6 +332,83 @@ C11 by 24%, and for two cases it drives the relaxation into the parametrisation'
 angular cap, where the routes disagree completely; those are reported as
 non-measurements rather than results.
 
+### What Ewald costs
+
+`CrystalPacker(coulomb="ewald")` (`DESIGN.md` 5.11) replaces the truncated Coulomb
+sum with a proper lattice sum. Measured on the same machine, same structures,
+tinfoil boundary, accuracy 1e-8 (which sets `alpha = 0.536 / A` at the packer's 8 Å
+cutoff and `kmax = 4.61 / A`):
+
+| | N atoms in the cell | k-vectors | real images | energy, one cell | with gradient | batched |
+|---|---|---|---|---|---|---|
+| beta | 12 | 164 | 315 | 1.04 → 4.35 ms (**x4.2**) | 3.14 → 9.45 ms (x3.0) | 0.85 → 3.33 ms/cfg (x3.9) |
+| alpha | 24 | 348 | 245 | 3.05 → 9.76 ms (x3.2) | 5.47 → 24.7 ms (x4.5) | 1.82 → 10.0 ms/cfg (x5.5) |
+| gamma | 48 | 718 | 125 | 16.2 → 28.8 ms (**x1.8**) | 35.0 → 72.4 ms (x2.1) | 15.4 → 31.0 ms/cfg (x2.0) |
+
+So **two to five times the truncated kernel per configuration**, and the ratio
+*falls* with cell size because the reciprocal sum is `O(N k)` against the real
+sum's `O(N^2 I)`. Downstream:
+
+| stage | truncated | Ewald | ratio |
+|---|---|---|---|
+| `refine_crystal`, beta | 0.1 s | 0.2 s | x1.6 |
+| `refine_crystal`, alpha | 1.1 s | 1.9 s | x1.7 |
+| `refine_crystal`, gamma | 3.9 s | 7.1 s | x1.8 |
+| full response, beta | 1.33 s | 2.64 s | x2.0 |
+| full response, alpha | 7.05 s | 14.0 s | x2.0 |
+| full response, gamma | 79.3 s | 64.8 s | **x0.8** |
+
+The response rows are the full deformable calculation of the section above
+(`pvdf-dft-valence` + `pvdf-dft-valence-flux`, elastic tensor, both routes to `d`,
+blocking stress, free strain), measured here with the same call both ways rather
+than quoted against the 0.3 / 1.4 / 7.8 s recorded earlier on a differently loaded
+machine. Gamma's **x0.8** is not Ewald being free: it is a relaxation that took a
+different number of iterations, and it is the warning that these are wall times of
+an optimisation, not of a kernel.
+
+**What the response numbers do under Ewald**, which is the part that matters more
+than the seconds:
+
+| | C33 (GPa) | C11 (GPa) | \|P\| (C/m^2) | the two routes to `d` |
+|---|---|---|---|---|
+| beta | 330.4 → 330.6 | 28.4 → 26.0 | 0.1497 → 0.1543 | agree 0.33 % → **0.26 %** |
+| alpha | 152.8 → 137.0 | 19.8 → 19.4 | 0.1022 → 0.1079 | 100 % → 100 %: a non-measurement either way, as already recorded |
+| gamma | 99.3 → 102.3 | 13.4 → 15.9 | 0.1023 → 0.1075 | 0.51 % → **100 %**: a non-measurement *under Ewald only* |
+
+`C33` — the one elastic constant this package stands behind — moves by 0.1 % for
+beta and 3 % for gamma, and by 10 % for alpha. Beta's `d31` goes from +2.33 to
++2.43 pC/N, the same sign and the same order. The two routes to `d` agreeing
+*better* for beta under Ewald (0.26 % against 0.33 %) is the sharpest available
+check that the Ewald energy gradient and the Ewald dipole derivative are consistent
+with each other.
+
+**Gamma's route agreement is lost under Ewald and that is reported as a
+non-measurement, not explained away.** It is not the gradient: finite differences
+against `energy_and_grad` at gamma's own Ewald reference, with valence terms and
+charge flux on, agree to 1e-9 on the cell, the coordinates and `c`. The failure is
+in the converse route's zero-stress root find in a field, which is the same
+parametrisation-cap failure already recorded for alpha's flux run; whether Ewald
+merely moved gamma over that edge has not been established.
+
+The refinement ratio is below the per-configuration ratio because a refinement
+spends part of its time in the chain rebuild and the valence terms, which Ewald
+does not touch. **The screen is unaffected**, by construction: the tabulated
+chain-pair interaction needs a pairwise potential, Ewald's reciprocal half is not
+one, and `pack(coulomb="ewald")` therefore screens with a truncated twin and
+polishes with Ewald (`CrystalPacker._require_dsf` refuses any other arrangement).
+So the 14-53 s structure-search rows above do not move at all.
+
+**And what the extra cost buys is not what was expected.** Ewald shifts beta's
+lattice energy by −1.12 kcal/mol per monomer, alpha's by −1.18 and gamma's by
+−1.16, and moves the *structures* almost not at all: beta's refined cell goes from
+4.59 x 8.59 x 2.6128 Å to 4.59 x 8.58 x 2.6141 and its `|P|` from 0.1408 to
+0.1409 C/m^2. The α−β polymorph gap, which is an acceptance test, goes from +7.34
+to +7.09 kJ/mol per monomer — a 3 % change, still inside the 2.6-6.5 kJ/mol
+literature range it was already inside. The near-cancellation is why the truncated
+sum got away with it for so long, and it is not a reason to keep using it: what
+cancels is a nearly constant offset, not the differences a polar/antipolar
+comparison is made of.
+
 ### The honest summary
 
 For **screening** - ranking chemistries, getting the direction and rough scale of

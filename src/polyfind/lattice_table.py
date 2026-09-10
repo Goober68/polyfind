@@ -78,7 +78,12 @@ __all__ = [
 
 # ------------------------------------------------------------------ pair potential
 def _pair_v(packer: CrystalPacker, r2: np.ndarray) -> np.ndarray:
-    """The packer's exact pair potential (LJ + DSF Coulomb, shifted, masked) at r2."""
+    """The packer's exact pair potential (LJ + DSF Coulomb, shifted, masked) at r2.
+
+    Pairwise by construction -- which is the whole basis of the tabulation -- so an Ewald
+    packer is refused rather than quietly tabulated without its electrostatics.
+    """
+    packer._require_dsf("the tabulated chain-pair interaction")
     mask = (r2 < packer.rc ** 2) & (r2 > 1e-8)
     rr = np.sqrt(np.where(mask, r2, 1.0))
     s6 = (packer.lj_x / rr) ** 6
@@ -132,6 +137,7 @@ def chain_pair_energy(packer: CrystalPacker, rho_vec, dz, phi1, phi2, flip, chun
 def intra_energy(packer1: CrystalPacker) -> float:
     """Energy of one chain with its own z-images (bonded exclusions applied) plus its
     torsion term: the constant part of the lattice energy, per chain."""
+    packer1._require_dsf("intra_energy")
     big = packer1.reach + 20.0
     return float(packer1.energy(np.array([[big, big, 90.0, 0.0, 0.0, 0.0, 0.0]]))[0])
 
@@ -139,6 +145,10 @@ def intra_energy(packer1: CrystalPacker) -> float:
 def intra_constants(packer2: CrystalPacker) -> np.ndarray:
     """``[E_intra(flip=0), E_intra(flip=1)]``: the constant part of a two-chain cell,
     isolated by evaluating the packer on a cell far larger than its reach.
+
+    Refused for an Ewald packer: the "constant part" is isolated by evaluating a cell far
+    larger than the cutoff, which for a conditionally convergent sum is not a limit at all
+    (and for an Ewald sum is a very large image grid).
 
     The two entries are measured rather than assumed to be equal, because the
     intra-chain term of the *flipped* chain is whatever the packer says it is
@@ -148,6 +158,7 @@ def intra_constants(packer2: CrystalPacker) -> np.ndarray:
     keeping it as a measured constant means the table reproduces the packer
     either way).  Both entries are independent of the cell and of the angles.
     """
+    packer2._require_dsf("intra_constants")
     big = packer2.reach + 20.0
     p = np.array([[big, big, 90.0, 0.0, 0.0, 0.0, f] for f in (0.0, 1.0)])
     return packer2.energy(p)

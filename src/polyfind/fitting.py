@@ -386,15 +386,126 @@ class Prediction:
         return tuple(sorted((self.a, self.b)))
 
 
+def chain_moment(packer: CrystalPacker) -> np.ndarray:
+    """``mu`` of ONE chain in its own frame (e.A): ``sum_i q_i r_i`` over the repeat.
+
+    Independent of the cell, of ``dz`` and of which image the chain is written at, because
+    the repeat is neutral.  It is what decides the antipolar subspace
+    (:func:`antipolar_offsets`).
+    """
+    q = np.asarray(packer._q_cell[: packer.n], dtype=float)
+    return np.einsum("n,nc->c", q, np.asarray(packer.chain.coords, dtype=float))
+
+
+def antipolar_offsets(packer: CrystalPacker, tol: float = 1e-9) -> list[tuple[int, float]]:
+    r"""``[(flip, dphi)]`` for which ``phi2 = phi1 + dphi`` makes the cell dipole exactly zero.
+
+    Chain 1 contributes ``Rz(phi1) m`` to the cell dipole and chain 2 contributes
+    ``Rz(phi2) M^flip m``, where ``m`` is :func:`chain_moment` and ``M = diag(1, -1, -1)``
+    is the mirror a flip applies.  So the cell is antipolar for *every* ``(a, b, dz)`` iff
+    ``Rz(phi2) M^flip m = -Rz(phi1) m``.  Writing ``m = (m_t cos th, m_t sin th, m_z)``:
+
+    * ``flip = 1`` sends ``th -> -th`` and ``m_z -> -m_z``, so ``dphi = 180 + 2 th``
+      satisfies it for **any** chain;
+    * ``flip = 0`` leaves ``m_z`` alone, so ``dphi = 180`` satisfies it only when
+      ``m_z = 0`` -- true of any planar zigzag, whose moment is perpendicular to its axis.
+
+    **This is a correction.**  :func:`antipolar_cell` uses ``dphi = 0``, which is the above
+    only when ``th = 90 deg``.  That holds for PVDF's alpha helix, whose ``m_x`` is zero,
+    and fails for its beta zigzag, whose moment lies along its own ``x``: there a flip is a
+    *rotation* of the chain (``DESIGN.md`` 5.6 notes the same symmetry for the energy) and
+    reverses no dipole at all, so ``antipolar_cell`` returns a cell with the full
+    polarization of the polar minimum and an energy degenerate with it.  Every all-trans
+    "antipolar gap" obtained through ``antipolar_cell`` is therefore a comparison between
+    two polar cells; see ``docs/SCREEN.md``.
+    """
+    m = chain_moment(packer)
+    th = np.degrees(np.arctan2(m[1], m[0]))
+    out = [(1, float((180.0 + 2.0 * th) % 360.0))]
+    if abs(m[2]) < tol:
+        out.append((0, 180.0))
+    return out
+
+
+def antipolar_cell_exact(packer: CrystalPacker, bounds: dict | None = None,
+                         screen_packer: CrystalPacker | None = None, target: int = 6000,
+                         n_polish: int = 8, maxfev: int = 900) -> tuple[np.ndarray, float, float]:
+    """Lowest cell in the exactly-antipolar subspace of :func:`antipolar_offsets`.
+
+    Searched the way ``pack()`` searches the unconstrained space, which
+    :func:`antipolar_cell` does not: a grid over the whole subspace scored with a cheap
+    truncated ``screen_packer`` (the packer itself if none is given), then an exact polish
+    of the best *distinct* cells.  ``antipolar_cell`` polishes from two starts with no
+    screen and with ``(a, b)`` unbounded, so its branch and the polar branch were neither
+    bounded alike nor screened alike, and on a near-degenerate pair of phases that decides
+    the answer.
+
+    Returns ``(params, energy_per_monomer, max|P|)``.  The polarization comes back so the
+    caller can check it is zero rather than trust that it is.
+    """
+    from .pack import default_bounds
+
+    sp = screen_packer or packer
+    c = float(packer.chain.c)
+    bd = bounds or default_bounds(packer.chain)
+    # widened at the low edge: antiparallel dipoles can pack denser than the polar screen went
+    lo_a, lo_b = 0.85 * bd["a"][0], 0.85 * bd["b"][0]
+    branches = antipolar_offsets(packer)
+    n_dz, n_phi = 4, 12
+    n_ab = max(6, int(np.sqrt(target / (len(branches) * n_dz * n_phi))))
+    avs = np.linspace(lo_a, bd["a"][1], n_ab)
+    bvs = np.linspace(lo_b, bd["b"][1], n_ab)
+    phis = np.linspace(0.0, 360.0, n_phi, endpoint=False)
+    dzs = np.linspace(0.0, c, n_dz, endpoint=False)
+    rows = []
+    for flip, dphi in branches:
+        grid = np.array([[a, b, 90.0, p, p + dphi, z, float(flip)]
+                         for a in avs for b in bvs for p in phis for z in dzs])
+        e = sp.energy(grid)
+        taken = []
+        for i in np.argsort(e):
+            g = grid[i]
+            # spread the starts over different cells: neighbouring (a, b) differ only in
+            # which (phi, dz) the same basin was entered at and all polish to one point
+            if any(abs(g[0] - t[0]) + abs(g[1] - t[1]) < 1.0 for t in taken):
+                continue
+            taken.append(g)
+            rows.append((float(e[i]), g, flip, dphi))
+            if len(taken) >= n_polish:
+                break
+    rows.sort(key=lambda r: r[0])
+    best, best_e = None, np.inf
+    for _, g, flip, dphi in rows[:n_polish]:
+        def obj(v, _f=flip, _d=dphi):
+            a, b, phi, dz = v
+            if a < 2.0 or b < 2.0:
+                return 1e6
+            return float(packer.energy(np.array([a, b, 90.0, phi, phi + _d, dz, float(_f)])[None])[0])
+
+        r = minimize(obj, [g[0], g[1], g[3], g[5]], method="Nelder-Mead",
+                     options={"maxfev": maxfev, "xatol": 1e-3, "fatol": 1e-5})
+        if r.fun < best_e:
+            best = np.array([r.x[0], r.x[1], 90.0, r.x[2], r.x[2] + dphi, r.x[3], float(flip)])
+            best_e = float(r.fun)
+    pol = float(np.abs(packer.polarization(best[None])).max())
+    return best, best_e / (packer.n_chains * packer.chain.n_monomers), pol
+
+
 def antipolar_cell(packer: CrystalPacker, start: PackResult, maxfev: int = 250) -> tuple[np.ndarray, float]:
     """Best cell with chain 2 flipped *and* the two setting angles equal.
 
-    That configuration is the antipolar one: flipping chain 2 reverses its axial dipole
-    and equal setting angles cancel the transverse part, so the cell dipole is exactly
-    zero for any (a, b, dz) -- asserted in the tests, not assumed.  It is a symmetric
-    subspace of the seven cell parameters, so an unconstrained polish would slide out of
-    it towards the polar minimum; tying phi2 to phi1 keeps the search inside it and
-    measures what the antipolar phase costs under the current potential.
+    **Only antipolar when the chain's transverse moment is perpendicular to its own x
+    axis**, which is true of PVDF's alpha helix and false of any planar zigzag; use
+    :func:`antipolar_cell_exact`, which derives the subspace from the chain's moment
+    instead of assuming it, for anything new.  This function is kept exactly as it was
+    because the fit, its acceptance tests and the numbers recorded in ``DESIGN.md`` 5.7,
+    5.9 and 5.10 were all measured with it.
+
+    Flipping chain 2 reverses its axial dipole and equal setting angles cancel the
+    transverse part *if* that part sits along the chain's own y -- and then the cell dipole
+    is exactly zero for any (a, b, dz), which the tests assert for the alpha helix.  It is a
+    symmetric subspace of the seven cell parameters, so an unconstrained polish would slide
+    out of it towards the polar minimum; tying phi2 to phi1 keeps the search inside it.
 
     Returns ``(params, energy_per_monomer)``.
     """

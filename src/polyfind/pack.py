@@ -61,6 +61,7 @@ from scipy.optimize import minimize
 
 from . import backend as bk
 from .chain import build_chain
+from .ewald import Ewald, EwaldSpec, exclusion_correction
 from .forcefield import COULOMB, _valence_lookup, erfc_approx, valence_topology
 from .helix import HelixParams, helix_parameters, kabsch, rotation_to_z
 from .polymers import Polymer, RISStates, lj_params
@@ -678,16 +679,30 @@ class CrystalPacker:
         given flux **replaces** whatever charges the chain carried, and a mismatch between
         the two at zero flux is refused rather than absorbed.
 
-    All three change the energy, so all three are refused by the tabulated screen
-    (:func:`_table_starts`), which is a rigid-chain, energy-shifted, fixed-charge object by
-    construction.
+    ``coulomb``
+        ``"dsf"`` (default) is the damped-shifted-force sum truncated at ``cutoff``.
+        ``"ewald"`` replaces the electrostatics entirely with :mod:`polyfind.ewald`: the pair
+        kernel then carries the Lennard-Jones term alone (``qq`` is zeroed), the whole
+        Coulomb energy including the intra-chain images comes from the Ewald sum, and the
+        bonded exclusions the sum knows nothing about are subtracted as
+        :attr:`e_excl`.  ``ewald=EwaldSpec(...)`` chooses the boundary convention
+        (``"tinfoil"`` by default) and the splitting parameters.  A truncated sum cannot
+        evaluate a dipole lattice sum at any cutoff, so this is the only setting in which a
+        polar/antipolar energy difference means anything; it is also not pairwise, so it is
+        refused by the tabulated screen and by every other caller that assumes a pair
+        potential (:meth:`_require_dsf`).
+
+    All four change the energy, so all four are refused by the tabulated screen
+    (:func:`_table_starts`), which is a rigid-chain, energy-shifted, fixed-charge,
+    pairwise object by construction.
     """
 
     PARAMS = ("a", "b", "gamma", "phi1", "phi2", "dz", "flip")
     NEUTRAL_TOL = 1e-6  # |cell charge| (e) above which the dipole is origin-dependent
     LJ_CUTOFFS = ("energy", "force")
+    COULOMB_SUMS = ("dsf", "ewald")
 
-    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy", charge_flux=None):
+    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy", charge_flux=None, coulomb: str = "dsf", ewald: EwaldSpec | None = None):
         self.n_chains = n_chains
         self.rc = cutoff
         self.rc2 = cutoff ** 2
@@ -697,6 +712,13 @@ class CrystalPacker:
         if lj_cutoff not in self.LJ_CUTOFFS:
             raise ValueError(f"unknown lj_cutoff {lj_cutoff!r} (expected one of {self.LJ_CUTOFFS})")
         self.lj_cutoff = lj_cutoff
+        if coulomb not in self.COULOMB_SUMS:
+            raise ValueError(f"unknown coulomb {coulomb!r} (expected one of {self.COULOMB_SUMS})")
+        if ewald is not None and coulomb != "ewald":
+            raise ValueError("an EwaldSpec was given but coulomb='dsf': pass coulomb='ewald' to use it, "
+                             "rather than letting a boundary convention be silently ignored")
+        self.coulomb = coulomb
+        self._ewald = None if coulomb == "dsf" else Ewald(cutoff, ewald, eps_r=eps_r)
         self.valence = valence
         self.charge_flux = charge_flux
         self.xp = xp or bk.get_backend()
@@ -774,6 +796,13 @@ class CrystalPacker:
         """
         xp, dt, rc = self.xp, self._dt, self.rc
         qq = np.outer(q, q) * COULOMB / self.eps_r
+        if self._ewald is not None:
+            # Under Ewald the pair kernel carries the Lennard-Jones term and nothing else:
+            # every electrostatic contribution, intra-chain images included, comes from
+            # :mod:`polyfind.ewald`, so zeroing ``qq`` here is what stops it being counted
+            # twice.  ``self._q_cell`` below still carries the real charges, because the
+            # dipole, the field term and the Ewald sum itself all need them.
+            qq = np.zeros_like(qq)
         qq_f = qq * self.dsf_force
         const = -self._lj_shift_np - qq * (self.dsf_shift + self.dsf_force * rc)
         if self._lj_f_np is not None:
@@ -800,6 +829,8 @@ class CrystalPacker:
         xp, dt, rc = self.xp, self._dt, self.rc
         q = np.asarray(q, dtype=float)
         qq = q[:, :, None] * q[:, None, :] * COULOMB / self.eps_r
+        if self._ewald is not None:
+            qq = np.zeros_like(qq)  # see :meth:`_set_charge_tables`
         if cell:
             qq = np.tile(qq, (1, self.n_chains, self.n_chains))
         qq_f = qq * self.dsf_force
@@ -862,6 +893,10 @@ class CrystalPacker:
         # constant only while the chain is; it moves as soon as an angle does.
         self.e_valence = 0.0 if self._valence is None else self.n_chains * float(
             self._valence.energy(chain.coords[None], np.array([chain.c]))[0])
+        # Under Ewald, the bonded exclusions the sum does not know about.  Like ``e_intra``
+        # it is a per-chain constant while the chain is rigid, and a flip is an isometry.
+        self.e_excl = 0.0 if self._ewald is None else self.n_chains * self._exclusion(
+            chain.coords, self._q_cell[: self.n], chain.c, self.K)[0]
 
     def torsion_energy(self, dihedrals) -> float:
         """Fourier torsion energy of one chain's repeat (kcal/mol)."""
@@ -987,10 +1022,48 @@ class CrystalPacker:
         """(2K+1, n, n) bonded-exclusion scales for the same-site (0,0,k) images."""
         S = self._scale_cache.get(K)
         if S is None:
-            ones = np.ones((self.n, self.n))
-            S = self.xp.asarray(np.stack([self._scale_nn_base.get(k, ones) for k in range(-K, K + 1)]), dtype=self._dt)
+            S = self.xp.asarray(self._scale_column_np(K), dtype=self._dt)
             self._scale_cache[K] = S
         return S
+
+    def _scale_column_np(self, K: int) -> np.ndarray:
+        """:meth:`_scale_column` in host float64, which the Ewald correction needs."""
+        ones = np.ones((self.n, self.n))
+        return np.stack([self._scale_nn_base.get(k, ones) for k in range(-K, K + 1)])
+
+    # --- Ewald ---------------------------------------------------------------------
+    def _require_dsf(self, what: str) -> None:
+        """Refuse a non-pairwise Coulomb sum where a pairwise one is being assumed.
+
+        Ewald's reciprocal-space half is a sum over the *whole cell*, not over pairs, so it
+        cannot be tabulated as a chain-pair interaction and it cannot be recovered from
+        ``packer.qq`` (which an Ewald packer deliberately leaves at zero, since its kernel
+        carries only the Lennard-Jones term).  Feeding an Ewald packer to the table builder
+        would silently produce a table with no electrostatics at all, so it is refused here
+        rather than found later.
+        """
+        if self.coulomb != "dsf":
+            raise ValueError(
+                f"{what} needs a pairwise Coulomb sum, and this packer uses coulomb='{self.coulomb}': "
+                "its reciprocal-space term is a property of the whole cell, not of a chain pair, and "
+                "its pair tables carry no charge at all.  Build the screen with a coulomb='dsf' packer "
+                "(the screen only chooses starts) and use the Ewald packer for the polish, the "
+                "refinement and the response -- the same rigid-table / deformable-direct split the "
+                "valence terms and the charge flux already use."
+            )
+
+    def _exclusion(self, coords, q_repeat, c, K: int, grad: bool = False, charge_grad: bool = False):
+        """:func:`polyfind.ewald.exclusion_correction` for ONE chain of this packer."""
+        return exclusion_correction(coords, q_repeat, c, self._scale_column_np(K),
+                                    pref=COULOMB / self.eps_r, grad=grad, charge_grad=charge_grad)
+
+    def _ewald_rows(self, P, lat, q_rows=None) -> np.ndarray:
+        """The Ewald energy of every row of a placed chunk, in kcal/mol per cell."""
+        Pn = np.asarray(bk.to_numpy(P), dtype=float)
+        latn = np.asarray(bk.to_numpy(lat), dtype=float)
+        qc = None if q_rows is None else np.tile(np.asarray(q_rows, dtype=float), (1, self.n_chains))
+        return np.array([self._ewald.terms(Pn[i], self._q_cell if qc is None else qc[i], latn[i]).total
+                         for i in range(Pn.shape[0])])
 
     # --- geometry --------------------------------------------------------------
     def _place(self, params, coords=None, c=None):
@@ -1217,6 +1290,10 @@ class CrystalPacker:
             e_add = e_add + 0.5 * self.n_chains * intra
             if self._valence is not None:
                 e_add = e_add + self.n_chains * self._valence.energy(coords, c_arr)
+            if self._ewald is not None:
+                e_add = e_add + self.n_chains * np.array([
+                    self._exclusion(coords[t], self._q_cell[: self.n] if q_row is None else q_row[t],
+                                    c_arr[t], K)[0] for t in range(M)])
         else:
             c_arr = None
             q_row = None
@@ -1224,6 +1301,10 @@ class CrystalPacker:
             e_add = np.full(M, self.e_torsion + self.e_intra)
             if self._valence is not None:
                 e_add = e_add + self.e_valence
+            if self._ewald is not None:
+                # added here, after the valence term, so that the sum is associated exactly
+                # as :meth:`energy_and_grad` associates it and the two stay bit-identical
+                e_add = e_add + self.e_excl
         order = np.argsort(params[:, 0] * params[:, 1] * np.sin(np.deg2rad(params[:, 2])))
         params = params[order]
         out = np.empty(M)
@@ -1262,14 +1343,18 @@ class CrystalPacker:
                 qq, qqf, cst = t_cell if t_cell is not None else (self._qq, self._qqf, self._const)
                 v = self._pair_energy(r2, self._A, self._B, qq, qqf, cst)
                 e = e + v.sum(axis=(1, 2, 3))
+            # The electrostatics of an Ewald packer: its pair kernel above carried only the
+            # Lennard-Jones term, so this is the whole Coulomb energy of the cell.
+            e_ew = 0.0 if self._ewald is None else self._ewald_rows(
+                P, lat, None if q_row is None else q_row[sl])
             if self._field_on:
                 # -mu . E, from the placed coordinates of this chunk: the dipole follows
                 # the setting angles and the flip, so it is a per-row quantity.
                 q_use = self._q_cell_xp[None, :, None] if qc_xp is None else qc_xp[:, :, None]
                 mu = (P * q_use).sum(axis=1)  # (m, 3), e.A
-                out[s : s + m_chunk] = bk.to_numpy(0.5 * e - EV_TO_KCAL * (mu * self._field_xp[None, :]).sum(axis=1))
+                out[s : s + m_chunk] = bk.to_numpy(0.5 * e - EV_TO_KCAL * (mu * self._field_xp[None, :]).sum(axis=1)) + e_ew
             else:
-                out[s : s + m_chunk] = bk.to_numpy(0.5 * e)
+                out[s : s + m_chunk] = bk.to_numpy(0.5 * e) + e_ew
         res = np.empty_like(out)
         res[order] = out
         return res + e_add
@@ -1350,13 +1435,20 @@ class CrystalPacker:
                 t_nn = self._row_charge_tables(flux_q[None], False)
                 t_cell = self._row_charge_tables(flux_q[None], True)
                 q_cell = np.tile(flux_q, nc)
+        # dE/dq from the *kernel's* Coulomb term.  Under Ewald the kernel has no Coulomb
+        # term (``qq`` is zeroed), so asking for it would add the derivative of an energy
+        # that is not in the total -- the dq terms then come from the Ewald sum and its
+        # exclusion correction instead, and ``gq_chain`` starts at zero so they can.
+        kernel_dq = flux_q if self._ewald is None else None
         intra, gX, gc, gq = self._intra_column_and_grad(
-            intra_in, np.array([cz]), K, tables=t_nn, q_repeat=flux_q)
+            intra_in, np.array([cz]), K, tables=t_nn, q_repeat=kernel_dq)
         pref = 0.5 * nc
         # identical arithmetic to ``energy``'s two branches, so the value matches bit for bit
         e_add = (e_t + pref * float(bk.to_numpy(intra)[0])) if per_row else (self.e_torsion + self.e_intra)
         gX, gc = pref * gX, pref * gc
-        gq_chain = None if gq is None else pref * gq
+        gq_chain = None if self._flux is None else np.zeros(n)
+        if gq is not None:
+            gq_chain = gq_chain + pref * gq
         if self._valence is not None:
             # One repeat's valence energy per chain, with its exact derivatives with respect
             # to the repeat's coordinates and to c.  This is the whole of the plumbing the
@@ -1385,7 +1477,7 @@ class CrystalPacker:
             qq, qqf, cst = t_nn if t_nn is not None else (self._qq_nn, self._qqf_nn, self._const_nn)
             vh, gh = self._pair_energy_and_dv(r2h, self._A_nn, self._B_nn, qq, qqf, cst)
             e = e + 2.0 * vh.sum(axis=(1, 2, 3))
-            if gq_chain is not None:
+            if kernel_dq is not None:
                 # Chain 1 sees this block as rows, chain 2 as columns; both carry the *same*
                 # repeat charges, so both roles add into the one dE/dq per repeat atom.
                 W = np.asarray(bk.to_numpy(self._pair_phi(r2h)), dtype=float).sum(axis=(0, 1))
@@ -1413,7 +1505,7 @@ class CrystalPacker:
             qq, qqf, cst = t_cell if t_cell is not None else (self._qq, self._qqf, self._const)
             v, gv = self._pair_energy_and_dv(r2, self._A, self._B, qq, qqf, cst)
             e = e + v.sum(axis=(1, 2, 3))
-            if gq_chain is not None:
+            if kernel_dq is not None:
                 # E gets 0.5 * sum v; the image set is closed under negation, so the (a, b)
                 # and (b, a) sums are equal and the 0.5 cancels against counting both.
                 Wc = np.asarray(bk.to_numpy(self._pair_phi(r2)), dtype=float).sum(axis=(0, 1))
@@ -1430,6 +1522,30 @@ class CrystalPacker:
             glat = ijk_np[0].T @ gsh
             del dx, dy, dzz, gv, q, gsh
 
+        e_ew = 0.0
+        if self._ewald is not None:
+            # The whole electrostatic energy of the cell, with its exact derivatives.  The
+            # coordinate gradient joins ``gP`` and the lattice gradient joins ``glat``, both
+            # in the conventions the truncated kernel already established: ``glat`` is
+            # dE/d(lattice vectors) *at fixed Cartesian coordinates*, so the chain rule
+            # below carries it through to a, b, gamma and c unchanged.
+            terms = self._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=gq_chain is not None)
+            e_ew = terms.total
+            gP += terms.grad_coords
+            glat = glat + terms.grad_lattice
+            if gq_chain is not None:
+                gqe = terms.grad_charges
+                gq_chain = gq_chain + gqe[:n] + (gqe[n:] if nc == 2 else 0.0)
+            X_ch = Xn[0] if per_row else np.asarray(self.chain.coords, dtype=float)
+            q_rep = flux_q if flux_q is not None else self._q_cell[:n]
+            ex_e, ex_gX, ex_gc, ex_gq = self._exclusion(
+                X_ch, q_rep, cz, K, grad=True, charge_grad=gq_chain is not None)
+            # ``self.e_excl`` rather than ``nc * ex_e`` off the rigid path, so the value stays
+            # bit-for-bit the one :meth:`energy` returns for the same row.
+            e_add = e_add + (nc * ex_e if per_row else self.e_excl)
+            gX, gc = gX + nc * ex_gX, gc + nc * ex_gc
+            if gq_chain is not None:
+                gq_chain = gq_chain + nc * ex_gq
         if self._field_on:
             q_use = self._q_cell_xp if t_cell is None else xp.asarray(q_cell, dtype=dt)
             mu = (P * q_use[None, :, None]).sum(axis=1)
@@ -1442,6 +1558,7 @@ class CrystalPacker:
                 gq_chain = gq_chain + w[:n] + (w[n:] if nc == 2 else 0.0)
         else:
             out = float(bk.to_numpy(0.5 * e)[0])
+        out = out + e_ew
         if gq_chain is not None:
             gX = gX + np.einsum("a,abd->bd", gq_chain, flux_dq)
             gc = gc + float(gq_chain @ flux_dqc)
@@ -1736,6 +1853,7 @@ def _table_starts(packer, chain, lo, hi, n_refine, flips, step, gammas, table, c
     """
     from .lattice_table import fft_screen, pair_table
 
+    packer._require_dsf("screen='table'")
     if packer.valence is not None or packer.lj_cutoff != "energy" or packer._flux is not None:
         what = ("valence terms" if packer.valence is not None else
                 "charge flux" if packer._flux is not None else f"lj_cutoff={packer.lj_cutoff!r}")
@@ -1803,6 +1921,8 @@ def pack(
     table_kw: dict | None = None,
     field=None,
     gradient: str = "analytic",
+    coulomb: str = "dsf",
+    ewald: EwaldSpec | None = None,
 ) -> list[PackResult]:
     """Coarse screen of the cell parameters followed by local polishing of the best cells.
 
@@ -1838,11 +1958,30 @@ def pack(
     is the cell the field selects, and every :class:`PackResult` carries its dipole and
     polarization.  ``screen="random"`` is field-aware throughout; ``screen="table"``
     screens field-free and re-ranks (see :func:`_table_starts`).
+
+    ``coulomb="ewald"`` (with an optional ``ewald=EwaldSpec(...)``) polishes and reports
+    with the Ewald sum of :mod:`polyfind.ewald` instead of the truncated one.  **The screen
+    stays truncated either way**, because the tabulated chain-pair interaction needs a
+    pairwise potential and Ewald's reciprocal-space half is not one: an Ewald run screens
+    with an otherwise identical ``"dsf"`` twin and hands its starts to an Ewald polish, so
+    the returned energies are Ewald energies and only the choice of starts is truncated.
+    Use it for anything that depends on a dipole lattice sum -- a polar/antipolar
+    comparison above all -- and not for a ranking of how compactly chains pack.
     """
     if screen not in ("table", "random"):
         raise ValueError(f"unknown screen {screen!r} (expected 'table' or 'random')")
     rng = rng or np.random.default_rng(0)
-    packer = CrystalPacker(chain, n_chains=n_chains, cutoff=cutoff, alpha=alpha, eps_r=eps_r, field=field)
+    packer = CrystalPacker(chain, n_chains=n_chains, cutoff=cutoff, alpha=alpha, eps_r=eps_r, field=field,
+                           coulomb=coulomb, ewald=ewald)
+    # The screen stays truncated whatever the polish uses.  That is the boundary of
+    # :meth:`CrystalPacker._require_dsf`, drawn here rather than enforced by accident: the
+    # tabulated chain-pair interaction needs a pairwise potential and Ewald's
+    # reciprocal-space half is not one, so an Ewald run screens with an otherwise identical
+    # ``coulomb="dsf"`` twin and polishes every selected start with the Ewald kernel.  The
+    # screen only chooses candidates and the polish is exact, which is the same division of
+    # labour the rigid table and the deformable direct kernel already have.
+    screen_packer = packer if coulomb == "dsf" else CrystalPacker(
+        chain, n_chains=n_chains, cutoff=cutoff, alpha=alpha, eps_r=eps_r, field=field)
     bounds = bounds or default_bounds(chain, gamma_free)
     keys = ["a", "b", "gamma", "phi1", "phi2", "dz"]
     lo = np.array([bounds[k][0] for k in keys])
@@ -1851,10 +1990,10 @@ def pack(
     if screen == "table" and n_chains == 2:
         if screen_gammas is None:
             screen_gammas = [lo[2]] if hi[2] <= lo[2] + 1e-9 else np.linspace(lo[2], hi[2], 5)
-        starts = _table_starts(packer, chain, lo, hi, n_refine, flips, screen_step, screen_gammas, table,
+        starts = _table_starts(screen_packer, chain, lo, hi, n_refine, flips, screen_step, screen_gammas, table,
                                cutoff, alpha, eps_r, table_cache_dir, table_kw, verbose)
     else:
-        starts = _random_starts(packer, lo, hi, n_random, n_refine, flips, n_chains, rng, verbose)
+        starts = _random_starts(screen_packer, lo, hi, n_random, n_refine, flips, n_chains, rng, verbose)
     free = [i for i in range(6) if hi[i] > lo[i] and not (n_chains == 1 and i in (4, 5))]
     results = [packer.result(polish(packer, p, lo, hi, free, maxfev, method=method, gradient=gradient)) for p in starts]
     results.sort(key=lambda r: r.energy_per_cell)
