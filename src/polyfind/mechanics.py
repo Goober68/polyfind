@@ -603,9 +603,17 @@ class Relaxed:
     multiplier of the constraint ``c(shape) = c_target``.  It is the axial stress, and it
     comes out of the stationarity condition rather than out of an extra relaxation --
     ``grad_shape = multiplier * dc_dshape`` at the solution, so ``residual`` (the part of
-    the shape gradient that is *not* along the constraint, relative to the whole) is a
-    direct measurement of how converged the constrained minimisation is.  ``c_error`` is
-    how far the constraint itself is from satisfied.
+    the shape gradient that is *not* along the constraint, relative to the whole) measures
+    how converged the constrained minimisation is.  ``c_error`` is how far the constraint
+    itself is from satisfied and ``cell_residual`` the largest free cell gradient.
+
+    **Read ``residual`` next to ``shape_gradient``, never alone.**  It is a *ratio*, so
+    where the shape barely moves -- the reference itself, and any strain state whose
+    symmetry forbids a conformational response -- both numerator and denominator are at the
+    numerical floor and the ratio means nothing.  With one shape parameter it is identically
+    zero for the opposite reason: the gradient and the constraint are parallel by
+    construction.  It is informative exactly where there is a response to be converged, and
+    there it runs at 1e-8 (alpha's axial column) to 1e-3 (alpha's in-plane columns).
     """
 
     params: np.ndarray
@@ -617,6 +625,7 @@ class Relaxed:
     c_error: float
     cell_residual: float
     iterations: int
+    shape_gradient: float = 0.0  # |dE/d(shape)| at the solution, kcal/(mol deg)
 
 
 def _shape_scalar(chain, gX, gc, packer, penalty: float) -> float:
@@ -716,7 +725,8 @@ def relax_deformable(ref: Reference, shape: Shape, params, x=None, free=_INTERNA
     return Relaxed(params=p, x=np.asarray(res.x, dtype=float)[nf:], chain=chain, energy=E,
                    multiplier=lam, residual=resid,
                    c_error=0.0 if c_target is None else abs(chain.c / c_target - 1.0),
-                   cell_residual=float(np.abs(grad[:nf]).max()), iterations=int(res.nit))
+                   cell_residual=float(np.abs(grad[:nf]).max()), iterations=int(res.nit),
+                   shape_gradient=float(np.linalg.norm(gs)))
 
 
 def deformable_state(ref: Reference, shape: Shape, eps6, x=None, field_lab=None,

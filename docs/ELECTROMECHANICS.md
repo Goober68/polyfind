@@ -76,8 +76,10 @@ lets the calculation say which strain it is at.
   multiplier of that constraint is `dE*/dc`, so `sigma_3 = (c0/V0) lambda`. It falls out of
   the stationarity condition `grad_shape E = lambda grad_shape c` at no extra cost, and the
   part of the shape gradient that is *not* along the constraint is reported as
-  `Relaxed.residual` — a direct measurement of how converged each constrained relaxation is
-  (it runs at 1e-16 for the states in section 5).
+  `Relaxed.residual`, a measure of how converged each constrained relaxation is. It is a
+  ratio, so it only means something where the shape actually moves: 1e-8 for alpha's axial
+  column, 1e-3 for its in-plane ones, and meaningless (0/0) at the reference and at states
+  whose symmetry forbids a conformational response. Section 6 says what was checked instead.
 * Actuator at field `E`: free strain `eps_free = d^T E` at zero stress in the reachable
   components, blocking stress `sigma_block = C eps_free = e^T E`, the stress the crystal
   exerts on a rigid clamp (the external stress needed to *hold* `eps = 0` is its negative),
@@ -428,10 +430,14 @@ second derivatives through — the leftover gradient enters the stress differenc
 step — so it was checked rather than assumed: restarting L-BFGS-B from its own answer, once or
 three more times, moves no constant of beta or PE by 0.002 GPa even at `deps = 5e-4`.
 
-**The constrained relaxation is not the limit either.** Its own convergence measure — the
-component of the shape gradient not along the constraint, divided by the whole — runs at
-1e-16 for every state in section 5, the constraint itself is satisfied to 1e-15 relative,
-and the two independent routes to `C_33` agree to 0.04%.
+**The constrained relaxation is not the limit either**, and it was checked in three ways
+rather than trusted. The constraint itself is satisfied to 2e-14 relative or better on every
+state. The component of the shape gradient not along the constraint runs at 1e-8 on alpha's
+axial column and 1e-3 on its in-plane ones — that ratio is 0/0 at the reference and wherever
+symmetry forbids a conformational response, so it is quoted where it means something and
+ignored where it does not. And restarting a converged state from its own answer with three
+times the iteration budget moves alpha's shape parameters by 1e-5 degrees, its stress by
+1e-6 GPa and its dipole not at all.
 
 **The nonbonded cutoff is the accuracy limit, and it has two separate faults.** They need
 separate fixes and it took measuring both to see that.
