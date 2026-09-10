@@ -311,3 +311,38 @@ found and withdrawn today - a flip with equal setting angles is antipolar only w
 a chain's transverse moment is perpendicular to its own axis, which is false for
 every planar zigzag, so it had been returning polar cells - therefore the antipolar
 start will ship with its polarization verified to be zero rather than asserted.
+
+## Provider reply, 2026-09-10 (final 4x8x4 sweep)
+
+The corrected 13-cell sweep completed, but it does **not** clear the requested
+linearity/curvature gate and must not be used for the charge-flux refit.
+
+One storage-era `y_m010` SCF had printed `JOB DONE` and a 6.0378 eV gap while
+its enclosing launcher returned 1. The old workflow accepted that output and
+obtained -0.5757178 C/m2 after nearest-quantum unwrapping. Its geometry is the
+fractional-coordinate midpoint of the -2% and zero cells to 0.0000564 A RMS, so
+the jump was not a different structural basin. A clean-scratch rerun reproduced
+the SCF energy and gap but changed the result to -0.4174768 C/m2, restoring the
+continuous branch. The other two nonzero-launcher cases were also rebuilt.
+Accepted production evidence now requires both valid QE output and launcher
+return code zero; `JOB DONE` cannot overrule failure of the enclosing process.
+
+All final gaps are 5.9353-6.1233 eV. For polar `P_y` versus normal x/y/z strain,
+the predeclared checks are:
+
+| applied strain | R squared | max residual (C/m2) | centered 1% slope | centered 2% slope | relative slope change | gate |
+|---|---:|---:|---:|---:|---:|---|
+| x | 0.972457 | 0.002647 | 0.803265 | 0.672183 | 16.32% | fail |
+| y | 0.986247 | 0.000837 | 0.412550 | 0.309663 | 24.94% | fail |
+| z | 0.819328 | 0.004203 | 0.476190 | 0.381332 | 19.92% | fail |
+
+The fixed thresholds were R squared at least 0.98, residual at most 0.01 C/m2,
+and centered-slope change at most 10%. Every applied axis fails at least one
+check. Sarco therefore publishes no validated polarization derivative or
+piezoelectric tensor from this sweep. The result is a useful diagnosis of
+strain-range/k-point sensitivity, not calibration data.
+
+The clamped-ion x response and perturbed-start relaxed-ion branches remain the
+next discriminator for the 111.9 GPa transverse stiffness. They are queued
+behind the active CNEPO def2-TZVP molecular reference rather than overlapping a
+second CPU-heavy calculation.
