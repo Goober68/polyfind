@@ -551,3 +551,61 @@ and the pipeline's default of `cpu_count() - 1` candidate workers is a 1.24x
 again. The on-disk table cache, by contrast, needed nothing: its writes were
 already atomic, its keys are per conformation so a multi-candidate run has no
 duplicates to remove, and a warm cache takes the PVDF funnel from 179 s to 146 s.
+
+## 13. The bandwidth lesson, and a lead that did not transfer
+
+Parallelising the interaction-table build produced the most transferable finding
+of this whole effort, and it was not the parallelism. Splitting the build across
+processes bought *nothing* at first. The inner kernel held an 8 MB working set,
+so a single worker was already streaming from main memory and additional workers
+only contended for bandwidth it did not have. Shrinking the chunk to about 1 MB,
+small enough to stay in cache, raised throughput by 3.9x and made the *serial*
+build faster as well. Only after that did splitting pay, and the same change
+inverted an earlier result: threads went from helping to being 1.7x worse than
+serial. Scaling then saturated near four workers on six physical cores, which is
+a bandwidth ceiling rather than a core count.
+
+That single constant was worth more than the parallelism it enabled, which is
+worth remembering before reaching for more workers anywhere in this package.
+
+**The obvious follow-up does not transfer, and I measured it rather than
+assuming.** The packing kernel has the same kind of constant, and since
+refinement and polishing together are 84% of what remains, a similar win there
+would have been large. Sweeping it from 4,000 to 500,000 elements across the
+polyethylene, alpha and gamma chains, for both a gradient-sized batch of 29 rows
+and a screen-sized batch of 512, moves the cost by at most 5%, which is inside
+the noise; the present 60,000 is already near optimal, and only the extreme
+500,000 is clearly bad. The difference from the table build is that the table
+kernel was being run in parallel, where bandwidth contention dominates, while
+this measurement is single-process.
+
+**Where the time now is.** The profile has moved enough that the old
+recommendations are stale:
+
+| Stage | Share of pipeline |
+|---|---|
+| refinement | 69% |
+| polishing | 15% |
+| table build | 10% |
+| FFT screen | 3% |
+| fit, enumeration, amorphous | about 2% together |
+
+Refinement is the target, and 112 of its 165 seconds is a single candidate, the
+gamma chain, whose per-row kernel cost is 18 ms against 2.3 for alpha and 0.9
+for polyethylene - an N-squared effect from its 24-atom repeat that no constant
+will fix.
+
+The lever there is not the kernel but the *number of rows*. Refinement gets its
+gradients by central differences, so every L-BFGS iteration costs one plus twice
+the variable count, 29 rows for the gamma chain, to extract a single gradient.
+Analytic or automatically-differentiated gradients would collapse that to one
+evaluation per iteration at some increased cost per evaluation - plausibly five
+to ten times overall, against roughly 30 times fewer rows. Section 2 of this
+document already pointed at automatic differentiation as the route, for the
+separate reason that the same implementation would run on a GPU; the profile now
+says it is also where the remaining CPU time is. That is the next thing to do.
+
+A smaller fix is already applied: the pipeline's worker count defaulted to
+logical cores minus one, which oversubscribes a bandwidth-bound workload. On
+this machine three workers beat five by 1.24x, so the default is now derived
+from physical cores.

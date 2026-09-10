@@ -22,6 +22,7 @@ from .forcefield import Calculator, FitReport, SimpleFF, fit_ris
 from .helix import canonical_sequence
 from .pack import PackResult, pack, periodic_chain
 from .polymers import Polymer, get_polymer
+from .lattice_table import physical_cores as _physical_cores
 from .refine import RefineResult, refine_crystal
 from .ris import RISModel
 
@@ -63,7 +64,7 @@ class PipelineConfig:
     n_chains: int = 2000
     n_bonds: int = 200
     seed: int = 0
-    workers: int | None = None  # candidates packed/refined in parallel processes; None = min(n_candidates, cpu_count-1); 1 = serial
+    workers: int | None = None  # candidates packed/refined in parallel processes; None = a bandwidth-aware default, see run_pipeline; 1 = serial
 
 
 @dataclass
@@ -210,7 +211,12 @@ def run_pipeline(cfg: PipelineConfig, verbose: bool = True) -> PipelineResult:
     ]
     n_workers = cfg.workers
     if n_workers is None:
-        n_workers = min(len(to_pack), max(1, (os.cpu_count() or 1) - 1)) if to_pack else 1
+        # Physical cores, not logical, and not cpu_count-1.  Measured on a 6-physical /
+        # 12-logical machine: 3 workers beat 5 by 1.24x, because each worker's packing
+        # kernel is memory-bandwidth bound rather than core bound (the same effect that
+        # made the table build saturate at ~4 workers; see lattice_table).  Over-
+        # subscribing logical cores makes them contend for bandwidth they already lack.
+        n_workers = min(len(to_pack), max(1, _physical_cores() // 2)) if to_pack else 1
     n_workers = max(1, n_workers)
 
     outcomes: list[tuple] = [None] * len(jobs)
