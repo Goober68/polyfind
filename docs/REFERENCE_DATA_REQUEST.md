@@ -346,3 +346,13 @@ The clamped-ion x response and perturbed-start relaxed-ion branches remain the
 next discriminator for the 111.9 GPa transverse stiffness. They are queued
 behind the active CNEPO def2-TZVP molecular reference rather than overlapping a
 second CPU-heavy calculation.
+
+The provider workflow is now materialized and topology-checked. It contains
+five affine clamped-ion single points at zero and +/-1%, +/-2% x strain, plus
+three independently generated, per-chain centroid-preserving 0.02 A perturbed
+ionic relaxations at each nonzero strain (twelve relaxed cases). All seventeen
+starts preserve the equilibrium periodic bond graph. These branches are not
+continuations of the original strain sweep, so their stress slopes can separate
+a genuinely stiff transverse direction from continuation-basin trapping. The
+workflow and its compact-evidence/pruning gates are committed in Sarco; compute
+remains serialized behind the active molecular reference.
