@@ -356,3 +356,64 @@ continuations of the original strain sweep, so their stress slopes can separate
 a genuinely stiff transverse direction from continuation-basin trapping. The
 workflow and its compact-evidence/pruning gates are committed in Sarco; compute
 remains serialized behind the active molecular reference.
+## Delivered, 2026-09-10: VDCN/VDF copolymer starts
+
+In `deliverables/` on this branch. Eight-chain 592-atom extended XYZ with the
+lattice on the comment line, plus two-chain primitives and CIFs, a README with the
+full topology report, and `ris_parameter_provenance.json` naming every transferred
+parameter.
+
+| | polar | antipolar |
+|---|---|---|
+| a x b x c (A), gamma = 90 | 10.4598 x 4.8036 x 30.7557 | 11.3267 x 4.7451 x 30.7557 |
+| density | 1.6816 | 1.5720 |
+| E/monomer, Ewald | -6.9933 | -6.1225 |
+| P (C/m^2) | (0, +0.1209, 0) | (0, 0, 0) |
+
+**Topology passes, and against a criterion like yours rather than ours.** Detected
+graph from Cordero radii over all periodic images: every covalent scale factor from
+1.019 to 1.584 gives exactly eight components of 74 atoms, with zero lost bonds,
+zero new bonds and zero new interchain bonds. Both edges of that band are
+intramolecular, so the verdict is not sensitive to the cutoff you pick. Minimum
+interchain distance is 2.5655 A in the polar cell and 2.5243 A in the antipolar
+one, both H to N, which is 2.47 times the covalent-radius sum. Per-element-pair
+minima are in the README.
+
+The antipolar cell's polarization is **verified, not asserted**: largest dipole
+component 3.3e-13 e.A. Its chain moment lies along the chain's own reference axis,
+which is exactly the configuration the defect we withdrew today used to get wrong.
+
+### Four things to weigh before using these
+
+**The nitriles are all at the same axial height, and it costs about 17% density.**
+The 592-atom cell is a 2x2x1 tiling of a twelve-monomer two-chain repeat, so every
+chain carries its VDCN unit at the same z. A mixing rule predicts 2.028 against the
+1.682 obtained. We checked this is a construction artifact rather than a search
+failure: six fixed-shape starts at about 1.96 density all polished back to the same
+cell, sitting 5.7 kcal/mol per monomer higher. A real 8.33 mol% solid would stagger
+the units axially between chains. If you would rather have staggered variants, say
+so and we will build them; it is a post-processing step on these files.
+
+**Ten of twenty-four rotational-isomeric terms are transferred, not fitted.** The
+copolymer differs from PVDF at exactly one of twenty-four backbone atoms, so 20 of
+24 first-order terms are PVDF's own fitted values. The junction bonds either side of
+the cyano carbon, and the two bonds nearest it, have no fitted value for their own
+environment. That is the weakest part of the construction and the provenance file
+lists each one.
+
+**Charges are illustrative for the nitrile.** Our fitted PVDF potential contains no
+nitrogen, so the cyano charges are chosen the way the illustrative ones were.
+
+**These are a different basin from your accepted reference, not a better one.**
+Sixteen of your 192 dihedrals sit more than thirty degrees from any
+rotational-isomeric state; our three-state rigid model cannot represent them. Treat
+these as the all-trans comparison branch you asked for.
+
+### One finding from building it
+
+`antipolar_cell_exact`'s axial scan used four points, a 7.7 A step on this 30.8 A
+repeat, and **missed the basin**: a finer scan of the identical subspace found
+-3.7514 against its -3.7152 kcal/mol per monomer. We shipped the finer result. That
+helper has now produced two distinct defects in one day, so treat any antipolar
+number from it on a long repeat as a lower bound on the search rather than a
+converged minimum.
