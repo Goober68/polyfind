@@ -282,3 +282,66 @@ So the honest statement is that beta's piezoelectric response has gone from
 *structurally impossible* to *computable, with both measured signs and an order of
 magnitude short*, and that the coefficient which gets it there is determined to
 about a factor of four by data that does not describe a bulk crystal.
+
+## Goal assessment
+
+The target was a solver meeting field and strain measurement needs at 10 to 100
+times existing methods. Split it, because the two halves land differently.
+
+### Speed: met, on the axis it measures
+
+| | Existing method | polyfind |
+|---|---|---|
+| Full response tensor for one chemistry | not obtainable from the 6-point grid | 0.3 s (beta) to 7.8 s (gamma) |
+| One finite-difference derivative | 87 s (PVDF) to 143 s (VDCN) | included in the above |
+| Structure search | 2,400-step budgets exhausted, continuations needed | 14 to 53 s, exhaustive |
+| Field point at the density-functional tier | 772 to 2,470 s | not attempted; different accuracy tier |
+
+Per derivative obtained the ratio is well past 100x. Per whole pipeline with the
+structure search included, which the baseline does not do at all, it is 2 to 6x.
+Both are true and neither should be quoted alone.
+
+### Field and strain: qualitatively right for the first time, not quantitative
+
+Charge flux makes the dipole respond to geometry, which fixed charges could not
+do in principle. The out-of-sample test is the honest one, because the fit never
+saw a measured piezoelectric constant:
+
+| | d33 | d31 | interpretation |
+|---|---|---|---|
+| before | -4.43 | **-0.14** | d31 sign wrong |
+| with flux | -6.29 | **+2.33** | both signs now match measurement |
+| measured | -32 | +20 | magnitudes 5x and 9x short |
+
+d31's sign is the meaningful result. d33 being negative proves nothing on its
+own, since the dimensional term is negative for any stable crystal by
+arithmetic; d31 turning positive requires a real mechanism, and it is stable
+across the whole angle-only fit family including leave-one-chemistry-out.
+
+The magnitudes should not be trusted, for reasons worth stating rather than
+burying. The calibration data is exploratory semi-empirical work on a finite
+pinned two-chain pair in vacuum, not a bulk crystal, and not the level the
+energy model is fitted to. The fit's R-squared is 0.39. Two alternative
+channels fit the *same* data better - a bond-stretch channel at 0.86 and a plain
+charge rescale at 0.75 - and neither is usable here, one because bonds are rigid
+and the other because it is not a mechanism. Fitting the angle channel alongside
+a bond channel changes the coefficient sixfold and flips both signs back.
+Leave-one-out spans the coefficient over a factor of eleven. The flux also
+perturbs the structure it is meant to probe, moving beta's repeat by 2.3% and
+C11 by 24%, and for two cases it drives the relaxation into the parametrisation's
+angular cap, where the routes disagree completely; those are reported as
+non-measurements rather than results.
+
+### The honest summary
+
+For **screening** - ranking chemistries, getting the direction and rough scale of
+a response, deciding which candidates deserve expensive validation - the solver
+now does what was asked, at the speed asked. For **quantitative prediction** of
+piezoelectric coefficients it does not, and the limiting factor is no longer the
+search or the speed but the calibration data: a bulk, higher-level reference for
+the dipole-strain response would be worth more than any further work inside this
+package.
+
+Still absent entirely: the shear constants involving the chain axis, which no
+variable in this parametrisation can express; the bond-stretch channel;
+polarizability; temperature; and domain switching.
