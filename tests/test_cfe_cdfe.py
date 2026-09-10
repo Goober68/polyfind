@@ -41,20 +41,25 @@ def _digest(*arrays) -> str:
     return h.hexdigest()
 
 
-# coordinates+charges of each polymer, taken before BackboneAtom grew a second pendant
+# coordinates+charges of each polymer, taken before BackboneAtom grew a second pendant.
+# The PVDF and PVDC entries were RE-RECORDED when the batched geometry corrections landed
+# (PVDF C-C 1.54 -> 1.528 A, PVDC backbone angles 114/114 -> 123/114; docs/REFERENCES.md).
+# The PE entries are still the originals, and they are the ones that carry this test's
+# actual claim: the single-atom pendant path is unchanged.  PVDF's and PVDC's digests
+# moved because their declared geometry moved, not because the builder did.
 BASELINE = {
     ("pe", True): "9fa3fd6b6d6b909c7570164f93b72b11758beb29d96a0f69b385d3705690ecdd",
     ("pe", False): "539a09e1cf75594f19c3321883bea185ff5b908f8da9ae9278873d3c238e01dd",
     ("pe", "batch"): "15c45ec4a2971fe5337ba834cd750c875d7122bd92c26fffa18448d21440d8a7",
     ("pe", "trans"): "8ae1ecce71f26cecfc20b71ac379ad11a3fa38c4eeaa67d8c64488d9d4cbb707",
-    ("pvdf", True): "9650a4c802ac61a875e46a07f61aa6389c2c8baabc64d27dd2a82db05a32a0f6",
-    ("pvdf", False): "ad46e666db004c26a2cdd0dce952d31dbba5a708ef1bf1ba6e8b234c076214a0",
-    ("pvdf", "batch"): "796284f466d358b2d41373e776988d0799daea36ce666bc0a265d26cf55e16a5",
-    ("pvdf", "trans"): "b51d418a7a926b5ab8e149ba8d262ae9446bb50c9a7027a337aa748305927e50",
-    ("pvdc", True): "81b85857f57c855c014f13e75401424e2720aa9824870304113eb05778ac5f8e",
-    ("pvdc", False): "cb6ed4d7838f9445fd81b3807240700b57f3cddb60ad6e060c2f5e3c1d8b4f82",
-    ("pvdc", "batch"): "58f5b04d2d04af12c242dcf388ca06a6066ae4c005d2e9bc656243540cfa1f37",
-    ("pvdc", "trans"): "331b546c3025fb8c9c23b099fe6068f62580885f523c574af0c6b52ca8888eec",
+    ("pvdf", True): "e251321676b51f72cf55cf87cfeec1fee84e59bdb259ef99196cf984f7f1d0ff",
+    ("pvdf", False): "4671ab3ef1ff53a94b64aa483afb845751472d63b1bab417c418c9b2cd799003",
+    ("pvdf", "batch"): "8ef0a6cf915c7e274169ed3ea14322001bce5c12dab50596ef4fb01ea5b3d6dd",
+    ("pvdf", "trans"): "a1455e5c19761c6d3e6bd389d8756bbef838b42a176e6539d5252ebb6c889585",
+    ("pvdc", True): "b1e01e4f429ac8e679454cc684951233908b325fa64dde8134d9b44923363a23",
+    ("pvdc", False): "11720a0fef5c09503549c6f05c3b7274adf87198dc4cf82c2c4b890a4dceeb95",
+    ("pvdc", "batch"): "b3dbf43408b3ea6fcfee4aca1397dee0e36510edaabf5eeea6fa93457551eda4",
+    ("pvdc", "trans"): "7026baa2e03ff0c4fc488c01045aa8ecc41643df7fdfe89d1f37a8f6401d0f84",
 }
 ELEMENTS = {
     "pe": "CHHCHHCHHCHHCHHCHHCHHCHHCHHCHHCHHCHHCHHHH",

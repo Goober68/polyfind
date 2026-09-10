@@ -57,3 +57,44 @@ def test_cli_enumerate_runs(capsys):
         main(["enumerate", "--polymer", "pe", "--model", p, "--max-period", "4", "--top", "5"])
     out = capsys.readouterr().out
     assert "planar zigzag" in out
+
+
+def _a_packed_cell(chain):
+    from polyfind.pack import CrystalPacker
+
+    return CrystalPacker(chain, n_chains=2).result(
+        np.array([5.0, 9.0, 87.0, 10.0, 20.0, 0.3 * chain.c, 0.0]))
+
+
+def test_reference_cell_angles_record_what_the_model_cannot_express():
+    """gamma-PVDF's reference cell is monoclinic and this parametrisation is not.
+
+    ``pack`` builds a = (a, 0, 0), b = (b cos g, b sin g, 0), c = (0, 0, c) with the chain
+    axis along z, so the crystallographic *gamma* (a to b) is a search variable while
+    *alpha* and *beta* are 90 deg by construction.  gamma-PVDF's unique angle is
+    beta = 93 deg, between a and the chain axis, so it is precisely the one that cannot be
+    represented; the package approximates that cell as orthorhombic and
+    ``REFERENCE_CELL_ANGLES`` records both the real angles and that limitation.  This test
+    pins all three halves of the statement: the record, the pin at 90 deg, and the one
+    angle that really is free.
+    """
+    from polyfind.pack import default_bounds, periodic_chain, to_cif
+    from polyfind.pipeline import EXPERIMENTAL_CELLS, REFERENCE_CELL_ANGLES
+    from polyfind.polymers import PVDF, THREE_STATE
+
+    assert REFERENCE_CELL_ANGLES.keys() == EXPERIMENTAL_CELLS.keys()
+    for name, cells in EXPERIMENTAL_CELLS.items():
+        assert REFERENCE_CELL_ANGLES[name].keys() == cells.keys()
+    non_right = {(p, lab) for p, d in REFERENCE_CELL_ANGLES.items()
+                 for lab, angs in d.items() if any(a != 90.0 for a in angs)}
+    assert non_right == {("pvdf", "gamma/epsilon (T3GT3G')")}
+    assert REFERENCE_CELL_ANGLES["pvdf"]["gamma/epsilon (T3GT3G')"] == (90.0, 93.0, 90.0)
+
+    ch = periodic_chain(PVDF, [0, 0], THREE_STATE)
+    assert default_bounds(ch)["gamma"] == (90.0, 90.0)  # pinned unless asked
+    assert default_bounds(ch, gamma_free=True)["gamma"] == (60.0, 120.0)
+    # ... while the other two angles are not variables at all: the CIF writer emits them as
+    # literal 90, which is the parametrisation showing through.
+    cif = to_cif(_a_packed_cell(ch))
+    assert "_cell_angle_alpha 90\n" in cif and "_cell_angle_beta 90\n" in cif
+    assert "_cell_angle_gamma 87.000" in cif  # the one angle that is a real variable

@@ -60,14 +60,24 @@ over a combined discrete-and-continuous space carries.
 
 | Stage | Seconds |
 |---|---|
-| Fit the rotational-isomeric-state model from a potential | 0.6 |
-| Enumerate periodic chain conformations (120 distinct, exhaustive) | 4.4 |
-| Exhaustive screen and refine, all candidates, cold cache | 77 |
-| Same, warm interaction-table cache | 25 |
+| Fit the rotational-isomeric-state model from a potential | 0.3 |
+| Enumerate periodic chain conformations (120 distinct, exhaustive) | 4.5 |
+| Exhaustive screen and refine, all candidates, cold cache | 49 |
+| Same, warm interaction-table cache | 17 |
+
+Re-measured on the same machine after the geometry corrections of
+`docs/REFERENCES.md`, since PVDF's C-C bond length changed and every cached
+interaction table with it. **The corrections do not move these timings**: the
+unchanged code on the same machine gives 0.4 / 5.0 / 53 / 14 s, which is
+run-to-run spread rather than a difference. The table previously read 0.6 / 4.4 /
+77 / 25, so the screen-and-refine rows have come down by about a third since they
+were recorded and the fit row by half; neither is attributable to this change.
+Quote a range rather than a point for the two cache rows: cold 49-53 s, warm
+14-17 s across runs.
 
 Fitting the potential itself against reference data is a separate one-off:
 roughly 260 s over 467 frames, amortised across every later run for that
-chemistry class.
+chemistry class.  That fit has not been repeated at the corrected geometry.
 
 ## What is actually comparable
 
@@ -75,8 +85,8 @@ Three traps, and the ratio differs by an order of magnitude depending on which
 comparison is meant.
 
 **The baseline's 87 to 143 s per chemistry does not include finding the
-structure.** It relaxes around a structure already supplied. polyfind's 25 to
-77 s includes enumerating 120 candidate conformations and screening the packing
+structure.** It relaxes around a structure already supplied. polyfind's 17 to
+53 s includes enumerating 120 candidate conformations and screening the packing
 of each exhaustively. Comparing those two numbers directly credits polyfind for
 work the baseline never did, and also credits the baseline with an input polyfind
 derives. The structure-search tier above is the closer analogue, and it is the

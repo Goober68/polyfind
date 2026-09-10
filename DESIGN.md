@@ -165,7 +165,7 @@ Measured on this machine (4 CPU cores, NumPy, no GPU), PVDF three-state model.
 | High-fidelity potential calls | 10^6+ | ~3k for the fit + O(10) at the end |
 
 All dynamic-programming routines are checked against brute-force enumeration in
-the test suite (290 tests, 4 skipped).
+the test suite (362 tests, 5 skipped).
 
 ## 4. GPU design
 
@@ -216,13 +216,29 @@ check.  Read that file before building an argument on any of them.
 
 ### 5.1 Chain repeats from the screw decomposition (rigid textbook geometry)
 
-| Chain | polyfind c (A) | experiment (A) |
-|---|---|---|
-| PE all-trans (2/1) | 2.55 | 2.55 |
-| PVDF beta TT | 2.58 | 2.56 |
-| PVDF alpha TG+TG- | 4.56 | 4.62 |
-| PVDF gamma TTTG+TTTG- | 9.11 | 9.20 |
-| PE TG (isotactic-polypropylene-type 3/1 helix) | 6.35 | 6.50 (iPP) |
+No potential enters this table; it is the declared bond lengths and angles put
+through the screw decomposition.  Re-measured with PVDF's C-C distance at the
+DFT Form I value of 1.528 A (it was the textbook 1.54 A until the batch of
+corrections recorded in `docs/REFERENCES.md` was applied):
+
+| Chain | polyfind c (A) | experiment (A) | error | error at C-C = 1.54 A |
+|---|---|---|---|---|
+| PE all-trans (2/1) | 2.553 | 2.55 | +0.13% | +0.13% (PE unchanged) |
+| PVDF beta TT | 2.563 | 2.56 | **+0.12%** | +0.90% |
+| PVDF alpha TG+TG- | 4.520 | 4.62 | **-2.17%** | -1.40% |
+| PVDF gamma TTTG+TTTG- | 9.040 | 9.20 | **-1.74%** | -0.97% |
+| PE TG (isotactic-polypropylene-type 3/1 helix) | 6.351 | 6.50 | -2.30% | -2.30% (PE unchanged) |
+
+**The correction cuts beta's error by a factor of seven and makes alpha's and
+gamma's worse, and that has to be said plainly.**  1.528 A is the C-C distance
+of the *Form I* (beta) crystal, so beta is the row it was derived from, and
+there it lands almost exactly on the experimental 2.56 A.  Every repeat is
+proportional to the bond length, so shortening it shortens all of them; alpha
+and gamma were already under-predicted, and they move further down.  The
+root-mean-square error over the three PVDF rows therefore rises from 1.11% to
+1.61% even though the one row with a matching reference structure improves.
+Both facts are consequences of a single rigid bond length being asked to serve
+three conformations whose measured C-C distances are not in fact identical.
 
 One note on the "experiment" column: the last row compares a hypothetical
 polyethylene helix with a *different* polymer, whose backbone angles are wider.
@@ -234,18 +250,40 @@ See `docs/REFERENCES.md` sections 1.4 and 8.
 
 ### 5.2 Packing the known chain conformations (built-in potential, ideal angles)
 
-`examples/pvdf_polymorphs.py`, Part A.  Axes are listed as sorted pairs since
-the search does not know which is a and which is b.
+`examples/pvdf_polymorphs.py`, Part A, with the default `SimpleFF()`
+(illustrative, unfitted).  Axes are listed as sorted pairs since the search does
+not know which is a and which is b.  Re-measured after the geometry corrections
+of `docs/REFERENCES.md`; the previous numbers are in the last column for
+comparison.
 
-| Chain | predicted a x b x c (A), density | orientation | experiment (A), density |
-|---|---|---|---|
-| PE T | 4.61 x 7.35 x 2.55, 1.08 | degenerate | 4.95 x 7.42 x 2.55, 1.00 |
-| PVDF beta TT | 4.65 x 8.61 x 2.58, 2.06 | degenerate | 4.91 x 8.58 x 2.56, 1.97 |
-| PVDF alpha TG+TG- | 5.09 x 9.14 x 4.56, 2.01 | **antiparallel** | 4.96 x 9.64 x 4.62, 1.92 |
-| PVDF gamma TTTG+TTTG- | 5.40 x 8.92 x 9.11, 1.94 | **parallel** | 4.96 x 9.67 x 9.20, 1.94 |
+| Chain | predicted a x b x c (A), density | orientation | experiment (A), density | before the corrections |
+|---|---|---|---|---|
+| PE T | 4.61 x 7.35 x 2.55, 1.076 | degenerate | 4.95 x 7.42 x 2.55, 1.00 | unchanged |
+| PVDF beta TT | 4.64 x 8.62 x 2.56, 2.073 | degenerate | 4.91 x 8.58 x 2.56, 1.97 | 4.65 x 8.61 x 2.58, 2.058 |
+| PVDF alpha TG+TG- | 5.09 x 9.11 x 4.52, 2.027 | **antiparallel** | 4.96 x 9.64 x 4.62, 1.92 | 5.09 x 9.14 x 4.56, 2.008 |
+| PVDF gamma TTTG+TTTG- | 5.39 x 8.91 x 9.04, 1.960 | **parallel** | 4.96 x 9.67 x 9.20, 1.93 | 5.40 x 8.92 x 9.11, 1.939 |
 
-Cell edges are within about 7% and densities within about 5% with a potential
-that was never fitted to any of this.  For PE the herringbone arrangement
+The experimental gamma density reads 1.93, not the 1.94 an earlier version of
+this table carried: 1.93 is what the tabulated gamma cell actually gives, while
+1.94 came from a different determination (`docs/REFERENCES.md` section 1.3).
+That correction makes the *apparent* agreement on gamma's density worse rather
+than better - the predicted 1.960 is +1.5% against 1.93, where 1.939 against
+1.94 looked like -0.1% - and the looking-good was an accident of comparing a
+density from one structure with a cell from another.  The gamma reference cell is
+also monoclinic, with beta = 93 deg, and **that angle is not expressible in this
+packing model at all**: the chain axis is the cell's c by construction and a and
+b are built perpendicular to it, so only the in-plane a-to-b angle is a search
+variable (`pack(..., gamma_free=True)`).  The package therefore approximates
+gamma as orthorhombic.  The cost is small and measurable: the monoclinic cell's
+volume differs by sin(93 deg) = 0.14%, so the density the model could at best
+reproduce differs by that much, against cell-edge errors of 3 to 9% here.  See
+`pipeline.REFERENCE_CELL_ANGLES`, which records the angles and this limitation.
+
+Cell edges are within about 9% and densities within about 5% with a potential
+that was never fitted to any of this.  Every density moved *up* with the shorter
+C-C bond, so beta's density error grows from +4.5% to +5.3% and alpha's from
++4.6% to +5.6% while their edges barely move; beta's c error falls from +0.90% to
++0.12%.  For PE the herringbone arrangement
 (setting angles +/-48 deg from a, chain 2 offset by c/2) is found as the second
 minimum, 0.01 kcal/mol per CH2 above a parallel arrangement, i.e. within the
 potential's accuracy.  Two qualifications on that parenthesis.  The setting angle
@@ -283,54 +321,87 @@ same question as this flag: two chains pointing the same way can still oppose
 their transverse dipoles through their setting angles.
 
 For the two chains where the flip is a real degree of freedom, alpha prefers
-antiparallel by 0.18 kcal/mol per monomer and gamma prefers parallel by 0.78.
-Neither answer was reachable before the fix.
+antiparallel by 0.18 kcal/mol per monomer and gamma prefers parallel by 0.79.
+Neither answer was reachable before the fix.  Both margins are unchanged by the
+geometry corrections (they were 0.18 and 0.78), which is worth noting: the
+orientation preferences are a property of the packing and not of the 0.8% of
+bond length that moved.
 
 **A correction to what that means for alpha.**  An earlier version of this
 paragraph read the antiparallel preference as reproducing the antipolar alpha
 phase.  Measuring the cell dipole directly (section 5.5) shows it does not.
 Flipping chain 2 reverses its *axial* dipole, and those do cancel exactly, but
 the two chains' *transverse* dipoles still align, leaving a net polarization of
-0.078 C/m^2.  The genuinely antipolar arrangement is reachable in this
+0.079 C/m^2.  The genuinely antipolar arrangement is reachable in this
 parametrisation - flip with equal setting angles cancels the transverse part
-too, and a constrained polish reaches zero - but it costs 1.76 kcal/mol per
-monomer more, so the illustrative potential prefers the polar one.  The chain
-orientation flag and crystallographic polarity are different questions, and
-only the second is the one the alpha phase is named for.
+too, and a constrained polish (`fitting.antipolar_cell`) reaches exactly zero -
+but it costs **0.20 kcal/mol per monomer** more after refinement, so the
+illustrative potential prefers the polar one.  (An earlier version of this
+sentence quoted 1.76 kcal/mol from a different and unrecorded measurement at the
+rigid ideal-angle cell; 0.20 is the figure `fitting.acceptance_tests` reports and
+is reproducible.  It is unmoved by the geometry corrections: +0.200 before and
+after.)  The chain orientation flag and crystallographic polarity are different
+questions, and only the second is the one the alpha phase is named for.
 
-Continuous refinement then does what it is meant to: alpha relaxes to c = 4.70
-A with gauche angles at the potential's own minimum (+/-80 deg); gamma relaxes
-to c = 9.27 A (experiment 9.20) with deflected trans angles (171-189 deg) and
-reduced gauche (+/-64 deg).  An earlier version of this sentence added "that the
-real gamma chain has"; that is withdrawn, because no published torsion set for
-the gamma chain was found to support it - the one crystal-structure figure
-available, a DFT internal rotation of 59.2 deg, does not
+Continuous refinement then does what it is meant to: alpha relaxes to c = 4.80 A
+with gauche angles at +/-65.7 deg; gamma relaxes to c = 9.51 A (experiment 9.20)
+with deflected trans angles (173.8-186.2 deg) and gauche at +/-65.5 deg.  Two
+notes on that sentence.  First, it previously read "c = 4.70 A ... (+/-80 deg)"
+and "c = 9.27 A ... (171-189 deg) ... (+/-64 deg)", and those numbers had already
+gone stale before these corrections - re-measuring the unchanged code gave 4.83
+and 9.57 A - because the refinement stage acquired line-group constraints since
+they were recorded.  The corrections then moved them down to 4.80 and 9.51, which
+for gamma is an *improvement* against the experimental 9.20 (error +3.98% to
++3.38%) and for alpha likewise (+4.52% to +3.96%): refinement over-expands both
+cells, and a shorter bond partly cancels that.  Second, an earlier version added
+"that the real gamma chain has"; that is withdrawn, because no published torsion
+set for the gamma chain was found to support it - the one crystal-structure
+figure available, a DFT internal rotation of 59.2 deg, does not
 (`docs/REFERENCES.md` section 2.5).
 
 ### 5.3 One full funnel run (PVDF, built-in potential, third-order RIS)
 
-`examples/pvdf_polymorphs.py`, Part B, on 4 CPU cores.  Stage wall times:
-fit 7.6 s (2,881 single points), enumeration 3.6 s (120 distinct periodic
-conformations up to period 8), packing of 4 conformations 81 s, refinement
-88 s, amorphous statistics 0.4 s.  Packing and refinement are where a GPU
+`examples/pvdf_polymorphs.py`, Part B, on 6 physical cores, re-measured after the
+geometry corrections.  Stage wall times: fit 0.3 s (2,881 single points),
+enumeration 4.5 s (120 distinct periodic conformations up to period 8), packing
+and refinement of 4 conformations 49 s cold / 17 s with a warm interaction-table
+cache, amorphous statistics 0.4 s.  Packing and refinement are where a GPU
 matters; everything else is already seconds.
 
-The fitted model moves the gauche state to +/-80 deg, at which the TG+ chain
-becomes an 18/5 helix and gamma is no longer commensurate within 8 periods, so
-neither is packed; three candidates with 72-144 atoms per chain repeat are
-listed but skipped as too large for the packing kernel.  Lattice energies per
-monomer relative to beta: T3G+TG- +2.8, alpha +3.9, TG+TG+TG-TG- +4.4.  All
-four came out as parallel packings, but see section 5.6: antiparallel was
-unreachable when this run was made, so that is an artifact, not a result.  Refinement changes the
-alpha energy by -0.12 kcal/mol and the 8-bond glide chain by -0.45 kcal/mol
-per monomer, with commensurability residuals below 0.4 deg.
+Three of those stage times had **already** gone stale before these corrections,
+for reasons of their own, and re-measuring the unchanged code gives the same
+numbers to within run-to-run noise (fit 0.4 s, enumeration 5.0 s, packing and
+refinement 53 s cold / 14 s warm).  The fit stage is some twenty times faster
+than the 7.6 s once recorded here; packing and refinement are fused per
+candidate, so they no longer have separate wall times; and the exhaustive table
+screen with its cache replaced random sampling.  Whatever produced those changes,
+it was not these corrections, which move no stage time outside run-to-run
+spread.
 
-The melt-like ensemble at 450 K has 51% trans bonds, a mean trans run of 1.2
+The fitted model moves the gauche state to +/-80 deg, at which the TG+ chain
+becomes a helix with more than 8 periods per repeat and gamma is no longer
+commensurate within 8 periods, so neither is packed; three candidates with 72 to
+144 atoms per chain repeat are listed but skipped as too large for the packing
+kernel.  What is packed is beta, alpha and two further glide chains.  Lattice
+energies per monomer relative to beta, after refinement: alpha +1.13,
+TTTG+TG- +1.41, TG+TG+TG-TG- +2.87 (they were +1.21, +1.46 and +2.92 before the
+corrections).  An earlier version of this paragraph recorded +2.8, +3.9 and +4.4
+from a run in which antiparallel packings were unreachable (section 5.6) and the
+refinement had no line-group constraints; those numbers are superseded.  Alpha and
+the 8-bond glide chain now come out antiparallel and beta and TTTG+TG- parallel,
+which the earlier run could not have found at all; refinement lowers the alpha
+energy by 3.67 kcal/mol per monomer and the 8-bond glide chain by 3.08, with
+commensurability residuals below 0.2 deg.
+
+The melt-like ensemble at 450 K has 52% trans bonds, a mean trans run of 1.2
 bonds and a TTTT tetrad fraction of 0.002; chains leaving an all-trans stem
-advance 9.3 A on average along the stem axis, turn back with probability 0.32,
-and show no trans excess in their first free bond.  These numbers are what the
-funnel produces for *this* potential; with a properly fitted one the same run
-costs the same three minutes.
+advance 8.8 A on average along the stem axis, turn back with probability 0.33,
+and show a marked *deficit* of trans in their first free bond (18% against 51%
+in bulk).  Before the corrections those read 51%, 1.2 bonds, 0.002, 9.0 A, 0.33
+and 17% against 51% - so this paragraph's earlier "advance 9.3 A ... and show no
+trans excess in their first free bond" was stale on the first number and too weak
+on the last.  These numbers are what the funnel produces for *this* potential;
+with a properly fitted one the same run costs the same minute.
 
 ### 5.4 What the illustrative potential gets wrong
 
@@ -338,12 +409,15 @@ costs the same three minutes.
 is there so the pipeline runs and can be tested; its energy *differences* are
 not quantitative:
 
-* it puts beta 3.9 kcal/mol per monomer below alpha in the crystal (the real
-  ordering is nearly degenerate, alpha slightly favoured: across five exchange-
-  correlation functionals and four independent studies beta sits 2.6 to 6.5
-  kJ/mol per monomer *above* alpha, i.e. 0.6 to 1.6 kcal/mol, with delta
-  essentially degenerate with alpha and gamma in between -
-  `docs/REFERENCES.md` section 5), because unscreened
+* it puts beta 1.8 kcal/mol per monomer below alpha in the crystal, measured as
+  the refined alpha/beta gap of `fitting.acceptance_tests` (+7.34 kJ/mol per
+  monomer; it was +7.38 before the geometry corrections, and an earlier version
+  of this bullet quoted 3.9 kcal/mol from the superseded funnel run of section
+  5.3).  The real ordering is nearly degenerate, alpha slightly favoured: across
+  five exchange-correlation functionals and four independent studies beta sits
+  2.6 to 6.5 kJ/mol per monomer *above* alpha, i.e. 0.6 to 1.6 kcal/mol, with
+  delta essentially degenerate with alpha and gamma in between
+  (`docs/REFERENCES.md` section 5).  The stated reason is that unscreened
   dipole alignment in the polar beta cell is over-rewarded;
 * its isolated-chain RIS ranking prefers the TG+ 3/1-type helix, which PVDF
   does not form;
@@ -374,12 +448,20 @@ neutral, so the sum of charge times position does not move with the origin;
 `CrystalPacker` asserts that.  Spontaneous polarizations of the packed
 reference chains, with the illustrative potential:
 
-| Chain | \|P\| (C/m^2) | direction | expectation |
-|---|---|---|---|
-| PE all-trans | 0.0000 | - | exactly zero, and for every configuration, not only the minimum |
-| PVDF beta TT | 0.1405 | perpendicular to c | 0.13 rigid-dipole, 0.176-0.188 from DFT, 0.050-0.100 measured |
-| PVDF alpha TG+TG- | 0.0777 | perpendicular to c | should be near zero: **disagrees** |
-| PVDF gamma T3GT3G' | 0.0910 | 34 deg out of ab | polar, weaker than beta (DFT 0.071) |
+| Chain | \|P\| (C/m^2) | before the corrections | direction | expectation |
+|---|---|---|---|---|
+| PE all-trans | 0.0000 | 0.0000 | - | exactly zero, and for every configuration, not only the minimum |
+| PVDF beta TT | 0.1416 | 0.1405 | perpendicular to c | 0.13 rigid-dipole, 0.176-0.188 from DFT, 0.050-0.100 measured |
+| PVDF alpha TG+TG- | 0.0785 | 0.0777 | perpendicular to c | should be near zero: **disagrees** |
+| PVDF gamma T3GT3G' | 0.0920 | 0.0910 | 34 deg out of ab | polar, weaker than beta (DFT 0.071) |
+
+Every PVDF polarization rose by about 0.8%, which is the shorter C-C bond packing
+the same charges into a slightly smaller cell and nothing more.  Which way that
+counts as agreement depends on the target, and the targets disagree by 40%: beta
+moves a shade closer to the DFT 0.176-0.188 and a shade further from both the
+rigid-dipole 0.13 and the measured 0.050-0.100, while gamma moves further from
+the DFT 0.071.  None of the shifts is large enough to matter against that spread.
+Alpha's disagreement is unaffected.
 
 **A correction to the beta target.**  This table and sections 5.4 and 5.7 used
 to call 0.13 C/m^2 the *experimental* polarization of beta-PVDF.  It is not a
@@ -407,7 +489,12 @@ flip and the torsions, and `pack` and `refine_crystal` both optimise in it.
 Beta responds linearly along its own polar axis and does not move, being already
 saturated; a field opposing it finds the 180-degree-rotated cell at equal energy,
 which is polarization reversal.  A transverse field does move the structure: at
-0.5 V/A the setting angles rotate by 6.6 degrees and b opens from 8.61 to 8.85 A.
+0.5 V/A the setting angles rotate by 6.7 degrees and b opens from 8.62 to 8.86 A
+(6.6 degrees and 8.61 to 8.85 before the geometry corrections).  That is the
+*local* response - the zero-field minimum polished in the field.  Re-screening
+the whole cell in the same field instead finds a different basin altogether, with
+the setting angles turned by 60 degrees, a opened to 5.01 and b closed to 8.03 A,
+which is worth knowing before quoting the local number as "the" response.
 
 ### 5.6 A defect that invalidated every polarity result
 
@@ -436,8 +523,13 @@ flip beyond the cutoff is free and that an isolated pair of chains costs
 exactly twice one chain.
 
 With the antiparallel branch reachable, the answer changes: **alpha-PVDF packs
-antiparallel**, and wins outright at 0.62 against 0.80 kcal/mol per monomer for
-the best parallel cell, at the experimental antipolar cell.  That is the
+antiparallel**, and wins outright at 2.05 against 2.23 kcal/mol per monomer for
+the best parallel cell, at the experimental antipolar cell.  (Re-measured with
+the corrected geometry; the same two numbers were 0.62 and 0.80 before it, so
+what matters - the 0.18 kcal/mol margin and its sign - is unchanged, while the
+absolute lattice energies of the rigid ideal-angle alpha cell moved by 1.4
+kcal/mol per monomer because the shorter C-C bond tightens its internal
+contacts.)  That is the
 correct result for alpha-PVDF, and it was unreachable before.  For gamma the
 parallel packing still wins.  For PE and beta the two orientations are exactly
 degenerate at the minimum, which is not a coincidence: both chains are
@@ -465,11 +557,21 @@ generalise**.  Nearly all of the gain sits in the three targets that each have
 their own private knob: PE's a axis is set by the hydrogen radius, alpha's b
 axis by the fluorine radius, and the alpha-beta energy gap by the torsion
 coefficient.  Targets without a dedicated knob got *worse*, including beta's
-polarization, which was a fitted target and drifted from 0.140 to 0.160 against
+polarization, which was a fitted target and drifted from 0.141 to 0.162 against
 the 0.13 target it was fitted to.  (That 0.13 is the rigid-dipole estimate, not
 an experimental value; see section 5.5 and `docs/REFERENCES.md` section 3.
 Against the DFT value of 0.176-0.188 the drift was towards the truth, which
 makes this a weaker piece of evidence than it looked, not a stronger one.)
+
+**What was and was not re-measured here after the geometry corrections.**  The
+fit itself - 86 objective evaluations, twenty-five minutes - was run at the old
+geometry and has not been repeated, so the objective values (100.8 to 56.5, and
+89.0 in the ablation) and the held-out gamma percentages below are as they were.
+The quantities that are a straight evaluation of the shipped preset were
+re-measured and moved by about 1%: beta's polarization under `pvdf-crystal-fit`
+is 0.1615 C/m^2 against 0.1604 before, and its alpha/beta gap +1.09 kJ/mol per
+monomer against +1.28.  Nothing in the conclusion of this section turns on
+differences that size.
 
 An ablation settles which parameters are real.  The two Lennard-Jones radii
 alone deliver essentially the whole held-out improvement (gamma root-mean-square
@@ -523,11 +625,16 @@ fit used a statistically disordered structure at 2.56 A instead.  Treating it as
 the experimental geometry, as this document did, was a misreading.
 
 What survives is smaller and concrete.  The C-C distance in the DFT structure is
-1.528 A rather than the 1.54 A used here, and adopting it moves the computed
-chain repeat from 2.583 to 2.563 A against an experimental 2.56.  That change is
-queued rather than applied: it shifts every PVDF energy and would invalidate the
-tables above, and the unfitted potential contributes cell errors of 3 to 6%,
-which dwarf this 0.9%.  It belongs with the next full re-measurement.
+1.528 A rather than the 1.54 A this package used, and adopting it moves the
+computed beta chain repeat from 2.583 to 2.563 A against an experimental 2.56.
+**That change has now been applied**, together with the rest of the batch in
+`docs/REFERENCES.md`, and the tables above are the re-measurement.  Two things it
+did that were not anticipated when it was queued: it made alpha's and gamma's
+chain repeats *worse* (section 5.1), because 1.528 A is Form I's C-C and every
+repeat scales with it; and it raised every PVDF density by about 1%, which the
+unfitted potential already over-predicts.  What it improved is beta's repeat, by
+a factor of seven, and - through the refinement stage, which over-expands - both
+refined polymorph cells.
 
 The general lesson is the same one section 5.7 records about the fit.  Both this
 and the "unreachable geometry" argument were careful reasoning from a number
@@ -557,9 +664,13 @@ with ten chemistries held out **whole** rather than frames held out at random:
 
 So the data diagnosis was right, and the fit now generalises.  The headline
 physical result is one the objective never saw: **alpha now falls below beta by
-4.54 kJ/mol per monomer**, inside the 2.6 to 6.5 range that four independent
-studies agree on, where the illustrative potential had beta below alpha by 7.38.
-That is the polymorph ordering this package exists to get right.
+4.81 kJ/mol per monomer**, inside the 2.6 to 6.5 range that four independent
+studies agree on, where the illustrative potential had beta below alpha by 7.34.
+That is the polymorph ordering this package exists to get right.  (Both figures
+re-measured after the geometry corrections; they were 4.54 and 7.38 before, so
+the correction moved the fitted result a little further into the accepted range.
+The held-out error table above is from the fit itself, which was run at the old
+geometry and has not been repeated.)
 
 Two other acceptance tests still fail, and the way they fail is the finding.
 The isolated-chain ranking still prefers a 3/1 helix PVDF does not form, and
@@ -619,12 +730,22 @@ and off its bound at +0.114 e, and released from bounds entirely the new form
 picks the electronegativity-correct sign for every charge increment unprompted,
 where the rigid form got three of six backwards.  The strain that made all-trans
 an unusable reference state largely dissolves once angles can relax: PVDC from
-231 kcal/mol to 12, CFE 120 to 12, AN 27 to 2, VDCN 57 to minus 1.  And PVDC's
+47 kcal/mol to 12, CFE 120 to 12, AN 27 to 2, VDCN 57 to minus 1.  And PVDC's
 fitted equilibrium angle at the CH2 carbon comes out at 123.1 degrees against a
 measured 123, recovered from DFT data alone with no crystallographic input - an
 independent confirmation of both the valence terms and the strain diagnosis.  Its
 angle at the CCl2 carbon is 102 against a measured 114, so the agreement is one
 sided.
+
+PVDC's first figure was 231 kcal/mol until its backbone angles were corrected from
+114/114 to the measured 123/114 (`docs/REFERENCES.md` section 6.2).  That is worth
+pausing on rather than editing quietly: the fitted valence model's own answer,
+123.1 degrees, was already telling the rigid model what its input should be, and
+giving the rigid model that input removed four fifths of the gap the valence terms
+were being credited with closing.  The remaining 47-to-12 is what the angle terms
+genuinely buy.  The relaxed geometry is unchanged either way, at 123.1 and 102.1
+degrees, which is the check that this is a starting-point effect and not a
+different minimum.
 
 Three things did not work, and they matter as much.
 
@@ -644,11 +765,22 @@ toward the wrong level.  Forces are kept at a low weight because they improve th
 conditioning of the fit by a factor of forty and because refinement needs
 gradients, not because they improve the energies.
 
-**The acceptance tests still stand at one of three.**  Alpha stays below beta,
-now at 2.96 kJ/mol per monomer, nearer the edge of the accepted range than the
-previous fit's 4.54.  The chain ranking still prefers a helix PVDF does not form,
-by a margin that has narrowed from 1.64 to 0.18 kcal/mol but not changed sign,
-and alpha's cell still packs polar.  So the functional form improved
+**The acceptance tests still stand at one of three**, re-measured with the
+corrected geometry:
+
+| preset | E(alpha) - E(beta), kJ/mol per monomer | RIS top (margin, kcal/mol) | E(anti) - E(polar) | beta \|P\| |
+|---|---|---|---|---|
+| illustrative | +7.34 (was +7.38) | TG+ (1.58, was 1.64) | +0.200 (was +0.200) | 0.1408 |
+| `pvdf-crystal-fit` | +1.09 (was +1.28) | TG+ (3.02, was 3.04) | +0.165 (was +0.166) | 0.1615 |
+| `pvdf-dft-fit` | **-4.81** (was -4.54) | TG+ (0.49, was 0.34) | +0.092 (was +0.091) | 0.1148 |
+| `pvdf-dft-valence` | **-3.13** (was -2.96) | TG+ (0.43, was 0.18) | +0.084 (was +0.085) | 0.1149 |
+
+Alpha stays below beta, now at 3.13 kJ/mol per monomer, a little further inside
+the accepted range than the 2.96 this fit gave at the old geometry.  The chain
+ranking still prefers a helix PVDF does not form, and here the geometry
+correction made things **worse**: the margin over the next candidate, which had
+narrowed from 1.64 to 0.18 kcal/mol, widens back to 0.43.  Alpha's cell still
+packs polar, unmoved.  So the functional form improved
 substantially on every physical diagnostic while the three targets stayed in
 tension, which suggests the remaining obstacle is not the terms in the potential
 but something about how those two particular quantities are computed.
@@ -701,6 +833,6 @@ src/polyfind/
   backend.py      NumPy / CuPy selection for the batched kernels
   pipeline.py     the funnel and the report
   cli.py          polyfind fit | enumerate | pack | sample | pipeline
-tests/            290 tests: every DP routine vs brute force, geometry, helices, packing, pipeline
+tests/            362 tests: every DP routine vs brute force, geometry, helices, packing, pipeline
 examples/         pvdf_polymorphs.py reproduces Section 5
 ```

@@ -331,11 +331,17 @@ def test_pair_table_cache_reuses_the_table_in_memory_and_on_disk(tmp_path):
 # ------------------------------------------------------------------ dipole and field coupling
 # Lattice energies measured with the fieldless code (commit 12a817d) at fixed cells, as a
 # regression guard that adding the field term left the zero-field kernel alone.
+#
+# The three PVDF rows were RE-RECORDED when PVDF's C-C bond length was corrected from
+# 1.54 to the DFT Form I 1.528 A (docs/REFERENCES.md): that moves every atom of the
+# chain, so the energies at these fixed cells necessarily move with it.  PE's row is
+# untouched -- PE's geometry did not change -- and it is what still holds the original
+# recording, and hence the kernel itself, in place.
 FIELDLESS_ENERGIES = {
     "pe": (-5.610711164309272, -4.205273674665557),
-    "beta": (-1.1715837780098868, -9.859895741455485),
-    "alpha": (92.75378910310668, 10.399320548352355),
-    "gamma": (80.30868931961102, 160.00684801113476),
+    "beta": (-0.5491161941046234, -9.17687306724556),
+    "alpha": (96.67441893488612, 16.146841685705),
+    "gamma": (87.07041823166938, 159.77466693085987),
 }
 
 

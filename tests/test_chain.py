@@ -20,7 +20,11 @@ def test_backbone_geometry_reproduced():
     bb = build_backbone(PVDF, dih, xp=np)
     assert bb.shape == (15, 3)
     for k in range(14):
-        assert distance(bb, k, k + 1) == pytest.approx(1.54, abs=1e-9)
+        # read the spec rather than repeating it: this asserts that the builder
+        # reproduces whatever geometry the Polymer declares, which is the property
+        # under test.  A literal here only re-asserted the value of the day, and broke
+        # when PVDF's C-C was corrected from 1.54 to the DFT Form I 1.528 A.
+        assert distance(bb, k, k + 1) == pytest.approx(PVDF.bond_length, abs=1e-9)
     for k in range(1, 14):
         expected = PVDF.backbone[k % 2].backbone_angle
         assert angle(bb, k - 1, k, k + 1) == pytest.approx(expected, abs=1e-6)
@@ -122,8 +126,17 @@ def test_backbone_atom_scalar_and_pair_specs():
 
 
 def test_all_trans_pvdf_rise():
-    # all-trans rise per monomer = l (sin(a1/2) + sin(a2/2))
+    """The closed form, and the experimental repeat it is supposed to reproduce.
+
+    The rise per monomer of an all-trans chain is l (sin(a1/2) + sin(a2/2)), and for
+    beta-PVDF it *is* the crystallographic c: 2.56 A (Hasegawa; docs/REFERENCES.md 1.1).
+    Both halves are asserted, the second because it is the physical claim: with the DFT
+    Form I C-C distance of 1.528 A the rise is 2.5630 A, +0.12% against experiment,
+    where the textbook 1.54 A this used to carry gave 2.5831 A, +0.90%.
+    """
+    a1, a2 = (b.backbone_angle for b in PVDF.backbone)
     bb = build_backbone(PVDF, np.full(10, 180.0), xp=np)
     rise = np.linalg.norm(bb[12] - bb[2]) / 5
-    expected = 1.54 * (np.sin(np.deg2rad(114 / 2)) + np.sin(np.deg2rad(114 / 2)))
+    expected = PVDF.bond_length * (np.sin(np.deg2rad(a1 / 2)) + np.sin(np.deg2rad(a2 / 2)))
     assert rise == pytest.approx(expected, abs=1e-6)
+    assert rise == pytest.approx(2.56, abs=0.01)  # the experimental beta repeat
