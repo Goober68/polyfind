@@ -581,6 +581,74 @@ changes than a refit.
 The fitted parameters ship as the preset `pvdf-dft-fit`.  `SimpleFF()`'s
 defaults are unchanged and still the default, so nothing silently moves.
 
+### 5.10 Valence terms: the forces become usable, and a data problem surfaces
+
+Section 5.9 concluded that the binding constraint had moved from the data to the
+functional form, and named two gaps: no bond or angle terms, and electrostatics
+too crude.  Both were addressed.  Harmonic stretching and bending were added with
+fitted equilibria and stiffnesses rather than invented ones, and fluorine's charge
+was allowed to sit off the nucleus while its Lennard-Jones centre stayed on it.
+Held-out results, ten chemistries held out whole:
+
+| | held-out energy | held-out force | force correlation |
+|---|---|---|---|
+| illustrative | 3.32 | 14.37 | +0.06 |
+| DFT fit, rigid form | 1.76 | 14.06 | +0.10 |
+| rigid form refit to full forces | 2.00 | 13.86 | +0.17 |
+| with valence terms | **1.36** | **5.23** | **+0.93** |
+
+The third row is the control that makes the point: refitting the *rigid* form
+against the same full force data gets nowhere, 13.86 against the 14.05 that
+predicting zero scores.  **The valence terms are what made the forces usable**,
+and the force correlation going from +0.10 to +0.93 is the clearest single number
+in this document.
+
+Three further checks came out well.  Fluorine's partial charge is now physical
+and off its bound at +0.114 e, and released from bounds entirely the new form
+picks the electronegativity-correct sign for every charge increment unprompted,
+where the rigid form got three of six backwards.  The strain that made all-trans
+an unusable reference state largely dissolves once angles can relax: PVDC from
+231 kcal/mol to 12, CFE 120 to 12, AN 27 to 2, VDCN 57 to minus 1.  And PVDC's
+fitted equilibrium angle at the CH2 carbon comes out at 123.1 degrees against a
+measured 123, recovered from DFT data alone with no crystallographic input - an
+independent confirmation of both the valence terms and the strain diagnosis.  Its
+angle at the CCl2 carbon is 102 against a measured 114, so the agreement is one
+sided.
+
+Three things did not work, and they matter as much.
+
+**The off-site charge is a null result.**  Setting its displacement to zero gives
+essentially the same fit.  It was the valence terms, not the electrostatics, that
+fixed fluorine's charge, and the charge-permittivity degeneracy is still exact.
+
+**The forces still do not help the energies**, 1.16 kcal/mol held out without
+them against 1.36 with.  The diagnosis is a provenance problem in the reference
+data rather than a modelling one: the fitted equilibrium bond lengths come out at
+1.467 A for C-F against a measured 1.358, and 1.458 for C-C against 1.535.  Those
+geometries are not at a PBE-D3 minimum - the reference force magnitude confirms
+it, since a relaxed structure would show forces near zero and these average
+14 kcal/mol per angstrom.  The dataset's geometries were optimised at one level
+and labelled at another, so fitting bond parameters to its forces bends them
+toward the wrong level.  Forces are kept at a low weight because they improve the
+conditioning of the fit by a factor of forty and because refinement needs
+gradients, not because they improve the energies.
+
+**The acceptance tests still stand at one of three.**  Alpha stays below beta,
+now at 2.96 kJ/mol per monomer, nearer the edge of the accepted range than the
+previous fit's 4.54.  The chain ranking still prefers a helix PVDF does not form,
+by a margin that has narrowed from 1.64 to 0.18 kcal/mol but not changed sign,
+and alpha's cell still packs polar.  So the functional form improved
+substantially on every physical diagnostic while the three targets stayed in
+tension, which suggests the remaining obstacle is not the terms in the potential
+but something about how those two particular quantities are computed.
+
+One thing found along the way is worth recording for its own sake.  Testing the
+chain ranking exposed a spurious third-order term of about minus 50 kcal/mol,
+produced by inclusion-exclusion across a steric overlap of order a million, which
+would have faked a pass on that test.  The fitting code now refuses such terms.
+An agent found it while checking its own acceptance test rather than reporting
+the pass.
+
 ## 6. Limitations and roadmap
 
 * RIS uses rigid bond geometry and discrete states; the continuous refinement
