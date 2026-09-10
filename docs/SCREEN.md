@@ -572,3 +572,64 @@ claim that trfe has "no antipolar escape route" now rests on nothing that has be
 checked, and is withdrawn with the column it came from. What survives for trfe is
 the part that never used the antipolar branch: its all-trans sits +0.42 kcal/mol
 per monomer above its own lattice ground state, the closest of anything screened.
+
+
+## Addendum 3: my own check was wrong too, and the cause was not truncation
+
+The addendum above reported beta-PVDF packing antipolar under the fitted
+potential by 0.125 kcal/mol per monomer, from a check I ran by hand, and blamed
+truncated electrostatics. **Both halves were wrong.** Recorded here because it
+was pushed to this repository and reported as a finding.
+
+**The measurement.** My antipolar construction set `phi2 = phi1 + 180` on a grid
+and then polished with every cell variable free. Polishing does not preserve that
+relation, so the "antipolar" start slid back into the polar basin and returned
+something lower than the polar minimum I was comparing it against. The correct
+construction constrains the antipolar subspace throughout, and under it beta is
+**polar under both potentials and both summation methods**:
+
+| potential | beta | alpha | gamma |
+|---|---|---|---|
+| illustrative, truncated / Ewald | +1.729 / +1.758 | +0.202 / +0.220 | +1.638 / +1.674 |
+| `pvdf-dft-valence-flux`, truncated / Ewald | +1.018 / +1.021 | +0.084 / +0.094 | +0.665 / +0.683 |
+
+Positive is polar. Beta polar and gamma polar are both correct. The -0.125 is
+withdrawn, and with it the claim that fitting the potential broke beta's polarity.
+
+**The diagnosis.** I attributed the flip to conditionally convergent dipole sums
+that a truncated potential cannot evaluate. Ewald now settles that: it moves
+every polarity gap by at most 0.09 kcal/mol per monomer and **changes no
+verdict**. Truncation was not the problem.
+
+The problem was a second defect in the comparison itself. The helper that built
+the antipolar cell used a flip with equal setting angles, which is antipolar only
+when a chain's transverse moment is perpendicular to its own reference axis. That
+holds for the alpha helix and fails for **every planar zigzag**, so on beta it
+returned a cell with a polarization of 0.1416 - a *polar* cell, near-degenerate
+with the polar minimum. **Every all-trans antipolar gap in this document was
+comparing two polar cells.**
+
+**Design rule 1 does not survive the correction**, and not for the reason I
+guessed. Under the corrected comparison, "perpendicular dipole above 0.5 implies
+antipolar packing" holds for one chemistry of four rather than four of four, and
+the correlation is -0.49. Three of the cases it rested on are not resolved at
+all, sitting within a tenth of a kcal/mol of zero. The candidate `trfe-cand`'s
+selling point, that it had no antipolar escape route, rests on the same withdrawn
+column.
+
+**What Ewald did buy**, since it was worth doing regardless: a validated
+electrostatic sum, the rock-salt Madelung constant reproduced to every published
+digit and asserted without a tolerance, independence from the splitting parameter
+to ten digits, and a brute-force spherical sum to 100 A recovering the vacuum
+surface term to four digits, which measures the conditional convergence directly.
+It also showed that the **boundary convention matters more than the summation
+method**: under the vacuum convention alpha becomes correct and beta becomes
+wrong. The default is tinfoil, which is the bulk limit of a screened crystal and
+the condition under which a ferroelectric's spontaneous polarization is defined,
+measured, and computed in the Berry-phase references we are comparing against.
+
+**What still cannot be decided.** Alpha's polarity comes out wrong by 0.08 to
+0.22 kcal/mol per monomer, which is an order of magnitude below the fitted
+potential's 1.36 held-out error. The honest statement is not that the model gets
+alpha wrong; it is that **the model cannot decide alpha**, and any gap below
+about 0.3 per monomer should be read the same way.
