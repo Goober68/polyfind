@@ -9,8 +9,9 @@ amorphous statistics 0.4 s; the expected gains in sections 1-9 are the reasoned
 estimates made at that time, not measurements. **Every "today" number in
 sections 1-9 is stale: section 10 now carries a measured stage-by-stage profile
 of the current code and is the only profile to plan from.** What it says, in one
-line: the table build is no longer the bottleneck and torsion refinement is
-69% of the funnel.
+line: with analytic gradients in the refinement and the polish, no single stage
+dominates any more -- refinement is 36% of the funnel and the chain-pair table
+build 34%.
 
 Hardware note: the target machine has an AMD Radeon RX 7700 XT. The current
 GPU backend is CuPy, which needs CUDA (or ROCm on Linux) and cannot run on
@@ -115,6 +116,15 @@ Refinement: 20-50x fewer evaluations and roughly 5x cheaper evaluations, so
 the 88 s stage becomes a few seconds. Effort: small for batched finite
 differences, medium for torch autodiff. Risk: none to results; the minima are
 the same or better.
+
+**Measured, and the second route was not needed.** Both stages now run on
+*analytic* gradients (`CrystalPacker.energy_and_grad`), and torch was not
+involved: the derivatives have closed forms, one kernel row per iteration instead
+of `1 + 2 n_vars`, 10.4x fewer rows in the polish and 25.6x in the refinement for
+4.9x and 7.1x in time. The minima are the same or lower. Section 13 carries the
+derivation, what stayed numerical and why, and the verification; section 10 the
+numbers. The autodiff bullet above therefore survives only as the GPU argument of
+section 9, not as the gradient argument.
 
 ## 3. Refinement variables: impose the chain's line-group symmetry, add bond angles, drop the penalty
 
@@ -280,53 +290,107 @@ the exactness is worth having.
   CPU unless ensembles exceed ~10^5 chains.
 * **Projected end-to-end effect.** This bullet predicted that the CPU pipeline
   would end up dominated by the table builds and the final polishes, and that a
-  GPU would then matter most for the table builds. The first half is now wrong
-  and the second follows it: with the build split across processes it is 10% of
-  the funnel and refinement is 69% (section 10), so the gradient batches of
-  section 2, not the table build, are what a GPU should take. Still projected:
-  nothing has been run on the GPU beyond a device test.
+  GPU would then matter most for the table builds. It was then briefly wrong --
+  with the build split across processes it was 10% of the funnel against
+  refinement's 69% -- and is now right again for a different reason: the analytic
+  gradients of section 13 took refinement's kernel rows away, so the table build
+  is 34% of the funnel and its largest single stage (section 10). A GPU should
+  take the table build; there is no gradient *batch* left for it to take, because
+  a gradient is now one row. Still projected: nothing has been run on the GPU
+  beyond a device test.
 
 ## 10. Where the time actually goes (measured), and what to do next
 
 All numbers below were measured on the target machine -- Windows 11, Python
 3.12, **Intel i7-8700K, 6 physical cores / 12 threads**, `OMP_NUM_THREADS=1`,
 with another agent's work running alongside -- as the minimum of repeats, and
-each "before" was taken back to back with its "after". The "before" column is
-commit `bb2e4de`. The workload is the default `PipelineConfig` for PVDF with
-`SimpleFF`: a fit, enumeration to period 8, and five conformations packed and
-refined (TG+TG+TG-TG-, TTTG+TG-, TTG+TG-G-TG+, TG+TG-, TT).
+each "before" was taken back to back with its "after". The workload is the
+default `PipelineConfig` for PVDF with `SimpleFF`: a fit, enumeration to period
+8, and five conformations packed and refined (TG+TG+TG-TG-, TTTG+TG-,
+TTG+TG-G-TG+, TG+TG-, TT).
 
 ### The funnel, stage by stage
 
-One process, no candidate parallelism, cold table cache -- so the columns are
-CPU work, not a wall time with contention in it:
+One process, no candidate parallelism -- so the columns are CPU work, not a wall
+time with contention in it. The two gradient columns were measured in the *same*
+process, from the same screen starts, with the chain-pair tables built once and
+shared, so nothing but the gradient differs between them. The "central
+differences" column is a fresh measurement of the same code that previously read
+34.7 s and 165.0 s for the polish and the refinement; it comes out 10% higher
+because the machine was busier. Compare within a row pair, never across runs.
 
-| Stage | before | after | share of the funnel now |
+| Stage | `bb2e4de` | central differences | **analytic gradients** | share now |
+|---|---|---|---|---|
+| RIS fit (`fit_ris`, step 10 deg, 6 monomers, third order) | 0.31 s | 0.33 s | 0.33 s | 0.5% |
+| enumeration (period <= 8, k = 60) | 4.9 s | 4.6 s | 4.6 s | 6% |
+| periodic chain construction (5) | 0.12 s | 0.13 s | 0.13 s | 0.2% |
+| **chain-pair table builds (5, screen grid)** | 66.1 s | 24.3 s | **24.3 s** | **34%** |
+| FFT screen (5 conformations, ~10^8 landscape points each) | 8.1 s | 8.3 s | 8.3 s | 12% |
+| exact-kernel polish (4 starts per conformation) | 33.8 s | 38.6 s | **8.0 s** (4.9x) | 11% |
+| **torsion + cell refinement (5)** | 155.7 s | 181.2 s | **25.7 s** (7.1x) | **36%** |
+| amorphous + interface statistics | 0.38 s | 0.48 s | 0.48 s | 0.7% |
+| total | 269.4 s | 258.0 s | **71.8 s** | |
+
+In kernel rows -- one row being one configuration through the pair kernel, the
+unit the two earlier sections argue about -- the collapse is larger than the time:
+
+| Stage | central differences | analytic | rows saved |
 |---|---|---|---|
-| RIS fit (`fit_ris`, step 10 deg, 6 monomers, third order) | 0.31 s | 0.30 s | 0.1% |
-| enumeration (period <= 8, k = 60) | 4.9 s | 4.4 s | 1.9% |
-| periodic chain construction (5) | 0.12 s | 0.14 s | 0.1% |
-| **chain-pair table builds (5, screen grid)** | **66.1 s** | **24.8 s** | **10%** |
-| FFT screen (5 conformations, ~10^8 landscape points each) | 8.1 s | 7.9 s | 3% |
-| exact-kernel polish (4 starts per conformation) | 33.8 s | 34.7 s | 15% |
-| **torsion + cell refinement (5)** | 155.7 s | **165.0 s** | **69%** |
-| amorphous + interface statistics | 0.38 s | 0.38 s | 0.2% |
-| total | 269.4 s | 237.5 s | |
+| polish (20 L-BFGS runs) | 3,584 rows | 343 rows | 10.4x |
+| refinement (5 candidates) | 13,115 rows | 512 rows | 25.6x |
 
-Refinement is now the stage to attack, and it is lopsided: of its 165 s, 112 s
-is one candidate (TTG+TG-G-TG+, an 8-bond 24-atom repeat), i.e. 47% of the whole
-funnel sits in one L-BFGS run. The polish is the second target at 15%.
+The time gains less than the rows because an analytic row is not a plain row: it
+carries the pair derivative and the reductions onto atoms and lattice vectors, and
+measures about 2.2x a plain row (1.7-2.3x over polyethylene, alpha and gamma and
+repeated runs; `examples/benchmark.py` prints it). A gradient therefore costs ~2.2
+rows against 11 for a cell-only difference and 29 for the gamma chain's full
+variable set, which is the 4.9x and 13x that benchmark measures directly and the
+4.9x and 7.1x the two stages show once the geometry builds are paid too.
+
+Per candidate, refinement before and after (time / rows / L-BFGS evaluations):
+
+| Candidate | atoms | vars | central differences | analytic | speedup |
+|---|---|---|---|---|---|
+| TG+TG+TG-TG- | 24 | 10 (linegroup) | 24.4 s / 1,198 / 57 | 5.8 s / 69 / 68 | 4.2x |
+| TTTG+TG- | 18 | 13 (free) | 30.2 s / 4,510 / 167 | 5.6 s / 180 / 179 | 5.4x |
+| **TTG+TG-G-TG+** | 24 | 15 (free) | **124.2 s / 6,697 / 216** | **13.2 s / 218 / 217** | **9.4x** |
+| TG+TG- (alpha) | 12 | 8 (linegroup) | 2.3 s / 579 / 34 | 1.0 s / 34 / 33 | 2.2x |
+| TT (beta) | 6 | 6 (linegroup) | 0.24 s / 131 / 10 | 0.12 s / 11 / 10 | 2.0x |
+
+The lopsidedness is gone with it: the worst candidate was 47% of the whole funnel
+and is now 18% of a funnel 3.6x smaller.
 
 ### End to end
 
-| Run | before | after |
-|---|---|---|
-| `run_pipeline(pvdf)`, default workers (5), cold cache | 289.1 s | 222.7 s (**1.30x**) |
-| same, `workers=3` (one per physical core, minus the main process) | - | 179.0 s |
-| same, `workers=3`, warm on-disk table cache | - | 146.3 s |
+Same script, same conditions, run back to back; `workers=3` is the current
+default (one per physical core, minus the main process):
 
-The refined cell is unchanged: beta-PVDF TT wins at -8.153 kcal/mol per monomer,
-a = 4.60, b = 8.59, c = 2.63 A, antipolar, in all four runs.
+| Run | central differences | analytic | speedup |
+|---|---|---|---|
+| PVDF funnel, `workers=3`, cold table cache | 188.8 s | **77.2 s** | 2.45x |
+| same, warm on-disk table cache | 162.5 s | **25.4 s** | 6.40x |
+
+The answer is unchanged: beta-PVDF TT wins at -8.153 kcal/mol per monomer,
+a = 4.60, b = 8.59, c = 2.63 A, in every run, and every candidate's refined
+energy agrees to better than 1e-3 kcal/mol per monomer with two exceptions worth
+naming, because neither is a different minimum:
+
+* **TT (beta) is reported "para" on the analytic path and "anti" on the
+  finite-difference one, at the same energy (1.4e-6 kcal/mol per monomer apart)
+  and the same cell.** For an all-trans chain the flip `(x, -y, -z)` *is* a
+  translation along z -- measured residual 3.6e-15 A for beta-PVDF and 2.9e-15 A
+  for polyethylene, against 0.8-1.5 A for alpha and gamma -- so `flip=0` and
+  `flip=1` describe the identical crystal and the label is decided by a tie-break
+  at the 1e-11 level. The polarity of an all-trans cell is set by `phi` and `dz`,
+  not by the flip flag, and any reading of that flag for beta (including this
+  document's earlier "antipolar") says nothing.
+* **TTG+TG-G-TG+ ends 8.4e-3 kcal/mol per monomer *lower* on the analytic path at
+  the pipeline's default budget.** Neither route has converged there: both stop at
+  `maxiter=200` (216 and 217 evaluations), and the analytic gradient simply gets
+  further down the same valley per iteration. Lifting the cap to 2,000 settles it
+  -- both land on the same minimum, -5.4381 against -5.4377 kcal/mol per monomer,
+  a within 1e-4 A, b within 1e-4, c within 2e-4, every torsion within 0.024 deg --
+  and the analytic route takes 18.4 s to the finite difference's 208.5 s (11.3x).
 
 ### The table build against worker count
 
@@ -366,21 +430,25 @@ Cold builds, screen grid, before (4 threads) vs after (6 processes): PE all-tran
 
 ### Next, in order
 
-1. **Refinement (69%).** Its L-BFGS iterations are sequential, but each iteration
-   is one batched kernel call of `1 + 2 n_vars` configurations with per-row
-   coordinates -- embarrassingly parallel across rows, exactly like the radial
-   axis of the table. Before splitting it, repeat the chunk-size experiment on
-   `pack.CPU_CHUNK_ELEMS` (60,000, i.e. ~4 MB of temporaries): the table build
-   gained 1.3x serially and 4x in parallel from that one constant, and the
-   packing kernel has the same shape. Cutting the iteration count is the other
-   half: 112 s in one candidate is an optimiser-conditioning problem.
-2. **Polish (15%).** Four independent L-BFGS runs per conformation, each a
-   sequence of small batched calls: parallel across starts, with the same
-   caveat about the kernel's working set.
-3. **Pipeline worker count.** `cpu_count() - 1` is 11 on a 6-core machine and
-   oversubscribes it; 3 workers beat 5 by 1.24x (section 4).
-4. **GPU (section 9).** The table build is no longer where a GPU would pay;
-   the refinement gradient batches are.
+1. **Chain-pair table builds (34%).** Now the largest single stage, and the one
+   whose scaling is already understood (section 13): bandwidth-bound, saturating
+   at about four worker processes on six physical cores, and already 1 worker
+   inside an outer candidate pool. Two levers are left -- the float32/spline
+   arithmetic of section 6, and the GPU of section 9, which is where the table
+   build becomes the natural job again now that the gradient batches have gone.
+2. **Refinement (36%).** The gradient is no longer the cost; the cost is now the
+   *geometry* -- each iteration still builds `1 + 2 n_shape` chains (one NeRF
+   pass, plus a closure solve in the line-group parametrisation) to contract
+   against the exact `dE/d(coords)`. Making the torsion and bond-angle Jacobian
+   analytic as well (`dr_i/dtheta_j = u_j x (r_i - p_j)` through the NeRF build,
+   the closure solve by the implicit function theorem, and the Kabsch/alignment
+   stage by differentiating the SVD) would remove it; so would simply using the
+   *line-group* parametrisation everywhere, since it has the fewest shape
+   variables. Nothing here is a kernel problem any more.
+3. **Sequential L-BFGS runs.** The polish is four independent L-BFGS runs per
+   conformation and is parallel across starts; at 11% of the funnel that is now a
+   small prize.
+4. **GPU (section 9).** Back to the table build, not the gradients.
 
 ### Status of the earlier plan
 
@@ -390,10 +458,11 @@ Cold builds, screen grid, before (4 threads) vs after (6 processes): PE all-tran
 | 2 | section 2: batched-gradient polish and refinement, hoisted invariants | done |
 | 3 | section 6: intra constant, z-windows, float32 screen | done; tabulated pair potentials not done |
 | 4 | section 1: tabulated W + FFT lattice sums, exhaustive screen | done; the screen is 3% of the funnel |
-| 5 | section 3: symmetry-parametrised refinement with bond angles | done; still 69% of the funnel |
+| 5 | section 3: symmetry-parametrised refinement with bond angles | done; 69% of the funnel then, 36% after step 9 |
 | 6 | section 5: coarse-to-fine fit, batched conformers | done; the fit is 0.1% of the funnel |
 | 7 | section 9: torch backend on the AMD GPU | not done |
 | 8 | process-parallel table build (this section) | done; 2.8-3.8x on the build, 1.30x end to end |
+| 9 | section 13: analytic gradients for the polish and the refinement | done; 4.9x on the polish, 7.1x on refinement, 2.4-6.4x end to end |
 
 ## 11. Open points
 
@@ -506,6 +575,21 @@ it. The symmetry group of a chiral repeat is therefore shifts plus
 reflection-with-reversal, and nothing else - exactly the operation the fitting
 code had already been driven to.
 
+Implementing the analytic gradients corrected a claim this document had been
+repeating. Section 10 reported the winning beta-PVDF cell as "antipolar", read off
+the `flip` flag of the packed result. For an all-trans chain that flag carries no
+information: the flip `(x, -y, -z)` is *exactly* a translation along z (measured
+residual 3.6e-15 A for beta-PVDF, 2.9e-15 A for polyethylene, against 0.8 A for
+alpha and 1.5 A for gamma), so `flip=0` and `flip=1` describe the identical
+crystal and which one a run reports is a tie-break between energies 1e-11 apart.
+It surfaced because the analytic polish perturbs those last bits and the reported
+label changed while the energy, a, b and c did not. The polarity of an all-trans
+cell lives in `phi1`, `phi2` and `dz`; anywhere a conclusion rests on the flip
+flag, it has to be checked against the chain's own symmetry first. The same
+arithmetic says the flag *is* meaningful for alpha and gamma, which is where the
+antipolar result of this document's earlier work was obtained, so that result
+stands.
+
 The same agent's own achiral control caught a false alarm before it reached me.
 Its first angle check reported a 120-degree symmetry violation for PVDC, an
 achiral polymer where the residual must vanish. Rather than report it, it looked
@@ -552,7 +636,7 @@ again. The on-disk table cache, by contrast, needed nothing: its writes were
 already atomic, its keys are per conformation so a multi-candidate run has no
 duplicates to remove, and a warm cache takes the PVDF funnel from 179 s to 146 s.
 
-## 13. The bandwidth lesson, and a lead that did not transfer
+## 13. The bandwidth lesson, a lead that did not transfer, and the rows that did
 
 Parallelising the interaction-table build produced the most transferable finding
 of this whole effort, and it was not the parallelism. Splitting the build across
@@ -579,33 +663,70 @@ the noise; the present 60,000 is already near optimal, and only the extreme
 kernel was being run in parallel, where bandwidth contention dominates, while
 this measurement is single-process.
 
-**Where the time now is.** The profile has moved enough that the old
-recommendations are stale:
+**Where the time was, and the lever that moved it.** Before this section's work
+the profile was refinement 69%, polishing 15%, table build 10%, FFT screen 3%,
+everything else 2%, and 112 of refinement's 165 seconds sat in a single candidate
+whose per-row kernel cost is 18 ms against 2.3 for alpha and 0.9 for
+polyethylene - an N-squared effect from its 24-atom repeat that no constant will
+fix.
 
-| Stage | Share of pipeline |
-|---|---|
-| refinement | 69% |
-| polishing | 15% |
-| table build | 10% |
-| FFT screen | 3% |
-| fit, enumeration, amorphous | about 2% together |
+The lever was not the kernel but the *number of rows*. Refinement got its
+gradients by central differences, so every L-BFGS iteration cost one plus twice
+the variable count - 29 rows for the gamma chain - to extract a single gradient.
+**That is now done analytically, and the prediction in the paragraph this
+replaces was about right in both directions:** 25.6x fewer rows in refinement
+(13,115 to 512) and 10.4x fewer in the polish, at 1.7-2.2x the cost per row, for
+7.1x on refinement and 4.9x on the polish. The funnel went from 258.0 s to
+71.8 s of CPU work and the end-to-end run from 188.8 s to 77.2 s cold, 162.5 s to
+25.4 s warm. Section 10 carries the per-candidate numbers.
 
-Refinement is the target, and 112 of its 165 seconds is a single candidate, the
-gamma chain, whose per-row kernel cost is 18 ms against 2.3 for alpha and 0.9
-for polyethylene - an N-squared effect from its 24-atom repeat that no constant
-will fix.
+**What is analytic and what is not.** The lattice energy is a sum of pair terms,
+so `dE/dr_i` is a scalar times the separation vector, and
+`CrystalPacker.energy_and_grad` returns, from one kernel row, the energy together
+with `dE/d(a, b, gamma, phi1, phi2, dz)`, `dE/d(chain coordinates)` and `dE/dc`.
+The cell variables are closed-form throughout: the lengths and the cell angle
+through the lattice vectors and chain 2's offset, `dz` through that offset alone,
+the setting angles through `dr/dphi = z_hat x r`. The *conformational* variables
+are not: `d(coords, c)/d(shape)` runs through the NeRF build, the line group's
+closure solve and the Kabsch alignment, and that Jacobian is still a central
+difference - but of the **geometry only**, contracted against the exact
+`dE/d(coords)`, so it costs no kernel row at all. That is why the row count
+collapses by 25x while the gradient of a torsion is still numerical.
 
-The lever there is not the kernel but the *number of rows*. Refinement gets its
-gradients by central differences, so every L-BFGS iteration costs one plus twice
-the variable count, 29 rows for the gamma chain, to extract a single gradient.
-Analytic or automatically-differentiated gradients would collapse that to one
-evaluation per iteration at some increased cost per evaluation - plausibly five
-to ten times overall, against roughly 30 times fewer rows. Section 2 of this
-document already pointed at automatic differentiation as the route, for the
-separate reason that the same implementation would run on a GPU; the profile now
-says it is also where the remaining CPU time is. That is the next thing to do.
+**Verification was the deliverable, not the speed.** A gradient wrong in one
+component is worse than no gradient, because L-BFGS converges confidently to the
+wrong place. Every component was checked against a central difference of the very
+function the optimiser minimises - not a re-implementation of it; `refine_crystal`
+grew a `probe` argument precisely so that the objective and both gradient routes
+can be driven from a test. Over polyethylene, beta-, alpha- and gamma-PVDF and an
+unpatterned sequence, with and without a field, in both parametrisations, at two
+points each: worst relative error **2.3e-7** on the analytic cell variables and
+**2.3e-5** on the geometry-differenced shape variables. The energy
+`energy_and_grad` returns is bit-identical to `energy()`, asserted with `==`.
 
-A smaller fix is already applied: the pipeline's worker count defaulted to
+Two things that verification taught, both worth keeping:
+
+* **Differentiate the approximation, not the function it approximates.** The
+  Coulomb term uses the usual polynomial `erfc`, whose *value* is good to 1.5e-7 -
+  but whose *derivative* differs from the true `-2/sqrt(pi) exp(-x^2)` by 1.2e-5
+  relative over the range the kernel uses. Substituting the true derivative and
+  re-measuring: the error on the `a` gradient goes from 4e-7 to 5.7e-6 and on
+  `phi1` from 9e-10 to 4e-8, i.e. an order of magnitude of accuracy thrown away,
+  and enough to sit above the finite-difference floor and look like a bug in the
+  chain rule. The gradient of a kernel is the gradient of the kernel, not of the
+  mathematics it stands in for.
+* **The kernel has a real kink, and the finite difference is the thing that is
+  wrong at it.** The Lennard-Jones term is energy-shifted at the cutoff but not
+  force-shifted, so its force jumps at `r = rc`. A step that straddles that point
+  makes the *difference* disagree with the derivative by ~1e-4 relative, and the
+  disagreement vanishes at smaller steps rather than shrinking as `h^2`. Three
+  components looked wrong until the step was swept; moving the cutoff by 0.04 A
+  moved the anomaly with it. Force-shifting the Lennard-Jones term, or splining
+  it to zero over the last half-angstrom, would remove a genuine non-smoothness
+  from the objective that the old finite-difference refinement was walking over
+  blind.
+
+A smaller fix was applied alongside: the pipeline's worker count defaulted to
 logical cores minus one, which oversubscribes a bandwidth-bound workload. On
 this machine three workers beat five by 1.24x, so the default is now derived
 from physical cores.

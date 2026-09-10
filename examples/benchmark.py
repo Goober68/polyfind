@@ -71,6 +71,25 @@ def main():
             dt = timeit(lambda: pk.energy(params), 2)
             print(f"  {lbl}: M={M:5d}: {dt:6.2f} s  = {1e3 * dt / M:6.2f} ms/cell")
 
+    # The refinement's gradient: one analytic row against the 1 + 2 n_vars rows a central
+    # difference needs.  The analytic row costs more than a plain energy row (it carries
+    # the pair derivative and the reductions onto atoms and lattice vectors), so the row
+    # count overstates the win; this measures what is actually paid per gradient.
+    print("\nrefinement gradient, one configuration (cell variables analytic; the shape")
+    print("variables' chain rule is a geometry-only difference and costs no kernel row):")
+    for poly, seq, lbl in [(PE, [T], "PE all-trans  ( 6 atoms)"), (PVDF, [T, GP, T, GM], "PVDF alpha    (12 atoms)"), (PVDF, [T, T, T, GP, T, T, T, GM], "PVDF gamma    (24 atoms)")]:
+        ch = periodic_chain(poly, seq, THREE_STATE)
+        pk = CrystalPacker(ch)
+        p = np.array([5.1, 9.3, 90.0, 37.0, 212.0, 0.4 * ch.c, 1.0])
+        one = timeit(lambda: pk.energy(p[None]))
+        an = timeit(lambda: pk.energy_and_grad(p))
+        for n_vars in (5, 14):  # cell only, and cell + the gamma chain's conformation
+            rows = np.repeat(p[None], 1 + 2 * n_vars, axis=0)
+            fd = timeit(lambda: pk.energy(rows))
+            print(f"  {lbl}: energy {1e3 * one:6.2f} ms  analytic grad {1e3 * an:6.2f} ms "
+                  f"({an / one:4.2f} rows)  vs {1 + 2 * n_vars:2d}-row difference {1e3 * fd:7.2f} ms "
+                  f"({fd / an:5.2f}x)")
+
     # The table build is the packing path's one real cost, and it is the stage process
     # parallelism helps: the radial axis splits cleanly and the result is bit-identical,
     # so the only question is how far the machine's memory bandwidth lets it scale.
