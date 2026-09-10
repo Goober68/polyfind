@@ -60,6 +60,19 @@ beta-PVDF:
 That is fifteen small periodic calculations, plus relaxations. On the hardware
 described it should be hours, not days.
 
+## Run it on CPU, not GPU
+
+The cell is about twelve atoms, which is far below where plane-wave
+density-functional theory starts to benefit from a GPU. At this size the
+transforms are too small to saturate a device and the calculation is
+latency-bound, so a GPU mostly adds transfer overhead; the crossover is in the
+hundreds of atoms. GPU support in the common plane-wave codes is also
+CUDA-oriented, with ROCm less mature.
+
+The scheduling consequence is the useful part: **this work does not compete with
+GPU-bound simulation work**. It wants CPU cores and can run alongside rather than
+queueing behind whatever is occupying the accelerator.
+
 ## Worth more than the above, if it is cheap to add
 
 **Born effective charge tensors** `Z*_ij` per atom, from density-functional
