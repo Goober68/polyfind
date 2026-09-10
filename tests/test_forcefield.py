@@ -5,6 +5,7 @@ import pytest
 
 from polyfind.chain import build_chain, build_chain_batch
 from polyfind.forcefield import (
+    Frame,
     SimpleFF,
     _reversal_angle_residual,
     _reversal_image3,
@@ -348,7 +349,9 @@ def test_lj_overrides_are_per_instance_and_never_touch_the_global_table():
     assert fat.lj_table()["F"] == (3.9, 0.050)
     assert fat.lj_table()["C"] == UFF_LJ["C"]
     assert UFF_LJ == before  # the module-level table is untouched
-    assert plain.lj_table() == UFF_LJ
+    # the table is UFF plus the main-group fallbacks a Frame of some other chemistry needs;
+    # every element polymers.py defines keeps polymers.py's value
+    assert {k: v for k, v in plain.lj_table().items() if k in UFF_LJ} == UFF_LJ
     assert plain.energy(s) == float.fromhex(GOLDEN_ENERGIES[("pvdf", 0)][0])  # still exact
 
 
@@ -365,3 +368,140 @@ def test_topology_cache_is_keyed_on_the_parameters():
 def test_unknown_preset_names_are_rejected():
     with pytest.raises(KeyError, match="unknown SimpleFF preset"):
         SimpleFF.from_preset("no-such-preset")
+
+
+# ------------------------------------------------- arbitrary geometries (Frame)
+def _frame_from_chain(polymer, dihedrals):
+    """A :class:`Frame` built from a chain, so the tests need no external data file."""
+    s = build_chain(polymer, dihedrals)
+    return Frame.from_geometry(s.elements, s.coords, system=polymer.name, source="synthetic"), s
+
+
+# Torsion sets to build test frames from: the polymorph conformations plus a couple of
+# mixed ones, jittered off their ideal angles.  Deliberately not uniform draws on the
+# circle -- with *frozen* bond angles an arbitrary torsion set can fold the chain onto
+# itself until two atoms four bonds apart are inside covalent bonding distance (the
+# pentane G+G- clash does it on its own), at which point any distance-based bond
+# perception, ours or anyone else's, invents a ring.  That is an artifact of the rigid
+# geometry; the reference data holds relaxed conformers, which these imitate.
+_CONFORMERS = [
+    [178.0, -176.0, 179.0, 174.0, -178.0, 177.0, 180.0],      # all-trans (beta)
+    [172.0, 62.0, 176.0, -58.0, 168.0, 65.0, -175.0],         # TGTG' (alpha)
+    [175.0, 171.0, 178.0, 58.0, -174.0, 176.0, 172.0],        # T3GT3 (gamma-like)
+    [-172.0, 178.0, 64.0, 170.0, 176.0, -61.0, 174.0],
+    [166.0, -63.0, -168.0, -59.0, 173.0, 178.0, -177.0],
+]
+
+
+def test_inferred_bonds_and_elements_match_build_chain_for_pvdf():
+    """The Frame path must see exactly the molecule build_chain builds.
+
+    This is the check that licenses fitting to reference geometries at all: if the
+    inferred topology of a five-monomer PVDF oligomer were not bond-for-bond the one the
+    package builds for itself, the fit would be scoring a different molecule.
+    """
+    for dih in _CONFORMERS:
+        frame, s = _frame_from_chain(PVDF, dih)
+        assert sorted(frame.elements) == sorted(s.elements)
+        assert len(frame.bonds) == len(s.bonds)
+        assert len(frame.backbone) == len(s.backbone) == 10
+        assert [frame.elements[i] for i in frame.backbone] == ["C"] * 10
+        # reordering into build_chain's order reproduces the element list and the bond
+        # graph exactly -- to_structure raises if either differs
+        rebuilt = frame.to_structure(PVDF)
+        assert rebuilt.elements == list(s.elements)
+        assert (sorted(tuple(sorted(b)) for b in rebuilt.bonds)
+                == sorted(tuple(sorted(b)) for b in s.bonds))
+
+
+def test_frame_energy_equals_structure_energy():
+    """The same potential and the same number, whichever path built the topology."""
+    ff = SimpleFF(charge_increments=(("C", "H", -0.10), ("C", "F", 0.20)))
+    for dih in _CONFORMERS:
+        frame, _ = _frame_from_chain(PVDF, dih)
+        assert ff.energy_frame(frame) == pytest.approx(ff.energy(frame.to_structure(PVDF)), abs=1e-9)
+
+
+def test_bond_charge_increments_reproduce_the_polymer_tables():
+    """The illustrative charges *are* a bond-charge-increment model; these are its numbers."""
+    from polyfind.forcefield import bci_charges
+
+    cases = ((PVDF, {("C", "H"): -0.10, ("C", "F"): 0.20}),
+             (PE, {("C", "H"): -0.06}),
+             (get_polymer("pvdc"), {("C", "H"): -0.10, ("C", "Cl"): 0.10}))
+    for polymer, inc in cases:
+        s = build_chain(polymer, np.full(7, 180.0))
+        q = bci_charges(s.elements, s.bonds, inc)
+        assert abs(q.sum()) < 1e-12  # neutral by construction, for any increments
+        # Away from the ends the two agree exactly.  build_chain gives its two cap
+        # hydrogens charge zero and leaves the carbons they hang off unbalanced, which a
+        # neutral increment model cannot and should not reproduce.
+        caps = {s.n_atoms - 1, s.n_atoms - 2}
+        touching = caps | {a for a, b in s.bonds if b in caps} | {b for a, b in s.bonds if a in caps}
+        interior = [i for i in range(s.n_atoms) if i not in touching]
+        assert np.allclose(q[interior], s.charges[interior]), polymer.name
+
+
+def test_rotor_changes_one_torsion_and_no_bond_or_angle():
+    """The projection the force fit uses is the only displacement with this property."""
+    from polyfind.forcefield import _side_mask, dihedral_angles, rotate_about_bond
+
+    frame, _ = _frame_from_chain(PVDF, _CONFORMERS[1])
+    a0 = frame.angles()
+    lengths = lambda c: np.array([np.linalg.norm(c[i] - c[j]) for i, j in frame.bonds])
+    l0 = lengths(frame.coords)
+    wrap = lambda x: (x + 180.0) % 360.0 - 180.0
+    for k, (_, b, c, _) in enumerate(np.asarray(frame.torsions, dtype=int)):
+        mask = _side_mask(frame.n_atoms, frame.adjacency, int(b), int(c))
+        h = 1e-4
+        moved = rotate_about_bond(frame.coords, mask, int(b), int(c), h)
+        d = wrap(dihedral_angles(moved, frame.torsions) - a0) / np.degrees(h)
+        want = np.zeros(frame.n_dihedrals)
+        want[k] = 1.0
+        assert np.allclose(d, want, atol=1e-6)
+        assert np.allclose(lengths(moved), l0, atol=1e-12)
+
+
+def test_frame_torques_are_the_projection_of_the_cartesian_gradient():
+    """``frame_torques`` must equal ``sum_i F_i . u_ki`` for the model's own forces."""
+    ff = SimpleFF(charge_increments=(("C", "H", -0.10), ("C", "F", 0.20)))
+    frame, _ = _frame_from_chain(PVDF, _CONFORMERS[3])
+    h = 1e-5
+    F = np.zeros((frame.n_atoms, 3))
+    for i in range(frame.n_atoms):
+        for a in range(3):
+            cp = frame.coords.copy()
+            cp[i, a] += h
+            cm = frame.coords.copy()
+            cm[i, a] -= h
+            F[i, a] = -(ff.energy_frame(frame.with_coords(cp))
+                        - ff.energy_frame(frame.with_coords(cm))) / (2 * h)
+    assert np.allclose(np.einsum("kia,ia->k", frame.rotors(), F), ff.frame_torques(frame), atol=1e-6)
+
+
+def test_a_bond_stretch_force_pair_projects_to_exactly_zero():
+    """Why forces are fitted through the torsional projection and not in Cartesians.
+
+    A potential with no bonded terms cannot produce a bond-stretch force, and a reference
+    method evaluated at a geometry relaxed by some *other* method is dominated by exactly
+    that (measured on the reference set: 93% of the sum of squared force components).  The
+    projection annihilates it identically, so what survives is the part this potential is
+    answerable for.
+    """
+    frame, _ = _frame_from_chain(PVDF, _CONFORMERS[2])
+    rng = np.random.default_rng(7)
+    F = np.zeros((frame.n_atoms, 3))
+    for i, j in frame.bonds:  # an arbitrary force along every bond, equal and opposite
+        u = frame.coords[j] - frame.coords[i]
+        u = u / np.linalg.norm(u) * rng.normal()
+        F[i] -= u
+        F[j] += u
+    assert np.abs(np.einsum("kia,ia->k", frame.rotors(), F)).max() < 1e-10
+
+
+def test_read_frames_needs_a_path_or_the_environment_variable(monkeypatch):
+    from polyfind.forcefield import TRAINSET_ENV, read_frames
+
+    monkeypatch.delenv(TRAINSET_ENV, raising=False)
+    with pytest.raises(FileNotFoundError, match=TRAINSET_ENV):
+        read_frames()

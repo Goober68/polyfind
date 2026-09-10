@@ -23,9 +23,18 @@ Two roles:
    for step = 10 deg and B = 2.  The scan is embarrassingly parallel and goes
    through ``energy_batch`` so a GPU-backed calculator can evaluate all
    conformers at once.
+
+3. :class:`Frame` and its helpers: an *arbitrary* all-atom geometry with its
+   topology inferred from the coordinates, so that the same potential can be
+   scored against reference (density-functional) data that was not produced by
+   :func:`~polyfind.chain.build_chain`.  :mod:`polyfind.fitting` uses this to fit
+   the potential to torsion scans and conformer energies; see that module for the
+   objective and DESIGN.md 5.7 for why crystal data alone could not do the job.
 """
 from __future__ import annotations
 
+import os
+import re
 import warnings
 from dataclasses import dataclass, field
 from typing import Protocol, Sequence
@@ -70,6 +79,433 @@ def erfc_approx(x, xp=np):
     return xp.where(x >= 0, y, 2.0 - y)
 
 
+# ------------------------------------------------- arbitrary geometries (Frame)
+#
+# Everything in this package below :class:`~polyfind.chain.Structure` assumes rigid
+# bond geometry: only the dihedrals vary, and the topology comes from the
+# :class:`~polyfind.polymers.Polymer` that built the chain.  Reference data does not
+# arrive that way -- a relaxed torsion scan moves bond lengths and angles too, and it
+# names no polymer -- so a :class:`Frame` carries an arbitrary geometry with its
+# topology *inferred from the coordinates*, and :class:`SimpleFF` scores it with the
+# same three terms it uses everywhere else.
+
+# Cordero et al., Dalton Trans. 2008, 2832 (single-bond covalent radii, A).
+COVALENT_RADII: dict[str, float] = {
+    "H": 0.31, "B": 0.84, "C": 0.76, "N": 0.71, "O": 0.66, "F": 0.57, "Si": 1.11,
+    "P": 1.07, "S": 1.05, "Cl": 1.02, "Br": 1.20, "I": 1.39,
+}
+BOND_TOLERANCE = 1.25  # a bond is r_ij < tolerance * (rcov_i + rcov_j)
+
+# Environment variable naming the reference set :func:`read_frames` reads by default.
+# The data is *not* vendored into this repository: it is large, it is not ours, and
+# pinning it to one machine's path would be worse than asking for the path.
+TRAINSET_ENV = "POLYFIND_TRAINSET"
+EV_TO_KCAL = 23.0605
+
+
+def infer_bonds(elements, coords, tolerance: float = BOND_TOLERANCE) -> list[tuple[int, int]]:
+    """Bonds of a geometry, by the usual covalent-radius overlap rule.
+
+    ``r_ij < tolerance * (rcov_i + rcov_j)``.  For the saturated fluoro-oligomers this
+    package cares about the rule is unambiguous: the widest bond (C-C at 1.55 A) sits
+    at 0.82 of its cutoff and the tightest non-bond (a geminal F...F at 2.2 A) at 1.9
+    of its own, so nothing lands near the boundary.  A double bond is *not*
+    distinguished from a single one -- callers that need to exclude unsaturated
+    backbones test the bond length themselves (see :meth:`Frame.backbone_is_saturated`).
+    """
+    coords = np.asarray(coords, dtype=float)
+    try:
+        rad = np.array([COVALENT_RADII[e] for e in elements])
+    except KeyError as e:  # pragma: no cover - guards a typo in a data file
+        raise KeyError(f"no covalent radius for element {e.args[0]!r}") from e
+    d = np.linalg.norm(coords[:, None, :] - coords[None, :, :], axis=-1)
+    cut = tolerance * (rad[:, None] + rad[None, :])
+    i, j = np.where(np.triu(d < cut, 1))
+    return [(int(a), int(b)) for a, b in zip(i, j)]
+
+
+def neighbour_lists(n_atoms: int, bonds) -> list[list[int]]:
+    adj: list[list[int]] = [[] for _ in range(n_atoms)]
+    for a, b in bonds:
+        adj[a].append(b)
+        adj[b].append(a)
+    return adj
+
+
+def carbon_backbone(elements, bonds) -> list[int]:
+    """The longest simple path through the carbon atoms, in chain order.
+
+    That is the backbone of a linear oligomer, and it is what
+    :attr:`~polyfind.chain.Structure.backbone` holds for a built chain.  Exhaustive
+    depth-first search rather than the usual double-breadth-first trick, because the
+    latter is only correct on a tree and a pendant ring (cyclopropyl, say) is not one;
+    with a dozen or two carbons the exhaustive search costs nothing.
+    """
+    carbons = [i for i, e in enumerate(elements) if e == "C"]
+    if not carbons:
+        return []
+    if len(carbons) > 24:  # pragma: no cover - guard, not a supported case
+        raise ValueError(f"exhaustive backbone search refuses {len(carbons)} carbons")
+    among = set(carbons)
+    adj = {c: [] for c in carbons}
+    for a, b in bonds:
+        if a in among and b in among:
+            adj[a].append(b)
+            adj[b].append(a)
+    best: list[int] = []
+
+    def walk(path, seen):
+        nonlocal best
+        if len(path) > len(best):
+            best = list(path)
+        for nxt in adj[path[-1]]:
+            if nxt not in seen:
+                seen.add(nxt)
+                path.append(nxt)
+                walk(path, seen)
+                path.pop()
+                seen.discard(nxt)
+
+    for start in carbons:
+        walk([start], {start})
+    return best
+
+
+def bci_charges(elements, bonds, increments) -> np.ndarray:
+    """Point charges from bond-charge increments: ``q_i = sum_j delta(e_i, e_j)``.
+
+    ``increments`` maps an *ordered* element pair to the charge the first element gains
+    per bond to the second; the reverse pair gains the negative, so the molecule is
+    neutral by construction and a bond between two atoms of the same element carries
+    nothing.  Only pairs that appear need an entry; anything missing is zero.
+
+    This is the charge model :mod:`polyfind.polymers` already uses, written as
+    parameters instead of literals.  ``{("C", "H"): -0.10, ("C", "F"): +0.20}``
+    reproduces PVDF's charges exactly (CH2 carbon -0.20, H +0.10, CF2 carbon +0.40,
+    F -0.20), ``{("C", "H"): -0.06}`` reproduces polyethylene's, and
+    ``{("C", "Cl"): +0.10}`` PVDC's.  Because every backbone-backbone bond is C-C and
+    therefore carries no increment, the charges of a periodic block do not depend on
+    the bonds that cross its boundary -- which is why the same function serves an
+    oligomer and one repeat of a :class:`~polyfind.pack.PeriodicChain`.
+    """
+    q = np.zeros(len(elements))
+    for a, b in bonds:
+        ea, eb = elements[a], elements[b]
+        d = increments.get((ea, eb))
+        if d is None:
+            d = -increments.get((eb, ea), 0.0)
+        q[a] += d
+        q[b] -= d
+    return q
+
+
+def rotor_field(coords, far_mask: np.ndarray, b: int, c: int) -> np.ndarray:
+    """Displacement field of a unit rotation about the bond ``b-c`` (n_atoms, 3).
+
+    Atoms on ``c``'s side of the bond move with ``omega x (x - x_c)`` for ``omega`` the
+    unit vector along ``b -> c``; the rest stand still.  This is the only
+    displacement that changes a torsion angle without changing *any* bond length or
+    *any* bond angle, which is exactly why it is the projection worth fitting forces
+    through: a potential with no bonded terms -- this one -- cannot reproduce a
+    Cartesian force component that a real molecule's bond and angle terms are holding
+    up, but it can and must reproduce the torsional part.
+    """
+    coords = np.asarray(coords, dtype=float)
+    axis = coords[c] - coords[b]
+    axis = axis / np.linalg.norm(axis)
+    u = np.cross(axis, coords - coords[c])
+    return np.where(far_mask[:, None], u, 0.0)
+
+
+def rotate_about_bond(coords, far_mask: np.ndarray, b: int, c: int, theta: float) -> np.ndarray:
+    """Rotate the ``far_mask`` atoms by ``theta`` radians about the ``b -> c`` axis.
+
+    An exact (Rodrigues) rotation, so bond lengths and bond angles are preserved to
+    machine precision and a finite-difference derivative taken along it sees only the
+    torsional part of the energy.
+    """
+    coords = np.asarray(coords, dtype=float)
+    axis = coords[c] - coords[b]
+    axis = axis / np.linalg.norm(axis)
+    v = coords - coords[c]
+    rot = (v * np.cos(theta) + np.cross(axis, v) * np.sin(theta)
+           + np.outer(v @ axis, axis) * (1.0 - np.cos(theta)))
+    return np.where(far_mask[:, None], coords[c] + rot, coords)
+
+
+def _side_mask(n_atoms: int, adj, b: int, c: int) -> np.ndarray:
+    """Atoms reachable from ``c`` without using the bond ``b-c`` (``c`` included)."""
+    seen = {c}
+    stack = [c]
+    while stack:
+        u = stack.pop()
+        for v in adj[u]:
+            if v in seen or (u == c and v == b):
+                continue
+            seen.add(v)
+            stack.append(v)
+    mask = np.zeros(n_atoms, dtype=bool)
+    mask[list(seen)] = True
+    return mask
+
+
+def dihedral_angles(coords, torsions) -> np.ndarray:
+    """Dihedral angles (deg) of an ``(n_tors, 4)`` index array; same convention as
+    :meth:`SimpleFF._energy_from_coords` (IUPAC, trans = 180)."""
+    coords = np.asarray(coords, dtype=float)
+    t = np.asarray(torsions, dtype=int).reshape(-1, 4)
+    a, b, c, d = (coords[t[:, k]] for k in range(4))
+    b0, b1, b2 = b - a, c - b, d - c
+    n1, n2 = np.cross(b0, b1), np.cross(b1, b2)
+    x = (n1 * n2).sum(-1)
+    y = np.linalg.norm(b1, axis=-1) * (b0 * n2).sum(-1)
+    return np.degrees(np.arctan2(y, x))
+
+
+@dataclass
+class Frame:
+    """One reference geometry: elements, coordinates, and whatever was computed for it.
+
+    ``energy`` and ``forces`` are in kcal/mol and kcal/(mol A) -- converted on read, so
+    nothing downstream has to remember what the file was in.  ``bonds``, ``backbone``
+    and ``torsions`` are inferred from the coordinates by :func:`infer_bonds` and
+    :func:`carbon_backbone`; ``torsions`` are the consecutive backbone quadruples, the
+    same set :meth:`~polyfind.chain.Structure.dihedral_atoms` enumerates for a built
+    chain.
+
+    ``system`` names the chemistry and ``source`` how the frame was generated (a
+    relaxed torsion ``scan`` or a ``conf`` ormer).  Both matter for the fit: energies
+    are only comparable *within* a system, and a split that mixes frames of one system
+    across train and test measures nothing (DESIGN.md 5.7).
+    """
+
+    system: str
+    source: str
+    elements: list[str]
+    coords: np.ndarray
+    energy: float | None = None
+    forces: np.ndarray | None = None
+    bonds: list[tuple[int, int]] = field(default_factory=list)
+    backbone: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=int))
+    torsions: np.ndarray = field(default_factory=lambda: np.empty((0, 4), dtype=int))
+    _cache: dict = field(default_factory=dict, repr=False)
+
+    @classmethod
+    def from_geometry(cls, elements, coords, system: str = "", source: str = "",
+                      energy: float | None = None, forces=None,
+                      tolerance: float = BOND_TOLERANCE) -> "Frame":
+        elements = list(elements)
+        coords = np.asarray(coords, dtype=float)
+        bonds = infer_bonds(elements, coords, tolerance)
+        bb = carbon_backbone(elements, bonds)
+        tors = np.array([bb[k:k + 4] for k in range(max(0, len(bb) - 3))], dtype=int).reshape(-1, 4)
+        return cls(system=system, source=source, elements=elements, coords=coords,
+                   energy=energy, forces=None if forces is None else np.asarray(forces, dtype=float),
+                   bonds=bonds, backbone=np.array(bb, dtype=int), torsions=tors)
+
+    @property
+    def n_atoms(self) -> int:
+        return len(self.elements)
+
+    @property
+    def n_dihedrals(self) -> int:
+        return len(self.torsions)
+
+    @property
+    def adjacency(self) -> list[list[int]]:
+        if "adj" not in self._cache:
+            self._cache["adj"] = neighbour_lists(self.n_atoms, self.bonds)
+        return self._cache["adj"]
+
+    def with_coords(self, coords) -> "Frame":
+        """The same molecule at different coordinates: topology kept, geometry replaced.
+
+        The bond graph is *not* re-inferred, which is the point -- a displaced copy used
+        for a finite-difference derivative must keep the topology of the frame it came
+        from, or the derivative would step across a change of exclusions.  The cached
+        graph distances and adjacency are shared; the geometry-dependent caches are not.
+        """
+        out = Frame(system=self.system, source=self.source, elements=self.elements,
+                    coords=np.asarray(coords, dtype=float), energy=None, forces=None,
+                    bonds=self.bonds, backbone=self.backbone, torsions=self.torsions)
+        out._cache["adj"] = self.adjacency
+        out._cache["dist"] = self.graph_distances()
+        return out
+
+    def graph_distances(self) -> np.ndarray:
+        """Bond-count distances capped at 99, for the nonbonded exclusions."""
+        if "dist" in self._cache:
+            return self._cache["dist"]
+        n, adj = self.n_atoms, self.adjacency
+        dist = np.full((n, n), 99, dtype=int)
+        for s in range(n):
+            dist[s, s] = 0
+            frontier = [s]
+            for d in (1, 2, 3):
+                nxt = []
+                for u in frontier:
+                    for v in adj[u]:
+                        if dist[s, v] == 99:
+                            dist[s, v] = d
+                            nxt.append(v)
+                frontier = nxt
+        self._cache["dist"] = dist
+        return dist
+
+    def angles(self) -> np.ndarray:
+        """The backbone dihedral angles (deg)."""
+        return dihedral_angles(self.coords, self.torsions)
+
+    def rotors(self) -> np.ndarray:
+        """``(n_dihedrals, n_atoms, 3)`` rigid-rotation fields, one per backbone torsion.
+
+        Normalised so that ``d phi_k / d theta_k = 1`` exactly (asserted in the tests):
+        rotating about torsion ``k``'s central bond changes torsion ``k``'s angle by the
+        rotation angle and leaves every other torsion, bond length and bond angle alone.
+        """
+        if "rotors" in self._cache:
+            return self._cache["rotors"]
+        adj = self.adjacency
+        out = np.zeros((self.n_dihedrals, self.n_atoms, 3))
+        for k, (a, b, c, d) in enumerate(np.asarray(self.torsions, dtype=int)):
+            mask = _side_mask(self.n_atoms, adj, int(b), int(c))
+            if mask[a]:  # the bond is in a ring: a rotation about it is not rigid
+                raise ValueError(f"torsion {k} of system {self.system!r} sits in a ring")
+            out[k] = rotor_field(self.coords, mask, int(b), int(c))
+        self._cache["rotors"] = out
+        return out
+
+    def reference_torques(self) -> np.ndarray:
+        """``-dE/dphi_k`` of the reference data, kcal/(mol rad), one per backbone torsion.
+
+        The projection of the reference Cartesian forces onto :meth:`rotors`.  Because
+        the rotation preserves every bond length and every bond angle, the bond and
+        angle terms of whatever produced the forces contribute exactly zero here, which
+        is what makes this comparable with a potential that has no such terms.
+        """
+        if self.forces is None:
+            raise ValueError(f"frame {self.system!r} carries no forces")
+        return np.einsum("kia,ia->k", self.rotors(), self.forces)
+
+    def backbone_is_saturated(self, min_cc: float = 1.42) -> bool:
+        """Every backbone C-C bond longer than ``min_cc`` (i.e. none of them multiple)."""
+        c = self.coords
+        return all(float(np.linalg.norm(c[i] - c[j])) >= min_cc
+                   for i, j in zip(self.backbone, self.backbone[1:]))
+
+    def backbone_is_acyclic(self) -> bool:
+        """No backbone bond lies in a ring, so every backbone torsion is a real rotor."""
+        adj = self.adjacency
+        for i, j in zip(self.backbone, self.backbone[1:]):
+            if _side_mask(self.n_atoms, adj, int(i), int(j))[int(i)]:
+                return False
+        return True
+
+    def to_structure(self, polymer: Polymer) -> Structure:
+        """This geometry as a :class:`~polyfind.chain.Structure` of ``polymer``.
+
+        Only for frames whose topology really is ``polymer``'s: the atoms are reordered
+        into :func:`~polyfind.chain.build_chain`'s order (each backbone atom followed by
+        its pendants, then the two end caps) and the result is checked against a chain
+        built from the polymer, element by element and bond by bond.  Raises if they
+        disagree.  This is the bridge that proves the :class:`Frame` path and the
+        :class:`Structure` path are scoring the same molecule.
+        """
+        order = _structure_order(self)
+        elements = [self.elements[i] for i in order]
+        ref = build_chain(polymer, [180.0] * (len(self.backbone) - 3))
+        if elements != list(ref.elements):
+            raise ValueError(f"{self.system!r} does not match {polymer.name}: elements "
+                             f"{''.join(elements)} vs {''.join(ref.elements)}")
+        pos = {old: new for new, old in enumerate(order)}
+        bonds = sorted(tuple(sorted((pos[a], pos[b]))) for a, b in self.bonds)
+        if bonds != sorted(tuple(sorted(b)) for b in ref.bonds):
+            raise ValueError(f"{self.system!r} does not match {polymer.name}: bond graphs differ")
+        return Structure(polymer=polymer, elements=elements, coords=self.coords[order],
+                         charges=ref.charges.copy(), bonds=[tuple(b) for b in bonds],
+                         backbone=np.array([pos[int(i)] for i in self.backbone], dtype=int),
+                         n_dihedrals=len(self.torsions), dihedrals=self.angles(),
+                         subs_of={pos[int(i)]: [pos[j] for j in self.adjacency[int(i)]
+                                                if j not in set(int(x) for x in self.backbone)]
+                                  for i in self.backbone})
+
+
+def _structure_order(frame: Frame) -> list[int]:
+    """Atom permutation putting ``frame`` into :func:`~polyfind.chain.build_chain` order.
+
+    build_chain emits backbone atom ``k`` then its pendant atoms, for ``k`` along the
+    chain, and finally the two cap hydrogens (first end, then last).  The pendants of
+    one atom are ordered by element then by index so that the permutation is
+    deterministic; for the CH2/CF2 atoms of a VDF oligomer the two pendants are
+    identical elements, so any order gives the same element list and the same bond
+    graph.  The backbone is taken in whichever direction puts the CH3 cap first, which
+    is the direction :func:`~polyfind.chain.build_chain` builds.
+    """
+    bb = [int(i) for i in frame.backbone]
+    adj = frame.adjacency
+    bbset = set(bb)
+
+    def pendants(k):
+        return sorted((j for j in adj[k] if j not in bbset), key=lambda j: (frame.elements[j], j))
+
+    # build_chain caps both ends with a single H, so the terminal backbone atoms have
+    # one more pendant than the interior ones; the cap is the H that comes last.
+    if len(pendants(bb[0])) < len(pendants(bb[-1])):
+        bb = bb[::-1]
+    order: list[int] = []
+    caps: list[int] = []
+    for pos, k in enumerate(bb):
+        p = pendants(k)
+        if pos in (0, len(bb) - 1):
+            hydrogens = [j for j in p if frame.elements[j] == "H"]
+            if not hydrogens:
+                raise ValueError("terminal backbone atom carries no cap hydrogen")
+            caps.append(hydrogens[-1])
+            p = [j for j in p if j != hydrogens[-1]]
+        order.append(k)
+        order.extend(p)
+    return order + caps
+
+
+_COMMENT_KEY = re.compile(r'(\w+)=("[^"]*"|\S+)')
+
+
+def read_frames(path: str | None = None, to_kcal: float = EV_TO_KCAL) -> list[Frame]:
+    """Read an extended-XYZ trajectory into :class:`Frame` objects.
+
+    ``path`` defaults to the ``POLYFIND_TRAINSET`` environment variable, so the
+    reference set stays where it lives and no copy of it enters this repository.  Each
+    comment line is parsed for ``energy=``, ``system=`` and ``source=``; each atom line
+    is ``element x y z fx fy fz``.  ``to_kcal`` converts both the energy and the forces
+    (default: from eV and eV/A, which is what the bundled set is in).
+    """
+    if path is None:
+        path = os.environ.get(TRAINSET_ENV)
+        if not path:
+            raise FileNotFoundError(
+                f"no reference set given and ${TRAINSET_ENV} is not set; point it at an "
+                "extended-XYZ file with energy=, system= and source= on each comment line")
+    with open(path) as fh:
+        lines = fh.read().splitlines()
+    frames: list[Frame] = []
+    i = 0
+    while i < len(lines):
+        if not lines[i].strip():
+            i += 1
+            continue
+        n = int(lines[i].strip())
+        info = {k: v.strip('"') for k, v in _COMMENT_KEY.findall(lines[i + 1])}
+        rows = [ln.split() for ln in lines[i + 2:i + 2 + n]]
+        elements = [r[0] for r in rows]
+        arr = np.array([[float(x) for x in r[1:7]] for r in rows])
+        energy = float(info["energy"]) * to_kcal if "energy" in info else None
+        frames.append(Frame.from_geometry(
+            elements, arr[:, :3], system=info.get("system", ""), source=info.get("source", ""),
+            energy=energy, forces=arr[:, 3:6] * to_kcal if arr.shape[1] >= 6 else None))
+        i += 2 + n
+    return frames
+
+
 @dataclass
 class _Topology:
     pairs_i: np.ndarray
@@ -84,6 +520,19 @@ class _Topology:
 # The illustrative defaults, named so that "what the potential was before anyone fitted
 # it" is a value and not a literal repeated in three modules.  Nothing here changes when
 # a fitted preset is selected: a preset is a *different* SimpleFF, built on request.
+# UFF Lennard-Jones entries for elements no ``Polymer`` in this package uses, so that a
+# :class:`Frame` of an arbitrary chemistry can still be scored (Rappe et al., JACS 1992;
+# same table and same convention as :data:`polyfind.polymers.UFF_LJ`, which wins wherever
+# the two overlap -- today they do not overlap at all).
+UFF_LJ_EXTRA: dict[str, tuple[float, float]] = {
+    "S": (4.035, 0.274),   # S_3+2
+    "Br": (3.732, 0.251),  # Br
+    "I": (4.009, 0.339),   # I
+    "P": (4.147, 0.305),   # P_3+3
+    "Si": (4.295, 0.402),  # Si3
+    "B": (4.083, 0.180),   # B_3
+}
+
 DEFAULT_TORSION: tuple[float, float, float] = (1.3, -0.05, 2.5)
 DEFAULT_SCALE14 = 0.5
 DEFAULT_EPS_R = 1.0
@@ -133,6 +582,13 @@ class SimpleFF:
         :data:`polyfind.polymers.UFF_LJ` for this instance only.  The module-level
         table is never touched, so two calculators with different parameters can be
         alive at once and nothing global changes underneath anyone.
+    ``charge_increments``
+        ``((element, element, delta), ...)`` bond-charge increments (see
+        :func:`bci_charges`).  ``None`` (the default) means "use whatever charges the
+        structure carries", which is the polymer's own table and what this potential
+        has always done.  When set, charges are derived from the bond graph instead,
+        so the *same* numbers describe a built chain, a periodic block and an
+        arbitrary :class:`Frame`; ``charge_scale`` still multiplies the result.
     """
 
     torsion: tuple[float, float, float] = DEFAULT_TORSION
@@ -141,6 +597,7 @@ class SimpleFF:
     torsion_by_bond: tuple[tuple[float, float, float], ...] | None = None
     charge_scale: float = 1.0
     lj: dict[str, tuple[float, float]] | None = None
+    charge_increments: tuple[tuple[str, str, float], ...] | None = None
     _cache: dict = field(default_factory=dict, repr=False)
 
     @classmethod
@@ -154,19 +611,26 @@ class SimpleFF:
 
     # --- parameters -----------------------------------------------------------
     def lj_table(self) -> dict[str, tuple[float, float]]:
-        """The effective ``{element: (x_i, D_i)}`` table: UFF with this instance's overrides."""
-        return {**UFF_LJ, **(self.lj or {})}
+        """The effective ``{element: (x_i, D_i)}`` table: UFF with this instance's overrides.
+
+        :data:`polyfind.polymers.UFF_LJ` carries only the elements the polymer
+        definitions use; :data:`UFF_LJ_EXTRA` fills in the rest of the UFF main group so
+        that a :class:`Frame` of some chemistry no ``Polymer`` describes can still be
+        scored.  It is a fallback, never an override: an element in both takes
+        ``UFF_LJ``'s value, and a caller's ``lj`` beats both.
+        """
+        return {**UFF_LJ_EXTRA, **UFF_LJ, **(self.lj or {})}
 
     def _lj_arrays(self, elements) -> tuple[np.ndarray, np.ndarray]:
         """Per-atom ``(x_i, D_i)`` with the overrides applied; ``UFF_LJ`` is left alone."""
-        x, d = lj_params(elements)
-        if self.lj:
-            elements = list(elements)
-            for sym, (xi, di) in self.lj.items():
-                where = np.array([e == sym for e in elements])
-                x = np.where(where, xi, x)
-                d = np.where(where, di, d)
-        return x, d
+        table = self.lj_table()
+        try:
+            pairs = [table[e] for e in elements]
+        except KeyError as e:  # pragma: no cover - guards an unparameterised element
+            raise KeyError(f"no Lennard-Jones parameters for element {e.args[0]!r}; "
+                           "pass them in SimpleFF(lj=...)") from e
+        arr = np.array(pairs, dtype=float)
+        return arr[:, 0], arr[:, 1]
 
     def torsion_coefficients(self, polymer: Polymer, n_dihedrals: int) -> np.ndarray:
         """``(n_dihedrals, 3)`` Fourier coefficients, one row per backbone dihedral.
@@ -182,14 +646,49 @@ class SimpleFF:
             raise ValueError(f"torsion_by_bond must be {B} triples for {polymer.name}, got shape {V.shape}")
         return V[[j % B for j in range(n_dihedrals)]]
 
+    def increments(self) -> dict[tuple[str, str], float] | None:
+        """:attr:`charge_increments` as the mapping :func:`bci_charges` wants."""
+        if self.charge_increments is None:
+            return None
+        return {(a, b): float(d) for a, b, d in self.charge_increments}
+
+    def charges_for(self, elements, bonds, fallback=None) -> np.ndarray:
+        """Point charges for a topology: bond-charge increments if set, else ``fallback``.
+
+        ``charge_scale`` is applied here, so this is the one place charges are decided
+        and every caller -- :meth:`_topology`, :meth:`energy_frame`, and
+        :meth:`polyfind.fitting.FFParameters.applied`'s packer -- gets the same answer.
+        """
+        inc = self.increments()
+        q = np.asarray(fallback, dtype=float) if inc is None else bci_charges(elements, bonds, inc)
+        return q * self.charge_scale if self.charge_scale != 1.0 else np.asarray(q, dtype=float)
+
     def _param_key(self) -> tuple:
         """Everything a cached :class:`_Topology` depends on besides the structure."""
         lj = tuple(sorted((k, float(v[0]), float(v[1])) for k, v in (self.lj or {}).items()))
         tbb = None if self.torsion_by_bond is None else tuple(tuple(float(x) for x in t) for t in self.torsion_by_bond)
+        inc = None if self.charge_increments is None else tuple(
+            sorted((a, b, float(d)) for a, b, d in self.charge_increments))
         return (tuple(float(x) for x in self.torsion), tbb, float(self.scale14),
-                float(self.eps_r), float(self.charge_scale), lj)
+                float(self.eps_r), float(self.charge_scale), lj, inc)
 
     # --- topology -------------------------------------------------------------
+    def _pair_terms(self, elements, dist: np.ndarray, charges) -> tuple:
+        """The nonbonded pair arrays shared by the :class:`Structure` and :class:`Frame`
+        paths: indices, LJ minimum distance and well depth, and the Coulomb prefactor,
+        for every pair at least three bonds apart with 1-4 pairs scaled."""
+        n = len(elements)
+        iu, ju = np.triu_indices(n, 1)
+        keep = dist[iu, ju] >= 3
+        iu, ju = iu[keep], ju[keep]
+        scale = np.where(dist[iu, ju] == 3, self.scale14, 1.0)
+        x, d = self._lj_arrays(elements)
+        lj_x = np.sqrt(x[iu] * x[ju])
+        lj_d = np.sqrt(d[iu] * d[ju]) * scale
+        q = np.asarray(charges, dtype=float)
+        qq = q[iu] * q[ju] * scale * COULOMB / self.eps_r
+        return iu, ju, lj_x, lj_d, qq
+
     def _topology(self, struct: Structure) -> _Topology:
         key = (struct.polymer.name, struct.n_dihedrals, len(struct.elements), self._param_key())
         top = self._cache.get(key)
@@ -213,20 +712,66 @@ class SimpleFF:
                             dist[s, v] = d
                             nxt.append(v)
                 frontier = nxt
-        iu, ju = np.triu_indices(n, 1)
-        keep = dist[iu, ju] >= 3
-        iu, ju = iu[keep], ju[keep]
-        scale = np.where(dist[iu, ju] == 3, self.scale14, 1.0)
-        x, d = self._lj_arrays(struct.elements)
-        lj_x = np.sqrt(x[iu] * x[ju])
-        lj_d = np.sqrt(d[iu] * d[ju]) * scale
-        q = struct.charges if self.charge_scale == 1.0 else struct.charges * self.charge_scale
-        qq = q[iu] * q[ju] * scale * COULOMB / self.eps_r
+        q = self.charges_for(struct.elements, struct.bonds, struct.charges)
+        iu, ju, lj_x, lj_d, qq = self._pair_terms(struct.elements, dist, q)
         tors = np.array([struct.dihedral_atoms(j) for j in range(struct.n_dihedrals)], dtype=int).reshape(-1, 4)
         tors_V = self.torsion_coefficients(struct.polymer, struct.n_dihedrals).reshape(-1, 3)
         top = _Topology(iu, ju, lj_x, lj_d, qq, tors, tors_V)
         self._cache[key] = top
         return top
+
+    def frame_topology(self, frame: Frame, torsion=None) -> _Topology:
+        """The resolved potential for one :class:`Frame`: pairs, exclusions and torsions.
+
+        ``torsion`` is an ``(n_dihedrals, 3)`` array of Fourier coefficients, one row per
+        backbone torsion; ``None`` broadcasts :attr:`torsion`.  Per-*type* coefficients
+        are the caller's business -- :mod:`polyfind.fitting` types the torsions by the
+        substituents on the two central carbons and passes the rows in -- because a
+        frame names no polymer and so has no ``bonds_per_repeat`` to index by.
+        """
+        if self.charge_increments is None:
+            raise ValueError(
+                "scoring a Frame needs charge_increments: a frame carries no polymer charge "
+                "table to fall back on, so the charges have to come from the parameters "
+                "(see bci_charges; importing polyfind.fitting registers a preset that has "
+                "them, SimpleFF.from_preset('pvdf-dft-fit'))")
+        q = self.charges_for(frame.elements, frame.bonds)
+        iu, ju, lj_x, lj_d, qq = self._pair_terms(frame.elements, frame.graph_distances(), q)
+        V = (np.tile(np.asarray(self.torsion, dtype=float), (frame.n_dihedrals, 1))
+             if torsion is None else np.asarray(torsion, dtype=float).reshape(-1, 3))
+        return _Topology(iu, ju, lj_x, lj_d, qq, np.asarray(frame.torsions, dtype=int).reshape(-1, 4), V)
+
+    def energy_frame(self, frame: Frame, torsion=None) -> float:
+        """Energy (kcal/mol) of an arbitrary geometry, topology inferred from coordinates.
+
+        The same three terms as :meth:`energy`, evaluated through the same kernel; the
+        only difference is where the topology came from.  Absolute values are not
+        comparable with a reference method's -- this potential has no bonded terms and
+        no zero of energy -- so only *differences within one chemistry* mean anything,
+        which is exactly how :mod:`polyfind.fitting` uses them.
+        """
+        top = self.frame_topology(frame, torsion)
+        return float(self._energy_from_coords(top, frame.coords[None], np)[0])
+
+    def frame_torques(self, frame: Frame, torsion=None, step: float = 1e-5) -> np.ndarray:
+        """``-dE/dphi_k`` (kcal/(mol rad)) about each backbone torsion of ``frame``.
+
+        Central differences over a *rigid* rotation of one side of each central bond
+        (:meth:`Frame.rotors`), which is the same displacement
+        :meth:`Frame.reference_torques` projects the reference forces onto, so the two
+        are directly comparable.  Finite differences rather than an analytic gradient
+        because this is the reference implementation: it calls :meth:`energy_frame`
+        and so cannot drift away from the energy it differentiates.
+        ``polyfind.fitting`` carries an analytic version for its inner loop and the
+        tests assert the two agree.
+        """
+        out = np.empty(frame.n_dihedrals)
+        for k, (_, b, c, _) in enumerate(np.asarray(frame.torsions, dtype=int)):
+            mask = _side_mask(frame.n_atoms, frame.adjacency, int(b), int(c))
+            plus = frame.with_coords(rotate_about_bond(frame.coords, mask, int(b), int(c), step))
+            minus = frame.with_coords(rotate_about_bond(frame.coords, mask, int(b), int(c), -step))
+            out[k] = -(self.energy_frame(plus, torsion) - self.energy_frame(minus, torsion)) / (2 * step)
+        return out
 
     # --- energies -------------------------------------------------------------
     def _energy_from_coords(self, top: _Topology, coords, xp):
