@@ -45,10 +45,11 @@ the maximum reciprocity mismatch is 1.507 GPa and remains a reported numerical
 diagnostic rather than being hidden by symmetrization.
 
 The first 4x8x4 Berry sweep is rejected and cannot be used for the charge-flux
-fit. Exact-checkpoint repeats isolated nondeterminism in Quantum ESPRESSO 7.6
-Berry evaluation when either MPI or OpenMP parallelism was present. Two repeats
-on the full unsymmetrized k-point grid at one MPI rank and one OpenMP thread both
-returned `P_y=-0.4086832 C/m2` for the x/+1% cell. The runner now enforces that
+fit. Exact-checkpoint repeats isolated nondeterminism in parallel Quantum
+ESPRESSO 7.6 Berry evaluation; restricting it to one MPI rank was insufficient
+while multiple OpenMP threads remained. Two repeats on the full unsymmetrized
+k-point grid at one MPI rank and one OpenMP thread both returned
+`P_y=-0.4086832 C/m2` for the x/+1% cell. The runner now enforces that
 execution shape, requires every Berry stage to load the saved SCF wavefunctions,
 and keeps independent checkpoint copies for x/y/z. A clean 13-cell sweep is the
 next running gate; polarization derivatives and the Polyfind refit remain
