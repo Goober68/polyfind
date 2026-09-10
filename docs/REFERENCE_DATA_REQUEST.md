@@ -26,6 +26,36 @@ Symptoms of that data being the limit, all measured (`docs/BENCHMARK.md`):
 
 A bulk reference at the level the energy model is fitted to would settle all four.
 
+## Provider status — 2026-09-10
+
+The beta-PVDF PBE-D3(BJ) campaign is active in
+`sarco/materials/gpu_bundle/periodic_reference/beta_pvdf`. The stress-free
+periodic reference and all 13 unique relaxed-ion cells (zero plus +/-1% and
++/-2% on each of three axes) are complete. The accepted reference is
+`a=8.3582753719`, `b=4.7314155341`, `c=2.5801545869` A with residual pressure
+-0.554 MPa. Sarco axes are `x=a`, `y=b` (polar) and `z=c` (chain); Polyfind's
+canonical packing frame maps its polar axis to `x` and chain axis to `z`.
+
+The preliminary relaxed-ion normal stiffness diagonal is
+`(111.934, 25.185, 315.851)` GPa in Sarco x/y/z order. The full raw normal
+stiffness matrix is
+`[[111.934, 8.547, 1.335], [10.054, 25.185, 2.817],
+[1.249, 2.324, 315.851]]` GPa. Direct-fit R-squared is at least 0.999266;
+the maximum reciprocity mismatch is 1.507 GPa and remains a reported numerical
+diagnostic rather than being hidden by symmetrization.
+
+The first 4x8x4 Berry sweep is rejected and cannot be used for the charge-flux
+fit. Exact-checkpoint repeats isolated nondeterminism in Quantum ESPRESSO 7.6
+Berry evaluation when either MPI or OpenMP parallelism was present. Two repeats
+on the full unsymmetrized k-point grid at one MPI rank and one OpenMP thread both
+returned `P_y=-0.4086832 C/m2` for the x/+1% cell. The runner now enforces that
+execution shape, requires every Berry stage to load the saved SCF wavefunctions,
+and keeps independent checkpoint copies for x/y/z. A clean 13-cell sweep is the
+next running gate; polarization derivatives and the Polyfind refit remain
+deliberately unpublished until branch unwrapping, linearity and curvature checks
+pass. The zero-strain Born-effective-charge/phonon workflow is prepared behind
+that gate, followed by polyethylene and alpha/gamma-PVDF controls.
+
 ## What is needed
 
 **A periodic-crystal polarization response to strain.** Concretely, for
