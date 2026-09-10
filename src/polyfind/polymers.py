@@ -309,6 +309,38 @@ class BackboneAtom:
 
 
 @dataclass(frozen=True)
+class Monomer:
+    """One chemical monomer unit of a repeat: its backbone atoms, in chain order.
+
+    This is the unit of *composition*.  A homopolymer has one of them and its
+    :attr:`Polymer.backbone` is that monomer's backbone cycled, which is what the model
+    always assumed.  A copolymer has an explicit list of them, concatenated once into a
+    multi-monomer :attr:`Polymer.backbone` that is then cycled as a whole -- so an
+    11 VDF : 1 VDCN repeat is a 24-bond explicit repeat and every ``k % B`` / ``i % B``
+    index in the package goes on meaning what it meant (see :func:`copolymer`).
+
+    ``source`` names the polymer whose *fitted* parameters describe this unit, which is
+    normally the homopolymer of the same monomer.  It carries no parameters itself; it is
+    the provenance label that :func:`polyfind.ris.transfer_ris` reports against.
+    """
+
+    name: str
+    backbone: tuple[BackboneAtom, ...]
+    source: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.backbone:
+            raise ValueError(f"monomer {self.name!r} has no backbone atoms")
+        object.__setattr__(self, "backbone", tuple(self.backbone))
+        if not self.source:
+            object.__setattr__(self, "source", self.name)
+
+    @property
+    def n_bonds(self) -> int:
+        return len(self.backbone)
+
+
+@dataclass(frozen=True)
 class RISStates:
     """Rotational isomeric states for the backbone dihedrals."""
 
@@ -329,15 +361,89 @@ THREE_STATE = RISStates(names=("T", "G+", "G-"), angles=(180.0, 60.0, -60.0), mi
 
 @dataclass(frozen=True)
 class Polymer:
+    """A polymer's repeat unit: the backbone atoms that are cycled to build a chain.
+
+    ``backbone`` is the **explicit periodic repeat**, however many monomers long.  For a
+    homopolymer it is one monomer (PVDF: CH2, CF2 -- two entries, B = 2) and that is the
+    degenerate case of what it always was.  For a copolymer it is the whole composition
+    sequence written out -- an 11 VDF : 1 VDCN repeat is 12 monomers, i.e. 24 entries and
+    B = 24 -- and ``sequence`` records which monomer each stretch came from.  Nothing else
+    in the package changes, because every consumer already indexes the repeat modulo ``B``:
+    ``chain.build_chain`` takes a backbone atom's chemistry from ``backbone[k % B]`` and
+    :class:`polyfind.ris.RISModel` takes a bond's energies from ``t(i) = i % B``.  Build one
+    with :func:`copolymer` rather than by hand, so that ``backbone`` and ``sequence`` cannot
+    disagree.
+
+    ``sequence`` defaults to a single :class:`Monomer` covering the whole backbone, which is
+    exactly the homopolymer case, so ``monomers_per_repeat == 1`` and every count derived
+    from it is unchanged for PE, PVDF, PVDC, CFE, CDFE, AN, VDCN and FANOME.
+
+    ``bond_length`` stays ONE number for the whole repeat: the model assumes a uniform
+    backbone-backbone distance, and a copolymer whose comonomers have different fitted C-C
+    distances has to pick one (:func:`copolymer` makes that explicit rather than silent).
+    """
+
     name: str
-    backbone: tuple[BackboneAtom, ...]  # in chain order; one chemical repeat unit
+    backbone: tuple[BackboneAtom, ...]  # in chain order; the explicit periodic repeat
     bond_length: float  # backbone-backbone bond length (A), assumed uniform
     states: RISStates = THREE_STATE
     formula: str = ""
+    sequence: tuple[Monomer, ...] = ()  # the monomers of the repeat, in chain order
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "backbone", tuple(self.backbone))
+        if not self.sequence:
+            object.__setattr__(self, "sequence", (Monomer(self.name, self.backbone),))
+            return
+        object.__setattr__(self, "sequence", tuple(self.sequence))
+        flat = tuple(a for m in self.sequence for a in m.backbone)
+        if flat != self.backbone:
+            detail = (f"{len(flat)} backbone atoms against backbone's {len(self.backbone)}"
+                      if len(flat) != len(self.backbone) else
+                      "the same number of atoms but not the same atoms")
+            raise ValueError(f"polymer {self.name!r}: the monomer sequence concatenates to {detail}")
 
     @property
     def bonds_per_repeat(self) -> int:
         return len(self.backbone)
+
+    @property
+    def monomers_per_repeat(self) -> int:
+        """Monomers in one periodic repeat; 1 for every homopolymer."""
+        return len(self.sequence)
+
+    @property
+    def is_copolymer(self) -> bool:
+        return len({m.name for m in self.sequence}) > 1
+
+    def monomer_count(self, n_bonds: int) -> int:
+        """Monomers in a chain stretch of ``n_bonds`` backbone bonds.
+
+        ``n_bonds // bonds_per_repeat`` for a homopolymer, which is what every caller
+        used to compute inline; for a copolymer it multiplies by the monomers in the
+        repeat, so an "energy per monomer" stays an energy per *monomer* rather than
+        per twelve of them.
+        """
+        if n_bonds % self.bonds_per_repeat:
+            raise ValueError(f"{n_bonds} bonds is not a whole number of {self.bonds_per_repeat}-bond repeats")
+        return n_bonds // self.bonds_per_repeat * self.monomers_per_repeat
+
+    @property
+    def monomer_of_atom(self) -> tuple[int, ...]:
+        """``k -> index into sequence`` for each backbone atom of the repeat."""
+        return tuple(i for i, m in enumerate(self.sequence) for _ in m.backbone)
+
+    def composition(self) -> dict[str, int]:
+        """Monomer name -> count in one repeat."""
+        out: dict[str, int] = {}
+        for m in self.sequence:
+            out[m.name] = out.get(m.name, 0) + 1
+        return out
+
+    def mol_percent(self) -> dict[str, float]:
+        out = self.composition()
+        n = float(sum(out.values()))
+        return {k: 100.0 * v / n for k, v in out.items()}
 
     @property
     def atoms_per_repeat(self) -> int:
@@ -611,6 +717,82 @@ FANOME = Polymer(
     ),
 )
 
+# --- Copolymer composition (docs/CHEMISTRY_EXTENSION.md section 3, first bullet).
+def monomer_of(polymer: Polymer, name: str | None = None) -> Monomer:
+    """The repeat of a homopolymer, as a :class:`Monomer` for use in :func:`copolymer`.
+
+    ``source`` is set to the homopolymer's own name, so the provenance of every parameter
+    transferred onto a copolymer bond points back at the fit it came from.
+    """
+    if polymer.monomers_per_repeat != 1:
+        raise ValueError(f"{polymer.name!r} is not a single-monomer repeat; take its sequence instead")
+    return Monomer(name=name or polymer.name, backbone=polymer.backbone, source=polymer.name)
+
+
+def copolymer(name: str, units, bond_length: float | None = None, formula: str = "",
+              states: RISStates = THREE_STATE) -> Polymer:
+    """A :class:`Polymer` whose repeat is an explicit sequence of monomers.
+
+    ``units`` is the composition in chain order: :class:`Monomer` objects, or
+    :class:`Polymer` homopolymers (converted by :func:`monomer_of`).  The monomers'
+    backbones are concatenated into one explicit repeat, so ``bonds_per_repeat`` is the
+    total and every ``% B`` index in the package continues to work unchanged -- that is the
+    whole of the generalisation, and it is why an 11:1 sequence needs no new mathematics.
+
+    ``bond_length`` must be given whenever the units disagree about it, because the model
+    carries one uniform backbone-backbone distance and picking one silently would hide a
+    real approximation.  ``states`` must be shared; the RIS state set is a property of the
+    chain, not of a monomer.
+    """
+    mons = [u if isinstance(u, Monomer) else monomer_of(u) for u in units]
+    if not mons:
+        raise ValueError("a copolymer needs at least one monomer")
+    if bond_length is None:
+        lengths = {}
+        for u in units:
+            if isinstance(u, Polymer):
+                lengths.setdefault(round(u.bond_length, 6), u.name)
+        if len(lengths) != 1:
+            raise ValueError(
+                f"copolymer {name!r}: the units disagree about the backbone bond length ({lengths}); "
+                "this model carries one uniform value, so pass bond_length= explicitly and say which"
+            )
+        bond_length = float(next(iter(lengths)))
+    return Polymer(
+        name=name,
+        backbone=tuple(a for m in mons for a in m.backbone),
+        bond_length=float(bond_length),
+        states=states,
+        formula=formula,
+        sequence=tuple(mons),
+    )
+
+
+VDF_UNIT = monomer_of(PVDF, "vdf")
+VDCN_UNIT = monomer_of(VDCN, "vdcn")
+
+# The 11 VDF : 1 VDCN periodic copolymer asked for in docs/NOTE_VDCN_CONVERGENCE.md:
+# twelve monomers, 8.33 mol% VDCN, one explicit 24-bond repeat.  The VDCN unit sits at
+# monomer index 6, i.e. backbone atoms 12 (its CH2) and 13 (its C(CN)2), as far from the
+# repeat boundary as the sequence allows; the choice is arbitrary for an infinite periodic
+# chain and only makes the bond indices below easier to read.
+#
+# The ONLY backbone atom that differs chemically from PVDF's is atom 13.  VDCN's own CH2
+# entry is field-for-field identical to PVDF's (same element, same H pendants, 114/108 deg,
+# -0.20/+0.10 e), so the substitution is a single-atom substitution in this model and the
+# junction it creates is two backbone bonds wide.
+#
+# BOND LENGTH, stated rather than hidden: PVDF carries a measured 1.528 A C-C (DFT Form I,
+# docs/REFERENCES.md) and VDCN carries the textbook 1.54 A.  The repeat takes 1.528 A --
+# PVDF's, which is the measured one and describes 22 of the 24 bonds -- so the two bonds
+# inside the VDCN unit are 0.8% short of what VDCN's own entry would give them.
+VDF_VDCN_11_1 = copolymer(
+    name="vdf11-vdcn1",
+    formula="-(CH2-CF2)6-(CH2-C(CN)2)-(CH2-CF2)5-",
+    units=[VDF_UNIT] * 6 + [VDCN_UNIT] + [VDF_UNIT] * 5,
+    bond_length=PVDF.bond_length,
+)
+
 POLYMERS: dict[str, Polymer] = {
     "pvdf": PVDF,
     "pe": PE,
@@ -620,6 +802,7 @@ POLYMERS: dict[str, Polymer] = {
     "an": AN,
     "vdcn": VDCN,
     "fanome": FANOME,
+    "vdf11-vdcn1": VDF_VDCN_11_1,
 }
 
 

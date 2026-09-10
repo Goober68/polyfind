@@ -26,6 +26,7 @@ Energies are in kcal/mol, temperatures in K.
 from __future__ import annotations
 
 import json
+import warnings
 from dataclasses import dataclass
 from typing import Sequence
 
@@ -453,6 +454,155 @@ class RISModel:
                             if abs(v) > 0.05:
                                 lines.append(f"    type {b}: {st.names[a]}{st.names[c]}{st.names[d]} {v:+.2f}")
         return "\n".join(lines)
+
+
+# ------------------------------------------------------- copolymer parameter transfer
+#
+# A copolymer's explicit repeat (``polymers.copolymer``) has many more bond types than the
+# homopolymers it is made of, and only a few of them are chemically new.  Rather than
+# annotate by hand which copolymer bond gets which homopolymer's fitted energies, the
+# assignment below is *derived* from the backbone chemistry and reported, so the answer to
+# "which bonds got which parameters, and which had none" is data rather than a claim.
+
+
+def term_window(polymer, bond: int, order: int) -> tuple:
+    """The backbone atoms an order-``order`` RIS term at bond type ``bond`` is a function of.
+
+    An order-1 term (``first_order[b]``) is the energy of bond ``b``'s own dihedral, whose
+    four atoms are ``b, b+1, b+2, b+3``.  An order-2 term (``second_order[b]``) spans bonds
+    ``b`` and ``b+1``, so five atoms; order 3 spans three bonds and six.  Indices wrap
+    modulo the repeat, which is correct because the chain is infinite and periodic.
+    """
+    B = polymer.bonds_per_repeat
+    return tuple(polymer.backbone[(bond + i) % B] for i in range(order + 3))
+
+
+def term_core(polymer, bond: int, order: int) -> tuple:
+    """The atoms the term's rotatable bonds actually join: ``b+1 .. b+order+1``.
+
+    For order 1 this is the two atoms of the rotating bond itself.  A torsional preference
+    is set far more by those than by the 1-4 atoms at the window's ends, so the matching
+    below ranks a candidate by its core agreement first and its full-window agreement
+    second -- which is what makes the bonds flanking the VDCN carbon take VDCN's
+    parameters rather than VDF's, despite agreeing with each in three atoms of four.
+    """
+    B = polymer.bonds_per_repeat
+    return tuple(polymer.backbone[(bond + 1 + i) % B] for i in range(order + 1))
+
+
+@dataclass(frozen=True)
+class TermTransfer:
+    """Where one RIS term of a copolymer got its parameters, and how good the match is."""
+
+    order: int  # 1, 2 or 3
+    bond: int  # bond type of the target repeat
+    source: str  # source polymer name
+    source_bond: int  # bond type within the source repeat
+    core_matches: int
+    core_size: int
+    window_matches: int
+    window_size: int
+
+    @property
+    def exact(self) -> bool:
+        """True when the source term's whole backbone window is the same chemistry.
+
+        An exact match means the transferred number really is the fitted number for this
+        environment.  Anything else is a transfer: the right bond in the wrong
+        neighbourhood, and not a fitted value for the bond it is being used for.
+        """
+        return self.window_matches == self.window_size
+
+    def describe(self) -> str:
+        kind = "fitted" if self.exact else "TRANSFERRED"
+        return (f"order {self.order} bond {self.bond:2d} <- {self.source}[{self.source_bond}]  "
+                f"core {self.core_matches}/{self.core_size} window {self.window_matches}/{self.window_size}  {kind}")
+
+
+def _best_source(target, bond: int, order: int, sources) -> TermTransfer:
+    core_t, win_t = term_core(target, bond, order), term_window(target, bond, order)
+    best = None
+    for poly, model in sources:
+        for t in range(model.B):
+            core_s, win_s = term_core(poly, t, order), term_window(poly, t, order)
+            score = (sum(a == b for a, b in zip(core_t, core_s)), sum(a == b for a, b in zip(win_t, win_s)))
+            if best is None or score > best[0]:
+                best = (score, poly.name, t)
+    (nc, nw), src, t = best
+    return TermTransfer(order=order, bond=bond, source=src, source_bond=t, core_matches=nc,
+                        core_size=len(core_t), window_matches=nw, window_size=len(win_t))
+
+
+def transfer_ris(target, sources, name: str = "", third_order: bool | None = None) -> tuple[RISModel, list[TermTransfer]]:
+    """Assemble a copolymer's RIS model from its comonomers' fitted homopolymer models.
+
+    ``sources`` is a sequence of ``(Polymer, RISModel)`` pairs -- the homopolymer and the
+    model fitted for it.  For every bond type of ``target`` and every order the model
+    carries, the source term whose backbone environment best matches is used: core
+    agreement (the atoms the rotating bonds join) first, then whole-window agreement, with
+    ties going to the earlier source.  Returns the assembled model and one
+    :class:`TermTransfer` per term, whose :attr:`TermTransfer.exact` flag separates the
+    bonds that carry a genuinely fitted value for their own environment from those that
+    carry a transferred one.
+
+    This is the cheap half of ``docs/CHEMISTRY_EXTENSION.md`` section 3's copolymer bullet:
+    it reuses the background fits and makes the junction terms visible so they can be
+    fitted later, rather than pretending they were.
+    """
+    if not sources:
+        raise ValueError("transfer_ris needs at least one (polymer, model) source")
+    # The assembled model uses the TARGET's state set: a chain has one set of state
+    # angles, and ``chain.build_chain`` reads them from the polymer, not per bond type.
+    states = target.states
+    for poly, model in sources:
+        if model.states.names != states.names or model.states.mirror != states.mirror:
+            raise ValueError(f"source model for {poly.name!r} has a different state set "
+                             f"({model.states.names} vs {states.names})")
+        if model.states.angles != states.angles:
+            warnings.warn(
+                f"source model for {poly.name!r} was fitted with adapted state angles "
+                f"{tuple(round(a, 1) for a in model.states.angles)}, but the copolymer chain is built at "
+                f"{tuple(round(a, 1) for a in states.angles)}: its energies are basin minima located at "
+                "angles the copolymer will not use. Fit the sources with adapt_angles=False, or give the "
+                "target a states= carrying the adapted angles, rather than mixing the two.",
+                UserWarning, stacklevel=2,
+            )
+        if model.B != poly.bonds_per_repeat:
+            raise ValueError(f"source model for {poly.name!r} has B={model.B} but the polymer has "
+                             f"{poly.bonds_per_repeat} bonds per repeat")
+    if third_order is None:
+        third_order = all(m.third_order is not None for _, m in sources)
+    elif third_order and any(m.third_order is None for _, m in sources):
+        raise ValueError("third_order=True needs every source model to carry third-order terms")
+    by_name = {poly.name: (poly, model) for poly, model in sources}
+    B, S = target.bonds_per_repeat, states.n
+    e1 = np.zeros((B, S))
+    e2 = np.zeros((B, S, S))
+    e3 = np.zeros((B, S, S, S)) if third_order else None
+    report: list[TermTransfer] = []
+    for order, dest in ((1, e1), (2, e2), (3, e3)):
+        if dest is None:
+            continue
+        for b in range(B):
+            tr = _best_source(target, b, order, sources)
+            src = by_name[tr.source][1]
+            arr = {1: src.first_order, 2: src.second_order, 3: src.third_order}[order]
+            dest[b] = arr[tr.source_bond]
+            report.append(tr)
+    return RISModel(states, B, e1, e2, e3, name=name or f"{target.name}-transferred"), report
+
+
+def transfer_summary(report: list[TermTransfer]) -> str:
+    """A per-order table of :func:`transfer_ris`'s provenance, exact matches collapsed."""
+    lines = []
+    for order in sorted({t.order for t in report}):
+        rows = [t for t in report if t.order == order]
+        n_exact = sum(t.exact for t in rows)
+        lines.append(f"order {order}: {n_exact}/{len(rows)} bond types carry a fitted value for their own environment")
+        for t in rows:
+            if not t.exact:
+                lines.append("  " + t.describe())
+    return "\n".join(lines)
 
 
 def polyethylene_like_model(e_gauche: float = 0.5, e_pentane: float = 2.0, name="pe-textbook") -> RISModel:

@@ -141,3 +141,115 @@ all-trans starts in independently constructed polar and antipolar packings. The
 starts should be screened for interchain close contacts before Sarco applies its
 fixed-cell/full-cell MACE+D3 protocol. The existing kinked Sarco reference is the
 comparison basin, not an input to that construction.
+
+## polyfind reply: the copolymer starts are built, 2026-09-10
+
+Built. Everything is under `deliverables/` in this repository, with `deliverables/README.md`
+as the complete record -- provenance, the potential used, every topology number and every
+caveat -- and `examples/copolymer_starts.py` regenerating all of it from scratch in 44
+minutes on one core.
+
+| file | what |
+|---|---|
+| `vdf11_vdcn1_alltrans_polar_8chain_592atom.xyz` | polar, `C208H192F176N16`, 592 atoms, eight chains of 74 |
+| `vdf11_vdcn1_alltrans_antipolar_8chain_592atom.xyz` | antipolar, same size and formula |
+| `..._polar_2chain_148atom.xyz`, `..._antipolar_2chain_148atom.xyz` | the two-chain primitives the above tile |
+
+Extended XYZ with the lattice on the comment line. Coordinates are deliberately **not**
+wrapped into the cell: each chain's repeat is written whole, which is the molecular choice of
+branch and is what makes the quoted cell dipole a property of the cell.
+
+**The sequence.** `Polymer.backbone` now holds an explicit multi-monomer repeat, so this is
+one 24-bond repeat of twelve monomers, eleven VDF and one VDCN, 8.33 mol%, with the VDCN at
+monomer index 6. Every existing homopolymer is the degenerate one-monomer case and builds
+byte-identical geometry. Details in `docs/CHEMISTRY_EXTENSION.md`, "Copolymer composition
+implemented".
+
+**Which bonds got which parameters, and which had none.** In this model VDCN's own CH2 entry
+is field-for-field PVDF's, so the copolymer differs from the homopolymer at exactly **one** of
+the 24 backbone atoms, the cyano carbon. 20 of 24 first-order RIS terms therefore sit entirely
+inside a VDF stretch and take PVDF's fitted values exactly. Four do not: bonds 11 and 12,
+whose rotating bond touches the cyano carbon, take VDCN's own values for the same central bond
+in a different neighbourhood; bonds 10 and 13, the junction bonds either side, take PVDF's
+values with the cyano carbon as the 1-4 partner. Pair terms span five backbone atoms so five
+are affected, triples span six so six are. **None of those ten has a fitted value for its own
+environment** -- no dihedral scan has been run on a VDF-VDCN-VDF oligomer. The assignment is
+derived from the backbone chemistry by `ris.transfer_ris` and reported per term in
+`deliverables/ris_parameter_provenance.json` rather than asserted. It does not touch an
+all-trans start, whose torsions are 180 degrees whatever the energies say.
+
+**The two cells** (two-chain primitive; the 592-atom cell is a 2x2x1 tiling of it, so
+`a, b -> 2a, 2b`):
+
+| | polar | antipolar |
+|---|---|---|
+| a x b x c (A), gamma 90 | 10.4598 x 4.8036 x 30.7557 | 11.3267 x 4.7451 x 30.7557 |
+| phi1, phi2 (deg), dz (A), flip | 90, 90, 2.5304, 0 | 90, 270, 3.8118, 0 |
+| density (g/cm3) | 1.6816 | 1.5720 |
+| E per monomer (kcal/mol), truncated / Ewald | -4.6082 / -6.9933 | -3.7514 / -6.1225 |
+| P (C/m2) | (0, +0.1209, 0) | (0, 0, 0) |
+| min interchain distance, 592 atoms (A) | 2.5655 (H...N) | 2.5243 (N...H) |
+
+The polar cell is lower by 0.857 kcal/mol per monomer truncated and 0.871 with Ewald, so
+polar wins either way. The polar axis is the short transverse one, 4.80 A against the 4.64 A
+this packer gives beta-PVDF.
+
+**The polarization was measured, not assumed.** The antipolar subspace is derived from the
+chain's own dipole moment by `fitting.antipolar_offsets`, and the antipolar cell's dipole
+comes out 3.3e-13 e.A in its largest component -- zero to floating point. That check is not
+ceremony: the defect we withdrew in `docs/SCREEN.md` addendum 3 was exactly a
+flip-with-equal-angles construction that is *polar* for every planar zigzag, and this chain's
+moment is (+5.83, 0, 0) e.A, along its own x, which is the case that got wrong. Note also
+that both cells have `flip = 0`: the antipolar one is antipolar by setting angle,
+`phi2 = phi1 + 180`, not by an up-down chain pair.
+
+**One finding against our own helper.** `antipolar_cell_exact` samples `dz` at four points
+across the repeat. On a 30.8 A twelve-monomer repeat that is a 7.7 A step, coarser than the
+2.56 A monomer period the interchain registry varies on, and it cost it the basin: the helper
+returned -3.7152 and a finer scan of the *identical* subspace returned -3.7514. The cell
+shipped is the finer one. Both are exactly antipolar; only the registry differs. It is a
+resolution limit in the screen, not a correctness bug, and it will bite any copolymer.
+
+**Topology, checked against a criterion like yours.** The intended graph comes from the
+`Polymer` definition rather than from the builder; the detected graph is
+`d <= scale * (r_i + r_j)` on the Cordero radii `ase.data.covalent_radii` carries, over every
+periodic image. All four cells **pass**, and they pass over a band rather than at a point:
+every scale between **1.019 and 1.584** gives exactly eight (or two) components of 74 atoms,
+**zero lost bonds and zero new bonds, interchain or otherwise**. Both edges of that band are
+set by *intramolecular* distances -- the 1.09 A C-H bond below and a 2.41 A 1-3 backbone
+C...C above -- so the band is a property of the chain, not of the packing. The closest
+interchain contact in either 592-atom cell is 2.47 times the sum of covalent radii, so a
+detector would have to be more than twice as generous as the most generous convention before
+it saw an interchain bond. Per-element-pair minima are in the README; the tightest are
+H...N 2.52-2.57 A and F...N 2.63-2.79 A.
+
+**The thing to look at first is the density: 1.68 and 1.57 against your 1.96.** These are
+*looser* than your accepted reference, which is the safe direction -- your rejected seed failed
+by being too tight -- but you should know where it comes from. A mass-fraction mixing rule over
+the two homopolymers' own all-trans cells, measured with the same packer, predicts 2.028, so
+we are 17% short. It is the tiling, not the chemistry: the 2x2x1 replication puts **every**
+chain's nitrile at the same axial height, turning eight isolated bulky groups into a continuous
+plane of them, and the long axis comes out 10.46 A -- above even the pure-VDCN cell's 9.50 --
+while the short axis stays within 4% of PVDF's. We checked it is not a search failure: fixing
+`(a, b)` at six shapes spanning 1.69-1.95 g/cm3 and sampling setting angles and axial shift
+densely at each leaves the dense ones repulsive (+5.7 kcal/mol per monomer at your density),
+and polishing the best three with everything free brings all three back to the same cell. An
+eight-chain search with independent registries -- which our packer cannot do, it places two --
+should recover much of the 17%. We would not read it as evidence that an all-trans copolymer
+cannot pack densely; it is, though, consistent with your kink being how the chain makes room
+for the nitrile, which would be a result about the copolymer rather than about either code.
+
+**And the thing we want to be plain about: this is a different basin from your accepted
+reference, not a better one.** Sixteen of your 192 mapped dihedrals are outside 30 degrees of
+any rotational isomeric state. Our model has three states at 180 and +/-60 degrees and a
+rigid-geometry chain built from them; an 85-degree torsion is not in its vocabulary, and no
+start we build can land in that basin. Treat these as a second candidate for the electronic
+comparison, constructed from the conformational side rather than found by relaxation. If your
+kinked basin is lower under MACE+D3, that is a real result about the copolymer and an equally
+real limit of the three-state rigid-geometry model, not a defect in these files.
+
+Also worth naming: our charges here are illustrative, not fitted, because the fitted PVDF
+potential has no nitrile parameters -- so every energy, dipole and polarization above is the
+rigid-ion value of an illustrative model. Both cells are orthorhombic with gamma fixed at 90
+degrees and the chains rigid, against your monoclinic beta = 110.4; releasing that is your
+full-cell stage's job.

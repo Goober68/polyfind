@@ -237,7 +237,10 @@ def _assemble(polymer, name, dih_block, helix, axis, axis_point, c, scale14, rot
         coords=coords,
         charges=full.charges[atoms0],
         c=c,
-        n_monomers=nb_block // polymer.bonds_per_repeat,
+        # monomers, not repeats: identical to ``nb_block // bonds_per_repeat`` for every
+        # homopolymer (one monomer per repeat) and twelve times it for the 11:1 copolymer,
+        # which is what keeps ``energy_per_monomer`` an energy per monomer
+        n_monomers=polymer.monomer_count(nb_block),
         helix=helix,
         dihedrals=np.asarray(dih_block, dtype=float),
         same_site_scale=_same_site_scales(polymer, full, nb_block, scale14),
@@ -353,13 +356,13 @@ def repeat_chains_from_torsions(polymer: Polymer, name: str, torsions_batch, sca
             coords = _align_about_z(coords, ref)
         tors = tors_batch[m]
         helix = HelixParams(
-            sequence=name, period_bonds=nb, monomers_per_period=nb // polymer.bonds_per_repeat,
+            sequence=name, period_bonds=nb, monomers_per_period=polymer.monomer_count(nb),
             rotation_per_period=ang, rise_per_period=c, rise_per_bond=c / nb, periods_per_repeat=1,
             turns_per_repeat=0, c=c, radius_backbone=0.0, radius_all=0.0, axis=axis, axis_point=point, label="refined",
         )
         ch = PeriodicChain(
             polymer=polymer, name=name, elements=list(elements), coords=coords, charges=charges.copy(),
-            c=c, n_monomers=nb // polymer.bonds_per_repeat, helix=helix, dihedrals=tors.copy(),
+            c=c, n_monomers=polymer.monomer_count(nb), helix=helix, dihedrals=tors.copy(),
             same_site_scale=scales, backbone=np.array(bb_local), rotation_error=ang,
         )
         ch.helix.radius_all = ch.radius

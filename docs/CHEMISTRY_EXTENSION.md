@@ -297,12 +297,17 @@ accepted relaxations and is not blocked on it.
 
 ## 3. Orthogonal to the phases
 
-* **Copolymer composition.** A comparison model of one candidate unit per
+* **Copolymer composition. Done; see "Copolymer composition implemented" below.**
+  A comparison model of one candidate unit per
   eleven VDF units (8.33 mol%) mostly falls out of the existing bond-type
   indexing, `t(i) = i mod B`, once `Polymer.backbone` can hold a full explicit
   24-bond sequence rather than a short repeating motif. Reuse VDF's fitted
   energies for the 22 background bonds and fit only the two candidate bonds and
   their junction terms. Real work, but configuration more than new mathematics.
+  The prediction held: the generalisation is one new dataclass and two derived
+  properties, and every `% B` consumer -- the chain builder, the RIS solvers, the
+  packer -- needed no change at all. The bond count in the sentence above was
+  slightly wrong, and the correction is recorded below.
 * **More than two chains per cell.** A 2x2x1 eight-chain cell is what lets
   chains slip and register independently. `CrystalPacker` would have to
   generalise, and the search dimensionality grows quickly, so this should
@@ -412,3 +417,55 @@ become the relaxed chain rather than all-trans for these chemistries, or their
 fitted energies are relative to nothing meaningful. Second, variable backbone
 angles are no longer a refinement nicety; for anything past PVDF they are a
 precondition for the model to describe a real molecule at all.
+
+### Copolymer composition implemented
+
+Built for the 11 VDF : 1 VDCN handoff asked for at the end of
+`docs/NOTE_VDCN_CONVERGENCE.md`; the deliverable itself is in `deliverables/`.
+
+**What the generalisation actually cost.** `Polymer.backbone` now holds the explicit
+periodic repeat, however many monomers long, and a new `sequence` field of `Monomer`
+objects records which monomer each stretch came from. A homopolymer's `sequence` defaults
+to one `Monomer` covering the whole backbone, so PE, PVDF, PVDC, CFE, CDFE, AN, VDCN and
+FANOME are the degenerate one-monomer case and build byte-identical geometry
+(`tests/test_an_vdcn_fanome.py`'s digests are unchanged). `copolymer()` concatenates the
+units and refuses to pick a backbone bond length silently when they disagree about it.
+
+Nothing that consumes a repeat needed changing, which was the prediction: `build_chain`
+already took a backbone atom's chemistry from `backbone[k % B]` and `RISModel` already took
+a bond's energies from `t(i) = i % B`, so `B = 24` works out of the box -- the chain
+builder, the batched builder, `periodic_chain`, `helix_parameters`, `CrystalPacker` and all
+of `ris.py`'s solvers. The only real change outside `polymers.py` was that three places
+computed monomers as `n_bonds // bonds_per_repeat` inline, which silently meant *repeats*;
+they now call `Polymer.monomer_count`, identical for every homopolymer and twelve times
+larger for this copolymer, which is what keeps an "energy per monomer" per monomer.
+
+**The bond count in the bullet above was wrong.** It said "22 background bonds and the two
+candidate bonds and their junction terms". In this model VDCN's own CH2 entry is
+field-for-field PVDF's, so the copolymer differs from the homopolymer at exactly **one** of
+the 24 backbone atoms, the cyano carbon. Counting dihedral windows rather than monomers:
+**20** of 24 first-order terms sit entirely inside a VDF stretch and take PVDF's fitted
+values exactly; **four** do not -- two whose rotating bond touches the cyano carbon (taking
+VDCN's own values for the same central bond in a different neighbourhood) and two whose
+rotating bond is a plain VDF bond with the cyano carbon as its 1-4 partner. Pair terms span
+five backbone atoms so five are affected, and triple terms span six so six are.
+
+`ris.transfer_ris` derives that assignment from the backbone chemistry rather than being
+told it: for each term it scores every candidate source bond on the atoms the rotating
+bonds join, then on the whole window, and reports the match. So "which bonds got which
+parameters, and which had none" is data (`TermTransfer.exact`) rather than a claim, and the
+junction terms are visible to be fitted later instead of being quietly absorbed.
+
+**What is still not fitted.** The four first-order, five pair and six triple terms above are
+*transferred*, not fitted: no dihedral scan has been run on a VDF-VDCN-VDF oligomer. That
+does not touch an all-trans start, whose torsions are 180 degrees whatever the energies say,
+and it does touch any conformational ranking of a copolymer. It is one contained job.
+
+**One limit that is not about chemistry.** `CrystalPacker` still places two chains, so an
+eight-chain cell is a 2x2x1 tiling of a two-chain one. For a copolymer that is more
+restrictive than it is for a homopolymer: the replication forces every chain's comonomer
+unit to the same axial position, so eight isolated bulky units become a continuous plane of
+them. Measured on this sequence, the tiled all-trans cell comes out about 17% less dense
+than a mass-fraction mixing rule over the two homopolymers' own all-trans cells predicts.
+The multi-chain bullet above is therefore a prerequisite for copolymer *packing*, not only
+for independent slip and registry.

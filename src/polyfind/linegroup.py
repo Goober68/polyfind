@@ -288,13 +288,13 @@ def repeat_chains(
         if ref is not None:
             coords = _align_about_z(coords, ref)
         helix = HelixParams(
-            sequence=name, period_bonds=nb, monomers_per_period=nb // polymer.bonds_per_repeat,
+            sequence=name, period_bonds=nb, monomers_per_period=polymer.monomer_count(nb),
             rotation_per_period=ang, rise_per_period=c, rise_per_bond=c / nb, periods_per_repeat=1,
             turns_per_repeat=0, c=c, radius_backbone=0.0, radius_all=0.0, axis=axis, axis_point=point, label="refined",
         )
         ch = PeriodicChain(
             polymer=polymer, name=name, elements=list(elements), coords=coords, charges=charges.copy(),
-            c=c, n_monomers=nb // polymer.bonds_per_repeat, helix=helix, dihedrals=tors_batch[m].copy(),
+            c=c, n_monomers=polymer.monomer_count(nb), helix=helix, dihedrals=tors_batch[m].copy(),
             same_site_scale=scales, backbone=np.array(bb_local), rotation_error=ang,
         )
         ch.helix.radius_all = ch.radius
