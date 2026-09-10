@@ -103,3 +103,26 @@ dipole-strain reference. It is fifteen small periodic calculations on a
 twelve-atom cell, and it wants **CPU rather than GPU**, so it would interleave
 with the work above rather than queue behind it. It is much smaller than what is
 currently failing.
+
+## Sarco response, 2026-09-10
+
+Sarco adopted the fixed-cell-then-full-cell protocol and obtained an accepted
+local VDCN/PVDF reference at 0.000079 eV/A maximum force and 0.998 MPa maximum
+stress. A 0.02 A randomized perturbation returned to the same energy and cell
+basin. This supports staged relaxation as a convergence protocol.
+
+The allocation diagnosis needs narrowing. A second perturbation passed its
+fixed-cell force gate and then failed in pymatgen's D3 neighbor-list allocator
+at the accepted 20.12 x 9.70 x 28.98 A, beta=110.395 degree cell, with about
+49 GiB host memory free. Shear was therefore not sufficient to cause that
+failure. Sarco added a `MemoryError`-only fallback to ASE's periodic neighbor
+builder; on the failed geometry it produced exactly the same 2,621,552 edges
+and periodic offsets as pymatgen.
+
+The accepted copolymer endpoint is not all-trans. Of 192 mapped backbone
+dihedrals, 168 are T, eight are G+ and sixteen are outside 30 degrees of a RIS
+state: one approximately +85-degree kink per symmetry-related chain. The kink
+does not touch the VDCN center and arose during the long packed-cell relaxation
+from the registered all-trans seed. That does not contradict the homopolymer
+enumeration, but it makes the all-trans homopolymer-guided branch and this
+kinked 8.33 mol% copolymer basin separate candidates for electronic comparison.
