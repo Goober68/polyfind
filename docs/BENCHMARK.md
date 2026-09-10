@@ -127,10 +127,60 @@ difference-based path had been walking over unnoticed.
 
 | Comparison | Status |
 |---|---|
-| Structure search against supercell relaxation | favourable, and the baseline's runs did not converge; not yet quantified as a ratio |
-| Field and strain response against the machine-learned grid | pending: needs polyfind's response calculation, in progress |
+| Structure search against supercell relaxation | favourable, and the baseline's runs did not converge; not quantified as a ratio |
+| Field and strain response against the machine-learned grid | **measured, see below** |
 | Field response against the density-functional tier | roughly 2,700 to 6,000 s per field triple to beat, per chemistry |
-| Accuracy at which any ratio holds | held-out energies 1.36 kcal/mol, one of three acceptance tests passing |
+| Accuracy at which any ratio holds | held-out energies 1.36 kcal/mol; one of three acceptance tests passing |
 
-The 10 to 100 times target is not yet demonstrated and should not be quoted until
-the middle row is filled in with a measurement at a stated accuracy.
+### The speed comparison, now measurable
+
+The baseline spends 87 s (PVDF) to 143 s (VDCN) per chemistry on a grid of two
+strain values by three field values, which yields **one** finite-difference
+derivative at one strain state, around a structure supplied to it.
+
+polyfind computes a full response - the in-plane elastic constants, the axial
+constant, the piezoelectric tensor by two independent routes, blocking stress,
+free strain and work density - in **0.3 s for beta, 1.4 for alpha, 7.8 for
+gamma**, from a structure it derived itself in a further 14 to 53 s.
+
+Taken as cost per derivative obtained the ratio is far beyond 100x, because the
+baseline's grid yields one derivative and this yields a tensor. Taken as
+whole-pipeline cost per chemistry, structure search included, it is roughly 2 to
+6x. Neither number should be quoted alone. The honest statement is that the
+speed target is met, comfortably, for the response calculation itself, and that
+the response calculation is not the whole job.
+
+**And the speed is not the binding constraint.** What limits this package for
+the intended application is in the next section: the piezoelectric response of
+the phase the material is actually used in cannot be computed at all, at any
+speed. A fast wrong answer is not progress, so the target should be read as met
+on the axis it measures and not yet met as a whole.
+
+### What the response can and cannot deliver
+
+| Quantity | Status |
+|---|---|
+| In-plane elastic constants C11, C22, C12, C16, C26, C66 | computed |
+| Axial constant C33 | computed, and demonstrated free of the invented-stiffness contamination that made an earlier attempt refuse it |
+| Shear constants C44, C55, C45 and mixed 4/5 | structurally absent: the chain axis is fixed along z, so no variable expresses those shears |
+| Piezoelectric response of helical chains (alpha, gamma) | computed, d up to 2.7 pC/N |
+| Piezoelectric response of beta, the ferroelectric phase | **exactly zero, and provably so** |
+| Polarization, blocking stress, free strain, work density | computed |
+
+The beta result is the one that matters for the application and it is not a
+numerical failure. With bond-charge-increment charges, a planar all-trans
+zigzag's dipole is *exactly* independent of its backbone angle: measured, the
+dipole holds every digit while the chain repeat is driven from minus 1.17% to
+plus 1.14%. Axial strain changes the backbone angle and nothing else, since bonds
+are rigid, so the dipole cannot respond and d33 and d31 are identically zero.
+
+The dimensional term alone gives d33 = -4.4 pC/N against a measured -32. Its sign
+is right, but that is arithmetic rather than physics: that term is negative on
+every diagonal column for any stable crystal. The same term gives d31 = -0.14
+against a measured +20, with the **wrong sign**, which is the honest read on how
+much of the physics is present.
+
+Reaching PVDF's piezoelectricity therefore needs the dipole to respond to strain,
+which requires bond stretching combined with charge flux, or charges that depend
+on the backbone angle, or explicit polarizability. Fixed atom-centred charges on
+a rigid-bonded chain cannot produce it in principle, not merely in practice.
