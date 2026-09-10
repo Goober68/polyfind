@@ -219,21 +219,24 @@ def test_adaptive_matches_dense_10deg_fit(polymer, n_monomers):
     assert dense.n_evaluations >= 2.5 * adap.n_evaluations
 
 
-def test_adaptive_pvdf_g_plus_g_minus_has_no_interior_minimum():
+def test_adaptive_pvdf_g_plus_g_minus_infimum_sits_at_the_basin_edge():
     """PVDF's CF2-centred (bond type 1) G+/G- pair is the one place adaptive and dense
-    disagree by more than grid/refinement noise, and it is expected, not a bug: this
-    basin has no interior critical point near the G+/T boundary. Scanning phi from 100 to
-    140 deg (crossing straight through the nominal boundary at 120) at each point's own
-    best psi gives a smooth, monotonically *decreasing* profile (E ~= 7.8, 5.1, 4.88 (at
-    phi=120), 4.7, 4.04 (at phi=140), ...; no kink, no minimum). So the true infimum of a
-    correctly bounded search of the open G+/G- basin (matching ``_basins``' tie-break --
-    see ``_basin_bounds``) sits at its own edge, at ~4.85 kcal/mol; excluding the single
-    boundary point cannot raise the infimum of a continuous, monotonic function
-    approaching it. The dense step=10 deg scan reports a much higher ~8.17 kcal/mol only
-    because it is too coarse to sample anywhere near that edge (its neighbouring grid
-    points are 110 deg, E ~= 10.2, and 120 deg itself, excluded by the same tie-break).
-    This is asserted explicitly, as expected behaviour, rather than folded into a widened
-    tolerance in the general accuracy test above.
+    disagree by more than grid/refinement noise, and it is expected, not a bug: the
+    infimum of that basin sits at the basin's own *edge*, the G+/T boundary at 120 deg,
+    where no grid of step 10 deg can sample it.
+
+    Re-measured (the numbers below, and the two pinned values, moved with the PVDF C-C
+    correction from 1.54 to 1.528 A). Profile of the pair energy over the G+ basin, at
+    each phi's own best psi in the G- basin, on a 2 deg grid: it falls from 9.87 at
+    phi = 106 monotonically to 4.97 at phi = 118, the last grid point inside the basin,
+    and the bounded continuous search reaches **4.75 at phi = 120 - 1e-6, psi = -75**.
+    There is a second, shallow interior minimum near phi = 72 at 4.97, which is *above*
+    the edge infimum and so does not change the answer -- an earlier version of this
+    docstring said the basin had no interior critical point at all, and that overstated
+    it. The dense step = 10 deg scan can only report **8.77**, because its G+ samples
+    stop at 110 deg (120 itself is handed to T by ``_basins``' tie-break; see
+    ``_basin_bounds``). This is asserted explicitly, as expected behaviour, rather than
+    folded into a widened tolerance in the general accuracy test above.
     """
     dense = fit_ris(PVDF, SimpleFF(), step=10.0, n_monomers=6, scan="dense")
     adap = fit_ris(PVDF, SimpleFF(), step=10.0, n_monomers=6, scan="adaptive")
@@ -241,8 +244,8 @@ def test_adaptive_pvdf_g_plus_g_minus_has_no_interior_minimum():
 
     d = dense.model.second_order[1, gp, gm]
     a = adap.model.second_order[1, gp, gm]
-    assert d == pytest.approx(8.17, abs=0.2)
-    assert a == pytest.approx(4.85, abs=0.2)
+    assert d == pytest.approx(8.77, abs=0.2)
+    assert a == pytest.approx(4.75, abs=0.2)
     assert a - d < -3.0  # a large, expected improvement -- not refinement noise
 
     # neither coordinate sits exactly on the G+/T (or G-/T) tie boundary that _basins
@@ -264,16 +267,23 @@ def _probe_dihedrals(n, k):
 # comparison is bit-for-bit rather than "close".  Recorded from the code as it stood
 # before the parameters became settable; every default in SimpleFF is still that
 # potential, and this is what says so.
+#
+# The PVDF and PVDC rows were RE-RECORDED when the batched geometry corrections landed
+# (PVDF C-C 1.54 -> 1.528 A, PVDC backbone angles 114/114 -> 123/114; see
+# docs/REFERENCES.md).  Those change the *structures* the potential is evaluated on, not
+# the potential, which is exactly why the PE rows below are untouched: PE's geometry did
+# not move, so its three energies still match the pre-parameterisation recording bit for
+# bit, and they are what still guards the potential itself against drift.
 GOLDEN_ENERGIES = {
     ("pe", 0): ("0x1.1e3fc00e8da83p+2", "0x1.6da9b630c824dp-1", "0x1.e1151290e9472p+1"),
     ("pe", 1): ("0x1.a3b106a39b6b4p+11", "0x1.a2304c690a679p+11", "0x1.3f6baf81062a0p+1"),
     ("pe", 2): ("0x1.339abec54a8d0p+9", "0x1.2b05af4b379bap+9", "0x1.27a0f2f1adc5ap+1"),
-    ("pvdf", 0): ("-0x1.3fde07fe80080p+3", "0x1.d9cf7d9295a83p+2", "-0x1.1662e363e56e1p+4"),
-    ("pvdf", 1): ("0x1.ed8901cec023ep+15", "0x1.ed9ea3604bb38p+15", "-0x1.457c33b4de016p+4"),
-    ("pvdf", 2): ("0x1.f424484648882p+10", "0x1.f74621458c1f0p+10", "-0x1.b62410b50e2b7p+4"),
-    ("pvdc", 0): ("0x1.6cd76b45a239ep+7", "0x1.790398e958758p+7", "-0x1.8585b476c774fp+2"),
-    ("pvdc", 1): ("0x1.0b7800064280cp+20", "0x1.0b780f7b4dc39p+20", "-0x1.dcce6531704c4p+2"),
-    ("pvdc", 2): ("0x1.36594713d009cp+14", "0x1.365185143630cp+14", "-0x1.4a35315572436p+3"),
+    ("pvdf", 0): ("-0x1.0adb43a3bf2e9p+3", "0x1.1e9633e714343p+3", "-0x1.14b8bbc569b16p+4"),
+    ("pvdf", 1): ("0x1.2759360e35fccp+16", "0x1.2763f688308d3p+16", "-0x1.4477470167d44p+4"),
+    ("pvdf", 2): ("0x1.21906e59e0153p+11", "0x1.232546efdb088p+11", "-0x1.b81a1be1a2196p+4"),
+    ("pvdc", 0): ("0x1.351d41daeb829p+5", "0x1.67f392c00d8cbp+5", "-0x1.96b287291050ep+2"),
+    ("pvdc", 1): ("0x1.b8d2ad49ad013p+15", "0x1.b8d5965338f4ep+15", "-0x1.fc1b69a4a43e5p+2"),
+    ("pvdc", 2): ("0x1.d64cf03c1fdddp+9", "0x1.d53d2eb589facp+9", "-0x1.4454cc7ec19a2p+3"),
 }
 _PROBES = {"pe": (PE, 8), "pvdf": (PVDF, 8), "pvdc": (get_polymer("pvdc"), 6)}
 
@@ -636,10 +646,18 @@ def test_forces_frame_is_the_gradient_the_torques_are_projected_from():
 def test_relaxing_the_backbone_angles_needs_a_bend_term_and_then_relieves_strain():
     """The strain finding, and what having an angle term does to it.
 
-    PVDC's all-trans chain is the case ``polymers.py`` records at ~313 kcal/mol of
-    Lennard-Jones strain with the angles frozen.  Given a bend term the angles can open,
-    which is what a real chain does; the test asserts the direction and the mechanism, not
-    a fitted number (those are in docs/VALENCE_FIT.md).
+    PVDC's all-trans chain is the case ``polymers.py`` records: 313 kcal/mol of
+    Lennard-Jones strain when both backbone angles were frozen at 114 deg, 74 now that
+    the CH2 angle carries its measured 123 deg.  Given a bend term the angles can open
+    further, which is what a real chain does; the test asserts the direction and the
+    mechanism, not a fitted number (those are in docs/VALENCE_FIT.md).
+
+    The threshold moved with the angle correction, and that is the point rather than an
+    inconvenience: with this potential the relaxation used to buy 249 kcal/mol from a
+    114/114 start and now buys 28 from a 123/114 one, because most of what it used to
+    recover was the error in the starting angles.  It still opens the same angle in the
+    same direction and still lands on the same relaxed geometry -- 125.8 deg at CH2 and
+    108.3 at CCl2, from either start.
     """
     from polyfind.forcefield import relax_backbone_angles
 
@@ -647,6 +665,7 @@ def test_relaxing_the_backbone_angles_needs_a_bend_term_and_then_relieves_strain
     ff = SimpleFF(bond_terms=BOND_TERMS, angle_terms=ANGLE_TERMS + (("Cl-C-Cl", 120.0, 109.5),
                                                                    ("C-C-Cl", 120.0, 109.0)))
     r = relax_backbone_angles(pvdc, ff, np.full(10, 180.0))
-    assert r["energy"] < r["energy0"] - 100.0  # the strain was real and relaxing removes much of it
+    assert r["energy"] < r["energy0"] - 20.0  # the strain was real and relaxing removes much of it
     assert r["lj"] < r["lj0"]
-    assert r["angles"][0] > r["angles0"][0] + 3.0  # the CH2 angle is the one that opens
+    assert r["angles"][0] > r["angles0"][0]  # the CH2 angle is still the one that opens
+    assert r["angles"][1] < r["angles0"][1] - 3.0  # the CCl2 angle closes to compensate

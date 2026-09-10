@@ -329,14 +329,21 @@ ranking.
 
 | | illustrative | fitted | target | |
 |---|---|---|---|---|
-| 1. E(alpha) − E(beta), kJ/mol per monomer | +7.38 | **−4.54** | −6.5 to −2.6 | **PASS** |
+| 1. E(alpha) − E(beta), kJ/mol per monomer | +7.34 | **−4.81** | −6.5 to −2.6 | **PASS** |
 | 2. isolated-chain RIS, top candidate | TG+ | TG+ | anything but the 3/1 helix | **FAIL** |
-| 3. alpha E(antipolar) − E(polar), kcal/mol per monomer | +0.197 | +0.091 | ≤ 0 | **FAIL** |
+| 3. alpha E(antipolar) − E(polar), kcal/mol per monomer | +0.200 | +0.092 | ≤ 0 | **FAIL** |
+
+Re-measured after the batched geometry corrections of `REFERENCES.md` (PVDF's C–C
+bond 1.54 → 1.528 Å); the same three rows read +7.38 / −4.54, TG+ / TG+, +0.197 /
++0.091 before them. Test 1's fitted value moves a little further into the accepted
+range and test 3 does not move at all. The fit itself was run at the old geometry
+and has not been repeated, so the training and held-out errors below are as they
+were; only the acceptance evaluations are refreshed.
 
 **Test 1 passes**, and it is the one with the most agreement behind it: four independent
 studies over five exchange-correlation functionals put beta 2.6 to 6.5 kJ/mol per monomer
 above alpha (`REFERENCES.md` section 5).  The unfitted potential had the sign backwards and
-the magnitude three to six times too large; the fit lands at 4.5 kJ/mol, near the middle of
+the magnitude three to six times too large; the fit lands at 4.8 kJ/mol, near the middle of
 the range.  This is DESIGN.md 5.4's headline failure, fixed by data the objective did see
 (torsion profiles) applied to a quantity it did not.
 

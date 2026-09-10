@@ -8,7 +8,8 @@ binding constraint had moved from the data to the functional form, and named two
 
 * no bond or angle terms, so **93% of the reference force signal was unrepresentable** and
   a strained all-trans chain could not relieve a contact by opening an angle — the reason
-  PVDC's planar zigzag carried 313 kcal/mol and FANOME's about a million;
+  PVDC's planar zigzag carried 313 kcal/mol (74 now that its backbone angles are the
+  measured 123/114 rather than an equal 114 — section 4) and FANOME's about a million;
 * fixed atom-centred point charges, which the fit tried to escape by driving **fluorine's
   partial charge positive** once its bounds were released.
 
@@ -23,8 +24,9 @@ the forces become representable — held-out force error falls from 13.9 to 5.2 
 against a reference whose own RMS is 14.0, and the correlation with the reference from
 +0.10 to +0.93 — and the held-out energy error falls from 1.76 to 1.36 kcal/mol. Fluorine's
 charge comes out **+0.114 e and off its bound**. The all-trans strain problem is largely
-gone: with the angles free, PVDC falls from 313 to 12 kcal/mol and PVDC's own relaxed CH2
-angle lands at 123.1°, the measured value. But the forces **still do not help the
+gone: with the angles free, PVDC falls from 47 to 12 kcal/mol and PVDC's own relaxed CH2
+angle lands at 123.1°, the measured value.  (That first figure was 313 until PVDC's
+backbone angles were themselves corrected to the measured 123/114 — see section 4.) But the forces **still do not help the
 energies** (1.16 without them against 1.36 with), the off-site charge is within noise of
 doing nothing, and of the three acceptance tests the score is unchanged at **one pass, two
 failures**.
@@ -249,23 +251,32 @@ than quoted:
 
 | | `pvdf-dft-fit` | this fit | target | |
 |---|---|---|---|---|
-| 1. E(alpha) − E(beta), kJ/mol per monomer | −4.54 | **−2.96** | −6.5 to −2.6 | **PASS** |
+| 1. E(alpha) − E(beta), kJ/mol per monomer | −4.81 | **−3.13** | −6.5 to −2.6 | **PASS** |
 | 2. isolated-chain RIS, top candidate | TG+ | TG+ | anything but TG+ | **FAIL** |
-| 3. alpha E(antipolar) − E(polar), kcal/mol per monomer | +0.091 | **+0.085** | ≤ 0 | **FAIL** |
-| beta \|P\|, C/m² | 0.114 | 0.114 | 0.176–0.188 (DFT) | |
+| 3. alpha E(antipolar) − E(polar), kcal/mol per monomer | +0.092 | **+0.084** | ≤ 0 | **FAIL** |
+| beta \|P\|, C/m² | 0.115 | 0.115 | 0.176–0.188 (DFT) | |
 
-**Test 1 still passes**, at −2.96 kJ/mol per monomer against the previous −4.54. It is
+Re-measured after the batched geometry corrections of `REFERENCES.md` (PVDF's C–C bond
+1.54 → 1.528 Å); the same rows read −4.54 / −2.96, +0.091 / +0.085 and 0.114 / 0.114
+before them. The fit itself was run at the old geometry and has not been repeated.
+
+**Test 1 still passes**, at −3.13 kJ/mol per monomer against the previous fit's −4.81. It is
 inside the range four independent studies agree on, but nearer its edge, so this is a small
-step in the wrong direction inside a passing test.
+step in the wrong direction inside a passing test. The geometry correction helped it
+slightly (−2.96 → −3.13, further from the −2.6 boundary).
 
-**Test 2 still fails, and the margin keeps narrowing**: TG+ at −3.49 kcal/mol per monomer
-against TTG+G+ at −3.31, a gap of 0.18, against 0.23 for the previous fit and 1.64 for the
-illustrative potential. Three fits in a row have moved this the right way without arriving.
+**Test 2 still fails, and the geometry correction pushed it back the wrong way**: TG+ at
+−4.37 kcal/mol per monomer against TG+G+G+ at −3.94, a gap of 0.43, where at the old
+geometry it was 0.18 against TTG+G+. Measured on the same footing the illustrative
+potential's gap is 1.58 and `pvdf-dft-fit`'s 0.49, so the fits still move this the right
+way and still do not arrive — but the run of three successive narrowings recorded here is
+not what a fresh measurement shows, and the 0.18 should not be quoted as the current
+number.
 
-**Test 3 still fails and barely moved**: +0.085 against +0.091. The electrostatics change
+**Test 3 still fails and barely moved**: +0.084 against +0.092. The electrostatics change
 was aimed squarely at this test and did not shift it. What did change is that the reason
 can no longer be "the fit refuses to have any C–F electrostatics": `q_C-F` is now +0.114
-and beta's polarization is unchanged at 0.114 C/m², still well below the DFT range of
+and beta's polarization is unchanged at 0.115 C/m², still well below the DFT range of
 0.176–0.188. The remaining suspects are the ones the fit cannot see: the objective still
 contains no polarization, and `applied` reaches the lattice with the dipole-equivalent
 projection of the off-site model rather than the model itself.
@@ -295,13 +306,24 @@ of the repeat, the substituents following the changed backbone):
 
 | polymer | LJ, rigid, unfitted | LJ, rigid, this fit | **LJ, angles relaxed** | E(relaxed) − E(rigid) | relaxed angles (°) |
 |---|---|---|---|---|---|
-| PVDF | 9 | 8 | **5** | −5 | 113.7, 107.3 |
-| PVDC | 313 | 231 | **12** | −199 | **123.1**, 102.1 |
+| PVDF | 11 | 10 | **6** | −6 | 114.0, 107.3 |
+| PVDC | 74 | 47 | **12** | −33 | **123.1**, 102.1 |
 | CFE | 162 | 120 | **12** | −96 | 120.8, 103.2 |
 | CDFE | 199 | 154 | **50** | −89 | 113.7, 124.2 |
 | AN | 88 | 27 | **2** | −32 | 116.1, 102.9 |
 | VDCN | 176 | 57 | **−1** | −65 | 118.6, 102.3 |
 | FANOME | 1.0e6 | 1.4e5 | **4.8e3** | −1.4e5 | 135.0, 135.0 ← both at the bound |
+
+Re-measured after the batched geometry corrections of `docs/REFERENCES.md`. The
+PVDF row moved because its C–C bond went from 1.54 to 1.528 Å (9 / 8 / 5 / −5 /
+113.7, 107.3 before), and the PVDC row because its backbone angles went from an
+equal 114/114 to the measured 123/114 (313 / 231 / 12 / −199 / 123.1, 102.1
+before). **The relaxed columns are unchanged for PVDC to three figures**, which is
+the check that these are starting-point effects and not different minima: the
+relaxation lands on the same 123.1 / 102.1° and the same 12 kcal/mol from either
+start. What changed is how much of the drop the angle terms can claim. Most of
+PVDC's celebrated 231 → 12 was the model starting from the wrong angle; the honest
+figure for what a bend term buys is 47 → 12.
 
 **This resolves the reference-state problem for five of the seven chemistries, and it is
 worth saying plainly.** PVDF, PVDC, CFE, AN and VDCN all come into the same range as PVDF's

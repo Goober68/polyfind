@@ -28,18 +28,51 @@ from .ris import RISModel
 
 # Reference unit cells (a, b, c in A, density g/cm^3), literature values, approximate.
 # Every entry is sourced and given a verdict in docs/REFERENCES.md section 1; consult
-# that before treating any of these as ground truth.  Two caveats recorded there:
-#   * the gamma cell is monoclinic with beta ~ 93 deg, which this table does not carry
-#     (the search fits the cell angle freely, so nothing computed depends on it);
-#   * the gamma density of 1.94 does not follow from the gamma cell beside it, which
-#     gives 1.93.  Left alone deliberately -- changing it shifts a reported table.
+# that before treating any of these as ground truth.
+#
+# The gamma density reads 1.93, not the 1.94 an earlier version carried: 1.93 is what
+# 4.96 x 9.67 x 9.20 A with Z = 8 CH2CF2 actually gives, while 1.94 belongs to a
+# *different* determination (Weinhold's orthorhombic 4.96 x 9.58 x 9.23).  The cell and
+# the density now come from the same structure (docs/REFERENCES.md section 1.3).
+#
+# The cell *angles* are not in this table, and for gamma that is a real approximation
+# rather than an omission: see :data:`REFERENCE_CELL_ANGLES` below.
 EXPERIMENTAL_CELLS = {
     "pvdf": {
         "beta (TTTT)": (8.58, 4.91, 2.56, 1.97),
         "alpha/delta (TGTG')": (4.96, 9.64, 4.62, 1.92),
-        "gamma/epsilon (T3GT3G')": (4.96, 9.67, 9.20, 1.94),
+        "gamma/epsilon (T3GT3G')": (4.96, 9.67, 9.20, 1.93),
     },
     "pe": {"orthorhombic (all-trans)": (7.42, 4.95, 2.55, 1.00)},
+}
+
+# Reported (alpha, beta, gamma) cell angles in degrees for the same reference cells,
+# kept separate from EXPERIMENTAL_CELLS so that the (a, b, c, rho) tuples every consumer
+# unpacks stay four long.  Only gamma-PVDF is not a right-angled cell.
+#
+# WHAT THE PACKING MODEL CAN AND CANNOT EXPRESS.  :mod:`polyfind.pack` builds the cell
+# as a = (a, 0, 0), b = (b cos g, b sin g, 0), c = (0, 0, c) with the chain axis along z,
+# so the crystallographic *gamma* -- the a-to-b angle, in the plane perpendicular to the
+# chains -- is a free search variable (``pack(..., gamma_free=True)``), while alpha and
+# beta are pinned at 90 deg by construction: nothing in the parametrisation can tilt a
+# lattice vector out of the plane normal to the chain axis.  gamma-PVDF's unique angle is
+# beta = 93 deg, between a and the chain axis c, so it is exactly the one this model
+# cannot represent.  The package therefore approximates the gamma cell as orthorhombic.
+#
+# What that costs, measured on the reference cell: a lattice translation along a would
+# carry a z-component of a cos(beta) = -0.26 A, which the model must set to zero, and the
+# cell volume changes by the factor sin(beta) = 0.9986 -- so the density the model can
+# reproduce differs from the monoclinic one by 0.14%, well inside the 0.5% granularity
+# of the two-decimal density above and far inside this potential's own cell errors of
+# 3 to 9%.  The approximation is therefore harmless for every number this package
+# reports and would matter only to a structure comparison at crystallographic precision.
+REFERENCE_CELL_ANGLES = {
+    "pvdf": {
+        "beta (TTTT)": (90.0, 90.0, 90.0),  # Cm2m, orthorhombic
+        "alpha/delta (TGTG')": (90.0, 90.0, 90.0),  # P2_1/c, but beta = 90 deg exactly
+        "gamma/epsilon (T3GT3G')": (90.0, 93.0, 90.0),  # Cc, monoclinic; NOT expressible
+    },
+    "pe": {"orthorhombic (all-trans)": (90.0, 90.0, 90.0)},  # Pnam
 }
 
 

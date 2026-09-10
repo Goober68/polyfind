@@ -44,15 +44,15 @@ enumerate, helix analysis, packing), and the flipped-chain fix holds for it.
 `tests/test_pvdc.py` covers all of that.
 
 It also produced the first real finding of this exercise, and it is a caution
-about the phases that follow. With bond angles frozen, the all-trans PVDC chain
-carries about 313 kcal/mol of Lennard-Jones strain, against 9 for PVDF: a
-planar zigzag simply cannot relieve Cl...Cl contact when the angles cannot
-open. Every rotation away from trans then lowers the energy, the fitted
-first-order energies come out around -15 kcal/mol relative to a reference that
-is not even metastable, and the RIS convention of measuring from all-trans
-breaks down. The *direction* is correct, since PVDC is known not to adopt the
-planar zigzag that PVDF's beta phase does, but the magnitude is an artifact of
-rigid geometry rather than a property of the polymer.
+about the phases that follow. With bond angles frozen *at PVDF's 114 deg for both
+backbone carbons*, the all-trans PVDC chain carries about 313 kcal/mol of
+Lennard-Jones strain, against 9 for PVDF: a planar zigzag simply cannot relieve
+Cl...Cl contact when the angles cannot open. Every rotation away from trans then
+lowers the energy, the fitted first-order energies come out around -15 kcal/mol
+relative to a reference that is not even metastable, and the RIS convention of
+measuring from all-trans breaks down. The *direction* is correct, since PVDC is
+known not to adopt the planar zigzag that PVDF's beta phase does, but the
+magnitude is an artifact of rigid geometry rather than a property of the polymer.
 
 That direction has since been checked against the crystallography and holds:
 PVDC's crystal conformation is a *glide TGTG' form* with internal rotation
@@ -62,6 +62,36 @@ concrete reason - the real chain relieves the Cl...Cl crowding by opening the
 C-CH2-C backbone angle to 123 deg, against 114 deg at the CCl2 carbon, which is
 precisely the degree of freedom this model freezes. See `docs/REFERENCES.md`
 section 6.
+
+**Those measured angles have now been adopted, and it settles the diagnosis.**
+`polymers.py` carried 114 deg at both carbons, borrowed from PVDF's justification,
+which does not transfer. With 123/114 the same ten-bond all-trans measurement
+gives **74 kcal/mol against PVDF's 11** - a factor of 4.2 removed by nothing but
+using the right angle - and the drop available by rotating every bond away from
+trans falls from 79 kcal/mol to 4.0, so all-trans goes from grossly unphysical to
+very nearly a local minimum. The residual 74 is what rigid geometry still costs;
+the 239 that vanished was the wrong input.
+
+Two consequences, one good and one a real loss of capability.
+
+*The good one.* Ask the model which torsions make a TG+TG- repeat close under
+these backbone angles, and it answers **175.3 deg and 49.4 deg with a chain repeat
+of 4.677 A** - the published torsion pair to within half a degree and the measured
+4.68 A fibre repeat to 0.06%. Under the old equal angles the same closure search
+could only answer "trans exactly 180, gauche 49.6" and gave 4.491 A, 4.0% short,
+and the published 175/49 pair did not close at all. So the wide CH2 angle is what
+*creates* the trans deflection the crystallography reports: the 9 deg of curl per
+repeat that unequal angles introduce is exactly what a 5 deg deflection of each
+trans bond cancels. That is a structural prediction recovered from geometry alone.
+
+*The loss.* That same 9 deg of curl means **no PVDC conformation closes at ideal
+RIS angles any more**. An all-trans chain with unequal backbone angles is a
+planar circular arc, not a straight stem, with zero rise per repeat; ideal
+TG+TG- carries the same 9 deg. `periodic_chain` refuses every one of them, so the
+phase-1 claim that "the whole funnel runs on PVDC" now holds only through
+`periodic_chain_from_torsions` with the deflected torsions above. The RIS fit,
+the enumeration and the helix analysis are unaffected; only ideal-angle packing
+is lost, and it was packing a chain the polymer does not adopt.
 
 The lesson generalises: the rigid-bond-angle assumption is already flagged as a
 compromise for PVDF, where it is second order. For any substituent bulkier than
@@ -227,8 +257,10 @@ are placed as mirror images of one another, so a multi-atom pendant does not by
 itself create a stereocentre.
 
 The finding is the phase-1 one again, worse. All-trans Lennard-Jones strain, on
-the same 10-bond oligomer that gave PVDF 9 kcal/mol and PVDC 313: **AN 88,
-VDCN 176, FANOME 1.0e6**. AN and VDCN are strained but finite and comparable
+the same 10-bond oligomer that gives PVDF 11 kcal/mol and PVDC 74 (9 and 313
+before the geometry corrections; AN, VDCN and FANOME are unaffected by them,
+since neither PVDF's bond length nor PVDC's angles enter their definitions):
+**AN 88, VDCN 176, FANOME 1.0e6**. AN and VDCN are strained but finite and comparable
 with CFE (162) and CDFE (199); every rotation away from trans still lowers the
 energy by tens of kcal/mol, so all-trans remains a poor RIS reference for them,
 though a usable-if-suspect one in the same sense it is for the chlorine
@@ -355,12 +387,16 @@ chain exactly, and the per-row gradient path returns finite energies.
 
 The strain finding from phase 1 has now recurred twice more and is worth
 stating as a general limit rather than a per-chemistry quirk. All-trans
-Lennard-Jones strain, same measurement each time: PVDF 9, CFE 162, CDFE 199,
-PVDC 313, AN 88, VDCN 176, FANOME about 1e6 kcal/mol. Only PVDF has an
-all-trans chain that is a sensible RIS reference. For everything bulkier the
-planar zigzag is strained enough that any rotation lowers the energy, so the
-convention of measuring RIS energies from all-trans is measuring from a state
-the polymer would never occupy.
+Lennard-Jones strain, same measurement each time: PVDF 11, CFE 162, CDFE 199,
+PVDC 74, AN 88, VDCN 176, FANOME about 1e6 kcal/mol. (PVDF and PVDC re-measured
+after the geometry corrections, from 9 and 313; the other five are unchanged and
+still carry the equal 114 deg backbone angles, which for CFE and CDFE in
+particular is the same borrowed assumption PVDC's correction just overturned and
+is therefore the obvious next thing to check.) Only PVDF has an all-trans chain
+that is a sensible RIS reference, and PVDC is now the near miss rather than the
+worst case. For everything bulkier the planar zigzag is strained enough that any
+rotation lowers the energy, so the convention of measuring RIS energies from
+all-trans is measuring from a state the polymer would never occupy.
 
 FANOME is the extreme case and is instructive: its all-trans chain puts methyl
 hydrogens of methoxy groups on consecutive substituted carbons 0.80 A apart.

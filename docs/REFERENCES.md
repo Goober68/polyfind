@@ -16,9 +16,12 @@ and a verdict:
 
 Where sources disagree the entry gives the range rather than picking a winner.
 
-Numbers that would change computed results are **not** applied here.  They are
-collected under [Changes that need re-measurement](#changes-that-need-re-measurement)
-at the end.
+Numbers that would change computed results used to be collected, unapplied, at
+the end of this file.  **That batch has now been applied and every table it
+touches regenerated**; what each correction did to agreement with experiment,
+including the two places where it made agreement worse, is under
+[Changes that were re-measured](#changes-that-were-re-measured).  The pending
+list is empty.
 
 ## Index
 
@@ -26,7 +29,7 @@ at the end.
 |---|---|---|
 | 1.1 | beta-PVDF cell 8.58 x 4.91 x 2.56, rho 1.97 | confirmed |
 | 1.2 | alpha/delta-PVDF cell 4.96 x 9.64 x 4.62, rho 1.92 | confirmed |
-| 1.3 | gamma-PVDF cell 4.96 x 9.67 x 9.20, rho 1.94 | **corrected** (rho 1.93; cell is monoclinic, beta ~ 93 deg) |
+| 1.3 | gamma-PVDF cell 4.96 x 9.67 x 9.20, rho 1.94 | **corrected and applied** (rho now 1.93; cell is monoclinic, beta ~ 93 deg, which the packing model cannot express) |
 | 1.4 | PE cell 7.42 x 4.95 x 2.55, rho 1.00, Pnam | confirmed (a room-temperature determination) |
 | 1.5 | PE herringbone, setting angle +/-48 deg from a, chain 2 offset by c/2 | herringbone and angle confirmed (from-a range 41-48.8 deg); the c/2 offset is a parametrisation artifact, **not** the crystal |
 | 2.1 | beta = TTTT, alpha/delta = TGTG', gamma/epsilon = T3GT3G' | confirmed |
@@ -40,7 +43,7 @@ at the end.
 | 4.2 | delta and epsilon are the polar/antipolar partners of alpha and gamma | confirmed |
 | 5 | alpha and beta nearly degenerate, alpha slightly favoured | confirmed |
 | 6.1 | PVDC does not adopt a planar zigzag | confirmed (it is a glide TGTG') |
-| 6.2 | PVDC's two backbone angles are both 114 deg | **wrong** (123 and 114 deg) |
+| 6.2 | PVDC's two backbone angles are both 114 deg | **wrong**; 123 and 114 deg, now applied |
 | 7.1 | HH/TT defects, a few percent, known to stabilise beta | abundance confirmed, effect **unverified** |
 | 7.2 | UFF Lennard-Jones parameters | confirmed |
 | 7.3 | PVDF about half crystalline; melt ~450 K | crystallinity confirmed; 450 K **unverified** |
@@ -93,8 +96,9 @@ Note the crystal system is reported two ways.  Because beta = 90 deg exactly, th
 cell is pseudo-orthorhombic and several sources call it orthorhombic (e.g.
 *"orthorhombic, a = 0.496 nm, b = 0.964 nm, c = 0.462 nm"*, Orientation of PVDF
 alpha and gamma crystals in nanolayered films, Table 2); the space group P2_1/c
-is monoclinic.  Nothing in `polyfind` depends on the distinction, since the cell
-angle is a free variable in the search.
+is monoclinic.  Nothing in `polyfind` depends on the distinction here, because
+this cell's beta really is 90 deg; where a reference cell's beta is *not* 90 deg,
+as for gamma, the packing model cannot represent it at all (see 1.3).
 
 **Sources**: Hasegawa et al. 1972 (above); Itoh thesis Table 4.2; Ramer & Stiso
 [arXiv:cond-mat/0508561](https://arxiv.org/abs/cond-mat/0508561)
@@ -108,8 +112,9 @@ a = 4.96, b = 9.64, c = 4.62, all angles 90 deg in
 
 ### 1.3 gamma-PVDF (Form III) cell and density
 
-**Claim** (`EXPERIMENTAL_CELLS["pvdf"]["gamma/epsilon (T3GT3G')"]`, and the
-DESIGN 5.2 table): a = 4.96, b = 9.67, c = 9.20 A, density 1.94 g/cm^3.
+**Claim as it stood** (`EXPERIMENTAL_CELLS["pvdf"]["gamma/epsilon (T3GT3G')"]`,
+and the DESIGN 5.2 table): a = 4.96, b = 9.67, c = 9.20 A, density 1.94 g/cm^3.
+The density now reads 1.93; see the verdict.
 
 **Verified**: the three edge lengths are right, but two things are missing or
 off.
@@ -120,9 +125,16 @@ space group Cc.  Lovinger's determination gives a = 4.97, b = 9.66, c = 9.18 A,
 beta = 92.9 deg.  An earlier orthorhombic cell (Weinhold, Litt & Lando, space
 group C2cm) gives a = 4.96, b = 9.58, c = 9.23 A.  So the spread across sources
 on b is 9.58-9.67 A and on c is 9.18-9.23 A, and the monoclinic angle of about
-93 deg that two of the three carry is not recorded in `EXPERIMENTAL_CELLS`.
-That is a reporting omission, not an error in the search, which fits the cell
-angle freely.
+93 deg that two of the three carry was not recorded in `EXPERIMENTAL_CELLS`.
+An earlier version of this entry called that a reporting omission "not an error
+in the search, which fits the cell angle freely".  **That was wrong.**  The angle
+the search fits freely is the crystallographic gamma, between a and b; alpha and
+beta are 90 deg by construction, because `pack` puts the chain axis along z and
+builds a and b perpendicular to it.  gamma-PVDF's unique angle is beta, between a
+and the chain axis, so it is precisely the one that cannot be fitted.  The angles
+are now recorded in `pipeline.REFERENCE_CELL_ANGLES` together with the fact that
+the package approximates this cell as orthorhombic and what that costs (0.14% in
+volume; see the re-measurement section at the end).
 
 *The density does not follow from the cell.*  4.96 x 9.67 x 9.20 A with Z = 8
 CH2CF2 units gives **1.928** g/cm^3 (1.930 with beta = 93 deg), not 1.94.  The
@@ -140,9 +152,13 @@ Polym. Lett. Ed. **17**, 585 (1979) and Macromolecules **13**, 1178 (1980)
 (cited as ref. 7 by Ramer & Stiso for the C2cm alternative).  Itoh thesis
 Table 4.2.
 
-**Verdict: corrected** - edges confirmed, density should read 1.93 for the cell
-as tabulated, and the cell is monoclinic with beta ~ 93 deg.  See
-[Changes that need re-measurement](#changes-that-need-re-measurement).
+**Verdict: corrected, and applied** - edges confirmed; the density now reads 1.93
+for the cell as tabulated; and the cell is monoclinic with beta ~ 93 deg, which
+`polyfind.pack` **cannot express** (its alpha and beta cell angles are 90 deg by
+construction, only the a-to-b gamma being free), so the package approximates the
+gamma cell as orthorhombic and `pipeline.REFERENCE_CELL_ANGLES` records both the
+real angles and that limitation.  See
+[Changes that were re-measured](#changes-that-were-re-measured).
 
 ### 1.4 Polyethylene cell, space group and density
 
@@ -724,8 +740,17 @@ above"* - the reason being beta-PVDF's equal angles.
 are measured as **123 deg at the CH2 carbon and 114 deg at the CCl2 carbon** -
 unequal by 9 deg, and unequal for a physical reason.
 
-**Verdict: wrong.**  The comment has been corrected; the value has not been
-changed, because it moves every PVDC energy.  Queued below.
+**Verdict: wrong, and now corrected in the code.**  `polymers.py` carries 123 deg
+at the CH2 carbon and 114 at the CCl2 carbon.  The ten-bond all-trans
+Lennard-Jones strain falls from 313 kcal/mol to 74, and the energy available by
+rotating away from all-trans from 79 kcal/mol to 4.0, so the reference-state
+artifact the audit diagnosed is largely gone.  The correction also reproduces the
+published *chain*: the torsions that close a TG+TG- repeat under these angles come
+out at 175.3 and 49.4 deg with a repeat of 4.677 A, against Takahagi's 175 deg,
+49 deg and 4.68 A - and under the old equal angles the same search could only
+answer "trans exactly 180" and 4.491 A.  It costs the ability to pack PVDC at
+ideal RIS angles, because unequal angles give every repeat 9 deg of curl.  Full
+before-and-after in [Changes that were re-measured](#changes-that-were-re-measured).
 
 ---
 
@@ -879,26 +904,73 @@ P. Corradini, Nuovo Cimento Suppl. **15**, 40 (1960), which I did not read.
 
 ---
 
+## Changes that were re-measured
+
+**All four have now been applied**, together, and every table they touch has been
+regenerated: `DESIGN.md` 5.1, 5.2, 5.3, 5.5, 5.7, 5.8, 5.9 and 5.10,
+`docs/CHEMISTRY_EXTENSION.md` phases 1 and 3, `docs/VALENCE_FIT.md` section 4 and
+its acceptance table, `docs/DFT_FIT.md`'s acceptance table, and
+`docs/BENCHMARK.md`'s stage timings.  Each document says which potential produced
+its numbers.  The pending list below this section is now empty.
+
+| # | Where | Was | Is | What it did |
+|---|---|---|---|---|
+| 1 | `polymers.py`, `PVDF.bond_length` | 1.54 A | **1.528 A** (Itoh, Form I crystal) | Applied.  Beta's chain repeat 2.583 -> 2.563 A against an experimental 2.56, error +0.90% -> +0.12%.  **But alpha's and gamma's got worse** (-1.40% -> -2.17% and -0.97% -> -1.74%), and every PVDF density rose about 1% in a potential that already over-predicts them.  Net: better on the polymorph the number comes from, worse on the other two. |
+| 2 | `polymers.py`, `PVDC` backbone angles | 114.0 deg at both carbons | **123 deg at CH2, 114 deg at CCl2** (Takahagi et al. 1988; section 6.2) | Applied.  Ten-bond all-trans strain 313 -> 74 kcal/mol, and the drop available by rotating away from trans 79 -> 4.0, so the reference-state artifact is largely gone - the audit's diagnosis, confirmed.  It also **recovers the published chain**: the torsions that close a TG+TG- repeat come out 175.3 and 49.4 deg with c = 4.677 A, against a measured 175, 49 and 4.68.  Cost: with unequal angles no PVDC chain closes at *ideal* torsions (9 deg of curl per repeat), so ideal-angle packing of PVDC is no longer possible. |
+| 3 | `pipeline.py`, gamma density | 1.94 | **1.93** for the cell as tabulated (section 1.3) | Applied.  Report-only, but it makes the *reported* agreement worse rather than better: the packed gamma density is 1.960, which was -0.1% against the mismatched 1.94 and is +1.5% against the correct 1.93.  The old agreement was an accident of comparing a density from one determination with a cell from another. |
+| 4 | `pipeline.py`, gamma cell | orthorhombic (a, b, c) | monoclinic, **beta ~ 93 deg** (section 1.3) | **Not expressible; documented instead.**  See below. |
+
+### Item 4: the monoclinic cell is not expressible, and this is why
+
+The entry above used to say "the search already fits the cell angle freely, so no
+predicted quantity changes".  That is wrong, and checking it was the point of
+this exercise.
+
+`polyfind.pack` builds the cell as `a = (a, 0, 0)`, `b = (b cos g, b sin g, 0)`
+and `c = (0, 0, c)`, with the chain axis along z.  The free angle is therefore the
+crystallographic **gamma**, between a and b, in the plane perpendicular to the
+chains; `default_bounds` pins it at 90 deg unless `pack(..., gamma_free=True)` is
+passed, and with that flag it does move (gamma-PVDF settles at 87.2 deg, 0.08
+kcal/mol per monomer below the right-angled cell).  **alpha and beta are 90 deg by
+construction and no flag changes that**: nothing in the parametrisation can tilt a
+lattice vector out of the plane normal to the chain axis, and `to_cif` writes both
+as 90 unconditionally.
+
+gamma-PVDF's unique angle is beta = 93 deg, between a and the chain axis c.  It is
+exactly the one the model cannot represent.  The package therefore **approximates
+the gamma cell as orthorhombic**, and `pipeline.REFERENCE_CELL_ANGLES` now records
+the real angles and says so, rather than the table silently implying right angles.
+
+What the approximation costs, measured: a lattice translation along a would carry
+a z-component of `a cos(beta)` = -0.26 A, which the model must set to zero, and
+the cell volume changes by `sin(beta)` = 0.9986, so the best density the model
+could reproduce differs from the monoclinic one by 0.14%.  That is well inside the
+0.5% granularity of a two-decimal density and far inside this potential's own
+3 to 9% cell-edge errors, so no reported number is affected.  It would matter to a
+structure comparison at crystallographic precision, and to nothing here.
+
+### Not re-measured, and why
+
+Two things these corrections moved that have deliberately *not* been regenerated:
+
+* **the fits themselves.**  `pvdf-crystal-fit`, `pvdf-dft-fit` and
+  `pvdf-dft-valence` were fitted at the old geometry, over 25 minutes, 40 seconds
+  and 260 seconds respectively.  Their *parameters* are unchanged, so what the
+  documents quote as fit outcomes (objective values, held-out errors, ablation
+  tables) still describes those runs.  Everything that is a straight *evaluation*
+  of a shipped preset - acceptance tests, polarizations, cell predictions - has
+  been re-measured and is marked as such.  Refitting is a separate job.
+* **the inline records in `src/polyfind/fitting.py`.**  That file is not owned by
+  this change and was not edited, so its comments still quote the pre-correction
+  acceptance numbers (-4.54 and -2.96 kJ/mol per monomer, RIS margin 0.18, PVDC
+  strain 313).  The re-measured values are in `docs/DFT_FIT.md` and
+  `docs/VALENCE_FIT.md`; the comments should be brought into line the next time
+  that file is touched.
+
 ## Changes that need re-measurement
 
-Numbers that are wrong or imprecise but that would move computed results.  None
-of these has been applied.  They are batched deliberately, so that one
-re-measurement of the DESIGN section 5 tables absorbs all of them at once.
-
-| # | Where | Now | Should be | Effect |
-|---|---|---|---|---|
-| 1 | `polymers.py`, `PVDF.bond_length` | 1.54 A | **1.528 A** (Itoh, Form I crystal) | *Already queued before this audit.*  Moves the computed beta repeat from 2.583 to 2.563 A against an experimental 2.56; shifts every PVDF energy. |
-| 2 | `polymers.py`, `PVDC` backbone angles | 114.0 deg at both carbons | **123 deg at CH2, 114 deg at CCl2** (Takahagi et al. 1988; section 6.2) | Shifts every PVDC energy, and would substantially reduce the 313 kcal/mol all-trans strain that `docs/CHEMISTRY_EXTENSION.md` phase 1 reports.  Note this needs unequal backbone angles per repeat, which the model already supports. |
-| 3 | `pipeline.py`, gamma density | 1.94 | **1.93** for the cell as tabulated (section 1.3) | Report-only: `EXPERIMENTAL_CELLS` is printed for comparison, never used in an energy.  Changing it edits a printed table, so it is batched with the rest. |
-| 4 | `pipeline.py`, gamma cell | orthorhombic (a, b, c) | monoclinic, **beta ~ 93 deg** (section 1.3) | Report-only, same reason.  The search already fits the cell angle freely, so no predicted quantity changes. |
-
-Items 1 and 2 are the substantive ones: they move every PVDF and every PVDC
-energy respectively.  Items 3 and 4 are cosmetic in the strict sense that no
-energy depends on them; they are listed here rather than fixed inline only
-because they alter a table that appears in `DESIGN.md`, and this project is
-batching such edits.
-
-Two numbers that were candidates for this list and are deliberately *not* on it:
+None outstanding.  Two numbers that were candidates for the list above and are
+deliberately *not* on it:
 
 * the polyethylene c of 2.55 A - an intermediate draft of this file had it down
   as too high, on the strength of Bunn's 1939 value of 2.534 A.  That was wrong:

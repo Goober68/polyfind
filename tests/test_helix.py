@@ -58,7 +58,8 @@ def test_pvdf_polymorph_chain_repeats():
     beta = helix_parameters(PVDF, [T, T], THREE_STATE)
     alpha = helix_parameters(PVDF, [T, GP, T, GM], THREE_STATE)
     gamma = helix_parameters(PVDF, [T, T, T, GP, T, T, T, GM], THREE_STATE)
-    assert abs(beta.rotation_per_period) < 1e-6 and beta.c == pytest.approx(2.58, abs=0.02)
+    # expt 2.56; 2.563 with the DFT Form I C-C of 1.528 A, 2.583 with the old 1.54
+    assert abs(beta.rotation_per_period) < 1e-6 and beta.c == pytest.approx(2.563, abs=0.005)
     assert abs(alpha.rotation_per_period) < 1e-6 and 4.3 < alpha.c < 4.9  # expt 4.62
     assert abs(gamma.rotation_per_period) < 1e-6 and 8.8 < gamma.c < 9.5  # expt 9.20
     assert beta.radius_all > beta.radius_backbone > 0

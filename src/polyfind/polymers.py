@@ -406,13 +406,11 @@ class Polymer:
 PVDF = Polymer(
     name="pvdf",
     formula="-(CH2-CF2)n-",
-    # Queued improvement, deliberately not applied yet: the DFT Form I structure gives a
-    # C-C distance of 1.528 A, which puts the computed chain repeat at 2.563 A against an
-    # experimental 2.56, where the 1.54 A used here gives 2.583.  Changing it shifts every
-    # PVDF energy, so it belongs with the next full re-measurement of the documented
-    # tables rather than on its own; the potential is unfitted and contributes 3-6% cell
-    # errors, which dwarf this 0.9%.
-    bond_length=1.54,
+    # APPLIED, with the full re-measurement of the DESIGN section 5 tables: the DFT
+    # Form I structure gives a C-C distance of 1.528 A, not the textbook 1.54 A this
+    # used to carry.  See docs/REFERENCES.md, "Changes that were re-measured", for the
+    # before/after on every quantity it moved.
+    bond_length=1.528,
     backbone=(
         # Equal backbone angles at both carbons, and exactly trans, is not a compromise:
         # it is what the accepted beta-PVDF structure has.  A DFT study of Form I gives a
@@ -449,40 +447,48 @@ PE = Polymer(
 # so steric crowding rather than electrostatics dominates its conformational
 # preferences.  Charges are illustrative and each backbone atom is neutral, as for
 # PVDF; the C-Cl dipole is set smaller than C-F, chlorine being the less
-# electronegative.  Backbone angles are kept equal for the reason given above.
+# electronegative.
 #
-# That last sentence borrows PVDF's justification, and for PVDC it does not hold.
-# The published structure (Takahagi, Chatani, Kusumoto & Tadokoro, Polym. J. 20,
-# 883 (1988)) has *unequal* backbone angles, C-CH2-C = 123 deg and C-CCl2-C = 114
-# deg, the wide one being exactly how the real chain relieves the Cl...Cl crowding
-# that the strain note below measures.  Applying it would shift every PVDC energy,
-# so it is queued rather than changed; see docs/REFERENCES.md, "Changes that need
-# re-measurement".
+# The backbone angles are *unequal*, and that is measured rather than assumed.  An
+# earlier version of this entry set both to 114 deg, borrowing the justification
+# PVDF's comment gives for its equal angles; for PVDC that justification does not
+# hold.  The published structure (Takahagi, Chatani, Kusumoto & Tadokoro, Polym. J.
+# 20, 883 (1988)) has C-CH2-C = 123 deg and C-CCl2-C = 114 deg, the wide one being
+# exactly how the real chain relieves the Cl...Cl crowding that the strain note
+# below measures.  An independent check agrees: fitted against DFT data with no
+# crystallographic input, relax_backbone_angles recovers 123.1 deg at the CH2 carbon
+# (docs/VALENCE_FIT.md section 4).
 #
-# Caveat, measured rather than assumed: with these rigid angles the all-trans
-# chain carries about 313 kcal/mol of Lennard-Jones strain (PVDF: 9), because a
-# planar zigzag cannot relieve Cl...Cl contact when the angles cannot open.
-# Every rotation away from trans lowers the energy, so all-trans is not a
-# sensible RIS reference for this chemistry and its fitted energies should not
-# be trusted.  That is qualitatively right -- PVDC does not adopt the planar
-# zigzag that PVDF's beta phase does -- but the magnitude is an artifact of
-# frozen bond angles.  Making the backbone angles refinement variables is the
-# principled fix; see docs/CHEMISTRY_EXTENSION.md.
+# Caveat, measured rather than assumed: with rigid angles the all-trans chain is
+# strained, because a planar zigzag cannot relieve Cl...Cl contact when the angles
+# cannot open.  Opening the CH2 angle to its measured 123 deg takes three quarters of
+# that away -- the ten-bond all-trans Lennard-Jones strain falls from 313 kcal/mol at
+# the old 114/114 to 74 at 123/114, against PVDF's 11 -- which is the audit's
+# diagnosis confirmed at first hand.  All-trans is still not a minimum: rotating every
+# bond together still lowers the energy, but by 4.0 kcal/mol rather than the 79 the
+# equal angles gave, so the reference state is now nearly metastable rather than
+# grossly unphysical.  It is still not the *crystal* conformation, which is a glide
+# TGTG' form, so PVDC's fitted first-order energies remain measured from a state the
+# chain does not adopt.  Letting the angles relax under a potential that has a bend
+# term is the principled fix; see docs/CHEMISTRY_EXTENSION.md and
+# docs/VALENCE_FIT.md section 4.
 #
-# That fix now exists on the potential side and the artifact is confirmed as one.
-# :class:`polyfind.forcefield.SimpleFF` can carry harmonic bond and angle terms, and
-# with them :func:`polyfind.forcefield.relax_backbone_angles` lets the all-trans chain
-# open its angles: PVDC's 313 kcal/mol falls to 12, and the relaxed backbone angles come
-# out 123.1 deg at CH2 and 102.1 at CCl2 against the published 123 and 114 -- the wide
-# angle to a tenth of a degree, the narrow one 12 deg too closed.  The 114/114 written
-# here is still what the *rigid* builder uses, so nothing above moves; docs/VALENCE_FIT.md
-# section 4 has the table and the caveats.
+# CONSEQUENCE FOR PACKING, and it is a real limitation.  Unequal backbone angles give
+# a planar chain a net 123 - 114 = 9 deg of rotation per two-bond repeat, so at ideal
+# torsions the all-trans PVDC chain is a circular arc rather than a linear stem, with
+# zero rise; ideal TG+TG- carries the same curl.  No PVDC sequence is therefore
+# commensurate at ideal RIS angles and ``periodic_chain`` refuses all of them.  What
+# does close is the chain with the small torsion deflections the real polymer has, and
+# it lands on the published structure: asking which torsions close a TG+TG- repeat
+# under these angles gives 175.3 and 49.4 deg with c = 4.677 A, against Takahagi's
+# 175 deg, 49 deg and a 4.68 A fibre repeat.  Build it with
+# ``periodic_chain_from_torsions``; see tests/test_pvdc.py.
 PVDC = Polymer(
     name="pvdc",
     formula="-(CH2-CCl2)n-",
     bond_length=1.54,
     backbone=(
-        BackboneAtom("C", "H", 1.09, 114.0, 108.0, -0.20, +0.10),  # CH2
+        BackboneAtom("C", "H", 1.09, 123.0, 108.0, -0.20, +0.10),  # CH2
         BackboneAtom("C", "Cl", 1.77, 114.0, 110.0, +0.20, -0.10),  # CCl2
     ),
 )
@@ -547,8 +553,8 @@ CDFE = Polymer(
 # CAVEAT, measured rather than assumed, and it is the phase-1 finding made worse.  With
 # bond angles frozen a planar zigzag cannot relieve contact between substituents on 1-3
 # backbone atoms, and a nitrile reaches 2.63 A from the backbone against chlorine's 1.77.
-# All-trans Lennard-Jones strain on a 10-bond oligomer, against PVDF's 9 kcal/mol and
-# PVDC's 313:  AN 88, VDCN 176, FANOME 1.0e6.  AN and VDCN are strained but finite and
+# All-trans Lennard-Jones strain on a 10-bond oligomer, against PVDF's 11 kcal/mol and
+# PVDC's 74:  AN 88, VDCN 176, FANOME 1.0e6.  AN and VDCN are strained but finite and
 # comparable with CFE (162) and CDFE (199); FANOME's all-trans chain is not a physical
 # structure at all -- methyl hydrogens of methoxy groups on consecutive substituted
 # carbons come 0.80 A apart, and that is robust to the frozen rotamer (every C-O azimuth
