@@ -156,3 +156,64 @@ and equally useful thing to learn.
    calibrates the mechanism directly and is one calculation.
 
 Any of these is a large improvement on what the coefficient currently rests on.
+
+## Consumer response — elastic cross-check, 2026-09-10
+
+Thank you, and the Berry nondeterminism catch is the important part of that
+status: a silent parallelism-dependent result in the one quantity this whole
+request exists to obtain is exactly the failure that would have propagated into
+our fit unnoticed. Enforcing one rank and one thread, and requiring each Berry
+stage to reload the saved wavefunctions, is the right response.
+
+Your normal stiffnesses let us cross-check immediately, and the result is two
+agreements and one outlier worth your attention.
+
+**Axis mapping used.** Please confirm it, because reversing it inverts the
+conclusion. Your cell is `a=8.3583, b=4.7314 (polar), c=2.5802`. Ours is
+`a=4.542, b=8.546, c=2.600`, with the polar axis first. So we read your **b**
+against our **a**, your **a** against our **b**, and chain against chain.
+
+| direction | yours (GPa) | ours, illustrative | ours, fitted | published DFT |
+|---|---|---|---|---|
+| chain (your c, our c) | 315.9 | - | **328.4** | 287-341 |
+| polar transverse (your b, our a) | 25.2 | 45.3 | **21.9** | about 20-25 |
+| other transverse (your a, our b) | **111.9** | 38.4 | **17.1** | about 20-25 |
+
+Cells agree well: our polar axis 4.542 against your 4.731 (4% low), our long axis
+8.546 against your 8.358 (2% high), chain 2.600 against your 2.580 (0.8% high).
+
+**The chain axis agreeing to 3.9% is the headline.** Two independent routes, a
+fitted classical potential here and PBE-D3 there, on the quantity we had only
+been able to compare against literature. That is mutual validation.
+
+**The polar transverse agrees to 13%**, and both land in the published range.
+
+**Your a-direction constant of 111.9 GPa is the outlier, and we would query it
+before using it.** It is about five times our fitted value and about five times
+the published DFT transverse constants for this phase, while your b-direction
+constant matches both. A van der Waals-bonded direction in a polymer crystal
+being stiffer than 100 GPa is surprising on its face.
+
+The hypothesis we would test first is **under-relaxation of chain
+reorientation**. Transverse compliance in these crystals comes mostly from the
+chains rotating about their own axes and sliding, rather than from compressing
+contacts. If the relaxation at fixed strain did not fully release the setting
+angles and the relative axial shift, the result approaches a clamped constant,
+which is stiff. Two cheap diagnostics: compare the relaxed-ion value against the
+clamped-ion one for that axis specifically, since a large gap there and a small
+gap on b would confirm it; and check how far the setting angles actually moved
+between the zero-strain and plus-two-percent a cells.
+
+It may equally be real and our transverse constants may be the wrong ones. But
+the asymmetry between your two transverse directions is the thing we would want
+explained before either of us builds on it.
+
+**On our side**, our own transverse constants carry a caveat in the other
+direction: the fitted potential roughly halves them against the illustrative one
+and moves them toward the published range, which is consistent with the
+illustrative potential being too stiff rather than with our fit being validated.
+
+**No change to the request.** A clean 13-cell Berry sweep remains what we need,
+and holding the polarization derivatives back until branch unwrapping, linearity
+and curvature checks pass is the right call. We would rather wait than refit
+against a rejected sweep.
