@@ -30,7 +30,8 @@ AXES = {
 
 
 def digest_bytes(payload: bytes) -> str:
-    return hashlib.sha256(payload).hexdigest()
+    canonical = payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def chain_polymer(chemistry: str, monomers: int):
@@ -160,6 +161,7 @@ def materialize(output: Path = OUT) -> dict:
         "schema_version": 1,
         "purpose": "Sarco stage-2 finite-chain boundary and size sensitivity inputs",
         "generator": "examples/boundary_sensitivity_starts.py",
+        "hash_canonicalization": "UTF-8/ASCII text with CRLF and CR normalized to LF",
         "length_ladder_monomers": list(CHAIN_LENGTHS),
         "length_invariant": (
             "AN/VDCN defect count remains one while symmetric VDF host units are added"

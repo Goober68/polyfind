@@ -2,6 +2,7 @@
   "schema_version": 1,
   "purpose": "Sarco stage-2 finite-chain boundary and size sensitivity inputs",
   "generator": "examples/boundary_sensitivity_starts.py",
+  "hash_canonicalization": "UTF-8/ASCII text with CRLF and CR normalized to LF",
   "length_ladder_monomers": [
     5,
     7,

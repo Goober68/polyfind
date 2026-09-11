@@ -9,7 +9,8 @@ Each chain is neutral, H-capped, connected, and initially all-trans. Coordinates
 use `z` for the backbone end-to-end direction, `y` toward the central substituted
 unit's non-H pendants, and `x` to complete the right-handed transverse frame.
 `manifest.json` owns the sequence, stereochemistry statement, complete bond graph,
-atom and backbone indices, axes, SHA-256, and component validation for every XYZ.
+atom and backbone indices, axes, canonical-LF SHA-256, and component validation
+for every XYZ. Line-ending changes between Windows and Linux do not change identity.
 
 The intended Sarco protocol independently varies:
 

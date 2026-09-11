@@ -49,6 +49,7 @@ def test_materialized_inputs_are_deterministic_and_self_describing() -> None:
             payload = (output / record["path"]).read_bytes()
             assert payload == first_payloads[record["path"]]
             assert starts.digest_bytes(payload) == record["sha256"]
+            assert starts.digest_bytes(payload.replace(b"\n", b"\r\n")) == record["sha256"]
             assert record["connected_component_sizes"] == [record["atom_count"]]
 
 
