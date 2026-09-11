@@ -429,7 +429,9 @@ def antipolar_offsets(packer: CrystalPacker, tol: float = 1e-9) -> list[tuple[in
 
 def antipolar_cell_exact(packer: CrystalPacker, bounds: dict | None = None,
                          screen_packer: CrystalPacker | None = None, target: int = 6000,
-                         n_polish: int = 8, maxfev: int = 900) -> tuple[np.ndarray, float, float]:
+                         n_polish: int = 8, maxfev: int = 900, dz_step: float = 0.5,
+                         phi_step: float = 30.0, ab_step: float | None = None,
+                         pol_tol: float = 1e-9) -> tuple[np.ndarray, float, float]:
     """Lowest cell in the exactly-antipolar subspace of :func:`antipolar_offsets`.
 
     Searched the way ``pack()`` searches the unconstrained space, which
@@ -440,39 +442,127 @@ def antipolar_cell_exact(packer: CrystalPacker, bounds: dict | None = None,
     bounded alike nor screened alike, and on a near-degenerate pair of phases that decides
     the answer.
 
-    Returns ``(params, energy_per_monomer, max|P|)``.  The polarization comes back so the
-    caller can check it is zero rather than trust that it is.
+    **The axial scan is a length, not a point count, and that is a correction.**  ``dz`` used
+    to be sampled at four points across the repeat whatever the repeat was.  On a one-monomer
+    all-trans cell that is a 0.64 A step and harmless.  On a **four-monomer gamma-type repeat
+    it is one sample per monomer** -- aliased exactly to the interchain registry the scan
+    exists to search, so the grid can only ever see one registry phase.  On the 30.8 A repeat
+    of the 11:1 VDF/VDCN copolymer it is 7.7 A, three times the 2.56 A monomer period, and
+    this function returned -3.7152 kcal/mol per monomer where a finer scan of the identical
+    subspace returned -3.7514 (``examples/copolymer_readme.py``).
+
+    ``dz_step`` (A), ``phi_step`` (deg) and ``ab_step`` (A) now set the resolution in absolute
+    units, so the grid grows with the repeat instead of thinning out over it.  Two things were
+    wrong and both are fixed, and the measurement says which did what: re-run at the polar
+    cell's own ``(a, b)``, the copolymer's subspace minimum is -3.7514 at *either* dz
+    resolution -- the exact polish recovers the basin from a start the coarse grid scored at
+    +1.01 -- while the fine grid's own screen minimum is -2.93 against the coarse grid's
+    +1.01.  So on that case the 0.036 this function missed came from its **start selection**,
+    which kept only one start per ``(a, b)`` region and so discarded every distinct axial
+    registry, and not from the dz step alone.  The selection is now two-pass (below) and the
+    dz step no longer aliases.
+
+    **And the change moved no number on any phase of ``docs/SCREEN.md``'s screen**, which is
+    recorded here rather than quietly: beta-PVDF's gap is +1.0178 at four dz points and +1.0178
+    at six, alpha's +0.0844 at four and at ten, gamma's +0.6649 at four and at nineteen -- and
+    gamma is exactly the aliased case, four samples across four monomers.  The exact polish
+    recovers the basin from the aliased grid every time it has been checked.  So the fix rests
+    on the aliasing being a provable blindness of the *grid* rather than on any number it
+    changed, and the claim that survives is the weaker one: **any antipolar energy this
+    function produced on a multi-monomer repeat before the change is a lower bound on the
+    search rather than a converged minimum, and on every case checked since, the bound was
+    tight.**
+
+    The grid is scored with the exact kernel (or with ``screen_packer``'s, which an Ewald
+    caller should make its truncated twin, the division of labour ``pack(coulomb="ewald")``
+    already draws), so **the screen's cost now grows linearly with the repeat** -- about
+    20 ms per cell on a 24-atom chain and 280 on a 74-atom one, 5000 cells on a two-monomer
+    repeat and 8000 on a four-monomer one.  ``target`` is the budget the ``(a, b)`` grid is
+    sized from, and ``dz_step``, ``phi_step`` and ``ab_step`` (A, deg, A; the last defaults
+    to the budget, never coarser than six points) are what a caller trades against it on a
+    long repeat, together with a narrowed ``bounds``.  The tabulated screen of
+    :mod:`polyfind.lattice_table` is deliberately *not* used here: its ``dz`` axis is itself
+    eight points across the repeat, which is the same blindness on a long repeat that this
+    function just stopped having.
+
+    ``bounds`` sizes the **screen**; the polish that follows is free in ``(a, b)`` and may
+    return a cell slightly outside them -- measured on beta-PVDF, 0.6 % past the upper edge of
+    ``b``.  That is deliberate, because the object wanted is the true minimum of the subspace
+    rather than the best cell inside a search heuristic, but it does leave the antipolar branch
+    searched over a marginally wider domain than ``pack()``'s bounded polish gives the polar
+    one.  That asymmetry can only matter if the polar optimum sits *on* a bound, which is
+    checkable and for beta-PVDF is not the case (its ``(4.58, 8.55)`` is interior in both axes
+    against bounds of ``(4.33, 9.89)``).  Check it before quoting a gap from a chemistry whose
+    polar cell is at an edge.
+
+    Returns ``(params, energy_per_monomer, max|P|)``.  The subspace is antipolar
+    analytically for every ``(a, b, dz)``, so a non-zero dipole means the construction is
+    broken rather than that the caller chose badly: it is checked here against ``pol_tol``
+    and raised, *and* returned so a caller can assert on it as well.
+
+    **A caller trap worth naming, because it cost this repository a table.**  ``packer`` must
+    be built *inside* the :meth:`FFParameters.applied` block **and resolved through the
+    module** (``polyfind.pack.CrystalPacker``, not a name imported earlier), because
+    ``applied()`` forces the fitted potential by rebinding that class.  A packer built from an
+    earlier-imported name carries the illustrative potential, and then this function's energy
+    and the polar branch's ``pack()`` energy are differences of two *different* potentials.
+    ``examples/screen_electroactive.py`` did that until ``docs/SCREEN.md``'s re-run found it.
     """
     from .pack import default_bounds
 
-    sp = screen_packer or packer
+    score = (screen_packer or packer).energy
     c = float(packer.chain.c)
     bd = bounds or default_bounds(packer.chain)
     # widened at the low edge: antiparallel dipoles can pack denser than the polar screen went
     lo_a, lo_b = 0.85 * bd["a"][0], 0.85 * bd["b"][0]
     branches = antipolar_offsets(packer)
-    n_dz, n_phi = 4, 12
-    n_ab = max(6, int(np.sqrt(target / (len(branches) * n_dz * n_phi))))
-    avs = np.linspace(lo_a, bd["a"][1], n_ab)
-    bvs = np.linspace(lo_b, bd["b"][1], n_ab)
+    # resolution in angstroms and degrees, not in points: a four-point dz scan is fine on a
+    # 2.6 A repeat and blind on a 30.8 A one
+    n_dz = max(4, int(np.ceil(c / float(dz_step))))
+    n_phi = max(4, int(np.ceil(360.0 / float(phi_step))))
+    if ab_step is None:
+        n_ab = max(6, int(np.sqrt(target / (len(branches) * n_dz * n_phi))))
+        n_a = n_b = n_ab
+    else:
+        n_a = max(2, int(np.ceil((bd["a"][1] - lo_a) / float(ab_step))) + 1)
+        n_b = max(2, int(np.ceil((bd["b"][1] - lo_b) / float(ab_step))) + 1)
+    avs = np.linspace(lo_a, bd["a"][1], n_a)
+    bvs = np.linspace(lo_b, bd["b"][1], n_b)
     phis = np.linspace(0.0, 360.0, n_phi, endpoint=False)
     dzs = np.linspace(0.0, c, n_dz, endpoint=False)
+    dz_tol = max(1.0, 2.0 * float(dz_step))
+
+    def near_ab(g, t) -> bool:
+        return abs(g[0] - t[0]) + abs(g[1] - t[1]) < 1.0
+
+    def near_registry(g, t) -> bool:
+        return (abs((g[3] - t[3] + 180.0) % 360.0 - 180.0) < 20.0
+                and abs((g[5] - t[5] + 0.5 * c) % c - 0.5 * c) < dz_tol)
+
     rows = []
     for flip, dphi in branches:
         grid = np.array([[a, b, 90.0, p, p + dphi, z, float(flip)]
                          for a in avs for b in bvs for p in phis for z in dzs])
-        e = sp.energy(grid)
+        e = score(grid)
+        order = np.argsort(e)
         taken = []
-        for i in np.argsort(e):
-            g = grid[i]
-            # spread the starts over different cells: neighbouring (a, b) differ only in
-            # which (phi, dz) the same basin was entered at and all polish to one point
-            if any(abs(g[0] - t[0]) + abs(g[1] - t[1]) < 1.0 for t in taken):
-                continue
-            taken.append(g)
-            rows.append((float(e[i]), g, flip, dphi))
-            if len(taken) >= n_polish:
-                break
+        # Two passes, because the two things a start can be distinct in are not the same
+        # thing.  Pass 1 spreads half the starts over different *cells*, as before, since
+        # neighbouring (a, b) usually differ only in which (phi, dz) the same basin was
+        # entered at.  Pass 2 then fills the rest with distinct *registries* -- a different
+        # (phi, dz) at an (a, b) already taken -- which pass 1 throws away and which on a
+        # long repeat is the basin that was being missed.
+        passes = ((max(1, n_polish // 2), lambda g: any(near_ab(g, t) for t in taken)),
+                  (n_polish, lambda g: any(near_ab(g, t) and near_registry(g, t) for t in taken)))
+        for limit, rejected in passes:
+            for i in order:
+                if len(taken) >= limit:
+                    break
+                g = grid[i]
+                if rejected(g):
+                    continue
+                taken.append(g)
+                rows.append((float(e[i]), g, flip, dphi))
     rows.sort(key=lambda r: r[0])
     best, best_e = None, np.inf
     for _, g, flip, dphi in rows[:n_polish]:
@@ -487,7 +577,14 @@ def antipolar_cell_exact(packer: CrystalPacker, bounds: dict | None = None,
         if r.fun < best_e:
             best = np.array([r.x[0], r.x[1], 90.0, r.x[2], r.x[2] + dphi, r.x[3], float(flip)])
             best_e = float(r.fun)
+    if best is None:
+        raise RuntimeError("no cell in the antipolar subspace could be polished")
     pol = float(np.abs(packer.polarization(best[None])).max())
+    if not pol < pol_tol:
+        raise RuntimeError(
+            f"the antipolar subspace returned a cell with max|P| = {pol:.3e} C/m^2 > {pol_tol:g}: "
+            f"the construction is wrong, not the cell (branches {branches}, "
+            f"chain moment {np.round(chain_moment(packer), 6).tolist()} e.A)")
     return best, best_e / (packer.n_chains * packer.chain.n_monomers), pol
 
 
@@ -528,7 +625,8 @@ def antipolar_cell(packer: CrystalPacker, start: PackResult, maxfev: int = 250) 
 
 
 def predict(case: CrystalCase, params: FFParameters = ILLUSTRATIVE, n_refine: int = 4,
-            refine: bool = True, verbose: bool = False) -> Prediction:
+            refine: bool = True, verbose: bool = False, coulomb: str = "dsf", ewald=None,
+            antipolar: str = "legacy", always_gap: bool = False) -> Prediction:
     """Pack and refine ``case`` under ``params``: the inner loop of the fit.
 
     Table screen (prebuilt, see :func:`screen_table`) -> exact-kernel polish -> continuous
@@ -536,6 +634,21 @@ def predict(case: CrystalCase, params: FFParameters = ILLUSTRATIVE, n_refine: in
     the symmetric branch of :func:`antipolar_cell` is searched as well and the lower of
     the two rigid branches is the one that gets refined, so the fit cannot be fooled by a
     screen that only ever proposes polar starts.
+
+    **The defaults are the fit's and they do not move.**  ``coulomb="dsf"``, ``ewald=None``,
+    ``antipolar="legacy"`` reproduce every number this module has ever recorded, bit for bit.
+    The switches exist so that ``docs/SCREEN.md``'s acceptance-test attribution is
+    reproducible from the shipped code rather than from a one-off script:
+
+    ``coulomb="ewald"`` (with an optional ``ewald=EwaldSpec(...)``) puts the polish, the
+        antipolar branch *and* the refinement on :mod:`polyfind.ewald`; the table screen stays
+        truncated either way, which is the division of labour :func:`polyfind.pack.pack`
+        already draws.
+    ``antipolar="exact"`` measures the antipolar subspace with :func:`antipolar_cell_exact`,
+        which derives it from the chain's own moment, instead of :func:`antipolar_cell`, which
+        assumes a perpendicular moment and is therefore only correct for a helix.
+    ``always_gap=True`` computes the gap for a case not marked ``antipolar`` as well, which is
+        what makes beta and gamma usable as controls on the construction.
     """
     from . import pack as pack_mod
 
@@ -543,13 +656,20 @@ def predict(case: CrystalCase, params: FFParameters = ILLUSTRATIVE, n_refine: in
     table = screen_table(case)  # outside the patch, deliberately
     t0 = time.time()
     with params.applied():
-        results = pack(chain, table=table, n_refine=n_refine, verbose=verbose)
+        results = pack(chain, table=table, n_refine=n_refine, verbose=verbose,
+                       coulomb=coulomb, ewald=ewald)
         rigid = results[0]
         gap = None
-        if case.antipolar:
+        if case.antipolar or always_gap:
             # resolved through the module so that the patched class is the one built
-            packer = pack_mod.CrystalPacker(chain, n_chains=2)
-            anti_params, anti_e = antipolar_cell(packer, rigid)
+            packer = pack_mod.CrystalPacker(chain, n_chains=2, coulomb=coulomb, ewald=ewald)
+            if antipolar == "legacy":
+                anti_params, anti_e = antipolar_cell(packer, rigid)
+            elif antipolar == "exact":
+                screen_pk = None if coulomb == "dsf" else pack_mod.CrystalPacker(chain, n_chains=2)
+                anti_params, anti_e, _ = antipolar_cell_exact(packer, screen_packer=screen_pk)
+            else:
+                raise ValueError(f"unknown antipolar {antipolar!r} (expected 'legacy' or 'exact')")
             gap = anti_e - rigid.energy_per_monomer
             if gap < 0.0:  # the antipolar cell is the ground state: refine that one
                 rigid = packer.result(anti_params)
@@ -559,7 +679,8 @@ def predict(case: CrystalCase, params: FFParameters = ILLUSTRATIVE, n_refine: in
                              rigid.polarization_magnitude, gap, rigid, None, rigid.dihedrals)
             out.seconds = time.time() - t0
             return out
-        ref = refine_crystal(case.polymer, rigid, eps_r=params.eps_r)
+        ref = refine_crystal(case.polymer, rigid, eps_r=params.eps_r,
+                             coulomb=coulomb, ewald=ewald)
         r = ref.result
     out = Prediction(case.key, r.a, r.b, r.c, r.density,
                      r.energy_per_monomer + ref.angle_energy, r.polarization_magnitude,
@@ -1457,9 +1578,21 @@ KJ_PER_KCAL = 4.184
 
 
 def acceptance_tests(params: FFParameters = ILLUSTRATIVE, step: float = 20.0,
-                     verbose: bool = False) -> dict:
-    """Run the three acceptance tests and report each as a pass or a fail with numbers."""
-    preds = predict_all([c for c in ALL_CASES if c.key in ("alpha", "beta")], params, verbose=verbose)
+                     verbose: bool = False, coulomb: str = "dsf", ewald=None,
+                     antipolar: str = "legacy") -> dict:
+    """Run the three acceptance tests and report each as a pass or a fail with numbers.
+
+    ``coulomb``, ``ewald`` and ``antipolar`` go straight to :func:`predict` and default to the
+    fit's own choices, so calling this with no arguments reproduces every recorded score.
+    ``docs/SCREEN.md`` reports the 2x2 over ``coulomb`` and ``antipolar``, which is how test 3's
+    failure is attributed: neither switch moves it, and its margin is a third of the potential's
+    own resolution.  Beta's gap comes back too (``beta_polar_gap``), as the control that shows
+    what the two constructions differ on -- ``+0.0000`` with a polarization of 0.115 C/m^2 for
+    the legacy one, which is beta's own polar minimum, against ``+1.018`` for the exact one.
+    """
+    preds = predict_all([c for c in ALL_CASES if c.key in ("alpha", "beta")], params,
+                        verbose=verbose, coulomb=coulomb, ewald=ewald, antipolar=antipolar,
+                        always_gap=True)
     gap = preds["alpha"].energy_per_monomer - preds["beta"].energy_per_monomer
     gap_kj = gap * KJ_PER_KCAL
     chk = chain_check(params, step=step)
@@ -1475,6 +1608,13 @@ def acceptance_tests(params: FFParameters = ILLUSTRATIVE, step: float = 20.0,
         "alpha_antipolar_pass": bool(polar_gap is not None and polar_gap <= 0.0),
         "alpha_polarization": preds["alpha"].polarization,
         "beta_polarization": preds["beta"].polarization,
+        # beta is the control, not a test: it is the ferroelectric phase, so its gap must come
+        # out positive, and the two antipolar constructions differ on it by 1.02 kcal/mol per
+        # monomer (docs/SCREEN.md).  Reported rather than asserted, since no acceptance test
+        # was ever written for it and adding one now would be changing the score.
+        "beta_polar_gap": preds["beta"].polar_gap,
+        "coulomb": coulomb if coulomb == "dsf" else f"ewald[{getattr(ewald, 'boundary', 'tinfoil')}]",
+        "antipolar_construction": antipolar,
         "predictions": preds,
     }
 
@@ -1490,7 +1630,11 @@ def acceptance_table(result: dict) -> str:
         f"     ranking: {rank}",
         f"  3. alpha E(anti)-E(polar)  {result['alpha_polar_gap']:+8.3f} kcal/mol per monomer "
         f"(want <= 0)                {ok(result['alpha_antipolar_pass'])}",
-        f"     |P| alpha {result['alpha_polarization']:.4f}, beta {result['beta_polarization']:.4f} C/m^2",
+        f"     |P| alpha {result['alpha_polarization']:.4f}, beta {result['beta_polarization']:.4f} C/m^2"
+        + ("" if result.get("beta_polar_gap") is None else
+           f";  beta E(anti)-E(polar) {result['beta_polar_gap']:+.3f} (control, wants > 0)"),
+        f"     sum {result.get('coulomb', 'dsf')}, antipolar construction "
+        f"{result.get('antipolar_construction', 'legacy')!r}",
     ])
 
 

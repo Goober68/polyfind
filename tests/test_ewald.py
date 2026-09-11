@@ -445,3 +445,59 @@ def test_antipolar_subspace_is_derived_not_assumed():
     assert abs(chain_moment(pka)[0]) < 1e-9  # the helix: the old construction was right
     dphi = antipolar_offsets(pka)[0][1]
     assert min(abs(dphi), abs(dphi - 360.0)) < 1e-6
+
+
+def test_antipolar_scan_resolution_is_a_length_not_a_point_count():
+    """``dz`` is sampled every ``dz_step`` angstroms, not four times per repeat.
+
+    The old grid put four ``dz`` points across the repeat whatever the repeat was, which on a
+    four-monomer gamma-type cell is one sample per monomer -- aliased to the interchain
+    registry the scan exists to search.  Two things are asserted, and the second is the
+    measured result rather than the expected one: the resolution now follows the repeat, and on
+    beta-PVDF the change moves the answer by nothing, because the exact polish recovers the
+    basin from the coarse grid as well (``docs/SCREEN.md``).
+    """
+    from polyfind import pack as pack_mod
+    from polyfind.fitting import antipolar_cell_exact
+
+    beta = periodic_chain(PVDF, (T, T), THREE_STATE)
+    pk = pack_mod.CrystalPacker(beta, n_chains=2)
+    # absolute resolution: 0.5 A on a 2.563 A repeat is six samples, where the old fixed count
+    # of four corresponds to a step of c/4
+    assert int(np.ceil(beta.c / 0.5)) == 6
+    kw = dict(target=1500, n_polish=3, maxfev=300)
+    _, e_fine, pol_fine = antipolar_cell_exact(pk, dz_step=0.5, **kw)
+    _, e_coarse, pol_coarse = antipolar_cell_exact(pk, dz_step=beta.c / 4.0, **kw)
+    assert pol_fine < 1e-12 and pol_coarse < 1e-12
+    assert e_fine == pytest.approx(e_coarse, abs=2e-3)
+
+
+def test_antipolar_cell_exact_checks_its_own_polarization():
+    """A non-zero dipole is raised, not returned quietly: the subspace is exact by construction."""
+    from polyfind import pack as pack_mod
+    from polyfind.fitting import antipolar_cell_exact
+
+    beta = periodic_chain(PVDF, (T, T), THREE_STATE)
+    pk = pack_mod.CrystalPacker(beta, n_chains=2)
+    with pytest.raises(RuntimeError, match="the construction is wrong"):
+        # a tolerance no floating-point cell can meet, so the guard has to fire
+        antipolar_cell_exact(pk, target=600, n_polish=2, maxfev=120, pol_tol=1e-30)
+
+
+def test_predict_switches_default_to_the_fit_exactly():
+    """``predict``'s ``coulomb``/``ewald``/``antipolar`` arguments must not move the fit.
+
+    The defaults are the fit's own, so passing them explicitly has to give the identical
+    numbers -- not approximately, exactly -- or every score this module has recorded would be
+    in question.
+    """
+    from polyfind.fitting import ALL_CASES, ILLUSTRATIVE, predict
+
+    beta = next(c for c in ALL_CASES if c.key == "beta")
+    a = predict(beta, ILLUSTRATIVE, refine=False)
+    b = predict(beta, ILLUSTRATIVE, refine=False, coulomb="dsf", ewald=None, antipolar="legacy")
+    assert a.energy_per_monomer == b.energy_per_monomer
+    assert (a.a, a.b, a.c) == (b.a, b.b, b.c)
+    assert a.polar_gap is None and b.polar_gap is None  # beta is not an antipolar case
+    with pytest.raises(ValueError, match="unknown antipolar"):
+        predict(beta, ILLUSTRATIVE, refine=False, antipolar="nonsense", always_gap=True)

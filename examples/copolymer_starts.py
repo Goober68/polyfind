@@ -208,12 +208,16 @@ def registry_sweep(pk, ch, best, best_e, lo, hi, free, dphi=None, flip=None, n_k
 def antipolar_fine(pk, ch, a0, b0, lo, hi, n_phi=24, n_dz=60):
     """A finer screen of the *same* exactly-antipolar subspace antipolar_cell_exact uses.
 
-    ``antipolar_cell_exact`` screens ``dz`` on four points across the whole repeat.  For a
-    twelve-monomer repeat that is a 7.7 A step, coarser than the 2.56 A monomer period the
-    interchain registry actually varies on, so its grid can miss the basin entirely.  This
-    adds a 0.5 A ``dz`` scan and a 15 deg ``phi`` scan at the polar cell's ``(a, b)``, inside
-    the identical subspace, and hands its best starts to the same constrained polish.  The
-    two are compared and the lower is taken.
+    When this was written ``antipolar_cell_exact`` screened ``dz`` on four points across the
+    whole repeat, which for a twelve-monomer repeat is a 7.7 A step -- coarser than the
+    2.56 A monomer period the interchain registry actually varies on -- and it returned
+    -3.7152 where this scan returned -3.7514.  The helper's axial resolution is now a length
+    (``dz_step``, 0.5 A) rather than a point count, so that particular blindness is gone; its
+    remaining cost on a 74-atom, 30.8 A repeat is the ``(a, b)`` axis, at 284 ms per
+    exact-kernel cell.  This stays as the cheap independent check it always was: a 0.5 A
+    ``dz`` scan and a 15 deg ``phi`` scan at the polar cell's own ``(a, b)``, inside the
+    identical subspace, handed to the same constrained polish.  The two are compared and the
+    lower is taken.
     """
     from scipy.optimize import minimize
 

@@ -4,8 +4,18 @@
     python examples/screen_electroactive.py --screen        # step 2: the funnel on every expressible chemistry
     python examples/screen_electroactive.py --candidates    # step 3: new substituent combinations
     python examples/screen_electroactive.py --all --json out.json
+    python examples/screen_electroactive.py --screen --coulomb ewald --only pvdf   # polarity under Ewald
 
 ``docs/SCREEN.md`` is written from this script's output and quotes it.
+
+**The polarity column is reported against the model's own error bar, and mostly comes out
+"cannot tell".**  ``--coulomb ewald`` puts *both* branches of the polar/antipolar comparison
+on the Ewald sum of :mod:`polyfind.ewald` (screened with the truncated twin and polished with
+Ewald, the division of labour ``pack(coulomb="ewald")`` draws); the refined cells, densities
+and lattice ranking stay on the truncated sum, which is the protocol the earlier table was
+measured with, so that one thing changes at a time.  Every gap is printed beside
+:data:`ERROR_BAR`, the fitted potential's own held-out energy error per monomer, and a gap
+inside it is reported as ``not resolved`` rather than as a verdict -- see :func:`verdict`.
 
 **Step 1 is a gate, not a formality.**  ``docs/BENCHMARK.md`` says the piezoelectric
 magnitudes are 5x and 9x short, from a charge-flux coefficient fitted to twelve numbers
@@ -391,9 +401,68 @@ def response_of(polymer, chain, label, valence, flux):
     return resp, rr, res, None
 
 
+# The model's own resolution on a per-monomer lattice energy difference, which every
+# polarity verdict in this script is measured against.
+#
+# ``pvdf-dft-valence``'s held-out energy error is 1.359 kcal/mol RMS over ten chemistries
+# the objective never saw (``docs/VALENCE_FIT.md``; re-measured from the shipped preset, it
+# is 1.3593).  That is a *per-frame* number and the frames are ten-bond oligomers -- eleven
+# backbone carbons, five monomers -- so the comparable quantity for a per-monomer crystal
+# energy is 1.359 / 5 = 0.27 kcal/mol per monomer.  A polarity gap smaller than that is not
+# a prediction: the model does not resolve it.  Both figures are reported, because the
+# per-frame one is the conservative reading and under it nothing here resolves at all.
+ERROR_BAR_PER_FRAME = 1.3593      # kcal/mol, held-out energy RMS of pvdf-dft-valence
+MONOMERS_PER_FRAME = 5            # ten-bond oligomers, eleven backbone carbons
+ERROR_BAR = ERROR_BAR_PER_FRAME / MONOMERS_PER_FRAME  # 0.272 kcal/mol per monomer
+
+
+def verdict(gap: float, error_bar: float = ERROR_BAR) -> str:
+    """``'antipolar'``, ``'polar'`` or ``'not resolved'`` for one polarity gap.
+
+    The gap is ``E(best antipolar cell) - E(best cell overall)`` per monomer, so a negative
+    gap means the crystal prefers antipolar.  Inside +/- ``error_bar`` the model is not
+    deciding anything and saying which side of zero it fell on would be reporting noise.
+    """
+    if abs(float(gap)) <= error_bar:
+        return "not resolved"
+    return "antipolar" if gap < 0.0 else "polar"
+
+
+def _packers(chain, coulomb: str, boundary: str):
+    """``(packer, screen_packer, ewald_spec)`` for the polar/antipolar comparison.
+
+    **Resolved through the module, and that is load-bearing.**
+    :meth:`polyfind.fitting.FFParameters.applied` forces the fitted potential by *rebinding
+    ``polyfind.pack.CrystalPacker``* for the duration of its block, so a name imported with
+    ``from polyfind.pack import CrystalPacker`` before the block -- or at module scope --
+    still points at the original class and builds a packer carrying the **illustrative**
+    potential.  This script used to do exactly that: its polar branch went through
+    ``pack()``, which resolves the class through the module and so was fitted, while its
+    antipolar branch was built from the module-level name and so was not.  **Every antipolar
+    gap it printed was a difference between two different potentials** on top of being a
+    difference between two polar cells (``docs/SCREEN.md``).  ``fitting.predict`` has the
+    same note and does it the same way.
+
+    An Ewald packer screens with its own truncated twin, which is the division of labour
+    ``pack(coulomb="ewald")`` already draws and for the same reason: the reciprocal half of
+    the sum is not pairwise, so it cannot be tabulated or cheaply gridded, and the screen
+    only chooses starts while the polish is exact.
+    """
+    import polyfind.pack as pack_mod
+    from polyfind.ewald import EwaldSpec
+
+    if coulomb == "dsf":
+        return pack_mod.CrystalPacker(chain, n_chains=2), None, None
+    spec = EwaldSpec(boundary=boundary)
+    return (pack_mod.CrystalPacker(chain, n_chains=2, coulomb="ewald", ewald=spec),
+            pack_mod.CrystalPacker(chain, n_chains=2), spec)
+
+
 def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: int = 3,
                fit_step: float = 10.0, fit_monomers: int = 6, mech: int = 1,
-               skip_fit_reason: str | None = None) -> dict:
+               skip_fit_reason: str | None = None, coulomb: str = "dsf",
+               boundary: str = "tinfoil", anti_polish: int = 8, anti_maxfev: int = 900,
+               anti_target: int = 6000, error_bar: float = ERROR_BAR) -> dict:
     """The whole funnel for one chemistry.  Returns a record; prints as it goes."""
     from polyfind.enumerate import KNOWN_CHAINS, enumerate_periodic
     from polyfind.forcefield import fit_ris
@@ -527,14 +596,16 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
     # refinement of torsions, backbone angles and cell, with the bond-angle strain added
     # back into the reported energy.
     from polyfind.fitting import antipolar_cell_exact
-    from polyfind.pack import CrystalPacker
     from polyfind.pack import pack as _pack
     from polyfind.refine import refine_crystal
 
     t0 = time.time()
     packed = []
+    rec["coulomb"] = coulomb if coulomb == "dsf" else f"ewald[{boundary}]"
+    rec["error_bar_per_monomer"] = round(error_bar, 4)
     print(f"  [3] packing {len(wanted)} conformations (exhaustive screen, antipolar branch, "
-          f"refinement; 2 chains per cell):")
+          f"refinement; 2 chains per cell; polarity under "
+          f"{'the truncated 8 A DSF sum' if coulomb == 'dsf' else f'Ewald, {boundary}'}):")
     with FITTED_VALENCE.applied():
         for cand, why in wanted:
             chain, how = build_repeat(polymer, cand.seq, model.states, helix=cand.helix)
@@ -543,23 +614,34 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
                 print(f"      {cand.name:<16s} NOT PACKED: {how}   [{why}]")
                 continue
             try:
-                rigid = _pack(chain, n_chains=2, table_cache_dir=None)[0]
-                packer = CrystalPacker(chain, n_chains=2)
+                packer, screen_pk, spec = _packers(chain, coulomb, boundary)
+                # Both branches of the comparison use the same sum, and an Ewald run screens
+                # both with the truncated twin and polishes both with Ewald -- otherwise the
+                # gap would be a difference of two different summations rather than of two
+                # cells.
+                rigid = _pack(chain, n_chains=2, table_cache_dir=None,
+                              coulomb=coulomb, ewald=spec)[0]
                 # ``antipolar_cell_exact``, not ``antipolar_cell``: the latter's
                 # "flip and equal setting angles" is the antipolar subspace only when the
                 # chain's transverse moment is perpendicular to its own x, which is false
                 # for every planar zigzag, so it compared two *polar* cells for every
-                # all-trans row this script has ever printed (docs/SCREEN.md addendum 2).
-                # The corrected search costs about 10 s per conformation instead of 1.
-                anti_params, anti_e, anti_pol = antipolar_cell_exact(packer)
+                # all-trans row this script printed before docs/SCREEN.md's correction.
+                # Its axial scan is now a length rather than four points, which matters here:
+                # a four-point dz scan of a four-monomer gamma-type repeat lands one sample
+                # per monomer and is aliased to the registry it is supposed to be searching.
+                t_anti = time.time()
+                anti_params, anti_e, anti_pol = antipolar_cell_exact(
+                    packer, screen_packer=screen_pk, target=anti_target,
+                    n_polish=anti_polish, maxfev=anti_maxfev)
                 assert anti_pol < 1e-9, f"antipolar branch is not antipolar: |P| = {anti_pol:.2e}"
+                t_anti = time.time() - t_anti
                 polar_gap = anti_e - rigid.energy_per_monomer
                 if polar_gap < 0.0:
                     rigid = packer.result(anti_params)
                 rr = refine_crystal(polymer, rigid)
                 res = rr.result
                 e_mon = res.energy_per_monomer + rr.angle_energy
-            except (ValueError, RuntimeError, KeyError, np.linalg.LinAlgError) as e:
+            except (AssertionError, ValueError, RuntimeError, KeyError, np.linalg.LinAlgError) as e:
                 packed.append({"name": cand.name, "why": why, "packed": False, "reason": str(e)})
                 print(f"      {cand.name:<16s} NOT PACKED: {e}")
                 continue
@@ -572,8 +654,15 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
                    # ``antipolar_cell_exact`` measures the symmetric antipolar subspace explicitly,
                    # while a refinement started there slides back out of it (the subspace is
                    # not stationary), so the refined cell's own flip flag is not the answer.
-                   "arrangement": "antipolar" if polar_gap < 0.0 else "polar",
+                   # And it is judged against the model's own resolution: inside +/- ERROR_BAR
+                   # the sign of the gap is not a prediction.
+                   "arrangement": verdict(polar_gap, error_bar),
+                   "arrangement_sign": "antipolar" if polar_gap < 0.0 else "polar",
                    "antipolar_gap": round(float(polar_gap), 4),
+                   "antipolar_e_per_monomer": round(float(anti_e), 4),
+                   "polar_e_per_monomer": round(float(rigid.energy_per_monomer), 4),
+                   "antipolar_max_P": float(f"{anti_pol:.3e}"),
+                   "antipolar_seconds": round(t_anti, 1),
                    "flip": int(res.flip),
                    "e_per_monomer": round(e_mon, 4),
                    "angle_strain": round(float(rr.angle_energy), 4),
@@ -583,8 +672,9 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
             packed.append(row)
             print(f"      {cand.name:<16s} {res.row()}   [{why}; {how}]")
             print(f"      {'':<16s} E/mon with angle strain {e_mon:+8.3f}; antipolar minus polar "
-                  f"{polar_gap:+.3f} kcal/mol per monomer; chain dipole per monomer: "
-                  f"transverse {perp:.4f}, axial {axial:+.4f} e.A")
+                  f"{polar_gap:+.3f} +/- {error_bar:.2f} kcal/mol per monomer -> "
+                  f"{row['arrangement'].upper()} ({t_anti:.0f} s, max|P| {anti_pol:.1e}); "
+                  f"chain dipole per monomer: transverse {perp:.4f}, axial {axial:+.4f} e.A")
     rec["timings"]["pack"] = round(time.time() - t0, 2)
     rec["packings"] = packed
     ok = [p for p in packed if p["packed"]]
@@ -597,8 +687,7 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
         print(f"      lattice energy ranking (kcal/mol per monomer, refined, angle strain "
               f"included, relative to the best):")
         for p in rec["lattice_ranking"]:
-            print(f"        {p['name']:<16s} {p['de_per_monomer']:+7.3f}   "
-                  f"{p['arrangement']} preferred")
+            print(f"        {p['name']:<16s} {p['de_per_monomer']:+7.3f}   {p['arrangement']}")
 
     # --- 5. the electromechanical response ------------------------------------------------
     t0 = time.time()
@@ -824,12 +913,19 @@ def print_rules(rules: dict) -> None:
     hdr = (f"  {'polymer':12s} {'phase':<12s} {'w kJ/m3':>8s} {'|P| C/m2':>9s} {'mu_perp':>8s} "
            f"{'rho':>6s} {'C33':>7s} {'C11':>7s} {'d31':>7s} {'dE(TT)':>7s} {'gap':>7s}  arrangement")
     print(hdr)
+    # Any of these can legitimately be None -- ``film_coefficients`` returns None for a cell
+    # with no polarization to pole along, which is exactly what happens when a polar phase
+    # re-packs antipolar, and ``C_33`` is nan on the rigid fallback path.  Formatting them was
+    # a latent crash (AN's TT hit it on this re-run once its polarization collapsed).
+    def num(v, w, p):
+        return (" " * (w - 3) + "n/a") if v is None or not np.isfinite(v) else f"{v:{w}.{p}f}"
+
     for r in sorted(rules["rows"], key=lambda x: -x["work_density"]):
-        dt = "   n/a" if r["de_all_trans_above_ground"] is None else f"{r['de_all_trans_above_ground']:6.2f}"
-        gp = "   n/a" if r["polymorph_gap"] is None else f"{r['polymorph_gap']:6.2f}"
-        print(f"  {r['polymer']:12s} {r['phase']:<12s} {r['work_density']:8.3f} {r['P']:9.4f} "
-              f"{r['chain_dipole_perp']:8.4f} {r['density']:6.3f} {r['C33']:7.1f} {r['C11']:7.2f} "
-              f"{r['d31']:7.2f} {dt:>7s} {gp:>7s}  {r['arrangement']}")
+        print(f"  {r['polymer']:12s} {r['phase']:<12s} {num(r['work_density'], 8, 3)} "
+              f"{num(r['P'], 9, 4)} {num(r['chain_dipole_perp'], 8, 4)} {num(r['density'], 6, 3)} "
+              f"{num(r['C33'], 7, 1)} {num(r['C11'], 7, 2)} {num(r['d31'], 7, 2)} "
+              f"{num(r['de_all_trans_above_ground'], 7, 2)} {num(r['polymorph_gap'], 7, 2)}  "
+              f"{r['arrangement']}")
     print(f"\n  correlation of each feature with the work density (n = {len(rules['rows'])}; "
           f"at this n these describe the sample, they do not establish a rule):")
     for k, v in rules["correlations"].items():
@@ -837,6 +933,53 @@ def print_rules(rules: dict) -> None:
             print(f"    {k:28s} n={v['n']}  not computable")
         else:
             print(f"    {k:28s} n={v['n']}  Pearson {v['pearson']:+.3f}  Spearman {v['spearman']:+.3f}")
+
+
+def print_polarity(records: list, error_bar: float = ERROR_BAR) -> dict:
+    """The polarity column against the model's own error bar, one row per phase.
+
+    This is the table the screen's primary output turns out to be, so it is printed on its
+    own rather than buried in the packing rows: a gap, the resolution of the model that
+    produced it, and whether the verdict is a prediction or a "cannot tell".
+    """
+    rows = []
+    for r in records:
+        for p in r.get("packings", []):
+            if p.get("packed"):
+                rows.append((r["polymer"], p))
+    print("\n" + "=" * 100)
+    print("POLARITY against the model's own error bar")
+    print("=" * 100)
+    print(f"  E(best antipolar cell) - E(best cell), rigid, 2 chains, per monomer.  Negative = the")
+    print(f"  crystal prefers antipolar.  Error bar {error_bar:.2f} kcal/mol per monomer: "
+          f"{ERROR_BAR_PER_FRAME:.3f} held-out")
+    print(f"  energy RMS over ten unseen chemistries, on ten-bond ({MONOMERS_PER_FRAME}-monomer) oligomer frames.")
+    if not rows:
+        print("  nothing packed")
+        return {"rows": [], "n_resolved": 0, "n_total": 0}
+    print(f"\n  {'chemistry':12s} {'phase':<14s} {'mu_perp':>8s} {'gap':>8s} {'+/-':>6s} "
+          f"{'|P| anti':>9s}  verdict")
+    out = []
+    for name, p in rows:
+        out.append({"polymer": name, "phase": p["name"], "gap": p["antipolar_gap"],
+                    "error_bar": round(error_bar, 4), "verdict": p["arrangement"],
+                    "sign": p["arrangement_sign"],
+                    "mu_perp": p["chain_dipole_perp_per_monomer"]})
+        print(f"  {name:12s} {p['name']:<14s} {p['chain_dipole_perp_per_monomer']:8.3f} "
+              f"{p['antipolar_gap']:+8.3f} {error_bar:6.2f} {p['antipolar_max_P']:9.1e}  "
+              f"{p['arrangement']}"
+              + ("" if p["arrangement"] != "not resolved" else f"  (sign alone says {p['arrangement_sign']})"))
+    n_res = sum(1 for r in out if r["verdict"] != "not resolved")
+    print(f"\n  {n_res} of {len(out)} phases resolved; {len(out) - n_res} inside the error bar.")
+    by_chem = {}
+    for r in out:
+        by_chem.setdefault(r["polymer"], []).append(r)
+    n_chem_res = sum(1 for v in by_chem.values() if any(x["verdict"] != "not resolved" for x in v))
+    print(f"  {n_chem_res} of {len(by_chem)} chemistries have at least one resolved phase.")
+    return {"rows": out, "n_resolved": n_res, "n_total": len(out),
+            "n_chemistries_resolved": n_chem_res, "n_chemistries": len(by_chem),
+            "error_bar_per_monomer": round(error_bar, 4),
+            "error_bar_per_frame": ERROR_BAR_PER_FRAME}
 
 
 # --------------------------------------------------------------------------------- main
@@ -851,6 +994,15 @@ def main():
                     help="how many packings per chemistry get a full response (1 = the polar phase)")
     ap.add_argument("--max-period", type=int, default=8)
     ap.add_argument("--k-per-period", type=int, default=40)
+    ap.add_argument("--coulomb", default="dsf", choices=("dsf", "ewald"),
+                    help="electrostatic sum for the polar/antipolar comparison (both branches)")
+    ap.add_argument("--boundary", default="tinfoil", choices=("tinfoil", "vacuum"),
+                    help="Ewald boundary convention; tinfoil is the bulk limit of a screened crystal")
+    ap.add_argument("--error-bar", type=float, default=ERROR_BAR,
+                    help="kcal/mol per monomer below which a polarity gap is 'not resolved'")
+    ap.add_argument("--anti-polish", type=int, default=8, help="antipolar starts polished")
+    ap.add_argument("--anti-maxfev", type=int, default=900, help="function evaluations per antipolar polish")
+    ap.add_argument("--anti-target", type=int, default=6000, help="antipolar screen budget in cells")
     ap.add_argument("--data", default=REF_DATA, help="path to results/field_neighborhood_refined")
     ap.add_argument("--json", default=None, help="write the whole record here")
     args = ap.parse_args()
@@ -860,7 +1012,14 @@ def main():
         ap.error("nothing to do: pass --ranking, --screen, --candidates or --all")
 
     out = {"generated": time.strftime("%Y-%m-%d %H:%M:%S"),
-           "preset": "pvdf-dft-valence (+ pvdf-dft-valence-flux in the mechanics packer)"}
+           "preset": "pvdf-dft-valence (+ pvdf-dft-valence-flux in the mechanics packer)",
+           "coulomb": args.coulomb if args.coulomb == "dsf" else f"ewald[{args.boundary}]",
+           "error_bar_per_monomer": round(args.error_bar, 4),
+           "error_bar_per_frame": ERROR_BAR_PER_FRAME}
+    kw = dict(max_period=args.max_period, k_per_period=args.k_per_period, mech=args.mech,
+              coulomb=args.coulomb, boundary=args.boundary, error_bar=args.error_bar,
+              anti_polish=args.anti_polish, anti_maxfev=args.anti_maxfev,
+              anti_target=args.anti_target)
     t_all = time.time()
 
     if args.ranking:
@@ -880,9 +1039,7 @@ def main():
         for polymer, skip in incumbents():
             if only and polymer.name not in only:
                 continue
-            records.append(screen_one(polymer, max_period=args.max_period,
-                                      k_per_period=args.k_per_period, mech=args.mech,
-                                      skip_fit_reason=skip))
+            records.append(screen_one(polymer, skip_fit_reason=skip, **kw))
         out["incumbents"] = records
 
     cand_records = []
@@ -892,12 +1049,15 @@ def main():
         print("=" * 100)
         print("MODEL SUGGESTIONS, NOT PREDICTIONS.  Illustrative charges, PVDF-fitted potential,")
         print("rigid backbone angles, isotactic-only chirality, two chains per cell.")
+        only = set(args.only.split(",")) if args.only else None
         for polymer in new_candidates():
-            cand_records.append(screen_one(polymer, max_period=args.max_period,
-                                           k_per_period=args.k_per_period, mech=args.mech))
+            if only and polymer.name not in only:
+                continue
+            cand_records.append(screen_one(polymer, **kw))
         out["candidates"] = cand_records
 
     if records or cand_records:
+        out["polarity"] = print_polarity(records + cand_records, args.error_bar)
         rules = design_rules(records + cand_records)
         print_rules(rules)
         out["design_rules"] = rules
