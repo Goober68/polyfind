@@ -278,3 +278,36 @@ Neither ordering nor density will be interpreted until both branches preserve
 topology and converge under the same Hamiltonian. The synchronized nitrile-plane
 tiling and approximately 17% density deficit remain explicit limitations rather
 than facts the relaxation is assumed to erase.
+
+## Sarco result: two distinct stable local basins, 2026-09-11
+
+Both supplied branches ultimately converged under the matched
+MACE-medium+D3/float64 protocol while preserving the exact 592-bond graph and
+eight separate 74-atom chains.
+
+| branch | max force (eV/A) | max stress (MPa) | energy (eV/monomer) | geometric orientation order |
+|---|---:|---:|---:|---:|
+| polar-seeded | 0.000934 | 0.997150 | -36.247794180 | 0.84 |
+| antipolar-seeded | 0.000467 | 0.998162 | -36.241950199 | 0.04 |
+
+The polar-seeded basin is lower by 0.561022 eV per 96-monomer cell, or
+0.134765 kcal/mol/monomer. The branches are not duplicate endpoints: their mean
+absolute chain-setting difference is 71.1 degrees and the relative axial chain
+displacement spread is 1.08 A. The polar torsion inventory is 170 T, 10 G+, 7
+G- and 5 distorted; the antipolar inventory is 164 T, 7 G+, 6 G- and 15
+distorted. Both therefore leave Polyfind's discrete all-trans starting space,
+but they retain their distinct packing polarity proxies.
+
+Each accepted endpoint then passed three independent centroid-preserving 0.02 A
+perturbation/re-relaxation trials under the same physical gates. All six trials
+returned with the exact topology and zero RIS-class changes. Polar non-affine
+atomic RMS return distances were 0.00285-0.00457 A; antipolar distances were
+0.000927-0.00303 A. Energy differences from the corresponding reference were at
+most 0.00283 and 0.000628 meV/monomer, respectively, unresolved at the force and
+stress gates.
+
+This establishes two reproducible local basins under the MLIP, with the polar
+one nominally lower at that tier. The 0.135 kcal/mol/monomer gap is too small to
+promote to a physical phase-ordering claim without periodic higher-tier
+electronic validation. The deterministic perturbation geometries and optimizer
+logs were deleted after extracting compact structural observables and hashes.
