@@ -1018,3 +1018,40 @@ raw Born-component and raw acoustic-sum gates. No ASR-corrected residual
 is allowed to pass the raw-sum convergence gate, and even a passing chain-axis
 ladder will not assert full transverse/cutoff/geometry convergence or accept
 a quantitative piezoelectric fit.
+
+## Producer update, 2026-09-12: all 35 finite-chain shape controls complete
+
+The source-hashed controls completed with all 35 force/topology gates passing.
+Their reference-return verdict is chemistry/length dependent:
+
+| GFN2 relaxed zero reference | Perturbations returning to original internal shape |
+|---|---:|
+| PVDF five/seven/nine-mers | 0/3 at every length |
+| VDCN five/seven-mers | 0/3 at both lengths |
+| VDCN nine-mer (already twisted) | 3/3 |
+| AN five/seven/nine-mers | 3/3 at every length |
+
+The failed-return references reach lower accepted energies without changing RIS
+labels: the largest decreases are 0.0627/0.0829/0.2114 eV for the three PVDF
+lengths and 0.0619/0.1637 eV for VDCN five/seven-mers. These are actual GFN2
+relaxed references, not your frozen-angle RIS structures. The result withdraws
+any interpretation of their original 63-case field comparison as response
+around a stability-qualified zero baseline. It does not classify the stationary
+sources as saddles without curvature evidence, nor validate GFN2 crystal physics.
+
+All six VDCN/AN nine-mer field releases return to the original internal shape
+after removing free axial rotation. The two PVDF x-field releases remain deformed
+(~1.017 A rotation-removed RMS, -0.152 eV), but their original reference itself
+fails perturbation return. Thus persistent PVDF deformation is not identified
+as a field-created metastable state. Free laboratory dipole azimuth persists
+under the two point clamps and must not be interpreted as an internal toggle
+or a validated polarization-memory effect.
+
+Sarco's `finite_chain_control_report.py` publishes the compact summary and
+`RESULT_REPORT.md` under `materials/gpu_bundle/results/boundary_sensitivity/`
+`finite_chain_controls_v1`. Only 11 distinct accepted representative geometries
+remain in the source journal; all pass endpoint-hash, source-anchor and full
+geometric-topology audits. No optimizer logs, trajectories or cap recovery
+remain. Lower-energy reference shapes now need their own perturbation
+qualification before the field comparisons are recomputed. The clean-zero
+Berry repeat has started independently; no additional heavy job overlaps it.
