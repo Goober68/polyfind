@@ -384,15 +384,26 @@ def project_offset_charges(coords, charges, sites) -> np.ndarray:
 # flux needs no fitted reference angle of its own and the base charges are the BCI ones at
 # ideal geometry -- and it is a function of the bond graph and the coordinates alone, so
 # the same expression serves a built chain, one repeat of a periodic chain and an
-# arbitrary :class:`Frame`.  The **bond driver** ``r_ij - r0_ij`` takes its reference from
-# the fitted stretch terms (:meth:`SimpleFF.bond_table`), which is where a reference bond
-# length already lives.  It is **inert in a crystal**: :func:`polyfind.chain.build_chain`
-# places every atom at the polymer's own bond length, so ``r - r0`` is a constant of the
-# chemistry and contributes a constant charge shift with zero gradient -- exactly the
-# same way the stretch energy is inert (docs/ELECTROMECHANICS.md 4.2).  It is kept
-# because it is the channel a flexible builder would need and because fitting it
-# *alongside* the angle channel is what stops the angle channel from absorbing a
-# stretch-driven signal it cannot reproduce.
+# arbitrary :class:`Frame`.  The **bond driver** ``r_ij - r0_ij`` is the *directional*
+# channel: charge moves along the bond by the bond's own stretch, so a displacement of the
+# terminal atom projected on the bond direction transfers charge and one across it does not.
+# Its Born effective charge (:mod:`polyfind.born`) is ``-k_bond r u u^T`` on the terminal
+# atom, ``u`` the unit bond vector -- large along the bond, zero across it, which is the
+# anisotropy the periodic-DFPT tensor of beta-PVDF shows for fluorine (-1.3 e along the C-F
+# bond, -0.4 e across it) and the angle driver, whose Born signature is the traceless
+# ``u n^T`` with ``n`` perpendicular to the bond, cannot express.  Its zero depends on the
+# path.  For a molecule (:meth:`SimpleFF.charges_at`) ``r0`` is the fitted stretch
+# reference (:meth:`SimpleFF.bond_table`), because bonds there do stretch.  On the
+# lattice path (:func:`polyfind.pack.chain_flux`) ``r0`` is **the bond's own length in the
+# built chain**: :func:`polyfind.chain.build_chain` places every atom at the polymer's own
+# bond length, the increments were fitted with the atoms there, and referencing the driver
+# to a different fit's ``r0`` would shift every charge by an arbitrary constant
+# (``k_bond (1.35 - 1.467)`` = -0.07 e per fluorine at ``k_bond = 0.6``).  With the built
+# length as its zero the driver vanishes identically in a rigid-bond crystal -- no charge
+# shift, no energy, no gradient, exactly as the stretch energy is inert
+# (docs/ELECTROMECHANICS.md 4.2) -- and the channel is a pure response, seen only by a
+# displacement that actually stretches a bond: the Born tensor.  That is what it is fitted
+# to (``examples/fit_born_flux.py``).
 #
 # Neutrality is preserved for free: whatever ``delta_ij`` is, ``q_i += delta`` and
 # ``q_j -= delta``, so the block's total charge is unchanged and the dipole stays a
@@ -1182,20 +1193,24 @@ class SimpleFF:
         """Whether any charge-flux coefficient is non-zero."""
         return any(ka or kb for ka, kb in self.flux_table().values())
 
-    def flux_topology(self, elements, bonds, images=None) -> FluxTopology:
+    def flux_topology(self, elements, bonds, images=None, bond_r0=None) -> FluxTopology:
         """The :class:`FluxTopology` this potential resolves for one block.
 
         ``images`` is the periodic map :func:`polyfind.pack.chain_flux` supplies; ``None``
         treats the block as a molecule.  Needs :attr:`charge_increments`, because a flux is
         a perturbation of an increment and there is nothing to perturb without one.
+        ``bond_r0`` (``{bond type: (k, r0)}``) is the stretch driver's zero; ``None`` takes
+        the fitted stretch reference, :meth:`bond_table`, which is a molecule's choice --
+        the lattice path passes the built chain's own lengths (see the note above
+        :class:`FluxTopology`).
         """
         if self.charge_increments is None:
             raise ValueError("charge flux needs charge_increments: the flux is a geometry "
                              "dependence *of* the bond-charge increments, so there is nothing "
                              "for it to modify without them")
         return flux_topology(elements, bonds, self.increments(), self.flux_table(),
-                             bond_r0=self.bond_table(), offsets=self.offset_table(),
-                             images=images, scale=self.charge_scale)
+                             bond_r0=self.bond_table() if bond_r0 is None else bond_r0,
+                             offsets=self.offset_table(), images=images, scale=self.charge_scale)
 
     def charges_at(self, elements, bonds, coords) -> np.ndarray:
         """Point charges of one geometry, flux included, ``charge_scale`` applied.

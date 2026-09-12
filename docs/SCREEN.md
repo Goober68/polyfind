@@ -1026,3 +1026,25 @@ under both sums separately. `--error-bar` overrides the 0.27 threshold; `--anti-
 487 tests pass, 5 skipped (three added: that the axial resolution is a length, that the
 subspace checks its own polarization, and that `predict`'s new switches default to the fit's own
 choices bit for bit).
+
+## Note, 2026-09-12: what the nitrile entries rest on
+
+The AN and VDCN rows above rest on two things: the angle-relaxed conformational
+ranking, which places their all-trans phases well above gauche-containing ground
+states, and a polarity that is unresolved at every tier, ours, the machine-learned
+potential and a vertical density-functional point. Both stand.
+
+They do **not** rest on the provider's finite-chain size gate, and that is worth
+saying because for two days the exchange treated that gate as a fourth reason to
+distrust nitrile chains. The provider's own controls have since shown the
+opposite: in that protocol every AN reference and the VDCN nine-mer return
+exactly after perturbation, while every PVDF reference falls to a lower-energy
+shape. The finite-chain references were never at minima, and the chemistry that
+protocol implicates is the fluorocarbon. That leg is withdrawn in
+`docs/REFERENCE_DATA_REQUEST.md`; nothing in this document ever cited it, so
+nothing here changes.
+
+The honest reading of the nitrile chemistries after all of it: they cannot reach
+a polar all-trans phase cheaply, which is a real and decisive result against them
+as actuator candidates, and whether the phase they do reach is polar or
+antipolar cannot be decided by any method now available.

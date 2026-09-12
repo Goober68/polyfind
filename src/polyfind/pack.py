@@ -594,7 +594,40 @@ def chain_flux(chain: PeriodicChain, ff):
     if ff is None or not ff.has_flux():
         return None
     tpl, where = _repeat_images(chain)
-    return ff.flux_topology(tpl.elements, tpl.bonds, images=where)
+    return ff.flux_topology(tpl.elements, tpl.bonds, images=where, bond_r0=built_bond_lengths(tpl, ff))
+
+
+def built_bond_lengths(tpl, ff) -> dict:
+    """``{bond type: (0.0, length)}`` of the built chain: the stretch driver's zero on the lattice path.
+
+    :func:`polyfind.chain.build_chain` places every atom at the polymer's own bond length and
+    the increments were fitted with the atoms there, so that length -- and not the valence
+    fit's ``r0`` -- is where the stretch flux must vanish: at it the charges are the
+    increments' charges exactly, as they are for the angle driver at its tetrahedral zero,
+    and ``k_bond`` is a pure response channel that only a bond-stretching displacement (the
+    Born tensor's) can see.  Only the types a non-zero ``k_bond`` reaches are listed, and a
+    type built at two different lengths is refused rather than averaged.
+    """
+    from .forcefield import bond_type_name, neighbour_lists
+
+    fluxed = {tuple(sorted(k)) for k, (_, kb) in ff.flux_table().items() if kb}
+    if not fluxed:
+        return {}
+    X = np.asarray(tpl.coords, dtype=float)
+    adj = neighbour_lists(len(tpl.elements), tpl.bonds)
+    seen: dict = {}
+    for a, b in tpl.bonds:
+        if tuple(sorted((tpl.elements[a], tpl.elements[b]))) not in fluxed:
+            continue
+        seen.setdefault(bond_type_name(tpl.elements, adj, a, b), set()).add(
+            round(float(np.linalg.norm(X[a] - X[b])), 8))
+    out = {}
+    for name, lengths in seen.items():
+        if len(lengths) > 1:
+            raise ValueError(f"bond charge flux on {name!r}: the built chain has that bond at "
+                             f"{sorted(lengths)} A, so it has no single stretch reference")
+        out[name] = (0.0, lengths.pop())
+    return out
 
 
 # ------------------------------------------------------------------ energy kernel

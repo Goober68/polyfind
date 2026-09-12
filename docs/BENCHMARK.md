@@ -462,3 +462,45 @@ directional (bond-resolved) charge flux, which the Born charges now say is the
 larger missing piece; temperature; and domain switching. Polarizability is no
 longer absent: it is opt-in, validated on the dielectric constant, and worth a
 quarter of the `d33` shortfall.
+
+### Reassessment, 2026-09-12: the piezoelectric shortfall is not in the charges
+
+The Born-consistent charge flux was the last identified piece of the shortfall,
+and fitting it succeeded on its own terms: four parameters against ten transverse
+Born components, held-out root-mean-square 0.08 e, every fluorine and carbon
+component within 0.19 e of the periodic-DFT reference. The model now has the
+right dynamical charges on every atom.
+
+**And the piezoelectric coefficients did not move toward measurement.** d33 went
+from -12.81 to -8.80 against -32, d31 from +3.56 to +0.02 against +20. The
+Born-consistent model equals the no-flux polarizable one to 0.1 pC/N.
+
+That is the finding, and it is sharper than the shortfall it replaces. On rigid
+pendant groups only the *group* Born sum acts under axial strain, and the
+reference puts that sum at 0.08 e; the previous flux had it at 0.86 e, which is
+what the earlier, better-looking d33 was made of. Getting the charges right
+removed a wrong contribution rather than adding a right one. So the reasoning
+"dynamical charges are four times too small, therefore d is four times too
+small" was wrong at its second step: the atomic Born charges are large, but they
+cancel within each rigid group under the strain that matters.
+
+**Where the response must come from instead:** internal strain, the relative
+motion of atoms within the cell under a macroscopic strain, which is what the
+piezoelectric tensor of a real crystal is mostly made of. Our proper transverse
+coefficient is 0.04 C/m^2 against roughly 0.4 to 0.6 implied by the provider's
+Berry slope, and that missing half a C/m^2 through the compliance is about
+20 pC/N, the size of the whole gap. Rigid pendants cannot supply it: freeing
+pendant angles gives 0.12 pC/N and freeing bond lengths 0.41, at geometries that
+are not keepable. The response the material actually produces lives in a degree
+of freedom this model holds fixed.
+
+**Goal status, corrected.** Speed: met. Field and strain: polarization, the
+dielectric tensor and the Born charges are now all validated against periodic
+DFT to within a few percent, which is more than the goal asked for on the static
+side. The piezoelectric coefficients remain a factor of three to fifty short,
+and the reason is now known and structural rather than parametric. The solver
+measures everything that feeds a piezoelectric response except the
+internal-strain channel.
+
+The next step is a data request, not a fit: the provider's piezoelectric and
+internal-strain tensors from the run that produced the Born charges.

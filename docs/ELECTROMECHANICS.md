@@ -7,7 +7,8 @@ in both directions, and the three numbers an actuator is judged by — blocking 
 strain, work density. `examples/electromechanics.py` produces every table below:
 `--preset illustrative|fitted|valence|flux` for section 5, `--axial` for section 4.1,
 `--stiffness-sweep` for section 4.3, `--cutoff` for section 6.
-`examples/fit_charge_flux.py` produces section 5.6.
+`examples/fit_charge_flux.py` produces section 5.6, `examples/polarizable_response.py`
+section 5.8 and `examples/fit_born_flux.py` section 5.9.
 
 **Three paths, and the difference between them is two opt-in flags.**
 
@@ -24,7 +25,9 @@ strain, work density. `examples/electromechanics.py` produces every table below:
   geometry (`CrystalPacker(charge_flux=...)`, also opt-in). That is the one change that
   makes a *planar zigzag's* dipole respond to strain at all, so it is the only path on which
   beta-PVDF — the phase the material is used in — has a non-zero `d_33` or `d_31`. Section
-  5.6 has the result and the reasons to distrust its magnitude.
+  5.6 has the result and the reasons to distrust its magnitude; section 5.9 measures the
+  flux against the periodic-DFPT Born charges and finds the magnitude was borrowed from a
+  channel the Born tensor rules out.
 
 Sections 1 to 3 set up all three. Section 4 is the axial constant and the evidence that it
 has stopped being an artifact. Section 5 has the tables. Sections 6 to 9 are convergence,
@@ -793,6 +796,207 @@ the internal-strain displacements and the compliance all enter too. That refit i
 task and a separate one; nothing of it is folded in here, and `d_33` and `d_31` remain out
 of sample.
 
+### 5.9 Born charges: the flux refitted to them, and what that does to `d_33`
+
+The verdict first, because it is the opposite of what section 5.8 expected. **A charge flux
+fitted to the periodic-DFPT Born tensor closes none of the piezoelectric shortfall; it widens
+it.** `d_33` goes from −12.81 to −8.80 against −32 (the gap grows by 21%) and `d_31` from
++3.56 to +0.02 against +20 (by 22%). The reason is a result in its own right: the proper
+`d_33` of section 5.6 was carried by a C–H angle flux that puts a dynamical charge of **−4.4 e
+on the CH2 carbon where DFPT has −0.12**, and once the flux is made to agree with the Born
+tensor that channel is gone and nothing on a rigid-pendant chain can replace it.
+`examples/fit_born_flux.py` produces everything below; the reference is the sibling
+project's `born_results.json` (`docs/REFERENCES.md` 9.3).
+
+**What was computed first: our own Born tensor, like for like.** `polyfind.born` differences
+the cell dipole — static charges, flux and induced dipoles all on, at zero macroscopic field
+— against the displacement of one atom of one chain, which is what a DFPT code's
+`Z*_ab = dP_a/du_b` is. The acoustic sum comes out at 1e−8 e (it holds identically for a
+neutral flux, so it checks the arithmetic and not the model), halving the step moves nothing
+by more than 2e−7 e, and the two chains' tensors agree to 1e−12 e after the symmetry
+reflection. In the provider's axes (a = long, b = polar, c = chain), at the
+`pvdf-dft-valence-flux` structure of section 5.8, before any parameter was touched:
+
+| atom | `Z*_aa` ours / DFPT | `Z*_bb` (polar) ours / DFPT | `Z*_cc` (chain) ours / DFPT | `Z*_ab`, `Z*_ba` ours / DFPT |
+|---|---:|---:|---:|---:|
+| C (CF2) | +2.72 / +1.79 | +1.07 / +1.47 | +0.41 / +1.26 | |
+| F | **−0.09 / −0.97** | **−0.10 / −0.78** | −0.17 / −0.40 | −0.05, −0.04 / −0.48, −0.39 |
+| C (CH2) | **−4.38 / −0.12** | **−3.08 / −0.20** | −0.79 / −0.75 | |
+| H | +0.92 / +0.14 | +1.11 / +0.14 | +0.36 / +0.14 | +0.84, +0.55 / +0.03, +0.03 |
+
+Transverse rms 1.62 e against the reference — worse than the 0.63 e of the same model with
+the flux switched off. Fluorine is not within a factor of two; it is a factor of ten too
+small, and the CH2 group is 8 to 35 times too large. So the fit is not a refinement. It is a
+replacement of a mechanism the reference contradicts. Two more things the decomposition
+shows. The induced dipoles alone lift every static charge by a local-field factor of 1.4 to
+1.6 (F −0.13 → −0.18, H +0.12 → +0.16 to +0.19), which is the whole of the isotropic part
+the reference asks for on hydrogen and a third of it on fluorine. And the flux at the
+relaxed geometry had already moved the *static* charges: H carried +0.233 instead of the
+increments' +0.119, because the `k_angle(C-H)` = −1.21 of section 5.6 acts at the +6° of
+backbone opening it had itself bought. That is where section 5.8's `|P| = 0.196` and its
+`E/monomer = −1.85` came from.
+
+**The directional channel.** Fluorine's reference tensor in the frame of its own bond is
+−1.3 e along the C–F bond and −0.4 e across it (both perpendicular components equal to 0.03
+e), with an antisymmetric part of 0.04 e: charge that moves along the bond by the bond's
+own stretch, and almost nothing else. The flux model's stretch channel, `k_bond (r − r0)`,
+is exactly that — its Born signature on the terminal atom is `−k_bond (r + d) u u^T`, rank
+one along the unit bond vector `u` (`d` the off-site distance of section 5.6's fluorine
+charge) — while the angle channel's signature is the traceless `u n^T` with `n`
+perpendicular to the bond, which cannot produce it. The channel existed in the code
+(`FluxTopology.kb`) but had never been fitted, because on a rigid-bonded chain no observable
+this package computed could see it, and its zero was the *valence fit's* `r0` (1.467 Å for
+C–F against a built 1.35 Å), so that a non-zero `k_bond` would have shifted every fluorine
+by −0.07 e at rest. The one change to the model is that on the lattice path the stretch
+driver's zero is now the bond's own built length (`polyfind.pack.built_bond_lengths`): the
+charges at rest are the increments' charges to 1e−16, the energy and every gradient are
+untouched, and `k_bond` is seen by the Born tensor alone. The analytic charge gradient the
+channel uses was already verified against central differences; `tests/test_born.py` now also
+checks the Born tensor against it in closed form, checks the rank-one signature and its
+eigenvalue, and checks the two-chain sum against the packer's own dipole derivative with
+Ewald and induced dipoles on.
+
+**The fit: four parameters, ten independent observations.** The observations are the four
+transverse components (`aa`, `bb`; `ab`, `ba` for the pendants) of the four atom types —
+twelve numbers, of which the acoustic sum rule the model satisfies identically ties two, so
+**4 : 10, 2.5 : 1**. The chain-axis components are kept out, as the provider asked: the
+acoustic-sum correction moves each of them by 0.052 e on a raw residual of −0.62 e, whereas
+the transverse components move by at most 5e−4 e between the raw and corrected tensors, so
+the correction cannot be hiding anything transverse. At fixed geometry the dipole is linear
+in every coefficient (the induced dipoles are linear in the charges), so the fit is a linear
+least squares with exact columns (linearity residual 1e−3 e; design-matrix singular values
+8.2, 3.3, 1.7, 1.3). Fitted at the section 5.8 structure, then refitted at its own relaxed
+structure (the shipped values; the two iterations differ by less than the leave-one-out
+spread):
+
+| | `k_angle(C-H)` | `k_bond(C-H)` | `k_angle(C-F)` | `k_bond(C-F)` (e/Å) | rms (e) |
+|---|---:|---:|---:|---:|---:|
+| no flux (static + induced dipoles) | 0 | 0 | 0 | 0 | 0.633 |
+| `pvdf-dft-valence-flux` (section 5.6, GFN2) | −1.214 | 0 | −0.098 | 0 | 1.620 |
+| **`pvdf-dft-valence-flux-born`** | **+0.112** | **+0.042** | **+0.096** | **+0.585** | **0.083** |
+| bond channels only (2 : 10) | 0 | +0.088 | 0 | +0.645 | 0.111 |
+| C–F only, both channels (2 : 10) | 0 | 0 | −0.005 | +0.650 | 0.127 |
+| raw reference instead of corrected | +0.112 | +0.042 | +0.096 | +0.585 | 0.083 |
+| off-diagonal index convention transposed | +0.116 | +0.041 | +0.100 | +0.582 | 0.080 |
+
+Leave one atom type out and predict it: without C(CF2) the held-out rms is 0.18 e, without
+F 0.08, without C(CH2) 0.03, without H 0.25 — and `k_bond(C-F)` stays within 0.58–0.61
+whichever type is dropped, while the two C–H coefficients are pinned by hydrogen alone
+(`k_bond(C-H)` flips sign without it, and hydrogen's reference tensor is isotropic to
+0.005 e, so that channel is measuring nothing). The like-for-like tensor with the fitted
+preset, at its own structure:
+
+| atom | `Z*_aa` | `Z*_bb` | `Z*_cc` (not fitted) | `Z*_ab`, `Z*_ba` |
+|---|---:|---:|---:|---:|
+| C (CF2) | +1.90 / +1.79 | +1.30 / +1.47 | +0.45 / +1.26 | |
+| F | −0.94 / −0.97 | −0.66 / −0.78 | −0.20 / −0.40 | −0.44, −0.47 / −0.48, −0.39 |
+| C (CH2) | −0.14 / −0.12 | −0.17 / −0.20 | −0.41 / −0.75 | |
+| H | +0.06 / +0.14 | +0.10 / +0.14 | +0.18 / +0.14 | −0.05, −0.02 / +0.03, +0.03 |
+
+Every transverse component within 0.19 e. The chain-axis check fails on both carbons, by
+0.8 e on CF2 and 0.3 e on CH2, with the same sign pattern a flux along the C(H2)–C(F2)
+backbone bond would produce; that bond is homonuclear and refused (section 9), the reference
+component is the provisional one, and the residual is recorded rather than fitted.
+
+**Then `d_33` and `d_31`, out of sample.** Ewald, induced dipoles on, both routes:
+
+| beta-PVDF | film `d_33` | film `d_31` | proper `d_33` | proper `d_31` | `e_x,zz` (C/m²) | routes |
+|---|---:|---:|---:|---:|---:|---:|
+| `pvdf-dft-valence` + dipoles (no flux) | −8.71 | −0.07 | −3.75 | +0.09 | +0.029 | 1.3% |
+| `pvdf-dft-valence-flux` + dipoles (section 5.8) | −12.81 | +3.56 | −7.61 | +3.38 | −0.872 | 0.25% |
+| **`pvdf-dft-valence-flux-born` + dipoles** | **−8.80** (direct −8.79) | **+0.02** (direct +0.02) | −3.81 | +0.17 | +0.003 | 0.74% |
+| measured (Nix and Ward 1986) | −32 | +20 | | | | |
+
+The Born-fitted preset is, to 0.1 pC/N, the no-flux polarizable model. That is not a
+coincidence and it is the point. On the deformable path bond lengths are rigid, so the
+stretch channel that carries fluorine's dynamical charge — the only channel the reference
+wants — contributes exactly nothing to any strain response; and the angle channels, now
+small and of the opposite sign, take `e_x,zz` from −0.87 to +0.003 C/m². What section 5.6
+and 5.8 reported as beta's proper response was the C–H angle flux acting on a backbone it
+had opened 6°, a channel the Born tensor puts 20 to 35 times too large.
+
+**Why no flux can fix this on a rigid pendant, in one line.** Under `eps_zz` the model's only
+internal motion is the backbone angle, so the CF2 and CH2 groups translate as rigid blocks
+towards and away from the chain axis, by ∓1.99 Å per unit strain, and the polar dipole can
+change only through the *group* Born sums, `Z*(C) + 2 Z*(F)`. The reference puts those at
+−0.08 e (CF2) and +0.08 e (CH2) along the polar axis — against +0.86 and −0.86 for the
+section 5.6 flux and −0.02 / +0.02 for the fitted one — so even a model reproducing the DFPT
+tensor exactly would have `e_x,zz` ≈ 0.11 C/m² on this path, which through `S_31` is 0.2 pC/N
+of `d_33`. The response the reference does allow lives in fluorine moving *relative to its
+carbon* — −1.3 e along the bond, −0.4 e across it — and a pendant that rides rigidly on its
+carbon never does that.
+
+**What it costs what was right.** Less than section 5.8's polarizability did, and in two
+cases the sign of the move is towards the reference:
+
+| | section 5.8 | Born-fitted | reference |
+|---|---:|---:|---|
+| `C_33` (GPa) | 340.2 (+7.7%) | 336.1 (+6.4%) | 315.9 periodic DFT |
+| beta `a`, `b`, `c` (Å) | 4.402, 8.402, 2.632 | 4.563, 8.503, 2.549 | 4.731, 8.358, 2.580 |
+| `|P|` (C/m²) | 0.196 (+4 to +11%) | 0.143 (−19 to −24%) | 0.176–0.188 DFT |
+| `E(α) − E(β)` (kJ/mol per monomer, rigid, Ewald, dipoles) | −5.37 | −4.91 | accepted −6.5 to −2.6 |
+| PE piezoelectric tensor | 5e−13 C/m², 2e−10 pC/N | 6e−14 C/m², 4e−11 pC/N | 0 |
+
+`a` moves from −7.0% to −3.6% of the DFT value and `c` from +2.0% to −1.2%; `b` from +0.5%
+to +1.7%. `|P|` drops below the DFT range because the +0.233 e hydrogen of the old flux is
+gone, and 0.143 sits between the DFT range and the measured 0.05–0.10 (`docs/REFERENCES.md`
+3). The shape parameter rests at +0.17° of its ±8° range (it was +6.0°), the two `C_33`
+routes agree (336.1, 336.0), and polyethylene's dipole stays at 3e−16 C/m² with every
+piezoelectric coefficient at machine zero.
+
+**The pendant hypothesis, measured rather than argued.** The obvious reading of the last
+paragraph is that the response lives in the pendant's own internal strain, which
+`build_chain` freezes. `examples/fit_born_flux.py pendant` tests it: the F–C–F and H–C–H
+angles (and, with `--pendant all`, the C–F and C–H lengths) are relaxed against the fitted
+valence terms at each strain by rebuilding the line group from a polymer whose pendant
+geometry is the minimiser, and `e_x,zz` is differenced along that relaxed path, cell fixed.
+
+| pendant coordinates relaxed | relaxed values at `eps = 0` | `e_x,zz` (C/m²) | axial column of film `d_33` (pC/N) |
+|---|---|---:|---:|
+| none (the deformable path) | F–C–F 106°, H–C–H 108°, C–F 1.35 Å | +0.003 | −0.005 |
+| the two pendant angles | 108.2°, 110.1° (0.34 kcal/mol per cell gained; `|P|` 0.143 → 0.138) | −0.069 | +0.12 |
+| angles and lengths | 106.2°, 110.8°, **C–F 1.537 Å** (16 kcal/mol per cell; `|P|` 0.246) | −0.230 | +0.41 |
+
+Freeing the pendant angles multiplies the axial response by twenty and it is still 0.12
+pC/N; freeing the lengths as well runs the C–F bond to 1.54 Å (the valence `r0` of 1.467 Å
+pulled further by the flux, against 1.40 Å in the DFT cell — not a structure to keep) and
+reaches 0.41 pC/N. The fluorine moves 0.15 Å along its bond per unit axial strain, and −1.3
+e times that is 0.07 C/m². So within this valence model the pendant's internal strain is
+real, the right sign, and two orders of magnitude short of the 23 pC/N missing. The axial
+column is not where `d_33` is.
+
+**What this settles, and what it redirects.** The field-and-strain half of the goal is not
+met, and the Born tensor says it cannot be met by any charge-flux coefficient on this chain.
+A Born charge is the dipole per unit displacement of one atom, so once the model's tensor
+matches the reference's, the dipole response to *every* displacement pattern is fixed; the
+shortfall is then not in how much charge moves but in which atoms move, and by how much.
+Three things follow, in the order the evidence ranks them.
+
+1. **The transverse columns, not the axial one.** The film `d_33` is `e_x,J S_J1`, and
+   the transverse compliances are more than ten times the axial one (`C_11` 25 GPa against
+   `C_33` 336), so `e_x,xx` and `e_x,yy` carry it. Ours are 0.096 and 0.039 C/m² proper (the induced dipoles' response to the strained
+   field; a rigid chain has no other internal motion under a transverse strain that the line
+   group allows to change the polar dipole). The provider's own Berry-phase strain sweep
+   (`docs/REFERENCE_DATA_REQUEST.md`, 2026-09-11) measured `dP_polar / d eps_aa` at 0.56–0.80
+   C/m², provisional; the dimensional part of that is `|P|` ≈ 0.18, which leaves a proper
+   response of 0.4–0.6 C/m² against our 0.04 — and 0.5 C/m² through `S_11` ≈ 0.04 GPa⁻¹ is
+   20 pC/N, the size of the gap. Under a transverse strain the DFT cell's atoms move
+   internally in a way this chain cannot: that displacement pattern, not a charge, is the
+   missing quantity, and the data that would pin it is the relaxed-ion and clamped-ion
+   piezoelectric tensors (or the internal-strain tensor `du_i / d eps_J`) of the same DFPT
+   run — the centred Berry slopes for `eps_bb` and `eps_cc` beside the existing `eps_aa` one.
+2. **The backbone C(H2)–C(F2) flux** is the one channel the Born residual still points at
+   (0.8 e on the CF2 carbon and 0.3 e on the CH2 one along the chain, opposite signs, the
+   signature of charge flowing along a bond that lies in the polar–chain plane). It is
+   refused as homonuclear (section 9), and it would be fitted to the provisional components
+   alone. It would change the individual carbons' tensors and not the group sums, so by the
+   argument above it cannot move the axial column either; it matters for the chain-axis
+   dielectric and for any response in which the two carbons move apart.
+3. **The compliance.** −32 pC/N is a drawn-film number, and `d = e S` with a crystal `S`
+   is not the same quantity as with the film's (section 8.5). This is independent of
+   everything above and bounds how much of the factor of 3.6 a perfect crystal model should
+   ever be asked to close.
+
 ### 5.4 Blocking stress, free strain, work density (E = 0.01 V/A = 100 MV/m)
 
 | potential | | poling direction | free strain | blocking stress (MPa) | work density (kJ/m³) |
@@ -1184,17 +1388,25 @@ describe the cell this potential produces, not the phase it is named after.
   closes a quarter of the `d_33` shortfall and a sixteenth of `d_31`'s, no more. The
   depolarising field of a finite sample is still a boundary choice (`EwaldSpec`), not a
   computed quantity.
+* The pendant's internal strain. `build_chain` fixes every pendant bond length and every
+  F–C–F / H–C–H angle, so under strain or field a fluorine rides rigidly on its carbon. The
+  Born-fitted flux (section 5.9) puts fluorine's dynamical charge at −1.3 e *along* its bond,
+  and a rigid pendant cannot spend it: the polar dipole responds to an axial strain only
+  through the group Born sums, which the reference makes 0.1 e. This is now the first
+  hypothesis for the piezoelectric shortfall, not the bond-stretch channel's `C_33` above.
 * Charge transfer along the backbone. The increments are typed by element pair, so a
   backbone C-C bond is homonuclear and carries neither an increment nor a flux;
   `flux_topology` refuses to orient one rather than letting the arbitrary order of the bond
   list decide which carbon gains. That is the channel most likely to carry an *axial* dipole
   response and it is outside this model — which is also why, on the four reference
   chemistries of section 5.6, the angle channel explains only 39% of the residual and a
-  bond-stretch channel explains 86%.
+  bond-stretch channel explains 86%; and it is what the chain-axis Born residual of section
+  5.9 (0.8 e on the CF2 carbon, 0.3 e on the CH2 one, opposite signs) points at.
 * Any change in the *molecular* dipole with strain for a planar zigzag **with fixed
   charges**. Section 5.2 shows this is exact rather than approximate for
-  bond-charge-increment charges; section 5.6 is what removes it, and section 5.6 also says
-  how far the coefficient that removes it can be trusted.
+  bond-charge-increment charges; section 5.6 is what removes it, section 5.6 also says how
+  far the coefficient that removes it can be trusted, and section 5.9 measures that
+  coefficient against the Born tensor and finds it 20 to 35 times too large on the CH2 group.
 * Temperature. Everything is a zero-kelvin second derivative; no phonons, no thermal
   expansion, no pyroelectric coefficient.
 * Electrostriction. The response reported is strictly linear in the field; DESIGN.md section

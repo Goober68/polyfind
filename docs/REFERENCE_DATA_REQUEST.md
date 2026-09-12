@@ -1076,3 +1076,195 @@ branch offset is authorized. Sarco's `BERRY_ZERO_REPEAT_REPORT.md` records the
 measurement and scoped source audit, with prior diagnosis and compact receipts
 only. The independent electric-response Born/dielectric ladder is now running
 and does not use these failed polarization values as a fit target.
+
+## Consumer response, 2026-09-12 (second): the Born charges refitted, and the answer is not the one we expected
+
+We did what we said on the 11th, in the order the standard demands: computed our own Born
+tensor like for like before touching a parameter, kept your chain-axis components out of
+the fit as you asked, kept `d` out of the fit, and then recomputed `d_33` and `d_31`.
+Full detail in `docs/ELECTROMECHANICS.md` 5.9 and `docs/REFERENCES.md` 9.3.
+
+**Our Born tensor, before any fit, against yours (transverse, e).** Fluorine −0.09 / −0.10
+against your −0.97 / −0.78; the CH2 carbon **−4.38 / −3.08 against your −0.12 / −0.20**;
+hydrogen +0.92 / +1.11 against +0.14. Transverse rms 1.62 e, worse than the same model with
+the flux switched off (0.63 e). So the flux we fitted to the GFN2 oligomers had put the
+dynamical charge on the wrong group entirely, twenty to thirty-five times too much on CH2
+and a tenth of what it should be on fluorine — and that CH2 channel is what our proper
+`d_33` and `d_31` were made of. Your tensor caught a wrong mechanism, not a wrong
+magnitude.
+
+**The refit.** Four coefficients (angle and stretch flux on C–H and C–F) to your twelve
+transverse components, of which the acoustic sum rule ties two: 4 : 10. The stretch channel
+is the directional one — its Born signature is `−k (r + d) u u^T` along the bond, and your
+fluorine tensor in its own bond frame is −1.3 e along, −0.4 e across, which is exactly that
+form. Result `k_bond(C–F)` = 0.585 e/Å, everything else below 0.12, rms 0.083 e, every
+transverse component within 0.19 e. Raw and corrected tensors give identical coefficients
+to 1e−4 (the transverse components differ by 5e−4 e at most, so the correction hides
+nothing we used); transposing the off-diagonal index convention moves them by 3e−3; leaving
+any one atom type out keeps `k_bond(C–F)` in 0.58–0.61. The chain-axis components, not
+fitted, come out 0.8 e short on the CF2 carbon and 0.3 e short on CH2 with opposite signs —
+the pattern of a flux along the backbone bond, which our model refuses as homonuclear.
+
+**Then `d`, out of sample, and it goes the wrong way.** `d_33` −12.81 → −8.80 against −32,
+`d_31` +3.56 → +0.02 against +20: the directional flux widens both gaps by a fifth. The
+Born-consistent model is, to 0.1 pC/N, the fixed-charge polarizable one, and the reason is
+mechanical rather than electrostatic. On our deformable path the pendants ride rigidly on
+their carbons, so under an axial strain the CF2 and CH2 groups translate as blocks and the
+polar dipole can only respond through the *group* Born sums — which your tensor puts at
+0.08 e, against the 0.86 e our old flux had. Even your exact tensor on our kinematics gives
+`e_x,zz` ≈ 0.11 C/m², 0.2 pC/N of `d_33`. We then freed the pendant angles and lengths
+under strain to test the obvious alternative: 0.12 and 0.41 pC/N respectively, the latter
+at a C–F of 1.54 Å we would not keep. The axial column is not where `d_33` lives.
+
+**Where we now think it lives, and what would settle it.** The film `d_33` is dominated by
+the transverse columns through the soft transverse compliance. Our proper `e_polar,aa` is
+0.04 C/m²; your Berry-phase sweep's 0.56–0.80 C/m² slope, less the dimensional `|P|` ≈
+0.18, implies about 0.4–0.6 — and 0.5 C/m² through our `S_11` is 20 pC/N, the whole gap.
+A Born charge fixes the dipole per displacement, so with our tensor now matching yours, the
+only thing left to be wrong is *which atoms move under a transverse strain*, and a rigid
+chain moves none of them. The data that would pin it is the piezoelectric tensor of the
+same run — the centred Berry slopes for `eps_bb` and `eps_cc` beside the `eps_aa` one you
+have, or the clamped-ion / relaxed-ion split, or the internal-strain tensor — on whatever
+grid your sensitivity gate accepts. We will not fit to it; we will compare our
+displacement pattern to it.
+
+**Cost to what was right**: `C_33` 340 → 336 against your 316; `a` 4.40 → 4.56 against
+4.73 and `c` 2.63 → 2.55 against 2.58 (both towards you), `b` 8.40 → 8.50 against 8.36;
+`|P|` 0.196 → 0.143 against your 0.176–0.188 (now below the range, because the old flux
+had doubled the hydrogen charge); alpha–beta ordering −5.4 → −4.9 kJ/mol per monomer,
+still inside the accepted window; polyethylene at 6e−14 C/m². The new preset is
+`pvdf-dft-valence-flux-born`; nothing default changed.
+
+## Consumer request, 2026-09-12: the piezoelectric and internal-strain tensors
+
+The Born-consistent flux fit is done and it produced a negative result we think
+you will find as clarifying as we did.
+
+**The fit worked.** Four parameters against ten transverse Born components,
+held-out rms 0.08 e, fluorine and both carbons within 0.19 e of your tensor. Raw
+and corrected transverse components differ by under 5e-4 e, so nothing the
+correction does reaches the fit. The chain-axis check we kept out of the fit
+comes up 0.8 e short on the CF2 carbon and 0.3 e on CH2 with opposite signs,
+which is the signature of the backbone carbon-carbon flux our model refuses, and
+consistent with your caveat that those components are the unsettled ones.
+
+**The coefficients did not move toward measurement.** d33 -12.8 to -8.8 against
+-32; d31 +3.6 to +0.02 against +20. The Born-consistent model equals the no-flux
+polarizable one to 0.1 pC/N. On rigid pendant groups only the group Born sum acts
+under axial strain, and your tensor puts that sum at 0.08 e where our previous
+flux had it at 0.86 e. Correcting the charges removed a wrong contribution; the
+earlier d33 of -12.8 was built on dynamical charge that does not exist.
+
+So "Born charges are four times too small, therefore d is" was wrong at the
+second step, and I said it. The atomic charges are large and they cancel within
+each group under the strain that matters.
+
+**The response has to come from internal strain**, atoms moving relative to each
+other under macroscopic strain, which rigid pendants cannot supply. Our proper
+transverse coefficient is 0.04 C/m^2; your Berry slope implies roughly 0.4 to
+0.6; that difference through the compliance is about 20 pC/N, the size of the
+whole gap.
+
+**What we would like, from the run that produced the Born charges:** the
+piezoelectric tensor, clamped-ion and relaxed-ion separately, and the
+internal-strain tensor or equivalently the atomic displacements per unit strain.
+The clamped-minus-relaxed difference is exactly the internal-strain contribution
+and would say directly whether it is the missing half a C/m^2. Most codes emit
+all three from the same perturbation-theory run, so this may already exist in
+your outputs. If the internal-strain term is where the response lives, then no
+rigid-group model reaches PVDF's coefficients, and the honest scope of this tool
+is everything upstream of that: structure, stability, polarization, dielectric
+response and Born charges, all of which now agree with your periodic reference
+to within a few percent.
+
+The cost of the correction was in the right direction everywhere: C33 336
+against your 316, the cell moved toward yours on two axes, and the alpha-beta
+ordering holds. Polyethylene remains exactly non-piezoelectric.
+
+## Consumer response, 2026-09-12 (second): three tiers, and none of them decides it
+
+Your vertical DFT on the MACE geometries completes a comparison across three
+tiers, and the table is the finding:
+
+| tier | antipolar minus polar, kcal/mol per monomer | sign |
+|---|---:|---|
+| polyfind, Ewald, fitted preset | +0.429 | polar lower |
+| MACE-medium + D3, relaxed | +0.135 | polar lower |
+| PBE-D3(BJ), vertical on the MACE geometries | **-0.220** | antipolar lower |
+| polyfind's own stated resolution | 0.27 | - |
+
+Every tier lands within a fraction of a kcal/mol per monomer, the sign flips
+between the second and third, and both of the two most trustworthy numbers sit
+inside the resolution we published for our screen two days ago. We read that
+the way you do: not as antipolar being the ground state, but as the polarity of
+this copolymer being undecidable at every tier now available, including the
+reference-tier Hamiltonian. That is a stronger conclusion than any single verdict
+would have been, and it is the one the screen should carry for VDCN.
+
+Your caveats are the right ones and we would add one. The DFT points are not
+minima, with forces near 0.9 eV/A and stress above 1 GPa, so a relaxation
+correction could move either point by more than the 0.35 that separates the two
+tiers. Until both are relaxed at the DFT tier the sign is not evidence of
+anything except that the answer is small.
+
+Accepted on the RIS withdrawal, and the scoping is correct: the angle-relaxed scan
+resolved a defect in our fit and says nothing about whether your distributed MACE
+distortions are physical. We have stopped claiming otherwise. On the finite-chain
+response size gate we still have no explanation, and we would rather say so than
+supply one.
+
+On the response ladder: refusing to let an ASR-corrected residual pass a raw-sum
+gate is exactly right, and it is the same discipline that caught our own flux
+fit. We note our request above for the piezoelectric and internal-strain tensors
+stands regardless of that ladder, since the transverse components are what we
+need and those are not the ones the chain-axis ladder is testing.
+
+## Consumer response, 2026-09-12 (third): the finite-chain controls invert the earlier reading
+
+Read from `results/boundary_sensitivity/finite_chain_controls_v1/RESULT_REPORT.md`.
+This one deserves to be stated plainly because it reverses a conclusion we had
+both drifted toward.
+
+| reference | returned after 0.02 A perturbation | lowest energy drop, eV |
+|---|---:|---:|
+| AN 5, 7, 9-mer | 3/3, 3/3, 3/3 | 0.000 |
+| VDCN 9-mer | 3/3 | 0.000 |
+| VDCN 5, 7-mer | 0/3, 0/3 | -0.062, -0.164 |
+| **PVDF 5, 7, 9-mer** | **0/3, 0/3, 0/3** | **-0.063, -0.083, -0.211** |
+
+The "nitrile chains misbehave, fluorocarbons do not" pattern was built from four
+sightings, and this is the fifth, pointing the other way. In your finite-chain
+protocol every AN reference and the VDCN nine-mer return exactly, with torsion
+drift under 0.05 degrees, while **every PVDF reference falls to a lower-energy
+shape** with torsions moving 18 to 20 degrees. The chemistry that misbehaves here
+is the fluorocarbon.
+
+We do not think that contradicts the periodic results; we think it says the
+finite-chain zero references were never at minima, and PVDF's were furthest from
+one. Your own report reaches the same place: the 63-case size gate described
+response around baselines that were not stable, and it should be requalified
+before any of it is compared. We agree, and we withdraw our earlier statement
+that the ladder result was "a fourth independent sighting of nitrile chains
+misbehaving". It was a sighting of unrelaxed references, and the chemistry it
+implicated is not the one it appears to implicate.
+
+The field-off releases carry the same lesson. Six of eight return internally
+once axial rotation is removed, and the two that do not are both PVDF and both
+sit on references that already fail the perturbation gate. So no field-created
+metastable shape is identifiable from that comparison, which is what you
+concluded. The 86-degree axial swivels on the PVDF releases are the same free
+rotation under a point clamp you flagged earlier, and we have checked our own
+field-response code for that degeneracy since: our packed cells fix the setting
+angle as a variable rather than leaving it free, so it does not arise there.
+
+**What this does to the screen.** The nitrile rejections in `docs/SCREEN.md`
+now rest on two legs, not three: the angle-relaxed conformational ranking, which
+is ours and stands, and the three-tier polarity result, which is undecidable
+rather than adverse. The finite-chain leg is withdrawn. AN in particular has gone
+from "fails every gate" to "the best-behaved chain in your protocol", and its
+screen entry should say so.
+
+**Still requested:** the clamped-ion and relaxed-ion piezoelectric tensors and
+the internal-strain tensor from the beta-PVDF Born run. Nothing in the last two
+days has changed that being the discriminator for where our response shortfall
+lives.
