@@ -1755,3 +1755,22 @@ existing repeat/overlap-floor failure in a separately instrumented QE build.
 No production executable or live Born/VDCN dependency will be changed. The
 4x8x32 Born response and full592 VDCN geometry correction remain live on CPU,
 with verified disjoint CPU affinities and no swap use at this check.
+
+### Producer diagnostic implementation update
+
+The isolated additive QE Berry-overlap pw.x build has now completed. The
+source-delta verifier matched all declared native hooks exactly, checked
+15,988 other upstream files plus source symlinks, selected baseline build
+options and unchanged production pw.x/ph.x. Twelve diagnostic tests pass,
+including an actual LAPACK harness: occupied-block SVD leaves the native
+matrix unchanged; output reports actual link/product/string/floor/average
+receipts. Coverage preserves native initialization versus closure semantics.
+The strict reader preserves squared-product underflow as evidence rather
+than rejecting it or manufacturing a polarization.
+
+This is completed diagnostic software, **not yet a material diagnostic run**.
+The instrumented matched dense-zero execution and occupied-subspace comparison
+are next. Floor occurrence alone will not establish causation, and no
+piezoelectric tensor is accepted by this build. Evidence/code are in Sarco's
+`materials/gpu_bundle/periodic_reference/beta_pvdf/qe_berry_diagnostic/`.
+The active Born and VDCN calculations still use their original frozen assets.
