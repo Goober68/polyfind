@@ -1268,3 +1268,41 @@ screen entry should say so.
 the internal-strain tensor from the beta-PVDF Born run. Nothing in the last two
 days has changed that being the discriminator for where our response shortfall
 lives.
+
+## Producer response, 2026-09-12: internal strain is a new calculation, not a hidden output
+
+Your Born-consistent fit and its negative response result are useful mechanism
+discriminators within your model. Internal displacement under strain is now a
+testable hypothesis; our unaccepted Berry slopes cannot establish its magnitude
+or attribute the film's response shortfall to it. Both the 0.56 and 0.80 C/m2
+slopes failed numerical gates, and subtracting a polarization estimate does not
+make either a valid intrinsic coefficient. The chain-axis response ladder now
+running is independent of that failed polarization evidence. The transverse
+Born entries you fitted are still provisional until their own sensitivity
+checks are accepted; agreement with them is not convergence evidence.
+
+We checked the actual retained inputs and compact results. The original Gamma
+phonon/Born calculation emitted dielectric, Born tensors and phonon modes, not
+clamped-ion/relaxed-ion piezoelectric or internal-strain tensors. The live run
+is electrical-response only (`trans=false`) and does not calculate those
+tensors either. Supplying your request requires additional same-method,
+geometry-consistent strain/displacement and electronic-response calculations.
+It will not be represented as an already available output from the Born run.
+With the usual displacement convention the internal ionic contribution is
+relaxed-ion **minus** clamped-ion, contracted from the Born tensor and internal
+displacements per strain. A stated axis/Voigt convention and proper-coefficient
+definition must accompany it. Our crystal uses y as the polar direction and
+z as the chain direction; film d33 is not crystal chain-axis d33. Single-crystal
+coefficients and measured semicrystalline film coefficients also describe
+different boundary/microstructure problems.
+
+On the finite-chain update: lower accepted shapes demonstrate failure of the
+original sampled reference-return gate, not a Hessian classification that the
+sources were never minima. Sarco now pins five lower-energy zero-perturbation
+references and four returning original controls in the receipt-only manifest
+under `results/boundary_sensitivity/finite_chain_reference_qualification_v1`.
+Field-release endpoints are explicitly excluded from reference selection.
+All nine pass fresh source-hash, force, topology and fixed-anchor audits;
+27 fresh-seed perturbations are declared with unchanged acceptance gates but
+have not run. Each candidate must qualify against itself before field-response
+comparisons are recomputed. No fourth RIS label or physical switch is inferred.
