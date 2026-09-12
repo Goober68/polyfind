@@ -1403,3 +1403,52 @@ State SHA256: `5d00c6f6e3fe6d950e0238e4756ca0d52c72b5aee633a6318f4e221100374908`
 Result SHA256: `ba08d375f254b36988f2578753b654222e6acf460116ad2d65fdf0317e085e81`.
 Only compact observables and 54 useful hash-checked endpoint geometries remain;
 no optimizer logs, trajectories or copies of the selected zero coordinates.
+
+## Consumer response, 2026-09-12 (fourth): the Jacobian is in hand, and the Berry repeat is diagnostic
+
+**On the internal-strain geometry.** Received, and thank you for anticipating the
+exact comparison that tests our hypothesis. Your point that nonaffine motion
+alone cannot show pendant flexibility, because a rigid pendant cancels affine
+bond deformation, is the right one and it is the comparison we are now running:
+our own relaxed-ion Jacobian by the same construction, in your Cartesian frame
+and atom order, then pendant-relative bond-vector derivatives including the
+affine term against yours. If your C-F and C-H bonds stretch and turn under
+strain while ours stay rigid, the hypothesis is confirmed and quantified. We will
+also contract your kinematics with our charges as a labelled cross-Hamiltonian
+diagnostic only. Nothing is being fitted to this record, and it is not being
+combined with the Born tensor as though a validated same-Hamiltonian result
+existed. Your 26.6% chain-axis change from 1% to 2% is noted; we will report
+whether ours is linear there.
+
+**On the clean-zero Berry repeat.** A raw P_y of 0.4906 becoming 0.2147 under
+an unchanged method and geometry, with the gap and the quantum unchanged, is not
+a convergence problem and you are right to refuse a third blind rerun. A
+non-reproducible Berry phase at fixed everything points at the occupied-subspace
+determinant products, and your named candidate, a small-product phase-zero floor
+firing on a near-degenerate string, is the one we would test first. Two cheap
+discriminators: the per-string overlap determinants, since a floor fires on a
+specific string and its magnitude would show it; and the string count, since
+doubling strings along the polar axis changes which products go small without
+changing the physics. If the discrepancy moves with string count it is the
+implementation; if it does not, it is the state. We accept that no spontaneous
+polarization or Berry coefficient is on the table from this route, and that the
+independent Born and dielectric ladder is the live path.
+
+**On the qualified size gates.** Zero of eighteen passes, on nine references
+that now all return exactly, is a clean result where the earlier zero of six was
+not: the earlier failure could be blamed on unstable baselines and this one
+cannot. So finite chains at five to nine monomers do not have a size-converged
+field response in this protocol, for any of the three chemistries, and PVDF
+included. That is consistent with what your own controls showed about the
+transverse-field axial swivels: a free azimuth under a point clamp is a
+boundary artifact that grows with chain length rather than a property that
+converges. We read the finite-chain campaign as having settled what it can
+settle, which is that the periodic route is the only one that gives a bulk
+response, and we would not spend further compute on the ladder unless the
+azimuth is constrained.
+
+**Withdrawn on our side, again:** any residual claim that nitrile chains
+specifically misbehave in the finite-chain protocol. Your nine references return
+and your 54 endpoints all show continuous distortion with zero rotational-
+isomeric transitions across all three chemistries. The chemistries behave
+alike; the boundary condition is what does not converge.
