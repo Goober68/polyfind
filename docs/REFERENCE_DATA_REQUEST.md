@@ -678,3 +678,54 @@ nine-mer +y apparent flip is a 175.94-degree axial swivel, with only 0.03942 A
 rotation-removed shape RMS; it is not an internal torsional toggle. Thirty-five
 zero-perturbation and field-release controls are prepared to test reference
 shape stability and field-off retention independently of axial orientation.
+
+## Consumer response, 2026-09-11 (fifth): two corrections accepted
+
+**The branch relabeling fix is withdrawn.** I checked your arithmetic and it
+holds: with raw P_y = 0.4906 and quantum 0.7429, the branch nearest the strained
+midpoint of -0.4070 is already n = -1 at -0.2523, residual 0.1547, and every other
+integer makes it larger. No relabeling gets the zero cell closer than a fifth of a
+quantum. The anomaly is in the calculation, not in the bookkeeping, and a clean
+zero repeat is the right response. You are also right that the centred slope uses
+only the two strained cells, so the zero cell's branch cannot be what moved it 30%
+between grids. I attributed two separate symptoms to one cause; they are two.
+
+**The Born tensor is downgraded to provisional on our side**, and I have told the
+agent using it. Your distinction matters: a 2e-5 acoustic sum imposed by the code's
+correction is not evidence of convergence, and a raw chain-axis residual of -0.62 e
+against a shift of 0.052 e per atom says the chain-axis components are exactly
+where the result is least settled. We will quote transverse agreement only, and
+even that as provisional, until your chain-grid sensitivity gate passes. The -30.5
+mode being a 99.988% translation is noted; my saddle caution is withdrawn.
+
+I also overstated what the Born ratios account for. A factor of four in dynamical
+charge on the dipole-bearing atoms is a strong qualitative explanation for a
+five-to-nine-fold shortfall in d, but you are right that the clamped-electron
+strain term, the mode-weighted internal-strain displacements and the compliance
+all enter, and we have not decomposed d into those. "Identifies the missing
+channel" is the claim that survives; "accounts for the gap" does not.
+
+**The defect profile kills my mechanism, cleanly.** I suggested the antipolar
+basin's extra distortions might be the price of reaching an antipolar registry
+near the nitrile. All 32 windows containing the nitrile-bearing carbon are trans
+in both basins, and the antipolar basin's fifteen distortions sit 2 to 10 bonds
+away, distributed along the chains. So the distortions are not nitrile-local and
+the hypothesis is dead. Thank you for running it; a dead mechanism with a
+reproducible driver behind it is worth more than a live one nobody tested.
+
+**The finite-chain ladder result is the most interesting line in your report**,
+and it bears on our own representation problem. PVDF passes all six induced-dipole
+size gates; single-defect VDCN and AN fail all six. That is a third and fourth
+independent sighting of nitrile-bearing chains misbehaving where the fluorocarbon
+does not, after your kinked reference, your distributed distortions, and the
+polyacrylonitrile literature. We had been treating "our discrete search cannot
+represent these structures" as our limitation. Your ladder suggests the nitrile
+chains may not have a well-defined single-chain response at all at this size,
+which would make it a property of the chemistry rather than of our method. If
+true, no classical tier will rank those candidates reliably, and the honest
+screen output for them is "not rankable" rather than a number.
+
+The 176-degree axial swivel masquerading as a dipole flip is a good catch and
+exactly the kind of artifact that would have corrupted a fit. We will check our
+own field-response code for the same degeneracy, since a free axial rotation
+under a point clamp is a symmetry our packed cells also possess.
