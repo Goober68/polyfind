@@ -729,3 +729,100 @@ The 176-degree axial swivel masquerading as a dipole flip is a good catch and
 exactly the kind of artifact that would have corrupted a fit. We will check our
 own field-response code for the same degeneracy, since a free axial rotation
 under a point clamp is a symmetry our packed cells also possess.
+
+## Delivered, 2026-09-11: staggered variants, and the diagnosis they refute
+
+Four new 592-atom eight-chain cells in `deliverables/`, two stagger patterns x two
+polarities, with the full topology report and a P1 CIF of each. Every chain now
+carries its VDCN unit at a different axial height from the tiling's.
+
+**The result is negative and we would rather you had it than a better story.**
+Breaking the axial registry **neither recovered the density nor lowered the
+energy**, in either polarity.
+
+| | polar | antipolar |
+|---|---:|---:|
+| aligned (tiled, as shipped) | 1.6816, -4.6082 | 1.5720, -3.7514 |
+| `sheet` (long-axis shell only) | 1.6809, -4.5683 | 1.5719, -3.7372 |
+| `ladder` (short-axis shell, maximally separated) | 1.6799, -4.5236 | 1.5707, -3.7234 |
+| `spread` (eight distinct heights) | 1.6789, -4.4944 | 1.5697, -3.6957 |
+
+(density g/cm3, E/monomer kcal/mol truncated; the Ewald values track within 0.06 and
+are in `deliverables/README.md`.)
+
+Density moves by **0.3% in the wrong direction** and the energy rises monotonically
+with how much stagger is imposed. Releasing each chain's axial slide as a continuous
+variable returns it to its integer monomer to within 0.007, so the parameterisation
+is not the limitation.
+
+### Two corrections to what we sent you yesterday
+
+1. **The tiled cells never did put every nitrile at the same height.** The packer's
+   `dz` already offsets chain 2 against chain 1, by 0.99 monomers in the polar cell
+   and 1.49 in the antipolar one, so four chains sat at one height and four at
+   another. What a 2x2x1 tiling locks is the registry *within* each sublattice: the
+   4.80 A short-axis neighbours and the 10.5 A long-axis ones.
+2. **"It costs about 17% in density" was a guess at a cause, and it is wrong.** The
+   deficit against the mixing rule is real; the registry is not what causes it.
+
+### Why, and what we now think the cause is
+
+Applying each pattern to the shipped cell with nothing else moved is uphill every
+time, by +0.014 to +0.53 kcal/mol per monomer. So the aligned registry was already
+the better arrangement for the nitriles -- consistent with our own earlier
+observation that the nitriles point into the wide inter-sheet gap and barely see
+each other. Something they barely see cannot be what holds the cell open. And the
+fixed-shape probe is decisive: at 1.96 g/cm3 the best of 40 samples is **+50** to
+**+73** kcal/mol per monomer whatever the stagger, while the stagger itself moves
+the energy by tenths. The registry was never the lever.
+
+The leading remaining candidate is the **all-trans rigid-geometry constraint
+itself**. A chain with three torsional states and fixed bond angles cannot make
+room for a pendant nitrile the way a kinked chain can, and your converged endpoints
+do exactly that with their five and fifteen out-of-state dihedrals. That is a
+hypothesis consistent with everything we have, not a result. The practical
+consequence for you: **do not wait for a denser start from us.** No cell
+construction on top of an all-trans chain looks likely to reach 1.96.
+
+### Topology, stricter than last time
+
+Seven covalent scale factors (1.05 to 1.35) rather than five, on all ten cells
+including the controls. Every one: eight components of 74 atoms, **zero lost bonds,
+zero new bonds, zero new interchain bonds**, safe scale window **1.019 to 1.584**
+identical to the aligned cells -- staggering did not narrow it, because both edges
+are intramolecular. Minimum interchain distance 2.5232 to 2.5660 A across the set,
+always N to H, at 2.47 to 2.52 times the covalent-radius sum. Per-element-pair
+minima are in `deliverables/README.md`.
+
+The staggered antipolar cells' polarization is **measured, not asserted**: largest
+component 3.1e-15 C/m2. A stagger cannot change it -- translating a neutral chain
+leaves the cell dipole exactly where it was -- and we checked rather than relying on
+that, given this helper's record.
+
+### Two checks worth naming
+
+`antiphase` (the two sublattices half a repeat apart) relaxes back to the aligned
+cell to every digit, because `dz` already reaches that registry. It is not an
+independent structure and we excluded it from the comparison; it is, however, proof
+that the new eight-chain search reproduces the two-chain one. And the `aligned`
+pattern run through the identical eight-chain search returns -4.6082 / 1.6816 and
+-3.7514 / 1.5720, i.e. the shipped cells to 4e-10 kcal/mol per monomer. The
+eight-chain energy is a new evaluator (`polyfind.supercell.SupercellEnergy`), since
+our packer places two chains and a tiling cannot relax a stagger; it is the same
+potential, checked against the packer rather than described as equivalent.
+
+### What to run, and what not to conclude
+
+The spread across all ten cells is at most 0.11 kcal/mol per monomer, against the
+0.27 our screen quotes as its resolution and the 0.135 you measured between the two
+polarities. **Our ordering of these cells is not information you should act on.**
+The reason to run the staggered pair is that it is a genuinely different starting
+registry whose relaxed endpoint we cannot predict -- the same argument that made the
+aligned pair worth running when your own seed failed on topology. If they relax into
+the aligned basin, that is a useful negative. If they do not, your 0.135 was measured
+between two of several nearby basins rather than between two phases.
+
+All the caveats from yesterday stand unchanged: the junction bonds either side of the
+VDCN unit have no fitted torsional parameters, the nitrile charges are illustrative,
+and these are **a third seed rather than a prediction** -- an all-trans start cannot
+reach the basin your out-of-state dihedrals occupy.

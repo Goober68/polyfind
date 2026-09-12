@@ -14,8 +14,9 @@ structures are the deliverable; the energies are context.
 
 ## Reproduce
 
-    PYTHONPATH=src python examples/copolymer_starts.py   # writes every file here
-    PYTHONPATH=src python examples/copolymer_readme.py   # writes this README from them
+    PYTHONPATH=src python examples/copolymer_starts.py      # the aligned cells
+    PYTHONPATH=src python examples/copolymer_staggered.py   # the staggered variants
+    PYTHONPATH=src python examples/copolymer_readme.py      # writes this README from them
 
 ## Files
 
@@ -28,12 +29,33 @@ structures are the deliverable; the energies are context.
 | `vdf11_vdcn1_alltrans_antipolar_2chain_148atom.xyz` | antipolar, 148 atoms, two chains -- the primitive cell the above tiles |
 | `vdf11_vdcn1_alltrans_polar_2chain.cif` | polar primitive as P1 CIF |
 | `vdf11_vdcn1_alltrans_antipolar_2chain.cif` | antipolar primitive as P1 CIF |
-| `summary.json` | every number in this document, machine-readable |
+
+Staggered variants, added 2026-09-11 (see *Staggered variants* below; these are the ones to run if you want the axial registry broken):
+
+| file | contents |
+|---|---|
+| `vdf11_vdcn1_alltrans_polar_stagger_ladder_8chain_592atom.xyz` | polar, **592 atoms, eight chains**, `ladder` stagger: offsets [0, 3, 6, 9, 0, 3, 6, 9] monomers, 4 distinct axial heights, rho 1.6799 |
+| `vdf11_vdcn1_alltrans_polar_stagger_spread_8chain_592atom.xyz` | polar, **592 atoms, eight chains**, `spread` stagger: offsets [0, 3, 6, 9, 1, 4, 7, 10] monomers, 8 distinct axial heights, rho 1.6789 |
+| `vdf11_vdcn1_alltrans_antipolar_stagger_ladder_8chain_592atom.xyz` | antipolar, **592 atoms, eight chains**, `ladder` stagger: offsets [0, 3, 6, 9, 0, 3, 6, 9] monomers, 4 distinct axial heights, rho 1.5707 |
+| `vdf11_vdcn1_alltrans_antipolar_stagger_spread_8chain_592atom.xyz` | antipolar, **592 atoms, eight chains**, `spread` stagger: offsets [0, 3, 6, 9, 1, 4, 7, 10] monomers, 8 distinct axial heights, rho 1.5697 |
+| `vdf11_vdcn1_alltrans_polar_stagger_ladder_8chain.cif` | the same cell as a P1 CIF (fractional, wrapped) |
+| `vdf11_vdcn1_alltrans_polar_stagger_spread_8chain.cif` | the same cell as a P1 CIF (fractional, wrapped) |
+| `vdf11_vdcn1_alltrans_antipolar_stagger_ladder_8chain.cif` | the same cell as a P1 CIF (fractional, wrapped) |
+| `vdf11_vdcn1_alltrans_antipolar_stagger_spread_8chain.cif` | the same cell as a P1 CIF (fractional, wrapped) |
+| `staggered_summary.json` | every staggered number in this document, machine-readable |
+
+And the machine-readable companions to both sets:
+
+| file | contents |
+|---|---|
+| `summary.json` | every aligned number in this document, machine-readable |
 | `ris_parameter_provenance.json` | per-term parameter source and match quality |
 
-Extended XYZ: `Lattice="..."` on the comment line, `Properties=species:S:1:pos:R:3`, `pbc="T T T"`, plus the energy, density and minimum interchain distance as extra key-value pairs. Atom order is chain by chain, 74 atoms each, and within a chain it is backbone atom then its pendant atoms, repeating.
+Extended XYZ: `Lattice="..."` on the comment line, `Properties=species:S:1:pos:R:3`, `pbc="T T T"`, plus the energy, density and minimum interchain distance as extra key-value pairs; the staggered files add `stagger_monomers="..."`, one integer per chain in the file's own chain order. Atom order is chain by chain, 74 atoms each, and within a chain it is backbone atom then its pendant atoms, repeating.
 
-**Coordinates are not wrapped into the cell.** Each chain's crystallographic repeat is written whole, so a few pendant atoms sit just outside the `c` boundary. That is deliberate: it is the molecular choice of branch, and it is what makes the cell dipole quoted below a property of the cell rather than of where the origin was put. Any PBC-aware reader handles it; wrap if your tool insists. We could not validate the files against ASE here because ASE is not installed in this environment -- the format is written to the extxyz convention rather than round-tripped through a reader, so the ten seconds it would take you to load one before committing a long run is worth it.
+**Coordinates are not wrapped into the cell.** Each chain's crystallographic repeat is written whole, so a few pendant atoms sit just outside the `c` boundary. That is deliberate: it is the molecular choice of branch, and it is what makes the cell dipole quoted below a property of the cell rather than of where the origin was put. Any PBC-aware reader handles it; wrap if your tool insists. The CIFs are the exception: fractional coordinates are taken modulo one, because a CIF reader would otherwise place the overhanging atoms outside the box. Use the extended XYZ for anything that reads a dipole off the coordinates.
+
+**What we could and could not validate about the format.** ASE is still not installed here, so these have not been round-tripped through the reader you will probably use. They have been round-tripped through an independent parser of our own, which is worth more than nothing and less than ASE: `tests/test_supercell.py` re-reads each staggered file as text and re-derives the energy, the density, the whole topology report and the stagger pattern from what comes back. Energies agree to 1e-8 kcal/mol per monomer, densities to six decimals, the topology verdict and safe window are identical, and the stagger recovered from the coordinates alone matches the declared `stagger_monomers`. Each header's extra key-value pairs are checked against the file's own geometry rather than against the generator's memory of it. Still spend the ten seconds to load one in your own stack before committing a long run.
 
 ## The sequence
 
@@ -99,7 +121,14 @@ formula exactly -- `C208H192F176N16`, 592 atoms, eight chains of 74 -- but the t
 exact replication, so the four copies of the two-chain motif are **not independent**: a
 chain cannot slip, rotate or register differently from its own image, because it is its own
 image. If independent eight-chain registry is what you need, these are seeds for it rather
-than an answer to it.
+than an answer to it -- and *Staggered variants* below is that answer, built on top of these
+files with eight independently registered chains.
+
+One thing to be precise about, because we were not precise enough about it the first time:
+the packer's `dz` slides chain 2 against chain 1, and at these cells it does so by
+0.99 monomers (polar) and 1.49 (antipolar). So the eight chains sit at **two**
+axial heights, not one. What a 2x2x1 tiling locks is the registry within each of the two
+sublattices: the 4.80 A `b`-axis neighbours and the 10.5 A `a`-axis ones.
 
 Both cells are orthorhombic with gamma fixed at 90 degrees. Your full-cell stage is what
 releases that.
@@ -193,10 +222,19 @@ where it goes: the copolymer's short axis comes out **4.80 A**, 4% off PVDF's ow
 4.64 A, while its long axis comes out **10.46 A**, 21% above PVDF's 8.62 and
 10% above the 9.50 A long axis of the *pure VDCN* cell. So the majority
 monomer sets the short axis and the nitrile sets the long one, even though only one monomer
-in twelve carries a nitrile. The reason is the tiling rather than
-the chemistry: the 2x2x1 replication puts
-**every** chain's nitrile at the same axial height, turning eight isolated bulky groups into
-a continuous plane of them that the whole structure has to clear.
+in twelve carries a nitrile.
+
+> **Corrected 2026-09-11.** This paragraph used to continue: *"The reason is the tiling rather
+> than the chemistry: the 2x2x1 replication puts every chain's nitrile at the same axial
+> height, turning eight isolated bulky groups into a continuous plane of them that the whole
+> structure has to clear."* **We tested that and it is wrong**, twice over. First, the tiled
+> cells never did put every nitrile at the same height: the packer's own `dz` already offsets
+> the second chain, and at the shipped cells it does so by 0.99 monomers (polar) and
+> 1.49 (antipolar), so four chains sit at one height and four at another. What the tiling
+> actually locks is the registry *within* each sublattice -- the 4.80 A `b`-axis neighbours and
+> the 10.5 A `a`-axis ones. Second, breaking that lock does not recover the density: see
+> *Staggered variants* below. The deficit is real and the sentence naming its cause was a
+> guess; the sections below say what we now think it is.
 
 This is not a search failure, and that was checked rather than assumed. Both checks are in
 the generator and their numbers are in its log.
@@ -218,9 +256,14 @@ into the wide inter-sheet gap and barely see each other.
 What we would not conclude from this is that an all-trans copolymer cannot pack densely. The
 tiling constraint alone could account for all of it, and an eight-chain search with
 independent axial registries -- which `CrystalPacker` cannot do, it places two chains -- would
-stagger the nitriles and should recover much of the 17%. It is, though, consistent with your
+stagger the nitriles and might recover much of the 17%. It is, though, consistent with your
 kink being how the chain makes room for the nitrile at high density, which would be a real
 result about the copolymer rather than about either of our codes.
+
+**That paragraph was a prediction, and it has since been tested.** The eight-chain search it
+asks for is in *Staggered variants* below, and the answer is in that section's verdict table
+rather than here. Read the two together: this section says where the deficit goes, that one
+says whether breaking the registry gets it back.
 
 For your protocol the practical consequence is the useful direction: a loose fixed-cell start
 cannot do what your rejected seed did. The seed that failed was too *tight* -- chains close
@@ -286,6 +329,265 @@ means no reasonable choice of detector disagrees.
 | F-F | 3.9008 | 3.7251 |
 | H-H | 4.2171 | 4.0950 |
 
+## Staggered variants: breaking the axial nitrile registry
+
+You took up the offer at the end of our 2026-09-10 note, and this section is the answer.
+A 2x2x1 tiling of a two-chain cell is an exact replication, so a chain cannot sit at a
+different axial height from its own image -- it *is* its own image -- and we had argued that
+the resulting nitrile registry was what cost the four files above about 17% density against a
+mixing rule. The cells here slide each chain along its own axis by a whole number of monomers
+so the comonomer units distribute along the repeat instead.
+
+**The short version: in both polarities, breaking the registry does not recover the density (1.6816 -> 1.6809 g/cm3) and does not lower the energy (+0.0399 kcal/mol per monomer).** The verdict table below has the numbers and the honest
+reading of them; the rest of this section is how we got there, because a result like this is
+only worth anything if the search behind it is visible.
+
+**Two corrections to what we sent you on 2026-09-10**, both found while building this:
+
+1. The tiled cells never did put every nitrile at the same height. The packer's own `dz`
+   offsets chain 2 against chain 1, and it does so by 0.99 monomers in the shipped polar
+   cell and 1.49 in the antipolar one. Four chains sit at one height and four at another.
+   What a tiling locks is the registry *within* each sublattice.
+2. "It costs about 17% in density" was a guess at the cause, not a measurement. It is wrong.
+
+**These are a third seed, not a prediction, and the caveats on the aligned files apply
+unchanged.** The junction bonds either side of the VDCN unit still have no fitted torsional
+parameters. The nitrile charges are still illustrative. And your two converged endpoints still
+carry five and fifteen dihedrals outside any rotational-isomeric state, so every all-trans
+start we can build -- aligned or staggered -- is **a different basin, not a better one**.
+
+### Why a whole number of monomers
+
+Because the copolymer's backbone is a PVDF backbone, a slide by `c / 12` is a *rigid* slide
+of the skeleton and moves only the comonomer decoration. Measured rather than assumed:
+a `c/12` slide maps **68 of 74** atoms onto an identical atom, worst displacement 7.5e-13 A. The 6 that move are exactly the comonomer site: `34` F -> C at 0.1297 A, `35` F -> C at 0.1297 A, `40` C -> F at 0.1297 A, `41` N -> F at 1.2817 A, `42` C -> F at 0.1297 A, `43` N -> F at 1.2817 A.
+
+So an integer stagger changes which monomer of each chain carries the nitrile and changes
+nothing else about the chain. A fractional slide would put the backbones of neighbouring
+chains out of register as well, which is a different object; we release it at the end as a
+half-monomer local relaxation and report what it buys.
+
+### Which patterns, and why those
+
+The eight chains of the 2x2x1 cell sit on a centred lattice, and the neighbour shells are not
+what the cell edges suggest. Measured at the aligned polar cell, the close column pairs
+are **4** pairs at 4.80 A and **16** pairs at 5.76 A. Two facts follow, and both pick the patterns. **Every** A-B pair is a close pair,
+so no assignment of integer offsets can keep all close pairs more than 3 monomers apart --
+that is a backtracking search over the constraint graph, not an estimate. And the A-B shell is
+the one the packer's `dz` already moves, so the registry a tiling genuinely locks is the
+within-sublattice one: `b` at 4.80 A and `a` at 10.5 A.
+
+| pattern | offsets (monomers, chain order below) | min offset over close pairs | mean | distinct heights |
+|---|---|---|---|---|
+| `aligned` | 0 0 0 0 0 0 0 0 | 0 | 0.00 | 1 |
+| `antiphase` | 0 6 0 6 0 6 0 6 | 0 | 4.80 | 2 |
+| `sheet` | 0 0 0 0 6 6 6 6 | 0 | 2.40 | 2 |
+| `ladder` | 0 3 6 9 0 3 6 9 | 3 **(optimal)** | 3.60 | 4 |
+| `spread` | 0 3 6 9 1 4 7 10 | 2 | 3.60 | 8 |
+
+Chain order is `build_cell`'s: `(0,0,0), (0,0,1), (0,1,0), (0,1,1), (1,0,0), (1,0,1), (1,1,0), (1,1,1)` as `(ix, iy, k)`, with `k = 1` the chain at
+`(a + b) / 2`.
+
+Rather than enumerate, the four non-trivial patterns **decompose the problem by neighbour
+shell**, so that a null result can be attributed to a shell rather than to the whole idea:
+
+* **`antiphase`** offsets the two sublattices by half a repeat and leaves both near shells
+  aligned. It is *not* an independent structure -- `dz` already does exactly this -- so it is
+  a check rather than a candidate, and it should come back identical to `aligned` after the
+  registry sweep. It does, to every digit reported, which is how we know the eight-chain
+  search is reproducing the two-chain one.
+* **`sheet`** offsets the two sheets stacked along the long `a` axis by half a repeat and
+  leaves the 4.80 A `b` neighbours aligned: the far shell alone.
+* **`ladder`** ramps a quarter of the repeat per `b/2` layer, which puts the 4.80 A
+  neighbours half a repeat apart -- the near shell, the one a tiling actually locks. It is
+  affine in the transverse height, so it is a c-glide rather than an arbitrary decoration, and
+  at 3 monomers it **reaches the bound above**: it is the maximally-separated arrangement
+  for this lateral geometry. That was worth checking rather than assuming, because it is not
+  obvious until the constraint graph is written down.
+* **`spread`** adds one monomer per step along `a` on top of the ladder, so all eight chains
+  sit at eight different heights -- the most axial slots occupied -- at the cost of dropping
+  the nearest-neighbour minimum to 2 monomers. `ladder` and `spread` optimise different
+  measures, which is why both are here and both are shipped.
+* **`aligned`** is the 2x2x1 registry, run through the *identical* eight-chain search. It is
+  the control that makes any difference a statement about the stagger rather than about the
+  optimiser.
+
+### The eight-chain energy
+
+`CrystalPacker` places two chains, so it cannot relax a stagger at all.
+`polyfind.supercell.SupercellEnergy` evaluates the same potential -- the same UFF
+Lennard-Jones tables, the same damped-shifted-force Coulomb at 8 A, the same bonded
+exclusions, the same charges, optionally the same Ewald sum -- on a cell of arbitrarily many
+independent chains, as a direct sum over every periodic image within the cutoff. It is not
+trusted on that description: the energy per monomer of a pair potential is invariant under
+tiling, so it is checked against `CrystalPacker.energy` on the packer's own cells, and it
+agrees to 2e-10 kcal/mol per monomer. The staggered cells and the aligned ones are
+therefore scored by one function.
+
+Each staggered cell was then relaxed over exactly the five variables the aligned cells were
+-- `(a, b, phi1, phi2, dz)` at `gamma = 90` -- by the same sequence: a screen (the aligned
+optimum at all twelve axial registries, nine fixed shapes spanning 1.68 to 2.10 g/cm3 with
+the setting angles and `dz` sampled at each, and a uniform random screen), a polish of the
+best five distinct cells, an axial-registry sweep, and a final tightening. The fixed dense
+shapes matter: the question is whether a staggered cell *started dense* stays dense, and a
+screen that only looked near the loose aligned optimum could not answer it.
+
+The antipolar variants hold `phi2 = phi1 + 180` throughout the search rather than checking it
+at the end, so they are exactly antipolar at every step. That is the same subspace
+`antipolar_offsets` derives from the chain's own moment, and with four chains at each setting
+angle the cell dipole cancels exactly.
+
+
+### First, the cheapest possible measurement
+
+Apply each pattern to the shipped cell and move nothing else. The number is the change in kcal/mol per monomer against the aligned registry at the *same* cell, so it isolates what the stagger does to the comonomer contacts from what relaxing the cell afterwards might win back.
+
+| pattern | polar | antipolar |
+|---|---|---|
+| `aligned` | +0.0000 | +0.0000 |
+| `antiphase` | +0.1054 | +0.0368 |
+| `sheet` | +0.0402 | +0.0143 |
+| `ladder` | +0.1282 | +0.0298 |
+| `spread` | +0.1149 | +0.5315 |
+
+**Every one of them is uphill.** So at the shipped shape the aligned registry is already the better arrangement for the nitriles, and the whole case for staggering rests on the cell being able to contract afterwards. The spread is small in absolute terms -- at most 0.531 kcal/mol per monomer, which is inside the 0.27 our own screen quotes as its resolution and about the size of the 0.135 your MACE+D3 run measured between the two polarities -- so read the signs, not the magnitudes.
+
+
+### The staggered cells
+
+| cell | a x b x c (A) | density | E/mon trunc. | E/mon Ewald | \|P\| (C/m2) | min offset |
+|---|---|---|---|---|---|---|
+| polar, **aligned (control)** | 20.920 x 9.607 x 30.756 | 1.6816 | -4.6082 | -6.9933 | 1.209e-01 | 0 |
+| polar, antiphase | 20.920 x 9.607 x 30.756 | 1.6816 | -4.6082 | -6.9933 | 1.209e-01 | 0 |
+| polar, sheet | 20.930 x 9.607 x 30.756 | 1.6809 | -4.5683 | -6.9405 | 1.209e-01 | 0 |
+| polar, ladder | 20.938 x 9.609 x 30.756 | 1.6799 | -4.5236 | -6.9092 | 1.208e-01 | 3 |
+| polar, spread | 20.951 x 9.608 x 30.756 | 1.6789 | -4.4944 | -6.8761 | 1.207e-01 | 2 |
+| antipolar, **aligned (control)** | 22.653 x 9.490 x 30.756 | 1.5720 | -3.7514 | -6.1225 | 3.164e-15 | 0 |
+| antipolar, antiphase | 22.653 x 9.490 x 30.756 | 1.5720 | -3.7514 | -6.1225 | 3.095e-15 | 0 |
+| antipolar, sheet | 22.654 x 9.491 x 30.756 | 1.5719 | -3.7372 | -6.1014 | 3.271e-15 | 0 |
+| antipolar, ladder | 22.665 x 9.493 x 30.756 | 1.5707 | -3.7234 | -6.0959 | 3.131e-15 | 3 |
+| antipolar, spread | 22.678 x 9.494 x 30.756 | 1.5697 | -3.6957 | -6.0660 | 3.164e-15 | 2 |
+
+Every cell is orthorhombic, 592 atoms, eight chains of 74, `C208H192F176N16`, c = 30.7557 A. `a x b` here is the **supercell**, twice the two-chain primitive's, so double the aligned `a` and `b` in *The two cells* above before comparing. The `aligned` rows are the shipped two-chain cells reproduced by the eight-chain search from scratch, and they come back to the reported figure, which is the control the rest of the table is read against.
+
+**The antipolar cells' polarization was measured, not assumed**, for the reason the aligned report gives: the helper that builds antipolar cells has shipped two defects in this area. The largest magnitude across the antipolar rows above is 3.3e-15 C/m2. A stagger cannot change it -- translating a neutral chain moves its moment by `(sum q) d = 0`, which is also why polarity and stagger are independent choices here -- but it was checked rather than relied on, at every pattern.
+
+One number to expect if you recompute that yourself: reading the polarization back off the extended-XYZ file gives about 2e-10 rather than 3e-15 C/m2, because the file carries eight decimals and the cancellation between the four chains up and the four down is exact only in the coordinates we computed it from. Both are zero against the polar cell's 0.12. The energies and densities do round-trip from the file: 1e-8 kcal/mol per monomer and exact to six decimals respectively.
+
+**Releasing the per-chain slides.** Each chain was then allowed to slide off its integer monomer by up to half a monomer -- a degree of freedom the aligned cells could not have had, so reported separately rather than folded in:
+
+| cell | E/mon with slides free | change | density | slides (monomers) |
+|---|---|---|---|---|
+| polar, antiphase | -4.6082 | +0.0000 | 1.6816 | +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 |
+| polar, sheet | -4.5683 | +0.0000 | 1.6809 | +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 |
+| polar, ladder | -4.5236 | +0.0000 | 1.6799 | +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 |
+| polar, spread | -4.4944 | -0.0001 | 1.6789 | +0.00 -0.01 -0.00 -0.01 +0.01 +0.00 +0.01 +0.00 |
+| antipolar, antiphase | -3.7514 | +0.0000 | 1.5720 | +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 |
+| antipolar, sheet | -3.7372 | +0.0000 | 1.5719 | +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 |
+| antipolar, ladder | -3.7234 | -0.0000 | 1.5707 | +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 |
+| antipolar, spread | -3.6957 | -0.0001 | 1.5697 | +0.00 -0.01 -0.00 -0.01 +0.01 +0.00 +0.01 +0.00 |
+
+
+### And does a staggered cell started dense stay dense?
+
+The aligned deliverable answered its own density question with a fixed-shape probe: pin `(a, b)`, sample the setting angles and `dz` densely, and see whether the dense shapes are attractive at all. Here is the same probe run for every pattern, 40 samples per shape, polar branch, best kcal/mol per monomer found at each shape.
+
+| shape a x b (A) | density | `aligned` | `antiphase` | `sheet` | `ladder` | `spread` |
+|---|---|---|---|---|---|---|
+| 10.46 x 4.80 | 1.6816 | -0.13 | +0.35 | +0.36 | -0.09 | -0.10 |
+| 9.60 x 4.80 | 1.8336 | +7.12 | +7.03 | +7.04 | +7.13 | +7.19 |
+| 9.00 x 4.80 | 1.9558 | +72.89 | +57.45 | +72.88 | +57.52 | +57.52 |
+| 8.60 x 4.80 | 2.0468 | +73.35 | +73.26 | +73.31 | +73.33 | +73.32 |
+| 8.20 x 4.80 | 2.1466 | +54.37 | +54.36 | +54.35 | +54.44 | +54.42 |
+| 9.00 x 5.20 | 1.8054 | +3.87 | +3.89 | +3.85 | +3.87 | +3.88 |
+| 8.60 x 5.60 | 1.7544 | +2.40 | +2.43 | +2.41 | +2.47 | +3.81 |
+| 10.00 x 4.40 | 1.9202 | +12.69 | +12.47 | +12.53 | +12.49 | +12.46 |
+| 7.80 x 5.00 | 2.1664 | +107.28 | +107.23 | +107.27 | +107.34 | +107.34 |
+
+The pattern is the same one the aligned cells showed and the stagger does not change it: every shape at or above about 1.9 g/cm3 is **strongly repulsive whatever the stagger** -- tens of kcal/mol per monomer, not tenths -- and only the shapes already near the reported cell sample attractively. Staggering the comonomer units moves these numbers by a fraction of a kcal/mol against a wall tens of kcal/mol high. (5 of the 9 shapes are above 1.9.) Whatever is keeping this structure from the mixing rule's density, it is not the axial registry of the nitriles.
+
+
+### Did breaking the registry recover the density?
+
+Patterns excluded from this comparison because they relaxed back to the aligned cell *exactly*, `dz` having already reached that registry: `antiphase`. That is measured (same relaxed energy to 1e-6), not assumed, and it is the check that the eight-chain search reproduces the two-chain one.
+
+| | polar | antipolar |
+|---|---|---|
+| genuine stagger patterns | `sheet`, `ladder`, `spread` | `sheet`, `ladder`, `spread` |
+| aligned density | 1.6816 | 1.5720 |
+| densest staggered | 1.6809 (`sheet`) | 1.5719 (`sheet`) |
+| change in density | **-0.0007** | **-0.0001** |
+| mixing-rule target | 2.028 | 2.028 |
+| fraction of the deficit recovered | **-0.2%** | **-0.0%** |
+| aligned E/mon | -4.6082 | -3.7514 |
+| lowest staggered E/mon | -4.5683 (`sheet`) | -3.7372 (`sheet`) |
+| change in E/mon | **+0.0399** | **+0.0141** |
+| with the slides free | -4.5683 | -3.7372 |
+| density recovered? | **no** | **no** |
+| energy lowered? | **no** | **no** |
+
+**It did not work, and that is worth saying plainly.** Breaking the axial
+registry neither recovered the density nor lowered the energy, in either polarity. So the
+aligned registry was **not** what was costing the 17%, and our own explanation of the deficit
+was a guess that has now failed: the nitrile registry is not the binding constraint.
+
+Two pieces of evidence in this section say why, and both were already visible in the aligned
+report if we had read it properly. The fixed-geometry table shows every pattern is uphill at
+the shipped shape, so the aligned registry was already the better arrangement for the
+nitriles -- consistent with the aligned report's own observation that *"the nitriles point into
+the wide inter-sheet gap and barely see each other"*. Something the nitriles barely see cannot
+be what holds the cell open. And the fixed-shape probe shows the wall at high density is tens
+of kcal/mol per monomer tall whatever the stagger, while the stagger moves the energy by
+tenths. The registry was never the lever.
+
+The leading remaining candidate is the **all-trans rigid-geometry constraint itself**: a chain
+with three torsional states at 180 and +-60 degrees and fixed bond angles cannot make room for
+a pendant nitrile the way a kinked chain can, and your converged endpoints do exactly that with
+their five and fifteen out-of-state dihedrals. That is a hypothesis consistent with everything
+we have, not a result -- testing it needs a relaxed-geometry search we have not run. What it
+does mean is that the 17% is unlikely to be recoverable by any cell construction we can do on
+top of an all-trans chain, so do not wait for a denser start from us.
+
+**What to do with them anyway.** The spread between every cell in the table -- aligned and staggered, both polarities -- is at most 0.114 kcal/mol per monomer, against the 0.27 our own screen quotes as its resolution and the 0.135 your MACE+D3 run measured between the two polarities. Our ordering of these cells is therefore not information you should act on, and the reason to run the staggered ones is that they are a genuinely different starting registry whose relaxed endpoint we cannot predict -- the same argument that made the aligned pair worth running when your own seed failed on topology. They pass the same topology screen, they are looser rather than tighter than your rejected seed, and they break a symmetry the aligned cells could not. If they relax to the same basin as the aligned ones, that is a useful negative; if they do not, the 0.135 gap you measured was measured between two of several nearby basins rather than between the two phases.
+
+
+### Topology of the staggered cells
+
+This is the part of the handoff that has to be right, so it is **stricter** than the aligned report above: the same detected-graph-from-Cordero-radii test over all periodic images, at 7 covalent scale factors (1.05-1.35) rather than five, on all 10 relaxed cells including the controls.
+
+| | polar aligned | polar antiphase | polar sheet | polar ladder | polar spread | antipolar aligned | antipolar antiphase | antipolar sheet | antipolar ladder | antipolar spread |
+|---|---|---|---|---|---|---|---|---|---|---|
+| atoms | 592 | 592 | 592 | 592 | 592 | 592 | 592 | 592 | 592 | 592 |
+| components at 1.20 | 8 x 74 | 8 x 74 | 8 x 74 | 8 x 74 | 8 x 74 | 8 x 74 | 8 x 74 | 8 x 74 | 8 x 74 | 8 x 74 |
+| lost bonds (1.05-1.35) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| new bonds (1.05-1.35) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| new **interchain** bonds (1.05-1.35) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| worst intended bond d/(ri+rj) | 1.0187 | 1.0187 | 1.0187 | 1.0187 | 1.0187 | 1.0187 | 1.0187 | 1.0187 | 1.0187 | 1.0187 |
+| closest non-bonded d/(ri+rj) | 1.5844 | 1.5844 | 1.5844 | 1.5844 | 1.5844 | 1.5844 | 1.5844 | 1.5844 | 1.5844 | 1.5844 |
+| **safe scale window** | 1.019-1.584 | 1.019-1.584 | 1.019-1.584 | 1.019-1.584 | 1.019-1.584 | 1.019-1.584 | 1.019-1.584 | 1.019-1.584 | 1.019-1.584 | 1.019-1.584 |
+| **min interchain d (A)** | **2.5655** | **2.5655** | **2.5599** | **2.5660** | **2.5643** | **2.5243** | **2.5243** | **2.5232** | **2.5254** | **2.5252** |
+| min interchain d/(ri+rj) | 2.5152 | 2.5152 | 2.5097 | 2.5157 | 2.5140 | 2.4748 | 2.4748 | 2.4737 | 2.4759 | 2.4757 |
+| verdict | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** |
+
+**Every covalent scale from 1.019 to 1.584 recovers the intended graph of all 10 cells exactly**: eight separate components of 74 atoms, zero bonds lost, zero invented, zero interchain. Both edges of that band are *intramolecular* -- the lower is the 1.09 A C-H bond against the Cordero radii, the upper a 1-3 backbone C...C -- so the verdict does not depend on the cutoff you pick, and staggering did not narrow it. The closest interchain contact anywhere in the set is **2.5232 A**, 2.47 times the sum of covalent radii, so a detector would have to be more than twice as generous as the most generous convention before it saw an interchain bond. A bare unscaled 1.0 is still outside the band and would lose every C-H bond, in these cells as in the aligned ones.
+
+
+#### Minimum interchain distance by element pair (A)
+
+| pair | polar aligned | polar antiphase | polar sheet | polar ladder | polar spread | antipolar aligned | antipolar antiphase | antipolar sheet | antipolar ladder | antipolar spread |
+|---|---|---|---|---|---|---|---|---|---|---|
+| H-N | 2.5655 | 2.5655 | 2.5599 | 2.5660 | 2.5643 | 2.5243 | 2.5243 | 2.5232 | 2.5254 | 2.5252 |
+| F-N | 2.6268 | 2.6268 | 2.6250 | 2.6303 | 2.6318 | 2.7904 | 2.7904 | 2.7963 | 2.7918 | 2.8047 |
+| C-H | 2.8167 | 2.8167 | 2.8152 | 2.8174 | 2.8167 | 2.7652 | 2.7652 | 2.7651 | 2.7666 | 2.7667 |
+| F-H | 2.8323 | 2.8323 | 2.8313 | 2.8330 | 2.8325 | 2.7805 | 2.7805 | 2.7805 | 2.7819 | 2.7820 |
+| C-N | 3.2028 | 3.2028 | 3.2018 | 3.2071 | 3.2096 | 3.4734 | 3.4734 | 3.4720 | 3.4745 | 3.4742 |
+| C-F | 3.5754 | 3.5754 | 3.5718 | 3.5760 | 3.5748 | 3.5239 | 3.5239 | 3.5232 | 3.5252 | 3.5252 |
+| C-C | 3.5886 | 3.5886 | 3.5847 | 3.5892 | 3.5879 | 3.5377 | 3.5377 | 3.5370 | 3.5391 | 3.5391 |
+| N-N | 3.6083 | 3.6083 | 3.6174 | 3.6203 | 3.6259 | 4.2369 | 4.2369 | 4.2508 | 4.2356 | 4.2576 |
+| F-F | 3.9008 | 3.9008 | 3.8986 | 3.9045 | 3.9061 | 3.7251 | 3.7251 | 3.7298 | 3.7272 | 3.7379 |
+| H-H | 4.2171 | 4.2171 | 4.2147 | 4.2210 | 4.2227 | 4.0950 | 4.0950 | 4.0991 | 4.0972 | 4.1071 |
+
+
 ## What we would not stand behind
 
 1. **The junction bonds have no fitted torsional parameters.** Four of 24 first-order
@@ -315,8 +617,12 @@ means no reasonable choice of detector disagrees.
    potential.** It is quoted with Ewald alongside the truncated sum for exactly that reason,
    and it is not evidence about which phase a real copolymer adopts.
 
-5. **Eight chains here are four copies of two**, and that costs about 17% in density. See
-   "How the two packings were built" and "Density".
+5. **Eight chains in the four files at the top are four copies of two.** We used to write
+   that this cost about 17% in density; it does not -- the staggered cells released exactly
+   that constraint and came back no denser, and slightly higher in energy. The 17% deficit
+   against the mixing rule is real, the tiling is not what causes it, and the best remaining
+   candidate is the all-trans rigid-geometry constraint itself. See the correction in
+   "Density" and the verdict in "Staggered variants".
 
 5b. **`antipolar_cell_exact`'s own `dz` resolution was not good enough here** and a finer
    scan of the identical subspace found a lower cell. We took the lower one, but it means the
@@ -343,18 +649,36 @@ means no reasonable choice of detector disagrees.
 8. **gamma is fixed at 90 degrees** and the chains are rigid. Your accepted cell is
    monoclinic (beta = 110.4 degrees). Releasing the cell is your full-cell stage's job.
 
+9. **The staggered cells keep all eight chains at two setting angles and one `dz`.** They are
+   relaxed over the same five variables the aligned cells were, which is what makes the
+   comparison matched, but it means eight chains that are now axially independent are still
+   orientationally a pair. A search with eight free setting angles is a bigger problem than
+   this one and has not been run; if your full-cell stage rotates individual chains, that is a
+   degree of freedom we did not explore rather than one we closed.
+
+10. **The stagger is an integer number of monomers by construction.** The half-monomer
+    release reported in that section is a local relaxation of the chosen pattern, not a search
+    over fractional registries, and the patterns themselves were chosen from the neighbour-shell
+    geometry rather than enumerated: with eight chains and twelve slots there are more
+    arrangements than we tried, and `ladder` is optimal only for the measure stated (the minimum
+    axial offset over close column pairs).
+
 ## Provenance
 
 | | |
 |---|---|
 | repository | `polyfind`, branch `claude/polymeric-stable-arrangements-uh06b1` |
-| generator | `examples/copolymer_starts.py` |
+| generator, aligned | `examples/copolymer_starts.py` |
+| generator, staggered | `examples/copolymer_staggered.py` |
 | sequence | `polyfind.polymers.VDF_VDCN_11_1` |
 | packer | `polyfind.pack.CrystalPacker` defaults (UFF LJ + DSF Coulomb, 8 A, illustrative charges) |
+| eight-chain energy | `polyfind.supercell.SupercellEnergy`, checked against the packer |
+| stagger construction | `polyfind.supercell.staggered_cell` / `stagger_pattern` |
 | antipolar subspace | `polyfind.fitting.antipolar_offsets` / `antipolar_cell_exact` |
 | topology check | `polyfind.topology.check_topology`, Cordero covalent radii |
 | request | `docs/NOTE_VDCN_CONVERGENCE.md`, "Sarco response, 2026-09-10" |
+| staggered request | `docs/REFERENCE_DATA_REQUEST.md`, "Consumer response, 2026-09-11" |
 | scope | `docs/CHEMISTRY_EXTENSION.md` section 3, "Copolymer composition" |
 
 
-Generated in 2626 s. Chain: 74 atoms, c = 30.7557 A, mass 782.448, 12 monomers per repeat, 8.33 mol% VDCN, uniform backbone bond 1.528 A.
+Generated in 2626 s. Chain: 74 atoms, c = 30.7557 A, mass 782.448, 12 monomers per repeat, 8.33 mol% VDCN, uniform backbone bond 1.528 A. Staggered variants generated in 1752 s on top of that, 21141 eight-chain energy evaluations.
