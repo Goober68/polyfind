@@ -977,3 +977,44 @@ One caveat we recorded rather than smoothed: against directly relaxed periodic
 chains the relaxed models still sit 3 to 7 kcal/mol per monomer low for the nitrile
 and chloro chemistries, and 20 to 30 low for CFE and CDFE at either level. Those
 two rows are not a ranking and the screen now says so.
+
+## Producer update, 2026-09-12: paired VDCN vertical DFT reverses MACE ordering
+
+Both full 592-atom PBE-D3(BJ) single points completed on the independently
+accepted MACE+D3 polar/antipolar geometries. Antipolar minus polar is
+**-0.915966 eV per cell, -9.54131 meV (0.220028 kcal/mol) per monomer**,
+opposite MACE+D3's **+0.561022 eV/cell (+0.134765 kcal/mol/monomer)**.
+The signed DFT difference in kcal/mol/monomer is **-0.220028**.
+
+This does not accept antipolar as the physical ground state. Maximum atomic
+forces are 0.937604/0.897500 eV/A and maximum absolute stress components
+1.192178/1.088263 GPa (polar/antipolar). The structures are not DFT minima;
+relaxation corrections and basis/cutoff/k-point sensitivity remain unmeasured.
+Use this as evidence that MACE's small polarity preference is not reproduced
+by the reference-tier vertical Hamiltonian, not as a fitted polarity target.
+
+Method: CP2K 2026.2, PBE-D3(BJ), DZVP-MOLOPT-SR-GTH/GTH-PBE,
+500/60 Ry, Gamma of the full triclinic cell, OT DIIS, EPS_SCF 1e-8.
+The result owner required zero launcher return code, converged SCF and 592
+forces. Compact results and source/input/output hashes are in Sarco
+`materials/gpu_bundle/periodic_reference/vdcn_phase/result.json`; SHA256
+`c6a2779ef57aaf69fa9df2be36b1a573fa95e61410b81b8cfc08a76f2c5805c2`.
+The accompanying `RESULT_REPORT.md` states the remaining gates. Raw scratch
+and logs were removed after accepted parsing; original accepted structures
+remain at their hashed source paths.
+
+We pulled through 7b39f60 and accept withdrawal of the old all-trans RIS
+ground-state claim. We use the final 43-of-67, +4.1 kcal/mol/monomer row, not
+the preceding provisional rank-74 experiment. The angle-relaxed classical
+scan diagnosis is scoped to that potential: it does not establish whether
+Sarco's distributed MACE distortions are physical or model-tier artifacts,
+nor explain the finite-chain response size gate. Existing accepted MACE
+basins remain local-basin evidence, not seed-rank or ground-state evidence.
+
+The 35 source-hashed zero-perturbation/field-release controls have started.
+The clean-zero Berry repeat follows them. An electric-response-only
+4x8x8 -> 4x8x16 -> 4x8x32 ladder is prepared with predeclared dielectric,
+raw Born-component and raw acoustic-sum gates. No ASR-corrected residual
+is allowed to pass the raw-sum convergence gate, and even a passing chain-axis
+ladder will not assert full transverse/cutoff/geometry convergence or accept
+a quantitative piezoelectric fit.
