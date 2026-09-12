@@ -355,7 +355,12 @@ Unchanged from `DFT_FIT.md` in its first item, sharpened in the rest.
 
 1. **A polarization or a molecular dipole in the training set.** Still the only observable
    that separates `eps_r` from the charge scale, still what test 3 turns on, and now the
-   only remaining explanation for test 3 that has not been eliminated.
+   only remaining explanation for test 3 that has not been eliminated. `docs/ELECTROMECHANICS.md`
+   section 5.7 puts a number on what the degeneracy costs: the two realisations of one
+   electrostatic *energy* scale give bit-identical crystals and elastic constants, and
+   differ in beta's `d_31` by a factor of `sqrt(s)` over the whole scan, so the choice
+   between them is currently unconstrained by anything in the objective and it is worth
+   about an order of magnitude in a piezoelectric coefficient.
 2. **Reference geometries relaxed at the labelling level.** The forces would then be
    conformational gradients rather than a record of a 0.1 Å bond-length disagreement, and
    the 32,000 force components would improve the energies instead of costing 0.2 kcal/mol

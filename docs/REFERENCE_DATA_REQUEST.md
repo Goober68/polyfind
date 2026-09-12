@@ -475,13 +475,27 @@ The more interesting result is the comparison between tiers.
 
 | | polar minus antipolar, kcal/mol per monomer | sign |
 |---|---:|---|
-| polyfind, Ewald, fitted preset | -0.871 | polar lower |
+| polyfind, Ewald, **illustrative** potential, cells frozen as delivered | -0.871 | polar lower |
+| polyfind, Ewald, `pvdf-dft-valence`, both branches re-relaxed | **-0.429** | polar lower |
 | your MACE-medium + D3 | **-0.135** | polar lower |
 | our potential's own resolution | 0.27 | - |
 
-**The sign agrees and the magnitude is 6.5 times too large**, which is the same
-failure mode as our piezoelectric coefficients: we get directions right and
+**The sign agrees and the magnitude is 3.2 to 6.5 times too large**, which is the
+same failure mode as our piezoelectric coefficients: we get directions right and
 over-separate. That is now consistent across three independent quantities.
+
+*Corrected 2026-09-11.* The -0.871 row was first published here as the fitted
+preset's number and it is not: `examples/copolymer_starts.py` runs inside no
+`FFParameters.applied` block, so every energy in `deliverables/summary.json` is the
+*default illustrative* potential's, and the polymer's own nitrile charges rather
+than the fit's increments. Re-measured on `pvdf-dft-valence` the same two delivered
+cells give -0.457 frozen and **-0.429** with both branches re-relaxed, so the
+over-separation against your number is 3.2x and not 6.5x. A one-parameter
+electrostatic rescale does not close the remaining factor and cannot: the gap is
+linear in the electrostatic strength with a **non-electrostatic floor of -0.177**,
+already 1.3x your value with the Coulomb term switched off entirely. See
+`docs/ELECTROMECHANICS.md` section 5.7 for that scan and for why the same knob moves
+our piezoelectric coefficients the *opposite* way.
 
 **But the number that matters most is the third row.** Our screen reported two days
 ago that it cannot decide polar against antipolar for five of nine chemistries

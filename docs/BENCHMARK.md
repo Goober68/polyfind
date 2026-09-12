@@ -332,6 +332,15 @@ C11 by 24%, and for two cases it drives the relaxation into the parametrisation'
 angular cap, where the routes disagree completely; those are reported as
 non-measurements rather than results.
 
+**The magnitudes are not a mis-scaled electrostatics**, which was the obvious suspect
+and has now been tested. Scanning the whole electrostatic strength over a factor of
+4000 moves `d_33` and `d_31` the *opposite* way from the copolymer polar/antipolar
+energy gap; the scale that would supply the magnitudes destroys the crystal before it
+reaches them; and the gap has a non-electrostatic floor already 1.3x its reference.
+`docs/ELECTROMECHANICS.md` section 5.7 has the scan. The conclusion is that these are
+two deficiencies rather than one, and that the piezoelectric half is a missing
+mechanism rather than a wrong coefficient.
+
 ### What Ewald costs
 
 `CrystalPacker(coulomb="ewald")` (`DESIGN.md` 5.11) replaces the truncated Coulomb
@@ -403,8 +412,13 @@ lattice energy by −1.12 kcal/mol per monomer, alpha's by −1.18 and gamma's b
 −1.16, and moves the *structures* almost not at all: beta's refined cell goes from
 4.59 x 8.59 x 2.6128 Å to 4.59 x 8.58 x 2.6141 and its `|P|` from 0.1408 to
 0.1409 C/m^2. The α−β polymorph gap, which is an acceptance test, goes from +7.34
-to +7.09 kJ/mol per monomer — a 3 % change, still inside the 2.6-6.5 kJ/mol
-literature range it was already inside. The near-cancellation is why the truncated
+to +7.09 kJ/mol per monomer — a 3 % change, and **still outside** the −6.5 to −2.6
+kJ/mol literature range, with the sign still backwards. (This row is the
+illustrative potential, which fails that test either way. The sentence here
+previously read "still inside the range it was already inside", which was wrong on
+both counts; corrected 2026-09-11. On `pvdf-dft-valence`, the preset that passes,
+the same switch moves the gap from −3.126 to −3.115 kJ/mol per monomer and it stays
+inside.) The near-cancellation is why the truncated
 sum got away with it for so long, and it is not a reason to keep using it: what
 cancels is a nearly constant offset, not the differences a polar/antipolar
 comparison is made of.

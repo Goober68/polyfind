@@ -506,6 +506,135 @@ of section 8.2 rather than towards it. None of that is fitted to anything. The f
 therefore an opt-in *third* preset and neither `pvdf-dft-valence` nor any number measured
 with it is changed by its existence.
 
+### 5.7 One electrostatic scale for all three discrepancies: tested and rejected
+
+Three discrepancies against external references had been read as one failure — the model
+over-separates energies and under-responds to field and strain, which is what a landscape
+too stiff in one direction would do. The hypothesis was that a single over-strong
+electrostatics explains all three, making the correction one parameter with a physical
+reading. It was tested directly and **it does not hold: the three optima are not in the
+same place and two of the three targets are not reachable at any scale.**
+
+**The knob, and why it is one parameter for energies and two for a response.** Every energy
+depends on the charges and the permittivity only through `q²/eps_r` (`docs/DFT_FIT.md`
+section 5, `docs/VALENCE_FIT.md`), so one scale `s` multiplying that ratio is the whole
+electrostatic strength — *for energies*. A polarization is linear in `q` and blind to
+`eps_r`, so the same `s` has two inequivalent realisations:
+
+* **the screening ray**, `eps_r = 1/s` at fixed charges: energies scale, `P` does not;
+* **the charge ray**, `q -> sqrt(s)` at `eps_r = 1`: energies scale the same way and `P`
+  scales as `sqrt(s)`.
+
+Both rays give *bit-identical* energies, hence bit-identical relaxed structures and elastic
+constants — measured, not assumed: the two rays' cells, `C_11` and `C_33` agree to every
+printed digit at every `s`. So the energy side of this test cannot choose between them and
+only the piezoelectric coefficients can, which is the same statement as "only a
+polarization separates `eps_r` from the charge scale", now cashed out on a crystal.
+
+Baselines, on `pvdf-dft-valence` + `pvdf-dft-valence-flux` (the preset the `d` coefficients
+are quoted from), with the geometry relaxed at every point rather than clamped:
+
+| quantity | ours, `s = 1` | reference | ratio |
+|---|---:|---:|---|
+| copolymer polar − antipolar, Ewald, both branches relaxed | −0.429 kcal/mol per monomer | −0.135 (MACE+D3) | 3.2x |
+| beta film `d_33` | −6.290 pC/N | −32 | 5.1x short |
+| beta film `d_31` | +2.331 pC/N | +20 | 8.6x short |
+
+The scan, charge ray (`d` on the screening ray in brackets; the copolymer gap is common to
+both rays by the degeneracy above):
+
+| `s` | copolymer gap | `d_33` | `d_31` | `C_33` | beta `a` | `|P|` |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0.001 | −0.173 | −0.277 (−8.76) | +0.059 (+1.855) | 312.1 | 4.686 | 0.0040 (0.1269) |
+| 0.0625 | −0.189 | −2.171 (−8.68) | +0.472 (+1.887) | 312.7 | 4.679 | 0.0320 (0.1281) |
+| 0.25 | −0.238 | −4.004 (−8.01) | +0.989 (+1.977) | 315.0 | 4.660 | 0.0659 (0.1318) |
+| 0.5 | −0.303 | −5.272 (−7.46) | +1.487 (+2.103) | 318.6 | 4.636 | 0.0971 (0.1373) |
+| **1.0** | **−0.429** | **−6.290** | **+2.331** | **330.4** | **4.492** | **0.1497** |
+| 1.5 | −0.554 | −7.453 (−6.09) | +3.145 (+2.568) | 354.9 | 4.391 | 0.2016 (0.1646) |
+| 2.0 | −0.678 | −11.093 (−7.84) | +4.394 (+3.107) | 397.8 | 4.265 | 0.2603 (0.1841) |
+| 4.0 | −1.177 | not a measurement | not a measurement | — | — | — |
+
+`s >= 2` needs `Shape.max_angle_change` widened from 8° to 25° to be a measurement at all;
+at the shipped 8° cap the single backbone-angle variable sits on it (shape gradient 0.23 at
+`s = 2`, 1.79 at `s = 4`) and the two `d` routes disagree by 100%. The rows above at
+`s = 1.5` and `2.0` are the widened-cap values and converge (shape gradient 3e−10 and 7e−8,
+routes agreeing to 0.26% and 0.68%); the `s = 1` row is identical either way, which is the
+control. **At `s >= 3` the relaxation runs to the 25° cap too and the crystal stops being
+one** — at `s = 4`, `a = 3.66 Å` and `C_33 = 666 GPa`, at `s = 6`, `d_33` changes sign.
+Those are reported as non-measurements, not as the scan's strong-coupling end.
+
+**The three optima, and they do not coincide.**
+
+| quantity | scale that best matches it | reachable? |
+|---|---|---|
+| copolymer gap | `s -> 0` | **no**: the gap is linear, `−0.1765 − 0.2506 s` over the whole scan, and measured directly at `s = 0.001` it is −0.173 — so with the electrostatics switched off entirely it is still 1.3x the reference |
+| `d_33` | `s ≈ 7.3` (charge ray, extrapolated from `s = 1, 2`) | **no**: past `s = 2` the structure is not a measurement |
+| `d_31` | `s ≈ 10.5` (charge ray, same extrapolation) | **no**, same reason |
+
+So the separation between the energy optimum and the response optima is at least a factor
+of 300 in `s`, i.e. 18 in charge, and they are on *opposite sides* of the shipped value. The
+verdict is **two problems, not one and not three**: `d_33` and `d_31` agree on an optimum to
+within 1.4x, which is consistent with their 5x and 8.6x shortfalls being one missing
+mechanism, and the polar/antipolar gap is a separate deficiency that is not electrostatic in
+origin at all. Its non-electrostatic floor of −0.177 is already 1.3x the reference, so no
+electrostatic correction can reach it; what is left over is steric and torsional.
+
+**The second parameter, an explicit screening length, buys nothing.** The damped-shifted-force
+kernel is already `qq erfc(alpha r)/r`: `alpha` is a Debye-like inverse screening length that
+leaves the `r -> 0` limit untouched and kills the long-range tail, which is exactly the
+asymmetric damping the hypothesis asks for next. It behaves identically to uniform weakening:
+
+| `1/alpha` (Å) | copolymer gap (dsf) | `d_33` | `d_31` | `C_11` | `|P|` |
+|---:|---:|---:|---:|---:|---:|
+| 10.0 | — | −5.791 | +2.315 | 31.04 | 0.1509 |
+| 5.0 (default) | −0.394 | −6.290 | +2.331 | 28.37 | 0.1497 |
+| 2.5 | −0.315 | −6.668 | +2.075 | 23.59 | 0.1387 |
+| 1.0 | −0.173 | −8.768 | +1.856 | 15.14 | 0.1269 |
+
+At `1/alpha = 1 Å` every number equals the `s -> 0` limit of the uniform scan to three
+figures (gap −0.1725 against −0.1727, `d_31` +1.856 against +1.855). Screening the long
+range removes the polar/antipolar gap *and* the response together, because the response is
+itself a lattice dipole sum and not a local contact, so preserving the short range buys no
+separation between them. (The dsf gap at the default `alpha` is −0.394 against Ewald's
+−0.429: under genuine screening the sum converges absolutely and the truncation is legitimate,
+but that 8% is what it costs at the default screening length and is on the record rather
+than assumed.)
+
+**One premise of the hypothesis is backwards and worth correcting.** The supporting argument
+was that the energy fit wanted *stronger* electrostatics while the differences want weaker.
+It wanted weaker: `docs/DFT_FIT.md` section 5 records `q_C-F` running to its *lower* bound
+at 0.02 e and, unbounded, turning fluorine positive — the conformer energies would rather
+have almost no C–F electrostatics. `docs/VALENCE_FIT.md` then took that pressure away
+(`q_C-F = +0.114 e`, off its bound). So there is no measured tension pulling the two ways;
+every energy-side observable here wants the electrostatics weaker and only the
+piezoelectric magnitudes want it stronger.
+
+**What it would cost anyway.** At `s = 2`, the strongest scale that is still a measurement
+and the closest approach to the piezoelectric targets (`d_33 = −11.1`, `d_31 = +4.4`, still
+2.9x and 4.6x short): `C_33` goes from 330.4 to 397.8 GPa against the periodic-DFT reference
+of 315.9, i.e. from +4.6% to +26%; beta's `a` from 4.492 to 4.265 Å against 4.731 (from −5.1%
+to −9.9%) and `c` from 2.605 to 2.694 Å against 2.580 (from +1.0% to +4.4%); `|P|` from
+0.1497 to 0.2603 C/m² against the DFT 0.176–0.188, overshooting instead of undershooting;
+and the copolymer gap to −0.678, 5.0x the reference rather than 3.2x. The `alpha`/`beta`
+ordering is the one thing that survives the whole range: it stays inside the accepted
+−6.5 to −2.6 kJ/mol per monomer from `s = 0.0625` (−2.78) to `s = 4` (−4.15), and it would
+fail off the `−2.6` edge only below about `s = 0.03`. Held-out energy error cannot be
+re-measured here — `$POLYFIND_TRAINSET` is not vendored and is not present — but the bound
+is computable: the RMS of the *mean-centred* Coulomb component of relative conformer
+energies is 1.24 kcal/mol for PVDF and 1.48 to 2.65 for PVDC, AN and VDCN, so rescaling by
+`s` shifts the quantity the 1.36 kcal/mol measures by `|s − 1|` times that — 0.9 to 2.0
+kcal/mol at `s = 0.25`, 3.7 to 8.0 at `s = 4`. Refitting at fixed `s` would absorb part of
+it and that is untestable without the data.
+
+**What this redirects.** The two piezoelectric magnitudes agreeing on one scale says their
+shortfall is one missing mechanism, and the scan says it is not the strength of the
+electrostatics: a scale large enough to supply the magnitudes destroys the crystal first.
+Section 9's list names the candidates that are missing rather than mis-scaled — the
+bond-stretch channel, backbone charge transfer, and polarizability. The copolymer gap is now
+a separate problem with a measured non-electrostatic floor, and the thing to explain there is
+the 0.177 kcal/mol of steric and torsional preference for the polar registry, not a
+mis-scaled dipole sum.
+
 ### 5.4 Blocking stress, free strain, work density (E = 0.01 V/A = 100 MV/m)
 
 | potential | | poling direction | free strain | blocking stress (MPa) | work density (kJ/m³) |
