@@ -141,6 +141,15 @@ is a trustworthy magnitude; ``polyfind.fitting.FITTED_VALENCE_FLUX`` and
 ``docs/ELECTROMECHANICS.md`` section 5.6 say how the two coefficients were fitted, how
 poorly, and which of the resulting numbers are signs rather than values.
 ``examples/electromechanics.py`` runs the whole thing on the reference polymorphs.
+
+**The fourth path gives the crystal a dielectric constant.**  ``CrystalPacker(polarizable=...)``
+(:mod:`polyfind.polarizability`, Ewald only) adds self-consistent induced dipoles; nothing
+in this module branches on it either -- the dipole the strain states differentiate is the
+packer's total one and the stress carries the fixed-dipole gradient that the solve's
+stationarity makes exact -- and :func:`dielectric_tensor` is the known-answer check that
+must pass before any piezoelectric number with it is read.  ``docs/ELECTROMECHANICS.md``
+section 5.8 has that check and what the dipoles do to ``d_33`` and ``d_31``:
+a quarter of one shortfall and a sixteenth of the other, not a closure.
 """
 from __future__ import annotations
 
@@ -1051,6 +1060,81 @@ def piezoelectric(ref: Reference, elastic: Elastic, step: float = 2e-3, field: f
                          max_abs_difference=diff,
                          relative_difference=(diff / scale if scale > 1e-6 else 0.0) if converse else float("nan"),
                          field=field, step=step, converse_iterations=used)
+
+
+# --- dielectric response ------------------------------------------------------------------
+@dataclass
+class Dielectric:
+    """The static dielectric tensor of one crystal, at fixed cell, in the reference frame.
+
+    ``clamped`` is the response at fixed geometry -- the induced dipoles alone, which is the
+    electronic part ``eps_inf`` a frozen-phonon or DFPT calculation reports -- and is exactly
+    1 for any packer without ``polarizable``.  ``relaxed`` lets the internal coordinates
+    (and, with a :class:`Shape`, the chain's conformation) follow the field at fixed cell:
+    the ionic part this parametrisation can express, which is chain *reorientation* and the
+    line group's shape parameters, not the optical phonons of a full lattice dynamics.  Both
+    are ``1 + (dP/dE) / eps_0`` from a central difference at ``+-field`` (V/A).
+    """
+
+    clamped: np.ndarray
+    relaxed: np.ndarray | None
+    field: float
+
+    def table(self) -> str:
+        def row(name, m):
+            return f"{name}: diag({m[0, 0]:.4f}, {m[1, 1]:.4f}, {m[2, 2]:.4f})  max|offdiag| {np.abs(m - np.diag(np.diag(m))).max():.1e}"
+        out = [row("eps_inf (clamped)", self.clamped)]
+        if self.relaxed is not None:
+            out.append(row("eps_0  (relaxed-ion, fixed cell)", self.relaxed))
+        return "\n".join(out)
+
+
+def dielectric_tensor(ref: Reference, field: float = 2e-3, relax: bool = True,
+                      shape: Shape | None = None) -> Dielectric:
+    r"""``eps_ij = delta_ij + (1/eps_0) dP_i/dE_j`` at fixed cell, by central differences in the field.
+
+    The field is applied in the reference frame (at zero strain the packer's frame is the
+    reference frame, so no rotation is needed) and the dipole read back is the packer's total
+    one -- static charges plus induced dipoles, which :meth:`polyfind.pack.CrystalPacker.dipole`
+    returns because the induced dipoles are stationary and ``mu = -dE/dE_applied`` holds for the
+    whole.  Under tinfoil boundaries the applied field *is* the macroscopic field, so this is
+    the dielectric constant and not a Clausius-Mossotti local-field quantity; the known-answer
+    test for the machinery is the simple cubic lattice in ``tests/test_polarizable.py`` and the
+    known answer for the physics is beta-PVDF's ``eps_inf`` (``docs/ELECTROMECHANICS.md``
+    section 5.8).
+
+    ``relax=True`` adds the tensor with the internal coordinates relaxed under the field at
+    fixed cell (through :func:`_state_at_strain`, or :func:`deformable_state` with a
+    :class:`Shape`).  The relaxation has a noise floor, so ``field`` should not be made very
+    small for it; the electronic part is linear to machine precision at any small field.
+    """
+    from .polarizability import E_PER_A2_PER_V_PER_A_TO_CHI
+
+    pk = ref.packer
+    V = ref.volume
+    c_arr = np.array([ref.c])
+    clamped = np.eye(3)
+    relaxed = np.eye(3) if relax else None
+    saved = pk.field
+    try:
+        for j in range(3):
+            mus, mus_r = [], []
+            for sgn in (1.0, -1.0):
+                f = np.zeros(3)
+                f[j] = sgn * field
+                pk.set_field(f)
+                mus.append(np.asarray(pk.dipole(ref.params[None], c=c_arr)[0], dtype=float))
+                pk.set_field(saved)
+                if relax:
+                    st = (_state_at_strain(ref, np.zeros(6), True, field_lab=f) if shape is None
+                          else deformable_state(ref, shape, np.zeros(6), field_lab=f))
+                    mus_r.append(st.m * V / E_PER_A2_TO_C_PER_M2)  # back to e.A
+            clamped[:, j] += (mus[0] - mus[1]) / (2.0 * field * V) * E_PER_A2_PER_V_PER_A_TO_CHI
+            if relax:
+                relaxed[:, j] += (mus_r[0] - mus_r[1]) / (2.0 * field * V) * E_PER_A2_PER_V_PER_A_TO_CHI
+    finally:
+        pk.set_field(saved)
+    return Dielectric(clamped=clamped, relaxed=relaxed, field=field)
 
 
 # --- actuator figures ---------------------------------------------------------------------

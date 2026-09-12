@@ -341,6 +341,29 @@ reaches them; and the gap has a non-electrostatic floor already 1.3x its referen
 two deficiencies rather than one, and that the piezoelectric half is a missing
 mechanism rather than a wrong coefficient.
 
+**Polarizability is one of the missing mechanisms and it is now measured, not
+guessed** (`docs/ELECTROMECHANICS.md` section 5.8). Induced point dipoles with
+literature atomic polarizabilities and Thole damping, nothing fitted, give
+beta-PVDF a clamped-ion dielectric tensor of diag(2.24, 2.18, 2.57) against a
+provisional periodic-DFPT diag(2.24, 2.25, 2.60) -- the first known-answer test
+this response has passed on a *dielectric* quantity -- and then, out of sample:
+
+| Ewald, `pvdf-dft-valence-flux` | d33 | d31 | C33 (GPa) | \|P\| (C/m^2) | beta `a` (A) |
+|---|---|---|---|---|---|
+| fixed charges | -7.14 | +2.48 | 330.6 | 0.154 | 4.470 |
+| with induced dipoles | -12.81 | +3.56 | 340.2 | 0.196 | 4.402 |
+| measured / DFT | -32 | +20 | 315.9 | 0.176-0.188 | 4.731 |
+
+That closes 23% of the `d33` shortfall and 6% of `d31`'s, at a cost the energies
+notice: `C33` goes from +4.7% to +7.7% off the DFT value, `C11` rises 22%, `a`
+contracts a further 1.5%, and `|P|` overshoots the DFT range instead of
+undershooting it. The alpha/beta ordering survives (-5.00 to -5.37 kJ/mol per
+monomer, inside the accepted window) and polyethylene stays non-piezoelectric to
+1e-10 pC/N. The remainder of the shortfall is a charge-flux problem -- the Born
+charges from the same DFPT run put fluorine's dynamical charge along the polar
+axis at about four times the static one, and anisotropic along the C-F bond, which
+a scalar angle flux cannot express -- and that is a separate task.
+
 ### What Ewald costs
 
 `CrystalPacker(coulomb="ewald")` (`DESIGN.md` 5.11) replaces the truncated Coulomb
@@ -434,5 +457,8 @@ the dipole-strain response would be worth more than any further work inside this
 package.
 
 Still absent entirely: the shear constants involving the chain axis, which no
-variable in this parametrisation can express; the bond-stretch channel;
-polarizability; temperature; and domain switching.
+variable in this parametrisation can express; the bond-stretch channel; a
+directional (bond-resolved) charge flux, which the Born charges now say is the
+larger missing piece; temperature; and domain switching. Polarizability is no
+longer absent: it is opt-in, validated on the dielectric constant, and worth a
+quarter of the `d33` shortfall.

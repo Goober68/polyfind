@@ -46,11 +46,13 @@ adds ``-mu_cell . E`` to the cell energy, where ``mu_cell = sum_i q_i r_i`` is t
 dipole moment of the placed cell; the dipole depends on the setting angles and the
 flip, so it is recomputed per configuration inside the kernel.  This is the cheap
 screening heuristic of ``docs/CHEMISTRY_EXTENSION.md`` section 3, not a
-Berry-phase or DFT treatment: the charges never depend on the field, so the cell has
-no polarizability and no depolarisation field, and only the *orientational* and
+Berry-phase or DFT treatment: the charges never depend on the field, so by default the
+cell has no polarizability and no depolarisation field, and only the *orientational* and
 packing response to the field is captured.  With ``charge_flux`` they do depend on
 the chain's own geometry, which is a different thing and is what gives a planar
-zigzag a piezoelectric response at all (:func:`chain_flux`).
+zigzag a piezoelectric response at all (:func:`chain_flux`).  With ``polarizable``
+(:mod:`polyfind.polarizability`, Ewald only) every atom also carries a self-consistent
+induced dipole, which is what gives the cell a dielectric constant other than 1.
 """
 from __future__ import annotations
 
@@ -61,8 +63,9 @@ from scipy.optimize import minimize
 
 from . import backend as bk
 from .chain import build_chain
-from .ewald import Ewald, EwaldSpec, exclusion_correction
+from .ewald import Ewald, EwaldSpec, charge_dipole_exclusion, exclusion_correction
 from .forcefield import COULOMB, _valence_lookup, erfc_approx, valence_topology
+from .polarizability import Polarizable
 from .helix import HelixParams, helix_parameters, kabsch, rotation_to_z
 from .polymers import Polymer, RISStates, lj_params
 
@@ -695,7 +698,20 @@ class CrystalPacker:
         refused by the tabulated screen and by every other caller that assumes a pair
         potential (:meth:`_require_dsf`).
 
-    All four change the energy, so all four are refused by the tabulated screen
+    ``polarizable``
+        a :class:`~polyfind.polarizability.Polarizable`: every atom carries an isotropic
+        point polarizability and an induced dipole, solved self-consistently per
+        configuration in the field of the static charges (the chain's own 1-2/1-3 charges
+        excluded and 1-4 scaled, as in the Coulomb energy), of every other induced dipole
+        (Ewald-summed, Thole-damped) and of the applied field.  The polarization energy
+        ``-(1/2) sum p . E0`` joins the electrostatics, the induced dipoles join
+        :meth:`dipole`, and every gradient carries the fixed-``p`` derivative that the
+        stationarity of the solution makes exact.  Requires ``coulomb="ewald"``: a lattice of
+        dipoles is a conditionally convergent sum and no truncation evaluates it.  This is
+        the first thing in the package that gives a crystal a dielectric constant other than
+        1 (:func:`polyfind.mechanics.dielectric_tensor`).
+
+    All five change the energy, so all five are refused by the tabulated screen
     (:func:`_table_starts`), which is a rigid-chain, energy-shifted, fixed-charge,
     pairwise object by construction.
     """
@@ -705,7 +721,7 @@ class CrystalPacker:
     LJ_CUTOFFS = ("energy", "force")
     COULOMB_SUMS = ("dsf", "ewald")
 
-    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy", charge_flux=None, coulomb: str = "dsf", ewald: EwaldSpec | None = None):
+    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy", charge_flux=None, coulomb: str = "dsf", ewald: EwaldSpec | None = None, polarizable: Polarizable | None = None):
         self.n_chains = n_chains
         self.rc = cutoff
         self.rc2 = cutoff ** 2
@@ -720,8 +736,15 @@ class CrystalPacker:
         if ewald is not None and coulomb != "ewald":
             raise ValueError("an EwaldSpec was given but coulomb='dsf': pass coulomb='ewald' to use it, "
                              "rather than letting a boundary convention be silently ignored")
+        if polarizable is not None and coulomb != "ewald":
+            raise ValueError(
+                "induced dipoles need coulomb='ewald': the field of the static charges at every site, "
+                "and the dipole-dipole sum the self-consistent solve inverts, are lattice sums that a "
+                "truncated kernel cannot evaluate at any cutoff (the same reason the polar/antipolar "
+                "gap needs it).  Pass coulomb='ewald' together with polarizable=.")
         self.coulomb = coulomb
         self._ewald = None if coulomb == "dsf" else Ewald(cutoff, ewald, eps_r=eps_r)
+        self.polarizable = polarizable
         self.valence = valence
         self.charge_flux = charge_flux
         self.xp = xp or bk.get_backend()
@@ -766,6 +789,14 @@ class CrystalPacker:
         # the same n x n block also serves the (0,0,k) chain1-chain2 column and the intra sum
         self._A_nn, self._B_nn = xp.asarray(A, dtype=dt), xp.asarray(B, dtype=dt)
         self._set_charge_tables(chain.charges)
+        # Induced dipoles: one isotropic polarizability per placed atom, typed by element, and
+        # the per-pair Thole length (alpha_i alpha_j)^(1/6).  Neither depends on the geometry
+        # or on the (fluxing) charges, so both are resolved once here.
+        self._alpha_cell = self._thole_scale = self._thole = None
+        if self.polarizable is not None:
+            self._alpha_cell = np.tile(self.polarizable.per_atom(self.elements), n_chains)
+            self._thole_scale = (self._alpha_cell[:, None] * self._alpha_cell[None, :]) ** (1.0 / 6.0)
+            self._thole = self.polarizable.thole()
         # kept for backwards compatibility / introspection
         self.lj_x = xp.asarray(tile(xs), dtype=dt)
         self.lj_d = xp.asarray(tile(ds), dtype=dt)
@@ -964,12 +995,22 @@ class CrystalPacker:
         """
         self._require_neutral("the cell dipole")
         params = np.atleast_2d(np.asarray(params, dtype=float))
-        P, _ = self._place(params, coords, c)
+        P, lat = self._place(params, coords, c)
         Pn = np.asarray(bk.to_numpy(P), dtype=float)
+        q = None
         if self._flux is not None and coords is not None:
-            q = self._row_charges(coords, c, Pn.shape[0])
-            return np.einsum("mn,mnc->mc", np.tile(q, (1, self.n_chains)), Pn)
-        return np.einsum("n,mnc->mc", self._q_cell, Pn)
+            q = np.tile(self._row_charges(coords, c, Pn.shape[0]), (1, self.n_chains))
+            mu = np.einsum("mn,mnc->mc", q, Pn)
+        else:
+            mu = np.einsum("n,mnc->mc", self._q_cell, Pn)
+        if self.polarizable is not None:
+            # The induced dipoles at this configuration and this field: mu = sum q r + sum p,
+            # which is -dE/dE_applied by the stationarity of the solve (Hellmann-Feynman), so
+            # the polarization a strain or a field changes is the total one.
+            latn = np.asarray(bk.to_numpy(lat), dtype=float)
+            for i in range(Pn.shape[0]):
+                mu[i] += self._polarize(Pn[i], self._q_cell if q is None else q[i], latn[i], params[i, 6])[1].sum(axis=0)
+        return mu
 
     def _row_charges(self, coords, c, M: int) -> np.ndarray:
         """The repeat's fluxed charges for each of ``M`` rows, ``(M, n)``."""
@@ -1060,13 +1101,102 @@ class CrystalPacker:
         return exclusion_correction(coords, q_repeat, c, self._scale_column_np(K),
                                     pref=COULOMB / self.eps_r, grad=grad, charge_grad=charge_grad)
 
-    def _ewald_rows(self, P, lat, q_rows=None) -> np.ndarray:
-        """The Ewald energy of every row of a placed chunk, in kcal/mol per cell."""
+    def _ewald_rows(self, P, lat, q_rows=None, flips=None) -> np.ndarray:
+        """The Ewald energy of every row of a placed chunk, in kcal/mol per cell.
+
+        With induced dipoles this is the whole electrostatic energy -- the charge sum plus
+        the polarization energy of :meth:`_polarize` -- and ``flips`` (one per row) says which
+        rows carry a mirrored chain 2, whose bonded-exclusion stack is reversed.
+        """
         Pn = np.asarray(bk.to_numpy(P), dtype=float)
         latn = np.asarray(bk.to_numpy(lat), dtype=float)
         qc = None if q_rows is None else np.tile(np.asarray(q_rows, dtype=float), (1, self.n_chains))
+        if self.polarizable is not None:
+            fl = np.zeros(Pn.shape[0]) if flips is None else np.asarray(flips, dtype=float)
+            return np.array([self._polarize(Pn[i], self._q_cell if qc is None else qc[i], latn[i], fl[i])[0]
+                             for i in range(Pn.shape[0])])
         return np.array([self._ewald.terms(Pn[i], self._q_cell if qc is None else qc[i], latn[i]).total
                          for i in range(Pn.shape[0])])
+
+    # --- induced dipoles ---------------------------------------------------------------
+    def _polarize(self, Pn, q_cell, latn, flip: float, grad: bool = False, charge_grad: bool = False):
+        r"""Induced dipoles of ONE placed configuration, solved self-consistently.
+
+        ``E0_i`` is the permanent field at site ``i``: the Ewald field of every charge in the
+        crystal, minus the bare field of the chain's own excluded pairs
+        (:func:`polyfind.ewald.charge_dipole_exclusion`), plus the applied field.  With ``T``
+        the Ewald-summed, Thole-damped dipole interaction matrix
+        (:meth:`polyfind.ewald.Ewald.terms` with ``tensor=True``) the dipoles solve
+        ``(k/alpha - T) p = E0`` and the polarization energy is ``-(1/2) sum_i p_i . E0_i``;
+        see :mod:`polyfind.polarizability` for why the half.  ``3N x 3N`` and a direct solve:
+        36 unknowns for beta-PVDF, 144 for gamma, so convergence is not a question and the
+        Hellmann-Feynman gradient below is exact rather than exact-at-tolerance.
+
+        Returns ``(e_es, p, E0, grads)``: the whole electrostatic energy of the cell (the
+        charge-charge Ewald sum plus the polarization energy), the dipoles ``(N, 3)``, the
+        permanent field, and -- when ``grad`` -- ``(gP, glat, gq, gc)``: the derivatives of
+        ``e_es`` with respect to the placed coordinates, the lattice vectors (at fixed
+        Cartesian coordinates), the charges (``None`` unless ``charge_grad``) and ``c``
+        through the exclusion images, all taken *at fixed* ``p``, which at the solution is the
+        total derivative.  The stationarity that makes this true is asserted numerically in
+        ``tests/test_polarizable.py``.
+        """
+        ew = self._ewald
+        N, n, nc = self.N, self.n, self.n_chains
+        pref = COULOMB / self.eps_r
+        q_cell = np.asarray(q_cell, dtype=float)
+        t0 = ew.terms(Pn, q_cell, latn, thole=self._thole, thole_scale=self._thole_scale,
+                      field=True, tensor=True)
+        F = t0.field.copy()
+        cz = float(latn[2, 2])
+        stacks = []
+        if self.polarizable.exclude_bonded:
+            Sk = self._scale_column_np(int(np.ceil(self.rc / cz)) + 1)
+            for s in range(nc):
+                sl = slice(s * n, (s + 1) * n)
+                # chain 2 of a flipped cell is mirrored z -> -z, which maps image k to -k
+                sc = Sk[::-1] if (s == 1 and flip > 0.5) else Sk
+                stacks.append((sl, sc))
+                F[sl] += charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, pref=pref)[4]
+        E0 = F if not self._field_on else F + EV_TO_KCAL * np.asarray(self.field, dtype=float)[None, :]
+        A = -t0.tensor.transpose(0, 2, 1, 3).reshape(3 * N, 3 * N)
+        A[np.arange(3 * N), np.arange(3 * N)] += np.repeat(pref / self._alpha_cell, 3)
+        p = np.linalg.solve(A, E0.ravel()).reshape(N, 3)
+        e_es = t0.total + (-0.5 * float((p * E0).sum()))
+        if not grad:
+            return e_es, p, E0, None
+        t = ew.terms(Pn, q_cell, latn, dipoles=p, thole=self._thole, thole_scale=self._thole_scale,
+                     grad=True, charge_grad=charge_grad)
+        gP, glat = t.grad_coords.copy(), t.grad_lattice.copy()
+        gq = t.grad_charges.copy() if charge_grad else None
+        gc = 0.0
+        for sl, sc in stacks:
+            _, exX, exc, exq, _ = charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, dipoles=p[sl], pref=pref,
+                                                          grad=True, charge_grad=charge_grad)
+            gP[sl] += exX
+            gc += exc
+            if charge_grad:
+                gq[sl] += exq
+        return e_es, p, E0, (gP, glat, gq, gc)
+
+    def induced_dipoles(self, params, coords=None, c=None) -> np.ndarray:
+        """The induced dipoles ``(M, N, 3)`` in e.A of every row of ``params``, at the set field.
+
+        Zeros for a packer without ``polarizable``.  The cell's induced moment,
+        ``induced_dipoles(...).sum(axis=1)``, is what :meth:`dipole` adds to the static one.
+        """
+        params = np.atleast_2d(np.asarray(params, dtype=float))
+        M = params.shape[0]
+        if self.polarizable is None:
+            return np.zeros((M, self.N, 3))
+        P, lat = self._place(params, coords, c)
+        Pn = np.asarray(bk.to_numpy(P), dtype=float)
+        latn = np.asarray(bk.to_numpy(lat), dtype=float)
+        q = None
+        if self._flux is not None and coords is not None:
+            q = np.tile(self._row_charges(coords, c, M), (1, self.n_chains))
+        return np.stack([self._polarize(Pn[i], self._q_cell if q is None else q[i], latn[i], params[i, 6])[1]
+                         for i in range(M)])
 
     # --- geometry --------------------------------------------------------------
     def _place(self, params, coords=None, c=None):
@@ -1347,9 +1477,10 @@ class CrystalPacker:
                 v = self._pair_energy(r2, self._A, self._B, qq, qqf, cst)
                 e = e + v.sum(axis=(1, 2, 3))
             # The electrostatics of an Ewald packer: its pair kernel above carried only the
-            # Lennard-Jones term, so this is the whole Coulomb energy of the cell.
+            # Lennard-Jones term, so this is the whole Coulomb energy of the cell (and, with
+            # induced dipoles, the polarization energy as well).
             e_ew = 0.0 if self._ewald is None else self._ewald_rows(
-                P, lat, None if q_row is None else q_row[sl])
+                P, lat, None if q_row is None else q_row[sl], flips=sub[:, 6])
             if self._field_on:
                 # -mu . E, from the placed coordinates of this chunk: the dipole follows
                 # the setting angles and the flip, so it is a per-row quantity.
@@ -1532,12 +1663,21 @@ class CrystalPacker:
             # in the conventions the truncated kernel already established: ``glat`` is
             # dE/d(lattice vectors) *at fixed Cartesian coordinates*, so the chain rule
             # below carries it through to a, b, gamma and c unchanged.
-            terms = self._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=gq_chain is not None)
-            e_ew = terms.total
-            gP += terms.grad_coords
-            glat = glat + terms.grad_lattice
-            if gq_chain is not None:
+            if self.polarizable is not None:
+                # Induced dipoles: the value is the one ``energy`` adds per row, and the
+                # gradients are the fixed-``p`` ones, which the self-consistency makes total.
+                e_ew, _, _, (gPe, glate, gqe, gce) = self._polarize(
+                    Pn, q_cell, latn, p[6], grad=True, charge_grad=gq_chain is not None)
+                gP += gPe
+                glat = glat + glate
+                gc += gce
+            else:
+                terms = self._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=gq_chain is not None)
+                e_ew = terms.total
+                gP += terms.grad_coords
+                glat = glat + terms.grad_lattice
                 gqe = terms.grad_charges
+            if gq_chain is not None:
                 gq_chain = gq_chain + gqe[:n] + (gqe[n:] if nc == 2 else 0.0)
             X_ch = Xn[0] if per_row else np.asarray(self.chain.coords, dtype=float)
             q_rep = flux_q if flux_q is not None else self._q_cell[:n]
@@ -1621,6 +1761,8 @@ class CrystalPacker:
         e_field = 0.0
         if self.is_neutral:
             mu = np.einsum("n,nc->c", self._q_cell, cell)
+            if self.polarizable is not None:
+                mu = self.dipole(params[None])[0]  # static plus induced
             pol = mu / float(self.cell_volume(params[None])[0]) * E_PER_A2_TO_C_PER_M2
             if self._field_on:
                 e_field = float(-(mu @ self.field) * EV_TO_KCAL)

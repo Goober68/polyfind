@@ -49,8 +49,10 @@ list is empty.
 | 7.3 | PVDF about half crystalline; melt ~450 K | crystallinity confirmed; 450 K **unverified** |
 | 7.4 | two-chain cell with chain 2 at (1/2, 1/2) for PE, alpha, beta, gamma | confirmed; an idealisation for gamma |
 | 8.1 | isotactic polypropylene chain repeat 6.50 A | confirmed |
+| 9.1 | atomic polarizabilities H 0.414, C 1.289, F 0.388 A^3 and Thole damping a = 2.1304 (`polarizability.py`) | confirmed from a secondary rendering of the paper's Table 7; the primary PDF was not read |
+| 9.2 | beta-PVDF's electronic dielectric tensor ~ diag(2.25, 2.24, 2.60) | **provisional** (unpublished periodic DFPT, chain-axis k-grid sensitivity unresolved) |
 
-Totals over 22 entries: **14 confirmed, 2 corrected, 2 wrong, 4 unverified**.
+Totals over 24 entries: **15 confirmed, 2 corrected, 2 wrong, 4 unverified, 1 provisional**.
 Entries 7.1 and 7.3 are split verdicts and are counted under the weaker half.
 
 ---
@@ -901,6 +903,61 @@ quotes the cell for its own pole-figure analysis.  The primary determination is 
 P. Corradini, Nuovo Cimento Suppl. **15**, 40 (1960), which I did not read.
 
 **Verdict: confirmed** (the number), with the comparison correctly labelled.
+
+---
+
+## 9. Atomic polarizabilities, Thole damping, and the dielectric anchor
+
+### 9.1 The polarizabilities in `src/polyfind/polarizability.py`
+
+**Claim**: `VDS98` carries isotropic atomic polarizabilities H 0.41384, C 1.28860,
+N 0.97157, O 0.85197, F 0.38787, S 2.47445, Cl 2.40028 A^3 (with Br and I), to be
+used with Thole's exponential damping `rho(u) = a^3/(8 pi) exp(-a u)`,
+`u = r / (alpha_i alpha_j)^(1/6)`, `a = 2.1304`; and these are literature values,
+not fitted to anything in this package.
+
+**Verified**: P. Th. van Duijnen and M. Swart, *Molecular and Atomic
+Polarizabilities: Thole's Model Revisited*, J. Phys. Chem. A **102**, 2399-2407
+(1998), [doi:10.1021/jp980221f](https://doi.org/10.1021/jp980221f), Table 7,
+"exponential" column, fitted to 52 experimental molecular polarizabilities:
+H 2.7927, C 8.6959, N 6.5565, O 5.7494, F 2.6175, S 16.6984, Cl 16.1979,
+Br 23.5714, I 36.9880 au, damping 2.1304 (the "linear" column, Thole's original
+piecewise form, gives H 3.5020, C 10.1756, F 2.9413 au with a = 1.7278).  Converted
+with `1 bohr^3 = 0.148184711 A^3`.  The H and C values, 0.4138 and 1.2886 A^3, are
+the ones widely quoted for this model; the fluorine value is from the same table
+and is the reason this set was chosen over Thole's 1981 original (B. T. Thole, Chem.
+Phys. **59**, 341-350 (1981), doi:10.1016/0301-0104(81)85176-2), which has no
+halogens.  The functional forms of `lambda3`, `lambda5` for both the exponential
+and the `exp(-a u^3)` density were re-derived here by Gauss's law from the
+enclosed charge (`Thole.damping`'s docstring) rather than copied.
+
+**Caveat on the verification**: the table was read from a secondary rendering of
+the paper, not from the publisher's PDF, which the tooling here could not render.
+The two values that could be cross-checked against other quotations (H, C) agree
+to every digit; F, S, Cl, Br, I rest on the rendering alone.  AMOEBA's cubic
+damping `a = 0.39` (P. Ren and J. W. Ponder, J. Phys. Chem. B **107**, 5933
+(2003)) is quoted for the alternative form and was fitted to *different*
+polarizabilities, which is why `docs/ELECTROMECHANICS.md` section 5.8 reports it
+as a sensitivity row and not as a second model.
+
+**Verdict: confirmed**, with the secondary-source caveat.
+
+### 9.2 The dielectric anchor
+
+**Claim** (ELECTROMECHANICS 5.8): beta-PVDF's clamped-ion electronic dielectric
+tensor is about diag(2.25, 2.24, 2.60) along (a, b = polar, c = chain).
+
+**Source**: a periodic PBE-D3 DFPT calculation by the sibling project (their
+`born_results.json`, commit `3a0495e`), `eps_inf = diag(2.2526, 2.2354, 2.6005)`.
+The provider's own status: the transverse components are the safer two; the
+chain-axis k-grid sensitivity is unresolved; the Born charges from the same run
+carry a raw acoustic-sum residual of -0.62 e on the chain axis and are not an
+accepted quantitative target.  Published context: PVDF's refractive index of about
+1.42 gives `n^2 ~ 2.0`, the same order.
+
+**Verdict: provisional.**  Used as the validation anchor with that label attached
+wherever agreement with it is quoted; the chain-axis ordering is *consistent* with
+it and is not claimed as a validation of the backbone dipole coupling.
 
 ---
 

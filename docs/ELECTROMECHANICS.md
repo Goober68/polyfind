@@ -637,6 +637,162 @@ a separate problem with a measured non-electrostatic floor, and the thing to exp
 the 0.177 kcal/mol of steric and torsional preference for the polar registry, not a
 mis-scaled dipole sum.
 
+### 5.8 Polarizability: the dielectric constant passes, and a quarter of `d_33` comes back
+
+Section 5.7 ended with the piezoelectric shortfall being "one missing mechanism" and named
+three candidates. This section adds the first of them — electronic polarizability — and
+measures it against a known answer *before* reading a piezoelectric number from it. The
+verdict first: **polarizability does not close the gap. With literature polarizabilities and
+nothing fitted it closes 23% of the `d_33` shortfall and 6% of `d_31`'s**, while moving the
+energies by a measurable but not fatal amount.
+
+**The model.** `CrystalPacker(polarizable=Polarizable(), coulomb="ewald")`
+(`polyfind.polarizability`): one isotropic point polarizability per atom, an induced dipole
+`p_i` on every atom, solved self-consistently against the field of the static charges (the
+chain's own 1-2/1-3 charges excluded and 1-4 scaled, exactly as the Coulomb energy excludes
+them), of every other induced dipole, and of the applied field. The dipole-dipole sum is a
+lattice sum and goes through the Ewald machinery, which `polyfind.ewald` now extends to
+charge-dipole systems — real, reciprocal, self and surface terms, with gradients with
+respect to coordinates, lattice, charges and dipoles — and it is Thole-damped at short
+range (`Thole`, exponential density, `a = 2.1304`), which is what stops two bonded atoms
+polarising each other without bound. The energy is `U = −(1/2) Σ p_i · E0_i`, half the
+dipole-field product; the other half was spent polarising, and the functional
+`Σ p²/2α − p·E0 − (1/2) p·T·p` is asserted to be stationary in `p` at the solution
+(`tests/test_polarizable.py`), which is what makes the geometric gradient at fixed `p` the
+total one and the analytic stress exact. The solve is a direct `3N × 3N` linear solve — 36
+unknowns for beta — so "converged" is not a tolerance.
+
+**Parameters, and their provenance.** van Duijnen and Swart, J. Phys. Chem. A **102**, 2399
+(1998), Table 7, exponential model: H 0.4138, C 1.2886, F 0.3879 Å³, damping `a = 2.1304`,
+fitted to 52 experimental molecular polarizabilities and never to anything in this package
+(`docs/REFERENCES.md` entry 9). Nothing below is fitted, and after the dielectric test
+nothing needed to be.
+
+**Known answers for the machinery**, before any polymer: the Lorentz field of a simple cubic
+dipole lattice, `4π p / 3V` under tinfoil boundaries and exactly 0 under vacuum ones,
+reproduced to 1e−10; the Clausius–Mossotti dielectric constant of a cubic lattice of
+polarizable points, `(ε−1)/(ε+2) = 4πα/3V`, reproduced to 1e−10 from the field response;
+independence of the Ewald splitting parameter with dipoles present (2e−10 relative); every
+site of rock salt, an inversion centre, carrying an induced dipole of exactly zero; the
+packer's `energy` and `energy_and_grad` agreeing bit for bit with valence, flux, Ewald and
+dipoles all on, and the gradient agreeing with central differences to 3e−10 relative over
+the cell, the chain coordinates and `c`.
+
+**The known answer for the physics: beta-PVDF's electronic dielectric tensor.** Periodic
+PBE-D3 DFPT from the sibling project gives the clamped-ion `ε∞ = diag(2.2526, 2.2354,
+2.6005)` along (a, b = polar, c = chain); **provisional** — their chain-axis k-grid
+sensitivity is unresolved and the transverse pair are the safer two (`docs/REFERENCES.md`
+9.2). In the packer's frame (x = polar, y = long axis, z = chain), at the model's own
+relaxed cell under `pvdf-dft-valence-flux`:
+
+| `ε∞`, clamped-ion | polar | long axis | chain |
+|---|---:|---:|---:|
+| this model, literature polarizabilities, unfitted | **2.240** | **2.181** | **2.570** |
+| periodic DFPT (provisional) | 2.235 | 2.253 | 2.601 |
+| this model at the DFT cell (4.731 × 8.358 × 2.580, V = 101 Å³ against the model's 97) | 2.167 | 2.141 | 2.486 |
+| measured, low frequency (electronic + ionic + orientational) | ~10 | | |
+
+Within 3% on every component at the model's cell and 3–5% low at the DFT cell — the
+difference is the model's 5% over-dense beta cell, not the polarizabilities. The chain-axis
+component comes out highest, as in the DFPT tensor; given the provider's caveat that is
+consistency, not a validation of the backbone dipole coupling. Off-diagonals are 1e−15.
+Polyethylene, the control: `ε∞ = diag(2.27, 2.27, 2.54)` at its experimental cell against a
+measured `n² ≈ 2.3`, and 2.9 at the model's own PE cell, which is 21% too dense. So the
+polarizabilities are right at the few-percent level and **no damping fit was made**: the
+brief allowed one against the dielectric constant only, and the dielectric constant did not
+ask for it.
+
+The relaxed-ion tensor at fixed cell, `ε0 = diag(2.24, 3.18, 2.57)`, adds only the response
+this parametrisation can express — chain rotation about its own axis, which a field along
+the long axis drives — and nothing along the polar or chain axes, where the line group
+forbids it. The measured 10 is mostly ionic and orientational response the model has no
+coordinates for, and is not reachable here.
+
+**Then the numbers that matter, out of sample.** Ewald against Ewald (the induced dipoles
+need the lattice sum; the truncated-kernel row of section 5.6 is quoted for reference):
+
+| beta-PVDF, `pvdf-dft-valence-flux` | film `d_33` | film `d_31` | proper `d_33` | `C_33` | `C_11` | `a` | `b` | `c` | `|P|` | routes |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| truncated kernel, fixed charges (section 5.6) | −6.29 | +2.33 | −1.88 | 330.4 | 28.37 | 4.492 | 8.482 | 2.6052 | 0.1497 | 0.33% |
+| Ewald, fixed charges | −7.14 | +2.48 | −2.15 | 330.6 | 26.01 | 4.470 | 8.471 | 2.6218 | 0.1543 | 0.26% |
+| **Ewald, induced dipoles** | **−12.81** | **+3.56** | **−7.61** | **340.2** | **31.68** | **4.402** | **8.402** | **2.6321** | **0.1959** | 0.12% |
+| measured / periodic DFT | −32 | +20 | | 315.9 | | 4.731 | 8.358 | 2.580 | 0.176–0.188 | |
+
+The two routes to `d` agree to 0.12%, better than without dipoles, which is the check that
+the induced dipoles entered the energy gradient and the dipole derivative consistently; the
+shape parameter sits at +6.0° of its ±8° range with a gradient of 7e−7, off the cap; the
+energy and multiplier routes to `C_33` agree (340.2, 340.4).
+
+**What fraction of the shortfall this is.** `d_33` moves from 7.14 to 12.81 against 32:
+5.67 of the 24.86 missing, **23%** (25% against the truncated baseline of 6.29). `d_31`
+moves from 2.48 to 3.56 against 20: 1.08 of 17.52, **6%**. The ratio measured/modelled
+falls from 4.5x to 2.5x for `d_33` and from 8.1x to 5.6x for `d_31`. Most of the `d_33`
+gain is in the proper coefficient (−2.15 → −7.61, 3.5x): the induced dipoles respond to the
+strain-driven change in the permanent field, which is the electronic contribution the model
+lacked, and the dimensional term grows with `|P|` as it must.
+
+**What it costs the four things that were right.** The hypothesis was that responses grow
+while energies barely move. Responses grew; the energies moved less than the `s = 2`
+electrostatic scale of section 5.7 moved them, but they did move:
+
+| | fixed charges | induced dipoles | reference |
+|---|---:|---:|---|
+| `C_33` (GPa) | 330.6 (+4.7%) | 340.2 (+7.7%) | 315.9 periodic DFT |
+| beta `a`, `b`, `c` (Å) | 4.470, 8.471, 2.6218 | 4.402, 8.402, 2.6321 | 4.731, 8.358, 2.580 |
+| `|P|` (C/m²) | 0.154 (−13%) | 0.196 (+4 to +11%) | 0.176–0.188 DFT |
+| `E(α) − E(β)` (kJ/mol per monomer, rigid, Ewald) | −5.00 | −5.37 | accepted −6.5 to −2.6 |
+| PE piezoelectric tensor | 6e−15 C/m², 3e−12 pC/N | 5e−13 C/m², 2e−10 pC/N | 0 |
+
+`C_33` goes further from the DFT value; `a` contracts another 1.5% away from it (the
+induced dipoles add attraction between chains, as the −0.57 kcal/mol per monomer of
+polarization energy says); `C_11` rises 22%; `|P|` overshoots the DFT range instead of
+undershooting it, the induced moment being 27% of the static one along the polar axis. The
+alpha/beta ordering survives comfortably and polyethylene's induced dipoles sum to zero at
+every configuration by symmetry, so it stays exactly non-piezoelectric while acquiring a
+dielectric constant. So: not "energies barely move", but nothing breaks, and the response
+gained per unit of energy moved is far better than a charge scale gave — at `s = 1.5`,
+`C_33` moved 24 GPa for a `d_33` of −7.45; here it moves 10 GPa for −12.81.
+
+**Sensitivity, so that the number above is not taken as sharper than it is.** Every row
+below is a diagnostic and none is a fit:
+
+| variant (`examples/polarizable_response.py`, `--scale`, `--thole`, `--thole-a`) | `ε∞` (polar, long, chain) | `d_33` | `d_31` | `C_33` | `a` | `|P|` |
+|---|---|---:|---:|---:|---:|---:|
+| **shipped: VDS98, exp `a = 2.1304`** | **2.24, 2.18, 2.57** | **−12.81** | **+3.56** | **340.2** | **4.402** | **0.196** |
+| polarizabilities × 0.5 | 1.58, 1.57, 1.66 | −9.76 | +2.98 | 334.2 | 4.437 | 0.173 |
+| polarizabilities × 1.5 | 3.01, 2.85, 3.76 | −16.46 | +4.33 | 348.8 | 4.363 | 0.224 |
+| VDS98 "linear" column (H 0.519, C 1.508, F 0.436) | 2.50, 2.41, 2.95 | −14.04 | +3.83 | 343.4 | 4.388 | 0.205 |
+| Thole cubic, AMOEBA `a = 0.39` (not refitted to these α) | 2.11, 2.03, 2.43 | −12.34 | +3.44 | 338.0 | 4.411 | 0.190 |
+| exp `a = 1.5` (stronger damping) | 2.14, 2.09, 2.27 | −12.48 | +3.59 | 338.4 | 4.403 | 0.192 |
+| exp `a = 3.0` (weaker damping) | 2.61, 2.60, **5.34** | −13.89 | +3.63 | 346.3 | 4.387 | 0.213 |
+| bonded 1-2/1-3 charges allowed to polarise | 2.09, 2.05, 2.45 | not a measurement: shape on its 8° cap, `C_33 = −788`, `|P| = 0.009`, routes disagree 100% | | | | |
+
+Three things the table settles. The dielectric constant *pins the polarizability scale*:
+half the literature values give `ε∞ ≈ 1.6` and 1.5x give 3.0–3.8, both unmistakably wrong,
+and the literature values themselves land on the DFPT tensor — so there was no room for a
+fit even had one been wanted. The damping constant moves mainly the chain-axis component
+(2.27 at `a = 1.5`, 5.34 at `a = 3.0`, on the edge of the polarization catastrophe along
+the backbone, where the C–C neighbours are closest) and hardly the transverse ones, so the
+chain-axis agreement at the fitted `a = 2.13` is the one component that *is* sensitive to
+the damping — which is exactly the component the DFPT anchor is least sure of. And
+**`d_33` does not reach −32 at any physical polarizability**: at 1.5x, with `ε∞` already
+35% too high, it is −16.5. The exclusion of the bonded charges' field is not a choice
+either: without it the C–F charge 1.35 Å away dominates every induced dipole on the carbon,
+the polarization energy overwhelms the bend terms, and the structure is not one.
+
+**What this redirects.** A quarter of `d_33` and a sixteenth of `d_31` is the electronic
+contribution, and it is now in, at the dielectric constant's own accuracy. The remainder
+is the dynamical charge: the Born tensor from the same DFPT run (not yet an accepted
+quantitative target, its chain-axis acoustic sum residual being 0.6 e before correction)
+puts fluorine's effective charge along the polar axis at about −0.78 e against the static
+−0.20, and anisotropic by 2.4x between the transverse and chain directions while hydrogen's
+is isotropic to 0.005 — charge flowing along the C–F bond, directional, which the scalar
+angle flux of section 5.6 cannot express. Born-to-static ratios identify the missing
+channel; they do not by themselves account for `d`, since the clamped-electron strain term,
+the internal-strain displacements and the compliance all enter too. That refit is the next
+task and a separate one; nothing of it is folded in here, and `d_33` and `d_31` remain out
+of sample.
+
 ### 5.4 Blocking stress, free strain, work density (E = 0.01 V/A = 100 MV/m)
 
 | potential | | poling direction | free strain | blocking stress (MPa) | work density (kJ/m³) |
@@ -1019,10 +1175,15 @@ describe the cell this potential produces, not the phase it is named after.
 * The full compliance tensor, hence `d` as a truly free coefficient. `S` is the inverse of
   the reachable block (3×3 rigid, 4×4 deformable), so `d` is clamped in whatever is outside
   it.
-* Electronic polarizability, depolarisation, and any field-induced change in the charges:
-  the charges depend on the *geometry* on the fluxing path but never on the field, so the
-  dielectric constant is 1 by construction and the piezoelectric response still has no
-  electronic contribution.
+* Electronic polarizability **by default**. `CrystalPacker(polarizable=Polarizable(),
+  coulomb="ewald")` is opt-in (section 5.8): induced point dipoles with literature atomic
+  polarizabilities, Thole-damped, Ewald-summed, self-consistent. Without it the charges
+  depend on the *geometry* on the fluxing path but never on the field, so the dielectric
+  constant is 1 by construction. With it the clamped-ion dielectric tensor is within 3% of
+  periodic DFPT and the piezoelectric coefficients gain an electronic contribution — which
+  closes a quarter of the `d_33` shortfall and a sixteenth of `d_31`'s, no more. The
+  depolarising field of a finite sample is still a boundary choice (`EwaldSpec`), not a
+  computed quantity.
 * Charge transfer along the backbone. The increments are typed by element pair, so a
   backbone C-C bond is homonuclear and carries neither an increment nor a flux;
   `flux_topology` refuses to orient one rather than letting the arbitrary order of the bond
