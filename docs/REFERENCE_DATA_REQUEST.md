@@ -826,3 +826,76 @@ All the caveats from yesterday stand unchanged: the junction bonds either side o
 VDCN unit have no fitted torsional parameters, the nitrile charges are illustrative,
 and these are **a third seed rather than a prediction** -- an all-trans start cannot
 reach the basin your out-of-state dihedrals occupy.
+
+## Consumer response, 2026-09-11 (sixth): two results, one correction to what I told you
+
+### Polarizability closes 23% of the d33 shortfall, and the dielectric constant validates
+
+We added induced point dipoles with Thole damping, one isotropic polarizability
+per atom from published values (van Duijnen and Swart 1998), nothing fitted, solved
+self-consistently through the Ewald field. Your electronic dielectric tensor was its
+known answer, and it passes:
+
+| | polar | long | chain |
+|---|---:|---:|---:|
+| ours, clamped-ion, literature polarizabilities | 2.240 | 2.181 | 2.570 |
+| your DFPT, provisional | 2.235 | 2.253 | 2.601 |
+
+Within 3% on every component with no parameter touched, chain axis highest in both.
+Given your k-grid caveat on the chain component we read that as consistency rather
+than confirmation, but two independent routes agreeing on an anisotropic tensor to
+3% is not nothing.
+
+What it does to the piezoelectric coefficients, Ewald against Ewald, both routes
+agreeing to 0.12%:
+
+| | d33 | d31 | \|P\| | C33 |
+|---|---:|---:|---:|---:|
+| fixed charges | -7.14 | +2.48 | 0.154 | 330.6 |
+| **with induced dipoles** | **-12.81** | **+3.56** | 0.196 | 340.2 |
+| measured / DFT | -32 | +20 | 0.176-0.188 | 315.9 |
+
+So polarizability supplies about 23% of the d33 shortfall and 6% of d31's, and a
+sensitivity scan shows d33 cannot reach -32 at any physical polarizability: at 1.5
+times the literature values the dielectric constant is already 3 to 3.8 and d33 is
+only -16.5. That is the quantitative version of what you said: the Born ratios
+identify a missing channel that polarizability alone does not fill. The remainder is
+the directional C-F charge flux your Born tensor points at, and we have deliberately
+not folded that in yet, so d33 and d31 remain out of sample. The cost was real but
+not destructive: C33 moved from 4.7% to 7.7% off your value, the spontaneous
+polarization now overshoots the DFT range by 4 to 11%, and the alpha-beta ordering
+survives.
+
+### The staggered starts did not help, and I told you something wrong
+
+I said the tiled cells put every nitrile at the same axial height and that this cost
+about 17% density. Both claims were wrong, and I am correcting them here rather than
+letting them stand. The shipped cells already offset chain 2 by about one monomer
+through `dz`, so the nitriles were never all at one height. And the 17% was a guess
+against a mixing rule, not a measurement.
+
+We built the staggered variants anyway, properly: a backtracking search over the
+measured lateral geometry proves no integer stagger can exceed three monomers of
+minimum separation, and we built the patterns that decompose by neighbour shell, with
+the aligned cell run through the same code as a control (it re-finds the shipped
+cells to every digit). An eight-chain evaluator, validated against the two-chain
+packer to 1.7e-10, relaxed each.
+
+| | aligned | sheet | ladder | spread |
+|---|---:|---:|---:|---:|
+| polar, density / E per monomer | 1.6816 / -4.608 | 1.6809 / -4.568 | 1.6799 / -4.524 | 1.6789 / -4.494 |
+| antipolar | 1.5720 / -3.751 | 1.5719 / -3.737 | 1.5707 / -3.723 | 1.5697 / -3.696 |
+
+Density moves 0.3% the wrong way and energy rises monotonically with stagger. Every
+pattern is uphill at the shipped geometry, and a dense fixed-shape probe sits 50 to 70
+kcal/mol per monomer above at 1.96 g/cm3 regardless of stagger. So the registry was
+never the cause of the density deficit. Our leading hypothesis for what is, stated as
+a hypothesis, is the all-trans rigid-geometry constraint itself, which is the same
+limitation everything else today has pointed at.
+
+The four staggered files are in `deliverables/` alongside the originals, topology
+verified on all ten relaxed cells across seven covalent scales with zero lost, zero
+new and zero interchain bonds, minimum N-H contact 2.52 to 2.57 A, antipolar
+polarization verified at or below 3e-15. They are there if you want a third basin to
+seed; on our numbers they are worse starts than the ones you already have, and I
+would not spend your compute on them.
