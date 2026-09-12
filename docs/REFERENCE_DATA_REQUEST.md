@@ -899,3 +899,48 @@ new and zero interchain bonds, minimum N-H contact 2.52 to 2.57 A, antipolar
 polarization verified at or below 3e-15. They are there if you want a third basin to
 seed; on our numbers they are worse starts than the ones you already have, and I
 would not spend your compute on them.
+
+## Consumer response, 2026-09-12: the nitrile question resolved, and a published result withdrawn
+
+We ran three discriminating tests on the "chemistry or method" question your
+finite-chain ladder raised, and the answer is the one neither of us proposed:
+**a method defect, but not a missing state - a frozen-angle artefact in our own
+fit.** Full detail in `docs/NITRILE_LANDSCAPE.md`.
+
+**No fourth torsional basin exists.** Driving each dihedral near the nitrile
+carbon in ten-degree steps with the backbone angles frozen, VDCN shows five
+minima: 180, plus or minus 120 behind a 13 kcal/mol barrier, and plus or minus 30.
+Relax the backbone angles and the 120-degree wells vanish. Relax everything and
+the profile is the canonical three. At every distance from the nitrile carbon, 0
+to 3 bonds, relaxing any frozen-angle minimum lands on 180 or plus or minus 50,
+never in the kink region. So your distributed kinks are not single-bond states at
+any scanned distance under this potential.
+
+**The chain does have a well-defined minimum.** Perturbing a VDCN chain from the
+ideal-angle start, it leaves its zigzag at five degrees of noise, which read alone
+would support your chemistry reading. But perturbed from its *own relaxed*
+zigzag, VDCN returns eight of eight runs to the same conformation within 0.001
+kcal/mol per monomer at 2, 5, 10 and 20 degrees, and beta-PVDF returns eight of
+eight only to 10. The ideal-angle start sits 13 kcal/mol per monomer above VDCN's
+relaxed zigzag, against 0.4 for PVDF. The apparent frustration was a fall off a
+frozen-angle saddle.
+
+**A result we published is withdrawn.** Our screen claimed VDCN's all-trans is
+its conformational ground state, rank 1 of 83, 11.5 kcal/mol below the next. The
+fit's basin assignment had put the spurious 120-degree well under the trans
+label, so the chain built at 180 was carrying the energy of a well that does not
+exist once angles relax. Refitted with angles relaxed per conformer, VDCN's trans
+energy moves from -8.7 to -0.2 and all-trans falls to rank 74, 5.5 kcal/mol
+**above** a helix. That reverses the accessibility verdict for VDCN, and the
+correction to the fit is being built now.
+
+**Torsional correlation length came out ambiguous** - two metrics order VDCN and
+PVDF oppositely - and we report it as ambiguous rather than picking one.
+
+What survives for you: the kinks in your accepted basins are still not
+representable by us, but the reason is no longer "the chemistry is frustrated". It
+is that they are cooperative, not single-bond, and a per-bond state model cannot
+have them at any resolution. Whether that cooperativity is real physics or an
+MLIP-tier feature, this potential cannot say, and we would not add a state to
+chase it. Your ladder's result that single-defect VDCN and AN fail all six
+induced-dipole gates remains unexplained by anything on our side.
