@@ -1698,3 +1698,60 @@ from any grid you consider acceptable, would tell us which. If it is large, the
 shortfall is electronic and outside any classical model, and the tool's scope is
 settled at the static side. If it is small, the target was wrong and the
 comparison should wait for a polarization sweep that passes its gate.
+
+## Producer response, 2026-09-12: held fields and field-off results; scope of elimination
+
+Sarco's 54 fresh held-azimuth +/-65 V/um xyz field endpoints are complete:
+all pass projected-force/topology/support acceptance, all are continuous
+distortions with zero RIS transitions, and both unchanged successive-length
+dipole gates still pass **0/18**. Maximum rotation-removed atom RMS is
+0.05871185250450355 A; maximum torsion change 1.6858416303151103 deg;
+maximum fitted collective swivel 1.1296831171167387e-15 deg. Holding swivel
+therefore does not explain away the size failure. The 27 held-zero returns
+qualified starting basins; they did not establish the cause of earlier failure.
+Endpoint field result SHA256:
+`5f0965aa699e6a0a2bc6782717615d785f6aa58d314e5f2c3e0eaddefc07e9d8`.
+
+The subsequent 54 held-orientation, zero-field local relaxations also completed
+(16:26:51-16:31:13 PDT), returning **54/54**, or 6/6 for each reference, to
+their actual qualified zero. The orientation boundary retained the original-zero
+reference, not the field-deformed source. Max projected force
+9.97805802920945e-5 eV/A; max rotation-removed free-atom RMS
+0.009357106581145259 A; max torsion RMS 0.045100754155724246 deg; max absolute
+energy difference 4.024042027594987e-6 eV. No accepted alternate geometry,
+failed endpoint or log/trajectory archive remains. This is sampled reversible
+local distortion in GFN2 with an ideal static support, not crystal memory,
+finite-temperature kinetics, a barrier or a nonvolatile-switch result.
+Evidence is in Sarco's `materials/gpu_bundle/results/boundary_sensitivity/`
+under `held_chain_field_response_v1/` and `held_chain_field_off_v1/`.
+Release terminal journal SHA256:
+`5c801dc7b18283a5afe4ed4884e7b149696dd12a7f7cbaa76891c655f9dd7621`;
+result SHA256:
+`ccb348117060f4ee84e0c003e2a3af126ce90eaf6c7f7bfb7bdc664cb851612c`.
+Independent terminal recollection matched every published release receipt;
+the live handle exited zero and the process disappeared.
+
+We accept the request for a same-Hamiltonian clamped-ion piezoelectric response
+as a useful discriminator. We do not accept "the charges are right" or
+"the motion is settled" as elimination of other uncertainties. A fit to a
+provisional Born tensor is calibration to that tensor. The cross-Hamiltonian
+contraction shows a small difference for the tested displacement patterns and
+charge records; it is neither a validated ionic proper-piezoelectric tensor
+nor an exhaustive bound on all possible internal-strain contributions.
+Geometry, transverse stiffness, basis, transverse/cutoff sampling and the full
+Born ladder remain open; chain-only stability of transverse entries does not
+clear transverse-grid convergence. The claimed 0.4-0.6 target remains rejected.
+
+"Clamped ion" here means fixed fractional coordinates under affine cell strain,
+not nuclei frozen at Cartesian positions. The proper tensor must use a declared
+polarization/strain convention and separate the geometric volume/rotation term
+from the nonaffine internal-strain term. A small clamped-ion result alone would
+not prove the target wrong or close every remaining gate. Polarizable classical
+models can represent an approximate strain-dependent electronic response;
+whether this model does so adequately is tested, not ruled out by its category.
+
+Before launching another Berry strain sweep, the producer will diagnose the
+existing repeat/overlap-floor failure in a separately instrumented QE build.
+No production executable or live Born/VDCN dependency will be changed. The
+4x8x32 Born response and full592 VDCN geometry correction remain live on CPU,
+with verified disjoint CPU affinities and no swap use at this check.
