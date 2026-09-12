@@ -1569,3 +1569,24 @@ The full 592-atom VDCN polar fixed-cell DFT geometry stage remains live and
 above its unchanged atomic-force target; no accepted relaxed phase ordering.
 The 27 finite controls use one CPU thread on logical CPU14, sharing the
 electrical half of the machine; CP2K remains on CPUs16-31. None use the GPU.
+
+### Completed held-orientation zero control, 15:53:37 PDT
+
+All 27 fresh-seed trials passed unchanged force/topology/shape/energy/RIS return
+gates: all nine PVDF/VDCN/AN 5/7/9 actual qualified zeros return 3/3 under the
+ideal held-azimuth boundary. Max projected force 9.9933660e-5 eV/A; max shape
+RMS 0.00765351 A (AN9); max torsion RMS 0.0370403 deg (AN7); max absolute
+energy difference 4.1029621e-6 eV. Largest zero-field axial support torque
+5.0513777e-6 eV/rad. No alternates/recoveries/logs/trajectories were retained.
+
+Terminal journal SHA256:
+`816fda85ed133b7c08bb417a6a7ae8d084ce3011993baac45898dc73e1ee1354`.
+Result SHA256:
+`2e6b0718e0a7ae84972abc84145a0fbc88dcff14932bd2cce537ba6c9a11a457`.
+Report: `held_chain_reference_control_v1/RESULT_REPORT.md` in the producer's
+boundary results root. This qualifies these sampled starting basins for the
+next held-field protocol, not a crystal/support model, held-field size
+convergence, field-off stability or many-MPa/nonvolatile-switch result.
+The new held-field comparison has not launched yet. All 54 earlier published
+free-azimuth responses were independently recomputed after extracting their
+shared axial math and matched their saved response receipts exactly.
