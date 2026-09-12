@@ -622,3 +622,59 @@ finite-cluster dipole responses, then recompute d33 and d31 with polarizability
 on. Both are out of sample with respect to the measured coefficients. If the
 combination lands within a factor of two of -32 and +20 from a fit that never saw
 them, the field-and-strain half of the goal is met in the only way that counts.
+
+## Producer response, 2026-09-11: numerical gates and the defect profile
+
+The Born tensor is useful qualitative evidence for missing dynamical response,
+but it is not yet an accepted quantitative fit target. The raw acoustic-sum
+tensor has diagonal residuals (0.00222, -0.00582, -0.62064) e. The corrected
+sum within 2e-5 is imposed by QE's simple ASR correction, not an independent
+convergence result; it shifts every atom's chain-axis diagonal by about
+0.05172 e. Dielectric and Born chain-grid sensitivity remain open. See sarco
+`BORN_RESPONSE_REPORT.md` and both raw and corrected tensors in
+`born_results.json`. Treat a preliminary fit as provisional until that gate
+passes, rather than using the corrected sum as validation.
+
+The -30.540607 cm^-1 mode was projected from its complex Gamma eigenvector:
+99.98799% is uniform x translation. The other two lowest modes are also
+translations. The lowest internal Gamma mode is positive at 40.293054 cm^-1.
+This does not establish finite-q dynamical stability, but the negative mode is
+not evidence for an internal optical instability of the zero cell.
+
+The proposed integer Berry relabeling cannot fix this zero-cell anomaly. Its
+raw P_y is 0.4906266 with quantum 0.7429302 C/m2; the dense +/-1% midpoint is
+-0.40704935. The nearest branch to that midpoint is already n=-1, giving
+-0.2523036 and the minimum possible residual 0.15474575 C/m2 (0.20829 quantum).
+Adding any other integer quantum makes the residual larger. The owner's new
+`midpoint_branch_diagnostic` and regression tests record that bound. A clean
+zero repeat is required, not a fractional-quantum adjustment. The centered
++/-1% slope uses the two strained cells only, so the 29.9% cross-grid slope
+change cannot be caused by the zero point's branch alone. Agreement at two
+grids also does not yet establish the strained cells' full k convergence.
+
+Born/static-charge ratios identify a missing response channel, but do not by
+themselves account quantitatively for d: the clamped-electron strain term,
+mode-weighted internal strain displacements and elastic compliance also enter.
+Keep crystal-axis and film-axis conventions explicit when comparing d_33 with
+the project chain-axis C_33. None of the present model tiers establishes
+physical phase ordering from the small VDCN gap; the matched full-cell PBE-D3(BJ)
+vertical comparison is now running, and DFT-relaxed ordering remains separate.
+
+The suggested nitrile-local torsion check is complete on the two accepted
+592-atom basins. For all 192 four-carbon periodic windows in each basin,
+minimum backbone graph distance to the nitrile-bearing carbon was tabulated.
+The 32 windows containing that carbon are all trans-class in both basins.
+Antipolar's 15 distorted windows occur at distances 2/3 (seven windows) and
+6/8/9/10 bonds (eight); polar's five are at 1/5/7/9 bonds. Thus the extra
+distortions are distributed, not confined to the VDCN units. This does not
+partition the energy into steric, torsional and electrostatic contributions.
+The reproducible driver and source-hashed compact profile are in sarco
+`vdcn_defect_torsions.py` and `results/free_angle/VDCN_DEFECT_TORSION_PROFILE.json`.
+
+The isolated finite-chain ladder also completed all 63 cases: PVDF passes all
+six declared total induced-dipole size gates; single-defect VDCN and AN fail
+all six. Two endpoint point clamps still permit axial rotation. The VDCN
+nine-mer +y apparent flip is a 175.94-degree axial swivel, with only 0.03942 A
+rotation-removed shape RMS; it is not an internal torsional toggle. Thirty-five
+zero-perturbation and field-release controls are prepared to test reference
+shape stability and field-off retention independently of axial orientation.
