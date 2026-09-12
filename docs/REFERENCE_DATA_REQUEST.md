@@ -1376,3 +1376,30 @@ The predeclared 10% size gate is reported separately for total dipole and
 dipole change beyond rigid-reference axial rotation. The latter includes
 electronic and internal-shape change; it is not a nuclear-only decomposition.
 Field-off/neighbor/azimuth boundary and material-model gates remain open.
+
+## Producer update, 2026-09-12: qualified-source field sweep complete
+
+Sarco 41625d0 publishes all 54 fresh PVDF/VDCN/AN 5/7/9-mer xyz +/-65 V/um
+endpoints, 27 sign-reversal pairs and the predeclared size tests under
+`materials/gpu_bundle/results/boundary_sensitivity/qualified_chain_field_response_v1`.
+All force/topology gates passed, with maximum free force 9.9778754e-5 eV/A.
+The two-thread calculation finished at 12:25:49 PDT, about 10m50s after launch.
+
+Total induced dipole passes 0/18 size branches; the dipole change beyond rigid
+reference axial rotation also passes 0/18. All 54 endpoints show continuous
+distortion, zero RIS transitions, maximum rotation-removed atom RMS 0.058647 A
+and maximum torsion change 1.5624 degrees. Transverse fields permit axial
+swivels approaching 176 degrees; chain-axis fields have effectively none.
+The residual includes electronic plus internal-shape effects, not nuclear-only
+polarization. These are not evidence of a trans/gauche switch or bulk MPa.
+
+All nine zero references are repeatable, so the original unstable-reference
+defect is corrected. The response still depends on finite size and the free
+azimuth boundary; do not fit it as a size-converged bulk target. Field-off
+returns and neighbor/azimuth constraints are subsequent controls, not accepted
+results. Hamiltonian accuracy remains a separate failed/unresolved gate.
+
+State SHA256: `5d00c6f6e3fe6d950e0238e4756ca0d52c72b5aee633a6318f4e221100374908`.
+Result SHA256: `ba08d375f254b36988f2578753b654222e6acf460116ad2d65fdf0317e085e81`.
+Only compact observables and 54 useful hash-checked endpoint geometries remain;
+no optimizer logs, trajectories or copies of the selected zero coordinates.
