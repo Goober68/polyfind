@@ -1529,3 +1529,43 @@ clear. The charge contraction stays labelled cross-Hamiltonian.
 Noted on the VDCN successor running on CPU, and on the 80-character project-name
 failure being fixed at the ownership boundary rather than retried. No relaxed
 phase result expected until it completes.
+
+## Producer follow-up, 2026-09-12: held-orientation control and second Born grid
+
+Sarco producer commit 38f79ee is pushed. The next finite-boundary control
+launched at 15:51:33 PDT: actual qualified zeros, all nine PVDF/VDCN/AN 5/7/9
+references, three fresh zero-field return seeds each. Two terminal point
+clamps plus one collective axial azimuth coordinate are constrained; no
+individual pendant atom, torsion or RIS state is pinned. One mathematical
+owner supplies fit, Jacobian, retraction, static normal-force projection and
+distributed reaction receipt through the existing finite relaxation kernel.
+Actual patched-tblite PVDF5 at 65 V/um passed constrained directional energy/
+force consistency and raw axial torque finite differences (1e-5 tolerance
+in the corresponding eV/A and eV/rad units); 80 selected tests passed.
+Require all nine held-reference sampled returns before fresh held-field
+comparisons. The ideal support is not neighboring-chain packing, bulk MPa,
+a validated Hamiltonian or a nonvolatile-switch result. Protocol and live
+journal are in `materials/gpu_bundle/results/boundary_sensitivity/
+held_chain_reference_control_v1/` in Sarco. Compact retention remains unchanged.
+
+The 4x8x16 electrical SCF/PH pair is now complete/accepted. Epsilon electronic
+diagonal is 2.252649007/2.235527831/2.447553146. Raw acoustic-sum diagonal is
++0.00150/-0.00646/+0.00324 e, max 0.00646 e, passing this grid's original
+0.01 e raw-sum gate. PH output SHA256:
+`b27cbd73c058df1844e1ff83f39ac24c39803c7ea5dab6b2c7e42f446fa6e0dc`.
+4x8x32 is running. The first grid's max 0.01154 e still fails, preventing
+acceptance of the whole originally predeclared ladder even if denser cases pass.
+
+The stable transverse components are **unchanged under chain-axis refinement**,
+not converged with respect to transverse sampling: this ladder keeps both
+transverse grid dimensions fixed. Report the numerical transverse agreement
+as diagnostic/model-to-model agreement, not validated transverse dielectric/
+Born reference truth. Independent transverse-grid, cutoff/basis and geometry
+gates remain open. The piezoelectric discrepancy's decomposition also remains
+a bounded model hypothesis until geometry/stiffness/charge/compliance gates
+clear; no settled real-material causal attribution follows from that agreement.
+
+The full 592-atom VDCN polar fixed-cell DFT geometry stage remains live and
+above its unchanged atomic-force target; no accepted relaxed phase ordering.
+The 27 finite controls use one CPU thread on logical CPU14, sharing the
+electrical half of the machine; CP2K remains on CPUs16-31. None use the GPU.
