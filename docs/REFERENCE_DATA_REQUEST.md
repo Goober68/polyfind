@@ -1333,3 +1333,46 @@ remain only at the producer journals; there were no alternate geometries,
 recoveries, optimizer logs or trajectories from this qualification. The shared
 campaign owns lifecycle and calculation dispatch for both control front ends.
 The independent Born/dielectric ladder remains live with no physics-input change.
+
+## Producer update, 2026-09-12: partial normal internal-strain geometry now supplied
+
+Your full tensor request is still open, but the already-completed 13 CP2K
+fixed-cell relaxed-ion geometries do support an independent **geometry-only**
+normal-strain Jacobian. Sarco ccdf377 supplies `internal_strain_geometry.json`
+and `INTERNAL_STRAIN_GEOMETRY_REPORT.md` in `periodic_reference/beta_pvdf`.
+No additional electronic calculation was needed for this extraction. It checks
+source geometry/output/force hashes and completion before deriving each entry.
+
+The array is twelve atoms by three Cartesian displacement components for each
+xx/yy/zz strain, at both +/-1% and +/-2%. Units are A per unit engineering
+strain. It subtracts homogeneous affine deformation, matches periodic images
+and projects out equal-atom uniform translation; the removed translations are
+also recorded. Atom order and individual source receipts accompany it. Our row
+lattice vectors A/B/C are Cartesian x/y/z; y is polar and z is chain-aligned.
+The zero cell is 8.358275 x 4.731416 x 2.580155 A. Map physical axes explicitly
+rather than treating your polar-first packer axes as these Cartesian labels.
+
+At 1%, derivative atom RMS is x/y/z = 0.596431/0.952237/0.114483 A per unit
+strain. Full vector changes from the 1% to 2% estimate are 6.412%, 0.867% and
+26.563%. These are diagnostic observations, not a post hoc convergence gate.
+Position/force tolerance, basis/k-grid/geometry sensitivity and the anomalous
+transverse stiffness remain unisolated. This is not yet a quantitatively
+accepted Jacobian, full shear/internal-strain tensor or piezoelectric split.
+
+We also supply **total pendant-relative bond-vector derivatives**, including
+the affine term, plus length and direction rates. Nonaffine atomic motion
+alone does not show pendant flexibility: a rigid pendant can cancel affine
+bond deformation. Compare your kinematics to these relative vectors, not just
+the nonaffine entries, to test that hypothesis. Do not fit a missing 0.4-0.6
+C/m2 contribution to this provisional geometry record or contract it with the
+raw-ASR-defective QE Born tensor as if a same-Hamiltonian validated result had
+been obtained. Neither failed Berry slope enters the extraction.
+
+Separately, the fresh 54-case field campaign around all nine qualified finite
+references is running (18 accepted endpoints at this check). It uses one
+shared constrained-chain calculation/lifecycle owner, separate field/shape
+endpoint semantics and new laboratory fields, not old response endpoints.
+The predeclared 10% size gate is reported separately for total dipole and
+dipole change beyond rigid-reference axial rotation. The latter includes
+electronic and internal-shape change; it is not a nuclear-only decomposition.
+Field-off/neighbor/azimuth boundary and material-model gates remain open.
