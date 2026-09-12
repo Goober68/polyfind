@@ -571,8 +571,10 @@ Those are reported as non-measurements, not as the scan's strong-coupling end.
 | `d_33` | `s ≈ 7.3` (charge ray, extrapolated from `s = 1, 2`) | **no**: past `s = 2` the structure is not a measurement |
 | `d_31` | `s ≈ 10.5` (charge ray, same extrapolation) | **no**, same reason |
 
-So the separation between the energy optimum and the response optima is at least a factor
-of 300 in `s`, i.e. 18 in charge, and they are on *opposite sides* of the shipped value. The
+The gap wants `s` as small as it can be had, and the only thing bounding it from below is
+acceptance test 1, which fails off its `−2.6` edge at about `s = 0.03`; the responses want
+`s ≈ 7` to `10`. So the separation between the two optima is a factor of 250 or more in `s`,
+i.e. 16 or more in the charge, and they are on *opposite sides* of the shipped value. The
 verdict is **two problems, not one and not three**: `d_33` and `d_31` agree on an optimum to
 within 1.4x, which is consistent with their 5x and 8.6x shortfalls being one missing
 mechanism, and the polar/antipolar gap is a separate deficiency that is not electrostatic in
