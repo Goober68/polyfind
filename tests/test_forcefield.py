@@ -57,11 +57,17 @@ def test_pvdf_fit_has_two_pair_types_and_is_mirror_symmetric():
 
 # ------------------------------------------------ reflection-with-reversal, orders 1-3
 def _raw_fit(name, third_order=True, step=20.0):
-    """An unsymmetrised fit, so the relations can be measured rather than assumed."""
+    """An unsymmetrised fit, so the relations can be measured rather than assumed.
+
+    Rigid angles throughout this section: it measures the fit's symmetry algebra (reversal
+    images, bond-type shifts), which does not depend on how the backbone angles are
+    treated, and the relaxed scan PVDC, CFE and CDFE now default to costs a hundred times
+    more per fit.
+    """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # the chiral polymers warn once on build_chain
         return fit_ris(get_polymer(name), SimpleFF(), step=step, n_monomers=3,
-                       third_order=third_order, symmetrize=False)
+                       third_order=third_order, symmetrize=False, angles="rigid")
 
 
 @pytest.mark.parametrize("name", ["pvdf", "pvdc", "cfe", "cdfe"])
@@ -103,7 +109,7 @@ def test_a_chiral_fit_symmetrises_all_three_orders(name):
     """The default fit averages a chiral model over the operation it just validated."""
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        model = fit_ris(get_polymer(name), SimpleFF(), step=20.0, n_monomers=3, third_order=True).model
+        model = fit_ris(get_polymer(name), SimpleFF(), step=20.0, n_monomers=3, third_order=True, angles="rigid").model
     B, m = model.B, np.array(model.states.mirror)
     *_, c = _reversal_images(model.first_order, model.second_order, model.states.mirror, B)
     assert _reversal_image3(model.third_order, model.states.mirror, B, c)[1] < 1e-9
@@ -133,7 +139,7 @@ def test_state_angles_obey_reflection_with_reversal(name):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        model = fit_ris(get_polymer(name), SimpleFF(), step=20.0, n_monomers=3).model
+        model = fit_ris(get_polymer(name), SimpleFF(), step=20.0, n_monomers=3, angles="rigid").model
     assert model.states.angles[1] == -model.states.angles[2]  # aggregated: exactly paired
 
 
@@ -747,3 +753,149 @@ def test_the_oligomer_energy_path_refuses_a_fluxing_potential():
     ff = _flux_ff(charge_flux=(("C", "H", -0.7, 0.0),))
     with pytest.raises(ValueError, match="charge flux"):
         ff.energy(build_chain(PVDF, [180.0] * 6))
+
+
+# ------------------------------------------------------------ backbone-angle relaxation
+#
+# docs/NITRILE_LANDSCAPE.md: with the backbone angles frozen, VDCN's one-bond profile has
+# wells at +/-120 deg, 8.7 kcal/mol below trans, that a chain free to bend does not have;
+# _basins hands them to the trans label, so the rigid fit gave VDCN a T state at 180 deg
+# carrying the energy of a well at 120.  The relaxed scan removes that, the rigid scan is
+# kept bit-for-bit, and which one a chemistry gets by default is measured, not assigned.
+
+def _val():
+    import polyfind.fitting  # noqa: F401 - registers the preset
+
+    return SimpleFF.from_preset("pvdf-dft-valence")
+
+
+def test_rigid_alias_and_explicit_rigid_are_bit_for_bit_the_default_fit():
+    """PVDF is recorded rigid, so the default, ``scan="rigid"`` and ``angles="rigid"`` are
+    the same fit to the last bit -- every PVDF number in every table depends on it."""
+    ff = SimpleFF()
+    a = fit_ris(PVDF, ff, step=20.0, n_monomers=5)
+    b = fit_ris(PVDF, ff, step=20.0, n_monomers=5, scan="rigid")
+    c = fit_ris(PVDF, ff, step=20.0, n_monomers=5, angles="rigid")
+    assert a.angles == b.angles == c.angles == "rigid"
+    assert a.discriminator is None and a.n_relaxation_energies == 0
+    for x in (b, c):
+        assert np.array_equal(a.model.first_order, x.model.first_order)
+        assert np.array_equal(a.model.second_order, x.model.second_order)
+        assert a.model.states.angles == x.model.states.angles
+        assert a.n_evaluations == x.n_evaluations
+        for k in a.scan1:
+            assert np.array_equal(a.scan1[k], x.scan1[k]) and np.array_equal(a.scan2[k], x.scan2[k])
+    with pytest.raises(ValueError, match="angles must be"):
+        fit_ris(PVDF, ff, step=45.0, n_monomers=3, angles="bogus")
+
+
+def test_relax_angles_batch_matches_per_row_scipy_and_only_lowers_the_energy():
+    """The batched projected BFGS finds the same minima as an independent per-row L-BFGS-B
+    on the same objective, and a relaxed conformer never costs more than the rigid one."""
+    from scipy.optimize import minimize
+
+    from polyfind.forcefield import relax_angles_batch
+
+    ff = _val()
+    rng = np.random.default_rng(3)
+    dihs = rng.choice([180.0, 60.0, -60.0], size=(4, 8)) + rng.uniform(-10, 10, size=(4, 8))
+    tpl, coords = build_chain_batch(PVDF, dihs)
+    rigid = ff.energy_batch((tpl, coords))
+    E, ang, status, n = relax_angles_batch(PVDF, ff, dihs)
+    assert E.shape == (4,) and ang.shape == (4, 11) and n > 0
+    assert np.all(E <= rigid + 1e-9)
+    assert np.all(status <= 1)  # converged or stalled at the finite-difference floor, never out of iterations
+    assert np.all((ang >= 95.0) & (ang <= 135.0))
+    nominal = np.array([PVDF.backbone[k % 2].backbone_angle for k in range(11)])
+    for m in range(4):
+        def f(a):
+            t, c = build_chain_batch(PVDF, dihs[m][None], bond_angles=a[None])
+            return float(ff.energy_batch((t, c))[0])
+        res = minimize(f, nominal, method="L-BFGS-B", bounds=[(95.0, 135.0)] * 11,
+                       options={"maxiter": 500, "ftol": 1e-12})
+        assert E[m] == pytest.approx(res.fun, abs=2e-3)
+
+
+def test_local_minima_of_a_cyclic_profile():
+    from polyfind.forcefield import _local_minima
+
+    E = np.array([0.0, 1.0, 2.0, 1.0, 0.5, 1.5, 3.0, 2.0])  # minima at 0 (cyclic) and 4
+    found = _local_minima(E)
+    assert [i for i, _ in found] == [0, 4]
+    # the barrier tops are the maxima at index 2 (2.0) and index 6 (3.0); index 3 is on a slope
+    assert dict(found)[0] == pytest.approx(2.0)  # min(2.0, 3.0) - 0.0
+    assert dict(found)[4] == pytest.approx(1.5)  # min(2.0, 3.0) - 0.5
+    assert [i for i, _ in _local_minima(E, min_depth=1.8)] == [0]
+    assert _local_minima(np.zeros(5)) == []
+
+
+def test_the_discriminator_orphans_vdcn_s_frozen_angle_well_and_clears_pvdf():
+    """The measurement behind ANGLE_RELAXATION_DEFAULTS, on the two rows that anchor it:
+    VDCN's rigid +/-120 wells have no relaxed minimum within 30 deg, PVDF's rigid double
+    gauche (+/-70, +/-40) sits within 30 of the relaxed +/-50 on both sides."""
+    from polyfind.forcefield import ANGLE_RELAXATION_DEFAULTS, angle_relaxation_check
+
+    ff = _val()
+    vdcn = angle_relaxation_check(get_polymer("vdcn"), ff, step=10.0, n_monomers=6)
+    assert vdcn["needs_relaxation"] is True and ANGLE_RELAXATION_DEFAULTS["vdcn"] is True
+    for b in (0, 1):
+        orphans = sorted(a for a, _, _ in vdcn["bonds"][b]["orphans"])
+        assert orphans == [-120.0, 120.0]
+        assert all(e < -8.0 for _, e, _ in vdcn["bonds"][b]["orphans"])  # the well is deep, not grid noise
+        relaxed = sorted(a for a, _, _ in vdcn["bonds"][b]["relaxed_minima"])
+        assert relaxed == [-180.0, -40.0, 40.0]
+    pvdf = angle_relaxation_check(PVDF, ff, step=10.0, n_monomers=6)
+    assert pvdf["needs_relaxation"] is False and ANGLE_RELAXATION_DEFAULTS["pvdf"] is False
+    assert all(not pvdf["bonds"][b]["orphans"] for b in (0, 1))
+    assert pvdf["restraint_k"] == 0.0  # the preset carries bend terms, so no fallback restraint
+
+
+def test_auto_measures_a_polymer_it_has_no_record_for_and_falls_back_to_a_restraint():
+    """A chemistry not in the table gets the check run on the fly (kept in the report), and
+    a calculator without bend terms relaxes against the stated harmonic fallback."""
+    from dataclasses import replace
+
+    from polyfind.forcefield import FALLBACK_ANGLE_K, _angle_restraint_for
+
+    unknown = replace(PE, name="pe-unrecorded")
+    rep = fit_ris(unknown, SimpleFF(), step=30.0, n_monomers=3)
+    assert rep.discriminator is not None and rep.discriminator["needs_relaxation"] is False
+    assert rep.angles == "rigid"
+    assert rep.discriminator["restraint_k"] == FALLBACK_ANGLE_K
+    assert _angle_restraint_for(SimpleFF(), None) == FALLBACK_ANGLE_K
+    assert _angle_restraint_for(_val(), None) == 0.0
+    assert _angle_restraint_for(SimpleFF(), 7.5) == 7.5
+
+
+def test_relaxed_fit_removes_vdcn_s_trans_artefact_and_the_third_order_guard_still_holds():
+    """Rigid, VDCN's T state carries the energy of the +/-120 well (about -8.7 kcal/mol at
+    the screen's step; here on a coarse grid that still samples 120).  Relaxed, T is a
+    fraction of a kcal/mol from zero, the gauche state sits near +/-40 rather than +/-30,
+    and no third-order term is a spurious inclusion-exclusion across an overlap: every
+    unguarded triple is well inside the cap, and the guard fires only where the triple
+    itself still overlaps after relaxing."""
+    ff = _val()
+    vdcn = get_polymer("vdcn")
+    rigid = fit_ris(vdcn, ff, step=30.0, n_monomers=3, third_order=True, angles="rigid")
+    relaxed = fit_ris(vdcn, ff, step=30.0, n_monomers=3, third_order=True, angles="relaxed")
+    T = THREE_STATE.index("T")
+    assert rigid.angles == "rigid" and relaxed.angles == "relaxed"
+    assert np.all(rigid.model.first_order[:, T] < -5.0)  # the artefact
+    assert np.all(relaxed.model.first_order[:, T] > -1.5)  # gone
+    assert 25.0 <= abs(relaxed.model.states.angles[1]) <= 60.0  # on a 30 deg grid the +/-40 well reads as 30
+    assert relaxed.relaxed_reference_angles.shape == (13,)
+    assert np.all((relaxed.relaxed_reference_angles >= 95.0) & (relaxed.relaxed_reference_angles <= 135.0))
+    assert relaxed.n_relaxation_energies > relaxed.n_evaluations
+    st = relaxed.relaxation_status
+    assert st["out_of_iterations"] == 0 and st["converged"] > 0
+    # the third-order guard, relaxed: unguarded terms are moderate, guarded ones are +cap or 0
+    g = relaxed.third_order_guard
+    e3 = relaxed.model.third_order
+    free = ~(g["capped"] | g["zeroed"])
+    assert free.any()
+    assert np.all(np.abs(e3[free]) < 25.0)
+    assert np.all(e3[g["capped"]] == 50.0) and np.all(e3[g["zeroed"]] == 0.0)
+    # and it never lets a difference between overlaps through as a bonus
+    assert np.all(e3 > -25.0)
+    # relaxing relieves contacts, so fewer triples overlap than under the rigid scan
+    assert g["capped"].sum() < rigid.third_order_guard["capped"].sum()

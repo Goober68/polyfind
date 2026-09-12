@@ -61,7 +61,11 @@ def ris_provenance():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         vdf = fit_ris(PVDF, SimpleFF(), step=10.0, n_monomers=5, third_order=True, adapt_angles=False)
-        cn = fit_ris(VDCN, SimpleFF(), step=10.0, n_monomers=5, third_order=True, adapt_angles=False)
+        # angles="rigid": VDCN now defaults to the angle-relaxed scan (docs/NITRILE_LANDSCAPE.md;
+        # its rigid T state is a +/-120 deg basin edge), which is the better model but a
+        # different one from the one every result this script recorded was built on, and a
+        # hundred times slower.  Pinned so the script goes on reproducing those results.
+        cn = fit_ris(VDCN, SimpleFF(), step=10.0, n_monomers=5, third_order=True, adapt_angles=False, angles="rigid")
         model, report = transfer_ris(CP, [(PVDF, vdf.model), (VDCN, cn.model)], name=CP.name)
     return model, report
 

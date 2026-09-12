@@ -35,11 +35,16 @@ before polarity screening means anything.** What that needs is stated at the end
 **Yes, and decisively, for the structural half that is not polarity.** Whether a polar chain
 conformation is *accessible* — how far the planar zigzag sits above the chain's own
 conformational ground state, and above its own lattice ground state — separates the chemistries
-by 0.4 to 17 kcal/mol per monomer against a 0.27 error bar. That column needed no correction,
-it is an order of magnitude clear of the noise where it matters, and it is what this screen is
-actually good for. It rejects PVDC (no polar conformation closes at all), rejects the nitriles
-(their polar zigzag sits 4.1 and 16.3 kcal/mol per monomer above their own lattice ground state),
-and picks out trifluoroethylene, which is the known answer.
+by 0.4 to 21 kcal/mol per monomer against a 0.27 error bar. That column did need one correction
+after all: VDCN's conformational row ("all-trans ground state, rank 1") was a frozen-angle
+artefact of the RIS scan (`docs/NITRILE_LANDSCAPE.md`) and is regenerated below with the
+backbone angles relaxed (all-trans 43rd of 67, +4.1), as are AN's, PVDC's, CFE's and CDFE's;
+PVDF's stands bit-for-bit. The lattice half is an order of magnitude clear of the noise where
+it matters, and it is what this screen is actually good for. It rejects PVDC (no polar
+conformation closes at all), rejects the nitriles (their polar zigzag sits 4.1 and 16.3 kcal/mol
+per monomer above their own lattice ground state), and picks out trifluoroethylene at the
+lattice level, which is the known answer — though no longer at the conformational level, where
+the relaxed scan puts its zigzag behind PVDF's.
 
 **Yes, with a caveat, for the response ranking.** The ordering of the dipole-strain response
 survives leave-one-out at Spearman `rho = +1.000` and the scale error is systematic to within a
@@ -163,35 +168,75 @@ carbons, which is a change of chain topology rather than a substituent, and
 `polymers.BackboneAtom` carries pendants, not rings (`docs/CHEMISTRY_EXTENSION.md` phase 4). It
 is reported as out of scope rather than approximated by something else.
 
-Method per chemistry: `fit_ris` (step 10 deg, 6 monomers, third order, ~2900 evaluations),
+Method per chemistry: `fit_ris` (step 10 deg, 6 monomers, third order, ~2900 conformers),
 exhaustive `enumerate_periodic` to period 8, then packing of the top three by RIS energy **plus**
 all-trans, TG+TG- and T3GT3G' whatever they rank — because screening only the top of the RIS
 list lets a polymer look useless when its polar phase happens to rank 63rd, which for PVDF it
 does.
 
-| polymer | conformations | ground state | all-trans rank | ΔE(all-trans) | chain μ⊥ per monomer |
-|---|---|---|---|---|---|
-| VDCN | 83 | **TT** (−11.48) | **1 of 83** | **+0.00** | 0.645 e.A |
-| PVDC | 81 | TTG+TTG+ (−8.80) | not enumerated | +2.85 | — |
-| PVDF | 84 | TG+TG+G+TG+G+ (−4.65) | 63 of 84 | +4.58 | 0.362 e.A |
-| AN | 164 | TG− (−13.05) | 105 of 164 | +6.14 | 0.561 e.A |
-| CFE | 157 | TG− (−30.90) | 41 of 157 | +11.16 | 0.386 e.A |
-| CDFE | 162 | TG+G+G+ (−30.42) | 95 of 162 | +16.67 | 0.325 e.A |
-| FANOME | — | not screened | — | — | — |
+**The scan's backbone angles are no longer frozen for the chemistries that need them free.**
+`docs/NITRILE_LANDSCAPE.md` found that the frozen-angle one-bond scan has wells a chain that can
+bend does not have — VDCN's at ±120 deg, 8.7 kcal/mol below planar trans — and that `fit_ris`'s
+basin assignment folded that well into VDCN's trans state, so its published "all-trans ground
+state at −11.48" was a chain built at 180 deg carrying the energy of a well at 120. `fit_ris`
+now relaxes every backbone angle of the oligomer at each scan point (`angles="relaxed"`) for a
+chemistry whose rigid profile has a minimum no relaxed minimum lies within 30 deg of, and the
+answer is measured per chemistry rather than assigned (`forcefield.ANGLE_RELAXATION_DEFAULTS`,
+`examples/angle_relaxation_defaults.py`): PVDF and PE keep the rigid scan, whose numbers every
+table here depends on and which are bit-for-bit what they were; PVDC, CFE, CDFE, AN and VDCN
+get the relaxed one, at 9-13 min per chemistry against 1 s. The rows below are the regenerated
+ones; the previous values are kept in the last column so that the change is on record.
+
+| polymer | scan | conformations | ground state | all-trans rank | ΔE(all-trans) | chain μ⊥ per monomer | previously (rigid) |
+|---|---|---|---|---|---|---|---|
+| VDCN | relaxed | 67 | TTG+G+ (−5.45) | 43 of 67 | **+4.10** | 0.645 e.A | TT (−11.48), **1 of 83, +0.00** |
+| PVDC | relaxed | 65 | TTG+G+ (−4.64) | not enumerated | +3.13 | — | TTG+TTG+ (−8.80), +2.85 |
+| PVDF | rigid | 84 | TG+TG+G+TG+G+ (−4.65) | 63 of 84 | +4.58 | 0.362 e.A | unchanged |
+| AN | relaxed | 148 | TG−G−G− (−7.70) | 136 of 148 | +5.91 | 0.561 e.A | TG− (−13.05), 105 of 164, +6.14 |
+| CFE | relaxed | 95 | G+G+ (−23.26) | 91 of 95 | +21.22 | 0.386 e.A | TG− (−30.90), 41 of 157, +11.16 |
+| CDFE | relaxed | 147 | G+G+G+G−G−G+ (−19.07) | 146 of 147 | +17.71 | 0.325 e.A | TG+G+G+ (−30.42), 95 of 162, +16.67 |
+| FANOME | — | not screened | — | — | — | — | — |
 
 ΔE is kcal/mol per monomer above the conformational ground state; it is a *difference*, so the
 known badness of the all-trans RIS reference cancels out of it even where the absolute energies
-are meaningless (CFE's and CDFE's −30 are relative to a state carrying 162 and 199 kcal/mol of
-all-trans strain). μ⊥ is the **all-trans** repeat's transverse dipole per monomer, computed with
+are meaningless (CFE's and CDFE's rigid −30 were relative to a state carrying 162 and 199 kcal/mol
+of all-trans strain; relaxed, the reference is a chain that can bend and their absolute energies
+are −23 and −19). μ⊥ is the **all-trans** repeat's transverse dipole per monomer, computed with
 the fitted bond-charge increments rather than the polymer entry's illustrative charges; it is the
 component that survives in a planar zigzag and cancels in a screw helix, so it is the one
 β-PVDF's ferroelectricity is made of. PVDC has no entry because it has no all-trans repeat to
-measure one on.
+measure one on; its ΔE is that of the rebuilt all-trans under the model.
 
-**This column is the one that never had to be withdrawn, and its differences are well clear of
-the error bar** — +2.85 to +16.67 kcal/mol per monomer against 0.27. Whatever else this screen
-cannot decide, it can say whether a polar chain conformation is accessible, and that is the
-criterion that separates the chemistries.
+**What the regeneration did.** VDCN is the row that flips: with its trans state no longer
+carrying the ±120 deg well (e1(T) goes from −8.7 to 0.0 on both bond types, the T basin minimum
+sits at 180) its all-trans falls from first of 83 to 43rd of 67, 4.1 kcal/mol per monomer above a
+TTG+G+ chain — the same verdict `docs/NITRILE_LANDSCAPE.md` reached with a per-*type* angle
+relaxation (74th, +5.5), now with the per-*atom* one it asked for, which also puts the gauche well
+at ±40 deg rather than that experiment's ±95. AN's verdict stands (a gauche-rich helix ground
+state, all-trans 5.9 above) and its trans state is a basin edge at both levels, flagged by the
+fit (`FitReport.edge_states`), so its ΔE is an upper bound on a well that is not there. PVDC's
+ground state moves from TTG+TTG+ to TTG+G+ and its ΔE from +2.85 to +3.13 — neither changes the
+geometric verdict below. CFE's and CDFE's all-trans move *up*, to 91st of 95 and 146th of 147:
+their rigid trans states were ±140 and ±150 deg basin edges 20 kcal/mol below planar, and relaxed
+they are −2.4 and −5.6.
+
+**A caveat that applies to both scans, measured rather than assumed.** An RIS term is a basin
+*minimum* — the pair term at its own best pair of angles, relaxed angles included — while a chain
+is built at one adapted angle per state, so the model sits below the chain it describes. Against
+directly relaxed periodic chains of their own top sequences the relaxed models are 3-7 kcal/mol
+per monomer low for VDCN, AN and PVDC; the rigid PVDF model is 2.8 low on the same test against
+rigid chains, so this is the fit's convention, not the relaxation. For CFE and CDFE the gap is
+20-30 kcal/mol per monomer at *either* level (the rigid models are 14-42 low against rigid
+chains): the chlorinated helices have non-additivity beyond three bonds that no third-order
+model carries, and their rows — as the previous version of this document already said of their
+absolute energies — cannot be read as a ranking. Their ΔE(all-trans) is quoted because it is what
+the model says, not because the model is trusted there.
+
+**This column's differences are still well clear of the error bar** — +3.13 to +21.22 kcal/mol
+per monomer against 0.27 — but one of its rows had to be withdrawn and regenerated, and the
+lesson is the one above: the rigid scan's numbers were a property of the frozen geometry for the
+bulky-pendant chemistries. Whatever else this screen cannot decide, it can say whether a polar
+chain conformation is accessible, and that is the criterion that separates the chemistries.
 
 Two entries need their own sentence.
 
@@ -435,6 +480,14 @@ search is 80 % to 95 % of the cost**, and unlike the previous version of this ta
 something: the four-point axial scan it replaces was aliased to the monomer period on every
 four-monomer repeat here. Ten chemistries in about an hour of wall time on six cores.
 
+The fit column above is the rigid scan's. With the angle-relaxed scan the bulky-pendant
+chemistries now default to, the fit is 9-13 min per chemistry (measured with eight fits sharing
+twelve cores: VDCN 750 s, AN 534 s, PVDC 568 s, CFE 657 s, CDFE 693 s, trfe-cand 592 s, vfcn-cand
+718 s, vclcn-cand 655 s; 1.3-1.8 million calculator energies each, every one of the 2881 scan
+conformers being a bounded minimisation over its 15 backbone angles), so for those chemistries the
+fit is now comparable to the antipolar search rather than negligible beside it. PVDF, PE and
+pvf-cand keep the 1 s rigid fit.
+
 ## The three acceptance tests, re-measured
 
 These three have tracked this project since `DESIGN.md` 5.4 and none of them is in any fit's
@@ -507,7 +560,7 @@ table, on a sample of eight that overlaps this one in five rows.
 | feature | Pearson | Spearman | as published | reading |
 |---|---|---|---|---|
 | packing density ρ | **+0.788** | **+0.857** | +0.81 / +0.91 | the strongest, and the most likely to be a confound |
-| ΔE(all-trans above conformational ground) | **+0.648** | +0.429 | +0.63 / +0.43 | the response column rewards inaccessible phases |
+| ΔE(all-trans above conformational ground) | **+0.793** | +0.571 | +0.63 / +0.43 (+0.648 / +0.429 on the rigid-scan column) | the response column rewards inaccessible phases — more clearly on the regenerated column |
 | axial stiffness C33 (n = 7) | +0.588 | +0.500 | +0.35 / +0.19 | no rule |
 | polarization \|P\| | +0.422 | +0.429 | +0.45 / +0.26 | no rule |
 | transverse stiffness C11 | +0.415 | +0.381 | −0.18 / −0.29 | no rule, and it changed sign |
@@ -618,11 +671,20 @@ re-assessment rather than a recommendation carried forward.
 
 | candidate | formula | ΔE(TT) above conformational ground | TT above lattice ground | TT polarity gap | verdict | ρ | \|P\| | work |
 |---|---|---|---|---|---|---|---|---|
-| **trfe-cand** | −(CHF−CF2)− | +3.96 | **+0.424** | +0.051 | *not resolved* | 2.310 | 0.108 | 2.49 |
-| pvf-cand | −(CH2−CHF)− | +4.06 | +0.984 | +0.205 | *not resolved* | 1.654 | 0.114 | not a measurement |
-| vfcn-cand | −(CH2−C(F)(CN))− | +6.71 | +4.072 | +0.265 | *not resolved* | 1.824 | 0.166 | 2.28 |
-| vclcn-cand | −(CH2−C(Cl)(CN))− | +9.89 | +16.342 | +0.134 | *not resolved* | 1.880 | 0.157 | 1.75 |
-| *PVDF, for comparison* | −(CH2−CF2)− | +4.58 | +0.747 | +1.021 | polar | 2.107 | 0.150 | 4.22 |
+| **trfe-cand** | −(CHF−CF2)− | +5.41 (relaxed scan; was +3.96) | **+0.424** | +0.051 | *not resolved* | 2.310 | 0.108 | 2.49 |
+| pvf-cand | −(CH2−CHF)− | +4.06 (rigid) | +0.984 | +0.205 | *not resolved* | 1.654 | 0.114 | not a measurement |
+| vfcn-cand | −(CH2−C(F)(CN))− | +8.62 (relaxed; was +6.71) | +4.072 | +0.265 | *not resolved* | 1.824 | 0.166 | 2.28 |
+| vclcn-cand | −(CH2−C(Cl)(CN))− | +4.13 (relaxed; was +9.89) | +16.342 | +0.134 | *not resolved* | 1.880 | 0.157 | 1.75 |
+| *PVDF, for comparison* | −(CH2−CF2)− | +4.58 (rigid) | +0.747 | +1.021 | polar | 2.107 | 0.150 | 4.22 |
+
+The ΔE(TT) column is the regenerated one: the candidates are not registered, so `fit_ris`'s
+`angles="auto"` measured each on the fly, and three of the four have frozen-angle wells the
+relaxed profile lacks (trfe-cand's at ±30 deg, +14 kcal/mol *above* trans and 25 deep behind a
+barrier; vfcn-cand's at ±80; vclcn-cand's at ±110 and ±130, the latter 20 kcal/mol below trans)
+while pvf-cand does not and keeps the rigid scan. The "TT above lattice ground" column is
+packing, measured with the angles already relaxing, and was not re-run here; what this change
+would alter there is which three RIS conformers are carried into packing, not the energy of a
+packed cell.
 
 Three of the four densities moved from the published table (pvf-cand 1.689 → 1.654, vfcn-cand
 1.744 → 1.824, vclcn-cand 1.737 → 1.880) for the same reason AN's and VDCN's cells did: their
@@ -665,9 +727,20 @@ by a factor of 1.6, so it is resolved. It is the one design criterion of the ori
 is both resolved by this model and satisfied by this candidate, and it is the criterion that
 matters for a ferroelectric: the polar phase has to be the phase the polymer is in.
 
+**And the conformational half of its accessibility moved against it.** With the angle-relaxed
+scan trfe-cand's ΔE(TT) above its conformational ground state goes from +3.96 to +5.41 kcal/mol
+per monomer, so on that column it is no longer ahead of PVDF (+4.58, rigid scan): the ordering
+by conformational accessibility is now pvf-cand +4.06, VDCN +4.10, vclcn-cand +4.13, PVDF +4.58,
+trfe-cand +5.41, AN +5.91, vfcn-cand +8.62, CDFE +17.71, CFE +21.22, where it was VDCN 0.00,
+trfe-cand 3.96, pvf-cand 4.06, PVDF 4.58, AN 6.14, vfcn-cand 6.71, vclcn-cand 9.89, CFE 11.16,
+CDFE 16.67. The lattice half, +0.424 against PVDF's +0.747, is what the claim above rests on and
+it was not re-measured; read together, trfe-cand's lead is now a lattice-level statement only,
+and a column that mixes a rigid scan (PVDF, pvf-cand) with a relaxed one (everything else) is
+being compared at a resolution of a kcal/mol or two at best (the basin-minimum caveat in step 2).
+
 So the honest statement about trfe-cand is **weaker than the one withdrawn and points the same
-way**: the model says its polar zigzag is unusually accessible, and says nothing trustworthy about
-whether that zigzag packs polar. That is still worth having — TrFE is the copolymer partner
+way**: the model says its polar zigzag is unusually accessible *at the lattice level*, and says
+nothing trustworthy about whether that zigzag packs polar. That is still worth having — TrFE is the copolymer partner
 already used to stabilise the polar phase of PVDF, and the accessibility column recovered it from
 a potential fitted only to PVDF and from a rule extracted with no knowledge of it — but it is
 evidence about the accessibility column, not about the polarity column, and it should be cited as
@@ -684,7 +757,9 @@ What does survive for them is the accessibility column, which is resolved and wh
 vclcn-cand's polar zigzag sits +16.34 kcal/mol per monomer above its own lattice ground
 state and vfcn-cand's +4.07, against PVDF's +0.747 and trfe's +0.424. Adding a nitrile buys dipole
 and costs the crystal — which was rule 1's conclusion, reached through the column that is resolved
-rather than the one that is not.
+rather than the one that is not. (Their conformational ΔE(TT) moved with the relaxed scan, vfcn
+up to +8.62 and vclcn *down* to +4.13 — its rigid trans state was a ±130 deg basin edge 20
+kcal/mol below planar — but the rejection is the lattice number and that did not move.)
 
 ### And pvf-cand
 
@@ -840,7 +915,11 @@ asked below the model's resolution**, which is a different and more actionable p
 ## What to trust
 
 **Stand behind:** the conformational enumeration and the ΔE column (exact given the RIS model, and
-differences of 2.9 to 16.7 kcal/mol per monomer against a 0.27 error bar); the refined lattice
+differences of 3.1 to 21.2 kcal/mol per monomer against a 0.27 error bar — with the RIS model
+now fitted on an angle-relaxed scan for the bulky-pendant chemistries, after the VDCN row was
+found to be a frozen-angle artefact and withdrawn; and with the caveat that the model sits 3-7
+kcal/mol per monomer below its own chains for the nitriles and PVDC, 2.8 for PVDF, and 20-30 for
+the chlorinated pair, whose rows are not a ranking at either level); the refined lattice
 ranking where its gaps exceed 0.27; the cells and densities (every PVDF edge within 8 %, five of
 nine within 2 %); the polymorph ordering α < γ < β with β 3.13 kJ/mol per monomer above α, inside the
 2.6 to 6.5 kJ/mol range four independent studies across five functionals agree on; the axial
@@ -917,6 +996,18 @@ for coulomb, anti in (("dsf", "legacy"), ("dsf", "exact"), ("ewald", "legacy"), 
 `acceptance_tests()` with no arguments is unchanged and still gives the recorded score; the three
 switches exist so that the attribution above is reproducible, and `beta_polar_gap` comes back as the
 control that separates the two constructions.
+
+Which chemistries get the angle-relaxed RIS scan, and why, is reproduced by
+
+```
+python examples/angle_relaxation_defaults.py --candidates
+```
+
+(3-5 s per chemistry: a rigid and a relaxed one-bond scan per bond type, and the rigid minima
+with no relaxed minimum within 30 deg). The regenerated conformational rows come from the screen
+itself — `fit_ris`'s default `angles="auto"` now reads `forcefield.ANGLE_RELAXATION_DEFAULTS` for
+a registered polymer and measures a candidate on the fly — or, for a side-by-side of the two
+scans on one chemistry, `fit_ris(..., angles="rigid")` against `angles="relaxed"`.
 
 Do **not** set `POLYFIND_TABLE_CACHE=1`. That variable is read as a directory *name*, so the value
 `1` makes a directory called `1`, and 85 MB of interaction tables were once committed because of

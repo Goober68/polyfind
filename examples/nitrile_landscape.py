@@ -440,7 +440,9 @@ def run_correlation(temperatures=(200.0, 300.0, 400.0, 500.0), n_chains=2000, n_
     out = []
     for name in ("pvdf", "vdcn", "an"):
         p = get_polymer(name)
-        fit = fit_ris(p, VAL, step=10.0, n_monomers=6, third_order=True)
+        # the document's correlation lengths are those of the screen's *rigid* models (the
+        # nitriles now default to the angle-relaxed scan, which section 4 motivated)
+        fit = fit_ris(p, VAL, step=10.0, n_monomers=6, third_order=True, angles="rigid")
         m = fit.model
         gs = enumerate_periodic(p, m, max_period=8, k_per_period=40)[0]
         rec = {"polymer": name, "ground_state": gs.name, "period": gs.period,
@@ -522,14 +524,23 @@ class AngleRelaxedCalculator:
 
 
 def run_risfit(verbose=True):
-    """The screen's RIS fit, rigid against angle-relaxed, for PVDF and the two nitriles."""
+    """The screen's RIS fit, rigid against angle-relaxed, for PVDF and the two nitriles.
+
+    Three rows per polymer.  The two the document records: ``rigid`` (the frozen-angle scan)
+    and ``angle-relaxed`` (this script's per-*type* wrapper, one angle per backbone atom of
+    the repeat broadcast along the oligomer).  And the row that came out of them:
+    ``fit_ris(angles="relaxed")``, the package's own per-*atom* relaxation with watershed
+    basins, which is what VDCN and AN now get by default.  ``angles="rigid"`` is passed on
+    the first two explicitly, since the default has moved.
+    """
     out = []
     for name in ("pvdf", "vdcn", "an"):
         p = get_polymer(name)
         rec = {"polymer": name}
-        for label, calc in (("rigid", VAL), ("angle-relaxed", AngleRelaxedCalculator(p))):
+        for label, calc, angles in (("rigid", VAL, "rigid"), ("angle-relaxed", AngleRelaxedCalculator(p), "rigid"),
+                                    ("fit_ris(angles='relaxed')", VAL, "relaxed")):
             t0 = time.time()
-            fit = fit_ris(p, calc, step=10.0, n_monomers=6, third_order=True)
+            fit = fit_ris(p, calc, step=10.0, n_monomers=6, third_order=True, angles=angles)
             m = fit.model
             cands = enumerate_periodic(p, m, max_period=8, k_per_period=40)
             e0 = cands[0].energy_per_monomer

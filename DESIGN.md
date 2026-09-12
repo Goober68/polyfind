@@ -81,7 +81,9 @@ coarse random screen is followed by Nelder-Mead polishing of the best few.
 
 ### 2.4 Continuous refinement inside the basin (`refine.py`)
 
-The discrete stage uses ideal angles and rigid geometry; real chains deflect
+The discrete stage uses ideal torsion angles and rigid bond lengths (its
+backbone angles are frozen or relaxed per conformer according to
+`fit_ris(angles=...)`, section 6); real chains deflect
 from the ideal RIS angles.  (This sentence used to give two examples,
 "beta-PVDF dihedrals near +/-172 deg, alpha gauche near +/-45 deg".  The first
 is withdrawn - beta's torsions are exactly trans, section 5.8 - and the second is
@@ -964,9 +966,14 @@ boundary condition, the bulk one is tinfoil, and tinfoil is what is reported.
 
 ## 6. Limitations and roadmap
 
-* RIS uses rigid bond geometry and discrete states; the continuous refinement
-  stage relaxes torsions but not bond angles.  Adding the two backbone angles
-  per repeat to the refinement variables is straightforward.
+* RIS uses rigid bond lengths and discrete states.  The backbone *angles* are
+  no longer frozen by default where it matters: `fit_ris(angles="relaxed")`
+  relaxes every backbone angle of the oligomer at each scan point, and a
+  chemistry gets it by default when its frozen-angle one-bond profile has
+  minima the relaxed profile lacks (`forcefield.ANGLE_RELAXATION_DEFAULTS`,
+  measured; PVDF and PE keep the rigid scan, PVDC, CFE, CDFE, AN and VDCN do
+  not).  VDCN's published "all-trans ground state" was such a frozen-angle
+  well read as a trans energy (`docs/NITRILE_LANDSCAPE.md`).
 * Third-order terms are fitted by inclusion-exclusion at the state angles, not
   from a full 3D scan.
 * Thermodynamic ranking says nothing about which polymorph forms kinetically;

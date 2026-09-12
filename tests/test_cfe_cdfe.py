@@ -260,11 +260,15 @@ def test_the_fitted_model_shows_the_same_thing(polymer):
     G-, and the residual under the *correct* operation is only grid noise, which is the
     measurement that says the violation is physics and not a fitting artefact.
     ``adapt_angles=False`` so both models are read at the same state angles.
+    ``angles="rigid"``: the relaxed scan CFE and CDFE now default to obeys the same
+    relation (residual under 0.5 there too), but most of the rigid fit's 24 kcal/mol
+    G+/G- asymmetry was frozen-angle strain -- relaxed, CFE's is 3.0 -- so the "gross
+    violation" floor below is a property of the rigid scan this test was written on.
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         rep = fit_ris(polymer, SimpleFF(), step=45.0, n_monomers=3, third_order=False,
-                      symmetrize=False, adapt_angles=False)
+                      symmetrize=False, adapt_angles=False, angles="rigid")
     mir = np.array(THREE_STATE.mirror)
     e1, e2 = rep.model.first_order, rep.model.second_order
     # mirror + reversal: for B = 2 reversal swaps the two bond types of the 1-D scan and
@@ -322,11 +326,14 @@ def test_symmetrize_auto_protects_chiral_polymers():
     assert mirror_residual(pvdf) < 1e-9
 
     # chiral: the default must PRESERVE the asymmetry rather than average it away
+    # (angles="rigid": this measures the symmetrisation, which does not depend on how the
+    # backbone angles are treated, and the relaxed scan CFE and CDFE default to is slow)
     for name, floor in (("cfe", 1.0), ("cdfe", 1.0)):
         with _w.catch_warnings():
             _w.simplefilter("ignore")
-            auto = fit_ris(get_polymer(name), ff, step=30.0, n_monomers=4, third_order=False).model
-            forced = fit_ris(get_polymer(name), ff, step=30.0, n_monomers=4, third_order=False, symmetrize=True).model
+            auto = fit_ris(get_polymer(name), ff, step=30.0, n_monomers=4, third_order=False, angles="rigid").model
+            forced = fit_ris(get_polymer(name), ff, step=30.0, n_monomers=4, third_order=False, symmetrize=True,
+                             angles="rigid").model
         assert mirror_residual(auto) > floor, f"{name}: real G+/G- asymmetry was averaged away"
         assert mirror_residual(forced) < 1e-9  # forcing it still works, but is wrong
 
@@ -354,7 +361,8 @@ def test_chiral_fits_are_symmetrised_over_reflection_with_reversal():
     for name in ("cfe", "cdfe"):
         with _w.catch_warnings():
             _w.simplefilter("ignore")
-            m = fit_ris(get_polymer(name), ff, step=20.0, n_monomers=4, third_order=False).model
+            # rigid: the symmetrisation is what is measured, and the relaxed scan is slow
+            m = fit_ris(get_polymer(name), ff, step=20.0, n_monomers=4, third_order=False, angles="rigid").model
         mir = np.array(m.states.mirror)
         e2 = m.second_order
         reversal = np.abs(e2 - np.transpose(e2[:, mir][:, :, mir], (0, 2, 1))).max()

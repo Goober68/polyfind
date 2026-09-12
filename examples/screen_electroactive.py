@@ -498,7 +498,14 @@ def screen_one(polymer, max_period: int = 8, k_per_period: int = 40, top_pack: i
     model = fit.model
     rec["timings"]["fit"] = round(time.time() - t0, 2)
     rec["fit_evaluations"] = int(fit.n_evaluations)
-    print(f"  [1] RIS fit: {fit.n_evaluations} evaluations, {rec['timings']['fit']:.1f} s"
+    # which scan the chemistry got: rigid (the frozen-angle scan) or relaxed (every backbone
+    # angle relaxed per conformer, the default for chemistries whose rigid profile has wells
+    # the relaxed one lacks -- docs/NITRILE_LANDSCAPE.md, forcefield.ANGLE_RELAXATION_DEFAULTS)
+    rec["fit_angles"] = fit.angles
+    rec["fit_relaxation_energies"] = int(fit.n_relaxation_energies)
+    print(f"  [1] RIS fit ({fit.angles} backbone angles): {fit.n_evaluations} conformers"
+          + (f", {fit.n_relaxation_energies} energies in relaxation" if fit.angles == "relaxed" else "")
+          + f", {rec['timings']['fit']:.1f} s"
           + (f"   (symmetrised over reflection+reversal: chiral)" if polymer.is_chiral else ""))
 
     # --- 2. exhaustive conformational enumeration -----------------------------------------

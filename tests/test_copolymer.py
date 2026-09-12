@@ -157,7 +157,9 @@ def sources():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         vdf = fit_ris(PVDF, SimpleFF(), step=20.0, n_monomers=4, third_order=True, adapt_angles=False)
-        cn = fit_ris(VDCN, SimpleFF(), step=20.0, n_monomers=4, third_order=True, adapt_angles=False)
+        # angles="rigid": the transfer tests compare the copolymer's arrays with their source
+        # arrays, whichever scan produced them, and VDCN's default (relaxed) scan is slow
+        cn = fit_ris(VDCN, SimpleFF(), step=20.0, n_monomers=4, third_order=True, adapt_angles=False, angles="rigid")
     return [(PVDF, vdf.model), (VDCN, cn.model)]
 
 

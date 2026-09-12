@@ -44,6 +44,9 @@ from polyfind.refine import refine_crystal
 from polyfind.amorphous import sample_ensemble, ensemble_stats
 
 model = fit_ris(PVDF, SimpleFF(), third_order=True).model      # ~3k single points
+# angles="auto" (the default) keeps PVDF's backbone angles frozen and relaxes them per
+# conformer for chemistries whose frozen-angle scan has spurious wells (VDCN, AN, PVDC,
+# CFE, CDFE): forcefield.ANGLE_RELAXATION_DEFAULTS, docs/NITRILE_LANDSCAPE.md
 cands = enumerate_periodic(PVDF, model, max_period=8)           # exact k-best cycles
 print(table(cands, top=10))
 

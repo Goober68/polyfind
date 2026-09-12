@@ -89,7 +89,10 @@ def test_a_chiral_polymer_gains_the_mirror_partners_and_they_differ_in_energy():
     assert cfe.is_chiral
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        model = fit_ris(cfe, SimpleFF(), step=45.0, n_monomers=3).model
+        # angles="rigid": the partner count and energy floor below were calibrated on the
+        # rigid scan; CFE's relaxed default keeps the partners distinct but with a smaller
+        # G+/G- gap (3 rather than 24 kcal/mol), which puts one pair under the floor
+        model = fit_ris(cfe, SimpleFF(), step=45.0, n_monomers=3, angles="rigid").model
     cands = enumerate_periodic(cfe, model, max_period=4, k_per_period=20)
     names = {c.name for c in cands}
     mir = np.array(model.states.mirror)

@@ -1627,7 +1627,7 @@ def _quad_vertex(x0, x1, x2, y0, y1, y2, fallback):
     return float(-b / (2.0 * a))
 
 
-def _refine_coord(polymer, calc, base, ref, j, other_j, other_val, states, bounds, s_idx, center, energy, h):
+def _refine_coord(polymer, calc, base, ref, j, other_j, other_val, states, bounds, s_idx, center, energy, h, score=None):
     """One coarse-to-fine refinement step along dihedral index ``j`` for a whole batch of
     1-D basins at once (one state each, flattened): evaluate ``center +/- h`` (clipped to
     each point's basin), fit a parabola per point and evaluate its vertex too (also
@@ -1639,6 +1639,7 @@ def _refine_coord(polymer, calc, base, ref, j, other_j, other_val, states, bound
     basin regardless of how many there are. Returns ``(new_center, new_energy,
     n_evaluations)`` with the same shape as ``center``.
     """
+    score = _rigid_scorer(polymer, calc) if score is None else score
     shape = center.shape
     c = center.reshape(-1)
     e = energy.reshape(-1)
@@ -1654,8 +1655,7 @@ def _refine_coord(polymer, calc, base, ref, j, other_j, other_val, states, bound
     if other_j is not None:
         dihs[:n, other_j] = other
         dihs[n:, other_j] = other
-    template, coords = build_chain_batch(polymer, dihs)
-    E = calc.energy_batch((template, coords)) - ref
+    E = score(dihs) - ref
     e_lo, e_hi = E[:n], E[n:]
 
     vtx = np.array([_quad_vertex(lo[i], c[i], hi[i], e_lo[i], e[i], e_hi[i], c[i]) for i in range(n)])
@@ -1664,8 +1664,7 @@ def _refine_coord(polymer, calc, base, ref, j, other_j, other_val, states, bound
     dihs_v[:, j] = vtx
     if other_j is not None:
         dihs_v[:, other_j] = other
-    template_v, coords_v = build_chain_batch(polymer, dihs_v)
-    e_v = calc.energy_batch((template_v, coords_v)) - ref
+    e_v = score(dihs_v) - ref
 
     new_c, new_e = np.empty(n), np.empty(n)
     for i in range(n):
@@ -1678,7 +1677,7 @@ def _refine_coord(polymer, calc, base, ref, j, other_j, other_val, states, bound
 _STENCIL2D = [(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx, dy) != (0, 0)]  # 3x3 minus centre, incl. diagonals
 
 
-def _refine_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx, cx, cy, ce, h):
+def _refine_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx, cx, cy, ce, h, score=None):
     """One coarse-to-fine pattern-search step for a whole batch of 2-D basins (state
     pairs) at once: evaluate the full 3x3 stencil (8 neighbours; the centre is already
     known) and move to whichever of the 9 points has the lowest energy.  The diagonal
@@ -1691,6 +1690,7 @@ def _refine_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx
     regardless of how many there are. Returns ``(new_cx, new_cy, new_ce,
     n_evaluations)``.
     """
+    score = _rigid_scorer(polymer, calc) if score is None else score
     shape = cx.shape
     x0, y0, e0 = cx.reshape(-1), cy.reshape(-1), ce.reshape(-1)
     si, pi = s_idx.reshape(-1), sp_idx.reshape(-1)
@@ -1705,8 +1705,7 @@ def _refine_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx
     for oi in range(n_off):
         dihs[oi * n : (oi + 1) * n, j0] = X[oi]
         dihs[oi * n : (oi + 1) * n, j1] = Y[oi]
-    template, coords = build_chain_batch(polymer, dihs)
-    E = (calc.energy_batch((template, coords)) - ref).reshape(n_off, n)
+    E = (score(dihs) - ref).reshape(n_off, n)
 
     out_x, out_y, out_e = x0.copy(), y0.copy(), e0.copy()
     for oi in range(n_off):
@@ -1718,7 +1717,7 @@ def _refine_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx
     return out_x.reshape(shape), out_y.reshape(shape), out_e.reshape(shape), n_eval
 
 
-def _polish_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx, cx, cy, ce, h):
+def _polish_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx, cx, cy, ce, h, score=None):
     """A single quadratic-surface (Newton) polish on top of :func:`_refine_pair`'s
     pattern-search result: fit ``f0 + g.d + 1/2 d^T H d`` to the same 3x3 stencil, step to
     its stationary point if the fit is locally convex (else stay put), and keep whichever
@@ -1731,6 +1730,7 @@ def _polish_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx
     duplicate stencil point corrupting its curvature. Returns ``(cx, cy, ce,
     n_evaluations)``.
     """
+    score = _rigid_scorer(polymer, calc) if score is None else score
     shape = cx.shape
     x0, y0, e0 = cx.reshape(-1), cy.reshape(-1), ce.reshape(-1)
     si, pi = s_idx.reshape(-1), sp_idx.reshape(-1)
@@ -1745,8 +1745,7 @@ def _polish_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx
     for oi in range(n_off):
         dihs[oi * n : (oi + 1) * n, j0] = X[oi]
         dihs[oi * n : (oi + 1) * n, j1] = Y[oi]
-    template, coords = build_chain_batch(polymer, dihs)
-    E = (calc.energy_batch((template, coords)) - ref).reshape(n_off, n)
+    E = (score(dihs) - ref).reshape(n_off, n)
 
     new_x, new_y = x0.copy(), y0.copy()
     for i in range(n):
@@ -1768,8 +1767,7 @@ def _polish_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx
     dihs_v = np.tile(base, (n, 1))
     dihs_v[:, j0] = new_x
     dihs_v[:, j1] = new_y
-    template_v, coords_v = build_chain_batch(polymer, dihs_v)
-    e_v = calc.energy_batch((template_v, coords_v)) - ref
+    e_v = score(dihs_v) - ref
 
     out_x, out_y, out_e = np.empty(n), np.empty(n), np.empty(n)
     for i in range(n):
@@ -1782,16 +1780,17 @@ def _polish_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx, sp_idx
     return out_x.reshape(shape), out_y.reshape(shape), out_e.reshape(shape), n_eval
 
 
-def _dense_scan_bond(polymer, calc, states, base, j0, grid, basins, ref):
+def _dense_scan_bond(polymer, calc, states, base, j0, grid, basins, ref, score=None):
     """Bond-type ``b``'s share of the dense scan (batched conformer building): full
     ``len(grid)`` 1-D scan and ``len(grid)^2`` 2-D scan, basin minima on the grid exactly
-    as before. Returns ``(E1, E2, e1, arg1, e2, arg2, n_eval)``."""
+    as before. ``score`` maps a ``(M, N)`` dihedral batch to absolute energies; ``None`` is
+    the rigid-geometry scorer.  Returns ``(E1, E2, e1, arg1, e2, arg2, n_eval)``."""
+    score = _rigid_scorer(polymer, calc) if score is None else score
     S = states.n
     j1 = j0 + 1
     dihs1 = np.tile(base, (len(grid), 1))
     dihs1[:, j0] = grid
-    template1, coords1 = build_chain_batch(polymer, dihs1)
-    E1 = calc.energy_batch((template1, coords1)) - ref
+    E1 = score(dihs1) - ref
     n_eval = len(grid)
     e1, arg1 = np.zeros(S), {}
     for s, idx in enumerate(basins):
@@ -1803,8 +1802,7 @@ def _dense_scan_bond(polymer, calc, states, base, j0, grid, basins, ref):
     dihs2 = np.tile(base, (len(grid) ** 2, 1))
     dihs2[:, j0] = phis.ravel()
     dihs2[:, j1] = psis.ravel()
-    template2, coords2 = build_chain_batch(polymer, dihs2)
-    E2 = (calc.energy_batch((template2, coords2)) - ref).reshape(len(grid), len(grid))
+    E2 = (score(dihs2) - ref).reshape(len(grid), len(grid))
     n_eval += len(grid) ** 2
     e2, arg2 = np.zeros((S, S)), {}
     for s, idx in enumerate(basins):
@@ -1826,7 +1824,7 @@ def _refine_schedule(coarse_step: float, step: float, rounds: int) -> list[float
     return [max(step, coarse_step / (2.0 * (r + 1))) for r in range(rounds)]
 
 
-def _adaptive_scan_bond(polymer, calc, states, base, j0, coarse_grid, basins_coarse, bounds, ref, step, coarse_step, rounds=2):
+def _adaptive_scan_bond(polymer, calc, states, base, j0, coarse_grid, basins_coarse, bounds, ref, step, coarse_step, rounds=2, score=None):
     """Bond-type ``b``'s share of the coarse-to-fine scan: a coarse (``coarse_step``) grid
     to find each basin's approximate minimum, batched across every state (1-D) / state
     pair (2-D) at once, then ``rounds`` of refinement (see :func:`_refine_schedule` for the
@@ -1838,6 +1836,7 @@ def _adaptive_scan_bond(polymer, calc, states, base, j0, coarse_grid, basins_coa
     simultaneously. Returns the same shape as :func:`_dense_scan_bond`, with ``E1``/``E2``
     the coarse-grid energies (for diagnostics) and ``e1``/``e2``/``arg1``/``arg2`` the
     refined basin minima."""
+    score = _rigid_scorer(polymer, calc) if score is None else score
     S = states.n
     j1 = j0 + 1
     n_eval = 0
@@ -1846,15 +1845,14 @@ def _adaptive_scan_bond(polymer, calc, states, base, j0, coarse_grid, basins_coa
     # ---- 1-D: coarse grid, then refine every state's basin minimum
     dihs1 = np.tile(base, (len(coarse_grid), 1))
     dihs1[:, j0] = coarse_grid
-    template1, coords1 = build_chain_batch(polymer, dihs1)
-    E1 = calc.energy_batch((template1, coords1)) - ref
+    E1 = score(dihs1) - ref
     n_eval += len(coarse_grid)
     center1, energy1, s_idx1 = np.empty(S), np.empty(S), np.arange(S)
     for s, idx in enumerate(basins_coarse):
         k = idx[np.argmin(E1[idx])]
         center1[s], energy1[s] = coarse_grid[k], E1[k]
     for h in schedule:
-        center1, energy1, ne = _refine_coord(polymer, calc, base, ref, j0, None, None, states, bounds, s_idx1, center1, energy1, h)
+        center1, energy1, ne = _refine_coord(polymer, calc, base, ref, j0, None, None, states, bounds, s_idx1, center1, energy1, h, score=score)
         n_eval += ne
     arg1 = {states.names[s]: float(center1[s]) for s in range(S)}
     e1 = energy1
@@ -1864,8 +1862,7 @@ def _adaptive_scan_bond(polymer, calc, states, base, j0, coarse_grid, basins_coa
     dihs2 = np.tile(base, (len(coarse_grid) ** 2, 1))
     dihs2[:, j0] = phis.ravel()
     dihs2[:, j1] = psis.ravel()
-    template2, coords2 = build_chain_batch(polymer, dihs2)
-    E2 = (calc.energy_batch((template2, coords2)) - ref).reshape(len(coarse_grid), len(coarse_grid))
+    E2 = (score(dihs2) - ref).reshape(len(coarse_grid), len(coarse_grid))
     n_eval += len(coarse_grid) ** 2
     cx, cy, ce = np.empty((S, S)), np.empty((S, S)), np.empty((S, S))
     s_idx_x, s_idx_y = np.empty((S, S), dtype=int), np.empty((S, S), dtype=int)
@@ -1876,15 +1873,508 @@ def _adaptive_scan_bond(polymer, calc, states, base, j0, coarse_grid, basins_coa
             cx[s, sp], cy[s, sp], ce[s, sp] = coarse_grid[idx[k[0]]], coarse_grid[idxp[k[1]]], sub[k]
             s_idx_x[s, sp], s_idx_y[s, sp] = s, sp
     for h in schedule:
-        cx, cy, ce, ne = _refine_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx_x, s_idx_y, cx, cy, ce, h)
+        cx, cy, ce, ne = _refine_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx_x, s_idx_y, cx, cy, ce, h, score=score)
         n_eval += ne
     # one quadratic polish for sub-step precision, now that pattern search has found the
     # right sub-region (safe: see _polish_pair)
-    cx, cy, ce, ne = _polish_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx_x, s_idx_y, cx, cy, ce, schedule[-1] / 2.0)
+    cx, cy, ce, ne = _polish_pair(polymer, calc, base, ref, j0, j1, states, bounds, s_idx_x, s_idx_y, cx, cy, ce, schedule[-1] / 2.0, score=score)
     n_eval += ne
     arg2 = {(states.names[s], states.names[sp]): (float(cx[s, sp]), float(cy[s, sp])) for s in range(S) for sp in range(S)}
     e2 = ce
     return E1, E2, e1, arg1, e2, arg2, n_eval
+
+
+# ------------------------------------------------------------ backbone-angle relaxation
+#
+# The RIS scan rotates one or two backbone bonds of an oligomer whose every other internal
+# coordinate is frozen at the polymer's nominal value.  For PVDF that costs little: its
+# nominal angles are near the potential's own optimum and the frozen one-bond profile has
+# the three canonical minima at every level of relaxation.  For a chain with bulky
+# pendants it is not harmless.  With the angles frozen VDCN's profile has *five* minima --
+# 180, +/-120 behind a 13 kcal/mol barrier at -8.7, and +/-30 at -13.6 -- and the +/-120
+# pair disappears the moment the backbone angles may relax (docs/NITRILE_LANDSCAPE.md,
+# section 1).  ``_basins`` hands +/-120 to the trans label, so the rigid fit gave VDCN's T
+# state the energy of a well that does not exist, and the screen's "all-trans VDCN ground
+# state, rank 1" was that artefact.  The relaxed scan below relaxes every backbone angle of
+# the oligomer at each scan point with the driven dihedral(s) held, so the basin minima it
+# feeds to the fit are minima of a chain that can bend.
+
+ANGLE_RELAXATION_BOUNDS = (95.0, 135.0)  # deg: the bounds relax_backbone_angles and refine_crystal use
+FALLBACK_ANGLE_K = 120.0
+"""Bend stiffness, kcal/(mol rad^2) in the ``0.5 k (theta - theta0)^2`` convention, restraining
+the relaxed backbone angles to the polymer's nominal values when the calculator has no bend
+term of its own.  It is the textbook C-C-C stiffness :data:`polyfind.fitting.VAL_ANGLE_K0`
+starts the valence fit from (the fitted value is 77); without *some* restoring term nothing
+resists opening an angle and the minimum runs to whichever bound relieves the most contact
+(see :func:`relax_backbone_angles`)."""
+
+
+def relax_angles_batch(polymer: Polymer, calc: Calculator, dihedrals, start=None,
+                       lo: float = ANGLE_RELAXATION_BOUNDS[0], hi: float = ANGLE_RELAXATION_BOUNDS[1],
+                       restraint_k: float = 0.0, h: float = 0.2, central: bool = True, gtol: float = 3e-3,
+                       ftol: float = 1e-6, maxiter: int = 200, step_cap: float = 10.0,
+                       stop_above: float | None = None, patience: int = 60) -> tuple:
+    """Relax every backbone angle of a batch of oligomers at fixed torsions.
+
+    ``dihedrals`` has shape ``(M, N)``: one conformer per row, and each conformer gets its
+    own ``N + 3`` backbone angles -- one per backbone atom, the per-*atom* freedom of
+    docs/NITRILE_LANDSCAPE.md section 1 rather than the per-*type* broadcast of
+    :func:`relax_backbone_angles`, which cannot bend the chain locally around one rotated
+    bond (with the per-type broadcast VDCN's relaxed gauche minimum lands at +/-95 deg; per
+    atom it is at +/-40, where the fully relaxed chain has it).  ``start`` is the starting
+    angles, ``(N + 3,)`` shared or ``(M, N + 3)`` per row; ``None`` starts from the polymer's
+    nominal angles.  Every angle is bounded to ``[lo, hi]``.
+
+    ``restraint_k`` adds ``0.5 k (theta - theta_nominal)^2`` per backbone angle, in
+    kcal/(mol rad^2): the stand-in for a bend term when the calculator has none
+    (:func:`fit_ris` passes :data:`FALLBACK_ANGLE_K` for a :class:`SimpleFF` without
+    ``angle_terms``).  With the fitted valence terms present nothing extra is needed and the
+    default of zero leaves the calculator's energy alone.
+
+    Every conformer is minimised at once.  The objective is a sum of independent per-row
+    terms, so one batched :func:`~polyfind.chain.build_chain_batch` call per
+    finite-difference direction gives the gradient of every row -- ``2 (N + 3) + 1`` batched
+    energy calls per iteration whatever ``M`` is (``N + 4`` with ``central=False``) -- while
+    each row carries its own projected BFGS direction, Armijo backtracking and
+    inverse-Hessian update, so rows converge independently and leave the batch as they do.
+    Central differences are the default because the cheaper forward difference is not
+    cheaper where it matters: on the stiff Lennard-Jones wall of a G+G- pentane-type
+    contact its bias (``h/2`` times a curvature of kcal/mol/deg^2) misdirects BFGS into a
+    crawl of hundreds of iterations, where the central stencil converges in under a
+    hundred with a fifth of the energies.  ``gtol`` of 3e-3 kcal/mol/deg leaves a row within
+    a few 1e-4 kcal/mol of its minimum, far inside anything the 10-degree grid or the
+    potential's 0.27 kcal/mol error bar can resolve (1e-3 changes the fitted terms by
+    2e-4).  Checked against a per-row ``scipy`` L-BFGS-B on the same objective: the same
+    minima to 4e-5 kcal/mol over a 36-point VDCN scan, in less time.
+
+    ``stop_above`` (with ``patience``) is the rule for hopeless rows: a conformer whose
+    energy is still above ``stop_above`` after ``patience`` iterations is abandoned where
+    it stands.  The rows that need it start ten or more orders of magnitude above the
+    reference -- two pendants through each other -- and march down a wall for as many
+    iterations as they are given without ever coming near a minimum; :func:`fit_ris` sets
+    ``stop_above`` four caps above the relaxed all-trans reference, so an abandoned row is
+    clipped to ``cap`` downstream exactly as it would have been.  ``None`` never abandons.
+
+    Returns ``(energies, angles, status, n_energies)``: the relaxed energies ``(M,)``
+    (restraint included), the relaxed angles ``(M, N + 3)``, a per-row status (0: the
+    projected gradient is below ``gtol`` kcal/mol/deg; 1: stalled -- either no descent step
+    is resolvable above the finite-difference noise or an accepted step lowered the energy
+    by less than ``ftol`` kcal/mol, which is a minimum to that resolution or a row wedged
+    against a wall taking microscopic steps; 2: out of iterations; 3: abandoned above
+    ``stop_above``) and the number of calculator energies spent.
+    """
+    dihs = np.asarray(dihedrals, dtype=float)
+    M, N = dihs.shape
+    R = N + 3
+    B = polymer.bonds_per_repeat
+    nominal = np.array([polymer.backbone[k % B].backbone_angle for k in range(R)], dtype=float)
+    if start is None:
+        x = np.tile(nominal, (M, 1))
+    else:
+        s = np.asarray(start, dtype=float)
+        x = np.tile(s, (M, 1)) if s.ndim == 1 else np.array(s, dtype=float, copy=True)
+    x = np.clip(x, lo, hi)
+    eye = np.eye(R)
+    n_energies = 0
+
+    def energies(dd, ang):
+        nonlocal n_energies
+        n_energies += len(dd)
+        template, coords = build_chain_batch(polymer, dd, bond_angles=ang)
+        E = calc.energy_batch((template, coords))
+        if restraint_k:
+            da = np.deg2rad(ang - nominal)
+            E = E + 0.5 * restraint_k * (da * da).sum(axis=1)
+        return E
+
+    def value_and_gradient(idx):
+        m = len(idx)
+        xi = x[idx]
+        if central:
+            pert = np.empty((2 * R + 1, m, R))
+            pert[0] = xi
+            for r in range(R):
+                pert[1 + 2 * r] = xi + h * eye[r]
+                pert[2 + 2 * r] = xi - h * eye[r]
+            E = energies(np.tile(dihs[idx], (2 * R + 1, 1)), pert.reshape(-1, R)).reshape(2 * R + 1, m)
+            g = np.stack([(E[1 + 2 * r] - E[2 + 2 * r]) / (2.0 * h) for r in range(R)], axis=1)
+            return E[0], g
+        pert = np.empty((R + 1, m, R))
+        pert[0] = xi
+        for r in range(R):
+            pert[1 + r] = xi + h * eye[r]
+        E = energies(np.tile(dihs[idx], (R + 1, 1)), pert.reshape(-1, R)).reshape(R + 1, m)
+        g = (E[1:] - E[0][None, :]).T / h
+        return E[0], g
+
+    def projected(xi, g):
+        pg = g.copy()
+        pg[(xi <= lo + 1e-9) & (g > 0)] = 0.0
+        pg[(xi >= hi - 1e-9) & (g < 0)] = 0.0
+        return pg
+
+    active = np.arange(M)
+    E_all, g_all = value_and_gradient(active)
+    H0 = 5.0  # deg^2 per kcal/mol; rescaled per row after its first step (Nocedal & Wright 6.20)
+    H = np.tile(eye * H0, (M, 1, 1))
+    fresh = np.ones(M, dtype=bool)
+    status = np.full(M, 2, dtype=int)
+    for it in range(maxiter):
+        pg = projected(x[active], g_all[active])
+        done = np.abs(pg).max(axis=1) < gtol
+        status[active[done]] = 0
+        active = active[~done]
+        if stop_above is not None and it >= patience and len(active):
+            hopeless = E_all[active] > stop_above
+            status[active[hopeless]] = 3
+            active = active[~hopeless]
+        if len(active) == 0:
+            break
+        xi, gi, Ei = x[active], g_all[active], E_all[active]
+        pgi = projected(xi, gi)
+        d = -np.einsum("mij,mj->mi", H[active], pgi)
+        d[(xi <= lo + 1e-9) & (d < 0)] = 0.0  # never push against an active bound
+        d[(xi >= hi - 1e-9) & (d > 0)] = 0.0
+        slope = (d * gi).sum(axis=1)
+        bad = slope >= 0  # not a descent direction: fall back to steepest descent
+        if bad.any():
+            H[active[bad]] = eye * H0
+            fresh[active[bad]] = True
+            d[bad] = -pgi[bad]
+            slope[bad] = (d[bad] * gi[bad]).sum(axis=1)
+        d *= np.minimum(1.0, step_cap / np.maximum(np.abs(d).max(axis=1), 1e-12))[:, None]
+        t = np.ones(len(active))
+        accepted = np.zeros(len(active), dtype=bool)
+        x_new, E_new = xi.copy(), Ei.copy()
+        trying = np.arange(len(active))
+        for _ls in range(20):
+            xt = np.clip(xi[trying] + t[trying, None] * d[trying], lo, hi)
+            Et = energies(dihs[active[trying]], xt)
+            ok = Et <= Ei[trying] + 1e-4 * ((xt - xi[trying]) * gi[trying]).sum(axis=1)
+            x_new[trying[ok]], E_new[trying[ok]], accepted[trying[ok]] = xt[ok], Et[ok], True
+            trying = trying[~ok]
+            if len(trying) == 0:
+                break
+            t[trying] *= 0.5
+        status[active[~accepted]] = 1
+        # an accepted step that lowered the energy by less than ftol is a stall too: a row
+        # wedged against a wall can go on taking microscopic Armijo steps for ever
+        stagnant = accepted & (Ei - E_new < ftol)
+        x[active[stagnant]], E_all[active[stagnant]] = x_new[stagnant], E_new[stagnant]
+        status[active[stagnant]] = 1
+        accepted &= ~stagnant
+        acc = active[accepted]
+        if len(acc):
+            x[acc], E_all[acc] = x_new[accepted], E_new[accepted]
+            E2, g2 = value_and_gradient(acc)
+            s = x_new[accepted] - xi[accepted]
+            y = g2 - gi[accepted]
+            sy, yy = (s * y).sum(axis=1), (y * y).sum(axis=1)
+            Hs = H[acc]
+            first = fresh[acc] & (sy > 1e-10)
+            Hs[first] = eye[None] * (sy[first] / yy[first])[:, None, None]
+            fresh[acc] = False
+            upd = sy > 1e-10
+            if upd.any():
+                rho = 1.0 / sy[upd]
+                su, yu = s[upd], y[upd]
+                A = eye[None] - rho[:, None, None] * su[:, :, None] * yu[:, None, :]
+                Hs[upd] = A @ Hs[upd] @ np.transpose(A, (0, 2, 1)) + rho[:, None, None] * su[:, :, None] * su[:, None, :]
+            H[acc], g_all[acc] = Hs, g2
+        active = acc
+    return E_all, x, status, n_energies
+
+
+def _rigid_scorer(polymer: Polymer, calc: Calculator):
+    """``dihedrals (M, N) -> energies (M,)`` at the polymer's frozen backbone angles: the two
+    calls every scan of :func:`fit_ris` has always made, in the same order, so the rigid fit
+    is bit-for-bit what it was."""
+
+    def score(dihs):
+        template, coords = build_chain_batch(polymer, dihs)
+        return calc.energy_batch((template, coords))
+
+    return score
+
+
+class _RelaxedScorer:
+    """``dihedrals (M, N) -> energies (M,)`` with every backbone angle relaxed per conformer
+    (:func:`relax_angles_batch`), warm-started from the relaxed all-trans reference once
+    :meth:`reference` has found it.  Counts what it spends."""
+
+    def __init__(self, polymer, calc, restraint_k, lo, hi, options=None, cap: float = 50.0):
+        self.polymer, self.calc = polymer, calc
+        self.restraint_k, self.lo, self.hi = float(restraint_k), float(lo), float(hi)
+        self.options = dict(options or {})
+        self.cap = float(cap)
+        self.start = None
+        self.stop_above = None  # set by reference(): four caps above the relaxed all-trans energy
+        self.n_conformers = 0
+        self.n_energies = 0
+        self.status = np.zeros(4, dtype=int)  # converged / stalled / out of iterations / abandoned
+
+    def _relax(self, dihs, start, stop_above):
+        E, ang, st, n = relax_angles_batch(self.polymer, self.calc, dihs, start=start, lo=self.lo, hi=self.hi,
+                                           restraint_k=self.restraint_k, stop_above=stop_above, **self.options)
+        self.n_conformers += len(dihs)
+        self.n_energies += n
+        self.status += np.bincount(st, minlength=4)[:4]
+        self.last_angles = ang
+        return E, ang
+
+    def __call__(self, dihs, start=None):
+        """Relaxed energies; ``start`` (``(M, N + 3)``) warm-starts each row, else the
+        relaxed all-trans angles do.  The relaxed angles are left in ``last_angles``."""
+        return self._relax(np.asarray(dihs, dtype=float), self.start if start is None else start, self.stop_above)[0]
+
+    def reference(self, base) -> float:
+        """Relax the all-trans reference (never abandoned); its angles warm-start every
+        later conformer and its energy sets the abandonment threshold."""
+        E, ang = self._relax(np.asarray(base, dtype=float)[None], None, None)
+        self.start = ang[0]
+        self.stop_above = float(E[0]) + 4.0 * self.cap
+        return float(E[0])
+
+    def status_counts(self) -> dict:
+        return {"converged": int(self.status[0]), "stalled": int(self.status[1]),
+                "out_of_iterations": int(self.status[2]), "abandoned": int(self.status[3])}
+
+
+def _angle_restraint_for(calc: Calculator, angle_restraint: float | None) -> float:
+    """The restraint stiffness :func:`fit_ris` relaxes under: the caller's number if given
+    (``0`` for none); otherwise none for a :class:`SimpleFF` that carries bend terms, and
+    :data:`FALLBACK_ANGLE_K` for one that does not.  A calculator of any other kind (an
+    :class:`ASECalculator` wrapping an MLIP or a DFT code) is taken to be a complete
+    potential with its own bending physics and gets no restraint."""
+    if angle_restraint is not None:
+        return float(angle_restraint)
+    if isinstance(calc, SimpleFF):
+        return 0.0 if calc.angle_table() else FALLBACK_ANGLE_K
+    return 0.0
+
+
+def _local_minima(E, min_depth: float = 0.0) -> list[tuple[int, float]]:
+    """``(index, depth)`` of every local minimum of a cyclic profile at least ``min_depth``
+    deep, the depth being the lower of the two barrier tops enclosing it.  A plateau of
+    equal neighbours counts once (its first point)."""
+    E = np.asarray(E, dtype=float)
+    n = len(E)
+    out = []
+    for i in range(n):
+        if not (E[i] < E[i - 1] and E[i] <= E[(i + 1) % n]):
+            continue
+        k = i
+        while E[(k - 1) % n] >= E[k % n] and i - k < n:
+            k -= 1
+        left = E[k % n]
+        k = i
+        while E[(k + 1) % n] >= E[k % n] and k - i < n:
+            k += 1
+        right = E[k % n]
+        depth = min(left, right) - E[i]
+        if depth >= min_depth:
+            out.append((i, float(depth)))
+    return out
+
+
+def _watershed_basins(states: RISStates, grid: np.ndarray, E) -> tuple[list[np.ndarray], list[bool]]:
+    """Grid indices per state by descent on the one-bond profile ``E``, for the relaxed scan.
+
+    Every local minimum of the profile is assigned to the state whose ideal angle is
+    nearest (ties to the lowest-indexed state, as :func:`_basins` breaks them), and every
+    grid point to the minimum it runs down to, so a state's basin is bounded by the
+    profile's own barrier tops rather than by the midpoints between ideal angles.  The
+    difference matters on a relaxed surface: VDCN's relaxed trans well is 1.2 kcal/mol deep
+    with its barriers at +/-150, and beyond them the profile is already descending into
+    the +/-40 gauche well, so the nearest-ideal T basin ``[120, 240]`` has its *lowest grid
+    point* at its edge (+/-120, -0.44) rather than at its minimum (180, 0.0); read off that
+    way the "trans" state lands at -120 deg carrying the slope's energy, which is the same
+    basin-edge-for-state error the rigid scan makes with a different well.  By watershed
+    each state's energy is the energy of a minimum of the surface, or nothing.
+
+    A state with no minimum of its own (AN's trans, a monotonic descent at either level)
+    keeps its nearest-ideal basin, whose lowest point is a basin edge; the second return
+    value flags those states so the report can say so.  The rigid scan does not use this
+    -- its numbers are pinned bit-for-bit -- and on PVDF the two assignments agree.
+    """
+    E = np.asarray(E, dtype=float)
+    n = len(grid)
+    minima = [i for i, _ in _local_minima(E)]
+    ideal = np.array(states.angles, dtype=float)
+    owner_of_min = {i: int(np.argmin(np.abs(_wrap180(grid[i] - ideal)))) for i in minima}
+    listed = np.zeros(n, dtype=bool)
+    listed[minima] = True
+    end = np.empty(n, dtype=int)
+    for i in range(n):
+        k = i
+        for _ in range(n):
+            if listed[k]:
+                break
+            lo, hi = (k - 1) % n, (k + 1) % n
+            # step to the lower neighbour; on a tie prefer a listed minimum, then the left
+            e, _, nxt = min((E[lo], 0 if listed[lo] else 1, lo), (E[hi], 0 if listed[hi] else 1, hi))
+            if e > E[k]:
+                break
+            k = nxt
+        end[i] = k
+    fallback = _basins(states, grid)
+    basins, edge = [], []
+    for s in range(states.n):
+        mine = [i for i in minima if owner_of_min[i] == s]
+        if mine:
+            basins.append(np.where(np.isin(end, mine))[0])
+            edge.append(False)
+        else:
+            basins.append(fallback[s])
+            edge.append(True)
+    return basins, edge
+
+
+def _dense_scan_relaxed(polymer, states, base, N, grid, ref, score: "_RelaxedScorer"):
+    """The dense 1-D and 2-D scans of every bond type on the relaxed surface, with
+    watershed basins (:func:`_watershed_basins`) read off each bond type's own 1-D
+    profile: the 2-D basin of a state pair on bonds ``(j0, j0 + 1)`` is the product of
+    bond type ``b``'s basin for the first state and bond type ``(b + 1) % B``'s for the
+    second, which is why every 1-D profile is taken before any 2-D scan.  Each 2-D row is
+    warm-started from the relaxed angles of its 1-D row at the same first dihedral.
+    Returns ``(scan1, scan2, e1, arg1, e2, arg2, n_eval, edge_states)`` in
+    :func:`_dense_scan_bond`'s conventions plus, per bond type, the names of the states
+    whose "minimum" is a basin edge."""
+    B, S = polymer.bonds_per_repeat, states.n
+    j0s = [(N // 2 - 1) - ((N // 2 - 1) - b) % B for b in range(B)]
+    scan1, angles1, basins, edges = {}, {}, {}, {}
+    n_eval = 0
+    for b in range(B):
+        dihs1 = np.tile(base, (len(grid), 1))
+        dihs1[:, j0s[b]] = grid
+        scan1[b] = score(dihs1) - ref
+        angles1[b] = score.last_angles
+        n_eval += len(grid)
+        basins[b], edge = _watershed_basins(states, grid, scan1[b])
+        edges[b] = [states.names[s] for s in range(S) if edge[s]]
+    e1, e2 = np.zeros((B, S)), np.zeros((B, S, S))
+    arg1, arg2, scan2 = {}, {}, {}
+    for b in range(B):
+        E1 = scan1[b]
+        arg1[b] = {}
+        for s, idx in enumerate(basins[b]):
+            k = idx[np.argmin(E1[idx])]
+            e1[b, s] = E1[k]
+            arg1[b][states.names[s]] = float(grid[k])
+        j0 = j0s[b]
+        phis, psis = np.meshgrid(grid, grid, indexing="ij")
+        dihs2 = np.tile(base, (len(grid) ** 2, 1))
+        dihs2[:, j0] = phis.ravel()
+        dihs2[:, j0 + 1] = psis.ravel()
+        start = np.repeat(angles1[b], len(grid), axis=0)  # row (phi_i, psi_j) starts from the 1-D row phi_i
+        E2 = (score(dihs2, start=start) - ref).reshape(len(grid), len(grid))
+        n_eval += len(grid) ** 2
+        bn = (b + 1) % B
+        arg2[b] = {}
+        for s, idx in enumerate(basins[b]):
+            for sp, idxp in enumerate(basins[bn]):
+                sub = E2[np.ix_(idx, idxp)]
+                k = np.unravel_index(np.argmin(sub), sub.shape)
+                arg2[b][(states.names[s], states.names[sp])] = (float(grid[idx[k[0]]]), float(grid[idxp[k[1]]]))
+                e2[b, s, sp] = sub[k]
+        scan2[b] = E2
+    return scan1, scan2, e1, arg1, e2, arg2, n_eval, edges
+
+
+def angle_relaxation_check(polymer: Polymer, calc: Calculator, step: float = 10.0, n_monomers: int = 5,
+                           tol: float = 30.0, min_depth: float = 0.05, angle_restraint: float | None = None,
+                           angle_bounds=ANGLE_RELAXATION_BOUNDS, relax_options: dict | None = None) -> dict:
+    """Does the rigid one-bond profile have minima the angle-relaxed one lacks?
+
+    The discriminator behind :data:`ANGLE_RELAXATION_DEFAULTS` and behind
+    ``fit_ris(angles="auto")`` for a polymer not recorded there.  For each bond type it
+    takes the same one-bond scan :func:`fit_ris` does (``step`` degrees round the circle,
+    every other bond trans, the oligomer ``n_monomers`` long) twice -- once at the polymer's
+    frozen backbone angles and once with every backbone angle relaxed per point
+    (:func:`relax_angles_batch`, the same restraint and bounds :func:`fit_ris` would use) --
+    finds the local minima of each (at least ``min_depth`` kcal/mol deep, so grid noise is
+    not a well), and calls a rigid minimum an **orphan** when no relaxed minimum lies within
+    ``tol`` degrees of it.  A chemistry needs the relaxed scan when it has an orphan on any
+    bond type: that is a well the frozen geometry manufactures, and ``_basins`` would fold
+    its energy into whichever state it lies nearest.
+
+    ``tol`` of 30 deg is the kink criterion of docs/NITRILE_LANDSCAPE.md.  It is wide
+    enough that PVDF's rigid double gauche well (+/-70 and +/-40, both within 30 of the
+    relaxed +/-50) is not an orphan, and narrow enough that VDCN's +/-120 (80 deg from the
+    relaxed +/-40, 60 from 180) is.
+
+    Returns ``{"needs_relaxation": bool, "grid": ..., "bonds": {b: {...}}, "n_evaluations",
+    "n_energies", "restraint_k"}``; each bond's entry carries both profiles (relative to
+    their own all-trans), both minima lists as ``(angle, energy, depth)`` and the orphans.
+    """
+    B = polymer.bonds_per_repeat
+    N = max(n_monomers * B, 2 * B + 6)
+    base = np.full(N, 180.0)
+    grid = np.arange(-180.0, 180.0, step)
+    rigid = _rigid_scorer(polymer, calc)
+    relaxed = _RelaxedScorer(polymer, calc, _angle_restraint_for(calc, angle_restraint),
+                             angle_bounds[0], angle_bounds[1], relax_options)
+    ref_rigid = calc.energy(build_chain(polymer, base))
+    ref_relaxed = relaxed.reference(base)
+    out = {"needs_relaxation": False, "grid": grid, "bonds": {}, "n_evaluations": 1 + 1,
+           "restraint_k": relaxed.restraint_k, "relaxed_reference_angles": relaxed.start.copy()}
+    for b in range(B):
+        j0 = (N // 2 - 1) - ((N // 2 - 1) - b) % B
+        dihs = np.tile(base, (len(grid), 1))
+        dihs[:, j0] = grid
+        E_rigid = rigid(dihs) - ref_rigid
+        E_relaxed = relaxed(dihs) - ref_relaxed
+        out["n_evaluations"] += 2 * len(grid)
+        m_rigid = _local_minima(E_rigid, min_depth)
+        m_relaxed = _local_minima(E_relaxed, min_depth)
+        orphans = [(float(grid[i]), float(E_rigid[i]), d) for i, d in m_rigid
+                   if all(abs(_wrap180(grid[i] - grid[k])) > tol for k, _ in m_relaxed)]
+        out["bonds"][b] = {
+            "rigid_profile": E_rigid, "relaxed_profile": E_relaxed,
+            "rigid_minima": [(float(grid[i]), float(E_rigid[i]), d) for i, d in m_rigid],
+            "relaxed_minima": [(float(grid[i]), float(E_relaxed[i]), d) for i, d in m_relaxed],
+            "orphans": orphans,
+        }
+        if orphans:
+            out["needs_relaxation"] = True
+    out["n_energies"] = relaxed.n_energies + out["n_evaluations"]
+    return out
+
+
+# Which registered chemistries need the relaxed scan by default, measured rather than
+# assigned: :func:`angle_relaxation_check` under the fitted potential (``pvdf-dft-valence``,
+# step 10 deg, six monomers -- the screen's settings; ``examples/angle_relaxation_defaults.py``
+# reproduces the table below and ``tests/test_forcefield.py`` re-measures the PVDF and VDCN
+# rows).  A chemistry needs it when its rigid one-bond profile has a minimum no relaxed
+# minimum lies within 30 deg of.  Bond type 0; minima are deg: kcal/mol relative to each
+# level's own all-trans; bond type 1 gives the same verdict in every row.
+#
+#   polymer  rigid minima                                relaxed minima                  orphans     default
+#   pvdf     180: 0; +/-70: -1.87; +/-40: -1.18           180: 0; +/-50: -1.79            none        rigid
+#   pe       180: 0; +/-70: -0.39                         180: 0; +/-70: +0.01            none        rigid
+#   pvdc     180: 0; +/-120: -2.44; +/-30: -11.29         180: 0; +/-30: -4.55            +/-120      relaxed
+#   cfe      -140: -20.3; -40: -24.1; +30: -12.0; +80: -11.9   -150: -2.4; -40: -5.2; +40: -3.2   +80    relaxed
+#   cdfe     -110: -14.2; -30: +68.5; +70: -25.0; +150: -19.2  -100: -4.5; +60: -11.2        -30, +150   relaxed
+#   an       -60: -11.9; +40: -6.6; +90: -10.0            -70: -5.2; +90: -3.6            +40         relaxed
+#   vdcn     180: 0; +/-120: -8.66; +/-30: -13.56         180: 0; +/-40: -3.86            +/-120      relaxed
+#   fanome   (overlapping all-trans reference: every energy is -2e4 to -3e4 and means nothing; recorded
+#             relaxed because the rule says so, and the screen does not fit it)             -80         relaxed
+#
+# Under the unfitted ``SimpleFF()`` with the :data:`FALLBACK_ANGLE_K` restraint the same
+# rule gives the same verdict for every row except CDFE and FANOME (rigid there), so a test
+# that fits CDFE with the illustrative potential relaxes angles it would not strictly need
+# to; that costs time, not correctness.  ``vdf11-vdcn1`` is not recorded (nothing fits its
+# 24-bond repeat directly; ``transfer_ris`` assembles it), so ``"auto"`` would measure it.
+ANGLE_RELAXATION_DEFAULTS: dict[str, bool] = {
+    "pvdf": False,
+    "pe": False,
+    "pvdc": True,
+    "cfe": True,
+    "cdfe": True,
+    "an": True,
+    "vdcn": True,
+    "fanome": True,
+}
 
 
 @dataclass
@@ -1896,6 +2386,13 @@ class FitReport:
     model: RISModel
     argmin1: dict  # bond type -> {state: angle at basin minimum}
     argmin2: dict  # bond type -> {(s, s'): (angle, angle)}
+    angles: str = "rigid"  # "rigid" or "relaxed": how the backbone angles were treated
+    relaxed_reference_angles: np.ndarray | None = None  # (N+3,) relaxed all-trans angles, relaxed scans only
+    n_relaxation_energies: int = 0  # calculator energies spent inside the relaxations (0 when rigid)
+    relaxation_status: dict | None = None  # counts of converged / stalled / out-of-iterations rows
+    discriminator: dict | None = None  # angle_relaxation_check's result when "auto" had to measure
+    third_order_guard: dict | None = None  # _fit_third_order's "capped" / "zeroed" masks and "raw" values
+    edge_states: dict | None = None  # relaxed scans: bond type -> states whose "minimum" is a basin edge
 
 
 
@@ -1995,12 +2492,52 @@ def fit_ris(
     angle_tol: float | None = None,
     scan: str = "dense",
     coarse_step: float = 30.0,
+    angles: str = "auto",
+    angle_restraint: float | None = None,
+    angle_bounds=ANGLE_RELAXATION_BOUNDS,
+    relax_options: dict | None = None,
 ) -> FitReport:
     """Derive an RIS model from dihedral scans of a short oligomer.
 
     First-order energies come from a 1D scan of one bond of each type (all other
     bonds trans); pair energies from a 2D scan of two consecutive bonds, minus the
-    first-order terms.  Energies are basin minima, relative to all-trans.  With
+    first-order terms.  Energies are basin minima, relative to all-trans.
+
+    ``angles`` says what the backbone angles do while a bond is driven:
+
+    * ``"rigid"``: frozen at the polymer's nominal values -- the scan as it always was,
+      bit-for-bit (``scan="rigid"`` is accepted as shorthand for this with the dense grid).
+    * ``"relaxed"``: every backbone angle of the oligomer relaxed per scan point with the
+      driven dihedral(s) held (:func:`relax_angles_batch`; bounded to ``angle_bounds``),
+      the all-trans reference relaxed the same way, and the basin assignment, the adapted
+      state angles and the second- and third-order terms all read off the relaxed scan
+      exactly as they read off the rigid one.  Under a :class:`SimpleFF` carrying bend
+      terms (the ``pvdf-dft-valence`` preset) the relaxation is against those terms; under
+      one without, a harmonic restraint of :data:`FALLBACK_ANGLE_K` about the nominal
+      angles stands in (``angle_restraint`` overrides either way; ``0`` means none; any
+      other calculator is trusted to have its own bending physics).  ``scan="relaxed"`` is
+      shorthand for this with the dense grid.  Basins are assigned by descent on each bond
+      type's relaxed profile (:func:`_watershed_basins`) rather than by nearest ideal angle,
+      and the adaptive grid is refused.  It costs 9-13 minutes for a two-bond-type chemistry
+      at the screen's settings (step 10 deg, six monomers, third order; measured with eight
+      fits sharing twelve cores) against one second rigid -- every one of the ~2900 scan
+      conformers is a bounded minimisation over its ``N + 3`` angles, 1.3-1.8 million
+      calculator energies in all -- and ``relax_options`` (``h``, ``central``, ``gtol``,
+      ``ftol``, ``maxiter``, ``step_cap``, ``patience``) is passed through.
+    * ``"auto"`` (default): the recorded answer in :data:`ANGLE_RELAXATION_DEFAULTS` for a
+      registered chemistry; for one not recorded there, :func:`angle_relaxation_check`
+      is run first (a rigid and a relaxed one-bond scan per bond type, at this ``step``
+      and ``n_monomers``) and its verdict used, kept in the report's ``discriminator``.
+
+    Why this exists: with the angles frozen a chain with bulky pendants has one-bond
+    minima that are not minima of a chain that can bend.  VDCN's rigid profile has wells
+    at +/-120 deg, 8.7 kcal/mol *below* trans, that vanish the moment the angles relax;
+    ``_basins`` hands them to the trans label, so the rigid fit gave VDCN a T state at 180
+    deg carrying the energy of a well at 120, and every ranking built on it inherited that
+    (docs/NITRILE_LANDSCAPE.md).  PVDF's profile has the same three minima at either level,
+    which is why its rigid numbers, and every table built on them, stand.
+
+    With
     ``symmetrize`` averages the model with its mirror image (G+ <-> G-).  That is
     exact for an achiral chain and removes grid/refinement noise, but it is *wrong*
     for a chiral one: reflecting a chiral chain gives its enantiomer, not the same
@@ -2057,18 +2594,49 @@ def fit_ris(
     B = polymer.bonds_per_repeat
     N = max(n_monomers * B, 2 * B + 6)
     base = np.full(N, 180.0)
-    ref = calc.energy(build_chain(polymer, base))
-    n_eval = 1
+    if scan in ("rigid", "relaxed"):
+        scan, angles = "dense", scan
+    if angles not in ("auto", "rigid", "relaxed"):
+        raise ValueError(f"angles must be 'auto', 'rigid' or 'relaxed'; got {angles!r}")
+    discriminator = None
+    if angles == "auto":
+        if polymer.name in ANGLE_RELAXATION_DEFAULTS:
+            angles = "relaxed" if ANGLE_RELAXATION_DEFAULTS[polymer.name] else "rigid"
+        else:
+            discriminator = angle_relaxation_check(polymer, calc, step=step, n_monomers=n_monomers,
+                                                  angle_restraint=angle_restraint, angle_bounds=angle_bounds,
+                                                  relax_options=relax_options)
+            angles = "relaxed" if discriminator["needs_relaxation"] else "rigid"
+    relaxer = None
+    if angles == "relaxed":
+        relaxer = _RelaxedScorer(polymer, calc, _angle_restraint_for(calc, angle_restraint),
+                                 angle_bounds[0], angle_bounds[1], relax_options, cap=cap)
+        ref = relaxer.reference(base)
+        score = relaxer
+    else:
+        ref = calc.energy(build_chain(polymer, base))
+        score = _rigid_scorer(polymer, calc)
+    n_eval = 1 + (0 if discriminator is None else discriminator["n_evaluations"])
     e1 = np.zeros((B, states.n))
     e2 = np.zeros((B, states.n, states.n))
     scan1, scan2, arg1, arg2 = {}, {}, {}, {}
-    if scan == "dense":
+    edge_states = None
+    if scan == "dense" and angles == "relaxed":
+        report_grid = np.arange(-180.0, 180.0, step)
+        scan1, scan2, e1, arg1, e2, arg2, ne, edge_states = _dense_scan_relaxed(polymer, states, base, N, report_grid, ref, relaxer)
+        n_eval += ne
+    elif scan == "adaptive" and angles == "relaxed":
+        raise ValueError("scan='adaptive' cannot be combined with angles='relaxed': the adaptive search "
+                         "confines each state to its nearest-ideal-angle basin, whose edge on a relaxed "
+                         "surface can lie on the slope into the neighbouring well (see _watershed_basins); "
+                         "use the dense grid for a relaxed fit")
+    elif scan == "dense":
         report_grid = np.arange(-180.0, 180.0, step)
         basins = _basins(states, report_grid)
         for b in range(B):
             # scanned bond j0 of type b, nearest the middle of the oligomer
             j0 = (N // 2 - 1) - ((N // 2 - 1) - b) % B
-            E1, E2, e1_b, arg1_b, e2_b, arg2_b, ne = _dense_scan_bond(polymer, calc, states, base, j0, report_grid, basins, ref)
+            E1, E2, e1_b, arg1_b, e2_b, arg2_b, ne = _dense_scan_bond(polymer, calc, states, base, j0, report_grid, basins, ref, score=score)
             scan1[b], scan2[b] = E1, E2
             e1[b], arg1[b] = e1_b, arg1_b
             e2[b], arg2[b] = e2_b, arg2_b
@@ -2085,7 +2653,7 @@ def fit_ris(
         for b in range(B):
             j0 = (N // 2 - 1) - ((N // 2 - 1) - b) % B
             E1, E2, e1_b, arg1_b, e2_b, arg2_b, ne = _adaptive_scan_bond(
-                polymer, calc, states, base, j0, report_grid, basins_coarse, bounds, ref, step, coarse_step
+                polymer, calc, states, base, j0, report_grid, basins_coarse, bounds, ref, step, coarse_step, score=score
             )
             scan1[b], scan2[b] = E1, E2
             e1[b], arg1[b] = e1_b, arg1_b
@@ -2172,8 +2740,10 @@ def fit_ris(
         angs = np.where(np.abs(np.abs(angs) - 180.0) < 1e-6, 180.0, angs)
         states = RISStates(states.names, tuple(float(a) for a in angs), states.mirror)
     e3 = None
+    guard = None
     if third_order:
-        e3 = np.clip(_fit_third_order(polymer, calc, states, N, base, ref=ref, cap=cap), -cap, cap)
+        guard = {}
+        e3 = np.clip(_fit_third_order(polymer, calc, states, N, base, ref=ref, cap=cap, score=score, diagnostics=guard), -cap, cap)
         n_eval += B * states.n ** 3 * 4
         if mode == "mirror":
             m = np.array(states.mirror)
@@ -2191,11 +2761,17 @@ def fit_ris(
                     stacklevel=2,
                 )
     model = RISModel(states, B, e1, e2, e3, name=name or f"{polymer.name}-fit")
-    return FitReport(report_grid, scan1, scan2, n_eval, model, arg1, arg2)
+    report = FitReport(report_grid, scan1, scan2, n_eval, model, arg1, arg2, angles=angles, discriminator=discriminator,
+                       third_order_guard=guard, edge_states=edge_states)
+    if relaxer is not None:
+        report.relaxed_reference_angles = relaxer.start.copy()
+        report.n_relaxation_energies = relaxer.n_energies
+        report.relaxation_status = relaxer.status_counts()
+    return report
 
 
 def _fit_third_order(polymer: Polymer, calc: Calculator, states: RISStates, N: int, base: np.ndarray,
-                     ref: float = 0.0, cap: float = 50.0) -> np.ndarray:
+                     ref: float = 0.0, cap: float = 50.0, score=None, diagnostics: dict | None = None) -> np.ndarray:
     """Triplet corrections by inclusion-exclusion at the state angles:
 
         e3[b, a, c, d] = E(a c d) - E(a c T) - E(T c d) + E(T c T)
@@ -2222,10 +2798,22 @@ def _fit_third_order(polymer: Polymer, calc: Calculator, states: RISStates, N: i
     the fixed state angles, so the two disagree by whatever the clash is worth.  Where
     nothing overlaps -- which is every triple of the illustrative potential's PVDF fit --
     the arithmetic is unchanged.
+
+    With ``score`` a relaxed-angle scorer (``fit_ris(angles="relaxed")``) the same rule is
+    applied to the relaxed energies against the relaxed all-trans reference.  Relaxing the
+    angles changes what counts as an overlap -- a contact the rigid chain could not relieve
+    may now cost a few kcal/mol of bend strain instead of a wall -- so fewer triples trip
+    the guard and the ones that still do are contacts no bend within the bounds relieves.
     """
+    score = _rigid_scorer(polymer, calc) if score is None else score
     B, S = polymer.bonds_per_repeat, states.n
     t_idx = states.index("T") if "T" in states.names else 0
     e3 = np.zeros((B, S, S, S))
+    # which triples the guard decided: the triple itself overlapped (capped) or only a
+    # subtracted term did (zeroed), and the raw inclusion-exclusion value it would have given
+    capped = np.zeros((B, S, S, S), dtype=bool)
+    zeroed = np.zeros((B, S, S, S), dtype=bool)
+    raw = np.zeros((B, S, S, S))
     for b in range(B):
         j0 = (N // 2 - 1) - ((N // 2 - 1) - b) % B
         rows, keys = [], []
@@ -2238,16 +2826,20 @@ def _fit_third_order(polymer: Polymer, calc: Calculator, states: RISStates, N: i
                         rows.append(dd)
                     keys.append((a, c, d))
         dihs = np.array(rows)
-        template, coords = build_chain_batch(polymer, dihs)
-        E = calc.energy_batch((template, coords)).reshape(-1, 4)
+        E = score(dihs).reshape(-1, 4)
         over = E > ref + cap
         for (a, c, d), row, ov in zip(keys, E, over):
+            raw[b, a, c, d] = row[0] - row[1] - row[2] + row[3]
             if ov[0]:
                 e3[b, a, c, d] = cap
+                capped[b, a, c, d] = True
             elif ov[1] or ov[2] or ov[3]:
                 e3[b, a, c, d] = 0.0
+                zeroed[b, a, c, d] = True
             else:
                 e3[b, a, c, d] = row[0] - row[1] - row[2] + row[3]
+    if diagnostics is not None:
+        diagnostics.update({"capped": capped, "zeroed": zeroed, "raw": raw})
     return e3
 
 

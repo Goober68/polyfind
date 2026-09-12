@@ -47,7 +47,10 @@ What the four measurements say, in order of weight:
 VDCN "not rankable by the rigid RIS stage as it stands", with FANOME staying "not screened"
 for the reason it already carries. The freedom to add is the backbone bond angle, relaxed per
 conformer inside `fit_ris`, with the state angles adapted from that relaxed scan; no fourth
-state is warranted by anything here. Sarco's kinks 2-10 bonds from the nitrile are not
+state is warranted by anything here. *Done — see "Done: the fix, measured" at the end: `fit_ris`
+relaxes every backbone angle per conformer for the chemistries whose frozen-angle profile has
+wells the relaxed one lacks (measured: PVDC, CFE, CDFE, AN, VDCN; not PVDF or PE), and the
+SCREEN.md rows are regenerated from it. VDCN's all-trans is 43rd of 67.* Sarco's kinks 2-10 bonds from the nitrile are not
 single-bond states of this potential at any distance we scanned, so if they are real they are
 either cooperative or a property of the MLIP tier that this potential does not have; that is
 the part of the chemistry reading this work cannot close.
@@ -316,3 +319,89 @@ rigid numbers as a ranking.)
   structures, packing accommodations, or MLIP-tier chemistry. Their finite-chain ladder
   failure for the nitriles is not addressed by anything above; it concerns the response, not
   the conformation.
+
+## Done: the fix, measured
+
+The freedom recommended above is in `fit_ris` (`angles="rigid" | "relaxed" | "auto"`), and it is
+the per-*atom* relaxation section 1 used rather than section 4's per-type broadcast: every
+backbone angle of the oligomer is relaxed at every scan point with the driven dihedral(s) held,
+the all-trans reference relaxed the same way, and the basin minima, adapted state angles and
+second- and third-order terms read off the relaxed surface exactly as they were read off the
+rigid one. Every conformer of a scan is minimised in one batch (one chain build per
+finite-difference direction gives the gradient of every row; each row carries its own projected
+BFGS step), which is what makes per-atom affordable: 9-13 min per chemistry at the screen's
+settings, against 1 s rigid and the 4 min section 4 paid for two angles. The rigid scan is kept
+bit-for-bit (59 arrays of PE, PVDF, CFE and VDCN fits compared to the last bit), so PVDF's tables
+stand.
+
+**The default is measured, not assigned.** For each registered polymer the rigid and relaxed
+one-bond profiles were taken at the screen's settings and a rigid minimum with no relaxed
+minimum within 30 deg — the kink criterion — called an orphan (`angle_relaxation_check`,
+`examples/angle_relaxation_defaults.py`). Bond type 0; deg: kcal/mol relative to each level's
+own all-trans:
+
+| polymer | rigid minima | relaxed minima | orphans | default |
+|---|---|---|---|---|
+| PVDF | 180: 0; ±70: −1.87; ±40: −1.18 | 180: 0; ±50: −1.79 | none | rigid |
+| PE | 180: 0; ±70: −0.39 | 180: 0; ±70: +0.01 | none | rigid |
+| PVDC | 180: 0; ±120: −2.44; ±30: −11.29 | 180: 0; ±30: −4.55 | ±120 | relaxed |
+| CFE | −140: −20.3; −40: −24.1; +30: −12.0; +80: −11.9 | −150: −2.4; −40: −5.2; +40: −3.2 | +80 | relaxed |
+| CDFE | −110: −14.2; −30: +68.5; +70: −25.0; +150: −19.2 | −100: −4.5; +60: −11.2 | −30, +150 | relaxed |
+| AN | −60: −11.9; +40: −6.6; +90: −10.0 | −70: −5.2; +90: −3.6 | +40 | relaxed |
+| VDCN | 180: 0; ±120: −8.66; ±30: −13.56 | 180: 0; ±40: −3.86 | ±120 | relaxed |
+| FANOME | overlapping reference; numbers meaningless | — | yes | relaxed (not fitted) |
+
+The screen's candidates, measured on the fly by `angles="auto"`: trfe-cand, vfcn-cand and
+vclcn-cand have orphans (±30 at +14 above trans for trfe; ±80 for vfcn; ±110 and ±130 for
+vclcn), pvf-cand does not.
+
+**What the relaxed fit gives, against the rigid one** (step 10, six monomers, third order,
+`enumerate_periodic` to period 8; the SCREEN.md rows are regenerated from these):
+
+| polymer | e1(T) rigid → relaxed | ground state rigid → relaxed | all-trans rank, ΔE: rigid → relaxed |
+|---|---|---|---|
+| VDCN | −8.66 → 0.00 | TT (−11.48) → TTG+G+ (−5.45) | **1 of 83, +0.00 → 43 of 67, +4.10** |
+| AN | −8.20 → −2.40 | TG− (−13.05) → TG−G−G− (−7.70) | 105 of 164, +6.14 → 136 of 148, +5.91 |
+| PVDC | −2.44 → 0.00 | TTG+TTG+ (−8.80) → TTG+G+ (−4.64) | not enumerated, +2.85 → +3.13 |
+| CFE | −20.27 → −2.41 | TG− (−30.90) → G+G+ (−23.26) | 41 of 157, +11.16 → 91 of 95, +21.22 |
+| CDFE | −19.15 → −5.59 | TG+G+G+ (−30.42) → G+G+G+G−G−G+ (−19.07) | 95 of 162, +16.67 → 146 of 147, +17.71 |
+| trfe-cand | 0.00 → −0.16 | TG− (−3.96) → G+G+G+G−G−G+ (−5.41) | 109 of 168, +3.96 → 111 of 121, +5.41 |
+| vfcn-cand | −6.03 → −0.95 | TTG+TTG−TG− (−12.36) → TG+G+G− (−9.53) | 56 of 141, +6.71 → 84 of 102, +8.62 |
+| vclcn-cand | −20.53 → −0.51 | TG+ (−23.79) → TTG+G+ (−5.74) | 41 of 158, +9.89 → 75 of 120, +4.13 |
+
+VDCN's verdict is section 4's, reached now with the freedom section 4 asked for: its trans state
+carries 0.0 rather than the ±120 well, the gauche well sits at ±40 (not the per-type ±95), and
+all-trans is 4.1 kcal/mol per monomer above a TTG+G+ chain. Two things the relaxed surface
+shows that the rigid one could not: VDCN's pair term e2(T,T) is −1.35 on the CH2-centred pair
+because the relaxed T×T basin's minimum is a *cooperatively deflected* pair near (160, −160),
+the deflected zigzag of section 1's fully relaxed level, which a one-bond scan cannot reach; and
+the relaxed basins are assigned by descent on each profile (`_watershed_basins`) rather than by
+nearest ideal angle, because on a relaxed surface the nearest-ideal T basin's lowest grid point
+is on the slope into the gauche well at ±120 — the same basin-edge-for-state error the rigid scan
+made, with a different well. AN's trans is a basin edge at either level and the fit flags it
+(`FitReport.edge_states`).
+
+**The third-order guard, checked on the relaxed surface.** Relaxing changes what overlaps: VDCN
+trips it on 20 triples (the triple itself is a 5e4 to 1.4e7 kcal/mol nitrile clash at the ±40
+state angles) where the rigid scan tripped it on 32, and zeroes 4 whose subtracted term overlaps
+(raw inclusion-exclusion −1.4e7, the −50 bonus the guard exists to refuse); CFE caps 4 and
+zeroes 4 (raw −2.4e6); CDFE and trfe-cand trip nothing. The large terms it lets through are real:
+CFE's −14.7 for G−G−G− is E(G−G−G−) = 0.85, E(G−G−T) = −0.73, E(TG−G−) = 12.81, E(TG−T) = −3.45,
+a 12.8 kcal/mol contact at the T/G−G− junction that a third gauche relieves, every sub-energy
+far under the cap; vfcn's −15.4 and CDFE's −14.6 are the same shape. No computed term is below
+−17.2 and none is a difference across an overlap.
+
+**The caveat that the fix exposes rather than creates.** An RIS term is a basin minimum; a chain
+is built at one adapted angle per state; so a model sits below the chains it describes, and
+the relaxed one more so because its basins are wider. Against directly relaxed periodic chains
+of their own top sequences the relaxed models are 3-7 kcal/mol per monomer low for VDCN, AN
+and PVDC; the rigid PVDF model is 2.8 low on the same test with rigid chains. For CFE and CDFE
+the gap is 20-30 at either level (rigid: 14-42): their helices have non-additivity beyond three
+bonds, and their rows are not a ranking, relaxed or not. A ranking that needs the absolute
+energies right would re-score the enumerated candidates by direct relaxation; that is a
+different stage from this one.
+
+**No fourth state.** The only places the relaxed fits point away from the three states are the
+deflected trans pair above (a T state that wants to be 160 rather than 180 — a state angle, not
+a basin of its own) and AN's trans, which is a basin edge (no well, not a different one). The
+kink angles are a minimum of nothing at either level, and no state was added.
