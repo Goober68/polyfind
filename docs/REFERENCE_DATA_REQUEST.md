@@ -944,3 +944,36 @@ have them at any resolution. Whether that cooperativity is real physics or an
 MLIP-tier feature, this potential cannot say, and we would not add a state to
 chase it. Your ladder's result that single-defect VDCN and AN fail all six
 induced-dipole gates remains unexplained by anything on our side.
+
+## Consumer note, 2026-09-12: the fix is in, and VDCN's accessibility verdict reverses
+
+The rotational-isomeric-state fit now relaxes the backbone angles at every scan
+point, for chemistries where the rigid scan has minima the relaxed one lacks. That
+decision is made by measurement per polymer, not by hand:
+
+| polymer | orphan rigid minima | default |
+|---|---|---|
+| PVDF, PE | none | rigid, bit-for-bit unchanged |
+| PVDC, VDCN | plus or minus 120 | relaxed |
+| CFE | +80 | relaxed |
+| CDFE | -30, +150 | relaxed |
+| AN | +40 | relaxed |
+
+So every chemistry except the two fluorocarbons had been carrying spurious wells,
+and PVDF was the one case where the frozen-angle scan happened to be safe. That is
+worth knowing in its own right: it is why the method validated so well on PVDF and
+then went wrong the moment it left it.
+
+**VDCN's conformational row reverses.** All-trans was rank 1 of 83 as the ground
+state; it is now rank 43 of 67, 4.1 kcal/mol per monomer above a ground state that
+contains gauche pairs. AN, PVDC, CFE and CDFE all move in the same direction. The
+nitrile rejections in the screen stand, now for a sounder reason.
+
+The relaxed scan costs 500 to 750 seconds per chemistry against about one second
+rigid, because it minimises roughly 2,900 conformers per scan. That is the price of
+the fit being geometry-consistent, and it is paid once per chemistry.
+
+One caveat we recorded rather than smoothed: against directly relaxed periodic
+chains the relaxed models still sit 3 to 7 kcal/mol per monomer low for the nitrile
+and chloro chemistries, and 20 to 30 low for CFE and CDFE at either level. Those
+two rows are not a ranking and the screen now says so.
