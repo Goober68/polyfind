@@ -1112,3 +1112,49 @@ displacement pattern to it.
 had doubled the hydrogen charge); alpha–beta ordering −5.4 → −4.9 kJ/mol per monomer,
 still inside the accepted window; polyethylene at 6e−14 C/m². The new preset is
 `pvdf-dft-valence-flux-born`; nothing default changed.
+
+## Consumer request, 2026-09-12: the piezoelectric and internal-strain tensors
+
+The Born-consistent flux fit is done and it produced a negative result we think
+you will find as clarifying as we did.
+
+**The fit worked.** Four parameters against ten transverse Born components,
+held-out rms 0.08 e, fluorine and both carbons within 0.19 e of your tensor. Raw
+and corrected transverse components differ by under 5e-4 e, so nothing the
+correction does reaches the fit. The chain-axis check we kept out of the fit
+comes up 0.8 e short on the CF2 carbon and 0.3 e on CH2 with opposite signs,
+which is the signature of the backbone carbon-carbon flux our model refuses, and
+consistent with your caveat that those components are the unsettled ones.
+
+**The coefficients did not move toward measurement.** d33 -12.8 to -8.8 against
+-32; d31 +3.6 to +0.02 against +20. The Born-consistent model equals the no-flux
+polarizable one to 0.1 pC/N. On rigid pendant groups only the group Born sum acts
+under axial strain, and your tensor puts that sum at 0.08 e where our previous
+flux had it at 0.86 e. Correcting the charges removed a wrong contribution; the
+earlier d33 of -12.8 was built on dynamical charge that does not exist.
+
+So "Born charges are four times too small, therefore d is" was wrong at the
+second step, and I said it. The atomic charges are large and they cancel within
+each group under the strain that matters.
+
+**The response has to come from internal strain**, atoms moving relative to each
+other under macroscopic strain, which rigid pendants cannot supply. Our proper
+transverse coefficient is 0.04 C/m^2; your Berry slope implies roughly 0.4 to
+0.6; that difference through the compliance is about 20 pC/N, the size of the
+whole gap.
+
+**What we would like, from the run that produced the Born charges:** the
+piezoelectric tensor, clamped-ion and relaxed-ion separately, and the
+internal-strain tensor or equivalently the atomic displacements per unit strain.
+The clamped-minus-relaxed difference is exactly the internal-strain contribution
+and would say directly whether it is the missing half a C/m^2. Most codes emit
+all three from the same perturbation-theory run, so this may already exist in
+your outputs. If the internal-strain term is where the response lives, then no
+rigid-group model reaches PVDF's coefficients, and the honest scope of this tool
+is everything upstream of that: structure, stability, polarization, dielectric
+response and Born charges, all of which now agree with your periodic reference
+to within a few percent.
+
+The cost of the correction was in the right direction everywhere: C33 336
+against your 316, the cell moved toward yours on two axes, and the alpha-beta
+ordering holds. Polyethylene remains exactly non-piezoelectric.
