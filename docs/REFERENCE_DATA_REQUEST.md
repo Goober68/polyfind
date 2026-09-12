@@ -1055,3 +1055,60 @@ geometric-topology audits. No optimizer logs, trajectories or cap recovery
 remain. Lower-energy reference shapes now need their own perturbation
 qualification before the field comparisons are recomputed. The clean-zero
 Berry repeat has started independently; no additional heavy job overlaps it.
+## Consumer response, 2026-09-12 (second): the Born charges refitted, and the answer is not the one we expected
+
+We did what we said on the 11th, in the order the standard demands: computed our own Born
+tensor like for like before touching a parameter, kept your chain-axis components out of
+the fit as you asked, kept `d` out of the fit, and then recomputed `d_33` and `d_31`.
+Full detail in `docs/ELECTROMECHANICS.md` 5.9 and `docs/REFERENCES.md` 9.3.
+
+**Our Born tensor, before any fit, against yours (transverse, e).** Fluorine −0.09 / −0.10
+against your −0.97 / −0.78; the CH2 carbon **−4.38 / −3.08 against your −0.12 / −0.20**;
+hydrogen +0.92 / +1.11 against +0.14. Transverse rms 1.62 e, worse than the same model with
+the flux switched off (0.63 e). So the flux we fitted to the GFN2 oligomers had put the
+dynamical charge on the wrong group entirely, twenty to thirty-five times too much on CH2
+and a tenth of what it should be on fluorine — and that CH2 channel is what our proper
+`d_33` and `d_31` were made of. Your tensor caught a wrong mechanism, not a wrong
+magnitude.
+
+**The refit.** Four coefficients (angle and stretch flux on C–H and C–F) to your twelve
+transverse components, of which the acoustic sum rule ties two: 4 : 10. The stretch channel
+is the directional one — its Born signature is `−k (r + d) u u^T` along the bond, and your
+fluorine tensor in its own bond frame is −1.3 e along, −0.4 e across, which is exactly that
+form. Result `k_bond(C–F)` = 0.585 e/Å, everything else below 0.12, rms 0.083 e, every
+transverse component within 0.19 e. Raw and corrected tensors give identical coefficients
+to 1e−4 (the transverse components differ by 5e−4 e at most, so the correction hides
+nothing we used); transposing the off-diagonal index convention moves them by 3e−3; leaving
+any one atom type out keeps `k_bond(C–F)` in 0.58–0.61. The chain-axis components, not
+fitted, come out 0.8 e short on the CF2 carbon and 0.3 e short on CH2 with opposite signs —
+the pattern of a flux along the backbone bond, which our model refuses as homonuclear.
+
+**Then `d`, out of sample, and it goes the wrong way.** `d_33` −12.81 → −8.80 against −32,
+`d_31` +3.56 → +0.02 against +20: the directional flux widens both gaps by a fifth. The
+Born-consistent model is, to 0.1 pC/N, the fixed-charge polarizable one, and the reason is
+mechanical rather than electrostatic. On our deformable path the pendants ride rigidly on
+their carbons, so under an axial strain the CF2 and CH2 groups translate as blocks and the
+polar dipole can only respond through the *group* Born sums — which your tensor puts at
+0.08 e, against the 0.86 e our old flux had. Even your exact tensor on our kinematics gives
+`e_x,zz` ≈ 0.11 C/m², 0.2 pC/N of `d_33`. We then freed the pendant angles and lengths
+under strain to test the obvious alternative: 0.12 and 0.41 pC/N respectively, the latter
+at a C–F of 1.54 Å we would not keep. The axial column is not where `d_33` lives.
+
+**Where we now think it lives, and what would settle it.** The film `d_33` is dominated by
+the transverse columns through the soft transverse compliance. Our proper `e_polar,aa` is
+0.04 C/m²; your Berry-phase sweep's 0.56–0.80 C/m² slope, less the dimensional `|P|` ≈
+0.18, implies about 0.4–0.6 — and 0.5 C/m² through our `S_11` is 20 pC/N, the whole gap.
+A Born charge fixes the dipole per displacement, so with our tensor now matching yours, the
+only thing left to be wrong is *which atoms move under a transverse strain*, and a rigid
+chain moves none of them. The data that would pin it is the piezoelectric tensor of the
+same run — the centred Berry slopes for `eps_bb` and `eps_cc` beside the `eps_aa` one you
+have, or the clamped-ion / relaxed-ion split, or the internal-strain tensor — on whatever
+grid your sensitivity gate accepts. We will not fit to it; we will compare our
+displacement pattern to it.
+
+**Cost to what was right**: `C_33` 340 → 336 against your 316; `a` 4.40 → 4.56 against
+4.73 and `c` 2.63 → 2.55 against 2.58 (both towards you), `b` 8.40 → 8.50 against 8.36;
+`|P|` 0.196 → 0.143 against your 0.176–0.188 (now below the range, because the old flux
+had doubled the hydrogen charge); alpha–beta ordering −5.4 → −4.9 kJ/mol per monomer,
+still inside the accepted window; polyethylene at 6e−14 C/m². The new preset is
+`pvdf-dft-valence-flux-born`; nothing default changed.

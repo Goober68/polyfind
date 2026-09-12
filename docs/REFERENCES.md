@@ -51,8 +51,9 @@ list is empty.
 | 8.1 | isotactic polypropylene chain repeat 6.50 A | confirmed |
 | 9.1 | atomic polarizabilities H 0.414, C 1.289, F 0.388 A^3 and Thole damping a = 2.1304 (`polarizability.py`) | confirmed from a secondary rendering of the paper's Table 7; the primary PDF was not read |
 | 9.2 | beta-PVDF's electronic dielectric tensor ~ diag(2.25, 2.24, 2.60) | **provisional** (unpublished periodic DFPT, chain-axis k-grid sensitivity unresolved) |
+| 9.3 | beta-PVDF's Born effective charges, transverse: C(CF2) +1.79/+1.47, F -0.97/-0.78, C(CH2) -0.12/-0.20, H +0.14/+0.14 e | **provisional** (same run as 9.2; transverse components used, chain-axis ones excluded) |
 
-Totals over 24 entries: **15 confirmed, 2 corrected, 2 wrong, 4 unverified, 1 provisional**.
+Totals over 25 entries: **15 confirmed, 2 corrected, 2 wrong, 4 unverified, 2 provisional**.
 Entries 7.1 and 7.3 are split verdicts and are counted under the weaker half.
 
 ---
@@ -958,6 +959,31 @@ accepted quantitative target.  Published context: PVDF's refractive index of abo
 **Verdict: provisional.**  Used as the validation anchor with that label attached
 wherever agreement with it is quoted; the chain-axis ordering is *consistent* with
 it and is not claimed as a validation of the backbone dipole coupling.
+
+### 9.3 The Born-charge fit target
+
+**Claim** (ELECTROMECHANICS 5.9, `polyfind.fitting.BORN_FLUX`): beta-PVDF's Born
+effective charges are, along (a = long, b = polar, c = chain), C(CF2) (+1.785,
++1.471, +1.261), F (-0.969, -0.777, -0.397) with off-diagonals `Z*_ab` = +/-0.478
+and `Z*_ba` = +/-0.391, C(CH2) (-0.122, -0.202, -0.748), H (+0.138, +0.142,
++0.140) e, acoustic-sum corrected.
+
+**Source**: the same calculation as 9.2 -- sibling project `born_results.json`,
+commit `3a0495e`, protocol `qe_7.6_pbe_d3bj_sssp_d3hess_dfpt_4x8x4_v3`, Quantum
+ESPRESSO 7.6 `ph.x` on the accepted zero-pressure cell (a = 8.358, b = 4.731, c =
+2.580 A), tensors read from the `(d Force / dE)` block so that `[alpha][beta]` is
+`dP_alpha / du_beta`.  Both the raw and the corrected tensors are in the file.
+The provider's own status: the raw acoustic sum is (0.002, -0.006, **-0.621**) e,
+the correction adds 0.052 e to every atom's `Z*_cc`, the corrected sum of 2e-5 is
+imposed rather than earned, and the chain-axis k-grid sensitivity is open.  The
+transverse components move by at most 5e-4 e between the raw and corrected
+tensors.  Published context, order of magnitude only: Born charges of about -0.8
+to -1.0 e on fluorine and +1.5 to +2 e on the CF2 carbon are the usual range for
+fluorocarbons in periodic DFPT.
+
+**Verdict: provisional.**  The transverse components are the fit target of section
+5.9 (raw and corrected give the same coefficients to 1e-4); the chain-axis
+components are reported as a check and never fitted.
 
 ---
 

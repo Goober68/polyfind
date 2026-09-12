@@ -2479,6 +2479,44 @@ FITTED_VALENCE_FLUX = replace(FITTED_VALENCE, charge_flux=(
 register_preset("pvdf-dft-valence-flux", FITTED_VALENCE_FLUX)
 
 
+# --------------------------------------------------------- charge flux fitted to Born charges
+#
+# The same two bond types, both channels, fitted to the periodic PBE-D3 DFPT Born effective
+# charges of beta-PVDF (``examples/fit_born_flux.py``; docs/ELECTROMECHANICS.md 5.9).  The
+# stretch channel's zero on the lattice path is the built chain's own bond length
+# (:func:`polyfind.pack.built_bond_lengths`), so at the reference geometry these charges are
+# ``pvdf-dft-valence``'s to the last digit and ``k_bond`` is a pure response.
+#
+# WHAT WAS FITTED.  The four transverse components (aa, bb; ab, ba for the pendants) of the
+# four atom types, twelve numbers of which the acoustic sum rule -- satisfied identically by
+# any neutral flux -- ties two: **four parameters for ten independent observations, 2.5:1**.
+# The chain-axis components were kept out (the provider's acoustic-sum correction moves each
+# of them by 0.052 e on a raw residual of -0.62 e) and are reported as a check.  The fit is
+# linear (at fixed geometry the dipole is linear in every coefficient), rms 0.083 e on
+# components of order 1 e, from 0.63 e with no flux and 1.62 e with the GFN2-fitted
+# ``pvdf-dft-valence-flux``; raw and corrected reference agree to 1e-4 in every coefficient,
+# transposing the off-diagonal convention moves them by 4e-3, and leave-one-type-out keeps
+# ``k_bond(C-F)`` within 0.58..0.61.  Two iterations: fitted at the ``-flux`` structure
+# (0.570, rms 0.076), then refitted at its own relaxed structure (these values), which moved
+# no coefficient by more than the leave-one-out spread.
+#
+# WHAT IT SAYS.  Fluorine's dynamical charge is carried by charge flowing *along* the C-F
+# bond as it stretches (``k_bond(C-F)`` = 0.57 e/A, Born charge -1.3 e along the bond
+# against -0.4 e across it); the C-H bond carries almost none (hydrogen's is isotropic to
+# 0.005 e in the reference).  The GFN2-fitted angle flux had put a dynamical charge of -4.4 e
+# on the CH2 carbon where the reference has -0.12, and that channel -- ``k_angle(C-H)`` =
+# -1.21, now +0.10 -- is what beta's proper ``d_33`` and ``d_31`` were made of.  Read
+# section 5.9 before quoting a piezoelectric coefficient from this preset: the Born tensor is
+# the *only* observable the stretch channel enters on a rigid-bond chain, so it cannot move
+# ``d`` at all, and the refitted angle channel moves it the wrong way.
+BORN_FLUX = (
+    ("C", "H", 0.1119, 0.0422),  # (k_angle, k_bond)
+    ("C", "F", 0.0963, 0.5849),
+)
+FITTED_VALENCE_FLUX_BORN = replace(FITTED_VALENCE, charge_flux=BORN_FLUX)
+register_preset("pvdf-dft-valence-flux-born", FITTED_VALENCE_FLUX_BORN)
+
+
 def valence_ablations() -> dict[str, np.ndarray]:
     """``free`` index sets for :func:`fit_valence`: which block of the new form did the work.
 
