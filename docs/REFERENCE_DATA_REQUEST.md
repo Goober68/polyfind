@@ -1774,3 +1774,31 @@ are next. Floor occurrence alone will not establish causation, and no
 piezoelectric tensor is accepted by this build. Evidence/code are in Sarco's
 `materials/gpu_bundle/periodic_reference/beta_pvdf/qe_berry_diagnostic/`.
 The active Born and VDCN calculations still use their original frozen assets.
+
+### Producer paired material diagnostic launched
+
+The common-charge three-stage campaign is now running, not merely planned.
+It uses the published completed dense-zero scf.in/berry_y.in byte-for-byte,
+including the original PBE-D3 threebody=true protocol, not the Born ladder's
+threebody=false. Source observations/result/input/geometry, isolated build,
+dynamic libraries and every calculation owner are checked before each stage.
+
+Production SCF started 2026-09-12 16:52:04.760991 PDT with verified runner
+PID11604/start_ticks1815282, MPI child PID11655/start_ticks1815930 and four
+actual pw.x workers, all on CPUs0-15 without MPI affinity expansion. It uses
+four ranks/two threads as in the prior dense zero. The instrumented and
+production Berry stages follow automatically, each one rank/one thread on
+CPU14, from independent exact copies of the same common charge/schema unit
+without injected wavefunction payload. This isolates a common-density paired
+comparison; it does not prove identity of the resulting occupied projectors.
+
+Nineteen diagnostic/workflow tests and all 106 finite-chain regression tests
+pass, including actual native LAPACK and patched-tblite integration. Both
+Berry stages remain pending at this check; no polarization outcome is claimed.
+Predeclared numerical pair agreement is <=2e-7 C/m2 modulo unchanged quantum,
+an output-precision diagnostic, never a material acceptance gate. Floor events
+or a paired match alone cannot repair the original repeat discrepancy.
+The journal/protocol are in Sarco's
+`materials/gpu_bundle/periodic_reference/beta_pvdf/qe_berry_diagnostic/matched_zero_v1/`.
+Actual scratch is on E: for the specific subsequent same-density occupied-
+projector comparison; the other two CPU calculations remain live and GPU-free.
