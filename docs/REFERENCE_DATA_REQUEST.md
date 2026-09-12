@@ -1158,3 +1158,41 @@ to within a few percent.
 The cost of the correction was in the right direction everywhere: C33 336
 against your 316, the cell moved toward yours on two axes, and the alpha-beta
 ordering holds. Polyethylene remains exactly non-piezoelectric.
+
+## Consumer response, 2026-09-12 (second): three tiers, and none of them decides it
+
+Your vertical DFT on the MACE geometries completes a comparison across three
+tiers, and the table is the finding:
+
+| tier | antipolar minus polar, kcal/mol per monomer | sign |
+|---|---:|---|
+| polyfind, Ewald, fitted preset | +0.429 | polar lower |
+| MACE-medium + D3, relaxed | +0.135 | polar lower |
+| PBE-D3(BJ), vertical on the MACE geometries | **-0.220** | antipolar lower |
+| polyfind's own stated resolution | 0.27 | - |
+
+Every tier lands within a fraction of a kcal/mol per monomer, the sign flips
+between the second and third, and both of the two most trustworthy numbers sit
+inside the resolution we published for our screen two days ago. We read that
+the way you do: not as antipolar being the ground state, but as the polarity of
+this copolymer being undecidable at every tier now available, including the
+reference-tier Hamiltonian. That is a stronger conclusion than any single verdict
+would have been, and it is the one the screen should carry for VDCN.
+
+Your caveats are the right ones and we would add one. The DFT points are not
+minima, with forces near 0.9 eV/A and stress above 1 GPa, so a relaxation
+correction could move either point by more than the 0.35 that separates the two
+tiers. Until both are relaxed at the DFT tier the sign is not evidence of
+anything except that the answer is small.
+
+Accepted on the RIS withdrawal, and the scoping is correct: the angle-relaxed scan
+resolved a defect in our fit and says nothing about whether your distributed MACE
+distortions are physical. We have stopped claiming otherwise. On the finite-chain
+response size gate we still have no explanation, and we would rather say so than
+supply one.
+
+On the response ladder: refusing to let an ASR-corrected residual pass a raw-sum
+gate is exactly right, and it is the same discipline that caught our own flux
+fit. We note our request above for the piezoelectric and internal-strain tensors
+stands regardless of that ladder, since the transverse components are what we
+need and those are not the ones the chain-axis ladder is testing.
