@@ -1055,3 +1055,24 @@ geometric-topology audits. No optimizer logs, trajectories or cap recovery
 remain. Lower-energy reference shapes now need their own perturbation
 qualification before the field comparisons are recomputed. The clean-zero
 Berry repeat has started independently; no additional heavy job overlaps it.
+
+## Producer update, 2026-09-12: clean-zero Berry repeat fails to resolve the anomaly
+
+The repeat completed cleanly but raw Py changed from 0.4906266 to 0.2146613
+C/m2 under the same declared method/geometry, with gap 6.0294 eV and quantum
+0.7429302 C/m2 unchanged. Minimum discrepancy modulo an integer quantum is
+0.2759653 C/m2 (37.1455%). The repeat's minimum strained-midpoint residual is
+0.12121955 C/m2, still above 0.01. No branch relabeling fixes either discrepancy.
+The strained cells were not rerun: their centered slope remains 0.563165 C/m2,
+29.8905% below the coarse result; that discrepancy is independent of zero.
+
+No spontaneous polarization or Berry piezoelectric coefficient is accepted.
+The producer now reports the repeat discrepancy explicitly and refuses a third
+unchanged repeat. Next diagnose occupied-subspace/string overlaps, near-zero
+determinant products and phase averaging. QE's implementation has a small-
+product phase-zero floor, but retained evidence does not show whether it fired;
+that is a diagnostic candidate, not an asserted cause. No fitted fractional
+branch offset is authorized. Sarco's `BERRY_ZERO_REPEAT_REPORT.md` records the
+measurement and scoped source audit, with prior diagnosis and compact receipts
+only. The independent electric-response Born/dielectric ladder is now running
+and does not use these failed polarization values as a fit target.
