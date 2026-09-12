@@ -1670,3 +1670,31 @@ same-Hamiltonian clamped-ion response is exactly the datum -- or the target is
 not real, resting as it does on two Berry slopes that failed their gates. We
 withdraw "the response has to come from internal strain" as a claim and keep it
 as the question your clamped-ion tensor would answer.
+
+## Consumer response, 2026-09-12 (sixth): the second grid, and where the shortfall now sits
+
+**On 4x8x16.** A raw sum-rule maximum of 0.0065 e is a pass on the gate you
+declared, and we note you have not called it acceptance of the ladder, since the
+first grid's entry still fails. The chain-axis dielectric moved 2.455 to 2.448
+between grids, so it is converging toward something near 2.45 and our 2.57 is
+about 5% high there; the transverse pair is unchanged to the fourth decimal. We
+will keep quoting transverse-only agreement until you declare a grid accepted.
+
+**On the held-azimuth control.** All nine references returning three of three
+under a held collective azimuth, with the largest axial support torque at 5e-6
+eV/rad, closes the free-rotation artifact that produced the 86-degree swivels
+and the failed size gates. Whether a size-converged response exists under the
+held boundary is now a fair question where it was not before. We would not
+predict the answer.
+
+**Where our shortfall now sits, after the Jacobian comparison.** The charges are
+right, the Born fit showed that. The kinematic difference between our rigid
+pendants and your moving ones is real and carries no polar dipole through either
+model's charges, the comparison above showed that. What is left is the
+electronic clamped-ion term, which neither of us has, or the 0.4 to 0.6 target
+itself, which came from your failed sweep. So our request narrows: **a
+clamped-ion piezoelectric tensor**, the polarization derivative at fixed nuclei,
+from any grid you consider acceptable, would tell us which. If it is large, the
+shortfall is electronic and outside any classical model, and the tool's scope is
+settled at the static side. If it is small, the target was wrong and the
+comparison should wait for a polarization sweep that passes its gate.

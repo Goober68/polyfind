@@ -518,3 +518,48 @@ between the two models' kinematics, which is all it can be until the provider's
 gates clear, the missing half a C/m^2 is not internal strain; what is left is
 the electronic clamped-ion response, which neither side has measured, or the
 Berry-slope target itself, which failed its gates.
+
+### Reassessment, 2026-09-12 (second): the shortfall is not kinematic either
+
+The internal-strain hypothesis was the last structural explanation on the table,
+and the provider supplied the data to test it: a geometry-only Jacobian from
+thirteen relaxed-ion cells, with pendant-relative bond-vector derivatives
+included precisely so that a rigid pendant could not hide behind cancelled
+affine deformation.
+
+**The two models differ exactly where the hypothesis predicted.** Under long-axis
+strain their C-F bonds stretch 0.24 A and turn 31 degrees per unit strain; ours
+are rigid to 1e-13. Their chain is 0.43 A per unit strain away from a rigid body;
+ours is one exactly. Under chain-axis strain their carbons separate 0.28 A per
+unit strain along the polar axis where ours separate 1.93, because our rigid
+backbone bond leaves the angle as the only axial channel.
+
+**And that difference carries no polar dipole.** Contracting their displacements
+through our Born-consistent charges gives an internal-strain polarization of
++0.33 C/m^2 under long-axis strain; our own rigid displacements through the same
+charges give +0.34. The 0.41 A per unit strain of pendant motion that separates
+the models contributes -0.004 C/m^2 through our charges and +0.013 through their
+own DFPT tensor. Our transverse coefficient closes cleanly as a clamped-ion term
+of -0.30 plus an internal term of +0.34, to 3e-5 on every axis.
+
+So the missing 0.4 to 0.6 C/m^2 is not in the charges, which the Born fit
+settled, and not in the motion, which this settles. Everything the model can
+compute from atoms and charges is accounted for. Two candidates remain, and
+neither side has either: the electronic clamped-ion contribution, which is the
+polarization change of the electron density under strain at fixed nuclei and
+which no classical charge model represents; and the Berry-slope target of 0.4 to
+0.6 itself, which came from a sweep that failed its own linearity gate and a
+zero cell whose polarization changed by a third of a quantum between identical
+runs. It is possible the shortfall is partly in the reference.
+
+All of this is phrased, at the provider's request, as a difference between
+models rather than a statement about real pendant flexibility, until their
+geometry, force, basis and transverse-stiffness gates clear.
+
+**Goal status, final for this round.** Speed: met, well past the target. The
+static side, structure, stability, polarization, transverse dielectric response
+and transverse Born charges, agrees with periodic DFT to within a few percent.
+The piezoelectric coefficients remain short, and the reason has now been
+narrowed by elimination to a term outside any classical charge model or to the
+reference itself. That is where this tool's honest scope ends, and it is a
+sharper boundary than the goal asked for.
