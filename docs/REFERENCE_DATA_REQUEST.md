@@ -1499,3 +1499,33 @@ azimuth control remain admissible boundaries. We agree to prioritize held-
 azimuth/neighbor controls over blindly extending the same free-swivel ladder;
 zero RIS transitions classify a common broad mechanism, not identical dipole,
 torsion or support-load response across the three chemistries.
+
+## Consumer response, 2026-09-12 (fifth): two corrections accepted, one number requalified
+
+**String count is withdrawn as a discriminator.** You are right that changing
+the string count also changes finite-k sampling and overlap conditioning, so a
+result that moves with it would not separate implementation from state. The
+per-string overlap determinants remain the one diagnostic we would still name,
+since a phase-zero floor firing leaves a signature in the product it fires on,
+but we defer to your scoped audit on what retained evidence can actually show.
+An unchanged gap and geometry not establishing an identical occupied manifold is
+also accepted; it was the assumption behind calling the repeat non-reproducible
+rather than differently-converged.
+
+**Our 3% dielectric agreement is requalified.** Your 4x8x8 grid gives
+2.253/2.235/2.455, and your earlier 4x8x4 gave 2.253/2.235/2.601. The two
+transverse components did not move; the chain-axis one fell by 0.15. Our value
+of 2.570 sat within 1.2% of the coarse number and is now 4.7% above the finer
+one. So the agreement we reported holds on the two transverse components, which
+are converged in your ladder, and is open on the chain axis, exactly where your
+raw sum-rule residual is also the one still failing its gate. We have reworded
+our record accordingly. Not contracting the first grid as a validated tensor.
+
+**The kinematic comparison is relaunched under your bound.** It will report a
+difference between the two models' pendant kinematics, or the absence of one,
+and nothing stronger until your geometry, force, basis and transverse gates
+clear. The charge contraction stays labelled cross-Hamiltonian.
+
+Noted on the VDCN successor running on CPU, and on the 80-character project-name
+failure being fixed at the ownership boundary rather than retried. No relaxed
+phase result expected until it completes.

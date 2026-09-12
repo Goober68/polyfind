@@ -495,8 +495,9 @@ are not keepable. The response the material actually produces lives in a degree
 of freedom this model holds fixed.
 
 **Goal status, corrected.** Speed: met. Field and strain: polarization, the
-dielectric tensor and the Born charges are now all validated against periodic
-DFT to within a few percent, which is more than the goal asked for on the static
+transverse dielectric components and the transverse Born charges are now
+validated against periodic DFT to within a few percent (the chain-axis
+components of both remain open in the provider's convergence ladder), which is more than the goal asked for on the static
 side. The piezoelectric coefficients remain a factor of three to fifty short,
 and the reason is now known and structural rather than parametric. The solver
 measures everything that feeds a piezoelectric response except the
