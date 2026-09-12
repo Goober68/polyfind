@@ -193,3 +193,62 @@ def test_labels_name_carbons_by_their_pendants():
     ch = periodic_chain(PVDF, [T, T], THREE_STATE)
     labels = atom_labels(ch)
     assert sorted(labels) == ["C(F2)", "C(H2)", "F", "F", "H", "H"]
+
+
+def _internal_strain_record(el, J1, J2):
+    def est(amp, J):
+        return {"strain_axis": "x", "strain_component": "xx", "amplitude": amp,
+                "internal_displacement_derivative_A_per_strain": J.tolist(),
+                "derivative_atom_rms_A_per_strain": float(np.sqrt(np.mean(np.sum(J ** 2, axis=1)))),
+                "maximum_midpoint_internal_displacement_A": 0.0,
+                "removed_uniform_translation_A": {"negative": [0.0, 0.0, 0.0], "positive": [0.1 * amp, 0.0, 0.0]},
+                "pendant_relative_bond_response": [
+                    {"atom_index_1based": 2, "parent_carbon_index_1based": 1, "element": "F",
+                     "relative_bond_vector_derivative_A_per_strain": [0.3, 0.0, 0.0],
+                     "bond_length_derivative_A_per_strain": 0.3, "bond_direction_rotation_rate_deg_per_strain": 0.0}]}
+    return {"atom_order_1based": [{"index": i + 1, "element": e} for i, e in enumerate(el)],
+            "axis_convention": "Cartesian x/y/z equal row lattice vectors A/B/C; y polar, z chain",
+            "branches": [{"strain_axis": "x", "estimates": [est(0.01, J1), est(0.02, J2)],
+                          "amplitude_relative_derivative_norm_change": float(np.linalg.norm(J2 - J1) / np.linalg.norm(J1))}],
+            "quantitatively_valid": False, "remaining_gates": ["force tolerance"],
+            "source_receipts": {"zero": {"geometry": "zero.xyz", "geometry_sha256": "0" * 64}}}
+
+
+def test_load_internal_strain_reads_the_record_and_checks_the_geometry(tmp_path):
+    """The provider's ``internal_strain_geometry.json``: arrays keyed by (axis, amplitude), pendants
+    0-based, the zero geometry read only when its SHA-256 matches the receipt."""
+    import hashlib
+
+    from polyfind.born import load_internal_strain
+
+    el = ["C", "F", "H"]
+    J1 = np.array([[0.1, 0.0, 0.0], [-0.2, 0.0, 0.0], [0.1, 0.0, 0.0]])
+    J2 = J1 * 1.1
+    d = _internal_strain_record(el, J1, J2)
+    xyz = (f"{len(el)}\nLattice=\"8.0 0 0 0 4.0 0 0 0 2.5\" Properties=species:S:1:pos:R:3\n"
+           "C 0 0 0\nF 1.1 0.8 0\nH -0.9 -0.7 0\n")
+    with open(tmp_path / "zero.xyz", "w") as fh:
+        fh.write(xyz)
+    with open(tmp_path / "zero.xyz", "rb") as fh:
+        d["source_receipts"]["zero"]["geometry_sha256"] = hashlib.sha256(fh.read()).hexdigest()
+    with open(tmp_path / "internal_strain_geometry.json", "w") as fh:
+        json.dump(d, fh)
+    rec = load_internal_strain(str(tmp_path / "internal_strain_geometry.json"))
+    assert rec.elements == el and rec.axes == ("x",) and rec.amplitudes == (0.01, 0.02) and rec.valid is False
+    assert rec.J[("x", 0.01)] == pytest.approx(J1) and rec.J[("x", 0.02)] == pytest.approx(J2)
+    assert rec.rms[("x", 0.01)] == pytest.approx(np.sqrt(np.mean(np.sum(J1 ** 2, axis=1))))
+    assert rec.translation[("x", 0.02)]["positive"] == pytest.approx([0.002, 0.0, 0.0])
+    p = rec.pendants[("x", 0.01)][0]
+    assert (p["atom"], p["parent"], p["element"]) == (1, 0, "F") and p["dv"] == pytest.approx([0.3, 0.0, 0.0])
+    assert rec.amplitude_change["x"] == pytest.approx(0.1)
+    assert rec.cell == pytest.approx(np.diag([8.0, 4.0, 2.5])) and rec.positions[1] == pytest.approx([1.1, 0.8, 0.0])
+    # a geometry that does not match its receipt is refused, and a record with the wrong shape too
+    with open(tmp_path / "zero.xyz", "a") as fh:
+        fh.write("\n")
+    with pytest.raises(ValueError, match="SHA-256"):
+        load_internal_strain(str(tmp_path / "internal_strain_geometry.json"))
+    bad = _internal_strain_record(el, J1[:2], J2[:2])
+    with open(tmp_path / "bad.json", "w") as fh:
+        json.dump(bad, fh)
+    with pytest.raises(ValueError, match="shape"):
+        load_internal_strain(str(tmp_path / "bad.json"), geometry=None)

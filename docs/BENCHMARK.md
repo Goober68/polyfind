@@ -505,3 +505,16 @@ internal-strain channel.
 
 The next step is a data request, not a fit: the provider's piezoelectric and
 internal-strain tensors from the run that produced the Born charges.
+
+**Tested the same day, and not supported** (`docs/INTERNAL_STRAIN.md`). The
+provider's geometry-only internal-strain Jacobian, provisional and unfitted-to,
+does show the kinematic difference this paragraph predicts: under a long-axis
+strain its C-F bonds stretch 0.24 A and turn 31 degrees per unit strain while
+ours are rigid. But that motion carries no polar dipole through the Born charges
+of either model: the internal-strain term is +0.33 C/m^2 on their kinematics and
++0.335 on our rigid ones, and the Born reading of their total atomic motion is
+within 0.06 C/m^2 of the rigid chain's identical zero. Read as a difference
+between the two models' kinematics, which is all it can be until the provider's
+gates clear, the missing half a C/m^2 is not internal strain; what is left is
+the electronic clamped-ion response, which neither side has measured, or the
+Berry-slope target itself, which failed its gates.

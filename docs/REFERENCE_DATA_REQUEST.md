@@ -1625,3 +1625,48 @@ VDCN full592-atom geometry and beta-PVDF 4x8x32 electrical response remain live
 on CPU. None of these three runs use the GPU. Their imported calculation
 code/assets are frozen until terminal ownership; independent validation and
 the other physics research gates remain open.
+## Consumer response, 2026-09-12 (fifth): the Jacobian comparison is done, and the pendant hypothesis does not survive it
+
+Full detail in `docs/INTERNAL_STRAIN.md`; `examples/internal_strain_jacobian.py`
+reproduces it; the reader is `polyfind.born.load_internal_strain`. Your record
+was read from `ccdf377` only, nothing was fitted to it, and it was not contracted
+with the DFPT tensor as a validated same-Hamiltonian result. Your bound is
+adopted as the phrasing: what follows establishes a difference between the two
+models' pendant kinematics, not real pendant flexibility, until your gates clear.
+
+**Kinematics.** Our Jacobian by your construction, in your frame (a 90-degree
+turn about the chain axis from our polar-first packer axes; atoms matched by
+fractional coordinates to 0.064 A) and atom order. Under your xx (long axis)
+your chain is 0.43 A per unit strain rms away from a rigid body and ours is one
+exactly: your C-F bonds stretch 0.244 A and turn 30.7 degrees per unit strain,
+your C-H bonds 0.029 A and 1.05 degrees, the F-C-F pendant opening in x and
+flattening in y while the carbons stay within 0.015 of rigid; ours are rigid to
+1e-13. Under yy (polar) both chains are rigid bodies to 0.03 A per unit strain.
+Under zz your carbons separate 0.28 A per unit strain along the polar axis where
+ours separate 1.93, because our rigid backbone bond leaves the angle as the only
+axial channel; your C-H bonds turn 4.8 degrees per unit strain there. Ours is
+linear between 1% and 2% to 1e-14 on the transverse axes and 0.11% on the chain
+axis; we note your 26.6% without drawing on it.
+
+**The contraction, cross-Hamiltonian and not a result.** Your displacements per
+unit strain through our Born-consistent charges give an internal-strain dipole
+of +0.331 C/m^2 along the polar axis for xx -- and our own rigid kinematics give
++0.335, your own ASR-corrected tensor on your geometry +0.318. The 0.41 A per
+unit strain by which the two displacement patterns differ carries 0.004 C/m^2 of
+polar dipole in our charges and 0.013 in yours: the F's move less along x and
+more along y, and the two cancel through Z_yx and Z_yy. Adding the affine term,
+the Born-charge reading of your total atomic motion is between -0.004 and
++0.06 C/m^2 on every normal axis, which is what a rigid chain gives identically
+by the acoustic sum rule. Our proper e_y,xx of 0.039 is, to 4e-5, a clamped-ion
+term of -0.296 plus an internal term of +0.335; the whole of it is the induced
+dipoles' response to the strained lattice.
+
+**So the hypothesis we stated on the 12th is not supported by the first data
+that could test it.** Pendant kinematics differ between the models exactly
+where we said; the difference is polar-neutral through either Born tensor. If a
+proper transverse coefficient of 0.4-0.6 C/m^2 is real, it is in the electronic
+part of the clamped-ion response, which neither side has -- your open gate for a
+same-Hamiltonian clamped-ion response is exactly the datum -- or the target is
+not real, resting as it does on two Berry slopes that failed their gates. We
+withdraw "the response has to come from internal strain" as a claim and keep it
+as the question your clamped-ion tensor would answer.

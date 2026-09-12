@@ -379,3 +379,113 @@ def comparison_table(model: CanonicalBorn, ref: BornReference | None = None, lab
             lines.append(row)
         lines.append(f"{lab:8s} spread over {model.count[lab]} equivalent atoms: {model.spread[lab]:.1e} e")
     return "\n".join(lines)
+
+
+# --- the provider's internal-strain geometry --------------------------------------------------
+def _read_extxyz(path: str) -> tuple:
+    """``(elements, positions (N, 3), cell (3, 3) or None)``: :func:`_read_xyz` plus the comment
+    line's ``Lattice="..."`` (nine numbers, rows the lattice vectors), when there is one."""
+    import re
+
+    el, X = _read_xyz(path)
+    with open(path) as fh:
+        fh.readline()
+        m = re.search(r'Lattice="([^"]+)"', fh.readline())
+    cell = None if m is None else np.array([float(v) for v in m.group(1).split()], dtype=float).reshape(3, 3)
+    return el, X, cell
+
+
+@dataclass
+class InternalStrainReference:
+    """The provider's geometry-only internal-strain Jacobian (``internal_strain_geometry.json``).
+
+    ``J[(axis, amplitude)]`` is ``d u / d eps`` (N, 3) in A per unit engineering strain for the
+    normal strain along ``axis`` (``"x"``, ``"y"``, ``"z"``), a central difference over
+    ``+/- amplitude``, where ``u = r_relaxed - r_zero F`` is the relaxed-ion displacement with
+    the homogeneous deformation ``F`` subtracted, periodic images matched and the equal-atom
+    mean translation projected out (``translation`` records what was removed, per sign).
+    ``pendants[(axis, amplitude)]`` lists, per H or F atom (0-based ``atom`` and its ``parent``
+    carbon), the **total** derivative ``dv`` of the bond vector from that carbon -- affine term
+    included, which is what tells a rigid pendant (it cancels the affine deformation of its
+    bond) from a flexible one -- with ``dlength``, the rate along the reference bond (A per
+    unit strain), and ``rotation_deg``, the rate of its direction (degrees per unit strain).
+    ``amplitude_change[axis]`` is the provider's ``|J(2%) - J(1%)| / |J(1%)|`` (Frobenius).
+
+    The provider's axes are Cartesian ``x, y, z`` = the row lattice vectors ``A, B, C``, with
+    ``y`` polar and ``z`` the chain axis -- so ``x`` is the long lateral axis, and the triple is
+    the ``(a, b, c)`` of :func:`load_reference` in that order.  ``positions`` and ``cell`` are
+    the zero geometry when the receipt's file is found beside the record (or is named
+    explicitly) and its SHA-256 matches; ``valid`` is the provider's own flag, ``False`` as
+    supplied, and ``gates`` says what has not been isolated.  Nothing in this package fits to
+    the record; ``examples/internal_strain_jacobian.py`` compares against it.
+    """
+
+    elements: list
+    axes: tuple
+    amplitudes: tuple
+    J: dict
+    rms: dict
+    translation: dict
+    pendants: dict
+    amplitude_change: dict
+    receipts: dict
+    valid: bool
+    gates: list
+    convention: str
+    path: str
+    positions: np.ndarray | None = None
+    cell: np.ndarray | None = None
+
+    @property
+    def n_atoms(self) -> int:
+        return len(self.elements)
+
+
+def load_internal_strain(path: str, geometry: str | None = None) -> InternalStrainReference:
+    """Read ``internal_strain_geometry.json``; ``geometry`` names the zero-strain extended-xyz
+    file when it is not beside the record (the receipt's SHA-256 is checked either way)."""
+    import hashlib
+
+    with open(path, encoding="utf-8-sig") as fh:
+        d = json.load(fh)
+    el = [str(a["element"]) for a in d["atom_order_1based"]]
+    N = len(el)
+    J, rms, tr, pend, change, axes = {}, {}, {}, {}, {}, []
+    for br in d["branches"]:
+        ax = str(br["strain_axis"])
+        axes.append(ax)
+        change[ax] = br.get("amplitude_relative_derivative_norm_change")
+        for est in br["estimates"]:
+            key = (ax, float(est["amplitude"]))
+            arr = np.array(est["internal_displacement_derivative_A_per_strain"], dtype=float)
+            if arr.shape != (N, 3):
+                raise ValueError(f"{path}: {key} derivative has shape {arr.shape}, not ({N}, 3)")
+            J[key] = arr
+            rms[key] = float(est["derivative_atom_rms_A_per_strain"])
+            tr[key] = {k: np.array(v, dtype=float) for k, v in est["removed_uniform_translation_A"].items()}
+            pend[key] = [{"atom": int(p["atom_index_1based"]) - 1, "parent": int(p["parent_carbon_index_1based"]) - 1,
+                          "element": str(p["element"]),
+                          "dv": np.array(p["relative_bond_vector_derivative_A_per_strain"], dtype=float),
+                          "dlength": float(p["bond_length_derivative_A_per_strain"]),
+                          "rotation_deg": float(p["bond_direction_rotation_rate_deg_per_strain"])}
+                         for p in est["pendant_relative_bond_response"]]
+    receipts = dict(d.get("source_receipts", {}))
+    zero = receipts.get("zero", {})
+    pos = cell = None
+    g = geometry
+    if g is None and "geometry" in zero:
+        g = os.path.join(os.path.dirname(path), zero["geometry"])
+    if g is not None and os.path.exists(g):
+        if "geometry_sha256" in zero:
+            with open(g, "rb") as fh:
+                h = hashlib.sha256(fh.read()).hexdigest()
+            if h != zero["geometry_sha256"]:
+                raise ValueError(f"{g}: SHA-256 {h[:12]}... does not match the record's zero-geometry receipt")
+        el2, pos, cell = _read_extxyz(g)
+        if el2 != el:
+            raise ValueError(f"{g}: atom order {el2} differs from the record's {el}")
+    return InternalStrainReference(elements=el, axes=tuple(axes), amplitudes=tuple(sorted({a for _, a in J})),
+                                   J=J, rms=rms, translation=tr, pendants=pend, amplitude_change=change,
+                                   receipts=receipts, valid=bool(d.get("quantitatively_valid", False)),
+                                   gates=list(d.get("remaining_gates", [])), convention=str(d.get("axis_convention", "")),
+                                   path=path, positions=pos, cell=cell)
