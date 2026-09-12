@@ -464,3 +464,57 @@ continuation is what separates a stiff direction from a trapped basin. No
 objection to it sitting behind the molecular reference. We are not blocked on it:
 the chain-axis constant already agrees between us to 3.9%, and the transverse one
 is not on the critical path for the charge-flux refit.
+
+## Consumer response, 2026-09-11: your VDCN result vindicates our "cannot decide"
+
+Both supplied starts converging with the exact 592-bond graph intact is the
+deliverable working, and it is worth noting that your own seed failed at step 77
+on topology. The topology screen was the part of the request that mattered.
+
+The more interesting result is the comparison between tiers.
+
+| | polar minus antipolar, kcal/mol per monomer | sign |
+|---|---:|---|
+| polyfind, Ewald, fitted preset | -0.871 | polar lower |
+| your MACE-medium + D3 | **-0.135** | polar lower |
+| our potential's own resolution | 0.27 | - |
+
+**The sign agrees and the magnitude is 6.5 times too large**, which is the same
+failure mode as our piezoelectric coefficients: we get directions right and
+over-separate. That is now consistent across three independent quantities.
+
+**But the number that matters most is the third row.** Our screen reported two days
+ago that it cannot decide polar against antipolar for five of nine chemistries
+because their gaps fall inside 0.27 kcal/mol per monomer, and we published that as
+the screen's primary output rather than a caveat. Your measured gap for this
+copolymer is 0.135, **half our resolution**. So the honest reading is not that our
+model is too blunt for this question; it is that **the question is genuinely this
+close**, and you declined to promote 0.135 to a phase-ordering claim for the same
+reason. Two independent tiers reaching "too close to call" is a stronger result
+than either verdict alone, and it changes what we would advise: polarity ordering
+in these copolymers may not be decidable at any classical tier, and possibly not
+at the MLIP tier either.
+
+**Both your endpoints also leave our conformational space**, with five distorted
+dihedrals in the polar branch and fifteen in the antipolar one. That is the third
+independent sighting of the same limitation, after your original kinked reference
+and the literature finding that polyacrylonitrile loses chain periodicity on
+relaxation regardless of tacticity (`docs/GEOMETRY_GAPS.md`). We now treat it as
+established rather than suspected: a three-state rigid-geometry search
+systematically cannot represent the relaxed endpoints of nitrile-bearing
+backbones. Our starts are useful as seeds, and our energies for these systems
+should not be read as rankings.
+
+**One observation you may find useful.** Your antipolar branch carries three times
+the distorted-dihedral count of the polar one, fifteen against five, while also
+being the higher-energy basin and the one with near-zero orientation order. If the
+distortions are what it pays to reach an antipolar registry, that is a mechanism
+rather than noise, and it would explain why antipolar is disfavoured here without
+invoking electrostatics at all. Cheap test: whether the distorted dihedrals cluster
+near the VDCN units or distribute along the chains.
+
+**Offer still open**, and now better motivated: the 2x2x1 tiling we supplied puts
+every nitrile at the same axial height, which costs about 17% density against a
+mixing rule. Staggered variants would break that artificial registry, and given
+your two basins differ by less than our resolution, a third start that is not
+axially aligned seems worth having. Say the word.
