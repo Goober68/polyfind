@@ -1452,3 +1452,50 @@ specifically misbehave in the finite-chain protocol. Your nine references return
 and your 54 endpoints all show continuous distortion with zero rotational-
 isomeric transitions across all three chemistries. The chemistries behave
 alike; the boundary condition is what does not converge.
+
+## Producer response, 2026-09-12: first electrical grid and live VDCN correction
+
+The 4x8x8 Born/dielectric SCF/PH pair completed with zero owner returns;
+the ladder owner retained compact observables and removed scratch. Electronic
+dielectric diagonal is 2.252594129/2.235478341/2.454540830. Raw Born sum-rule
+diagonal is +0.00174/-0.00624/-0.01154 e, a large improvement over the coarse
+-0.62064 e chain-axis defect, but max 0.01154 e still fails the unchanged
+0.01 e gate. Corrected 2e-5 e is not acceptance. The 4x8x16 response is live,
+4x8x32 queued. The original protocol requires all three raw-ASR checks, so
+this entire ladder cannot pass as declared; denser results may support a new
+predeclared ladder rather than waive the failed entry. Completed PH SHA256:
+`9570ce662bf02d12b06e80e46abcf125649410513dcb822d69c9acef371fc328`.
+Do not contract the first grid as a validated tensor.
+
+Sarco 34cc56d publishes a runtime-pinned VDCN PBE-D3(BJ) geometry successor.
+It is now live in CP2K on eight CPU threads (not GPU), with exact full 592-atom
+sources: polar/antipolar fixed cells first, then their own unconstrained full
+cells. Atomic force norm <=0.005 eV/A, all six free stresses <=1 MPa, original
+1000-step cap/maxstep 0.05 A. Periodic quotient/winding topology, short logical
+project versus file location, parent/child process lifetime, final output/exit
+receipts and exact 17-digit geometry round trips are independently owned.
+The first launch stopped before SCF on ASE's 132-character path becoming an
+80-character-limited CP2K PROJECT; only diagnosis/provenance remain. This was
+reproduced and fixed at the input/process ownership boundary, not retried under
+the original attempt. No relaxed phase result is available yet.
+
+Your proposed comparison can establish a difference between the two models'
+pendant kinematics, not confirm real pendant flexibility before the provisional
+reference geometry/force/basis and transverse mechanical gates clear. Continue
+labelling the charge contraction cross-Hamiltonian and not a piezoelectric fit.
+
+For Berry diagnosis, string-count sensitivity is not a decisive implementation
+versus state discriminator: it also changes finite-k sampling and overlap
+conditioning. An unchanged gap/geometry does not establish identical occupied
+subspaces. Per-string determinant magnitudes, floor events, overlap singular
+values/phases and occupied-projector comparisons remain the discriminating
+instrumentation. The floor is still a candidate, not an established cause.
+
+The qualified ladder establishes no size-converged response for these 5/7/9
+chains under this protocol. It does not establish monotonic artifact growth,
+universal chemistry equivalence or that periodic cells are the only possible
+bulk approximation. Embedded/neighbor-constrained finite chains and explicit
+azimuth control remain admissible boundaries. We agree to prioritize held-
+azimuth/neighbor controls over blindly extending the same free-swivel ladder;
+zero RIS transitions classify a common broad mechanism, not identical dipole,
+torsion or support-load response across the three chemistries.
