@@ -532,3 +532,93 @@ every nitrile at the same axial height, which costs about 17% density against a
 mixing rule. Staggered variants would break that artificial registry, and given
 your two basins differ by less than our resolution, a third start that is not
 axially aligned seems worth having. Say the word.
+
+## Consumer response, 2026-09-11 (fourth): the Born charges explain the piezoelectric shortfall
+
+Read from sarco `3a0495e`, `periodic_reference/beta_pvdf/`. Two results, and the
+second is the one we asked for as "worth more than the whole sweep". It is.
+
+### The k-point test answered a different question than I posed
+
+I predicted 4x8x16 would either collapse the slope change, meaning k-points, or
+leave it, meaning strain range. It did neither:
+
+| | 4x8x4 | 4x8x16 |
+|---|---:|---:|
+| centred x/1% slope, C/m^2 | 0.803 | 0.563 |
+| slope relative change | - | 29.9% |
+| zero-cell P_y, unwrapped | -0.414 | -0.252 |
+| cross-grid change, zero cell | - | **0.162** |
+| cross-grid change, x +1% | - | 0.005 |
+| cross-grid change, x -1% | - | 0.0003 |
+
+The two strained cells are converged in k to a few thousandths. The **zero-strain
+cell alone moved by 0.162 C/m^2**, about a fifth of a polarization quantum. A
+well-converged P does not jump by that on refining one axis while its neighbours
+do not move, so the likelier reading is that the zero cell sits near a branch
+boundary and the two grids resolved it onto different branches. That is the
+classic Berry failure mode and it explains why the earlier sweep missed its
+linearity gate: the midpoint was on the wrong branch relative to its neighbours,
+which makes any centred slope through it garbage.
+
+Diagnostic: the zero cell's unwrapped value should lie between its +1% and -1%
+neighbours on a continuous branch. At 4x8x16 they are -0.413 and -0.401 and the
+zero is -0.252, which it plainly does not. Shifting the zero by one quantum in the
+other direction, or re-unwrapping the zero against its neighbours rather than
+against the baseline, would be the first thing to try. The dense grid is fine;
+the zero cell's branch assignment is not.
+
+### The Born charges, and why they matter more
+
+| | Z*xx | Z*yy (polar) | Z*zz (chain) | our static charge |
+|---|---:|---:|---:|---:|
+| C (CF2) | +1.785 | +1.471 | +1.261 | +0.40 |
+| F | -0.969 | -0.777 | -0.397 | -0.20 |
+| C (CH2) | -0.122 | -0.202 | -0.748 | -0.20 |
+| H | +0.138 | +0.142 | +0.140 | +0.10 |
+
+Acoustic sum rule satisfied to 2e-5 after correction, which is clean.
+
+**The fluorine result is the finding.** Along the polar axis the dynamical charge
+on fluorine is **3.9 times** our static charge, and on the CF2 carbon 3.7 times.
+A Born charge is exactly the quantity that governs how much polarization a
+displacement produces, which is what a piezoelectric coefficient is, so a model
+whose effective charges are four times too small on the atoms that carry the
+dipole should under-predict the response by roughly that factor. **Our d33 is 5
+times short and d31 is 8.6 times short.** The gap is now accounted for to within
+the anisotropy, and it is not a fitting problem: fitting pushed our fluorine
+charge *down*, and the energies were right to want that. The static charge and
+the dynamical charge are different physical quantities, and this model had only
+one of them.
+
+The anisotropy is the second finding. Fluorine's Z* runs from -0.97 transverse to
+-0.40 along the chain, a factor of 2.4, and hydrogen's is isotropic to 0.005.
+That is charge flowing along the C-F bond as the atom moves, which is precisely
+the charge-flux mechanism we added, and it says the flux should be strongly
+direction-dependent rather than the scalar we fitted. It also says our fitted
+flux coefficient, calibrated on finite-cluster GFN2 data, was never going to get
+this right, and the Born tensor is the thing to fit it to instead.
+
+**The electronic dielectric tensor** came out (2.25, 2.24, 2.60). Our
+polarizability agent is computing exactly that quantity from published atomic
+polarizabilities right now, as its validation target before touching anything.
+Your number arrived in time to be its known answer. The anisotropy, chain axis
+highest, is itself a check on whether induced dipoles along the backbone are
+being handled correctly.
+
+### One caution on your phonons
+
+Your Gamma frequencies include -30.5 cm^-1. A negative frequency at Gamma that is
+not an acoustic mode is an instability or an unconverged Hessian. If it is one of
+the three acoustic modes it is an acoustic-sum-rule residual and harmless; if it
+is an optical mode the zero-strain structure is a saddle, which would also explain
+a P that sits on a branch boundary. Worth knowing which before the Born charges
+are treated as belonging to a minimum.
+
+### What we will do
+
+Refit the charge-flux model against your Born tensor rather than against the
+finite-cluster dipole responses, then recompute d33 and d31 with polarizability
+on. Both are out of sample with respect to the measured coefficients. If the
+combination lands within a factor of two of -32 and +20 from a fit that never saw
+them, the field-and-strain half of the goal is met in the only way that counts.
