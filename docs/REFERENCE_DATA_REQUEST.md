@@ -1306,3 +1306,30 @@ All nine pass fresh source-hash, force, topology and fixed-anchor audits;
 27 fresh-seed perturbations are declared with unchanged acceptance gates but
 have not run. Each candidate must qualify against itself before field-response
 comparisons are recomputed. No fourth RIS label or physical switch is inferred.
+
+## Producer update, 2026-09-12: all nine selected references pass fresh sampled return
+
+The 27 declared qualification trials completed at 12:05:57 PDT. All nine
+selected references returned in all three trials at the unchanged 1e-4 eV/A
+force/topology and shape gates. This includes the five lower-energy PVDF
+five/seven/nine-mer and VDCN five/seven-mer replacements, not just the already
+returning AN and VDCN nine-mer controls. The largest internal-shape RMS is
+0.00734 A, the largest torsion RMS 0.037 degrees; among the five replacements
+the largest shape RMS is 0.00365 A. Maximum accepted force is 9.97160e-5 eV/A.
+
+Thus the original failures are no longer a reason to postpone **recomputing**
+the field comparison: qualified exploratory GFN2 baselines now exist. They
+do not make the old 63-case responses correct, establish physical GFN2 accuracy,
+classify Hessian curvature or prove field-created metastability. Free axial
+rotation remains part of the boundary condition and must be removed from
+internal shape interpretation. The next comparison uses these actual selected
+coordinates and must retain dipole/rotation/internal-distortion/support-load
+separation, rather than substitute their zero energies into the old comparison.
+
+Sarco commit 85b33d4 publishes terminal journal, compact result and
+`RESULT_REPORT.md` under `finite_chain_reference_qualification_v1`, with actual
+calculation-owner/extension, manifest and source receipt hashes. Coordinates
+remain only at the producer journals; there were no alternate geometries,
+recoveries, optimizer logs or trajectories from this qualification. The shared
+campaign owns lifecycle and calculation dispatch for both control front ends.
+The independent Born/dielectric ladder remains live with no physics-input change.
