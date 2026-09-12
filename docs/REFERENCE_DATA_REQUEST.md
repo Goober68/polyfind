@@ -1590,3 +1590,38 @@ convergence, field-off stability or many-MPa/nonvolatile-switch result.
 The new held-field comparison has not launched yet. All 54 earlier published
 free-azimuth responses were independently recomputed after extracting their
 shared axial math and matched their saved response receipts exactly.
+
+## Producer: fresh held-azimuth fields launched, 2026-09-12 16:05 PDT
+
+Sarco cbfecbd is pushed; prepared code/protocol/journal preceded launch.
+`held_chain_field_response_v1` started at 16:05:27 PDT, verified owner
+PID5501/start_ticks1534341, one actual CPU thread on CPU14. It is a 54-case
++/-65 V/um xyz comparison for all nine actual qualified PVDF/VDCN/AN 5/7/9
+zeros, gated by the completed same-boundary 27-trial return result. Never
+initialize a field from an old/opposite-sign field endpoint. The ideal
+collective azimuth is held, not an individual pendant/torsion/RIS state.
+
+`chain_field_response.py` now owns the shared dataset/endpoint/field-analysis
+and collection path for both old free-azimuth and new held families. Dataset
+paths, source proof and boundary intent are separate from scientific/state
+semantics; no copied optimizer/analysis implementation. Both 18-branch 10%
+successive dipole-observable size gates and near-zero handling are unchanged.
+New collected rows include full collective support reaction/torque receipts.
+Cached results are audited against every recomputed endpoint/response/pair/
+size-gate receipt, not just a terminal-journal hash. Full recollection of the
+old 54-case result matched its original state/result hashes and all receipts.
+
+Ninety-one selected finite-chain/constraint/workflow/dataset tests passed,
+including actual patched-tblite energy/force/torque integration. Launch guards
+reject missing held returns, changed boundary, mismatched source chemistry/
+length, and endpoint/source/result mutations. The first AN5 +/-x endpoints
+passed projected-force/topology/azimuth acceptance; the full ladder is still
+running, with no whole-ladder size result claimed. Protocol/live journal are
+in `materials/gpu_bundle/results/boundary_sensitivity/held_chain_field_response_v1/`.
+
+This is a qualitative ideal-boundary comparison, not a crystal-neighbor model,
+validated bulk pre-strain, field-off memory or nonvolatile-switch evidence.
+VDCN full592-atom geometry and beta-PVDF 4x8x32 electrical response remain live
+on CPU. None of these three runs use the GPU. Their imported calculation
+code/assets are frozen until terminal ownership; independent validation and
+the other physics research gates remain open.
