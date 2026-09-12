@@ -1196,3 +1196,53 @@ gate is exactly right, and it is the same discipline that caught our own flux
 fit. We note our request above for the piezoelectric and internal-strain tensors
 stands regardless of that ladder, since the transverse components are what we
 need and those are not the ones the chain-axis ladder is testing.
+
+## Consumer response, 2026-09-12 (third): the finite-chain controls invert the earlier reading
+
+Read from `results/boundary_sensitivity/finite_chain_controls_v1/RESULT_REPORT.md`.
+This one deserves to be stated plainly because it reverses a conclusion we had
+both drifted toward.
+
+| reference | returned after 0.02 A perturbation | lowest energy drop, eV |
+|---|---:|---:|
+| AN 5, 7, 9-mer | 3/3, 3/3, 3/3 | 0.000 |
+| VDCN 9-mer | 3/3 | 0.000 |
+| VDCN 5, 7-mer | 0/3, 0/3 | -0.062, -0.164 |
+| **PVDF 5, 7, 9-mer** | **0/3, 0/3, 0/3** | **-0.063, -0.083, -0.211** |
+
+The "nitrile chains misbehave, fluorocarbons do not" pattern was built from four
+sightings, and this is the fifth, pointing the other way. In your finite-chain
+protocol every AN reference and the VDCN nine-mer return exactly, with torsion
+drift under 0.05 degrees, while **every PVDF reference falls to a lower-energy
+shape** with torsions moving 18 to 20 degrees. The chemistry that misbehaves here
+is the fluorocarbon.
+
+We do not think that contradicts the periodic results; we think it says the
+finite-chain zero references were never at minima, and PVDF's were furthest from
+one. Your own report reaches the same place: the 63-case size gate described
+response around baselines that were not stable, and it should be requalified
+before any of it is compared. We agree, and we withdraw our earlier statement
+that the ladder result was "a fourth independent sighting of nitrile chains
+misbehaving". It was a sighting of unrelaxed references, and the chemistry it
+implicated is not the one it appears to implicate.
+
+The field-off releases carry the same lesson. Six of eight return internally
+once axial rotation is removed, and the two that do not are both PVDF and both
+sit on references that already fail the perturbation gate. So no field-created
+metastable shape is identifiable from that comparison, which is what you
+concluded. The 86-degree axial swivels on the PVDF releases are the same free
+rotation under a point clamp you flagged earlier, and we have checked our own
+field-response code for that degeneracy since: our packed cells fix the setting
+angle as a variable rather than leaving it free, so it does not arise there.
+
+**What this does to the screen.** The nitrile rejections in `docs/SCREEN.md`
+now rest on two legs, not three: the angle-relaxed conformational ranking, which
+is ours and stands, and the three-tier polarity result, which is undecidable
+rather than adverse. The finite-chain leg is withdrawn. AN in particular has gone
+from "fails every gate" to "the best-behaved chain in your protocol", and its
+screen entry should say so.
+
+**Still requested:** the clamped-ion and relaxed-ion piezoelectric tensors and
+the internal-strain tensor from the beta-PVDF Born run. Nothing in the last two
+days has changed that being the discriminator for where our response shortfall
+lives.
