@@ -4487,3 +4487,16 @@ open. Exact newly useful relative-cutoff native artifacts have permanent E:
 copies; D: originals/live journal remain for the active final reduction. See
 alpha_grid_convergence_v1/RELATIVE_REPORT.md. Held seeds are NOT relaxed minima;
 no phase/field/load/bulk/pre-strain or physical promotion follows. GPU reserved.
+
+Both signed0.25% xz points subsequently pass fresh full independent accepted-
+zero/native source/input/stdout/XML/receipt/codec/result replay, session88395
+exit0. Proper central response[-3.75191657e-9,+7.26154991e-8,+1.95741023e-9]
+C/m2 per engineering xz strain, all branch shifts0. This small numerical vector
+is NOT a resolved physical nonzero or demonstrated symmetry-enforced zero.
+Second-amplitude/noise/full-tensor checks remain open; no relative near-zero
+gate is silently waived. Positive state/result SHA25672012bd6918bf176998c8342cc1bc62c4a2d937c579546b5b9878ac482146b75/
+3a3ff42c74e1a3d822f995fae247a120a2e5f8ae399b3b785acb1ee857923400.
+All13 positive native/terminal files have exact permanent E: copies. Parent
+continues without restart and its live journal is not published. See Sarco
+clamped_ion_owner_matrix_v2/XZ_CENTRAL_REPORT.md. No bulk calibration or
+physical gate is released; all five stages/all target chemistries stay open.
