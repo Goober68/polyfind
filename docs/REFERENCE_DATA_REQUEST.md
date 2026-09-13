@@ -3287,3 +3287,13 @@ is being published before run; no CNEPO optimization result yet. Five previous
 roots kernel-live,17/26/8/10/11 owners unchanged,22.7GB WSL memory available and
 swapfree. GPU reserved. Candidate successes still need basin/Hessian/field/size/
 bulk/DFT/model/packing/stress/barrier/temperature/viewer gates; full scope open.
+
+Sarco678bc472 seals/pushes the actual3-input/factory ready epoch BEFORE run.
+CNEPO CPU reference producer now PID15514/start_ticks5486377,session82507;
+kernel liveness/all20 owner hashes verified. FirstCNEPO5 optimizer step3 observed,
+projected0.1364493952eV/A; no accepted candidate/terminal result. Original ring/
+stereo invariant is checked by the inherited original algorithm. All five new
+sealed code/protocol/test/doc units match exact committed bytes. Original cold
+AN9 stays kernel-live PID27830/start_ticks5430020 with17 hashes unchanged (step138
+projected2.114089882e-5>1e-6, not accepted). Other four roots retain26/8/10/11
+owners/liveness; all six epochs remain frozen, GPU reserved, five-stage scope open.
