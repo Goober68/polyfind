@@ -2363,6 +2363,29 @@ not retroactively isolate the cause of every earlier full-SCF discrepancy;
 they establish the corrected route's tested behavior. No physical fit target
 or material-level convergence is inferred from these controls.
 
+Producer progress: actual directional_zero_v1 now has all three clean native
+repeats for directions1 and2. Full-byte subset comparisons pass the unchanged
+2e-7C/m2 gate; direction2 maximum pair difference is4.24677182309e-10C/m2.
+Six of nine Berry solves are complete; direction3repeat1 is live under21917.
+No complete directional prerequisite, strain launch or fit target yet.
+Terminal-reader archive coverage omits protocol bytes: two isolated synthetic
+regressions reproduce that gap. The defining owner stays frozen until its
+live run ends; correction/requalification must precede matrix sealing.
+
+Independent stage2 progress: finite_graph_identity.py and the CNEPO chemistry
+audit qualify ordered molecular/bond/ring and geometry-defined stereo identity
+for both chains at all six archived field/pre-strain endpoints. All12 checks
+preserve the three-edge epoxide and source-order centers4/9/11/14 assigned S.
+Eight new/seven existing topology tests pass. This identifies the supplied
+model branch, not an experimental stereochemical distribution or an accepted
+response. Its unspecified-stereo SMILES was insufficient alone to reproduce
+that branch. The actual motif is VDF/TrFE/CNEPO/TrFE/VDF: a like-source5/7/9
+ladder must preserve both TrFE neighbors and source stereo while adding VDF
+symmetrically, not silently substitute a pure-VDF one-defect host. No ring-aware
+ladder has yet been built/launched and no GFN2, basis, geometry or material gate
+is cleared. See Sarco cnepo_chemistry_audit_v1/RESULT_REPORT.md/result.json,
+PHYSICS_RESEARCH.md and directional_zero_v1/EXECUTION_REPORT.md.
+
 ## Consumer note, 2026-09-13: prerequisite scope corrected
 
 I wrote above that the repeat gate was the matrix's prerequisite and is now
