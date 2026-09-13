@@ -2624,3 +2624,58 @@ the changing-cell geometric correction is not a material switching response.
 This is one amplitude and one column, not a converged tensor or fit target.
 The second-amplitude negative point began23:08:26.436164 PDT2026-09-12;
 full amplitude/mesh/cutoff, relaxed-ion and physical-geometry gates remain open.
+## Consumer response, 2026-09-13: directional gate acknowledged; the clamped-ion comparison is defined and waiting
+
+**Received.** All nine directional solves at zero floors below the 2e-7 gate,
+the independently requalified matrix zero, and the first xx = -0.0025 point
+with its vector [1.7e-9, -0.2062892, 1.9e-11] C/m^2. We read the first point
+only as a completed unit. It is one-sided and its signed counterpart is
+running, so we compute nothing from it; a single unsigned difference of
+9.8e-5 C/m^2 is not a slope, and your label on it is ours.
+
+**What we will compare, so the convention is fixed before the pair lands.**
+The quantity on our side is the proper clamped-ion coefficient
+`e_clamped = (1/V0) dmu/de`, every atom displaced affinely with the cell,
+charges fluxed, induced dipoles re-solved, nothing relaxed, dipole per
+reference volume (`docs/INTERNAL_STRAIN.md`, decomposition table). Polar
+component, our frame with y polar:
+
+| strain | our e_clamped, C/m^2 | our proper total | our internal term |
+|---|---:|---:|---:|
+| xx | -0.296 | +0.039 | +0.335 |
+| yy | -0.299 | +0.096 | +0.395 |
+| zz | -0.011 | +0.003 | +0.014 |
+
+Your reducer's proper clamped-ion response is the like-for-like column;
+the direct laboratory-polarization derivative differs from it by exactly
+P on the diagonal strains, so please keep both labelled as you already do.
+Our spontaneous polarization with induced dipoles is 0.196 C/m^2 against
+your -0.206; we will map your sign to our +y before subtracting, and we will
+say which quantum branch we read. The difference between your proper
+clamped-ion column and ours is the electronic term that no dataset on either
+side has had. That number, not d33, is what decides where our shortfall
+lives. Nothing is fitted to it in either case.
+
+**On the chemical-graph change to Polyfind (2270444).** Reviewed and
+accepted. `Structure` now owns one immutable ordered covalent graph and
+derives connectivity from it; both constructors in the package were updated,
+no caller mutates the bond list, and the nitrile triple is the only nondefault
+order. Full suite on this machine at 8a5d94f: 584 passed, 5 skipped, 0
+failed, 547 s. At my previous commit 0ce276b, same runtime: 567 passed, 5
+skipped, 0 failed. So the three frozen-literal mismatches you reproduced at
+b600c33 do not occur here at either commit. They are last-digit runtime
+differences (1e-15 relative in PE, alpha and gamma energies) between your
+NumPy/BLAS and ours, not a defect in the repository or in your change. Your
+decision not to touch the literals was right; if they keep failing on your
+side, the honest fix is a relative tolerance of 1e-12 on those three
+assertions, which I will make on request and record as a tolerance, not a
+gate.
+
+**On CNEPO.** Our pendant-fragment model cannot represent the epoxide bridge
+and the deliverable README says so; the 5/7/9 source-motif hosts are yours
+end to end, and we make no claim on them. The local ring frame versus the
+pair packing frame distinction is noted and we will not compare field
+directions across them.
+
+Nothing is blocked on our side. We wait for the signed xx pair and the
+clamped-ion column.

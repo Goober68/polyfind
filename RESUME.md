@@ -1,4 +1,4 @@
-# Resume: polyfind, state as of 2026-09-13 (evening)
+# Resume: polyfind, state as of 2026-09-13 (late)
 
 Read this first after a context clear. It is the map; the documents it points to
 are the territory. Everything below is committed and pushed on branch
@@ -30,6 +30,10 @@ last ~30 sections are the record of the past four days. Read it from the bottom
 up before replying to anything. Never write into `sarco` except as an untracked
 file; it has staged work in flight. Rebase-conflicts on that document are
 routine (both sides append): resolve by keeping both sides, no markers.
+
+Dipole now also edits Polyfind source directly (2270444 added
+`chemical_graph.py` and made `Structure.bonds` a derived view). Review their
+code diffs, run the suite, and record the verdict in the exchange.
 
 Dipole works on a different machine with ROCm; this machine has no usable GPU
 (`docs/PERFORMANCE_REVIEW.md` section 14). Large runs go to RunPod if ever
@@ -95,21 +99,19 @@ no polarity verdict, truncation was never the cause.
 
 ## Dipole's open gates (theirs, not ours to chase)
 
-- Berry polarization: **repaired, not yet accepted.** The earlier scatter
-  (raw P_y 0.491, 0.215, 0.314, 0.082 at fixed everything) was an augmentation-
-  kernel defect returning undefined output, not the structure; my branch-
-  boundary and floor diagnoses were wrong and are withdrawn in the exchange.
-  The corrected build gives P_y = -0.2061908 C/m^2 on three fresh solves, zero
-  floors, and an x-direction null of 1e-9. A clamped-ion reducer exists and a
-  +/-0.25%/+/-0.5% six-component matrix is predeclared but **not executing**:
-  its separate three-direction prerequisite is incomplete (direction 1 passed
-  its 2e-7 subset gate, direction 2 live, direction 3 pending, as of 2026-09-13)
-  and the matrix cannot be prepared or launched until all three pass. I
-  overstated this once ("repeat gate cleared, matrix next") and corrected it in
-  the exchange.
-  Every posted number is `quantitatively_valid=false` by their label. **Do not
-  fit to any Berry number until they declare one accepted.** The clamped-ion
-  column of that matrix is the one number that decides where our shortfall is.
+- Berry polarization: **route repaired, directional gate passed, matrix
+  running.** The earlier scatter was an augmentation-kernel defect. All nine
+  directional zero-strain solves passed the 2e-7 C/m^2 gate at zero floors;
+  the 25-point +/-0.25%/+/-0.5% clamped-ion matrix launched 2026-09-12 21:23
+  PDT on Dipole's machine. Its independent zero passed. First strained point
+  (xx = -0.0025) is complete: P = [1.7e-9, -0.2062892, 1.9e-11] C/m^2 against
+  zero P_y = -0.2061908; its signed counterpart is running. **One-sided; do
+  not compute a slope from it.** Every number is still
+  `quantitatively_valid=false` by their label. **Do not fit to any Berry
+  number until they declare one accepted.** The like-for-like quantity on our
+  side is the proper clamped-ion `e_clamped` in `docs/INTERNAL_STRAIN.md`
+  (y,xx -0.296; y,yy -0.299; y,zz -0.011 C/m^2); their proper column minus
+  ours is the electronic term. Conventions are written into the exchange.
 - Born/dielectric ladder: 4x8x16 passed its raw sum-rule gate (max 0.0065 e);
   the ladder as declared cannot pass because 4x8x8 failed; a new predeclared
   ladder may follow. Transverse eps (2.253, 2.235) is stable; chain-axis
@@ -136,7 +138,10 @@ traceable to an invented constant, refuse it.
 
 ## Housekeeping
 
-- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 567 pass, 5 skip (GPU). ~9 min.
+- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 584 pass, 5 skip (GPU). ~9 min. Dipole's runtime reports 3 last-digit
+  frozen-literal failures in `test_mechanics.py` (PE/alpha/gamma energies at
+  1e-15 relative) that do not reproduce here at any commit; machine noise,
+  not a defect. A 1e-12 relative tolerance is the fix if ever needed.
 - **Never set `POLYFIND_TABLE_CACHE=1`**: it is read as a directory name and once committed 85 MB of caches. It is gitignored now.
 - Agents: launch in worktrees; they often pause on their own background jobs and report "waiting"; that is not stuck. Merge, run the suite, push, then remove the worktree.
 - Commit attribution: `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and the session URL, per the current system reminder.
