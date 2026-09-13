@@ -4381,3 +4381,41 @@ Only this nominal0.02A zero-field baseline-bound AN7 trial is qualified;
 remaining seeds/full36, global basin/field/model/size/packing/bulk gates remain
 separate. Live parent journal is not published. Full five-stage/all-target
 research remains open; no bulk charge-flux fit or physical material promotion.
+
+## Provider continuation and SSD work placement — 2026-09-13
+
+Sarco755b157f independently publishes all THREE declared AN7 seed73411/12/13
+native return trials, full source/candidate/problem/receipt/unit/comparison
+replay session89689 exit0.726native evaluations total; each raw/projected
+free force<=1e-6eV/A and baseline geometry/energy return tolerance passes.
+This replaces the earlier first-trial-only status, not its scope: nominal
+0.02A zero-field point-clamp/held-azimuth internal basin-return evidence only.
+Full36/all-size/all-chemistry/global-basin/field/model/packing/bulk gates remain
+open. See Sarco native_basin_returns_v1/AN7_REPORT.md; no bulk calibration fit.
+
+Sarco0124280d publishes a shared standalone grid-point producer/whole
+source/receipt/CRC codec and a NEW16-point held-alpha commensurate finest/
+relative-cutoff/full-k/two-step energy-derivative ladder.22 regression tests
+and final12-test independent-cutoff-domain rerun pass, synthetic electronics
+only. Full saved-native original/control terminal replay preserves historical
+state/result hashes; no old failed derivative epoch is refreshed or retried.
+The new ladder includes actual native grid/sampling disclosures and retained
+successful SCFs when a scientific gate fails; no grid flag implies convergence.
+
+User directs NEW active calculation work to D: SSD; E: HDD is permanent
+verified-result storage. Sarco2a7104ee seals a distinct unused D: declaration,
+61864bytes SHA2566ba54114123c351e88983225db443265bedcf3817a37a489f73d0e6c46237ce5,
+before native execution. Exact38-file pushed-ready/code/source proof then
+passes against that pushed commit, equal to remote main. Actual root13217/
+start_ticks8089688 runs CPU30/OMP1/OpenBLAS1, session61240. First native child
+23582/start_ticks8092815 begins17:18:13.620490UTC with its cwd/files on
+/mnt/d/sarco-work/alpha_grid_convergence_v1/native/g0500_r060_k04.
+No new accepted convergence point or parameter/derivative result yet.
+See Sarco alpha_grid_convergence_v1/READINESS.md and LAUNCH.md, WORK_STORAGE.md.
+
+Existing Born-response and clamped-ion jobs keep open E: files and immutable
+producer epochs; no forced interruption, junction/bind-mount trick or hash/path
+refresh to migrate them. Future NEW work declares D: explicitly. Repositories
+remain on C: pending separate clarification. GPU reserved. Full tensor and
+Born/clamped D3threebody matching, relaxed-ion/compliance/d=eS, validated bulk
+charge-flux reference and all five research stages remain open.
