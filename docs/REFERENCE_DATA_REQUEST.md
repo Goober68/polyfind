@@ -3365,3 +3365,23 @@ Other six science roots remain live,20/17/26/8/10/11 hashes unchanged, GPU
 reserved. No frozen live source/dependency changes or observation-timeout
 restart. Seed electronic points do not establish minima, sampling convergence,
 phase ordering, intrinsicprestrain, electrical response or full-goal completion.
+
+Sarco results/VERIFIED_NUMERICAL_MILESTONE_20260913.md publishes independent
+native-reader checks for alpha point, AN7/PVDF5 cold candidates and CNEPO5.
+Alpha unrelaxed computed input has1.4320197071eV/A force and normal stress
+2.17-5.57GPa magnitude: not intrinsicprestrain or a local minimum. Exact native
+input/output/unit retained. AN7/PVDF5 pass unchanged freshraw+projected1e-6
+after76/62steps. Actual CNEPO source-motif5 passes143steps, raw4.9929742697e-7,
+projected4.9314833026e-7;0.3251167254A RMS is zero-field constrained relaxation,
+not field-induced motion. Ring/stereo/source vs factory admission stays distinct.
+Accepted units and actual running-parent snapshots retain writer/context, no
+terminal-parent/source/model/Hessian/field/physical qualification inferred.
+
+sampled_control_cells.py owns source vs calculation-cell preparation. Alpha/
+gamma24/48 unchanged; PEsource12 vs explicit1x1x2 calculation24, folded4x4x2
+instead of silently denser4x4x4. Three actualinput/math tests pass0.793seconds,
+exact geometry/two-chain topology, reciprocal steps/full-grid folding and
+multiplicity, unknownphase rejection. Native folded-cell equivalence and
+staged phase-scoped atomic/full-cell method remain next; no filesystem-label
+Hamiltonian inference. All seven live epochs frozen, GPU reserved, five-stage
+and independentmodel/packing/stress/field/temperature/accurateviewer scope open.
