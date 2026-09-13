@@ -4174,3 +4174,16 @@ distortion as spontaneous physical phase lowering or fix it by restoring seed
 coordinates/refreshed hashes. Compact diagnosis is in Sarco's symmetry report;
 the useful original entry native input/output/unit remains for this diagnosis.
 Live providers remain frozen; no failed-native retry or global runtime update.
+
+Sarcof63c3c63 rules out the suspected initial skew-cell transpose using a
+fresh actual native LOAD/GET_CELL/GET_POS/SET_CELL/GET_CELL/GET_POS query,
+without an energy/SCF/optimizer command. Returned cell/positions agree with
+the exact intended source to1.78e-15/4.88e-14A before and after the ASE cell
+update. Raw original force indices are contiguous1..24 and match8C/8F/8H
+input ordering. This does not separately replay position-file consumption or
+isolate the force/SCF/Hamiltonian/numerical cause. Native actor is confirmed
+closed; duplicate no-SCF input/LOAD-only output are deleted after persisting
+the compact diagnosis. Original useful entry-point evidence is untouched.
+Next decisive probe is paired same-method energy/force finite differences on
+the symmetry-related seed atoms, with exact points/criteria declared before
+new SCFs. No alpha phase-ordering or switching promotion.
