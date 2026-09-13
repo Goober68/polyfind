@@ -1971,3 +1971,29 @@ pure-y radius is unaffected by the norm typo, so that typo is not asserted as
 the current discrepancy's cause. No Berry/material/Born/strain gate clears.
 Evidence: Sarco qe_berry_diagnostic/projector_comparison_v1/RESULT_REPORT.md,
 projector result/records,occupied_spectrum.json and qqc_probe_v1 receipts.
+
+### Exact-orbital correction replay prepared; VDCN first fixed-cell stage done
+
+Sarco129a0c2 prepares an owned seven-stage original/corrected native Berry
+replay from the exact matched occupied orbitals, with no electronic solve.
+Source-native metadata owns direction2 and8 points/string. Both executables
+share the verified libraries/flags/replay source; only the tested defining
+augmentation correction is compiled before archive resolution.65 tests pass,
+including synthetic replay envelopes and actual shared-supervisor success/
+nonzero handling. Completed kernel execution retains its original writer
+identity, verified from its actual archived b678762 blob after command-owner
+extraction. The ready journal/code were pushed before invoking the replay
+runner. No actual replay output or causal conclusion is available yet. Evidence:
+Sarco qe_berry_diagnostic/berry_replay_v1/PROTOCOL.md and journal.
+
+VDCN polar fixed-cell stage completed18:03:49.536564 PDT on2026-09-12 after83
+steps/84 converged SCF evaluations, native return0. Full592-atom periodic
+topology remains intact; force0.0042431863 eV/A passes0.005. Canonical energy
+is-5724.946266249035 Hartree/-155783.72408842933 eV. The socket/native-output
+representation audit passes; canonical output energies remain the sole energy
+comparison representation. Held-cell stress reaches1253.641 MPa, not free-cell
+convergence, established intrinsic pre-strain or Hessian stability. Antipolar
+fixed-cell is running, both full-cell stages pending. No corrected phase
+ordering or field path is qualified. Useful endpoint/milestone evidence:
+Sarco vdcn_phase/geometry_correction_v2/polar_fixed_cell.xyz and
+POLAR_FIXED_MILESTONE.md; whole-campaign result remains unavailable.
