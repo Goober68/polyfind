@@ -4712,3 +4712,41 @@ source-consumption/mapped-runtime equivalence. Native A/B lifecycle/whole respon
 codec and declared comparison gates remain required before combining responses.
 All six live actor epochs/110 code pins are unchanged; full five-stage/all-target
 physical qualification and validated bulk calibration remain open, GPU reserved.
+
+## xz amplitude failure and electrical artifact owner — 2026-09-13
+
+Sarco bd0b65eb publishes fresh full accepted-zero/all four signed xz native
+source/input/stdout/XML/receipt/codec/result replay, session85076 exit0.
+Proper central xz vectors in Sarco Cartesian order, C/m2, are
+[-3.751916571584665e-9,7.261549905831313e-8,1.9574102326048846e-9] at0.25%
+and[-1.1924848351571757e-8,-5.432598913126846e-8,7.609444900100145e-9] at0.5%.
+Whole-vector change1.7505099200120404 (175.05%) FAILS the unchanged2% gate;
+cosine-0.9514871364686429. Branches remain[0,0,0], affine fractional nuclei
+and full4x8x16 mesh pass. Tiny opposite-direction responses are unresolved,
+not physical coefficients or measured exact zeros. Do not waive the near-zero
+relative gate or use this column for calibration. Two nuclear mirror/bijection
+diagnostics motivate separately declared electronic-symmetry/absolute-noise
+controls without electronic symmetry attestation or changing that failure.
+Exact13 positive0.5% artifacts,1820727bytes, match E: verified archival copies;
+the changing parent journal is excluded. Matrix is21/25 complete, original
+producer epoch live at xy_m0025 with3pending points; no native restart/move.
+See Sarco clamped_ion_owner_matrix_v2/XZ_AMPLITUDE_REPORT.md.
+
+QEElectricalResponse now owns a whole artifact/checksum unit of exact four
+native SCF/PH files, independently verified operator/namespace, complete
+reference SCF checkpoint replay, detached receipt CONTENT and unmodified
+dielectric/raw/corrected Born observations. All34 combined tests pass0.239s,
+including11 new artifact tests with synthetic bytes/real shared parsers and no
+native calls. Raw1e acoustic failure with corrected0 remains visible; native
+error output is rejected even if complete/rehashed. Receipt authenticity,
+actual PH consumption, pre-PH checkpoint capture and mapped ELF closure are
+NOT attested. Metadata does not rehydrate raw checkpoint payload. Native A/B
+lifecycle/provenance/source-consumption/precision gates and actual outcomes
+remain required; no ready journal or native execution is prepared/launched.
+See Sarco beta_pvdf/ELECTRICAL_RESPONSE_ARTIFACT_VERIFICATION.md.
+
+All six live process epochs/110 code hashes remain unchanged. Full tensor,
+cutoff/transverse/basis/geometry, electrical/executable/mechanical matching,
+Born subtraction/internal strain/compliance/d=eS, validated bulk charge-flux
+calibration and five-stage/all-target physical field/load/MPa/pre-strain/work/
+barrier/rate/cycling/viewer qualifications remain open; GPU reserved.
