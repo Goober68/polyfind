@@ -4161,3 +4161,16 @@ native states/endpoints remain unchanged. Gamma/VDCN/Beta/other chemistries
 and all physical/model/size/packing/field/mechanics/barrier/thermal gates
 remain open. Native all36 returns and five existing CPU owners continue;
 GPU reserved. This does not enter the bulk charge-flux fit.
+
+Further actual read-only replay finds an initial-force contradiction on the
+EXACT P2_1/c prepared alpha seed: its original native unit
+afc361becab03585c68c7b99144e24ac27e777b4ff639837b800b2735de43e5e
+violates the two lost operations by0.40768794eV/A maximum/0.21029508eV/A RMS,
+while inversion agrees3.86e-12eV/A. Full defining native input/output/force
+codec and terminal source readers pass before analysis. Force association,
+actual cell consumption, Hamiltonian and numerical symmetry must be diagnosed
+at their defining boundary; no cause is isolated yet. Do not interpret the
+distortion as spontaneous physical phase lowering or fix it by restoring seed
+coordinates/refreshed hashes. Compact diagnosis is in Sarco's symmetry report;
+the useful original entry native input/output/unit remains for this diagnosis.
+Live providers remain frozen; no failed-native retry or global runtime update.
