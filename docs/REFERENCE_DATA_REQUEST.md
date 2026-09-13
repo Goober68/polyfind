@@ -3297,3 +3297,25 @@ sealed code/protocol/test/doc units match exact committed bytes. Original cold
 AN9 stays kernel-live PID27830/start_ticks5430020 with17 hashes unchanged (step138
 projected2.114089882e-5>1e-6, not accepted). Other four roots retain26/8/10/11
 owners/liveness; all six epochs remain frozen, GPU reserved, five-stage scope open.
+
+### Explicitly sampled alpha/gamma/PE control compiler
+
+Sarco now has cp2k_sampled_method.py: one typed full-grid, non-centered,
+non-symmetry-reduced complex Monkhorst-Pack sampling owner, reusing the
+existing defining physical method/exact geometry compiler and original
+diagonalization/Broyden SCF. Static/mock-interactive inputs are identical;
+no frozen Gamma/VDCN source/include or live numerical dependency was edited.
+All35 combined compiler/native-syntax/source tests pass. Actual CP2K2026.2
+--check accepts original24/48/12atom alpha/gamma/PE source cells at explicit
+4x4x4 and rejects an invalid KPOINTS keyword. Exact positions/full cell vectors
+are checked; PE's audit supercell is not substituted for its source cell.
+SAMPLED_CONTROL_METHOD.md records native/input hashes and evidence limits.
+
+These are computed provenance-admitted INPUTS, not local electronic minima;
+syntax acceptance is not an SCF, force/stress or convergence gate. Equal
+division counts across different cells do not imply equal reciprocal spacing.
+No sampled control electronic run has yet started. Shared provider lifecycle/
+receipts, full-cell relaxation, basis/sampling, phase/mechanical/electrical/
+physical gates and experimental full xyz remain open. All six science roots
+are kernel-live with20/17/26/8/10/11 owner hashes unchanged, GPU reserved.
+The full five-stage/other-chemistry/temperature/accurate-viewer scope stays open.
