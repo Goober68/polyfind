@@ -4630,3 +4630,30 @@ See Sarco alpha_grid_convergence_v1/DERIVATIVE_SAMPLING_REPORT.md. No native
 retry, phase/geometry/field/load/pre-strain/work, bulk charge-flux calibration,
 barrier/rate/cycling or physical all-target viewer gate is released. All five
 stages/all chemistries remain open; GPU reserved.
+
+## All three PVDF5 returns and second xz negative point — 2026-09-13
+
+Sarco a16b6b19 publishes fresh independent session46786 exit0: full defining
+all12-baseline/all36-input admission/native producer and all THREE PVDF5
+candidate/problem/initial-final native receipt/whole-checksum/direct baseline
+comparison replays.535fresh returned native evaluations/310steps. Each raw
+and projected free-force maximum passes1e-6eV/A; each direct baseline RMS/max/
+energy difference passes0.001A/0.003A/1e-5eV. Actual two point clamps[0,27],
+zero field and held collective azimuth remain unchanged. No optimizer or
+force call repeats. Exact three whole units/report are hash-verified on E:.
+See Sarco native_basin_returns_v1/PVDF5_REPORT.md. These are small sampled
+numerical returns, not global basin/physical model/size/packing/field evidence;
+full36 and all five-stage/all-target physical qualifications remain open.
+
+Independent session88055 exit0 also verifies accepted zero and negative0.5%
+xz native source/input/stdout/XML/receipt/codec/result. Negative state/result
+SHA2564cd0b892d56cded33751b2112f41951d86c89432dbb2114d7581ac2a07ae1e77 /
+b36441523a360342b7a6642c5dc60c5890707a3a2be6fe3b36078df5ddd0f50d.
+Held fractional nuclei/full4x8x16 mesh pass; all branch shifts remain[0,0,0].
+All13 useful native/terminal files,1820810bytes, have exact-hash E: copies.
+Positive0.5% remains running, so no second-amplitude central vector or unchanged
+two-amplitude/full-tensor gate is released. See Sarco clamped_ion_owner_matrix_v2/
+XZ_NEGATIVE_HALF_REPORT.md. No tiny-component resolution, symmetry-zero,
+Born subtraction/mechanical matching/compliance/d=eS, validated bulk calibration,
+field/load/MPa/pre-strain/barrier/rate/cycling or physical viewer promotion.
+Changing parent journals are excluded; NEW active work uses D:, GPU reserved.
