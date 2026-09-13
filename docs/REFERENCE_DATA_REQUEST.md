@@ -3137,3 +3137,16 @@ SLICE_REPORT.md gives the derivation and scope. This corrects an unnecessarily
 conservative missing-constraint-curvature caveat, not sampled-H/source/electronic/
 finite-field/free-swivel/packing/model/physical uncertainty. No force replay or
 new reference/material gate is inferred; all five research stages remain active.
+
+Sarcof803471c publishes the exact affine-slice derivation/54-probe archive;
+all six intended staged byte units and all four recorded analysis owners match,
+no active journal/user edit. All26 combined slice/quadratic/frame/report tests
+pass. The same live endpoint readout accepted initial complete6993force/234field
+replay and is deriving324 original full-space responses, not yet publishing648
+comparisons. PVDF9 tighter reference subsequently hits its500-step cap at
+02:15:52.637834 PDT with cachedprojected2.285520598e-6>1e-6; it never reaches the
+fresh candidate check. PVDF_DIAGNOSES.md distinguishes this cap fromPVDF5/7 fresh
+gate failures, preserving only relevant scalar/source/time diagnosis. No rejected
+geometry, accepted minimum energy, retry/cap extension/lowered gate. Original
+refinement continues VDCN5; AN candidates remain useful. Six kernel roots and
+23/13/11/26/8/10 hashes remain live/frozen, GPU reserved, full scope unchanged.
