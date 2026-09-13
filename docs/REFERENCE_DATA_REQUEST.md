@@ -4021,3 +4021,18 @@ weakening original gates or copying a parallel optimizer. Full input-suite
 generation/replay and actual returned minima remain separate. This is not
 bulk strain/dipole reference data and must not enter Polyfind's charge-flux fit.
 GPU reserved; all five research stages and all-target scope remain open.
+
+The actual input suite subsequently completes36/36 with no failures; generation
+and independent completed_evidence replay both exit0. The latter requalifies
+all12 defining native sources, every saved chemical/support/checksum/seed unit
+and the exact whole reduction. Sarco2a5901ec publishes the actual36 units
+(381116bytes), exact state/result and compact terminal/integration reports after
+an exact41-file raw-to-index proof. Terminal state/result SHA256:
+de99281914d85f44eca7d4084821ba7884e50cee445bbdee45cce130915d121e /
+deaac650a9c78e5c4ec6d6b1fdb4635028b70385a61616731d72962523d792d8.
+Retraction RMS spans1.5950974554619965e-5–0.005101328284231615A; the original
+nominal RMS remains0.02A. native_calls=0: these are validated mechanical
+starting nuclei, not36 returned minima or field trajectories. The defining
+native producer integration is still next, preserving historical admission
+while reusing the ONE optimizer and cold-calculator policy. No bulk fit, MPa,
+tensor-amplitude, model/basis/size or switching/thermal gate is cleared.
