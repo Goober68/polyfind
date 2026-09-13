@@ -3250,3 +3250,15 @@ no actual new optimization launch yet. Sameaccuracy0.001/1e-6raw+projectedfmax/
 physical knob retuning or all-nine/source/model gate. Four original roots are
 kernel-live,26/8/10/11 owners unchanged,17.5GB WSL memory available and swapfree.
 GPU reserved; CNEPO prepared-only relaxation/admission and full scope remain open.
+
+Sarco eefdeb3b seals/pushes the actual original-nine ready epoch before launch.
+Distinct CPU cold-refinement is now actually optimizing AN9 as PID27830/
+start_ticks5430020 (session34023). Kernel identity/liveness and all17 owner hashes
+verified; initial optimizer step2 observed, no accepted candidate or terminal
+result. Invocation requalified sealed diagnostics before ready->running; no
+observation-timeout restart. All40 combined fresh-native-policy/lifecycle/history/
+slice/frame/quadratic tests pass. Actual fresh force-history results remain
+published, old epochs/source admissions unmodified. Same1e-6raw+projected gates/
+accuracy0.001/500cap/.05A/held0pointclamps, all dependencies frozen. Other four
+science roots remain live with26/8/10/11 hashes intact; GPU reserved and full
+independent-model/packing/stress/field/other-chemistry/temperature/viewer scope open.
