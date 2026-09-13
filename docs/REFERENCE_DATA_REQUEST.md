@@ -3875,3 +3875,58 @@ memory checks at that observation,3.6633720398GiB available against unchanged
 10GiB admission. Its common charge is retained; no new/native retry or lowered
 gate. The stage's running phase is not evidence of a running PW child. The
 wait mechanism and exact source/input/charge checks remain the shared owner.
+
+## Sarco verified progress — 2026-09-13, subsequent completion
+
+Sarco27393420 publishes the complete NEW-coordinate AN/PVDF/VDCN5/7/9
+curvature archive:27 matrices,6993 fresh native force units134533680bytes.
+Complete source/native/matrix/reducer/reduction replay passes; all nine
+candidates are sampled_numerically_positive internally across the three
+declared settings, with all27 FULL rotational-vector Ward gates passing.
+The preparation's collective azimuth is not held during curvature sampling;
+only the two terminal points are fixed. AN/VDCN are VDF-host single-central-
+defect chains, not pure homopolymers. No physical/model/size/bulk gate is cleared.
+VDCN9 has the least minimum/sensitivity clearance1.73443. Spectra use different
+Euclidean Cartesian spaces at different chain lengths: no bulk-modulus, MPa
+or chemical actuation ranking is inferred from their eigenvalues.
+
+Sarco c1dcaf60 publishes54 representative Cold9 geometry directions. The saved
+packet2538265bytes, SHA256
+2deb514ee45bfeb11ce38ea847cab91b73ff79e82feba45fc9a324cefee3e712,
+passes whole native parent/source/matrix/geometry/reader replay. Lowest internal
+directions are predominantly transverse; AN5 is especially pendant/H weighted.
+These are unit-coordinate directions, not field trajectories, energetic
+fractions, switching barriers or probabilities. CNEPO's prior18 products remain.
+
+Alpha-seeded PVDF's sampled PBE-D3BJ full-cell endpoint is now terminal:
+24atoms,82 optimizer steps/83 clean SCFs, max atomic force0.0002050974eV/A,
+max full stress0.7729727MPa. Exact endpoint/native receipts pass. Direct
+periodic torsion measurement retains T/G-/T/G+ in each chain; PE retains all
+eight measured backbone torsions trans. Alpha a-c metric angle changes from
+90.4027 to91.2348degrees, not just rigid rotation of the cell. This is not a
+spacegroup/packing classification, phonon-stability result or field switch.
+Held seed stresses of hundreds of MPa are not recoverable intrinsic pre-strain.
+
+Sarco a2e041e5 publishes the independent zz_p0050 replacement's complete
+common SCF and three fresh native Berry directions. Defining full-native
+archive/affine/vector/branch/result verification passes; terminal state/result
+SHA256 f06ca364791a993c4b22887921743fd9dca8870deb26308057d07e070fefb4fa /
+d94ddbfd51ac3b8bb527d14893af35b4a872fa2e169b3a9ac0af82a9770c377f.
+Third-direction admission waits464checks, then launches at13:28:51UTC with
+13.26268GiB available, completes cleanly13:37:20UTC. The10GiB gate was not
+lowered. No private payload process/scratch remains after acceptance.
+
+The full25point parent now uses explicit typed native-owner bindings in
+Sarco21afdef3:12 unchanged historical accepted owners, the independent axial
+replacement,12 wholly new shear owners.53 combined tests and actual native
+read-only verification of all12 historical points pass. Original failed parent
+and point remain immutable; historical producer hashes are not forged into
+current execution identities. Actual new-matrix preparation has begun after
+replacement completion; ready journals must be sealed/pushed before invocation.
+No complete matrix or tensor amplitude convergence is claimed here.
+
+Gamma, finite PBE0 geometry and periodic VDCN full-cell work remain CPU-only;
+Born4x8x64 has advanced to response execution. Born/clamped D3threebody remains
+unmatched, so no Born subtraction or d=eS. GPU reserved. All five research
+stages/all-target scope, independent DFT/basis/size, actual field/load paths,
+packing/mechanics/barrier/thermal/cycling qualification remain open.
