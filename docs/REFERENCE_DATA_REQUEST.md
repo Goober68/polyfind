@@ -1802,3 +1802,26 @@ The journal/protocol are in Sarco's
 `materials/gpu_bundle/periodic_reference/beta_pvdf/qe_berry_diagnostic/matched_zero_v1/`.
 Actual scratch is on E: for the specific subsequent same-density occupied-
 projector comparison; the other two CPU calculations remain live and GPU-free.
+
+### Producer independent molecular-geometry correction interface
+
+The finite PBE0-D3 Hamiltonian/gradient interface is now reusable through one
+owner, shared by the old vertical calculator and a new ASE adapter. It retains
+only a converged density as an initial guess, resets geometry-dependent DF/grid
+caches and independently reconverges every geometry; no frozen-density geometry
+optimization or fitted force model is introduced. Eighteen DFT reference/
+adapter/receipt/comparison tests pass, including actual warm/fresh displaced-water
+energy/dipole/force comparison. The full field energy-derivative water gate passes
+with force error2.48574e-5 eV/A and dipole error2.30104e-7 e A, with verified
+unchanged owner identity during the final gate. No existing vertical/molecular
+receipt was rewritten or promoted by these software tests.
+
+The actual PVDF/CNEPO four-stage finite-pair geometry protocol is predeclared:
+SVP from each original pair, TZVP only from its own accepted SVP result, original
+four endpoint clamps, full topology, force1e-4 eV/A, BFGSLineSearch200/maxstep0.05 A,
+explicit resource/identity/retention gates. The execution owner remains to be
+implemented; no geometry relaxation or corrected pair is claimed yet. This
+addresses independent geometry mismatch, not the separate bulk electrical
+clamped-ion request. Evidence: Sarco's `materials/gpu_bundle/results/dft_field/`
+under `reusable_reference_v1/` and `geometry_correction_v1/`. All live native
+VDCN/Born/paired-Berry dependencies remain frozen.
