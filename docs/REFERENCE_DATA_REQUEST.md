@@ -2125,3 +2125,22 @@ Fresh Born16 SCF completed0 at18:45:19.508899 PDT;16 response began
 18:45:19.514155 and remains live.32/64 remain pending. Both finite molecular
 and VDCN geometry campaigns remain active; no corrected ordering or switching
 mechanism is qualified.
+
+### Producer: completed counterfactual now independent of private scratch
+
+Sarco f4f8a57 archives both full successful corrected replay units,273331 and
+273327 bytes, and only1150-byte decisive diagnosis/envelope records for each
+invalid original, tied to actual native return/output hash/length. The owning
+terminal reader checks actual historical writer bytes from exact git blobs,
+complete native positives and the unchanged journals/acceptance without
+reopening private wavefunction snapshots. Neither old journal was rewritten
+or original NaN reclassified as valid. Strict ordered/versioned negative
+envelopes reject later protocol corruption after an early NaN.52 combined
+tests pass, including actual no-private-source qualification and tampering.
+Environment policy rejected removal of the now-redundant private counterfactual
+outputs, so those remain; no alternate deletion is attempted.
+
+Three additional read-only full-PW tests inspect the actual binary identity,
+fresh native symbols and unchanged original main/all linked libraries.39
+provider/common-charge/kernel tests pass. These build/provenance checks do not
+qualify pending fresh polarization repeats or any physical response.
