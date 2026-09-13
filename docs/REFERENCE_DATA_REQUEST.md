@@ -4657,3 +4657,28 @@ XZ_NEGATIVE_HALF_REPORT.md. No tiny-component resolution, symmetry-zero,
 Born subtraction/mechanical matching/compliance/d=eS, validated bulk calibration,
 field/load/MPa/pre-strain/barrier/rate/cycling or physical viewer promotion.
 Changing parent journals are excluded; NEW active work uses D:, GPU reserved.
+
+## Alpha16 terminal native evidence — 2026-09-13
+
+Independent Sarco session83619 exits0 after full original/control/source and
+all16 native input/stdout/receipt/unit/CRC/state/result replay. Producer is
+terminal COMPLETE with no owner: every native calculation returned successfully.
+Terminal state/result SHA256
+0e3d8d9874f247f501eddc8f60f463d59991bb6bb05d16b962e81a053b27c370 /
+79a724dd35f85d545b27dc9fa869d462e68e056368a91125c0e121b28261d4f9.
+The WHOLE numerical ladder gate FAILS unchanged4x4x4-to6x6x6 stress sensitivity.
+The final6x6x6-to8x8x8 increment passes all three limits:8.306339320067006e-10
+eV/atom,1.270876917903927e-7eV/A,0.0005629700003950688MPa changes. All eight
+zero-point symmetry/grid checks,16 actual full native mesh disclosures and
+both full derivative ladders pass. No passing last increment erases the earlier
+required failure or validates4x4x4 stress.
+
+All48 useful native artifacts, now-immutable terminal journal/result and reports
+have exact-hash D:/repository/E: copies, retaining original execution paths.
+See Sarco alpha_grid_convergence_v1/TERMINAL_REPORT.md. Original D: bytes remain
+for downstream execution-bound replay; no retry. NEW adequately sampled
+compatible relaxations must own actual method/recipe and fresh force/stress
+convergence. The4x4x4 derivative pass is not a denser-mesh derivative gate.
+Gaussian-basis/general geometry/size/phase/phonons, full-five-stage physical
+field/load/MPa/pre-strain/work/barrier/rate/cycling/viewer and validated bulk
+charge-flux calibration remain open. Six other native actors are live, GPU reserved.
