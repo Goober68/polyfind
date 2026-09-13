@@ -2172,3 +2172,27 @@ tensor. The live corrected zero repeat gate remains the prerequisite; successful
 y repeats alone do not qualify directions1/3. Same-Hamiltonian geometry,
 Born, transverse/grid/cutoff/basis, compliance and film-orientation gates remain
 open; no old failed slope or provisional charge fit is promoted.
+
+### Producer: first fresh corrected Berry solve and full-precision native bridge
+
+First fresh corrected Berry solve completed actual0 with finite
+P=-0.2061908C/m2,Q=0.7429302C/m2; all64weightedstrings/34reducedstrings/7links
+and0floors. Second started19:22:27.636418 PDT2026-09-12 under17171/
+start_ticks2718219, third pending. No whole three-repeat or material gate yet.
+
+qe_polarization_unit.py owns the first complete100684-byte stdout/441130-byte
+QEXSD XML unit and upstream actual journal snapshot in fixed_zero_xml_v1.
+Full-precision total reduced charge phase-0.2775372023848586 reconciles ionic
+0.26110759488280433 plus electronic-0.5386447972676629, with the native
+weighted overlap average/spin factor, valence/fractional nuclei, actual QE
+Bohr/SI constants and cell quantum. Full-precision y contribution is
+-0.20619075917387947C/m2, Q=0.7429301636036395C/m2. Rounded console phase
+values are not substituted for reduced cycles in future strain derivatives.
+
+The terminal reader verifies byte identities, typed actual native return and
+historical scientific/exporter writer bytes without private scratch. Nine
+bridge/33 combined tests include this actual full native unit, corruption and
+no-private-read qualification. Three-direction assembly is synthetic only;
+one y unit cannot become a full vector. Native outputs remain quantitatively_valid=false.
+Live producer sources/journals/binaries were untouched by the observer.
+See Sarco fixed_zero_xml_v1/RESULT_REPORT.md and berry_repeat_1/RECEIPT.json.
