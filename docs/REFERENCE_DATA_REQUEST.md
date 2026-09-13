@@ -1997,3 +1997,38 @@ fixed-cell is running, both full-cell stages pending. No corrected phase
 ordering or field path is qualified. Useful endpoint/milestone evidence:
 Sarco vdcn_phase/geometry_correction_v2/polar_fixed_cell.xyz and
 POLAR_FIXED_MILESTONE.md; whole-campaign result remains unavailable.
+
+### Producer: failed original replay and Born I/O; fresh counterfactual active
+
+The strict-positive exact-orbital replay v1 stopped on its original/instrumented
+measurement: native return0 and three envelopes/footer, but the first phase was
+NaN. Later finite markers do not repair the invalid whole numerical unit. Both
+native builds succeeded; v1 remains terminal failed, with no correction outcome.
+Sarco 7aa4634 publishes its diagnosis and a distinct five-stage counterfactual
+whose original negative observations are explicitly typed, never numerical
+records. All corrected measurements still require complete finite native
+coverage and the unchanged 1e-12 repeat/2e-7 C/m2 modulo-quantum source gates.
+70 unique combined tests pass; synthetic tests are not actual correction proof.
+
+The new counterfactual is actually active under PID15443/start_ticks2370328.
+It captures the exact failed v1 control, then reuses the identical already-built
+executables and qualified private orbitals without SCF or rebuilding. The newly
+executed original/baseline also produced NaN on its first pass, native return0
+at18:28:06.869849 PDT on2026-09-12. Both originals are invalid_nonfinite with
+records=null. Corrected/instrumented is now running; corrected/baseline and
+assessment remain pending. No causal or physical polarization conclusion yet.
+Evidence: Sarco qe_berry_diagnostic/berry_replay_v1/FAILURE_REPORT.md and
+berry_counterfactual_v2/{PROTOCOL.md,EXECUTION_REPORT.md,state.json}.
+
+The Born 4x8x32 response failed native return2 at18:16:12.702422 PDT, after its
+SCF completed. davcio reported an error writing
+./scratch_scf/_ph0/beta_pvdf_zero.dvkb31. This is I/O failure, not a qualified
+32-grid tensor/ASR or demonstrated physical nonconvergence; partial printed
+dielectric values are not results. The failed journal retains diagnosis and
+input/output hashes; the owner removed failed raw scratch. No raw errno proves
+the underlying cause. A fresh large-capacity-drive density refinement is being
+prepared; the old 8-grid raw ASR failure and all original thresholds remain.
+Evidence: Sarco beta_pvdf/born_response_kpoint/state.json, terminal phase=failed.
+DFT finite-chain and VDCN antipolar fixed-cell relaxations remain active. The
+completed VDCN polar fixed-cell endpoint does not qualify full-cell stability,
+intrinsic pre-strain, corrected phase ordering or a field switching path.
