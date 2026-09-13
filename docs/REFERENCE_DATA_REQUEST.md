@@ -1943,3 +1943,31 @@ force0.9788934 eV/A. VDCN fixed-cell polar step76 force0.00600092 remains above
 0.005; other stages are pending. Dense Born32 printed its dielectric diagonal
 but full Born/ASR and ladder qualification are not yet available. Neither
 partial progress nor a self-tested diagnostic clears a physical gate.
+
+### Actual occupied-space match; native owner defects reproduced
+
+Sarco's PAW-S projector experiment completed both self-controls and the paired
+comparison, each actual return0 with complete272-point/24-band/basis/hash checks.
+Paired maximum principal sine9.06e-8 passes the declared1e-5 numerical tolerance;
+raw Gram residual<=1.31e-14. Independently decoded occupied eigenvalues differ
+by at most3.714e-14 Hartree. Different final occupied spaces are not detected at
+this resolution despite the Berry discrepancy; this is numerical, not physical,
+qualification.
+
+The native augmentation Q(q) definition leaves norm-conserving output slices
+undefined and duplicates x*x where its vector norm requires z*z. Both real and
+complex variants share these defects. In an isolated actual complex-kernel
+original/fixed experiment using the exact charge/mixed pseudopotentials, the
+original retains a caller sentinel in norm-conserving outputs and has9.3498e-6
+relative axis spread in augmented active Frobenius norm. Owner-level complete
+zeroing and DOT_PRODUCT(q,q) zero those outputs and reduce spread to1.4963e-16.
+Only those four real/complex source changes are permitted. No global/live QE
+provider was modified. A separate real-kernel numerical control remains open.
+
+52 combined tests pass including actual negative/fixed kernel receipts.
+The causal original/corrected c_phase replay from exact paired orbitals is next
+and has not executed; orbitals are temporarily retained for that task. The
+pure-y radius is unaffected by the norm typo, so that typo is not asserted as
+the current discrepancy's cause. No Berry/material/Born/strain gate clears.
+Evidence: Sarco qe_berry_diagnostic/projector_comparison_v1/RESULT_REPORT.md,
+projector result/records,occupied_spectrum.json and qqc_probe_v1 receipts.
