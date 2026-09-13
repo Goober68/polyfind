@@ -4553,3 +4553,26 @@ not establish global basin extent, other chemistries, physical model/size/
 packing/field response or bulk/MPa/pre-strain/barriers/rates/cycling. Full36,
 all five stages/all target chemistries and validated bulk calibration remain
 open; GPU reserved. No charge-flux fit or physical promotion follows.
+
+## Electrical dispersion input-owner integration — 2026-09-13
+
+Sarco now implements ElectricalDispersionInputs as the one typed owner of the
+same-source two_body/three_body SCF+electrical input declaration and complete
+checksum/roundtrip. It calls the existing SCF/electrical template compilers,
+not copied physics generation; no shared pinned live implementation changes.
+Six real-compiler/synthetic-geometry tests pass0.017s, and actual admitted PVDF
+source/input-pair replay exits0. Complete in-memory declaration SHA256
+5fe9a84e03263d68da1f6d712fa2f9abeea413333c2674d39c8b65b253f78a0c.
+Both alternatives' ph.in exactly matches current Born16. The two-body SCF
+matches current Born16 exactly; three-body SCF matches accepted clamped zero
+apart from its single historical terminal newline. No native input is edited.
+
+This is INPUT CONTRACT integration only. No D: ready journal is prepared or
+sealed and no A/B SCF/DFPT child starts. Native lifecycle/whole response-and-
+wavefunction-checkpoint codec, declared tensor/acoustic/precision gates and
+actual controlled outcomes remain required. The charge-only Berry checkpoint
+excludes orbitals and the old projector manifest fixes272 points; neither is
+repurposed as a512-point DFPT checkpoint or duplicated. See Sarco beta_pvdf/
+ELECTRICAL_INPUT_VERIFICATION.md. Electrical executable/operator validation,
+mechanical matching, Born subtraction/compliance/d=eS, bulk calibration and
+full five-stage/all-target physical qualification remain open; GPU reserved.
