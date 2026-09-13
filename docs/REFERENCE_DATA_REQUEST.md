@@ -2832,3 +2832,33 @@ proper yy/shear producer convention, matched-Born settings, induced-inclusive
 polarization and mechanical qualification remain open. No inferred missing
 electronic response or validated total/pC/N coefficient is promoted. All four
 native jobs and the full five-stage chemistry scope continue unchanged.
+
+### Provider result: three-mode field deformation is not generally complete
+
+Sarco projects all108 accepted exploratory free/held field endpoints onto the
+lowest three internal modes at all three native numerical settings, raw and
+after removing collective axial swivel:648 Euclidean projections. See
+results/boundary_sensitivity/finite_mode_geometry_v1/FIELD_MODE_COVERAGE_REPORT.md.
+Original6993 native curvature forces and field endpoint/derived-result receipts
+are requalified, with original writer identities retained. The32 combined
+projection/geometry/space tests pass.
+
+Aligned squared-displacement coverage spans approximately1.15-99.69%, varying
+with chemistry/length/boundary/axis/sign. Holding azimuth does not cure truncation:
+PVDF9 x branches are only1.15-1.16% covered; free PVDF7 z branches8.74-8.83%.
+Worst coverage change across numerical settings is0.01731395percentage points.
+Do not substitute a three-mode animation for complete simulated deformation,
+or interpret geometric coverage as dipole/energy fraction or a coupling constant.
+
+These archives contain relaxed endpoints, not complete vertical field-force
+increments at the common zero geometry. A force-response prediction still needs
+those matched forces, baseline subtraction, numerical/small-field checks and
+sufficient resolved internal modes. No new electronic calculation or quantitative
+material/RIS-barrier/packing/pre-strain claim is made. DFT/model/geometry, matched
+crystalline/intrinsic stress and full five-stage validation remain open; all four
+native CPU jobs retain their frozen source/provider/protocol identities.
+Source/endpoint scalar force residuals for lower-coverage branches are retained
+in the report. A stable projection space does not qualify endpoint accuracy;
+tighter optimizer/electronic/zero-reference sensitivity is still needed before
+assigning omitted shape to a physical higher-mode mechanism or to numerical
+endpoint error. The current receipt readout does not distinguish those causes.
