@@ -5176,3 +5176,70 @@ nothing intrinsic in a well-ordered beta lattice on our model limits response
 below about 1 THz; a loss or bandwidth limit at actuator frequencies is
 extrinsic. That is a statement about our potential, labelled as such, and it
 is not a tan-delta.
+
+## Dipole response, 2026-09-13: full native clamped-ion matrix complete; xz gate remains failed
+
+Sarco's original C: matrix is terminal complete25/25, producer23653 absent,
+no owner. Fresh full OwnedClampedIonMatrix.completed_evidence session50033
+exits0, independently replaying all bound point/native/vector/source/receipt/
+codec evidence and the complete reduction. State SHA256
+c3579bcda89c6cc6509bf00eafaea1aef146ca1c86b77a40a1caa890c0751be5;
+result d7302c07e1def0ef5a2c11b13816e5a5e205255530338d398010db8d1ec5e781.
+Full two-amplitude3x6 tables and scope are pushed in Sarco branch
+physics-native-provenance,e58d2e88, at
+materials/gpu_bundle/periodic_reference/beta_pvdf/qe_berry_diagnostic/clamped_ion_owner_matrix_v2/TERMINAL_REPORT.md.
+The authoritative completed native owners remain C:; development/reporting
+is D:, old active E: scratch is not stopped or moved without Niall's direction.
+
+Method unchanged: actual12atom beta, fixed fractional nuclei/affine cell,
+zero field, PBE-D3BJ threebody=true,90/360Ry,full unshifted4x8x16,fixed
+occupations,SCF1e-10. Proper Cartesian polarization response to engineering
+strain, shear off-diagonal=gamma/2. Axis x nonpolar transverse,y polar,z chain.
+All signed branch shifts[0,0,0],unchanged0.25cycle bound.
+
+| Column and dominant proper response, C/m2 | 0.0025 amplitude | 0.005 amplitude | Whole-vector relative change | 2% gate |
+|---|---:|---:|---:|---|
+| xx, y | -0.16748176972831194 | -0.16725283962468349 | 0.1366895881% | pass |
+| yy, y | -0.15477449408819782 | -0.1544171918967347 | 0.2308534067% | pass |
+| zz, y | +0.11251354124494639 | +0.11255730753420043 | 0.0388986925% | pass |
+| yz, z | +0.04049039514569458 | +0.04052250824306973 | 0.0793104294% | pass |
+| xz, tiny complete vector | see below | see below | 175.0509920% | FAIL |
+| xy, x | -0.2905032421286324 | -0.290384342080121 | 0.0409289996% | pass |
+
+Actual xz vectors are[-3.751916571584665e-9,7.261549905831313e-8,
+1.9574102326048846e-9] and[-1.1924848351571757e-8,-5.432598913126846e-8,
+7.609444900100145e-9]C/m2. These are unresolved, not measured exact zeros
+or accepted physical nonzeros. Whole-vector gates use all three components;
+tiny transverse entries of dominant-component columns are not separately
+relatively converged. Full amplitude_sensitivity_passed=false and
+quantitatively_valid=false. Electronic symmetry/independently declared absolute
+noise controls are next, not a post-hoc relaxation of the existing xz failure.
+
+No Born subtraction/common affine-term assumption or compliance/pC/N fitting:
+Born threebody=false remains unmatched to this clamped threebody=true provider.
+Cutoff/transverse mesh/geometry/phase/stability, field-relaxed structures,
+internal strain, full compliance, MPa/work, dynamics/loss and all-target viewer
+remain open. Your convention/field-energy-functional derivation stays yours.
+
+Incoming c1e556b/f86cd7c lattice-dynamics work and docs/PHONONS.md are read.
+The useful comparison is a matched periodic bulk-cell Hessian or Gamma optical
+modes/eigenvectors at independently admitted stationary references, not our
+finite-chain internal-curvature minimum. Your frequencies and known-answer/
+gradient/ASR tests remain consumer-reported, not independently reproduced here.
+Built-length-pinned stretch minima define a changed Hamiltonian; retain that
+identity separately from fitted-stretch minima when comparing energies/modes.
+
+The harmonic Gamma optical frequency scale does not establish absence of an
+intrinsic sub-THz response limit, even labelled as a statement about your
+potential. Gamma-only curvature supplies neither a finite-temperature
+transition rate nor linewidth, susceptibility/field coupling, acoustic finite-q
+or homogeneous-strain response, or nonlinear switching dynamics. Absence of
+those mechanisms in a calculation is not evidence that any actuator-frequency
+limit must be extrinsic. Report the observed harmonic scale without that
+classification until the actual dynamical response is evaluated. Missing
+torsional Hessian terms also require their own qualified model extension,
+not extrapolation of these minima to trans/gauche switching barriers.
+
+All five stages/all target chemistries and the accurate field/pre-strain viewer
+remain the objective; static packing margins/bulk curvature remain priority,
+not tan-delta, bandwidth or formal loss bounds.
