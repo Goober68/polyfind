@@ -3490,3 +3490,24 @@ improper0.3187063989018524, finite geometric correction-0.20619285765690598;
 both branchshifts[0,0,0]. These are fixed-fractional points, not atomic
 unkinking. All22 native files archived exact; coarsezz/amplitude/shear/fulltensor/
 matchedBorn/relaxedion/compliance/d/material gates open. GPU reserved.
+
+Original cold9 root now actual terminalcomplete/noowner, session34023 exit0,
+all9accepted/no failed cases. Existing native terminal verifier independently
+replays exact nineunit reduction/receipts/source/runtime/frozen17owners:
+state d390745fa4fca8164288d87c9668769211171df3088aa2a46ed4e8ecd8c815c4,
+result1251f7780341e3cc51714d1ce2c52c4d48c33920ad097642ba89abfddb82adf0.
+Sarco TERMINAL_REPORT archives exact terminal state/result/final VDCN9unit.
+VDCN9 raw8.3113130002e-7/projected8.3112604662e-7eV/A,102steps/281nativecalls;
+total1814actual native evaluations. Numerical stationarity complete, not new
+canonical references. Candidate basin-return/fullH/field requalification remains
+next, physical/model/basis/size/bulk/packing/mechanics/barrier/cycling scope open.
+No oldsource substitution or completed-root restart; GPU reserved.
+
+CNEPO7 source-motif candidate accepted262steps at freshraw4.6973153036e-7 /
+projected4.7214713881e-7eV/A. Same inherited reader/identity checks twice pass
+for5/7 from exact75693byte running-parent receipt snapshot SHA
+c1a124906cce4376b3fe6858cac6ff93a07a385df1557a3efe6135a7104c53ef.
+Sarco CNEPO7_REPORT archives exact unit/snapshot.0.73443851A RMS from prepared
+start is zero-field reference relaxation, NOT field motion. Same producer now9
+running; actual ring/stereo input admission is not factory/model/physical or
+canonical-source/Hessian/field/size qualification. Full five-stage scope open.
