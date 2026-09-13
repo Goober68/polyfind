@@ -2144,3 +2144,9 @@ Three additional read-only full-PW tests inspect the actual binary identity,
 fresh native symbols and unchanged original main/all linked libraries.39
 provider/common-charge/kernel tests pass. These build/provenance checks do not
 qualify pending fresh polarization repeats or any physical response.
+
+Fresh corrected common SCF completed actual0 at19:14:39.616439 PDT2026-09-12,
+with finite positive6.03eV gap. First independently initialized charge-only
+NSCF/Berry solve started19:14:45.672571 under16774/start_ticks2672022;
+second/third remain pending. No polarization or whole-repeat result yet.
+See Sarco fixed_zero_v1/EXECUTION_REPORT.md and owned journal.
