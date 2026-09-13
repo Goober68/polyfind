@@ -3319,3 +3319,14 @@ receipts, full-cell relaxation, basis/sampling, phase/mechanical/electrical/
 physical gates and experimental full xyz remain open. All six science roots
 are kernel-live with20/17/26/8/10/11 owner hashes unchanged, GPU reserved.
 The full five-stage/other-chemistry/temperature/accurate-viewer scope stays open.
+
+Original fresh-every-evaluation AN9/AN5 now complete in181/76steps. Existing
+independent candidate/native-receipt reader passes; fresh raw/projected maxima
+3.4060293133e-7/3.4062455548e-7 and7.7181695698e-7/7.7136988927e-7eV/A
+are below unchanged1e-6gates at accuracy0.001. Native evaluations308/152;
+original-to-candidate free RMS0.0082927595420972A/5.9912723760359606e-5A.
+Raw accepted units and an exact observed journal snapshot are retained under
+Sarco cold_reference_refinement_v1; ACCEPTED_AN9_AN5_REPORT.md gives hashes,
+receipts and limits. Snapshot is running-parent context, not terminal/all-nine
+evidence. AN7 continues in the same process. No canonical source replacement,
+basin/Hessian/field/model/size/bulk/crystalline-prestrain/physical gate is claimed.
