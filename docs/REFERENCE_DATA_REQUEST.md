@@ -28,6 +28,17 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13: Sarco independently publishes the first TWO completed PVDF9
+sampled returns after full12-baseline/36-input/native receipt/candidate/source/
+whole checksum/direct comparison replay (session59353 exit0).623 fresh
+evaluations/375steps, unchanged raw/projected forces and local return gates pass.
+Third trial was not complete in the admitted snapshot; full36 remains open.
+This is local zero-field point-clamp/held-azimuth numerical repeatability, NOT
+global basin, size/model, field/packing/crystalline response or calibration data.
+Canonical C: report: materials/gpu_bundle/results/boundary_sensitivity/
+native_basin_returns_v1/PVDF9_TWO_REPORT.md; useful exact units/report verified
+on E:, changing-parent journal excluded. Original live producers stay frozen.
+
 2026-09-13 follow-up: Actual empty-input CPU-only QE PW/PH startup probes
 each spawn /usr/bin/orted plus two background kernel tasks in both native/helper
 groups, even at one rank/one OpenMP thread (six per-task logs). They terminate
