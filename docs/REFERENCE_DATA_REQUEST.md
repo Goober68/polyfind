@@ -3089,3 +3089,51 @@ and future force-owner scalar reporting requirement without changing the active
 epoch. No rejected geometry/log/trajectory/checkpoint or accepted PVDF5 unit
 is retained. Same run continues PVDF7, no retry/lowered gate/substitution;
 three accepted AN candidates remain useful, but all-nine cannot pass this attempt.
+
+### Complete frame-conditioned quadratic endpoint readout
+
+Sarco6b58c57e implements the comparison at its defining boundary and archives
+the independently requalified larger negativeyy=-0.005 point. Its original
+point owner replays complete submitted inputs/native stdout/XML, clean returns,
+writer/protocol and exact result; statee226b4d186f17f5f196e7d78a8be36f1676da9ad907d3ceef0ecb48fbefbb37b,
+result944768723e9f32ab626beacd8a93d60e3d2f37045ebe03e05e05d48673818acc.
+P=[1.017780088e-9,-0.2054167882994,-2.925575925e-11]C/m2. Parent advances
+positive coarseyy; no larger-pair/amplitude/full-tensor/Born/mechanics gate.
+All20 intended files' unfiltered raw Git index bytes match working bytes,
+including native whitespace. PVDF7 tighter refinement also fails its distinct
+fresh-force gate despite step58 cachedprojected9.039168231e-7; same missing fresh
+maxima diagnosis, no accepted unit/rejected geometry/log/checkpoint, no retry.
+
+finite_quadratic_endpoint.py uses six matched signed axis responses to build
+the central-odd local map. Its endpoint comparison rotates BOTH actual geometry
+and laboratory field through the existing defining frame owner, compares the
+entire free vector, and reports the separate error from leaving the field
+unrotated. Measured swivel is conditioning, never predicted angle. Preserve all
+108 endpoints, three Hessian settings and both5/65axis-probe amplitudes:648
+comparisons, not an easier subset. No fitted gate, Newton-offset subtraction,
+physical higher-mode attribution or unmeasured mixed-field nonlinear pass.
+All21 focused tests pass, nine new synthetic math/complete-plan/lifecycle tests.
+Sarco4e397a8f seals/pushes the ready journal before CPU execution. The same
+readout now runs asPID25373/start_ticks5161570, session85293; kernel liveness
+and all23 analysis-owner hashes verified. Original complete6993force/234field/
+108endpoint evidence must replay before/after comparison and reproduce old324
+quadratic/108frame reports exactly. No completed comparison yet; GPU reserved.
+
+### Actual ideal held-angle slice is affine
+
+Read-only analysis of the defining AxialFrame finds C(X),S(X) affine for fixed
+clamp axis/origin, so holdingphi iscos(phi)S-sin(phi)C=0 on its positive branch.
+Atphi0 the old full internal complement is the exact affine slice. Its analytic
+restricted potential Hessian isC.T H C; projected angle-Hessian and support
+reaction-curvature terms vanish. The analysis reuses actual owner measurements/
+gradients, not a parallel constraint implementation. Nine original typed
+sources x three targets x two derivative steps give54 guarded mathematical
+probes: max angle4.44e-16rad, projected angle-gradient4.405e-17A^-1, projected
+angle-Hessian-direction2.585e-14A^-2. Five synthetic tests pass, including wrong
+branch and a nonstationary normal-force quadratic. Sarco azimuth_slice_v1/
+SLICE_ANALYSIS.json SHA256
+350dc22bb889023bfe8c6b4a0876957c061fd42bb329d95a84c1be1475eeb88a;
+SLICE_REPORT.md gives the derivation and scope. This corrects an unnecessarily
+conservative missing-constraint-curvature caveat, not sampled-H/source/electronic/
+finite-field/free-swivel/packing/model/physical uncertainty. No force replay or
+new reference/material gate is inferred; all five research stages remain active.
