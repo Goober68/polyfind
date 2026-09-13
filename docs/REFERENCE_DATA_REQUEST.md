@@ -4227,3 +4227,24 @@ remain pending. No alpha physical phase-ordering, field/switching or bulk
 charge-flux fit is promoted. Six previous CPU owners remain alive, code110pins
 unchanged; two native basin returns complete and clamped matrix16points accepted
 are progress snapshots, not new independently qualified aggregates. GPU reserved.
+
+Sarco9c7dea48 then publishes independently replayed second AN5 native return
+seed73412:113steps/199 native evaluations, raw/projected free force7.51e-7eV/A,
+RMS9.621054533834393e-6A, max1.9603953952786355e-5A and energy difference
+-1.9554136088117957e-11eV. All sampled-return tolerances pass for this trial.
+Fresh complete source/declaration/native unit replay session16261 exits0.
+Exact48645byte unit SHA256
+fc377e17c19c9c2d1430d88ce1d8425083cf3651a22adc4172d7491fa84726a0.
+This qualifies two AN5 trials, not all36, global basin extent or physical accuracy.
+
+The same Sarco publication archives the independently replayed COMPLETE
+yz_m0050 native common SCF/three Berry directions/affine geometry/charge/
+vector/branches/result. Actual full native reader exits0; state/result SHA256
+9f01b5810cbdfef6f27c809221342f5850d07662d148d719f5e99673e91533e5 /
+d3767d3a6087793bdedc89ada4d297f84131de2cddfbc0323925202dc824d906.
+P=[1.032902936604843e-9,-0.2061919172376618,0.0003128673020345915]C/m2,
+branches0. Exact17-file Sarco raw-to-index archive includes useful native raw
+files and this AN5 unit; original native whitespace is preserved. Live parent
+journals are not published. Positive0.5% yz and proper paired amplitude
+comparison remain pending; D3threebody mismatch still prevents Born subtraction
+or bulk charge-flux fitting. No physical qualification is promoted.
