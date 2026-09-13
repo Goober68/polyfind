@@ -2942,3 +2942,30 @@ replay exactly reconstructs the published analysis; all237 native/derived JSON
 entries and all five analysis owners match unfiltered raw-byte Git index hashes.
 The59 tests pass. Four original live root identities and their26/8/10/11 frozen
 owner hashes were rechecked before archive publication; no active epoch changed.
+
+### Full internal Cartesian quadratic response test
+
+Sarco bcddb2d2 implements and predeclares the next diagnostic: all324 signed
+field-point estimates at the27 original Cartesian curvature settings, plus27
+zero-reference Newton diagnostics and378 independent Cartesian-step/electronic/
+signed-amplitude comparisons. The original point-clamp tangent/complement owner
+defines the complete internal space. Strictly positive internal operators are
+solved without clipping, regularization or pseudoinverse; support reactions and
+removed axial driving load/torque remain separate. Matrix/vertical samples must
+match complete Hamiltonian/settings, runtime and base producer. Lowest-three-mode
+displacement coverage reuses the existing Euclidean projection owner.
+
+All66 combined tests pass. The CPU-only readout is live as PID10956/
+start_ticks4859696, observed advancing CPU time while requalifying the original
+6993force archive. It will replay all6993 forces and234 field units before and
+after deriving the report; source/numerical/analysis identities remain guarded.
+No completed native harmonic readout is yet claimed. Code/protocol and producer
+dependencies remain frozen for this active readout. Four original CPU root
+identities and their26/8/10/11 owner hashes remain live/unchanged; GPU stays
+reserved and all five research stages remain active.
+
+The diagnostic fixes the linear axial tangent gauge. It is not the full nonlinear
+azimuth-constrained Hessian, finite-angle swivel prediction or observed molecular
+deformation. Source Newton correction is not an independently bounded displacement
+error. Endpoint agreement, collective-swivel/field-frame matching, DFT/model,
+packing, mechanics, RIS/barriers, pre-strain and quantitative viewer gates remain.
