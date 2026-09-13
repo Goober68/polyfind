@@ -28,6 +28,31 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13: Sarco's original live source repo independently publishes all three
+PVDF seven-mer baseline-bound sampled returns after full12-baseline/36-input/
+native receipt/candidate/source replay (session54054 exit0).712 native
+evaluations/430steps; unchanged raw/projected forces<=1e-6eV/A and direct local
+RMS/max/energy gates pass. This is small zero-field point-clamp/held-azimuth
+numerical repeatability, not bulk, field, model/size, global-basin or calibration
+data. Canonical report: materials/gpu_bundle/results/boundary_sensitivity/
+native_basin_returns_v1/PVDF7_REPORT.md; exact useful whole units/report verified
+on E:, no changing-parent journal archive.
+
+The separate D: physics-native-provenance branch now implements a checkpoint
+read-trace owner and a launcher observer for one declared serial native consumer.
+Actual tracer/consumer epochs and sampled mapped ELF are distinct; completed
+stdout/receipt/argv/PID/times and exact reference-bound per-PID reads replay
+together. All69 combined regression controls pass34.760s, including clean
+mapped/no-reference-read rejection, actual tracer-death/no-orphan and rejecting
+FD path tags found only inside a read buffer, not its actual descriptor. The17
+process/ownership/ELF regressions pass3.161s. Read counts and mappings do not
+attest full byte consumption or
+historical authenticity. Actual controlled SCF->checkpoint->PH A/B science,
+electrical/tensor/precision and mechanical-matching/material gates stay open;
+these synthetic kernel-read controls are not calibration data. Original C:
+producer/source epochs stay frozen, new source/Git I/O on D:. Existing three
+E: scratch workflows are unmigrated pending the user's interruption decision.
+
 The beta-PVDF PBE-D3(BJ) campaign is active in
 `sarco/materials/gpu_bundle/periodic_reference/beta_pvdf`. The stress-free
 periodic reference and all 13 unique relaxed-ion cells (zero plus +/-1% and
