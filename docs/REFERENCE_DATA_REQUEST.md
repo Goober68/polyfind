@@ -5064,10 +5064,22 @@ dipole/Berry polarization. No field-induced trans/gauche transition is inferred.
 Already admitted original native seed forces violate the glide by0.7457967818
 eV/A, C-centering by0.4184043043eV/A, and combined operation by0.6213039511
 eV/A. Native/shell maximum vector difference1.051e-7eV/A is within the original
-representation audit. Gamma-specific actual grid/covariance controls are next;
+representation audit. Controlled grid-compatible native covariance is next;
 alpha's separately demonstrated numerical-grid artifact does not establish
 gamma's cause by analogy. Do not calibrate physical phase/packing margins from
 this old numerical symmetry loss or subtract unlike alpha/beta/gamma conformations.
+
+Subsequent sarcofb905a3d now publishes actual gamma LOAD-only input/output and
+independent offline replay. Input/protocol pushedb8e75023 before invocation;
+child3993/t9562771 exits0/absent, no SCF/force/optimizer/GPU or new E: scratch.
+PW/RS four-level abc counts are72x135x125,40x75x72,24x45x45,15x25x24.
+C-centering is incompatible on ALL levels (odd b); glide incompatible on1/3
+(odd c), preserved-axis/origin-independent. Exact rational source CIF operations
+also independently pass full seed species bijections. An actual gamma
+discretization-symmetry mismatch is established, not the force-error magnitude/
+causal replacement recipe or physical minima. Next is the separately declared
+same-geometry grid-compatible native energy/full-force-covariance comparison,
+then independently qualified new relaxations; do not retry this LOAD.
 
 Your low-loss/high-frequency static calibration priority is retained: controlled
 same-Hamiltonian/conformation/chemistry/normalization/boundary PVDF polar/antipolar
