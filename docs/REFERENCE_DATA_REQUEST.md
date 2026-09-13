@@ -3044,3 +3044,48 @@ coordinates and curvature/field archives remain unchanged. A distinct qualified
 source epoch with new evidence is needed before substitution. All four original
 CPU roots and their26/8/10/11 hashes remain live/frozen, GPU stays reserved, and
 the full five-stage research retains its independent validation requirements.
+
+### First tighter candidate and VDCN held-cell pair
+
+AN9 completed2026-09-13 01:51:31.818717 PDT after182steps. A distinct fresh
+native zero-field calculator ataccuracy0.001 passes raw/projected force gates
+9.879325169e-7/9.879087714e-7eV/A versus1e-6. Actual original-to-refined
+displacement0.008292026737A RMS agrees closely with old tight Newton diagnostic
+0.008311787739A: full-vector difference0.4325374368%, cosine0.999993456186,
+differenceRMS3.595159364e-5A. The original numerical stationarity concern is
+supported; this is not field-induced motion. Candidate unitSHA256
+e77faf55bbe02f300f4d5df02e29d84996455c031e9ceabbf38d7e0b89f5a828,
+milestoneJSON5044a687012680484f9358c885fda5e625ab93b83cb31f517f259151c4ef032d.
+See Sarco reference_refinement_v1/AN9_MILESTONE.md. AN5/AN7 also complete;
+the same frozen nine-point run has advanced to PVDF5, GPU remains reserved.
+Old source coordinates are not substituted. New admission/three-trial basin
+return and new Hessian/field/independent model evidence remain required.
+
+VDCN antipolar held-cell completed01:48:20.658247 PDT after121steps/122SCFs;
+childexit0, original writer-owned representation auditPASS andforce0.00402720022
+eV/A below0.005. Original run now relaxes polar full-cell. Both completed
+held-case/geometry receipts are archived without sealing the active parent;
+FIXED_PAIR_MILESTONE.json SHA256
+5d763dc24de91a1fedcef83b7e84bd8905978fd258a501aa063e00456951bb44.
+The reader reuses original stage endpoint loading and guards runtime/protocol/
+sources, both geometry hashes, exact held cells and periodic topology. Native
+raw outputs were originally audited then removed by their retention owner,
+not freshly replayed here. Antipolar-minus-polar=-8.770059399meV/monomer under
+DIFFERENT held cells, not equilibrium phase ordering. Held stresses are not
+intrinsic pre-strain; full-cell/stability/mechanics/model/path gates remain open.
+All22 focused synthetic refinement/milestone tests pass, ten new; no native
+SCF attestation is inferred from tests. All five original/refinement roots and
+13/26/8/10/11 hashes remain live/frozen; no completed five-stage claim.
+
+Sarco126cfc79 commits/pushes the AN9 and VDCN pair milestones and ten new tests;
+only13 intended files, all unfiltered raw Git index bytes exact, no active
+journals/user edits included. PVDF5 subsequently fails its DISTINCT FRESH
+raw/projected force gate at01:58:16.926133 PDT despite optimizer step78 cached
+projected9.832666631e-7eV/A passing1e-6. It is not a cap failure or accepted
+candidate. The current exception does not retain separate fresh maxima, so
+which force failed/how far above threshold/noise/support-torque attribution
+remain unknown. Sarco PVDF5_DIAGNOSIS.md records that diagnostic limitation
+and future force-owner scalar reporting requirement without changing the active
+epoch. No rejected geometry/log/trajectory/checkpoint or accepted PVDF5 unit
+is retained. Same run continues PVDF7, no retry/lowered gate/substitution;
+three accepted AN candidates remain useful, but all-nine cannot pass this attempt.
