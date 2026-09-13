@@ -3743,3 +3743,55 @@ Alpha/gamma, Born mesh, finite PBE0 geometry, periodic VDCN and replacement
 axial point give six live CPU owners; actual PID/start-time/code checks pass.
 Born/clamped D3threebody settings remain unmatched: no Born subtraction/d=eS.
 GPU reserved, quantitatively_valid=false; full five-stage/all-target scope open.
+
+## Producer: native curvature now sampling the new CNEPO candidates
+
+Sarco24b90ad6 makes workflow/scope/writer declarations explicit at the shared
+FiniteCurvatureCampaign boundary. CandidateCurvatureCampaign supplies the
+complete native candidate input archive and existing calibrated coordinate
+force adapter; root/column/force/matrix/reducer/error retention is inherited,
+not copied. The candidate native producer supplies its own original factory.
+Three accepted CNEPO5/7/9 inputs, nine matrices,1134 free Cartesian columns,
+2277 planned native force calls including nine independent undisplaced baselines.
+Same0.001/0.0005A steps at accuracy0.01 and0.0005A at0.001, raw baseline gate
+1e-4eV/A, linear terminal point clamps ONLY. Preparation's held-azimuth support
+is deliberately not used in these force samples. Complete rotational vector
+Ward/sensitivity/full and complement spectra gates remain the original reducer;
+no deleted arbitrary negative/soft modes or inherited old-reference qualification.
+
+29 synthetic shared-lifecycle/routing/force tests pass106.455s. Actual original
+27-matrix archive requalifies unchanged state/result hashes
+75aa69ba3f917d3085c8ef7ffc3456df33fe328eda6f599db09122fe626dfdec /
+34b4e3fff18b603a078381ec39109483dc0f536add48a9776a347e15e9f380a7.
+Historical writer65914cfd1938db7d88afc8b5fb081bfe49895595a4bccac53feb7592f39b26f2
+is found in actual fd1174534f46f015e6134815060583025e52f8f0 Git bytes,
+not relabeled by the current consumer.
+
+First preparation validated source but stalled at WSL Git remote ancestry
+read. Windows host Git returned the actual remote SHA immediately. Verified
+Git-read subprocesses only were stopped; preparation exited before any ready
+journal/native payload. Shared transport fixbc89b542 uses native host Git for
+mounted Windows repos, no prompts/30second command bounds, same actual pushed
+byte/ancestry proof, no credential/repo configuration change.30 tests pass85.251s;
+actual native-host ancestry read passes3.075s. This was not failed chemistry.
+
+Actual preparation after pushedbc89b542 creates the complete nine-matrix ready
+journal141441bytes SHA256
+b9d38b077a2eda29da2c17e87e55dd4ba5f6115e68c286e02438146ba5b40963,
+27 writer files, source checksum unchanged032457f65ee59647d696d5f460dbcbaaaf70c25143f60d0aaa107f5ca9172041.
+Ready state/report committed and pusheddb4b8d32 BEFORE invocation.
+Native root30858/start_ticks6425469 is running from2026-09-13T12:41:15.006999UTC,
+CPU31/one OMP/OpenBLAS thread, memory11.63839GiB at preflight. First complete
+CNEPO5 h001_a01 matrix has all90 signed-pair columns accepted and matching
+fresh baseline36a6ecc78c7760072de369bfc1a1376cc8ad8243625cda3a44655b09e829b0f7.
+No internal-stability conclusion before remaining paired matrices/reducer.
+See Sarco candidate_curvature_v1/cnepo protocol/verification/readiness.
+
+Independent axial point's common SCF completed cleanly. First Berry admission
+actually waited through ten temporary shortage checks, retained common charge,
+then admitted on check11 and launched12:32:53.873451UTC, child15597/start_ticks6380841,
+memory11.349163GiB at admission. Latest/count retained, not guessed historical
+shortage metrics. Original failed records unchanged; no native retry/missing
+vector inference. Seven CPU scientific owners now live, pinned code unchanged.
+GPU reserved, no completed fulltensor or physical/material/field/cycling/viewer
+qualification, quantitatively_valid=false; all five stages/all-target scope open.
