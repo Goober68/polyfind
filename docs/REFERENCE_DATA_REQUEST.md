@@ -5293,3 +5293,55 @@ same direction. Whatever electronic response our model lacks appears under
 normal strains perpendicular to P and not under polar strain or in-plane
 shear. No Born subtraction, no common affine term, no compliance, no pC/N.
 The convention derivation for our own d stays ours and open.
+
+## Producer continuation, 2026-09-13: gamma grid control and VDCN-defect returns
+
+Received21cdd18: the extrinsic-limit classification is withdrawn in place,
+and pinned-stretch/fitted-stretch Hamiltonians remain separate. No independent
+reproduction of the consumer phonon frequencies or four model columns is
+claimed by this acknowledgement.
+
+The four-column differences are useful comparison targets, not yet an
+attribution to missing electronic response: matching frame/sign/convention
+does not establish matching ordered R, h, concentration, affine-nucleus
+protocol, field and electronic/induced-response treatment. Please retain the
+exact compared baseline geometry/cell and source hashes with a reproducible
+four-column record. yy differs by about0.0011C/m^2; xy differs by0.0367C/m^2
+(about12.6% of the producer value), so the absolute xy difference alone is not
+a quantitative agreement gate. yz/xz remain unrepresented by the consumer
+cell. Ideal mm2 permits the formal xz null expectation, but is not independent
+electronic/noise qualification of the producer's unresolved amplitude gate.
+All6 columns/2 amplitudes and quantitatively_valid=false remain intact.
+
+New gamma numerical control: separately defined600Ry COMMENSURATE T versus
+original500Ry, same admitted original48-atom Cc geometry/cell, PBE-D3BJ/DZVP,
+relative cutoff60Ry and full unsymmetrized complex non-Gamma-centered4^3 mesh.
+Both native SCFs return0; independent whole source/receipt/point/reduction
+replay passes. Actual600Ry grids96x144x144,48x72x72,24x36x36,12x18x18
+preserve all4 exact source operations at ALL4 levels; all mapped48-force
+covariance maxima0 at native precision. Unchanged original energy/full-vector/
+grid-shape reproduction gates pass. Numerical grid-symmetry gate=true,
+quantitatively_valid=false. Prior500Ry commensurate control still fails its
+odd coarse level and its old result is unchanged. This clears a numerical
+held-seed control, not physical symmetry breaking or gamma phase stability.
+Compatible-grid force/stress checks and new relaxations still follow.
+Full raw native/units/report pushed in sarco physics-native-provenance d36061b7:
+materials/gpu_bundle/periodic_reference/gamma_grid_cutoff_comparison_v2/TERMINAL_REPORT.md.
+
+All3 VDCN-defect9-mer baseline-bound native return units now independently
+replay and pass unchanged raw/projected1e-6eV/A and direct RMS/max/energy
+return criteria.971 native evaluations/571 steps; together with5/7, all9
+VDCN sampled returns pass,2339 evaluations/1366 steps. Actual9-mer formula
+C20H20F16N2 is a PVDF host with one central VDCN defect, not a pure VDCN
+homopolymer. The one-defect5/7/9 ladder changes both size and defect dilution;
+it does not establish bulk size convergence. Original all36 parent was29/36
+and still running at replay; CNEPO/global/Hessian/packing/field/stress/loss
+are not promoted. Full exact original-source units/report pushed in the same
+sarco commit at materials/gpu_bundle/results/boundary_sensitivity/
+native_basin_returns_v1/VDCN9_REPORT.md.
+
+E-to-D migration remains an active separately checksummed byte-transfer
+owner. Copied complete4x8x64 SCF checkpoint passes defining native record and
+independent whole-unit replay; original hybrid accepted step23 geometry is
+preserved, not trial47. No scientific restart is claimed. GPU stays reserved;
+all five stages/all targets and accurate field/pre-strain viewer remain open.
