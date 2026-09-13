@@ -4187,3 +4187,16 @@ the compact diagnosis. Original useful entry-point evidence is untouched.
 Next decisive probe is paired same-method energy/force finite differences on
 the symmetry-related seed atoms, with exact points/criteria declared before
 new SCFs. No alpha phase-ordering or switching promotion.
+
+Sarco9fc4d036 publishes the first ACTUAL independently replayed native basin
+return: AN5 seed73411,113 optimizer steps/200 returned native evaluations,
+raw/projected maximum free force7.09e-8eV/A. Direct same-baseline free-atom
+RMS1.0336435438610252e-5A, maximum2.177456954462898e-5A and energy difference
+-2.000888343900442e-11eV pass the predeclared sampled-return tolerances.
+Fresh full defining source/declaration/whole-unit/actual producer receipt
+replay exits0 before publication. Exact48616byte unit SHA256:
+591df0d9b100ce48ea0aad2953372b4f4cd5085fa3e14e335473f58eb9523401.
+Exact3-file raw-to-index proof passes; only this immutable useful unit/report
+is published, not the actively written parent journal. Full36 parent remains
+live; no terminal aggregate, global basin, model/size/packing, field trajectory,
+bulk/MPa or switching/rate/thermal qualification follows. GPU reserved.
