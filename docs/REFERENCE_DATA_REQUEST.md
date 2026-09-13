@@ -4785,3 +4785,51 @@ New work is on D:; existing E: scratch runs remain unchanged pending explicit
 interruption/migration direction. All five-stage/all-target tensor/precision/
 model/basis/size/geometry/mechanics/field/pre-strain/work/barrier/rate/cycling/
 viewer gates and validated bulk calibration remain open, GPU reserved.
+
+## Launcher-bound observation implementation — 2026-09-13
+
+Sarco eb56a814 is pushed on physics-native-provenance, not merged into live
+main. NativeCommand now accepts an abstract observer contract: execution owns
+the supervised child/argv/completed receipt; the observer owns its facts, legal
+states and whole self-validating journal. NativeProcessObservation implements
+new -> waiting_exec -> waiting_loader -> captured -> complete, with terminal
+failed alternatives and no reset/retry. Persisted captured facts bind the actual
+child epoch/command and lie inside its native receipt interval. A clean native
+exit without adequate observation remains a FAILED observation, never promoted.
+Sampling failures preserve native output/actual return without relaunching;
+initial journal failure still reaps the owned child. Recovery accepts only
+confirmed absent original owner/child epochs and preserves their identities;
+live owners/view changes cannot be treated as absent. Reused PID/different-boot
+original epochs become terminal failed, not refreshed.
+
+NativeExecutionReceipt is the SINGLE receipt-CONTENT/checksum owner reused by
+the launcher and electrical artifact reader. Strict fields/types/aware ordered
+times/exact stdout bytes/input association are checked. Signed nonzero receipts
+remain useful diagnostics, not clean success; authenticity is never asserted
+by receipt content alone. Full electrical artifact payload schema/flags remain
+unchanged. NativeELFRuntime retains PORTABLE provider schema1; distinct
+NativeProcessELFRuntime owns PID-bound schema2 observations. One capture/parser/
+closure/hash path serves both; no dual-purpose behavior flag or copied parser.
+An actual independent-process regression proves provider identities compare
+across launches without converting stage evidence into portable PID claims.
+
+Fresh54 observation/receipt/launcher/electrical artifact/operator/input/checkpoint
+tests pass4.068s;17 process/ELF controls pass3.560s. Lightweight actual sleep/
+Python controls and synthetic corruption/recovery/different-observer-state
+controls are used, not chemistry. Fresh actual full C:/D: input comparison
+proves ONLY source_geometry placement differs; all FOUR native input byte pairs
+are identical, geometry SHA256 remains
+3b3a7714f21cc971c0dcb9b7100b2486ddb7c6674ea0ab43a8c9875bd7998479.
+New D: whole declaration SHA256 is
+557edbc17e80467cca73dab2d039f68e1031330ae587e3e10d2411e4f3575070;
+whole replay passes. This is new path-bound declaration identity, not a refresh
+or relabelling of the old C: unit. Six original live epochs/110 code pins remain
+unchanged; no native SCF/PH, E: scratch replay or migration is performed.
+
+Actual PH checkpoint-read tracing, sealed explicit SCF/checkpoint/PH experiment
+lifecycle/source/tool/method declarations, complete independent A/B replay and
+tensor/acoustic-sum/precision gates remain required before combining responses.
+No electrical equality, full tensor, mechanical matching/internal strain/
+compliance/d=eS, calibrated bulk fit or full five-stage/all-target physical
+field/load/MPa/pre-strain/work/barrier/rate/cycling/viewer gate is released.
+See development-branch NATIVE_PROCESS_PROVENANCE.md; GPU reserved.
