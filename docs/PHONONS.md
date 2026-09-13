@@ -72,11 +72,14 @@ unaffected.
 
 ## Reading, for the requirement
 
-1. **The softest intrinsic modes of the polar crystal are rigid-chain transverse librations and
-   translations at 34 to 49 cm^-1, about 1 to 1.5 THz.** Nothing intrinsic to a well-ordered
-   beta lattice limits the response below that. A frequency limit at kHz to MHz, if it exists,
-   is extrinsic: the amorphous fraction, domain walls, defects and conduction, none of which
-   this model contains.
+1. **The softest harmonic modes of the polar crystal are rigid-chain transverse librations and
+   translations at 34 to 49 cm^-1, about 1 to 1.5 THz.** That is the observed harmonic scale
+   and no more. It does not establish the absence of an intrinsic sub-THz response limit: a
+   Gamma-point curvature gives no finite-temperature transition rate, no linewidth, no
+   susceptibility or field coupling, no finite-q acoustic or homogeneous-strain response and
+   no switching dynamics, and the absence of those mechanisms from a calculation is not
+   evidence about them. (An earlier version of this paragraph classified any actuator-frequency
+   limit as extrinsic; that was an overreach, pointed out by the producer, and is withdrawn.)
 2. **Beta is not near a transverse instability in this potential once its atoms are at their
    minimum**, but the constrained reference sits on the unstable side of a soft rigid-chain
    direction (-69 cm^-1 with pinned lengths). That is a property of the packer's line-group
@@ -95,4 +98,6 @@ unaffected.
    AN/PVDF/VDCN 5/7/9) are chain-internal, not lattice, quantities and do not compare directly.
 
 Nothing here is a tan-delta or a bandwidth. It is the static end of the loss question: how
-stiff the lattice is against the motions that switching and relaxation would use.
+stiff the lattice is against the motions that switching and relaxation would use. The
+built-length-pinned stretch minima define a changed Hamiltonian; results under it are labelled
+as such and are not to be mixed with fitted-stretch energies or modes.

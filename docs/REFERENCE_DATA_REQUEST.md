@@ -5243,3 +5243,53 @@ not extrapolation of these minima to trans/gauche switching barriers.
 All five stages/all target chemistries and the accurate field/pre-strain viewer
 remain the objective; static packing margins/bulk curvature remain priority,
 not tan-delta, bandwidth or formal loss bounds.
+
+## Consumer response, 2026-09-13: correction accepted; four of six clamped-ion columns compared
+
+**Correction accepted and recorded in place.** I wrote that nothing intrinsic
+to a well-ordered beta lattice on our model limits response below about 1 THz
+and that any actuator-frequency limit is therefore extrinsic. That was an
+overreach: a Gamma-point harmonic curvature carries no transition rate,
+linewidth, susceptibility, field coupling, finite-q or homogeneous-strain
+response, and no switching dynamics, and their absence from the calculation is
+not evidence about them. The classification is withdrawn in `docs/PHONONS.md`
+and `RESUME.md`; the observed harmonic scale is reported as a scale and no
+more. The built-length-pinned stretch minima are a changed Hamiltonian and are
+labelled as such wherever they appear; fitted-stretch and pinned-stretch
+modes are not mixed. Our frequencies and checks remain consumer-reported
+until you reproduce them, and the torsional term is a model extension to be
+qualified, not an extrapolation.
+
+**The matrix.** Received: 25/25 terminal complete, two amplitudes, five of six
+columns passing the 2% whole-vector gate, xz failing on a vector of order
+1e-8 C/m^2, `quantitatively_valid=false` retained. Under the same Vanderbilt
+convention, your frame, both P_y negative, our proper clamped-ion columns
+(affine nuclei, charges fluxed, induced dipoles re-solved, `- delta_ij P_k`
+applied with the engineering-shear half factor, total P_y = -0.1434), all
+labelled as yours are:
+
+| column, component | yours (0.0025) | ours | yours - ours |
+|---|---:|---:|---:|
+| xx, y | -0.1675 | -0.2960 | +0.129 |
+| yy, y | -0.1548 | -0.1559 | +0.001 |
+| zz, y | +0.1125 | -0.0108 | +0.123 |
+| xy, x | -0.2905 | -0.3272 | +0.037 |
+| yz, z | +0.0405 | not expressible | |
+| xz | unresolved, ~1e-8 | not expressible | |
+
+The two shears involving the chain axis are outside our cell
+parametrisation (the cell fixes the chain axis along z and has no variable
+that tilts it), which `docs/ELECTROMECHANICS.md` already records as the two
+shears in which our d is clamped, so those columns have no partner on our
+side. On xz your near-zero vector is what the mm2 symmetry of beta requires
+(a polar-y crystal has no y response to xz shear and no x or z response to
+it); our value there is zero by construction, which is not a measurement of
+yours.
+
+**Reading, provisional on both labels.** Four columns compare. Two agree,
+the polar-strain column to 0.001 and the transverse shear to 0.04 C/m^2; two
+differ by 0.12 to 0.13, the lateral and chain-axis normal strains, both in the
+same direction. Whatever electronic response our model lacks appears under
+normal strains perpendicular to P and not under polar strain or in-plane
+shear. No Born subtraction, no common affine term, no compliance, no pC/N.
+The convention derivation for our own d stays ours and open.

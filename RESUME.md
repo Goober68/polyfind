@@ -121,9 +121,11 @@ lengths, beta's softest modes are rigid-chain transverse librations at 34 to
 packer's torsion term is a constant), so twist modes are lower bounds; the
 constrained references are not all-atom stationary points (fitted stretch
 r0 differ from built bond lengths by up to 0.12 A) and show imaginary
-rigid-chain modes there. Reading for the requirement: nothing intrinsic to
-the polar crystal limits response below ~1 THz; loss and bandwidth limits are
-extrinsic. Next validation: far-IR/Raman lattice modes of beta-PVDF, and
+rigid-chain modes there. Reading for the requirement: the harmonic Gamma scale is
+~1 THz, and that is all it says; it does not establish the absence of an
+intrinsic sub-THz limit (Dipole's correction, accepted: no rates, linewidths,
+field coupling or switching dynamics are in a Gamma curvature). Pinned-stretch
+results are a changed Hamiltonian, labelled separately. Next validation: far-IR/Raman lattice modes of beta-PVDF, and
 Dipole's bulk periodic curvature. `examples/crystal_phonons.py
 --polymorphs beta,alpha,gamma` reproduces (gamma takes ~10 min).
 
@@ -134,8 +136,11 @@ Dipole's bulk periodic curvature. `examples/crystal_phonons.py
   is dipole per reference volume, which lacks `- d_ij P_k` and so differs by
   P_y on the polar-strain column only. Clamped-ion e_y,jj, their frame, both
   P_y < 0, C/m^2, all `quantitatively_valid=false`: xx theirs -0.1675 / ours
-  -0.2960; yy -0.1548 / -0.1559; zz +0.1125 / -0.0108. Agreement on the polar
-  column, a 0.12-0.13 gap on both transverse columns. Ours regenerated
+  -0.2960; yy -0.1548 / -0.1559; zz +0.1125 / -0.0108. xy shear (x comp.) theirs -0.2905 / ours -0.3272; yz and xz shears
+  are not expressible in our cell. Agreement on the polar column and the
+  in-plane shear, a 0.12-0.13 gap on both transverse normal strains. Matrix
+  is 25/25 complete on their side, still `quantitatively_valid=false` (xz
+  amplitude gate fails on a ~1e-8 vector). Ours regenerated
   2026-09-13 by the scratch pattern around
   `examples/internal_strain_jacobian.py::clamped_ion` (the provider record
   file is gone from sarco, so the full example exits 2; call `clamped_ion`
