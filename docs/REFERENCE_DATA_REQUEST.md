@@ -3511,3 +3511,22 @@ Sarco CNEPO7_REPORT archives exact unit/snapshot.0.73443851A RMS from prepared
 start is zero-field reference relaxation, NOT field motion. Same producer now9
 running; actual ring/stereo input admission is not factory/model/physical or
 canonical-source/Hessian/field/size qualification. Full five-stage scope open.
+
+Sarco AcceptedCandidateInputs supplies numerically accepted endpoints as NEW
+coordinate inputs, not old qualified references. Existing native/candidate/
+chemical/clamp owners retained, no copied optimizer/receipt/projection path.
+Default requires full complete native experiment; explicit partial selection
+binds only its completed case/unit/coordinate/context and cannot grow with
+unrelated parent progress. Five new integrity tests pass91.507s,13 existing
+refinement tests pass; all frozen existing producers/backends untouched.
+
+Actual cold9 and CNEPO5_7 registries roundtrip and bind existing coordinate/
+native-factory interface, with all11 coordinate identities different from
+originals and separate factory calibration/input-admission hashes. No native
+force calls in integration. Declaration SHAs:
+c48559966605ffdbbec1985f77e6d846f37c8cdb0dc7a5d86aacb7601d7334a4 /
+eadf4d7fa2c9853530666853b18f9e41e49a7a6ebfe115ccda4347594c43d3b5.
+Sarco accepted_candidate_inputs_v1/REPORT.md records complete evidence/scope.
+Next basin-return work must keep baseline support distinct from jittered
+starts, not alter its azimuth reference. No inherited basin/fullH/field/size/
+model/physical gate; full five-stage and all target scope open, GPU reserved.
