@@ -3795,3 +3795,63 @@ shortage metrics. Original failed records unchanged; no native retry/missing
 vector inference. Seven CPU scientific owners now live, pinned code unchanged.
 GPU reserved, no completed fulltensor or physical/material/field/cycling/viewer
 qualification, quantitatively_valid=false; all five stages/all-target scope open.
+
+## Producer: complete new-coordinate CNEPO internal curvature
+
+2026-09-13. Sarco b9b4b3fc publishes the terminal CNEPO5/7/9 experiment:
+all nine matrices and2277 fresh native forces, including independent baselines
+and complete signed Cartesian columns. Native actor30858/start_ticks6425469
+is absent after clean session88731 exit0; completion12:49:27.159918UTC.
+The actual completed_evidence reader passes whole candidate source admission,
+native units, matrix reconstruction, original provider/reducer and aggregate
+result verification. Exact terminal state/result SHA256 remain
+c5c1e67f84847b64bc85fb0570f06ef819b3de10af03b5ba092955e2c2482944 /
+b8bfaf542030900ce6b8601d2c5efeff3ad7539ee9e7f43400362659e157b6fa.
+All2277 accepted force JSON units (43562670bytes) are retained for native
+matrix/symmetry/sensitivity replay. They are not failed trajectories or caches;
+exact working-tree and Git-staged native bytes were independently checked.
+
+All three candidates classify sampled_numerically_positive internally across
+the declared three settings. Minimum internal curvature5/7/9 is
+0.0026174192101474894 /0.0008628004577578627 /0.0005883151082248213eV/A2.
+Observed step/electronic/antisymmetry scales are
+0.0005836716821645817 /0.0004171780151799547 /0.00037006358307386226eV/A2,
+giving minimum/scale4.48440 /2.06818 /1.58977. The longer chain is softer with
+less numerical clearance in these finite-size tests, not a proven bulk trend
+or MPa stiffness. Sensitivity is not a rigorous error bound. All nine FULL
+rotational vector Ward gates pass before interpreting the axial complement;
+small full-space negative eigenvalues remain in the raw/full spectra, not
+clipped or deleted as presumed rigid rotations. Sampling fixes only the two
+terminal points, not the preparation's held collective azimuth.
+
+This is local numerical isolated-chain GFN2 internal stability, not an
+analytical minimum, sampled-return basin proof, independent DFT accuracy,
+field-driven T/G switching, packing/crystal stability or recoverable pre-strain.
+See Sarco candidate_curvature_v1/cnepo/TERMINAL_REPORT.md for full numbers.
+Sarco df13e760 adds a typed complete native-parent mode-geometry consumer using
+the existing spectrum/Jacobian owner;21 tests pass97.813s. Geometry direction
+products are not field trajectories or energy-partition probabilities.
+
+Separate new-coordinate AN/PVDF/VDCN5/7/9 curvature was sealed and pushed in
+8847cb41/1850200b before actual invocation:27 matrices/6993 planned fresh calls,
+CPU31/one OMP/OpenBLAS thread, native owner19361/start_ticks6500319. At the
+latest identity/code audit seven matrices are complete and another is running;
+no whole-experiment qualification is inferred from a prefix. New source unit
+SHA256 c48559966605ffdbbec1985f77e6d846f37c8cdb0dc7a5d86aacb7601d7334a4;
+ready journal950612207ec76a5148711e92a7f85b4f255b9f24691100ab4b270c9f1c6ae78b.
+
+Seven CPU owners remain live with exact PID/start-ticks and all code pins
+unchanged. Independent replacement zz_p0050 has clean common SCF and two
+complete Berry directions; the third is running. Old failed point/parent stay
+immutable. Born-response4x8x32 is now complete and4x8x64 SCF is running;
+Born/clamped D3threebody remains unmatched, so no Born subtraction or d=eS.
+Alpha/gamma, finite PBE0 geometry and periodic VDCN full-cell work continue.
+GPU reserved; all five stages/all-target scope remain open, quantitatively_valid=false.
+
+Next sampled-return experiments must explicitly separate accepted baseline
+support/azimuth from perturbed starting coordinates at the defining refiner,
+not replace the support baseline with jitter or duplicate the optimizer.
+Native candidate read-admission must preserve historical writer facts when
+future producer code changes. The currently executing24-file Cold9 manifest
+pins that refiner; do not edit it underneath the native run or relabel old
+candidate/source identities. Actual field/load-relaxed paths remain separate.
