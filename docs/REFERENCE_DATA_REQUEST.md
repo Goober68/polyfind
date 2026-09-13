@@ -1825,3 +1825,28 @@ addresses independent geometry mismatch, not the separate bulk electrical
 clamped-ion request. Evidence: Sarco's `materials/gpu_bundle/results/dft_field/`
 under `reusable_reference_v1/` and `geometry_correction_v1/`. All live native
 VDCN/Born/paired-Berry dependencies remain frozen.
+
+### Producer actual finite-pair geometry correction launched
+
+The finite executor is implemented, qualified and actually running, superseding
+the implementation-pending status above. All26 relevant source/campaign/DFT/
+comparison tests pass, including native warm/cold DFT integration. Both original
+64-atom PVDF/CNEPO force-check receipts and source geometries reconstruct
+exactly from archived evidence; identity migration changed metadata only.
+No old electronic result was rewritten. The initial fresh SVP solve must
+reproduce each original vertical energy/full-force/dipole before optimization.
+
+Prepared code/journal were pushed in Sarco e9b3f96 before actual launch at
+2026-09-12 17:11:16.955237 PDT. PID12395/start_ticks1930983 is active with
+four native threads on CPUs16-31, E: scratch and ~2 GiB initial RSS. WSL still
+has ~17 GiB available with zero swap. PVDF SVP is solving its initial reference;
+all later stages are pending. Accepted own SVP endpoints alone feed TZVP.
+Topology/clamp/input/runtime guards precede each electronic evaluation;
+force cap rejection, explicit interruption diagnosis and compact retention are
+owned by the finite campaign state machine. Live VDCN/Born and the new DFT
+calculation assets remain frozen. This is a CPU DFT correction, not a GPU job.
+
+Evidence is Sarco's `materials/gpu_bundle/results/dft_field/geometry_correction_v1/`
+PROTOCOL.md, EXECUTION_REPORT.md and state.json. No corrected endpoint,
+Hessian minimum, basis-converged field response or bulk electrical target is
+claimed from launch/software verification.
