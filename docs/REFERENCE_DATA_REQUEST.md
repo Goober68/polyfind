@@ -3599,3 +3599,59 @@ already audited/removed by its producer. Not a terminal two-stage campaign,
 measured relaxed phase classification or physical/field qualification.
 All8 science owners were live with frozen code hashes intact; full five-stage
 and all-target scope remains active, quantitatively_valid=false, GPU reserved.
+
+## Producer: actual prepared-to-candidate 3D geometry differences
+
+Sarco finite_relaxation_geometry.py separates finite endpoint geometry from
+unit-mode Jacobians/field trajectories. Native candidate admission owns actual
+acceptance; existing ordered graph/coordinate/RIS/axial-frame owners supply
+geometry, no copied chemistry/projection path.22 tests pass93.132s, including
+complete packet/selection/receipt guards, actual CNEPO ring inputs with synthetic
+native receipts, direct endpoint measurements and a180deg swivel with no false
+torsion/unkinking. Actual cold9/CNEPO5_7 packets roundtrip through native owning
+inputs and saved-file complete codecs. No duplicated coordinates/native logs.
+See Sarco accepted_candidate_geometry_v1/REPORT.md and its two complete units.
+
+All99 backbone dihedrals in AN/PVDF/VDCN5/7/9 remainT. AN9 adjusts0.00829276A RMS,
+maximum torsion0.06984871deg; other8 RMS0.00001746–0.00005991A. CNEPO5/7 RMS
+0.32511673/0.73443851A, maximum torsion17.31025070/19.37410018deg, but NO T/G
+interconversion. CNEPO5 one T->other window165.44755->148.13730deg;
+CNEPO7 one other->T window138.68464->154.82283deg. These cross existing30deg
+bin boundaries, not demonstrated dynamical barriers. OtherG labels unchanged.
+Both changing central bonds single/outside epoxide ring; one actual
+ring-constrained backbone central bond per CNEPO structure remains marked.
+
+CNEPO5 backbone-axis RMS radius0.77181109->0.75017143A; CNEPO7
+1.10457475->1.21276529A. Seven-chain gainsT while spreading farther from the
+axis: trans count alone does not specify3D chain shape or unique kink count.
+Essentially zero collective swivel in all11, consistent with accepted held
+azimuth. End-to-end extension is imposed/fixed by clamps, not a free-chain
+pre-strain measurement. Kinematics do not partition steric/electrostatic/
+torsional energy. These are zero-field prepared-start relaxations, not field
+motion, new basin/Hessian admission or physical-model qualification.
+Units SHA256 d79869c744732bd7ab671daace28dd20d29b87530c2e69ed397b09bc116a876d /
+f87d445085beba8331cc80e39c8546bd3ab273ea299e00033787b0fef22ec054.
+CNEPO9 remains live/unaccepted, latest step325 projected force0.00400857eV/A
+above1e-6. It is not added to the explicit two-case declaration.
+
+## Producer: independent axial point stopped before third native direction
+
+zz_p0050 now terminalfailed at shared resource admission before berry_d3_r1
+launch, after SCF/first2directions clean native return0. Session25883 exit1,
+owner20004/start_ticks6008146 absent; payload/process audit empty and private
+charge/orbitals already discarded. Failed state SHA256
+781a37750887afd4a9ffae5a5839faf9cf19f0a9494f7e7cba9b174ce8a132a2.
+No third native return, full vector/coarsezz amplitude/fulltensor result.
+No metrics saved at failure; later memory cannot reconstruct historical cause.
+Relevant diagnosis and8 successful native input/stdout/XML witnesses retained
+for accepted protocol/charge/replacement-repeat checks, no failed raw payload.
+See clamped_ion_v1/INDEPENDENT_POINT_RESOURCE_STOP.md. Original failed parent
+and old journals remain terminal. Strict adoption rejects the failed point.
+
+Typed temporary waiting and persisted actual observations must be fixed at
+the shared executor boundary before further launch. The sound replacement
+needs separate new point readiness/writer identities alongside historical
+adopted receipts; an executor change cannot silently rewrite old ready hashes.
+No old-point resume or inferred missing polarization component. Other7science
+roots live/frozen; full five-stage and all-target/model/field/packing/mechanics/
+thermal/cycling/viewer scope open, quantitatively_valid=false, GPU reserved.
