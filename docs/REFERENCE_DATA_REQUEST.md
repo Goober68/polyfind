@@ -2233,3 +2233,32 @@ or film response. Quantitatively_valid remainsfalse. Only first2XML units were
 independently captured before cleanup; no third full-precision XML claim.
 Next directional/strain owners must archive full XML themselves before
 scratch removal. Born16 and geometry campaigns continue unchanged.
+
+### Producer: three-direction native zero controls launched
+
+The corrected y-only full-solver repeat prerequisite now leads to a separate
+directional_zero_v1 attempt: one fresh SCF plus three independent Berry
+repeats per lattice direction on4x8x16. All9full-precision same-direction
+modulo-quantum comparisons must pass2e-7C/m2 with0floors. Complete stdout/XML
+is archived by the calculation owner immediately, before private cleanup.
+This supplies the missing full zero vector before a separately sealed
+six-component/two-amplitude proper clamped-ion matrix; no tensor is available.
+
+Sarco code/protocol b055c8a and ready journal104fb4f were pushed before
+invocation. ReadySHA3d8fc00627402e55ae6975f9c43c4fedcc46f8b5093532a5b37ed3606e092d11.
+Runner18452/start_ticks2886917 started19:50:40.531642 PDT2026-09-12;
+SCF started19:50:43.044702 under MPI18513/native ranks18516-18519.
+It is actually running, CPU8-15,4MPI x2OMP, private E: scratch; the10GiB
+available-memory/250GiB scratch checks passed before start and child launch.
+All9Berry stages remain pending at this report. No provider/global mutation.
+
+The shared common-charge executor, not a second sequencer, owns native
+launch/transfer/transitions/recovery.61 targeted workflow/native tests and24
+crystal/finite-response tests passed, final8directional tests rechecked.
+Missing/boolean-return/charge/wrong-direction/corruption aggregation tests
+are explicitly synthetic x/z, not measurements. The actual previous y-only
+gate still requalifies after shared-owner abstraction edits via exact archived
+writer bytes and complete native units without private scratch. Quantitatively_valid
+remainsfalse; sampling/basis/geometry/Born/compliance/film/chemistry gates
+remain open. Existing Born and finite/VDCN corrections continue unchanged.
+See Sarco directional_zero_v1/EXECUTION_REPORT.md and owning state.json.
