@@ -2296,3 +2296,22 @@ is live. This is one controlled near-zero transverse contribution, not a full
 vector/material tensor, symmetry/noise qualification or fit target. Born and
 geometry corrections remain live unchanged. See Sarco directional_zero_v1/
 EXECUTION_REPORT.md and CLAMPED_ION_RESPONSE_PLAN.md.
+
+Producer progress: the25point parent lifecycle is implemented, composing
+point-owned SCF/3Berry execution rather than duplicating native commands.
+Journaled preparation/ready identities, zero predecessor guard, terminal
+failure/interruption/successor stop and complete validated native tensor
+reduction are explicit. Point-owned process-directory audit catches surviving
+same-user ranks after launcher disappearance; unavailable audit defers cleanup
+with diagnosis.118combined tests pass, including10synthetic parent lifecycle
+cases and a real short-lived payload-user process. Full-direction prerequisite
+is still incomplete, so no actual parent/point ready journals or strain launch.
+
+Actual direction1has3completed0/0floor full128weighted/66reduced/3link native
+units. Independent full-precision subset pair maximum3.44456865723e-12C/m2
+passes the existing2e-7gate. Whole stdout/XML and subset source diagnosis are
+archived, no noise bound or whole9pair/vector qualification inferred.
+Direction2repeat1is live under20806; direction3pending. No tensor, material
+convergence, parameter fit or relaxed-ion/film interpretation is delivered.
+Existing Born and geometry writers remain unchanged. See Sarco
+clamped_ion_v1/VERIFICATION.md and directional_zero_v1/EXECUTION_REPORT.md.
