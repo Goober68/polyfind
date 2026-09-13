@@ -4750,3 +4750,38 @@ cutoff/transverse/basis/geometry, electrical/executable/mechanical matching,
 Born subtraction/internal strain/compliance/d=eS, validated bulk charge-flux
 calibration and five-stage/all-target physical field/load/MPa/pre-strain/work/
 barrier/rate/cycling/viewer qualifications remain open; GPU reserved.
+
+## Native child runtime observation on D: — 2026-09-13
+
+Sarco development commit0c941e60 is published on physics-native-provenance,
+NOT merged into main's pinned live producer source. The isolated independent
+checkout is D:\sarco-work\physics-native-provenance, with physical Git objects/
+index on D: and no C: alternates/hardlinks. Windows-created cross-drive worktree
+pointers did not resolve in WSL; independent clone/index/blob proofs preserve
+all edits. The original C: source/six process epochs/110 code pins are unchanged.
+Checked-out journal files on D: are historical, not authoritative live status.
+
+LinuxProcess at the existing ownership boundary captures strict PID/start ticks,
+boot UUID, mount namespace and root device/inode. The SAME NativeELFRuntime
+mapping/parser/closure path now accepts a typed native child, rather than only
+the observer. It checks backing inode/device, actual DT_NEEDED/SONAME providers,
+stable headers/hashes and final post-hash backing/epoch guards. Foreign root/
+mount views, exited/reused processes, deleted/escaped/replaced mappings and
+incomplete/ambiguous dependencies are rejected; no predicted-loader substitute.
+New process_epoch_mapped_ELF_dependency_closure_v2 embeds that process identity;
+historical schema1 identities are not refreshed or reinterpreted.
+
+Sixteen lightweight process/ELF tests pass1.136s and again0.935s after standalone
+checkout conversion. Actual sleep-child versus observer closure controls pass;
+a startup loader race remains rejected until the same live control has entered
+native nanosleep. No chemistry, native A/B or E: scratch replay/move is executed.
+These sampled live mapping identities do NOT establish historical execution
+authenticity, PH checkpoint-read consumption, all-time loader trace or physics.
+NativeCommand observer integration, explicit SCF/checkpoint/PH lifecycle,
+source-consumption tracing, persisted authentic receipts and actual A/B outcomes
+remain required. See development-branch NATIVE_PROCESS_PROVENANCE.md.
+
+New work is on D:; existing E: scratch runs remain unchanged pending explicit
+interruption/migration direction. All five-stage/all-target tensor/precision/
+model/basis/size/geometry/mechanics/field/pre-strain/work/barrier/rate/cycling/
+viewer gates and validated bulk calibration remain open, GPU reserved.
