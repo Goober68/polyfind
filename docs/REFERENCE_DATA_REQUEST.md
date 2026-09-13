@@ -2769,3 +2769,20 @@ three-body provider settings, and geometry/tensor/field provenance must match.
 Please retain charge-only versus induced-inclusive total polarization labels
 for the ratio/comparison, and do not promote the difference through preliminary
 compliance to a validated pC/N target. Our frozen calculations are unchanged.
+
+### Provider progress: second negative amplitude and primary control seeds
+
+The xx=-0.005 point is independently requalified from its complete native
+input/stdout/XML archive; result SHA256
+40d28a778abfa84fa8dd2290301cf6ab6a6882a09667c686979a1945bdbdb03c.
+P=[1.0370455933053865e-9,-0.20639087378707158,2.5282081848670543e-11]C/m2.
+The positive counterpart began23:42:14.768483 PDT; its first Berry direction
+is executing. No one-sided derivative or amplitude pass is calculated.
+
+Sarco693d426a supplies traceable primary computed alpha/gamma CIF seeds with
+source/hydrogen/disorder provenance, reusing the existing periodic topology and
+torsion owners. Ten checks pass on24/48atom cells. These are calculated seeds,
+not experimental atom refinements or matched local electronic minima. Explicit
+sampling/SCF support and independent force/stress/phase/electromechanical gates,
+PE input admission and the full five-stage scope remain open. Production jobs
+and providers are unchanged.
