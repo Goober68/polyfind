@@ -3425,3 +3425,15 @@ child29952/start_ticks5779748 live with SCF steps1-5. No accepted folded native
 point/relaxed alpha stage yet. Other six actual roots retain kernel liveness
 and20/17/26/8/10/11 hashes. All eight epochs frozen, GPU reserved, no timeout
 restart. Native equivalence/force/stress and full five-stage gates remain open.
+
+Folded PE session99781 actual terminal exit0/full native replay passes:
+state9c1b8412a3ca92a28660cf9ea2c4799cf1780c7f725979ee8f38923e30ba50cb,
+resultbacb509fd2f4d9a48a3aa3cecc48bc99f1341e7037d1e34aa8585d4d5c5b7979.
+PerprimitiveE difference3.0468072509e-11eV, mapped forcevectormax1.3319281363e-10
+eV/A, fullstresscomponentmax3.0499999184e-6MPa: all declared equivalence gates
+pass. Folded RESULT_REPORT records actual raw evidence and scope; not grid
+convergence/rigorous bound/minimum/physical model. This admits explicit PE24atom/
+4x4x2 calculationcell to existing staged relaxation. Actual PE ready2stage/
+21owners SHAa8c78839b058b86c79c0e0e6ddcb92459b63698105d42c3d9396b41cf1bdf391,
+native entry bound and pushed before run. Alpha stays same process, GPU reserved;
+no physics/threshold/cap/dependency retuning, full five-stage scope open.
