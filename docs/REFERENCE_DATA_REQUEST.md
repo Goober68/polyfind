@@ -3975,3 +3975,20 @@ symmetries of the retained nuclei, not full spacegroup searches, electronic
 polarization measurements or field switching. The alpha endpoint retains
 inversion symmetry numerically despite T/G structure and cell shear. No new
 electronic calculations or endpoint edits are made by this geometric analysis.
+
+Actual v2 native execution is now independently confirmed: pushed-ready/code/
+protocol/source/affinity proof passes43 files at
+a4d9255a4758899dda7093674a73b3f0ad3f5995. Parent and yz_m0025 owner
+23653/start_ticks6890585 are running; native common SCF starts
+14:00:27.947369UTC (07:00:27PDT), child24498/start_ticks6906248 verified live.
+Native-stage admission passes17.9078026GiB available against unchanged10GiB
+and actual launcher CPUs8-15. This is real native execution, not a queued
+command or completed vector/tensor.13 accepted native points remain unchanged.
+
+Gamma fixed-cell relaxation also completes36steps/37 clean native SCFs, force
+0.004521911eV/A, and moves to full-cell relaxation. Held-cell1698.07MPa maximum
+stress is not equilibrium recoverable pre-strain. Sarco3be4a216 publishes the
+exact accepted fixed endpoint and compact stage report; live parent is not
+promoted to terminal qualification. Other finite PBE0, periodic VDCN and Born
+owners remain live with unchanged code pins. GPU reserved; all five stages/
+all-target physical, model, tensor-amplitude, field/path and size gates remain.
