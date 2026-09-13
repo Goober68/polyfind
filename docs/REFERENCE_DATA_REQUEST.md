@@ -2457,3 +2457,32 @@ stdout entered electronic iteration1. No new zero acceptance, strained
 point, amplitude tensor or consumer target yet. The three zero comparisons
 must pass before any signed strain point. CNEPO prepared inputs also pass
 a fresh28test rerun; physical length relaxations remain unstarted.
+
+Producer/consumer chemistry follow-up: Polyfind2270444 emits schema2
+explicit covalent-order units with actual producer code/runtime receipts;
+manifest SHA2567bad66601067d4c30f7a38f53b030dfa0a881410a38d4d70c3d04e40f6f886b7.
+All nine original XYZ/canonical hashes and atom orders are unchanged. Sarco's
+single chemical/stereo owner consumes both ordered graphs and SMILES order;
+31combined tests and actual selected-endpoint chemistry audits pass. AN
+preserves source R at15/21/27; PVDF/VDCN remain achiral. Schema1 imports
+and original native calculation journals are not rewritten. Latest full
+Polyfind suite:581passed,5skipped,3baseline frozen-literal failures; detached
+b600c33 reproduces them and all eight baseline/current crystal energies are
+bit-for-bit equal. No tolerance/kernel change; compact diagnosis only.
+
+Fresh Born16 completed0 at21:35:26.484628 PDT2026-09-12, raw acoustic sum
+0.00646e<0.01e; dielectric diagonal2.252649007/2.235527832/2.447553148.
+Source/pins/returns and full owning atom/tensor validator requalify.32SCF
+started21:35:28.436672,64pending; whole two-increment/three-ASR gate remains
+open. Original PW/PH threebody=false is distinct from corrected private-PW
+Berry threebody=true; do not silently mix them for a response contraction.
+
+Matrix independent zero SCF completed0/gap6.0294eV at21:35:33.420243.
+First Berry direction completed0/0floors at21:43:28.318060; whole stdout/XML
+requalifies and its first component differs from source by7.983342967967007e-11
+C/m2<2e-7. Direction2started21:43:38.916654;3pending. One component is not
+the whole independent-zero gate, a signed strain result or fit target.
+Sarco finite_curvature_v1/PROTOCOL.md declares the next local-curvature test,
+including full linear-clamp Cartesian derivatives, both step/accuracy controls
+and explicit symmetry modes. No curvature owner/ready journal/native Hessian
+exists yet; CNEPO needs actual isolated relaxation/return qualification first.
