@@ -2969,3 +2969,49 @@ azimuth-constrained Hessian, finite-angle swivel prediction or observed molecula
 deformation. Source Newton correction is not an independently bounded displacement
 error. Endpoint agreement, collective-swivel/field-frame matching, DFT/model,
 packing, mechanics, RIS/barriers, pre-strain and quantitative viewer gates remain.
+
+### Complete full-space result, matched frames and fine yy column
+
+Sarco30477d5d/906e80ec add and archive corresponding geometry/field frames for
+all108 receipt-requalified free/held endpoints. Geometry alignment also rotates
+the applied laboratory field into the same reference frame. Original zero-source
+coordinates, chemical graph/clamps, complete published field results and actual
+historical writer availability are checked. Measured free swivel spans-173.539039
+to175.900921degrees; held swivel is numerical zero. This is conditioning data,
+not an orientation prediction. No endpoint coordinate archive is duplicated.
+Frame JSON SHA2566576f2b10af9a5c09a737086224ad494b67a1e45ed50580a2d4aa88eefa51cd5.
+
+Sarco985ac91a archives the complete324-point internal quadratic response,27
+source Newton diagnostics and378 sensitivity comparisons. Both native owners
+replay all6993 curvature forces and234 vertical units before and after math,
+with exact result and original numerical identities. Worst displacement-vector
+changes:0.3217657722% Cartesian step,0.0027782896% electronic setting,
+0.0306722568% signed-normalized amplitude. No comparison is undefined.
+Lowest-three-mode squared Euclidean displacement coverage remains3.876478-
+99.763407%; full resolved internal space is still needed. These are numerical
+diagnostics, not a fitted physical/harmonic pass. Backward-solve scaled residual
+maximum1.9960641469416177e-16 verifies calculation of the specified operator only.
+
+AN9 has0.008311788A RMS tight-setting zero-reference internal Newton correction,
+comparable to its+65V/um x estimate0.012374730A, despite the original1e-4eV/A
+force gate. Tighter native reference preparation/requalification is needed;
+do not silently apply this Newton vector as an unmeasured reference correction
+or interpret it as an independently bounded error/physical soft-mode result.
+Internal JSON SHA256a8a719306eb3acd1f6f823caa2b602dfa0b6094f4ec0e39a155db2174d4e196b.
+See Sarco finite_internal_response_v1/RESPONSE_REPORT.md for scope and diagnostics.
+
+Separately, zero and both signed fine yy points are independently requalified
+from complete native archives through their original point owners. Proper fine
+Cartesian yy column at0.0025:
+[9.534545513373371e-9,-0.15477449408819782,-1.0752758827570598e-8]C/m2;
+both branch shifts zero. Positive state/result SHA256s:
+d576e7ba4dd84497710f9e60be80e10b4b3e64390e19ded58357a7ffa9b3e86b;
+dae45d2af9361019f28a265c57b6ce638d9a7b5b712968f6c0b571234bb49d65.
+The original parent advanced to yy=-0.005 at01:24:32.737622 PDT2026-09-13.
+No yy amplitude/full-tensor/matched-Born/mechanical gate is inferred.
+
+All71 combined tests pass. New native/derived archives and recorded reader files
+match unfiltered raw-byte Git index hashes. Four original CPU root identities
+and their26/8/10/11 frozen owner hashes remain live/unchanged. GPU stays reserved,
+and all five research stages retain DFT/model, geometry/reference, packing,
+mechanics, pathways/barriers, pre-strain and quantitative-viewer requirements.
