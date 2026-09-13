@@ -3457,3 +3457,21 @@ Existing eight CPU roots live/unchanged; original cold9 has8 accepted cases and
 VDCN9 running, not terminal or canonical-source admission. CNEPO5 accepted,7
 running. Preparation claims no gamma minimum/phase ordering/material validation;
 full five-stage and accurate field/prestrain-viewer scope open, GPU reserved.
+
+Sarco7488c5cd pushes exact gamma ready epoch BEFORE actual launch. Gamma
+producer PID2338/start_ticks5835813,session98510 is kernel-live; actual native
+CP2K child7692/start_ticks5836486 live with SCF step1 observed,192electrons/
+496orbitalfunctions,20owner hashes intact. No accepted relaxed gamma stage.
+Nine CPU science roots live, GPU reserved, same frozen methods/thresholds.
+Computed-seed labels do not classify relaxed phase; physical and full-goal
+gates remain open, no observation-timeout restart.
+
+Sarco cold EIGHT_COMPLETE_REPORT publishes independently read8/9 numerical
+candidates. New PVDF7/9 and VDCN5/7 exact raw units retained with actual writer
+receipts/context in exact203654byte running-parent snapshot, SHA
+0bd37f3bdb9edac2fd7dd1798c1ddfec32be9044794f4f1f45dbcc73512b7bf5.
+Existing verifier/read_unit checks pass twice; raw maxima respectively
+8.4924366196e-7,7.3878759005e-7,9.9290668540e-7,9.4859008910e-7eV/A,
+projected maxima also pass unchanged1e-6. VDCN9 remains running. No terminal
+reduction/canonical-source/Hessian/field/size/bulk/model admission claimed;
+zero-field reference shifts are not field-induced motion. GPU reserved.
