@@ -2862,3 +2862,32 @@ in the report. A stable projection space does not qualify endpoint accuracy;
 tighter optimizer/electronic/zero-reference sensitivity is still needed before
 assigning omitted shape to a physical higher-mode mechanism or to numerical
 endpoint error. The current receipt readout does not distinguish those causes.
+
+### Provider implementation: matched vertical field-force matrix
+
+Sarco0a7dcaeb implements an owned234point fixed-coordinate CPU experiment:
+all nine qualified AN/PVDF/VDCN5/7/9 references, zero and +/-5/65V/um on each
+laboratory axis, electronic accuracies0.01/0.001. It reuses the original source
+admission, calculator factory and native runtime guards. Parameters come from
+the actual calculator instance producing complete raw forces, energy and total
+dipole. The separate versioned self-validating vertical unit preserves the
+existing zero-only curvature contract. Fresh zero points must reproduce the
+original1e-4eV/A free-force gate, replayed from full units rather than stored
+scalar assertions. All47 unit/lifecycle/projection/geometry/space tests pass;
+synthetic lifecycle fixtures are not native SCFs.
+
+Native preparation has been launched and must requalify the full6993force
+parent before measurement. This is not yet a completed234point dataset or a
+field-coupling/harmonic result. See Sarco vertical_fields_v1/PROTOCOL.md for
+predeclared fields/settings, CPU1/resources, PID-verified recovery without
+restart, full dataset requirement and compact failure retention. Direct forces,
+small-field/electronic and tighter-reference checks remain ahead; all five
+physics stages and quantitative material/packing/pre-strain/viewer gates stay open.
+
+Separately, the complete native yy=-0.0025 vector is independently requalified:
+result SHA256309ea28e917c9dea478a7dbeabe0e8b0f0ed41aa3d795566c00130cb10d8699d;
+P=[1.0166272019086165e-9,-0.20580371668485187,3.299575564856335e-11]C/m2.
+The original serial parent has advanced to yy=+0.0025, legally started
+00:49:37.953964 PDT2026-09-13. No one-sided derivative, yy amplitude pass,
+full tensor or matched-Born/mechanical claim is made. Original four native
+jobs retain their frozen source/provider/protocol identities; GPU untouched.
