@@ -4286,3 +4286,37 @@ baseline-bound starts/zero field/exact point clamps/held collective azimuth.
 No global basin extent, arbitrary perturbations, physical model or other
 size/chemistry qualification follows. Full36 parent advances into AN7 and
 remains live; useful immutable unit/report archived, live journal uncommitted.
+
+Sarco404ecec3 now archives an ACTUAL native LOAD-only multigrid disclosure,
+with unchanged original alpha geometry/PBE-D3BJ/basis/SCF/full4x4x4 sampling;
+only print level/project differ. No SCF/energy/force evaluation, CPU29/one thread,
+native23365 closes0 and is absent. Offline structured-input/native output
+replay resolves an ASE-header-only literal postprocessor rejection without
+repeating the native query. Exact input/output SHA256:
+57dc002dfde26ebf9b6af93fe2066dc05dd11bfb0004170a65d8302f579fe6b8 /
+44e15d1d55ea8e0ba781c6c2f2dc3d67246b3e03f0bd24625ce0dc0e80f9596b.
+Both native PW/RS tables report72x135x64,40x80x40,24x45x24,15x25x15.
+Three real-space grids cannot respect the seed's b/c half translation;
+the preserved-y translation requires Nb/2 integer and is incompatible on
+levels1/3/4. Centered inversion remains compatible. This identifies a real
+discretization-symmetry mismatch matching the observed retained/lost force
+symmetries, but does not yet attribute the entire0.40769eV/A discrepancy.
+Useful raw disclosure remains archived; byte-identical scratch copies removed.
+
+Sarcob3c163db archives the COMPLETE original eight-point native derivative/
+covariance experiment, all native cases successful, no owner, no retries.
+Producer66190 exits0 and a separate fresh independent process passes full
+original native corpus/baseline/declaration/all eight raw native units/terminal
+reduction replay. Terminal state/result SHA256
+db05783214751a609f57fec3ce11012025dcf785d3c3ec8abc003da126b13251 /
+51f64aca3ae92d661cda219b4f77d52989d8bdfcfb1934ae04bf4c178b7335af.
+Both half-step individual force comparisons pass (errors7.52605e-5 and
+2.63745e-5eV/A), but two-step changes2.01149e-4 and1.05623e-4eV/A both
+exceed the independent1e-4 sensitivity limit: full numerical derivative gate
+FAILS. Paired native energy asymmetry persists at0.0005A:
+-0.00019754278855543816/+0.00019074182091571856eV. Exact28-file useful
+native/raw-to-index archive passes, original epoch/gates remain unchanged.
+Next is a controlled separately identified grid-compatible/convergence
+diagnostic with actual grid-count/full native force-energy checks. No physical
+alpha-phase, field, bulk/pre-strain, barrier/cycling or fit promotion. Other
+six CPU owners continue, GPU reserved; all five stages/all-target scope open.
