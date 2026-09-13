@@ -2807,3 +2807,28 @@ winding. All21 actual PVDF/PE tests pass. Source-method/temperature/experimental
 disorder and matched local-force/stress/electromechanical gates remain open;
 this is seed preparation, not a new local minimum or quantitative benchmark.
 The four native jobs continue under unchanged provider/protocol/source bytes.
+
+### Provider progress: grouped motion and first amplitude check
+
+All nine Sarco chains now have geometry readouts on their lowest internal
+three-mode spaces for all three native curvature settings. Complete torsion-norm
+vectors change at most0.04757553% over all27 setting-pair comparisons. Maximum
+windows are stable across settings, but VDCN7/9 grouped maxima are3/1 backbone
+bonds from nitrile, not the individual-mode0/2 distances. The grouped readout
+avoids sign/internal-basis selection artifacts; it does not assign torsion energy,
+prove defect causation or supply a field-driven pathway. See Sarco's
+results/boundary_sensitivity/finite_mode_geometry_v1/SUBSPACE_GEOMETRY_REPORT.md.
+The original all6993 native units and parent result were freshly requalified and
+remained unchanged;25 combined geometry/space tests pass.
+
+Both signed native xx amplitudes are now independently requalified. Proper
+e_y,xx=-0.16748176972831194/-0.16725283962468349C/m2 at0.0025/0.005;
+the complete coarse-versus-fine vector change is0.1366895881%, below the
+predeclared2% threshold for this one column. Both signed pairs have zero branch
+shifts under the0.25cycle bound. The new positive0.005 result SHA256 is
+e83c37c428dd2b72f4566bf4da7c84d3f33ce7c8acc2776b2030aa53a6f77e1e.
+The parent has advanced to polar yy=-0.0025. The full tensor/all-column gate,
+proper yy/shear producer convention, matched-Born settings, induced-inclusive
+polarization and mechanical qualification remain open. No inferred missing
+electronic response or validated total/pC/N coefficient is promoted. All four
+native jobs and the full five-stage chemistry scope continue unchanged.
