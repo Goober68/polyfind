@@ -4320,3 +4320,33 @@ Next is a controlled separately identified grid-compatible/convergence
 diagnostic with actual grid-count/full native force-energy checks. No physical
 alpha-phase, field, bulk/pre-strain, barrier/cycling or fit promotion. Other
 six CPU owners continue, GPU reserved; all five stages/all-target scope open.
+
+Sarco d67135b5 publishes complete independent native replay of zero and all
+four signed yz shear points (session57865 exit0), including the exact useful
+positive0.5% native input/stdout/XML/terminal archive. Existing cell-owned
+proper clamped-ion reduction gives z=+0.04049039514569458C/m2 at0.25% and
++0.04052250824306973C/m2 at0.5%. Whole-vector relative change
+0.0007931042939468555 (0.07931%) passes the declared2% sensitivity limit
+for the yz column only. Branch shifts all zero; engineering shear/2 is the
+off-diagonal deformation. Raw lab-polarization z derivatives are negative;
+geometric correction is required. Tiny transverse components are not separately
+relatively qualified by the dominant-z vector gate. Full tensor, matching
+Born/clamped D3threebody, relaxed-ion response/compliance/d=eS, mechanical
+work and physical material validation remain open.17 matrix points complete;
+live parent advances into xz, its journal uncommitted.
+
+Sarco bce27b96 defines a separate typed original-versus-commensurate alpha grid
+experiment, reusing the original input compiler, actual native supervisor and
+unit lifecycle.18 regression tests pass159.391s with explicitly synthetic
+electronic responses and actual approved source/grid disclosure.33ccbde8 seals
+the actual unused ready SHA256
+3862236dcb78cf008096a6e1f9cc300310a29eef7e6f6cd7a3c67e5b9ed0b092
+before any SCF.9b954104 records exact31-file pushed ready/code/source proof
+equal to remote main and actual CPU30/OMP1/OpenBLAS1 launch, session62048,
+root8865/start_ticks7850106. Original standalone child14014/start_ticks7851513
+starts16:38:00UTC; it must reproduce the admitted original shell energy/forces
+and actual grid counts before interpreting the override. Two serial held-seed
+zero-field points; full actual grids/native forces/energies and independent
+terminal replay remain pending. No original failed-epoch retry or gate/hash
+refresh, no physical alpha promotion or bulk fit. GPU reserved; full five-stage/
+all-target research continues.
