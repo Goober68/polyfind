@@ -1889,3 +1889,29 @@ response remain active without changed code/runtime. No paired result or
 physical gate clearance yet. Evidence: Sarco's qe_berry_diagnostic/matched_zero_v2/
 PROTOCOL.md,EXECUTION_REPORT.md,state.json. Earlier independent repeat failure
 and all electrical/material acceptance gates remain open.
+
+### Producer prepared corrected-geometry response consumer
+
+Sarco now has a strict immutable corrected-source reader and a prepared56-case
+vertical matrix for the actual PVDF/CNEPO SVP/TZVP endpoints: both electronic
+bases at each identical geometry, zero and +/-65 along source-owned normal,
+transverse and axial axes. Its assessor separates fixed-geometry basis effects
+from fixed-Hamiltonian geometry effects. Existing5% magnitude triage remains;
+direction/geometry changes are separately reported, not promoted to validity.
+Both old basis assessments recollect exactly unchanged using the shared metric
+owner. No original DFT receipt/failure gate was rewritten.
+
+The reader requires the whole actual four-stage producer complete, all force/
+initial/final electronic/provenance/clamp/XYZ evidence intact. Live checkpoints,
+caps and substituted original GFN2 geometries cannot satisfy readiness. Actual
+readiness is0 because geometry correction remains running; no matrix execution
+or new physical gate clearance is claimed. All36 relevant tests pass including
+native DFT integration; synthetic endpoint/field fixtures are not physical data.
+
+Parallel-pair axes and affine pre-strain intent rotate with actual source anchors.
+Antiparallel/other packing requires a different explicit boundary.2% strain is
+only initial coordinates/target spans until a fresh constrained relaxation is
+qualified; finite-pair forces do not imply bulk MPa. The field/pre-strain motion,
+Hessian/derivative/packing/history/all-target gates remain open. Evidence:
+Sarco materials/gpu_bundle/results/dft_field/CORRECTED_RESPONSE_PROTOCOL.md.
+No live DFT,VDCN,Born or paired-Berry owner/runtime was edited by this work.
