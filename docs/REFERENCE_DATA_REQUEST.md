@@ -3686,3 +3686,60 @@ source-seeded PE, not measured relaxed phase/RIS/packing classification;
 quantitatively_valid=false pending lattice stability/sampling/basis/size/
 elasticity/model/material/field qualification. Six other CPU science owners
 continue; stopped axial point remains terminal, GPU reserved, full scope open.
+
+## Producer: complete CNEPO candidates and independent axial replacement
+
+Sarco now archives complete source-motif CNEPO5/7/9 through its original
+native-unit owner. Nine reached430steps/591 fresh native evaluations;
+raw/projected free force9.0865567141e-7/9.0620408815e-7eV/A pass unchanged
+1e-6 gates. Free-atom RMS change1.2204384820A, energy-3850.4096293329103eV.
+No cross-length energy ordering, basin-return or physical-model qualification.
+Former15514/start_ticks5486377 absent; frozen20owners unchanged.
+State/result SHA256:
+5b5dabbb0000a57e7072abe41c6056017fa937aa47df19a7dd938e63decabbc3 /
+7eb43fe7b11d1e48529b8e115152331fdc498c0043018ba797a1403147012b94.
+Native9mer unit3ed00046faca87feb876e03ddab629b33f9b435e26721bd1aa860bbdd2dcbdbe.
+See Sarco cnepo_reference_candidates_v1/TERMINAL_REPORT.md.
+
+New complete three-case input and endpoint geometry packets pass their actual
+native owning readers/codecs; old explicit two-case facts remain unchanged.
+Input SHA032457f65ee59647d696d5f460dbcbaaaf70c25143f60d0aaa107f5ca9172041;
+geometry SHA8a99c2057c1ff40a0ee7c8726c5e8da10b1812a7fe3b90e8efe05835c78a72e6.
+Nine maximum torsion change20.8413degrees; labels T->T11, G+unchanged1,
+G-unchanged1, otherunchanged1, other->T1, no T/G interconversion. The same
+outside-ring single-bond window[4,6,9,11] moves138.68464->153.79791degrees.
+One backbone central epoxide-ring bond remains ring-constrained.
+Radius1.5010684654->1.7471384149A, contour26.0773069979->26.0545453443A.
+Gaining T while widening away from the axis demonstrates why T-count is not
+the complete3D shape. End-to-end19.4789111110A is imposed; zero collective
+swivel is held-support evidence, not freely predicted lack of flipping.
+These are neutral reference relaxation endpoints, not field motion or rates.
+
+Actual CPU31 force integration passes54.130s. Original factory/inherited sampler
+on new9mer coordinate identityf4c10a35b6a9bf6dc9a6b5b1189b268df0ca06a6c51245b57118d89303c15734
+reproduces accuracy0.001 force9.0865567141e-7 and gives accuracy0.01
+2.3251324605e-6eV/A, below1e-4 curvature-baseline gate. Full force codecs pass;
+15 adapter/sampler tests pass20.366s. Hessians and sampled returns remain new
+experiments; support baseline must not be replaced by jittered starting nuclei.
+
+Typed temporary memory/disk admission is fixed once at the shared QE executor,
+explicit pending/checking/waiting/admitted/failed states, latest observation and
+count, five-second checks, common charge retained while waiting. Affinity,
+source/protocol/native/library/pseudo/input/charge changes, interruption and
+native errors remain terminal; no failed-native retry.70 tests pass30.665s.
+Code/protocol c58d7d09 pushed BEFORE separate readiness2d782a1f was prepared,
+sealed and pushed BEFORE new native invocation. New ready state SHA256
+f539de70badcbaf4d3b8e2a87f1214ea0920baf5c0bd878fe6eb07f73121f266;
+all four inputs/prerequisite exactly match original failed zz_p0050.
+Old failed point and parent bytes remain unchanged. New independent publication
+clamped_ion_capacity_v2/points/zz_p0050, private directory
+/mnt/e/sarco-qe-clamped-ion-capacity-v2/zz_p0050, CPU launcher8-15.
+Actual common SCF launched2026-09-13T12:19:18.919022UTC under owner18974/
+start_ticks6297651, child19055/start_ticks6299345. Available memory12.43051GiB
+at launch; admission passed, three Berry stages still pending at that probe.
+This is not a complete vector/tensor or a prepared mixed-writer25point parent.
+
+Alpha/gamma, Born mesh, finite PBE0 geometry, periodic VDCN and replacement
+axial point give six live CPU owners; actual PID/start-time/code checks pass.
+Born/clamped D3threebody settings remain unmatched: no Born subtraction/d=eS.
+GPU reserved, quantitatively_valid=false; full five-stage/all-target scope open.
