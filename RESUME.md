@@ -109,6 +109,24 @@ references the chemistries behave alike and the free-azimuth boundary is what
 fails. Ewald is implemented and validated (Madelung to every digit); it changed
 no polarity verdict, truncation was never the cause.
 
+## Phonons (new, 2026-09-13)
+
+`src/polyfind/phonon.py` gives Gamma-point lattice dynamics on the packer's own
+potential: an all-atom energy assembled term for term (known-answer match to
+1e-14 against `packer.energy`), analytic gradient, finite-difference Hessian,
+acoustic sum rule to 7e-8 without imposing it. `docs/PHONONS.md` has the
+results: at the all-atom minimum with stretch minima pinned to built bond
+lengths, beta's softest modes are rigid-chain transverse librations at 34 to
+49 cm^-1 (~1 THz), alpha 39, gamma 22. No torsional stiffness enters (the
+packer's torsion term is a constant), so twist modes are lower bounds; the
+constrained references are not all-atom stationary points (fitted stretch
+r0 differ from built bond lengths by up to 0.12 A) and show imaginary
+rigid-chain modes there. Reading for the requirement: nothing intrinsic to
+the polar crystal limits response below ~1 THz; loss and bandwidth limits are
+extrinsic. Next validation: far-IR/Raman lattice modes of beta-PVDF, and
+Dipole's bulk periodic curvature. `examples/crystal_phonons.py
+--polymorphs beta,alpha,gamma` reproduces (gamma takes ~10 min).
+
 ## Dipole's open gates (theirs, not ours to chase)
 
 - Berry polarization: **matrix running, three diagonal columns compared.**
@@ -156,7 +174,7 @@ traceable to an invented constant, refuse it.
 
 ## Housekeeping
 
-- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 584 pass, 5 skip (GPU). ~9 min. Dipole's runtime reports 3 last-digit
+- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 599 pass, 5 skip (GPU). ~10 min. Dipole's runtime reports 3 last-digit
   frozen-literal failures in `test_mechanics.py` (PE/alpha/gamma energies at
   1e-15 relative) that do not reproduce here at any commit; machine noise,
   not a defect. A 1e-12 relative tolerance is the fix if ever needed.

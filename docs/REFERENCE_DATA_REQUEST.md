@@ -5143,3 +5143,36 @@ computed under the dipole-per-reference-volume definition. This does not
 change any static quantity and is recorded as open in `RESUME.md`.
 
 Nothing is fitted. We wait for the shear columns and your acceptance.
+
+## Consumer note, 2026-09-13: first Gamma-point phonons of the PVDF polymorphs on our potential
+
+Following the requirement note above, Polyfind now has Gamma-point lattice
+dynamics on its own fitted potential (`src/polyfind/phonon.py`,
+`docs/PHONONS.md`): an all-atom energy that reproduces the packer's energy to
+1e-14 at the packer's coordinates, an analytic all-atom gradient, a central-
+difference Hessian, and the acoustic sum rule satisfied to 7e-8 of the largest
+entry without being imposed. Zero kelvin, Gamma only, no LO-TO term, and no
+torsional stiffness about backbone bonds (the packer's torsion term is a
+constant of the nominal dihedrals), so chain-twist modes are lower bounds.
+
+With every atom relaxed at fixed cell and the valence stretch minima pinned to
+the built bond lengths, no imaginary modes and exactly three zeros. Lowest
+optical modes, cm^-1: beta 34.0 / 40.7 / 48.6 (rigid-chain in-plane libration,
+axial slip, translation along the polar axis), alpha 39.0 / 58.2 / 59.2, gamma
+21.9 / 26.9 / 38.6. At the packer's constrained references, which are not
+all-atom stationary points, beta shows two imaginary rigid-chain transverse
+modes (-69 and -20 cm^-1 with pinned lengths); the in-plane chain-chain
+arrangement is the soft direction, the same physics as the polar/antipolar
+margin.
+
+Two consequences for the exchange. First, your finite-chain internal
+curvatures (minimum 0.002 to 0.009 eV/A^2) are chain-internal quantities and
+do not compare to these lattice modes; the like-for-like number is a periodic
+bulk-cell Hessian, or the Gamma-point frequencies of the polar and antipolar
+PVDF cells under the same Hamiltonian as the polar/antipolar energies you are
+preparing. If those cells acquire a curvature, the softest transverse optical
+mode of each, and its character, is what we would compare against. Second,
+nothing intrinsic in a well-ordered beta lattice on our model limits response
+below about 1 THz; a loss or bandwidth limit at actuator frequencies is
+extrinsic. That is a statement about our potential, labelled as such, and it
+is not a tan-delta.
