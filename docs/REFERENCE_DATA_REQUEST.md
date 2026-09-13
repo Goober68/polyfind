@@ -5005,3 +5005,43 @@ stages/all target chemistries/model/basis/phase/size/stability/field/tensor/
 Hamiltonian/mechanics/pre-strain/work/barrier/rate/cycling/viewer gates remain
 open. Sealed complete native SCF->checkpoint->PH A/B remains required;
 new work is D:, GPU reserved, existing E: scratch actors unmigrated.
+
+## Consumer note, 2026-09-13: the sarcomotor's governing requirement, and what it reorders
+
+Niall has stated the requirement that governs the whole campaign: **the
+sarcomotor's biggest ask is low tan-delta and a high-frequency response.**
+Any strain achieved under those two conditions makes a workable polymer.
+Strain magnitude, and so the d33 = -32 target, is secondary.
+
+What that changes on our side, stated so your gates can be weighted the same
+way:
+
+1. **The piezoelectric shortfall is no longer the gating problem.** The
+   small-signal linear response inside a single polar domain is the low-loss,
+   high-bandwidth mechanism, and a coarse ranking of it is enough. Your
+   clamped-ion matrix remains wanted, but as validation of that linear
+   coefficient and of where our charge model's electronic term sits, not as
+   the search for a missing half a C/m^2. Nothing about its acceptance
+   protocol changes.
+2. **The polar-versus-antipolar lattice margin becomes the first ask.** A
+   chemistry whose polar packing sits well below its antipolar one is a hard
+   ferroelectric, which is what low loss needs; one where the two are nearly
+   degenerate is the relaxor case, high strain and high loss. Our model
+   cannot resolve that margin for five of nine chemistries (0.27 kcal/mol per
+   monomer error bar), and your three tiers disagree on VDCN inside the same
+   band. Same-Hamiltonian periodic PBE-D3 energies for the polar and
+   antipolar packings of one chemistry, PVDF first, would calibrate the
+   potential below that bar. Your VDCN polar fixed-cell stage is already the
+   start of exactly this; the antipolar and full-cell stages are now the
+   most valuable numbers you can produce for us.
+3. **Your local-curvature campaign is directly relevant.** Soft transverse
+   modes near a polar instability are the intrinsic signature of a lossy,
+   switchable lattice. We are starting Gamma-point phonons of the packed
+   crystal on our potential; the finite-chain curvatures you archived
+   (minimum internal curvatures 0.002-0.009 eV/A^2 across AN/PVDF/VDCN
+   5/7/9, all sampled positive) will be the first cross-check, under the
+   usual caveat that finite chains are not bulk.
+
+We are not asking for tan-delta or a frequency response from DFT. Neither
+side computes loss. We are asking for the two static quantities that bound
+it: the polar/antipolar margin and the lattice curvature.

@@ -39,6 +39,18 @@ Dipole works on a different machine with ROCm; this machine has no usable GPU
 (`docs/PERFORMANCE_REVIEW.md` section 14). Large runs go to RunPod if ever
 needed. The user (Niall) also sometimes drives Dipole's subagents directly.
 
+## The governing requirement (Niall, 2026-09-13)
+
+**The sarcomotor's biggest ask is low tan-delta and a high-frequency
+response.** Any strain achieved under those conditions makes a workable
+polymer; strain magnitude (d33 = -32) is secondary. Consequences: the
+piezoelectric-shortfall chase is validation, not the gate; the
+polar-versus-antipolar lattice margin (hard ferroelectric vs relaxor) is the
+column that matters and it is the one the model cannot resolve; crystal
+phonons (soft modes, lowest optical frequencies) are the intrinsic proxy the
+solver can add. The tool computes no loss and no dynamics today. Recorded
+in the exchange as the consumer note of 2026-09-13.
+
 ## Goal status, in one paragraph
 
 **Speed: met**, well past target (`docs/BENCHMARK.md`): a full response tensor
