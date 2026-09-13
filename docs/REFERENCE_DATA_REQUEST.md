@@ -3150,3 +3150,40 @@ gate failures, preserving only relevant scalar/source/time diagnosis. No rejecte
 geometry, accepted minimum energy, retry/cap extension/lowered gate. Original
 refinement continues VDCN5; AN candidates remain useful. Six kernel roots and
 23/13/11/26/8/10 hashes remain live/frozen, GPU reserved, full scope unchanged.
+
+### Complete648 readout and partial tighter references
+
+Sarco7529abd2 publishes all648 endpoint comparisons:108 endpoints x three full
+Cartesian Hessian settings x two signed-axis probe amplitudes. Original6993force/
+234vertical-field/108endpoint native evidence replayed before/after; original324
+response/108frame reports reproduced exactly. Result raw SHA256
+00aab36d82c8244bd5deae1a84570e345608f80c36031aec5ca77dd62ca98ee7.
+See finite_quadratic_endpoints_v1/COMPARISON_REPORT.md. Median full-internal vector
+mismatch freeAN/PVDF/VDCN4.179/5.365/5.861%; held7.731/10.096/8.831%; largest
+55.149% heldAN9-z65. Measured swivel conditions geometry AND field, not predicted
+swivel. No reference Newton offset subtraction or physical higher-mode attribution:
+old stationarity/endpoint accuracy and unmeasured mixed-field effects unresolved.
+No harmonic/model/bulk/viewer gate is claimed.
+
+The original tighter-reference epoch finished partialfailed with five native
+fresh-force-accepted candidates:AN5/7/9,VDCN5/7. PVDF5/7 freshcheck failures;
+PVDF9/VDCN9 original500-step caps. Accepted units replay and exactly reproduce
+published partial resultaa19a65572ef3dfb664d14c01b37d117b4d7c9487d0a946c44638564690c8655.
+See reference_refinement_v1/TERMINAL_REPORT.md. No retry/looser gate/new source
+admission or substitution into old Hessian/field evidence. Failed geometry/logs/
+checkpoints are not retained; exact PVDF5/7 fresh maxima/positions cannot be
+reconstructed from the compact diagnosis.
+
+Distinct force-history code/protocol and twelve synthetic codec/native-receipt/
+lifecycle/recovery tests are sealed/pushed; no synthetic native attestation.
+Preparation captures14 authoritative inputs (nine originals plus five accepted
+refinements),28 pending units at accuracies0.01/0.001,364 native force observations.
+Each uses seven distinct fresh calculators, six independent +/-xyz0.001A seed
+routes returning to IDENTICAL nuclei with writer-observed preserved native API/
+previous result. This measures numerical calculation-history sensitivity, not
+retroactive failed-PVDF endpoint causes, source admission or independent SCF/model
+error bounds. Ready journal is published before CPU execution; GPU reserved.
+Four other original roots remain live with26/8/10/11 owner hashes unchanged;
+clamped campaign completed both coarseyy points and advanced zz=-0.0025. No yy
+amplitude/full-tensor/Born/compliance gate from this status observation alone.
+All five research stages and other target chemistries remain active.
