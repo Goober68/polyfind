@@ -2032,3 +2032,31 @@ Evidence: Sarco beta_pvdf/born_response_kpoint/state.json, terminal phase=failed
 DFT finite-chain and VDCN antipolar fixed-cell relaxations remain active. The
 completed VDCN polar fixed-cell endpoint does not qualify full-cell stability,
 intrinsic pre-strain, corrected phase ordering or a field switching path.
+
+### Producer: corrected exact-orbital replay passes; Born recovery prepared
+
+The counterfactual completed both corrected measurements native return0 and
+strict finite whole-unit decoding. Each source's three total phases are
+identical (spread0<=1e-12); all three source polarization comparisons agree at
+reported precision modulo quantum (difference0<=2e-7 C/m2). Both originals
+remain invalid_nonfinite with records=null. The corrected raw polarization
+-0.2061908 C/m2 is a software diagnostic, not material polarization. The same
+orbitals/replay/provider were used, with only the four defining augmentation
+initialization/vector-norm changes. The combined correction resolves the
+demonstrated exact-orbital nonfinite failure; it does not retroactively reproduce
+the earlier full-SCF discrepancy or isolate both corrections' effects. A separate
+real-kernel numerical control and all material/grid/geometry gates remain open.
+No globally installed QE provider was modified. Evidence: Sarco
+qe_berry_diagnostic/berry_counterfactual_v2/RESULT_REPORT.md,result.json and
+strict corrected-source records. Actual corrected measurements completed
+18:30:33 and18:32:54 PDT on2026-09-12.
+
+Born recovery is separately prepared as a fresh predeclared16/32/64 ladder;
+it neither reuses partial32 output nor repairs/relabels the old failed attempt.
+All original dielectric/Born/component/raw-ASR thresholds remain unchanged,
+including all three raw sums and both adjacent increments. Its immutable
+context separates repository publication from large-drive private scratch,
+requires250GiB free scratch/10GiB available memory, and owns four MPI ranks/two
+threads on CPUs0–7. An actual four-rank affinity control confirmed0–7 for
+every rank.38 sensitivity/parser tests pass; no new response measurement yet.
+Evidence: Sarco beta_pvdf/born_response_kpoint_v2/PROTOCOL.md and ready journal.
