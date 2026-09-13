@@ -4200,3 +4200,30 @@ Exact3-file raw-to-index proof passes; only this immutable useful unit/report
 is published, not the actively written parent journal. Full36 parent remains
 live; no terminal aggregate, global basin, model/size/packing, field trajectory,
 bulk/MPa or switching/rate/thermal qualification follows. GPU reserved.
+
+## Alpha force/energy consistency probe running — 2026-09-13
+
+Sarcoe773f087 declares eight single points on exact original alpha seed
+fluorine atoms9/10, Cartesian y +/-0.001 and +/-0.0005A. The original sampled
+native point producer and complete native codec are inherited unchanged;
+no shared live provider or runtime is modified. Ten actual-input but explicitly
+synthetic-response tests pass, including immutable byte/source/lifecycle guards
+and a reduction in which consistent derivatives coexist with unequal paired
+energies. This is not target electronic or physical evidence.
+
+Actual complete original native corpus/baseline admission then passes. Sarco
+eee7a679 seals wholly pending eight-case ready SHA256
+865a13a9436cc2be83b34639ca6b0ab8a0d65c7f33eaa11e6bded96024e5aff9.
+Fresh native launch independently matches27 ready/protocol/code/source files
+to pushed main before invocation; root PID21434/start_ticks7584227 starts
+first native point15:53:40.794657UTC on CPU30/OMP1/OpenBLAS1. Sarco810adda5
+publishes actual launch proof, not the actively written journal.
+
+The unchanged PBE-D3BJ/basis/grid/SCF/full-complex4x4x4 method will compare
+canonical energy derivatives to original analytic forces at both steps and
+report same-sign symmetry-related energy differences. No cause is assumed;
+completion/independent terminal native replay and derivative interpretation
+remain pending. No alpha physical phase-ordering, field/switching or bulk
+charge-flux fit is promoted. Six previous CPU owners remain alive, code110pins
+unchanged; two native basin returns complete and clamped matrix16points accepted
+are progress snapshots, not new independently qualified aggregates. GPU reserved.
