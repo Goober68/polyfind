@@ -1,4 +1,4 @@
-# Resume: polyfind, state as of 2026-09-13 (late)
+# Resume: polyfind, state as of 2026-09-13 (afternoon)
 
 Read this first after a context clear. It is the map; the documents it points to
 are the territory. Everything below is committed and pushed on branch
@@ -111,20 +111,25 @@ no polarity verdict, truncation was never the cause.
 
 ## Dipole's open gates (theirs, not ours to chase)
 
-- Berry polarization: **route repaired, matrix running, first column in.**
-  All nine directional zero solves passed the 2e-7 gate; the 25-point
-  clamped-ion matrix launched 2026-09-12 21:23 PDT. Signed xx pair complete:
-  their preliminary proper clamped-ion e_y,xx = -0.1675 C/m^2, lab derivative
-  +0.0387 (identity closes on their P_y -0.2062). Ours, regenerated
-  2026-09-13 in their frame with the same sign of P: -0.2960. Difference 0.13
-  C/m^2 (~5 pC/N): the electronic term we lack is real but about a quarter of
-  the old 0.4-0.6 target, so both hypotheses are partly true, on one column,
-  `quantitatively_valid=false`. The yy column (polar strain, the d33 one) is
-  next. Recompute ours with the scratch script pattern in
-  `examples/internal_strain_jacobian.py::clamped_ion` (the provider's
-  `internal_strain_geometry.json` is no longer at its default path in sarco,
-  so the full example exits 2; call `clamped_ion` directly). **Do not fit to
-  any Berry number until they declare one accepted.**
+- Berry polarization: **matrix running, three diagonal columns compared.**
+  Their reducer is Vanderbilt-proper (`e = dP/de + d_jk P_i - d_ij P_k`); ours
+  is dipole per reference volume, which lacks `- d_ij P_k` and so differs by
+  P_y on the polar-strain column only. Clamped-ion e_y,jj, their frame, both
+  P_y < 0, C/m^2, all `quantitatively_valid=false`: xx theirs -0.1675 / ours
+  -0.2960; yy -0.1548 / -0.1559; zz +0.1125 / -0.0108. Agreement on the polar
+  column, a 0.12-0.13 gap on both transverse columns. Ours regenerated
+  2026-09-13 by the scratch pattern around
+  `examples/internal_strain_jacobian.py::clamped_ion` (the provider record
+  file is gone from sarco, so the full example exits 2; call `clamped_ion`
+  directly). Our reference P in their frame: charge-only -0.1187, induced
+  -0.0248, total -0.1434. **Do not fit to any Berry number until accepted.**
+- **Open correctness item, ours:** `mechanics.piezoelectric` defines `e` as
+  `(1/V0) dmu/de`, not Vanderbilt-proper; e_33 (polar strain) is off by P_y
+  (~0.14 C/m^2, larger than our whole e_33 of 0.096) and the converse route
+  agrees with it, so the field coupling carries the same term. Derive from
+  the energy functional which definition the measured d33 is, then decide
+  whether d33/d31 change. Secondary now that magnitude is not the gate, but
+  it is an acceptance quantity and must be resolved before any d is quoted.
 - Born/dielectric ladder: 4x8x16 passed its raw sum-rule gate (max 0.0065 e);
   the ladder as declared cannot pass because 4x8x8 failed; a new predeclared
   ladder may follow. Transverse eps (2.253, 2.235) is stable; chain-axis

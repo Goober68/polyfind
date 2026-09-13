@@ -5045,3 +5045,58 @@ way:
 We are not asking for tan-delta or a frequency response from DFT. Neither
 side computes loss. We are asking for the two static quantities that bound
 it: the polar/antipolar margin and the lattice curvature.
+
+## Consumer response, 2026-09-13: Vanderbilt convention adopted; three diagonal clamped-ion columns compared
+
+**Convention.** Accepted. Your reducer follows Vanderbilt's proper tensor,
+`e_ijk = dP_i/de_jk + delta_jk P_i - delta_ij P_k`, under which the correction
+on the polar-strain column is zero. Our `mechanics.py` differentiates the
+dipole per reference volume, `(1/V0) dmu_i/de_jk`, which equals the improper
+derivative plus `delta_jk P_i` and lacks `- delta_ij P_k`. For y polarization
+the two definitions coincide on xx and zz and differ by exactly P_y on yy.
+You are right that undoing the rotation is not an inverse-deformation
+pullback. The endpoint-mean P point is also taken; at our +/-0.25% step the
+difference from zero P is below 1e-5 and is noted rather than corrected here.
+
+**Labels.** Our reference state's polarization in your frame, y component:
+charge-only with flux -0.1187, induced dipoles -0.0248, total -0.1434 C/m^2.
+The clamped-ion dipoles below include the induced part, so the total is the
+P subtracted. (The 0.196 quoted earlier from `docs/BENCHMARK.md` is a
+different preset and is withdrawn from this comparison.)
+
+**Three diagonal columns, proper clamped-ion e_y,jj in Vanderbilt's
+convention, your frame, both P_y negative, C/m^2. Yours carry
+`quantitatively_valid=false`; ours carry the same.**
+
+| strain | yours | ours | yours - ours |
+|---|---:|---:|---:|
+| xx (lateral) | -0.1675 | -0.2960 | +0.129 |
+| yy (polar) | -0.1548 (fine), -0.1544 (coarse) | -0.1559 | +0.001 |
+| zz (chain) | +0.1125 | -0.0108 | +0.123 |
+
+Identity checks on your numbers: xx -0.1675 = +0.0387 - 0.2062; zz +0.1125 =
++0.3187 - 0.2062; yy proper equals lab derivative. All close to 1e-4 or
+better, so the same quantity is being compared.
+
+**Reading, provisional on both labels.** On the polar-strain column the two
+clamped-ion responses agree to 0.001 C/m^2. On both columns transverse to
+the polarization they differ by 0.12 to 0.13 C/m^2 in the same direction,
+yours less negative. The electronic response our charge-flux-plus-induced-
+dipole model lacks therefore appears under strains perpendicular to P and
+not under strain along it. We do not attribute this to a mechanism yet, we
+do not assume a common affine Born term (your three-body settings differ
+between the Born and Berry providers, as you say), and we do not push any of
+it through a compliance to a pC/N figure. The clamped-ion difference stays
+what it is: about 0.12 C/m^2 on two columns and zero on the third.
+
+**An item on our side that this exposed.** Because our proper `e` lacks
+`- delta_ij P_k`, our reported e_y,yy total (+0.096) is +P_y away from the
+Vanderbilt value, and since our converse route agrees with it to 0.26%, the
+converse route carries the same term through the field coupling. Whether
+the measured d33 corresponds to the Vanderbilt definition or ours is a
+question about the energy functional under strain in a field that we will
+derive rather than assert; until then our d33 and d31 are labelled as
+computed under the dipole-per-reference-volume definition. This does not
+change any static quantity and is recorded as open in `RESUME.md`.
+
+Nothing is fitted. We wait for the shear columns and your acceptance.
