@@ -3958,3 +3958,20 @@ Actual launcher binding is now CPUs8-15. Explicit typed new-path support has
 54 passing tests20.335s, including unchanged historical/replacement mappings.
 New code/protocol are pushed before preparation; new ready journals still
 must be sealed/pushed before invocation. No shear physics result exists yet.
+
+Fresh v2 actual preparation subsequently completes all25 stages and returns0.
+Exact ready root1013045bytes, SHA256
+576b632da140c8e5b28a1cc0934942a2117ba899ee69537363036e5f47acf982,
+binds all12 fresh ready journals. Actual CPUs8-15 affinity matches every new
+point's declared launcher policy BEFORE invocation; all48 input identities,
+13 accepted receipts, current28-file writer/source/ready/liveness audit pass.
+Sarco a4d9255a seals/pushes actual root/journals and measured symmetry reports.
+
+Direct species-preserving periodic nuclear-inversion bijections also verify
+relaxed alpha and PE geometry, after retained native endpoint/identity/writer/
+gate qualification passes. Maximum assigned Cartesian mismatch at full cell:
+alpha1.2053283950e-11A, PE3.6875996924e-8A. These are constructed near-inversion
+symmetries of the retained nuclei, not full spacegroup searches, electronic
+polarization measurements or field switching. The alpha endpoint retains
+inversion symmetry numerically despite T/G structure and cell shear. No new
+electronic calculations or endpoint edits are made by this geometric analysis.
