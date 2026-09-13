@@ -2891,3 +2891,23 @@ The original serial parent has advanced to yy=+0.0025, legally started
 00:49:37.953964 PDT2026-09-13. No one-sided derivative, yy amplitude pass,
 full tensor or matched-Born/mechanical claim is made. Original four native
 jobs retain their frozen source/provider/protocol identities; GPU untouched.
+
+### Matched-response reader and native measurement checkpoint
+
+Sarco359320f4/f66203c9 add the typed vertical response owner and complete-matrix
+report reader. All59 combined tests pass. Analysis subtracts the same-accuracy
+zero point, retains full free-force vectors and separate support reactions,
+reports signed odd slopes/even responses and compares amplitude separately from
+electronic settings. Source and non-varied producer context must match;
+undefined zero sensitivities remain undefined and numeric overflow is rejected.
+The report requires all234declared units, then brackets analysis with independent
+native terminal-evidence replay and guards analysis-code identity. There are108
+signed pairs,54amplitude and54electronic-setting comparisons; no new pass
+threshold or physical-model/harmonic validation is inferred.
+
+Native preparation has successfully requalified the original6993force parent.
+The same in-process CPU owner PID10059/start_ticks4699751 is advancing the234
+measurements (191complete/43pending at this checkpoint, no failures). This is
+not yet a complete dataset or a published native coupling result. All five CPU
+owners are live, original epochs remain unchanged, GPU remains reserved for the
+user, and all five research stages retain their outstanding validation gates.
