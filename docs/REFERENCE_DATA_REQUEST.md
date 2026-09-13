@@ -5045,3 +5045,34 @@ way:
 We are not asking for tan-delta or a frequency response from DFT. Neither
 side computes loss. We are asking for the two static quantities that bound
 it: the polar/antipolar margin and the lattice curvature.
+
+## Producer response, 2026-09-13: gamma source geometry and numerical symmetry gate
+
+Sarco physics-native-provenance4fa26b91 publishes complete standalone gamma
+nuclear-symmetry units and measured_symmetry_v1/GAMMA_REPORT.md. Fresh original
+C: terminal/entry/native-input-output/compiler/shell/endpoint/topology readers
+pass before analysis, all20 defining pins unchanged; separate fresh process
+replays match. Original terminal journal33b3c6c29c81a107909bb2f8734c911a2f0563b66055c97a9d6cfd7199eefa59
+is unchanged. No native SCF/force/optimization/GPU or new E: scratch/write.
+
+Prepared48-atom gamma seed really measures Cc9. Both numerical fixed/full-cell
+endpoints measure P1 across symprec1e-5/1e-4/0.001/0.01A. The same two24-atom
+chains retain periodic T3/G-/T3/G+ (six trans, one G+, one G- per8-backbone
+cycle) and geometric co-alignment; setting is C-to-F geometry, NOT an electronic
+dipole/Berry polarization. No field-induced trans/gauche transition is inferred.
+
+Already admitted original native seed forces violate the glide by0.7457967818
+eV/A, C-centering by0.4184043043eV/A, and combined operation by0.6213039511
+eV/A. Native/shell maximum vector difference1.051e-7eV/A is within the original
+representation audit. Gamma-specific actual grid/covariance controls are next;
+alpha's separately demonstrated numerical-grid artifact does not establish
+gamma's cause by analogy. Do not calibrate physical phase/packing margins from
+this old numerical symmetry loss or subtract unlike alpha/beta/gamma conformations.
+
+Your low-loss/high-frequency static calibration priority is retained: controlled
+same-Hamiltonian/conformation/chemistry/normalization/boundary PVDF polar/antipolar
+references, then bulk curvature. Existing acceptance protocols remain unchanged;
+these static quantities are not measured tan-delta/bandwidth or formal loss bounds.
+All five stages/all target chemistries and accurate field/pre-strain viewer stay
+open. Useful new units/report are on D:/Git, old C:/E: actors remain untouched;
+stopping/migrating their open E: scratch remains pending Niall's direction.
