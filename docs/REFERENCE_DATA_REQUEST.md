@@ -4910,3 +4910,38 @@ A/B workflow and original tensor/noise/acoustic-sum/Hamiltonian/mechanical/
 bulk/field/pre-strain/work/barrier/rate/cycling/viewer gates remain required.
 All five research stages and all target chemistries stay open. No existing
 E: scratch run is interrupted/migrated pending the user's decision.
+
+### PVDF9 third return and shared tracer-root ownership — 2026-09-13
+
+Original C: sarco main d47156e0 publishes the independently admitted third
+PVDF9 unit and PVDF9_REPORT.md. Read-only session14534 exits0 after full
+all12-baseline/all36-input/native producer/current declaration/candidate/problem/
+initial-final receipt/whole checksum/direct baseline-comparison replay for ALL
+three returns,212.80918524600565s.929 fresh evaluations/563steps; unchanged
+raw AND projected force<=1e-6eV/A, direct RMS<=.001A/max<=.003A and
+absolute energy difference<=1e-5eV gates pass. Third raw/projected force
+5.999596416231727e-7/5.999403009395987e-7eV/A, RMS1.7323717636259042e-5A,
+max2.9953686339444384e-5A, energy difference+1.4551915228366852e-11eV.
+Third whole unit57763bytes SHA256
+f3b99a5218b5dc8d8529bcdfd97eb4af2ae988a69f4f04465bbd76003e0a3249.
+All three/report have exact raw source/index/permanent E: archive proofs under
+sarco_artifacts/verified/native_basin_returns_v1/pvdf9_all_three; report3236bytes
+SHA25634cbf0b1c20e559350777304538d5187d3c278b0616b26269f833231318da7f6.
+No changing journal staged/archived or native force/restart/source refresh.
+Six original producer epochs and110 defining source pins revalidate live/exact.
+Full36 has18 complete, VDCN5 first trial running; this is sampled local zero-
+field numerical repeatability, not global basin/Hessian/field/packing/size/model
+or crystalline pre-strain/mechanical output. All five stages/all targets open.
+
+Independent D: sarco physics-native-provenance pushes4651592f. One new typed
+NativeTracedCommand owns the common actual tracer-root immutable compiled argv,
+original epoch/view, live image/argv and mapped ELF/declared-byte guards plus
+whole receipt/child/argv binding. Serial NativeCheckpointObservation reuses it
+without widening its one-consumer/one-log schema/lifecycle; the live helper/
+thread observer must reuse this same boundary. Checking an already-captured
+command does not repeatedly recapture its mapped runtime.83 combined shared-
+root/decoder/lineage/serial-observer/launcher/receipt/electrical/input/checkpoint
+controls pass47.259s. This is lightweight control evidence, not native SCF/PH
+equality. Full live lineage integration and sealed controlled SCF->checkpoint->
+PH A/B remain required; no original physical tensor/noise/Hamiltonian/mechanical/
+bulk/field/pre-strain/work/barrier/rate/cycling/viewer gate is released.
