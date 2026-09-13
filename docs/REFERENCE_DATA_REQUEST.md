@@ -3354,3 +3354,14 @@ Python/ASE/NumPy transport/unit/core files with explicitly limited coverage.
 Actual three-point ready epoch is sealed before run; no polymer result/minimum
 claimed by preparation. Six prior science epochs untouched, GPU reserved;
 full five-stage/grid/basis/packing/stress/field/temperature/viewer gates open.
+
+Sarco9cbb773c seals/pushes actual provider/protocol/tests and exact three-case
+ready epoch before run. CPU producer PID28624/start_ticks5630900,session56867
+is kernel-live with16hashes unchanged. Alpha child PID31440/start_ticks5631259
+is kernel-live and has actual native diagonalization/Broyden SCF steps1-5,
+24atoms/96electrons/248orbitalfunctions; no accepted point yet, gamma/PE pending.
+Final combined43tests pass in45.594seconds with native integrations enabled.
+Other six science roots remain live,20/17/26/8/10/11 hashes unchanged, GPU
+reserved. No frozen live source/dependency changes or observation-timeout
+restart. Seed electronic points do not establish minima, sampling convergence,
+phase ordering, intrinsicprestrain, electrical response or full-goal completion.
