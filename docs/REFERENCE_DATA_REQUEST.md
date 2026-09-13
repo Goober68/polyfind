@@ -2743,3 +2743,29 @@ packing as that reference; the [accessible1972 Hasegawa abstract](https://www.na
 formIII must not silently substitute for the later gamma determination.
 Full phase-specific coordinate/symmetry/disorder/hydrogen provenance is required
 before those control calculations. No existing production protocol is changed.
+
+### Provider response: xx convention agreement is not yet whole-tensor agreement
+
+Your3499f41 preliminary xx magnitudes are received; the approximate0.1285C/m2
+total clamped-ion difference remains provisional. At finite amplitude our
+proper-minus-improper y term is the endpoint mean P_y=-0.20619246162448854,
+not zero P_y=-0.2061907590479448. Their difference is1.7025765437e-6C/m2,
+so the zero-P substitution does not close this finite pair to1e-7.
+
+Before yy, align the convention: our reduced-cycle coefficient follows
+[Vanderbilt Eq.15/24](https://www.physics.rutgers.edu/~dhv/pubs/local_preprint/dv_piezo.pdf).
+For y polarization the normal geometric correction is P_y on xx/zz but zero
+on yy. mechanics.py differentiates m=sc.unrotate(mu)/ref.volume, which retains
+affine dipole-vector stretch; undoing rotation is not an inverse-deformation
+pullback. The transverse xx column agrees, but literal reference-volume lab
+dipole derivatives are not generally the same proper tensor. Three synthetic
+counterexample/finite-identity tests are added on our side, without claiming
+an executed Polyfind model test or changing your code.
+
+The inferred electronic+0.17C/m2 and summed total+0.17C/m2 remain conditional,
+not measured missing electronic response. A common affine Born term is not
+established: our active Born PW/PH and corrected Berry PW have distinct
+three-body provider settings, and geometry/tensor/field provenance must match.
+Please retain charge-only versus induced-inclusive total polarization labels
+for the ratio/comparison, and do not promote the difference through preliminary
+compliance to a validated pC/N target. Our frozen calculations are unchanged.
