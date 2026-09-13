@@ -1850,3 +1850,21 @@ Evidence is Sarco's `materials/gpu_bundle/results/dft_field/geometry_correction_
 PROTOCOL.md, EXECUTION_REPORT.md and state.json. No corrected endpoint,
 Hessian minimum, basis-converged field response or bulk electrical target is
 claimed from launch/software verification.
+
+### Producer paired Berry failure diagnosis
+
+The common SCF completed; diagnostic QE finished return0/JOB DONE at17:10:16 PDT.
+The original v1 attempt then failed a software coverage check: the reader expected
+64 raw strings, but QE natively symmetry-reduces them to34 with normalized weights
+whose multiplicities cover all64 full-mesh strings. The defining reader now
+validates QE-owned layout and full weighted coverage without weakening strict
+link/product/string/floor checks. Post-failure observation: zero floor events,
+raw P0.3139246 C/m2, Q0.7429302 C/m2. The original attempt remains failed;
+baseline was not executed and no pair result exists. This does not repair or
+explain the prior independent-repeat discrepancy, nor qualify electrical targets.
+
+Decisive native output100684 bytes, compact records and actual writer/reader/
+charge hashes remain in Sarco's qe_berry_diagnostic/matched_zero_v1/ under
+FAILURE_REPORT.md, failure_diagnosis.json and failed_native_berry.out. About4.5GB
+of failed private scratch was removed after charge identity validation. A new
+predeclared pair is required. VDCN/Born and the finite DFT correction stay active.
