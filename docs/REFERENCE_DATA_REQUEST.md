@@ -3548,3 +3548,13 @@ were not saved. Later memory9.92GiB below10guard, then after integration exits
 preserves diagnosis/accepted evidence. Failedparent never restarted/relabelled;
 untouched ready child can execute independently. Fulltensor/Born/mechanics/
 physical and all five-stage gates remain open, GPU reserved.
+
+Sarco04104622 pushes source-force integration evidence plus strain resource
+diagnosis/accepted coarse native archive. Untouched exact-ready zz_p0050
+now runs INDEPENDENTLY through existing point executor,session25883,
+producer20004/start_ticks6008146, MPIchild24270/start_ticks6009645 kernel-live.
+Actual native SCF iteration1 observed,4MPI/private qualifiedPW/90Ry;
+recorded10.263GiBavailable/9986.921GiBfree, affinity8-15. Method/code/input/
+sealed ready unchanged. Failedparent stays terminal with its original
+diagnosis, not native retry/resurrection/fake fulltensor. Other7roots frozen/
+live; full five-stage and physical gates remain open, GPU reserved.
