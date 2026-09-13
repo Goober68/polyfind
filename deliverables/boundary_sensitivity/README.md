@@ -27,6 +27,23 @@ CNEPO is deliberately absent. Its epoxide bridges two backbone atoms and changes
 the backbone bond graph; Polyfind's pendant-fragment model cannot represent it.
 Treating the oxygen as an ordinary pendant would create the wrong molecule.
 
+Schema2 additionally carries producer-owned explicit covalent bond orders
+and producer code hashes. Nitrile's internal C-N bond is declared triple
+at Pendant.nitrile, while backbone/attachment/cap bonds are single. Structure
+owns one immutable ChemicalBondGraph; connectivity is its derived view, not
+a second independently mutable bond list. Original XYZ coordinates, atom
+order and canonical-LF hashes are unchanged. This manifest does not replace
+the immutable schema1 inputs or native journals already used by Sarco.
+
+137targeted chemistry, chain, fragment, forcefield and boundary tests pass.
+Actual Sarco graph/stereo auditing of all nine sampled-return-qualified
+references passes: AN has source-order centers15/21/27 assigned R; PVDF
+and VDCN have none. This preserves identity, not Hessian or material stability.
+
+Latest full suite:581passed,5skipped,3preexisting frozen-literal failures
+reproduced on the unchanged baseline; all eight baseline/current fixed
+crystal energies match bit-for-bit. See docs/CHEMICAL_GRAPH_VERIFICATION.md.
+
 Regenerate with:
 
 ```text

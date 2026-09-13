@@ -78,6 +78,7 @@ class Pendant:
     atoms: tuple[PendantAtom, ...]
     bonds: tuple[tuple[int, int], ...] = ()
     label: str = ""
+    bond_orders: tuple | None = None
 
     def __post_init__(self) -> None:
         if not self.atoms:
@@ -89,6 +90,19 @@ class Pendant:
         for i, j in self.bonds:
             if not (0 <= i < n and 0 <= j < n) or i == j:
                 raise ValueError(f"bad intra-fragment bond {(i, j)!r} for a {n}-atom pendant")
+        from .chemical_graph import ChemicalBondGraph
+        orders=(1,)*len(self.bonds) if self.bond_orders is None else tuple(self.bond_orders)
+        if len(orders)!=len(self.bonds):
+            raise ValueError('every pendant bond requires its declared order')
+        graph=ChemicalBondGraph(n,tuple((*pair,order) for pair,order in zip(self.bonds,orders)))
+        object.__setattr__(self,'atoms',tuple(self.atoms))
+        object.__setattr__(self,'bonds',tuple(graph.bonds))
+        object.__setattr__(self,'bond_orders',tuple(order for _,_,order in graph.edges))
+
+    @property
+    def chemical_graph(self):
+        from .chemical_graph import ChemicalBondGraph
+        return ChemicalBondGraph(len(self.atoms),tuple((*pair,order) for pair,order in zip(self.bonds,self.bond_orders)))
 
     def __len__(self) -> int:
         return len(self.atoms)
@@ -145,6 +159,7 @@ def nitrile(bond: float = 1.47, cn: float = 1.16, charges: tuple[float, float] =
         ),
         bonds=((0, 1),),
         label="CN",
+        bond_orders=(3,),
     )
 
 

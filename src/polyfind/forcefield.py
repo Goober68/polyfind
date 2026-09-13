@@ -883,7 +883,7 @@ class Frame:
         if bonds != sorted(tuple(sorted(b)) for b in ref.bonds):
             raise ValueError(f"{self.system!r} does not match {polymer.name}: bond graphs differ")
         return Structure(polymer=polymer, elements=elements, coords=self.coords[order],
-                         charges=ref.charges.copy(), bonds=[tuple(b) for b in bonds],
+                         charges=ref.charges.copy(), chemical_graph=ref.chemical_graph,
                          backbone=np.array([pos[int(i)] for i in self.backbone], dtype=int),
                          n_dihedrals=len(self.torsions), dihedrals=self.angles(),
                          subs_of={pos[int(i)]: [pos[j] for j in self.adjacency[int(i)]

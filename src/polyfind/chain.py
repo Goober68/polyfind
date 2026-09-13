@@ -46,6 +46,7 @@ import numpy as np
 
 from . import backend as bk
 from .polymers import Polymer, pendant_pair
+from .chemical_graph import ChemicalBondGraph
 
 
 def _unit(v, xp):
@@ -274,13 +275,21 @@ class Structure:
     elements: list[str]
     coords: np.ndarray  # (n, 3)
     charges: np.ndarray  # (n,)
-    bonds: list[tuple[int, int]]
+    chemical_graph: ChemicalBondGraph
     backbone: np.ndarray  # indices of the real backbone atoms in chain order
     n_dihedrals: int
     dihedrals: np.ndarray  # (N,) the RIS dihedrals used to build it
     # backbone atom index -> its pendant atom indices: pendant 1's atoms then pendant 2's,
     # each in the pendant's own order (one index per pendant unless a pendant is a fragment)
     subs_of: dict = field(default_factory=dict)
+
+    def __post_init__(self):
+        if self.chemical_graph.atom_count!=len(self.elements):
+            raise ValueError('structure and chemical graph atom counts differ')
+
+    @property
+    def bonds(self):
+        return self.chemical_graph.bonds
 
     def dihedral_atoms(self, j: int) -> tuple[int, int, int, int]:
         bb = self.backbone
@@ -334,7 +343,7 @@ def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_angles=N
         charges.append(spec.charge)
         backbone_idx.append(idx)
         if k > 0:
-            bonds.append((backbone_idx[k - 1], idx))
+            bonds.append((backbone_idx[k - 1], idx,1))
         groups = pendant_positions(bb_ext[k], x, bb_ext[k + 2], spec, xp=np)
         subs = []
         for pendant, positions in zip(spec.pendants, groups):
@@ -344,8 +353,8 @@ def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_angles=N
                 coords.append(pos)
                 charges.append(atom.charge)
                 subs.append(len(elements) - 1)
-            bonds.append((idx, first))  # backbone atom to the pendant's first atom
-            bonds.extend((first + i, first + j) for i, j in pendant.bonds)
+            bonds.append((idx,first,1))
+            bonds.extend((first+i,first+j,order) for i,j,order in pendant.chemical_graph.edges)
         subs_of[idx] = subs
     if cap:
         for k, virt in ((0, bb_ext[0]), (N + 2, bb_ext[N + 4])):
@@ -356,13 +365,13 @@ def build_chain(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_angles=N
             elements.append("H")
             coords.append(pos)
             charges.append(-float(np.sum(charges[idx:idx + 1])) * 0.0)  # neutral cap
-            bonds.append((idx, len(elements) - 1))
+            bonds.append((idx,len(elements)-1,1))
     return Structure(
         polymer=polymer,
         elements=elements,
         coords=np.array(coords),
         charges=np.array(charges),
-        bonds=bonds,
+        chemical_graph=ChemicalBondGraph(len(elements),tuple(bonds)),
         backbone=np.array(backbone_idx),
         n_dihedrals=N,
         dihedrals=dih,

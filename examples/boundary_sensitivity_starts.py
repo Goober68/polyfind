@@ -125,6 +125,7 @@ def build_start(chemistry: str, monomers: int) -> tuple[Structure, dict]:
         "atom_count": structure.n_atoms,
         "backbone_atom_ids_0idx": [int(value) for value in structure.backbone],
         "bonds_0idx": [list(pair) for pair in bonds],
+        "chemical_graph": structure.chemical_graph.identity(),
         "connected_component_sizes": [len(component) for component in components],
         "net_illustrative_point_charge_e": float(np.sum(structure.charges)),
         "axes": AXES,
@@ -158,9 +159,15 @@ def materialize(output: Path = OUT) -> dict:
                 }
             )
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "purpose": "Sarco stage-2 finite-chain boundary and size sensitivity inputs",
         "generator": "examples/boundary_sensitivity_starts.py",
+        "calculation_owners_sha256": {
+            name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest()
+            for name in ('examples/boundary_sensitivity_starts.py','src/polyfind/chemical_graph.py',
+                         'src/polyfind/chain.py','src/polyfind/polymers.py')
+        },
+        "numpy_version": np.__version__,
         "hash_canonicalization": "UTF-8/ASCII text with CRLF and CR normalized to LF",
         "length_ladder_monomers": list(CHAIN_LENGTHS),
         "length_invariant": (
