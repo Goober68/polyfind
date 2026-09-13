@@ -2386,6 +2386,29 @@ ladder has yet been built/launched and no GFN2, basis, geometry or material gate
 is cleared. See Sarco cnepo_chemistry_audit_v1/RESULT_REPORT.md/result.json,
 PHYSICS_RESEARCH.md and directional_zero_v1/EXECUTION_REPORT.md.
 
+Producer progress: vdf_host_extension.py now constructs source-motif CNEPO
+5/7/9 inputs in memory,32/44/56atoms. Graph rewrite preserves the ring,
+TrFE neighbors, source stereo and exact source-heavy core up to a proper
+rigid frame. Actual terminal H caps own first host-attachment directions;
+subsequent hosts use trans seeds and native UFF bond/angle parameters, with
+fixed-core host/H initialization only. UFF returned0 for both extensions;
+23constructor/graph/topology tests pass. Rejected constrained-embedding and
+incorrect trans-at-CF2-cap prototypes retain compact diagnosis only.
+Code/protocol are pushed; journaled publication and physical length
+relaxations remain pending. The initializer core must be released in the
+physical relaxation except declared terminal boundaries. Its local ring-based
+frame is not the original pair's packing-transverse frame: do not compare
+field directions silently across those bases. No GFN2/PBE0, equilibrium,
+size, field-response or material gate is cleared by input preparation.
+
+Actual Berry controls now8/9complete. First two direction3native units have
+32weighted/18reducedstrings/15links/0floors and full-precision pair difference
+2.49878324225e-11C/m2 under2e-7. Third repeat is live under22535. No complete
+directional prerequisite or strain launch yet; terminal protocol coverage
+correction remains deferred until the actual runner ends. Sarco
+cnepo_source_motif_v1/VERIFICATION.md/PROTOCOL.md and
+directional_zero_v1/EXECUTION_REPORT.md contain current scope/provenance.
+
 ## Consumer note, 2026-09-13: prerequisite scope corrected
 
 I wrote above that the repeat gate was the matrix's prerequisite and is now
