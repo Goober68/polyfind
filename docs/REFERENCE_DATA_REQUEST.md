@@ -3015,3 +3015,32 @@ match unfiltered raw-byte Git index hashes. Four original CPU root identities
 and their26/8/10/11 frozen owner hashes remain live/unchanged. GPU stays reserved,
 and all five research stages retain DFT/model, geometry/reference, packing,
 mechanics, pathways/barriers, pre-strain and quantitative-viewer requirements.
+
+### Tighter native reference candidate preparation
+
+Sarcof263957c adds an owned native candidate producer and explicit nine-point
+refinement lifecycle, leaving the legacy hard-coded relaxation path and active
+epochs unchanged. All nine original admitted AN/PVDF/VDCN5/7/9 sources are used,
+AN9 first, zero field, electronic accuracy0.001, original exact point clamps and
+held collective azimuth0. BFGSLineSearch/0.05A maxstep/500step cap targets
+1e-6eV/A. A distinct fresh calculator at unchanged final nuclei must pass BOTH
+raw and projected free-force gates. Actual parameters, full forces/total dipole/
+energy, numerical/runtime/optimizer identity and original/refined coordinate
+bindings belong to the self-validating RefinementCandidate unit. The original
+constraint owner derives projection and support reactions; no copied formulas.
+
+All83 combined tests pass, including12 new synthetic codec/fresh-calculator/
+lifecycle tests. Independent failed points permit other declared references to
+be attempted; useful individually complete candidates are retained, failures
+keep diagnosis/eight-sample scalar tails only. Native result validation precedes
+terminal state transition. PID-verified recovery requires authoritative absence;
+there is no timeout restart/retry or automatic successor. Native preparation
+passed and the same launcher is running as PID15909/start_ticks5023593, observed
+advancing accepted steps on AN9. No completed native candidate is yet claimed.
+
+These are candidates, not source admission, three-trial basin-return qualification,
+Hessian stability, field response or physical/model accuracy. Old admitted source
+coordinates and curvature/field archives remain unchanged. A distinct qualified
+source epoch with new evidence is needed before substitution. All four original
+CPU roots and their26/8/10/11 hashes remain live/frozen, GPU stays reserved, and
+the full five-stage research retains its independent validation requirements.
