@@ -4350,3 +4350,34 @@ zero-field points; full actual grids/native forces/energies and independent
 terminal replay remain pending. No original failed-epoch retry or gate/hash
 refresh, no physical alpha promotion or bulk fit. GPU reserved; full five-stage/
 all-target research continues.
+
+Sarco bd0c31f6 publishes the COMPLETE independently replayed two-point grid
+comparison (both native successes, producer62048 exit0). Original standalone
+control matches admitted shell energy to2.72848e-12eV and maximum atom force
+vector to1.17592e-7eV/A; actual original grids match the LOAD disclosure.
+COMMENSURATE T produces72x144x64,36x72x32,18x36x16,9x18x8. All four defining
+source operations map all four actual grids; the0.4076879702eV/A screw/glide
+force covariance error disappears at saved native precision. Controlled
+numerical symmetry gate PASSES, identifying a grid artifact, not a physical
+alpha instability. Terminal state/result SHA256:
+7891eb8160dc6ea67b3a892bb49abd3e145f0a583d91350570ca954e6c512334 /
+81b61e21f0f669e2afeabd229e80f8441c7ee818660fe3ed362f2f530bb357ef.
+Energy override-original+0.02581736449883465eV; both held seeds have forces
+over1eV/A and are NOT minima. No basis/grid/k or derivative-convergence claim.
+The original eight-point derivative gate stays FAILED; earlier original-grid
+alpha symmetry loss cannot establish physical spontaneous symmetry breaking.
+New grid/cutoff/derivative sensitivity and grid-compatible relaxations are
+required before phase/packing conclusions. Exact useful native archive passes
+raw-to-index proof; shared six CPU providers remain frozen, GPU reserved.
+
+The same commit also archives first AN7 seed73411 after fresh independent
+full original source/declaration/native candidate/problem/receipt/CRC/comparison
+replay, session66250 exit0.140steps/244native evaluations; projected free-force
+9.163658733848441e-7eV/A, baseline RMS2.7248042726982472e-5A, maximum
+5.894644435674593e-5A and energy difference-9.549694368615746e-12eV pass the
+declared internal trial gates. Exact53436byte unit SHA256
+eddaec5d5f381dac6875bb1d92e1ec3f4edb796a6aa4e6af48f2e2a1968a7d44.
+Only this nominal0.02A zero-field baseline-bound AN7 trial is qualified;
+remaining seeds/full36, global basin/field/model/size/packing/bulk gates remain
+separate. Live parent journal is not published. Full five-stage/all-target
+research remains open; no bulk charge-flux fit or physical material promotion.
