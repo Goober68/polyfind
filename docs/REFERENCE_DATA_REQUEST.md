@@ -2535,3 +2535,21 @@ Hessian result. CNEPO initializer-only sources still need physical qualification
 The first xx=-0.0025 electronic solve completed native0 at22:10:40.836532 PDT
 on2026-09-12 with independently verified6.049eV gap; first Berry direction
 started22:10:51.012092. No completed strained vector/tensor or fit target yet.
+
+### Native Cartesian force adapter implemented; execution still pending
+
+Sarcoa1d2a49 implements the original-calculator force adapter for individual
+samples and guarded complete matrices. It preserves native unconstrained-force
+units and every original source parameter, explicitly separating physical
+Hamiltonian parameters from solver accuracy. NativeELFRuntime owns the actual
+mapped Python/TBLite/NumPy-core ELF dependency closure and backing inode/device
+checks. Historical qualification pinned the extension, not all linked libraries;
+the new current-provider identity does not retroactively assert equivalence.
+
+75combined tests pass in142.501s, including12adapter/runtime tests. Their
+force/matrix laws are synthetic; actual runtime admission is read-only. Native
+Hessian execution/journals and terminal archival remain pending, with no new
+molecular minimum, field-motion or material-response claim.
+First xx=-0.0025 Berry direction completed native0/0floors at22:17:57.422603
+PDT2026-09-12; complete stdout/XML requalification passes. Direction2started
+22:18:08.002054,3pending. The complete strained vector/tensor remains open.
