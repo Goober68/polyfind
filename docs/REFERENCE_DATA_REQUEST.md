@@ -4272,3 +4272,17 @@ remains running; no physical phase-ordering or full numerical promotion.
 Original LOW-print output lacks actual numerical-grid point counts, so a
 grid-symmetry explanation is not established from it or the CP2K manual.
 Live code/native inputs/runtime remain unchanged, no failed-native retry.
+
+Third AN5 seed73413 then passes fresh independent full defining source/
+declaration/native unit/problem/candidate/receipt/comparison replay session90797,
+exit0.111steps/190 returned native evaluations, raw/projected free forces
+7.186927863555682e-7/7.192555779583293e-7eV/A; direct baseline RMS
+4.196783143519534e-5A, maximum6.277438020103643e-5A and energy difference
++1.8917489796876907e-10eV pass the predeclared return tolerances. Exact
+48678byte unit SHA256
+20799e3ff5251bac7c5e9642bd66964b2a8a53ac7e132ead958362f719dae50e.
+All three declared AN5 trials now pass, limited to these nominal0.02A
+baseline-bound starts/zero field/exact point clamps/held collective azimuth.
+No global basin extent, arbitrary perturbations, physical model or other
+size/chemistry qualification follows. Full36 parent advances into AN7 and
+remains live; useful immutable unit/report archived, live journal uncommitted.
