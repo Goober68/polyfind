@@ -3655,3 +3655,34 @@ adopted receipts; an executor change cannot silently rewrite old ready hashes.
 No old-point resume or inferred missing polarization component. Other7science
 roots live/frozen; full five-stage and all-target/model/field/packing/mechanics/
 thermal/cycling/viewer scope open, quantitatively_valid=false, GPU reserved.
+
+## Producer: PE full-cell native reference now complete
+
+PE folded24atom/full complex4x4x2 source-seeded two-stage relaxation is
+terminal COMPLETE. Full-cell stage45steps/46converged native SCFs/energy
+evaluations, clean exit0. Atomic force9.2326767150e-5eV/A and maximum absolute
+six-component stress0.923835287341MPa pass unchanged0.005eV/A/1MPa gates.
+Existing terminal_evidence rechecks both stage receipts/input/compiler/
+sampling/native output-shell agreement, exact endpoints and original periodic
+two-chain topology. Parent31491/start_ticks5805656 and child4816/start_ticks
+5853268 exited; session3219 closed0. Raw success scratch was audited/removed
+by producer, so retained receipt/geometry verification is not fresh raw replay.
+
+Held/source diagonals7.004,4.849,5.134A -> full endpoint
+7.008932091493791,4.744689400214924,5.118952821638911A; full general cell is
+retained, tiny off-diagonals not discarded. Volume174.3629410640->170.2318295709A3.
+Canonical energy -55.10282989700332Ha / -1499.4243875743323eV.
+Final tension stress [xx,yy,zz,yz,xz,xy]MPa is
+[0.923835287341,0.477635460566,-0.380505817358,3.7720547e-5,2.3587438e-5,1.1525504e-5].
+Earlier held zz983.58MPa is not equilibrium residual/intrinsic pre-strain.
+Free unloading is not a Poisson slope, stiffness or recoverable switching work.
+
+Exact32081byte terminal state SHA256
+054686113d6ed0091caa8fd7621df223d2cd3efda1e0e7f4e6baaaf2c91f7f09;
+full-cell geometry SHA256
+ec9a066c9874c35aaec967d51bccf55a1d8ca073fb63c80378497e9a59b43764.
+See Sarco sampled_control_relaxations_v1/pe/TERMINAL_REPORT.md. Label remains
+source-seeded PE, not measured relaxed phase/RIS/packing classification;
+quantitatively_valid=false pending lattice stability/sampling/basis/size/
+elasticity/model/material/field qualification. Six other CPU science owners
+continue; stopped axial point remains terminal, GPU reserved, full scope open.
