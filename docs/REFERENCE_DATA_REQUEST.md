@@ -2582,3 +2582,30 @@ requalified, with0floor strings in all three Berry directions. Its vector is
 Its signed counterpart started22:33:42.833493; the full25point matrix and
 Born16/32/64 electrical convergence remain running. VDCN and finite-pair
 physical geometry-correction calculations are unchanged and still active.
+
+### Full nine-reference local curvature complete
+
+Sarco547fe066 archives all27native matrices and their whole independent
+verification. Native owner27968completed0 at23:15:55.892795 PDT2026-09-12.
+All nine selected point-clamped zero-field AN/PVDF/VDCN5/7/9 basins classify
+sampled_numerically_positive at both displacement steps/solver accuracies;
+all fresh force gates and vector axial Ward checks pass. This clears the
+sampled local-curvature boundary, not analytical/global minimum, field response,
+size, packing, barrier or material validation. Terminal result SHA256 is
+34b4e3fff18b603a078381ec39109483dc0f536add48a9776a347e15e9f380a7.
+Minimum internal curvatures at the tightest setting are AN5/7/9:
+0.0048778883/0.0040476431/0.0022183980; PVDF5/7/9:
+0.0091118495/0.0036120920/0.0021710998; VDCN5/7/9:
+0.0080310914/0.0039607492/0.0021268980eV/A2. All exceed their respective
+observed sensitivity scales, which remain diagnostics rather than rigorous bounds.
+
+Sarco4fa8286/9f37040 add standalone geometric direction and parent-linked
+mode products. Twelve geometry and six product tests pass; actual accepted-parent
+tight-setting products were subsequently evaluated for all nine references.
+Lowest internal modes are93.86-99.07% transverse by Euclidean displacement
+norm. That is not an energy fraction or field trajectory. The largest backbone
+torsion-derivative window contains the nitrile-bearing carbon for AN5/7/9 and
+VDCN5/7; for VDCN9 it is two backbone bonds away. This correlation does not
+isolate steric/electrostatic energy or establish a RIS crossing/switching mechanism.
+Mode geometry across all settings/subspaces and durable viewer export remain
+next boundaries; CNEPO physical references and all five research stages remain open.
