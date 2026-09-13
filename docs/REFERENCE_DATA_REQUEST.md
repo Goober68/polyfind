@@ -3415,3 +3415,13 @@ filter/SciPy file identities checked with limited coverage explicit.
 polymer physics. Alpha exact ready2-stage/20owners and PE exact ready1-point/
 18owners are published before run. Six prior roots remain live20/17/26/8/10/11
 owners unchanged, GPU reserved; full five-stage and physical gates remain open.
+
+Sarcoaf7a1d17 seals/pushes code/protocols, exact original control terminal
+native bytes/reduction and both new actual ready epochs before launch.
+Folded PE now PID25016/start_ticks5779027,session99781,18hashes unchanged;
+actual child2232/start_ticks5780440 live with SCF steps1-7. Alpha2stage now
+PID24995/start_ticks5779026,session25721,20hashes unchanged; actual first-stage
+child29952/start_ticks5779748 live with SCF steps1-5. No accepted folded native
+point/relaxed alpha stage yet. Other six actual roots retain kernel liveness
+and20/17/26/8/10/11 hashes. All eight epochs frozen, GPU reserved, no timeout
+restart. Native equivalence/force/stress and full five-stage gates remain open.
