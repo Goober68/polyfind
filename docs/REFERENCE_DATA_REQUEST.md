@@ -3187,3 +3187,21 @@ Four other original roots remain live with26/8/10/11 owner hashes unchanged;
 clamped campaign completed both coarseyy points and advanced zz=-0.0025. No yy
 amplitude/full-tensor/Born/compliance gate from this status observation alone.
 All five research stages and other target chemistries remain active.
+
+Sarco b238566d publishes the ready14-input/28-case force-history snapshot before
+native execution. Actual new CPU owner PID24914/start_ticks5329124 is kernel-live;
+all10 code-owner hashes verified. No force-history result yet, no retry/restart.
+
+Fresh requalification of zero and all four signedyy point native archives gives
+the completed coarse properyy column
+[1.994858750e-9,-0.1544171918967347,1.203499220e-8]C/m2. Coarse current versus
+fine reference full-vector change0.2308534067% passes the predeclared2% numerical
+amplitude limit; branch shifts allzero within0.25cycle bound. Positive coarse
+terminal state3a6868cc567459e126dac8be3cd95cecf4da2b7e526dda5707741704a42d81c2,
+result449b2168571874266c059e1a3d0a82522902cc0d3ffff7272c15bfa59c0602bf.
+Defining point/polarization/strain/vector owners replay actual submitted/native
+input/stdout/XML, writer/protocol/clean returns and exact results. All11 native
+files retained byte-for-byte. See Sarco clamped_ion_v1/EXECUTION_REPORT.md.
+This is only yy amplitude pass, not accuracy of near-zero transverse components,
+full six-column tensor, unmatched Born subtraction, compliance or physical-film
+data. Original parent continues zz=-0.0025; GPU reserved, five-stage scope active.
