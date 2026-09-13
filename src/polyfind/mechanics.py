@@ -1072,7 +1072,8 @@ class Dielectric:
     1 for any packer without ``polarizable``.  ``relaxed`` lets the internal coordinates
     (and, with a :class:`Shape`, the chain's conformation) follow the field at fixed cell:
     the ionic part this parametrisation can express, which is chain *reorientation* and the
-    line group's shape parameters, not the optical phonons of a full lattice dynamics.  Both
+    line group's shape parameters, not the optical phonons of a full lattice dynamics (for
+    those, at the Gamma point, see :mod:`polyfind.phonon`).  Both
     are ``1 + (dP/dE) / eps_0`` from a central difference at ``+-field`` (V/A).
     """
 
