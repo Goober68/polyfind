@@ -2098,3 +2098,30 @@ qualification. Next is a full isolated corrected PW provider and independent
 electronic-solve polarization repeats. Born and geometry jobs continue unchanged.
 Evidence: Sarco119721d, qe_berry_diagnostic/qq_kernel_v2/RESULT_REPORT.md,
 strict records and complete original_native.out/corrected_native.out.
+
+### Producer: full corrected electronic solver built and fresh repeats launched
+
+Sarco's private full PW executable completed actual link and symbol stages
+return0, retaining the original main/libraries and four controlled defining
+augmentation corrections. Its SHA256 is
+96317622aaea7e59f03ed25dcbb67573e0c18d88d1e504019d0f7c6984f347b3.
+The original/global installation remains unchanged. Full program link is not
+an electronic or material-response acceptance result.
+
+Ready code/provider receipts/journal d6aecb1 were pushed before actual launch.
+Runner16310/start_ticks2599673 began19:02:47.877661 PDT2026-09-12; the fresh
+common SCF began19:02:50.257397. Four live ranks16385–16388 use CPUs8–15 and
+E: scratch;18.18444GiB available memory/10091.67928GiB free scratch passed
+10/250GiB requirements. Original paired-input physics remains12 atoms,
+PBE-D3BJ three-body enabled,90/360Ry,4x8x16 and1e-10 SCF tolerance. Three
+fresh charge-only24-occupied-band NSCF/Berry solves are pending after SCF;
+no inherited SCF wavefunctions. Complete weighted diagnostics, zero floors and
+all three pairwise PmodQ differences within2e-7 C/m2 are required. No full-solve
+polarization repeat result yet. Evidence: Sarco
+qe_berry_diagnostic/fixed_provider_v1/BUILD_RECEIPT.json,RESULT_REPORT.md and
+fixed_zero_v1/EXECUTION_REPORT.md with live owned journal.
+
+Fresh Born16 SCF completed0 at18:45:19.508899 PDT;16 response began
+18:45:19.514155 and remains live.32/64 remain pending. Both finite molecular
+and VDCN geometry campaigns remain active; no corrected ordering or switching
+mechanism is qualified.
