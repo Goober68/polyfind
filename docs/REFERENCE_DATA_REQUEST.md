@@ -2486,3 +2486,31 @@ Sarco finite_curvature_v1/PROTOCOL.md declares the next local-curvature test,
 including full linear-clamp Cartesian derivatives, both step/accuracy controls
 and explicit symmetry modes. No curvature owner/ready journal/native Hessian
 exists yet; CNEPO needs actual isolated relaxation/return qualification first.
+
+### Sarco continuation: full independent zero and Cartesian numerical owner
+
+Sarco0aa2d3f publishes the independently requalified whole new zero: all
+three Berry directions completed native0, last at21:59:36.228349 PDT on
+2026-09-12. All unchanged2e-7C/m2 source comparisons pass; maximum absolute
+difference3.7700012556207696e-10. Terminal point state SHA256
+e32ae20db19e89fbaafd173db6df878e84c30037a05c9e9db8f975ccdceec6e0,
+result SHA25607d6b67f96ef20b881b5c07d9f0fa86838fe482eb44cedd72133a97f8f02e7cb.
+Exact complete native input/stdout/XML units remain archived, byte-verified
+against the committed blobs. First xx=-0.0025 strain SCF actually started
+21:59:55.264718. No signed strain vector/tensor or charge-flux fit is accepted.
+
+The new separate Cartesian numerical owner passes43combined tests, including
+12synthetic force-law tests on actual CNEPO coordinates. It owns checksummed
+full-force samples, linear point-clamp row/column restriction and raw matrix/
+mode reduction. A full vector rotational Ward identity, not scalar Rayleigh
+zero alone, prevents hiding a negative mixed rotation/internal mode. This is
+numerical infrastructure, not a native Hessian or minimum proof. Qualified
+source/calculator integration and the sampling state machine remain pending.
+CNEPO initializer-only sources remain ineligible until physical qualification.
+
+Born32 SCF completed0 at21:57:00.078579 and response started21:57:00.084980;
+64is pending and the complete sampling ladder is open. VDCN antipolar
+fixed-cell accepted step51 has0.0351004835046273eV/A force, above0.005.
+Neither full-cell DFT branch has completed, so the earlier vertical reversal
+does not establish corrected phase ordering, intrinsic strain or switchability.
+All four production owners remain live and their method identities frozen.
