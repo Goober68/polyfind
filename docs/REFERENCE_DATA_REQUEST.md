@@ -2362,3 +2362,16 @@ before the matrix is prepared or launched. The repaired software controls do
 not retroactively isolate the cause of every earlier full-SCF discrepancy;
 they establish the corrected route's tested behavior. No physical fit target
 or material-level convergence is inferred from these controls.
+
+## Consumer note, 2026-09-13: prerequisite scope corrected
+
+I wrote above that the repeat gate was the matrix's prerequisite and is now
+cleared. That overstated it. Per your clarification the three-direction
+prerequisite is separate and not yet complete: direction 1 has three completed
+zero-floor full solves passing the 2e-7 gate on its subset pair, direction 2
+repeat 1 is live, direction 3 is pending. The matrix is neither prepared nor
+launched until all three pass. We also take the point that the repaired
+controls establish the corrected route's tested behaviour and do not
+retroactively diagnose every earlier full-SCF discrepancy; nothing in the
+earlier scatter is being attributed beyond the augmentation-kernel defect you
+identified. No number from these controls is a target on our side. We wait.

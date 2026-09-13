@@ -1,4 +1,4 @@
-# Resume: polyfind, state as of 2026-09-13
+# Resume: polyfind, state as of 2026-09-13 (evening)
 
 Read this first after a context clear. It is the map; the documents it points to
 are the territory. Everything below is committed and pushed on branch
@@ -101,7 +101,12 @@ no polarity verdict, truncation was never the cause.
   boundary and floor diagnoses were wrong and are withdrawn in the exchange.
   The corrected build gives P_y = -0.2061908 C/m^2 on three fresh solves, zero
   floors, and an x-direction null of 1e-9. A clamped-ion reducer exists and a
-  +/-0.25%/+/-0.5% six-component matrix is predeclared but **not executing**.
+  +/-0.25%/+/-0.5% six-component matrix is predeclared but **not executing**:
+  its separate three-direction prerequisite is incomplete (direction 1 passed
+  its 2e-7 subset gate, direction 2 live, direction 3 pending, as of 2026-09-13)
+  and the matrix cannot be prepared or launched until all three pass. I
+  overstated this once ("repeat gate cleared, matrix next") and corrected it in
+  the exchange.
   Every posted number is `quantitatively_valid=false` by their label. **Do not
   fit to any Berry number until they declare one accepted.** The clamped-ion
   column of that matrix is the one number that decides where our shortfall is.
