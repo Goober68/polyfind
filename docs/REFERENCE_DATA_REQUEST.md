@@ -3262,3 +3262,28 @@ published, old epochs/source admissions unmodified. Same1e-6raw+projected gates/
 accuracy0.001/500cap/.05A/held0pointclamps, all dependencies frozen. Other four
 science roots remain live with26/8/10/11 hashes intact; GPU reserved and full
 independent-model/packing/stress/field/other-chemistry/temperature/viewer scope open.
+
+### CNEPO prepared inputs to independently owned reference candidates
+
+Sarco82fb8fe0 seals/pushes coordinate_cold_refinement.py and CNEPO reference
+driver/protocol/five tests. CNEPO source-motif5/7/9,32/44/56atoms retain one
+three-edge epoxide, four actual stereocenters, twoTrFE and symmetricVDF growth.
+The checked preparation already exists; no pendant-only or pure-VDF host is
+substituted. PreparedCNEPOInputs owns chemical/stereo/point-clamp INPUT admission;
+the original native factory owns unchanged Hamiltonian/parameters/runtime and
+its unrelated old-nine calibration. Two distinct self-described admission hashes
+avoid claiming CNEPO is qualified by old-nine data. Existing candidate context
+source_admission_sha256 binds the actual prepared CNEPO registry, not old-nine
+admission. Factory calibration does not claim a relaxed molecular minimum.
+
+ONE inherited cold optimizer/constraint/candidate/native audit/receipt reader
+and generic lifecycle path is reused; no copied minimizer/projection/native
+factory/codec. Sameaccuracy0.001/1e-6raw+projected force/.05A/500cap/held0 terminal
+xyzclamps, no knob/gate/cap retuning. Five tests pass with real checked inputs
+and synthetic electronic returns:3-case terminal replay, separate admissions,
+ring/stereo/motif/actual clamp checks, input/evidence/coordinate/gate/matrix drift.
+Tests attest no native electronic physics. Actual ready3-case input/factory epoch
+is being published before run; no CNEPO optimization result yet. Five previous
+roots kernel-live,17/26/8/10/11 owners unchanged,22.7GB WSL memory available and
+swapfree. GPU reserved. Candidate successes still need basin/Hessian/field/size/
+bulk/DFT/model/packing/stress/barrier/temperature/viewer gates; full scope open.
