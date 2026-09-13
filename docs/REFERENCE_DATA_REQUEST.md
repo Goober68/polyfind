@@ -4036,3 +4036,45 @@ starting nuclei, not36 returned minima or field trajectories. The defining
 native producer integration is still next, preserving historical admission
 while reusing the ONE optimizer and cold-calculator policy. No bulk fit, MPa,
 tensor-amplitude, model/basis/size or switching/thermal gate is cleared.
+
+## Native optimizer / preserved historical evidence — 2026-09-13
+
+Sarco9d3be6cf publishes the first COMPLETE new shear point yz_m0025:
+common SCF and three native Berry directions, four clean exits0. Independent
+full-native/input/charge/affine/vector/branch/result/writer replay passes,
+followed by exact15-file raw-to-index archival proof. Terminal state/result:
+061a879e786abbe1fff2d8d76c3125a4ed6906fd72f116bce268df33803156bd /
+2baf4c3b7bd75fecb98d2000d4517e9dd68c942f0b5d23e8fe78da3becabe156.
+At engineering yz shear-0.25%, P=[1.0463147e-9,-0.20619106284,
+0.00015651288129]C/m2. This includes Cartesian geometric shear mixing; Pz
+alone is not an intrinsic piezoelectric coefficient. Parent14 accepted points,
+positive-shear partner running. Full paired-sign/amplitude/tensor and matched
+Born/strain/compliance gates remain; no bulk fit or d=eS.
+
+Sarcoaa68db69 integrates typed RefinementProblem starting nuclei into the ONE
+existing native optimizer and cold-calculator policy. Baseline still owns exact
+clamps/held azimuth; the actual first native sample is recorded and checked
+against installed initial nuclei separately from independent terminal acceptance.
+The old zero-field candidate contract/raw AND projected1e-6eV/A gates remain.
+No copied optimizer or source.atoms() substitution is introduced.
+
+Defining NativeExperimentDeclaration separates historical scientific reading
+from current executable-code admission with explicit original/current full
+writer coverage. Original writer bytes are validated through actual Git
+archives; native/runtime/source/policy/scientific metadata and complete native
+unit/reduction gates remain strict. No writer hashes or old states are refreshed.
+Actual fresh evolved-producer replay passes all12 accepted sources and all36
+saved inputs, with exact original state/result hashes retained. The mode packet
+owner also separates stable native receipts from mutable archive-lookup
+diagnostics, with explicit v1/v2 reader/provenance contracts. Actual full saved
+native/matrix/reducer/geometry replay preserves all54 Cold9 and18 CNEPO products
+and both ORIGINAL v1 packet hashes, not rewrites under today's reader identity.
+
+77 combined tests pass279.544s, zero skipped, including two actual GFN field
+virtual-work checks on synthetic nuclei. All other harness/archive/input checks
+and the actual saved-data replay are distinct evidence, not target-model accuracy
+or native chemistry returns. A fresh all36 actual return campaign is NOT launched
+yet; it needs its own declaration/receipt/comparison owner and sealed/pushed
+ready journal before invoking this optimizer. Force convergence alone is not
+sampled return. GPU reserved; all five stages/all-target physical/electronic/
+basis/size/packing/field/load/path/mechanics/barrier/thermal/cycling gates remain.
