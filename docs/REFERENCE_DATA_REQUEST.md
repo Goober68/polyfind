@@ -4258,3 +4258,17 @@ failed SCFs; no retry or tolerance/hash refresh. Smaller-step comparison,
 atom10 and paired energy covariance remain pending. This one pair does not
 isolate the cause or explain the original0.40769eV/A symmetry contradiction.
 Full numerical and physical gates remain open; running journal uncommitted.
+
+Sarcoe4b6171f publishes independent partial replay of both alpha seed fluorine
+atoms at h=0.001A, four complete native points, session97540 exit0. Atom10
+energy-derivative force-1.180522966933495eV/A versus analytic-1.1806549647244
+differs1.31997790905114e-4eV/A, also above the1e-4 comparison limit.
+Canonical same-sign E(atom10)-E(atom9) is-0.00040157594685297227eV for the
+negative displacement and+0.0003743797278730199eV for positive. Thus native
+energies distinguish the exact symmetry-related inputs too, not only the
+reported force-array diagnostic. No consumed-input/electronic-state/grid/
+dispersion/derivative or association cause is isolated. The half-step ladder
+remains running; no physical phase-ordering or full numerical promotion.
+Original LOW-print output lacks actual numerical-grid point counts, so a
+grid-symmetry explanation is not established from it or the CP2K manual.
+Live code/native inputs/runtime remain unchanged, no failed-native retry.
