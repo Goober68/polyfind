@@ -3205,3 +3205,26 @@ files retained byte-for-byte. See Sarco clamped_ion_v1/EXECUTION_REPORT.md.
 This is only yy amplitude pass, not accuracy of near-zero transverse components,
 full six-column tensor, unmatched Born subtraction, compliance or physical-film
 data. Original parent continues zz=-0.0025; GPU reserved, five-stage scope active.
+
+### Completed native force-history diagnostic
+
+All28 units/364 native forces completed, with98 same-seed-history accuracy
+comparisons. Exact declaration/runtime/native-receipt/nested-CRC and full
+reduction verification passes. Sarco force_history_v1/result.json rawSHA256
+b00a97a01953344ec63537d67a9f711833227343236d3f6d11d47fcb482fb929;
+terminal stateaa62a0244958f2c6ecd73901b7eb64a389308f6ffd8cd617078b08b499961e73.
+Largest identical-nuclei free-atom force difference6.521860107e-6eV/A ataccuracy
+0.01 versus5.256515174e-7 at0.001; energy differences remain<=2.23e-11eV.
+Freshaccepted AN7/VDCN7 cached returns cross1e-6 rawforce (max1.05707e-6/
+1.02583e-6). Original fresh acceptance receipts are unchanged, not claims of
+cached-history immunity. This cannot reconstruct discardedPVDF5/7 failures or
+assignPVDF9/VDCN9 cap causes. See RESULT_REPORT.md;31 combined focused tests pass.
+
+Next numerical method test: fresh electronic solve at every optimizer evaluation,
+reusing original optimizer/constraint/candidate path behind a native policy owner;
+sameaccuracy0.001/1e-6fmax/500cap/.05Amaxstep, no physical knob/gate retuning or
+edits/substitution into old epochs. CNEPO source-motif5/7/9 prepared inputs already
+exist and independently requalify (manifestef82a9bcce6e5ec4fd793a307565f62e4bee0ebc9bfd75ccd696ea124ebcd596);
+they are not yet relaxed. No duplicate builder/preparation is needed. Full
+five-stage scope, independent model/DFT, ring/other-chemistry, packing, stress,
+barrier/temperature/bulk and accurate-viewer gates remain open; GPU reserved.
