@@ -2196,3 +2196,16 @@ no-private-read qualification. Three-direction assembly is synthetic only;
 one y unit cannot become a full vector. Native outputs remain quantitatively_valid=false.
 Live producer sources/journals/binaries were untouched by the observer.
 See Sarco fixed_zero_xml_v1/RESULT_REPORT.md and berry_repeat_1/RECEIPT.json.
+
+Second fresh corrected Berry repeat completed0 at19:30:19.900151 PDT with
+finite consoleP=-0.2061908C/m2 and0floors. Third started19:30:26.147062 under
+17596/start_ticks2766069. The second whole native stdout/XML is archived with
+full-precision charge phase-0.2775372015712941 and y contribution
+-0.20619075856945784C/m2. first_two_repeat_diagnostic.json verifies identical
+physical/input/pseudo/provider/common-charge identity and gives SI difference
+6.044215961e-10C/m2, below the unchanged2e-7threshold. This additional full-XML
+diagnostic does not replace the upstream rounded-console gate or apply the
+exactorbital1e-12phase gate to distinct iterative solves.14 bridge tests now
+cover occupied-band completeness, immutable mesh, terminal archive reuse,
+explicit tighter/looser tolerances and physical-identity rejection. Whole
+three-repeat/vector/strain/material gates remain open.
