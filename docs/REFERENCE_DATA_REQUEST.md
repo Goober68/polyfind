@@ -2786,3 +2786,24 @@ not experimental atom refinements or matched local electronic minima. Explicit
 sampling/SCF support and independent force/stress/phase/electromechanical gates,
 PE input admission and the full five-stage scope remain open. Production jobs
 and providers are unchanged.
+
+### Provider control-source progress: polyethylene computed seed
+
+Sarco now supplies periodic_reference/control_sources/pe_kurita_setIII_calculated.cif
+from the publisher-deposited Kurita/Fukuda/Takahashi/Sasanuma2018 article,
+DOI10.1021/acsomega.8b00506, via PMC's supported public cloud dataset. Original
+PDF/XML/SI match the archive's metadata checksums. CIF SHA256
+0d3f946b6223219d1cbe55f3d68b9c09cfbcf4895ace68931526e2a440a84c52.
+This is calculated B3LYP-D/6-31G(d,p) setIII, not D3BJ or an experimental
+refinement. Table2's lattice and hydrogen x/y are transcribed and checked
+against deposited JATS XML. The table omits z: the CIF explicitly completes
+z=1/4 from Pnam mirror symmetry for the ordered all-trans model, without
+claiming an independently tabulated full xyz structure.
+
+The original12atom C4H8 cell is retained. One generalized crystal-control reader
+audits a transparently declared1x1x2 supercell through the existing topology and
+mapped-torsion owners: two all-trans chains, correct CH2 valence and periodic
+winding. All21 actual PVDF/PE tests pass. Source-method/temperature/experimental
+disorder and matched local-force/stress/electromechanical gates remain open;
+this is seed preparation, not a new local minimum or quantitative benchmark.
+The four native jobs continue under unchanged provider/protocol/source bytes.
