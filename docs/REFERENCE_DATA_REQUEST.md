@@ -2514,3 +2514,24 @@ fixed-cell accepted step51 has0.0351004835046273eV/A force, above0.005.
 Neither full-cell DFT branch has completed, so the earlier vertical reversal
 does not establish corrected phase ordering, intrinsic strain or switchability.
 All four production owners remain live and their method identities frozen.
+
+### Finite curvature source admission published
+
+Sarco8f6018d implements the receipt-owned source/producer bridge;
+2fece6d publishes its actual complete admission unit and strained SCF receipt.
+All nine selected PVDF/AN/VDCN5/7/9 references resolve through their original
+qualification/selection owners and unchanged imported inputs. Complete ordered
+graph/stereo identity and original terminal point clamps pass. The compact
+source_admission.json is20656bytes, raw SHA256
+8db6388a609757f77e00a7d228848995bd65733e2c13b8d89bd258be38ac3c19.
+Its own decoder requalifies complete evidence, not just its checksum. Current
+admission-reader code/packages remain separate from historical qualification
+writers and producer NumPy provenance. No duplicate coordinates are retained.
+63combined tests pass, including10actual-source/adversarial admission tests.
+
+Native force/provider integration and the journaled Hessian sampling/terminal
+archive lifecycle remain pending; this is not a run-ready journal or native
+Hessian result. CNEPO initializer-only sources still need physical qualification.
+The first xx=-0.0025 electronic solve completed native0 at22:10:40.836532 PDT
+on2026-09-12 with independently verified6.049eV gap; first Berry direction
+started22:10:51.012092. No completed strained vector/tensor or fit target yet.
