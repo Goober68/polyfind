@@ -3944,3 +3944,17 @@ historical-source files and checks actual remote publication of
 then enters the existing owner/native admission pipeline. Launcher existence
 is not a claim that PW has already started; native stages/resource admission
 remain authoritative in the original point journals. No full tensor is claimed.
+
+The v1 launcher subsequently exits1 at initial resource admission because the
+invocation omitted CPUs8-15 binding. No native SCF/Berry stage or child starts.
+Both parent and first yz_m0025 point remain terminal failed; exact historical-
+writer/liveness/failure audit passes. This is launcher error, not physics or
+temporary memory shortage, and corrects any implied native execution claim.
+Sarco2d8a972d publishes compact decisive diagnosis and exact failed journals.
+The failed first payload is discarded by its defining owner;11 other ready
+inputs are not copied/adopted. Fresh v2 re-prepares all12 shear owners through
+the same factory/lifecycle, with the13 accepted native archives unchanged.
+Actual launcher binding is now CPUs8-15. Explicit typed new-path support has
+54 passing tests20.335s, including unchanged historical/replacement mappings.
+New code/protocol are pushed before preparation; new ready journals still
+must be sealed/pushed before invocation. No shear physics result exists yet.
