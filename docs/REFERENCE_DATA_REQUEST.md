@@ -2553,3 +2553,32 @@ molecular minimum, field-motion or material-response claim.
 First xx=-0.0025 Berry direction completed native0/0floors at22:17:57.422603
 PDT2026-09-12; complete stdout/XML requalification passes. Direction2started
 22:18:08.002054,3pending. The complete strained vector/tensor remains open.
+
+### Native curvature campaign invoked; first complete AN5 result
+
+Sarcofd11745 implements the full27matrix lifecycle and original source-reader
+replay;79f64b5 seals the independently verified ready journal before invocation.
+93combined regressions pass plus a fresh12test final lifecycle run, covering
+94unique tests. The immutable original admission and all nine producer XYZ
+remain unchanged; archived original reader bytes requalify source ownership
+rather than relabeling the admission with new code hashes.
+
+Native CPU31/one-thread owner27968/start_ticks3978143 actually started
+22:52:35.963541 PDT2026-09-12 from pushed readiness. All three AN5matrices
+completed at22:52:59.217775,22:53:20.934910 and22:53:41.662965.
+Independent typed-unit/runtime reconstruction and the sole numerical reducer
+classify this selected zero-field point-clamped GFN2basin as
+sampled_numerically_positive. Minimum internal curvatures at h=.001/.0005
+and tight accuracy are0.004870127158742487,0.00487789586831715 and
+0.0048778882903181275eV/A2; observed sensitivity scale0.0010424689895318316.
+The full vector rotational Ward checks pass. Small negative full-spectrum
+axial values are retained, not silently discarded; this is not analytical
+minimum, physical packing, field switching or MPa pre-strain evidence.
+The remaining eight references continue; no full aggregate or fit target yet.
+
+The first xx=-0.0025 periodic PVDF point is also complete and independently
+requalified, with0floor strings in all three Berry directions. Its vector is
+[1.6747649756362366e-9,-0.20628923835423357,1.867713684534013e-11]C/m2.
+Its signed counterpart started22:33:42.833493; the full25point matrix and
+Born16/32/64 electrical convergence remain running. VDCN and finite-pair
+physical geometry-correction calculations are unchanged and still active.
