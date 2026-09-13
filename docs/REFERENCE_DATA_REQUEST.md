@@ -28,6 +28,22 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 follow-up: Actual empty-input CPU-only QE PW/PH startup probes
+each spawn /usr/bin/orted plus two background kernel tasks in both native/helper
+groups, even at one rank/one OpenMP thread (six per-task logs). They terminate
+at input reading with code1, no SCF/force/response; failed output/traces/scratch
+are removed, only compact diagnosis/topology retained. The previous one-log
+observer remains strict, NOT native QE method admission. Sarco's D: branch now
+shares ONE framing/syscall/FD/read decoder across serial and full lineage-content
+units, with typed original kernel task/group epochs and explicit birth/exec/
+consumer-read coverage. Actual two-reader-thread/helper control passes, original
+serial unit bytes stay identical after extraction;79 combined tests pass55.829s
+and20 task/process/ELF controls pass3.874s. A live lineage observer, sealed
+SCF->checkpoint->PH A/B experiment and scientific equality/precision/mechanical/
+material gates remain REQUIRED. Content checks are not launcher/ELF/historical
+execution attestation, full-byte consumption or calibration data. Canonical
+scope/diagnosis: sarco/materials/gpu_bundle/NATIVE_QE_STARTUP_DIAGNOSIS.md.
+
 2026-09-13: Sarco's original live source repo independently publishes all three
 PVDF seven-mer baseline-bound sampled returns after full12-baseline/36-input/
 native receipt/candidate/source replay (session54054 exit0).712 native
