@@ -2911,3 +2911,34 @@ measurements (191complete/43pending at this checkpoint, no failures). This is
 not yet a complete dataset or a published native coupling result. All five CPU
 owners are live, original epochs remain unchanged, GPU remains reserved for the
 user, and all five research stages retain their outstanding validation gates.
+
+### Complete native fixed-coordinate field-force result
+
+The234point experiment completed without failure at01:07:52.507873 PDT
+2026-09-13. Complete native replay passed before and after constructing all108
+signed pairs and108 separate-setting comparisons. All18 zero points reproduce
+the original1e-4eV/A gate; maximum9.043608658939799e-5eV/A. See Sarco
+vertical_fields_v1/RESPONSE_REPORT.md and RESPONSE_ANALYSIS.json for findings
+and complete branch statistics.
+
+Worst odd force/dipole slope vector changes:0.0000586427%/0.0001033131% for
+65 versus5V/um;0.0003662825%/0.0003018071% for electronic accuracy0.01 versus
+0.001. Maximum signed-normalized force/dipole differences are0.1456887491%/
+0.0148860302%. All comparisons are defined. These are numerical sensitivities,
+not a new convergence/physical-model pass. Nuclei are fixed, so this experiment
+does not observe chain rotation, unkinking or packing; total dipole changes
+are electronic responses at these source geometries.
+
+Native state SHA25642d7babb5ee1adebcde26877b917ba2599770868614e267f18083958c93bbb91;
+resulta8e7547921e372752aa25bee99df88f873e023d6fe0514fceac820f681282dac;
+analysis1e59bcebd2280373fb3803ebb977d516a6248acc65ab737a9c590f22f36ce0ec.
+Matched force increments are now available for full internal-space curvature
+response tests. Relaxed-endpoint comparisons must account for collective axial
+swivel and matching field orientation, and still need endpoint/reference accuracy.
+Independent DFT/model, mechanics, pathway, pre-strain and viewer gates remain
+open; original four CPU jobs continue unchanged and GPU stays reserved.
+Sarco1da19258 archives the complete dataset and readout. Fresh complete native
+replay exactly reconstructs the published analysis; all237 native/derived JSON
+entries and all five analysis owners match unfiltered raw-byte Git index hashes.
+The59 tests pass. Four original live root identities and their26/8/10/11 frozen
+owner hashes were rechecked before archive publication; no active epoch changed.
