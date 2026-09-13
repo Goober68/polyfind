@@ -4106,3 +4106,28 @@ retention. Actual all12-source/all36-input preparation is underway on CPU31,
 OMP/OpenBLAS1; no new return native optimizer is claimed yet. Exact ready must
 be sealed/pushed before invocation. No bulk charge-flux fit, material/field/
 size/packing/MPa/barrier/thermal qualification follows. GPU remains reserved.
+
+Actual preparation subsequently exits0, requalifying all12 baseline energies/
+coordinates and all36 starts. Sarco1e505e3b seals/pushes exact74878byte ready
+SHA9d4bfe07f367f26cd5dbb56636b0665b17eb230f8de85f1a10796ff4175adfe7,
+36 pending cases, no owner/output,33 calculation owners and60 source guards.
+Fresh actual launch requalifies defining sources and passes95 committed/
+workspace ready/code/source files against actual remote main before invocation.
+Actor538/start_ticks7358384 is live on CPU31, OMP/OpenBLAS1; first AN5 seed73411
+starts15:19:05.914970UTC and produces actual native optimizer steps. Launch is
+not an accepted endpoint or return. Sarcod92f06e0 records launch evidence;
+the running journal remains authoritative. No failed-case retry or GPU use.
+
+Sarco689afa54 also publishes COMPLETE yz_p0025 native SCF/three Berry stages,
+all exits0, and exact15-file raw-to-index archive. Complete defining native
+readers independently pass zero and both yz signs at engineering amplitude
+0.0025. Reusing the owning proper-response reducer yields proper z,yz
++0.04049039514569458C/m2 versus lab derivative-0.06260513632096022C/m2;
+the geometric correction is+0.1030955314666548C/m2 and both branches0.
+Exact positive state/result hashes:
+81c992ae99ab82f79105e46be744672c295cd2b9331b60a6d09c3b8f86e6a598 /
+11240589f5e22606396ae9accaa57b2a1aced5fba78b9b02d2cd35fa66ab3d69.
+Parent15 accepted points,0.005 negative yz partner running. This is one signed
+pair at one amplitude, not complete tensor/2% amplitude qualification. The
+Born/clamped D3threebody mismatch remains: no Born subtraction, d=eS or bulk
+charge-flux fitting. All five stages/all-target physical gates remain open.
