@@ -3437,3 +3437,12 @@ convergence/rigorous bound/minimum/physical model. This admits explicit PE24atom
 21owners SHAa8c78839b058b86c79c0e0e6ddcb92459b63698105d42c3d9396b41cf1bdf391,
 native entry bound and pushed before run. Alpha stays same process, GPU reserved;
 no physics/threshold/cap/dependency retuning, full five-stage scope open.
+
+Sarcoe506b05d pushes actual folded PE native bytes/result/report and PE ready
+two-stage epoch before actual run. PE relaxation now PID31491/start_ticks
+5805656,session3219,21owner hashes intact; actual first-stage child16953/
+start_ticks5807843 live. Alpha remains originalPID24995/start_ticks5779026,
+session25721,20hashes intact, actual child29952/start_ticks5779748 live and
+optimizer step1. No accepted relaxed stage yet. Folded point terminal is not
+restarted. Two new crystal campaigns plus six older roots, CPUonly/GPU reserved;
+force/stress/stability/convergence/model/physical and full five-stage gates open.
