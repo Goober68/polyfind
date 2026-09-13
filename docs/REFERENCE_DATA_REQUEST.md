@@ -4500,3 +4500,28 @@ All13 positive native/terminal files have exact permanent E: copies. Parent
 continues without restart and its live journal is not published. See Sarco
 clamped_ion_owner_matrix_v2/XZ_CENTRAL_REPORT.md. No bulk calibration or
 physical gate is released; all five stages/all target chemistries stay open.
+
+## Compatible-grid derivative and full-input matching — 2026-09-13
+
+Fresh Sarco native replay session32133 exits0 for EIGHT completed D: alpha
+points. The source fluorine9 Cartesian-y +/-0.001A central energy derivative
+agrees with the analytic zero-seed force within7.473134427948835e-6eV/A,
+passing unchanged1e-4 tolerance at1000/120Ry/full4x4x4. Only ONE step is
+measured: smaller-step/step-change and the second fluorine's whole two-step
+tests remain required, so neither full derivative gate passes. Both denser
+meshes/all16/full-terminal remain open. Useful pair's exact six native input/
+stdout/whole units have permanent E: copies; D: originals/live journal stay
+for final reduction. Seed force~1eV/A means it is NOT a relaxed minimum.
+See alpha_grid_convergence_v1/DERIVATIVE_PARTIAL_REPORT.md; no phase or bulk fit.
+
+The electrical dispersion follow-up now compares the COMPLETE actual Born16
+and accepted clamped-zero SCF text. Changing exactly the unique three-body
+declaration false to true and appending one terminal newline reproduces the
+entire accepted input byte-for-byte, after both source hashes are checked.
+This is a diagnostic in-memory comparison, not a native input edit. All three
+pseudopotential hashes also match the same exact source declaration. See
+beta_pvdf/ELECTRICAL_DISPERSION_SCOPE.md for hashes. Standard/corrected PW
+executable bytes and electrical response operators still differ; full-input
+matching does not release native electrical equivalence, Born subtraction,
+mechanical matching or a charge-flux calibration. All five stages/all targets
+remain open; live producer epochs unchanged and GPU reserved.
