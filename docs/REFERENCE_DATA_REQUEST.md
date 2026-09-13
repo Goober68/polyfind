@@ -3530,3 +3530,21 @@ Sarco accepted_candidate_inputs_v1/REPORT.md records complete evidence/scope.
 Next basin-return work must keep baseline support distinct from jittered
 starts, not alter its azimuth reference. No inherited basin/fullH/field/size/
 model/physical gate; full five-stage and all target scope open, GPU reserved.
+
+Sarco CoordinateCartesianForces now separates NEW candidate coordinate inputs
+from the calibrated native factory, reusing ONE existing full force/matrix
+sampler. Factory-owned physical parameters/context unchanged.3synthetic tests/
+combined15force-adapter tests pass17.745s; explicit CPU native integration
+passes121.271s on actual AN9/CNEPO7 candidates at.001, reproducing raw maxima
+3.4060293133e-7 /4.6973153036e-7eV/A with complete force-codec replay. See
+FORCE_ADAPTER_REPORT. Not a production Hessian/basin/field/model qualification.
+
+Clamped25parent now terminalfailed at combined resource preflight BEFORE
+zz_p0050 invocation.12prior points complete; negativecoarsezz fully native
+replayed. Positivecoarsechild remains exact committedREADY/all4nativecases
+pending, no payload users; no native scientific failure. Failure-time metrics
+were not saved. Later memory9.92GiB below10guard, then after integration exits
+10.374GiB with9988.509GiBfree disk satisfies10/250eligibility. RESOURCE_STOP_REPORT
+preserves diagnosis/accepted evidence. Failedparent never restarted/relabelled;
+untouched ready child can execute independently. Fulltensor/Born/mechanics/
+physical and all five-stage gates remain open, GPU reserved.
