@@ -3228,3 +3228,25 @@ exist and independently requalify (manifestef82a9bcce6e5ec4fd793a307565f62e4bee0
 they are not yet relaxed. No duplicate builder/preparation is needed. Full
 five-stage scope, independent model/DFT, ring/other-chemistry, packing, stress,
 barrier/temperature/bulk and accurate-viewer gates remain open; GPU reserved.
+
+Sarco d14d6690 publishes complete native force-history evidence/report;32 raw
+staged units match unfiltered Git bytes. Sarco aeb575cc seals the distinct
+cold-every-evaluation refinement policy/driver/protocol and nine new tests.
+ColdForceProvider wraps the ONE original native factory; ColdReferenceRefiner
+INHERITS the original optimizer/constraint/fresh-terminal/candidate path, not a
+copied minimization implementation. Backend owns actual fresh-before/no-previous
+result/native-return/evaluation-count/last-sample geometrySHA and separate raw/
+projected force maxima. ASE actual constraints own projection. Producer supplies
+receipts; generic lifecycle engine never stamps native truth. Original epochs
+and dependencies remain unchanged. Tests include nonzero real BFGSLineSearch
+steps with a synthetic quadratic native calculator, nine-case codec/lifecycle/
+receipt replay and parameter/cached API/context/bool/count/policy/matrix/diagnostic/
+interruption negatives; synthetic calculators attest no physics.
+
+Preparation is replaying prior sealed complete force-history/partial-reference
+evidence before capturing the new original-nine ready input/diagnostic snapshot;
+no actual new optimization launch yet. Sameaccuracy0.001/1e-6raw+projectedfmax/
+500cap/.05A/held0pointclamps, no tighter-candidate substituted starts, threshold/
+physical knob retuning or all-nine/source/model gate. Four original roots are
+kernel-live,26/8/10/11 owners unchanged,17.5GB WSL memory available and swapfree.
+GPU reserved; CNEPO prepared-only relaxation/admission and full scope remain open.
