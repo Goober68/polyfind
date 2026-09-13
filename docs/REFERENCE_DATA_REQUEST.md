@@ -4945,3 +4945,63 @@ controls pass47.259s. This is lightweight control evidence, not native SCF/PH
 equality. Full live lineage integration and sealed controlled SCF->checkpoint->
 PH A/B remain required; no original physical tensor/noise/Hamiltonian/mechanical/
 bulk/field/pre-strain/work/barrier/rate/cycling/viewer gate is released.
+
+### Live native lineage and gamma-seeded candidate — 2026-09-13
+
+Sarco independent D: development pushes0808915a: NativeLineageObservation
+implements new -> waiting_tracer -> observing_tree -> complete/failed over
+the shared actual-root owner and original kernel roster. Late worker/helper
+births remain observed through exit; every native executable group requires
+live ELF evidence, every task a clean terminal trace, and exact whole receipt/
+argv/timestamp/kernel-group/trace coverage. Full recovery rejects changed
+fields/epochs/groups/claims, live original owner/tracer/tasks and terminal
+records contradicting live original tasks; interrupted epochs never refresh.
+NativeKernelLineage owns the source-independent birth/exec path so both SCF
+production and PH consumption use ONE process owner. CheckpointLineageTrace
+composes the existing read ledger/reference replay instead of copying lineage
+interpretation. The actual control's whole checkpoint bytes remain identical
+to the original4651592f owner. Recorded rosters never resume live sampling.
+94 combined controls pass65.169s;26 roster/task/process/ELF controls pass2.685s.
+An actual tracer-termination control confirms all four captured native tasks
+die, including a separate-session helper, with no orphan or raw failed scratch.
+
+Pushed14b12bd7 records actual PW/PH empty-input diagnostics, session80526
+exit0: all12 source blobs match0808915a BEFORE either invocation. Each standard
+binary gives6 original tasks/6logs and2 live mapped native/helper groups.
+Both fail at namelist reading/exit1; no SCF/force/electrical response starts,
+clean-receipt admission remains FAILED. Useful compact diagnosis only, both
+owned D: temporary directories removed. This is actual startup discovery/
+mapping/roster coverage, NOT successful-stage native birth-parser/reference
+consumption or A/B electrical equality. Installed QE source shows read_file_ph
+reads collected orbitals and rewrites distributed scratch buffers; later
+prefix.wfc* descriptors alone do not bypass source consumption or justify
+resetting/copying the SCF namespace. Actual PH source reads still must attest
+the unchanged independently validated reference under the declared method.
+
+Original C: main899d99ef now publishes gamma/TERMINAL_REPORT.md, exact terminal
+state and full-cell endpoint. Producer2338/start_ticks5835813 is absent, both
+stages COMPLETE; retained source/entry/cell/sampling/compiler/numerical/endpoint/
+topology/native-writer/gate admission independently passes2.298s. Raw stage
+scratch was producer-audited/removed, NOT freshly reparsed here.48atoms,
+C16H16F16, two24-atom periodic components/48bonds, inherited shared PBE-D3BJ
+full4x4x4 sampling. Fixed-cell36steps/37native evaluations, force.00452191076
+eV/A; full-cell122/123, force.0002513236543eV/A and max all-six free stress
+.8035929323MPa pass unchanged.005eV/A/1MPa gates. Total160 evaluations/158steps.
+Gamma is SOURCE SEED, not measured relaxed phase/RIS/spacegroup or Hessian
+stability. Fixed-cell1698MPa residual is externally held-cell mismatch, not
+intrinsic crystalline pre-strain or available actuator output. Other five
+original actors remain live; all110 original defining code pins remain exact.
+
+Retained terminal state34749bytes SHA256
+33b3c6c29c81a107909bb2f8734c911a2f0563b66055c97a9d6cfd7199eefa59;
+full-cell endpoint3290bytes SHA256
+1179cea75daf4f4ec93ef47dd4fdc737aaae73123e890cad6ad588cde0f9462d;
+report3853bytes SHA256
+78f881589f9c05f62ce426e7f2fad30c3ca27c3c031d2d5ee384ee6fb94bcf05.
+Both endpoints/state/report have exact source/index/permanent E: archive proofs
+under sarco_artifacts/verified/sampled_control_relaxations_v1/gamma_terminal.
+D: adc0a236 records this status without importing a live C: journal. All five
+stages/all target chemistries/model/basis/phase/size/stability/field/tensor/
+Hamiltonian/mechanics/pre-strain/work/barrier/rate/cycling/viewer gates remain
+open. Sealed complete native SCF->checkpoint->PH A/B remains required;
+new work is D:, GPU reserved, existing E: scratch actors unmigrated.
