@@ -2447,3 +2447,13 @@ relaxation, field/minimum/size or GFN2/PBE0 response gate is cleared. Release
 the interior core for actual relaxation, and retain the declared distinction
 between local ring frame and original pair packing frame. Other three
 native Born/finite/VDCN correction jobs remain live; all five stages remain open.
+
+Actual matrix follow-up: Sarco dbadf51 pushed all25ready child/parent
+journals before invoking execution. Parent entered running at21:23:41.803186
+PDT2026-09-12; the independent zero common SCF actually started
+21:23:50.885376, leader25547 and four private corrected-PW ranks, all
+OS-confirmed on CPUs8-15. Actual preflight passed10GiB/250GiB requirements;
+stdout entered electronic iteration1. No new zero acceptance, strained
+point, amplitude tensor or consumer target yet. The three zero comparisons
+must pass before any signed strain point. CNEPO prepared inputs also pass
+a fresh28test rerun; physical length relaxations remain unstarted.
