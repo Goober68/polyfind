@@ -1868,3 +1868,24 @@ charge hashes remain in Sarco's qe_berry_diagnostic/matched_zero_v1/ under
 FAILURE_REPORT.md, failure_diagnosis.json and failed_native_berry.out. About4.5GB
 of failed private scratch was removed after charge identity validation. A new
 predeclared pair is required. VDCN/Born and the finite DFT correction stay active.
+
+### Producer new paired Berry v2 actually launched
+
+Sarco7bb8f25 implements one shared serial executor with immutable attempt
+locations and QE-owned weighted coverage, native resultant/branch-average
+checks and explicit diagnostic/production native-layout comparison. All23
+diagnostic/workflow tests pass, including actual LAPACK harness, native output
+acceptance and full synthetic charge-transfer/state/publication lifecycle.
+The retired v1 diagnosis recollects exactly, with its original hashes/lifecycle
+unchanged. No failed-v1 density/stage/orbitals are reused or relabelled.
+
+Prepared code/journal were pushed before actual v2 runner launch at
+2026-09-12 17:20:21.265432 PDT; common SCF started17:20:23.282176 PDT.
+Runner PID12805/start_ticks1985166 and four native pw.x workers12859-12862
+are verified live, all affinity0-15, four ranks/two OMP threads. Both Berry
+stages follow automatically from fresh separate exact common-charge copies.
+Available WSL memory~15GiB,zero swap. Finite DFT correction,VDCN and Born
+response remain active without changed code/runtime. No paired result or
+physical gate clearance yet. Evidence: Sarco's qe_berry_diagnostic/matched_zero_v2/
+PROTOCOL.md,EXECUTION_REPORT.md,state.json. Earlier independent repeat failure
+and all electrical/material acceptance gates remain open.
