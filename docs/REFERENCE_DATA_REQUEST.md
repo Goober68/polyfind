@@ -4419,3 +4419,35 @@ refresh to migrate them. Future NEW work declares D: explicitly. Repositories
 remain on C: pending separate clarification. GPU reserved. Full tensor and
 Born/clamped D3threebody matching, relaxed-ion/compliance/d=eS, validated bulk
 charge-flux reference and all five research stages remain open.
+
+Sarco90f977d8 subsequently publishes full independent zero/negative0.25% xz
+native input/stdout/XML/receipt/result replay, session95990 exit0. All13 raw/
+terminal point files have exact-hash permanent E: copies. Native gap6.0294eV,
+zero branch shifts; positive xz continues, so no one-sided/proper-column or
+amplitude/full-tensor coefficient is published. See XZ_NEGATIVE_REPORT.md.
+
+Sarco3a5be6d7 publishes first AN9 seed73411 after full12-baseline/36-input/
+native candidate/problem/receipt/CRC/comparison replay, session19728 exit0.
+180steps/305fresh native evaluations, raw/projected force8.76e-7eV/A,
+baseline RMS8.31e-5A/max1.26e-4A and energy difference+4.07e-10eV pass the
+declared sampled return tolerances. Exact58189byte accepted unit SHA256
+19de68c6410bf16084acfe79312a5e8093feacd00f266ae55de18669b258b707.
+Unit/report have exact-hash E: copies; other seeds/full36/global/physical gates
+remain separate. See native_basin_returns_v1/AN9_REPORT.md.
+
+Sarcoa4316b95 publishes fresh full original/control and first THREE actual D:
+alpha ladder native unit/source/receipt/CRC/partial-reduction replays,
+session89893 exit0.500/60/4 control exactly reproduces saved commensurate
+energy/forces; all three points preserve all four source symmetries/native
+grids and full64-point complex sampling.1000vs750Ry atrelative60 passes
+predeclared changes1.74157e-8eV/atom,3.46784e-6eV/A and0.00895944MPa.
+Both use identical96x192x96/48x96x48/24x48x24/12x24x12 grid dimensions;
+actual density cutoffs and multigrid task assignments differ. This is parameter
+sensitivity, NOT a demonstrated finer-spacing/general-grid/basis convergence
+gate. Relative/full6/8mesh/both derivative ladders/all16/fullterminal remain
+open, D: producer live. Exact nine native artifacts and ready/protocol/report
+have permanent E: copies; D: originals remain for active final reduction.
+See alpha_grid_convergence_v1/PARTIAL_REPORT.md. Only the obsolete wholly
+unexecuted generated C: ready journal was removed after exact hash/phase/path
+checks, retaining its diagnosis; no native result or failed epoch was removed.
+All five stages/all targets remain open; no bulk fit or physical promotion.
