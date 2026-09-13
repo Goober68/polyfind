@@ -4682,3 +4682,33 @@ convergence. The4x4x4 derivative pass is not a denser-mesh derivative gate.
 Gaussian-basis/general geometry/size/phase/phonons, full-five-stage physical
 field/load/MPa/pre-strain/work/barrier/rate/cycling/viewer and validated bulk
 charge-flux calibration remain open. Six other native actors are live, GPU reserved.
+
+## Storage/default and PH-operator boundaries verified — 2026-09-13
+
+Sarco b670ffc0 adds one CalculationStorage owner of SSD D: working/HDD E:
+verified defaults, native Windows/WSL paths, typed nonoverlapping roots and
+contained unaliased calculation identifiers. It never executes, moves, creates,
+archives or deletes data. After alpha became terminal, its CLI/constructor
+default changes from C: to this D: owner. Eight storage tests pass0.017s;
+four complete alpha regression tests pass150.970s. Actual original schema1/
+26-writer native16 full source/unit/receipt/state/result replay passes after
+the change, session61138 exit0, with the original terminal hashes and failed
+scientific gate unchanged. Future writer-coverage schema2 includes27 files;
+no scientific recipe/tolerance/reduction change, relocation or native retry.
+
+ElectricalPHInput now independently validates complete bounded INPUTPH bytes
+using ASE's native namelist parser and unique complete framing/assignments.
+Actual SCF calculation/namespace, Gamma zero q, tr2_ph1e-14 and electrical-only
+flags are required; unknown/duplicate/inline/coerced controls, nonfinite/incomplete
+q and escaping scratch are rejected, including a deliberately bad compiler.
+Final23 operator/input/checkpoint tests pass0.100s. Actual admitted source/full
+pair/operator replay exits0 with original in-memory whole-pair SHA256
+5fe9a84e03263d68da1f6d712fa2f9abeea413333c2674d39c8b65b253f78a0c unchanged;
+both PH alternatives match current Born16 bytes exactly. No native input changes.
+See Sarco WORK_STORAGE.md and beta_pvdf/ELECTRICAL_INPUT_VERIFICATION.md.
+
+These are boundary/integrity proofs, not native electrical A/B outcomes or PH
+source-consumption/mapped-runtime equivalence. Native A/B lifecycle/whole response
+codec and declared comparison gates remain required before combining responses.
+All six live actor epochs/110 code pins are unchanged; full five-stage/all-target
+physical qualification and validated bulk calibration remain open, GPU reserved.
