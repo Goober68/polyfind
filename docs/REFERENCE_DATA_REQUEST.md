@@ -4078,3 +4078,31 @@ yet; it needs its own declaration/receipt/comparison owner and sealed/pushed
 ready journal before invoking this optimizer. Force convergence alone is not
 sampled return. GPU reserved; all five stages/all-target physical/electronic/
 basis/size/packing/field/load/path/mechanics/barrier/thermal/cycling gates remain.
+
+## Full native basin-return declaration — 2026-09-13
+
+Sarco4ec71bc2 declares all36 actual saved starts across all12 accepted native
+baselines, reusing the ONE original optimizer/cold-calculator policy and shared
+IndependentNativeUnits lifecycle. AdmittedBasinInputs fully requalifies defining
+native/source/input evidence once per process, then guards exact admitted bytes
+and immutable baseline/problem snapshots at every evaluation. The original
+native factory calibration remains separately owned. ColdCandidateReceipt owns
+both original and problem-bound receipt validation; no copied semantic path.
+
+RefinementReturn owns the complete baseline/problem/candidate/native receipt
+packet and its checksum/version. Predeclared direct same-clamp numerical return
+tolerances: free-atom RMS<=0.001A, maximum displacement<=0.003A and absolute
+same-baseline native energy difference<=1e-5eV, no rigid fit. Converged outcomes
+outside tolerance remain useful complete results, not proof of a different
+basin. Failures retain decisive scalar diagnosis/eight optimizer observations,
+not rejected geometries/logs/checkpoints. Independent failed cases are not
+retried and do not suppress other declared cases.
+
+20 fresh tests pass220.935s, zero skipped, using real ASE optimization/shared
+lifecycle with explicitly synthetic harmonic native responses, not target SCFs.
+They cover complete all36 execution/reduction, first/terminal native receipts,
+outside-tolerance retention, source/checksum/semantic guards and failed-case
+retention. Actual all12-source/all36-input preparation is underway on CPU31,
+OMP/OpenBLAS1; no new return native optimizer is claimed yet. Exact ready must
+be sealed/pushed before invocation. No bulk charge-flux fit, material/field/
+size/packing/MPa/barrier/thermal qualification follows. GPU remains reserved.
