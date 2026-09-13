@@ -4248,3 +4248,13 @@ files and this AN5 unit; original native whitespace is preserved. Live parent
 journals are not published. Positive0.5% yz and proper paired amplitude
 comparison remain pending; D3threebody mismatch still prevents Born subtraction
 or bulk charge-flux fitting. No physical qualification is promoted.
+
+The first alpha atom9 +/-0.001A pair then passes independent whole saved-native
+partial replay and defining reduction, session36254 exit0. Its numerical
+force derivative is-0.7925451295704988eV/A versus original analytic
+-0.79226872023001eV/A: difference2.764093404887813e-4eV/A exceeds the
+predeclared1e-4 comparison limit. Both native points are complete/useful, not
+failed SCFs; no retry or tolerance/hash refresh. Smaller-step comparison,
+atom10 and paired energy covariance remain pending. This one pair does not
+isolate the cause or explain the original0.40769eV/A symmetry contradiction.
+Full numerical and physical gates remain open; running journal uncommitted.
