@@ -2609,3 +2609,18 @@ VDCN5/7; for VDCN9 it is two backbone bonds away. This correlation does not
 isolate steric/electrostatic energy or establish a RIS crossing/switching mechanism.
 Mode geometry across all settings/subspaces and durable viewer export remain
 next boundaries; CNEPO physical references and all five research stages remain open.
+
+### First signed periodic PVDF strain pair
+
+Sarco independently requalified the complete zero and both xx=+/-0.0025
+point archives through their original owning reader. The positive point result
+SHA256 is9fb7e54b3684dd780addfd610730b589f808db7125aa42c4d3d45b11307a2972.
+The existing crystal-polarization owner verifies affine fixed-fractional nuclei
+and the declared0.25cycle branch bound; both branch-shift vectors are zero.
+The preliminary proper clamped-ion xx column is
+[-1.305875223507278e-7,-0.16748176972831194,-2.654220491456409e-10]C/m2.
+The lab-polarization derivative has y=+0.0387106918961766C/m2 instead;
+the changing-cell geometric correction is not a material switching response.
+This is one amplitude and one column, not a converged tensor or fit target.
+The second-amplitude negative point began23:08:26.436164 PDT2026-09-12;
+full amplitude/mesh/cutoff, relaxed-ion and physical-geometry gates remain open.
