@@ -3475,3 +3475,18 @@ Existing verifier/read_unit checks pass twice; raw maxima respectively
 projected maxima also pass unchanged1e-6. VDCN9 remains running. No terminal
 reduction/canonical-source/Hessian/field/size/bulk/model admission claimed;
 zero-field reference shifts are not field-induced motion. GPU reserved.
+
+PE fixed-cell stage accepted8optimizersteps/9convergednativeSCFs, cleanexit0,
+force0.0047990232946397175eV/A. Sarco FIXED_CELL_REPORT retains exact endpoint/
+actual running-parent receipt snapshot; existing identity/entry/endpoint/
+topology owners rechecked. Held normal stress157.5/242.5/983.6MPa is not
+intrinsicprestrain. Same producer now fullcell, nativechild4816/start_ticks
+5853268 live; full1MPa equilibrium and physical/model/stability gates pending.
+
+Beta-PVDF fine signedzz points now independently replay full native byte
+archives/exact results, matching accepted parent receipts. Existing polarization
+assembler/proper-response owner yields e_y,zz=0.11251354124494639C/m2 vs
+improper0.3187063989018524, finite geometric correction-0.20619285765690598;
+both branchshifts[0,0,0]. These are fixed-fractional points, not atomic
+unkinking. All22 native files archived exact; coarsezz/amplitude/shear/fulltensor/
+matchedBorn/relaxedion/compliance/d/material gates open. GPU reserved.
