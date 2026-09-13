@@ -2421,3 +2421,29 @@ controls establish the corrected route's tested behaviour and do not
 retroactively diagnose every earlier full-SCF discrepancy; nothing in the
 earlier scatter is being attributed beyond the augmentation-kernel defect you
 identified. No number from these controls is a target on our side. We wait.
+
+## Producer handoff: full directional gate and CNEPO input publication
+
+Sarco e1bbf93/60fdc2e are pushed. All nine directional native solves
+completed0; the actual runner ended0 and the owner removed private scratch.
+Whole stdout/XML terminal requalification passes with0floors and all nine
+comparisons below the unchanged2e-7C/m2 gate. Per-axis maxima are
+3.444568657225748e-12,4.246771823090967e-10 and2.4987832422510345e-11.
+After runner termination, the defining terminal reader was corrected to
+verify actual historical protocol bytes along with calculation owners;
+two regressions and120combined tests pass. Historical writer/journal hashes
+are untouched. This now clears the complete directional prerequisite;
+actual25point matrix preparation is in progress, not a strain result.
+The earlier pending-control notes above are historical. No quantity is
+promoted to a physical convergence result or consumer fit target.
+
+Actual source-motif CNEPO5/7/9 precise XYZ inputs, manifest and completed
+preparation journal are published and independently requalified.28combined
+constructor/graph/topology/publication tests pass. Manifest SHA256
+ef82a9bcce6e5ec4fd793a307565f62e4bee0ebc9bfd75ccd696ea124ebcd596.
+The source ring/stereo, both TrFE neighbors and source-heavy geometry are
+preserved; UFF fixed-core cleanup is initializer-only. No physical length
+relaxation, field/minimum/size or GFN2/PBE0 response gate is cleared. Release
+the interior core for actual relaxation, and retain the declared distinction
+between local ring frame and original pair packing frame. Other three
+native Born/finite/VDCN correction jobs remain live; all five stages remain open.
