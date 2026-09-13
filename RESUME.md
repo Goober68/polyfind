@@ -99,19 +99,20 @@ no polarity verdict, truncation was never the cause.
 
 ## Dipole's open gates (theirs, not ours to chase)
 
-- Berry polarization: **route repaired, directional gate passed, matrix
-  running.** The earlier scatter was an augmentation-kernel defect. All nine
-  directional zero-strain solves passed the 2e-7 C/m^2 gate at zero floors;
-  the 25-point +/-0.25%/+/-0.5% clamped-ion matrix launched 2026-09-12 21:23
-  PDT on Dipole's machine. Its independent zero passed. First strained point
-  (xx = -0.0025) is complete: P = [1.7e-9, -0.2062892, 1.9e-11] C/m^2 against
-  zero P_y = -0.2061908; its signed counterpart is running. **One-sided; do
-  not compute a slope from it.** Every number is still
-  `quantitatively_valid=false` by their label. **Do not fit to any Berry
-  number until they declare one accepted.** The like-for-like quantity on our
-  side is the proper clamped-ion `e_clamped` in `docs/INTERNAL_STRAIN.md`
-  (y,xx -0.296; y,yy -0.299; y,zz -0.011 C/m^2); their proper column minus
-  ours is the electronic term. Conventions are written into the exchange.
+- Berry polarization: **route repaired, matrix running, first column in.**
+  All nine directional zero solves passed the 2e-7 gate; the 25-point
+  clamped-ion matrix launched 2026-09-12 21:23 PDT. Signed xx pair complete:
+  their preliminary proper clamped-ion e_y,xx = -0.1675 C/m^2, lab derivative
+  +0.0387 (identity closes on their P_y -0.2062). Ours, regenerated
+  2026-09-13 in their frame with the same sign of P: -0.2960. Difference 0.13
+  C/m^2 (~5 pC/N): the electronic term we lack is real but about a quarter of
+  the old 0.4-0.6 target, so both hypotheses are partly true, on one column,
+  `quantitatively_valid=false`. The yy column (polar strain, the d33 one) is
+  next. Recompute ours with the scratch script pattern in
+  `examples/internal_strain_jacobian.py::clamped_ion` (the provider's
+  `internal_strain_geometry.json` is no longer at its default path in sarco,
+  so the full example exits 2; call `clamped_ion` directly). **Do not fit to
+  any Berry number until they declare one accepted.**
 - Born/dielectric ladder: 4x8x16 passed its raw sum-rule gate (max 0.0065 e);
   the ladder as declared cannot pass because 4x8x8 failed; a new predeclared
   ladder may follow. Transverse eps (2.253, 2.235) is stable; chain-axis
@@ -148,9 +149,10 @@ traceable to an invented constant, refuse it.
 
 ## If continuing
 
-Nothing on our side is unblocked. The next move is Dipole's clamped-ion
-tensor. When it lands: if large, write the scope boundary into `DESIGN.md` and
-`docs/BENCHMARK.md` as final and consider the goal met at the static side; if
-small, the target was wrong and the comparison waits for an accepted Berry
-sweep. Either way, reply in `docs/REFERENCE_DATA_REQUEST.md`, then re-run
+Nothing on our side is unblocked. The xx column says the answer is "both":
+a real electronic clamped-ion term of ~0.13 C/m^2 and an overstated target.
+When the yy column and the accepted matrix land: write the scope boundary
+into `DESIGN.md` and `docs/BENCHMARK.md` with the measured size of the
+electronic term, and restate the piezoelectric shortfall against the accepted
+Berry-derived total rather than the failed sweep's 0.4-0.6. Either way, reply in `docs/REFERENCE_DATA_REQUEST.md`, then re-run
 `examples/electromechanics.py --preset flux` if any parameter changes.

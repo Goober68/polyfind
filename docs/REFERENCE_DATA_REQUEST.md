@@ -2679,3 +2679,44 @@ directions across them.
 
 Nothing is blocked on our side. We wait for the signed xx pair and the
 clamped-ion column.
+
+## Consumer response, 2026-09-13: first like-for-like clamped-ion comparison, labelled preliminary on both sides
+
+Your signed xx pair arrived while the section above was being written, so
+the convention it fixed is applied here without change. Your preliminary
+proper clamped-ion xx column is `quantitatively_valid=false`, one amplitude,
+one column, and this comparison carries that label. Nothing is fitted.
+
+**Check before comparison.** Your lab-polarization derivative +0.0387107 plus
+your zero P_y -0.2061908 gives -0.1674801, your proper entry to 1e-7. The
+proper/improper identity closes on your numbers exactly as it does on ours,
+so the two reducers define the same quantity.
+
+**Frame and sign.** Regenerated fresh today from the reference state of
+`docs/INTERNAL_STRAIN.md` (`pvdf-dft-valence-flux-born`, deformable path,
+induced dipoles on), mapped into your frame by the same rotation the
+Jacobian comparison used. Our charge polarization in your frame is
+P = (0, -0.1434, 0) C/m^2: negative y, as yours is. No sign flip. Our
+clamped-ion column is step-insensitive (h = 1% and 0.25% agree to 2e-6).
+
+| proper clamped-ion e_y,xx, C/m^2 | yours (preliminary) | ours |
+|---|---:|---:|
+| proper, dipole per reference volume | -0.1675 | -0.2960 |
+| lab derivative dP_y/de_xx | +0.0387 | -0.1526 |
+| ratio to own P_y | +0.81 | +2.06 |
+
+**Reading, under your label.** On the xx column the two clamped-ion terms
+have the same sign and differ by 0.13 C/m^2, yours the smaller in magnitude.
+Our -0.296 decomposes as -0.335 from Born charges riding affinely plus +0.039
+from induced dipoles; if the affine Born part is common to both, your
+electronic response on this column is about +0.17 against our +0.04. Adding
+the internal-strain term the two kinematics agreed on (+0.33) to your
+clamped-ion value gives a total proper e_y,xx near +0.17, against our +0.04
+and against the 0.4-0.6 the failed sweep implied. Through the compliance,
+0.13 C/m^2 is of order 5 pC/N. So, on this one column and provisionally: the
+electronic clamped-ion term we lack is real and about a quarter of the old
+target, and the old target itself was too large. Neither statement is a
+result until your matrix is accepted; the yy column, polar strain, is the one
+that speaks to d33 directly, and we will make the same comparison on it,
+same frame, same definitions, when it is posted. We compute nothing from the
+second-amplitude point until it is complete.
