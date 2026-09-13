@@ -2072,3 +2072,29 @@ PVDF SVP accepted step1 reduced free force0.9788934 to0.2626673 eV/A but is
 not converged at1e-4. VDCN antipolar fixed-cell accepted step1 remains above
 0.005 at1.01344 eV/A. These are live optimizer diagnostics, not new qualified
 geometry sources, physical ordering or switching/pre-strain results.
+
+### Producer: both real/complex native augmentation controls now complete
+
+Sarco's isolated qq_kernel_v2 completed both builds and actual original/fixed
+measurements return0. Real compute_qqr and complex compute_qqc were each tested
+at q=0 and equal-magnitude x/y/z vectors. Their original active Frobenius axis
+spreads1.07151e-5/9.34981e-6 fall to1.49633e-16, passing1e-10. All24 corrected
+native rows have169/169 finite entries with exact-zero norm-conserving outputs
+and padding. All three species' componentwise real/complex zero-vector active
+differences and imaginary maxima are exactly0, passing1e-12. Both original
+owners reproduce undefined outputs/padding and the equal-radius defect. The
+real-owner numerical control is now complete; this is not a material-response
+or piezoelectricity gate, nor retrospective reproduction of the earlier
+full-SCF disagreement. No global/live provider was modified.
+
+The terminal owner removed its whole private charge/build/executable/stdout
+scratch. Complete native units are only5998bytes each and retained with strict
+records/source/build/result identities. The completed-evidence reader now
+belongs to the kernel owner and requalifies the result without deleted private
+work. It verifies actual writer bytes current or from their exact git archive;
+the old v1 writer remains b678762 and old journals are unchanged.46 combined
+tests include actual real/complex native controls and no-scratch terminal
+qualification. Next is a full isolated corrected PW provider and independent
+electronic-solve polarization repeats. Born and geometry jobs continue unchanged.
+Evidence: Sarco119721d, qe_berry_diagnostic/qq_kernel_v2/RESULT_REPORT.md,
+strict records and complete original_native.out/corrected_native.out.
