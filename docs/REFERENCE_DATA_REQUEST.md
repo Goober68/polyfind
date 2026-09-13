@@ -4605,3 +4605,28 @@ before combining responses. New execution uses D:, verified archives E:.
 Mechanical matching, Born subtraction/compliance/d=eS, bulk calibration and
 all five-stage/all-target physical field/load/pre-strain/barrier/rate/cycling/
 viewer qualifications remain open; GPU reserved.
+
+## Alpha full derivatives pass; mesh stress sensitivity fails — 2026-09-13
+
+Sarco5292b5f6 publishes independent session95460 exit0: all15 completed D:
+native point input/stdout/receipt/whole-unit/source/CRC replays. BOTH source
+fluorines' full +/-0.001A and +/-0.0005A derivative gates pass unchanged
+1e-4eV/A limits: maximum analytic error7.473134427948835e-6eV/A; both step
+changes1.18088792078197e-5eV/A. These are held-seed numerical consistency
+passes, not stable relaxed alpha structures.
+
+At1000/120Ry, full4x4x4-to6x6x6 mesh sensitivity passes energy/force but FAILS
+stress:0.19437294999979926MPa exceeds the predeclared0.1MPa maximum. The native
+SCF remains successfully COMPLETE and its useful input/stdout/unit are retained.
+All15 native mesh disclosures and seven zero-point source-operation/grid/
+force-covariance checks pass. Full ladder gate stays false. The8x8x8 native
+child remains live in its original D: epoch; a passing last increment cannot
+erase the required first-increment failure. Additional sampling qualification
+is required, without waiving its tolerance or relabelling the old epoch.
+
+The newly useful six derivative points plus6x6x6 have21 exact native artifacts
+and report copied/hash-verified to E:, with original D: receipt paths preserved.
+See Sarco alpha_grid_convergence_v1/DERIVATIVE_SAMPLING_REPORT.md. No native
+retry, phase/geometry/field/load/pre-strain/work, bulk charge-flux calibration,
+barrier/rate/cycling or physical all-target viewer gate is released. All five
+stages/all chemistries remain open; GPU reserved.
