@@ -3385,3 +3385,33 @@ multiplicity, unknownphase rejection. Native folded-cell equivalence and
 staged phase-scoped atomic/full-cell method remain next; no filesystem-label
 Hamiltonian inference. All seven live epochs frozen, GPU reserved, five-stage
 and independentmodel/packing/stress/field/temperature/accurateviewer scope open.
+
+### Completed native controls and next calculation-cell/relaxation owners
+
+Original three-point root is terminal complete, session56867 exit0/no owner.
+All original raw native inputs/outputs/units and exact reduction reread:
+state13ca4fa8c18aac53e39b00d9a90807e5edf246ff3bda14d8ac943b859851d224,
+result6c6cdb02b25a06bfa8b4bbf3f774e8ea44284b60d58f93665301099180f7861f.
+Gamma maxforce1.2383190215eV/A and PE0.2909623627 are unrelaxed computed-seed
+results, not intrinsicstress/equilibrium/material output. Sarco point RESULT_REPORT
+records full evidence and normal stresses. Historical writer identity preserved.
+
+Shared point provider now owns typed per-instance sampling/phases/storage/
+protocol. Only changed AFTER old root terminal, exact old reduction reverified.
+folded_pe_point.py reuses ONE native/codec/lifecycle path for explicit PE24atom/
+4x4x2, with primitive vs repeated comparison gates0.001eV/primitive,2e-5eV/A
+forcevector,0.1MPa stresscomponent. Mathematical folding does not assert native
+equivalence; pending native study has18 frozen owners and actual ready epoch.
+
+sampled_control_relaxation.py uses phase-scoped source/method and existing
+two-stage crystal lifecycle: atoms first at held cell,0.005eV/A, then actual
+accepted own predecessor with all6 cell components free and1MPa stress.1000cap/
+.05A/zero externalstress/field; no filesystem-label mesh inference or physics
+retuning. PE12atom native point alone cannot admit24atom calculation cell;
+completed folded-cell equivalence required. Seed label is not measured relaxed
+RIS/packing/spacegroup phase. Actual filter zero-pressure default and optimizer/
+filter/SciPy file identities checked with limited coverage explicit.
+26combined tests pass95.051s, final3scoped tests30.127s; synthetic tests not
+polymer physics. Alpha exact ready2-stage/20owners and PE exact ready1-point/
+18owners are published before run. Six prior roots remain live20/17/26/8/10/11
+owners unchanged, GPU reserved; full five-stage and physical gates remain open.
