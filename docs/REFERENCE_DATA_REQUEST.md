@@ -2150,3 +2150,25 @@ with finite positive6.03eV gap. First independently initialized charge-only
 NSCF/Berry solve started19:14:45.672571 under16774/start_ticks2672022;
 second/third remain pending. No polarization or whole-repeat result yet.
 See Sarco fixed_zero_v1/EXECUTION_REPORT.md and owned journal.
+
+### Producer: proper clamped-ion reduction implemented, native tensor pending
+
+Sarco crystal_polarization.py now owns the actual cell, three signed total
+reduced polarization cycles and ordered fractional nuclei. Its analysis gives
+proper clamped-ion response separately from the direct lab-P derivative and
+finite-difference geometric term, enforcing integer branch continuity and
+engineering shear. Fixed Cartesian nuclei, missing shear/strain samples and
+ambiguous phase steps are rejected. All six columns at identical two-step
+amplitudes are required. Pure numerical output remains quantitatively_valid=false;
+undefined near-zero relative sensitivity is not a convergence pass.
+
+Thirteen synthetic tests include all-six homogeneous-charge zero responses,
+known intrinsic redistribution, gauge invariance, geometric/shear factors,
+fractional clamps, full matrices and curvature.23 combined crystal/finite
+response tests pass. beta_pvdf/CLAMPED_ION_RESPONSE_PLAN.md predeclares the
+proposed +/-0.25%/+/-0.5% six-component native matrix and separate proper/
+improper/geometric deliverable. This is not an executing campaign or measured
+tensor. The live corrected zero repeat gate remains the prerequisite; successful
+y repeats alone do not qualify directions1/3. Same-Hamiltonian geometry,
+Born, transverse/grid/cutoff/basis, compliance and film-orientation gates remain
+open; no old failed slope or provisional charge fit is promoted.
