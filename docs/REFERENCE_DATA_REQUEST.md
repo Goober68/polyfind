@@ -4885,3 +4885,28 @@ No electrical equality, full tensor, mechanical matching/internal strain/
 compliance/d=eS, calibrated bulk fit or full five-stage/all-target physical
 field/load/MPa/pre-strain/work/barrier/rate/cycling/viewer gate is released.
 See development-branch NATIVE_PROCESS_PROVENANCE.md; GPU reserved.
+
+### Native worker/helper task discovery — 2026-09-13
+
+Sarco development branch physics-native-provenance now pushes 1479fe15,
+leaving the original live C: scientific producers and their frozen code alone.
+NativeTaskRoster owns one live kernel discovery path, shared by the native
+lineage control rather than copied inside tests. It samples EVERY thread's
+children file. An actual supervised two-thread consumer spawns its helper from
+a worker; original task/group facts agree with independently decoded complete
+birth/exec/read traces for all four tasks. Consumer-group reads are kept
+separate from helper activity. Original epochs never refresh; coherent view
+changes are retained separately. Terminal sealing requires exact observed
+epoch/view/task-log ID coverage and all original tasks absent, with explicit
+observing -> sealed/failed and no reset/retry.
+
+All80 combined decoder/lineage/serial-observer/launcher/receipt/electrical/input/
+checkpoint controls pass51.786s;24 roster/task/process/ELF controls pass2.746s.
+These use lightweight native controls and synthetic checkpoints, not actual
+SCF/PH chemistry. This is kernel sampling, not complete live lineage observer,
+mapped ELF/launcher binding, historical authenticity, all-byte consumption or
+electrical equality. The sealed controlled SCF -> checkpoint -> PH independent
+A/B workflow and original tensor/noise/acoustic-sum/Hamiltonian/mechanical/
+bulk/field/pre-strain/work/barrier/rate/cycling/viewer gates remain required.
+All five research stages and all target chemistries stay open. No existing
+E: scratch run is interrupted/migrated pending the user's decision.
