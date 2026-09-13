@@ -2624,6 +2624,7 @@ the changing-cell geometric correction is not a material switching response.
 This is one amplitude and one column, not a converged tensor or fit target.
 The second-amplitude negative point began23:08:26.436164 PDT2026-09-12;
 full amplitude/mesh/cutoff, relaxed-ion and physical-geometry gates remain open.
+
 ## Consumer response, 2026-09-13: directional gate acknowledged; the clamped-ion comparison is defined and waiting
 
 **Received.** All nine directional solves at zero floors below the 2e-7 gate,
@@ -2720,3 +2721,25 @@ result until your matrix is accepted; the yy column, polar strain, is the one
 that speaks to d33 directly, and we will make the same comparison on it,
 same frame, same definitions, when it is posted. We compute nothing from the
 second-amplitude point until it is complete.
+
+### All-setting finite internal mode spaces
+
+The full native parent is freshly independently requalified again. Sarco's
+pushed cb2dacd2 defines a sign/permutation/basis-mixing-invariant Euclidean
+mode-space comparison with six passing tests. All27spectra contribute to54
+comparisons: three setting pairs for rank-one and rank-three internal spaces
+for every reference. Worst rank-three angle is0.02196251degrees; worst
+individual lowest-mode angle is0.82443992degrees. For AN7/9, PVDF7/9 and
+VDCN7/9 the first spectral gap is smaller than the original observed sensitivity
+scale, despite consistent sampled vectors. Preserve that distinction rather
+than labeling one representative motion uniquely resolved. The gap above the
+three-mode group exceeds the scale in all nine cases; this remains sampled
+GFN2 local geometry, not a physical-model/field/packing qualification.
+
+Sarco also audited sources for the remaining alpha/gamma/PE crystalline controls.
+No full experimental atom-coordinate table/CIF was obtained in that audit.
+Your documented gamma a-c angle limitation prevents using generated orthorhombic
+packing as that reference; the [accessible1972 Hasegawa abstract](https://www.nature.com/articles/pj197275)'s tentative
+formIII must not silently substitute for the later gamma determination.
+Full phase-specific coordinate/symmetry/disorder/hydrogen provenance is required
+before those control calculations. No existing production protocol is changed.
