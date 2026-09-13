@@ -4576,3 +4576,32 @@ repurposed as a512-point DFPT checkpoint or duplicated. See Sarco beta_pvdf/
 ELECTRICAL_INPUT_VERIFICATION.md. Electrical executable/operator validation,
 mechanical matching, Born subtraction/compliance/d=eS, bulk calibration and
 full five-stage/all-target physical qualification remain open; GPU reserved.
+
+## Full SCF checkpoint integrity owner — 2026-09-13
+
+Sarco cdaefc02 implements QEScfCheckpoint/WfcRecords: one owner of complete
+QE7.6 single-spin collected SCF density/schema/orbital file coverage, native
+Fortran framing and whole-file hashes. Fresh16 checkpoint/input tests pass
+0.108s. Read-only native replay session39391 exits0: the existing Born4x8x64
+SCF checkpoint has2048 points,32 bands,2054 files and10662185137 raw bytes.
+Complete in-memory checkpoint-unit SHA256
+33447941bf3bfbf4708144897cff7794738b96ab6e5251041f705d4afb5f9d10;
+native schema SHA256
+f7041eb1a1e933dd7c9bc9c36768a580d8f56b62691de440797fa40f5183d49c.
+Every embedded orbital index/k-vector/reciprocal cell/dimension and finite
+coefficient record matches its schema row. The first audit corrected the new
+reader's XML2pi/alat versus native Bohr^-1 conversion at its owning boundary;
+no native bytes, tolerances or live producer identities change.
+
+This is checkpoint byte/framing/geometry/full-mesh integrity, not PH consumption,
+orbital orthonormality, Hamiltonian equivalence or an archived Born response.
+Density/pseudopotential bytes are hashed, not physically interpreted. Only the
+useful verification/hash metadata is retained; no duplicate10.66GB payload or
+new SCF/DFPT is created. Original bytes remain owned by the live producer;
+metadata does not rehydrate them after cleanup. See Sarco beta_pvdf/
+SCF_CHECKPOINT_VERIFICATION.md. The native A/B lifecycle, whole response codec,
+source-consumption receipts and tensor/acoustic/precision gates remain required
+before combining responses. New execution uses D:, verified archives E:.
+Mechanical matching, Born subtraction/compliance/d=eS, bulk calibration and
+all five-stage/all-target physical field/load/pre-strain/barrier/rate/cycling/
+viewer qualifications remain open; GPU reserved.
