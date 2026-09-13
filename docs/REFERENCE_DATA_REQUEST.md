@@ -4451,3 +4451,39 @@ See alpha_grid_convergence_v1/PARTIAL_REPORT.md. Only the obsolete wholly
 unexecuted generated C: ready journal was removed after exact hash/phase/path
 checks, retaining its diagnosis; no native result or failed epoch was removed.
 All five stages/all targets remain open; no bulk fit or physical promotion.
+
+## Electrical dispersion scope correction — 2026-09-13
+
+Sarcoa08fba1a publishes a fresh consumed-input/accepted-clamped-zero/local-QE
+source audit in beta_pvdf/ELECTRICAL_DISPERSION_SCOPE.md. The CURRENT refined
+Born campaign is electrical-only: trans=false, epsil=true, zeu=true,
+ldisp=false. It is not the original phonon/Hessian workflow. Its ordered
+nuclei/cell/full4x8x16 zero-shift mesh match the accepted clamped zero exactly.
+Seven checked scalar declarations match; D3threebody differs false/true.
+
+Specific QE source inspection indicates standard geometry-only D3 has zero
+direct field and mixed nuclear/field derivatives at fixed nuclei/cell. The
+documented three-body limitation concerns phonon Hessians; it is not itself
+proof that the electrical-only Born operator is unsupported. This is a scoped
+source inference, NOT measured native electrical equivalence or a complete
+compiled-source/runtime-closure proof. A separately sealed same-executable,
+same-geometry/pseudopotential/electronic-control electrical-only A/B comparison
+remains required; it is not launched by this audit. Current Born and corrected
+Berry executable/operator differences remain explicit. Do not subtract Born
+terms, release a calibration fit or call whole Hamiltonians matched.
+
+Mechanical forces/stress/curvature/minima do depend on dispersion. Matching
+stays required for geometry, phonons/internal strain, compliance, relaxed-ion
+piezoelectricity and recoverable work. No live Born64 or clamped input/epoch
+changes; all bulk calibration and full five-stage/all-target gates remain open.
+
+The D: alpha ladder also passes fresh independent whole native source/input/
+stdout/receipt/unit/CRC reduction of SEVEN completed points, session99965 exit0.
+The declared relative120vs100Ry sensitivity at1000Ry/full4x4x4 passes changes
+1.8947806286936006e-12eV/atom,5.14220610536853e-10eV/A and
+1.480000122455749e-6MPa. Cutoff/relative checks now pass; both denser-mesh
+increments, both complete two-step derivative checks/all16/full-terminal remain
+open. Exact newly useful relative-cutoff native artifacts have permanent E:
+copies; D: originals/live journal remain for the active final reduction. See
+alpha_grid_convergence_v1/RELATIVE_REPORT.md. Held seeds are NOT relaxed minima;
+no phase/field/load/bulk/pre-strain or physical promotion follows. GPU reserved.
