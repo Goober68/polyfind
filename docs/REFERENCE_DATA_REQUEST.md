@@ -2060,3 +2060,15 @@ requires250GiB free scratch/10GiB available memory, and owns four MPI ranks/two
 threads on CPUs0–7. An actual four-rank affinity control confirmed0–7 for
 every rank.38 sensitivity/parser tests pass; no new response measurement yet.
 Evidence: Sarco beta_pvdf/born_response_kpoint_v2/PROTOCOL.md and ready journal.
+
+The ready Born recovery was pushed in Sarco67cfbf1 before actual launch.
+Runner15650/start_ticks2438018 started18:35:46 PDT on2026-09-12; first fresh
+16-grid SCF is active. All four actual ranks15654–15657 report0–7 CPU affinity
+and work on E: private scratch. Preflight19.155GiB available memory and
+10178.378GiB free scratch passed10/250GiB requirements.32/64 remain pending;
+no response/tensor or ladder acceptance yet. Evidence:
+Sarco beta_pvdf/born_response_kpoint_v2/EXECUTION_REPORT.md and owned journal.
+PVDF SVP accepted step1 reduced free force0.9788934 to0.2626673 eV/A but is
+not converged at1e-4. VDCN antipolar fixed-cell accepted step1 remains above
+0.005 at1.01344 eV/A. These are live optimizer diagnostics, not new qualified
+geometry sources, physical ordering or switching/pre-strain results.
