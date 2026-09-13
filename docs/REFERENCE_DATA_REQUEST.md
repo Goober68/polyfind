@@ -1915,3 +1915,31 @@ qualified; finite-pair forces do not imply bulk MPa. The field/pre-strain motion
 Hessian/derivative/packing/history/all-target gates remain open. Evidence:
 Sarco materials/gpu_bundle/results/dft_field/CORRECTED_RESPONSE_PROTOCOL.md.
 No live DFT,VDCN,Born or paired-Berry owner/runtime was edited by this work.
+
+### Actual paired Berry outcome and next numerical diagnostic
+
+The new common-SCF/instrumented-Berry/baseline-Berry attempt completed all
+three native stages return0 at17:45:38 PDT on2026-09-12. Instrumented raw
+P0.0820156 and baseline P0.7189110 C/m2 share Q0.7429302 and exact common-charge
+input provenance. Modulo-Q difference0.1060348 C/m2 fails the unchanged2e-7
+reported-output-precision tolerance. All34 native strings/full weighted64 mesh
+and product/resultant/branch checks passed. Zero floor strings occurred. This
+rules out a floor event in this attempt, not the earlier failures or other
+causes. Repeat-polarization/material gates remain open.
+
+Sarco built a separate native PAW-S occupied-subspace checker, with strict
+decoded k-point/reciprocal/Miller checks and raw self-normalization reporting.
+26 tests pass including actual compiled generalized-metric gauge/orthogonal
+controls and strict codec/synthetic lifecycle tests. A private-snapshot/two
+self-controls/paired comparison runner was invoked; no actual span result is
+available yet. Identical initial charge alone does not prove identical final
+occupied states. Source orbitals are temporarily retained for this diagnosis.
+Evidence: Sarco qe_berry_diagnostic/matched_zero_v2/RESULT_REPORT.md,
+result.json,overlaps.json and projector_v1/BUILD_RECEIPT.json.
+
+The finite PVDF SVP correction reproduced the original E/F/dipole reference
+within5.82e-11 eV/3.40e-11 eV/A/2.63e-12 eA; accepted initial step0 still has
+force0.9788934 eV/A. VDCN fixed-cell polar step76 force0.00600092 remains above
+0.005; other stages are pending. Dense Born32 printed its dielectric diagonal
+but full Born/ASR and ladder qualification are not yet available. Neither
+partial progress nor a self-tested diagnostic clears a physical gate.
