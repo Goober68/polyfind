@@ -2275,3 +2275,24 @@ tests. Full3x6known-answer join is explicitly synthetic, not measured.
 The3direction zero control is live; no strain campaign is sealed/launched
 yet, and no clamped-ion value is delivered or fit. Frozen running sources
 are unchanged; all prior physical and relaxed-ion qualifications remain open.
+
+Producer progress: clamped_ion_point.py now owns each fresh SCF/3Berry point
+through the existing executor/lifecycle/charge-transfer owner. It requires a
+complete positive actual directional control, archives exact submitted input
+bytes alongside stdout/XML, binds immutable and submitted-input hashes,
+qualifies actual native receipts/common charge/affine nuclei/branches, and
+reads terminal evidence without scratch or regenerating old inputs. Shared
+protocol, no per-point copies. New matrix zero also requires3full-precision
+2e-7modulo-quantum comparisons to the qualified control; a valid negative
+diagnostic must stop reduction. Eight per-point tests use explicitly synthetic
+x/z archives; no native strain point or parent lifecycle is yet sealed.
+
+Actual controls: SCF completed0 at20:02:38.938330 PDT with6.0294eVgap;
+direction1repeat1 completed0 at20:09:50.371199, full128weighted/66reduced/
+3links/0floors. Its full charge cycles7.820438674e-10 give x contribution
+1.02637175027e-9C/m2, quantum1.3124222222158128C/m2; whole stdout/XML are
+owner-archived and real input-geometry/native-codec tested. Direction1repeat2
+is live. This is one controlled near-zero transverse contribution, not a full
+vector/material tensor, symmetry/noise qualification or fit target. Born and
+geometry corrections remain live unchanged. See Sarco directional_zero_v1/
+EXECUTION_REPORT.md and CLAMPED_ION_RESPONSE_PLAN.md.
