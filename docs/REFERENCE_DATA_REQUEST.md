@@ -3855,3 +3855,23 @@ Native candidate read-admission must preserve historical writer facts when
 future producer code changes. The currently executing24-file Cold9 manifest
 pins that refiner; do not edit it underneath the native run or relabel old
 candidate/source identities. Actual field/load-relaxed paths remain separate.
+
+The actual CNEPO mode_geometry.json packet now passes its saved-file complete
+native/source/matrix/geometry/reader round-trip:854235bytes, SHA256
+7596481d22b6ecbf117ff7f38233b75ebf6d8395867419062ec8904c02dd5442.
+All18 representative geometry products bind the original terminal campaign.
+Lowest full-mode collective axial-rotation squared overlap5/7/9 is
+0.99999991354 /0.99999940953 /0.99999901938. Lowest internal transverse norm
+fractions are0.9256591230 /0.9788733900 /0.9513701014; respective backbone/H/
+nonbackbone-heavy fractions are0.22585549/0.19068191/0.58346261,
+0.27186420/0.26857944/0.45955635 and0.28574027/0.19262461/0.52163512.
+These are unit Cartesian geometry fractions, not energetic mechanisms or field
+motion. The Sarco terminal report includes complete torsion/radius derivatives
+and interpretation limits. No new native force calls are made by this consumer.
+
+Later live probe advances Cold9 to14 complete matrices/one running. Replacement
+zz_p0050 third stage is specifically waiting BEFORE native launch:184 temporary
+memory checks at that observation,3.6633720398GiB available against unchanged
+10GiB admission. Its common charge is retained; no new/native retry or lowered
+gate. The stage's running phase is not evidence of a running PW child. The
+wait mechanism and exact source/input/charge checks remain the shared owner.
