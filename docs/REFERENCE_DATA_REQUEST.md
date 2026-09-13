@@ -3330,3 +3330,27 @@ Sarco cold_reference_refinement_v1; ACCEPTED_AN9_AN5_REPORT.md gives hashes,
 receipts and limits. Snapshot is running-parent context, not terminal/all-nine
 evidence. AN7 continues in the same process. No canonical source replacement,
 basin/Hessian/field/model/size/bulk/crystalline-prestrain/physical gate is claimed.
+
+### Sampled native session and first computed-control electronic epoch
+
+Sarco's sampled native session inherits the existing ONE clean native exit,
+convergedSCF and output-vs-shell energy/fullforce/fullstress audit; explicit
+RUNNING->CLOSED->COMPLETE/FAILED, idempotent close/no failed finish retry.
+Actual kernel executable, initial compiled source cell/input and unchanged
+method are checked, no frozen Gamma/VDCN owner changed. A real CPU2x2x2
+periodicH2 integration returned oneSCF,exit0 and matching observables in
+10.644seconds: kernel/transport integration, not polymer validation.
+
+sampled_control_points.py predeclares one native zero-field ENERGY_FORCE
+point per original24/48/12atom alpha/gamma/PE input cell on full-grid4x4x4.
+No relaxation/source-supercell substitution, field, physics/gate retuning
+or reciprocal-spacing convergence claim. Existing IndependentNativeUnits
+lifecycle/reduction is reused; point codec owns whole canonical checksum,
+reader binds actual source/method/nativebytes/receipt/fullarrays. Successful
+rawinput/output/unit survives later failure; failedscratch keeps diagnosis
+only. All43 combined source/compiler/session/campaign/native tests pass.
+Ready identity covers16codeowners, nativebinary/data and actual imported
+Python/ASE/NumPy transport/unit/core files with explicitly limited coverage.
+Actual three-point ready epoch is sealed before run; no polymer result/minimum
+claimed by preparation. Six prior science epochs untouched, GPU reserved;
+full five-stage/grid/basis/packing/stress/field/temperature/viewer gates open.
