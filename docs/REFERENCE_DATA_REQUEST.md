@@ -3930,3 +3930,17 @@ Born4x8x64 has advanced to response execution. Born/clamped D3threebody remains
 unmatched, so no Born subtraction or d=eS. GPU reserved. All five research
 stages/all-target scope, independent DFT/basis/size, actual field/load paths,
 packing/mechanics/barrier/thermal/cycling qualification remain open.
+
+The new full-matrix preparation subsequently returns cleanly0 with all25
+preparation stages complete:13 accepted native points and12 new ready shear
+owners. Actual ready root1015395bytes, SHA256
+65fbe9eaacaafdba9fd6c7a2a197607e5b0877744d9a5badc1797f913c1b1509;
+the root itself binds all12 ready journals.48 submitted input hashes,
+source/code/ready/liveness audit pass; all53 tests pass again26.759s.
+Sarco5548631f seals/pushes exact actual readiness. Before invocation, the
+launcher verifies exact committed bytes for43 root/code/protocol/new-ready/
+historical-source files and checks actual remote publication of
+5548631fed867277a4c9ba9996c899e034c23533. Launcher21250/start_ticks6831104
+then enters the existing owner/native admission pipeline. Launcher existence
+is not a claim that PW has already started; native stages/resource admission
+remain authoritative in the original point journals. No full tensor is claimed.
