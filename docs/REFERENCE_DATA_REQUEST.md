@@ -4131,3 +4131,33 @@ Parent15 accepted points,0.005 negative yz partner running. This is one signed
 pair at one amplitude, not complete tensor/2% amplitude qualification. The
 Born/clamped D3threebody mismatch remains: no Born subtraction, d=eS or bulk
 charge-flux fitting. All five stages/all-target physical gates remain open.
+
+## Actual relaxed nuclear symmetry — 2026-09-13
+
+Sarcoe13469ac publishes four whole source-bound alpha/PE symmetry packets and
+report after full original native terminal source admission, actual search/
+complete operation checks and an independent fresh whole replay, all exit0.
+Four synthetic search/codec tests also pass. Analysis uses isolated spglib2.7.0
+without updating any live runtime, CPU29/30, one thread, no optimizer/SCF/GPU.
+
+Prepared alpha is P2_1/c14, but BOTH fixed/full relaxed24atom endpoints are
+P-1(2), stable at symprec1e-5/1e-4/0.001/0.01A. Both retain inversion and the
+previously measured T/G/T/G sequence. The two lost source operations have
+complete species-bijection residual0.0367449A at fixed and0.0367547A at full
+cell. Thus lowering begins during held-cell relaxation, not just its later
+metric shear or an incorrect source label. It is a symmetry-lowered numerical
+candidate, not a validated alpha crystal, polar switch, or physical phase
+transition. Sampling/basis/grid sensitivity, competing packing/symmetry
+branches and lattice/phonon stability must resolve its interpretation before
+phase ordering/device work. Do not restore source symmetry or relabel hashes.
+
+Prepared and both relaxed folded PE24atom geometries retain Pnma62,16 found
+operations across the same ladder. Every reported alpha/PE operation passes
+full species-preserving periodic atom bijection within symprec and Cartesian
+lattice-isometry residual within2symprec. Complete found operations/Hall/
+setting/equivalence/Wyckoff/tolerance/reader/native engine identities are in
+the packets; complete numerical dependency closure is not claimed. Original
+native states/endpoints remain unchanged. Gamma/VDCN/Beta/other chemistries
+and all physical/model/size/packing/field/mechanics/barrier/thermal gates
+remain open. Native all36 returns and five existing CPU owners continue;
+GPU reserved. This does not enter the bulk charge-flux fit.
