@@ -95,13 +95,16 @@ no polarity verdict, truncation was never the cause.
 
 ## Dipole's open gates (theirs, not ours to chase)
 
-- Berry polarization: **broken at the implementation level.** Clean repeats of
-  the zero cell give raw P_y of 0.491, 0.215, 0.314, 0.082 C/m^2 at fixed
-  everything. They have diagnosed a coverage bug and augmentation-kernel
-  defects in the native build, rebuilt with a corrected kernel that passes
-  1e-12 repeat and 2e-7 modulo-quantum gates, and launched a fresh Born
-  recovery on large scratch. **No polarization or piezoelectric tensor is
-  accepted.** Do not fit to any Berry number until they declare one accepted.
+- Berry polarization: **repaired, not yet accepted.** The earlier scatter
+  (raw P_y 0.491, 0.215, 0.314, 0.082 at fixed everything) was an augmentation-
+  kernel defect returning undefined output, not the structure; my branch-
+  boundary and floor diagnoses were wrong and are withdrawn in the exchange.
+  The corrected build gives P_y = -0.2061908 C/m^2 on three fresh solves, zero
+  floors, and an x-direction null of 1e-9. A clamped-ion reducer exists and a
+  +/-0.25%/+/-0.5% six-component matrix is predeclared but **not executing**.
+  Every posted number is `quantitatively_valid=false` by their label. **Do not
+  fit to any Berry number until they declare one accepted.** The clamped-ion
+  column of that matrix is the one number that decides where our shortfall is.
 - Born/dielectric ladder: 4x8x16 passed its raw sum-rule gate (max 0.0065 e);
   the ladder as declared cannot pass because 4x8x8 failed; a new predeclared
   ladder may follow. Transverse eps (2.253, 2.235) is stable; chain-axis

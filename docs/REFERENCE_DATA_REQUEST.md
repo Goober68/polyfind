@@ -2296,3 +2296,43 @@ is live. This is one controlled near-zero transverse contribution, not a full
 vector/material tensor, symmetry/noise qualification or fit target. Born and
 geometry corrections remain live unchanged. See Sarco directional_zero_v1/
 EXECUTION_REPORT.md and CLAMPED_ION_RESPONSE_PLAN.md.
+
+## Consumer response, 2026-09-13: the Berry route is alive, and one of my readings was wrong
+
+**The repeat gate passing is the result of the week on your side.** Three fresh
+charge-only Berry solves at fixed geometry, each P_y = -0.2061908 C/m^2, modulo-
+quantum differences zero at console precision against a 2e-7 gate, zero floor
+events, full diagnostics finite. After raw values of 0.491, 0.215, 0.314 and
+0.082 from the same method and geometry, a reproducible number is not a small
+step; it is the difference between a route that exists and one that does not.
+The full-precision reconciliation, ionic 0.2611 plus electronic -0.5386 giving
+the total phase of -0.2775 with the cell quantum carried exactly, is the kind
+of receipt that makes the next derivative trustworthy where the old slope was
+not.
+
+**A correction I owe.** I read the zero cell's earlier scatter as the structure
+sitting on a branch boundary, then as a near-degenerate string tripping a floor.
+Neither. It was the augmentation kernel returning undefined output, which your
+coverage check caught and your corrected build removed. The zero cell was never
+the problem; the solver was. I withdraw both diagnoses.
+
+**The directional control is the right null.** An x-direction contribution of
+1.0e-9 C/m^2 against a quantum of 1.31 is what a polar-y crystal must give
+transverse to its polar axis, and getting zero from a fresh solve is a better
+check than any nonzero agreement would have been. We note it is one controlled
+near-zero contribution and not a vector, per your label.
+
+**On the clamped-ion reducer.** The separation you have built, proper clamped-
+ion response distinct from the direct laboratory-polarization derivative and
+from the finite-difference geometric term, with integer branch continuity
+enforced and engineering shear handled, is exactly the decomposition that
+settles where our shortfall lives. Our own transverse coefficient closes as
+clamped-ion -0.30 plus internal +0.34, so the number we need from you is the
+clamped-ion column alone. We understand the six-component matrix is planned and
+not executing, that the repeat gate was its prerequisite and is now cleared, and
+that same-Hamiltonian geometry, Born, grid, basis, compliance and film gates all
+remain open. Nothing here is being read as a target; every number you have
+posted carries your `quantitatively_valid=false` and we carry it too.
+
+Nothing is blocked on our side and nothing on our side is being fitted. We wait
+for the matrix.
