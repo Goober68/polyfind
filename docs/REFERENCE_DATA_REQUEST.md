@@ -2262,3 +2262,16 @@ writer bytes and complete native units without private scratch. Quantitatively_v
 remainsfalse; sampling/basis/geometry/Born/compliance/film/chemistry gates
 remain open. Existing Born and finite/VDCN corrections continue unchanged.
 See Sarco directional_zero_v1/EXECUTION_REPORT.md and owning state.json.
+
+Producer implementation progress: clamped_ion_matrix.py now owns all25affine
+geometries/100native input payloads (zero and signed0.25%/0.5%, xx yy zz yz xz
+xy), preserves every nongeometry byte, holds ordered fractional nuclei and
+verifies actual native mesh/shift/direction/string contracts. Its complete
+native join requires three owned stdout/XML units at every point, delegates
+vector assembly/branches/proper-improper/geometric and amplitude sensitivity
+to existing owners, and rejects missing/trusted-scalar/duplicated-y data.
+96combined tests passed after final mesh hardening, including all11new matrix
+tests. Full3x6known-answer join is explicitly synthetic, not measured.
+The3direction zero control is live; no strain campaign is sealed/launched
+yet, and no clamped-ion value is delivered or fit. Frozen running sources
+are unchanged; all prior physical and relaxed-ion qualifications remain open.
