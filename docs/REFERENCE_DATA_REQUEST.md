@@ -3992,3 +3992,32 @@ exact accepted fixed endpoint and compact stage report; live parent is not
 promoted to terminal qualification. Other finite PBE0, periodic VDCN and Born
 owners remain live with unchanged code pins. GPU reserved; all five stages/
 all-target physical, model, tensor-amplitude, field/path and size gates remain.
+
+## Baseline-bound basin inputs — 2026-09-13
+
+Sarco84de23b0 introduces RefinementProblem, the owner of accepted baseline,
+nominal perturbation and actual constraint-retracted initial nuclei. The
+baseline, not jittered coordinates, defines the exact two point clamps and
+held collective azimuth. The original chemical/stereo owner checks both
+initial and retracted geometry. The versioned whole unit owns checksums and
+records nominal displacement and constraint retraction separately.
+
+29 tests pass, including two actual GFN field virtual-work checks on synthetic
+test nuclei; they are not target-model accuracy or basin-return qualification.
+All nine accepted AN/PVDF/VDCN5/7/9 candidates and all three CNEPO5/7/9
+candidates pass their defining native source readers. Actual input preparation
+exits0 and declares36 pending starts, three seeds73411/73412/73413 each, nominal
+free-nucleus RMS0.02A. Retraction changes the installed RMS;0.02A is not promised
+at the installed starting nuclei. Ready SHA256
+9525fa8bf2d04f5bd8a6a3dfae016a1dc00b33981e56a1f6e30ada1efe66abb0.
+Sarcoffffaa9f seals/pushes exact readiness before invoking generation; actual
+remote/committed-byte proof passes30 ready/code/protocol files on CPU31.
+
+This preparation launches no optimizer, SCF or native force body. The existing
+native optimizer does NOT yet consume these units. Its integration must reuse
+the one defining optimizer and separate historical native read admission from
+current producer execution identity, without relabeling old writer hashes,
+weakening original gates or copying a parallel optimizer. Full input-suite
+generation/replay and actual returned minima remain separate. This is not
+bulk strain/dipole reference data and must not enter Polyfind's charge-flux fit.
+GPU reserved; all five research stages and all-target scope remain open.
