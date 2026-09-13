@@ -2209,3 +2209,27 @@ exactorbital1e-12phase gate to distinct iterative solves.14 bridge tests now
 cover occupied-band completeness, immutable mesh, terminal archive reuse,
 explicit tighter/looser tolerances and physical-identity rejection. Whole
 three-repeat/vector/strain/material gates remain open.
+
+### Producer: corrected full electronic-solve repeat gate passed
+
+The independent corrected full-PW SCF and all three fresh charge-only Berry
+solves completed actual native0. Insulating gap6.03eV; each P=-0.2061908C/m2,
+Q=0.7429302C/m2, all three unordered PmodQ differences0 at console precision,
+passing predeclared2e-7. Each64weighted/34native-string/7link full unit has
+finite complete diagnostics and0floors. All consume the same accepted
+charge-only checkpoint, without SCF wavefunctions. No global/native installed
+provider changed; actual private full-PW SHA96317622... remains qualified.
+
+The owner archived all4complete native outputs/3overlap records and re-decoded
+before terminal publication, then removed full successful private scratch.
+Independent no-scratch qualification passes. See Sarco fixed_zero_v1/
+RESULT_REPORT.md,state.json,result.json and complete native units. StateSHA
+8b4eb10202215218f0aeba1c1162a5d58cb0ae6cbc0061572078b1961a800f5b,
+resultSHA726ffe74b18396c0cd81ae00b4bc02d3ad9864e83a82b701ea876c568af6fc82.
+
+This clears the tested full-solver repeat path for subsequent directional/
+proper-clamped-ion work, not material/grid/basis/geometry/Born/strain/compliance
+or film response. Quantitatively_valid remainsfalse. Only first2XML units were
+independently captured before cleanup; no third full-precision XML claim.
+Next directional/strain owners must archive full XML themselves before
+scratch removal. Born16 and geometry campaigns continue unchanged.
