@@ -4525,3 +4525,31 @@ executable bytes and electrical response operators still differ; full-input
 matching does not release native electrical equivalence, Born subtraction,
 mechanical matching or a charge-flux calibration. All five stages/all targets
 remain open; live producer epochs unchanged and GPU reserved.
+
+## All three AN9 sampled returns — 2026-09-13
+
+Fresh independent Sarco CPU31 native reader session31067 exits0 after full
+defining12-baseline/36-input source/admission/declaration/native producer
+context and all THREE declared AN9 candidate/problem/initial-final native
+receipt/whole CRC/direct comparison replays.946fresh native evaluations,
+558accepted steps; all raw/projected forces<=1e-6eV/A and the unchanged
+0.001A RMS/0.003A maximum/1e-5eV energy return tolerances pass. No optimization
+or force calculation is repeated. The parent has advanced into PVDF in the
+same epoch; its changing journal is not published.
+
+Seed73412 unit58176bytes SHA256
+42e5fc0339110bbe8a75129393089cdb1ddda1ad6db144fd690a5ffb1e87b9dd;
+seed73413 unit58218bytes SHA256
+97cdb18e2eaba0efeee2495b790ab2675a5656921086a839aa0b556b8e697508.
+Seed73411 remains its exact previously published58189byte unit. All three
+whole units and updated AN9_REPORT.md have exact-hash permanent copies under
+E:\sarco_artifacts\verified\native_basin_returns_v1\an9_all_three; the earlier
+first-trial archive is not overwritten. See Sarco native_basin_returns_v1/
+AN9_REPORT.md for individual native residual/geometry/energy results.
+
+This qualifies only the three nominal0.02A baseline-bound zero-field AN9
+starts, exact source point clamps[0,52] and held collective azimuth. It does
+not establish global basin extent, other chemistries, physical model/size/
+packing/field response or bulk/MPa/pre-strain/barriers/rates/cycling. Full36,
+all five stages/all target chemistries and validated bulk calibration remain
+open; GPU reserved. No charge-flux fit or physical promotion follows.
