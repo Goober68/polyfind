@@ -3558,3 +3558,44 @@ recorded10.263GiBavailable/9986.921GiBfree, affinity8-15. Method/code/input/
 sealed ready unchanged. Failedparent stays terminal with its original
 diagnosis, not native retry/resurrection/fake fulltensor. Other7roots frozen/
 live; full five-stage and physical gates remain open, GPU reserved.
+
+## Producer progress: source-owned recovery and alpha fixed-cell endpoint
+
+Sarco ClampedIonMatrixCampaign now supports a new parent that adopts native
+completed-prefix receipts and invokes only an untouched suffix through the
+same point executor/tensor reducer. Original failed parent/diagnosis/hash,
+point namespace/protocol/input/native writer identities remain unchanged.
+No restart, ready rewrite, failed-native retry, copied archive or missing-column
+inference.17 synthetic parent tests and combined62 lifecycle/input/native-reader
+tests pass35.565s. An existing synthetic launch test's accidental host-memory
+dependency is isolated; separate controlled tests cover original admission
+guards. Production resource code/policy unchanged.
+
+Actual read-only successor context and25 point identities validate. All12
+completed native points are independently replayed by their defining reader
+and match original accepted receipts; all12 later shear ready journals retain
+their original hashes/all4 native stages pending. Independent zz_p0050 now has
+SCF clean exit0 and first Berry direction running under child27001/
+start_ticks6089933, with11.279636GiB/9979.989952GiB admission and exact affinity8-15.
+No successor ready journal or new native launch while that point is live.
+Typed temporary resource admission/waiting must be implemented at the shared
+executor boundary after its pinned owner closes, before successor launch.
+See Sarco clamped_ion_adoption_v1/PROTOCOL.md and VERIFICATION.md. Coarsezz
+amplitude/shear/fulltensor/Born/relaxed-ion/mechanics/physical gates stay open.
+
+Alpha-seeded24atom/full complex4x4x4 fixed-cell stage accepted30steps,
+31converged SCFs/energy evaluations, clean exit0, maximum force
+0.004923220592235847eV/A below0.005. Canonical energy -244.3180058308449Ha /
+-6648.231623512668eV. Existing entry/identity/endpoint/topology readers and
+exact held-source-cell equality pass. Held stress [xx,yy,zz,yz,xz,xy] is
+[6.56404966,-91.06353260,-613.69263028,8.66605436,332.04706446,1.38348211]MPa,
+not equilibrium residual stress or intrinsic pre-strain. Exact endpoint SHA
+c74513511c566f63e987686659de2b012377820aa8e6bec7736a6c048434f61a;
+28846byte observed-state snapshot SHA
+96bf8fea814db65e0027e6d8a9b55f024ec24de624cd838ec754bf62a789d1af.
+See alpha/FIXED_CELL_REPORT. Same parent now full-cell/1MPa gate pending.
+Receipt verification is not fresh raw-output replay: successful scratch was
+already audited/removed by its producer. Not a terminal two-stage campaign,
+measured relaxed phase classification or physical/field qualification.
+All8 science owners were live with frozen code hashes intact; full five-stage
+and all-target scope remains active, quantitatively_valid=false, GPU reserved.
