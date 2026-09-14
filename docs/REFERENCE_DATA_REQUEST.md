@@ -28,6 +28,18 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 further continuation: isolated physics-vector-repeat3092871 is
+pushed. ChainValence now owns full repeat-vector bond/angle gradients and
+metrics; scalar/vector repeat facts cannot override one another. The extension's
+missed phonon tuple consumer and private metric assumptions were reproduced
+and corrected.223 Windows model tests pass108.42s;42 focused Linux controls
+pass13.63s. No assertion relaxation or source merge into this C: live checkout.
+Earlier clamped-ion records remain owned bycb17be5 (all14 stored source hashes
+replayed from that commit), not relabelled as a new solver/native result.
+docs/AFFINE_VALENCE_PROGRESS.md on the isolated branch records scope and the
+remaining shared full-cell energy/torsion/relaxed-ion C/S/internal-strain work.
+No material/field/switching/frequency/loss gate is promoted; GPU reserved.
+
 2026-09-13 evening: Sarco's molecular v2 accepts its first NEW step24,
 segment1, on the original live2256/start_ticks11333095 epoch. PVDF SVP
 free-force maximum falls38.2% to0.0280441289eV/A; unchanged1e-4 criterion
