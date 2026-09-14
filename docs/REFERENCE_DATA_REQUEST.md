@@ -34,6 +34,25 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-14
 
+2026-09-14 00:41 PDT: original translation experiment is COMPLETE, archived
+in Sarco27efd41b (trainset_translation_probe_v1/RESULTS.md). All declared
+checks fail: derivative errors0.00152559685/0.00043572297 eV/A, inter-step
+difference0.00108987388, energy span0.00120476604 eV, maximum atomic force
+change0.020914606 eV/A and net-force norm0.725961418 eV/A. Full native-unit
+and terminal replay passes; this is numerical origin sensitivity, not an
+admitted force reference or a causal diagnosis. Original result SHA256:
+e9e62248f22aef1a466a166281ddd131c39e237a2f5580276b32e2d342e56b91.
+
+A separate tighter-SCF five-point run is live, definition Sarco3fdf6c88,
+trainset_translation_y_scf_tight_probe_v1/PROTOCOL.md. Session78188,
+controller12087/start13272490, native12088/start13272892 starts00:41:33PDT;
+SCF iterations observed. Only EPS_SCF changes1e-8 to1e-10; source, translations,
+grid and remaining method/gates stay fixed. Shared precision/compiler
+integration has35 passing controls (one optional parser test skipped), plus15
+older grid controls; both archived probes replay unchanged. Its24 defining
+files are pinned. CPU15/one thread, D: active, GPU reserved; C: mathematical
+source unchanged. No new calibration result; all five stages remain open.
+
 2026-09-14: Sarco 607504e7 recovers the actual cfe_ter source identity from
 all 15 stored training frames: VDF/TrFE/CFE/TrFE/VDF, C10H10ClF11, S at
 source atoms 4/10/13. This is not the CFE homopolymer in Polyfind's registry.
