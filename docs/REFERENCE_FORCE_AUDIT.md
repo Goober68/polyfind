@@ -7,6 +7,27 @@ This continuation measures the actual historical training labels, reproduces
 the recorded finite fit, and starts an independent native force check.
 All five research stages remain open; GPU stays reserved.
 
+## Terminal native result, 23:35 PDT
+
+Sarco 84cf6ec5 retains the full five-point native input/output/unit/terminal
+result diagnosis and trainset_force_probe_v1/RESULTS.md. Exact replay passes;
+session 44730 is exited, not running. The original scientific gate FAILS:
+errors at h=0.001/0.0005 A are 0.0001429456973/0.00003271584893 eV/A,
+and the difference between derivatives is 0.0001102298484 (limit 0.0001).
+Both step values and the inter-step criterion remain part of that result.
+
+Error reduction by 4.3693 on halving h, together with displaced native
+force-integral checks, supports a substantial central-difference truncation
+contribution. Simpson force integration differs from the energy-derived
+interval force by 1.20186487e-5 and -3.41793485e-8 eV/A respectively.
+Post-hoc Richardson force 1.1566269825683169 differs from analytic force by
+-4.02743386e-6 eV/A; it neither changes the declared gate nor qualifies the
+electronic/grid method. The raw native net force 0.7196521 eV/A remains a
+separate concern. Next is a separately declared common-translation test
+at the same method, followed by distinct numerical-convergence controls.
+No labels/model parameters were changed, and no accurate field/pre-strain
+geometry or completed material research stage follows from this diagnostic.
+
 ## Whole-dataset translation decomposition, 23:18 PDT
 
 The audit now reports the orthogonal decomposition of each raw force array,

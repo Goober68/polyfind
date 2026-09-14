@@ -1,5 +1,18 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+The radial native probe is now COMPLETE, not running: session 44730 exited,
+five native units and terminal result pass exact replay. Sarco 84cf6ec5
+archives the compact evidence and trainset_force_probe_v1/RESULTS.md.
+The original force gate FAILS: h=0.001 error 1.42945697e-4 eV/A,
+h=0.0005 error 3.27158489e-5, step difference 1.10229848e-4 (limit 1e-4).
+Error ratio 4.369 and force-integral checks support a substantial finite-step
+curvature effect. Post-hoc Richardson error -4.0274e-6 is not a replacement
+gate. Raw net force 0.7196521 eV/A remains unqualified. Next: separately
+declare/run common rigid translation at unchanged method, then distinguish
+SCF/integration/XC-grid controls. No follow-up is launched at this checkpoint.
+The radial experiment's source pin is released by terminal completion; other
+live molecular/electrical/VDCN pins stay intact. All five stages remain open.
+
 Latest diagnostic: all 566 historical frames have nonzero net force
 (0.1486-2.7510 eV/A), but translation contributes only 0.71182% of held-out
 squared force-fit error. The finite model's total force is numerically zero.
