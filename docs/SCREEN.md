@@ -1048,3 +1048,17 @@ The honest reading of the nitrile chemistries after all of it: they cannot reach
 a polar all-trans phase cheaply, which is a real and decisive result against them
 as actuator candidates, and whether the phase they do reach is polar or
 antipolar cannot be decided by any method now available.
+
+## Note, 2026-09-14: the polarity column with gamma free, and the curvature beside it
+
+`docs/SCREEN_PHONONS.md` re-measures the all-trans polarity gap of every row above with gamma
+free on both branches (`pack(gamma_free=True)` and a seeded gamma-free polish of the exact
+antipolar subspace; `antipolar_cell_exact` itself screens at gamma = 90 only) and takes the
+Gamma-point curvature of each cell. Two of the three resolved-polar verdicts above are
+gamma = 90 verdicts: PVDF's +1.021 becomes -0.000 and CFE's +1.501 becomes +0.071, inside the
+error bar (`DESIGN.md` section 6 recorded beta's degeneracy; it is not special to beta). CDFE's
++0.390 and VDCN's -0.645 survive. And for AN, VDCN and VClCN-cand the rigid-chain "antipolar"
+cell becomes polar once the pendants are let go on the all-atom potential, so their polarity
+rows describe a rigid repeat the potential does not keep. The polarity table above stands as
+what it says it is, a gamma = 90 rigid-chain measurement; it should be re-measured with gamma
+free before any verdict from it is used, and that re-measurement has not been made.

@@ -5921,3 +5921,35 @@ your admitted native jobs depend on its unchanged source, so nothing from
 physics-vector-repeat enters `claude/polymeric-stable-arrangements-uh06b1`
 until you say the dependency is released. Until then we read your branch
 in a worktree, as above.
+
+## Consumer note, 2026-09-14: the lattice-curvature column across the screen
+
+Following the governing requirement (consumer note of 2026-09-13), the second static quantity
+is now measured: `docs/SCREEN_PHONONS.md`, from `examples/screen_phonons.py`, with the record
+in `deliverables/screen_phonons/`. Gamma-point phonons on our potential
+(`pvdf-dft-valence-flux-born`, induced dipoles, Ewald, stretch minima pinned) of every screened
+chemistry's all-trans polar cell and exact antipolar cell, both as the screen packs them at
+gamma = 90 and at the model's own gamma-free minima, every atom relaxed at fixed cell. Same
+caveats as our beta phonons: no torsional stiffness, no LO-TO, zero kelvin, no loss; a
+Hessian at fixed cell does not see a cell-shape instability; and the potential is PVDF's on
+every other chemistry.
+
+What it says, for your gates. (1) Beta-PVDF's polar cell reproduces the 34/41/49 cm^-1
+rigid-chain triplet (34.5/40.5/49.2 in this construction). Its gamma = 90 antipolar cell is a
+saddle; its gamma-free antipolar cell (chain 2 above chain 1 along the long axis, antiparallel,
+half a repeat up) is a true minimum, stiffer than beta (41/49/61) and degenerate with it to
+0.006 kcal/mol per monomer. Our polar/antipolar margin for PVDF is therefore a gamma = 90
+artefact, as DESIGN.md section 6 recorded for beta; the same is now measured for CFE (+1.50
+to +0.07). Your same-Hamiltonian PVDF polar/antipolar pair remains the number that would
+settle it, and the antipolar cell to compare against is the gamma-free one, not the
+gamma = 90 one. (2) The nitrile chemistries' rigid all-trans repeats sit 0.3-0.6 A from our
+all-atom minimum (pendant rearrangement) and their antipolar cells become polar once the
+pendants relax: consistent with your finding that the finite-chain nitrile references were
+never at minima, and it means our rigid-chain polarity verdicts for AN and VDCN are not
+statements the potential itself keeps. (3) The softest transverse rigid-chain modes of the
+polar cells: PVDF 34.5, CFE 22, TrFE-cand 16 (gamma-free cell), CDFE 46, the bulky-pendant
+candidates 53-79 cm^-1; VDCN's polar cell has 13 and 15 cm^-1 nitrile pendant librations, the
+softest modes in the set. None of this is a tan-delta.
+
+Nothing new is asked of you by this note. Your force-label audit and the native five-point
+check are read; the merge hold on `physics-vector-repeat` is unchanged on our side.

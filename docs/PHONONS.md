@@ -101,3 +101,13 @@ Nothing here is a tan-delta or a bandwidth. It is the static end of the loss que
 stiff the lattice is against the motions that switching and relaxation would use. The
 built-length-pinned stretch minima define a changed Hamiltonian; results under it are labelled
 as such and are not to be mixed with fitted-stretch energies or modes.
+
+## Across the screen, 2026-09-14
+
+`docs/SCREEN_PHONONS.md` runs the same Hessian on the all-trans polar and exact antipolar
+cells of every screened chemistry, at gamma = 90 and with gamma free, from
+`examples/screen_phonons.py`. Beta's polar cell there (rigid-chain packing re-polished on this
+Hamiltonian, no torsion or angle relaxation) gives 34.5, 40.5, 49.2 cm^-1 against the 34.0,
+40.7, 48.6 above, the construction check. The gamma = 90 antipolar beta cell is a saddle whose
+chains slide 1.05 A when let go; the gamma-free one is a true minimum, stiffer than beta and
+degenerate with it.
