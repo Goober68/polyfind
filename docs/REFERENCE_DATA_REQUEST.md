@@ -28,6 +28,24 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 chain-layout continuation: isolated physics-vector-repeat2c73693
+is pushed; this C: native source is unchanged. Immutable declared chain/local/
+element/reversal layout drives the complete owner for arbitrary homogeneous
+independent-chain counts, including noncontiguous source order and mixed
+reversal patterns. Source-order forces and full dipoles/polarization share one
+model path. Eight-chain full valence/flux/Ewald/induced/field controls check
+sampled atom forces, all nine lattice components, six strains/two steps,
+permutation/scatter/dipoles and replicated per-motif energy.119 Windows
+controls pass70.97s (five deselected);61 focused Linux pass49.02s; final7
+mixed-reversal/layout controls pass17.83s. docs/CHAIN_LAYOUT_PROGRESS.md on
+the isolated branch records scope. Legacy SupercellEnergy total/terms/
+diagnostics migration is still pending; the new contract is a prerequisite,
+not native/calibrated supercell/field/stability evidence. Full relaxed-cell/
+six-strain/stability/BZ/size/C/S/internal response, native/calibration/all-
+target/field/barrier/rate/loss/accurate-viewer requirements remain open.
+GPU reserved; historical source identities and native writer dependencies stay
+unchanged. No physics criterion widened or complete research stage promoted.
+
 2026-09-13 consumer migration: isolated physics-vector-repeat52ca399 is pushed;
 this C: native source stays unchanged. Canonical energy/analytic placement,
 refinement/mechanical shape derivatives and phonon forces/atom relaxation/Gamma
