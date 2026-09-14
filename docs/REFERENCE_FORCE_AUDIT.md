@@ -9,6 +9,16 @@ All five research stages remain open; GPU stays reserved.
 
 ## CFE finite inputs and tighter-SCF zero checkpoint
 
+Update02:34 PDT: Sarco3af06c96 completes and archives all five QS-only
+points. Every declared limit still fails: derivative errors0.001525599766/
+0.000435716795 eV/A, derivative-step difference0.001089882971, energy span
+0.001204766029 eV, translated atomic-force change0.020914605972 eV/A, maximum
+net force0.725961402675 eV/A. Full terminal/native verification passes, not
+the numerical gates. Neither tested precision control fixes this source.
+CFE then starts its separately published epoch on the released CPU15 slot:
+process23124/start13938253, native5mer observations present, no accepted unit
+yet. Physics/field/pre-strain qualification and force-label repair stay open.
+
 Update Sarco e69274fd: CFE5/7/9 campaign is prepared READY through shared
 definition472ea450, not executed. Real input/factory/plan binding passes with
 new native calls forbidden. Shared input/read/reduction ownership replaces

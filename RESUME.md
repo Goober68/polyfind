@@ -1,5 +1,17 @@
 # Resume: polyfind, state as of 2026-09-14
 
+02:34 PDT: QS-only five-point control is COMPLETE and archived in Sarco
+3af06c96; all six numerical limits still fail. Tighter SCF and tighter QS
+alone both fail to remedy the defect; no recentering/refit. CFE is now
+actually RUNNING from readye69274fd: session49815/process23124/start13938253,
+CPU15/one thread. Its5mer starts02:33:14; native step2 projected force maximum
+0.000469764 eV/A, not converged. 7/9 pending, GPU reserved. Read Sarco QS
+RESULTS.md and CFE LAUNCH.md. The reference-data relay now lives at
+D:/sarco-work/polyfind-reference-relay; merge27fb52d preserves our relay and
+the concurrent upstream phonon-screen updateaad1362 without changing the
+original C: source checkout. That new screen needs scientific review before
+its model claims inform physical qualification.
+
 Sarco e69274fd publishes the actual READY CFE source-motif5/7/9 reference
 campaign, definition472ea450. All three are pending, no native calculation,
 units or result. One shared input/reference path serves CNEPO and CFE;
