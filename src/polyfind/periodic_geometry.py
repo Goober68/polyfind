@@ -99,7 +99,25 @@ class PlacedCell:
             raise ValueError("deformation must be a finite real (3,3) matrix")
         return PlacedCell(self.coords @ F, self.lattice @ F)
 
-    def pair_image_chunks(self, cutoff, chunk_elems=60000):
+    def image_bounds(self, cutoff, extra=0):
+        """Reciprocal-width bounds of minimum-fractional cutoff representatives."""
+        cutoff = np.asarray(cutoff)
+        if cutoff.shape != () or cutoff.dtype.kind not in "iuf" or not np.isfinite(cutoff) or cutoff <= 0:
+            raise ValueError("cutoff must be a positive finite scalar")
+        if isinstance(extra,bool) or not isinstance(extra,(int,np.integer)) or extra < 0:
+            raise ValueError("extra image shells must be a nonnegative integer")
+        bounds = np.ceil(cutoff*np.linalg.norm(np.linalg.inv(self.lattice),axis=0)+.5)
+        if not np.isfinite(bounds).all() or np.any(bounds >= np.iinfo(np.int64).max-int(extra)):
+            raise ValueError("cutoff image bounds are not finite representable integers")
+        return bounds.astype(np.int64)+int(extra)
+
+    def image_indices(self, cutoff, extra=0):
+        """Lazy image grid, shared by production sums and shell diagnostics."""
+        bounds = self.image_bounds(cutoff,extra)
+        axes = [range(-int(b),int(b)+1) for b in bounds]
+        return ((i,j,k) for i in axes[0] for j in axes[1] for k in axes[2])
+
+    def pair_image_chunks(self, cutoff, chunk_elems=60000, *, images=None):
         """Yield full pair separations and effective lattice integers (I,N,N,3).
 
         A nearest fractional representative bounds each component by 1/2.
@@ -107,22 +125,26 @@ class PlacedCell:
         including triclinic cells and atoms outside the stored primary cell.
         Effective integers, not the representative grid alone, own dD/dH.
         """
-        cutoff = np.asarray(cutoff)
-        if cutoff.shape != () or cutoff.dtype.kind not in "iuf" or not np.isfinite(cutoff) or cutoff <= 0:
-            raise ValueError("cutoff must be a positive finite scalar")
         if isinstance(chunk_elems, bool) or not isinstance(chunk_elems, (int, np.integer)) or chunk_elems <= 0:
             raise ValueError("chunk_elems must be a positive integer")
+        grid = self.image_indices(cutoff)
+        if images is not None:
+            supplied = np.asarray(images)
+            if (supplied.ndim != 2 or supplied.shape[1] != 3 or not len(supplied)
+                    or supplied.dtype.kind not in "iuf" or not np.isfinite(supplied).all()
+                    or np.any(supplied != np.round(supplied))
+                    or np.any(supplied <= -np.iinfo(np.int64).max)
+                    or np.any(supplied >= np.iinfo(np.int64).max)):
+                raise ValueError("image representatives must be nonempty finite integer (I,3)")
+            supplied = supplied.astype(np.int64)
+            if len(np.unique(supplied,axis=0)) != len(supplied):
+                raise ValueError("image representatives must not contain duplicates")
+            grid = iter(supplied)
         inverse = np.linalg.inv(self.lattice)
         fractional = self.coords @ inverse
         differences = fractional[:, None]-fractional[None, :]
         nearest = np.round(differences)
         base = (differences-nearest) @ self.lattice
-        bounds = np.ceil(cutoff*np.linalg.norm(inverse, axis=0)+.5)
-        if not np.isfinite(bounds).all() or np.any(bounds >= np.iinfo(np.int64).max):
-            raise ValueError("cutoff image bounds are not finite representable integers")
-        bounds = bounds.astype(np.int64)
-        axes = [range(-int(b),int(b)+1) for b in bounds]
-        grid = ((i,j,k) for i in axes[0] for j in axes[1] for k in axes[2])
         step = max(1, int(chunk_elems)//len(self.coords)**2)
         while True:
             integers = np.asarray(list(islice(grid,step)))

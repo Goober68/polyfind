@@ -88,13 +88,17 @@ def test_the_bonded_exclusions_are_actually_applied(se, chain):
     assert se.column_correction(cell) < -1e4
 
 
-@pytest.mark.parametrize("bad,match", [
-    ({"valence": SimpleFF()}, "valence"),
-    ({"field": (0.01, 0.0, 0.0)}, "field"),
+@pytest.mark.parametrize("settings", [
+    {"valence": SimpleFF()},
+    {"field": (0.01, 0.0, 0.0)},
 ])
-def test_refuses_a_potential_it_does_not_carry(chain, bad, match):
-    with pytest.raises(ValueError, match=match):
-        SupercellEnergy(CrystalPacker(chain, n_chains=2, **bad))
+def test_carries_the_complete_packer_potential(chain, settings):
+    pk = CrystalPacker(chain,n_chains=2,**settings)
+    evaluator = SupercellEnergy(pk)
+    cell = build_cell(chain,PARAMS,packer=pk)
+    assert evaluator.energy(cell) == pk.energy(PARAMS[None])[0]
+    assert evaluator.terms(cell).total == evaluator.energy(cell)
+    assert evaluator.check_against_packer(PARAMS,2,1) < 1e-8
 
 
 # --------------------------------------------------------------- 2. the stagger itself

@@ -1,5 +1,13 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest supercell migration: `docs/SUPERCELL_OWNER_MIGRATION.md` records the
+complete owner's immutable terms/derivatives and shared image diagnostics.
+Supercell total/terms/gradients/dipoles now delegate through explicit layout;
+no copied pair expression, constant torsion or ignored field/flux remains.
+Full general relaxation/stability/C/S and native/calibrated/all-target
+field/barrier/loss/viewer requirements remain open. Older notes below are
+historical checkpoints, not the current adapter state.
+
 Latest layout continuation: `docs/CHAIN_LAYOUT_PROGRESS.md` records immutable
 declared atom/local/reversal/element layout and the complete owner's arbitrary
 homogeneous independent-chain count, force scatter and dipole/polarization

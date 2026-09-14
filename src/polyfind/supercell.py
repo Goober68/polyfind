@@ -17,27 +17,22 @@ This module adds the missing degree of freedom and nothing else:
   :func:`cell_dipole`) it leaves the cell dipole *exactly* where it was -- a staggered
   antipolar cell is still exactly antipolar, which is why the stagger and the polarity can
   be chosen independently.
-* :class:`SupercellEnergy` evaluates the lattice energy of any such cell with the packer's
-  own pair potential, so a staggered cell and the aligned cell it came from are scored by
-  the same function.  It is a direct sum over every periodic image within the cutoff rather
-  than a re-derivation: :meth:`SupercellEnergy.check_against_packer` asserts that it
-  reproduces :meth:`polyfind.pack.CrystalPacker.energy` per monomer on the packer's own
-  two-chain cell, which it must, since the energy per monomer of a pair potential is
-  invariant under tiling.
+* :class:`SupercellEnergy` delegates complete energy, Cartesian torsion, valence,
+  charge flux, Ewald/induced polarization, field and all derivatives to the packer.
+  Its cells may carry independently perturbed nuclei and a full triclinic lattice;
+  :meth:`SupercellEnergy.check_against_packer` checks replication of the same model.
+  Rigid-charge :func:`cell_dipole` does not include flux or induced moments; use
+  :meth:`SupercellEnergy.dipole` for the actual complete-model moment.
 
 What it deliberately does **not** do is search.  It is an evaluator; the caller chooses the
 stagger pattern and drives the optimiser (see ``examples/copolymer_staggered.py``).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import numpy as np
 
-from . import backend as bk
-from .ewald import exclusion_correction
-from .forcefield import COULOMB
-from .pack import E_PER_A2_TO_C_PER_M2, CrystalPacker, PeriodicChain, _erfc_pos
+from .pack import E_PER_A2_TO_C_PER_M2, CellEnergyTerms, CrystalPacker, PeriodicChain
+from .periodic_geometry import ChainLayout, PlacedCell
 from .topology import Cell, build_cell
 
 __all__ = [
@@ -145,9 +140,13 @@ def cell_dipole(cell: Cell, charges) -> np.ndarray:
     staggered cell's polarity is exactly its aligned parent's.  ``examples`` measures it
     anyway; the helper that builds antipolar cells has shipped two defects in this area.
     """
-    q = np.tile(np.asarray(charges, dtype=float).ravel(), cell.n_chains)
-    if q.shape[0] != cell.n_atoms:
-        raise ValueError(f"{q.shape[0]} charges for {cell.n_atoms} atoms")
+    layout = ChainLayout.from_cell(cell)
+    repeat_charges = np.asarray(charges)
+    if (repeat_charges.shape != (cell.n_per_chain,) or repeat_charges.dtype.kind not in "iuf"
+            or not np.isfinite(repeat_charges).all()):
+        raise ValueError("charges must be a finite real vector for one declared chain repeat")
+    q = np.empty(cell.n_atoms,dtype=float)
+    q[layout.atoms] = repeat_charges
     tot = float(q.sum())
     if abs(tot) > CrystalPacker.NEUTRAL_TOL:
         raise ValueError(f"the cell carries {tot:+.3e} e: sum_i q_i r_i is not a dipole moment")
@@ -199,232 +198,77 @@ def cell_to_cif(cell: Cell, title: str = "polyfind") -> str:
 
 
 # ------------------------------------------------------------------------- energy
-@dataclass
-class SupercellTerms:
-    """The pieces of :meth:`SupercellEnergy.energy`, so a caller can report them apart."""
-
-    pair: float  # the pair kernel over every image, bonded scales applied
-    torsion: float  # the Fourier torsion term, one repeat's worth per chain
-    ewald: float  # the reciprocal-space sum, zero for a dsf packer
-    exclusion: float  # what the bonded exclusions take back out of that sum
-    n_chains: int
-    n_monomers: int
-
-    @property
-    def total(self) -> float:
-        return self.pair + self.torsion + self.ewald + self.exclusion
-
-    @property
-    def per_monomer(self) -> float:
-        return self.total / (self.n_chains * self.n_monomers)
-
-
 class SupercellEnergy:
-    """:class:`polyfind.pack.CrystalPacker`'s potential, on a cell of arbitrarily many chains.
+    """Complete packer model on independently placed homogeneous chain repeats.
 
-    Construct it from the packer whose potential you want; every setting that packer carries
-    -- the Lennard-Jones cutoff convention, the damping, ``eps_r``, the charges, and whether
-    the electrostatics are the truncated damped-shifted-force sum or an Ewald sum -- is taken
-    from its own pair tables rather than rebuilt, so the two agree by construction and not by
-    coincidence.  :meth:`check_against_packer` verifies that on the packer's own cell.
-
-    Not supported, and refused rather than ignored: a ``valence`` term or a ``charge_flux``
-    (both of which make the energy a function of the chain's internal geometry, which this
-    rigid-chain sum does not vary), and an applied ``field``.
+    The packer owns topology, charges, all Hamiltonian terms and derivatives.
+    Cell metadata declares source/local atom order and each chain's reversal;
+    no canonical setting-angle reconstruction or contiguous-block assumption.
     """
 
     def __init__(self, packer: CrystalPacker, chain: PeriodicChain | None = None):
-        if packer.valence is not None:
-            raise ValueError("a valence term is a per-chain constant for a rigid chain, but it is "
-                             "not this module's to guess at: pass a packer without one")
-        if packer.charge_flux is not None:
-            raise ValueError("charge flux makes the charges a function of the chain geometry; this "
-                             "rigid multi-chain sum does not carry it")
-        if getattr(packer, "_field_on", False):
-            raise ValueError("an applied field is not carried here; clear it with set_field(None)")
+        if chain is not None and chain is not packer.chain:
+            raise ValueError("chain topology belongs to the supplied packer; use its chain")
         self.pk = packer
-        self.chain = chain if chain is not None else packer.chain
-        self.rc = float(packer.rc)
-        self.rc2 = float(packer.rc2)
-        self.alpha = float(packer.alpha)
-        self.n = int(packer.n)
-        to = lambda Z: np.asarray(bk.to_numpy(Z), dtype=float)  # noqa: E731
-        self._A, self._B = to(packer._A_nn), to(packer._B_nn)
-        self._qq, self._qqf = to(packer._qq_nn), to(packer._qqf_nn)
-        self._const = to(packer._const_nn)
-        self._scales = dict(packer._scale_nn_base)  # z-image offset -> (n, n) bonded scale
-        self._q_repeat = np.asarray(packer._q_cell[: self.n], dtype=float)
-        self._ewald = packer._ewald
-        self._cache: dict[int, tuple] = {}
 
-    # --- tables -------------------------------------------------------------------
-    def _tiled(self, n_chains: int):
-        t = self._cache.get(n_chains)
-        if t is None:
-            tile = lambda Z: np.tile(Z, (n_chains, n_chains))  # noqa: E731
-            t = self._cache[n_chains] = (tile(self._A), tile(self._B), tile(self._qq),
-                                         tile(self._qqf), tile(self._const))
-        return t
+    @property
+    def chain(self):
+        return self.pk.chain
 
-    def _v(self, r2, A, B, qq, qqf, const):
-        """The pair potential on a flat selection of squared distances, all inside the cutoff.
-
-        Character for character :meth:`polyfind.pack.CrystalPacker._pair_energy`'s expression,
-        and fed from that packer's own tables, so the only difference between the two sums is
-        the order the terms are added in: measured at 4e-10 kcal/mol per monomer on a 592-atom
-        cell (:meth:`check_against_packer`), which is accumulated rounding over some 10^5 pairs
-        rather than a difference in the potential.
-        """
-        rr = np.sqrt(r2)
-        ir6 = 1.0 / (r2 * r2 * r2)
-        return ir6 * (A * ir6 - B) + qq * (_erfc_pos(self.alpha * rr) / rr) + qqf * rr + const
+    def evaluate(self, cell: Cell, *, images=None):
+        """Complete energy/decomposition/derivatives, in declared source order."""
+        return self.pk.evaluate_chain_cell(cell.coords,cell.lattice,ChainLayout.from_cell(cell),
+                                           images=images)
 
     def images(self, cell: Cell, extra: int = 0) -> np.ndarray:
-        """The integer images a minimum-image-reindexed pair sum has to cover.
+        """The geometry owner's minimum-fractional image representatives."""
+        return np.asarray(list(PlacedCell(cell.coords,cell.lattice).image_indices(self.pk.rc,extra)),
+                          dtype=np.int64)
 
-        Pair separations are taken in the minimum-image fractional frame first
-        (:meth:`pair_energy`), exactly as :meth:`polyfind.ewald.Ewald.terms` does, so the
-        images needed are ``ceil(rc / h + 1/2)`` per axis rather than however many the
-        unwrapped coordinates happen to span.  On a 592-atom cell that is 45 images instead
-        of 343, and it is a tighter sum over the *same* set of physical pairs, not a smaller
-        one: :meth:`energy_is_converged` adds ``extra`` shells and checks nothing moves.
-        """
-        lat = cell.lattice
-        V = abs(np.linalg.det(lat))
-        widths = V / np.linalg.norm(np.cross(np.roll(lat, -1, axis=0), np.roll(lat, -2, axis=0)), axis=1)
-        r = np.ceil(self.rc / widths + 0.5).astype(int) + int(extra)
-        return np.array([(ia, ib, ic) for ia in range(-r[0], r[0] + 1)
-                         for ib in range(-r[1], r[1] + 1) for ic in range(-r[2], r[2] + 1)], dtype=float)
-
-    # --- the sum -------------------------------------------------------------------
     def column_correction(self, cell: Cell) -> float:
-        """What the bonded exclusions take out of an unscaled sum, over the whole cell.
+        """UNHALVED bonded pair diagnostic, already included in pair energy.
 
-        ``sum_t sum_{k,p,q} (s_k[p,q] - 1) v(|r_tp - r_tq - k c|)``: the only pairs a bond path
-        can join are pairs in the same chain at the same transverse image, so this is the whole
-        difference between the scaled sum :meth:`pair_energy` wants and the unscaled sum it
-        actually evaluates.  For a chain placed antiparallel the repeat-closing bond runs
-        towards ``-c`` and the stack is read at ``-k``.
-
-        **Evaluated on the cell's own atoms, chain by chain, rather than once on the ideal
-        chain.** Every chain is the same rigid object up to an isometry, so in exact arithmetic
-        one evaluation times the chain count would do -- but the terms being corrected are
-        1-2 and 1-3 pairs at 1.1 to 2.5 A, where ``r^-12`` is of order ``10^5`` kcal/mol, and
-        the correction is of order ``10^2``.  That is a difference of large numbers, and it only
-        cancels if the coordinates the two halves see are the *same* coordinates.  They are not
-        for a cell read back from a file: extended XYZ carries eight decimals, and on a pair
-        whose potential has a gradient of ``10^6`` kcal/mol/A a 5e-9 A difference is worth
-        millikelvin-scale energy -- measurably, about 2e-3 kcal/mol per monomer on a 592-atom
-        cell.  Taking both halves from the cell makes the cancellation exact whatever
-        coordinates the cell carries, at the cost of a 74x74 sum per chain.
+        Computed by the complete owner on these exact nuclei, charges and
+        effective image indices. Energy itself applies scales directly; it
+        never subtracts this large diagnostic from an unscaled pair sum.
         """
-        lat2 = np.asarray(cell.lattice[2], dtype=float)
-        K = int(np.ceil(self.rc / float(np.linalg.norm(lat2)))) + 1
-        n = cell.n_per_chain
-        tot = 0.0
-        for t in range(cell.n_chains):
-            X = np.asarray(cell.coords[t * n : (t + 1) * n], dtype=float)
-            D = X[:, None, :] - X[None, :, :]
-            for k in range(-K, K + 1):
-                S = self._scales.get(-k if cell.reversed_of[t] else k)
-                if S is None:
-                    continue
-                d = D - k * lat2
-                r2 = d[:, :, 0] ** 2 + d[:, :, 1] ** 2 + d[:, :, 2] ** 2
-                sel = (r2 < self.rc2) & (r2 > 1e-8) & (S != 1.0)
-                if not sel.any():
-                    continue
-                idx = np.nonzero(sel)
-                v = self._v(r2[idx], self._A[idx], self._B[idx], self._qq[idx], self._qqf[idx],
-                            self._const[idx])
-                tot += float(((S[idx] - 1.0) * v).sum())
-        return tot
+        return self.evaluate(cell).terms.pair_correction
 
     def pair_energy(self, cell: Cell, images=None) -> float:
-        """``0.5 sum_{i,j,T} s_ij(T) v(|r_i - r_j - T|)`` over every image within the cutoff.
+        return self.evaluate(cell,images=images).terms.pair
 
-        Evaluated as an *unscaled* sum over every pair plus one correction
-        (:meth:`column_correction`), because the bonded scales touch only pairs inside one
-        chain at one transverse image.  That removes the need to know each pair's true image
-        index, which is what lets the separations be taken in the minimum-image frame.
-        """
-        A, B, qq, qqf, const = self._tiled(cell.n_chains)
-        X = np.asarray(cell.coords, dtype=float)
-        lat = cell.lattice
-        hinv = np.linalg.inv(lat)
-        S = X @ hinv
-        dS = S[:, None, :] - S[None, :, :]
-        base = (dS - np.round(dS)) @ lat  # (N, N, 3) minimum-image separations
-        ijk = self.images(cell) if images is None else np.asarray(images, dtype=float)
-        # Most of those images cannot contain a pair at all, and finding out costs three
-        # reductions rather than a 592 x 592 distance array: the separations live inside the
-        # box [lo, hi], so the closest any pair in image ``shift`` can come is the distance
-        # from the origin to the shifted box.  Conservative (it ignores the correlation
-        # between components), exact arithmetic, and on an orthorhombic 592-atom cell it
-        # leaves 3 images of 45 -- the rest are genuinely empty, which
-        # :meth:`energy_is_converged` confirms by keeping them.
-        lo = base.reshape(-1, 3).min(axis=0)
-        hi = base.reshape(-1, 3).max(axis=0)
-        tot = 0.0
-        for shift in ijk @ lat:
-            near = np.clip(0.0, lo + shift, hi + shift)
-            if float(near @ near) >= self.rc2:
-                continue
-            dx = base[:, :, 0] + shift[0]
-            dy = base[:, :, 1] + shift[1]
-            dz = base[:, :, 2] + shift[2]
-            r2 = dx * dx + dy * dy + dz * dz
-            sel = (r2 < self.rc2) & (r2 > 1e-8)
-            if not sel.any():
-                continue
-            idx = np.nonzero(sel)
-            tot += float(self._v(r2[idx], A[idx], B[idx], qq[idx], qqf[idx], const[idx]).sum())
-        return 0.5 * (tot + self.column_correction(cell))
-
-    def terms(self, cell: Cell, images=None) -> SupercellTerms:
-        """Every piece of the energy of ``cell``, in kcal/mol per cell."""
-        pair = self.pair_energy(cell, images)
-        tors = self.pk.torsion_energy(self.chain.dihedrals) * cell.n_chains
-        e_ew = e_ex = 0.0
-        if self._ewald is not None:
-            q = np.tile(self._q_repeat, cell.n_chains)
-            e_ew = float(self._ewald.terms(cell.coords, q, cell.lattice).total)
-            # Per chain, on the cell's own atoms and the cell's own axial period, for the
-            # reason :meth:`column_correction` gives: the correction is a small difference of
-            # large 1/r terms and only cancels against coordinates it actually shares.
-            cz = float(cell.lattice[2, 2])
-            K = int(np.ceil(self.rc / cz)) + 1
-            stack = self.pk._scale_column_np(K)
-            n = cell.n_per_chain
-            e_ex = sum(float(exclusion_correction(
-                cell.coords[t * n : (t + 1) * n], self._q_repeat, cz,
-                np.flip(stack, axis=0) if cell.reversed_of[t] else stack,
-                pref=COULOMB / self.pk.eps_r)[0]) for t in range(cell.n_chains))
-        return SupercellTerms(pair=pair, torsion=tors, ewald=e_ew, exclusion=e_ex,
-                              n_chains=cell.n_chains, n_monomers=self.chain.n_monomers)
+    def terms(self, cell: Cell, images=None) -> CellEnergyTerms:
+        """All complete-model terms, including Cartesian torsion/valence/field."""
+        return self.evaluate(cell,images=images).terms
 
     def energy(self, cell: Cell) -> float:
-        """Lattice energy of ``cell`` in kcal/mol per cell."""
-        return self.terms(cell).total
+        return self.evaluate(cell).terms.total
 
     def energy_per_monomer(self, cell: Cell) -> float:
-        return self.terms(cell).per_monomer
+        return self.evaluate(cell).terms.per_monomer
 
-    # --- self-checks ----------------------------------------------------------------
+    def energy_and_grad(self, cell: Cell):
+        """(E, source-order atom gradient, all nine lattice derivatives)."""
+        result = self.evaluate(cell)
+        return result.terms.total,result.grad_coords.copy(),result.grad_lattice.copy()
+
+    def dipole(self, cell: Cell):
+        """(permanent, induced) cell dipoles on these actual nuclei, in e.A."""
+        return self.pk.chain_dipole(cell.coords,cell.lattice,ChainLayout.from_cell(cell))
+
     def energy_is_converged(self, cell: Cell, extra: int = 1) -> float:
-        """``|E(images) - E(images + extra shells)|``: zero when the image bound is enough."""
-        return abs(self.pair_energy(cell, self.images(cell, extra))
-                   - self.pair_energy(cell, self.images(cell)))
+        """Absolute pair-energy difference after adding cutoff image shells.
+
+        This verifies real-space cutoff coverage only, not Ewald k-space,
+        force convergence, a relaxed minimum, stability or physical validity.
+        """
+        return abs(self.pair_energy(cell,self.images(cell,extra))
+                   - self.pair_energy(cell,self.images(cell)))
 
     def check_against_packer(self, params, nx: int = 1, ny: int = 1) -> float:
-        """``|this per monomer - packer per monomer|`` on the packer's own cell.
-
-        The energy per monomer of a pair potential is invariant under tiling, so for any
-        ``nx, ny`` this must be zero to rounding.  It is the whole basis for comparing a
-        staggered cell with the aligned one: the same function scores both.
-        """
-        cell = build_cell(self.chain, params, nx=nx, ny=ny, packer=self.pk)
+        """Per-monomer replication check of the SAME complete model."""
+        cell = build_cell(self.chain,params,nx=nx,ny=ny,packer=self.pk)
         mine = self.energy_per_monomer(cell)
-        theirs = float(self.pk.energy(np.asarray(params, dtype=float)[None])[0]) / (
-            self.pk.n_chains * self.chain.n_monomers)
-        return abs(mine - theirs)
+        theirs = float(self.pk.energy(np.asarray(params,dtype=float)[None])[0]) / (
+            self.pk.n_chains*self.chain.n_monomers)
+        return abs(mine-theirs)

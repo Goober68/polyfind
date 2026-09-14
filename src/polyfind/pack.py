@@ -84,6 +84,48 @@ EV_TO_KCAL = 23.0605
 CPU_CHUNK_ELEMS = 60_000
 
 
+@dataclass(frozen=True)
+class CellEnergyTerms:
+    """Complete owner's kcal/mol cell decomposition, not a second assembly.
+
+    ``ewald`` includes the stationary induced-dipole energy when enabled,
+    including its applied-field response. ``field`` is the permanent-dipole
+    field term. ``pair_correction`` is the UNHALVED bonded correction for
+    diagnostics only; it is already included in ``pair``. ``total`` preserves
+    the complete owner's accumulation order rather than resumming terms.
+    """
+
+    total: float
+    pair: float
+    torsion: float
+    ewald: float
+    exclusion: float
+    valence: float
+    field: float
+    pair_correction: float
+    n_chains: int
+    n_monomers: int
+
+    @property
+    def per_monomer(self) -> float:
+        return self.total / (self.n_chains * self.n_monomers)
+
+
+@dataclass(frozen=True, eq=False)
+class CellEnergy:
+    """One complete evaluation, with derivatives in declared source order."""
+
+    terms: CellEnergyTerms
+    grad_coords: np.ndarray
+    grad_lattice: np.ndarray
+
+    def __post_init__(self):
+        for name in ("grad_coords", "grad_lattice"):
+            value = np.array(getattr(self, name), dtype=float, copy=True)
+            value.setflags(write=False)
+            object.__setattr__(self, name, value)
+
+
 def _erfc_pos(x, xp=np):
     """:func:`polyfind.forcefield.erfc_approx` restricted to x >= 0 (the only case here).
 
@@ -1331,27 +1373,41 @@ class CrystalPacker:
         Atom derivatives are returned in the declared SOURCE cell order.
         All chains carry this model's homogeneous complete repeat topology.
         """
+        result = self.evaluate_chain_cell(coords,lattice,layout,chunk_elems=chunk_elems)
+        return result.terms.total,result.grad_coords.copy(),result.grad_lattice.copy()
+
+    def evaluate_chain_cell(self,coords,lattice,layout,*,chunk_elems=None,images=None):
+        """Own complete energy, decomposition, derivatives and pair diagnostics.
+
+        Explicit minimum-fractional image representatives are for cutoff-shell
+        diagnostics. They do not change bonded scales, charge topology, Ewald
+        settings or any other Hamiltonian term. Default images cover the cutoff.
+        """
         cell,q,states = self._chain_charge_state(coords,lattice,layout)
         P,H = cell.coords,cell.lattice
         E,gP,gH,gq = 0.,np.zeros_like(P),np.zeros_like(H),np.zeros(len(P))
+        pair = torsion = electrostatic = exclusion = valence = field_energy = correction = 0.
         xp,dt = self.xp,self._dt
         pref = COULOMB/self.eps_r
         tables = [xp.asarray(v,dtype=dt) for v in self._pair_charge_tables(q,q)]
         nc = len(states)
         A = xp.tile(self._A_nn,(nc,nc))
         B = xp.tile(self._B_nn,(nc,nc))
-        for D,integers in cell.pair_image_chunks(self.rc,CPU_CHUNK_ELEMS if chunk_elems is None else chunk_elems):
+        for D,integers in cell.pair_image_chunks(self.rc,CPU_CHUNK_ELEMS if chunk_elems is None else chunk_elems,images=images):
             r2 = xp.asarray((D*D).sum(axis=-1),dtype=dt)
             v,dv = self._pair_energy_and_dv(r2,A,B,*tables)
             scale = np.ones(D.shape[:-1])
             for sl,sign,_ in states:
-                images = integers[:,sl,sl]
-                axial = np.all(images[...,:2] == 0,axis=-1)
+                chain_images = integers[:,sl,sl]
+                axial = np.all(chain_images[...,:2] == 0,axis=-1)
                 for k,S in self._scale_nn_base.items():
-                    selected = axial & (images[...,2] == -sign*k)
+                    selected = axial & (chain_images[...,2] == -sign*k)
                     scale[:,sl,sl] = np.where(selected,S[None],scale[:,sl,sl])
             v,dv = np.asarray(bk.to_numpy(v)),np.asarray(bk.to_numpy(dv))
-            E += .5*float((v*scale).sum())
+            Ep = .5*float((v*scale).sum())
+            E += Ep
+            pair += Ep
+            correction += float((v*(scale-1.)).sum())
             force = dv[...,None]*scale[...,None]*D
             gP += force.sum(axis=(0,2))-force.sum(axis=(0,1))
             gH += np.einsum("mija,mijb->ab",integers,force)
@@ -1366,6 +1422,7 @@ class CrystalPacker:
             else:
                 Ee,_,_,(gPe,gHe,gqe) = self._polarize(P,q,H,layout.reversed_of,grad=True,charge_grad=self._flux is not None)
             E += Ee
+            electrostatic += float(Ee)
             gP += gPe
             gH += gHe
             if gqe is not None:
@@ -1376,22 +1433,26 @@ class CrystalPacker:
             if self._valence is not None:
                 Ev,gv,gr = self._valence.energy_and_repeat_grad(P[sl],repeat,n_atoms=self.n)
                 E += Ev
+                valence += float(Ev)
                 gP[sl] += gv
                 gH[2] += sign*gr
             Et,gt,grt = self._torsion.energy_and_repeat_grad(P[sl],repeat)
             E += Et
+            torsion += float(Et)
             gP[sl] += gt
             gH[2] += sign*grt
             if self._ewald is not None:
                 Ex,gx,gr,gqx = self._exclusion(P[sl],q[sl],repeat,K,grad=True,charge_grad=self._flux is not None)
                 E += Ex
+                exclusion += float(Ex)
                 gP[sl] += gx
                 gH[2] += sign*gr
                 if gqx is not None:
                     gq[sl] += gqx
         if self._field_on:
             field = np.asarray(self.field)
-            E -= EV_TO_KCAL*float((q@P)@field)
+            field_energy = -EV_TO_KCAL*float((q@P)@field)
+            E += field_energy
             gP -= EV_TO_KCAL*q[:,None]*field
             gq -= EV_TO_KCAL*(P@field)
         for sl,sign,state in states:
@@ -1402,7 +1463,10 @@ class CrystalPacker:
             raise ValueError("placed-cell energy/derivative is nonfinite")
         source_gradient = np.empty_like(gP)
         source_gradient[layout.atoms.ravel()] = gP
-        return float(E),source_gradient,gH
+        terms = CellEnergyTerms(total=float(E),pair=pair,torsion=torsion,ewald=electrostatic,
+                                exclusion=exclusion,valence=valence,field=field_energy,
+                                pair_correction=correction,n_chains=nc,n_monomers=self.chain.n_monomers)
+        return CellEnergy(terms,source_gradient,gH)
 
     def placed_dipole(self, coords, lattice, flip: float = 0.0) -> tuple:
         """(charge, induced) cell dipoles (e.A) on general placed geometry.
