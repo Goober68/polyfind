@@ -28,6 +28,20 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 current: distinct Sarco molecular v2 now actually runs PVDF SVP
+on D:, session21123/process2256/start_ticks11333095, starts19:18:30 PDT.
+It preserves original step23/177 remaining and all four SVP/TZVP dependencies,
+physics and force gates. Acyclic gradient ownership plus predeclared native
+registration replace the diagnosed v1 resource/loader defects; old v1 stays
+sealed. Actual14 zero/signed-field water cases across both bases and complete
+numerical gate pass. Isolated admission, legacy vector/frame and whole consumer
+checks pass; no tolerance/model waiver. Exact kernel epoch/CPU8-15/D: native
+scratch growth are observed, but no first target return, source reproduction
+or accepted geometry yet. Report on Sarco physics-native-provenance,
+commit132a1ff4: materials/gpu_bundle/results/dft_field/geometry_recovery_v2/
+EXECUTION_REPORT.md. Electrical response remains live; no new bulk charge-flux
+reference, material calibration or Polyfind refit is released by this launch.
+
 2026-09-13 later: Sarco original-C CNEPO source-motif curvature replay passes
 all nine complete matrices through source/candidate/native force/provider/writer/
 reducer and whole reduction owners (session49933 exit0). State/result/source
