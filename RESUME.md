@@ -1,5 +1,15 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+2026-09-13 evening provider update: an isolated D: worktree now exists at
+`D:\sarco-work\polyfind-vector-repeat`, branch `physics-vector-repeat`,
+pushed `cb17be5`. It supplies vector-repeat placed-dipole geometry and a
+complete six-column affine model record; see its
+`deliverables/clamped_ion_vector_repeat_v2/README.md`. Full relaxed-ion
+energy/forces/internal strain/C/S remain open. Do not merge source changes
+into this C: checkout while the admitted Sarco native jobs depend on its
+unchanged source. GPU is reserved; chemistry is CPU-only. The historical
+platform/worktree statements below precede this update.
+
 Read this first after a context clear. It is the map; the documents it points to
 are the territory. Everything below is committed and pushed on branch
 `claude/polymeric-stable-arrangements-uh06b1`; the working tree is clean, no

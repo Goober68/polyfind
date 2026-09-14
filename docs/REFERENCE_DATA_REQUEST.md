@@ -28,6 +28,30 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 evening: Sarco's molecular v2 accepts its first NEW step24,
+segment1, on the original live2256/start_ticks11333095 epoch. PVDF SVP
+free-force maximum falls38.2% to0.0280441289eV/A; unchanged1e-4 criterion
+is not met. No complete recovered-pair source or field result is promoted.
+
+Polyfind extension cb17be5 is pushed on separate branch physics-vector-repeat
+in D:\sarco-work\polyfind-vector-repeat. It replaces axial-only image geometry
+with vector-repeat charge flux/exclusions and one shared placed-dipole evaluator,
+plus complete six-column frame/proper reduction. Actual0.25%/0.5% affine
+model record, source maps, geometry and matched17-point legacy control are in
+deliverables/clamped_ion_vector_repeat_v2/README.md. Shared-domain dipoles
+agree within1.56e-15eA at identical decoded nuclei.84 focused Windows tests
+and10 new Linux geometry/frame controls pass. Wider inherited failures
+reproduce unchanged in original source, including PVDC50degree reflection;
+their diagnosis is retained without relaxing assertions. All six columns
+exist, including actual tiny xz values, but no unresolved-denominator amplitude
+gate or producer175% xz waiver is claimed. quantitatively_valid=false.
+
+This extension is NOT merged into the C: live source. Full six-strain energy/
+forces, relaxed-ion internal strain/full C/S, native producer response,
+matched-Hamiltonian calibration, all chemistry/field/pre-strain/barrier/loss
+requirements remain open. CPU-only/GPU reserved; both D: native campaigns
+continue unchanged. Sarco FIRST_ACCEPTED_STEP.md records the actual advance.
+
 2026-09-13 latest: original Sarco cold-candidate curvature replay now passes
 all27 whole matrices, every baseline/signed column/provider/writer/reducer
 and terminal reduction. Original27 curvature matrices separately replay too.
