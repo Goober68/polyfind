@@ -1,5 +1,17 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest reference audit: `docs/REFERENCE_FORCE_AUDIT.md` directly measures the
+566-frame labels and reproduces the recorded467-frame finite fit. Every
+sampled PVDF C-F label points outward (mean29.5457kcal/mol/A at1.361905A);
+the base fit follows it. Six systems, including all16 CNEPO frames, are
+excluded by the fit's structural filter. All headers declare18A periodic
+vacuum boxes; original native labelling protocol remains unadmitted.
+Distinct five-point native PBE-D3BJ force/energy check is actually running
+on D:/CPU15, sarco307c74e1, session44730/controller6211/start12612407.
+Read its exact protocol and wait on that handle; do not restart on quiet
+output. No native comparison is complete at this checkpoint. All five stages
+remain open, original native writers unchanged and GPU reserved.
+
 Latest force diagnosis: `docs/CF_FORCE_BALANCE.md` records actual C-F radial
 forces, complete-owner term derivatives and same-geometry flux/induction
 ablations. The rejected 1.5366309125 A stationary radius balances inward
