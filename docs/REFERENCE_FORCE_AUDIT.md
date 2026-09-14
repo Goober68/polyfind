@@ -9,6 +9,23 @@ All five research stages remain open; GPU stays reserved.
 
 ## CFE finite inputs and tighter-SCF zero checkpoint
 
+Update01:45 PDT: Sarcob13e3276 archives the COMPLETE SCF-only control, five
+fully replayed native points. Every unchanged numerical limit still fails:
+derivative errors.001525584259704/.000435722206654 eV/A, step difference
+.001089862053050, energy span.001204766049341 eV, maximum translated atom-
+force change.020914605469680 eV/A, maximum net-force norm.725961416619849.
+Across corresponding original/tighter-SCF points, maximum atomic-force
+change is only4.63481e-7 eV/A. No force recentering or refit is justified.
+The distinct QS-only control is actually running from its unchanged ready
+declaration: session95548/controller19778/zero child19780,01:44:28PDT.
+Only EPS_DEFAULT changes to1e-16; original EPS_SCF1e-8, CPU15, GPU reserved.
+
+The typed relocated archive now binds the original nine-source native factory
+with exact parent unit/path/hash guards;18 tests pass, including actual
+factory/runtime verification with zero force calls. This is not historical
+CNEPO receipt relocation, a new CFE run or physical reference qualification.
+Read Sarco original_polyfind_receipts_v1/FACTORY_BINDING.md.
+
 Update01:34 PDT, Sarcod3faa6d4: archive-only source replay now supports explicit
 original repository identities and D: storage. All nine original coordinate/
 graph identities replay unchanged and match an unchanged-location baseline;

@@ -1,5 +1,14 @@
 # Resume: polyfind, state as of 2026-09-14
 
+01:45 PDT: Sarcob13e3276 archives the completed five-point SCF-only control.
+Full replay passes but all six numerical limits still fail; 100x tighter SCF
+does not remedy this frame's defect. The unchanged QS-only ready control is
+now genuinely running: session95548/controller19778/zero child19780, starts
+01:44:28 PDT, CPU15/one thread, EPS_DEFAULT1e-16 with ORIGINAL EPS_SCF1e-8.
+The explicit relocated archive also binds the real nine-source factory;
+18 tests pass with zero force calls. Shared CFE orchestration and historical
+native-receipt relocation remain pending. No refit or physical admission.
+
 01:34 PDT: Sarcod3faa6d4 repairs the archive reader's original-identity/current-
 storage boundary. All nine original source identities/coordinate hashes replay
 from D: and match a separate unchanged-location read; seven tests pass41.063s.
