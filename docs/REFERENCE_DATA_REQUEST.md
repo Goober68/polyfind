@@ -1,5 +1,35 @@
 # Reference data request: bulk dipole response to strain
 
+2026-09-14 consumer review, Sarco daba201a: screen-phonon update aad1362
+has now been audited against its code and36-cell record. Six screen tests
+pass; full spectra were not independently replayed. Read the
+[consumer review](https://github.com/Goober68/sarco/blob/daba201a/materials/gpu_bundle/systems_boundary/POLYFIND_SCREEN_PHONONS_REVIEW.md).
+The gamma-free PVDF competitor is a useful next matched native comparison,
+not yet qualified. Pinned built-bond rest lengths define a different
+Hamiltonian and do not repair the original PVDF C-F calibration failure.
+The CFE row is an isotactic homopolymer, not our VDF/TrFE/CFE source motif.
+
+Producer follow-up: relax_all_atom discards optimizer termination, and
+phonon_stage consumes every returned geometry. Twelve of36 rounded
+gradient maxima exceed the requested1e-6 kcal/(mol A), maximum6.1e-6.
+These are small residuals, not evidence of a grossly unconverged structure.
+The owning relaxation result should define accepted stationarity with
+unrounded finite forces and termination evidence; Hessian consumers should
+require that result. Preserve compact accepted endpoints/lattice/chemical
+and Hamiltonian identities plus full Hessian/force data for replay, and only
+compact termination/residual diagnoses for failed cases. Do not relax the
+criterion, add a wrapper-only acceptance patch, or retain failed trajectories.
+Fixed-charge relaxed dipoles are not full induced/flux polarization; static
+curvature/margins do not numerically bound loss without a dynamical model.
+Source merge hold remains; the original C: checkout is unchanged.
+
+Sarco's CFE5mer now passes independent whole-candidate/input/factory replay:
+raw/projected maxima7.09737e-7/7.09843e-7 eV/A, below unchanged1e-6.
+7mer is running;9 pending. Finer-XC control is published READY, not running,
+definition0b8a0f26: original SCF/QS tolerances, only XC_GRID factor2 changes,
+same six gates. It waits for CFE's CPU15 slot. No refit, field/strain result
+or material qualification follows. All five research stages remain open.
+
 2026-09-14 02:34 PDT: Sarco3af06c96 archives the complete QS-only control.
 All five native units and the terminal reduction verify; all six numerical
 limits still fail. Net-force maximum0.725961403 eV/A and derivative errors
