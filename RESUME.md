@@ -139,6 +139,32 @@ results are a changed Hamiltonian, labelled separately. Next validation: far-IR/
 Dipole's bulk periodic curvature. `examples/crystal_phonons.py
 --polymorphs beta,alpha,gamma` reproduces (gamma takes ~10 min).
 
+## The lattice-curvature column (new, 2026-09-14)
+
+`examples/screen_phonons.py` and `docs/SCREEN_PHONONS.md`: Gamma-point phonons of every
+screened chemistry's all-trans polar cell and exact antipolar cell, at gamma = 90 (the
+screen's two cells, reproduced to the quoted digits) and with gamma free (the model's own
+minima), each re-polished on the phonon packer and relaxed over every atom at fixed cell.
+Record in `deliverables/screen_phonons/`. What it says: (1) the softest transverse
+rigid-chain mode of the polar cell is 34.5 cm^-1 for beta-PVDF (construction check against
+`docs/PHONONS.md`'s 34.0), 22 for CFE, 16 for TrFE-cand at its gamma-free cell, 46 for CDFE,
+53-79 for the bulky-pendant candidates; VDCN's polar cell has 13 and 15 cm^-1 nitrile pendant
+librations, the softest in the set and not rigid-chain. (2) The nitrile chemistries' rigid
+all-trans repeats are 0.3-0.6 A from the all-atom minimum and their "antipolar" cells become
+polar (0.24-0.27 e.A per monomer) once the pendants relax: the screen's rigid-chain polarity
+column does not survive for AN, VDCN, VClCN-cand. (3) With gamma free, PVDF's +1.021 and
+CFE's +1.501 polarity gaps collapse to -0.000 and +0.071 (DESIGN.md section 6 recorded this
+for beta only); of the screen's three resolved-polar verdicts only CDFE's survives; after
+all-atom relaxation PVDF, CFE and TrFE are degenerate to 0.02 kcal/mol per monomer. The
+screen's polarity column should be re-measured with gamma free on both branches (not done;
+`antipolar_cell_exact` screens at 90 only). (4) PVDF's gamma-free antipolar competitor
+(a rectangular cell with chain 2 above chain 1 along the long axis) is a true minimum, stiffer
+than beta (41/49/61 vs 34/40/49 cm^-1) and degenerate with it: beta is not near a soft-mode
+instability on this potential, and polar-vs-antipolar for PVDF is a barrier question this
+does not answer. Pending source fix (held under the merge hold): `pack.polish` leaves `dz`
+unbounded and the packer's energy is only periodic in `dz` for about two repeats outside
+`[0, c)`; the tied polish in the example wraps inside its objective.
+
 ## Dipole's Polyfind extension branch (do not merge yet)
 
 `origin/physics-vector-repeat` (e6150ed, 2026-09-13) is Dipole's isolated
@@ -205,7 +231,7 @@ traceable to an invented constant, refuse it.
 
 ## Housekeeping
 
-- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 599 pass, 5 skip (GPU). ~10 min. Dipole's runtime reports 3 last-digit
+- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 605 pass, 5 skip (GPU). ~10 min. Dipole's runtime reports 3 last-digit
   frozen-literal failures in `test_mechanics.py` (PE/alpha/gamma energies at
   1e-15 relative) that do not reproduce here at any commit; machine noise,
   not a defect. A 1e-12 relative tolerance is the fix if ever needed.
@@ -215,7 +241,10 @@ traceable to an invented constant, refuse it.
 
 ## If continuing
 
-Nothing on our side is unblocked. The xx column says the answer is "both":
+On our side: the lattice-curvature column exists now (`docs/SCREEN_PHONONS.md`); its next
+steps are the gamma-free re-measurement of the screen's polarity column, far-IR/Raman lattice
+modes of beta-PVDF against the 34/41/49 cm^-1 triplet, and Dipole's bulk periodic curvature
+when it lands. On the piezoelectric side the xx column says the answer is "both":
 a real electronic clamped-ion term of ~0.13 C/m^2 and an overstated target.
 When the yy column and the accepted matrix land: write the scope boundary
 into `DESIGN.md` and `docs/BENCHMARK.md` with the measured size of the
