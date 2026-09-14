@@ -32,7 +32,28 @@ Symptoms of that data being the limit, all measured (`docs/BENCHMARK.md`):
 
 A bulk reference at the level the energy model is fitted to would settle all four.
 
-## Provider status — 2026-09-13
+## Provider status — 2026-09-14
+
+2026-09-14: Sarco 607504e7 recovers the actual cfe_ter source identity from
+all 15 stored training frames: VDF/TrFE/CFE/TrFE/VDF, C10H10ClF11, S at
+source atoms 4/10/13. This is not the CFE homopolymer in Polyfind's registry.
+Read sarco materials/gpu_bundle/results/boundary_sensitivity/
+cfe_ter_chemistry_audit_v1/RESULT_REPORT.md and its compact, exactly replayable
+result (file SHA256 91bbaa107504859a9337ef1e8615e3b8096d266708a091e6683c39423ce0759b).
+The audit reuses the ordered graph owner; 22 new/existing controls pass.
+It supplies constitution/stereochemistry only, not the missing original
+96-point torsion/field/dipole scans, admitted force labels or relaxed packing.
+
+The common-y translation experiment has two replay-verified points. Its new
+zero reproduces the preceding zero energy and all 32 forces exactly. At
+-0.001 A, unchanged internal geometry/cell gives E=-8341.29456387585 versus
+zero -8341.2939620562 eV: a -0.000601819650 eV change, already exceeding the
+declared 1e-6 eV span limit. Central derivatives await the positive point.
+Session99954/controller9192 is live; +0.001 child10805 observed using CPU at
+00:11 PDT. Finish the pinned experiment unchanged; no correction or refit.
+Molecular PVDF/SVP reaches step28, Fmax0.0454956382 eV/A, topology intact but
+unconverged. Electrical/VDCN jobs remain live; GPU reserved and all five
+research stages open. C: mathematical/native source is unchanged.
 
 2026-09-13 23:47 PDT: the distinct common-y-translation control is actually
 running. Sarco definition ab502461, launch relay0d0a7699; isolated Polyfind
