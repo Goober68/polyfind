@@ -28,6 +28,24 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 consumer migration: isolated physics-vector-repeat52ca399 is pushed;
+this C: native source stays unchanged. Canonical energy/analytic placement,
+refinement/mechanical shape derivatives and phonon forces/atom relaxation/Gamma
+Hessians delegate to one complete placed-cell owner. Separate complete
+assemblies and double metadata torsion are deleted. Entire72x72 nonprimitive
+Gamma torsion contributions match the analytic matrix at two steps; this is
+not full stable lattice evidence.30 selected analytic controls pass185.80s;
+final Linux selection71 passes43.24s. Broad Windows284 pass/one skip/one old
+loaded exact snapshot fails353.18s. Original C: reproduces its old scalar;
+new image/summation order differs8.88e-15kcal/mol. Updated Windows unit fixtures
+keep exact == and pass targeted Ewald/mechanical/stress runs; the original
+broad command is not relabelled green. No physical/native gate is relaxed.
+docs/ENERGY_CONSUMER_MIGRATION.md on the isolated branch records evidence.
+Supercell complete-owner migration and optimized batching remain open, as do
+full independent-coordinate/six-strain minima, stability/BZ/size/C/S/internal
+response, native/calibration/all-target/field/barrier/rate/loss/accurate-viewer
+requirements. GPU reserved; historical files keep their actual writer hashes.
+
 2026-09-13 complete placed-energy continuation: isolated physics-vector-repeat
 e6150ed is pushed; this C: live checkout has no source edits. CrystalPacker's
 new owner provides a complete model energy/all atom/all nine lattice
