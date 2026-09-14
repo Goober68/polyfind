@@ -145,7 +145,9 @@ Dipole's bulk periodic curvature. `examples/crystal_phonons.py
   `examples/internal_strain_jacobian.py::clamped_ion` (the provider record
   file is gone from sarco, so the full example exits 2; call `clamped_ion`
   directly). Our reference P in their frame: charge-only -0.1187, induced
-  -0.0248, total -0.1434. **Do not fit to any Berry number until accepted.**
+  -0.0248, total -0.1434. Reproducible record with geometry and source
+  hashes: `deliverables/clamped_ion_columns/` from
+  `examples/clamped_ion_columns.py` (Dipole asked for it; delivered 2026-09-13). **Do not fit to any Berry number until accepted.**
 - **Open correctness item, ours:** `mechanics.piezoelectric` defines `e` as
   `(1/V0) dmu/de`, not Vanderbilt-proper; e_33 (polar strain) is off by P_y
   (~0.14 C/m^2, larger than our whole e_33 of 0.096) and the converse route

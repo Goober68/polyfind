@@ -1,0 +1,263 @@
+{
+ "schema_version": 1,
+ "purpose": "Polyfind clamped-ion piezoelectric columns of beta-PVDF for like-for-like comparison with the producer's Berry-phase clamped-ion matrix",
+ "generator": "examples/clamped_ion_columns.py",
+ "status": "model quantity on the fitted potential; not a fit, not a material coefficient, not same-Hamiltonian; the producer's values are not reproduced here",
+ "calculation_owners_sha256": {
+  "examples/clamped_ion_columns.py": "a829471e7ebdc7df0f2d385daabd159b9a4dfaf9b9e9a660d591a9b839986369",
+  "examples/internal_strain_jacobian.py": "61305e3bf04256213733d2a7b6e92d8114a812829a4c7f398664b539112ca10d",
+  "examples/fit_born_flux.py": "42b801016af1377da68e4fe834cae8f83b5fb6399b3e625bff591473fde29de5",
+  "src/polyfind/mechanics.py": "a153b48168e865bcd788f3f5e17d93a3e9aa902910adc4ca5370d5ca1932489b",
+  "src/polyfind/pack.py": "ef024a59479cb16ad9a34f5505cee4b2769c2ce9078db890724fa634df3007c6",
+  "src/polyfind/born.py": "e7a88fd879c434c8bf7adc3ccb66bc2902bc5193dd329e44255fa4ac1b8a4829",
+  "src/polyfind/forcefield.py": "656cb5416e92d343509bd89de1d911c6e9110ad8212d18f25c2aaa0a52893eba",
+  "src/polyfind/polarizability.py": "d1d1f191edc4976d5957becf5a14935c04eb21a391757461d83923612b3dbf4b",
+  "src/polyfind/fitting.py": "27eb460a10567a6f4616a9a60f786e20bc5d1302b8f641ce4dae8281abdfbc56",
+  "src/polyfind/ewald.py": "394e35018c3d53224bc1b25272d8559715dcd5b2d14c82d3e8a0d4ae4f13dacc",
+  "src/polyfind/polymers.py": "276090714f6742c7f3795c3c3f623ab5ae323cc746612b698aa386dec8de80bf",
+  "src/polyfind/chain.py": "3414882e2aa022d93f395642fd669f4cf9ce72867f61d91ca1fcf5f97d51a23a"
+ },
+ "hash_canonicalization": "UTF-8/ASCII text with CRLF and CR normalized to LF",
+ "numpy_version": "2.4.4",
+ "presets": {
+  "charge_flux": "pvdf-dft-valence-flux-born",
+  "valence": "pvdf-dft-valence",
+  "polarizable": "Polarizable() literature values",
+  "coulomb": "ewald"
+ },
+ "reference_state": {
+  "construction": "examples/fit_born_flux.py:beta_reference then mechanics.relax_reference_deformable, as examples/internal_strain_jacobian.py",
+  "packer_params_a_b_gamma_phi1_phi2_dz_flip": [
+   4.5634837549708145,
+   8.502899599326447,
+   90.0,
+   180.0,
+   180.0,
+   -7.253306456241728e-16,
+   0.0
+  ],
+  "c_A": 2.549411890180627,
+  "volume_A3": 98.92443235508021,
+  "lattice_rows_producer_frame_A": [
+   [
+    8.502899599326447,
+    -5.206524388893222e-16,
+    -0.0
+   ],
+   [
+    0.0,
+    4.5634837549708145,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    2.549411890180627
+   ]
+  ],
+  "frame_map_L_rows_producer_from_packer": [
+   [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   [
+    1.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "geometry_xyz_sha256": "c056e4901828bc107967a1ca2e5476457fbd139bdb6d60b84d7297cc8d2725e4",
+  "geometry_file": "beta_pvdf_reference_producer_frame.xyz"
+ },
+ "polarization_producer_frame_C_m2": {
+  "charge_only_with_flux": [
+   2.1577405094941665e-16,
+   -0.11867063487147037,
+   1.808006735246987e-14
+  ],
+  "induced_dipoles": [
+   6.20912308070587e-17,
+   -0.024765419748174495,
+   7.014871538812502e-15
+  ],
+  "total": [
+   2.7786528175647535e-16,
+   -0.14343605461964487,
+   2.5094938891282372e-14
+  ],
+  "note": "the total is what the Vanderbilt correction subtracts; the clamped-ion dipoles include the induced part"
+ },
+ "definitions": {
+  "dipole_per_reference_volume": "(1/V0) dmu_i/de_J, every atom affine with the cell, charges fluxed and induced dipoles re-solved, central difference at +/-h",
+  "vanderbilt_proper": "dipole_per_reference_volume - delta_ij P_k (normal strains); - (delta_ij P_k + delta_ik P_j)/2 per unit engineering shear",
+  "shear_convention": "engineering gamma; strain tensor off-diagonal = gamma/2 (mechanics.strain_tensor)",
+  "voigt_order_producer_frame": [
+   "xx",
+   "yy",
+   "zz",
+   "yz",
+   "xz",
+   "xy"
+  ]
+ },
+ "columns": {
+  "h=0.0025": {
+   "yy": {
+    "packer_voigt": 0,
+    "sign_from_frame_map": 1.0,
+    "dipole_per_reference_volume_C_m2": [
+     4.7481529440691945e-15,
+     -0.29929130838591106,
+     3.7990679562448746e-14
+    ],
+    "vanderbilt_proper_C_m2": [
+     4.7481529440691945e-15,
+     -0.1558552537662662,
+     3.7990679562448746e-14
+    ],
+    "improper_lab_dP_de_C_m2": [
+     4.470287662312719e-15,
+     -0.1558552537662662,
+     1.2895740671166374e-14
+    ]
+   },
+   "xx": {
+    "packer_voigt": 1,
+    "sign_from_frame_map": 1.0,
+    "dipole_per_reference_volume_C_m2": [
+     3.065227728981947e-14,
+     -0.29604278384207017,
+     6.172366844146094e-14
+    ],
+    "vanderbilt_proper_C_m2": [
+     3.0374412008062993e-14,
+     -0.29604278384207017,
+     6.172366844146094e-14
+    ],
+    "improper_lab_dP_de_C_m2": [
+     3.0374412008062993e-14,
+     -0.1526067292224253,
+     3.662872955017857e-14
+    ]
+   },
+   "zz": {
+    "packer_voigt": 2,
+    "sign_from_frame_map": 1.0,
+    "dipole_per_reference_volume_C_m2": [
+     2.2757419436071286e-15,
+     -0.010843709632909856,
+     4.559192751176466e-15
+    ],
+    "vanderbilt_proper_C_m2": [
+     2.2757419436071286e-15,
+     -0.010843709632909856,
+     -2.0535746140105905e-14
+    ],
+    "improper_lab_dP_de_C_m2": [
+     1.9978766618506533e-15,
+     0.132592344986735,
+     -2.0535746140105905e-14
+    ]
+   },
+   "xy": {
+    "packer_voigt": 5,
+    "sign_from_frame_map": -1.0,
+    "dipole_per_reference_volume_C_m2": [
+     -0.3988916074254675,
+     2.876987345992222e-14,
+     6.760413307919903e-15
+    ],
+    "vanderbilt_proper_C_m2": [
+     -0.327173580115645,
+     2.863094081904398e-14,
+     6.760413307919903e-15
+    ],
+    "improper_lab_dP_de_C_m2": null
+   },
+   "yz": "not expressible: this cell parametrisation fixes the chain axis along z and has no variable that tilts it",
+   "xz": "not expressible: this cell parametrisation fixes the chain axis along z and has no variable that tilts it"
+  },
+  "h=0.01": {
+   "yy": {
+    "packer_voigt": 0,
+    "sign_from_frame_map": 1.0,
+    "dipole_per_reference_volume_C_m2": [
+     -1.2994205542201197e-15,
+     -0.2992944107049666,
+     3.1635232871076435e-14
+    ],
+    "vanderbilt_proper_C_m2": [
+     -1.2994205542201197e-15,
+     -0.15585835608532173,
+     3.1635232871076435e-14
+    ],
+    "improper_lab_dP_de_C_m2": [
+     -1.577285835976595e-15,
+     -0.15585835608532173,
+     6.540293979794064e-15
+    ]
+   },
+   "xx": {
+    "packer_voigt": 1,
+    "sign_from_frame_map": 1.0,
+    "dipole_per_reference_volume_C_m2": [
+     1.2600867428491324e-14,
+     -0.29604452009471904,
+     5.6641562013552134e-14
+    ],
+    "vanderbilt_proper_C_m2": [
+     1.2323002146734848e-14,
+     -0.29604452009471904,
+     5.6641562013552134e-14
+    ],
+    "improper_lab_dP_de_C_m2": [
+     1.2323002146734848e-14,
+     -0.15260846547507417,
+     3.1546623122269765e-14
+    ]
+   },
+   "zz": {
+    "packer_voigt": 2,
+    "sign_from_frame_map": 1.0,
+    "dipole_per_reference_volume_C_m2": [
+     4.284575881482557e-16,
+     -0.010851009822873537,
+     1.2205237050002856e-14
+    ],
+    "vanderbilt_proper_C_m2": [
+     4.284575881482557e-16,
+     -0.010851009822873537,
+     -1.2889701841279516e-14
+    ],
+    "improper_lab_dP_de_C_m2": [
+     1.5059230639178037e-16,
+     0.13258504479677133,
+     -1.2889701841279516e-14
+    ]
+   },
+   "xy": {
+    "packer_voigt": 5,
+    "sign_from_frame_map": -1.0,
+    "dipole_per_reference_volume_C_m2": [
+     -0.3988991434738309,
+     -8.990585456225693e-16,
+     1.996731357067084e-15
+    ],
+    "vanderbilt_proper_C_m2": [
+     -0.32718111616400847,
+     -1.037991186500807e-15,
+     1.996731357067084e-15
+    ],
+    "improper_lab_dP_de_C_m2": null
+   },
+   "yz": "not expressible: this cell parametrisation fixes the chain axis along z and has no variable that tilts it",
+   "xz": "not expressible: this cell parametrisation fixes the chain axis along z and has no variable that tilts it"
+  }
+ }
+}
