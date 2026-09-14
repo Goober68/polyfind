@@ -34,6 +34,31 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-13
 
+2026-09-13 23:18 PDT: isolated physics-vector-repeat 4d6c1d1 and sarco
+physics-native-provenance 585db5fd record the whole-dataset translation
+decomposition and first native central-derivative comparison. All 566 frames
+have nonzero net force (0.1486006-2.7510042 eV/A), but that component accounts
+for only 0.711820% of held-out squared force-fit error. Held force RMS is
+5.2312495, translation floor 0.4413575, internal residual 5.2125978 kcal/(mol A).
+The finite model itself has zero net force to numerical precision. No labels
+are recentered or parameters changed; this concern does not explain most of
+the rejected periodic model's calibration mismatch. Audit/ref-fit/topology
+tests pass 42 in 7.55s against the actual dataset. Read isolated-branch
+docs/REFERENCE_FORCE_AUDIT.md for the reproducible diagnostic.
+
+Three native radial points now pass whole-unit replay. At h=0.001 A the
+energy-derived force is 1.1567739556994638 eV/A versus analytic
+1.156631010002172; error 0.00014294569729189632 exceeds the declared 0.0001
+limit. This first-step gate fails, not rounded into a pass. The two h=0.0005
+points remain running/pending (session 44730/controller 6211, fourth child
+8071 observed live). Finish the declared points unchanged before deciding
+the electronic/step-size refinement; rigid-translation/grid controls are a
+separate follow-up, not an established explanation. No calibration admission.
+Molecular PVDF/SVP step 27 remains unconverged (Fmax 0.0590822 eV/A), with
+intact topology. All five research stages and all targets remain open;
+live native sources and GPU reservation are unchanged. This C: update is
+documentation only, not a merge of isolated mathematical changes.
+
 2026-09-13 first native training-frame point: sarco physics-native-provenance
 fc0949be and Polyfind isolatedb992ab4 record completed47-step SCF and exact
 input/receipt/32-force/grid/whole-unit replay. At source frame13/C9/F10,
