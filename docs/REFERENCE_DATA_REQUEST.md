@@ -1,5 +1,20 @@
 # Reference data request: bulk dipole response to strain
 
+2026-09-14 01:12 PDT update: the SCF-only translation diagnostic has two of
+five native points complete. Both reproduce original forces within4.64e-7
+eV/A; tightening SCF does not remove the measured defect in either point.
+The separate QS-only control is declared in Sarco15d4a3f4 and independently
+verified READY, not launched: EPS_DEFAULT1e-16, original EPS_SCF1e-8, same
+source/geometry/method/grid settings and gates. Three SCF points remain.
+
+CFE5/7/9 preparations are available but native relaxation is not launched.
+Testing the existing CNEPO/reference factory on D: revealed a relocation
+read-contract failure: original C: archive identity paths are conflated with
+current D: storage paths. Preserve all original receipts and fix the archive
+location boundary before extending the shared native path to CFE. This is
+not a failed chemistry evaluation or new calibration data. See Sarco
+systems_boundary/cfe_ter_source_motif_v1/REFERENCE_LAUNCH_DIAGNOSIS.md.
+
 Current qualification (2026-09-13): the fully deformable periodic PVDF model
 now reaches numerical stationarity but fails covalent-distance admission.
 The force-balance diagnosis below requires joint energy/force/response
