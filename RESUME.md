@@ -1,5 +1,11 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest isolated continuation: `docs/CARTESIAN_TORSION_PROGRESS.md` records
+the shared Fourier/dihedral owner, periodic Cartesian/repeat derivatives,
+four-site trans stiffness and the two-site primitive-Gamma sampling limit.
+This term is not yet assembled into a shared full-cell Hamiltonian; no
+field-induced conformation, calibrated dynamics or mechanical tensor is claimed.
+
 Further evening continuation: `docs/AFFINE_VALENCE_PROGRESS.md` records
 full vector-repeat bond/angle gradients and metric ownership, corrected
 phonon consumers,223 Windows/42 focused Linux passing controls and the

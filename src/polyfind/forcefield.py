@@ -51,6 +51,7 @@ from . import backend as bk
 from .chain import Structure, build_chain, build_chain_batch
 from .polymers import Polymer, RISStates, THREE_STATE, UFF_LJ, lj_params
 from .ris import RISModel
+from .torsion_geometry import dihedral_radians, fourier_terms
 
 COULOMB = 332.0637  # kcal A / (mol e^2)
 
@@ -728,12 +729,7 @@ def dihedral_angles(coords, torsions) -> np.ndarray:
     :meth:`SimpleFF._energy_from_coords` (IUPAC, trans = 180)."""
     coords = np.asarray(coords, dtype=float)
     t = np.asarray(torsions, dtype=int).reshape(-1, 4)
-    a, b, c, d = (coords[t[:, k]] for k in range(4))
-    b0, b1, b2 = b - a, c - b, d - c
-    n1, n2 = np.cross(b0, b1), np.cross(b1, b2)
-    x = (n1 * n2).sum(-1)
-    y = np.linalg.norm(b1, axis=-1) * (b0 * n2).sum(-1)
-    return np.degrees(np.arctan2(y, x))
+    return np.degrees(dihedral_radians(coords[t]))
 
 
 @dataclass
@@ -1419,19 +1415,13 @@ class SimpleFF:
         e_t = xp.zeros(coords.shape[0])
         if top.torsions.size:
             tors = xp.asarray(top.torsions)
-            a, b, c, d = (coords[:, tors[:, k]] for k in range(4))
-            b0, b1, b2 = b - a, c - b, d - c
-            n1, n2 = xp.cross(b0, b1), xp.cross(b1, b2)
-            x = (n1 * n2).sum(-1)
-            y = xp.sqrt((b1 * b1).sum(-1)) * (b0 * n2).sum(-1)
-            phi = xp.arctan2(y, x)
+            points = xp.stack([coords[:, tors[:, k]] for k in range(4)], axis=-2)
+            phi = dihedral_radians(points, xp)
             # (n_tors,) coefficients, broadcast against phi's (M, n_tors): with one shared
             # triple every row holds the same number, so this is arithmetically identical
             # to the scalar form it replaces (the dtype cast keeps a float32 GPU batch in
             # float32, which a float64 coefficient array would silently promote).
-            V = xp.asarray(top.tors_V, dtype=phi.dtype)
-            V1, V2, V3 = V[:, 0], V[:, 1], V[:, 2]
-            e_t = (0.5 * (V1 * (1 + xp.cos(phi)) + V2 * (1 - xp.cos(2 * phi)) + V3 * (1 + xp.cos(3 * phi)))).sum(axis=1)
+            e_t = fourier_terms(phi, top.tors_V, xp).sum(axis=1)
         out = e_lj + e_c + e_t
         # The valence blocks are added only when there are any, so a potential without them
         # computes and returns exactly the expression it always did.

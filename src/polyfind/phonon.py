@@ -44,8 +44,10 @@ known-answer identity with :meth:`~polyfind.pack.CrystalPacker.energy` holds to 
 so the Hessian carries **no torsional stiffness about the backbone bonds**: a chain-twisting
 mode is held only by the 1-4 and longer nonbonded terms and by the neighbouring chains.  For
 the fitted potential ``d2E/dphi2`` at trans is ``(V1 + 4 V2 + 9 V3) / 2``, of order 10
-kcal/mol/rad^2, which is not small; the lowest torsional modes reported here are therefore
-lower bounds, and the module says so in :attr:`Phonons.notes` rather than silently.  No term
+kcal/mol/rad^2. These frequencies are not general lower bounds: omitted Cartesian curvature
+can be indefinite away from a torsion minimum, and the reference need not be stationary.
+Primitive-Gamma repeat support also excludes twisting branches requiring a longer repeat.
+The module records the missing stiffness in :attr:`Phonons.notes`. No term
 is omitted otherwise; a packer whose energy this module cannot reproduce is refused by the
 known-answer check (:func:`check_known_answer`) rather than approximated.
 
@@ -663,7 +665,9 @@ def phonons_from_hessian(packer, hess: Hessian, asr: str = "none", zero_tol: flo
     n_imag = int((lam < -lam_tol).sum())
     n_zero = int((np.abs(lam) <= lam_tol).sum())
     notes = ["the packer's Fourier torsion term is a constant of the chain's nominal dihedrals, so no torsional "
-             "stiffness about the backbone bonds enters this Hessian (see polyfind.phonon)"]
+             "stiffness about the backbone bonds enters this Hessian; these frequencies are not general "
+             "lower bounds, and Gamma-only repeat support does not cover all chain-twisting branches "
+             "(see polyfind.phonon)"]
     if hess.max_force > 1e-2:
         notes.append(f"the geometry is not a stationary point of the all-atom energy (max |dE/dP| = "
                      f"{hess.max_force:.2e} kcal/(mol A)); a Hessian there can have imaginary modes that a relaxed one would not")

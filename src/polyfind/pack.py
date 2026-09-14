@@ -68,6 +68,7 @@ from .forcefield import COULOMB, _valence_lookup, erfc_approx, valence_topology
 from .polarizability import Polarizable
 from .helix import HelixParams, helix_parameters, kabsch, rotation_to_z
 from .polymers import Polymer, RISStates, lj_params
+from .torsion_geometry import fourier_terms
 
 MASS = {"C": 12.011, "H": 1.008, "N": 14.007, "O": 15.999, "F": 18.998, "Cl": 35.45}
 _TOPO_CACHE: dict = {}
@@ -608,6 +609,28 @@ def _repeat_images(chain: PeriodicChain) -> tuple:
     return tpl, where
 
 
+def chain_torsion(chain: PeriodicChain, coefficients):
+    """Resolve one backbone quadruple per repeat torsion, including image atoms.
+
+    The representative's FIRST atom is in block0. Its index is the builder's
+    dihedral index, preserving the coefficient phase used by SimpleFF/RIS.
+    Coordinates/metadata angles are not used to resolve this topology.
+    """
+    from .periodic_torsion import ChainTorsion
+
+    tpl, where = _repeat_images(chain)
+    nb = len(chain.dihedrals)
+    atoms, images = [], []
+    for k in range(nb):
+        quad = [int(i) for i in tpl.backbone[2*nb+k:2*nb+k+4]]
+        if len(quad) != 4 or any(i not in where for i in quad):
+            raise ValueError("repeat template does not cover the complete torsion images")
+        entries = [where[i] for i in quad]
+        atoms.append([p for p, image in entries])
+        images.append([image for p, image in entries])
+    return ChainTorsion(chain.n_atoms, np.asarray(atoms), np.asarray(images), coefficients)
+
+
 def chain_flux(chain: PeriodicChain, ff):
     """The :class:`~polyfind.forcefield.FluxTopology` of one repeat of ``chain``.
 
@@ -998,9 +1021,8 @@ class CrystalPacker:
 
     def torsion_energy(self, dihedrals) -> float:
         """Fourier torsion energy of one chain's repeat (kcal/mol)."""
-        V1, V2, V3 = self.torsion
         phi = np.deg2rad(np.asarray(dihedrals, dtype=float))
-        return float((0.5 * (V1 * (1 + np.cos(phi)) + V2 * (1 - np.cos(2 * phi)) + V3 * (1 + np.cos(3 * phi)))).sum())
+        return float(fourier_terms(phi, self.torsion).sum())
 
     # --- dipole, polarization and the applied field --------------------------------
     @property

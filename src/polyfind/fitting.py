@@ -88,6 +88,7 @@ from .pack import CrystalPacker, PackResult, pack, periodic_chain
 from .pipeline import EXPERIMENTAL_CELLS
 from .polymers import PE, PVDF, UFF_LJ, Polymer, THREE_STATE
 from .refine import refine_crystal
+from .torsion_geometry import indexed_dihedral_gradient as _dihedral_gradient
 
 T, GP, GM = 0, 1, 2
 
@@ -1888,30 +1889,6 @@ def _angle_gradient(coords, idx: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     gi = (cos[:, None] * uh - vh) / (nu * s)[:, None]
     gk = (cos[:, None] * vh - uh) / (nv * s)[:, None]
     return theta, np.stack([gi, -(gi + gk), gk], axis=1)
-
-
-def _dihedral_gradient(coords, idx: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """``(phi, dphi/dx)`` for torsion quadruples ``idx`` (n, 4): radians and (n, 4, 3).
-
-    The standard result for the dihedral of ``i-j-k-l``, in the same sign convention as
-    :func:`polyfind.forcefield.dihedral_angles` (IUPAC, trans = 180).  Checked against
-    finite differences in the tests, because a sign error here would quietly corrupt every
-    fitted torsion coefficient.
-    """
-    b1 = coords[idx[:, 1]] - coords[idx[:, 0]]
-    b2 = coords[idx[:, 2]] - coords[idx[:, 1]]
-    b3 = coords[idx[:, 3]] - coords[idx[:, 2]]
-    n1, n2 = np.cross(b1, b2), np.cross(b2, b3)
-    nb2 = np.linalg.norm(b2, axis=1)
-    s1, s2 = (n1 * n1).sum(1), (n2 * n2).sum(1)
-    phi = np.arctan2((nb2[:, None] * b1 * n2).sum(1), (n1 * n2).sum(1))
-    gi = -nb2[:, None] * n1 / s1[:, None]
-    gl = nb2[:, None] * n2 / s2[:, None]
-    f = ((b1 * b2).sum(1) / nb2 ** 2)[:, None]
-    g = ((b3 * b2).sum(1) / nb2 ** 2)[:, None]
-    gj = -(1.0 + f) * gi + g * gl
-    gk = f * gi - (1.0 + g) * gl
-    return phi, np.stack([gi, gj, gk, gl], axis=1)
 
 
 class ValenceDesign:
