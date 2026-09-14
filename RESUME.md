@@ -1,5 +1,15 @@
 # Resume: polyfind, state as of 2026-09-14
 
+Latest00:41 PDT: original translation diagnostic is COMPLETE, archived in
+Sarco27efd41b; every declared derivative/invariance gate fails. Read
+REFERENCE_FORCE_AUDIT.md and Sarco trainset_translation_probe_v1/RESULTS.md.
+The distinct tighter-SCF five-point control is now RUNNING, definition
+3fdf6c88, session78188/controller12087/start13272490, native12088/start13272892.
+Only EPS_SCF changes1e-8 to1e-10; same source, translations, method/grid and
+gates. CPU15/one thread, D:, GPU reserved. Its24 defining files are pinned.
+Both historical probe results replay unchanged after shared compiler/precision
+integration. No new calibration result yet; all five stages remain open.
+
 Current checkpoint (supersedes the dated launch/history below): Sarco
 607504e7 recovers the actual cfe_ter source as VDF/TrFE/CFE/TrFE/VDF,
 C10H10ClF11, with S at source atoms 4/10/13 in all 15 stored frames.

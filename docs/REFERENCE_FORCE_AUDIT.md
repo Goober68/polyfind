@@ -7,6 +7,31 @@ This continuation measures the actual historical training labels, reproduces
 the recorded finite fit, and starts an independent native force check.
 All five research stages remain open; GPU stays reserved.
 
+## Terminal translation failure and isolated SCF control, 2026-09-14
+
+Sarco27efd41b archives all five native units, inputs/outputs and exact
+terminal replay in trainset_translation_probe_v1. Session99954 exited.
+Both energy-derived force errors exceed1e-4 eV/A:0.00152559685094 and
+0.00043572297446, with inter-step difference0.00108987387648. Energy span
+0.00120476604388 eV exceeds1e-6; maximum atomic force change0.020914606 eV/A
+and net force0.725961418 eV/A exceed1e-4. All declared checks fail unchanged.
+This proves sampled numerical origin sensitivity, not its particular cause.
+Terminal result SHA256:
+e9e62248f22aef1a466a166281ddd131c39e237a2f5580276b32e2d342e56b91.
+
+The distinct SCF-only precision control is running under Sarco3fdf6c88:
+trainset_translation_y_scf_tight_probe_v1/PROTOCOL.md. Session78188,
+controller12087/start13272490, zero child12088/start13272892 starts00:41:33PDT;
+kernel execution and native SCF iterations1-3 observed. Only EPS_SCF changes
+1e-8 to1e-10, leaving the five translations, source, grid and other method
+settings unchanged. CPU15/one thread/D:, GPU reserved;24 source files pinned.
+The shared compiler/method/recipe owns precision, not per-call-site edits.
+Thirty-five source/compiler/probe tests pass (one optional native parser test
+skipped), plus15 original grid tests on their required CPU30; both historical
+probe results replay with their original hashes and failed gates. Finer-XC
+native-unit integration remains pending despite synthetic grid-role tests.
+No corrected force labels, refit, field motion or research-stage admission.
+
 ## Source identity and first translated point, 2026-09-14 PDT
 
 Sarco 607504e7 publishes
