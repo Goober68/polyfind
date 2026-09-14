@@ -139,6 +139,20 @@ results are a changed Hamiltonian, labelled separately. Next validation: far-IR/
 Dipole's bulk periodic curvature. `examples/crystal_phonons.py
 --polymorphs beta,alpha,gamma` reproduces (gamma takes ~10 min).
 
+## Dipole's Polyfind extension branch (do not merge yet)
+
+`origin/physics-vector-repeat` (e6150ed, 2026-09-13) is Dipole's isolated
+extension of our source: a complete placed-cell energy with real Cartesian
+torsion (`CrystalPacker.placed_energy_and_grad(P, H, flip)`), general
+triclinic images, vector-repeat valence/flux/exclusion gradients, and a
+six-column affine clamped-ion record identical to ours on the four shared
+columns. Verified here: 640 pass / 5 skip / 0 fail. **Do not merge it into
+the shared branch until Dipole releases the dependency**: their C: checkout
+tracks our branch and their running native jobs depend on unchanged source.
+Read it in a detached worktree. Torsion changes nothing at Gamma for beta
+(primitive two-site repeat cannot twist); it raises alpha's torsional modes
+by 4-11 cm^-1. Next lattice-dynamics step: beta with a doubled repeat.
+
 ## Dipole's open gates (theirs, not ours to chase)
 
 - Berry polarization: **matrix running, three diagonal columns compared.**
