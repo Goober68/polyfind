@@ -1,4 +1,22 @@
-# Resume: polyfind, state as of 2026-09-13 (afternoon)
+# Resume: polyfind, state as of 2026-09-14
+
+Current checkpoint (supersedes the dated launch/history below): Sarco
+607504e7 recovers the actual cfe_ter source as VDF/TrFE/CFE/TrFE/VDF,
+C10H10ClF11, with S at source atoms 4/10/13 in all 15 stored frames.
+This is not Polyfind's CFE homopolymer. See REFERENCE_FORCE_AUDIT.md for
+the source-linked report; identity is admitted, force/field labels are not.
+
+The live translation diagnostic has two replay-verified points (zero and
+-0.001 A); +0.001 A is running, child 10805 observed using CPU at 00:11 PDT.
+The new zero reproduces the prior energy and all forces exactly. The first
+rigid shift changes energy by -0.000601819650 eV despite unchanged internal
+geometry/cell. This exceeds the declared 1e-6 eV span limit already; the
+five-point derivative/force diagnosis remains incomplete. Do not stop or
+modify the pinned experiment. Molecular PVDF/SVP reached step 28 with
+Fmax 0.0454956382 eV/A, topology intact, still unconverged. Other jobs remain
+live, GPU reserved, all five research stages open.
+
+## Historical checkpoints (newest first)
 
 The distinct common-y-translation experiment IS RUNNING: sarco definition
 ab502461, launch relay 0d0a7699, publication trainset_translation_probe_v1.

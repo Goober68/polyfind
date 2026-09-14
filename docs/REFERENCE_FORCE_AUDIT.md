@@ -7,6 +7,35 @@ This continuation measures the actual historical training labels, reproduces
 the recorded finite fit, and starts an independent native force check.
 All five research stages remain open; GPU stays reserved.
 
+## Source identity and first translated point, 2026-09-14 PDT
+
+Sarco 607504e7 publishes
+`materials/gpu_bundle/results/boundary_sensitivity/cfe_ter_chemistry_audit_v1/RESULT_REPORT.md`
+and its exactly replayable compact result. All 15 cfe_ter frames (7 conf/8
+scan) match the anchor-table graph in original atom order: C10H10ClF11,
+32 atoms, VDF/TrFE/CFE/TrFE/VDF and S at source atoms 4, 10, 13. The explicit
+backbone is 0,1,4,6,9,10,13,15,18,19. Polyfind's CFE homopolymer is a
+different chemistry, not an interchangeable baseline. The shared graph
+auditor b147245d has 22 passing new/existing controls. Result file SHA256:
+91bbaa107504859a9337ef1e8615e3b8096d266708a091e6683c39423ce0759b.
+This recovers constitution/stereochemistry, not the missing original
+96-point scans, matched field/dipole histories, admitted native protocol,
+relaxed packing or qualified energy/force labels. The original 18 A periodic
+boundary metadata is retained, not silently reinterpreted as vacuum.
+
+The live common-y experiment now has two whole-unit replay-verified points:
+zero E=-8341.2939620562 eV, total Fy=-0.6039086187928724 eV/A;
+minus_001 E=-8341.29456387585 eV, total Fy=-0.6028309705562616 eV/A.
+The new zero's energy and all 32 force vectors exactly reproduce the preceding
+radial zero at parsed precision. The -0.001 A common displacement changes
+energy by -0.000601819650 eV: measured numerical origin sensitivity, already
+larger than the 1e-6 eV span limit. This does not yet supply a central
+derivative, identify the responsible numerical setting, or justify recentering
+forces. Partial reduction payload SHA256:
+beb11f6d9125108f6ebbe53434af2fa4c15fe7ab4470fb8cd903641e85037042.
+Session 99954/controller 9192 remains live, +0.001 native child 10805 observed
+using CPU at 00:11 PDT. Complete the unchanged five-point experiment.
+
 ## Common-translation control launched, 23:47 PDT
 
 Sarco ab502461 generalizes the existing experiment through one immutable
