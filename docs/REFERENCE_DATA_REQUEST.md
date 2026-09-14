@@ -28,6 +28,31 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 latest: original Sarco cold-candidate curvature replay now passes
+all27 whole matrices, every baseline/signed column/provider/writer/reducer
+and terminal reduction. Original27 curvature matrices separately replay too.
+Cold means fresh electronic guesses, not cryogenic treatment. Refined free-force
+residuals improve47.76-263times; lowest internal curvatures change at most0.5221%.
+Nine-source-label AN/PVDF/VDCN soft modes remain collective and close low-mode
+gaps prevent unique mechanism attribution. No field, bulk stiffness, many-MPa
+pre-strain, barrier/rate/loss or calibrated charge-flux data is released.
+The nine CNEPO matrices now also pass fresh recheck: all63 whole matrices,
+63 baselines and8100 signed column pairs replay successfully. Across all nine
+cold sources, the stored three-mode soft subspaces have mean squared overlap
+at least0.999999949 across the three sampled numerical settings. This is
+numerical stability at fixed source/atom mapping, not physical-model calibration.
+Evidence: Sarco physics-native-provenance, results/boundary_sensitivity/
+candidate_curvature_v1/cold9/REPLAY_2026_09_13.md and
+finite_curvature_v1/REPLAY_2026_09_13.md beneath materials/gpu_bundle, with
+the combined evidence at results/boundary_sensitivity/CURVATURE_AUDIT_2026_09_13.md.
+
+Actual molecular v2 first native PVDF SVP return reproduces saved step23
+energy/dipole/free-force maximum/anchor reactions within unchanged limits;
+full original free-force vector was never saved. Restored step23/segment0
+is not new relaxation progress, and0.0453857eV/A is still above1e-4. Source
+admission still refuses all unfinished four-stage geometry sources. Both D:
+native campaigns remain live; GPU reserved. No bulk response calibration promoted.
+
 2026-09-13 current: distinct Sarco molecular v2 now actually runs PVDF SVP
 on D:, session21123/process2256/start_ticks11333095, starts19:18:30 PDT.
 It preserves original step23/177 remaining and all four SVP/TZVP dependencies,
