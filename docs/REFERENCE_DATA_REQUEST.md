@@ -1,5 +1,11 @@
 # Reference data request: bulk dipole response to strain
 
+Current qualification (2026-09-13): the fully deformable periodic PVDF model
+now reaches numerical stationarity but fails covalent-distance admission.
+The force-balance diagnosis below requires joint energy/force/response
+calibration. Historical constrained-geometry response fits in this document
+do not validate the fully relaxed molecular response.
+
 ## Why this is the binding constraint
 
 `polyfind` now reproduces both experimental piezoelectric **signs** for beta-PVDF
@@ -26,7 +32,30 @@ Symptoms of that data being the limit, all measured (`docs/BENCHMARK.md`):
 
 A bulk reference at the level the energy model is fitted to would settle all four.
 
-## Provider status — 2026-09-10
+## Provider status — 2026-09-13
+
+2026-09-13 C-F force diagnosis: isolated physics-vector-repeat19cd208 is
+pushed; C: native sources unchanged. Read docs/CF_FORCE_BALANCE.md on that
+branch. The rejected1.5366309125A C-F stationary radius is reproduced with
+unchanged fitted parameters and chemistry criteria. Its inward stretch
+17.9763584 balances outward electrostatics after bonded exclusions19.7792581
+and inward LJ1.8029150 kcal/(mol A), with effectively zero radial bend force.
+At fixed geometry, flux adds19.4786690 outward with induction present;
+induction adds2.7146176 with flux present (conditional, interacting effects).
+Removing both still leaves outward26.7154772 at1.3605293A, so the original
+periodic fitted potential also has a geometry problem. Full and ablated
+forces match their actual energy derivatives at two steps to1.26e-8/9.84e-9.
+The Born-response coefficients were not jointly fitted to the assembled
+deformable potential's energies/forces; the finite fit also used off-site
+charges subsequently projected for the periodic model. Next fit/admission
+must constrain matched energy/full force/zero-load geometry/electrical
+response together; no disabling flux or r0 retuning is a calibrated fix.
+Thirty selected controls pass on Windows and Linux, with six exact Windows
+reference/stress controls unchanged. No rejected raw geometry or field
+branch is retained. Native PVDF/SVP step26 remains unconverged at the
+original force criterion, other basis/chemistry cases pending; PH Born
+completion pending after its dielectric output. Both native handles live.
+All five research stages remain open; GPU reserved.
 
 2026-09-13 actual coupled model relaxation: isolated physics-vector-repeat
 58cf7ac is pushed; C: native sources unchanged. Independent Cartesian atoms/
