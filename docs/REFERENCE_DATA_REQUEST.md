@@ -28,6 +28,18 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13: Sarco's D: molecular recovery is actually live in PVDF SVP,
+preserving the original accepted23+177 budget and own SVP/TZVP dependencies.
+The explicit downstream whole-unit handoff now delegates accepted vectors,
+native/source receipts and complete reduction replay to the producer; no
+duplicate XYZ or checkpoint promotion. Frozen17 consumer/regression controls
+pass399.671s. Actual running-source readiness correctly exposes0 field cases.
+Canonical report on Sarco branch physics-native-provenance, commit60f76ca0:
+materials/gpu_bundle/results/dft_field/geometry_recovery_v1/CONSUMER_REPORT.md.
+The independent D: electrical-response solver remains live. Neither unfinished
+branch supplies new bulk calibration data or authorizes a Polyfind charge-flux
+refit; all field/mechanical/model and five-stage research gates remain open.
+
 2026-09-13: Sarco independently publishes the first TWO completed PVDF9
 sampled returns after full12-baseline/36-input/native receipt/candidate/source/
 whole checksum/direct comparison replay (session59353 exit0).623 fresh
