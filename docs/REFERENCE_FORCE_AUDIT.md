@@ -7,6 +7,55 @@ This continuation measures the actual historical training labels, reproduces
 the recorded finite fit, and starts an independent native force check.
 All five research stages remain open; GPU stays reserved.
 
+## Whole-dataset translation decomposition, 23:18 PDT
+
+The audit now reports the orthogonal decomposition of each raw force array,
+model force array and residual into common-translation and internal parts.
+For N atoms, m = sum(F)/N and sum(|F|^2) = N|m|^2 + sum(|F-m|^2).
+For any zero-net-force model the first term is an irreducible contribution
+to unweighted squared force error. This is a diagnostic projection only:
+no stored label, fitted parameter, force convention or acceptance gate changes.
+
+All 566 raw frames have nonzero net force, with norms ranging from
+0.1486006 to 2.7510042 eV/A, mean 0.9982068 and RMS 1.0935828 eV/A.
+The recorded finite model is zero-net-force to numerical precision:
+maximum net norm 4.624e-14 kcal/(mol A) over its 467 admitted frames.
+
+| Partition | Frames | Original force RMS | Translation floor | Internal residual RMS | Translation share of squared residual |
+|---|---:|---:|---:|---:|---:|
+| Fit training | 312 | 4.6445787 | 0.4197092 | 4.6255763 | 0.816591% |
+| Fit held out | 155 | 5.2312495 | 0.4413575 | 5.2125978 | 0.711820% |
+| PVDF subset | 15 | 3.5979889 | 0.3663947 | 3.5792847 | 1.037000% |
+
+RMS entries are force-component RMS in kcal/(mol A), weighted by actual
+component count, not equally by frame. Original RMS squared equals the sum
+of the two component RMS squares; these are not linearly subtractable errors.
+Thus the net-force issue is widespread but does not explain most of the
+fit mismatch. Merely subtracting mean force would neither qualify the native
+labels nor resolve the rejected long C-F periodic equilibrium. CNEPO remains
+outside the recorded fit, not silently scored with a different model.
+
+Actual audit writer SHA256:
+`b58508691791d95350431dd1f72b5b9d4499709d91c98f23ca4e2a6a39e5fab5`.
+Source dataset SHA remains unchanged. Seven new synthetic controls verify
+orthogonality, the zero-net-force lower bound, atom-count weighting,
+non-mutation and malformed input rejection. Combined with existing finite-fit
+tests: final 42 pass in 7.55s with the actual dataset path provided, including
+the PVDF reference-topology control. The initial run passed 41 and skipped
+that one path-dependent test. No source geometries or full output copy are
+retained by the audit.
+
+The third native point completed at 23:17:35 PDT, and all three completed
+units passed the defining replay. At h=0.001 A, the central energy derivative
+gives +1.1567739556994638 eV/A versus analytic +1.156631010002172.
+Absolute error 0.00014294569729189632 eV/A exceeds the predeclared 0.0001
+limit. This first-step comparison fails; it is not rounded into a pass.
+The two h=0.0005 points remain running/pending, needed to distinguish
+step-size sensitivity and complete the declared result. No protocol tuning
+or label recalibration is performed mid-run. Partial reduction SHA256:
+`1cf78168ec1c406c4b12b7741b3a2343544769c4fcd7b6a3ce0dab5925a299a5`.
+Session 44730/controller 6211 is live; fourth native child 8071 is observed.
+
 ## First native checkpoint, 23:00 PDT
 
 The zero point has now completed47 native SCF steps with clean exit and

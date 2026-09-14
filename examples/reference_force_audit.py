@@ -27,6 +27,34 @@ def statistics(values):
                 positive_fraction=float(np.mean(values > 0.)))
 
 
+def translation_components(forces):
+    """Orthogonal decomposition only; never replace or recenter source labels."""
+    forces = np.asarray(forces,dtype=float)
+    if forces.ndim != 2 or forces.shape[1] != 3 or not len(forces) or not np.isfinite(forces).all():
+        raise ValueError("nonempty finite N-by-3 force array required")
+    mean = forces.mean(axis=0)
+    return dict(atoms=len(forces),net_force_norm=float(np.linalg.norm(forces.sum(axis=0))),
+                squared=float(np.sum(forces*forces)),
+                translation_squared=float(len(forces)*(mean@mean)),
+                internal_squared=float(np.sum((forces-mean)**2)))
+
+
+def translation_summary(records):
+    if not records:
+        return None
+    components = 3*sum(r["atoms"] for r in records)
+    squared = sum(r["squared"] for r in records)
+    translation = sum(r["translation_squared"] for r in records)
+    internal = sum(r["internal_squared"] for r in records)
+    return dict(frames=len(records),components=components,
+                net_force_norm_kcal_mol_A=statistics([r["net_force_norm"] for r in records]),
+                component_rms_kcal_mol_A=float(np.sqrt(squared/components)),
+                translation_component_rms_kcal_mol_A=float(np.sqrt(translation/components)),
+                internal_component_rms_kcal_mol_A=float(np.sqrt(internal/components)),
+                translation_fraction_of_squared_norm=translation/squared if squared else 0.,
+                orthogonal_squared_norm_closure_error=float(squared-translation-internal))
+
+
 def terminal_cf(frame):
     """Atom-labelled radial probes; no assumption that labels are equilibrium forces."""
     for fluorine,element in enumerate(frame.elements):
@@ -62,10 +90,15 @@ def audit(path):
         if frame.forces is None or frame.energy is None or not np.isfinite(frame.forces).all():
             raise ValueError("complete finite energy/force labels required")
         row = rows.setdefault(frame.system,dict(frames=0,atoms=0,lengths=[],reference_radial=[],
-                                               fitted_radial=[],radial_error=[],force_norm=[]))
+                                               fitted_radial=[],radial_error=[],force_norm=[],
+                                               reference_translation=[],fitted_translation=[],residual_translation=[]))
         row["frames"] += 1
         row["atoms"] += frame.n_atoms
         row["force_norm"].extend(np.linalg.norm(frame.forces,axis=1))
+        row["reference_translation"].append(translation_components(frame.forces))
+        if index in predictions:
+            row["fitted_translation"].append(translation_components(predictions[index]))
+            row["residual_translation"].append(translation_components(predictions[index]-frame.forces))
         for carbon,fluorine,length,direction in terminal_cf(frame):
             measured = float(frame.forces[fluorine]@direction)
             row["lengths"].append(length)
@@ -88,7 +121,9 @@ def audit(path):
                              reference_outward_force_kcal_mol_A=statistics(row["reference_radial"]),
                              fitted_outward_force_kcal_mol_A=statistics(row["fitted_radial"]),
                              radial_error_kcal_mol_A=statistics(row["radial_error"]),
-                             reference_atom_force_norm_kcal_mol_A=statistics(row["force_norm"]))
+                             reference_atom_force_norm_kcal_mol_A=statistics(row["force_norm"]),
+                             force_translation={key:translation_summary(row[key+"_translation"])
+                                                for key in ("reference","fitted","residual")})
     if worst is not None:
         frame = raw[worst["source_frame"]]
         ff = F.FITTED_VALENCE.simple_ff()
@@ -109,7 +144,12 @@ def audit(path):
     train,test = F.split_systems(fitted)
     if hashlib.sha256(path.read_bytes()).hexdigest() != source_sha:
         raise ValueError("reference bytes changed during audit")
-    return dict(schema="finite_reference_cf_force_audit_v1",quantitatively_valid=False,
+    partitions = {"all_source":set(rows),"fit_train":train,"fit_held":test}
+    translation = {name:{key:translation_summary([r for system,row in rows.items() if system in systems
+                                                 for r in row[key+"_translation"]])
+                         for key in ("reference","fitted","residual")}
+                   for name,systems in partitions.items()}
+    return dict(schema="finite_reference_cf_force_audit_v2",quantitatively_valid=False,
         scope="source-file label and finite fitted-model diagnostic only; no native SCF/force-sign/unit/boundary/source admission or bulk calibration",
         force_convention="positive terminal-F force points from C toward F; labels interpreted as eV/A by the existing reader, converted to kcal/(mol A)",
         input_eV_to_kcal_mol=EV_TO_KCAL,
@@ -121,6 +161,8 @@ def audit(path):
                     fit_frames=len(fitted),fit_systems=len(admitted_systems),
                     sources=dict(sorted(Counter(f.source for f in raw).items()))),
         excluded_systems=sorted(set(rows)-admitted_systems),systems=summary,
+        force_translation=dict(partitions=translation,
+            scope="raw-label and residual orthogonal decomposition; translation component is a lower bound on unweighted force-component RMS error for a zero-net-force model, not evidence of the cause; no labels are corrected"),
         recorded_fit_train=F.ValenceDesign([f for f in fitted if f.system in train]).errors(F.VAL_FITTED_X),
         recorded_fit_held=F.ValenceDesign([f for f in fitted if f.system in test]).errors(F.VAL_FITTED_X),
         worst_pvdf_radial_error=worst)

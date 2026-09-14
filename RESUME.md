@@ -1,5 +1,19 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest diagnostic: all 566 historical frames have nonzero net force
+(0.1486-2.7510 eV/A), but translation contributes only 0.71182% of held-out
+squared force-fit error. The finite model's total force is numerically zero.
+Audit v2 decomposes raw/model/residual forces without changing any labels;
+read docs/REFERENCE_FORCE_AUDIT.md. Seven new controls plus finite-fit tests
+pass 42 in 7.55s with the actual dataset, including reference topology.
+Three native force points now pass receipt replay. The h=0.001 A derivative
+misses the declared 1e-4 eV/A gate: error 1.42945697e-4. Do not round or
+retune this into a pass. Two smaller-step points remain running/pending;
+session 44730/controller 6211, fourth child 8071 live at 23:18 PDT.
+All pinned native source/protocol owners remain unchanged. Molecular PVDF
+accepted step 27, Fmax 0.0590822 eV/A, topology intact, still unconverged.
+Full five-stage/all-target objective and GPU reservation remain unchanged.
+
 Native force-probe checkpoint: zero point completes47 SCF steps, exact
 source/receipt/unit replay passes. New radial C-F1.1566310eV/A versus
 label1.5998265; energy/force derivative still awaits four displaced points.
