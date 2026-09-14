@@ -28,6 +28,24 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 supercell-owner migration: isolated physics-vector-repeat a89b8ff
+is pushed; this C: native source remains unchanged. Supercell total/terms/
+atom/all nine lattice derivatives, pair/correction and image diagnostics
+now share the same complete model owner through declared chain/local order.
+Copied pair assembly and constant torsion are removed; valence/flux/Ewald/
+induced/field terms and actual total dipoles are carried. Expanded Windows/
+Linux controls each pass78, including592-atom saved-structure readbacks;
+final nine controls pass on both, including atom/lattice and actual
+field-energy/total-dipole derivatives at two steps. Existing eight Windows
+exact reference/stress controls pass unchanged. Read
+docs/SUPERCELL_OWNER_MIGRATION.md on that isolated branch. These are model
+controls, not material/native calibration. General independent/full-six-
+strain relaxation, stability/BZ/size/full6x6 C/S/internal response and all
+target/field/barrier/rate/loss/accurate-viewer requirements remain open.
+Native PH has printed iteration8 residual7.426e-15 and dielectric tensor,
+but final Born/completion/receipt verification remain pending; molecular
+PVDF/SVP step25 is still unconverged at the original criterion. GPU reserved.
+
 2026-09-13 chain-layout continuation: isolated physics-vector-repeat2c73693
 is pushed; this C: native source is unchanged. Immutable declared chain/local/
 element/reversal layout drives the complete owner for arbitrary homogeneous
