@@ -34,6 +34,25 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-13
 
+2026-09-13 23:47 PDT: the distinct common-y-translation control is actually
+running. Sarco definition ab502461, launch relay0d0a7699; isolated Polyfind
+c1fba2c. Session99954/controller9192/start12950992, first native
+child9193/start12951399; case starts23:47:58 and SCF steps1-4 are observed.
+All32 nuclei translate together by0 and+/-0.001/0.0005A, with unchanged
+internal geometry/cell/electronic method. The new zero input is byte-identical
+to the previous zero input. Its conjugate force is total y force, not one
+atom or a per-atom mean. CPU15/one thread/D: storage, GPU reserved.
+
+The radial and translation paths share ForceProbeCoordinate and the existing
+native execution/receipt/recovery/reduction owner. Ten controls pass10.788s;
+the full original radial result replays unchanged, including its failed gate.
+The new translation protocol/source is pinned while live. No translation
+point or calibration admission has completed yet. See sarco
+periodic_reference/trainset_translation_probe_v1/PROTOCOL.md for derivative,
+net-force, energy-span and atom-force-change gates. These concern one sampled
+y path, not complete origin/grid convergence. Other native writers, all
+target chemistries and all five research stages remain unchanged/open.
+
 2026-09-13 23:35 PDT: the five-point radial native experiment is COMPLETE;
 session 44730 exited, all five units and terminal result pass exact replay.
 Sarco 84cf6ec5 archives the compact native evidence and
