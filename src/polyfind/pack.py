@@ -398,7 +398,8 @@ class ChainValence:
     The chain the packer carries is one crystallographic repeat, and the bonds and angles
     of the infinite chain do not stop at its edges: a backbone bond joins the last atom of
     the repeat to the first atom of the *next* one, which is the same atom translated by
-    ``c`` along z.  Every term here therefore carries the image index of each of its atoms
+    the chain repeat vector. Legacy scalar ``c`` means ``c * z_hat``; explicit
+    vectors permit tilted cells. Every term carries the image index of each of its atoms
     (``0`` for the repeat itself, ``+/-1`` for a neighbouring one), and the energy depends
     on ``c`` as well as on the coordinates -- which is exactly the dependence that gives an
     axial strain something to push against.
@@ -409,17 +410,15 @@ class ChainValence:
     repeat* and adding it to a lattice energy per cell needs one factor of ``n_chains`` and
     nothing else.
 
-    **Bond stretching is inert here, and that is a property of the geometry, not of this
-    class.**  :func:`polyfind.chain.build_chain` places every atom at the polymer's own bond
-    length, so ``r - r0`` is fixed by the chemistry and the stretch block contributes a
-    constant and a zero gradient.  It is evaluated anyway, because leaving it out would make
-    the reported energy not the potential's, and because a future flexible builder would
-    need nothing changed here.
+    Stretch energy is constant along the builder's rigid-bond conformation
+    path, not over arbitrary Cartesian or affine geometries. Full coordinate
+    and repeat derivatives remain active in the latter. Fitted valence terms
+    are model quantities; this geometry extension does not calibrate them.
     """
 
     bond_i: np.ndarray  # (nb,) atom in the repeat
     bond_j: np.ndarray  # (nb,) the other atom, in image ``bond_s``
-    bond_s: np.ndarray  # (nb,) image of ``bond_j``, in units of c along z
+    bond_s: np.ndarray  # (nb,) image of ``bond_j``, in units of the chain repeat
     bond_k: np.ndarray  # (nb,) kcal/(mol A^2)
     bond_r0: np.ndarray  # (nb,) A
     ang_i: np.ndarray  # (na,)
@@ -438,34 +437,53 @@ class ChainValence:
     def n_angles(self) -> int:
         return int(self.ang_i.size)
 
-    def _bond_vectors(self, X: np.ndarray, cz: np.ndarray) -> np.ndarray:
+    def _bond_vectors(self, X: np.ndarray, repeats: np.ndarray) -> np.ndarray:
         d = X[:, self.bond_i] - X[:, self.bond_j]
-        d[..., 2] -= self.bond_s[None, :] * cz[:, None]
+        d -= self.bond_s[None, :, None] * repeats[:, None, :]
         return d
 
-    def _angle_vectors(self, X: np.ndarray, cz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def _angle_vectors(self, X: np.ndarray, repeats: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         u = X[:, self.ang_i] - X[:, self.ang_j]
         v = X[:, self.ang_k] - X[:, self.ang_j]
-        u[..., 2] += self.ang_si[None, :] * cz[:, None]
-        v[..., 2] += self.ang_sk[None, :] * cz[:, None]
+        u += self.ang_si[None, :, None] * repeats[:, None, :]
+        v += self.ang_sk[None, :, None] * repeats[:, None, :]
         return u, v
 
-    def energy(self, coords, c) -> np.ndarray:
+    def bond_lengths(self, coords, c=None, *, repeat=None) -> np.ndarray:
+        """(M,nb) bond lengths in A, including this topology's repeat images."""
+        from .periodic_geometry import repeat_rows
+
+        X = np.asarray(coords, dtype=float)
+        if X.ndim == 2:
+            X = X[None]
+        return np.linalg.norm(self._bond_vectors(X, repeat_rows(c, len(X), repeat=repeat)), axis=-1)
+
+    def angle_values(self, coords, c=None, *, repeat=None) -> np.ndarray:
+        """(M,na) angles in radians, including this topology's repeat images."""
+        from .periodic_geometry import repeat_rows
+
+        X = np.asarray(coords, dtype=float)
+        if X.ndim == 2:
+            X = X[None]
+        u, v = self._angle_vectors(X, repeat_rows(c, len(X), repeat=repeat))
+        cos = np.clip((u*v).sum(-1) / (np.linalg.norm(u, axis=-1)*np.linalg.norm(v, axis=-1)), -1., 1.)
+        return np.arccos(cos)
+
+    def energy(self, coords, c=None, *, repeat=None) -> np.ndarray:
         """Valence energy per repeat (kcal/mol), one entry per row of ``coords`` (M, n, 3)."""
         X = np.array(coords, dtype=float)
         if X.ndim == 2:
             X = X[None]
         M = X.shape[0]
-        cz = np.broadcast_to(np.asarray(c, dtype=float).ravel(), (M,))
+        from .periodic_geometry import repeat_rows
+
+        repeats = repeat_rows(c, M, repeat=repeat)
         out = np.zeros(M)
         if self.n_bonds:
-            r = np.linalg.norm(self._bond_vectors(X, cz), axis=-1)
+            r = self.bond_lengths(X, repeat=repeats)
             out += 0.5 * (self.bond_k * (r - self.bond_r0) ** 2).sum(axis=1)
         if self.n_angles:
-            u, v = self._angle_vectors(X, cz)
-            nu, nv = np.linalg.norm(u, axis=-1), np.linalg.norm(v, axis=-1)
-            cos = np.clip((u * v).sum(-1) / (nu * nv), -1.0, 1.0)
-            da = np.arccos(cos) - self.ang_t0
+            da = self.angle_values(X, repeat=repeats) - self.ang_t0
             out += 0.5 * (self.ang_kk * da * da).sum(axis=1)
         return out
 
@@ -477,23 +495,36 @@ class ChainValence:
         the centre.  ``c`` enters through the image offsets alone, so its derivative is the
         z components of those forces weighted by the image indices.
         """
+        from .periodic_geometry import repeat_rows
+
+        E, gX, g_repeat = self.energy_and_repeat_grad(coords, repeat_rows(c, 1)[0], n_atoms)
+        return E, gX, float(g_repeat[2])
+
+    def energy_and_repeat_grad(self, coords, repeat, n_atoms: int | None = None):
+        """``(E, dE/dcoords (n,3), dE/drepeat (3,))`` at general image geometry.
+
+        The same topology and valence potential serve canonical axial cells
+        and full affine strains. Repeat derivatives retain every component.
+        """
+        from .periodic_geometry import repeat_vector
+
         X = np.asarray(coords, dtype=float).reshape(1, -1, 3)
         n = X.shape[1] if n_atoms is None else int(n_atoms)
-        cz = np.asarray(c, dtype=float).reshape(1)
+        repeats = repeat_vector(repeat)[None]
         E = 0.0
         gX = np.zeros((n, 3))
-        gc = 0.0
+        g_repeat = np.zeros(3)
         if self.n_bonds:
-            d = self._bond_vectors(X, cz)[0]
+            d = self._bond_vectors(X, repeats)[0]
             r = np.linalg.norm(d, axis=-1)
             dr = r - self.bond_r0
             E += 0.5 * float((self.bond_k * dr * dr).sum())
             f = (self.bond_k * dr / r)[:, None] * d  # dE/d(separation vector)
             np.add.at(gX, self.bond_i, f)
             np.add.at(gX, self.bond_j, -f)
-            gc -= float((self.bond_s * f[:, 2]).sum())
+            g_repeat -= (self.bond_s[:, None] * f).sum(axis=0)
         if self.n_angles:
-            u, v = self._angle_vectors(X, cz)
+            u, v = self._angle_vectors(X, repeats)
             u, v = u[0], v[0]
             nu, nv = np.linalg.norm(u, axis=-1), np.linalg.norm(v, axis=-1)
             uh, vh = u / nu[:, None], v / nv[:, None]
@@ -509,8 +540,8 @@ class ChainValence:
             np.add.at(gX, self.ang_i, fi)
             np.add.at(gX, self.ang_k, fk)
             np.add.at(gX, self.ang_j, -(fi + fk))
-            gc += float((self.ang_si * fi[:, 2]).sum() + (self.ang_sk * fk[:, 2]).sum())
-        return E, gX, gc
+            g_repeat += (self.ang_si[:, None] * fi).sum(axis=0) + (self.ang_sk[:, None] * fk).sum(axis=0)
+        return E, gX, g_repeat
 
 
 def chain_valence(chain: PeriodicChain, bond_table: dict, angle_table: dict) -> ChainValence | None:

@@ -249,7 +249,7 @@ def cell_energy_and_grad(packer, params, Pn, latn) -> tuple:
     # --- electrostatics of an Ewald packer ------------------------------------------------------
     if packer._ewald is not None:
         if packer.polarizable is not None:
-            e_es, _, _, (gPe, _, gqe, _) = packer._polarize(Pn, q_cell, latn, params[6], grad=True, charge_grad=dq_on)
+            e_es, _, _, (gPe, _, gqe) = packer._polarize(Pn, q_cell, latn, params[6], grad=True, charge_grad=dq_on)
         else:
             terms = packer._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=dq_on)
             e_es, gPe, gqe = terms.total, terms.grad_coords, terms.grad_charges
@@ -322,13 +322,11 @@ def force_terms(packer, params, Pn, latn) -> dict:
         gb[sl] = bonds_only.energy_and_grad(X, cz, n_atoms=n)[1] @ R[s].T
         ga[sl] = angles_only.energy_and_grad(X, cz, n_atoms=n)[1] @ R[s].T
         if val.n_bonds:
-            r = np.linalg.norm(val._bond_vectors(X[None], np.array([cz]))[0], axis=-1)
+            r = val.bond_lengths(X, cz)[0]
             out["bond_strain"] = max(out["bond_strain"], float(np.abs(r - val.bond_r0).max()))
         if val.n_angles:
-            u, v = val._angle_vectors(X[None], np.array([cz]))
-            u, v = u[0], v[0]
-            cos = np.clip((u * v).sum(-1) / (np.linalg.norm(u, axis=-1) * np.linalg.norm(v, axis=-1)), -1.0, 1.0)
-            out["angle_strain"] = max(out["angle_strain"], float(np.rad2deg(np.abs(np.arccos(cos) - val.ang_t0)).max()))
+            angles = val.angle_values(X, cz)[0]
+            out["angle_strain"] = max(out["angle_strain"], float(np.rad2deg(np.abs(angles - val.ang_t0)).max()))
     out["bonds"] = float(np.abs(gb).max())
     out["angles"] = float(np.abs(ga).max())
     out["other"] = float(np.abs(g_all - gb - ga).max())
@@ -357,7 +355,7 @@ def packer_with_built_bond_lengths(packer):
     if val is None or not val.n_bonds:
         return packer
     X = np.asarray(packer.chain.coords, dtype=float)
-    r = np.linalg.norm(val._bond_vectors(X[None], np.array([float(packer.chain.c)]))[0], axis=-1)
+    r = val.bond_lengths(X, float(packer.chain.c))[0]
     pk = copy.copy(packer)
     pk._valence = _replace(val, bond_r0=r.copy())
     pk.update_chain(packer.chain)

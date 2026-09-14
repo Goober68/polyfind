@@ -70,7 +70,9 @@ def test_affine_cell_preserves_fractional_nuclei_for_all_six_strains():
 
 def test_repeat_batches_do_not_confuse_three_scalar_rows_with_one_vector():
     np.testing.assert_array_equal(repeat_rows([2., 3., 4.], 3)[:, 2], [2., 3., 4.])
-    np.testing.assert_array_equal(repeat_rows(0., 3, repeat=[2., 3., 4.]), [[2., 3., 4.]] * 3)
+    np.testing.assert_array_equal(repeat_rows(None, 3, repeat=[2., 3., 4.]), [[2., 3., 4.]] * 3)
+    with pytest.raises(ValueError):
+        repeat_rows(0., 3, repeat=[2., 3., 4.])
     for bad in (True, [1., 2.], [1., 2., np.nan], [1j, 0, 2]):
         with pytest.raises(ValueError):
             repeat_vector(bad)

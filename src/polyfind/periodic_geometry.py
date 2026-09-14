@@ -62,11 +62,13 @@ def repeat_gradient(c, gradient):
 def repeat_rows(c, rows: int, *, repeat=None) -> np.ndarray:
     """Batched translations, with unambiguous legacy scalar-row semantics.
 
-    ``c`` is a scalar or (M,) axial repeats; ``repeat`` explicitly supplies
+    ``c`` is a scalar or (M,) axial repeats (None means zero); ``repeat`` exclusively supplies
     (3,) or (M,3) translations instead. A three-row scalar batch is never
     mistaken for a Cartesian vector.
     """
-    value = np.asarray(c if repeat is None else repeat)
+    if repeat is not None and c is not None:
+        raise ValueError("specify axial c or Cartesian repeat, not both")
+    value = np.asarray((0.0 if c is None else c) if repeat is None else repeat)
     if value.dtype.kind not in "iuf" or not np.isfinite(value).all():
         raise ValueError("repeat must be finite and real")
     if repeat is not None:

@@ -1,5 +1,11 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Further evening continuation: `docs/AFFINE_VALENCE_PROGRESS.md` records
+full vector-repeat bond/angle gradients and metric ownership, corrected
+phonon consumers,223 Windows/42 focused Linux passing controls and the
+remaining shared full-cell energy/torsion/relaxation work. Historical
+six-column artifacts still belong to `cb17be5`, not the newer source.
+
 2026-09-13 evening extension: this is the isolated `physics-vector-repeat`
 worktree on D: (`D:\sarco-work\polyfind-vector-repeat`), based on `a05a00c`.
 Read `deliverables/clamped_ion_vector_repeat_v2/README.md` for general

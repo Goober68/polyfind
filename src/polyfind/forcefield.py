@@ -467,7 +467,7 @@ class FluxTopology:
             return P
         return at(self.bi, self.bsi), at(self.bj, self.bsj), at(self.ek, self.eks)
 
-    def increments(self, coords, c=0.0, *, repeat=None) -> np.ndarray:
+    def increments(self, coords, c=None, *, repeat=None) -> np.ndarray:
         """``delta_ij`` for every oriented bond, one row per row of ``coords`` (M, nb)."""
         X = np.asarray(coords, dtype=float)
         if X.ndim == 2:
@@ -517,7 +517,7 @@ class FluxTopology:
             q[nb] -= delta
         return q, dq, dc
 
-    def charges(self, coords, c=0.0, *, repeat=None) -> np.ndarray:
+    def charges(self, coords, c=None, *, repeat=None) -> np.ndarray:
         """Fluxed charges (M,n); explicit ``repeat`` translations may point anywhere."""
         X = np.asarray(coords, dtype=float)
         if X.ndim == 2:
