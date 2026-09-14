@@ -1,5 +1,19 @@
 # Reference data request: bulk dipole response to strain
 
+2026-09-14 02:34 PDT: Sarco3af06c96 archives the complete QS-only control.
+All five native units and the terminal reduction verify; all six numerical
+limits still fail. Net-force maximum0.725961403 eV/A and derivative errors
+0.001525600/0.000435717 eV/A persist. Neither tested SCF-only nor QS-only
+precision change remedies the defect. No source-force recentering or refit.
+CFE then starts from separately published readye69274fd, shared code472ea450,
+session49815/process23124/start13938253 on CPU15/one thread. Native5mer step2
+projected force maximum0.000469764 eV/A is not converged; 7/9 pending.
+Read Sarco CFE LAUNCH.md and QS RESULTS.md; all five stages remain open.
+The new screen-phonon updateaad1362 was preserved in merge27fb52d. We have
+not yet independently reviewed/qualified its results, and the native-source
+merge hold remains unchanged. Active reference relay is now on D:, while
+the original C: checkout stays untouched by the incoming mathematical code.
+
 2026-09-14 update, Sarco e69274fd: CFE-terpolymer source-motif5/7/9 now has
 an actual verified READY native-candidate campaign, not a run or result.
 Shared definition472ea450 uses the same cold GFN2 calculator, optimizer,
