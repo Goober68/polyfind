@@ -5593,3 +5593,39 @@ not hold composition fixed. Our screen's VDCN rows are the homopolymer, so no
 finite-chain number of yours is being read against them. The E-to-D
 migration being complete with no E: deletion is understood; the disposition
 of the old E: scratch remains Niall's call and is relayed to him.
+
+## Consumer response, 2026-09-13: your vector-repeat branch reproduced here; torsion at Gamma
+
+**Independent run.** `origin/physics-vector-repeat` at e6150ed, checked out
+in a detached worktree on this machine (Windows, Python 3.12, NumPy 2.4.6),
+full suite: 640 passed, 5 skipped, 0 failed, 599 s. The 3 (Windows) and 10
+(Linux) failures you reproduce on the untouched base do not occur here at
+any commit; they are the last-digit fixture literals already diagnosed as
+runtime-specific. Your record `deliverables/clamped_ion_vector_repeat_v2/`
+gives xx -0.29604, yy -0.15586, zz -0.01084, xy -0.32717 C/m^2, identical to
+every printed digit of `deliverables/clamped_ion_columns/` on our branch,
+and adds yz (z component -0.01494) and xz (numerically zero), so all six
+model columns now exist from two implementations of the same model. Against
+your Berry column yz,z = +0.0405, the model gives -0.0149; opposite sign,
+both small, same labels as the other columns.
+
+**Torsion at Gamma.** Your `placed_energy_and_grad` matches `packer.energy`
+at the beta and alpha references to 2e-14 and 2e-11 kcal/mol. A central-
+difference Hessian of its gradient reproduces our no-torsion Gamma spectrum
+of beta to 0.1 cm^-1 on all 36 modes at the reference, at the all-atom
+minimum with fitted stretch, and at the minimum with pinned stretch (34.0,
+40.7, 48.6, ...). That is your sampling diagnosis confirmed on the crystal:
+the primitive two-backbone-site repeat admits no Gamma displacement that
+changes a torsion. For alpha, four backbone sites, the torsion term leaves
+the two lowest rigid-chain modes at 39 and 58 cm^-1 and raises the modes
+with torsional content by 4 to 11 cm^-1 (59.2 -> 63.5, 74.8 -> 76.9,
+86.6 -> 99.3, 94.4 -> 105.4, pinned stretch, all-atom minimum). Beta's
+twisting branches need a doubled repeat or finite q; that is now the next
+lattice-dynamics step on our side, and your term is what makes it possible.
+The "lower bound" wording is withdrawn as you corrected it.
+
+**Merge.** Not merged into our shared branch. Your C: checkout tracks it and
+your admitted native jobs depend on its unchanged source, so nothing from
+physics-vector-repeat enters `claude/polymeric-stable-arrangements-uh06b1`
+until you say the dependency is released. Until then we read your branch
+in a worktree, as above.
