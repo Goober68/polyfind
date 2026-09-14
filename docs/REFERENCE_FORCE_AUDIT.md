@@ -7,6 +7,27 @@ This continuation measures the actual historical training labels, reproduces
 the recorded finite fit, and starts an independent native force check.
 All five research stages remain open; GPU stays reserved.
 
+## CFE finite inputs and tighter-SCF zero checkpoint
+
+Sarco980d2c71 publishes systems_boundary/cfe_ter_source_motif_v1 with verified
+5/7/9-unit inputs,32/44/56 atoms. Source frame38 is the first conf-labelled
+CFE-terpolymer frame, selected without energy/force ranking. All22 source
+heavy atoms and stereocentres4/10/13 are preserved; actual fixed-core UFF
+host/H initialization returns0 for the extensions. Shared preparation66fbaaeb
+has34 passing tests, and existing CNEPO receipts replay unchanged. Read the
+publication's PROTOCOL.md and VERIFICATION.md before using the coordinates.
+They are prepared-only finite inputs, not field response or force references.
+VDF/TrFE/CFE counts2/2/1,4/2/1,6/2/1 change composition as well as end distance.
+
+The SCF1e-10 zero point passes full native replay at00:53:08PDT. Relative to
+SCF1e-8, energy changes5.45697e-12 eV and maximum atomic force-vector change
+is4.61987e-7 eV/A. Net force remains0.7196520756 versus0.7196520837 eV/A,
+with identical actual ordinary grids. Tightening SCF alone does not resolve
+the defect at this geometry. Displaced points remain required; session78188/
+controller12087 continues with minus_001 child13855/start13342504. No refit,
+force recentering or calibration admission. See Sarco
+trainset_translation_y_scf_tight_probe_v1/MILESTONE_ZERO.md.
+
 ## Terminal translation failure and isolated SCF control, 2026-09-14
 
 Sarco27efd41b archives all five native units, inputs/outputs and exact

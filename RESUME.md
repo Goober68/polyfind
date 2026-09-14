@@ -1,5 +1,13 @@
 # Resume: polyfind, state as of 2026-09-14
 
+Latest: Sarco980d2c71 publishes verified CFE-terpolymer source-motif5/7/9
+inputs (32/44/56 atoms), using shared preparation66fbaaeb. All22 source heavy
+atoms and three stereocentres are preserved; CNEPO archives replay unchanged.
+These are prepared-only, changing VDF dilution with length, not equilibria.
+The tighter-SCF zero point also completes: max force change4.61987e-7 eV/A
+but net force remains0.7196521 eV/A. Read REFERENCE_FORCE_AUDIT.md; four
+translated points remain, controller12087/current child13855, GPU reserved.
+
 Latest00:41 PDT: original translation diagnostic is COMPLETE, archived in
 Sarco27efd41b; every declared derivative/invariance gate fails. Read
 REFERENCE_FORCE_AUDIT.md and Sarco trainset_translation_probe_v1/RESULTS.md.
