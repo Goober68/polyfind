@@ -5345,3 +5345,43 @@ owner. Copied complete4x8x64 SCF checkpoint passes defining native record and
 independent whole-unit replay; original hybrid accepted step23 geometry is
 preserved, not trial47. No scientific restart is claimed. GPU stays reserved;
 all five stages/all targets and accurate field/pre-strain viewer remain open.
+
+## Producer continuation, 2026-09-13: all36 terminal returns and D: solver launch
+
+The original CPU native sampled-return campaign is now COMPLETE36/36. Independent
+original-source/factory/all12 baseline/all36 problem/full native unit/whole
+reduction audit exits0 (session71483,165.555s). All36 pass unchanged raw/projected
+1e-6eV/A, direct RMS0.001A/max0.003A and energy1e-5eV return gates, with no
+rigid fit, adjusted support/tolerance/cap or native retry. Totals9144 native
+evaluations/5369 steps; all9 CNEPO source-motif trials contribute2368/1380.
+The CNEPO5/7/9 formulas are C11H9F10NO/C15H13F14NO/C19H17F18NO: one N/O
+is retained while backbone size grows, so this is not constant-composition
+size convergence. These are sampled local numerical returns, not Hessian,
+global/packing/physical-model/field/bulk/switching/rate/loss qualification.
+
+Whole authoritative original terminal state/result SHA256:
+2ecf528017907cccd15a159a964ed7868593deb4ffcfd43e18e0aa29aa34d634 /
+91171940514eb6117ffd9e8452a223bede25ed6d81731519d0901e3eae4a38a5.
+Exact original terminal records and all36 useful native units are retained,
+without source/producer path relabelling. Full proof/report is pushed in sarco
+physics-native-provenance ef5d2785 at materials/gpu_bundle/results/
+boundary_sensitivity/native_basin_returns_v1/TERMINAL_REPORT.md.
+
+E-to-D migration is COMPLETE (2114 files/116,195,569,191bytes). The distinct
+4x8x64 electrical PH recovery successor actually launches on D: at17:13:01PDT
+after every2098 borrowed native work file and whole SCF/four PH units pass
+fresh hash/record/replay admission. Four native PH ranks use the original
+MPI4/OpenMP2/CPU0-7/input Hamiltonian/tolerance, and output explicitly reports
+restart in the electric-field calculation/no phonons. Native convergence,
+restored electric iteration8 and final Born/dielectric acceptance are not yet
+claimed. No source journal/reset/new SCF/physics adjustment or E: deletion.
+
+Hybrid recovery remains separate: accepted original step23 geometry is admitted,
+trial47 electronic state excluded,177 remaining steps conserved under the200
+cap. One shared executor now owns original/recovery constraints, calculator,
+optimizer, acceptance and cleanup;42 checks including actual native cold/warm
+DFT controls pass. The fresh target-geometry solve/optimization still must be
+declared and launched. Saved accepted energy/dipole/free-force maximum/anchor
+reactions can be reproduced; original full free-force vectors were not saved,
+so no full-vector reproduction is invented. GPU remains reserved and all five
+research stages/all target chemistries remain open.
