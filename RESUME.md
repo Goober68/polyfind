@@ -1,5 +1,16 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Native force-probe checkpoint: zero point completes47 SCF steps, exact
+source/receipt/unit replay passes. New radial C-F1.1566310eV/A versus
+label1.5998265; energy/force derivative still awaits four displaced points.
+Native net force0.7196521eV/A and label1.0548349 introduce an additional
+common-translation/origin-consistency concern. Do not correct the raw force
+sum or fit against it as calibrated. Read REFERENCE_FORCE_AUDIT.md's first
+checkpoint and sarco trainset_force_probe_v1/MILESTONE_ZERO.md. Session44730
+is live, minus0.001A child6218/start12665829; current pinned307c74e1 source
+and protocol stay unchanged. Translation/grid investigation follows the
+declared five points. Full goal and GPU reservation remain intact.
+
 Latest reference audit: `docs/REFERENCE_FORCE_AUDIT.md` directly measures the
 566-frame labels and reproduces the recorded467-frame finite fit. Every
 sampled PVDF C-F label points outward (mean29.5457kcal/mol/A at1.361905A);

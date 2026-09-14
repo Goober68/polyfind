@@ -7,6 +7,26 @@ This continuation measures the actual historical training labels, reproduces
 the recorded finite fit, and starts an independent native force check.
 All five research stages remain open; GPU stays reserved.
 
+## First native checkpoint, 23:00 PDT
+
+The zero point has now completed47 native SCF steps with clean exit and
+passed the defining whole-input/output/receipt/unit replay. It gives outward
+C-F1.1566310100eV/A versus source1.5998264914, with energy difference+0.0441423eV.
+The source and new native forces therefore share the outward tendency, but
+neither is admitted as accurate by this observation. The four displaced
+points are still running/pending; their energy/force derivative gate is open.
+
+Total atomic force is0.7196520837eV/A in the new point and1.0548348674 in the
+stored label. The raw vectors are preserved. This introduces a separate
+common-translation consistency concern; SCF convergence and a single-atom
+energy/force check alone cannot establish origin-independent reference forces.
+Native grid counts are243^3,144^3,81^3,48^3. Grid-origin error is a hypothesis
+to test after the declared five points, not an established cause or a reason
+to tune the current run. Full evidence is sarco's
+`periodic_reference/trainset_force_probe_v1/MILESTONE_ZERO.md`.
+First unit SHA2565c261e786b9717ef88310ce520ceb587824a112048ec56962984fc0cdab9fc80.
+Session44730 remains live, now minus0.001A native child6218/start12665829.
+
 ## Measured source data
 
 `examples/reference_force_audit.py` reads the existing 566-frame dataset;
