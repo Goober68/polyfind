@@ -1,5 +1,20 @@
 # Resume: polyfind, state as of 2026-09-14
 
+Sarco e69274fd publishes the actual READY CFE source-motif5/7/9 reference
+campaign, definition472ea450. All three are pending, no native calculation,
+units or result. One shared input/reference path serves CNEPO and CFE;
+explicit archive locations bind the original factory from D: without
+rewriting scientific identities. The CFE core is released after preparation;
+terminal clamps and collective azimuth remain. Same GFN2 accuracy0.001,
+500-step cap and both fresh raw/projected1e-6eV/A force gates.
+Read Sarco cfe_reference_candidates_v1/PREPARATION.md. READY SHA2adfd8d6...
+Input admission96d54a10... differs from original factoryc65daac9....
+22 shared/chemistry/basin tests and12 declaration/CLI tests pass; archive/
+curvature regression25 pass/two opt-in skips. Exact original CNEPO input and
+whole three-candidate reduction are preserved. Its historical native writer/
+runtime relocation remains separate. CFE execution awaits the live final QS
+point's CPU slot; GPU reserved. No physical model or field/strain admission.
+
 Sarco c3c802dd publishes the exact neutral CNEPO5/7/9 dipole-axis analysis
 (code c62a6693). Transverse magnitudes are 0.935212/0.698476/0.467867 e A;
 signed axial components -0.433061/-0.531185/-0.680422 e A. Axial swiveling

@@ -9,6 +9,15 @@ All five research stages remain open; GPU stays reserved.
 
 ## CFE finite inputs and tighter-SCF zero checkpoint
 
+Update Sarco e69274fd: CFE5/7/9 campaign is prepared READY through shared
+definition472ea450, not executed. Real input/factory/plan binding passes with
+new native calls forbidden. Shared input/read/reduction ownership replaces
+CNEPO-specific duplication, preserving original CNEPO input identity and
+byte-identical terminal reduction; complete historical native writer/runtime
+relocation is still not claimed. Read cfe_reference_candidates_v1/PREPARATION.md.
+This expands chemistry coverage but does not resolve the electronic force
+diagnostic, qualify GFN2 or supply bulk field/pre-strain response. No refit.
+
 Update 2026-09-14, Sarco c3c802dd: first two QS-only units independently
 replay against original units. Maximum matching atomic-force change is
 5.943289949936275e-7 eV/A at both zero and minus_001; net-force norms remain
