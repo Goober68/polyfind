@@ -34,6 +34,29 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-13
 
+2026-09-13 historical-label audit: isolated physics-vector-repeat3fce039
+reproduces the recorded467-frame finite fit from the actual566-frame source
+without refitting. Held energy/force RMS1.3593459/5.2312495 agrees with the
+old report. Every PVDF C-F label points outward (mean29.5457033kcal/mol/A
+at1.3619047A); the finite model reproduces that tendency (mean26.9305824).
+All16 CNEPO frames are excluded by the original structural filter. All566
+headers declare18A cubic/T T T vacuum boxes, while the fitting reader drops
+cell/pbc metadata. These observations do not establish native label method,
+force sign/unit conversion, SCF convergence or periodic packing suitability.
+Read docs/REFERENCE_FORCE_AUDIT.md on the isolated branch.
+
+Sarco physics-native-provenance307c74e1 launches a distinct five-point native
+PBE-D3BJ force/energy check on exact source frame13/C9/F10,32atoms:500/60Ry,
+DZVP-MOLOPT-SR-GTH, full complex1x1x1, zero field, held18A cell, F radial
++/-0.001/0.0005A. It is an independent protocol, not a reproduction of the
+unavailable original labelling inputs. A1e-4eV/A two-step energy/force gate
+is declared before execution. CPU15/one thread/D:; session44730 is live,
+first native SCF iterations observed, no completed native comparison yet.
+Shared source/receipt/unit/lifecycle owners are reused. Four preparation
+controls and three finite-fit derivative controls pass. No calibration
+parameters, model conversion factor or physics criteria changed. C: native
+source stays unchanged; GPU remains reserved; all five stages stay open.
+
 2026-09-13 C-F force diagnosis: isolated physics-vector-repeat19cd208 is
 pushed; C: native sources unchanged. Read docs/CF_FORCE_BALANCE.md on that
 branch. The rejected1.5366309125A C-F stationary radius is reproduced with
