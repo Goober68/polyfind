@@ -1,5 +1,23 @@
 # Reference data request: bulk dipole response to strain
 
+2026-09-14 update, Sarco c3c802dd: exact archived neutral CNEPO5/7/9 dipoles
+are projected onto the actual terminal-clamp axes. Axial components are
+-0.433061/-0.531185/-0.680422 e A; transverse magnitudes are
+0.935212/0.698476/0.467867 e A. Rigid axial rotation preserves the axial
+component; the archived held-azimuth boundary prohibits that rotation.
+These are not field-induced dipole changes or a bulk strain-response tensor.
+Actual replay is tested with new native force calls forbidden; numerical
+geometry/receipt evidence is not independent physical calibration.
+See Sarco results/boundary_sensitivity/cnepo_dipole_axis_v1/REPORT.md.
+
+The first two QS-only control units also replay independently against the
+originals: atomic-force differences stay below 5.944e-7 eV/A and net-force
+norms remain 0.719652/0.725961 eV/A. Three points remain, third confirmed
+kernel-live as child21418/controller19778. Full derivatives/terminal gates
+remain pending. No force recentering, refit or material admission follows.
+GPU remains reserved; shared CFE launch/historical receipt relocation is
+still pending, and all five research stages remain open.
+
 2026-09-14 01:45 PDT: Sarcob13e3276 archives the complete five-point SCF
 control. All numerical limits still fail; tightening SCF100x changes forces
 by at most4.63481e-7 eV/A and does not fix this frame's force inconsistency.
