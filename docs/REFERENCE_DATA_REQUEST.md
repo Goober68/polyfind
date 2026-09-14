@@ -28,6 +28,27 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 later: Sarco original-C CNEPO source-motif curvature replay passes
+all nine complete matrices through source/candidate/native force/provider/writer/
+reducer and whole reduction owners (session49933 exit0). State/result/source
+admission exactly match D:. Finest internal minima5/7/9 are0.0026195/
+0.000864305/0.000589436eV/A2, all sampled_numerically_positive; sensitivity
+scales are0.000583672/0.000417178/0.000370064eV/A2, not rigorous error bounds.
+Two-terminal vacuum GFN2 and changing motif dilution are not bulk calibration,
+field switching or crystalline stiffness. Report: Sarco physics-native-provenance
+branch, results/boundary_sensitivity/candidate_curvature_v1/cnepo/REPLAY_2026_09_13.md
+under materials/gpu_bundle, commitb4c587da.
+
+The paired molecular recovery v1 subsequently stops at its first observation:
+runtime admission rejects two late PySCF gradient-library mappings, not a
+molecular-convergence failure. Session14570 exits1; no accepted geometry units.
+Failed epoch is absent and only scoped scratch is pruned by the terminal owner.
+Independent native water control reproduces253->255 and predeclared gradient
+registration verifies255->255. Distinct successor is still pending; old v1 is
+not retried. Full diagnosis/terminal declaration is pushed as Sarcoe02a27f3,
+materials/gpu_bundle/results/dft_field/geometry_recovery_v1/FAILURE_DIAGNOSIS.md.
+Electrical response remains live; no new bulk charge-flux data or Polyfind refit.
+
 2026-09-13: Sarco's D: molecular recovery is actually live in PVDF SVP,
 preserving the original accepted23+177 budget and own SVP/TZVP dependencies.
 The explicit downstream whole-unit handoff now delegates accepted vectors,
