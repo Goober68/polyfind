@@ -34,6 +34,26 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-13
 
+2026-09-13 23:29 PDT: sarco c9632b4c records a force-curvature diagnostic
+from four replay-verified native points; final plus0.0005 remains live.
+The h=0.001 point-force gate still fails unchanged, but the Simpson mean of
+the native forces at -h, 0, +h is 1.1567619370507802 eV/A, only
+0.000012018648683609356 from the independent energy-derived interval force.
+Estimated leading curvature accounts for 91.592% of the initial finite-step
+error. This supports a truncation contribution, not a new pass or proof of
+SCF accuracy; the final smaller-step pair is needed next. No raw force is
+recentered and no model parameter changes. The frozen-coordinate stiffness
+is not qualified as a physical C-F force constant.
+
+A CP2K developer's separate calcite diagnosis identifies XC-grid integration
+as a candidate control for a force-sum defect, not proof of PVDF's cause:
+[developer reply](https://lists.cp2k.org/archives/cp2k-user/2026-May/022323.html).
+Keep coordinate-step, SCF/integration and rigid-translation/grid tests
+separate. Do not copy the calcite recipe or modify any live pinned writer.
+Full evidence is sarco materials/gpu_bundle/PHYSICS_RESEARCH.md. All-target
+calibration, accurate field/pre-strain coordinates and all five stages remain
+open; GPU remains reserved. This relay changes documentation only.
+
 2026-09-13 23:18 PDT: isolated physics-vector-repeat 4d6c1d1 and sarco
 physics-native-provenance 585db5fd record the whole-dataset translation
 decomposition and first native central-derivative comparison. All 566 frames
