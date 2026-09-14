@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 from dataclasses import dataclass
+from itertools import islice
 
 
 @dataclass(frozen=True, eq=False)
@@ -38,6 +39,37 @@ class PlacedCell:
         if F.shape != (3, 3) or F.dtype.kind not in "iuf" or not np.isfinite(F).all():
             raise ValueError("deformation must be a finite real (3,3) matrix")
         return PlacedCell(self.coords @ F, self.lattice @ F)
+
+    def pair_image_chunks(self, cutoff, chunk_elems=60000):
+        """Yield full pair separations and effective lattice integers (I,N,N,3).
+
+        A nearest fractional representative bounds each component by 1/2.
+        Reciprocal-row widths bound every image that can enter the cutoff,
+        including triclinic cells and atoms outside the stored primary cell.
+        Effective integers, not the representative grid alone, own dD/dH.
+        """
+        cutoff = np.asarray(cutoff)
+        if cutoff.shape != () or cutoff.dtype.kind not in "iuf" or not np.isfinite(cutoff) or cutoff <= 0:
+            raise ValueError("cutoff must be a positive finite scalar")
+        if isinstance(chunk_elems, bool) or not isinstance(chunk_elems, (int, np.integer)) or chunk_elems <= 0:
+            raise ValueError("chunk_elems must be a positive integer")
+        inverse = np.linalg.inv(self.lattice)
+        fractional = self.coords @ inverse
+        differences = fractional[:, None]-fractional[None, :]
+        nearest = np.round(differences)
+        base = (differences-nearest) @ self.lattice
+        bounds = np.ceil(cutoff*np.linalg.norm(inverse, axis=0)+.5)
+        if not np.isfinite(bounds).all() or np.any(bounds >= np.iinfo(np.int64).max):
+            raise ValueError("cutoff image bounds are not finite representable integers")
+        bounds = bounds.astype(np.int64)
+        axes = [range(-int(b),int(b)+1) for b in bounds]
+        grid = ((i,j,k) for i in axes[0] for j in axes[1] for k in axes[2])
+        step = max(1, int(chunk_elems)//len(self.coords)**2)
+        while True:
+            integers = np.asarray(list(islice(grid,step)))
+            if not len(integers):
+                break
+            yield base[None]+(integers@self.lattice)[:,None,None,:], integers[:,None,None,:]-nearest[None]
 
 
 def repeat_vector(c) -> np.ndarray:

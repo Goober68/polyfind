@@ -115,19 +115,7 @@ def _charge_tables(packer, qa: np.ndarray, qb: np.ndarray) -> tuple:
     need not be one repeat's tiled: ``qa`` and ``qb`` are whole multiples of the repeat (the
     Lennard-Jones blocks are per element and tile).  Under Ewald ``qq`` is zero, as there.
     """
-    rc = packer.rc
-    qq = np.outer(qa, qb) * COULOMB / packer.eps_r
-    if packer._ewald is not None:
-        qq = np.zeros_like(qq)
-    ta, tb = qa.shape[0] // packer.n, qb.shape[0] // packer.n
-    shift = np.tile(packer._lj_shift_np, (ta, tb))
-    qq_f = qq * packer.dsf_force
-    const = -shift - qq * (packer.dsf_shift + packer.dsf_force * rc)
-    if packer._lj_f_np is not None:
-        f = np.tile(packer._lj_f_np, (ta, tb))
-        qq_f = qq_f + f
-        const = const - f * rc
-    return qq, qq_f, const
+    return packer._pair_charge_tables(qa,qb)
 
 
 def _pair_and_dv(packer, r2, A, B, qq, qqf, const) -> tuple:

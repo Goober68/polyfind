@@ -1,5 +1,11 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest full-energy continuation: `docs/PLACED_ENERGY_PROGRESS.md` records
+the complete independent placed-cell model owner, all atom/nine lattice
+derivatives, actual periodic torsion, general triclinic image geometry and
+one pair-table construction. Canonical refinement/phonon consumer migration
+is still pending; no new material result or calibrated dynamics is claimed.
+
 Latest isolated continuation: `docs/CARTESIAN_TORSION_PROGRESS.md` records
 the shared Fourier/dihedral owner, periodic Cartesian/repeat derivatives,
 four-site trans stiffness and the two-site primitive-Gamma sampling limit.

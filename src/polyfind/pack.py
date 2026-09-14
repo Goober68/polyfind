@@ -905,8 +905,28 @@ class CrystalPacker:
             chain, self.valence.bond_table(), self.valence.angle_table())
         # Charge flux likewise: the topology is resolved once, the charges are recomputed.
         self._flux = chain_flux(chain, self.charge_flux)
+        self._torsion = chain_torsion(chain, self.torsion)
         if self._flux is not None:
             self._check_flux_base(chain)
+
+    def _pair_charge_tables(self, qa, qb):
+        """One pair-table owner for repeat, full-cell and batched charges."""
+        qa,qb = np.asarray(qa,dtype=float),np.asarray(qb,dtype=float)
+        n = self._lj_shift_np.shape[0]
+        if qa.ndim < 1 or qb.ndim < 1 or qa.shape[-1] % n or qb.shape[-1] % n:
+            raise ValueError("pair charge rows must be whole multiples of the repeat")
+        qq = qa[..., :,None]*qb[...,None,:]*COULOMB/self.eps_r
+        if self._ewald is not None:
+            qq = np.zeros_like(qq)
+        tile = (qa.shape[-1]//n,qb.shape[-1]//n)
+        shift = np.tile(self._lj_shift_np,tile)
+        qqf = qq*self.dsf_force
+        const = -shift-qq*(self.dsf_shift+self.dsf_force*self.rc)
+        if self._lj_f_np is not None:
+            f = np.tile(self._lj_f_np,tile)
+            qqf = qqf+f
+            const = const-f*self.rc
+        return qq,qqf,const
 
     def _set_charge_tables(self, q) -> None:
         """(Re)build every charge-dependent pair table from the repeat's charges ``q`` (n,).
@@ -915,20 +935,8 @@ class CrystalPacker:
         only thing that happens without charge flux, so the tables are bit-for-bit what they
         always were -- and again from :meth:`update_chain` whenever the flux has moved them.
         """
-        xp, dt, rc = self.xp, self._dt, self.rc
-        qq = np.outer(q, q) * COULOMB / self.eps_r
-        if self._ewald is not None:
-            # Under Ewald the pair kernel carries the Lennard-Jones term and nothing else:
-            # every electrostatic contribution, intra-chain images included, comes from
-            # :mod:`polyfind.ewald`, so zeroing ``qq`` here is what stops it being counted
-            # twice.  ``self._q_cell`` below still carries the real charges, because the
-            # dipole, the field term and the Ewald sum itself all need them.
-            qq = np.zeros_like(qq)
-        qq_f = qq * self.dsf_force
-        const = -self._lj_shift_np - qq * (self.dsf_shift + self.dsf_force * rc)
-        if self._lj_f_np is not None:
-            qq_f = qq_f + self._lj_f_np
-            const = const - self._lj_f_np * rc
+        xp, dt = self.xp, self._dt
+        qq,qq_f,const = self._pair_charge_tables(q,q)
         tile = lambda Z: np.tile(Z, (self.n_chains, self.n_chains))  # noqa: E731
         self._qq, self._qqf = xp.asarray(tile(qq), dtype=dt), xp.asarray(tile(qq_f), dtype=dt)
         self._const = xp.asarray(tile(const), dtype=dt)
@@ -947,20 +955,11 @@ class CrystalPacker:
         :meth:`_pair_energy` is already elementwise.  ``cell=True`` tiles the block up to
         the whole cell, as :meth:`_set_charge_tables` does for the fixed case.
         """
-        xp, dt, rc = self.xp, self._dt, self.rc
+        xp, dt = self.xp, self._dt
         q = np.asarray(q, dtype=float)
-        qq = q[:, :, None] * q[:, None, :] * COULOMB / self.eps_r
-        if self._ewald is not None:
-            qq = np.zeros_like(qq)  # see :meth:`_set_charge_tables`
         if cell:
-            qq = np.tile(qq, (1, self.n_chains, self.n_chains))
-        qq_f = qq * self.dsf_force
-        shift = self._lj_shift_np if not cell else np.tile(self._lj_shift_np, (self.n_chains, self.n_chains))
-        const = -shift[None] - qq * (self.dsf_shift + self.dsf_force * rc)
-        if self._lj_f_np is not None:
-            f = self._lj_f_np if not cell else np.tile(self._lj_f_np, (self.n_chains, self.n_chains))
-            qq_f = qq_f + f[None]
-            const = const - f[None] * rc
+            q = np.tile(q,(1,self.n_chains))
+        qq,qq_f,const = self._pair_charge_tables(q,q)
         to = lambda Z: xp.asarray(Z[:, None], dtype=dt)  # noqa: E731 -- the broadcast image axis
         return to(qq), to(qq_f), to(const)
 
@@ -1264,13 +1263,8 @@ class CrystalPacker:
                 gq[sl] += exq
         return e_es, p, E0, (gP, glat, gq)
 
-    def placed_charges(self, coords, lattice, flip: float = 0.0) -> np.ndarray:
-        """Charge flux at arbitrary placed nuclei, including tilted repeat images.
-
-        Atom and image indices belong to the chain topology. Chain reversal
-        reverses its image translation, not the Cartesian coordinate frame.
-        No setting-angle/offset reconstruction or canonical-cell fit is used.
-        """
+    def _placed_charge_state(self, coords, lattice, flip):
+        """Placed-cell validation and one charge/derivative path for all consumers."""
         from .periodic_geometry import PlacedCell
 
         cell = PlacedCell(coords, lattice)
@@ -1279,12 +1273,99 @@ class CrystalPacker:
         if not np.isfinite(flip) or flip not in (0.0, 1.0):
             raise ValueError("chain reversal must be exactly 0 or 1")
         q = np.array(self._q_cell, dtype=float)
-        if self._flux is not None:
-            for s in range(self.n_chains):
-                sl = slice(s * self.n, (s + 1) * self.n)
-                repeat = cell.lattice[2] * (-1.0 if s == 1 and flip == 1.0 else 1.0)
-                q[sl] = self._flux.charges(cell.coords[sl], repeat=repeat)[0]
-        return q
+        states = []
+        for s in range(self.n_chains):
+            sl = slice(s*self.n,(s+1)*self.n)
+            sign = -1.0 if s == 1 and flip == 1.0 else 1.0
+            state = None if self._flux is None else self._flux.charges_and_repeat_grad(cell.coords[sl], sign*cell.lattice[2])
+            if state is not None:
+                q[sl] = state[0]
+            states.append((sl,sign,state))
+        return cell,q,states
+
+    def placed_charges(self, coords, lattice, flip: float = 0.0) -> np.ndarray:
+        """Charge flux at arbitrary placed nuclei, including tilted repeat images.
+
+        Atom and image indices belong to the chain topology. Chain reversal
+        reverses its image translation, not the Cartesian coordinate frame.
+        No setting-angle/offset reconstruction or canonical-cell fit is used.
+        """
+        return self._placed_charge_state(coords,lattice,flip)[1]
+
+    def placed_energy_and_grad(self, coords, lattice, flip: float = 0.0):
+        """Complete (E,gatoms,glattice) at independent placed atoms/lattice rows.
+
+        kcal/mol per cell, kcal/(mol A) derivatives at fixed other arguments.
+        Real Cartesian torsions are included; no metadata-energy override.
+        This owner imposes no canonical orientation or chain-frame recovery.
+        """
+        cell,q,states = self._placed_charge_state(coords,lattice,flip)
+        P,H = cell.coords,cell.lattice
+        E,gP,gH,gq = 0.,np.zeros_like(P),np.zeros_like(H),np.zeros(self.N)
+        xp,dt = self.xp,self._dt
+        pref = COULOMB/self.eps_r
+        tables = [xp.asarray(v,dtype=dt) for v in self._pair_charge_tables(q,q)]
+        for D,integers in cell.pair_image_chunks(self.rc):
+            r2 = xp.asarray((D*D).sum(axis=-1),dtype=dt)
+            v,dv = self._pair_energy_and_dv(r2,self._A,self._B,*tables)
+            scale = np.ones(D.shape[:-1])
+            for sl,sign,_ in states:
+                images = integers[:,sl,sl]
+                axial = np.all(images[...,:2] == 0,axis=-1)
+                for k,S in self._scale_nn_base.items():
+                    selected = axial & (images[...,2] == -sign*k)
+                    scale[:,sl,sl] = np.where(selected,S[None],scale[:,sl,sl])
+            v,dv = np.asarray(bk.to_numpy(v)),np.asarray(bk.to_numpy(dv))
+            E += .5*float((v*scale).sum())
+            force = dv[...,None]*scale[...,None]*D
+            gP += force.sum(axis=(0,2))-force.sum(axis=(0,1))
+            gH += np.einsum("mija,mijb->ab",integers,force)
+            if self._flux is not None and self._ewald is None:
+                W = np.asarray(bk.to_numpy(self._pair_phi(r2)))*scale
+                W = W.sum(axis=0)
+                gq += .5*pref*(W@q+W.T@q)
+        if self._ewald is not None:
+            if self.polarizable is None:
+                t = self._ewald.terms(P,q,H,grad=True,charge_grad=self._flux is not None)
+                Ee,gPe,gHe,gqe = t.total,t.grad_coords,t.grad_lattice,t.grad_charges
+            else:
+                Ee,_,_,(gPe,gHe,gqe) = self._polarize(P,q,H,flip,grad=True,charge_grad=self._flux is not None)
+            E += Ee
+            gP += gPe
+            gH += gHe
+            if gqe is not None:
+                gq += gqe
+        K = max(2,int(np.ceil(self.rc/np.linalg.norm(H[2])))+1)
+        for sl,sign,state in states:
+            repeat = sign*H[2]
+            if self._valence is not None:
+                Ev,gv,gr = self._valence.energy_and_repeat_grad(P[sl],repeat,n_atoms=self.n)
+                E += Ev
+                gP[sl] += gv
+                gH[2] += sign*gr
+            Et,gt,grt = self._torsion.energy_and_repeat_grad(P[sl],repeat)
+            E += Et
+            gP[sl] += gt
+            gH[2] += sign*grt
+            if self._ewald is not None:
+                Ex,gx,gr,gqx = self._exclusion(P[sl],q[sl],repeat,K,grad=True,charge_grad=self._flux is not None)
+                E += Ex
+                gP[sl] += gx
+                gH[2] += sign*gr
+                if gqx is not None:
+                    gq[sl] += gqx
+        if self._field_on:
+            field = np.asarray(self.field)
+            E -= EV_TO_KCAL*float((q@P)@field)
+            gP -= EV_TO_KCAL*q[:,None]*field
+            gq -= EV_TO_KCAL*(P@field)
+        for sl,sign,state in states:
+            if state is not None:
+                gP[sl] += np.einsum("a,abd->bd",gq[sl],state[1])
+                gH[2] += sign*np.einsum("a,ad->d",gq[sl],state[2])
+        if not np.isfinite(E) or not np.isfinite(gP).all() or not np.isfinite(gH).all():
+            raise ValueError("placed-cell energy/derivative is nonfinite")
+        return float(E),gP,gH
 
     def placed_dipole(self, coords, lattice, flip: float = 0.0) -> tuple:
         """(charge, induced) cell dipoles (e.A) on general placed geometry.
