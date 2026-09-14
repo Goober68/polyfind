@@ -28,6 +28,26 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 actual coupled model relaxation: isolated physics-vector-repeat
+58cf7ac is pushed; C: native sources unchanged. Independent Cartesian atoms/
+all six positive log strains, exact pullbacks, translation gauge and guarded
+checkpoint/stationarity lifecycle are implemented; phonon relaxation reuses
+that same owner. Topology resolves source order and explicitly declared
+doubled PeriodicChain graphs, not inferred partial atom counts. Actual
+24-atom fitted PVDF zero-field solve reaches force/six-stress stationarity
+(173steps,360eval; max physical stress0.01170084MPa), but geometry admission
+FAILS: C/F1.5366A, eight edges missing at existing1.05/1.10/1.15 scales.
+No criterion changes, field branches or retained raw rejected geometry.
+Fitted C/F harmonic r0=1.46738204A/k259.59063782kcal/(mol A^2); full-model
+equilibrium is not the harmonic r0. Unconverged native molecular PVDF/SVP
+step25 has nearest C/F1.35017–1.36963A, different boundaries/not a matched
+periodic calibration. Diagnose geometry/force balance against qualified
+references before accepting physical field/pre-strain seeds. Final Windows/
+Linux38-pass selections and earlier74-pass full copolymer/topology/supercell
+controls are in docs/CARTESIAN_RELAXATION_PROGRESS.md on the isolated branch.
+Native admissions/calibration, matched stable C/S/internal response/BZ/size,
+all-target/field/barrier/rate/loss/accurate-viewer requirements remain open.
+
 2026-09-13 supercell-owner migration: isolated physics-vector-repeat a89b8ff
 is pushed; this C: native source remains unchanged. Supercell total/terms/
 atom/all nine lattice derivatives, pair/correction and image diagnostics
