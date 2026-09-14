@@ -28,6 +28,22 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 complete placed-energy continuation: isolated physics-vector-repeat
+e6150ed is pushed; this C: live checkout has no source edits. CrystalPacker's
+new owner provides a complete model energy/all atom/all nine lattice
+derivatives with actual torsion, general triclinic pair images, full charge
+flux, Ewald/exclusions, induced dipoles and applied field. Fixed/batched/
+full-cell/phonon pair tables now have one defining implementation.282 broad
+Windows controls pass125.59s (one optional-native skip);24 affected controls
+pass14.85s after final bounded-memory image refinement. Final same-source
+Linux selection67 passes26.05s. Every coordinate/lattice component, six affine
+strains/two steps, reversal/covariance/wrapping and brute-force image coverage
+are covered. docs/PLACED_ENERGY_PROGRESS.md on the isolated branch records
+the evidence. Canonical refinement/phonon complete-energy migration is still
+pending; their torsion is still value-only. No native/calibrated material,
+full relaxation/stability/BZ/C/S/internal-strain, field/barrier/rate/loss or
+accurate viewer gate is promoted. GPU reserved; native dependencies untouched.
+
 2026-09-13 Cartesian torsion continuation: isolated physics-vector-repeat
 b7c2555 is pushed, without source changes in this C: live checkout. A shared
 dihedral/Fourier owner now serves fitting, finite molecules, rigid packer
