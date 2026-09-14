@@ -1,5 +1,12 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest migration: `docs/ENERGY_CONSUMER_MIGRATION.md` records canonical
+energy/refinement/mechanics/phonon delegation to the complete owner, removal
+of duplicate assemblies and double torsion, entire nonprimitive Gamma torsion
+matrix controls and exact Windows unit-snapshot updates. Standalone supercell
+migration, optimized batching and full relaxed-cell/native/material research
+requirements remain open. Historical extension notes below are checkpoints.
+
 Latest full-energy continuation: `docs/PLACED_ENERGY_PROGRESS.md` records
 the complete independent placed-cell model owner, all atom/nine lattice
 derivatives, actual periodic torsion, general triclinic image geometry and

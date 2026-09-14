@@ -15,11 +15,10 @@ damped-shifted-force Coulomb terms over all periodic images within a cutoff,
 *including* the intra-chain energy (with bonded exclusions across the periodic
 boundary) so that polymorphs with different chain conformations are comparable.
 
-The energy kernel is batched over configurations on the active array backend:
-the coarse search evaluates thousands of candidate cells in one call (a GPU
-does this in a fraction of a second), and only the best few are polished with
-a local optimiser.  Per configuration only the lateral images whose chain axes
-can lie within the cutoff are evaluated.
+Canonical energy rows and analytic refinement now delegate to the complete
+independent placed-cell Hamiltonian. Pair terms use the active array backend;
+image working memory is chunked, while rows are currently dispatched serially.
+This correctness-first owner is not yet an optimized batched GPU screen.
 
 :func:`pack` offers two coarse screens.  ``screen="random"`` samples cells
 uniformly and scores them with this kernel.  ``screen="table"`` uses
@@ -1139,12 +1138,11 @@ class CrystalPacker:
         return -(self.dipole(params, coords, c) @ self.field) * EV_TO_KCAL
 
     def chain_batch(self, chains) -> dict:
-        """``coords``/``c``/``e_torsion`` keyword arguments of :meth:`energy` for a list of chains."""
+        """Geometry keyword arguments of :meth:`energy` for a list of chains."""
         chains = list(chains)
         return {
             "coords": np.stack([ch.coords for ch in chains]),
             "c": np.array([ch.c for ch in chains], dtype=float),
-            "e_torsion": np.array([self.torsion_energy(ch.dihedrals) * self.n_chains for ch in chains]),
         }
 
     def _scale_column(self, K: int):
@@ -1292,7 +1290,7 @@ class CrystalPacker:
         """
         return self._placed_charge_state(coords,lattice,flip)[1]
 
-    def placed_energy_and_grad(self, coords, lattice, flip: float = 0.0):
+    def placed_energy_and_grad(self, coords, lattice, flip: float = 0.0, *, chunk_elems=None):
         """Complete (E,gatoms,glattice) at independent placed atoms/lattice rows.
 
         kcal/mol per cell, kcal/(mol A) derivatives at fixed other arguments.
@@ -1305,7 +1303,7 @@ class CrystalPacker:
         xp,dt = self.xp,self._dt
         pref = COULOMB/self.eps_r
         tables = [xp.asarray(v,dtype=dt) for v in self._pair_charge_tables(q,q)]
-        for D,integers in cell.pair_image_chunks(self.rc):
+        for D,integers in cell.pair_image_chunks(self.rc,CPU_CHUNK_ELEMS if chunk_elems is None else chunk_elems):
             r2 = xp.asarray((D*D).sum(axis=-1),dtype=dt)
             v,dv = self._pair_energy_and_dv(r2,self._A,self._B,*tables)
             scale = np.ones(D.shape[:-1])
@@ -1578,370 +1576,78 @@ class CrystalPacker:
         v = self._pair_energy(r2, self._A_nn, self._B_nn, qq, qqf, const)
         return (v * self._scale_column(K)[None]).sum(axis=(1, 2, 3))
 
-    def energy(self, params, chunk_elems: int | None = None, coords=None, c=None, e_torsion=None) -> np.ndarray:
-        """Lattice energy per cell (kcal/mol) for each row of params (M, 7).
+    def energy(self, params, chunk_elems: int | None = None, coords=None, c=None) -> np.ndarray:
+        """Complete model energy of canonical rows, through the placed-cell owner.
 
-        Configurations are sorted by cell area (so chunks share similar image counts and
-        little padding is wasted) and processed in chunks of ``chunk_elems`` array
-        elements: small on CPU (cache-resident), large on GPU (fewer kernel launches).
-
-        ``coords`` (M, n, 3), ``c`` (M,) and ``e_torsion`` (M,) optionally give a
-        *different chain geometry per row*, so that a gradient batch over torsions is a
-        single call; without them the packer's own chain is used for every row and its
-        intra-chain energy is the constant computed in :meth:`update_chain`.
-
-        When a ``field`` is set, ``-mu . E`` (:meth:`field_energy`) is added per row from
-        that row's placed coordinates.  With no field the kernel is untouched.
+        Each row may carry its own coordinates and axial repeat. Torsion comes
+        from geometry, never from an independently supplied energy constant.
+        Image working memory follows chunk_elems; rigid screening optimization
+        must preserve this Hamiltonian rather than introduce another assembly.
         """
-        xp = self.xp
-        params = np.atleast_2d(np.asarray(params, dtype=float))
-        M = params.shape[0]
+        p = np.atleast_2d(np.asarray(params, dtype=float))
+        if p.ndim != 2 or p.shape[1] != 7 or not np.isfinite(p).all():
+            raise ValueError("canonical parameters must be finite (M,7)")
+        M = len(p)
+        X = None if coords is None else np.asarray(coords, dtype=float)
+        if X is not None:
+            if X.shape == (self.n, 3):
+                X = X[None]
+            X = np.broadcast_to(X, (M, self.n, 3))
+        repeats = None if c is None else np.broadcast_to(np.asarray(c, dtype=float).ravel(), (M,))
+        P, H = self._place(p, X, repeats)
+        P, H = np.asarray(bk.to_numpy(P)), np.asarray(bk.to_numpy(H))
         self.n_energy_calls += 1
         self.n_energy_rows += M
-        if chunk_elems is None:
-            chunk_elems = 60_000_000 if bk.device_name() == "cuda" else CPU_CHUNK_ELEMS
-        per_row = coords is not None
-        if per_row:
-            coords = np.asarray(coords, dtype=float)
-            if coords.ndim == 2:
-                coords = coords[None]
-            if coords.shape[0] == 1 and M > 1:
-                coords = np.broadcast_to(coords, (M, self.n, 3))
-            c_arr = np.full(M, self.chain.c) if c is None else np.broadcast_to(np.asarray(c, dtype=float).ravel(), (M,))
-            K = int(np.ceil(self.rc / float(c_arr.min()))) + 1
-            reach = self.rc + 2 * float(np.linalg.norm(coords[:, :, :2], axis=2).max()) + 0.5
-            e_add = np.full(M, self.e_torsion) if e_torsion is None else np.broadcast_to(np.asarray(e_torsion, dtype=float).ravel(), (M,)).copy()
-            i_chunk = max(1, chunk_elems // ((2 * K + 1) * self.n * self.n))
-            # With charge flux each row's charges follow that row's conformation, so the
-            # pair tables become per-row arrays with a broadcast image axis.
-            q_row = self._row_charges(coords, c_arr, M) if self._flux is not None else None
-            intra = np.concatenate([
-                bk.to_numpy(self._intra_column(
-                    xp.asarray(coords[t : t + i_chunk], dtype=self._dt), c_arr[t : t + i_chunk], K,
-                    tables=None if q_row is None else self._row_charge_tables(q_row[t : t + i_chunk], False)))
-                for t in range(0, M, i_chunk)
-            ])
-            e_add = e_add + 0.5 * self.n_chains * intra
-            if self._valence is not None:
-                e_add = e_add + self.n_chains * self._valence.energy(coords, c_arr)
-            if self._ewald is not None:
-                e_add = e_add + self.n_chains * np.array([
-                    self._exclusion(coords[t], self._q_cell[: self.n] if q_row is None else q_row[t],
-                                    c_arr[t], K)[0] for t in range(M)])
-        else:
-            c_arr = None
-            q_row = None
-            K, reach = self.K, self.reach
-            e_add = np.full(M, self.e_torsion + self.e_intra)
-            if self._valence is not None:
-                e_add = e_add + self.e_valence
-            if self._ewald is not None:
-                # added here, after the valence term, so that the sum is associated exactly
-                # as :meth:`energy_and_grad` associates it and the two stay bit-identical
-                e_add = e_add + self.e_excl
-        order = np.argsort(params[:, 0] * params[:, 1] * np.sin(np.deg2rad(params[:, 2])))
-        params = params[order]
-        out = np.empty(M)
-        N, n, nk = self.N, self.n, 2 * K + 1
-        m_chunk = max(1, chunk_elems // (30 * nk * N * N))
-        for s in range(0, M, m_chunk):
-            sl = order[s : s + m_chunk]
-            sub = params[s : s + m_chunk]
-            sub_coords = coords[sl] if per_row else None
-            sub_c = c_arr[sl] if per_row else None
-            P, lat = self._place(sub, sub_coords, sub_c)
-            t_nn = self._row_charge_tables(q_row[sl], False) if q_row is not None else None
-            t_cell = self._row_charge_tables(q_row[sl], True) if q_row is not None else None
-            qc_xp = (xp.asarray(np.tile(q_row[sl], (1, self.n_chains)), dtype=self._dt)
-                     if q_row is not None else None)
-            e = xp.zeros(sub.shape[0], dtype=self._dt)
-            if self.n_chains == 2:
-                # (0, 0, k) column: chain1-chain2 only; the (2,1) block equals the (1,2) block
-                Dh = P[:, :n, None, :] - P[:, None, n:, :]  # (m, n, n, 3)
-                ks = xp.asarray(np.arange(-K, K + 1, dtype=float), dtype=self._dt)
-                cz = lat[:, 2, 2]
-                dzh = Dh[:, None, :, :, 2] - ks[None, :, None, None] * cz[:, None, None, None]
-                r2h = Dh[:, None, :, :, 0] ** 2 + Dh[:, None, :, :, 1] ** 2 + dzh * dzh
-                qq, qqf, cst = t_nn if t_nn is not None else (self._qq_nn, self._qqf_nn, self._const_nn)
-                vh = self._pair_energy(r2h, self._A_nn, self._B_nn, qq, qqf, cst)
-                e = e + 2.0 * vh.sum(axis=(1, 2, 3))
-            ijk_np, L = self._select_images(sub, K, reach)
-            if L:
-                ijk = xp.asarray(ijk_np, dtype=self._dt)
-                D = P[:, :, None, :] - P[:, None, :, :]  # (m, N, N, 3)
-                shift = xp.einsum("mic,mcd->mid", ijk, lat)  # (m, I, 3)
-                dx = D[:, None, :, :, 0] - shift[:, :, None, None, 0]
-                dy = D[:, None, :, :, 1] - shift[:, :, None, None, 1]
-                dzz = D[:, None, :, :, 2] - shift[:, :, None, None, 2]
-                r2 = dx * dx + dy * dy + dzz * dzz  # (m, I, N, N)
-                qq, qqf, cst = t_cell if t_cell is not None else (self._qq, self._qqf, self._const)
-                v = self._pair_energy(r2, self._A, self._B, qq, qqf, cst)
-                e = e + v.sum(axis=(1, 2, 3))
-            # The electrostatics of an Ewald packer: its pair kernel above carried only the
-            # Lennard-Jones term, so this is the whole Coulomb energy of the cell (and, with
-            # induced dipoles, the polarization energy as well).
-            e_ew = 0.0 if self._ewald is None else self._ewald_rows(
-                P, lat, None if q_row is None else q_row[sl], flips=sub[:, 6])
-            if self._field_on:
-                # -mu . E, from the placed coordinates of this chunk: the dipole follows
-                # the setting angles and the flip, so it is a per-row quantity.
-                q_use = self._q_cell_xp[None, :, None] if qc_xp is None else qc_xp[:, :, None]
-                mu = (P * q_use).sum(axis=1)  # (m, 3), e.A
-                out[s : s + m_chunk] = bk.to_numpy(0.5 * e - EV_TO_KCAL * (mu * self._field_xp[None, :]).sum(axis=1)) + e_ew
-            else:
-                out[s : s + m_chunk] = bk.to_numpy(0.5 * e) + e_ew
-        res = np.empty_like(out)
-        res[order] = out
-        return res + e_add
+        return np.array([self.placed_energy_and_grad(P[i], H[i], p[i,6],
+                                                    chunk_elems=chunk_elems)[0] for i in range(M)])
 
-    def energy_and_grad(self, params, coords=None, c=None, e_torsion=None):
-        """Energy of ONE configuration and its analytic gradient, in a single pass.
+    def energy_and_grad(self, params, coords=None, c=None):
+        """(E,gcell(6),gcoords(n,3),gc) pullback of complete placed energy.
 
-        Returns ``(E, g_cell, g_coords, g_c)``:
-
-        ``E``
-            the lattice energy of this configuration -- bit for bit the number
-            :meth:`energy` returns for the same row, because the value is built from the
-            same expressions in the same order (``tests/test_pack.py`` asserts equality
-            with ``==``, not a tolerance).
-        ``g_cell``
-            ``dE/d(a, b, gamma, phi1, phi2, dz)``, per A for the lengths and the shift and
-            per *degree* for the angles (the units the optimiser's variables are in).
-            ``flip`` is discrete and has no entry.
-        ``g_coords``
-            ``dE/d(chain coordinates)``, ``(n, 3)``, including the intra-chain
-            ``(0, 0, k)`` term that :attr:`e_intra` carries.  This is the quantity a
-            refinement over torsions needs: the chain rule from here to any
-            conformational parametrisation involves no further kernel evaluation.
-        ``g_c``
-            ``dE/dc``, the repeat along z, which enters both the lattice vector and the
-            ``(0, 0, k)`` image shifts.
-
-        The derivatives are closed-form throughout.  Each pair term contributes
-        ``2 (dV/dr^2) * (separation vector)`` to the two atoms it joins (and, for an
-        image, minus that to the image shift); from there
-
-        * ``a``, ``b`` and ``gamma`` enter through the lattice vectors and through
-          chain 2's ``(avec + bvec) / 2`` offset,
-        * ``dz`` through chain 2's offset alone,
-        * ``phi1`` and ``phi2`` through ``dr/dphi = z_hat x r``, r measured from each
-          chain's own axis,
-        * the applied field through ``-mu . E`` with ``mu = sum_i q_i r_i``, whose
-          coordinate gradient is just ``-q_i E``.
-
-        ``coords`` / ``c`` / ``e_torsion`` override the packer's chain exactly as in
-        :meth:`energy`; ``e_torsion`` only shifts the value, never the gradient.
+        Lengths/shift are in A, canonical angles in degrees. Flip is discrete.
+        Independent atom and lattice derivatives are owned by
+        placed_energy_and_grad; this method only differentiates placement.
         """
-        xp, dt = self.xp, self._dt
-        p = np.asarray(params, dtype=float).reshape(-1)
-        if p.shape[0] != 7:
-            raise ValueError("energy_and_grad evaluates one configuration: params must have 7 entries")
+        p = np.asarray(params, dtype=float)
+        if p.shape != (7,) or not np.isfinite(p).all():
+            raise ValueError("energy_and_grad requires one finite (7,) row")
+        X = None if coords is None else np.asarray(coords, dtype=float).reshape(1,self.n,3)
+        repeats = None if c is None else np.asarray(c,dtype=float).reshape(1)
+        P,H = self._place(p[None],X,repeats)
+        P,H = np.asarray(bk.to_numpy(P))[0],np.asarray(bk.to_numpy(H))[0]
+        E,gP,gH = self.placed_energy_and_grad(P,H,p[6])
         self.n_grad_calls += 1
         self.n_energy_calls += 1
         self.n_energy_rows += 1
-        n, N, nc = self.n, self.N, self.n_chains
-        sub = p[None]
-        per_row = coords is not None
-        if per_row:
-            Xn = np.asarray(coords, dtype=float).reshape(1, n, 3)
-            cz = float(self.chain.c if c is None else np.asarray(c, dtype=float).ravel()[0])
-            K = int(np.ceil(self.rc / cz)) + 1
-            reach = self.rc + 2.0 * float(np.linalg.norm(Xn[:, :, :2], axis=2).max()) + 0.5
-            e_t = self.e_torsion if e_torsion is None else float(np.asarray(e_torsion, dtype=float).ravel()[0])
-            c_arr = np.array([cz])
-            X, intra_in = Xn, xp.asarray(Xn, dtype=dt)
-        else:
-            X, c_arr = None, None
-            cz = float(self.chain.c)
-            K, reach, e_t = self.K, self.reach, self.e_torsion
-            intra_in = self.X0[None]
-        # Charge flux: this row's charges and their exact derivatives with respect to the
-        # repeat's coordinates and to c.  ``gq`` accumulates dE/dq alongside the usual
-        # dE/dX, and the two are combined at the end, so ``g_coords`` and ``g_c`` come back
-        # as *total* derivatives -- which is what lets every consumer's chain rule through
-        # (coords, c) stay exactly as it was.
-        flux_q = flux_dq = flux_dqc = None
-        t_nn = t_cell = None
-        q_cell = self._q_cell
-        if self._flux is not None:
-            Xf = Xn[0] if per_row else np.asarray(self.chain.coords, dtype=float)
-            flux_q, flux_dq, flux_dqc = self._flux.charges_and_grad(Xf, cz)
-            if per_row:
-                t_nn = self._row_charge_tables(flux_q[None], False)
-                t_cell = self._row_charge_tables(flux_q[None], True)
-                q_cell = np.tile(flux_q, nc)
-        # dE/dq from the *kernel's* Coulomb term.  Under Ewald the kernel has no Coulomb
-        # term (``qq`` is zeroed), so asking for it would add the derivative of an energy
-        # that is not in the total -- the dq terms then come from the Ewald sum and its
-        # exclusion correction instead, and ``gq_chain`` starts at zero so they can.
-        kernel_dq = flux_q if self._ewald is None else None
-        intra, gX, gc, gq = self._intra_column_and_grad(
-            intra_in, np.array([cz]), K, tables=t_nn, q_repeat=kernel_dq)
-        pref = 0.5 * nc
-        # identical arithmetic to ``energy``'s two branches, so the value matches bit for bit
-        e_add = (e_t + pref * float(bk.to_numpy(intra)[0])) if per_row else (self.e_torsion + self.e_intra)
-        gX, gc = pref * gX, pref * gc
-        gq_chain = None if self._flux is None else np.zeros(n)
-        if gq is not None:
-            gq_chain = gq_chain + pref * gq
-        if self._valence is not None:
-            # One repeat's valence energy per chain, with its exact derivatives with respect
-            # to the repeat's coordinates and to c.  This is the whole of the plumbing the
-            # deformable path needs: every consumer of ``g_coords``/``g_c`` -- the
-            # refinement's chain rule, the axial relaxation -- now sees a restoring force.
-            Ev, gXv, gcv = self._valence.energy_and_grad(
-                Xn if per_row else self.chain.coords, cz, n_atoms=n)
-            # ``self.e_valence`` rather than ``nc * Ev`` off the per-row path, so that the
-            # value stays bit-for-bit the one :meth:`energy` returns for the same row.
-            e_add = e_add + (nc * Ev if per_row else self.e_valence)
-            gX, gc = gX + nc * gXv, gc + nc * gcv
+        a,b,gamma,phi1,phi2,dz,flip = p
+        cg,sg = np.cos(np.deg2rad(gamma)),np.sin(np.deg2rad(gamma))
+        rad = np.pi/180.
+        gcell = np.zeros(6)
+        gcell[0] = gH[0,0]
+        gcell[1] = cg*gH[1,0]+sg*gH[1,1]
+        gcell[2] = rad*b*(-sg*gH[1,0]+cg*gH[1,1])
+        gcell[3] = rad*np.sum(-gP[:self.n,0]*P[:self.n,1]+gP[:self.n,1]*P[:self.n,0])
+        def folded(forces,angle):
+            ca,sa = np.cos(np.deg2rad(angle)),np.sin(np.deg2rad(angle))
+            return np.stack([ca*forces[:,0]+sa*forces[:,1],
+                             -sa*forces[:,0]+ca*forces[:,1],forces[:,2]],axis=1)
+        gX = folded(gP[:self.n],phi1)
+        if self.n_chains == 2:
+            g2 = gP[self.n:]
+            total = g2.sum(axis=0)
+            off = .5*(H[0]+H[1])+np.array([0.,0.,dz])
+            local = P[self.n:]-off
+            gcell[0] += .5*total[0]
+            gcell[1] += .5*(cg*total[0]+sg*total[1])
+            gcell[2] += .5*rad*b*(-sg*total[0]+cg*total[1])
+            gcell[4] = rad*np.sum(-g2[:,0]*local[:,1]+g2[:,1]*local[:,0])
+            gcell[5] = total[2]
+            gfold = folded(g2,phi2)
+            if flip == 1.:
+                gfold[:,1:] *= -1.
+            gX += gfold
+        return E,gcell,gX,float(gH[2,2])
 
-        P, lat = self._place(sub, X, c_arr)
-        latn = np.asarray(bk.to_numpy(lat), dtype=float)[0]
-        Pn = np.asarray(bk.to_numpy(P), dtype=float)[0]
-        gP = np.zeros((N, 3))
-        e = xp.zeros(1, dtype=dt)
-        kz = np.arange(-K, K + 1, dtype=float)
-        if nc == 2:
-            # (0, 0, k) column: chain1-chain2 only, counted twice (the (2,1) block equals (1,2))
-            Dh = P[:, :n, None, :] - P[:, None, n:, :]
-            ks = xp.asarray(kz, dtype=dt)
-            czl = lat[:, 2, 2]
-            dzh = Dh[:, None, :, :, 2] - ks[None, :, None, None] * czl[:, None, None, None]
-            r2h = Dh[:, None, :, :, 0] ** 2 + Dh[:, None, :, :, 1] ** 2 + dzh * dzh
-            qq, qqf, cst = t_nn if t_nn is not None else (self._qq_nn, self._qqf_nn, self._const_nn)
-            vh, gh = self._pair_energy_and_dv(r2h, self._A_nn, self._B_nn, qq, qqf, cst)
-            e = e + 2.0 * vh.sum(axis=(1, 2, 3))
-            if kernel_dq is not None:
-                # Chain 1 sees this block as rows, chain 2 as columns; both carry the *same*
-                # repeat charges, so both roles add into the one dE/dq per repeat atom.
-                W = np.asarray(bk.to_numpy(self._pair_phi(r2h)), dtype=float).sum(axis=(0, 1))
-                qc = flux_q * (COULOMB / self.eps_r)
-                gq_chain = gq_chain + W @ qc + W.T @ qc
-            # E gets 0.5 * (2 * sum vh) = sum vh, so the prefactor on dV/dw is exactly 1
-            t = 2.0 * gh
-            f = [np.asarray(bk.to_numpy(t * w), dtype=float)
-                 for w in (Dh[:, None, :, :, 0], Dh[:, None, :, :, 1], dzh)]
-            for d, q in enumerate(f):
-                gP[:n, d] += q.sum(axis=(0, 1, 3))
-                gP[n:, d] -= q.sum(axis=(0, 1, 2))
-            gc += -float((f[2] * kz[None, :, None, None]).sum())
-            del f, t, vh, gh, r2h, dzh, Dh
-        glat = np.zeros((3, 3))
-        ijk_np, L = self._select_images(sub, K, reach)
-        if L:
-            ijk = xp.asarray(ijk_np, dtype=dt)
-            D = P[:, :, None, :] - P[:, None, :, :]
-            shift = xp.einsum("mic,mcd->mid", ijk, lat)
-            dx = D[:, None, :, :, 0] - shift[:, :, None, None, 0]
-            dy = D[:, None, :, :, 1] - shift[:, :, None, None, 1]
-            dzz = D[:, None, :, :, 2] - shift[:, :, None, None, 2]
-            r2 = dx * dx + dy * dy + dzz * dzz
-            qq, qqf, cst = t_cell if t_cell is not None else (self._qq, self._qqf, self._const)
-            v, gv = self._pair_energy_and_dv(r2, self._A, self._B, qq, qqf, cst)
-            e = e + v.sum(axis=(1, 2, 3))
-            if kernel_dq is not None:
-                # E gets 0.5 * sum v; the image set is closed under negation, so the (a, b)
-                # and (b, a) sums are equal and the 0.5 cancels against counting both.
-                Wc = np.asarray(bk.to_numpy(self._pair_phi(r2)), dtype=float).sum(axis=(0, 1))
-                qq_c = q_cell * (COULOMB / self.eps_r)
-                gq_cell = 0.5 * (Wc @ qq_c + Wc.T @ qq_c)
-                gq_chain = gq_chain + gq_cell[:n] + (gq_cell[n:] if nc == 2 else 0.0)
-            del v, r2
-            # E gets 0.5 * sum v, so dE/d(separation) = 0.5 * 2 * gv * separation = gv * separation
-            gsh = np.zeros((ijk_np.shape[1], 3))
-            for d, w in enumerate((dx, dy, dzz)):
-                q = np.asarray(bk.to_numpy(gv * w), dtype=float)
-                gP[:, d] += q.sum(axis=(0, 1, 3)) - q.sum(axis=(0, 1, 2))
-                gsh[:, d] = -q.sum(axis=(0, 2, 3))
-            glat = ijk_np[0].T @ gsh
-            del dx, dy, dzz, gv, q, gsh
-
-        e_ew = 0.0
-        if self._ewald is not None:
-            # The whole electrostatic energy of the cell, with its exact derivatives.  The
-            # coordinate gradient joins ``gP`` and the lattice gradient joins ``glat``, both
-            # in the conventions the truncated kernel already established: ``glat`` is
-            # dE/d(lattice vectors) *at fixed Cartesian coordinates*, so the chain rule
-            # below carries it through to a, b, gamma and c unchanged.
-            if self.polarizable is not None:
-                # Induced dipoles: the value is the one ``energy`` adds per row, and the
-                # gradients are the fixed-``p`` ones, which the self-consistency makes total.
-                e_ew, _, _, (gPe, glate, gqe) = self._polarize(
-                    Pn, q_cell, latn, p[6], grad=True, charge_grad=gq_chain is not None)
-                gP += gPe
-                glat = glat + glate
-            else:
-                terms = self._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=gq_chain is not None)
-                e_ew = terms.total
-                gP += terms.grad_coords
-                glat = glat + terms.grad_lattice
-                gqe = terms.grad_charges
-            if gq_chain is not None:
-                gq_chain = gq_chain + gqe[:n] + (gqe[n:] if nc == 2 else 0.0)
-            X_ch = Xn[0] if per_row else np.asarray(self.chain.coords, dtype=float)
-            q_rep = flux_q if flux_q is not None else self._q_cell[:n]
-            ex_e, ex_gX, ex_gc, ex_gq = self._exclusion(
-                X_ch, q_rep, cz, K, grad=True, charge_grad=gq_chain is not None)
-            # ``self.e_excl`` rather than ``nc * ex_e`` off the rigid path, so the value stays
-            # bit-for-bit the one :meth:`energy` returns for the same row.
-            e_add = e_add + (nc * ex_e if per_row else self.e_excl)
-            gX, gc = gX + nc * ex_gX, gc + nc * ex_gc
-            if gq_chain is not None:
-                gq_chain = gq_chain + nc * ex_gq
-        if self._field_on:
-            q_use = self._q_cell_xp if t_cell is None else xp.asarray(q_cell, dtype=dt)
-            mu = (P * q_use[None, :, None]).sum(axis=1)
-            out = float(bk.to_numpy(0.5 * e - EV_TO_KCAL * (mu * self._field_xp[None, :]).sum(axis=1))[0])
-            gP += -EV_TO_KCAL * q_cell[:, None] * np.asarray(self.field, dtype=float)[None, :]
-            if gq_chain is not None:
-                # d(-mu . E)/dq_a = -(r_a . E): the field term's charge derivative, which is
-                # what carries the *intrinsic* piezoelectric response of a fluxing chain.
-                w = -EV_TO_KCAL * (Pn @ np.asarray(self.field, dtype=float))
-                gq_chain = gq_chain + w[:n] + (w[n:] if nc == 2 else 0.0)
-        else:
-            out = float(bk.to_numpy(0.5 * e)[0])
-        out = out + e_ew
-        if gq_chain is not None:
-            gX = gX + np.einsum("a,abd->bd", gq_chain, flux_dq)
-            gc = gc + float(gq_chain @ flux_dqc)
-
-        # --- chain rule: placed coordinates -> cell parameters and chain coordinates ---
-        a, b, gam, phi1, phi2, dz, flip = p
-        g = np.deg2rad(gam)
-        cg, sg = np.cos(g), np.sin(g)
-        g1, g2 = gP[:n], gP[n:]
-        P1 = Pn[:n]
-        rad = np.pi / 180.0
-        g_cell = np.zeros(6)
-        g_cell[0] = glat[0, 0]
-        g_cell[1] = cg * glat[1, 0] + sg * glat[1, 1]
-        g_cell[2] = rad * b * (-sg * glat[1, 0] + cg * glat[1, 1])
-        # dr/dphi = z_hat x r about each chain's own axis (which passes through the origin
-        # of that chain's own coordinates, i.e. before the cell offset is added)
-        g_cell[3] = rad * float((g1[:, 0] * -P1[:, 1] + g1[:, 1] * P1[:, 0]).sum())
-        g_c = gc + glat[2, 2]
-        # rotation back out of the placed frame: Rz(phi)^T, and the flip's mirror
-        ca, sa = np.cos(np.deg2rad(phi1)), np.sin(np.deg2rad(phi1))
-        gX[:, 0] += ca * g1[:, 0] + sa * g1[:, 1]
-        gX[:, 1] += -sa * g1[:, 0] + ca * g1[:, 1]
-        gX[:, 2] += g1[:, 2]
-        if nc == 2:
-            off = 0.5 * (latn[0] + latn[1]) + np.array([0.0, 0.0, dz])
-            Q2 = Pn[n:] - off[None, :]
-            G2 = g2.sum(axis=0)
-            g_cell[0] += 0.5 * G2[0]
-            g_cell[1] += 0.5 * (cg * G2[0] + sg * G2[1])
-            g_cell[2] += rad * 0.5 * b * (-sg * G2[0] + cg * G2[1])
-            g_cell[4] = rad * float((g2[:, 0] * -Q2[:, 1] + g2[:, 1] * Q2[:, 0]).sum())
-            g_cell[5] = G2[2]
-            ca, sa = np.cos(np.deg2rad(phi2)), np.sin(np.deg2rad(phi2))
-            gf = np.stack([ca * g2[:, 0] + sa * g2[:, 1], -sa * g2[:, 0] + ca * g2[:, 1], g2[:, 2]], axis=1)
-            if flip > 0.5:  # chain 2 carries (x, -y, -z) of the chain, an involution
-                gf[:, 1] *= -1.0
-                gf[:, 2] *= -1.0
-            gX += gf
-        return out + e_add, g_cell, gX, g_c
 
     def energy_per_monomer(self, params) -> np.ndarray:
         return self.energy(params) / (self.n_chains * self.chain.n_monomers)

@@ -316,14 +316,13 @@ def refine_crystal(
             if n_shape:
                 # The lattice energy sees a conformation only through (coords, c), and
                 # dE/dcoords, dE/dc are exact here, so
-                #     S(s) = gX . coords(s) + gc c(s) + E_torsion(s) + restraints(s)
+                #     S(s) = gX . coords(s) + gc c(s) + restraints(s)
                 # has the same gradient in s as the objective does at this point.  Its
                 # central difference therefore needs the geometry of each displacement
                 # but not its energy: the remaining numerical link is the Jacobian of the
                 # chain build (NeRF + closure solve + Kabsch alignment), not the kernel.
                 S = np.array([
                     float((gX * ch.coords).sum()) + gc * ch.c
-                    + packer.torsion_energy(ch.dihedrals) * packer.n_chains
                     + restraints(tors[j], angs[j], ch)
                     for j, ch in enumerate(chains)
                 ])

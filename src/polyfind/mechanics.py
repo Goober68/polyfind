@@ -648,8 +648,8 @@ class Relaxed:
     shape_gradient: float = 0.0  # |dE/d(shape)| at the solution, kcal/(mol deg)
 
 
-def _shape_scalar(chain, gX, gc, packer, penalty: float) -> float:
-    """``gX . coords + gc c + E_torsion + penalty`` for one displaced chain.
+def _shape_scalar(chain, gX, gc, penalty: float) -> float:
+    """``gX . coords + gc c + penalty`` for one displaced chain.
 
     The lattice energy *and* the valence energy depend on a conformation only through
     ``(coords, c)``, and the kernel returns both partial derivatives exactly, so this
@@ -658,7 +658,6 @@ def _shape_scalar(chain, gX, gc, packer, penalty: float) -> float:
     a shape gradient costs no kernel row.
     """
     return (float((gX * chain.coords).sum()) + gc * chain.c
-            + packer.torsion_energy(chain.dihedrals) * packer.n_chains
             + penalty * chain.rotation_error ** 2)
 
 
@@ -709,8 +708,8 @@ def relax_deformable(ref: Reference, shape: Shape, params, x=None, free=_INTERNA
         dc = np.empty(ns)
         for j in range(ns):
             plus, minus = chains[1 + 2 * j], chains[2 + 2 * j]
-            grad[nf + j] = (_shape_scalar(plus, gX, gc, packer, shape.penalty)
-                            - _shape_scalar(minus, gX, gc, packer, shape.penalty)) / (2.0 * shape.step)
+            grad[nf + j] = (_shape_scalar(plus, gX, gc, shape.penalty)
+                            - _shape_scalar(minus, gX, gc, shape.penalty)) / (2.0 * shape.step)
             dc[j] = (plus.c - minus.c) / (2.0 * shape.step)
         out = (E, grad, chains[0], dc, p)
         if len(cache) > 96:

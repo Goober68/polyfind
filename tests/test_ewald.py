@@ -201,12 +201,12 @@ def test_exclusion_correction_value_and_gradients():
 
 
 # ------------------------------------------------------------------ in the packer
-def test_default_packer_is_bit_for_bit_the_truncated_one(beta_chain):
-    """The literal is the number this package was measured with; coulomb='dsf' is default."""
+def test_default_dsf_complete_owner_reference_energy(beta_chain):
+    """Exact Windows reference of the complete owner; no Ewald term is enabled."""
     pk = CrystalPacker(beta_chain, n_chains=2)
     assert pk.coulomb == "dsf"
     assert pk._ewald is None
-    assert float(pk.energy(BETA[None])[0]) == -8.645931161267756
+    assert float(pk.energy(BETA[None])[0]) == -8.645931161267747
 
 
 def test_ewald_packer_total_is_the_spherical_shell_sum_minus_the_surface_term(beta_chain):

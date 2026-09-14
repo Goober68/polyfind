@@ -35,9 +35,9 @@ FIXED_PARAMS = np.array([5.0, 9.6, 92.0, 20.0, 50.0, 1.0, 0.0])
 FIXED_FIELD = (0.01, -0.02, 0.005)
 RECORDED_ENERGY = {
     "PE": (-4.143020937018386, -4.143020937018386),
-    "beta": (-8.784383912060322, -8.718173227934876),
-    "alpha": (27.715227596863407, 27.29006207153844),
-    "gamma": (27.70619594115115, 26.855864890501213),
+    "beta": (-8.784383912060312, -8.718173227934866),
+    "alpha": (27.71522759686362, 27.290062071538653),
+    "gamma": (27.70619594115111, 26.85586489050117),
 }
 CHAINS = {
     "PE": (PE, [T]),
@@ -48,7 +48,7 @@ CHAINS = {
 
 
 @pytest.mark.parametrize("name", sorted(RECORDED_ENERGY))
-def test_default_packer_energies_are_bit_for_bit_unchanged(name):
+def test_complete_owner_windows_reference_energies_are_bit_exact(name):
     polymer, seq = CHAINS[name]
     chain = periodic_chain(polymer, seq, THREE_STATE)
     e0, e1 = RECORDED_ENERGY[name]

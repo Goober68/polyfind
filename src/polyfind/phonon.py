@@ -1,55 +1,24 @@
-r"""Gamma-point lattice dynamics of a packed polymer crystal, on the packer's own potential.
+r"""Gamma-point lattice dynamics through the packer's complete placed-cell owner.
 
-The :class:`polyfind.pack.CrystalPacker` energy is a function of seven cell parameters and ONE
-chain repeat's coordinates: chain 2 is always the image of chain 1 under the placing isometry,
-and a displacement of a repeat coordinate moves the corresponding atom of *both* chains.  A
-lattice dynamics needs the energy as a function of every atom of the cell independently, so
-this module assembles exactly the packer's energy -- term for term, in the same units
-(kcal/mol per cell), on the same image sets, with the same bonded-exclusion bookkeeping -- for
-arbitrary placed coordinates ``Pn`` (N, 3), and its analytic all-atom gradient.  From there the
-Cartesian Hessian at the Gamma point is a central difference of that gradient, the dynamical
-matrix is its mass weighting, and the phonon frequencies are its eigenvalues.
+Canonical packing/refinement, independent-atom phonon gradients and the
+Cartesian Hessian consume one Hamiltonian. cell_energy_and_grad only
+forwards the cell and discrete chain reversal to
+CrystalPacker.placed_energy_and_grad; it does not assemble another potential
+or reconstruct chain-local frames.
 
-**What is in the energy** (:func:`cell_energy_and_grad`), and where each piece lives in the
-packer so that the two stay the same function:
+The owner includes short-range nonbonded interactions with complete triclinic
+cutoff images/topological exclusions, valence, geometry-derived periodic
+torsion, total charge-flux derivatives, Ewald/exclusions, stationary induced
+dipoles and an applied field. Torsional forces and stiffness now enter this
+Cartesian Hessian. The former value-only torsion treatment and the separate
+potential assembly are removed.
 
-* the same-site ``(0, 0, k)`` column of each chain -- Lennard-Jones plus, for a ``dsf``
-  packer, the damped-shifted-force Coulomb term, with the 1-2/1-3 exclusions and the 1-4
-  scale (:meth:`~polyfind.pack.CrystalPacker._intra_column_and_grad`), evaluated in the
-  chain's own frame (:func:`polyfind.born.chain_frame_coords`), which the column is invariant
-  under;
-* the valence bonds and angles of each chain (:class:`polyfind.pack.ChainValence`), likewise
-  per chain in its own frame;
-* the chain 1 - chain 2 block of the ``(0, 0, k)`` column and every lateral image the packer's
-  own :meth:`~polyfind.pack.CrystalPacker._select_images` keeps, on the placed coordinates,
-  with the pair tables rebuilt from *per-chain* charges (the packer tiles one repeat's
-  charges; here chain 2's charges are its own, re-solved from its own geometry);
-* the electrostatics of an Ewald packer: the Ewald sum of the placed cell
-  (:meth:`polyfind.ewald.Ewald.terms`), the per-chain bonded-exclusion correction
-  (:func:`polyfind.ewald.exclusion_correction`), and with ``polarizable`` the
-  self-consistent induced dipoles (:meth:`~polyfind.pack.CrystalPacker._polarize`) with
-  their own exclusion of bonded fields;
-* the charge flux: each chain's charges are :meth:`~polyfind.forcefield.FluxTopology.charges_and_grad`
-  of its own chain-frame geometry, and every ``dE/dq`` (kernel, Ewald, exclusion, field) is
-  chained through ``dq/dX`` exactly as :meth:`~polyfind.pack.CrystalPacker.energy_and_grad`
-  does it;
-* the applied field, ``-mu . E``.
+Gamma-only support remains a physical sampling limitation. A two-backbone-site
+primitive trans repeat cannot represent chain twisting; larger independent
+repeats/BZ convergence are required. A Hessian at a nonstationary geometry
+does not establish stable lattice modes. Model frequencies are not calibrated
+material frequencies or general frequency bounds.
 
-**What is a constant.**  The packer's Fourier torsion term is evaluated once per chain from the
-chain's *nominal* dihedrals (:attr:`polyfind.pack.PeriodicChain.dihedrals`) and is added as
-that constant by :meth:`~polyfind.pack.CrystalPacker.energy` and
-:meth:`~polyfind.pack.CrystalPacker.energy_and_grad` alike -- its docstring says so:
-``e_torsion`` "only shifts the value, never the gradient".  This module does the same, so the
-known-answer identity with :meth:`~polyfind.pack.CrystalPacker.energy` holds to rounding, and
-so the Hessian carries **no torsional stiffness about the backbone bonds**: a chain-twisting
-mode is held only by the 1-4 and longer nonbonded terms and by the neighbouring chains.  For
-the fitted potential ``d2E/dphi2`` at trans is ``(V1 + 4 V2 + 9 V3) / 2``, of order 10
-kcal/mol/rad^2. These frequencies are not general lower bounds: omitted Cartesian curvature
-can be indefinite away from a torsion minimum, and the reference need not be stationary.
-Primitive-Gamma repeat support also excludes twisting branches requiring a longer repeat.
-The module records the missing stiffness in :attr:`Phonons.notes`. No term
-is omitted otherwise; a packer whose energy this module cannot reproduce is refused by the
-known-answer check (:func:`check_known_answer`) rather than approximated.
 
 **Units.**  The Hessian is in kcal/(mol A^2); masses are :data:`polyfind.pack.MASS` in g/mol
 (= amu).  With ``1 kcal = 4184 J`` (exact), ``N_A = 6.02214076e23 1/mol`` (exact, SI 2019),
@@ -69,7 +38,7 @@ and leaves every optical mode where the raw matrix put it to within the residual
 is periodic in all three directions and has two chains, so exactly three zero modes are
 expected at Gamma and no more; if more appear, or if any mode is imaginary, that is a
 property of the geometry (not at a minimum over the all-atom coordinates) or of the
-potential (the missing torsional stiffness above), and it is reported, not projected away.
+potential, and it is reported, not projected away.
 """
 from __future__ import annotations
 
@@ -78,9 +47,8 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from . import backend as bk
-from .born import atom_labels, chain_frame_coords
-from .forcefield import COULOMB
-from .pack import EV_TO_KCAL, MASS
+from .born import atom_labels
+from .pack import MASS
 
 # --- unit conversion, derived from the constants written down in the module docstring ------
 KCAL_PER_MOL_TO_J = 4184.0 / 6.02214076e23  # J per (kcal/mol); 1 kcal = 4184 J, N_A exact
@@ -108,166 +76,18 @@ def placing_frames(params, n_chains: int) -> list:
     return R
 
 
-def _charge_tables(packer, qa: np.ndarray, qb: np.ndarray) -> tuple:
-    """``(qq, qq_f, const)`` (na, nb) for the atoms carrying ``qa`` against those carrying ``qb``.
-
-    The expressions of :meth:`polyfind.pack.CrystalPacker._set_charge_tables`, on charges that
-    need not be one repeat's tiled: ``qa`` and ``qb`` are whole multiples of the repeat (the
-    Lennard-Jones blocks are per element and tile).  Under Ewald ``qq`` is zero, as there.
-    """
-    return packer._pair_charge_tables(qa,qb)
-
-
-def _pair_and_dv(packer, r2, A, B, qq, qqf, const) -> tuple:
-    """:meth:`polyfind.pack.CrystalPacker._pair_energy_and_dv` on host arrays."""
-    xp, dt = packer.xp, packer._dt
-    v, dv = packer._pair_energy_and_dv(xp.asarray(r2, dtype=dt), xp.asarray(A, dtype=dt), xp.asarray(B, dtype=dt),
-                                       xp.asarray(qq, dtype=dt), xp.asarray(qqf, dtype=dt), xp.asarray(const, dtype=dt))
-    return np.asarray(bk.to_numpy(v), dtype=float), np.asarray(bk.to_numpy(dv), dtype=float)
-
-
-def _pair_phi(packer, r2) -> np.ndarray:
-    return np.asarray(bk.to_numpy(packer._pair_phi(packer.xp.asarray(r2, dtype=packer._dt))), dtype=float)
-
-
 def cell_energy_and_grad(packer, params, Pn, latn) -> tuple:
-    """``(E, dE/dPn)`` of the cell at arbitrary placed coordinates ``Pn`` (N, 3), lattice ``latn`` (3, 3).
+    """(E,gatoms) from the packer's complete independent placed-cell owner.
 
-    ``E`` is the packer's lattice energy in kcal/mol per cell, assembled as the module
-    docstring lists, and ``dE/dPn`` (N, 3) its exact derivative with respect to every placed
-    atom independently -- a *total* derivative, the fluxing charges and the induced dipoles
-    following the geometry.  ``params`` (7,) supplies the setting angles, the flip and the
-    chain-2 offset that map each chain back to its own frame; ``latn`` is the lattice
-    :meth:`~polyfind.pack.CrystalPacker._place` returned for it (its ``[2, 2]`` is the chain
-    repeat ``c``).
-
-    At the undisplaced placed coordinates ``E`` equals ``packer.energy(params[None])[0]`` to
-    rounding (:func:`check_known_answer`), and the gradient folded back onto one repeat with
-    :func:`fold_gradient` equals :meth:`~polyfind.pack.CrystalPacker.energy_and_grad`'s
-    ``g_coords``.
+    Only the discrete chain reversal is supplied by canonical params.
+    No setting-angle/offset reconstruction or parallel potential assembly.
     """
-    params = np.asarray(params, dtype=float).reshape(7)
-    n, N, nc = packer.n, packer.N, packer.n_chains
-    Pn = np.asarray(Pn, dtype=float).reshape(N, 3)
-    latn = np.asarray(latn, dtype=float).reshape(3, 3)
-    if nc not in (1, 2):
-        raise ValueError("cell_energy_and_grad handles the packer's one- or two-chain cell")
-    cz = float(latn[2, 2])
-    K = int(np.ceil(packer.rc / cz)) + 1
-    R = placing_frames(params, nc)
-    sl = [slice(s * n, (s + 1) * n) for s in range(nc)]
-    Xs = [chain_frame_coords(params, latn, Pn[sl[s]], s) for s in range(nc)]
-    flux = getattr(packer, "_flux", None)
-    dq_on = flux is not None
-    if dq_on:
-        fq = [flux.charges_and_grad(Xs[s], cz) for s in range(nc)]
-        qs = [fq[s][0] for s in range(nc)]
-    else:
-        qs = [np.asarray(packer._q_cell[:n], dtype=float) for _ in range(nc)]
-    q_cell = np.concatenate(qs)
-    # Under Ewald the kernel carries no Coulomb term, so its dE/dq is not wanted (see energy_and_grad)
-    kernel_dq = dq_on and packer._ewald is None
-    pref_q = COULOMB / packer.eps_r
-    E = float(packer.e_torsion)  # the packer's constant: see the module docstring
-    gP = np.zeros((N, 3))
-    gX = [np.zeros((n, 3)) for _ in range(nc)]
-    gq = [np.zeros(n) for _ in range(nc)] if dq_on else None
-    xp, dt = packer.xp, packer._dt
+    params = np.asarray(params,dtype=float)
+    if params.shape != (7,) or not np.isfinite(params).all():
+        raise ValueError("phonon requires one finite canonical parameter row")
+    E,gP,_ = packer.placed_energy_and_grad(Pn,latn,params[6])
+    return E,gP
 
-    # --- per chain, in the chain's own frame: same-site column, valence -----------------------
-    for s in range(nc):
-        qq, qqf, cst = _charge_tables(packer, qs[s], qs[s])
-        tables = (xp.asarray(qq, dtype=dt), xp.asarray(qqf, dtype=dt), xp.asarray(cst, dtype=dt))
-        intra, gXi, _, gqi = packer._intra_column_and_grad(
-            xp.asarray(Xs[s][None], dtype=dt), np.array([cz]), K, tables=tables,
-            q_repeat=qs[s] if kernel_dq else None)
-        E += 0.5 * float(bk.to_numpy(intra)[0])
-        gX[s] += 0.5 * gXi
-        if kernel_dq:
-            gq[s] += 0.5 * gqi
-        if packer._valence is not None:
-            Ev, gXv, _ = packer._valence.energy_and_grad(Xs[s], cz, n_atoms=n)
-            E += Ev
-            gX[s] += gXv
-
-    # --- chain 1 - chain 2 block of the (0, 0, k) column, on the placed coordinates ----------
-    kz = np.arange(-K, K + 1, dtype=float)
-    A_nn = np.asarray(bk.to_numpy(packer._A_nn), dtype=float)
-    B_nn = np.asarray(bk.to_numpy(packer._B_nn), dtype=float)
-    if nc == 2:
-        Dh = Pn[:n, None, :] - Pn[None, n:, :]  # (n, n, 3)
-        dzh = Dh[None, :, :, 2] - kz[:, None, None] * cz  # (2K+1, n, n)
-        r2h = Dh[None, :, :, 0] ** 2 + Dh[None, :, :, 1] ** 2 + dzh * dzh
-        qq, qqf, cst = _charge_tables(packer, qs[0], qs[1])
-        vh, gh = _pair_and_dv(packer, r2h, A_nn, B_nn, qq, qqf, cst)
-        E += float(vh.sum())  # 0.5 * (the (1,2) and the equal (2,1) block)
-        if kernel_dq:
-            W = _pair_phi(packer, r2h).sum(axis=0)
-            gq[0] += W @ (qs[1] * pref_q)
-            gq[1] += W.T @ (qs[0] * pref_q)
-        t = 2.0 * gh
-        for d, w in enumerate((Dh[None, :, :, 0], Dh[None, :, :, 1], dzh)):
-            f = t * w
-            gP[:n, d] += f.sum(axis=(0, 2))
-            gP[n:, d] -= f.sum(axis=(0, 1))
-
-    # --- lateral images: the packer's own selection, on a reach that covers these coordinates --
-    reach = packer.rc + 2.0 * max(float(np.linalg.norm(X[:, :2], axis=1).max()) for X in Xs) + 0.5
-    ijk_np, L = packer._select_images(params[None], K, reach)
-    if L:
-        ijk = np.asarray(ijk_np[0], dtype=float)  # (I, 3)
-        D = Pn[:, None, :] - Pn[None, :, :]  # (N, N, 3)
-        shift = ijk @ latn  # (I, 3)
-        dx = D[None, :, :, 0] - shift[:, None, None, 0]
-        dy = D[None, :, :, 1] - shift[:, None, None, 1]
-        dzz = D[None, :, :, 2] - shift[:, None, None, 2]
-        r2 = dx * dx + dy * dy + dzz * dzz
-        qq, qqf, cst = _charge_tables(packer, q_cell, q_cell)
-        A = np.tile(A_nn, (nc, nc))
-        B = np.tile(B_nn, (nc, nc))
-        v, gv = _pair_and_dv(packer, r2, A, B, qq, qqf, cst)
-        E += 0.5 * float(v.sum())
-        if kernel_dq:
-            Wc = _pair_phi(packer, r2).sum(axis=0)
-            g = 0.5 * (Wc @ (q_cell * pref_q) + Wc.T @ (q_cell * pref_q))
-            for s in range(nc):
-                gq[s] += g[sl[s]]
-        for d, w in enumerate((dx, dy, dzz)):
-            f = gv * w
-            gP[:, d] += f.sum(axis=(0, 2)) - f.sum(axis=(0, 1))
-
-    # --- electrostatics of an Ewald packer ------------------------------------------------------
-    if packer._ewald is not None:
-        if packer.polarizable is not None:
-            e_es, _, _, (gPe, _, gqe) = packer._polarize(Pn, q_cell, latn, params[6], grad=True, charge_grad=dq_on)
-        else:
-            terms = packer._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=dq_on)
-            e_es, gPe, gqe = terms.total, terms.grad_coords, terms.grad_charges
-        E += float(e_es)
-        gP += gPe
-        for s in range(nc):
-            ex_e, ex_gX, _, ex_gq = packer._exclusion(Xs[s], qs[s], cz, K, grad=True, charge_grad=dq_on)
-            E += float(ex_e)
-            gX[s] += ex_gX
-            if dq_on:
-                gq[s] += gqe[sl[s]] + ex_gq
-
-    # --- applied field ---------------------------------------------------------------------------
-    if getattr(packer, "_field_on", False):
-        Ef = np.asarray(packer.field, dtype=float)
-        E += -EV_TO_KCAL * float((q_cell @ Pn) @ Ef)
-        gP += -EV_TO_KCAL * q_cell[:, None] * Ef[None, :]
-        if dq_on:
-            w = -EV_TO_KCAL * (Pn @ Ef)
-            for s in range(nc):
-                gq[s] += w[sl[s]]
-
-    # --- chain rule through the fluxing charges, then the chain frames back to the placed one ---
-    for s in range(nc):
-        if dq_on:
-            gX[s] += np.einsum("a,abd->bd", gq[s], fq[s][1])
-        gP[sl[s]] += gX[s] @ R[s].T
-    return E, gP
 
 
 def cell_energy(packer, params, Pn, latn) -> float:
@@ -293,7 +113,6 @@ def force_terms(packer, params, Pn, latn) -> dict:
     n, nc = packer.n, packer.n_chains
     Pn = np.asarray(Pn, dtype=float).reshape(packer.N, 3)
     latn = np.asarray(latn, dtype=float).reshape(3, 3)
-    cz = float(latn[2, 2])
     _, g_all = cell_energy_and_grad(packer, params, Pn, latn)
     out = {"total": float(np.abs(g_all).max()), "bonds": 0.0, "angles": 0.0, "other": float(np.abs(g_all).max()),
            "bond_strain": 0.0, "angle_strain": 0.0}
@@ -304,18 +123,18 @@ def force_terms(packer, params, Pn, latn) -> dict:
     reals = lambda: np.zeros(0)  # noqa: E731
     bonds_only = _replace(val, ang_i=ints(), ang_j=ints(), ang_k=ints(), ang_si=reals(), ang_sk=reals(), ang_kk=reals(), ang_t0=reals())
     angles_only = _replace(val, bond_i=ints(), bond_j=ints(), bond_s=reals(), bond_k=reals(), bond_r0=reals())
-    R = placing_frames(params, nc)
     gb, ga = np.zeros_like(Pn), np.zeros_like(Pn)
     for s in range(nc):
         sl = slice(s * n, (s + 1) * n)
-        X = chain_frame_coords(params, latn, Pn[sl], s)
-        gb[sl] = bonds_only.energy_and_grad(X, cz, n_atoms=n)[1] @ R[s].T
-        ga[sl] = angles_only.energy_and_grad(X, cz, n_atoms=n)[1] @ R[s].T
+        X = Pn[sl]
+        repeat = latn[2]*(-1. if s == 1 and params[6] == 1. else 1.)
+        gb[sl] = bonds_only.energy_and_repeat_grad(X, repeat, n_atoms=n)[1]
+        ga[sl] = angles_only.energy_and_repeat_grad(X, repeat, n_atoms=n)[1]
         if val.n_bonds:
-            r = val.bond_lengths(X, cz)[0]
+            r = val.bond_lengths(X, repeat=repeat)[0]
             out["bond_strain"] = max(out["bond_strain"], float(np.abs(r - val.bond_r0).max()))
         if val.n_angles:
-            angles = val.angle_values(X, cz)[0]
+            angles = val.angle_values(X, repeat=repeat)[0]
             out["angle_strain"] = max(out["angle_strain"], float(np.rad2deg(np.abs(angles - val.ang_t0)).max()))
     out["bonds"] = float(np.abs(gb).max())
     out["angles"] = float(np.abs(ga).max())
@@ -652,10 +471,9 @@ def phonons_from_hessian(packer, hess: Hessian, asr: str = "none", zero_tol: flo
     lam_tol = (zero_tol / SQRT_KCAL_A2_AMU_TO_CM1) ** 2
     n_imag = int((lam < -lam_tol).sum())
     n_zero = int((np.abs(lam) <= lam_tol).sum())
-    notes = ["the packer's Fourier torsion term is a constant of the chain's nominal dihedrals, so no torsional "
-             "stiffness about the backbone bonds enters this Hessian; these frequencies are not general "
-             "lower bounds, and Gamma-only repeat support does not cover all chain-twisting branches "
-             "(see polyfind.phonon)"]
+    notes = ["the complete placed-cell model includes geometry-derived torsion; Gamma-only repeat support "
+             "does not cover all chain-twisting branches, and model frequencies are not independently "
+             "calibrated material frequencies (see polyfind.phonon)"]
     if hess.max_force > 1e-2:
         notes.append(f"the geometry is not a stationary point of the all-atom energy (max |dE/dP| = "
                      f"{hess.max_force:.2e} kcal/(mol A)); a Hessian there can have imaginary modes that a relaxed one would not")
