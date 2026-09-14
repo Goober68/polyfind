@@ -1,5 +1,14 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest coupled relaxation: `docs/CARTESIAN_RELAXATION_PROGRESS.md` records
+independent atoms/all six strains, exact positive-stretch pullbacks, explicit
+translation gauge and a guarded convergence/checkpoint lifecycle. Actual
+24-atom fitted PVDF model: numerical stationarity PASS but covalent-distance
+admission FAIL (C/F1.5366A); no field branches or saved rejected geometry.
+Diagnose calibration against qualified native references; do not loosen
+the gate. Ten new controls/final38-pass selections are recorded there.
+Native references remain unconverged/incomplete and all stages open.
+
 Latest supercell migration: `docs/SUPERCELL_OWNER_MIGRATION.md` records the
 complete owner's immutable terms/derivatives and shared image diagnostics.
 Supercell total/terms/gradients/dipoles now delegate through explicit layout;

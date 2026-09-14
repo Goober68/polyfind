@@ -504,30 +504,24 @@ def phonons_gamma(packer, params, h: float = 1e-3, asr: str = "none", Pn=None, l
 
 
 def relax_all_atom(packer, params, Pn=None, latn=None, gtol: float = 1e-6, maxiter: int = 2000) -> tuple:
-    """Minimise :func:`cell_energy` over every placed coordinate at fixed cell: ``(Pn, E, max |g|)``.
+    """Independent atoms at fixed cell through the shared Cartesian relaxer.
 
-    The Gamma-point Hessian is only a set of vibrational frequencies at a stationary point,
-    and the packer's rigid-helix reference is stationary over its *own* variables (cell,
-    setting angles, shape parameters), not necessarily over every atom independently.  This
-    lets the atoms go with L-BFGS on the analytic gradient; the three translations are flat
-    and are pinned by fixing the mass centre of the cell.
+    Returns (Pn,E,max absolute gradient component), preserving the legacy
+    observation API. The optimizer uses a vector-norm force criterion gtol
+    and an explicit mass-centre translation gauge, not post-hoc recentering.
+    The tuple is not a stability or physical-trajectory claim.
     """
-    from scipy.optimize import minimize
+    from .cartesian_mechanics import CartesianChart,CartesianRelaxer,CartesianTolerance
+    from .topology import build_cell
 
-    params = np.asarray(params, dtype=float).reshape(7)
-    if Pn is None or latn is None:
-        Pn, latn = placed_coordinates(packer, params)
-    Pn = np.asarray(Pn, dtype=float).reshape(packer.N, 3)
-    m = atom_masses(packer)
-    com0 = (m[:, None] * Pn).sum(axis=0) / m.sum()
-
-    def fg(x):
-        P = x.reshape(-1, 3)
-        E, g = cell_energy_and_grad(packer, params, P, latn)
-        return E, g.ravel()
-
-    res = minimize(fg, Pn.ravel(), jac=True, method="L-BFGS-B", options={"gtol": gtol, "ftol": 0.0, "maxiter": maxiter, "maxcor": 30})
-    P = res.x.reshape(-1, 3)
-    P = P - ((m[:, None] * P).sum(axis=0) / m.sum() - com0)[None, :]
-    E, g = cell_energy_and_grad(packer, params, P, latn)
-    return P, E, float(np.abs(g).max())
+    params = np.asarray(params,dtype=float).reshape(7)
+    cell = build_cell(packer.chain,params,packer=packer)
+    if Pn is not None:
+        cell.coords = np.asarray(Pn,dtype=float).reshape(packer.N,3)
+    if latn is not None:
+        cell.lattice = np.asarray(latn,dtype=float).reshape(3,3)
+    chart = CartesianChart(cell,free_strain=np.zeros(6,dtype=bool))
+    result = CartesianRelaxer(packer,chart,CartesianTolerance(gtol,1.)).run(maxiter=maxiter)
+    geometry = result.geometry
+    evaluation = packer.evaluate_chain_cell(geometry.coords,geometry.lattice,chart.layout)
+    return geometry.coords.copy(),evaluation.terms.total,float(np.abs(evaluation.grad_coords).max())

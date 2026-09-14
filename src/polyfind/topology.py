@@ -62,12 +62,27 @@ def repeat_bond_graph(polymer: Polymer) -> tuple[np.ndarray, list[tuple[int, int
     between the two atoms: ``0`` for every bond inside the repeat and ``1`` for the single
     backbone bond that closes the chain onto its own next repeat.
 
+    Accepts a primitive Polymer blueprint or the writer's PeriodicChain with
+    its explicitly declared independent backbone period. The latter can span
+    multiple chemical periods without inferring chemistry from atom count.
     Derived from the polymer's chemistry alone -- which monomers, which pendants, which
     intra-pendant bonds -- so it is the *intended* graph rather than a re-reading of the
     built coordinates.
     """
-    B = polymer.bonds_per_repeat
-    widths = [1 + polymer.backbone[k].n_pendant_atoms for k in range(B)]
+    # An independent Cartesian period can span multiple CHEMICAL periods.
+    # The chain writer declares its backbone sites; never infer this count
+    # from a cell's atom count, distance graph or an incomplete chain fragment.
+    declared_chain = None
+    if not isinstance(polymer,Polymer):
+        from .pack import PeriodicChain
+        if not isinstance(polymer,PeriodicChain):
+            raise ValueError("a polymer blueprint or declared periodic chain is required")
+        declared_chain,polymer = polymer,polymer.polymer
+    B0 = polymer.bonds_per_repeat
+    B = B0 if declared_chain is None else len(declared_chain.backbone)
+    if B <= 0 or B % B0:
+        raise ValueError("declared chain backbone must span complete chemical periods")
+    widths = [1 + polymer.backbone[k%B0].n_pendant_atoms for k in range(B)]
     starts = np.concatenate([[0], np.cumsum(widths)]).astype(int)
     bonds: list[tuple[int, int, int]] = []
     for k in range(B):
@@ -77,10 +92,13 @@ def repeat_bond_graph(polymer: Polymer) -> tuple[np.ndarray, list[tuple[int, int
         else:
             bonds.append((base, int(starts[0]), 1))  # closes onto the next repeat, +c away
         off = base + 1
-        for pendant in polymer.backbone[k].pendants:
+        for pendant in polymer.backbone[k%B0].pendants:
             bonds.append((base, off, 0))
             bonds.extend((off + i, off + j, 0) for i, j in pendant.bonds)
             off += len(pendant)
+    if declared_chain is not None and (int(starts[-1]) != declared_chain.n_atoms
+                                      or not np.array_equal(starts[:-1],declared_chain.backbone)):
+        raise ValueError("declared chain/local atom order does not match its chemical blueprint")
     return starts[:-1], bonds, int(starts[-1])
 
 
@@ -265,12 +283,13 @@ def intended_edges(cell: Cell, polymer: Polymer) -> set:
     if n_rep != cell.n_per_chain:
         raise ValueError(f"{polymer.name!r} has {n_rep} atoms per repeat but the cell has "
                          f"{cell.n_per_chain} per chain")
+    from .periodic_geometry import ChainLayout
+    layout = ChainLayout.from_cell(cell)
     out = set()
-    for t in range(cell.n_chains):
-        off = t * cell.n_per_chain
-        sgn = -1 if cell.reversed_of[t] else 1
+    for atoms,reversed_chain in zip(layout.atoms,layout.reversed_of):
+        sgn = -1 if reversed_chain else 1
         for i, j, dk in bonds:
-            out.add(_key(off + i, off + j, (0, 0, sgn * dk)))
+            out.add(_key(int(atoms[i]),int(atoms[j]),(0,0,sgn*dk)))
     return out
 
 
