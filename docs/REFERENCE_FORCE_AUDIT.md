@@ -9,6 +9,19 @@ All five research stages remain open; GPU stays reserved.
 
 ## CFE finite inputs and tighter-SCF zero checkpoint
 
+Update 2026-09-14, Sarco c3c802dd: first two QS-only units independently
+replay against original units. Maximum matching atomic-force change is
+5.943289949936275e-7 eV/A at both zero and minus_001; net-force norms remain
+0.7196520790347558 and 0.7259614026748614 eV/A. The third of five is running,
+not terminal; paired derivatives remain pending. This precision change has
+not removed the defect at either completed point. No recentering or refit.
+
+The new neutral CNEPO dipole-axis packet separates geometric swivel coupling
+from internal field response. It reproduces exact archived 5/7/9 candidates
+without new native calculations; no field/pre-strain/packing validation is
+claimed. Read Sarco cnepo_dipole_axis_v1/REPORT.md for components, constraints,
+unit/sign/covariance tests and the limited historical-receipt evidence scope.
+
 Update01:45 PDT: Sarcob13e3276 archives the COMPLETE SCF-only control, five
 fully replayed native points. Every unchanged numerical limit still fails:
 derivative errors.001525584259704/.000435722206654 eV/A, step difference

@@ -1,5 +1,19 @@
 # Resume: polyfind, state as of 2026-09-14
 
+Sarco c3c802dd publishes the exact neutral CNEPO5/7/9 dipole-axis analysis
+(code c62a6693). Transverse magnitudes are 0.935212/0.698476/0.467867 e A;
+signed axial components -0.433061/-0.531185/-0.680422 e A. Axial swiveling
+cannot change the axial component and is prohibited by the archived held-
+azimuth boundary. These are not field-induced changes, length convergence,
+bulk polarization or a switching result. Actual archive replay passes with
+new native calls forbidden; shared campaign and geometric controls pass.
+See Sarco results/boundary_sensitivity/cnepo_dipole_axis_v1/REPORT.md.
+
+QS-only zero/minus_001 both now replay; their forces change from original by
+at most 5.94329e-7 eV/A, with net-force norms still 0.719652/0.725961 eV/A.
+Three points remain; plus_001 child21418/controller19778 confirmed live.
+See QS MILESTONE_TWO.md. No recentering/refit/physical admission; GPU reserved.
+
 01:45 PDT: Sarcob13e3276 archives the completed five-point SCF-only control.
 Full replay passes but all six numerical limits still fail; 100x tighter SCF
 does not remedy this frame's defect. The unchanged QS-only ready control is
