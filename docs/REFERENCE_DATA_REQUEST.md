@@ -34,6 +34,20 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-14
 
+2026-09-14: Sarco980d2c71 publishes CFE-terpolymer source-motif5/7/9 inputs
+in materials/gpu_bundle/systems_boundary/cfe_ter_source_motif_v1. The32/44/56
+atom inputs preserve all22 source heavy atoms and three stereocentres; shared
+preparation66fbaaeb has34 passing controls and original CNEPO receipts remain
+unchanged. Read PROTOCOL.md/VERIFICATION.md: these are prepared-only finite
+inputs, not equilibria, force labels or field trajectories. VDF growth changes
+dilution, so this is not fixed-composition size convergence.
+
+The tighter-SCF zero point completes and replays: maximum atomic force change
+4.61987e-7 eV/A, while net force remains0.7196521 eV/A and actual ordinary grids
+are identical. Tightening SCF alone does not resolve the zero-point defect.
+Other points remain live under controller12087, current minus_001 child13855;
+no refit/admission follows. C: numerical source remains unchanged, GPU reserved.
+
 2026-09-14 00:41 PDT: original translation experiment is COMPLETE, archived
 in Sarco27efd41b (trainset_translation_probe_v1/RESULTS.md). All declared
 checks fail: derivative errors0.00152559685/0.00043572297 eV/A, inter-step
