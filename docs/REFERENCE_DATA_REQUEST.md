@@ -34,6 +34,21 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-13
 
+2026-09-13 first native training-frame point: sarco physics-native-provenance
+fc0949be and Polyfind isolatedb992ab4 record completed47-step SCF and exact
+input/receipt/32-force/grid/whole-unit replay. At source frame13/C9/F10,
+native outward force1.1566310100eV/A versus label1.5998264914, energy difference
++0.0441423eV. Four displaced native points remain running/pending, so the
+energy/force gate and calibration admission remain open. Native raw net
+force0.7196520837eV/A and label1.0548348674 introduce an additional common-
+translation consistency concern. Actual grids243^3/144^3/81^3/48^3; grid-origin
+error is a hypothesis, not a proven cause. A rigid-translation check follows
+the declared five points; neither recentering forces nor retuning parameters
+would establish reference accuracy. See sarco
+periodic_reference/trainset_force_probe_v1/MILESTONE_ZERO.md. Session44730
+remains live on D:/CPU15, current native child6218/start12665829. C: native
+sources and GPU reservation are unchanged. Full five-stage scope remains open.
+
 2026-09-13 historical-label audit: isolated physics-vector-repeat3fce039
 reproduces the recorded467-frame finite fit from the actual566-frame source
 without refitting. Held energy/force RMS1.3593459/5.2312495 agrees with the
