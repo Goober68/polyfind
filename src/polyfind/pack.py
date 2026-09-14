@@ -1202,7 +1202,7 @@ class CrystalPacker:
                          for i in range(Pn.shape[0])])
 
     # --- induced dipoles ---------------------------------------------------------------
-    def _polarize(self, Pn, q_cell, latn, flip: float, grad: bool = False, charge_grad: bool = False):
+    def _polarize(self, Pn, q_cell, latn, reversal, grad: bool = False, charge_grad: bool = False):
         r"""Induced dipoles of ONE placed configuration, solved self-consistently.
 
         ``E0_i`` is the permanent field at site ``i``: the Ewald field of every charge in the
@@ -1223,12 +1223,29 @@ class CrystalPacker:
         taken *at fixed* ``p``, which at the solution is the
         total derivative.  The stationarity that makes this true is asserted numerically in
         ``tests/test_polarizable.py``.
+
+        ``reversal`` is the canonical scalar flip for the packer's own cell,
+        or explicit boolean flags for all ordered independent-chain repeats.
+        Scalar canonical placement never guesses a larger cell's reversals.
         """
         ew = self._ewald
-        N, n, nc = self.N, self.n, self.n_chains
+        from .periodic_geometry import ChainLayout
+        N, n = len(Pn), self.n
+        if N == 0 or N % n:
+            raise ValueError("polarization requires complete chain repeats")
+        nc = N//n
+        reversal = np.asarray(reversal)
+        if reversal.ndim == 0:
+            if N != self.N:
+                raise ValueError("noncanonical polarization requires explicit per-chain reversal")
+            reversal = ChainLayout.canonical(self.elements,self.n_chains,reversal.item()).reversed_of
+        if reversal.shape != (nc,) or reversal.dtype.kind != "b":
+            raise ValueError("polarization needs one boolean reversal per chain")
+        alpha_cell = np.tile(self._alpha_cell[:n],nc)
+        thole_scale = self._thole_scale if N == self.N else (alpha_cell[:,None]*alpha_cell[None,:])**(1./6.)
         pref = COULOMB / self.eps_r
         q_cell = np.asarray(q_cell, dtype=float)
-        t0 = ew.terms(Pn, q_cell, latn, thole=self._thole, thole_scale=self._thole_scale,
+        t0 = ew.terms(Pn, q_cell, latn, thole=self._thole, thole_scale=thole_scale,
                       field=True, tensor=True)
         F = t0.field.copy()
         repeat = np.asarray(latn[2], dtype=float)
@@ -1237,18 +1254,18 @@ class CrystalPacker:
             Sk = self._scale_column_np(int(np.ceil(self.rc / np.linalg.norm(repeat))) + 1)
             for s in range(nc):
                 sl = slice(s * n, (s + 1) * n)
-                # chain 2 of a flipped cell is mirrored z -> -z, which maps image k to -k
-                sc = Sk[::-1] if (s == 1 and flip > 0.5) else Sk
+                # Each reversed chain maps its topological image k to -k.
+                sc = Sk[::-1] if reversal[s] else Sk
                 stacks.append((sl, sc))
                 F[sl] += charge_dipole_exclusion(Pn[sl], q_cell[sl], repeat, sc, pref=pref)[4]
         E0 = F if not self._field_on else F + EV_TO_KCAL * np.asarray(self.field, dtype=float)[None, :]
         A = -t0.tensor.transpose(0, 2, 1, 3).reshape(3 * N, 3 * N)
-        A[np.arange(3 * N), np.arange(3 * N)] += np.repeat(pref / self._alpha_cell, 3)
+        A[np.arange(3 * N), np.arange(3 * N)] += np.repeat(pref / alpha_cell, 3)
         p = np.linalg.solve(A, E0.ravel()).reshape(N, 3)
         e_es = t0.total + (-0.5 * float((p * E0).sum()))
         if not grad:
             return e_es, p, E0, None
-        t = ew.terms(Pn, q_cell, latn, dipoles=p, thole=self._thole, thole_scale=self._thole_scale,
+        t = ew.terms(Pn, q_cell, latn, dipoles=p, thole=self._thole, thole_scale=thole_scale,
                      grad=True, charge_grad=charge_grad)
         gP, glat = t.grad_coords.copy(), t.grad_lattice.copy()
         gq = t.grad_charges.copy() if charge_grad else None
@@ -1263,18 +1280,25 @@ class CrystalPacker:
 
     def _placed_charge_state(self, coords, lattice, flip):
         """Placed-cell validation and one charge/derivative path for all consumers."""
-        from .periodic_geometry import PlacedCell
+        from .periodic_geometry import ChainLayout
+        return self._chain_charge_state(coords,lattice,ChainLayout.canonical(self.elements,self.n_chains,flip))
+
+    def _chain_charge_state(self,coords,lattice,layout):
+        """Validate declared order and derive charges in chain-local atom order."""
+        from .periodic_geometry import PlacedCell,ChainLayout
 
         cell = PlacedCell(coords, lattice)
-        if cell.coords.shape != (self.N, 3):
-            raise ValueError("placed coordinates do not match this packer's atom order")
-        if not np.isfinite(flip) or flip not in (0.0, 1.0):
-            raise ValueError("chain reversal must be exactly 0 or 1")
-        q = np.array(self._q_cell, dtype=float)
+        if not isinstance(layout,ChainLayout) or layout.atoms.shape[1] != self.n or cell.coords.shape != (layout.atoms.size,3):
+            raise ValueError("placed coordinates/layout do not match complete model repeats")
+        labels = np.asarray(layout.elements)[layout.atoms]
+        if not np.all(labels == np.asarray(self.elements)[None,:]):
+            raise ValueError("declared chain element/local order does not match model topology")
+        cell = PlacedCell(cell.coords[layout.atoms.ravel()],cell.lattice)
+        q = np.tile(self._q_cell[:self.n],len(layout.atoms))
         states = []
-        for s in range(self.n_chains):
+        for s in range(len(layout.atoms)):
             sl = slice(s*self.n,(s+1)*self.n)
-            sign = -1.0 if s == 1 and flip == 1.0 else 1.0
+            sign = -1.0 if layout.reversed_of[s] else 1.0
             state = None if self._flux is None else self._flux.charges_and_repeat_grad(cell.coords[sl], sign*cell.lattice[2])
             if state is not None:
                 q[sl] = state[0]
@@ -1297,15 +1321,28 @@ class CrystalPacker:
         Real Cartesian torsions are included; no metadata-energy override.
         This owner imposes no canonical orientation or chain-frame recovery.
         """
-        cell,q,states = self._placed_charge_state(coords,lattice,flip)
+        from .periodic_geometry import ChainLayout
+        layout = ChainLayout.canonical(self.elements,self.n_chains,flip)
+        return self.chain_energy_and_grad(coords,lattice,layout,chunk_elems=chunk_elems)
+
+    def chain_energy_and_grad(self,coords,lattice,layout,*,chunk_elems=None):
+        """Complete model energy/derivatives with explicit arbitrary-chain layout.
+
+        Atom derivatives are returned in the declared SOURCE cell order.
+        All chains carry this model's homogeneous complete repeat topology.
+        """
+        cell,q,states = self._chain_charge_state(coords,lattice,layout)
         P,H = cell.coords,cell.lattice
-        E,gP,gH,gq = 0.,np.zeros_like(P),np.zeros_like(H),np.zeros(self.N)
+        E,gP,gH,gq = 0.,np.zeros_like(P),np.zeros_like(H),np.zeros(len(P))
         xp,dt = self.xp,self._dt
         pref = COULOMB/self.eps_r
         tables = [xp.asarray(v,dtype=dt) for v in self._pair_charge_tables(q,q)]
+        nc = len(states)
+        A = xp.tile(self._A_nn,(nc,nc))
+        B = xp.tile(self._B_nn,(nc,nc))
         for D,integers in cell.pair_image_chunks(self.rc,CPU_CHUNK_ELEMS if chunk_elems is None else chunk_elems):
             r2 = xp.asarray((D*D).sum(axis=-1),dtype=dt)
-            v,dv = self._pair_energy_and_dv(r2,self._A,self._B,*tables)
+            v,dv = self._pair_energy_and_dv(r2,A,B,*tables)
             scale = np.ones(D.shape[:-1])
             for sl,sign,_ in states:
                 images = integers[:,sl,sl]
@@ -1327,7 +1364,7 @@ class CrystalPacker:
                 t = self._ewald.terms(P,q,H,grad=True,charge_grad=self._flux is not None)
                 Ee,gPe,gHe,gqe = t.total,t.grad_coords,t.grad_lattice,t.grad_charges
             else:
-                Ee,_,_,(gPe,gHe,gqe) = self._polarize(P,q,H,flip,grad=True,charge_grad=self._flux is not None)
+                Ee,_,_,(gPe,gHe,gqe) = self._polarize(P,q,H,layout.reversed_of,grad=True,charge_grad=self._flux is not None)
             E += Ee
             gP += gPe
             gH += gHe
@@ -1363,7 +1400,9 @@ class CrystalPacker:
                 gH[2] += sign*np.einsum("a,ad->d",gq[sl],state[2])
         if not np.isfinite(E) or not np.isfinite(gP).all() or not np.isfinite(gH).all():
             raise ValueError("placed-cell energy/derivative is nonfinite")
-        return float(E),gP,gH
+        source_gradient = np.empty_like(gP)
+        source_gradient[layout.atoms.ravel()] = gP
+        return float(E),source_gradient,gH
 
     def placed_dipole(self, coords, lattice, flip: float = 0.0) -> tuple:
         """(charge, induced) cell dipoles (e.A) on general placed geometry.
@@ -1371,11 +1410,16 @@ class CrystalPacker:
         Fixed nuclei are evaluated, not relaxed. Charge flux and polarization
         share the same Cartesian cell and periodic image translations.
         """
-        q = self.placed_charges(coords, lattice, flip)
-        P = np.asarray(coords, dtype=float)
+        from .periodic_geometry import ChainLayout
+        return self.chain_dipole(coords,lattice,ChainLayout.canonical(self.elements,self.n_chains,flip))
+
+    def chain_dipole(self,coords,lattice,layout):
+        """(permanent,induced) dipoles with explicit independent-chain layout."""
+        cell,q,_ = self._chain_charge_state(coords,lattice,layout)
+        P = cell.coords
         mu_induced = np.zeros(3)
         if self.polarizable is not None:
-            mu_induced = self._polarize(P, q, np.asarray(lattice, dtype=float), flip)[1].sum(axis=0)
+            mu_induced = self._polarize(P,q,cell.lattice,layout.reversed_of)[1].sum(axis=0)
         return q @ P, mu_induced
 
     def induced_dipoles(self, params, coords=None, c=None) -> np.ndarray:

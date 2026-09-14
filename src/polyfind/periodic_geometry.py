@@ -11,6 +11,65 @@ from itertools import islice
 
 
 @dataclass(frozen=True, eq=False)
+class ChainLayout:
+    """Declared complete repeat atom IDs per chain, in chemical-local order."""
+
+    atoms: np.ndarray
+    reversed_of: np.ndarray
+    elements: tuple[str, ...]
+
+    def __post_init__(self):
+        atoms = np.asarray(self.atoms)
+        reversal = np.asarray(self.reversed_of)
+        if atoms.ndim != 2 or not all(atoms.shape) or atoms.dtype.kind not in "iu":
+            raise ValueError("chain atoms must be nonempty integer (chains,local_atoms)")
+        if not np.array_equal(np.sort(atoms.ravel()),np.arange(atoms.size)):
+            raise ValueError("chain layout must own every cell atom exactly once")
+        if reversal.shape != (len(atoms),) or reversal.dtype.kind != "b":
+            raise ValueError("one explicit boolean reversal is required per chain")
+        elements = tuple(self.elements)
+        if len(elements) != atoms.size or any(not isinstance(e,str) or not e for e in elements):
+            raise ValueError("one element label is required per cell atom")
+        for name,value in (("atoms",atoms.astype(np.int64)),("reversed_of",reversal)):
+            value = np.array(value,copy=True)
+            value.setflags(write=False)
+            object.__setattr__(self,name,value)
+        object.__setattr__(self,"elements",elements)
+
+    @classmethod
+    def canonical(cls,elements,n_chains,flip):
+        if isinstance(n_chains,bool) or not isinstance(n_chains,(int,np.integer)) or n_chains not in (1,2):
+            raise ValueError("canonical placement has one or two chains")
+        if not np.isscalar(flip) or not np.isfinite(flip) or flip not in (0.,1.):
+            raise ValueError("chain reversal must be exactly 0 or 1")
+        labels = tuple(elements)*int(n_chains)
+        atoms = np.arange(len(labels)).reshape(int(n_chains),len(elements))
+        reversal = np.zeros(int(n_chains),dtype=bool)
+        if n_chains == 2:
+            reversal[1] = flip == 1.
+        return cls(atoms,reversal,labels)
+
+    @classmethod
+    def from_cell(cls,cell):
+        chains,local = np.asarray(cell.chain_of),np.asarray(cell.local_of)
+        n = cell.n_per_chain
+        N = len(cell.elements)
+        if isinstance(n,bool) or not isinstance(n,(int,np.integer)) or n <= 0 or N == 0 or N % n:
+            raise ValueError("cell must contain complete positive-size chain repeats")
+        nc = N//n
+        if chains.shape != (N,) or local.shape != (N,) or chains.dtype.kind not in "iu" or local.dtype.kind not in "iu":
+            raise ValueError("cell chain/local maps must be integer (N,)")
+        if np.any(chains < 0) or np.any(chains >= nc) or np.any(local < 0) or np.any(local >= n):
+            raise ValueError("cell chain/local indices are outside the declared layout")
+        keys = chains.astype(np.int64)*n+local.astype(np.int64)
+        if not np.array_equal(np.sort(keys),np.arange(N)):
+            raise ValueError("each chain/local pair must occur exactly once")
+        atoms = np.empty(N,dtype=np.int64)
+        atoms[keys] = np.arange(N)
+        return cls(atoms.reshape(nc,n),cell.reversed_of,tuple(cell.elements))
+
+
+@dataclass(frozen=True, eq=False)
 class PlacedCell:
     """Cartesian atoms and lattice rows; no canonical-axis restriction."""
 

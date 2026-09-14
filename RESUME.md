@@ -1,5 +1,11 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest layout continuation: `docs/CHAIN_LAYOUT_PROGRESS.md` records immutable
+declared atom/local/reversal/element layout and the complete owner's arbitrary
+homogeneous independent-chain count, force scatter and dipole/polarization
+support. Legacy SupercellEnergy total/terms/diagnostics migration is still
+pending; do not promote its old assembly as full supercell/field evidence.
+
 Latest migration: `docs/ENERGY_CONSUMER_MIGRATION.md` records canonical
 energy/refinement/mechanics/phonon delegation to the complete owner, removal
 of duplicate assemblies and double torsion, entire nonprimitive Gamma torsion
