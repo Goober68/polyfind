@@ -1,5 +1,18 @@
 # Reference data request: bulk dipole response to strain
 
+2026-09-14 update, Sarco e69274fd: CFE-terpolymer source-motif5/7/9 now has
+an actual verified READY native-candidate campaign, not a run or result.
+Shared definition472ea450 uses the same cold GFN2 calculator, optimizer,
+force/chemical gates, candidate codec and lifecycle as CNEPO. Its real
+prepared input and original factory admissions bind separately from D:.
+The fixed-core UFF initialization does not become a core clamp in relaxation.
+Read Sarco cfe_reference_candidates_v1/PREPARATION.md. Original CNEPO input
+and complete candidate reduction bytes are preserved; full historical native
+writer/runtime relocation remains separate. 22 shared/chemistry/basin tests,
+12 declaration/CLI tests, and25 archive/curvature tests pass (two additional
+opt-in archive integrations skipped). No field/strain tensor, force-label
+repair or physical validation follows. GPU reserved; all five stages open.
+
 2026-09-14 update, Sarco c3c802dd: exact archived neutral CNEPO5/7/9 dipoles
 are projected onto the actual terminal-clamp axes. Axial components are
 -0.433061/-0.531185/-0.680422 e A; transverse magnitudes are
