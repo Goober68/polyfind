@@ -9,6 +9,22 @@ All five research stages remain open; GPU stays reserved.
 
 ## CFE finite inputs and tighter-SCF zero checkpoint
 
+Update01:34 PDT, Sarcod3faa6d4: archive-only source replay now supports explicit
+original repository identities and D: storage. All nine original coordinate/
+graph identities replay unchanged and match an unchanged-location baseline;
+seven tests pass41.063s. Four original Polyfind readers have mixed line endings,
+so their Git-normalized history is insufficient for exact raw receipts. The
+complete14-file/154820-byte producer evidence is preserved in Sarco
+systems_boundary/original_polyfind_receipts_v1 with byte conversion disabled.
+See RELOCATION_REPORT.md. Factory/default binding and terminal-native receipt
+relocation still require integration; no new CFE/native/field qualification.
+
+Four SCF-control points now independently replay. Maximum original-to-tight
+atomic force change is below4.64e-7 eV/A across them. The h=.001 central
+derivative is-.6023830246704165 eV/A with analytic error.0015255842597031721,
+still above1e-4. Last plus_0005 is running; no complete fine pair/terminal
+result yet. The separate QS control remains ready and unlaunched.
+
 Update 01:12 PDT: SCF-only minus_001 completes01:04:34 and passes full native
 replay. Energy -8341.294563875854 eV, summed Fy -0.6028309640513702 eV/A;
 relative to original, energy changes -3.63798e-12 eV and maximum atomic

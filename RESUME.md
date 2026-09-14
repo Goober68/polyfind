@@ -1,5 +1,15 @@
 # Resume: polyfind, state as of 2026-09-14
 
+01:34 PDT: Sarcod3faa6d4 repairs the archive reader's original-identity/current-
+storage boundary. All nine original source identities/coordinate hashes replay
+from D: and match a separate unchanged-location read; seven tests pass41.063s.
+Exact14-file/154820-byte Polyfind receipts are preserved because mixed line
+endings cannot be reconstructed from Git-normalized history. Factory and
+terminal-native relocation integration remain pending; CFE is not launched.
+SCF-only control now has four independently replayed points, unchanged forces
+within4.64e-7 eV/A. Its h=.001 derivative error remains.00152558426 eV/A.
+Last plus_0005 child15174/controller12087 runs; QS stays ready, GPU reserved.
+
 01:12 PDT: Sarco15d4a3f4 declares the independent QS-only translation control
 (EPS_DEFAULT1e-16, ORIGINAL EPS_SCF1e-8). It is prepared/verified READY with
 no native execution, pending completion of the live SCF control on CPU15.
