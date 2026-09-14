@@ -9,6 +9,24 @@ All five research stages remain open; GPU stays reserved.
 
 ## CFE finite inputs and tighter-SCF zero checkpoint
 
+Update 01:12 PDT: SCF-only minus_001 completes01:04:34 and passes full native
+replay. Energy -8341.294563875854 eV, summed Fy -0.6028309640513702 eV/A;
+relative to original, energy changes -3.63798e-12 eV and maximum atomic
+force-vector change is4.63481e-7 eV/A. Thus both completed points preserve
+the original defect. Plus_001 is running; no terminal derivative result yet.
+Sarco15d4a3f4 declares the separate QS-only control (EPS_DEFAULT1e-16 while
+retaining original EPS_SCF1e-8); production state is READY, not launched.
+Fifteen compiler/precision/installed-parser tests pass; physics remains open.
+
+CFE preparation is unchanged. Before extending the CNEPO native refinement
+path, its existing factory construction was tested on D: and failed because
+CurvatureSourceArchive demands current D: helper paths where original C:
+paths are recorded. The source-admission archive also names original C:
+Sarco/Polyfind paths. No CFE native calculation ran. Repair explicit original
+identity/current-storage ownership and replay original bytes; do not rewrite
+historical records, infer missing labels or treat preparation as calibration.
+See Sarco systems_boundary/cfe_ter_source_motif_v1/REFERENCE_LAUNCH_DIAGNOSIS.md.
+
 Sarco980d2c71 publishes systems_boundary/cfe_ter_source_motif_v1 with verified
 5/7/9-unit inputs,32/44/56 atoms. Source frame38 is the first conf-labelled
 CFE-terpolymer frame, selected without energy/force ranking. All22 source

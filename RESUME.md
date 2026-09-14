@@ -1,5 +1,15 @@
 # Resume: polyfind, state as of 2026-09-14
 
+01:12 PDT: Sarco15d4a3f4 declares the independent QS-only translation control
+(EPS_DEFAULT1e-16, ORIGINAL EPS_SCF1e-8). It is prepared/verified READY with
+no native execution, pending completion of the live SCF control on CPU15.
+SCF minus_001 now also reproduces original: max atomic-force change4.63481e-7
+eV/A; two of five complete, plus_001 running. Native sources unchanged.
+CFE native relaxation is held before execution by a reproduced archive-reader
+relocation defect: historical C: identity paths vs D: storage are conflated.
+Original receipts must remain intact; repair the archive location boundary,
+not historical hashes. See Sarco CFE REFERENCE_LAUNCH_DIAGNOSIS.md. No refit.
+
 Latest: Sarco980d2c71 publishes verified CFE-terpolymer source-motif5/7/9
 inputs (32/44/56 atoms), using shared preparation66fbaaeb. All22 source heavy
 atoms and three stereocentres are preserved; CNEPO archives replay unchanged.
