@@ -252,25 +252,15 @@ def clamped_ion(ref, h: float) -> dict:
     """
     packer = ref.packer
     P0, lat0 = placed(ref, ref.params, packer.chain)
-    flux = getattr(packer, "_flux", None)
-    n, nc = packer.n, packer.n_chains
     out = {}
     for K in (0, 1, 2):
         mus = []
         for sgn in (1.0, -1.0):
             eps = np.zeros(6)
             eps[K] = sgn * h
-            sc = M.strained_cell(ref.params, ref.c, eps)
             F = np.eye(3) + M.strain_tensor(eps)
             Pn, latn = P0 @ F, lat0 @ F
-            q = np.array(packer._q_cell, dtype=float)
-            if flux is not None:
-                for s in range(nc):
-                    sl = slice(s * n, (s + 1) * n)
-                    q[sl] = flux.charges(chain_frame_coords(sc.params, latn, Pn[sl], s), float(latn[2, 2]))[0]
-            mu = q @ Pn
-            if packer.polarizable is not None:
-                mu = mu + packer._polarize(Pn, q, latn, float(sc.params[6]))[1].sum(axis=0)
+            mu = sum(packer.placed_dipole(Pn, latn, float(ref.params[6])))
             mus.append(mu)
         out[K] = (mus[0] - mus[1]) / (2.0 * h) / ref.volume * E_PER_A2_TO_C_PER_M2
     return out

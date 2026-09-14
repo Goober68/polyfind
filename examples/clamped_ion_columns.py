@@ -6,7 +6,7 @@
 The producer's Berry-phase clamped-ion matrix (``docs/REFERENCE_DATA_REQUEST.md``, 2026-09-13) is
 compared column by column against this model's clamped-ion response.  The producer asked that the
 exact compared baseline geometry, cell and source hashes be retained with a reproducible
-four-column record rather than as numbers in the exchange; this script is that record.
+record rather than as numbers in the exchange; this script now supplies all six columns.
 
 **The quantity.**  Every atom is displaced affinely with the cell (fixed fractional nuclei),
 nothing is relaxed, the charge-flux charges and the induced dipoles are re-solved at the deformed
@@ -26,9 +26,8 @@ producer's are ``x`` = long lateral, ``y`` = polar, ``z`` = chain.  The map is t
 90 degrees about the chain axis used by the Born and internal-strain comparisons
 (:func:`examples.internal_strain_jacobian.frame_map`), and the polar sign is fixed the same way
 (fluorines at ``+y`` of their carbon, so ``P_y < 0``, as in the producer's cell).  Voigt columns
-are given in the producer's frame; the two shears that involve the chain axis (``yz``, ``xz``)
-cannot be applied by this cell parametrisation (the chain axis is fixed along ``z``) and are
-recorded as not expressible.
+are given in the producer's frame. All six affine strains use Cartesian placed geometry
+and vector repeat images, independently of the restricted canonical relaxation variables.
 
 **What this is not.**  Not a fit, not a piezoelectric coefficient of the material, not a
 same-Hamiltonian quantity, and not a comparison in itself: the producer's numbers carry their
@@ -51,17 +50,18 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 from polyfind import mechanics as M  # noqa: E402
+from polyfind.strain_response import frame_weights, proper_columns, rotate_columns  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("internal_strain_jacobian", os.path.join(ROOT, "examples", "internal_strain_jacobian.py"))
 ISJ = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ISJ)
 
 PRESET = "pvdf-dft-valence-flux-born"
-OUT = os.path.join(ROOT, "deliverables", "clamped_ion_columns")
+OUT = os.path.join(ROOT, "deliverables", "clamped_ion_vector_repeat_v2")
 SOURCES = ("examples/clamped_ion_columns.py", "examples/internal_strain_jacobian.py", "examples/fit_born_flux.py",
            "src/polyfind/mechanics.py", "src/polyfind/pack.py", "src/polyfind/born.py", "src/polyfind/forcefield.py",
            "src/polyfind/polarizability.py", "src/polyfind/fitting.py", "src/polyfind/ewald.py", "src/polyfind/polymers.py",
-           "src/polyfind/chain.py")
+           "src/polyfind/chain.py", "src/polyfind/periodic_geometry.py", "src/polyfind/strain_response.py")
 PROVIDER_VOIGT = ("xx", "yy", "zz", "yz", "xz", "xy")
 IDX = [(0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1)]
 
@@ -73,39 +73,25 @@ def sha256_text(path: str) -> str:
 
 def cell_dipole(packer, params, Pn, latn) -> tuple:
     """``(mu_charges, mu_induced)`` in e.A for placed coordinates, charges re-solved per chain."""
-    flux = getattr(packer, "_flux", None)
-    n, nc = packer.n, packer.n_chains
-    q = np.array(packer._q_cell, dtype=float)
-    if flux is not None:
-        for s in range(nc):
-            sl = slice(s * n, (s + 1) * n)
-            q[sl] = flux.charges(ISJ.chain_frame_coords(params, latn, Pn[sl], s), float(latn[2, 2]))[0]
-    mu_q = q @ Pn
-    mu_ind = np.zeros(3)
-    if packer.polarizable is not None:
-        mu_ind = packer._polarize(Pn, q, latn, float(params[6]))[1].sum(axis=0)
-    return mu_q, mu_ind
+    return packer.placed_dipole(Pn, latn, float(params[6]))
 
 
 def clamped_columns(ref, h: float) -> dict:
-    """Packer-frame ``{K: (3,) C/m^2}`` for the expressible Voigt columns, dipole per reference volume."""
+    """All six fixed-fractional-nuclei columns, dipole per reference volume."""
+    from polyfind.periodic_geometry import PlacedCell
+
     packer = ref.packer
     P0, lat0 = ISJ.placed(ref, ref.params, packer.chain)
+    baseline = PlacedCell(P0, lat0)
     out = {}
     for K in range(6):
-        try:
-            eps = np.zeros(6)
-            eps[K] = h
-            M.strained_cell(ref.params, ref.c, eps)
-        except ValueError:
-            continue
         mus = []
         for sgn in (1.0, -1.0):
             eps = np.zeros(6)
             eps[K] = sgn * h
-            sc = M.strained_cell(ref.params, ref.c, eps)
             F = np.eye(3) + M.strain_tensor(eps)
-            mu_q, mu_ind = cell_dipole(packer, sc.params, P0 @ F, lat0 @ F)
+            cell = baseline.deformed(F)
+            mu_q, mu_ind = cell_dipole(packer, ref.params, cell.coords, cell.lattice)
             mus.append(mu_q + mu_ind)
         out[K] = (mus[0] - mus[1]) / (2.0 * h) / ref.volume * ISJ.E_PER_A2_TO_C_PER_M2
     return out
@@ -113,29 +99,16 @@ def clamped_columns(ref, h: float) -> dict:
 
 def to_provider_columns(cols_pk: dict, L: np.ndarray, P_prov: np.ndarray) -> dict:
     """Map packer Voigt columns to the producer's frame and apply the Vanderbilt correction."""
-    rec = {}
-    for K, ev_pk in cols_pk.items():
-        e = np.zeros(6)
-        e[K] = 1.0
-        eps_pv = L @ M.strain_tensor(e) @ L.T
-        vals = [eps_pv[i, j] for i, j in IDX]
-        J = int(np.argmax(np.abs(vals)))
-        sgn = float(np.sign(vals[J]))
-        ev = L @ ev_pk * sgn
-        i_, j_ = IDX[J]
-        corr = np.zeros(3)
-        if i_ == j_:
-            corr[i_] = P_prov[i_]
-        else:
-            corr[i_] += 0.5 * P_prov[j_]
-            corr[j_] += 0.5 * P_prov[i_]
-        rec[PROVIDER_VOIGT[J]] = {"packer_voigt": K, "sign_from_frame_map": sgn,
-                                   "dipole_per_reference_volume_C_m2": ev.tolist(),
-                                   "vanderbilt_proper_C_m2": (ev - corr).tolist(),
-                                   "improper_lab_dP_de_C_m2": (ev - (P_prov if i_ == j_ else 0.0)).tolist() if i_ == j_ else None}
-    for name in PROVIDER_VOIGT:
-        rec.setdefault(name, "not expressible: this cell parametrisation fixes the chain axis along z and has no variable that tilts it")
-    return rec
+    if set(cols_pk) != set(range(6)):
+        raise ValueError("all six affine response columns are required")
+    response = rotate_columns(np.stack([cols_pk[k] for k in range(6)], axis=1), L)
+    proper = proper_columns(response, P_prov)
+    weights = frame_weights(L)
+    return {label: {"packer_voigt_weights": weights[J].tolist(),
+                    "dipole_per_reference_volume_C_m2": response[:, J].tolist(),
+                    "vanderbilt_proper_C_m2": proper[:, J].tolist(),
+                    "improper_lab_dP_de_C_m2": (response[:, J] - (P_prov if J < 3 else 0.0)).tolist()}
+            for J, label in enumerate(PROVIDER_VOIGT)}
 
 
 def main(argv=None) -> int:
@@ -149,7 +122,7 @@ def main(argv=None) -> int:
     with ISJ.FITTED_VALENCE.applied():
         ref, shape = M.relax_reference_deformable(ref, shape)
         states = ISJ.our_states(ref, shape)
-        cols = {h: clamped_columns(ref, h) for h in (0.0025, 0.01)}
+        cols = {h: clamped_columns(ref, h) for h in (0.0025, 0.005)}
         P0, lat0 = ISJ.placed(ref, ref.params, packer.chain)
         mu_q, mu_ind = cell_dipole(packer, ref.params, P0, lat0)
     n_chain = packer.n
@@ -168,10 +141,13 @@ def main(argv=None) -> int:
     geometry_sha = hashlib.sha256(xyz.encode("ascii")).hexdigest()
 
     record = {
-        "schema_version": 1,
+        "schema_version": 2,
         "purpose": "Polyfind clamped-ion piezoelectric columns of beta-PVDF for like-for-like comparison with the producer's Berry-phase clamped-ion matrix",
         "generator": "examples/clamped_ion_columns.py",
         "status": "model quantity on the fitted potential; not a fit, not a material coefficient, not same-Hamiltonian; the producer's values are not reproduced here",
+        "quantitatively_valid": False,
+        "complete_affine_columns": True,
+        "relaxed_ion_full_tensor": False,
         "calculation_owners_sha256": {s: sha256_text(os.path.join(ROOT, s)) for s in SOURCES},
         "hash_canonicalization": "UTF-8/ASCII text with CRLF and CR normalized to LF",
         "numpy_version": np.__version__,
@@ -191,6 +167,7 @@ def main(argv=None) -> int:
             "vanderbilt_proper": "dipole_per_reference_volume - delta_ij P_k (normal strains); - (delta_ij P_k + delta_ik P_j)/2 per unit engineering shear",
             "shear_convention": "engineering gamma; strain tensor off-diagonal = gamma/2 (mechanics.strain_tensor)",
             "voigt_order_producer_frame": list(PROVIDER_VOIGT),
+            "periodic_images": "full Cartesian chain-repeat vector from lattice row 3, sign reversed for a reversed chain; fixed fractional nuclei; no canonical-cell reconstruction",
         },
         "columns": {f"h={h}": to_provider_columns(cols[h], L, P) for h in cols},
     }

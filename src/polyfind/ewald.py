@@ -530,9 +530,14 @@ def exclusion_correction(coords, charges, c: float, scales, pref: float = COULOM
     orientations of a two-chain cell give the same number -- so for a rigid chain it is a
     constant, exactly as :attr:`polyfind.pack.CrystalPacker.e_intra` is.
 
+    ``c`` can also be a Cartesian (3,) repeat vector: image offsets then use
+    ``k * c`` and its derivative is a (3,) vector, not a z projection.
     Returns ``(E, dE/dcoords (n, 3), dE/dc, dE/dq (n,))`` for ONE chain; the trailing three
     are ``None`` unless asked for.
     """
+    from .periodic_geometry import repeat_vector, repeat_gradient
+
+    repeat = repeat_vector(c)
     X = np.asarray(coords, dtype=float).reshape(-1, 3)
     q = np.asarray(charges, dtype=float).reshape(-1)
     Sk = np.asarray(scales, dtype=float)
@@ -541,8 +546,8 @@ def exclusion_correction(coords, charges, c: float, scales, pref: float = COULOM
     ks = np.arange(-K, K + 1, dtype=float)
     u = (1.0 - Sk) * (q[None, :, None] * q[None, None, :])  # (2K+1, n, n)
     D = X[:, None, :] - X[None, :, :]
-    dz = D[None, :, :, 2] - ks[:, None, None] * float(c)
-    r2 = (D[None, :, :, 0] ** 2 + D[None, :, :, 1] ** 2 + dz * dz)
+    R = D[None] - ks[:, None, None, None] * repeat
+    r2 = np.einsum("kijc,kijc->kij", R, R)
     # keyed on the *scale*, not on ``u``: a pair whose charge product happens to be zero
     # still contributes to dE/dq, and keying on u would silently drop it
     live = (np.abs(1.0 - Sk) > 0.0) & (r2 > 1e-12)
@@ -553,9 +558,9 @@ def exclusion_correction(coords, charges, c: float, scales, pref: float = COULOM
     if grad:
         # phi(d) = -pref u / |d|;  dphi/dd = pref u d / r^3
         t = np.where(live, pref * u / (r2s * r), 0.0)
-        fx, fy, fz = t * D[None, :, :, 0], t * D[None, :, :, 1], t * dz
+        fx, fy, fz = (t * R[..., i] for i in range(3))
         gX = 0.5 * np.stack([f.sum(axis=(0, 2)) - f.sum(axis=(0, 1)) for f in (fx, fy, fz)], axis=1)
-        gc = -0.5 * float((fz * ks[:, None, None]).sum())
+        gc = repeat_gradient(c, -0.5 * (t[..., None] * R * ks[:, None, None, None]).sum(axis=(0, 1, 2)))
     if charge_grad:
         w = np.where(live, (1.0 - Sk) / r, 0.0)
         gq = -pref * (w.sum(axis=0) @ q)
@@ -582,11 +587,16 @@ def charge_dipole_exclusion(coords, charges, c: float, scales, dipoles=None, pre
     interacts, Thole-damped, which is Thole's model -- and the permanent field is not
     Thole-damped either, which is also his model (the 1981 fit had no permanent charges).
 
+    ``c`` can also be a Cartesian (3,) repeat vector; ``dE/dc`` then retains
+    all three components. Reversal still reverses the topology's image stack.
     Returns ``(E, dE/dcoords (n, 3), dE/dc, dE/dq (n,), F (n, 3))``: ``F = -dE/dp`` is the
     field correction at every atom and is returned whatever ``dipoles`` is (it does not
     depend on them); the energy and the other gradients are ``0`` / ``None`` unless dipoles
     are given and asked for.
     """
+    from .periodic_geometry import repeat_vector, repeat_gradient
+
+    repeat = repeat_vector(c)
     X = np.asarray(coords, dtype=float).reshape(-1, 3)
     q = np.asarray(charges, dtype=float).reshape(-1)
     Sk = np.asarray(scales, dtype=float)
@@ -596,7 +606,7 @@ def charge_dipole_exclusion(coords, charges, c: float, scales, dipoles=None, pre
     w = 1.0 - Sk  # (2K+1, n, n)
     D = X[:, None, :] - X[None, :, :]
     R = np.broadcast_to(D[None], (2 * K + 1, n, n, 3)).copy()
-    R[..., 2] -= ks[:, None, None] * float(c)
+    R -= ks[:, None, None, None] * repeat
     r2 = np.einsum("kijc,kijc->kij", R, R)
     live = (np.abs(w) > 0.0) & (r2 > 1e-12)
     r2s = np.where(live, r2, 1.0)
@@ -617,7 +627,7 @@ def charge_dipole_exclusion(coords, charges, c: float, scales, dipoles=None, pre
                                        - q[None, None, :, None] * p[None, :, None, :])
                     - 3.0 * (inv5 * cross)[..., None] * R)
         gX = -0.5 * (G.sum(axis=(0, 2)) - G.sum(axis=(0, 1)))
-        gc = 0.5 * float((ks[:, None, None] * G[..., 2]).sum())
+        gc = repeat_gradient(c, 0.5 * (ks[:, None, None, None] * G).sum(axis=(0, 1, 2)))
     if charge_grad:
         gq = -0.5 * pref * ((inv3 * pdj).sum(axis=(0, 2)) - (inv3 * pid).sum(axis=(0, 1)))
     return e, gX, gc, gq, F

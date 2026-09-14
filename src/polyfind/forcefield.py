@@ -435,7 +435,7 @@ class FluxTopology:
     n_atoms: int
     bi: np.ndarray  # (nb,) the atom that gains the increment
     bj: np.ndarray  # (nb,) the other atom
-    bsi: np.ndarray  # (nb,) image of bi, in units of c along z
+    bsi: np.ndarray  # (nb,) image of bi, in units of the chain repeat vector
     bsj: np.ndarray  # (nb,) image of bj
     d0: np.ndarray  # (nb,) base increment (e)
     ka: np.ndarray  # (nb,) angle-flux coefficient (e per unit of the dimensionless driver)
@@ -459,22 +459,22 @@ class FluxTopology:
         return bool(np.any(self.ka != 0.0) or np.any(self.kb != 0.0))
 
     # --- geometry -------------------------------------------------------------
-    def _positions(self, X, cz):
-        """Image-shifted positions of the three atom roles; ``X`` (M, n, 3), ``cz`` (M,)."""
-        z = np.zeros(3)
+    def _positions(self, X, repeats):
+        """Image-shifted positions; ``X`` (M,n,3), ``repeats`` (M,3)."""
         def at(idx, img):
             P = X[:, idx, :].copy()
-            P[..., 2] += img[None, :] * cz[:, None]
+            P += img[None, :, None] * repeats[:, None, :]
             return P
         return at(self.bi, self.bsi), at(self.bj, self.bsj), at(self.ek, self.eks)
 
-    def increments(self, coords, c) -> np.ndarray:
+    def increments(self, coords, c=0.0, *, repeat=None) -> np.ndarray:
         """``delta_ij`` for every oriented bond, one row per row of ``coords`` (M, nb)."""
         X = np.asarray(coords, dtype=float)
         if X.ndim == 2:
             X = X[None]
-        cz = np.broadcast_to(np.asarray(c, dtype=float).ravel(), (X.shape[0],))
-        Pi, Pj, Pk = self._positions(X, cz)
+        from .periodic_geometry import repeat_rows
+
+        Pi, Pj, Pk = self._positions(X, repeat_rows(c, X.shape[0], repeat=repeat))
         u = Pj - Pi
         r = np.linalg.norm(u, axis=-1)
         G = np.zeros((self.n_bonds, X.shape[0]))
@@ -517,12 +517,12 @@ class FluxTopology:
             q[nb] -= delta
         return q, dq, dc
 
-    def charges(self, coords, c=0.0) -> np.ndarray:
-        """Fluxed point charges, one row per row of ``coords`` (M, n_atoms)."""
+    def charges(self, coords, c=0.0, *, repeat=None) -> np.ndarray:
+        """Fluxed charges (M,n); explicit ``repeat`` translations may point anywhere."""
         X = np.asarray(coords, dtype=float)
         if X.ndim == 2:
             X = X[None]
-        delta = self.increments(X, c)
+        delta = self.increments(X, c, repeat=repeat)
         qT = np.zeros((self.n_atoms, X.shape[0]))
         mi, mj = self.bsi == 0, self.bsj == 0
         np.add.at(qT, self.bi[mi], delta[:, mi].T)
@@ -541,22 +541,35 @@ class FluxTopology:
         image indices.  Verified against a central difference in ``tests/test_forcefield.py``
         and, through the lattice kernel, in ``tests/test_pack.py``.
         """
+        from .periodic_geometry import repeat_rows
+
+        q, dq, dr = self.charges_and_repeat_grad(coords, repeat_rows(c, 1)[0])
+        return q, dq, dr[:, 2]
+
+    def charges_and_repeat_grad(self, coords, repeat):
+        """``(q (n,), dq/dcoords (n,n,3), dq/drepeat (n,3))`` for ONE geometry.
+
+        Image indices belong to the topology; their translation is a Cartesian
+        vector. Bond and angle derivatives retain all three repeat components.
+        """
+        from .periodic_geometry import repeat_vector
+
         X = np.asarray(coords, dtype=float).reshape(1, self.n_atoms, 3)
-        cz = np.asarray(c, dtype=float).reshape(1)
+        repeats = repeat_vector(repeat)[None]
         n, nb = self.n_atoms, self.n_bonds
-        Pi, Pj, Pk = self._positions(X, cz)
+        Pi, Pj, Pk = self._positions(X, repeats)
         Pi, Pj, Pk = Pi[0], Pj[0], Pk[0]
         u = Pj - Pi
         r = np.linalg.norm(u, axis=-1)
         uh = u / r[:, None]
         G = np.zeros(nb)
         D = np.zeros((nb, n, 3))  # d(delta_b) / dX
-        Dc = np.zeros(nb)  # d(delta_b) / dc
+        Dc = np.zeros((nb, 3))  # d(delta_b) / d repeat vector
         rows = np.arange(nb)
         if self.kb.any():
             np.add.at(D, (rows, self.bj), self.kb[:, None] * uh)
             np.add.at(D, (rows, self.bi), -self.kb[:, None] * uh)
-            Dc += self.kb * uh[:, 2] * (self.bsj - self.bsi)
+            Dc += self.kb[:, None] * uh * (self.bsj - self.bsi)[:, None]
         if self.ea.size:
             e = self.ea
             v = Pk - Pi[e]
@@ -570,12 +583,12 @@ class FluxTopology:
             np.add.at(D, (e, self.bj[e]), gj)
             np.add.at(D, (e, self.ek), gk)
             np.add.at(D, (e, self.bi[e]), -(gj + gk))
-            np.add.at(Dc, e, gj[:, 2] * self.bsj[e] + gk[:, 2] * self.eks
-                      - (gj[:, 2] + gk[:, 2]) * self.bsi[e])
+            np.add.at(Dc, e, gj * self.bsj[e, None] + gk * self.eks[:, None]
+                      - (gj + gk) * self.bsi[e, None])
         delta = self.d0 + self.ka * G + self.kb * (r - self.r0)
         q = np.zeros(n)
         dq = np.zeros((n, n, 3))
-        dqc = np.zeros(n)
+        dqc = np.zeros((n, 3))
         mi, mj = self.bsi == 0, self.bsj == 0
         np.add.at(q, self.bi[mi], delta[mi])
         np.add.at(q, self.bj[mj], -delta[mj])

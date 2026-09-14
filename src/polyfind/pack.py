@@ -1167,10 +1167,10 @@ class CrystalPacker:
 
         Returns ``(e_es, p, E0, grads)``: the whole electrostatic energy of the cell (the
         charge-charge Ewald sum plus the polarization energy), the dipoles ``(N, 3)``, the
-        permanent field, and -- when ``grad`` -- ``(gP, glat, gq, gc)``: the derivatives of
+        permanent field, and -- when ``grad`` -- ``(gP, glat, gq)``: the derivatives of
         ``e_es`` with respect to the placed coordinates, the lattice vectors (at fixed
-        Cartesian coordinates), the charges (``None`` unless ``charge_grad``) and ``c``
-        through the exclusion images, all taken *at fixed* ``p``, which at the solution is the
+        Cartesian coordinates) and the charges (``None`` unless ``charge_grad``), all
+        taken *at fixed* ``p``, which at the solution is the
         total derivative.  The stationarity that makes this true is asserted numerically in
         ``tests/test_polarizable.py``.
         """
@@ -1181,16 +1181,16 @@ class CrystalPacker:
         t0 = ew.terms(Pn, q_cell, latn, thole=self._thole, thole_scale=self._thole_scale,
                       field=True, tensor=True)
         F = t0.field.copy()
-        cz = float(latn[2, 2])
+        repeat = np.asarray(latn[2], dtype=float)
         stacks = []
         if self.polarizable.exclude_bonded:
-            Sk = self._scale_column_np(int(np.ceil(self.rc / cz)) + 1)
+            Sk = self._scale_column_np(int(np.ceil(self.rc / np.linalg.norm(repeat))) + 1)
             for s in range(nc):
                 sl = slice(s * n, (s + 1) * n)
                 # chain 2 of a flipped cell is mirrored z -> -z, which maps image k to -k
                 sc = Sk[::-1] if (s == 1 and flip > 0.5) else Sk
                 stacks.append((sl, sc))
-                F[sl] += charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, pref=pref)[4]
+                F[sl] += charge_dipole_exclusion(Pn[sl], q_cell[sl], repeat, sc, pref=pref)[4]
         E0 = F if not self._field_on else F + EV_TO_KCAL * np.asarray(self.field, dtype=float)[None, :]
         A = -t0.tensor.transpose(0, 2, 1, 3).reshape(3 * N, 3 * N)
         A[np.arange(3 * N), np.arange(3 * N)] += np.repeat(pref / self._alpha_cell, 3)
@@ -1202,15 +1202,49 @@ class CrystalPacker:
                      grad=True, charge_grad=charge_grad)
         gP, glat = t.grad_coords.copy(), t.grad_lattice.copy()
         gq = t.grad_charges.copy() if charge_grad else None
-        gc = 0.0
         for sl, sc in stacks:
-            _, exX, exc, exq, _ = charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, dipoles=p[sl], pref=pref,
+            _, exX, exrepeat, exq, _ = charge_dipole_exclusion(Pn[sl], q_cell[sl], repeat, sc, dipoles=p[sl], pref=pref,
                                                           grad=True, charge_grad=charge_grad)
             gP[sl] += exX
-            gc += exc
+            glat[2] += exrepeat
             if charge_grad:
                 gq[sl] += exq
-        return e_es, p, E0, (gP, glat, gq, gc)
+        return e_es, p, E0, (gP, glat, gq)
+
+    def placed_charges(self, coords, lattice, flip: float = 0.0) -> np.ndarray:
+        """Charge flux at arbitrary placed nuclei, including tilted repeat images.
+
+        Atom and image indices belong to the chain topology. Chain reversal
+        reverses its image translation, not the Cartesian coordinate frame.
+        No setting-angle/offset reconstruction or canonical-cell fit is used.
+        """
+        from .periodic_geometry import PlacedCell
+
+        cell = PlacedCell(coords, lattice)
+        if cell.coords.shape != (self.N, 3):
+            raise ValueError("placed coordinates do not match this packer's atom order")
+        if not np.isfinite(flip) or flip not in (0.0, 1.0):
+            raise ValueError("chain reversal must be exactly 0 or 1")
+        q = np.array(self._q_cell, dtype=float)
+        if self._flux is not None:
+            for s in range(self.n_chains):
+                sl = slice(s * self.n, (s + 1) * self.n)
+                repeat = cell.lattice[2] * (-1.0 if s == 1 and flip == 1.0 else 1.0)
+                q[sl] = self._flux.charges(cell.coords[sl], repeat=repeat)[0]
+        return q
+
+    def placed_dipole(self, coords, lattice, flip: float = 0.0) -> tuple:
+        """(charge, induced) cell dipoles (e.A) on general placed geometry.
+
+        Fixed nuclei are evaluated, not relaxed. Charge flux and polarization
+        share the same Cartesian cell and periodic image translations.
+        """
+        q = self.placed_charges(coords, lattice, flip)
+        P = np.asarray(coords, dtype=float)
+        mu_induced = np.zeros(3)
+        if self.polarizable is not None:
+            mu_induced = self._polarize(P, q, np.asarray(lattice, dtype=float), flip)[1].sum(axis=0)
+        return q @ P, mu_induced
 
     def induced_dipoles(self, params, coords=None, c=None) -> np.ndarray:
         """The induced dipoles ``(M, N, 3)`` in e.A of every row of ``params``, at the set field.
@@ -1699,11 +1733,10 @@ class CrystalPacker:
             if self.polarizable is not None:
                 # Induced dipoles: the value is the one ``energy`` adds per row, and the
                 # gradients are the fixed-``p`` ones, which the self-consistency makes total.
-                e_ew, _, _, (gPe, glate, gqe, gce) = self._polarize(
+                e_ew, _, _, (gPe, glate, gqe) = self._polarize(
                     Pn, q_cell, latn, p[6], grad=True, charge_grad=gq_chain is not None)
                 gP += gPe
                 glat = glat + glate
-                gc += gce
             else:
                 terms = self._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=gq_chain is not None)
                 e_ew = terms.total

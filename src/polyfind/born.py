@@ -73,24 +73,13 @@ def chain_frame_coords(params, latn, P_chain, s: int) -> np.ndarray:
     return X
 
 
-def cell_dipole(packer, params, Pn, latn, moved_chain: int | None = None) -> np.ndarray:
+def cell_dipole(packer, params, Pn, latn) -> np.ndarray:
     """``mu`` (e.A) of the cell at placed coordinates ``Pn`` (N, 3), induced dipoles included.
 
-    With charge flux, ``moved_chain`` says which chain's charges must be re-derived from its
-    (displaced) geometry; every other chain keeps the packer's own charges, which are exactly
-    what the flux gives at the undisplaced geometry (asserted by :func:`born_charges`).
+    All chains' charges are re-derived through the packer's placed-geometry
+    evaluator. Undisplaced chains reproduce their baseline charges.
     """
-    n = packer.n
-    cz = float(latn[2, 2])
-    q = np.array(packer._q_cell, dtype=float)
-    flux = getattr(packer, "_flux", None)
-    if flux is not None and moved_chain is not None:
-        sl = slice(moved_chain * n, (moved_chain + 1) * n)
-        q[sl] = flux.charges(chain_frame_coords(params, latn, Pn[sl], moved_chain), cz)[0]
-    mu = q @ Pn
-    if packer.polarizable is not None:
-        mu = mu + packer._polarize(Pn, q, latn, float(params[6]))[1].sum(axis=0)
-    return mu
+    return sum(packer.placed_dipole(Pn, latn, float(params[6])))
 
 
 def atom_labels(chain) -> list:
@@ -152,24 +141,23 @@ def born_charges(packer, params, h: float = 1e-4) -> BornCharges:
     N, n = packer.N, packer.n
     flux = getattr(packer, "_flux", None)
     if flux is not None:
-        # the undisplaced chain, read back through the inverse placement, must reproduce the
-        # packer's own charges -- otherwise the frame inversion is wrong and so is everything
+        # Placed-image geometry must reproduce the packer's baseline charges.
+        placed_q = packer.placed_charges(Pn, latn, float(params[6]))
         for s in range(packer.n_chains):
             sl = slice(s * n, (s + 1) * n)
-            q = flux.charges(chain_frame_coords(params, latn, Pn[sl], s), float(latn[2, 2]))[0]
+            q = placed_q[sl]
             err = float(np.abs(q - packer._q_cell[sl]).max())
             if err > 1e-9:
                 raise RuntimeError(f"chain {s}: charges re-derived from the placed geometry differ "
                                    f"from the packer's by {err:.2e} e")
     Z = np.zeros((N, 3, 3))
     for i in range(N):
-        s = i // n
         for b in range(3):
             Pp, Pm = Pn.copy(), Pn.copy()
             Pp[i, b] += h
             Pm[i, b] -= h
-            Z[i, :, b] = (cell_dipole(packer, params, Pp, latn, s)
-                          - cell_dipole(packer, params, Pm, latn, s)) / (2.0 * h)
+            Z[i, :, b] = (cell_dipole(packer, params, Pp, latn)
+                          - cell_dipole(packer, params, Pm, latn)) / (2.0 * h)
     return BornCharges(Z=Z, elements=list(packer.elements) * packer.n_chains,
                        labels=atom_labels(packer.chain) * packer.n_chains, positions=Pn,
                        n_chain=n, h=float(h))

@@ -1,5 +1,15 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+2026-09-13 evening extension: this is the isolated `physics-vector-repeat`
+worktree on D: (`D:\sarco-work\polyfind-vector-repeat`), based on `a05a00c`.
+Read `deliverables/clamped_ion_vector_repeat_v2/README.md` for general
+Cartesian image/dipole ownership, all six affine model columns, matched
+17-point legacy control and inherited platform/RIS diagnoses. Full relaxed
+six-strain energy/forces/internal strain/C/S are not implemented or claimed.
+The C: checkout stays on the collaboration branch with unchanged live source.
+GPU is reserved; chemistry is CPU-only. Statements below describe the earlier
+collaboration checkpoint, not this extension's runtime/platform evidence.
+
 Read this first after a context clear. It is the map; the documents it points to
 are the territory. Everything below is committed and pushed on branch
 `claude/polymeric-stable-arrangements-uh06b1`; the working tree is clean, no
