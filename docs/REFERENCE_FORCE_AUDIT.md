@@ -9,6 +9,24 @@ All five research stages remain open; GPU stays reserved.
 
 ## CFE finite inputs and tighter-SCF zero checkpoint
 
+Update Sarco daba201a: the finer-XC translation control is independently
+verified and published READY (definition0b8a0f26), not launched. Only XC_GRID
+changes; original SCF/QS settings, inputs and six acceptance limits remain.
+It waits for CFE's CPU15 slot. The first CFE5mer force-accepted candidate
+independently replays at raw/projected7.09737e-7/7.09843e-7 eV/A;7 is running
+and9 pending. This does not qualify field/pre-strain or material accuracy.
+
+The upstream aad1362 phonon screen was reviewed separately in the D:
+reference relay; its mathematical code is not merged into this worktree.
+Read Sarco systems_boundary/POLYFIND_SCREEN_PHONONS_REVIEW.md. Cell shear
+suggests a useful competing-PVDF comparison. The pinned-bond Hamiltonian
+does not resolve our original C-F rejection; CFE homopolymer is not the
+terpolymer. Twelve small residual-gradient target overruns lack explicit
+termination/accepted-stationarity records. Producer-owned acceptance and
+compact replayable endpoints are requested; no force-label recenter/refit,
+loss inference or source-merge release. Six screen tests pass, not full
+36-cell numerical reproduction. All five research stages remain open.
+
 Update02:34 PDT: Sarco3af06c96 completes and archives all five QS-only
 points. Every declared limit still fails: derivative errors0.001525599766/
 0.000435716795 eV/A, derivative-step difference0.001089882971, energy span
