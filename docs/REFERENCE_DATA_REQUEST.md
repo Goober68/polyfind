@@ -34,6 +34,21 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-13
 
+2026-09-13 23:35 PDT: the five-point radial native experiment is COMPLETE;
+session 44730 exited, all five units and terminal result pass exact replay.
+Sarco 84cf6ec5 archives the compact native evidence and
+periodic_reference/trainset_force_probe_v1/RESULTS.md. Original numerical
+admission FAILS: force errors 1.42945697e-4 and 3.27158489e-5 eV/A at
+h=0.001/0.0005, and step difference 1.10229848e-4 versus the 1e-4 limit.
+The 4.3693 error ratio and native force-integral comparisons support a
+substantial finite-step truncation effect; post-hoc Richardson error
+-4.0274e-6 is not a replacement gate. Net force 0.7196521 eV/A remains
+unqualified. Next is a distinct common-translation experiment at unchanged
+method, followed by separately identified numerical controls. No new native
+follow-up is launched at this checkpoint. Other native writers remain live
+and pinned; GPU reserved. No labels, fitted parameters or material gates
+change, and no five-stage/all-target completion is claimed.
+
 2026-09-13 23:29 PDT: sarco c9632b4c records a force-curvature diagnostic
 from four replay-verified native points; final plus0.0005 remains live.
 The h=0.001 point-force gate still fails unchanged, but the Simpson mean of
