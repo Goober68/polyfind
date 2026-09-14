@@ -28,6 +28,25 @@ A bulk reference at the level the energy model is fitted to would settle all fou
 
 ## Provider status — 2026-09-10
 
+2026-09-13 Cartesian torsion continuation: isolated physics-vector-repeat
+b7c2555 is pushed, without source changes in this C: live checkout. A shared
+dihedral/Fourier owner now serves fitting, finite molecules, rigid packer
+values and topology-derived periodic Cartesian/repeat derivatives.268 Windows
+controls pass102.80s (one optional-native skip);82 focused Linux controls
+pass16.37s (one skip/five design cases deselected).15 phonon controls also pass
+after correcting the inherited general frequency-lower-bound wording.
+The initial primitive TT test's zero stiffness is physical sampling: two
+independent backbone sites plus one translation cannot twist out of their
+plane. The retained primitive control stays trans under perturbations/strain;
+an independently declared four-site repeat has positive trans stiffness
+matching analytic curvature at two steps. Gamma-only primitive support is
+not a complete chain/BZ test. Read docs/CARTESIAN_TORSION_PROGRESS.md on the
+isolated branch. The new term is not yet assembled into a shared complete
+placed-cell Hamiltonian: canonical packer/phonon torsion still shifts value
+only. No full relaxation/C/S/internal-strain/stability/native calibration,
+field switching, rate/loss or accurate viewer gate is promoted. GPU reserved;
+the same native D: molecular/electrical sessions remain live without restart.
+
 2026-09-13 further continuation: isolated physics-vector-repeat3092871 is
 pushed. ChainValence now owns full repeat-vector bond/angle gradients and
 metrics; scalar/vector repeat facts cannot override one another. The extension's
