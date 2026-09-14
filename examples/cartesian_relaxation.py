@@ -50,6 +50,105 @@ class PilotRecord:
         return payload
 
 
+def pvdf_model(field,*,flux=True,induction=True):
+    """One fitted blueprint for the pilot and named diagnostic ablations."""
+    with FITTED_VALENCE.applied():
+        chain = pack_mod.periodic_chain(PVDF,(0,0,0,0),THREE_STATE)
+        pk = pack_mod.CrystalPacker(chain,coulomb="ewald",ewald=EwaldSpec(),
+                                    valence=SimpleFF.from_preset("pvdf-dft-valence"),
+                                    charge_flux=SimpleFF.from_preset("pvdf-dft-valence-flux-born") if flux else None,
+                                    polarizable=Polarizable() if induction else None,
+                                    lj_cutoff="force",field=field)
+    if pk.xp is not np:
+        raise RuntimeError("GPU reserved: this pilot requires the CPU backend")
+    return chain,pk
+
+
+def radial_term_forces(owner,coords,lattice,layout,atom,direction,h):
+    """Differentiate the complete owner's terms with one displacement path."""
+    values = []
+    for step in (-h,h):
+        displaced = coords.copy()
+        displaced[atom] += step*direction
+        values.append(owner.evaluate_chain_cell(displaced,lattice,layout).terms)
+    return {name:-(getattr(values[1],name)-getattr(values[0],name))/(2*h)
+            for name in ("total","pair","torsion","ewald","exclusion","valence","field")}
+
+
+def bond_force_diagnosis(pk,chart,cell,topology):
+    """Local fixed-geometry force balance, not a new Hamiltonian or trajectory.
+
+    Valence component forces come from their defining owner. The remainder
+    includes ALL other complete-model terms and charge-flux chain rules.
+    Positive reported force moves the terminal F outwards along C-F.
+    """
+    ei,ej,i,j,image,_ = topology.max_bond_pair
+    if (ei,ej) not in (("C","F"),("F","C")):
+        return dict(scope="worst bond is not terminal C/F; no C/F force assertion")
+    carbon,fluorine = (i,j) if ei == "C" else (j,i)
+    shift = np.asarray(image)@cell.lattice
+    vector = (cell.coords[j]+shift-cell.coords[i]) if ei == "C" else (cell.coords[i]-cell.coords[j]-shift)
+    length = np.linalg.norm(vector)
+    direction = vector/length
+    cid,local = np.argwhere(chart.layout.atoms == fluorine)[0]
+    atoms = chart.layout.atoms[cid]
+    sign = -1. if chart.layout.reversed_of[cid] else 1.
+    valence = pk._valence
+    bonds = np.flatnonzero(((valence.bond_i == local)|(valence.bond_j == local)))
+    if len(bonds) != 1:
+        raise ValueError("declared terminal fluorine must own exactly one stretch term")
+    r0 = float(valence.bond_r0[bonds[0]])
+    ablations = [(flux,induction,pvdf_model(pk.field,flux=flux,induction=induction)[1])
+                 for flux,induction in ((False,True),(True,False),(False,False))]
+    rows = []
+    for radius in (1.35,1.3605293280605644,r0,float(length)):
+        P = cell.coords.copy()
+        P[fluorine] += (radius-length)*direction
+        result = pk.evaluate_chain_cell(P,cell.lattice,chart.layout)
+        _,gB,_ = valence.bond_energy_and_repeat_grad(P[atoms],sign*cell.lattice[2])
+        _,gA,_ = valence.angle_energy_and_repeat_grad(P[atoms],sign*cell.lattice[2])
+        gb,ga = gB[local],gA[local]
+        gradient = result.grad_coords[fluorine]
+        row = dict(bond_length_A=radius,energy_kcal_mol=result.terms.total,
+                   outward_force_kcal_mol_A=dict(stretch=float(-gb@direction),bend=float(-ga@direction),
+                       remaining_complete_model=float(-(gradient-gb-ga)@direction),total=float(-gradient@direction)))
+        fd = []
+        for h in (1e-5,5e-6):
+            forces = radial_term_forces(pk,P,cell.lattice,chart.layout,fluorine,direction,h)
+            force = forces["total"]
+            if abs(force-row["outward_force_kcal_mol_A"]["total"]) > 3e-5:
+                raise ValueError("local energy/complete force derivative differs")
+            if abs(forces["valence"]-row["outward_force_kcal_mol_A"]["stretch"]
+                   -row["outward_force_kcal_mol_A"]["bend"]) > 3e-5:
+                raise ValueError("local valence energy/component force derivative differs")
+            fd.append(dict(step_A=h,outward_force_kcal_mol_A=force,
+                           term_outward_forces_kcal_mol_A=forces))
+        if any(abs(fd[0]["term_outward_forces_kcal_mol_A"][name]-value) > 3e-5
+               for name,value in fd[1]["term_outward_forces_kcal_mol_A"].items()):
+            raise ValueError("local energy-term force differs between displacement steps")
+        row["finite_difference_controls"] = fd
+        row["fixed_geometry_ablations"] = []
+        for flux,induction,owner in ablations:
+            value = owner.evaluate_chain_cell(P,cell.lattice,chart.layout)
+            force = float(-value.grad_coords[fluorine]@direction)
+            controls = []
+            for h in (1e-5,5e-6):
+                measured = radial_term_forces(owner,P,cell.lattice,chart.layout,fluorine,direction,h)["total"]
+                if abs(measured-force) > 3e-5:
+                    raise ValueError("ablated local energy/force derivative differs")
+                controls.append(dict(step_A=h,outward_force_kcal_mol_A=measured))
+            row["fixed_geometry_ablations"].append(dict(charge_flux=flux,induction=induction,
+                energy_kcal_mol=value.terms.total,outward_force_kcal_mol_A=force,
+                finite_difference_controls=controls))
+        rows.append(row)
+    return dict(scope="local fixed failed periodic geometry; only terminal F radius varied; not matched native calibration/minima/path",
+                term_convention="CellEnergyTerms: ewald includes stationary induction; pair includes bonded correction; coordinate-dependent charges recomputed at each displacement",
+                ablation_scope="same fitted blueprint and fixed nuclei/cell; removing flux restores its base charges, removing induction restores permanent electrostatics; no refits or ablated minima",
+                carbon_source_atom=int(carbon),fluorine_source_atom=int(fluorine),
+                outward_direction=direction.tolist(),stretch_r0_A=r0,
+                stretch_k_kcal_mol_A2=float(valence.bond_k[bonds[0]]),samples=rows)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--field",nargs=3,type=float,default=(0.,0.,0.),metavar=("EX","EY","EZ"))
@@ -57,17 +156,11 @@ def main():
     parser.add_argument("--fixed-cell",action="store_true")
     parser.add_argument("--maxiter",type=int,default=500)
     parser.add_argument("--seed",type=Path)
+    parser.add_argument("--bond-diagnosis",action="store_true",help="diagnose the worst terminal C/F at a rejected stationary cell")
     args = parser.parse_args()
     if not np.isfinite([*args.field,args.prestrain]).all() or args.prestrain <= -1.:
         raise ValueError("finite field and positive chain stretch required")
-    with FITTED_VALENCE.applied():
-        chain = pack_mod.periodic_chain(PVDF,(0,0,0,0),THREE_STATE)
-        pk = pack_mod.CrystalPacker(chain,coulomb="ewald",ewald=EwaldSpec(),
-                                    valence=SimpleFF.from_preset("pvdf-dft-valence"),
-                                    charge_flux=SimpleFF.from_preset("pvdf-dft-valence-flux-born"),
-                                    polarizable=Polarizable(),lj_cutoff="force",field=args.field)
-    if pk.xp is not np:
-        raise RuntimeError("GPU reserved: this pilot requires the CPU backend")
+    chain,pk = pvdf_model(args.field)
     package = Path(pack_mod.__file__).resolve().parent
     sources = {path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(package.glob("*.py"))}
     cell = build_cell(chain,[4.6,8.6,90.,0.,0.,.4,0.],packer=pk)
@@ -129,6 +222,8 @@ def main():
                     missing_by_scale=topology.missing,extra_by_scale=topology.extra,
                     components_by_scale=topology.components,
                     remaining_decision="diagnose model geometry/calibration; do not change covalent-distance gate")
+                if args.bond_diagnosis:
+                    payload["bond_force_diagnosis"] = bond_force_diagnosis(pk,chart,final,topology)
             if topology.ok:
                 permanent,induced = pk.chain_dipole(final.coords,final.lattice,chart.layout)
                 payload.update(admission="stationary_model_geometry_only",geometry=dict(

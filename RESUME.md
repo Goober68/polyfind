@@ -1,5 +1,17 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+Latest force diagnosis: `docs/CF_FORCE_BALANCE.md` records actual C-F radial
+forces, complete-owner term derivatives and same-geometry flux/induction
+ablations. The rejected 1.5366309125 A stationary radius balances inward
+stretch17.97636 with outward electrostatics after exclusions19.77926 and
+inward LJ1.80291 kcal/(mol A). Flux adds19.47867 conditional on induction;
+even both response additions removed still push outward26.71548 at1.360529 A.
+This directs joint energy/force/response calibration on admitted references,
+not radius-gate retuning. Thirty focused controls pass on Windows and Linux;
+six exact Windows reference/stress controls are unchanged. Native PVDF/SVP
+step26 remains unconverged, PH Born completion pending, both handles live.
+All five stages stay open; C: native source unchanged and GPU reserved.
+
 Latest coupled relaxation: `docs/CARTESIAN_RELAXATION_PROGRESS.md` records
 independent atoms/all six strains, exact positive-stretch pullbacks, explicit
 translation gauge and a guarded convergence/checkpoint lifecycle. Actual

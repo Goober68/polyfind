@@ -433,6 +433,31 @@ def periodic_chain_from_torsions(polymer: Polymer, name: str, torsions, states: 
 
 
 # ------------------------------------------------------------------ valence terms
+class _ValenceGradient:
+    """One scatter owner for complete and component valence evaluations."""
+
+    def __init__(self,n_atoms):
+        self.energy = 0.
+        self.coords = np.zeros((n_atoms,3))
+        self.repeat = np.zeros(3)
+
+    def add_bonds(self,topology,energy,gradient):
+        self.energy += energy
+        np.add.at(self.coords,topology.bond_i,gradient)
+        np.add.at(self.coords,topology.bond_j,-gradient)
+        self.repeat -= (topology.bond_s[:,None]*gradient).sum(axis=0)
+
+    def add_angles(self,topology,energy,fi,fk):
+        self.energy += energy
+        np.add.at(self.coords,topology.ang_i,fi)
+        np.add.at(self.coords,topology.ang_k,fk)
+        np.add.at(self.coords,topology.ang_j,-(fi+fk))
+        self.repeat += (topology.ang_si[:,None]*fi).sum(axis=0)+(topology.ang_sk[:,None]*fk).sum(axis=0)
+
+    def result(self):
+        return self.energy,self.coords,self.repeat
+
+
 @dataclass
 class ChainValence:
     """Harmonic bond and angle terms of **one repeat** of an infinite periodic chain.
@@ -542,48 +567,62 @@ class ChainValence:
         E, gX, g_repeat = self.energy_and_repeat_grad(coords, repeat_rows(c, 1)[0], n_atoms)
         return E, gX, float(g_repeat[2])
 
-    def energy_and_repeat_grad(self, coords, repeat, n_atoms: int | None = None):
-        """``(E, dE/dcoords (n,3), dE/drepeat (3,))`` at general image geometry.
-
-        The same topology and valence potential serve canonical axial cells
-        and full affine strains. Repeat derivatives retain every component.
-        """
+    def _gradient_geometry(self,coords,repeat,n_atoms):
         from .periodic_geometry import repeat_vector
-
-        X = np.asarray(coords, dtype=float).reshape(1, -1, 3)
+        X = np.asarray(coords,dtype=float).reshape(1,-1,3)
         n = X.shape[1] if n_atoms is None else int(n_atoms)
-        repeats = repeat_vector(repeat)[None]
-        E = 0.0
-        gX = np.zeros((n, 3))
-        g_repeat = np.zeros(3)
+        return X,repeat_vector(repeat)[None],_ValenceGradient(n)
+
+    def _bond_derivatives(self,X,repeats):
+        d = self._bond_vectors(X,repeats)[0]
+        r = np.linalg.norm(d,axis=-1)
+        dr = r-self.bond_r0
+        energy = .5*float((self.bond_k*dr*dr).sum())
+        gradient = (self.bond_k*dr/r)[:,None]*d
+        return energy,gradient
+
+    def _angle_derivatives(self,X,repeats):
+        u,v = self._angle_vectors(X,repeats)
+        u,v = u[0],v[0]
+        nu,nv = np.linalg.norm(u,axis=-1),np.linalg.norm(v,axis=-1)
+        uh,vh = u/nu[:,None],v/nv[:,None]
+        cos = np.clip((uh*vh).sum(-1),-1.,1.)
+        theta = np.arccos(cos)
+        da = theta-self.ang_t0
+        energy = .5*float((self.ang_kk*da*da).sum())
+        s = np.maximum(np.sqrt(1.-cos*cos),1e-9)
+        gi = (cos[:,None]*uh-vh)/(nu*s)[:,None]
+        gk = (cos[:,None]*vh-uh)/(nv*s)[:,None]
+        w = (self.ang_kk*da)[:,None]
+        return energy,w*gi,w*gk
+
+    def bond_energy_and_repeat_grad(self,coords,repeat,n_atoms=None):
+        """Pure stretch (E,gatoms,grepeat), using the COMPLETE owner's terms."""
+        X,repeats,result = self._gradient_geometry(coords,repeat,n_atoms)
         if self.n_bonds:
-            d = self._bond_vectors(X, repeats)[0]
-            r = np.linalg.norm(d, axis=-1)
-            dr = r - self.bond_r0
-            E += 0.5 * float((self.bond_k * dr * dr).sum())
-            f = (self.bond_k * dr / r)[:, None] * d  # dE/d(separation vector)
-            np.add.at(gX, self.bond_i, f)
-            np.add.at(gX, self.bond_j, -f)
-            g_repeat -= (self.bond_s[:, None] * f).sum(axis=0)
+            result.add_bonds(self,*self._bond_derivatives(X,repeats))
+        return result.result()
+
+    def angle_energy_and_repeat_grad(self,coords,repeat,n_atoms=None):
+        """Pure bend (E,gatoms,grepeat), using the COMPLETE owner's terms."""
+        X,repeats,result = self._gradient_geometry(coords,repeat,n_atoms)
         if self.n_angles:
-            u, v = self._angle_vectors(X, repeats)
-            u, v = u[0], v[0]
-            nu, nv = np.linalg.norm(u, axis=-1), np.linalg.norm(v, axis=-1)
-            uh, vh = u / nu[:, None], v / nv[:, None]
-            cos = np.clip((uh * vh).sum(-1), -1.0, 1.0)
-            theta = np.arccos(cos)
-            da = theta - self.ang_t0
-            E += 0.5 * float((self.ang_kk * da * da).sum())
-            s = np.maximum(np.sqrt(1.0 - cos * cos), 1e-9)
-            gi = (cos[:, None] * uh - vh) / (nu * s)[:, None]
-            gk = (cos[:, None] * vh - uh) / (nv * s)[:, None]
-            w = (self.ang_kk * da)[:, None]
-            fi, fk = w * gi, w * gk
-            np.add.at(gX, self.ang_i, fi)
-            np.add.at(gX, self.ang_k, fk)
-            np.add.at(gX, self.ang_j, -(fi + fk))
-            g_repeat += (self.ang_si[:, None] * fi).sum(axis=0) + (self.ang_sk[:, None] * fk).sum(axis=0)
-        return E, gX, g_repeat
+            result.add_angles(self,*self._angle_derivatives(X,repeats))
+        return result.result()
+
+    def energy_and_repeat_grad(self,coords,repeat,n_atoms=None):
+        """Complete valence (E,gatoms,grepeat) in the original scatter order.
+
+        Component queries and the complete term share evaluation and scatter;
+        callers do not reconstruct harmonic forces or periodic image coverage.
+        """
+        X,repeats,result = self._gradient_geometry(coords,repeat,n_atoms)
+        if self.n_bonds:
+            result.add_bonds(self,*self._bond_derivatives(X,repeats))
+        if self.n_angles:
+            result.add_angles(self,*self._angle_derivatives(X,repeats))
+        return result.result()
+
 
 
 def chain_valence(chain: PeriodicChain, bond_table: dict, angle_table: dict) -> ChainValence | None:

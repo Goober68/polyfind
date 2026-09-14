@@ -16,6 +16,44 @@ def valence_case(sequence):
     return chain, chain_valence(chain, ff.bond_table(), ff.angle_table())
 
 
+@pytest.mark.parametrize("sequence",[(0,0),(0,1,0,2)])
+@pytest.mark.parametrize("component",["bond","angle"])
+def test_component_gradients_share_complete_valence_and_full_repeat_geometry(sequence,component):
+    chain,valence = valence_case(sequence)
+    F = np.array([[1.01,.006,-.007],[.006,.99,.008],[-.007,.008,1.003]])
+    X = np.asarray(chain.coords)@F
+    repeat = np.array([0.,0.,chain.c])@F
+    evaluate = getattr(valence,component+"_energy_and_repeat_grad")
+    E,gX,gr = evaluate(X,repeat)
+    for h in (1e-6,5e-7):
+        np.testing.assert_allclose(fd(X,lambda v:evaluate(v,repeat)[0],h=h),gX,atol=4e-7)
+        np.testing.assert_allclose(fd(repeat,lambda v:evaluate(X,v)[0],h=h),gr,atol=4e-7)
+    # Component sums are independently scattered; the COMPLETE path retains
+    # its original bond-then-angle scatter order, so gradients agree to roundoff.
+    bE,bG,bR = valence.bond_energy_and_repeat_grad(X,repeat)
+    aE,aG,aR = valence.angle_energy_and_repeat_grad(X,repeat)
+    total,G,R = valence.energy_and_repeat_grad(X,repeat)
+    assert total == bE+aE
+    np.testing.assert_allclose(G,bG+aG,atol=2e-14,rtol=0.)
+    np.testing.assert_allclose(R,bR+aR,atol=2e-14,rtol=0.)
+    np.testing.assert_allclose(np.cross(X,gX).sum(axis=0)+np.cross(repeat,gr),0.,atol=3e-13)
+
+
+def test_terminal_fluorine_bend_force_is_transverse_to_its_bond():
+    chain,valence = valence_case((0,0,0,0))
+    X = chain.coords+np.random.default_rng(7).normal(size=chain.coords.shape)*.003
+    repeat = np.array([.01,-.02,chain.c])
+    _,gA,_ = valence.angle_energy_and_repeat_grad(X,repeat)
+    lengths = valence.bond_lengths(X,repeat=repeat)[0]
+    _,gB,_ = valence.bond_energy_and_repeat_grad(X,repeat)
+    for i,j,s,k,r0,r in zip(valence.bond_i,valence.bond_j,valence.bond_s,valence.bond_k,valence.bond_r0,lengths):
+        if chain.elements[j] != "F":
+            continue
+        direction = (X[j]+s*repeat-X[i])/r
+        assert gA[j]@direction == pytest.approx(0.,abs=3e-13)
+        assert gB[j]@direction == pytest.approx(k*(r-r0),abs=3e-13)
+
+
 def fd(value, evaluate, h=1e-6):
     value = np.array(value, dtype=float)
     result = np.zeros_like(value)
