@@ -7,6 +7,26 @@ This continuation measures the actual historical training labels, reproduces
 the recorded finite fit, and starts an independent native force check.
 All five research stages remain open; GPU stays reserved.
 
+## Common-translation control launched, 23:47 PDT
+
+Sarco ab502461 generalizes the existing experiment through one immutable
+ForceProbeCoordinate, which owns selected source atoms, displacement direction
+and summed work-conjugate force. The radial path and common y-translation
+reuse one source/execution/receipt/recovery/reduction implementation. Ten
+controls pass in10.788s; the complete archived radial result replays with
+unchanged state/result SHA256s and failed gate. Its original writer identity
+is preserved, not relabelled as the new implementation.
+
+The new experiment actually runs on D:/CPU15, one thread, GPU reserved:
+session99954/controller9192/start12950992, first native child9193/start12951399,
+case starts23:47:58PDT and SCF steps1-4 are observed. All32 atoms translate
+equally along y at0 and+/-0.001/0.0005A. The zero input is byte-identical to
+the preceding zero input; internal coordinates, cell and method stay fixed.
+Read sarco trainset_translation_probe_v1/PROTOCOL.md and PHYSICS_RESEARCH.md
+(launch relay0d0a7699). No translation point or admission has completed yet.
+Its additional net-force/energy-span/force-change checks concern only this
+sampled y path, not full origin/grid convergence or physical motion under field.
+
 ## Terminal native result, 23:35 PDT
 
 Sarco 84cf6ec5 retains the full five-point native input/output/unit/terminal

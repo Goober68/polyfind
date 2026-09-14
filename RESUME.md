@@ -1,5 +1,17 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+The distinct common-y-translation experiment IS RUNNING: sarco definition
+ab502461, launch relay 0d0a7699, publication trainset_translation_probe_v1.
+Session 99954/controller 9192/start12950992, native zero child9193/start12951399,
+case start23:47:58 PDT; SCF steps1-4 observed. All32 atoms move equally by
+0 and +/-0.001/0.0005 A, same cell/internal geometry/electronic method, CPU15
+one thread, D: and GPU reserved. New zero input matches the prior zero bytes.
+Shared ForceProbeCoordinate owns displacement and total-force projection;
+one existing execution/receipt/recovery path. Ten controls pass10.788s, and
+the completed radial result replays unchanged, including its failed gate.
+Translation source/protocol23-file pin is now live. No translation result
+or material admission yet. Other native pins and all five stages stay open.
+
 The radial native probe is now COMPLETE, not running: session 44730 exited,
 five native units and terminal result pass exact replay. Sarco 84cf6ec5
 archives the compact evidence and trainset_force_probe_v1/RESULTS.md.
