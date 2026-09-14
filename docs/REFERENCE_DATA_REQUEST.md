@@ -1,5 +1,16 @@
 # Reference data request: bulk dipole response to strain
 
+2026-09-14 01:34 PDT: Sarcod3faa6d4 adds explicit archive identity/storage
+separation. The full original nine-source admission replays from D: with
+unchanged identities/coordinate hashes and matches an unchanged-location
+baseline. Seven tests pass; exact14-file/154820-byte Polyfind source evidence
+is preserved under Sarco systems_boundary/original_polyfind_receipts_v1.
+Its mixed line endings cannot be recovered from normalized Git history.
+Factory/default binding and historical native receipt relocation remain
+pending; CFE execution is still unlaunched. Four tighter-SCF points replay
+with force changes below4.64e-7 eV/A, and the first central derivative still
+fails1e-4 eV/A. Last point running; QS control ready, not launched. No refit.
+
 2026-09-14 01:12 PDT update: the SCF-only translation diagnostic has two of
 five native points complete. Both reproduce original forces within4.64e-7
 eV/A; tightening SCF does not remove the measured defect in either point.
