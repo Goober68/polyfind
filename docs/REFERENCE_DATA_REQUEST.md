@@ -1,5 +1,15 @@
 # Reference data request: bulk dipole response to strain
 
+2026-09-14 01:45 PDT: Sarcob13e3276 archives the complete five-point SCF
+control. All numerical limits still fail; tightening SCF100x changes forces
+by at most4.63481e-7 eV/A and does not fix this frame's force inconsistency.
+The distinct QS-only control is running (session95548/controller19778,
+zero child19780, starts01:44:28PDT): EPS_DEFAULT1e-16 while retaining original
+EPS_SCF1e-8, same source/translations/method/grid requests and gates.
+The relocated original archive now binds the actual nine-source reference
+factory;18 tests pass with zero force calls. Historical CNEPO native-receipt
+relocation/shared CFE orchestration remain pending; no CFE run or refit yet.
+
 2026-09-14 01:34 PDT: Sarcod3faa6d4 adds explicit archive identity/storage
 separation. The full original nine-source admission replays from D: with
 unchanged identities/coordinate hashes and matches an unchanged-location
