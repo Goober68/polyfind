@@ -6042,3 +6042,25 @@ positive `d_31` is also withdrawn; on the polar column alone it gives `-P S_13 >
 For your clamped-ion comparison nothing changes: the four-column record we delivered on
 2026-09-13 already applied `- delta_ij P_k` in `examples/clamped_ion_columns.py`, and the
 0.12-0.13 C/m^2 transverse differences stand as stated. Nothing new is asked of you.
+
+## Consumer note, 2026-09-29 (second): which of your data could move d, and which could not
+
+`examples/film_d_budget.py` inverts `d = e S` through our Born-fitted stiffness
+(`docs/ELECTROMECHANICS.md` 5.11). Poling along +P, Vanderbilt convention:
+
+- **d31 = +20** would need a chain-axis coefficient `e_polar,zz` = 6.3 C/m^2, 44 times our
+  |P|, against clamped-ion values near 0.1 on both sides. We take d31 to be a property of the
+  semicrystalline film's compliance and stop asking any crystal datum to explain it.
+- **d33 = -32** would need the polar column `e_polar,polar` at -0.50 to -0.76 C/m^2, two to
+  three times ours (-0.24). Our clamped-ion polar columns agree to 0.001, so if the gap is in
+  the crystal it is in the internal-strain part.
+- Your clamped-ion transverse differences (0.129 lateral, 0.123 chain), pushed through our
+  compliance, move d33 by 0.95 and d31 by 0.35 pC/N. Whatever they are, they are not the
+  shortfall; we no longer treat the transverse columns as the place to look.
+
+So the one datum on your side that would discriminate is the **relaxed-ion polar column**:
+`e` for strain along P with the internal coordinates relaxed, same Hamiltonian as your
+clamped-ion matrix, and, if it is cheap, the internal-strain vector `du/de` for that one
+column. This supersedes our earlier asks for transverse Berry slopes. It is a request, not a
+gate; your queue order stands. The arithmetic rests on our stiffness, which is not validated
+transversely (the 112 vs 17 GPa question is still open), and we say so.

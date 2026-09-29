@@ -5,7 +5,12 @@ definition item is closed -- `mechanics.piezoelectric` returns Vanderbilt's prop
 its converse route holds the nominal field (`docs/ELECTROMECHANICS.md` 5.10; Born-fitted
 d33 -9.86, d31 +0.42, not the cause of the shortfall). `phonon.relax_all_atom` owns its
 acceptance and the screen phonons record is regenerated under it (tables unchanged).
-`pack.polish` wraps `dz` inside its objective. Stale until rerun, and flagged in place: d figures
+`pack.polish` wraps `dz` inside its objective. `examples/film_d_budget.py`
+(ELECTROMECHANICS 5.11): through this crystal's stiffness, d31 = +20 needs a chain-axis `e` of
+6.3 C/m^2 (44x |P|), so d31 is a film-compliance property, not a crystal one; d33 = -32 needs
+the polar column at -0.50 to -0.76 C/m^2 (2-3x ours), so the discriminating datum is the
+provider's relaxed-ion polar column; the clamped-ion transverse differences move d by <1 pC/N.
+Stale until rerun, and flagged in place: d figures
 in `docs/SCREEN.md`'s response table and `docs/BENCHMARK.md` (old definitions).
 
 2026-09-13 evening provider update: an isolated D: worktree now exists at

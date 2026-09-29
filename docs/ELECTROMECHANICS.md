@@ -1011,7 +1011,9 @@ Three things follow, in the order the evidence ranks them.
    argument above it cannot move the axial column either; it matters for the chain-axis
    dielectric and for any response in which the two carbons move apart.
 3. **The compliance.** −32 pC/N is a drawn-film number, and `d = e S` with a crystal `S`
-   is not the same quantity as with the film's (section 8.5). This is independent of
+   is not the same quantity as with the film's (section 8.5). *(2026-09-29, section 5.11: for `d_31` this is the
+   first item, not the third -- no crystal `e` of sensible size reaches +20 through a crystal
+   compliance.)* This is independent of
    everything above and bounds how much of the factor of 3.6 a perfect crystal model should
    ever be asked to close.
 
@@ -1082,6 +1084,44 @@ intrinsic channel stands, but the sign argument for it does not. Second, the dim
 of `d_33` is 61% for the Born-fitted preset (−6.05 of −9.86), where the improper bookkeeping
 gave 57% (section 8.5); Broadhurst and Davis put it near two thirds. Nothing here was fitted,
 and the pendant's internal strain (section 9) remains the first hypothesis for the rest.
+
+### 5.11 What a crystal `e` could close, and what only a compliance could (2026-09-29)
+
+`d = e S` inverts to `e = d C`. `examples/film_d_budget.py` puts the measured film row
+(`d_33 = −32`, `d_32 = +1.5`, `d_31 = +20` pC/N; 3 = poling = our polar `x`, 1 = draw = the
+chain axis `z`) through the Born-fitted model's own stiffness and asks what proper polar row
+of `e` a crystal would need. Poling along +P, C/m²:
+
+| column | ours (Vanderbilt) | required, whole film row | required, `d_33` alone |
+|---|---:|---:|---:|
+| `e_x,xx` (polar) | −0.239 | −0.496 | −0.764 |
+| `e_x,yy` (lateral) | −0.039 | +0.002 | ours |
+| `e_x,zz` (chain) | −0.003 | **+6.26** | ours |
+
+(`C_11` 24.7, `C_22` 20.6, `C_33` 336.1, `C_13` 14.5 GPa; "`d_33` alone" holds the other
+columns at ours and solves for the polar one.)
+
+**`d_31` is out of reach of any crystal `e` of a sensible size.** Twenty pm/V of strain
+along a 336 GPa chain axis needs a chain-column coefficient of 6.3 C/m², 44 times this
+crystal's polarization; both clamped-ion determinations of that column are near 0.1 C/m²
+(ours +0.01, the provider's ±0.11, 2026-09-13). A crystal-compliance model is therefore the
+wrong instrument for `d_31` whatever its charges, and the measured value is a property of the
+semicrystalline film's compliance -- the third item of 5.9's list, now first for `d_31`.
+
+**`d_33` is within reach of one.** It needs the polar column at −0.50 to −0.76 C/m², two to
+three times ours. That column is where the models have not been compared relaxed-ion: the
+clamped-ion polar columns agree (0.001 C/m², 2026-09-13), so the difference would have to be
+in the internal-strain part.
+
+**The clamped-ion transverse differences cannot close either.** Through this compliance the
+provider-minus-ours 0.129 (lateral) and 0.123 (chain) C/m² move `d_33` by +0.95 and `d_31` by
+−0.35 pC/N; with the opposite sign they would move them by as much the other way. Whatever
+electronic response they represent, it is not the shortfall.
+
+So the discriminating datum is the provider's **relaxed-ion polar column** (`e` for strain
+along P, internal coordinates relaxed), and for `d_31` no crystal datum is. None of this is
+fitted; it is arithmetic on the model's stiffness, which itself is not validated beyond
+`C_33` (5.9) and carries the transverse-stiffness question in `RESUME.md`.
 
 ### 5.4 Blocking stress, free strain, work density (E = 0.01 V/A = 100 MV/m)
 
