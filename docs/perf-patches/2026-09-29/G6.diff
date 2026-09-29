@@ -1,0 +1,581 @@
+diff --git a/src/polyfind/lattice_table.py b/src/polyfind/lattice_table.py
+index 99ba421..486ddbd 100644
+--- a/src/polyfind/lattice_table.py
++++ b/src/polyfind/lattice_table.py
+@@ -50,6 +50,7 @@ worker count.  It is also memoised, in process and optionally on disk, by
+ from __future__ import annotations
+ 
+ import atexit
++import warnings
+ from dataclasses import dataclass, field
+ 
+ import numpy as np
+@@ -73,6 +74,8 @@ __all__ = [
+     "default_cache_dir",
+     "default_table_procs",
+     "shutdown_table_pool",
++    "BUILD_CHUNK_ELEMS",
++    "BUILD_CHUNK_ELEMS_CUDA",
+ ]
+ 
+ 
+@@ -222,7 +225,15 @@ def direct_lattice_energy(packer1: CrystalPacker, params, e_intra=None, r_max: f
+ 
+ 
+ # ------------------------------------------------------------------ the table
+-def _pot_batch(lj_x6, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, dtype=np.float32):
++def _errstate(xp):
++    """``numpy.errstate`` for NumPy, a no-op for an array module without one (CuPy)."""
++    import contextlib
++
++    es = getattr(xp, "errstate", None)
++    return es(over="ignore", invalid="ignore", divide="ignore") if es is not None else contextlib.nullcontext()
++
++
++def _pot_batch(lj_x6, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, dtype=np.float32, xp=np):
+     """The same pair potential, for per-triple parameter vectors broadcast against r2.
+ 
+     ``lj_x6`` is ``lj_x ** 6`` (the LJ part is a function of ``r^2`` alone, so the
+@@ -232,16 +243,46 @@ def _pot_batch(lj_x6, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, d
+     cannot overflow float32; that only affects pairs whose energy is astronomically
+     large and therefore clipped to the table's cap.  Exactly coincident atoms give 0,
+     as in the packer.
++
++    ``xp`` is the array module (NumPy or CuPy); every operation is elementwise and in
++    the NumPy subset CuPy implements identically, so the same source runs on both.
+     """
+-    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
++    with _errstate(xp):
+         mask = (r2 < dtype(rc * rc)) & (r2 > dtype(1e-8))
+-        r2s = np.where(mask, np.maximum(r2, dtype(2.5e-3)), dtype(1.0))
++        r2s = xp.where(mask, xp.maximum(r2, dtype(2.5e-3)), dtype(1.0))
+         ir2 = dtype(1.0) / r2s
+         s6 = lj_x6 * (ir2 * ir2 * ir2)
+-        rr = np.sqrt(r2s)
++        rr = xp.sqrt(r2s)
+         v = lj_d * (s6 * s6 - 2 * s6) - lj_shift
+-        v = v + qq * (erfc_approx(dtype(alpha) * rr, np) / rr - dtype(dsf_shift) + dtype(dsf_force) * (rr - dtype(rc)))
+-        return np.where(mask, v, dtype(0.0))
++        v = v + qq * (erfc_approx(dtype(alpha) * rr, xp) / rr - dtype(dsf_shift) + dtype(dsf_force) * (rr - dtype(rc)))
++        return xp.where(mask, v, dtype(0.0))
++
++
++def _grid_kernel(rc, alpha, dsf_shift, dsf_force, dtype, xp):
++    """The build's elementwise kernel for one call: ``r^2`` of every (term, alpha1, alpha2)
++    from the per-term angle factors, then :func:`_pot_batch`.
++
++    Takes the ``(m, na, 1)`` / ``(m, 1, na)`` / ``(m, 1, 1)`` operands already broadcast-
++    shaped, and does nothing but whole-array arithmetic on them, so that the same function
++    can be traced by ``cupy.fuse`` (which allows no indexing) and run unfused by NumPy.
++    """
++    def kernel(cu3, su3, cv3, sv3, ea3, eb3, pref3, lx6, ld, lq, ls):
++        r2 = ea3 + eb3 + pref3 * (cu3 * cv3 + su3 * sv3)
++        return _pot_batch(lx6, ld, lq, ls, r2, rc, alpha, dsf_shift, dsf_force, dtype, xp)
++
++    return kernel
++
++
++def _fused(kernel, xp):
++    """``cupy.fuse`` of ``kernel`` when ``xp`` offers it, else ``None``."""
++    fuse = getattr(xp, "fuse", None)
++    if fuse is None:
++        return None
++    try:
++        return fuse()(kernel)
++    except Exception as exc:
++        warnings.warn(f"cupy.fuse unavailable for the table kernel ({exc!r}); building unfused")
++        return None
+ 
+ 
+ # Working set of one call of the build's inner kernel, in array elements.  That kernel
+@@ -257,6 +298,41 @@ def _pot_batch(lj_x6, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, d
+ # at a different value differs from this one in its last bits (~1e-4 kcal/mol).
+ BUILD_CHUNK_ELEMS = 16_384
+ 
++# The same working set on a CUDA device.  There the trade-off is the opposite one: a
++# kernel launch costs microseconds whatever its size, and CuPy adds ~10 us of host-side
++# dispatch per array operation, so a chunk must be large enough that the ~50 elementwise
++# operations of one call each do real work.  The whole chunk then streams through the
++# device's DRAM (10^7 float32 elements is 40 MB per temporary, far past any L2), which is
++# the regime this kernel is bandwidth-bound in on both kinds of hardware -- see the
++# projection in the performance review: an unfused elementwise port is bounded by the
++# device's bandwidth divided by ~500 bytes of temporary traffic per grid element, not by
++# its arithmetic.  PROJECTED, not measured: no CUDA device has run this code.
++BUILD_CHUNK_ELEMS_CUDA = 10_000_000
++
++
++def _resolve_device(device):
++    """``(device_name, xp)`` for a ``device`` argument of ``PairTable.build``.
++
++    ``None`` follows :mod:`polyfind.backend` (CuPy when it selects CUDA, NumPy otherwise),
++    ``"cpu"`` is NumPy whatever the backend, ``"cuda"`` requires the CuPy backend.
++    """
++    from . import backend as bk
++
++    if device is None:
++        device = bk.device_name()
++    device = str(device).lower()
++    if device == "cpu":
++        return "cpu", np
++    if device == "cuda":
++        if bk.device_name() == "cuda":
++            return "cuda", bk.get_backend()
++        try:  # asked for explicitly: use CuPy without re-pointing the package backend
++            import cupy  # type: ignore
++        except ImportError as exc:
++            raise ImportError("PairTable.build(device='cuda') needs CuPy and a CUDA device") from exc
++        return "cuda", cupy
++    raise ValueError(f"device must be None, 'cpu' or 'cuda', not {device!r}")
++
+ 
+ # ------------------------------------------------------------------ the build, by radius
+ # The build is a pure function of the chain geometry and the potential parameters over a
+@@ -364,9 +440,75 @@ def _pair_arrays(spec: dict, flip: int) -> dict:
+     return out
+ 
+ 
+-def _build_block(spec: dict, irs) -> np.ndarray:
++_PER_PAIR = ("lx6", "ld", "lq", "ls", "rp", "rq", "pp", "pq")
++
++
++def _pair_arrays_on(spec: dict, flip: int, xp) -> dict:
++    """:func:`_pair_arrays` with the *per-pair* arrays (a few hundred entries) held on
++    the device of ``xp``; the per-(pair, z-image) bookkeeping arrays stay on the host,
++    where the radius selection and the sort by plane are done.  For NumPy this is
++    :func:`_pair_arrays` itself (``np.asarray`` of a NumPy array is that array)."""
++    A = _pair_arrays(spec, flip)
++    if xp is np:
++        return A
++    dk = "dev:" + xp.__name__
++    if dk not in A:
++        A[dk] = {k: xp.asarray(A[k]) for k in _PER_PAIR}
++    return dict(A, **A[dk])
++
++
++def _plane_chunks(edges, batch):
++    """Split the terms of one radius, sorted by dz plane, into kernel calls.
++
++    Yields ``(lo, hi, segments)``: the term range of the call and, inside it, the
++    ``(j, lo_j, hi_j)`` plane segments it covers (indices relative to ``lo``).  A plane
++    with more than ``batch`` terms is cut into calls of ``batch``, exactly as the
++    one-plane-per-call loop this replaces did; a call otherwise takes whole planes while
++    the total fits in ``batch``.  Each plane's sum is still a reduction over the same
++    slices of the same elementwise values in the same order, so at the CPU chunk the
++    table is bit-identical to the previous builder's (measured, PE / alpha / gamma
++    on the screen grid).  What the chunk size *does* fix is the float32 association of
++    each plane sum (:data:`BUILD_CHUNK_ELEMS` says so): a NumPy build at the CUDA chunk
++    of 10^7 elements, which takes all the planes of a radius in one call, differs from
++    the default one by ~1e-4 kcal/mol in the last bits, and so will a device build.
++    """
++    nz = len(edges) - 1
++    lo, segs = None, []
++    for j in range(nz):
++        lo_j, hi_j = int(edges[j]), int(edges[j + 1])
++        if hi_j <= lo_j:
++            continue
++        if hi_j - lo_j > batch:
++            if segs:
++                yield lo, segs[-1][2] + lo, segs
++                lo, segs = None, []
++            for s in range(lo_j, hi_j, batch):
++                e = min(s + batch, hi_j)
++                yield s, e, [(j, 0, e - s)]
++            continue
++        if segs and hi_j - lo > batch:
++            yield lo, segs[-1][2] + lo, segs
++            lo, segs = None, []
++        if lo is None:
++            lo = lo_j
++        segs.append((j, lo_j - lo, hi_j - lo))
++    if segs:
++        yield lo, segs[-1][2] + lo, segs
++
++
++def _build_block(spec: dict, irs, xp=np, fuse: bool | None = None) -> np.ndarray:
+     """``W`` for the radii ``irs``: ``(2, len(irs), n_angle, n_angle, n_z)`` float32, finished.
+ 
++    ``xp`` is the array module the kernel runs on.  With CuPy the block is accumulated on
++    the device -- the per-radius term selection stays on the host (it is ~10^4 elements
++    of bookkeeping), each kernel call gathers its terms onto the device, and the finished
++    float32 block comes back to the host once, at the end -- and is returned as a NumPy
++    array either way.  ``fuse`` (default: on for CuPy, never for NumPy) runs the ~50
++    elementwise operations of :func:`_grid_kernel` as one ``cupy.fuse`` kernel instead of
++    fifty, which is what decides whether a GPU build is bandwidth-bound like the CPU one
++    (see :data:`BUILD_CHUNK_ELEMS_CUDA`); it falls back to the unfused path, with a warning,
++    if this CuPy cannot fuse the function.  NOT RUN on a device yet.
++
+     "Finished" means both exchange symmetries have been applied and the cap taken, so the
+     caller only has to write the block into place.  Only the (pair, z-image) terms that can
+     reach within the cutoff at that radius are evaluated (the z-window of section 6 of the
+@@ -386,19 +528,23 @@ def _build_block(spec: dict, irs) -> np.ndarray:
+     is summed (the diagonal at half weight) and the finished block is symmetrised.  Both act
+     within one radius, which is why the radial axis is the split.
+     """
++    from .backend import to_numpy
++
+     irs = np.atleast_1d(np.asarray(irs, dtype=np.int64))
+     na, nz = spec["n_angle"], spec["n_z"]
+     dtype = np.dtype(spec["dtype"]).type
+     rc, alpha, cap = spec["rc"], spec["alpha"], spec["cap"]
+     r_values = spec["r_values"]
+-    ang = (2 * np.pi * np.arange(na) / na).astype(dtype)
++    ang = xp.asarray((2 * np.pi * np.arange(na) / na).astype(dtype))
+     m_half = na // 2
+     batch = max(1, spec["chunk_elems"] // (na * na))
+-    out = np.zeros((2, len(irs), na, na, nz), dtype=np.float32)
++    kernel = _grid_kernel(rc, alpha, spec["dsf_shift"], spec["dsf_force"], dtype, xp)
++    fused = _fused(kernel, xp) if (fuse if fuse is not None else xp is not np) else None
++    out = xp.zeros((2, len(irs), na, na, nz), dtype=np.float32)
+     for flip in (0, 1):
+-        A = _pair_arrays(spec, flip)
+-        pp, pq, pair_i, zt, zt2, j_f, gap = (A[k] for k in ("pp", "pq", "pair_i", "zt", "zt2", "j_f", "gap"))
+-        lx6, ld, lq, ls, rp, rq = (A[k] for k in ("lx6", "ld", "lq", "ls", "rp", "rq"))
++        A = _pair_arrays_on(spec, flip, xp)
++        pair_i, zt, zt2, j_f, gap = (A[k] for k in ("pair_i", "zt", "zt2", "j_f", "gap"))  # host
++        pp, pq, lx6, ld, lq, ls, rp, rq = (A[k] for k in ("pp", "pq", "lx6", "ld", "lq", "ls", "rp", "rq"))  # device
+         for m, ir in enumerate(irs):
+             r = r_values[ir]
+             keep = np.maximum(0.0, r - gap) ** 2 + zt2 < rc * rc
+@@ -409,36 +555,40 @@ def _build_block(spec: dict, irs) -> np.ndarray:
+             pi, zz, jj = pi[order], zz[order], jj[order]
+             edges = np.searchsorted(jj, np.arange(nz + 1))
+             rd = dtype(r)
+-            for j in range(nz):
+-                lo_j, hi_j = int(edges[j]), int(edges[j + 1])
+-                if hi_j <= lo_j:
+-                    continue
+-                plane = np.zeros((na, na))
+-                for s in range(lo_j, hi_j, batch):
+-                    sl = slice(s, min(s + batch, hi_j))
+-                    b = pi[sl]
+-                    cu, su = np.cos(pp[b][:, None] + ang), np.sin(pp[b][:, None] + ang)
+-                    cv, sv = np.cos(pq[b][:, None] + ang), np.sin(pq[b][:, None] + ang)
+-                    rpb, rqb = rp[b][:, None], rq[b][:, None]
+-                    ea = rpb ** 2 + rqb ** 2 + rd * rd + zz[sl][:, None] ** 2 - 2 * rd * rpb * cu
+-                    eb = 2 * rd * rqb * cv
+-                    pref = (-2 * rp[b] * rq[b])[:, None, None]
+-                    r2 = ea[:, :, None] + eb[:, None, :] + pref * (cu[:, :, None] * cv[:, None, :] + su[:, :, None] * sv[:, None, :])
+-                    v = _pot_batch(lx6[b][:, None, None], ld[b][:, None, None], lq[b][:, None, None], ls[b][:, None, None],
+-                                   r2, rc, alpha, spec["dsf_shift"], spec["dsf_force"], dtype)
+-                    plane += v.sum(axis=0)
+-                out[flip, m, :, :, j] += plane.astype(np.float32)
++            planes = xp.zeros((nz, na, na))
++            for lo, hi, segs in _plane_chunks(edges, batch):
++                b = xp.asarray(pi[lo:hi])
++                zb = xp.asarray(zz[lo:hi])[:, None]
++                cu, su = xp.cos(pp[b][:, None] + ang), xp.sin(pp[b][:, None] + ang)
++                cv, sv = xp.cos(pq[b][:, None] + ang), xp.sin(pq[b][:, None] + ang)
++                rpb, rqb = rp[b][:, None], rq[b][:, None]
++                ea = rpb ** 2 + rqb ** 2 + rd * rd + zb ** 2 - 2 * rd * rpb * cu
++                eb = 2 * rd * rqb * cv
++                pref = (-2 * rp[b] * rq[b])[:, None, None]
++                args = (cu[:, :, None], su[:, :, None], cv[:, None, :], sv[:, None, :], ea[:, :, None], eb[:, None, :], pref,
++                        lx6[b][:, None, None], ld[b][:, None, None], lq[b][:, None, None], ls[b][:, None, None])
++                if fused is not None:
++                    try:
++                        v = fused(*args)
++                    except Exception as exc:  # an unsupported construct in this CuPy: finish unfused
++                        warnings.warn(f"cupy.fuse of the table kernel failed ({exc!r}); building unfused")
++                        fused = None
++                if fused is None:
++                    v = kernel(*args)
++                for j, lo_j, hi_j in segs:
++                    planes[j] += v[lo_j:hi_j].sum(axis=0)
++            out[flip, m] += xp.moveaxis(planes.astype(np.float32), 0, -1)
+         if spec["symmetry"] and flip == 0:
+             for j in range(nz // 2 + 1, nz):
+                 src = out[0, :, :, :, (-j) % nz]
+-                out[0, :, :, :, j] = np.roll(np.swapaxes(src, 1, 2), (m_half, m_half), axis=(1, 2))
++                out[0, :, :, :, j] = xp.roll(xp.swapaxes(src, 1, 2), (m_half, m_half), axis=(1, 2))
+         elif spec["symmetry"] and flip == 1:
+             # W1 = V + S[V] with S[X][i1, i2] = X[m_half - i2, m_half - i1] and V the
+             # p <= q half sum (diagonal at half weight)
+             V = out[1]
+-            out[1] = V + np.roll(np.swapaxes(V, 1, 2)[:, ::-1, ::-1, :], (m_half + 1, m_half + 1), axis=(1, 2))
+-    np.minimum(out, np.float32(cap), out=out)
+-    return out
++            out[1] = V + xp.roll(xp.swapaxes(V, 1, 2)[:, ::-1, ::-1, :], (m_half + 1, m_half + 1), axis=(1, 2))
++    xp.minimum(out, np.float32(cap), out=out)
++    return to_numpy(out)
+ 
+ 
+ # ------------------------------------------------------------------ the process pool
+@@ -629,12 +779,13 @@ class PairTable:
+         n_angle: int = 72,
+         n_z: int = 16,
+         cap: float = 50.0,
+-        chunk_elems: int = BUILD_CHUNK_ELEMS,
++        chunk_elems: int | None = None,
+         symmetry: bool = True,
+         n_threads: int | None = None,
+         n_procs: int | None = None,
+         dtype=np.float32,
+         verbose: bool = False,
++        device: str | None = None,
+     ) -> "PairTable":
+         """Tabulate ``W`` with the exact pair potential of :class:`CrystalPacker`.
+ 
+@@ -649,20 +800,36 @@ class PairTable:
+         which radius, never what is summed inside one or in what order.  ``n_procs=1``
+         builds in this process (with ``n_threads`` threads, 1 by default), and so does a
+         machine or sandbox where a process pool cannot be created.
++
++        ``device`` picks where the kernel runs: ``None`` follows :mod:`polyfind.backend`
++        (CuPy on a CUDA device when it selects one, NumPy otherwise), ``"cpu"`` forces the
++        NumPy path above, ``"cuda"`` forces CuPy.  On CUDA the whole table is built in this
++        process on the device -- no process pool; the radial split is a CPU device -- with
++        the chunk of :data:`BUILD_CHUNK_ELEMS_CUDA` (``chunk_elems`` ``None`` means the
++        device's default), and the result agrees with the CPU table to float32 rounding of
++        the plane sums rather than bit for bit (``tests/test_gpu.py`` checks it).  The
++        table key does not record the device, like ``chunk_elems``.
+         """
+         import time
+ 
+         t_start = time.perf_counter()
+         if n_angle % 2 or n_z % 2:
+             raise ValueError("n_angle and n_z must be even (the exchange symmetries map grid to grid)")
++        device, xp = _resolve_device(device)
++        if chunk_elems is None:
++            chunk_elems = BUILD_CHUNK_ELEMS_CUDA if device == "cuda" else BUILD_CHUNK_ELEMS
+         spec = _build_spec(chain, cutoff, alpha, eps_r, r_min, dr, n_angle, n_z, cap, chunk_elems, symmetry, dtype)
+         n_r = len(spec["r_values"])
+         W = np.empty((2, n_r, n_angle, n_angle, n_z), dtype=np.float32)
+-        if n_procs is None:
++        if device == "cuda":
++            n_procs, n_threads = 1, 1
++        elif n_procs is None:
+             n_procs = default_table_procs(n_r)
+         n_procs = max(1, min(int(n_procs), n_r))
+         fell_back = False
+-        if n_procs > 1:
++        if device == "cuda":
++            W[...] = _build_block(spec, np.arange(n_r), xp=xp)
++        elif n_procs > 1:
+             try:
+                 _build_parallel(spec, n_r, n_procs, W)
+             except (OSError, RuntimeError, NotImplementedError, ImportError, EOFError) as exc:
+@@ -671,7 +838,7 @@ class PairTable:
+                 if verbose:
+                     print(f"table {chain.name}: process pool unavailable ({exc!r}); building in this process")
+                 n_procs, fell_back = 1, True
+-        if n_procs == 1:
++        if device == "cpu" and n_procs == 1:
+             from concurrent.futures import ThreadPoolExecutor
+ 
+             # Threads used to be worth 1.3x here, with a 131,072-element inner chunk.  They
+@@ -691,7 +858,8 @@ class PairTable:
+                 W[...] = _build_block(spec, np.arange(n_r))
+         dt = time.perf_counter() - t_start
+         if verbose:
+-            how = (f"{n_procs} worker processes" if n_procs > 1 else
++            how = (f"{xp.__name__} on {device}, chunk {chunk_elems}" if device == "cuda" else
++                   f"{n_procs} worker processes" if n_procs > 1 else
+                    f"this process, {n_threads} thread" + ("" if n_threads == 1 else "s"))
+             if fell_back:
+                 how += ", after the pool failed"
+diff --git a/tests/test_gpu.py b/tests/test_gpu.py
+index 5c63886..630ac2c 100644
+--- a/tests/test_gpu.py
++++ b/tests/test_gpu.py
+@@ -72,3 +72,103 @@ def test_forcefield_batch_on_gpu(cuda_backend):
+     e = ff.energy_batch(structs)
+     for s, ei in zip(structs, e):
+         assert abs(ff.energy(s) - ei) < 1e-3 * max(1.0, abs(ei))
++
++
++# ------------------------------------------------------------------ the chain-pair table build
++# The build kernel is written against the array module (``lattice_table._build_block(..., xp)``),
++# so a table can be built on the device.  It cannot be bit-identical to the CPU table -- a
++# device reduction associates the float32 plane sums differently -- so these compare to a
++# float32 tolerance, and also against the exact float64 kernel so that the check does not
++# depend on which of the two builds is taken as the reference.  None of this has run here:
++# the container has no CUDA device, and the tests are skipped.
++_TAB_KW = dict(n_angle=24, n_z=8, dr=0.25)  # ~40 radii, a few seconds on the CPU
++
++
++def _table_pair(chain, **kw):
++    from polyfind.lattice_table import PairTable
++
++    cpu = PairTable.build(chain, device="cpu", n_procs=1, **kw)
++    gpu = PairTable.build(chain, device="cuda", **kw)
++    return cpu, gpu
++
++
++def _assert_tables_agree(cpu, gpu, tol=2e-3):
++    """Entries below the cap within ``tol`` kcal/mol; capped entries capped on both."""
++    Wc, Wg = cpu.W.astype(np.float64), gpu.W.astype(np.float64)
++    assert Wg.shape == Wc.shape and gpu.W.dtype == np.float32
++    below = Wc < cpu.cap - tol
++    d = np.abs(Wg[below] - Wc[below])
++    assert d.max() < tol, f"max deviation below the cap {d.max():.2e}"
++    assert (Wg[~below] >= cpu.cap - tol).all()
++    assert (Wg <= cpu.cap + 1e-6).all()
++    assert np.allclose(np.asarray(gpu.e_intra, dtype=float), np.asarray(cpu.e_intra, dtype=float), rtol=1e-4, atol=1e-3)
++
++
++def test_table_build_default_device_follows_the_backend(cuda_backend):
++    from polyfind import lattice_table as lt
++
++    assert lt._resolve_device(None)[0] == "cuda"
++    assert lt._resolve_device("cpu")[1] is np
++    assert lt._resolve_device("cuda")[1].__name__ == "cupy"
++
++
++@pytest.mark.parametrize("symmetry", [True, False])
++def test_table_built_on_gpu_matches_cpu(cuda_backend, symmetry):
++    from polyfind.pack import periodic_chain
++    from polyfind.polymers import PVDF, THREE_STATE
++
++    ch = periodic_chain(PVDF, [0, 1, 0, 2], THREE_STATE)  # alpha-PVDF: chiral repeat, both flips differ
++    cpu, gpu = _table_pair(ch, symmetry=symmetry, **_TAB_KW)
++    _assert_tables_agree(cpu, gpu)
++
++
++def test_table_built_on_gpu_matches_the_direct_kernel(cuda_backend):
++    """Independent of the CPU build: random grid points against the float64 pair kernel."""
++    from polyfind.lattice_table import PairTable, chain_pair_energy
++    from polyfind.pack import CrystalPacker, periodic_chain
++    from polyfind.polymers import PE, THREE_STATE
++
++    ch = periodic_chain(PE, [0], THREE_STATE)
++    tab = PairTable.build(ch, device="cuda", **_TAB_KW)
++    pk1 = CrystalPacker(ch, n_chains=1, xp=np)  # the reference kernel stays on the host, in float64
++    rng = np.random.default_rng(6)
++    n = 60
++    ir = rng.integers(0, tab.n_r, n)
++    i1, i2 = rng.integers(0, tab.n_angle, n), rng.integers(0, tab.n_angle, n)
++    iz, fl = rng.integers(0, tab.n_z, n), rng.integers(0, 2, n)
++    r = tab.r_min + tab.dr * ir
++    ref = chain_pair_energy(pk1, np.stack([r, np.zeros_like(r)], 1), ch.c * iz / tab.n_z,
++                            360.0 * i1 / tab.n_angle, 360.0 * i2 / tab.n_angle, fl)
++    got = tab.W[fl, ir, i1, i2, iz]
++    uncapped = ref < tab.cap - 1e-3
++    assert uncapped.sum() > 10
++    assert np.abs(got[uncapped] - ref[uncapped]).max() < 1e-3
++    assert (got <= tab.cap + 1e-4).all()
++
++
++def test_gpu_build_chunk_size_does_not_change_the_table_beyond_rounding(cuda_backend):
++    """The CUDA chunk (all planes of a radius per call) against the CPU-sized chunk, both on
++    the device: only the association of the float32 plane sums may differ."""
++    from polyfind.lattice_table import BUILD_CHUNK_ELEMS, BUILD_CHUNK_ELEMS_CUDA, PairTable
++    from polyfind.pack import periodic_chain
++    from polyfind.polymers import PVDF, THREE_STATE
++
++    ch = periodic_chain(PVDF, [0, 0], THREE_STATE)
++    big = PairTable.build(ch, device="cuda", chunk_elems=BUILD_CHUNK_ELEMS_CUDA, **_TAB_KW)
++    small = PairTable.build(ch, device="cuda", chunk_elems=BUILD_CHUNK_ELEMS, **_TAB_KW)
++    _assert_tables_agree(small, big, tol=1e-3)
++
++
++def test_gpu_table_screens_the_same_cell_as_the_cpu_table(cuda_backend):
++    """End to end: the FFT screen over a GPU-built table ranks the beta-PVDF cell where the
++    CPU-built one does, and the top energies agree to the table tolerance."""
++    from polyfind.lattice_table import fft_screen
++    from polyfind.pack import periodic_chain
++    from polyfind.polymers import PVDF, THREE_STATE
++
++    ch = periodic_chain(PVDF, [0, 0], THREE_STATE)
++    cpu, gpu = _table_pair(ch, n_angle=36, n_z=8, dr=0.1)
++    av = np.arange(4.2, 9.41, 0.2)
++    rc, rg = (fft_screen(t, av, av, flips=(0,), n_top=5, min_separation=0.35) for t in (cpu, gpu))
++    assert np.abs(rc.top_energy - rg.top_energy).max() < 5e-2
++    assert np.abs(rc.top[:, :2] - rg.top[:, :2]).max() < 1e-9
+diff --git a/tests/test_lattice_table.py b/tests/test_lattice_table.py
+index d2ac24b..e623c37 100644
+--- a/tests/test_lattice_table.py
++++ b/tests/test_lattice_table.py
+@@ -396,3 +396,93 @@ def test_screen_wrapper_returns_rows_with_energies():
+     assert (np.diff(energies) >= -1e-9).all()
+     assert np.abs(table_energy(tab, params) - energies).max() < 1e-3
+     assert res.energy.shape == (5, 5, 1)
++
++
++# ------------------------------------------------------------------ (g) the array-module port of the build
++def test_resolve_device_follows_the_backend_and_rejects_nonsense():
++    from polyfind import backend as bk
++
++    assert lt._resolve_device("cpu") == ("cpu", np)
++    assert lt._resolve_device(None)[0] == bk.device_name()
++    with pytest.raises(ValueError):
++        lt._resolve_device("tpu")
++    if bk.device_name() != "cuda":
++        try:
++            import cupy  # noqa: F401
++        except ImportError:
++            with pytest.raises(ImportError):
++                lt._resolve_device("cuda")
++
++
++def test_plane_chunks_cover_every_term_of_every_plane_exactly_once():
++    rng = np.random.default_rng(3)
++    for _ in range(200):
++        nz = int(rng.integers(1, 9))
++        counts = rng.integers(0, 12, nz)
++        counts[rng.random(nz) < 0.3] = 0
++        edges = np.concatenate([[0], np.cumsum(counts)])
++        batch = int(rng.integers(1, 20))
++        seen = {j: [] for j in range(nz)}
++        for lo, hi, segs in lt._plane_chunks(edges, batch):
++            assert 0 <= lo < hi <= edges[-1]
++            assert hi - lo <= batch or len(segs) == 1  # only a single oversized plane exceeds the batch
++            assert segs[0][1] == 0 and segs[-1][2] == hi - lo
++            for j, a, b in segs:
++                assert 0 <= a < b <= hi - lo
++                seen[j].extend(range(lo + a, lo + b))
++        for j in range(nz):
++            assert seen[j] == list(range(int(edges[j]), int(edges[j + 1]))), (edges, batch, j)
++
++
++def test_build_at_the_cuda_chunk_on_numpy_agrees_to_rounding():
++    """The device chunk takes every plane of a radius in one call.  On NumPy that is the
++    same arithmetic in a different float32 association: last bits only (the CPU chunk's
++    table is the bit-reproducible one; ``BUILD_CHUNK_ELEMS`` documents the trade)."""
++    chain = _chain(PVDF_A)
++    kw = dict(n_angle=24, n_z=4, dr=0.4)
++    ref = PairTable.build(chain, n_procs=1, device="cpu", **kw)
++    big = PairTable.build(chain, n_procs=1, device="cpu", chunk_elems=lt.BUILD_CHUNK_ELEMS_CUDA, **kw)
++    assert big.W.shape == ref.W.shape
++    d = np.abs(big.W.astype(float) - ref.W)
++    assert d.max() < 1e-3, f"max deviation {d.max():.2e}"
++    assert (d > 0).any() or np.array_equal(big.W, ref.W)
++
++
++def test_grid_kernel_is_the_pair_potential_of_the_packer():
++    """The factored kernel (what cupy.fuse would trace) against the direct pair potential on
++    random geometry: same LJ + DSF numbers, to float32."""
++    chain = _chain(PE_T)
++    pk1 = CrystalPacker(chain, n_chains=1)
++    spec = lt._build_spec(chain, 8.0, 0.2, 1.0, 3.0, 0.1, 12, 4, 50.0, lt.BUILD_CHUNK_ELEMS, True, np.float32)
++    kernel = lt._grid_kernel(spec["rc"], spec["alpha"], spec["dsf_shift"], spec["dsf_force"], np.float32, np)
++    rng = np.random.default_rng(9)
++    m, na = 5, 12
++    f32 = np.float32
++    ang = (2 * np.pi * np.arange(na) / na).astype(f32)
++    pp, pq = rng.uniform(-np.pi, np.pi, m).astype(f32), rng.uniform(-np.pi, np.pi, m).astype(f32)
++    rp, rq = rng.uniform(0.3, 2.0, m).astype(f32), rng.uniform(0.3, 2.0, m).astype(f32)
++    zz = rng.uniform(-3, 3, m).astype(f32)
++    rd = f32(5.5)
++    cu, su = np.cos(pp[:, None] + ang), np.sin(pp[:, None] + ang)
++    cv, sv = np.cos(pq[:, None] + ang), np.sin(pq[:, None] + ang)
++    ea = rp[:, None] ** 2 + rq[:, None] ** 2 + rd * rd + zz[:, None] ** 2 - 2 * rd * rp[:, None] * cu
++    eb = 2 * rd * rq[:, None] * cv
++    pref = (-2 * rp * rq)[:, None, None]
++    P, Q = rng.integers(0, chain.n_atoms, m), rng.integers(0, chain.n_atoms, m)
++    pot = [np.asarray(a)[P, Q].astype(f32)[:, None, None] for a in (pk1.lj_x ** 6, pk1.lj_d, pk1.qq, pk1.lj_shift)]
++    v = kernel(cu[:, :, None], su[:, :, None], cv[:, None, :], sv[:, None, :], ea[:, :, None], eb[:, None, :], pref, *pot)
++    # the same geometry, explicitly: atom p at (rp, pp + a1, 0), atom q at (rd + rq cos(pq + a2), rq sin(pq + a2), zz)
++    a1, a2 = np.meshgrid(ang, ang, indexing="ij")
++    ref = np.empty_like(v, dtype=float)
++    for i in range(m):
++        xp_, yp_ = rp[i] * np.cos(pp[i] + a1), rp[i] * np.sin(pp[i] + a1)
++        xq_, yq_ = rd + rq[i] * np.cos(pq[i] + a2), rq[i] * np.sin(pq[i] + a2)
++        r2 = (xp_ - xq_) ** 2 + (yp_ - yq_) ** 2 + float(zz[i]) ** 2
++        lj_x, lj_d, qq, sh = (float(np.asarray(a)[P[i], Q[i]]) for a in (pk1.lj_x, pk1.lj_d, pk1.qq, pk1.lj_shift))
++        rr = np.sqrt(np.maximum(r2, 2.5e-3))
++        s6 = (lj_x / rr) ** 6
++        e = lj_d * (s6 * s6 - 2 * s6) - sh + qq * (lt.erfc_approx(0.2 * rr) / rr - pk1.dsf_shift + pk1.dsf_force * (rr - pk1.rc))
++        ref[i] = np.where(r2 < pk1.rc ** 2, e, 0.0)
++    ok = np.abs(ref) < 1e3
++    assert ok.sum() > 100
++    assert np.abs(v[ok] - ref[ok]).max() < 1e-3 * np.maximum(1.0, np.abs(ref[ok])).max()

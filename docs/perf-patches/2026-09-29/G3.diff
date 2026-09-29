@@ -1,0 +1,475 @@
+diff --git a/src/polyfind/lattice_table.py b/src/polyfind/lattice_table.py
+index 99ba421..1415836 100644
+--- a/src/polyfind/lattice_table.py
++++ b/src/polyfind/lattice_table.py
+@@ -225,13 +225,13 @@ def direct_lattice_energy(packer1: CrystalPacker, params, e_intra=None, r_max: f
+ def _pot_batch(lj_x6, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, dtype=np.float32):
+     """The same pair potential, for per-triple parameter vectors broadcast against r2.
+ 
+-    ``lj_x6`` is ``lj_x ** 6`` (the LJ part is a function of ``r^2`` alone, so the
+-    sixth power is taken once per pair type instead of once per grid point: ``**6``
+-    on the (pairs, n_angle, n_angle) array is `pow`, and removing it is a third of
+-    the builder's arithmetic).  ``r2`` is floored at (0.05 A)^2 so that ``(x/r)^12``
+-    cannot overflow float32; that only affects pairs whose energy is astronomically
+-    large and therefore clipped to the table's cap.  Exactly coincident atoms give 0,
+-    as in the packer.
++    The reference form of the build's pair kernel (kept for tests and for reading; the
++    build itself runs :class:`_PairKernel`, whose exact path evaluates the same expression
++    with the same float32 rounding, in place).  ``lj_x6`` is ``lj_x ** 6`` (the LJ part is
++    a function of ``r^2`` alone, so the sixth power is taken once per pair type instead of
++    once per grid point).  ``r2`` is floored at (0.05 A)^2 so that ``(x/r)^12`` cannot
++    overflow float32; that only affects pairs whose energy is astronomically large and
++    therefore clipped to the table's cap.  Exactly coincident atoms give 0, as in the packer.
+     """
+     with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+         mask = (r2 < dtype(rc * rc)) & (r2 > dtype(1e-8))
+@@ -244,18 +244,235 @@ def _pot_batch(lj_x6, lj_d, qq, lj_shift, r2, rc, alpha, dsf_shift, dsf_force, d
+         return np.where(mask, v, dtype(0.0))
+ 
+ 
+-# Working set of one call of the build's inner kernel, in array elements.  That kernel
+-# builds a dozen or so temporaries of this size per call, so 16,384 elements is about 1 MB
+-# of live data per worker and stays inside a shared 12 MB L3 with one worker per core.
+-# The previous 131,072 was 8 MB per worker, which made the build DRAM-bandwidth-bound --
+-# and *that*, not the GIL alone, is why threads saturated at 1.3x: measured here, six
+-# processes each running the whole build concurrently delivered 1.8x the throughput of one
+-# at 131,072 and 3.9x at 16,384.  Serial build of the gamma-PVDF screen table: 30.4 s at
+-# 131,072, 28.2 s at 16,384; with six workers, 23.4 s against 6.4 s.  Going smaller loses
+-# to Python call overhead (8,192: 40.7 s serial).  It is deliberately not part of
+-# :func:`table_key`, but it does fix the order of the float32 pair sums, so a table built
+-# at a different value differs from this one in its last bits (~1e-4 kcal/mol).
+-BUILD_CHUNK_ELEMS = 16_384
++# Abramowitz-Stegun 7.1.26, the same constants as :func:`polyfind.forcefield.erfc_approx`.
++_AS_P = 0.3275911
++_AS_C = (0.254829592, -0.284496736, 1.421413741, -1.453152027, 1.061405429)
++_R2_FLOOR = 2.5e-3  # (0.05 A)^2: keeps (x/r)^12 finite in float32; see _pot_batch
++_SPLINE_R_LO = 1.0  # A: below this every pair type is >= 1e4 kcal/mol, far past any cap
++
++
++def _pair_type_v_and_dv(lx6, ld, lq, ls, r, rc, alpha, dsf_shift, dsf_force):
++    """``V(r)`` of one pair type and ``dV/dr``, in float64, for the spline knots.
++
++    ``V = ld ((x/r)^12 - 2 (x/r)^6) - ls + lq (erfc(a r)/r - dsf_shift + dsf_force (r - rc))``
++    with the *polynomial* erfc the kernel uses, differentiated as such (the same
++    reasoning as :func:`polyfind.pack._derfc_pos`: the spline should reproduce the kernel,
++    not the function the kernel approximates).
++    """
++    r = np.asarray(r, dtype=float)
++    ir2 = 1.0 / (r * r)
++    s6 = lx6 * ir2 ** 3
++    v = ld * (s6 * s6 - 2 * s6) - ls
++    dv = ld * (-12.0 * s6 * s6 + 12.0 * s6) / r
++    x = alpha * r
++    t = 1.0 / (1.0 + _AS_P * x)
++    c1, c2, c3, c4, c5 = _AS_C
++    poly = t * (c1 + t * (c2 + t * (c3 + t * (c4 + t * c5))))
++    dpoly = c1 + t * (2.0 * c2 + t * (3.0 * c3 + t * (4.0 * c4 + t * 5.0 * c5)))
++    ex = np.exp(-x * x)
++    erfc = poly * ex
++    derfc = (dpoly * (-_AS_P * t * t) - 2.0 * x * poly) * ex  # d/dx
++    coul = erfc / r - dsf_shift + dsf_force * (r - rc)
++    dcoul = alpha * derfc / r - erfc / (r * r) + dsf_force
++    return v + lq * coul, dv + lq * dcoul
++
++
++def _spline_coefficients(types: np.ndarray, h: float, rc: float, alpha: float, dsf_shift: float, dsf_force: float) -> np.ndarray:
++    """Cubic Hermite coefficients of every pair type's ``V(r)`` on the knots ``r = k h``.
++
++    ``(n_types, K, 4)`` float32 with ``V(r) = c0 + c1 f + c2 f^2 + c3 f^3``,
++    ``f = r / h - k`` in ``[0, 1)``: the interpolant is C^1, local, and built from the
++    analytic value and slope at the knots (error ``<= h^4 max|V''''| / 384`` on each
++    interval).  Knots below :data:`_SPLINE_R_LO` hold the constant ``V(r_lo)``: every pair
++    type is above 1e4 kcal/mol there, so any table entry containing such a pair is capped
++    whichever value is used, and the wall's astronomical derivatives never enter a cubic.
++    Knots run to ``rc`` and one beyond, so a clipped ``r <= rc`` always indexes inside.
++    """
++    K = int(np.floor(rc / h)) + 2
++    rk = h * np.arange(K + 1, dtype=float)
++    k_lo = int(np.ceil(_SPLINE_R_LO / h))
++    out = np.empty((len(types), K, 4), dtype=np.float64)
++    for t, (lx6, ld, lq, ls) in enumerate(np.asarray(types, dtype=float)):
++        v, dv = _pair_type_v_and_dv(lx6, ld, lq, ls, np.maximum(rk, _SPLINE_R_LO), rc, alpha, dsf_shift, dsf_force)
++        v0, v1, d0, d1 = v[:-1], v[1:], h * dv[:-1], h * dv[1:]
++        out[t, :, 0] = v0
++        out[t, :, 1] = d0
++        out[t, :, 2] = 3.0 * (v1 - v0) - 2.0 * d0 - d1
++        out[t, :, 3] = 2.0 * (v0 - v1) + d0 + d1
++        out[t, :k_lo, 1:] = 0.0  # constant below r_lo
++        out[t, :k_lo, 0] = v[k_lo] if k_lo < len(v) else v[-1]
++    return out.astype(np.float32)
++
++
++class _PairKernel:
++    """The build's inner kernel: ``r^2`` on a ``(pairs, n_angle, n_angle)`` grid, the pair
++    potential at every point and the sum over the pairs, with one set of preallocated
++    float32 buffers reused for every chunk.
++
++    Per chunk the terms all belong to one pair *type* (same ``lj_x``, ``lj_d``, charge
++    product and shift), so the potential's constants are scalars rather than ``(B, 1, 1)``
++    broadcasts.  The grid is assembled from three small per-pair tables:
++
++        r2[b, i, j] = ea[b, i] + eb[b, j] + pe[b, n_angle - 1 + i - j]
++
++    where ``ea`` and ``eb`` carry the terms in one angle each and ``pe[b, m]`` is
++    ``-2 rp rq cos(psi_p - psi_q + 2 pi (m - n_angle + 1) / n_angle)``, the ``cos(u - v)``
++    term that depends on the two angles only through their difference -- so it is a
++    circulant, read through a negative-stride view instead of being formed from four
++    ``(B, n_angle, n_angle)`` products.  Every later pass is in place.
++
++    ``spline`` (knot spacing in A) switches the potential to a cubic Hermite interpolant per
++    pair type in ``r`` (:func:`_spline_coefficients`): the elementwise work becomes a square
++    root, an index, one gather and a cubic instead of a reciprocal, a square root, a
++    division, the erfc polynomial with its exp and the LJ powers.  Off by default: the exact
++    path reproduces :func:`_pot_batch` to float32 rounding, the spline to its interpolation
++    error (measured below 1e-4 kcal/mol per grid point on the screen grid at 0.01 A, median
++    1e-7 -- under the float32 accumulation noise of the build itself).  In NumPy it is *not*
++    faster than the exact path (a gather costs about five arithmetic passes), which is why
++    it is an option and not the default.
++    """
++
++    def __init__(self, spec: dict, batch: int, na: int):
++        dt = np.dtype(spec["dtype"]).type
++        self.dt, self.na = dt, na
++        self.rc, self.alpha = dt(spec["rc"]), dt(spec["alpha"])
++        self.rc2 = dt(spec["rc"] * spec["rc"])
++        self.dsf_shift, self.dsf_force = dt(spec["dsf_shift"]), dt(spec["dsf_force"])
++        shape = (batch, na, na)
++        self.r2, self.b1, self.b2, self.b3, self.b4, self.b5 = (np.empty(shape, dtype=dt) for _ in range(6))
++        self.m1, self.m2 = np.empty(shape, dtype=bool), np.empty(shape, dtype=bool)
++        self.acc = np.empty((na, na), dtype=dt)
++        self.ea, self.eb = np.empty((batch, na), dtype=dt), np.empty((batch, na), dtype=dt)
++        # the circulant: pe[b, n_angle - 1 + i - j] read as a (batch, n_angle, n_angle) view
++        self.pe = np.empty((batch, 2 * na - 1), dtype=dt)
++        s0, s1 = self.pe.strides
++        self.view = np.lib.stride_tricks.as_strided(self.pe[:, na - 1:], shape=shape, strides=(s0, s1, -s1))
++        self.h = spec.get("spline")
++        if self.h:
++            self.idx = np.empty(shape, dtype=np.int64)
++            self.inv_h = dt(1.0 / float(self.h))
++            self.coef = None  # per flip, set by :meth:`set_pairs`
++
++    def set_pairs(self, A: dict) -> None:
++        """Point the kernel at one flip's pair tables (:func:`_pair_arrays`)."""
++        self.types = np.asarray(A["types"], dtype=self.dt)
++        self.cu, self.cv, self.cd = A["cu"], A["cv"], A["cd"]
++        self.rp2q2, self.two_rp, self.two_rq = A["rp2q2"], A["two_rp"], A["two_rq"]
++        if self.h:
++            self.coef = _spline_coefficients(self.types, float(self.h), float(self.rc), float(self.alpha),
++                                             float(self.dsf_shift), float(self.dsf_force))
++
++    def _grid(self, b, zz, rd, B):
++        """``r2[b, i, j]`` of the chunk's pairs ``b`` at radius ``rd`` and z-offsets ``zz``."""
++        ea, eb, pe = self.ea[:B], self.eb[:B], self.pe[:B]
++        # ea[b, i] = rp^2 + rq^2 + r^2 + zz^2 - 2 r rp cos(psi_p + ang_i);  eb[b, j] = 2 r rq cos(psi_q + ang_j)
++        np.take(self.cu, b, axis=0, out=ea)
++        np.multiply(ea, (rd * self.two_rp[b])[:, None], out=ea)
++        np.subtract((self.rp2q2[b] + (rd * rd + zz * zz))[:, None], ea, out=ea)
++        np.take(self.cv, b, axis=0, out=eb)
++        np.multiply(eb, (rd * self.two_rq[b])[:, None], out=eb)
++        np.take(self.cd, b, axis=0, out=pe)
++        r2 = self.r2[:B]
++        np.add(ea[:, :, None], eb[:, None, :], out=r2)
++        np.add(r2, self.view[:B], out=r2)
++        m = self.m1[:B]
++        np.less(r2, self.rc2, out=m)
++        np.greater(r2, self.dt(1e-8), out=self.m2[:B])
++        np.logical_and(m, self.m2[:B], out=m)
++        return r2, m
++
++    def accumulate(self, b, zz, rd, t: int, plane: np.ndarray) -> None:
++        """``plane += sum_b V(r2[b])`` for the chunk's pairs ``b``, all of type ``t``.
++
++        Call inside ``np.errstate(over="ignore", invalid="ignore", divide="ignore")``: the
++        floor of ``_R2_FLOOR`` keeps every value finite, but the masked-out points beyond
++        the cutoff are evaluated too and can be anything.
++        """
++        B = len(b)
++        r2, m = self._grid(b, zz, rd, B)
++        v = self._spline(r2, B, t) if self.h else self._exact(r2, B, t)
++        np.multiply(v, m, out=v)
++        np.add.reduce(v, axis=0, out=self.acc)
++        plane += self.acc
++
++    def _exact(self, r2, B, t):
++        dt = self.dt
++        lx6, ld, lq, ls = self.types[t]
++        np.maximum(r2, dt(_R2_FLOOR), out=r2)
++        ir2, s6, rr, v, pl = self.b1[:B], self.b2[:B], self.b3[:B], self.b4[:B], self.b5[:B]
++        np.divide(dt(1.0), r2, out=ir2)
++        np.multiply(ir2, ir2, out=s6)
++        np.multiply(s6, ir2, out=s6)
++        np.multiply(s6, lx6, out=s6)  # (x/r)^6
++        np.sqrt(r2, out=rr)
++        np.subtract(s6, dt(2.0), out=v)
++        np.multiply(v, s6, out=v)
++        np.multiply(v, ld, out=v)
++        np.subtract(v, ls, out=v)  # LJ, energy-shifted
++        x, tt, ex = ir2, s6, r2  # buffers free again
++        np.multiply(rr, self.alpha, out=x)
++        np.multiply(x, dt(_AS_P), out=tt)
++        np.add(tt, dt(1.0), out=tt)
++        np.divide(dt(1.0), tt, out=tt)
++        c1, c2, c3, c4, c5 = (dt(c) for c in _AS_C)
++        np.multiply(tt, c5, out=pl)
++        np.add(pl, c4, out=pl)
++        np.multiply(pl, tt, out=pl)
++        np.add(pl, c3, out=pl)
++        np.multiply(pl, tt, out=pl)
++        np.add(pl, c2, out=pl)
++        np.multiply(pl, tt, out=pl)
++        np.add(pl, c1, out=pl)
++        np.multiply(pl, tt, out=pl)
++        np.multiply(x, x, out=ex)
++        np.negative(ex, out=ex)
++        np.exp(ex, out=ex)
++        np.multiply(pl, ex, out=pl)  # erfc(alpha r)
++        np.divide(pl, rr, out=pl)
++        np.subtract(pl, self.dsf_shift, out=pl)
++        np.subtract(rr, self.rc, out=rr)
++        np.multiply(rr, self.dsf_force, out=rr)
++        np.add(pl, rr, out=pl)
++        np.multiply(pl, lq, out=pl)
++        np.add(v, pl, out=v)
++        return v
++
++    def _spline(self, r2, B, t):
++        dt = self.dt
++        np.clip(r2, dt(_R2_FLOOR), self.rc2, out=r2)
++        g, fl, v = self.b1[:B], self.b2[:B], self.b3[:B]
++        np.sqrt(r2, out=g)
++        np.multiply(g, self.inv_h, out=g)  # grid coordinate r / h
++        np.floor(g, out=fl)
++        np.subtract(g, fl, out=g)  # f in [0, 1)
++        idx = self.idx[:B]
++        np.copyto(idx, fl, casting="unsafe")
++        c = np.take(self.coef[t], idx, axis=0)  # (B, na, na, 4)
++        np.multiply(c[..., 3], g, out=v)
++        np.add(v, c[..., 2], out=v)
++        np.multiply(v, g, out=v)
++        np.add(v, c[..., 1], out=v)
++        np.multiply(v, g, out=v)
++        np.add(v, c[..., 0], out=v)
++        return v
++
++
++# Working set of one call of the build's inner kernel, in array elements.  The kernel
++# (:class:`_PairKernel`) runs on six preallocated float32 buffers of this size plus two
++# masks, so 65,536 elements is about 1.7 MB of live data per worker -- what the old kernel
++# held at 16,384, when it built a dozen or so temporaries per call.  The working set, not
++# the element width, is what decides whether the build is DRAM-bandwidth-bound: with the
++# old kernel, six processes each running the whole build concurrently delivered 1.8x the
++# throughput of one at 131,072 elements (8 MB per worker) and 3.9x at 16,384 (1 MB), and
++# the serial build was faster at the smaller chunk too (gamma-PVDF screen table 30.4 s
++# against 28.2 s).  With the buffered kernel the sweep moved: on a 4-core box, gamma-PVDF
++# serial 19.5 / 14.6 / 12.1 / 12.0 s and on four processes 4.9 / 3.8 / 3.3 / 3.0 s at
++# 8,192 / 16,384 / 32,768 / 65,536, flat from there to 262,144 -- the per-call overhead
++# (~45 NumPy calls per chunk) is what the larger chunk amortises, and 65,536 is the smallest
++# size on the plateau, leaving the most L3 headroom for more workers.  It is deliberately
++# not part of :func:`table_key`, but it does fix the order of the float32 pair sums, so a
++# table built at a different value differs from this one in its last bits (~1e-4 kcal/mol).
++BUILD_CHUNK_ELEMS = 65_536
+ 
+ 
+ # ------------------------------------------------------------------ the build, by radius
+@@ -269,7 +486,8 @@ BUILD_CHUNK_ELEMS = 16_384
+ # which ``test_parallel_build_is_bit_identical_to_the_serial_one`` asserts as exact equality
+ # rather than as a tolerance.
+ def _build_spec(chain: PeriodicChain, cutoff: float, alpha: float, eps_r: float, r_min: float, dr: float,
+-                n_angle: int, n_z: int, cap: float, chunk_elems: int, symmetry: bool, dtype) -> dict:
++                n_angle: int, n_z: int, cap: float, chunk_elems: int, symmetry: bool, dtype,
++                spline: float | None = None) -> dict:
+     """Everything a radius block of the build needs, as small picklable plain data.
+ 
+     The four ``(n, n)`` pair-parameter matrices, the chain's coordinates and the radial
+@@ -301,6 +519,7 @@ def _build_spec(chain: PeriodicChain, cutoff: float, alpha: float, eps_r: float,
+         "chunk_elems": int(chunk_elems),
+         "symmetry": bool(symmetry),
+         "dtype": np.dtype(dtype).name,
++        "spline": None if spline is None else float(spline),
+     }
+ 
+ 
+@@ -319,6 +538,13 @@ def _pair_arrays(spec: dict, flip: int) -> dict:
+     A worker gets several radius blocks of the same build, so these are computed once per
+     process and reused; they are also what would be far too large to send per work item
+     (millions of entries for the fine grid, against 30 kB for the spec they come from).
++
++    Besides the (pair, z-image) terms this holds what :class:`_PairKernel` reads per chunk:
++    the pair *types* (the distinct ``(lj_x^6, lj_d, qq, lj_shift)`` rows, with the halved
++    diagonal of the flip-1 exchange half-sum as types of their own) and, per pair, the
++    three angular tables ``cos(psi_p + ang)``, ``cos(psi_q + ang)`` and the circulant
++    ``cos(psi_p - psi_q + ang')`` over the ``2 n_angle - 1`` angle differences, so that no
++    trigonometry happens per chunk.
+     """
+     ck = (spec["key"], int(flip))
+     hit = _PAIR_CACHE.get(ck)
+@@ -329,7 +555,7 @@ def _pair_arrays(spec: dict, flip: int) -> dict:
+     rad = np.hypot(X[:, 0], X[:, 1])
+     psi = np.arctan2(X[:, 1], X[:, 0])
+     zc = X[:, 2]
+-    n, n_z, K, c = len(rad), spec["n_z"], spec["K"], spec["c"]
++    n, n_z, K, c, na = len(rad), spec["n_z"], spec["K"], spec["c"], spec["n_angle"]
+     if spec["symmetry"] and flip == 1:
+         P, Q = np.triu_indices(n)  # exchange maps (p, q, t) -> (q, p, t) here
+         half = P == Q
+@@ -342,10 +568,19 @@ def _pair_arrays(spec: dict, flip: int) -> dict:
+         ldb, lqb, lsb = (np.where(half, 0.5 * a, a) for a in (ldb, lqb, lsb))
+     lx6 = (lxb ** 6).astype(dtype)
+     ld, lq, ls = (a.astype(dtype) for a in (ldb, lqb, lsb))
++    par = np.stack([lx6, ld, lq, ls], axis=1)
++    types, type_of_pair = np.unique(par, axis=0, return_inverse=True)
++    type_of_pair = np.asarray(type_of_pair).ravel()
+     rp, rq = rad[P].astype(dtype), rad[Q].astype(dtype)
+     psi_q = -psi if flip else psi
+     z_q = -zc if flip else zc
+     pp, pq = psi[P].astype(dtype), psi_q[Q].astype(dtype)
++    ang = (2 * np.pi * np.arange(na) / na).astype(dtype)
++    angd = (2 * np.pi * (np.arange(2 * na - 1) - (na - 1)) / na).astype(dtype)
++    cu = np.cos(pp[:, None] + ang[None, :])
++    cv = np.cos(pq[:, None] + ang[None, :])
++    cd = np.cos((pp - pq)[:, None] + angd[None, :])
++    cd *= (-2 * rp * rq)[:, None]  # the whole cos(u - v) term, ready to add
+     dzpq = zc[P] - z_q[Q]
+     # (pair, t) grid with t = j + k n_z, i.e. the z offset of the image is dz_j + k c
+     t_all = np.arange(-K * n_z, (K + 1) * n_z)
+@@ -356,8 +591,10 @@ def _pair_arrays(spec: dict, flip: int) -> dict:
+         sel0 = j_f <= n_z // 2
+         pair_i, zt, j_f = pair_i[sel0], zt[sel0], j_f[sel0]
+     gap = rp[pair_i].astype(float) + rq[pair_i].astype(float)  # closest possible xy approach is r - gap
+-    out = {"lx6": lx6, "ld": ld, "lq": lq, "ls": ls, "rp": rp, "rq": rq, "pp": pp, "pq": pq,
+-           "pair_i": pair_i, "zt": zt, "zt2": zt ** 2, "j_f": j_f, "gap": gap}
++    out = {"types": types, "cu": cu, "cv": cv, "cd": cd,
++           "rp2q2": rp * rp + rq * rq, "two_rp": dtype(2.0) * rp, "two_rq": dtype(2.0) * rq,
++           "pair_i": pair_i, "zt": zt, "zt2": zt ** 2, "j_f": j_f, "gap": gap,
++           "key_t": j_f * len(types) + type_of_pair[pair_i]}
+     if len(_PAIR_CACHE) >= 8:  # one build at a time; never let a long-lived worker grow
+         _PAIR_CACHE.clear()
+     _PAIR_CACHE[ck] = out
+@@ -385,49 +622,47 @@ def _build_block(spec: dict, irs) -> np.ndarray:
+     in; for flip 1 it acts inside each plane, so only the ``p <= q`` half of the atom pairs
+     is summed (the diagonal at half weight) and the finished block is symmetrised.  Both act
+     within one radius, which is why the radial axis is the split.
++
++    Within a plane the surviving terms are grouped by pair type and handed to
++    :class:`_PairKernel` in chunks of ``chunk_elems // n_angle^2`` pairs; the chunk sums
++    are accumulated in float64 per plane.  The order is fixed by the radius alone, so the
++    block is the same from any worker.
+     """
+     irs = np.atleast_1d(np.asarray(irs, dtype=np.int64))
+     na, nz = spec["n_angle"], spec["n_z"]
+     dtype = np.dtype(spec["dtype"]).type
+-    rc, alpha, cap = spec["rc"], spec["alpha"], spec["cap"]
++    rc, cap = spec["rc"], spec["cap"]
+     r_values = spec["r_values"]
+-    ang = (2 * np.pi * np.arange(na) / na).astype(dtype)
+     m_half = na // 2
+     batch = max(1, spec["chunk_elems"] // (na * na))
++    kern = _PairKernel(spec, batch, na)
+     out = np.zeros((2, len(irs), na, na, nz), dtype=np.float32)
+     for flip in (0, 1):
+         A = _pair_arrays(spec, flip)
+-        pp, pq, pair_i, zt, zt2, j_f, gap = (A[k] for k in ("pp", "pq", "pair_i", "zt", "zt2", "j_f", "gap"))
+-        lx6, ld, lq, ls, rp, rq = (A[k] for k in ("lx6", "ld", "lq", "ls", "rp", "rq"))
++        pair_i, zt, zt2, gap, key_t = (A[k] for k in ("pair_i", "zt", "zt2", "gap", "key_t"))
++        n_types = len(A["types"])
++        kern.set_pairs(A)
+         for m, ir in enumerate(irs):
+             r = r_values[ir]
+             keep = np.maximum(0.0, r - gap) ** 2 + zt2 < rc * rc
+             if not keep.any():
+                 continue
+-            pi, zz, jj = pair_i[keep], zt[keep].astype(dtype), j_f[keep]
+-            order = np.argsort(jj, kind="stable")
+-            pi, zz, jj = pi[order], zz[order], jj[order]
+-            edges = np.searchsorted(jj, np.arange(nz + 1))
++            pi, zz, kk = pair_i[keep], zt[keep].astype(dtype), key_t[keep]
++            order = np.argsort(kk, kind="stable")
++            pi, zz, kk = pi[order], zz[order], kk[order]
++            edges = np.searchsorted(kk, np.arange(nz * n_types + 1))
+             rd = dtype(r)
+-            for j in range(nz):
+-                lo_j, hi_j = int(edges[j]), int(edges[j + 1])
+-                if hi_j <= lo_j:
+-                    continue
+-                plane = np.zeros((na, na))
+-                for s in range(lo_j, hi_j, batch):
+-                    sl = slice(s, min(s + batch, hi_j))
+-                    b = pi[sl]
+-                    cu, su = np.cos(pp[b][:, None] + ang), np.sin(pp[b][:, None] + ang)
+-                    cv, sv = np.cos(pq[b][:, None] + ang), np.sin(pq[b][:, None] + ang)
+-                    rpb, rqb = rp[b][:, None], rq[b][:, None]
+-                    ea = rpb ** 2 + rqb ** 2 + rd * rd + zz[sl][:, None] ** 2 - 2 * rd * rpb * cu
+-                    eb = 2 * rd * rqb * cv
+-                    pref = (-2 * rp[b] * rq[b])[:, None, None]
+-                    r2 = ea[:, :, None] + eb[:, None, :] + pref * (cu[:, :, None] * cv[:, None, :] + su[:, :, None] * sv[:, None, :])
+-                    v = _pot_batch(lx6[b][:, None, None], ld[b][:, None, None], lq[b][:, None, None], ls[b][:, None, None],
+-                                   r2, rc, alpha, spec["dsf_shift"], spec["dsf_force"], dtype)
+-                    plane += v.sum(axis=0)
+-                out[flip, m, :, :, j] += plane.astype(np.float32)
++            with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
++                for j in range(nz):
++                    if edges[(j + 1) * n_types] <= edges[j * n_types]:
++                        continue
++                    plane = np.zeros((na, na))
++                    for t in range(n_types):
++                        lo, hi = int(edges[j * n_types + t]), int(edges[j * n_types + t + 1])
++                        for s in range(lo, hi, batch):
++                            e = min(s + batch, hi)
++                            kern.accumulate(pi[s:e], zz[s:e], rd, t, plane)
++                    out[flip, m, :, :, j] += plane.astype(np.float32)
+         if spec["symmetry"] and flip == 0:
+             for j in range(nz // 2 + 1, nz):
+                 src = out[0, :, :, :, (-j) % nz]
+@@ -635,6 +870,7 @@ class PairTable:
+         n_procs: int | None = None,
+         dtype=np.float32,
+         verbose: bool = False,
++        spline: float | None = None,
+     ) -> "PairTable":
+         """Tabulate ``W`` with the exact pair potential of :class:`CrystalPacker`.
+ 
+@@ -642,6 +878,12 @@ class PairTable:
+         (``|k| <= K`` as in the packer); see :func:`_build_block` for the z-window and the
+         two exchange symmetries that make one radius cheap.
+ 
++        ``spline`` (a knot spacing in A, e.g. 0.01) replaces the pair potential by a cubic
++        Hermite interpolant per pair type (:class:`_PairKernel`); off by default, since it
++        changes the table's values by its interpolation error (below 1e-4 kcal/mol per entry
++        at 0.01 A, median 1e-7) without being faster in NumPy; the table's only job is to
++        choose starts for the exact polish.
++
+         The radial axis is split across ``n_procs`` worker processes (default
+         :func:`default_table_procs`: one per physical core, or 1 inside an outer pool's
+         worker).  Radii are independent, so the table is **bit-identical** to the serial
+@@ -655,7 +897,8 @@ class PairTable:
+         t_start = time.perf_counter()
+         if n_angle % 2 or n_z % 2:
+             raise ValueError("n_angle and n_z must be even (the exchange symmetries map grid to grid)")
+-        spec = _build_spec(chain, cutoff, alpha, eps_r, r_min, dr, n_angle, n_z, cap, chunk_elems, symmetry, dtype)
++        spec = _build_spec(chain, cutoff, alpha, eps_r, r_min, dr, n_angle, n_z, cap, chunk_elems, symmetry, dtype,
++                           spline)
+         n_r = len(spec["r_values"])
+         W = np.empty((2, n_r, n_angle, n_angle, n_z), dtype=np.float32)
+         if n_procs is None:
+@@ -796,9 +1039,9 @@ def table_key(chain: PeriodicChain, **kw) -> str:
+     Everything the table's *contents* depend on goes in: the chain's coordinates,
+     elements, charges, repeat length and bonded-exclusion matrices, and the potential
+     parameters (``cutoff``, ``alpha``, ``eps_r``) and grid (``r_min``, ``dr``,
+-    ``n_angle``, ``n_z``, ``cap``, ``dtype``).  ``symmetry``, ``chunk_elems``,
+-    ``n_threads``, ``n_procs`` and ``verbose`` only change how the same numbers are
+-    produced -- the parallel build is bit-identical to the serial one -- and are
++    ``n_angle``, ``n_z``, ``cap``, ``dtype``, and ``spline`` when set).  ``symmetry``,
++    ``chunk_elems``, ``n_threads``, ``n_procs`` and ``verbose`` only change how the same
++    numbers are produced -- the parallel build is bit-identical to the serial one -- and are
+     deliberately not part of the key.  The cell parameters are not part of it either --
+     that is the point of the table.
+     """
+@@ -817,6 +1060,8 @@ def table_key(chain: PeriodicChain, **kw) -> str:
+         h.update(np.ascontiguousarray(chain.same_site_scale[k], dtype=np.float64).tobytes())
+     h.update(repr((float(chain.c),) + tuple(
+         np.dtype(p[k]).name if k == "dtype" else float(p[k]) for k in _KEY_PARAMS)).encode())
++    if kw.get("spline") is not None:  # the splined build is a different table; the exact keys are unchanged
++        h.update(f"spline:{float(kw['spline'])!r}".encode())
+     tag = "".join(ch if ch.isalnum() else "_" for ch in str(chain.name))[:24]
+     return f"{tag}-{h.hexdigest()}"
+ 

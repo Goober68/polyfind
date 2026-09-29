@@ -1,0 +1,323 @@
+diff --git a/src/polyfind/lattice_table.py b/src/polyfind/lattice_table.py
+index 99ba421..1dc59b2 100644
+--- a/src/polyfind/lattice_table.py
++++ b/src/polyfind/lattice_table.py
+@@ -959,15 +959,112 @@ class ScreenResult:
+         return self.top
+ 
+ 
+-def _shift_multiplier(theta_deg: float, n_angle: int) -> np.ndarray:
++def _shift_multiplier(theta_deg, n_angle: int) -> np.ndarray:
+     """DFT multiplier of a *linearly interpolated* rotation of the angle axis by
+-    ``theta``: the exact Fourier image of what :meth:`PairTable.interpolate` does."""
+-    g = (theta_deg % 360.0) * (n_angle / 360.0)
+-    q = int(np.floor(g))
++    ``theta``: the exact Fourier image of what :meth:`PairTable.interpolate` does.
++
++    ``theta_deg`` may be an array: the result has one more trailing axis of length
++    ``n_angle`` (``(n_angle,)`` for a scalar), complex64.
++    """
++    theta = np.asarray(theta_deg, dtype=float)
++    g = (theta % 360.0) * (n_angle / 360.0)
++    q = np.floor(g)
+     f = g - q
+     m = np.fft.fftfreq(n_angle) * n_angle  # 0, 1, ..., -1
+-    ph = np.exp(-2j * np.pi * m * q / n_angle)
+-    return (ph * ((1.0 - f) + f * np.exp(-2j * np.pi * m / n_angle))).astype(np.complex64)
++    ph = np.exp(-2j * np.pi * m * q[..., None] / n_angle)
++    return (ph * ((1.0 - f)[..., None] + f[..., None] * np.exp(-2j * np.pi * m / n_angle))).astype(np.complex64)
++
++
++def _lattice_sites_batch(a, b, gamma: float, r_max: float, centred: bool, chunk_elems: int = 2_000_000):
++    """:func:`lattice_sites` for many cells at once.
++
++    Returns flat arrays ``(cell, r, theta)`` sorted by cell index, the sites of each cell
++    in exactly the order (and with exactly the values) that :func:`lattice_sites` gives
++    them: one ``(i, j)`` grid large enough for the smallest cell serves every cell, and a
++    site the per-cell grid would not have generated lies beyond ``r_max`` (``r >= h max(|i|,
++    |j|)`` with ``h`` the shortest lattice height) and is dropped by the same test.
++    """
++    a = np.atleast_1d(np.asarray(a, dtype=float))
++    b = np.atleast_1d(np.asarray(b, dtype=float))
++    g = np.deg2rad(gamma)
++    h = np.minimum(np.minimum(a * np.sin(g), b * np.sin(g)), np.minimum(a, b))
++    R = int(np.ceil(r_max / max(float(h.min(initial=np.inf)), 1e-3))) + 2
++    i, j = np.meshgrid(np.arange(-R, R + 1), np.arange(-R, R + 1), indexing="ij")
++    i = i.ravel().astype(float)
++    j = j.ravel().astype(float)
++    if centred:
++        i, j = i + 0.5, j + 0.5
++    else:
++        keep = (i != 0) | (j != 0)
++        i, j = i[keep], j[keep]
++    bx, by = b * np.cos(g), b * np.sin(g)
++    n_cells, K = len(a), len(i)
++    step = max(1, chunk_elems // max(K, 1))
++    cells, rs, ths = [], [], []
++    for c0 in range(0, n_cells, step):
++        sl = slice(c0, min(c0 + step, n_cells))
++        x = i[None, :] * a[sl, None] + j[None, :] * bx[sl, None]
++        y = i[None, :] * 0.0 + j[None, :] * by[sl, None]
++        r = np.sqrt(x * x + y * y)
++        sel = r < r_max
++        cells.append(np.broadcast_to(np.arange(c0, c0 + sel.shape[0])[:, None], sel.shape)[sel])
++        rs.append(r[sel])
++        ths.append(np.degrees(np.arctan2(y[sel], x[sel])))
++    if not cells:
++        return np.zeros(0, dtype=np.int64), np.zeros(0), np.zeros(0)
++    return np.concatenate(cells), np.concatenate(rs), np.concatenate(ths)
++
++
++def _cell_sums(v: np.ndarray, cell: np.ndarray, n_cells: int) -> np.ndarray:
++    """Sum the rows of ``v`` (``(n_sites, k)``, the sites of a cell contiguous and ``cell``
++    non-decreasing) over each cell.
++
++    One ``np.sum`` per distinct site count, over a C-contiguous ``(cells, k, n_sites)``
++    block, so that every cell gets exactly the pairwise summation NumPy would do for that
++    cell alone (bit-identical to a per-cell ``values.sum(axis=1)``, which decides ties
++    between symmetry-equivalent grid points).  Cells without sites sum to zero.
++    """
++    out = np.zeros((n_cells, v.shape[1]), dtype=v.dtype)
++    counts = np.bincount(cell, minlength=n_cells)
++    first = np.concatenate(([0], np.cumsum(counts)[:-1]))
++    for n in np.unique(counts):
++        if n == 0:
++            continue
++        cells_n = np.flatnonzero(counts == n)
++        rows = first[cells_n][:, None] + np.arange(n)[None, :]
++        out[cells_n] = np.ascontiguousarray(v[rows].transpose(0, 2, 1)).sum(axis=2)
++    return out
++
++
++def _interpolate_self(table: PairTable, r, alpha) -> np.ndarray:
++    """``table.interpolate(r, alpha, alpha, 0.0, 0)``, bit for bit, for the self terms.
++
++    Same multilinear rule in the same order of accumulation as :meth:`PairTable.interpolate`,
++    minus the eight ``dz`` terms that carry an exactly-zero weight at ``dz = 0`` (adding
++    ``0 * W`` changes nothing), so half the gathers.
++    """
++    r, a1 = np.broadcast_arrays(np.asarray(r, dtype=float), np.asarray(alpha, dtype=float))
++    na = table.n_angle
++    fr = np.clip((r - table.r_min) / table.dr, 0.0, table.n_r - 1.0)
++    i0 = np.minimum(fr.astype(np.int64), table.n_r - 2)
++    tr = fr - i0
++    ja = (a1 % 360.0) * (na / 360.0)
++    fa = ja.astype(np.int64)  # >= 0, so floor
++    ta = ja - fa
++    ia = fa % na
++    W0 = table.W[0]
++    out = np.zeros(np.shape(r), dtype=float)
++    for da in (0, 1):
++        wa = 1 - ta if da == 0 else ta
++        iia = (ia + da) % na
++        for db in (0, 1):
++            wb = (1 - ta if db == 0 else ta) * wa
++            iib = (ia + db) % na
++            wz = (1 - 0.0) * wb  # the dz = 0 plane, weight (1 - tz) with tz = 0
++            for di in (0, 1):
++                w = (1 - tr if di == 0 else tr) * wz
++                out += w * W0[i0 + di, iia, iib, 0]
++    return np.where(r > table.r_max, 0.0, out)
+ 
+ 
+ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=(0, 1), n_top: int = 20,
+@@ -984,6 +1081,14 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
+     grid.  The energies are identical (to float32) to :func:`table_energy` at the
+     same grid points.
+ 
++    Everything that depends only on the cell geometry is computed for all cells at once
++    (the lattice sites, the self terms in one :meth:`PairTable.interpolate` call, the
++    rotation multipliers and their per-radius outer products), and the Fourier
++    accumulation, inverse FFT and grid minimum are done for ``batch`` cells per NumPy
++    call; there is no per-cell Python work.  ``n_threads`` is accepted for compatibility
++    and ignored: the screen is single-threaded (the earlier per-cell thread pool only
++    contended for the GIL).
++
+     ``ab_symmetry=True`` skips the cells with ``b < a``: at ``gamma = 90`` swapping the
+     axes is a 90 deg rotation of the same lattice (``phi1, phi2 -> phi1 + 90, phi2 + 90``
+     leaves the energy unchanged), so the minimum over the angle/dz grid at ``(b, a)``
+@@ -1000,13 +1105,9 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
+     the effect is invisible at ``gamma = 90`` but dominates an oblique lattice, whose
+     centred site ``(a_vec + b_vec)/2`` gets short quickly as gamma leaves 90.
+     """
+-    import os
+     import time
+-    from concurrent.futures import ThreadPoolExecutor
+ 
+     t0 = time.perf_counter()
+-    if n_threads is None:
+-        n_threads = max(1, min(4, (os.cpu_count() or 1)))
+     a_values = np.atleast_1d(np.asarray(a_values, dtype=float))
+     b_values = np.atleast_1d(np.asarray(b_values, dtype=float))
+     flips = tuple(int(f) for f in flips)
+@@ -1020,64 +1121,115 @@ def fft_screen(table: PairTable, a_values, b_values, gamma: float = 90.0, flips=
+     energy = np.full(shape, np.inf)
+     best = np.zeros(shape + (3,))
+ 
++    # --- the cells to screen, and their lattice sites, all at once ---------------------
++    IA, IB = np.meshgrid(np.arange(len(a_values)), np.arange(len(b_values)), indexing="ij")
++    IA, IB = IA.ravel(), IB.ravel()
++    if ab_symmetry:
++        keep = b_values[IB] >= a_values[IA] - 1e-9
++        IA, IB = IA[keep], IB[keep]
++    A, B = a_values[IA], b_values[IB]
++    n_cells = len(A)
++    cs, rs, ts = _lattice_sites_batch(A, B, gamma, r_max, centred=False)
++    cc, rc_, tc = _lattice_sites_batch(A, B, gamma, r_max, centred=True)
++    r_min_cell = np.full(n_cells, np.inf)
++    np.minimum.at(r_min_cell, cs, rs)
++    np.minimum.at(r_min_cell, cc, rc_)
++    ok = ~(r_min_cell < table.r_min)  # no table data below r_min: left at +inf (see the docstring)
++    if not ok.all():
++        new_index = np.cumsum(ok) - 1
++        IA, IB = IA[ok], IB[ok]
++        sel = ok[cs]
++        cs, rs, ts = new_index[cs[sel]], rs[sel], ts[sel]
++        sel = ok[cc]
++        cc, rc_, tc = new_index[cc[sel]], rc_[sel], tc[sel]
++        n_cells = len(IA)
++    # --- self terms of every cell in one interpolation (they do not depend on flip) -------
++    da = phi[None, :] - ts[:, None]  # (n_sites, na)
++    self_pos = 0.5 * _cell_sums(_interpolate_self(table, rs[:, None], da), cs, n_cells)
++    self_neg = None
++    if any(_self_sign(f) < 0 for f in flips):
++        self_neg = 0.5 * _cell_sums(_interpolate_self(table, rs[:, None], -da), cs, n_cells)
++
++    # --- centred sites grouped by (cell, radius): sites at the same radius (a rectangular
++    # lattice gives them in fours) share the coefficient array, so their rotation
++    # multipliers are summed first, as (na, na) outer products -----------------------------
++    keys = np.round(rc_, 9)
++    order = np.lexsort((keys, cc))  # stable: sites keep their order inside a group
++    cc, rc_, tc, keys = cc[order], rc_[order], tc[order], keys[order]
++    if len(cc):
++        new_group = np.concatenate(([True], (cc[1:] != cc[:-1]) | (keys[1:] != keys[:-1])))
++    else:
++        new_group = np.zeros(0, dtype=bool)
++    g_start = np.flatnonzero(new_group)  # first site of each group
++    n_groups = len(g_start)
++    g_cell = cc[g_start]
++    g_i0, g_w = table.radial_weights(rc_[g_start])
++    w1 = (1.0 - g_w).astype(np.float32)[:, None, None, None]
++    w2 = g_w.astype(np.float32)[:, None, None, None]
++    # position of each site inside its group and of each group inside its cell: the sums
++    # below add the p-th member of every group (cell) in one vectorised operation, p = 0,
++    # 1, ..., so that each group (cell) is accumulated left to right in the same order as a
++    # per-cell loop would, and the complex64 rounding is the same
++    g_id = np.cumsum(new_group) - 1  # group of each site
++    s_pos = np.arange(len(cc)) - g_start[g_id]
++    g_counts = np.bincount(g_cell, minlength=n_cells)
++    g_first_of_cell = np.concatenate(([0], np.cumsum(g_counts)))  # (n_cells + 1,): a batch of cells is a slice of groups
++    g_pos = np.arange(n_groups) - g_first_of_cell[g_cell]
++    s_counts = np.bincount(cc, minlength=n_cells)
++    s_first_of_cell = np.concatenate(([0], np.cumsum(s_counts)))
++    LL = np.empty((n_groups, na, na), dtype=np.complex64)
++    for c0 in range(0, n_cells, 4 * batch):
++        c1 = min(c0 + 4 * batch, n_cells)
++        s0, s1 = s_first_of_cell[c0], s_first_of_cell[c1]
++        if s1 == s0:
++            continue
++        L = _shift_multiplier(tc[s0:s1], na)  # (n_sites, na)
++        outer = L[:, :, None] * L[:, None, :]
++        pos, gid = s_pos[s0:s1], g_id[s0:s1]
++        LL[gid[pos == 0]] = outer[pos == 0]
++        for p in range(1, int(pos.max()) + 1):
++            sel = pos == p
++            LL[gid[sel]] += outer[sel]
++
++    # --- per flip: Fourier accumulation, inverse FFT and grid minimum, batched over cells ---
+     for fi, flip in enumerate(flips):
+         Wh = table.fourier(flip)
+-        sgn2 = _self_sign(flip)
++        self2 = self_pos if _self_sign(flip) > 0 else self_neg
+         e0 = float(table.e_intra[flip])
+-
+-        def do_rows(ias, fi=fi, Wh=Wh, sgn2=sgn2, e0=e0):
+-            buf = np.empty((batch, na, na, nz2), dtype=np.complex64)
+-            meta = []
+-
+-            def flush():
+-                if not meta:
+-                    return
+-                E = np.fft.irfftn(buf[: len(meta)], s=(na, na, nz), axes=(1, 2, 3))
+-                for k, (ia, ib, self1, self2) in enumerate(meta):
+-                    Ek = E[k] + self1[:, None, None] + self2[None, :, None] + e0
+-                    i1, i2, j = np.unravel_index(int(np.argmin(Ek)), Ek.shape)
+-                    energy[ia, ib, fi] = Ek[i1, i2, j]
+-                    best[ia, ib, fi] = (phi[i1], phi[i2], c * j / nz)
+-                meta.clear()
+-
+-            for ia in ias:
+-                a = a_values[ia]
+-                for ib, b in enumerate(b_values):
+-                    if ab_symmetry and b < a - 1e-9:
+-                        continue
+-                    rs, ts = lattice_sites(a, b, gamma, r_max, centred=False)
+-                    rc_, tc = lattice_sites(a, b, gamma, r_max, centred=True)
+-                    if min(rs.min(initial=np.inf), rc_.min(initial=np.inf)) < table.r_min:
+-                        continue  # no table data there; left at +inf (see the docstring)
+-                    da = phi[:, None] - ts[None, :]
+-                    self1 = 0.5 * table.interpolate(rs[None, :], da, da, 0.0, 0).sum(axis=1)
+-                    self2 = self1 if sgn2 > 0 else 0.5 * table.interpolate(rs[None, :], -da, -da, 0.0, 0).sum(axis=1)
+-                    i0, tr = table.radial_weights(rc_)
+-                    acc = buf[len(meta)]
+-                    acc[...] = 0
+-                    # sites at the same radius (a rectangular lattice gives them in fours)
+-                    # share the coefficient array: sum their rotation multipliers first
+-                    keys = np.round(rc_, 9)
+-                    for key in np.unique(keys):
+-                        grp = keys == key
+-                        LL = np.zeros((na, na), dtype=np.complex64)
+-                        for t_i in tc[grp]:
+-                            L = _shift_multiplier(t_i, na)
+-                            LL += L[:, None] * L[None, :]
+-                        r_i, w_i = int(i0[grp][0]), float(tr[grp][0])
+-                        coef = Wh[r_i] if w_i == 0.0 else (1.0 - w_i) * Wh[r_i] + w_i * Wh[r_i + 1]
+-                        acc += LL[:, :, None] * coef
+-                    meta.append((ia, ib, self1, self2))
+-                    if len(meta) >= batch:
+-                        flush()
+-            flush()
+-
+-        if n_threads > 1 and len(a_values) > 1:
+-            blocks = [range(i, len(a_values), n_threads) for i in range(n_threads)]
+-            with ThreadPoolExecutor(max_workers=n_threads) as ex:
+-                list(ex.map(do_rows, blocks))
+-        else:
+-            do_rows(range(len(a_values)))
++        for c0 in range(0, n_cells, batch):
++            c1 = min(c0 + batch, n_cells)
++            nb = c1 - c0
++            q0, q1 = g_first_of_cell[c0], g_first_of_cell[c1]
++            acc = np.zeros((nb, na, na, nz2), dtype=np.complex64)
++            gsl = slice(q0, q1)
++            pos, cell = g_pos[gsl], g_cell[gsl] - c0
++            for p in range(int(pos.max(initial=-1)) + 1):
++                sel = np.flatnonzero(pos == p) + q0
++                i0 = g_i0[sel]
++                # (1 - w) Wh[i0] + w Wh[i0 + 1], then LL * coef, each product in the operand
++                # order of a per-cell loop (NumPy's complex64 product is not order symmetric)
++                coef = Wh[i0]
++                coef *= w1[sel]
++                tmp = Wh[i0 + 1]
++                tmp *= w2[sel]
++                coef += tmp
++                np.multiply(LL[sel, :, :, None], coef, out=coef)
++                if len(sel) == nb:
++                    acc += coef  # every cell of the batch has a p-th group
++                else:
++                    acc[cell[sel - q0]] += coef
++            E = np.fft.irfftn(acc, s=(na, na, nz), axes=(1, 2, 3))
++            E = E + self_pos[c0:c1, :, None, None]  # float64 from here
++            E += self2[c0:c1, None, :, None]
++            E += e0
++            flat = E.reshape(nb, -1)
++            k = flat.argmin(axis=1)
++            i1, i2, j = np.unravel_index(k, (na, na, nz))
++            ia, ib = IA[c0:c1], IB[c0:c1]
++            energy[ia, ib, fi] = flat[np.arange(nb), k]
++            best[ia, ib, fi, 0] = phi[i1]
++            best[ia, ib, fi, 1] = phi[i2]
++            best[ia, ib, fi, 2] = c * j / nz
+ 
+     # top distinct cells: (a, b) and (b, a) are the same cell (a 90 deg rotation of it)
+     order = np.argsort(energy, axis=None)
