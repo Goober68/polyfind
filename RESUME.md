@@ -161,9 +161,15 @@ screen's polarity column should be re-measured with gamma free on both branches 
 (a rectangular cell with chain 2 above chain 1 along the long axis) is a true minimum, stiffer
 than beta (41/49/61 vs 34/40/49 cm^-1) and degenerate with it: beta is not near a soft-mode
 instability on this potential, and polar-vs-antipolar for PVDF is a barrier question this
-does not answer. Pending source fix (held under the merge hold): `pack.polish` leaves `dz`
+does not answer. Dipole reviewed the first record and found 12 of 36 relaxed cells a few 1e-6
+above the requested force tolerance because `relax_all_atom` discarded termination; fixed at
+the owner (`phonon.Relaxation`: unrounded force, termination evidence, Newton polish,
+`converged`), consumers require acceptance; record regeneration under the fix pending (the committed JSON predates it). Pending source fix: `pack.polish` leaves `dz`
 unbounded and the packer's energy is only periodic in `dz` for about two repeats outside
-`[0, c)`; the tied polish in the example wraps inside its objective.
+`[0, c)`; the tied polish in the example wraps inside its objective. The merge hold below is
+about merging *their* branch into ours; Dipole's 2026-09-14 notes say their C: checkout is no
+longer touched by incoming code (their relay is on D:), so our own source edits on this branch
+are safe to push.
 
 ## Dipole's Polyfind extension branch (do not merge yet)
 
@@ -231,7 +237,7 @@ traceable to an invented constant, refuse it.
 
 ## Housekeeping
 
-- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 605 pass, 5 skip (GPU). ~10 min. Dipole's runtime reports 3 last-digit
+- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 606 pass, 5 skip (GPU). ~10 min. Dipole's runtime reports 3 last-digit
   frozen-literal failures in `test_mechanics.py` (PE/alpha/gamma energies at
   1e-15 relative) that do not reproduce here at any commit; machine noise,
   not a defect. A 1e-12 relative tolerance is the fix if ever needed.

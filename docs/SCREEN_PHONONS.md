@@ -47,6 +47,19 @@ separately), the known-answer identity is checked on every cell, every atom is t
 fixed cell, and the Gamma-point Hessian is taken there with h = 1e-3 A and the acoustic sum
 projected.
 
+**The relaxation owns its acceptance.** `phonon.relax_all_atom` returns a `Relaxation`: the
+geometry, the energy, the largest *unrounded* residual force, L-BFGS-B's own termination
+message and counts, and `converged`, which is true only when that force is finite and no
+larger than the requested 1e-6 kcal/(mol A). L-BFGS-B's line search stops a little above that
+on a third of these cells (the energy is smooth only to the precision of the Ewald sum and the
+induced-dipole solve; residuals of up to 6.1e-6 were left in the first version of this record,
+which Dipole's review caught), so up to three Newton steps follow, each a finite-difference
+Hessian solved against the gradient in the translation-free subspace and kept only if it lowers
+the force. The criterion is not loosened. This script takes a relaxed Hessian only from an
+accepted relaxation; an unaccepted one gets its compact diagnosis in the record and no
+spectrum. The record keeps, per cell, the acceptance, the unrounded force before and after the
+Newton polish, the message and the counts.
+
 Two diagnostics travel with every cell. **"slid"** is the largest atom displacement when the
 rigid cell's atoms were let go: a few hundredths of an Angstrom for a cell that was already a
 minimum, tenths or more for a saddle, and the record keeps each chain's mean displacement
@@ -204,6 +217,22 @@ That is a latent source fix, held with the other source changes under the merge 
 `antipolar_cell_exact`'s own polish is free in `(a, b)` and can return a cell just outside the
 screen's bounds; a bounded polish started there projects onto the bound first, which for CDFE
 raised the antipolar energy by 0.15 kcal/mol per monomer before it was caught.
+
+## Dipole's review, and what changed
+
+Dipole audited the first version of this record against the code (`docs/REFERENCE_DATA_REQUEST.md`,
+consumer review of 2026-09-14). Their finding: `relax_all_atom` discarded the optimizer's
+termination and this script consumed every returned geometry; 12 of 36 cells carried a
+residual force above the requested 1e-6, at most 6.1e-6. Confirmed from the record, and fixed
+at the owner as they asked, not with a wrapper and not by loosening the criterion: the
+acceptance paragraph above is the change, and the record and tables are to be regenerated from a run under it (the committed
+record still predates the fix; regeneration pending).
+Their three scope points stand as this document already states them: the fixed-charge relaxed
+dipole is not the full induced-plus-flux polarization (it is a diagnostic of whether a rigid
+antipolar packing stayed antipolar); the pinned rest lengths are a changed Hamiltonian and
+repair nothing about the C-F calibration; and the CFE row is the isotactic homopolymer, not
+their VDF/TrFE/CFE source motif. They name the gamma-free PVDF antipolar competitor as a
+useful next matched native comparison, not yet qualified.
 
 ## Reproducing this
 
