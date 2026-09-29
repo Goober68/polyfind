@@ -8,11 +8,11 @@
    "atoms_per_repeat": 6,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 0.5,
-    "pack": 6.1,
-    "antipolar": 11.2,
-    "gamma_free": 17.2,
-    "total": 62.7
+    "fit": 0.6,
+    "pack": 7.4,
+    "antipolar": 13.9,
+    "gamma_free": 21.3,
+    "total": 79.8
    },
    "notes": [],
    "build": "ideal angles",
@@ -232,6 +232,17 @@
      "label": "polar90",
      "atoms": 12,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "9.140561072484843e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 11,
+      "n_evaluations": 13,
+      "lbfgs_max_force": "9.140561072484843e-07",
+      "newton_steps": 0,
+      "energy": "-9.339395052166438"
+     },
      "params": [
       4.5493,
       8.4997,
@@ -432,12 +443,23 @@
       },
       "dipole_per_monomer": 0.358
      },
-     "seconds": 5.1
+     "seconds": 6.3
     },
     "anti90": {
      "label": "anti90",
      "atoms": 12,
      "known_answer_rel": 2.32e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "4.8038448219323016e-12",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "n_iterations": 154,
+      "n_evaluations": 193,
+      "lbfgs_max_force": "1.0274817914268652e-06",
+      "newton_steps": 1,
+      "energy": "-8.144803738754952"
+     },
      "params": [
       4.4869,
       9.9705,
@@ -520,7 +542,7 @@
      "relaxed": {
       "energy": -8.144804,
       "lowered_by": 3.550456,
-      "max_force": 1e-06,
+      "max_force": 4.8e-12,
       "max_displacement": 1.0506,
       "chain_slides": [
        [
@@ -638,12 +660,23 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 10.6
+     "seconds": 15.9
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 12,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "9.140561072484843e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 11,
+      "n_evaluations": 13,
+      "lbfgs_max_force": "9.140561072484843e-07",
+      "newton_steps": 0,
+      "energy": "-9.339395052166438"
+     },
      "params": [
       4.5493,
       8.4997,
@@ -844,12 +877,23 @@
       },
       "dipole_per_monomer": 0.358
      },
-     "seconds": 4.7
+     "seconds": 5.7
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 12,
      "known_answer_rel": 4.61e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "2.000051318300503e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 32,
+      "n_evaluations": 37,
+      "lbfgs_max_force": "2.000051318300503e-07",
+      "newton_steps": 0,
+      "energy": "-9.350631573018845"
+     },
      "params": [
       4.5593,
       9.6351,
@@ -1050,7 +1094,7 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 5.6
+     "seconds": 6.4
     }
    },
    "n_monomers_per_cell": 2,
@@ -1062,7 +1106,7 @@
    "atoms_per_repeat": 6,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 237.9
+    "fit": 302.2
    },
    "notes": [],
    "build": "no repeat, ideal or deflected (chain is not commensurate; cannot build a periodic repeat)",
@@ -1075,11 +1119,11 @@
    "atoms_per_repeat": 6,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 296.3,
-    "pack": 4.2,
-    "antipolar": 10.5,
-    "gamma_free": 23.0,
-    "total": 360.9
+    "fit": 422.4,
+    "pack": 4.4,
+    "antipolar": 11.4,
+    "gamma_free": 48.3,
+    "total": 559.2
    },
    "notes": [
     "polymer 'cfe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md."
@@ -1301,6 +1345,17 @@
      "label": "polar90",
      "atoms": 12,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "9.885266635256684e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 26,
+      "n_evaluations": 29,
+      "lbfgs_max_force": "9.885266635256684e-07",
+      "newton_steps": 0,
+      "energy": "34.30262765492843"
+     },
      "params": [
       5.4981,
       8.3709,
@@ -1509,12 +1564,23 @@
       },
       "dipole_per_monomer": 0.3861
      },
-     "seconds": 4.9
+     "seconds": 14.9
     },
     "anti90": {
      "label": "anti90",
      "atoms": 12,
      "known_answer_rel": 7.38e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "5.230577135029169e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 67,
+      "n_evaluations": 73,
+      "lbfgs_max_force": "5.230577135029169e-07",
+      "newton_steps": 0,
+      "energy": "36.75329055853758"
+     },
      "params": [
       8.2886,
       5.8152,
@@ -1723,12 +1789,23 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 6.0
+     "seconds": 15.2
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 12,
      "known_answer_rel": 5.95e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "4.347060458265162e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 27,
+      "n_evaluations": 30,
+      "lbfgs_max_force": "4.347060458265162e-07",
+      "newton_steps": 0,
+      "energy": "34.21186880406961"
+     },
      "params": [
       5.5106,
       8.3272,
@@ -1937,12 +2014,23 @@
       },
       "dipole_per_monomer": 0.388
      },
-     "seconds": 4.6
+     "seconds": 10.7
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 12,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "1.434939495808776e-11",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "n_iterations": 66,
+      "n_evaluations": 74,
+      "lbfgs_max_force": "1.8607420804173103e-06",
+      "newton_steps": 1,
+      "energy": "34.240017431645285"
+     },
      "params": [
       9.811,
       5.1504,
@@ -2028,7 +2116,7 @@
      "relaxed": {
       "energy": 34.240017,
       "lowered_by": 1.732882,
-      "max_force": 1.9e-06,
+      "max_force": 1.4e-11,
       "max_displacement": 0.16,
       "chain_slides": [
        [
@@ -2151,7 +2239,7 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 8.7
+     "seconds": 23.0
     }
    },
    "n_monomers_per_cell": 2,
@@ -2163,11 +2251,11 @@
    "atoms_per_repeat": 6,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 317.3,
-    "pack": 4.6,
-    "antipolar": 11.4,
-    "gamma_free": 22.4,
-    "total": 379.6
+    "fit": 371.9,
+    "pack": 6.0,
+    "antipolar": 13.5,
+    "gamma_free": 26.0,
+    "total": 446.1
    },
    "notes": [
     "polymer 'cdfe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md."
@@ -2389,6 +2477,17 @@
      "label": "polar90",
      "atoms": 12,
      "known_answer_rel": 1.62e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "3.9478861781072627e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 26,
+      "n_evaluations": 30,
+      "lbfgs_max_force": "3.9478861781072627e-07",
+      "newton_steps": 0,
+      "energy": "41.83021512935983"
+     },
      "params": [
       6.2396,
       8.1165,
@@ -2597,12 +2696,23 @@
       },
       "dipole_per_monomer": 0.3336
      },
-     "seconds": 3.9
+     "seconds": 4.5
     },
     "anti90": {
      "label": "anti90",
      "atoms": 12,
      "known_answer_rel": 4.73e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "7.410156483977914e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 60,
+      "n_evaluations": 86,
+      "lbfgs_max_force": "7.410156483977914e-07",
+      "newton_steps": 0,
+      "energy": "42.70693545991403"
+     },
      "params": [
       4.6405,
       11.3618,
@@ -2811,12 +2921,23 @@
       },
       "dipole_per_monomer": 0.0094
      },
-     "seconds": 7.5
+     "seconds": 8.3
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 12,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "4.260224300972615e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 27,
+      "n_evaluations": 30,
+      "lbfgs_max_force": "4.260224300972615e-07",
+      "newton_steps": 0,
+      "energy": "41.81926603591162"
+     },
      "params": [
       6.2298,
       8.1323,
@@ -3025,12 +3146,23 @@
       },
       "dipole_per_monomer": 0.3334
      },
-     "seconds": 4.0
+     "seconds": 5.8
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 12,
      "known_answer_rel": 1.58e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "6.912642445122685e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 62,
+      "n_evaluations": 69,
+      "lbfgs_max_force": "6.912642445122685e-07",
+      "newton_steps": 0,
+      "energy": "42.70693545883407"
+     },
      "params": [
       4.6405,
       11.3618,
@@ -3239,7 +3371,7 @@
       },
       "dipole_per_monomer": 0.0094
      },
-     "seconds": 7.0
+     "seconds": 8.5
     }
    },
    "n_monomers_per_cell": 2,
@@ -3251,11 +3383,11 @@
    "atoms_per_repeat": 7,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 222.5,
-    "pack": 5.6,
-    "antipolar": 12.5,
-    "gamma_free": 25.7,
-    "total": 311.9
+    "fit": 268.7,
+    "pack": 5.8,
+    "antipolar": 13.5,
+    "gamma_free": 26.4,
+    "total": 375.0
    },
    "notes": [
     "polymer 'an' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md."
@@ -3477,6 +3609,17 @@
      "label": "polar90",
      "atoms": 14,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "8.747195963110244e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 94,
+      "n_evaluations": 103,
+      "lbfgs_max_force": "8.747195963110244e-07",
+      "newton_steps": 0,
+      "energy": "14.286809107783284"
+     },
      "params": [
       6.7478,
       6.575,
@@ -3677,12 +3820,23 @@
       },
       "dipole_per_monomer": 0.287
      },
-     "seconds": 9.2
+     "seconds": 12.2
     },
     "anti90": {
      "label": "anti90",
      "atoms": 14,
      "known_answer_rel": 8.21e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "1.2085604116424089e-11",
+      "gtol": 1e-06,
+      "message": "ABNORMAL: ",
+      "n_iterations": 151,
+      "n_evaluations": 215,
+      "lbfgs_max_force": "1.1605924017388247e-06",
+      "newton_steps": 1,
+      "energy": "14.65597838774471"
+     },
      "params": [
       6.6861,
       6.6133,
@@ -3765,7 +3919,7 @@
      "relaxed": {
       "energy": 14.655978,
       "lowered_by": 2.645837,
-      "max_force": 1.2e-06,
+      "max_force": 1.2e-11,
       "max_displacement": 0.5675,
       "chain_slides": [
        [
@@ -3883,12 +4037,23 @@
       },
       "dipole_per_monomer": 0.2536
      },
-     "seconds": 13.2
+     "seconds": 20.0
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 14,
      "known_answer_rel": 8.38e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "9.14468500923249e-12",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "n_iterations": 99,
+      "n_evaluations": 127,
+      "lbfgs_max_force": "1.3580655213729642e-06",
+      "newton_steps": 1,
+      "energy": "14.286809107783284"
+     },
      "params": [
       6.7478,
       6.575,
@@ -3971,7 +4136,7 @@
      "relaxed": {
       "energy": 14.286809,
       "lowered_by": 2.67487,
-      "max_force": 1.4e-06,
+      "max_force": 9.1e-12,
       "max_displacement": 0.3448,
       "chain_slides": [
        [
@@ -4089,12 +4254,23 @@
       },
       "dipole_per_monomer": 0.287
      },
-     "seconds": 9.9
+     "seconds": 14.4
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 14,
      "known_answer_rel": 8.21e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "7.881270107645832e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 154,
+      "n_evaluations": 176,
+      "lbfgs_max_force": "7.881270107645832e-07",
+      "newton_steps": 0,
+      "energy": "14.610681417794169"
+     },
      "params": [
       6.7008,
       6.6001,
@@ -4295,7 +4471,7 @@
       },
       "dipole_per_monomer": 0.2576
      },
-     "seconds": 11.1
+     "seconds": 11.4
     }
    },
    "n_monomers_per_cell": 2,
@@ -4307,11 +4483,11 @@
    "atoms_per_repeat": 8,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 371.2,
-    "pack": 6.5,
-    "antipolar": 14.3,
-    "gamma_free": 27.9,
-    "total": 492.2
+    "fit": 380.4,
+    "pack": 6.8,
+    "antipolar": 15.0,
+    "gamma_free": 28.2,
+    "total": 518.8
    },
    "notes": [],
    "build": "ideal angles",
@@ -4531,6 +4707,17 @@
      "label": "polar90",
      "atoms": 16,
      "known_answer_rel": 3.82e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "9.278125261413805e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 151,
+      "n_evaluations": 167,
+      "lbfgs_max_force": "9.278125261413805e-07",
+      "newton_steps": 0,
+      "energy": "21.664832071900776"
+     },
      "params": [
       6.1282,
       9.5692,
@@ -4731,12 +4918,23 @@
       },
       "dipole_per_monomer": 0.2865
      },
-     "seconds": 14.6
+     "seconds": 15.2
     },
     "anti90": {
      "label": "anti90",
      "atoms": 16,
      "known_answer_rel": 1.73e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "1.0722089882619912e-11",
+      "gtol": 1e-06,
+      "message": "ABNORMAL: ",
+      "n_iterations": 231,
+      "n_evaluations": 317,
+      "lbfgs_max_force": "1.2935443879924513e-06",
+      "newton_steps": 1,
+      "energy": "21.296391611371575"
+     },
      "params": [
       9.2521,
       6.0967,
@@ -4819,7 +5017,7 @@
      "relaxed": {
       "energy": 21.296392,
       "lowered_by": 3.334859,
-      "max_force": 1.3e-06,
+      "max_force": 1.1e-11,
       "max_displacement": 0.6199,
       "chain_slides": [
        [
@@ -4937,12 +5135,23 @@
       },
       "dipole_per_monomer": 0.2421
      },
-     "seconds": 22.3
+     "seconds": 25.0
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 16,
      "known_answer_rel": 4.36e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "2.630289586136314e-08",
+      "gtol": 1e-06,
+      "message": "ABNORMAL: ",
+      "n_iterations": 129,
+      "n_evaluations": 178,
+      "lbfgs_max_force": "2.062822514359297e-06",
+      "newton_steps": 1,
+      "energy": "21.664832071900733"
+     },
      "params": [
       6.1282,
       9.5692,
@@ -5025,7 +5234,7 @@
      "relaxed": {
       "energy": 21.664832,
       "lowered_by": 4.388742,
-      "max_force": 2.1e-06,
+      "max_force": 2.6e-08,
       "max_displacement": 0.2868,
       "chain_slides": [
        [
@@ -5143,12 +5352,23 @@
       },
       "dipole_per_monomer": 0.2865
      },
-     "seconds": 14.8
+     "seconds": 19.8
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 16,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "1.2072121080564102e-11",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "n_iterations": 226,
+      "n_evaluations": 273,
+      "lbfgs_max_force": "3.569558025162678e-06",
+      "newton_steps": 1,
+      "energy": "21.297747700195757"
+     },
      "params": [
       9.2147,
       6.1073,
@@ -5231,7 +5451,7 @@
      "relaxed": {
       "energy": 21.297748,
       "lowered_by": 3.319618,
-      "max_force": 3.6e-06,
+      "max_force": 1.2e-11,
       "max_displacement": 0.6173,
       "chain_slides": [
        [
@@ -5349,7 +5569,7 @@
       },
       "dipole_per_monomer": 0.2415
      },
-     "seconds": 17.5
+     "seconds": 25.2
     }
    },
    "n_monomers_per_cell": 2,
@@ -5367,11 +5587,11 @@
    "atoms_per_repeat": 6,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 3.0,
-    "pack": 3.6,
-    "antipolar": 9.9,
-    "gamma_free": 17.0,
-    "total": 59.7
+    "fit": 4.1,
+    "pack": 4.5,
+    "antipolar": 12.3,
+    "gamma_free": 25.4,
+    "total": 76.0
    },
    "notes": [
     "polymer 'pvf-cand' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md."
@@ -5593,6 +5813,17 @@
      "label": "polar90",
      "atoms": 12,
      "known_answer_rel": 2.43e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "6.246011432509135e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 40,
+      "n_evaluations": 45,
+      "lbfgs_max_force": "6.246011432509135e-07",
+      "newton_steps": 0,
+      "energy": "-5.108593714851864"
+     },
      "params": [
       5.0658,
       7.0002,
@@ -5793,12 +6024,23 @@
       },
       "dipole_per_monomer": 0.3015
      },
-     "seconds": 5.5
+     "seconds": 6.1
     },
     "anti90": {
      "label": "anti90",
      "atoms": 12,
      "known_answer_rel": 6.56e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "8.781193479023841e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 60,
+      "n_evaluations": 64,
+      "lbfgs_max_force": "8.781193479023841e-07",
+      "newton_steps": 0,
+      "energy": "-4.889443949336986"
+     },
      "params": [
       4.955,
       7.1451,
@@ -5999,12 +6241,23 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 6.1
+     "seconds": 6.7
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 12,
      "known_answer_rel": 1.08e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "6.81351328690738e-08",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 29,
+      "n_evaluations": 35,
+      "lbfgs_max_force": "6.81351328690738e-08",
+      "newton_steps": 0,
+      "energy": "-5.326857296870092"
+     },
      "params": [
       7.7882,
       4.5437,
@@ -6205,12 +6458,23 @@
       },
       "dipole_per_monomer": 0.3018
      },
-     "seconds": 5.5
+     "seconds": 7.0
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 12,
      "known_answer_rel": 5.69e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "7.878744838762941e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 61,
+      "n_evaluations": 67,
+      "lbfgs_max_force": "7.878744838762941e-07",
+      "newton_steps": 0,
+      "energy": "-4.662250967983454"
+     },
      "params": [
       4.9465,
       7.0474,
@@ -6411,7 +6675,7 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 6.3
+     "seconds": 6.8
     }
    },
    "n_monomers_per_cell": 2,
@@ -6423,11 +6687,11 @@
    "atoms_per_repeat": 6,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 223.9,
-    "pack": 3.5,
-    "antipolar": 10.0,
-    "gamma_free": 16.8,
-    "total": 278.2
+    "fit": 263.6,
+    "pack": 4.0,
+    "antipolar": 10.9,
+    "gamma_free": 17.9,
+    "total": 324.8
    },
    "notes": [
     "polymer 'trfe-cand' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md."
@@ -6649,6 +6913,17 @@
      "label": "polar90",
      "atoms": 12,
      "known_answer_rel": 6.58e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "4.276776954525996e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 23,
+      "n_evaluations": 26,
+      "lbfgs_max_force": "4.276776954525996e-07",
+      "newton_steps": 0,
+      "energy": "0.6279600642957384"
+     },
      "params": [
       4.9396,
       9.0614,
@@ -6849,12 +7124,23 @@
       },
       "dipole_per_monomer": 0.3119
      },
-     "seconds": 4.9
+     "seconds": 5.4
     },
     "anti90": {
      "label": "anti90",
      "atoms": 12,
      "known_answer_rel": 2.51e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "1.2060713538986079e-11",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "n_iterations": 44,
+      "n_evaluations": 57,
+      "lbfgs_max_force": "1.254643445136594e-06",
+      "newton_steps": 1,
+      "energy": "0.5844556612558485"
+     },
      "params": [
       5.0915,
       8.7869,
@@ -6937,7 +7223,7 @@
      "relaxed": {
       "energy": 0.584456,
       "lowered_by": 2.24705,
-      "max_force": 1.3e-06,
+      "max_force": 1.2e-11,
       "max_displacement": 0.118,
       "chain_slides": [
        [
@@ -7055,12 +7341,23 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 6.0
+     "seconds": 8.5
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 12,
      "known_answer_rel": 1.97e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "1.250845507172471e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 24,
+      "n_evaluations": 28,
+      "lbfgs_max_force": "1.250845507172471e-07",
+      "newton_steps": 0,
+      "energy": "0.6303797791877912"
+     },
      "params": [
       5.175,
       8.6691,
@@ -7261,12 +7558,23 @@
       },
       "dipole_per_monomer": 0.3119
      },
-     "seconds": 5.1
+     "seconds": 5.6
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 12,
      "known_answer_rel": 6.27e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "8.013904098103097e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 44,
+      "n_evaluations": 51,
+      "lbfgs_max_force": "8.013904098103097e-07",
+      "newton_steps": 0,
+      "energy": "0.5910622360621041"
+     },
      "params": [
       5.0937,
       8.781,
@@ -7467,7 +7775,7 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 5.7
+     "seconds": 6.3
     }
    },
    "n_monomers_per_cell": 2,
@@ -7479,11 +7787,11 @@
    "atoms_per_repeat": 7,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 328.7,
-    "pack": 4.9,
-    "antipolar": 12.1,
-    "gamma_free": 26.2,
-    "total": 412.3
+    "fit": 364.5,
+    "pack": 5.7,
+    "antipolar": 12.7,
+    "gamma_free": 26.5,
+    "total": 460.2
    },
    "notes": [
     "polymer 'vfcn-cand' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.",
@@ -7706,6 +8014,17 @@
      "label": "polar90",
      "atoms": 14,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "1.3786305430585344e-11",
+      "gtol": 1e-06,
+      "message": "ABNORMAL: ",
+      "n_iterations": 116,
+      "n_evaluations": 172,
+      "lbfgs_max_force": "1.7799503231330505e-06",
+      "newton_steps": 1,
+      "energy": "1.8314249902037858"
+     },
      "params": [
       5.6161,
       8.7497,
@@ -7791,7 +8110,7 @@
      "relaxed": {
       "energy": 1.831425,
       "lowered_by": 3.764377,
-      "max_force": 1.8e-06,
+      "max_force": 1.4e-11,
       "max_displacement": 0.5787,
       "chain_slides": [
        [
@@ -7914,12 +8233,23 @@
       },
       "dipole_per_monomer": 0.2433
      },
-     "seconds": 10.1
+     "seconds": 14.6
     },
     "anti90": {
      "label": "anti90",
      "atoms": 14,
      "known_answer_rel": 4.26e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "8.185714088781992e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 86,
+      "n_evaluations": 95,
+      "lbfgs_max_force": "8.185714088781992e-07",
+      "newton_steps": 0,
+      "energy": "2.7906054078426266"
+     },
      "params": [
       8.1266,
       5.9926,
@@ -8128,12 +8458,23 @@
       },
       "dipole_per_monomer": 0.0
      },
-     "seconds": 8.1
+     "seconds": 9.4
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 14,
      "known_answer_rel": 1.27e-14,
+     "relaxation": {
+      "converged": true,
+      "max_force": "4.887070612635824e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 110,
+      "n_evaluations": 123,
+      "lbfgs_max_force": "4.887070612635824e-07",
+      "newton_steps": 0,
+      "energy": "1.8314249902042121"
+     },
      "params": [
       5.6161,
       8.7497,
@@ -8342,12 +8683,23 @@
       },
       "dipole_per_monomer": 0.2433
      },
-     "seconds": 8.9
+     "seconds": 10.3
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 14,
      "known_answer_rel": 5.93e-15,
+     "relaxation": {
+      "converged": true,
+      "max_force": "8.217426739065559e-12",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "n_iterations": 145,
+      "n_evaluations": 158,
+      "lbfgs_max_force": "6.05627566307998e-06",
+      "newton_steps": 1,
+      "energy": "2.1855326824673753"
+     },
      "params": [
       8.7833,
       5.6863,
@@ -8433,18 +8785,18 @@
      "relaxed": {
       "energy": 2.185533,
       "lowered_by": 3.808112,
-      "max_force": 6.1e-06,
+      "max_force": 8.2e-12,
       "max_displacement": 0.6349,
       "chain_slides": [
        [
         0.1439,
         -0.3166,
-        -0.0
+        0.0
        ],
        [
         -0.1374,
         0.3512,
-        0.0
+        -0.0
        ]
       ],
       "max_internal_displacement": [
@@ -8556,7 +8908,7 @@
       },
       "dipole_per_monomer": 0.0727
      },
-     "seconds": 11.0
+     "seconds": 14.0
     }
    },
    "n_monomers_per_cell": 2,
@@ -8568,11 +8920,11 @@
    "atoms_per_repeat": 7,
    "preset": "pvdf-dft-valence-flux-born",
    "timings": {
-    "fit": 300.1,
-    "pack": 6.0,
+    "fit": 308.0,
+    "pack": 5.3,
     "antipolar": 11.6,
-    "gamma_free": 27.3,
-    "total": 398.5
+    "gamma_free": 25.2,
+    "total": 407.7
    },
    "notes": [
     "polymer 'vclcn-cand' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.",
@@ -8795,6 +9147,17 @@
      "label": "polar90",
      "atoms": 14,
      "known_answer_rel": 4.19e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "8.784954088625341e-07",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+      "n_iterations": 111,
+      "n_evaluations": 123,
+      "lbfgs_max_force": "8.784954088625341e-07",
+      "newton_steps": 0,
+      "energy": "48.41450639746458"
+     },
      "params": [
       6.663,
       8.7207,
@@ -9003,12 +9366,23 @@
       },
       "dipole_per_monomer": 0.2182
      },
-     "seconds": 10.8
+     "seconds": 9.4
     },
     "anti90": {
      "label": "anti90",
      "atoms": 14,
      "known_answer_rel": 8.28e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "6.854346052659394e-10",
+      "gtol": 1e-06,
+      "message": "ABNORMAL: ",
+      "n_iterations": 185,
+      "n_evaluations": 262,
+      "lbfgs_max_force": "1.7206457325613655e-06",
+      "newton_steps": 1,
+      "energy": "47.84258514063481"
+     },
      "params": [
       6.3898,
       8.9383,
@@ -9094,7 +9468,7 @@
      "relaxed": {
       "energy": 47.842585,
       "lowered_by": 3.645693,
-      "max_force": 1.7e-06,
+      "max_force": 6.9e-10,
       "max_displacement": 0.7803,
       "chain_slides": [
        [
@@ -9217,12 +9591,23 @@
       },
       "dipole_per_monomer": 0.2669
      },
-     "seconds": 14.3
+     "seconds": 16.6
     },
     "polar_free": {
      "label": "polar_free",
      "atoms": 14,
      "known_answer_rel": 8.37e-16,
+     "relaxation": {
+      "converged": true,
+      "max_force": "2.8990143619012088e-12",
+      "gtol": 1e-06,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "n_iterations": 113,
+      "n_evaluations": 152,
+      "lbfgs_max_force": "1.6433397481696588e-06",
+      "newton_steps": 1,
+      "energy": "48.41450639746457"
+     },
      "params": [
       6.663,
       8.7207,
@@ -9308,7 +9693,7 @@
      "relaxed": {
       "energy": 48.414506,
       "lowered_by": 2.495617,
-      "max_force": 1.6e-06,
+      "max_force": 2.9e-12,
       "max_displacement": 0.5252,
       "chain_slides": [
        [
@@ -9431,12 +9816,23 @@
       },
       "dipole_per_monomer": 0.2182
      },
-     "seconds": 11.1
+     "seconds": 12.7
     },
     "anti_free": {
      "label": "anti_free",
      "atoms": 14,
      "known_answer_rel": 0.0,
+     "relaxation": {
+      "converged": true,
+      "max_force": "4.977529499683442e-11",
+      "gtol": 1e-06,
+      "message": "ABNORMAL: ",
+      "n_iterations": 184,
+      "n_evaluations": 281,
+      "lbfgs_max_force": "1.2916091094439253e-06",
+      "newton_steps": 1,
+      "energy": "47.867393980655706"
+     },
      "params": [
       6.3785,
       8.986,
@@ -9522,7 +9918,7 @@
      "relaxed": {
       "energy": 47.867394,
       "lowered_by": 3.602917,
-      "max_force": 1.3e-06,
+      "max_force": 5e-11,
       "max_displacement": 0.7834,
       "chain_slides": [
        [
@@ -9645,7 +10041,7 @@
       },
       "dipole_per_monomer": 0.2675
      },
-     "seconds": 15.1
+     "seconds": 16.8
     }
    },
    "n_monomers_per_cell": 2,

@@ -225,8 +225,10 @@ consumer review of 2026-09-14). Their finding: `relax_all_atom` discarded the op
 termination and this script consumed every returned geometry; 12 of 36 cells carried a
 residual force above the requested 1e-6, at most 6.1e-6. Confirmed from the record, and fixed
 at the owner as they asked, not with a wrapper and not by loosening the criterion: the
-acceptance paragraph above is the change, and the record and tables are to be regenerated from a run under it (the committed
-record still predates the fix; regeneration pending).
+acceptance paragraph above is the change, and the record is regenerated under it (2026-09-29):
+all 36 relaxations accepted, 13 of them after the Newton polish (L-BFGS-B had left them at up
+to 6.06e-6; the polish took the largest to 9.9e-7). Every tabulated mode and energy is
+unchanged to the record's printed digits, so the tables here stand as they were.
 Their three scope points stand as this document already states them: the fixed-charge relaxed
 dipole is not the full induced-plus-flux polarization (it is a diagnostic of whether a rigid
 antipolar packing stayed antipolar); the pinned rest lengths are a changed Hamiltonian and
