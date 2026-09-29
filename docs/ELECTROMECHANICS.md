@@ -69,17 +69,27 @@ lets the calculation say which strain it is at.
 
 * Engineering Voigt strain `eps = (e_xx, e_yy, e_zz, 2 e_yz, 2 e_xz, 2 e_xy)`, tension positive.
 * `sigma_J = (1/V0) dE/de_J` in GPa, tension positive, `V0` the reference cell volume.
-* The electric enthalpy per unit reference volume is `h(eps, E) = u(eps) - E . P`, which is
-  what the kernel minimises: it adds `-mu . E` to the cell energy. Then `sigma_J = dh/de_J`,
-  `P_i = -dh/dE_i`, and
+* **The field is the nominal field** `Et = F^T E`, the electrode voltage per *reference*
+  length along each reference axis, because that is what an experiment holds. Its conjugate
+  is the nominal polarization `Pt = det(F) F^-1 P = F^-1 mu / V0`, the bound charge per unit
+  *reference* electrode area, which is what an electrode integrates. The kernel adds
+  `-mu . E` to the cell energy and `mu . E = V0 Pt . Et` identically, so the electric
+  enthalpy per unit reference volume is `h(eps, Et) = u(eps) - Et . Pt`. Then
+  `sigma_J = dh/de_J |_Et`, `Pt_i = -dh/dEt_i`, and
 
-      e_iJ = (1/V0) dmu_i/de_J |_E  =  -dsigma_J/dE_i |_eps   (C/m^2)
-      d_iJ = de_J/dE_i |_sigma=0    =  (e S)_iJ, S = C^-1     (pC/N = pm/V)
+      e_iJ = dPt_i/de_J |_Et   =  -dsigma_J/dEt_i |_eps   (C/m^2)
+      d_iJ = de_J/dEt_i |_sigma=0 =  (e S)_iJ, S = C^-1     (pC/N = pm/V)
 
-* `e` is the **proper** piezoelectric stress constant: the dipole per *reference* volume.
-  The naive `dP/deps` with `P = mu/V` differs from it by `P_i` on the three diagonal
-  columns. `Piezoelectric` reports both, and the difference is asserted to be `P_i` in
-  `tests/test_mechanics.py` on both paths.
+  Linearised, `e_ijk = dP_i/de_jk + delta_jk P_i - delta_ij P_k`: Vanderbilt's **proper**
+  piezoelectric tensor (J. Phys. Chem. Solids 61, 147 (2000)), the convention Dipole's
+  Berry-phase reducer uses. Section 5.10 derives it and says what it changed.
+* `Piezoelectric` reports two other strain derivatives beside `e`, each a known multiple of
+  `P` away from it. `e_reference_volume = (1/V0) dmu/de`, the dipole per reference volume,
+  was this module's `e` until 2026-09-29; it lacks `-delta_ij P_k`, which is `-P` on the
+  polar diagonal column and `-P/2` on a shear. `e_improper = dP/de` with `P = mu/V` has a
+  spurious `-P_i` on every diagonal column; its contraction `d_improper` is what the tables
+  of sections 5.3 to 5.9 called the **film** coefficient, and that label is withdrawn
+  (section 5.10). All three identities are asserted in `tests/test_mechanics.py`.
 * **The axial stress is a Lagrange multiplier.** On the deformable path the relaxed energy
   at strain `eps_zz` is a minimum subject to `c(shape) = c0 (1 + eps_zz)`, and the
   multiplier of that constraint is `dE*/dc`, so `sigma_3 = (c0/V0) lambda`. It falls out of
@@ -99,13 +109,16 @@ lets the calculation say which strain it is at.
 * Poling direction: the tables use the direction that maximises the work, the leading
   eigenvector of `d C d^T`.
 
-One trap, recorded because it cost two wrong answers before it was found. A shear leaves
+Two traps, recorded because they cost three wrong answers before they were found. A shear leaves
 `a_vec` off the x axis, so the packer's canonical frame is rotated relative to the reference
 by `theta = -e_xy/2`. The dipole has to be rotated back out of that frame before it is
 differentiated, *and* an applied field has to be rotated into it. Each of those terms is
 `P/2` — the same size as the coefficient being measured — so getting either wrong does not
 degrade the answer, it replaces it. The direct/converse agreement in section 3 is what
-caught both.
+caught both. The second trap is the one that agreement *cannot* catch: at fixed voltage the
+field inside a strained crystal is `F^-T Et` and moves with the strain. Until 2026-09-29 both
+routes held the current field `E` fixed instead, consistently, so they agreed with each other
+on a coefficient no electrode measures (section 5.10).
 
 ## 3. The two piezoelectric routes, and the check
 
@@ -393,6 +406,11 @@ a new chain builder. Section 5.6 makes it reachable.
 `d_improper` is reported by `Piezoelectric` and labelled, in the code and in the tables, as
 not being a piezoelectric constant. `d = e S` is the coefficient; this is the term that
 would be added to it by a model this package does not implement.
+
+*Superseded in part, 2026-09-29 (section 5.10).* The measurable coefficient is Vanderbilt's
+proper `e`, which contains the dimensional term on the polar column only. On that reading the
+"proper" row above is not zero but `-P S_1J`, and the sign argument against `d_31` fails:
+`-P S_13 > 0`. The table is kept as it was computed.
 
 ### 5.6 Charge flux: beta's `d_33` and `d_31` stop being zero
 
@@ -996,6 +1014,74 @@ Three things follow, in the order the evidence ranks them.
    is not the same quantity as with the film's (section 8.5). This is independent of
    everything above and bounds how much of the factor of 3.6 a perfect crystal model should
    ever be asked to close.
+
+### 5.10 Which `e` an electrode measures: Vanderbilt's, and what it moves (2026-09-29)
+
+**The question.** Dipole's Berry-phase reducer follows Vanderbilt's proper tensor,
+`e_ijk = dP_i/de_jk + delta_jk P_i - delta_ij P_k`. This module differentiated the dipole per
+reference volume, `(1/V0) dmu/de`, which lacks `-delta_ij P_k`, and its converse route agreed
+with it, so both routes carried the same term through the field coupling. The consumer
+response of 2026-09-13 left open which one the measured `d_33` is, "to be derived rather than
+asserted". This is the derivation.
+
+**The electrode.** A film's electrodes collect the bound charge on their faces. With
+deformation gradient `F` the face whose reference area vector is `A0` has current area vector
+`det(F) F^-T A0`, so the charge per unit *reference* area is `Pt = det(F) F^-1 P = F^-1 mu / V0`,
+the nominal polarization. Linearised with `F = 1 + eps`,
+`Pt_i = P_i (1 + tr eps) - eps_ik P_k`, and `dPt_i/de_jk` is Vanderbilt's tensor term for term.
+For a box of fixed dipoles polarised along `x`: squeezed along `x`, `P_x = mu/V` rises and the
+electrode area does not change, so charge flows (`e_x,xx = -P_x`); stretched along `y`, `P_x`
+falls by exactly as much as the electrode area grows, so none does (`e_x,yy = 0`). That is the
+Broadhurst-Davis thickness effect, which says `Q = mu_total / t` depends on thickness alone.
+The reference-volume derivative misses the first; the improper one invents the second.
+
+**The converse.** The voltage `V` across electrodes a reference distance `L0` apart is a
+nominal field, `Et = V / L0 = F^T E`, and the work term per reference volume is `Et . dPt`.
+The kernel's `-mu . E` is `-V0 Et . Pt` identically, so holding `Et` fixed while straining is
+holding the voltage, and `-dsigma/dEt|eps = dPt/de|Et`: the Maxwell relation closes on
+Vanderbilt's `e` and not on either other one. Holding the current field `E` fixed instead --
+what `_state_at_strain` did -- closes on `(1/V0) dmu/de`, and the routes agreed because both
+made that choice. The field inside the crystal is `F^-T Et`, and its strain derivative adds
+`mu_ref . F^-1 B_J E_ref / V0` to the stress (`_field_stress`), beside the rotation term of
+section 2.
+
+**What changed in the code.** `StrainState.nominal` is `F^-1 mu / V0`, and `e` is its
+derivative, measured directly rather than corrected algebraically; the old quantity is
+`e_reference_volume`, and `e - e_reference_volume = -B_J P` is asserted to 2e-4 C/m^2 as a
+check on the pullback. The converse route holds `Et`. On rigid beta, whose diagonal columns
+used to be identically zero by both routes, the polar column is now `d_x,xx = -3.119` pC/N from
+`e S` and `-3.120` from the zero-stress root: the stretch term is checked by the one
+coefficient that exists only because of it. The converse field default fell from 0.02 to
+0.005 V/A, because rigid beta's soft `C_66` let 0.02 shear the cell by 5% and the shear column
+missed `e S` by 5.6% on third-order terms; at 0.005 it lands within the 0.016 pC/N the strain
+finite difference leaves in both routes, as it did before.
+
+**What it moves.** Deformable beta, Ewald, induced dipoles on, poling along +P, pC/N:
+
+| beta-PVDF | improper (the old "film") | reference volume (the old "proper") | **Vanderbilt `e S`** | converse | `-P S_11`, `-P S_13` |
+|---|---:|---:|---:|---:|---:|
+| `pvdf-dft-valence` + dipoles, `d_33` / `d_31` | −8.71 / −0.07 | −3.75 / +0.09 | **−9.76 / +0.33** | −9.75 / +0.34 | −6.01 / +0.25 |
+| `pvdf-dft-valence-flux` + dipoles | −12.81 / +3.56 | −7.61 / +3.38 | **−14.70 / +4.04** | −14.70 / +4.04 | −7.09 / +0.66 |
+| `pvdf-dft-valence-flux-born` + dipoles | −8.80 / +0.02 | −3.81 / +0.17 | **−9.86 / +0.42** | −9.85 / +0.42 | −6.05 / +0.25 |
+| measured (Nix and Ward 1986) | −32 / +20 | | | | |
+
+(`|P|` 0.141, 0.196, 0.143 C/m^2; `S_11` 0.0425, 0.0362, 0.0422 and `S_13` −0.00176, −0.00338,
+−0.00177 GPa^-1. The first two columns reproduce section 5.9's table to its printed digits.
+Route agreement over the whole tensor 2.5%, 0.02%, 1.9%, the largest residual on the shear
+column; on `d_33` and `d_31` it is below 0.02 pC/N.)
+
+**Reading.** The definition was the wrong one and is corrected, and it is **not** what stands
+between the model and the measurement. For the Born-fitted preset `d_33` moves from −8.80 to
+−9.86, 3% of the gap, and `d_31` from +0.02 to +0.42, 2%. Two things change in how the earlier
+sections read. First, section 5.3's argument that "the dimensional term is negative on every
+diagonal column, so it cannot produce a positive `d_31`" was an argument about the improper
+term. The proper dimensional term sits on the polar column only, and through the Poisson
+coupling it gives `d_31 = -P S_13`, which is **positive**: +0.25 pC/N here. The measured
++20 is still beyond it by two orders of magnitude, so the conclusion that `d_31` needs an
+intrinsic channel stands, but the sign argument for it does not. Second, the dimensional share
+of `d_33` is 61% for the Born-fitted preset (−6.05 of −9.86), where the improper bookkeeping
+gave 57% (section 8.5); Broadhurst and Davis put it near two thirds. Nothing here was fitted,
+and the pendant's internal strain (section 9) remains the first hypothesis for the rest.
 
 ### 5.4 Blocking stress, free strain, work density (E = 0.01 V/A = 100 MV/m)
 

@@ -213,7 +213,9 @@ measured on beta-PVDF under both sums). `pack.polish` leaves `dz` unbounded and 
 afterwards, so a polish that wanders far can be scored on a wrong energy; the tied polish here
 wraps inside its objective (a VDCN seed once walked nine repeats out and reported an antipolar
 cell 4.4 kcal/mol per monomer too low, at a cell the polarizable model could not evaluate).
-That is a latent source fix, held with the other source changes under the merge hold. And
+Fixed 2026-09-29: `polish` now wraps `phi1, phi2, dz` inside its objective as well as after
+it (`tests/test_pack.py`: from nine repeats out the unwrapped polish returned +1.5e7 kcal/mol
+per cell, the wrapped one the near start's -13.84). And
 `antipolar_cell_exact`'s own polish is free in `(a, b)` and can return a cell just outside the
 screen's bounds; a bounded polish started there projects onto the bound first, which for CDFE
 raised the antipolar energy by 0.15 kcal/mol per monomer before it was caught.

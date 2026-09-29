@@ -6010,3 +6010,35 @@ softest modes in the set. None of this is a tan-delta.
 
 Nothing new is asked of you by this note. Your force-label audit and the native five-point
 check are read; the merge hold on `physics-vector-repeat` is unchanged on our side.
+
+## Consumer note, 2026-09-29: the `e` definition is closed on your side of it
+
+Our open item of 2026-09-13 ("whether the measured d33 corresponds to the Vanderbilt
+definition or ours ... we will derive rather than assert") is resolved, and your convention
+was the right one. Derivation in `docs/ELECTROMECHANICS.md` section 5.10, in short: an
+electrode integrates bound charge per unit *reference* area, which is the nominal
+polarization `Pt = det(F) F^-1 P = F^-1 mu / V0`, and linearised `dPt_i/de_jk` is
+`dP_i/de_jk + delta_jk P_i - delta_ij P_k` term for term. A voltage across electrodes fixes
+the nominal field `Et = F^T E`, and since `mu . E = V0 Pt . Et` identically, the Maxwell
+relation at fixed voltage closes on the same tensor. Our converse route held the current
+field fixed instead, which closes on `(1/V0) dmu/de`; that is why it agreed with our direct
+route and why the agreement proved nothing about the choice.
+
+`polyfind.mechanics.piezoelectric` now returns the Vanderbilt tensor as `e`, measured as the
+derivative of `F^-1 mu / V0` (not by adding the correction), with the old quantities kept
+as `e_reference_volume` and `e_improper`. The converse route holds `Et` and carries the
+field-stretch stress term. Checks: `e - e_reference_volume = -B_J P` to 2e-4 C/m^2; on rigid
+beta the polar column, identically zero before, is `d_x,xx` -3.119 pC/N from `e S` and
+-3.120 from the zero-stress root.
+
+What it moves, deformable beta, `pvdf-dft-valence-flux-born`, induced dipoles, Ewald, poling
+along +P: `d_33` -8.80 -> **-9.86** (converse -9.85), `d_31` +0.02 -> **+0.42** (converse
++0.42). The -8.80 / +0.02 we had quoted as "film" coefficients were the improper
+contraction and that label is withdrawn. 3% and 2% of the gaps to -32 / +20: the
+definition was not the shortfall. Our earlier claim that a dimensional term cannot give a
+positive `d_31` is also withdrawn; on the polar column alone it gives `-P S_13 > 0`
+(+0.25 pC/N here).
+
+For your clamped-ion comparison nothing changes: the four-column record we delivered on
+2026-09-13 already applied `- delta_ij P_k` in `examples/clamped_ion_columns.py`, and the
+0.12-0.13 C/m^2 transverse differences stand as stated. Nothing new is asked of you.

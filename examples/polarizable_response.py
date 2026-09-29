@@ -78,9 +78,12 @@ def beta_point(pol: Polarizable | None, cap: float | None = None, dielectric: bo
                "C11": float(el.C[0, 0]), "C22": float(el.C[1, 1]), "C33": float(el.C[2, 2]),
                "C33_energy": float(el.c33_from_energy), "C13": float(el.C[0, 2]),
                "e_x": [float(v) for v in pz.e[0]],
-               "d33_film": float(sgn * pz.d_improper[0, 0]), "d32_film": float(sgn * pz.d_improper[0, 1]),
-               "d31_film": float(sgn * pz.d_improper[0, 2]),
-               "d33_proper": float(sgn * pz.d_from_e[0, 0]), "d31_proper": float(sgn * pz.d_from_e[0, 2]),
+               # film = Vanderbilt proper d; the pre-2026-09-29 "film" figure is d33_improper
+               "d33_film": float(sgn * pz.d_from_e[0, 0]), "d32_film": float(sgn * pz.d_from_e[0, 1]),
+               "d31_film": float(sgn * pz.d_from_e[0, 2]),
+               "d33_improper": float(sgn * pz.d_improper[0, 0]), "d31_improper": float(sgn * pz.d_improper[0, 2]),
+               "d33_reference_volume": float(sgn * pz.d_reference_volume[0, 0]),
+               "d31_reference_volume": float(sgn * pz.d_reference_volume[0, 2]),
                "d33_direct": float(sgn * pz.d_direct[0, 0]), "d31_direct": float(sgn * pz.d_direct[0, 2]),
                "route_rel_diff": float(pz.relative_difference), "res_zz": float(el.residual_stress[2]),
                "E_per_monomer": float(resp.reference.packer.energy(resp.reference.params[None])[0])
@@ -167,8 +170,8 @@ def main():
                 print(f"    eps_inf = diag({', '.join(f'{v:.4f}' for v in r['eps_inf'])}), offdiag {r['eps_inf_offdiag']:.1e};  "
                       f"eps_0 (relaxed-ion, fixed cell) = diag({', '.join(f'{v:.4f}' for v in r['eps_0_fixed_cell'])});  "
                       f"measured low-frequency ~{MEASURED['eps0_low_frequency']:g}", flush=True)
-            print(f"    d33 proper {r['d33_proper']:+.3f} (direct {r['d33_direct']:+.3f}), d31 proper {r['d31_proper']:+.3f} "
-                  f"(direct {r['d31_direct']:+.3f}); film d33 {r['d33_film']:+.3f}, d31 {r['d31_film']:+.3f} vs measured "
+            print(f"    d33 film {r['d33_film']:+.3f} (direct {r['d33_direct']:+.3f}), d31 film {r['d31_film']:+.3f} "
+                  f"(direct {r['d31_direct']:+.3f}); improper d33 {r['d33_improper']:+.3f}, d31 {r['d31_improper']:+.3f} vs measured "
                   f"{MEASURED['d33']:+.0f}, {MEASURED['d31']:+.0f};  C33 {r['C33']:.1f} (energy route {r['C33_energy']:.1f}) "
                   f"vs DFT {MEASURED['C33_dft']};  shape {r['shape_x']:+.3f} deg, grad {r['shape_grad']:.1e}; "
                   f"E/mon {r['E_per_monomer']:.4f}; {r['seconds']:.0f} s", flush=True)

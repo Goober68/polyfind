@@ -713,7 +713,8 @@ class CrystalPacker:
         carries the extra ``dE/dq . dq/dgeometry`` term
         (:class:`~polyfind.forcefield.FluxTopology`).  Without it a planar all-trans
         zigzag's dipole is *exactly* independent of its backbone angle and beta-PVDF's
-        ``d_33`` and ``d_31`` are identically zero; see ``docs/ELECTROMECHANICS.md``.  The
+        ``d_33`` and ``d_31`` have no contribution beyond the dimensional term (``-P`` on the
+        polar column of the proper ``e``); see ``docs/ELECTROMECHANICS.md``.  The
         charges it starts from are the potential's own bond-charge increments, so a packer
         given flux **replaces** whatever charges the chain carried, and a mismatch between
         the two at zero flux is refused rather than absorbed.
@@ -1927,8 +1928,13 @@ def polish(
         x[:6] = np.clip(x[:6], lo, hi)
         return x
 
-    # phi1, phi2 and dz are periodic: leave them unbounded and wrap afterwards, so the
-    # optimiser is never stopped by an artificial boundary at 0 or 360 deg.
+    # phi1, phi2 and dz are periodic: leave them unbounded so the optimiser is never stopped
+    # by an artificial boundary at 0 or 360 deg, and wrap them *inside* the objective as well
+    # as afterwards.  The kernel is exactly periodic in dz only for a repeat or two outside
+    # [0, c) and drifts beyond (1 kcal/mol at six repeats, nonsense at nine), so a polish that
+    # wandered far and was wrapped only at the end could be scored on the wrong energy.  The
+    # energy and its gradient are periodic, so wrapping changes nothing where the kernel is
+    # right.
     period = {3: 360.0, 4: 360.0, 5: float(packer.chain.c)}
     wrap = [i for i in free if i in period and hi[i] - lo[i] >= period[i] - 1e-9]
     bounds = [(None, None) if i in wrap else (lo[i], hi[i]) for i in free]
@@ -1938,6 +1944,8 @@ def polish(
     def fun(xf):
         x = x0.copy()
         x[free] = xf
+        for i in wrap:
+            x[i] = lo[i] + (x[i] - lo[i]) % period[i]
         if gradient == "analytic":
             return cell_value_and_grad_analytic(packer, x, free)
         return cell_value_and_grad(packer, x, free, lo_fd, hi_fd)

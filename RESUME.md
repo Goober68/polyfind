@@ -69,8 +69,9 @@ derivative, and the baseline does no structure search at all. **Static side:
 validated** against Dipole's periodic PBE-D3 to within a few percent on
 polarization, transverse dielectric response and transverse Born charges (the
 chain-axis components of both remain open in Dipole's convergence ladder).
-**Piezoelectric coefficients: short**, d33 = -8.8 vs measured -32, d31 = +0.02
-vs +20, and the reason has been narrowed by elimination to one of two things
+**Piezoelectric coefficients: short**, d33 = -9.86 vs measured -32, d31 = +0.42
+vs +20 (Vanderbilt-proper since 2026-09-29; the earlier -8.8 / +0.02 were the
+improper "film" bookkeeping, `docs/ELECTROMECHANICS.md` 5.10), and the reason has been narrowed by elimination to one of two things
 neither side has: the electronic clamped-ion term, which no classical charge
 model represents, or the 0.4-0.6 C/m^2 Berry-slope target itself, which came
 from a sweep that failed its own gate. The narrowed request to Dipole is a
@@ -164,9 +165,9 @@ instability on this potential, and polar-vs-antipolar for PVDF is a barrier ques
 does not answer. Dipole reviewed the first record and found 12 of 36 relaxed cells a few 1e-6
 above the requested force tolerance because `relax_all_atom` discarded termination; fixed at
 the owner (`phonon.Relaxation`: unrounded force, termination evidence, Newton polish,
-`converged`), consumers require acceptance; record regenerated 2026-09-29 (36/36 accepted, 13 via the Newton polish, every tabulated number unchanged to its printed digits). Pending source fix: `pack.polish` leaves `dz`
-unbounded and the packer's energy is only periodic in `dz` for about two repeats outside
-`[0, c)`; the tied polish in the example wraps inside its objective. The merge hold below is
+`converged`), consumers require acceptance; record regenerated 2026-09-29 (36/36 accepted, 13 via the Newton polish, every tabulated number unchanged to its printed digits). `pack.polish` now wraps `dz` (and the setting
+angles) inside its objective, not only afterwards (2026-09-29): the packer's energy is only
+periodic in `dz` for about two repeats outside `[0, c)`. The merge hold below is
 about merging *their* branch into ours; Dipole's 2026-09-14 notes say their C: checkout is no
 longer touched by incoming code (their relay is on D:), so our own source edits on this branch
 are safe to push.
@@ -188,9 +189,9 @@ by 4-11 cm^-1. Next lattice-dynamics step: beta with a doubled repeat.
 ## Dipole's open gates (theirs, not ours to chase)
 
 - Berry polarization: **matrix running, three diagonal columns compared.**
-  Their reducer is Vanderbilt-proper (`e = dP/de + d_jk P_i - d_ij P_k`); ours
-  is dipole per reference volume, which lacks `- d_ij P_k` and so differs by
-  P_y on the polar-strain column only. Clamped-ion e_y,jj, their frame, both
+  Their reducer is Vanderbilt-proper (`e = dP/de + d_jk P_i - d_ij P_k`); since
+  2026-09-29 so is `mechanics.piezoelectric`'s `e` (the numbers below already
+  applied the correction in `clamped_ion_columns.py`). Clamped-ion e_y,jj, their frame, both
   P_y < 0, C/m^2, all `quantitatively_valid=false`: xx theirs -0.1675 / ours
   -0.2960; yy -0.1548 / -0.1559; zz +0.1125 / -0.0108. xy shear (x comp.) theirs -0.2905 / ours -0.3272; yz and xz shears
   are not expressible in our cell. Agreement on the polar column and the
@@ -204,13 +205,18 @@ by 4-11 cm^-1. Next lattice-dynamics step: beta with a doubled repeat.
   -0.0248, total -0.1434. Reproducible record with geometry and source
   hashes: `deliverables/clamped_ion_columns/` from
   `examples/clamped_ion_columns.py` (Dipole asked for it; delivered 2026-09-13). **Do not fit to any Berry number until accepted.**
-- **Open correctness item, ours:** `mechanics.piezoelectric` defines `e` as
-  `(1/V0) dmu/de`, not Vanderbilt-proper; e_33 (polar strain) is off by P_y
-  (~0.14 C/m^2, larger than our whole e_33 of 0.096) and the converse route
-  agrees with it, so the field coupling carries the same term. Derive from
-  the energy functional which definition the measured d33 is, then decide
-  whether d33/d31 change. Secondary now that magnitude is not the gate, but
-  it is an acceptance quantity and must be resolved before any d is quoted.
+- **Closed 2026-09-29, ours:** the `e` definition. Derived
+  (`docs/ELECTROMECHANICS.md` 5.10): an electrode integrates the nominal
+  polarization `F^-1 mu / V0` and a voltage fixes the nominal field `F^T E`,
+  so the measured coefficient is Vanderbilt's. `mechanics.piezoelectric` now
+  returns it as `e` (old ones kept as `e_reference_volume`, `e_improper`), and
+  the converse route holds the nominal field, adding the field-stretch stress
+  term both routes had omitted. Born-fitted preset: d33 -8.80 -> -9.86,
+  d31 +0.02 -> +0.42, routes agree to 0.02 pC/N on both. Not the shortfall's
+  cause (3% and 2% of the gaps); the proper dimensional term gives a
+  *positive* d31 (-P S_13), so section 5.3's sign argument is withdrawn.
+  Examples now label the Vanderbilt d as "film"; recorded deliverables that
+  quote the old film numbers (screen, fit_born_flux runs) are stale until rerun.
 - Born/dielectric ladder: 4x8x16 passed its raw sum-rule gate (max 0.0065 e);
   the ladder as declared cannot pass because 4x8x8 failed; a new predeclared
   ladder may follow. Transverse eps (2.253, 2.235) is stable; chain-axis
