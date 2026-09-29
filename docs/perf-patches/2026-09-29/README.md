@@ -14,7 +14,7 @@ on the source staying as it is; every one of them applied cleanly to `bd5ef12` w
 | `G3.diff` | table-build kernel: buffered in-place passes, pair-type grouping, larger chunk; splined potential as an opt-in that does not pay | table stage 24.05 -> 10.55 s (2.28x, 4 processes) | tables differ by <= 8e-4 kcal/mol at wall-adjacent entries, same accuracy against the exact kernel; serial == parallel still bit-identical |
 | `G4.diff` | `fft_screen` vectorised, thread pool removed | screen stage 12.76 -> 2.26 s (5.6x) | bit-identical |
 | `G5.diff` | one chain build per candidate, batched helix analysis, vectorised k-best | enumeration 3.95 -> 0.06 s (60x) | exact |
-| `G6.diff` | table build on the array backend (CuPy path), GPU tests | CPU path 1.0x, bit-identical; GPU projected only, with four defects to fix first (section 15.4) | see section 15.4 |
+| `G6.diff` | table build on the array backend (CuPy path), GPU tests (the prototype's own notes for the review document were dropped from the diff; section 15.4 carries them) | CPU path 1.0x, bit-identical; GPU projected only, with four defects to fix first (section 15.4) | see section 15.4 |
 
 Apply one at a time on a fresh checkout of `bd5ef12` (or later) with
 `git apply docs/perf-patches/2026-09-29/<id>.diff`; `G3`, `G4` and `G6` all edit
