@@ -163,19 +163,46 @@ def test_proper_and_improper_e_differ_by_exactly_the_polarization(beta):
     el = M.elastic_constants(beta)
     pz = M.piezoelectric(beta, el)
     P = beta.polarization()
-    diff = pz.e_improper - pz.e
+    diff = pz.e_improper - pz.e_reference_volume
     # -P_i on the two diagonal columns (xx, yy) and nothing at all on the shear column
     assert diff[:, 0] == pytest.approx(-P, abs=2e-4)
     assert diff[:, 1] == pytest.approx(-P, abs=2e-4)
     assert diff[:, 2] == pytest.approx(np.zeros(3), abs=2e-4)
 
 
+def test_vanderbilt_proper_e_is_the_reference_volume_one_less_delta_ij_P_k(beta):
+    """``e - e_reference_volume = -B_J P``: the nominal polarization ``F^-1 mu / V0`` is
+    differentiated directly, so this is a check on the pullback, not a definition.
+
+    For beta's polar x: ``-P_x`` on (x, xx), ``-P_x/2`` on (y, xy), zero everywhere else --
+    in particular zero on (x, yy), where the dimensional effect of a strain transverse to
+    the polarization cancels between the dipole density and the electrode area.
+    """
+    el = M.elastic_constants(beta)
+    pz = M.piezoelectric(beta, el, converse=False)
+    P = beta.polarization()
+    assert abs(P[0]) > 0.1 and np.abs(P[1:]).max() < 1e-9  # C/m^2, polar along x
+    expect = np.zeros((3, 3))
+    expect[0, 0] = -P[0]  # column xx
+    expect[1, 2] = -P[0] / 2.0  # column xy, engineering shear
+    assert pz.e - pz.e_reference_volume == pytest.approx(expect, abs=2e-4)
+    # a rigid dipole array has no reference-volume response on a diagonal column, so the
+    # polar-column coefficient is the dimensional term alone
+    assert np.abs(pz.e_reference_volume[:, :2]).max() < 1e-6
+    assert pz.e[0, 0] == pytest.approx(-P[0], abs=2e-4)
+
+
 def test_direct_and_converse_piezoelectric_routes_agree(beta):
     el = M.elastic_constants(beta)
     pz = M.piezoelectric(beta, el)
     assert np.abs(pz.d_from_e).max() > 1.0  # there is something to check
-    assert pz.relative_difference < 0.03
-    assert pz.d_direct == pytest.approx(pz.d_from_e, abs=0.05 * np.abs(pz.d_from_e).max() + 1e-6)
+    assert pz.relative_difference < 0.01
+    assert pz.d_direct == pytest.approx(pz.d_from_e, abs=0.01 * np.abs(pz.d_from_e).max() + 1e-6)
+    # The polar diagonal column exists only through the field's stretch at fixed voltage, so
+    # the converse route reproducing it is the check on that term: before it, both routes
+    # read exactly zero here.
+    assert abs(pz.d_from_e[0, 0]) > 1.0
+    assert pz.d_direct[0, 0] == pytest.approx(pz.d_from_e[0, 0], rel=1e-3)
 
 
 def test_polyethylene_has_exactly_no_piezoelectric_response(pe):
@@ -218,10 +245,17 @@ def test_actuator_figures_follow_from_C_and_d(beta):
     w = float(ac.blocking_stress @ ac.free_strain)
     assert ac.work_density == pytest.approx(0.25 * w * M.GPA_TO_KJ_PER_M3)
     assert ac.elastic_energy == pytest.approx(2.0 * ac.work_density)
-    # the polarization direction is a *bad* poling direction here: a rigid dipole already
-    # aligned with the field feels no torque, and reorientation is the only channel there is
-    along_P = M.actuator(el, pz, beta.polarization(), 0.01)
-    assert along_P.work_density < 1e-6 * ac.work_density
+    # Along P a rigid dipole feels no torque, and what is left is the dimensional channel --
+    # the field pulling on the bound surface charge, a blocking stress of exactly -|P| E along
+    # P.  On this crystal it beats reorientation under a transverse field, whose shear
+    # coefficient the same -P/2 term nearly cancels (e_y6 = +0.013 against a
+    # reference-volume -0.057), and best_direction finds that rather than assuming it.
+    P = beta.polarization()
+    along_P = M.actuator(el, pz, P, 0.01)
+    E_si = 0.01 * M.V_PER_A_TO_V_PER_M
+    assert along_P.blocking_stress[0] == pytest.approx(-np.linalg.norm(P) * E_si * 1e-9, rel=2e-3)
+    assert along_P.work_density > 2.0 * ac.work_density
+    assert abs(M.best_direction(el, pz) @ (P / np.linalg.norm(P))) > 0.99
 
 
 def test_axial_c33_is_a_report_of_the_invented_bend_constant(beta):
@@ -349,16 +383,18 @@ def test_beta_has_no_diagonal_piezoelectric_column_and_alpha_does(beta_deformabl
     diag = [M.WITH_AXIAL.index(K) for K in (0, 1, 2)]
     el_b, pz_b = out["beta"]
     el_a, pz_a = out["alpha"]
-    assert np.abs(pz_b.e[:, diag]).max() < 1e-6  # C/m^2: exactly zero, not merely small
-    assert np.abs(pz_a.e[:, diag]).max() > 1e-2
+    assert np.abs(pz_b.e_reference_volume[:, diag]).max() < 1e-6  # C/m^2: exactly zero, not merely small
+    assert np.abs(pz_a.e_reference_volume[:, diag]).max() > 1e-2
     # and the two routes still agree where there is something to agree about
     assert pz_a.relative_difference < 0.02
-    # the improper column of a rigid dipole array is still exactly -P, on both
+    # the improper column of a rigid dipole array is still exactly -P, on both, and the proper
+    # one differs from the reference-volume one by -P_i on column i alone
     for pz, ref_shape in ((pz_b, beta_deformable), (pz_a, alpha_deformable)):
         with FITTED_VALENCE.applied():
             P = ref_shape[0].polarization()
-        for n in diag:
-            assert pz.e_improper[:, n] - pz.e[:, n] == pytest.approx(-P, abs=2e-3)
+        for n, K in zip(diag, (0, 1, 2)):
+            assert pz.e_improper[:, n] - pz.e_reference_volume[:, n] == pytest.approx(-P, abs=2e-3)
+            assert pz.e[:, n] - pz.e_reference_volume[:, n] == pytest.approx(-P * (np.arange(3) == K), abs=2e-3)
 
 
 def test_polyethylene_has_no_piezoelectric_response_when_the_chain_deforms_either():

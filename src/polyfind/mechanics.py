@@ -81,24 +81,35 @@ rigid path and says so; :func:`deformable_state` replaces it.
 * Engineering (Voigt) strain ``eps = (e_xx, e_yy, e_zz, 2 e_yz, 2 e_xz, 2 e_xy)``,
   dimensionless, tension positive.
 * ``sigma_J = (1/V0) dE/de_J`` in GPa, tension positive.
-* The electric enthalpy per unit reference volume is ``h(eps, E) = u(eps) - E . P``,
-  which is what the kernel minimises (it adds ``-mu . E`` to the cell energy).  Then
-  ``sigma_J = dh/de_J``, ``P_i = -dh/dE_i``, and
+* The field is the **nominal** field ``Et = F^T E``: the electrode voltage per *reference*
+  length along each reference axis, which is what an experiment holds fixed.  Its conjugate
+  is the nominal polarization ``Pt = det(F) F^-1 P = F^-1 mu / V0``, the bound charge per
+  unit *reference* electrode area, which is what an electrode integrates.  The kernel adds
+  ``-mu . E`` to the cell energy, and ``mu . E = V0 Pt . Et`` exactly, so the electric
+  enthalpy per unit reference volume is ``h(eps, Et) = u(eps) - Et . Pt``.  Then
+  ``sigma_J = dh/de_J |_Et``, ``Pt_i = -dh/dEt_i``, and
 
-      e_iJ = (1/V0) dmu_i/de_J |_E  =  -dsigma_J/dE_i |_eps   (C/m^2)
-      d_iJ = de_J/dE_i |_sigma=0    =  (e S)_iJ,  S = C^-1    (pC/N = pm/V)
+      e_iJ = dPt_i/de_J |_Et  =  -dsigma_J/dEt_i |_eps   (C/m^2)
+      d_iJ = de_J/dEt_i |_sigma=0 =  (e S)_iJ,  S = C^-1    (pC/N = pm/V)
 
-  ``e`` is the **proper** piezoelectric constant: the dipole per *reference* volume, not
-  ``dP/de`` with ``P = mu/V``.  The two differ by ``P_i`` on the three diagonal columns,
-  and for a rigid dipole array that difference is the whole of the naive ``dP/de_xx``
-  (dilating a box of fixed dipoles changes ``P`` only through ``V``, and does nothing
-  piezoelectric at all).  :class:`Piezoelectric` reports both.  Both routes to ``d`` are
-  computed independently here -- ``e`` from the dipole of strained, internally relaxed
-  cells; ``d`` from the strain of field-relaxed cells -- and :class:`Response` reports how
-  far apart they land.  One trap on the way: a shear leaves ``a_vec`` off the x axis, so
-  the packer's canonical frame is rotated with respect to the reference by
-  ``theta = -e_xy/2``; the dipole has to be rotated back out of it and the applied field
-  rotated into it, and each of those terms is the same size as the coefficient itself.
+  ``e`` is Vanderbilt's **proper** piezoelectric tensor (J. Phys. Chem. Solids 61, 147
+  (2000)), ``e_ijk = dP_i/de_jk + delta_jk P_i - delta_ij P_k``.  Two other
+  derivatives are kept beside it.  ``e_reference_volume = (1/V0) dmu_i/de_J`` is the dipole
+  per reference volume, which is what this module called proper until 2026-09-29: it lacks
+  ``- delta_ij P_k`` because it undoes the rotation of the dipole but not the stretch, and
+  it is ``-dsigma/dE`` only at fixed *current* field ``E``, which no electrode holds.  On a
+  diagonal column along the polarization the difference is ``-P`` -- a box of fixed dipoles
+  squeezed along ``P`` keeps its electrode area and its dipole, so ``P`` and the electrode
+  charge both rise, which is the Broadhurst-Davis dimensional effect, and it is measurable.
+  ``e_improper = dP/de`` with ``P = mu/V`` has a spurious ``-P_i`` on every diagonal column.
+  :class:`Piezoelectric` reports all three.  Both routes to ``d`` are computed
+  independently here -- ``e`` from the nominal polarization of strained, internally relaxed
+  cells; ``d`` from the strain of cells relaxed at a fixed nominal field -- and
+  :class:`Response` reports how far apart they land.  Two traps on the way: a shear leaves
+  ``a_vec`` off the x axis, so the packer's canonical frame is rotated with respect to the
+  reference by ``theta = -e_xy/2``, and the dipole has to be rotated back out of it and the
+  field rotated into it; and at fixed voltage the field inside the crystal is ``F^-T Et``,
+  which moves with the strain.  Each of those terms is the same size as the coefficient.
 * An actuator at field ``E``: free strain ``eps_free = d^T E`` (zero in-plane stress),
   blocking stress ``sigma_block = C eps_free = e^T E``, the stress the crystal exerts on
   a rigid clamp (the external stress needed to *hold* ``eps = 0`` is its negative), and
@@ -485,19 +496,65 @@ class StrainState:
     stress: np.ndarray  # (6,) GPa, nan where unreachable
     m: np.ndarray  # dipole per *reference* volume, C/m^2, in the reference frame
     polarization: np.ndarray  # dipole per current volume, C/m^2, in the reference frame
+    nominal: np.ndarray  # nominal polarization F^-1 mu / V0, C/m^2, in the reference frame
     relaxed: object = None  # the :class:`Relaxed` behind it, on the deformable path only
 
 
-def _state_at_strain(ref: Reference, eps6, relax_internal: bool = True, field_lab=None) -> StrainState:
+def _deformation(eps6) -> np.ndarray:
+    """``F = 1 + eps``: the symmetric deformation gradient of a Voigt strain (no rotation)."""
+    return np.eye(3) + strain_tensor(eps6)
+
+
+def _field_in_crystal(sc: StrainedCell, eps6, field) -> tuple:
+    """``(E_ref, E_pk)`` for a nominal field: the field inside the strained crystal.
+
+    ``field`` is the nominal field ``Et`` (V/A), the voltage per reference length along each
+    reference axis.  Inside the strained crystal it is ``E = F^-T Et`` in the reference frame
+    (``F`` is symmetric, so ``F^-1 Et``), and the packer, which works in its canonical frame,
+    is handed that turned by ``theta``.  ``(None, None)`` for no field.
+    """
+    if field is None:
+        return None, None
+    E_ref = np.linalg.solve(_deformation(eps6), np.asarray(field, dtype=float).reshape(3))
+    return E_ref, sc.rotate_field(E_ref)
+
+
+def _field_stress(ref: Reference, sc: StrainedCell, eps6, E_ref, e_pk, mu) -> np.ndarray:
+    """The explicit strain derivative of ``-mu . E_pk`` at fixed nominal field, as a stress (GPa).
+
+    The kernel holds its field fixed, but at fixed voltage the field inside the crystal is
+    ``R(theta) F^-1 Et`` and both factors move with the strain, so ``dh/de_K |_Et`` has two
+    pieces the kernel's gradient does not see.  The rotation: the canonical frame turns by
+    ``dtheta/de_K`` about z, which for a shear is ``P/2``.  The stretch:
+    ``dE_ref/de_K = -F^-1 B_K E_ref``, which contributes ``+mu_ref . F^-1 B_K E_ref`` and is
+    ``P`` along the field on the diagonal columns.  Neither is a correction; each is the size
+    of the coefficient being measured, and without either the zero-stress strain of
+    :func:`free_strain` disagrees with ``e S`` by exactly it.
+    """
+    extra = np.zeros(6)
+    if e_pk is None:
+        return extra
+    to_gpa = EV_TO_KCAL / ref.volume * KCAL_MOL_A3_TO_GPA
+    zxE = np.array([-e_pk[1], e_pk[0], 0.0])
+    rot = -float(mu @ zxE) * to_gpa
+    mu_ref = sc.unrotate(mu)
+    Finv_mu = np.linalg.solve(_deformation(eps6), mu_ref)  # F symmetric: mu . F^-1 B E = (F^-1 mu) . B E
+    for K in range(6):
+        if K not in UNREACHABLE:
+            extra[K] = rot * np.deg2rad(sc.dparams[K, 3]) + float(Finv_mu @ _EPS_BASIS[K] @ E_ref) * to_gpa
+    return extra
+
+
+def _state_at_strain(ref: Reference, eps6, relax_internal: bool = True, field=None) -> StrainState:
     """Strain the reference, relax the internal coordinates, and read off stress and dipole.
 
-    ``field_lab`` is a uniform field given in the *reference* frame; it is rotated into the
-    packer's canonical frame by :meth:`StrainedCell.rotate_field` before being applied, and
-    the packer's field is restored afterwards.
+    ``field`` is a uniform *nominal* field (V/A) in the reference frame, held fixed as the
+    crystal strains: see :func:`_field_in_crystal`.  The packer's field is restored
+    afterwards.  At zero strain it is simply the field.
     """
     sc = strained_cell(ref.params, ref.c, eps6)
     saved = ref.packer.field
-    e_pk = None if field_lab is None else sc.rotate_field(np.asarray(field_lab, dtype=float))
+    E_ref, e_pk = _field_in_crystal(sc, eps6, field)
     try:
         if e_pk is not None:
             ref.packer.set_field(e_pk)
@@ -507,20 +564,12 @@ def _state_at_strain(ref: Reference, eps6, relax_internal: bool = True, field_la
         mu = np.asarray(ref.packer.dipole(p[None], c=c_arr)[0], dtype=float)
     finally:
         ref.packer.set_field(saved)
-    if e_pk is not None:
-        # The kernel's field is a *canonical-frame* vector, and the canonical frame turns
-        # with the strain, so the strain derivative of ``-mu . E_pk`` has a second piece:
-        # the field itself rotates, by ``dtheta/de_K`` about z.  It is not a correction --
-        # for a shear it is ``P/2``, the size of the coefficient being measured -- and
-        # without it the zero-stress strain below disagrees with ``e S`` by exactly that.
-        zxE = np.array([-e_pk[1], e_pk[0], 0.0])
-        extra = -EV_TO_KCAL * float(mu @ zxE) / ref.volume * KCAL_MOL_A3_TO_GPA
-        for K in range(6):
-            if K not in UNREACHABLE:
-                sig[K] += extra * np.deg2rad(sc.dparams[K, 3])
-    m = sc.unrotate(mu) / ref.volume * E_PER_A2_TO_C_PER_M2
-    pol = sc.unrotate(mu) / float(ref.packer.cell_volume(p[None], c_arr)[0]) * E_PER_A2_TO_C_PER_M2
-    return StrainState(cell=sc, params=p, energy=E, stress=sig, m=m, polarization=pol)
+    sig = sig + _field_stress(ref, sc, eps6, E_ref, e_pk, mu)
+    mu_ref = sc.unrotate(mu)
+    m = mu_ref / ref.volume * E_PER_A2_TO_C_PER_M2
+    pol = mu_ref / float(ref.packer.cell_volume(p[None], c_arr)[0]) * E_PER_A2_TO_C_PER_M2
+    nominal = np.linalg.solve(_deformation(eps6), mu_ref) / ref.volume * E_PER_A2_TO_C_PER_M2
+    return StrainState(cell=sc, params=p, energy=E, stress=sig, m=m, polarization=pol, nominal=nominal)
 
 
 # --- the deformable chain -----------------------------------------------------------------
@@ -749,22 +798,23 @@ def relax_deformable(ref: Reference, shape: Shape, params, x=None, free=_INTERNA
                    shape_gradient=float(np.linalg.norm(gs)))
 
 
-def deformable_state(ref: Reference, shape: Shape, eps6, x=None, field_lab=None,
+def deformable_state(ref: Reference, shape: Shape, eps6, x=None, field=None,
                      free=_INTERNAL_FREE, maxiter: int = 120) -> StrainState:
     """A strained state with the chain's conformation relaxed at fixed ``eps_zz``.
 
-    The deformable twin of :func:`_state_at_strain`.  The repeat is held at the strained
-    ``c`` by the constraint of :func:`relax_deformable`, so ``eps_zz`` is exactly what the
-    strain says it is whether it is zero (an in-plane column) or not (the axial one) --
-    the rigid path got that for free and this one has to ask for it.
+    The deformable twin of :func:`_state_at_strain`, with the same nominal ``field``.  The
+    repeat is held at the strained ``c`` by the constraint of :func:`relax_deformable`, so
+    ``eps_zz`` is exactly what the strain says it is whether it is zero (an in-plane column)
+    or not (the axial one) -- the rigid path got that for free and this one has to ask for it.
 
     ``stress[2]`` is the constraint multiplier converted to GPa, which is the axial stress:
     ``dE*/deps_zz = c0 dE*/dc_target = c0 lambda``.  The other three come from the analytic
-    kernel gradient exactly as in the rigid path.
+    kernel gradient exactly as in the rigid path.  The multiplier is taken at the kernel's
+    fixed field, so the field's own strain dependence is added to all four alike.
     """
     sc = strained_cell(ref.params, ref.c, eps6)
     saved_field, saved_chain = ref.packer.field, ref.packer.chain
-    e_pk = None if field_lab is None else sc.rotate_field(np.asarray(field_lab, dtype=float))
+    E_ref, e_pk = _field_in_crystal(sc, eps6, field)
     try:
         if e_pk is not None:
             ref.packer.set_field(e_pk)
@@ -776,16 +826,13 @@ def deformable_state(ref: Reference, shape: Shape, eps6, x=None, field_lab=None,
     finally:
         ref.packer.set_field(saved_field)
         ref.packer.update_chain(saved_chain)
-    if e_pk is not None:
-        zxE = np.array([-e_pk[1], e_pk[0], 0.0])
-        extra = -EV_TO_KCAL * float(mu @ zxE) / ref.volume * KCAL_MOL_A3_TO_GPA
-        for K in range(6):
-            if K not in UNREACHABLE:
-                sig[K] += extra * np.deg2rad(sc.dparams[K, 3])
-    m = sc.unrotate(mu) / ref.volume * E_PER_A2_TO_C_PER_M2
-    pol = sc.unrotate(mu) / V * E_PER_A2_TO_C_PER_M2
+    sig = sig + _field_stress(ref, sc, eps6, E_ref, e_pk, mu)
+    mu_ref = sc.unrotate(mu)
+    m = mu_ref / ref.volume * E_PER_A2_TO_C_PER_M2
+    pol = mu_ref / V * E_PER_A2_TO_C_PER_M2
+    nominal = np.linalg.solve(_deformation(eps6), mu_ref) / ref.volume * E_PER_A2_TO_C_PER_M2
     return StrainState(cell=sc, params=rel.params, energy=E, stress=sig, m=m, polarization=pol,
-                       relaxed=rel)
+                       nominal=nominal, relaxed=rel)
 
 
 def relax_reference_deformable(ref: Reference, shape: Shape, maxiter: int = 300) -> tuple:
@@ -924,38 +971,39 @@ class Piezoelectric:
     """Direct and converse piezoelectric coefficients, and the check that they agree.
 
     ``e`` (3, n) in C/m^2, rows ``x, y, z`` and columns the reachable Voigt order --
-    ``(1, 2, 6)`` on the rigid path, ``(1, 2, 3, 6)`` with a :class:`Shape` -- is the
-    **proper** piezoelectric stress constant ``(1/V0) dmu_i/de_J``, the dipole per
-    *reference* volume.  ``e_improper`` is the naive ``dP_i/de_J``, the dipole per *current*
-    volume, and the two differ by exactly ``P_i`` on the diagonal columns because a
-    dilation changes ``P = mu/V`` through ``V`` alone.  Only the proper one is the
-    ``-dsigma_J/dE_i`` that appears in the stress, so only the proper one satisfies
-    ``d = e S``; keeping both is a cheap check that the difference really is ``P_i``, and a
-    useful one, since for a rigid dipole array the naive ``dP/de`` is nothing *but* the
-    volume derivative.  With a deformable chain it stops being nothing but that, and the
-    difference between the two columns is exactly the argument the PVDF literature has
-    about the dimensional effect -- see ``docs/ELECTROMECHANICS.md`` section 8.5.
+    ``(1, 2, 6)`` on the rigid path, ``(1, 2, 3, 6)`` with a :class:`Shape` -- is
+    Vanderbilt's **proper** piezoelectric stress constant, ``dPt_i/de_J`` with ``Pt = F^-1
+    mu / V0`` the nominal polarization: the charge per unit *reference* electrode area, which
+    is what an electroded film delivers, and the ``-dsigma_J/dEt_i`` at fixed voltage that
+    the converse route measures.  Two other strain derivatives travel with it, each off by a
+    known multiple of the reference polarization ``P``:
+
+    * ``e_reference_volume = (1/V0) dmu_i/de_J``, the dipole per reference volume (this
+      module's ``e`` until 2026-09-29).  ``e - e_reference_volume = -B_J P``, i.e.
+      ``-delta_ij P_k`` for ``J = (jk)``: ``-P_i`` on the diagonal column ``i``, ``-P_j/2`` on a
+      shear.  For a rigid dipole array it is identically zero on the diagonal columns, where
+      ``e`` is not: squeezing fixed dipoles along ``P`` raises the charge on the electrodes
+      normal to ``P``, which is the dimensional effect and is part of the measured ``d_33``.
+    * ``e_improper = dP_i/de_J`` with ``P = mu/V``, the naive derivative:
+      ``e_improper - e_reference_volume = -P_i`` on every diagonal column, a volume term that
+      no electrode sees.
 
     ``d_from_e = e S`` and ``d_direct`` (both pC/N) are the two routes to the converse
     coefficient; ``max_abs_difference`` and ``relative_difference`` say how far apart they
-    land.  ``field`` is the magnitude (V/A) the converse route used and
+    land.  ``field`` is the magnitude (V/A) of the nominal field the converse route used and
     ``converse_iterations`` how many frame iterations it needed; ``d_direct`` is ``nan``
-    when the converse route was not run (``converse=False``).
-
-    ``d_improper = e_improper S`` is **not** a piezoelectric constant and no theorem
-    connects it to the strain of a field-relaxed cell.  It is reported because on the
-    diagonal columns it is exactly the *dimensional* (thickness) term the PVDF literature
-    argues about -- ``-P_i`` times the sum of the compliance's diagonal-column entries, the
-    charge an electrode sees when a crystal of fixed dipoles changes shape under stress.
-    Where the proper ``d`` is zero on those columns, this is what a Broadhurst-Davis
-    dimensional model would have said instead, evaluated with this crystal's own
-    compliance.  See ``docs/ELECTROMECHANICS.md`` section 8.5.
+    when the converse route was not run (``converse=False``).  ``d_reference_volume`` and
+    ``d_improper`` are the other two contracted with the same compliance, reported so that
+    earlier numbers can be traced; neither is a piezoelectric constant an experiment measures.
+    See ``docs/ELECTROMECHANICS.md`` section 8.5 and its 2026-09-29 addendum.
     """
 
     e: np.ndarray
+    e_reference_volume: np.ndarray
     e_improper: np.ndarray
     d_from_e: np.ndarray
     d_direct: np.ndarray
+    d_reference_volume: np.ndarray
     d_improper: np.ndarray
     max_abs_difference: float
     relative_difference: float
@@ -964,10 +1012,10 @@ class Piezoelectric:
     converse_iterations: int = 0
 
 
-def free_strain(ref: Reference, field_lab, elastic: Elastic, iterations: int = 12,
+def free_strain(ref: Reference, field, elastic: Elastic, iterations: int = 12,
                 tol: float = 1e-8, shape: Shape | None = None,
                 step_tol: float = 1e-12) -> tuple[np.ndarray, int]:
-    """The strain at which the in-plane stress vanishes, with a field held in the reference frame.
+    """The strain at which the in-plane stress vanishes, at a fixed nominal field (fixed voltage).
 
     Newton on the analytic stress, whose Jacobian is the stiffness: ``eps -= S sigma``.  The
     converged point satisfies ``sigma = 0`` whatever Jacobian got it there, so using
@@ -984,8 +1032,8 @@ def free_strain(ref: Reference, field_lab, elastic: Elastic, iterations: int = 1
     eps = np.zeros(6)
     idx = list(elastic.reachable)
     for it in range(1, iterations + 1):
-        st = (_state_at_strain(ref, eps, field_lab=field_lab) if shape is None
-              else deformable_state(ref, shape, eps, field_lab=field_lab))
+        st = (_state_at_strain(ref, eps, field=field) if shape is None
+              else deformable_state(ref, shape, eps, field=field))
         sig = st.stress[idx]
         if float(np.max(np.abs(sig))) < tol:
             return eps, it
@@ -1001,7 +1049,7 @@ def free_strain(ref: Reference, field_lab, elastic: Elastic, iterations: int = 1
     return eps, iterations
 
 
-def piezoelectric(ref: Reference, elastic: Elastic, step: float = 2e-3, field: float = 0.02,
+def piezoelectric(ref: Reference, elastic: Elastic, step: float = 2e-3, field: float = 0.005,
                   relax_internal: bool = True, converse_iterations: int = 12,
                   shape: Shape | None = None, states: dict | None = None,
                   converse: bool = True) -> Piezoelectric:
@@ -1009,24 +1057,34 @@ def piezoelectric(ref: Reference, elastic: Elastic, step: float = 2e-3, field: f
 
     The direct route strains the cell, relaxes the internal coordinates (and, with a
     :class:`Shape`, the chain's conformation at fixed ``eps_zz``) at each strain, and
-    differentiates the cell dipole per reference volume.  The converse route hands each field
-    axis in turn to :func:`free_strain`, which drives the analytic stress to zero over the
-    reachable components (relaxing the same things at every iterate) and returns the strain
-    it lands on.  The
-    identity ``d = e S`` follows from ``d^2 h / de dE`` being symmetric; the two numbers come
+    differentiates the nominal polarization ``F^-1 mu / V0``.  The converse route hands each
+    nominal field axis in turn to :func:`free_strain`, which drives the analytic stress at
+    fixed voltage to zero over the reachable components (relaxing the same things at every
+    iterate) and returns the strain it lands on.  The
+    identity ``d = e S`` follows from ``d^2 h / de dEt`` being symmetric; the two numbers come
     from disjoint machinery -- a dipole derivative against a stress root-find -- so agreeing
-    is evidence and not bookkeeping.  It caught two sign-and-magnitude errors while this was
-    being written: the improper-vs-proper volume term, and the frame the applied field is
-    given in under a shear.
+    is evidence and not bookkeeping.  It caught three sign-and-magnitude errors while this
+    was being written: the improper-vs-proper volume term, the frame the applied field is
+    given in under a shear, and (2026-09-29) the stretch of the field at fixed voltage,
+    which both routes had omitted consistently -- agreement between the routes checks the
+    arithmetic, not the choice of which field is held fixed.
+
+    ``field`` (V/A) is the converse route's nominal field.  The default 0.005 is set by
+    linearity, not cost: on rigid beta-PVDF the soft ``C_66`` lets 0.02 shear the cell by
+    about 5%, and the converse ``d_y6`` then misses ``e S`` by 5.6% on third-order terms;
+    at 0.005 and 0.00125 it lands within 0.016 pC/N of it, the residual the strain finite
+    difference leaves in both routes.
     """
     cols = elastic.reachable
     if states is None:
         states = strain_states(ref, step, relax_internal, shape, cols)
     e = np.zeros((3, len(cols)))
+    e_ref_vol = np.zeros((3, len(cols)))
     e_improper = np.zeros((3, len(cols)))
     for n, K in enumerate(cols):
         sp, sm = states[(K, 1)], states[(K, -1)]
-        e[:, n] = (sp.m - sm.m) / (2.0 * step)
+        e[:, n] = (sp.nominal - sm.nominal) / (2.0 * step)
+        e_ref_vol[:, n] = (sp.m - sm.m) / (2.0 * step)
         e_improper[:, n] = (sp.polarization - sm.polarization) / (2.0 * step)
 
     d_direct = np.full((3, len(cols)), np.nan)
@@ -1055,7 +1113,9 @@ def piezoelectric(ref: Reference, elastic: Elastic, step: float = 2e-3, field: f
     scale = float(np.max(np.abs(d_from_e)))
     # Below a micro-pC/N there is no coefficient to be relatively wrong about: a crystal with
     # no dipoles lands at 1e-12 pC/N by both routes and a ratio of the two is meaningless.
-    return Piezoelectric(e=e, e_improper=e_improper, d_from_e=d_from_e, d_direct=d_direct,
+    return Piezoelectric(e=e, e_reference_volume=e_ref_vol, e_improper=e_improper,
+                         d_from_e=d_from_e, d_direct=d_direct,
+                         d_reference_volume=e_ref_vol @ elastic.S * C_PER_M2_PER_GPA_TO_PC_PER_N,
                          d_improper=e_improper @ elastic.S * C_PER_M2_PER_GPA_TO_PC_PER_N,
                          max_abs_difference=diff,
                          relative_difference=(diff / scale if scale > 1e-6 else 0.0) if converse else float("nan"),
@@ -1127,8 +1187,8 @@ def dielectric_tensor(ref: Reference, field: float = 2e-3, relax: bool = True,
                 mus.append(np.asarray(pk.dipole(ref.params[None], c=c_arr)[0], dtype=float))
                 pk.set_field(saved)
                 if relax:
-                    st = (_state_at_strain(ref, np.zeros(6), True, field_lab=f) if shape is None
-                          else deformable_state(ref, shape, np.zeros(6), field_lab=f))
+                    st = (_state_at_strain(ref, np.zeros(6), True, field=f) if shape is None
+                          else deformable_state(ref, shape, np.zeros(6), field=f))
                     mus_r.append(st.m * V / E_PER_A2_TO_C_PER_M2)  # back to e.A
             clamped[:, j] += (mus[0] - mus[1]) / (2.0 * field * V) * E_PER_A2_PER_V_PER_A_TO_CHI
             if relax:
@@ -1167,10 +1227,11 @@ def best_direction(elastic: Elastic, piezo: Piezoelectric) -> np.ndarray:
 
     The work at field ``E0 n`` goes as ``n^T (d C d^T) n``, so the answer is the leading
     eigenvector of that symmetric positive-semidefinite 3x3 matrix.  Worth computing rather
-    than assuming: the obvious choice, the polarization direction, is the *worst* one for a
-    rigid dipole array -- a field along a dipole that is already aligned exerts no torque,
-    and with fixed point charges on a rigid chain reorientation is the only piezoelectric
-    channel there is.
+    than assuming.  Along the polarization a rigid dipole feels no torque and only the
+    dimensional channel acts (``e_x,xx = -P_x``: the field pulls on the bound surface
+    charge); across it, reorientation acts.  Which wins is the crystal's compliance: on
+    rigid beta-PVDF the polar direction does, by about eight times in work density, because
+    the same geometric term nearly cancels the transverse shear coefficient.
     """
     d = piezo.d_from_e * 1e-12
     W = d @ elastic.block @ d.T
@@ -1383,7 +1444,7 @@ class Response:
         return "\n".join(lines)
 
 
-def electromechanical_response(ref: Reference, step: float = 2e-3, field: float = 0.02,
+def electromechanical_response(ref: Reference, step: float = 2e-3, field: float = 0.005,
                                actuator_field: float = 0.01, direction=None,
                                relax_first: bool = True, polymer=None,
                                axial: bool = False, shape: Shape | None = None,
@@ -1400,7 +1461,7 @@ def electromechanical_response(ref: Reference, step: float = 2e-3, field: float 
     ``shape`` (a :class:`Shape`, which needs a packer built with ``valence=``) switches the
     whole calculation onto the deformable path: the reference is relaxed over ``c`` as well
     as the cell, the reachable block becomes :data:`WITH_AXIAL`, and the diagonal columns of
-    ``e`` are no longer identically zero.  That is the one change that makes ``C_33`` and
+    ``e_reference_volume`` are no longer identically zero.  That is the one change that makes ``C_33`` and
     the ``d_31``/``d_33`` family reachable at all; ``shape=None`` leaves every number
     exactly what it was.
     """
@@ -1426,9 +1487,10 @@ def electromechanical_response(ref: Reference, step: float = 2e-3, field: float 
         "C_33 is nan: eps_zz is reachable only through the bond angles, whose only restoring term "
         "anywhere in the pipeline is refine_crystal's invented bend constant (axial_report)",
         "d is the axially clamped strain coefficient: S is the inverse of the in-plane block only",
-        "the charges are fixed point charges on a rigid chain, so chain *reorientation* is the only "
-        "piezoelectric channel in the model: a dilation cannot change the dipole at all, and the "
-        "proper e therefore vanishes on every diagonal column",
+        "the charges are fixed point charges on a rigid chain, so a dilation cannot change the "
+        "dipole at all: e_reference_volume vanishes on every diagonal column, and what the proper "
+        "e keeps there is the dimensional term -P_i on column i (the electrode charge of a fixed "
+        "dipole array squeezed along P); chain reorientation is the only other channel",
     ]
     deformable_notes = [
         "relaxed-ion means the rigid-body internal coordinates (phi1, phi2, dz) *and* the chain's "

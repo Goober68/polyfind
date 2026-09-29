@@ -713,7 +713,8 @@ class CrystalPacker:
         carries the extra ``dE/dq . dq/dgeometry`` term
         (:class:`~polyfind.forcefield.FluxTopology`).  Without it a planar all-trans
         zigzag's dipole is *exactly* independent of its backbone angle and beta-PVDF's
-        ``d_33`` and ``d_31`` are identically zero; see ``docs/ELECTROMECHANICS.md``.  The
+        ``d_33`` and ``d_31`` have no contribution beyond the dimensional term (``-P`` on the
+        polar column of the proper ``e``); see ``docs/ELECTROMECHANICS.md``.  The
         charges it starts from are the potential's own bond-charge increments, so a packer
         given flux **replaces** whatever charges the chain carried, and a mismatch between
         the two at zero flux is refused rather than absorbed.

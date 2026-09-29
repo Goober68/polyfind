@@ -317,12 +317,14 @@ def beta_response(flx: SimpleFF, pol: Polarizable | None, args) -> dict:
            "C11": float(el.C[0, 0]), "C22": float(el.C[1, 1]), "C33": float(el.C[2, 2]),
            "C33_energy": float(el.c33_from_energy), "C13": float(el.C[0, 2]),
            "e_x": [float(v) for v in pz.e[0]],
-           "d33_film": float(sgn * pz.d_improper[0, 0]), "d32_film": float(sgn * pz.d_improper[0, 1]),
-           "d31_film": float(sgn * pz.d_improper[0, 2]),
-           "d33_proper": float(sgn * pz.d_from_e[0, 0]), "d31_proper": float(sgn * pz.d_from_e[0, 2]),
-           "d33_direct": float(sgn * pz.d_direct[0, 0]), "d31_direct": float(sgn * pz.d_direct[0, 2]),
-           "d33_film_direct": float(sgn * (pz.d_direct[0, 0] + pz.d_improper[0, 0] - pz.d_from_e[0, 0])),
-           "d31_film_direct": float(sgn * (pz.d_direct[0, 2] + pz.d_improper[0, 2] - pz.d_from_e[0, 2])),
+           # film = Vanderbilt proper d (what an electroded film measures); before 2026-09-29 the
+           # "film" figure here was d_improper, kept below with the reference-volume one
+           "d33_film": float(sgn * pz.d_from_e[0, 0]), "d32_film": float(sgn * pz.d_from_e[0, 1]),
+           "d31_film": float(sgn * pz.d_from_e[0, 2]),
+           "d33_film_direct": float(sgn * pz.d_direct[0, 0]), "d31_film_direct": float(sgn * pz.d_direct[0, 2]),
+           "d33_improper": float(sgn * pz.d_improper[0, 0]), "d31_improper": float(sgn * pz.d_improper[0, 2]),
+           "d33_reference_volume": float(sgn * pz.d_reference_volume[0, 0]),
+           "d31_reference_volume": float(sgn * pz.d_reference_volume[0, 2]),
            "route_rel_diff": float(pz.relative_difference), "res_zz": float(el.residual_stress[2]),
            "E_per_monomer": float(resp.reference.packer.energy(resp.reference.params[None])[0])
            / (2 * resp.reference.packer.chain.n_monomers)}
@@ -342,7 +344,7 @@ def response_row(r: dict) -> str:
     born = "" if "born_rms_transverse" not in r else f"  Born rms {r['born_rms_transverse']:.4f} e"
     return (f"a={r['a']:.3f} b={r['b']:.3f} c={r['c']:.4f} |P|={r['absP']:.4f} C11={r['C11']:6.2f} C33={r['C33']:7.2f} "
             f"d33={r['d33_film']:+7.3f} (direct {r['d33_film_direct']:+7.3f}) d31={r['d31_film']:+6.3f} "
-            f"(direct {r['d31_film_direct']:+6.3f}) proper d33={r['d33_proper']:+7.3f} d31={r['d31_proper']:+6.3f} "
+            f"(direct {r['d31_film_direct']:+6.3f}) improper d33={r['d33_improper']:+7.3f} d31={r['d31_improper']:+6.3f} "
             f"routes={r['route_rel_diff'] * 100:.2f}% shape {r['shape_x']:+.2f} deg{born}{flag}")
 
 

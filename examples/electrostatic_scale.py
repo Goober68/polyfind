@@ -121,9 +121,12 @@ def beta_point(ray: str, s: float, cap: float | None = None, alpha: float = 0.2)
                 "a": float(resp.reference.params[0]), "b": float(resp.reference.params[1]),
                 "c": float(resp.reference.c), "absP": float(np.linalg.norm(P)),
                 "C11": float(el.C[0, 0]), "C22": float(el.C[1, 1]), "C33": float(el.C[2, 2]),
-                "d33_film": float(sgn * pz.d_improper[0, 0]),
-                "d32_film": float(sgn * pz.d_improper[0, 1]),
-                "d31_film": float(sgn * pz.d_improper[0, 2]),
+                # film = Vanderbilt proper d; before 2026-09-29 this was d_improper
+                "d33_film": float(sgn * pz.d_from_e[0, 0]),
+                "d32_film": float(sgn * pz.d_from_e[0, 1]),
+                "d31_film": float(sgn * pz.d_from_e[0, 2]),
+                "d33_improper": float(sgn * pz.d_improper[0, 0]),
+                "d31_improper": float(sgn * pz.d_improper[0, 2]),
                 "route_rel_diff": float(pz.relative_difference),
                 "res_zz": float(el.residual_stress[2]), "seconds": time.time() - t0}
 
