@@ -1,5 +1,13 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+2026-09-29 update (all on `claude/polymeric-stable-arrangements-uh06b1`, pushed): the `e`
+definition item is closed -- `mechanics.piezoelectric` returns Vanderbilt's proper tensor and
+its converse route holds the nominal field (`docs/ELECTROMECHANICS.md` 5.10; Born-fitted
+d33 -9.86, d31 +0.42, not the cause of the shortfall). `phonon.relax_all_atom` owns its
+acceptance and the screen phonons record is regenerated under it (tables unchanged).
+`pack.polish` wraps `dz` inside its objective. Stale until rerun: recorded outputs that quote
+the old "film" d (the screen deliverable, fit_born_flux/polarizable_response runs).
+
 2026-09-13 evening provider update: an isolated D: worktree now exists at
 `D:\sarco-work\polyfind-vector-repeat`, branch `physics-vector-repeat`,
 pushed `cb17be5`. It supplies vector-repeat placed-dipole geometry and a
