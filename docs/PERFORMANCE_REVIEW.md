@@ -1009,4 +1009,10 @@ the last one or two digits (`-8.645931161267757` against `...756`).  They guard 
 invariants, but as written they test the BLAS build rather than the code; recording
 them to a tolerance of a few ulps, or per platform, would keep the guard and lose the
 false alarms.  Every prototype above reproduced exactly these ten failures and no
-others.
+others.  On the head this section was pushed to (`0586a35` plus this document), the
+suite here gives 589 passed and those ten plus one more:
+`test_mechanics::test_direct_and_converse_piezoelectric_routes_agree`, added the same
+day in `dd86575`, asks the two routes to agree within 1% and they agree within 1.12%
+on this box (relative difference 0.0112).  It is a tolerance test on a
+finite-difference route, not a golden value, and no source changed here, so it is
+recorded rather than diagnosed.
