@@ -10,6 +10,12 @@ acceptance and the screen phonons record is regenerated under it (tables unchang
 6.3 C/m^2 (44x |P|), so d31 is a film-compliance property, not a crystal one; d33 = -32 needs
 the polar column at -0.50 to -0.76 C/m^2 (2-3x ours), so the discriminating datum is the
 provider's relaxed-ion polar column; the clamped-ion transverse differences move d by <1 pC/N.
+New `polyfind.film` (ELECTROMECHANICS 5.12, `examples/film_response.py`): exact laminate of
+crystal lamellae + passive amorphous layers along the draw axis. Film d31 +2.2..+6.3 (crystal
++0.42) from amorphous incompressibility; raising only the crystal polar column to -0.77
+C/m^2 (3.2x) gives film d33 -32, d31 +12..+17.5, d32 +2.5..+3.1 (measured -32/+20/+1.5):
+one crystal deficit explains both. Film inputs swept, never fitted; a measured draw modulus
+and crystallinity for the same films would make it a prediction.
 Stale until rerun, and flagged in place: d figures
 in `docs/SCREEN.md`'s response table and `docs/BENCHMARK.md` (old definitions).
 
@@ -82,9 +88,11 @@ derivative, and the baseline does no structure search at all. **Static side:
 validated** against Dipole's periodic PBE-D3 to within a few percent on
 polarization, transverse dielectric response and transverse Born charges (the
 chain-axis components of both remain open in Dipole's convergence ladder).
-**Piezoelectric coefficients: short**, d33 = -9.86 vs measured -32, d31 = +0.42
+**Piezoelectric coefficients: short**, crystal d33 = -9.86 vs measured -32, d31 = +0.42
 vs +20 (Vanderbilt-proper since 2026-09-29; the earlier -8.8 / +0.02 were the
-improper "film" bookkeeping, `docs/ELECTROMECHANICS.md` 5.10), and the reason has been narrowed by elimination to one of two things
+improper "film" bookkeeping, `docs/ELECTROMECHANICS.md` 5.10). Through the film laminate
+(5.12) d31 becomes +2..+6 and the whole measured film row is consistent with one crystal
+deficit, the polar column (3.2x). The earlier account of the reason has been narrowed by elimination to one of two things
 neither side has: the electronic clamped-ion term, which no classical charge
 model represents, or the 0.4-0.6 C/m^2 Berry-slope target itself, which came
 from a sweep that failed its own gate. The narrowed request to Dipole is a

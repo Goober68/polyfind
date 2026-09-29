@@ -6064,3 +6064,18 @@ clamped-ion matrix, and, if it is cheap, the internal-strain vector `du/de` for 
 column. This supersedes our earlier asks for transverse Berry slopes. It is a request, not a
 gate; your queue order stands. The arithmetic rests on our stiffness, which is not validated
 transversely (the 112 vs 17 GPa question is still open), and we say so.
+
+## Consumer note, 2026-09-29 (third): a number to test the relaxed-ion polar column against
+
+Our new film layer (`polyfind.film`, `docs/ELECTROMECHANICS.md` 5.12) is an exact laminate
+of crystal lamellae and passive amorphous layers stacked along the draw axis, with the film
+inputs swept rather than fitted. Raising only the crystal's polar column until the film d33
+is the measured -32 brings the film d31 to +12..+17.5 and d32 to +2.5..+3.1 (measured +20,
++1.5): the measured film row is consistent with a single crystal deficit. The polar column
+that does it is **e_polar,polar ≈ -0.77 to -0.80 C/m^2 relaxed-ion, poling along +P**
+(ours -0.24; our clamped-ion polar column agrees with yours to 0.001).
+
+So when your relaxed-ion polar column exists, it has a sharp reading: near -0.8, the crystal
+is right and the model's internal-strain response is what is short; near our -0.24, the
+missing response is not in the crystal at all (amorphous or interface terms, which the
+laminate deliberately omits). Same request as the second note; this only adds the threshold.

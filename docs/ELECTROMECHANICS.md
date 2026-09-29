@@ -1123,6 +1123,57 @@ along P, internal coordinates relaxed), and for `d_31` no crystal datum is. None
 fitted; it is arithmetic on the model's stiffness, which itself is not validated beyond
 `C_33` (5.9) and carries the transverse-stiffness question in `RESUME.md`.
 
+### 5.12 From crystal to film: a laminate, and one deficit instead of two (2026-09-29)
+
+Section 5.11 showed that the measured `d_31` cannot be a crystal coefficient. `polyfind.film`
+supplies the missing layer: crystal lamellae and amorphous layers stacked along the draw
+(chain) axis, which is how a uniaxially drawn semicrystalline film is built. For a laminate
+with the poling field tangential to the layers the homogenisation is exact -- in-plane strain,
+normal stress and tangential field are continuous, the rest are volume-averaged -- so there is
+no mixing rule to choose. The amorphous phase is isotropic, elastic and electrically passive.
+Crystallinity `X_c`, the amorphous Young's modulus `E_a` and Poisson ratio `nu_a` are inputs,
+**swept, not fitted**; `tests/test_film.py` checks the exact limits (all crystal, all
+amorphous, identical layers, the equal-Poisson Voigt identity) and the mechanism below.
+
+**The mechanism.** A field along P contracts the crystal in-plane (`d_x,xx + d_x,yy < 0`). The
+amorphous layers are bonded to it in-plane and, being soft, take its in-plane strain; being
+nearly incompressible, they extend along the normal to conserve volume. That extension is the
+film's `d_31`, and its sign is positive. The crystal's own `d_31` hardly enters.
+
+**The sweep** (`examples/film_response.py`; Born-fitted crystal with induced dipoles, poling
+along +P; `X_c` 0.4-0.6, `E_a` 0.1-3 GPa, `nu_a` 0.35-0.499): film `d_31` is **+2.2 to +6.3
+pC/N** against the crystal's +0.42, and film `d_33` stays within −8.0 to −9.8 (crystal −9.86).
+The ratio `d_31 / −d_33`, which scales out the crystal's overall magnitude, runs 0.25-0.65;
+the measured one is 0.625, reached at `X_c` 0.4 with `nu_a` 0.49.
+
+**One deficit or two.** Raise only the crystal's polar column `e_x,xx` until the film `d_33`
+is the measured −32, and read what the other two film coefficients become:
+
+| `X_c`, `E_a` (GPa), `nu_a` | `e_x,xx` needed (ours −0.239) | film `d_33` | `d_32` | `d_31` | film `E_draw` (GPa) |
+|---|---:|---:|---:|---:|---:|
+| 0.4, 0.1, 0.49 | −0.769 (3.2x) | −32 (set) | +2.5 | **+17.5** | 2.4 |
+| 0.4, 0.3, 0.49 | −0.781 (3.3x) | −32 | +2.8 | +17.4 | 5.4 |
+| 0.5, 0.3, 0.49 | −0.775 (3.2x) | −32 | +2.6 | +14.8 | 7.3 |
+| 0.5, 1.0, 0.45 | −0.800 (3.3x) | −32 | +3.1 | +12.5 | 6.3 |
+| 0.6, 1.0, 0.49 | −0.789 (3.3x) | −32 | +2.9 | +12.0 | 22.0 |
+| measured (Nix and Ward 1986) | | −32 | +1.5 | +20 | |
+
+All three film signs come out right and `d_31` lands 12-40% short, `d_32` 1.0-1.6 pC/N high,
+with nothing but the one column changed. So the measured pair is consistent with **a single
+crystal deficit: the polar column, `e_x,xx` ≈ −0.77 to −0.80 C/m² relaxed-ion against our
+−0.24**, the film geometry doing the rest. That is the datum already requested from the
+provider (the relaxed-ion polar column, 2026-09-29), now with a number to test against.
+
+**Limits, as the module states them.** One lamellar stack, perfectly aligned crystallites
+(misalignment lowers every film coefficient), a passive amorphous phase (no trapped charge,
+no interface polarization, no electrostriction -- the mechanisms the literature argues over,
+section 8.5), and no field along the draw axis. The film's draw modulus is a *measurable*
+check on `(X_c, E_a, nu_a)` and is not verified here: the laminate stiffens sharply along the
+normal as `nu_a` → 0.5 (2 to 45 GPa across the sweep), and the rows that reproduce the ratio
+sit at 2.4-5.4 GPa. A measured draw modulus and crystallinity for the same films would turn
+this sweep into a prediction. The factor-of-3.2 in the crystal column is not explained here;
+it is located.
+
 ### 5.4 Blocking stress, free strain, work density (E = 0.01 V/A = 100 MV/m)
 
 | potential | | poling direction | free strain | blocking stress (MPa) | work density (kJ/m³) |
