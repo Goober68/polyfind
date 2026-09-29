@@ -184,6 +184,13 @@ is right, but that is arithmetic rather than physics: that term is negative on
 every diagonal column for any stable crystal. The same term gave d31 = -0.14
 against a measured +20, with the **wrong sign**.
 
+*Corrected 2026-09-29 (`docs/ELECTROMECHANICS.md` 5.10):* that was the improper
+dimensional term, which puts `-P` on every diagonal column. The one an electrode
+measures (Vanderbilt's proper `e`) puts it on the polar column only, and through the
+Poisson coupling it gives a **positive** d31 (`-P S_13`). The d figures in this
+document predate the correction; for the current Born-fitted model they are
+d33 = -9.86, d31 = +0.42 pC/N.
+
 #### What charge flux changes, and what it does not
 
 `CrystalPacker(charge_flux=...)` lets the bond-charge increments depend on the local

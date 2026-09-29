@@ -5,8 +5,8 @@ definition item is closed -- `mechanics.piezoelectric` returns Vanderbilt's prop
 its converse route holds the nominal field (`docs/ELECTROMECHANICS.md` 5.10; Born-fitted
 d33 -9.86, d31 +0.42, not the cause of the shortfall). `phonon.relax_all_atom` owns its
 acceptance and the screen phonons record is regenerated under it (tables unchanged).
-`pack.polish` wraps `dz` inside its objective. Stale until rerun: recorded outputs that quote
-the old "film" d (the screen deliverable, fit_born_flux/polarizable_response runs).
+`pack.polish` wraps `dz` inside its objective. Stale until rerun, and flagged in place: d figures
+in `docs/SCREEN.md`'s response table and `docs/BENCHMARK.md` (old definitions).
 
 2026-09-13 evening provider update: an isolated D: worktree now exists at
 `D:\sarco-work\polyfind-vector-repeat`, branch `physics-vector-repeat`,

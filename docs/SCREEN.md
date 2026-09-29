@@ -410,6 +410,12 @@ question is what the polar phase would deliver. `d_33` and `d_31` are in the fil
 `fit_charge_flux.py`'s hard-coded x-axis to the actual polarization direction; for β-PVDF that
 reduces to the same numbers, which is the check.
 
+*2026-09-29:* the `d_33`, `d_31` and `e` in the table below were computed with the
+dipole-per-reference-volume `e` that `mechanics` used until then. The measurable coefficient
+is Vanderbilt's proper one (`docs/ELECTROMECHANICS.md` 5.10), which adds `-|P| S_1J` to each
+film `d`: more negative `d_33`, slightly more positive `d_31`, by an amount set by each
+chemistry's own `|P|` and compliance. The table is kept as computed and has not been rerun.
+
 These columns come from the **truncated** sum and are the same measurement as before — nothing in
 the antipolar correction touches them, since they never used the antipolar branch. Ewald is
 deliberately not applied to them: `docs/BENCHMARK.md` records that under Ewald β's cell moves by
