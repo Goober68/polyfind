@@ -758,3 +758,28 @@ def test_the_table_screen_refuses_charge_flux():
         _table_starts(pk, ch, np.array([4.0, 6.0, 90.0, 0.0, 0.0, 0.0]),
                       np.array([5.0, 8.0, 90.0, 360.0, 360.0, ch.c]), 1, [0, 1], 0.5, [90.0],
                       None, 8.0, 0.2, 1.0, None, None, False)
+
+
+def test_polish_scores_dz_wrapped_so_a_far_start_lands_where_a_near_one_does():
+    """The kernel is periodic in ``dz`` only near ``[0, c)``; polish must evaluate it there.
+
+    Nine repeats out the energy is wrong (the drift is asserted, so this test means
+    something), and a polish started there used to be scored on it and wrapped only at the
+    end.  Wrapped inside the objective, it is the same polish as from the near start.
+    """
+    ch = periodic_chain(PVDF, [T, T], THREE_STATE)
+    packer = CrystalPacker(ch, n_chains=2)
+    b = default_bounds(ch)
+    keys = ["a", "b", "gamma", "phi1", "phi2", "dz"]
+    lo = np.array([b[k][0] for k in keys])
+    hi = np.array([b[k][1] for k in keys])
+    free = [i for i in range(6) if hi[i] > lo[i]]
+    near = np.array([4.9, 8.6, 90.0, 243.0, 243.0, 0.6 * ch.c, 0.0])
+    far = near.copy()
+    far[5] += 9.0 * ch.c
+    assert abs(float(packer.energy(far[None])[0]) - float(packer.energy(near[None])[0])) > 1e-3
+    x_near = polish(packer, near, lo, hi, free)
+    x_far = polish(packer, far, lo, hi, free)
+    e_near, e_far = (float(packer.energy(x[None])[0]) for x in (x_near, x_far))
+    assert e_far == pytest.approx(e_near, abs=1e-6)
+    assert np.abs(x_far[:3] - x_near[:3]).max() < 1e-4 and 0.0 <= x_far[5] < ch.c
