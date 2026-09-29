@@ -15,7 +15,11 @@ crystal lamellae + passive amorphous layers along the draw axis. Film d31 +2.2..
 +0.42) from amorphous incompressibility; raising only the crystal polar column to -0.77
 C/m^2 (3.2x) gives film d33 -32, d31 +12..+17.5, d32 +2.5..+3.1 (measured -32/+20/+1.5):
 one crystal deficit explains both. Film inputs swept, never fitted; a measured draw modulus
-and crystallinity for the same films would make it a prediction.
+and crystallinity for the same films would make it a prediction. BUT (5.13): the provider's own data
+already estimate their crystal polar column at -0.34 (1.42x ours, via their larger Born charges;
+kinematics agree, neither crystal relaxes internally under polar strain), which through the
+laminate gives film d33 -14, d31 +6..+8: ~43% / 28-41% of measured, all signs right. The rest
+(~2.3x) is outside the crystal (amorphous/interface/charge terms the laminate omits).
 Stale until rerun, and flagged in place: d figures
 in `docs/SCREEN.md`'s response table and `docs/BENCHMARK.md` (old definitions).
 
@@ -91,8 +95,9 @@ chain-axis components of both remain open in Dipole's convergence ladder).
 **Piezoelectric coefficients: short**, crystal d33 = -9.86 vs measured -32, d31 = +0.42
 vs +20 (Vanderbilt-proper since 2026-09-29; the earlier -8.8 / +0.02 were the
 improper "film" bookkeeping, `docs/ELECTROMECHANICS.md` 5.10). Through the film laminate
-(5.12) d31 becomes +2..+6 and the whole measured film row is consistent with one crystal
-deficit, the polar column (3.2x). The earlier account of the reason has been narrowed by elimination to one of two things
+(5.12) d31 becomes +2..+6; with the provider's estimated crystal polar column (5.13) the film
+is d33 -14, d31 +6..+8, ~40% of measured with every sign right, and the remaining ~2.3x is
+non-crystalline. The earlier account of the reason has been narrowed by elimination to one of two things
 neither side has: the electronic clamped-ion term, which no classical charge
 model represents, or the 0.4-0.6 C/m^2 Berry-slope target itself, which came
 from a sweep that failed its own gate. The narrowed request to Dipole is a

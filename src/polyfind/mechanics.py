@@ -794,7 +794,7 @@ def relax_deformable(ref: Reference, shape: Shape, params, x=None, free=_INTERNA
     return Relaxed(params=p, x=np.asarray(res.x, dtype=float)[nf:], chain=chain, energy=E,
                    multiplier=lam, residual=resid,
                    c_error=0.0 if c_target is None else abs(chain.c / c_target - 1.0),
-                   cell_residual=float(np.abs(grad[:nf]).max()), iterations=int(res.nit),
+                   cell_residual=float(np.abs(grad[:nf]).max()) if nf else 0.0, iterations=int(res.nit),
                    shape_gradient=float(np.linalg.norm(gs)))
 
 

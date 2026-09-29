@@ -399,6 +399,21 @@ def test_beta_has_no_diagonal_piezoelectric_column_and_alpha_does(beta_deformabl
             assert pz.e[:, n] - pz.e_reference_volume[:, n] == pytest.approx(-P * (np.arange(3) == K), abs=2e-3)
 
 
+def test_beta_has_no_internal_relaxation_under_polar_strain(beta_deformable):
+    """A strain along P keeps beta's mirror, so the setting angles and offset stay put and the one
+    shape parameter is held by the fixed-c constraint: relaxing nothing gives the same state as
+    relaxing everything (docs/ELECTROMECHANICS.md 5.13).  Also the regression for free=[]."""
+    ref, shape = beta_deformable
+    eps = np.zeros(6)
+    eps[0] = 2e-3
+    with FITTED_VALENCE.applied():
+        none = M.deformable_state(ref, shape, eps, free=[])
+        full = M.deformable_state(ref, shape, eps)
+    assert none.relaxed.cell_residual == 0.0
+    assert none.nominal == pytest.approx(full.nominal, abs=1e-8)
+    assert none.energy == pytest.approx(full.energy, abs=1e-8)
+
+
 def test_polyethylene_has_no_piezoelectric_response_when_the_chain_deforms_either():
     """The null control, on the harder path: the cancellation has to survive a relaxation."""
     with FITTED_VALENCE.applied():

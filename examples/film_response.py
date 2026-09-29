@@ -23,6 +23,13 @@ MEASURED = {"d33": -32.0, "d31": 20.0, "d32": 1.5}
 CRYSTALLINITY = (0.4, 0.5, 0.6)
 AMORPHOUS_YOUNG = (0.1, 0.3, 1.0, 3.0)  # GPa
 AMORPHOUS_POISSON = (0.35, 0.45, 0.49, 0.499)
+# The provider's own crystal polar column, estimated from data already exchanged (Vanderbilt,
+# provider frame, P_y < 0): the Berry-phase clamped-ion e_y,yy (docs/REFERENCE_DATA_REQUEST.md,
+# 2026-09-13) plus their ASR-corrected DFPT Born tensors contracted with their CP2K relaxed-ion
+# internal-strain Jacobian at 1% (examples/internal_strain_jacobian.py).  Mixed Hamiltonians and
+# quantitatively_valid=false on their side; an estimate, labelled as one.
+PROVIDER_CLAMPED_POLAR = -0.1548
+PROVIDER_INTERNAL_POLAR = +0.4949
 SINGLE_DEFICIT_CASES = ((0.4, 0.1, 0.49), (0.4, 0.3, 0.49), (0.5, 0.3, 0.49), (0.5, 1.0, 0.45), (0.6, 1.0, 0.49))
 
 
@@ -106,11 +113,28 @@ def main():
         print(f"{phi:5.2f} {Ea:8.2f} {nu:6.3f} | {exx:+7.3f} {exx / e_row[0]:6.1f} | {c['d33']:+6.1f} {c['d32']:+6.2f} "
               f"{c['d31']:+6.1f} | {f.young_draw:10.2f}")
     print(f"measured{'':>16} | {'':>14} | {MEASURED['d33']:+6.1f} {MEASURED['d32']:+6.2f} {MEASURED['d31']:+6.1f} |")
+
+    # And with the provider's crystal polar column instead of ours (the rest of the crystal ours).
+    e_prov = -(PROVIDER_CLAMPED_POLAR + PROVIDER_INTERNAL_POLAR)  # provider frame has P_y < 0: flip to +P
+    d_prov = d.copy()
+    d_prov[0] += (e_prov - float(e_row[0])) * S[0] * k
+    print(f"\nwith the provider's estimated relaxed-ion polar column, e_x,xx = {e_prov:+.3f} C/m^2 "
+          f"({e_prov / e_row[0]:.2f} x ours; crystal d33 {d_prov[0, 0]:+.2f}, d31 {d_prov[0, 2]:+.2f}):")
+    provider = []
+    for phi, Ea, nu in SINGLE_DEFICIT_CASES:
+        f = laminate(S, d_prov, phi, Ea, nu)
+        c = f.film_coefficients(polar=0)
+        provider.append({"crystallinity": phi, "amorphous_young": Ea, "amorphous_poisson": nu, **c,
+                         "fraction_of_measured_d33": c["d33"] / MEASURED["d33"],
+                         "fraction_of_measured_d31": c["d31"] / MEASURED["d31"]})
+        print(f"{phi:5.2f} {Ea:8.2f} {nu:6.3f} | {'':>14} | {c['d33']:+6.1f} {c['d32']:+6.2f} {c['d31']:+6.1f} | "
+              f"{c['d33'] / MEASURED['d33']:.0%} / {c['d31'] / MEASURED['d31']:.0%} of measured")
     if args.json:
         with open(args.json, "w") as fh:
             json.dump({"preset": args.preset, "crystal": xtal, "crystal_e_polar_row": e_row.tolist(), "absP": absP,
                        "crystal_S": S.tolist(), "crystal_d": d.tolist(), "measured": MEASURED, "rows": rows,
-                       "single_deficit": single}, fh, indent=1)
+                       "single_deficit": single, "provider_polar_column": {"e_x_xx": e_prov, "rows": provider}},
+                      fh, indent=1)
 
 
 if __name__ == "__main__":

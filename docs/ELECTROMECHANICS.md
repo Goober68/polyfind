@@ -1174,6 +1174,56 @@ sit at 2.4-5.4 GPa. A measured draw modulus and crystallinity for the same films
 this sweep into a prediction. The factor-of-3.2 in the crystal column is not explained here;
 it is located.
 
+### 5.13 The crystal's polar column, from data already exchanged: most of the rest is not crystalline (2026-09-29)
+
+Section 5.12 located the film shortfall in one crystal number, the relaxed-ion polar column,
+and asked the provider for it. Most of the answer is already in hand, and it points the other
+way.
+
+**Our model has no internal relaxation under polar strain.** A strain along P keeps beta's
+mirror symmetry, so the setting angles and chain offset do not move, and the single line-group
+shape parameter is held by the fixed-`c` constraint: relaxing `phi1, phi2`, `dz`, all of them
+or none gives the same `e_x,xx` = −0.2391 C/m² to four digits. Relaxing the pendant angles
+under polar strain (`fit_born_flux.py pendant --pendant-column xx`) moves it the wrong way, to
+−0.216, and freeing the pendant bond lengths as well reaches −0.365 only by running C–F to
+1.54 Å at a different reference state (|P| 0.246) -- the angles move 0.01° over the ±0.2% step
+and the lengths not at all.
+
+**The DFT crystal barely relaxes under polar strain either.** The provider's CP2K relaxed-ion
+geometries (`docs/INTERNAL_STRAIN.md`) put the within-chain motion under their `yy` (our polar
+`xx`) at 0.034 Å per unit strain rms; ours is exactly rigid; the two Jacobians differ by 0.030
+rms. The pendant opening they do show is under the long-axis strain, which reaches `d_33` only
+through `S_12`.
+
+**So the provider's polar column can be estimated now.** Vanderbilt, their frame (`P_y < 0`):
+
+| | clamped-ion | internal strain `(1/V0) sum Z . J` | relaxed-ion | along +P |
+|---|---:|---:|---:|---:|
+| ours | −0.1559 | +0.3949 (our Z, our J) | +0.2390 | **−0.239** |
+| provider, estimated | −0.1548 (Berry, 2026-09-13) | +0.4949 (their DFPT Z, their CP2K J) | +0.3401 | **−0.340** |
+| needed by the film laminate (5.12) | | | | −0.77 to −0.80 |
+
+Our charges on their displacements give +0.4011, on ours +0.3949: the kinematics agree, and
+the provider's larger internal-strain term is their Born charges, about 25% larger along the
+polar axis. The provider's crystal is 1.42 times ours on this column, not 3.2 times.
+
+**Through the laminate** (`examples/film_response.py`, the rest of the crystal ours), that
+column gives a film `d_33` of −13.5 to −14.0 and `d_31` of +5.5 to +8.3 pC/N: **42-44% of the
+measured `d_33` and 28-41% of `d_31`**, every sign right, `d_32` +0.04 to +0.25 against +1.5.
+A crystal of the provider's quality in this film geometry therefore accounts for a little under
+half of the measured film response, and the remaining factor of about 2.3 lies outside what the
+crystal and the laminate contain: the amorphous and interfacial contributions the laminate
+omits by construction (trapped charge, interface polarization, amorphous electrostriction --
+the terms section 8.5's literature argues over), orientation, or the measurement itself.
+Section 5.12's "one crystal deficit" reading is therefore withdrawn as the likely one; it stays
+as the arithmetic of what a crystal would need.
+
+**Caveats, carried whole.** The estimate mixes Hamiltonians (QE Berry clamped-ion, QE DFPT Born
+charges, CP2K relaxed geometries), every provider record carries `quantitatively_valid=false`,
+and the transverse stiffness anomaly is unresolved; the laminate's own limits (5.12) stand. A
+same-Hamiltonian relaxed-ion polar column from the provider would confirm or overturn the
+−0.34; the threshold that would overturn it is −0.77.
+
 ### 5.4 Blocking stress, free strain, work density (E = 0.01 V/A = 100 MV/m)
 
 | potential | | poling direction | free strain | blocking stress (MPa) | work density (kJ/m³) |

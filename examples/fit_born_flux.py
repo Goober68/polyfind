@@ -383,7 +383,12 @@ def pe_null(flx: SimpleFF | None, pol: Polarizable | None) -> dict:
 
 
 def stage_pendant(args) -> dict:
-    """Would letting the pendant geometry relax under axial strain change ``e_x,zz``?  A diagnostic.
+    """Would letting the pendant geometry relax under strain change the polar row of ``e``?  A diagnostic.
+
+    ``--pendant-column zz`` (default, the 2026-09-12 measurement) strains the chain axis;
+    ``--pendant-column xx`` strains the polar axis, where beta's rigid-body coordinates cannot
+    move at all (``docs/ELECTROMECHANICS.md`` 5.12) and the pendant is the only internal freedom
+    left.  The derivative is of the nominal polarization, so both are Vanderbilt-proper.
 
     The deformable path holds every pendant rigid on its carbon, so under ``eps_zz`` the CF2 and
     CH2 groups translate as blocks and the polar dipole can only respond through the *group*
@@ -422,10 +427,12 @@ def stage_pendant(args) -> dict:
             bb[k] = dataclasses.replace(bb[k], **{f: float(v)})
         return dataclasses.replace(polymer, backbone=tuple(bb), sequence=())  # the monomer is rebuilt
 
-    def state(x, eps_zz: float):
+    col = {"xx": 0, "zz": 2}[getattr(args, "pendant_column", "zz")]
+
+    def state(x, eps_zz: float):  # eps_zz: the strain on the chosen column
         calls[0] += 1
         eps6 = np.zeros(6)
-        eps6[2] = eps_zz
+        eps6[col] = eps_zz
         sh = M.shape_of(polymer_at(x), ref, torsions=tors, angles=angs, frame=shape.frame)
         with FITTED_VALENCE.applied():
             return M.deformable_state(ref, sh, eps6)
@@ -437,17 +444,20 @@ def stage_pendant(args) -> dict:
 
     t0 = time.time()
     rigid = {s: state(x0, s * step) for s in (-1.0, 0.0, 1.0)}
-    e_rigid = (rigid[1.0].m - rigid[-1.0].m) / (2.0 * step)
+    e_rigid = (rigid[1.0].nominal - rigid[-1.0].nominal) / (2.0 * step)
     x_ref, st_ref = relaxed(0.0, x0)
     xp, st_p = relaxed(step, x_ref)
     xm, st_m = relaxed(-step, x_ref)
-    e_relaxed = (st_p.m - st_m.m) / (2.0 * step)
+    e_relaxed = (st_p.nominal - st_m.nominal) / (2.0 * step)
     S = el.S
     conv = M.C_PER_M2_PER_GPA_TO_PC_PER_N
-    # the axial column's contribution to the film d33 (poling axis x = Voigt 1): e_x,zz S_zz,xx
-    d33_axial_rigid = float(e_rigid[0] * S[2, 0] * conv)
-    d33_axial_relaxed = float(e_relaxed[0] * S[2, 0] * conv)
-    out = {"preset": args.preset, "pendant": args.pendant, "coordinates": label, "x_polymer": x0.tolist(),
+    # this column's contribution to the crystal d33 (poling axis x = Voigt 1): e_x,J S_J,xx
+    d33_axial_rigid = float(e_rigid[0] * S[col, 0] * conv)
+    d33_axial_relaxed = float(e_relaxed[0] * S[col, 0] * conv)
+    sgn = 1.0 if st_ref.nominal[0] >= 0 else -1.0  # quote along +P
+    out = {"preset": args.preset, "pendant": args.pendant, "column": ("xx", "zz")[col // 2], "coordinates": label,
+           "x_polymer": x0.tolist(),
+           "e_x_column_rigid_along_P": sgn * float(e_rigid[0]), "e_x_column_pendant_relaxed_along_P": sgn * float(e_relaxed[0]),
            "x_relaxed_reference": x_ref.tolist(), "x_relaxed_plus": xp.tolist(), "x_relaxed_minus": xm.tolist(),
            "energy_gain_kcal_per_cell": float(rigid[0.0].energy - st_ref.energy),
            "m_reference_rigid": rigid[0.0].m.tolist(), "m_reference_relaxed": st_ref.m.tolist(),
@@ -455,13 +465,14 @@ def stage_pendant(args) -> dict:
            "e_zz_rigid": e_rigid.tolist(), "e_zz_pendant_relaxed": e_relaxed.tolist(),
            "d33_axial_column_rigid": d33_axial_rigid, "d33_axial_column_pendant_relaxed": d33_axial_relaxed,
            "S_zz_xx_per_GPa": float(S[2, 0]), "state_evaluations": calls[0], "seconds": time.time() - t0}
-    print(f"# pendant relaxation under eps_zz = +/-{step}, {args.preset} + polarizable, cell fixed at the reference")
+    print(f"# pendant relaxation under eps_{('xx', 'zz')[col // 2]} = +/-{step}, {args.preset} + polarizable, cell fixed at the reference")
     print(f"  coordinates {label}: polymer {np.array2string(x0, precision=4)} -> relaxed at eps=0 "
           f"{np.array2string(x_ref, precision=4)} (+eps {np.array2string(xp, precision=4)}, -eps {np.array2string(xm, precision=4)}); "
           f"energy gain {out['energy_gain_kcal_per_cell']:.4f} kcal/mol per cell")
     print(f"  |P| at eps=0: rigid {np.linalg.norm(rigid[0.0].m):.4f}, pendant-relaxed {np.linalg.norm(st_ref.m):.4f} C/m^2")
-    print(f"  e_x,zz (C/m^2): rigid pendants {e_rigid[0]:+.4f}, pendants relaxed {e_relaxed[0]:+.4f}; "
-          f"axial column of film d33 (pC/N): {d33_axial_rigid:+.3f} -> {d33_axial_relaxed:+.3f}  "
+    print(f"  e_x,{out['column']} (C/m^2, Vanderbilt, poling along +P): rigid pendants {sgn * e_rigid[0]:+.4f}, "
+          f"pendants relaxed {sgn * e_relaxed[0]:+.4f}; this column of crystal d33 (pC/N, along +P): "
+          f"{sgn * d33_axial_rigid:+.3f} -> {sgn * d33_axial_relaxed:+.3f}  "
           f"[{calls[0]} strain states, {out['seconds']:.0f} s]")
     return out
 
@@ -469,6 +480,8 @@ def stage_pendant(args) -> dict:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("mode", choices=["born", "fit", "response", "ordering", "pe", "pendant", "all"])
+    ap.add_argument("--pendant-column", default="zz", choices=["zz", "xx"],
+                    help="pendant: which strain column (zz = chain axis, xx = polar axis)")
     ap.add_argument("--pendant", default="angles", choices=["angles", "bonds", "all"],
                     help="pendant: which pendant coordinates to relax")
     ap.add_argument("--data", default=DEFAULT_DATA, help="path to the provider's born_results.json")

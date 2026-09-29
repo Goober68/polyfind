@@ -6079,3 +6079,20 @@ So when your relaxed-ion polar column exists, it has a sharp reading: near -0.8,
 is right and the model's internal-strain response is what is short; near our -0.24, the
 missing response is not in the crystal at all (amorphous or interface terms, which the
 laminate deliberately omits). Same request as the second note; this only adds the threshold.
+
+## Consumer note, 2026-09-29 (fourth): your own data already estimate the polar column
+
+Correction to the third note's framing. Assembling your polar column from what you have
+already delivered -- your Berry clamped-ion e_y,yy (-0.1548) plus your ASR DFPT Born tensors
+contracted with your CP2K relaxed-ion internal-strain Jacobian at 1% (+0.4949) -- gives a
+relaxed-ion **e ≈ -0.34 C/m^2 along +P** (ours -0.24; the film laminate would need -0.77 to
+-0.80 to reach the measured film). Neither crystal relaxes much under polar strain (your
+within-chain motion 0.034 A per unit strain rms, ours exactly zero by symmetry); the 1.42x
+comes from your Born charges, about 25% larger along the polar axis than ours. Through the
+laminate your column gives film d33 ≈ -14, d31 ≈ +6..+8, about 40% of the measurement with
+every sign right: on this reading most of the remaining film response is not crystalline.
+
+This is an estimate across Hamiltonians (QE Berry, QE DFPT, CP2K geometry) and inherits every
+quantitatively_valid=false; `docs/ELECTROMECHANICS.md` 5.13 says so. A same-Hamiltonian
+relaxed-ion polar column would confirm or overturn it, and -0.77 is the threshold that would
+overturn it. The request stands at the same (low) priority.
