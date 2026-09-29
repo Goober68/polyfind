@@ -165,9 +165,9 @@ instability on this potential, and polar-vs-antipolar for PVDF is a barrier ques
 does not answer. Dipole reviewed the first record and found 12 of 36 relaxed cells a few 1e-6
 above the requested force tolerance because `relax_all_atom` discarded termination; fixed at
 the owner (`phonon.Relaxation`: unrounded force, termination evidence, Newton polish,
-`converged`), consumers require acceptance; record regeneration under the fix pending (the committed JSON predates it). Pending source fix: `pack.polish` leaves `dz`
-unbounded and the packer's energy is only periodic in `dz` for about two repeats outside
-`[0, c)`; the tied polish in the example wraps inside its objective. The merge hold below is
+`converged`), consumers require acceptance; record regeneration under the fix pending (the committed JSON predates it). `pack.polish` now wraps `dz` (and the setting
+angles) inside its objective, not only afterwards (2026-09-29): the packer's energy is only
+periodic in `dz` for about two repeats outside `[0, c)`. The merge hold below is
 about merging *their* branch into ours; Dipole's 2026-09-14 notes say their C: checkout is no
 longer touched by incoming code (their relay is on D:), so our own source edits on this branch
 are safe to push.
