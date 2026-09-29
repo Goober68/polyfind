@@ -7,8 +7,9 @@ funnel run recorded in DESIGN.md section 5.3 (4-core cloud box): fit 7.6 s,
 enumeration 3.6 s, packing of four conformations 81 s, refinement 88 s,
 amorphous statistics 0.4 s; the expected gains in sections 1-9 are the reasoned
 estimates made at that time, not measurements. **Every "today" number in
-sections 1-9 is stale: section 10 now carries a measured stage-by-stage profile
-of the current code and is the only profile to plan from.** What it says, in one
+sections 1-9 is stale: section 10 carries a measured stage-by-stage profile of
+the code as it was after that plan, and section 15 a second one of the current head
+with the next round of verified prototypes.** What it says, in one
 line: with analytic gradients in the refinement and the polish, no single stage
 dominates any more -- refinement is 36% of the funnel and the chain-pair table
 build 34%.
@@ -762,3 +763,250 @@ At that point the torch route is the lower-risk one, since it already runs on
 this card through DirectML, and it doubles as the automatic-differentiation path
 section 2 wanted. CuPy remains unusable on an AMD card and should not be the
 plan.
+
+## 15. Second review (2026-09-29): what is left, measured on the current code
+
+Scope: execution speed of the code at branch head `bd5ef12`, after sections 1-14
+landed.  Every "before" below was measured on that head; every "after" is a
+prototype made in an isolated worktree and run back to back with its baseline on the
+same machine, a 4-core cloud box (Intel Xeon, NumPy 2.4, no GPU).  The machine is
+slower and narrower than the i7-8700K of section 10, so compare shares and ratios,
+not seconds, across the two sections.  The profile script is
+`examples/profile_funnel.py`; the prototypes are kept as patches under
+`docs/perf-patches/2026-09-29/` with an index of what each does and costs.
+
+### 15.1 Where the time goes now
+
+Default `PipelineConfig` for PVDF with `SimpleFF`, single process, no table cache:
+
+| stage | seconds | share |
+|---|---|---|
+| RIS fit (2,881 single points) | 0.58 | 0.9% |
+| enumeration (120 candidates, period <= 8, k = 60) | 3.95 | 5.9% |
+| periodic chain construction (5) | 0.11 | 0.2% |
+| **chain-pair table builds (5, screen grid, 4 worker processes)** | **25.55** | **38.5%** |
+| **FFT screen (5)** | **12.04** | **18.1%** |
+| exact-kernel polish (4 starts per conformation) | 2.57 | 3.9% |
+| **torsion + cell refinement (5)** | **21.60** | **32.5%** |
+| total | 66.40 | |
+
+The same three stages as section 10, in a different order: this box has four cores
+for the table build, and the thread pool inside `fft_screen` ran under the GIL.
+The refinement row was taken under cProfile, which inflates Python-call-heavy code;
+the same five refinements without the profiler, on a quiet machine, take 15.2 s
+(finding G1 below), so the true share of refinement is nearer 25% and the true total
+nearer 60 s.
+
+Per candidate (seconds: table / screen / polish / refine; refinement evaluations,
+variables, parametrisation):
+
+| candidate | atoms | table | screen | polish | refine | evals / vars / param. |
+|---|---|---|---|---|---|---|
+| TG+TG+TG-TG- | 24 | 7.74 | 3.08 | 0.60 | 6.06 | 70 / 10 / linegroup |
+| TTTG+TG- | 18 | 5.22 | 2.39 | 0.78 | 5.21 | 161 / 13 / free |
+| TTG+TG-G-TG+ | 24 | 7.34 | 2.58 | 0.85 | 8.85 | 216 / 15 / free |
+| TG+TG- (alpha) | 12 | 3.54 | 2.09 | 0.17 | 1.30 | 29 / 8 / linegroup |
+| TT (beta) | 6 | 1.71 | 1.90 | 0.16 | 0.18 | 10 / 6 / linegroup |
+
+**Refinement was mostly geometry, not kernel.**  cProfile of the five refinements,
+cumulative seconds summed over candidates: `build_backbone` (the per-atom Python
+NeRF loop, about fifteen small NumPy calls per atom) 7.1; pendant placement inside
+`_block_coords` 4.1; the per-row Python loop of `repeat_chains` (Kabsch, `arccos`,
+`_orient_block` with an `eigh`, `_align_about_z`, one `PeriodicChain` per row) about
+3.6; the closure Newton `LineGroup._close`, which re-differences its Jacobian at every
+iteration after the first, 4.2 (itself mostly `build_backbone`); the lattice energy
+`CrystalPacker.energy_and_grad` 4.7.  Section 10 said "the cost is now the geometry";
+this is that statement with numbers, and it says which geometry.
+
+### 15.2 The earlier verification round, reconciled with the branch
+
+A first round of this review (2026-09-09, against the code before sections 1-14)
+verified three findings by prototype before its budget ran out: a compacted packing
+kernel (12-17x on batched cells), a fast NeRF builder (10-55x on `build_backbone`) and
+a candidate process pool (2.2-2.4x).  The branch has since taken the process pool
+(section 4), replaced the random screen the kernel served with the table screen
+(section 1) and made the polish a one-row gradient (section 13), so the kernel finding
+is now worth about 3 s of 66 and was not pursued again.  The fast builder was never
+taken; 15.1 shows it sitting under the largest remaining stage, and it is G1 below.
+
+### 15.3 Findings, measured
+
+Every prototype ran the full suite with `-k "not byte_identical"`; the ten failures
+that remain are the same ten on the untouched head in this container (see 15.6) and
+none touches the code a finding changes.
+
+**G1. Fast chain geometry for the refinement** (`chain.py`, `pack.py`,
+`linegroup.py`; `G1.diff`, 702 lines).  The NeRF recursion runs on component arrays
+of shape `(N+3, M)` with an explicit cross product, the per-atom-type scalars hoisted
+and the dihedral trig done once for all steps; a Python-float path serves `M == 1`;
+pendant frames are built for every backbone atom in one call and each pendant atom is
+placed with one gather and one scatter; the per-row tail of `repeat_chains` (Kabsch,
+rotation to z, orientation, alignment) is batched.  Measured, quiet machine, back to
+back: refinement stage 15.15 -> 8.93 s (1.70x); per candidate 1.5-1.9x; `build_backbone`
+65x at `M = 1` and 3.3x at `M = 31`; `repeat_chains` on 31 rows 6.5-9.9x.  Bit-identical
+outputs everywhere (155 dumped geometry arrays, seven polymers including the multi-atom
+pendants of AN/VDCN/FANOME, every refined energy, and the full 216-evaluation L-BFGS-B
+trace of the free-mode candidate).  That bit-identity cost something worth recording:
+an intermediate version equal only to 1e-13 A moved one free-mode refinement onto a
+neighbouring minimum, 0.01 kcal/mol per monomer away, through a one-ulp gradient
+difference, so the final version reproduces NumPy's operation order exactly (the 1-D
+norm as a BLAS dot, `s ** 2` through a Python float).  That order is a property of
+this NumPy/BLAS build; on another the batched and per-row forms may differ by an ulp
+again.  The refinement objective is chaotic at that level, which is a property of the
+original, not of the change.  After G1 the refinement is kernel-bound: the analytic
+row is 63-87% of each candidate, and the line-group closure is second (0.8 of 1.9 s
+for the 8-bond glide chain).  A one-line fix found on the way, zeroing the closure
+step for rows already inside tolerance, removes a batch-size dependence of the closure
+that currently rests on rounding; it was reverted to keep outputs identical and should
+be adopted on its own.
+
+**G2. Fewer geometry builds per refinement iteration** (new `chainjac.py`,
+`linegroup.py`, `pack.py`, `refine.py`, `tests/test_chainjac.py`; `G2.diff`, 733
+lines).  The derivative of every oligomer coordinate with respect to every torsion is
+closed-form (`dr_i/dtheta_j = u_j x (r_i - p_j)` for downstream atoms, carried through
+the virtual end atoms and the rigid pendant frames), then through the repeat transform
+(Kabsch derivative), the alignment and `c`; the closure solve reuses its Jacobian and
+freezes converged rows.  Chain builds per L-BFGS evaluation: 98 -> 3 (TG+TG+TG-TG-),
+17 -> 1 and 21 -> 1 (free mode), 59 -> 3 (alpha).  Gradient verified against a
+Richardson-extrapolated central difference of the very objective the optimiser
+minimises: 8.8e-7 of scale over 44 evaluations (PE, beta, alpha, gamma, the unpatterned
+chain; both parametrisations; field on and off).  Measured alone: refinement stage
+14.8 -> 11.9 s (1.24x).  The build count fell 30x and the time 1.24x because, on the
+unchanged builder, one build costs the same for 1 row as for 31; G2 is worth much more
+on top of G1, where the builds are cheap and the closure's remaining re-differencing
+is the next cost, but the two were made independently and their combination was not
+measured.  Linegroup results agree with the original to 2e-9 kcal/mol per monomer;
+free-parametrisation results end in the same basin at a different flat-valley point,
+1e-5 to 3e-5 kcal/mol per monomer in the objective (up to 6e-4 in the lattice energy
+alone, traded against the bend restraint), so anything pinning refined numbers to many
+digits will move.
+
+**G3. Cheaper table-build kernel** (`lattice_table.py`; `G3.diff`, 475 lines).  The
+premise was partly wrong and the measurement says how: the trig was about 1% of the
+kernel, and a splined pair potential does not pay in NumPy (a gather costs about five
+arithmetic passes, and the Horner on gathered rows is strided), so it ships as an
+opt-in that is off.  What did pay: a buffered kernel with in-place passes and a single
+mask, grouping pairs by element type, forming `r^2` from `cos(u - v)` (1.9-2.0x on the
+exact path), and, enabled by the smaller working set, a chunk of 65,536 elements
+instead of 16,384 (a further 1.2-1.3x; re-sweep on the i7-8700K with six workers, its
+12 MB L3 may prefer 32,768).  Measured: serial build PE 5.20 -> 2.60 s, gamma 24.7 ->
+11.4 s; with four processes PE 1.94 -> 0.67 s, gamma 7.51 -> 3.06 s; table stage of the
+funnel 24.05 -> 10.55 s (2.28x).  Not bit-identical to the old tables: max 8e-4
+kcal/mol at wall-adjacent entries, with the same accuracy against the float64 kernel
+(max 1.5e-4 to 2.2e-4 at uncapped grid points, medians unchanged) and identical
+polished energies on all twenty starts of the five candidates; serial and parallel
+builds remain bit-identical.  On-disk caches built before the change stay valid but
+will not match bit for bit.  Inside the new kernel the erfc polynomial with its `exp`
+is about a third and the whole thing runs at about 7 ns per grid point against a
+~5.5 ns floor for this many passes, so NumPy-level work is nearly exhausted there;
+what is left is fewer grid points (20-40% of each chunk lies beyond the cutoff and is
+still evaluated) or a compiled or fused kernel.
+
+**G4. FFT screen without the thread pool** (`lattice_table.py`; `G4.diff`, 323
+lines).  The premise was off by an order of magnitude: with `ab_symmetry` the screen
+is 756 landscapes of 18,432 points per candidate, 14 million, not 10^8, and the 12 s
+was GIL contention plus per-cell Python (two `lattice_sites` calls, a 16-term
+interpolation, `np.unique`, a Python loop over sites with an outer product each,
+`argmin` and `unravel_index`), not FFT work.  The prototype precomputes the sites and
+shift multipliers for the whole `(a, b)` grid, interpolates all self terms in one call,
+accumulates the Fourier sums for a batch of cells with array operations, and drops
+the threads.  Measured: `fft_screen` 4.2-6.9x per candidate; screen stage 12.76 ->
+2.26 s (5.6x).  Bit-identical `ScreenResult.energy`, angles, `dz`, top rows and
+`_table_starts` output on all five candidates and nine edge cases (below `r_min`,
+no sites, oblique gammas, single flips, 1x1 grids, all cells rejected).  What is left
+in the 0.3-0.5 s per candidate: `irfftn` 0.12 s (scipy's with workers would halve it
+but differs at the float32 ulp), the complex64 accumulation 0.12-0.15 s, and the cold
+`table.fourier` of a fresh table, now 25-45% of the stage.
+
+**G5. Enumeration** (`enumerate.py`, `helix.py`, `ris.py`; `G5.diff`, 448 lines).
+One chain build per candidate and a batched helix analysis of all candidates of a
+period (327 builds, 171 of them redundant, become four batched calls); `k_best` works
+on one `(S, S*k)` candidate array per step with a vectorised backtrace, and
+`cyclic_k_best` runs all start states in one pass.  Measured: `enumerate_periodic`
+3.95 -> 0.06 s (60x); exact to 0.0 in energies, sequences, order, ranks and every
+helix descriptor over 173 sequences, including chiral CFE.  The stage was 5.9% of the
+funnel, which caps what this can ever deliver.
+
+**G6. Table build on the array backend, for CUDA rentals** (`lattice_table.py`,
+`tests/test_gpu.py`; `G6.diff`, 733 lines).  `_build_block` and `_pot_batch` used
+`np` explicitly, so the table build could not run on a GPU even though `backend.py`
+selects CuPy for the packing kernel.  The port takes the array module as an argument,
+keeps the process-pool CPU path bit-identical (verified: SHA-256 of the tables equal
+for PE, alpha and gamma, serial and four processes) and adds skipped-here GPU checks.
+Nothing on a GPU was executed.  The agent's projection and an adversarial re-check of
+it are both recorded, and the re-check wins: per gamma table, 6.9 s on four CPU
+processes -> about 2-2.5 s unfused on an A10-class card (2.5-3.5x), 1-1.5 s if
+`cupy.fuse` traces the kernel (5-7x, host-bound, and the first build pays a 1-3 s
+NVRTC compile the agent had omitted); the term count in the brief was 7x too high
+(1.3e9 grid elements, not 10^10), which shrinks the absolute payoff to a few seconds
+per table.  The re-check also found four defects that must be fixed before the port
+is used: `device="cuda"` with CuPy importable but no usable device returns the CUDA
+module instead of the documented `ImportError` and then dies in `xp.zeros`; the
+pipeline's `ProcessPoolExecutor` uses `fork` on Linux after the parent has touched the
+CUDA runtime, so every worker's build raises and `_pack_and_refine_one` turns that
+into "skip" for every candidate (needs a `spawn` context or `device="cpu"` inside
+workers); `table_key` does not record the device, so a disk cache mixes CPU and GPU
+tables that differ at 1e-4 kcal/mol; a new `cupy.fuse` object is created per block
+call.  The torch-directml route for the RX 7700 XT remains a sketch (float32 only, no
+fusion, op availability unverified).
+
+### 15.4 GPU, again
+
+The facts have not moved since section 14, and this round adds one measurement to
+them: the user's card is AMD, CuPy cannot run on it, and every prototype above is a
+CPU gain that the AMD machine collects in full.  On a rented CUDA machine the table
+build is the one stage the port makes GPU-resident, and its projected effect on the
+funnel is bounded by the stage: on the section-10 numbers (CPU work 71.8 s, tables
+24.3 s) about 1.3-1.4x for a serial pipeline, nothing at all for the warm-cache run,
+and less than G3 delivers on the CPU without a GPU.  The order therefore stands: GPU
+work waits for the workload that multiplies table builds (many chemistries crossed
+with strain and field grids, or the phonon supercells), and when it comes the four
+defects above are the first day's work.
+
+### 15.5 Order of implementation and expected effect
+
+1. **G4** (bit-identical, one file): the screen stage 12.8 -> 2.3 s here.
+2. **G5** (exact, three files, isolated): enumeration 4.0 -> 0.06 s.
+3. **G1** (bit-identical on this build; re-check the ulp-level identity on the
+   i7-8700K's NumPy before trusting refined digits): refinement 15.2 -> 8.9 s.
+4. **G3** (changes table values below 1e-3 kcal/mol; clear `$POLYFIND_TABLE_CACHE`
+   and re-sweep the chunk size on the target machine): table stage 24.1 -> 10.6 s.
+5. **G2** on top of G1, with the closure-freeze fix: expected to take the refinement
+   below 8 s here, unmeasured in combination; adopt once its 1e-5 movement of
+   free-mode results is acceptable, and re-record any pinned refined values.
+6. **G6** only when a CUDA machine is in play, after its four defects are fixed.
+
+Projected from the measured stage ratios, single process on this box, with the
+refinement row taken without the profiler:
+
+| stage | now | after G1, G3, G4, G5 |
+|---|---|---|
+| fit + chains + polish + amorphous | 3.7 | 3.7 |
+| enumeration | 3.95 | 0.06 |
+| table builds | 25.55 | 10.55 |
+| FFT screen | 12.04 | 2.26 |
+| refinement | 15.15 | 8.93 |
+| total | 60.4 | 25.5 (2.4x) |
+
+On the user's machine (section 10, CPU work 71.8 s: tables 24.3, screen 8.3,
+refinement 25.7, enumeration 4.6, the rest 9.0) the same ratios give about 36 s, a
+little over 2x, and the warm-cache end-to-end run, which no longer pays the tables,
+gains from the screen, the refinement and the enumeration alone.  After all five the
+funnel here would be table builds 41%, refinement 35%, screen 9%, and the next levers
+are the ones each finding names: a compiled or fused table kernel and fewer evaluated
+grid points; the closure solve and then the kernel row itself in the refinement.
+
+### 15.6 A finding about the tests
+
+Ten tests fail on the untouched head in this container and pass on the machine the
+branch is developed on: `test_ewald::test_default_packer_is_bit_for_bit_the_truncated_one`,
+`test_forcefield::test_default_simpleff_is_bit_for_bit_the_illustrative_potential`
+(four cases), `test_forcefield::test_third_order_terms_obey_reflection_with_reversal[pvdc]`,
+`test_mechanics::test_default_packer_energies_are_bit_for_bit_unchanged` (four cases),
+plus the eight `byte_identical` digest tests deselected above.  All compare `==`
+against float64 literals or SHA digests recorded on one machine and differ here in
+the last one or two digits (`-8.645931161267757` against `...756`).  They guard real
+invariants, but as written they test the BLAS build rather than the code; recording
+them to a tolerance of a few ulps, or per platform, would keep the guard and lose the
+false alarms.  Every prototype above reproduced exactly these ten failures and no
+others.

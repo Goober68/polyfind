@@ -1,0 +1,733 @@
+diff --git a/src/polyfind/chainjac.py b/src/polyfind/chainjac.py
+new file mode 100644
+index 0000000..9586c1b
+--- /dev/null
++++ b/src/polyfind/chainjac.py
+@@ -0,0 +1,267 @@
++"""Analytic Jacobian of the chain build: repeat torsions and bond angles -> coordinates.
++
++The continuous refinement (:mod:`polyfind.refine`) and the closure solve of the
++line-group parametrisation (:mod:`polyfind.linegroup`) both need the derivative of
++the *geometry* of one crystallographic repeat with respect to the repeat's torsions
++and backbone angles: the aligned coordinates of the repeat, its length ``c`` and the
++rotation vector of the repeat transform.  Until now that Jacobian was taken by
++central differences, which costs ``2 (P + R)`` chain builds per gradient (and per
++Newton iteration of the closure solve).  Here it is closed-form, from the one build
++already being made, in three layers.
++
++**The oligomer.**  Rigid bond geometry means every internal coordinate is a
++rotation generator.  Rotating RIS bond ``j`` (between backbone atoms ``j+1`` and
++``j+2``) by ``d phi`` moves every atom downstream of it by ``u_j x (r - r_{j+2})``,
++``u_j`` the unit bond vector; a pendant atom is rigid in the frame of its backbone
++atom and its two neighbours, and for the atoms whose frames touch the bond the frame
++turns rigidly with the downstream part because the bond's two atoms lie on the axis.
++Opening the backbone angle at atom ``k`` by ``d theta`` rotates everything downstream
++of ``k`` about the normal ``n_k`` of the plane ``(k-1, k, k+1)`` through ``r_k``, and
++the pendants *of atom k* by half that angle about the same axis (their frame is built
++on the bisector, which turns by ``d theta / 2``).  A repeat torsion or angle acts on
++every one of its instances along the five-block oligomer, so its generator is the sum
++over instances.
++
++**The repeat transform.**  The rigid fit ``Y ~= R X + t`` of two backbone windows
++(:func:`polyfind.helix.kabsch`) maximises ``tr(R H)``, ``H = Xc^T Yc``, so at the
++optimum ``A = R H`` is symmetric, and a perturbation ``dH`` moves ``R`` to
++``(I + [delta]_x) R`` with ``([delta]_x A + A [delta]_x) = B^T - B``, ``B = R dH``;
++for symmetric ``A`` the left side is ``[(tr A I - A) delta]_x``, a 3x3 solve.  From
++``delta`` follow ``dt``, ``dc = t . dt / c``, the axis, and the rotation vector through
++the inverse left Jacobian of SO(3).
++
++**The frame.**  The repeat is expressed with its axis along z, oriented about z and
++shifted along z to superimpose on a reference (:func:`polyfind.pack._orient_block`
++and :func:`polyfind.pack._align_about_z`).  The composite of those two about-z steps
++is the *optimal* about-z rotation onto the reference, whatever the principal-axis step
++chose, so the map is smooth and its derivative needs no eigendecomposition: any
++rotation taking the axis to z serves, differing from ``rotation_to_z`` by an about-z
++rotation the alignment absorbs, and the aligning angle is ``atan2(sw, cw)`` of the
++correlation with the reference, differentiated directly.
++
++Every array here carries a leading batch dimension ``M`` and a variable dimension
++``nv = P + R`` (torsions first, then angles), and every derivative is per **degree**,
++the unit the optimiser's variables are in.
++"""
++from __future__ import annotations
++
++import numpy as np
++
++from .chain import backbone_angle_lookup, build_backbone, nerf, pendant_positions
++from .helix import rotation_to_z
++from .polymers import Polymer
++
++DEG = np.pi / 180.0
++
++
++def _unit(v):
++    return v / np.linalg.norm(v, axis=-1, keepdims=True)
++
++
++_BB_CACHE: dict = {}
++
++
++def _backbone_cached(polymer: Polymer, dih: np.ndarray, angles_batch):
++    """``build_backbone`` with a one-entry memo on its inputs.
++
++    The closure solve's last accepted Newton trial and the chain build that follows it
++    ask for the very same backbone; the memo hands the second caller the first one's
++    array (bit for bit: the function is deterministic in its inputs).
++    """
++    # keyed on the polymer's identity *and* the numbers the backbone build reads from
++    # it, so two definitions sharing a name (a fitted variant, say) cannot collide
++    key = (id(polymer), polymer.name, polymer.bond_length, tuple(b.backbone_angle for b in polymer.backbone),
++           dih.tobytes(), dih.shape,
++           None if angles_batch is None else (np.asarray(angles_batch, dtype=float).tobytes(), np.shape(angles_batch)))
++    hit = _BB_CACHE.get(key)
++    if hit is None:
++        _BB_CACHE.clear()
++        hit = _BB_CACHE[key] = build_backbone(polymer, dih, xp=np, bond_angles=angles_batch)
++    return hit
++
++
++def oligomer_and_jacobian(polymer: Polymer, tors_batch, angles_batch=None, pendants: bool = True):
++    """Five-block oligomer coordinates and their Jacobian w.r.t. the repeat's variables.
++
++    ``tors_batch`` is ``(M, P)``; ``angles_batch`` is ``None`` (the polymer's own angles,
++    ``R = bonds_per_repeat``), ``(R,)`` or ``(M, R)``.  With ``pendants=False`` only the
++    real backbone atoms are placed and differentiated (``coords is bb``, ``owner`` is
++    ``arange``), which is all the repeat transform needs.
++
++    Returns ``(coords, bb, jac, owner)``: ``coords`` ``(M, n_full, 3)`` in the atom order
++    of ``build_chain(..., cap=False)`` (bit for bit what
++    :func:`polyfind.linegroup._block_coords` builds), ``bb`` ``(M, N+3, 3)`` the real
++    backbone atoms, ``jac`` ``(M, P + R, n_full, 3)`` = ``d coords / d (torsions, angles)``
++    per degree, and ``owner`` ``(n_full,)`` the backbone atom each atom belongs to.
++
++    The derivative is exact for every atom except the pendants of the two *end* backbone
++    atoms (0 and N+2), whose frames hang off the virtual trans atoms and which no consumer
++    of the middle block ever reads; their rows are left as if rigid.
++    """
++    tors_batch = np.atleast_2d(np.asarray(tors_batch, dtype=float))
++    M, nb = tors_batch.shape
++    dih = np.tile(tors_batch, (1, 5))
++    N = dih.shape[1]
++    B, L = polymer.bonds_per_repeat, polymer.bond_length
++    if angles_batch is None:
++        R = B
++    else:
++        ab = np.asarray(angles_batch, dtype=float)
++        R = ab.shape[-1]
++    ang_of = backbone_angle_lookup(polymer, angles_batch, xp=np)
++    bb = _backbone_cached(polymer, dih, angles_batch)  # (M, N+3, 3)
++    if pendants:
++        v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, ang_of(0), 180.0, xp=np)
++        v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, ang_of(N + 2), 180.0, xp=np)
++        bb_ext = np.concatenate([np.broadcast_to(v0, (M, 3))[:, None], bb, np.broadcast_to(v1, (M, 3))[:, None]], axis=1)
++        widths = [1 + polymer.backbone[k % B].n_pendant_atoms for k in range(N + 3)]
++        starts = np.concatenate([[0], np.cumsum(widths)])
++        n_full = int(starts[-1])
++        coords = np.empty((M, n_full, 3))
++        for k in range(N + 3):
++            spec = polymer.backbone[k % B]
++            x = bb_ext[:, k + 1]
++            at = int(starts[k])
++            coords[:, at] = x
++            at += 1
++            for positions in pendant_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec, xp=np):
++                for pos in positions:
++                    coords[:, at] = pos
++                    at += 1
++        owner = np.repeat(np.arange(N + 3), widths)
++        is_pendant = np.ones(n_full, dtype=bool)
++        is_pendant[starts[:-1]] = False
++    else:
++        coords, n_full = bb, N + 3
++        owner = np.arange(N + 3)
++        is_pendant = np.zeros(n_full, dtype=bool)
++
++    # --- torsions: bond j turns everything owned by atoms >= j + 2 about (r_{j+1}, r_{j+2})
++    a = bb[:, 2 : N + 2]  # (M, N, 3) a point on each bond
++    u = _unit(bb[:, 2 : N + 2] - bb[:, 1 : N + 1])
++    mask_t = (owner[None, :] >= (np.arange(N) + 2)[:, None]).astype(float)  # (N, n_full)
++    g = np.cross(u[:, :, None, :], coords[:, None, :, :] - a[:, :, None, :]) * mask_t[None, :, :, None]
++    jac_t = g.reshape(M, 5, nb, n_full, 3).sum(axis=1)  # one repeat torsion = five instances
++
++    # --- angles: the angle at atom k turns everything owned by atoms > k about n_k through
++    # r_k, and the pendants of atom k itself by half that
++    ks = np.arange(1, N + 2)
++    n = _unit(np.cross(bb[:, ks - 1] - bb[:, ks], bb[:, ks + 1] - bb[:, ks]))  # (M, N+1, 3)
++    w = np.where(owner[None, :] > ks[:, None], 1.0,
++                 np.where((owner[None, :] == ks[:, None]) & is_pendant[None, :], 0.5, 0.0))
++    ga = np.cross(n[:, :, None, :], coords[:, None, :, :] - bb[:, ks][:, :, None, :]) * w[None, :, :, None]
++    jac_a = np.zeros((M, R, n_full, 3))
++    types = ks % R
++    for r in range(R):
++        jac_a[:, r] = ga[:, types == r].sum(axis=1)
++    jac = np.concatenate([jac_t, jac_a], axis=1) * DEG
++    return coords, bb, jac, owner
++
++
++def _vee(S):
++    """Vector of a skew-symmetric matrix, batched over leading axes."""
++    return np.stack([S[..., 2, 1], S[..., 0, 2], S[..., 1, 0]], axis=-1)
++
++
++def _skew_apply(v, X):
++    """``[v]_x X`` i.e. ``v x`` every column-vector of X... here X is (..., n, 3) points: v x X_i."""
++    return np.cross(v[..., None, :], X)
++
++
++def _left_jacobian_inverse(w):
++    """Inverse left Jacobian of SO(3) at rotation vector ``w`` (rad), batched ``(M, 3)`` -> ``(M, 3, 3)``."""
++    th = np.linalg.norm(w, axis=-1)
++    M = w.shape[0]
++    K = np.zeros((M, 3, 3))
++    K[:, 0, 1], K[:, 0, 2], K[:, 1, 0] = -w[:, 2], w[:, 1], w[:, 2]
++    K[:, 1, 2], K[:, 2, 0], K[:, 2, 1] = -w[:, 0], -w[:, 1], w[:, 0]
++    small = th < 1e-6
++    ths = np.where(small, 1.0, th)
++    coef = np.where(small, 1.0 / 12.0, 1.0 / ths ** 2 - (1.0 + np.cos(ths)) / (2.0 * ths * np.sin(ths)))
++    return np.eye(3)[None] - 0.5 * K + coef[:, None, None] * (K @ K)
++
++
++def repeat_transform_jacobian(bb, jac_bb, sx, sy):
++    """The rigid fit between two backbone windows and its derivative.
++
++    ``bb`` is ``(M, n_bb, 3)`` and ``jac_bb`` ``(M, nv, n_bb, 3)``; ``sx``, ``sy`` the two
++    window slices.  Returns a dict with ``R`` ``(M, 3, 3)``, ``t`` ``(M, 3)``, ``c`` ``(M,)``,
++    ``axis`` ``(M, 3)``, ``w`` ``(M, 3)`` the rotation vector (rad) and, per variable,
++    ``delta`` ``(M, nv, 3)`` with ``dR = [delta]_x R``, ``dt`` ``(M, nv, 3)``, ``dc`` ``(M, nv)``,
++    ``daxis`` ``(M, nv, 3)`` and ``dw`` ``(M, nv, 3)`` (rad per unit of the variable).
++
++    ``R``, ``t`` and ``w`` are computed exactly as :func:`polyfind.linegroup.repeat_rotvec`
++    and :func:`polyfind.helix.kabsch` compute them.
++    """
++    X, Y = bb[:, sx], bb[:, sy]
++    pc, qc = X.mean(axis=1), Y.mean(axis=1)
++    Xc, Yc = X - pc[:, None], Y - qc[:, None]
++    H = np.einsum("mij,mik->mjk", Xc, Yc)
++    U, _, Vt = np.linalg.svd(H)
++    d = np.sign(np.linalg.det(np.einsum("mji,mkj->mik", Vt, U)))
++    V = np.transpose(Vt, (0, 2, 1)).copy()
++    V[:, :, 2] *= d[:, None]
++    R = np.einsum("mij,mkj->mik", V, U)  # V D U^T
++    t = qc - np.einsum("mij,mj->mi", R, pc)
++    c = np.linalg.norm(t, axis=1)
++    axis = t / c[:, None]
++    wv = 0.5 * np.stack([R[:, 2, 1] - R[:, 1, 2], R[:, 0, 2] - R[:, 2, 0], R[:, 1, 0] - R[:, 0, 1]], axis=1)
++    s = np.linalg.norm(wv, axis=1)
++    cth = 0.5 * (np.trace(R, axis1=1, axis2=2) - 1.0)
++    theta = np.arctan2(s, cth)
++    scale = np.where(s > 1e-12, theta / np.where(s > 1e-12, s, 1.0), 1.0)
++    w = scale[:, None] * wv
++    # --- derivative of the fit
++    dX, dY = jac_bb[:, :, sx], jac_bb[:, :, sy]
++    dpc, dqc = dX.mean(axis=2), dY.mean(axis=2)
++    dXc, dYc = dX - dpc[:, :, None], dY - dqc[:, :, None]
++    dH = np.einsum("mvij,mik->mvjk", dXc, Yc) + np.einsum("mij,mvik->mvjk", Xc, dYc)
++    Bm = np.einsum("mij,mvjk->mvik", R, dH)
++    rhs = _vee(np.swapaxes(Bm, -1, -2) - Bm)  # (M, nv, 3)
++    A = R @ H
++    Mm = np.trace(A, axis1=1, axis2=2)[:, None, None] * np.eye(3)[None] - A
++    delta = np.swapaxes(np.linalg.solve(Mm, np.swapaxes(rhs, -1, -2)), -1, -2)  # (M, nv, 3)
++    Rpc = np.einsum("mij,mj->mi", R, pc)
++    dt = dqc - np.cross(delta, Rpc[:, None, :]) - np.einsum("mij,mvj->mvi", R, dpc)
++    dc = np.einsum("mi,mvi->mv", t, dt) / c[:, None]
++    daxis = (dt - axis[:, None, :] * dc[:, :, None]) / c[:, None, None]
++    dw = np.einsum("mij,mvj->mvi", _left_jacobian_inverse(w), delta)
++    return dict(R=R, t=t, c=c, axis=axis, w=w, delta=delta, dt=dt, dc=dc, daxis=daxis, dw=dw)
++
++
++def aligned_block_jacobian(coords_block, jac_block, axis, daxis, ref):
++    """Derivative of the aligned repeat coordinates.
++
++    ``coords_block`` ``(M, n, 3)`` are the block's raw coordinates, ``jac_block``
++    ``(M, nv, n, 3)`` their derivative, ``axis``/``daxis`` the repeat axis and its
++    derivative, ``ref`` ``(n, 3)`` the reference frame the block is aligned to.  Returns
++    ``(F, dF)``: the aligned coordinates -- equal to what
++    ``_align_about_z(_orient_block(...))`` produces up to rounding -- and their
++    derivative ``(M, nv, n, 3)``.
++    """
++    M, n, _ = coords_block.shape
++    point = coords_block.mean(axis=1)
++    dpoint = jac_block.mean(axis=2)
++    Rot = np.stack([rotation_to_z(axis[m]) for m in range(M)])  # (M, 3, 3)
++    W = np.einsum("mij,mnj->mni", Rot, coords_block - point[:, None])
++    eps = np.cross(np.einsum("mij,mvj->mvi", Rot, daxis), np.array([0.0, 0.0, 1.0]))  # (M, nv, 3)
++    dW = np.cross(eps[:, :, None, :], W[:, None]) + np.einsum("mij,mvnj->mvni", Rot, jac_block - dpoint[:, :, None])
++    xr, yr = ref[:, 0], ref[:, 1]
++    cw = (W[:, :, 0] * xr + W[:, :, 1] * yr).sum(axis=1)
++    sw = (W[:, :, 0] * yr - W[:, :, 1] * xr).sum(axis=1)
++    th = np.arctan2(sw, cw)
++    dcw = (dW[..., 0] * xr + dW[..., 1] * yr).sum(axis=2)
++    dsw = (dW[..., 0] * yr - dW[..., 1] * xr).sum(axis=2)
++    dth = (cw[:, None] * dsw - sw[:, None] * dcw) / (cw ** 2 + sw ** 2)[:, None]
++    ca, sa = np.cos(th), np.sin(th)
++    F = np.empty_like(W)
++    F[:, :, 0] = ca[:, None] * W[:, :, 0] - sa[:, None] * W[:, :, 1]
++    F[:, :, 1] = sa[:, None] * W[:, :, 0] + ca[:, None] * W[:, :, 1]
++    F[:, :, 2] = W[:, :, 2] - W[:, :, 2].mean(axis=1, keepdims=True) + ref[:, 2].mean()
++    dF = np.empty_like(dW)
++    rx = ca[:, None, None] * dW[..., 0] - sa[:, None, None] * dW[..., 1]
++    ry = sa[:, None, None] * dW[..., 0] + ca[:, None, None] * dW[..., 1]
++    dF[..., 0] = rx - dth[:, :, None] * F[:, None, :, 1]
++    dF[..., 1] = ry + dth[:, :, None] * F[:, None, :, 0]
++    dF[..., 2] = dW[..., 2] - dW[..., 2].mean(axis=2, keepdims=True)
++    return F, dF
+diff --git a/src/polyfind/linegroup.py b/src/polyfind/linegroup.py
+index 6161d45..e58eb57 100644
+--- a/src/polyfind/linegroup.py
++++ b/src/polyfind/linegroup.py
+@@ -64,6 +64,7 @@ from dataclasses import dataclass
+ import numpy as np
+ 
+ from .chain import backbone_angle_lookup, build_backbone, nerf, pendant_positions, substituent_positions
++from .chainjac import aligned_block_jacobian, oligomer_and_jacobian, repeat_transform_jacobian
+ from .helix import HelixParams, canonical_sequence, kabsch, rotation_to_z
+ from .pack import (
+     PeriodicChain,
+@@ -262,9 +263,14 @@ def repeat_chains(
+     to ``pack.repeat_chains_from_torsions``.
+     """
+     tors_batch = np.atleast_2d(np.asarray(torsions_batch, dtype=float))
++    coords_full = _block_coords(polymer, tors_batch, bond_angles)
++    return _assemble_repeat_chains(polymer, name, tors_batch, coords_full, scale14, align_to)
++
++
++def _assemble_repeat_chains(polymer, name, tors_batch, coords_full, scale14, align_to) -> list[PeriodicChain]:
++    """The per-row half of :func:`repeat_chains`: oligomer coordinates -> aligned repeats."""
+     M, nb = tors_batch.shape
+     tpl = _template(polymer, nb)
+-    coords_full = _block_coords(polymer, tors_batch, bond_angles)
+     bb0, atoms0 = _block_atoms(tpl, nb, 0)
+     bb_local = [atoms0.index(k) for k in bb0]
+     scales = _same_site_scales(polymer, tpl, nb, scale14)
+@@ -303,6 +309,38 @@ def repeat_chains(
+     return out
+ 
+ 
++def repeat_chains_and_jacobian(
++    polymer: Polymer,
++    name: str,
++    torsions_batch,
++    bond_angles,
++    align_to,
++    scale14: float = 0.5,
++):
++    """:func:`repeat_chains` plus the analytic Jacobian of what the packer reads from it.
++
++    ``bond_angles`` is ``(R,)`` or ``(M, R)`` and ``align_to`` is required: the derivative
++    is that of the *aligned* coordinates, which is what the refinement differentiates.
++    Returns ``(chains, dcoords, dc, w, dw)`` with ``chains`` exactly what
++    :func:`repeat_chains` builds (same oligomer, same per-row assembly), ``dcoords``
++    ``(M, P + R, n, 3)`` = ``d chain.coords / d (torsions, angles)``, ``dc`` ``(M, P + R)``,
++    ``w`` ``(M, 3)`` the rotation vector of the repeat transform in degrees (its norm is
++    ``chain.rotation_error``) and ``dw`` ``(M, P + R, 3)`` its derivative -- all per degree.
++    See :mod:`polyfind.chainjac`.
++    """
++    tors_batch = np.atleast_2d(np.asarray(torsions_batch, dtype=float))
++    M, nb = tors_batch.shape
++    coords_full, bb, jac, _ = oligomer_and_jacobian(polymer, tors_batch, bond_angles, pendants=True)
++    chains = _assemble_repeat_chains(polymer, name, tors_batch, coords_full, scale14, align_to)
++    tpl = _template(polymer, nb)
++    _, atoms0 = _block_atoms(tpl, nb, 0)
++    sx, sy = _windows(nb)
++    tr = repeat_transform_jacobian(bb, jac[:, :, tpl.backbone], sx, sy)
++    ref = align_to.coords if isinstance(align_to, PeriodicChain) else np.asarray(align_to, dtype=float)
++    _, dF = aligned_block_jacobian(coords_full[:, atoms0], jac[:, :, atoms0], tr["axis"], tr["daxis"], ref)
++    return chains, dF, tr["dc"], np.degrees(tr["w"]), np.degrees(tr["dw"])
++
++
+ # ------------------------------------------------------------------ parametrisation
+ @dataclass
+ class LineGroup:
+@@ -325,6 +363,7 @@ class LineGroup:
+     tol: float = 1e-9
+     max_newton: int = 12
+     last_residual: float = 0.0
++    n_builds: int = 0  # backbone builds spent in closure solves (diagnostics)
+ 
+     # --- construction -------------------------------------------------------
+     @property
+@@ -373,47 +412,100 @@ class LineGroup:
+         r = self._residual(big).reshape(M, k, 2, 3)
+         return np.transpose((r[:, :, 0] - r[:, :, 1]) / (2 * h), (0, 2, 1))
+ 
++    @property
++    def tmat(self) -> np.ndarray:
++        """``d torsions / d (pattern parameters)``, ``(P, n_t)``: ``torsions = tmat @ params``."""
++        T = np.zeros((len(self.pattern.group), self.pattern.n_params))
++        T[np.arange(len(self.pattern.group)), np.asarray(self.pattern.group)] = np.asarray(self.pattern.signs)
++        return T
++
++    def _residual_and_jac(self, Y):
++        """The residual (M, 3) and its closed-form Jacobian ``d r / d y`` (M, 3, n_y), deg per deg.
++
++        One backbone build per call, the same one :func:`repeat_rotvec` makes; the
++        residual is bit for bit :meth:`_residual`'s.  See :mod:`polyfind.chainjac`.
++        """
++        tors, angles = self._split(Y)
++        nb = tors.shape[1]
++        _, bb, jac, _ = oligomer_and_jacobian(self.polymer, tors, angles, pendants=False)
++        sx, sy = _windows(nb)
++        tr = repeat_transform_jacobian(bb, jac, sx, sy)
++        dw = np.degrees(tr["dw"])  # (M, P + R, 3), per degree of torsion / angle
++        J = np.concatenate([np.einsum("mpi,pt->mit", dw[:, :nb], self.tmat), np.transpose(dw[:, nb:], (0, 2, 1))], axis=2)
++        return np.degrees(tr["w"]), J
++
+     def _close(self, Y, max_step: float = 20.0):
+         """Newton on y[dep] until the repeat transform is a pure translation.
+ 
+-        Damped: a step that makes a row's residual worse is halved for that row, which
+-        keeps far-from-reference parameters (a helix pushed away from commensurability,
+-        say) from running away.  A row that still cannot be closed keeps its residual,
+-        and the caller's penalty term -- inactive at 1e-6 deg, enormous at 10 deg --
+-        pushes the optimiser back out of that region.
++        The Jacobian is closed-form and comes with every residual (one backbone build
++        each, no finite differences), so an iteration costs one build when the full
++        step is accepted.  Damped: a step that makes a row's residual worse is halved
++        for that row, which keeps far-from-reference parameters (a helix pushed away
++        from commensurability, say) from running away.  A row that still cannot be
++        closed keeps its residual, and the caller's penalty term -- inactive at 1e-6
++        deg, enormous at 10 deg -- pushes the optimiser back out of that region.
++
++        Returns ``(Y, iterations, J)`` with ``J`` the closure Jacobian ``(M, 3, n_y)`` at
++        the returned ``Y``.
+         """
+         Y = np.array(Y, dtype=float)
+-        r = self._residual(Y)
++        r, J = self._residual_and_jac(Y)
++        self.n_builds += 1
+         for it in range(self.max_newton):
+             norm = np.linalg.norm(r, axis=1)
+             if norm.max() < self.tol:
+                 self.last_residual = float(norm.max())
+-                return Y, it
+-            jac = np.broadcast_to(self.jac0, (Y.shape[0],) + self.jac0.shape) if it == 0 else self._jacobian(Y)
+-            step = np.clip(-np.einsum("mij,mj->mi", np.linalg.pinv(jac), r), -max_step, max_step)
+-            Ybest, rbest = Y.copy(), r.copy()
++                return Y, it, J
++            step = np.clip(-np.einsum("mij,mj->mi", np.linalg.pinv(J[:, :, self.dep]), r), -max_step, max_step)
++            Ybest, rbest, Jbest = Y.copy(), r.copy(), J.copy()
+             for _ in range(4):
+                 Yt = Y.copy()
+                 Yt[:, self.dep] += step
+-                rt = self._residual(Yt)
+-                take = np.linalg.norm(rt, axis=1) < np.linalg.norm(rbest, axis=1)
+-                Ybest[take], rbest[take] = Yt[take], rt[take]
++                rt, Jt = self._residual_and_jac(Yt)
++                self.n_builds += 1
++                # a row that is already closed stays put, so that its result does not
++                # depend on which other rows share its batch
++                take = (np.linalg.norm(rt, axis=1) < np.linalg.norm(rbest, axis=1)) & (norm >= self.tol)
++                Ybest[take], rbest[take], Jbest[take] = Yt[take], rt[take], Jt[take]
+                 bad = (np.linalg.norm(rbest, axis=1) >= norm) & (norm > self.tol)
+                 if not bad.any():
+                     break
+                 step = np.where(bad[:, None], 0.5 * step, step)
+-            Y, r = Ybest, rbest
++            Y, r, J = Ybest, rbest, Jbest
+         self.last_residual = float(np.linalg.norm(r, axis=1).max())
+-        return Y, self.max_newton
++        return Y, self.max_newton, J
+ 
+     def expand(self, x) -> tuple[np.ndarray, np.ndarray]:
+         """Free parameters (n,) or (M, n) -> torsions (M, P) and backbone angles (M, B)."""
+         X = np.atleast_2d(np.asarray(x, dtype=float))
+         Y = np.repeat(self.y0[None], X.shape[0], axis=0)
+         Y[:, self.free] += X
+-        Y, _ = self._close(Y)
++        Y, _, _ = self._close(Y)
+         return self._split(Y)
+ 
++    def expand_jac(self, x) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
++        """:meth:`expand` plus ``d (torsions, angles) / d x``, ``(M, P + R, n_params)``.
++
++        The closure is an implicit function: ``r(y) = 0`` with ``y[dep]`` solved for, so
++        ``d y[dep] / d x = -pinv(J[:, dep]) J[:, free]`` at the solution, with ``J`` the
++        closure Jacobian the solve ends on.  Torsions follow the pattern's linear map.
++        """
++        X = np.atleast_2d(np.asarray(x, dtype=float))
++        M = X.shape[0]
++        Y = np.repeat(self.y0[None], M, axis=0)
++        Y[:, self.free] += X
++        Y, _, J = self._close(Y)
++        tors, angles = self._split(Y)
++        n_y, nt = len(self.y0), self.pattern.n_params
++        dYdx = np.zeros((M, n_y, len(self.free)))
++        dYdx[:, self.free, np.arange(len(self.free))] = 1.0
++        if len(self.dep):
++            dYdx[:, self.dep] = -np.einsum("mij,mjk->mik", np.linalg.pinv(J[:, :, self.dep]), J[:, :, self.free])
++        dVdy = np.zeros((tors.shape[1] + angles.shape[1], n_y))
++        dVdy[: tors.shape[1], :nt] = self.tmat
++        dVdy[tors.shape[1] :, nt:] = np.eye(n_y - nt)
++        return tors, angles, np.einsum("vy,myk->mvk", dVdy, dYdx)
++
+     def chains(self, x, name: str | None = None, align_to=None, scale14: float = 0.5) -> list[PeriodicChain]:
+         tors, angles = self.expand(x)
+         return repeat_chains(self.polymer, name or self.name, tors, angles, scale14=scale14, align_to=align_to)
+@@ -458,7 +550,7 @@ def line_group(
+     # to be solved for; they are picked greedily, torsion parameters before backbone
+     # angles (so the angles stay free wherever the symmetry allows it) and within each
+     # group by how much a column adds to the span already selected.
+-    J = lg._jacobian(y0[None], cols=np.arange(len(y0)))[0]  # (3, n_y)
++    J = lg._residual_and_jac(y0[None])[1][0]  # (3, n_y), closed-form
+     sv = np.linalg.svd(J, compute_uv=False)
+     k = int((sv > 1e-4 * max(sv.max(), 1e-12)).sum())
+     dep, basis = [], np.zeros((3, 0))
+@@ -474,7 +566,7 @@ def line_group(
+     lg.dep = np.array(sorted(dep))
+     lg.free = np.array([j for j in range(len(y0)) if j not in dep])
+     lg.jac0 = J[:, lg.dep]
+-    Y, iters = lg._close(y0[None])
++    Y, iters, _ = lg._close(y0[None])
+     if iters >= lg.max_newton or np.abs(Y[0] - y0).max() > 1e-6:
+         raise LineGroupError(f"closure solve did not reproduce the start conformation of {name!r}")
+     return lg
+diff --git a/src/polyfind/pack.py b/src/polyfind/pack.py
+index 0c5273c..0c02892 100644
+--- a/src/polyfind/pack.py
++++ b/src/polyfind/pack.py
+@@ -971,6 +971,12 @@ class CrystalPacker:
+         phi = np.deg2rad(np.asarray(dihedrals, dtype=float))
+         return float((0.5 * (V1 * (1 + np.cos(phi)) + V2 * (1 - np.cos(2 * phi)) + V3 * (1 + np.cos(3 * phi)))).sum())
+ 
++    def torsion_energy_grad(self, dihedrals) -> np.ndarray:
++        """``d torsion_energy / d dihedrals`` (kcal/mol per **degree**), one entry per dihedral."""
++        V1, V2, V3 = self.torsion
++        phi = np.deg2rad(np.asarray(dihedrals, dtype=float))
++        return 0.5 * (-V1 * np.sin(phi) + 2.0 * V2 * np.sin(2 * phi) - 3.0 * V3 * np.sin(3 * phi)) * (np.pi / 180.0)
++
+     # --- dipole, polarization and the applied field --------------------------------
+     @property
+     def cell_charge(self) -> float:
+diff --git a/src/polyfind/refine.py b/src/polyfind/refine.py
+index 7a99bc9..6f01e14 100644
+--- a/src/polyfind/refine.py
++++ b/src/polyfind/refine.py
+@@ -34,11 +34,16 @@ The objective is smooth, so the default method is L-BFGS-B with gradients, and
+     kernel row.  The cell variables are then analytic outright.  For the
+     conformational variables the remaining link is ``d(coords, c)/d(shape)``, which
+     runs through the NeRF build, the closure solve and the Kabsch alignment; that
+-    Jacobian is taken by central differences of the *geometry only*, contracted
+-    against the exact ``dE/d(coords)`` and ``dE/dc``.  No kernel row is spent on it,
+-    so an iteration costs one row instead of ``1 + 2 n_vars`` (29 for the gamma
+-    chain), and the chains of the displacement batch are built in the single NeRF
+-    pass they were built in before.
++    Jacobian is closed-form too (:mod:`polyfind.chainjac`: rotation generators for
++    the torsions and bond angles, the derivative of the rigid fit, the aligning frame,
++    and the implicit-function derivative of the closure solve), contracted against the
++    exact ``dE/d(coords)`` and ``dE/dc``.  An iteration therefore builds **one** chain
++    and evaluates one kernel row.
++``gradient="fd-geometry"``
++    The previous analytic route: the same exact ``dE/d(coords)``, ``dE/dc``, but the
++    geometry Jacobian by central differences over a batch of ``1 + 2 n_shape`` chain
++    builds (31 for the unpatterned TTG+TG-G-TG+ chain).  Kept as the reference the
++    closed-form route is checked against.
+ ``gradient="fd"``
+     The original route: central differences of the *energy*, evaluated as one batched
+     kernel call of ``1 + 2 n_vars`` configurations per iteration -- the cell
+@@ -65,7 +70,7 @@ from dataclasses import dataclass, field
+ import numpy as np
+ from scipy.optimize import minimize
+ 
+-from .linegroup import LineGroupError, line_group, repeat_chains, wrap180
++from .linegroup import LineGroupError, line_group, repeat_chains, repeat_chains_and_jacobian, wrap180
+ from .pack import FD_STEPS, CrystalPacker, PackResult, PeriodicChain
+ from .polymers import Polymer
+ 
+@@ -175,8 +180,8 @@ def refine_crystal(
+         raise ValueError(f"unknown refine method {method!r}")
+     if parametrisation not in ("linegroup", "free"):
+         raise ValueError(f"unknown parametrisation {parametrisation!r}")
+-    if gradient not in ("analytic", "fd"):
+-        raise ValueError(f"unknown refine gradient {gradient!r} (expected 'analytic' or 'fd')")
++    if gradient not in ("analytic", "fd-geometry", "fd"):
++        raise ValueError(f"unknown refine gradient {gradient!r} (expected 'analytic', 'fd-geometry' or 'fd')")
+     if angle_stiffness is None:
+         has_bend = valence is not None and bool(valence.angle_table())
+         angle_stiffness = 0.0 if has_bend else 105.0
+@@ -303,7 +308,63 @@ def refine_crystal(
+                     batch.append(sj)
+             return chains_for(np.array(batch) if n_shape else s[None])
+ 
++        def shape_jacobian(s):
++            """The centre conformation and ``d (torsions, angles) / d s``, ``(P + B, n_shape)``."""
++            if mode == "linegroup":
++                tors, angs, dV = lg.expand_jac(s[None])
++                return tors, angs, dV[0]
++            tors, angs = conformations(s[None])
++            P = len(tors0)
++            dV = np.zeros((P + B, n_shape))
++            dV[:P, :P] = np.eye(P)
++            if refine_angles:
++                dV[P:, P:] = np.eye(B)
++            return tors, angs, dV
++
++        def restraints_grad(tors, angles, w_deg, dw_deg):
++            """``d restraints / d (torsions, angles)``, per degree, at one conformation.
++
++            ``w_deg`` is the rotation vector of the repeat transform (its norm is the
++            ``rotation_error`` the penalty squares) and ``dw_deg`` its derivative.
++            """
++            tors, angles = np.asarray(tors, dtype=float), np.asarray(angles, dtype=float)
++            g = np.empty(len(tors) + len(angles))
++            # pen_rot * |w|^2  ->  2 pen_rot w . dw   (smooth through w = 0, unlike arccos)
++            g[:] = 2.0 * pen_rot * (dw_deg @ w_deg)
++            d = wrap180(tors - tors0)
++            g[: len(tors)] += 20.0 * np.maximum(np.abs(d) - max_torsion_change, 0.0) * np.sign(d)
++            da = angles - angles0
++            g[len(tors):] += 20.0 * np.maximum(np.abs(da) - max_angle_change, 0.0) * np.sign(da)
++            g[len(tors):] += angle_stiffness * np.deg2rad(da) * (np.pi / 180.0) * n_repeats * start.n_chains
++            return g
++
+         def value_and_grad_analytic(x):
++            """One chain build and one kernel row: every derivative is closed-form."""
++            count["n"] += 1
++            s, p = unpack(x)
++            if not n_shape:
++                chains, tors, angs = chains_for(s[None])
++                packer.update_chain(chains[0])
++                E, g_cell, gX, gc = packer.energy_and_grad(p)
++                return float(E) + restraints(tors[0], angs[0], chains[0]), g_cell[cell_idx]
++            tors, angs, dV = shape_jacobian(s)
++            chains, dX, dc, w, dw = repeat_chains_and_jacobian(polymer, start.chain, tors, angs, ref)
++            packer.update_chain(chains[0])
++            E, g_cell, gX, gc = packer.energy_and_grad(p)
++            grad = np.empty(n_cell + n_shape)
++            grad[:n_cell] = g_cell[cell_idx]
++            # dE/dcoords and dE/dc are exact from the kernel; the geometry Jacobian
++            # d(coords, c)/d(torsions, angles) is exact from the build (chainjac), and so
++            # are the torsion energy and the restraints -- so no displaced chain is built
++            gv = np.einsum("ni,vni->v", gX, dX[0]) + gc * dc[0]
++            gv[: len(tors0)] += packer.torsion_energy_grad(tors[0]) * packer.n_chains
++            gv += restraints_grad(tors[0], angs[0], w[0], dw[0])
++            grad[n_cell:] = gv @ dV
++            return float(E) + restraints(tors[0], angs[0], chains[0]), grad
++
++        def value_and_grad_fdgeom(x):
++            """The previous analytic route: exact ``dE/d(coords, c)`` against a central
++            difference of the geometry over ``1 + 2 n_shape`` chain builds."""
+             count["n"] += 1
+             s, p = unpack(x)
+             chains, tors, angs = shape_batch(s)
+@@ -367,13 +428,15 @@ def refine_crystal(
+             packer.update_chain(chains[0])
+             return float(packer.energy(p[None])[0]) + restraints(tors[0], angs[0], chains[0])
+ 
+-        value_and_grad = value_and_grad_analytic if gradient == "analytic" else value_and_grad_fd
++        value_and_grad = {"analytic": value_and_grad_analytic, "fd-geometry": value_and_grad_fdgeom,
++                          "fd": value_and_grad_fd}[gradient]
+         if probe is not None:
+             shape_labels = [] if not n_shape else (
+                 lg.labels() if mode == "linegroup" else
+                 [f"t{j}" for j in range(len(tors0))] + ([f"angle{j}" for j in range(B)] if refine_angles else []))
+             probe.update(
+                 x0=x0.copy(), value=value_only, value_and_grad_analytic=value_and_grad_analytic,
++                value_and_grad_fdgeom=value_and_grad_fdgeom,
+                 value_and_grad_fd=value_and_grad_fd, n_cell=n_cell, n_shape=n_shape, mode=mode,
+                 cell_idx=list(cell_idx), s_step=np.asarray(s_step, dtype=float), packer=packer,
+                 labels=[CrystalPacker.PARAMS[i] for i in cell_idx] + shape_labels,
+diff --git a/tests/test_chainjac.py b/tests/test_chainjac.py
+new file mode 100644
+index 0000000..9e06f24
+--- /dev/null
++++ b/tests/test_chainjac.py
+@@ -0,0 +1,100 @@
++"""The closed-form Jacobian of the chain build (polyfind.chainjac) against finite differences."""
++import numpy as np
++import pytest
++
++from polyfind.chainjac import aligned_block_jacobian, oligomer_and_jacobian, repeat_transform_jacobian
++from polyfind.linegroup import _block_coords, _windows, line_group, repeat_chains, repeat_chains_and_jacobian, repeat_rotvec
++from polyfind.pack import CrystalPacker, _block_atoms, _template, periodic_chain
++from polyfind.polymers import PE, PVDF, THREE_STATE
++from polyfind.refine import refine_crystal
++
++T, GP, GM = 0, 1, 2
++CASES = [
++    (PE, np.array([180.0, 172.0]), np.array([112.0, 114.0])),
++    (PVDF, np.array([175.0, -176.0]), np.array([113.0, 116.0])),
++    (PVDF, np.array([178.0, 52.0, -177.0, -49.0]), np.array([114.5, 112.0])),
++    (PVDF, np.array([175.0, 178.0, -179.0, 60.0, -176.0, -177.0, 179.0, -58.0]), np.array([115.0, 113.0])),
++    (PVDF, np.array([179.0, 176.0, 55.0, 178.0, -62.0, 175.0]), np.array([114.0, 116.0])),
++]
++
++
++def _displaced(tors, angs, v, h):
++    tp, tm, ap, am = tors.copy(), tors.copy(), angs.copy(), angs.copy()
++    if v < len(tors):
++        tp[v] += h
++        tm[v] -= h
++    else:
++        ap[v - len(tors)] += h
++        am[v - len(tors)] -= h
++    return tp, ap, tm, am
++
++
++@pytest.mark.parametrize("poly,tors,angs", CASES)
++def test_oligomer_coordinates_are_bit_identical_and_their_jacobian_matches_finite_differences(poly, tors, angs):
++    C, bb, J, owner = oligomer_and_jacobian(poly, tors[None], angs[None])
++    assert np.array_equal(C, _block_coords(poly, tors[None], angs[None]))
++    N = 5 * len(tors)
++    keep = ~((owner == 0) | (owner == N + 2))  # the end atoms' pendants are documented as not covered
++    h = 1e-4
++    for v in range(len(tors) + len(angs)):
++        tp, ap, tm, am = _displaced(tors, angs, v, h)
++        fd = (_block_coords(poly, tp[None], ap[None])[0] - _block_coords(poly, tm[None], am[None])[0]) / (2 * h)
++        np.testing.assert_allclose(J[0, v][keep], fd[keep], atol=1e-7)
++
++
++@pytest.mark.parametrize("poly,tors,angs", CASES)
++def test_repeat_transform_and_aligned_coordinates_match_finite_differences(poly, tors, angs):
++    P = len(tors)
++    C, bb, J, _ = oligomer_and_jacobian(poly, tors[None], angs[None])
++    tpl = _template(poly, P)
++    sx, sy = _windows(P)
++    tr = repeat_transform_jacobian(bb, J[:, :, tpl.backbone], sx, sy)
++    # the rotation vector is the one repeat_rotvec computes, bit for bit
++    assert np.array_equal(np.degrees(tr["w"]), repeat_rotvec(poly, tors[None], angs[None]))
++    ref = repeat_chains(poly, "x", tors[None], angs)[0]
++    chains, dX, dc, w, dw = repeat_chains_and_jacobian(poly, "x", tors[None], angs, ref)
++    plain = repeat_chains(poly, "x", tors[None], angs, align_to=ref)[0]
++    assert np.array_equal(chains[0].coords, plain.coords) and chains[0].c == plain.c
++    assert np.linalg.norm(w[0]) == pytest.approx(plain.rotation_error, abs=1e-9)
++    h = 1e-4
++    for v in range(P + len(angs)):
++        tp, ap, tm, am = _displaced(tors, angs, v, h)
++        fdw = (repeat_rotvec(poly, tp[None], ap[None])[0] - repeat_rotvec(poly, tm[None], am[None])[0]) / (2 * h)
++        np.testing.assert_allclose(dw[0, v], fdw, atol=1e-7)
++        cp = repeat_chains(poly, "x", tp[None], ap, align_to=ref)[0]
++        cm = repeat_chains(poly, "x", tm[None], am, align_to=ref)[0]
++        assert dc[0, v] == pytest.approx((cp.c - cm.c) / (2 * h), abs=1e-8)
++        np.testing.assert_allclose(dX[0, v], (cp.coords - cm.coords) / (2 * h), atol=1e-7)
++
++
++@pytest.mark.parametrize("seq", [[T, T], [T, GP, T, GM], [T, T, T, GP, T, T, T, GM], [T, GP] * 3])
++def test_closure_jacobian_is_the_finite_difference_one_and_the_solve_needs_no_extra_builds(seq):
++    chain = periodic_chain(PVDF, seq, THREE_STATE)
++    lg = line_group(PVDF, chain.name, chain.dihedrals, states=PVDF.states, bond_angles=np.array([114.0, 114.0]))
++    rng = np.random.default_rng(1)
++    Y = np.repeat(lg.y0[None], 3, axis=0)
++    Y[:, lg.free] += rng.uniform(-10, 10, (3, lg.n_params))
++    r, J = lg._residual_and_jac(Y)
++    assert np.array_equal(r, lg._residual(Y))
++    np.testing.assert_allclose(J[:, :, lg.dep], lg._jacobian(Y), atol=1e-6, rtol=1e-6)
++    lg.n_builds = 0
++    Yc, it, Jc = lg._close(Y)
++    tors, angs = lg._split(Yc)
++    assert np.linalg.norm(repeat_rotvec(PVDF, tors, angs), axis=1).max() < 1e-9
++    assert it < lg.max_newton
++    assert lg.n_builds <= it + 1 + 3  # one build per residual; at most a few damping trials
++
++
++def test_analytic_route_reproduces_the_geometry_difference_route_and_costs_one_build():
++    chain = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
++    start = CrystalPacker(chain).result(np.array([5.29, 8.99, 90.0, 209.5, 150.0, 0.40, 1.0]))
++    for par in ("linegroup", "free"):
++        probe = {}
++        refine_crystal(PVDF, start, maxfev=1, maxiter=1, parametrisation=par, gamma_free=True, probe=probe)
++        x = probe["x0"] + 0.5
++        E, g = probe["value_and_grad_analytic"](x)
++        Eg, gg = probe["value_and_grad_fdgeom"](x)
++        assert E == Eg == probe["value"](x)
++        np.testing.assert_allclose(g, gg, atol=2e-5 * max(np.abs(g).max(), 1e-6))
++    with pytest.raises(ValueError):
++        refine_crystal(PVDF, start, gradient="fd-geom")
