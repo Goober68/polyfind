@@ -195,7 +195,7 @@ def phonon_stage(full, plain, params, label: str, h: float, n_report: int = 12) 
     """Curvature of one cell on the pinned-stretch phonon packer: at the rigid-chain cell, then relaxed."""
     t0 = time.time()
     pk = packer_with_built_bond_lengths(full)
-    e_cell, e_pack, rel = check_known_answer(pk, params)
+    e_cell, e_pack, rel_ka = check_known_answer(pk, params)
     P0, latn = placed_coordinates(pk, params)
     N = pk.N
     q = np.asarray(plain._q_cell, dtype=float)[:N]  # the fixed charges, for a dipole diagnostic only
@@ -203,7 +203,23 @@ def phonon_stage(full, plain, params, label: str, h: float, n_report: int = 12) 
     mu0 = q @ P0
     ft = force_terms(pk, params, P0, latn)
     ph0 = phonons_gamma(pk, params, h=h, Pn=P0, latn=latn, asr="project", n_report=n_report)
-    Pn, E, gmax = relax_all_atom(pk, params, Pn=P0, latn=latn)
+    rel = relax_all_atom(pk, params, Pn=P0, latn=latn)
+    relaxation = {"converged": bool(rel.converged), "max_force": repr(float(rel.max_force)), "gtol": rel.gtol,
+                  "message": rel.message, "n_iterations": rel.n_iterations, "n_evaluations": rel.n_evaluations,
+                  "lbfgs_max_force": repr(float(rel.lbfgs_max_force)), "newton_steps": rel.newton_steps,
+                  "energy": repr(float(rel.energy))}
+    print(f"    [{label}] relaxation {rel.summary()}")
+    if not rel.converged:
+        # A Hessian belongs to a stationary point; an unaccepted geometry gets its compact
+        # diagnosis recorded and no spectrum (the relaxation owns the criterion, not this script).
+        print(f"    [{label}] not a stationary point to the requested tolerance: no relaxed Hessian taken")
+        return {"label": label, "atoms": int(N), "known_answer_rel": float(f"{rel_ka:.2e}"),
+                "params": [round(float(v), 4) for v in params],
+                "rigid": {"energy": round(float(e_pack), 6), "max_force": float(f"{ft['total']:.3e}"),
+                          "n_imaginary": int(ph0.n_imaginary), "lowest_optical": [round(float(v), 2) for v in ph0.optical[:6]]},
+                "relaxation": relaxation, "error": f"relaxation not accepted: {rel.summary()}",
+                "seconds": round(time.time() - t0, 1)}
+    Pn, E, gmax = rel.Pn, rel.energy, rel.max_force
     mu1 = q @ Pn
     # where the atoms went, chain by chain: the mean displacement of each chain (a rigid slide or
     # shift) and the largest internal displacement once that mean is removed
@@ -217,7 +233,7 @@ def phonon_stage(full, plain, params, label: str, h: float, n_report: int = 12) 
     ph1 = phonons_gamma(pk, params, h=h, Pn=Pn, latn=latn, asr="project", n_report=n_report)
     soft_t = _softest(ph1, True)
     soft_rc = _softest(ph1, True, True)
-    rec = {"label": label, "atoms": int(N), "known_answer_rel": float(f"{rel:.2e}"),
+    rec = {"label": label, "atoms": int(N), "known_answer_rel": float(f"{rel_ka:.2e}"), "relaxation": relaxation,
            "params": [round(float(v), 4) for v in params],
            "rigid": {"energy": round(float(e_pack), 6), "max_force": float(f"{ft['total']:.3e}"),
                      "bond_strain": round(float(ft["bond_strain"]), 4), "angle_strain_deg": round(float(ft["angle_strain"]), 2),
@@ -236,7 +252,7 @@ def phonon_stage(full, plain, params, label: str, h: float, n_report: int = 12) 
                        "softest_rigid_chain_transverse": None if soft_rc is None else _mode_row(soft_rc),
                        "dipole_per_monomer": round(float(np.linalg.norm(mu1)) / n_mon, 4)},
            "seconds": round(time.time() - t0, 1)}
-    print(f"    [{label}] {N} atoms; known-answer {rel:.1e}; rigid cell: max force {ft['total']:.2e}, "
+    print(f"    [{label}] {N} atoms; known-answer {rel_ka:.1e}; rigid cell: max force {ft['total']:.2e}, "
           f"{ph0.n_imaginary} imaginary, lowest optical {' '.join(f'{v:.1f}' for v in ph0.optical[:4])} cm^-1; "
           f"|mu|/mon {rec['rigid']['dipole_per_monomer']:.4f} e.A")
     print(f"    [{label}] relaxed at fixed cell: lowered {e_pack - E:.4f} kcal/mol, max displacement "

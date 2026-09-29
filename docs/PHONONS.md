@@ -102,6 +102,17 @@ stiff the lattice is against the motions that switching and relaxation would use
 built-length-pinned stretch minima define a changed Hamiltonian; results under it are labelled
 as such and are not to be mixed with fitted-stretch energies or modes.
 
+## The relaxation's acceptance, 2026-09-14
+
+`relax_all_atom` now returns a `Relaxation` rather than a bare geometry: the largest unrounded
+residual force, L-BFGS-B's termination message and counts, up to three Newton polishes (a
+finite-difference Hessian solved in the translation-free subspace, kept only when it lowers the
+force) and `converged`, true only when the force is finite and within the requested `gtol`.
+A Hessian consumer must require `converged`; `examples/crystal_phonons.py` and
+`examples/screen_phonons.py` do. Dipole's review of the screen record found a third of its
+cells a few 1e-6 above the tolerance because the old function discarded termination; the
+criterion is unchanged, the acceptance is now the function's own.
+
 ## Across the screen, 2026-09-14
 
 `docs/SCREEN_PHONONS.md` runs the same Hessian on the all-trans polar and exact antipolar

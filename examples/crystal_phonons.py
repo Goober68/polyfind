@@ -104,7 +104,11 @@ def report(packer, params, label: str, h: float, n_lowest: int = 6) -> None:
           "torsions, backbone angles), not over every atom")
     stage(packer, params, P0, latn, h, n_lowest)
     print("\n--- (2) every atom relaxed at fixed cell against the potential as fitted")
-    Pn, E, gmax = relax_all_atom(packer, params, Pn=P0, latn=latn)
+    rel = relax_all_atom(packer, params, Pn=P0, latn=latn)
+    Pn, E, gmax = rel
+    print("relaxation " + rel.summary())
+    if not rel.converged:
+        raise RuntimeError("the all-atom relaxation was not accepted; a Hessian here would not be at a stationary point")
     print(f"E {E:.6f} kcal/mol (reference {e_pack:.6f}, lowered by {e_pack - E:.6f}), max |dE/dP| {gmax:.1e}, "
           f"max displacement {np.abs(Pn - P0).max():.4f} A -- the fitted stretch r0 values are not bond potentials "
           "(see polyfind.phonon.packer_with_built_bond_lengths), so this geometry has its C-F bonds stretched")
@@ -114,7 +118,11 @@ def report(packer, params, label: str, h: float, n_lowest: int = 6) -> None:
     pk3 = packer_with_built_bond_lengths(packer)
     e3 = check_known_answer(pk3, params)
     print(f"known-answer check on the modified packer: relative difference {e3[2]:.1e}")
-    Pn, E, gmax = relax_all_atom(pk3, params, Pn=P0, latn=latn)
+    rel = relax_all_atom(pk3, params, Pn=P0, latn=latn)
+    Pn, E, gmax = rel
+    print("relaxation " + rel.summary())
+    if not rel.converged:
+        raise RuntimeError("the all-atom relaxation was not accepted; a Hessian here would not be at a stationary point")
     print(f"E {E:.6f} kcal/mol (its reference {e3[1]:.6f}, lowered by {e3[1] - E:.6f}), max |dE/dP| {gmax:.1e}, "
           f"max displacement {np.abs(Pn - P0).max():.4f} A")
     stage(pk3, params, Pn, latn, h, n_lowest)

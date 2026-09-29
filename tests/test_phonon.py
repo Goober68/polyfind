@@ -169,8 +169,11 @@ def test_relaxed_cell_has_three_zero_modes_and_no_imaginary_ones():
     """At a minimum over every atom the Hessian is positive semi-definite with exactly the three
     translations null; projecting the acoustic sum rule then moves no optical mode."""
     pk = _fitted()
-    Pn, E, gmax = PH.relax_all_atom(pk, P0)
-    assert gmax < 1e-4
+    rel = PH.relax_all_atom(pk, P0)
+    Pn, E, gmax = rel  # the tuple form older callers use
+    assert rel.converged and rel.max_force <= rel.gtol == 1e-6
+    assert gmax == rel.max_force and E == rel.energy and np.isfinite(E)
+    assert "accepted" in rel.summary() and "NOT" not in rel.summary()
     latn = PH.placed_coordinates(pk, P0)[1]
     raw = PH.phonons_gamma(pk, P0, Pn=Pn, latn=latn)
     assert raw.n_imaginary == 0 and raw.n_zero == 3
@@ -197,3 +200,21 @@ def test_asr_must_be_none_or_project():
     pk = CrystalPacker(periodic_chain(PVDF, [T, T], THREE_STATE), n_chains=2)
     with pytest.raises(ValueError):
         PH.phonons_gamma(pk, P0, asr="fix")
+
+
+def test_relaxation_owns_its_acceptance_and_the_newton_polish_meets_gtol():
+    """Stopped early, L-BFGS-B leaves a force above gtol and the result says so; the Newton
+    polish from the same point brings the *unrounded* force under gtol without loosening it."""
+    pk = _fitted()
+    early = PH.relax_all_atom(pk, P0, maxiter=14, newton=0)
+    assert not early.converged and early.max_force > early.gtol and early.newton_steps == 0
+    assert early.n_iterations <= 14 and "NOT accepted" in early.summary()
+    polished = PH.relax_all_atom(pk, P0, maxiter=14, newton=3)
+    assert polished.converged and polished.max_force <= 1e-6
+    assert 1 <= polished.newton_steps <= 3 and polished.lbfgs_max_force == early.max_force
+    assert polished.energy <= early.energy + 1e-9
+    # the polish pins the mass centre like L-BFGS-B does
+    m = PH.atom_masses(pk)
+    P_ref = PH.placed_coordinates(pk, P0)[0]
+    com = lambda P: (m[:, None] * P).sum(axis=0) / m.sum()  # noqa: E731
+    assert np.allclose(com(polished.Pn), com(P_ref), atol=1e-9)

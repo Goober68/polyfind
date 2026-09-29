@@ -695,14 +695,66 @@ def phonons_gamma(packer, params, h: float = 1e-3, asr: str = "none", Pn=None, l
     return phonons_from_hessian(packer, hess, asr=asr, zero_tol=zero_tol, n_report=n_report)
 
 
-def relax_all_atom(packer, params, Pn=None, latn=None, gtol: float = 1e-6, maxiter: int = 2000) -> tuple:
-    """Minimise :func:`cell_energy` over every placed coordinate at fixed cell: ``(Pn, E, max |g|)``.
+@dataclass
+class Relaxation:
+    """What :func:`relax_all_atom` accepted, and the evidence for it.
+
+    ``converged`` is the acceptance: the largest unrounded force ``max_force`` (kcal/(mol A))
+    at the returned geometry is finite and no larger than the requested ``gtol``, and so is
+    the energy.  A consumer that needs a stationary point (a Hessian) must check it rather
+    than the geometry.  ``message`` is L-BFGS-B's own termination message, ``n_iterations`` /
+    ``n_evaluations`` its counts, ``newton_steps`` how many Newton polishes followed (each one
+    a finite-difference Hessian and a solve in the translation-free subspace) and ``lbfgs_max_force``
+    the residual before them.  Unpacks as ``(Pn, energy, max_force)`` for older callers.
+    """
+
+    Pn: np.ndarray
+    energy: float
+    max_force: float
+    converged: bool
+    gtol: float
+    message: str
+    n_iterations: int
+    n_evaluations: int
+    lbfgs_max_force: float
+    newton_steps: int = 0
+
+    def __iter__(self):
+        return iter((self.Pn, self.energy, self.max_force))
+
+    def summary(self) -> str:
+        return (f"{'accepted' if self.converged else 'NOT accepted'}: max |dE/dP| {self.max_force:.3e} against gtol "
+                f"{self.gtol:g} kcal/(mol A); L-BFGS-B {self.n_iterations} iterations / {self.n_evaluations} "
+                f"evaluations, residual {self.lbfgs_max_force:.3e}, '{self.message}'; {self.newton_steps} Newton polish"
+                f"{'es' if self.newton_steps != 1 else ''}")
+
+
+def _translation_basis(N: int) -> np.ndarray:
+    """(3N, 3) orthonormal uniform translations of every atom along x, y, z."""
+    T = np.zeros((3 * N, 3))
+    for d in range(3):
+        T[d::3, d] = 1.0 / np.sqrt(N)
+    return T
+
+
+def relax_all_atom(packer, params, Pn=None, latn=None, gtol: float = 1e-6, maxiter: int = 2000,
+                   newton: int = 3, h: float = 1e-3, max_step: float = 0.05) -> Relaxation:
+    """Minimise :func:`cell_energy` over every placed coordinate at fixed cell.
 
     The Gamma-point Hessian is only a set of vibrational frequencies at a stationary point,
     and the packer's rigid-helix reference is stationary over its *own* variables (cell,
     setting angles, shape parameters), not necessarily over every atom independently.  This
     lets the atoms go with L-BFGS on the analytic gradient; the three translations are flat
     and are pinned by fixing the mass centre of the cell.
+
+    L-BFGS-B stops on its own line search a little above ``gtol`` when the energy is only
+    smooth to the precision of the Ewald sum and the induced-dipole solve (residuals of a few
+    1e-6 were left on a third of the screen's cells).  Rather than loosen the criterion, up to
+    ``newton`` Newton steps follow: the finite-difference Hessian (step ``h``) at the current
+    geometry, solved against the gradient in the subspace orthogonal to the three
+    translations, each displacement capped at ``max_step`` A, and each step kept only if it
+    lowers the largest force.  The returned :class:`Relaxation` says whether ``gtol`` was met;
+    it is the consumer's job to require that.
     """
     from scipy.optimize import minimize
 
@@ -713,13 +765,41 @@ def relax_all_atom(packer, params, Pn=None, latn=None, gtol: float = 1e-6, maxit
     m = atom_masses(packer)
     com0 = (m[:, None] * Pn).sum(axis=0) / m.sum()
 
+    def recentre(P):
+        return P - ((m[:, None] * P).sum(axis=0) / m.sum() - com0)[None, :]
+
     def fg(x):
         P = x.reshape(-1, 3)
         E, g = cell_energy_and_grad(packer, params, P, latn)
         return E, g.ravel()
 
     res = minimize(fg, Pn.ravel(), jac=True, method="L-BFGS-B", options={"gtol": gtol, "ftol": 0.0, "maxiter": maxiter, "maxcor": 30})
-    P = res.x.reshape(-1, 3)
-    P = P - ((m[:, None] * P).sum(axis=0) / m.sum() - com0)[None, :]
+    P = recentre(res.x.reshape(-1, 3))
     E, g = cell_energy_and_grad(packer, params, P, latn)
-    return P, E, float(np.abs(g).max())
+    gmax = float(np.abs(g).max())
+    lbfgs_gmax = gmax
+    message = str(res.message)
+    steps = 0
+    N = packer.N
+    T = _translation_basis(N)
+    for _ in range(newton):
+        if not (np.isfinite(gmax) and gmax > gtol):
+            break
+        H = gamma_hessian(packer, params, h=h, Pn=P, latn=latn).H
+        Pp = np.eye(3 * N) - T @ T.T
+        A = Pp @ H @ Pp + T @ T.T  # translations pinned, everything else Newton
+        step = np.linalg.solve(A, -(Pp @ g.ravel()))
+        big = float(np.abs(step).max())
+        if big > max_step:
+            step *= max_step / big
+        P_try = recentre(P + step.reshape(-1, 3))
+        E_try, g_try = cell_energy_and_grad(packer, params, P_try, latn)
+        gmax_try = float(np.abs(g_try).max())
+        if not (np.isfinite(gmax_try) and gmax_try < gmax):
+            message += f"; Newton step {steps + 1} did not lower the force ({gmax_try:.3e} vs {gmax:.3e}), discarded"
+            break
+        P, E, g, gmax = P_try, E_try, g_try, gmax_try
+        steps += 1
+    converged = bool(np.isfinite(E) and np.isfinite(gmax) and gmax <= gtol)
+    return Relaxation(Pn=P, energy=float(E), max_force=gmax, converged=converged, gtol=float(gtol), message=message,
+                      n_iterations=int(res.nit), n_evaluations=int(res.nfev), lbfgs_max_force=lbfgs_gmax, newton_steps=steps)

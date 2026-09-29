@@ -6,7 +6,10 @@ gamma-free cells and seeds, each cell re-polished on the phonon packer (paramete
 polarization, density, closest interchain contact), and for each cell the rigid-cell and
 all-atom-relaxed Gamma-point spectra (lowest optical modes, the three lowest modes' axis,
 transverse, rigid-chain and per-element shares, imaginary-mode counts, acoustic-sum residual,
-chain mean displacements and relaxed dipole per monomer). Timings and every warning are kept.
+chain mean displacements and relaxed dipole per monomer), and the relaxation's own acceptance
+(`relaxation`: `converged`, the unrounded residual force before and after the Newton polish, L-BFGS-B's
+termination message and counts). A cell whose relaxation was not accepted carries that diagnosis and no
+relaxed spectrum. Timings and every warning are kept.
 
 Reproduce with `PYTHONPATH=src python examples/screen_phonons.py --json screen_phonons.json`
 (about an hour; `--only pvdf` is two minutes). The potential is `pvdf-dft-valence-flux-born`
