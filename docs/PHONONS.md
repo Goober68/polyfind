@@ -122,3 +122,37 @@ Hamiltonian, no torsion or angle relaxation) gives 34.5, 40.5, 49.2 cm^-1 agains
 40.7, 48.6 above, the construction check. The gamma = 90 antipolar beta cell is a saddle whose
 chains slide 1.05 A when let go; the gamma-free one is a true minimum, stiffer than beta and
 degenerate with it.
+
+## Rigid chain rotation as a switching path: why it is not a loss proxy (2026-10-02)
+
+The next static quantity the loss requirement suggests after curvature is a switching barrier
+and, from it, an intrinsic coercive field and hysteresis energy (`~4 P_s E_c` per cycle). It
+was tried on beta-PVDF (`pvdf-dft-valence-flux-born`, induced dipoles, Ewald) by rotating the
+two chains about their own axes from the polar state to the reversed one, and it does not give
+a usable number. Recorded so it is not re-run.
+
+* **Clamped cell, both chains in phase**: polar and reversed states degenerate as they must
+  (`P` +0.1434 to −0.1434 C/m²); barrier **6.05 kcal/mol per monomer at 40°**, a steric peak.
+  With a field against `P` the polar state is still a local minimum at 1 V/Å (10 GV/m): near
+  the minimum a rigid rotation changes the dipole only at second order, so the restoring
+  curvature wins at any sensible field.
+* **Cell relaxed at each angle** (`a, b, gamma, dz` polished, continuation in angle): in phase
+  1.66 kcal/mol per monomer at 105° with `b` on its 9.91 Å bound; with the bound widened to
+  14 Å, 1.50 at 138° with `gamma` on its 120° bound and the path ending 1.15 kcal/mol above the
+  reversed minimum, i.e. the continuation tracks a branch rather than a minimum-energy path.
+  One chain only: 2.25 kcal/mol per monomer at 87°, ending in the antipolar cell, degenerate
+  with polar (−0.008), consistent with section "Across the screen".
+* **Coercive field along these paths** (field against `P`, one-dimensional spinodal
+  `max U'(x) / (−dmu_P/dx)`): 14-17 GV/m. That is the rotational curvature at the minimum
+  divided by the dipole -- the libration stiffness already measured above -- not a switching
+  field; it is tens of times larger than reported intrinsic coercive fields of ferroelectric
+  P(VDF-TrFE) films (recalled at ~0.5 GV/m, not verified here) and larger still than bulk.
+
+**Why.** Switching in a real crystal proceeds by nucleated kinks and domain walls that rotate
+segments of a chain, not whole infinite chains at once, and the per-monomer barrier of an
+infinite rigid rotation is not the barrier of that process. A one-monomer-repeat, two-chain
+cell cannot hold a kink. A switching or hysteresis proxy needs a supercell along the chain with
+torsional freedom (the packer's torsion term is a constant today, section 2) and a proper
+path method; a small-signal dielectric loss needs dynamics. Neither is a static-curvature
+calculation, and at device frequencies both are expected to be dominated by the
+non-crystalline phase, which `polyfind.film` treats as passive.

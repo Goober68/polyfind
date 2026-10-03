@@ -128,6 +128,13 @@ the goal asked for.
    models, not real flexibility, at Dipole's request.
 6. Electrostatic scale as a single fix: dead, optima 250x apart
    (`docs/ELECTROMECHANICS.md` 5.7).
+7. **Rigid chain rotation as a switching / loss proxy (2026-10-02)**: not usable in this cell.
+   Clamped-cell in-phase rotation of beta's two chains: barrier 6.05 kcal/mol/monomer at
+   40 deg, and the polar state stays a local minimum past 10 GV/m. Cell-relaxed continuation:
+   1.5-2.3 kcal/mol/monomer but bound-limited and branch-tracking (not a true MEP), with
+   1D-spinodal "coercive fields" of 14-17 GV/m that are just libration stiffness / dipole
+   (the phonon column again). Real switching goes by kinks/domain walls along the chain,
+   which a one-monomer, two-chain cell cannot hold. `docs/PHONONS.md`, last section.
 
 ## Screening verdicts that stand
 
