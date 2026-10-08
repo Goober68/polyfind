@@ -22,8 +22,13 @@ from polyfind.polymers import PE, PVDF, THREE_STATE
 T, GP, GM = 0, 1, 2
 
 # One fixed configuration and the energies a default CrystalPacker gives for it, without a
-# field and with one.  Compared with ``==``, not a tolerance: mechanics.py must not have
-# moved a single bit of the kernel.
+# field and with one.  Compared with ``==`` until 2026-10-08, because mechanics.py must not
+# have moved a single bit of the kernel; on other BLAS/libm builds the same code lands one or
+# two ulps from these literals (docs/PERFORMANCE_REVIEW.md 15.6), so they are now held to
+# 1e-12 relative.  Jittering every input by 4 ulps moves them by at most 9e-14 relative
+# (gamma), and anything mechanics.py could do to the kernel -- a term added, a parameter
+# changed -- moves them by far more.  The analytic-gradient path is compared with the
+# energy computed in the same process, and that stays exact.
 #
 # Re-recorded once, and the guard worked as intended when it happened.  These were first
 # taken while PVDF's backbone C-C bond length was 1.54 A; correcting it to the measured
@@ -52,10 +57,12 @@ def test_default_packer_energies_are_bit_for_bit_unchanged(name):
     polymer, seq = CHAINS[name]
     chain = periodic_chain(polymer, seq, THREE_STATE)
     e0, e1 = RECORDED_ENERGY[name]
-    assert float(CrystalPacker(chain).energy(FIXED_PARAMS[None])[0]) == e0
-    assert float(CrystalPacker(chain, field=FIXED_FIELD).energy(FIXED_PARAMS[None])[0]) == e1
+    got0 = float(CrystalPacker(chain).energy(FIXED_PARAMS[None])[0])
+    assert got0 == pytest.approx(e0, rel=1e-12, abs=0.0)
+    got1 = float(CrystalPacker(chain, field=FIXED_FIELD).energy(FIXED_PARAMS[None])[0])
+    assert got1 == pytest.approx(e1, rel=1e-12, abs=0.0)
     # and the analytic-gradient path still returns the same value from the same expressions
-    assert CrystalPacker(chain).energy_and_grad(FIXED_PARAMS)[0] == e0
+    assert CrystalPacker(chain).energy_and_grad(FIXED_PARAMS)[0] == got0
 
 
 # --- what a strain can be -------------------------------------------------------------

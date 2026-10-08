@@ -1016,3 +1016,19 @@ day in `dd86575`, asks the two routes to agree within 1% and they agree within 1
 on this box (relative difference 0.0112).  It is a tolerance test on a
 finite-difference route, not a golden value, and no source changed here, so it is
 recorded rather than diagnosed.
+
+*Addressed 2026-10-08.* The literal comparisons are held to 1e-12 relative (jittering every
+input by 4 ulps moves the recorded energies by at most 9e-14), and the eight digest tests
+compare against the arrays the digests were taken of, stored in `tests/data/pendant_builds.npz`
+and checked against the digests (charges exactly, coordinates to 1e-12 of their scale); the
+comparisons between two computations in one process stay exact. Under an emulated libm whose
+sin and cos are off by up to 2 ulps the old forms of these tests fail and the new ones pass.
+One correction to the paragraph above: `test_third_order_terms_obey_reflection_with_reversal[pvdc]`
+compares no literal. PVDC's trans basin is a symmetric double well whose minima at -120 and
++120 deg differ by 1e-13 kcal/mol, so `fit_ris`'s `argmin` picks between them by rounding; this
+build resolves the two bond types opposite ways and `adapt_angles` puts T at 180, a build that
+resolves them the same way puts T at +/-120 and the measured relation fails by the 50 kcal/mol
+cap. No other decision in the test is that close (every other basin minimum leads by
+0.02 kcal/mol or more), so this is the likely failure there; the test now measures PVDC at
+the nominal state angles. The tie itself is in `fit_ris` and would move any rigid PVDC fit
+the same way on such a build; it is recorded, not fixed.

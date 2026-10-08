@@ -202,11 +202,20 @@ def test_exclusion_correction_value_and_gradients():
 
 # ------------------------------------------------------------------ in the packer
 def test_default_packer_is_bit_for_bit_the_truncated_one(beta_chain):
-    """The literal is the number this package was measured with; coulomb='dsf' is default."""
+    """The literal is the number this package was measured with; coulomb='dsf' is default.
+
+    To 1e-12 relative rather than ``==`` (2026-10-08): another BLAS/libm build gives
+    ``-8.645931161267757``, one ulp away (docs/PERFORMANCE_REVIEW.md 15.6).  Jittering every
+    input by 4 ulps moves this energy by 1.2e-14 relative, so 1e-12 clears any build's
+    rounding with room to spare, while a changed default or an Ewald term leaking in moves it
+    by far more.  Exactness still holds within a process, and that is asserted below.
+    """
     pk = CrystalPacker(beta_chain, n_chains=2)
     assert pk.coulomb == "dsf"
     assert pk._ewald is None
-    assert float(pk.energy(BETA[None])[0]) == -8.645931161267756
+    e = float(pk.energy(BETA[None])[0])
+    assert e == pytest.approx(-8.645931161267756, rel=1e-12, abs=0.0)
+    assert pk.energy_and_grad(BETA)[0] == e  # same expressions, same process: bit for bit
 
 
 def test_ewald_packer_total_is_the_spherical_shell_sum_minus_the_surface_term(beta_chain):

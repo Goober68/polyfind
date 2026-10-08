@@ -3,8 +3,9 @@
 Covers three things:
 
 1. That the change is invisible to the chemistries that already worked -- PE, PVDF and
-   PVDC must build byte-identical coordinates and charges (digests below were taken
-   from the code immediately before the phase-2 change).
+   PVDC must build the coordinates and charges recorded from the code immediately before
+   the phase-2 change (digests below; compared byte for byte until 2026-10-08, now as the
+   recorded arrays, charges exactly and coordinates to 1e-12).
 2. That CFE (CH2-CFCl) and CDFE (CHCl-CF2) are built as specified: each pendant at its
    own bond length, the specified angle between them, a neutral repeat, no overlaps --
    through every construction path, including the batched builder and the coordinate
@@ -18,6 +19,7 @@ chlorine plus frozen bond angles makes the all-trans reference badly strained (t
 1 finding), so the numbers are not meaningful even though the machinery runs.
 """
 import hashlib
+import os
 import warnings
 
 import numpy as np
@@ -68,18 +70,39 @@ ELEMENTS = {
 }
 
 
+# The digests stay as the record; since 2026-10-08 the build is compared with the arrays they
+# were taken of, stored in ``data/pendant_builds.npz`` and checked against the digests, because
+# a digest of float64 coordinates also records the BLAS/libm build (docs/PERFORMANCE_REVIEW.md
+# 15.6).  Charges exactly, coordinates to 1e-12 of the largest one; ``test_an_vdcn_fanome.py``,
+# which shares the file and these digests, says why that tolerance.
+_STORED = os.path.join(os.path.dirname(__file__), "data", "pendant_builds.npz")
+_CASE = {True: "cap", False: "nocap", "batch": "batch", "trans": "trans"}
+
+
+def _matches_recording(name, case, coords, charges):
+    with np.load(_STORED) as z:
+        X0 = z[f"{name}_{_CASE[case]}_coords"]
+        q0 = z[f"{name}_{_CASE[case]}_charges"]
+    assert _digest(X0, q0) == BASELINE[(name, case)]  # the stored arrays are the recorded ones
+    assert np.array_equal(charges, q0)
+    assert coords.shape == X0.shape
+    np.testing.assert_allclose(coords, X0, rtol=0.0, atol=1e-12 * float(np.abs(X0).max()))
+
+
 @pytest.mark.parametrize("polymer", [PE, PVDF, PVDC])
 def test_existing_polymers_are_byte_identical(polymer):
-    """Bit-for-bit, not approximately: the symmetric case must take the same code path."""
+    """Not approximately: the symmetric case must build what it built before the second pendant.
+
+    Against the stored recording (above), to 1e-12 of the coordinate scale."""
     dih = np.random.default_rng(1234).uniform(-180.0, 180.0, size=12)
     for cap in (True, False):
         s = build_chain(polymer, dih, cap=cap)
-        assert _digest(s.coords, s.charges) == BASELINE[(polymer.name, cap)]
+        _matches_recording(polymer.name, cap, s.coords, s.charges)
     dihs = np.random.default_rng(99).uniform(-180.0, 180.0, size=(6, 10))
     tpl, coords = build_chain_batch(polymer, dihs, cap=True)
-    assert _digest(coords, tpl.charges) == BASELINE[(polymer.name, "batch")]
+    _matches_recording(polymer.name, "batch", coords, tpl.charges)
     s = build_chain(polymer, np.full(10, 180.0), cap=True)
-    assert _digest(s.coords, s.charges) == BASELINE[(polymer.name, "trans")]
+    _matches_recording(polymer.name, "trans", s.coords, s.charges)
     assert "".join(s.elements) == ELEMENTS[polymer.name]
 
 

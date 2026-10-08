@@ -4,9 +4,10 @@ AN (CH2-CH(CN)), VDCN (CH2-C(CN)2) and FANOME (CH2-C(CN)(OCH3)) need a pendant t
 group of atoms rather than one atom.  Covered here:
 
 1. That the generalisation is invisible to everything that already worked -- PE, PVDF,
-   PVDC, CFE and CDFE must build byte-identical coordinates and charges (digests taken
-   from the code immediately before the phase-3 change), exactly as phase 2 asserted for
-   the three that predated it.
+   PVDC, CFE and CDFE must build the coordinates and charges recorded from the code
+   immediately before the phase-3 change (byte-identical digests until 2026-10-08; now the
+   recorded arrays, charges exactly and coordinates to 1e-12, see below), exactly as
+   phase 2 asserts for the three that predated it.
 2. That the fragments are built as specified: every atom at its stated distance and
    angle, nitriles actually linear, the methoxy at its stated frozen rotamer, a neutral
    repeat and no overlapping atoms inside a monomer -- through the single builder, the
@@ -24,6 +25,7 @@ own 1-3 neighbour's way.  That is a property of the rigid-geometry model, and it
 recorded rather than tuned away.
 """
 import hashlib
+import os
 import warnings
 
 import numpy as np
@@ -115,20 +117,48 @@ ELEMENTS = {
 }
 
 
+# A digest of float64 coordinates records the BLAS/libm build as well as the code: the chain
+# is built from sin and cos, and on other builds (a 4-core cloud Xeon, Dipole's machine) the
+# same code lands an ulp or two away and every digest changes (docs/PERFORMANCE_REVIEW.md
+# 15.6).  So since 2026-10-08 the arrays the digests were taken of are stored in
+# ``data/pendant_builds.npz``, written by a build that reproduced all twenty digests bit for
+# bit and checked against the digests here, so they are the recording and not a new one; the
+# build is compared with them.  Charges exactly: they are copied from the specs, not computed.
+# Coordinates to 1e-12 of the largest one (about 1e-11 A): a libm two ulps off in every sin and
+# cos moves them by at most 3e-14 A, a changed bond length, angle or pendant placement by 1e-5 A
+# or more.  What this gives up is the ulp-level trace of a different but equivalent code path;
+# ``test_a_single_atom_pendant_is_the_degenerate_fragment`` still pins that exactly, in one
+# process.  To re-record, store the new arrays and their digests together.
+_STORED = os.path.join(os.path.dirname(__file__), "data", "pendant_builds.npz")
+_CASE = {True: "cap", False: "nocap", "batch": "batch", "trans": "trans"}
+
+
+def _matches_recording(name, case, coords, charges):
+    with np.load(_STORED) as z:
+        X0 = z[f"{name}_{_CASE[case]}_coords"]
+        q0 = z[f"{name}_{_CASE[case]}_charges"]
+    assert _digest(X0, q0) == BASELINE[(name, case)]  # the stored arrays are the recorded ones
+    assert np.array_equal(charges, q0)
+    assert coords.shape == X0.shape
+    np.testing.assert_allclose(coords, X0, rtol=0.0, atol=1e-12 * float(np.abs(X0).max()))
+
+
 @pytest.mark.parametrize("polymer", [PE, PVDF, PVDC, CFE, CDFE])
 def test_existing_polymers_are_byte_identical(polymer):
-    """Bit-for-bit: a single-atom pendant must still take the single-atom code path."""
+    """A single-atom pendant must still build what the single-atom code path built.
+
+    Against the stored recording (above), to 1e-12 of the coordinate scale."""
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         dih = np.random.default_rng(1234).uniform(-180.0, 180.0, size=12)
         for cap in (True, False):
             s = build_chain(polymer, dih, cap=cap)
-            assert _digest(s.coords, s.charges) == BASELINE[(polymer.name, cap)]
+            _matches_recording(polymer.name, cap, s.coords, s.charges)
         dihs = np.random.default_rng(99).uniform(-180.0, 180.0, size=(6, 10))
         tpl, coords = build_chain_batch(polymer, dihs, cap=True)
-        assert _digest(coords, tpl.charges) == BASELINE[(polymer.name, "batch")]
+        _matches_recording(polymer.name, "batch", coords, tpl.charges)
         s = build_chain(polymer, np.full(10, 180.0), cap=True)
-        assert _digest(s.coords, s.charges) == BASELINE[(polymer.name, "trans")]
+        _matches_recording(polymer.name, "trans", s.coords, s.charges)
     assert "".join(s.elements) == ELEMENTS[polymer.name]
     assert polymer.atoms_per_repeat == 3 * polymer.bonds_per_repeat  # all single atoms
 
