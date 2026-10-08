@@ -197,9 +197,10 @@ def main():
     print("beta-PVDF with each fit.  Film axes: 3 = poling = the packer's x, 1 = draw = the chain")
     print("axis z, so the film's d_33 is d_x,xx and its d_31 is d_x,zz.  Measured d_33 = -32,")
     print("d_31 = +20 pC/N (Nix and Ward 1986).  Signs are quoted with the poling axis along +P.")
-    print("'proper' is e S, the piezoelectric constant; 'total' adds the dimensional (thickness)")
-    print("term a Broadhurst-Davis reading would add.  Neither is a prediction of experiment: the")
-    print("flux is calibrated to an exploratory GFN2 finite-oligomer response.")
+    print("d33, d31 are e S with Vanderbilt's proper e, the dimensional term on the polar column")
+    print("included (since 2026-09-29); 'tot' is the improper e's d, kept to trace earlier numbers.")
+    print("Neither is a prediction of experiment: the flux is calibrated to an exploratory GFN2")
+    print("finite-oligomer response.")
     print("=" * 104)
     # Pack and refine once and reuse: only the packer's charge model differs between rows.
     with FITTED_VALENCE.applied():

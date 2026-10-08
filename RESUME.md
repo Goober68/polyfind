@@ -280,7 +280,7 @@ traceable to an invented constant, refuse it.
 
 ## Housekeeping
 
-- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 606 pass, 5 skip (GPU). ~10 min. Dipole's runtime reports 3 last-digit
+- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 615 pass, 5 skip (GPU). ~10 min. Dipole's runtime reports 3 last-digit
   frozen-literal failures in `test_mechanics.py` (PE/alpha/gamma energies at
   1e-15 relative) that do not reproduce here at any commit; machine noise,
   not a defect. A 1e-12 relative tolerance is the fix if ever needed.

@@ -163,8 +163,8 @@ cost the next section states in full.
 | In-plane elastic constants C11, C22, C12, C16, C26, C66 | computed |
 | Axial constant C33 | computed, and demonstrated free of the invented-stiffness contamination that made an earlier attempt refuse it |
 | Shear constants C44, C55, C45 and mixed 4/5 | structurally absent: the chain axis is fixed along z, so no variable expresses those shears |
-| Piezoelectric response of helical chains (alpha, gamma) | computed; d up to 2.7 pC/N with fixed charges, 8.9 for gamma with charge flux (alpha's flux run does not converge, below) |
-| Piezoelectric response of beta, the ferroelectric phase | **non-zero with charge flux**, with the measured signs and an order of magnitude short; exactly zero with fixed charges, and provably so |
+| Piezoelectric response of helical chains (alpha, gamma) | computed; d up to 2.6 pC/N on the axial column with fixed charges, 9.0 for gamma with charge flux (2.7 and 8.9 before the 2026-10-08 rerun under Vanderbilt's proper `e`; alpha's flux run does not converge, below) |
+| Piezoelectric response of beta, the ferroelectric phase | **non-zero with charge flux**, with the measured signs and an order of magnitude short; exactly zero with fixed charges, and provably so (*2026-10-08:* the dipole's response is; under Vanderbilt's proper `e` the dimensional term alone gives d33 −5.25, d31 +0.20, and the flux takes them to −7.59, +2.72, 4x and 7x short) |
 | Polarization, blocking stress, free strain, work density | computed |
 
 #### Why beta was exactly zero
@@ -187,9 +187,11 @@ against a measured +20, with the **wrong sign**.
 *Corrected 2026-09-29 (`docs/ELECTROMECHANICS.md` 5.10):* that was the improper
 dimensional term, which puts `-P` on every diagonal column. The one an electrode
 measures (Vanderbilt's proper `e`) puts it on the polar column only, and through the
-Poisson coupling it gives a **positive** d31 (`-P S_13`). The d figures in this
-document predate the correction; for the current Born-fitted model they are
-d33 = -9.86, d31 = +0.42 pC/N.
+Poisson coupling it gives a **positive** d31 (`-P S_13`). On this crystal with fixed
+charges that is d33 = −5.25, d31 = +0.20 pC/N. Every d figure below that the
+definition touches was rerun under it on 2026-10-08 and carries the figure it replaced
+(the pendant figures of the 2026-09-12 reassessment are axial-column contributions it
+does not touch); for the current Born-fitted model they are d33 = -9.86, d31 = +0.42 pC/N.
 
 #### What charge flux changes, and what it does not
 
@@ -209,20 +211,32 @@ draw = the chain axis z), quoted with the poling axis along +P:
 
 | | d33 | d32 | d31 |
 |---|---|---|---|
-| fixed charges, proper `d = e S` | 0 | 0 | 0 |
-| fixed charges, plus the dimensional term | −4.43 | −5.90 | **−0.14** |
-| charge flux, proper `d = e S` | −1.88 | −0.44 | **+2.33** |
-| charge flux, plus the dimensional term | −6.29 | −7.09 | **+2.33** |
+| fixed charges, proper `d = e S` | −5.25 | +0.62 | **+0.20** |
+| charge flux, proper `d = e S` | −7.59 | +0.47 | **+2.72** |
 | measured (Nix and Ward 1986) | −32 | +1.5 | **+20** |
+
+*Rerun 2026-10-08* with Vanderbilt's proper `e` (`examples/fit_charge_flux.py --beta`).
+The table had four rows: "proper" was the dipole per reference volume (fixed 0, 0, 0;
+flux −1.88, −0.44, +2.33) and "plus the dimensional term" the improper `e` (fixed
+−4.43, −5.90, −0.14; flux −6.29, −7.09, +2.33). The rerun gives all twelve again under
+those definitions, so the definition is the whole change.
 
 **d31's sign has turned positive**, which is the sharper test: d33's sign was
 already right by arithmetic, while a positive d31 is something the dimensional term
-cannot produce at all. The magnitudes are 5x (d33) and 9x (d31) too small. The two
-independent routes to `d` -- a dipole derivative and a zero-stress root find --
-agree to 0.33%, which is what says the flux entered the energy gradient and the
-dipole derivative consistently rather than only one of them.
+cannot produce at all. The magnitudes are 4x (d33) and 7x (d31) too small (5x and
+9x under the old `e`). The two independent routes to `d` -- a dipole derivative and a
+zero-stress root find -- agree to 0.02% (0.33% when the converse route held the
+current field rather than the nominal one), which is what says the flux entered the
+energy gradient and the dipole derivative consistently rather than only one of them.
 
-**And here is the honest reading of that +2.33.** Its sign is a property of the
+*Corrected 2026-10-08:* not under the proper `e`. The fixed-charge crystal's d31 is
+already positive (+0.20, the `-P S_13` term), so the sign of the total is no longer a
+test the flux passes and the dimensional term fails. What the flux itself supplies is
+the reference-volume part of d, zero without it: +2.33 of d31 and −1.88 of d33 (the
+totals move by +2.52 and −2.34, the difference being the dimensional term following
+`|P|` and the compliance). That part's sign is what the argument below is about.
+
+**And here is the honest reading of that +2.72.** Its sign is a property of the
 fitting choice as much as of the data:
 
 * The fit has **two parameters for twelve observations** and its `R^2` is **0.39**.
@@ -241,20 +255,31 @@ fitting choice as much as of the data:
   shape sweep -- and a plain charge-magnitude scale of x1.36 (R² 0.75 on one), which
   is not a flux at all but a statement that the increments are too small.
 * **Fitted with a bond channel present the angle coefficient changes by a factor of
-  six and both proper signs flip**: d33 = +0.03 and d31 = −0.06, dimensional total
-  d31 = −0.33. What is shipped is the fit of *the model that is deployed* -- a
+  six and both proper signs flip**: d33 = −5.16 and d31 = +0.14, against −5.25 and
+  +0.20 with fixed charges, so the flux's own part flips on both. (*2026-10-08:* those
+  were +0.03 and −0.06 under the reference-volume `e`, where the totals themselves
+  flipped, with an improper d31 of −0.33; the rerun gives +0.03 and −0.06 again, and
+  the improper d31 has been −0.20 since `8ac7b48` put the stretch channel's zero at the
+  built bond length, which took a constant charge shift out of this row.) What is
+  shipped is the fit of *the model that is deployed* -- a
   rigid-bonded chain has only the angle channel -- so R² = 0.39 is honestly its own
   rather than borrowed from a channel that does nothing. The argument for that
   choice beyond self-consistency is that the angle-only family reproduces two
   experimental signs the fit never saw (d33 < 0 and d31 > 0) and the
-  angle-plus-bond family reproduces neither.
+  angle-plus-bond family reproduces neither. (*Corrected 2026-10-08:* under the proper
+  `e` both families give d33 < 0 and d31 > 0, because the fixed-charge crystal already
+  does; the argument now rests on the sign of the flux's own part, which the
+  angle-only family has right and the angle-plus-bond family has wrong.)
 * Leave one chemistry out and `k_angle(C-H)` moves over −1.62 .. −0.15, a factor of
-  eleven. Every *converged* leave-one-out run keeps d31 positive (+0.50 to +2.16)
-  and d33 negative, so the sign survives that resampling even though the magnitude
-  spans a factor of four.
-* Scaling the fitted coefficients by 0.25, 0.5, 1, 2 gives d31 = +0.52, +1.08,
-  +2.33, +6.34. The magnitude is proportional to a badly determined number, and
-  nothing about the value 2.33 means anything beyond its sign and its order.
+  eleven. Every *converged* leave-one-out run keeps d31 positive (+0.74 to +2.53;
+  +0.50 to +2.16 under the old `e`, which is also the flux's own part now) and d33
+  negative (−5.73 to −7.37), so the sign survives that resampling even though the
+  magnitude spans a factor of three to four.
+* Scaling the fitted coefficients by 0.25, 0.5, 1, 2 gives d31 = +0.75, +1.35,
+  +2.72, +7.36 (+0.52, +1.08, +2.33, +6.34 under the old `e`; the x2 row is not a
+  measurement either way, the angle cap binds and the routes disagree completely).
+  Above the fixed-charge +0.20 the magnitude is proportional to a badly determined
+  number, and nothing about the value 2.72 means anything beyond its order.
 
 **The flux is not free, and this is the part to read before using it.** The charges
 enter the Coulomb sum, so the structure moves: beta's `c` goes 2.5469 -> 2.6052 A
@@ -316,14 +341,21 @@ saw a measured piezoelectric constant:
 
 | | d33 | d31 | interpretation |
 |---|---|---|---|
-| before | -4.43 | **-0.14** | d31 sign wrong |
-| with flux | -6.29 | **+2.33** | both signs now match measurement |
-| measured | -32 | +20 | magnitudes 5x and 9x short |
+| before | −5.25 | **+0.20** | both signs from the dimensional term alone |
+| with flux | −7.59 | **+2.72** | the flux's own part, +2.33 of d31, has the measured sign |
+| measured | -32 | +20 | magnitudes 4x and 7x short |
+
+(*Rerun 2026-10-08* with Vanderbilt's proper `e`; under the improper one these rows
+read −4.43 / −0.14, "d31 sign wrong", and −6.29 / +2.33, "both signs now match", with
+magnitudes 5x and 9x short.)
 
 d31's sign is the meaningful result. d33 being negative proves nothing on its
 own, since the dimensional term is negative for any stable crystal by
 arithmetic; d31 turning positive requires a real mechanism, and it is stable
 across the whole angle-only fit family including leave-one-chemistry-out.
+(*Corrected 2026-10-08:* the proper dimensional term makes d31 positive too, +0.20
+here, so the meaningful result is the sign of the flux's own contribution rather than
+of the total; that is what is stable across the angle-only family.)
 
 The magnitudes should not be trusted, for reasons worth stating rather than
 burying. The calibration data is exploratory semi-empirical work on a finite
@@ -332,7 +364,8 @@ energy model is fitted to. The fit's R-squared is 0.39. Two alternative
 channels fit the *same* data better - a bond-stretch channel at 0.86 and a plain
 charge rescale at 0.75 - and neither is usable here, one because bonds are rigid
 and the other because it is not a mechanism. Fitting the angle channel alongside
-a bond channel changes the coefficient sixfold and flips both signs back.
+a bond channel changes the coefficient sixfold and flips both signs back (the signs
+of the flux's own part; the proper totals keep the fixed-charge signs).
 Leave-one-out spans the coefficient over a factor of eleven. The flux also
 perturbs the structure it is meant to probe, moving beta's repeat by 2.3% and
 C11 by 24%, and for two cases it drives the relaxation into the parametrisation's
@@ -357,11 +390,16 @@ this response has passed on a *dielectric* quantity -- and then, out of sample:
 
 | Ewald, `pvdf-dft-valence-flux` | d33 | d31 | C33 (GPa) | \|P\| (C/m^2) | beta `a` (A) |
 |---|---|---|---|---|---|
-| fixed charges | -7.14 | +2.48 | 330.6 | 0.154 | 4.470 |
-| with induced dipoles | -12.81 | +3.56 | 340.2 | 0.196 | 4.402 |
+| fixed charges | −8.66 | +2.87 | 330.6 | 0.154 | 4.470 |
+| with induced dipoles | −14.70 | +4.04 | 340.2 | 0.196 | 4.402 |
 | measured / DFT | -32 | +20 | 315.9 | 0.176-0.188 | 4.731 |
 
-That closes 23% of the `d33` shortfall and 6% of `d31`'s, at a cost the energies
+(*Rerun 2026-10-08,* `examples/polarizable_response.py beta`, with Vanderbilt's proper
+`e`; the improper figures were −7.14 / +2.48 and −12.81 / +3.56, which the rerun gives
+again.)
+
+That closes 26% of the `d33` shortfall and 7% of `d31`'s (23% and 6% under the
+improper `e`), at a cost the energies
 notice: `C33` goes from +4.7% to +7.7% off the DFT value, `C11` rises 22%, `a`
 contracts a further 1.5%, and `|P|` overshoots the DFT range instead of
 undershooting it. The alpha/beta ordering survives (-5.00 to -5.37 kJ/mol per
@@ -410,16 +448,20 @@ than the seconds:
 
 | | C33 (GPa) | C11 (GPa) | \|P\| (C/m^2) | the two routes to `d` |
 |---|---|---|---|---|
-| beta | 330.4 → 330.6 | 28.4 → 26.0 | 0.1497 → 0.1543 | agree 0.33 % → **0.26 %** |
+| beta | 330.4 → 330.6 | 28.4 → 26.0 | 0.1497 → 0.1543 | agree 0.02 % → 0.21 % (0.33 % → **0.26 %** before 2026-10-08) |
 | alpha | 152.8 → 137.0 | 19.8 → 19.4 | 0.1022 → 0.1079 | 100 % → 100 %: a non-measurement either way, as already recorded |
 | gamma | 99.3 → 102.3 | 13.4 → 15.9 | 0.1023 → 0.1075 | 0.51 % → **100 %**: a non-measurement *under Ewald only* |
 
 `C33` — the one elastic constant this package stands behind — moves by 0.1 % for
-beta and 3 % for gamma, and by 10 % for alpha. Beta's `d31` goes from +2.33 to
-+2.43 pC/N, the same sign and the same order. The two routes to `d` agreeing
+beta and 3 % for gamma, and by 10 % for alpha. Beta's `d31` goes from +2.72 to
++2.87 pC/N (+2.33 to +2.43 under the old reference-volume `e`), the same sign and the
+same order. The two routes to `d` agreeing
 *better* for beta under Ewald (0.26 % against 0.33 %) is the sharpest available
 check that the Ewald energy gradient and the Ewald dipole derivative are consistent
-with each other.
+with each other. (*2026-10-08:* with the converse route at fixed nominal field they
+agree to 0.21 % under Ewald and 0.02 % truncated, so "better under Ewald" no longer
+holds; 0.21 % is still the consistency check. Gamma's truncated figure is now 1.4 %
+rather than 0.51 %; its Ewald figure and alpha's predate the change and were not rerun.)
 
 **Gamma's route agreement is lost under Ewald and that is reported as a
 non-measurement, not explained away.** It is not the gradient: finite differences
@@ -479,7 +521,9 @@ component within 0.19 e of the periodic-DFT reference. The model now has the
 right dynamical charges on every atom.
 
 **And the piezoelectric coefficients did not move toward measurement.** d33 went
-from -12.81 to -8.80 against -32, d31 from +3.56 to +0.02 against +20. The
+from −14.70 to −9.86 against -32, d31 from +4.04 to +0.42 against +20 (rerun
+2026-10-08, `examples/fit_born_flux.py response`, Vanderbilt's proper `e`; −12.81 to
+−8.80 and +3.56 to +0.02 under the improper one, as first recorded). The
 Born-consistent model equals the no-flux polarizable one to 0.1 pC/N.
 
 That is the finding, and it is sharper than the shortfall it replaces. On rigid

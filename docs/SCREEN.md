@@ -410,11 +410,17 @@ question is what the polar phase would deliver. `d_33` and `d_31` are in the fil
 `fit_charge_flux.py`'s hard-coded x-axis to the actual polarization direction; for β-PVDF that
 reduces to the same numbers, which is the check.
 
-*2026-09-29:* the `d_33`, `d_31` and `e` in the table below were computed with the
-dipole-per-reference-volume `e` that `mechanics` used until then. The measurable coefficient
-is Vanderbilt's proper one (`docs/ELECTROMECHANICS.md` 5.10), which adds `-|P| S_1J` to each
-film `d`: more negative `d_33`, slightly more positive `d_31`, by an amount set by each
-chemistry's own `|P|` and compliance. The table is kept as computed and has not been rerun.
+*Rerun 2026-10-08* (`--screen --coulomb dsf`, one chemistry per process, at `adb701b`): `d_33`,
+`d_31` and the three actuator columns now come from Vanderbilt's proper `e`
+(`docs/ELECTROMECHANICS.md` 5.10), which adds `-|P| S` along the poling axis to each film `d`, and
+"routes" from the converse route at fixed nominal field. Before, with the dipole-per-reference-volume
+`e`, they read (d33, d31; blocking, free strain, work; routes): PVDF −1.88, +2.33; 0.072, 2.3e−4,
+4.22; 0.33 % · CFE −1.20, +1.36; 0.021, 1.8e−3, 5.57; 2.7 % · CDFE −0.40, +0.96; 0.008, 1.7e−3,
+6.64; 1.1 % · VDCN −3.94, +1.71; 0.020, 3.9e−4, 2.17; 0.27 % · AN (\|P\| 0.058, C11 9.8, C22 19.5)
+—, —; 0.003, 4.1e−4, 0.43; 0.37 % · PVDC failed. For the first four the definition is the whole
+change: the code the old table came from (`b4b7422`) and this one build the same structures and give
+the same reference-volume `d` to every printed digit. AN's and PVDC's rows moved for other reasons,
+recorded below the table.
 
 These columns come from the **truncated** sum and are the same measurement as before — nothing in
 the antipolar correction touches them, since they never used the antipolar branch. Ewald is
@@ -425,17 +431,18 @@ nothing here and costs one row.
 
 | polymer | phase | \|P\| C/m² | C11 | C22 | C66 | C33 | d33 | d31 | blocking GPa | free strain | work kJ/m³ | routes | status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| PVDF | TT | 0.150 | 28.4 | 20.1 | 5.1 | 330 | −1.88 | +2.33 | 0.072 | 2.3e−4 | 4.22 | 0.33 % | ok |
-| CFE | TT | 0.168 | 32.9 | 27.6 | 6.1 | 636 | −1.20 | +1.36 | 0.021 | 1.8e−3 | 5.57 | 2.7 % | ok |
-| CDFE | TT | 0.116 | 19.1 | 14.2 | 6.0 | 614 | −0.40 | +0.96 | 0.008 | 1.7e−3 | 6.64 | 1.1 % | ok |
-| VDCN | TG+TG- | 0.074 | 36.9 | 25.2 | 16.3 | 191 | −3.94 | +1.71 | 0.020 | 3.9e−4 | 2.17 | 0.27 % | ok |
-| AN | T3GT3G' | 0.058 | 9.8 | 19.5 | 7.1 | nan | — | — | 0.003 | 4.1e−4 | 0.43 | 0.37 % | **rigid path** |
-| PVDC | TG+TG- | — | — | — | — | — | — | — | — | — | — | — | **failed** |
+| PVDF | TT | 0.150 | 28.4 | 20.1 | 5.1 | 330 | −7.59 | +2.72 | 0.072 | 7.6e−4 | 7.77 | 0.02 % | ok |
+| CFE | TT | 0.168 | 32.9 | 27.6 | 6.1 | 636 | −9.24 | +1.60 | 0.018 | 3.0e−3 | 15.40 | 1.1 % | ok |
+| CDFE | TT | 0.116 | 19.1 | 14.2 | 6.0 | 614 | −17.62 | +1.04 | 0.038 | 2.3e−3 | 12.21 | 0.07 % | ok |
+| VDCN | TG+TG- | 0.074 | 36.9 | 25.2 | 16.3 | 191 | −6.08 | +1.95 | 0.020 | 6.1e−4 | 4.01 | 2.0 % | ok |
+| AN | T3GT3G' | 0.076 | 15.8 | 16.4 | 7.1 | nan | — | — | 0.011 | 9.6e−4 | 3.20 | 0.10 % | **rigid path** |
+| PVDC | TG+TG- | 0.037 | 25.4 | 15.6 | **−0.12** | nan | — | — | — | — | — | — | **not a measurement** |
 
 Elastic constants in GPa. "routes" is the disagreement between the two independent routes to `d` —
 a dipole derivative and a zero-stress root find — the internal check that the flux entered the
 energy gradient and the dipole derivative consistently. PVDF's row reproduces
-`docs/BENCHMARK.md` exactly (`d_33 = −1.88`, `d_31 = +2.33`, `C_33 = 330` against a literature DFT
+`docs/BENCHMARK.md` exactly (`d_33 = −7.59`, `d_31 = +2.72`, −1.88 and +2.33 under the old `e`;
+`C_33 = 330` against a literature DFT
 287), which is what says the generalised film convention and the packing protocol are the same
 calculation the benchmark ran; CFE's, CDFE's and the candidates' rows reproduce the previous
 table to the quoted digits.
@@ -446,8 +453,16 @@ than of the mechanics.** The script picks the response target as the packed phas
 stops being refined from a mis-built antipolar cell its `|P|` falls below its γ-type phase's, so
 both targets move off the zigzag and onto a helix. AN's lands on a sequence with no line group,
 degrades to the rigid path where `eps_zz` is not a variable, and is reported as such. Neither
-chemistry's response was ever load-bearing — 0.43 and 2.17 kJ/m³, the bottom of the table — but
-the target rule is a heuristic and it should be read as one.
+chemistry's response was ever load-bearing — 3.20 and 4.01 kJ/m³ (0.43 and 2.17 under the old
+`e`), the bottom of the measured rows — but the target rule is a heuristic and it should be read
+as one.
+
+*2026-10-08:* AN's row also moved for a reason that is not the `e` definition. Its RIS fit relaxes
+the backbone angles by default since `3d3bd6d` (`docs/NITRILE_LANDSCAPE.md`), which moved its fitted
+state angles and so its T3GT3G' helix (`c` 9.00 → 9.17 Å): `|P|` 0.058 → 0.076, C11 9.8 → 15.8,
+C22 19.5 → 16.4. With the rigid fit this code rebuilds the old structure to every printed digit and
+gives 0.008 GPa, 1.2e−3, 2.78 kJ/m³ and 0.74 % for blocking stress, free strain, work and routes;
+the table carries the default fit's row.
 
 **PVDC's response could not be computed, in three documented steps.** No conformation closes at
 ideal angles, so its chain has deflected torsions; a deflected chain breaks the glide pattern its
@@ -456,6 +471,13 @@ unavailable; and the rigid fallback then fails its own strained-cell constructio
 three are model limitations already on the roadmap (variable backbone angles, and a shape
 parametrisation that does not need an exact symmetry pattern). It is reported as a failure rather
 than forced.
+
+*2026-10-08:* the third step no longer fails. Since `dd86575`, whose converse route holds the
+nominal field, the rigid fallback completes on the same deflected chain (177.5 / 27.7 deg, with the
+rigid or the angle-relaxed fit alike; the commit before it still fails here), but on a reference
+whose C66 is −0.12 GPa, unstable to in-plane shear. Its response columns are therefore still not a
+measurement and are left blank; `|P|` and the in-plane constants are shown because they are the
+reason.
 
 **One methodological warning the screen produced by itself.** The work-density figure is dominated
 by the softest reachable mode. The pvf candidate's C66 relaxes to 1.04 GPa, its shear `d` blows up
@@ -562,6 +584,10 @@ pvf-cand is a non-measurement). **At this n these describe the sample; they do n
 anything** — and this re-run is the demonstration of that, because the sample changed by three rows
 and half the coefficients moved with it. The "as published" column is the previous version of this
 table, on a sample of eight that overlaps this one in five rows.
+
+*2026-10-08:* the work densities behind this section, including Rule 2's 6.64 and 5.57, are the old
+`e`'s. The response table above was rerun under Vanderbilt's (CFE 15.40 and CDFE 12.21 still top
+it); the three candidates were not, so these correlations have not been recomputed.
 
 | feature | Pearson | Spearman | as published | reading |
 |---|---|---|---|---|
@@ -682,6 +708,9 @@ re-assessment rather than a recommendation carried forward.
 | vfcn-cand | −(CH2−C(F)(CN))− | +8.62 (relaxed; was +6.71) | +4.072 | +0.265 | *not resolved* | 1.824 | 0.166 | 2.28 |
 | vclcn-cand | −(CH2−C(Cl)(CN))− | +4.13 (relaxed; was +9.89) | +16.342 | +0.134 | *not resolved* | 1.880 | 0.157 | 1.75 |
 | *PVDF, for comparison* | −(CH2−CF2)− | +4.58 (rigid) | +0.747 | +1.021 | polar | 2.107 | 0.150 | 4.22 |
+
+(The work column is the old reference-volume `e`'s throughout, PVDF's 4.22 included, so that it
+compares like with like; under Vanderbilt's `e` PVDF's is 7.77, and the candidates were not rerun.)
 
 The ΔE(TT) column is the regenerated one: the candidates are not registered, so `fit_ris`'s
 `angles="auto"` measured each on the fly, and three of the four have frozen-angle wells the
