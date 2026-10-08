@@ -174,8 +174,16 @@ rigid-chain modes there. Reading for the requirement: the harmonic Gamma scale i
 ~1 THz, and that is all it says; it does not establish the absence of an
 intrinsic sub-THz limit (Dipole's correction, accepted: no rates, linewidths,
 field coupling or switching dynamics are in a Gamma curvature). Pinned-stretch
-results are a changed Hamiltonian, labelled separately. Next validation: far-IR/Raman lattice modes of beta-PVDF, and
-Dipole's bulk periodic curvature. `examples/crystal_phonons.py
+results are a changed Hamiltonian, labelled separately. **First comparison with a measured
+spectrum (2026-10-08, PHONONS.md last section, `polyfind.infrared`):** the "alpha" row above
+is the packer's TGTG' reference, which relaxes to P2_1cn (delta-PVDF's polar arrangement),
+not alpha's P2_1/c; the model's P2_1/c cell is 0.030 kcal/mol per monomer above it (inside
+the resolution) with b 6.4% short. On the P2_1/c cell, the IR-active antiphase libration
+(Rabolt and Johnson's 53 cm^-1 rotatory lattice mode, ~60 at 90 K) is 67.5 (68.1 with
+Dipole's torsion), +8 high; nothing IR-active lies within 10 cm^-1 of the ~100/102 line;
+the brightest mode is an internal Bu at 72.5 / 88.8 whose position is set by the torsion
+term. No beta far-IR data below 100 cm^-1 were found. Still open: Dipole's bulk periodic
+curvature. `examples/crystal_phonons.py
 --polymorphs beta,alpha,gamma` reproduces (gamma takes ~10 min).
 
 ## The lattice-curvature column (new, 2026-09-14)
@@ -294,9 +302,9 @@ traceable to an invented constant, refuse it.
 ## If continuing
 
 On our side: the lattice-curvature column exists now (`docs/SCREEN_PHONONS.md`); its next
-steps are the gamma-free re-measurement of the screen's polarity column, far-IR/Raman lattice
-modes of beta-PVDF against the 34/41/49 cm^-1 triplet, and Dipole's bulk periodic curvature
-when it lands. On the piezoelectric side the xx column says the answer is "both":
+steps are the gamma-free re-measurement of the screen's polarity column (the alpha/delta
+pair, 0.030 kcal/mol apart, is the same unresolved question), and Dipole's bulk periodic
+curvature when it lands; the alpha far-IR comparison is done (above). On the piezoelectric side the xx column says the answer is "both":
 a real electronic clamped-ion term of ~0.13 C/m^2 and an overstated target.
 When the yy column and the accepted matrix land: write the scope boundary
 into `DESIGN.md` and `docs/BENCHMARK.md` with the measured size of the
