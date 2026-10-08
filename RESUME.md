@@ -20,8 +20,9 @@ already estimate their crystal polar column at -0.34 (1.42x ours, via their larg
 kinematics agree, neither crystal relaxes internally under polar strain), which through the
 laminate gives film d33 -14, d31 +6..+8: ~43% / 28-41% of measured, all signs right. The rest
 (~2.3x) is outside the crystal (amorphous/interface/charge terms the laminate omits).
-Stale until rerun, and flagged in place: d figures
-in `docs/SCREEN.md`'s response table and `docs/BENCHMARK.md` (old definitions).
+The d figures in `docs/SCREEN.md`'s response table and `docs/BENCHMARK.md` were rerun under
+the proper `e` on 2026-10-08 (old values kept beside them); SCREEN.md's Step 3 correlations,
+Rule 2 and candidates table still use the old `e` and are flagged in place.
 
 2026-09-13 evening provider update: an isolated D: worktree now exists at
 `D:\sarco-work\polyfind-vector-repeat`, branch `physics-vector-repeat`,
@@ -283,7 +284,9 @@ traceable to an invented constant, refuse it.
 - Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 615 pass, 5 skip (GPU). ~10 min. Dipole's runtime reports 3 last-digit
   frozen-literal failures in `test_mechanics.py` (PE/alpha/gamma energies at
   1e-15 relative) that do not reproduce here at any commit; machine noise,
-  not a defect. A 1e-12 relative tolerance is the fix if ever needed.
+  not a defect. Since 2026-10-08 every recorded golden value is held to 1e-12
+  relative and the digest tests compare stored arrays (`tests/data/pendant_builds.npz`);
+  `docs/PERFORMANCE_REVIEW.md` 15.6 has the per-test record.
 - **Never set `POLYFIND_TABLE_CACHE=1`**: it is read as a directory name and once committed 85 MB of caches. It is gitignored now.
 - Agents: launch in worktrees; they often pause on their own background jobs and report "waiting"; that is not stuck. Merge, run the suite, push, then remove the worktree.
 - Commit attribution: `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and the session URL, per the current system reminder.
