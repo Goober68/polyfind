@@ -88,10 +88,14 @@ in the exchange as the consumer note of 2026-09-13.
 
 **Speed: met**, well past target (`docs/BENCHMARK.md`): a full response tensor
 in 0.3-7.8 s against the baseline's 87-143 s for a single finite-difference
-derivative, and the baseline does no structure search at all. **Static side:
-validated** against Dipole's periodic PBE-D3 to within a few percent on
-polarization, transverse dielectric response and transverse Born charges (the
-chain-axis components of both remain open in Dipole's convergence ladder).
+derivative, and the baseline does no structure search at all. **Static side,
+shipped preset `pvdf-dft-valence-flux-born` (rechecked 2026-10-08):** clamped-ion
+dielectric within 5% of Dipole's DFPT (2.229/2.146/2.520 vs 2.235/2.253/2.601,
+polar/long/chain), transverse Born charges within 0.19 e, C33 +6.4%, cell a/b/c
+-3.6/+1.7/-1.2%; but |P| 0.143 is 19-24% BELOW the DFT 0.176-0.188 (the earlier
+"within a few percent" was never true of this preset). Chain-axis components
+remain open in Dipole's convergence ladder; every DFT reference is
+`quantitatively_valid=false`.
 **Piezoelectric coefficients: short**, crystal d33 = -9.86 vs measured -32, d31 = +0.42
 vs +20 (Vanderbilt-proper since 2026-09-29; the earlier -8.8 / +0.02 were the
 improper "film" bookkeeping, `docs/ELECTROMECHANICS.md` 5.10). Through the film laminate
