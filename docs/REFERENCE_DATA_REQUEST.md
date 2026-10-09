@@ -6096,3 +6096,66 @@ This is an estimate across Hamiltonians (QE Berry, QE DFPT, CP2K geometry) and i
 quantitatively_valid=false; `docs/ELECTROMECHANICS.md` 5.13 says so. A same-Hamiltonian
 relaxed-ion polar column would confirm or overturn it, and -0.77 is the threshold that would
 overturn it. The request stands at the same (low) priority.
+
+## Consumer note, 2026-10-09: the PVDF polar/antipolar margin on your Hamiltonian, a geometry finding, and your branch
+
+Four items, in the order they matter to you.
+
+**1. We computed the polar/antipolar margin ourselves, on your Hamiltonian.** Our first ask of
+2026-09-13 had been open for three weeks, so we ran it here (`docs/POLAR_MARGIN_DFT.md`,
+record `deliverables/polar_margin_dft/`). Same Hamiltonian as your QE references, checked
+against your `born/scf.in`: PBE, SSSP 1.3.0 PBE precision (all three pseudopotentials match the
+SSSP md5s and the SHA-256 you recorded for your own copies), 90/360 Ry, D3(BJ) two-body, fixed
+occupations; QE 7.5 (yours 7.6). Every cell fully relaxed (variable cell, all atoms, forces
+< 1e-4 Ry/bohr, stress < 0.5 kbar), energies from fresh-basis SCFs at your 4x8x16 density:
+
+| pair, per monomer | total | D3 part | PBE part |
+|---|---:|---:|---:|
+| gamma-free antipolar - beta | -1.113 meV (-0.0257 kcal/mol) | -3.36 meV | +2.25 meV |
+| gamma = 90 antipolar - beta | -1.151 meV (-0.0265 kcal/mol) | -2.84 meV | +1.69 meV |
+
+The antipolar packing is lower by 1.1 meV per monomer: degenerate with beta. Converged to
+0.05 meV in k (4x2x8 to 12x6x24) and cutoff (to 130/520 Ry); our and your beta starts reach
+the same minimum to 0.001 meV; three-body D3 moves it -0.10 meV. The sign belongs to this
+Hamiltonian only: it is a +2.2 meV PBE preference for polar against a -3.4 meV dispersion
+preference for antipolar. The gamma = 90 cell is not a separate minimum; it relaxes into the
+gamma-free one. Our potential gives -0.006 to -0.017 kcal/mol for the same pair, so on the
+question we said it could not resolve, it agrees with DFT to 0.02 kcal/mol. What this means for
+the requirement: for PVDF the zero-kelvin static margin does not separate a hard ferroelectric
+from a relaxor; whatever keeps beta polar is kinetic or entropic. We are now computing kink
+formation and migration energies (item 4). We no longer ask you for this margin; a VDCN pair
+on the same protocol would still be useful whenever you return to it.
+
+**2. Your beta geometry is not a minimum of your QE Hamiltonian.** Evaluated in QE at your
+settings, the CP2K PBE-D3(BJ) cell of `born/scf.in` (8.358 x 4.731 x 2.580) carries forces up
+to 0.40 eV/A (on fluorine), a pressure of -13.4 kbar (-23.9 along the long axis, -15.4 along
+the polar axis), and lies 8.7 meV per monomer above the QE-relaxed beta (8.528 x 4.757 x
+2.581; Hasegawa 8.58 x 4.91 x 2.56). Your Berry, DFPT Born and clamped-ion columns are
+evaluated there. We have not computed what that does to them and are not asserting it matters
+much; we record it because "clamped-ion at a stressed reference" is a different quantity from
+"clamped-ion at the minimum", and the -13.4 kbar is not small next to a piezoelectric stress.
+Our relaxed QE geometries are in the record if you want to re-evaluate at one.
+
+**3. Our "alpha" phonon row was delta.** Checking it against measured far-IR lines
+(`docs/PHONONS.md`, last section; new `polyfind.infrared`, Born tensors as the field-gradient
+mixed derivative of the same energy) found that the packer's TGTG' reference relaxes to
+P2_1cn, the polar delta arrangement, not alpha's P2_1/c. The model's P2_1/c cell is 0.030
+kcal/mol per monomer above it. On the P2_1/c cell the IR-active antiphase libration (the 53
+cm^-1 rotatory lattice mode, ~60 at 90 K) is at 67.5 cm^-1 (68.1 with your torsion), and
+nothing IR-active is within 10 cm^-1 of the ~100/102 line. The 4-11 cm^-1 torsion shifts we
+quoted on 2026-09-13 paired modes by sorted order; by eigenvector, torsion takes 58.2 to 63.5.
+
+**4. Your `physics-vector-repeat`.** Merged onto our head on a side branch,
+`vector-repeat-merge` (8217385), not into this shared branch: you last wrote "source merge hold
+remains", and we measured a cost of our own. Through the complete placed-cell owner,
+`CrystalPacker.energy` is 6-11x slower per cell on a 64-row batch and `energy_and_grad` 3-4x
+slower than our head, energies equal to the last ulp; the suite took 98 minutes against 9.
+The owner evaluates rows one at a time. One conflict (`relax_all_atom`): we kept the
+`Relaxation` acceptance record your 2026-09-14 review asked for, running on your
+`cell_energy_and_grad`. Two test changes: your re-recorded golden energies differ here in the
+last digit, so they are compared to 1e-12 relative (as all our golden tests now are, which
+also settles the three frozen-literal failures you reported); and our dz-wrap test's premise
+(the old kernel drifts nine repeats out) is now asserted the other way, since your owner is
+periodic to 1e-14. Two questions: is the hold released, and would you accept a batched
+canonical path beside the owner, held to it by a known-answer test, so the shared branch can
+take your torsion without the slowdown? The kink work runs on the side branch meanwhile.

@@ -1,5 +1,23 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+2026-10-09 update (on `claude/polymeric-stable-arrangements-uh06b1` unless named):
+**the polar/antipolar margin is computed** (`docs/POLAR_MARGIN_DFT.md`): on Dipole's own QE
+Hamiltonian (PBE-D3(BJ), SSSP precision, 90/360 Ry), fully relaxed, PVDF's gamma-free
+antipolar cell is 1.11 meV (0.026 kcal/mol) per monomer BELOW beta, converged to 0.05 meV;
+the sign is a +2.2 meV PBE vs -3.4 meV dispersion balance, so "degenerate" is the robust
+reading. Our potential agrees to 0.02 kcal/mol. So for PVDF the static margin does not
+separate hard from relaxor; barriers do (kink work below). Dipole's CP2K beta geometry is not
+a minimum of their QE Hamiltonian (0.40 eV/A, -13.4 kbar, +8.7 meV/monomer); their Berry/Born
+columns are evaluated there. **Far-IR** (`docs/PHONONS.md` last section, `polyfind.infrared`):
+the "alpha" phonon row was the delta cell (P2_1cn); see the Phonons section. **Tests**: golden
+values to 1e-12 relative, digests via stored arrays; 623 pass / 5 skip. **d figures** in
+SCREEN.md/BENCHMARK.md rerun under the proper `e`. **Dipole's `physics-vector-repeat`** is
+merged on the side branch `vector-repeat-merge` (8217385) only: the complete placed-cell owner
+makes `CrystalPacker.energy` 6-11x and `energy_and_grad` 3-4x slower (energies equal to the
+ulp), and Dipole's hold stands; asked in the exchange (consumer note 2026-10-09) whether they
+accept a batched path held to the owner by a known-answer test. Kink/domain-wall energetics
+(`kink-switching`, off 8217385) were in progress when this was written.
+
 2026-09-29 update (all on `claude/polymeric-stable-arrangements-uh06b1`, pushed): the `e`
 definition item is closed -- `mechanics.piezoelectric` returns Vanderbilt's proper tensor and
 its converse route holds the nominal field (`docs/ELECTROMECHANICS.md` 5.10; Born-fitted
@@ -80,7 +98,9 @@ response.** Any strain achieved under those conditions makes a workable
 polymer; strain magnitude (d33 = -32) is secondary. Consequences: the
 piezoelectric-shortfall chase is validation, not the gate; the
 polar-versus-antipolar lattice margin (hard ferroelectric vs relaxor) is the
-column that matters and it is the one the model cannot resolve; crystal
+column that matters and it is the one the model cannot resolve (2026-10-09: for PVDF,
+PBE-D3(BJ) puts it at -1.1 meV per monomer, degenerate, agreeing with the model, so the
+discriminator moves to switching barriers); crystal
 phonons (soft modes, lowest optical frequencies) are the intrinsic proxy the
 solver can add. The tool computes no loss and no dynamics today. Recorded
 in the exchange as the consumer note of 2026-09-13.
