@@ -1,0 +1,972 @@
+{
+ "hamiltonian": {
+  "functional": "PBE",
+  "dispersion": "DFT-D3(BJ) (dftd3_version=4), two-body (dftd3_threebody=.false.)",
+  "pseudopotentials": "SSSP 1.3.0 PBE precision: H_ONCV_PBE-1.0.oncvpsp.upf, C.pbe-n-kjpaw_psl.1.0.0.UPF, F.oncvpsp.upf",
+  "ecutwfc_ry": 90,
+  "ecutrho_ry": 360,
+  "occupations": "fixed"
+ },
+ "qe_versions": [
+  "v.7.5"
+ ],
+ "pseudopotentials": {
+  "H_ONCV_PBE-1.0.oncvpsp.upf": {
+   "md5": "1790becc920ee074925cf490c71280fe",
+   "sha256": "69d631780c0178c5239ed3dcb4a3e22c13bd13cde9beb97e123d036949da5c09",
+   "bytes": 109312
+  },
+  "C.pbe-n-kjpaw_psl.1.0.0.UPF": {
+   "md5": "5d2aebdfa2cae82b50a7e79e9516da0f",
+   "sha256": "9900d1efd50b9848e31849f39094b33348486b400ee51e0f3922f716137cf3d7",
+   "bytes": 911843
+  },
+  "F.oncvpsp.upf": {
+   "md5": "dbf8367619a749999a0442b33b80a7e7",
+   "sha256": "ba6ca6af365222805e3ce85564616b50a2feb562106dfbf1d725170cc7afd7b8",
+   "bytes": 133252
+  }
+ },
+ "units": "per monomer (CH2-CF2); each beta-type cell holds 2, alpha holds 4",
+ "cells": {
+  "alpha": {
+   "n_atoms": 24,
+   "n_monomers": 4,
+   "final_relaxation": "relax0",
+   "lattice_A_deg": {
+    "a": 4.9453,
+    "b": 9.636,
+    "c": 4.6596,
+    "alpha": 90.0,
+    "beta": 87.7279,
+    "gamma": 90.0,
+    "volume": 221.8691
+   },
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 12,
+      "cf2_groups": 2,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 180.0
+     },
+     {
+      "atoms": 12,
+      "cf2_groups": 2,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       -0.0,
+       0.0
+      ],
+      "azimuth_deg": -0.0
+     }
+    ],
+    "sum_of_unit_vectors": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "antipolar",
+    "chain2_minus_chain1_fractional": [
+     -0.4375,
+     -0.5,
+     0.2766
+    ],
+    "chain_separation_inplane_A": 5.2713
+   },
+   "scf_k2": {
+    "energy_ry": null,
+    "d3_ry": null,
+    "mesh": null,
+    "n_kpoints_irreducible": null,
+    "sym_ops": null,
+    "max_force_component_ry_bohr": null,
+    "stress_kbar": null,
+    "pressure_kbar": null,
+    "meets_criteria": null
+   },
+   "energies_ry_per_monomer": {
+    "scf_k0": null,
+    "scf_k1": -137.905818675,
+    "scf_k15": null,
+    "scf_k2": null,
+    "scf_k3": null,
+    "scf_k1_e110": null,
+    "scf_k1_e130": null,
+    "scf_k1_3body": -137.904601075
+   },
+   "d3_ry_per_monomer": {
+    "scf_k0": null,
+    "scf_k1": -0.024739435,
+    "scf_k15": null,
+    "scf_k2": null,
+    "scf_k3": null,
+    "scf_k1_e110": null,
+    "scf_k1_e130": null,
+    "scf_k1_3body": -0.023521835
+   }
+  },
+  "anti90": {
+   "n_atoms": 12,
+   "n_monomers": 2,
+   "final_relaxation": "relax1",
+   "lattice_A_deg": {
+    "a": 4.7523,
+    "b": 8.5148,
+    "c": 2.5807,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 89.9738,
+    "volume": 104.4269
+   },
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       -0.0012,
+       0.0
+      ],
+      "azimuth_deg": -0.07
+     },
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       0.0012,
+       0.0
+      ],
+      "azimuth_deg": 179.93
+     }
+    ],
+    "sum_of_unit_vectors": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "antipolar",
+    "chain2_minus_chain1_fractional": [
+     -0.0022,
+     0.4998,
+     0.0
+    ],
+    "chain_separation_inplane_A": 4.2556
+   },
+   "scf_k2": {
+    "energy_ry": -275.80719954,
+    "d3_ry": -0.05284929,
+    "mesh": [
+     8,
+     4,
+     16
+    ],
+    "n_kpoints_irreducible": 162,
+    "sym_ops": 4,
+    "max_force_component_ry_bohr": 8.485e-05,
+    "stress_kbar": [
+     [
+      -0.15,
+      -0.01,
+      0.0
+     ],
+     [
+      -0.01,
+      0.08,
+      0.0
+     ],
+     [
+      0.0,
+      0.0,
+      -0.07
+     ]
+    ],
+    "pressure_kbar": -0.05,
+    "meets_criteria": true
+   },
+   "energies_ry_per_monomer": {
+    "scf_k0": null,
+    "scf_k1": -137.90359032,
+    "scf_k15": null,
+    "scf_k2": -137.90359977,
+    "scf_k3": null,
+    "scf_k1_e110": -137.90368195,
+    "scf_k1_e130": null,
+    "scf_k1_3body": -137.902198045
+   },
+   "d3_ry_per_monomer": {
+    "scf_k0": null,
+    "scf_k1": -0.026424645,
+    "scf_k15": null,
+    "scf_k2": -0.026424645,
+    "scf_k3": null,
+    "scf_k1_e110": -0.026424645,
+    "scf_k1_e130": null,
+    "scf_k1_3body": -0.02503237
+   }
+  },
+  "anti_free": {
+   "n_atoms": 12,
+   "n_monomers": 2,
+   "final_relaxation": "relax1",
+   "lattice_A_deg": {
+    "a": 4.7429,
+    "b": 8.519,
+    "c": 2.5808,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 89.9999,
+    "volume": 104.2793
+   },
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 0.0
+     },
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       -0.0,
+       0.0
+      ],
+      "azimuth_deg": -180.0
+     }
+    ],
+    "sum_of_unit_vectors": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "antipolar",
+    "chain2_minus_chain1_fractional": [
+     -0.0036,
+     0.5,
+     0.0
+    ],
+    "chain_separation_inplane_A": 4.2596
+   },
+   "scf_k2": {
+    "energy_ry": -275.80719396,
+    "d3_ry": -0.05292555,
+    "mesh": [
+     8,
+     4,
+     16
+    ],
+    "n_kpoints_irreducible": 162,
+    "sym_ops": 4,
+    "max_force_component_ry_bohr": 9.16e-05,
+    "stress_kbar": [
+     [
+      0.12,
+      -0.0,
+      0.0
+     ],
+     [
+      -0.0,
+      0.03,
+      0.0
+     ],
+     [
+      0.0,
+      0.0,
+      -0.11
+     ]
+    ],
+    "pressure_kbar": 0.01,
+    "meets_criteria": true
+   },
+   "energies_ry_per_monomer": {
+    "scf_k0": -137.901436365,
+    "scf_k1": -137.903587625,
+    "scf_k15": -137.90359691,
+    "scf_k2": -137.90359698,
+    "scf_k3": -137.90359699,
+    "scf_k1_e110": -137.90367975,
+    "scf_k1_e130": -137.903741705,
+    "scf_k1_3body": -137.902190815
+   },
+   "d3_ry_per_monomer": {
+    "scf_k0": -0.026462775,
+    "scf_k1": -0.026462775,
+    "scf_k15": -0.026462775,
+    "scf_k2": -0.026462775,
+    "scf_k3": -0.026462775,
+    "scf_k1_e110": -0.026462775,
+    "scf_k1_e130": -0.026462775,
+    "scf_k1_3body": -0.025065965
+   },
+   "nosym_check": {
+    "job_done": true,
+    "bfgs_converged": true,
+    "final_energy_ry_per_monomer": -137.90359136,
+    "minus_symmetric_k1_meV_per_monomer": -0.050817263910365625,
+    "final_lattice": {
+     "a": 4.746925605210773,
+     "b": 8.516590989193547,
+     "c": 2.580731432231278,
+     "alpha": 89.98209709393649,
+     "beta": 90.03332792840516,
+     "gamma": 90.02689258543894,
+     "volume": 104.3328053357899
+    },
+    "final_orientation": {
+     "chains": [
+      {
+       "atoms": 6,
+       "cf2_groups": 1,
+       "cf2_to_f_unit_inplane": [
+        1.0,
+        0.0002,
+        0.0
+       ],
+       "azimuth_deg": 0.01
+      },
+      {
+       "atoms": 6,
+       "cf2_groups": 1,
+       "cf2_to_f_unit_inplane": [
+        -1.0,
+        -0.0013,
+        0.0
+       ],
+       "azimuth_deg": -179.93
+      }
+     ],
+     "sum_of_unit_vectors": [
+      0.0,
+      -0.0011,
+      0.0
+     ],
+     "arrangement": "antipolar",
+     "chain2_minus_chain1_fractional": [
+      0.0004,
+      0.4997,
+      0.0024
+     ],
+     "chain_separation_inplane_A": 4.2561
+    }
+   }
+  },
+  "polar": {
+   "n_atoms": 12,
+   "n_monomers": 2,
+   "final_relaxation": "relax1",
+   "lattice_A_deg": {
+    "a": 4.7568,
+    "b": 8.5282,
+    "c": 2.5808,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 90.0,
+    "volume": 104.6928
+   },
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 180.0
+     },
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 180.0
+     }
+    ],
+    "sum_of_unit_vectors": [
+     -2.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "polar",
+    "chain2_minus_chain1_fractional": [
+     0.5,
+     -0.5,
+     0.0
+    ],
+    "chain_separation_inplane_A": 4.8825
+   },
+   "scf_k2": {
+    "energy_ry": -275.8070304,
+    "d3_ry": -0.05243146,
+    "mesh": [
+     8,
+     4,
+     16
+    ],
+    "n_kpoints_irreducible": 135,
+    "sym_ops": 4,
+    "max_force_component_ry_bohr": 3.482e-05,
+    "stress_kbar": [
+     [
+      -0.03,
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.05,
+      0.0
+     ],
+     [
+      0.0,
+      0.0,
+      -0.04
+     ]
+    ],
+    "pressure_kbar": -0.0,
+    "meets_criteria": true
+   },
+   "energies_ry_per_monomer": {
+    "scf_k0": -137.90156222,
+    "scf_k1": -137.903506095,
+    "scf_k15": -137.90351511,
+    "scf_k2": -137.9035152,
+    "scf_k3": -137.9035152,
+    "scf_k1_e110": -137.903595395,
+    "scf_k1_e130": -137.903659795,
+    "scf_k1_3body": -137.902101675
+   },
+   "d3_ry_per_monomer": {
+    "scf_k0": -0.02621573,
+    "scf_k1": -0.02621573,
+    "scf_k15": -0.02621573,
+    "scf_k2": -0.02621573,
+    "scf_k3": -0.02621573,
+    "scf_k1_e110": -0.02621573,
+    "scf_k1_e130": -0.02621573,
+    "scf_k1_3body": -0.02481131
+   },
+   "nosym_check": {
+    "job_done": true,
+    "bfgs_converged": true,
+    "final_energy_ry_per_monomer": -137.903505925,
+    "minus_symmetric_k1_meV_per_monomer": 0.002312968118959061,
+    "final_lattice": {
+     "a": 4.754987358342875,
+     "b": 8.530885731645352,
+     "c": 2.5807596984197327,
+     "alpha": 89.92197168209479,
+     "beta": 89.97172912252194,
+     "gamma": 89.95138348201071,
+     "volume": 104.68644397968411
+    },
+    "final_orientation": {
+     "chains": [
+      {
+       "atoms": 6,
+       "cf2_groups": 1,
+       "cf2_to_f_unit_inplane": [
+        -1.0,
+        0.0014,
+        0.0
+       ],
+       "azimuth_deg": 179.92
+      },
+      {
+       "atoms": 6,
+       "cf2_groups": 1,
+       "cf2_to_f_unit_inplane": [
+        -1.0,
+        0.0002,
+        0.0
+       ],
+       "azimuth_deg": 179.99
+      }
+     ],
+     "sum_of_unit_vectors": [
+      -2.0,
+      0.0016,
+      0.0
+     ],
+     "arrangement": "polar",
+     "chain2_minus_chain1_fractional": [
+      0.4992,
+      -0.4998,
+      0.0033
+     ],
+     "chain_separation_inplane_A": 4.8783
+    }
+   }
+  },
+  "polar_dipole": {
+   "n_atoms": 12,
+   "n_monomers": 2,
+   "final_relaxation": "relax1",
+   "lattice_A_deg": {
+    "a": 4.7594,
+    "b": 8.5259,
+    "c": 2.5808,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 90.0,
+    "volume": 104.7224
+   },
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 0.0
+     },
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 0.0
+     }
+    ],
+    "sum_of_unit_vectors": [
+     2.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "polar",
+    "chain2_minus_chain1_fractional": [
+     0.5,
+     -0.5,
+     0.0
+    ],
+    "chain_separation_inplane_A": 4.8822
+   },
+   "scf_k2": {
+    "energy_ry": -275.8070303,
+    "d3_ry": -0.05241407,
+    "mesh": [
+     8,
+     4,
+     16
+    ],
+    "n_kpoints_irreducible": 135,
+    "sym_ops": 4,
+    "max_force_component_ry_bohr": 1.695e-05,
+    "stress_kbar": [
+     [
+      -0.03,
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.04,
+      0.0
+     ],
+     [
+      0.0,
+      0.0,
+      -0.05
+     ]
+    ],
+    "pressure_kbar": -0.01,
+    "meets_criteria": true
+   },
+   "energies_ry_per_monomer": {
+    "scf_k0": null,
+    "scf_k1": -137.903506015,
+    "scf_k15": null,
+    "scf_k2": -137.90351515,
+    "scf_k3": null,
+    "scf_k1_e110": null,
+    "scf_k1_e130": null,
+    "scf_k1_3body": null
+   },
+   "d3_ry_per_monomer": {
+    "scf_k0": null,
+    "scf_k1": -0.026207035,
+    "scf_k15": null,
+    "scf_k2": -0.026207035,
+    "scf_k3": null,
+    "scf_k1_e110": null,
+    "scf_k1_e130": null,
+    "scf_k1_3body": null
+   }
+  }
+ },
+ "margins": {
+  "anti_free - polar": {
+   "total": {
+    "scf_k0": {
+     "ry": 0.00012585499999318017,
+     "meV": 1.7123445079016213,
+     "kcal_mol": 0.0394876024269631
+    },
+    "scf_k1": {
+     "ry": -8.152999998856103e-05,
+     "meV": -1.1092721601620656,
+     "kcal_mol": -0.025580423706591377
+    },
+    "scf_k15": {
+     "ry": -8.18000000037955e-05,
+     "meV": -1.1129456975125496,
+     "kcal_mol": -0.025665137490369777
+    },
+    "scf_k2": {
+     "ry": -8.178000001635155e-05,
+     "meV": -1.1126735838209234,
+     "kcal_mol": -0.025658862399568667
+    },
+    "scf_k3": {
+     "ry": -8.179000002428438e-05,
+     "meV": -1.1128096408600852,
+     "kcal_mol": -0.025661999949427947
+    },
+    "scf_k1_e110": {
+     "ry": -8.435500001269247e-05,
+     "meV": -1.1477082435628487,
+     "kcal_mol": -0.026466780846276797
+    },
+    "scf_k1_e130": {
+     "ry": -8.190999997736981e-05,
+     "meV": -1.114442323396539,
+     "kcal_mol": -0.02569965050315206
+    },
+    "scf_k1_3body": {
+     "ry": -8.914000000004307e-05,
+     "meV": -1.2128114849842713,
+     "kcal_mol": -0.027968097259003847
+    }
+   },
+   "d3_part": {
+    "scf_k0": {
+     "ry": -0.0002470450000000013,
+     "meV": -3.3612184575700703,
+     "kcal_mol": -0.07751153900995403
+    },
+    "scf_k1": {
+     "ry": -0.0002470450000000013,
+     "meV": -3.3612184575700703,
+     "kcal_mol": -0.07751153900995403
+    },
+    "scf_k15": {
+     "ry": -0.0002470450000000013,
+     "meV": -3.3612184575700703,
+     "kcal_mol": -0.07751153900995403
+    },
+    "scf_k2": {
+     "ry": -0.0002470450000000013,
+     "meV": -3.3612184575700703,
+     "kcal_mol": -0.07751153900995403
+    },
+    "scf_k3": {
+     "ry": -0.0002470450000000013,
+     "meV": -3.3612184575700703,
+     "kcal_mol": -0.07751153900995403
+    },
+    "scf_k1_e110": {
+     "ry": -0.0002470450000000013,
+     "meV": -3.3612184575700703,
+     "kcal_mol": -0.07751153900995403
+    },
+    "scf_k1_e130": {
+     "ry": -0.0002470450000000013,
+     "meV": -3.3612184575700703,
+     "kcal_mol": -0.07751153900995403
+    },
+    "scf_k1_3body": {
+     "ry": -0.00025465499999999947,
+     "meV": -3.46475778223603,
+     "kcal_mol": -0.07989921255876338
+    }
+   },
+   "pbe_part": {
+    "scf_k0": {
+     "ry": 0.00037289999999318146,
+     "meV": 5.073562965471692,
+     "kcal_mol": 0.11699914143691713
+    },
+    "scf_k1": {
+     "ry": 0.00016551500001144026,
+     "meV": 2.2519462974080047,
+     "kcal_mol": 0.051931115303362654
+    },
+    "scf_k15": {
+     "ry": 0.0001652449999962058,
+     "meV": 2.248272760057521,
+     "kcal_mol": 0.05184640151958425
+    },
+    "scf_k2": {
+     "ry": 0.00016526499998364974,
+     "meV": 2.2485448737491467,
+     "kcal_mol": 0.05185267661038536
+    },
+    "scf_k3": {
+     "ry": 0.0001652549999757169,
+     "meV": 2.2484088167099854,
+     "kcal_mol": 0.051849539060526084
+    },
+    "scf_k1_e110": {
+     "ry": 0.00016268999998730882,
+     "meV": 2.2135102140072216,
+     "kcal_mol": 0.051044758163677234
+    },
+    "scf_k1_e130": {
+     "ry": 0.00016513500002263148,
+     "meV": 2.2467761341735315,
+     "kcal_mol": 0.05181188850680197
+    },
+    "scf_k1_3body": {
+     "ry": 0.0001655149999999564,
+     "meV": 2.2519462972517585,
+     "kcal_mol": 0.05193111529975954
+    }
+   }
+  },
+  "anti90 - polar": {
+   "total": {
+    "scf_k0": null,
+    "scf_k1": {
+     "ry": -8.42249999948308e-05,
+     "meV": -1.145939503213839,
+     "kcal_mol": -0.026425992724858512
+    },
+    "scf_k15": null,
+    "scf_k2": {
+     "ry": -8.457000001271808e-05,
+     "meV": -1.150633467584641,
+     "kcal_mol": -0.02653423811474661
+    },
+    "scf_k3": null,
+    "scf_k1_e110": {
+     "ry": -8.655499999576932e-05,
+     "meV": -1.1776407682031844,
+     "kcal_mol": -0.027157041262436437
+    },
+    "scf_k1_e130": null,
+    "scf_k1_3body": {
+     "ry": -9.636999999429463e-05,
+     "meV": -1.3111806461853064,
+     "kcal_mol": -0.030236544005938185
+    }
+   },
+   "d3_part": {
+    "scf_k0": null,
+    "scf_k1": {
+     "ry": -0.0002089150000000005,
+     "meV": -2.842433378790298,
+     "kcal_mol": -0.06554807088694165
+    },
+    "scf_k15": null,
+    "scf_k2": {
+     "ry": -0.0002089150000000005,
+     "meV": -2.842433378790298,
+     "kcal_mol": -0.06554807088694165
+    },
+    "scf_k3": null,
+    "scf_k1_e110": {
+     "ry": -0.0002089150000000005,
+     "meV": -2.842433378790298,
+     "kcal_mol": -0.06554807088694165
+    },
+    "scf_k1_e130": null,
+    "scf_k1_3body": {
+     "ry": -0.0002210600000000021,
+     "meV": -3.007674521769082,
+     "kcal_mol": -0.06935862216819005
+    }
+   },
+   "pbe_part": {
+    "scf_k0": null,
+    "scf_k1": {
+     "ry": 0.0001246900000051697,
+     "meV": 1.696493875576459,
+     "kcal_mol": 0.03912207816208313
+    },
+    "scf_k15": null,
+    "scf_k2": {
+     "ry": 0.0001243449999872824,
+     "meV": 1.691799911205657,
+     "kcal_mol": 0.039013832772195035
+    },
+    "scf_k3": null,
+    "scf_k1_e110": {
+     "ry": 0.00012236000000423117,
+     "meV": 1.6647926105871136,
+     "kcal_mol": 0.038391029624505205
+    },
+    "scf_k1_e130": null,
+    "scf_k1_3body": {
+     "ry": 0.00012469000000570746,
+     "meV": 1.6964938755837755,
+     "kcal_mol": 0.03912207816225187
+    }
+   }
+  },
+  "lowest antipolar found - lowest polar found, 4x2x8 (any relaxation, symmetric or not)": {
+   "ry": -8.526499999561565e-05,
+   "meV": -1.1600894240724313,
+   "kcal_mol": -0.026752297651617553
+  },
+  "polar_dipole - polar (same minimum?)": {
+   "scf_k1": {
+    "ry": 8.000000661922968e-08,
+    "meV": 0.0010884555398987278,
+    "kcal_mol": 2.510038103933684e-05
+   },
+   "scf_k2": {
+    "ry": 4.999998282073648e-08,
+    "meV": 0.0006802844224139124,
+    "kcal_mol": 1.568773146150105e-05
+   }
+  },
+  "alpha - polar (beta)": {
+   "total": {
+    "scf_k0": null,
+    "scf_k1": {
+     "ry": -0.0023125799999945684,
+     "meV": -31.464253802299563,
+     "kcal_mol": -0.7255829297626649
+    },
+    "scf_k15": null,
+    "scf_k2": null,
+    "scf_k3": null,
+    "scf_k1_e110": null,
+    "scf_k1_e130": null,
+    "scf_k1_3body": {
+     "ry": -0.0024993999999765038,
+     "meV": -34.00606939129152,
+     "kcal_mol": -0.784198589729227
+    }
+   },
+   "d3_part": {
+    "scf_k0": null,
+    "scf_k1": {
+     "ry": 0.001476294999999999,
+     "meV": 20.086016729010414,
+     "kcal_mol": 0.46319454950595806
+    },
+    "scf_k15": null,
+    "scf_k2": null,
+    "scf_k3": null,
+    "scf_k1_e110": null,
+    "scf_k1_e130": null,
+    "scf_k1_3body": {
+     "ry": 0.0012894749999999983,
+     "meV": 17.544201139772664,
+     "kcal_mol": 0.40457888953372795
+    }
+   }
+  }
+ },
+ "lattice_vs_experiment": {
+  "experiment": {
+   "beta": {
+    "a_long": 8.58,
+    "b_short_polar": 4.91,
+    "c_chain": 2.56,
+    "source": "Hasegawa et al. 1972"
+   },
+   "alpha": {
+    "a_short": 4.96,
+    "b_long": 9.64,
+    "c_chain": 4.62,
+    "source": "docs/REFERENCES.md 1.2 (Hasegawa et al. 1972)"
+   }
+  },
+  "dft": {
+   "polar": {
+    "long (a_exp 8.58)": [
+     8.5282,
+     -0.6
+    ],
+    "short, polar (b_exp 4.91)": [
+     4.7568,
+     -3.12
+    ],
+    "chain (c_exp 2.56)": [
+     2.5808,
+     0.81
+    ],
+    "angles": [
+     90.0,
+     90.0,
+     90.0
+    ],
+    "volume_per_monomer_A3": 52.346
+   },
+   "polar_dipole": {
+    "long (a_exp 8.58)": [
+     8.5259,
+     -0.63
+    ],
+    "short, polar (b_exp 4.91)": [
+     4.7594,
+     -3.07
+    ],
+    "chain (c_exp 2.56)": [
+     2.5808,
+     0.81
+    ],
+    "angles": [
+     90.0,
+     90.0,
+     90.0
+    ],
+    "volume_per_monomer_A3": 52.361
+   },
+   "alpha": {
+    "short (a_exp 4.96)": [
+     4.9453,
+     -0.3
+    ],
+    "long (b_exp 9.64)": [
+     9.636,
+     -0.04
+    ],
+    "chain (c_exp 4.62)": [
+     4.6596,
+     0.86
+    ],
+    "angles": [
+     90.0,
+     87.7279,
+     90.0
+    ],
+    "volume_per_monomer_A3": 55.467
+   }
+  }
+ },
+ "polyfind_margins_kcal_per_monomer": {
+  "screen_gamma90_rigid (anti90 - best, screen packer)": 1.0214,
+  "screen_gamma_free_rigid (anti_free - best, screen packer)": -0.0,
+  "phonon_packer_rigid anti_free - polar": -0.007610999999999812,
+  "phonon_packer_rigid anti90 - polar": 1.166195,
+  "phonon_packer_all_atom_relaxed anti_free - polar": -0.005618260426206945,
+  "phonon_packer_all_atom_relaxed anti90 - polar": 0.5972956567057395,
+  "error_bar": 0.27186
+ }
+}

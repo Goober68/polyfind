@@ -1,0 +1,2440 @@
+{
+ "run_root": "/home/niall_sweeny/polar_margin/runs",
+ "cells": {
+  "alpha": {
+   "stages": {
+    "relax0": {
+     "file": "relax0.out",
+     "job_done": true,
+     "energy_ry": -551.62083663,
+     "d3_ry": -0.09895774,
+     "n_scf": 62,
+     "n_kpoints_irreducible": 4,
+     "sym_ops": 2,
+     "pressure_kbar": 0.03,
+     "stress_kbar": [
+      [
+       -0.09,
+       0.0,
+       -0.13
+      ],
+      [
+       0.0,
+       0.11,
+       0.0
+      ],
+      [
+       -0.13,
+       0.0,
+       0.08
+      ]
+     ],
+     "total_force_ry_bohr": 0.000438,
+     "max_force_component_ry_bohr": 0.00015048,
+     "wall": "4h38m",
+     "bfgs_converged": true,
+     "bfgs_steps": 60,
+     "has_final_coordinates": true,
+     "mesh": [
+      2,
+      1,
+      2
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": false,
+     "final_lattice": {
+      "a": 4.945335532791442,
+      "b": 9.635999092,
+      "c": 4.659571334191021,
+      "alpha": 90.0,
+      "beta": 87.72792821525783,
+      "gamma": 90.0,
+      "volume": 221.86914936176674
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 12,
+        "cf2_groups": 2,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 180.0
+       },
+       {
+        "atoms": 12,
+        "cf2_groups": 2,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         -0.0,
+         0.0
+        ],
+        "azimuth_deg": -0.0
+       }
+      ],
+      "sum_of_unit_vectors": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "antipolar",
+      "chain2_minus_chain1_fractional": [
+       -0.4375,
+       -0.5,
+       0.2766
+      ],
+      "chain_separation_inplane_A": 5.2713
+     }
+    },
+    "scf_k1": {
+     "file": "scf_k1.out",
+     "job_done": true,
+     "energy_ry": -551.6232747,
+     "d3_ry": -0.09895774,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 20,
+     "sym_ops": 2,
+     "pressure_kbar": -0.27,
+     "stress_kbar": [
+      [
+       0.0,
+       0.0,
+       -0.3
+      ],
+      [
+       0.0,
+       -0.96,
+       0.0
+      ],
+      [
+       -0.3,
+       0.0,
+       0.16
+      ]
+     ],
+     "total_force_ry_bohr": 0.003563,
+     "max_force_component_ry_bohr": 0.00093686,
+     "wall": "25m31.92s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      4
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": false
+    },
+    "scf_k1_3body": {
+     "file": "scf_k1_3body.out",
+     "job_done": true,
+     "energy_ry": -551.6184043,
+     "d3_ry": -0.09408734,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 20,
+     "sym_ops": 2,
+     "pressure_kbar": 0.74,
+     "stress_kbar": [
+      [
+       1.06,
+       0.0,
+       -0.3
+      ],
+      [
+       0.0,
+       0.04,
+       0.0
+      ],
+      [
+       -0.3,
+       0.0,
+       1.11
+      ]
+     ],
+     "total_force_ry_bohr": 0.003552,
+     "max_force_component_ry_bohr": 0.00094116,
+     "wall": "24m 6.92s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      4
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": true,
+     "nosym": false,
+     "meets_criteria": false
+    }
+   },
+   "final_relaxation": "relax0",
+   "lattice": {
+    "a": 4.945335532791442,
+    "b": 9.635999092,
+    "c": 4.659571334191021,
+    "alpha": 90.0,
+    "beta": 87.72792821525783,
+    "gamma": 90.0,
+    "volume": 221.86914936176674
+   },
+   "lattice_vectors_A": [
+    [
+     4.94427791,
+     0.0,
+     0.1022716
+    ],
+    [
+     0.0,
+     9.63599909,
+     0.0
+    ],
+    [
+     0.08840187,
+     0.0,
+     4.65873267
+    ]
+   ],
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 12,
+      "cf2_groups": 2,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 180.0
+     },
+     {
+      "atoms": 12,
+      "cf2_groups": 2,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       -0.0,
+       0.0
+      ],
+      "azimuth_deg": -0.0
+     }
+    ],
+    "sum_of_unit_vectors": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "antipolar",
+    "chain2_minus_chain1_fractional": [
+     -0.4375,
+     -0.5,
+     0.2766
+    ],
+    "chain_separation_inplane_A": 5.2713
+   },
+   "n_atoms": 24,
+   "n_monomers": 4
+  },
+  "anti90": {
+   "stages": {
+    "relax0": {
+     "file": "relax0.out",
+     "job_done": true,
+     "energy_ry": -275.80294983,
+     "d3_ry": -0.05229822,
+     "n_scf": 59,
+     "n_kpoints_irreducible": 6,
+     "sym_ops": 4,
+     "pressure_kbar": 0.06,
+     "stress_kbar": [
+      [
+       0.17,
+       -0.01,
+       0.0
+      ],
+      [
+       -0.01,
+       0.01,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.02
+      ]
+     ],
+     "total_force_ry_bohr": 0.000107,
+     "max_force_component_ry_bohr": 4.13e-05,
+     "wall": "1h31m",
+     "bfgs_converged": true,
+     "bfgs_steps": 57,
+     "has_final_coordinates": true,
+     "mesh": [
+      2,
+      1,
+      4
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.744432758634901,
+      "b": 8.604343902115493,
+      "c": 2.582636682,
+      "alpha": 90.0,
+      "beta": 90.0,
+      "gamma": 89.93794654925613,
+      "volume": 105.43022090244055
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         -0.0022,
+         0.0
+        ],
+        "azimuth_deg": -0.13
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0022,
+         0.0
+        ],
+        "azimuth_deg": 179.87
+       }
+      ],
+      "sum_of_unit_vectors": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "antipolar",
+      "chain2_minus_chain1_fractional": [
+       -0.0046,
+       0.4997,
+       0.0
+      ],
+      "chain_separation_inplane_A": 4.2993
+     }
+    },
+    "relax1": {
+     "file": "relax1.out",
+     "job_done": true,
+     "energy_ry": -275.80718064,
+     "d3_ry": -0.05284929,
+     "n_scf": 21,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.04,
+     "stress_kbar": [
+      [
+       -0.16,
+       -0.01,
+       0.0
+      ],
+      [
+       -0.01,
+       0.09,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.06
+      ]
+     ],
+     "total_force_ry_bohr": 0.000147,
+     "max_force_component_ry_bohr": 6.276e-05,
+     "wall": "1h26m",
+     "bfgs_converged": true,
+     "bfgs_steps": 19,
+     "has_final_coordinates": true,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.752319514774633,
+      "b": 8.514829598197167,
+      "c": 2.580661349,
+      "alpha": 90.0,
+      "beta": 90.0,
+      "gamma": 89.9737543182459,
+      "volume": 104.42694308787902
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         -0.0012,
+         0.0
+        ],
+        "azimuth_deg": -0.07
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0012,
+         0.0
+        ],
+        "azimuth_deg": 179.93
+       }
+      ],
+      "sum_of_unit_vectors": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "antipolar",
+      "chain2_minus_chain1_fractional": [
+       -0.0022,
+       0.4998,
+       0.0
+      ],
+      "chain_separation_inplane_A": 4.2556
+     }
+    },
+    "scf_k1": {
+     "file": "scf_k1.out",
+     "job_done": true,
+     "energy_ry": -275.80718064,
+     "d3_ry": -0.05284929,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.04,
+     "stress_kbar": [
+      [
+       -0.16,
+       -0.01,
+       0.0
+      ],
+      [
+       -0.01,
+       0.09,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.06
+      ]
+     ],
+     "total_force_ry_bohr": 0.000147,
+     "max_force_component_ry_bohr": 6.275e-05,
+     "wall": "7m 4.48s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k1_3body": {
+     "file": "scf_k1_3body.out",
+     "job_done": true,
+     "energy_ry": -275.80439609,
+     "d3_ry": -0.05006474,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": 1.16,
+     "stress_kbar": [
+      [
+       1.04,
+       -0.01,
+       0.0
+      ],
+      [
+       -0.01,
+       1.33,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       1.12
+      ]
+     ],
+     "total_force_ry_bohr": 0.000147,
+     "max_force_component_ry_bohr": 5.99e-05,
+     "wall": "8m55.94s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": true,
+     "nosym": false,
+     "meets_criteria": false
+    },
+    "scf_k1_e110": {
+     "file": "scf_k1_e110.out",
+     "job_done": true,
+     "energy_ry": -275.8073639,
+     "d3_ry": -0.05284929,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.01,
+     "stress_kbar": [
+      [
+       -0.13,
+       -0.01,
+       0.0
+      ],
+      [
+       -0.01,
+       0.04,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       0.06
+      ]
+     ],
+     "total_force_ry_bohr": 0.00015,
+     "max_force_component_ry_bohr": 6.574e-05,
+     "wall": "10m25.91s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      110,
+      440
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k2": {
+     "file": "scf_k2.out",
+     "job_done": true,
+     "energy_ry": -275.80719954,
+     "d3_ry": -0.05284929,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 162,
+     "sym_ops": 4,
+     "pressure_kbar": -0.05,
+     "stress_kbar": [
+      [
+       -0.15,
+       -0.01,
+       0.0
+      ],
+      [
+       -0.01,
+       0.08,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.07
+      ]
+     ],
+     "total_force_ry_bohr": 0.000172,
+     "max_force_component_ry_bohr": 8.485e-05,
+     "wall": "36m48.78s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      8,
+      4,
+      16
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    }
+   },
+   "final_relaxation": "relax1",
+   "lattice": {
+    "a": 4.752319514774633,
+    "b": 8.514829598197167,
+    "c": 2.580661349,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 89.9737543182459,
+    "volume": 104.42694308787902
+   },
+   "lattice_vectors_A": [
+    [
+     4.75231951,
+     0.0,
+     0.0
+    ],
+    [
+     0.00390042,
+     8.5148287,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     2.58066135
+    ]
+   ],
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       -0.0012,
+       0.0
+      ],
+      "azimuth_deg": -0.07
+     },
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       0.0012,
+       0.0
+      ],
+      "azimuth_deg": 179.93
+     }
+    ],
+    "sum_of_unit_vectors": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "antipolar",
+    "chain2_minus_chain1_fractional": [
+     -0.0022,
+     0.4998,
+     0.0
+    ],
+    "chain_separation_inplane_A": 4.2556
+   },
+   "n_atoms": 12,
+   "n_monomers": 2
+  },
+  "anti_free": {
+   "stages": {
+    "relax0": {
+     "file": "relax0.out",
+     "job_done": true,
+     "energy_ry": -275.80295057,
+     "d3_ry": -0.05227887,
+     "n_scf": 35,
+     "n_kpoints_irreducible": 6,
+     "sym_ops": 4,
+     "pressure_kbar": 0.04,
+     "stress_kbar": [
+      [
+       0.1,
+       -0.01,
+       0.0
+      ],
+      [
+       -0.01,
+       0.01,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       0.02
+      ]
+     ],
+     "total_force_ry_bohr": 8.4e-05,
+     "max_force_component_ry_bohr": 4.29e-05,
+     "wall": "44m12.91s",
+     "bfgs_converged": true,
+     "bfgs_steps": 33,
+     "has_final_coordinates": true,
+     "mesh": [
+      2,
+      1,
+      4
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.746531812001952,
+      "b": 8.603272234001789,
+      "c": 2.582732471,
+      "alpha": 90.0,
+      "beta": 90.0,
+      "gamma": 89.99991107228661,
+      "volume": 105.46770217318213
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 0.0
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         -0.0,
+         0.0
+        ],
+        "azimuth_deg": -180.0
+       }
+      ],
+      "sum_of_unit_vectors": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "antipolar",
+      "chain2_minus_chain1_fractional": [
+       -0.0047,
+       0.5,
+       0.0
+      ],
+      "chain_separation_inplane_A": 4.3017
+     }
+    },
+    "relax1": {
+     "file": "relax1.out",
+     "job_done": true,
+     "energy_ry": -275.80717525,
+     "d3_ry": -0.05292555,
+     "n_scf": 12,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": 0.02,
+     "stress_kbar": [
+      [
+       0.11,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.1
+      ]
+     ],
+     "total_force_ry_bohr": 0.000238,
+     "max_force_component_ry_bohr": 9.829e-05,
+     "wall": "40m19.17s",
+     "bfgs_converged": true,
+     "bfgs_steps": 10,
+     "has_final_coordinates": true,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.7429493240002385,
+      "b": 8.519047913006444,
+      "c": 2.580825919,
+      "alpha": 90.0,
+      "beta": 90.0,
+      "gamma": 89.9999477272128,
+      "volume": 104.27933595138472
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 0.0
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         -0.0,
+         0.0
+        ],
+        "azimuth_deg": -180.0
+       }
+      ],
+      "sum_of_unit_vectors": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "antipolar",
+      "chain2_minus_chain1_fractional": [
+       -0.0036,
+       0.5,
+       0.0
+      ],
+      "chain_separation_inplane_A": 4.2596
+     }
+    },
+    "relax_nosym": {
+     "file": "relax_nosym.out",
+     "job_done": true,
+     "energy_ry": -275.80718272,
+     "d3_ry": -0.0529011,
+     "n_scf": 43,
+     "n_kpoints_irreducible": 36,
+     "sym_ops": null,
+     "pressure_kbar": 0.02,
+     "stress_kbar": [
+      [
+       -0.01,
+       0.01,
+       -0.03
+      ],
+      [
+       0.01,
+       0.06,
+       -0.05
+      ],
+      [
+       -0.03,
+       -0.05,
+       0.0
+      ]
+     ],
+     "total_force_ry_bohr": 0.000189,
+     "max_force_component_ry_bohr": 6.673e-05,
+     "wall": "3h24m",
+     "bfgs_converged": true,
+     "bfgs_steps": 41,
+     "has_final_coordinates": true,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": true,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.746925605210773,
+      "b": 8.516590989193547,
+      "c": 2.580731432231278,
+      "alpha": 89.98209709393649,
+      "beta": 90.03332792840516,
+      "gamma": 90.02689258543894,
+      "volume": 104.3328053357899
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         0.0002,
+         0.0
+        ],
+        "azimuth_deg": 0.01
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         -0.0013,
+         0.0
+        ],
+        "azimuth_deg": -179.93
+       }
+      ],
+      "sum_of_unit_vectors": [
+       0.0,
+       -0.0011,
+       0.0
+      ],
+      "arrangement": "antipolar",
+      "chain2_minus_chain1_fractional": [
+       0.0004,
+       0.4997,
+       0.0024
+      ],
+      "chain_separation_inplane_A": 4.2561
+     }
+    },
+    "scf_k0": {
+     "file": "scf_k0.out",
+     "job_done": true,
+     "energy_ry": -275.80287273,
+     "d3_ry": -0.05292555,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 6,
+     "sym_ops": 4,
+     "pressure_kbar": 0.96,
+     "stress_kbar": [
+      [
+       -0.95,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       1.91,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       1.93
+      ]
+     ],
+     "total_force_ry_bohr": 0.003119,
+     "max_force_component_ry_bohr": 0.00160782,
+     "wall": "1m14.01s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      2,
+      1,
+      4
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": false
+    },
+    "scf_k1": {
+     "file": "scf_k1.out",
+     "job_done": true,
+     "energy_ry": -275.80717525,
+     "d3_ry": -0.05292555,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": 0.02,
+     "stress_kbar": [
+      [
+       0.11,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.1
+      ]
+     ],
+     "total_force_ry_bohr": 0.000238,
+     "max_force_component_ry_bohr": 9.814e-05,
+     "wall": "5m24.52s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k15": {
+     "file": "scf_k15.out",
+     "job_done": true,
+     "energy_ry": -275.80719382,
+     "d3_ry": -0.05292555,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 70,
+     "sym_ops": 4,
+     "pressure_kbar": 0.01,
+     "stress_kbar": [
+      [
+       0.12,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.1
+      ]
+     ],
+     "total_force_ry_bohr": 0.000234,
+     "max_force_component_ry_bohr": 9.127e-05,
+     "wall": "17m38.45s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      6,
+      3,
+      12
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k1_3body": {
+     "file": "scf_k1_3body.out",
+     "job_done": true,
+     "energy_ry": -275.80438163,
+     "d3_ry": -0.05013193,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": 1.23,
+     "stress_kbar": [
+      [
+       1.32,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       1.28,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       1.09
+      ]
+     ],
+     "total_force_ry_bohr": 0.000286,
+     "max_force_component_ry_bohr": 0.00011355,
+     "wall": "6m29.29s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": true,
+     "nosym": false,
+     "meets_criteria": false
+    },
+    "scf_k1_e110": {
+     "file": "scf_k1_e110.out",
+     "job_done": true,
+     "energy_ry": -275.8073595,
+     "d3_ry": -0.05292555,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": 0.0,
+     "stress_kbar": [
+      [
+       0.16,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       -0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.12
+      ]
+     ],
+     "total_force_ry_bohr": 0.000248,
+     "max_force_component_ry_bohr": 0.00010287,
+     "wall": "11m33.06s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      110,
+      440
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": false
+    },
+    "scf_k1_e130": {
+     "file": "scf_k1_e130.out",
+     "job_done": true,
+     "energy_ry": -275.80748341,
+     "d3_ry": -0.05292555,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.06,
+     "stress_kbar": [
+      [
+       0.06,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       -0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.2
+      ]
+     ],
+     "total_force_ry_bohr": 0.000253,
+     "max_force_component_ry_bohr": 0.000103,
+     "wall": "13m53.49s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      130,
+      520
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": false
+    },
+    "scf_k2": {
+     "file": "scf_k2.out",
+     "job_done": true,
+     "energy_ry": -275.80719396,
+     "d3_ry": -0.05292555,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 162,
+     "sym_ops": 4,
+     "pressure_kbar": 0.01,
+     "stress_kbar": [
+      [
+       0.12,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.11
+      ]
+     ],
+     "total_force_ry_bohr": 0.000234,
+     "max_force_component_ry_bohr": 9.16e-05,
+     "wall": "48m36.79s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      8,
+      4,
+      16
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k3": {
+     "file": "scf_k3.out",
+     "job_done": true,
+     "energy_ry": -275.80719398,
+     "d3_ry": -0.05292555,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 494,
+     "sym_ops": 4,
+     "pressure_kbar": 0.02,
+     "stress_kbar": [
+      [
+       0.12,
+       -0.0,
+       0.0
+      ],
+      [
+       -0.0,
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.1
+      ]
+     ],
+     "total_force_ry_bohr": 0.000233,
+     "max_force_component_ry_bohr": 9.09e-05,
+     "wall": "1h55m",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      12,
+      6,
+      24
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    }
+   },
+   "final_relaxation": "relax1",
+   "lattice": {
+    "a": 4.7429493240002385,
+    "b": 8.519047913006444,
+    "c": 2.580825919,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 89.9999477272128,
+    "volume": 104.27933595138472
+   },
+   "lattice_vectors_A": [
+    [
+     4.74294932,
+     -0.0,
+     0.0
+    ],
+    [
+     7.77e-06,
+     8.51904791,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     2.58082592
+    ]
+   ],
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 0.0
+     },
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       -0.0,
+       0.0
+      ],
+      "azimuth_deg": -180.0
+     }
+    ],
+    "sum_of_unit_vectors": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "antipolar",
+    "chain2_minus_chain1_fractional": [
+     -0.0036,
+     0.5,
+     0.0
+    ],
+    "chain_separation_inplane_A": 4.2596
+   },
+   "n_atoms": 12,
+   "n_monomers": 2
+  },
+  "polar": {
+   "stages": {
+    "relax0": {
+     "file": "relax0.out",
+     "job_done": true,
+     "energy_ry": -275.80317427,
+     "d3_ry": -0.05191123,
+     "n_scf": 22,
+     "n_kpoints_irreducible": 6,
+     "sym_ops": 4,
+     "pressure_kbar": 0.08,
+     "stress_kbar": [
+      [
+       0.06,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       -0.02,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       0.2
+      ]
+     ],
+     "total_force_ry_bohr": 0.000172,
+     "max_force_component_ry_bohr": 8.301e-05,
+     "wall": "27m17.26s",
+     "bfgs_converged": true,
+     "bfgs_steps": 20,
+     "has_final_coordinates": true,
+     "mesh": [
+      2,
+      1,
+      4
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.768781134,
+      "b": 8.579597182,
+      "c": 2.582589979,
+      "alpha": 90.0,
+      "beta": 90.0,
+      "gamma": 90.0,
+      "volume": 105.66465761506477
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 180.0
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 180.0
+       }
+      ],
+      "sum_of_unit_vectors": [
+       -2.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "polar",
+      "chain2_minus_chain1_fractional": [
+       0.5,
+       -0.5,
+       0.0
+      ],
+      "chain_separation_inplane_A": 4.9079
+     }
+    },
+    "relax1": {
+     "file": "relax1.out",
+     "job_done": true,
+     "energy_ry": -275.80701219,
+     "d3_ry": -0.05243146,
+     "n_scf": 12,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.0,
+     "stress_kbar": [
+      [
+       -0.03,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.06,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.03
+      ]
+     ],
+     "total_force_ry_bohr": 5e-05,
+     "max_force_component_ry_bohr": 1.355e-05,
+     "wall": "56m10.11s",
+     "bfgs_converged": true,
+     "bfgs_steps": 10,
+     "has_final_coordinates": true,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.756803091,
+      "b": 8.528150366,
+      "c": 2.580755558,
+      "alpha": 90.0,
+      "beta": 90.0,
+      "gamma": 90.0,
+      "volume": 104.69281913438678
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 180.0
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 180.0
+       }
+      ],
+      "sum_of_unit_vectors": [
+       -2.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "polar",
+      "chain2_minus_chain1_fractional": [
+       0.5,
+       -0.5,
+       0.0
+      ],
+      "chain_separation_inplane_A": 4.8825
+     }
+    },
+    "relax_nosym": {
+     "file": "relax_nosym.out",
+     "job_done": true,
+     "energy_ry": -275.80701185,
+     "d3_ry": -0.05243602,
+     "n_scf": 33,
+     "n_kpoints_irreducible": 36,
+     "sym_ops": null,
+     "pressure_kbar": -0.01,
+     "stress_kbar": [
+      [
+       -0.02,
+       -0.03,
+       -0.09
+      ],
+      [
+       -0.03,
+       0.03,
+       0.01
+      ],
+      [
+       -0.09,
+       0.01,
+       -0.04
+      ]
+     ],
+     "total_force_ry_bohr": 0.000259,
+     "max_force_component_ry_bohr": 9.092e-05,
+     "wall": "2h37m",
+     "bfgs_converged": true,
+     "bfgs_steps": 31,
+     "has_final_coordinates": true,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": true,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.754987358342875,
+      "b": 8.530885731645352,
+      "c": 2.5807596984197327,
+      "alpha": 89.92197168209479,
+      "beta": 89.97172912252194,
+      "gamma": 89.95138348201071,
+      "volume": 104.68644397968411
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0014,
+         0.0
+        ],
+        "azimuth_deg": 179.92
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         -1.0,
+         0.0002,
+         0.0
+        ],
+        "azimuth_deg": 179.99
+       }
+      ],
+      "sum_of_unit_vectors": [
+       -2.0,
+       0.0016,
+       0.0
+      ],
+      "arrangement": "polar",
+      "chain2_minus_chain1_fractional": [
+       0.4992,
+       -0.4998,
+       0.0033
+      ],
+      "chain_separation_inplane_A": 4.8783
+     }
+    },
+    "scf_k0": {
+     "file": "scf_k0.out",
+     "job_done": true,
+     "energy_ry": -275.80312444,
+     "d3_ry": -0.05243146,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 6,
+     "sym_ops": 4,
+     "pressure_kbar": 0.7,
+     "stress_kbar": [
+      [
+       -1.3,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       1.44,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       1.95
+      ]
+     ],
+     "total_force_ry_bohr": 0.003177,
+     "max_force_component_ry_bohr": 0.00160402,
+     "wall": "1m44.91s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      2,
+      1,
+      4
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": false
+    },
+    "scf_k1": {
+     "file": "scf_k1.out",
+     "job_done": true,
+     "energy_ry": -275.80701219,
+     "d3_ry": -0.05243146,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.0,
+     "stress_kbar": [
+      [
+       -0.03,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.06,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.03
+      ]
+     ],
+     "total_force_ry_bohr": 5e-05,
+     "max_force_component_ry_bohr": 1.336e-05,
+     "wall": "6m52.43s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k15": {
+     "file": "scf_k15.out",
+     "job_done": true,
+     "energy_ry": -275.80703022,
+     "d3_ry": -0.05243146,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 56,
+     "sym_ops": 4,
+     "pressure_kbar": -0.0,
+     "stress_kbar": [
+      [
+       -0.03,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.05,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.04
+      ]
+     ],
+     "total_force_ry_bohr": 8.2e-05,
+     "max_force_component_ry_bohr": 3.45e-05,
+     "wall": "11m30.67s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      6,
+      3,
+      12
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k1_3body": {
+     "file": "scf_k1_3body.out",
+     "job_done": true,
+     "energy_ry": -275.80420335,
+     "d3_ry": -0.04962262,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": 1.22,
+     "stress_kbar": [
+      [
+       1.15,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       1.35,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       1.16
+      ]
+     ],
+     "total_force_ry_bohr": 6.8e-05,
+     "max_force_component_ry_bohr": 2.127e-05,
+     "wall": "6m15.37s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": true,
+     "nosym": false,
+     "meets_criteria": false
+    },
+    "scf_k1_e110": {
+     "file": "scf_k1_e110.out",
+     "job_done": true,
+     "energy_ry": -275.80719079,
+     "d3_ry": -0.05243146,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.02,
+     "stress_kbar": [
+      [
+       0.0,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       -0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.05
+      ]
+     ],
+     "total_force_ry_bohr": 6.6e-05,
+     "max_force_component_ry_bohr": 3.477e-05,
+     "wall": "8m32.49s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      110,
+      440
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k1_e130": {
+     "file": "scf_k1_e130.out",
+     "job_done": true,
+     "energy_ry": -275.80731959,
+     "d3_ry": -0.05243146,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.07,
+     "stress_kbar": [
+      [
+       -0.09,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       -0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.13
+      ]
+     ],
+     "total_force_ry_bohr": 5.6e-05,
+     "max_force_component_ry_bohr": 2.098e-05,
+     "wall": "13m44.00s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      130,
+      520
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k2": {
+     "file": "scf_k2.out",
+     "job_done": true,
+     "energy_ry": -275.8070304,
+     "d3_ry": -0.05243146,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 135,
+     "sym_ops": 4,
+     "pressure_kbar": -0.0,
+     "stress_kbar": [
+      [
+       -0.03,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.05,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.04
+      ]
+     ],
+     "total_force_ry_bohr": 8.3e-05,
+     "max_force_component_ry_bohr": 3.482e-05,
+     "wall": "25m50.74s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      8,
+      4,
+      16
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k3": {
+     "file": "scf_k3.out",
+     "job_done": true,
+     "energy_ry": -275.8070304,
+     "d3_ry": -0.05243146,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 364,
+     "sym_ops": 4,
+     "pressure_kbar": -0.0,
+     "stress_kbar": [
+      [
+       -0.03,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.05,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.04
+      ]
+     ],
+     "total_force_ry_bohr": 8.3e-05,
+     "max_force_component_ry_bohr": 3.51e-05,
+     "wall": "1h28m",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      12,
+      6,
+      24
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    }
+   },
+   "final_relaxation": "relax1",
+   "lattice": {
+    "a": 4.756803091,
+    "b": 8.528150366,
+    "c": 2.580755558,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 90.0,
+    "volume": 104.69281913438678
+   },
+   "lattice_vectors_A": [
+    [
+     4.75680309,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     8.52815037,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     2.58075556
+    ]
+   ],
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 180.0
+     },
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       -1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 180.0
+     }
+    ],
+    "sum_of_unit_vectors": [
+     -2.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "polar",
+    "chain2_minus_chain1_fractional": [
+     0.5,
+     -0.5,
+     0.0
+    ],
+    "chain_separation_inplane_A": 4.8825
+   },
+   "n_atoms": 12,
+   "n_monomers": 2
+  },
+  "polar_dipole": {
+   "stages": {
+    "relax0": {
+     "file": "relax0.out",
+     "job_done": true,
+     "energy_ry": -275.80317541,
+     "d3_ry": -0.05184946,
+     "n_scf": 15,
+     "n_kpoints_irreducible": 6,
+     "sym_ops": 4,
+     "pressure_kbar": 0.02,
+     "stress_kbar": [
+      [
+       -0.07,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.04,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       0.1
+      ]
+     ],
+     "total_force_ry_bohr": 0.000157,
+     "max_force_component_ry_bohr": 5.275e-05,
+     "wall": "18m 6.53s",
+     "bfgs_converged": true,
+     "bfgs_steps": 13,
+     "has_final_coordinates": true,
+     "mesh": [
+      1,
+      2,
+      4
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.775233802,
+      "b": 8.576662108,
+      "c": 2.582690502,
+      "alpha": 90.0,
+      "beta": 90.0,
+      "gamma": 90.0,
+      "volume": 105.77555339505567
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 0.0
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 0.0
+       }
+      ],
+      "sum_of_unit_vectors": [
+       2.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "polar",
+      "chain2_minus_chain1_fractional": [
+       -0.5,
+       -0.5,
+       0.0
+      ],
+      "chain_separation_inplane_A": 4.9082
+     }
+    },
+    "relax1": {
+     "file": "relax1.out",
+     "job_done": true,
+     "energy_ry": -275.80701203,
+     "d3_ry": -0.05241407,
+     "n_scf": 12,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.01,
+     "stress_kbar": [
+      [
+       -0.04,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.04,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.04
+      ]
+     ],
+     "total_force_ry_bohr": 5.1e-05,
+     "max_force_component_ry_bohr": 1.579e-05,
+     "wall": "1h 5m",
+     "bfgs_converged": true,
+     "bfgs_steps": 10,
+     "has_final_coordinates": true,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true,
+     "final_lattice": {
+      "a": 4.759368281,
+      "b": 8.525906966,
+      "c": 2.580771058,
+      "alpha": 90.0,
+      "beta": 90.0,
+      "gamma": 90.0,
+      "volume": 104.72235038476272
+     },
+     "final_orientation": {
+      "chains": [
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 0.0
+       },
+       {
+        "atoms": 6,
+        "cf2_groups": 1,
+        "cf2_to_f_unit_inplane": [
+         1.0,
+         0.0,
+         0.0
+        ],
+        "azimuth_deg": 0.0
+       }
+      ],
+      "sum_of_unit_vectors": [
+       2.0,
+       0.0,
+       0.0
+      ],
+      "arrangement": "polar",
+      "chain2_minus_chain1_fractional": [
+       0.5,
+       -0.5,
+       0.0
+      ],
+      "chain_separation_inplane_A": 4.8822
+     }
+    },
+    "scf_k1": {
+     "file": "scf_k1.out",
+     "job_done": true,
+     "energy_ry": -275.80701203,
+     "d3_ry": -0.05241407,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 30,
+     "sym_ops": 4,
+     "pressure_kbar": -0.01,
+     "stress_kbar": [
+      [
+       -0.04,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.04,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.04
+      ]
+     ],
+     "total_force_ry_bohr": 5.1e-05,
+     "max_force_component_ry_bohr": 1.583e-05,
+     "wall": "5m34.25s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      4,
+      2,
+      8
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    },
+    "scf_k2": {
+     "file": "scf_k2.out",
+     "job_done": true,
+     "energy_ry": -275.8070303,
+     "d3_ry": -0.05241407,
+     "n_scf": 1,
+     "n_kpoints_irreducible": 135,
+     "sym_ops": 4,
+     "pressure_kbar": -0.01,
+     "stress_kbar": [
+      [
+       -0.03,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.04,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       -0.05
+      ]
+     ],
+     "total_force_ry_bohr": 5.8e-05,
+     "max_force_component_ry_bohr": 1.695e-05,
+     "wall": "29m10.84s",
+     "bfgs_converged": false,
+     "bfgs_steps": null,
+     "has_final_coordinates": false,
+     "mesh": [
+      8,
+      4,
+      16
+     ],
+     "ecut": [
+      90,
+      360
+     ],
+     "threebody": false,
+     "nosym": false,
+     "meets_criteria": true
+    }
+   },
+   "final_relaxation": "relax1",
+   "lattice": {
+    "a": 4.759368281,
+    "b": 8.525906966,
+    "c": 2.580771058,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 90.0,
+    "volume": 104.72235038476272
+   },
+   "lattice_vectors_A": [
+    [
+     4.75936828,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     8.52590697,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     2.58077106
+    ]
+   ],
+   "orientation": {
+    "chains": [
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 0.0
+     },
+     {
+      "atoms": 6,
+      "cf2_groups": 1,
+      "cf2_to_f_unit_inplane": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "azimuth_deg": 0.0
+     }
+    ],
+    "sum_of_unit_vectors": [
+     2.0,
+     0.0,
+     0.0
+    ],
+    "arrangement": "polar",
+    "chain2_minus_chain1_fractional": [
+     0.5,
+     -0.5,
+     0.0
+    ],
+    "chain_separation_inplane_A": 4.8822
+   },
+   "n_atoms": 12,
+   "n_monomers": 2
+  }
+ },
+ "pseudopotentials": {
+  "H_ONCV_PBE-1.0.oncvpsp.upf": {
+   "md5": "1790becc920ee074925cf490c71280fe",
+   "sha256": "69d631780c0178c5239ed3dcb4a3e22c13bd13cde9beb97e123d036949da5c09",
+   "bytes": 109312
+  },
+  "C.pbe-n-kjpaw_psl.1.0.0.UPF": {
+   "md5": "5d2aebdfa2cae82b50a7e79e9516da0f",
+   "sha256": "9900d1efd50b9848e31849f39094b33348486b400ee51e0f3922f716137cf3d7",
+   "bytes": 911843
+  },
+  "F.oncvpsp.upf": {
+   "md5": "dbf8367619a749999a0442b33b80a7e7",
+   "sha256": "ba6ca6af365222805e3ce85564616b50a2feb562106dfbf1d725170cc7afd7b8",
+   "bytes": 133252
+  }
+ },
+ "qe_versions": [
+  "v.7.5"
+ ]
+}

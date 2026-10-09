@@ -1,0 +1,86 @@
+{
+ "what": "k-mesh test on the provider geometry (born/scf.in: their CP2K PBE-D3(BJ) cell) with this QE build, before any cell was run; inputs identical to born/scf.in except nbnd/nosym/noinv removed and the mesh",
+ "runs": {
+  "4x8x16": {
+   "energy_ry": -275.80574654,
+   "d3_ry": -0.05393497,
+   "n_kpoints_irreducible": 135,
+   "sym_ops": 4,
+   "pressure_kbar": -13.42,
+   "stress_kbar": [
+    [
+     -23.91,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     -15.37,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     -0.96
+    ]
+   ],
+   "max_force_component_ry_bohr": 0.01559929,
+   "total_force_ry_bohr": 0.039296,
+   "wall": "20m28.29s"
+  },
+  "2x4x8": {
+   "energy_ry": -275.80572742,
+   "d3_ry": -0.05393497,
+   "n_kpoints_irreducible": 30,
+   "sym_ops": 4,
+   "pressure_kbar": -13.41,
+   "stress_kbar": [
+    [
+     -23.91,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     -15.38,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     -0.95
+    ]
+   ],
+   "max_force_component_ry_bohr": 0.01559612,
+   "total_force_ry_bohr": 0.039283,
+   "wall": "5m28.55s"
+  },
+  "3x6x12": {
+   "energy_ry": -275.80574643,
+   "d3_ry": -0.05393497,
+   "n_kpoints_irreducible": 56,
+   "sym_ops": 4,
+   "pressure_kbar": -13.41,
+   "stress_kbar": [
+    [
+     -23.91,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     -15.37,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     -0.96
+    ]
+   ],
+   "max_force_component_ry_bohr": 0.01559706,
+   "total_force_ry_bohr": 0.039291,
+   "wall": "10m32.39s"
+  }
+ }
+}
