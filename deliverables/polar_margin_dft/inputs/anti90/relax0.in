@@ -1,0 +1,71 @@
+&CONTROL
+  calculation = 'vc-relax'
+  prefix = 'pvdf_anti90'
+  pseudo_dir = '/home/niall_sweeny/polar_margin/pseudo'
+  outdir = '/home/niall_sweeny/polar_margin/scratch/anti90_relax0'
+  tstress = .true.
+  tprnfor = .true.
+  disk_io = 'low'
+  etot_conv_thr = 1.0d-6
+  forc_conv_thr = 1.0d-4
+  nstep = 300
+/
+
+&SYSTEM
+  ibrav = 0
+  nat = 12
+  ntyp = 3
+  input_dft = 'PBE'
+  occupations = 'fixed'
+  ecutwfc = 90
+  ecutrho = 360
+  vdw_corr = 'grimme-d3'
+  dftd3_version = 4
+  dftd3_threebody = .false.
+/
+
+&ELECTRONS
+  conv_thr = 1.0d-10
+  electron_maxstep = 200
+  mixing_mode = 'plain'
+  mixing_beta = 0.3
+  startingwfc = 'atomic+random'
+/
+
+&IONS
+  ion_dynamics = 'bfgs'
+/
+
+&CELL
+  cell_dynamics = 'bfgs'
+  press = 0.0
+  press_conv_thr = 0.5
+  cell_dofree = 'all'
+/
+
+ATOMIC_SPECIES
+H 1.00794 H_ONCV_PBE-1.0.oncvpsp.upf
+C 12.0107 C.pbe-n-kjpaw_psl.1.0.0.UPF
+F 18.998403163 F.oncvpsp.upf
+
+CELL_PARAMETERS angstrom
+4.4868808468 0.0000000000 0.0000000000
+0.0000000000 9.9704661966 0.0000000000
+0.0000000000 0.0000000000 2.5629772556
+
+ATOMIC_POSITIONS angstrom
+C   0.4778104814 -0.3194821352  0.6407433919
+H  -0.0958071570 -1.2436125303  0.6407433919
+H  -0.1813244499  0.5459205059  0.6407433919
+C   1.3637327589 -0.2768418120  1.9222320198
+F   2.1265507168  0.8887137363  1.9222320198
+F   2.2219059945 -1.3844772848  1.9222320198
+C   1.7656299419  5.3047152335  0.6407433919
+H   2.4247648733  4.4393125923  0.6407433919
+H   2.3392475803  6.2288456285  0.6407433919
+C   0.8797076645  5.2620749102 -0.6407452359
+F   0.0215344289  6.3697103830 -0.6407452359
+F   0.1168897066  4.0965193620 -0.6407452359
+
+K_POINTS automatic
+2 1 4 0 0 0

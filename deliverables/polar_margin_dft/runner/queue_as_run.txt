@@ -1,0 +1,17 @@
+# The order in which the stages were run on this machine (WSL, QE 7.5, 2 x 3 MPI ranks, 1 OpenMP thread).
+# Two relaxation pipelines first, each on 3 ranks:
+#   NP=3 NK=3 drive_cell.sh polar RELAX FINALCHECK;     NP=3 NK=3 drive_cell.sh anti90 RELAX FINALCHECK
+#   NP=3 NK=3 drive_cell.sh anti_free RELAX FINALCHECK; NP=3 NK=3 drive_cell.sh polar_dipole RELAX FINALCHECK
+# then two workers (worker.sh W1 / W2) pulling these jobs, one line = one drive_cell.sh call:
+anti_free scf_k0 scf_k1 scf_k1_3body scf_k1_e110 scf_k15 scf_k1_e130
+polar scf_k0 scf_k1 scf_k1_3body scf_k1_e110 scf_k15 scf_k1_e130
+polar_dipole scf_k1
+anti90 scf_k1 scf_k1_e110 scf_k1_3body
+anti_free scf_k3
+polar scf_k3
+anti_free relax_nosym
+alpha RELAX FINALCHECK scf_k1 scf_k1_3body
+# (alpha was cut to a reduced protocol by alpha_reduced.sh: relax1 stopped the moment it started, then
+#  'drive_cell.sh alpha scf_k1 scf_k1_3body' on the relax0 geometry; see docs/POLAR_MARGIN_DFT.md)
+polar relax_nosym
+# (anti90 relax_nosym was queued and then removed: anti90 had relaxed into the anti_free structure, whose check covers it)

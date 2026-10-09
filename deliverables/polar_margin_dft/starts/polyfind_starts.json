@@ -1,0 +1,388 @@
+{
+ "source": "examples/screen_phonons.py one_chemistry(pvdf), defaults of its main()",
+ "preset": "pvdf-dft-valence-flux-born",
+ "seconds": 703.7,
+ "n_monomers_per_cell": 2,
+ "screen": {
+  "gamma90": {
+   "best": "TT             E/mon=  -4.302  a= 4.58 b= 8.55 c= 2.56 gamma= 90.0  phi=(  0.0,  0.0) dz=0.00 anti  rho=2.117  |P|=0.115",
+   "best_e_per_monomer": -4.3022,
+   "best_P": 0.1154,
+   "polar": "TT             E/mon=  -4.302  a= 4.58 b= 8.55 c= 2.56 gamma= 90.0  phi=(  0.0,  0.0) dz=0.00 anti  rho=2.117  |P|=0.115",
+   "polar_e_per_monomer": -4.3022,
+   "antipolar_e_per_monomer": -3.2808,
+   "antipolar_max_P": 3.08e-17,
+   "antipolar_params": [
+    4.5214,
+    9.9521,
+    90.0,
+    180.0001,
+    360.0001,
+    1.2815,
+    1.0
+   ],
+   "antipolar_gap": 1.0214,
+   "arrangement": "polar"
+  },
+  "gamma_free": {
+   "best": "TT             E/mon=  -4.319  a= 4.59 b= 9.69 c= 2.56 gamma= 61.7  phi=(180.0,  0.0) dz=0.00 anti  rho=2.116  |P|=0.000",
+   "best_e_per_monomer": -4.3192,
+   "best_P": 0.0,
+   "polar": "TT             E/mon=  -4.302  a= 4.58 b= 8.55 c= 2.56 gamma= 90.0  phi=(  0.0,  0.0) dz=0.00 anti  rho=2.117  |P|=0.115",
+   "polar_e_per_monomer": -4.3022,
+   "antipolar_e_per_monomer": -4.3192,
+   "antipolar_max_P": 3.65e-17,
+   "antipolar_params": [
+    4.5917,
+    9.6945,
+    61.7295,
+    180.0,
+    360.0,
+    2.563,
+    1.0
+   ],
+   "antipolar_seeds": [
+    {
+     "gamma0": 90.0,
+     "dz0": 1.281,
+     "gamma": 90.0,
+     "dz": 1.281,
+     "e_per_monomer": -3.2808
+    },
+    {
+     "gamma0": 90.0,
+     "dz0": 2.563,
+     "gamma": 90.0,
+     "dz": 1.281,
+     "e_per_monomer": -3.2808
+    },
+    {
+     "gamma0": 65.0,
+     "dz0": 1.281,
+     "gamma": 61.73,
+     "dz": 2.563,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 65.0,
+     "dz0": 2.563,
+     "gamma": 61.73,
+     "dz": 2.563,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 75.0,
+     "dz0": 1.281,
+     "gamma": 61.73,
+     "dz": 2.563,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 75.0,
+     "dz0": 2.563,
+     "gamma": 61.73,
+     "dz": 0.0,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 85.0,
+     "dz0": 1.281,
+     "gamma": 61.73,
+     "dz": 0.0,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 85.0,
+     "dz0": 2.563,
+     "gamma": 61.73,
+     "dz": 2.563,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 95.0,
+     "dz0": 1.281,
+     "gamma": 118.27,
+     "dz": 0.0,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 95.0,
+     "dz0": 2.563,
+     "gamma": 118.27,
+     "dz": 2.563,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 105.0,
+     "dz0": 1.281,
+     "gamma": 118.27,
+     "dz": 0.0,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 105.0,
+     "dz0": 2.563,
+     "gamma": 118.27,
+     "dz": 0.0,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 115.0,
+     "dz0": 1.281,
+     "gamma": 118.27,
+     "dz": 0.0,
+     "e_per_monomer": -4.3192
+    },
+    {
+     "gamma0": 115.0,
+     "dz0": 2.563,
+     "gamma": 118.27,
+     "dz": 2.563,
+     "e_per_monomer": -4.3192
+    }
+   ],
+   "antipolar_gap": -0.0,
+   "arrangement": "not resolved",
+   "antipolar_density": 2.1165,
+   "antipolar_closest_contact": 2.6415
+  },
+  "error_bar": 0.27186
+ },
+ "phonon_packer": {
+  "polar90": {
+   "row": "TT             E/mon=   0.663  a= 4.55 b= 8.50 c= 2.56 gamma= 90.0  phi=(  0.0,  0.0) dz=0.00 anti  rho=2.146  |P|=0.143",
+   "e_per_monomer": 0.6626,
+   "P": 0.1435,
+   "density": 2.1459,
+   "closest_contact": 2.6088,
+   "params": [
+    4.5493,
+    8.4997,
+    90.0,
+    0.0,
+    360.0,
+    0.0,
+    1.0
+   ]
+  },
+  "anti90": {
+   "row": "TT             E/mon=   1.829  a= 4.49 b= 9.97 c= 2.56 gamma= 90.0  phi=(180.0,  0.0) dz=1.28 anti  rho=1.855  |P|=0.000",
+   "e_per_monomer": 1.8288,
+   "P": 1.007e-16,
+   "density": 1.8547,
+   "closest_contact": 2.5549,
+   "params": [
+    4.4869,
+    9.9705,
+    90.0,
+    180.0001,
+    0.0001,
+    1.2815,
+    1.0
+   ]
+  },
+  "polar_free": {
+   "row": "TT             E/mon=   0.663  a= 4.55 b= 8.50 c= 2.56 gamma= 90.0  phi=(  0.0,  0.0) dz=0.00 anti  rho=2.146  |P|=0.143",
+   "e_per_monomer": 0.6626,
+   "P": 0.1435,
+   "density": 2.1459,
+   "closest_contact": 2.6088,
+   "params": [
+    4.5493,
+    8.4997,
+    90.0,
+    0.0,
+    360.0,
+    0.0,
+    1.0
+   ]
+  },
+  "anti_free": {
+   "row": "TT             E/mon=   0.655  a= 4.56 b= 9.64 c= 2.56 gamma= 61.8  phi=(180.0,  0.0) dz=0.00 anti  rho=2.144  |P|=0.000",
+   "e_per_monomer": 0.655,
+   "P": 9.499e-17,
+   "density": 2.1441,
+   "closest_contact": 2.6176,
+   "params": [
+    4.5593,
+    9.6351,
+    61.758,
+    180.0001,
+    0.0001,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "cells": {
+  "polar90": {
+   "params": [
+    4.549260911138021,
+    8.49971389364472,
+    90.0,
+    2.0627806560675914e-16,
+    360.0,
+    1.3311646916145737e-15,
+    1.0
+   ],
+   "rigid_energy_kcal_per_cell": -6.926738,
+   "relaxed_energy_kcal_per_cell": -9.33939505216643,
+   "relaxation": "accepted: max |dE/dP| 9.139e-07 against gtol 1e-06 kcal/(mol A); L-BFGS-B 11 iterations / 13 evaluations, residual 9.139e-07, 'CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL'; 0 Newton polishes",
+   "max_displacement": 0.0571,
+   "chain_slides": [
+    [
+     0.0102,
+     0.0,
+     -0.0
+    ],
+    [
+     0.0102,
+     0.0,
+     -0.0
+    ]
+   ],
+   "dipole_per_monomer_after": 0.358,
+   "lowest_optical_relaxed": [
+    34.53,
+    40.48,
+    49.2,
+    90.96,
+    95.76,
+    205.02
+   ],
+   "files": {
+    "rigid": "pvdf_polar90_rigid.xyz",
+    "relaxed": "pvdf_polar90_relaxed.xyz"
+   }
+  },
+  "anti90": {
+   "params": [
+    4.486880846753281,
+    9.970466196556593,
+    90.0,
+    180.00011155645308,
+    0.00011155645302096673,
+    1.2814867838933275,
+    1.0
+   ],
+   "rigid_energy_kcal_per_cell": -4.594348,
+   "relaxed_energy_kcal_per_cell": -8.144803738754952,
+   "relaxation": "accepted: max |dE/dP| 4.804e-12 against gtol 1e-06 kcal/(mol A); L-BFGS-B 154 iterations / 193 evaluations, residual 1.027e-06, 'CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH'; 1 Newton polish",
+   "max_displacement": 1.0506,
+   "chain_slides": [
+    [
+     0.9855,
+     -0.2983,
+     0.6407
+    ],
+    [
+     -0.9855,
+     0.2983,
+     -0.6407
+    ]
+   ],
+   "dipole_per_monomer_after": 0.0,
+   "lowest_optical_relaxed": [
+    18.18,
+    22.52,
+    38.87,
+    42.07,
+    49.32,
+    206.22
+   ],
+   "files": {
+    "rigid": "pvdf_anti90_rigid.xyz",
+    "relaxed": "pvdf_anti90_relaxed.xyz"
+   }
+  },
+  "polar_free": {
+   "params": [
+    4.549260911138021,
+    8.49971389364472,
+    90.0,
+    2.0627806560675914e-16,
+    360.0,
+    1.3311646916145737e-15,
+    1.0
+   ],
+   "rigid_energy_kcal_per_cell": -6.926738,
+   "relaxed_energy_kcal_per_cell": -9.33939505216643,
+   "relaxation": "accepted: max |dE/dP| 9.139e-07 against gtol 1e-06 kcal/(mol A); L-BFGS-B 11 iterations / 13 evaluations, residual 9.139e-07, 'CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL'; 0 Newton polishes",
+   "max_displacement": 0.0571,
+   "chain_slides": [
+    [
+     0.0102,
+     0.0,
+     -0.0
+    ],
+    [
+     0.0102,
+     0.0,
+     -0.0
+    ]
+   ],
+   "dipole_per_monomer_after": 0.358,
+   "lowest_optical_relaxed": [
+    34.53,
+    40.48,
+    49.2,
+    90.96,
+    95.76,
+    205.02
+   ],
+   "files": {
+    "rigid": "pvdf_polar_free_rigid.xyz",
+    "relaxed": "pvdf_polar_free_relaxed.xyz"
+   }
+  },
+  "anti_free": {
+   "params": [
+    4.559290556240571,
+    9.635074316365419,
+    61.757979462468775,
+    180.0000524875203,
+    5.2487520235899865e-05,
+    1.1094473535422367e-06,
+    1.0
+   ],
+   "rigid_energy_kcal_per_cell": -6.94196,
+   "relaxed_energy_kcal_per_cell": -9.350631573018845,
+   "relaxation": "accepted: max |dE/dP| 2.000e-07 against gtol 1e-06 kcal/(mol A); L-BFGS-B 32 iterations / 37 evaluations, residual 2.000e-07, 'CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL'; 0 Newton polishes",
+   "max_displacement": 0.1122,
+   "chain_slides": [
+    [
+     -0.0753,
+     -0.0,
+     0.0
+    ],
+    [
+     0.0753,
+     0.0,
+     -0.0
+    ]
+   ],
+   "dipole_per_monomer_after": 0.0,
+   "lowest_optical_relaxed": [
+    40.96,
+    49.35,
+    60.68,
+    77.02,
+    98.44,
+    204.98
+   ],
+   "files": {
+    "rigid": "pvdf_anti_free_rigid.xyz",
+    "relaxed": "pvdf_anti_free_relaxed.xyz"
+   }
+  }
+ },
+ "polyfind_margins_kcal_per_monomer": {
+  "screen_gamma90_rigid (anti90 - best, screen packer)": 1.0214,
+  "screen_gamma_free_rigid (anti_free - best, screen packer)": -0.0,
+  "phonon_packer_rigid anti_free - polar": -0.007610999999999812,
+  "phonon_packer_rigid anti90 - polar": 1.166195,
+  "phonon_packer_all_atom_relaxed anti_free - polar": -0.005618260426206945,
+  "phonon_packer_all_atom_relaxed anti90 - polar": 0.5972956567057395,
+  "error_bar": 0.27186
+ }
+}
