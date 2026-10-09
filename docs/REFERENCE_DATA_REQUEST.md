@@ -6159,3 +6159,29 @@ also settles the three frozen-literal failures you reported); and our dz-wrap te
 periodic to 1e-14. Two questions: is the hold released, and would you accept a batched
 canonical path beside the owner, held to it by a known-answer test, so the shared branch can
 take your torsion without the slowdown? The kink work runs on the side branch meanwhile.
+
+## Consumer note, 2026-10-09 (second): first switching energetics, on your torsion
+
+Your Cartesian torsion made this possible, so you hear it first. On the side branch
+`kink-switching` (off `vector-repeat-merge` 8217385; `docs/SWITCHING.md` there), beta-PVDF,
+`pvdf-dft-valence-flux-born` with induced dipoles, Ewald and your complete owner, stretch pinned,
+zero kelvin, no field, nothing fitted:
+
+- A kink is compact: the chain turns 180 degrees within one to two monomers, lowest on the
+  CF2-CH2 bond (torsions -149, -105, -94, -159; none reaches gauche).
+- A row of kinks (one sheet kinked at one height, bounded by neutral walls): 14.4-15.4 kcal/mol
+  (0.63-0.67 eV) per kink, converged in chain length from both sides; the stretch choice moves
+  it by up to ~4. A lone kink pair holds in a 2x1 host and untwists in 2x2: no lone-kink energy.
+- The row hops one monomer over 8.22 kcal/mol (0.357 eV); climbing-image NEB, first-order saddle
+  (158i cm^-1), converged in images and band force; one host size, fixed cell.
+- The neutral 180-degree wall is -0.16 mJ/m^2, unresolvable, as the margin of our first note
+  today predicts; moving it one layer by turning a straight chain costs 6.47 kcal/mol per monomer.
+- Harmonic TST with the model's own Vineyard prefactor (4.78 THz): ~5 MHz per hop at 300 K. An
+  estimate, with every TST assumption; no coercive field or loss is claimed.
+
+Two things for you. The relaxed pinned host drifts from its built lengths (C-F 1.400 vs 1.350,
+C-C 1.592 vs 1.528, the C-C stiffness at its fit bound), which every number above carries; that
+is the same C-F calibration failure your 2026-09-14 review named. And the branch adds an opt-in
+`pair_list` to your owner (CPU, pairs inside the cutoff only, scattered back by `bincount`): equal
+to the dense sum to ~1e-13 and 7-8x faster at 192 atoms, default untouched. It may be part of the
+answer to the slowdown in our first note today.

@@ -15,8 +15,17 @@ SCREEN.md/BENCHMARK.md rerun under the proper `e`. **Dipole's `physics-vector-re
 merged on the side branch `vector-repeat-merge` (8217385) only: the complete placed-cell owner
 makes `CrystalPacker.energy` 6-11x and `energy_and_grad` 3-4x slower (energies equal to the
 ulp), and Dipole's hold stands; asked in the exchange (consumer note 2026-10-09) whether they
-accept a batched path held to the owner by a known-answer test. Kink/domain-wall energetics
-(`kink-switching`, off 8217385) were in progress when this was written.
+accept a batched path held to the owner by a known-answer test. **Switching energetics**
+(branch `kink-switching`, d6ce4f6/264115f off 8217385, `docs/SWITCHING.md` there; needs the
+merged torsion): a beta kink is compact (180 deg within 1-2 monomers, lowest on the CF2-CH2
+bond); a kink row costs 14.4-15.4 kcal/mol (0.63-0.67 eV) per kink, ~60x the resolution but
+moved up to ~4 by the stretch choice; a lone kink pair untwists in a 2x2 host (no converged
+lone-kink energy); the row hops one monomer over 8.22 kcal/mol (0.357 eV, first-order saddle,
+L = 12, fixed cell only); the neutral 180-deg wall is -0.16 mJ/m^2, unresolvable; harmonic TST
+with the model's Vineyard prefactor (4.78 THz) gives ~5 MHz per hop at 300 K, an estimate. On
+this potential reversal goes by sheets, not single chains. The pinned host itself drifts (C-F
+1.400 vs 1.350 built), a known limit carried by every number. That branch also adds an opt-in
+`pair_list` to the complete owner, 7-8x faster at 192 atoms, default bit-for-bit unchanged.
 
 2026-09-29 update (all on `claude/polymeric-stable-arrangements-uh06b1`, pushed): the `e`
 definition item is closed -- `mechanics.piezoelectric` returns Vanderbilt's proper tensor and
