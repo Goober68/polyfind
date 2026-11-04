@@ -12,7 +12,11 @@ in Vogel-Fulcher form). New: `polyfind.electrostriction` (intrinsic electrostric
 and the polarization routes, agreeing to 5e-5 on force-shifted rigid beta; `TwoState` switch,
 `transition_strain`: TGTG' to TTTT is +13.4% axial at the ideal angles), `examples/electrostriction.py`,
 `tests/test_electrostriction.py`; `pack.polish`, `mechanics.relax` and `_state_at_strain` take
-optional `gtol`/`ftol` (defaults unchanged). Needed from the PI: push `kink-switching` and
+optional `gtol`/`ftol` (defaults unchanged). The PI's reminder that this seat also supports the
+microreactor (fluoro-ribosome) programme is answered in section 10 of the plan: `polyfind.chainend`
+gives the torsion-gate field per unit type (VDF end: 1.6 V/nm to write gauche, 0.2 to hold trans)
+and beta's registry corrugation (0.48 kcal/mol per monomer, 41 pN per monomer peak) for D21/D24;
+`examples/chain_end_gates.py`, `tests/test_chainend.py`. Needed from the PI: push `kink-switching` and
 `vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
 
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five

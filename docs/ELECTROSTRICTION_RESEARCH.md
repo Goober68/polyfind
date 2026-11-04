@@ -262,3 +262,65 @@ format is agreed); tier 3 once the two side branches are pushed.
    anything.
 3. Whether the fluorine-free disulfonyl family should enter the slate as a row despite the
    force column.
+
+## 10. The microreactor side: the same computations from the printer's end (2026-11-04)
+
+The PI's reminder of 2026-11-04: this seat's work also supports the parallel microreactor
+programme, the reversible and controllable synthesis at the ends of polymer chains
+(`sarco/shared/ip/fluoro-ribosome-design-v1.md`; disclosure sections 10.16 and 10.23;
+Dipole items D13 and D19-D25). The two programmes meet in the chain. The printer writes a
+sequence and, through its torsion gate, a conformation; the muscle wants a sequence whose
+polar conformation sits a few hundredths of a kcal/mol above its ground state and switches
+fast. Tiers 2 and 3 of this plan, run per *printed sequence* rather than per random
+copolymer, are the printer's product specification: which periodic spacing keeps relaxor
+behaviour (Dipole's D8), which sequence holds a programmed torsion once the chain leaves
+the tunnel (design 2.5(a): TrFE units lock trans, CFE units kink; the relaxor principle),
+and what each such chain is worth as an actuator. The copolymer builder is the tool, the
+70/30 VDF/TrFE cell added today is the first printable cell, and the CFE, CDFE and TrFE
+units at a prescribed spacing in a VDF host are the next.
+
+**What polyfind can say now, and what it cannot.** The bond-forming chemistry at the chain
+end (depropagation D13, halogen-bond grip D19, block joining D20, oriented attack D22,
+mid-chain fluorination D23) is electronic structure and stays with Dipole; the force field
+supplies the conformational and lattice environment those steps happen in. Two of the
+design's deciding numbers are of that kind, and `polyfind.chainend` computes them
+(`examples/chain_end_gates.py`):
+
+*Torsion gate (design 2.5, D21: at least 2 kT per bond at no more than 2 V/nm).* On the
+fitted single-chain potential, an all-trans 8-mer, the bond entering the tunnel (15) and
+the one inside it (14); the field couples to the transverse part of the dipole *change*,
+0.5-0.7 e.A for a VDF end, not to the 0.44 e.A unit dipole:
+
+| unit | bond | E_G - E_T (kcal/mol) | transverse dipole change (e.A) | field to write gauche (V/nm) | field to hold trans (V/nm) |
+|---|---|---|---|---|---|
+| VDF | 15 | +0.93 | 0.58 | 1.6 | 0.2 |
+| VDF | 14 | -0.37 | 0.75 | 0.5 | 0.9 |
+| TrFE | 15 | -1.42 | 0.55 | 0 | 2.0 |
+| TrFE | 14 | -1.66 | 1.07 | 0 | 1.2 |
+| CFE, CTFE | | not meaningful (frozen angles) | 0.5-0.7 | | |
+
+Reading: for a VDF end the gate works within the limit in both directions, 1.6 V/nm to
+write a gauche at the entering bond and 0.2 to hold trans. For a TrFE end the model puts
+gauche 1.4 kcal/mol below trans at the end of an isolated chain, so holding trans costs
+2.0 V/nm, at the limit; the potential is fitted to PVDF single chains, and the sign of this
+margin is a transfer assumption the DFT provider's TrFE end models (D19) can check. The
+chlorine-bearing ends carry the frozen-angle strain of `docs/CHEMISTRY_EXTENSION.md` phase 1
+(all-trans CFE 25 kcal/mol above its gauche at this level), so their energies are not
+numbers; the valence path with the angles relaxed is the next step for them.
+
+*Registry ring and backtracking (design 2.4 and 10.2, D21 and D24).* Sliding one chain of
+the refined beta-PVDF crystal along its axis through one repeat, cell held, fitted potential:
+corrugation amplitude 0.48 kcal/mol per monomer (0.8 kT), the half-slipped lattice 0.48
+above the registered one (the provider's GFN1 "registry" number for pure PVDF is +0.56,
+`sarco/materials/computational/registry_gate_v1.md`, on a potential that over-binds), peak
+slope 0.59 kcal/mol/A, i.e. 41 pN per monomer. Against the design: the ring's corrugation
+of "no more than about 1 kT per notch (est.)" is confirmed in order for a commensurate
+partner, and the D24 criterion of 20 pN to backtrack means a ring may hold less than half a
+monomer's worth of crystalline contact, which is what the 2.3% mismatched armchair ring
+does and the halogen-bond anchor is for. A BN ring or tube as the partner needs boron in
+the nonbonded table (nitrogen is there); the machinery is the chain-pair one.
+
+**Next on this side**, in order: the valence path for the chlorine-bearing ends; a
+tube/ring partner for the corrugation; per-sequence tier-2 and tier-3 runs for the
+printable cells (D8's question); and the held-end geometry with the anchor, which is
+Dipole's.
