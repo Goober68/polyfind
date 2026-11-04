@@ -290,49 +290,117 @@ def _template(polymer: Polymer, nb: int):
     return tpl
 
 
-def _batch_block_coords(polymer: Polymer, tors_batch: np.ndarray) -> np.ndarray:
-    """(M, nb) repeat torsions -> (M, n_full, 3), atom order as ``build_chain(cap=False)``.
+def _batch_block_coords(polymer: Polymer, tors_batch: np.ndarray, angles_batch=None) -> np.ndarray:
+    """(M, nb) repeat torsions [+ backbone angles] -> (M, n_full, 3), atom order as ``build_chain(cap=False)``.
 
-    One batched NeRF pass for the whole batch: the per-atom Python loop is paid once for
-    the batch instead of once per chain, which is what makes a gradient over torsions
-    affordable.
+    The five-block oligomer of the whole batch in one vectorised pass
+    (:func:`polyfind.chain.build_oligomer_coords`: component-array NeRF, block-wide
+    pendant placement), which is what makes a gradient over the conformation affordable.
+    ``angles_batch`` is ``None``, ``(R,)`` or ``(M, R)`` (see
+    :func:`polyfind.chain.backbone_angle_lookup`).
     """
-    from .chain import build_backbone, nerf, pendant_positions
+    from .chain import build_oligomer_coords
 
-    M, nb = tors_batch.shape
-    dih = np.tile(tors_batch, (1, 5))
-    N = dih.shape[1]
-    B, L = polymer.bonds_per_repeat, polymer.bond_length
-    bb = build_backbone(polymer, dih, xp=np)  # (M, N+3, 3)
-    v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, polymer.backbone[0].backbone_angle, 180.0, xp=np)
-    v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, polymer.backbone[(N + 2) % B].backbone_angle, 180.0, xp=np)
-    bb_ext = np.concatenate([v0[:, None], bb, v1[:, None]], axis=1)  # (M, N+5, 3)
-    # A pendant is a group of one or more atoms (phase 3), so the stride is per backbone
-    # atom rather than a fixed 3; the layout matches build_chain's exactly (backbone atom,
-    # then each pendant's atoms in order).
-    widths = [1 + polymer.backbone[k % B].n_pendant_atoms for k in range(N + 3)]
-    starts = np.concatenate([[0], np.cumsum(widths)])
-    out = np.empty((M, int(starts[-1]), 3))
-    for k in range(N + 3):
-        spec = polymer.backbone[k % B]
-        x = bb_ext[:, k + 1]
-        at = int(starts[k])
-        out[:, at] = x
-        groups = pendant_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec, xp=np)
-        at += 1
-        for positions in groups:
-            for pos in positions:
-                out[:, at] = pos
-                at += 1
+    return build_oligomer_coords(polymer, np.tile(tors_batch, (1, 5)), angles_batch, xp=np)
+
+
+def _kabsch_batch(P: np.ndarray, Q: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """:func:`polyfind.helix.kabsch` over a batch: (M, n, 3) x2 -> R (M, 3, 3), t (M, 3).
+
+    The same matrix products, on the same memory layouts, as the per-row function (stacked
+    ``matmul`` reaches the same BLAS call per row), so ``R`` and ``t`` are bit for bit
+    what ``kabsch`` gives row by row.
+    """
+    M = P.shape[0]
+    pc, qc = P.mean(axis=1, keepdims=True), Q.mean(axis=1, keepdims=True)
+    Pc, Qc = P - pc, Q - qc
+    H = np.transpose(Pc, (0, 2, 1)) @ Qc
+    U, _, Vt = np.linalg.svd(H)
+    Ut, V = np.transpose(U, (0, 2, 1)), np.transpose(Vt, (0, 2, 1))
+    dsign = np.sign(np.linalg.det(V @ Ut))
+    D = np.zeros((M, 3, 3))
+    D[:, 0, 0], D[:, 1, 1], D[:, 2, 2] = 1.0, 1.0, dsign
+    R = V @ D @ Ut
+    t = qc[:, 0] - (pc @ np.transpose(R, (0, 2, 1)))[:, 0]
+    return R, t
+
+
+def _rotations_to_z(n: np.ndarray) -> np.ndarray:
+    """:func:`polyfind.helix.rotation_to_z` over a batch of vectors (M, 3) -> (M, 3, 3).
+
+    Same operations as the per-row function (the 1-D norms are the ``ddot`` a stacked
+    ``(1, 3) @ (3, 1)`` reaches), so the matrices are bit for bit the per-row ones.
+    """
+    n = n / _norm_rows(n)[:, None]
+    M = n.shape[0]
+    z = np.array([0.0, 0.0, 1.0])
+    v = np.cross(n, z)
+    s, c = _norm_rows(v), n @ z
+    degenerate = s < 1e-12
+    vx = np.zeros((M, 3, 3))
+    vx[:, 0, 1], vx[:, 0, 2], vx[:, 1, 0], vx[:, 1, 2], vx[:, 2, 0], vx[:, 2, 1] = -v[:, 2], v[:, 1], v[:, 2], -v[:, 0], -v[:, 1], v[:, 0]
+    # ``s ** 2`` of a NumPy *scalar* is libm's pow(), which is not always the ``s * s``
+    # the array power fast-paths to (1 ulp apart for some s); Python floats take the
+    # same pow(), so the per-row value is reproduced through them.
+    s2 = np.array([x ** 2 for x in np.where(degenerate, 1.0, s).tolist()])
+    fac = (1 - c) / s2
+    R = np.eye(3) + vx + vx @ vx * fac[:, None, None]
+    if degenerate.any():
+        R[degenerate] = np.where((c[degenerate] > 0)[:, None, None], np.eye(3)[None], np.diag([1.0, -1.0, -1.0])[None])
+    return R
+
+
+def _norm_rows(v: np.ndarray) -> np.ndarray:
+    """``np.linalg.norm`` of every row of (M, 3), bit for bit as the 1-D norm computes it."""
+    return np.sqrt((v[:, None, :] @ v[:, :, None])[:, 0, 0])
+
+
+def _orient_blocks(coords: np.ndarray, bb_local: list[int]) -> np.ndarray:
+    """:func:`_orient_block` over a batch (M, n, 3): z from 0, cross-section principal axis along x."""
+    shift = np.zeros((len(coords), 1, 3))
+    shift[:, 0, 2] = coords[:, :, 2].min(axis=1)
+    coords = coords - shift
+    xy = coords[:, bb_local, :2]
+    if xy.shape[1] > 1:
+        xc = xy - xy.mean(axis=1, keepdims=True)
+        # np.cov: (X X^T) * (1 / (n - 1))
+        cov = (np.transpose(xc, (0, 2, 1)) @ xc) * np.true_divide(1, xy.shape[1] - 1)
+        w, v = np.linalg.eigh(cov)
+        imax = np.argmax(w, axis=1)
+        ux = np.take_along_axis(v, imax[:, None, None], axis=2)[:, :, 0]  # (M, 2)
+        ang = np.arctan2(ux[:, 1], ux[:, 0])
+        ca, sa = np.cos(-ang), np.sin(-ang)
+        rot = np.zeros((len(coords), 3, 3))
+        rot[:, 0, 0], rot[:, 0, 1], rot[:, 1, 0], rot[:, 1, 1], rot[:, 2, 2] = ca, -sa, sa, ca, 1.0
+        coords = coords @ np.transpose(rot, (0, 2, 1))
+    return coords
+
+
+def _align_about_z_batch(coords: np.ndarray, ref: np.ndarray) -> np.ndarray:
+    """:func:`_align_about_z` over a batch (M, n, 3) against one reference (n, 3)."""
+    cw = (coords[:, :, 0] * ref[:, 0] + coords[:, :, 1] * ref[:, 1]).sum(axis=1)
+    sw = (coords[:, :, 0] * ref[:, 1] - coords[:, :, 1] * ref[:, 0]).sum(axis=1)
+    ang = np.arctan2(sw, cw)
+    ca, sa = np.cos(ang)[:, None], np.sin(ang)[:, None]
+    out = np.empty_like(coords)
+    out[:, :, 0] = ca * coords[:, :, 0] - sa * coords[:, :, 1]
+    out[:, :, 1] = sa * coords[:, :, 0] + ca * coords[:, :, 1]
+    out[:, :, 2] = coords[:, :, 2] + (ref[:, 2] - coords[:, :, 2]).mean(axis=1, keepdims=True)
     return out
 
 
-def repeat_chains_from_torsions(polymer: Polymer, name: str, torsions_batch, scale14: float = 0.5, align_to: "PeriodicChain | np.ndarray | None" = None) -> list[PeriodicChain]:
-    """:func:`periodic_chain_from_torsions` for a whole batch of torsion sets at once."""
-    tors_batch = np.atleast_2d(np.asarray(torsions_batch, dtype=float))
+def _finish_repeat_chains(polymer: Polymer, name: str, tors_batch: np.ndarray, coords_full: np.ndarray,
+                          scale14: float, align_to) -> list[PeriodicChain]:
+    """Five-block oligomer coordinates (M, n_full, 3) -> one :class:`PeriodicChain` per row.
+
+    The repeat transform (Kabsch fit of block 2 onto block 3), its rotation angle and
+    rise, the rotation of the axis onto z, the principal-axis orientation and the
+    alignment to ``align_to`` are all batched matrix operations over the rows; only the
+    (cheap) dataclass construction is a Python loop.  Shared by
+    :func:`repeat_chains_from_torsions` and :func:`polyfind.linegroup.repeat_chains`.
+    """
     M, nb = tors_batch.shape
     tpl = _template(polymer, nb)
-    coords_full = _batch_block_coords(polymer, tors_batch)
     bb0, atoms0 = _block_atoms(tpl, nb, 0)
     bb_local = [atoms0.index(k) for k in bb0]
     scales = _same_site_scales(polymer, tpl, nb, scale14)
@@ -341,37 +409,47 @@ def repeat_chains_from_torsions(polymer: Polymer, name: str, torsions_batch, sca
     ref = None
     if align_to is not None:
         ref = align_to.coords if isinstance(align_to, PeriodicChain) else np.asarray(align_to, dtype=float)
+    bbc = coords_full[:, tpl.backbone]
+    if nb < 3:  # need >= 3 points for a rigid fit; use two blocks
+        X, Y = bbc[:, 2 * nb : 2 * nb + 4], bbc[:, 3 * nb : 3 * nb + 4]
+    else:
+        X, Y = bbc[:, 2 * nb : 3 * nb], bbc[:, 3 * nb : 4 * nb]
+    R, t = _kabsch_batch(X, Y)
+    ang = np.degrees(np.arccos(np.clip((np.trace(R, axis1=1, axis2=2) - 1) / 2, -1, 1)))
+    ang = np.minimum(ang, 360.0 - ang)
+    c = _norm_rows(t)
+    axis = t / c[:, None]
+    block = coords_full[:, atoms0]
+    point = block.mean(axis=1)
+    Rz = _rotations_to_z(axis)
+    coords = _orient_blocks((block - point[:, None]) @ np.transpose(Rz, (0, 2, 1)), bb_local)
+    if ref is not None:
+        coords = _align_about_z_batch(coords, ref)
+    radius_all = np.linalg.norm(coords[:, :, :2], axis=2).max(axis=1)
+    radius_bb = np.linalg.norm(coords[:, bb_local, :2], axis=2).max(axis=1)
+    n_mon = polymer.monomer_count(nb)
     out = []
     for m in range(M):
-        C = coords_full[m]
-        bbc = C[tpl.backbone]
-        X, Y = bbc[2 * nb : 3 * nb], bbc[3 * nb : 4 * nb]
-        if nb < 3:  # need >= 3 points for a rigid fit; use two blocks
-            X, Y = bbc[2 * nb : 2 * nb + 4], bbc[3 * nb : 3 * nb + 4]
-        R, t = kabsch(X, Y)
-        ang = float(np.degrees(np.arccos(np.clip((np.trace(R) - 1) / 2, -1, 1))))
-        ang = min(ang, 360.0 - ang)
-        c = float(np.linalg.norm(t))
-        axis = t / c
-        point = C[atoms0].mean(axis=0)
-        coords = _orient_block((C[atoms0] - point) @ rotation_to_z(axis).T, bb_local)
-        if ref is not None:
-            coords = _align_about_z(coords, ref)
-        tors = tors_batch[m]
+        cm, am = float(c[m]), float(ang[m])
         helix = HelixParams(
-            sequence=name, period_bonds=nb, monomers_per_period=polymer.monomer_count(nb),
-            rotation_per_period=ang, rise_per_period=c, rise_per_bond=c / nb, periods_per_repeat=1,
-            turns_per_repeat=0, c=c, radius_backbone=0.0, radius_all=0.0, axis=axis, axis_point=point, label="refined",
+            sequence=name, period_bonds=nb, monomers_per_period=n_mon,
+            rotation_per_period=am, rise_per_period=cm, rise_per_bond=cm / nb, periods_per_repeat=1,
+            turns_per_repeat=0, c=cm, radius_backbone=float(radius_bb[m]), radius_all=float(radius_all[m]),
+            axis=axis[m].copy(), axis_point=point[m].copy(), label="refined",
         )
-        ch = PeriodicChain(
-            polymer=polymer, name=name, elements=list(elements), coords=coords, charges=charges.copy(),
-            c=c, n_monomers=polymer.monomer_count(nb), helix=helix, dihedrals=tors.copy(),
-            same_site_scale=scales, backbone=np.array(bb_local), rotation_error=ang,
-        )
-        ch.helix.radius_all = ch.radius
-        ch.helix.radius_backbone = float(np.linalg.norm(coords[ch.backbone][:, :2], axis=1).max())
-        out.append(ch)
+        out.append(PeriodicChain(
+            polymer=polymer, name=name, elements=list(elements), coords=coords[m].copy(), charges=charges.copy(),
+            c=cm, n_monomers=n_mon, helix=helix, dihedrals=tors_batch[m].copy(),
+            same_site_scale=scales, backbone=np.array(bb_local), rotation_error=am,
+        ))
     return out
+
+
+def repeat_chains_from_torsions(polymer: Polymer, name: str, torsions_batch, scale14: float = 0.5, align_to: "PeriodicChain | np.ndarray | None" = None) -> list[PeriodicChain]:
+    """:func:`periodic_chain_from_torsions` for a whole batch of torsion sets at once."""
+    tors_batch = np.atleast_2d(np.asarray(torsions_batch, dtype=float))
+    coords_full = _batch_block_coords(polymer, tors_batch)
+    return _finish_repeat_chains(polymer, name, tors_batch, coords_full, scale14, align_to)
 
 
 def periodic_chain_from_torsions(polymer: Polymer, name: str, torsions, states: RISStates | None = None, scale14: float = 0.5, align_to: "PeriodicChain | np.ndarray | None" = None) -> PeriodicChain:

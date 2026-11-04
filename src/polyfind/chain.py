@@ -26,19 +26,29 @@ Conventions
   :func:`substituent_positions` has always put it.  Atom order within a backbone atom
   is: the backbone atom, then pendant 1's atoms in order, then pendant 2's.
 
-Two things elsewhere have not caught up with multi-atom pendants
----------------------------------------------------------------
-``pack._batch_block_coords`` and ``linegroup._block_coords`` build coordinates
-themselves and index them as ``3 * k + {0, 1, 2}``, so they support single-atom
-pendants only; ``pack.repeat_chains_from_torsions`` and hence the continuous
-refinement stage are limited to those chemistries until they are generalised the way
-:func:`build_chain_batch` is here.  ``pack.MASS`` likewise has no entry for N or O, so
-``PeriodicChain.mass`` (and the densities derived from it) raises for the phase-3
-chemistries.  Everything that goes through :func:`build_chain` -- fitting,
-``pack.periodic_chain``, ``CrystalPacker.energy`` -- is already general.
+One thing elsewhere has not caught up with multi-atom pendants
+-------------------------------------------------------------
+``pack.MASS`` has no entry for N or O, so ``PeriodicChain.mass`` (and the densities
+derived from it) raises for the phase-3 chemistries.  Everything that builds
+coordinates -- :func:`build_chain`, :func:`build_chain_batch`, and the refinement's
+``pack._batch_block_coords`` / ``linegroup._block_coords``, which are
+:func:`build_oligomer_coords` -- places pendants through the same
+:func:`pendant_frames` and is general.
+
+Performance notes
+-----------------
+The builders are dominated by per-call overhead on small arrays, not arithmetic.
+:func:`build_backbone` therefore runs the NeRF recursion on component arrays
+``X, Y, Z`` of shape ``(N+3, M)`` with the per-atom-type scalars hoisted and the
+dihedral trigonometry done for all steps at once (and in Python floats for a single
+chain on NumPy); :func:`place_pendants` builds the pendant frames of every backbone
+atom in one call and places each pendant atom of each atom type with one broadcast.
+Both are bit for bit the per-step / per-atom forms (:func:`nerf`,
+:func:`pendant_positions`), which stay as the reference implementations.
 """
 from __future__ import annotations
 
+import math
 import warnings
 from dataclasses import dataclass, field
 
@@ -51,6 +61,18 @@ from .chemical_graph import ChemicalBondGraph
 
 def _unit(v, xp):
     return v / xp.linalg.norm(v, axis=-1, keepdims=True)
+
+
+def _cross(u, v, xp):
+    """Component cross product of (..., 3) arrays.
+
+    The same arithmetic, in the same order, as ``xp.cross`` for 3-vectors, so the
+    result is bit-for-bit the same on NumPy -- minus the ~20x call overhead of
+    ``xp.cross`` on small arrays, which is what the per-step NeRF recursion pays.
+    """
+    ux, uy, uz = u[..., 0], u[..., 1], u[..., 2]
+    vx, vy, vz = v[..., 0], v[..., 1], v[..., 2]
+    return xp.stack([uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx], axis=-1)
 
 
 def nerf(a, b, c, bond, angle_deg, dihedral_deg, xp=np):
@@ -94,11 +116,61 @@ def backbone_angle_lookup(polymer: Polymer, bond_angles=None, xp=np):
     return lambda k: ba[:, k % R]
 
 
+def _backbone_scalar(N: int, L: float, cos_c, sin_c, P, Q) -> np.ndarray:
+    """The NeRF recursion of :func:`build_backbone` for one chain in Python floats.
+
+    Same formulas and operation order as the array loop there; ``cos_c[k]``,
+    ``sin_c[k]`` are ``-L cos``, ``L sin`` of the backbone angle at atom ``k`` and
+    ``P[j]``, ``Q[j]`` the dihedral coefficients of RIS bond ``j`` (all plain floats).
+    Returns ``(N+3, 3)``.  Bit-identical to the array loop (IEEE doubles either way),
+    and ~20x cheaper than NumPy dispatch on 1-element arrays.
+    """
+    sqrt = math.sqrt
+    n = N + 3
+    xs, ys, zs = [0.0] * n, [0.0] * n, [0.0] * n
+    xs[1] = L
+    xs[2] = L + cos_c[1]  # L - L cos(theta_1)
+    ys[2] = sin_c[1]
+    for k in range(3, n):
+        ax, ay, az = xs[k - 3], ys[k - 3], zs[k - 3]
+        bx, by, bz = xs[k - 2], ys[k - 2], zs[k - 2]
+        cx, cy, cz = xs[k - 1], ys[k - 1], zs[k - 1]
+        cc, p, q = cos_c[k - 1], P[k - 3], Q[k - 3]
+        vx, vy, vz = cx - bx, cy - by, cz - bz
+        nv = sqrt(vx * vx + vy * vy + vz * vz)
+        vx, vy, vz = vx / nv, vy / nv, vz / nv  # bc
+        ux, uy, uz = bx - ax, by - ay, bz - az
+        nx, ny, nz = uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx
+        nn = sqrt(nx * nx + ny * ny + nz * nz)
+        nx, ny, nz = nx / nn, ny / nn, nz / nn  # n
+        mx, my, mz = ny * vz - nz * vy, nz * vx - nx * vz, nx * vy - ny * vx  # m = n x bc
+        xs[k] = cx + cc * vx + p * mx + q * nx
+        ys[k] = cy + cc * vy + p * my + q * ny
+        zs[k] = cz + cc * vz + p * mz + q * nz
+    return np.array([xs, ys, zs]).T.copy()
+
+
 def build_backbone(polymer: Polymer, dihedrals_deg, xp=None, bond_angles=None):
     """Backbone coordinates for a dihedral array of shape (N,) or (M, N).
 
     Returns (N+3, 3) or (M, N+3, 3).  ``bond_angles`` optionally overrides the
     polymer's frozen backbone angles; see :func:`backbone_angle_lookup`.
+
+    The recursion is the NeRF step of :func:`nerf` -- atom ``k`` from atoms
+    ``k-3, k-2, k-1``, the bond length, the backbone angle at ``k-1`` and RIS dihedral
+    ``k-3`` -- but written out on component arrays ``X, Y, Z`` of shape ``(N+3, M)``,
+    with ``bc = unit(c - b)``, ``n = unit((b - a) x bc)`` and ``m = n x bc``:
+
+        d = c - L cos(theta) bc + L sin(theta) cos(phi) m + L sin(theta) sin(phi) n
+
+    The per-atom-type scalars ``-L cos(theta)``, ``L sin(theta)`` are hoisted out of the
+    loop and the dihedral trigonometry is done for all steps at once, so each step is
+    ~35 element-wise operations on ``(M,)`` rows instead of ~15 NumPy calls on ``(M, 3)``
+    blocks (``xp.cross`` alone costs ~20x an explicit component product).  Every
+    operation is the one ``nerf`` performs, in its order (division by the norm, the
+    same trigonometric ufuncs, the same left-to-right sum), so the coordinates are bit
+    for bit those of the per-step form.  A single chain on NumPy runs the same recursion
+    in Python floats (:func:`_backbone_scalar`), which is again bit-identical.
     """
     xp = xp or bk.get_backend()
     dih = xp.asarray(dihedrals_deg, dtype=float)
@@ -106,16 +178,66 @@ def build_backbone(polymer: Polymer, dihedrals_deg, xp=None, bond_angles=None):
     if not batched:
         dih = dih[None, :]
     M, N = dih.shape
-    L = polymer.bond_length
-    ang_of = backbone_angle_lookup(polymer, bond_angles, xp=xp)
-    coords = xp.zeros((M, N + 3, 3), dtype=float)
+    n_atoms = N + 3
+    L = float(polymer.bond_length)
+    B = polymer.bonds_per_repeat
+    # Backbone angle at every atom (the same ufuncs, on the same values, as ``nerf`` uses,
+    # so the coordinates are bit for bit those of the per-step form): ``cos_c[k]`` is
+    # ``-L cos(theta_k)`` (the coefficient of ``bc``) and ``sin_c[k]`` is ``L sin(theta_k)``.
+    if bond_angles is None:
+        # the polymer's own frozen angles: one value per atom type, as Python floats
+        rad = xp.deg2rad(xp.asarray([polymer.backbone[k % B].backbone_angle for k in range(n_atoms)], dtype=float))
+        cos_c = (-L * xp.cos(rad)).tolist()
+        sin_c = (L * xp.sin(rad)).tolist()
+        fac = xp.asarray(sin_c[2 : N + 2], dtype=float)[:, None]  # (N, 1): step k uses the angle at atom k-1
+        scalar_ok = True
+    else:
+        ba = xp.asarray(bond_angles, dtype=float)
+        if ba.ndim == 1:
+            ba = ba[None, :]
+        if ba.ndim != 2 or ba.shape[1] == 0:
+            raise ValueError("bond_angles must have shape (R,) or (M, R) with R >= 1")
+        Mb, R = ba.shape
+        rad = xp.deg2rad(ba)
+        idx = np.arange(n_atoms) % R
+        cos_c = (-L * xp.cos(rad))[:, idx].T  # (n_atoms, Mb); Mb is M or 1, broadcast along the batch
+        sin_c = (L * xp.sin(rad))[:, idx].T
+        fac = sin_c[2 : N + 2]  # (N, Mb)
+        scalar_ok = Mb == 1
+        if M == 1 and xp is np:
+            cos_c, sin_c = cos_c[:, 0].tolist(), sin_c[:, 0].tolist()
+    # dihedral coefficients for every step at once: P multiplies (n x v)^, Q multiplies n^
+    drad = xp.deg2rad(dih)
+    P = xp.cos(drad).T * fac  # (N, M)
+    Q = xp.sin(drad).T * fac
+    if M == 1 and xp is np and scalar_ok:
+        coords = _backbone_scalar(N, L, cos_c, sin_c, P[:, 0].tolist(), Q[:, 0].tolist())
+        return coords[None] if batched else coords
+    # component rows, atom-major: every step touches three contiguous (M,) rows
+    X = xp.zeros((n_atoms, M), dtype=float)
+    Y = xp.zeros((n_atoms, M), dtype=float)
+    Z = xp.zeros((n_atoms, M), dtype=float)
     # first three atoms in the xy plane
-    coords[:, 1, 0] = L
-    a1 = xp.deg2rad(xp.asarray(ang_of(1), dtype=float))
-    coords[:, 2, 0] = L - L * xp.cos(a1)
-    coords[:, 2, 1] = L * xp.sin(a1)
-    for k in range(3, N + 3):
-        coords[:, k] = nerf(coords[:, k - 3], coords[:, k - 2], coords[:, k - 1], L, ang_of(k - 1), dih[:, k - 3], xp=xp)
+    X[1] = L
+    X[2] = L + cos_c[1]  # L - L cos(theta_1)
+    Y[2] = sin_c[1]
+    for k in range(3, n_atoms):
+        ax, ay, az = X[k - 3], Y[k - 3], Z[k - 3]
+        bx, by, bz = X[k - 2], Y[k - 2], Z[k - 2]
+        cx, cy, cz = X[k - 1], Y[k - 1], Z[k - 1]
+        cc, p, q = cos_c[k - 1], P[k - 3], Q[k - 3]
+        vx, vy, vz = cx - bx, cy - by, cz - bz
+        nv = xp.sqrt(vx * vx + vy * vy + vz * vz)
+        vx, vy, vz = vx / nv, vy / nv, vz / nv  # bc
+        ux, uy, uz = bx - ax, by - ay, bz - az
+        nx, ny, nz = uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx
+        nn = xp.sqrt(nx * nx + ny * ny + nz * nz)
+        nx, ny, nz = nx / nn, ny / nn, nz / nn  # n
+        mx, my, mz = ny * vz - nz * vy, nz * vx - nx * vz, nx * vy - ny * vx  # m = n x bc
+        X[k] = cx + cc * vx + p * mx + q * nx
+        Y[k] = cy + cc * vy + p * my + q * ny
+        Z[k] = cz + cc * vz + p * mz + q * nz
+    coords = xp.ascontiguousarray(xp.stack([X, Y, Z], axis=-1).transpose(1, 0, 2))  # (M, N+3, 3)
     return coords if batched else coords[0]
 
 
@@ -202,8 +324,12 @@ def pendant_frames(x_prev, x, x_next, sub_angle_deg, xp=np):
     n2 = _unit(x_next - x, xp)
     u = -_unit(n1 + n2, xp)
     w = _unit(xp.cross(n1, n2), xp)
+    # ``sub_angle_deg`` is one angle, or an array broadcastable against the leading
+    # shape (one per backbone atom, as :func:`place_pendants` passes it)
     half = np.deg2rad(sub_angle_deg) / 2.0
     c, s = np.cos(half), np.sin(half)
+    if xp is not np:
+        c, s = xp.asarray(c), xp.asarray(s)
     e1_a, e2_a = c * u + s * w, s * u - c * w
     e1_b, e2_b = c * u - s * w, s * u + c * w
     return (e1_a, e2_a, xp.cross(e1_a, e2_a)), (e1_b, e2_b, -xp.cross(e1_b, e2_b))
@@ -231,6 +357,90 @@ def pendant_positions(x_prev, x, x_next, spec, xp=np):
             positions.append(p)
         out.append(positions)
     return tuple(out)
+
+
+def extended_backbone(polymer: Polymer, dihedrals_deg, bond_angles=None, xp=np):
+    """Backbone of ``(M, N)`` dihedrals plus one virtual trans atom beyond each end.
+
+    Returns ``(M, N+5, 3)``; real backbone atom ``k`` sits at ``[:, k+1]``.  The virtual
+    atoms are what the terminal backbone atoms' pendants are placed from, exactly as
+    :func:`build_chain` does it.
+    """
+    dih = xp.asarray(dihedrals_deg, dtype=float)
+    M, N = dih.shape
+    L = polymer.bond_length
+    ang_of = backbone_angle_lookup(polymer, bond_angles, xp=xp)
+    bb = build_backbone(polymer, dih, xp=xp, bond_angles=bond_angles)  # (M, N+3, 3)
+    v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, ang_of(0), 180.0, xp=xp)
+    v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, ang_of(N + 2), 180.0, xp=xp)
+    return xp.concatenate([xp.broadcast_to(v0, (M, 3))[:, None], bb, xp.broadcast_to(v1, (M, 3))[:, None]], axis=1)
+
+
+def atom_starts(polymer: Polymer, n_backbone: int) -> np.ndarray:
+    """``starts[k]`` = index of backbone atom ``k`` in :func:`build_chain`'s atom order.
+
+    Backbone atom ``k`` is followed by its pendant atoms (pendant 1's, then pendant 2's),
+    so ``starts[k+1] - starts[k] = 1 + n_pendant_atoms``; ``starts[-1]`` is the number
+    of atoms before any end cap.
+    """
+    B = polymer.bonds_per_repeat
+    widths = [1 + polymer.backbone[k % B].n_pendant_atoms for k in range(n_backbone)]
+    return np.concatenate([[0], np.cumsum(widths)]).astype(int)
+
+
+def place_pendants(polymer: Polymer, bb_ext, xp=np):
+    """All-atom coordinates ``(M, n, 3)`` in :func:`build_chain` order from an extended backbone.
+
+    ``bb_ext`` is ``(M, n_backbone + 2, 3)`` as returned by :func:`extended_backbone`.
+    Every backbone atom's pendant frames are built in **one** :func:`pendant_frames` call
+    over the whole ``(M, n_backbone)`` block (the pendant angle is broadcast per atom),
+    and then every pendant atom of every backbone-atom *type* is placed with one
+    broadcast: the gather of the frames of that type's atoms, ``x + lx e1 [+ ly e2]
+    [+ lz e3]``, and one scatter into the output.  The arithmetic per atom is the same
+    as :func:`pendant_positions` on the same frames, so the coordinates are bit for bit
+    those of the per-atom loop (the zero components of a single-atom pendant are skipped
+    rather than added, as there).  For PVDF that is four placements for a 43-atom
+    backbone instead of 43 calls of the per-atom routine.
+    """
+    M, n_ext, _ = bb_ext.shape
+    n_bb = n_ext - 2
+    B = polymer.bonds_per_repeat
+    specs = [polymer.backbone[k % B] for k in range(n_bb)]
+    starts = atom_starts(polymer, n_bb)
+    out = xp.empty((M, int(starts[-1]), 3), dtype=float)
+    x_prev, x, x_next = bb_ext[:, :-2], bb_ext[:, 1:-1], bb_ext[:, 2:]
+    out[:, starts[:-1]] = x
+    sub_angle = np.array([s.sub_angle for s in specs], dtype=float)[:, None]  # (n_bb, 1), per atom
+    frames = pendant_frames(x_prev, x, x_next, sub_angle, xp=xp)  # each axis (M, n_bb, 3)
+    for r in range(min(B, n_bb)):  # backbone-atom type: same pendants, same local offsets
+        ks = np.arange(r, n_bb, B)
+        xr = x[:, ks]
+        at = starts[ks] + 1
+        for pendant, (e1, e2, e3) in zip(specs[r].pendants, frames):
+            e1r, e2r, e3r = e1[:, ks], None, None
+            for atom in pendant.atoms:
+                lx, ly, lz = atom.offset
+                p = xr + lx * e1r
+                if ly:
+                    e2r = e2[:, ks] if e2r is None else e2r
+                    p = p + ly * e2r
+                if lz:
+                    e3r = e3[:, ks] if e3r is None else e3r
+                    p = p + lz * e3r
+                out[:, at] = p
+                at = at + 1
+    return out
+
+
+def build_oligomer_coords(polymer: Polymer, dihedrals_deg, bond_angles=None, xp=np):
+    """``(M, N)`` dihedrals -> ``(M, n, 3)`` all-atom coordinates, ``build_chain(cap=False)`` order.
+
+    :func:`extended_backbone` followed by :func:`place_pendants`: the whole oligomer in a
+    handful of vectorised calls, which is what the refinement's chain builders
+    (:func:`polyfind.pack._batch_block_coords`, :func:`polyfind.linegroup._block_coords`)
+    and :func:`build_chain_batch` are built on.
+    """
+    return place_pendants(polymer, extended_backbone(polymer, dihedrals_deg, bond_angles, xp=xp), xp=xp)
 
 
 _CHIRAL_WARNED: set[str] = set()
@@ -388,10 +598,10 @@ def build_chain_batch(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_an
     and ``coords`` is an ``(M, n_atoms, 3)`` array whose row ``m`` equals
     ``build_chain(polymer, dihedrals_deg[m], cap).coords`` to numerical precision.
 
-    Implemented with the batched :func:`build_backbone` plus :func:`substituent_positions`
-    and :func:`nerf`, both of which already accept a leading batch dimension, so the whole
-    oligomer (backbone, substituents, end caps) is placed in a handful of vectorised calls
-    instead of one Python loop per conformer.
+    Implemented with the batched :func:`build_backbone`, the block-wide pendant
+    placement of :func:`place_pendants` and :func:`nerf` for the virtual end atoms, so
+    the whole oligomer (backbone, substituents, end caps) is placed in a handful of
+    vectorised calls with no Python loop over conformers or over backbone atoms.
 
     ``bond_angles`` optionally overrides the polymer's frozen backbone angles, either
     once for the whole batch (shape ``(R,)``) or per row (shape ``(M, R)``), which is
@@ -399,32 +609,19 @@ def build_chain_batch(polymer: Polymer, dihedrals_deg, cap: bool = True, bond_an
     """
     dih = np.asarray(dihedrals_deg, dtype=float)
     M, N = dih.shape
-    B = polymer.bonds_per_repeat
-    L = polymer.bond_length
-    ang_of = backbone_angle_lookup(polymer, bond_angles, xp=np)
     row0 = None if bond_angles is None else np.atleast_2d(np.asarray(bond_angles, dtype=float))[0]
     template = build_chain(polymer, dih[0], cap, bond_angles=row0)
-    bb = build_backbone(polymer, dih, xp=np, bond_angles=bond_angles)  # (M, N+3, 3)
-    v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, ang_of(0), 180.0, xp=np)
-    v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, ang_of(N + 2), 180.0, xp=np)
-    bb_ext = np.concatenate([v0[:, None, :], bb, v1[:, None, :]], axis=1)  # (M, N+5, 3)
-    coords = np.zeros((M, template.n_atoms, 3), dtype=float)
-    for k in range(N + 3):
-        spec = polymer.backbone[k % B]
-        idx = int(template.backbone[k])
+    bb_ext = extended_backbone(polymer, dih, bond_angles, xp=np)  # (M, N+5, 3)
+    body = place_pendants(polymer, bb_ext, xp=np)  # backbone atom k at template.backbone[k], then its pendants
+    if not cap:
+        return template, body
+    coords = np.empty((M, template.n_atoms, 3), dtype=float)
+    n_body = body.shape[1]
+    coords[:, :n_body] = body
+    for i, (k, virt) in enumerate(((0, bb_ext[:, 0]), (N + 2, bb_ext[:, N + 4]))):
         x = bb_ext[:, k + 1]
-        coords[:, idx] = x
-        groups = pendant_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec, xp=np)
-        # ``subs_of`` lists the pendant atoms in the same order pendant_positions returns
-        for sub_idx, pos in zip(template.subs_of[idx], [p for g in groups for p in g]):
-            coords[:, sub_idx] = pos
-    if cap:
-        cap0 = template.n_atoms - 2
-        for i, (k, virt) in enumerate(((0, bb_ext[:, 0]), (N + 2, bb_ext[:, N + 4]))):
-            idx = int(template.backbone[k])
-            x = coords[:, idx]
-            v = virt - x
-            coords[:, cap0 + i] = x + 1.09 * v / np.linalg.norm(v, axis=-1, keepdims=True)
+        v = virt - x
+        coords[:, n_body + i] = x + 1.09 * v / np.linalg.norm(v, axis=-1, keepdims=True)
     return template, coords
 
 

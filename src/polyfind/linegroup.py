@@ -63,16 +63,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .chain import backbone_angle_lookup, build_backbone, nerf, pendant_positions, substituent_positions
-from .helix import HelixParams, canonical_sequence, kabsch, rotation_to_z
-from .pack import (
-    PeriodicChain,
-    _align_about_z,
-    _block_atoms,
-    _orient_block,
-    _same_site_scales,
-    _template,
-)
+from .chain import build_backbone, build_oligomer_coords
+from .helix import canonical_sequence
+from .pack import PeriodicChain, _finish_repeat_chains
 from .polymers import Polymer, RISStates
 
 
@@ -220,31 +213,7 @@ def _block_coords(polymer: Polymer, tors_batch: np.ndarray, angles_batch=None) -
     :func:`polyfind.pack._batch_block_coords` with the backbone angles opened up; the
     atom order is that of ``build_chain(..., cap=False)``.
     """
-    M, nb = tors_batch.shape
-    dih = np.tile(tors_batch, (1, 5))
-    N = dih.shape[1]
-    B, L = polymer.bonds_per_repeat, polymer.bond_length
-    ang_of = backbone_angle_lookup(polymer, angles_batch, xp=np)
-    bb = build_backbone(polymer, dih, xp=np, bond_angles=angles_batch)  # (M, N+3, 3)
-    v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, ang_of(0), 180.0, xp=np)
-    v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, ang_of(N + 2), 180.0, xp=np)
-    bb_ext = np.concatenate([np.broadcast_to(v0, (M, 3))[:, None], bb, np.broadcast_to(v1, (M, 3))[:, None]], axis=1)
-    # A pendant is a group of one or more atoms (phase 3), so the stride is per backbone
-    # atom rather than a fixed 3; the layout matches build_chain's exactly.
-    widths = [1 + polymer.backbone[k % B].n_pendant_atoms for k in range(N + 3)]
-    starts = np.concatenate([[0], np.cumsum(widths)])
-    out = np.empty((M, int(starts[-1]), 3))
-    for k in range(N + 3):
-        spec = polymer.backbone[k % B]
-        x = bb_ext[:, k + 1]
-        at = int(starts[k])
-        out[:, at] = x
-        at += 1
-        for positions in pendant_positions(bb_ext[:, k], x, bb_ext[:, k + 2], spec, xp=np):
-            for pos in positions:
-                out[:, at] = pos
-                at += 1
-    return out
+    return build_oligomer_coords(polymer, np.tile(tors_batch, (1, 5)), angles_batch, xp=np)
 
 
 def repeat_chains(
@@ -262,45 +231,10 @@ def repeat_chains(
     to ``pack.repeat_chains_from_torsions``.
     """
     tors_batch = np.atleast_2d(np.asarray(torsions_batch, dtype=float))
-    M, nb = tors_batch.shape
-    tpl = _template(polymer, nb)
     coords_full = _block_coords(polymer, tors_batch, bond_angles)
-    bb0, atoms0 = _block_atoms(tpl, nb, 0)
-    bb_local = [atoms0.index(k) for k in bb0]
-    scales = _same_site_scales(polymer, tpl, nb, scale14)
-    elements = [tpl.elements[i] for i in atoms0]
-    charges = tpl.charges[atoms0]
-    ref = None
-    if align_to is not None:
-        ref = align_to.coords if isinstance(align_to, PeriodicChain) else np.asarray(align_to, dtype=float)
-    sx, sy = _windows(nb)
-    out = []
-    for m in range(M):
-        C = coords_full[m]
-        bbc = C[tpl.backbone]
-        R, t = kabsch(bbc[sx], bbc[sy])
-        ang = float(np.degrees(np.arccos(np.clip((np.trace(R) - 1) / 2, -1, 1))))
-        ang = min(ang, 360.0 - ang)
-        c = float(np.linalg.norm(t))
-        axis = t / c
-        point = C[atoms0].mean(axis=0)
-        coords = _orient_block((C[atoms0] - point) @ rotation_to_z(axis).T, bb_local)
-        if ref is not None:
-            coords = _align_about_z(coords, ref)
-        helix = HelixParams(
-            sequence=name, period_bonds=nb, monomers_per_period=polymer.monomer_count(nb),
-            rotation_per_period=ang, rise_per_period=c, rise_per_bond=c / nb, periods_per_repeat=1,
-            turns_per_repeat=0, c=c, radius_backbone=0.0, radius_all=0.0, axis=axis, axis_point=point, label="refined",
-        )
-        ch = PeriodicChain(
-            polymer=polymer, name=name, elements=list(elements), coords=coords, charges=charges.copy(),
-            c=c, n_monomers=polymer.monomer_count(nb), helix=helix, dihedrals=tors_batch[m].copy(),
-            same_site_scale=scales, backbone=np.array(bb_local), rotation_error=ang,
-        )
-        ch.helix.radius_all = ch.radius
-        ch.helix.radius_backbone = float(np.linalg.norm(coords[ch.backbone][:, :2], axis=1).max())
-        out.append(ch)
-    return out
+    # the rigid fit, orientation and alignment of every row are batched matrix
+    # operations in pack (``_finish_repeat_chains``, windows as in ``_windows``)
+    return _finish_repeat_chains(polymer, name, tors_batch, coords_full, scale14, align_to)
 
 
 # ------------------------------------------------------------------ parametrisation
