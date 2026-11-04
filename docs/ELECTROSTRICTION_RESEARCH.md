@@ -221,7 +221,11 @@ linear sp carbon pair) and the disulfonyl side chain (needs S in the nonbonded t
 multi-atom pendant with its own torsions). The fluorine-free relaxor is worth a row because
 it is a relaxor with no crystallinity (so it fails the recovery floor and the force column
 as made: modulus about 1 MPa) but tests whether a dipole-pair side chain on a stiffer
-backbone keeps the low `Tf`.
+backbone keeps the low `Tf`. *PI ruling, 2026-11-04: a test row only.* It is screened for
+what the dipole-pair side chain does to the switching margin and the cooperativity on a
+stiffer backbone; it is not a candidate as made (1 MPa modulus: blocking stress 0.04 MPa,
+work density about 0.8 kJ/m^3, coupling about 0.002, no crystalline recovery spring, a
+relaxation near a few hundred hertz at room temperature).
 
 ## 7. What Dipole is asked for (summary; the ask file has the specifications)
 
@@ -260,8 +264,8 @@ format is agreed); tier 3 once the two side branches are pushed.
 2. Priority of E1-E3 against D13/D19/D23: E1 and E2 are CPU-small and can run beside the GPU
    queue, as the earlier reference-data request argued; the ask says so but does not reorder
    anything.
-3. Whether the fluorine-free disulfonyl family should enter the slate as a row despite the
-   force column.
+3. ~~Whether the fluorine-free disulfonyl family should enter the slate as a row despite the
+   force column.~~ Ruled 2026-11-04: a test row only (section 6).
 
 ## 10. The microreactor side: the same computations from the printer's end (2026-11-04)
 
