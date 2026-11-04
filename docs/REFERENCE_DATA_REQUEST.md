@@ -6237,3 +6237,22 @@ strains, Q, k33, modulus and mechanism), and the libration column needs the QENS
 (crystal-interior quantity; the dispersion is interfacial). Two requests to the PI, not
 to you: push `kink-switching` and `vector-repeat-merge` so the barrier work (tier 3) can
 continue here, and rule on where E1-E3 sit against D13/D19/D23.
+
+## Consumer note, 2026-11-04 (later): E1 and E2 dispatched; polyfind's predictions pre-registered
+
+The PI ruled the same day: "go on E1, E2", beside the D13 / D19 / D23 queue; E3 waits and E4
+is the PI's own bench work. Before any of your E1 or E2 records exist, polyfind's predictions
+for every quantity they will deliver are committed in `docs/E1_E2_PREDICTIONS.md` (rendered
+from `docs/predictions/e1_polyfind.json` and `e2_polyfind.json` by `examples/e1_e2_report.py`;
+produced by `examples/e1_predictions.py` and `examples/e2_predictions.py`), with the
+definitions both sides must share (frames, proper against improper piezoelectric constants,
+true against nominal dielectric tensors, the monomer), and `examples/crosscheck_e1_e2.py`
+applies the ask's acceptance rules to any record you deliver in the small JSON schema it
+documents (or we transcribe yours). Two flags came out of running that script on what the
+periodic reference already holds for beta-PVDF: your preliminary lateral (`a`-axis)
+relaxed-ion stiffness of 112 GPa is six times polyfind's 18.5 and far above published
+transverse moduli for beta (10-30 GPa), while the polar-axis stiffnesses agree within 10%;
+and your unpublished Berry slope of the polar polarization against lateral strain (0.56-0.80
+C/m^2) is three to four times polyfind's 0.18. The electronic dielectric tensor agrees within
+5% on all three axes. The first E1 cells to run are therefore beta's lateral strain pair, with
+the ion relaxation checked for chain sliding and rotation.

@@ -1,0 +1,16 @@
+{
+ "frame": "Dipole periodic reference: x = a (lateral), y = b (polar), z = chain",
+ "note": "Numbers already in sarco/materials/gpu_bundle/periodic_reference before E1 was dispatched (2026-11-04). Each carries Dipole's own status; nothing here is an accepted quantitative reference unless its status says so.",
+ "systems": {
+  "beta": {
+   "label": "beta-PVDF, CP2K PBE-D3(BJ) zero-pressure cell (STATUS.md 2026-09-10)",
+   "cell": {"a": 8.3582753719, "b": 4.7314155341, "c": 2.5801545869, "volume_A3": 102.036016},
+   "C_GPa": {"axes": "x y z", "block": [[111.934, 8.547, 1.335], [10.054, 25.185, 2.817], [1.249, 2.324, 315.851]],
+             "status": "preliminary relaxed-ion normal stiffness from the 13-cell strain manifold; reciprocity mismatch up to 1.5 GPa"},
+   "eps_inf": {"axes": "x y z", "diag": [2.252561, 2.235403, 2.600531],
+               "status": "QE DFPT electronic tensor at the accepted cell (BORN_RESPONSE_REPORT.md): complete evidence for its protocol, not an accepted quantitative reference"},
+   "berry_slope_C_m2": {"dP_y_d_eta_x": {"grid_4x8x4": 0.803265, "grid_4x8x16": 0.563165},
+                        "status": "polarization along y per unit strain along x, centered 1%; 30% apart between k-grids and branch-discontinuous at the dense zero point: not published as a piezoelectric constant"}
+  }
+ }
+}
