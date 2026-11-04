@@ -208,55 +208,60 @@ class RISModel:
             out = self._aug().k_best(n_bonds - 1, k, end_term=self._aug_end_term(n_bonds))
             return [(e, self._decode(q)) for e, q in out]
         e1, e2, S, B = self.first_order, self.second_order, self.S, self.B
-        first = []
-        for s in range(S):
-            if start is not None and s != start:
-                first.append((np.empty(0), np.empty((0, 2), dtype=int)))
-            else:
-                first.append((np.array([e1[0, s]]), np.array([[-1, -1]])))
-        lists = [first]
+        # E[s, r]: r-th best energy of the prefixes ending in state s, INF-padded to k
+        E = np.full((S, k), INF)
+        if start is None:
+            E[:, 0] = e1[0]
+        else:
+            E[start, 0] = e1[0, start]
+        E, back = self._k_best_forward(E[None], n_bonds, k)
+        fin = E[0]
+        if end_pair_to is not None:
+            fin = fin + e2[(n_bonds - 1) % B, :, end_pair_to][:, None]
+        if end_term is not None:
+            fin = fin + end_term[:, None]
+        order = np.argsort(fin.ravel(), kind="stable")
+        order = order[np.isfinite(fin.ravel()[order])][:k]
+        energies = fin.ravel()[order]
+        seqs = self._k_best_backtrace(back, np.zeros(order.size, dtype=int), order // k, order % k, n_bonds, k)
+        return [(float(e), seqs[j].copy()) for j, e in enumerate(energies)]
+
+    def _k_best_forward(self, E: np.ndarray, n_bonds: int, k: int):
+        """The k-best Viterbi recursion, vectorised over states and over a leading batch.
+
+        ``E`` is ``(G, S, k)``: for each of ``G`` independent problems (the start states
+        of the cyclic search, or just one), the ``k`` best prefix energies per end state,
+        ascending and INF-padded.  Each step forms every (predecessor, rank) candidate of
+        every state as one ``(G, S, S*k)`` array, flat index ``p*k + r`` -- predecessor-
+        major, the order in which the per-state lists used to be concatenated, so that a
+        stable argsort breaks ties the same way -- and keeps the best ``k``.  Forbidden
+        pairs (``INF`` in ``second_order``) simply sort last and never come out finite.
+        Returns the final ``E`` and the flat backpointers ``back[i]`` ``(G, S, k)`` for
+        ``i = 1 .. n_bonds-1`` (``back[0]`` is ``None``).
+        """
+        e1, e2, S, B = self.first_order, self.second_order, self.S, self.B
+        G = E.shape[0]
+        back = [None]
         for i in range(1, n_bonds):
             t = (i - 1) % B
-            cur = []
-            for s in range(S):
-                es, bps = [], []
-                for p in range(S):
-                    pe, _ = lists[i - 1][p]
-                    if pe.size == 0 or not np.isfinite(e2[t, p, s]):
-                        continue
-                    es.append(pe + e2[t, p, s] + e1[i % B, s])
-                    bps.append(np.stack([np.full(pe.size, p), np.arange(pe.size)], axis=1))
-                if not es:
-                    cur.append((np.empty(0), np.empty((0, 2), dtype=int)))
-                    continue
-                es = np.concatenate(es)
-                bps = np.concatenate(bps)
-                order = np.argsort(es, kind="stable")[:k]
-                cur.append((es[order], bps[order]))
-            lists.append(cur)
-        finals = []
-        for s in range(S):
-            pe, _ = lists[-1][s]
-            for r in range(pe.size):
-                e = pe[r]
-                if end_pair_to is not None:
-                    e = e + e2[(n_bonds - 1) % B, s, end_pair_to]
-                if end_term is not None:
-                    e = e + end_term[s]
-                if np.isfinite(e):
-                    finals.append((float(e), s, r))
-        finals.sort(key=lambda x: x[0])
-        out = []
-        for e, s, r in finals[:k]:
-            seq = np.empty(n_bonds, dtype=int)
-            i, st, rk = n_bonds - 1, s, r
-            while i >= 0:
-                seq[i] = st
-                _, bps = lists[i][st]
-                st, rk = int(bps[rk, 0]), int(bps[rk, 1])
-                i -= 1
-            out.append((e, seq))
-        return out
+            cand = E[:, :, None, :] + e2[t][None, :, :, None]  # (G, p, s, r)
+            cand = cand.transpose(0, 2, 1, 3).reshape(G, S, S * k) + e1[i % B][None, :, None]
+            order = np.argsort(cand, axis=2, kind="stable")[:, :, :k]
+            E = np.take_along_axis(cand, order, axis=2)
+            back.append(order)
+        return E, back
+
+    @staticmethod
+    def _k_best_backtrace(back, g, s, r, n_bonds: int, k: int) -> np.ndarray:
+        """Follow the flat backpointers for every selected (problem g, state s, rank r) at once."""
+        n = s.size
+        seqs = np.empty((n, n_bonds), dtype=int)
+        for i in range(n_bonds - 1, -1, -1):
+            seqs[:, i] = s
+            if i > 0:
+                f = back[i][g, s, r]
+                s, r = f // k, f % k
+        return seqs
 
     def cyclic_k_best(self, period: int, k: int):
         """Lowest-energy periodic sequences of a given period (cycles in state space).
@@ -264,6 +269,9 @@ class RISModel:
         Each cycle is reported once per distinct starting state it passes through;
         callers should canonicalise under shift/reversal/mirror (see :mod:`polyfind.helix`).
         Energies are per period (all first-order, pair and triple terms, ring closed).
+
+        The ``S`` start states are solved in one pass (a ``(S, S, k)`` recursion, see
+        :meth:`_k_best_forward`), with the closing pair term added at the end.
         """
         if period % self.B != 0:
             raise ValueError("period must be a multiple of bonds_per_repeat")
@@ -275,15 +283,28 @@ class RISModel:
                 seq = tuple(int(x) for x in (np.asarray(q) // S))
                 seen[seq] = e
             return sorted(((e, np.array(s)) for s, e in seen.items()), key=lambda x: x[0])
+        e1, e2, S, B = self.first_order, self.second_order, self.S, self.B
         seen: dict[tuple, float] = {}
-        for s0 in range(self.S):
-            if period == 1:
-                e = float(self.first_order[0, s0] + self.second_order[0, s0, s0])
+        if period == 1:
+            for s0 in range(S):
+                e = float(e1[0, s0] + e2[0, s0, s0])
                 if np.isfinite(e):
                     seen[(s0,)] = e
-                continue
-            for e, seq in self.k_best(period, k, start=s0, end_pair_to=s0):
-                seen[tuple(int(x) for x in seq)] = e
+            return sorted(((e, np.array(s)) for s, e in seen.items()), key=lambda x: x[0])
+        E = np.full((S, S, k), INF)
+        E[np.arange(S), np.arange(S), 0] = e1[0]  # problem s0 starts in state s0
+        E, back = self._k_best_forward(E, period, k)
+        fin = E + e2[(period - 1) % B].T[:, :, None]  # close[s0, s] = e2[t_last, s, s0]
+        flat = fin.reshape(S, S * k)
+        order = np.argsort(flat, axis=1, kind="stable")
+        finite = np.isfinite(np.take_along_axis(flat, order, axis=1))
+        keep = finite & (np.cumsum(finite, axis=1) <= k)  # first k finite per start state
+        g, col = np.nonzero(keep)  # row-major: start states ascending, energies ascending within
+        sel = order[g, col]
+        energies = flat[g, sel]
+        seqs = self._k_best_backtrace(back, g, sel // k, sel % k, period, k)
+        for j in range(g.size):
+            seen[tuple(int(x) for x in seqs[j])] = float(energies[j])
         return sorted(((e, np.array(s)) for s, e in seen.items()), key=lambda x: x[0])
 
     def enumerate_all(self, n_bonds: int, periodic: bool = False):

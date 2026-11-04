@@ -7,6 +7,11 @@ composition, see :func:`polyfind.helix.sequence_images`), discards non-primitive
 repetitions of shorter periods,
 computes helix descriptors, and filters out chains that do not propagate
 (rings, rise per bond below ``min_rise_per_bond``).
+
+The helix analysis is batched: all new canonical sequences of one period go through
+one :func:`polyfind.helix.helix_parameters_batch` call (one batched backbone build,
+one batched Kabsch), and a key that failed a filter is remembered so that its other
+images are not analysed again.
 """
 from __future__ import annotations
 
@@ -14,7 +19,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .helix import HelixParams, canonical_sequence, helix_parameters, is_primitive
+from .helix import HelixParams, canonical_sequence, helix_parameters_batch, is_primitive
 from .polymers import Polymer
 from .ris import RISModel
 
@@ -72,28 +77,41 @@ def enumerate_periodic(
     chiral = bool(polymer.is_chiral)
     states = model.states
     seen: dict[tuple, Candidate] = {}
+    # canonical sequences that failed a filter: their descriptors are a function of the
+    # key alone, so every later image of the same key would fail the same way and need
+    # not be rebuilt (about half the helix analyses of a PVDF run were such repeats)
+    rejected: set[tuple] = set()
     for P in range(B, max_period + 1, B):
+        # one pass over the DP output collects each new canonical key once, with the
+        # energy of its first image (all images of a key have the same energy: they are
+        # related by symmetries of the chain's energy); the helix analysis of all of
+        # them is then one batched build, the sequences of a period having one length
+        pending: dict[tuple, float] = {}
         for e, seq in model.cyclic_k_best(P, k_per_period):
             seq = tuple(int(s) for s in seq)
             if not is_primitive(seq, B):
                 continue
             key = canonical_sequence(seq, states, B, chiral=chiral)
-            if key in seen:
+            if key in seen or key in rejected or key in pending:
                 continue
-            h = helix_parameters(polymer, np.array(key), states, max_m=max_m)
-            if h.rise_per_bond < min_rise_per_bond:
+            pending[key] = float(e)
+        if not pending:
+            continue
+        keys = list(pending)
+        helices = helix_parameters_batch(polymer, np.array(keys), states, max_m=max_m)
+        for key, h in zip(keys, helices):
+            if h.rise_per_bond < min_rise_per_bond or (require_commensurate and h.c is None):
+                rejected.add(key)
                 continue
-            if require_commensurate and h.c is None:
-                continue
-            cand = Candidate(
+            e = pending[key]
+            seen[key] = Candidate(
                 seq=key,
                 name="".join(states.names[s] for s in key),
                 period=P,
-                energy_per_period=float(e),
-                energy_per_monomer=float(e) / (P / B),
+                energy_per_period=e,
+                energy_per_monomer=e / (P / B),
                 helix=h,
             )
-            seen[key] = cand
     known = {
         canonical_sequence(model.parse(s), states, B, chiral=chiral): lbl
         for lbl, s in KNOWN_CHAINS.get(polymer.name, {}).items()
