@@ -328,3 +328,85 @@ the nonbonded table (nitrogen is there); the machinery is the chain-pair one.
 tube/ring partner for the corrugation; per-sequence tier-2 and tier-3 runs for the
 printable cells (D8's question); and the held-end geometry with the anchor, which is
 Dipole's.
+
+## 11. Level 1 of the loss model: the derived small-signal tan delta (2026-11-04)
+
+The PI's question of 2026-11-04: can tan delta be simulated or derived, since the target is
+the optimum on the frequency-force-efficiency surface and that needs tan delta at each
+performance level. The honest answer is that nothing in the record gave it (the one
+earlier loss proxy, rigid chain rotation, was abandoned on 2026-10-02, and the provider's
+own note says static margins do not bound loss without a dynamical model), but every input
+of a derived model exists. Three levels were proposed: a closed-form relaxation model fed by
+computed and bench-calibrated numbers (days); kinetic Monte Carlo on the sequence lattice
+for the large-signal regime (weeks); molecular dynamics of the crystal-amorphous interface
+for the dipole autocorrelation (months, GPU, Dipole's). The PI chose level 1, and it is
+`polyfind.loss` (`examples/loss_level1.py`, `tests/test_loss.py`).
+
+**The model.** Units of `n` monomers switch between a ground and a polar conformation
+with dipole gain `dmu_u = n dmu` and cost `dE_u = n dE`; the polar fraction at nominal
+field `E` is `x = 1 / (1 + exp((dE_u - dmu_u E) / kT))` and the channel's dielectric
+strength is `N dmu_u^2 x(1-x) / (eps0 kT)`, so a degenerate unit gives the textbook
+`N dmu_u^2 / (4 eps0 kT)` and the bias suppression `sech^2(dmu_u E / 2kT)`, and a unit
+well above its ground state gives nothing at zero field. The relaxation time is
+Vogel-Fulcher, `tau0 exp(Ea / k(T - Tf))`, tilted by the bias as `1 / cosh((dmu_u E -
+dE_u) / 2kT)`. The permittivity is Debye or Cole-Cole on that time plus `eps_inf` and a
+background loss; the strain of the channel follows the same spectral function with the
+transition strain and `dx/dE` as its amplitude; the operating point is the per-cycle
+bookkeeping of electrical loss (`pi eps0 eps'' E_ac^2`), mechanical loss, matched-load
+work (`Y S_ac^2 / 4`), efficiency and heat (losses times frequency).
+
+**Calibration, and which inputs are computed.** The bias suppression ratio gives the unit
+dipole and hence `n` (with the computed `dmu` per monomer); the dielectric strength then
+gives the switchable fraction; `tau0`, `Ea`, `Tf` come from the bench sweep's VF fit
+(`loss.fit_vogel_fulcher` fits the peak temperature against frequency as the sweep
+delivers it). On the computed side, `dmu` per monomer and the margin `dE` per sequence are
+tier 2, the attempt time is the libration frequency (the 53-68 cm^-1 modes give about 1e-13
+s, against the fitted 8e-13), the barrier is tier 3, and `Tf` has no computed value yet (the
+polar/antipolar coupling between chains is 0.03 kcal/mol per monomer, far too small to be
+the cooperativity; QENS puts it at the interface). A candidate is then the baseline channel
+with its `dmu` scaled, its margin set, its barrier shifted and its cooperativity replaced
+(`SwitchingChannel.scaled`).
+
+**First numbers, on published inputs for the 63/30/7 terpolymer** (VF `tau0` 8.08e-13 s,
+`Ea` 0.124 eV, `Tf` 191 K; dielectric strength 45; `eps` halving under 60 MV/m; polyfind's
+`dmu` 0.45 e.A per monomer): the unit is `n` = 17 monomers (about 4 nm of chain, a
+nanodomain), 49% of monomers switch, `f_relax` is 364 kHz unbiased and 491 kHz at 55 MV/m.
+
+| f (kHz) | tan delta, Debye, 0 / 55 MV/m | Cole-Cole 0.3, 0 / 55 MV/m |
+|---|---|---|
+| 1 | 0.0025 / 0.0018 | 0.013 / 0.010 |
+| 10 | 0.025 / 0.018 | 0.064 / 0.049 |
+| 30 | 0.076 / 0.053 | 0.131 / 0.101 |
+| 50 | 0.126 / 0.088 | 0.181 / 0.140 |
+| 100 | 0.251 / 0.174 | 0.273 / 0.212 |
+
+At the program's bias-hold point (55 V/um DC, 1.8 V/um AC, Y = 0.2 GPa, mechanical tan
+delta 0.05) the channel gives an AC strain of 8e-4 and a blocking stress of 0.16 MPa at
+every frequency below the relaxation, 32 J/m^3 of work per cycle, and:
+
+| f (kHz) | tan delta | efficiency | heat (MW/m^3) |
+|---|---|---|---|
+| 1 | 0.002 | 0.57 | 0.02 |
+| 10 | 0.018 | 0.33 | 0.7 |
+| 34 | 0.060 | 0.16 | 5.9 |
+| 50 | 0.088 | 0.12 | 12 |
+| 66 | 0.115 | 0.09 | 21 |
+
+Three readings, each to be tested by the sweep rather than believed. The optimizer's
+`tan delta_0` of 0.0125 at 34-66 kHz is what this channel gives at 7 kHz; at 34-66 kHz it
+gives 0.06-0.12, and the 4 MW/m^3 heat budget is crossed near 25 kHz, so on these inputs
+the baseline's cooled bias-hold optimum sits near 20-25 kHz at tan delta 0.04-0.05 and an
+efficiency near 0.2, not at 34-66 kHz. The assumed 30 kHz `f_relax` is a factor of ten
+below this film's VF fit; the loss at the operating point is set by `omega tau`, so the
+chemistry lever is `tau`, and a candidate with a three times shorter `tau` moves the whole
+curve up by three times in frequency at the same loss. And the Arrhenius alternative with
+polyfind's computed kink hop (0.357 eV, `Tf` = 0) lands in the same decade at 300 K (198
+kHz against 364) but diverges from the VF form away from room temperature (24 against 0.2
+kHz at 260 K), which is exactly what the sweep in temperature discriminates.
+
+**What the bench must deliver for the model to be the film's and not the literature's**
+(this sharpens E4 of the ask): the VF parameters from the peak temperatures at each
+frequency; the dielectric strength and `eps_inf`; the small-signal `eps` under the
+operating DC bias at 1-100 kHz (the suppression ratio); the DMA mechanical loss; and the
+DC leakage, which this model does not contain. With those, `SwitchingChannel` is the
+baseline, and the candidates are its scaled copies with tier-2 and tier-3 inputs.

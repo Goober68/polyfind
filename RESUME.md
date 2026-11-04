@@ -16,7 +16,11 @@ optional `gtol`/`ftol` (defaults unchanged). The PI's reminder that this seat al
 microreactor (fluoro-ribosome) programme is answered in section 10 of the plan: `polyfind.chainend`
 gives the torsion-gate field per unit type (VDF end: 1.6 V/nm to write gauche, 0.2 to hold trans)
 and beta's registry corrugation (0.48 kcal/mol per monomer, 41 pN per monomer peak) for D21/D24;
-`examples/chain_end_gates.py`, `tests/test_chainend.py`. Needed from the PI: push `kink-switching` and
+`examples/chain_end_gates.py`, `tests/test_chainend.py`. Level 1 of the loss model (PI: "go with level
+1") is `polyfind.loss`: a bias-tilted Vogel-Fulcher switching channel giving tan delta, the strain per AC
+field and the cycle efficiency at any (f, T, E_bias); on published terpolymer inputs the bias-hold point
+at 34-66 kHz carries tan delta 0.06-0.12, not the assumed 0.0125, and crosses the 4 MW/m^3 heat budget
+near 25 kHz (plan section 11; the bench sweep in VF form replaces every input). Needed from the PI: push `kink-switching` and
 `vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
 
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five
