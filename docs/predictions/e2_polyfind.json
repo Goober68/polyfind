@@ -1,0 +1,97 @@
+{
+ "potential": "pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
+ "frame": "x polar, y lateral, z chain",
+ "systems": {
+  "pvdf": {
+   "label": "PVDF",
+   "conformations": {
+    "TTTT": {
+     "sequence": [
+      0,
+      0
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 2.0,
+     "energy_per_monomer_kcal": -4.74356840829072,
+     "P_C_m2": [
+      -0.1400151232288881,
+      6.85640500022575e-17,
+      -5.251667465198503e-17
+     ],
+     "c_per_monomer_A": 2.599947642352012,
+     "cell": {
+      "a": 4.519579610692147,
+      "b": 8.520781117847154,
+      "gamma_deg": 90.0,
+      "c": 2.599947642352012,
+      "volume_A3": 100.12489006794456
+     },
+     "volume_per_monomer_A3": 50.06244503397228,
+     "seconds": 2.327066421508789,
+     "margin_vs_ground_kcal": 1.3037724580308598,
+     "conformational_strain_vs_ground": 0.10397283726155515
+    },
+    "TGTG'": {
+     "sequence": [
+      0,
+      1,
+      0,
+      2
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 4.0,
+     "energy_per_monomer_kcal": -6.04734086632158,
+     "P_C_m2": [
+      0.07262963723969033,
+      -3.7024447604598256e-17,
+      -6.042298025816854e-18
+     ],
+     "c_per_monomer_A": 2.355082982658592,
+     "cell": {
+      "a": 4.977304561925439,
+      "b": 9.037670400737875,
+      "gamma_deg": 90.0,
+      "c": 4.710165965317184,
+      "volume_A3": 211.87851717795374
+     },
+     "volume_per_monomer_A3": 52.969629294488435,
+     "seconds": 5.131643056869507,
+     "margin_vs_ground_kcal": 0.0,
+     "conformational_strain_vs_ground": 0.0
+    },
+    "T3GT3G'": {
+     "sequence": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 8.0,
+     "energy_per_monomer_kcal": -5.322504307488998,
+     "P_C_m2": [
+      0.031931860216979094,
+      -0.06040541281747906,
+      -0.05025000304231837
+     ],
+     "c_per_monomer_A": 2.335558692873238,
+     "cell": {
+      "a": 5.286504017206574,
+      "b": 8.762392925945411,
+      "gamma_deg": 85.62839201749613,
+      "c": 9.342234771492953,
+      "volume_A3": 431.49593619833496
+     },
+     "volume_per_monomer_A3": 53.93699202479187,
+     "seconds": 34.42966389656067,
+     "margin_vs_ground_kcal": 0.7248365588325818,
+     "conformational_strain_vs_ground": -0.00829027678817229
+    }
+   }
+  }
+ }
+}
