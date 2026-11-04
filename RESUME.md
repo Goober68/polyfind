@@ -35,7 +35,8 @@ point is a question for the calibrated lattice. The coupling x spread grid
 settles the temperature slope: 0.36-0.37 eV apparent at every disordered point against VF's 1.0, the lattice ordering
 into a ferroelectric past J of about 0.03 eV, so the VF slope is an input (`at_temperature(T, tau_target=...)`
 recalibrates the barrier at each T to the bench fit) and the lattice's deliverables are the bias and amplitude
-dependence at each temperature; the spread is the knob for the suppression (section 12, last block). Needed from the PI: push `kink-switching` and
+dependence at each temperature; the spread is the knob for the suppression (section 12, last block). The PI runs the E4 bench items personally once an LCR meter is in hand (sarco ask, E4 status line).
+Needed from the PI: push `kink-switching` and
 `vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
 
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five
