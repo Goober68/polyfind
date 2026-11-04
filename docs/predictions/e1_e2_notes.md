@@ -111,6 +111,12 @@ The periodic reference already holds three beta-PVDF numbers that E1 asks for, f
   kcal/mol threshold: the fitted potential over-binds the helical conformations relative to
   all-trans by about a kcal/mol per monomer, which E2's PVDF row will measure and the
   refit will use.
+- **E2, the 70/30 VDF/TrFE model.** The same ordering, TGTG' below T3GT3G' below TTTT, with the
+  all-trans penalty lowered from 1.30 to 1.09 kcal/mol per monomer and the helical penalty from
+  0.73 to 0.56 by the TrFE units; the conformational strain is unchanged at +10.1%. The direction
+  is the known one (TrFE stabilises the all-trans phase of the copolymer); the magnitude, 0.2
+  kcal/mol per monomer at 30% TrFE, is what E2's VDF/TrFE row tests. The cells are large (20
+  and 40 backbone bonds per chain) and their packing searches are the least converged of the set.
 - **E2, the defect units.** The CFE, CTFE, CDFE, FA and DB cells in a beta host are not
   predicted here: the potential's chlorine and the other defect parameters are unvalidated,
   and their validation is one of the things E2 is for. They will be added to this file, as
