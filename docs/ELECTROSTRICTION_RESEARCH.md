@@ -470,10 +470,82 @@ do. The driven large-signal rows at this lattice size are noise-limited (the los
 program's amplitudes is below the statistical floor of 400 units; the loop areas come out
 with either sign), so the small-signal column is the fluctuation-dissipation one and the
 large-signal estimator needs larger lattices or many replicas. A 32 x 32 run was started
-with the same parameters (zero-bias strength 108 before scaling).
+with the same parameters (zero-bias strength 108 before scaling); its result is the addendum below.
 
 **Next**, in order: calibrate `n`, `J` and the spread jointly on the bench's three numbers
 (the suppression under bias, the VF slope in temperature, the strength); larger lattices or
 replica averaging for the large-signal loss; the margins drawn from a printed sequence
 (tier 2's per-sequence `dE`), which is where the muscle's and the printer's questions become
 one calculation; and level 3 for the interface, which this lattice does not contain.
+
+**Addendum: the 32 x 32 run** (same parameters, 1024 units, 24 periods per driven row, 1.7
+hours of CPU, `examples/loss_level2.py` without `--quick`). The larger lattice agrees with
+the 20 x 20 one within a factor two in every column and moves no conclusion, so the shape of
+the surface is not a finite-size effect. Calibration: barrier 0.281 eV (formula 0.261),
+zero-field polar fraction 0.563, zero-bias strength 108 scaled to 45 (density factor
+0.417); the fluctuation-dissipation strength at zero bias then reads 44.6 against the
+measured 45.
+
+| T (K) | lattice tau (s) | Vogel-Fulcher (s) | Arrhenius at 0.281 eV (s) |
+|---|---|---|---|
+| 270 | 4.1e-6 | 6.6e-5 | 1.4e-7 |
+| 285 | 9.1e-7 | 3.6e-6 | 7.5e-8 |
+| 300 | 4.9e-7 | 4.4e-7 | 4.2e-8 |
+| 315 | 2.5e-7 | 8.9e-8 | 2.5e-8 |
+| 330 | 1.5e-7 | 2.5e-8 | 1.6e-8 |
+
+Over 270-330 K the lattice's apparent activation energy is 0.43 eV, the bare barrier's 0.28
+and the VF fit's 1.0: the coupling and the random field add 0.15 eV of cooperativity, a
+fifth of what the measured fit demands, so `J` must go up (towards the ordering point, which
+the spread then has to hold off), and the calibration of `J` on the bench's slope is a
+one-parameter fit with a clear target. At zero bias the lattice's spectrum is broader than
+one Debye (its integral time 6.3e-7 s against the fitted 4.9e-7), which puts its tan delta
+at 1.4x level 1's at every frequency (0.121 against 0.086 at 34 kHz, 0.223 against 0.166 at
+66). At 55 V/um the strength is 2.2 against level 1's 24.7, the same saturation as on the
+smaller lattice (a parameter, not a size).
+
+Bias sweep in the program's band (fluctuation-dissipation, 1.8 V/um AC, `Y` 0.2 GPa,
+mechanical tan delta 0.05; the two-state reading, see the correction below for the strain
+columns):
+
+| bias (V/um) | x | chi_s | tau (s) | tan delta 34 / 66 kHz | S_ac | efficiency 34 / 66 kHz | heat 34 / 66 kHz (MW/m^3) | S at the 4 MW/m^3 budget, 34 kHz |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 0.56 | 42.6 | 4.3e-7 | 0.083 / 0.161 | 3.3e-3 | 0.44 / 0.35 | 23 / 65 | 1.4e-3 |
+| 10 | 0.75 | 43.2 | 7.1e-7 | 0.138 / 0.266 | 3.3e-3 | 0.37 / 0.26 | 31 / 88 | 1.2e-3 |
+| 20 | 0.86 | 19.0 | 4.0e-7 | 0.069 / 0.128 | 1.5e-3 | 0.34 / 0.24 | 7.1 / 21 | 1.1e-3 |
+| 30 | 0.93 | 13.8 | 7.4e-7 | 0.119 / 0.209 | 1.0e-3 | 0.20 / 0.12 | 7.4 / 22 | 0.76e-3 |
+| 45 | 0.97 | 3.5 | 9.1e-8 | 0.009 / 0.018 | 2.7e-4 | 0.31 / 0.21 | 0.29 / 0.93 | 1.0e-3 |
+| 55 | 0.98 | 2.1 | 5.7e-8 | 0.004 / 0.008 | 1.65e-4 | 0.30 / 0.20 | 0.11 / 0.35 | 1.0e-3 |
+
+The relaxation time is not monotonic in bias (slow near 10 and again near 30 V/um): with a
+spread of margins, different sub-populations of units pass through their thresholds at
+different biases, and each passage is a slow, lossy region. The driven rows at 55 V/um and
+10 V/um AC (the amplitude the heat budget allows there) show the response still linear
+(third harmonic 2-4.5% of the fundamental, drift below 1% per cycle, strain 9.3-9.8e-4 at
+every frequency), so the fluctuation-dissipation reading extends to the budget amplitude at
+the bias-hold point; their loss is at the noise floor even at 1024 units (tan delta
+0.004-0.037 with scatter, the 1.8 V/um rows pure noise), which settles that the
+large-signal loss wants replicas, not a larger lattice.
+
+**A model limit found in reading the sweep, and its correction.** The lattice (and level
+1's channel) is two-state: ground, or polar with its dipole along the drive axis. The real
+unit has three states, ground, polar up and polar down. At zero bias the two polar states
+are equally occupied, so the linear-in-field strain vanishes (the strain is at 2f, the
+`Q P^2` of the literature) while the dielectric strength does not (both polar states
+respond; in mean field `N dmu_u^2 x_polar / (eps0 kT)`, `1 / (1 - x)` times the two-state
+value at the same polar fraction, which the strength calibration absorbs). In mean field the
+three-state unit's linear strain per AC volt is the two-state's times `tanh(dmu_u E_dc /
+kT)`, rising from zero to one over a bias scale `kT / dmu_u`, 34 V/um on these parameters,
+while the loss is unchanged. So the two-state rows overstate the strain, the efficiency and
+the stroke at budget at low bias, and the corrected surface is not broad but rising: stroke
+at the 4 MW/m^3 budget and 34 kHz of 0 at zero bias, 12 per second per unit lever at 10
+V/um, 20 at 20, 19 at 30, 30 at 45 and 31 at 55 (34 uncorrected), with the efficiency at
+34 kHz 0, 0.07, 0.16, 0.12, 0.29 and 0.28 along the same biases: a plateau from about 45
+V/um, and the program's bias-hold point of 50-65 V/um is on it. That reading replaces the
+"broad optimum" of the 20 x 20 paragraph above; the knee and the loss columns stand, and the
+efficiency statement stands on the aligned side only. A three-state unit in the lattice is a
+small change to `polyfind.kmc` (the polar state carries a dipole sign; the conformational
+coupling is the same for either sign, the dipolar one is not) and is the first model item of
+the next round, ahead of the `n`, `J`, spread calibration, because the suppression of the
+strength under bias on which `n` is calibrated has a different form in the three-state unit
+(`x_polar - m^2` against `x (1 - x)`, `m` the net polar fraction).

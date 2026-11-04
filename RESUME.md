@@ -23,9 +23,12 @@ at 34-66 kHz carries tan delta 0.06-0.12, not the assumed 0.0125, and crosses th
 near 25 kHz (plan section 11; the bench sweep in VF form replaces every input). Level 2 ("Go") is
 `polyfind.kmc`: the units on a lattice with coupling and random margins, rejection-free kinetic Monte Carlo
 under a DC plus AC field, barrier and strength calibrated by measurement, small-signal permittivity at any
-bias from the lattice's own fluctuations; first result (plan section 12): the bias axis has a knee near
-15 V/um on the first parameters, efficiency is nearly bias-independent, the stroke-at-budget optimum is broad;
-`n`, `J` and the spread still to be calibrated on the bench's suppression, VF slope and strength. Needed from the PI: push `kink-switching` and
+bias from the lattice's own fluctuations; first results (plan section 12; 20 x 20 and 32 x 32 agree): the bias axis has a knee near
+15 V/um on the first parameters, the lattice's apparent activation (0.43 eV) is a fifth of the way from the bare
+barrier to the VF slope, and a three-state correction (the polar state's dipole can point either way, so the
+linear strain vanishes at zero bias while the loss does not) makes the stroke-at-budget surface rise with bias to
+a plateau from about 45 V/um, where the program's bias-hold point already sits; next the three-state unit in the
+lattice, then `n`, `J` and the spread calibrated on the bench's suppression, VF slope and strength. Needed from the PI: push `kink-switching` and
 `vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
 
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five
