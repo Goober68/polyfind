@@ -574,7 +574,7 @@ harmonic. On the first lattice parameters (20 x 20, `J` 0.02 eV, spread 0.08 eV;
 45.6 against the channel's 45 with no density scaling to speak of), 8000-sample
 fluctuation-dissipation rows, 1.8 V/um AC, `Y` 0.2 GPa, mechanical tan delta 0.05:
 
-| bias (V/um) | x | m | chi_s | tau_int (s) | tan delta 20 / 50 kHz | S_ac | efficiency 20 / 50 kHz | heat 20 / 50 kHz (MW/m^3) | stroke at budget 20 / 50 kHz | DC strain |
+| bias (V/um) | x | m | chi_s | tau_int (s) | tan delta 20 / 50 kHz | S_ac | efficiency 20 / 50 kHz | heat 20 / 50 kHz (MW/m^3) | stroke at budget 20 / 50 kHz | DC strain (switching population) |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | 0.57 | 0.00 | 48 | 5.8e-7 | 0.067 / 0.165 | 1.1e-4 (noise) | 0.00 / 0.00 | 6.3 / 37 | 2 / 2 (noise) | 0 |
 | 10 | 0.60 | 0.17 | 59 | 6.0e-7 | 0.071 / 0.176 | 9.8e-4 | 0.10 / 0.04 | 8.6 / 49 | 13 / 14 | 0.3% |
@@ -587,7 +587,9 @@ fluctuation-dissipation rows, 1.8 V/um AC, `Y` 0.2 GPa, mechanical tan delta 0.0
 (`m` is the net polar fraction, the polarization over `N dmu_u`; the stroke at budget is
 `S_ac f` with the AC amplitude re-scaled to the 4 MW/m^3 heat budget, per second per unit
 of the clutch's lever; the DC strain is `s_switch (x - x_0)`, the quasi-static
-electrostrictive strain.)
+electrostrictive strain of the switching population itself; the film's strain is that times
+the population's share of the chain length, the channel's switchable fraction, 0.25 on this
+calibration, since switched and unswitched segments lie in series along a chain.)
 
 Readings. (a) The third state removes the saturation problem: the strength at 55 V/um is
 45% of its zero-bias value (two states: 5%; measured: 50% at 60 MV/m), because the dipole
@@ -603,11 +605,15 @@ coupled lattice switches cooperatively and is 94% polar by 55 V/um, leaving litt
 switch; the efficiency follows the same shape (0.27 at 20 V/um and 20 kHz, 0.06 at 55).
 Where that maximum sits is decided by the polar fraction's rise with the DC field, which
 the lattice's DC strain column states and the bench's quasi-static strain curve `S(E_dc)`
-measures directly: on these parameters the lattice reaches 4% by 55 V/um where the neat
-terpolymer films reach 3.0-3.2% at 100 MV/m, so the lattice saturates early and the
-optimum will move up the bias axis when `n`, `J` and the spread are calibrated on `S(E_dc)`
-(E4 item 7, added today) together with the suppression; the bias-hold point of 50-65
-V/um is then a question for the calibrated lattice, not a conclusion of this one. (d) The
+measures directly. On these parameters the switching population's strain is 4% by 55 V/um
+and flat beyond, which at a switchable fraction of 0.25 is about 1% of film strain, where
+the neat terpolymer films reach 3.0-3.2% at 100 MV/m and are still rising: the lattice
+saturates at too low a field, and its switching population or its strain per switch is too
+small by about three times. Both are what `S(E_dc)` calibrates, the field scale through
+`n` and the spread, the magnitude through the fraction and `s_switch` (E4 item 7, added
+today), together with the suppression; the optimum will move up the bias axis with the field
+scale, and the bias-hold point of 50-65 V/um is then a question for the calibrated lattice,
+not a conclusion of this one. (d) The
 loss at the bias-hold point is higher than level 1's: tan delta 0.09 / 0.20 / 0.30 at 20 /
 50 / 100 kHz (level 1: 0.025 / 0.062 / 0.124), about 0.14-0.23 over 34-66 kHz, because
 the biased lattice relaxes more slowly than the tilted well predicts (integral time 8.4e-7
@@ -668,7 +674,7 @@ strength 49 before scaling; it reached the end of the bias sweep in its two hour
 stopped at the driven rows, for which the 20 x 20 rows above stand). Fluctuation-dissipation
 rows, 1.8 V/um AC, `Y` 0.2 GPa, mechanical tan delta 0.05:
 
-| bias (V/um) | x | m | chi_s | tan delta 34 / 66 kHz | S_ac | efficiency 34 / 66 kHz | heat 34 / 66 kHz (MW/m^3) | stroke at budget 34 / 66 kHz | DC strain |
+| bias (V/um) | x | m | chi_s | tan delta 34 / 66 kHz | S_ac | efficiency 34 / 66 kHz | heat 34 / 66 kHz (MW/m^3) | stroke at budget 34 / 66 kHz | DC strain (switching population) |
 |---|---|---|---|---|---|---|---|---|---|
 | 0 | 0.57 | 0.00 | 48 | 0.170 / 0.316 | 5.7e-5 (noise) | 0.00 / 0.00 | 26 / 84 | 1 / 1 (noise) | 0 |
 | 10 | 0.59 | 0.17 | 50 | 0.154 / 0.279 | 1.1e-3 | 0.08 / 0.04 | 26 / 81 | 15 / 16 | 0.3% |
