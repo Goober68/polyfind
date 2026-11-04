@@ -541,11 +541,90 @@ the stroke at budget at low bias, and the corrected surface is not broad but ris
 at the 4 MW/m^3 budget and 34 kHz of 0 at zero bias, 12 per second per unit lever at 10
 V/um, 20 at 20, 19 at 30, 30 at 45 and 31 at 55 (34 uncorrected), with the efficiency at
 34 kHz 0, 0.07, 0.16, 0.12, 0.29 and 0.28 along the same biases: a plateau from about 45
-V/um, and the program's bias-hold point of 50-65 V/um is on it. That reading replaces the
-"broad optimum" of the 20 x 20 paragraph above; the knee and the loss columns stand, and the
-efficiency statement stands on the aligned side only. A three-state unit in the lattice is a
-small change to `polyfind.kmc` (the polar state carries a dipole sign; the conformational
-coupling is the same for either sign, the dipolar one is not) and is the first model item of
-the next round, ahead of the `n`, `J`, spread calibration, because the suppression of the
-strength under bias on which `n` is calibrated has a different form in the three-state unit
-(`x_polar - m^2` against `x (1 - x)`, `m` the net polar fraction).
+V/um, and the program's bias-hold point of 50-65 V/um is on it. That mean-field estimate
+compares units at the same polar fraction; once the three-state unit is calibrated on the
+same bench numbers (zero-field polar fraction one half, margin `kT ln 2`, the same `n`), its
+strain per field is the two-state's times `2 tanh(dmu_u E / 2kT)` instead, and the lattice's
+own three-state reading, which supersedes both estimates, follows below. The knee and the
+loss columns of the two-state tables stand.
+
+**The three-state lattice** (same day, later; `IsingKMC(three_state=True)`, taken from a
+`SwitchingChannel(states=3)`). Three things had to be settled before the lattice could carry
+the third state. First, the unit's margin: a polar conformation with two dipole states has
+twice the ground state's weight, so a unit with no margin is two thirds polar at zero field,
+and on the lattice the conformational coupling took that to 92% polar, where the barrier
+calibration ran into the rate floor. The calibrated channel now takes the zero-field polar
+fraction (one half until the bench measures the all-trans content, E4 item 6) and sets the
+margin that gives it, `kT ln 2` for three states; at one half the two- and three-state bias
+suppressions coincide (`sech^2(dmu_u E / 2kT)`), so the same measurement calibrates the same
+unit (`n` = 17, `dmu_u` 7.7 e.A), and the three-state channel's strain per field is the
+two-state's times `2 tanh(dmu_u E / 2kT)`. Second, the calibration observable: the
+polarization autocorrelation of the coupled three-state lattice is multi-exponential (units
+at a conformational interface reverse fast, units inside a polar region slowly), so a fitted
+time constant depends on the sampling step and the first calibration overshot threefold.
+The lattice is now calibrated on the centroid in log frequency of its own loss peak
+(`IsingKMC.loss_peak`), which is what the Vogel-Fulcher fit of a sweep is made on, scales
+exactly with `exp(-Ea / kT)`, and is far less noisy than the maximum of a peak 1.8 decades
+wide; the shift is iterated because the centroid of an off-centre peak is pulled toward the
+grid's centre. Third, the strain estimator: the strain per field at a bias comes from the
+cross-correlation of the polar fraction with the polarization (Kubo), beside the
+autocorrelation that gives the permittivity, and the driven runs report the strain's second
+harmonic. On the first lattice parameters (20 x 20, `J` 0.02 eV, spread 0.08 eV; barrier
+0.289 eV, loss-peak width 1.8 decades, zero-field polar fraction 0.57, zero-bias strength
+45.6 against the channel's 45 with no density scaling to speak of), 8000-sample
+fluctuation-dissipation rows, 1.8 V/um AC, `Y` 0.2 GPa, mechanical tan delta 0.05:
+
+| bias (V/um) | x | m | chi_s | tau_int (s) | tan delta 20 / 50 kHz | S_ac | efficiency 20 / 50 kHz | heat 20 / 50 kHz (MW/m^3) | stroke at budget 20 / 50 kHz | DC strain |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | 0.57 | 0.00 | 48 | 5.8e-7 | 0.067 / 0.165 | 1.1e-4 (noise) | 0.00 / 0.00 | 6.3 / 37 | 2 / 2 (noise) | 0 |
+| 10 | 0.60 | 0.17 | 59 | 6.0e-7 | 0.071 / 0.176 | 9.8e-4 | 0.10 / 0.04 | 8.6 / 49 | 13 / 14 | 0.3% |
+| 20 | 0.67 | 0.36 | 58 | 6.0e-7 | 0.071 / 0.176 | 1.9e-3 | 0.27 / 0.15 | 10 / 53 | 24 / 26 | 1.1% |
+| 30 | 0.81 | 0.57 | 65 | 1.1e-6 | 0.123 / 0.291 | 2.5e-3 | 0.26 / 0.13 | 19 / 86 | 23 / 25 | 2.6% |
+| 45 | 0.91 | 0.80 | 34 | 6.6e-7 | 0.074 / 0.181 | 8.6e-4 | 0.12 / 0.06 | 5.5 / 31 | 15 / 15 | 3.8% |
+| 55 | 0.94 | 0.87 | 19 | 5.2e-7 | 0.054 / 0.132 | 3.6e-4 | 0.06 / 0.02 | 2.3 / 13 | 10 / 10 | 4.0% |
+| 65 | 0.96 | 0.91 | 11 | 5.8e-7 | 0.053 / 0.129 | 2.3e-4 | 0.03 / 0.02 | 1.5 / 8.4 | 7.5 / 7.8 | 4.2% |
+
+(`m` is the net polar fraction, the polarization over `N dmu_u`; the stroke at budget is
+`S_ac f` with the AC amplitude re-scaled to the 4 MW/m^3 heat budget, per second per unit
+of the clutch's lever; the DC strain is `s_switch (x - x_0)`, the quasi-static
+electrostrictive strain.)
+
+Readings. (a) The third state removes the saturation problem: the strength at 55 V/um is
+45% of its zero-bias value (two states: 5%; measured: 50% at 60 MV/m), because the dipole
+sign relaxes without a conformational change and the conformational coupling no longer
+enhances the polarization fluctuations (zero-bias strength 48 before scaling against the
+two-state lattice's 108-152). (b) The zero-bias strain is at twice the drive frequency, as
+the real film's is: driven at 10 V/um AC the strain's second harmonic is 1.7e-3 and its
+fundamental is at the noise floor. (c) The stroke-at-budget surface along the bias axis is
+neither broad nor a plateau: it rises from zero to a maximum of about 25 per second per
+unit lever at 20-30 V/um, where the net polarization is already 0.4-0.6 of full but the
+polar fraction has not saturated, and falls to 10 at 55 V/um and 8 at 65, because the
+coupled lattice switches cooperatively and is 94% polar by 55 V/um, leaving little to
+switch; the efficiency follows the same shape (0.27 at 20 V/um and 20 kHz, 0.06 at 55).
+Where that maximum sits is decided by the polar fraction's rise with the DC field, which
+the lattice's DC strain column states and the bench's quasi-static strain curve `S(E_dc)`
+measures directly: on these parameters the lattice reaches 4% by 55 V/um where the neat
+terpolymer films reach 3.0-3.2% at 100 MV/m, so the lattice saturates early and the
+optimum will move up the bias axis when `n`, `J` and the spread are calibrated on `S(E_dc)`
+(E4 item 7, added today) together with the suppression; the bias-hold point of 50-65
+V/um is then a question for the calibrated lattice, not a conclusion of this one. (d) The
+loss at the bias-hold point is higher than level 1's: tan delta 0.09 / 0.20 / 0.30 at 20 /
+50 / 100 kHz (level 1: 0.025 / 0.062 / 0.124), about 0.14-0.23 over 34-66 kHz, because
+the biased lattice relaxes more slowly than the tilted well predicts (integral time 8.4e-7
+s against 2.3e-7), and the 4 MW/m^3 budget at 1.8 V/um is crossed near 27 kHz (level 1 put
+it near 25); the driven rows at 10 V/um AC, the amplitude the budget allows at 20 kHz, are
+consistent with the small-signal column (tan delta 0.10 / 0.18 / 0.20, third harmonic 2-3%,
+second harmonic of the strain 12-18%) and the 1.8 V/um rows are noise. (e) The temperature
+dependence is as flat as the two-state lattice's: loss-peak times 1.2e-6, 3.6e-7 and
+1.7e-7 s at 280, 300 and 320 K, an apparent activation of 0.39 eV against the
+Vogel-Fulcher fit's 0.97 over the same window, and the first points of the coupling x
+spread grid (`lattice_observables`, 270-330 K) put it at 0.36-0.37 eV for `J` of 0.02 and
+0.035 eV alike, the lattice ordering into one conformation at `J` 0.035 with a spread of
+0.08 eV (polar fraction 0.07, the strength then rising under bias as the field switches
+the ordered lattice). The spread does move the suppression toward the measurement (0.34 at
+a spread of 0.08 eV, 0.44 at 0.12, measured 0.50) without touching the slope. The
+remaining grid points and the 32 x 32 three-state run are in progress; the reading they
+will settle is whether this lattice can be made to carry the Vogel-Fulcher slope at all, or
+whether the slope is an input (the barrier calibrated at each temperature from the bench's
+fit) and the lattice's deliverables are the bias and amplitude dependence at a given
+temperature.

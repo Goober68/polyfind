@@ -25,10 +25,15 @@ near 25 kHz (plan section 11; the bench sweep in VF form replaces every input). 
 under a DC plus AC field, barrier and strength calibrated by measurement, small-signal permittivity at any
 bias from the lattice's own fluctuations; first results (plan section 12; 20 x 20 and 32 x 32 agree): the bias axis has a knee near
 15 V/um on the first parameters, the lattice's apparent activation (0.43 eV) is a fifth of the way from the bare
-barrier to the VF slope, and a three-state correction (the polar state's dipole can point either way, so the
-linear strain vanishes at zero bias while the loss does not) makes the stroke-at-budget surface rise with bias to
-a plateau from about 45 V/um, where the program's bias-hold point already sits; next the three-state unit in the
-lattice, then `n`, `J` and the spread calibrated on the bench's suppression, VF slope and strength. Needed from the PI: push `kink-switching` and
+barrier to the VF slope. The three-state unit (the polar state's dipole points either way; margin `kT ln 2` for a
+zero-field polar fraction of one half; the lattice calibrated on the centroid of its own loss peak) removes the
+two-state lattice's over-saturation (strength at 55 V/um 45% of zero bias, measured 50%), puts the zero-bias strain
+at 2f, and makes the stroke-at-budget surface rise from zero to a maximum near 20-30 V/um and fall by 55 on the
+first parameters, the position set by the polar fraction's rise with DC field, i.e. by the bench's quasi-static
+S(E_dc) curve (E4 item 7); the bias-hold point is a question for the calibrated lattice. The temperature slope
+stays near 0.4 eV apparent against VF's 1.0 for J of 0.02-0.035 (the lattice orders at 0.035 with spread 0.08), so
+the VF slope may be an input rather than a prediction of this lattice; the grid and the 32 x 32 three-state run
+decide that (section 12). Needed from the PI: push `kink-switching` and
 `vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
 
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five
