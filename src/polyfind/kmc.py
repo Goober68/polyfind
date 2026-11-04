@@ -307,6 +307,24 @@ class IsingKMC:
                          s_phase_deg=s_phase, harmonic_ratio=float(p3 / np.hypot(p_s, p_c)) if field_ac > 0 else float("nan"),
                          drift_per_cycle=float(drift_x / x_amp) if x_amp > 0 else float("nan"))
 
+    def calibrate_strength(self, delta_eps_target: float, field_dc: float = 0.0, samples: int = 12000) -> dict:
+        """Rescale the unit density so that the lattice's static susceptibility at ``field_dc``
+        equals the measured dielectric strength.
+
+        The dynamics do not depend on ``n_units`` (it only converts a polar fraction to a
+        polarization), so this calibration is independent of :meth:`calibrate`; it absorbs
+        what the coupling does to the strength (a Curie-Weiss enhancement at zero bias) into
+        the switchable fraction, which is the quantity level 1 calibrated the same way.
+        """
+        lr = self.linear_response(np.array([1.0]), field_dc=field_dc, samples=samples)
+        chi = float(lr["chi_static"])
+        factor = delta_eps_target / chi if chi > 0 else 1.0
+        self.n_units *= factor
+        info = {"chi_before": chi, "density_factor": float(factor), "n_units": float(self.n_units)}
+        if hasattr(self, "calibration"):
+            self.calibration.update(info)
+        return info
+
     def trajectory(self, field_dc: float, samples: int, dt: float, relaxation: float) -> np.ndarray:
         """The polar fraction sampled every ``dt`` at a constant field after ``relaxation`` seconds."""
         self.equilibrate(field_dc, relaxation)

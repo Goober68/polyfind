@@ -39,6 +39,9 @@ def main():
           f"dmu_unit {ch.dmu_unit:.1f} e.A; barrier: formula {cal['barrier_formula']:.3f} eV -> calibrated {cal['barrier_ev']:.3f} eV "
           f"(tau {cal['tau_before']:.2e} -> {cal['tau_after']:.2e} s, target {cal['tau_target']:.2e}; {time.time() - t0:.0f} s)")
     print(f"zero-field polar fraction {m.polar_fraction:.3f}")
+    st = m.calibrate_strength(45.0, 0.0, samples=8000 if args.quick else 16000)
+    print(f"static susceptibility at zero bias {st['chi_before']:.1f} against the measured strength 45: unit density scaled by "
+          f"{st['density_factor']:.3f} (the coupling's Curie-Weiss enhancement absorbed into the switchable fraction)")
 
     print("\nrelaxation time against temperature: the lattice's own, the channel's Vogel-Fulcher, and Arrhenius at the lattice barrier")
     temps = (280.0, 300.0, 320.0) if args.quick else (270.0, 285.0, 300.0, 315.0, 330.0)
@@ -61,6 +64,25 @@ def main():
         print(f"    {'f (kHz)':>8s} {'eps_r':>7s} {'eps_i':>7s} {'tan d':>8s} {'tan d (L1)':>11s}")
         for f, er, ei, td in zip(freqs, lr["eps_real"], lr["eps_imag"], lr["tan_delta"]):
             print(f"    {f / 1e3:8.0f} {er:7.1f} {ei:7.2f} {td:8.4f} {float(ch.tan_delta(f, T, bias)):11.4f}")
+
+    print("\nbias sweep (fluctuation-dissipation): where the strain per field and the loss sit along the DC axis; 1.8 V/um AC, "
+          "Y = 0.2 GPa, mechanical tan delta 0.05")
+    print(f"{'bias (V/um)':>12s} {'x':>6s} {'chi_s':>7s} {'tau (s)':>9s} {'f (kHz)':>8s} {'tan d':>8s} {'S_ac':>9s} {'work':>7s} "
+          f"{'loss_e':>8s} {'eff.':>6s} {'heat (MW/m3)':>13s}")
+    e_ac = 0.00018
+    E_ac_si = e_ac * 1e10
+    for bias in (0.0, 0.001, 0.002, 0.003, 0.0045, 0.0055):
+        lr = m.linear_response(freqs, field_dc=bias, samples=8000 if args.quick else 16000, eps_inf=ch.eps_inf)
+        dx_de = L.EPS0 * lr["chi_static"] / (m.n_units * m.dmu * L.E_A_TO_C_M)  # per V/m, static
+        for f, er, ei, td in zip(freqs, lr["eps_real"], lr["eps_imag"], lr["tan_delta"]):
+            roll = (er - ch.eps_inf) / lr["chi_static"] if lr["chi_static"] > 0 else 0.0  # the channel's in-phase fraction at f
+            s_ac = m.s_switch * dx_de * E_ac_si * max(roll, 0.0)
+            loss_e = np.pi * L.EPS0 * ei * E_ac_si ** 2
+            work = 0.25 * 2e8 * s_ac ** 2
+            loss_m = np.pi * 2e8 * 0.05 * s_ac ** 2
+            eff = work / (work + loss_e + loss_m) if work + loss_e + loss_m > 0 else 0.0
+            print(f"{bias * 1e4:12.1f} {lr['x_mean']:6.3f} {lr['chi_static']:7.1f} {lr['tau_integral']:9.2e} {f / 1e3:8.0f} {td:8.4f} "
+                  f"{s_ac:9.2e} {work:7.1f} {loss_e:8.1f} {eff:6.3f} {f * (loss_e + loss_m) / 1e6:13.2f}")
 
     print("\nbias-hold point, 55 V/um DC, driven: the large-signal response (10 V/um AC) and the program's 1.8 V/um, against level 1")
     print(f"{'f (kHz)':>8s} {'E_ac (V/um)':>12s} {'tan d (lattice)':>16s} {'tan d (L1)':>11s} {'S_ac':>9s} {'S_ac (L1)':>10s} "
