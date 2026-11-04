@@ -200,6 +200,7 @@ def test_the_loss_peak_of_independent_units_is_the_debye_peak():
     pk = m.loss_peak(0.0, samples=12000, tau_center=tau)
     assert not pk["at_edge"]
     assert pk["tau_peak"] == pytest.approx(tau, rel=0.25)
+    assert pk["tau_centroid"] == pytest.approx(tau, rel=0.2)  # symmetric in log f: the centroid is the peak
     assert pk["width_decades"] == pytest.approx(1.14, abs=0.3)  # log10((2 + sqrt 3) / (2 - sqrt 3))
     assert pk["eps_peak"] == pytest.approx(0.5 * pk["chi_static"], rel=0.3)  # a Debye peak is half the strength
     # a centre 1.5 decades above the peak with a 2-decade grid lands the maximum on the grid's edge and says so

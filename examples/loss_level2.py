@@ -40,7 +40,7 @@ def main():
     ch = L.literature_terpolymer(states=args.states)
     t0 = time.time()
     m = KM.IsingKMC.from_channel(ch, L=L_side, coupling_ev=args.coupling, temperature=T, margin_spread_ev=args.spread,
-                                 seed=0, samples=2000 if args.quick else 3000, dipolar_coupling_ev=args.dipolar)
+                                 seed=0, samples=8000 if args.quick else 12000, dipolar_coupling_ev=args.dipolar)
     cal = m.calibration
     print(f"lattice {L_side}x{L_side}, {args.states} states, J = {args.coupling} eV, J_d = {args.dipolar} eV, margin spread "
           f"{args.spread} eV, units of {ch.n} monomers, dmu_unit {ch.dmu_unit:.1f} e.A (kT/dmu_unit = "
@@ -52,7 +52,7 @@ def main():
     print(f"static susceptibility at zero bias {st['chi_before']:.1f} against the measured strength 45: unit density scaled by "
           f"{st['density_factor']:.3f} (the coupling's Curie-Weiss enhancement absorbed into the switchable fraction)")
 
-    print("\nloss-peak time against temperature: the lattice's own, the channel's Vogel-Fulcher, and Arrhenius at the lattice barrier")
+    print("\nloss-peak time (centroid) against temperature: the lattice's own, the channel's Vogel-Fulcher, and Arrhenius at the lattice barrier")
     temps = (280.0, 300.0, 320.0) if args.quick else (270.0, 285.0, 300.0, 315.0, 330.0)
     for Tk in temps:
         mt = m.at_temperature(Tk, seed=1)
@@ -60,8 +60,8 @@ def main():
         guess = float(m.tau_ref * np.exp(0.5 * (1.0 / mt.kT - 1.0 / m.kT)))  # an Arrhenius guess at 0.5 eV for the grid's centre
         t1 = time.time()
         for _ in range(4):
-            pk = mt.loss_peak(0.0, samples=3000 if args.quick else 5000, tau_center=guess)
-            tau_k = pk["tau_peak"]
+            pk = mt.loss_peak(0.0, samples=8000 if args.quick else 12000, tau_center=guess)
+            tau_k = pk["tau_centroid"]
             if np.isfinite(tau_k) and not pk["at_edge"] and 1.0 / 3.0 < tau_k / guess < 3.0:
                 break
             guess = tau_k if np.isfinite(tau_k) and tau_k > 0 else guess * 3.0
