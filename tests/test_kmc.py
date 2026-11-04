@@ -215,3 +215,18 @@ def test_at_temperature_recalibrates_the_barrier_to_a_target_time():
     assert hot.T == 330.0 and hot.ea != m.ea
     assert hot.calibration["tau_after"] == pytest.approx(5e-8, rel=0.4)
     assert hot.tau_ref == 5e-8
+
+
+def test_calibration_on_the_integral_time_matches_the_flank_observable():
+    """A meter that sees only the low-frequency flank delivers eps'' / (delta_eps omega) = the
+    integral time; for independent two-state units that is 1 / (2 r1), so calibrating on it
+    with a target of twice the natural time must raise the barrier by about kT ln 2."""
+    m = _independent(L_side=12, ea=0.18, seed=4)
+    r1 = m.nu0 * np.exp(-m.ea / m.kT)
+    natural = 1.0 / (2.0 * r1)
+    info = m.calibrate(2.0 * natural, samples=4000, observable="integral")
+    assert info["observable"] == "integral"
+    assert info["barrier_shift_ev"] == pytest.approx(m.kT * np.log(2.0), abs=0.6 * m.kT)
+    assert info["tau_after"] == pytest.approx(2.0 * natural, rel=0.35)
+    with pytest.raises(ValueError):
+        m.calibrate(natural, observable="peak")

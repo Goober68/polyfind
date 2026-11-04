@@ -226,8 +226,15 @@ class IsingKMC:
         return clone
 
     def calibrate(self, tau_target: float, samples: int = 8000, field_dc: float = 0.0, iterations: int = 2,
-                  tolerance: float = 0.05) -> dict:
-        """Shift ``Ea`` so that the lattice's loss peak sits at ``1 / (2 pi tau_target)``.
+                  tolerance: float = 0.05, observable: str = "centroid") -> dict:
+        """Shift ``Ea`` so that the lattice's relaxation time equals ``tau_target`` in the chosen observable.
+
+        ``observable="centroid"`` (default): the loss peak sits at ``1 / (2 pi tau_target)``.
+        ``observable="integral"``: the integral (mean) relaxation time of the polarization,
+        ``int phi dt``, equals ``tau_target``; this is what a meter that sees only the
+        low-frequency flank of the peak delivers, as ``eps'' / (delta_eps omega)`` at
+        ``omega tau << 1`` (the LCR-6100's 10 Hz to 100 kHz at room temperature against a
+        peak near 0.5 MHz), so the bench's flank time and the lattice's are the same quantity.
 
         The position of the small-signal loss peak (:meth:`loss_peak`, from the
         fluctuations at ``field_dc``; its centroid in ``log f``, which is the peak for a
@@ -249,10 +256,17 @@ class IsingKMC:
         shift_total = 0.0
         at_edge = False
         first = float("nan")
+        if observable not in ("centroid", "integral"):
+            raise ValueError("observable must be 'centroid' or 'integral'")
         for _ in range(max(1, int(iterations))):
-            pk = self.loss_peak(field_dc, samples=samples, tau_center=tau_target)
-            measured = pk["tau_centroid"]
-            at_edge = at_edge or bool(pk["at_edge"])
+            if observable == "centroid":
+                pk = self.loss_peak(field_dc, samples=samples, tau_center=tau_target)
+                measured = pk["tau_centroid"]
+                at_edge = at_edge or bool(pk["at_edge"])
+            else:
+                lr = self.linear_response(np.array([1.0]), field_dc=field_dc, samples=samples, dt=tau_target / 20.0,
+                                          relaxation=100.0 * tau_target)
+                measured = lr["tau_integral"]
             history.append(float(measured))
             if not np.isfinite(first):
                 first = float(measured)
@@ -267,8 +281,10 @@ class IsingKMC:
             shift_total += shift
         self.tau_ref = float(tau_target)
         after = self.loss_peak(field_dc, samples=samples, tau_center=tau_target)
-        info = {"tau_target": float(tau_target), "tau_before": first, "tau_history": history,
-                "barrier_shift_ev": float(shift_total), "barrier_ev": self.ea, "tau_after": float(after["tau_centroid"]),
+        tau_after = float(after["tau_centroid"]) if observable == "centroid" else float(after["tau_integral"])
+        info = {"tau_target": float(tau_target), "tau_before": first, "tau_history": history, "observable": observable,
+                "barrier_shift_ev": float(shift_total), "barrier_ev": self.ea, "tau_after": tau_after,
+                "tau_centroid_after": float(after["tau_centroid"]), "tau_integral_after": float(after["tau_integral"]),
                 "tau_peak_after": float(after["tau_peak"]), "width_decades": float(after["width_decades"]),
                 "peak_at_edge": bool(at_edge or after["at_edge"])}
         getattr(self, "calibration", {}).update(info) if hasattr(self, "calibration") else setattr(self, "calibration", info)
