@@ -27,5 +27,6 @@ Apply one at a time on a fresh checkout of `bd5ef12` (or later) with
 `git apply docs/perf-patches/2026-09-29/<id>.diff`; `G3`, `G4` and `G6` all edit
 `lattice_table.py` and were made independently, so applying more than one of them
 needs a manual merge.  `G1` and `G2` both touch `pack.py` and `linegroup.py` and were
-also made independently; their combined effect on the refinement was not measured.
+also made independently; section 15.7 has their combined effect on the refinement (no
+wall time over G1 alone on the review box, 30x fewer chain builds per evaluation).
 The benchmark scripts and logs behind every number are named in section 15.

@@ -4,9 +4,12 @@
 CPU performance patches of `docs/PERFORMANCE_REVIEW.md` section 15 are applied (commits
 31a2456, bdbcb8f, e364e0b, 1700515; section 15.7 has the measurements on the merged tree):
 vectorised FFT screen, single-build enumeration, fast chain geometry, cheaper table build,
-closed-form chain Jacobian.  Table values move by < 1e-3 kcal/mol (clear any on-disk
-`$POLYFIND_TABLE_CACHE`); refined free-parametrisation endpoints can move at the 1e-3 level
-within their flat valleys (`refine_crystal(gradient="fd-geometry")` reproduces the previous
+closed-form chain Jacobian.  Funnel here 61.9 -> 24.9 s (2.5x with the refinement row under
+cProfile, 2.1-2.2x without; section 15.7).  Table values move by < 1e-3 kcal/mol (clear any
+on-disk `$POLYFIND_TABLE_CACHE`); line-group end points are unchanged to 2e-9; free-
+parametrisation end points can stop elsewhere along their flat valleys (objective within
+6e-4 kcal/mol per monomer, lattice energy and bend restraint moving up to 1e-2 each in
+opposite directions; `refine_crystal(gradient="fd-geometry")` reproduces the previous
 route).  The GPU port (G6) stays a patch.  IP: the solver's methods were assessed for
 invention disclosure and found to be known art or implementation; the record is
 `sarco/shared/ip/polyfind-methods-prior-art-2026-10-16.md`, and one consolidated defensive

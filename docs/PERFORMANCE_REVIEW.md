@@ -1032,3 +1032,107 @@ cap. No other decision in the test is that close (every other basin minimum lead
 0.02 kcal/mol or more), so this is the likely failure there; the test now measures PVDC at
 the nominal state angles. The tie itself is in `fit_ris` and would move any rigid PVDC fit
 the same way on such a build; it is recorded, not fixed.
+
+### 15.7 Measured on the merged tree (2026-11-04)
+
+G4, G5, G1, G3 and G2 are applied on the branch in that order (commits `31a2456`,
+`bdbcb8f`, `e364e0b`, `1700515`); G3 and G2 were merged by hand onto the files G4 and
+G1 had changed, and G6 stays a patch.  `examples/profile_funnel.py` was run on the
+branch head and, from a second worktree with its own `src` on `PYTHONPATH`, on the
+untouched base `0cb880e`: the box of 15.1 (four cores, NumPy 2.5.3), single process, no
+table cache, the two runs back to back on an otherwise idle machine.  The refinement
+row is under cProfile in both runs, as it was in 15.1, and is given again without it.
+
+| stage | base `0cb880e` | merged | ratio | projected in 15.5 |
+|---|---|---|---|---|
+| RIS fit (2,881 single points) | 0.46 | 0.35 | | |
+| enumeration (120 candidates, period <= 8, k = 60) | 3.00 | 0.05 | 60x | 0.06 |
+| periodic chain construction (5) | 0.10 | 0.03 | | |
+| chain-pair table builds (5, screen grid, 4 worker processes) | 23.36 | 10.92 | 2.1x | 10.55 |
+| FFT screen (5) | 12.92 | 2.00 | 6.5x | 2.26 |
+| exact-kernel polish (4 starts per conformation) | 3.32 | 3.34 | 1.0x | |
+| torsion + cell refinement (5), under cProfile | 18.73 | 8.22 | 2.3x | |
+| total, with that refinement row | 61.90 | 24.91 | 2.5x | |
+| refinement (5) without the profiler | 14.9 | 9.4-10.9 | 1.4-1.6x | 8.93 |
+| total, with that refinement row | 58.1 | 26.1-27.6 | 2.1-2.2x | 25.5 (2.4x) |
+
+The profiler-free refinement row is the five refinements of the same polished starts,
+timed on their own: 14.9 s on the base (15.2 s in 15.1); on the merged refinement code
+9.4-9.9 s as the minimum of three runs in each of two orderings against G1 alone (which
+took 9.7 s in both: G2 buys no wall time over G1 on this box), and 10.9 s in a single
+run of the branch head.  Every stage landed where 15.5 projected it except the
+refinement, where the projection was G1's own measurement and holds; G2's projected
+"below 8 s" did not happen, for the reason given under *what G2 changed* below.
+
+Per candidate, base -> merged (seconds; the refinement column under cProfile):
+
+| candidate | atoms | table | screen | polish | refine | evals / vars / param. |
+|---|---|---|---|---|---|---|
+| TG+TG+TG-TG- | 24 | 6.69 -> 3.02 | 2.87 -> 0.54 | 0.90 -> 0.92 | 4.85 -> 1.56 | 70 -> 66 / 10 / linegroup |
+| TTTG+TG- | 18 | 4.67 -> 2.31 | 2.66 -> 0.42 | 0.98 -> 0.92 | 3.89 -> 2.27 | 128 -> 143 / 13 / free |
+| TTG+TG-G-TG+ | 24 | 7.14 -> 3.30 | 2.96 -> 0.37 | 1.12 -> 1.18 | 8.77 -> 3.86 | 211 -> 218 / 15 / free |
+| TG+TG- (alpha) | 12 | 3.19 -> 1.51 | 2.27 -> 0.34 | 0.18 -> 0.22 | 1.04 -> 0.45 | 29 -> 31 / 8 / linegroup |
+| TT (beta) | 6 | 1.67 -> 0.78 | 2.16 -> 0.33 | 0.14 -> 0.11 | 0.17 -> 0.08 | 10 -> 10 / 6 / linegroup |
+
+**The refinement is now the kernel.**  cProfile cumulative seconds summed over the five
+candidates, base -> merged: `CrystalPacker.energy_and_grad` 5.5 -> 5.8 (unchanged, it is
+the same code); `build_backbone` 5.3 -> 0.07; `repeat_chains` 9.4 -> 0.36; the closure
+Newton `LineGroup._close` 3.1 -> 0.42; `_jacobian` 1.0 -> 1.7 (it is now the closed-form
+chain Jacobian of every candidate rather than the differenced closure Jacobian of the
+line-group ones).  The geometry that was three quarters of the refinement in 15.1 is
+now under a third, and the kernel row is about 70% of what is left; the next lever is
+the one 15.5 named, the kernel row itself.
+
+**Tests.**  The merged tree gives 630 passed, 5 skipped, 8 deselected (the
+`byte_identical` digest tests of 15.6, which depend on the BLAS build) and no failures
+in 235 s; the base gives 615 passed on the same box, and the fifteen new tests are
+`tests/test_chainjac.py`.
+
+**What moved numerically.**  G4, G5 and G1 are bit-identical or exact (15.3), and G3
+changes table values by at most 8.7e-4 kcal/mol over the five screen tables (clear any
+on-disk `$POLYFIND_TABLE_CACHE`; the build ran at its default 65,536-point chunk, and the
+re-sweep on the target machine that 15.5 asks for is still to be done).
+Refined from the same polished starts, the base and the branch with everything but G2
+give the same end points to the ninth decimal, so every movement of a refined value is
+G2's, and G2 moves them as follows (same starts, base -> merged, per monomer):
+
+| candidate | param. | d objective | d lattice E | d bend | max d torsion (deg) | max d cell |
+|---|---|---|---|---|---|---|
+| TG+TG+TG-TG- | linegroup | -2.1e-9 | -2.9e-5 | +2.9e-5 | 1.0e-3 | 0 (phi2 reported as 0 and 360) |
+| TG+TG- | linegroup | -1.9e-10 | -9.8e-6 | +9.8e-6 | 5.1e-5 | 1.2e-5 |
+| TT | linegroup | +2.3e-13 | -2.0e-8 | +2.0e-8 | 2.8e-14 | 1.3e-9 |
+| TTTG+TG- | free | +1.7e-5 | -9.6e-5 | +1.1e-4 | 7.6e-3 | 5.2e-3 |
+| TTG+TG-G-TG+ | free | -1.9e-4 | +7.6e-3 | -7.7e-3 | 0.35 | 0.19 (setting angle, deg) |
+
+The line-group end points are unchanged for practical purposes.  The two free-mode
+candidates stop at different places along one flat valley: in TTG+TG-G-TG+ the lattice
+energy and the bend restraint move by 8e-3 each in opposite directions and the full
+objective (energy, commensurability penalty, bend, caps) is 5.9e-4 higher at the new
+stop.  Continuing the optimisation from either stop with the analytic gradient reaches
+the same point (objective -4.37772 against -4.37732 and -4.37673 at the two stops;
+torsions agree to 2e-4 deg, objective to 2e-10), 0.36 and 0.58 deg of torsion further
+down the valley: both are early stops of L-BFGS-B's relative-reduction test, not two
+minima.  They differ because the previous route's finite-difference geometry gradient
+is off by 13% of the gradient at the TTTG+TG- stop and by 2.7% at the TTG+TG-G-TG+ one
+(where the gradients are 2.5e-4 and 1.4e-2, against 6e-6 and 2e-5 of gradients of 7 and
+19 at the starts), while the analytic gradient agrees
+with a finite difference of the whole objective to 5.7e-7 of the gradient scale over
+380 components (18 cases of polymer, sequence, parametrisation and field) and with the
+previous route to 3.2e-6 where the gradient is large.  `refine_crystal(gradient=
+"fd-geometry")` keeps the previous route and reproduces the base end points (to 1e-8
+kcal/mol for the line-group candidates, to the printed digits for the free ones).  In
+the full funnel run above, whose starts come from the G3 tables, TTG+TG-G-TG+ refines
+to -5.2941 kcal/mol per monomer against -5.3075 on the base, the same trade-off from a
+slightly different start; a pinned refined value of a free-mode candidate should be
+compared on the objective, or re-recorded, not held to the old lattice energy.
+
+**What G2 changed, and why it bought no time.**  Per refinement evaluation the chain
+build went from 7.3 backbone calls and 98 rows (line group) or 17-21 rows (free) to
+3.2 calls and 3 rows or 1.1 calls and 1 row, and the oligomer build from 1.06 calls per
+evaluation to 0.06; the finite differences G2 removes were already cheap once G1 had
+made each build cheap, and what is left per evaluation is the kernel row, which G2 does
+not touch.  G2 is kept for the gradient quality above and the 30x fewer builds, which
+matter more on a slower chain build (a larger repeat, or the complete placed-cell
+owner of the `vector-repeat-merge` branch) than they do here.
+
+**GPU.**  Nothing in this section ran on a GPU; 15.4 stands and G6 stays a patch.
