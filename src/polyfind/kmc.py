@@ -212,7 +212,8 @@ class IsingKMC:
                         s_switch=self.s_switch, seed=seed, three_state=self.three_state,
                         dipolar_coupling_ev=(self.jdx, self.jdy), flip_barrier_ev=self.ea_flip)
 
-    def calibrate(self, tau_target: float, samples: int = 8000, field_dc: float = 0.0) -> dict:
+    def calibrate(self, tau_target: float, samples: int = 8000, field_dc: float = 0.0, iterations: int = 2,
+                  tolerance: float = 0.05) -> dict:
         """Shift ``Ea`` so that the lattice's loss peak sits at ``1 / (2 pi tau_target)``.
 
         The position of the small-signal loss peak (:meth:`loss_peak`, from the
@@ -224,20 +225,39 @@ class IsingKMC:
         same amount).  A fitted time constant does not serve here: the polarization
         autocorrelation of a coupled lattice is multi-exponential (units at a conformational
         interface reverse fast, units inside a polar region slowly), so its fit depends on
-        the sampling step.  Returns and stores the centroid time before and after, the peak
-        time after, and the peak's width in decades.
+        the sampling step.  The grid is centred on the target, and the centroid of a broad
+        peak that sits off-centre is pulled toward the centre by the grid's truncation, so a
+        single shift under-corrects; the measurement and shift are repeated ``iterations``
+        times (stopping early once within ``tolerance`` of the target), and the bias vanishes
+        as the peak approaches the centre.  Returns and stores the centroid time before and
+        after, the history, the peak time after, and the peak's width in decades.
         """
-        before = self.loss_peak(field_dc, samples=samples, tau_center=tau_target)
-        measured = before["tau_centroid"]
-        shift = self.kT * np.log(tau_target / measured) if np.isfinite(measured) and measured > 0 else 0.0
-        self.ea = float(self.ea + shift)
-        if self.ea_flip is not None:
-            self.ea_flip = float(self.ea_flip + shift)
+        history = []
+        shift_total = 0.0
+        at_edge = False
+        first = float("nan")
+        for _ in range(max(1, int(iterations))):
+            pk = self.loss_peak(field_dc, samples=samples, tau_center=tau_target)
+            measured = pk["tau_centroid"]
+            at_edge = at_edge or bool(pk["at_edge"])
+            history.append(float(measured))
+            if not np.isfinite(first):
+                first = float(measured)
+            if not (np.isfinite(measured) and measured > 0):
+                break
+            shift = self.kT * np.log(tau_target / measured)
+            if abs(shift) < tolerance * self.kT:
+                break
+            self.ea = float(self.ea + shift)
+            if self.ea_flip is not None:
+                self.ea_flip = float(self.ea_flip + shift)
+            shift_total += shift
         self.tau_ref = float(tau_target)
         after = self.loss_peak(field_dc, samples=samples, tau_center=tau_target)
-        info = {"tau_target": float(tau_target), "tau_before": float(measured), "barrier_shift_ev": float(shift),
-                "barrier_ev": self.ea, "tau_after": float(after["tau_centroid"]), "tau_peak_after": float(after["tau_peak"]),
-                "width_decades": float(after["width_decades"]), "peak_at_edge": bool(before["at_edge"] or after["at_edge"])}
+        info = {"tau_target": float(tau_target), "tau_before": first, "tau_history": history,
+                "barrier_shift_ev": float(shift_total), "barrier_ev": self.ea, "tau_after": float(after["tau_centroid"]),
+                "tau_peak_after": float(after["tau_peak"]), "width_decades": float(after["width_decades"]),
+                "peak_at_edge": bool(at_edge or after["at_edge"])}
         getattr(self, "calibration", {}).update(info) if hasattr(self, "calibration") else setattr(self, "calibration", info)
         return info
 
