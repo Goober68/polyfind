@@ -70,6 +70,9 @@ def e1_tables(pf):
     out.append("| system | field | M_strain (1e-18 m^2/V^2), J = 1, 2 | M_polarization, J = 1, 2 | chi_free | Q (m^4/C^2), J = 1, 2 |")
     out.append("|---|---|---|---|---|---|")
     for key, s in pf["systems"].items():
+        if "M_strain_m2_V2" not in s:
+            out.append(f"| {s['label']} | - | not computed on this cell (cost) | | | |")
+            continue
         ms = np.asarray(s["M_strain_m2_V2"], dtype=float) * 1e18
         mp = np.asarray(s["M_polarization_m2_V2"], dtype=float) * 1e18
         q = np.asarray(s["Q_m4_C2"], dtype=float)
