@@ -307,6 +307,70 @@ class IsingKMC:
                          s_phase_deg=s_phase, harmonic_ratio=float(p3 / np.hypot(p_s, p_c)) if field_ac > 0 else float("nan"),
                          drift_per_cycle=float(drift_x / x_amp) if x_amp > 0 else float("nan"))
 
+    def trajectory(self, field_dc: float, samples: int, dt: float, relaxation: float) -> np.ndarray:
+        """The polar fraction sampled every ``dt`` at a constant field after ``relaxation`` seconds."""
+        self.equilibrate(field_dc, relaxation)
+        ts = self.time + np.arange(int(samples)) * dt
+        xs: list[float] = []
+        self._advance(lambda t: field_dc, ts[-1] + dt, ts, lambda t_s: xs.append(self.polar_fraction))
+        return np.asarray(xs)
+
+    def linear_response(self, freqs, field_dc: float = 0.0, samples: int = 20000, dt: float | None = None,
+                        relaxation: float | None = None, eps_inf: float = 0.0) -> dict:
+        """The small-signal permittivity at a bias from the equilibrium fluctuations (fluctuation-dissipation).
+
+        No drive is applied: the lattice sits at ``field_dc`` and its polar fraction is
+        sampled every ``dt`` (default ``tau_ref / 20``) for ``samples`` steps after
+        ``relaxation`` (default ``100 tau_ref``).  The static susceptibility is
+        ``V <dP^2> / (eps0 kT)`` with ``V`` the lattice's volume, and the frequency
+        dependence is ``chi(w) / chi(0) = 1 - i w int_0^inf phi(t) exp(-i w t) dt`` with ``phi``
+        the normalised autocorrelation of ``P``, integrated to its first zero crossing.  This
+        uses every fluctuation of the trajectory, which a small drive cannot, so it is the
+        right estimator for the small-signal column; :meth:`run` is for the large-signal one.
+
+        Returns ``freqs``, ``eps_real``, ``eps_imag``, ``tan_delta`` (with ``eps_inf`` added
+        to the real part), ``chi_static``, ``tau_integral`` (the integral of ``phi``, the
+        Debye-equivalent time), ``x_mean`` and the sampled ``phi`` with its ``dt``.
+
+        Measured against the exact two-state reference: the strength to 2%, the time to
+        12%, tan delta to 10% at ``omega tau`` of 0.3 and 1.  Above the relaxation the real
+        part is the small difference ``1 - w int phi sin(wt)`` and a few percent of noise in
+        ``phi`` becomes tens of percent in ``eps'``, so the estimator is for frequencies at
+        and below the relaxation, which is where the operating points are.
+        """
+        freqs = np.atleast_1d(np.asarray(freqs, dtype=float))
+        if dt is None:
+            dt = self.tau_ref / 20.0
+        if relaxation is None:
+            relaxation = 100.0 * self.tau_ref
+        x = self.trajectory(field_dc, samples, dt, relaxation)
+        x_mean = float(x.mean())
+        dx = x - x_mean
+        volume = self.N / self.n_units  # m^3
+        p_unit = self.n_units * self.dmu * E_A_TO_C_M  # C/m^2 per unit of polar fraction
+        var_p = float(np.var(dx)) * p_unit ** 2
+        kT_j = self.kT * 1.602176634e-19
+        chi_static = volume * var_p / (EPS0 * kT_j)
+        n = len(dx)
+        c = np.correlate(dx, dx, mode="full")[n - 1:] / np.arange(n, 0, -1)
+        if c[0] <= 0.0:
+            nanv = np.full(len(freqs), np.nan)
+            return {"freqs": freqs, "eps_real": nanv, "eps_imag": nanv, "tan_delta": nanv, "chi_static": 0.0,
+                    "tau_integral": float("nan"), "x_mean": x_mean, "phi": c, "dt": dt}
+        phi = c / c[0]
+        zero = int(np.argmax(phi <= 0.0)) if np.any(phi <= 0.0) else n
+        phi = phi[:max(zero, 2)]
+        t = np.arange(len(phi)) * dt
+        tau_int = float(np.trapezoid(phi, t))
+        w = 2.0 * np.pi * freqs
+        kernel = np.exp(-1j * np.outer(w, t))  # (n_freq, n_t)
+        integral = np.trapezoid(phi[None, :] * kernel, t, axis=1)
+        chi_w = chi_static * (1.0 - 1j * w * integral)
+        eps_real = eps_inf + chi_w.real
+        eps_imag = -chi_w.imag
+        return {"freqs": freqs, "eps_real": eps_real, "eps_imag": eps_imag, "tan_delta": eps_imag / eps_real,
+                "chi_static": float(chi_static), "tau_integral": tau_int, "x_mean": x_mean, "phi": phi, "dt": dt}
+
     def autocorrelation_time(self, field_dc: float = 0.0, samples: int = 4000, dt: float | None = None,
                              relaxation: float | None = None) -> float:
         """Integral relaxation time of the polarization at a constant field, in seconds.

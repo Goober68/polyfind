@@ -51,12 +51,22 @@ def main():
         arr = (1.0 / m.nu0) * np.exp(m.ea / (L.K_B_EV * Tk))
         print(f"  T = {Tk:5.0f} K: lattice {tau_k:9.2e} s, Vogel-Fulcher {guess:9.2e} s, Arrhenius(Ea = {m.ea:.3f}) {arr:9.2e} s   ({time.time() - t1:.0f} s)")
 
-    print("\nbias-hold point, 55 V/um DC: lattice against level 1 (Debye) at a small and a large AC drive")
-    freqs = (20e3, 50e3, 100e3) if args.quick else (10e3, 20e3, 34e3, 50e3, 66e3, 100e3)
+    freqs = np.array((20e3, 50e3, 100e3) if args.quick else (10e3, 20e3, 34e3, 50e3, 66e3, 100e3))
+    print("\nsmall-signal permittivity from the lattice's own fluctuations (fluctuation-dissipation), eps_inf = 4, against level 1:")
+    for bias in (0.0, 0.0055):
+        t1 = time.time()
+        lr = m.linear_response(freqs, field_dc=bias, samples=12000 if args.quick else 24000, eps_inf=ch.eps_inf)
+        print(f"  bias {bias * 1e4:4.1f} V/um: polar fraction {lr['x_mean']:.3f}, chi_static {lr['chi_static']:.1f} "
+              f"(level 1 {ch.delta_eps(bias, T):.1f}), tau_integral {lr['tau_integral']:.2e} s (level 1 {ch.tau(T, bias):.2e})   ({time.time() - t1:.0f} s)")
+        print(f"    {'f (kHz)':>8s} {'eps_r':>7s} {'eps_i':>7s} {'tan d':>8s} {'tan d (L1)':>11s}")
+        for f, er, ei, td in zip(freqs, lr["eps_real"], lr["eps_imag"], lr["tan_delta"]):
+            print(f"    {f / 1e3:8.0f} {er:7.1f} {ei:7.2f} {td:8.4f} {float(ch.tan_delta(f, T, bias)):11.4f}")
+
+    print("\nbias-hold point, 55 V/um DC, driven: the large-signal response (10 V/um AC) and the program's 1.8 V/um, against level 1")
     print(f"{'f (kHz)':>8s} {'E_ac (V/um)':>12s} {'tan d (lattice)':>16s} {'tan d (L1)':>11s} {'S_ac':>9s} {'S_ac (L1)':>10s} "
           f"{'phase':>7s} {'3rd/1st':>8s} {'drift':>7s} {'loss (J/m3)':>12s} {'eff.':>6s} {'heat (MW/m3)':>13s} {'events':>8s} {'s':>5s}")
     for f in freqs:
-        for e_ac in (0.00018, 0.001):
+        for e_ac in (0.001, 0.00018):
             t1 = time.time()
             res = m.run(f, 0.0055, e_ac, periods=periods, equilibrate_periods=eq, samples_per_period=64)
             op = res.operating_point(2e8, 0.05)
@@ -64,8 +74,9 @@ def main():
             print(f"{f / 1e3:8.0f} {e_ac * 1e4:12.1f} {res.tan_delta:16.4f} {l1['tan_delta']:11.4f} {res.s_ac:9.2e} {l1['strain_ac']:10.2e} "
                   f"{res.s_phase_deg:7.1f} {res.harmonic_ratio:8.3f} {res.drift_per_cycle:7.3f} {res.loop_loss_j_per_m3:12.1f} {op['efficiency']:6.3f} "
                   f"{op['heat_w_per_m3'] / 1e6:13.2f} {res.events:8d} {time.time() - t1:5.0f}")
-    print("level 1 is linear about the bias point; the lattice's tan delta at the large drive is the minor-loop loss over the\n"
-          "stored energy at that amplitude, which is what the operating-point optimizer needs at each performance level.")
+    print("level 1 is linear about the bias point; the driven lattice's tan delta at the large drive is the minor-loop loss over\n"
+          "the stored energy at that amplitude; at 1.8 V/um the driven rows are noise-limited and the fluctuation-dissipation\n"
+          "table above is the small-signal answer.")
 
 
 if __name__ == "__main__":

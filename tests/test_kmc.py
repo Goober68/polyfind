@@ -95,3 +95,24 @@ def test_large_amplitude_loss_is_not_the_small_signal_one():
     op = big.operating_point(2e8, 0.05)
     assert 0.0 < op["efficiency"] < 1.0 and op["heat_w_per_m3"] == pytest.approx(
         f * (op["loss_electrical_j_per_m3"] + op["loss_mechanical_j_per_m3"]))
+
+
+def test_fluctuation_dissipation_reproduces_debye_for_independent_units():
+    """At a constant field the lattice's own fluctuations give the small-signal permittivity:
+    static strength N dmu^2 x(1-x) / (eps0 kT) and tan delta = omega tau, tau = 1/(2 r1)."""
+    m = _independent(L_side=16, ea=0.20, margin=0.01)
+    r1 = m.nu0 * np.exp(-m.ea / m.kT)
+    tau = 1.0 / (2.0 * r1)
+    field = 0.002
+    x = 1.0 / (1.0 + np.exp((0.01 - 4.0 * field) / KT))
+    lam = 2.0 * r1 * np.cosh((4.0 * field - 0.01) / (2.0 * KT))  # the tilted two-state rate
+    tau_e = 1.0 / lam
+    freqs = np.array([0.1, 0.3, 1.0]) / (2.0 * np.pi * tau_e)  # at and below the relaxation (see the docstring)
+    lr = m.linear_response(freqs, field_dc=field, samples=20000, dt=tau_e / 20.0, relaxation=100.0 * tau_e)
+    ch = L.SwitchingChannel(dmu_mon=4.0, de_mon=0.01 * 23.060548, n=1, fraction=1.0,
+                            rho_mon=1e27, tau0=1.0 / (2.0 * m.nu0), ea_ev=0.20, eps_inf=0.0)
+    assert lr["x_mean"] == pytest.approx(x, abs=0.03)
+    assert lr["chi_static"] == pytest.approx(ch.delta_eps(field, T), rel=0.2)
+    assert lr["tau_integral"] == pytest.approx(tau_e, rel=0.25)
+    for wt, td in zip((0.1, 0.3, 1.0), lr["tan_delta"]):
+        assert td == pytest.approx(wt, rel=0.3)
