@@ -30,10 +30,11 @@ zero-field polar fraction of one half; the lattice calibrated on the centroid of
 two-state lattice's over-saturation (strength at 55 V/um 45% of zero bias, measured 50%), puts the zero-bias strain
 at 2f, and makes the stroke-at-budget surface rise from zero to a maximum near 20-30 V/um and fall by 55 on the
 first parameters, the position set by the polar fraction's rise with DC field, i.e. by the bench's quasi-static
-S(E_dc) curve (E4 item 7); the bias-hold point is a question for the calibrated lattice. The temperature slope
-stays near 0.4 eV apparent against VF's 1.0 for J of 0.02-0.035 (the lattice orders at 0.035 with spread 0.08), so
-the VF slope may be an input rather than a prediction of this lattice; the grid and the 32 x 32 three-state run
-decide that (section 12). Needed from the PI: push `kink-switching` and
+S(E_dc) curve (E4 item 7); the bias-hold point is a question for the calibrated lattice. The coupling x spread grid
+settles the temperature slope: 0.36-0.37 eV apparent at every disordered point against VF's 1.0, the lattice ordering
+into a ferroelectric past J of about 0.03 eV, so the VF slope is an input (`at_temperature(T, tau_target=...)`
+recalibrates the barrier at each T to the bench fit) and the lattice's deliverables are the bias and amplitude
+dependence at each temperature; the spread is the knob for the suppression (section 12, last block). Needed from the PI: push `kink-switching` and
 `vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
 
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five

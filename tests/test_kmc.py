@@ -206,3 +206,12 @@ def test_the_loss_peak_of_independent_units_is_the_debye_peak():
     # a centre 1.5 decades above the peak with a 2-decade grid lands the maximum on the grid's edge and says so
     off = m.loss_peak(0.0, samples=3000, tau_center=tau / 30.0, decades=2.0)
     assert off["at_edge"]
+
+
+def test_at_temperature_recalibrates_the_barrier_to_a_target_time():
+    ch = L.literature_terpolymer(states=3)
+    m = KM.IsingKMC.from_channel(ch, L=10, coupling_ev=0.01, temperature=T, seed=3, calibrate=False)
+    hot = m.at_temperature(330.0, tau_target=5e-8, samples=2000)
+    assert hot.T == 330.0 and hot.ea != m.ea
+    assert hot.calibration["tau_after"] == pytest.approx(5e-8, rel=0.4)
+    assert hot.tau_ref == 5e-8

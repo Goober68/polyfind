@@ -623,8 +623,42 @@ spread grid (`lattice_observables`, 270-330 K) put it at 0.36-0.37 eV for `J` of
 0.08 eV (polar fraction 0.07, the strength then rising under bias as the field switches
 the ordered lattice). The spread does move the suppression toward the measurement (0.34 at
 a spread of 0.08 eV, 0.44 at 0.12, measured 0.50) without touching the slope. The
-remaining grid points and the 32 x 32 three-state run are in progress; the reading they
-will settle is whether this lattice can be made to carry the Vogel-Fulcher slope at all, or
-whether the slope is an input (the barrier calibrated at each temperature from the bench's
-fit) and the lattice's deliverables are the bias and amplitude dependence at a given
-temperature.
+grid's verdict on whether this lattice can carry the Vogel-Fulcher slope follows.
+
+**The coupling x spread grid, and what it settles** (three-state lattice, 20 x 20, `n` 17,
+`lattice_observables` over 270-330 K; targets: apparent activation 1.0 eV from the VF
+fit, suppression 0.50 at 60 MV/m):
+
+| J (eV) | spread (eV) | barrier (eV) | zero-field polar fraction | strength | apparent activation (eV) | suppression at 60 MV/m | polar fraction at 60 MV/m | peak width (decades) |
+|---|---|---|---|---|---|---|---|---|
+| 0.020 | 0.08 | 0.289 | 0.56 | 44 | 0.36 | 0.34 | 0.95 | 1.6 |
+| 0.020 | 0.12 | 0.284 | 0.54 | 41 | 0.37 | 0.44 | 0.80 | 1.6 |
+| 0.035 | 0.08 | 0.261 | 0.07 (ordered, ground) | 7 | 0.37 | 1.2 (rises) | 1.00 | 2.6 |
+| 0.035 | 0.12 | 0.234 | 0.60 | 46 | 0.37 | 0.22 | 0.97 | 2.4 |
+| 0.050 | 0.08 | 0.271 | 0.00 (ordered, ground) | 0 | 0.27 | not switched at 60 MV/m | 0.00 | - |
+| 0.050 | 0.12 | 0.209 | 0.07 (ordered, ground) | 6 | 0.37 | 2.2 (rises) | 1.00 | - |
+
+The apparent activation energy is 0.36-0.37 eV at every disordered point and does not
+rise with the coupling; past about `J` = 0.03 eV at these spreads the lattice orders into
+one conformation, a ferroelectric with field-induced switching (its strength rises under
+bias), not a stiffer relaxor. The 32 x 32 three-state run says the same over five
+temperatures (loss-peak times 2.5e-6, 9.1e-7, 4.2e-7, 1.9e-7 and 1.2e-7 s at 270, 285,
+300, 315 and 330 K: 0.39 eV apparent, peak widths 1.6-2.3 decades, the 300 K value within
+4% of the calibration target). So this lattice, two-dimensional with a nearest-neighbour
+conformational coupling, Gaussian margins and single-flip Arrhenius dynamics, does not
+carry the Vogel-Fulcher slope: its temperature dependence is the barrier plus about 0.08 eV
+of cooperativity whatever the coupling. The slope is an input from here on:
+`IsingKMC.at_temperature(T, tau_target=tau_VF(T))` clones the lattice at `T` and
+recalibrates its barrier to the bench fit's time there, and the lattice's deliverables are
+the bias and amplitude dependence at each temperature, which is what the operating-point
+question needs. What would carry the slope is a cooperative length growing toward a
+freezing temperature, which is the interface and the chain connectivity of level 3, not
+this lattice. The spread, by contrast, is a working knob: it moves the suppression toward
+the measurement (0.34 to 0.44 for 0.08 to 0.12 eV at `J` 0.02) and broadens the peak; with
+`n` it is calibrated on the suppression and the `S(E_dc)` curve when they arrive, `J`
+staying below the ordering point. A size effect to carry along: at zero bias the 32 x 32
+three-state lattice is twice as lossy as the 20 x 20 at the same calibration (tan delta
+0.17 against 0.09 at 34 kHz; integral time 9.2e-7 against 4.3e-7 s), the slow tail of the
+spectrum being the collective relaxation of polar regions that the smaller lattice
+truncates; the biased rows of the 32 x 32 run, in progress, say whether the bias-hold
+numbers share it.

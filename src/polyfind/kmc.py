@@ -205,12 +205,25 @@ class IsingKMC:
             model.calibrate(tau, samples=samples)
         return model
 
-    def at_temperature(self, temperature: float, seed: int | None = 1) -> "IsingKMC":
-        """The same lattice (units, margins, couplings, barriers, density) at another temperature."""
-        return IsingKMC(L=self.L, dmu_unit=self.dmu, margins_ev=self.margins, coupling_ev=(self.jx, self.jy),
-                        barrier_ev=self.ea, attempt_rate=self.nu0, temperature=temperature, n_units=self.n_units,
-                        s_switch=self.s_switch, seed=seed, three_state=self.three_state,
-                        dipolar_coupling_ev=(self.jdx, self.jdy), flip_barrier_ev=self.ea_flip)
+    def at_temperature(self, temperature: float, seed: int | None = 1, tau_target: float | None = None,
+                       samples: int = 8000) -> "IsingKMC":
+        """The same lattice (units, margins, couplings, barriers, density) at another temperature.
+
+        With ``tau_target`` (the bench fit's loss-peak time at that temperature) the clone's
+        barrier is recalibrated to it: the lattice's own temperature dependence is the
+        barrier plus a few hundredths of an eV of cooperativity whatever the coupling (the
+        coupling x spread grid of plan section 12), so the Vogel-Fulcher slope is taken as
+        an input this way, and the lattice supplies the bias and amplitude dependence at
+        each temperature.
+        """
+        clone = IsingKMC(L=self.L, dmu_unit=self.dmu, margins_ev=self.margins, coupling_ev=(self.jx, self.jy),
+                         barrier_ev=self.ea, attempt_rate=self.nu0, temperature=temperature, n_units=self.n_units,
+                         s_switch=self.s_switch, seed=seed, three_state=self.three_state,
+                         dipolar_coupling_ev=(self.jdx, self.jdy), flip_barrier_ev=self.ea_flip)
+        if tau_target is not None:
+            clone.calibration = {"tau_target": float(tau_target), "barrier_formula": self.ea}
+            clone.calibrate(float(tau_target), samples=samples)
+        return clone
 
     def calibrate(self, tau_target: float, samples: int = 8000, field_dc: float = 0.0, iterations: int = 2,
                   tolerance: float = 0.05) -> dict:
