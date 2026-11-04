@@ -34,11 +34,16 @@ The objective is smooth, so the default method is L-BFGS-B with gradients, and
     kernel row.  The cell variables are then analytic outright.  For the
     conformational variables the remaining link is ``d(coords, c)/d(shape)``, which
     runs through the NeRF build, the closure solve and the Kabsch alignment; that
-    Jacobian is taken by central differences of the *geometry only*, contracted
-    against the exact ``dE/d(coords)`` and ``dE/dc``.  No kernel row is spent on it,
-    so an iteration costs one row instead of ``1 + 2 n_vars`` (29 for the gamma
-    chain), and the chains of the displacement batch are built in the single NeRF
-    pass they were built in before.
+    Jacobian is closed-form too (:mod:`polyfind.chainjac`: rotation generators for
+    the torsions and bond angles, the derivative of the rigid fit, the aligning frame,
+    and the implicit-function derivative of the closure solve), contracted against the
+    exact ``dE/d(coords)`` and ``dE/dc``.  An iteration therefore builds **one** chain
+    and evaluates one kernel row.
+``gradient="fd-geometry"``
+    The previous analytic route: the same exact ``dE/d(coords)``, ``dE/dc``, but the
+    geometry Jacobian by central differences over a batch of ``1 + 2 n_shape`` chain
+    builds (31 for the unpatterned TTG+TG-G-TG+ chain).  Kept as the reference the
+    closed-form route is checked against.
 ``gradient="fd"``
     The original route: central differences of the *energy*, evaluated as one batched
     kernel call of ``1 + 2 n_vars`` configurations per iteration -- the cell
@@ -65,7 +70,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.optimize import minimize
 
-from .linegroup import LineGroupError, line_group, repeat_chains, wrap180
+from .linegroup import LineGroupError, line_group, repeat_chains, repeat_chains_and_jacobian, wrap180
 from .pack import FD_STEPS, CrystalPacker, PackResult, PeriodicChain
 from .polymers import Polymer
 
@@ -175,8 +180,8 @@ def refine_crystal(
         raise ValueError(f"unknown refine method {method!r}")
     if parametrisation not in ("linegroup", "free"):
         raise ValueError(f"unknown parametrisation {parametrisation!r}")
-    if gradient not in ("analytic", "fd"):
-        raise ValueError(f"unknown refine gradient {gradient!r} (expected 'analytic' or 'fd')")
+    if gradient not in ("analytic", "fd-geometry", "fd"):
+        raise ValueError(f"unknown refine gradient {gradient!r} (expected 'analytic', 'fd-geometry' or 'fd')")
     if angle_stiffness is None:
         has_bend = valence is not None and bool(valence.angle_table())
         angle_stiffness = 0.0 if has_bend else 105.0
@@ -303,7 +308,63 @@ def refine_crystal(
                     batch.append(sj)
             return chains_for(np.array(batch) if n_shape else s[None])
 
+        def shape_jacobian(s):
+            """The centre conformation and ``d (torsions, angles) / d s``, ``(P + B, n_shape)``."""
+            if mode == "linegroup":
+                tors, angs, dV = lg.expand_jac(s[None])
+                return tors, angs, dV[0]
+            tors, angs = conformations(s[None])
+            P = len(tors0)
+            dV = np.zeros((P + B, n_shape))
+            dV[:P, :P] = np.eye(P)
+            if refine_angles:
+                dV[P:, P:] = np.eye(B)
+            return tors, angs, dV
+
+        def restraints_grad(tors, angles, w_deg, dw_deg):
+            """``d restraints / d (torsions, angles)``, per degree, at one conformation.
+
+            ``w_deg`` is the rotation vector of the repeat transform (its norm is the
+            ``rotation_error`` the penalty squares) and ``dw_deg`` its derivative.
+            """
+            tors, angles = np.asarray(tors, dtype=float), np.asarray(angles, dtype=float)
+            g = np.empty(len(tors) + len(angles))
+            # pen_rot * |w|^2  ->  2 pen_rot w . dw   (smooth through w = 0, unlike arccos)
+            g[:] = 2.0 * pen_rot * (dw_deg @ w_deg)
+            d = wrap180(tors - tors0)
+            g[: len(tors)] += 20.0 * np.maximum(np.abs(d) - max_torsion_change, 0.0) * np.sign(d)
+            da = angles - angles0
+            g[len(tors):] += 20.0 * np.maximum(np.abs(da) - max_angle_change, 0.0) * np.sign(da)
+            g[len(tors):] += angle_stiffness * np.deg2rad(da) * (np.pi / 180.0) * n_repeats * start.n_chains
+            return g
+
         def value_and_grad_analytic(x):
+            """One chain build and one kernel row: every derivative is closed-form."""
+            count["n"] += 1
+            s, p = unpack(x)
+            if not n_shape:
+                chains, tors, angs = chains_for(s[None])
+                packer.update_chain(chains[0])
+                E, g_cell, gX, gc = packer.energy_and_grad(p)
+                return float(E) + restraints(tors[0], angs[0], chains[0]), g_cell[cell_idx]
+            tors, angs, dV = shape_jacobian(s)
+            chains, dX, dc, w, dw = repeat_chains_and_jacobian(polymer, start.chain, tors, angs, ref)
+            packer.update_chain(chains[0])
+            E, g_cell, gX, gc = packer.energy_and_grad(p)
+            grad = np.empty(n_cell + n_shape)
+            grad[:n_cell] = g_cell[cell_idx]
+            # dE/dcoords and dE/dc are exact from the kernel; the geometry Jacobian
+            # d(coords, c)/d(torsions, angles) is exact from the build (chainjac), and so
+            # are the torsion energy and the restraints -- so no displaced chain is built
+            gv = np.einsum("ni,vni->v", gX, dX[0]) + gc * dc[0]
+            gv[: len(tors0)] += packer.torsion_energy_grad(tors[0]) * packer.n_chains
+            gv += restraints_grad(tors[0], angs[0], w[0], dw[0])
+            grad[n_cell:] = gv @ dV
+            return float(E) + restraints(tors[0], angs[0], chains[0]), grad
+
+        def value_and_grad_fdgeom(x):
+            """The previous analytic route: exact ``dE/d(coords, c)`` against a central
+            difference of the geometry over ``1 + 2 n_shape`` chain builds."""
             count["n"] += 1
             s, p = unpack(x)
             chains, tors, angs = shape_batch(s)
@@ -367,13 +428,15 @@ def refine_crystal(
             packer.update_chain(chains[0])
             return float(packer.energy(p[None])[0]) + restraints(tors[0], angs[0], chains[0])
 
-        value_and_grad = value_and_grad_analytic if gradient == "analytic" else value_and_grad_fd
+        value_and_grad = {"analytic": value_and_grad_analytic, "fd-geometry": value_and_grad_fdgeom,
+                          "fd": value_and_grad_fd}[gradient]
         if probe is not None:
             shape_labels = [] if not n_shape else (
                 lg.labels() if mode == "linegroup" else
                 [f"t{j}" for j in range(len(tors0))] + ([f"angle{j}" for j in range(B)] if refine_angles else []))
             probe.update(
                 x0=x0.copy(), value=value_only, value_and_grad_analytic=value_and_grad_analytic,
+                value_and_grad_fdgeom=value_and_grad_fdgeom,
                 value_and_grad_fd=value_and_grad_fd, n_cell=n_cell, n_shape=n_shape, mode=mode,
                 cell_idx=list(cell_idx), s_step=np.asarray(s_step, dtype=float), packer=packer,
                 labels=[CrystalPacker.PARAMS[i] for i in cell_idx] + shape_labels,

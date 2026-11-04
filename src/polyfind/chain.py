@@ -359,18 +359,24 @@ def pendant_positions(x_prev, x, x_next, spec, xp=np):
     return tuple(out)
 
 
-def extended_backbone(polymer: Polymer, dihedrals_deg, bond_angles=None, xp=np):
+def extended_backbone(polymer: Polymer, dihedrals_deg, bond_angles=None, xp=np, backbone=None):
     """Backbone of ``(M, N)`` dihedrals plus one virtual trans atom beyond each end.
 
     Returns ``(M, N+5, 3)``; real backbone atom ``k`` sits at ``[:, k+1]``.  The virtual
     atoms are what the terminal backbone atoms' pendants are placed from, exactly as
     :func:`build_chain` does it.
+
+    ``backbone``, if given, is the ``(M, N+3, 3)`` result of :func:`build_backbone` for
+    these very dihedrals and angles, and is used instead of building it again (the
+    analytic Jacobian of :mod:`polyfind.chainjac` differentiates the backbone it has
+    already built, and places the pendants on it through here, so its coordinates are
+    those of :func:`build_oligomer_coords` by construction).
     """
     dih = xp.asarray(dihedrals_deg, dtype=float)
     M, N = dih.shape
     L = polymer.bond_length
     ang_of = backbone_angle_lookup(polymer, bond_angles, xp=xp)
-    bb = build_backbone(polymer, dih, xp=xp, bond_angles=bond_angles)  # (M, N+3, 3)
+    bb = build_backbone(polymer, dih, xp=xp, bond_angles=bond_angles) if backbone is None else backbone  # (M, N+3, 3)
     v0 = nerf(bb[:, 2], bb[:, 1], bb[:, 0], L, ang_of(0), 180.0, xp=xp)
     v1 = nerf(bb[:, N], bb[:, N + 1], bb[:, N + 2], L, ang_of(N + 2), 180.0, xp=xp)
     return xp.concatenate([xp.broadcast_to(v0, (M, 3))[:, None], bb, xp.broadcast_to(v1, (M, 3))[:, None]], axis=1)

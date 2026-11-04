@@ -1050,6 +1050,12 @@ class CrystalPacker:
         phi = np.deg2rad(np.asarray(dihedrals, dtype=float))
         return float((0.5 * (V1 * (1 + np.cos(phi)) + V2 * (1 - np.cos(2 * phi)) + V3 * (1 + np.cos(3 * phi)))).sum())
 
+    def torsion_energy_grad(self, dihedrals) -> np.ndarray:
+        """``d torsion_energy / d dihedrals`` (kcal/mol per **degree**), one entry per dihedral."""
+        V1, V2, V3 = self.torsion
+        phi = np.deg2rad(np.asarray(dihedrals, dtype=float))
+        return 0.5 * (-V1 * np.sin(phi) + 2.0 * V2 * np.sin(2 * phi) - 3.0 * V3 * np.sin(3 * phi)) * (np.pi / 180.0)
+
     # --- dipole, polarization and the applied field --------------------------------
     @property
     def cell_charge(self) -> float:
