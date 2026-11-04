@@ -191,3 +191,17 @@ def test_from_channel_follows_the_channels_states_and_clones_at_temperature():
     assert hot.three_state and hot.T == 330.0 and hot.ea == m.ea and np.array_equal(hot.margins, m.margins)
     two = KM.IsingKMC.from_channel(L.literature_terpolymer(), L=8, coupling_ev=0.01, temperature=T, calibrate=False)
     assert not two.three_state and two.K == 1
+
+
+def test_the_loss_peak_of_independent_units_is_the_debye_peak():
+    m = _independent(L_side=16, ea=0.20)
+    r1 = m.nu0 * np.exp(-m.ea / m.kT)
+    tau = 1.0 / (2.0 * r1)
+    pk = m.loss_peak(0.0, samples=12000, tau_center=tau)
+    assert not pk["at_edge"]
+    assert pk["tau_peak"] == pytest.approx(tau, rel=0.25)
+    assert pk["width_decades"] == pytest.approx(1.14, abs=0.3)  # log10((2 + sqrt 3) / (2 - sqrt 3))
+    assert pk["eps_peak"] == pytest.approx(0.5 * pk["chi_static"], rel=0.3)  # a Debye peak is half the strength
+    # a centre 1.5 decades above the peak with a 2-decade grid lands the maximum on the grid's edge and says so
+    off = m.loss_peak(0.0, samples=3000, tau_center=tau / 30.0, decades=2.0)
+    assert off["at_edge"]

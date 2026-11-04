@@ -45,22 +45,29 @@ def main():
     print(f"lattice {L_side}x{L_side}, {args.states} states, J = {args.coupling} eV, J_d = {args.dipolar} eV, margin spread "
           f"{args.spread} eV, units of {ch.n} monomers, dmu_unit {ch.dmu_unit:.1f} e.A (kT/dmu_unit = "
           f"{L.K_B_EV * T / ch.dmu_unit * 1e4:.0f} V/um); barrier: formula {cal['barrier_formula']:.3f} eV -> calibrated "
-          f"{cal['barrier_ev']:.3f} eV (tau {cal['tau_before']:.2e} -> {cal['tau_after']:.2e} s, target {cal['tau_target']:.2e}; "
+          f"{cal['barrier_ev']:.3f} eV (loss-peak tau {cal['tau_before']:.2e} -> {cal['tau_after']:.2e} s, target {cal['tau_target']:.2e}, width {cal['width_decades']:.2f} decades; "
           f"{time.time() - t0:.0f} s)")
     print(f"zero-field polar fraction {m.polar_fraction:.3f}")
     st = m.calibrate_strength(45.0, 0.0, samples=8000 if args.quick else 16000)
     print(f"static susceptibility at zero bias {st['chi_before']:.1f} against the measured strength 45: unit density scaled by "
           f"{st['density_factor']:.3f} (the coupling's Curie-Weiss enhancement absorbed into the switchable fraction)")
 
-    print("\nrelaxation time against temperature: the lattice's own, the channel's Vogel-Fulcher, and Arrhenius at the lattice barrier")
+    print("\nloss-peak time against temperature: the lattice's own, the channel's Vogel-Fulcher, and Arrhenius at the lattice barrier")
     temps = (280.0, 300.0, 320.0) if args.quick else (270.0, 285.0, 300.0, 315.0, 330.0)
     for Tk in temps:
         mt = m.at_temperature(Tk, seed=1)
-        guess = float(L.vogel_fulcher_tau(Tk, ch.tau0, ch.ea_ev, ch.tf))
+        vf_k = float(L.vogel_fulcher_tau(Tk, ch.tau0, ch.ea_ev, ch.tf))
+        guess = float(m.tau_ref * np.exp(0.5 * (1.0 / mt.kT - 1.0 / m.kT)))  # an Arrhenius guess at 0.5 eV for the grid's centre
         t1 = time.time()
-        tau_k = mt.autocorrelation_time(0.0, samples=6000 if args.quick else 10000, dt=guess / 10.0, relaxation=50.0 * guess)
+        for _ in range(4):
+            pk = mt.loss_peak(0.0, samples=3000 if args.quick else 5000, tau_center=guess)
+            tau_k = pk["tau_peak"]
+            if np.isfinite(tau_k) and not pk["at_edge"] and 1.0 / 3.0 < tau_k / guess < 3.0:
+                break
+            guess = tau_k if np.isfinite(tau_k) and tau_k > 0 else guess * 3.0
         arr = (1.0 / m.nu0) * np.exp(m.ea / (L.K_B_EV * Tk))
-        print(f"  T = {Tk:5.0f} K: lattice {tau_k:9.2e} s, Vogel-Fulcher {guess:9.2e} s, Arrhenius(Ea = {m.ea:.3f}) {arr:9.2e} s   ({time.time() - t1:.0f} s)")
+        print(f"  T = {Tk:5.0f} K: lattice {tau_k:9.2e} s (peak width {pk['width_decades']:.2f} decades), Vogel-Fulcher {vf_k:9.2e} s, "
+              f"Arrhenius(Ea = {m.ea:.3f}) {arr:9.2e} s   ({time.time() - t1:.0f} s)")
 
     freqs = np.array((20e3, 50e3, 100e3) if args.quick else (10e3, 20e3, 34e3, 50e3, 66e3, 100e3))
     print("\nsmall-signal permittivity from the lattice's own fluctuations (fluctuation-dissipation), eps_inf = 4, against level 1:")

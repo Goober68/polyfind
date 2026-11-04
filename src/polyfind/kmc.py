@@ -213,21 +213,29 @@ class IsingKMC:
                         dipolar_coupling_ev=(self.jdx, self.jdy), flip_barrier_ev=self.ea_flip)
 
     def calibrate(self, tau_target: float, samples: int = 3000, field_dc: float = 0.0) -> dict:
-        """Shift ``Ea`` so that the measured zero-field autocorrelation time equals ``tau_target``.
+        """Shift ``Ea`` so that the lattice's loss peak sits at ``1 / (2 pi tau_target)``.
 
-        Exact up to the floor on negative barriers, because ``exp(-Ea / kT)`` multiplies
-        every rate (the direct-reversal barrier, when there is one, is shifted by the same
-        amount).  Returns and stores the measurement before and after.
+        The peak frequency of the small-signal spectrum (:meth:`loss_peak`, from the
+        fluctuations at ``field_dc``) is the quantity the Vogel-Fulcher fit of the bench
+        sweep is made on, and it scales exactly with ``exp(-Ea / kT)`` because that factor
+        multiplies every rate (up to the floor on negative barriers; the direct-reversal
+        barrier, when there is one, is shifted by the same amount).  A fitted time constant
+        does not serve here: the polarization autocorrelation of a coupled lattice is
+        multi-exponential (units at a conformational interface reverse fast, units inside a
+        polar region slowly), so its fit depends on the sampling step.  Returns and stores
+        the peak time before and after, and the peak's width in decades.
         """
-        measured = self.autocorrelation_time(field_dc, samples=samples, dt=tau_target / 20.0, relaxation=20.0 * tau_target)
+        before = self.loss_peak(field_dc, samples=samples, tau_center=tau_target)
+        measured = before["tau_peak"]
         shift = self.kT * np.log(tau_target / measured) if np.isfinite(measured) and measured > 0 else 0.0
         self.ea = float(self.ea + shift)
         if self.ea_flip is not None:
             self.ea_flip = float(self.ea_flip + shift)
         self.tau_ref = float(tau_target)
-        check = self.autocorrelation_time(field_dc, samples=samples, dt=tau_target / 20.0, relaxation=20.0 * tau_target)
+        after = self.loss_peak(field_dc, samples=samples, tau_center=tau_target)
         info = {"tau_target": float(tau_target), "tau_before": float(measured), "barrier_shift_ev": float(shift),
-                "barrier_ev": self.ea, "tau_after": float(check)}
+                "barrier_ev": self.ea, "tau_after": float(after["tau_peak"]), "width_decades": float(after["width_decades"]),
+                "peak_at_edge": bool(before["at_edge"] or after["at_edge"])}
         getattr(self, "calibration", {}).update(info) if hasattr(self, "calibration") else setattr(self, "calibration", info)
         return info
 
@@ -554,6 +562,61 @@ class IsingKMC:
                 "chi_static": float(chi_static), "tau_integral": tau_int, "x_mean": x_mean, "m_mean": m_mean,
                 "dx_de": dx_de, "d_eff": d_eff, "phi": phi, "phi_strain": phi_s, "dt": dt}
 
+    def loss_peak(self, field_dc: float = 0.0, samples: int = 3000, dt: float | None = None, relaxation: float | None = None,
+                  decades: float = 3.0, points: int = 61, tau_center: float | None = None) -> dict:
+        """The loss peak of the small-signal spectrum at a bias, from the lattice's fluctuations.
+
+        ``eps''(f)`` by :meth:`linear_response` on ``points`` logarithmically spaced
+        frequencies over ``decades`` centred on ``1 / (2 pi tau_center)`` (default
+        ``tau_ref``; the sampling step defaults to a twentieth of it), its maximum located by
+        a parabola in ``log f`` through the three points about it.  Returns ``f_peak``,
+        ``tau_peak = 1 / (2 pi f_peak)`` (the quantity a Vogel-Fulcher fit of a sweep is made
+        on), ``eps_peak``, ``width_decades`` (the full width at half maximum in decades of
+        frequency; 1.14 for a Debye relaxation, more for a broad one; ``nan`` when a half
+        maximum lies outside the grid), ``at_edge`` (the maximum on the grid's end, so the
+        centre was off), the static ``chi_static``, ``dx_de``, ``x_mean``, ``m_mean`` and the
+        spectrum itself.
+        """
+        tau_c = self.tau_ref if tau_center is None else float(tau_center)
+        if dt is None:
+            dt = tau_c / 20.0
+        if relaxation is None:
+            relaxation = 100.0 * tau_c
+        f0 = 1.0 / (2.0 * np.pi * tau_c)
+        freqs = f0 * np.logspace(-0.5 * decades, 0.5 * decades, int(points))
+        lr = self.linear_response(freqs, field_dc=field_dc, samples=samples, dt=dt, relaxation=relaxation)
+        ei = np.asarray(lr["eps_imag"], dtype=float)
+        out = {"freqs": freqs, "eps_imag": ei, "eps_real": lr["eps_real"], "chi_static": lr["chi_static"],
+               "dx_de": lr["dx_de"], "x_mean": lr["x_mean"], "m_mean": lr["m_mean"], "tau_integral": lr["tau_integral"]}
+        if not np.all(np.isfinite(ei)) or np.max(ei) <= 0.0:
+            out.update({"f_peak": float("nan"), "tau_peak": float("nan"), "eps_peak": float("nan"),
+                        "width_decades": float("nan"), "at_edge": True})
+            return out
+        lf = np.log10(freqs)
+        step = lf[1] - lf[0]
+        k = int(np.argmax(ei))
+        at_edge = k in (0, len(ei) - 1)
+        if not at_edge:
+            y0, y1, y2 = ei[k - 1], ei[k], ei[k + 1]
+            denom = y0 - 2.0 * y1 + y2
+            frac = 0.5 * (y0 - y2) / denom if denom < 0 else 0.0
+            lf_peak = lf[k] + frac * step
+            e_peak = y1 - 0.25 * (y0 - y2) * frac
+        else:
+            lf_peak, e_peak = lf[k], ei[k]
+        half = 0.5 * e_peak
+        above = np.flatnonzero(ei >= half)
+        width = float("nan")
+        if len(above) and above[0] > 0 and above[-1] < len(ei) - 1 and not at_edge:
+            lo, hi = above[0], above[-1]
+            lf_lo = lf[lo - 1] + (half - ei[lo - 1]) / (ei[lo] - ei[lo - 1]) * step
+            lf_hi = lf[hi] + (ei[hi] - half) / (ei[hi] - ei[hi + 1]) * step
+            width = float(lf_hi - lf_lo)
+        f_peak = float(10.0 ** lf_peak)
+        out.update({"f_peak": f_peak, "tau_peak": 1.0 / (2.0 * np.pi * f_peak), "eps_peak": float(e_peak),
+                    "width_decades": width, "at_edge": at_edge})
+        return out
+
     def autocorrelation_time(self, field_dc: float = 0.0, samples: int = 4000, dt: float | None = None,
                              relaxation: float | None = None) -> float:
         """Integral relaxation time of the polarization at a constant field, in seconds.
@@ -588,20 +651,20 @@ class IsingKMC:
         return float(-1.0 / slope) if slope < 0 else float("nan")
 
 
-def lattice_observables(model: IsingKMC, temperatures=(270.0, 330.0), bias: float = 0.006, samples: int = 6000,
+def lattice_observables(model: IsingKMC, temperatures=(270.0, 330.0), bias: float = 0.006, samples: int = 3000,
                         fdt_samples: int = 8000, ea_guess: float = 0.5, seed: int = 1) -> dict:
     """The bench's calibration numbers, measured on the lattice.
 
-    ``apparent_ea_ev`` is the slope of ``ln tau`` against ``1 / kT`` between the two
-    temperatures (the lattice's own relaxation times at each, the sampling step set from
-    an Arrhenius guess at ``ea_guess`` and re-measured when the guess was off by more
-    than 3x); ``suppression`` the static strength at ``bias`` (V/A) over its zero-bias
-    value (fluctuation-dissipation); ``breadth`` the integral time over the fitted
-    initial-decay time at zero bias (1 for a Debye spectrum, larger for a stretched one);
-    ``chi_zero`` the zero-bias strength before any density scaling.  These are the
-    quantities the bench's bias-suppression ratio, Vogel-Fulcher slope and loss-peak width
-    calibrate ``n``, ``J`` and the margin spread against (the dielectric strength then sets
-    the density, which the dynamics do not depend on).
+    ``apparent_ea_ev`` is the slope of ``ln tau_peak`` against ``1 / kT`` between the two
+    temperatures (the lattice's own loss-peak times at each, :meth:`IsingKMC.loss_peak`
+    centred on an Arrhenius guess at ``ea_guess`` from the reference time and re-centred
+    when the peak lands on the grid's edge or more than 3x from the guess); ``suppression``
+    the static strength at ``bias`` (V/A) over its zero-bias value (fluctuation-dissipation);
+    ``width_decades`` the loss peak's full width at half maximum at the reference
+    temperature (1.14 for Debye); ``chi_zero`` the zero-bias strength before any density
+    scaling.  These are the quantities the bench's bias-suppression ratio, Vogel-Fulcher
+    slope and loss-peak width calibrate ``n``, ``J`` and the margin spread against (the
+    dielectric strength then sets the density, which the dynamics do not depend on).
     """
     t_lo, t_hi = sorted(float(x) for x in temperatures)
     taus = {}
@@ -609,20 +672,21 @@ def lattice_observables(model: IsingKMC, temperatures=(270.0, 330.0), bias: floa
         mt = model.at_temperature(tk, seed=seed)
         guess = float(model.tau_ref * np.exp(ea_guess * (1.0 / mt.kT - 1.0 / model.kT)))
         tau = float("nan")
-        for _ in range(3):
-            tau = mt.autocorrelation_time(0.0, samples=samples, dt=guess / 20.0, relaxation=50.0 * guess)
-            if np.isfinite(tau) and tau > 0 and 1.0 / 3.0 < tau / guess < 3.0:
+        for _ in range(4):
+            pk = mt.loss_peak(0.0, samples=samples, tau_center=guess)
+            tau = pk["tau_peak"]
+            if np.isfinite(tau) and tau > 0 and not pk["at_edge"] and 1.0 / 3.0 < tau / guess < 3.0:
                 break
             guess = tau if np.isfinite(tau) and tau > 0 else guess * 3.0
         taus[tk] = tau
     k_lo, k_hi = K_B_EV * t_lo, K_B_EV * t_hi
     ea_app = float(np.log(taus[t_lo] / taus[t_hi]) / (1.0 / k_lo - 1.0 / k_hi))
-    lr0 = model.linear_response(np.array([1.0]), field_dc=0.0, samples=fdt_samples)
+    pk0 = model.loss_peak(0.0, samples=fdt_samples)
     lrb = model.linear_response(np.array([1.0]), field_dc=bias, samples=fdt_samples)
-    tau_fit = model.autocorrelation_time(0.0, samples=samples, dt=model.tau_ref / 20.0, relaxation=50.0 * model.tau_ref)
+    chi0 = float(pk0["chi_static"])
     return {"tau_lo": taus[t_lo], "tau_hi": taus[t_hi], "temperatures": (t_lo, t_hi), "apparent_ea_ev": ea_app,
-            "chi_zero": float(lr0["chi_static"]), "chi_bias": float(lrb["chi_static"]),
-            "suppression": float(lrb["chi_static"] / lr0["chi_static"]) if lr0["chi_static"] > 0 else float("nan"),
-            "x_zero": float(lr0["x_mean"]), "x_bias": float(lrb["x_mean"]), "m_bias": float(lrb["m_mean"]),
-            "tau_integral": float(lr0["tau_integral"]), "tau_fit": float(tau_fit),
-            "breadth": float(lr0["tau_integral"] / tau_fit) if tau_fit > 0 else float("nan")}
+            "tau_peak": float(pk0["tau_peak"]), "width_decades": float(pk0["width_decades"]),
+            "chi_zero": chi0, "chi_bias": float(lrb["chi_static"]),
+            "suppression": float(lrb["chi_static"] / chi0) if chi0 > 0 else float("nan"),
+            "x_zero": float(pk0["x_mean"]), "x_bias": float(lrb["x_mean"]), "m_bias": float(lrb["m_mean"]),
+            "dx_de_bias": float(lrb["dx_de"])}
