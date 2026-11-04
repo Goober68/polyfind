@@ -586,3 +586,43 @@ class IsingKMC:
         wts = c[:upto]
         slope = np.sum(wts * tt * np.log(c[:upto])) / np.sum(wts * tt * tt)
         return float(-1.0 / slope) if slope < 0 else float("nan")
+
+
+def lattice_observables(model: IsingKMC, temperatures=(270.0, 330.0), bias: float = 0.006, samples: int = 6000,
+                        fdt_samples: int = 8000, ea_guess: float = 0.5, seed: int = 1) -> dict:
+    """The bench's calibration numbers, measured on the lattice.
+
+    ``apparent_ea_ev`` is the slope of ``ln tau`` against ``1 / kT`` between the two
+    temperatures (the lattice's own relaxation times at each, the sampling step set from
+    an Arrhenius guess at ``ea_guess`` and re-measured when the guess was off by more
+    than 3x); ``suppression`` the static strength at ``bias`` (V/A) over its zero-bias
+    value (fluctuation-dissipation); ``breadth`` the integral time over the fitted
+    initial-decay time at zero bias (1 for a Debye spectrum, larger for a stretched one);
+    ``chi_zero`` the zero-bias strength before any density scaling.  These are the
+    quantities the bench's bias-suppression ratio, Vogel-Fulcher slope and loss-peak width
+    calibrate ``n``, ``J`` and the margin spread against (the dielectric strength then sets
+    the density, which the dynamics do not depend on).
+    """
+    t_lo, t_hi = sorted(float(x) for x in temperatures)
+    taus = {}
+    for tk in (t_lo, t_hi):
+        mt = model.at_temperature(tk, seed=seed)
+        guess = float(model.tau_ref * np.exp(ea_guess * (1.0 / mt.kT - 1.0 / model.kT)))
+        tau = float("nan")
+        for _ in range(3):
+            tau = mt.autocorrelation_time(0.0, samples=samples, dt=guess / 20.0, relaxation=50.0 * guess)
+            if np.isfinite(tau) and tau > 0 and 1.0 / 3.0 < tau / guess < 3.0:
+                break
+            guess = tau if np.isfinite(tau) and tau > 0 else guess * 3.0
+        taus[tk] = tau
+    k_lo, k_hi = K_B_EV * t_lo, K_B_EV * t_hi
+    ea_app = float(np.log(taus[t_lo] / taus[t_hi]) / (1.0 / k_lo - 1.0 / k_hi))
+    lr0 = model.linear_response(np.array([1.0]), field_dc=0.0, samples=fdt_samples)
+    lrb = model.linear_response(np.array([1.0]), field_dc=bias, samples=fdt_samples)
+    tau_fit = model.autocorrelation_time(0.0, samples=samples, dt=model.tau_ref / 20.0, relaxation=50.0 * model.tau_ref)
+    return {"tau_lo": taus[t_lo], "tau_hi": taus[t_hi], "temperatures": (t_lo, t_hi), "apparent_ea_ev": ea_app,
+            "chi_zero": float(lr0["chi_static"]), "chi_bias": float(lrb["chi_static"]),
+            "suppression": float(lrb["chi_static"] / lr0["chi_static"]) if lr0["chi_static"] > 0 else float("nan"),
+            "x_zero": float(lr0["x_mean"]), "x_bias": float(lrb["x_mean"]), "m_bias": float(lrb["m_mean"]),
+            "tau_integral": float(lr0["tau_integral"]), "tau_fit": float(tau_fit),
+            "breadth": float(lr0["tau_integral"] / tau_fit) if tau_fit > 0 else float("nan")}

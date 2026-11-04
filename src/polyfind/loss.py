@@ -91,32 +91,63 @@ def fit_vogel_fulcher(t_max, freq, tf_grid=None) -> dict:
 
 
 # --- calibration helpers -----------------------------------------------------------------
-def bias_suppression(y: float, states: int = 2) -> float:
-    """The small-signal susceptibility of a degenerate unit at ``y = dmu_u E / kT`` over its
-    zero-bias value: ``sech^2(y / 2)`` for two states, ``3 (cosh y + 2) / (1 + 2 cosh y)^2`` for three."""
+def zero_field_margin_ev(x_zero: float, states: int = 2, temperature: float = 300.0) -> float:
+    """The unit margin ``dE_u`` (eV) at which the zero-field polar fraction is ``x_zero``:
+    ``kT ln((1 - x0) / x0)`` for two states, ``kT ln(2 (1 - x0) / x0)`` for three (the polar
+    conformation has two dipole states, so a polar fraction of one half costs ``kT ln 2``)."""
+    if not 0.0 < x_zero < 1.0:
+        raise ValueError("x_zero must lie strictly between 0 and 1")
+    if states not in (2, 3):
+        raise ValueError("states must be 2 or 3")
+    mult = 1.0 if states == 2 else 2.0
+    return float(K_B_EV * temperature * np.log(mult * (1.0 - x_zero) / x_zero))
+
+
+def bias_suppression(y: float, states: int = 2, x_zero: float = 0.5) -> float:
+    """The small-signal susceptibility of a unit at ``y = dmu_u E / kT`` over its zero-bias
+    value, for a unit whose zero-field polar fraction is ``x_zero``.
+
+    Two states: ``x (1 - x) / (x0 (1 - x0))`` with ``x = 1 / (1 + (1 - x0) / x0 exp(-y))``;
+    at ``x0 = 1/2`` that is ``sech^2(y / 2)``.  Three states (ground, polar up, polar down):
+    ``(x - m^2) / x0`` with ``x = 2 g cosh y / (1 + 2 g cosh y)``, ``m = 2 g sinh y / (1 + 2 g
+    cosh y)`` and ``g = x0 / (2 (1 - x0))`` the Boltzmann weight of each polar state; at
+    ``x0 = 1/2`` (the polar entropy paid by a margin ``kT ln 2``) that is again
+    ``sech^2(y / 2)``, and at ``x0 = 2/3`` (no margin) ``3 (cosh y + 2) / (1 + 2 cosh y)^2``.
+    """
+    if not 0.0 < x_zero < 1.0:
+        raise ValueError("x_zero must lie strictly between 0 and 1")
     if states == 2:
-        return float(1.0 / np.cosh(0.5 * y) ** 2)
+        x = 1.0 / (1.0 + (1.0 - x_zero) / x_zero * np.exp(-y))
+        return float(x * (1.0 - x) / (x_zero * (1.0 - x_zero)))
     if states == 3:
-        c = np.cosh(y)
-        return float(3.0 * (c + 2.0) / (1.0 + 2.0 * c) ** 2)
+        g = x_zero / (2.0 * (1.0 - x_zero))
+        z = 1.0 + 2.0 * g * np.cosh(y)
+        x = 2.0 * g * np.cosh(y) / z
+        m = 2.0 * g * np.sinh(y) / z
+        return float((x - m * m) / x_zero)
     raise ValueError("states must be 2 or 3")
 
 
-def unit_dipole_from_bias_suppression(ratio: float, field: float, temperature: float = 300.0, states: int = 2) -> float:
-    """``dmu_u`` (e.A) of a degenerate unit whose small-signal susceptibility falls to
-    ``ratio`` of its zero-bias value at nominal field ``field`` (V/A): the inverse of
-    :func:`bias_suppression` (closed form for two states, bisection for three)."""
+def unit_dipole_from_bias_suppression(ratio: float, field: float, temperature: float = 300.0, states: int = 2,
+                                      x_zero: float = 0.5) -> float:
+    """``dmu_u`` (e.A) of a unit whose small-signal susceptibility falls to ``ratio`` of its
+    zero-bias value at nominal field ``field`` (V/A): the inverse of :func:`bias_suppression`
+    on its decreasing branch (closed form, ``2 arccosh(1 / sqrt(ratio)) kT / E``, when the
+    zero-field polar fraction is one half; bisection otherwise)."""
     if not 0.0 < ratio < 1.0:
         raise ValueError("ratio must lie strictly between 0 and 1")
-    if states == 2:
+    if x_zero == 0.5:
         y = 2.0 * float(np.arccosh(1.0 / np.sqrt(ratio)))
     else:
-        lo, hi = 0.0, 1.0
-        while bias_suppression(hi, states) > ratio:
-            hi *= 2.0
+        grid = np.linspace(0.0, 60.0, 6001)
+        vals = np.array([bias_suppression(g, states, x_zero) for g in grid])
+        top = int(np.argmax(vals))
+        if ratio >= vals[top]:
+            raise ValueError(f"the suppression never falls to {ratio}: its maximum is {vals[top]:.3f}")
+        lo, hi = float(grid[top]), float(grid[-1])
         for _ in range(200):
             mid = 0.5 * (lo + hi)
-            if bias_suppression(mid, states) > ratio:
+            if bias_suppression(mid, states, x_zero) > ratio:
                 lo = mid
             else:
                 hi = mid
@@ -301,20 +332,27 @@ class SwitchingChannel:
 
 def calibrate_degenerate_channel(delta_eps: float, suppression_ratio: float, field: float, dmu_mon: float,
                                  rho_mon: float, tau0: float, ea_ev: float, tf: float = 0.0,
-                                 temperature: float = 300.0, states: int = 2, **kw) -> SwitchingChannel:
-    """A degenerate (``dE = 0``) channel from three measured numbers and one computed one.
+                                 temperature: float = 300.0, states: int = 2, x_zero: float = 0.5,
+                                 **kw) -> SwitchingChannel:
+    """A channel degenerate at zero field (polar fraction ``x_zero``, one half by default: no
+    margin for two states, a margin ``kT ln 2`` paying the polar entropy for three) from three
+    measured numbers and one computed one.
 
     ``delta_eps`` is the dielectric strength (peak ``eps'`` minus ``eps_inf``),
     ``suppression_ratio`` the small-signal ``eps`` under bias ``field`` (V/A) over its
     zero-bias value, ``dmu_mon`` the computed dipole gain per monomer, ``rho_mon`` the
     monomer density.  The bias suppression sets the unit dipole, hence the cooperative size
-    ``n``; the dielectric strength then sets the switchable fraction.  ``states=3`` uses the
-    three-state suppression, which gives a smaller unit for the same measurement.  ``kw``
-    passes ``alpha``, ``eps_inf``, ``tan_bg``, ``s_switch``, ``label``.
+    ``n``; the dielectric strength then sets the switchable fraction.  At ``x_zero = 1/2``
+    the two- and three-state suppressions coincide (``sech^2(dmu_u E / 2kT)``) and so do the
+    units they calibrate; what the third state changes is the strain per field, which then
+    vanishes at zero bias.  The zero-field polar fraction is a structural number (the
+    all-trans content by FTIR or XRD) and belongs with the bench inputs.  ``kw`` passes
+    ``alpha``, ``eps_inf``, ``tan_bg``, ``s_switch``, ``label``.
     """
-    dmu_u = unit_dipole_from_bias_suppression(suppression_ratio, field, temperature, states)
+    dmu_u = unit_dipole_from_bias_suppression(suppression_ratio, field, temperature, states, x_zero)
     n = max(1, int(round(dmu_u / dmu_mon)))
-    probe = SwitchingChannel(dmu_mon=dmu_mon, de_mon=0.0, n=n, fraction=1.0, rho_mon=rho_mon,
+    de_mon = zero_field_margin_ev(x_zero, states, temperature) * SwitchingChannel.KCAL_PER_EV / n
+    probe = SwitchingChannel(dmu_mon=dmu_mon, de_mon=de_mon, n=n, fraction=1.0, rho_mon=rho_mon,
                              tau0=tau0, ea_ev=ea_ev, tf=tf, states=states, **kw)
     fraction = delta_eps / probe.delta_eps(0.0, temperature)
     return replace(probe, fraction=float(fraction))
