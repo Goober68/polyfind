@@ -116,3 +116,78 @@ def test_fluctuation_dissipation_reproduces_debye_for_independent_units():
     assert lr["tau_integral"] == pytest.approx(tau_e, rel=0.25)
     for wt, td in zip((0.1, 0.3, 1.0), lr["tan_delta"]):
         assert td == pytest.approx(wt, rel=0.3)
+
+
+def _three(L_side=10, dmu=4.0, margin=0.0, ea=0.15, nu0=1e12, seed=1, **kw):
+    """Non-interacting three-state units: ground, polar up, polar down."""
+    return KM.IsingKMC(L=L_side, dmu_unit=dmu, margins_ev=margin, coupling_ev=0.0, barrier_ev=ea, attempt_rate=nu0,
+                       temperature=T, n_units=1e27, s_switch=0.1, seed=seed, three_state=True, **kw)
+
+
+def test_three_state_units_reach_the_three_state_occupancies():
+    m = _three(L_side=12, margin=0.02)
+    field = 0.004
+    a = np.exp(-(0.02 - 4.0 * field) / KT)
+    b = np.exp(-(0.02 + 4.0 * field) / KT)
+    z = 1.0 + a + b
+    r = m.nu0 * np.exp(-m.ea / m.kT)
+    m.equilibrate(field, 200.0 / r)
+    xs, ms = [], []
+    for _ in range(40):
+        m.equilibrate(field, 20.0 / r)
+        xs.append(m.polar_fraction)
+        ms.append(m.net_polar_fraction)
+    assert np.mean(xs) == pytest.approx((a + b) / z, abs=0.03)
+    assert np.mean(ms) == pytest.approx((a - b) / z, abs=0.03)
+
+
+def test_three_state_fluctuations_give_the_strength_and_a_strain_that_vanishes_at_zero_bias():
+    m = _three(L_side=16, ea=0.20, margin=0.01)
+    three = L.SwitchingChannel(dmu_mon=4.0, de_mon=0.01 * 23.060548, n=1, fraction=1.0, rho_mon=1e27,
+                               tau0=1.0 / m.nu0, ea_ev=0.20, eps_inf=0.0, states=3)
+    two = L.SwitchingChannel(dmu_mon=4.0, de_mon=0.01 * 23.060548, n=1, fraction=1.0, rho_mon=1e27,
+                             tau0=1.0 / m.nu0, ea_ev=0.20, eps_inf=0.0)
+    for field in (0.0, 0.003):
+        tau_e = three.tau(T, field)  # the slow mode of the independent three-state unit
+        lr = m.linear_response(np.array([0.2]) / (2.0 * np.pi * tau_e), field_dc=field, samples=20000, dt=tau_e / 20.0,
+                               relaxation=100.0 * tau_e)
+        x, mm = three.occupancies(field, T)
+        assert lr["x_mean"] == pytest.approx(x, abs=0.03)
+        assert lr["m_mean"] == pytest.approx(mm, abs=0.03)
+        assert lr["chi_static"] == pytest.approx(three.delta_eps(field, T), rel=0.2)
+        if field == 0.0:
+            assert lr["tau_integral"] == pytest.approx(tau_e, rel=0.3)  # at zero bias the polarization is the slow mode
+            assert abs(lr["dx_de"]) < 0.15 * two.dx_de(0.0, T)  # no linear strain: noise about zero
+        else:
+            assert lr["dx_de"] == pytest.approx(three.dx_de(field, T), rel=0.3)
+            assert abs(lr["d_eff"][0]) == pytest.approx(0.1 * three.dx_de(field, T), rel=0.35)
+
+
+def test_three_state_strain_is_at_twice_the_drive_frequency_at_zero_bias():
+    m = _three(L_side=16, ea=0.20)
+    r = m.nu0 * np.exp(-m.ea / m.kT)
+    f = 0.1 * r / (2.0 * np.pi)
+    res = m.run(f, 0.0, 0.01, periods=12, equilibrate_periods=2, samples_per_period=48)  # dmu E = 1.5 kT
+    assert res.s_2f > 3.0 * res.s_ac
+    assert res.eps_real > 0.0  # the polarization still responds at the drive frequency
+    assert abs(res.p_dc) < 0.2 * res.eps_real * L.EPS0 * 0.01 * 1e10
+
+
+def test_a_direct_reversal_path_speeds_the_polarization_relaxation():
+    slow = _three(L_side=10, ea=0.18, seed=2)
+    fast = _three(L_side=10, ea=0.18, seed=2, flip_barrier_ev=0.18)
+    r = slow.nu0 * np.exp(-slow.ea / slow.kT)
+    t_slow = slow.autocorrelation_time(0.0, samples=6000, dt=0.05 / r, relaxation=50.0 / r)
+    t_fast = fast.autocorrelation_time(0.0, samples=6000, dt=0.05 / r, relaxation=50.0 / r)
+    assert t_slow == pytest.approx(1.0 / r, rel=0.25)  # the polarization mode of the degenerate unit: 1/r, not 1/(2r)
+    assert t_fast < 0.7 * t_slow  # with the reversal at the same barrier the mode relaxes three times faster
+
+
+def test_from_channel_follows_the_channels_states_and_clones_at_temperature():
+    ch = L.literature_terpolymer(states=3)
+    m = KM.IsingKMC.from_channel(ch, L=8, coupling_ev=0.01, temperature=T, seed=3, calibrate=False)
+    assert m.three_state and m.K == 2 and m.dmu == pytest.approx(ch.dmu_unit)
+    hot = m.at_temperature(330.0)
+    assert hot.three_state and hot.T == 330.0 and hot.ea == m.ea and np.array_equal(hot.margins, m.margins)
+    two = KM.IsingKMC.from_channel(L.literature_terpolymer(), L=8, coupling_ev=0.01, temperature=T, calibrate=False)
+    assert not two.three_state and two.K == 1

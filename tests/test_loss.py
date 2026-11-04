@@ -98,3 +98,48 @@ def test_operating_point_bookkeeping():
     assert op["heat_w_per_m3"] == pytest.approx(5e4 * (op["loss_electrical_j_per_m3"] + op["loss_mechanical_j_per_m3"]))
     assert 0.0 < op["efficiency"] < 1.0
     assert -90.0 < op["strain_phase_deg"] <= 0.0
+
+
+def test_three_state_unit_has_the_full_strength_but_no_linear_strain_at_zero_bias():
+    import dataclasses
+
+    two = L.SwitchingChannel(dmu_mon=0.45, de_mon=0.0, n=17, fraction=0.5, rho_mon=1.5e28, tau0=8.08e-13, ea_ev=0.124,
+                             tf=191.0)
+    three = dataclasses.replace(two, states=3)
+    assert three.polar_fraction(0.0) == pytest.approx(2.0 / 3.0)
+    assert three.net_polar_fraction(0.0) == 0.0
+    # both polar states respond: the strength is x_polar / (x (1 - x)) times the two-state one
+    assert three.delta_eps(0.0) == pytest.approx(two.delta_eps(0.0) * (2.0 / 3.0) / 0.25)
+    assert three.dx_de(0.0) == 0.0
+    assert three.tau(300.0, 0.0) == pytest.approx(two.tau(300.0, 0.0))
+    kT = L.K_B_EV * 300.0
+    for E in (0.001, 0.003, 0.0055):
+        x, m = three.occupancies(E)
+        assert 0.0 < m < x < 1.0
+        # the strain per field is a two-state unit's at the same polar fraction times tanh(dmu_u E / kT)
+        ref = three.dmu_unit * x * (1.0 - x) / kT / L.V_PER_A_TO_V_PER_M
+        assert three.dx_de(E) / ref == pytest.approx(np.tanh(three.dmu_unit * E / kT))
+        assert three.delta_eps(E) / three.delta_eps(0.0) == pytest.approx(L.bias_suppression(three.dmu_unit * E / kT, 3))
+    assert three.tau(300.0, 0.0055) < three.tau(300.0, 0.0)  # the tilt speeds the slow mode too
+    # a margin: the polar states are rarer, the strain per field smaller, the slow mode faster
+    up = dataclasses.replace(three, de_mon=0.1)
+    assert up.polar_fraction(0.0) < three.polar_fraction(0.0)
+    assert up.dx_de(0.003) < three.dx_de(0.003)
+    assert up.tau(300.0, 0.0) < three.tau(300.0, 0.0)
+
+
+def test_three_state_calibration_needs_a_smaller_unit_for_the_same_suppression():
+    d2 = L.unit_dipole_from_bias_suppression(0.5, 0.006, 300.0)
+    d3 = L.unit_dipole_from_bias_suppression(0.5, 0.006, 300.0, states=3)
+    assert d3 < d2
+    kT = L.K_B_EV * 300.0
+    assert L.bias_suppression(d3 * 0.006 / kT, 3) == pytest.approx(0.5, rel=1e-6)
+    assert L.bias_suppression(d2 * 0.006 / kT, 2) == pytest.approx(0.5, rel=1e-6)
+    assert L.bias_suppression(0.0, 3) == 1.0
+    ch3 = L.literature_terpolymer(states=3)
+    ch2 = L.literature_terpolymer()
+    assert ch3.states == 3 and ch3.n < ch2.n
+    assert ch3.delta_eps(0.006) / ch3.delta_eps(0.0) == pytest.approx(0.5, abs=0.05)  # n is an integer
+    assert ch3.delta_eps(0.0) == pytest.approx(45.0)
+    op = ch3.operating_point(50e3, 0.0055, 0.00018, 2e8)
+    assert 0.0 < op["net_polar_fraction"] < op["polar_fraction"] < 1.0
