@@ -28,9 +28,10 @@ bias from the lattice's own fluctuations; first results (plan section 12; 20 x 2
 barrier to the VF slope. The three-state unit (the polar state's dipole points either way; margin `kT ln 2` for a
 zero-field polar fraction of one half; the lattice calibrated on the centroid of its own loss peak) removes the
 two-state lattice's over-saturation (strength at 55 V/um 45% of zero bias, measured 50%), puts the zero-bias strain
-at 2f, and makes the stroke-at-budget surface rise from zero to a maximum near 20-30 V/um and fall by 55 on the
-first parameters, the position set by the polar fraction's rise with DC field, i.e. by the bench's quasi-static
-S(E_dc) curve (E4 item 7); the bias-hold point is a question for the calibrated lattice. The coupling x spread grid
+at 2f, and makes the stroke-at-budget surface rise from zero to a maximum near 20 V/um and decline to the bias-hold point
+(by a third on the 32 x 32 lattice, six tenths on the 20 x 20) on the first parameters, the position set by the
+polar fraction's rise with DC field, i.e. by the bench's quasi-static S(E_dc) curve (E4 item 7); the bias-hold
+point is a question for the calibrated lattice. The coupling x spread grid
 settles the temperature slope: 0.36-0.37 eV apparent at every disordered point against VF's 1.0, the lattice ordering
 into a ferroelectric past J of about 0.03 eV, so the VF slope is an input (`at_temperature(T, tau_target=...)`
 recalibrates the barrier at each T to the bench fit) and the lattice's deliverables are the bias and amplitude

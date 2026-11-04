@@ -660,5 +660,32 @@ staying below the ordering point. A size effect to carry along: at zero bias the
 three-state lattice is twice as lossy as the 20 x 20 at the same calibration (tan delta
 0.17 against 0.09 at 34 kHz; integral time 9.2e-7 against 4.3e-7 s), the slow tail of the
 spectrum being the collective relaxation of polar regions that the smaller lattice
-truncates; the biased rows of the 32 x 32 run, in progress, say whether the bias-hold
-numbers share it.
+truncates; the biased rows of the 32 x 32 run (addendum below) do not share it.
+
+**Addendum: the 32 x 32 three-state run** (same parameters; barrier 0.286 eV, loss-peak
+time 3.9e-7 s against the 4.4e-7 target, zero-field polar fraction 0.55, zero-bias
+strength 49 before scaling; it reached the end of the bias sweep in its two hours and was
+stopped at the driven rows, for which the 20 x 20 rows above stand). Fluctuation-dissipation
+rows, 1.8 V/um AC, `Y` 0.2 GPa, mechanical tan delta 0.05:
+
+| bias (V/um) | x | m | chi_s | tan delta 34 / 66 kHz | S_ac | efficiency 34 / 66 kHz | heat 34 / 66 kHz (MW/m^3) | stroke at budget 34 / 66 kHz | DC strain |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 | 0.57 | 0.00 | 48 | 0.170 / 0.316 | 5.7e-5 (noise) | 0.00 / 0.00 | 26 / 84 | 1 / 1 (noise) | 0 |
+| 10 | 0.59 | 0.17 | 50 | 0.154 / 0.279 | 1.1e-3 | 0.08 / 0.04 | 26 / 81 | 15 / 16 | 0.3% |
+| 20 | 0.67 | 0.35 | 55 | 0.119 / 0.230 | 2.1e-3 | 0.23 / 0.14 | 26 / 84 | 28 / 30 | 1.1% |
+| 30 | 0.78 | 0.55 | 52 | 0.146 / 0.271 | 2.0e-3 | 0.19 / 0.12 | 28 / 88 | 25 / 27 | 2.3% |
+| 45 | 0.89 | 0.78 | 32 | 0.114 / 0.212 | 1.0e-3 | 0.12 / 0.08 | 13 / 44 | 20 / 21 | 3.6% |
+| 55 | 0.94 | 0.87 | 20 | 0.083 / 0.159 | 7.2e-4 | 0.12 / 0.07 | 6.6 / 23 | 19 / 20 | 4.1% |
+| 65 | 0.96 | 0.92 | 11 | 0.056 / 0.106 | 3.2e-4 | 0.06 / 0.03 | 2.6 / 9.3 | 13 / 14 | 4.4% |
+
+Against the 20 x 20 lattice: the zero-bias loss is twice as high (the slow collective
+tail), the loss at the bias-hold point is 30% lower (tan delta 0.061 / 0.147 against 0.087
+/ 0.203 at 20 / 50 kHz; 2.3-2.5x level 1's), the strain per field there is twice as high
+(3.6e-9 against 1.9e-9 per V/m; level 1 5.5e-9), and the 4 MW/m^3 budget at 1.8 V/um is
+crossed at the same 26 kHz. The stroke-at-budget surface keeps its maximum at 20 V/um (28
+per second per unit lever at 34 kHz) but its decline to the bias-hold point is gentle on
+the larger lattice (19 at 55 V/um, against 10 on the 20 x 20), so the 50-65 V/um point
+costs about a third of the maximum stroke on these parameters rather than six tenths, with
+a third of the heat; the finite-size effect is in how fast the polar fraction saturates
+(0.89 at 45 V/um here, 0.91 on the smaller lattice) and in the slow tail, and it is the
+bench's `S(E_dc)` curve, not a larger lattice, that decides the position of the maximum.
