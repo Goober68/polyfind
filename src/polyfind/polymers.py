@@ -652,6 +652,40 @@ CDFE = Polymer(
     ),
 )
 
+# --- The two fluorinated comonomers of the relaxor terpolymers (2026-11-04, for the
+# electrostriction plan's tier 2; docs/ELECTROSTRICTION_RESEARCH.md section 6).
+#
+# TrFE (CHF-CF2) and CTFE (CF2-CFCl) are the units P(VDF-TrFE) and P(VDF-TrFE-CTFE) are
+# made of; CFE (CH2-CFCl) above is the terpolymer's other defect.  Both carry one
+# stereocentre per monomer (the CHF carbon; the CFCl carbon), so both are CHIRAL in this
+# model and are fitted on the chiral path, like CFE, CDFE and AN.  Geometry follows PVDF's
+# conventions: 114 deg backbone angles, 1.09 / 1.35 / 1.77 A pendant bonds, and the pendant
+# angle of the mixed carbons taken from CDFE's CHCl (109) and CFE's CFCl (108).  Charges are
+# ILLUSTRATIVE in exactly PVDF's sense -- each backbone atom's group is neutral and the
+# fluorines carry -0.20 e, the chlorine -0.10 e, the hydrogen +0.10 e -- so a TrFE unit has
+# the same pendant charges as a VDF unit with one hydrogen replaced by a fluorine, and its
+# monomer dipole is correspondingly smaller.  Production numbers come from fit_ris against
+# a real potential, as for every other unit here.
+TRFE = Polymer(
+    name="trfe",
+    formula="-(CHF-CF2)n-",
+    bond_length=1.54,
+    backbone=(
+        BackboneAtom("C", ("H", "F"), (1.09, 1.35), 114.0, 109.0, +0.10, (+0.10, -0.20)),  # CHF
+        BackboneAtom("C", "F", 1.35, 114.0, 106.0, +0.40, -0.20),  # CF2
+    ),
+)
+
+CTFE = Polymer(
+    name="ctfe",
+    formula="-(CF2-CFCl)n-",
+    bond_length=1.54,
+    backbone=(
+        BackboneAtom("C", "F", 1.35, 114.0, 106.0, +0.40, -0.20),  # CF2
+        BackboneAtom("C", ("F", "Cl"), (1.35, 1.77), 114.0, 108.0, +0.30, (-0.20, -0.10)),  # CFCl
+    ),
+)
+
 # --- Phase 3: multi-atom pendant groups (see docs/CHEMISTRY_EXTENSION.md).
 #
 # AN, VDCN and FANOME need pendants that are small molecular fragments rather than single
@@ -808,16 +842,33 @@ VDF_VDCN_11_1 = copolymer(
     bond_length=PVDF.bond_length,
 )
 
+TRFE_UNIT = monomer_of(TRFE, "trfe")
+# A 70/30 VDF/TrFE model cell: ten monomers, 30 mol% TrFE, the TrFE units spread as evenly
+# as ten positions allow (VDF VDF TrFE VDF VDF TrFE VDF VDF VDF TrFE), one explicit 20-bond
+# repeat.  The sequence is periodic and regular where the real copolymer is statistical;
+# it is the smallest cell that carries the composition, the counterpart of the VDF/TrFE
+# model cell the DFT provider uses.  Bond length PVDF's 1.528 A for the same reason as the
+# VDCN copolymer below: it is the measured one and describes most of the bonds.
+VDF_TRFE_7_3 = copolymer(
+    name="vdf7-trfe3",
+    formula="-(CH2-CF2)2-(CHF-CF2)-(CH2-CF2)2-(CHF-CF2)-(CH2-CF2)3-(CHF-CF2)-",
+    units=[VDF_UNIT] * 2 + [TRFE_UNIT] + [VDF_UNIT] * 2 + [TRFE_UNIT] + [VDF_UNIT] * 3 + [TRFE_UNIT],
+    bond_length=PVDF.bond_length,
+)
+
 POLYMERS: dict[str, Polymer] = {
     "pvdf": PVDF,
     "pe": PE,
     "pvdc": PVDC,
     "cfe": CFE,
     "cdfe": CDFE,
+    "trfe": TRFE,
+    "ctfe": CTFE,
     "an": AN,
     "vdcn": VDCN,
     "fanome": FANOME,
     "vdf11-vdcn1": VDF_VDCN_11_1,
+    "vdf7-trfe3": VDF_TRFE_7_3,
 }
 
 

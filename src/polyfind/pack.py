@@ -1976,6 +1976,8 @@ def polish(
     maxfev: int = 1500,
     method: str = "lbfgs",
     maxiter: int = 200,
+    gtol: float = 1e-5,
+    ftol: float = 1e-9,
     gradient: str = "analytic",
 ) -> np.ndarray:
     """Local minimisation of the continuous cell parameters (flip fixed).
@@ -2036,7 +2038,7 @@ def polish(
 
     res = minimize(
         fun, x0[free], method="L-BFGS-B", jac=True, bounds=bounds,
-        options={"ftol": 1e-9, "gtol": 1e-5, "maxiter": maxiter, "maxfun": max(maxfev, 2 * maxiter)},
+        options={"ftol": ftol, "gtol": gtol, "maxiter": maxiter, "maxfun": max(maxfev, 2 * maxiter)},
     )
     x = x0.copy()
     x[free] = res.x

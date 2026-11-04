@@ -1636,9 +1636,12 @@ describe the cell this potential produces, not the phase it is named after.
   coefficient against the Born tensor and finds it 20 to 35 times too large on the CH2 group.
 * Temperature. Everything is a zero-kelvin second derivative; no phonons, no thermal
   expansion, no pyroelectric coefficient.
-* Electrostriction. The response reported is strictly linear in the field; DESIGN.md section
-  5.5's observation that a 0.5 V/A transverse field opens beta's `b` from 8.61 to 8.85 A is a
-  quadratic effect and is not in any `d` here.
+* Electrostriction. The response reported here is strictly linear in the field; DESIGN.md
+  section 5.5's observation that a 0.5 V/A transverse field opens beta's `b` from 8.61 to
+  8.85 A is a quadratic effect and is not in any `d` here. *Since 2026-11-04* the quadratic
+  coefficient is computed by `polyfind.electrostriction` (strain and polarization routes on
+  the same states this module builds; `docs/ELECTROSTRICTION_RESEARCH.md` tier 1); what is
+  said above about the linear `d` is unchanged.
 * Domain switching. A field opposing `P` finds the 180-degree-rotated cell at equal energy
   (DESIGN.md section 5.5); the linear response about one minimum says nothing about the path
   between them or about the coercive field.

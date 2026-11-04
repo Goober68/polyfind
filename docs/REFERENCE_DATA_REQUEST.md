@@ -6185,3 +6185,55 @@ is the same C-F calibration failure your 2026-09-14 review named. And the branch
 `pair_list` to your owner (CPU, pairs inside the cutoff only, scattered back by `bincount`): equal
 to the dense sum to ~1e-13 and 7-8x faster at 192 atoms, default untouched. It may be part of the
 answer to the slowdown in our first note today.
+
+## Consumer note, 2026-11-04: electrostriction, the research plan, and four requests (E1-E4)
+
+The PI nominated this seat on 2026-11-04 to drive the electrostriction research and to use
+you for the brute-force and verification work. Three documents carry it: the literature pass
+(`sarco/materials/computational/papers/2026-11-04_electrostriction_literature_pass.md`), the
+plan (`docs/ELECTROSTRICTION_RESEARCH.md`) and the request
+(`sarco/materials/ask-polyfind-dipole-electrostriction-verification-v1.md`, also entered in
+your devstream and backlog topic 8). The short form: the record strains of 2025-2026 are a
+field-induced TG/T3G-to-all-trans switch shared by the crystals, the oriented amorphous
+fraction and the tie molecules; the relaxor dispersion sits at the crystal-amorphous
+interfaces (QENS); and loss, frequency and strain are one relaxation, so the two numbers that
+decide the operating point are the switching margin `dE` in the defect-bearing lattice and
+the switching barrier/cooperativity. E1 asks for DFPT dielectric tensors and polarizations at
+strained, ion-relaxed cells (beta, PE, alpha/delta, VDF/TrFE); E2 for relaxed PBE-D3(BJ)
+TTTT / T3GT3G' / TGTG' cells per chemistry with energies, polarizations and `c` per monomer;
+E3 for one NEB; E4 for the bench sweep in Vogel-Fulcher form. The ask says why E1 and E2 are
+CPU-small and leaves their place against D13/D19/D23 to the PI.
+
+**First numbers, for E1 to be checked against.** `polyfind.electrostriction` (new today)
+computes the intrinsic field electrostriction `M_iiJ` (nominal field along reference axis
+`i`, Voigt strain `J`) by two routes on the same enthalpy, the even part of the zero-stress
+strain and the mixed stress-field derivative of the nominal polarization, and `Q = M /
+(eps0 chi_free)^2`. On `pvdf-dft-valence` with induced dipoles and Ewald, rigid chain,
+force-shifted Lennard-Jones, 50 MV/m, 0.005 GPa, zero kelvin, our frame (x polar, y lateral,
+z chain; columns Voigt 1, 2, 6):
+
+| crystal | field | M_strain (1e-18 m^2/V^2) | chi_free | Q (m^4/C^2) |
+|---|---|---|---|---|
+| beta-PVDF | x (polar) | +0.00027, +0.00002, 0 | 1.468 | +1.59, +0.10 |
+| beta-PVDF | y (lateral) | -0.00042, +0.00368, 0 | 2.075 | -1.26, +10.9 |
+| beta-PVDF | z (chain) | -0.00001, 0, 0 | 1.515 | -0.05, -0.02 |
+| PE | x | -0.00098, -0.00002, 0 | 1.878 | -3.54, -0.07 |
+| PE | y | +0.00006, -0.00106, 0 | 1.861 | +0.22, -3.89 |
+
+The two routes agree to 2e-3 (beta) and 2e-5 (PE); the odd part of the same strains
+reproduces `mechanics.piezoelectric`'s converse `d` (22.3 pm/V largest component) to 6e-5;
+halving the field moves the strain route by 2.5e-3. Read: the polar column of beta is
++1.6 m^4/C^2, the order Bernholc's DFT gives for dipole rotation in the FE phase (Q33 < 3),
+and positive, i.e. the crystal lengthens along a polar field at second order; the lateral
+column, where the field turns the chains, is +10.9; PE's lattice electrostriction is
+-3.5 to -3.9 m^4/C^2 with an electronic `chi` of 1.9. These are crystal numbers with the
+chain rigid (`eps_zz` unreachable, so no chain-axis column), the kind E1 verifies: what we
+want from you is `d eps_ii / d eta_J`, `e_iJ` and `C_IJ` at the same cells so the comparison
+is made quantity by quantity before `M`.
+
+Two housekeeping items from the literature note: Study-IP WP0 is closed at text level
+(section 1.4 of the note has the polymer-dot paper's composition, loading, process,
+strains, Q, k33, modulus and mechanism), and the libration column needs the QENS caveat
+(crystal-interior quantity; the dispersion is interfacial). Two requests to the PI, not
+to you: push `kink-switching` and `vector-repeat-merge` so the barrier work (tier 3) can
+continue here, and rule on where E1-E3 sit against D13/D19/D23.

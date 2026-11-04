@@ -420,7 +420,8 @@ def _bounds(ref: Reference, params, free):
     return lo, hi
 
 
-def relax(ref: Reference, params, free=_INTERNAL_FREE, maxiter: int = 200) -> np.ndarray:
+def relax(ref: Reference, params, free=_INTERNAL_FREE, maxiter: int = 200,
+          gtol: float | None = None, ftol: float | None = None) -> np.ndarray:
     """Minimise the cell energy over ``free`` (default: the internal coordinates only).
 
     :func:`polyfind.pack.polish` stops at ``gtol = 1e-5``, which is a loose tolerance to be
@@ -433,7 +434,8 @@ def relax(ref: Reference, params, free=_INTERNAL_FREE, maxiter: int = 200) -> np
     p = np.asarray(params, dtype=float).reshape(7)
     free = list(free)
     lo, hi = _bounds(ref, p, free)
-    return polish(ref.packer, p, lo, hi, free, method="lbfgs", gradient="analytic", maxiter=maxiter)
+    tight = {k: v for k, v in (("gtol", gtol), ("ftol", ftol)) if v is not None}
+    return polish(ref.packer, p, lo, hi, free, method="lbfgs", gradient="analytic", maxiter=maxiter, **tight)
 
 
 def relax_reference(ref: Reference, maxiter: int = 300) -> Reference:
@@ -545,12 +547,16 @@ def _field_stress(ref: Reference, sc: StrainedCell, eps6, E_ref, e_pk, mu) -> np
     return extra
 
 
-def _state_at_strain(ref: Reference, eps6, relax_internal: bool = True, field=None) -> StrainState:
+def _state_at_strain(ref: Reference, eps6, relax_internal: bool = True, field=None,
+                     gtol: float | None = None, ftol: float | None = None) -> StrainState:
     """Strain the reference, relax the internal coordinates, and read off stress and dipole.
 
     ``field`` is a uniform *nominal* field (V/A) in the reference frame, held fixed as the
     crystal strains: see :func:`_field_in_crystal`.  The packer's field is restored
-    afterwards.  At zero strain it is simply the field.
+    afterwards.  At zero strain it is simply the field.  ``gtol`` and ``ftol`` tighten the
+    internal relaxation (:func:`relax`); the stress is quadratic in a leftover gradient but
+    the dipole is linear in it, so a derivative of the *polarization* through this state
+    (:mod:`polyfind.electrostriction`) needs them and a derivative of the stress does not.
     """
     sc = strained_cell(ref.params, ref.c, eps6)
     saved = ref.packer.field
@@ -558,7 +564,7 @@ def _state_at_strain(ref: Reference, eps6, relax_internal: bool = True, field=No
     try:
         if e_pk is not None:
             ref.packer.set_field(e_pk)
-        p = relax(ref, sc.params) if relax_internal else sc.params
+        p = relax(ref, sc.params, gtol=gtol, ftol=ftol) if relax_internal else sc.params
         E, sig = stress(ref, sc, params=p)
         c_arr = np.array([sc.c])
         mu = np.asarray(ref.packer.dipole(p[None], c=c_arr)[0], dtype=float)

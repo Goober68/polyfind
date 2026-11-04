@@ -1,5 +1,20 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+2026-11-04 research note (cloud session, PI-nominated the same day to drive the electrostriction
+research): the literature pass is `sarco/materials/computational/papers/2026-11-04_electrostriction_literature_pass.md`
+(the giant strain is a field-induced TG/T3G-to-TT switch shared by crystals, OAF and tie molecules;
+the relaxor dispersion is interfacial; loss, frequency and strain are one relaxation, with Ea 0.12 eV
+and Tf the discriminating number); the plan is `docs/ELECTROSTRICTION_RESEARCH.md` (tiers: intrinsic
+M/Q, switching margin and transition strain, switching barrier and tau(T), then the deformable
+connectors), and the request to Dipole is `sarco/materials/ask-polyfind-dipole-electrostriction-verification-v1.md`
+(E1 DFPT at strained cells, E2 two-phase PBE-D3 cells per chemistry, E3 one NEB, E4 the bench sweep
+in Vogel-Fulcher form). New: `polyfind.electrostriction` (intrinsic electrostriction by the strain
+and the polarization routes, agreeing to 5e-5 on force-shifted rigid beta; `TwoState` switch,
+`transition_strain`: TGTG' to TTTT is +13.4% axial at the ideal angles), `examples/electrostriction.py`,
+`tests/test_electrostriction.py`; `pack.polish`, `mechanics.relax` and `_state_at_strain` take
+optional `gtol`/`ftol` (defaults unchanged). Needed from the PI: push `kink-switching` and
+`vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
+
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five
 CPU performance patches of `docs/PERFORMANCE_REVIEW.md` section 15 are applied (commits
 31a2456, bdbcb8f, e364e0b, 1700515; section 15.7 has the measurements on the merged tree):
