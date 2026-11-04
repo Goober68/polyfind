@@ -20,7 +20,12 @@ and beta's registry corrugation (0.48 kcal/mol per monomer, 41 pN per monomer pe
 1") is `polyfind.loss`: a bias-tilted Vogel-Fulcher switching channel giving tan delta, the strain per AC
 field and the cycle efficiency at any (f, T, E_bias); on published terpolymer inputs the bias-hold point
 at 34-66 kHz carries tan delta 0.06-0.12, not the assumed 0.0125, and crosses the 4 MW/m^3 heat budget
-near 25 kHz (plan section 11; the bench sweep in VF form replaces every input). Needed from the PI: push `kink-switching` and
+near 25 kHz (plan section 11; the bench sweep in VF form replaces every input). Level 2 ("Go") is
+`polyfind.kmc`: the units on a lattice with coupling and random margins, rejection-free kinetic Monte Carlo
+under a DC plus AC field, barrier and strength calibrated by measurement, small-signal permittivity at any
+bias from the lattice's own fluctuations; first result (plan section 12): the bias axis has a knee near
+15 V/um on the first parameters, efficiency is nearly bias-independent, the stroke-at-budget optimum is broad;
+`n`, `J` and the spread still to be calibrated on the bench's suppression, VF slope and strength. Needed from the PI: push `kink-switching` and
 `vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
 
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five

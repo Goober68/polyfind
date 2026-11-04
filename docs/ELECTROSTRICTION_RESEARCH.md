@@ -410,3 +410,70 @@ frequency; the dielectric strength and `eps_inf`; the small-signal `eps` under t
 operating DC bias at 1-100 kHz (the suppression ratio); the DMA mechanical loss; and the
 DC leakage, which this model does not contain. With those, `SwitchingChannel` is the
 baseline, and the candidates are its scaled copies with tier-2 and tier-3 inputs.
+
+## 12. Level 2 of the loss model: the driven lattice (2026-11-04)
+
+The PI's "Go" after level 1. `polyfind.kmc` puts level 1's units on an `L x L` periodic
+lattice (chain segments along `x`, neighbouring chains along `y`) with an Ising coupling
+`J` and a margin per unit, a spread of margins being the random field that keeps an
+interacting lattice from ordering into one domain (a relaxor rather than a ferroelectric).
+Units flip singly at Arrhenius rates with the barrier top midway, under `E_dc + E_ac sin(wt)`
+by rejection-free kinetic Monte Carlo. It is built from a level-1 channel and calibrated
+twice by measurement: the barrier so that the lattice's own zero-field autocorrelation time
+equals the channel's Vogel-Fulcher time (exact, since `exp(-Ea/kT)` multiplies every rate),
+and the unit density so that its static susceptibility equals the measured dielectric
+strength (the coupling's Curie-Weiss enhancement absorbed into the switchable fraction; the
+dynamics do not depend on the density). Two estimators then read it. The small-signal
+permittivity at any bias comes from the lattice's own fluctuations
+(`IsingKMC.linear_response`, fluctuation-dissipation: static strength from the variance,
+frequency dependence from the autocorrelation), which uses every fluctuation where a small
+drive is noise-limited on a few hundred units; checked against the exact two-state
+reference to 2% in strength, 12% in time and 10% in tan delta at and below the relaxation.
+The large-signal response comes from driven runs (`IsingKMC.run`: trajectories, the
+fundamental's `eps'`, `eps''`, tan delta, the loop area as the loss per cycle, the third
+harmonic, the residual drift). `examples/loss_level2.py` runs the baseline terpolymer.
+
+**What the lattice says on the first parameters** (20 x 20 units, `J` = 0.02 eV, margin
+spread 0.08 eV, `n` = 17, `dmu_u` = 7.7 e.A, the channel's `tau0`; barrier by formula
+0.261 eV, calibrated 0.274 eV; zero-bias strength 152 scaled to 45):
+
+| bias (V/um) | polar fraction | chi_static | tau (s) | tan delta at 20 / 50 / 100 kHz | S_ac at 1.8 V/um | heat at 20 / 50 kHz (MW/m^3) |
+|---|---|---|---|---|---|---|
+| 0 | 0.56 | 36.5 | 4.0e-7 | 0.045 / 0.113 / 0.226 | 4.0e-3 | 13 / 45 |
+| 10 | 0.77 | 44.6 | 1.1e-6 | 0.131 / 0.325 / 0.592 | 4.8e-3 | 26 / 91 |
+| 20 | 0.90 | 11.3 | 2.7e-7 | 0.025 / 0.061 / 0.115 | 1.2e-3 | 1.6 / 6.5 |
+| 30 | 0.93 | 4.1 | 9.1e-8 | 0.006 / 0.015 / 0.029 | 4.5e-4 | 0.21 / 0.84 |
+| 55 | 0.97 | 1.4 | 4.0e-8 | 0.0013 / 0.0033 / 0.0066 | 1.6e-4 | 0.03 / 0.12 |
+
+Three readings. First, the bias axis has a knee: below about 15 V/um the lattice is in its
+switching range (polar fraction 0.5-0.8, strength 35-45, the slowest and lossiest dynamics
+at 10 V/um where units sit at their thresholds); above it the units saturate, the strength,
+the strain per AC volt and the loss all fall together, by 25x in strain and 400x in heat
+between zero and 55 V/um. Second, the cycle efficiency at a given frequency is nearly
+independent of bias (0.47-0.55 at 20 kHz, 0.34-0.46 at 50, 0.24-0.37 at 100 kHz, with the
+assumed mechanical loss of 0.05 capping it near 0.6), because work and electrical loss
+scale with the same susceptibility; what the bias moves is the stroke per volt and the
+heat. Third, re-optimising the AC amplitude to the 4 MW/m^3 budget gives a broad optimum
+in stroke rate across the bias axis (about 40-50 per second per unit lever at 20 V/um and
+20-50 kHz, about 50 at 55 V/um and 100 kHz), so the bias-hold point is a choice of where on
+the surface to sit, not a single optimum, and the lattice is the first object that gives
+the surface with a derived loss rather than an assumed one.
+
+**What is not yet calibrated, in order of consequence.** The lattice saturates ten times
+harder than the film: at 55 V/um its strength is 4% of zero bias where the literature says
+50% at 60 MV/m, so `n` (the unit size) must be recalibrated on the lattice itself rather
+than by the level-1 sech^2 formula, and the knee will move up. Its temperature dependence
+is flatter than the Vogel-Fulcher fit (1.4e-6 against 8.5e-6 s at 280 K, 3.6e-7 against
+5.7e-8 at 320 K): the coupling is too weak, or the spread too wide, for the measured
+cooperativity, and `J` against the sweep's slope in temperature is the calibration still to
+do. The driven large-signal rows at this lattice size are noise-limited (the loss at the
+program's amplitudes is below the statistical floor of 400 units; the loop areas come out
+with either sign), so the small-signal column is the fluctuation-dissipation one and the
+large-signal estimator needs larger lattices or many replicas. A 32 x 32 run was started
+with the same parameters (zero-bias strength 108 before scaling).
+
+**Next**, in order: calibrate `n`, `J` and the spread jointly on the bench's three numbers
+(the suppression under bias, the VF slope in temperature, the strength); larger lattices or
+replica averaging for the large-signal loss; the margins drawn from a printed sequence
+(tier 2's per-sequence `dE`), which is where the muscle's and the printer's questions become
+one calculation; and level 3 for the interface, which this lattice does not contain.
