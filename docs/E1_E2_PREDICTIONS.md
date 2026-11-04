@@ -104,6 +104,16 @@ The periodic reference already holds three beta-PVDF numbers that E1 asks for, f
   than the antipolar alpha. Dipole should report the nominal polarization of each relaxed
   TGTG' cell so that like is compared with like; the alpha/delta margin itself is a separate,
   known question (`docs/POLAR_MARGIN_DFT.md` is the beta polar/antipolar analogue).
+- **The 70/30 VDF/TrFE model cell (E1).** The isotactic TrFE placement makes the cell monoclinic
+  (gamma 92.0 degrees) and gives the polarization a lateral component: `P0 = (0.100, 0.044, 0)`
+  C/m^2, the polar component being beta's 0.140 diluted by the VDF content (0.70 x 0.140 = 0.098).
+  The TrFE units soften the in-plane stiffness (`C_11` 16.5 against beta's 22.6 GPa, `C_66` 1.7
+  against 4.3) and stiffen the chain libration: the lateral ionic contribution to `eps_0` is 0.36
+  against beta's 0.70, and `d eps_yy / d eta_2` is +2.1 against beta's +9.2. The proper `e_11` is
+  -1.65 times `P0` in both crystals (-0.164 against +0.233 C/m^2 with the opposite sign of `P0`),
+  which is the rigid-dipole dilation term. Its electrostriction routes were not run (the cell has
+  60 atoms per chain and the routes' tight relaxations dominated a two-hour job); `M` and `Q` for
+  this cell are not predicted here.
 - **E2, PVDF.** On this potential TGTG' is the ground conformation, T3GT3G' lies 0.7 and
   TTTT 1.3 kcal/mol per monomer above it, and the TGTG' to TTTT conformational strain along
   the chain is +10.4%. Published PBE-D3 puts alpha below beta by a few tenths of a kcal/mol
@@ -135,6 +145,7 @@ Potential: pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted 
 | beta-PVDF (TTTT) | 4.520 | 8.521 | 90.00 | 2.5999 | 100.12 | 22.57 | 3.09 | 18.55 | 4.34 |
 | PE (control) | 4.061 | 7.088 | 90.00 | 2.5511 | 73.43 | 23.28 | 1.56 | 25.04 | 2.41 |
 | alpha-PVDF (TGTG') | 4.977 | 9.038 | 90.00 | 4.7102 | 211.88 | 16.57 | 5.01 | 12.26 | 5.97 |
+| VDF/TrFE 70/30 model (TTTT) | 4.793 | 8.852 | 91.96 | 25.9918 | 1102.19 | 16.51 | 1.20 | 16.96 | 1.74 |
 
 ### E1, dielectric tensors at the stress-free cell, proper piezoelectric constants, polarization
 
@@ -143,6 +154,7 @@ Potential: pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted 
 | beta-PVDF (TTTT) | 2.1970, 2.1330, 2.5145 | 2.1970, 2.8311, 2.5145 | 0.2325, 0.0367, 0.0967 | 10.27, 0.27 | -0.1400, 6.38e-17, -4.57e-17 |
 | PE (control) | 2.8782, 2.8613, 2.9821 | 2.8782, 2.8613, 2.9821 | 3.48e-14, 1.89e-14, 3.58e-14 | -1.35e-13, -2.00e-13 | -9.58e-17, -1.33e-16, -6.52e-18 |
 | alpha-PVDF (TGTG') | 2.0749, 2.1084, 2.3804 | 2.0749, 2.2521, 2.3804 | -0.1370, -0.0079, -0.0776 | -9.21, 3.15 | 0.0726, -2.04e-17, -1.52e-17 |
+| VDF/TrFE 70/30 model (TTTT) | 2.0430, 2.0078, 2.3794 | 2.0696, 2.3709, 2.3794 | -0.1637, -0.0436, -0.0188 | -, - | 0.0999, 0.0435, -5.83e-08 |
 
 ### E1, the true relaxed-ion dielectric tensor against normal strain (central differences at +/-1%)
 
@@ -154,6 +166,8 @@ Potential: pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted 
 | PE (control) | yy (lateral) | -2.337 | -4.095 | -2.059 | 1.17e-15 | 2.8553, 2.8209, 2.9617 | 2.9020, 2.9028, 3.0029 |
 | alpha-PVDF (TGTG') | xx (polar) | -1.860 | 0.629 | -1.383 | -0.1370 | 2.0566, 2.2599, 2.3667 | 2.0938, 2.2473, 2.3943 |
 | alpha-PVDF (TGTG') | yy (lateral) | -1.314 | -0.841 | -1.373 | -0.0806 | 2.0620, 2.2441, 2.3668 | 2.0882, 2.2609, 2.3942 |
+| VDF/TrFE 70/30 model (TTTT) | xx (polar) | -1.585 | 0.239 | -1.408 | -0.1637 | 2.0541, 2.3737, 2.3655 | 2.0858, 2.3689, 2.3936 |
+| VDF/TrFE 70/30 model (TTTT) | yy (lateral) | -0.727 | 2.061 | -1.396 | -0.1435 | 2.0626, 2.3915, 2.3656 | 2.0772, 2.3503, 2.3935 |
 
 ### E1, electrostriction (field along reference axis i, Voigt strain J), both routes
 
@@ -168,6 +182,7 @@ Potential: pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted 
 | alpha-PVDF (TGTG') | x (polar) | -0.00015, 0.00007 | -0.00015, 0.00007 | [1.21456346 0.         0.        ] | -1.32, 0.58 |
 |  | y (lateral) | 0.00145, -0.00134 | 0.00145, -0.00134 | [0.         1.36612442 0.        ] | 9.89, -9.14 |
 |  | z (chain) | -1.74e-06, 3.40e-06 | -1.74e-06, 3.36e-06 | [0.         0.         1.38036377] | -0.01, 0.02 |
+| VDF/TrFE 70/30 model (TTTT) | - | not computed on this cell (cost) | | | |
 
 ## E2 predictions
 

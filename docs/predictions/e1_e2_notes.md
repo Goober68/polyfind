@@ -104,6 +104,16 @@ The periodic reference already holds three beta-PVDF numbers that E1 asks for, f
   than the antipolar alpha. Dipole should report the nominal polarization of each relaxed
   TGTG' cell so that like is compared with like; the alpha/delta margin itself is a separate,
   known question (`docs/POLAR_MARGIN_DFT.md` is the beta polar/antipolar analogue).
+- **The 70/30 VDF/TrFE model cell (E1).** The isotactic TrFE placement makes the cell monoclinic
+  (gamma 92.0 degrees) and gives the polarization a lateral component: `P0 = (0.100, 0.044, 0)`
+  C/m^2, the polar component being beta's 0.140 diluted by the VDF content (0.70 x 0.140 = 0.098).
+  The TrFE units soften the in-plane stiffness (`C_11` 16.5 against beta's 22.6 GPa, `C_66` 1.7
+  against 4.3) and stiffen the chain libration: the lateral ionic contribution to `eps_0` is 0.36
+  against beta's 0.70, and `d eps_yy / d eta_2` is +2.1 against beta's +9.2. The proper `e_11` is
+  -1.65 times `P0` in both crystals (-0.164 against +0.233 C/m^2 with the opposite sign of `P0`),
+  which is the rigid-dipole dilation term. Its electrostriction routes were not run (the cell has
+  60 atoms per chain and the routes' tight relaxations dominated a two-hour job); `M` and `Q` for
+  this cell are not predicted here.
 - **E2, PVDF.** On this potential TGTG' is the ground conformation, T3GT3G' lies 0.7 and
   TTTT 1.3 kcal/mol per monomer above it, and the TGTG' to TTTT conformational strain along
   the chain is +10.4%. Published PBE-D3 puts alpha below beta by a few tenths of a kcal/mol
