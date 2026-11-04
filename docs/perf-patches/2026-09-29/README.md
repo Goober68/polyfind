@@ -16,6 +16,13 @@ on the source staying as it is; every one of them applied cleanly to `bd5ef12` w
 | `G5.diff` | one chain build per candidate, batched helix analysis, vectorised k-best | enumeration 3.95 -> 0.06 s (60x) | exact |
 | `G6.diff` | table build on the array backend (CuPy path), GPU tests (the prototype's own notes for the review document were dropped from the diff; section 15.4 carries them) | CPU path 1.0x, bit-identical; GPU projected only, with four defects to fix first (section 15.4) | see section 15.4 |
 
+**Status (2026-11-04).** G4, G5, G1, G3 and G2 are applied on the branch (commits 31a2456,
+bdbcb8f, e364e0b, 1700515); G3 and G2 were merged by hand onto the files G4 and G1 had
+changed, re-verified, and their measured effects on the merged tree are recorded in
+`docs/PERFORMANCE_REVIEW.md` section 15.7.  G6 remains a patch: it is CUDA-only and the
+four defects listed in section 15.3 must be fixed before it is used.  The diffs below
+are kept as the record of what was measured; they no longer apply to the branch head.
+
 Apply one at a time on a fresh checkout of `bd5ef12` (or later) with
 `git apply docs/perf-patches/2026-09-29/<id>.diff`; `G3`, `G4` and `G6` all edit
 `lattice_table.py` and were made independently, so applying more than one of them

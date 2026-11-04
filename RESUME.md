@@ -1,5 +1,17 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five
+CPU performance patches of `docs/PERFORMANCE_REVIEW.md` section 15 are applied (commits
+31a2456, bdbcb8f, e364e0b, 1700515; section 15.7 has the measurements on the merged tree):
+vectorised FFT screen, single-build enumeration, fast chain geometry, cheaper table build,
+closed-form chain Jacobian.  Table values move by < 1e-3 kcal/mol (clear any on-disk
+`$POLYFIND_TABLE_CACHE`); refined free-parametrisation endpoints can move at the 1e-3 level
+within their flat valleys (`refine_crystal(gradient="fd-geometry")` reproduces the previous
+route).  The GPU port (G6) stays a patch.  IP: the solver's methods were assessed for
+invention disclosure and found to be known art or implementation; the record is
+`sarco/shared/ip/polyfind-methods-prior-art-2026-10-16.md`, and one consolidated defensive
+row, row 88 of `sarco/shared/ip/idf-candidates.md`, was logged on the PI's instruction.
+
 2026-10-09 update (on `claude/polymeric-stable-arrangements-uh06b1` unless named):
 **the polar/antipolar margin is computed** (`docs/POLAR_MARGIN_DFT.md`): on Dipole's own QE
 Hamiltonian (PBE-D3(BJ), SSSP precision, 90/360 Ry), fully relaxed, PVDF's gamma-free
