@@ -48,14 +48,16 @@ true_dielectric = ES.true_dielectric
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="docs/predictions/e1_polyfind.json")
+    ap.add_argument("--preset", default="pvdf-dft-valence", help="fitted preset to apply (polyfind.fitting.PRESET_PARAMETERS)")
     ap.add_argument("--systems", default="beta,pe,alpha,vdftrfe")
     ap.add_argument("--strain", type=float, default=0.01)
     ap.add_argument("--skip-electrostriction", action="store_true", help="omit the M/Q routes (the costly part on a large cell)")
     ap.add_argument("--skip-converse", action="store_true", help="omit the converse piezoelectric route")
     ap.add_argument("--merge", action="store_true", help="update the systems in an existing output file instead of replacing it")
     args = ap.parse_args()
-    from polyfind.fitting import FITTED_VALENCE
-    results = {"potential": "pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
+    from polyfind.fitting import PRESET_PARAMETERS
+    params = PRESET_PARAMETERS[args.preset]
+    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
                "frame": "x polar, y lateral, z chain; Voigt 1 xx, 2 yy, 6 xy; Dipole's frame has x and y swapped",
                "strain": args.strain, "systems": {}}
     if args.merge:
@@ -64,7 +66,7 @@ def main():
                 results = json.load(fh)
         except FileNotFoundError:
             pass
-    with FITTED_VALENCE.applied():
+    with params.applied():
         for key in args.systems.split(","):
             label, polymer, seq = SYSTEMS[key]
             t0 = time.time()

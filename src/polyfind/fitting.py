@@ -971,9 +971,14 @@ def chain_check(params: FFParameters = ILLUSTRATIVE, step: float = 20.0, n_monom
     }
 
 
+PRESET_PARAMETERS: dict[str, FFParameters] = {}  # the FFParameters behind each fitted preset, by name
+
+
 def register_preset(name: str, params: FFParameters) -> None:
-    """Add ``params`` to :data:`polyfind.forcefield.PRESETS` under ``name``."""
+    """Add ``params`` to :data:`polyfind.forcefield.PRESETS` under ``name`` (and keep the
+    :class:`FFParameters` itself in :data:`PRESET_PARAMETERS`, for ``.applied()``)."""
     PRESETS[name] = params.preset_kwargs()
+    PRESET_PARAMETERS[name] = params
 
 
 # The result of the fit that ``examples/fit_potential.py`` reproduces (86 objective

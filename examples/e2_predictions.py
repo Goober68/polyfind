@@ -57,12 +57,14 @@ def monomers_in_cell(polymer, seq, ref):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="docs/predictions/e2_polyfind.json")
+    ap.add_argument("--preset", default="pvdf-dft-valence", help="fitted preset to apply (polyfind.fitting.PRESET_PARAMETERS)")
     ap.add_argument("--systems", default="pvdf,vdftrfe")
     args = ap.parse_args()
-    from polyfind.fitting import FITTED_VALENCE
-    results = {"potential": "pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
+    from polyfind.fitting import PRESET_PARAMETERS
+    params = PRESET_PARAMETERS[args.preset]
+    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
                "frame": "x polar, y lateral, z chain", "systems": {}}
-    with FITTED_VALENCE.applied():
+    with params.applied():
         for key in args.systems.split(","):
             label, polymer, confs = SYSTEMS[key]
             rows = {}
