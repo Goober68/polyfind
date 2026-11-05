@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -48,13 +48,10 @@ RIDGE = 1.0
 
 
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
-    """The valence preset with its C, H, F Lennard-Jones terms and C-H, C-F increments moved."""
-    x = np.asarray(x, dtype=float)
-    mult = {"C": (x[0], x[3]), "H": (x[1], x[4]), "F": (x[2], x[5])}
-    lj = tuple((e, xi * mult.get(e, (1.0, 1.0))[0], di * mult.get(e, (1.0, 1.0))[1]) for e, xi, di in base.lj)
-    shift = {("C", "H"): x[6], ("C", "F"): x[7]}
-    incr = tuple((a, b, d + shift.get((a, b), 0.0)) for a, b, d in base.charge_increments)
-    return replace(base, lj=lj, charge_increments=incr)
+    """The valence preset with its C, H, F Lennard-Jones terms and C-H, C-F increments moved
+    (:func:`polyfind.fitting.crystal_stage_parameters`; the fitted result is the preset
+    ``pvdf-dft-valence-crystal``)."""
+    return F.crystal_stage_parameters(x, base)
 
 
 def ridge(x) -> float:

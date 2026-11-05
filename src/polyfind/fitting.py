@@ -2551,3 +2551,34 @@ def valence_ablations() -> dict[str, np.ndarray]:
         "valence only": np.arange(off, len(VAL_X0) - 1),
     }
     return {name: idx for name, idx in groups.items()}
+
+# ------------------------------------------------------------------ the crystal stage
+#
+# ``pvdf-dft-valence`` with the eight nonbonded terms the conformer trainset left
+# undetermined moved against Dipole's periodic PBE-D3(BJ) crystal anchors (the QE beta cell,
+# the antipolar alpha cell, the alpha-beta and polar/antipolar margins, the beta Berry-phase
+# polarization), with a ridge to the trainset values: :mod:`polyfind.crystalfit`, result in
+# ``docs/predictions/crystal_stage_v1.json``, write-up in ``docs/CRYSTAL_STAGE.md``.  It closes
+# the polarization (0.115 -> 0.174 C/m^2 against 0.18) and halves alpha's long-axis error
+# (-6.2% -> -2.7%) but moves beta's polar axis only from -4.5% to -3.7% while its lateral and
+# chain axes drift to +1.6% and +1.2%; every torsion, bond and angle term is the valence
+# fit's.  Opt-in, like every fitted preset here; the E1/E2 predictions pre-registered on
+# ``pvdf-dft-valence`` stand, and this preset's are a labelled second set.
+CRYSTAL_STAGE_VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "q_CH", "q_CF")
+CRYSTAL_FITTED_X = np.array([0.9481209139388875, 1.072763542201075, 1.0161618008788684, 0.5795387875191187, 1.2391304899271793, 0.9650268227284355, -0.07607173819968646, 0.05714695187292264])
+
+
+def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParameters:
+    """``base`` with its C, H and F Lennard-Jones diameters and well depths multiplied by
+    ``x[0:3]`` and ``x[3:6]`` and its C-H and C-F bond-charge increments shifted by ``x[6:8]``
+    (the crystal stage's variables, :data:`CRYSTAL_STAGE_VARIABLES`)."""
+    x = np.asarray(x, dtype=float)
+    mult = {"C": (x[0], x[3]), "H": (x[1], x[4]), "F": (x[2], x[5])}
+    lj = tuple((e, xi * mult.get(e, (1.0, 1.0))[0], di * mult.get(e, (1.0, 1.0))[1]) for e, xi, di in base.lj)
+    shift = {("C", "H"): x[6], ("C", "F"): x[7]}
+    incr = tuple((a, b, d + shift.get((a, b), 0.0)) for a, b, d in base.charge_increments)
+    return replace(base, lj=lj, charge_increments=incr)
+
+
+FITTED_VALENCE_CRYSTAL = crystal_stage_parameters(CRYSTAL_FITTED_X)
+register_preset("pvdf-dft-valence-crystal", FITTED_VALENCE_CRYSTAL)
