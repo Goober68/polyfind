@@ -176,7 +176,42 @@ preset the all-trans phase is a quarter further from the ground state than the p
 set says, in both polymers.
 
 
-## 5. What it costs, and what it does not touch
+## 5. Stage 2: the setting the predictions are made in, a pair term, the stiffness
+
+*2026-11-05, afternoon. `crystalfit.fit(stage=2)`, `examples/crystal_stage.py --stage 2`, result
+`docs/predictions/crystal_stage_v2.json`.*
+
+Section 4 ended with two lessons: fit in the setting you predict in, and change the form.
+Stage 2 does both and adds the first DFT anchors on the response, Dipole's six strained cells.
+
+**The setting.** Every evaluation now packs and refines beta (with its antipolar competitor)
+and the antipolar alpha cell with induced dipoles, Ewald electrostatics and the
+force-shifted Lennard-Jones term, through the same `fitting.predict` path as stage 1, which
+took `polarizable=` and `lj_cutoff=` for the purpose (`pack` and `refine_crystal` with it).
+At the start point this reproduces the pre-registered E1 construction to the digits printed
+in `docs/E1_E2_PREDICTIONS.md`: beta 4.517, 8.521, 2.602 A, P 0.140 C/m^2, C_11 22.5, C_22
+18.5, C_12 3.1 GPa.
+
+**The form.** A tenth and ninth variable give the H-F pair its own Lennard-Jones diameter and
+well depth, as multipliers on the geometric means of the (already multiplied) H and F
+values, so (1, 1) is the mixing rule and changes nothing. This is the smallest change that
+decouples the polar H...F contact from the lateral F...F one (section 4). It reaches the
+lattice kernel's pair tables and the force field's own pair terms through
+`FFParameters.lj_pairs` / `SimpleFF.lj_pairs` (bounds 0.85-1.15 on the diameter, 0.3-3 on
+the depth; ridge widths 0.05 and 0.5 in the logarithm).
+
+**The anchors.** The nine of stage 1 plus beta's relaxed-ion C_11, C_22 and C_12 (22.77,
+24.52, 5.88 GPa, derived from Dipole's six +/-1% cells, section 4.1), tolerance 10% each,
+computed at every evaluation from a `Reference` rebuilt from the refined beta prediction
+exactly as the E1 script builds its own (`crystalfit.reference_from_prediction`), with the
+six strained states relaxed in parallel. One evaluation is 11 s on the 4-core box, so the
+fit costs about as much as stage 1 did.
+
+### 5.1 Result
+
+RESULTS2-TODO
+
+## 6. What it costs, and what it does not touch
 
 - **The conformer trainset.** The torsion, bond and angle terms are untouched, so the 467
   conformer frames of `docs/VALENCE_FIT.md` see this preset only through the nonbonded terms
@@ -193,7 +228,7 @@ set says, in both polymers.
   and DFPT records are the test, through `examples/crosscheck_e1_e2.py --polyfind
   docs/predictions/e1_polyfind_crystal.json`.
 
-## 6. Reproduce
+## 7. Reproduce
 
 ```
 python examples/crystal_stage.py --maxfev 300 --out docs/predictions/crystal_stage_v1.json
