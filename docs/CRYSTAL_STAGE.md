@@ -166,14 +166,13 @@ all-trans cell (`e1_polyfind_crystal.json`, 343 s with four workers): a 4.793 ->
 M_x1 0.46 -> 0.74 x 1e-21 m^2/V^2 (chi_free 1.38 -> 1.55): the same stiffening, larger
 polarization and larger ionic response as beta, with no DFT anchor yet to judge them against
 (Dipole's copolymer cell is in E1). E2 (`e2_polyfind_crystal.json`, same script, same
-construction): PVDF's ground conformation is still TGTG' and the margins open, TTTT +1.30 ->
-+1.63 and T3GT3G' +0.73 -> +1.04 kcal/mol per monomer against DFT's +0.726 for the alpha-beta
+construction; the numbers here are the corrected ones of section 5.4, with the backbone-angle
+strain included): PVDF's ground conformation is still TGTG' and the margins open, TTTT +0.85
+-> +0.98 and T3GT3G' +0.41 -> +0.52 kcal/mol per monomer against DFT's +0.726 for the alpha-beta
 pair -- the fixed-charge fit reproduces that margin to 0.02 and the induced dipoles, on the
-larger charges, add 0.9 kcal/mol of polar-lattice stabilisation that the fit never saw. The
-copolymer's margins open the same way, TTTT +1.09 -> +1.33 and T3GT3G' +0.56 -> +0.86 kcal/mol
-per monomer over TGTG' (conformational strain of the switch +9.9%, unchanged), so on this
-preset the all-trans phase is a quarter further from the ground state than the pre-registered
-set says, in both polymers.
+larger charges, add polar-lattice stabilisation that the fit never saw. The copolymer's
+margins open the same way, TTTT +0.46 -> +0.53 and T3GT3G' +0.11 -> +0.18 kcal/mol per
+monomer over TGTG' (conformational strain of the switch +9.9%, unchanged).
 
 
 ## 5. Stage 2: the setting the predictions are made in, a pair term, the stiffness
@@ -305,12 +304,24 @@ relaxed conformer cell and left out the strain energy of the refined backbone an
 design). A DFT total energy carries that strain, so the margins compared with DFT must too.
 The omission is 0.21 kcal/mol per monomer for beta (whose backbone angle the lattice opens to
 116.6 deg) and 0.66 for the refined TGTG' cell, so it favoured the gauche conformers by about
-0.45 kcal/mol per monomer: the pre-registered PVDF margin of TTTT over TGTG', +1.30, is +0.85
-with the strain included, which is what the fit path (`fitting.predict`) had been reporting
-all along (its -0.854 for E(alpha) - E(beta) in section 5.1's start column). The script now
-adds the strain and records both parts; the three E2 files (`e2_polyfind.json`, the stage-1
-and stage-2 files) are being regenerated, the pre-registered values are kept in
-`docs/predictions/e1_e2_notes.md`, and the correction goes to Dipole with the numbers.
+0.45 kcal/mol per monomer. Regenerated with the strain included (both parts are recorded in
+the files), the margins over TGTG' are:
+
+| preset | PVDF TTTT | PVDF T3GT3G' | copolymer TTTT | copolymer T3GT3G' |
+|---|---|---|---|---|
+| pre-registered (strain omitted) | +1.304 | +0.725 | +1.087 | +0.560 |
+| `pvdf-dft-valence`, corrected | +0.853 | +0.414 | +0.455 | +0.111 |
+| stage 1 (`-crystal`) | +0.982 | +0.522 | +0.528 | +0.179 |
+| stage 2 (`-crystal2`) | +0.756 | +0.323 | +0.346 | +0.022 |
+
+The PVDF number is the one the fit path had been reporting all along (-0.854 for E(alpha) -
+E(beta) in section 5.1's start column; DFT -0.726). The copolymer's correction is the large one,
+because its refined TGTG' packing carries 0.84-1.10 kcal/mol per monomer of angle strain: the
+all-trans phase of the 70/30 model is 0.35-0.46 kcal/mol per monomer above its ground state,
+not 1.1, and on the stage-2 preset T3GT3G' is degenerate with TGTG'. That is the margin the
+switching model (plan section 11) takes as its input, and it is now a third of what the
+pre-registered file said. The pre-registered values are kept in
+`docs/predictions/e1_e2_notes.md`; the correction goes to Dipole with these numbers.
 
 ### 5.5 Charge penetration: implemented, probed, in the fit
 

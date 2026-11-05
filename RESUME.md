@@ -74,7 +74,8 @@ the PBE chain geometry (C-F 1.386 against the built 1.350) were each probed: -5.
 -4.4% respectively, neither the lever alone; stage 3 (eleven variables) was running at the end of
 the session, result to section 5.6. **E2 correction**: the E2 script omitted the refined
 backbone angles' strain energy, favouring the gauche conformers by about 0.45 kcal/mol per
-monomer (PVDF TTTT margin +1.30 -> about +0.85); fixed, files regenerated, Dipole told.
+monomer (PVDF TTTT margin +1.30 -> +0.85, copolymer +1.09 -> +0.46); fixed, files regenerated,
+Dipole told.
 **Exchange**: the Science 2022 main text makes FA the dehydrochlorinated CFE pair, i.e. the
 same `-CH=CF-` unit as DB (the CF3 reading is withdrawn; E2 is six chemistries; record and
 devstream amended, sarco a498326c). Dipole at 05:12 UTC: no accepted strained units yet, one

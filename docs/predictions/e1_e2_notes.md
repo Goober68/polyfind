@@ -171,10 +171,11 @@ stiffness flag of the previous section is read against the QE cell from here on.
   margins over TGTG' were PVDF TTTT +1.304 and T3GT3G' +0.725, copolymer TTTT +1.087 and
   T3GT3G' +0.560 kcal/mol per monomer; the omission favoured the gauche conformers by about
   0.45 for PVDF (0.21 for beta's opened backbone angle against 0.66 for the refined TGTG'
-  cell), so the corrected PVDF TTTT margin is near +0.85, the number the fit path had been
-  giving for E(beta) - E(alpha) all along. The files `e2_polyfind*.json` are regenerated with
-  the strain included and both parts recorded (`docs/CRYSTAL_STAGE.md` 5.4); the conformer
-  cells, polarizations and strains are unchanged. The correction is reported to Dipole.
+  cell). Regenerated with the strain included, the margins over TGTG' on `pvdf-dft-valence`
+  are PVDF TTTT +0.853 and T3GT3G' +0.414, copolymer TTTT +0.455 and T3GT3G' +0.111 (the
+  copolymer's TGTG' carries 0.84 kcal/mol per monomer of angle strain, hence its larger
+  correction). The files `e2_polyfind*.json` carry both parts (`docs/CRYSTAL_STAGE.md` 5.4);
+  the conformer cells, polarizations and strains are unchanged. Reported to Dipole 2026-11-05.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
   2026-11-05; the earlier CF3 reading of FA is withdrawn) are not predicted here: the potential's chlorine and the other defect parameters are unvalidated,

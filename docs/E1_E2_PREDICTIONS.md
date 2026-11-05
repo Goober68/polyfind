@@ -165,6 +165,17 @@ stiffness flag of the previous section is read against the QE cell from here on.
   is the known one (TrFE stabilises the all-trans phase of the copolymer); the magnitude, 0.2
   kcal/mol per monomer at 30% TrFE, is what E2's VDF/TrFE row tests. The cells are large (20
   and 40 backbone bonds per chain) and their packing searches are the least converged of the set.
+- **E2, corrected 2026-11-05 (the backbone-angle strain).** The E2 script reported the lattice
+  energy of each relaxed conformer cell and left out the strain energy of the refined backbone
+  angles (`RefineResult.angle_energy`), which a DFT total energy carries. The pre-registered
+  margins over TGTG' were PVDF TTTT +1.304 and T3GT3G' +0.725, copolymer TTTT +1.087 and
+  T3GT3G' +0.560 kcal/mol per monomer; the omission favoured the gauche conformers by about
+  0.45 for PVDF (0.21 for beta's opened backbone angle against 0.66 for the refined TGTG'
+  cell). Regenerated with the strain included, the margins over TGTG' on `pvdf-dft-valence`
+  are PVDF TTTT +0.853 and T3GT3G' +0.414, copolymer TTTT +0.455 and T3GT3G' +0.111 (the
+  copolymer's TGTG' carries 0.84 kcal/mol per monomer of angle strain, hence its larger
+  correction). The files `e2_polyfind*.json` carry both parts (`docs/CRYSTAL_STAGE.md` 5.4);
+  the conformer cells, polarizations and strains are unchanged. Reported to Dipole 2026-11-05.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
   2026-11-05; the earlier CF3 reading of FA is withdrawn) are not predicted here: the potential's chlorine and the other defect parameters are unvalidated,
@@ -234,12 +245,12 @@ Potential: pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted 
 
 | system | conformation | E per monomer (kcal/mol) | margin vs ground | |P| (C/m^2) | c per monomer (A) | conformational strain vs ground | V per monomer (A^3) | cell a, b, gamma, c |
 |---|---|---|---|---|---|---|---|---|
-| PVDF | TTTT | -4.7436 | 1.304 | 0.1400 | 2.5999 | 10.4% | 50.06 | 4.520, 8.521, 90.0, 2.600 |
-| PVDF | TGTG' | -6.0473 | 0.000 | 0.0726 | 2.3551 | 0.0% | 52.97 | 4.977, 9.038, 90.0, 4.710 |
-| PVDF | T3GT3G' | -5.3225 | 0.725 | 0.0848 | 2.3356 | -0.8% | 53.94 | 5.287, 8.762, 85.6, 9.342 |
-| VDF/TrFE 70/30 model | TTTT | -3.1461 | 1.087 | 0.1090 | 2.5992 | 10.1% | 55.11 | 4.793, 8.852, 92.0, 25.992 |
-| VDF/TrFE 70/30 model | TGTG' | -4.2332 | 0.000 | 0.0642 | 2.3601 | 0.0% | 59.71 | 5.341, 9.476, 91.2, 23.601 |
-| VDF/TrFE 70/30 model | T3GT3G' | -3.6733 | 0.560 | 0.0615 | 2.3418 | -0.8% | 59.55 | 5.565, 9.156, 93.6, 46.836 |
+| PVDF | TTTT | -4.5289 | 0.853 | 0.1400 | 2.5999 | 10.4% | 50.06 | 4.520, 8.521, 90.0, 2.600 |
+| PVDF | TGTG' | -5.3817 | 0.000 | 0.0726 | 2.3551 | 0.0% | 52.97 | 4.977, 9.038, 90.0, 4.710 |
+| PVDF | T3GT3G' | -4.9681 | 0.414 | 0.0848 | 2.3356 | -0.8% | 53.94 | 5.287, 8.762, 85.6, 9.342 |
+| VDF/TrFE 70/30 model | TTTT | -2.9376 | 0.455 | 0.1090 | 2.5992 | 10.1% | 55.11 | 4.793, 8.852, 92.0, 25.992 |
+| VDF/TrFE 70/30 model | TGTG' | -3.3922 | 0.000 | 0.0642 | 2.3601 | 0.0% | 59.71 | 5.341, 9.476, 91.2, 23.601 |
+| VDF/TrFE 70/30 model | T3GT3G' | -3.2816 | 0.111 | 0.0615 | 2.3418 | -0.8% | 59.55 | 5.565, 9.156, 93.6, 46.836 |
 
 ## First cross-check against what Dipole already has
 

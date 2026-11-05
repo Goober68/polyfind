@@ -1,6 +1,7 @@
 {
  "potential": "pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
  "frame": "x polar, y lateral, z chain",
+ "energy": "lattice energy plus the refined backbone angles' strain, per vinyl monomer (the strain was omitted before 2026-11-05)",
  "systems": {
   "pvdf": {
    "label": "PVDF",
@@ -12,11 +13,13 @@
      ],
      "n_chains": 2,
      "monomers_per_cell": 2.0,
-     "energy_per_monomer_kcal": -4.74356840829072,
+     "energy_per_monomer_kcal": -4.52890412296893,
+     "lattice_energy_per_monomer_kcal": -4.743568408290713,
+     "bend_energy_per_monomer_kcal": 0.21466428532178342,
      "P_C_m2": [
       -0.1400151232288881,
-      6.85640500022575e-17,
-      -5.251667465198503e-17
+      6.91192244962029e-17,
+      -8.078407637843257e-17
      ],
      "c_per_monomer_A": 2.599947642352012,
      "cell": {
@@ -27,8 +30,8 @@
       "volume_A3": 100.12489006794456
      },
      "volume_per_monomer_A3": 50.06244503397228,
-     "seconds": 2.327066421508789,
-     "margin_vs_ground_kcal": 1.3037724580308598,
+     "seconds": 1.9169840812683105,
+     "margin_vs_ground_kcal": 0.8527959679280315,
      "conformational_strain_vs_ground": 0.10397283726155515
     },
     "TGTG'": {
@@ -40,22 +43,24 @@
      ],
      "n_chains": 2,
      "monomers_per_cell": 4.0,
-     "energy_per_monomer_kcal": -6.04734086632158,
+     "energy_per_monomer_kcal": -5.381700090896961,
+     "lattice_energy_per_monomer_kcal": -6.0473408663215835,
+     "bend_energy_per_monomer_kcal": 0.665640775424622,
      "P_C_m2": [
-      0.07262963723969033,
-      -3.7024447604598256e-17,
-      -6.042298025816854e-18
+      0.07262963723969029,
+      -1.9938763634717215e-17,
+      -1.7872740429146184e-18
      ],
      "c_per_monomer_A": 2.355082982658592,
      "cell": {
-      "a": 4.977304561925439,
+      "a": 4.97730456192544,
       "b": 9.037670400737875,
       "gamma_deg": 90.0,
       "c": 4.710165965317184,
-      "volume_A3": 211.87851717795374
+      "volume_A3": 211.87851717795377
      },
-     "volume_per_monomer_A3": 52.969629294488435,
-     "seconds": 5.131643056869507,
+     "volume_per_monomer_A3": 52.96962929448844,
+     "seconds": 3.3127617835998535,
      "margin_vs_ground_kcal": 0.0,
      "conformational_strain_vs_ground": 0.0
     },
@@ -72,23 +77,25 @@
      ],
      "n_chains": 2,
      "monomers_per_cell": 8.0,
-     "energy_per_monomer_kcal": -5.322504307488998,
+     "energy_per_monomer_kcal": -4.968117197681479,
+     "lattice_energy_per_monomer_kcal": -5.322504307489005,
+     "bend_energy_per_monomer_kcal": 0.3543871098075263,
      "P_C_m2": [
-      0.031931860216979094,
-      -0.06040541281747906,
-      -0.05025000304231837
+      0.031931860215356885,
+      -0.06040541281855233,
+      -0.05025000304230595
      ],
      "c_per_monomer_A": 2.335558692873238,
      "cell": {
-      "a": 5.286504017206574,
-      "b": 8.762392925945411,
-      "gamma_deg": 85.62839201749613,
+      "a": 5.286504017213596,
+      "b": 8.762392925934476,
+      "gamma_deg": 85.62839201719018,
       "c": 9.342234771492953,
-      "volume_A3": 431.49593619833496
+      "volume_A3": 431.4959361981934
      },
-     "volume_per_monomer_A3": 53.93699202479187,
-     "seconds": 34.42966389656067,
-     "margin_vs_ground_kcal": 0.7248365588325818,
+     "volume_per_monomer_A3": 53.93699202477418,
+     "seconds": 8.682012796401978,
+     "margin_vs_ground_kcal": 0.4135828932154828,
      "conformational_strain_vs_ground": -0.00829027678817229
     }
    }
@@ -121,23 +128,25 @@
      ],
      "n_chains": 2,
      "monomers_per_cell": 20.0,
-     "energy_per_monomer_kcal": -3.1460574536566583,
+     "energy_per_monomer_kcal": -2.9376322419231125,
+     "lattice_energy_per_monomer_kcal": -3.146057453656664,
+     "bend_energy_per_monomer_kcal": 0.20842521173355136,
      "P_C_m2": [
-      0.09994157582331491,
-      0.04350396999392944,
-      -5.833851544197003e-08
+      0.09994157582331632,
+      0.04350396999392955,
+      -5.833851539586234e-08
      ],
      "c_per_monomer_A": 2.599180539642817,
      "cell": {
-      "a": 4.7933555489913,
-      "b": 8.851874025580166,
-      "gamma_deg": 91.95851025757904,
+      "a": 4.793355548991279,
+      "b": 8.851874025580095,
+      "gamma_deg": 91.95851025757585,
       "c": 25.99180539642817,
-      "volume_A3": 1102.1927312561036
+      "volume_A3": 1102.1927312560922
      },
-     "volume_per_monomer_A3": 55.10963656280518,
-     "seconds": 138.62984490394592,
-     "margin_vs_ground_kcal": 1.0871309600859633,
+     "volume_per_monomer_A3": 55.10963656280461,
+     "seconds": 34.82368040084839,
+     "margin_vs_ground_kcal": 0.45460459988166857,
      "conformational_strain_vs_ground": 0.10128490197050133
     },
     "TGTG'": {
@@ -165,22 +174,24 @@
      ],
      "n_chains": 2,
      "monomers_per_cell": 20.0,
-     "energy_per_monomer_kcal": -4.233188413742622,
+     "energy_per_monomer_kcal": -3.392236841804781,
+     "lattice_energy_per_monomer_kcal": -4.23318841374261,
+     "bend_energy_per_monomer_kcal": 0.8409515719378288,
      "P_C_m2": [
-      -0.042216301910532626,
-      -0.01708400342887939,
-      -0.04518696718594325
+      -0.04221630191053169,
+      -0.017084003428881226,
+      -0.04518696718594279
      ],
      "c_per_monomer_A": 2.360134543742649,
      "cell": {
-      "a": 5.340559737702795,
-      "b": 9.476300046969447,
-      "gamma_deg": 91.18793759958955,
+      "a": 5.340559737702787,
+      "b": 9.476300046969554,
+      "gamma_deg": 91.18793759959055,
       "c": 23.60134543742649,
-      "volume_A3": 1194.1777886878356
+      "volume_A3": 1194.1777886878467
      },
-     "volume_per_monomer_A3": 59.70888943439178,
-     "seconds": 139.8078579902649,
+     "volume_per_monomer_A3": 59.70888943439233,
+     "seconds": 35.48119020462036,
      "margin_vs_ground_kcal": 0.0,
      "conformational_strain_vs_ground": 0.0
     },
@@ -229,23 +240,25 @@
      ],
      "n_chains": 2,
      "monomers_per_cell": 40.0,
-     "energy_per_monomer_kcal": -3.6732520129683963,
+     "energy_per_monomer_kcal": -3.2815977842680035,
+     "lattice_energy_per_monomer_kcal": -3.6732520129683905,
+     "bend_energy_per_monomer_kcal": 0.3916542287003874,
      "P_C_m2": [
-      0.00469388469303984,
-      0.047546307515666165,
-      -0.038689668102555266
+      0.004693884693041165,
+      0.04754630751566681,
+      -0.03868966810255601
      ],
      "c_per_monomer_A": 2.341786516396099,
      "cell": {
-      "a": 5.565202290691989,
-      "b": 9.156164466615085,
-      "gamma_deg": 93.58056105687976,
+      "a": 5.565202290691885,
+      "b": 9.156164466615076,
+      "gamma_deg": 93.58056105687872,
       "c": 46.835730327921986,
-      "volume_A3": 2381.898519349952
+      "volume_A3": 2381.898519349908
      },
-     "volume_per_monomer_A3": 59.5474629837488,
-     "seconds": 733.0601894855499,
-     "margin_vs_ground_kcal": 0.5599364007742254,
+     "volume_per_monomer_A3": 59.5474629837477,
+     "seconds": 216.1413757801056,
+     "margin_vs_ground_kcal": 0.1106390575367775,
      "conformational_strain_vs_ground": -0.0077741446542509696
     }
    }
