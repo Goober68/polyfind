@@ -216,8 +216,9 @@ In order of what the model can express today: PVDF (controls), CFE and CDFE unit
 host (the baseline and its isomer), VDC, AN, VDCN, FANOME (the slate's leaders, already in
 `polyfind.polymers`), the VDF/VDCN copolymer. To add: TrFE as a unit (one F on the CH2
 carbon; two different substituents are expressible since phase 2), CTFE, the double-bond
-unit (needs an sp2 backbone pair and a torsion profile across it), the alkyne (needs a
-linear sp carbon pair) and the disulfonyl side chain (needs S in the nonbonded table and a
+unit (needs an sp2 backbone pair and a torsion profile across it; the "fluorinated alkyne"
+unit of Science 2022 is this same `-CH=CF-` pair, made from CFE by losing HCl, so there is no
+sp carbon to add) and the disulfonyl side chain (needs S in the nonbonded table and a
 multi-atom pendant with its own torsions). The fluorine-free relaxor is worth a row because
 it is a relaxor with no crystallinity (so it fails the recovery floor and the force column
 as made: modulus about 1 MPa) but tests whether a dipole-pair side chain on a stiffer

@@ -165,7 +165,8 @@ stiffness flag of the previous section is read against the QE cell from here on.
   is the known one (TrFE stabilises the all-trans phase of the copolymer); the magnitude, 0.2
   kcal/mol per monomer at 30% TrFE, is what E2's VDF/TrFE row tests. The cells are large (20
   and 40 backbone bonds per chain) and their packing searches are the least converged of the set.
-- **E2, the defect units.** The CFE, CTFE, CDFE, FA and DB cells in a beta host are not
-  predicted here: the potential's chlorine and the other defect parameters are unvalidated,
+- **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
+  is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
+  2026-11-05; the earlier CF3 reading of FA is withdrawn) are not predicted here: the potential's chlorine and the other defect parameters are unvalidated,
   and their validation is one of the things E2 is for. They will be added to this file, as
   predictions, before Dipole's corresponding records are read.

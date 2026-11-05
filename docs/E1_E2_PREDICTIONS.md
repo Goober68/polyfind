@@ -165,8 +165,9 @@ stiffness flag of the previous section is read against the QE cell from here on.
   is the known one (TrFE stabilises the all-trans phase of the copolymer); the magnitude, 0.2
   kcal/mol per monomer at 30% TrFE, is what E2's VDF/TrFE row tests. The cells are large (20
   and 40 backbone bonds per chain) and their packing searches are the least converged of the set.
-- **E2, the defect units.** The CFE, CTFE, CDFE, FA and DB cells in a beta host are not
-  predicted here: the potential's chlorine and the other defect parameters are unvalidated,
+- **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
+  is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
+  2026-11-05; the earlier CF3 reading of FA is withdrawn) are not predicted here: the potential's chlorine and the other defect parameters are unvalidated,
   and their validation is one of the things E2 is for. They will be added to this file, as
   predictions, before Dipole's corresponding records are read.
 
@@ -192,7 +193,7 @@ Potential: pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted 
 | beta-PVDF (TTTT) | 2.1970, 2.1330, 2.5145 | 2.1970, 2.8311, 2.5145 | 0.2325, 0.0367, 0.0967 | 10.27, 0.27 | -0.1400, 6.38e-17, -4.57e-17 |
 | PE (control) | 2.8782, 2.8613, 2.9821 | 2.8782, 2.8613, 2.9821 | 3.48e-14, 1.89e-14, 3.58e-14 | -1.35e-13, -2.00e-13 | -9.58e-17, -1.33e-16, -6.52e-18 |
 | alpha-PVDF (TGTG') | 2.0749, 2.1084, 2.3804 | 2.0749, 2.2521, 2.3804 | -0.1370, -0.0079, -0.0776 | -9.21, 3.15 | 0.0726, -2.04e-17, -1.52e-17 |
-| VDF/TrFE 70/30 model (TTTT) | 2.0430, 2.0078, 2.3794 | 2.0696, 2.3709, 2.3794 | -0.1637, -0.0436, -0.0188 | -, - | 0.0999, 0.0435, -5.83e-08 |
+| VDF/TrFE 70/30 model (TTTT) | 2.0430, 2.0078, 2.3794 | 2.0696, 2.3709, 2.3794 | -0.1637, -0.0436, -0.0188 | -10.23, 0.34 | 0.0999, 0.0435, -5.83e-08 |
 
 ### E1, the true relaxed-ion dielectric tensor against normal strain (central differences at +/-1%)
 
@@ -220,7 +221,9 @@ Potential: pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifted 
 | alpha-PVDF (TGTG') | x (polar) | -0.00015, 0.00007 | -0.00015, 0.00007 | [1.21456346 0.         0.        ] | -1.32, 0.58 |
 |  | y (lateral) | 0.00145, -0.00134 | 0.00145, -0.00134 | [0.         1.36612442 0.        ] | 9.89, -9.14 |
 |  | z (chain) | -1.74e-06, 3.40e-06 | -1.74e-06, 3.36e-06 | [0.         0.         1.38036377] | -0.01, 0.02 |
-| VDF/TrFE 70/30 model (TTTT) | - | not computed on this cell (cost) | | | |
+| VDF/TrFE 70/30 model (TTTT) | x (polar) | 0.00046, -2.56e-06 | 0.00046, -2.01e-06 | [1.3824645 0.        0.       ] | 3.06, -0.02 |
+|  | y (lateral) | 0.00037, 0.00025 | 0.00037, 0.00025 | [0.         1.40396684 0.        ] | 2.41, 1.62 |
+|  | z (chain) | -7.34e-06, -3.21e-06 | -7.33e-06, -3.21e-06 | [0.         0.         1.37938252] | -0.05, -0.02 |
 
 ## E2 predictions
 
