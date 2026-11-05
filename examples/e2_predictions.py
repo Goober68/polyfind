@@ -32,8 +32,8 @@ def build(polymer, seq, label):
     from polyfind.polarizability import Polarizable
     kw = {"pack_kw": {"table_cache_dir": None}, "lj_cutoff": "force", "coulomb": "ewald", "ewald": EwaldSpec(),
           "polarizable": Polarizable()}
-    ref, _ = M.refined_reference(polymer, seq, label=label, **kw)
-    return M.relax_reference(ref)
+    ref, rr = M.refined_reference(polymer, seq, label=label, **kw)
+    return M.relax_reference(ref), rr
 
 
 def monomers_in_cell(polymer, seq, ref):
@@ -63,7 +63,9 @@ def main():
     from polyfind.fitting import PRESET_PARAMETERS
     params = PRESET_PARAMETERS[args.preset]
     results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
-               "frame": "x polar, y lateral, z chain", "systems": {}}
+               "frame": "x polar, y lateral, z chain",
+               "energy": "lattice energy plus the refined backbone angles' strain, per vinyl monomer (the strain was omitted before 2026-11-05)",
+               "systems": {}}
     with params.applied():
         for key in args.systems.split(","):
             label, polymer, confs = SYSTEMS[key]
@@ -71,12 +73,19 @@ def main():
             for conf, seq in confs.items():
                 t0 = time.time()
                 try:
-                    ref = build(polymer, seq, f"{label} {conf}")
+                    ref, rr = build(polymer, seq, f"{label} {conf}")
                     st = ES._state(ref, np.zeros(6), None, None, ES.TIGHT)
                     n_mon, n_chains = monomers_in_cell(polymer, seq, ref)
                     p = np.asarray(ref.polarization(), dtype=float)
+                    # The refinement's bond-angle strain is not part of the lattice energy
+                    # (RefineResult.angle_energy, per chain repeat unit); a DFT total energy carries
+                    # it, so the energy compared with DFT must too.  Before 2026-11-05 this file
+                    # omitted it, which favoured the gauche conformers by their larger strain.
+                    bend_cell = float(rr.angle_energy) * n_chains * float(getattr(ref.packer.chain, "n_monomers", len(seq) / 2.0))
                     rows[conf] = {"sequence": seq, "n_chains": n_chains, "monomers_per_cell": n_mon,
-                                  "energy_per_monomer_kcal": float(st.energy) / n_mon,
+                                  "energy_per_monomer_kcal": (float(st.energy) + bend_cell) / n_mon,
+                                  "lattice_energy_per_monomer_kcal": float(st.energy) / n_mon,
+                                  "bend_energy_per_monomer_kcal": bend_cell / n_mon,
                                   "P_C_m2": p.tolist(), "c_per_monomer_A": float(ref.c) * n_chains / n_mon,
                                   "cell": {"a": float(ref.params[0]), "b": float(ref.params[1]), "gamma_deg": float(ref.params[2]),
                                            "c": float(ref.c), "volume_A3": float(ref.volume)},

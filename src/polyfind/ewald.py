@@ -96,10 +96,19 @@ class EwaldSpec:
     alpha: float | None = None
     rc: float | None = None
     kmax: float | None = None
+    # Charge penetration: the permanent charges interact as ``1/r - (1 + b r / 2) exp(-b r) / r``
+    # (a point charge against a Slater-type density of exponent ``b``, 1/A) instead of ``1/r``,
+    # so two charges that overlap at 2.5-3 A attract less than point charges do.  ``None`` is
+    # point charges.  Applied to the charge-charge term of the real-space sum (it is short
+    # ranged) and to the bonded-exclusion correction, so excluded pairs stay excluded; the
+    # charge-dipole and dipole-dipole terms are left as they are (Thole damps the latter).
+    charge_damping: float | None = None
 
     def __post_init__(self) -> None:
         if self.boundary not in BOUNDARIES:
             raise ValueError(f"unknown Ewald boundary {self.boundary!r} (expected one of {BOUNDARIES})")
+        if self.charge_damping is not None and not float(self.charge_damping) > 0.0:
+            raise ValueError(f"Ewald charge_damping must be positive (1/A), got {self.charge_damping!r}")
         if not 0.0 < float(self.accuracy) < 1.0:
             raise ValueError(f"Ewald accuracy must be in (0, 1), got {self.accuracy!r}")
         for name in ("alpha", "rc", "kmax"):
@@ -111,7 +120,8 @@ class EwaldSpec:
         return (f"ewald[{self.boundary}, acc={self.accuracy:g}"
                 + (f", alpha={self.alpha:g}" if self.alpha is not None else "")
                 + (f", rc={self.rc:g}" if self.rc is not None else "")
-                + (f", kmax={self.kmax:g}" if self.kmax is not None else "") + "]")
+                + (f", kmax={self.kmax:g}" if self.kmax is not None else "")
+                + (f", damping={self.charge_damping:g}" if self.charge_damping is not None else "") + "]")
 
 
 THOLE_FORMS = ("exp", "cubic")
@@ -235,6 +245,7 @@ class Ewald:
         self.kmax = float(2.0 * self.alpha * self.p if spec.kmax is None else spec.kmax)
         self.eps_r = float(eps_r)
         self.pref = float(coulomb) / self.eps_r
+        self.charge_damping = None if spec.charge_damping is None else float(spec.charge_damping)
         self.chunk_elems = int(chunk_elems)
         self._real_grid: dict = {}
         self._recip_grid: dict = {}
@@ -378,6 +389,22 @@ class Ewald:
                 gX += scatter_vec(ii, W)
                 A1 += mk.T @ W
                 A2 += nk.T @ W
+            if self.charge_damping is not None:
+                # charge penetration: -q_i q_j g(r), g = (1 + b r/2) exp(-b r) / r, on the same list
+                # (the bonded exclusions take their share back out in exclusion_correction)
+                bq = self.charge_damping
+                ebr = np.exp(-bq * rk)
+                gd = (1.0 + 0.5 * bq * rk) * ebr / rk
+                e_real -= 0.5 * self.pref * float(qqk @ gd)
+                if charge_grad:
+                    gq_real -= self.pref * scatter(ii, gd * q[jj])
+                if grad:
+                    # g'(r) = -exp(-b r) [ (b/2 + b^2 r/2) / r + (1 + b r/2) / r^2 ]
+                    gdp = -ebr * ((0.5 * bq + 0.5 * bq * bq * rk) / rk + (1.0 + 0.5 * bq * rk) / r2k)
+                    Wd = (-self.pref * qqk * gdp / rk)[:, None] * Dk  # the term's f' is -g'
+                    gX += scatter_vec(ii, Wd)
+                    A1 += mk.T @ Wd
+                    A2 += nk.T @ Wd
             if want_dip:
                 gk = _TWO_OVER_SQRT_PI * self.alpha * np.exp(-ark * ark)
                 B1 = (fk + gk) / r2k
@@ -542,7 +569,7 @@ class Ewald:
 
 # --------------------------------------------------------------- bonded exclusions
 def exclusion_correction(coords, charges, c: float, scales, pref: float = COULOMB,
-                         grad: bool = False, charge_grad: bool = False):
+                         grad: bool = False, charge_grad: bool = False, charge_damping: float | None = None):
     r"""The full ``1/r`` an Ewald sum puts in that the bonded exclusions must take out.
 
     An Ewald sum evaluates every pair at full weight.  This package's potential does not:
@@ -580,16 +607,25 @@ def exclusion_correction(coords, charges, c: float, scales, pref: float = COULOM
     live = (np.abs(1.0 - Sk) > 0.0) & (r2 > 1e-12)
     r2s = np.where(live, r2, 1.0)
     r = np.sqrt(r2s)
-    e = -0.5 * pref * float(np.where(live, u / r, 0.0).sum())
+    # h(r) is the interaction the Ewald sum put in for the pair: 1/r for point charges, and with
+    # charge penetration (EwaldSpec.charge_damping) 1/r - (1 + b r/2) exp(-b r)/r
+    h = 1.0 / r
+    hp_over_r = -1.0 / (r2s * r)  # h'(r) / r
+    if charge_damping is not None:
+        bq = float(charge_damping)
+        ebr = np.exp(-bq * r)
+        h = h - (1.0 + 0.5 * bq * r) * ebr / r
+        hp_over_r = hp_over_r + ebr * ((0.5 * bq + 0.5 * bq * bq * r) / r + (1.0 + 0.5 * bq * r) / r2s) / r
+    e = -0.5 * pref * float(np.where(live, u * h, 0.0).sum())
     gX = gc = gq = None
     if grad:
-        # phi(d) = -pref u / |d|;  dphi/dd = pref u d / r^3
-        t = np.where(live, pref * u / (r2s * r), 0.0)
+        # phi(d) = -pref u h(|d|);  dphi/dd = -pref u h'(r) d / r
+        t = np.where(live, -pref * u * hp_over_r, 0.0)
         fx, fy, fz = t * D[None, :, :, 0], t * D[None, :, :, 1], t * dz
         gX = 0.5 * np.stack([f.sum(axis=(0, 2)) - f.sum(axis=(0, 1)) for f in (fx, fy, fz)], axis=1)
         gc = -0.5 * float((fz * ks[:, None, None]).sum())
     if charge_grad:
-        w = np.where(live, (1.0 - Sk) / r, 0.0)
+        w = np.where(live, (1.0 - Sk) * h, 0.0)
         gq = -pref * (w.sum(axis=0) @ q)
     return e, gX, gc, gq
 

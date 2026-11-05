@@ -1236,7 +1236,8 @@ class CrystalPacker:
     def _exclusion(self, coords, q_repeat, c, K: int, grad: bool = False, charge_grad: bool = False):
         """:func:`polyfind.ewald.exclusion_correction` for ONE chain of this packer."""
         return exclusion_correction(coords, q_repeat, c, self._scale_column_np(K),
-                                    pref=COULOMB / self.eps_r, grad=grad, charge_grad=charge_grad)
+                                    pref=COULOMB / self.eps_r, grad=grad, charge_grad=charge_grad,
+                                    charge_damping=self._ewald.charge_damping)
 
     def _ewald_rows(self, P, lat, q_rows=None, flips=None) -> np.ndarray:
         """The Ewald energy of every row of a placed chunk, in kcal/mol per cell.

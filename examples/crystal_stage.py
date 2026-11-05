@@ -13,7 +13,7 @@ def main():
     ap.add_argument("--maxfev", type=int, default=240)
     ap.add_argument("--out", default="docs/predictions/crystal_stage_v1.json")
     ap.add_argument("--coulomb", default="ewald", choices=("ewald", "dsf"))
-    ap.add_argument("--stage", type=int, default=1, choices=(1, 2), help="2: induced dipoles, force-shifted LJ, H-F pair term, stiffness anchors")
+    ap.add_argument("--stage", type=int, default=1, choices=(1, 2, 3), help="2: induced dipoles, force-shifted LJ, H-F pair term, stiffness anchors; 3: plus charge penetration")
     ap.add_argument("--x0", default=None, help="JSON result file to resume from (its best x)")
     args = ap.parse_args()
     x0 = None

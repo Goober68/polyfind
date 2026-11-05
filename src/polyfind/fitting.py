@@ -121,6 +121,7 @@ class FFParameters:
     charge_scale: float = 1.0
     lj: tuple[tuple[str, float, float], ...] = ()  # (element, x_i, D_i) overrides; hashable
     lj_pairs: tuple[tuple[str, str, float, float], ...] = ()  # (elem_a, elem_b, x_ij, D_ij): pair overrides of the mixing
+    charge_damping: float = 0.0  # charge penetration in the lattice sum (EwaldSpec.charge_damping, 1/A); 0 = point charges
     scale14: float = 0.5
     charge_increments: tuple[tuple[str, str, float], ...] = ()  # bond-charge increments
     # Valence terms and off-site charges (docs/VALENCE_FIT.md).  Empty means "none", which
@@ -169,6 +170,8 @@ class FFParameters:
     def describe(self) -> str:
         lj = ", ".join(f"{e} x_i={x:.3f}" for e, x, _ in self.lj) or "UFF unchanged"
         lj += "".join(f"; {a}-{b} x_ij={x:.3f} D_ij={d:.4f}" for a, b, x, d in self.lj_pairs)
+        if self.charge_damping:
+            lj += f"; charge penetration b={self.charge_damping:.3f}/A"
         q = ("; ".join(f"d{a}{b}={d:+.3f}" for a, b, d in self.charge_increments)
              or "polymer charges")
         val = (f" [{len(self.bond_terms)} stretch, {len(self.angle_terms)} bend types]"
@@ -234,7 +237,7 @@ class FFParameters:
         from .forcefield import bci_charges, infer_bonds
 
         ff = self.simple_ff()
-        q_scale, torsion, eps_r = self.charge_scale, tuple(self.torsion), self.eps_r
+        q_scale, torsion, eps_r, damping = self.charge_scale, tuple(self.torsion), self.eps_r, float(self.charge_damping)
         increments = ff.increments()
         offsets = ff.offset_table()
 
@@ -257,6 +260,9 @@ class FFParameters:
                     chain = replace(chain, charges=np.asarray(chain.charges, dtype=float) * q_scale)
                 kw["eps_r"] = eps_r
                 kw["torsion"] = torsion
+                if damping > 0.0 and kw.get("coulomb", "dsf") == "ewald":
+                    from .ewald import EwaldSpec
+                    kw["ewald"] = replace(kw.get("ewald") or EwaldSpec(), charge_damping=damping)
                 super().__init__(chain, **kw)
 
         old_lj, old_packer_pack, old_packer_refine = pack_mod.lj_params, pack_mod.CrystalPacker, refine_mod.CrystalPacker
@@ -2592,17 +2598,20 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
     shift = {("C", "H"): x[6], ("C", "F"): x[7]}
     incr = tuple((a, b, d + shift.get((a, b), 0.0)) for a, b, d in base.charge_increments)
     out = replace(base, lj=lj, charge_increments=incr)
-    if len(x) == 10:
+    if len(x) >= 10:
         table = {e: (xi, di) for e, xi, di in lj}
         x_hf = x[8] * np.sqrt(table["H"][0] * table["F"][0])
         d_hf = x[9] * np.sqrt(table["H"][1] * table["F"][1])
         out = replace(out, lj_pairs=(("F", "H", float(x_hf), float(d_hf)),))
-    elif len(x) != 8:
-        raise ValueError(f"expected 8 or 10 crystal-stage variables, got {len(x)}")
+    if len(x) == 11:  # stage 3: charge penetration in the lattice sum, b in 1/A
+        out = replace(out, charge_damping=float(x[10]))
+    elif len(x) not in (8, 10):
+        raise ValueError(f"expected 8, 10 or 11 crystal-stage variables, got {len(x)}")
     return out
 
 
 CRYSTAL_STAGE2_VARIABLES = CRYSTAL_STAGE_VARIABLES + ("x_HF", "D_HF")
+CRYSTAL_STAGE3_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("b_q",)
 
 
 FITTED_VALENCE_CRYSTAL = crystal_stage_parameters(CRYSTAL_FITTED_X)

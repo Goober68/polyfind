@@ -58,6 +58,13 @@ X0_2 = np.concatenate([X0, [1.0, 1.0]])
 BOUNDS2 = np.vstack([BOUNDS, [(0.85, 1.15), (0.3, 3.0)]])
 SIGMA2 = np.concatenate([SIGMA, [0.05, 0.5]])
 STAGE2 = {"polarizable": True, "lj_cutoff": "force", "stiffness": True}
+# Stage 3 (docs/CRYSTAL_STAGE.md section 5.2): stage 2 plus charge penetration, the permanent
+# charges interacting as 1/r - (1 + b r/2) exp(-b r)/r in the lattice sum (EwaldSpec.charge_damping,
+# b in 1/A).  b = 4 is point charges to 3e-4 at 2.5 A; the fit may bring it down to 1.
+VARIABLES3 = VARIABLES2 + ("b_q",)
+X0_3 = np.concatenate([X0_2, [4.0]])
+BOUNDS3 = np.vstack([BOUNDS2, [(1.0, 6.0)]])
+SIGMA3 = np.concatenate([SIGMA2, [2.0]])  # a weak pull towards point charges
 
 
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
@@ -74,15 +81,19 @@ def _config(x):
         return VARIABLES, X0, BOUNDS, SIGMA
     if n == 10:
         return VARIABLES2, X0_2, BOUNDS2, SIGMA2
-    raise ValueError(f"expected 8 or 10 variables, got {n}")
+    if n == 11:
+        return VARIABLES3, X0_3, BOUNDS3, SIGMA3
+    raise ValueError(f"expected 8, 10 or 11 variables, got {n}")
 
 
 def ridge(x) -> float:
     x = np.asarray(x, dtype=float)
     _, _, _, sigma = _config(x)
     parts = [(x[:3] - 1.0) / sigma[:3], np.log(x[3:6]) / sigma[3:6], x[6:8] / sigma[6:8]]
-    if len(x) == 10:  # the pair term: a diameter multiplier and a well-depth multiplier
+    if len(x) >= 10:  # the pair term: a diameter multiplier and a well-depth multiplier
         parts += [(x[8:9] - 1.0) / sigma[8:9], np.log(x[9:10]) / sigma[9:10]]
+    if len(x) == 11:  # charge penetration, measured from the point-charge start
+        parts += [(x[10:11] - X0_3[10]) / sigma[10:11]]
     d = np.concatenate(parts)
     return RIDGE * float(np.sum(d * d))
 
@@ -183,9 +194,9 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
     logged.  ``stage=2`` uses :data:`X0_2`, :data:`BOUNDS2` and the :data:`STAGE2` evaluation
     settings unless ``eval_kw`` overrides them; ``x0`` resumes from an earlier best."""
     from scipy.optimize import minimize
-    if stage == 2:
+    if stage in (2, 3):
         eval_kw = {**STAGE2, **eval_kw}
-    start = (X0_2 if stage == 2 else X0) if x0 is None else np.asarray(x0, dtype=float)
+    start = ({1: X0, 2: X0_2, 3: X0_3}[stage]) if x0 is None else np.asarray(x0, dtype=float)
     _, _, bounds, _ = _config(start)
     history: list[Evaluation] = []
 
@@ -213,7 +224,8 @@ def save(ev: Evaluation, path: str) -> None:
     prm = parameters(ev.x)
     out = {"variables": list(variables), "x": ev.x.tolist(), "objective": ev.objective, "ridge": ev.ridge,
            "residuals": {k: {"polyfind": v[0], "dft": v[1], "z": v[2]} for k, v in ev.residuals.items()},
-           "parameters": {"lj": prm.lj, "lj_pairs": prm.lj_pairs, "charge_increments": prm.charge_increments},
+           "parameters": {"lj": prm.lj, "lj_pairs": prm.lj_pairs, "charge_increments": prm.charge_increments,
+                          "charge_damping": prm.charge_damping},
            "anchors": DFT_ANCHORS, "tolerances": TOL}
     with open(path, "w") as fh:
         json.dump(out, fh, indent=1)

@@ -209,7 +209,121 @@ fit costs about as much as stage 1 did.
 
 ### 5.1 Result
 
-RESULTS2-TODO
+321 evaluations, 40 minutes on the 4-core box (7 s each once the tables are built), objective
+112.99 -> 65.05 of which 4.87 is the ridge. Induced dipoles, Ewald, force-shifted Lennard-Jones
+throughout, so the start column is the pre-registered E1 construction:
+
+| quantity | DFT | start (`pvdf-dft-valence`) | stage 2 | z before -> after |
+|---|---|---|---|---|
+| beta a (polar), A | 4.757 | 4.517 (-5.0%) | 4.572 (-3.9%) | -5.04 -> -3.89 |
+| beta b (lateral), A | 8.528 | 8.521 (-0.1%) | 8.656 (+1.5%) | -0.09 -> +1.50 |
+| beta c (chain), A | 2.581 | 2.602 (+0.8%) | 2.610 (+1.1%) | +0.81 -> +1.12 |
+| alpha a, A | 4.945 | 4.970 (+0.5%) | 5.031 (+1.7%) | +0.50 -> +1.73 |
+| alpha b, A | 9.636 | 9.069 (-5.9%) | 9.339 (-3.1%) | -5.88 -> -3.09 |
+| alpha c, A | 4.660 | 4.706 (+1.0%) | 4.742 (+1.8%) | +0.98 -> +1.77 |
+| beta polarization, C/m^2 | 0.18 | 0.140 | 0.189 | -4.00 -> +0.93 |
+| E(alpha) - E(beta), kcal/mol per monomer | -0.726 | -0.854 | -0.758 | -2.55 -> -0.64 |
+| E(antipolar) - E(polar) beta, rigid | -0.026 | 0.000 | 0.000 | +0.52 -> +0.52 |
+| beta C_11 (polar), GPa | 22.77 | 22.53 | 27.30 | -0.10 -> +1.99 |
+| beta C_22 (lateral), GPa | 24.52 | 18.52 | 21.03 | -2.45 -> -1.42 |
+| beta C_12, GPa | 5.88 | 3.10 | 3.36 | -4.72 -> -4.28 |
+
+The variables: diameters x_C 1.001, x_H 1.019, x_F 1.011; well depths D_C 0.62, D_H 1.20, D_F
+0.94; increments C-H -0.119 -> -0.173 e, C-F +0.114 -> +0.157 e; the H-F pair diameter x 1.037
+and depth x 0.937 on their geometric means. The margin and the polarization are inside their
+tolerances in the setting that matters, which stage 1 could not say. The polar axis moves as far
+as stage 1 moved it (-3.9% here, -3.7% there) and no further, the lateral axis drifts out by the
+same 1.5%, the polar stiffness overshoots once the charges are right, and C_12 stays at 57% of
+DFT. The pair term, free to move the H-F diameter by 15%, moved it 3.7%: it is not where the
+remaining error is.
+
+### 5.2 Where the error is: a scan along the polar axis
+
+The energy of the beta cell against `a` at the DFT `b` and `c`, internal coordinates relaxed,
+split into its Lennard-Jones part (the same geometry on a charge-free twin) and the rest, which
+is the electrostatics with the induced dipoles (kcal/mol per two-monomer cell, slopes at the DFT
+`a = 4.757` A, positive meaning the term wants the axis shorter):
+
+| preset | dE/da total | Lennard-Jones | electrostatic |
+|---|---|---|---|
+| `pvdf-dft-valence` | +1.99 | +0.65 | +1.34 |
+| stage 2 | +1.93 | -0.74 | +2.67 |
+
+On both potentials the electrostatics pulls the polar axis in by 1.3-2.7 kcal/mol per A at the
+DFT spacing, and the fits respond the only way their variables allow, by inflating the
+repulsion: the stage-2 Lennard-Jones term pushes outward at the DFT spacing, and still loses.
+The electrostatic attraction is between the H of one chain's CH2 and the F of the facing CF2
+across 2.5-3 A, where point charges are known to overbind: real charge distributions overlap
+there and the interaction falls below 1/r (charge penetration). DFT has that screening; the
+model has none, for the permanent charges (the induced dipoles already carry Thole damping).
+Bigger diameters cannot supply it without opening every other contact, which is exactly the
+lateral drift of both stages. The next change to the form is therefore a short-range damping
+of the permanent-charge interaction, Gaussian-smeared charges in the Ewald real space
+(`erf(beta r)/r` in place of `1/r`, one width to fit), not another Lennard-Jones variable.
+
+### 5.3 The stage-2 preset as a prediction set
+
+`examples/e1_predictions.py --preset pvdf-dft-valence-crystal2` (`docs/predictions/e1_polyfind_crystal2.json`,
+the copolymer in 290 s with four workers; the E2 file beside it). Against the pre-registered set:
+
+| quantity | DFT | `pvdf-dft-valence` | stage 2 |
+|---|---|---|---|
+| beta a, b, c, A | 4.757, 8.528, 2.581 | 4.520, 8.521, 2.600 | 4.576, 8.657, 2.606 |
+| beta polarization, C/m^2 | 0.18 | 0.140 | 0.189 |
+| beta eps_0 relaxed-ion (x, y, z) | - | 2.197, 2.831, 2.515 | 2.145, 3.253, 2.469 |
+| beta C_11, C_22, C_12, C_66, GPa | 22.8, 24.5, 5.9, - | 22.6, 18.5, 3.1, 4.3 | 27.4, 21.1, 3.3, 4.7 |
+| beta intrinsic Q_x1, m^4/C^2 | - | +1.59 | +3.45 |
+| alpha (polar TGTG') a, b, c, A | - | 4.977, 9.038, 4.710 | 5.043, 9.276, 4.750 |
+| alpha polarization, C/m^2 | - | 0.073 | 0.095 |
+| copolymer a, b, c per 10 monomers, A | - | 4.793, 8.852, 25.99 | 4.794, 8.963, 26.04 |
+| copolymer polarization, C/m^2 | - | 0.109 | 0.151 |
+| copolymer C_11, C_22, C_66, GPa | - | 16.5, 17.0, 1.7 | 19.8, 18.7, 2.4 |
+| copolymer intrinsic Q_x1, m^4/C^2 | - | +3.06 | +3.94 |
+| PE (control) a, b, gamma, A, deg | - | 4.061, 7.088, 90.0 | 4.326, 6.865, 87.8 |
+| PE C_11, C_22, C_66, GPa | - | 23.3, 25.0, 2.4 | 15.9, 14.6, 10.3 |
+
+The fit path and the E1 path agree on the fitted beta cell to 0.004 A, as they should now that
+they share one construction. PE, which is not an anchor, is the warning in this table: its cell
+goes monoclinic and its stiffness halves, so the hydrogen and carbon terms the PVDF anchors
+pulled on are not transferable to a chain without fluorine. A PE anchor (Dipole's PE control is
+in the E1 request) belongs in the next objective.
+
+**The chain geometry itself.** Dipole's reference gives the beta chain C-F 1.386 A, C-H 1.096,
+C-C 1.533, F-C-F 105.1 deg, H-C-H 107.6 and a backbone angle of 114.6; polyfind builds its rigid
+chain at the textbook C-F 1.350, C-H 1.090, C-C 1.528, 106.0, 108.0 and 114.0, and the lattice
+then opens the backbone angle to 116.6 (c +0.7%). Rebuilding the chain at the PBE-D3 geometry
+on the valence preset moves beta's polar axis from -5.0% to -4.4% and the lateral and chain
+axes to +0.5% and +1.3%, with P and the stiffness unchanged: a real but minor part of the polar
+deficit, worth adopting as the consistent choice against PBE-D3 anchors, not the cause.
+
+### 5.4 E2, and a correction to the pre-registered margins
+
+Comparing the E2 margins of the stage-2 preset with the fit's own alpha-beta margin exposed a
+bookkeeping error in `examples/e2_predictions.py`: it reported the lattice energy of each
+relaxed conformer cell and left out the strain energy of the refined backbone angles
+(`RefineResult.angle_energy`, which the refinement keeps outside the lattice energy by
+design). A DFT total energy carries that strain, so the margins compared with DFT must too.
+The omission is 0.21 kcal/mol per monomer for beta (whose backbone angle the lattice opens to
+116.6 deg) and 0.66 for the refined TGTG' cell, so it favoured the gauche conformers by about
+0.45 kcal/mol per monomer: the pre-registered PVDF margin of TTTT over TGTG', +1.30, is +0.85
+with the strain included, which is what the fit path (`fitting.predict`) had been reporting
+all along (its -0.854 for E(alpha) - E(beta) in section 5.1's start column). The script now
+adds the strain and records both parts; the three E2 files (`e2_polyfind.json`, the stage-1
+and stage-2 files) are being regenerated, the pre-registered values are kept in
+`docs/predictions/e1_e2_notes.md`, and the correction goes to Dipole with the numbers.
+
+### 5.5 Charge penetration: implemented, probed, in the fit
+
+The permanent charges can now interact as ``1/r - (1 + b r/2) exp(-b r)/r`` in the lattice
+sum (`EwaldSpec(charge_damping=b)`, b in 1/A; `FFParameters.charge_damping` carries it
+through `applied()`; the bonded-exclusion correction removes the damped interaction, so
+excluded pairs stay excluded; `tests/test_charge_damping.py` checks the off case bit for bit,
+the on case against a direct sum, and the gradients against finite differences). Probed on
+the valence preset at b = 1.5, 2.0, 3.0 /A: beta's polar axis -5.0% -> -4.3%, -4.7%, -5.0%, the
+lateral axis +0.7%, +0.3%, 0.0%, the stiffness down (C_11 19.6, 21.1, 22.3 GPa), the margin
+-0.78, -0.81, -0.85. Alone it is not the lever either: it weakens every contact, not the polar
+one in particular. Stage 3 (`crystalfit.fit(stage=3)`, eleven variables, running as this is
+written) lets the fit weigh it against the other ten; its result goes to section 5.6.
 
 ## 6. What it costs, and what it does not touch
 
