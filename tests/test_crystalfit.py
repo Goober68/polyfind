@@ -96,3 +96,17 @@ def test_predict_with_induced_dipoles_runs_on_beta():
                      polarizable=Polarizable(), lj_cutoff="force", refine=False, n_refine=1)
     assert 4.0 < pred.a < 5.5 and 0.05 < pred.polarization < 0.4
     assert pred.rigid.polarization_magnitude == pred.polarization
+
+
+def test_registered_stage2_preset_matches_the_saved_fit():
+    with open("docs/predictions/crystal_stage_v2.json") as fh:
+        saved = json.load(fh)
+    assert saved["variables"] == list(C.VARIABLES2) == list(F.CRYSTAL_STAGE2_VARIABLES)
+    np.testing.assert_allclose(F.CRYSTAL2_FITTED_X, saved["x"], rtol=0, atol=1e-12)
+    p = F.FITTED_VALENCE_CRYSTAL2
+    assert [list(t) for t in p.lj] == [list(t) for t in saved["parameters"]["lj"]]
+    assert [list(t) for t in p.lj_pairs] == [list(t) for t in saved["parameters"]["lj_pairs"]]
+    assert [list(t) for t in p.charge_increments] == [list(t) for t in saved["parameters"]["charge_increments"]]
+    assert "pvdf-dft-valence-crystal2" in PRESETS and F.PRESET_PARAMETERS["pvdf-dft-valence-crystal2"] is p
+    ff = SimpleFF.from_preset("pvdf-dft-valence-crystal2")
+    assert ff.lj_pair_table() == {("F", "H"): tuple(saved["parameters"]["lj_pairs"][0][2:])}

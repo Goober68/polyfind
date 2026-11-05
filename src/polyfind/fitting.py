@@ -2607,3 +2607,14 @@ CRYSTAL_STAGE2_VARIABLES = CRYSTAL_STAGE_VARIABLES + ("x_HF", "D_HF")
 
 FITTED_VALENCE_CRYSTAL = crystal_stage_parameters(CRYSTAL_FITTED_X)
 register_preset("pvdf-dft-valence-crystal", FITTED_VALENCE_CRYSTAL)
+
+# Stage 2 of the crystal stage (docs/CRYSTAL_STAGE.md section 5): the same eight variables plus a
+# pair-specific H-F Lennard-Jones term, fitted in the induced-dipole, force-shifted setting the
+# E1/E2 predictions use, with beta's relaxed-ion C_11, C_22, C_12 from Dipole's six strained cells
+# as anchors (docs/predictions/crystal_stage_v2.json: objective 113.0 -> 65.1, ridge 4.9).  In that
+# setting it brings P to 0.189 C/m^2 (0.18), the alpha-beta margin to -0.758 (-0.726), alpha's long
+# axis to -3.1% and beta's polar axis from -5.0% to -3.9%, with the lateral axis +1.5%, C_11 27.3
+# (22.8), C_22 21.0 (24.5) and C_12 3.4 (5.9) GPa.  Opt-in, like the others.
+CRYSTAL2_FITTED_X = np.array([1.0008638997932235, 1.018846232405703, 1.0110098148821827, 0.6174749796517582, 1.2032495377181727, 0.9447945819365001, -0.0537390939952406, 0.043760706026035046, 1.0365814193797118, 0.9367930113696455])
+FITTED_VALENCE_CRYSTAL2 = crystal_stage_parameters(CRYSTAL2_FITTED_X)
+register_preset("pvdf-dft-valence-crystal2", FITTED_VALENCE_CRYSTAL2)
