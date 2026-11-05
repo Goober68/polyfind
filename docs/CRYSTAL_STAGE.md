@@ -164,8 +164,10 @@ construction): PVDF's ground conformation is still TGTG' and the margins open, T
 +1.63 and T3GT3G' +0.73 -> +1.04 kcal/mol per monomer against DFT's +0.726 for the alpha-beta
 pair -- the fixed-charge fit reproduces that margin to 0.02 and the induced dipoles, on the
 larger charges, add 0.9 kcal/mol of polar-lattice stabilisation that the fit never saw. The
-E2 row that matters most for the plan, the copolymer's TTTT-against-TGTG' margin, is in the
-same file (its rows are written as they finish).
+copolymer's margins open the same way, TTTT +1.09 -> +1.33 and T3GT3G' +0.56 -> +0.86 kcal/mol
+per monomer over TGTG' (conformational strain of the switch +9.9%, unchanged), so on this
+preset the all-trans phase is a quarter further from the ground state than the pre-registered
+set says, in both polymers.
 
 
 ## 5. What it costs, and what it does not touch
