@@ -89,6 +89,39 @@ The periodic reference already holds three beta-PVDF numbers that E1 asks for, f
    dipoles were fitted with beta's `eps_inf` in view, so this is a consistency check rather
    than an independent test; PE and the alpha cell are the independent ones.
 
+## Dipole's first E1 record (2026-11-04 evening), and what it already tests
+
+Dipole picked the ask up the same afternoon on the sarco branch `polyfind-electrostriction-reference`
+and, rather than reuse the 2026-09 periodic reference, re-relaxed polyfind's own polar beta cell
+(the polar-margin work's `pvdf_polar_pbe_d3bj.xyz`) with QE 7.6, PBE-D3(BJ), SSSP precision, 90/360
+Ry, an 8x4x16 mesh **in polyfind's axis order** (x polar, y lateral, z chain), cell and ions free, to
+forces of 1.1e-5 Ry/bohr and stresses of 0.05 kbar. Its records therefore need no axis swap; the
+cross-check reads a `frame: polyfind` flag. Six +/-1% strained cells (ions free, cell fixed) are
+declared from that accepted cell and three are running; the alpha (TGTG') cell is relaxing; DFPT with
+the D3 Hessian and ionic-mode reduction, and branch-tracked Berry polarization, are the declared next
+stages. Dipole marks the cell `quantitatively_valid: false` in its own scope (one local equilibrium,
+phase identity and response not yet established).
+
+The one quantity it already fixes is the stress-free cell, and the comparison is clean because both
+sides start from the same geometry and the same Hamiltonian family:
+
+| axis | polyfind (fitted potential) | Dipole QE 7.6 | polyfind / Dipole |
+|---|---|---|---|
+| a, polar (A) | 4.520 | 4.757 | -5.0% |
+| b, lateral (A) | 8.521 | 8.528 | -0.1% |
+| c, chain (A) | 2.600 | 2.581 | +0.7% |
+| volume (A^3) | 100.1 | 104.7 | -4.4% |
+
+polyfind's lateral axis matches QE to 0.1% and its chain axis is the rigid chain's own; the whole
+4.4% volume deficit sits on the polar axis, where the fitted potential packs the chains 5% too
+close along the dipoles. Two consequences for the quantities to come: polyfind's polar-axis
+stiffness and permittivity are evaluated at a smaller spacing than Dipole's, which biases the
+polar-polar components (`C_11`, `eps_xx`, `d eps_xx / d eta_1`) in a direction the strained cells will
+show, and the polar-margin fit that set this potential was made on energies, not on the polar
+spacing. Dipole's two DFT codes also differ between themselves: the 2026-09 CP2K cell had the lateral
+axis at 8.358 A (2% below QE's 8.528) and the polar axis at 4.731 (0.5% below), so the lateral
+stiffness flag of the previous section is read against the QE cell from here on.
+
 ## What the predictions themselves say, before any comparison
 
 - **beta-PVDF.** Stretching the polar axis lowers the polar permittivity (`d eps_xx / d eta_1

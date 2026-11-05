@@ -54,19 +54,37 @@ def line(name, pf, dp, pp, floor):
 
 
 def crosscheck_e1(pf_all, dp_all, floor):
+    global to_pf_vec, to_pf_mat
     for key, dp in dp_all.get("systems", {}).items():
-        pf = pf_all.get("systems", {}).get(key)
+        pf = pf_all.get("systems", {}).get(dp.get("polyfind_system", key))
         if pf is None:
             print(f"\n[{key}] no polyfind prediction yet")
             continue
+        # a record in polyfind's own frame needs no axis swap
+        same_frame = str(dp.get("frame", dp_all.get("frame", ""))).lower().startswith("polyfind")
+        to_pf_vec = (lambda v: np.asarray(v, dtype=float)) if same_frame else (lambda v: np.asarray(v, dtype=float)[SWAP])
+        to_pf_mat = (lambda m: np.asarray(m, dtype=float)) if same_frame else (lambda m: np.asarray(m, dtype=float)[np.ix_(SWAP, SWAP)])
         print(f"\n=== E1 {pf['label']}  <->  {dp.get('label', key)} ===")
+        if dp.get("status"):
+            print(f"  Dipole status: {dp['status']}")
         if "cell" in dp:
             c = dp["cell"]
-            print(f"  cell (polyfind a b c / Dipole a b c, A): {pf['cell']['a']:.3f} {pf['cell']['b']:.3f} {pf['cell']['c']:.3f} / "
-                  f"{c.get('a', float('nan')):.3f} {c.get('b', float('nan')):.3f} {c.get('c', float('nan')):.3f}  "
-                  "(polyfind's a is along x polar; Dipole's a is the lateral axis)")
+            if same_frame:
+                pa, pb, pc = pf["cell"]["a"], pf["cell"]["b"], pf["cell"]["c"]
+                da, db, dc = c.get("a", float("nan")), c.get("b", float("nan")), c.get("c", float("nan"))
+                print(f"  cell (A), polyfind / Dipole, same axis order (x polar, y lateral, z chain):")
+                for name, pv, dv in (("a (polar)", pa, da), ("b (lateral)", pb, db), ("c (chain)", pc, dc)):
+                    print(f"  {name:36s} polyfind {pv:12.4f}   Dipole {dv:12.4f}   {100 * (pv / dv - 1):+.1f}%")
+                if "volume_A3" in c:
+                    print(f"  {'volume (A^3)':36s} polyfind {pf['cell']['volume_A3']:12.3f}   Dipole {c['volume_A3']:12.3f}   {100 * (pf['cell']['volume_A3'] / c['volume_A3'] - 1):+.1f}%")
+            else:
+                print(f"  cell (polyfind a b c / Dipole a b c, A): {pf['cell']['a']:.3f} {pf['cell']['b']:.3f} {pf['cell']['c']:.3f} / "
+                      f"{c.get('a', float('nan')):.3f} {c.get('b', float('nan')):.3f} {c.get('c', float('nan')):.3f}  "
+                      "(polyfind's a is along x polar; Dipole's a is the lateral axis)")
         pf_voigt = pf["C_GPa"]["voigt"]
         pf_block = np.asarray(pf["C_GPa"]["block"], dtype=float)
+        if "energy_Eh_per_cell" in dp:
+            print(f"  Dipole total energy {dp['energy_Eh_per_cell']:.6f} Eh per {dp.get('monomers_per_cell', '?')} monomers (differences only are comparable; E2)")
         if "C_GPa" in dp:
             dpc = to_pf_mat(dp["C_GPa"]["block"])
             print(f"  C (GPa), Dipole status: {dp['C_GPa'].get('status', '')}")
