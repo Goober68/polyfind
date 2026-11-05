@@ -264,13 +264,27 @@ E1: polyfind pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifte
     polyfind dP_polar/d eta_lateral (true) +0.177 C/m^2; proper e_12 +0.037
 
 === E1 beta-PVDF (TTTT)  <->  beta-PVDF, Dipole QE 7.6 PBE-D3(BJ) equilibrium reference pvdf_beta_ref_v1 (branch polyfind-electrostriction-reference, 2026-11-04) ===
-  Dipole status: terminal complete 2026-11-04 23:06 UTC; six +/-1% axial strain cells declared from it, three running (ax0_m01, ax0_p01, ax1_m01) at 2026-11-05 00:06 UTC; no response, polarization or stiffness yet
+  Dipole status: terminal complete 2026-11-04 23:06 UTC; the six +/-1% axial cells are complete (record beta_qe_axial_v1); no DFPT, polarization or Dipole-side stiffness yet
   cell (A), polyfind / Dipole, same axis order (x polar, y lateral, z chain):
   a (polar)                            polyfind       4.5196   Dipole       4.7568   -5.0%
   b (lateral)                          polyfind       8.5208   Dipole       8.5282   -0.1%
   c (chain)                            polyfind       2.5999   Dipole       2.5807   +0.7%
   volume (A^3)                         polyfind      100.125   Dipole      104.693   -4.4%
   Dipole total energy -137.903515 Eh per 2 monomers (differences only are comparable; E2)
+
+=== E1 beta-PVDF (TTTT)  <->  beta-PVDF, Dipole QE 7.6 PBE-D3(BJ): six +/-1% axial strain cells from pvdf_beta_ref_v1 (exchange main 54897c21, 2026-11-05) ===
+  Dipole status: six axial cells complete on exchange main at 54897c21 (2026-11-05); Dipole's lattice Hessian and Gamma response stages declared, not run
+  cell (A), polyfind / Dipole, same axis order (x polar, y lateral, z chain):
+  a (polar)                            polyfind       4.5196   Dipole       4.7568   -5.0%
+  b (lateral)                          polyfind       8.5208   Dipole       8.5282   -0.1%
+  c (chain)                            polyfind       2.5999   Dipole       2.5807   +0.7%
+  volume (A^3)                         polyfind      100.125   Dipole      104.693   -4.4%
+  C (GPa), Dipole status: derived by polyfind from Dipole's six strained-cell stresses and energies (relaxed ions, fixed strained cell); Dipole's own stiffness/DFPT stage is pending
+  C_11 (polar,polar)                   polyfind      22.5655   Dipole      22.7690   ratio 0.99: within 1.5
+  C_12 (polar,lateral)                 polyfind       3.0913   Dipole       5.8820   sign agrees
+  C_21 (lateral,polar)                 polyfind       3.0913   Dipole       5.8820   sign agrees
+  C_22 (lateral,lateral)               polyfind      18.5496   Dipole      24.5190   sign agrees
+  C_33 (chain): polyfind rigid chain, none; Dipole 302.6
 ```
 
 

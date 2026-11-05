@@ -61,7 +61,149 @@
    },
    "energy_Eh_per_cell": -137.9035152031639,
    "monomers_per_cell": 2,
-   "status": "terminal complete 2026-11-04 23:06 UTC; six +/-1% axial strain cells declared from it, three running (ax0_m01, ax0_p01, ax1_m01) at 2026-11-05 00:06 UTC; no response, polarization or stiffness yet"
+   "status": "terminal complete 2026-11-04 23:06 UTC; the six +/-1% axial cells are complete (record beta_qe_axial_v1); no DFPT, polarization or Dipole-side stiffness yet"
+  },
+  "beta_qe_axial_v1": {
+   "label": "beta-PVDF, Dipole QE 7.6 PBE-D3(BJ): six +/-1% axial strain cells from pvdf_beta_ref_v1 (exchange main 54897c21, 2026-11-05)",
+   "polyfind_system": "beta",
+   "frame": "polyfind",
+   "note": "Ions relaxed at each fixed strained cell (forces <= 2.7e-5 Ry/bohr), SCF 1e-11 Ry, same SSSP 90/360 Ry and 8x4x16 mesh as the reference. Stiffness derived here by polyfind from Dipole's stresses: C_ij = -d sigma_i / d eta_j across the +/-1% pair (QE's stress carries the pressure sign), symmetrised (reciprocity mismatch 0.25 GPa); the energy route, (dE+ + dE-) = C V0 eta^2, gives the diagonal within 1.5%. Relaxed-ion, other strains clamped: the normal block of C. The -1% cells cost 0.3 meV (0.6 along the chain) more than the +1% cells: third-order stiffening in compression. quantitatively_valid is false on every unit in Dipole's scope (one local equilibrium and its strain neighbours; acceptance as a quantitative reference is theirs to declare).",
+   "cell": {
+    "a": 4.7567822852259996,
+    "b": 8.528227514836319,
+    "c": 2.5807377932516005,
+    "volume_A3": 104.69258764370215
+   },
+   "C_GPa": {
+    "axes": "x y z (polyfind order: polar, lateral, chain)",
+    "block": [
+     [
+      22.769,
+      5.882,
+      1.875
+     ],
+     [
+      5.882,
+      24.519,
+      0.452
+     ],
+     [
+      1.875,
+      0.452,
+      302.556
+     ]
+    ],
+    "from_stress_unsymmetrised": [
+     [
+      22.769,
+      5.755,
+      1.87
+     ],
+     [
+      6.008,
+      24.519,
+      0.509
+     ],
+     [
+      1.88,
+      0.394,
+      302.556
+     ]
+    ],
+    "diag_from_energies": [
+     23.118,
+     24.509,
+     302.553
+    ],
+    "status": "derived by polyfind from Dipole's six strained-cell stresses and energies (relaxed ions, fixed strained cell); Dipole's own stiffness/DFPT stage is pending"
+   },
+   "strained_cells": {
+    "ax0_p01": {
+     "strain_axis": 0,
+     "strain": 0.01,
+     "energy_Eh": -137.9034925972757,
+     "dE_meV_per_cell": 0.6151,
+     "stress_diag_GPa_QE_sign": [
+      -0.20657,
+      -0.05514,
+      -0.01717
+     ],
+     "max_force_Ry_bohr": 2.225187357767296e-05,
+     "max_stress_kbar": 2.065746952424962,
+     "quantitatively_valid": false
+    },
+    "ax0_m01": {
+     "strain_axis": 0,
+     "strain": -0.01,
+     "energy_Eh": -137.903482294601,
+     "dE_meV_per_cell": 0.8955,
+     "stress_diag_GPa_QE_sign": [
+      0.24881,
+      0.06502,
+      0.02043
+     ],
+     "max_force_Ry_bohr": 2.658917587000236e-05,
+     "max_stress_kbar": 2.488129424453936,
+     "quantitatively_valid": false
+    },
+    "ax1_p01": {
+     "strain_axis": 1,
+     "strain": 0.01,
+     "energy_Eh": -137.9034912484551,
+     "dE_meV_per_cell": 0.6518,
+     "stress_diag_GPa_QE_sign": [
+      -0.05352,
+      -0.22103,
+      -0.00409
+     ],
+     "max_force_Ry_bohr": 1.3439154367176476e-05,
+     "max_stress_kbar": 2.210303469715474,
+     "quantitatively_valid": false
+    },
+    "ax1_m01": {
+     "strain_axis": 1,
+     "strain": -0.01,
+     "energy_Eh": -137.903480300504,
+     "dE_meV_per_cell": 0.9497,
+     "stress_diag_GPa_QE_sign": [
+      0.06158,
+      0.26936,
+      0.00379
+     ],
+     "max_force_Ry_bohr": 1.9556430095416927e-05,
+     "max_stress_kbar": 2.693568627663851,
+     "quantitatively_valid": false
+    },
+    "ax2_p01": {
+     "strain_axis": 2,
+     "strain": 0.01,
+     "energy_Eh": -137.9031631309547,
+     "dE_meV_per_cell": 9.5804,
+     "stress_diag_GPa_QE_sign": [
+      -0.01806,
+      -0.00149,
+      -2.92083
+     ],
+     "max_force_Ry_bohr": 1.9594904850833966e-05,
+     "max_stress_kbar": 29.208253890630107,
+     "quantitatively_valid": false
+    },
+    "ax2_m01": {
+     "strain_axis": 2,
+     "strain": -0.01,
+     "energy_Eh": -137.9031407404824,
+     "dE_meV_per_cell": 10.1896,
+     "stress_diag_GPa_QE_sign": [
+      0.01934,
+      0.00869,
+      3.13029
+     ],
+     "max_force_Ry_bohr": 1.175210367383702e-05,
+     "max_stress_kbar": 31.302931915768415,
+     "quantitatively_valid": false
+    }
+   },
+   "status": "six axial cells complete on exchange main at 54897c21 (2026-11-05); Dipole's lattice Hessian and Gamma response stages declared, not run"
   }
  }
 }

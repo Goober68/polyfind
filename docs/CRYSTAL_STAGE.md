@@ -122,7 +122,8 @@ set (induced dipoles, Ewald, rigid chain, force-shifted Lennard-Jones, 0 K):
 | beta polarization, C/m^2 | 0.18 | 0.140 | 0.214 |
 | beta eps_inf (x, y, z) | 2.24, 2.25, 2.60 (Dipole's DFPT at the CP2K cell) | 2.197, 2.133, 2.515 | 2.171, 2.108, 2.495 |
 | beta eps_0 relaxed-ion (x, y, z) | - | 2.197, 2.831, 2.515 | 2.171, 3.430, 2.495 |
-| beta C_11, C_22, C_66, GPa | 25.2 (C_11, Dipole, preliminary) | 22.6, 18.6, 4.3 | 31.5, 23.5, 5.7 |
+| beta C_11, C_22, C_12, GPa | 22.8, 24.5, 5.9 (Dipole's six +/-1% QE cells, 2026-11-05) | 22.6, 18.6, 3.1 | 31.5, 23.5, 4.2 |
+| beta C_66, GPa | - | 4.3 | 5.7 |
 | beta e_11, C/m^2 | - | 0.233 | 0.356 |
 | alpha (polar TGTG' packing) a, b, c, A | - | 4.977, 9.038, 4.710 | 4.984, 9.335, 4.744 |
 | alpha polarization, C/m^2 | - | 0.073 | 0.104 |
@@ -138,8 +139,13 @@ fit's drift (+0.8%, +1.1%). The polarization overshoots: the increments were set
 induced dipoles were absent, and with them present P is 0.214, 19% above DFT, where the
 valence preset was 22% below. The ionic part of the lateral dielectric constant nearly
 doubles (eps_0 - eps_inf along y: 0.70 -> 1.32), as it must when it scales with the square of
-the bond charges, and the polar stiffness C_11 goes from 22.6 to 31.5 GPa against Dipole's
-preliminary 25.2. PE, which is not an anchor, moves 3.5-5% towards the measured cell (its
+the bond charges. Dipole's six +/-1% axial cells, which landed the same morning
+(`docs/E1_E2_PREDICTIONS.md`, record `beta_qe_axial_v1`), give the first DFT stiffness to judge
+by: C_11 22.8, C_22 24.5, C_12 5.9 GPa (stress and energy routes within 1.5%). The valence
+preset has the polar stiffness C_11 to 1% and the lateral one 24% low; this preset has the
+lateral one to 4% and the polar one 38% high; both have C_12 low (3.1 and 4.2). Neither
+potential carries the right lateral-to-polar stiffness ratio, which is the same H...F against
+F...F contact problem as the cell axes, seen through second derivatives. PE, which is not an anchor, moves 3.5-5% towards the measured cell (its
 cross-section per chain 14.4 -> 15.6 A^2; experiment at room temperature 18.4).
 
 In the setting E1 is judged in, the pre-registered set on `pvdf-dft-valence` therefore
