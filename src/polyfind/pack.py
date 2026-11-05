@@ -1391,7 +1391,13 @@ class CrystalPacker:
         r2s = xp.where(mask, r2, 1.0)
         rr = xp.sqrt(r2s)
         ir6 = 1.0 / (r2s * r2s * r2s)
-        v = ir6 * (A * ir6 - B) + qq * (_erfc_pos(self.alpha * rr, xp) / rr) + qqf * rr + const
+        if self._ewald is not None:
+            # ``qq`` is zeroed under Ewald (:meth:`_set_charge_tables`); adding its exact zeros
+            # is bit-identical to leaving them out, and the erfc they multiply is the kernel's
+            # largest cost.  ``qqf`` still carries the Lennard-Jones force shift.
+            v = ir6 * (A * ir6 - B) + qqf * rr + const
+        else:
+            v = ir6 * (A * ir6 - B) + qq * (_erfc_pos(self.alpha * rr, xp) / rr) + qqf * rr + const
         return xp.where(mask, v, 0.0)
 
     def _pair_energy_and_dv(self, r2, A, B, qq, qqf, const):
@@ -1416,6 +1422,12 @@ class CrystalPacker:
         r2s = xp.where(mask, r2, 1.0)
         rr = xp.sqrt(r2s)
         ir6 = 1.0 / (r2s * r2s * r2s)
+        if self._ewald is not None:
+            # as in :meth:`_pair_energy`: no Coulomb term in the kernel under Ewald, so the
+            # erfc and its derivative (over half the kernel's time) are not evaluated
+            v = ir6 * (A * ir6 - B) + qqf * rr + const
+            dv = 3.0 * ir6 * (B - 2.0 * A * ir6) / r2s + qqf / (2.0 * rr)
+            return xp.where(mask, v, 0.0), xp.where(mask, dv, 0.0)
         ar = self.alpha * rr
         ef = _erfc_pos(ar, xp)
         v = ir6 * (A * ir6 - B) + qq * (ef / rr) + qqf * rr + const

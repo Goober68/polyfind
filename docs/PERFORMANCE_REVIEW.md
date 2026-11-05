@@ -1136,3 +1136,149 @@ matter more on a slower chain build (a larger repeat, or the complete placed-cel
 owner of the `vector-repeat-merge` branch) than they do here.
 
 **GPU.**  Nothing in this section ran on a GPU; 15.4 stands and G6 stays a patch.
+
+## 16. The large-cell response path (2026-11-05): the 120-atom cell an order of magnitude faster
+
+Scope: the E1 prediction path of `examples/e1_predictions.py` on its largest system, the
+all-trans 70/30 VDF/TrFE model cell (two chains of 60 atoms, 120 atoms and 20 monomers in the cell), on the fitted valence potential with
+Ewald electrostatics and induced dipoles: build and relax the reference, then the
+stiffness, the clamped and relaxed-ion dielectric tensors, the proper and converse
+piezoelectric routes, the electrostriction routes and the true dielectric tensor at two
+strained cells.  Same 4-core box as section 15, no GPU.  Before this section the full job
+on that cell did not finish inside the two hours the background runner allows, and the
+reduced job (without the electrostriction and converse routes) took 1,410 s.  The three
+smaller systems of the E1 set (beta-PVDF, PE, alpha-PVDF) were never the problem: 43, 119
+and 180 s each before any of this.
+
+### 16.1 Where the time went
+
+The stages of the path, serial, under cProfile (which inflates Python-call-heavy code
+but not the two rows that matter here):
+
+| stage | seconds |
+|---|---|
+| `refined_reference` (RIS fit, enumeration, pack) | 28.3 |
+| `relax_reference` | 43.7 |
+| `elastic_constants` (6 strained, relaxed states) | 90.5 |
+| one tight strained state, no field | 15.3 |
+| one tight strained state, field along x | 45.0 |
+| `dielectric_tensor` (6 relaxed states) | 91.0 |
+| total profiled | 313.8 |
+
+Cumulative time, same run: `ewald.terms` 261.1 s of 313.8 (83%), of which the
+three-operand `einsum` that assembled the reciprocal-space dipole tensor 152.9 s (49%
+of everything) and the routine's own time 80.8 s plus 19.4 s in `damping`; `_polarize`
+266.9 s; the Lennard-Jones and valence pair terms (`_pair_energy_and_dv`) 29.4 s.
+`terms` was called 302 times at 0.865 s a call, 21 L-BFGS-B minimisations in all.  The
+response path is one Ewald kernel evaluated a few hundred times, and the kernel was
+dense: every real-space kernel was evaluated on every pair-image combination and masked
+afterwards, and on this cell about 98% of those combinations lie outside the 8 A cutoff.
+
+### 16.2 Four changes
+
+**Neighbour-list real space and a BLAS reciprocal tensor** (`ewald.py`).  One pass
+over the distances finds the pair-image list; every kernel (charge, dipole, Thole
+damping, their gradients) runs on the list, sums over images and sites are
+scatter-adds, and the two lattice-derivative moments accumulate as 3 x 3 matrices.  The
+reciprocal dipole tensor, an einsum over `(N, N, K, 3, 3)`, becomes six `(N, K) @ (K, N)`
+products.  Every output agrees with the previous routine to 1e-13 on the beta cell and
+on this cell (energy, dipoles, field, tensor, coordinate, lattice and charge
+gradients), and the 63 Ewald and polarizable tests pass.  On this cell a
+field-and-tensor pass goes 1,289 -> 171 ms and a polarization solve with gradients
+2,058 -> 947 ms, the remainder of which was one 360 x 360 linear solve.
+
+**One BLAS thread per process** (`polyfind/__init__.py`).  That 360 x 360 solve took
+400-1,000 ms with OpenBLAS's default thread count and 2 ms with one thread: the pool's
+spin-waiting threads contend with each other and with every other process on the box,
+and polyfind's linear algebra is many small operations, none of which a thread pool
+helps.  The package now limits BLAS to one thread at import (environment variables for
+libraries loaded later, `threadpoolctl` for those already loaded; `POLYFIND_BLAS_THREADS`
+overrides).  With both changes, on this cell: a polarization solve with gradients 2,495 ->
+168 ms, `relax_reference` 44 -> 7 s, `elastic_constants` 90 -> 14 s.
+
+**Independent relaxations in parallel processes** (`mechanics.parallel_map`).  The
+states behind the tensors do not depend on one another: 6 strained states for the
+stiffness and the proper piezoelectric tensor, 6 field states for the relaxed-ion
+dielectric tensor, 6 Newton chains for the converse route, 6 field states for each
+strained true dielectric tensor, and in the electrostriction routes 55 (one at zero
+stress and field, 12 at fields for the strain and the free susceptibility, 36 at
++/- stress and +/- field for the polarization route, 6 for the clamped susceptibility).
+Each group now runs in forked worker processes, one BLAS thread each (the reason the
+previous change had to come first), with what the jobs need inherited through the
+fork rather than pickled; `POLYFIND_WORKERS` sets the count (default: the CPU count),
+and the map is serial for one worker, one item, inside a worker (no nesting) or off
+Linux.  The results equal the serial loops' (`tests/test_parallel.py`: stiffness to
+1e-9 GPa, tensors to 1e-10, the electrostriction coefficients exactly), because the
+jobs are the same function calls in another process.  What stays serial: the reference
+build and relaxation, the zero-stress state, and the iterates inside each Newton
+(`free_strain`, `state_at_stress`), which depend on the previous one.
+
+**No Coulomb work in the pair kernel under Ewald** (`pack.py`, after the profile of 16.3).
+The Lennard-Jones pair kernel also carries the damped-shifted-force Coulomb term of the
+non-Ewald setting; under Ewald the charge product it multiplies is zeroed (every
+electrostatic term comes from `ewald.terms`), but the `erfc` and its derivative were still
+evaluated on every pair-image combination and multiplied by zero: 16.5 s of the 68.9 s
+serial profile below. The kernel now skips them when the packer has an Ewald sum. Adding an
+exact zero is bit-identical to leaving it out, and the A/B confirms it: energies and
+gradients of the beta and copolymer packers agree with the previous module to the last bit
+(fixed-charge and polarizable), and the 120-atom `energy_and_grad` goes 269 -> 217 ms. The
+end-to-end numbers of 16.3 were measured before this change.
+
+### 16.3 End to end
+
+Full E1 job on this cell (`--systems vdftrfe`, electrostriction and converse routes
+included), wall time, same box.  The crystal-stage fit of `docs/CRYSTAL_STAGE.md` was
+running on another core during the first two measured rows and not during the last:
+
+| version | wall |
+|---|---|
+| before this section, reduced job (no electrostriction, no converse) | 1,410 s |
+| before this section, full job | > 7,200 s (killed at the runner's cap) |
+| Ewald + BLAS changes, serial | 1,139 s (build, tensors and electrostriction routes 1,014 s; two strained true dielectric tensors 69 and 56 s) |
+| all three changes, 4 workers, the fit holding about 1.5 cores | 512 s (444 s; 34 and 33 s); results identical to the serial run in every one of the 40 stored quantities |
+| all three changes, 4 workers, idle box | 359 s (304 s; two strained tensors 30 s each); results identical to the serial run |
+
+The same profile script after the three changes, serial (`POLYFIND_WORKERS=1`, so the
+profiler sees every relaxation), same box:
+
+| stage | before | after |
+|---|---|---|
+| `refined_reference` | 28.3 | 29.1 |
+| `relax_reference` | 43.7 | 7.1 |
+| `elastic_constants` | 90.5 | 13.1 |
+| one tight strained state, no field | 15.3 | 2.4 |
+| one tight strained state, field along x | 45.0 | 5.2 |
+| `dielectric_tensor` | 91.0 | 12.1 |
+| total profiled | 313.8 | 68.9 |
+
+Cumulative, after: `ewald.terms` 20.1 s (was 261.1) in 290 calls of 69 ms (was 865 ms), the
+einsum 3.5 s (was 152.9), `_polarize` 21.5 s (was 266.9), the 360 x 360 solves 0.33 s for 357
+calls. The largest kernel is now the Lennard-Jones and valence pair routine
+`_pair_energy_and_dv`, 29.4 s, unchanged in absolute terms (it was 29.4 s before too), of
+which 16.5 s is the complementary error function and its derivative (`_erfc_pos`,
+`_derfc_pos`); and the largest stage is the reference build, `refined_reference`, 29 s, of
+which `pack` (the chain-pair tables with their worker pool, the FFT screen and the polish) is
+20 s. Everything the response path repeats is 4.6x faster serially; the one-off build is
+untouched and is now 42% of a serial profile.
+
+### 16.4 What is left
+
+- **The pair kernel.** With the Coulomb work gone, `_pair_energy_and_dv` still evaluates
+  the Lennard-Jones terms on every pair-image combination, dense, exactly as the Ewald real
+  space did before this section, and is the largest kernel row left (about 13 s of the
+  serial profile). The same neighbour-list treatment would take most of it away; it is the
+  next kernel row on this path.
+- **The reference build.** 29 s per system, serial with respect to everything after it,
+  and 42% of what is left on one process; on four workers it is a tenth of the full E1 job
+  on this cell and most of a job that stops at the tensors. Its table build already uses a
+  worker pool; the screen and the polish of the best starts run one after another, and the
+  polish is L-BFGS-B relaxations of the same kind the rest of the path now runs in parallel.
+- **Amdahl on the E1 path.** The serial parts of the end-to-end job are the build and
+  reference relaxation (36 s), the zero-stress state, and the iterates inside each Newton
+  (`free_strain`, `state_at_stress`), which depend on the previous one; the biggest group,
+  the 55 states of the electrostriction routes, is 49 Newton chains of a few relaxations
+  each plus 6 single relaxations, so it scales to four workers but not much beyond without
+  splitting the chains.
+- **GPU.** Nothing here ran on one; the kernels are now neighbour-list scatter-adds and
+  small dense products, which is the shape section 14 said a GPU would want, and the
+  decision there stands until a GPU is on the box.
