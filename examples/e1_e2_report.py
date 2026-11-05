@@ -76,7 +76,8 @@ def e1_tables(pf):
         ms = np.asarray(s["M_strain_m2_V2"], dtype=float) * 1e18
         mp = np.asarray(s["M_polarization_m2_V2"], dtype=float) * 1e18
         q = np.asarray(s["Q_m4_C2"], dtype=float)
-        chi = np.diag(np.asarray(s["chi_free"], dtype=float))
+        chi = np.asarray(s["chi_free"], dtype=float)
+        chi = np.diag(chi) if chi.ndim == 2 else chi.reshape(-1)  # stored as the diagonal
         for i, ax in enumerate(("x (polar)", "y (lateral)", "z (chain)")):
             out.append(f"| {s['label'] if i == 0 else ''} | {ax} | {fmt(ms[i, 0], 5)}, {fmt(ms[i, 1], 5)} | {fmt(mp[i, 0], 5)}, {fmt(mp[i, 1], 5)} | "
                        f"{fmt(chi[i])} | {fmt(q[i, 0], 2)}, {fmt(q[i, 1], 2)} |")
