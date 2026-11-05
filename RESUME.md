@@ -71,8 +71,10 @@ degrades (not an anchor: a warning). The polar-axis scan says why: at the DFT sp
 electrostatics pulls the axis in by 1.3-2.7 kcal/mol per A and the fits can only inflate the
 repulsion. Charge penetration (`EwaldSpec(charge_damping=b)`, exclusion-consistent, tested) and
 the PBE chain geometry (C-F 1.386 against the built 1.350) were each probed: -5.0% -> -4.3% and
--4.4% respectively, neither the lever alone; stage 3 (eleven variables) was running at the end of
-the session, result to section 5.6. **E2 correction**: the E2 script omitted the refined
+-4.4% respectively, neither the lever alone; stage 3 (eleven variables, charge penetration free)
+ended at the same floor as stage 2 with the damping off (section 5.6): three forms share the
+floor, so the next lever is the fluorine's off-site charge reaching the lattice as a site, with the
+PBE geometry and Dipole's DFPT tensors as anchors. **E2 correction**: the E2 script omitted the refined
 backbone angles' strain energy, favouring the gauche conformers by about 0.45 kcal/mol per
 monomer (PVDF TTTT margin +1.30 -> +0.85, copolymer +1.09 -> +0.46); fixed, files regenerated,
 Dipole told.

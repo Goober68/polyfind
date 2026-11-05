@@ -336,7 +336,37 @@ lateral axis +0.7%, +0.3%, 0.0%, the stiffness down (C_11 19.6, 21.1, 22.3 GPa),
 one in particular. Stage 3 (`crystalfit.fit(stage=3)`, eleven variables, running as this is
 written) lets the fit weigh it against the other ten; its result goes to section 5.6.
 
+### 5.6 Stage 3: the fit does not want charge penetration
+
+321 evaluations from the valence start with b free in 1-6 /A: objective 112.99 -> 64.86 against
+stage 2's 65.05, and b ends at 3.95 /A, where the damping is 3e-4 of the pair interaction at 2.5 A,
+i.e. point charges. Every residual is stage 2's to the second digit (beta a -3.9%, b +1.4%, P
+0.189, margin -0.767, C_11 27.3, C_22 21.1, C_12 3.4). The result is saved as
+`docs/predictions/crystal_stage_v3.json` and not registered as a preset: it is stage 2 with an
+eleventh variable the data did not use.
+
+**Where this leaves the accuracy stage.** Three forms have now been fitted to the same anchors in
+the setting the predictions are made in: the isotropic Lennard-Jones terms and the bond charges
+(stage 1, fixed-charge; its induced-dipole evaluation in 4.1), the same plus a pair-specific H-F
+term (stage 2), the same plus charge penetration (stage 3). All three stop at the same place: the
+polar axis 4% short, the lateral axis 1.5% long, C_12 at 57% of DFT, with the polarization, the
+margin and the polar stiffness within tolerance. A floor that three different forms share is
+set by what they have in common: atom-centred point charges (the fluorine's off-site charge of
+the valence fit reaches the lattice as its dipole-equivalent projection onto the nucleus, so the
+lattice sees no lone-pair anisotropy), isotropic repulsion per atom, and a rigid chain built at
+the textbook geometry. The scan of 5.2 puts the excess attraction in the electrostatics of the
+H...F contact along the polar axis, and the one lever not yet pulled that acts on that contact
+and not on the F...F one is the shape of the fluorine's charge: forwarding the off-site site to
+the lattice as a site, with the induced dipoles and the Ewald sum carrying it, instead of
+projecting it. With it, the PBE-D3 chain geometry (5.3; 0.6% of the polar deficit), and
+Dipole's DFPT dielectric and Born tensors as anchors when they land, that is the next stage. Until
+then the pre-registered set on `pvdf-dft-valence` remains the primary prediction and the two
+fitted presets its labelled alternatives.
+
 ## 6. What it costs, and what it does not touch
+
+(Stage 1; the same applies to stages 2 and 3, whose extra terms are likewise outside the
+valence range.)
 
 - **The conformer trainset.** The torsion, bond and angle terms are untouched, so the 467
   conformer frames of `docs/VALENCE_FIT.md` see this preset only through the nonbonded terms
@@ -357,6 +387,8 @@ written) lets the fit weigh it against the other ten; its result goes to section
 
 ```
 python examples/crystal_stage.py --maxfev 300 --out docs/predictions/crystal_stage_v1.json
+python examples/crystal_stage.py --stage 2 --maxfev 320 --out docs/predictions/crystal_stage_v2.json
+python examples/crystal_stage.py --stage 3 --maxfev 320 --out docs/predictions/crystal_stage_v3.json
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and
