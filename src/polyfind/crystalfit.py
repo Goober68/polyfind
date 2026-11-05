@@ -36,8 +36,12 @@ DFT_ANCHORS = {
     "alpha_minus_beta": -0.726,  # kcal/mol per monomer, two-body D3
     "beta_antipolar_minus_polar": -0.026,  # kcal/mol per monomer; the antipolar beta packing is lower
     "p_beta": 0.18,  # C/m^2, published DFT Berry phase for beta (0.178-0.181)
+    # relaxed-ion normal stiffness of beta, GPa, derived by polyfind from Dipole's six +/-1% axial QE
+    # cells of 2026-11-05 (docs/predictions/e1_dipole_existing.json, record beta_qe_axial_v1):
+    # stress and energy routes agree within 1.5%
+    "beta_C": {"C11": 22.77, "C22": 24.52, "C12": 5.88},
 }
-TOL = {"cell": 0.01, "p": 0.01, "margin": 0.05, "gap": 0.05}  # relative for the cell, absolute otherwise
+TOL = {"cell": 0.01, "p": 0.01, "margin": 0.05, "gap": 0.05, "stiffness": 0.10}  # relative for cell and stiffness, absolute otherwise
 
 VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "q_CH", "q_CF")
 # multipliers on the valence values for the Lennard-Jones terms, absolute shifts for the increments
@@ -45,6 +49,15 @@ X0 = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0])
 BOUNDS = np.array([(0.90, 1.10)] * 3 + [(0.5, 2.0)] * 3 + [(-0.08, 0.08)] * 2)
 SIGMA = np.array([0.05, 0.05, 0.05, 0.35, 0.35, 0.35, 0.05, 0.05])  # ridge widths (log scale for D)
 RIDGE = 1.0
+# Stage 2 (docs/CRYSTAL_STAGE.md section 5): the same eight plus a pair-specific H-F term,
+# multipliers on the geometric means of the mixed H and F diameter and well depth; fitted in the
+# induced-dipole, force-shifted Lennard-Jones setting the E1/E2 predictions are made in, with
+# the beta stiffness as anchors.
+VARIABLES2 = VARIABLES + ("x_HF", "D_HF")
+X0_2 = np.concatenate([X0, [1.0, 1.0]])
+BOUNDS2 = np.vstack([BOUNDS, [(0.85, 1.15), (0.3, 3.0)]])
+SIGMA2 = np.concatenate([SIGMA, [0.05, 0.5]])
+STAGE2 = {"polarizable": True, "lj_cutoff": "force", "stiffness": True}
 
 
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
@@ -54,9 +67,23 @@ def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
     return F.crystal_stage_parameters(x, base)
 
 
+def _config(x):
+    """``(variables, x0, bounds, sigma)`` for an 8- or 10-variable vector."""
+    n = len(np.asarray(x))
+    if n == 8:
+        return VARIABLES, X0, BOUNDS, SIGMA
+    if n == 10:
+        return VARIABLES2, X0_2, BOUNDS2, SIGMA2
+    raise ValueError(f"expected 8 or 10 variables, got {n}")
+
+
 def ridge(x) -> float:
     x = np.asarray(x, dtype=float)
-    d = np.concatenate([(x[:3] - 1.0) / SIGMA[:3], np.log(x[3:6]) / SIGMA[3:6], x[6:] / SIGMA[6:]])
+    _, _, _, sigma = _config(x)
+    parts = [(x[:3] - 1.0) / sigma[:3], np.log(x[3:6]) / sigma[3:6], x[6:8] / sigma[6:8]]
+    if len(x) == 10:  # the pair term: a diameter multiplier and a well-depth multiplier
+        parts += [(x[8:9] - 1.0) / sigma[8:9], np.log(x[9:10]) / sigma[9:10]]
+    d = np.concatenate(parts)
     return RIDGE * float(np.sum(d * d))
 
 
@@ -71,15 +98,47 @@ class Evaluation:
     alpha: object = None
 
 
-def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald", verbose: bool = False) -> Evaluation:
-    """Pack and refine beta and alpha under ``x``; return the normalised residuals and the objective."""
+def reference_from_prediction(pred: F.Prediction, case, **packer_kw):
+    """The :class:`polyfind.mechanics.Reference` of a refined prediction, built the way
+    :func:`polyfind.mechanics.refined_reference` builds one (chain rebuilt from the refined torsions
+    and angles in the refinement's own frame), for the response functions of :mod:`polyfind.mechanics`.
+    Call inside ``params.applied()`` so the packer is the fitted one."""
+    from .linegroup import repeat_chains
+    from .mechanics import reference_from_chain
+    rr, rigid, polymer = pred.refine_result, pred.rigid, case.polymer
+    angles0 = np.array([polymer.backbone[k].backbone_angle for k in range(polymer.bonds_per_repeat)])
+    frame = repeat_chains(polymer, rigid.chain, np.asarray(rigid.dihedrals, dtype=float)[None], angles0)[0]
+    built = repeat_chains(polymer, rigid.chain, rr.torsions[None], rr.angles, align_to=frame)[0]
+    return reference_from_chain(built, rr.result.params, n_chains=2, **packer_kw)
+
+
+def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald", verbose: bool = False,
+             polarizable: bool = False, lj_cutoff: str = "energy", stiffness: bool = False) -> Evaluation:
+    """Pack and refine beta and alpha under ``x``; return the normalised residuals and the objective.
+
+    ``polarizable`` adds the induced dipoles (:class:`polyfind.polarizability.Polarizable`),
+    ``lj_cutoff="force"`` the force-shifted Lennard-Jones term, and ``stiffness`` the relaxed-ion
+    C_11, C_22 and C_12 of beta against Dipole's strained-cell values: together the construction
+    of the E1/E2 predictions (:data:`STAGE2`).
+    """
+    from .mechanics import elastic_constants, relax_reference
+    from .polarizability import Polarizable
     t0 = time.time()
     params = parameters(x, base)
     ewald = EwaldSpec() if coulomb == "ewald" else None
+    pol = Polarizable() if polarizable else None
     beta_case, alpha_case = F.FITTED_CASES[1], F.FITTED_CASES[2]
     try:
-        beta = F.predict(beta_case, params, coulomb=coulomb, ewald=ewald, always_gap=True)
-        alpha = F.predict(alpha_case, params, coulomb=coulomb, ewald=ewald)
+        beta = F.predict(beta_case, params, coulomb=coulomb, ewald=ewald, always_gap=True,
+                         polarizable=pol, lj_cutoff=lj_cutoff)
+        alpha = F.predict(alpha_case, params, coulomb=coulomb, ewald=ewald, polarizable=pol, lj_cutoff=lj_cutoff)
+        C = None
+        if stiffness:
+            with params.applied():
+                ref = reference_from_prediction(beta, beta_case, coulomb=coulomb, ewald=ewald,
+                                                polarizable=pol, lj_cutoff=lj_cutoff)
+                ref = relax_reference(ref)
+                C = elastic_constants(ref).block  # Voigt 1, 2, 6 in-plane block, GPa
     except Exception as exc:  # a parameter set that cannot pack is simply bad
         if verbose:
             print(f"  evaluate: {type(exc).__name__}: {exc}", flush=True)
@@ -100,6 +159,11 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     if beta.polar_gap is not None:
         res["beta antipolar-polar (rigid)"] = (beta.polar_gap, DFT_ANCHORS["beta_antipolar_minus_polar"],
                                              (beta.polar_gap - DFT_ANCHORS["beta_antipolar_minus_polar"]) / TOL["gap"])
+    if C is not None:
+        for name, pred, key in (("beta C_11 (polar)", float(C[0, 0]), "C11"), ("beta C_22 (lateral)", float(C[1, 1]), "C22"),
+                                ("beta C_12", float(C[0, 1]), "C12")):
+            target = DFT_ANCHORS["beta_C"][key]
+            res[name] = (pred, target, (pred - target) / (TOL["stiffness"] * target))
     rg = ridge(x)
     obj = float(sum(r[2] ** 2 for r in res.values())) + rg
     return Evaluation(np.asarray(x, dtype=float), res, obj, rg, time.time() - t0, beta, alpha)
@@ -113,35 +177,43 @@ def table(ev: Evaluation) -> str:
     return "\n".join(lines)
 
 
-def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None) -> tuple[Evaluation, list[Evaluation]]:
-    """Powell with bounds on the eight variables; every evaluation is logged."""
+def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int = 1,
+        **eval_kw) -> tuple[Evaluation, list[Evaluation]]:
+    """Powell with bounds on the eight (stage 1) or ten (stage 2) variables; every evaluation is
+    logged.  ``stage=2`` uses :data:`X0_2`, :data:`BOUNDS2` and the :data:`STAGE2` evaluation
+    settings unless ``eval_kw`` overrides them; ``x0`` resumes from an earlier best."""
     from scipy.optimize import minimize
+    if stage == 2:
+        eval_kw = {**STAGE2, **eval_kw}
+    start = (X0_2 if stage == 2 else X0) if x0 is None else np.asarray(x0, dtype=float)
+    _, _, bounds, _ = _config(start)
     history: list[Evaluation] = []
 
     def obj(x):
-        xc = np.clip(x, BOUNDS[:, 0], BOUNDS[:, 1])
-        ev = evaluate(xc, coulomb=coulomb)
+        xc = np.clip(x, bounds[:, 0], bounds[:, 1])
+        ev = evaluate(xc, coulomb=coulomb, **eval_kw)
         history.append(ev)
         if log is not None:
             print(f"[{len(history):3d}] obj {ev.objective:9.2f} ridge {ev.ridge:6.2f}  x = {np.array2string(xc, precision=4, suppress_small=True)}  ({ev.seconds:.0f} s)",
                   file=log, flush=True)
         return ev.objective
 
-    start = X0 if x0 is None else np.asarray(x0, dtype=float)
-    first = evaluate(start, coulomb=coulomb)
+    first = evaluate(start, coulomb=coulomb, **eval_kw)
     history.append(first)
     if log is not None:
         print("start:\n" + table(first), file=log, flush=True)
-    minimize(obj, start, method="Powell", bounds=[tuple(b) for b in BOUNDS],
+    minimize(obj, start, method="Powell", bounds=[tuple(b) for b in bounds],
              options={"maxfev": maxfev, "xtol": 1e-3, "ftol": 1e-3})
     best = min(history, key=lambda e: e.objective)
     return best, history
 
 
 def save(ev: Evaluation, path: str) -> None:
-    out = {"variables": list(VARIABLES), "x": ev.x.tolist(), "objective": ev.objective, "ridge": ev.ridge,
+    variables = _config(ev.x)[0]
+    prm = parameters(ev.x)
+    out = {"variables": list(variables), "x": ev.x.tolist(), "objective": ev.objective, "ridge": ev.ridge,
            "residuals": {k: {"polyfind": v[0], "dft": v[1], "z": v[2]} for k, v in ev.residuals.items()},
-           "parameters": {"lj": parameters(ev.x).lj, "charge_increments": parameters(ev.x).charge_increments},
+           "parameters": {"lj": prm.lj, "lj_pairs": prm.lj_pairs, "charge_increments": prm.charge_increments},
            "anchors": DFT_ANCHORS, "tolerances": TOL}
     with open(path, "w") as fh:
         json.dump(out, fh, indent=1)

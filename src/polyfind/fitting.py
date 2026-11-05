@@ -120,6 +120,7 @@ class FFParameters:
     eps_r: float = 1.0
     charge_scale: float = 1.0
     lj: tuple[tuple[str, float, float], ...] = ()  # (element, x_i, D_i) overrides; hashable
+    lj_pairs: tuple[tuple[str, str, float, float], ...] = ()  # (elem_a, elem_b, x_ij, D_ij): pair overrides of the mixing
     scale14: float = 0.5
     charge_increments: tuple[tuple[str, str, float], ...] = ()  # bond-charge increments
     # Valence terms and off-site charges (docs/VALENCE_FIT.md).  Empty means "none", which
@@ -139,6 +140,7 @@ class FFParameters:
     def simple_ff(self) -> SimpleFF:
         return SimpleFF(torsion=tuple(self.torsion), scale14=self.scale14, eps_r=self.eps_r,
                         charge_scale=self.charge_scale, lj=self.lj_dict or None,
+                        lj_pairs=self.lj_pairs or None,
                         charge_increments=self.charge_increments or None,
                         bond_terms=self.bond_terms or None, angle_terms=self.angle_terms or None,
                         charge_offsets=self.charge_offsets or None,
@@ -150,6 +152,8 @@ class FFParameters:
               "eps_r": float(self.eps_r), "charge_scale": float(self.charge_scale)}
         if self.lj:
             kw["lj"] = {e: (float(x), float(d)) for e, x, d in self.lj}
+        if self.lj_pairs:
+            kw["lj_pairs"] = tuple((a, b, float(x), float(d)) for a, b, x, d in self.lj_pairs)
         if self.charge_increments:
             kw["charge_increments"] = tuple((a, b, float(d)) for a, b, d in self.charge_increments)
         for name in ("bond_terms", "angle_terms"):
@@ -164,6 +168,7 @@ class FFParameters:
 
     def describe(self) -> str:
         lj = ", ".join(f"{e} x_i={x:.3f}" for e, x, _ in self.lj) or "UFF unchanged"
+        lj += "".join(f"; {a}-{b} x_ij={x:.3f} D_ij={d:.4f}" for a, b, x, d in self.lj_pairs)
         q = ("; ".join(f"d{a}{b}={d:+.3f}" for a, b, d in self.charge_increments)
              or "polymer charges")
         val = (f" [{len(self.bond_terms)} stretch, {len(self.angle_terms)} bend types]"
@@ -255,13 +260,16 @@ class FFParameters:
                 super().__init__(chain, **kw)
 
         old_lj, old_packer_pack, old_packer_refine = pack_mod.lj_params, pack_mod.CrystalPacker, refine_mod.CrystalPacker
+        old_pairs = pack_mod.lj_pairs
         pack_mod.lj_params = ff._lj_arrays
+        pack_mod.lj_pairs = ff.lj_pair_table
         pack_mod.CrystalPacker = _FittedPacker
         refine_mod.CrystalPacker = _FittedPacker
         try:
             yield ff
         finally:
             pack_mod.lj_params = old_lj
+            pack_mod.lj_pairs = old_pairs
             pack_mod.CrystalPacker = old_packer_pack
             refine_mod.CrystalPacker = old_packer_refine
 
@@ -379,6 +387,7 @@ class Prediction:
     refined: PackResult | None = None
     torsions: np.ndarray | None = None
     seconds: float = 0.0
+    refine_result: object | None = None  # the RefineResult, when refined (torsions, angles, cell)
 
     @property
     def axes(self) -> tuple[float, float]:
@@ -626,7 +635,8 @@ def antipolar_cell(packer: CrystalPacker, start: PackResult, maxfev: int = 250) 
 
 def predict(case: CrystalCase, params: FFParameters = ILLUSTRATIVE, n_refine: int = 4,
             refine: bool = True, verbose: bool = False, coulomb: str = "dsf", ewald=None,
-            antipolar: str = "legacy", always_gap: bool = False) -> Prediction:
+            antipolar: str = "legacy", always_gap: bool = False, polarizable=None,
+            lj_cutoff: str = "energy") -> Prediction:
     """Pack and refine ``case`` under ``params``: the inner loop of the fit.
 
     Table screen (prebuilt, see :func:`screen_table`) -> exact-kernel polish -> continuous
@@ -657,12 +667,13 @@ def predict(case: CrystalCase, params: FFParameters = ILLUSTRATIVE, n_refine: in
     t0 = time.time()
     with params.applied():
         results = pack(chain, table=table, n_refine=n_refine, verbose=verbose,
-                       coulomb=coulomb, ewald=ewald)
+                       coulomb=coulomb, ewald=ewald, polarizable=polarizable, lj_cutoff=lj_cutoff)
         rigid = results[0]
         gap = None
         if case.antipolar or always_gap:
             # resolved through the module so that the patched class is the one built
-            packer = pack_mod.CrystalPacker(chain, n_chains=2, coulomb=coulomb, ewald=ewald)
+            packer = pack_mod.CrystalPacker(chain, n_chains=2, coulomb=coulomb, ewald=ewald,
+                                            polarizable=polarizable, lj_cutoff=lj_cutoff)
             if antipolar == "legacy":
                 anti_params, anti_e = antipolar_cell(packer, rigid)
             elif antipolar == "exact":
@@ -680,11 +691,11 @@ def predict(case: CrystalCase, params: FFParameters = ILLUSTRATIVE, n_refine: in
             out.seconds = time.time() - t0
             return out
         ref = refine_crystal(case.polymer, rigid, eps_r=params.eps_r,
-                             coulomb=coulomb, ewald=ewald)
+                             coulomb=coulomb, ewald=ewald, polarizable=polarizable, lj_cutoff=lj_cutoff)
         r = ref.result
     out = Prediction(case.key, r.a, r.b, r.c, r.density,
                      r.energy_per_monomer + ref.angle_energy, r.polarization_magnitude,
-                     gap, rigid, r, ref.torsions)
+                     gap, rigid, r, ref.torsions, refine_result=ref)
     out.seconds = time.time() - t0
     return out
 
@@ -2571,13 +2582,27 @@ CRYSTAL_FITTED_X = np.array([0.9481209139388875, 1.072763542201075, 1.0161618008
 def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParameters:
     """``base`` with its C, H and F Lennard-Jones diameters and well depths multiplied by
     ``x[0:3]`` and ``x[3:6]`` and its C-H and C-F bond-charge increments shifted by ``x[6:8]``
-    (the crystal stage's variables, :data:`CRYSTAL_STAGE_VARIABLES`)."""
+    (the crystal stage's variables, :data:`CRYSTAL_STAGE_VARIABLES`).  With ten variables
+    (:data:`CRYSTAL_STAGE2_VARIABLES`) the H-F pair gets its own Lennard-Jones term: ``x[8]``
+    and ``x[9]`` multiply the geometric means of the (already multiplied) H and F diameter and
+    well depth, so ``(1, 1)`` is the mixing rule and changes nothing."""
     x = np.asarray(x, dtype=float)
     mult = {"C": (x[0], x[3]), "H": (x[1], x[4]), "F": (x[2], x[5])}
     lj = tuple((e, xi * mult.get(e, (1.0, 1.0))[0], di * mult.get(e, (1.0, 1.0))[1]) for e, xi, di in base.lj)
     shift = {("C", "H"): x[6], ("C", "F"): x[7]}
     incr = tuple((a, b, d + shift.get((a, b), 0.0)) for a, b, d in base.charge_increments)
-    return replace(base, lj=lj, charge_increments=incr)
+    out = replace(base, lj=lj, charge_increments=incr)
+    if len(x) == 10:
+        table = {e: (xi, di) for e, xi, di in lj}
+        x_hf = x[8] * np.sqrt(table["H"][0] * table["F"][0])
+        d_hf = x[9] * np.sqrt(table["H"][1] * table["F"][1])
+        out = replace(out, lj_pairs=(("F", "H", float(x_hf), float(d_hf)),))
+    elif len(x) != 8:
+        raise ValueError(f"expected 8 or 10 crystal-stage variables, got {len(x)}")
+    return out
+
+
+CRYSTAL_STAGE2_VARIABLES = CRYSTAL_STAGE_VARIABLES + ("x_HF", "D_HF")
 
 
 FITTED_VALENCE_CRYSTAL = crystal_stage_parameters(CRYSTAL_FITTED_X)

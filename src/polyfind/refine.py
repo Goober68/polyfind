@@ -123,6 +123,7 @@ def refine_crystal(
     lj_cutoff: str = "energy",
     coulomb: str = "dsf",
     ewald=None,
+    polarizable=None,
 ) -> RefineResult:
     """Relax cell (a, b, [gamma], phi1, phi2, dz) and the repeat's conformation.
 
@@ -246,7 +247,8 @@ def refine_crystal(
         field = getattr(start, "field", (0.0, 0.0, 0.0))
     field = None if not np.any(np.asarray(field, dtype=float)) else field
     packer = CrystalPacker(ref, n_chains=start.n_chains, cutoff=cutoff, eps_r=eps_r, field=field,
-                           valence=valence, lj_cutoff=lj_cutoff, coulomb=coulomb, ewald=ewald)
+                           valence=valence, lj_cutoff=lj_cutoff, coulomb=coulomb, ewald=ewald,
+                           polarizable=polarizable)
     count = {"n": 0}
 
     def chains_for(S) -> tuple[list[PeriodicChain], np.ndarray, np.ndarray]:

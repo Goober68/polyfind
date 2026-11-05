@@ -43,3 +43,56 @@ def test_registered_preset_matches_the_saved_fit():
     assert "pvdf-dft-valence-crystal" in PRESETS
     assert SimpleFF.from_preset("pvdf-dft-valence-crystal") is not None
     assert F.PRESET_PARAMETERS["pvdf-dft-valence-crystal"] is p
+
+
+def test_pair_term_reaches_the_packer_and_the_force_field():
+    """A pair-specific H-F term overrides the geometric mean in both the lattice kernel and SimpleFF."""
+    from polyfind import pack as P
+    from polyfind.polymers import PVDF
+    x = np.concatenate([C.X0, [1.1, 2.0]])
+    params = C.parameters(x)
+    assert params.lj_pairs and params.lj_pairs[0][:2] == ("F", "H")
+    table = {e: (xi, di) for e, xi, di in params.lj}
+    x_hf = 1.1 * np.sqrt(table["H"][0] * table["F"][0])
+    d_hf = 2.0 * np.sqrt(table["H"][1] * table["F"][1])
+    assert np.isclose(params.lj_pairs[0][2], x_hf) and np.isclose(params.lj_pairs[0][3], d_hf)
+    from polyfind.polymers import THREE_STATE
+    chain = P.periodic_chain(PVDF, [0, 0], THREE_STATE)
+    el = list(chain.elements)
+    i_h, i_f, i_c = el.index("H"), el.index("F"), el.index("C")
+    with params.applied():
+        pk = P.CrystalPacker(chain, n_chains=2, coulomb="ewald")
+        A = np.asarray(pk._A_nn); B = np.asarray(pk._B_nn)
+        # v = A r^-12 - B r^-6 with A = D x^12, B = 2 D x^6  ->  x^6 = 2A/B, D = B^2/(4A)
+        x6 = 2.0 * A / B; D = B * B / (4.0 * A)
+        assert np.isclose(x6[i_h, i_f] ** (1 / 6), x_hf) and np.isclose(D[i_h, i_f], d_hf)
+        assert np.isclose(x6[i_c, i_f] ** (1 / 6), np.sqrt(table["C"][0] * table["F"][0]))  # untouched pair
+    with C.parameters(C.X0).applied():
+        pk0 = P.CrystalPacker(chain, n_chains=2, coulomb="ewald")
+        # without the pair term the H-F entry is the geometric-mean mixing of the valence values
+        assert np.isclose(np.asarray(pk0._A_nn)[i_h, i_f], np.sqrt(table["H"][1] * table["F"][1]) * (table["H"][0] * table["F"][0]) ** 6)
+    # SimpleFF's own pair terms
+    ff = params.simple_ff()
+    assert ff.lj_pair_table() == {("F", "H"): (float(x_hf), float(d_hf))}
+    iu, ju, lj_x, lj_d, qq = ff._pair_terms(el, np.full((len(el), len(el)), 9), np.zeros(len(el)))
+    m = ((np.array(el)[iu] == "H") & (np.array(el)[ju] == "F")) | ((np.array(el)[iu] == "F") & (np.array(el)[ju] == "H"))
+    assert m.any() and np.allclose(lj_x[m], x_hf) and np.allclose(lj_d[m], d_hf)
+    assert ff._param_key() != C.parameters(C.X0).simple_ff()._param_key()
+
+
+def test_identity_pair_multipliers_change_nothing():
+    a = C.parameters(np.concatenate([C.X0, [1.0, 1.0]]))
+    b = C.parameters(C.X0)
+    table = {e: (xi, di) for e, xi, di in b.lj}
+    assert np.isclose(a.lj_pairs[0][2], np.sqrt(table["H"][0] * table["F"][0]))
+    assert np.isclose(a.lj_pairs[0][3], np.sqrt(table["H"][1] * table["F"][1]))
+    assert C.ridge(np.concatenate([C.X0, [1.0, 1.0]])) == 0.0 == C.ridge(C.X0)
+
+
+def test_predict_with_induced_dipoles_runs_on_beta():
+    from polyfind.ewald import EwaldSpec
+    from polyfind.polarizability import Polarizable
+    pred = F.predict(F.FITTED_CASES[1], F.FITTED_VALENCE, coulomb="ewald", ewald=EwaldSpec(),
+                     polarizable=Polarizable(), lj_cutoff="force", refine=False, n_refine=1)
+    assert 4.0 < pred.a < 5.5 and 0.05 < pred.polarization < 0.4
+    assert pred.rigid.polarization_magnitude == pred.polarization

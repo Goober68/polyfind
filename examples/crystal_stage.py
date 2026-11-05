@@ -13,8 +13,15 @@ def main():
     ap.add_argument("--maxfev", type=int, default=240)
     ap.add_argument("--out", default="docs/predictions/crystal_stage_v1.json")
     ap.add_argument("--coulomb", default="ewald", choices=("ewald", "dsf"))
+    ap.add_argument("--stage", type=int, default=1, choices=(1, 2), help="2: induced dipoles, force-shifted LJ, H-F pair term, stiffness anchors")
+    ap.add_argument("--x0", default=None, help="JSON result file to resume from (its best x)")
     args = ap.parse_args()
-    best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout)
+    x0 = None
+    if args.x0:
+        import json
+        with open(args.x0) as fh:
+            x0 = json.load(fh)["x"]
+    best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout, stage=args.stage, x0=x0)
     print(f"\nbest of {len(history)} evaluations:\n" + C.table(best))
     print("parameters:", C.parameters(best.x).describe())
     C.save(best, args.out)

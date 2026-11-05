@@ -69,6 +69,24 @@ from .polarizability import Polarizable
 from .helix import HelixParams, helix_parameters, kabsch, rotation_to_z
 from .polymers import Polymer, RISStates, lj_params
 
+
+def lj_pairs() -> dict:
+    """Pair-specific Lennard-Jones overrides ``{(elem_a, elem_b), sorted: (x_ij, D_ij)}`` of the
+    geometric-mean mixing in :meth:`CrystalPacker._setup_topology`.  Empty by default;
+    :meth:`polyfind.fitting.FFParameters.applied` rebinds this name, as it does ``lj_params``."""
+    return {}
+
+
+def apply_lj_pairs(elements, xs, ds, pairs) -> None:
+    """Overwrite the ``(i, j)`` entries of the mixed tables ``xs``, ``ds`` whose element pair is in ``pairs``."""
+    if not pairs:
+        return
+    el = np.asarray(list(elements))
+    for (a, b), (x_ij, d_ij) in pairs.items():
+        mask = ((el[:, None] == a) & (el[None, :] == b)) | ((el[:, None] == b) & (el[None, :] == a))
+        xs[mask] = x_ij
+        ds[mask] = d_ij
+
 MASS = {"C": 12.011, "H": 1.008, "N": 14.007, "O": 15.999, "F": 18.998, "Cl": 35.45}
 _TOPO_CACHE: dict = {}
 
@@ -881,6 +899,7 @@ class CrystalPacker:
         x, d = lj_params(chain.elements)
         xs = np.sqrt(np.outer(x, x))
         ds = np.sqrt(np.outer(d, d))
+        apply_lj_pairs(chain.elements, xs, ds, lj_pairs())
         erc = float(erfc_approx(np.array(alpha * rc)))
         self.dsf_shift = erc / rc
         self.dsf_force = erc / rc ** 2 + 2 * alpha / np.sqrt(np.pi) * np.exp(-(alpha * rc) ** 2) / rc
@@ -2207,6 +2226,8 @@ def pack(
     gradient: str = "analytic",
     coulomb: str = "dsf",
     ewald: EwaldSpec | None = None,
+    polarizable=None,
+    lj_cutoff: str = "energy",
 ) -> list[PackResult]:
     """Coarse screen of the cell parameters followed by local polishing of the best cells.
 
@@ -2256,7 +2277,7 @@ def pack(
         raise ValueError(f"unknown screen {screen!r} (expected 'table' or 'random')")
     rng = rng or np.random.default_rng(0)
     packer = CrystalPacker(chain, n_chains=n_chains, cutoff=cutoff, alpha=alpha, eps_r=eps_r, field=field,
-                           coulomb=coulomb, ewald=ewald)
+                           coulomb=coulomb, ewald=ewald, polarizable=polarizable, lj_cutoff=lj_cutoff)
     # The screen stays truncated whatever the polish uses.  That is the boundary of
     # :meth:`CrystalPacker._require_dsf`, drawn here rather than enforced by accident: the
     # tabulated chain-pair interaction needs a pairwise potential and Ewald's

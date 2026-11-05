@@ -1097,6 +1097,7 @@ class SimpleFF:
     torsion_by_bond: tuple[tuple[float, float, float], ...] | None = None
     charge_scale: float = 1.0
     lj: dict[str, tuple[float, float]] | None = None
+    lj_pairs: tuple[tuple[str, str, float, float], ...] | None = None  # (elem_a, elem_b, x_ij, D_ij) pair overrides of the mixing
     charge_increments: tuple[tuple[str, str, float], ...] | None = None
     bond_terms: tuple[tuple[str, float, float], ...] | None = None
     angle_terms: tuple[tuple[str, float, float], ...] | None = None
@@ -1124,6 +1125,11 @@ class SimpleFF:
         ``UFF_LJ``'s value, and a caller's ``lj`` beats both.
         """
         return {**UFF_LJ_EXTRA, **UFF_LJ, **(self.lj or {})}
+
+    def lj_pair_table(self) -> dict[tuple[str, str], tuple[float, float]]:
+        """Pair-specific ``{(elem_a, elem_b) sorted: (x_ij, D_ij)}`` that replace the geometric-mean
+        mixing for those element pairs (empty unless ``lj_pairs`` is set)."""
+        return {tuple(sorted((a, b))): (float(x), float(d)) for a, b, x, d in (self.lj_pairs or ())}
 
     def _lj_arrays(self, elements) -> tuple[np.ndarray, np.ndarray]:
         """Per-atom ``(x_i, D_i)`` with the overrides applied; ``UFF_LJ`` is left alone."""
@@ -1267,6 +1273,7 @@ class SimpleFF:
     def _param_key(self) -> tuple:
         """Everything a cached :class:`_Topology` depends on besides the structure."""
         lj = tuple(sorted((k, float(v[0]), float(v[1])) for k, v in (self.lj or {}).items()))
+        lj += tuple(sorted((a, b, float(x), float(d)) for a, b, x, d in (self.lj_pairs or ())))
         tbb = None if self.torsion_by_bond is None else tuple(tuple(float(x) for x in t) for t in self.torsion_by_bond)
         inc = None if self.charge_increments is None else tuple(
             sorted((a, b, float(d)) for a, b, d in self.charge_increments))
@@ -1288,6 +1295,14 @@ class SimpleFF:
         x, d = self._lj_arrays(elements)
         lj_x = np.sqrt(x[iu] * x[ju])
         lj_d = np.sqrt(d[iu] * d[ju]) * scale
+        pairs = self.lj_pair_table()
+        if pairs:
+            el = np.asarray(list(elements))
+            ei, ej = el[iu], el[ju]
+            for (a, b), (x_ij, d_ij) in pairs.items():
+                mask = ((ei == a) & (ej == b)) | ((ei == b) & (ej == a))
+                lj_x[mask] = x_ij
+                lj_d[mask] = d_ij * scale[mask]
         q = np.asarray(charges, dtype=float)
         qq = q[iu] * q[ju] * scale * COULOMB / self.eps_r
         return iu, ju, lj_x, lj_d, qq
