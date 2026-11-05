@@ -1282,3 +1282,25 @@ untouched and is now 42% of a serial profile.
 - **GPU.** Nothing here ran on one; the kernels are now neighbour-list scatter-adds and
   small dense products, which is the shape section 14 said a GPU would want, and the
   decision there stands until a GPU is on the box.
+
+### 16.5 The pair kernel on a list: measured, not kept
+
+A neighbour-list form of the Lennard-Jones kernel of the gradient path (the pair potential
+evaluated on the combinations inside the cutoff, found by one `nonzero` over the dense
+distance array, the gradient assembled by `bincount` scatter-adds) was built and A/B'd:
+energies equal to the dense kernel's, gradients to 4e-14, and 183 -> 169 ms per 120-atom
+`energy_and_grad` (8%).  It is not kept.  The gain is small because the `(images, N, N)`
+distance arrays are still formed densely, and that, not the pair potential, is most of
+what the kernel costs once the Coulomb work is gone (16.2); and the different summation
+order breaks the invariant `tests/test_pack.py` guards, that `energy_and_grad`'s value is
+bit for bit the one `energy` returns for the same row, which the rest of the module leans
+on.  Two per cent of the end-to-end time is not worth that invariant.
+
+What a gradient call is made of now, from cProfile of ten `energy_and_grad` calls on the
+copolymer packer (induced dipoles, Ewald), 1.55 s: `ewald.terms` 1.25 s cumulative (two calls
+per energy, 0.90 s own time), the reciprocal-space `einsum`s 0.23 s, the packer's own time
+0.16 s, the list kernel 0.004 s.  A gradient call is 80% Ewald, and the next lever on this
+path is inside `terms`: the real-space list is rebuilt from a dense distance array at every
+call (a Verlet skin would reuse it across the small steps of a relaxation), and the
+reciprocal-space structure factors are recomputed for every k-vector.  Neither was taken
+here; the end-to-end numbers of 16.3 stand as the state of the speed stage.
