@@ -147,13 +147,18 @@ stiffness flag of the previous section is read against the QE cell from here on.
   which is the rigid-dipole dilation term. Its electrostriction routes were not run (the cell has
   60 atoms per chain and the routes' tight relaxations dominated a two-hour job); `M` and `Q` for
   this cell are not predicted here.
-- **E2, PVDF.** On this potential TGTG' is the ground conformation, T3GT3G' lies 0.7 and
-  TTTT 1.3 kcal/mol per monomer above it, and the TGTG' to TTTT conformational strain along
-  the chain is +10.4%. Published PBE-D3 puts alpha below beta by a few tenths of a kcal/mol
-  per monomer, so the sign is expected to hold and the magnitude is expected to fail the 0.1
-  kcal/mol threshold: the fitted potential over-binds the helical conformations relative to
-  all-trans by about a kcal/mol per monomer, which E2's PVDF row will measure and the
-  refit will use.
+- **E2, PVDF.** On this potential in the induced-dipole Ewald setting of these runs, TGTG' is the
+  ground conformation, T3GT3G' lies 0.7 and TTTT 1.3 kcal/mol per monomer above it, and the
+  TGTG' to TTTT conformational strain along the chain is +10.4%. Two cautions, found on
+  2026-11-05 while re-reading the record. The TGTG' cell here relaxed to a polar (delta-like)
+  packing with 0.07 C/m^2, not the antipolar alpha. And the setting matters: in the
+  fixed-charge setting the potential was validated in (`docs/POLAR_MARGIN_DFT.md`), the
+  antipolar TGTG' cell lies 0.747 kcal/mol per monomer below beta against Dipole's PBE-D3(BJ)
+  -0.726, a match to 0.02; the extra 0.55 of the induced-dipole setting is the induced dipoles'
+  own contribution to the two packings, which has never been checked against DFT. E2's PVDF row
+  will therefore be compared in both settings, with the polar and antipolar TGTG' packings
+  reported separately; the number that stands as the prediction of the validated setting is
+  -0.747 for alpha (antipolar) against beta.
 - **E2, the 70/30 VDF/TrFE model.** The same ordering, TGTG' below T3GT3G' below TTTT, with the
   all-trans penalty lowered from 1.30 to 1.09 kcal/mol per monomer and the helical penalty from
   0.73 to 0.56 by the TrFE units; the conformational strain is unchanged at +10.1%. The direction
