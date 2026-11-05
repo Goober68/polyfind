@@ -165,6 +165,16 @@ stiffness flag of the previous section is read against the QE cell from here on.
   is the known one (TrFE stabilises the all-trans phase of the copolymer); the magnitude, 0.2
   kcal/mol per monomer at 30% TrFE, is what E2's VDF/TrFE row tests. The cells are large (20
   and 40 backbone bonds per chain) and their packing searches are the least converged of the set.
+- **E2, corrected 2026-11-05 (the backbone-angle strain).** The E2 script reported the lattice
+  energy of each relaxed conformer cell and left out the strain energy of the refined backbone
+  angles (`RefineResult.angle_energy`), which a DFT total energy carries. The pre-registered
+  margins over TGTG' were PVDF TTTT +1.304 and T3GT3G' +0.725, copolymer TTTT +1.087 and
+  T3GT3G' +0.560 kcal/mol per monomer; the omission favoured the gauche conformers by about
+  0.45 for PVDF (0.21 for beta's opened backbone angle against 0.66 for the refined TGTG'
+  cell), so the corrected PVDF TTTT margin is near +0.85, the number the fit path had been
+  giving for E(beta) - E(alpha) all along. The files `e2_polyfind*.json` are regenerated with
+  the strain included and both parts recorded (`docs/CRYSTAL_STAGE.md` 5.4); the conformer
+  cells, polarizations and strains are unchanged. The correction is reported to Dipole.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
   2026-11-05; the earlier CF3 reading of FA is withdrawn) are not predicted here: the potential's chlorine and the other defect parameters are unvalidated,
