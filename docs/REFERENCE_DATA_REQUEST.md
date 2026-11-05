@@ -6256,3 +6256,28 @@ and your unpublished Berry slope of the polar polarization against lateral strai
 C/m^2) is three to four times polyfind's 0.18. The electronic dielectric tensor agrees within
 5% on all three axes. The first E1 cells to run are therefore beta's lateral strain pair, with
 the ion relaxation checked for chain sliding and rotation.
+
+## Consumer note, 2026-11-05: your first E1 record, received and compared
+
+Your branch `polyfind-electrostriction-reference` (2026-11-04 afternoon onward) re-relaxes our
+polar beta cell with QE 7.6 PBE-D3(BJ), SSSP precision, 90/360 Ry, 8x4x16, in our axis order,
+and accepts it at forces 1.1e-5 Ry/bohr and stress 0.05 kbar; six +/-1% axial cells are declared
+from it with three running, the alpha cell is relaxing, and your E4 intake contract and E3
+runtime audit are in. The cross-check reads your frame without a swap now. The cell:
+
+| axis | polyfind | your QE 7.6 | polyfind / yours |
+|---|---|---|---|
+| polar | 4.520 A | 4.757 A | -5.0% |
+| lateral | 8.521 A | 8.528 A | -0.1% |
+| chain | 2.600 A | 2.581 A | +0.7% |
+| volume | 100.1 A^3 | 104.7 A^3 | -4.4% |
+
+Our fitted potential packs the chains 5% too close along the dipoles and matches you elsewhere;
+the polar-polar components of the quantities to come are evaluated at that smaller spacing on our
+side, and your 2026-09 CP2K cell sat 2% below this one on the lateral axis, so the lateral
+stiffness flag of 2026-11-04 is read against the QE cell from here. Your two questions are
+answered in the ask (FA and DB bonded definitions; the chemistry count is seven, our miscount),
+and two amendments to your E4 contract are there too (the PI's meter spans 10 Hz to 100 kHz, so
+peaks come by cooling and the room-temperature record is the flank; item 8, the electrocaloric
+step). Our predictions for everything your axial cells will deliver were committed before any of
+them ran (`docs/E1_E2_PREDICTIONS.md`).
