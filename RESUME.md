@@ -39,6 +39,32 @@ dependence at each temperature; the spread is the knob for the suppression (sect
 Needed from the PI: push `kink-switching` and
 `vector-repeat-merge`, which exist only on `E:\source\gh\polyfind`.
 
+2026-11-05 update (the mission: a solver an order of magnitude faster than DFT at DFT-like
+accuracy, worked in two stages; all on `claude/polymeric-stable-arrangements-uh06b1`).
+**Speed** (`docs/PERFORMANCE_REVIEW.md` section 16): the 120-atom copolymer E1 job, which did
+not finish in two hours, runs in 359 s on four cores (1,139 s serial), results identical;
+neighbour-list Ewald real space and a BLAS reciprocal tensor (1e-13 agreement), one BLAS
+thread per process (OpenBLAS's pool made a 360 x 360 solve 200-500x slower), independent
+relaxations in forked workers (`mechanics.parallel_map`, `POLYFIND_WORKERS`), no Coulomb
+work in the pair kernel under Ewald; serial profile 314 -> 69 s. Left: the dense
+Lennard-Jones kernel, the serial reference build. **Accuracy** (`docs/CRYSTAL_STAGE.md`,
+preset `pvdf-dft-valence-crystal`, opt-in): the eight nonbonded terms the conformer trainset
+left free were fitted to Dipole's QE beta cell, the antipolar alpha cell, the two margins and
+the Berry-phase P. Fixed-charge: P 0.115 -> 0.174 (DFT 0.18), alpha's long axis -6.2% ->
+-2.7%, beta's polar axis only -4.5% -> -3.7% with the other axes drifting out by about one
+tolerance; the isotropic Lennard-Jones form cannot open the polar H...F contact without
+opening the lateral F...F one. With induced dipoles (the E1 setting) the polar axis stays at
+-4.8% and P overshoots to 0.214, so the pre-registered set on `pvdf-dft-valence` remains the
+better E1 prediction and both sets are kept (`docs/predictions/e1_polyfind_crystal.json`,
+`e2_polyfind_crystal.json`). Next, in order: fit in the induced-dipole setting (plumb
+`polarizable` through `fitting.predict`, or an antipolar branch on the mechanics path) with a
+pair-specific H-F term, adding Dipole's six strained cells as anchors when they land.
+**Exchange**: the Science 2022 main text makes FA the dehydrochlorinated CFE pair, i.e. the
+same `-CH=CF-` unit as DB (the CF3 reading is withdrawn; E2 is six chemistries; record and
+devstream amended, sarco a498326c). Dipole at 05:12 UTC: no accepted strained units yet, one
+axial relaxation in SCF, alpha relaxing. The E1 report now carries the copolymer's
+electrostriction column (intrinsic lattice Q about +3 m^4/C^2 along the polar axis).
+
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five
 CPU performance patches of `docs/PERFORMANCE_REVIEW.md` section 15 are applied (commits
 31a2456, bdbcb8f, e364e0b, 1700515; section 15.7 has the measurements on the merged tree):

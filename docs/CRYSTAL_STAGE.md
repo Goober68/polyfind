@@ -108,15 +108,65 @@ fluorine), which decouples the polar contact from the lateral one, fitted to the
 plus the six strained-cell energies Dipole is computing (which pin the curvature, not just the
 minimum).
 
-### 4.1 The induced-dipole setting
+### 4.1 The induced-dipole setting, the one E1 and E2 are predicted in
 
-The induced dipoles add attraction (the pre-registered polarizable prediction packed beta's
-polar axis 5.0% short against 4.5% fixed-charge), so this preset's misses in that setting are
-expected to be larger on the polar axis. `examples/e1_predictions.py --preset
-pvdf-dft-valence-crystal` and the E2 script on the same preset are the measurement; they run
-after the timing runs of `docs/PERFORMANCE_REVIEW.md` section 16 finish, and their results go
-here and into `docs/predictions/e1_polyfind_crystal.json` and `e2_polyfind_crystal.json` as a
-labelled second prediction set. The pre-registered set on `pvdf-dft-valence` is not replaced.
+`examples/e1_predictions.py --preset pvdf-dft-valence-crystal`
+(`docs/predictions/e1_polyfind_crystal.json`), the same construction as the pre-registered
+set (induced dipoles, Ewald, rigid chain, force-shifted Lennard-Jones, 0 K):
+
+| quantity | DFT | `pvdf-dft-valence` | crystal stage |
+|---|---|---|---|
+| beta a (polar), A | 4.757 | 4.520 (-5.0%) | 4.530 (-4.8%) |
+| beta b (lateral), A | 8.528 | 8.521 (-0.1%) | 8.596 (+0.8%) |
+| beta c (chain), A | 2.581 | 2.600 (+0.7%) | 2.610 (+1.1%) |
+| beta polarization, C/m^2 | 0.18 | 0.140 | 0.214 |
+| beta eps_inf (x, y, z) | 2.24, 2.25, 2.60 (Dipole's DFPT at the CP2K cell) | 2.197, 2.133, 2.515 | 2.171, 2.108, 2.495 |
+| beta eps_0 relaxed-ion (x, y, z) | - | 2.197, 2.831, 2.515 | 2.171, 3.430, 2.495 |
+| beta C_11, C_22, C_66, GPa | 25.2 (C_11, Dipole, preliminary) | 22.6, 18.6, 4.3 | 31.5, 23.5, 5.7 |
+| beta e_11, C/m^2 | - | 0.233 | 0.356 |
+| alpha (polar TGTG' packing) a, b, c, A | - | 4.977, 9.038, 4.710 | 4.984, 9.335, 4.744 |
+| alpha polarization, C/m^2 | - | 0.073 | 0.104 |
+| PE a, b, c, A | - | 4.061, 7.088, 2.551 | 4.202, 7.436, 2.544 |
+
+(The sign of P and of e_11 differs between the two files because the packer chose the other
+of the two symmetry-equivalent orientations of the CF2 dipoles along x; magnitudes compare.)
+
+**Reading.** With induced dipoles the polar axis does not open: -5.0% -> -4.8%. The dipoles
+the fixed-charge fit did not see add their own attraction along the polar axis and take
+back most of the 0.8% the fit gained there, while the lateral and chain axes carry the
+fit's drift (+0.8%, +1.1%). The polarization overshoots: the increments were set where the
+induced dipoles were absent, and with them present P is 0.214, 19% above DFT, where the
+valence preset was 22% below. The ionic part of the lateral dielectric constant nearly
+doubles (eps_0 - eps_inf along y: 0.70 -> 1.32), as it must when it scales with the square of
+the bond charges, and the polar stiffness C_11 goes from 22.6 to 31.5 GPa against Dipole's
+preliminary 25.2. PE, which is not an anchor, moves 3.5-5% towards the measured cell (its
+cross-section per chain 14.4 -> 15.6 A^2; experiment at room temperature 18.4).
+
+In the setting E1 is judged in, the pre-registered set on `pvdf-dft-valence` therefore
+remains the better prediction on every quantity but the magnitude of P; both sets stay in
+the record and the cross-check runs on both. The lesson is the obvious one: fit in the
+setting you predict in. The stage was fitted fixed-charge because the fit's packing and
+refinement path (`fitting.predict`, through `pack` and `refine_crystal`) has no induced-dipole
+option, while the mechanics path that has one (`refined_reference`) has no antipolar branch
+for the alpha anchor; either needs plumbing before an induced-dipole fit, and that fit should
+come with the form change of section 4, since the same isotropic terms would hit the same
+ceiling on the polar axis.
+
+**The copolymer cell and the E2 margins on this preset.** The 120-atom 70/30 VDF/TrFE
+all-trans cell (`e1_polyfind_crystal.json`, 343 s with four workers): a 4.793 -> 4.765, b
+8.852 -> 8.932, gamma 91.96 -> 92.68 deg, c per 10 monomers 25.99 -> 26.07 A; |P| 0.109 ->
+0.169 C/m^2; eps_0 (x, y, z) 2.070, 2.371, 2.379 -> 2.085, 2.637, 2.374; C_11, C_22, C_66 16.5,
+17.0, 1.7 -> 21.7, 20.6, 3.0 GPa; intrinsic Q along the polar axis 3.06 -> 3.92 m^4/C^2 and
+M_x1 0.46 -> 0.74 x 1e-21 m^2/V^2 (chi_free 1.38 -> 1.55): the same stiffening, larger
+polarization and larger ionic response as beta, with no DFT anchor yet to judge them against
+(Dipole's copolymer cell is in E1). E2 (`e2_polyfind_crystal.json`, same script, same
+construction): PVDF's ground conformation is still TGTG' and the margins open, TTTT +1.30 ->
++1.63 and T3GT3G' +0.73 -> +1.04 kcal/mol per monomer against DFT's +0.726 for the alpha-beta
+pair -- the fixed-charge fit reproduces that margin to 0.02 and the induced dipoles, on the
+larger charges, add 0.9 kcal/mol of polar-lattice stabilisation that the fit never saw. The
+E2 row that matters most for the plan, the copolymer's TTTT-against-TGTG' margin, is in the
+same file (its rows are written as they finish).
+
 
 ## 5. What it costs, and what it does not touch
 
