@@ -59,6 +59,22 @@ better E1 prediction and both sets are kept (`docs/predictions/e1_polyfind_cryst
 `e2_polyfind_crystal.json`). Next, in order: fit in the induced-dipole setting (plumb
 `polarizable` through `fitting.predict`, or an antipolar branch on the mechanics path) with a
 pair-specific H-F term, adding Dipole's six strained cells as anchors when they land.
+**Afternoon, 2026-11-05.** Dipole's six +/-1% axial beta cells landed (exchange main 54897c21):
+from their stresses the relaxed-ion stiffness is C_11 22.8, C_22 24.5, C_12 5.9, C_33 302.6 GPa
+(record `beta_qe_axial_v1`); the pre-registered prediction has C_11 to 1%, C_22 24% low, C_12 47%
+low. Stage 2 of the crystal fit (`docs/CRYSTAL_STAGE.md` section 5; the fit path now takes
+`polarizable=`, `lj_cutoff=`, a pair-specific H-F Lennard-Jones term through `FFParameters.lj_pairs`,
+and the stiffness as anchors) ran in the setting the predictions are made in: P and the margin
+inside tolerance, beta's polar axis -5.0% -> -3.9% and no further, lateral +1.5%, C_12 still 57% of
+DFT; preset `pvdf-dft-valence-crystal2`, prediction files `e1/e2_polyfind_crystal2.json`, PE's cell
+degrades (not an anchor: a warning). The polar-axis scan says why: at the DFT spacing the
+electrostatics pulls the axis in by 1.3-2.7 kcal/mol per A and the fits can only inflate the
+repulsion. Charge penetration (`EwaldSpec(charge_damping=b)`, exclusion-consistent, tested) and
+the PBE chain geometry (C-F 1.386 against the built 1.350) were each probed: -5.0% -> -4.3% and
+-4.4% respectively, neither the lever alone; stage 3 (eleven variables) was running at the end of
+the session, result to section 5.6. **E2 correction**: the E2 script omitted the refined
+backbone angles' strain energy, favouring the gauche conformers by about 0.45 kcal/mol per
+monomer (PVDF TTTT margin +1.30 -> about +0.85); fixed, files regenerated, Dipole told.
 **Exchange**: the Science 2022 main text makes FA the dehydrochlorinated CFE pair, i.e. the
 same `-CH=CF-` unit as DB (the CF3 reading is withdrawn; E2 is six chemistries; record and
 devstream amended, sarco a498326c). Dipole at 05:12 UTC: no accepted strained units yet, one
