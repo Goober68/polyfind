@@ -22,7 +22,6 @@ import numpy as np
 
 from polyfind import electrostriction as ES
 from polyfind import mechanics as M
-from polyfind.loss import EPS0
 from polyfind.polymers import PE, PVDF, VDF_TRFE_7_3
 
 T, GP, GM = 0, 1, 2
@@ -43,22 +42,7 @@ def build(polymer, seq, label):
     return M.relax_reference(ref)
 
 
-def true_dielectric(ref, eps6, field=2e-3):
-    """``eps_ij = delta_ij + (1/eps0) dP_i / dE_j`` at fixed normal strain ``eps6``: the true
-    polarization (dipole over the strained volume, in the reference frame) against the true
-    field ``F^-T Et`` for the nominal field ``Et`` that :func:`polyfind.mechanics._state_at_strain`
-    holds fixed in the reference frame; for a normal strain ``E_j = Et_j / (1 + eta_j)``."""
-    eps6 = np.asarray(eps6, dtype=float).reshape(6)
-    eps = np.eye(3)
-    for j in range(3):
-        ps = []
-        for sgn in (1.0, -1.0):
-            f = np.zeros(3)
-            f[j] = sgn * field
-            ps.append(np.asarray(ES._state(ref, eps6, f, None, ES.TIGHT).polarization, dtype=float))
-        e_true = 2.0 * field * 1e10 / (1.0 + eps6[j])  # V/m
-        eps[:, j] += (ps[0] - ps[1]) / e_true / EPS0
-    return eps
+true_dielectric = ES.true_dielectric
 
 
 def main():

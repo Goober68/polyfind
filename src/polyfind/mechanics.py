@@ -907,23 +907,74 @@ class Elastic:
         return "  ".join(f"{n}={self.C[i, j]:7.2f}" for (i, j), n in sorted(names.items(), key=lambda kv: kv[1]))
 
 
+# --- process parallelism for independent relaxations -----------------------------------------
+_PARALLEL_CONTEXT: dict = {}  # what the forked workers read instead of receiving it pickled
+
+
+def parallel_workers() -> int:
+    """Worker processes for independent relaxations: ``POLYFIND_WORKERS``, else the CPU count."""
+    import os
+    try:
+        n = int(os.environ.get("POLYFIND_WORKERS", os.cpu_count() or 1))
+    except ValueError:
+        n = 1
+    return max(1, n)
+
+
+def parallel_map(fn, items, workers: int | None = None) -> list:
+    """``[fn(x) for x in items]`` in forked worker processes where that is possible.
+
+    The relaxations this package does at different strains, fields and stresses are
+    independent, and with one BLAS thread per process (see :mod:`polyfind`) they parallelise
+    across cores by process.  ``fn`` must be a module-level function; whatever else it needs
+    (the reference, a shape, the elastic constants) is placed in :data:`_PARALLEL_CONTEXT`
+    before the call, which the forked children inherit, so nothing large is pickled.  Serial
+    when ``workers`` is 1, for a single item, off Linux, or inside a worker already (no
+    nesting).  The results are the same objects the serial loop would return.
+    """
+    import multiprocessing as mp
+    import sys
+    items = list(items)
+    n = parallel_workers() if workers is None else int(workers)
+    n = min(n, len(items))
+    if n <= 1 or sys.platform != "linux" or mp.parent_process() is not None:
+        return [fn(x) for x in items]
+    ctx = mp.get_context("fork")
+    with ctx.Pool(n) as pool:
+        return pool.map(fn, items, chunksize=1)
+
+
+def _free_strain_job(field):
+    ctx = _PARALLEL_CONTEXT
+    return free_strain(ctx["ref"], field, ctx["elastic"], shape=ctx.get("shape"), **ctx["free_strain_kw"])
+
+
+def _strain_state_job(job):
+    eps6, field, relax_internal = job
+    ref, shape = _PARALLEL_CONTEXT["ref"], _PARALLEL_CONTEXT.get("shape")
+    if shape is None:
+        return _state_at_strain(ref, eps6, relax_internal, field=field)
+    return deformable_state(ref, shape, eps6, field=field)
+
+
 def strain_states(ref: Reference, step: float = 2e-3, relax_internal: bool = True,
                   shape: Shape | None = None, reachable=None) -> dict:
     """``{(K, +1): state, (K, -1): state}`` for every reachable Voigt component.
 
     Both the stiffness and the piezoelectric constants are built from the same strained,
     relaxed configurations, and on the deformable path each one costs a constrained
-    minimisation -- so they are computed once here and shared rather than twice over.
+    minimisation -- so they are computed once here and shared rather than twice over.  The
+    states are independent and are relaxed in parallel processes (:func:`parallel_map`).
     """
     reachable = (IN_PLANE if shape is None else WITH_AXIAL) if reachable is None else tuple(reachable)
-    out = {}
-    for K in reachable:
-        for sgn in (1, -1):
-            s = np.zeros(6)
-            s[K] = sgn * step
-            out[(K, sgn)] = (_state_at_strain(ref, s, relax_internal) if shape is None
-                             else deformable_state(ref, shape, s))
-    return out
+    keys = [(K, sgn) for K in reachable for sgn in (1, -1)]
+    jobs = []
+    for K, sgn in keys:
+        s = np.zeros(6)
+        s[K] = sgn * step
+        jobs.append((s, None, relax_internal))
+    _PARALLEL_CONTEXT.update(ref=ref, shape=shape)
+    return dict(zip(keys, parallel_map(_strain_state_job, jobs)))
 
 
 def elastic_constants(ref: Reference, step: float = 2e-3, relax_internal: bool = True,
@@ -1103,16 +1154,19 @@ def piezoelectric(ref: Reference, elastic: Elastic, step: float = 2e-3, field: f
         floor = float(np.max(np.abs(elastic.residual_stress[list(cols)])))
         tol = max(1e-8, 20.0 * floor)
         d_direct = np.zeros((3, len(cols)))
+        # six independent Newton iterations (one per field direction and sign), in parallel
+        fields = []
         for i in range(3):
-            strains = []
             for sgn in (1.0, -1.0):
                 f = np.zeros(3)
                 f[i] = sgn * field
-                eps, it = free_strain(ref, f, elastic, iterations=converse_iterations,
-                                      tol=tol, shape=shape)
-                used = max(used, it)
-                strains.append(eps)
-            d_direct[i] = (strains[0] - strains[1])[list(cols)] / (2.0 * field * V_PER_A_TO_V_PER_M)
+                fields.append(f)
+        _PARALLEL_CONTEXT.update(ref=ref, elastic=elastic, shape=shape, free_strain_kw={"iterations": converse_iterations, "tol": tol})
+        roots = parallel_map(_free_strain_job, fields)
+        for i in range(3):
+            (ep, itp), (em, itm) = roots[2 * i], roots[2 * i + 1]
+            used = max(used, itp, itm)
+            d_direct[i] = (ep - em)[list(cols)] / (2.0 * field * V_PER_A_TO_V_PER_M)
         d_direct *= 1e12  # C/N -> pC/N
     d_from_e = e @ elastic.S * C_PER_M2_PER_GPA_TO_PC_PER_N
     diff = float(np.max(np.abs(d_from_e - d_direct))) if converse else float("nan")
@@ -1183,24 +1237,27 @@ def dielectric_tensor(ref: Reference, field: float = 2e-3, relax: bool = True,
     clamped = np.eye(3)
     relaxed = np.eye(3) if relax else None
     saved = pk.field
+    fields = []
     try:
         for j in range(3):
-            mus, mus_r = [], []
+            mus = []
             for sgn in (1.0, -1.0):
                 f = np.zeros(3)
                 f[j] = sgn * field
+                fields.append(f)
                 pk.set_field(f)
                 mus.append(np.asarray(pk.dipole(ref.params[None], c=c_arr)[0], dtype=float))
                 pk.set_field(saved)
-                if relax:
-                    st = (_state_at_strain(ref, np.zeros(6), True, field=f) if shape is None
-                          else deformable_state(ref, shape, np.zeros(6), field=f))
-                    mus_r.append(st.m * V / E_PER_A2_TO_C_PER_M2)  # back to e.A
             clamped[:, j] += (mus[0] - mus[1]) / (2.0 * field * V) * E_PER_A2_PER_V_PER_A_TO_CHI
-            if relax:
-                relaxed[:, j] += (mus_r[0] - mus_r[1]) / (2.0 * field * V) * E_PER_A2_PER_V_PER_A_TO_CHI
     finally:
         pk.set_field(saved)
+    if relax:
+        # the six relaxed states are independent: one per field direction and sign
+        _PARALLEL_CONTEXT.update(ref=ref, shape=shape)
+        states = parallel_map(_strain_state_job, [(np.zeros(6), f, True) for f in fields])
+        for j in range(3):
+            mp_, mm_ = (st.m * V / E_PER_A2_TO_C_PER_M2 for st in (states[2 * j], states[2 * j + 1]))  # back to e.A
+            relaxed[:, j] += (mp_ - mm_) / (2.0 * field * V) * E_PER_A2_PER_V_PER_A_TO_CHI
     return Dielectric(clamped=clamped, relaxed=relaxed, field=field)
 
 

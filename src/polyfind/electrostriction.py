@@ -154,6 +154,25 @@ def state_at_stress(ref: Reference, elastic: Elastic, target6, field=None, shape
     return eps, _state(ref, eps, field, shape, tight)
 
 
+def _tight_state_job(job):
+    eps6, field = job
+    return _state(ref=M._PARALLEL_CONTEXT["ref"], eps6=eps6, field=field, shape=M._PARALLEL_CONTEXT.get("shape"),
+                  tight=TIGHT)
+
+
+def _field_states(ref: Reference, eps6, field: float, shape: Shape | None) -> list:
+    """The six tight relaxed states at ``eps6`` with the field ``+/- field`` along each axis,
+    ordered ``(+x, -x, +y, -y, +z, -z)``, relaxed in parallel processes."""
+    jobs = []
+    for j in range(3):
+        for sgn in (1.0, -1.0):
+            f = np.zeros(3)
+            f[j] = sgn * field
+            jobs.append((np.asarray(eps6, dtype=float).reshape(6), f))
+    M._PARALLEL_CONTEXT.update(ref=ref, shape=shape)
+    return M.parallel_map(_tight_state_job, jobs)
+
+
 def nominal_susceptibility(ref: Reference, eps6, field: float = 2e-3, shape: Shape | None = None) -> np.ndarray:
     """``chi^eta_ij = (1/eps0) d Pt_i / d Et_j`` at fixed strain ``eps6``, relaxed-ion, dimensionless.
 
@@ -162,18 +181,36 @@ def nominal_susceptibility(ref: Reference, eps6, field: float = 2e-3, shape: Sha
     enthalpy; at zero strain this is the relaxed-ion susceptibility of
     :func:`polyfind.mechanics.dielectric_tensor`.  Central differences in the field; the
     internal coordinates (and the chain's shape, with a :class:`~polyfind.mechanics.Shape`)
-    are relaxed at every evaluation.
+    are relaxed at every evaluation, the six evaluations in parallel processes.
     """
-    eps6 = np.asarray(eps6, dtype=float).reshape(6)
+    states = _field_states(ref, eps6, field, shape)
     chi = np.zeros((3, 3))
     for j in range(3):
-        ms = []
-        for sgn in (1.0, -1.0):
-            f = np.zeros(3)
-            f[j] = sgn * field
-            ms.append(np.asarray(_state(ref, eps6, f, shape, TIGHT).nominal, dtype=float))
-        chi[:, j] = (ms[0] - ms[1]) / (2.0 * field)  # C/m^2 per V/A
+        mp_, mm_ = (np.asarray(states[2 * j + k].nominal, dtype=float) for k in (0, 1))
+        chi[:, j] = (mp_ - mm_) / (2.0 * field)  # C/m^2 per V/A
     return chi / V_PER_A_TO_V_PER_M / EPS0
+
+
+def true_dielectric(ref: Reference, eps6, field: float = 2e-3, shape: Shape | None = None) -> np.ndarray:
+    """``eps_ij = delta_ij + (1/eps0) dP_i / dE_j`` at fixed normal strain ``eps6``: the true
+    dielectric tensor of the strained cell, which is what DFPT at a strained, ion-relaxed
+    cell reports.  The true polarization (dipole over the strained volume, reference frame)
+    against the true field ``F^-T Et`` for the nominal field held in the reference frame; for
+    a normal strain ``E_j = Et_j / (1 + eta_j)``.  Six tight relaxations, in parallel."""
+    eps6 = np.asarray(eps6, dtype=float).reshape(6)
+    states = _field_states(ref, eps6, field, shape)
+    eps = np.eye(3)
+    for j in range(3):
+        pp_, pm_ = (np.asarray(states[2 * j + k].polarization, dtype=float) for k in (0, 1))
+        e_true = 2.0 * field * V_PER_A_TO_V_PER_M / (1.0 + eps6[j])  # V/m
+        eps[:, j] += (pp_ - pm_) / e_true / EPS0
+    return eps
+
+
+def _stress_state_job(job):
+    target6, field3 = job
+    ctx = M._PARALLEL_CONTEXT
+    return state_at_stress(ctx["ref"], ctx["elastic"], target6, field3, ctx.get("shape"))
 
 
 def electrostriction(ref: Reference, elastic: Elastic | None = None, field: float = 0.005,
@@ -208,21 +245,36 @@ def electrostriction(ref: Reference, elastic: Elastic | None = None, field: floa
     S_si = stress * 1e9
 
     zero = np.zeros(6)
-    eps0, _ = state_at_stress(ref, elastic, zero, np.zeros(3), shape)
+    # every stress-targeted state is independent of the others: one list, relaxed in parallel
+    jobs: dict = {"zero": (zero, np.zeros(3))}
+    for i in range(3):
+        f = np.zeros(3)
+        f[i] = field
+        fc = np.zeros(3)
+        fc[i] = chi_field
+        jobs[("E+", i)], jobs[("E-", i)] = (zero, f), (zero, -f)
+        jobs[("c+", i)], jobs[("c-", i)] = (zero, fc), (zero, -fc)
+        if polarization_route:
+            for J in idx:
+                tgt = np.zeros(6)
+                tgt[J] = stress
+                for sname, sg in (("s+", tgt), ("s-", -tgt)):
+                    for fname, fg in (("f+", f), ("f-", -f)):
+                        jobs[(sname, fname, i, J)] = (sg, fg)
+    keys = list(jobs)
+    M._PARALLEL_CONTEXT.update(ref=ref, elastic=elastic, shape=shape)
+    results = dict(zip(keys, M.parallel_map(_stress_state_job, [jobs[k] for k in keys])))
+    eps0, _ = results["zero"]
     M_strain = np.full((3, 6), np.nan)
     linear = np.full((3, 6), np.nan)
     chi_free = np.zeros(3)
     for i in range(3):
-        f = np.zeros(3)
-        f[i] = field
-        ep, _ = state_at_stress(ref, elastic, zero, f, shape)
-        em, _ = state_at_stress(ref, elastic, zero, -f, shape)
+        ep, _ = results[("E+", i)]
+        em, _ = results[("E-", i)]
         M_strain[i, idx] = (ep[idx] + em[idx] - 2.0 * eps0[idx]) / (2.0 * E_si ** 2)
         linear[i, idx] = (ep[idx] - em[idx]) / (2.0 * E_si) * 1e12
-        fc = np.zeros(3)
-        fc[i] = chi_field
-        _, sp = state_at_stress(ref, elastic, zero, fc, shape)
-        _, sm = state_at_stress(ref, elastic, zero, -fc, shape)
+        _, sp = results[("c+", i)]
+        _, sm = results[("c-", i)]
         chi_free[i] = (sp.nominal[i] - sm.nominal[i]) / (2.0 * chi_field) / V_PER_A_TO_V_PER_M / EPS0
 
     chi_clamped = np.diag(nominal_susceptibility(ref, np.zeros(6), chi_field, shape)).copy()
@@ -230,15 +282,11 @@ def electrostriction(ref: Reference, elastic: Elastic | None = None, field: floa
     M_pol = np.full((3, 6), np.nan)
     if polarization_route:
         for i in range(3):
-            f = np.zeros(3)
-            f[i] = field
             for J in idx:
-                tgt = np.zeros(6)
-                tgt[J] = stress
-                _, spp = state_at_stress(ref, elastic, tgt, f, shape)
-                _, spm = state_at_stress(ref, elastic, tgt, -f, shape)
-                _, smp = state_at_stress(ref, elastic, -tgt, f, shape)
-                _, smm = state_at_stress(ref, elastic, -tgt, -f, shape)
+                _, spp = results[("s+", "f+", i, J)]
+                _, spm = results[("s+", "f-", i, J)]
+                _, smp = results[("s-", "f+", i, J)]
+                _, smm = results[("s-", "f-", i, J)]
                 mixed = (spp.nominal[i] - spm.nominal[i] - smp.nominal[i] + smm.nominal[i]) / (4.0 * S_si * E_si)
                 M_pol[i, J] = 0.5 * mixed
 
