@@ -332,87 +332,113 @@ class Ewald:
         e_real = 0.0
         gq_real = np.zeros(N) if charge_grad else None
         A1 = np.zeros((3, 3)) if grad else None
-        Wij = np.zeros((N, N, 3)) if grad else None
+        A2 = np.zeros((3, 3)) if grad else None  # sum_k nint_k (x) W_k: the image-shift part of dE/dh
         qq = q[:, None] * q[None, :]
         pp = None if not has_p else p @ p.T
+        rc2 = self.rc * self.rc
         step = max(1, self.chunk_elems // max(1, N * N))
+
+        # The kernels are evaluated on the neighbour list only.  Every pair-image combination
+        # within the cutoff is found from the full (I, N, N) distance array, which is one
+        # cheap pass; everything after that runs on the K entries inside the sphere, which on
+        # a 120-atom cell is about 2% of them (measured 2026-11-05: the dense form spent 83% of
+        # a response calculation on masked-out arithmetic).  Sums over images and sites become
+        # scatter-adds (bincount) and the lattice derivative's two moments are accumulated as
+        # (3, 3) matrices, so no (N, N, 3) intermediate survives the loop.
+        def scatter(idx, w):
+            return np.bincount(idx, weights=w, minlength=N)
+
+        def scatter_vec(idx, W):
+            return np.stack([np.bincount(idx, weights=W[:, c], minlength=N) for c in range(3)], axis=1)
+
         for t in range(0, m_all.shape[0], step):
             m = m_all[t : t + step]
             D = base[None] + (m @ h)[:, None, None, :]  # (I, N, N, 3)
             r2 = np.einsum("mijc,mijc->mij", D, D)
-            mask = (r2 < self.rc * self.rc) & (r2 > 1e-12)
-            r2s = np.where(mask, r2, 1.0)
-            r = np.sqrt(r2s)
-            ar = self.alpha * r
-            f = np.where(mask, erfc(ar) / r, 0.0)
-            e_real += 0.5 * self.pref * float((qq[None] * f).sum())
+            mi, ii, jj = np.nonzero((r2 < rc2) & (r2 > 1e-12))
+            if mi.size == 0:
+                continue
+            Dk = D[mi, ii, jj]  # (K, 3)
+            r2k = r2[mi, ii, jj]
+            rk = np.sqrt(r2k)
+            ark = self.alpha * rk
+            erfck = erfc(ark)
+            fk = erfck / rk
+            qqk = qq[ii, jj]
+            e_real += 0.5 * self.pref * float(qqk @ fk)
             if charge_grad:
-                gq_real = gq_real + self.pref * (f.sum(axis=0) @ q)
+                gq_real += self.pref * scatter(ii, fk * q[jj])
+            if grad:
+                mk = m[mi]  # (K, 3) image integers
+                nk = nint[ii, jj]  # (K, 3) the round() shifts of the minimum-image frame
             if grad and not want_dip:
                 # f'(r) = -erfc(a r)/r^2 - (2a/sqrt(pi)) exp(-a^2 r^2)/r
-                fp = -(erfc(ar) / r2s + _TWO_OVER_SQRT_PI * self.alpha * np.exp(-ar * ar) / r)
-                tt = np.where(mask, self.pref * qq[None] * fp / r, 0.0)
-                W = tt[..., None] * D  # (I, N, N, 3);  dE/dd = W
-                gX += W.sum(axis=(0, 2))
-                A1 += m.T @ W.sum(axis=(1, 2))
-                Wij += W.sum(axis=0)
+                fp = -(erfck / r2k + _TWO_OVER_SQRT_PI * self.alpha * np.exp(-ark * ark) / rk)
+                W = (self.pref * qqk * fp / rk)[:, None] * Dk  # dE/dd per pair-image
+                gX += scatter_vec(ii, W)
+                A1 += mk.T @ W
+                A2 += nk.T @ W
             if want_dip:
-                g = _TWO_OVER_SQRT_PI * self.alpha * np.exp(-ar * ar)
-                B1 = np.where(mask, (f + g) / r2s, 0.0)
-                B2 = np.where(mask, (3.0 * B1 + 2.0 * self.alpha ** 2 * g) / r2s, 0.0)
+                gk = _TWO_OVER_SQRT_PI * self.alpha * np.exp(-ark * ark)
+                B1 = (fk + gk) / r2k
+                B2 = (3.0 * B1 + 2.0 * self.alpha ** 2 * gk) / r2k
                 C1, C2 = B1, B2  # the dipole-dipole kernels, Thole-damped when asked
                 if thole is not None:
-                    u = r / sth[None]
-                    f3, f5, d3, d5 = thole.damping(u)
-                    r3 = r2s * r
-                    r5 = r3 * r2s
-                    C1 = np.where(mask, B1 - f3 / r3, 0.0)
-                    C2 = np.where(mask, B2 - 3.0 * f5 / r5, 0.0)
+                    sk = sth[ii, jj]
+                    f3, f5, d3, d5 = thole.damping(rk / sk)
+                    r3 = r2k * rk
+                    r5 = r3 * r2k
+                    C1 = B1 - f3 / r3
+                    C2 = B2 - 3.0 * f5 / r5
                 if field:
-                    Fq += self.pref * np.einsum("mij,j,mijc->ic", B1, q, D)
+                    Fq += self.pref * scatter_vec(ii, (B1 * q[jj])[:, None] * Dk)
                 if tensor:
-                    Tm += self.pref * (np.einsum("mij,mija,mijb->ijab", C2, D, D)
-                                       - C1.sum(axis=0)[:, :, None, None] * I3[None, None])
+                    pair = ii * N + jj
+                    for a in range(3):
+                        for b in range(a, 3):
+                            tab = np.bincount(pair, weights=C2 * Dk[:, a] * Dk[:, b], minlength=N * N).reshape(N, N)
+                            Tm[:, :, a, b] += self.pref * tab
+                            if b != a:
+                                Tm[:, :, b, a] += self.pref * tab
+                    c1 = np.bincount(pair, weights=C1, minlength=N * N).reshape(N, N)
+                    Tm -= self.pref * c1[:, :, None, None] * I3[None, None]
                 if has_p:
-                    pdj = np.einsum("mijc,jc->mij", D, p)  # p_j . d
-                    pid = np.einsum("mijc,ic->mij", D, p)  # p_i . d
-                    cross = q[:, None] * pdj - q[None, :] * pid  # q_i p_j.d - q_j p_i.d
-                    e_real += 0.5 * self.pref * float((cross * B1).sum())
-                    e_real += 0.5 * self.pref * float((pp[None] * C1 - pid * pdj * C2).sum())
+                    pi_, pj_ = p[ii], p[jj]
+                    pdj = (Dk * pj_).sum(axis=1)  # p_j . d
+                    pid = (Dk * pi_).sum(axis=1)  # p_i . d
+                    cross = q[ii] * pdj - q[jj] * pid  # q_i p_j.d - q_j p_i.d
+                    ppk = pp[ii, jj]
+                    e_real += 0.5 * self.pref * float(cross @ B1)
+                    e_real += 0.5 * self.pref * float((ppk * C1 - pid * pdj * C2).sum())
                     if charge_grad:
-                        gq_real = gq_real + self.pref * (pdj * B1).sum(axis=(0, 2))
+                        gq_real += self.pref * scatter(ii, pdj * B1)
                     if dipole_grad:
-                        gp += self.pref * (np.einsum("mij,jc->ic", C1, p)
-                                           - np.einsum("mij,mijc->ic", pdj * C2, D))
+                        gp += self.pref * (scatter_vec(ii, C1[:, None] * pj_) - scatter_vec(ii, (pdj * C2)[:, None] * Dk))
                     if grad:
-                        B3 = np.where(mask, (5.0 * B2 + 4.0 * self.alpha ** 4 * g) / r2s, 0.0)
+                        B3 = (5.0 * B2 + 4.0 * self.alpha ** 4 * gk) / r2k
                         C1p, C2p = -B2, -B3  # (dC1/dr)/r and (dC2/dr)/r
                         if thole is not None:
-                            C1p = np.where(mask, C1p + 3.0 * f3 / (r5) - d3 / (sth[None] * r2s * r2s), 0.0)
-                            C2p = np.where(mask, C2p + 15.0 * f5 / (r5 * r2s)
-                                           - 3.0 * d5 / (sth[None] * r5 * r), 0.0)
+                            C1p = C1p + 3.0 * f3 / r5 - d3 / (sk * r2k * r2k)
+                            C2p = C2p + 15.0 * f5 / (r5 * r2k) - 3.0 * d5 / (sk * r5 * rk)
                         # dE/dd for the pair, both roles combined (the image set is closed
                         # under negation and every term is odd in d, so the 1/2 cancels)
-                        scal = -qq[None] * B1 - cross * B2 + pp[None] * C1p - pid * pdj * C2p
-                        p_i, p_j = p[None, :, None, :], p[None, None, :, :]  # (1, N, 1, 3), (1, 1, N, 3)
-                        q_i, q_j = q[None, :, None, None], q[None, None, :, None]
-                        W = self.pref * (scal[..., None] * D
-                                         + B1[..., None] * (q_i * p_j - q_j * p_i)
-                                         - C2[..., None] * (pdj[..., None] * p_i + pid[..., None] * p_j))
-                        gX += W.sum(axis=(0, 2))
-                        A1 += m.T @ W.sum(axis=(1, 2))
-                        Wij += W.sum(axis=0)
+                        scal = -qqk * B1 - cross * B2 + ppk * C1p - pid * pdj * C2p
+                        W = self.pref * (scal[:, None] * Dk
+                                         + B1[:, None] * (q[ii, None] * pj_ - q[jj, None] * pi_)
+                                         - C2[:, None] * (pdj[:, None] * pi_ + pid[:, None] * pj_))
+                        gX += scatter_vec(ii, W)
+                        A1 += mk.T @ W
+                        A2 += nk.T @ W
                 elif grad:
-                    tt = -self.pref * qq[None] * B1
-                    W = tt[..., None] * D
-                    gX += W.sum(axis=(0, 2))
-                    A1 += m.T @ W.sum(axis=(1, 2))
-                    Wij += W.sum(axis=0)
+                    W = (-self.pref * qqk * B1)[:, None] * Dk
+                    gX += scatter_vec(ii, W)
+                    A1 += mk.T @ W
+                    A2 += nk.T @ W
                 if dipole_grad:
-                    gp += -self.pref * np.einsum("mij,j,mijc->ic", B1, q, D)
+                    gp += -self.pref * scatter_vec(ii, (B1 * q[jj])[:, None] * Dk)
         if grad:
-            glat = 0.5 * (A1 - np.einsum("ija,ijb->ab", nint, Wij))
-            del A1, Wij
+            glat = 0.5 * (A1 - A2)
+            del A1, A2
         if charge_grad:
             gq += gq_real
 
@@ -462,9 +488,15 @@ class Ewald:
         if field:
             Fq -= 2.0 * pre * ((Ak[None, :] * (sk[None, :] * cos - ck[None, :] * sin)) @ k)
         if tensor:
-            kk = Ak[:, None, None] * k[:, :, None] * k[:, None, :]  # (K, 3, 3)
-            Tm -= 2.0 * pre * (np.einsum("jk,lk,kab->jlab", cos, cos, kk)
-                               + np.einsum("jk,lk,kab->jlab", sin, sin, kk))
+            # T_jl,ab -= 2 pre sum_k A_k k_a k_b cos(k.(r_j - r_l)): six (N, K) @ (K, N) products,
+            # one per unique (a, b), instead of a three-operand einsum over (N, N, K, 3, 3)
+            for a in range(3):
+                for b in range(a, 3):
+                    w = Ak * k[:, a] * k[:, b]  # (K,)
+                    tab = (cos * w[None, :]) @ cos.T + (sin * w[None, :]) @ sin.T
+                    Tm[:, :, a, b] -= 2.0 * pre * tab
+                    if b != a:
+                        Tm[:, :, b, a] -= 2.0 * pre * tab
 
         # --- self, background, surface ---------------------------------------------
         e_self = -self.alpha / np.sqrt(np.pi) * self.pref * float(q @ q)
