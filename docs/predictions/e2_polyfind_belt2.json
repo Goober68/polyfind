@@ -99,6 +99,169 @@
      "conformational_strain_vs_ground": -0.011603297465973217
     }
    }
+  },
+  "vdftrfe": {
+   "label": "VDF/TrFE 70/30 model",
+   "conformations": {
+    "TTTT": {
+     "sequence": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 20.0,
+     "energy_per_monomer_kcal": -7.419892215897629,
+     "lattice_energy_per_monomer_kcal": -7.5002703375861755,
+     "bend_energy_per_monomer_kcal": 0.08037812168854644,
+     "P_C_m2": [
+      0.014530043443270727,
+      0.16569273456863542,
+      5.42517392490431e-08
+     ],
+     "c_per_monomer_A": 2.588888654046639,
+     "cell": {
+      "a": 4.958573937843095,
+      "b": 8.397216861019581,
+      "gamma_deg": 92.10085295035016,
+      "c": 25.88888654046639,
+      "volume_A3": 1077.2426132492262
+     },
+     "volume_per_monomer_A3": 53.86213066246131,
+     "seconds": 192.20509839057922,
+     "margin_vs_ground_kcal": 0.059173738291282696,
+     "conformational_strain_vs_ground": 0.10839733549081232
+    },
+    "TGTG'": {
+     "sequence": [
+      0,
+      1,
+      0,
+      2,
+      0,
+      1,
+      0,
+      2,
+      0,
+      1,
+      0,
+      2,
+      0,
+      1,
+      0,
+      2,
+      0,
+      1,
+      0,
+      2
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 20.0,
+     "energy_per_monomer_kcal": -7.479065954188911,
+     "lattice_energy_per_monomer_kcal": -8.130218665311526,
+     "bend_energy_per_monomer_kcal": 0.6511527111226147,
+     "P_C_m2": [
+      0.06353003607020075,
+      0.023728390300948993,
+      -0.07065736166396715
+     ],
+     "c_per_monomer_A": 2.3357045087989556,
+     "cell": {
+      "a": 5.186068659498365,
+      "b": 9.693459625958262,
+      "gamma_deg": 91.07057081477073,
+      "c": 23.357045087989555,
+      "volume_A3": 1173.9758154924186
+     },
+     "volume_per_monomer_A3": 58.69879077462093,
+     "seconds": 187.80522656440735,
+     "margin_vs_ground_kcal": 0.0,
+     "conformational_strain_vs_ground": 0.0
+    },
+    "T3GT3G'": {
+     "sequence": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 40.0,
+     "energy_per_monomer_kcal": -7.449501732737133,
+     "lattice_energy_per_monomer_kcal": -7.607982488476068,
+     "bend_energy_per_monomer_kcal": 0.15848075573893466,
+     "P_C_m2": [
+      0.007961466135422543,
+      0.07172612772491843,
+      -0.0624260121866372
+     ],
+     "c_per_monomer_A": 2.3181302636424825,
+     "cell": {
+      "a": 5.554774205086751,
+      "b": 9.057323929784438,
+      "gamma_deg": 94.63291255509937,
+      "c": 46.36260527284965,
+      "volume_A3": 2324.9457599400116
+     },
+     "volume_per_monomer_A3": 58.12364399850029,
+     "seconds": 966.9685668945312,
+     "margin_vs_ground_kcal": 0.029564221451778394,
+     "conformational_strain_vs_ground": -0.007524173152155256
+    }
+   }
   }
  }
 }
