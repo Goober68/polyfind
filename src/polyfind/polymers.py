@@ -127,6 +127,28 @@ def single_atom(element: str, bond: float, charge: float) -> Pendant:
     return Pendant(atoms=(PendantAtom(element, charge, (float(bond), 0.0, 0.0)),), label=element)
 
 
+def belt_fluorine(bond: float = 1.35, charge: float = -0.20, d: float = 0.7) -> Pendant:
+    """A fluorine with two repulsion-only sites in the belt perpendicular to its C-F bond.
+
+    Fluorine bonded to carbon is not a sphere: its density is drawn in along the bond axis
+    and extended in the belt around it (polar flattening).  A point-atom Lennard-Jones term
+    cannot express that, and docs/CRYSTAL_STAGE.md section 5.7 measures what it costs in a
+    beta-PVDF lattice: the sideways F...H contact along the polar axis is compressed while the
+    head-on diagonal one is kept, and no isotropic term can tell the two apart.  The two sites
+    ``X`` sit at ``d`` angstrom from the fluorine along ``+/- e2`` of the pendant frame
+    (:func:`polyfind.chain.pendant_frames`): perpendicular to the C-F bond, in the plane of
+    the CF2 group.  They carry no charge, no polarizability, no bonds and no dispersion, and
+    interact only through the ``"X"`` row of the Lennard-Jones table (zero by default), which
+    the crystal fit sets.  Within its own chain a site interacts with nothing
+    (:class:`polyfind.pack.CrystalPacker` excludes it), so the conformer energies of the
+    valence fit are untouched.
+    """
+    return Pendant(atoms=(PendantAtom("F", float(charge), (float(bond), 0.0, 0.0)),
+                          PendantAtom("X", 0.0, (float(bond), float(d), 0.0)),
+                          PendantAtom("X", 0.0, (float(bond), -float(d), 0.0))),
+                   bonds=(), label=f"F-belt-{d:.2f}")
+
+
 def _place_atom(a, b, c, bond: float, angle_deg: float, dihedral_deg: float) -> np.ndarray:
     """NeRF placement for single points: |cd| = ``bond``, angle ``b-c-d``, dihedral ``a-b-c-d``.
 
@@ -887,6 +909,10 @@ UFF_LJ: dict[str, tuple[float, float]] = {
     "O": (3.500, 0.060),  # O_3, added with the phase-3 methoxy group
     "F": (3.364, 0.050),  # F_
     "Cl": (3.947, 0.227),  # Cl
+    # "X" is a massless repulsion-only site (belt_fluorine): no dispersion, no charge, no
+    # polarizability, no bonds; its well depth is zero here so a chain that carries sites has the
+    # same energy as one without until a fitted preset gives "X" a depth (docs/CRYSTAL_STAGE.md 5.7).
+    "X": (2.600, 0.0),
 }
 
 
@@ -895,3 +921,61 @@ def lj_params(elements) -> tuple[np.ndarray, np.ndarray]:
     x = np.array([UFF_LJ[e][0] for e in elements])
     d = np.array([UFF_LJ[e][1] for e in elements])
     return x, d
+
+
+def pvdf_belt(d: float = 0.7, geometry: str = "textbook") -> Polymer:
+    """PVDF whose fluorines carry :func:`belt_fluorine` sites at ``d`` angstrom.
+
+    ``geometry="textbook"`` keeps :data:`PVDF`'s bond lengths and angles; ``"pbe"`` uses the
+    PBE-D3(BJ) geometry of Dipole's beta reference (C-C 1.533, C-H 1.096, C-F 1.386 A, H-C-H
+    107.6, F-C-F 105.1, backbone 114.6 deg; docs/CRYSTAL_STAGE.md 5.3).  Same charges, same
+    RIS states; a different polymer name so nothing caches across the two.
+    """
+    if geometry == "textbook":
+        cc, ch, cf, hch, fcf, bb = PVDF.bond_length, 1.09, 1.35, 108.0, 106.0, 114.0
+    elif geometry == "pbe":
+        cc, ch, cf, hch, fcf, bb = 1.5331, 1.0960, 1.3863, 107.64, 105.12, 114.6
+    else:
+        raise ValueError(f"unknown geometry {geometry!r} (expected 'textbook' or 'pbe')")
+    return Polymer(
+        name=f"pvdf-belt-{d:.2f}" + ("" if geometry == "textbook" else "-pbe"),
+        formula=PVDF.formula, bond_length=cc, states=PVDF.states,
+        backbone=(BackboneAtom("C", "H", ch, bb, hch, -0.20, +0.10),
+                  BackboneAtom("C", belt_fluorine(cf, -0.20, d), None, bb, fcf, +0.40, None)),
+    )
+
+
+def trfe_belt(d: float = 0.7, geometry: str = "textbook") -> Polymer:
+    """TrFE whose fluorines carry :func:`belt_fluorine` sites (the CHF carbon's single fluorine
+    and the CF2 pair alike); same charges and states as :data:`TRFE`."""
+    if geometry == "textbook":
+        ch, cf, hcf, fcf, bb = 1.09, 1.35, 109.0, 106.0, 114.0
+    elif geometry == "pbe":
+        ch, cf, hcf, fcf, bb = 1.0960, 1.3863, 109.0, 105.12, 114.6
+    else:
+        raise ValueError(f"unknown geometry {geometry!r} (expected 'textbook' or 'pbe')")
+    return Polymer(
+        name=f"trfe-belt-{d:.2f}" + ("" if geometry == "textbook" else "-pbe"),
+        formula=TRFE.formula, bond_length=TRFE.bond_length, states=TRFE.states,
+        backbone=(BackboneAtom("C", ("H", belt_fluorine(cf, -0.20, d)), (ch, None), bb, hcf, +0.10, (+0.10, None)),  # CHF
+                  BackboneAtom("C", belt_fluorine(cf, -0.20, d), None, bb, fcf, +0.40, None)),  # CF2
+    )
+
+
+def vdf_trfe_7_3_belt(d: float = 0.7, geometry: str = "textbook") -> Polymer:
+    """:data:`VDF_TRFE_7_3` with belt-site fluorines on every CF2 and CHF."""
+    v, tr = monomer_of(pvdf_belt(d, geometry)), monomer_of(trfe_belt(d, geometry))
+    return copolymer(name=f"vdf7-trfe3-belt-{d:.2f}" + ("" if geometry == "textbook" else "-pbe"),
+                     formula=VDF_TRFE_7_3.formula, units=[v] * 2 + [tr] + [v] * 2 + [tr] + [v] * 3 + [tr],
+                     bond_length=PVDF.bond_length)
+
+
+def belt_variant(polymer: Polymer, d: float = 0.7, geometry: str = "textbook") -> Polymer:
+    """The belt-site version of ``polymer`` where one is defined (PVDF, TrFE, the 70/30 model);
+    polymers without fluorine (PE) are returned unchanged."""
+    table = {PVDF.name: pvdf_belt, TRFE.name: trfe_belt, VDF_TRFE_7_3.name: vdf_trfe_7_3_belt}
+    if polymer.name in table:
+        return table[polymer.name](d, geometry)
+    if polymer.name == PE.name:
+        return polymer
+    raise ValueError(f"no belt-site variant of polymer {polymer.name!r}")

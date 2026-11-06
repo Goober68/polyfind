@@ -398,6 +398,47 @@ that the chain builder, the packer, the Ewald sum (zero charge) and the induced 
 polarizability) carry them unchanged. Task 15 is rewritten to that; the off-site charge as a
 site is dropped on the first row of the table.
 
+### 5.8 Stage 4: fluorine belt sites, implemented
+
+The sites are carried by the polymer definition, not by the kernel. :func:`polyfind.polymers.belt_fluorine`
+is a rigid pendant fragment: the fluorine at its bond length and two atoms of a pseudo-element
+``X`` at ``(bond, +/-d, 0)`` in the pendant frame of :func:`polyfind.chain.pendant_frames`,
+whose second axis is exactly the in-plane perpendicular to the C-F bond. :func:`pvdf_belt`,
+:func:`trfe_belt` and :func:`vdf_trfe_7_3_belt` (and :func:`belt_variant` for the scripts) build
+the polymers; the chain builder, the line groups, the packer, the Ewald sum and the induced
+dipoles then carry four extra atoms per CF2 without knowing what they are. What ``X`` is made
+to be: a zero well depth in the Lennard-Jones table until a preset gives it one (``UFF_LJ["X"]
+= (2.6, 0.0)``), no dispersion term and no interaction at all within its own chain (the packer
+zeroes its exclusion scales for every same-site image, and the force field's own pair terms skip
+it, so the conformer energetics of the valence fit are untouched), zero charge, a covalent
+radius that bond inference never reaches, a polarizability of 1e-6 A^3 (a strict zero would
+put an infinity on the dipole system's diagonal), zero mass. A chain with sites at zero depth
+reproduces the plain chain's lattice energy, cell, polarization and stiffness exactly
+(`tests/test_belt_sites.py`); the massless sites shift the chain's principal-axis frame by a
+hair, which is why a fixed set of cell parameters at a rotated orientation is not bit-identical
+and a relaxed cell is.
+
+The wall is a Lennard-Jones repulsion of the ``X-H`` pair only (``X-C``, ``X-F``, ``X-X`` are
+zeroed through ``lj_pairs``), its diameter fixed at 2.6 A and its depth the fitted variable, in
+log10 (``crystalfit`` stage 4: the ten variables of stage 2 plus ``log10_D_X``, with the charge
+penetration of stage 3 carried at its point-charge value; sites at d = 0.7 A). The probe that
+sized the start point, on the valence preset with everything else fixed:
+
+| depth D_X, kcal/mol | beta a | beta b | a/b | P | C_11, C_22, C_12 |
+|---|---|---|---|---|---|
+| 0 (plain chain) | 4.520 (-5.0%) | 8.521 (-0.1%) | 0.530 | 0.140 | 22.6, 18.5, 3.1 |
+| 0.01 | 4.750 (-0.1%) | 8.636 (+1.3%) | 0.550 | 0.127 | 17.4, 16.5, 3.1 |
+| 0.03 | 4.855 (+2.1%) | 8.708 (+2.1%) | 0.557 | 0.121 | 15.2, 15.3, 3.1 |
+| 0.10 | 5.000 (+5.1%) | 8.827 (+3.5%) | 0.566 | 0.114 | 12.6, 13.5, 3.1 |
+| DFT | 4.757 | 8.528 | 0.558 | 0.180 | 22.8, 24.5, 5.9 |
+
+At the start point of the fit (D_X = 0.01, the other variables at the valence values) beta's
+polar axis is -0.2% and alpha's long axis -0.2% from DFT, the first time either has been within
+tolerance; what is left for the other ten variables is the polarization (0.127), the margin
+(-1.06, the sites having changed the alpha-beta balance) and the stiffness (17, 16, 3.1 GPa),
+which are the quantities the charges and well depths reach. One evaluation is 16 s. The result
+goes to section 5.9.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 and 3, whose extra terms are likewise outside the

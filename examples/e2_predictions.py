@@ -58,17 +58,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="docs/predictions/e2_polyfind.json")
     ap.add_argument("--preset", default="pvdf-dft-valence", help="fitted preset to apply (polyfind.fitting.PRESET_PARAMETERS)")
+    ap.add_argument("--variant", default="plain", choices=("plain", "belt"), help="belt: fluorines carry repulsion-only belt sites (polymers.belt_variant)")
     ap.add_argument("--systems", default="pvdf,vdftrfe")
     args = ap.parse_args()
     from polyfind.fitting import PRESET_PARAMETERS
     params = PRESET_PARAMETERS[args.preset]
-    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
+    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K" + (", fluorine belt sites" if args.variant == "belt" else ""),
                "frame": "x polar, y lateral, z chain",
                "energy": "lattice energy plus the refined backbone angles' strain, per vinyl monomer (the strain was omitted before 2026-11-05)",
                "systems": {}}
     with params.applied():
         for key in args.systems.split(","):
             label, polymer, confs = SYSTEMS[key]
+            if args.variant == "belt":
+                from polyfind.polymers import belt_variant
+                polymer = belt_variant(polymer)
             rows = {}
             for conf, seq in confs.items():
                 t0 = time.time()

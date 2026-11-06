@@ -49,6 +49,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="docs/predictions/e1_polyfind.json")
     ap.add_argument("--preset", default="pvdf-dft-valence", help="fitted preset to apply (polyfind.fitting.PRESET_PARAMETERS)")
+    ap.add_argument("--variant", default="plain", choices=("plain", "belt"), help="belt: fluorines carry repulsion-only belt sites (polymers.belt_variant)")
     ap.add_argument("--systems", default="beta,pe,alpha,vdftrfe")
     ap.add_argument("--strain", type=float, default=0.01)
     ap.add_argument("--skip-electrostriction", action="store_true", help="omit the M/Q routes (the costly part on a large cell)")
@@ -57,7 +58,7 @@ def main():
     args = ap.parse_args()
     from polyfind.fitting import PRESET_PARAMETERS
     params = PRESET_PARAMETERS[args.preset]
-    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K",
+    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K" + (", fluorine belt sites" if args.variant == "belt" else ""),
                "frame": "x polar, y lateral, z chain; Voigt 1 xx, 2 yy, 6 xy; Dipole's frame has x and y swapped",
                "strain": args.strain, "systems": {}}
     if args.merge:
@@ -69,6 +70,9 @@ def main():
     with params.applied():
         for key in args.systems.split(","):
             label, polymer, seq = SYSTEMS[key]
+            if args.variant == "belt":
+                from polyfind.polymers import belt_variant
+                polymer = belt_variant(polymer)
             t0 = time.time()
             ref = build(polymer, seq, label)
             el = M.elastic_constants(ref)

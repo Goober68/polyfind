@@ -58,6 +58,10 @@ BOHR3_TO_A3 = 0.529177210903 ** 3  # 0.148184711 A^3
 _VDS98_AU = {"H": 2.7927, "C": 8.6959, "N": 6.5565, "O": 5.7494, "F": 2.6175,
              "S": 16.6984, "Cl": 16.1979, "Br": 23.5714, "I": 36.9880}
 VDS98 = {e: round(v * BOHR3_TO_A3, 5) for e, v in _VDS98_AU.items()}  # A^3
+# The repulsion-only belt site of polymers.belt_fluorine carries no polarizability.  A strict zero
+# would put 1/alpha = inf on the diagonal of the dipole system and a zero Thole scale under a
+# division, so it gets 1e-6 A^3: its induced dipole is 1e-6 of an atom's and its energy 1e-12.
+VDS98["X"] = 1e-6
 VDS98_THOLE_A = 2.1304
 
 # The same paper's "linear" column (Thole's original piecewise form), for the record only.

@@ -99,6 +99,7 @@ def erfc_approx(x, xp=np):
 COVALENT_RADII: dict[str, float] = {
     "H": 0.31, "B": 0.84, "C": 0.76, "N": 0.71, "O": 0.66, "F": 0.57, "Si": 1.11,
     "P": 1.07, "S": 1.05, "Cl": 1.02, "Br": 1.20, "I": 1.39,
+    "X": -10.0,  # the repulsion-only site of polymers.belt_fluorine: never inferred as bonded
 }
 BOND_TOLERANCE = 1.25  # a bond is r_ij < tolerance * (rcov_i + rcov_j)
 
@@ -308,10 +309,11 @@ def offset_sites(elements, bonds, offsets) -> list[tuple[int, int, float]]:
     if not offsets:
         return []
     adj = neighbour_lists(len(elements), bonds)
+    adj = [[j for j in nb if elements[j] != "X"] for nb in adj]  # repulsion-only sites are not neighbours
     out = []
     for i, e in enumerate(elements):
         d = offsets.get(e)
-        if d is None:
+        if d is None or e == "X":
             continue
         if len(adj[i]) != 1:
             raise ValueError(f"off-site charge asked for {e} atom {i}, which has "
@@ -1290,6 +1292,8 @@ class SimpleFF:
         n = len(elements)
         iu, ju = np.triu_indices(n, 1)
         keep = dist[iu, ju] >= 3
+        el_arr = np.asarray(list(elements))
+        keep &= (el_arr[iu] != "X") & (el_arr[ju] != "X")  # belt sites act only between chains (pack)
         iu, ju = iu[keep], ju[keep]
         scale = np.where(dist[iu, ju] == 3, self.scale14, 1.0)
         x, d = self._lj_arrays(elements)

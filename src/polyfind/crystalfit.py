@@ -65,6 +65,15 @@ VARIABLES3 = VARIABLES2 + ("b_q",)
 X0_3 = np.concatenate([X0_2, [4.0]])
 BOUNDS3 = np.vstack([BOUNDS2, [(1.0, 6.0)]])
 SIGMA3 = np.concatenate([SIGMA2, [2.0]])  # a weak pull towards point charges
+# Stage 4 (docs/CRYSTAL_STAGE.md section 5.7): stage 2's ten plus the depth of the fluorine belt
+# sites' wall against H (log10 of kcal/mol; -2 is the 0.01 that put beta's polar axis on the DFT
+# value in the probe), with the charge penetration carried at its point-charge value.  The chains
+# are polymers.pvdf_belt(BELT_D): four massless repulsion-only sites per CF2.
+BELT_D = 0.7  # A, distance of the sites from the fluorine, perpendicular to the C-F bond
+VARIABLES4 = VARIABLES2 + ("log10_D_X", "b_q")
+X0_4 = np.concatenate([X0_2, [-2.0, 4.0]])
+BOUNDS4 = np.vstack([BOUNDS2, [(-3.5, -0.3), (4.0, 4.0 + 1e-9)]])
+SIGMA4 = np.concatenate([SIGMA2, [1.0, 2.0]])
 
 
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
@@ -83,7 +92,9 @@ def _config(x):
         return VARIABLES2, X0_2, BOUNDS2, SIGMA2
     if n == 11:
         return VARIABLES3, X0_3, BOUNDS3, SIGMA3
-    raise ValueError(f"expected 8, 10 or 11 variables, got {n}")
+    if n == 12:
+        return VARIABLES4, X0_4, BOUNDS4, SIGMA4
+    raise ValueError(f"expected 8, 10, 11 or 12 variables, got {n}")
 
 
 def ridge(x) -> float:
@@ -94,6 +105,8 @@ def ridge(x) -> float:
         parts += [(x[8:9] - 1.0) / sigma[8:9], np.log(x[9:10]) / sigma[9:10]]
     if len(x) == 11:  # charge penetration, measured from the point-charge start
         parts += [(x[10:11] - X0_3[10]) / sigma[10:11]]
+    if len(x) == 12:  # the belt wall (log depth, from the probe's 0.01) and the carried penetration
+        parts += [(x[10:11] - X0_4[10]) / sigma[10:11], (x[11:12] - X0_4[11]) / sigma[11:12]]
     d = np.concatenate(parts)
     return RIDGE * float(np.sum(d * d))
 
@@ -123,6 +136,20 @@ def reference_from_prediction(pred: F.Prediction, case, **packer_kw):
     return reference_from_chain(built, rr.result.params, n_chains=2, **packer_kw)
 
 
+def cases_for(x):
+    """The beta and alpha cases the variables ``x`` are evaluated on: the plain PVDF cases, or for
+    stage 4 (twelve variables) the same sequences on :func:`polyfind.polymers.pvdf_belt`, under
+    their own keys so the cached chains and screen tables stay separate."""
+    from dataclasses import replace as _replace
+    beta_case, alpha_case = F.FITTED_CASES[1], F.FITTED_CASES[2]
+    if len(np.asarray(x)) == 12:
+        from .polymers import pvdf_belt
+        pol = pvdf_belt(BELT_D)
+        return (_replace(beta_case, key=f"beta-belt-{BELT_D:.2f}", polymer=pol),
+                _replace(alpha_case, key=f"alpha-belt-{BELT_D:.2f}", polymer=pol))
+    return beta_case, alpha_case
+
+
 def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald", verbose: bool = False,
              polarizable: bool = False, lj_cutoff: str = "energy", stiffness: bool = False) -> Evaluation:
     """Pack and refine beta and alpha under ``x``; return the normalised residuals and the objective.
@@ -138,7 +165,7 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     params = parameters(x, base)
     ewald = EwaldSpec() if coulomb == "ewald" else None
     pol = Polarizable() if polarizable else None
-    beta_case, alpha_case = F.FITTED_CASES[1], F.FITTED_CASES[2]
+    beta_case, alpha_case = cases_for(x)
     try:
         beta = F.predict(beta_case, params, coulomb=coulomb, ewald=ewald, always_gap=True,
                          polarizable=pol, lj_cutoff=lj_cutoff)
@@ -194,9 +221,9 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
     logged.  ``stage=2`` uses :data:`X0_2`, :data:`BOUNDS2` and the :data:`STAGE2` evaluation
     settings unless ``eval_kw`` overrides them; ``x0`` resumes from an earlier best."""
     from scipy.optimize import minimize
-    if stage in (2, 3):
+    if stage in (2, 3, 4):
         eval_kw = {**STAGE2, **eval_kw}
-    start = ({1: X0, 2: X0_2, 3: X0_3}[stage]) if x0 is None else np.asarray(x0, dtype=float)
+    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4}[stage]) if x0 is None else np.asarray(x0, dtype=float)
     _, _, bounds, _ = _config(start)
     history: list[Evaluation] = []
 

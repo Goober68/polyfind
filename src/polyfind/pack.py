@@ -87,7 +87,7 @@ def apply_lj_pairs(elements, xs, ds, pairs) -> None:
         xs[mask] = x_ij
         ds[mask] = d_ij
 
-MASS = {"C": 12.011, "H": 1.008, "N": 14.007, "O": 15.999, "F": 18.998, "Cl": 35.45}
+MASS = {"C": 12.011, "H": 1.008, "N": 14.007, "O": 15.999, "F": 18.998, "Cl": 35.45, "X": 0.0}  # "X": massless repulsion-only site (polymers.belt_fluorine)
 _TOPO_CACHE: dict = {}
 
 # 1 e/A^2 in C/m^2:  1.602176634e-19 C / (1e-10 m)^2.
@@ -908,6 +908,16 @@ class CrystalPacker:
         # per-pair constants: v = ir6 (A ir6 - B) + qq erfc(alpha r)/r + qq_f r + const
         A = ds * xs ** 12
         B = 2.0 * ds * xs ** 6
+        # Repulsion-only sites (polymers.belt_fluorine, element "X"): no dispersion term, and no
+        # interaction at all within their own chain (every same-site image), so a chain's own
+        # conformational energetics are exactly those of the chain without sites.
+        el_arr = np.asarray(self.elements)
+        x_atoms = el_arr == "X"
+        self._x_pair_mask = None
+        if x_atoms.any():
+            self._x_pair_mask = x_atoms[:, None] | x_atoms[None, :]
+            B = np.where(self._x_pair_mask, 0.0, B)
+            lj_shift = A / rc ** 12 - B / rc ** 6
         # Force-shifted Lennard-Jones: subtract the tangent at rc, not just the value.
         # ``qq_f`` is already the linear coefficient the damped-shifted-force Coulomb term
         # needs, so the LJ force shift rides in the same array at no extra cost -- after
@@ -1210,7 +1220,11 @@ class CrystalPacker:
     def _scale_column_np(self, K: int) -> np.ndarray:
         """:meth:`_scale_column` in host float64, which the Ewald correction needs."""
         ones = np.ones((self.n, self.n))
-        return np.stack([self._scale_nn_base.get(k, ones) for k in range(-K, K + 1)])
+        S = np.stack([self._scale_nn_base.get(k, ones) for k in range(-K, K + 1)])
+        if getattr(self, "_x_pair_mask", None) is not None:
+            S = S.copy()
+            S[:, self._x_pair_mask] = 0.0  # a belt site sees nothing of its own chain
+        return S
 
     # --- Ewald ---------------------------------------------------------------------
     def _require_dsf(self, what: str) -> None:

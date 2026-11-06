@@ -2605,13 +2605,25 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
         out = replace(out, lj_pairs=(("F", "H", float(x_hf), float(d_hf)),))
     if len(x) == 11:  # stage 3: charge penetration in the lattice sum, b in 1/A
         out = replace(out, charge_damping=float(x[10]))
+    elif len(x) == 12:
+        # stage 4: fluorine belt sites (polymers.belt_fluorine), a repulsion-only wall against H
+        # with well depth 10**x[10] kcal/mol at the fixed diameter BELT_X_DIAMETER; the sites see
+        # no C, F or other site.  x[11] is reserved for the charge penetration of stage 3 and is
+        # carried unchanged (4.0 = point charges to 3e-4).
+        d_x = 10.0 ** float(x[10])
+        out = replace(out, lj=tuple(out.lj) + (("X", BELT_X_DIAMETER, d_x),),
+                      lj_pairs=tuple(out.lj_pairs) + (("C", "X", BELT_X_DIAMETER, 0.0), ("F", "X", BELT_X_DIAMETER, 0.0),
+                                                      ("X", "X", BELT_X_DIAMETER, 0.0)),
+                      charge_damping=float(x[11]))
     elif len(x) not in (8, 10):
-        raise ValueError(f"expected 8, 10 or 11 crystal-stage variables, got {len(x)}")
+        raise ValueError(f"expected 8, 10, 11 or 12 crystal-stage variables, got {len(x)}")
     return out
 
 
+BELT_X_DIAMETER = 2.6  # A, the fixed Lennard-Jones diameter of the belt site; its depth is the variable
 CRYSTAL_STAGE2_VARIABLES = CRYSTAL_STAGE_VARIABLES + ("x_HF", "D_HF")
 CRYSTAL_STAGE3_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("b_q",)
+CRYSTAL_STAGE4_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("log10_D_X", "b_q")
 
 
 FITTED_VALENCE_CRYSTAL = crystal_stage_parameters(CRYSTAL_FITTED_X)
