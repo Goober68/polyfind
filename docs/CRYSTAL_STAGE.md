@@ -582,8 +582,56 @@ adds the residual at a tolerance of 0.03 C/m^2 (a tenth of the value, as for the
 the cell; z = 1.47. With the Berry P anchor (0.1927, z -1.36) the stage-4 point's objective is
 20.30 on the stage-6 residual set, against its 16.29 on the stage-4 anchors.
 
-Stage 5 (the Berry P anchor alone, the twelve variables from the stage-4 point) is running; stage
-6 starts from its result. Both results go here when they land.
+**Stage 5: the Berry P anchor (0.1927 in place of the published 0.18), the twelve belt variables
+from the stage-4 point.** The first run was cut by a two-hour session limit at evaluation 292 of
+320 (best 12.14 from 18.15 at the stage-4 point on these anchors), and its result file was only
+written at the end, which is why the fitter now checkpoints (section 7); the finishing run from
+the logged best point converged in 73 evaluations to objective 11.64, of which 6.79 is the ridge
+(`docs/predictions/crystal_stage_v5.json`):
+
+| quantity | DFT | stage 4 (belt) | stage 5 (belt, Berry P) | z, stage 5 |
+|---|---|---|---|---|
+| beta a (polar), A | 4.757 | 4.723 (-0.7%) | 4.763 (+0.1%) | +0.12 |
+| beta b (lateral), A | 8.528 | 8.515 (-0.1%) | 8.487 (-0.5%) | -0.48 |
+| beta c (chain), A | 2.581 | 2.606 (+1.0%) | 2.599 (+0.7%) | +0.71 |
+| alpha a, A | 4.945 | 4.942 (-0.1%) | 4.921 (-0.5%) | -0.48 |
+| alpha b, A | 9.636 | 9.595 (-0.4%) | 9.718 (+0.8%) | +0.85 |
+| alpha c, A | 4.660 | 4.725 (+1.4%) | 4.707 (+1.0%) | +1.01 |
+| beta polarization, C/m^2 | 0.1927 (Berry) | 0.179 (-7%) | 0.188 (-2%) | -0.43 |
+| E(alpha) - E(beta), kcal/mol per monomer | -0.726 | -0.760 | -0.726 | 0.00 |
+| E(antipolar) - E(polar) beta, rigid | -0.026 | 0.000 | 0.000 | +0.52 |
+| beta C_11 (polar), GPa | 22.77 | 25.08 (+10%) | 24.03 (+6%) | +0.55 |
+| beta C_22 (lateral), GPa | 24.52 | 24.59 (+0.3%) | 24.74 (+0.9%) | +0.09 |
+| beta C_12, GPa | 5.88 | 4.88 (-17%) | 5.19 (-12%) | -1.18 |
+| ridge | | 8.00 | 6.79 | |
+| objective on these anchors | | 18.15 | 11.64 | |
+
+Every residual is inside 1.2 tolerances. The polarization came up to 2% of the Berry value and
+the alpha-beta gap landed on the anchor without the cell giving anything back: the beta axes are
++0.1/-0.5/+0.7%, the alpha axes -0.5/+0.8/+1.0%. The move is in the charges and the hydrogen
+well. The C-H and C-F increments grow (-0.068 e and +0.043 e against stage 4's -0.061 and
++0.032), which is where the extra polarization comes from; the hydrogen well returns to the
+valence value (x0.98 from x0.72) and the carbon diameter's excess halves (+6% from +10%), the
+two terms that carried half the stage-4 ridge; the fluorine well drops to x0.84 (x0.98) and the
+carbon well to x1.12 (x1.18); the H-F pair term (x1.019, x0.997), the belt wall (10^-1.624 =
+0.0238 kcal/mol) and the held penetration parameter are as before. The ridge falls to 6.79. The
+one systematic left is the chain axes, +0.7% and +1.0%, the backbone angle again.
+
+**On the stage-6 residual set** the stage-5 point gives d|P|/d eta = -0.2930 C/m^2 (z 1.08) against
+the stage-4 point's -0.2814 (z 1.47): the slope moved with the polarization, and the slope per unit
+polarization is -1.56 against Dipole's -1.69. Its objective there is 12.81.
+
+**The PBE-D3 chain geometry at the same point** (`--geometry pbe`, one evaluation, 30 s, before
+any refit): Dipole's bond lengths and angles make every chain axis longer rather than shorter (beta
+c 2.615, +1.3%; alpha c 4.734, +1.6%), widen the alpha cell (b 9.787, +1.6%) and deepen the
+alpha-beta gap (-0.790, z -1.28); the slope is unchanged (-0.2933) and the objective is 19.00. With
+the C-C bond at 1.533 A, c = 2.615 is a backbone angle near 117 deg against the 114.6 the chain was
+built at and DFT settles at (c = 2.581 is exactly the planar zigzag at 1.533 A and 114.6 deg). So the
+chain-axis excess is not the textbook bond geometry's: the lattice opens the backbone angle on
+either geometry, and a shorter C-C bond with longer C-F bonds opens it further. What opens it is
+the next probe (5.12).
+
+Stage 6 (both Berry anchors, from the stage-5 point) is running; its result goes here.
 
 ## 6. What it costs, and what it does not touch
 
