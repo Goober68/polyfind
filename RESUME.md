@@ -102,7 +102,11 @@ in a different minimum (gamma 88 vs 92 deg, dipole tilt 38 vs 23 deg), so its ro
 minima; PE's shear stiffness is 5x the pre-registered value (C_66 11.5 GPa), so a PE anchor comes
 before the belt terms are trusted on a hydrocarbon. Stage 5 (the Berry anchor 0.1927, from the
 stage-4 point; `crystal_stage_v5.json`) is running; `examples/crystal_stage.py --geometry pbe`
-builds the belt chain at Dipole's PBE-D3 geometry for the stage after.
+builds the belt chain at Dipole's PBE-D3 geometry for the stage after. Dipole's three-point polar
+Berry pair landed (exchange main 6574b77d): d|P|/d eta_polar = -0.326 C/m^2, the relaxed-ion e_11
+on one branch; polyfind's sets are 0.71 (pre-registered), 0.96 (stage 2), 0.87 (belt) of it and
+0.98/0.98/0.93 relative to their own P (record `beta_qe_berry_axial_v1`, cross-check lines added;
+candidate anchor for the next stage).
 **Exchange**: the Science 2022 main text makes FA the dehydrochlorinated CFE pair, i.e. the
 same `-CH=CF-` unit as DB (the CF3 reading is withdrawn; E2 is six chemistries; record and
 devstream amended, sarco a498326c). Dipole at 05:12 UTC: no accepted strained units yet, one

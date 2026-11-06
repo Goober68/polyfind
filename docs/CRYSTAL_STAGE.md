@@ -533,7 +533,13 @@ the beta cell -0.6%, -0.1%, +0.8% on the QE reference; C_11 at 1.10 of the six-c
 1.00, C_12 at 0.83; the Berry polarization at 0.93; the electronic permittivity at 0.94, 0.93 and
 0.94 of the DFPT tensor on all three axes (that tensor is protocol evidence on Dipole's side, not
 an accepted reference, and polyfind's eps_inf is the induced-dipole model's, which every stage has
-left 5-7% low). The stage-2 set was at 1.20, 0.86, 0.57, 1.05 (against 0.18) and 0.96, 0.92, 0.95.
+left 5-7% low). The stage-2 set was at 1.20, 0.86, 0.57, 1.05 (against 0.18) and 0.96, 0.92, 0.95. Dipole's
+three-point polar Berry pair, landed the same morning, gives the relaxed-ion longitudinal
+piezoelectric slope d|P|/d eta = -0.326 C/m^2 (`docs/predictions/e1_e2_notes.md`); the belt
+set's -0.282 is 0.87 of it (pre-registered 0.71, stage 2 0.96), and relative to each set's own
+P the slopes are -1.57 against -1.69 (0.93; the other two sets 0.98): the response's shape is
+right and its size is P's. That slope, cheap on the fit path (P at the strained states the
+stiffness block already relaxes), is the natural next anchor.
 
 **What this set predicts that the others did not.** The lateral relaxed-ion permittivity of beta
 rises with every stage, 2.83 -> 3.25 -> 3.82, and its strain derivative with it (9 -> 20 -> 29):

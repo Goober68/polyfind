@@ -232,7 +232,56 @@
      -4.37e-11
     ]
    ],
-   "status": "repeat evidence complete on exchange main (2026-11-06); +/-1% polar axial Berry repeats in progress (plus and minus controllers admitted)"
+   "status": "repeat evidence complete on exchange main (2026-11-06); the +/-1% polar axial Berry repeats are complete too (record beta_qe_berry_axial_v1)"
+  },
+  "beta_qe_berry_axial_v1": {
+   "label": "beta-PVDF, Dipole QE 7.6 PBE-D3(BJ) Berry-phase polarization at the -1%, 0 and +1% polar-axis cells (beta_ax0_m01 / beta_zero / beta_ax0_p01_berry_repeat_v1, exchange main 6574b77d, 2026-11-06)",
+   "polyfind_system": "beta",
+   "frame": "polyfind",
+   "note": "Three occupied-only NSCF Berry repeats per lattice direction at each of the three cells (24 occupied bands, 8x4x16 mesh, one common SCF checkpoint per cell), the ions relaxed at each fixed strained cell (the pvdf_beta_ref_v1_ax0_{m,p}01 geometries of beta_qe_axial_v1); the repeats agree to 3e-10 C/m^2. The polar-axis slope is formed here by polyfind: (P(+1%) - P(-1%))/0.02 = -0.3255 C/m^2 (one-sided -0.3198 from the plus cell, -0.3312 from the minus; -1.69 per unit strain relative to P0, of which -1 is the dilution of the dipole density by the stretched cell and -0.69 the fall of the dipole per cell). It is the raw finite difference of the Berry polarization; for the longitudinal component the proper and improper piezoelectric coefficients coincide (Vanderbilt 2000, e_ijk = dP_i/d eta_jk + delta_jk P_i - delta_ij P_k), so on one branch it is the relaxed-ion e_11. Dipole's scope: repeat evidence only; 'a raw polarization finite difference is not automatically a proper piezoelectric coefficient'; their three-point relative-branch replay (axis 0, 0.25-cycle bound) is running and no branch result is asserted; quantitatively_valid false on every unit. The quantum along a is 0.728 C/m^2 and the three values (0.196, 0.193, 0.189) sit on the branch nearest zero, so the 0.0065 C/m^2 steps cannot be a branch jump.",
+   "P0_C_m2": [
+    0.19269124,
+    0.0,
+    0.0
+   ],
+   "strained": {
+    "xx (polar)": {
+     "+0.010": {
+      "P_C_m2": [
+       0.18949348,
+       0.0,
+       0.0
+      ],
+      "a_A": 4.80435,
+      "P_repeats_C_m2": [
+       0.1894934832285063,
+       0.18949348328883164,
+       0.18949348349852396
+      ]
+     },
+     "-0.010": {
+      "P_C_m2": [
+       0.19600298,
+       0.0,
+       0.0
+      ],
+      "a_A": 4.70921,
+      "P_repeats_C_m2": [
+       0.1960029755501312,
+       0.1960029755501312,
+       0.1960029755501312
+      ]
+     }
+    }
+   },
+   "dP_d_eta_polar_C_m2": {
+    "centered": -0.325475,
+    "plus_one_sided": -0.319776,
+    "minus_one_sided": -0.331174,
+    "over_P0": -1.6891,
+    "formed_by": "polyfind, from Dipole's three raw Berry vectors"
+   },
+   "status": "three Berry units (minus, zero, plus) complete on exchange main at 6574b77d (2026-11-06); Dipole's three-point branch replay running; no proper piezoelectric coefficient asserted by Dipole"
   }
  }
 }

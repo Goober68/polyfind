@@ -176,6 +176,22 @@ stiffness flag of the previous section is read against the QE cell from here on.
   copolymer's TGTG' carries 0.84 kcal/mol per monomer of angle strain, hence its larger
   correction). The files `e2_polyfind*.json` carry both parts (`docs/CRYSTAL_STAGE.md` 5.4);
   the conformer cells, polarizations and strains are unchanged. Reported to Dipole 2026-11-05.
+- **E1, the polar-axis Berry pair (2026-11-06).** Dipole's Berry-phase polarization at the
+  -1%, 0 and +1% polar-axis cells (ions relaxed at each fixed strained cell; three repeats per
+  cell agreeing to 3e-10 C/m^2) is 0.19600, 0.19269 and 0.18949 C/m^2: stretching the polar axis
+  lowers the polarization, by -0.3255 C/m^2 per unit strain (centered; one-sided -0.320 and
+  -0.331), of which -1.0 x P is the dilution of the dipole density and the remaining -0.69 x P
+  the fall of the dipole per cell. For the longitudinal component the proper and improper
+  piezoelectric coefficients coincide, so on one branch this is the relaxed-ion e_11; all three
+  points sit on the branch nearest zero (quantum 0.728 C/m^2), and Dipole's own three-point
+  branch replay is running with no coefficient asserted (record `beta_qe_berry_axial_v1`, slope
+  formed by polyfind). Polyfind's `d|P_polar|/d eta`, the same quantity on rigid chains relaxed
+  in the strained cell: pre-registered -0.233 (0.71 of Dipole's), stage 2 -0.312 (0.96), belt
+  -0.282 (0.87). Relative to each set's own P the slopes are -1.66, -1.65 and -1.57 against
+  -1.69 (0.98, 0.98, 0.93): the shape of the response is right on every set and the absolute
+  number is carried by P itself, so the pre-registered set's 29% shortfall in e_11 is its 27%
+  shortfall in P, and the belt set's 13% is its 7% in P and a 7% softer relative slope. The
+  cross-check prints these lines for any set (`examples/crosscheck_e1_e2.py --polyfind <file>`).
 - **Labelled sets beside the pre-registered one.** Three fitted presets of the crystal stage
   (`docs/CRYSTAL_STAGE.md`) have their own E1/E2 files, each a prediction set in its own right
   and none of them the pre-registered one, which stands: `e1/e2_polyfind_crystal.json`

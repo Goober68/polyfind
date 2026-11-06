@@ -104,21 +104,30 @@ def crosscheck_e1(pf_all, dp_all, floor):
                     line(f"{name}_{ax}", p[i], d[i], i == 0, floor)
         if "strained" in dp:
             for axis, cells in dp["strained"].items():
-                key_pf = AXIS_D2P[axis]
+                # a record in polyfind's frame may key the strain by polyfind's own column name
+                key_pf = axis if axis in pf["strained"] else AXIS_D2P.get(axis, axis)
                 if key_pf not in pf["strained"]:
                     print(f"  strain along Dipole's {axis} ({key_pf}): polyfind has no column (chain rigid)")
                     continue
                 plus, minus = cells["+0.010"], cells["-0.010"]
-                deps_d = (to_pf_vec(plus["eps_diag"]) - to_pf_vec(minus["eps_diag"])) / 0.02
-                deps_p = np.diag(np.asarray(pf["strained"][key_pf]["d_eps_d_eta"], dtype=float))
-                print(f"  d eps_ii / d eta along {key_pf}:")
-                for i, ax in enumerate(("x polar", "y lateral", "z chain")):
-                    line(f"d eps_{ax} / d eta", deps_p[i], deps_d[i], key_pf.startswith("xx") and i == 0, floor)
+                if "eps_diag" in plus:
+                    deps_d = (to_pf_vec(plus["eps_diag"]) - to_pf_vec(minus["eps_diag"])) / 0.02
+                    deps_p = np.diag(np.asarray(pf["strained"][key_pf]["d_eps_d_eta"], dtype=float))
+                    print(f"  d eps_ii / d eta along {key_pf}:")
+                    for i, ax in enumerate(("x polar", "y lateral", "z chain")):
+                        line(f"d eps_{ax} / d eta", deps_p[i], deps_d[i], key_pf.startswith("xx") and i == 0, floor)
                 if "P_C_m2" in plus:
                     dp_d = (to_pf_vec(plus["P_C_m2"]) - to_pf_vec(minus["P_C_m2"])) / 0.02
                     dp_p = np.asarray(pf["strained"][key_pf]["dP_true_d_eta_C_m2"], dtype=float)
-                    for i, ax in enumerate(("x polar", "y lateral", "z chain")):
-                        line(f"dP_{ax} / d eta (true, C/m^2)", dp_p[i], dp_d[i], key_pf.startswith("xx") and i == 0, floor)
+                    # the sign of P is the orientation of each side's cell; d|P|/d eta of the polar component is the comparable number
+                    p0_d = to_pf_vec(dp["P0_C_m2"]) if "P0_C_m2" in dp else (to_pf_vec(plus["P_C_m2"]) + to_pf_vec(minus["P_C_m2"])) / 2
+                    s_pf = np.sign(pf["P0_C_m2"][0]) or 1.0
+                    s_dp = np.sign(p0_d[0]) or 1.0
+                    print(f"  polarization against strain along {key_pf} (ions relaxed at the fixed strained cell on both sides):")
+                    line("d|P_polar| / d eta (true, C/m^2)", s_pf * dp_p[0], s_dp * dp_d[0], key_pf.startswith("xx"), floor)
+                    if abs(pf["P0_C_m2"][0]) > floor and abs(p0_d[0]) > floor:
+                        line("(d|P_polar| / d eta) / |P_polar|", s_pf * dp_p[0] / abs(pf["P0_C_m2"][0]), s_dp * dp_d[0] / abs(p0_d[0]), key_pf.startswith("xx"), floor)
+                    print(f"    raw dP/d eta, polyfind {np.round(dp_p, 4).tolist()} / Dipole {np.round(dp_d, 4).tolist()} C/m^2 (sign is the orientation of the cell's dipoles)")
         if "P_C_m2" in dp:
             dpv = to_pf_vec(dp["P_C_m2"]); pfv = np.asarray(pf["P0_C_m2"], dtype=float)
             print(f"  polarization (C/m^2), Dipole status: {dp.get('status', '')}")
