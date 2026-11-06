@@ -223,3 +223,27 @@ def test_angle_anchors_are_dipoles_geometries():
     ch2, cf2 = C.DFT_ANCHORS["alpha_backbone_angles"]
     assert ch2 > cf2 > C.DFT_ANCHORS["beta_backbone_angle"]
     assert C.TOL["angle"] == 1.0
+
+
+def test_prediction_path_refined_under_the_full_potential_is_the_fit_path():
+    """With the fit's potential passed to its refinement, the E1/E2 reference builder returns the
+    cell and backbone angles the fit's predict() refined to (docs/CRYSTAL_STAGE.md 5.10)."""
+    from polyfind import mechanics as M
+    from polyfind.ewald import EwaldSpec
+    from polyfind.polarizability import Polarizable
+    params = F.PRESET_PARAMETERS["pvdf-dft-valence-belt"]
+    full = dict(coulomb="ewald", ewald=EwaldSpec(), polarizable=Polarizable(), lj_cutoff="force")
+    old = C.BELT_GEOMETRY
+    try:
+        C.BELT_GEOMETRY = "textbook"
+        beta_case, _ = C.cases_for(np.zeros(12))
+    finally:
+        C.BELT_GEOMETRY = old
+    pred = F.predict(beta_case, params, always_gap=False, **full)
+    with params.applied():
+        ref, rr = M.refined_reference(beta_case.polymer, [0, 0], label="beta-belt-test", refine_kw=dict(full),
+                                      pack_kw={"table_cache_dir": None}, **full)
+    r = pred.refine_result.result
+    assert np.allclose(sorted(ref.params[:2]), sorted((r.a, r.b)), atol=2e-3)
+    assert abs(ref.c - pred.c) < 2e-3
+    assert np.allclose(rr.angles, pred.refine_result.angles, atol=0.05)

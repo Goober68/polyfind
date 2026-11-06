@@ -567,6 +567,22 @@ needs, before the belt terms are trusted on a hydrocarbon.
 induced-dipole work grows with the square. Beta and alpha are 11 and 35 s. The E2 copolymer
 T3GT3G' cell, the largest, took 1,011 s.
 
+**The prediction path's refinement and the fit's (found 2026-11-06, closed).** `mechanics.refined_reference`
+hands `refine_crystal` only what `refine_kw` says, and the E1/E2 scripts said nothing, so their
+chain conformation and starting cell were refined under the refinement's own defaults (the
+truncated Coulomb sum, no induced dipoles, the energy-shifted Lennard-Jones) and only then relaxed
+in a, b and gamma under the full potential. At the stage-6 point that leaves a and b within 0.1%
+of the fit path, c 0.2% short (2.5931 against 2.5978: `relax_reference` cannot move c) and the
+backbone angles 0.3 deg closed (116.1 against 116.4). With the full potential passed to the
+refinement the two paths agree to four decimals on every cell axis and the angles, and
+`relax_reference` has nothing left to move; the scripts do that from here, and
+`examples/e1_predictions.py --geometry` builds the belt chain at the geometry the preset was
+fitted on. The belt sets above and the pre-registered sets were made before this; the differences
+it would make (0.2% in c, 0.3 deg) are below the differences those sets report, so they are left
+as they are and the next sets carry the consistent refinement. For the stage-7 preset this is not
+optional: its restraint stiffness is fitted against the full potential's lateral pressure, and a
+refinement under the truncated potential would relax the angles against a different pressure.
+
 ### 5.11 Stage 6: the polar Berry slope as an anchor (implemented; runs after stage 5)
 
 Dipole's three-point Berry pair (5.10; `docs/predictions/e1_e2_notes.md`) gives d|P|/d eta along
