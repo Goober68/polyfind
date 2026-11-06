@@ -152,3 +152,29 @@ def test_slope_anchor_is_dipoles_three_point_berry_pair():
     np.testing.assert_allclose(rec["dP_d_eta_polar_C_m2"]["centered"], centered, atol=1e-6)
     np.testing.assert_allclose(C.DFT_ANCHORS["beta_dP_deta_polar"], centered, atol=1e-4)
     assert C.STAGE6["slope"] and C.STAGE6["stiffness"] and C.STAGE6["polarizable"]
+
+
+def test_fit_checkpoints_its_best_so_far(tmp_path, monkeypatch):
+    """A run cut short keeps its best point: the checkpoint holds the best evaluation so far,
+    marked incomplete, in the format ``--x0`` resumes from."""
+    import time
+
+    def cheap(x, **kw):
+        x = np.asarray(x, dtype=float)
+        obj = float(np.sum((x - C.X0_4) ** 2)) + float(((x[10] + 1.5) / 0.5) ** 2)
+        return C.Evaluation(x=x, residuals={"q": (obj, 0.0, obj)}, objective=obj, ridge=0.0, seconds=0.0)
+
+    monkeypatch.setattr(C, "evaluate", cheap)
+    path = tmp_path / "ck.json"
+    best, history = C.fit(maxfev=40, stage=4, checkpoint=str(path))
+    with open(path) as fh:
+        ck = json.load(fh)
+    assert ck["complete"] is False
+    assert ck["objective"] == min(e.objective for e in history) == best.objective
+    assert np.allclose(ck["x"], best.x) and len(ck["x"]) == 12
+    assert 1 <= ck["evaluations"] <= len(history)
+    assert ck["belt"] == {"d": C.BELT_D, "geometry": C.BELT_GEOMETRY}
+    C.save(best, str(path), evaluations=len(history), complete=True)
+    with open(path) as fh:
+        done = json.load(fh)
+    assert done["complete"] is True and done["evaluations"] == len(history)

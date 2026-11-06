@@ -257,10 +257,12 @@ def table(ev: Evaluation) -> str:
 
 
 def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int = 1,
-        **eval_kw) -> tuple[Evaluation, list[Evaluation]]:
+        checkpoint: str | None = None, **eval_kw) -> tuple[Evaluation, list[Evaluation]]:
     """Powell with bounds on the eight (stage 1) or ten (stage 2) variables; every evaluation is
     logged.  ``stage=2`` uses :data:`X0_2`, :data:`BOUNDS2` and the :data:`STAGE2` evaluation
-    settings unless ``eval_kw`` overrides them; ``x0`` resumes from an earlier best."""
+    settings unless ``eval_kw`` overrides them; ``x0`` resumes from an earlier best.  With
+    ``checkpoint``, the best evaluation so far is :func:`save`\ d to that path (``complete``
+    false) each time it improves, so a run cut short keeps its best point and resumes from it."""
     from scipy.optimize import minimize
     if stage in (2, 3, 4):
         eval_kw = {**STAGE2, **eval_kw}
@@ -270,17 +272,22 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
     _, _, bounds, _ = _config(start)
     history: list[Evaluation] = []
 
+    def record(ev):
+        history.append(ev)
+        if checkpoint is not None and ev.objective <= min(e.objective for e in history):
+            save(ev, checkpoint, evaluations=len(history), complete=False)
+
     def obj(x):
         xc = np.clip(x, bounds[:, 0], bounds[:, 1])
         ev = evaluate(xc, coulomb=coulomb, **eval_kw)
-        history.append(ev)
+        record(ev)
         if log is not None:
             print(f"[{len(history):3d}] obj {ev.objective:9.2f} ridge {ev.ridge:6.2f}  x = {np.array2string(xc, precision=4, suppress_small=True)}  ({ev.seconds:.0f} s)",
                   file=log, flush=True)
         return ev.objective
 
     first = evaluate(start, coulomb=coulomb, **eval_kw)
-    history.append(first)
+    record(first)
     if log is not None:
         print("start:\n" + table(first), file=log, flush=True)
     minimize(obj, start, method="Powell", bounds=[tuple(b) for b in bounds],
@@ -289,10 +296,14 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
     return best, history
 
 
-def save(ev: Evaluation, path: str) -> None:
+def save(ev: Evaluation, path: str, evaluations: int | None = None, complete: bool = True) -> None:
+    """Write an evaluation as a result file (the format ``--x0`` resumes from).  ``evaluations``
+    is how many the run had made when this was its best; ``complete`` false marks a checkpoint
+    of a run still going (or cut short)."""
     variables = _config(ev.x)[0]
     prm = parameters(ev.x)
     out = {"variables": list(variables), "x": ev.x.tolist(), "objective": ev.objective, "ridge": ev.ridge,
+           "complete": bool(complete), "evaluations": evaluations,
            "residuals": {k: {"polyfind": v[0], "dft": v[1], "z": v[2]} for k, v in ev.residuals.items()},
            "parameters": {"lj": prm.lj, "lj_pairs": prm.lj_pairs, "charge_increments": prm.charge_increments,
                           "charge_damping": prm.charge_damping},

@@ -621,4 +621,9 @@ python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and
-increments it implies, and the anchors and tolerances it was fitted to.
+increments it implies, and the anchors and tolerances it was fitted to. It is also the run's
+checkpoint: the best evaluation so far is written there each time it improves, with
+`"complete": false` and the evaluation count, and the final write marks it complete. A run cut
+short (the first stage-5 run was, by a two-hour session limit at evaluation 292 of 320) resumes
+from its checkpoint with `--x0`; the Powell line searches start over, so the resumed run is a
+restart from the best point, not a continuation.

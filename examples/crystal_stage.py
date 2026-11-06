@@ -1,6 +1,10 @@
 """Run the crystal stage of the fit (polyfind.crystalfit) and write its result.
 
     python examples/crystal_stage.py [--maxfev 240] [--out docs/predictions/crystal_stage_v1.json] [--coulomb ewald]
+
+The output file is also the run's checkpoint: the best evaluation so far is written there each time
+it improves (``"complete": false``), and the final write marks it complete.  A run cut short resumes
+from its checkpoint with ``--x0``.
 """
 import argparse
 import sys
@@ -23,10 +27,11 @@ def main():
         import json
         with open(args.x0) as fh:
             x0 = json.load(fh)["x"]
-    best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout, stage=args.stage, x0=x0)
+    best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout, stage=args.stage, x0=x0,
+                          checkpoint=args.out)
     print(f"\nbest of {len(history)} evaluations:\n" + C.table(best))
     print("parameters:", C.parameters(best.x).describe())
-    C.save(best, args.out)
+    C.save(best, args.out, evaluations=len(history), complete=True)
     print(f"written {args.out}")
 
 

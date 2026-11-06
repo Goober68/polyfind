@@ -114,7 +114,7 @@ matches the E1 path to 1e-4), is implemented and queued to start from the stage-
 same `-CH=CF-` unit as DB (the CF3 reading is withdrawn; E2 is six chemistries; record and
 devstream amended, sarco a498326c). Dipole at 05:12 UTC: no accepted strained units yet, one
 axial relaxation in SCF, alpha relaxing. The E1 report now carries the copolymer's
-electrostriction column (intrinsic lattice Q about +3 m^4/C^2 along the polar axis).
+electrostriction column (intrinsic lattice Q about +3 m^4/C^2 along the polar axis). The first stage-5 run was cut by the session's two-hour background limit at evaluation 292 of 320 (best objective 12.14 from 18.15), and its result file was only written at the end, so the fitter now checkpoints its best-so-far to the output file on every improvement (`crystalfit.fit(checkpoint=...)`, `"complete": false` until the final write; `--x0` resumes from it). Stage 5 is finishing from the logged best point; stage 6 follows.
 
 2026-11-04 update (cloud session, on `claude/polymeric-stable-arrangements-uh06b1`): the five
 CPU performance patches of `docs/PERFORMANCE_REVIEW.md` section 15 are applied (commits
