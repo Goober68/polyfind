@@ -807,6 +807,97 @@ the valence value), hydrogen 2.651 to 2.572, fluorine 3.333 to 3.369 and the H-F
 3.004; the increments barely moved (C-H -0.176 to -0.162, C-F +0.167 to +0.169). This point is
 the preset `pvdf-dft-valence-belt2` (5.14).
 
+### 5.14 The stage-7 preset as a prediction set (`pvdf-dft-valence-belt2`)
+
+`examples/e1_predictions.py --preset pvdf-dft-valence-belt2 --variant belt --geometry pbe` and the
+E2 script likewise (`docs/predictions/e1_polyfind_belt2.json`, `e2_polyfind_belt2.json`), with the
+refinement under the full potential (5.10, last paragraph): the E1 path's beta cell is the fit
+path's to four decimals (4.7445, 8.4756, 2.6003) and so is alpha's (4.9264, 9.7073, 4.6815), and
+E2's PVDF TTTT margin is the fit's gap, +0.726. Against the belt set (5.10 has the two earlier
+sets beside it) and the DFT in hand:
+
+| quantity | DFT | belt (stage 4) | belt2 (stage 7) |
+|---|---|---|---|
+| beta a, b, c, A | 4.757, 8.528, 2.581 | 4.728, 8.517, 2.602 | 4.745, 8.476, 2.600 |
+| beta polarization, C/m^2 | 0.193 (Berry) | 0.179 | 0.193 |
+| beta eps_inf (x, y, z) | 2.235, 2.253, 2.600 (DFPT, protocol evidence) | 2.108, 2.086, 2.446 | 2.122, 2.095, 2.448 |
+| beta eps_0 relaxed-ion (x, y, z) | - | 2.108, 3.823, 2.446 | 2.122, 4.386, 2.448 |
+| beta C_11, C_22, C_12, C_66, GPa | 22.8, 24.5, 5.9, - | 25.1, 24.6, 4.9, 5.3 | 23.5, 24.2, 5.0, 5.5 |
+| beta d\|P\|/d eta (polar), C/m^2 | -0.326 (Berry pair) | -0.282 | -0.300 |
+| beta proper e_11, C/m^2; d_11, pm/V | - | 0.281; 11.2 | 0.300; 12.8 |
+| beta intrinsic Q_11, Q_22, m^4/C^2 | - | 3.83, 8.85 | 5.58, 11.56 |
+| beta d eps_yy / d eta_yy | - | 28.5 | 48.6 |
+| alpha (polar TGTG') a, b, c, A | 4.945, 9.636, 4.660 (the antipolar anchor; degenerate here) | 4.957, 9.559, 4.732 | 4.926, 9.707, 4.682 |
+| alpha polarization, C/m^2 | - | 0.094 | 0.099 |
+| alpha C_11, C_22, C_12, C_66, GPa | - | 21.6, 14.3, 5.4, 6.7 | 21.1, 15.0, 5.2, 6.2 |
+| copolymer a, b, gamma, c per 10 monomers | - | 4.970, 8.401, 88.0, 25.99 | 4.959, 8.397, 92.1, 25.89 |
+| copolymer polarization, C/m^2 (tilt from a) | - | 0.153 (38 deg) | 0.166 (85 deg) |
+| copolymer eps_0 relaxed-ion (x, y, z) | - | 2.411, 2.380, 2.402 | 2.769, 2.140, 2.417 |
+| copolymer C_11, C_22, C_12, C_66, GPa | - | 24.6, 16.4, 6.1, 6.8 | 12.5, 21.1, 8.8, 9.7 |
+| copolymer intrinsic Q_11, Q_22, m^4/C^2 | - | 1.63, -0.60 | -3.27, -0.78 |
+| PE (control) a, b, gamma | - | 4.139, 7.231, 90.9 | 3.971, 6.887, 90.0 |
+| PE eps_inf (x, y, z) | - | 2.771, 2.754, 2.904 | 3.038, 3.031, 3.094 |
+| PE C_11, C_22, C_12, C_66, GPa | - | 20.4, 17.3, 10.2, 11.5 | 31.7, 33.8, 1.0, 4.9 |
+
+E2, margins over TGTG' in kcal/mol per monomer with the backbone-angle strain included (5.4):
+
+| | DFT | belt | belt2 |
+|---|---|---|---|
+| PVDF TTTT | +0.726 | +0.758 | +0.726 |
+| PVDF T3GT3G' | - | +0.425 | +0.333 |
+| copolymer TTTT | - | +0.172 | +0.059 |
+| copolymer T3GT3G' | - | +0.185 | +0.030 |
+
+**Against Dipole's records** (`examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt2.json --e2 docs/predictions/e2_polyfind_belt2.json`):
+the beta cell -0.3%, -0.6%, +0.8% on the QE reference (volume -0.1%); C_11 at 1.03 of the six-cell
+value, C_22 at 0.99, C_12 at 0.85; the Berry polarization at 1.00; the polar Berry slope at 0.92,
+and 0.92 relative to its own P as well (the belt set was 0.87 and 0.93); the electronic
+permittivity at 0.95, 0.93 and 0.94 of the DFPT tensor, as every set has been, because no stage
+has touched the polarizabilities. Every anchored quantity is where the fit put it, which is what
+this check is for; the rows that are not anchors are the predictions.
+
+**What this set predicts.** The ionic part of beta's lateral permittivity is the chains' libration
+about their axes, and it has risen with every stage: eps_0 - eps_inf along y is 0.70, 1.17, 1.74,
+2.29 (pre-registered, stage 2, belt, belt2). For a rigid-dipole libration that increment scales as
+P^2 over the libration stiffness, and P is pinned by the Berry anchor, so the stiffness this form
+implies is 0.60 of the isotropic forms' (belt) and 0.53 (belt2): the fluorine wall is hard where
+the chains touch and leaves them free to rock between contacts. Its strain derivative says the
+same, 49 per unit lateral strain against 29 and 20: the libration softens fast as the chains
+separate. Dipole's DFPT eps_0 along the lateral axis is the number that tests this, and it is not
+an anchor. The piezoelectric column follows P: proper e_11 0.300 C/m^2 (0.92 of the Berry slope,
+which on one branch is this coefficient), d_11 12.8 pm/V, intrinsic Q_11 5.6 and Q_22 11.6
+m^4/C^2 (3.8 and 8.9 on the belt set; the lateral Q is the libration's again).
+
+**Two cautions, both sharper than in 5.10.** The copolymer model's packing search landed in a
+third arrangement: the cell is back in the pre-registered setting (gamma 92.1 against the belt
+set's 88.0) but the chain dipoles lie along b, 85 deg from a, so the frame's "polar" axis x is now
+across the dipole and its rows are read in the dipole's frame: the longitudinal proper
+coefficient is e_22 = -0.253 C/m^2 (1.53 times P, the rigid-dipole dilation term of
+`e1_e2_notes.md`), the stiffness along the dipole 21.1 GPa and across it 12.5, and the libration's
+permittivity sits on x (2.77 - 2.04 = 0.73), the axis perpendicular to the dipole, as it must. Its
+E2 margins put the three conformations within 0.06 kcal/mol per monomer, TTTT +0.059 over TGTG':
+the TrFE stabilisation of the all-trans phase is nearly complete on this set, but the search's
+minimum differs from set to set, so it is not a clean statement, and the copolymer rows compare
+minima before they compare potentials. PE is the second and is worse than before: its cell volume
+is 69.7 A^3 against 76.3 (belt) and 73.4 (pre-registered), its electronic permittivity 3.04 against
+2.77, its in-plane stiffness 31.7 and 33.8 GPa against 20.4 and 17.3, with C_12 1.0 and C_66 4.9
+(10.2 and 11.5 on the belt set). The restraint's rise was paid for by the carbon diameter (1.016
+to 0.971 of the valence value), the hydrogen diameter (1.021 to 0.990) and the hydrogen well (1.116
+to 1.012 of it), and PE, a chain of nothing but those two, is where it shows. Dipole's PE cell is
+the anchor this objective needs next, before any belt set is trusted on a hydrocarbon.
+
+**Cost.** Beta 28 s, PE 19 s, alpha 70 s, the copolymer E1 1,719 s and the E2 copolymer T3GT3G'
+cell 967 s, all with the E1 and E2 runs and the test suite sharing the four cores (the belt set's
+copolymer E1 took 1,356 s alone, 5.10).
+
+**What is left.** In beta, the lateral axis 0.6% short and C_12 0.9 GPa low are shared by every
+belt set and did not move between stages 6 and 7: they are the coupling between the two lateral
+axes, which a hard wall gives least of, and the form's next change. The backbone angle of beta
+is 1.4 deg open against a restraint the fit itself set, so the chain-axis excess (+0.8%) is now
+the lateral pressure's, not an invented constant's. Dipole's native alpha positions replace the
+start geometry's angles as anchors when they land; the DFPT tensors (eps_0 lateral above all) and
+the PE cell are the anchors that would let a stage 8 move the form rather than the fit.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
