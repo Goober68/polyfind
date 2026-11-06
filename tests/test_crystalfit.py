@@ -110,3 +110,24 @@ def test_registered_stage2_preset_matches_the_saved_fit():
     assert "pvdf-dft-valence-crystal2" in PRESETS and F.PRESET_PARAMETERS["pvdf-dft-valence-crystal2"] is p
     ff = SimpleFF.from_preset("pvdf-dft-valence-crystal2")
     assert ff.lj_pair_table() == {("F", "H"): tuple(saved["parameters"]["lj_pairs"][0][2:])}
+
+
+def test_registered_stage4_preset_matches_the_saved_fit():
+    with open("docs/predictions/crystal_stage_v4.json") as fh:
+        saved = json.load(fh)
+    assert saved["variables"] == list(C.VARIABLES4) == list(F.CRYSTAL_STAGE4_VARIABLES)
+    np.testing.assert_allclose(F.CRYSTAL4_FITTED_X, saved["x"], rtol=0, atol=1e-12)
+    p = F.FITTED_VALENCE_BELT
+    assert [list(t) for t in p.lj] == [list(t) for t in saved["parameters"]["lj"]]
+    assert [list(t) for t in p.lj_pairs] == [list(t) for t in saved["parameters"]["lj_pairs"]]
+    assert [list(t) for t in p.charge_increments] == [list(t) for t in saved["parameters"]["charge_increments"]]
+    assert p.charge_damping == saved["parameters"]["charge_damping"]
+    assert "pvdf-dft-valence-belt" in PRESETS and F.PRESET_PARAMETERS["pvdf-dft-valence-belt"] is p
+    ff = SimpleFF.from_preset("pvdf-dft-valence-belt")
+    table = ff.lj_pair_table()
+    assert table[("F", "H")] == tuple(saved["parameters"]["lj_pairs"][0][2:])
+    # the wall is X-H only: the site sees no carbon, fluorine or other site
+    x_depth = dict((e, d) for e, _, d in p.lj)["X"]
+    assert x_depth == 10 ** saved["x"][10] and x_depth > 0
+    for pair in (("C", "X"), ("F", "X"), ("X", "X")):
+        assert table[pair][1] == 0.0

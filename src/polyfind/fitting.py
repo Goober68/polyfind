@@ -2639,3 +2639,18 @@ register_preset("pvdf-dft-valence-crystal", FITTED_VALENCE_CRYSTAL)
 CRYSTAL2_FITTED_X = np.array([1.0008638997932235, 1.018846232405703, 1.0110098148821827, 0.6174749796517582, 1.2032495377181727, 0.9447945819365001, -0.0537390939952406, 0.043760706026035046, 1.0365814193797118, 0.9367930113696455])
 FITTED_VALENCE_CRYSTAL2 = crystal_stage_parameters(CRYSTAL2_FITTED_X)
 register_preset("pvdf-dft-valence-crystal2", FITTED_VALENCE_CRYSTAL2)
+
+# Stage 4 of the crystal stage (docs/CRYSTAL_STAGE.md sections 5.7-5.9): the ten variables of
+# stage 2 plus the depth of a repulsion-only wall between hydrogen and two massless, chargeless
+# "belt" sites 0.7 A either side of each fluorine, perpendicular to the C-F bond
+# (polymers.belt_fluorine; the probes of 5.7 found fluorine's polar flattening to be what sets
+# beta's a:b ratio, which no isotropic term reached).  Fitted in the induced-dipole, force-shifted
+# setting with the stiffness anchors (docs/predictions/crystal_stage_v4.json: objective 16.3, ridge
+# 8.0, against 65.1 for stage 2): every cell axis of beta and alpha within 1.4%, P 0.179 (0.18),
+# the alpha-beta margin -0.760 (-0.726), C_11 25.1 (22.8), C_22 24.6 (24.5), C_12 4.9 (5.9) GPa.
+# This preset only means something on the belt-site polymers (polymers.belt_variant, the
+# scripts' ``--variant belt``): on a plain chain there is no X atom, the wall never acts and the
+# remaining terms are not a fit to anything.  Opt-in, like the others.
+CRYSTAL4_FITTED_X = np.array([1.0995343449266393, 1.0265844264855664, 0.9640137318955736, 1.1789141853916727, 0.7188470506254732, 0.9818764789877136, -0.06057127720698972, 0.03225221988909674, 1.0193025010432388, 1.0004977569208784, -1.7053315426360323, 4.0000000003819665])
+FITTED_VALENCE_BELT = crystal_stage_parameters(CRYSTAL4_FITTED_X)
+register_preset("pvdf-dft-valence-belt", FITTED_VALENCE_BELT)
