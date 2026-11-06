@@ -1,0 +1,104 @@
+{
+ "potential": "pvdf-dft-valence-belt2, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K, fluorine belt sites, pbe chain geometry",
+ "frame": "x polar, y lateral, z chain",
+ "energy": "lattice energy plus the refined backbone angles' strain, per vinyl monomer (the strain was omitted before 2026-11-05)",
+ "systems": {
+  "pvdf": {
+   "label": "PVDF",
+   "conformations": {
+    "TTTT": {
+     "sequence": [
+      0,
+      0
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 2.0,
+     "energy_per_monomer_kcal": -9.362709114478498,
+     "lattice_energy_per_monomer_kcal": -9.46892879960756,
+     "bend_energy_per_monomer_kcal": 0.106219685129063,
+     "P_C_m2": [
+      -0.19278645709569364,
+      -1.8284479239393936e-16,
+      -7.945119095356802e-12
+     ],
+     "c_per_monomer_A": 2.600270524551868,
+     "cell": {
+      "a": 4.744527005712048,
+      "b": 8.475597057387098,
+      "gamma_deg": 90.0,
+      "c": 2.600270524551868,
+      "volume_A3": 104.56389625600839
+     },
+     "volume_per_monomer_A3": 52.281948128004196,
+     "seconds": 7.464947938919067,
+     "margin_vs_ground_kcal": 0.7264231909747636,
+     "conformational_strain_vs_ground": 0.11086582033117764
+    },
+    "TGTG'": {
+     "sequence": [
+      0,
+      1,
+      0,
+      2
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 4.0,
+     "energy_per_monomer_kcal": -10.089132305453262,
+     "lattice_energy_per_monomer_kcal": -10.56199182011359,
+     "bend_energy_per_monomer_kcal": 0.47285951466032833,
+     "P_C_m2": [
+      -0.09931639565035284,
+      -8.03192941255136e-15,
+      -3.6303181661965604e-17
+     ],
+     "c_per_monomer_A": 2.3407602223071913,
+     "cell": {
+      "a": 4.926445256402013,
+      "b": 9.707323175830316,
+      "gamma_deg": 90.0,
+      "c": 4.6815204446143825,
+      "volume_A3": 223.88246188069135
+     },
+     "volume_per_monomer_A3": 55.97061547017284,
+     "seconds": 15.82835340499878,
+     "margin_vs_ground_kcal": 0.0,
+     "conformational_strain_vs_ground": 0.0
+    },
+    "T3GT3G'": {
+     "sequence": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 8.0,
+     "energy_per_monomer_kcal": -9.756268948162102,
+     "lattice_energy_per_monomer_kcal": -9.897608309921488,
+     "bend_energy_per_monomer_kcal": 0.1413393617593861,
+     "P_C_m2": [
+      0.039277725127169885,
+      0.07867898843142358,
+      -0.07680177797535663
+     ],
+     "c_per_monomer_A": 2.3135996851512433,
+     "cell": {
+      "a": 5.482878993089248,
+      "b": 8.834040083437364,
+      "gamma_deg": 97.20259034883676,
+      "c": 9.254398740604973,
+      "volume_A3": 444.70871323267
+     },
+     "volume_per_monomer_A3": 55.58858915408375,
+     "seconds": 34.03109002113342,
+     "margin_vs_ground_kcal": 0.3328633572911599,
+     "conformational_strain_vs_ground": -0.011603297465973217
+    }
+   }
+  }
+ }
+}
