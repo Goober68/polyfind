@@ -583,7 +583,7 @@ as they are and the next sets carry the consistent refinement. For the stage-7 p
 optional: its restraint stiffness is fitted against the full potential's lateral pressure, and a
 refinement under the truncated potential would relax the angles against a different pressure.
 
-### 5.11 Stage 6: the polar Berry slope as an anchor (implemented; runs after stage 5)
+### 5.11 Stage 6: the polar Berry slope as an anchor (closed)
 
 Dipole's three-point Berry pair (5.10; `docs/predictions/e1_e2_notes.md`) gives d|P|/d eta along
 the polar axis, -0.3255 C/m^2, the relaxed-ion e_11 on one branch. On the fit path it costs
@@ -738,7 +738,7 @@ against 114.6, alpha 119.3-119.5 and 117.7-118.1 against 118.2 and 116.9. The re
 stiffness decides how much lateral pressure goes into the chain axes and how much of the gap the
 alpha opening buys, and three DFT angles now pin it. That is stage 7.
 
-### 5.13 Stage 7: the restraint as a variable, the backbone angles as anchors (implemented; runs after stage 6)
+### 5.13 Stage 7: the restraint as a variable, the backbone angles as anchors (closed)
 
 The thirteenth variable is log10 of the restraint's multiplier on the refinement's default
 (`refine.DEFAULT_ANGLE_STIFFNESS`, 105 kcal/mol/rad^2), bounded at a fifth and five times, with a
@@ -767,8 +767,45 @@ Doubling the restraint puts alpha's angles on DFT's and halves the chain-axis ex
 gap opens to -0.50 while the polar axes grow 1%: once the chains cannot stretch, the lateral
 potential at the stage-5 point is too repulsive and alpha is not bound enough against beta.
 Whether the other twelve variables can hold the cell, the Berry anchors and the gap with the
-angles at DFT's values is the question stage 7 answers; it is running from the stage-6 result
-(5.11) on the PBE-D3 geometry and its result goes here.
+angles at DFT's values was the question stage 7 had to answer, from the stage-6 result (5.11) on
+the PBE-D3 geometry.
+
+**Result.** Stage 7 closed at objective 11.65 from 25.14 at the stage-6 point (281 evaluations at 16
+s; `crystal_stage_v7.json`), ridge 4.45, the restraint fitted at 178 kcal/mol/rad^2 (multiplier
+1.70 on the default). The twelve other variables did hold everything: |P| 0.1928 against 0.1927,
+the slope -0.300 against -0.326 (0.92; z 0.84), the gap -0.726 on the anchor (the k = 210
+evaluation above had it at -0.50), every cell axis within 0.8%, C_11 23.5 and C_22 24.2 against
+22.8 and 24.5. Alpha's angles are on DFT's (118.05 and 116.94 against 118.23 and 116.87); beta's
+closed from 116.93 to 116.00 and is the largest angle residual left (z 1.37), and since the C-C
+bond is now Dipole's its chain axis is that angle: 2 x 1.5331 x sin(116.00/2) = 2.6003 A, +0.75%.
+The comparison with stage 6 is made under the same residual set, the stage-6 point evaluated on
+its own (textbook) geometry with the three angle rows added (`evaluate(x6, **STAGE7)`, restraint at
+the default 105):
+
+| quantity | stage 6 (textbook, k = 105) | stage 7 (PBE-D3, k = 178) | DFT |
+|---|---|---|---|
+| beta a, b, c | 4.7503, 8.4790, 2.5978 (-0.14, -0.57, 0.65) | 4.7445, 8.4756, 2.6003 (-0.26, -0.61, 0.75) | 4.757, 8.528, 2.581 |
+| alpha a, b, c | 4.9127, 9.7244, 4.6999 (-0.65, 0.92, 0.86) | 4.9264, 9.7073, 4.6815 (-0.38, 0.74, 0.46) | 4.945, 9.636, 4.660 |
+| beta Berry P | 0.1917 (-0.10) | 0.1928 (0.01) | 0.1927 |
+| E(alpha) - E(beta) | -0.735 (-0.19) | -0.726 (-0.01) | -0.726 |
+| antipolar - polar (rigid) | -0.000 (0.52) | 0.000 (0.52) | -0.026 |
+| C_11, C_22, C_12 | 24.16, 24.89, 5.07 (0.61, 0.15, -1.38) | 23.46, 24.19, 4.99 (0.30, -0.14, -1.51) | 22.77, 24.52, 5.88 |
+| d|P|/d eta (polar) | -0.299 (0.90) | -0.300 (0.84) | -0.326 |
+| beta backbone angle | 116.44 (1.81) | 116.00 (1.37) | 114.63 |
+| alpha angle at CH2, CF2 | 119.17, 117.73 (0.94, 0.86) | 118.05, 116.94 (-0.18, 0.07) | 118.23, 116.87 |
+| ridge, objective | 5.00, 16.08 | 4.45, 11.65 | |
+
+Stage 7 is the better point on eleven of the sixteen rows, with the rigid antipolar margin a tie.
+The four it loses are small, beta's three axes by at most a tenth of a tolerance and C_12 by 0.13,
+and the a and c losses are one residual: a beta angle 1.4 deg open is a chain axis 0.75% long, and
+the lateral pressure that opens it (5.12) is still there, resisted by 178 instead of 105. Beta's
+lateral axis sits 0.6% short in both sets and C_12 0.9 GPa low in both; the belt wall that fixed
+the a:b ratio (5.7) is a hard wall, and the coupling between the two lateral axes is what a hard
+wall gives least of. Those two rows are the next thing the form, not the fit, has to change. In
+parameters the restraint's rise was paid for by the carbon diameter (3.624 to 3.465 A, x 0.971 of
+the valence value), hydrogen 2.651 to 2.572, fluorine 3.333 to 3.369 and the H-F pair 3.042 to
+3.004; the increments barely moved (C-H -0.176 to -0.162, C-F +0.167 to +0.169). This point is
+the preset `pvdf-dft-valence-belt2` (5.14).
 
 ## 6. What it costs, and what it does not touch
 
@@ -800,10 +837,13 @@ python examples/crystal_stage.py --stage 3 --maxfev 320 --out docs/predictions/c
 python examples/crystal_stage.py --stage 4 --maxfev 320 --out docs/predictions/crystal_stage_v4.json
 python examples/crystal_stage.py --stage 4 --x0 docs/predictions/crystal_stage_v4.json --maxfev 320 --out docs/predictions/crystal_stage_v5.json   # the Berry P anchor
 python examples/crystal_stage.py --stage 6 --x0 docs/predictions/crystal_stage_v5.json --maxfev 300 --out docs/predictions/crystal_stage_v6.json   # plus the polar Berry slope
-python examples/crystal_stage.py --stage 7 --geometry pbe --x0 docs/predictions/crystal_stage_v6.json --maxfev 300 --out docs/predictions/crystal_stage_v7.json   # plus the restraint's stiffness, Dipole's backbone angles as anchors
+python examples/crystal_stage.py --stage 7 --geometry pbe --x0 docs/predictions/crystal_stage_v6.json --maxfev 280 --out docs/predictions/crystal_stage_v7.json   # plus the restraint's stiffness, Dipole's backbone angles as anchors
 python examples/e1_predictions.py --preset pvdf-dft-valence-belt --variant belt --out docs/predictions/e1_polyfind_belt.json
 python examples/e2_predictions.py --preset pvdf-dft-valence-belt --variant belt --out docs/predictions/e2_polyfind_belt.json
 python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt.json --e2 docs/predictions/e2_polyfind_belt.json
+python examples/e1_predictions.py --preset pvdf-dft-valence-belt2 --variant belt --geometry pbe --out docs/predictions/e1_polyfind_belt2.json
+python examples/e2_predictions.py --preset pvdf-dft-valence-belt2 --variant belt --geometry pbe --out docs/predictions/e2_polyfind_belt2.json
+python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt2.json --e2 docs/predictions/e2_polyfind_belt2.json
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and

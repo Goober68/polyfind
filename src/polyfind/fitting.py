@@ -2669,3 +2669,21 @@ register_preset("pvdf-dft-valence-crystal2", FITTED_VALENCE_CRYSTAL2)
 CRYSTAL4_FITTED_X = np.array([1.0995343449266393, 1.0265844264855664, 0.9640137318955736, 1.1789141853916727, 0.7188470506254732, 0.9818764789877136, -0.06057127720698972, 0.03225221988909674, 1.0193025010432388, 1.0004977569208784, -1.7053315426360323, 4.0000000003819665])
 FITTED_VALENCE_BELT = crystal_stage_parameters(CRYSTAL4_FITTED_X)
 register_preset("pvdf-dft-valence-belt", FITTED_VALENCE_BELT)
+
+# Stage 7 of the crystal stage (docs/CRYSTAL_STAGE.md 5.11-5.14): the twelve variables of stage 4
+# plus log10 of the refinement's backbone-angle restraint relative to its default (105
+# kcal/mol/rad^2, refine.DEFAULT_ANGLE_STIFFNESS), fitted on Dipole's PBE-D3 chain geometry
+# (polymers.pvdf_belt "pbe") with the Berry P (0.1927 C/m^2), the polar Berry slope d|P|/d eta
+# (-0.3255 C/m^2) and the backbone angles of both polymorphs (beta 114.63, alpha 118.23 at the CH2
+# and 116.87 deg at the CF2 carbon) as anchors beside the cells, the energy differences and the
+# stiffness (docs/predictions/crystal_stage_v7.json: objective 11.65, ridge 4.45, 281 evaluations,
+# from 25.14 at the stage-6 point).  Against the anchors: beta's cell -0.3%, -0.6%, +0.8%, alpha's
+# -0.4%, +0.7%, +0.5%; P 0.1928; E(alpha)-E(beta) -0.726; C_11 23.5 (22.8), C_22 24.2 (24.5), C_12
+# 5.0 (5.9) GPa; slope -0.300; angles 116.0, 118.05, 116.94 deg; the restraint fitted at 178
+# kcal/mol/rad^2, which applied() binds for every refinement made under this preset (the E1/E2
+# prediction path included).  It means something only on the belt-site polymers built at the PBE-D3
+# geometry (polymers.belt_variant(..., geometry="pbe"), the scripts' ``--variant belt --geometry
+# pbe``).  Opt-in, like the others.
+CRYSTAL7_FITTED_X = np.array([0.9711218548273446, 0.9900560857062977, 0.9498113526623126, 1.140031090784027, 1.0116205075282758, 0.8885990880373323, -0.042975547057411544, 0.05507860331389327, 1.0203927863482467, 1.031300684196814, -1.6781242742965172, 4.0000000003819665, 0.22964167699761515])
+FITTED_VALENCE_BELT2 = crystal_stage_parameters(CRYSTAL7_FITTED_X)
+register_preset("pvdf-dft-valence-belt2", FITTED_VALENCE_BELT2)

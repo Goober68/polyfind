@@ -132,6 +132,29 @@ def test_registered_stage4_preset_matches_the_saved_fit():
     for pair in (("C", "X"), ("F", "X"), ("X", "X")):
         assert table[pair][1] == 0.0
 
+def test_registered_stage7_preset_matches_the_saved_fit():
+    with open("docs/predictions/crystal_stage_v7.json") as fh:
+        saved = json.load(fh)
+    assert saved["complete"] and saved["belt"] == {"d": C.BELT_D, "geometry": "pbe"}
+    assert saved["variables"] == list(C.VARIABLES7) == list(F.CRYSTAL_STAGE7_VARIABLES)
+    np.testing.assert_allclose(F.CRYSTAL7_FITTED_X, saved["x"], rtol=0, atol=1e-12)
+    p = F.FITTED_VALENCE_BELT2
+    assert [list(t) for t in p.lj] == [list(t) for t in saved["parameters"]["lj"]]
+    assert [list(t) for t in p.lj_pairs] == [list(t) for t in saved["parameters"]["lj_pairs"]]
+    assert [list(t) for t in p.charge_increments] == [list(t) for t in saved["parameters"]["charge_increments"]]
+    assert p.charge_damping == saved["parameters"]["charge_damping"]
+    assert "pvdf-dft-valence-belt2" in PRESETS and F.PRESET_PARAMETERS["pvdf-dft-valence-belt2"] is p
+    # the thirteenth variable is the refinement's backbone-angle restraint relative to its default,
+    # bound for every refinement made under the preset; the stage-4 preset keeps the default
+    from polyfind.refine import DEFAULT_ANGLE_STIFFNESS, resolve_angle_stiffness
+    assert p.angle_stiffness == DEFAULT_ANGLE_STIFFNESS * 10.0 ** saved["x"][12]
+    assert 170.0 < p.angle_stiffness < 190.0
+    with p.applied():
+        assert resolve_angle_stiffness(None, None) == p.angle_stiffness
+    assert resolve_angle_stiffness(None, None) == DEFAULT_ANGLE_STIFFNESS
+    assert F.FITTED_VALENCE_BELT.angle_stiffness is None
+
+
 
 def test_polar_slope_removes_the_cell_orientation():
     from types import SimpleNamespace
