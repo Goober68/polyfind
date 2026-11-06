@@ -74,6 +74,7 @@ SIGMA3 = np.concatenate([SIGMA2, [2.0]])  # a weak pull towards point charges
 # value in the probe), with the charge penetration carried at its point-charge value.  The chains
 # are polymers.pvdf_belt(BELT_D): four massless repulsion-only sites per CF2.
 BELT_D = 0.7  # A, distance of the sites from the fluorine, perpendicular to the C-F bond
+BELT_GEOMETRY = "textbook"  # or "pbe": the chain built at Dipole's PBE-D3 bond lengths and angles (polymers.pvdf_belt)
 VARIABLES4 = VARIABLES2 + ("log10_D_X", "b_q")
 X0_4 = np.concatenate([X0_2, [-2.0, 4.0]])
 BOUNDS4 = np.vstack([BOUNDS2, [(-3.5, -0.3), (4.0, 4.0 + 1e-9)]])
@@ -148,9 +149,10 @@ def cases_for(x):
     beta_case, alpha_case = F.FITTED_CASES[1], F.FITTED_CASES[2]
     if len(np.asarray(x)) == 12:
         from .polymers import pvdf_belt
-        pol = pvdf_belt(BELT_D)
-        return (_replace(beta_case, key=f"beta-belt-{BELT_D:.2f}", polymer=pol),
-                _replace(alpha_case, key=f"alpha-belt-{BELT_D:.2f}", polymer=pol))
+        pol = pvdf_belt(BELT_D, BELT_GEOMETRY)
+        tag = f"belt-{BELT_D:.2f}" + ("" if BELT_GEOMETRY == "textbook" else f"-{BELT_GEOMETRY}")
+        return (_replace(beta_case, key=f"beta-{tag}", polymer=pol),
+                _replace(alpha_case, key=f"alpha-{tag}", polymer=pol))
     return beta_case, alpha_case
 
 
@@ -258,5 +260,7 @@ def save(ev: Evaluation, path: str) -> None:
            "parameters": {"lj": prm.lj, "lj_pairs": prm.lj_pairs, "charge_increments": prm.charge_increments,
                           "charge_damping": prm.charge_damping},
            "anchors": DFT_ANCHORS, "tolerances": TOL}
+    if len(ev.x) == 12:
+        out["belt"] = {"d": BELT_D, "geometry": BELT_GEOMETRY}
     with open(path, "w") as fh:
         json.dump(out, fh, indent=1)

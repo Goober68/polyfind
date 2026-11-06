@@ -15,7 +15,9 @@ def main():
     ap.add_argument("--coulomb", default="ewald", choices=("ewald", "dsf"))
     ap.add_argument("--stage", type=int, default=1, choices=(1, 2, 3, 4), help="2: induced dipoles, force-shifted LJ, H-F pair term, stiffness anchors; 3: plus charge penetration; 4: fluorine belt sites")
     ap.add_argument("--x0", default=None, help="JSON result file to resume from (its best x)")
+    ap.add_argument("--geometry", default="textbook", choices=("textbook", "pbe"), help="stage 4 only: the chain geometry of the belt-site polymer (pbe: Dipole's PBE-D3 bond lengths and angles)")
     args = ap.parse_args()
+    C.BELT_GEOMETRY = args.geometry
     x0 = None
     if args.x0:
         import json
