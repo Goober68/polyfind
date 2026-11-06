@@ -92,6 +92,17 @@ settles at), P 0.179 (fitted to 0.18; Dipole's Berry 0.193 is the anchor from st
 (0.19269 C/m^2 at the reference cell; the pre-registered P0 is -27% against it, stage 2 -2%, stage
 4 -7%). Next: the belt preset's E1/E2 sets and their cross-check, stage 5 with the 0.193 anchor
 from the stage-4 point, the PBE-D3 chain geometry on the belt chain, DFPT tensors as anchors.
+**Later, 2026-11-06.** The belt preset's E1/E2 sets are written (`e1/e2_polyfind_belt.json`,
+`docs/CRYSTAL_STAGE.md` 5.10; the copolymer E1 takes 1,356 s with the sites): beta against
+Dipole cell -0.6/-0.1/+0.8%, C_11 1.10, C_22 1.00, C_12 0.83, Berry P 0.93, eps_inf 0.93-0.94 of
+the DFPT electronic tensor; E2 PVDF TTTT margin +0.758 (DFT +0.726). Beta's lateral relaxed-ion
+permittivity keeps rising across the stages (2.83 -> 3.25 -> 3.82; the chains' libration) and is
+the set's sharpest number for Dipole's DFPT eps_0 to test. Cautions: the copolymer packing lands
+in a different minimum (gamma 88 vs 92 deg, dipole tilt 38 vs 23 deg), so its rows compare
+minima; PE's shear stiffness is 5x the pre-registered value (C_66 11.5 GPa), so a PE anchor comes
+before the belt terms are trusted on a hydrocarbon. Stage 5 (the Berry anchor 0.1927, from the
+stage-4 point; `crystal_stage_v5.json`) is running; `examples/crystal_stage.py --geometry pbe`
+builds the belt chain at Dipole's PBE-D3 geometry for the stage after.
 **Exchange**: the Science 2022 main text makes FA the dehydrochlorinated CFE pair, i.e. the
 same `-CH=CF-` unit as DB (the CF3 reading is withdrawn; E2 is six chemistries; record and
 devstream amended, sarco a498326c). Dipole at 05:12 UTC: no accepted strained units yet, one

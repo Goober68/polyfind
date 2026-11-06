@@ -176,6 +176,16 @@ stiffness flag of the previous section is read against the QE cell from here on.
   copolymer's TGTG' carries 0.84 kcal/mol per monomer of angle strain, hence its larger
   correction). The files `e2_polyfind*.json` carry both parts (`docs/CRYSTAL_STAGE.md` 5.4);
   the conformer cells, polarizations and strains are unchanged. Reported to Dipole 2026-11-05.
+- **Labelled sets beside the pre-registered one.** Three fitted presets of the crystal stage
+  (`docs/CRYSTAL_STAGE.md`) have their own E1/E2 files, each a prediction set in its own right
+  and none of them the pre-registered one, which stands: `e1/e2_polyfind_crystal.json`
+  (`pvdf-dft-valence-crystal`, fixed-charge stage 1, section 4), `e1/e2_polyfind_crystal2.json`
+  (`pvdf-dft-valence-crystal2`, induced dipoles with an H-F pair term and the six-cell stiffness
+  as anchors, section 5.3) and `e1/e2_polyfind_belt.json` (`pvdf-dft-valence-belt`, fluorine
+  belt sites, run with `--variant belt`, section 5.10). The last is the first to put every beta
+  and alpha cell axis within 1% of DFT (chain axes +1.0%, +1.4%); its beta set reads against
+  Dipole's records as cell -0.6/-0.1/+0.8%, C_11 1.10, C_22 1.00, C_12 0.83, Berry P 0.93.
+  `examples/crosscheck_e1_e2.py --polyfind <file>` reads any of them against the same records.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
   2026-11-05; the earlier CF3 reading of FA is withdrawn) are not predicted here: the potential's chlorine and the other defect parameters are unvalidated,
