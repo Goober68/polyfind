@@ -35,7 +35,11 @@ DFT_ANCHORS = {
     "alpha_cell": (4.945, 9.636, 4.660),  # QE, polyfind's antipolar TGTG' packing (docs/POLAR_MARGIN_DFT.md)
     "alpha_minus_beta": -0.726,  # kcal/mol per monomer, two-body D3
     "beta_antipolar_minus_polar": -0.026,  # kcal/mol per monomer; the antipolar beta packing is lower
-    "p_beta": 0.18,  # C/m^2, published DFT Berry phase for beta (0.178-0.181)
+    # C/m^2.  Stages 1-4 used the published 0.18 (other functionals and cells, 0.178-0.181); from
+    # stage 5 the anchor is Dipole's own Berry phase at the pvdf_beta_ref_v1 cell, 0.1927 (three
+    # repeats to 3e-10; docs/predictions/e1_dipole_existing.json, record beta_qe_berry_v1).
+    "p_beta": 0.1927,
+    "p_beta_published": 0.18,
     # relaxed-ion normal stiffness of beta, GPa, derived by polyfind from Dipole's six +/-1% axial QE
     # cells of 2026-11-05 (docs/predictions/e1_dipole_existing.json, record beta_qe_axial_v1):
     # stress and energy routes agree within 1.5%

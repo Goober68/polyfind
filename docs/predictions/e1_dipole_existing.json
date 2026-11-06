@@ -204,6 +204,35 @@
     }
    },
    "status": "six axial cells complete on exchange main at 54897c21 (2026-11-05); Dipole's lattice Hessian and Gamma response stages declared, not run"
+  },
+  "beta_qe_berry_v1": {
+   "label": "beta-PVDF, Dipole QE 7.6 PBE-D3(BJ) Berry-phase polarization at the pvdf_beta_ref_v1 cell (beta_zero_berry_repeat_v1, exchange main 2026-11-06)",
+   "polyfind_system": "beta",
+   "frame": "polyfind",
+   "note": "Three independent occupied-only NSCF Berry repeats per lattice direction from one common SCF checkpoint (24 occupied bands, 8x4x16 mesh, indirect gap 0.2206 Eh); the three vectors agree to 3e-10 C/m^2. Dipole's scope: repeat evidence only, not strain-path branch tracking or E1 acceptance; quantitatively_valid false. The polarization quantum along a is e a / V = 0.728 C/m^2, so 0.193 is the branch nearest zero. This is the polarization of the same Hamiltonian and cell as the other anchors, and it replaces the published 0.18 (other functionals and cells) as the crystal fit's P anchor from stage 5 on (stages 1-4 used 0.18).",
+   "P_C_m2": [
+    0.19269124,
+    0.0,
+    0.0
+   ],
+   "P_repeats_C_m2": [
+    [
+     0.1926912444576228,
+     -5.31e-11,
+     3.31e-11
+    ],
+    [
+     0.1926912446744483,
+     -5.31e-11,
+     3.31e-11
+    ],
+    [
+     0.19269124498686588,
+     -3.42e-11,
+     -4.37e-11
+    ]
+   ],
+   "status": "repeat evidence complete on exchange main (2026-11-06); +/-1% polar axial Berry repeats in progress (plus and minus controllers admitted)"
   }
  }
 }

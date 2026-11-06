@@ -119,6 +119,11 @@ def crosscheck_e1(pf_all, dp_all, floor):
                     dp_p = np.asarray(pf["strained"][key_pf]["dP_true_d_eta_C_m2"], dtype=float)
                     for i, ax in enumerate(("x polar", "y lateral", "z chain")):
                         line(f"dP_{ax} / d eta (true, C/m^2)", dp_p[i], dp_d[i], key_pf.startswith("xx") and i == 0, floor)
+        if "P_C_m2" in dp:
+            dpv = to_pf_vec(dp["P_C_m2"]); pfv = np.asarray(pf["P0_C_m2"], dtype=float)
+            print(f"  polarization (C/m^2), Dipole status: {dp.get('status', '')}")
+            line("|P|", float(np.linalg.norm(pfv)), float(np.linalg.norm(dpv)), True, floor)
+            print(f"    components polyfind {np.round(pfv, 4).tolist()} / Dipole {np.round(dpv, 4).tolist()} (sign is the orientation of the cell's dipoles)")
         if "berry_slope_C_m2" in dp:
             b = dp["berry_slope_C_m2"]
             print(f"  Berry slope dP_polar/d eta_lateral (Dipole, {b.get('status', '')}): "

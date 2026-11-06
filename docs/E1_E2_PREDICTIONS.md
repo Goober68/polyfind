@@ -296,6 +296,12 @@ E1: polyfind pvdf-dft-valence, induced dipoles, Ewald, rigid chain, force-shifte
   C_21 (lateral,polar)                 polyfind       3.0913   Dipole       5.8820   sign agrees
   C_22 (lateral,lateral)               polyfind      18.5496   Dipole      24.5190   sign agrees
   C_33 (chain): polyfind rigid chain, none; Dipole 302.6
+
+=== E1 beta-PVDF (TTTT)  <->  beta-PVDF, Dipole QE 7.6 PBE-D3(BJ) Berry-phase polarization at the pvdf_beta_ref_v1 cell (beta_zero_berry_repeat_v1, exchange main 2026-11-06) ===
+  Dipole status: repeat evidence complete on exchange main (2026-11-06); +/-1% polar axial Berry repeats in progress (plus and minus controllers admitted)
+  polarization (C/m^2), Dipole status: repeat evidence complete on exchange main (2026-11-06); +/-1% polar axial Berry repeats in progress (plus and minus controllers admitted)
+  |P|                                  polyfind       0.1400   Dipole       0.1927   ratio 0.73: within 1.5
+    components polyfind [-0.14, 0.0, -0.0] / Dipole [0.1927, 0.0, 0.0] (sign is the orientation of the cell's dipoles)
 ```
 
 
