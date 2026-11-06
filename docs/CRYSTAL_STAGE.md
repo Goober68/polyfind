@@ -363,6 +363,41 @@ Dipole's DFPT dielectric and Born tensors as anchors when they land, that is the
 then the pre-registered set on `pvdf-dft-valence` remains the primary prediction and the two
 fitted presets its labelled alternatives.
 
+### 5.7 Five probes on the morning of 2026-11-06: what moves the a:b ratio
+
+Each probe keeps the valence preset and the pre-registered construction (induced dipoles,
+Ewald, force-shifted Lennard-Jones) and changes one thing; the beta cell is re-relaxed. DFT:
+a 4.757, b 8.528, a/b 0.558; the model: 4.520, 8.521, 0.530.
+
+| change | a | b | a/b | reading |
+|---|---|---|---|---|
+| fluorine's off-site charge carried as a site (static, fixed-charge Ewald) | pull along a 0.948 -> 0.826 kcal/mol/A | - | - | 8% of the pull: not the lever (task 15's first item, dropped) |
+| H-F repulsive wall x2, x4 (dispersion untouched) | -0.8%, +4.2% | +4.2%, +9.4% | 0.531, 0.531 | both axes move together; stiffness halves |
+| all dispersion x0.7, x0.5 | -2.5%, -0.4% | +2.7%, +4.9% | 0.530, 0.529 | same curve; C_11 14, 10 GPa |
+| carbon-pair dispersion x0.5 | -2.6% | +2.3% | 0.531 | same curve |
+| chain at the PBE-D3 geometry (5.3) | -4.4% | +0.5% | 0.530 | same curve |
+| repulsive site on the C-F axis beyond F, against other chains' H | +0.1% | +9.7% | 0.509 | wrong way: that approach is the diagonal contact |
+| repulsive belt sites on F, perpendicular to C-F in the CF2 plane, d 0.7 A, weak / strong | +0.8% / +10.8% | +1.9% / +5.8% | **0.552 / 0.584** | the first change that moves the ratio, and in the right direction |
+
+The contact geometry explains the table. At the model's own minimum the shortest interchain
+contacts are F...H at 2.61 A between a chain and its neighbour along a (dx 2.26, dy 0.2, dz 1.3
+A; 63 deg off the C-F bond: a sideways approach to the fluorine), then F...H at 2.64 A between
+corner and centre chain (dy 2.3, dz 1.3; 46 deg off the bond: nearer head-on). In DFT's cell the
+along-a contact is 2.76 A and the diagonal one 2.61. The model compresses the sideways contact
+and keeps the head-on one, and every isotropic term, whatever its strength, treats the two
+alike, which is why all of them slide the cell along one curve of constant a/b. A site on the
+C-F axis stiffens the head-on approach and opens b; sites in the belt perpendicular to the bond
+stiffen the sideways approach and open a. That is fluorine's polar flattening, the known
+anisotropy of a bonded halogen (the density is drawn in along the bond axis and extended in
+the belt), and it is what the point-atom Lennard-Jones form cannot express.
+
+**The next form change is therefore anisotropic fluorine repulsion**, carried as rigid belt
+sites on each fluorine (two massless repulsion-only sites in the CF2 plane, perpendicular to the
+C-F bond, with a fitted distance and wall), through the polymer's pendant-fragment machinery so
+that the chain builder, the packer, the Ewald sum (zero charge) and the induced dipoles (zero
+polarizability) carry them unchanged. Task 15 is rewritten to that; the off-site charge as a
+site is dropped on the first row of the table.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 and 3, whose extra terms are likewise outside the
