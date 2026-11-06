@@ -74,6 +74,25 @@ from .linegroup import LineGroupError, line_group, repeat_chains, repeat_chains_
 from .pack import FD_STEPS, CrystalPacker, PackResult, PeriodicChain
 from .polymers import Polymer
 
+DEFAULT_ANGLE_STIFFNESS = 105.0  # kcal/mol/rad^2: the UFF-like restraint on the backbone angles (see refine_crystal)
+# A fitted parameter set's own restraint, bound for the duration of ``FFParameters.applied()``;
+# ``None`` leaves :func:`refine_crystal` on :data:`DEFAULT_ANGLE_STIFFNESS`.  The crystal stage of the
+# fit makes the stiffness a variable (docs/CRYSTAL_STAGE.md 5.13) and this is how the value reaches
+# every refinement made under the fitted parameters, the E1/E2 prediction path included.
+ANGLE_STIFFNESS: float | None = None
+
+
+def resolve_angle_stiffness(angle_stiffness, valence) -> float:
+    """The restraint :func:`refine_crystal` uses: the explicit argument when given; otherwise 0.0
+    when ``valence`` carries fitted bend terms (a restraint on top of them would count the bend
+    twice), else :data:`ANGLE_STIFFNESS` if a parameter set has bound one, else
+    :data:`DEFAULT_ANGLE_STIFFNESS`."""
+    if angle_stiffness is not None:
+        return float(angle_stiffness)
+    if valence is not None and bool(valence.angle_table()):
+        return 0.0
+    return DEFAULT_ANGLE_STIFFNESS if ANGLE_STIFFNESS is None else float(ANGLE_STIFFNESS)
+
 
 @dataclass
 class RefineResult:
@@ -183,9 +202,7 @@ def refine_crystal(
         raise ValueError(f"unknown parametrisation {parametrisation!r}")
     if gradient not in ("analytic", "fd-geometry", "fd"):
         raise ValueError(f"unknown refine gradient {gradient!r} (expected 'analytic', 'fd-geometry' or 'fd')")
-    if angle_stiffness is None:
-        has_bend = valence is not None and bool(valence.angle_table())
-        angle_stiffness = 0.0 if has_bend else 105.0
+    angle_stiffness = resolve_angle_stiffness(angle_stiffness, valence)
     tors0 = np.asarray(start.dihedrals if torsions is None else torsions, dtype=float)
     B = polymer.bonds_per_repeat
     angles0 = np.array([polymer.backbone[k].backbone_angle for k in range(B)])

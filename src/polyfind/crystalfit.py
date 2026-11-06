@@ -50,8 +50,16 @@ DFT_ANCHORS = {
     # component the proper and improper piezoelectric coefficients coincide, so on one branch this
     # is the relaxed-ion e_11; Dipole asserts no coefficient (its branch replay is running).
     "beta_dP_deta_polar": -0.3255,
+    # Backbone C-C-C angles, degrees (docs/CRYSTAL_STAGE.md 5.12).  Beta: both carbons of Dipole's
+    # native pvdf_beta_ref_v1, a planar zigzag (dihedral 180.00) with C-C 1.5331 A, so that
+    # c = 2 r sin(theta/2) = 2.5807 is the cell's chain axis exactly.  Alpha: the CH2 and CF2
+    # carbons of the PBE-D3(BJ) start geometry of pvdf_alpha_ref_v1, relaxed at the anchor cell
+    # 4.945/9.636/4.660 (torsions 179.1, 59.9); Dipole's native alpha relaxation is still running.
+    "beta_backbone_angle": 114.63,
+    "alpha_backbone_angles": (118.23, 116.87),
 }
-TOL = {"cell": 0.01, "p": 0.01, "margin": 0.05, "gap": 0.05, "stiffness": 0.10, "slope": 0.03}  # relative for cell and stiffness, absolute otherwise
+TOL = {"cell": 0.01, "p": 0.01, "margin": 0.05, "gap": 0.05, "stiffness": 0.10, "slope": 0.03,
+       "angle": 1.0}  # relative for cell and stiffness, absolute otherwise (angle in degrees)
 
 VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "q_CH", "q_CF")
 # multipliers on the valence values for the Lennard-Jones terms, absolute shifts for the increments
@@ -90,6 +98,17 @@ SIGMA4 = np.concatenate([SIGMA2, [1.0, 2.0]])
 # along the polar axis from the -1/0/+1% cells (-0.3255 C/m^2); the strained states the stiffness
 # block relaxes give the slope for nothing.
 STAGE6 = {**STAGE2, "slope": True}
+# Stage 7 (docs/CRYSTAL_STAGE.md section 5.13): stage 6 plus the stiffness of the refinement's
+# harmonic backbone-angle restraint as a variable (log10 of its multiplier on
+# refine.DEFAULT_ANGLE_STIFFNESS, 105 kcal/mol/rad^2, an invented constant until here), with the
+# backbone angles of Dipole's beta and alpha cells as anchors.  Meant for the PBE-D3 chain
+# geometry (BELT_GEOMETRY "pbe"), which builds the chain at beta's DFT angle so the restraint's
+# equilibrium is the DFT value.
+VARIABLES7 = VARIABLES4 + ("log10_k_angle",)
+X0_7 = np.concatenate([X0_4, [0.0]])
+BOUNDS7 = np.vstack([BOUNDS4, [(-0.7, 0.7)]])  # a fifth to five times the default
+SIGMA7 = np.concatenate([SIGMA4, [0.3]])  # a factor of two is one width
+STAGE7 = {**STAGE6, "angles": True}
 STRAIN_STEP = 2e-3  # the strain of the stiffness and slope states (mechanics.strain_states' default)
 
 
@@ -111,7 +130,9 @@ def _config(x):
         return VARIABLES3, X0_3, BOUNDS3, SIGMA3
     if n == 12:
         return VARIABLES4, X0_4, BOUNDS4, SIGMA4
-    raise ValueError(f"expected 8, 10, 11 or 12 variables, got {n}")
+    if n == 13:
+        return VARIABLES7, X0_7, BOUNDS7, SIGMA7
+    raise ValueError(f"expected 8, 10, 11, 12 or 13 variables, got {n}")
 
 
 def ridge(x) -> float:
@@ -122,8 +143,10 @@ def ridge(x) -> float:
         parts += [(x[8:9] - 1.0) / sigma[8:9], np.log(x[9:10]) / sigma[9:10]]
     if len(x) == 11:  # charge penetration, measured from the point-charge start
         parts += [(x[10:11] - X0_3[10]) / sigma[10:11]]
-    if len(x) == 12:  # the belt wall (log depth, from the probe's 0.01) and the carried penetration
+    if len(x) >= 12:  # the belt wall (log depth, from the probe's 0.01) and the carried penetration
         parts += [(x[10:11] - X0_4[10]) / sigma[10:11], (x[11:12] - X0_4[11]) / sigma[11:12]]
+    if len(x) == 13:  # the backbone-angle restraint, log10 of its multiplier on the default
+        parts += [x[12:13] / sigma[12:13]]
     d = np.concatenate(parts)
     return RIDGE * float(np.sum(d * d))
 
@@ -159,7 +182,7 @@ def cases_for(x):
     their own keys so the cached chains and screen tables stay separate."""
     from dataclasses import replace as _replace
     beta_case, alpha_case = F.FITTED_CASES[1], F.FITTED_CASES[2]
-    if len(np.asarray(x)) == 12:
+    if len(np.asarray(x)) >= 12:
         from .polymers import pvdf_belt
         pol = pvdf_belt(BELT_D, BELT_GEOMETRY)
         tag = f"belt-{BELT_D:.2f}" + ("" if BELT_GEOMETRY == "textbook" else f"-{BELT_GEOMETRY}")
@@ -182,7 +205,7 @@ def polar_slope(states: dict, step: float = STRAIN_STEP) -> float:
 
 def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald", verbose: bool = False,
              polarizable: bool = False, lj_cutoff: str = "energy", stiffness: bool = False,
-             slope: bool = False) -> Evaluation:
+             slope: bool = False, angles: bool = False) -> Evaluation:
     """Pack and refine beta and alpha under ``x``; return the normalised residuals and the objective.
 
     ``polarizable`` adds the induced dipoles (:class:`polyfind.polarizability.Polarizable`),
@@ -190,7 +213,8 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     C_11, C_22 and C_12 of beta against Dipole's strained-cell values: together the construction
     of the E1/E2 predictions (:data:`STAGE2`).  ``slope`` adds ``d|P|/d eta`` along the polar axis
     (:func:`polar_slope`) against Dipole's three-point Berry pair (:data:`STAGE6`), from the same
-    strained states as the stiffness.
+    strained states as the stiffness.  ``angles`` adds the refined backbone angles of both
+    polymorphs against Dipole's (:data:`STAGE7`), which the refinement already has.
     """
     from .mechanics import elastic_constants, relax_reference, strain_states
     from .polarizability import Polarizable
@@ -243,6 +267,14 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     if dp_slope is not None:
         target = DFT_ANCHORS["beta_dP_deta_polar"]
         res["beta d|P|/d eta (polar)"] = (dp_slope, target, (dp_slope - target) / TOL["slope"])
+    if angles:
+        b_ang = np.asarray(beta.refine_result.angles, dtype=float)  # [CH2 carbon, CF2 carbon]
+        a_ang = np.asarray(alpha.refine_result.angles, dtype=float)
+        t = DFT_ANCHORS["beta_backbone_angle"]
+        res["beta backbone angle"] = (float(b_ang.mean()), t, (float(b_ang.mean()) - t) / TOL["angle"])
+        for name, pred, t in (("alpha angle at CH2", float(a_ang[0]), DFT_ANCHORS["alpha_backbone_angles"][0]),
+                              ("alpha angle at CF2", float(a_ang[1]), DFT_ANCHORS["alpha_backbone_angles"][1])):
+            res[name] = (pred, t, (pred - t) / TOL["angle"])
     rg = ridge(x)
     obj = float(sum(r[2] ** 2 for r in res.values())) + rg
     return Evaluation(np.asarray(x, dtype=float), res, obj, rg, time.time() - t0, beta, alpha)
@@ -268,7 +300,11 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
         eval_kw = {**STAGE2, **eval_kw}
     elif stage == 6:
         eval_kw = {**STAGE6, **eval_kw}
-    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4}[stage]) if x0 is None else np.asarray(x0, dtype=float)
+    elif stage == 7:
+        eval_kw = {**STAGE7, **eval_kw}
+    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7}[stage]) if x0 is None else np.asarray(x0, dtype=float)
+    if stage == 7 and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
+        start = np.concatenate([start, [0.0]])
     _, _, bounds, _ = _config(start)
     history: list[Evaluation] = []
 
@@ -308,7 +344,7 @@ def save(ev: Evaluation, path: str, evaluations: int | None = None, complete: bo
            "parameters": {"lj": prm.lj, "lj_pairs": prm.lj_pairs, "charge_increments": prm.charge_increments,
                           "charge_damping": prm.charge_damping},
            "anchors": DFT_ANCHORS, "tolerances": TOL}
-    if len(ev.x) == 12:
+    if len(ev.x) >= 12:
         out["belt"] = {"d": BELT_D, "geometry": BELT_GEOMETRY}
     with open(path, "w") as fh:
         json.dump(out, fh, indent=1)

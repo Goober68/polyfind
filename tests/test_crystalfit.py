@@ -178,3 +178,48 @@ def test_fit_checkpoints_its_best_so_far(tmp_path, monkeypatch):
     with open(path) as fh:
         done = json.load(fh)
     assert done["complete"] is True and done["evaluations"] == len(history)
+
+
+def test_stage7_variable_sets_the_backbone_restraint():
+    """The thirteenth variable is log10 of the restraint's multiplier on the refinement's default;
+    twelve variables leave the restraint at the refinement's own value."""
+    from polyfind import refine as R
+    x = np.concatenate([C.X0_4, [0.0]])
+    assert C.parameters(x).angle_stiffness == R.DEFAULT_ANGLE_STIFFNESS == 105.0
+    x[12] = 0.3
+    assert np.isclose(C.parameters(x).angle_stiffness, 105.0 * 10 ** 0.3)
+    assert C.parameters(C.X0_4).angle_stiffness is None
+    assert "backbone-angle restraint" in C.parameters(x).describe()
+    variables, x0, bounds, sigma = C._config(x)
+    assert variables[-1] == "log10_k_angle" and len(variables) == 13 and x0[12] == 0.0
+    assert C.ridge(x) > C.ridge(np.concatenate([C.X0_4, [0.0]]))  # the ridge pulls it to the default
+    assert C.STAGE7["angles"] and C.STAGE7["slope"] and C.STAGE7["stiffness"]
+
+
+def test_angle_restraint_reaches_the_refinement_through_applied():
+    """applied() binds the parameter set's restraint for the refinement and unbinds it after;
+    fitted bend terms switch the restraint off; an explicit argument always wins."""
+    from polyfind import refine as R
+    from polyfind.forcefield import SimpleFF
+    assert R.ANGLE_STIFFNESS is None
+    assert R.resolve_angle_stiffness(None, None) == 105.0
+    assert R.resolve_angle_stiffness(80.0, None) == 80.0
+    x = np.concatenate([C.X0_4, [-0.3]])
+    with C.parameters(x).applied():
+        assert np.isclose(R.ANGLE_STIFFNESS, 105.0 * 10 ** -0.3)
+        assert np.isclose(R.resolve_angle_stiffness(None, None), 105.0 * 10 ** -0.3)
+        assert R.resolve_angle_stiffness(None, SimpleFF.from_preset("pvdf-dft-valence")) == 0.0
+        assert R.resolve_angle_stiffness(50.0, None) == 50.0
+    assert R.ANGLE_STIFFNESS is None
+    with C.parameters(C.X0_4).applied():
+        assert R.ANGLE_STIFFNESS is None and R.resolve_angle_stiffness(None, None) == 105.0
+
+
+def test_angle_anchors_are_dipoles_geometries():
+    """Beta's anchor is the planar zigzag that gives Dipole's chain axis exactly; alpha's two
+    angles open from it, the CH2 carbon more than the CF2 carbon, as in the PBE-D3 start cell."""
+    theta = np.radians(C.DFT_ANCHORS["beta_backbone_angle"])
+    assert abs(2 * 1.5331 * np.sin(theta / 2) - C.DFT_ANCHORS["beta_cell"][2]) < 1e-3
+    ch2, cf2 = C.DFT_ANCHORS["alpha_backbone_angles"]
+    assert ch2 > cf2 > C.DFT_ANCHORS["beta_backbone_angle"]
+    assert C.TOL["angle"] == 1.0

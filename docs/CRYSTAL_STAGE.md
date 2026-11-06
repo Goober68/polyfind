@@ -633,6 +633,95 @@ the next probe (5.12).
 
 Stage 6 (both Berry anchors, from the stage-5 point) is running; its result goes here.
 
+### 5.12 The backbone angle: what opens it, and what DFT says it is
+
+The refinement (`polyfind.refine.refine_crystal`) relaxes the two backbone angles of the repeat,
+at the CH2 and the CF2 carbon, against a harmonic restraint of 105 kcal/mol/rad^2 about the angle
+the chain was built at (114.0 textbook, 114.6 PBE-D3). The valence preset's fitted bend terms are
+deliberately not forwarded to it (`FFParameters.applied` says why: for the rigid chains the packer
+sees, the valence energy is a constant), so 105 is the one invented number left in the crystal
+stage, and its strain is part of the energy per monomer the fit compares: 0.21 kcal/mol for beta
+and 0.67 for alpha at the stage-5 point, i.e. 0.46 of the alpha-beta gap is restraint strain.
+
+**The fitted bend terms cannot replace it.** An isolated TTTT chain relaxed under the valence
+preset's own terms (`forcefield.relax_backbone_angles`, bend + intrachain nonbonded, the 1-4 scaling
+0.92 they were fitted with) closes its angles to 113.8 and 107.3 deg (111.6 and 107.9 at the
+stage-5 Lennard-Jones terms): a chain axis near 2.50 A, 3% short. The C-C-C term (k 77, theta_0
+108.8) was fitted to oligomer energetics with the nonbonded terms doing the rest, and the rest
+does not reproduce the backbone angle. The restraint is the better of the two.
+
+**The chain's own nonbonded terms do not open it either.** Setting both angles together on the
+isolated chain at the stage-5 terms, per monomer per degree near 116 deg: the Lennard-Jones term
+falls by 0.10 kcal/mol, the Coulomb term rises by 0.08. They cancel. What opens the angle is
+intermolecular.
+
+**Frozen angles.** The same refinement with the angle freedom's bound set to zero
+(`max_angle_change=0`; the line-group parametrisation bounds the angles, it does not take the
+`refine_angles` flag), stage-5 parameters:
+
+| | a | b | c | E_lattice + strain, kcal/mol per monomer | angles (CH2, CF2) | gauche torsion |
+|---|---|---|---|---|---|---|
+| beta, PBE-D3 geometry, refined | +0.6% | +0.2% | +1.3% | -10.037 + 0.187 = -9.850 | 117.0, 117.0 | |
+| beta, PBE-D3 geometry, frozen | +1.5% | +0.5% | -0.0% | -9.643 | 114.6, 114.6 | |
+| alpha, PBE-D3 geometry, refined | +0.2% | +1.6% | +1.6% | -11.222 + 0.583 = -10.639 | 119.5, 118.1 | 59.2 |
+| alpha, PBE-D3 geometry, frozen | +3.6% | -0.4% | -0.2% | -9.552 | 114.6, 114.6 | 73.1 |
+| beta, textbook, refined | +0.1% | -0.5% | +0.7% | -10.019 + 0.206 = -9.812 | 116.5, 116.5 | |
+| beta, textbook, frozen | +1.1% | -0.2% | -0.7% | -9.581 | 114.0, 114.0 | |
+| alpha, textbook, refined | -0.5% | +0.8% | +1.0% | -11.211 + 0.672 = -10.538 | 119.3, 117.7 | 59.5 |
+| alpha, textbook, frozen | +3.2% | -0.8% | -0.9% | -9.286 | 114.0, 114.0 | 74.4 |
+
+With the angles held, beta's chain axis is exact on the PBE-D3 geometry and the lateral pressure
+appears where it was hiding: the polar axis goes to +1.5% (+1.1% textbook) for 0.21 kcal/mol per
+monomer. Alpha pays five times that, 1.09 kcal/mol (1.25 textbook), its polar axis goes to +3.6%
+and its gauche torsion to 73 deg; and E(alpha) - E(beta) turns from -0.79 (-0.73 textbook) to
++0.09 (+0.30): **the alpha-beta gap anchor is being matched through the alpha chain opening its
+angles against the invented restraint**, not through the lattice energies of two chains at the
+geometry DFT gives them.
+
+**What DFT gives them.** Dipole's native beta cell (`pvdf_beta_ref_v1`) is a planar zigzag:
+dihedral 180.00, both backbone angles 114.63 deg, C-C 1.5331 A, so that 2 r sin(theta/2) = 2.5807
+is its chain axis exactly. The alpha reference's start geometry (the PBE-D3(BJ) relaxation of the
+polar-margin deliverable, at the anchor cell 4.945/9.636/4.660; Dipole's native relaxation is
+running) has backbone angles 118.23 at the CH2 carbon and 116.87 at the CF2 carbon, torsions
+179.1 and 59.9, C-C 1.527 and 1.522. So alpha's opening is real, +3.6 and +2.2 deg from beta, and
+polyfind has the direction, the ordering (CH2 wider than CF2) and the torsions (179.0, 59.5)
+right; what it has wrong is the amount, both polymorphs 1 to 2.4 deg too open: beta 116.5-117.0
+against 114.6, alpha 119.3-119.5 and 117.7-118.1 against 118.2 and 116.9. The restraint's
+stiffness decides how much lateral pressure goes into the chain axes and how much of the gap the
+alpha opening buys, and three DFT angles now pin it. That is stage 7.
+
+### 5.13 Stage 7: the restraint as a variable, the backbone angles as anchors (implemented; runs after stage 6)
+
+The thirteenth variable is log10 of the restraint's multiplier on the refinement's default
+(`refine.DEFAULT_ANGLE_STIFFNESS`, 105 kcal/mol/rad^2), bounded at a fifth and five times, with a
+ridge width of a factor two. It lives on the parameter set (`FFParameters.angle_stiffness`) and
+`applied()` binds it for the refinement (`refine.ANGLE_STIFFNESS`), so every refinement made under
+a fitted preset uses the fitted value, the E1/E2 prediction path included; the valence preset and
+the earlier crystal presets carry `None` and refine as before. The anchors are the three angles
+above (beta's mean of two, alpha's CH2 and CF2) at a tolerance of 1.0 deg, about half of what the
+1% chain-axis tolerance already allows (1% of c is 1.8 deg of backbone angle). Stage 7 is stage 6
+with them, on the PBE-D3 chain geometry, which builds the chain at beta's DFT angle so that the
+restraint's equilibrium is the DFT value and the bond lengths are Dipole's.
+
+Two evaluations at the stage-5 point on that geometry show what the fit has to resolve:
+
+| quantity | k = 105 | k = 210 | DFT |
+|---|---|---|---|
+| beta backbone angle | 117.02 (z 2.39) | 115.87 (1.24) | 114.63 |
+| alpha angle at CH2 | 119.50 (1.27) | 117.92 (-0.31) | 118.23 |
+| alpha angle at CF2 | 118.13 (1.26) | 116.86 (-0.01) | 116.87 |
+| beta c, alpha c | +1.3%, +1.6% | +0.7%, +0.8% | |
+| beta a, alpha a (polar) | +0.6%, +0.2% | +1.0%, +1.2% | |
+| E(alpha) - E(beta) | -0.790 (-1.28) | -0.500 (4.52) | -0.726 |
+| objective | 27.90 | 37.70 | |
+
+Doubling the restraint puts alpha's angles on DFT's and halves the chain-axis excess, and the
+gap opens to -0.50 while the polar axes grow 1%: once the chains cannot stretch, the lateral
+potential at the stage-5 point is too repulsive and alpha is not bound enough against beta.
+Whether the other twelve variables can hold the cell, the Berry anchors and the gap with the
+angles at DFT's values is the question stage 7 answers; it runs from the stage-6 result and its
+result goes here.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
@@ -662,7 +751,8 @@ python examples/crystal_stage.py --stage 2 --maxfev 320 --out docs/predictions/c
 python examples/crystal_stage.py --stage 3 --maxfev 320 --out docs/predictions/crystal_stage_v3.json
 python examples/crystal_stage.py --stage 4 --maxfev 320 --out docs/predictions/crystal_stage_v4.json
 python examples/crystal_stage.py --stage 4 --x0 docs/predictions/crystal_stage_v4.json --maxfev 320 --out docs/predictions/crystal_stage_v5.json   # the Berry P anchor
-python examples/crystal_stage.py --stage 6 --x0 docs/predictions/crystal_stage_v5.json --maxfev 320 --out docs/predictions/crystal_stage_v6.json   # plus the polar Berry slope
+python examples/crystal_stage.py --stage 6 --x0 docs/predictions/crystal_stage_v5.json --maxfev 300 --out docs/predictions/crystal_stage_v6.json   # plus the polar Berry slope
+python examples/crystal_stage.py --stage 7 --geometry pbe --x0 docs/predictions/crystal_stage_v6.json --maxfev 300 --out docs/predictions/crystal_stage_v7.json   # plus the restraint's stiffness, Dipole's backbone angles as anchors
 python examples/e1_predictions.py --preset pvdf-dft-valence-belt --variant belt --out docs/predictions/e1_polyfind_belt.json
 python examples/e2_predictions.py --preset pvdf-dft-valence-belt --variant belt --out docs/predictions/e2_polyfind_belt.json
 python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt.json --e2 docs/predictions/e2_polyfind_belt.json

@@ -133,6 +133,11 @@ class FFParameters:
     # forcefield.FluxTopology.  Like the valence terms it is *not* forwarded by
     # :meth:`applied` -- it is opt-in per packer, ``CrystalPacker(charge_flux=...)``.
     charge_flux: tuple[tuple[str, str, float, float], ...] = ()
+    # The harmonic restraint refine_crystal relaxes the backbone angles against, kcal/mol/rad^2
+    # (polyfind.refine.DEFAULT_ANGLE_STIFFNESS when None).  Unlike the valence terms it *is*
+    # forwarded by :meth:`applied`, because it is a parameter of the refinement, not of the
+    # rigid-chain lattice energy; the crystal stage fits it (docs/CRYSTAL_STAGE.md 5.13).
+    angle_stiffness: float | None = None
 
     @property
     def lj_dict(self) -> dict[str, tuple[float, float]]:
@@ -179,8 +184,9 @@ class FFParameters:
         off = "".join(f" [{e} charge {d:+.3f} A off its nucleus]" for e, d in self.charge_offsets)
         flx = ("" if not self.charge_flux else " [charge flux: " + "; ".join(
             f"{a}-{b} ka={ka:+.4f} kb={kb:+.4f}" for a, b, ka, kb in self.charge_flux) + "]")
+        rest = "" if self.angle_stiffness is None else f" [backbone-angle restraint {self.angle_stiffness:.1f} kcal/mol/rad^2]"
         return (f"torsion=({self.torsion[0]:+.3f}, {self.torsion[1]:+.3f}, {self.torsion[2]:+.3f}) "
-                f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}{flx}")
+                f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}{flx}{rest}")
 
     def has_valence(self) -> bool:
         return bool(self.bond_terms) or bool(self.angle_terms)
@@ -267,10 +273,12 @@ class FFParameters:
 
         old_lj, old_packer_pack, old_packer_refine = pack_mod.lj_params, pack_mod.CrystalPacker, refine_mod.CrystalPacker
         old_pairs = pack_mod.lj_pairs
+        old_angle = refine_mod.ANGLE_STIFFNESS
         pack_mod.lj_params = ff._lj_arrays
         pack_mod.lj_pairs = ff.lj_pair_table
         pack_mod.CrystalPacker = _FittedPacker
         refine_mod.CrystalPacker = _FittedPacker
+        refine_mod.ANGLE_STIFFNESS = None if self.angle_stiffness is None else float(self.angle_stiffness)
         try:
             yield ff
         finally:
@@ -278,6 +286,7 @@ class FFParameters:
             pack_mod.lj_pairs = old_pairs
             pack_mod.CrystalPacker = old_packer_pack
             refine_mod.CrystalPacker = old_packer_refine
+            refine_mod.ANGLE_STIFFNESS = old_angle
 
 
 ILLUSTRATIVE = FFParameters()  # exactly today's defaults
@@ -2605,7 +2614,7 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
         out = replace(out, lj_pairs=(("F", "H", float(x_hf), float(d_hf)),))
     if len(x) == 11:  # stage 3: charge penetration in the lattice sum, b in 1/A
         out = replace(out, charge_damping=float(x[10]))
-    elif len(x) == 12:
+    elif len(x) in (12, 13):
         # stage 4: fluorine belt sites (polymers.belt_fluorine), a repulsion-only wall against H
         # with well depth 10**x[10] kcal/mol at the fixed diameter BELT_X_DIAMETER; the sites see
         # no C, F or other site.  x[11] is reserved for the charge penetration of stage 3 and is
@@ -2615,8 +2624,13 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
                       lj_pairs=tuple(out.lj_pairs) + (("C", "X", BELT_X_DIAMETER, 0.0), ("F", "X", BELT_X_DIAMETER, 0.0),
                                                       ("X", "X", BELT_X_DIAMETER, 0.0)),
                       charge_damping=float(x[11]))
+        if len(x) == 13:
+            # stage 7: the refinement's backbone-angle restraint, 10**x[12] times its default 105
+            # kcal/mol/rad^2 (docs/CRYSTAL_STAGE.md 5.13); reaches refine_crystal through applied()
+            from .refine import DEFAULT_ANGLE_STIFFNESS
+            out = replace(out, angle_stiffness=float(DEFAULT_ANGLE_STIFFNESS * 10.0 ** float(x[12])))
     elif len(x) not in (8, 10):
-        raise ValueError(f"expected 8, 10, 11 or 12 crystal-stage variables, got {len(x)}")
+        raise ValueError(f"expected 8, 10, 11, 12 or 13 crystal-stage variables, got {len(x)}")
     return out
 
 
@@ -2624,6 +2638,7 @@ BELT_X_DIAMETER = 2.6  # A, the fixed Lennard-Jones diameter of the belt site; i
 CRYSTAL_STAGE2_VARIABLES = CRYSTAL_STAGE_VARIABLES + ("x_HF", "D_HF")
 CRYSTAL_STAGE3_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("b_q",)
 CRYSTAL_STAGE4_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("log10_D_X", "b_q")
+CRYSTAL_STAGE7_VARIABLES = CRYSTAL_STAGE4_VARIABLES + ("log10_k_angle",)
 
 
 FITTED_VALENCE_CRYSTAL = crystal_stage_parameters(CRYSTAL_FITTED_X)
