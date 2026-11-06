@@ -44,8 +44,14 @@ DFT_ANCHORS = {
     # cells of 2026-11-05 (docs/predictions/e1_dipole_existing.json, record beta_qe_axial_v1):
     # stress and energy routes agree within 1.5%
     "beta_C": {"C11": 22.77, "C22": 24.52, "C12": 5.88},
+    # d|P|/d eta along the polar axis, C/m^2: the central difference of Dipole's Berry-phase
+    # polarization at the -1%, 0, +1% polar-axis cells (ions relaxed at each fixed cell; 0.19600,
+    # 0.19269, 0.18949), formed by polyfind (record beta_qe_berry_axial_v1).  For the longitudinal
+    # component the proper and improper piezoelectric coefficients coincide, so on one branch this
+    # is the relaxed-ion e_11; Dipole asserts no coefficient (its branch replay is running).
+    "beta_dP_deta_polar": -0.3255,
 }
-TOL = {"cell": 0.01, "p": 0.01, "margin": 0.05, "gap": 0.05, "stiffness": 0.10}  # relative for cell and stiffness, absolute otherwise
+TOL = {"cell": 0.01, "p": 0.01, "margin": 0.05, "gap": 0.05, "stiffness": 0.10, "slope": 0.03}  # relative for cell and stiffness, absolute otherwise
 
 VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "q_CH", "q_CF")
 # multipliers on the valence values for the Lennard-Jones terms, absolute shifts for the increments
@@ -79,6 +85,12 @@ VARIABLES4 = VARIABLES2 + ("log10_D_X", "b_q")
 X0_4 = np.concatenate([X0_2, [-2.0, 4.0]])
 BOUNDS4 = np.vstack([BOUNDS2, [(-3.5, -0.3), (4.0, 4.0 + 1e-9)]])
 SIGMA4 = np.concatenate([SIGMA2, [1.0, 2.0]])
+# Stage 6 (docs/CRYSTAL_STAGE.md section 5.11): the belt form of stage 4 under both of Dipole's
+# Berry-phase anchors, P at the reference cell (0.1927, the anchor from stage 5 on) and d|P|/d eta
+# along the polar axis from the -1/0/+1% cells (-0.3255 C/m^2); the strained states the stiffness
+# block relaxes give the slope for nothing.
+STAGE6 = {**STAGE2, "slope": True}
+STRAIN_STEP = 2e-3  # the strain of the stiffness and slope states (mechanics.strain_states' default)
 
 
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
@@ -156,16 +168,31 @@ def cases_for(x):
     return beta_case, alpha_case
 
 
+def polar_slope(states: dict, step: float = STRAIN_STEP) -> float:
+    """``d|P_polar|/d eta`` along the polar axis from the ``(0, +1)`` and ``(0, -1)`` states of
+    :func:`polyfind.mechanics.strain_states`: the central difference of the true polarization's
+    polar component with the cell's orientation (the sign of P) taken out, so that it compares
+    with the finite difference of a Berry-phase polarization whatever either side's sign
+    convention.  Negative when stretching the polar axis lowers the polarization."""
+    px_plus = float(states[(0, 1)].polarization[0])
+    px_minus = float(states[(0, -1)].polarization[0])
+    sgn = float(np.sign(px_plus + px_minus)) or 1.0
+    return sgn * (px_plus - px_minus) / (2.0 * step)
+
+
 def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald", verbose: bool = False,
-             polarizable: bool = False, lj_cutoff: str = "energy", stiffness: bool = False) -> Evaluation:
+             polarizable: bool = False, lj_cutoff: str = "energy", stiffness: bool = False,
+             slope: bool = False) -> Evaluation:
     """Pack and refine beta and alpha under ``x``; return the normalised residuals and the objective.
 
     ``polarizable`` adds the induced dipoles (:class:`polyfind.polarizability.Polarizable`),
     ``lj_cutoff="force"`` the force-shifted Lennard-Jones term, and ``stiffness`` the relaxed-ion
     C_11, C_22 and C_12 of beta against Dipole's strained-cell values: together the construction
-    of the E1/E2 predictions (:data:`STAGE2`).
+    of the E1/E2 predictions (:data:`STAGE2`).  ``slope`` adds ``d|P|/d eta`` along the polar axis
+    (:func:`polar_slope`) against Dipole's three-point Berry pair (:data:`STAGE6`), from the same
+    strained states as the stiffness.
     """
-    from .mechanics import elastic_constants, relax_reference
+    from .mechanics import elastic_constants, relax_reference, strain_states
     from .polarizability import Polarizable
     t0 = time.time()
     params = parameters(x, base)
@@ -177,12 +204,17 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
                          polarizable=pol, lj_cutoff=lj_cutoff)
         alpha = F.predict(alpha_case, params, coulomb=coulomb, ewald=ewald, polarizable=pol, lj_cutoff=lj_cutoff)
         C = None
-        if stiffness:
+        dp_slope = None
+        if stiffness or slope:
             with params.applied():
                 ref = reference_from_prediction(beta, beta_case, coulomb=coulomb, ewald=ewald,
                                                 polarizable=pol, lj_cutoff=lj_cutoff)
                 ref = relax_reference(ref)
-                C = elastic_constants(ref).block  # Voigt 1, 2, 6 in-plane block, GPa
+                states = strain_states(ref, STRAIN_STEP)
+                if stiffness:
+                    C = elastic_constants(ref, STRAIN_STEP, states=states).block  # Voigt 1, 2, 6 in-plane block, GPa
+                if slope:
+                    dp_slope = polar_slope(states, STRAIN_STEP)
     except Exception as exc:  # a parameter set that cannot pack is simply bad
         if verbose:
             print(f"  evaluate: {type(exc).__name__}: {exc}", flush=True)
@@ -208,6 +240,9 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
                                 ("beta C_12", float(C[0, 1]), "C12")):
             target = DFT_ANCHORS["beta_C"][key]
             res[name] = (pred, target, (pred - target) / (TOL["stiffness"] * target))
+    if dp_slope is not None:
+        target = DFT_ANCHORS["beta_dP_deta_polar"]
+        res["beta d|P|/d eta (polar)"] = (dp_slope, target, (dp_slope - target) / TOL["slope"])
     rg = ridge(x)
     obj = float(sum(r[2] ** 2 for r in res.values())) + rg
     return Evaluation(np.asarray(x, dtype=float), res, obj, rg, time.time() - t0, beta, alpha)
@@ -229,7 +264,9 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
     from scipy.optimize import minimize
     if stage in (2, 3, 4):
         eval_kw = {**STAGE2, **eval_kw}
-    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4}[stage]) if x0 is None else np.asarray(x0, dtype=float)
+    elif stage == 6:
+        eval_kw = {**STAGE6, **eval_kw}
+    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4}[stage]) if x0 is None else np.asarray(x0, dtype=float)
     _, _, bounds, _ = _config(start)
     history: list[Evaluation] = []
 

@@ -567,6 +567,24 @@ needs, before the belt terms are trusted on a hydrocarbon.
 induced-dipole work grows with the square. Beta and alpha are 11 and 35 s. The E2 copolymer
 T3GT3G' cell, the largest, took 1,011 s.
 
+### 5.11 Stage 6: the polar Berry slope as an anchor (implemented; runs after stage 5)
+
+Dipole's three-point Berry pair (5.10; `docs/predictions/e1_e2_notes.md`) gives d|P|/d eta along
+the polar axis, -0.3255 C/m^2, the relaxed-ion e_11 on one branch. On the fit path it costs
+nothing: the strained states the stiffness block relaxes include the +/-0.2% polar pair, and
+`crystalfit.polar_slope` takes the central difference of their true polarization's polar
+component with the cell's orientation (the sign of P) removed, which is what makes it comparable
+with a Berry-phase finite difference under either side's sign convention. `evaluate(slope=True)`
+adds the residual at a tolerance of 0.03 C/m^2 (a tenth of the value, as for the stiffness);
+`STAGE6` is stage 2's setting with it, on the twelve belt variables; `examples/crystal_stage.py
+--stage 6`. At the stage-4 point the fit path gives -0.2814 against the E1 path's -0.2815 at
++/-1%, so the slope is linear to 1e-4 over that range and the two paths agree on it as they do on
+the cell; z = 1.47. With the Berry P anchor (0.1927, z -1.36) the stage-4 point's objective is
+20.30 on the stage-6 residual set, against its 16.29 on the stage-4 anchors.
+
+Stage 5 (the Berry P anchor alone, the twelve variables from the stage-4 point) is running; stage
+6 starts from its result. Both results go here when they land.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
@@ -595,6 +613,8 @@ python examples/crystal_stage.py --maxfev 300 --out docs/predictions/crystal_sta
 python examples/crystal_stage.py --stage 2 --maxfev 320 --out docs/predictions/crystal_stage_v2.json
 python examples/crystal_stage.py --stage 3 --maxfev 320 --out docs/predictions/crystal_stage_v3.json
 python examples/crystal_stage.py --stage 4 --maxfev 320 --out docs/predictions/crystal_stage_v4.json
+python examples/crystal_stage.py --stage 4 --x0 docs/predictions/crystal_stage_v4.json --maxfev 320 --out docs/predictions/crystal_stage_v5.json   # the Berry P anchor
+python examples/crystal_stage.py --stage 6 --x0 docs/predictions/crystal_stage_v5.json --maxfev 320 --out docs/predictions/crystal_stage_v6.json   # plus the polar Berry slope
 python examples/e1_predictions.py --preset pvdf-dft-valence-belt --variant belt --out docs/predictions/e1_polyfind_belt.json
 python examples/e2_predictions.py --preset pvdf-dft-valence-belt --variant belt --out docs/predictions/e2_polyfind_belt.json
 python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt.json --e2 docs/predictions/e2_polyfind_belt.json

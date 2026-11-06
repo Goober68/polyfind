@@ -106,7 +106,10 @@ builds the belt chain at Dipole's PBE-D3 geometry for the stage after. Dipole's 
 Berry pair landed (exchange main 6574b77d): d|P|/d eta_polar = -0.326 C/m^2, the relaxed-ion e_11
 on one branch; polyfind's sets are 0.71 (pre-registered), 0.96 (stage 2), 0.87 (belt) of it and
 0.98/0.98/0.93 relative to their own P (record `beta_qe_berry_axial_v1`, cross-check lines added;
-candidate anchor for the next stage).
+candidate anchor for the next stage). Stage 6, that anchor on the belt form (`crystalfit.polar_slope`,
+`STAGE6`, `--stage 6`; the slope comes from the stiffness block's strained states for nothing and
+matches the E1 path to 1e-4), is implemented and queued to start from the stage-5 result
+(`crystal_stage_v6.json`); write-up `docs/CRYSTAL_STAGE.md` 5.11.
 **Exchange**: the Science 2022 main text makes FA the dehydrochlorinated CFE pair, i.e. the
 same `-CH=CF-` unit as DB (the CF3 reading is withdrawn; E2 is six chemistries; record and
 devstream amended, sarco a498326c). Dipole at 05:12 UTC: no accepted strained units yet, one

@@ -131,3 +131,24 @@ def test_registered_stage4_preset_matches_the_saved_fit():
     assert x_depth == 10 ** saved["x"][10] and x_depth > 0
     for pair in (("C", "X"), ("F", "X"), ("X", "X")):
         assert table[pair][1] == 0.0
+
+
+def test_polar_slope_removes_the_cell_orientation():
+    from types import SimpleNamespace
+    step = 2e-3
+    up = {(0, 1): SimpleNamespace(polarization=np.array([0.1890, 0.0, 0.0])),
+          (0, -1): SimpleNamespace(polarization=np.array([0.1960, 0.0, 0.0]))}
+    down = {k: SimpleNamespace(polarization=-v.polarization) for k, v in up.items()}
+    s_up, s_down = C.polar_slope(up, step), C.polar_slope(down, step)
+    assert s_up == s_down < 0
+    np.testing.assert_allclose(s_up, (0.1890 - 0.1960) / (2 * step))
+
+
+def test_slope_anchor_is_dipoles_three_point_berry_pair():
+    with open("docs/predictions/e1_dipole_existing.json") as fh:
+        rec = json.load(fh)["systems"]["beta_qe_berry_axial_v1"]
+    cells = rec["strained"]["xx (polar)"]
+    centered = (cells["+0.010"]["P_C_m2"][0] - cells["-0.010"]["P_C_m2"][0]) / 0.02
+    np.testing.assert_allclose(rec["dP_d_eta_polar_C_m2"]["centered"], centered, atol=1e-6)
+    np.testing.assert_allclose(C.DFT_ANCHORS["beta_dP_deta_polar"], centered, atol=1e-4)
+    assert C.STAGE6["slope"] and C.STAGE6["stiffness"] and C.STAGE6["polarizable"]
