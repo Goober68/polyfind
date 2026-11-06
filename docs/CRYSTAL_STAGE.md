@@ -631,7 +631,39 @@ chain-axis excess is not the textbook bond geometry's: the lattice opens the bac
 either geometry, and a shorter C-C bond with longer C-F bonds opens it further. What opens it is
 the next probe (5.12).
 
-Stage 6 (both Berry anchors, from the stage-5 point) is running; its result goes here.
+**Stage 6: both Berry anchors.** 301 evaluations, 100 minutes, from the stage-5 point: objective
+12.81 to 11.19 on the stage-6 residual set, of which 5.00 is the ridge (6.79 before);
+`docs/predictions/crystal_stage_v6.json`:
+
+| quantity | DFT | stage 5 | stage 6 (belt, P and slope) | z, stage 6 |
+|---|---|---|---|---|
+| beta a (polar), A | 4.757 | 4.763 (+0.1%) | 4.750 (-0.1%) | -0.14 |
+| beta b (lateral), A | 8.528 | 8.487 (-0.5%) | 8.479 (-0.6%) | -0.57 |
+| beta c (chain), A | 2.581 | 2.599 (+0.7%) | 2.598 (+0.7%) | +0.65 |
+| alpha a, A | 4.945 | 4.921 (-0.5%) | 4.913 (-0.6%) | -0.65 |
+| alpha b, A | 9.636 | 9.718 (+0.8%) | 9.724 (+0.9%) | +0.92 |
+| alpha c, A | 4.660 | 4.707 (+1.0%) | 4.700 (+0.9%) | +0.86 |
+| beta polarization, C/m^2 | 0.1927 (Berry) | 0.188 (-2%) | 0.192 (-0.5%) | -0.10 |
+| E(alpha) - E(beta), kcal/mol per monomer | -0.726 | -0.726 | -0.735 | -0.19 |
+| E(antipolar) - E(polar) beta, rigid | -0.026 | 0.000 | 0.000 | +0.52 |
+| beta C_11 (polar), GPa | 22.77 | 24.03 (+6%) | 24.16 (+6%) | +0.61 |
+| beta C_22 (lateral), GPa | 24.52 | 24.74 (+0.9%) | 24.89 (+1.5%) | +0.15 |
+| beta C_12, GPa | 5.88 | 5.19 (-12%) | 5.07 (-14%) | -1.38 |
+| beta d\|P\|/d eta (polar), C/m^2 | -0.3255 | -0.2930 | -0.2986 | +0.90 |
+| ridge | | 6.79 | 5.00 | |
+| objective on the stage-6 set | | 12.81 | 11.19 | |
+
+Both Berry anchors are met without the cell or the gap giving anything back: the polarization is
+within half a percent of Dipole's and the slope within a tenth. The slope per unit polarization is
+-1.56 against Dipole's -1.69, as at every earlier point, so the tenth that is left is the shape of
+the response and the fit took the slope through the polarization. The ridge fell with the carbon
+diameter: x_C 1.016 from 1.060 (1.100 at stage 4), the term that had been half of the stage-4
+ridge; the polarization is now carried by the increments (C-F +0.053 e, C-H -0.057 e against
++0.043 and -0.068) with the hydrogen well above the valence value again (x1.12 from x0.98), the
+fluorine well at x0.84, the carbon well at x1.14, the H-F pair at (1.023, 1.007) and the belt wall
+at 10^-1.656 = 0.0221 kcal/mol. What is left is C_12 (-14%) and the chain axes (+0.7% and +0.9%),
+and 5.12 says where the chain axes come from. The result is not registered as a preset: stage 7
+(5.13) decides which of the two is.
 
 ### 5.12 The backbone angle: what opens it, and what DFT says it is
 
@@ -719,8 +751,8 @@ Doubling the restraint puts alpha's angles on DFT's and halves the chain-axis ex
 gap opens to -0.50 while the polar axes grow 1%: once the chains cannot stretch, the lateral
 potential at the stage-5 point is too repulsive and alpha is not bound enough against beta.
 Whether the other twelve variables can hold the cell, the Berry anchors and the gap with the
-angles at DFT's values is the question stage 7 answers; it runs from the stage-6 result and its
-result goes here.
+angles at DFT's values is the question stage 7 answers; it is running from the stage-6 result
+(5.11) on the PBE-D3 geometry and its result goes here.
 
 ## 6. What it costs, and what it does not touch
 
