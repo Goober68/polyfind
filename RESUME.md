@@ -78,6 +78,20 @@ PBE geometry and Dipole's DFPT tensors as anchors. **E2 correction**: the E2 scr
 backbone angles' strain energy, favouring the gauche conformers by about 0.45 kcal/mol per
 monomer (PVDF TTTT margin +1.30 -> +0.85, copolymer +1.09 -> +0.46); fixed, files regenerated,
 Dipole told.
+**2026-11-06.** Stage 4 of the crystal fit broke the floor (`docs/CRYSTAL_STAGE.md` 5.7-5.9):
+five probes showed that nothing isotropic moves beta's a:b ratio (0.530 against DFT's 0.558) and
+that flattening the fluorine's repulsion in the plane perpendicular to C-F does; implemented as a
+rigid pendant fragment with two massless, chargeless, dispersion-free "belt" sites 0.7 A either
+side of each fluorine (pseudo-element X, `polymers.belt_fluorine`/`pvdf_belt`/`belt_variant`),
+a repulsion-only X-H Lennard-Jones wall whose depth is the twelfth variable, inert within its own
+chain so the conformer energetics are untouched. Result: objective 65.1 -> 16.3, every cell axis of
+beta and alpha within 1% except the two chain axes (+1.0%, +1.4%: the backbone angle the lattice
+settles at), P 0.179 (fitted to 0.18; Dipole's Berry 0.193 is the anchor from stage 5 on), margin
+-0.760 (-0.726), C_11 25.1 (22.8), C_22 24.6 (24.5), C_12 4.9 (5.9) GPa. Preset
+`pvdf-dft-valence-belt`, meaningful only with `--variant belt`. Dipole's Berry repeat landed
+(0.19269 C/m^2 at the reference cell; the pre-registered P0 is -27% against it, stage 2 -2%, stage
+4 -7%). Next: the belt preset's E1/E2 sets and their cross-check, stage 5 with the 0.193 anchor
+from the stage-4 point, the PBE-D3 chain geometry on the belt chain, DFPT tensors as anchors.
 **Exchange**: the Science 2022 main text makes FA the dehydrochlorinated CFE pair, i.e. the
 same `-CH=CF-` unit as DB (the CF3 reading is withdrawn; E2 is six chemistries; record and
 devstream amended, sarco a498326c). Dipole at 05:12 UTC: no accepted strained units yet, one

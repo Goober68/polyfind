@@ -436,13 +436,65 @@ At the start point of the fit (D_X = 0.01, the other variables at the valence va
 polar axis is -0.2% and alpha's long axis -0.2% from DFT, the first time either has been within
 tolerance; what is left for the other ten variables is the polarization (0.127), the margin
 (-1.06, the sites having changed the alpha-beta balance) and the stiffness (17, 16, 3.1 GPa),
-which are the quantities the charges and well depths reach. One evaluation is 16 s. The result
-goes to section 5.9.
+which are the quantities the charges and well depths reach. One evaluation is 16 s.
+
+### 5.9 Stage 4 result: the floor is broken
+
+321 evaluations, 85 minutes on the 4-core box, objective 90.4 at the start point -> 16.29, of
+which 8.00 is the ridge. Stage 2's 65.05 (4.87 ridge) is the comparison; same setting, same
+anchors (the polarization anchor is still the published 0.18, the fit having started before the
+Berry repeat of 2026-11-06 landed), two more variables, one of them held:
+
+| quantity | DFT | stage 2 | stage 4 (belt) | z, stage 4 |
+|---|---|---|---|---|
+| beta a (polar), A | 4.757 | 4.572 (-3.9%) | 4.723 (-0.7%) | -0.71 |
+| beta b (lateral), A | 8.528 | 8.656 (+1.5%) | 8.515 (-0.1%) | -0.15 |
+| beta c (chain), A | 2.581 | 2.610 (+1.1%) | 2.606 (+1.0%) | +0.97 |
+| alpha a, A | 4.945 | 5.031 (+1.7%) | 4.942 (-0.1%) | -0.06 |
+| alpha b, A | 9.636 | 9.339 (-3.1%) | 9.595 (-0.4%) | -0.42 |
+| alpha c, A | 4.660 | 4.742 (+1.8%) | 4.725 (+1.4%) | +1.39 |
+| beta polarization, C/m^2 | 0.18 (Berry 0.193) | 0.189 | 0.179 | -0.09 (-1.4 against 0.193) |
+| E(alpha) - E(beta), kcal/mol per monomer | -0.726 | -0.758 | -0.760 | -0.69 |
+| E(antipolar) - E(polar) beta, rigid | -0.026 | 0.000 | 0.000 | +0.52 |
+| beta C_11 (polar), GPa | 22.77 | 27.30 (+20%) | 25.08 (+10%) | +1.02 |
+| beta C_22 (lateral), GPa | 24.52 | 21.03 (-14%) | 24.59 (+0.3%) | +0.03 |
+| beta C_12, GPa | 5.88 | 3.36 (-43%) | 4.88 (-17%) | -1.71 |
+
+Every cell axis of both polymorphs is inside the 1% tolerance for the first time, or within
+1.4% of it on the two chain axes; the a:b ratio of beta is 0.5547 against DFT's 0.5578 (stage
+2: 0.528). The lateral stiffness is exact, the polar one has come down from +20% to +10%, the
+coupling C_12 has gone from 57% of DFT to 83%; the margin and the polarization stay inside their
+tolerances. What did not move is what no variable here reaches: the antipolar-polar beta margin
+of the rigid-chain construction (0.000 at every stage) and the two chain axes, which are the
+backbone angle the lattice settles at (section 5.3: 116.6 deg against DFT's 114.6).
+
+The variables, against stage 2's: diameters x_C 1.100 (1.001), x_H 1.027 (1.019), x_F 0.964
+(1.011); well depths D_C 1.18 (0.62), D_H 0.72 (1.20), D_F 0.98 (0.94); increments C-H -0.180 e
+(-0.173), C-F +0.146 e (+0.157); the H-F pair term at x 1.019 and depth x 1.0005 on its geometric
+means, i.e. back at the mixing rule it had been bent away from (1.037, 0.937) when it was the
+only term standing in for the anisotropy; the belt wall D_X = 10^-1.705 = 0.0197 kcal/mol, twice
+the start point, at its fixed 2.6 A diameter; the charge penetration held at the point-charge
+value. Stage 2 had inflated the hydrogen well (x1.20) and deflated carbon's (x0.62) to push the
+polar H...F contact open with isotropic terms; stage 4 reverses both (hydrogen softer, carbon
+larger and deeper) once the belt wall carries that contact. Half of the ridge is the carbon
+diameter: +10% is two widths of its prior (3.96 of the 8.00); the C-H increment is 1.47, the
+hydrogen well 0.89, the belt depth itself 0.09.
+
+**Against the Berry polarization.** Read against Dipole's 0.1927 C/m^2 rather than the 0.18 it
+was fitted to, the stage-4 P is 7% low. `crystalfit.DFT_ANCHORS["p_beta"]` is 0.1927 since the
+repeat landed, so a re-run of stage 4 from this result is the next fit (stage 5 below); whether
+the belt form can carry 0.193 without giving back the cell is the question it answers.
+
+**What the two extra variables cost.** One evaluation went from 7 s (stage 2) to 16 s: four
+massless sites per CF2 double the atom count the Ewald sum, the induced-dipole system and the
+pair kernel see, and the strained-cell stiffness block (six relaxations) is the bulk of each
+evaluation. The E1/E2 prediction runs on the belt polymers scale the same way (section 5.10).
 
 ## 6. What it costs, and what it does not touch
 
-(Stage 1; the same applies to stages 2 and 3, whose extra terms are likewise outside the
-valence range.)
+(Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
+valence range; the belt sites have no interaction at all within their own chain, so the conformer
+energetics are untouched by construction, `tests/test_belt_sites.py`.)
 
 - **The conformer trainset.** The torsion, bond and angle terms are untouched, so the 467
   conformer frames of `docs/VALENCE_FIT.md` see this preset only through the nonbonded terms
@@ -465,6 +517,10 @@ valence range.)
 python examples/crystal_stage.py --maxfev 300 --out docs/predictions/crystal_stage_v1.json
 python examples/crystal_stage.py --stage 2 --maxfev 320 --out docs/predictions/crystal_stage_v2.json
 python examples/crystal_stage.py --stage 3 --maxfev 320 --out docs/predictions/crystal_stage_v3.json
+python examples/crystal_stage.py --stage 4 --maxfev 320 --out docs/predictions/crystal_stage_v4.json
+python examples/e1_predictions.py --preset pvdf-dft-valence-belt --variant belt --out docs/predictions/e1_polyfind_belt.json
+python examples/e2_predictions.py --preset pvdf-dft-valence-belt --variant belt --out docs/predictions/e2_polyfind_belt.json
+python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt.json --e2 docs/predictions/e2_polyfind_belt.json
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and
