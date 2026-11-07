@@ -109,7 +109,8 @@ def site_constraint(pk, Pn):
         chain_atoms = [i for i in atoms if i // pk.n == s]
         _, c, shc = nearest(x, [i for i in chain_atoms if el[i] == "C"])
         pc = Pn[c] + shc
-        fl = sorted(((float(np.linalg.norm(pc - Pn[i] - sh)), i, sh) for i in chain_atoms if el[i] == "F" for sh in shifts))[:2]
+        fl = sorted(((float(np.linalg.norm(pc - Pn[i] - sh)), int(i), sh) for i in chain_atoms if el[i] == "F" for sh in shifts),
+                    key=lambda t: (t[0], t[1]))[:2]
         assert fl[1][0] < 1.6, fl
         (_, f1, sh1), (_, f2, sh2) = fl
         A = np.stack([Pn[f1] + sh1 - pc, Pn[f2] + sh2 - pc], axis=1)  # (3, 2)
