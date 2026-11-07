@@ -1,5 +1,23 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+**Where things stand, 2026-11-07 (read this first; the detail is in the dated paragraphs below and in `docs/CRYSTAL_STAGE.md`).**
+The mission's two stages are closed and documented: the large-cell response path is 10x faster
+(`docs/PERFORMANCE_REVIEW.md` 16), and the crystal terms of the valence potential are fitted to
+Dipole's DFT anchors through seven stages. The current preset is `pvdf-dft-valence-belt3`
+(fluorine belt sites, the PBE-D3 chain geometry, a fitted backbone-angle restraint; fitted by
+bounded least squares, objective 9.11): against Dipole's records beta's cell is -0.1/-0.4/+0.7%,
+the relaxed-ion stiffnesses 1.06/1.01/0.91, the Berry polarization 1.00, the polar Berry slope
+0.92, the electronic permittivity 0.93-0.95, the alpha-beta gap and the backbone angles within
+1.24 tolerances; its E1/E2 sets are `e1/e2_polyfind_belt3.json` (sections 5.18-5.19). The
+pre-registered set on `pvdf-dft-valence` still stands as the primary one. Open on our side: the
+lateral coupling (C_12 at 0.91, the lateral axis -0.4%) is held by the other anchors and the prior
+together and no radial term adds a direction (5.15, 5.18, 5.20); a shape term (hydrogen belt
+sites or a CF2 quadrupole) is the next form change and waits for Dipole's rotated-setting cell
+(5.17, requested). Open on Dipole's side: the Gamma DFPT and alpha successors are running after a
+WSL shutdown killed the first attempts; polyfind's like-for-like prediction for the DFPT tensor is
+eps_0 = 2.23 polar, 4.49 lateral, 2.73 chain (5.16, 5.19), posted on the exchange. Fitting from
+here: `examples/crystal_stage.py --method trf` (one evaluation per variable per iteration, 5.18).
+
 2026-11-04 research note (cloud session, PI-nominated the same day to drive the electrostriction
 research): the literature pass is `sarco/materials/computational/papers/2026-11-04_electrostriction_literature_pass.md`
 (the giant strain is a field-induced TG/T3G-to-TT switch shared by crystals, OAF and tie molecules;
