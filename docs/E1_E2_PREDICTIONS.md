@@ -215,7 +215,17 @@ stiffness flag of the previous section is read against the QE cell from here on.
   arrangement, `e1_polyfind_belt3_tilt24.json`), reads against Dipole's records as cell
   -0.1/-0.4/+0.7%, C_11 1.06, C_22 1.01, C_12 0.91, Berry P 1.00, slope 0.92, and predicts the
   same tensors within a few percent (Gamma-route eps_0 2.23, 4.49, 2.73; section 5.19). A
-  copolymer row compares across sets only in the same arrangement (section 5.17).
+  copolymer row compares across sets only in the same arrangement (section 5.17). One bias runs
+  through every set's TGTG'-type rows (section 5.22, found 2026-11-07): the refinement keeps the
+  CH2 and CF2 groups rigid in the chain builder's symmetric placement, which is exact for the
+  planar zigzag and not for a chain whose two sides of a backbone atom differ; DFT's alpha turns
+  its CF2 groups by two to three degrees, and under `pvdf-dft-valence-belt3` letting the groups
+  turn lowers alpha by 0.23 kcal/mol per monomer and beta by nothing. E2's PVDF TTTT margin is
+  that gap and carries the full 0.23 in every set; the TGTG' and T3GT3G' rows of the other
+  chemistries carry a bias of the same order and sign (the gauche conformer too high). The beta
+  rows, the Berry quantities, the stiffnesses and the tensors are untouched by symmetry. The
+  crystal fit now evaluates its gap row with the groups relaxed (`crystal_stage.py
+  --pendant-tilts`); a set made with the same correction will say so in its label.
   `examples/crosscheck_e1_e2.py --polyfind <file>` reads any of them against the same records.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read

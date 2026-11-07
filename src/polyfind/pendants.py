@@ -86,8 +86,9 @@ def pinned_valence_packer(ref, polymer, k_backbone: float | None = None):
 
 def belt_site_constraint(pk, Pn):
     """``(J (3N, 3Na), atoms)``: the real atoms are free coordinates and each belt site is the fixed
-    affine combination of its carbon and that carbon's two fluorines that places it (it lies in the
-    CF2 plane), so a rigid motion of the CF2 group carries it exactly and a deformation to first order."""
+    affine combination of its carbon and that carbon's two pendant atoms that places it (it lies in
+    the pendant plane: the two fluorines of a CF2, the fluorine and hydrogen of a CHF), so a rigid
+    motion of the group carries it exactly and a deformation to first order."""
     el = np.asarray(list(pk.elements) * pk.n_chains)
     atoms = np.flatnonzero(el != "X")
     col = {int(i): a for a, i in enumerate(atoms)}
@@ -112,10 +113,10 @@ def belt_site_constraint(pk, Pn):
         chain_atoms = [i for i in atoms if i // pk.n == s]
         _, c, shc = nearest(x, [i for i in chain_atoms if el[i] == "C"])
         pc = Pn[c] + shc
-        fl = sorted(((float(np.linalg.norm(pc - Pn[i] - sh)), int(i), sh) for i in chain_atoms if el[i] == "F" for sh in shifts),
+        fl = sorted(((float(np.linalg.norm(pc - Pn[i] - sh)), int(i), sh) for i in chain_atoms if el[i] != "C" for sh in shifts),
                     key=lambda t: (t[0], t[1]))[:2]
         if fl[1][0] > 1.6:
-            raise ValueError(f"belt site {x}: its carbon has no two fluorines within 1.6 A ({fl})")
+            raise ValueError(f"belt site {x}: its carbon has no two pendant atoms within 1.6 A ({fl})")
         (_, f1, sh1), (_, f2, sh2) = fl
         A = np.stack([Pn[f1] + sh1 - pc, Pn[f2] + sh2 - pc], axis=1)  # (3, 2)
         ab, *_ = np.linalg.lstsq(A, Pn[x] - pc, rcond=None)

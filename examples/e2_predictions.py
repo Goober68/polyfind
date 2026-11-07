@@ -66,12 +66,15 @@ def main():
     ap.add_argument("--variant", default="plain", choices=("plain", "belt"), help="belt: fluorines carry repulsion-only belt sites (polymers.belt_variant)")
     ap.add_argument("--geometry", default="textbook", choices=("textbook", "pbe"), help="belt variant only: the chain's bond lengths and angles (pbe: Dipole's PBE-D3 beta geometry; use the geometry the preset was fitted on)")
     ap.add_argument("--systems", default="pvdf,vdftrfe")
+    ap.add_argument("--pendant-tilts", action="store_true", help="relax each conformation's CH2/CF2/CHF groups as rigid tilts about their carbons and add the released energy to its energy per monomer (polyfind.pendants.tilt_relaxation; docs/CRYSTAL_STAGE.md 5.22): the relaxation DFT's cells have and the rigid-pendant refinement lacks, which otherwise puts every gauche conformer too high")
     args = ap.parse_args()
     from polyfind.fitting import PRESET_PARAMETERS
     params = PRESET_PARAMETERS[args.preset]
-    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K" + (f", fluorine belt sites, {args.geometry} chain geometry" if args.variant == "belt" else ""),
+    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K" + (f", fluorine belt sites, {args.geometry} chain geometry" if args.variant == "belt" else "")
+               + (", pendant groups relaxed as rigid tilts (5.22)" if args.pendant_tilts else ""),
                "frame": "x polar, y lateral, z chain",
-               "energy": "lattice energy plus the refined backbone angles' strain, per vinyl monomer (the strain was omitted before 2026-11-05)",
+               "energy": "lattice energy plus the refined backbone angles' strain, per vinyl monomer (the strain was omitted before 2026-11-05)"
+               + (", plus the energy released when the pendant groups turn rigidly about their carbons (polyfind.pendants.tilt_relaxation)" if args.pendant_tilts else ""),
                "systems": {}}
     with params.applied():
         for key in args.systems.split(","):
@@ -100,7 +103,21 @@ def main():
                                   "cell": {"a": float(ref.params[0]), "b": float(ref.params[1]), "gamma_deg": float(ref.params[2]),
                                            "c": float(ref.c), "volume_A3": float(ref.volume)},
                                   "volume_per_monomer_A3": float(ref.volume) / n_mon, "seconds": time.time() - t0}
-                    print(f"{label} {conf:8s}: E/monomer {rows[conf]['energy_per_monomer_kcal']:.4f} kcal/mol, |P| {np.linalg.norm(p):.4f} C/m^2, "
+                    if args.pendant_tilts:
+                        from polyfind.pendants import tilt_relaxation
+                        rows[conf]["energy_rigid_pendants_per_monomer_kcal"] = rows[conf]["energy_per_monomer_kcal"]
+                        try:
+                            tr = tilt_relaxation(ref, polymer)
+                            rows[conf]["pendant_tilt_relaxation_per_monomer_kcal"] = float(tr.dE_per_cell) / n_mon
+                            rows[conf]["pendant_tilts_deg"] = tr.tilts_by_substituents
+                            rows[conf]["energy_per_monomer_kcal"] += float(tr.dE_per_cell) / n_mon
+                        except Exception as exc:  # recorded, and the energy stays the rigid one
+                            rows[conf]["pendant_tilt_relaxation_per_monomer_kcal"] = None
+                            rows[conf]["pendant_tilts_deg"] = f"unavailable: {exc!r}"
+                        rows[conf]["seconds"] = time.time() - t0
+                    tilt_note = (f" (pendant tilts {rows[conf]['pendant_tilt_relaxation_per_monomer_kcal']:+.4f})" if args.pendant_tilts and rows[conf].get("pendant_tilt_relaxation_per_monomer_kcal") is not None
+                                 else (" (pendant tilts unavailable)" if args.pendant_tilts else ""))
+                    print(f"{label} {conf:8s}: E/monomer {rows[conf]['energy_per_monomer_kcal']:.4f} kcal/mol{tilt_note}, |P| {np.linalg.norm(p):.4f} C/m^2, "
                           f"c/monomer {rows[conf]['c_per_monomer_A']:.4f} A, V/monomer {rows[conf]['volume_per_monomer_A3']:.2f} A^3, "
                           f"cell a {ref.params[0]:.3f} b {ref.params[1]:.3f} gamma {ref.params[2]:.1f} c {ref.c:.3f}   ({time.time() - t0:.0f} s)", flush=True)
                 except Exception as exc:  # a conformation that does not pack is a result too
