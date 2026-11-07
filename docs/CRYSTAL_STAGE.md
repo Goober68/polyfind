@@ -1268,23 +1268,26 @@ the twelve variables (`examples/stage8_screen.py`, `docs/predictions/stage8_scre
 The part outside that span is the new direction; its value is how much of the residual the twelve
 variables cannot reach it would take out.
 
-| candidate (perturbation) | residual change per step | outside the span of the twelve | what it moves most |
-|---|---|---|---|
-| belt distance d, 0.7 +- 0.1 A | 3.15 | 0.09 | beta a +1.5, alpha b +1.6, gap -1.6, C_11 -1.0, C_12 +1.0 |
-| belt site diameter, 2.6 +- 0.2 A | 4.42 | 0.00 | gap -2.8, beta a +2.0, alpha b +1.7, C_11 -1.3, b +0.9 |
-| F-F pair diameter x 1.02 | 3.62 | 0.00 | gap -3.6, C_12 +0.3, alpha b +0.4 |
-| F-F pair depth x 1.5 | 5.07 | 0.01 | gap -5.0, C_12 +0.6, alpha a -0.5 |
-| H-H pair diameter x 1.02 | 0.03 | 0.00 | nothing |
-| C-C pair diameter x 1.02 | 0.46 | 0.00 | gap +0.4 |
-| C-F pair diameter x 1.02 | 0.56 | 0.01 | gap +0.4, alpha a +0.3, b +0.15 |
-| C-H pair diameter x 1.02 | 0.20 | 0.00 | nothing |
+| candidate (perturbation) | residual change per step | outside the span of the twelve | gain within one step, of 1.62 | what it moves most |
+|---|---|---|---|---|
+| belt distance d, 0.7 +- 0.1 A | 3.15 | 0.09 | 0.20 (the full 1.28 would need 12 steps, 1.2 A) | beta a +1.5, alpha b +1.6, gap -1.6, C_11 -1.0, C_12 +1.0 |
+| belt site diameter, 2.6 +- 0.2 A | 4.42 | 0.00 | 0.002 | gap -2.8, beta a +2.0, alpha b +1.7, C_11 -1.3, b +0.9 |
+| F-F pair diameter x 1.02 | 3.62 | 0.00 | 0.007 | gap -3.6, C_12 +0.3, alpha b +0.4 |
+| F-F pair depth x 1.5 | 5.07 | 0.01 | 0.006 | gap -5.0, C_12 +0.6, alpha a -0.5 |
+| H-H pair diameter x 1.02 | 0.03 | 0.00 | 0.001 | nothing |
+| C-C pair diameter x 1.02 | 0.46 | 0.00 | 0.009 | gap +0.4 |
+| C-F pair diameter x 1.02 | 0.56 | 0.01 | 0.016 | gap +0.4, alpha a +0.3, b +0.15 |
+| C-H pair diameter x 1.02 | 0.20 | 0.00 | 0.002 | nothing |
 
-Every radial contact term, the belt geometry included, lies in the span of the twelve variables
-to within 1 to 3 percent of its own length: the belt site's diameter is degenerate with its depth
-(a repulsive wall has one effective radius), its distance from the fluorine with the fluorine and
-pair diameters, and a pair-specific F-F, C-C, C-F, C-H or H-H term with the element diameters that
-already set every contact. None of them is a new direction, and none would take anything out of the
-residual the fit leaves. The anchors in hand (fifteen informative rows) fix six directions of the
+(the linear model's attainable minimum of the anchors' sum of squares with the twelve variables,
+bounds ignored, is 1.62 of the 5.02 at the point; "gain within one step" is how much of that a
+candidate moved by one step, the twelve variables re-optimised, would remove). Every radial contact
+term, the belt geometry included, lies in the span of the twelve variables to within 0 to 3 percent
+of its own length: the belt site's diameter is degenerate with its depth (a repulsive wall has one
+effective radius), its distance from the fluorine with the fluorine and pair diameters, and a
+pair-specific F-F, C-C, C-F, C-H or H-H term with the element diameters that already set every
+contact. None of them is a new direction worth having: the one with any gain at all, the belt
+distance, would need to move 1.2 A to deliver it. The anchors in hand (fifteen informative rows) fix six directions of the
 twelve-variable space (5.15), so the problem is not a shortage of variables but that the lateral
 coupling, P, the polar axis and the gap are moved by the same combinations of them: every radial
 term pushes on the same combinations. What would not is a term with a shape rather than a radius:

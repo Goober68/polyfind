@@ -43,7 +43,9 @@
    "objective_plus": 18.78892449429826,
    "norm": 3.151162893741458,
    "outside_span": 0.09213211951295766,
-   "attainable_gain": 1.2814186580982108
+   "steps_for_full_gain": 12.28667750708891,
+   "gain_full": 1.2814186580982108,
+   "gain_within_one_step": 0.20009835635996664
   },
   "belt site diameter, +-0.2 A": {
    "dz_per_step": [
@@ -68,7 +70,9 @@
    "objective_plus": 30.44319596382378,
    "norm": 4.424487773047932,
    "outside_span": 0.0020588557483789374,
-   "attainable_gain": 0.2684080765053502
+   "steps_for_full_gain": 251.6354771234439,
+   "gain_full": 0.2684080765053502,
+   "gain_within_one_step": 0.002129069814734494
   },
   "F-F pair diameter x1.02": {
    "dz_per_step": [
@@ -93,7 +97,9 @@
    "objective_plus": 27.66760163639378,
    "norm": 3.6234799182721438,
    "outside_span": 0.0034169794553569307,
-   "attainable_gain": 1.2036667305287814
+   "steps_for_full_gain": 321.0781565004308,
+   "gain_full": 1.2036667305287814,
+   "gain_within_one_step": 0.007485979922831104
   },
   "F-F pair depth x1.5": {
    "dz_per_step": [
@@ -118,7 +124,9 @@
    "objective_plus": 49.65468282984789,
    "norm": 5.068713814216609,
    "outside_span": 0.005544031291156272,
-   "attainable_gain": 0.2742597636254101
+   "steps_for_full_gain": 94.46161706112579,
+   "gain_full": 0.2742597636254101,
+   "gain_within_one_step": 0.005776061698236196
   },
   "H-H pair diameter x1.02": {
    "dz_per_step": [
@@ -143,7 +151,9 @@
    "objective_plus": 9.137651611508922,
    "norm": 0.0277910886402263,
    "outside_span": 0.0004124473132048553,
-   "attainable_gain": 1.1144653822834287
+   "steps_for_full_gain": 2559.557041883142,
+   "gain_full": 1.1144653822834287,
+   "gain_within_one_step": 0.0008706566467249081
   },
   "C-C pair diameter x1.02": {
    "dz_per_step": [
@@ -168,7 +178,9 @@
    "objective_plus": 9.215615933429415,
    "norm": 0.45984017897000856,
    "outside_span": 0.004349704463141084,
-   "attainable_gain": 1.193484056786399
+   "steps_for_full_gain": 251.15889329618912,
+   "gain_full": 1.193484056786399,
+   "gain_within_one_step": 0.009484896886989867
   },
   "C-F pair diameter x1.02": {
    "dz_per_step": [
@@ -193,7 +205,36 @@
    "objective_plus": 9.07845983114629,
    "norm": 0.5625492969967038,
    "outside_span": 0.007500973587659723,
-   "attainable_gain": 1.2025607543497014
+   "steps_for_full_gain": -146.19613019652454,
+   "gain_full": 1.2025607543497014,
+   "gain_within_one_step": 0.016395070361944708
+  },
+  "C-H pair diameter x1.02": {
+   "dz_per_step": [
+    -0.03924968247922533,
+    -0.03480885666829894,
+    0.006824827662044786,
+    -0.030828567821933883,
+    -0.0504951032608128,
+    0.015040568335719956,
+    0.019121283105748288,
+    0.1059758794087351,
+    1.4210854715202004e-13,
+    0.10294826177142541,
+    0.09140198060884147,
+    0.045667516615901405,
+    -0.01170659978272831,
+    0.012400474619511215,
+    -0.009161313482096034,
+    0.03789380733180536
+   ],
+   "objective_minus": 9.119191840823069,
+   "objective_plus": 9.185855600984691,
+   "norm": 0.20241179031866907,
+   "outside_span": 0.0009829150970619416,
+   "steps_for_full_gain": -1066.181126679084,
+   "gain_full": 1.098231742878324,
+   "gain_within_one_step": 0.0020591561505675917
   }
  }
 }
