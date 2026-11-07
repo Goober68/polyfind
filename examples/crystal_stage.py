@@ -19,6 +19,7 @@ def main():
     ap.add_argument("--coulomb", default="ewald", choices=("ewald", "dsf"))
     ap.add_argument("--stage", type=int, default=1, choices=(1, 2, 3, 4, 6, 7), help="2: induced dipoles, force-shifted LJ, H-F pair term, stiffness anchors; 3: plus charge penetration; 4: fluorine belt sites; 6: the belt form with Dipole's polar Berry slope as a further anchor; 7: stage 6 plus the backbone-angle restraint's stiffness as a variable, Dipole's backbone angles as anchors (run with --geometry pbe)")
     ap.add_argument("--x0", default=None, help="JSON result file to resume from (its best x)")
+    ap.add_argument("--method", default="powell", choices=("powell", "trf"), help="powell: bounded Powell (the stages so far); trf: bounded least squares on the same objective with a forward-difference Jacobian (one evaluation per free variable per iteration)")
     ap.add_argument("--geometry", default="textbook", choices=("textbook", "pbe"), help="stages 4-7: the chain geometry of the belt-site polymer (pbe: Dipole's PBE-D3 bond lengths and angles)")
     args = ap.parse_args()
     C.BELT_GEOMETRY = args.geometry
@@ -27,7 +28,7 @@ def main():
         import json
         with open(args.x0) as fh:
             x0 = json.load(fh)["x"]
-    best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout, stage=args.stage, x0=x0,
+    best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout, stage=args.stage, x0=x0, method=args.method,
                           checkpoint=args.out)
     print(f"\nbest of {len(history)} evaluations:\n" + C.table(best))
     print("parameters:", C.parameters(best.x).describe())

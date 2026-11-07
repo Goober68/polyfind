@@ -270,3 +270,15 @@ def test_prediction_path_refined_under_the_full_potential_is_the_fit_path():
     assert np.allclose(sorted(ref.params[:2]), sorted((r.a, r.b)), atol=2e-3)
     assert abs(ref.c - pred.c) < 2e-3
     assert np.allclose(rr.angles, pred.refine_result.angles, atol=0.05)
+
+
+
+def test_ridge_parts_square_to_the_ridge_and_the_fitter_knows_both_methods():
+    import inspect
+    for path in ("docs/predictions/crystal_stage_v2.json", "docs/predictions/crystal_stage_v4.json", "docs/predictions/crystal_stage_v7.json"):
+        with open(path) as fh:
+            x = np.asarray(json.load(fh)["x"], dtype=float)
+        d = C.ridge_parts(x)
+        assert d.shape == (len(x),) and C.ridge(x) == C.RIDGE * float(np.sum(d * d))
+    assert set(C.FD_STEPS) >= set(C.VARIABLES7)
+    assert inspect.signature(C.fit).parameters["method"].default == "powell"

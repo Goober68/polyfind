@@ -368,10 +368,16 @@ def reference_from_result(chain: PeriodicChain, result, **kw) -> Reference:
 
 
 def refined_reference(polymer, seq, states=None, label: str = "", n_chains: int = 2,
-                      pack_kw: dict | None = None, refine_kw: dict | None = None, **packer_kw):
+                      pack_kw: dict | None = None, refine_kw: dict | None = None, start: int = 0,
+                      start_params=None, **packer_kw):
     """Pack and refine one polymorph, then wrap it as a :class:`Reference`.
 
-    Returns ``(reference, refine_result)``.  The chain is rebuilt from the refined torsions
+    Returns ``(reference, refine_result)``.  ``start`` picks which of the packing screen's distinct
+    minima is refined (``pack()`` returns them by their truncated-kernel energy; the full potential
+    can order them differently, and for beta and the copolymer model cell the first two are
+    degenerate under it, ``docs/CRYSTAL_STAGE.md`` 5.17); ``start_params`` (a 7-vector ``a, b, gamma,
+    phi1, phi2, dz, flip``) replaces the chosen minimum's cell and placement, which is how an
+    arrangement found under one potential is refined under another.  The chain is rebuilt from the refined torsions
     and bond angles *aligned to the same frame the refinement used*, which is the one
     subtlety worth hiding behind a function: the frame
     :func:`polyfind.linegroup.repeat_chains` picks is a principal axis of the cross section
@@ -385,7 +391,15 @@ def refined_reference(polymer, seq, states=None, label: str = "", n_chains: int 
 
     states = THREE_STATE if states is None else states
     chain = periodic_chain(polymer, seq, states)
-    res = pack(chain, n_chains=n_chains, **(pack_kw or {}))[0]
+    cands = pack(chain, n_chains=n_chains, **(pack_kw or {}))
+    if start >= len(cands):
+        raise IndexError(f"the packing screen found {len(cands)} distinct minima; start={start} asks for another")
+    res = cands[start]
+    if start_params is not None:
+        from dataclasses import replace as _replace
+        sp = np.asarray(start_params, dtype=float).reshape(7)
+        res = _replace(res, a=float(sp[0]), b=float(sp[1]), gamma=float(sp[2]), phi1=float(sp[3]), phi2=float(sp[4]),
+                       dz=float(sp[5]), flip=int(round(sp[6])), energy_per_monomer=float("nan"), energy_per_cell=float("nan"))
     rr = refine_crystal(polymer, res, **(refine_kw or {}))
     angles0 = np.array([polymer.backbone[k].backbone_angle for k in range(polymer.bonds_per_repeat)])
     frame = repeat_chains(polymer, res.chain, np.asarray(res.dihedrals, dtype=float)[None], angles0)[0]

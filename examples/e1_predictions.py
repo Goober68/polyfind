@@ -33,7 +33,7 @@ SYSTEMS = {
 }
 
 
-def build(polymer, seq, label):
+def build(polymer, seq, label, basin: int = 0, start_params=None):
     from polyfind.ewald import EwaldSpec
     from polyfind.polarizability import Polarizable
     kw = {"pack_kw": {"table_cache_dir": None}, "lj_cutoff": "force", "coulomb": "ewald", "ewald": EwaldSpec(),
@@ -43,7 +43,7 @@ def build(polymer, seq, label):
     # energy-shifted Lennard-Jones), so the reference is the fit path's cell to four decimals
     # (docs/CRYSTAL_STAGE.md 5.10); relax_reference then has nothing left to move.
     refine_kw = {k: kw[k] for k in ("lj_cutoff", "coulomb", "ewald", "polarizable")}
-    ref, _ = M.refined_reference(polymer, seq, label=label, refine_kw=refine_kw, **kw)
+    ref, _ = M.refined_reference(polymer, seq, label=label, refine_kw=refine_kw, start=basin, start_params=start_params, **kw)
     return M.relax_reference(ref)
 
 
@@ -57,6 +57,8 @@ def main():
     ap.add_argument("--variant", default="plain", choices=("plain", "belt"), help="belt: fluorines carry repulsion-only belt sites (polymers.belt_variant)")
     ap.add_argument("--geometry", default="textbook", choices=("textbook", "pbe"), help="belt variant only: the chain's bond lengths and angles (pbe: Dipole's PBE-D3 beta geometry; use the geometry the preset was fitted on)")
     ap.add_argument("--systems", default="beta,pe,alpha,vdftrfe")
+    ap.add_argument("--basin", type=int, default=0, help="which of the packing screen's distinct minima to refine (0: the first by truncated-kernel energy; docs/CRYSTAL_STAGE.md 5.17)")
+    ap.add_argument("--start-params", default=None, help="refine from this cell and placement instead of the screen's: 'a,b,gamma,phi1,phi2,dz,flip' (one system only; an arrangement found under another preset, docs/CRYSTAL_STAGE.md 5.17)")
     ap.add_argument("--strain", type=float, default=0.01)
     ap.add_argument("--skip-electrostriction", action="store_true", help="omit the M/Q routes (the costly part on a large cell)")
     ap.add_argument("--skip-converse", action="store_true", help="omit the converse piezoelectric route")
@@ -64,7 +66,7 @@ def main():
     args = ap.parse_args()
     from polyfind.fitting import PRESET_PARAMETERS
     params = PRESET_PARAMETERS[args.preset]
-    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K" + (f", fluorine belt sites, {args.geometry} chain geometry" if args.variant == "belt" else ""),
+    results = {"potential": f"{args.preset}, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K" + (f", fluorine belt sites, {args.geometry} chain geometry" if args.variant == "belt" else "") + (f", packing basin {args.basin}" if args.basin else "") + (f", started from {args.start_params}" if args.start_params else ""),
                "frame": "x polar, y lateral, z chain; Voigt 1 xx, 2 yy, 6 xy; Dipole's frame has x and y swapped",
                "strain": args.strain, "systems": {}}
     if args.merge:
@@ -80,7 +82,8 @@ def main():
                 from polyfind.polymers import belt_variant
                 polymer = belt_variant(polymer, geometry=args.geometry)
             t0 = time.time()
-            ref = build(polymer, seq, label)
+            sp = None if args.start_params is None else [float(v) for v in args.start_params.split(",")]
+            ref = build(polymer, seq, label, basin=args.basin, start_params=sp)
             el = M.elastic_constants(ref)
             di = M.dielectric_tensor(ref)
             pz = M.piezoelectric(ref, el, converse=not args.skip_converse)

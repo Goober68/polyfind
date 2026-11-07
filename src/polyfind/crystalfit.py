@@ -135,7 +135,10 @@ def _config(x):
     raise ValueError(f"expected 8, 10, 11, 12 or 13 variables, got {n}")
 
 
-def ridge(x) -> float:
+def ridge_parts(x) -> np.ndarray:
+    """The ridge's components ``d_j`` (distance from the valence value in prior widths), one per
+    variable, so that :func:`ridge` is ``RIDGE * sum(d^2)`` and the least-squares fitter can carry
+    ``sqrt(RIDGE) * d`` as extra residual rows."""
     x = np.asarray(x, dtype=float)
     _, _, _, sigma = _config(x)
     parts = [(x[:3] - 1.0) / sigma[:3], np.log(x[3:6]) / sigma[3:6], x[6:8] / sigma[6:8]]
@@ -147,8 +150,17 @@ def ridge(x) -> float:
         parts += [(x[10:11] - X0_4[10]) / sigma[10:11], (x[11:12] - X0_4[11]) / sigma[11:12]]
     if len(x) == 13:  # the backbone-angle restraint, log10 of its multiplier on the default
         parts += [x[12:13] / sigma[12:13]]
-    d = np.concatenate(parts)
+    return np.concatenate(parts)
+
+
+def ridge(x) -> float:
+    d = ridge_parts(x)
     return RIDGE * float(np.sum(d * d))
+
+
+# Forward-difference steps of the least-squares fitter's Jacobian, per variable (the units of x).
+FD_STEPS = {"x_C": 0.005, "x_H": 0.005, "x_F": 0.005, "D_C": 0.02, "D_H": 0.02, "D_F": 0.02, "q_CH": 0.005,
+            "q_CF": 0.005, "x_HF": 0.005, "D_HF": 0.02, "log10_D_X": 0.05, "b_q": 0.1, "log10_k_angle": 0.02}
 
 
 @dataclass
@@ -289,13 +301,21 @@ def table(ev: Evaluation) -> str:
 
 
 def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int = 1,
-        checkpoint: str | None = None, **eval_kw) -> tuple[Evaluation, list[Evaluation]]:
+        checkpoint: str | None = None, method: str = "powell", **eval_kw) -> tuple[Evaluation, list[Evaluation]]:
     """Powell with bounds on the eight (stage 1) or ten (stage 2) variables; every evaluation is
     logged.  ``stage=2`` uses :data:`X0_2`, :data:`BOUNDS2` and the :data:`STAGE2` evaluation
     settings unless ``eval_kw`` overrides them; ``x0`` resumes from an earlier best.  With
     ``checkpoint``, the best evaluation so far is :func:`save`\ d to that path (``complete``
-    false) each time it improves, so a run cut short keeps its best point and resumes from it."""
-    from scipy.optimize import minimize
+    false) each time it improves, so a run cut short keeps its best point and resumes from it.
+
+    ``method="trf"`` fits the same objective as a bounded least-squares problem instead
+    (:func:`scipy.optimize.least_squares`, trust-region reflective): the residual vector is the
+    ``z`` of every anchor row plus ``sqrt(RIDGE)`` times each ridge component (:func:`ridge_parts`),
+    so its sum of squares is the objective, and the Jacobian is a forward difference of that vector
+    with the per-variable steps :data:`FD_STEPS` (one evaluation per free variable, which can run in
+    parallel where Powell's line searches cannot).  ``maxfev`` then bounds the residual evaluations
+    least_squares asks for itself; the Jacobian's evaluations come on top and are in ``history``."""
+    from scipy.optimize import least_squares, minimize
     if stage in (2, 3, 4):
         eval_kw = {**STAGE2, **eval_kw}
     elif stage == 6:
@@ -326,8 +346,49 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
     record(first)
     if log is not None:
         print("start:\n" + table(first), file=log, flush=True)
-    minimize(obj, start, method="Powell", bounds=[tuple(b) for b in bounds],
-             options={"maxfev": maxfev, "xtol": 1e-3, "ftol": 1e-3})
+    if method == "powell":
+        minimize(obj, start, method="Powell", bounds=[tuple(b) for b in bounds],
+                 options={"maxfev": maxfev, "xtol": 1e-3, "ftol": 1e-3})
+    elif method == "trf":
+        variables = _config(start)[0]
+        rows = list(first.residuals)
+        n_ridge = len(ridge_parts(start))
+        m = len(rows) + n_ridge
+        free = [i for i in range(len(start)) if bounds[i, 1] - bounds[i, 0] > 1e-6]
+
+        def residual_vector(ev):
+            if not ev.residuals:  # a parameter set that could not pack
+                return np.full(m, np.sqrt(F.BIG / m))
+            return np.concatenate([[ev.residuals[k][2] for k in rows], np.sqrt(RIDGE) * ridge_parts(ev.x)])
+
+        def fun(x):
+            xc = np.clip(np.asarray(x, dtype=float), bounds[:, 0], bounds[:, 1])
+            ev = evaluate(xc, coulomb=coulomb, **eval_kw)
+            record(ev)
+            if log is not None:
+                print(f"[{len(history):3d}] obj {ev.objective:9.2f} ridge {ev.ridge:6.2f}  x = {np.array2string(xc, precision=4, suppress_small=True)}  ({ev.seconds:.0f} s)",
+                      file=log, flush=True)
+            return residual_vector(ev)
+
+        def jac(x):
+            x = np.asarray(x, dtype=float)
+            r0 = residual_vector(history[-1]) if np.allclose(history[-1].x, x, atol=1e-12) else fun(x)
+            J = np.zeros((m, len(x)))
+            for i in free:
+                h = FD_STEPS.get(variables[i], 0.005)
+                if x[i] + h > bounds[i, 1]:
+                    h = -h
+                xp = x.copy()
+                xp[i] += h
+                J[:, i] = (fun(xp) - r0) / h
+            return J
+
+        lo, hi = bounds[:, 0].copy(), bounds[:, 1].copy()
+        x_start = np.clip(start, lo, hi)
+        least_squares(fun, x_start, jac=jac, bounds=(lo, hi), method="trf", x_scale="jac",
+                      ftol=1e-3, xtol=1e-3, gtol=1e-4, max_nfev=maxfev)
+    else:
+        raise ValueError(f"unknown method {method!r} (powell or trf)")
     best = min(history, key=lambda e: e.objective)
     return best, history
 
