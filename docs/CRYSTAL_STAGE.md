@@ -1483,7 +1483,12 @@ the anchors within a prior width, the gap row is the stiffest (8.2 and 6.3 toler
 of x_HF and D_HF, 7.5 of the belt wall), and the linear model closes C_12 and the lateral axis
 together only by driving beta's polar axis, alpha's polar axis, C_11 and the beta backbone angle to
 their full tolerance (step 1 to 2 widths in x_C, x_H, D_F). The lateral coupling is the form's
-residual at belt4 as it was at belt3, and the stage-8 shape term is still what closes it.
+residual at belt4 as it was at belt3, and the stage-8 shape term is still what closes it. The 5.20
+screen rerun against this Jacobian (`stage8_screen_belt4.json`, 20 evaluations) says the same of
+the radial candidates: every pair diameter and depth, the belt diameter and the fluorine charge
+offset lie in the span (outside part at most 0.006), the belt distance 0.056 with a gain of 0.06 per
+step, and the polarizability scale is again the one fixed quantity with a direction of its own
+(0.14) and again points to smaller polarizabilities, which eps_inf forbids.
 
 **What it does not do.** The cell and the backbone do not re-relax with the tilted pendants, so
 the corrected gap is complete to first order only; the alpha cell rows and the alpha angle rows are
@@ -1560,6 +1565,7 @@ python examples/e2_predictions.py --preset pvdf-dft-valence-belt4 --variant belt
 python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt4 --variant belt --geometry pbe --systems beta   # 5.22: the Gamma-route tensor at belt4
 python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stage_v8_tilts.json --out docs/predictions/crystal_stage_v8_tilts_sensitivity.json   # 5.22: the Jacobian at belt4, with the pendant-tilt correction carried
 python examples/crystal_stage_sensitivity.py --analyze docs/predictions/crystal_stage_v8_tilts_sensitivity.json   # its linear analysis: the lateral-coupling lock stands at belt4
+python examples/stage8_screen.py --fit docs/predictions/crystal_stage_v8_tilts.json --sensitivity docs/predictions/crystal_stage_v8_tilts_sensitivity.json --out docs/predictions/stage8_screen_belt4.json   # 5.22: the 5.20 screen at belt4 (no radial candidate adds a direction)
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and
