@@ -206,7 +206,10 @@ stiffness flag of the previous section is read against the QE cell from here on.
   +1.0%, +1.4%); its beta set reads against Dipole's records as cell -0.6/-0.1/+0.8%, C_11 1.10,
   C_22 1.00, C_12 0.83, Berry P 0.93. The belt2 set reads as cell -0.3/-0.6/+0.8%, C_11 1.03,
   C_22 0.99, C_12 0.85, Berry P 1.00, polar Berry slope 0.92, the first with every anchored
-  quantity within 0.15 of DFT's; what it predicts beyond the anchors is in 5.14.
+  quantity within 0.15 of DFT's; what it predicts beyond the anchors is in 5.14. For Dipole's DFPT
+  relaxed-ion tensor the like-for-like number is the Gamma route's, not the sets' rigid-chain
+  eps_0 (`docs/predictions/gamma_dielectric_pvdf-dft-valence-belt2.json`, section 5.16): beta
+  2.24 polar, 4.57 lateral, 2.74 chain, the lateral part one libration at 46 cm^-1.
   `examples/crosscheck_e1_e2.py --polyfind <file>` reads any of them against the same records.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
