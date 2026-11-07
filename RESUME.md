@@ -1,5 +1,19 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+**Final status of the 14-hour window, 2026-11-07 19:06 UTC.** Closed today: the stage-7 problem solved by bounded
+least squares (`pvdf-dft-valence-belt3`, 5.18-5.19); the sensitivity, screen and basin analyses (5.15, 5.17, 5.20); the
+Gamma-route relaxed-ion tensor (5.16); the pendant-group finding and its fix (5.22: the rigid refinement cannot tilt the
+CH2/CF2 groups as DFT's alpha does, the gap row carried 0.23 kcal/mol per monomer of that strain, `polyfind.pendants`
+relaxes the groups as rigid tilts, the refit is `pvdf-dft-valence-belt4`, the sixth prediction set
+`e1/e2_polyfind_belt4.json` carries the correction, the copolymer model reorders to TGTG' lowest); the soft C-C stretch
+constant quantified on the Gamma route (beta unmoved, alpha's polar eps_0 3.47 -> 2.93 floored); stage 8 (shape term,
+5.21) and stage 9 (tilts as refinement variables, 5.23) designed. Open: the lateral coupling (C_12 0.87, the one residual
+past a tolerance at belt4), waiting on Dipole's rotated-setting cell for its anchor; Dipole's alpha and Gamma successors
+(launched 05:10 UTC, no result by 19:06) -- when they land: `examples/dft_cell_geometry.py` on the alpha record for the
+backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4, twist 0.6-0.7 deg), the Gamma DFPT
+against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
+(task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
+
 **Where things stand, 2026-11-07 (read this first; the detail is in the dated paragraphs below and in `docs/CRYSTAL_STAGE.md`).**
 The mission's two stages are closed and documented: the large-cell response path is 10x faster
 (`docs/PERFORMANCE_REVIEW.md` 16), and the crystal terms of the valence potential are fitted to
