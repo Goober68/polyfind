@@ -938,6 +938,20 @@ class CrystalPacker:
             self._alpha_cell = np.tile(self.polarizable.per_atom(self.elements), n_chains)
             self._thole_scale = (self._alpha_cell[:, None] * self._alpha_cell[None, :]) ** (1.0 / 6.0)
             self._thole = self.polarizable.thole()
+        # Electrostatically inert sites -- no charge and no polarizability, the belt sites of
+        # polymers.belt_fluorine -- take no part in the Ewald sums or the dipole solve.  A zero
+        # charge adds nothing to any term of the charge sum and a site without a polarizability has
+        # no unknown in the solve, so leaving them out changes no value; it removes their share of
+        # the N^2 pair work and of the (3N)^3 solve (the belt copolymer cell carries 92 of them
+        # beside 120 atoms).  ``_es_idx`` is None when every site is active.
+        active = self._q_cell != 0.0
+        if self._alpha_cell is not None:
+            active |= self._alpha_cell > 0.0
+        self._es_idx = None if bool(active.all()) else np.flatnonzero(active)
+        self._alpha_es = self._thole_scale_es = None
+        if self.polarizable is not None:
+            self._alpha_es = self._alpha_cell if self._es_idx is None else self._alpha_cell[self._es_idx]
+            self._thole_scale_es = (self._alpha_es[:, None] * self._alpha_es[None, :]) ** (1.0 / 6.0)
         # kept for backwards compatibility / introspection
         self.lj_x = xp.asarray(tile(xs), dtype=dt)
         self.lj_d = xp.asarray(tile(ds), dtype=dt)
@@ -992,6 +1006,9 @@ class CrystalPacker:
         # charges of the whole cell, in the atom order :meth:`_place` produces
         self._q_cell = np.tile(np.asarray(q, dtype=float), self.n_chains)
         self._q_cell_xp = xp.asarray(self._q_cell, dtype=dt)
+        idx = getattr(self, "_es_idx", None)
+        if idx is not None and np.any(np.delete(self._q_cell, idx) != 0.0):
+            raise ValueError("a site left out of the electrostatics as chargeless has acquired a charge")
 
     def _row_charge_tables(self, q, cell: bool):
         """``(qq, qq_f, const)`` for per-row charges ``q`` (M, n); shapes (M, 1, n, n).
@@ -1267,7 +1284,11 @@ class CrystalPacker:
             fl = np.zeros(Pn.shape[0]) if flips is None else np.asarray(flips, dtype=float)
             return np.array([self._polarize(Pn[i], self._q_cell if qc is None else qc[i], latn[i], fl[i])[0]
                              for i in range(Pn.shape[0])])
-        return np.array([self._ewald.terms(Pn[i], self._q_cell if qc is None else qc[i], latn[i]).total
+        idx = self._es_idx
+        if idx is None:
+            return np.array([self._ewald.terms(Pn[i], self._q_cell if qc is None else qc[i], latn[i]).total
+                             for i in range(Pn.shape[0])])
+        return np.array([self._ewald.terms(Pn[i][idx], (self._q_cell if qc is None else qc[i])[idx], latn[i]).total
                          for i in range(Pn.shape[0])])
 
     # --- induced dipoles ---------------------------------------------------------------
@@ -1297,9 +1318,18 @@ class CrystalPacker:
         N, n, nc = self.N, self.n, self.n_chains
         pref = COULOMB / self.eps_r
         q_cell = np.asarray(q_cell, dtype=float)
-        t0 = ew.terms(Pn, q_cell, latn, thole=self._thole, thole_scale=self._thole_scale,
+        # The sums and the solve run on the electrostatically active sites (``_es_idx``); the inert
+        # sites get the zero dipoles and zero gradients they would have had.
+        idx = self._es_idx
+        Pa, qa = (Pn, q_cell) if idx is None else (Pn[idx], q_cell[idx])
+        Na = Pa.shape[0]
+        t0 = ew.terms(Pa, qa, latn, thole=self._thole, thole_scale=self._thole_scale_es,
                       field=True, tensor=True)
-        F = t0.field.copy()
+        F = np.zeros((N, 3))
+        if idx is None:
+            F[:] = t0.field
+        else:
+            F[idx] = t0.field
         cz = float(latn[2, 2])
         stacks = []
         if self.polarizable.exclude_bonded:
@@ -1311,16 +1341,31 @@ class CrystalPacker:
                 stacks.append((sl, sc))
                 F[sl] += charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, pref=pref)[4]
         E0 = F if not self._field_on else F + EV_TO_KCAL * np.asarray(self.field, dtype=float)[None, :]
-        A = -t0.tensor.transpose(0, 2, 1, 3).reshape(3 * N, 3 * N)
-        A[np.arange(3 * N), np.arange(3 * N)] += np.repeat(pref / self._alpha_cell, 3)
-        p = np.linalg.solve(A, E0.ravel()).reshape(N, 3)
-        e_es = t0.total + (-0.5 * float((p * E0).sum()))
+        E0a = E0 if idx is None else E0[idx]
+        A = -t0.tensor.transpose(0, 2, 1, 3).reshape(3 * Na, 3 * Na)
+        A[np.arange(3 * Na), np.arange(3 * Na)] += np.repeat(pref / self._alpha_es, 3)
+        pa = np.linalg.solve(A, E0a.ravel()).reshape(Na, 3)
+        if idx is None:
+            p = pa
+        else:
+            p = np.zeros((N, 3))
+            p[idx] = pa
+        e_es = t0.total + (-0.5 * float((pa * E0a).sum()))
         if not grad:
             return e_es, p, E0, None
-        t = ew.terms(Pn, q_cell, latn, dipoles=p, thole=self._thole, thole_scale=self._thole_scale,
+        t = ew.terms(Pa, qa, latn, dipoles=pa, thole=self._thole, thole_scale=self._thole_scale_es,
                      grad=True, charge_grad=charge_grad)
-        gP, glat = t.grad_coords.copy(), t.grad_lattice.copy()
-        gq = t.grad_charges.copy() if charge_grad else None
+        glat = t.grad_lattice.copy()
+        if idx is None:
+            gP = t.grad_coords.copy()
+            gq = t.grad_charges.copy() if charge_grad else None
+        else:
+            gP = np.zeros((N, 3))
+            gP[idx] = t.grad_coords
+            gq = None
+            if charge_grad:
+                gq = np.zeros(N)
+                gq[idx] = t.grad_charges
         gc = 0.0
         for sl, sc in stacks:
             _, exX, exc, exq, _ = charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, dipoles=p[sl], pref=pref,
@@ -1836,11 +1881,20 @@ class CrystalPacker:
                 glat = glat + glate
                 gc += gce
             else:
-                terms = self._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=gq_chain is not None)
+                idx = self._es_idx
+                if idx is None:
+                    terms = self._ewald.terms(Pn, q_cell, latn, grad=True, charge_grad=gq_chain is not None)
+                    gP += terms.grad_coords
+                    gqe = terms.grad_charges
+                else:
+                    terms = self._ewald.terms(Pn[idx], q_cell[idx], latn, grad=True, charge_grad=gq_chain is not None)
+                    gP[idx] += terms.grad_coords
+                    gqe = None
+                    if gq_chain is not None:
+                        gqe = np.zeros(self.N)
+                        gqe[idx] = terms.grad_charges
                 e_ew = terms.total
-                gP += terms.grad_coords
                 glat = glat + terms.grad_lattice
-                gqe = terms.grad_charges
             if gq_chain is not None:
                 gq_chain = gq_chain + gqe[:n] + (gqe[n:] if nc == 2 else 0.0)
             X_ch = Xn[0] if per_row else np.asarray(self.chain.coords, dtype=float)

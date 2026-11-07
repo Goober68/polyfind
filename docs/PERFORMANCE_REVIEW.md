@@ -1304,3 +1304,31 @@ path is inside `terms`: the real-space list is rebuilt from a dense distance arr
 call (a Verlet skin would reuse it across the small steps of a relaxation), and the
 reciprocal-space structure factors are recomputed for every k-vector.  Neither was taken
 here; the end-to-end numbers of 16.3 stand as the state of the speed stage.
+
+### 16.6 Inert sites out of the electrostatics (2026-11-07)
+
+The belt sites of `polymers.belt_fluorine` (pseudo-element "X", `docs/CRYSTAL_STAGE.md` 5.7) carry
+no charge and, until now, a 1e-6 A^3 placeholder polarizability so that the dipole solve's
+diagonal stayed finite; they rode through the Ewald sums and the induced-dipole solve like atoms.
+On the 70/30 copolymer cell that is 92 sites beside 120 atoms, and one `energy_and_grad` call
+cost 0.64 s against 0.17 s for the plain chain, 56% of it in `ewald.terms` (cProfile of three
+calls: `terms` 1.07 s cumulative, the Lennard-Jones kernel 0.43 s, the gradient assembly 0.27 s).
+
+A zero charge adds nothing to any term of the charge sum, and a site without a polarizability has
+no unknown in the solve, so the packer now leaves every site that is chargeless and unpolarizable
+out of both (`CrystalPacker._es_idx`, set once from the topology; the Ewald sums and the
+`(3N)^3` solve run on the active sites and the inert ones get the zero dipoles and gradients they
+would have had; `_set_charge_tables` refuses a charge that later lands on one).  The placeholder
+is now a true zero (`polarizability.VDS98["X"] = 0.0`; `Polarizable.per_atom` accepts zero as "no
+induced dipole on this site").  Measured: the belt copolymer call 0.64 -> 0.42 s, `ewald.terms`
+1.07 -> 0.38 s per three calls, i.e. back to the plain chain's 0.35; the stage-7 fit point
+re-evaluated moves by at most 4.3e-6 relative (the placeholder dipoles' energy), and the gradient
+matches finite differences as before (`tests/test_belt_sites.py::test_inert_sites_are_left_out_of_the_electrostatics`;
+the Ewald total over all sites equals the total over the active ones to 1e-9).
+
+What is left of the belt cost is the pair kernel: 0.46 s per three calls against 0.08 on the plain
+chain, from the dense `(images, N, N)` arrays over 212 sites of which the 92 inert ones interact
+with hydrogen alone.  That is the finding of 16.5 again, and the same answer: a pair list would
+take it out at the price of the bit-for-bit `energy == energy_and_grad` invariant.  The belt cells
+are 2.5x the plain chain's call now, from 3.8x.
+

@@ -80,3 +80,32 @@ def test_a_wall_on_the_x_h_pair_acts_between_chains_only():
     e_tight = float(pk.energy(tight[None])[0]) - float(pk_plain.energy(tight[None])[0])
     e_wide = float(pk.energy(wide[None])[0]) - float(pk_plain.energy(wide[None])[0])
     assert e_tight > 1.0 and abs(e_wide) < 1e-2, (e_tight, e_wide)  # the force-shifted tail is all that is left at 7 x 12 A
+
+
+def test_inert_sites_are_left_out_of_the_electrostatics():
+    """Belt sites have no charge and no polarizability, so the Ewald sums and the dipole solve run
+    on the atoms alone (``CrystalPacker._es_idx``): the sites' induced dipoles are zero, the charge
+    sum over every site is the sum over the active ones (a zero charge adds nothing), and the
+    analytic gradient still matches finite differences."""
+    _, ch1 = _chains()
+    with F.FITTED_VALENCE_BELT.applied():
+        pk = P.CrystalPacker(ch1, n_chains=2, **KW)
+        el = np.tile(np.asarray(list(ch1.elements)), 2)
+        assert pk._es_idx is not None and np.array_equal(pk._es_idx, np.flatnonzero(el != "X"))
+        assert pk._alpha_cell[el == "X"].max() == 0.0 and pk._alpha_es.min() > 0.0
+        params = np.array([4.73, 8.52, 90.0, 0.0, 0.0, 0.0, 0.0])
+        P_, lat = pk._place(params[None])
+        Pn, latn = np.asarray(P_[0], dtype=float), np.asarray(lat[0], dtype=float)
+        e_es, p, E0, _ = pk._polarize(Pn, pk._q_cell, latn, 0.0)
+        assert np.all(p[el == "X"] == 0.0) and np.abs(p[el != "X"]).max() > 1e-3
+        full = pk._ewald.terms(Pn, pk._q_cell, latn).total
+        act = pk._ewald.terms(Pn[pk._es_idx], pk._q_cell[pk._es_idx], latn).total
+        assert abs(full - act) < 1e-9
+        E, g_cell, _, _ = pk.energy_and_grad(params)
+        assert float(pk.energy(params[None])[0]) == E
+        for i, h in ((0, 1e-4), (1, 1e-4), (3, 1e-3)):
+            pp, pm = params.copy(), params.copy()
+            pp[i] += h
+            pm[i] -= h
+            fd = (float(pk.energy(pp[None])[0]) - float(pk.energy(pm[None])[0])) / (2 * h)
+            assert abs(fd - g_cell[i]) < 2e-5 * max(1.0, abs(fd)), (i, fd, g_cell[i])
