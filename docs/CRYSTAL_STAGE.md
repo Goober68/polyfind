@@ -975,8 +975,9 @@ be a local minimum: a least-squares run on the same objective found a point at 9
 at z -0.92 and the gap at -0.21, with the carbon diameter at the valence value. The qualitative
 statement stands (C_12 and b move with the variables that set P, the gap and the slope; six
 constrained directions of twelve), the quantitative trade-off does not: at the least-squares point
-the same analysis finds the lateral coupling held by the ridge, not by the gap (5.18), and that
-Jacobian (`crystal_stage_v7_trf2_sensitivity.json`) is the one to screen new terms with.
+the same analysis finds the lateral coupling held by P, the polar axis and the ridge together, not
+by the gap (5.18), and that Jacobian (`crystal_stage_v7_trf2_sensitivity.json`) is the one to
+screen new terms with.
 
 ### 5.16 The relaxed-ion dielectric tensor by the Gamma route: the like-for-like for DFPT
 
@@ -1182,15 +1183,19 @@ puts C_12 and beta b on their anchors with a step of half a prior width (x_C +0.
 D_F -0.72, the restraint +0.52 widths) and only the beta backbone angle at its 1.0 limit, and the
 real evaluation at that point confirms it almost row by row (C_12 z -0.00, b -0.05, the gap -0.19,
 P +0.60, beta a +0.61, the angle +1.00): sum of squares of the anchors 5.3 against 5.0 at the
-minimum, ridge 7.51 against 4.09, objective 12.83. So at the least-squares point what holds
-C_12 at -0.92 is not another anchor but the ridge, i.e. the prior that keeps the crystal terms
-near the oligomer-fitted valence values (RIDGE 1.0, 5.1). The anchors in hand would let the
-lateral coupling close for a 2.5-unit ridge cost and P and beta's polar axis at +0.6; whether
-that is a price worth paying is the question of how far the crystal terms may leave the valence
-fit, which the chain-orientation anchor requested in 5.17 is the right datum to settle. The point
-is the preset `pvdf-dft-valence-belt3`; its prediction sets, Gamma-route dielectric tensor and
-cross-check are below (5.19). The belt2 preset and its sets stay as the record of 5.13-5.17;
-`--method trf` is the fitter to use from here, and the Powell runs stand as what they were.
+minimum, ridge 7.51 against 4.09, objective 12.83. So at the least-squares point closing the
+lateral coupling buys 1.0 in the anchors' sum of squares (C_12 and b) and costs 0.8 in the other
+rows (P and beta's polar axis to +0.6, the alpha angles to -0.8) plus 3.4 of ridge: the residual is
+held by the other anchors and the prior together, each about as much as the other. A probe with
+the ridge at half weight (`--ridge 0.5`, `crystal_stage_v7_trf_ridge05.json`, from the belt3 point)
+says the same from the other side: the fit does not move, 7.06 to 7.00 in 27 evaluations with the
+restraint 228 to 238 and every other variable where it was, C_12 still at -0.92. The prior alone is
+not the lock, and weakening it would not close the coupling; a term that moves C_12 without P and
+the polar axis would, and the chain-orientation anchor requested in 5.17 is the datum to build it
+against. The point is the preset `pvdf-dft-valence-belt3`; its prediction sets, Gamma-route
+dielectric tensor and cross-check are below (5.19). The belt2 preset and its sets stay as the
+record of 5.13-5.17; `--method trf` is the fitter to use from here, and the Powell runs stand as
+what they were.
 
 ### 5.19 The belt3 preset as a prediction set
 
@@ -1296,6 +1301,7 @@ python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt2 --variant be
 python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --x0 docs/predictions/crystal_stage_v6.json --maxfev 40 --out docs/predictions/crystal_stage_v7_trf.json   # 5.18: stage 7 by bounded least squares (235 evaluations, 9.36)
 python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --x0 docs/predictions/crystal_stage_v7_trf.json --maxfev 20 --out docs/predictions/crystal_stage_v7_trf2.json   # its continuation to convergence (53 evaluations, 9.11): the preset pvdf-dft-valence-belt3
 python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stage_v7_trf2.json --out docs/predictions/crystal_stage_v7_trf2_sensitivity.json
+python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --ridge 0.5 --x0 docs/predictions/crystal_stage_v7_trf2.json --maxfev 30 --out docs/predictions/crystal_stage_v7_trf_ridge05.json   # 5.18: the half-weight ridge probe (the fit does not move)
 python examples/e1_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --out docs/predictions/e1_polyfind_belt3.json
 python examples/e2_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --out docs/predictions/e2_polyfind_belt3.json
 python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --systems beta

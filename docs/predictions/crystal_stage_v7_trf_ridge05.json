@@ -32,8 +32,8 @@
  "objective": 6.999122210666762,
  "ridge": 2.1227090577391317,
  "ridge_weight": 0.5,
- "complete": false,
- "evaluations": 14,
+ "complete": true,
+ "evaluations": 27,
  "residuals": {
   "beta a (polar)": {
    "polyfind": 4.7534738099424745,
