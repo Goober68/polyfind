@@ -1257,6 +1257,43 @@ energy is flat at the level the fit resolves, which is the relaxor-like statemen
 the reason the copolymer rows of E2 should not be read as a ranking. The prediction posted for the
 Gamma successor (5.16) stands within 2%.
 
+### 5.20 What a new term would have to be: the radial candidates screened
+
+5.14 named three candidates for the lateral coupling, and 5.18 said the residual is held by the
+other anchors and the prior together, so a term helps only if it moves C_12 and beta's lateral axis
+in a way the twelve fitted variables cannot already produce by moving. That is a question the
+Jacobian answers before anything is fitted: perturb the candidate at the belt3 point, take the
+change of the residual vector per step, and project it onto the column space of the Jacobian of
+the twelve variables (`examples/stage8_screen.py`, `docs/predictions/stage8_screen_belt3.json`).
+The part outside that span is the new direction; its value is how much of the residual the twelve
+variables cannot reach it would take out.
+
+| candidate (perturbation) | residual change per step | outside the span of the twelve | what it moves most |
+|---|---|---|---|
+| belt distance d, 0.7 +- 0.1 A | 3.15 | 0.09 | beta a +1.5, alpha b +1.6, gap -1.6, C_11 -1.0, C_12 +1.0 |
+| belt site diameter, 2.6 +- 0.2 A | 4.42 | 0.00 | gap -2.8, beta a +2.0, alpha b +1.7, C_11 -1.3, b +0.9 |
+| F-F pair diameter x 1.02 | 3.62 | 0.00 | gap -3.6, C_12 +0.3, alpha b +0.4 |
+| F-F pair depth x 1.5 | 5.07 | 0.01 | gap -5.0, C_12 +0.6, alpha a -0.5 |
+| H-H pair diameter x 1.02 | 0.03 | 0.00 | nothing |
+| C-C pair diameter x 1.02 | 0.46 | 0.00 | gap +0.4 |
+| C-F pair diameter x 1.02 | 0.56 | 0.01 | gap +0.4, alpha a +0.3, b +0.15 |
+| C-H pair diameter x 1.02 | 0.20 | 0.00 | nothing |
+
+Every radial contact term, the belt geometry included, lies in the span of the twelve variables
+to within 1 to 3 percent of its own length: the belt site's diameter is degenerate with its depth
+(a repulsive wall has one effective radius), its distance from the fluorine with the fluorine and
+pair diameters, and a pair-specific F-F, C-C, C-F, C-H or H-H term with the element diameters that
+already set every contact. None of them is a new direction, and none would take anything out of the
+residual the fit leaves. The anchors in hand (fifteen informative rows) fix six directions of the
+twelve-variable space (5.15), so the problem is not a shortage of variables but that the lateral
+coupling, P, the polar axis and the gap are moved by the same combinations of them: every radial
+term pushes on the same combinations. What would not is a term with a shape rather than a radius:
+the anisotropy the belt gave the fluorine, given to the hydrogen (sites on the CH2 group), or a
+quadrupole on the CF2 group that changes how the chains' electrostatics couple the two lateral
+axes without changing P. Both are a stage of work, and both should wait for the rotated-setting
+cell (5.17): one more anchor row on the chain-orientation energy may change which direction is
+missing, and it is the measurement of exactly the energy these terms would shape.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
@@ -1302,6 +1339,7 @@ python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --x0 docs
 python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --x0 docs/predictions/crystal_stage_v7_trf.json --maxfev 20 --out docs/predictions/crystal_stage_v7_trf2.json   # its continuation to convergence (53 evaluations, 9.11): the preset pvdf-dft-valence-belt3
 python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stage_v7_trf2.json --out docs/predictions/crystal_stage_v7_trf2_sensitivity.json
 python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --ridge 0.5 --x0 docs/predictions/crystal_stage_v7_trf2.json --maxfev 30 --out docs/predictions/crystal_stage_v7_trf_ridge05.json   # 5.18: the half-weight ridge probe (the fit does not move)
+python examples/stage8_screen.py --fit docs/predictions/crystal_stage_v7_trf2.json --sensitivity docs/predictions/crystal_stage_v7_trf2_sensitivity.json --out docs/predictions/stage8_screen_belt3.json   # 5.20: candidate terms against the Jacobian
 python examples/e1_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --out docs/predictions/e1_polyfind_belt3.json
 python examples/e2_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --out docs/predictions/e2_polyfind_belt3.json
 python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --systems beta
