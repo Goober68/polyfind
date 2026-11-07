@@ -1049,7 +1049,9 @@ Gamma phonon calculation would test; they are predictions, not anchors.
 rigid-chain route gives eps_0 2.02, 2.35, 2.31 and the Gamma route 3.32, 2.49, 2.82, the polar
 axis gaining 1.30 from one mode at 50 cm^-1, a torsional rocking of the TGTG' chain that a rigid
 conformation cannot have, and the chain axis 0.19 and 0.10 from modes at 39 and 75 cm^-1. Two
-caveats before it is compared with anything: the all-atom relaxation moved atoms by 0.13 A and
+caveats before it is compared with anything (5.22 traces the relaxation to the valence fit's soft C-C
+stretch constant: with the constants floored at a physical value alpha's polar eps_0 is 2.93 at belt4
+instead of 3.47): the all-atom relaxation moved atoms by 0.13 A and
 lowered the cell's energy by 1.5 kcal/mol (the line-group refinement keeps every monomer
 equivalent, the atoms need not), so the tensor is that of the fully relaxed cell, not the E1
 reference's; and the pinned valence bend terms of the pendants are the valence fit's stiffnesses,
@@ -1478,9 +1480,21 @@ releases 0.357 kcal/mol per monomer (its CF2 groups wag 3.1 deg, its CHF groups 
 1.3), its T3GT3G' 0.122 and its TTTT 0.040 (the CHF groups break the zigzag's mirror), so TGTG' is
 the ground conformation by 0.13 to 0.15 where the rigid belt3 set had T3GT3G' by 0.02 to 0.06; a
 copolymer E2 record from Dipole would arbitrate, and the pre-registered set stands as the primary
-one. The Gamma-route tensor of beta at belt4 is in `gamma_dielectric_pvdf-dft-valence-belt4.json`:
+one. The Gamma-route tensors at belt4 are in `gamma_dielectric_pvdf-dft-valence-belt4.json`: beta
 eps_0 2.23 polar, 4.61 lateral, 2.73 chain (belt3 4.49 lateral), eps_inf 2.12, 2.09, 2.44, the
-lateral libration at 46 cm^-1.
+lateral libration at 46 cm^-1; alpha 3.47, 2.51, 2.81 with a 0.12 A all-atom relaxation.
+
+**The soft C-C constant, quantified.** The all-atom routes (the Gamma route of 5.16, the pendant-only
+and all-atom columns above) pin the valence fit's stretch constants, and the C-C one sits at that
+fit's bound, 100 kcal/mol/A^2, five times softer than a real C-C bond. `gamma_dielectric.py
+--k-bond-min 540` floors every stretch constant at a physical value
+(`gamma_dielectric_pvdf-dft-valence-belt4_kbond540.json`): beta's tensor does not move (eps_0 2.23,
+4.60, 2.73 against 2.23, 4.61, 2.73; its relaxation is 0.004 A either way), so the prediction posted
+for Dipole's DFPT stands whatever the constant; alpha's polar component falls from 3.47 to 2.93
+(its ionic part 1.45 to 0.90, the relaxation 0.12 to 0.08 A), the lateral and chain components by
+0.03 and 0.11. The alpha caveat of 5.16 is therefore the soft constant itself: alpha's Gamma-route
+polar eps_0 is 2.9 to 3.5 depending on it, and the floored value is the one to quote until the
+stretch terms are refitted. The rigid tilts of 5.22 carry no bond stretching and are unaffected.
 
 **The Jacobian at belt4** (`crystal_stage_v8_tilts_sensitivity.json`, taken with the same
 correction, 25 evaluations) reads as 5.15 and 5.18 did: six of twelve directions are fixed by
@@ -1571,6 +1585,8 @@ python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt4 --variant be
 python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stage_v8_tilts.json --out docs/predictions/crystal_stage_v8_tilts_sensitivity.json   # 5.22: the Jacobian at belt4, with the pendant-tilt correction carried
 python examples/crystal_stage_sensitivity.py --analyze docs/predictions/crystal_stage_v8_tilts_sensitivity.json   # its linear analysis: the lateral-coupling lock stands at belt4
 python examples/stage8_screen.py --fit docs/predictions/crystal_stage_v8_tilts.json --sensitivity docs/predictions/crystal_stage_v8_tilts_sensitivity.json --out docs/predictions/stage8_screen_belt4.json   # 5.22: the 5.20 screen at belt4 (no radial candidate adds a direction)
+python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt4 --variant belt --geometry pbe --systems beta,alpha --out docs/predictions/gamma_dielectric_pvdf-dft-valence-belt4.json   # 5.22: both tensors at belt4
+python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt4 --variant belt --geometry pbe --systems beta,alpha --k-bond-min 540 --out docs/predictions/gamma_dielectric_pvdf-dft-valence-belt4_kbond540.json   # 5.22: the same with the stretch constants floored (beta unchanged, alpha's polar eps_0 3.47 -> 2.93)
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and

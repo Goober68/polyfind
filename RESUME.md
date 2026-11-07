@@ -26,7 +26,9 @@ sites or a CF2 quadrupole) is the next form change and waits for Dipole's rotate
 (5.17, requested). Open on Dipole's side: the Gamma DFPT and alpha successors are running after a
 WSL shutdown killed the first attempts; polyfind's like-for-like prediction for the DFPT tensor is
 eps_0 = 2.23 polar, 4.49 lateral, 2.73 chain (5.16, 5.19), posted on the exchange; belt4 gives
-2.23, 4.61, 2.73 (5.22). Fitting from
+2.23, 4.61, 2.73 (5.22), and it does not move when the valence fit's soft C-C stretch constant is
+floored at a physical value; alpha's Gamma-route polar eps_0 does (3.47 to 2.93), so the floored
+value is the one to quote for alpha (5.22). Suite: 724 passed, 5 skipped (2026-11-07 18:03 UTC). Fitting from
 here: `examples/crystal_stage.py --method trf` (one evaluation per variable per iteration, 5.18).
 
 2026-11-04 research note (cloud session, PI-nominated the same day to drive the electrostriction
@@ -478,7 +480,7 @@ traceable to an invented constant, refuse it.
 
 ## Housekeeping
 
-- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 716 pass, 5 skip (GPU). ~5-7 min. Dipole's runtime reports 3 last-digit
+- Tests: `export PYTHONPATH="$PWD/src"; python -m pytest tests -q -p no:cacheprovider`, 724 pass, 5 skip (GPU). ~5-7 min on an idle box. Dipole's runtime reports 3 last-digit
   frozen-literal failures in `test_mechanics.py` (PE/alpha/gamma energies at
   1e-15 relative) that do not reproduce here at any commit; machine noise,
   not a defect. Since 2026-10-08 every recorded golden value is held to 1e-12
