@@ -14,14 +14,19 @@ the refinement's rigid CH2/CF2 groups cannot tilt as DFT's do (Dipole's alpha st
 CF2 rock 2.3, wag 2.9, twist 1.3 deg; beta none by symmetry), and under belt3 alpha releases 0.23
 kcal/mol per monomer through rigid group tilts alone, so the gap the fit matched carries that much
 pendant strain; `polyfind.pendants.tilt_relaxation` evaluates it, `crystal_stage.py --pendant-tilts`
-adds it to the gap row, and the refit from the belt3 point (`crystal_stage_v8_tilts.json`) is the
-current fit (its outcome is in 5.22). Open on our side: the
+adds it to the gap row, and the refit from the belt3 point is the current preset
+`pvdf-dft-valence-belt4` (objective 11.11; the gap back on the anchor with the relaxation inside
+the fit, paid by the fluorine well -12%, the H-F pair +8% and the lateral coupling, C_12 now 0.87 of
+DFT's and the largest residual at 1.29 tolerances; everything else within 1.1). The stage-8 shape
+term starts from belt4. Prediction on record for Dipole's native alpha positions: CF2 wag 2.5, rock
+1.1, twist 0.7 deg. Open on our side: the
 lateral coupling (C_12 at 0.91, the lateral axis -0.4%) is held by the other anchors and the prior
 together and no radial term adds a direction (5.15, 5.18, 5.20); a shape term (hydrogen belt
 sites or a CF2 quadrupole) is the next form change and waits for Dipole's rotated-setting cell
 (5.17, requested). Open on Dipole's side: the Gamma DFPT and alpha successors are running after a
 WSL shutdown killed the first attempts; polyfind's like-for-like prediction for the DFPT tensor is
-eps_0 = 2.23 polar, 4.49 lateral, 2.73 chain (5.16, 5.19), posted on the exchange. Fitting from
+eps_0 = 2.23 polar, 4.49 lateral, 2.73 chain (5.16, 5.19), posted on the exchange; belt4 gives
+2.23, 4.61, 2.73 (5.22). Fitting from
 here: `examples/crystal_stage.py --method trf` (one evaluation per variable per iteration, 5.18).
 
 2026-11-04 research note (cloud session, PI-nominated the same day to drive the electrostriction

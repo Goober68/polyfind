@@ -4,8 +4,9 @@
 since 5.18, bounded least squares), driver `examples/crystal_stage.py`, results
 `docs/predictions/crystal_stage_v*.json`. Sections 1 to 4 are the first stage and its preset
 `pvdf-dft-valence-crystal`; section 5 is the stages after it in order, 5.1 to 5.22, and the
-current preset is `pvdf-dft-valence-belt3` (5.18, 5.19; 5.22 found the alpha-beta gap it matched
-carries 0.23 kcal/mol per monomer of pendant strain and refits with the pendants relaxed). Every preset is opt-in; the E1/E2
+current preset is `pvdf-dft-valence-belt4` (5.22: the belt3 problem with the alpha-beta gap row
+evaluated with the pendant groups relaxed, which the rigid refinement cannot do and DFT's alpha
+does; belt3 is 5.18, 5.19). Every preset is opt-in; the E1/E2
 predictions pre-registered on `pvdf-dft-valence` stand unchanged. `RESUME.md` opens with the
 one-paragraph state.*
 
@@ -1358,7 +1359,8 @@ as in 5.19.
 
 One thing came before either (5.22): the refinement's rigid CH2 and CF2 groups, which cannot tilt
 as DFT's do, and the 0.23 kcal/mol per monomer that costs the alpha-beta gap row. The stage-8 fit
-starts from that corrected point, not from the belt3 one.
+starts from the corrected point, `pvdf-dft-valence-belt4`, whose lateral coupling is 1.3 tolerances
+short, not from the belt3 one.
 
 ### 5.22 The pendant groups: what the rigid refinement cannot do, and what it costs the gap anchor
 
@@ -1437,8 +1439,42 @@ and the prior together.
 polymorphs' tilt relaxations added to their refined energies (`crystalfit.evaluate(...,
 pendant_tilts=True)`; the relaxation energies and tilts are recorded in the result file under
 `pendant_tilts`). An evaluation costs 15 s against 8 s without (two reference rebuilds and
-relaxations). The refit by bounded least squares from the belt3 point is `crystal_stage_v8_tilts.json`;
-its result follows in the next paragraph.
+relaxations). The refit by bounded least squares from the belt3 point is `crystal_stage_v8_tilts.json`.
+
+**The refit.** 196 evaluations in 31 minutes (10 s each; the two reference rebuilds and tilt
+relaxations add about 2 s to an evaluation): objective 11.11 (ridge 5.21), against 9.11 (4.09)
+for the uncorrected problem at the belt3 point and 31.5 for the corrected one there. Registered as
+`pvdf-dft-valence-belt4`, the current preset.
+
+| quantity | DFT | belt3 (z) | belt4 (z) |
+|---|---|---|---|
+| beta a, b, c (A) | 4.757, 8.528, 2.581 | 4.753 (-0.09), 8.490 (-0.44), 2.598 (+0.68) | 4.755 (-0.04), 8.478 (-0.59), 2.596 (+0.58) |
+| alpha a, b, c (A) | 4.945, 9.636, 4.660 | 4.942 (-0.06), 9.682 (+0.48), 4.676 (+0.34) | 4.957 (+0.24), 9.646 (+0.11), 4.680 (+0.43) |
+| beta P (C/m^2) | 0.1927 | 0.1928 (+0.01) | 0.1927 (-0.00) |
+| E(alpha) - E(beta), kcal/mol per monomer | -0.726 | -0.736 rigid (-0.21) | -0.744 with the tilts (-0.36) |
+| beta C_11, C_22, C_12 (GPa) | 22.77, 24.52, 5.88 | 24.17 (+0.61), 24.78 (+0.11), 5.34 (-0.92) | 24.21 (+0.63), 25.07 (+0.22), 5.12 (-1.29) |
+| beta d|P|/d eta (polar) | -0.3255 | -0.3004 (+0.84) | -0.2998 (+0.86) |
+| backbone angles: beta, alpha CH2, alpha CF2 (deg) | 114.63, 118.23, 116.87 | 115.87 (+1.24), 117.83 (-0.40), 116.60 (-0.27) | 115.70 (+1.07), 117.56 (-0.67), 116.54 (-0.33) |
+| alpha's tilt relaxation, kcal/mol per monomer | | -0.226 (not in the fit) | -0.205 (in the fit) |
+| alpha CF2 rock, wag, twist; CH2 (deg) | 2.29, 2.86, 1.29; 1.01, 0.66, 0.88 (start geometry) | 1.17, 2.65, 0.73; 0.67, 2.48, 0.50 | 1.09, 2.47, 0.73; 0.72, 2.46, 0.53 |
+| objective (ridge) | | 9.11 (4.09) | 11.11 (5.21) |
+
+The gap is back on the anchor with the relaxation inside the fit, and what paid for it is what the
+linear preview said would: the fluorine well 12% shallower (D_F 0.923 to 0.815 of the valence
+value, which is where the ridge's extra 1.1 comes from), the H-F pair 8% deeper, the fluorine
+diameter 1.7% smaller, the carbon and hydrogen wells 2-3% deeper, the charge increments by 0.002
+and 0.004 e, the restraint 228 to 233 kcal/mol/rad^2. In the anchors the lateral coupling pays
+(C_12 from 0.91 to 0.87 of DFT's, z -0.92 to -1.29, the largest residual now; the lateral axis
+-0.4 to -0.6%) and the alpha CH2 angle a little; alpha's lateral axis (+0.5 to +0.1%), beta's polar
+axis and the beta backbone angle (1.24 to 1.07) improve. So 5.15's reading sharpens: at the belt3
+point the gap anchor was helping the lateral coupling through alpha's pendant strain, and with that
+strain released the coupling is 1.3 tolerances short on its own. The stage-8 shape term (5.21)
+starts from this point. The tilts at the new parameters are within 0.2 deg of the belt3 ones (CF2
+wag 2.47, rock 1.09, twist 0.73), so the prediction for Dipole's native alpha positions is
+unchanged by the refit. The E2 set with every conformation's groups relaxed
+(`e2_polyfind_belt4.json`) puts TTTT +0.744 and T3GT3G' +0.402 above TGTG' (PVDF; T3GT3G'
+releases 0.040), and the Gamma-route tensor of beta at belt4 is in
+`gamma_dielectric_pvdf-dft-valence-belt4.json` (eps_0 2.23 polar, 4.61 lateral, 2.73 chain; eps_inf 2.12, 2.09, 2.44; the lateral libration at 46 cm^-1).
 
 **What it does not do.** The cell and the backbone do not re-relax with the tilted pendants, so
 the corrected gap is complete to first order only; the alpha cell rows and the alpha angle rows are
@@ -1455,8 +1491,8 @@ repeat, placed through the pendant frames' local coordinates (`polyfind.polymers
 offsets, which the builder and `chainjac` already carry) with the valence C-C-X bends as their
 restoring force; it is a stage-9 item, and the cheap consistent evaluation here is what the fit
 can use now. Dipole's native alpha positions, when they land, test the pattern directly: the
-prediction is CF2 wag 2.6, rock 1.2, twist 0.7 deg and CH2 wag 2.5 at the belt3 parameters (the
-refit's values follow), against the start geometry's 2.9, 2.3, 1.3 and 0.7.
+prediction is CF2 wag 2.5, rock 1.1, twist 0.7 deg and CH2 wag 2.5 (belt4; belt3 within 0.2 deg),
+against the start geometry's 2.9, 2.3, 1.3 and 0.7.
 
 ## 6. What it costs, and what it does not touch
 
@@ -1511,6 +1547,8 @@ python examples/e2_predictions.py --preset pvdf-dft-valence-belt3 --variant belt
 python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --systems beta
 python examples/dft_cell_geometry.py <sarco>/materials/electrostriction/results/qe_equilibrium_v1/pvdf_alpha_ref_fresh_20261107_v1/state.json   # 5.22: the pendant tilts of Dipole's alpha start geometry (rock, wag, twist against the builder's placement)
 python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --pendant-tilts --x0 docs/predictions/crystal_stage_v7_trf2.json --maxfev 160 --out docs/predictions/crystal_stage_v8_tilts.json   # 5.22: the gap row with both polymorphs' pendant groups relaxed as rigid tilts
+python examples/e2_predictions.py --preset pvdf-dft-valence-belt4 --variant belt --geometry pbe --pendant-tilts --out docs/predictions/e2_polyfind_belt4.json   # 5.22: the E2 set with every conformation's pendant groups relaxed
+python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt4 --variant belt --geometry pbe --systems beta   # 5.22: the Gamma-route tensor at belt4
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and

@@ -1,0 +1,152 @@
+{
+ "potential": "pvdf-dft-valence-belt4, induced dipoles, Ewald, rigid chain, force-shifted LJ, 0 K, fluorine belt sites, pbe chain geometry, pendant groups relaxed as rigid tilts (5.22)",
+ "frame": "x polar, y lateral, z chain",
+ "energy": "lattice energy plus the refined backbone angles' strain, per vinyl monomer (the strain was omitted before 2026-11-05), plus the energy released when the pendant groups turn rigidly about their carbons (polyfind.pendants.tilt_relaxation)",
+ "systems": {
+  "pvdf": {
+   "label": "PVDF",
+   "conformations": {
+    "TTTT": {
+     "sequence": [
+      0,
+      0
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 2.0,
+     "energy_per_monomer_kcal": -9.481251551754854,
+     "lattice_energy_per_monomer_kcal": -9.56699536083957,
+     "bend_energy_per_monomer_kcal": 0.08574380908473138,
+     "P_C_m2": [
+      0.19265336683169376,
+      2.5098288632043044e-17,
+      -2.6392639587713066e-17
+     ],
+     "c_per_monomer_A": 2.5960086083069354,
+     "cell": {
+      "a": 4.754871425022783,
+      "b": 8.477823192963086,
+      "gamma_deg": 90.0,
+      "c": 2.5960086083069354,
+      "volume_A3": 104.64759721332412
+     },
+     "volume_per_monomer_A3": 52.32379860666206,
+     "seconds": 3.2593274116516113,
+     "energy_rigid_pendants_per_monomer_kcal": -9.48125155175484,
+     "pendant_tilt_relaxation_per_monomer_kcal": -1.4210854715202004e-14,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 4.1312923666668203e-07,
+       "wag": 3.109141382421659e-14,
+       "twist": 7.350535819992711e-14,
+       "n": 2
+      },
+      "HH": {
+       "rock": 8.300679679882386e-07,
+       "wag": 6.760984681384658e-14,
+       "twist": 2.319438260772254e-14,
+       "n": 2
+      }
+     },
+     "margin_vs_ground_kcal": 0.7440161570572776,
+     "conformational_strain_vs_ground": 0.10938734538657013
+    },
+    "TGTG'": {
+     "sequence": [
+      0,
+      1,
+      0,
+      2
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 4.0,
+     "energy_per_monomer_kcal": -10.225267708812131,
+     "lattice_energy_per_monomer_kcal": -10.464567816127477,
+     "bend_energy_per_monomer_kcal": 0.4440586008318149,
+     "P_C_m2": [
+      0.1036844386106145,
+      -2.2046411293841923e-17,
+      -3.027500142464208e-17
+     ],
+     "c_per_monomer_A": 2.3400380571335493,
+     "cell": {
+      "a": 4.956662852515117,
+      "b": 9.646276763494377,
+      "gamma_deg": 90.0,
+      "c": 4.680076114267099,
+      "volume_A3": 223.77007842734102
+     },
+     "volume_per_monomer_A3": 55.942519606835255,
+     "seconds": 6.408712863922119,
+     "energy_rigid_pendants_per_monomer_kcal": -10.020509215295663,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.20475849351646858,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 1.0871806284567103,
+       "wag": 2.4656595277708337,
+       "twist": 0.7306922325295837,
+       "n": 4
+      },
+      "HH": {
+       "rock": 0.7223404018946384,
+       "wag": 2.4599231791635905,
+       "twist": 0.5252626816327417,
+       "n": 4
+      }
+     },
+     "margin_vs_ground_kcal": 0.0,
+     "conformational_strain_vs_ground": 0.0
+    },
+    "T3GT3G'": {
+     "sequence": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2
+     ],
+     "n_chains": 2,
+     "monomers_per_cell": 8.0,
+     "energy_per_monomer_kcal": -9.823048141113178,
+     "lattice_energy_per_monomer_kcal": -9.916485919683488,
+     "bend_energy_per_monomer_kcal": 0.13360096253650314,
+     "P_C_m2": [
+      -0.04045967228695534,
+      0.08067588022606437,
+      -0.07595595071966696
+     ],
+     "c_per_monomer_A": 2.3143471590449924,
+     "cell": {
+      "a": 5.473960841844201,
+      "b": 8.839619182087306,
+      "gamma_deg": 83.0238106313849,
+      "c": 9.25738863617997,
+      "volume_A3": 444.62775627172016
+     },
+     "volume_per_monomer_A3": 55.57846953396502,
+     "seconds": 19.614317178726196,
+     "energy_rigid_pendants_per_monomer_kcal": -9.782884957146985,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.04016318396619312,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 0.7991954353452013,
+       "wag": 1.2072819839104405,
+       "twist": 0.24035125324048234,
+       "n": 8
+      },
+      "HH": {
+       "rock": 0.13991503761576832,
+       "wag": 1.0077534743718677,
+       "twist": 0.10843136501048897,
+       "n": 8
+      }
+     },
+     "margin_vs_ground_kcal": 0.4022195676989533,
+     "conformational_strain_vs_ground": -0.010978837720283519
+    }
+   }
+  }
+ }
+}

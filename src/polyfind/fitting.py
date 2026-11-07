@@ -2700,3 +2700,20 @@ register_preset("pvdf-dft-valence-belt2", FITTED_VALENCE_BELT2)
 CRYSTAL7_TRF_FITTED_X = np.array([1.0132281505387504, 1.0023220284490788, 0.9633905894276096, 1.0629896228171571, 1.0233589511159167, 0.9229160353594129, -0.04875160210358813, 0.0524501964074133, 1.004977095847722, 1.0188083710213525, -1.718290675877666, 4.0000000004, 0.3359866631685057])
 FITTED_VALENCE_BELT3 = crystal_stage_parameters(CRYSTAL7_TRF_FITTED_X)
 register_preset("pvdf-dft-valence-belt3", FITTED_VALENCE_BELT3)
+
+# Stage 7 refitted with the alpha-beta gap row evaluated with both polymorphs' CH2/CF2 groups
+# relaxed as rigid tilts about their carbons (crystalfit.evaluate(pendant_tilts=True),
+# polyfind.pendants.tilt_relaxation; docs/CRYSTAL_STAGE.md 5.22): the relaxation DFT's alpha has
+# and the rigid-pendant refinement lacks, 0.23 kcal/mol per monomer at the belt3 point, which the
+# belt3 fit had absorbed into its other terms.  From the belt3 point by bounded least squares,
+# 196 evaluations, objective 11.11 (ridge 5.21).  Against the anchors: beta's cell
+# -0.0%, -0.6%, +0.6%; alpha's +0.2%, +0.1%, +0.4%; P 0.1927;
+# E(alpha)-E(beta) -0.744 with the tilts (alpha releases -0.205 per monomer, CF2 rock 1.09,
+# wag 2.47, twist 0.73 deg, CH2 0.72, 2.46, 0.53); C_11 24.2 (22.8), C_22 25.1 (24.5),
+# C_12 5.1 (5.9) GPa; slope -0.300; angles 115.70, 117.56, 116.54 deg; the
+# largest residual 1.29 tolerances (beta C_12); the restraint at 233 kcal/mol/rad^2.  The same
+# meaning and caveats as pvdf-dft-valence-belt3; the gap is consistent with DFT's relaxed cells only
+# when evaluated with the tilts, as the fit did (the rigid-pendant gap of this preset is lower).
+CRYSTAL8_TILT_FITTED_X = np.array([1.0229262151777028, 1.0055189721724347, 0.9469941195655658, 1.0832204382551116, 1.056607530969089, 0.8147339565878955, -0.044617060471246174, 0.05433040477273087, 1.0092052148491217, 1.1009664851916399, -1.7371267213550259, 4.0000000004, 0.34623571205867687])
+FITTED_VALENCE_BELT4 = crystal_stage_parameters(CRYSTAL8_TILT_FITTED_X)
+register_preset("pvdf-dft-valence-belt4", FITTED_VALENCE_BELT4)

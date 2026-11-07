@@ -176,6 +176,30 @@ def test_registered_least_squares_stage7_preset_matches_the_saved_fit():
 
 
 
+def test_registered_pendant_tilt_preset_matches_the_saved_fit():
+    """5.22: the stage-7 problem with the gap row evaluated with the pendant groups relaxed, from the
+    belt3 point.  The saved point carries the relaxation it was evaluated with (alpha releases about
+    a quarter kcal/mol per monomer, beta nothing) and the gap is back on the anchor."""
+    with open("docs/predictions/crystal_stage_v8_tilts.json") as fh:
+        saved = json.load(fh)
+    assert saved["complete"] and saved["belt"] == {"d": C.BELT_D, "geometry": "pbe"}
+    assert saved["variables"] == list(C.VARIABLES7) and saved["objective"] < 11.16
+    np.testing.assert_allclose(F.CRYSTAL8_TILT_FITTED_X, saved["x"], rtol=0, atol=1e-12)
+    p = F.FITTED_VALENCE_BELT4
+    assert [list(t) for t in p.lj] == [list(t) for t in saved["parameters"]["lj"]]
+    assert [list(t) for t in p.lj_pairs] == [list(t) for t in saved["parameters"]["lj_pairs"]]
+    assert [list(t) for t in p.charge_increments] == [list(t) for t in saved["parameters"]["charge_increments"]]
+    assert p.charge_damping == saved["parameters"]["charge_damping"]
+    assert "pvdf-dft-valence-belt4" in PRESETS and F.PRESET_PARAMETERS["pvdf-dft-valence-belt4"] is p
+    from polyfind.refine import DEFAULT_ANGLE_STIFFNESS
+    assert p.angle_stiffness == DEFAULT_ANGLE_STIFFNESS * 10.0 ** saved["x"][12]
+    tilts = saved["pendant_tilts"]
+    assert -0.30 < tilts["alpha"]["dE_per_monomer"] < -0.18 and abs(tilts["beta"]["dE_per_monomer"]) < 1e-6
+    assert tilts["alpha"]["tilts_by_substituents_deg"]["FF"]["wag"] > tilts["alpha"]["tilts_by_substituents_deg"]["FF"]["rock"]
+    assert abs(saved["residuals"]["E(alpha)-E(beta)"]["z"]) < 0.50
+    assert max(abs(v["z"]) for v in saved["residuals"].values()) < 1.39
+
+
 def test_polar_slope_removes_the_cell_orientation():
     from types import SimpleNamespace
     step = 2e-3
