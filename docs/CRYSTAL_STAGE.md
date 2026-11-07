@@ -3,7 +3,7 @@
 *2026-11-05, kept current through 2026-11-07. Code: `polyfind.crystalfit` (bounded Powell and,
 since 5.18, bounded least squares), driver `examples/crystal_stage.py`, results
 `docs/predictions/crystal_stage_v*.json`. Sections 1 to 4 are the first stage and its preset
-`pvdf-dft-valence-crystal`; section 5 is the stages after it in order, 5.1 to 5.22, and the
+`pvdf-dft-valence-crystal`; section 5 is the stages after it in order, 5.1 to 5.23, and the
 current preset is `pvdf-dft-valence-belt4` (5.22: the belt3 problem with the alpha-beta gap row
 evaluated with the pendant groups relaxed, which the rigid refinement cannot do and DFT's alpha
 does; belt3 is 5.18, 5.19). Every preset is opt-in; the E1/E2
@@ -1540,6 +1540,42 @@ restoring force; it is a stage-9 item, and the cheap consistent evaluation here 
 can use now. Dipole's native alpha positions, when they land, test the pattern directly: the
 prediction is CF2 wag 2.5, rock 1.1, twist 0.7 deg and CH2 wag 2.5 (belt4; belt3 within 0.2 deg),
 against the start geometry's 2.9, 2.3, 1.3 and 0.7.
+
+### 5.23 Stage 9, as designed and not yet built: the pendant tilts as refinement variables
+
+5.22 corrects one row of the fit by relaxing the groups after the rigid refinement. The complete
+form puts the three tilts of every backbone atom of the repeat into the refinement itself, so the
+cell, the setting, the torsions, the backbone angles and the pendant groups relax together and
+every energy the model reports (the E1/E2 sets, the Gamma route, the margins) carries the
+relaxation without a post-step.
+
+**Where it goes.** A pendant's position is its local offset in the frame
+:func:`polyfind.chain.pendant_frames` builds at its carbon (`(bond, 0, 0)` for a single atom);
+a rigid turn of the group by `(rock, wag, twist)` is a fixed rotation of that offset, with the
+rock's sign mirrored on pendant 2 because the two frames are mirror images (the local components
+of `u` and `v` agree in both frames, `w`'s flip). So the tilts enter as per-backbone-atom offsets
+on `polyfind.polymers.PendantAtom`, which the builders and `chainjac` already place and
+differentiate; nothing in the energy kernel changes. The refinement
+(`refine.refine_crystal`) gains `3 x bonds_per_repeat` shape variables whose geometry Jacobian is
+the frame vectors times the rotation generators (closed form, like the torsions' and angles'),
+and a restoring term: the valence C-C-X bends about the untilted angles with the valence constants
+(X-C-X is invariant under a rigid turn), the analogue of the backbone-angle restraint. For the
+TGTG' glide the four CF2 groups' tilts are one triple up to sign, but the variables can be left
+free and the symmetry found, as the torsions are.
+
+**What it costs.** 12 more shape variables for alpha (6 for beta, whose tilts stay at zero by
+symmetry and can be frozen), one more Jacobian column each in the analytic route; the energy per
+evaluation does not change. The fit's evaluation loses the 5.22 post-step (7 s of the 15).
+
+**The acceptance test.** On the belt4 parameters the refinement with tilts must recover the
+tilt-only relaxation of 5.22 (alpha -0.205 kcal/mol per monomer, CF2 wag 2.47, rock 1.09, twist
+0.73, the glide respected) to the coupled re-relaxation of cell and backbone, and beta must not
+move. Then the anchors: Dipole's native alpha positions give the tilts directly (5.22 reads them
+off any record), and they become anchor rows at 0.5 deg beside the backbone angles; the bend
+constants, which 5.22 showed set the tilts' size (CF2 wag 2.0-2.5 deg across defensible values),
+become the first valence terms refitted against a crystal. That is the order: stage 8 closes the
+lateral coupling with a shape term from belt4; stage 9 moves the tilts inside and refits the
+pendant bends against the native alpha positions.
 
 ## 6. What it costs, and what it does not touch
 
