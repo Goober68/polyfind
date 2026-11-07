@@ -1028,6 +1028,18 @@ contacts; if it finds 4.5, the wall is right and the lateral-coupling residual i
 lowest modes (20 to 50 cm^-1 on belt2 against 31 to 64 on the plain chain) are the second thing a
 Gamma phonon calculation would test; they are predictions, not anchors.
 
+*Alpha, for the record* (`gamma_dielectric_pvdf-dft-valence-belt3_alpha.json`, under belt3): the
+rigid-chain route gives eps_0 2.02, 2.35, 2.31 and the Gamma route 3.32, 2.49, 2.82, the polar
+axis gaining 1.30 from one mode at 50 cm^-1, a torsional rocking of the TGTG' chain that a rigid
+conformation cannot have, and the chain axis 0.19 and 0.10 from modes at 39 and 75 cm^-1. Two
+caveats before it is compared with anything: the all-atom relaxation moved atoms by 0.13 A and
+lowered the cell's energy by 1.5 kcal/mol (the line-group refinement keeps every monomer
+equivalent, the atoms need not), so the tensor is that of the fully relaxed cell, not the E1
+reference's; and the pinned valence bend terms of the pendants are the valence fit's stiffnesses,
+which alpha's soft modes lean on more than beta's do. For alpha the rigid-chain route is not a
+substitute for the full one, and the sets' alpha eps_0 rows should be read as electronic plus
+libration only.
+
 ### 5.17 Basins: the packing search's other minima, refined
 
 Every E1/E2 set stands on one refined start: `mechanics.refined_reference` takes the first of the

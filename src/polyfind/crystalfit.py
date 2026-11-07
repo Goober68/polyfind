@@ -400,7 +400,7 @@ def save(ev: Evaluation, path: str, evaluations: int | None = None, complete: bo
     variables = _config(ev.x)[0]
     prm = parameters(ev.x)
     out = {"variables": list(variables), "x": ev.x.tolist(), "objective": ev.objective, "ridge": ev.ridge,
-           "complete": bool(complete), "evaluations": evaluations,
+           "ridge_weight": RIDGE, "complete": bool(complete), "evaluations": evaluations,
            "residuals": {k: {"polyfind": v[0], "dft": v[1], "z": v[2]} for k, v in ev.residuals.items()},
            "parameters": {"lj": prm.lj, "lj_pairs": prm.lj_pairs, "charge_increments": prm.charge_increments,
                           "charge_damping": prm.charge_damping},
