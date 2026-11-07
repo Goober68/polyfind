@@ -1016,6 +1016,41 @@ contacts; if it finds 4.5, the wall is right and the lateral-coupling residual i
 lowest modes (20 to 50 cm^-1 on belt2 against 31 to 64 on the plain chain) are the second thing a
 Gamma phonon calculation would test; they are predictions, not anchors.
 
+### 5.17 Basins: the packing search's other minima, refined
+
+Every E1/E2 set stands on one refined start: `mechanics.refined_reference` takes the first of the
+distinct minima the packing screen returns (`pack()`, the exhaustive table screen under the
+truncated Coulomb kernel, the best few polished and deduplicated) and refines it under the full
+potential. The copolymer model cell landed in a different arrangement under each preset (5.10,
+5.14), which asked what the other minima are. `examples/copolymer_basins.py` refines each of the
+screen's top candidates under the same full potential, relaxes the cell, and lists them by their
+full-potential energy with their cells and dipole directions (`--xyz` writes each as extended XYZ;
+`docs/predictions/basins_<preset>_<system>.json`).
+
+**Beta has two.** On both presets the screen finds two minima and the full potential cannot tell
+them apart:
+
+| preset | basin | a, b, gamma, c | dipoles from a | E per monomer, kcal/mol |
+|---|---|---|---|---|
+| `pvdf-dft-valence` | 0 (the E1 cell, the DFT setting) | 4.517, 8.520, 90.0, 2.602 | 180 deg (along a) | -4.5297 |
+| `pvdf-dft-valence` | 1 (chains rotated 60 deg) | 4.823, 8.007, 85.8, 2.600 | 118 deg | -4.5290 |
+| `pvdf-dft-valence-belt2` | 0 (the E1 cell, the DFT setting) | 4.745, 8.476, 90.0, 2.600 | 180 deg | -9.3627 |
+| `pvdf-dft-valence-belt2` | 1 (chains rotated 60 deg) | 4.857, 8.284, 88.5, 2.600 | 119 deg | -9.3626 |
+
+(energies with the backbone-angle strain; the screen's truncated-kernel energies put basin 0
+first by 0.10 and 0.016, which is why every set sits in the DFT setting). Basin 1 is a real
+alternative packing of the same chains: both setting angles turned by about 60 deg, the dipoles
+pointing 119 deg from a instead of along it, the cell a little longer along a and shorter along b
+and sheared 1.5 deg. The form puts 0.1 cal/mol per monomer between the two settings (0.7 on the
+pre-registered potential). That is not a statement about PVDF: it says the potential's energy as a
+function of the chains' orientation about their axes has no preference at 60 deg, and that angular
+energy is exactly what the libration (5.16), the lateral coupling (5.14, 5.15) and the polar
+response are made of. DFT will have a preference, and it is one relaxed cell: **the energy of beta
+in the rotated setting against the standard one is the cheapest anchor on the chain-orientation
+energetics there is**, and `basins_pvdf-dft-valence-belt2_beta_basin1.xyz` is its start geometry
+(polyfind's frame, no belt sites; the standard setting beside it as `_basin0.xyz`, which is
+Dipole's cell to 0.3/0.6/0.8%). It is asked for on the exchange.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
