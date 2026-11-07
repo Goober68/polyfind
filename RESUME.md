@@ -15,6 +15,14 @@ against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit on
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
 **Where things stand, 2026-11-07 (read this first; the detail is in the dated paragraphs below and in `docs/CRYSTAL_STAGE.md`).**
+Candidate pass, 2026-11-07 22:50 UTC (`docs/CANDIDATE_MATERIALS.md`, `examples/candidate_screen.py`,
+`examples/candidate_loss_map.py`): ten-monomer sequences packed in TTTT and TGTG' under belt4 with pendant
+tilts. TrFE sets the TT-TG margin in steps of about 0.3 kcal/mol per monomer per ten mol% (PVDF +0.74,
+80/20 +0.18, 70/30 +0.15, 60/40 TT ground); one CFE per ten beside 20 mol% TrFE brings it to +0.03 (the
+degeneracy the relaxor needs), CDFE leaves it, CTFE overshoots to TT ground, CFE without TrFE does
+nothing; placement of the CFE moves it by 0.03 per monomer (the local-margin spread a controlled sequence
+sets by choice). Loss per strain is not discriminated by this pass (tier 3, the barrier per chemistry,
+is the gap). Ranking in the document's section 5; chlorine rows are extrapolated chemistry.
 The mission's two stages are closed and documented: the large-cell response path is 10x faster
 (`docs/PERFORMANCE_REVIEW.md` 16), and the crystal terms of the valence potential are fitted to
 Dipole's DFT anchors through seven stages. The current preset is `pvdf-dft-valence-belt3`
