@@ -1,8 +1,12 @@
 # The crystal stage of the fit: nonbonded terms against the DFT crystal anchors
 
-*2026-11-05. Code: `polyfind.crystalfit`, driver `examples/crystal_stage.py`, result
-`docs/predictions/crystal_stage_v1.json`. Preset: `pvdf-dft-valence-crystal` (opt-in; the
-E1/E2 predictions pre-registered on `pvdf-dft-valence` stand unchanged).*
+*2026-11-05, kept current through 2026-11-07. Code: `polyfind.crystalfit` (bounded Powell and,
+since 5.18, bounded least squares), driver `examples/crystal_stage.py`, results
+`docs/predictions/crystal_stage_v*.json`. Sections 1 to 4 are the first stage and its preset
+`pvdf-dft-valence-crystal`; section 5 is the stages after it in order, 5.1 to 5.21, and the
+current preset is `pvdf-dft-valence-belt3` (5.18, 5.19). Every preset is opt-in; the E1/E2
+predictions pre-registered on `pvdf-dft-valence` stand unchanged. `RESUME.md` opens with the
+one-paragraph state.*
 
 ## 1. Why a second stage
 
@@ -1361,7 +1365,9 @@ energetics are untouched by construction, `tests/test_belt_sites.py`.)
 - **What it does not fit.** The strained-cell stiffness, the dielectric tensors and the
   piezoelectric constants are predictions of this preset, not inputs: Dipole's six axial cells
   and DFPT records are the test, through `examples/crosscheck_e1_e2.py --polyfind
-  docs/predictions/e1_polyfind_crystal.json`.
+  docs/predictions/e1_polyfind_crystal.json` (and the later sets' files likewise; from stage 2
+  on the stiffness, and from stage 5 on the Berry polarization and its polar slope, are anchors
+  rather than predictions, as each stage's section says).
 
 ## 7. Reproduce
 
