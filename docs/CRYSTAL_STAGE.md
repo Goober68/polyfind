@@ -872,7 +872,8 @@ m^4/C^2 (3.8 and 8.9 on the belt set; the lateral Q is the libration's again).
 **Two cautions, both sharper than in 5.10.** The copolymer model's packing search landed in a
 third arrangement: the cell is back in the pre-registered setting (gamma 92.1 against the belt
 set's 88.0) but the chain dipoles lie along b, 85 deg from a, so the frame's "polar" axis x is now
-across the dipole and its rows are read in the dipole's frame: the longitudinal proper
+across the dipole and its rows are read in the dipole's frame (5.17 has the same cell refined in
+the pre-registered set's arrangement, where the rows line up with that set's): the longitudinal proper
 coefficient is e_22 = -0.253 C/m^2 (1.53 times P, the rigid-dipole dilation term of
 `e1_e2_notes.md`), the stiffness along the dipole 21.1 GPa and across it 12.5, and the libration's
 permittivity sits on x (2.77 - 2.04 = 0.73), the axis perpendicular to the dipole, as it must. Its
@@ -1081,6 +1082,36 @@ physics, the finding is the same as beta's: on every fitted potential the energy
 orientation about their axes is flat to 0.1 cal/mol, for PVDF and for the copolymer alike, and
 nothing in the anchors in hand constrains it. The rotated-setting cell requested above is the
 measurement that does.
+
+**The arrangement-matched row.** `examples/e1_predictions.py --start-params` refines a given cell
+and placement instead of the screen's choice (through `mechanics.refined_reference(start_params=)`),
+so the belt2 copolymer E1 cell was run in the pre-registered set's arrangement
+(`e1_polyfind_belt2_tilt24.json`, 822 s). Beside the two sets as they stand:
+
+| copolymer TTTT | pre-registered (24 deg) | belt2 as published (85 deg) | belt2 in the 24-deg arrangement |
+|---|---|---|---|
+| a, b, gamma, c | 4.793, 8.852, 92.0, 25.99 | 4.959, 8.397, 92.1, 25.89 | 4.797, 8.674, 90.1, 25.89 |
+| P (x, y), \|P\| C/m^2 | (0.100, 0.044) 0.109 | (0.015, 0.166) 0.166 | (0.152, 0.068) 0.166 |
+| eps_0 relaxed-ion (x, y, z) | 2.070, 2.371, 2.379 | 2.769, 2.140, 2.417 | 2.137, 2.773, 2.417 |
+| C_11, C_22, C_12, C_66 GPa | 16.5, 17.0, 1.2, 1.7 | 12.5, 21.1, 8.8, 9.7 | 21.1, 22.3, 3.9, 4.8 |
+| proper e_11, e_12 C/m^2; d_11 pm/V | -0.164, -0.044; -10.2 | -0.052, -0.097; -2.7 | -0.244, -0.085; -11.5 |
+| intrinsic Q_11, Q_22 m^4/C^2 | 3.06, 1.62 | -3.27, -0.78 | 3.43, 1.49 |
+| d eps_yy / d eta_yy | 2.1 | -1.9 | 3.1 |
+
+In the same arrangement the two potentials tell one story: the libration sits on the lateral axis
+(eps_0 y 2.77 against 2.37, the belt form's softer rocking again), the piezoelectric column
+follows the polar component of P (e_11 -0.244 against -0.164, with P_x 0.152 against 0.100), the
+intrinsic Q is the same within 15%, and the stiffness rises as beta's did. Every sign flip and
+factor-of-three difference the published belt2 row showed against the pre-registered one (5.14)
+was the 85-deg arrangement's frame, not the potential. So the copolymer rows of the sets are
+usable once the arrangement is named, and the cautions of 5.10 and 5.14 reduce to one: the
+copolymer's two polar arrangements are degenerate on every fitted potential, the screen picks one,
+and the next sets will carry both. The second thing this row says is physical: in the 85-deg
+arrangement the copolymer's E2 margins put TTTT within 0.06 kcal/mol of TGTG' (5.14), and with
+the 24-deg arrangement as a second TTTT minimum at the same energy the all-trans phase of the
+copolymer is a flat valley of arrangements rather than a single cell, which is what a relaxor-like
+copolymer should look like on a potential and a hint that the TrFE content's effect on the
+margins is already in the form.
 
 ## 6. What it costs, and what it does not touch
 
