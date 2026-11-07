@@ -121,8 +121,8 @@ def belt_site_constraint(pk, Pn):
         pc = Pn[c] + shc
         fl = sorted(((float(np.linalg.norm(pc - Pn[i] - sh)), int(i), sh) for i in chain_atoms if el[i] != "C" for sh in shifts),
                     key=lambda t: (t[0], t[1]))[:2]
-        if fl[1][0] > 1.6:
-            raise ValueError(f"belt site {x}: its carbon has no two pendant atoms within 1.6 A ({fl})")
+        if fl[1][0] > max(BOND_MAX.values()):  # a C-Cl bond is 1.77 A
+            raise ValueError(f"belt site {x}: its carbon has no two pendant atoms within a bond length ({fl})")
         (_, f1, sh1), (_, f2, sh2) = fl
         A = np.stack([Pn[f1] + sh1 - pc, Pn[f2] + sh2 - pc], axis=1)  # (3, 2)
         ab, *_ = np.linalg.lstsq(A, Pn[x] - pc, rcond=None)
