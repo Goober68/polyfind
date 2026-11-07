@@ -1180,6 +1180,66 @@ is the preset `pvdf-dft-valence-belt3`; its prediction sets, Gamma-route dielect
 cross-check are below (5.19). The belt2 preset and its sets stay as the record of 5.13-5.17;
 `--method trf` is the fitter to use from here, and the Powell runs stand as what they were.
 
+### 5.19 The belt3 preset as a prediction set
+
+`examples/e1_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe` and the
+E2 script likewise (`e1_polyfind_belt3.json`, `e2_polyfind_belt3.json`; the copolymer cell also in
+the pre-registered set's arrangement, `e1_polyfind_belt3_tilt24.json`, by `--start-params`), the
+refinement under the full potential, the belt sites out of the electrostatics. Beside belt2 and
+the DFT in hand:
+
+| quantity | DFT | belt2 (5.14) | belt3 |
+|---|---|---|---|
+| beta a, b, c, A | 4.757, 8.528, 2.581 | 4.745, 8.476, 2.600 | 4.753, 8.490, 2.598 |
+| beta polarization, C/m^2 | 0.193 (Berry) | 0.193 | 0.193 |
+| beta eps_inf (x, y, z) | 2.235, 2.253, 2.600 (DFPT, protocol evidence) | 2.122, 2.095, 2.448 | 2.119, 2.091, 2.443 |
+| beta eps_0, rigid-chain route (x, y, z) | - | 2.122, 4.386, 2.448 | 2.119, 4.339, 2.443 |
+| beta eps_0, Gamma route (5.16) | - | 2.236, 4.573, 2.735 | 2.232, 4.489, 2.731 |
+| beta C_11, C_22, C_12, C_66, GPa | 22.8, 24.5, 5.9, - | 23.5, 24.2, 5.0, 5.5 | 24.2, 24.8, 5.3, 5.9 |
+| beta d\|P\|/d eta (polar), C/m^2 | -0.326 (Berry pair) | -0.300 | -0.300 |
+| beta proper e_11, C/m^2; d_11, pm/V | - | 0.300; 12.8 | 0.300; 12.5 |
+| beta intrinsic Q_11, Q_22, m^4/C^2 | - | 5.58, 11.56 | 5.28, 11.00 |
+| beta d eps_yy / d eta_yy | - | 48.6 | 45.7 |
+| alpha (polar TGTG') a, b, c, A | 4.945, 9.636, 4.660 (the antipolar anchor) | 4.926, 9.707, 4.682 | 4.942, 9.682, 4.676 |
+| alpha polarization, C/m^2; C_11, C_22, C_12, C_66 | - | 0.099; 21.1, 15.0, 5.2, 6.2 | 0.101; 22.3, 15.4, 5.3, 6.4 |
+| copolymer, the screen's arrangement (dipoles 85 deg from a): a, b, gamma, c per 10 | - | 4.959, 8.397, 92.1, 25.89 | 4.986, 8.423, 91.8, 25.88 |
+| copolymer (85 deg) polarization; eps_0; C_11, C_22, C_12, C_66 | - | 0.166; 2.769, 2.140, 2.417; 12.5, 21.1, 8.8, 9.7 | 0.165; 2.707, 2.125, 2.404; 13.3, 21.4, 8.9, 9.9 |
+| copolymer, the pre-registered arrangement (24 deg): a, b, gamma, c per 10 | - | 4.797, 8.674, 90.1, 25.89 | @T24CELL@ |
+| copolymer (24 deg) P (x, y); eps_0; C_11, C_22, C_12, C_66 | - | (0.152, 0.068); 2.137, 2.773, 2.417; 21.1, 22.3, 3.9, 4.8 | @T24ROW@ |
+| copolymer (24 deg) proper e_11; d_11; Q_11, Q_22 | - | -0.244; -11.5; 3.43, 1.49 | @T24PIEZO@ |
+| PE (control) a, b, gamma; eps_inf (x, y, z) | - | 3.971, 6.887, 90.0; 3.038, 3.031, 3.094 | 4.048, 6.992, 90.0; 2.930, 2.926, 3.019 |
+| PE C_11, C_22, C_12, C_66, GPa | - | 31.7, 33.8, 1.0, 4.9 | 29.6, 32.5, 1.7, 4.4 |
+
+E2, margins in kcal/mol per monomer with the backbone-angle strain, relative to TGTG':
+
+| | DFT | belt2 | belt3 |
+|---|---|---|---|
+| PVDF TTTT | +0.726 | +0.726 | +0.736 |
+| PVDF T3GT3G' | - | +0.333 | +0.315 |
+| copolymer TTTT | - | +0.059 | -0.036 |
+| copolymer T3GT3G' | - | +0.030 | -0.057 |
+
+**Against Dipole's records** (`examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt3.json --e2 docs/predictions/e2_polyfind_belt3.json`):
+beta's cell -0.1%, -0.4%, +0.7%; C_11 at 1.06 of the six-cell value, C_22 at 1.01, C_12 at 0.91
+(belt2: 1.03, 0.99, 0.85); the Berry polarization at 1.00; the polar Berry slope at 0.92 and 0.92
+relative to P; the electronic permittivity at 0.95, 0.93, 0.94. Every anchored quantity is where
+the fit put it; the fit put them closer than before, which is 5.18.
+
+**What changed, and what did not.** Almost nothing in the predictions: beta's libration is the
+same mode at the same softness (eps_0 lateral 4.49 by the Gamma route against 4.57; the 47 cm^-1
+mode carrying 2.30 of 2.40), its piezoelectric column the same (e_11 0.300, d_11 12.5), its
+intrinsic Q 5% smaller; alpha is the same cell to 0.3%; PE is squeezed 4% less in volume with a
+lower electronic permittivity (2.93 against 3.04) and the same stiffness, so the PE caution of
+5.14 stands with a slightly smaller number. The copolymer under belt3 sits in the 85-deg
+arrangement again by the screen's choice and reads like belt2's in it; in the pre-registered
+arrangement it reads like the pre-registered set's (5.17), @T24SENTENCE@ The one physical
+change is E2's copolymer: under belt3 the T3GT3G' conformation is the lowest of the three model
+cells, TTTT 0.021 above it and TGTG' 0.057, where belt2 had TGTG' lowest by 0.03 and 0.06; three
+conformations within 0.06 kcal/mol per monomer on both presets, i.e. the copolymer's conformational
+energy is flat at the level the fit resolves, which is the relaxor-like statement of 5.17 again and
+the reason the copolymer rows of E2 should not be read as a ranking. The prediction posted for the
+Gamma successor (5.16) stands within 2%.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
