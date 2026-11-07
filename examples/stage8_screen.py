@@ -10,7 +10,9 @@ twelve variables leave is reported both for an unbounded move of the candidate (
 steps that needs) and within one step, which is the physically meaningful number.  The
 candidates are the two fixed belt constants (the sites' distance from the fluorine and their
 Lennard-Jones diameter) and pair-specific Lennard-Jones terms beside the fitted F-H one (F-F, H-H,
-C-C, C-F, C-H, each at the mixing rule's value times a factor).  docs/CRYSTAL_STAGE.md 5.20.
+C-C, C-F, C-H, each at the mixing rule's value times a factor), and two electrostatic directions the form
+carries as fixed quantities: the fluorine charge's offset from its nucleus and the polarizability
+scale.  docs/CRYSTAL_STAGE.md 5.20.
 """
 import argparse
 import json
@@ -68,6 +70,23 @@ def main():
                                 ("C-F pair diameter x1.02", "C", "F", 1.02, 1.0), ("C-H pair diameter x1.02", "C", "H", 1.02, 1.0)):
         probes.append((label, (lambda s, a=a, b=b, xm=xm, dm=dm: setattr(C, "parameters", pair_patch(a, b, xm ** s, dm ** s))),
                        lambda: setattr(C, "parameters", orig)))
+    # two electrostatic shape and response directions the form already has as fixed quantities
+    import polyfind.polarizability as PZ
+    orig_pol = PZ.Polarizable
+    offs = dict(base.charge_offsets or ())
+    f_off = float(offs.get("F", 0.0))
+
+    def offset_patch(delta):
+        def patched(x, b=F.FITTED_VALENCE):
+            p = orig(x, b)
+            return replace(p, charge_offsets=tuple((e, (d + delta) if e == "F" else d) for e, d in (p.charge_offsets or (("F", f_off),))))
+        return patched
+
+    def pol_scale(s):
+        return lambda *a, **k: orig_pol(*a, **{**k, "scale": float(k.get("scale", 1.0)) * s})
+
+    probes.append((f"F charge offset {f_off:.3f} +- 0.03 A", lambda s: setattr(C, "parameters", offset_patch(0.03 * s)), lambda: setattr(C, "parameters", orig)))
+    probes.append(("polarizability scale x 1.05", lambda s: setattr(PZ, "Polarizable", pol_scale(1.05 ** s)), lambda: setattr(PZ, "Polarizable", orig_pol)))
     out = {"fit": args.fit, "rows": rows, "attainable_minimum_12": float(r_min @ r_min), "probes": {}}
     for label, apply, restore in probes:
         t0 = time.time()
