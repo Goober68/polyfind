@@ -11,7 +11,10 @@ top ``--top`` candidates of the screen, refines each under the same full potenti
 (induced dipoles, Ewald, force-shifted Lennard-Jones, the chain's conformation and the cell), relaxes
 the cell, and lists them by their full-potential energy per monomer with their cells and dipole
 directions, so that the basin a set sits in can be named and the question "is it the lowest?" has an
-answer.  Output: ``docs/predictions/basins_<preset>_<system>.json``.
+answer.  ``--start-from`` takes another preset's output and refines its arrangements under this
+preset as well (the same cell, setting angles, shift and flip as the start), so that a row of the
+prediction sets can be compared arrangement by arrangement and not minimum by minimum.  Output:
+``docs/predictions/basins_<preset>_<system>.json``.
 """
 import argparse
 import json
@@ -84,6 +87,7 @@ def main():
     ap.add_argument("--top", type=int, default=4, help="how many of the screen's distinct minima to refine")
     ap.add_argument("--out", default=None)
     ap.add_argument("--xyz", action="store_true", help="also write each refined basin's cell as extended XYZ beside the output")
+    ap.add_argument("--start-from", default=None, help="a basins JSON of another preset: its refined arrangements (cell, setting angles, shift, flip) are refined under this preset too, as transplanted candidates")
     args = ap.parse_args()
     from polyfind.fitting import PRESET_PARAMETERS
     label, polymer, seq = SYSTEMS[args.system]
@@ -99,15 +103,27 @@ def main():
         print(f"screen: {len(cands)} distinct minima under the truncated kernel ({time.time() - t0:.0f} s)")
         for r in cands:
             print("  " + r.row())
-        for k, res in enumerate(cands[:args.top]):
+        starts = list(cands[:args.top])
+        tags = [f"basin {k}" for k in range(len(starts))]
+        if args.start_from:
+            from dataclasses import replace as _replace
+            with open(args.start_from) as fh:
+                other = json.load(fh)
+            for d in other["candidates"]:
+                f = d["refined"]
+                starts.append(_replace(cands[0], a=f["a"], b=f["b"], gamma=f["gamma"], phi1=f["phi1"], phi2=f["phi2"], dz=f["dz"],
+                                       flip=int(f["flip"]), energy_per_monomer=float("nan")))
+                tags.append(f"transplanted from {other['preset']} basin {d['index']} (gamma {f['gamma']:.1f}, tilt {f['tilt_from_a_deg']:.0f} deg)")
+        for k, res in enumerate(starts):
             t1 = time.time()
             ref, rr = refine_candidate(polymer, res, f"{label} basin {k}")
             d = describe(ref, rr, res)
             d["index"] = k
+            d["tag"] = tags[k]
             d["seconds"] = time.time() - t1
             results["candidates"].append(d)
             f = d["refined"]
-            print(f"basin {k}: refined E/monomer {f['energy_per_monomer']:.4f} (+ angle strain {f['angle_strain_per_monomer']:.4f} = {f['total_per_monomer']:.4f}) kcal/mol; "
+            print(f"{tags[k]}: refined E/monomer {f['energy_per_monomer']:.4f} (+ angle strain {f['angle_strain_per_monomer']:.4f} = {f['total_per_monomer']:.4f}) kcal/mol; "
                   f"cell a {f['a']:.3f} b {f['b']:.3f} gamma {f['gamma']:.1f} c {f['c']:.3f}; |P| {f['P_abs']:.3f} C/m^2 at {f['tilt_from_a_deg']:.0f} deg from a; "
                   f"phi ({f['phi1']:.1f}, {f['phi2']:.1f}) dz {f['dz']:.2f} {'anti' if f['flip'] else 'para'}   ({d['seconds']:.0f} s)", flush=True)
             if args.xyz:
@@ -122,7 +138,7 @@ def main():
     print("\nby full-potential energy (with the angle strain):")
     for d in order:
         f = d["refined"]
-        print(f"  basin {d['index']}: {f['total_per_monomer']:.4f} kcal/mol per monomer, gamma {f['gamma']:.1f}, tilt {f['tilt_from_a_deg']:.0f} deg, |P| {f['P_abs']:.3f}")
+        print(f"  {d['tag']}: {f['total_per_monomer']:.4f} kcal/mol per monomer, cell {f['a']:.3f} {f['b']:.3f} gamma {f['gamma']:.1f}, tilt {f['tilt_from_a_deg']:.0f} deg, |P| {f['P_abs']:.3f}")
     print(f"written {out_path}")
 
 
