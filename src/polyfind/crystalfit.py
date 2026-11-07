@@ -172,6 +172,7 @@ class Evaluation:
     seconds: float
     beta: object = None
     alpha: object = None
+    extra: dict | None = None  # settings and side results that are not residuals (pendant tilts)
 
 
 def reference_from_prediction(pred: F.Prediction, case, **packer_kw):
@@ -217,7 +218,7 @@ def polar_slope(states: dict, step: float = STRAIN_STEP) -> float:
 
 def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald", verbose: bool = False,
              polarizable: bool = False, lj_cutoff: str = "energy", stiffness: bool = False,
-             slope: bool = False, angles: bool = False) -> Evaluation:
+             slope: bool = False, angles: bool = False, pendant_tilts: bool = False) -> Evaluation:
     """Pack and refine beta and alpha under ``x``; return the normalised residuals and the objective.
 
     ``polarizable`` adds the induced dipoles (:class:`polyfind.polarizability.Polarizable`),
@@ -227,6 +228,11 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     (:func:`polar_slope`) against Dipole's three-point Berry pair (:data:`STAGE6`), from the same
     strained states as the stiffness.  ``angles`` adds the refined backbone angles of both
     polymorphs against Dipole's (:data:`STAGE7`), which the refinement already has.
+    ``pendant_tilts`` evaluates the alpha-beta gap with each polymorph's CH2/CF2 groups relaxed as
+    rigid tilts about their carbons (:func:`polyfind.pendants.tilt_relaxation`, the relaxation
+    DFT's geometry has and the rigid-pendant refinement lacks; docs/CRYSTAL_STAGE.md 5.22): the two
+    relaxation energies are added to the refined energies before the difference is taken, and
+    recorded in ``Evaluation.extra``.
     """
     from .mechanics import elastic_constants, relax_reference, strain_states
     from .polarizability import Polarizable
@@ -251,6 +257,13 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
                     C = elastic_constants(ref, STRAIN_STEP, states=states).block  # Voigt 1, 2, 6 in-plane block, GPa
                 if slope:
                     dp_slope = polar_slope(states, STRAIN_STEP)
+        tilt = None
+        if pendant_tilts:
+            from .pendants import tilt_relaxation
+            kw = dict(coulomb=coulomb, ewald=ewald, polarizable=pol, lj_cutoff=lj_cutoff)
+            with params.applied():
+                tilt = {"alpha": tilt_relaxation(reference_from_prediction(alpha, alpha_case, **kw), alpha_case.polymer),
+                        "beta": tilt_relaxation(reference_from_prediction(beta, beta_case, **kw), beta_case.polymer)}
     except Exception as exc:  # a parameter set that cannot pack is simply bad
         if verbose:
             print(f"  evaluate: {type(exc).__name__}: {exc}", flush=True)
@@ -267,6 +280,11 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
         res[name] = (pred, target, (pred - target) / (TOL["cell"] * target))
     res["beta |P|"] = (beta.polarization, DFT_ANCHORS["p_beta"], (beta.polarization - DFT_ANCHORS["p_beta"]) / TOL["p"])
     gap = alpha.energy_per_monomer - beta.energy_per_monomer
+    extra = None
+    if tilt is not None:
+        gap += tilt["alpha"].dE_per_monomer - tilt["beta"].dE_per_monomer
+        extra = {"pendant_tilts": {s: {"dE_per_monomer": t.dE_per_monomer, "tilts_by_substituents_deg": t.tilts_by_substituents,
+                                       "n_iterations": t.n_iterations} for s, t in tilt.items()}}
     res["E(alpha)-E(beta)"] = (gap, DFT_ANCHORS["alpha_minus_beta"], (gap - DFT_ANCHORS["alpha_minus_beta"]) / TOL["margin"])
     if beta.polar_gap is not None:
         res["beta antipolar-polar (rigid)"] = (beta.polar_gap, DFT_ANCHORS["beta_antipolar_minus_polar"],
@@ -289,7 +307,7 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
             res[name] = (pred, t, (pred - t) / TOL["angle"])
     rg = ridge(x)
     obj = float(sum(r[2] ** 2 for r in res.values())) + rg
-    return Evaluation(np.asarray(x, dtype=float), res, obj, rg, time.time() - t0, beta, alpha)
+    return Evaluation(np.asarray(x, dtype=float), res, obj, rg, time.time() - t0, beta, alpha, extra)
 
 
 def table(ev: Evaluation) -> str:
@@ -407,5 +425,7 @@ def save(ev: Evaluation, path: str, evaluations: int | None = None, complete: bo
            "anchors": DFT_ANCHORS, "tolerances": TOL}
     if len(ev.x) >= 12:
         out["belt"] = {"d": BELT_D, "geometry": BELT_GEOMETRY}
+    if ev.extra:
+        out.update(ev.extra)
     with open(path, "w") as fh:
         json.dump(out, fh, indent=1)

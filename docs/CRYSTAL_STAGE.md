@@ -3,8 +3,9 @@
 *2026-11-05, kept current through 2026-11-07. Code: `polyfind.crystalfit` (bounded Powell and,
 since 5.18, bounded least squares), driver `examples/crystal_stage.py`, results
 `docs/predictions/crystal_stage_v*.json`. Sections 1 to 4 are the first stage and its preset
-`pvdf-dft-valence-crystal`; section 5 is the stages after it in order, 5.1 to 5.21, and the
-current preset is `pvdf-dft-valence-belt3` (5.18, 5.19). Every preset is opt-in; the E1/E2
+`pvdf-dft-valence-crystal`; section 5 is the stages after it in order, 5.1 to 5.22, and the
+current preset is `pvdf-dft-valence-belt3` (5.18, 5.19; 5.22 found the alpha-beta gap it matched
+carries 0.23 kcal/mol per monomer of pendant strain and refits with the pendants relaxed). Every preset is opt-in; the E1/E2
 predictions pre-registered on `pvdf-dft-valence` stand unchanged. `RESUME.md` opens with the
 one-paragraph state.*
 
@@ -1355,6 +1356,105 @@ the screen (two evaluations per candidate), then the stage-8 fit by least square
 point with the surviving term as the fourteenth variable, then the sets and the Gamma-route tensor
 as in 5.19.
 
+One thing came before either (5.22): the refinement's rigid CH2 and CF2 groups, which cannot tilt
+as DFT's do, and the 0.23 kcal/mol per monomer that costs the alpha-beta gap row. The stage-8 fit
+starts from that corrected point, not from the belt3 one.
+
+### 5.22 The pendant groups: what the rigid refinement cannot do, and what it costs the gap anchor
+
+**The observation.** Dipole's PBE-D3 start geometry for the alpha successor
+(`pvdf_alpha_ref_fresh_20261107_v1`, the TGTG' antipolar start whose native relaxation is pending;
+read from its `state.json` by `examples/dft_cell_geometry.py`) has CH2 and CF2 groups that are not
+where polyfind's chain builder puts them. The builder places both pendants of a backbone atom at
+`cos(a/2) u +- sin(a/2) w`, `u` the outward bisector of the backbone angle and `w` the normal of
+the backbone plane (`polyfind.chain.pendant_frames`); the refinement moves the cell, the setting,
+the torsions and the backbone angles and never a pendant relative to its carbon. A real group can
+differ from that placement by three small rigid rotations, measured against the local frame
+`(u, v, w)` with `v` along the chain: *rock* (about `w`: the group's bisector tilts toward a
+backbone neighbour), *wag* (about `v`: the bisector tilts out of the backbone plane) and *twist*
+(about `u`: the X-X line turns toward the chain direction). The reader now reports all three, and
+the plain-angle view of the same thing, the C-C-X asymmetries (rock: one X against the two
+neighbours; wag: the two X against one neighbour; twist: both):
+
+| cell | X-C-X (FF, HH) | CF2 rock, wag, twist | CH2 rock, wag, twist | largest C-C-X asymmetry |
+|---|---|---|---|---|
+| Dipole's alpha start geometry | 104.70, 107.17 | 2.29, 2.86, 1.29 | 1.01, 0.66, 0.88 | 4.35 deg |
+| Dipole's beta reference (`pvdf_beta_ref_v1`) | 105.12, 107.64 | 0, 0, 0 | 0, 0, 0 | 0.00 |
+| polyfind, belt3 fit path, alpha | 105.12, 107.64 | 0, 0, 0 | 0, 0, 0 | 0.00 |
+| polyfind, belt3 fit path, beta | 105.12, 107.64 | 0, 0, 0 | 0, 0, 0 | 0.00 |
+
+Beta's zeros are symmetry: the planar zigzag has a mirror through every group, so the symmetric
+placement is exact and the refinement loses nothing by freezing it. Alpha's are not: in TGTG' the
+two sides of every backbone atom are inequivalent (a trans neighbour one way, a gauche one the
+other) and nothing forbids the group to turn. The DFT geometry turns it, by two to three degrees
+on the CF2 groups, and the fit path cannot follow. (The X-C-X angles differ too, 104.70 against
+beta's 105.12 at the CF2 and 107.17 against 107.64 at the CH2; the chain geometry is beta's, 5.11.)
+
+**What the fitted potential wants.** `polyfind.pendants.tilt_relaxation` lets every group of a
+refined reference turn rigidly about its carbon, three angles per group, with the carbons, the
+cell, the bond lengths and the X-C-X angles fixed, the belt sites carried along as the affine
+combinations of their CF2 atoms that place them (the Gamma route's construction, 5.16, now shared
+in `polyfind.pendants`), and the valence bend terms pinned at the reference geometry so the C-C-X
+bends resist with the valence fit's stiffness (78.6 kcal/mol/rad^2 for C-C-F, 60.4 for C-C-H, in
+the kernel's 1/2 k convention) and the reference is a stationary point of the valence part. A
+dozen L-BFGS iterations on the kernel's analytic forces, about a second per polymorph. Under
+`pvdf-dft-valence-belt3`:
+
+| polymorph | tilt-only (rigid groups) | pendant-only (H, F free) | all-atom (translation-free) |
+|---|---|---|---|
+| alpha, kcal/mol per monomer | -0.226 | -0.245 | -0.368 |
+| alpha, CF2 rock, wag, twist (deg) | 1.17, 2.65, 0.73 | 1.19, 2.61, 0.75 | 1.37, 2.38, 0.91 |
+| alpha, CH2 rock, wag, twist (deg) | 0.67, 2.48, 0.50 | 0.69, 2.48, 0.51 | 0.71, 2.36, 0.56 |
+| beta, kcal/mol per monomer | 0.000 | -0.007 | -0.032 |
+| E(alpha) - E(beta), from -0.736 rigid | -0.963 | -0.975 | -1.072 |
+
+The tilt-only column is the one that means something: the pendant-only and all-atom relaxations
+(the Gamma route's machinery, 5.16, with the carbons fixed or free) add bond stretching at the
+valence fit's stiffnesses, and the all-atom one stretches every C-C bond from 1.533 to 1.553 A and
+turns the gauche torsion from 60.7 to 56.0 deg against a C-C stretch constant that the valence fit
+left at its bound (100 kcal/mol/A^2, five times softer than a real C-C bond): that is a weakness
+of the pinned valence, not a property of the crystal, and it is also the origin of the 0.13-0.18 A
+caveat on alpha's Gamma-route tensor in 5.16. The rigid tilts carry none of it. Their pattern is
+DFT's: the CF2 groups wag most and rock second (2.65 and 1.17 against the start geometry's 2.86
+and 2.29), the twist is smallest, and the signs follow the glide of TGTG' (the four CF2 groups
+turn by the same magnitudes, two one way and two the other). The CH2 wag is the one component the
+potential overdoes (2.48 against 0.66). Beta's groups do not move: the symmetric placement is a
+stationary point, as it must be.
+
+**What it costs the gap anchor.** The fit matched E(alpha) - E(beta) = -0.726 (DFT, relaxed cells
+on both sides) with -0.736 from rigid-pendant refinements. With the tilts relaxed the same
+parameters give -0.963, 4.7 tolerances off: the belt3 point carries 0.23 kcal/mol per monomer of
+pendant strain in alpha that DFT's alpha does not have, and the other terms were fitted to make up
+for it. The linear preview on the 5.18 Jacobian (`crystal_stage_v7_trf2_sensitivity.json`, the gap
+row shifted by -4.53 and the least-squares problem re-solved with the ridge) puts the objective at
+31.5 at the belt3 point and 10.7 after the re-solve, paid mainly by the fluorine well (D_F -8%),
+the H-F pair depth (+7%), both charge increments (+0.019 and +0.014 e) and the restraint
+(+0.04 dex), with the lateral coupling the row that gives (C_12 from -0.92 to -1.23). So the
+correction moves the fit, and it moves the quantities 5.15 and 5.18 found held by the other anchors
+and the prior together.
+
+**What was done.** `examples/crystal_stage.py --pendant-tilts` evaluates the gap row with both
+polymorphs' tilt relaxations added to their refined energies (`crystalfit.evaluate(...,
+pendant_tilts=True)`; the relaxation energies and tilts are recorded in the result file under
+`pendant_tilts`). An evaluation costs 15 s against 8 s without (two reference rebuilds and
+relaxations). The refit by bounded least squares from the belt3 point is `crystal_stage_v8_tilts.json`;
+its result follows in the next paragraph.
+
+**What it does not do.** The cell and the backbone do not re-relax with the tilted pendants, so
+the corrected gap is complete to first order only; the alpha cell rows and the alpha angle rows are
+still the rigid refinement's. Every alpha-type energy in the prediction sets carries the same
+bias: E2's PVDF TTTT margin is the gap and takes the full 0.23, and the T3GT3G' and TGTG' rows of
+every chemistry in `docs/E1_E2_PREDICTIONS.md` are rigid-pendant numbers that the relaxation would
+lower by an amount of this order (the sets are not re-issued here; the belt3 set stands as
+labelled). Beta's rows, the Berry anchors, the stiffnesses and the tensors are untouched, by
+symmetry. The complete fix is the tilts as refinement variables, three per backbone atom of the
+repeat, placed through the pendant frames' local coordinates (`polyfind.polymers.PendantAtom`
+offsets, which the builder and `chainjac` already carry) with the valence C-C-X bends as their
+restoring force; it is a stage-9 item, and the cheap consistent evaluation here is what the fit
+can use now. Dipole's native alpha positions, when they land, test the pattern directly: the
+prediction is CF2 wag 2.6, rock 1.2, twist 0.7 deg and CH2 wag 2.5 at the belt3 parameters (the
+refit's values follow), against the start geometry's 2.9, 2.3, 1.3 and 0.7.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
@@ -1406,6 +1506,8 @@ python examples/stage8_screen.py --fit docs/predictions/crystal_stage_v7_trf2.js
 python examples/e1_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --out docs/predictions/e1_polyfind_belt3.json
 python examples/e2_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --out docs/predictions/e2_polyfind_belt3.json
 python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --systems beta
+python examples/dft_cell_geometry.py <sarco>/materials/electrostriction/results/qe_equilibrium_v1/pvdf_alpha_ref_fresh_20261107_v1/state.json   # 5.22: the pendant tilts of Dipole's alpha start geometry (rock, wag, twist against the builder's placement)
+python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --pendant-tilts --x0 docs/predictions/crystal_stage_v7_trf2.json --maxfev 160 --out docs/predictions/crystal_stage_v8_tilts.json   # 5.22: the gap row with both polymorphs' pendant groups relaxed as rigid tilts
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and

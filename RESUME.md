@@ -9,7 +9,13 @@ bounded least squares, objective 9.11): against Dipole's records beta's cell is 
 the relaxed-ion stiffnesses 1.06/1.01/0.91, the Berry polarization 1.00, the polar Berry slope
 0.92, the electronic permittivity 0.93-0.95, the alpha-beta gap and the backbone angles within
 1.24 tolerances; its E1/E2 sets are `e1/e2_polyfind_belt3.json` (sections 5.18-5.19). The
-pre-registered set on `pvdf-dft-valence` still stands as the primary one. Open on our side: the
+pre-registered set on `pvdf-dft-valence` still stands as the primary one. Found 2026-11-07 (5.22):
+the refinement's rigid CH2/CF2 groups cannot tilt as DFT's do (Dipole's alpha start geometry has
+CF2 rock 2.3, wag 2.9, twist 1.3 deg; beta none by symmetry), and under belt3 alpha releases 0.23
+kcal/mol per monomer through rigid group tilts alone, so the gap the fit matched carries that much
+pendant strain; `polyfind.pendants.tilt_relaxation` evaluates it, `crystal_stage.py --pendant-tilts`
+adds it to the gap row, and the refit from the belt3 point (`crystal_stage_v8_tilts.json`) is the
+current fit (its outcome is in 5.22). Open on our side: the
 lateral coupling (C_12 at 0.91, the lateral axis -0.4%) is held by the other anchors and the prior
 together and no radial term adds a direction (5.15, 5.18, 5.20); a shape term (hydrogen belt
 sites or a CF2 quadrupole) is the next form change and waits for Dipole's rotated-setting cell

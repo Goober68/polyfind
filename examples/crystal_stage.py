@@ -22,6 +22,7 @@ def main():
     ap.add_argument("--ridge", type=float, default=None, help="weight of the ridge toward the valence values (crystalfit.RIDGE, default 1.0): a probe of how far the crystal terms would leave the valence fit if the prior were weaker")
     ap.add_argument("--method", default="powell", choices=("powell", "trf"), help="powell: bounded Powell (the stages so far); trf: bounded least squares on the same objective with a forward-difference Jacobian (one evaluation per free variable per iteration)")
     ap.add_argument("--geometry", default="textbook", choices=("textbook", "pbe"), help="stages 4-7: the chain geometry of the belt-site polymer (pbe: Dipole's PBE-D3 bond lengths and angles)")
+    ap.add_argument("--pendant-tilts", action="store_true", help="evaluate the alpha-beta gap with each polymorph's CH2/CF2 groups relaxed as rigid tilts about their carbons (polyfind.pendants.tilt_relaxation; docs/CRYSTAL_STAGE.md 5.22): the relaxation DFT's geometry has and the rigid-pendant refinement lacks")
     args = ap.parse_args()
     C.BELT_GEOMETRY = args.geometry
     x0 = None
@@ -31,8 +32,9 @@ def main():
             x0 = json.load(fh)["x"]
     if args.ridge is not None:
         C.RIDGE = float(args.ridge)
+    extra = {"pendant_tilts": True} if args.pendant_tilts else {}
     best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout, stage=args.stage, x0=x0, method=args.method,
-                          checkpoint=args.out)
+                          checkpoint=args.out, **extra)
     print(f"\nbest of {len(history)} evaluations:\n" + C.table(best))
     print("parameters:", C.parameters(best.x).describe())
     C.save(best, args.out, evaluations=len(history), complete=True)

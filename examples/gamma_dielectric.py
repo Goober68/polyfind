@@ -36,6 +36,7 @@ from scipy.optimize import minimize
 
 from polyfind import infrared as IR
 from polyfind import mechanics as M
+from polyfind import pendants as PD
 from polyfind import phonon as PH
 from polyfind.ewald import EwaldSpec
 from polyfind.forcefield import SimpleFF
@@ -56,70 +57,13 @@ def build(polymer, seq, label):
 
 
 def pinned_valence_packer(ref, polymer, k_backbone: float):
-    """A copy of the reference's packer carrying valence terms that are stationary at its geometry."""
-    chain = ref.packer.chain
-    val = SimpleFF.from_preset("pvdf-dft-valence")
-    cv = chain_valence(chain, val.bond_table(), val.angle_table())
-    X = np.asarray(chain.coords, dtype=float)
-    cz = float(chain.c)
-    r = np.linalg.norm(cv._bond_vectors(X[None], np.array([cz]))[0], axis=-1)
-    ez = np.array([0.0, 0.0, 1.0])
-    ri = X[cv.ang_i] + cv.ang_si[:, None] * cz * ez
-    rk = X[cv.ang_k] + cv.ang_sk[:, None] * cz * ez
-    rj = X[cv.ang_j]
-    u, v = ri - rj, rk - rj
-    theta = np.arccos(np.clip((u * v).sum(1) / np.linalg.norm(u, axis=1) / np.linalg.norm(v, axis=1), -1.0, 1.0))
-    el = np.asarray(list(chain.elements))
-    backbone = (el[cv.ang_i] == "C") & (el[cv.ang_j] == "C") & (el[cv.ang_k] == "C")
-    built = np.array([polymer.backbone[m].backbone_angle for m in range(polymer.bonds_per_repeat)], dtype=float)
-    assert np.ptp(built) < 1e-9, built
-    t0 = np.where(backbone, np.deg2rad(float(built[0])), theta)
-    kk = np.where(backbone, float(k_backbone), cv.ang_kk)
-    pk = copy.copy(ref.packer)
-    pk._valence = replace(cv, bond_r0=r.copy(), ang_t0=t0, ang_kk=kk)
-    pk.update_chain(chain)
-    return pk, int(backbone.sum()), float(np.rad2deg(theta[backbone].mean())) if backbone.any() else None
+    """The reference's packer with valence terms stationary at its geometry; now :func:`polyfind.pendants.pinned_valence_packer`."""
+    return PD.pinned_valence_packer(ref, polymer, k_backbone)
 
 
 def site_constraint(pk, Pn):
-    """``J`` (3N, 3Na): atoms are free coordinates; each belt site is the fixed affine combination of
-    its carbon and that carbon's two fluorines that places it (it lies in the CF2 plane), so a
-    rigid motion of the CF2 group carries it exactly and a deformation carries it to first order."""
-    el = np.asarray(list(pk.elements) * pk.n_chains)
-    atoms = np.flatnonzero(el != "X")
-    col = {i: a for a, i in enumerate(atoms)}
-    N, Na = pk.N, len(atoms)
-    J = np.zeros((3 * N, 3 * Na))
-    for i in atoms:
-        J[3 * i:3 * i + 3, 3 * col[i]:3 * col[i] + 3] = np.eye(3)
-    cz = float(pk.chain.c)
-    shifts = [np.array([0.0, 0.0, k * cz]) for k in (-1, 0, 1)]
-
-    def nearest(x, cands):
-        best = None
-        for i in cands:
-            for sh in shifts:
-                d = float(np.linalg.norm(Pn[x] - Pn[i] - sh))
-                if best is None or d < best[0]:
-                    best = (d, i, sh)
-        return best
-
-    for x in np.flatnonzero(el == "X"):
-        s = x // pk.n
-        chain_atoms = [i for i in atoms if i // pk.n == s]
-        _, c, shc = nearest(x, [i for i in chain_atoms if el[i] == "C"])
-        pc = Pn[c] + shc
-        fl = sorted(((float(np.linalg.norm(pc - Pn[i] - sh)), int(i), sh) for i in chain_atoms if el[i] == "F" for sh in shifts),
-                    key=lambda t: (t[0], t[1]))[:2]
-        assert fl[1][0] < 1.6, fl
-        (_, f1, sh1), (_, f2, sh2) = fl
-        A = np.stack([Pn[f1] + sh1 - pc, Pn[f2] + sh2 - pc], axis=1)  # (3, 2)
-        ab, resid, _, _ = np.linalg.lstsq(A, Pn[x] - pc, rcond=None)
-        assert np.linalg.norm(A @ ab - (Pn[x] - pc)) < 1e-6, "belt site off the CF2 plane"
-        alpha, beta = float(ab[0]), float(ab[1])
-        for atom, w in ((c, 1.0 - alpha - beta), (f1, alpha), (f2, beta)):
-            J[3 * x:3 * x + 3, 3 * col[atom]:3 * col[atom] + 3] += w * np.eye(3)
-    return J, atoms
+    """Belt sites as affine combinations of their CF2 atoms; now :func:`polyfind.pendants.belt_site_constraint`."""
+    return PD.belt_site_constraint(pk, Pn)
 
 
 def gamma_dielectric(ref, polymer, k_backbone: float, h: float = 1e-3) -> dict:
