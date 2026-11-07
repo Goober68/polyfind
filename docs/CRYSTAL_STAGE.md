@@ -1293,6 +1293,8 @@ variables cannot reach it would take out.
 | C-C pair diameter x 1.02 | 0.46 | 0.00 | 0.009 | gap +0.4 |
 | C-F pair diameter x 1.02 | 0.56 | 0.01 | 0.016 | gap +0.4, alpha a +0.3, b +0.15 |
 | C-H pair diameter x 1.02 | 0.20 | 0.00 | 0.002 | nothing |
+| fluorine charge offset, 0.177 +- 0.03 A (an electrostatic shape the form already carries, fixed) | 0.51 | 0.00 | 0.000 | P +0.27, gap -0.23, C_12 +0.20 |
+| polarizability scale x 1.05 (the induced-dipole response, fixed at the VDS98 values) | 0.55 | 0.15 | 0.22 (the full 0.65 would need the polarizabilities 23% smaller) | P +0.19, gap -0.39, slope -0.28 |
 
 (the linear model's attainable minimum of the anchors' sum of squares with the twelve variables,
 bounds ignored, is 1.62 of the 5.02 at the point; "gain within one step" is how much of that a
@@ -1302,7 +1304,14 @@ of its own length: the belt site's diameter is degenerate with its depth (a repu
 effective radius), its distance from the fluorine with the fluorine and pair diameters, and a
 pair-specific F-F, C-C, C-F, C-H or H-H term with the element diameters that already set every
 contact. None of them is a new direction worth having: the one with any gain at all, the belt
-distance, would need to move 1.2 A to deliver it. The anchors in hand (fifteen informative rows) fix six directions of the
+distance, would need to move 1.2 A to deliver it. Of the two electrostatic quantities the form
+carries fixed, the fluorine charge's offset from its nucleus is in the span as well (it is one more
+way of setting P), while the polarizability scale is the only probed quantity with a direction of
+its own, 0.15 of its 0.55 outside the span: it moves P, the gap and the polar slope in a combination
+the twelve variables do not have, and would take 0.22 of the 1.62 within a 5% change. It is not a
+lateral-coupling term, and the direction that gains points to smaller polarizabilities, which the
+electronic permittivity, already 0.93 to 0.95 of DFPT's on every set, forbids; it stays fixed, and
+is noted here as the one fixed quantity with a direction of its own. The anchors in hand (fifteen informative rows) fix six directions of the
 twelve-variable space (5.15), so the problem is not a shortage of variables but that the lateral
 coupling, P, the polar axis and the gap are moved by the same combinations of them: every radial
 term pushes on the same combinations. What would not is a term with a shape rather than a radius:
