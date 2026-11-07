@@ -1100,9 +1100,10 @@ one. Under belt2 it lists two, the arrangement that set stands on (85 deg) and t
 | flipped chains, 90 deg | 4.947, 8.637, 90.0; -2.8220 | 4.944, 8.780, 90.0; -7.0969 |
 
 (kcal/mol per monomer with the backbone-angle strain; the belt set of 5.10 sits at gamma 88 and 38
-deg, a third point on what is evidently the same flat valley, not re-run here). On both potentials
-the two polar arrangements are degenerate to 0.0001 kcal/mol per monomer and the antiparallel one
-is 0.12 and 0.32 above them. The screen's truncated-kernel energies, which separate the two by 0.1
+deg, a third point on what is evidently the same flat valley, not re-run here; under belt3 the
+same pair is -7.2715 and -7.2716 with the antiparallel one at -6.8840,
+`basins_pvdf-dft-valence-belt3_vdftrfe.json`). On every potential the two polar arrangements are
+degenerate to 0.0001 kcal/mol per monomer and the antiparallel one is 0.12 to 0.39 above them. The screen's truncated-kernel energies, which separate the two by 0.1
 to 0.3, decide which one a set stands on, and that is an accident of the screen, not a property of
 the potential: every copolymer row that differed between the sets (5.10, 5.14: the cell, the
 dipole tilt, the stiffness, the Q column) compared two arrangements the potentials themselves do
