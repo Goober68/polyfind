@@ -1474,7 +1474,16 @@ wag 2.47, rock 1.09, twist 0.73), so the prediction for Dipole's native alpha po
 unchanged by the refit. The E2 set with every conformation's groups relaxed
 (`e2_polyfind_belt4.json`) puts TTTT +0.744 and T3GT3G' +0.402 above TGTG' (PVDF; T3GT3G'
 releases 0.040), and the Gamma-route tensor of beta at belt4 is in
-`gamma_dielectric_pvdf-dft-valence-belt4.json` (eps_0 2.23 polar, 4.61 lateral, 2.73 chain; eps_inf 2.12, 2.09, 2.44; the lateral libration at 46 cm^-1).
+`gamma_dielectric_pvdf-dft-valence-belt4.json`: eps_0 2.23 polar, 4.61 lateral, 2.73 chain
+(belt3 4.49 lateral), eps_inf 2.12, 2.09, 2.44, the lateral libration at 46 cm^-1.
+
+**The Jacobian at belt4** (`crystal_stage_v8_tilts_sensitivity.json`, taken with the same
+correction, 25 evaluations) reads as 5.15 and 5.18 did: six of twelve directions are fixed by
+the anchors within a prior width, the gap row is the stiffest (8.2 and 6.3 tolerances per width
+of x_HF and D_HF, 7.5 of the belt wall), and the linear model closes C_12 and the lateral axis
+together only by driving beta's polar axis, alpha's polar axis, C_11 and the beta backbone angle to
+their full tolerance (step 1 to 2 widths in x_C, x_H, D_F). The lateral coupling is the form's
+residual at belt4 as it was at belt3, and the stage-8 shape term is still what closes it.
 
 **What it does not do.** The cell and the backbone do not re-relax with the tilted pendants, so
 the corrected gap is complete to first order only; the alpha cell rows and the alpha angle rows are
@@ -1549,6 +1558,8 @@ python examples/dft_cell_geometry.py <sarco>/materials/electrostriction/results/
 python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --pendant-tilts --x0 docs/predictions/crystal_stage_v7_trf2.json --maxfev 160 --out docs/predictions/crystal_stage_v8_tilts.json   # 5.22: the gap row with both polymorphs' pendant groups relaxed as rigid tilts
 python examples/e2_predictions.py --preset pvdf-dft-valence-belt4 --variant belt --geometry pbe --pendant-tilts --out docs/predictions/e2_polyfind_belt4.json   # 5.22: the E2 set with every conformation's pendant groups relaxed
 python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt4 --variant belt --geometry pbe --systems beta   # 5.22: the Gamma-route tensor at belt4
+python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stage_v8_tilts.json --out docs/predictions/crystal_stage_v8_tilts_sensitivity.json   # 5.22: the Jacobian at belt4, with the pendant-tilt correction carried
+python examples/crystal_stage_sensitivity.py --analyze docs/predictions/crystal_stage_v8_tilts_sensitivity.json   # its linear analysis: the lateral-coupling lock stands at belt4
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and
