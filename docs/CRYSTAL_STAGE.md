@@ -1473,9 +1473,14 @@ starts from this point. The tilts at the new parameters are within 0.2 deg of th
 wag 2.47, rock 1.09, twist 0.73), so the prediction for Dipole's native alpha positions is
 unchanged by the refit. The E2 set with every conformation's groups relaxed
 (`e2_polyfind_belt4.json`) puts TTTT +0.744 and T3GT3G' +0.402 above TGTG' (PVDF; T3GT3G'
-releases 0.040), and the Gamma-route tensor of beta at belt4 is in
-`gamma_dielectric_pvdf-dft-valence-belt4.json`: eps_0 2.23 polar, 4.61 lateral, 2.73 chain
-(belt3 4.49 lateral), eps_inf 2.12, 2.09, 2.44, the lateral libration at 46 cm^-1.
+releases 0.040), and reorders the VDF/TrFE 70/30 model's conformations: the copolymer's TGTG'
+releases 0.357 kcal/mol per monomer (its CF2 groups wag 3.1 deg, its CHF groups wag 2.3 and twist
+1.3), its T3GT3G' 0.122 and its TTTT 0.040 (the CHF groups break the zigzag's mirror), so TGTG' is
+the ground conformation by 0.13 to 0.15 where the rigid belt3 set had T3GT3G' by 0.02 to 0.06; a
+copolymer E2 record from Dipole would arbitrate, and the pre-registered set stands as the primary
+one. The Gamma-route tensor of beta at belt4 is in `gamma_dielectric_pvdf-dft-valence-belt4.json`:
+eps_0 2.23 polar, 4.61 lateral, 2.73 chain (belt3 4.49 lateral), eps_inf 2.12, 2.09, 2.44, the
+lateral libration at 46 cm^-1.
 
 **The Jacobian at belt4** (`crystal_stage_v8_tilts_sensitivity.json`, taken with the same
 correction, 25 evaluations) reads as 5.15 and 5.18 did: six of twelve directions are fixed by

@@ -214,7 +214,17 @@ stiffness flag of the previous section is read against the QE cell from here on.
   least squares to a lower minimum, section 5.18; the copolymer cell also in the pre-registered
   arrangement, `e1_polyfind_belt3_tilt24.json`), reads against Dipole's records as cell
   -0.1/-0.4/+0.7%, C_11 1.06, C_22 1.01, C_12 0.91, Berry P 1.00, slope 0.92, and predicts the
-  same tensors within a few percent (Gamma-route eps_0 2.23, 4.49, 2.73; section 5.19). A
+  same tensors within a few percent (Gamma-route eps_0 2.23, 4.49, 2.73; section 5.19). The sixth
+  set, `e1/e2_polyfind_belt4.json` (`pvdf-dft-valence-belt4`, section 5.22: the belt3 problem
+  refitted with the alpha-beta gap evaluated with the pendant groups relaxed, and the E2 set made
+  with every conformation's groups relaxed, `--pendant-tilts`), is the first whose E2 margins carry
+  that relaxation: PVDF TTTT +0.744 and T3GT3G' +0.402 above TGTG' (rigid belt3: +0.736, +0.315),
+  and the VDF/TrFE 70/30 model reordered, TGTG' the ground conformation with TTTT +0.145 and
+  T3GT3G' +0.129 above it (rigid belt3: T3GT3G' ground, TTTT +0.021, TGTG' +0.057), because the
+  copolymer's TGTG' releases 0.357 kcal/mol per monomer through its CF2 and CHF groups (CF2 wag 3.1,
+  CHF wag 2.3 and twist 1.3 deg), its T3GT3G' 0.122 and its TTTT 0.040 (the CHF groups break the
+  zigzag's mirror). Its beta rows read against Dipole's records as cell -0.0/-0.6/+0.6%, C_11 1.06,
+  C_22 1.02, C_12 0.87, Berry P 1.00, slope 0.92, Gamma-route eps_0 2.23, 4.61, 2.73. A
   copolymer row compares across sets only in the same arrangement (section 5.17). One bias runs
   through every set's TGTG'-type rows (section 5.22, found 2026-11-07): the refinement keeps the
   CH2 and CF2 groups rigid in the chain builder's symmetric placement, which is exact for the
@@ -226,7 +236,7 @@ stiffness flag of the previous section is read against the QE cell from here on.
   of the same order and sign as PVDF's (the gauche conformer too high). The beta
   rows, the Berry quantities, the stiffnesses and the tensors are untouched by symmetry. The
   crystal fit now evaluates its gap row with the groups relaxed (`crystal_stage.py
-  --pendant-tilts`); a set made with the same correction will say so in its label.
+  --pendant-tilts`); the sixth set above is the one made with the same correction.
   `examples/crosscheck_e1_e2.py --polyfind <file>` reads any of them against the same records.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
