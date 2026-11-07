@@ -1496,6 +1496,20 @@ for Dipole's DFPT stands whatever the constant; alpha's polar component falls fr
 polar eps_0 is 2.9 to 3.5 depending on it, and the floored value is the one to quote until the
 stretch terms are refitted. The rigid tilts of 5.22 carry no bond stretching and are unaffected.
 
+**The bend constants, and the error bar on the predicted tilts.** The tilts are held back by the
+valence fit's C-C-X constants (78.6 and 60.4 kcal/mol/rad^2, in the kernel's 1/2 k convention),
+which are 20-25% softer than OPLS-like values (100 and 75). Scaling every pendant bend constant at
+belt4 (the backbone restraint untouched; a probe on the default refined reference, whose tilts
+differ from the fit path's by 0.1-0.3 deg): x1.3 takes alpha's release from 0.22 to 0.18 kcal/mol
+per monomer and the CF2 wag from 2.5 to 2.0 deg, x1.6 to 0.15 and 1.7, x2.0 to 0.13 and 1.4; the
+rock and twist scale alike and the pattern (wag largest, glide-symmetric) does not change. So the
+gap correction is 0.18-0.22 for any defensible bend constant, and the prediction for Dipole's native
+alpha positions is CF2 wag 2.0-2.5, rock 1.1-1.4, twist 0.6-0.7 deg (CH2 wag 1.8-2.3), the lower
+end if the bends are OPLS-stiff. The start geometry's 2.9, 2.3, 1.3 sit above the range: if the
+native relaxation keeps them there, the pendant bends of the valence fit are too stiff rather than
+too soft, and the stretch and bend terms both want a crystal-anchored refit (a stage-9 item with the
+tilts as refinement variables).
+
 **The Jacobian at belt4** (`crystal_stage_v8_tilts_sensitivity.json`, taken with the same
 correction, 25 evaluations) reads as 5.15 and 5.18 did: six of twelve directions are fixed by
 the anchors within a prior width, the gap row is the stiffest (8.2 and 6.3 tolerances per width
