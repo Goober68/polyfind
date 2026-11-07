@@ -974,8 +974,9 @@ against with this Jacobian before any is fitted.
 be a local minimum: a least-squares run on the same objective found a point at 9.11 where C_12 is
 at z -0.92 and the gap at -0.21, with the carbon diameter at the valence value. The qualitative
 statement stands (C_12 and b move with the variables that set P, the gap and the slope; six
-constrained directions of twelve), the quantitative trade-off does not; the Jacobian at the
-least-squares point (`crystal_stage_v7_trf2_sensitivity.json`) is the one to screen new terms with.
+constrained directions of twelve), the quantitative trade-off does not: at the least-squares point
+the same analysis finds the lateral coupling held by the ridge, not by the gap (5.18), and that
+Jacobian (`crystal_stage_v7_trf2_sensitivity.json`) is the one to screen new terms with.
 
 ### 5.16 The relaxed-ion dielectric tensor by the Gamma route: the like-for-like for DFPT
 
@@ -1162,10 +1163,22 @@ backbone angle (and so its chain axis), as before. Two corrections follow. The P
 5.13 was a local minimum, and the statement in 5.15 that the lateral coupling could only be
 bought with the gap holds for the neighbourhood of that point: at the least-squares point the
 residual that the form could not reach is 0.6 of a tolerance smaller, and the Jacobian there is
-the one to judge the form by (`crystal_stage_v7_trf2_sensitivity.json`). The point is the preset
-`pvdf-dft-valence-belt3`; its prediction sets, Gamma-route dielectric tensor and cross-check are
-below (5.19). The belt2 preset and its sets stay as the record of 5.13-5.17; `--method trf` is
-the fitter to use from here, and the Powell runs stand as what they were.
+the one to judge the form by (`crystal_stage_v7_trf2_sensitivity.json`, the same 25 evaluations
+and analysis as 5.15). It says something different from 5.15's. The singular values are much as
+before (six constrained directions of twelve), but the trade is now benign: the linear model
+puts C_12 and beta b on their anchors with a step of half a prior width (x_C +0.54, x_F +0.63,
+D_F -0.72, the restraint +0.52 widths) and only the beta backbone angle at its 1.0 limit, and the
+real evaluation at that point confirms it almost row by row (C_12 z -0.00, b -0.05, the gap -0.19,
+P +0.60, beta a +0.61, the angle +1.00): sum of squares of the anchors 5.3 against 5.0 at the
+minimum, ridge 7.51 against 4.09, objective 12.83. So at the least-squares point what holds
+C_12 at -0.92 is not another anchor but the ridge, i.e. the prior that keeps the crystal terms
+near the oligomer-fitted valence values (RIDGE 1.0, 5.1). The anchors in hand would let the
+lateral coupling close for a 2.5-unit ridge cost and P and beta's polar axis at +0.6; whether
+that is a price worth paying is the question of how far the crystal terms may leave the valence
+fit, which the chain-orientation anchor requested in 5.17 is the right datum to settle. The point
+is the preset `pvdf-dft-valence-belt3`; its prediction sets, Gamma-route dielectric tensor and
+cross-check are below (5.19). The belt2 preset and its sets stay as the record of 5.13-5.17;
+`--method trf` is the fitter to use from here, and the Powell runs stand as what they were.
 
 ## 6. What it costs, and what it does not touch
 
