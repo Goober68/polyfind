@@ -221,8 +221,9 @@ stiffness flag of the previous section is read against the QE cell from here on.
   planar zigzag and not for a chain whose two sides of a backbone atom differ; DFT's alpha turns
   its CF2 groups by two to three degrees, and under `pvdf-dft-valence-belt3` letting the groups
   turn lowers alpha by 0.23 kcal/mol per monomer and beta by nothing. E2's PVDF TTTT margin is
-  that gap and carries the full 0.23 in every set; the TGTG' and T3GT3G' rows of the other
-  chemistries carry a bias of the same order and sign (the gauche conformer too high). The beta
+  that gap and carries the full 0.23 in every set; T3GT3G' releases only 0.05 (its backbone atoms
+  between trans bonds barely turn), and the TGTG'-type rows of the other chemistries carry a bias
+  of the same order and sign as PVDF's (the gauche conformer too high). The beta
   rows, the Berry quantities, the stiffnesses and the tensors are untouched by symmetry. The
   crystal fit now evaluates its gap row with the groups relaxed (`crystal_stage.py
   --pendant-tilts`); a set made with the same correction will say so in its label.

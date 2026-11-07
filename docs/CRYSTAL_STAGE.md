@@ -1443,10 +1443,13 @@ its result follows in the next paragraph.
 **What it does not do.** The cell and the backbone do not re-relax with the tilted pendants, so
 the corrected gap is complete to first order only; the alpha cell rows and the alpha angle rows are
 still the rigid refinement's. Every alpha-type energy in the prediction sets carries the same
-bias: E2's PVDF TTTT margin is the gap and takes the full 0.23, and the T3GT3G' and TGTG' rows of
-every chemistry in `docs/E1_E2_PREDICTIONS.md` are rigid-pendant numbers that the relaxation would
-lower by an amount of this order (the sets are not re-issued here; the belt3 set stands as
-labelled). Beta's rows, the Berry anchors, the stiffnesses and the tensors are untouched, by
+bias: E2's PVDF TTTT margin is the gap and takes the full 0.23, and the TGTG' and T3GT3G' rows of
+every chemistry in `docs/E1_E2_PREDICTIONS.md` are rigid-pendant numbers. `examples/e2_predictions.py
+--pendant-tilts` relaxes every conformation the same way; at the belt3 parameters PVDF's TGTG'
+releases 0.226, T3GT3G' 0.052 (three of its four backbone atoms sit between trans bonds and barely
+turn) and TTTT nothing, so the margins become TTTT +0.963 and T3GT3G' +0.489 above TGTG' against
+the rigid set's +0.736 and +0.315 (the belt3 set stands as labelled; the refit's set carries the
+correction). Beta's rows, the Berry anchors, the stiffnesses and the tensors are untouched, by
 symmetry. The complete fix is the tilts as refinement variables, three per backbone atom of the
 repeat, placed through the pendant frames' local coordinates (`polyfind.polymers.PendantAtom`
 offsets, which the builder and `chainjac` already carry) with the valence C-C-X bends as their
