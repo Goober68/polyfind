@@ -2687,3 +2687,16 @@ register_preset("pvdf-dft-valence-belt", FITTED_VALENCE_BELT)
 CRYSTAL7_FITTED_X = np.array([0.9711218548273446, 0.9900560857062977, 0.9498113526623126, 1.140031090784027, 1.0116205075282758, 0.8885990880373323, -0.042975547057411544, 0.05507860331389327, 1.0203927863482467, 1.031300684196814, -1.6781242742965172, 4.0000000003819665, 0.22964167699761515])
 FITTED_VALENCE_BELT2 = crystal_stage_parameters(CRYSTAL7_FITTED_X)
 register_preset("pvdf-dft-valence-belt2", FITTED_VALENCE_BELT2)
+
+# The same stage-7 problem solved by bounded least squares (crystalfit.fit(method="trf"),
+# docs/CRYSTAL_STAGE.md 5.18): from the stage-6 point, 235 + 53 evaluations in 62 min reach
+# objective 9.11 (ridge 4.09) where Powell's 281 evaluations in 78 min reached 11.65, and the point
+# is a better minimum of the same objective, not a trade (docs/predictions/crystal_stage_v7_trf.json,
+# crystal_stage_v7_trf2.json).  Against the anchors: beta's cell -0.1%, -0.4%, +0.7%, alpha's -0.1%,
+# +0.5%, +0.3%; P 0.1928; E(alpha)-E(beta) -0.736; C_11 24.2 (22.8), C_22 24.8 (24.5), C_12 5.3 (5.9)
+# GPa; slope -0.300; angles 115.87, 117.83, 116.60 deg; every residual within 1.24 tolerances; the
+# restraint at 228 kcal/mol/rad^2 and the carbon diameter back at the valence value (3.615 A).  The
+# same meaning and caveats as pvdf-dft-valence-belt2 (belt sites, PBE-D3 chain geometry).
+CRYSTAL7_TRF_FITTED_X = np.array([1.0132281505387504, 1.0023220284490788, 0.9633905894276096, 1.0629896228171571, 1.0233589511159167, 0.9229160353594129, -0.04875160210358813, 0.0524501964074133, 1.004977095847722, 1.0188083710213525, -1.718290675877666, 4.0000000004, 0.3359866631685057])
+FITTED_VALENCE_BELT3 = crystal_stage_parameters(CRYSTAL7_TRF_FITTED_X)
+register_preset("pvdf-dft-valence-belt3", FITTED_VALENCE_BELT3)

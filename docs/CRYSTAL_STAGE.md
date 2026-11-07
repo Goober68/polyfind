@@ -739,7 +739,7 @@ against 114.6, alpha 119.3-119.5 and 117.7-118.1 against 118.2 and 116.9. The re
 stiffness decides how much lateral pressure goes into the chain axes and how much of the gap the
 alpha opening buys, and three DFT angles now pin it. That is stage 7.
 
-### 5.13 Stage 7: the restraint as a variable, the backbone angles as anchors (closed)
+### 5.13 Stage 7: the restraint as a variable, the backbone angles as anchors (closed; a lower minimum of the same problem is in 5.18)
 
 The thirteenth variable is log10 of the restraint's multiplier on the refinement's default
 (`refine.DEFAULT_ANGLE_STIFFNESS`, 105 kcal/mol/rad^2), bounded at a fifth and five times, with a
@@ -970,6 +970,13 @@ couples the two lateral axes without moving the gap, which the candidates of 5.1
 longer-ranged wall, a C-F bond dipole or quadrupole, an H..F pair attraction) will be screened
 against with this Jacobian before any is fitted.
 
+*Correction (5.18).* This analysis is of the neighbourhood of Powell's point, which turned out to
+be a local minimum: a least-squares run on the same objective found a point at 9.11 where C_12 is
+at z -0.92 and the gap at -0.21, with the carbon diameter at the valence value. The qualitative
+statement stands (C_12 and b move with the variables that set P, the gap and the slope; six
+constrained directions of twelve), the quantitative trade-off does not; the Jacobian at the
+least-squares point (`crystal_stage_v7_trf2_sensitivity.json`) is the one to screen new terms with.
+
 ### 5.16 The relaxed-ion dielectric tensor by the Gamma route: the like-for-like for DFPT
 
 Every eps_0 in the prediction sets is `mechanics.dielectric_tensor(relax=True)`: the chains
@@ -1113,6 +1120,53 @@ copolymer is a flat valley of arrangements rather than a single cell, which is w
 copolymer should look like on a potential and a hint that the TrFE content's effect on the
 margins is already in the form.
 
+### 5.18 Stage 7 by least squares: the method, and a better minimum (`pvdf-dft-valence-belt3`)
+
+Every stage so far was fitted with bounded Powell, 240 to 320 sequential evaluations per run. The
+objective is a sum of squares, so `crystalfit.fit(method="trf")` now fits it as one: the residual
+vector is the z of every anchor row plus sqrt(RIDGE) times each ridge component
+(`ridge_parts`, so its sum of squares is the objective), the Jacobian is a forward difference of
+that vector with per-variable steps (`FD_STEPS`, the same steps as 5.15's analysis), and
+`scipy.optimize.least_squares` (trust-region reflective, the variables' bounds) takes it from
+there. One iteration costs one evaluation per free variable plus one or two steps, and those
+twelve evaluations are independent, which Powell's line searches never are: on a machine with
+the cores they run at the cost of one.
+
+From the stage-6 point on the PBE-D3 belt geometry, where Powell's 281 evaluations (78 min) ended
+at 11.65 (5.13), the least-squares run passes 11.65 at its 144th evaluation, stops on its
+evaluation budget at 9.36 after 235 (31 min, `crystal_stage_v7_trf.json`), and a continuation from
+there converges at **9.11** (ridge 4.09) in 53 more (7 min, `crystal_stage_v7_trf2.json`): 288
+evaluations and 62 minutes for a lower minimum than 281 and 78 reached.
+
+| quantity | Powell point (5.13, belt2) | least-squares point (belt3) | DFT |
+|---|---|---|---|
+| beta a, b, c | 4.7445, 8.4756, 2.6003 (-0.26, -0.61, 0.75) | 4.7525, 8.4902, 2.5984 (-0.09, -0.44, 0.68) | 4.757, 8.528, 2.581 |
+| alpha a, b, c | 4.9264, 9.7073, 4.6815 (-0.38, 0.74, 0.46) | 4.9422, 9.6819, 4.6757 (-0.06, 0.48, 0.34) | 4.945, 9.636, 4.660 |
+| beta Berry P | 0.1928 (0.01) | 0.1928 (0.01) | 0.1927 |
+| E(alpha) - E(beta) | -0.726 (-0.01) | -0.736 (-0.21) | -0.726 |
+| C_11, C_22, C_12 | 23.46, 24.19, 4.99 (0.30, -0.14, -1.51) | 24.17, 24.78, 5.34 (0.61, 0.11, -0.92) | 22.77, 24.52, 5.88 |
+| d|P|/d eta (polar) | -0.300 (0.84) | -0.300 (0.84) | -0.326 |
+| beta backbone angle | 116.00 (1.37) | 115.87 (1.24) | 114.63 |
+| alpha angle at CH2, CF2 | 118.05, 116.94 (-0.18, 0.07) | 117.83, 116.60 (-0.40, -0.27) | 118.23, 116.87 |
+| C, H, F diameters; F-H | 3.465, 2.572, 3.369; 3.004 | 3.615, 2.603, 3.418; 2.998 | |
+| restraint, kcal/mol/rad^2 | 178 | 228 | |
+| ridge, objective | 4.45, 11.65 | 4.09, 9.11 | |
+
+The two points differ most in the carbon diameter, which the least-squares point leaves at the
+valence value (3.615 A, x_C 1.013) where Powell had taken it down 4% (3.465), and in the
+restraint (228 against 178); with those, C_12 comes from 4.99 to 5.34 GPa (z -1.51 to -0.92),
+beta's lateral axis from -0.61% to -0.44%, both cells' polar axes onto the anchors, and the
+alpha-beta gap moves 0.01 kcal/mol (z -0.21), not the 2.3 tolerances the linear model at Powell's
+point charged for it (5.15). Every residual is within 1.24 tolerances, the largest being beta's
+backbone angle (and so its chain axis), as before. Two corrections follow. The Powell point of
+5.13 was a local minimum, and the statement in 5.15 that the lateral coupling could only be
+bought with the gap holds for the neighbourhood of that point: at the least-squares point the
+residual that the form could not reach is 0.6 of a tolerance smaller, and the Jacobian there is
+the one to judge the form by (`crystal_stage_v7_trf2_sensitivity.json`). The point is the preset
+`pvdf-dft-valence-belt3`; its prediction sets, Gamma-route dielectric tensor and cross-check are
+below (5.19). The belt2 preset and its sets stay as the record of 5.13-5.17; `--method trf` is
+the fitter to use from here, and the Powell runs stand as what they were.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
@@ -1154,6 +1208,12 @@ python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stag
 python examples/crystal_stage_sensitivity.py --analyze docs/predictions/crystal_stage_v7_sensitivity.json --verify   # its linear analysis and the real evaluation of the lateral-coupling trade
 python examples/gamma_dielectric.py --preset pvdf-dft-valence --systems beta   # 5.16: the relaxed-ion tensor by the Gamma route, plain chain
 python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt2 --variant belt --geometry pbe --systems beta   # 5.16: the same under belt2 (docs/predictions/gamma_dielectric_<preset>.json)
+python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --x0 docs/predictions/crystal_stage_v6.json --maxfev 40 --out docs/predictions/crystal_stage_v7_trf.json   # 5.18: stage 7 by bounded least squares (235 evaluations, 9.36)
+python examples/crystal_stage.py --stage 7 --geometry pbe --method trf --x0 docs/predictions/crystal_stage_v7_trf.json --maxfev 20 --out docs/predictions/crystal_stage_v7_trf2.json   # its continuation to convergence (53 evaluations, 9.11): the preset pvdf-dft-valence-belt3
+python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stage_v7_trf2.json --out docs/predictions/crystal_stage_v7_trf2_sensitivity.json
+python examples/e1_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --out docs/predictions/e1_polyfind_belt3.json
+python examples/e2_predictions.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --out docs/predictions/e2_polyfind_belt3.json
+python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt3 --variant belt --geometry pbe --systems beta
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and

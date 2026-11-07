@@ -155,6 +155,26 @@ def test_registered_stage7_preset_matches_the_saved_fit():
     assert F.FITTED_VALENCE_BELT.angle_stiffness is None
 
 
+def test_registered_least_squares_stage7_preset_matches_the_saved_fit():
+    with open("docs/predictions/crystal_stage_v7_trf2.json") as fh:
+        saved = json.load(fh)
+    assert saved["complete"] and saved["belt"] == {"d": C.BELT_D, "geometry": "pbe"}
+    assert saved["variables"] == list(C.VARIABLES7) and saved["objective"] < 9.2
+    np.testing.assert_allclose(F.CRYSTAL7_TRF_FITTED_X, saved["x"], rtol=0, atol=1e-12)
+    p = F.FITTED_VALENCE_BELT3
+    assert [list(t) for t in p.lj] == [list(t) for t in saved["parameters"]["lj"]]
+    assert [list(t) for t in p.lj_pairs] == [list(t) for t in saved["parameters"]["lj_pairs"]]
+    assert [list(t) for t in p.charge_increments] == [list(t) for t in saved["parameters"]["charge_increments"]]
+    assert p.charge_damping == saved["parameters"]["charge_damping"]
+    assert "pvdf-dft-valence-belt3" in PRESETS and F.PRESET_PARAMETERS["pvdf-dft-valence-belt3"] is p
+    from polyfind.refine import DEFAULT_ANGLE_STIFFNESS
+    assert p.angle_stiffness == DEFAULT_ANGLE_STIFFNESS * 10.0 ** saved["x"][12] and 220.0 < p.angle_stiffness < 235.0
+    # every residual of the saved point is within 1.25 tolerances, and it beats the Powell point
+    assert max(abs(v["z"]) for v in saved["residuals"].values()) < 1.25
+    with open("docs/predictions/crystal_stage_v7.json") as fh:
+        assert saved["objective"] < json.load(fh)["objective"]
+
+
 
 def test_polar_slope_removes_the_cell_orientation():
     from types import SimpleNamespace
