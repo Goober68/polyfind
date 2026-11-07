@@ -28,13 +28,17 @@ STEPS = {"x_C": 0.005, "x_H": 0.005, "x_F": 0.005, "D_C": 0.02, "D_H": 0.02, "D_
          "q_CF": 0.005, "x_HF": 0.005, "D_HF": 0.02, "log10_D_X": 0.05, "b_q": 0.1, "log10_k_angle": 0.02}
 
 
-def stage_kwargs(residual_rows) -> dict:
-    """The evaluate() flags of the stage a saved fit was made on, read off its residual rows."""
+def stage_kwargs(residual_rows, fit: dict | None = None) -> dict:
+    """The evaluate() flags of the stage a saved fit was made on, read off its residual rows; a fit
+    whose gap row was evaluated with the pendant groups relaxed (5.22) says so with a ``pendant_tilts``
+    record, and the Jacobian is then taken with the same correction."""
     kw = dict(C.STAGE2) if "beta C_11 (polar)" in residual_rows else {}
     if "beta d|P|/d eta (polar)" in residual_rows:
         kw["slope"] = True
     if "beta backbone angle" in residual_rows:
         kw["angles"] = True
+    if fit is not None and "pendant_tilts" in fit:
+        kw["pendant_tilts"] = True
     return kw
 
 
@@ -47,7 +51,7 @@ def jacobian(fit_path: str, out_path: str, geometry: str | None) -> dict:
         fit = json.load(fh)
     x0 = np.asarray(fit["x"], dtype=float)
     variables, _, bounds, _ = C._config(x0)
-    kw = stage_kwargs(fit["residuals"])
+    kw = stage_kwargs(fit["residuals"], fit)
     C.BELT_GEOMETRY = geometry or fit.get("belt", {}).get("geometry", C.BELT_GEOMETRY)
     t0 = time.time()
     e0 = C.evaluate(x0, **kw)
