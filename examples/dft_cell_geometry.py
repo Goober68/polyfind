@@ -42,6 +42,9 @@ def read_dipole(path):
         ref = r.get("reference") or r
         if "cell_A" in ref and "positions_A" in ref:
             out[name] = {"cell_A": ref["cell_A"], "positions_A": ref["positions_A"], "symbols": ref["symbols"]}
+    init = (d.get("spec") or {}).get("initial")  # a state.json: the start geometry of a case not yet published
+    if not out and isinstance(init, dict) and "cell_A" in init:
+        out[(d.get("spec") or {}).get("id", "initial") + " (start geometry)"] = {k: init[k] for k in ("cell_A", "positions_A", "symbols")}
     if not out and "cell_A" in d:
         out["cell"] = {"cell_A": d["cell_A"], "positions_A": d["positions_A"], "symbols": d["symbols"]}
     return out
@@ -78,16 +81,47 @@ def analyse(cell, pos, sym):
     for i, j, img, d in bl:
         key = "-".join(sorted((sym[i], sym[j]), key=lambda e: (e != "C", e)))
         lengths.setdefault(key, []).append(d)
-    angles = []
+    def ang(u, v):
+        return float(np.degrees(np.arccos(np.clip(u @ v / np.linalg.norm(u) / np.linalg.norm(v), -1, 1))))
+
+    def unit(x):
+        return x / np.linalg.norm(x)
+
+    angles, pendant = [], []
     for c in [i for i, e in enumerate(sym) if e == "C"]:
         cc = [(j, img) for j, img, _ in nb[c] if sym[j] == "C"]
-        subs = sorted(sym[j] for j, _, _ in nb[c] if sym[j] != "C")
+        sb = [(j, img) for j, img, _ in nb[c] if sym[j] != "C"]
+        subs = "".join(sorted(sym[j] for j, _ in sb))
         if len(cc) == 2:
             (j1, s1), (j2, s2) = cc
-            u = pos[j1] + s1 @ cell - pos[c]
-            v = pos[j2] + s2 @ cell - pos[c]
-            ang = float(np.degrees(np.arccos(np.clip(u @ v / np.linalg.norm(u) / np.linalg.norm(v), -1, 1))))
-            angles.append({"carbon": c, "substituents": "".join(subs), "angle_deg": ang})
+            angles.append({"carbon": c, "substituents": subs, "angle_deg": ang(pos[j1] + s1 @ cell - pos[c], pos[j2] + s2 @ cell - pos[c])})
+        if len(cc) == 2 and len(sb) == 2:
+            # The pendant group against the local backbone frame: u the outward bisector of the backbone
+            # angle, v along the chain (from one backbone neighbour toward the other), w their normal.  The
+            # chain builder puts the two X at cos(a/2) u +- sin(a/2) w (polyfind.chain.substituent_positions),
+            # so the group's own bisector m is u and its X-X line n is w.  A real group can differ by three
+            # small rotations: rock (m tilts toward a backbone neighbour, i.e. about w), wag (m tilts out of
+            # the backbone plane, about v) and twist (n turns toward the chain direction, about u).  Their
+            # signs depend on the arbitrary order of the neighbours and of the X, so magnitudes are kept.
+            # The two C-C-X asymmetries are the plain-angle view of the same thing: one X against the two
+            # neighbours (rock, and twist), the two X against one neighbour (wag, and twist).
+            (j1, s1), (j2, s2) = cc
+            (x1, t1), (x2, t2) = sb
+            n1, n2 = unit(pos[j1] + s1 @ cell - pos[c]), unit(pos[j2] + s2 @ cell - pos[c])
+            u, v = unit(-(n1 + n2)), unit(n2 - n1)
+            w = unit(np.cross(u, v))
+            d1, d2 = unit(pos[x1] + t1 @ cell - pos[c]), unit(pos[x2] + t2 @ cell - pos[c])
+            m, nn = unit(d1 + d2), unit(d1 - d2)
+            if nn @ w < 0.0:
+                nn = -nn
+            ccx = [[ang(nvec, dvec) for dvec in (d1, d2)] for nvec in (n1, n2)]
+            pendant.append({"carbon": c, "substituents": subs, "xcx_deg": ang(d1, d2),
+                            "ccx_deg": [a for row in ccx for a in row],
+                            "rock_deg": abs(float(np.degrees(np.arctan2(m @ v, m @ u)))),
+                            "wag_deg": abs(float(np.degrees(np.arctan2(m @ w, m @ u)))),
+                            "twist_deg": abs(float(np.degrees(np.arctan2(nn @ v, nn @ w)))),
+                            "ccx_same_x_asymmetry_deg": float(max(abs(ccx[0][k] - ccx[1][k]) for k in (0, 1))),
+                            "ccx_same_neighbour_asymmetry_deg": float(max(abs(row[0] - row[1]) for row in ccx))})
     torsions = []
     for i, j, img, d in bl:
         if sym[i] != "C" or sym[j] != "C":
@@ -114,7 +148,17 @@ def analyse(cell, pos, sym):
     a, b, c = (float(np.linalg.norm(cell[i])) for i in range(3))
     gamma = float(np.degrees(np.arccos(cell[0] @ cell[1] / a / b)))
     return {"cell": {"a": a, "b": b, "c": c, "gamma_deg": gamma, "volume_A3": float(abs(np.linalg.det(cell)))},
-            "n_atoms": len(sym), "bond_lengths_A": lengths, "backbone_angles": angles,
+            "n_atoms": len(sym), "bond_lengths_A": lengths, "backbone_angles": angles, "pendant_groups": pendant,
+            "pendant_rock_max_deg": float(max(p["rock_deg"] for p in pendant)) if pendant else None,
+            "pendant_wag_max_deg": float(max(p["wag_deg"] for p in pendant)) if pendant else None,
+            "pendant_twist_max_deg": float(max(p["twist_deg"] for p in pendant)) if pendant else None,
+            "pendant_ccx_asymmetry_max_deg": float(max(max(p["ccx_same_x_asymmetry_deg"], p["ccx_same_neighbour_asymmetry_deg"])
+                                                       for p in pendant)) if pendant else None,
+            "pendant_xcx_by_substituents_deg": {sub: float(np.mean([p["xcx_deg"] for p in pendant if p["substituents"] == sub]))
+                                                for sub in sorted({p["substituents"] for p in pendant})},
+            "pendant_tilts_by_substituents_deg": {sub: {k: float(np.mean([p[k + "_deg"] for p in pendant if p["substituents"] == sub]))
+                                                        for k in ("rock", "wag", "twist")}
+                                                  for sub in sorted({p["substituents"] for p in pendant})},
             "backbone_angle_mean_deg": float(np.mean([x["angle_deg"] for x in angles])) if angles else None,
             "backbone_angle_by_substituents_deg": {s: float(np.mean([x["angle_deg"] for x in angles if x["substituents"] == s]))
                                                    for s in sorted({x["substituents"] for x in angles})},
@@ -139,6 +183,12 @@ def main():
         for s, v in r["backbone_angle_by_substituents_deg"].items():
             print(f"  backbone angle at C{s}: {v:.2f} deg")
         print(f"  backbone angle mean {r['backbone_angle_mean_deg']:.2f} deg; torsions |phi| {r['torsion_abs_values_deg']}")
+        if r["pendant_groups"]:
+            print("  pendant angles X-C-X: " + ", ".join(f"{k} {v:.2f}" for k, v in r["pendant_xcx_by_substituents_deg"].items())
+                  + " deg; C-C-X asymmetry (largest of any group) " + f"{r['pendant_ccx_asymmetry_max_deg']:.2f} deg")
+            for sub, t in r["pendant_tilts_by_substituents_deg"].items():
+                print(f"  C{sub} groups, tilt out of the builder's symmetric placement (mean over groups): "
+                      f"rock {t['rock']:.2f}, wag {t['wag']:.2f}, twist {t['twist']:.2f} deg")
     if args.out:
         with open(args.out, "w") as fh:
             json.dump(results, fh, indent=1)
