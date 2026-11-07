@@ -56,9 +56,12 @@ def build(polymer, seq, label):
     return M.relax_reference(ref), rr
 
 
+K_BOND_MIN = None  # --k-bond-min: a floor on the pinned stretch constants (5.22)
+
+
 def pinned_valence_packer(ref, polymer, k_backbone: float):
     """The reference's packer with valence terms stationary at its geometry; now :func:`polyfind.pendants.pinned_valence_packer`."""
-    return PD.pinned_valence_packer(ref, polymer, k_backbone)
+    return PD.pinned_valence_packer(ref, polymer, k_backbone, k_bond_min=K_BOND_MIN)
 
 
 def site_constraint(pk, Pn):
@@ -182,8 +185,11 @@ def main():
     ap.add_argument("--geometry", default="textbook", choices=("textbook", "pbe"))
     ap.add_argument("--systems", default="beta")
     ap.add_argument("--h", type=float, default=1e-3, help="finite-difference step of the Hessian (A)")
+    ap.add_argument("--k-bond-min", type=float, default=None, help="floor on the pinned stretch constants, kcal/mol/A^2 in the kernel's 1/2 k convention (the valence fit's C-C constant sits at its bound, 100; a real C-C bond is about 540): a probe of what that softness does to the relaxed-ion tensor (5.22)")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
+    global K_BOND_MIN
+    K_BOND_MIN = args.k_bond_min
     from polyfind.fitting import PRESET_PARAMETERS
     from polyfind.refine import resolve_angle_stiffness
     params_ff = PRESET_PARAMETERS[args.preset]

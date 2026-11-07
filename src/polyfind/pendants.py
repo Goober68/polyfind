@@ -48,13 +48,16 @@ VALENCE_PRESET = "pvdf-dft-valence"
 BOND_MAX = {("C", "C"): 1.75, ("C", "H"): 1.25, ("C", "F"): 1.55, ("C", "Cl"): 1.95}
 
 
-def pinned_valence_packer(ref, polymer, k_backbone: float | None = None):
+def pinned_valence_packer(ref, polymer, k_backbone: float | None = None, k_bond_min: float | None = None):
     """A copy of the reference's packer carrying valence terms stationary at its geometry.
 
     Bond lengths and angles of the valence preset's tables, with every equilibrium value pinned at
     the reference's own (the backbone C-C-C angles at the polymer's built angle, with
     ``k_backbone`` -- the refinement's restraint, so the all-atom energy agrees with the fit path's
     -- else the preset's stiffness), so the reference is a stationary point of the valence part.
+    ``k_bond_min`` floors every stretch constant (kcal/mol/A^2, the kernel's 1/2 k convention): the
+    valence fit left the C-C constant at its bound, 100, five times softer than a real C-C bond,
+    and a floor shows what that softness does to an all-atom result (5.22).
     Returns ``(packer, n_backbone_angles, mean_backbone_angle_deg)``."""
     from . import fitting  # noqa: F401  (registers the valence preset)
     chain = ref.packer.chain
@@ -78,8 +81,11 @@ def pinned_valence_packer(ref, polymer, k_backbone: float | None = None):
         k_backbone = resolve_angle_stiffness(None, None)
     t0 = np.where(backbone, np.deg2rad(float(built[0])), theta)
     kk = np.where(backbone, float(k_backbone), cv.ang_kk)
+    bk = np.asarray(cv.bond_k, dtype=float)
+    if k_bond_min is not None:
+        bk = np.maximum(bk, float(k_bond_min))
     pk = copy.copy(ref.packer)
-    pk._valence = replace(cv, bond_r0=r.copy(), ang_t0=t0, ang_kk=kk)
+    pk._valence = replace(cv, bond_r0=r.copy(), bond_k=bk, ang_t0=t0, ang_kk=kk)
     pk.update_chain(chain)
     return pk, int(backbone.sum()), float(np.rad2deg(theta[backbone].mean())) if backbone.any() else None
 

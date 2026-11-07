@@ -75,3 +75,17 @@ def test_beta_releases_nothing_and_alpha_releases_the_documented_amount():
     for sub in ("FF", "HH"):
         mags = np.array([np.abs(x) for g, x in zip(ta.groups, ta.tilts_deg) if g.substituents == sub])
         assert np.ptp(mags, axis=0).max() < 0.05
+
+
+def test_the_stretch_constant_floor_only_raises_the_soft_bonds():
+    """The valence fit's C-C stretch constant sits at its bound (100 kcal/mol/A^2); a floor of 540
+    raises it and leaves the stiffer C-H and C-F constants alone, and the pinned reference stays a
+    stationary point (the equilibrium lengths are the reference's own)."""
+    ref, polymer = _reference([0, 0], "beta")
+    with PRESET_PARAMETERS[PRESET].applied():
+        pk0, _, _ = PD.pinned_valence_packer(ref, polymer)
+        pk1, _, _ = PD.pinned_valence_packer(ref, polymer, k_bond_min=540.0)
+    k0, k1 = np.asarray(pk0._valence.bond_k), np.asarray(pk1._valence.bond_k)
+    assert k0.min() < 150.0 and k1.min() >= 540.0
+    assert np.all(k1 >= k0) and np.all(np.where(k0 >= 540.0, k1 == k0, True))
+    np.testing.assert_allclose(pk1._valence.bond_r0, pk0._valence.bond_r0)
