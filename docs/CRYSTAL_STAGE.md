@@ -966,6 +966,56 @@ couples the two lateral axes without moving the gap, which the candidates of 5.1
 longer-ranged wall, a C-F bond dipole or quadrupole, an H..F pair attraction) will be screened
 against with this Jacobian before any is fitted.
 
+### 5.16 The relaxed-ion dielectric tensor by the Gamma route: the like-for-like for DFPT
+
+Every eps_0 in the prediction sets is `mechanics.dielectric_tensor(relax=True)`: the chains
+reorient under the field at fixed cell, which is the ionic response a rigid-chain parametrisation
+can express. DFPT's relaxed-ion tensor lets every atom move. `examples/gamma_dielectric.py` makes
+the comparison like for like: it builds the E1 reference on the fit path, gives the packer the
+valence stretch and bend terms of `pvdf-dft-valence` pinned at that geometry (zero force at the
+reference, the valence fit's stiffness for the stretches and the pendant bends) with the two
+backbone angles carrying the preset's own restraint about the built angle instead (the term the
+refinement balanced the lateral pressure against, so the reference is stationary over them too),
+relaxes every atom at fixed cell, and forms eps_0 = eps_inf + (4 pi k_e / V) Z^T H^+ Z from the
+all-atom Hessian, the Born tensors by the field route and the clamped-ion tensor, the translations
+projected out. The belt sites are not coordinates: each is the fixed affine combination of its
+carbon and that carbon's two fluorines that places it in the CF2 plane, which carries it exactly
+through any rigid motion of the group (a first version that let each site follow its fluorine
+alone misplaced it under the libration by the site's 0.7 A offset and gave 3.72 on the lateral
+axis; the exact construction gives the number below).
+
+| | pre-registered (`pvdf-dft-valence`, plain chain) | belt2 (`pvdf-dft-valence-belt2`, PBE-D3 belt chain) |
+|---|---|---|
+| eps_inf (x polar, y lateral, z chain) | 2.209, 2.135, 2.495 | 2.126, 2.095, 2.440 |
+| eps_0, rigid-chain route (the E1 sets) | 2.196, 2.832, 2.515 | 2.122, 4.386, 2.448 |
+| eps_0, Gamma route | 2.272, 2.870, 2.648 | 2.236, 4.573, 2.735 |
+| ionic part, Gamma route | 0.063, 0.735, 0.153 | 0.110, 2.478, 0.295 |
+| libration: frequency, its share of the lateral ionic part | 63.6 cm^-1, 0.687 | 46.5 cm^-1, 2.381 |
+| other lateral carriers | 249 cm^-1 0.020, 891 cm^-1 0.022 | 248 cm^-1 0.043, 883 cm^-1 0.045 |
+| polar carriers | 1063, 406, 335 cm^-1 (0.024, 0.017, 0.021) | 432, 331, 1176 cm^-1 (0.042, 0.034, 0.032) |
+| chain-axis carriers | 200 cm^-1 0.091, 833 cm^-1 0.063 | 204 cm^-1 0.177, 823 cm^-1 0.118 |
+| lowest six modes, cm^-1 | 31, 34, 40, 64, 77, 200 | 20, 41, 47, 50, 101, 204 |
+| all-atom relaxation: max force before/after, displacement | 10.1 -> 6e-11 kcal/(mol A), 0.012 A | 6.5 -> 2e-12, 0.006 A |
+
+The two routes agree on what the rigid-chain route was built to carry: the lateral axis is the
+libration on both presets (0.69 of 0.73 and 2.38 of 2.48), and the full relaxation leaves it a
+little softer than the rigid rotation (coupling to the pendant bends), 0.04 and 0.19 more. What
+the rigid route cannot see is small and is now on the record: the C-F stretch and bend modes add
+0.06 (plain) and 0.11 (belt2) along the polar axis, and two chain-axis modes 0.13 and 0.30 along
+the chain. The rigid-chain route's field step was checked to be in the linear regime (eps_0
+lateral 4.3867 to 4.3858 from 2.5e-4 to 4e-3 V/A).
+
+So the prediction for Dipole's DFPT tensor of beta at the reference cell, in polyfind's frame
+(their a is our y, their b our x): **eps_0 = 2.24 (polar), 4.57 (lateral), 2.74 (chain)**, against
+eps_inf 2.13, 2.10, 2.44, with the lateral ionic part a libration at 46 cm^-1. The pre-registered
+set says 2.27, 2.87, 2.65 for the same cell under its own potential. The lateral number is the
+form's statement about the chains' rocking stiffness between hard contacts (5.14), and DFPT's
+relaxed-ion lateral permittivity is the test of it: if DFT finds the libration twice as stiff
+(eps_0 lateral near 3.3), the belt wall is too hard where the chains touch and too open between
+contacts; if it finds 4.5, the wall is right and the lateral-coupling residual is elsewhere. Beta's
+lowest modes (20 to 50 cm^-1 on belt2 against 31 to 64 on the plain chain) are the second thing a
+Gamma phonon calculation would test; they are predictions, not anchors.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
@@ -1005,6 +1055,8 @@ python examples/e2_predictions.py --preset pvdf-dft-valence-belt2 --variant belt
 python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt2.json --e2 docs/predictions/e2_polyfind_belt2.json
 python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stage_v7.json --out docs/predictions/crystal_stage_v7_sensitivity.json   # 5.15: the Jacobian at the stage-7 point (25 evaluations)
 python examples/crystal_stage_sensitivity.py --analyze docs/predictions/crystal_stage_v7_sensitivity.json --verify   # its linear analysis and the real evaluation of the lateral-coupling trade
+python examples/gamma_dielectric.py --preset pvdf-dft-valence --systems beta   # 5.16: the relaxed-ion tensor by the Gamma route, plain chain
+python examples/gamma_dielectric.py --preset pvdf-dft-valence-belt2 --variant belt --geometry pbe --systems beta   # 5.16: the same under belt2 (docs/predictions/gamma_dielectric_<preset>.json)
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and
