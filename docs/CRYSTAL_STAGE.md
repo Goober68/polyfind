@@ -894,7 +894,10 @@ Ewald sums and the dipole solve, being chargeless and unpolarizable: one energy-
 the belt copolymer cell fell from 0.64 to 0.42 s against 0.17 s for the plain chain, the Ewald share
 back to the plain chain's and the remaining excess the Lennard-Jones pair arrays over 212 sites
 (`docs/PERFORMANCE_REVIEW.md` 16.6). The sets above were made before this; the change moves no
-prediction by more than 4e-6 relative (the stage-7 point re-evaluated).
+prediction by more than 4e-6 relative (the stage-7 point re-evaluated), and the copolymer E1 cell
+re-run with it takes 776 s on a quiet machine (601 s of build and tensors) against 1,356 s for the
+belt set alone, its cell, polarization and permittivities unchanged and its stiffness within 2e-4
+relative, which is the relaxation's own noise floor.
 
 **What is left.** In beta, the lateral axis 0.6% short and C_12 0.9 GPa low are shared by every
 belt set and did not move between stages 6 and 7: they are the coupling between the two lateral
@@ -1050,6 +1053,34 @@ in the rotated setting against the standard one is the cheapest anchor on the ch
 energetics there is**, and `basins_pvdf-dft-valence-belt2_beta_basin1.xyz` is its start geometry
 (polyfind's frame, no belt sites; the standard setting beside it as `_basin0.xyz`, which is
 Dipole's cell to 0.3/0.6/0.8%). It is asked for on the exchange.
+
+**The copolymer has the same two, and the sets sit in different ones.** Under the pre-registered
+potential the screen lists three minima for the 70/30 model cell: the arrangement its E1 set stands
+on (dipoles 24 deg from a), one with the chains turned (84 deg) and a flipped, antiparallel-chain
+one. Under belt2 it lists two, the arrangement that set stands on (85 deg) and the flipped one; the
+24-deg arrangement is not among them. Refining each arrangement under the other potential
+(`--start-from`) closes the question:
+
+| arrangement (dipoles from a) | `pvdf-dft-valence`: a, b, gamma; E per monomer | `pvdf-dft-valence-belt2`: a, b, gamma; E per monomer |
+|---|---|---|
+| 24 deg (the pre-registered and stage-2 sets) | 4.792, 8.851, 92.0; -2.9382 | 4.796, 8.674, 90.1; -7.4199 (transplanted) |
+| 85 deg (the belt2 set) | 5.104, 8.310, 92.2; -2.9382 (transplanted; the screen's own 84-deg basin -2.9380) | 4.959, 8.397, 92.1; -7.4199 |
+| flipped chains, 90 deg | 4.947, 8.637, 90.0; -2.8220 | 4.944, 8.780, 90.0; -7.0969 |
+
+(kcal/mol per monomer with the backbone-angle strain; the belt set of 5.10 sits at gamma 88 and 38
+deg, a third point on what is evidently the same flat valley, not re-run here). On both potentials
+the two polar arrangements are degenerate to 0.0001 kcal/mol per monomer and the antiparallel one
+is 0.12 and 0.32 above them. The screen's truncated-kernel energies, which separate the two by 0.1
+to 0.3, decide which one a set stands on, and that is an accident of the screen, not a property of
+the potential: every copolymer row that differed between the sets (5.10, 5.14: the cell, the
+dipole tilt, the stiffness, the Q column) compared two arrangements the potentials themselves do
+not distinguish. Two consequences. For the sets, a copolymer row has to name its arrangement, and
+the arrangement-by-arrangement comparison is the one that means something: the basins files hold
+both for both potentials, and the next E1/E2 runs will refine both and report both. For the
+physics, the finding is the same as beta's: on every fitted potential the energy of the chains'
+orientation about their axes is flat to 0.1 cal/mol, for PVDF and for the copolymer alike, and
+nothing in the anchors in hand constrains it. The rotated-setting cell requested above is the
+measurement that does.
 
 ## 6. What it costs, and what it does not touch
 

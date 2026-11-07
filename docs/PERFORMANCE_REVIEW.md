@@ -1330,5 +1330,9 @@ What is left of the belt cost is the pair kernel: 0.46 s per three calls against
 chain, from the dense `(images, N, N)` arrays over 212 sites of which the 92 inert ones interact
 with hydrogen alone.  That is the finding of 16.5 again, and the same answer: a pair list would
 take it out at the price of the bit-for-bit `energy == energy_and_grad` invariant.  The belt cells
-are 2.5x the plain chain's call now, from 3.8x.
+are 2.5x the plain chain's call now, from 3.8x.  End to end, the belt2 copolymer E1 cell
+(`examples/e1_predictions.py --systems vdftrfe`, build, tensors and electrostriction) runs in 776 s
+on a quiet machine, 601 s of it build and tensors, against 1,356 s for the belt set alone before
+the change (1,719 s under load): 1.75x, with the cell, polarization and permittivities unchanged
+and the stiffness block within 2e-4 relative, the relaxation's noise floor.
 
