@@ -1204,9 +1204,9 @@ the DFT in hand:
 | alpha polarization, C/m^2; C_11, C_22, C_12, C_66 | - | 0.099; 21.1, 15.0, 5.2, 6.2 | 0.101; 22.3, 15.4, 5.3, 6.4 |
 | copolymer, the screen's arrangement (dipoles 85 deg from a): a, b, gamma, c per 10 | - | 4.959, 8.397, 92.1, 25.89 | 4.986, 8.423, 91.8, 25.88 |
 | copolymer (85 deg) polarization; eps_0; C_11, C_22, C_12, C_66 | - | 0.166; 2.769, 2.140, 2.417; 12.5, 21.1, 8.8, 9.7 | 0.165; 2.707, 2.125, 2.404; 13.3, 21.4, 8.9, 9.9 |
-| copolymer, the pre-registered arrangement (24 deg): a, b, gamma, c per 10 | - | 4.797, 8.674, 90.1, 25.89 | @T24CELL@ |
-| copolymer (24 deg) P (x, y); eps_0; C_11, C_22, C_12, C_66 | - | (0.152, 0.068); 2.137, 2.773, 2.417; 21.1, 22.3, 3.9, 4.8 | @T24ROW@ |
-| copolymer (24 deg) proper e_11; d_11; Q_11, Q_22 | - | -0.244; -11.5; 3.43, 1.49 | @T24PIEZO@ |
+| copolymer, the pre-registered arrangement (24 deg): a, b, gamma, c per 10 | - | 4.797, 8.674, 90.1, 25.89 | 4.824, 8.700, 90.3, 25.88 |
+| copolymer (24 deg) P (x, y); eps_0; C_11, C_22, C_12, C_66 | - | (0.152, 0.068); 2.137, 2.773, 2.417; 21.1, 22.3, 3.9, 4.8 | (0.150, 0.068); 2.122, 2.711, 2.404; 21.3, 23.5, 3.8, 4.9 |
+| copolymer (24 deg) proper e_11; d_11; Q_11, Q_22 | - | -0.244; -11.5; 3.43, 1.49 | -0.244; -11.3; 3.44, 1.27 |
 | PE (control) a, b, gamma; eps_inf (x, y, z) | - | 3.971, 6.887, 90.0; 3.038, 3.031, 3.094 | 4.048, 6.992, 90.0; 2.930, 2.926, 3.019 |
 | PE C_11, C_22, C_12, C_66, GPa | - | 31.7, 33.8, 1.0, 4.9 | 29.6, 32.5, 1.7, 4.4 |
 
@@ -1232,7 +1232,7 @@ intrinsic Q 5% smaller; alpha is the same cell to 0.3%; PE is squeezed 4% less i
 lower electronic permittivity (2.93 against 3.04) and the same stiffness, so the PE caution of
 5.14 stands with a slightly smaller number. The copolymer under belt3 sits in the 85-deg
 arrangement again by the screen's choice and reads like belt2's in it; in the pre-registered
-arrangement it reads like the pre-registered set's (5.17), @T24SENTENCE@ The one physical
+arrangement it reads like the pre-registered set's (5.17), the two presets agreeing row by row in both (e_11 -0.244 in both, eps_0 lateral 2.71 against 2.77, Q_11 3.44 against 3.43). The one physical
 change is E2's copolymer: under belt3 the T3GT3G' conformation is the lowest of the three model
 cells, TTTT 0.021 above it and TGTG' 0.057, where belt2 had TGTG' lowest by 0.03 and 0.06; three
 conformations within 0.06 kcal/mol per monomer on both presets, i.e. the copolymer's conformational

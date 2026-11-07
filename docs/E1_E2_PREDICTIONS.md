@@ -192,7 +192,7 @@ stiffness flag of the previous section is read against the QE cell from here on.
   number is carried by P itself, so the pre-registered set's 29% shortfall in e_11 is its 27%
   shortfall in P, and the belt set's 13% is its 7% in P and a 7% softer relative slope. The
   cross-check prints these lines for any set (`examples/crosscheck_e1_e2.py --polyfind <file>`).
-- **Labelled sets beside the pre-registered one.** Four fitted presets of the crystal stage
+- **Labelled sets beside the pre-registered one.** Five fitted presets of the crystal stage
   (`docs/CRYSTAL_STAGE.md`) have their own E1/E2 files, each a prediction set in its own right
   and none of them the pre-registered one, which stands: `e1/e2_polyfind_crystal.json`
   (`pvdf-dft-valence-crystal`, fixed-charge stage 1, section 4), `e1/e2_polyfind_crystal2.json`
@@ -209,7 +209,13 @@ stiffness flag of the previous section is read against the QE cell from here on.
   quantity within 0.15 of DFT's; what it predicts beyond the anchors is in 5.14. For Dipole's DFPT
   relaxed-ion tensor the like-for-like number is the Gamma route's, not the sets' rigid-chain
   eps_0 (`docs/predictions/gamma_dielectric_pvdf-dft-valence-belt2.json`, section 5.16): beta
-  2.24 polar, 4.57 lateral, 2.74 chain, the lateral part one libration at 46 cm^-1.
+  2.24 polar, 4.57 lateral, 2.74 chain, the lateral part one libration at 46 cm^-1. The fifth
+  set, `e1/e2_polyfind_belt3.json` (`pvdf-dft-valence-belt3`, the same problem solved by bounded
+  least squares to a lower minimum, section 5.18; the copolymer cell also in the pre-registered
+  arrangement, `e1_polyfind_belt3_tilt24.json`), reads against Dipole's records as cell
+  -0.1/-0.4/+0.7%, C_11 1.06, C_22 1.01, C_12 0.91, Berry P 1.00, slope 0.92, and predicts the
+  same tensors within a few percent (Gamma-route eps_0 2.23, 4.49, 2.73; section 5.19). A
+  copolymer row compares across sets only in the same arrangement (section 5.17).
   `examples/crosscheck_e1_e2.py --polyfind <file>` reads any of them against the same records.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
