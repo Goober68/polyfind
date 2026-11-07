@@ -1307,6 +1307,40 @@ axes without changing P. Both are a stage of work, and both should wait for the 
 cell (5.17): one more anchor row on the chain-orientation energy may change which direction is
 missing, and it is the measurement of exactly the energy these terms would shape.
 
+### 5.21 Stage 8, as designed and not yet built
+
+What 5.20 leaves is a term with a shape. Two are concrete enough to name, with the mechanism each
+would ride on and the test it has to pass before it is fitted.
+
+**A hydrogen belt.** The anisotropy the belt sites gave the fluorine (5.7) given to the CH2 group:
+massless, chargeless sites either side of each hydrogen in the HCH plane, a repulsion-only wall
+against fluorine. It rides on the belt machinery as it stands (pendant sites, a pseudo-element
+outside every bonded and electrostatic sum, a pair table with one non-zero row), but needs a
+second pseudo-element, since the fluorine sites' wall is X-H and a hydrogen site's must be Y-F;
+the packer's and force field's special cases for "X" become a set. Two variables (depth, as for
+the fluorine belt; the sites' offset fixed at the probe's value). The doubt is written in 5.20:
+the F...H contact is the same contact seen from the other side, and the screen may find this
+direction in the span as well; it is the first thing to check, with `examples/stage8_screen.py`
+on a tiny depth, before anything else is written.
+
+**A CF2 quadrupole.** The electrostatics of the chain are bond-charge increments with the
+fluorine's charge displaced along its bond (`charge_offsets`, 0.177 A). A quadrupole on the CF2
+group, two further charge sites of opposite sign placed symmetrically about the C-F bond so the
+group's dipole does not change, alters how neighbouring chains' charge distributions couple the
+two lateral axes while leaving P, the Berry anchor and the slope where they are to first order.
+It rides on the pendant-site and charge machinery, but the sites carry charge, so unlike the belt
+they enter the Ewald sum, the induced-dipole solve and the dipole; the inert-site exclusion of
+16.6 does not apply to them and the cost is that of two more charged atoms per CF2. One variable
+(the quadrupole strength at a fixed geometry). It is the candidate the screen most likely passes,
+because it is the only one of the three whose first-order effect on the anchors is not a contact.
+
+**The order.** Neither is built before Dipole's rotated-setting cell lands (5.17): it adds the
+first anchor row on the chain-orientation energy, which is the energy both terms shape, and with
+it the Jacobian's picture of which direction is missing may change. When it does, the sequence is
+the screen (two evaluations per candidate), then the stage-8 fit by least squares from the belt3
+point with the surviving term as the fourteenth variable, then the sets and the Gamma-route tensor
+as in 5.19.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
