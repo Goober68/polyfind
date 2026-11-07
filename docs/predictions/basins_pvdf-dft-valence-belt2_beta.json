@@ -1,0 +1,87 @@
+{
+ "preset": "pvdf-dft-valence-belt2",
+ "variant": "belt",
+ "geometry": "pbe",
+ "system": "beta-PVDF (TTTT)",
+ "frame": "x polar (a), y lateral (b), z chain",
+ "candidates": [
+  {
+   "screen": {
+    "energy_per_monomer_dsf": -7.514517140237206,
+    "a": 4.803713667523075,
+    "b": 8.567139950813367,
+    "gamma": 90.0,
+    "phi1": 180.0,
+    "phi2": 180.0,
+    "dz": 0.0,
+    "flip": 0
+   },
+   "refined": {
+    "energy_per_monomer": -9.46892682604176,
+    "angle_strain_per_monomer": 0.10621964239889517,
+    "total_per_monomer": -9.362707183642865,
+    "a": 4.744527526898548,
+    "b": 8.47559655934125,
+    "gamma": 90.0,
+    "c": 2.600270520561864,
+    "phi1": 180.0,
+    "phi2": 180.0,
+    "dz": 3.3306690738754696e-15,
+    "flip": 0,
+    "P_C_m2": [
+     -0.19278632793912612,
+     -1.9124521648221938e-16,
+     -2.555003810274572e-16
+    ],
+    "P_abs": 0.19278632793912612,
+    "tilt_from_a_deg": -179.99999999999994,
+    "backbone_angles_deg": [
+     115.9989737380583,
+     115.99897373805827
+    ]
+   },
+   "index": 0,
+   "seconds": 0.19293642044067383,
+   "xyz": "docs/predictions/basins_pvdf-dft-valence-belt2_beta_basin0.xyz"
+  },
+  {
+   "screen": {
+    "energy_per_monomer_dsf": -7.499243288568942,
+    "a": 4.934502026661739,
+    "b": 8.3563464238563,
+    "gamma": 90.0,
+    "phi1": 120.61607263162423,
+    "phi2": 120.61607263162423,
+    "dz": 2.5802403596006935,
+    "flip": 0
+   },
+   "refined": {
+    "energy_per_monomer": -9.464082010323239,
+    "angle_strain_per_monomer": 0.10143336437164578,
+    "total_per_monomer": -9.362648645951593,
+    "a": 4.856865694869748,
+    "b": 8.283764461976867,
+    "gamma": 88.47144790112729,
+    "c": 2.5998183417016447,
+    "phi1": 119.24167368242516,
+    "phi2": 119.24167368242516,
+    "dz": 3.965753239798531e-06,
+    "flip": 0,
+    "P_C_m2": [
+     -0.09417261109587885,
+     0.1682146436299906,
+     6.850160723580898e-17
+    ],
+    "P_abs": 0.19278134508344003,
+    "tilt_from_a_deg": 119.24167203369913,
+    "backbone_angles_deg": [
+     115.96709142631215,
+     115.96709142631214
+    ]
+   },
+   "index": 1,
+   "seconds": 0.46030640602111816,
+   "xyz": "docs/predictions/basins_pvdf-dft-valence-belt2_beta_basin1.xyz"
+  }
+ ]
+}
