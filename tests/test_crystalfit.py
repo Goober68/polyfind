@@ -326,3 +326,22 @@ def test_ridge_parts_square_to_the_ridge_and_the_fitter_knows_both_methods():
         assert d.shape == (len(x),) and C.ridge(x) == C.RIDGE * float(np.sum(d * d))
     assert set(C.FD_STEPS) >= set(C.VARIABLES7)
     assert inspect.signature(C.fit).parameters["method"].default == "powell"
+
+
+def test_the_pendant_tilt_evaluation_reproduces_the_saved_belt4_gap_row():
+    """evaluate(pendant_tilts=True) at the belt4 point: the gap row and the recorded relaxation of the
+    saved fit come back (the post-step is deterministic), and the gap is the rigid gap plus the two
+    relaxations.  One evaluation, about 15 s."""
+    with open("docs/predictions/crystal_stage_v8_tilts.json") as fh:
+        saved = json.load(fh)
+    C.BELT_GEOMETRY = "pbe"
+    ev = C.evaluate(np.asarray(saved["x"]), **C.STAGE7, pendant_tilts=True)
+    assert ev.extra and set(ev.extra["pendant_tilts"]) == {"alpha", "beta"}
+    ta, tb = ev.extra["pendant_tilts"]["alpha"], ev.extra["pendant_tilts"]["beta"]
+    assert abs(ta["dE_per_monomer"] - saved["pendant_tilts"]["alpha"]["dE_per_monomer"]) < 2e-3
+    assert abs(tb["dE_per_monomer"]) < 1e-6
+    gap = ev.residuals["E(alpha)-E(beta)"][0]
+    assert abs(gap - saved["residuals"]["E(alpha)-E(beta)"]["polyfind"]) < 2e-3
+    rigid = ev.alpha.energy_per_monomer - ev.beta.energy_per_monomer
+    assert abs(gap - (rigid + ta["dE_per_monomer"] - tb["dE_per_monomer"])) < 1e-9
+    assert abs(ev.objective - saved["objective"]) < 0.02
