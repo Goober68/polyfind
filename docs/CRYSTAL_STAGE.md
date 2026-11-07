@@ -411,8 +411,9 @@ to be: a zero well depth in the Lennard-Jones table until a preset gives it one 
 = (2.6, 0.0)``), no dispersion term and no interaction at all within its own chain (the packer
 zeroes its exclusion scales for every same-site image, and the force field's own pair terms skip
 it, so the conformer energetics of the valence fit are untouched), zero charge, a covalent
-radius that bond inference never reaches, a polarizability of 1e-6 A^3 (a strict zero would
-put an infinity on the dipole system's diagonal), zero mass. A chain with sites at zero depth
+radius that bond inference never reaches, no polarizability (chargeless and unpolarizable, the
+packer leaves it out of the Ewald sums and the dipole solve altogether; until 2026-11-07 it carried
+a 1e-6 A^3 placeholder and rode through both, 5.14 has the cost), zero mass. A chain with sites at zero depth
 reproduces the plain chain's lattice energy, cell, polarization and stiffness exactly
 (`tests/test_belt_sites.py`); the massless sites shift the chain's principal-axis frame by a
 hair, which is why a fixed set of cell parameters at a rotated orientation is not bit-identical
@@ -888,7 +889,12 @@ the anchor this objective needs next, before any belt set is trusted on a hydroc
 
 **Cost.** Beta 28 s, PE 19 s, alpha 70 s, the copolymer E1 1,719 s and the E2 copolymer T3GT3G'
 cell 967 s, all with the E1 and E2 runs and the test suite sharing the four cores (the belt set's
-copolymer E1 took 1,356 s alone, 5.10).
+copolymer E1 took 1,356 s alone, 5.10). Since 2026-11-07 the packer leaves the belt sites out of the
+Ewald sums and the dipole solve, being chargeless and unpolarizable: one energy-and-gradient call on
+the belt copolymer cell fell from 0.64 to 0.42 s against 0.17 s for the plain chain, the Ewald share
+back to the plain chain's and the remaining excess the Lennard-Jones pair arrays over 212 sites
+(`docs/PERFORMANCE_REVIEW.md` 16.6). The sets above were made before this; the change moves no
+prediction by more than 4e-6 relative (the stage-7 point re-evaluated).
 
 **What is left.** In beta, the lateral axis 0.6% short and C_12 0.9 GPa low are shared by every
 belt set and did not move between stages 6 and 7: they are the coupling between the two lateral
@@ -897,6 +903,68 @@ is 1.4 deg open against a restraint the fit itself set, so the chain-axis excess
 the lateral pressure's, not an invented constant's. Dipole's native alpha positions replace the
 start geometry's angles as anchors when they land; the DFPT tensors (eps_0 lateral above all) and
 the PE cell are the anchors that would let a stage 8 move the form rather than the fit.
+
+### 5.15 Sensitivity at the stage-7 point: what the form can still move
+
+The Jacobian of the sixteen residuals (tolerance units) with respect to the twelve free variables at
+the stage-7 point, by central differences on the PBE-D3 belt geometry
+(`examples/crystal_stage_sensitivity.py`, 25 evaluations, `docs/predictions/crystal_stage_v7_sensitivity.json`),
+scaled by the ridge's prior widths so that an entry of 1 means one width of a variable moves the
+residual by one tolerance:
+
+| residual | x_C | x_H | x_F | D_C | D_H | D_F | q_CH | q_CF | x_HF | D_HF | log10_D_X | log10_k_angle | z at the point |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| beta a (polar) | -0.13 | 1.58 | 0.32 | -0.36 | 0.73 | -0.13 | 0.90 | -1.14 | 0.57 | 0.10 | 5.16 | 0.34 | -0.26 |
+| beta b (lateral) | -0.04 | 1.62 | 1.40 | -0.28 | 0.72 | 0.38 | 0.66 | -1.46 | 2.05 | 1.27 | 2.37 | 0.10 | -0.61 |
+| beta c (chain) | 0.03 | 0.00 | 0.18 | 0.01 | 0.00 | 0.09 | -0.12 | 0.14 | -0.02 | -0.01 | 0.00 | -0.50 | +0.75 |
+| alpha a | 0.13 | 1.77 | 1.06 | -0.19 | 0.80 | 0.24 | 1.06 | -1.85 | 2.64 | 1.71 | 1.83 | 0.88 | -0.38 |
+| alpha b | -0.46 | 0.87 | 0.43 | -0.47 | 0.36 | -0.09 | -0.04 | 0.11 | -0.42 | -0.56 | 4.39 | -0.79 | +0.74 |
+| alpha c | 0.18 | 0.44 | 0.32 | 0.05 | 0.21 | 0.14 | 0.09 | -0.13 | 0.87 | 0.65 | -0.08 | -0.62 | +0.46 |
+| beta Berry P | 0.04 | -0.89 | -0.49 | 0.18 | -0.40 | -0.08 | -2.69 | 4.21 | -0.69 | -0.35 | -2.15 | -0.01 | +0.01 |
+| E(alpha) - E(beta) | 1.22 | 2.95 | -2.22 | 0.99 | 1.69 | -0.34 | 2.79 | -4.01 | 9.26 | 7.21 | -7.32 | 5.06 | -0.01 |
+| beta C_11 | 0.53 | -0.48 | 0.22 | 0.90 | 0.08 | 0.76 | -1.74 | 2.31 | 0.49 | 1.07 | -3.35 | 0.05 | +0.30 |
+| beta C_22 | 0.45 | -0.62 | -0.45 | 0.78 | 0.02 | 0.47 | -1.35 | 2.80 | -0.58 | 0.27 | -1.76 | 0.06 | -0.14 |
+| beta C_12 | 0.25 | -1.06 | -0.57 | 0.33 | -0.35 | 0.00 | -1.82 | 3.10 | -2.68 | -1.61 | 0.99 | -0.04 | -1.51 |
+| beta d\|P\|/d eta (polar) | -0.03 | 0.54 | 0.21 | -0.11 | 0.25 | 0.00 | 1.49 | -2.17 | 0.28 | 0.10 | 1.58 | 0.00 | +0.84 |
+| beta backbone angle | 0.06 | 0.00 | 0.33 | 0.03 | 0.00 | 0.16 | -0.22 | 0.26 | -0.04 | -0.02 | -0.01 | -0.91 | +1.37 |
+| alpha angle at CH2 | 0.14 | 0.36 | 0.82 | 0.05 | 0.19 | 0.39 | -0.09 | 0.04 | 0.71 | 0.55 | 0.02 | -1.34 | -0.18 |
+| alpha angle at CF2 | -0.02 | 0.31 | 0.25 | -0.02 | 0.15 | 0.13 | -0.20 | 0.28 | 0.47 | 0.38 | 0.10 | -1.04 | +0.07 |
+
+The rigid antipolar-polar margin row is zero in every column: under this form the two rigid
+packings are degenerate whatever the parameters, and its z of 0.52 is a floor the fit cannot
+touch. Three things the table says:
+
+**Six directions of twelve.** The singular values of the scaled matrix are 17.3, 11.6, 4.7, 3.4,
+1.35, 1.19, then 0.31, 0.29, 0.06, 0.04, 0.02, 0.00: sixteen residual rows constrain six directions
+of the twelve-variable space to within a prior width, and the ridge decides the other six. That is
+the parameter count against the observation count, stated: the anchors in hand determine half the
+form, and every statement about a residual being "the form's" has to be read with the other half
+set by the prior.
+
+**No residual moves alone.** The minimum-norm step that moves one residual by one tolerance while
+holding the fifteen others is tens to hundreds of widths for every row (14.7 for beta a, 68 for
+C_12, 79 for beta b, 262 for P, 501 for the slope), almost all of it along the softest directions
+(the hydrogen well depth): the anchors are coupled through the same few combinations of
+variables, as a physical potential's should be. The lateral coupling in particular, C_12 and beta
+b, is moved by the variables that set P (q_CF 3.10 and -1.46, q_CH -1.82), the gap (x_HF -2.68 and
+2.05, D_HF -1.61 and 1.27, the wall depth 0.99 and 2.37) and the slope; the carbon diameter the
+earlier stages leaned on gives C_12 0.25 per width and b nothing.
+
+**The trade.** Asking the linear model for the best C_12 and beta b with every other residual held
+within one tolerance and the variables inside their bounds puts both on their anchors, by x_C +2.2
+widths (0.971 to 1.079), the restraint +0.7 widths (178 to 296 kcal/mol/rad^2), D_F -0.7 widths,
+q_CH and x_HF -0.4, with three rows pinned at their limit: beta a, the gap and the beta backbone
+angle. Evaluated for real at that point (`--verify`): C_12 z -0.01 and b +0.12 as predicted,
+beta a +1.18 and the angle +1.05 close to the prediction, but the gap +2.31 against the model's
++0.98, the objective 22.0 (ridge 9.5) against 11.65. The gap is the nonlinear row, with the largest
+sensitivities in the table (9.3 per width of the H-F diameter, 7.2 of its depth, 7.3 of the wall
+depth), and it is the binding constraint: within this form the lateral coupling is bought with the
+alpha-beta gap and beta's polar axis, there is no direction that improves C_12 and b without paying
+in those, and the stage-7 optimum is where the tolerances and the ridge put that trade. So the
+residual is the form's in the sense that matters: stage 8 has to add a direction, a term that
+couples the two lateral axes without moving the gap, which the candidates of 5.14 (a softer or
+longer-ranged wall, a C-F bond dipole or quadrupole, an H..F pair attraction) will be screened
+against with this Jacobian before any is fitted.
 
 ## 6. What it costs, and what it does not touch
 
@@ -935,6 +1003,8 @@ python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt
 python examples/e1_predictions.py --preset pvdf-dft-valence-belt2 --variant belt --geometry pbe --out docs/predictions/e1_polyfind_belt2.json
 python examples/e2_predictions.py --preset pvdf-dft-valence-belt2 --variant belt --geometry pbe --out docs/predictions/e2_polyfind_belt2.json
 python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind_belt2.json --e2 docs/predictions/e2_polyfind_belt2.json
+python examples/crystal_stage_sensitivity.py --fit docs/predictions/crystal_stage_v7.json --out docs/predictions/crystal_stage_v7_sensitivity.json   # 5.15: the Jacobian at the stage-7 point (25 evaluations)
+python examples/crystal_stage_sensitivity.py --analyze docs/predictions/crystal_stage_v7_sensitivity.json --verify   # its linear analysis and the real evaluation of the lateral-coupling trade
 ```
 
 The result file holds the variables, the residual table, the Lennard-Jones terms and
