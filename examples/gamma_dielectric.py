@@ -194,7 +194,15 @@ def gamma_dielectric(ref, polymer, k_backbone: float, h: float = 1e-3) -> dict:
     freq = np.sign(lam) * np.sqrt(np.abs(lam)) * PH.SQRT_KCAL_A2_AMU_TO_CM1
     order = np.argsort(-np.array([np.trace(c) for c in contrib]))
     modes = [{"freq_cm1": float(freq[i]), "d_eps_diag": np.diag(contrib[i]).round(4).tolist()} for i in order[:8]]
+    # the Born tensors themselves, per site (the inert sites carry zeros), for the comparison with DFPT's
+    el = list(pk.elements) * pk.n_chains
+    born = {"frame": "x polar, y lateral, z chain; Z[i][a][b] = d mu_a / d u_ib in e, at the relaxed geometry",
+            "elements": el, "positions_A": Pn.tolist(), "Z": Z.tolist(),
+            "sum_rule_max_abs": float(np.abs(Z.sum(axis=0)).max()),
+            "by_element_mean_diag": {e: np.mean([np.diag(Z[i]) for i in range(pk.N) if el[i] == e], axis=0).round(4).tolist()
+                                     for e in sorted(set(el)) if e != "X"}}
     return {"cell": {"a": float(params[0]), "b": float(params[1]), "gamma_deg": float(params[2]), "c": float(ref.c), "volume_A3": V},
+            "born": born,
             "k_backbone": float(k_backbone), "refined_backbone_angle_deg": theta_ref, "n_backbone_angles": n_backbone,
             "n_bonds": pk._valence.n_bonds, "n_angles": pk._valence.n_angles, "n_free": m, "n_atoms": Na, "n_sites": pk.N,
             "relaxation": {"max_force_before": float(np.abs(g0).max()), "max_force_after": float(np.abs(g1).max()),

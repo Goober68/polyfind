@@ -1016,7 +1016,17 @@ little softer than the rigid rotation (coupling to the pendant bends), 0.04 and 
 the rigid route cannot see is small and is now on the record: the C-F stretch and bend modes add
 0.06 (plain) and 0.11 (belt2) along the polar axis, and two chain-axis modes 0.13 and 0.30 along
 the chain. The rigid-chain route's field step was checked to be in the linear regime (eps_0
-lateral 4.3867 to 4.3858 from 2.5e-4 to 4e-3 V/A).
+lateral 4.3867 to 4.3858 from 2.5e-4 to 4e-3 V/A). The result files also carry the Born tensors
+per site at the relaxed geometry (`"born"`: Z[i][a][b] = d mu_a / d u_ib in e, polyfind's frame),
+for the comparison with DFPT's when Dipole's Gamma successor delivers them. Under belt3 the mean
+diagonals by element are H (+0.25, +0.23, +0.26), F (-0.27, -0.26, -0.27), C (+0.02, +0.03,
++0.01), the sum rule met to 4e-13; under the pre-registered potential H (+0.19, +0.16, +0.19), F
+(-0.20, -0.18, -0.19). These presets carry no charge flux, so their Born tensors are the fixed
+bond-charge increments dressed by the induced dipoles and nothing more; the flux-fitted presets of
+`docs/ELECTROMECHANICS.md` exist because that falls short of DFT's Born tensors, and the same will
+be true here. The dielectric and piezoelectric columns of this document do not rest on the Born
+tensors' size (P and the slope are anchored directly), but a Born comparison with Dipole's DFPT is
+the place where the fixed-charge form will be seen to end.
 
 So the prediction for Dipole's DFPT tensor of beta at the reference cell, in polyfind's frame
 (their a is our y, their b our x): **eps_0 = 2.24 (polar), 4.57 (lateral), 2.74 (chain)**, against
