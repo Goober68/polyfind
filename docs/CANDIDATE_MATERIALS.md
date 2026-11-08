@@ -77,20 +77,23 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 | vdf7-trfe2-cfe1-adj | chlorine (extrapolated) | +0.961 (+0.758) | -0.326 | +11.5%, -14.6% | 0.159 | 0.566 | 736 | 1156 |
 | vdf7-trfe2-ctfe1 | chlorine (extrapolated) | +0.790 (+0.439) | -0.455 | +11.1%, -12.3% | 0.136 | 0.506 | 676 | 1043 |
 | vdf7-trfe2-cdfe1 | chlorine (extrapolated) | +0.146 (-0.267) | -0.447 | +11.3%, -8.8% | 0.130 | 0.532 | 119 | 240 |
-| vdf9-cfe1 | chlorine (extrapolated) | +0.976 (+0.747) | -0.310 | +11.3%, -14.8% | 0.176 | 0.614 | 689 | 1417 |
+| vdf9-cfe1 | chlorine (extrapolated) | +0.982 (+0.755) | -0.308 | +11.4%, -14.7% | 0.176 | 0.614 | 693 | 1425 |
 | vdf8-cfe2 | chlorine (extrapolated) | +0.835 (+0.506) | -0.416 | +10.6%, -13.1% | 0.147 | 0.536 | 675 | 1832 |
 | vdf7-trfe2-an1 | chlorine (extrapolated) | +0.568 (+0.334) | -0.288 | +11.6%, -16.9% | 0.146 | 0.558 | 441 | 802 |
 | vdf7-trfe2-fan1 | chlorine (extrapolated) | +0.912 (+0.912) | +0.000 | +11.0%, -12.9% | 0.144 | 0.581 | 681 | 1155 |
-| vdf9-an1 | chlorine (extrapolated) | +0.456 (+0.196) | -0.303 | +11.7%, -16.4% | 0.163 | 0.590 | 335 | 820 |
+| vdf9-an1 | chlorine (extrapolated) | +0.470 (+0.213) | -0.300 | +11.7%, -16.3% | 0.163 | 0.590 | 345 | 841 |
 | vdf6-trfe3-cdfe1 | chlorine (extrapolated) | +0.805 (+0.480) | -0.362 | +10.8%, -8.4% | 0.127 | 0.523 | 668 | 1020 |
 | vdf6-trfe3-cfe1 | chlorine (extrapolated) | +0.297 (+0.000) | -0.424 | +10.1%, -14.4% | 0.153 | 0.549 | 235 | 707 |
+| vdf9-trfe4-cfe1-14 | chlorine (extrapolated) | +0.110 (-0.187) | -0.420 | +10.5%, -14.2% | 0.156 | 0.552 | 87 | 279 |
+| vdf10-trfe4-14 | VDF/TrFE (validated) | -0.051 (-0.393) | -0.382 | +10.4%, -16.5% | 0.168 | 0.562 | 0 | 0 |
 
 **Reading the screen.**
 
 * **The helix handedness is the first lesson of this pass, and it corrected the pass.** The first
   run (2026-11-07) packed one TG conformer, TGTG'. For the VDF/TrFE copolymer rows that is enough:
-  the 80/20 row's four conformers are degenerate to 0.0002 kcal/mol per monomer. For every chlorine
-  and nitrile row it is not: TG'TG, the other handedness, is 0.9-1.5 kcal/mol per monomer below
+  the 80/20 row's four conformers are degenerate to 0.0002 kcal/mol per monomer, and for a lone
+  defect in a VDF run it hardly matters (VDF/CFE 90/10 and 80/20, VDF/AN 90/10: 0.01-0.05). For
+  every chlorine and nitrile defect beside TrFE at one per ten it is not: TG'TG, the other handedness, is 0.9-1.5 kcal/mol per monomer below
   TGTG' (CFE 0.94, CFE next to TrFE 0.90, CTFE 0.89, AN 1.30, FAN 1.48), because the bulky
   substituent on a backbone carbon in a gauche segment fits one handedness of the helix and not
   the other (in the other, CDFE's chlorine comes within 1.8 A of the TrFE fluorine two monomers
@@ -146,7 +149,12 @@ anchored on is 63/30/7; one regular cell of that composition is fourteen monomer
 never the lowest above): 64/29/7 TTTT -7.138, TG'TG -7.248, TGTG' -7.246 (the two handednesses
 degenerate to 0.003 here, where the ten-monomer CFE cell split them by 0.94: the split is a
 property of the CFE's placement among the TrFE units, not of the chlorine alone), margin +0.11
-kcal/mol per monomer, E* 280 MV/m on the TT-TG dipole difference (the two controls running). So the pin diluted to one per fourteen in a 29 mol% matrix
+kcal/mol per monomer, E* 280 MV/m on the TT-TG dipole difference. The matrix control 71/29 (the
+same cell, CFE replaced by VDF): TTTT -7.666, TG'TG -7.614, margin -0.05 (TGTG' running): the 29
+mol% matrix is degenerate within the model's resolution, and the pin tips the cell by +0.16 per
+monomer, i.e. +2.3 kcal/mol per CFE unit (TT cost +7.4, TG cost +5.1 in this more open lattice,
+against +6.9 and -1.0 in the ten-monomer 20 mol% cell): the pin is a gentler pin where the
+matrix is near-degenerate. The 64/36 matrix control is running. So the pin diluted to one per fourteen in a 29 mol% matrix
 leaves the cell near-degenerate where one per ten in a 20 mol% matrix pinned it at +0.97: at the
 film's composition the model reproduces the relaxor's near-degeneracy, and the quantity that
 carries it is the matrix between the pins.
@@ -174,13 +182,15 @@ chemistry).
 | vdf7-trfe2-cfe1-adj | +0.961 | 736 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf7-trfe2-ctfe1 | +0.790 | 676 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf7-trfe2-cdfe1 | +0.146 | 119 | 0.10 | 0.062% | 0.047 / 0.091 | 4.1 / 14.7 | 0.14 / 0.08 | 21 / 41 |
-| vdf9-cfe1 | +0.976 | 689 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf9-cfe1 | +0.982 | 693 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf8-cfe2 | +0.835 | 675 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf7-trfe2-an1 | +0.568 | 441 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf7-trfe2-fan1 | +0.912 | 681 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf9-an1 | +0.456 | 335 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf9-an1 | +0.470 | 345 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf6-trfe3-cdfe1 | +0.805 | 668 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf6-trfe3-cfe1 | +0.297 | 235 | 0.00 | 0.001% | 0.001 / 0.001 | 0.0 / 0.0 | 0.02 / 0.01 | 0 / 1 |
+| vdf9-trfe4-cfe1-14 | +0.110 | 87 | 0.24 | 0.125% | 0.074 / 0.143 | 13.7 / 47.8 | 0.16 / 0.10 | 42 / 82 |
+| vdf10-trfe4-14 | -0.051 | 0 | 0.88 | 0.071% | 0.052 / 0.102 | 5.8 / 20.6 | 0.13 / 0.07 | 24 / 46 |
 
 **Reading the mapping.** The operating point is 55 V/um bias, 1.8 V/um AC; the polar fraction
 at bias is where the crystal margin puts the channel on its own switching curve, and the strain
@@ -235,8 +245,7 @@ division of labour is now the opposite of what it claimed: TrFE sets the margin 
 how the polar order is broken into the relaxor's nanodomains, and the pin density decides whether
 any matrix is left between pins: one CFE per ten in a 20 mol% matrix pins the whole cell (+0.97);
 one per fourteen in a 29 mol% matrix leaves it at +0.11. CFE without TrFE does not do TrFE's job
-(one or two per ten VDF leave TGTG' lowest by 0.8-1.0 with TGTG' alone; their other conformers are
-running). The terpolymer recipe the literature converged on (about 30 mol% TrFE, 7-10 mol% CFE) is
+(one or two per ten VDF leave the helix lowest by 0.84-0.98 with all four conformers run). The terpolymer recipe the literature converged on (about 30 mol% TrFE, 7-10 mol% CFE) is
 what the fourteen-monomer cell reproduces; the ten-monomer 70/20/10 cell does not, and the margin
 near zero it showed in the first pass was the handedness artefact, not the recipe.
 
@@ -377,9 +386,11 @@ A^3 per monomer around it). With the lowest handedness its margin is +0.57; the 
 alone gave -0.73 (TTTT the ground state) and the reading built on it, that a nitrile drives the
 TrFE host to a saturated ferroelectric, is withdrawn. So a nitrile is a weaker relaxor pin than
 CFE, needing about twice the density for the same hold, at a polarization beside TrFE of 0.146
-C/m^2 against CFE's 0.159. In a VDF host without TrFE the first pass's VDF/AN 90/10 row (TGTG'
-alone: +0.74 to +0.46, threshold 510 to 340 MV/m, TTTT polarization 0.193 to 0.163 C/m^2) is being
-rerun with the other conformers before it is read again. Dipole's registry gate reads AN as
+C/m^2 against CFE's 0.159. In a VDF host without TrFE the VDF/AN 90/10 row stands with all four conformers run: one
+acrylonitrile per ten VDF takes PVDF's +0.74 to +0.47 (threshold 510 to 840 MV/m on the TT-TG
+dipole difference, 335 on the TTTT dipole; TTTT polarization 0.193 to 0.163 C/m^2), so a nitrile
+is a weak trans-favouring unit in a VDF host and a weak helix-favouring pin beside TrFE: it
+follows the lattice it is put in rather than setting it. Dipole's registry gate reads AN as
 "marginal" (-0.11), a different quantity saying something compatible from the lattice's side: the
 nitrile does not frustrate the polar crystal strongly. Its single-bond barriers do not settle its
 speed either way (host bond 10.2 against CFE's 6.8, defect bonds' mean 9.6 against 12.2; see the
