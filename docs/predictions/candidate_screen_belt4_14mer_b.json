@@ -60,9 +60,71 @@
     },
     "TG'TG": {
      "failed": "ValueError('off-site charge asked for F atom 58, which has 2 neighbours; only terminal atoms can carry one')"
+    },
+    "TGTG'": {
+     "energy_rigid_per_monomer_kcal": -6.271108744947062,
+     "P_C_m2": [
+      -0.024850636222664927,
+      -0.05142700214522003,
+      0.0003016681525798188
+     ],
+     "P_abs_C_m2": 0.05711726248683468,
+     "c_per_monomer_A": 2.33358619516851,
+     "volume_per_monomer_A3": 63.329788600989914,
+     "cell": {
+      "a": 5.5511480272773825,
+      "b": 9.789267166679382,
+      "gamma_deg": 92.80001352131643,
+      "c": 32.67020673235914,
+      "volume_A3": 1773.2340808277177
+     },
+     "monomers_per_cell": 28,
+     "dipole_per_monomer_eA": 0.22576937411249826,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.3805420655164125,
+     "pendant_tilts_deg": {
+      "ClH": {
+       "rock": 0.16132205804289979,
+       "wag": 1.4251308412539814,
+       "twist": 1.7932161984436001,
+       "n": 2
+      },
+      "FF": {
+       "rock": 1.2470060425558092,
+       "wag": 2.818591400493971,
+       "twist": 0.8669632266884798,
+       "n": 28
+      },
+      "FH": {
+       "rock": 1.3553402319727526,
+       "wag": 1.6211109989911752,
+       "twist": 1.2382285572271243,
+       "n": 8
+      },
+      "HH": {
+       "rock": 0.994371155282406,
+       "wag": 2.301435019111588,
+       "twist": 0.7237621043211627,
+       "n": 18
+      }
+     },
+     "energy_per_monomer_kcal": -6.651650810463475,
+     "seconds": 733.3639509677887
     }
    },
-   "derived": {}
+   "derived": {
+    "margin_TT_minus_TG_kcal_per_monomer": 0.4020732193509913,
+    "margin_rigid_kcal_per_monomer": 0.07715039498525833,
+    "axial_transition_strain": 0.10767491485850855,
+    "areal_transition_strain": -0.09575612547471368,
+    "dipole_gain_eA_per_monomer": 0.30351304839015153,
+    "P_TT_C_m2": 0.1336878474776162,
+    "P_TG_C_m2": 0.05711726248683468,
+    "tg_conformer": "TGTG'",
+    "tg_conformers_run": {
+     "TGTG'": -6.651650810463475
+    },
+    "threshold_field_MV_m": 574.4578350481755
+   }
   }
  }
 }

@@ -158,7 +158,15 @@ matrix is near-degenerate. The 64/36 matrix control: TTTT -7.239, TGTG' -7.182, 
 the fourteen-monomer cell the matrix is degenerate within the model's resolution from 29 to 36
 mol% TrFE (the ten-monomer 70/30 and 80/20 cells gave +0.15 and +0.18, the 60/40 cell -0.33: the
 cell length moves these numbers by 0.2, which is the sequence-regularity effect of the 50/50 row
-again), and the pin sets where in that window the material sits. So the pin diluted to one per fourteen in a 29 mol% matrix
+again), and the pin sets where in that window the material sits. CDFE in place of the CFE
+(`candidate_screen_belt4_14mer_b.json`): TTTT -6.250, TGTG' -6.652 (TG'TG not buildable, the F-Cl
+clash), margin +0.40: at one per fourteen the CDFE unit tips the degenerate matrix by +0.45 per
+monomer (TT cost +19.8, TG cost +13.5 per unit, pin +6.3) where CFE tips it by +0.16 (+2.3 per
+unit). So the pin strengths of section 4's table are properties of the unit *in its cell*, not of
+the unit: CFE pins at +7.9 per unit in the ten-monomer 20 mol% cell and +2.3 in the fourteen-monomer
+29 mol% one, CDFE at -0.3 and +6.3. The fourteen-monomer cells at the film's composition are the
+ones to read, and in them CDFE is the stronger tipper and leaves the cell at +0.40, off the steep
+part of the curve (E* 570 MV/m), while CFE leaves it at +0.11. So the pin diluted to one per fourteen in a 29 mol% matrix
 leaves the cell near-degenerate where one per ten in a 20 mol% matrix pinned it at +0.97: at the
 film's composition the model reproduces the relaxor's near-degeneracy, and the quantity that
 carries it is the matrix between the pins.
@@ -237,10 +245,13 @@ helix) are:
 | AN (CH2-CH(CN)) | -0.7 | -4.6 | +3.9 | +0.57 |
 | FAN (CH2-CF(CN)) | +5.9 | -1.5 | +7.4 | +0.91 |
 
-CFE, FAN and CTFE pin at 6-8 kcal/mol per unit, AN at 4, CDFE not at all: the chlorine on the
-hydrogen-bearing carbon costs the all-trans and the helical lattice the same 17 kcal/mol, a large
-unit that fits neither, where CFE's chlorine on the fluorine-bearing carbon costs TTTT 7 and the
-helix nothing. CTFE's two costs are both large (it is the bulkiest unit) and its pin is the
+In this cell CFE, FAN and CTFE pin at 6-8 kcal/mol per unit, AN at 4, CDFE not at all: the chlorine
+on the hydrogen-bearing carbon costs the all-trans and the helical lattice the same 17 kcal/mol, a
+large unit that fits neither, where CFE's chlorine on the fluorine-bearing carbon costs TTTT 7 and
+the helix nothing. These numbers are the unit's in a 20 mol% TrFE cell with a pin every ten; in the
+fourteen-monomer 29 mol% cell the same CFE pins at +2.3 and CDFE at +6.3 (section 2), so a pin
+strength is a property of the unit in its matrix and the fourteen-monomer cells are the ones to
+design on. CTFE's two costs are both large (it is the bulkiest unit) and its pin is the
 difference of two big numbers. The nitrile pins by packing *better* into the helix (TG cost -4.6)
 rather than worse into the all-trans lattice (-0.7), the opposite route to the chlorines'. These
 are the rows whose chemistry is extrapolated; the pin strength of CFE against CDFE is the
@@ -299,9 +310,11 @@ first pass's ranking):
    Chlorine chemistry: extrapolated until a DFT cell tests it.
 3. **Alternative pins.** FAN (+7.4) and CTFE (+6.1) pin as CFE does; AN at half the strength
    (+3.9) would need twice the density for the same job, with the polarization cost that brings
-   (section 6). CDFE does not pin (-0.3): whatever its other merits (section 8: its kink pair is
-   free), it is not a relaxor-making defect, and the first pass's CDFE rows were read wrongly on
-   that point.
+   (section 6). CDFE does not pin in the ten-monomer 20 mol% cell (-0.3) but tips the fourteen-
+   monomer 29 mol% cell by +0.45 per monomer, more than CFE (+0.16), leaving it at +0.40: at the
+   film's composition it is a stronger pin than CFE and overshoots the steep part of the curve;
+   its kink pair is the cheapest of the table (section 8). The first pass's CDFE rows were read
+   wrongly on both points.
 4. **A hypothesis the controlled sequence can test and a statistical copolymer cannot:** the pin
    (CFE) and the lattice loosener (CDFE, whose unit costs both conformations alike and whose kink
    pair is free) do different jobs, so a sequence carrying one of each per fourteen would hold the
@@ -455,7 +468,7 @@ relaxation the kink needs, which is a property of the chemistry's all-trans latt
 | vdf7-trfe2-an1 | +1.27 | +3.56 | +11.28 | +6.76 | 6.8-11.3 in the all-trans cell's basin (the own-basin 1.3 is another cell): the nitrile fills the interchain gap (section 6) and locks the lattice against kinks |
 | vdf9-an1 | +0.38 | +1.35 | +12.17 | +7.11 | 7.1-12.2 in the all-trans cell's basin (the own-basin 0.4 is another cell, 5.15 x 9.58 A), as above |
 | vdf9-trfe4-cfe1-14 (64/29/7, fourteen monomers) | +1.82 | - | +13.21 | running | 1.8 in its own basin; the pinned value is a stuck placement rather than a bound (the ten-monomer CFE cell's pinned kink is 3.1 in the same 57 A^3 lattice), so read the released value when it lands |
-| vdf10-trfe4-14 (71/29 matrix, fourteen monomers) | +5.47 | - | running | running | 5.5: the matrix without the pin has the copolymer's kink cost; the one CFE per fourteen cuts it to 1.8 |
+| vdf10-trfe4-14 (71/29 matrix, fourteen monomers) | +5.47 | - | +7.27 | running | 5.5-7.3: the matrix without the pin has the copolymer's kink cost; the one CFE per fourteen cuts it to 1.8 |
 
 The frequency map (`examples/candidate_frequency_map.py`) is run on both ends of the bracket, the
 CFE 70/20/10 row anchored at the measured 364 kHz in each; the full tables are
@@ -555,7 +568,10 @@ cell with one CFE and one CDFE per fourteen (section 5, item 4).
   5.20 against 0.40. So for a chiral sequence the two kink handednesses differ by 5-9 kcal/mol in
   the pinned lattice, the chain takes the cheaper one, and the table above happens to carry it for
   these rows; every chiral row's number is an upper bound on the cheaper handedness until both
-  have run (the own-basin mirrored runs and the fourteen-monomer cell's are going). A real chain
+  have run. In the relaxed kink crystal the difference is small: the mirrored CFE pair costs 1.70
+  against 1.24 in its own basin, so the 5-9 kcal/mol split is the pinned lattice's (the mirrored
+  kink's lateral offset collides where the lattice cannot give), not the kink's own (the CDFE
+  own-basin mirrored run and the fourteen-monomer cell's are going). A real chain
   nucleates whichever pair is cheaper where it is, which the regular isotactic model cannot
   average over.
 * **What the proxy leaves out.** The migration barrier (the hop that moves the kink, 0.357 eV in
