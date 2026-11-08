@@ -24,8 +24,12 @@ near-degeneracy comes from the TrFE matrix (29-40 mol%), and a fourteen-monomer 
 the relaxor at the real composition once the cell holds the matrix between the pins. `docs/CANDIDATE_MATERIALS.md`
 sections 2-8 are rewritten on this (the 70/20/10 ranking is withdrawn; the kink-pair bracket of section 8 stands
 since it does not depend on the margin). `examples/candidate_screen.py` carries the four conformers
-(`TG_VARIANTS`, `conformation()` sized to the repeat, `derive()` takes the lowest TG); the 14-mer controls (71/29,
-64/36), the no-TrFE defect rows' conformers and the 14-mer kink energy are running or next.
+(`TG_VARIANTS`, `conformation()` sized to the repeat, `derive()` takes the lowest TG). The 14-mer dynamics: the
+71/29 matrix is degenerate (-0.05) and frozen at the drive (kink pair 5.5, channel 0.8 kHz, saturated at the bias);
+one CFE per fourteen holds it off saturation (polar fraction 0.24) and cuts the kink to 1.8 (channel at the drive),
+giving tan delta 0.07 for 0.125% AC strain at the operating point (`candidate_frequency_map_belt4_anchor14.md`):
+the relaxor mechanism in one cell. Running or next: the 64/36 control, the 14-mer released and pinned kinks, the
+mirrored kink, CDFE at one per fourteen and the CFE+CDFE cell.
 
 **Where things stand, 2026-11-07 (read this first; the detail is in the dated paragraphs below and in `docs/CRYSTAL_STAGE.md`).**
 Candidate pass, 2026-11-07 22:50 UTC (`docs/CANDIDATE_MATERIALS.md`, `examples/candidate_screen.py`,
