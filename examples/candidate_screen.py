@@ -85,6 +85,9 @@ SEQUENCES = {
     "vdf7-trfe2-an1": ("VVRVVAVVRV", "the slate's nitrile: one acrylonitrile per ten beside 20 mol% TrFE (Dipole's makeable track)"),
     "vdf7-trfe2-fan1": ("VVRVVNVVRV", "2-fluoroacrylonitrile in place of CFE (the slate's dipole-density anomaly)"),
     "vdf9-an1": ("VVVVAVVVVV", "one acrylonitrile per ten VDF, no TrFE: a trans-favouring defect pulling PVDF's margin toward zero from the other side"),
+    "vdf6-trfe3-cdfe1": ("RVVRVDVRVV", "CDFE with more TrFE, 60/30/10: does the TrFE bring the CDFE row's margin down to the CFE row's (section 8 ranks CDFE first on loss per strain)"),
+    "vdf6-trfe3-cfe1": ("RVVRVCVRVV", "CFE at 60/30/10, the trade-off row: the CFE margin was +0.03 at 70/20/10"),
+    "vdf6-trfe2-cdfe2": ("VVRVDVVRVD", "two CDFE per ten beside 20 mol% TrFE: more defect instead of more TrFE"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 
