@@ -241,16 +241,20 @@ not automatically the recommendation") is the lens:
   lattice preferred by more than a kcal). The FOM's first and third place replace the polar
   crystal rather than frustrate it; Dipole's recommendation accordingly reordered to CNEPO, then
   AN and CDFE, with VDCN and FANOMe demoted.
-* **The barrier table** (DFT, the host-reference bond): PVDF 7.4, CFE terpolymer 6.8, VDCN 9.0, AN
-  10.2, CNEPO 16.4 kcal/mol. Read through section 1, this is the frequency lever: the loss per unit
-  strain at the drive frequency is `omega tau` and `tau` grows as `exp(B / kT)`; against PVDF's
-  barrier, CFE's is a factor 2.7 faster at 300 K, VDCN's 14 times slower, AN's 110 times slower,
-  CNEPO's six orders of magnitude slower. On the PI's objective the frequency floor is the one
-  the nitrile and epoxide chemistries fail first, and the baseline terpolymer's defect is the
-  fastest switch on the table. (Dipole's bias-hold descriptors place the cooled operating point
-  above a 30 kHz `f_relax`, in the libration regime, where the barrier does not enter; the
-  measured Vogel-Fulcher fit of the terpolymer film puts `f_relax` at 360 kHz at 300 K, plan
-  section 11, which puts 34-66 kHz below it, in the switching regime, where it does.)
+* **The barrier table** is single-bond torsional barriers, not switching rates. Dipole's
+  `field_barrier_v1.md` scores each pentad's defect bonds (approach, entry, exit) and a host
+  reference bond for the trans-gauche rotation barrier B and the well difference D, at GFN2 and
+  re-scored at DFT, and folds them into the FOM's loss term `L = B_mean (1 + D_mean)` over the
+  defect bonds. At DFT: baseline terpolymer L 37.4, PVDF 27.3, CNEPO 16.7, AN 14.2, VDCN 14.5, so
+  on this term every slate candidate scores 2-2.6 times better than the baseline; read bond by
+  bond the picture is mixed (CNEPO's host-reference bond is 16.4 against PVDF's 7.4 while its
+  flanking exit bond is 4.3; AN's host bond 10.2, its approach bond 7.6). Dipole's own conclusion
+  from the same table is the one that matters here: the field moves these barriers by 1-4% at
+  100 MV/m, so a single monomer cannot be switched by the field, switching is collective, and the
+  single-chain barrier does not decide the loss. The quantity that does, the collective switching
+  barrier of a trans run inside the lattice, has not been computed per chemistry by either seat
+  (polyfind's one number is the kink-row hop in perfect beta, 0.357 eV); section 8 below starts on
+  it with the kink-pair formation energy in the packed cell.
 * **Orientation.** Mirroring an asymmetric defect's substituents in an otherwise unchanged
   lattice moves the packing energy by 0.3-0.5 kcal/mol per monomer (AN 0.53, CFE 0.35; SCN 1.7;
   the symmetric VDCN 0.006 as the control). That is the same statement section 2 makes from the
@@ -302,10 +306,10 @@ threshold from 510 to 340 MV/m, and the TTTT polarization from 0.193 to 0.163 C/
 TrFE does the same job twice as well (10 mol% TrFE: +0.74 to +0.18) and keeps more polarization
 (0.174), so a nitrile is the less efficient trans-favouring unit as well as the slower one; reaching
 the degeneracy with AN alone would take 20-25 mol% on a linear extrapolation, at a polarization
-cost of about 15%. Its polarization beside TrFE stays at 0.145 C/m^2, below CFE's 0.159. On Dipole's barrier table AN's host bond is 2.8 kcal/mol higher than CFE's, a hundred times
-slower at 300 K, which is the frequency floor again; and Dipole's registry gate reads AN as
-"marginal" (-0.11), a different quantity saying the same thing from the lattice's side: the
-nitrile does not frustrate the polar crystal.
+cost of about 15%. Its polarization beside TrFE stays at 0.145 C/m^2, below CFE's 0.159. Dipole's registry gate reads AN as "marginal" (-0.11), a different quantity saying the
+same thing from the lattice's side: the nitrile does not frustrate the polar crystal. Its
+single-bond barriers do not settle its speed either way (host bond 10.2 against CFE's 6.8, defect
+bonds' mean 9.6 against 12.2; see the barrier paragraph above).
 
 **What this seat cannot compute.** CNEPO, SCN, SF5, nitro, isocyanide, the cyano-alkenes and
 cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind does not have; for
