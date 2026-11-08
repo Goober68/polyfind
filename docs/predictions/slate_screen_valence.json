@@ -301,9 +301,55 @@
      },
      "energy_per_monomer_kcal": -4.260094312473151,
      "seconds": 121.24407172203064
+    },
+    "TGTG'": {
+     "energy_rigid_per_monomer_kcal": -2.6497343597858314,
+     "P_C_m2": [
+      0.05520625031284065,
+      -1.2266353399998395e-14,
+      -3.457203102381377e-16
+     ],
+     "P_abs_C_m2": 0.05520625031284065,
+     "c_per_monomer_A": 2.2605117984088667,
+     "volume_per_monomer_A3": 66.02586265385379,
+     "cell": {
+      "a": 6.093520838005095,
+      "b": 9.58669699827519,
+      "gamma_deg": 89.99999999999315,
+      "c": 27.1261415809064,
+      "volume_A3": 1584.620703692491
+     },
+     "monomers_per_cell": 24,
+     "dipole_per_monomer_eA": 0.22750552114155284,
+     "pendant_tilt_relaxation_per_monomer_kcal": -1.9177152619311997,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 3.498771969412692,
+       "wag": 4.850044116621137,
+       "twist": 1.8585007888107923,
+       "n": 22
+      },
+      "HH": {
+       "rock": 2.4487961445440245,
+       "wag": 3.6337200117202375,
+       "twist": 1.7423253546144117,
+       "n": 24
+      }
+     },
+     "energy_per_monomer_kcal": -4.5674496217170315,
+     "seconds": 76.42259454727173
     }
    },
-   "derived": {}
+   "derived": {
+    "margin_TT_minus_TG_kcal_per_monomer": 0.30735530924388055,
+    "margin_rigid_kcal_per_monomer": -1.5770851510879296,
+    "axial_transition_strain": 0.148639239090109,
+    "areal_transition_strain": -0.09225039561630077,
+    "dipole_gain_eA_per_monomer": 0.19207890273303654,
+    "P_TT_C_m2": 0.09764858414173197,
+    "P_TG_C_m2": 0.05520625031284065,
+    "threshold_field_MV_m": 693.8912801865961
+   }
   }
  }
 }

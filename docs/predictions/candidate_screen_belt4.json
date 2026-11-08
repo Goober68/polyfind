@@ -978,6 +978,57 @@
     "P_TG_C_m2": 0.08907429996988075,
     "threshold_field_MV_m": 1831.6958161864475
    }
+  },
+  "vdf7-trfe2-an1": {
+   "letters": "VVRVVAVVRV",
+   "note": "the slate's nitrile: one acrylonitrile per ten beside 20 mol% TrFE (Dipole's makeable track)",
+   "validated_chemistry": false,
+   "conformations": {
+    "TTTT": {
+     "energy_rigid_per_monomer_kcal": -15.584154585609136,
+     "P_C_m2": [
+      -0.04647946489700137,
+      -0.13802313667858754,
+      -2.0395008915920977e-05
+     ],
+     "P_abs_C_m2": 0.14563903093492495,
+     "c_per_monomer_A": 4.923379948726689,
+     "volume_per_monomer_A3": 111.36409770019392,
+     "cell": {
+      "a": 5.488803203342423,
+      "b": 8.242051258369777,
+      "gamma_deg": 89.8695765461969,
+      "c": 25.847744730815116,
+      "volume_A3": 1169.3230258520362
+     },
+     "monomers_per_cell": 10.5,
+     "dipole_per_monomer_eA": 1.062923205351057,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.10441354045467831,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 0.316996832592943,
+       "wag": 1.267139830235576,
+       "twist": 0.40362930522812746,
+       "n": 18
+      },
+      "FH": {
+       "rock": 0.012013063421918425,
+       "wag": 0.5331339512539829,
+       "twist": 0.01729020260852168,
+       "n": 4
+      },
+      "HH": {
+       "rock": 0.6869795537650136,
+       "wag": 0.5433780265886136,
+       "twist": 0.25970589686588275,
+       "n": 16
+      }
+     },
+     "energy_per_monomer_kcal": -15.688568126063814,
+     "seconds": 135.20084166526794
+    }
+   },
+   "derived": {}
   }
  }
 }
