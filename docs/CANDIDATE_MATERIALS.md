@@ -332,8 +332,10 @@ first pass's ranking):
    the all-trans lattice instead (-1.4 per unit, the cell saturated at the bias) and FAN pins at
    about +4 (rigid pendants) and overshoots like CDFE, so neither nitrile is the relaxor's pin in
    a TrFE matrix (section 6). CTFE at one per fourteen pins as CFE does (+0.135 against +0.11) with
-   12% less polarization and 10% less switch strain, so it ranks below CFE unless its kink pair is
-   cheaper (running). CDFE does not pin in the ten-monomer 20 mol% cell (-0.3) but tips the fourteen-
+   12% less polarization and 10% less switch strain, and its kink pair is -0.6: the all-trans CTFE
+   lattice is metastable against kinking at this dilution as it was at one per ten, so its polar
+   phase is a kinked one and the rate proxy has no meaning for it (section 8). It ranks below CFE on
+   stroke and its dynamics are undetermined. CDFE does not pin in the ten-monomer 20 mol% cell (-0.3) but tips the fourteen-
    monomer 29 mol% cell by +0.45 per monomer, more than CFE (+0.16), leaving it at +0.40: at the
    film's composition it is a stronger pin than CFE and overshoots the steep part of the curve;
    its kink pair is the cheapest of the table (section 8). The first pass's CDFE rows were read
@@ -543,6 +545,7 @@ cell takes the measured 364 kHz, every other row's rate is relative to its own-b
 | 64/29/7 with CDFE in place of CFE | +1.08 | 1.3 MHz | +0.40 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.02 / 0.01 |
 | one CFE and one CDFE per fourteen (57/29/7/7) | +0.86 | 1.8 MHz | +0.64 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.00 / 0.00 |
 | 64/29/7 with AN in place of CFE | +1.97 | 285 kHz | -0.15 | 0.87 | 0.076% | 0.055 / 0.107 | 0.72 | 0.14 / 0.08 |
+| 64/29/7 with CTFE in place of CFE | -0.57 | no meaning: the all-trans lattice is metastable against kinking | +0.135 | 0.12 | 0.060% | 0.052 / 0.101 | 0.87 | 0.11 / 0.06 |
 | VDF/TrFE/CDFE 70/20/10, ten monomers | +0.61 | 2.8 MHz | +0.15 | 0.10 | 0.062% | 0.006 / 0.012 | 0.10 | 0.42 / 0.32 |
 | VDF/TrFE 70/30, ten monomers | +4.95 | 2 kHz | +0.15 | 0.11 | 0.006% | 0.576 / 0.310 | 93 | 0.00 / 0.00 |
 
