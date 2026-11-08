@@ -128,6 +128,7 @@ def refine_crystal(
     cutoff: float = 8.0,
     eps_r: float = 1.0,
     gamma_free: bool = False,
+    cell_free: bool = True,
     method: str = "lbfgs",
     maxiter: int = 200,
     h_torsion: float = 0.05,
@@ -150,7 +151,10 @@ def refine_crystal(
     sequence has no recognised pattern) or ``"free"``.  ``refine_angles`` adds the
     repeat's backbone bond angles to the variables, bounded to the polymer's own
     values +/- ``max_angle_change``.  ``refine_torsions=False`` freezes the chain
-    entirely and moves only the cell.
+    entirely and moves only the cell.  ``cell_free=False`` does the opposite for the
+    lattice: ``a, b, gamma`` stay at ``start``'s values and only the chain's placement
+    (``phi1, phi2, dz``) and conformation move, which is how a defect is relaxed inside a
+    lattice that the surrounding crystal pins (a kink pair in the all-trans cell).
 
     ``angle_stiffness`` (kcal/mol/rad^2, UFF-like for sp3 carbon) is the harmonic
     bond-angle term ``0.5 k (theta - theta_0)^2`` summed over the repeat's backbone
@@ -207,7 +211,7 @@ def refine_crystal(
     B = polymer.bonds_per_repeat
     angles0 = np.array([polymer.backbone[k].backbone_angle for k in range(B)])
     p0 = start.params
-    cell_idx = [0, 1, 3, 4, 5] + ([2] if gamma_free else [])
+    cell_idx = ([0, 1] if cell_free else []) + [3, 4, 5] + ([2] if (gamma_free and cell_free) else [])
     n_cell = len(cell_idx)
 
     # --- the conformational block of the variable vector ------------------------
@@ -299,7 +303,7 @@ def refine_crystal(
         def objective(x):
             count["n"] += 1
             s, p = unpack(x)
-            if x[0] < 2.0 or x[1] < 2.0:
+            if cell_free and (x[0] < 2.0 or x[1] < 2.0):
                 return 1e6
             pen = 0.0
             if n_shape:

@@ -219,10 +219,11 @@ with the confidence stated in section 7:
 6. **VDF/CFE without TrFE, PVDF, and the alternating 50/50:** not field-switchable in the crystal.
 
 Section 8 adds the frequency reading: the CFE rows are also the ones whose switching channel
-follows a 34-66 kHz drive (kink pair 1.2-1.4 kcal/mol, channel near 360 kHz), the no-defect
-copolymers' channel is frozen there (kink pair 4.9, channel near 0.7 kHz), and CDFE, which the
-statics ranked below CFE, has the lower loss per strain (kink pair 0.6) if its margin can be
-brought down with more TrFE. What would change the ranking: the migration barrier and the
+follows a 34-66 kHz drive (kink pair 1.2-1.5 kcal/mol under both protocols run, channel near 360
+kHz), the no-defect copolymers' channel is frozen there (kink pair 4.9-5.1, channel near 0.8 kHz),
+and CDFE, which the statics ranked below CFE, has the lower loss per strain (kink pair 0.6-0.7) if
+its margin can be brought down with more TrFE; the CTFE row's kink energy is protocol-dependent
+(section 8) and its rank on loss waits for the pinned-lattice number. What would change the ranking: the migration barrier and the
 cooperativity (not computed); Dipole's E2 cells for rows 1 and 3; and the bench's Vogel-Fulcher
 and bias-suppression numbers, which replace the literature channel the mappings are built on.
 
@@ -337,6 +338,30 @@ Vogel-Fulcher relaxation of the 63/30/7 film (364 kHz at 300 K) and every other 
 scaled by its kink factor, with the screen's margin, dipole and switch strain as before, at the
 program's operating point.
 
+The kinked cell's packing is the protocol question, and three protocols bracket it: the kinked
+chain packed by its own screen and relaxed with the cell (the fully relaxed kink crystal, every
+chain kinked in register and the cell following: the lower bound); the same refinement started
+from the all-trans cell's packing parameters (`--same-basin`, a start and not a constraint); and
+the kinked chain relaxed inside the all-trans cell with `a, b, gamma` held at the all-trans values
+(`--pinned-lattice`, `refine_crystal(cell_free=False)` then an internal-coordinate relaxation: the
+lattice the surrounding crystal pins, the upper bound for a dilute kink pair). Results
+`docs/predictions/kink_formation_belt4.json`, `_samebasin.json`, `_pinned.json`; kcal/mol per kink pair.
+
+| sequence | own basin (kink crystal, lower bound) | same-basin start | pinned lattice (upper bound) | reading |
+|---|---|---|---|---|
+| vdf10 | +4.26 | +4.59 | running | agree within 0.3; the restart moved to the a/b-swapped setting (8.88 x 5.03 A) |
+| vdf8-trfe2 | +4.92 | +6.89 | running | similar cells; the restart sits 2.0 higher (a worse local minimum) |
+| vdf7-trfe3 | +4.95 | +5.09 | running | agree within 0.15 |
+| vdf7-trfe2-cfe1 | +1.24 | +1.47 | running | agree within 0.25, the same cell (5.49 x 8.47 A) |
+| vdf7-trfe2-cfe1-adj | +1.40 | +2.97 | running | similar cells; the restart sits 1.6 higher |
+| vdf7-trfe2-ctfe1 | -0.42 | +5.68 | running | no number: the kinked cell left the all-trans cell (5.69 x 8.13 A) under both, to 5.10 x 9.50 and to 5.56 x 9.74 (13% larger) |
+| vdf7-trfe2-cdfe1 | +0.61 | +0.72 | running | agree within 0.1 although the restart landed in another cell (5.10 x 10.17 A) |
+| vdf7-trfe2-an1 | +1.27 | +3.56 | running | the restart moved to another cell (5.19 x 9.49 A) and sits 2.3 higher |
+| vdf9-an1 | +0.38 | +1.35 | running | the own-basin cell moved (5.15 x 9.58 A); the restart stayed near the all-trans cell (5.49 x 8.50) and sits 1.0 higher |
+
+The frequency map below uses the own-basin energies, the optimistic end for the rows the
+protocols disagree on; the same-basin version is `candidate_frequency_map_belt4_samebasin.md`.
+
 | sequence | kink pair, kcal/mol | rate vs CFE row | f_relax proxy at 300 K | margin | polar fraction at bias | S_ac 34 / 66 kHz | tan delta 34 / 66 kHz | tan delta per % strain, 34 kHz | efficiency 34 / 66 kHz |
 |---|---|---|---|---|---|---|---|---|---|
 | vdf10 | +4.26 | 0.0063 | 2 kHz | +0.744 | 0.00 | 0.000% / 0.000% | 0.000 / 0.000 | 0.25 | 0.00 / 0.00 |
@@ -351,25 +376,34 @@ program's operating point.
 
 **Reading.**
 
-* **The relaxor mechanism, from inside the lattice.** A kink pair in a VDF run costs 4.3 kcal/mol
-  in PVDF and 4.9 in the 80/20 and 70/30 copolymers (TrFE stiffens the trans lattice against
-  kinks), but 1.2-1.4 in the CFE terpolymer model and 0.6 with CDFE, although the kink sits in a
-  VDF run away from the defect: one chlorine per ten monomers loosens the whole lattice (the model
-  cell carries the defects in register) and cuts the nucleation cost by 3.5 kcal/mol, a factor of
-  300-500 in rate at 300 K. That is why the terpolymer switches at tens of kilohertz and the
+* **The relaxor mechanism, from inside the lattice.** A kink pair in a VDF run costs 4.3-4.6
+  kcal/mol in PVDF and 4.9-5.1 in the 70/30 copolymer (4.9-6.9 in the 80/20; TrFE stiffens the
+  trans lattice against kinks), but 1.2-1.5 in the CFE terpolymer model and 0.6-0.7 with CDFE,
+  under both protocols that have run, although the kink sits in a VDF run away from the defect:
+  one chlorine per ten monomers loosens the whole lattice (the model cell carries the defects in
+  register) and cuts the nucleation cost by 3-3.5 kcal/mol, a factor of 200-500 in rate at 300 K. That is why the terpolymer switches at tens of kilohertz and the
   copolymer does not: on this proxy the copolymers' channel sits at 0.7 kHz against 360 kHz, so
   at 34-66 kHz it is frozen, with the loss tail of a peak far below the drive (tan delta 0.1-0.2
   for no strain) where the CFE rows carry the full switch strain at tan delta 0.07-0.14. The
   table therefore separates what the statics could not: the rows with a near-zero margin AND a
   low kink energy are the only ones that both switch at the bias and follow the drive.
-* **The loss-per-strain column is the one to rank on**, and on it the model's order is CTFE
-  (0.06), CDFE (0.27), CFE (0.67-0.76), AN beside TrFE (0.91), the no-defect copolymers (100: loss
-  without strain). The CTFE and CDFE numbers come with their caveats: CTFE's kinked cell packed
-  in a different basin from its all-trans cell (its cell changed from 5.69 x 8.13 to 5.10 x 9.50 A)
-  and its kink energy is negative, so that row says the all-trans CTFE lattice is unstable to a
-  kink rather than that the kink is cheap; CDFE's cell stayed in its basin. A same-basin rerun
-  (`--same-basin`: the kinked chain refined from the all-trans cell's own packing parameters) is
-  the check, and its numbers replace these when it lands.
+* **The loss-per-strain column is the one to rank on**, and on it what survives both protocols is
+  CDFE (0.21-0.27) ahead of CFE (0.67), with the no-defect copolymers out (loss without strain).
+  The CTFE row's rank is withdrawn: its kink energy is -0.4 under the own-basin protocol and +5.7
+  under the same-basin start, because its kinked cell left the all-trans cell under both (5.10 x
+  9.50 and 5.56 x 9.74 A against 5.69 x 8.13), so the row has no formation energy until the
+  pinned-lattice run gives one. The nitrile rows are protocol-dependent for the same reason (AN
+  beside TrFE 1.3-3.6, VDF/AN 90/10 0.4-1.35), as is the CFE-adjacent placement (1.4-3.0).
+* **What the same-basin check showed.** Starting the kinked chain's refinement from the all-trans
+  cell's packing parameters is a start, not a constraint: the cell is free in the refinement and
+  the relaxation, and in four rows it moved anyway (PVDF to the a/b-swapped setting, CDFE to
+  5.10 x 10.17 A, AN beside TrFE to 5.19 x 9.49 A, CTFE to a cell 13% larger); where it stayed in
+  a cell like the own-basin one, the restarted refinement sits 0.1-2.0 kcal/mol per kink pair
+  higher, a worse local minimum of the same kink crystal. So neither protocol is the dilute kink.
+  The own-basin number is the fully relaxed kink crystal, a lower bound; the pinned-lattice
+  number is the upper bound, and the two bracket the quantity the rate needs. Where the bracket
+  is narrow (PVDF, 70/30, CFE 70/20/10, CDFE) the row's reading stands; where it is wide the row
+  waits for the pinned number and then carries the bracket.
 * **What the proxy leaves out.** The migration barrier (the hop that moves the kink, 0.357 eV in
   perfect beta from an earlier polyfind computation) is assumed equal across rows; the
   cooperativity `Tf` is not computed and the anchoring on the measured film fixes it at the

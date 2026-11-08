@@ -241,6 +241,18 @@ def test_refinement_without_torsions_only_moves_the_cell():
     assert res.result.energy_per_monomer <= start.energy_per_monomer + 1e-9
 
 
+def test_pinned_cell_refinement_moves_only_the_internal_coordinates():
+    chain = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
+    packer = CrystalPacker(chain)
+    start = packer.result(np.array([5.29, 8.99, 92.0, 209.5, 209.5, 0.0, 0.0]))
+    res = refine_crystal(PVDF, start, cell_free=False, maxfev=20, maxiter=20)
+    np.testing.assert_allclose(res.result.params[:3], start.params[:3], atol=1e-12)
+    assert res.result.energy_per_monomer <= start.energy_per_monomer + 1e-9
+    nm = refine_crystal(PVDF, start, cell_free=False, method="nelder-mead", maxfev=40)
+    np.testing.assert_allclose(nm.result.params[:3], start.params[:3], atol=1e-12)
+    assert nm.result.energy_per_monomer <= start.energy_per_monomer + 1e-9
+
+
 # ------------------------------------------------- line-group parametrisation (item 5)
 def test_linegroup_is_the_default_and_needs_no_penalty():
     chain = periodic_chain(PVDF, [T, GP, T, GM], THREE_STATE)
