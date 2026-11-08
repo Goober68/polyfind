@@ -69,12 +69,12 @@ def build_from(polymer, seq, label, start_params, pinned=False, release=False):
     return M.relax_reference(ref), rr
 
 
-def build_pinned_from_own(polymer, seq, label, start_params):
+def build_pinned_from_own(polymer, seq, label, start_params, builder):
     """E2's own-basin build of the kinked chain, then ``a, b, gamma`` set to the all-trans cell's values and only the
     placement (phi1, phi2, dz) relaxed: the kink pair in the pinned lattice, started from the kinked chain's own
     refined conformation instead of the all-trans cell's placement (which the long repeats get stuck in)."""
     from polyfind import mechanics as M
-    ref, rr = C.E2.build(polymer, seq, label)
+    ref, rr = builder(polymer, seq, label)  # E2's own build, captured before the monkeypatch (calling C.E2.build here would recurse)
     p = np.asarray(ref.params, dtype=float).copy()
     p[:3] = np.asarray(start_params, dtype=float)[:3]
     return M.Reference(packer=ref.packer, params=M.relax(ref, p, M._INTERNAL_FREE), c=ref.c, label=ref.label), rr
@@ -84,7 +84,7 @@ def one_cell_from(polymer, seq, label, start_params, pinned=False, release=False
     """candidate_screen.one_cell with the build seeded from ``start_params``."""
     saved = C.E2.build
     if from_own:
-        C.E2.build = lambda pol, sq, lab: build_pinned_from_own(pol, sq, lab, start_params)
+        C.E2.build = lambda pol, sq, lab: build_pinned_from_own(pol, sq, lab, start_params, saved)
     else:
         C.E2.build = lambda pol, sq, lab: build_from(pol, sq, lab, start_params, pinned, release)
     try:
