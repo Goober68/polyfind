@@ -14,6 +14,12 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**Dipole, 2026-11-08 22:33 UTC.** A power outage on Dipole's host killed both DFT successors (alpha at BFGS 37/120
+after 27 h, Gamma at representation 22/36); Dipole marked them lost and started fresh ones under the PI's standing
+restart instruction, no checkpoint reuse: `pvdf_alpha_ref_fresh_20261108_v2` (ETA uncertain; the v1 pace says about
+three days) and `beta_zero_gamma_fresh_20261108_v2` (40-46 h). Hourly lines on sarco main. Nothing from Dipole lands
+before 2026-11-10; the stage-8 items that wait on it (task #16) stay parked.
+
 **Correction, 2026-11-08 (read before the candidate paragraph below).** The candidate screen's first pass ran one
 of an isotactic sequence's four TG conformers (TGTG'); for every chlorine and nitrile row the other handedness
 (TG'TG) is 0.9-1.5 kcal/mol per monomer lower (a multi-start probe confirms it is the model's effect, not the
