@@ -512,6 +512,7 @@ cell takes the measured 364 kHz, every other row's rate is relative to its own-b
 | 64/29/7, one CFE per fourteen | +1.82 | 364 kHz (anchor) | +0.11 | 0.24 | 0.125% | 0.074 / 0.143 | 0.59 | 0.16 / 0.10 |
 | 71/29, the matrix without the pin | +5.47 | 0.8 kHz | -0.05 | 0.88 | 0.003% | 0.262 / 0.136 | 101 | 0.00 / 0.00 |
 | 64/29/7 with CDFE in place of CFE | +1.08 | 1.3 MHz | +0.40 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.02 / 0.01 |
+| one CFE and one CDFE per fourteen (57/29/7/7) | +0.86 | 1.8 MHz | +0.64 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.00 / 0.00 |
 | VDF/TrFE/CDFE 70/20/10, ten monomers | +0.61 | 2.8 MHz | +0.15 | 0.10 | 0.062% | 0.006 / 0.012 | 0.10 | 0.42 / 0.32 |
 | VDF/TrFE 70/30, ten monomers | +4.95 | 2 kHz | +0.15 | 0.11 | 0.006% | 0.576 / 0.310 | 93 | 0.00 / 0.00 |
 
@@ -528,8 +529,10 @@ but half the strain, because nothing holds its matrix on the steep part of the c
 per fourteen in the 29 mol% matrix is the fastest lattice of the table (kink pair 1.1, channel 1.3
 MHz) and switches nothing at the bias: at the film's dilution it pins harder than CFE (+0.40) and
 overshoots the steep part, so the loosening it buys is not usable on its own. The cell with one
-CFE and one CDFE per fourteen is pinned harder still (+0.64; section 5, item 4), its kink energy is
-running.
+CFE and one CDFE per fourteen has the loosest lattice of all (kink pair 0.86) and is pinned harder
+still (+0.64; section 5, item 4): in this model every chlorine buys loosening and pinning together,
+and at the film's dilution one CFE per fourteen is the amount of chlorine that leaves the matrix on
+the steep part of its curve.
 
 **Reading.**
 
