@@ -93,6 +93,11 @@ SEQUENCES = {
     "vdf6-trfe3-cfe1-b": ("VRVRVVRVCV", "60/30/10 CFE, a second TrFE placement"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
+# The other handedness and the other phase of the TGTG' helix.  For an achiral chain (PVDF) all four are one
+# conformer; for a chiral (isotactic copolymer) sequence they are four different conformers, and the TG side
+# of the margin is the lowest of those that were run (derive() picks it and records which).
+TG_VARIANTS = {"TG'TG": [T, GM, T, GP] * 5, "GTG'T": [GP, T, GM, T] * 5, "G'TGT": [GM, T, GP, T] * 5}
+CONFORMATIONS.update(TG_VARIANTS)
 
 
 def make_polymer(name: str, letters: str) -> Polymer:
@@ -125,16 +130,26 @@ def one_cell(polymer, seq, label):
     return row
 
 
+def lowest_tg(rows: dict):
+    """``(key, row)`` of the lowest TG-type conformer that ran, or ``(None, None)``."""
+    cands = [(k, r) for k, r in rows.items() if k != "TTTT" and r and "failed" not in r]
+    if not cands:
+        return None, None
+    return min(cands, key=lambda kr: kr[1]["energy_per_monomer_kcal"])
+
+
 def derive(rows: dict) -> dict:
-    tt, tg = rows.get("TTTT"), rows.get("TGTG'")
-    if not tt or not tg or "failed" in tt or "failed" in tg:
+    tt = rows.get("TTTT")
+    tg_key, tg = lowest_tg(rows)
+    if not tt or not tg or "failed" in tt:
         return {}
     de = tt["energy_per_monomer_kcal"] - tg["energy_per_monomer_kcal"]
     dmu = tt["dipole_per_monomer_eA"] - tg["dipole_per_monomer_eA"]
     out = {"margin_TT_minus_TG_kcal_per_monomer": de, "margin_rigid_kcal_per_monomer": tt["energy_rigid_per_monomer_kcal"] - tg["energy_rigid_per_monomer_kcal"],
            "axial_transition_strain": tt["c_per_monomer_A"] / tg["c_per_monomer_A"] - 1.0,
            "areal_transition_strain": (tt["volume_per_monomer_A3"] / tt["c_per_monomer_A"]) / (tg["volume_per_monomer_A3"] / tg["c_per_monomer_A"]) - 1.0,
-           "dipole_gain_eA_per_monomer": dmu, "P_TT_C_m2": tt["P_abs_C_m2"], "P_TG_C_m2": tg["P_abs_C_m2"]}
+           "dipole_gain_eA_per_monomer": dmu, "P_TT_C_m2": tt["P_abs_C_m2"], "P_TG_C_m2": tg["P_abs_C_m2"], "tg_conformer": tg_key,
+           "tg_conformers_run": {k: r["energy_per_monomer_kcal"] for k, r in rows.items() if k != "TTTT" and r and "failed" not in r}}
     if de > 0 and dmu > 0:
         out["threshold_field_MV_m"] = ES.threshold_field(de, dmu) * 1e4
     elif de <= 0:
@@ -146,7 +161,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--sequences", default=",".join(SEQUENCES))
-    ap.add_argument("--conformations", default=",".join(CONFORMATIONS))
+    ap.add_argument("--conformations", default="TTTT,TGTG'", help="comma list; the TG variants TG'TG, GTG'T, G'TGT are the other handedness and phase of the helix")
     ap.add_argument("--out", default="docs/predictions/candidate_screen_belt4.json")
     args = ap.parse_args()
     params = PRESET_PARAMETERS[args.preset]

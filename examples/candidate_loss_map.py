@@ -52,7 +52,7 @@ def main():
         rows[name] = {"validated_chemistry": e["validated_chemistry"], "note": e["note"], "margin": d["margin_TT_minus_TG_kcal_per_monomer"],
                       "margin_rigid": d["margin_rigid_kcal_per_monomer"], "mu_TT": c["TTTT"]["dipole_per_monomer_eA"], "dmu_diff": d["dipole_gain_eA_per_monomer"],
                       "axial": d["axial_transition_strain"], "areal": d["areal_transition_strain"], "P_TT": d["P_TT_C_m2"], "P_TG": d["P_TG_C_m2"],
-                      "tilt_TG": c["TGTG'"].get("pendant_tilt_relaxation_per_monomer_kcal", 0.0) or 0.0}
+                      "tilt_TG": c[d.get("tg_conformer") or "TGTG'"].get("pendant_tilt_relaxation_per_monomer_kcal", 0.0) or 0.0, "tg_conformer": d.get("tg_conformer", "TGTG'")}
     base = L.literature_terpolymer()
     out = {"operating_point": {"bias_V_um": args.bias, "ac_V_um": args.ac, "young_Pa": args.young, "frequencies_hz": [34e3, 66e3]},
            "baseline": {"dmu_mon": base.dmu_mon, "de_mon": base.de_mon, "n": base.n, "fraction": base.fraction, "f_relax_hz_300K": base.f_relax(300.0)},

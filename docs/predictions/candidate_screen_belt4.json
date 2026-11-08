@@ -1531,6 +1531,66 @@
     }
    },
    "derived": {}
+  },
+  "vdf6-trfe3-cdfe1-b": {
+   "letters": "VRVRVVRVDV",
+   "note": "60/30/10 CDFE, a second TrFE placement (the placement spread at 30 mol% TrFE)",
+   "validated_chemistry": false,
+   "conformations": {
+    "TTTT": {
+     "energy_rigid_per_monomer_kcal": -5.8609632292537075,
+     "P_C_m2": [
+      -0.09976135926914483,
+      -0.07908562141724235,
+      7.37778842789504e-06
+     ],
+     "P_abs_C_m2": 0.1273061835599926,
+     "c_per_monomer_A": 2.5847495657196715,
+     "volume_per_monomer_A3": 65.76548889326764,
+     "cell": {
+      "a": 5.631974524494424,
+      "b": 9.098167353648103,
+      "gamma_deg": 96.73237931641063,
+      "c": 25.847495657196713,
+      "volume_A3": 1315.3097778653528
+     },
+     "monomers_per_cell": 20,
+     "dipole_per_monomer_eA": 0.5225611972667793,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.03445710740869288,
+     "pendant_tilts_deg": {
+      "ClH": {
+       "rock": 0.051014981005723825,
+       "wag": 1.1546005746967052,
+       "twist": 0.052801838485153255,
+       "n": 2
+      },
+      "FF": {
+       "rock": 0.5467841089237886,
+       "wag": 0.45000924810097953,
+       "twist": 0.20742132662467508,
+       "n": 20
+      },
+      "FH": {
+       "rock": 0.023849483865252725,
+       "wag": 1.4288808109761055,
+       "twist": 0.024879344063957903,
+       "n": 6
+      },
+      "HH": {
+       "rock": 0.6220717037777254,
+       "wag": 0.14250255201415332,
+       "twist": 0.27789352081921254,
+       "n": 12
+      }
+     },
+     "energy_per_monomer_kcal": -5.895420336662401,
+     "seconds": 171.83251786231995
+    },
+    "TGTG'": {
+     "failed": "ValueError('off-site charge asked for F atom 70, which has 2 neighbours; only terminal atoms can carry one')"
+    }
+   },
+   "derived": {}
   }
  }
 }
