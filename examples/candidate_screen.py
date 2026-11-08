@@ -84,6 +84,7 @@ SEQUENCES = {
     "vdf8-cfe2": ("VVCVVVVCVV", "two CFE per ten, no TrFE"),
     "vdf7-trfe2-an1": ("VVRVVAVVRV", "the slate's nitrile: one acrylonitrile per ten beside 20 mol% TrFE (Dipole's makeable track)"),
     "vdf7-trfe2-fan1": ("VVRVVNVVRV", "2-fluoroacrylonitrile in place of CFE (the slate's dipole-density anomaly)"),
+    "vdf9-an1": ("VVVVAVVVVV", "one acrylonitrile per ten VDF, no TrFE: a trans-favouring defect pulling PVDF's margin toward zero from the other side"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 
