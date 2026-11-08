@@ -30,6 +30,11 @@ CS.loader.exec_module(C)
 T, GP, GM = 0, 1, 2
 KT = 0.596  # kcal/mol at 300 K
 KINK = [GP, T, GM] + [T] * 17  # a kink pair in the first two monomers; the chain direction is restored after it
+
+
+def kink_at(offset: int) -> list:
+    """The kink pair moved ``offset`` bonds along the periodic repeat (the chain is periodic, so it wraps)."""
+    return [int(x) for x in np.roll(np.asarray(KINK), offset % len(KINK))]
 ROWS = ["vdf10", "vdf8-trfe2", "vdf7-trfe3", "vdf7-trfe2-cfe1", "vdf7-trfe2-cfe1-adj", "vdf7-trfe2-ctfe1", "vdf7-trfe2-cdfe1", "vdf7-trfe2-an1", "vdf9-an1"]
 EXTRA = {"vdf10": ("VVVVVVVVVV", "PVDF as a ten-monomer sequence"), "vdf7-trfe3": ("VVRVVRVVVR", "the 70/30 model of the E2 set as a ten-monomer sequence")}
 
@@ -81,6 +86,7 @@ def main():
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--screen", default="docs/predictions/candidate_screen_belt4.json", help="the candidate screen: its TTTT rows are the references")
     ap.add_argument("--rows", default=",".join(ROWS))
+    ap.add_argument("--kink-at", default="0", help="comma list of bond offsets of the kink pair along the repeat (default 0: bonds 0-2); an offset k writes its row as '<name>@k', so a scan is the kink's energy landscape along the sequence, the pinning by the TrFE and the defect")
     ap.add_argument("--out", default="docs/predictions/kink_formation_belt4.json")
     args = ap.parse_args()
     screen = json.load(open(args.screen))["sequences"]
@@ -92,43 +98,50 @@ def main():
     results.update({"preset": args.preset, "protocol": protocol, "kink": "T G+ T G- T pair at bonds 0-2 of the twenty-bond repeat, one per chain, relaxed with the cell; pendant tilts as in the candidate screen",
                     "energy": "kcal/mol per kink pair: (E_kinked - E_TTTT) per cell / n_chains", "rate_proxy": "exp(-(E_form - E_form_ref) / kT) at 300 K, reference the CFE 70/20/10 row"})
     results.setdefault("rows", {})
+    offsets = [int(x) for x in args.kink_at.split(",")]
+    p0_cache = {}
     with PRESET_PARAMETERS[args.preset].applied():
         for name in args.rows.split(","):
-            letters, note = (C.SEQUENCES.get(name) or EXTRA[name])
-            polymer = C.make_polymer(name, letters)
-            entry = results["rows"].setdefault(name, {"letters": letters, "note": note, "validated_chemistry": set(letters) <= C.VALIDATED})
-            if "kinked" not in entry or "failed" in entry["kinked"]:
-                try:
-                    if args.same_basin or args.pinned_lattice or args.pinned_release:
-                        p0 = reference_params(polymer, f"{name} TTTT")
-                        entry["start_params"] = p0.tolist()
-                        entry["kinked"] = one_cell_from(polymer, KINK, f"{name} kink", p0, pinned=args.pinned_lattice or args.pinned_release, release=args.pinned_release)
-                    else:
-                        entry["kinked"] = C.one_cell(polymer, KINK, f"{name} kink")
-                except Exception as exc:
-                    entry["kinked"] = {"failed": repr(exc)}
-                    print(f"{name} kink: failed: {exc!r}", flush=True)
-            if "TTTT" not in entry or "failed" in entry["TTTT"]:
-                ref = screen.get(name, {}).get("conformations", {}).get("TTTT")
-                if ref is None or "failed" in ref:
+            for offset in offsets:
+                letters, note = (C.SEQUENCES.get(name) or EXTRA[name])
+                polymer = C.make_polymer(name, letters)
+                key = name if offset == 0 else f"{name}@{offset}"
+                kink = kink_at(offset)
+                entry = results["rows"].setdefault(key, {"letters": letters, "note": note, "validated_chemistry": set(letters) <= C.VALIDATED, "kink_offset_bonds": offset})
+                if "kinked" not in entry or "failed" in entry["kinked"]:
                     try:
-                        ref = C.one_cell(polymer, [T] * 20, f"{name} TTTT")
+                        if args.same_basin or args.pinned_lattice or args.pinned_release:
+                            if name not in p0_cache:
+                                p0_cache[name] = reference_params(polymer, f"{name} TTTT")
+                            p0 = p0_cache[name]
+                            entry["start_params"] = p0.tolist()
+                            entry["kinked"] = one_cell_from(polymer, kink, f"{key} kink", p0, pinned=args.pinned_lattice or args.pinned_release, release=args.pinned_release)
+                        else:
+                            entry["kinked"] = C.one_cell(polymer, kink, f"{key} kink")
                     except Exception as exc:
-                        ref = {"failed": repr(exc)}
-                entry["TTTT"] = ref
-            k, r = entry["kinked"], entry["TTTT"]
-            if "failed" not in k and "failed" not in r:
-                n_mon = k["monomers_per_cell"]
-                n_chains = 2
-                e_form = (k["energy_per_monomer_kcal"] - r["energy_per_monomer_kcal"]) * n_mon / n_chains
-                e_form_rigid = (k["energy_rigid_per_monomer_kcal"] - r["energy_rigid_per_monomer_kcal"]) * n_mon / n_chains
-                entry["formation_kcal_per_kink_pair"] = e_form
-                entry["formation_rigid_kcal_per_kink_pair"] = e_form_rigid
-                entry["kink_tilt_release_kcal_per_cell"] = k["pendant_tilt_relaxation_per_monomer_kcal"] * n_mon
-                entry["c_change_pct"] = 100.0 * (k["c_per_monomer_A"] / r["c_per_monomer_A"] - 1.0)
-                print(f"{name:22s}: kink pair {e_form:+.2f} kcal/mol (rigid {e_form_rigid:+.2f}); chain shortens {entry['c_change_pct']:+.2f}%; |P| {k['P_abs_C_m2']:.3f} vs {r['P_abs_C_m2']:.3f}  ({k['seconds']:.0f} s)", flush=True)
-            with open(out_path, "w") as fh:
-                json.dump(results, fh, indent=1)
+                        entry["kinked"] = {"failed": repr(exc)}
+                        print(f"{name} kink: failed: {exc!r}", flush=True)
+                if "TTTT" not in entry or "failed" in entry["TTTT"]:
+                    ref = screen.get(name, {}).get("conformations", {}).get("TTTT")
+                    if ref is None or "failed" in ref:
+                        try:
+                            ref = C.one_cell(polymer, [T] * 20, f"{name} TTTT")
+                        except Exception as exc:
+                            ref = {"failed": repr(exc)}
+                    entry["TTTT"] = ref
+                k, r = entry["kinked"], entry["TTTT"]
+                if "failed" not in k and "failed" not in r:
+                    n_mon = k["monomers_per_cell"]
+                    n_chains = 2
+                    e_form = (k["energy_per_monomer_kcal"] - r["energy_per_monomer_kcal"]) * n_mon / n_chains
+                    e_form_rigid = (k["energy_rigid_per_monomer_kcal"] - r["energy_rigid_per_monomer_kcal"]) * n_mon / n_chains
+                    entry["formation_kcal_per_kink_pair"] = e_form
+                    entry["formation_rigid_kcal_per_kink_pair"] = e_form_rigid
+                    entry["kink_tilt_release_kcal_per_cell"] = k["pendant_tilt_relaxation_per_monomer_kcal"] * n_mon
+                    entry["c_change_pct"] = 100.0 * (k["c_per_monomer_A"] / r["c_per_monomer_A"] - 1.0)
+                    print(f"{key:22s}: kink pair {e_form:+.2f} kcal/mol (rigid {e_form_rigid:+.2f}); chain shortens {entry['c_change_pct']:+.2f}%; |P| {k['P_abs_C_m2']:.3f} vs {r['P_abs_C_m2']:.3f}  ({k['seconds']:.0f} s)", flush=True)
+                with open(out_path, "w") as fh:
+                    json.dump(results, fh, indent=1)
     ref_row = results["rows"].get("vdf7-trfe2-cfe1", {})
     e_ref = ref_row.get("formation_kcal_per_kink_pair")
     if e_ref is not None:
