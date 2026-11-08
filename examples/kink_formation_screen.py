@@ -32,13 +32,13 @@ KT = 0.596  # kcal/mol at 300 K
 KINK = [GP, T, GM] + [T] * 17  # a kink pair in the first two monomers; the chain direction is restored after it
 
 
-def kink_at(offset: int, mirror: bool = False) -> list:
+def kink_at(offset: int, mirror: bool = False, n_bonds: int = 20) -> list:
     """The kink pair moved ``offset`` bonds along the periodic repeat (the chain is periodic, so it wraps).
 
     ``mirror`` swaps G+ and G- (the kink pair of the other handedness): for a chiral (isotactic
     copolymer) sequence the two are different conformers, as the TG helix's handednesses are.
     """
-    k = np.asarray(KINK)
+    k = np.asarray([GP, T, GM] + [T] * (n_bonds - 3))
     if mirror:
         k = np.where(k == GP, GM, np.where(k == GM, GP, k))
     return [int(x) for x in np.roll(k, offset % len(k))]
@@ -81,7 +81,7 @@ def one_cell_from(polymer, seq, label, start_params, pinned=False, release=False
 
 def reference_params(polymer, label):
     """The all-trans cell's refined packing parameters (a, b, gamma, phi1, phi2, dz, flip)."""
-    ref, rr = C.E2.build(polymer, [T] * 20, label)
+    ref, rr = C.E2.build(polymer, [T] * polymer.bonds_per_repeat, label)
     return np.asarray(ref.params, dtype=float)
 
 
@@ -114,7 +114,7 @@ def main():
                 letters, note = (C.SEQUENCES.get(name) or EXTRA[name])
                 polymer = C.make_polymer(name, letters)
                 key = (name if offset == 0 else f"{name}@{offset}") + ("~" if args.mirror_kink else "")
-                kink = kink_at(offset, args.mirror_kink)
+                kink = kink_at(offset, args.mirror_kink, polymer.bonds_per_repeat)
                 entry = results["rows"].setdefault(key, {"letters": letters, "note": note, "validated_chemistry": set(letters) <= C.VALIDATED, "kink_offset_bonds": offset, "kink_mirrored": bool(args.mirror_kink)})
                 if "kinked" not in entry or "failed" in entry["kinked"]:
                     try:
@@ -133,7 +133,7 @@ def main():
                     ref = screen.get(name, {}).get("conformations", {}).get("TTTT")
                     if ref is None or "failed" in ref:
                         try:
-                            ref = C.one_cell(polymer, [T] * 20, f"{name} TTTT")
+                            ref = C.one_cell(polymer, [T] * polymer.bonds_per_repeat, f"{name} TTTT")
                         except Exception as exc:
                             ref = {"failed": repr(exc)}
                     entry["TTTT"] = ref

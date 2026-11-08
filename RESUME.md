@@ -14,6 +14,19 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**Correction, 2026-11-08 (read before the candidate paragraph below).** The candidate screen's first pass ran one
+of an isotactic sequence's four TG conformers (TGTG'); for every chlorine and nitrile row the other handedness
+(TG'TG) is 0.9-1.5 kcal/mol per monomer lower (a multi-start probe confirms it is the model's effect, not the
+search's), so the defect rows' margins are +0.57 to +0.97, not near zero, and the defects read as TG-favouring
+pins (CFE +7.9, FAN +7.4, CTFE +6.1, AN +3.9 kcal/mol per unit; CDFE does not pin) rather than margin tuners. The
+near-degeneracy comes from the TrFE matrix (29-40 mol%), and a fourteen-monomer cell at the film's composition
+(64/29/7, one CFE per fourteen) gives +0.11 where the ten-monomer 70/20/10 cell gives +0.97: the model reproduces
+the relaxor at the real composition once the cell holds the matrix between the pins. `docs/CANDIDATE_MATERIALS.md`
+sections 2-8 are rewritten on this (the 70/20/10 ranking is withdrawn; the kink-pair bracket of section 8 stands
+since it does not depend on the margin). `examples/candidate_screen.py` carries the four conformers
+(`TG_VARIANTS`, `conformation()` sized to the repeat, `derive()` takes the lowest TG); the 14-mer controls (71/29,
+64/36), the no-TrFE defect rows' conformers and the 14-mer kink energy are running or next.
+
 **Where things stand, 2026-11-07 (read this first; the detail is in the dated paragraphs below and in `docs/CRYSTAL_STAGE.md`).**
 Candidate pass, 2026-11-07 22:50 UTC (`docs/CANDIDATE_MATERIALS.md`, `examples/candidate_screen.py`,
 `examples/candidate_loss_map.py`): ten-monomer sequences packed in TTTT and TGTG' under belt4 with pendant

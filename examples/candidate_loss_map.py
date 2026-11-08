@@ -28,7 +28,9 @@ def main():
     ap.add_argument("--young", type=float, default=0.2e9)
     ap.add_argument("--out", default="docs/predictions/candidate_loss_map_belt4.json")
     args = ap.parse_args()
-    screen = json.load(open(args.screen))
+    screen = {"sequences": {}}
+    for path in args.screen.split(","):  # several screen files (the ten- and fourteen-monomer cells) merge by row name
+        screen["sequences"].update(json.load(open(path))["sequences"])
     rows = {}
     # the two E2 rows: PVDF and the 70/30 model, in the same quantities
     e2 = json.load(open(args.e2))["systems"]
