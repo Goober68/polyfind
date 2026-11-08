@@ -69,10 +69,24 @@ def build_from(polymer, seq, label, start_params, pinned=False, release=False):
     return M.relax_reference(ref), rr
 
 
-def one_cell_from(polymer, seq, label, start_params, pinned=False, release=False):
+def build_pinned_from_own(polymer, seq, label, start_params):
+    """E2's own-basin build of the kinked chain, then ``a, b, gamma`` set to the all-trans cell's values and only the
+    placement (phi1, phi2, dz) relaxed: the kink pair in the pinned lattice, started from the kinked chain's own
+    refined conformation instead of the all-trans cell's placement (which the long repeats get stuck in)."""
+    from polyfind import mechanics as M
+    ref, rr = C.E2.build(polymer, seq, label)
+    p = np.asarray(ref.params, dtype=float).copy()
+    p[:3] = np.asarray(start_params, dtype=float)[:3]
+    return M.Reference(packer=ref.packer, params=M.relax(ref, p, M._INTERNAL_FREE), c=ref.c, label=ref.label), rr
+
+
+def one_cell_from(polymer, seq, label, start_params, pinned=False, release=False, from_own=False):
     """candidate_screen.one_cell with the build seeded from ``start_params``."""
     saved = C.E2.build
-    C.E2.build = lambda pol, sq, lab: build_from(pol, sq, lab, start_params, pinned, release)
+    if from_own:
+        C.E2.build = lambda pol, sq, lab: build_pinned_from_own(pol, sq, lab, start_params)
+    else:
+        C.E2.build = lambda pol, sq, lab: build_from(pol, sq, lab, start_params, pinned, release)
     try:
         return C.one_cell(polymer, seq, label)
     finally:
@@ -89,6 +103,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--same-basin", action="store_true", help="refine the kinked chain from the all-trans cell's own packing parameters instead of its own packing screen (a start, not a constraint: the cell is still free to move)")
     ap.add_argument("--pinned-lattice", action="store_true", help="refine the kinked chain inside the all-trans cell with a, b, gamma held at the all-trans values (only the chain's placement, torsions and angles move): the kink pair in a lattice the surrounding crystal pins, the upper bound")
+    ap.add_argument("--pinned-from-own", action="store_true", help="the kinked chain refined in its own basin, then a, b, gamma set to the all-trans cell's values and only the placement relaxed: the pinned lattice reached from the kink's own conformation (the start the long repeats need)")
     ap.add_argument("--pinned-release", action="store_true", help="the pinned-lattice refinement followed by a local relaxation of the cell: the kink crystal in the basin nearest the all-trans cell (between the pinned upper bound and the own-basin lower bound)")
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--screen", default="docs/predictions/candidate_screen_belt4.json", help="the candidate screen: its TTTT rows are the references")
@@ -100,7 +115,8 @@ def main():
     screen = json.load(open(args.screen))["sequences"]
     out_path = Path(args.out)
     results = json.load(open(out_path)) if out_path.exists() else {}
-    protocol = ("pinned lattice then released: the pinned-lattice refinement, then a, b, gamma and the placement relaxed locally (the kink crystal in the basin nearest the all-trans cell)" if args.pinned_release
+    protocol = ("pinned lattice from the own-basin conformation: a, b, gamma set to the all-trans cell's values after the kinked chain's own refinement, placement relaxed" if args.pinned_from_own
+                else "pinned lattice then released: the pinned-lattice refinement, then a, b, gamma and the placement relaxed locally (the kink crystal in the basin nearest the all-trans cell)" if args.pinned_release
                 else "pinned lattice: a, b, gamma held at the all-trans cell's values, chain placement and conformation relaxed" if args.pinned_lattice
                 else "same basin: kinked chain refined from the all-trans cell's packing parameters (cell free)" if args.same_basin else "own packing screen")
     results.update({"preset": args.preset, "protocol": protocol, "kink": "T G+ T G- T pair at bonds 0-2 of the twenty-bond repeat, one per chain, relaxed with the cell; pendant tilts as in the candidate screen",
@@ -118,12 +134,12 @@ def main():
                 entry = results["rows"].setdefault(key, {"letters": letters, "note": note, "validated_chemistry": set(letters) <= C.VALIDATED, "kink_offset_bonds": offset, "kink_mirrored": bool(args.mirror_kink)})
                 if "kinked" not in entry or "failed" in entry["kinked"]:
                     try:
-                        if args.same_basin or args.pinned_lattice or args.pinned_release:
+                        if args.same_basin or args.pinned_lattice or args.pinned_release or args.pinned_from_own:
                             if name not in p0_cache:
                                 p0_cache[name] = reference_params(polymer, f"{name} TTTT")
                             p0 = p0_cache[name]
                             entry["start_params"] = p0.tolist()
-                            entry["kinked"] = one_cell_from(polymer, kink, f"{key} kink", p0, pinned=args.pinned_lattice or args.pinned_release, release=args.pinned_release)
+                            entry["kinked"] = one_cell_from(polymer, kink, f"{key} kink", p0, pinned=args.pinned_lattice or args.pinned_release, release=args.pinned_release, from_own=args.pinned_from_own)
                         else:
                             entry["kinked"] = C.one_cell(polymer, kink, f"{key} kink")
                     except Exception as exc:
