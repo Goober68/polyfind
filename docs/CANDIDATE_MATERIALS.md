@@ -467,7 +467,7 @@ relaxation the kink needs, which is a property of the chemistry's all-trans latt
 | vdf7-trfe2-cdfe1 | +0.61 | +0.72 | +0.40 | +0.08 | 0.1-0.6, the narrowest: the kink pair is free within the protocols' resolution; the kink fits the all-trans CDFE lattice as it is (65.6 A^3 per monomer, gamma 96.7 deg) |
 | vdf7-trfe2-an1 | +1.27 | +3.56 | +11.28 | +6.76 | 6.8-11.3 in the all-trans cell's basin (the own-basin 1.3 is another cell): the nitrile fills the interchain gap (section 6) and locks the lattice against kinks |
 | vdf9-an1 | +0.38 | +1.35 | +12.17 | +7.11 | 7.1-12.2 in the all-trans cell's basin (the own-basin 0.4 is another cell, 5.15 x 9.58 A), as above |
-| vdf9-trfe4-cfe1-14 (64/29/7, fourteen monomers) | +1.82 | - | +13.21 | running | 1.8 in its own basin; the pinned value is a stuck placement rather than a bound (the ten-monomer CFE cell's pinned kink is 3.1 in the same 57 A^3 lattice), so read the released value when it lands |
+| vdf9-trfe4-cfe1-14 (64/29/7, fourteen monomers) | +1.82 | - | +13.21 | +11.75 | 1.8 in its own basin; the pinned and released values are a stuck placement rather than a bound (the ten-monomer CFE cell's pinned kink is 3.1 in the same 57 A^3 lattice; releasing the cell recovers only 1.5), so the pinned lattice is being reached from the kink's own conformation instead (`--pinned-from-own`) |
 | vdf10-trfe4-14 (71/29 matrix, fourteen monomers) | +5.47 | - | +7.27 | running | 5.5-7.3: the matrix without the pin has the copolymer's kink cost; the one CFE per fourteen cuts it to 1.8 |
 
 The frequency map (`examples/candidate_frequency_map.py`) is run on both ends of the bracket, the
@@ -570,10 +570,11 @@ cell with one CFE and one CDFE per fourteen (section 5, item 4).
   these rows; every chiral row's number is an upper bound on the cheaper handedness until both
   have run. In the relaxed kink crystal the difference is small: the mirrored CFE pair costs 1.70
   against 1.24 in its own basin, so the 5-9 kcal/mol split is the pinned lattice's (the mirrored
-  kink's lateral offset collides where the lattice cannot give), not the kink's own (the CDFE
-  own-basin mirrored run and the fourteen-monomer cell's are going). A real chain
-  nucleates whichever pair is cheaper where it is, which the regular isotactic model cannot
-  average over.
+  kink's lateral offset collides where the lattice cannot give), not the kink's own. The mirrored CDFE pair in its own basin is -3.20: a kinked CDFE
+  crystal 3.2 kcal/mol per kink pair *below* the all-trans one, so the ten-monomer CDFE all-trans
+  lattice is metastable against kinking (as the CTFE one was, -0.4), the far end of the
+  chlorine's loosening and one more reason the CDFE rows are read in the fourteen-monomer cell,
+  not this one (the fourteen-monomer cell's mirrored kink is running).
 * **What the proxy leaves out.** The migration barrier (the hop that moves the kink, 0.357 eV in
   perfect beta from an earlier polyfind computation) is assumed equal across rows; the
   cooperativity `Tf` is not computed and the anchoring on the measured film fixes it at the
