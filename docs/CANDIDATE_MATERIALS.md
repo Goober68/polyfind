@@ -86,6 +86,9 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 | vdf6-trfe3-cfe1 | chlorine (extrapolated) | +0.297 (+0.000) | -0.424 | +10.1%, -14.4% | 0.153 | 0.549 | 235 | 707 |
 | vdf9-trfe4-cfe1-14 | chlorine (extrapolated) | +0.110 (-0.187) | -0.420 | +10.5%, -14.2% | 0.156 | 0.552 | 87 | 279 |
 | vdf10-trfe4-14 | VDF/TrFE (validated) | -0.051 (-0.393) | -0.382 | +10.4%, -16.5% | 0.168 | 0.562 | 0 | 0 |
+| vdf9-trfe5-14 | VDF/TrFE (validated) | -0.058 (-0.413) | -0.393 | +10.5%, -17.1% | 0.164 | 0.551 | 0 | 0 |
+| vdf9-trfe4-cdfe1-14 | chlorine (extrapolated) | +0.402 (+0.077) | -0.381 | +10.8%, -9.6% | 0.134 | 0.529 | 329 | 574 |
+| vdf8-trfe4-cfe1-cdfe1-14 | chlorine (extrapolated) | +0.641 (+0.303) | -0.458 | +11.3%, -14.0% | 0.129 | 0.526 | 529 | 1479 |
 
 **Reading the screen.**
 
@@ -166,7 +169,10 @@ unit). So the pin strengths of section 4's table are properties of the unit *in 
 the unit: CFE pins at +7.9 per unit in the ten-monomer 20 mol% cell and +2.3 in the fourteen-monomer
 29 mol% one, CDFE at -0.3 and +6.3. The fourteen-monomer cells at the film's composition are the
 ones to read, and in them CDFE is the stronger tipper and leaves the cell at +0.40, off the steep
-part of the curve (E* 570 MV/m), while CFE leaves it at +0.11. So the pin diluted to one per fourteen in a 29 mol% matrix
+part of the curve (E* 570 MV/m), while CFE leaves it at +0.11. With one CFE and one CDFE per
+fourteen (`DVRVVRVCVVRVVR`, 57/29/7/7): TTTT -5.928, TG'TG -6.569, margin +0.64. The two pins add
+(-0.05 + 0.16 + 0.45 = +0.56 against +0.64 found), so at the film's dilution every chlorine unit
+tips the degenerate matrix toward the helix and two of them tip it off the curve. So the pin diluted to one per fourteen in a 29 mol% matrix
 leaves the cell near-degenerate where one per ten in a 20 mol% matrix pinned it at +0.97: at the
 film's composition the model reproduces the relaxor's near-degeneracy, and the quantity that
 carries it is the matrix between the pins.
@@ -203,6 +209,9 @@ chemistry).
 | vdf6-trfe3-cfe1 | +0.297 | 235 | 0.00 | 0.001% | 0.001 / 0.001 | 0.0 / 0.0 | 0.02 / 0.01 | 0 / 1 |
 | vdf9-trfe4-cfe1-14 | +0.110 | 87 | 0.24 | 0.125% | 0.074 / 0.143 | 13.7 / 47.8 | 0.16 / 0.10 | 42 / 82 |
 | vdf10-trfe4-14 | -0.051 | 0 | 0.88 | 0.071% | 0.052 / 0.102 | 5.8 / 20.6 | 0.13 / 0.07 | 24 / 46 |
+| vdf9-trfe5-14 | -0.058 | 0 | 0.88 | 0.072% | 0.053 / 0.103 | 5.8 / 20.8 | 0.13 / 0.08 | 24 / 47 |
+| vdf9-trfe4-cdfe1-14 | +0.402 | 329 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf8-trfe4-cfe1-cdfe1-14 | +0.641 | 529 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 
 **Reading the mapping.** The operating point is 55 V/um bias, 1.8 V/um AC; the polar fraction
 at bias is where the crystal margin puts the channel on its own switching curve, and the strain
@@ -315,11 +324,15 @@ first pass's ranking):
    film's composition it is a stronger pin than CFE and overshoots the steep part of the curve;
    its kink pair is the cheapest of the table (section 8). The first pass's CDFE rows were read
    wrongly on both points.
-4. **A hypothesis the controlled sequence can test and a statistical copolymer cannot:** the pin
-   (CFE) and the lattice loosener (CDFE, whose unit costs both conformations alike and whose kink
-   pair is free) do different jobs, so a sequence carrying one of each per fourteen would hold the
-   relaxor's disorder with the pin and buy its dynamics with the loosener. The model has not run
-   that cell.
+4. **A hypothesis tested and failed as posed:** that the pin (CFE) and a lattice loosener (CDFE,
+   neutral in the ten-monomer cell with a free kink pair) do different jobs, so one of each per
+   fourteen would hold the relaxor's disorder with the pin and buy its dynamics with the loosener.
+   In the 29 mol% fourteen-monomer cell CDFE is not neutral (+0.45 per monomer, more than CFE's
+   +0.16) and the two add: the CFE+CDFE cell sits at +0.64, off the curve, and CDFE alone at +0.40.
+   What the idea needs is a unit that costs the all-trans and the helical lattice alike *at the
+   film's dilution*, which neither chlorine is; the loosening both chlorines bring (kink pair 1.1-1.8
+   against the matrix's 5.5) comes with the pinning, and at one per fourteen CFE's is the usable
+   combination.
 5. **Out:** PVDF and the alternating 50/50 (not switchable in the crystal), CFE without TrFE (the
    helix by 0.8-1.0), and the ten-monomer 70/20/10 cells as models of the switching unit.
 
@@ -515,7 +528,8 @@ but half the strain, because nothing holds its matrix on the steep part of the c
 per fourteen in the 29 mol% matrix is the fastest lattice of the table (kink pair 1.1, channel 1.3
 MHz) and switches nothing at the bias: at the film's dilution it pins harder than CFE (+0.40) and
 overshoots the steep part, so the loosening it buys is not usable on its own. The cell with one
-CFE and one CDFE per fourteen (section 5, item 4) is running.
+CFE and one CDFE per fourteen is pinned harder still (+0.64; section 5, item 4), its kink energy is
+running.
 
 **Reading.**
 
