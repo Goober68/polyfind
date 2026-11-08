@@ -450,8 +450,10 @@ lowest (per unit: TTTT 0.0, the helix +1.4), so it saturates the matrix at the b
 same dilution is -0.09 with rigid pendants, which the other units' tilt release would turn to about
 +0.25 (the FAN cell's tilts cannot be treated: its carbon carries a fluorine and a nitrile
 fragment), a pin of about CDFE's kind with the same overshoot; its chemistry is the least tested
-of the table. So in this model the nitriles are not the relaxor's pin in a TrFE matrix, and AN's
-kink energy (running) decides only whether it loosens a lattice it leaves ferroelectric.
+of the table. So in this model the nitriles are not the relaxor's pin in a TrFE matrix. AN does loosen the
+lattice it leaves ferroelectric (kink pair 2.0 against the matrix's 5.5, channel 285 kHz on the
+fourteen-monomer anchor): a fast saturated ferroelectric, which under the bias-hold operating point
+gives the pinless matrix's strain (0.076%) and loss (tan delta 0.055), not the relaxor's.
 
 **What this seat cannot compute.** CNEPO, SCN, SF5, nitro, isocyanide, the cyano-alkenes and
 cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind does not have; for
@@ -533,6 +535,7 @@ cell takes the measured 364 kHz, every other row's rate is relative to its own-b
 | 71/29, the matrix without the pin | +5.47 | 0.8 kHz | -0.05 | 0.88 | 0.003% | 0.262 / 0.136 | 101 | 0.00 / 0.00 |
 | 64/29/7 with CDFE in place of CFE | +1.08 | 1.3 MHz | +0.40 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.02 / 0.01 |
 | one CFE and one CDFE per fourteen (57/29/7/7) | +0.86 | 1.8 MHz | +0.64 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.00 / 0.00 |
+| 64/29/7 with AN in place of CFE | +1.97 | 285 kHz | -0.15 | 0.87 | 0.076% | 0.055 / 0.107 | 0.72 | 0.14 / 0.08 |
 | VDF/TrFE/CDFE 70/20/10, ten monomers | +0.61 | 2.8 MHz | +0.15 | 0.10 | 0.062% | 0.006 / 0.012 | 0.10 | 0.42 / 0.32 |
 | VDF/TrFE 70/30, ten monomers | +4.95 | 2 kHz | +0.15 | 0.11 | 0.006% | 0.576 / 0.310 | 93 | 0.00 / 0.00 |
 

@@ -33,10 +33,13 @@ the relaxor mechanism in one cell. The 14-mer matrix is degenerate within resolu
 cell properties: CFE +7.9 per unit in the 20 mol% ten-monomer cell, +2.3 in the 29 mol% fourteen-monomer one, CDFE
 -0.3 and +6.3) with the fastest lattice (kink 1.1, channel 1.3 MHz) and no strain at the bias; CFE+CDFE per
 fourteen adds the two pins (+0.64), so the pin-and-loosener hypothesis fails as posed. The kink pair's handedness
-splits 5-9 kcal/mol in the pinned lattice and 0-0.5 in the relaxed one (section 8). Running: the 71/29 released
-kink, the pinned-from-own protocol for the 14-mer cells (the pinned-from-all-trans start sticks for long repeats:
-64/29/7 pinned 13.2 / released 11.8 against own 1.8), the CFE+CDFE cell's kink. Still to run: the kink-position
-scan (the pinning landscape), FAN and AN at one per fourteen.
+splits 5-9 kcal/mol in the pinned lattice and 0-0.5 in the relaxed one (section 8). The 14-mer brackets with the
+pinned-from-own protocol (`--pinned-from-own`; the pinned-from-all-trans start sticks for long repeats): 64/29/7
+1.8-3.5, matrix 5.5-7.6; CDFE-14 kink 1.1, CFE+CDFE-14 0.86 (loosest, hardest pinned), AN-14 2.0 with the cell
+TT-ground (-0.15: AN favours the all-trans lattice at the film's dilution, FAN about +0.25 with tilts estimated),
+so neither nitrile is the relaxor's pin. Deferred: the kink-position scan (the pinned protocol it needs exaggerates
+handedness and sticks; the own basin cannot compare positions), the dilute kink (a mixed-conformation cell), the
+migration barrier. Running: CTFE at one per fourteen and a twenty-monomer 65/30/5 cell (the pin-density lever).
 
 **Where things stand, 2026-11-07 (read this first; the detail is in the dated paragraphs below and in `docs/CRYSTAL_STAGE.md`).**
 Candidate pass, 2026-11-07 22:50 UTC (`docs/CANDIDATE_MATERIALS.md`, `examples/candidate_screen.py`,
