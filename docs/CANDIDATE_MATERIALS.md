@@ -574,7 +574,8 @@ cell with one CFE and one CDFE per fourteen (section 5, item 4).
   crystal 3.2 kcal/mol per kink pair *below* the all-trans one, so the ten-monomer CDFE all-trans
   lattice is metastable against kinking (as the CTFE one was, -0.4), the far end of the
   chlorine's loosening and one more reason the CDFE rows are read in the fourteen-monomer cell,
-  not this one (the fourteen-monomer cell's mirrored kink is running).
+  not this one. In the fourteen-monomer 64/29/7 cell the two kink handednesses are equal within
+  resolution in their own basin (1.79 against 1.82), so its 1.8 is the number.
 * **What the proxy leaves out.** The migration barrier (the hop that moves the kink, 0.357 eV in
   perfect beta from an earlier polyfind computation) is assumed equal across rows; the
   cooperativity `Tf` is not computed and the anchoring on the measured film fixes it at the
