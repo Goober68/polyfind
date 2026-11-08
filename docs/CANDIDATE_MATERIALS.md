@@ -89,6 +89,8 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 | vdf9-trfe5-14 | VDF/TrFE (validated) | -0.058 (-0.413) | -0.393 | +10.5%, -17.1% | 0.164 | 0.551 | 0 | 0 |
 | vdf9-trfe4-cdfe1-14 | chlorine (extrapolated) | +0.402 (+0.077) | -0.381 | +10.8%, -9.6% | 0.134 | 0.529 | 329 | 574 |
 | vdf8-trfe4-cfe1-cdfe1-14 | chlorine (extrapolated) | +0.641 (+0.303) | -0.458 | +11.3%, -14.0% | 0.129 | 0.526 | 529 | 1479 |
+| vdf9-trfe4-an1-14 | chlorine (extrapolated) | -0.154 (-0.494) | -0.393 | +10.8%, -15.4% | 0.145 | 0.524 | 0 | 0 |
+| vdf9-trfe4-fan1-14 | chlorine (extrapolated) | -0.091 (-0.091) | +0.000 | +10.6%, -12.2% | 0.141 | 0.537 | 0 | 0 |
 
 **Reading the screen.**
 
@@ -212,6 +214,8 @@ chemistry).
 | vdf9-trfe5-14 | -0.058 | 0 | 0.88 | 0.072% | 0.053 / 0.103 | 5.8 / 20.8 | 0.13 / 0.08 | 24 / 47 |
 | vdf9-trfe4-cdfe1-14 | +0.402 | 329 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf8-trfe4-cfe1-cdfe1-14 | +0.641 | 529 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf9-trfe4-an1-14 | -0.154 | 0 | 0.87 | 0.076% | 0.055 / 0.107 | 5.9 / 21.0 | 0.14 / 0.08 | 26 / 50 |
+| vdf9-trfe4-fan1-14 | -0.091 | 0 | 0.87 | 0.074% | 0.054 / 0.105 | 5.9 / 20.9 | 0.14 / 0.08 | 25 / 48 |
 
 **Reading the mapping.** The operating point is 55 V/um bias, 1.8 V/um AC; the polar fraction
 at bias is where the crystal margin puts the channel on its own switching curve, and the strain
@@ -258,7 +262,8 @@ In this cell CFE, FAN and CTFE pin at 6-8 kcal/mol per unit, AN at 4, CDFE not a
 on the hydrogen-bearing carbon costs the all-trans and the helical lattice the same 17 kcal/mol, a
 large unit that fits neither, where CFE's chlorine on the fluorine-bearing carbon costs TTTT 7 and
 the helix nothing. These numbers are the unit's in a 20 mol% TrFE cell with a pin every ten; in the
-fourteen-monomer 29 mol% cell the same CFE pins at +2.3 and CDFE at +6.3 (section 2), so a pin
+fourteen-monomer 29 mol% cell the same CFE pins at +2.3, CDFE at +6.3, AN at -1.4 (it favours the
+all-trans lattice there) and FAN at about +4 with rigid pendants (sections 2 and 6), so a pin
 strength is a property of the unit in its matrix and the fourteen-monomer cells are the ones to
 design on. CTFE's two costs are both large (it is the bulkiest unit) and its pin is the
 difference of two big numbers. The nitrile pins by packing *better* into the helix (TG cost -4.6)
@@ -317,9 +322,11 @@ first pass's ranking):
    the mapping. Its placement relative to TrFE is not a lever for the
    margin (0.005 per monomer); the pin spacing is (section 4), and a controlled sequence fixes it.
    Chlorine chemistry: extrapolated until a DFT cell tests it.
-3. **Alternative pins.** FAN (+7.4) and CTFE (+6.1) pin as CFE does; AN at half the strength
-   (+3.9) would need twice the density for the same job, with the polarization cost that brings
-   (section 6). CDFE does not pin in the ten-monomer 20 mol% cell (-0.3) but tips the fourteen-
+3. **Alternative pins.** In the ten-monomer 20 mol% cell FAN (+7.4) and CTFE (+6.1) pin as CFE
+   does and AN at half the strength (+3.9); at the film's dilution in the 29 mol% matrix AN favours
+   the all-trans lattice instead (-1.4 per unit, the cell saturated at the bias) and FAN pins at
+   about +4 (rigid pendants) and overshoots like CDFE, so neither nitrile is the relaxor's pin in
+   a TrFE matrix (section 6); CTFE at one per fourteen has not been run. CDFE does not pin in the ten-monomer 20 mol% cell (-0.3) but tips the fourteen-
    monomer 29 mol% cell by +0.45 per monomer, more than CFE (+0.16), leaving it at +0.40: at the
    film's composition it is a stronger pin than CFE and overshoots the steep part of the curve;
    its kink pair is the cheapest of the table (section 8). The first pass's CDFE rows were read
@@ -414,6 +421,9 @@ recommendation asks (AN as "the makeable track"); the belt4 screen's rows for it
 | VDF/TrFE/AN 70/20/10 | +0.57 (+0.33), TG'TG lowest; TGTG' alone gave -0.73 | -0.29 | +11.6%, -16.9% | 0.146 | 0.558 | 440 MV/m |
 | VDF/TrFE/FAN 70/20/10 | +0.91 (+0.91; tilts not treated: the FAN carbon's pendants are a fluorine and a nitrile fragment), TG'TG lowest; TGTG' alone gave -0.57 | - | +11.0%, -12.9% | 0.144 | 0.581 | 680 MV/m |
 | VDF/TrFE/CFE 70/20/10, for comparison | +0.97 (+0.76), TG'TG lowest; TGTG' alone gave +0.03 | -0.33 | +11.5%, -14.5% | 0.159 | 0.566 | 740 MV/m |
+| 64/29/7 with AN in place of CFE, fourteen monomers | -0.15 (-0.49): TTTT the ground state, the matrix alone is -0.05 | -0.39 | +10.8%, -15.4% | 0.145 | 0.516 | 0 |
+| 64/29/7 with FAN in place of CFE, fourteen monomers | -0.09 rigid (tilts not treated for the FAN cell); about +0.25 with the other units' tilts added by hand | - | +10.6%, -12.2% | 0.141 | 0.516 | 0 (rigid) |
+| 64/29/7 with CFE, fourteen monomers, for comparison | +0.11 (-0.19) | -0.42 | +10.5%, -14.2% | 0.156 | 0.552 | 280 MV/m |
 
 A nitrile defect beside 20 mol% TrFE is a TG-favouring pin of about half CFE's strength (section
 4: +3.9 against +7.9 kcal/mol per unit), and it pins by the opposite route: where CFE's chlorine
@@ -432,6 +442,16 @@ follows the lattice it is put in rather than setting it. Dipole's registry gate 
 nitrile does not frustrate the polar crystal strongly. Its single-bond barriers do not settle its
 speed either way (host bond 10.2 against CFE's 6.8, defect bonds' mean 9.6 against 12.2; see the
 barrier paragraph above).
+
+At the film's dilution, one per fourteen in the 29 mol% TrFE matrix, the nitrile does the opposite
+of what a relaxor pin does: AN takes the degenerate matrix (-0.05) to -0.15, the all-trans lattice
+lowest (per unit: TTTT 0.0, the helix +1.4), so it saturates the matrix at the bias (polar fraction
+0.88, the pinless matrix's) instead of holding it on the steep part as CFE does (0.24). FAN at the
+same dilution is -0.09 with rigid pendants, which the other units' tilt release would turn to about
++0.25 (the FAN cell's tilts cannot be treated: its carbon carries a fluorine and a nitrile
+fragment), a pin of about CDFE's kind with the same overshoot; its chemistry is the least tested
+of the table. So in this model the nitriles are not the relaxor's pin in a TrFE matrix, and AN's
+kink energy (running) decides only whether it loosens a lattice it leaves ferroelectric.
 
 **What this seat cannot compute.** CNEPO, SCN, SF5, nitro, isocyanide, the cyano-alkenes and
 cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind does not have; for

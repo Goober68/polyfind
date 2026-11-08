@@ -183,9 +183,71 @@
      "pendant_tilts_deg": "unavailable: ValueError('belt site 79: its carbon has no two pendant atoms within a bond length ([(1.3863000000000008, 78, array([0., 0., 0.])), (2.140315940234214, 76, array([0., 0., 0.]))])')",
      "energy_per_monomer_kcal": -7.029706209858999,
      "seconds": 412.3219361305237
+    },
+    "TG'TG": {
+     "energy_rigid_per_monomer_kcal": -6.938391015757537,
+     "P_C_m2": [
+      -0.0737106356919117,
+      -2.6625565191377903e-16,
+      8.944845528262125e-17
+     ],
+     "P_abs_C_m2": 0.0737106356919117,
+     "c_per_monomer_A": 2.336997605934943,
+     "volume_per_monomer_A3": 62.75982043889606,
+     "cell": {
+      "a": 6.087378081591085,
+      "b": 8.823139470000491,
+      "gamma_deg": 90.0,
+      "c": 32.7179664830892,
+      "volume_A3": 1757.2749722890896
+     },
+     "monomers_per_cell": 28,
+     "dipole_per_monomer_eA": 0.2887363454372573,
+     "pendant_tilt_relaxation_per_monomer_kcal": 0.0,
+     "pendant_tilts_deg": "unavailable: ValueError('belt site 79: its carbon has no two pendant atoms within a bond length ([(1.3862999999999988, 78, array([0., 0., 0.])), (2.1319390553520496, 75, array([0., 0., 0.]))])')",
+     "energy_per_monomer_kcal": -6.938391015757537,
+     "seconds": 433.2933416366577
+    },
+    "TGTG'": {
+     "energy_rigid_per_monomer_kcal": -6.643039910058266,
+     "P_C_m2": [
+      0.052955038260551084,
+      -0.05579598350074718,
+      -0.05388432680691297
+     ],
+     "P_abs_C_m2": 0.09391990485209341,
+     "c_per_monomer_A": 2.351076071993495,
+     "volume_per_monomer_A3": 65.27087000622234,
+     "cell": {
+      "a": 6.125674635967674,
+      "b": 9.11708642613335,
+      "gamma_deg": 83.82480034793998,
+      "c": 32.91506500790893,
+      "volume_A3": 1827.5843601742254
+     },
+     "monomers_per_cell": 28,
+     "dipole_per_monomer_eA": 0.3826191051914792,
+     "pendant_tilt_relaxation_per_monomer_kcal": 0.0,
+     "pendant_tilts_deg": "unavailable: ValueError('belt site 79: its carbon has no two pendant atoms within a bond length ([(1.3862999999999996, 78, array([0., 0., 0.])), (2.1237417108908603, 85, array([0., 0., 0.]))])')",
+     "energy_per_monomer_kcal": -6.643039910058266,
+     "seconds": 399.31352949142456
     }
    },
-   "derived": {}
+   "derived": {
+    "margin_TT_minus_TG_kcal_per_monomer": -0.09131519410146183,
+    "margin_rigid_kcal_per_monomer": -0.09131519410146183,
+    "axial_transition_strain": 0.10616196014302282,
+    "areal_transition_strain": -0.1219192042642977,
+    "dipole_gain_eA_per_monomer": 0.2485758107025618,
+    "P_TT_C_m2": 0.14122193869113336,
+    "P_TG_C_m2": 0.0737106356919117,
+    "tg_conformer": "TG'TG",
+    "tg_conformers_run": {
+     "TG'TG": -6.938391015757537,
+     "TGTG'": -6.643039910058266
+    },
+    "threshold_field_MV_m": 0.0
+   }
   }
  }
 }
