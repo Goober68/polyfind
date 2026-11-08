@@ -72,6 +72,8 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 | vdf7-trfe2-cdfe1 | chlorine (extrapolated) | +0.146 (-0.267) | -0.447 | +11.3%, -8.8% | 0.130 | 0.532 | 119 | 240 |
 | vdf9-cfe1 | chlorine (extrapolated) | +0.976 (+0.747) | -0.310 | +11.3%, -14.8% | 0.176 | 0.614 | 689 | 1417 |
 | vdf8-cfe2 | chlorine (extrapolated) | +0.835 (+0.506) | -0.416 | +10.6%, -13.1% | 0.147 | 0.536 | 675 | 1832 |
+| vdf7-trfe2-an1 | chlorine (extrapolated) | -0.731 (-0.965) | -0.289 | +9.0%, -17.5% | 0.146 | 0.558 | 0 | 0 |
+| vdf7-trfe2-fan1 | chlorine (extrapolated) | -0.572 (-0.572) | +0.000 | +9.1%, -13.1% | 0.144 | 0.581 | 0 | 0 |
 
 **Reading the screen.**
 
@@ -128,6 +130,8 @@ chemistry).
 | vdf7-trfe2-cdfe1 | +0.146 | 119 | 0.10 | 0.062% | 0.047 / 0.091 | 4.1 / 14.7 | 0.14 / 0.08 | 21 / 41 |
 | vdf9-cfe1 | +0.976 | 689 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf8-cfe2 | +0.835 | 675 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf7-trfe2-an1 | -0.731 | 0 | 0.88 | 0.062% | 0.053 / 0.102 | 5.7 / 20.4 | 0.10 / 0.06 | 21 / 40 |
+| vdf7-trfe2-fan1 | -0.572 | 0 | 0.89 | 0.061% | 0.051 / 0.099 | 5.6 / 20.1 | 0.10 / 0.06 | 21 / 40 |
 
 **Reading the mapping.** The operating point is 55 V/um bias, 1.8 V/um AC; the polar fraction
 at bias is where the crystal margin puts the channel on its own switching curve, and the strain
@@ -263,7 +267,7 @@ margin +1.00 against belt4's +0.74, P 0.140 against 0.193):
 | PVDF control | +1.00 | +10.6%, -14.6% | 0.140 | 990 |
 | polyacrylonitrile (AN) | +5.76 | +12.4%, -27.7% | 0.043 | 15,800 |
 | poly(vinylidene cyanide) (VDCN) | +9.31 | +14.3%, -19.2% | 0.113 | 7,400 |
-| VDF/VDCN 11:1 (8.3 mol% VDCN) | @VDCN_COPOLYMER@ |
+| VDF/VDCN 11:1 (8.3 mol% VDCN) | +0.31 with tilts, -1.58 rigid: undetermined (its TGTG' cell releases 1.9 kcal/mol per monomer through pendant tilts, ten times a PVDF-family cell's, so the rigid geometry is not a reference) | +14.9%, -9.2% | 0.098 | 320, not meaningful |
 | PVDC | not buildable: its 123 deg CH2 angle makes the all-trans chain non-periodic (its crystal chain is not planar) |
 
 The nitrile homopolymers' all-trans crystals sit 6-9 kcal/mol per monomer above their TGTG' forms:
@@ -276,7 +280,25 @@ unit that cannot sit in a polar lattice neither switches with it nor frustrates 
 it. As a dilute defect in a VDF/TrFE host the question is different and is the one Dipole's
 recommendation asks (AN as "the makeable track"); the belt4 screen's rows for it:
 
-@NITRILE_DEFECTS@
+| sequence (belt4 preset, as section 2) | margin TT-TG (rigid), kcal/mol per monomer | TGTG' tilt release | switch strain axial, areal | P(TTTT) C/m^2 | mu(TTTT) e.A | E* |
+|---|---|---|---|---|---|---|
+| VDF/TrFE/AN 70/20/10 | -0.73 (-0.97): TTTT the ground state | -0.29 | +9.0%, -17.5% | 0.146 | 0.558 | 0 |
+| VDF/TrFE/FAN 70/20/10 | -0.57 (-0.57; tilts not treated: the FAN carbon's pendants are a fluorine and a nitrile fragment) | - | +9.1%, -13.1% | 0.144 | 0.581 | 0 |
+| VDF/TrFE/CFE 70/20/10, for comparison | +0.03 (-0.20) | -0.35 | +9.2%, -11.7% | 0.159 | 0.566 | 23 MV/m |
+
+A nitrile defect beside 20 mol% TrFE makes TTTT the ground state by 0.6-0.7 kcal/mol per monomer:
+the nitrile packs into the all-trans lattice's interchain gap (TTTT cell 58-62 A^3 per monomer,
+gamma near 90 deg) and not into the TGTG' one (65 A^3, the cell sheared to 81-82 deg). That is the
+opposite of CFE's action, which leaves the two conformations level. So a nitrile is not the
+relaxor's tuning defect in a TrFE host, where it drives the material to a saturated ferroelectric
+(polar fraction 0.88-0.89 at the 55 V/um bias in the mapping of section 3, half the CFE rows'
+strain per field, tan delta 0.05); its place, if it has one, is in a VDF host without TrFE, where a
+trans-favouring defect would bring PVDF's +0.74 toward the degeneracy from the other side (a
+VDF/AN 90/10 row is the next thing to run). Its polarization stays at 0.145 C/m^2, below CFE's
+0.159. On Dipole's barrier table AN's host bond is 2.8 kcal/mol higher than CFE's, a hundred times
+slower at 300 K, which is the frequency floor again; and Dipole's registry gate reads AN as
+"marginal" (-0.11), a different quantity saying the same thing from the lattice's side: the
+nitrile does not frustrate the polar crystal.
 
 **What this seat cannot compute.** CNEPO, SCN, SF5, nitro, isocyanide, the cyano-alkenes and
 cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind does not have; for

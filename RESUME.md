@@ -22,7 +22,13 @@ tilts. TrFE sets the TT-TG margin in steps of about 0.3 kcal/mol per monomer per
 degeneracy the relaxor needs), CDFE leaves it, CTFE overshoots to TT ground, CFE without TrFE does
 nothing; placement of the CFE moves it by 0.03 per monomer (the local-margin spread a controlled sequence
 sets by choice). Loss per strain is not discriminated by this pass (tier 3, the barrier per chemistry,
-is the gap). Ranking in the document's section 5; chlorine rows are extrapolated chemistry.
+is the gap). Ranking in the document's section 5; chlorine rows are extrapolated chemistry. Section 6 reads
+Dipole's slate of other chemistries (VDCN, CNEPO, FANOMe, SCN, VDC, AN ...) against the same screen and against
+Dipole's own registry gate and barrier table: the nitrile homopolymers' all-trans crystals are 6-9 kcal/mol per
+monomer above their TGTG' forms (not conformational switches), a nitrile defect beside TrFE drives the lattice to a
+saturated TT ferroelectric (the opposite of CFE), and on the barrier table the slate's leaders are 10 to 10^6 times
+slower switches than the CFE terpolymer, which is where the PI's frequency floor bites. Nothing on the slate
+displaces the VDF/TrFE/CFE family for this objective on current evidence (`examples/slate_screen.py`).
 The mission's two stages are closed and documented: the large-cell response path is 10x faster
 (`docs/PERFORMANCE_REVIEW.md` 16), and the crystal terms of the valence potential are fitted to
 Dipole's DFT anchors through seven stages. The current preset is `pvdf-dft-valence-belt3`

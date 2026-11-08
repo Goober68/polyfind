@@ -98,7 +98,8 @@ def one_cell(polymer, seq, label):
     t0 = time.time()
     ref, rr = E2.build(polymer, seq, label)
     st = ES._state(ref, np.zeros(6), None, None, ES.TIGHT)
-    n_mon, n_chains = E2.monomers_in_cell(polymer, seq, ref)
+    n_chains = int(getattr(ref.packer, "n_chains", 2))
+    n_mon = n_chains * int(getattr(ref.packer.chain, "n_monomers", len(seq) // 2))  # vinyl monomers; a carbon count would include nitrile carbons
     p = np.asarray(ref.polarization(), dtype=float)
     bend_cell = float(rr.angle_energy) * n_chains * float(getattr(ref.packer.chain, "n_monomers", len(seq) / 2.0))
     row = {"energy_rigid_per_monomer_kcal": (float(st.energy) + bend_cell) / n_mon, "P_C_m2": p.tolist(), "P_abs_C_m2": float(np.linalg.norm(p)),

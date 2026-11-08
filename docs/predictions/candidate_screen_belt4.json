@@ -985,15 +985,15 @@
    "validated_chemistry": false,
    "conformations": {
     "TTTT": {
-     "energy_rigid_per_monomer_kcal": -15.584154585609136,
+     "energy_rigid_per_monomer_kcal": -8.181681157444796,
      "P_C_m2": [
       -0.04647946489700137,
       -0.13802313667858754,
       -2.0395008915920977e-05
      ],
      "P_abs_C_m2": 0.14563903093492495,
-     "c_per_monomer_A": 4.923379948726689,
-     "volume_per_monomer_A3": 111.36409770019392,
+     "c_per_monomer_A": 2.5847744730815116,
+     "volume_per_monomer_A3": 58.466151292601815,
      "cell": {
       "a": 5.488803203342423,
       "b": 8.242051258369777,
@@ -1001,9 +1001,9 @@
       "c": 25.847744730815116,
       "volume_A3": 1169.3230258520362
      },
-     "monomers_per_cell": 10.5,
-     "dipole_per_monomer_eA": 1.062923205351057,
-     "pendant_tilt_relaxation_per_monomer_kcal": -0.10441354045467831,
+     "monomers_per_cell": 20.0,
+     "dipole_per_monomer_eA": 0.558034682809305,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.05481710873870611,
      "pendant_tilts_deg": {
       "FF": {
        "rock": 0.316996832592943,
@@ -1024,11 +1024,132 @@
        "n": 16
       }
      },
-     "energy_per_monomer_kcal": -15.688568126063814,
-     "seconds": 135.20084166526794
+     "energy_per_monomer_kcal": -8.236498266183503,
+     "seconds": 135.20084166526794,
+     "note": "per-monomer quantities rescaled from a carbon count of 10.5 to the chain's 20 vinyl monomers per cell (the nitrile carbon had been counted)"
+    },
+    "TGTG'": {
+     "energy_rigid_per_monomer_kcal": -7.216791875349764,
+     "P_C_m2": [
+      0.055828564625365944,
+      -0.07675347478766761,
+      -0.04231055339065926
+     ],
+     "P_abs_C_m2": 0.10391394251174198,
+     "c_per_monomer_A": 2.3707047335321874,
+     "volume_per_monomer_A3": 64.96342962306394,
+     "cell": {
+      "a": 6.173703137214821,
+      "b": 8.978944695070362,
+      "gamma_deg": 81.36616422705049,
+      "c": 23.70704733532187,
+      "volume_A3": 1299.268592461279
+     },
+     "monomers_per_cell": 20.0,
+     "dipole_per_monomer_eA": 0.4424066763526086,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.28855295393809116,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 0.9532449658009923,
+       "wag": 2.926200485117367,
+       "twist": 0.7680080033906505,
+       "n": 18
+      },
+      "FH": {
+       "rock": 2.0083719622077156,
+       "wag": 2.0253771312627857,
+       "twist": 1.8451568242231882,
+       "n": 4
+      },
+      "HH": {
+       "rock": 1.1100744911876372,
+       "wag": 1.615312843139554,
+       "twist": 0.5354569167094476,
+       "n": 16
+      }
+     },
+     "energy_per_monomer_kcal": -7.505344829287855,
+     "seconds": 173.86735892295837,
+     "note": "per-monomer quantities rescaled from a carbon count of 10.5 to the chain's 20 vinyl monomers per cell (the nitrile carbon had been counted)"
     }
    },
-   "derived": {}
+   "derived": {
+    "margin_TT_minus_TG_kcal_per_monomer": -0.7311534368956476,
+    "margin_rigid_kcal_per_monomer": -0.9648892820950321,
+    "axial_transition_strain": 0.0902979339946628,
+    "areal_transition_strain": -0.1745507594218253,
+    "dipole_gain_eA_per_monomer": 0.11562800645669641,
+    "P_TT_C_m2": 0.14563903093492495,
+    "P_TG_C_m2": 0.10391394251174198,
+    "threshold_field_MV_m": 0.0
+   }
+  },
+  "vdf7-trfe2-fan1": {
+   "letters": "VVRVVNVVRV",
+   "note": "2-fluoroacrylonitrile in place of CFE (the slate's dipole-density anomaly)",
+   "validated_chemistry": false,
+   "conformations": {
+    "TTTT": {
+     "energy_rigid_per_monomer_kcal": -7.578818293455481,
+     "P_C_m2": [
+      0.04233330879344632,
+      0.1378024889052951,
+      -2.9561457518145454e-06
+     ],
+     "P_abs_C_m2": 0.14415836774406837,
+     "c_per_monomer_A": 2.585518676805158,
+     "volume_per_monomer_A3": 61.4566709755125,
+     "cell": {
+      "a": 6.0509647171138905,
+      "b": 7.868355705750948,
+      "gamma_deg": 86.84859826897507,
+      "c": 25.85518676805158,
+      "volume_A3": 1229.13341951025
+     },
+     "monomers_per_cell": 20.0,
+     "dipole_per_monomer_eA": 0.5806143870872887,
+     "pendant_tilt_relaxation_per_monomer_kcal": 0.0,
+     "pendant_tilts_deg": "unavailable: ValueError('belt site 57: its carbon has no two pendant atoms within a bond length ([(1.386300000000003, 56, array([0., 0., 0.])), (2.1404847268730807, 53, array([0., 0., 0.]))])')",
+     "energy_per_monomer_kcal": -7.578818293455481,
+     "seconds": 125.13766241073608,
+     "note": "per-monomer quantities rescaled from a carbon count of 10.5 to the chain's 20 vinyl monomers per cell (the nitrile carbon had been counted)"
+    },
+    "TGTG'": {
+     "energy_rigid_per_monomer_kcal": -7.006882324934647,
+     "P_C_m2": [
+      0.06192466597096486,
+      -0.08636310314759112,
+      -0.043987715615277125
+     ],
+     "P_abs_C_m2": 0.1150137772875386,
+     "c_per_monomer_A": 2.3689084842856403,
+     "volume_per_monomer_A3": 64.82253041002045,
+     "cell": {
+      "a": 6.209475367834475,
+      "b": 8.899562751807796,
+      "gamma_deg": 82.02947324890133,
+      "c": 23.689084842856403,
+      "volume_A3": 1296.450608200409
+     },
+     "monomers_per_cell": 20.0,
+     "dipole_per_monomer_eA": 0.4886014508923634,
+     "pendant_tilt_relaxation_per_monomer_kcal": 0.0,
+     "pendant_tilts_deg": "unavailable: ValueError('belt site 57: its carbon has no two pendant atoms within a bond length ([(1.3863000000000005, 56, array([0., 0., 0.])), (2.131258581475917, 63, array([0., 0., 0.]))])')",
+     "energy_per_monomer_kcal": -7.006882324934647,
+     "seconds": 164.99896264076233,
+     "note": "per-monomer quantities rescaled from a carbon count of 10.5 to the chain's 20 vinyl monomers per cell (the nitrile carbon had been counted)"
+    }
+   },
+   "derived": {
+    "margin_TT_minus_TG_kcal_per_monomer": -0.5719359685208341,
+    "margin_rigid_kcal_per_monomer": -0.5719359685208341,
+    "axial_transition_strain": 0.09143881832346845,
+    "areal_transition_strain": -0.13135233741861652,
+    "dipole_gain_eA_per_monomer": 0.09201293619492534,
+    "P_TT_C_m2": 0.14415836774406837,
+    "P_TG_C_m2": 0.1150137772875386,
+    "threshold_field_MV_m": 0.0
+   }
   }
  }
 }
