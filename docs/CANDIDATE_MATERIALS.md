@@ -545,7 +545,7 @@ cell takes the measured 364 kHz, every other row's rate is relative to its own-b
 | 64/29/7 with CDFE in place of CFE | +1.08 | 1.3 MHz | +0.40 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.02 / 0.01 |
 | one CFE and one CDFE per fourteen (57/29/7/7) | +0.86 | 1.8 MHz | +0.64 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.00 / 0.00 |
 | 64/29/7 with AN in place of CFE | +1.97 | 285 kHz | -0.15 | 0.87 | 0.076% | 0.055 / 0.107 | 0.72 | 0.14 / 0.08 |
-| 64/29/7 with CTFE in place of CFE | -0.57 | no meaning: the all-trans lattice is metastable against kinking | +0.135 | 0.12 | 0.060% | 0.052 / 0.101 | 0.87 | 0.11 / 0.06 |
+| 64/29/7 with CTFE in place of CFE | -0.57 | no meaning: the all-trans lattice is metastable against kinking | +0.135 | 0.12 | 0.060% | - | - | - |
 | VDF/TrFE/CDFE 70/20/10, ten monomers | +0.61 | 2.8 MHz | +0.15 | 0.10 | 0.062% | 0.006 / 0.012 | 0.10 | 0.42 / 0.32 |
 | VDF/TrFE 70/30, ten monomers | +4.95 | 2 kHz | +0.15 | 0.11 | 0.006% | 0.576 / 0.310 | 93 | 0.00 / 0.00 |
 
