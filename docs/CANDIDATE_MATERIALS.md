@@ -92,6 +92,7 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 | vdf9-trfe4-an1-14 | chlorine (extrapolated) | -0.154 (-0.494) | -0.393 | +10.8%, -15.4% | 0.145 | 0.524 | 0 | 0 |
 | vdf9-trfe4-fan1-14 | chlorine (extrapolated) | -0.091 (-0.091) | +0.000 | +10.6%, -12.2% | 0.141 | 0.537 | 0 | 0 |
 | vdf9-trfe4-ctfe1-14 | chlorine (extrapolated) | +0.135 (-0.190) | -0.416 | +9.5%, -12.1% | 0.138 | 0.508 | 115 | 390 |
+| vdf13-trfe6-cfe1-20 | chlorine (extrapolated) | +0.055 (-0.253) | -0.426 | +10.1%, -13.8% | 0.156 | 0.552 | 43 | 146 |
 
 **Reading the screen.**
 
@@ -178,7 +179,16 @@ fourteen (`DVRVVRVCVVRVVR`, 57/29/7/7): TTTT -5.928, TG'TG -6.569, margin +0.64.
 tips the degenerate matrix toward the helix and two of them tip it off the curve. CTFE in place of
 the CFE: TTTT -5.952, TGTG' -6.086, margin +0.135, a pin of CFE's strength at this dilution (+2.6
 per unit against +2.3; it costs both lattices 21-24 kcal/mol per unit, the bulkiest unit) with 12%
-less polarization (0.138 against 0.156 C/m^2) and 10% less switch strain (9.5% against 10.5%). So the pin diluted to one per fourteen in a 29 mol% matrix
+less polarization (0.138 against 0.156 C/m^2) and 10% less switch strain (9.5% against 10.5%).
+
+**The pin density is the dial (`candidate_screen_belt4_20mer.json`).** A twenty-monomer cell with
+one CFE per twenty in a 30 mol% matrix (`VVRVVRVVRVCVVRVVRVVR`, 65/30/5): TTTT -7.175, TG'TG -7.230,
+margin +0.055 (the two handednesses within 0.005). With the pinless matrix at -0.05, one per
+twenty at +0.055 and one per fourteen at +0.11, the tip is linear in the pin density: about +2.3
+kcal/mol per CFE unit spread over the monomers between pins, so the margin of a 30 mol% TrFE
+matrix with one CFE per N monomers is -0.05 + 2.3/N kcal/mol per monomer in this model, and the
+composition the loss model wants (margin near +0.07, section 3) is one CFE per sixteen to twenty,
+5-6 mol%. So the pin diluted to one per fourteen in a 29 mol% matrix
 leaves the cell near-degenerate where one per ten in a 20 mol% matrix pinned it at +0.97: at the
 film's composition the model reproduces the relaxor's near-degeneracy, and the quantity that
 carries it is the matrix between the pins.
@@ -221,6 +231,7 @@ chemistry).
 | vdf9-trfe4-an1-14 | -0.154 | 0 | 0.87 | 0.076% | 0.055 / 0.107 | 5.9 / 21.0 | 0.14 / 0.08 | 26 / 50 |
 | vdf9-trfe4-fan1-14 | -0.091 | 0 | 0.87 | 0.074% | 0.054 / 0.105 | 5.9 / 20.9 | 0.14 / 0.08 | 25 / 48 |
 | vdf9-trfe4-ctfe1-14 | +0.135 | 115 | 0.12 | 0.060% | 0.052 / 0.101 | 4.8 / 17.4 | 0.11 / 0.06 | 20 / 39 |
+| vdf13-trfe6-cfe1-20 | +0.055 | 43 | 0.60 | 0.157% | 0.086 / 0.167 | 20.6 / 71.1 | 0.17 / 0.10 | 53 / 102 |
 
 **Reading the mapping.** The operating point is 55 V/um bias, 1.8 V/um AC; the polar fraction
 at bias is where the crystal margin puts the channel on its own switching curve, and the strain
@@ -230,11 +241,13 @@ correction no ten-monomer row sits there: the no-defect 70/30 and 80/20 and the 
 on the curve (polar fraction 0.05-0.11) and give 0.03-0.07% AC strain, the TT-ground 60/40 is
 saturated (0.88) and gives the same, and every pinned defect row (CFE, CTFE, AN, FAN, margins
 +0.57 to +0.97), PVDF, the alternating 50/50 and the VDF/CFE copolymers do not switch at all.
-The rows that do sit on the curve are the fourteen-monomer cells of section 2: the 64/29/7 cell
-(margin +0.11, polar fraction 0.24 at 55 V/um) carries the largest AC strain of the table (0.125%
-at 34 kHz, tan delta 0.074, efficiency 0.16) and its 71/29 matrix control (margin -0.05) is
-saturated (0.88) with half that strain, which is the pin doing its job: it holds the matrix off
-saturation at the bias. Section 8 carries these two rows with their own kink energies. The loss per
+The rows that do sit on the curve are the long cells of section 2: the 64/29/7 cell (margin +0.11,
+polar fraction 0.24 at 55 V/um) carries 0.125% AC strain at 34 kHz (tan delta 0.074, efficiency
+0.16), the 65/30/5 twenty-monomer cell (margin +0.055, polar fraction 0.60) the largest strain of
+the table (0.157%, tan delta 0.086, efficiency 0.17), and the 71/29 matrix control (margin -0.05)
+is saturated (0.88) with half that strain, which is the pin doing its job: it holds the matrix off
+saturation at the bias, and the pin density sets where on the curve the cell sits. Section 8
+carries these rows with their own kink energies. The loss per
 unit strain is the same for every switchable row (efficiency 0.10-0.15 at 34 kHz, 0.05-0.09 at
 66 kHz) because the relaxation is the same: a candidate with more strain at this bias also has
 more loss and more heat, and all of them exceed the 4 MW/m^3 budget at 1.8 V/um at 34 kHz (the
@@ -319,12 +332,16 @@ first pass's ranking):
    where the near-degeneracy the relaxor needs comes from, as it does in every giant-strain
    terpolymer made so far. Without a pin it is a ferroelectric copolymer with hysteresis, which
    this equilibrium picture does not contain (the lattice model's coupling does).
-2. **The pin: CFE at one per fourteen (7 mol%).** A TG pin (+7.9 kcal/mol per unit in the 20 mol%
-   cell, +2.3 in the 29 mol% one) that holds the matrix off saturation at the bias (polar fraction
-   0.24 against the pinless matrix's 0.88) and loosens the lattice for the kinks that switching
-   needs (kink pair 5.5 kcal/mol in the 71/29 matrix, 1.8 with the pin: section 8), so the cell both
-   switches at 55 V/um and follows a 34-66 kHz drive, with tan delta 0.07 for 0.125% AC strain in
-   the mapping. Its placement relative to TrFE is not a lever for the
+2. **The pin: CFE at one per fourteen to twenty (5-7 mol%).** A TG pin (+7.9 kcal/mol per unit in
+   the 20 mol% cell, +2.3 in the 29 mol% one) that holds the matrix off saturation at the bias
+   (polar fraction 0.24 at one per fourteen, 0.60 at one per twenty, against the pinless matrix's
+   0.88) and loosens the lattice for the kinks that switching needs (kink pair 5.5 kcal/mol in the
+   71/29 matrix, 1.8 with the pin: section 8), so the cell both switches at 55 V/um and follows a
+   34-66 kHz drive. The pin density is the dial: the margin is -0.05 + 2.3/N for one CFE per N
+   monomers, and the loss model's steep part (margin near +0.07) sits at one per sixteen to twenty,
+   where the mapping gives 0.13-0.16% AC strain at tan delta 0.07-0.09. That is the controlled
+   sequence this pass recommends: a 30 mol% TrFE matrix with one CFE every sixteen to twenty
+   monomers, strictly periodic. Its placement relative to TrFE is not a lever for the
    margin (0.005 per monomer); the pin spacing is (section 4), and a controlled sequence fixes it.
    Chlorine chemistry: extrapolated until a DFT cell tests it.
 3. **Alternative pins.** In the ten-monomer 20 mol% cell FAN (+7.4) and CTFE (+6.1) pin as CFE
