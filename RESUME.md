@@ -31,12 +31,15 @@ its loss term every slate candidate scores 2-2.6 times better than the baseline)
 not decide the loss: the field moves them 1-4%, switching is collective, and the collective number is section 8's. Nothing on the slate
 displaces the VDF/TrFE/CFE family for this objective on current evidence (`examples/slate_screen.py`). Section 8
 (`examples/kink_formation_screen.py`, `candidate_frequency_map.py`): the kink-pair formation energy in the packed
-cell, the first piece of the dynamics the statics could not give: 4.3-4.6 kcal/mol in PVDF, 4.9-5.1 in the
-70/30 copolymer, 1.2-1.5 in the CFE terpolymer model, 0.6-0.7 with CDFE under both protocols run (own basin;
-same-basin start), so the terpolymer's channel follows a 34-66 kHz drive and the copolymer's is frozen there;
-loss per strain ranks CDFE then CFE. The CTFE, nitrile and CFE-adjacent rows are protocol-dependent (the kinked
-cell's packing moves: CTFE -0.4 against +5.7); the pinned-lattice protocol (`refine_crystal(cell_free=False)`,
-the upper bound for a dilute kink pair) is running (`kink_formation_belt4_pinned.json`); the migration barrier is open.
+cell, the first piece of the dynamics the statics could not give, as a bracket between the relaxed kink crystal
+(own packing basin) and the pinned all-trans lattice (`refine_crystal(cell_free=False)`): 4.3-9.3 kcal/mol in PVDF,
+4.9-7.6 in the TrFE copolymers, 1.2-3.1 in the CFE terpolymer model, 0.4-0.6 with CDFE, so the copolymer-terpolymer
+separation (3.7-4.4, a factor 500-1600 in rate) holds at both ends: the terpolymer's channel follows a 34-66 kHz
+drive and the copolymer's is frozen there; loss per strain ranks CDFE then CFE at both ends. CTFE (-0.4 to +20.4)
+and the nitrile rows (1.3-11.3, 0.4-12.2) are undetermined: free, their lattices relax to a kinked packing; pinned,
+they have no room for a kink. Running: the pinned-then-released protocol (`kink_formation_belt4_pinned_released.json`,
+the kink crystal in the basin nearest the all-trans cell). Open: the dilute kink (one kinked chain among all-trans
+neighbours, a mixed-conformation cell the packer does not have) and the migration barrier.
 The mission's two stages are closed and documented: the large-cell response path is 10x faster
 (`docs/PERFORMANCE_REVIEW.md` 16), and the crystal terms of the valence potential are fitted to
 Dipole's DFT anchors through seven stages. The current preset is `pvdf-dft-valence-belt3`
