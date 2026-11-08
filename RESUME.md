@@ -39,7 +39,12 @@ pinned-from-own protocol (`--pinned-from-own`; the pinned-from-all-trans start s
 TT-ground (-0.15: AN favours the all-trans lattice at the film's dilution, FAN about +0.25 with tilts estimated),
 so neither nitrile is the relaxor's pin. Deferred: the kink-position scan (the pinned protocol it needs exaggerates
 handedness and sticks; the own basin cannot compare positions), the dilute kink (a mixed-conformation cell), the
-migration barrier. Running: CTFE at one per fourteen and a twenty-monomer 65/30/5 cell (the pin-density lever).
+migration barrier. CTFE at one per fourteen pins as CFE does (+0.135) with less stroke and an all-trans lattice
+metastable against kinking (kink -0.6: dynamics undetermined). The pin density is the dial: margin -0.05 + 2.3/N for
+one CFE per N in a 30 mol% matrix (one per twenty +0.055, kink 2.3, channel 157 kHz, 0.154% strain at tan delta
+0.20; one per fourteen +0.11, kink 1.8, 364 kHz, 0.125% at 0.07), so under the objective the recommended controlled
+sequence is a 30 mol% TrFE matrix with one CFE every fourteen to sixteen monomers, strictly periodic
+(`docs/CANDIDATE_MATERIALS.md` section 5). All background computations of 2026-11-08 are complete.
 
 **Where things stand, 2026-11-07 (read this first; the detail is in the dated paragraphs below and in `docs/CRYSTAL_STAGE.md`).**
 Candidate pass, 2026-11-07 22:50 UTC (`docs/CANDIDATE_MATERIALS.md`, `examples/candidate_screen.py`,

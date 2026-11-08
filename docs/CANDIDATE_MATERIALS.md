@@ -187,8 +187,9 @@ margin +0.055 (the two handednesses within 0.005). With the pinless matrix at -0
 twenty at +0.055 and one per fourteen at +0.11, the tip is linear in the pin density: about +2.3
 kcal/mol per CFE unit spread over the monomers between pins, so the margin of a 30 mol% TrFE
 matrix with one CFE per N monomers is -0.05 + 2.3/N kcal/mol per monomer in this model, and the
-composition the loss model wants (margin near +0.07, section 3) is one CFE per sixteen to twenty,
-5-6 mol%. So the pin diluted to one per fourteen in a 29 mol% matrix
+composition the loss model wants on the statics alone (margin near +0.07, section 3) is one CFE per
+sixteen to twenty, 5-6 mol%; with the dynamics (section 8: the sparser pin leaves a stiffer lattice
+and a slower channel) the optimum moves to one per fourteen to sixteen. So the pin diluted to one per fourteen in a 29 mol% matrix
 leaves the cell near-degenerate where one per ten in a 20 mol% matrix pinned it at +0.97: at the
 film's composition the model reproduces the relaxor's near-degeneracy, and the quantity that
 carries it is the matrix between the pins.
@@ -338,10 +339,13 @@ first pass's ranking):
    0.88) and loosens the lattice for the kinks that switching needs (kink pair 5.5 kcal/mol in the
    71/29 matrix, 1.8 with the pin: section 8), so the cell both switches at 55 V/um and follows a
    34-66 kHz drive. The pin density is the dial: the margin is -0.05 + 2.3/N for one CFE per N
-   monomers, and the loss model's steep part (margin near +0.07) sits at one per sixteen to twenty,
-   where the mapping gives 0.13-0.16% AC strain at tan delta 0.07-0.09. That is the controlled
-   sequence this pass recommends: a 30 mol% TrFE matrix with one CFE every sixteen to twenty
-   monomers, strictly periodic. Its placement relative to TrFE is not a lever for the
+   monomers, and the loss model's steep part (margin near +0.07) sits at one per sixteen to twenty
+   on the statics; but the sparser pin leaves a stiffer lattice (kink pair 2.3 at one per twenty
+   against 1.8 at one per fourteen) and a slower channel (157 against 364 kHz), so its loss at the
+   drive is 0.20 against 0.07 for 0.154 against 0.125% strain (section 8). Under the objective (loss
+   first, stroke as a floor) the controlled sequence this pass recommends is a 30 mol% TrFE matrix
+   with one CFE every fourteen to sixteen monomers, strictly periodic: tan delta 0.07-0.1 for
+   0.12-0.14% AC strain at the operating point in the mapping. Its placement relative to TrFE is not a lever for the
    margin (0.005 per monomer); the pin spacing is (section 4), and a controlled sequence fixes it.
    Chlorine chemistry: extrapolated until a DFT cell tests it.
 3. **Alternative pins.** In the ten-monomer 20 mol% cell FAN (+7.4) and CTFE (+6.1) pin as CFE
@@ -558,6 +562,7 @@ cell takes the measured 364 kHz, every other row's rate is relative to its own-b
 | sequence | kink pair (own basin) | f_relax proxy | margin | polar fraction at bias | S_ac at 34 kHz | tan delta 34 / 66 kHz | tan delta per % strain | efficiency 34 / 66 kHz |
 |---|---|---|---|---|---|---|---|---|
 | 64/29/7, one CFE per fourteen | +1.82 | 364 kHz (anchor) | +0.11 | 0.24 | 0.125% | 0.074 / 0.143 | 0.59 | 0.16 / 0.10 |
+| 65/30/5, one CFE per twenty | +2.32 | 157 kHz | +0.055 | 0.60 | 0.154% | 0.199 / 0.383 | 1.29 | 0.09 / 0.05 |
 | 71/29, the matrix without the pin | +5.47 | 0.8 kHz | -0.05 | 0.88 | 0.003% | 0.262 / 0.136 | 101 | 0.00 / 0.00 |
 | 64/29/7 with CDFE in place of CFE | +1.08 | 1.3 MHz | +0.40 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.02 / 0.01 |
 | one CFE and one CDFE per fourteen (57/29/7/7) | +0.86 | 1.8 MHz | +0.64 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.00 / 0.00 |
@@ -570,7 +575,12 @@ The matrix alone is a frozen ferroelectric at the drive: saturated at the bias (
 channel at 0.8 kHz, so it carries loss and no strain at 34-66 kHz, the copolymer's known
 behaviour. One CFE per fourteen does two things at once: it holds the matrix off saturation (polar
 fraction 0.24) and it cuts the kink cost from 5.5-7.6 to 1.8-3.5 kcal/mol (own basin and pinned
-lattice respectively), a factor of 460-900 in rate, which puts the channel at the drive. That is the relaxor terpolymer's mechanism in one cell, pin and
+lattice respectively), a factor of 460-900 in rate, which puts the channel at the drive. One CFE
+per twenty does less of both: the margin falls to +0.055 and the strain rises to 0.154%, but the
+kink costs 2.3 and the channel sits at 157 kHz, so at 34-66 kHz the loss is 0.20-0.38 and the loss
+per strain 1.29, twice the one-per-fourteen cell's. The pin density therefore trades strain
+against loss through the channel's position, and under the objective (loss first, stroke as a
+floor) one per fourteen to sixteen is the model's optimum, not one per twenty. That is the relaxor terpolymer's mechanism in one cell, pin and
 loosener in the same chlorine, and at the program's operating point the model gives tan delta 0.07
 at 34 kHz for 0.125% AC strain, the largest strain of the table at the lowest loss per strain of
 any row that switches. The ten-monomer CDFE row shows what a loosener without a pin does: a
