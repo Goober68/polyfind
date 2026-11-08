@@ -74,6 +74,7 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 | vdf8-cfe2 | chlorine (extrapolated) | +0.835 (+0.506) | -0.416 | +10.6%, -13.1% | 0.147 | 0.536 | 675 | 1832 |
 | vdf7-trfe2-an1 | chlorine (extrapolated) | -0.731 (-0.965) | -0.289 | +9.0%, -17.5% | 0.146 | 0.558 | 0 | 0 |
 | vdf7-trfe2-fan1 | chlorine (extrapolated) | -0.572 (-0.572) | +0.000 | +9.1%, -13.1% | 0.144 | 0.581 | 0 | 0 |
+| vdf9-an1 | chlorine (extrapolated) | +0.456 (+0.196) | -0.303 | +11.7%, -16.4% | 0.163 | 0.590 | 335 | 820 |
 
 **Reading the screen.**
 
@@ -132,6 +133,7 @@ chemistry).
 | vdf8-cfe2 | +0.835 | 675 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf7-trfe2-an1 | -0.731 | 0 | 0.88 | 0.062% | 0.053 / 0.102 | 5.7 / 20.4 | 0.10 / 0.06 | 21 / 40 |
 | vdf7-trfe2-fan1 | -0.572 | 0 | 0.89 | 0.061% | 0.051 / 0.099 | 5.6 / 20.1 | 0.10 / 0.06 | 21 / 40 |
+| vdf9-an1 | +0.456 | 335 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 
 **Reading the mapping.** The operating point is 55 V/um bias, 1.8 V/um AC; the polar fraction
 at bias is where the crystal margin puts the channel on its own switching curve, and the strain
@@ -293,9 +295,14 @@ opposite of CFE's action, which leaves the two conformations level. So a nitrile
 relaxor's tuning defect in a TrFE host, where it drives the material to a saturated ferroelectric
 (polar fraction 0.88-0.89 at the 55 V/um bias in the mapping of section 3, half the CFE rows'
 strain per field, tan delta 0.05); its place, if it has one, is in a VDF host without TrFE, where a
-trans-favouring defect would bring PVDF's +0.74 toward the degeneracy from the other side (a
-VDF/AN 90/10 row is the next thing to run). Its polarization stays at 0.145 C/m^2, below CFE's
-0.159. On Dipole's barrier table AN's host bond is 2.8 kcal/mol higher than CFE's, a hundred times
+trans-favouring defect would bring PVDF's +0.74 toward the degeneracy from the other side. The
+VDF/AN 90/10 row does that, but weakly: one acrylonitrile per ten VDF takes the margin from +0.74
+to +0.46 kcal/mol per monomer (rigid +0.20; the TGTG' cell releases 0.30 through its tilts), the
+threshold from 510 to 340 MV/m, and the TTTT polarization from 0.193 to 0.163 C/m^2. Per mole,
+TrFE does the same job twice as well (10 mol% TrFE: +0.74 to +0.18) and keeps more polarization
+(0.174), so a nitrile is the less efficient trans-favouring unit as well as the slower one; reaching
+the degeneracy with AN alone would take 20-25 mol% on a linear extrapolation, at a polarization
+cost of about 15%. Its polarization beside TrFE stays at 0.145 C/m^2, below CFE's 0.159. On Dipole's barrier table AN's host bond is 2.8 kcal/mol higher than CFE's, a hundred times
 slower at 300 K, which is the frequency floor again; and Dipole's registry gate reads AN as
 "marginal" (-0.11), a different quantity saying the same thing from the lattice's side: the
 nitrile does not frustrate the polar crystal.
