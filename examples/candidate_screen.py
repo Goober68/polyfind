@@ -91,8 +91,21 @@ SEQUENCES = {
     "vdf6-trfe3-cdfe1-b": ("VRVRVVRVDV", "60/30/10 CDFE, a second TrFE placement (the placement spread at 30 mol% TrFE)"),
     "vdf6-trfe3-cdfe1-c": ("RVRVVRVVDV", "60/30/10 CDFE, a third TrFE placement"),
     "vdf6-trfe3-cfe1-b": ("VRVRVVRVCV", "60/30/10 CFE, a second TrFE placement"),
+    # fourteen-monomer cells: the real terpolymer composition, with the chlorine pin one per fourteen
+    "vdf9-trfe4-cfe1-14": ("VVRVVRVCVVRVVR", "64/29/7, the 63/30/7 film's composition in one regular cell: 29 mol% TrFE matrix with one CFE per fourteen"),
+    "vdf10-trfe4-14": ("VVRVVRVVVVRVVR", "the same cell with the CFE replaced by VDF (71/29): the matrix without the pin"),
+    "vdf9-trfe5-14": ("VVRVVRVRVVRVVR", "the matrix at 36 mol% TrFE (64/36), no pin"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
+CONFORMATION_UNITS = {"TTTT": [T], "TGTG'": [T, GP, T, GM], "TG'TG": [T, GM, T, GP], "GTG'T": [GP, T, GM, T], "G'TGT": [GM, T, GP, T]}
+
+
+def conformation(conf: str, n_bonds: int) -> list:
+    """The conformer's torsion pattern tiled to a repeat of ``n_bonds`` bonds (20 for ten monomers, 28 for fourteen)."""
+    unit = CONFORMATION_UNITS[conf]
+    if n_bonds % len(unit):
+        raise ValueError(f"{conf} needs a repeat of a multiple of {len(unit)} bonds, not {n_bonds}")
+    return unit * (n_bonds // len(unit))
 # The other handedness and the other phase of the TGTG' helix.  For an achiral chain (PVDF) all four are one
 # conformer; for a chiral (isotactic copolymer) sequence they are four different conformers, and the TG side
 # of the margin is the lowest of those that were run (derive() picks it and records which).
@@ -181,7 +194,7 @@ def main():
                 if conf in entry["conformations"] and "failed" not in entry["conformations"][conf]:
                     continue
                 try:
-                    row = one_cell(polymer, CONFORMATIONS[conf], f"{name} {conf}")
+                    row = one_cell(polymer, conformation(conf, polymer.bonds_per_repeat), f"{name} {conf}")
                     tilt = row["pendant_tilt_relaxation_per_monomer_kcal"]
                     print(f"{name:22s} {conf:6s}: E/monomer {row['energy_per_monomer_kcal']:.4f} (tilts {tilt:+.4f}) kcal/mol, |P| {row['P_abs_C_m2']:.4f} C/m^2, "
                           f"c/monomer {row['c_per_monomer_A']:.4f} A, V/monomer {row['volume_per_monomer_A3']:.2f} A^3  ({row['seconds']:.0f} s)", flush=True)
