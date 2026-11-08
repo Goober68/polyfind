@@ -97,6 +97,8 @@ SEQUENCES = {
     "vdf9-trfe5-14": ("VVRVVRVRVVRVVR", "the matrix at 36 mol% TrFE (64/36), no pin"),
     "vdf9-trfe4-cdfe1-14": ("VVRVVRVDVVRVVR", "the 64/29/7 cell with CDFE in place of CFE: the loosener without the pin, at the film's dilution"),
     "vdf8-trfe4-cfe1-cdfe1-14": ("DVRVVRVCVVRVVR", "one CFE and one CDFE per fourteen (57/29/7/7), seven monomers apart: pin and loosener in one cell"),
+    "vdf9-trfe4-an1-14": ("VVRVVRVAVVRVVR", "the 64/29/7 cell with acrylonitrile in place of CFE: the nitrile pin at the film's dilution"),
+    "vdf9-trfe4-fan1-14": ("VVRVVRVNVVRVVR", "the 64/29/7 cell with 2-fluoroacrylonitrile in place of CFE"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 CONFORMATION_UNITS = {"TTTT": [T], "TGTG'": [T, GP, T, GM], "TG'TG": [T, GM, T, GP], "GTG'T": [GP, T, GM, T], "G'TGT": [GM, T, GP, T]}

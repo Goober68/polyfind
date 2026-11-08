@@ -481,7 +481,7 @@ relaxation the kink needs, which is a property of the chemistry's all-trans latt
 | vdf7-trfe2-an1 | +1.27 | +3.56 | +11.28 | +6.76 | 6.8-11.3 in the all-trans cell's basin (the own-basin 1.3 is another cell): the nitrile fills the interchain gap (section 6) and locks the lattice against kinks |
 | vdf9-an1 | +0.38 | +1.35 | +12.17 | +7.11 | 7.1-12.2 in the all-trans cell's basin (the own-basin 0.4 is another cell, 5.15 x 9.58 A), as above |
 | vdf9-trfe4-cfe1-14 (64/29/7, fourteen monomers) | +1.82 | - | +13.21 | +11.75 | 1.8 in its own basin; the pinned and released values are a stuck placement rather than a bound (the ten-monomer CFE cell's pinned kink is 3.1 in the same 57 A^3 lattice; releasing the cell recovers only 1.5), so the pinned lattice is being reached from the kink's own conformation instead (`--pinned-from-own`) |
-| vdf10-trfe4-14 (71/29 matrix, fourteen monomers) | +5.47 | - | +7.27 | running | 5.5-7.3: the matrix without the pin has the copolymer's kink cost; the one CFE per fourteen cuts it to 1.8 |
+| vdf10-trfe4-14 (71/29 matrix, fourteen monomers) | +5.47 | - | +7.27 | +5.70 | 5.5-7.3, the three protocols agree: the matrix without the pin has the copolymer's kink cost; the one CFE per fourteen cuts it to 1.8 |
 
 The frequency map (`examples/candidate_frequency_map.py`) is run on both ends of the bracket, the
 CFE 70/20/10 row anchored at the measured 364 kHz in each; the full tables are
