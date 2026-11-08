@@ -20,7 +20,7 @@ import numpy as np
 from polyfind import electrostriction as ES
 from polyfind.fitting import PRESET_PARAMETERS
 from polyfind.pendants import tilt_relaxation
-from polyfind.polymers import (PVDF, BackboneAtom, Polymer, belt_fluorine, copolymer, monomer_of, pvdf_belt, trfe_belt)
+from polyfind.polymers import (NITRILE, PVDF, BackboneAtom, Polymer, belt_fluorine, copolymer, monomer_of, pvdf_belt, trfe_belt)
 
 SPEC = importlib.util.spec_from_file_location("e2", Path(__file__).with_name("e2_predictions.py"))
 E2 = importlib.util.module_from_spec(SPEC)
@@ -50,8 +50,25 @@ def cdfe_belt(d: float = D) -> Polymer:
                              BackboneAtom("C", belt_fluorine(1.3863, -0.20, d), None, 114.6, 105.12, +0.40, None)))
 
 
+def an_belt() -> Polymer:
+    """CH2-CH(CN), acrylonitrile, at the belt chain's PBE-D3 backbone geometry (the nitrile is a rigid
+    fragment the pendant-tilt relaxation leaves alone; its parameters are the valence fit's, held out at
+    0.9 kcal/mol)."""
+    return Polymer(name="an-belt-pbe", formula="-(CH2-CH(CN))n-", bond_length=1.5331,
+                   backbone=(BackboneAtom("C", "H", 1.0960, 114.6, 107.64, -0.20, +0.10),
+                             BackboneAtom("C", ("H", NITRILE), (1.0960, None), 114.6, 109.5, +0.05, (+0.10, None))))
+
+
+def fan_belt(d: float = D) -> Polymer:
+    """CH2-CF(CN), 2-fluoroacrylonitrile (the gen-1 slate's highest dipole density), belt sites on its fluorine."""
+    return Polymer(name="fan-belt-pbe", formula="-(CH2-CF(CN))n-", bond_length=1.5331,
+                   backbone=(BackboneAtom("C", "H", 1.0960, 114.6, 107.64, -0.20, +0.10),
+                             BackboneAtom("C", (belt_fluorine(1.3863, -0.20, d), NITRILE), (None, None), 114.6, 108.0, +0.30, (None, None))))
+
+
 UNITS = {"V": lambda: monomer_of(pvdf_belt(D, "pbe"), "vdf"), "R": lambda: monomer_of(trfe_belt(D, "pbe"), "trfe"),
-         "C": lambda: monomer_of(cfe_belt(), "cfe"), "K": lambda: monomer_of(ctfe_belt(), "ctfe"), "D": lambda: monomer_of(cdfe_belt(), "cdfe")}
+         "C": lambda: monomer_of(cfe_belt(), "cfe"), "K": lambda: monomer_of(ctfe_belt(), "ctfe"), "D": lambda: monomer_of(cdfe_belt(), "cdfe"),
+         "A": lambda: monomer_of(an_belt(), "an"), "N": lambda: monomer_of(fan_belt(), "fan")}
 VALIDATED = set("VR")  # chemistries the crystal anchors have tested
 
 # name: (sequence letters, what the row asks)
@@ -65,13 +82,15 @@ SEQUENCES = {
     "vdf7-trfe2-cdfe1": ("VVRVVDVVRV", "CDFE (CHCl-CF2) in place of CFE"),
     "vdf9-cfe1": ("VVVVCVVVVV", "one CFE per ten VDF, no TrFE"),
     "vdf8-cfe2": ("VVCVVVVCVV", "two CFE per ten, no TrFE"),
+    "vdf7-trfe2-an1": ("VVRVVAVVRV", "the slate's nitrile: one acrylonitrile per ten beside 20 mol% TrFE (Dipole's makeable track)"),
+    "vdf7-trfe2-fan1": ("VVRVVNVVRV", "2-fluoroacrylonitrile in place of CFE (the slate's dipole-density anomaly)"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 
 
 def make_polymer(name: str, letters: str) -> Polymer:
     units = [UNITS[c]() for c in letters]
-    formula = "-" + "-".join({"V": "(CH2-CF2)", "R": "(CHF-CF2)", "C": "(CH2-CFCl)", "K": "(CF2-CFCl)", "D": "(CHCl-CF2)"}[c] for c in letters) + "-"
+    formula = "-" + "-".join({"V": "(CH2-CF2)", "R": "(CHF-CF2)", "C": "(CH2-CFCl)", "K": "(CF2-CFCl)", "D": "(CHCl-CF2)", "A": "(CH2-CH(CN))", "N": "(CH2-CF(CN))"}[c] for c in letters) + "-"
     return copolymer(name=f"{name}-belt-pbe", formula=formula, units=units, bond_length=PVDF.bond_length)
 
 

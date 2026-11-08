@@ -7,7 +7,8 @@ literature pass. Code: `examples/candidate_screen.py` (the crystal screen),
 `examples/candidate_loss_map.py` (the mapping onto the loss model); results
 `docs/predictions/candidate_screen_belt4.json`, `candidate_loss_map_belt4.json`. Every number here
 is a model number at zero kelvin on a regular ten-monomer periodic sequence packed as two chains;
-section 6 says what that leaves out and what decides each row.*
+section 7 says what that leaves out and what decides each row, and section 6 reads Dipole's slate of
+other chemistries against the same screen.*
 
 ## 1. What "optimal tan delta, frequency and strain" means in the program's variables
 
@@ -190,7 +191,7 @@ along a chain of a given length the defects go so that the chain folds with them
 ## 5. Candidates, ranked for the sequence-controlled route
 
 For a sequence-controlled material aimed at the bias-hold operating point, on this model and
-with the confidence stated in section 6:
+with the confidence stated in section 7:
 
 1. **VDF/TrFE/CFE near 70/20/10, the CFE two monomers from either TrFE.** Margin +0.03, crystal
    threshold 20-50 MV/m, the largest strain per field at 55 V/um in the mapping; the statistical
@@ -215,7 +216,74 @@ loss per strain and which this pass does not have; Dipole's E2 cells for rows 1 
 bench's Vogel-Fulcher and bias-suppression numbers, which replace the literature channel the
 mapping of section 3 is built on.
 
-## 6. Confidence, and what decides each row
+## 6. The slate's other chemistries
+
+Dipole's slate (`sarco/materials/computational/candidate_slate_v1.md`, `_v2.md`; ranking
+`ranking_v3_correction_v1.md`, 2026-09-02; the PI's reframe `objective_function_v1.md`; the
+registry gate `registry_gate_v1.md`; the barrier table `field_barrier_table_v1.json`) is a
+single-chain conformer screen plus GFN1 packing, scored by a frozen figure of merit
+`FOM = eps_s x (dipole/volume) x frustration / (B_mean x (1 + D_mean))`, a strain-per-loss proxy.
+Its v3 ranking, relative to the FA tetrapolymer: VDCN 9.3, cyano-epoxide (CNEPO) 6.5, FANOMe 5.5,
+thiocyanate 4.2-5.6, VDC 5.3, dicyano-alkene 5.3, VNC 3.5, adjFAN 3.0, AN 2.0, HFP 1.5, CDFE 1.2.
+Three of Dipole's own later findings bear on it, and the PI's reframe (minimize tan delta subject
+to floors on stroke rate, frequency response, crystallinity and radial stroke; "the FOM leader is
+not automatically the recommendation") is the lens:
+
+* **The registry gate.** Whether the polar, in-register VDF lattice is still the ground state with
+  the defect in it, at 8.3 mol%: PVDF +0.56, CFE +0.24, CNEPO +0.31 (ground state), CDFE -0.06 and
+  AN -0.11 (marginal), VDC -0.38, FANOMe -1.13 and VDCN -1.18 kcal/mol per monomer (the slipped
+  lattice preferred by more than a kcal). The FOM's first and third place replace the polar
+  crystal rather than frustrate it; Dipole's recommendation accordingly reordered to CNEPO, then
+  AN and CDFE, with VDCN and FANOMe demoted.
+* **The barrier table** (DFT, the host-reference bond): PVDF 7.4, CFE terpolymer 6.8, VDCN 9.0, AN
+  10.2, CNEPO 16.4 kcal/mol. Read through section 1, this is the frequency lever: the loss per unit
+  strain at the drive frequency is `omega tau` and `tau` grows as `exp(B / kT)`; against PVDF's
+  barrier, CFE's is a factor 2.7 faster at 300 K, VDCN's 14 times slower, AN's 110 times slower,
+  CNEPO's six orders of magnitude slower. On the PI's objective the frequency floor is the one
+  the nitrile and epoxide chemistries fail first, and the baseline terpolymer's defect is the
+  fastest switch on the table. (Dipole's bias-hold descriptors place the cooled operating point
+  above a 30 kHz `f_relax`, in the libration regime, where the barrier does not enter; the
+  measured Vogel-Fulcher fit of the terpolymer film puts `f_relax` at 360 kHz at 300 K, plan
+  section 11, which puts 34-66 kHz below it, in the switching regime, where it does.)
+* **Orientation.** Mirroring an asymmetric defect's substituents in an otherwise unchanged
+  lattice moves the packing energy by 0.3-0.5 kcal/mol per monomer (AN 0.53, CFE 0.35; SCN 1.7;
+  the symmetric VDCN 0.006 as the control). That is the same statement section 2 makes from the
+  alternating 50/50 row: a regular sequence's handedness pattern is a packing lever of the size of
+  a composition change.
+
+**What this seat adds: the crystal switch.** The FOM has no crystal switching margin in it; the
+screen of section 2 is exactly that quantity. `examples/slate_screen.py` runs the slate's
+polymers that polyfind can build through the same TTTT-against-TGTG' screen, under the plain
+valence preset `pvdf-dft-valence` (no belt sites exist for these chemistries, so the fitted
+crystal terms of belt4 do not apply; the PVDF control under the same preset shows the cost:
+margin +1.00 against belt4's +0.74, P 0.140 against 0.193):
+
+| polymer (valence preset, plain chains) | margin TT-TG, kcal/mol per monomer | switch strain axial, areal | P(TTTT) C/m^2 | threshold E*, MV/m |
+|---|---|---|---|---|
+| PVDF control | +1.00 | +10.6%, -14.6% | 0.140 | 990 |
+| polyacrylonitrile (AN) | +5.76 | +12.4%, -27.7% | 0.043 | 15,800 |
+| poly(vinylidene cyanide) (VDCN) | +9.31 | +14.3%, -19.2% | 0.113 | 7,400 |
+| VDF/VDCN 11:1 (8.3 mol% VDCN) | @VDCN_COPOLYMER@ |
+| PVDC | not buildable: its 123 deg CH2 angle makes the all-trans chain non-periodic (its crystal chain is not planar) |
+
+The nitrile homopolymers' all-trans crystals sit 6-9 kcal/mol per monomer above their TGTG' forms:
+nitriles on alternate carbons cannot coexist in a planar zigzag (the strain finding of
+docs/VALENCE_FIT.md section 4, with the backbone angles now free to relax), so as conformational
+switches they are out by two orders of magnitude in threshold. That agrees with what is known
+(polyacrylonitrile is no ferroelectric crystal; the VDCN copolymers are glassy dipolar
+piezoelectrics, not switching crystals) and with Dipole's registry gate from the other side: a
+unit that cannot sit in a polar lattice neither switches with it nor frustrates it, it replaces
+it. As a dilute defect in a VDF/TrFE host the question is different and is the one Dipole's
+recommendation asks (AN as "the makeable track"); the belt4 screen's rows for it:
+
+@NITRILE_DEFECTS@
+
+**What this seat cannot compute.** CNEPO, SCN, SF5, nitro, isocyanide, the cyano-alkenes and
+cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind does not have; for
+those Dipole's single-chain and GFN1 numbers are the only ones, and the barrier column above is
+the one that matters for this programme's objective.
+
+## 7. Confidence, and what decides each row
 
 * **Validated against DFT:** the VDF and TrFE crystal terms (cells, polarization, stiffness,
   polar Berry slope, backbone angles; 5.22). **Not validated:** every chlorine parameter; the
