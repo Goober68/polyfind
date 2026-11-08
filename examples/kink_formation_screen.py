@@ -34,8 +34,37 @@ ROWS = ["vdf10", "vdf8-trfe2", "vdf7-trfe3", "vdf7-trfe2-cfe1", "vdf7-trfe2-cfe1
 EXTRA = {"vdf10": ("VVVVVVVVVV", "PVDF as a ten-monomer sequence"), "vdf7-trfe3": ("VVRVVRVVVR", "the 70/30 model of the E2 set as a ten-monomer sequence")}
 
 
+def build_from(polymer, seq, label, start_params):
+    """E2's build, started from another reference's packing parameters (the same basin)."""
+    from polyfind import mechanics as M
+    from polyfind.ewald import EwaldSpec
+    from polyfind.polarizability import Polarizable
+    kw = {"pack_kw": {"table_cache_dir": None}, "lj_cutoff": "force", "coulomb": "ewald", "ewald": EwaldSpec(), "polarizable": Polarizable()}
+    refine_kw = {k: kw[k] for k in ("lj_cutoff", "coulomb", "ewald", "polarizable")}
+    ref, rr = M.refined_reference(polymer, seq, label=label, refine_kw=refine_kw, start_params=start_params, **kw)
+    return M.relax_reference(ref), rr
+
+
+def one_cell_from(polymer, seq, label, start_params):
+    """candidate_screen.one_cell with the build seeded from ``start_params``."""
+    import types
+    saved = C.E2.build
+    C.E2.build = lambda pol, sq, lab: build_from(pol, sq, lab, start_params)
+    try:
+        return C.one_cell(polymer, seq, label)
+    finally:
+        C.E2.build = saved
+
+
+def reference_params(polymer, label):
+    """The all-trans cell's refined packing parameters (a, b, gamma, phi1, phi2, dz, flip)."""
+    ref, rr = C.E2.build(polymer, [T] * 20, label)
+    return np.asarray(ref.params, dtype=float)
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--same-basin", action="store_true", help="refine the kinked chain from the all-trans cell's own packing parameters instead of its own packing screen (the kink's formation energy in the trans crystal's basin)")
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--screen", default="docs/predictions/candidate_screen_belt4.json", help="the candidate screen: its TTTT rows are the references")
     ap.add_argument("--rows", default=",".join(ROWS))
@@ -44,7 +73,7 @@ def main():
     screen = json.load(open(args.screen))["sequences"]
     out_path = Path(args.out)
     results = json.load(open(out_path)) if out_path.exists() else {}
-    results.update({"preset": args.preset, "kink": "T G+ T G- T pair at bonds 0-2 of the twenty-bond repeat, one per chain, relaxed with the cell; pendant tilts as in the candidate screen",
+    results.update({"preset": args.preset, "protocol": "same basin: kinked chain refined from the all-trans cell's packing parameters" if args.same_basin else "own packing screen", "kink": "T G+ T G- T pair at bonds 0-2 of the twenty-bond repeat, one per chain, relaxed with the cell; pendant tilts as in the candidate screen",
                     "energy": "kcal/mol per kink pair: (E_kinked - E_TTTT) per cell / n_chains", "rate_proxy": "exp(-(E_form - E_form_ref) / kT) at 300 K, reference the CFE 70/20/10 row"})
     results.setdefault("rows", {})
     with PRESET_PARAMETERS[args.preset].applied():
@@ -54,7 +83,12 @@ def main():
             entry = results["rows"].setdefault(name, {"letters": letters, "note": note, "validated_chemistry": set(letters) <= C.VALIDATED})
             if "kinked" not in entry or "failed" in entry["kinked"]:
                 try:
-                    entry["kinked"] = C.one_cell(polymer, KINK, f"{name} kink")
+                    if args.same_basin:
+                        p0 = reference_params(polymer, f"{name} TTTT")
+                        entry["start_params"] = p0.tolist()
+                        entry["kinked"] = one_cell_from(polymer, KINK, f"{name} kink", p0)
+                    else:
+                        entry["kinked"] = C.one_cell(polymer, KINK, f"{name} kink")
                 except Exception as exc:
                     entry["kinked"] = {"failed": repr(exc)}
                     print(f"{name} kink: failed: {exc!r}", flush=True)

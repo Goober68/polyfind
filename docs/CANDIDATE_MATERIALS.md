@@ -7,8 +7,9 @@ literature pass. Code: `examples/candidate_screen.py` (the crystal screen),
 `examples/candidate_loss_map.py` (the mapping onto the loss model); results
 `docs/predictions/candidate_screen_belt4.json`, `candidate_loss_map_belt4.json`. Every number here
 is a model number at zero kelvin on a regular ten-monomer periodic sequence packed as two chains;
-section 7 says what that leaves out and what decides each row, and section 6 reads Dipole's slate of
-other chemistries against the same screen.*
+section 7 says what that leaves out and what decides each row, section 6 reads Dipole's slate of
+other chemistries against the same screen, and section 8 adds the frequency: the kink-pair formation
+energy in the lattice as the first piece of the dynamics.*
 
 ## 1. What "optimal tan delta, frequency and strain" means in the program's variables
 
@@ -37,7 +38,7 @@ So a chemistry has three independent handles, and the pass below reads them sepa
 |---|---|---|---|
 | margin `dE` and dipole gain `dmu` | `E*`, the slope of S(E) at the bias point, the polar fraction at bias | TrFE content; defect type, concentration and placement | the crystal screen (tier 2) |
 | transition strain | the stroke per switched unit | the conformational pair, hence the chemistry's ground conformation | the crystal screen, exactly |
-| `Ea`, `Tf`, `tau0` | `f_relax`, hence loss per strain at 34-66 kHz and the heat | defect pinning (Ea), the size of the cooperative unit (Tf), chain stiffness | **not computed per chemistry yet** (tier 3); the bench's Vogel-Fulcher fit is the input |
+| `Ea`, `Tf`, `tau0` | `f_relax`, hence loss per strain at 34-66 kHz and the heat | defect pinning (Ea), the size of the cooperative unit (Tf), chain stiffness | the kink-pair formation energy in the lattice (section 8), the first piece; the migration barrier and `Tf` are not computed (the bench's Vogel-Fulcher fit is the input) |
 
 and a fourth that is a property of the sequence rather than of any unit: the **spread of local
 margins** along the chain, which the driven lattice (plan section 12) found to be the knob that
@@ -217,10 +218,13 @@ with the confidence stated in section 7:
    tuning defect.
 6. **VDF/CFE without TrFE, PVDF, and the alternating 50/50:** not field-switchable in the crystal.
 
-What would change the ranking: a barrier per chemistry (tier 3), which is the only lever on
-loss per strain and which this pass does not have; Dipole's E2 cells for rows 1 and 3; and the
-bench's Vogel-Fulcher and bias-suppression numbers, which replace the literature channel the
-mapping of section 3 is built on.
+Section 8 adds the frequency reading: the CFE rows are also the ones whose switching channel
+follows a 34-66 kHz drive (kink pair 1.2-1.4 kcal/mol, channel near 360 kHz), the no-defect
+copolymers' channel is frozen there (kink pair 4.9, channel near 0.7 kHz), and CDFE, which the
+statics ranked below CFE, has the lower loss per strain (kink pair 0.6) if its margin can be
+brought down with more TrFE. What would change the ranking: the migration barrier and the
+cooperativity (not computed); Dipole's E2 cells for rows 1 and 3; and the bench's Vogel-Fulcher
+and bias-suppression numbers, which replace the literature channel the mappings are built on.
 
 ## 6. The slate's other chemistries
 
@@ -315,6 +319,65 @@ bonds' mean 9.6 against 12.2; see the barrier paragraph above).
 cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind does not have; for
 those Dipole's single-chain and GFN1 numbers are the only ones, and the barrier column above is
 the one that matters for this programme's objective.
+
+## 8. Frequency and loss: the kink-pair formation energy
+
+The tables above screen the statics. The objective is loss at the drive frequency, which is
+`omega tau`, and `tau` is dynamics: the collective barrier to nucleate and move a kink pair in a
+trans run inside the lattice, and the cooperativity behind `Tf`. Neither seat had computed any
+of it per chemistry (section 6). `examples/kink_formation_screen.py` computes the first piece: the
+energy of a kink pair (T G+ T G- T, one per chain, at bonds 0-2 of the twenty-bond repeat, in the
+VDF run away from the TrFE and the defect) embedded in the all-trans two-chain crystal, relaxed
+with the cell and the pendant tilts, against the all-trans cell. Switching is nucleation-limited
+once the single-bond barrier is ruled out as the rate (Dipole's own conclusion), so
+`exp(-E_form / kT)` is the first-order rate factor between chemistries; the migration barrier is
+not computed and is taken equal for every row. `examples/candidate_frequency_map.py` then gives
+each candidate its own relaxation rate: the CFE 70/20/10 row is anchored on the measured
+Vogel-Fulcher relaxation of the 63/30/7 film (364 kHz at 300 K) and every other row's rate is
+scaled by its kink factor, with the screen's margin, dipole and switch strain as before, at the
+program's operating point.
+
+| sequence | kink pair, kcal/mol | rate vs CFE row | f_relax proxy at 300 K | margin | polar fraction at bias | S_ac 34 / 66 kHz | tan delta 34 / 66 kHz | tan delta per % strain, 34 kHz | efficiency 34 / 66 kHz |
+|---|---|---|---|---|---|---|---|---|---|
+| vdf10 | +4.26 | 0.0063 | 2 kHz | +0.744 | 0.00 | 0.000% / 0.000% | 0.000 / 0.000 | 0.25 | 0.00 / 0.00 |
+| vdf8-trfe2 | +4.92 | 0.00206 | 750 Hz | +0.177 | 0.05 | 0.002% / 0.001% | 0.176 / 0.092 | 102.13 | 0.00 / 0.00 |
+| vdf7-trfe3 | +4.95 | 0.00198 | 721 Hz | +0.145 | 0.11 | 0.002% / 0.001% | 0.228 / 0.118 | 98.02 | 0.00 / 0.00 |
+| vdf7-trfe2-cfe1 | +1.24 | 1 | 364 kHz | +0.030 | 0.77 | 0.110% / 0.109% | 0.073 / 0.141 | 0.67 | 0.13 / 0.08 |
+| vdf7-trfe2-cfe1-adj | +1.40 | 0.758 | 276 kHz | +0.063 | 0.56 | 0.152% / 0.149% | 0.116 / 0.224 | 0.76 | 0.12 / 0.07 |
+| vdf7-trfe2-ctfe1 | -0.42 | 16 | 5826 kHz | -0.098 | 0.86 | 0.063% / 0.063% | 0.004 / 0.007 | 0.06 | 0.47 / 0.39 |
+| vdf7-trfe2-cdfe1 | +0.61 | 2.84 | 1033 kHz | +0.146 | 0.10 | 0.062% / 0.062% | 0.016 / 0.032 | 0.27 | 0.28 / 0.18 |
+| vdf7-trfe2-an1 | +1.27 | 0.941 | 343 kHz | -0.731 | 0.88 | 0.062% / 0.061% | 0.056 / 0.109 | 0.91 | 0.10 / 0.05 |
+| vdf9-an1 | +0.38 | 4.17 | 1519 kHz | +0.456 | 0.00 | 0.000% / 0.000% | 0.000 / 0.000 | 0.02 | 0.01 / 0.01 |
+
+**Reading.**
+
+* **The relaxor mechanism, from inside the lattice.** A kink pair in a VDF run costs 4.3 kcal/mol
+  in PVDF and 4.9 in the 80/20 and 70/30 copolymers (TrFE stiffens the trans lattice against
+  kinks), but 1.2-1.4 in the CFE terpolymer model and 0.6 with CDFE, although the kink sits in a
+  VDF run away from the defect: one chlorine per ten monomers loosens the whole lattice (the model
+  cell carries the defects in register) and cuts the nucleation cost by 3.5 kcal/mol, a factor of
+  300-500 in rate at 300 K. That is why the terpolymer switches at tens of kilohertz and the
+  copolymer does not: on this proxy the copolymers' channel sits at 0.7 kHz against 360 kHz, so
+  at 34-66 kHz it is frozen, with the loss tail of a peak far below the drive (tan delta 0.1-0.2
+  for no strain) where the CFE rows carry the full switch strain at tan delta 0.07-0.14. The
+  table therefore separates what the statics could not: the rows with a near-zero margin AND a
+  low kink energy are the only ones that both switch at the bias and follow the drive.
+* **The loss-per-strain column is the one to rank on**, and on it the model's order is CTFE
+  (0.06), CDFE (0.27), CFE (0.67-0.76), AN beside TrFE (0.91), the no-defect copolymers (100: loss
+  without strain). The CTFE and CDFE numbers come with their caveats: CTFE's kinked cell packed
+  in a different basin from its all-trans cell (its cell changed from 5.69 x 8.13 to 5.10 x 9.50 A)
+  and its kink energy is negative, so that row says the all-trans CTFE lattice is unstable to a
+  kink rather than that the kink is cheap; CDFE's cell stayed in its basin. A same-basin rerun
+  (`--same-basin`: the kinked chain refined from the all-trans cell's own packing parameters) is
+  the check, and its numbers replace these when it lands.
+* **What the proxy leaves out.** The migration barrier (the hop that moves the kink, 0.357 eV in
+  perfect beta from an earlier polyfind computation) is assumed equal across rows; the
+  cooperativity `Tf` is not computed and the anchoring on the measured film fixes it at the
+  terpolymer's; the kinks of the two chains are in register; the chlorine and nitrile rows are
+  extrapolated chemistry; and a kink pair in the model's trans run is a crystal-interior event
+  where the film's switching also happens at interfaces. The direction of every statement above
+  is the model's; the factor of 300 between copolymer and terpolymer is the size of the effect,
+  not a measurement.
 
 ## 7. Confidence, and what decides each row
 

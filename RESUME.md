@@ -28,7 +28,12 @@ Dipole's own registry gate and barrier table: the nitrile homopolymers' all-tran
 monomer above their TGTG' forms (not conformational switches), a nitrile defect beside TrFE drives the lattice to a
 saturated TT ferroelectric (the opposite of CFE), and on the barrier table the slate's leaders are 10 to 10^6 times
 slower switches than the CFE terpolymer, which is where the PI's frequency floor bites. Nothing on the slate
-displaces the VDF/TrFE/CFE family for this objective on current evidence (`examples/slate_screen.py`).
+displaces the VDF/TrFE/CFE family for this objective on current evidence (`examples/slate_screen.py`). Section 8
+(`examples/kink_formation_screen.py`, `candidate_frequency_map.py`): the kink-pair formation energy in the packed
+cell, the first piece of the dynamics the statics could not give: 4.3 kcal/mol in PVDF, 4.9 in the TrFE
+copolymers, 1.2-1.4 in the CFE terpolymer model, 0.6 with CDFE, so the terpolymer's channel follows a 34-66
+kHz drive and the copolymer's is frozen there; loss per strain ranks CDFE and CFE ahead; the same-basin rerun
+and the migration barrier are open.
 The mission's two stages are closed and documented: the large-cell response path is 10x faster
 (`docs/PERFORMANCE_REVIEW.md` 16), and the crystal terms of the valence potential are fitted to
 Dipole's DFT anchors through seven stages. The current preset is `pvdf-dft-valence-belt3`
