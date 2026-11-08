@@ -95,7 +95,8 @@
    "formation_kcal_per_kink_pair": 6.798513733344258,
    "formation_rigid_kcal_per_kink_pair": 7.498740482730248,
    "kink_tilt_release_kcal_per_cell": -1.400453511529804,
-   "c_change_pct": -1.9551632564898336
+   "c_change_pct": -1.9551632564898336,
+   "rate_factor_vs_cfe": 0.00013688200545410454
   },
   "vdf8-trfe2": {
    "letters": "VVRVVVVRVV",
@@ -199,7 +200,8 @@
    "formation_kcal_per_kink_pair": 5.1609062531992045,
    "formation_rigid_kcal_per_kink_pair": 5.240878253871735,
    "kink_tilt_release_kcal_per_cell": -0.9450157652979101,
-   "c_change_pct": -2.1873524619493656
+   "c_change_pct": -2.1873524619493656,
+   "rate_factor_vs_cfe": 0.0021361978836584297
   },
   "vdf7-trfe3": {
    "letters": "VVRVVRVVVR",
@@ -303,7 +305,8 @@
    "formation_kcal_per_kink_pair": 5.12319962776405,
    "formation_rigid_kcal_per_kink_pair": 5.291576891036804,
    "kink_tilt_release_kcal_per_cell": -1.1419525812406732,
-   "c_change_pct": -2.2208064124789484
+   "c_change_pct": -2.2208064124789484,
+   "rate_factor_vs_cfe": 0.0022757136807417897
   },
   "vdf7-trfe2-cfe1": {
    "letters": "VVRVVCVVRV",
@@ -419,7 +422,8 @@
    "formation_kcal_per_kink_pair": 1.496264532071443,
    "formation_rigid_kcal_per_kink_pair": 0.8978861788610182,
    "kink_tilt_release_kcal_per_cell": -1.2598296708072212,
-   "c_change_pct": -2.616888187690125
+   "c_change_pct": -2.616888187690125,
+   "rate_factor_vs_cfe": 1.0
   },
   "vdf7-trfe2-cfe1-adj": {
    "letters": "VVRCVVVVRV",
@@ -535,7 +539,8 @@
    "formation_kcal_per_kink_pair": 1.4962627665685968,
    "formation_rigid_kcal_per_kink_pair": 0.8773732026036374,
    "kink_tilt_release_kcal_per_cell": -1.22096333235487,
-   "c_change_pct": -2.7041224377206463
+   "c_change_pct": -2.7041224377206463,
+   "rate_factor_vs_cfe": 1.000002962257485
   },
   "vdf7-trfe2-ctfe1": {
    "letters": "VVRVVKVVRV",
@@ -651,7 +656,8 @@
    "formation_kcal_per_kink_pair": 13.629702753067878,
    "formation_rigid_kcal_per_kink_pair": 14.449487904392333,
    "kink_tilt_release_kcal_per_cell": -3.7319345930569057,
-   "c_change_pct": -1.9908919090526056
+   "c_change_pct": -1.9908919090526056,
+   "rate_factor_vs_cfe": 1.440727243746632e-09
   },
   "vdf7-trfe2-cdfe1": {
    "letters": "VVRVVDVVRV",
@@ -767,7 +773,8 @@
    "formation_kcal_per_kink_pair": 0.08436393509760443,
    "formation_rigid_kcal_per_kink_pair": 0.263970106083411,
    "kink_tilt_release_kcal_per_cell": -1.0461697638206147,
-   "c_change_pct": -2.7614582460916193
+   "c_change_pct": -2.7614582460916193,
+   "rate_factor_vs_cfe": 10.686280614218832
   },
   "vdf7-trfe2-an1": {
    "letters": "VVRVVAVVRV",
@@ -872,7 +879,101 @@
    "formation_kcal_per_kink_pair": 6.764944738909486,
    "formation_rigid_kcal_per_kink_pair": 6.870208780143221,
    "kink_tilt_release_kcal_per_cell": -1.3068702572415987,
-   "c_change_pct": -2.6191027643151177
+   "c_change_pct": -2.6191027643151177,
+   "rate_factor_vs_cfe": 0.00014481297710497524
+  },
+  "vdf9-an1": {
+   "letters": "VVVVAVVVVV",
+   "note": "one acrylonitrile per ten VDF, no TrFE: a trans-favouring defect pulling PVDF's margin toward zero from the other side",
+   "validated_chemistry": false,
+   "start_params": [
+    5.47476999511094,
+    8.17879580876739,
+    91.35561985882721,
+    65.52750109191483,
+    65.52750109869547,
+    25.859568185968513,
+    0.0
+   ],
+   "kinked": {
+    "energy_rigid_per_monomer_kcal": -8.550796626902804,
+    "P_C_m2": [
+     0.11497187022841425,
+     0.06657191068981207,
+     0.015850150585266638
+    ],
+    "P_abs_C_m2": 0.13379677690545191,
+    "c_per_monomer_A": 2.52256850913916,
+    "volume_per_monomer_A3": 60.95578644964252,
+    "cell": {
+     "a": 5.337426740919479,
+     "b": 9.070144877770721,
+     "gamma_deg": 93.35322230495771,
+     "c": 25.2256850913916,
+     "volume_A3": 1219.1157289928503
+    },
+    "monomers_per_cell": 20,
+    "dipole_per_monomer_eA": 0.5090379916687258,
+    "pendant_tilt_relaxation_per_monomer_kcal": -0.07288297740370808,
+    "pendant_tilts_deg": {
+     "FF": {
+      "rock": 0.561762508423654,
+      "wag": 1.1835898049852114,
+      "twist": 0.5646947869774208,
+      "n": 18
+     },
+     "HH": {
+      "rock": 0.435134842275816,
+      "wag": 1.014408845923383,
+      "twist": 0.1883141442120211,
+      "n": 20
+     }
+    },
+    "energy_per_monomer_kcal": -8.623679604306512,
+    "seconds": 199.87184071540833
+   },
+   "TTTT": {
+    "energy_rigid_per_monomer_kcal": -9.29073848169691,
+    "P_C_m2": [
+     0.07814522744291608,
+     0.1433893716926078,
+     -1.4561330441074998e-07
+    ],
+    "P_abs_C_m2": 0.16330091391822374,
+    "c_per_monomer_A": 2.5859547957975417,
+    "volume_per_monomer_A3": 57.879478261657894,
+    "cell": {
+     "a": 5.47476999511094,
+     "b": 8.17879580876739,
+     "gamma_deg": 91.35561985882721,
+     "c": 25.85954795797542,
+     "volume_A3": 1157.5895652331578
+    },
+    "monomers_per_cell": 20,
+    "dipole_per_monomer_eA": 0.5899331881804675,
+    "pendant_tilt_relaxation_per_monomer_kcal": -0.044018559629358835,
+    "pendant_tilts_deg": {
+     "FF": {
+      "rock": 0.12200629237751381,
+      "wag": 0.9609784821153168,
+      "twist": 0.3992371838035382,
+      "n": 18
+     },
+     "HH": {
+      "rock": 0.4035252775492125,
+      "wag": 0.4234861141614239,
+      "twist": 0.11984584940710166,
+      "n": 20
+     }
+    },
+    "energy_per_monomer_kcal": -9.334757041326268,
+    "seconds": 111.38698530197144
+   },
+   "formation_kcal_per_kink_pair": 7.110774370197568,
+   "formation_rigid_kcal_per_kink_pair": 7.399418547941057,
+   "kink_tilt_release_kcal_per_cell": -1.4576595480741616,
+   "c_change_pct": -2.4511753554776528,
+   "rate_factor_vs_cfe": 8.106019587510109e-05
   }
  }
 }

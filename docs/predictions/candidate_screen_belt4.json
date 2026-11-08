@@ -1729,17 +1729,65 @@
      "energy_per_monomer_kcal": -7.505344829287855,
      "seconds": 173.86735892295837,
      "note": "per-monomer quantities rescaled from a carbon count of 10.5 to the chain's 20 vinyl monomers per cell (the nitrile carbon had been counted)"
+    },
+    "TG'TG": {
+     "energy_rigid_per_monomer_kcal": -8.515623623673784,
+     "P_C_m2": [
+      -0.06388731967619303,
+      -4.876229270168829e-17,
+      -4.301030544904626e-17
+     ],
+     "P_abs_C_m2": 0.06388731967619303,
+     "c_per_monomer_A": 2.315237310543669,
+     "volume_per_monomer_A3": 62.99672442630252,
+     "cell": {
+      "a": 5.527822976388617,
+      "b": 9.844605668084835,
+      "gamma_deg": 90.0,
+      "c": 23.15237310543669,
+      "volume_A3": 1259.9344885260505
+     },
+     "monomers_per_cell": 20,
+     "dipole_per_monomer_eA": 0.251201508408481,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.28841615886726685,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 1.1115993378784994,
+       "wag": 3.293696308859799,
+       "twist": 0.880773455870444,
+       "n": 18
+      },
+      "FH": {
+       "rock": 1.1293685171891763,
+       "wag": 0.9516196939937049,
+       "twist": 1.0973018542333994,
+       "n": 4
+      },
+      "HH": {
+       "rock": 0.8759082034171323,
+       "wag": 2.2578692515637595,
+       "twist": 0.713731211318342,
+       "n": 16
+      }
+     },
+     "energy_per_monomer_kcal": -8.804039782541052,
+     "seconds": 171.08320665359497
     }
    },
    "derived": {
-    "margin_TT_minus_TG_kcal_per_monomer": -0.7311534368956476,
-    "margin_rigid_kcal_per_monomer": -0.9648892820950321,
-    "axial_transition_strain": 0.0902979339946628,
-    "areal_transition_strain": -0.1745507594218253,
-    "dipole_gain_eA_per_monomer": 0.11562800645669641,
+    "margin_TT_minus_TG_kcal_per_monomer": 0.567541516357549,
+    "margin_rigid_kcal_per_monomer": 0.33394246622898827,
+    "axial_transition_strain": 0.11641880567074536,
+    "areal_transition_strain": -0.16869691123767794,
+    "dipole_gain_eA_per_monomer": 0.306833174400824,
     "P_TT_C_m2": 0.14563903093492495,
-    "P_TG_C_m2": 0.10391394251174198,
-    "threshold_field_MV_m": 0.0
+    "P_TG_C_m2": 0.06388731967619303,
+    "tg_conformer": "TG'TG",
+    "tg_conformers_run": {
+     "TGTG'": -7.505344829287855,
+     "TG'TG": -8.804039782541052
+    },
+    "threshold_field_MV_m": 802.0947977404826
    }
   },
   "vdf7-trfe2-fan1": {

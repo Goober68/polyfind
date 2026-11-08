@@ -353,17 +353,17 @@ all-trans cell. Results `docs/predictions/kink_formation_belt4.json`, `_samebasi
 `_pinned.json`, `_pinned_released.json`; kcal/mol per kink pair. The bracket's width is the lateral
 relaxation the kink needs, which is a property of the chemistry's all-trans lattice in its own right.
 
-| sequence | own basin (relaxed kink crystal) | same-basin start | pinned lattice (upper bound) | pinned then released | bracket |
+| sequence | own basin (relaxed kink crystal) | same-basin start | pinned lattice (upper bound) | pinned then released | bracket, kcal/mol per kink pair |
 |---|---|---|---|---|---|
-| vdf10 | +4.26 | +4.59 | +9.31 | running | width 5.0: the tightest lattice (52 A^3 per monomer) pays most to host a kink |
-| vdf8-trfe2 | +4.92 | +6.89 | +7.58 | running | width 2.7 |
-| vdf7-trfe3 | +4.95 | +5.09 | +7.48 | running | width 2.5 |
-| vdf7-trfe2-cfe1 | +1.24 | +1.47 | +3.13 | running | width 1.9 |
-| vdf7-trfe2-cfe1-adj | +1.40 | +2.97 | +3.14 | running | width 1.7; the placement does not change the kink cost |
-| vdf7-trfe2-ctfe1 | -0.42 | +5.68 | +20.42 | running | width 21: no number. Free, the lattice relaxes to a kinked packing; pinned, it has no room for a kink |
-| vdf7-trfe2-cdfe1 | +0.61 | +0.72 | +0.40 | running | width 0.2, the narrowest: the kink fits the all-trans CDFE lattice as it is (65.6 A^3 per monomer, gamma 96.7 deg); the pinned value is the lower one, so the screen missed a kink-crystal minimum by 0.2 |
-| vdf7-trfe2-an1 | +1.27 | +3.56 | +11.28 | running | width 10: no number; the nitrile fills the interchain gap (section 6) and locks the pinned lattice against kinks |
-| vdf9-an1 | +0.38 | +1.35 | +12.17 | running | width 12: no number, as above |
+| vdf10 | +4.26 | +4.59 | +9.31 | +6.80 | 4.3-9.3; the released cell (4.87 x 8.83 A) is the own-basin cell, 2.5 higher: the release moves the cell and the placement but not the torsions, so it is itself an upper bound on the nearest-basin kink crystal |
+| vdf8-trfe2 | +4.92 | +6.89 | +7.58 | +5.16 | 4.9-7.6; released and own basin agree (5.2 against 4.9) |
+| vdf7-trfe3 | +4.95 | +5.09 | +7.48 | +5.12 | 4.9-7.5; released and own basin agree (5.1 against 5.0) |
+| vdf7-trfe2-cfe1 | +1.24 | +1.47 | +3.13 | +1.50 | 1.2-3.1; released and own basin agree (1.5 against 1.2) |
+| vdf7-trfe2-cfe1-adj | +1.40 | +2.97 | +3.14 | +1.50 | 1.4-3.1; the placement does not change the kink cost (released 1.50 against 1.50) |
+| vdf7-trfe2-ctfe1 | -0.42 | +5.68 | +20.42 | +13.63 | 13.6-20.4 in the all-trans cell's own basin; the own-basin -0.4 is a different crystal (5.10 x 9.50 A against the all-trans 5.69 x 8.13), so the all-trans CTFE lattice is metastable against a kinked packing and has no room for a kink itself |
+| vdf7-trfe2-cdfe1 | +0.61 | +0.72 | +0.40 | +0.08 | 0.1-0.6, the narrowest: the kink pair is free within the protocols' resolution; the kink fits the all-trans CDFE lattice as it is (65.6 A^3 per monomer, gamma 96.7 deg) |
+| vdf7-trfe2-an1 | +1.27 | +3.56 | +11.28 | +6.76 | 6.8-11.3 in the all-trans cell's basin (the own-basin 1.3 is another cell): the nitrile fills the interchain gap (section 6) and locks the lattice against kinks |
+| vdf9-an1 | +0.38 | +1.35 | +12.17 | +7.11 | 7.1-12.2 in the all-trans cell's basin (the own-basin 0.4 is another cell, 5.15 x 9.58 A), as above |
 
 The frequency map (`examples/candidate_frequency_map.py`) is run on both ends of the bracket, the
 CFE 70/20/10 row anchored at the measured 364 kHz in each; the full tables are
@@ -414,9 +414,13 @@ CFE 70/20/10 row anchored at the measured 364 kHz in each; the full tables are
   placement's higher margin (+0.06 against +0.03) gives it more strain at the bias and a lower loss
   per strain at the upper end.
 * **Two cautions on the bracket itself.** The own-basin column is the lowest minimum the packing
-  screen found, not a proven bound: for CDFE the pinned solution (0.40) lies below it (0.61), so the
-  screen missed a kink-crystal minimum by 0.2 there; the released column is the check on the other
-  rows. And the same-basin start showed that a start is not a constraint: four of its rows moved
+  screen found, not a proven bound: for CDFE the pinned solution (0.40) and the released one (0.08)
+  lie below it (0.61), so the screen missed kink-crystal minima there, and for the CTFE and nitrile
+  rows it found a different crystal rather than the all-trans cell's basin (their released values,
+  6.8-13.6, are the ones to read against the all-trans lattice). The released column agrees with
+  the own basin for the copolymers and the CFE rows (within 0.3) and sits 2.5 above it for PVDF,
+  whose release did not re-refine the torsions. And the same-basin start showed that a start is
+  not a constraint: four of its rows moved
   to other cells anyway (PVDF to the a/b-swapped setting, CDFE to 5.10 x 10.17 A, AN beside TrFE
   to 5.19 x 9.49 A, CTFE to a cell 13% larger), and where the cell stayed the restarted refinement
   sat 0.1-2.0 kcal/mol per kink pair above the own-basin minimum.
