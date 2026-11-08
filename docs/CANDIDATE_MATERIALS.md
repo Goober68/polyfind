@@ -91,6 +91,7 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 | vdf8-trfe4-cfe1-cdfe1-14 | chlorine (extrapolated) | +0.641 (+0.303) | -0.458 | +11.3%, -14.0% | 0.129 | 0.526 | 529 | 1479 |
 | vdf9-trfe4-an1-14 | chlorine (extrapolated) | -0.154 (-0.494) | -0.393 | +10.8%, -15.4% | 0.145 | 0.524 | 0 | 0 |
 | vdf9-trfe4-fan1-14 | chlorine (extrapolated) | -0.091 (-0.091) | +0.000 | +10.6%, -12.2% | 0.141 | 0.537 | 0 | 0 |
+| vdf9-trfe4-ctfe1-14 | chlorine (extrapolated) | +0.135 (-0.190) | -0.416 | +9.5%, -12.1% | 0.138 | 0.508 | 115 | 390 |
 
 **Reading the screen.**
 
@@ -174,7 +175,10 @@ ones to read, and in them CDFE is the stronger tipper and leaves the cell at +0.
 part of the curve (E* 570 MV/m), while CFE leaves it at +0.11. With one CFE and one CDFE per
 fourteen (`DVRVVRVCVVRVVR`, 57/29/7/7): TTTT -5.928, TG'TG -6.569, margin +0.64. The two pins add
 (-0.05 + 0.16 + 0.45 = +0.56 against +0.64 found), so at the film's dilution every chlorine unit
-tips the degenerate matrix toward the helix and two of them tip it off the curve. So the pin diluted to one per fourteen in a 29 mol% matrix
+tips the degenerate matrix toward the helix and two of them tip it off the curve. CTFE in place of
+the CFE: TTTT -5.952, TGTG' -6.086, margin +0.135, a pin of CFE's strength at this dilution (+2.6
+per unit against +2.3; it costs both lattices 21-24 kcal/mol per unit, the bulkiest unit) with 12%
+less polarization (0.138 against 0.156 C/m^2) and 10% less switch strain (9.5% against 10.5%). So the pin diluted to one per fourteen in a 29 mol% matrix
 leaves the cell near-degenerate where one per ten in a 20 mol% matrix pinned it at +0.97: at the
 film's composition the model reproduces the relaxor's near-degeneracy, and the quantity that
 carries it is the matrix between the pins.
@@ -216,6 +220,7 @@ chemistry).
 | vdf8-trfe4-cfe1-cdfe1-14 | +0.641 | 529 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
 | vdf9-trfe4-an1-14 | -0.154 | 0 | 0.87 | 0.076% | 0.055 / 0.107 | 5.9 / 21.0 | 0.14 / 0.08 | 26 / 50 |
 | vdf9-trfe4-fan1-14 | -0.091 | 0 | 0.87 | 0.074% | 0.054 / 0.105 | 5.9 / 20.9 | 0.14 / 0.08 | 25 / 48 |
+| vdf9-trfe4-ctfe1-14 | +0.135 | 115 | 0.12 | 0.060% | 0.052 / 0.101 | 4.8 / 17.4 | 0.11 / 0.06 | 20 / 39 |
 
 **Reading the mapping.** The operating point is 55 V/um bias, 1.8 V/um AC; the polar fraction
 at bias is where the crystal margin puts the channel on its own switching curve, and the strain
@@ -262,10 +267,10 @@ In this cell CFE, FAN and CTFE pin at 6-8 kcal/mol per unit, AN at 4, CDFE not a
 on the hydrogen-bearing carbon costs the all-trans and the helical lattice the same 17 kcal/mol, a
 large unit that fits neither, where CFE's chlorine on the fluorine-bearing carbon costs TTTT 7 and
 the helix nothing. These numbers are the unit's in a 20 mol% TrFE cell with a pin every ten; in the
-fourteen-monomer 29 mol% cell the same CFE pins at +2.3, CDFE at +6.3, AN at -1.4 (it favours the
-all-trans lattice there) and FAN at about +4 with rigid pendants (sections 2 and 6), so a pin
-strength is a property of the unit in its matrix and the fourteen-monomer cells are the ones to
-design on. CTFE's two costs are both large (it is the bulkiest unit) and its pin is the
+fourteen-monomer 29 mol% cell the same CFE pins at +2.3, CTFE at +2.6, CDFE at +6.3, AN at -1.4 (it
+favours the all-trans lattice there) and FAN at about +4 with rigid pendants (sections 2 and 6), so
+a pin strength is a property of the unit in its matrix and the fourteen-monomer cells are the ones
+to design on. CTFE's two costs are both large (it is the bulkiest unit) and its pin is the
 difference of two big numbers. The nitrile pins by packing *better* into the helix (TG cost -4.6)
 rather than worse into the all-trans lattice (-0.7), the opposite route to the chlorines'. These
 are the rows whose chemistry is extrapolated; the pin strength of CFE against CDFE is the
@@ -326,7 +331,9 @@ first pass's ranking):
    does and AN at half the strength (+3.9); at the film's dilution in the 29 mol% matrix AN favours
    the all-trans lattice instead (-1.4 per unit, the cell saturated at the bias) and FAN pins at
    about +4 (rigid pendants) and overshoots like CDFE, so neither nitrile is the relaxor's pin in
-   a TrFE matrix (section 6); CTFE at one per fourteen has not been run. CDFE does not pin in the ten-monomer 20 mol% cell (-0.3) but tips the fourteen-
+   a TrFE matrix (section 6). CTFE at one per fourteen pins as CFE does (+0.135 against +0.11) with
+   12% less polarization and 10% less switch strain, so it ranks below CFE unless its kink pair is
+   cheaper (running). CDFE does not pin in the ten-monomer 20 mol% cell (-0.3) but tips the fourteen-
    monomer 29 mol% cell by +0.45 per monomer, more than CFE (+0.16), leaving it at +0.40: at the
    film's composition it is a stronger pin than CFE and overshoots the steep part of the curve;
    its kink pair is the cheapest of the table (section 8). The first pass's CDFE rows were read

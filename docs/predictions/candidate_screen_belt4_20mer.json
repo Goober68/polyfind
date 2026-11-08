@@ -1,0 +1,65 @@
+{
+ "preset": "pvdf-dft-valence-belt4",
+ "potential": "pvdf-dft-valence-belt4, induced dipoles, Ewald, force-shifted LJ, belt sites on every fluorine, PBE-D3 chain geometry, pendant groups relaxed as rigid tilts, 0 K",
+ "energy": "lattice energy plus the refined backbone angles' strain plus the pendant-tilt relaxation, per vinyl monomer",
+ "frame": "x polar, y lateral, z chain",
+ "sequences": {
+  "vdf13-trfe6-cfe1-20": {
+   "letters": "VVRVVRVVRVCVVRVVRVVR",
+   "note": "twenty monomers, 65/30/5: one CFE per twenty in a 30 mol% matrix, the pin-density lever",
+   "validated_chemistry": false,
+   "conformations": {
+    "TTTT": {
+     "energy_rigid_per_monomer_kcal": -7.057286843661188,
+     "P_C_m2": [
+      0.020712490474622123,
+      0.1551092098106873,
+      1.1754425844711273e-07
+     ],
+     "P_abs_C_m2": 0.1564860192789469,
+     "c_per_monomer_A": 2.585931813807513,
+     "volume_per_monomer_A3": 56.476416796347095,
+     "cell": {
+      "a": 5.35628945803896,
+      "b": 8.154941149766243,
+      "gamma_deg": 90.26962439886425,
+      "c": 51.71863627615026,
+      "volume_A3": 2259.056671853884
+     },
+     "monomers_per_cell": 40,
+     "dipole_per_monomer_eA": 0.5516101945348313,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.11749412139159858,
+     "pendant_tilts_deg": {
+      "ClF": {
+       "rock": 9.849632586393406e-05,
+       "wag": 6.4761214678835515,
+       "twist": 4.6907400183493646e-05,
+       "n": 2
+      },
+      "FF": {
+       "rock": 0.4088990637021005,
+       "wag": 1.7361820088623996,
+       "twist": 0.21890731966693067,
+       "n": 38
+      },
+      "FH": {
+       "rock": 0.035986963140839066,
+       "wag": 0.24407918642305793,
+       "twist": 0.01656033811263344,
+       "n": 12
+      },
+      "HH": {
+       "rock": 0.7264974071603747,
+       "wag": 0.5384619931612968,
+       "twist": 0.21665149193518238,
+       "n": 28
+      }
+     },
+     "energy_per_monomer_kcal": -7.174780965052787,
+     "seconds": 1006.5660035610199
+    }
+   },
+   "derived": {}
+  }
+ }
+}
