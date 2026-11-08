@@ -32,9 +32,16 @@ KT = 0.596  # kcal/mol at 300 K
 KINK = [GP, T, GM] + [T] * 17  # a kink pair in the first two monomers; the chain direction is restored after it
 
 
-def kink_at(offset: int) -> list:
-    """The kink pair moved ``offset`` bonds along the periodic repeat (the chain is periodic, so it wraps)."""
-    return [int(x) for x in np.roll(np.asarray(KINK), offset % len(KINK))]
+def kink_at(offset: int, mirror: bool = False) -> list:
+    """The kink pair moved ``offset`` bonds along the periodic repeat (the chain is periodic, so it wraps).
+
+    ``mirror`` swaps G+ and G- (the kink pair of the other handedness): for a chiral (isotactic
+    copolymer) sequence the two are different conformers, as the TG helix's handednesses are.
+    """
+    k = np.asarray(KINK)
+    if mirror:
+        k = np.where(k == GP, GM, np.where(k == GM, GP, k))
+    return [int(x) for x in np.roll(k, offset % len(k))]
 ROWS = ["vdf10", "vdf8-trfe2", "vdf7-trfe3", "vdf7-trfe2-cfe1", "vdf7-trfe2-cfe1-adj", "vdf7-trfe2-ctfe1", "vdf7-trfe2-cdfe1", "vdf7-trfe2-an1", "vdf9-an1"]
 EXTRA = {"vdf10": ("VVVVVVVVVV", "PVDF as a ten-monomer sequence"), "vdf7-trfe3": ("VVRVVRVVVR", "the 70/30 model of the E2 set as a ten-monomer sequence")}
 
@@ -86,6 +93,7 @@ def main():
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--screen", default="docs/predictions/candidate_screen_belt4.json", help="the candidate screen: its TTTT rows are the references")
     ap.add_argument("--rows", default=",".join(ROWS))
+    ap.add_argument("--mirror-kink", action="store_true", help="the kink pair of the other handedness (G- T G+); rows are written as '<name>~'")
     ap.add_argument("--kink-at", default="0", help="comma list of bond offsets of the kink pair along the repeat (default 0: bonds 0-2); an offset k writes its row as '<name>@k', so a scan is the kink's energy landscape along the sequence, the pinning by the TrFE and the defect")
     ap.add_argument("--out", default="docs/predictions/kink_formation_belt4.json")
     args = ap.parse_args()
@@ -105,9 +113,9 @@ def main():
             for offset in offsets:
                 letters, note = (C.SEQUENCES.get(name) or EXTRA[name])
                 polymer = C.make_polymer(name, letters)
-                key = name if offset == 0 else f"{name}@{offset}"
-                kink = kink_at(offset)
-                entry = results["rows"].setdefault(key, {"letters": letters, "note": note, "validated_chemistry": set(letters) <= C.VALIDATED, "kink_offset_bonds": offset})
+                key = (name if offset == 0 else f"{name}@{offset}") + ("~" if args.mirror_kink else "")
+                kink = kink_at(offset, args.mirror_kink)
+                entry = results["rows"].setdefault(key, {"letters": letters, "note": note, "validated_chemistry": set(letters) <= C.VALIDATED, "kink_offset_bonds": offset, "kink_mirrored": bool(args.mirror_kink)})
                 if "kinked" not in entry or "failed" in entry["kinked"]:
                     try:
                         if args.same_basin or args.pinned_lattice or args.pinned_release:
