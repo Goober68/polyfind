@@ -28,8 +28,15 @@ since it does not depend on the margin). `examples/candidate_screen.py` carries 
 71/29 matrix is degenerate (-0.05) and frozen at the drive (kink pair 5.5, channel 0.8 kHz, saturated at the bias);
 one CFE per fourteen holds it off saturation (polar fraction 0.24) and cuts the kink to 1.8 (channel at the drive),
 giving tan delta 0.07 for 0.125% AC strain at the operating point (`candidate_frequency_map_belt4_anchor14.md`):
-the relaxor mechanism in one cell. Running or next: the 64/36 control, the 14-mer released and pinned kinks, the
-mirrored kink, CDFE at one per fourteen and the CFE+CDFE cell.
+the relaxor mechanism in one cell. The 14-mer matrix is degenerate within resolution from 29 to 36 mol% TrFE
+(71/29 -0.05, 64/36 -0.06); CDFE at one per fourteen pins harder than CFE (+0.40 against +0.11; pin strengths are
+cell properties: CFE +7.9 per unit in the 20 mol% ten-monomer cell, +2.3 in the 29 mol% fourteen-monomer one, CDFE
+-0.3 and +6.3) with the fastest lattice (kink 1.1, channel 1.3 MHz) and no strain at the bias; CFE+CDFE per
+fourteen adds the two pins (+0.64), so the pin-and-loosener hypothesis fails as posed. The kink pair's handedness
+splits 5-9 kcal/mol in the pinned lattice and 0-0.5 in the relaxed one (section 8). Running: the 71/29 released
+kink, the pinned-from-own protocol for the 14-mer cells (the pinned-from-all-trans start sticks for long repeats:
+64/29/7 pinned 13.2 / released 11.8 against own 1.8), the CFE+CDFE cell's kink. Still to run: the kink-position
+scan (the pinning landscape), FAN and AN at one per fourteen.
 
 **Where things stand, 2026-11-07 (read this first; the detail is in the dated paragraphs below and in `docs/CRYSTAL_STAGE.md`).**
 Candidate pass, 2026-11-07 22:50 UTC (`docs/CANDIDATE_MATERIALS.md`, `examples/candidate_screen.py`,
