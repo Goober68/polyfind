@@ -143,8 +143,10 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 anchored on is 63/30/7; one regular cell of that composition is fourteen monomers with one CFE,
 `VVRVVRVCVVRVVR` (64/29/7), and its controls are the same cell with the CFE replaced by VDF
 (71/29) and the matrix at 36 mol% TrFE (64/36). With TTTT, TG'TG and TGTG' (the two phases were
-never the lowest above): 64/29/7 TTTT -7.138, TG'TG -7.248, margin +0.11 kcal/mol per monomer
-(TGTG' and the two controls running). So the pin diluted to one per fourteen in a 29 mol% matrix
+never the lowest above): 64/29/7 TTTT -7.138, TG'TG -7.248, TGTG' -7.246 (the two handednesses
+degenerate to 0.003 here, where the ten-monomer CFE cell split them by 0.94: the split is a
+property of the CFE's placement among the TrFE units, not of the chlorine alone), margin +0.11
+kcal/mol per monomer, E* 280 MV/m on the TT-TG dipole difference (the two controls running). So the pin diluted to one per fourteen in a 29 mol% matrix
 leaves the cell near-degenerate where one per ten in a 20 mol% matrix pinned it at +0.97: at the
 film's composition the model reproduces the relaxor's near-degeneracy, and the quantity that
 carries it is the matrix between the pins.

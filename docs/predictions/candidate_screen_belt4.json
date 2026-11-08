@@ -1564,22 +1564,66 @@
      },
      "energy_per_monomer_kcal": -9.549748156783151,
      "seconds": 160.82479190826416
+    },
+    "GTG'T": {
+     "energy_rigid_per_monomer_kcal": -9.288863269422572,
+     "P_C_m2": [
+      0.08605362543515807,
+      4.1935344659821166e-16,
+      1.5572775670938805e-16
+     ],
+     "P_abs_C_m2": 0.08605362543515807,
+     "c_per_monomer_A": 2.3242605846453475,
+     "volume_per_monomer_A3": 58.76264259351202,
+     "cell": {
+      "a": 5.32112215189431,
+      "b": 9.50261792074334,
+      "gamma_deg": 90.0,
+      "c": 23.242605846453475,
+      "volume_A3": 1175.2528518702404
+     },
+     "monomers_per_cell": 20,
+     "dipole_per_monomer_eA": 0.31561678831237716,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.3079143517188129,
+     "pendant_tilts_deg": {
+      "ClF": {
+       "rock": 0.9831939676327083,
+       "wag": 0.8969255166761342,
+       "twist": 1.1271422008675613,
+       "n": 2
+      },
+      "FF": {
+       "rock": 1.1955655446071065,
+       "wag": 3.279357415117608,
+       "twist": 0.7743939232230765,
+       "n": 18
+      },
+      "HH": {
+       "rock": 0.7059752203835274,
+       "wag": 2.699358496597015,
+       "twist": 0.5754700656756848,
+       "n": 20
+      }
+     },
+     "energy_per_monomer_kcal": -9.596777621141385,
+     "seconds": 147.16746425628662
     }
    },
    "derived": {
-    "margin_TT_minus_TG_kcal_per_monomer": 0.975941690876093,
-    "margin_rigid_kcal_per_monomer": 0.7470146505993256,
-    "axial_transition_strain": 0.11348205332103678,
-    "areal_transition_strain": -0.14789624308290694,
-    "dipole_gain_eA_per_monomer": 0.2985742865442519,
+    "margin_TT_minus_TG_kcal_per_monomer": 0.9819349158986022,
+    "margin_rigid_kcal_per_monomer": 0.7550207428815039,
+    "axial_transition_strain": 0.11355235991619717,
+    "areal_transition_strain": -0.14717043180166378,
+    "dipole_gain_eA_per_monomer": 0.2987966178062461,
     "P_TT_C_m2": 0.1763993038821332,
-    "P_TG_C_m2": 0.08603552356022993,
-    "tg_conformer": "TGTG'",
+    "P_TG_C_m2": 0.08605362543515807,
+    "tg_conformer": "GTG'T",
     "tg_conformers_run": {
      "TGTG'": -9.590784396118876,
-     "TG'TG": -9.549748156783151
+     "TG'TG": -9.549748156783151,
+     "GTG'T": -9.596777621141385
     },
-    "threshold_field_MV_m": 1417.4307304239048
+    "threshold_field_MV_m": 1425.0739533653164
    }
   },
   "vdf8-cfe2": {
