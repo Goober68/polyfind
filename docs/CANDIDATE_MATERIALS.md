@@ -200,8 +200,11 @@ correction no ten-monomer row sits there: the no-defect 70/30 and 80/20 and the 
 on the curve (polar fraction 0.05-0.11) and give 0.03-0.07% AC strain, the TT-ground 60/40 is
 saturated (0.88) and gives the same, and every pinned defect row (CFE, CTFE, AN, FAN, margins
 +0.57 to +0.97), PVDF, the alternating 50/50 and the VDF/CFE copolymers do not switch at all.
-The row that does sit near the steep part is the fourteen-monomer 64/29/7 cell of section 2
-(margin +0.11), which this mapping will carry once its kink energy is computed (section 8). The loss per
+The rows that do sit on the curve are the fourteen-monomer cells of section 2: the 64/29/7 cell
+(margin +0.11, polar fraction 0.24 at 55 V/um) carries the largest AC strain of the table (0.125%
+at 34 kHz, tan delta 0.074, efficiency 0.16) and its 71/29 matrix control (margin -0.05) is
+saturated (0.88) with half that strain, which is the pin doing its job: it holds the matrix off
+saturation at the bias. Section 8 carries these two rows with their own kink energies. The loss per
 unit strain is the same for every switchable row (efficiency 0.10-0.15 at 34 kHz, 0.05-0.09 at
 66 kHz) because the relaxation is the same: a candidate with more strain at this bias also has
 more loss and more heat, and all of them exceed the 4 MW/m^3 budget at 1.8 V/um at 34 kHz (the

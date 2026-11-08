@@ -25,21 +25,26 @@ REF = "vdf7-trfe2-cfe1"
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--screen", default="docs/predictions/candidate_screen_belt4.json")
-    ap.add_argument("--kinks", default="docs/predictions/kink_formation_belt4.json")
+    ap.add_argument("--screen", default="docs/predictions/candidate_screen_belt4.json", help="comma list of screen files; rows merge by name")
+    ap.add_argument("--kinks", default="docs/predictions/kink_formation_belt4.json", help="comma list of kink files; rows merge by name")
+    ap.add_argument("--ref", default=REF, help="the row anchored on the measured 364 kHz channel (the CFE terpolymer cell)")
     ap.add_argument("--e2", default="docs/predictions/e2_polyfind_belt4.json")
     ap.add_argument("--out", default="docs/predictions/candidate_frequency_map_belt4.json")
     ap.add_argument("--bias", type=float, default=55.0)
     ap.add_argument("--ac", type=float, default=1.8)
     args = ap.parse_args()
-    screen = json.load(open(args.screen))["sequences"]
-    kinks = json.load(open(args.kinks))["rows"]
+    screen = {}
+    for path in args.screen.split(","):
+        screen.update(json.load(open(path))["sequences"])
+    kinks = {}
+    for path in args.kinks.split(","):
+        kinks.update(json.load(open(path))["rows"])
     e2 = json.load(open(args.e2))["systems"]
     base = L.literature_terpolymer()
     T = 300.0
     rows = {}
     for name, k in kinks.items():
-        if "formation_kcal_per_kink_pair" not in k:
+        if "formation_kcal_per_kink_pair" not in k or "@" in name or name.endswith("~"):
             continue
         # statics: from the candidate screen (vdf10 and vdf7-trfe3 are the E2 set's PVDF and 70/30 rows)
         if name in screen and screen[name].get("derived"):
@@ -52,11 +57,13 @@ def main():
             mu = dipole_per_monomer(float(np.linalg.norm(tt["P_C_m2"])), tt["cell"]["volume_A3"], int(round(tt["monomers_per_cell"])))
             axial = tt["c_per_monomer_A"] / tg["c_per_monomer_A"] - 1.0
         rows[name] = {"E_form": k["formation_kcal_per_kink_pair"], "margin": margin, "mu_TT": mu, "axial": axial, "validated_chemistry": k["validated_chemistry"]}
-    e_ref = rows[REF]["E_form"]
+    if args.ref not in rows:
+        raise SystemExit(f"the anchor row {args.ref!r} is not among the rows with a kink energy: {sorted(rows)}")
+    e_ref = rows[args.ref]["E_form"]
     tf_factor = (T - base.tf) / T  # an Arrhenius rate change written as a shift of the Vogel-Fulcher activation
     md = ["| sequence | kink pair, kcal/mol | rate vs CFE row | f_relax proxy at 300 K | margin | polar fraction at bias | S_ac 34 / 66 kHz | tan delta 34 / 66 kHz | tan delta per % strain, 34 kHz | efficiency 34 / 66 kHz |",
           "|---|---|---|---|---|---|---|---|---|---|"]
-    out = {"reference": REF, "operating_point": {"bias_V_um": args.bias, "ac_V_um": args.ac}, "rows": {}}
+    out = {"reference": args.ref, "operating_point": {"bias_V_um": args.bias, "ac_V_um": args.ac}, "rows": {}}
     for name, r in rows.items():
         rate = float(np.exp(-(r["E_form"] - e_ref) / KT))
         ea_shift = ((r["E_form"] - e_ref) / L.SwitchingChannel.KCAL_PER_EV) * tf_factor
