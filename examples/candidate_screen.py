@@ -88,6 +88,9 @@ SEQUENCES = {
     "vdf6-trfe3-cdfe1": ("RVVRVDVRVV", "CDFE with more TrFE, 60/30/10: does the TrFE bring the CDFE row's margin down to the CFE row's (section 8 ranks CDFE first on loss per strain)"),
     "vdf6-trfe3-cfe1": ("RVVRVCVRVV", "CFE at 60/30/10, the trade-off row: the CFE margin was +0.03 at 70/20/10"),
     "vdf6-trfe2-cdfe2": ("VVRVDVVRVD", "two CDFE per ten beside 20 mol% TrFE: more defect instead of more TrFE"),
+    "vdf6-trfe3-cdfe1-b": ("VRVRVVRVDV", "60/30/10 CDFE, a second TrFE placement (the placement spread at 30 mol% TrFE)"),
+    "vdf6-trfe3-cdfe1-c": ("RVRVVRVVDV", "60/30/10 CDFE, a third TrFE placement"),
+    "vdf6-trfe3-cfe1-b": ("VRVRVVRVCV", "60/30/10 CFE, a second TrFE placement"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 
