@@ -548,6 +548,16 @@ cell with one CFE and one CDFE per fourteen (section 5, item 4).
   to other cells anyway (PVDF to the a/b-swapped setting, CDFE to 5.10 x 10.17 A, AN beside TrFE
   to 5.19 x 9.49 A, CTFE to a cell 13% larger), and where the cell stayed the restarted refinement
   sat 0.1-2.0 kcal/mol per kink pair above the own-basin minimum.
+* **The kink pair has a handedness too.** G+ T G- and G- T G+ are different conformers in a chiral
+  sequence, as the helix's handednesses are, and the screen ran the first. The mirrored pair in
+  the pinned lattice (`--mirror-kink`, `kink_formation_belt4_pinned_mirror.json`): PVDF 9.16
+  against 9.31 (achiral, equal within the 0.15 resolution), CFE 70/20/10 12.41 against 3.13, CDFE
+  5.20 against 0.40. So for a chiral sequence the two kink handednesses differ by 5-9 kcal/mol in
+  the pinned lattice, the chain takes the cheaper one, and the table above happens to carry it for
+  these rows; every chiral row's number is an upper bound on the cheaper handedness until both
+  have run (the own-basin mirrored runs and the fourteen-monomer cell's are going). A real chain
+  nucleates whichever pair is cheaper where it is, which the regular isotactic model cannot
+  average over.
 * **What the proxy leaves out.** The migration barrier (the hop that moves the kink, 0.357 eV in
   perfect beta from an earlier polyfind computation) is assumed equal across rows; the
   cooperativity `Tf` is not computed and the anchoring on the measured film fixes it at the
