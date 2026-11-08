@@ -154,7 +154,11 @@ same cell, CFE replaced by VDF): TTTT -7.666, TG'TG -7.614, margin -0.05 (TGTG' 
 mol% matrix is degenerate within the model's resolution, and the pin tips the cell by +0.16 per
 monomer, i.e. +2.3 kcal/mol per CFE unit (TT cost +7.4, TG cost +5.1 in this more open lattice,
 against +6.9 and -1.0 in the ten-monomer 20 mol% cell): the pin is a gentler pin where the
-matrix is near-degenerate. The 64/36 matrix control is running. So the pin diluted to one per fourteen in a 29 mol% matrix
+matrix is near-degenerate. The 64/36 matrix control: TTTT -7.239, TGTG' -7.182, margin -0.06. So in
+the fourteen-monomer cell the matrix is degenerate within the model's resolution from 29 to 36
+mol% TrFE (the ten-monomer 70/30 and 80/20 cells gave +0.15 and +0.18, the 60/40 cell -0.33: the
+cell length moves these numbers by 0.2, which is the sequence-regularity effect of the 50/50 row
+again), and the pin sets where in that window the material sits. So the pin diluted to one per fourteen in a 29 mol% matrix
 leaves the cell near-degenerate where one per ten in a 20 mol% matrix pinned it at +0.97: at the
 film's composition the model reproduces the relaxor's near-degeneracy, and the quantity that
 carries it is the matrix between the pins.
@@ -279,8 +283,9 @@ For a sequence-controlled material aimed at the bias-hold operating point, on th
 with the confidence stated in section 7 (and after the handedness correction, which withdrew the
 first pass's ranking):
 
-1. **The matrix: VDF/TrFE at 29-35 mol% TrFE.** Margin +0.11 to +0.18 in the model (the 71/29 and
-   64/36 fourteen-monomer controls running), threshold 90-130 MV/m, validated chemistry: this is
+1. **The matrix: VDF/TrFE at 29-36 mol% TrFE.** Degenerate within the model's resolution in the
+   fourteen-monomer cells (71/29 -0.05, 64/36 -0.06; the ten-monomer 70/30 and 80/20 cells +0.15
+   and +0.18), validated chemistry: this is
    where the near-degeneracy the relaxor needs comes from, as it does in every giant-strain
    terpolymer made so far. Without a pin it is a ferroelectric copolymer with hysteresis, which
    this equilibrium picture does not contain (the lattice model's coupling does).
