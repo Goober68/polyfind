@@ -1,0 +1,191 @@
+{
+ "preset": "pvdf-dft-valence-belt4",
+ "potential": "pvdf-dft-valence-belt4, induced dipoles, Ewald, force-shifted LJ, belt sites on every fluorine, PBE-D3 chain geometry, pendant groups relaxed as rigid tilts, 0 K",
+ "energy": "lattice energy plus the refined backbone angles' strain plus the pendant-tilt relaxation, per vinyl monomer",
+ "frame": "x polar, y lateral, z chain",
+ "sequences": {
+  "vdf9-trfe4-an1-14": {
+   "letters": "VVRVVRVAVVRVVR",
+   "note": "the 64/29/7 cell with acrylonitrile in place of CFE: the nitrile pin at the film's dilution",
+   "validated_chemistry": false,
+   "conformations": {
+    "TTTT": {
+     "energy_rigid_per_monomer_kcal": -7.612330482839397,
+     "P_C_m2": [
+      0.02968385703645981,
+      0.14176639414947034,
+      1.1662448951843152e-07
+     ],
+     "P_abs_C_m2": 0.14484074661060528,
+     "c_per_monomer_A": 2.5845112513030584,
+     "volume_per_monomer_A3": 57.932067236175065,
+     "cell": {
+      "a": 5.432039654900784,
+      "b": 8.252921046203427,
+      "gamma_deg": 89.97961780421464,
+      "c": 36.183157518242815,
+      "volume_A3": 1622.097882612902
+     },
+     "monomers_per_cell": 28,
+     "dipole_per_monomer_eA": 0.5237202748510051,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.05270447809863299,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 0.33595371891904197,
+       "wag": 1.314719310640918,
+       "twist": 0.27347889346193166,
+       "n": 26
+      },
+      "FH": {
+       "rock": 0.01172490346389752,
+       "wag": 0.413548015087068,
+       "twist": 0.017141196761502366,
+       "n": 8
+      },
+      "HH": {
+       "rock": 0.7773768742047422,
+       "wag": 0.6835156877788536,
+       "twist": 0.3057162271502545,
+       "n": 20
+      }
+     },
+     "energy_per_monomer_kcal": -7.66503496093803,
+     "seconds": 414.4521825313568
+    },
+    "TG'TG": {
+     "energy_rigid_per_monomer_kcal": -7.118093674641551,
+     "P_C_m2": [
+      -0.05902265147624919,
+      0.056581867815824714,
+      -0.05732130941385567
+     ],
+     "P_abs_C_m2": 0.09985446242273412,
+     "c_per_monomer_A": 2.3331789908131704,
+     "volume_per_monomer_A3": 61.803179220808204,
+     "cell": {
+      "a": 5.5346389141249315,
+      "b": 9.576568181835963,
+      "gamma_deg": 88.23351188199106,
+      "c": 32.664505871384385,
+      "volume_A3": 1730.4890181826297
+     },
+     "monomers_per_cell": 28,
+     "dipole_per_monomer_eA": 0.3851836998585073,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.3927615324716669,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 1.3313144746144412,
+       "wag": 3.240526254718428,
+       "twist": 0.9658929885232905,
+       "n": 26
+      },
+      "FH": {
+       "rock": 1.2339900255645724,
+       "wag": 2.122421645107808,
+       "twist": 1.3961307009248718,
+       "n": 8
+      },
+      "HH": {
+       "rock": 0.9890877447760363,
+       "wag": 2.2467244285953116,
+       "twist": 0.7248813271414015,
+       "n": 20
+      }
+     },
+     "energy_per_monomer_kcal": -7.5108552071132175,
+     "seconds": 497.3371305465698
+    },
+    "TGTG'": {
+     "energy_rigid_per_monomer_kcal": -6.759076567169607,
+     "P_C_m2": [
+      0.05302016554720284,
+      -0.05146645313550736,
+      -0.05124363975605062
+     ],
+     "P_abs_C_m2": 0.0899213232134073,
+     "c_per_monomer_A": 2.359381483940286,
+     "volume_per_monomer_A3": 63.561130984043565,
+     "cell": {
+      "a": 5.757052367370137,
+      "b": 9.396419020296129,
+      "gamma_deg": 84.87588202748665,
+      "c": 33.031340775164004,
+      "volume_A3": 1779.7116675532197
+     },
+     "monomers_per_cell": 28,
+     "dipole_per_monomer_eA": 0.3567335137547574,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.36635173925219533,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 0.994904552900299,
+       "wag": 3.273803989474551,
+       "twist": 0.9307305699309851,
+       "n": 26
+      },
+      "FH": {
+       "rock": 1.3187420461510526,
+       "wag": 3.144379748038566,
+       "twist": 1.4982356585968293,
+       "n": 8
+      },
+      "HH": {
+       "rock": 0.9879790537129007,
+       "wag": 1.5837367569408787,
+       "twist": 0.6133072656988812,
+       "n": 20
+      }
+     },
+     "energy_per_monomer_kcal": -7.125428306421802,
+     "seconds": 605.3792977333069
+    }
+   },
+   "derived": {
+    "margin_TT_minus_TG_kcal_per_monomer": -0.15417975382481242,
+    "margin_rigid_kcal_per_monomer": -0.4942368081978463,
+    "axial_transition_strain": 0.10772095131985249,
+    "areal_transition_strain": -0.15379061069900413,
+    "dipole_gain_eA_per_monomer": 0.13853657499249783,
+    "P_TT_C_m2": 0.14484074661060528,
+    "P_TG_C_m2": 0.09985446242273412,
+    "tg_conformer": "TG'TG",
+    "tg_conformers_run": {
+     "TG'TG": -7.5108552071132175,
+     "TGTG'": -7.125428306421802
+    },
+    "threshold_field_MV_m": 0.0
+   }
+  },
+  "vdf9-trfe4-fan1-14": {
+   "letters": "VVRVVRVNVVRVVR",
+   "note": "the 64/29/7 cell with 2-fluoroacrylonitrile in place of CFE",
+   "validated_chemistry": false,
+   "conformations": {
+    "TTTT": {
+     "energy_rigid_per_monomer_kcal": -7.029706209858999,
+     "P_C_m2": [
+      -0.028905894604074677,
+      -0.1382319978325274,
+      -2.2021816755542686e-07
+     ],
+     "P_abs_C_m2": 0.14122193869113336,
+     "c_per_monomer_A": 2.585097852630548,
+     "volume_per_monomer_A3": 60.95858686759605,
+     "cell": {
+      "a": 6.0137357314427415,
+      "b": 7.852348584646866,
+      "gamma_deg": 87.10135921842704,
+      "c": 36.19136993682768,
+      "volume_A3": 1706.8404322926892
+     },
+     "monomers_per_cell": 28,
+     "dipole_per_monomer_eA": 0.5373121561398191,
+     "pendant_tilt_relaxation_per_monomer_kcal": 0.0,
+     "pendant_tilts_deg": "unavailable: ValueError('belt site 79: its carbon has no two pendant atoms within a bond length ([(1.3863000000000008, 78, array([0., 0., 0.])), (2.140315940234214, 76, array([0., 0., 0.]))])')",
+     "energy_per_monomer_kcal": -7.029706209858999,
+     "seconds": 412.3219361305237
+    }
+   },
+   "derived": {}
+  }
+ }
+}

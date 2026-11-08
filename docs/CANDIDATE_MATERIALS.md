@@ -480,8 +480,8 @@ relaxation the kink needs, which is a property of the chemistry's all-trans latt
 | vdf7-trfe2-cdfe1 | +0.61 | +0.72 | +0.40 | +0.08 | 0.1-0.6, the narrowest: the kink pair is free within the protocols' resolution; the kink fits the all-trans CDFE lattice as it is (65.6 A^3 per monomer, gamma 96.7 deg) |
 | vdf7-trfe2-an1 | +1.27 | +3.56 | +11.28 | +6.76 | 6.8-11.3 in the all-trans cell's basin (the own-basin 1.3 is another cell): the nitrile fills the interchain gap (section 6) and locks the lattice against kinks |
 | vdf9-an1 | +0.38 | +1.35 | +12.17 | +7.11 | 7.1-12.2 in the all-trans cell's basin (the own-basin 0.4 is another cell, 5.15 x 9.58 A), as above |
-| vdf9-trfe4-cfe1-14 (64/29/7, fourteen monomers) | +1.82 | - | +13.21 | +11.75 | 1.8 in its own basin; the pinned and released values are a stuck placement rather than a bound (the ten-monomer CFE cell's pinned kink is 3.1 in the same 57 A^3 lattice; releasing the cell recovers only 1.5), so the pinned lattice is being reached from the kink's own conformation instead (`--pinned-from-own`) |
-| vdf10-trfe4-14 (71/29 matrix, fourteen monomers) | +5.47 | - | +7.27 | +5.70 | 5.5-7.3, the three protocols agree: the matrix without the pin has the copolymer's kink cost; the one CFE per fourteen cuts it to 1.8 |
+| vdf9-trfe4-cfe1-14 (64/29/7, fourteen monomers) | +1.82 | - | +13.21 (stuck) | +11.75 (stuck) | 1.8-3.5: the pinned lattice reached from the kink's own conformation (`--pinned-from-own`, `kink_formation_belt4_14mer_pinned_from_own.json`) gives 3.52, the upper bound; the pinned and released values started from the all-trans placement are a stuck minimum (the ten-monomer CFE cell's pinned kink is 3.1 in the same 57 A^3 lattice) |
+| vdf10-trfe4-14 (71/29 matrix, fourteen monomers) | +5.47 | - | +7.27 | +5.70 | 5.5-7.6 (pinned from own 7.56), the protocols agree: the matrix without the pin has the copolymer's kink cost; the one CFE per fourteen cuts it to 1.8-3.5 |
 
 The frequency map (`examples/candidate_frequency_map.py`) is run on both ends of the bracket, the
 CFE 70/20/10 row anchored at the measured 364 kHz in each; the full tables are
@@ -519,8 +519,8 @@ cell takes the measured 364 kHz, every other row's rate is relative to its own-b
 The matrix alone is a frozen ferroelectric at the drive: saturated at the bias (0.88) with its
 channel at 0.8 kHz, so it carries loss and no strain at 34-66 kHz, the copolymer's known
 behaviour. One CFE per fourteen does two things at once: it holds the matrix off saturation (polar
-fraction 0.24) and it cuts the kink cost from 5.5 to 1.8 kcal/mol, a factor of 460 in rate, which
-puts the channel at the drive. That is the relaxor terpolymer's mechanism in one cell, pin and
+fraction 0.24) and it cuts the kink cost from 5.5-7.6 to 1.8-3.5 kcal/mol (own basin and pinned
+lattice respectively), a factor of 460-900 in rate, which puts the channel at the drive. That is the relaxor terpolymer's mechanism in one cell, pin and
 loosener in the same chlorine, and at the program's operating point the model gives tan delta 0.07
 at 34 kHz for 0.125% AC strain, the largest strain of the table at the lowest loss per strain of
 any row that switches. The ten-monomer CDFE row shows what a loosener without a pin does: a
