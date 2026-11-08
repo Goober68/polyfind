@@ -498,6 +498,7 @@ cell takes the measured 364 kHz, every other row's rate is relative to its own-b
 |---|---|---|---|---|---|---|---|---|
 | 64/29/7, one CFE per fourteen | +1.82 | 364 kHz (anchor) | +0.11 | 0.24 | 0.125% | 0.074 / 0.143 | 0.59 | 0.16 / 0.10 |
 | 71/29, the matrix without the pin | +5.47 | 0.8 kHz | -0.05 | 0.88 | 0.003% | 0.262 / 0.136 | 101 | 0.00 / 0.00 |
+| 64/29/7 with CDFE in place of CFE | +1.08 | 1.3 MHz | +0.40 | 0.00 | 0.000% | 0.000 / 0.000 | - | 0.02 / 0.01 |
 | VDF/TrFE/CDFE 70/20/10, ten monomers | +0.61 | 2.8 MHz | +0.15 | 0.10 | 0.062% | 0.006 / 0.012 | 0.10 | 0.42 / 0.32 |
 | VDF/TrFE 70/30, ten monomers | +4.95 | 2 kHz | +0.15 | 0.11 | 0.006% | 0.576 / 0.310 | 93 | 0.00 / 0.00 |
 
@@ -510,9 +511,11 @@ loosener in the same chlorine, and at the program's operating point the model gi
 at 34 kHz for 0.125% AC strain, the largest strain of the table at the lowest loss per strain of
 any row that switches. The ten-monomer CDFE row shows what a loosener without a pin does: a
 cheaper kink still (0.6), a channel at 2.8 MHz far above the drive, a lower loss per strain (0.10)
-but half the strain, because nothing holds its matrix on the steep part of the curve. The two
-cells this points at have not been run: CDFE at one per fourteen in the 29 mol% matrix, and the
-cell with one CFE and one CDFE per fourteen (section 5, item 4).
+but half the strain, because nothing holds its matrix on the steep part of the curve. CDFE at one
+per fourteen in the 29 mol% matrix is the fastest lattice of the table (kink pair 1.1, channel 1.3
+MHz) and switches nothing at the bias: at the film's dilution it pins harder than CFE (+0.40) and
+overshoots the steep part, so the loosening it buys is not usable on its own. The cell with one
+CFE and one CDFE per fourteen (section 5, item 4) is running.
 
 **Reading.**
 
