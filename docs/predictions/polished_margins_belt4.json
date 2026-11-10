@@ -589,6 +589,29 @@
      "tilt_seconds": 16.258378744125366,
      "energy_per_monomer": -6.686875323205849,
      "seconds": 181.09195566177368
+    },
+    "TGTG'": {
+     "search_rigid_per_monomer": -6.139260250096103,
+     "rigid_per_monomer": -6.858662703375484,
+     "polish_gain_per_monomer": 0.7194024532793805,
+     "search_closure_residual_deg": 3.56788590160072e-13,
+     "cell": [
+      5.682442079644869,
+      9.614012313361998,
+      90.70700791950304,
+      22.903310195785902
+     ],
+     "c_per_monomer": 2.2903310195785904,
+     "torsions": [
+      "T G+ T G- T G+ T G- T G+ T G- T G+ T G- T G+ T G-",
+      "T G+ T G- T G+ T G- T G+ T G- T G+ T G- T G+ T G-"
+     ],
+     "largest_torsion_off_ideal_deg": 23.221029504933483,
+     "tilt_per_monomer": -0.22061543647957932,
+     "largest_tilt_deg": 4.143291847471342,
+     "tilt_seconds": 16.351879358291626,
+     "energy_per_monomer": -7.079278139855063,
+     "seconds": 242.0525839328766
     }
    }
   }

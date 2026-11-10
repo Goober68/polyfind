@@ -254,7 +254,13 @@ def main():
         for seg, (a, b) in (("A-I", ("A", "I")), ("I-B", ("I", "B"))):
             t0 = time.time()
             old = prior.get(seg, {})
-            same_ends = "images" in old and len(old["images"]) == args.images and np.allclose(old["images"][0], ends[a], atol=1e-9) and np.allclose(old["images"][-1], ends[b], atol=1e-9)
+            def same(u, v):  # the same structure: equal up to whole turns of the torsions and setting angles
+                dv = np.asarray(u, dtype=float) - np.asarray(v, dtype=float)
+                per = np.concatenate([model.index("tors"), model.index("phi")])
+                dv[per] = wrap(dv[per])
+                return bool(np.abs(dv).max() < 1e-8)
+
+            same_ends = "images" in old and len(old["images"]) == args.images and same(old["images"][0], ends[a]) and same(old["images"][-1], ends[b])
             if same_ends and old.get("converged"):
                 entry[seg] = old
                 top = max(top, eA + old["saddle"] * nm)
