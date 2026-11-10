@@ -764,7 +764,7 @@ class NEBResult:
 
 def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_after: int = 30,
         fmax: float = 0.05, maxiter: int = 300, max_step: float = 0.15, callback=None,
-        constraint=None, constraint_tol: float = 1e-8) -> NEBResult:
+        constraint=None, constraint_tol: float = 1e-8, climb_force: float | None = None) -> NEBResult:
     """Nudged elastic band with the improved tangent and a climbing image, relaxed by FIRE.
 
     ``evaluate(X)`` takes the moving images ``(m, n_var)`` and returns ``(energies (m,), gradients
@@ -774,7 +774,10 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
     which variables move (the others are held at their per-image values).  ``k_spring`` is in
     kcal/mol per scaled length squared.  The band converges when the largest scaled force
     component (perpendicular true force plus parallel spring force; the full reversed force on
-    the climbing image) falls under ``fmax``.
+    the climbing image) falls under ``fmax``.  The climbing image is switched on after
+    ``climb_after`` iterations and, if ``climb_force`` is given, not before the band's largest force
+    has fallen under it: an image of a straight initial path can start on a steric clash far above
+    the saddle, and one switched to climbing there climbs the clash.
 
     ``constraint(x)``, if given, returns ``(h (k,), J (k, n_var))`` for one image: equality
     constraints every image keeps (the chain closure, :meth:`MixedModel.closure`).  The band then
@@ -832,7 +835,7 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
                 Q[i] = normals(i)[0]
                 G[i - 1] -= Q[i] @ (Q[i].T @ G[i - 1])
                 V[i - 1] -= Q[i] @ (Q[i].T @ V[i - 1])
-        if climbing < 0 and it > climb_after:
+        if climbing < 0 and it > climb_after and (climb_force is None or fm < climb_force):
             climbing = int(np.argmax(E[1:-1])) + 1
         Fn = np.empty_like(G)
         for i in range(1, M - 1):

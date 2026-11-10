@@ -279,3 +279,15 @@ def test_descent_stays_on_the_closure_surface_and_in_step():
     assert max(m.closure_residual(y)) < 1e-7
     assert np.abs((y - x) / m.scale(x)).max() <= 25 * 0.05 + 1e-6
     np.testing.assert_array_equal(y[m.index("xy", 1)], x[m.index("xy", 1)])  # what is not free does not move
+
+
+def test_the_climbing_image_waits_for_a_relaxed_band():
+    """With ``climb_force`` set the climbing image is not switched on while the band's largest
+    force is above it, whatever ``climb_after`` says; once the band is under it, it is."""
+    a, b = np.array([-0.5582236, 1.4417258]), np.array([-0.0500108, 0.4666941])
+    images = np.linspace(a, b, 11)
+    held = MC.neb(_muller_brown, images, k_spring=200.0, climb_after=0, climb_force=1e-12, fmax=0.05, maxiter=30, max_step=0.02)
+    assert held.climbing == -1 and not held.converged
+    res = MC.neb(_muller_brown, images, k_spring=200.0, climb_after=0, climb_force=20.0, fmax=0.05, maxiter=3000, max_step=0.02)
+    assert res.converged and res.climbing > 0
+    assert res.energies.max() == pytest.approx(-40.6648, abs=0.01)

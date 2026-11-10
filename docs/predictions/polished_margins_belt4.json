@@ -438,6 +438,70 @@
      "tilt_seconds": 40.15313720703125,
      "energy_per_monomer": -8.480045650333102,
      "seconds": 386.2446241378784
+    },
+    "G'TGT": {
+     "search_rigid_per_monomer": -7.998657376854849,
+     "rigid_per_monomer": -8.239906868010905,
+     "polish_gain_per_monomer": 0.24124949115605573,
+     "search_closure_residual_deg": 2.0453285109588915e-12,
+     "cell": [
+      5.113444774124254,
+      9.715850438689344,
+      91.11259071507307,
+      23.23233024423355
+     ],
+     "c_per_monomer": 2.323233024423355,
+     "torsions": [
+      "G- T G+ T G- T G+ T G- T G+ T G- T G+ T G- T G+ T",
+      "G- T G+ T G- T G+ T G- T G+ T G- T G+ T G- T G+ T"
+     ],
+     "largest_torsion_off_ideal_deg": 14.306184404571525,
+     "tilt_per_monomer": -0.24013882135568282,
+     "largest_tilt_deg": 4.004334728969058,
+     "tilt_seconds": 20.237648725509644,
+     "energy_per_monomer": -8.480045689366587,
+     "seconds": 317.8132872581482
+    }
+   },
+   "tg_conformer": "G'TGT",
+   "margin": 0.22874089385351581,
+   "margin_rigid": 0.017708510678177802,
+   "axial_transition_strain": 0.11295405680953952
+  },
+  "vdf7-trfe2-cfe1": {
+   "letters": "VVRVVCVVRV",
+   "note": "terpolymer model 70/20/10, the CFE two VDF away from either TrFE",
+   "tg_conformers": [
+    "TG'TG",
+    "GTG'T"
+   ],
+   "screen": {
+    "margin": 0.9656613151421585,
+    "margin_rigid": 0.756123386324016
+   },
+   "cells": {
+    "TTTT": {
+     "search_rigid_per_monomer": -7.353811944850591,
+     "rigid_per_monomer": -7.6020198368081,
+     "polish_gain_per_monomer": 0.24820789195750875,
+     "search_closure_residual_deg": 6.318755068178672e-13,
+     "cell": [
+      5.357852819055982,
+      8.220546985358276,
+      92.12777190283724,
+      25.84628228422211
+     ],
+     "c_per_monomer": 2.584628228422211,
+     "torsions": [
+      "T T T T T T T T T T T T T T T T T T T T",
+      "T T T T T T T T T T T T T T T T T T T T"
+     ],
+     "largest_torsion_off_ideal_deg": 11.157528417190548,
+     "tilt_per_monomer": -0.03642036300797145,
+     "largest_tilt_deg": 2.0429155458565247,
+     "tilt_seconds": 65.93029761314392,
+     "energy_per_monomer": -7.638440199816071,
+     "seconds": 464.76379919052124
     }
    }
   }

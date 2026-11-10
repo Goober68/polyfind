@@ -266,7 +266,7 @@ def main():
                 if it == 1 or it % 10 == 0:
                     log(f"      {seg} it {it:4d}: force {fm:8.4f}, top {(E.max() - eA) / nm:+8.4f}, climbing {climbing}, energies {np.round((E - eA) / nm, 3).tolist()}  ({time.time() - t0:.0f} s)")
 
-            res = MC.neb(evaluate, imgs, scale=sc, free=free, k_spring=args.k_spring, climb_after=40, fmax=args.fmax, maxiter=args.maxiter,
+            res = MC.neb(evaluate, imgs, scale=sc, free=free, k_spring=args.k_spring, climb_after=40, climb_force=1.0, fmax=args.fmax, maxiter=args.maxiter,
                          constraint=constraint, callback=progress)
             i_top = int(np.argmax(res.energies))
             st = model.state(res.images[i_top])
