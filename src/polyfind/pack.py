@@ -1292,7 +1292,7 @@ class CrystalPacker:
                          for i in range(Pn.shape[0])])
 
     # --- induced dipoles ---------------------------------------------------------------
-    def _polarize(self, Pn, q_cell, latn, flip: float, grad: bool = False, charge_grad: bool = False):
+    def _polarize(self, Pn, q_cell, latn, flip, grad: bool = False, charge_grad: bool = False):
         r"""Induced dipoles of ONE placed configuration, solved self-consistently.
 
         ``E0_i`` is the permanent field at site ``i``: the Ewald field of every charge in the
@@ -1334,10 +1334,18 @@ class CrystalPacker:
         stacks = []
         if self.polarizable.exclude_bonded:
             Sk = self._scale_column_np(int(np.ceil(self.rc / cz)) + 1)
+            # ``flip`` is the packer's own scalar (chain 2 of the two-chain cell) or one flag per
+            # chain, which is what a cell of more than two chains (polyfind.mixedcell) passes
+            flipped = np.zeros(nc, dtype=bool)
+            if np.ndim(flip) == 0:
+                if nc > 1:
+                    flipped[1] = float(flip) > 0.5
+            else:
+                flipped[:] = np.asarray(flip, dtype=float).reshape(nc) > 0.5
             for s in range(nc):
                 sl = slice(s * n, (s + 1) * n)
-                # chain 2 of a flipped cell is mirrored z -> -z, which maps image k to -k
-                sc = Sk[::-1] if (s == 1 and flip > 0.5) else Sk
+                # a flipped chain is mirrored z -> -z, which maps image k to -k
+                sc = Sk[::-1] if flipped[s] else Sk
                 stacks.append((sl, sc))
                 F[sl] += charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, pref=pref)[4]
         E0 = F if not self._field_on else F + EV_TO_KCAL * np.asarray(self.field, dtype=float)[None, :]

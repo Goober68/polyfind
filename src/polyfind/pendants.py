@@ -48,23 +48,25 @@ VALENCE_PRESET = "pvdf-dft-valence"
 BOND_MAX = {("C", "C"): 1.75, ("C", "H"): 1.25, ("C", "F"): 1.55, ("C", "Cl"): 1.95}
 
 
-def pinned_valence_packer(ref, polymer, k_backbone: float | None = None, k_bond_min: float | None = None):
-    """A copy of the reference's packer carrying valence terms stationary at its geometry.
+def pinned_chain_valence(chain, polymer, k_backbone: float | None = None, k_bond_min: float | None = None,
+                         cz: float | None = None):
+    """``(valence, n_backbone_angles, mean_backbone_angle_deg)``: the valence terms of ``chain``,
+    stationary at its own geometry.
 
     Bond lengths and angles of the valence preset's tables, with every equilibrium value pinned at
-    the reference's own (the backbone C-C-C angles at the polymer's built angle, with
-    ``k_backbone`` -- the refinement's restraint, so the all-atom energy agrees with the fit path's
-    -- else the preset's stiffness), so the reference is a stationary point of the valence part.
-    ``k_bond_min`` floors every stretch constant (kcal/mol/A^2, the kernel's 1/2 k convention): the
-    valence fit left the C-C constant at its bound, 100, five times softer than a real C-C bond,
-    and a floor shows what that softness does to an all-atom result (5.22).
-    Returns ``(packer, n_backbone_angles, mean_backbone_angle_deg)``."""
+    the chain's own (the backbone C-C-C angles at the polymer's built angle, with ``k_backbone`` --
+    the refinement's restraint, so the all-atom energy agrees with the fit path's -- else the
+    preset's stiffness), so the chain is a stationary point of the valence part.  ``k_bond_min``
+    floors every stretch constant (kcal/mol/A^2, the kernel's 1/2 k convention): the valence fit
+    left the C-C constant at its bound, 100, five times softer than a real C-C bond, and a floor
+    shows what that softness does to an all-atom result (5.22).  ``cz`` is the repeat the terms
+    that cross the repeat boundary are measured over (default the chain's own; a chain held in a
+    cell of several chains is measured over the cell's)."""
     from . import fitting  # noqa: F401  (registers the valence preset)
-    chain = ref.packer.chain
     val = SimpleFF.from_preset(VALENCE_PRESET)
     cv = chain_valence(chain, val.bond_table(), val.angle_table())
     X = np.asarray(chain.coords, dtype=float)
-    cz = float(chain.c)
+    cz = float(chain.c if cz is None else cz)
     r = np.linalg.norm(cv._bond_vectors(X[None], np.array([cz]))[0], axis=-1)
     ez = np.array([0.0, 0.0, 1.0])
     ri = X[cv.ang_i] + cv.ang_si[:, None] * cz * ez
@@ -84,17 +86,28 @@ def pinned_valence_packer(ref, polymer, k_backbone: float | None = None, k_bond_
     bk = np.asarray(cv.bond_k, dtype=float)
     if k_bond_min is not None:
         bk = np.maximum(bk, float(k_bond_min))
+    pinned = replace(cv, bond_r0=r.copy(), bond_k=bk, ang_t0=t0, ang_kk=kk)
+    return pinned, int(backbone.sum()), float(np.rad2deg(theta[backbone].mean())) if backbone.any() else None
+
+
+def pinned_valence_packer(ref, polymer, k_backbone: float | None = None, k_bond_min: float | None = None):
+    """A copy of the reference's packer carrying valence terms stationary at its geometry
+    (:func:`pinned_chain_valence` on the packer's chain).
+    Returns ``(packer, n_backbone_angles, mean_backbone_angle_deg)``."""
+    chain = ref.packer.chain
+    pinned, n_backbone, mean_angle = pinned_chain_valence(chain, polymer, k_backbone, k_bond_min)
     pk = copy.copy(ref.packer)
-    pk._valence = replace(cv, bond_r0=r.copy(), bond_k=bk, ang_t0=t0, ang_kk=kk)
+    pk._valence = pinned
     pk.update_chain(chain)
-    return pk, int(backbone.sum()), float(np.rad2deg(theta[backbone].mean())) if backbone.any() else None
+    return pk, n_backbone, mean_angle
 
 
-def belt_site_constraint(pk, Pn):
+def belt_site_constraint(pk, Pn, cz: float | None = None):
     """``(J (3N, 3Na), atoms)``: the real atoms are free coordinates and each belt site is the fixed
     affine combination of its carbon and that carbon's two pendant atoms that places it (it lies in
     the pendant plane: the two fluorines of a CF2, the fluorine and hydrogen of a CHF), so a rigid
-    motion of the group carries it exactly and a deformation to first order."""
+    motion of the group carries it exactly and a deformation to first order.  ``cz`` is the cell's
+    repeat along the chains (default the packer's own chain's)."""
     el = np.asarray(list(pk.elements) * pk.n_chains)
     atoms = np.flatnonzero(el != "X")
     col = {int(i): a for a, i in enumerate(atoms)}
@@ -102,7 +115,7 @@ def belt_site_constraint(pk, Pn):
     J = np.zeros((3 * N, 3 * Na))
     for i in atoms:
         J[3 * i:3 * i + 3, 3 * col[int(i)]:3 * col[int(i)] + 3] = np.eye(3)
-    cz = float(pk.chain.c)
+    cz = float(pk.chain.c if cz is None else cz)
     shifts = [np.array([0.0, 0.0, k * cz]) for k in (-1, 0, 1)]
 
     def nearest(x, cands):
