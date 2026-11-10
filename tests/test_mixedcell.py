@@ -205,3 +205,38 @@ def test_neb_finds_the_muller_brown_saddle():
     assert res.energies.max() == pytest.approx(-40.6648, abs=0.01)  # the saddle between them
     np.testing.assert_allclose(res.images[res.climbing], [-0.8220, 0.6243], atol=2e-3)
     np.testing.assert_array_equal(res.images[[0, -1]], images[[0, -1]])
+
+
+def test_neb_on_a_constraint_surface_is_the_neb_of_the_reduced_problem():
+    """Three variables, the third tied to the others by z = 0.3 x y, and an energy that depends on
+    all three: the band on that surface has the saddle of the two-variable function it reduces to."""
+    from scipy.optimize import minimize
+
+    slope = 25.0
+
+    def reduced(X):
+        X = np.atleast_2d(X)
+        e, g = _muller_brown(X)
+        return e + slope * 0.3 * X[:, 0] * X[:, 1], g + slope * 0.3 * X[:, ::-1]
+
+    def embedded(X):
+        X = np.atleast_2d(X)
+        e, g = _muller_brown(X[:, :2])
+        return e + slope * X[:, 2], np.concatenate([g, np.full((len(X), 1), slope)], axis=1)
+
+    def surface(x):
+        return np.array([x[2] - 0.3 * x[0] * x[1]]), np.array([[-0.3 * x[1], -0.3 * x[0], 1.0]])
+
+    ends = [minimize(lambda p: float(reduced(p)[0][0]), p0, jac=lambda p: reduced(p)[1][0], method="BFGS", options={"gtol": 1e-10}).x
+            for p0 in ([-0.5582236, 1.4417258], [-0.0500108, 0.4666941])]
+    flat = np.linspace(ends[0], ends[1], 11)
+    ref = MC.neb(reduced, flat, k_spring=200.0, climb_after=40, fmax=0.05, maxiter=3000, max_step=0.02)
+    assert ref.converged and ref.climbing > 0
+    lifted = np.concatenate([flat, 0.3 * flat[:, :1] * flat[:, 1:2]], axis=1)
+    res = MC.neb(embedded, lifted, k_spring=200.0, climb_after=40, fmax=0.05, maxiter=3000, max_step=0.02, constraint=surface)
+    assert res.converged and res.climbing > 0
+    z = res.images[:, 2] - 0.3 * res.images[:, 0] * res.images[:, 1]
+    assert np.abs(z).max() < 1e-7  # every image is on the surface
+    assert res.energies.max() == pytest.approx(ref.energies.max(), abs=0.02)
+    np.testing.assert_allclose(res.images[res.climbing, :2], ref.images[ref.climbing], atol=5e-3)
+    assert abs(ref.energies.max() - (-40.6648)) > 1.0  # and it is not the unconstrained surface's saddle

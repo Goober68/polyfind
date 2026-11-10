@@ -515,14 +515,23 @@ class MixedModel:
         return x
 
     # --- relaxation --------------------------------------------------------------------------
-    def relax(self, x0, free=None, closed=None, ftol: float = 1e-9, maxiter: int = 400, angle_window: float | None = 8.0):
+    def relax(self, x0, free=None, closed=None, ftol: float = 1e-9, maxiter: int = 400, angle_window: float | None = 8.0,
+              first_step: float | None = 0.3, cell_window=(0.6, 1.6), c_window=(0.85, 1.15)):
         """Constrained minimisation (SLSQP) over the ``free`` variables (indices; default all), in
         the scaled variables of :meth:`scale`, with the closure of the chains in ``closed`` held as
         equality constraints.  ``closed`` defaults to every chain with a free internal coordinate,
         or to every chain when the repeat ``c`` is free.  ``angle_window`` bounds each backbone
         angle to the polymer's own value +/- that many degrees, the refinement's bound; ``None``
         leaves them free.  Returns ``(x, info)`` with the optimiser's message, its iteration and
-        evaluation counts and the closure residuals at the result."""
+        evaluation counts and the closure residuals at the result.
+
+        SLSQP starts from a unit Hessian, so its first step is the (constrained) steepest-descent
+        step at full length: from a strained start that is hundreds of degrees of torsion, enough
+        to leave the basin the caller put the structure in, or to send a free cell somewhere
+        absurd.  ``first_step`` (scaled units, about 1 A of atom motion; ``None`` for the raw
+        behaviour) scales the objective so that the first step is no longer than that; the
+        quasi-Newton updates take over from there.  ``cell_window`` and ``c_window`` bound the
+        cell edges and the repeat to those multiples of their starting values."""
         x0 = np.asarray(x0, dtype=float).ravel().copy()
         free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
         if closed is None:
@@ -539,9 +548,12 @@ class MixedModel:
                     bounds[j] = ((a0 - angle_window) / sc[j], (a0 + angle_window) / sc[j])
         for j, i in enumerate(free):
             if int(i) in (0, 1):
-                bounds[j] = (2.0 / sc[j], None)
+                lo, hi = (0.0, None) if cell_window is None else (cell_window[0] * x0[i], cell_window[1] * x0[i])
+                bounds[j] = (max(2.0, lo) / sc[j], None if hi is None else hi / sc[j])
             elif int(i) == 2:
                 bounds[j] = (55.0 / sc[j], 125.0 / sc[j])
+            elif int(i) == 3 and c_window is not None:
+                bounds[j] = (c_window[0] * x0[i] / sc[j], c_window[1] * x0[i] / sc[j])
 
         def full(y):
             x = x0.copy()
@@ -569,12 +581,26 @@ class MixedModel:
                 return ccache["h"], ccache["J"]
 
             cons = [{"type": "eq", "fun": lambda y: hj(y)[0], "jac": lambda y: hj(y)[1]}]
-        res = minimize(lambda y: fg(y)[0], x0[free] / sc, jac=lambda y: fg(y)[1], method="SLSQP", bounds=bounds,
-                       constraints=cons, options={"ftol": ftol, "maxiter": maxiter})
+        y0 = x0[free] / sc
+        fs = 1.0
+        if first_step is not None:
+            g0 = fg(y0)[1].copy()
+            if closed:  # the part of the gradient the constraints do not carry
+                J0 = hj(y0)[1]
+                g0 -= J0.T @ np.linalg.lstsq(J0 @ J0.T, J0 @ g0, rcond=None)[0]
+            fs = max(1.0, float(np.abs(g0).max()) / float(first_step))
+        res = minimize(lambda y: fg(y)[0] / fs, y0, jac=lambda y: fg(y)[1] / fs, method="SLSQP", bounds=bounds,
+                       constraints=cons, options={"ftol": ftol / fs, "maxiter": maxiter})
         x = full(res.x)
-        rot, dc = self.closure_residual(x) if closed else (0.0, 0.0)
+        if closed:  # an iterate that stopped short of convergence is still returned periodic
+            on_surface = np.intersect1d(free, np.concatenate([self.index("internal", closed), self.index("c")]))
+            if on_surface.size:
+                x = self.project(x, on_surface, closed)
+        h = self.closure(x, closed)[0].reshape(-1, 4) if closed else np.zeros((1, 4))
+        rot, dc = float(np.linalg.norm(h[:, :3], axis=1).max()), float(np.abs(h[:, 3]).max() / CLOSURE_C)
         return x, {"message": str(res.message), "iterations": int(res.nit), "evaluations": int(res.nfev),
-                   "energy": float(res.fun), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed}
+                   "energy": self.physical_energy(x), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed,
+                   "objective_scale": fs}
 
 
 # ------------------------------------------------------------------- pendant tilts
@@ -633,7 +659,8 @@ class NEBResult:
 
 
 def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_after: int = 30,
-        fmax: float = 0.05, maxiter: int = 300, max_step: float = 0.15, callback=None) -> NEBResult:
+        fmax: float = 0.05, maxiter: int = 300, max_step: float = 0.15, callback=None,
+        constraint=None, constraint_tol: float = 1e-8) -> NEBResult:
     """Nudged elastic band with the improved tangent and a climbing image, relaxed by FIRE.
 
     ``evaluate(X)`` takes the moving images ``(m, n_var)`` and returns ``(energies (m,), gradients
@@ -644,6 +671,13 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
     kcal/mol per scaled length squared.  The band converges when the largest scaled force
     component (perpendicular true force plus parallel spring force; the full reversed force on
     the climbing image) falls under ``fmax``.
+
+    ``constraint(x)``, if given, returns ``(h (k,), J (k, n_var))`` for one image: equality
+    constraints every image keeps (the chain closure, :meth:`MixedModel.closure`).  The band then
+    lives on the constraint surface: gradients, tangents and velocities are projected onto its
+    tangent space at each image, and after every step each image is returned to the surface by
+    Newton steps along the constraint normals (the smallest move in the scaled metric).  The end
+    points and the initial images must lie on it already.
     """
     X = np.array(images, dtype=float)
     M, nv = X.shape
@@ -651,6 +685,30 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
     sc = np.ones(nv) if scale is None else np.asarray(scale, dtype=float)
     scf = sc[free]
     Y = X[:, free] / scf  # scaled, free
+
+    def full(i):
+        x = X[i].copy()
+        x[free] = Y[i] * scf
+        return x
+
+    def normals(i):
+        """Orthonormal columns spanning the constraint normals of image ``i`` in the scaled free
+        variables, and the residual."""
+        h, J = constraint(full(i))
+        Jf = np.asarray(J, dtype=float)[:, free] * scf
+        _, sv, Vt = np.linalg.svd(Jf, full_matrices=False)
+        keep = sv > 1e-10 * max(float(sv.max()), 1e-300)
+        return Vt[keep].T, np.asarray(h, dtype=float), Jf
+
+    def retract(i):
+        for _ in range(12):
+            h, J = constraint(full(i))
+            h = np.asarray(h, dtype=float)
+            if float(np.abs(h).max()) < constraint_tol:
+                return
+            Jf = np.asarray(J, dtype=float)[:, free] * scf
+            Y[i] -= Jf.T @ np.linalg.lstsq(Jf @ Jf.T, h, rcond=None)[0]
+
     e_end, _ = evaluate(X[[0, M - 1]])
     E = np.empty(M)
     E[0], E[-1] = float(e_end[0]), float(e_end[1])
@@ -664,6 +722,12 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
         e, g = evaluate(Xm)
         E[1:-1] = np.asarray(e, dtype=float)
         G = np.asarray(g, dtype=float)[:, free] * scf  # scaled gradient of the moving images
+        Q = [None] * M
+        if constraint is not None:
+            for i in range(1, M - 1):
+                Q[i] = normals(i)[0]
+                G[i - 1] -= Q[i] @ (Q[i].T @ G[i - 1])
+                V[i - 1] -= Q[i] @ (Q[i].T @ V[i - 1])
         if climbing < 0 and it > climb_after:
             climbing = int(np.argmax(E[1:-1])) + 1
         Fn = np.empty_like(G)
@@ -677,6 +741,8 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
             else:
                 dmax, dmin = max(abs(ep - e0), abs(em - e0)), min(abs(ep - e0), abs(em - e0))
                 tau = tp * dmax + tm * dmin if ep > em else tp * dmin + tm * dmax
+            if Q[i] is not None:
+                tau = tau - Q[i] @ (Q[i].T @ tau)
             tau = tau / max(float(np.linalg.norm(tau)), 1e-300)
             f_true = -G[i - 1]
             if i == climbing:
@@ -707,5 +773,8 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
         if big > max_step:
             step *= max_step / big
         Y[1:-1] += step
+        if constraint is not None:
+            for i in range(1, M - 1):
+                retract(i)
     X[:, free] = Y * scf
     return NEBResult(images=X, energies=E, force_max=fm, climbing=climbing, iterations=it, converged=converged, history=history)
