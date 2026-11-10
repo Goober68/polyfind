@@ -114,28 +114,38 @@ exactly, started half a degree off the search's torsions), then the pendant tilt
 | sequence | the table's margin | both cells polished | all-trans cell lower by | TG cell lower by | TG conformer | torsions off the pattern, TT / TG | axial switch strain |
 |---|---|---|---|---|---|---|---|
 | 64/29/7, one CFE per fourteen | +0.110 | **+0.317** | 0.206 | 0.533 | TG'TG | 10 / 21 deg | +12.1% |
-| 71/29, the matrix without the pin | -0.051 | **+0.046** | 0.081 | 0.382 | TG'TG | 6 / 22 deg | +11.4% |
+| 71/29, the matrix without the pin | -0.051 | **+0.056** | 0.081 | 0.375 | TGTG' | 6 / 19 deg | +11.7% |
 | 64/36 matrix | -0.058 | **+0.083** | 0.061 | 0.407 | TGTG' | 6 / 21 deg | +11.8% |
+| 65/30/5, one CFE per twenty | +0.055 | **+0.187** or more (one TG conformer in) | 0.175 | 0.452 | TG'TG | 10 / 27 deg | +11.1% |
+| 64/29/7 with CDFE in place of CFE | +0.402 | **+0.685** | 0.150 | 0.637 | TGTG' | 14 / 25 deg | +12.1% |
 | 70/30, ten monomers (the E2 cell) | +0.145 | **+0.213** | 0.078 | 0.305 | TGTG' | 6 / 19 deg | +11.6% |
+| 80/20, ten monomers | +0.177 | **+0.229** | 0.097 | 0.241 | G'TGT | 6 / 14 deg | +11.3% |
+| 60/40, ten monomers | -0.329 | **-0.199** | 0.049 | 0.414 | TGTG' | 6 / 20 deg | +11.0% |
+| 70/20/10 CFE, ten monomers | +0.966 | **+0.868** | 0.248 | 0.154 | TG'TG | 11 / 13 deg | +11.6% |
+| 70/20/10 CDFE, ten monomers | +0.146 | **+0.392** | 0.220 | 0.719 | TGTG' | 16 / 23 deg | +12.8% |
 
 kcal/mol per monomer, all-trans minus TG, pendant tilts included (`polished_margins_belt4.json`;
-the remaining rows are running and the table is completed from `kink_summary_belt4.md`).
+the twenty-monomer cell's second helix, the CFE+CDFE, CTFE and AN fourteen-monomer cells and the
+other ten-monomer rows are still running; `kink_summary_belt4.md` carries the table as it fills).
 
 * **Both cells fall, the helix by more.** The all-trans chain of a VDF/TrFE sequence is not
   planar: its torsions deflect by 2-6 degrees in a pattern that follows the TrFE units (ten at the
   CFE), which is the deflected-trans chain known for the TrFE-rich copolymers, and it gains
-  0.06-0.21 kcal/mol per monomer. The TG chain gains 0.3-0.5: held to one trans and one gauche
+  0.05-0.25 kcal/mol per monomer. The TG chain gains 0.15-0.72: held to one trans and one gauche
   value it had to strain its backbone angles to stay commensurate (0.73 kcal/mol per monomer of
   bend in the 64/29/7 cell), and free to vary its torsions along the sequence (trans bonds
   160-180, gauche 47-76 degrees) it closes at half that bend. Nothing in either polished cell is at
   a bound, and the closest contacts are the all-trans cell's own (F-H 2.30 against 2.36 A).
-* **Every margin moves toward the helix, by 0.07-0.21.** The matrix stays degenerate within the
-  model's resolution but on the other side of zero (+0.05 and +0.08 for 29 and 36 mol% TrFE), and
-  the 64/29/7 cell is at +0.32, not +0.11: the CFE pin is +3.8 kcal/mol per unit at one per
+* **Every margin but one moves toward the helix, by 0.05-0.28** (the ten-monomer 70/20/10 CFE cell,
+  whose helix the handedness correction had already found, moves the other way by 0.10). The matrix stays degenerate within the
+  model's resolution but on the other side of zero (+0.06 and +0.08 for 29 and 36 mol% TrFE), and
+  the 64/29/7 cell is at +0.32, not +0.11: the CFE pin is +3.7 kcal/mol per unit at one per
   fourteen (it was +2.3), and the cell no longer sits on the steep part of the switching curve at
-  55 V/um (E* near 300 MV/m on the all-trans dipole). On these numbers the margin of a 29-36 mol%
-  matrix with one CFE per N monomers is about +0.05 + 3.8/N, and the steep part (+0.07, section 3)
-  is the matrix with almost no pin; the twenty-monomer cell that tests the 1/N law is running.
+  55 V/um (E* near 300 MV/m on the all-trans dipole). The twenty-monomer cell with one CFE is at
+  +0.19 with one of its two helix handednesses polished (a lower bound; it was +0.055), a pin of
+  2.6 per unit, so the pin weakens somewhat as it is diluted and the margin of a 29-36 mol% matrix
+  with one CFE per N monomers is about +0.06 + (2.6 to 3.7)/N: the steep part of the curve (+0.07,
+  section 3) is the matrix with almost no pin.
 * **What this does to the pass.** The search's cells are constrained minima of the same potential
   and the polished cells are lower, so the polished margins supersede the table's wherever both
   exist. The readings that do not move: TrFE content sets the matrix's margin and brings it to
@@ -383,14 +393,14 @@ along a chain of a given length the defects go so that the chain folds with them
 
 *Suspended in part, 2026-11-10. Items 1-4 below were read off the search's margins and the
 search's kink energies. With both cells of a row relaxed alike (2.1) the matrix sits at +0.05 to
-+0.08 instead of -0.05, the 64/29/7 cell at +0.32 instead of +0.11 (a pin of +3.8 kcal/mol per CFE,
++0.08 instead of -0.05, the 64/29/7 cell at +0.32 instead of +0.11 (a pin of +3.7 kcal/mol per CFE,
 not +2.3) and the CDFE cell at +0.69 instead of +0.40; with the kink pair measured like for like
 (8.2) it costs 6.9, 3.8 and 5.1 kcal/mol in the 71/29, 64/29/7 and PVDF lattices instead of 5.5,
 1.8 and 4.3. What survives: item 1 (the matrix is where the near-degeneracy comes from), the
 direction of item 2 (the chlorine pins the helix and cheapens the kink sheet, by 3.1 kcal/mol) and
 item 5. What does not: the density. On the polished numbers one CFE per fourteen holds the perfect
 crystal off the switching curve at 55 V/um altogether (polar fraction 0.00 in the mapping), and the
-margin law +0.05 + 3.8/N puts the steep part at pins far sparser than any terpolymer that is known
+margin law +0.06 + (2.6 to 3.7)/N puts the steep part at pins far sparser than any terpolymer that is known
 to work, while the measured 63/30/7 film does switch there. The model and the film now disagree on
 that one number, and the two explanations (the chlorine's untested parameters overstate its pin;
 the film switches where the perfect crystal's margin does not apply) are decided by a DFT cell with
@@ -706,15 +716,17 @@ closure surface, every chain flexible, the cell fixed at the kinked crystal's:
 |---|---|---|---|---|---|---|
 | PVDF | one sublattice (half the chains, each with its two stack neighbours) | +7.01 | 7.55 | 8.94 | +1.97 | 8.9 / 7.0 |
 | PVDF | one chain in four (all six neighbours stay) | +9.85 | 10.35 | 12.66 | +7.88 | 12.7 / 4.8 |
-| 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.42 | 11.7 | +8.98 | 11.7 / 2.7 |
-| 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.05 | 12.1 | +11.25 | 12.1 / 0.8 |
+| 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.43 | 11.4 (11.4, 11.7 in two runs) | +8.98 | 11.4 / 2.4 |
+| 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.02 | 12.0 | +11.25 | 12.0 / 0.8 |
 | PVDF | every chain together (the sheet in register), per chain | +5.06 | 8.2 | 7.9 | 0.00 | 8.2 / 8.2, which is 16.5 per two-chain cell |
 
 kcal/mol per moving chain against the sheet (`kink_migration_belt4.json`). The PVDF bands of rows
 one and two are converged to 0.1-0.16 kcal/mol per scaled unit (row one twice, from two separate
-runs, to 0.02 kcal/mol in both saddles); the copolymers' bands stopped at their iteration limit
-with forces of 0.2-1.4, their first saddles reproduced to 0.03 by a second run and their second
-saddles good to about 0.3; the in-register PVDF band stopped at forces of 0.8-1.0.
+runs, to 0.02 kcal/mol in both saddles). The copolymers' bands were each run twice from a fresh
+straight path: the first saddles agree to 0.03 (the terpolymer's converged), the 71/29 second
+saddle converged at 12.02 (12.07 in the first run) and the terpolymer's stopped at its iteration
+limit both times, at 11.4 and 11.7, so it is good to about 0.3. The in-register PVDF band stopped
+at forces of 0.8-1.0.
 
 * **The torsional step itself costs 7.5-9 kcal/mol in the PVDF lattice**: with a 3e12 /s attempt
   frequency, 1e6 steps per second at 300 K. The two saddles are sequential, not concerted: at the
@@ -732,8 +744,9 @@ saddles good to about 0.3; the in-register PVDF band stopped at forces of 0.8-1.
   more than the 1.3 the whole sheet pays for the same move (8.4): half the chains with their kink
   pairs on a different unit from their neighbours' is a costly arrangement in a lattice of
   sequence-ordered chains, and the model cell, in which every chain carries the same sequence in
-  register, makes it as costly as it can be. With that cost the barrier of the whole step is 11.7
-  and 12.1 kcal/mol, so in this protocol the terpolymer's step is no faster than the matrix's.
+  register, makes it as costly as it can be. With that cost the barrier of the whole step is 11.4
+  and 12.0 kcal/mol, so in this protocol the terpolymer's step is a factor of three faster than the
+  matrix's and no more.
 * **Moving every chain together is not the way round that cost.** In PVDF the concerted step of
   both chains of the cell has a barrier of 8.2 kcal/mol per chain, 16.5 for the cell, against 8.9
   for one sublattice followed by the other: the sheet moves one chain (or one stack) at a time. In
@@ -767,7 +780,7 @@ lattice the sheet carries with it, not a new packing search):
 * **The kink pair does not sit at the CFE and does not cross it.** With a gauche bond on either
   side of the chlorinated unit the sheet is 7.5-8.2 kcal/mol above its VDF-VDF sites, and the
   lattice it would need there is a different one (5.11 x 9.20 A against 5.40 x 8.43). The pin of
-  the statics, which favours the helix around itself by 3.8 kcal/mol per unit (2.1), is to this
+  the statics, which favours the helix around itself by 3.7 kcal/mol per unit (2.1), is to this
   kink pair a wall: a sheet of this handedness lives in the segment between two CFE units and
   turns back at each. The mirrored kink pair (G- T G+), which the chiral unit treats differently
   (the pinned-lattice handedness split of 8.7 was 9 kcal/mol at the CFE), and the kink pair on the
@@ -790,27 +803,34 @@ and `--steps kink_migration_belt4.json`; the 64/29/7 cell is the anchor at 364 k
 
 | lattice | kink sheet, kcal/mol per kink pair | f_relax if the sheet's energy sets the rate | step barrier (one sublattice) | f_relax if the step sets the rate | margin (polished) | polar fraction at 55 V/um |
 |---|---|---|---|---|---|---|
-| 64/29/7 | 3.79 | 364 kHz (anchor) | 11.7 | 364 kHz (anchor) | +0.317 | 0.00 |
-| 71/29 | 6.85 | 2 kHz | 12.1 | 190 kHz | +0.046 | 0.67 |
-| PVDF | 5.06 | 43 kHz | 8.9 | 40 MHz | +0.744 | 0.00 |
+| 64/29/7 | 3.79 | 364 kHz (anchor) | 11.4 | 364 kHz (anchor) | +0.317 | 0.00 |
+| 71/29 | 6.85 | 2 kHz | 12.0 | 120 kHz | +0.056 | 0.61 |
+| PVDF | 5.06 | 43 kHz | 8.9 | 21 MHz | +0.744 | 0.00 |
+
+(`candidate_frequency_map_belt4_polished.md` and `_steps.md`. At the operating point the 71/29 row
+reads 0.012% AC strain at tan delta 1.0 on the first rate model and 0.18% at 0.26 on the second;
+the other two rows carry no strain on either.)
 
 * **The two rate models bracket the matrix between frozen and following.** If the population of
   kink sheets limits the channel (the earlier section's assumption, on corrected energies) the 71/29
   matrix sits at 2 kHz, frozen at a 34-66 kHz drive, as the copolymer is known to be, and the
   chlorine's 3.1 kcal/mol is a factor of 180. If the step limits it, the matrix is within a factor
-  of two of the terpolymer, because the chlorine does not lower the step. The bench's Vogel-Fulcher
+  of three of the terpolymer, because the chlorine hardly lowers the step. The bench's Vogel-Fulcher
   fit on a copolymer film beside the terpolymer's decides between them; the model's own next piece
   is the wall of a helix run (8.2), whose creation and motion are the two quantities these proxies
   stand in for.
-* **No lattice of this table delivers strain at the operating point.** The matrix is on the steep
-  part of the curve (polar fraction 0.67) and, on the first rate model, too slow; the 64/29/7 cell
+* **Only the pinless matrix is on the switching curve, and whether it delivers depends on the
+  rate model.** The matrix sits on the steep part (polar fraction 0.61): frozen and lossy on the
+  first rate model, and on the second the best row this document has had (0.18% at tan delta
+  0.26, loss per strain 1.4), which is a ferroelectric copolymer and in a real film switches with
+  hysteresis this equilibrium mapping does not contain; the 64/29/7 cell
   is fast and pinned off the curve (+0.32); PVDF does not switch. The earlier section's row for the
   64/29/7 cell (tan delta 0.07 for 0.125% strain) came from the search's margin of +0.11 and is
   withdrawn with it (section 5).
-* **Absolute rates.** With a 3e12 /s attempt frequency the step barriers give 9e5 /s (PVDF), 9e3 /s
-  (64/29/7) and 4e3 /s (71/29) per chain at 300 K, so the terpolymer's computed step is one to two
-  orders slower than the measured channel (364 kHz is 2e6 /s): the second saddles of the copolymer
-  bands are not converged (8.3), the model cell overstates the cost of a chain stepping onto a TrFE
+* **Absolute rates.** With a 3e12 /s attempt frequency the step barriers give 9e5 /s (PVDF), 2e4 /s
+  (64/29/7) and 5e3 /s (71/29) per chain at 300 K, so the terpolymer's computed step is two
+  orders slower than the measured channel (364 kHz is 2e6 /s): its second saddle is good to 0.3
+  only (8.3), the model cell overstates the cost of a chain stepping onto a TrFE
   unit ahead of its neighbours, and the film's channel need not be this step. The earlier
   polyfind number for a kink-row hop in perfect beta, 8.2 kcal/mol (`ask ... verification-v1.md`,
   E3), is PVDF's 7.5-8.9 here by a different route.

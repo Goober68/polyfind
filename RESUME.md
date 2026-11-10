@@ -16,44 +16,59 @@ against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit on
 
 **Correction and results, 2026-11-10 (read before the 2026-11-08 block below; it corrects it).** The PI asked for
 the dilute kink and the migration barrier. Both needed a cell whose chains differ: `polyfind.mixedcell` (energy and
-analytic gradients equal to the packer's to rounding; each chain closed exactly by equality constraints, `relax`,
-`descend`, `project`; `tile_state`; a climbing-image band on the closure surface, `neb(constraint=...)`; 28 tests).
-Drivers: `examples/dilute_kink.py`, `kink_migration.py`, `kink_site_scan.py`, `polish_margins.py`, `kink_summary.py`
-(tables in `docs/predictions/kink_summary_belt4.md`), `export_mixed_cell.py`. What they found, in order of weight:
+analytic gradients equal to the packer's to rounding; each chain closed exactly by equality constraints, `relax` with
+a damped pre-descent, `descend`, `project`; `tile_state`; a climbing-image band on the closure surface,
+`neb(constraint=..., climb_force=...)`; 29 tests; suite 755 passed, 5 skipped). Drivers: `examples/dilute_kink.py`,
+`kink_migration.py`, `kink_site_scan.py`, `polish_margins.py`, `kink_summary.py` (tables in
+`docs/predictions/kink_summary_belt4.md`), `export_mixed_cell.py`. What they found, in order of weight:
 (1) **The packing search biases every chiral row.** It refines a recognised state pattern (all-trans, TGTG') under
 the line group of the pattern, which a copolymer sequence does not have, and holds a kinked chain periodic only by a
-penalty. Polished (every torsion free, closure exact) the all-trans cells fall 0.06-0.21 kcal/mol per monomer and the
-TG cells 0.30-0.64, so every margin moves toward the helix: 64/29/7 +0.317 (was +0.110), 71/29 +0.046 (-0.051), 64/36
-+0.083 (-0.058), 70/30 ten-monomer +0.213 (+0.145), CDFE-14 +0.685 (+0.402); PVDF unchanged. The matrix is still
-degenerate within resolution; the CFE pin is +3.8 kcal/mol per unit at one per fourteen and the film's cell is no
-longer on the steep part of the curve at the bias. The recommendation "one CFE per fourteen to sixteen" was read off
-the search's margins and is SUSPENDED (`docs/CANDIDATE_MATERIALS.md` 2.1); sections 3-5 and the loss and frequency
-maps still carry the search's margins. Remaining rows are being polished (`polish_margins.py --rows ...`, resumable).
-(2) **A lone kink pair does not exist.** It shortens its chain by 1 A and the axial registry holds the chain (one
-PVDF chain slid rigidly: 6.8 kcal/mol per monomer; a sublattice half-slip relaxed with the cell free 0.51 per monomer
-of the cell against the DFT seat's GFN1 0.56): 25/23 kcal/mol in PVDF with the neighbours fixed/rigid at ten monomers,
-21.7 at infinite repeat, 21/20 in 64/29/7, and it reverts to all-trans when the neighbours are flexible (71/29: even
-when fixed). Bias: the mixed cell's chains are twice too stiff along the axis (674 GPa against DFT's 303), so the
-strain part is about 1.4 too large; the run with the restraint matched (`--angle-stiffness 100`, 327 GPa) is the bound.
-Kink pairs come as sheets (every chain at the same height). Section 8's "pinned lattice = upper bound for a dilute
-kink" is withdrawn. (3) **The sheet, like for like:** PVDF 5.3 (5.1 with tilts), 71/29 7.1, 64/29/7 3.95 (3.8) kcal/mol
-per kink pair; the search's 4.3, 5.5, 1.8 carried the two biases. The chlorine still loosens the matrix by 3.1. One
-kink pair per fourteen costs +3.8 while the helix is 4.4 below all-trans per chain: kink pairs attract along the
-chain, the low-energy objects are runs of helix and trans with walls. (4) **The step** (one chain's kink pair one
-monomer ahead, two gauche migrations through the wide kink G+ T T T G-): PVDF with one sublattice moving 7.5 and 8.9
-(saddles), ending 2.0 up; one chain in four 10.3 and about 13, ending 7.9 up: a sheet is stiff, it advances by stacks
-along the short axis. In 64/29/7 and 71/29 the first saddle is 6.4-7.1 and the step onto the TrFE position lands
-9.0 and 11.3 up (bands running at the time of writing). (5) **The sheet sees the sequence** (`kink_site_scan.py`,
-64/29/7): VDF-VDF 3.95-4.06, TrFE-VDF 4.5, VDF-TrFE 5.3, next to the CFE 4.7-5.9, on the CFE (V-C) 12.1: the kink
-pair of this handedness does not cross a CFE; the mirrored kink and the 71/29 scan are not run. (6) The frequency map
-is NOT regenerated: `candidate_frequency_map.py --steps` scales rates by the step barrier and reads polished
-margins, to be run when the copolymer bands are in. (7) Asked of Dipole (not dispatched by the PI):
-`sarco/materials/ask-polyfind-dipole-registry-kink-v1.md` (E5 registry single points on the accepted beta cell, the
-polished 70/30 cells, E6 the PVDF kink sheet), numbers registered in `docs/E1_E2_PREDICTIONS.md`; coordinates in
-`docs/predictions/polished_*.xyz`. Dipole at 04:23 UTC: alpha at BFGS 5, Gamma at representation 26 of 36, no
-result delivered. Next: finish the polished margin table and rewrite sections 3-5 on it; the mirrored-kink and 71/29
-site scans; partial sheets (8-16 chains) for nucleation; bands for the wall of a helix run, which is what moves in the
-relaxor.
+penalty. Polished (every torsion free, closure exact) the all-trans cells fall 0.05-0.25 kcal/mol per monomer and the
+TG cells 0.15-0.72, so margins move, all but one toward the helix: 64/29/7 +0.317 (was +0.110), 71/29 +0.056
+(-0.051), 64/36 +0.083 (-0.058), 65/30/5 twenty-monomer +0.19 or more (+0.055; second helix running), CDFE-14 +0.685
+(+0.402), ten-monomer 70/30 +0.213 (+0.145), 80/20 +0.229 (+0.177), 60/40 -0.199 (-0.329), 70/20/10 CFE +0.868
+(+0.966), 70/20/10 CDFE +0.392 (+0.146); PVDF unchanged. The matrix is still degenerate within resolution; the CFE
+pin is +3.7 kcal/mol per unit at one per fourteen (2.6 at one per twenty) and the film's cell is no longer on the
+steep part of the curve at the bias, while the measured film is. The recommendation "one CFE per fourteen to sixteen"
+was read off the search's margins and is SUSPENDED (`docs/CANDIDATE_MATERIALS.md` 2.1 and the note at section 5);
+sections 3-6 and the old loss and frequency maps still carry the search's numbers. STILL TO POLISH (resumable,
+`polish_margins.py --rows ...`; two detached runs were going at the time of writing, logs in the session scratchpad,
+results accumulate in `polished_margins_belt4.json`): the twenty-monomer cell's TGTG', CFE+CDFE-14, CTFE-14, AN-14,
+and the ten-monomer rows not listed above. (2) **A lone kink pair does not exist.** It shortens its chain by 1 A and
+the axial registry holds the chain (one PVDF chain slid rigidly: 6.8 kcal/mol per monomer; a sublattice half-slip
+relaxed with the cell free 0.51 per monomer of the cell against the DFT seat's GFN1 0.56): 25/23 kcal/mol in PVDF
+with the neighbours fixed/rigid at ten monomers, 21.7 at infinite repeat, 21/20 in 64/29/7, and it reverts to
+all-trans when the neighbours are flexible (71/29: even when fixed). Bias, measured: the mixed cell's chains are
+twice too stiff along the axis (674 GPa against DFT's 303); with the angle restraint at 100 (327 GPa,
+`--angle-stiffness 100 --angle-window 14`) the ten-monomer numbers are 19.8/18.2, so about 16-17 at infinite repeat.
+Kink pairs come as sheets (every chain at the same height). The old section 8's "pinned lattice = upper bound for a
+dilute kink" is withdrawn. (3) **The sheet, like for like, with tilts:** PVDF 5.06, 71/29 6.85, 64/29/7 3.79
+kcal/mol per kink pair (the search's 4.3, 5.5, 1.8 carried the two biases); the chlorine still loosens the matrix by
+3.1. One kink pair per fourteen costs +3.8 while the helix is 4.4 below all-trans per chain: kink pairs attract
+along the chain; the low-energy objects are runs of helix and trans with walls of about 2 kcal/mol per chain.
+(4) **The step** (one chain's kink pair one monomer ahead, two gauche migrations through the wide kink
+G+ T T T G-), kcal/mol per moving chain: PVDF one sublattice 7.55 and 8.94 (saddles, converged, reproduced), ending
+1.97 up; one PVDF chain in four 10.35 and 12.66, ending 7.88 up (a sheet is stiff; it advances by stacks along the
+short axis); every chain together 8.2 per chain = 16.5 per cell (the concerted route costs more than the sequential
+one, and in the copolymer cells its band does not settle: not reported). 64/29/7 and 71/29, one sublattice from a
+VDF-VDF pair onto VDF-TrFE: first saddle 6.43 and 7.02, second 11.4 (11.4/11.7 in two runs, not converged) and
+12.02 (converged), ending 9.0 and 11.3 up, which the sequence-registered model cell overstates. (5) **The sheet sees
+the sequence** (`kink_site_scan.py`, 64/29/7, complete for G+ T G- on the even bonds): VDF-VDF 3.95-4.06 (4.75 next
+to the CFE), TrFE-VDF 4.5, VDF-TrFE 5.3-5.5, and with a gauche bond on either side of the CFE 11.4-12.1: this
+kink pair does not cross a CFE. NOT RUN: the mirrored kink (G- T G+), the odd bonds, the 71/29 scan. (6) **Frequency
+map on two rate models** with polished margins, 64/29/7 anchored at 364 kHz
+(`candidate_frequency_map_belt4_polished.md`: rate by the sheet's energy; `_steps.md`: rate by the step barrier,
+`--steps ... --step-mover 0`): the 71/29 matrix is at 2 kHz on the first and 120 kHz on the second; only the matrix
+is on the switching curve (polar fraction 0.61), the 64/29/7 cell is pinned off it (+0.32). Which rate model holds
+is the bench's Vogel-Fulcher fit on a copolymer film beside the terpolymer's. (7) Asked of Dipole (NOT dispatched by
+the PI): `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md` (E5 registry single points on the accepted beta
+cell, the polished 70/30 cells, the polished 64/29/7 pair for the chlorine cell, E6 the PVDF kink sheet), numbers
+registered in `docs/E1_E2_PREDICTIONS.md` (its notes file is now level with it; re-rendering is safe); coordinates
+in `docs/predictions/polished_*.xyz`. Dipole at 04:23 UTC: alpha at BFGS 5, Gamma at representation 26 of 36, no
+result delivered. Next, in order: finish the polished margin table and rewrite sections 3-6 on it; the mirrored-kink
+and 71/29 site scans; site scans of alternative sequences at fixed composition (VDF runs against alternation: the
+sheet climbs 1.3-1.5 at each TrFE); partial sheets (8-16 chains) for nucleation; the wall of a helix run, which is
+what moves in the relaxor; a step in a cell whose chains do not carry the same sequence in register.
 
 **Dipole, 2026-11-08 22:33 UTC.** A power outage on Dipole's host killed both DFT successors (alpha at BFGS 37/120
 after 27 h, Gamma at representation 22/36); Dipole marked them lost and started fresh ones under the PI's standing
