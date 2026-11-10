@@ -381,6 +381,22 @@ along a chain of a given length the defects go so that the chain folds with them
 
 ## 5. Candidates, ranked for the sequence-controlled route
 
+*Suspended in part, 2026-11-10. Items 1-4 below were read off the search's margins and the
+search's kink energies. With both cells of a row relaxed alike (2.1) the matrix sits at +0.05 to
++0.08 instead of -0.05, the 64/29/7 cell at +0.32 instead of +0.11 (a pin of +3.8 kcal/mol per CFE,
+not +2.3) and the CDFE cell at +0.69 instead of +0.40; with the kink pair measured like for like
+(8.2) it costs 6.9, 3.8 and 5.1 kcal/mol in the 71/29, 64/29/7 and PVDF lattices instead of 5.5,
+1.8 and 4.3. What survives: item 1 (the matrix is where the near-degeneracy comes from), the
+direction of item 2 (the chlorine pins the helix and cheapens the kink sheet, by 3.1 kcal/mol) and
+item 5. What does not: the density. On the polished numbers one CFE per fourteen holds the perfect
+crystal off the switching curve at 55 V/um altogether (polar fraction 0.00 in the mapping), and the
+margin law +0.05 + 3.8/N puts the steep part at pins far sparser than any terpolymer that is known
+to work, while the measured 63/30/7 film does switch there. The model and the film now disagree on
+that one number, and the two explanations (the chlorine's untested parameters overstate its pin;
+the film switches where the perfect crystal's margin does not apply) are decided by a DFT cell with
+a CFE in it, not here. No pin density is recommended until that cell or the remaining polished
+rows say which.*
+
 For a sequence-controlled material aimed at the bias-hold operating point, on this model and
 with the confidence stated in section 7 (and after the handedness correction, which withdrew the
 first pass's ranking):
@@ -764,17 +780,40 @@ lattice the sheet carries with it, not a new packing search):
 
 ### 8.5 What the frequency map becomes
 
-The map of the earlier section scaled each chemistry's relaxation rate by
-`exp(-E_form / kT)` with the kinked-cell formation energies of the search, anchored on the
-measured 364 kHz. Those energies carried the two biases of 8.2, and a formation energy is not
-what limits the motion of a sheet that is already there: the step is. The rate that belongs in the
-map is `nu exp(-(E_step + dU) / kT)` with `E_step` the step barrier of 8.3 in that lattice and
-`dU` the climb of 8.4 along that sequence. For PVDF's lattice that is 3e12 exp(-8.9/kT) = 9e5 /s
-before the stack's cost, the right order for a channel measured at 364 kHz in the terpolymer film
-and three orders above the earlier section's PVDF proxy; the terpolymer's and the matrix's own
-step barriers are the runs in progress, and the map is regenerated on them when they land. Until
-then the frequency columns of 8.7 and of `candidate_frequency_map_belt4*.md` are not to be read as
-this model's ranking of chemistries by rate.
+The map of the earlier section scaled each chemistry's relaxation rate by `exp(-E_form / kT)`
+with the kinked-cell formation energies of the search, anchored on the measured 364 kHz. Two
+things have changed under it: those energies carried the biases of 8.2, and the step of 8.3 now
+exists as a second candidate for what limits the rate. Neither rate model is established, so the
+map is given on both, for the three lattices that have a like-for-like sheet energy and a band,
+with the polished margins (`candidate_frequency_map.py --kinks kink_formation_belt4_polished.json`
+and `--steps kink_migration_belt4.json`; the 64/29/7 cell is the anchor at 364 kHz in both):
+
+| lattice | kink sheet, kcal/mol per kink pair | f_relax if the sheet's energy sets the rate | step barrier (one sublattice) | f_relax if the step sets the rate | margin (polished) | polar fraction at 55 V/um |
+|---|---|---|---|---|---|---|
+| 64/29/7 | 3.79 | 364 kHz (anchor) | 11.7 | 364 kHz (anchor) | +0.317 | 0.00 |
+| 71/29 | 6.85 | 2 kHz | 12.1 | 190 kHz | +0.046 | 0.67 |
+| PVDF | 5.06 | 43 kHz | 8.9 | 40 MHz | +0.744 | 0.00 |
+
+* **The two rate models bracket the matrix between frozen and following.** If the population of
+  kink sheets limits the channel (the earlier section's assumption, on corrected energies) the 71/29
+  matrix sits at 2 kHz, frozen at a 34-66 kHz drive, as the copolymer is known to be, and the
+  chlorine's 3.1 kcal/mol is a factor of 180. If the step limits it, the matrix is within a factor
+  of two of the terpolymer, because the chlorine does not lower the step. The bench's Vogel-Fulcher
+  fit on a copolymer film beside the terpolymer's decides between them; the model's own next piece
+  is the wall of a helix run (8.2), whose creation and motion are the two quantities these proxies
+  stand in for.
+* **No lattice of this table delivers strain at the operating point.** The matrix is on the steep
+  part of the curve (polar fraction 0.67) and, on the first rate model, too slow; the 64/29/7 cell
+  is fast and pinned off the curve (+0.32); PVDF does not switch. The earlier section's row for the
+  64/29/7 cell (tan delta 0.07 for 0.125% strain) came from the search's margin of +0.11 and is
+  withdrawn with it (section 5).
+* **Absolute rates.** With a 3e12 /s attempt frequency the step barriers give 9e5 /s (PVDF), 9e3 /s
+  (64/29/7) and 4e3 /s (71/29) per chain at 300 K, so the terpolymer's computed step is one to two
+  orders slower than the measured channel (364 kHz is 2e6 /s): the second saddles of the copolymer
+  bands are not converged (8.3), the model cell overstates the cost of a chain stepping onto a TrFE
+  unit ahead of its neighbours, and the film's channel need not be this step. The earlier
+  polyfind number for a kink-row hop in perfect beta, 8.2 kcal/mol (`ask ... verification-v1.md`,
+  E3), is PVDF's 7.5-8.9 here by a different route.
 
 ### 8.6 What decides these numbers
 

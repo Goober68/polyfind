@@ -22,6 +22,7 @@
 
 | sequence | cell, moving chains | host | wide kink I | saddle A-I | saddle I-B | B (one monomer ahead) | barrier ahead / back | rate at 300 K, 3e12 /s attempt | bands converged |
 |---|---|---|---|---|---|---|---|---|---|
+| vdf10@0 ahead | 1x1, all 2 (the sheet in register) | flexible | +5.06 | +8.23 | +7.87 | -0.00 | 8.23 / 8.23 | 3e+06 /s | A-I force 1.04, I-B force 0.81 |
 | vdf10@0 ahead | 2x1, 1 of 4 | flexible | +9.85 | +10.35 | +12.66 | +7.88 | 12.66 / 4.78 | 1.8e+03 /s | A-I force 0.10, I-B force 0.16 |
 
 **Margins with both cells polished** (kcal/mol per monomer, all-trans minus TG; positive when TG is lower)
@@ -33,3 +34,5 @@
 | vdf9-trfe5-14 (VVRVVRVRVVRVVR) | -0.058 | +0.083 | 0.061 | 0.407 | TGTG' | 6 / 21 deg | +11.8% |
 | vdf9-trfe4-cdfe1-14 (VVRVVRVDVVRVVR) | +0.402 | +0.685 | 0.150 | 0.637 | TGTG' | 14 / 25 deg | +12.1% |
 | vdf7-trfe3 (VVRVVRVVVR) | +0.145 | +0.213 | 0.078 | 0.305 | TGTG' | 6 / 19 deg | +11.6% |
+| vdf8-trfe2 (VVRVVVVRVV) | +0.177 | +0.229 | 0.097 | 0.241 | G'TGT | 6 / 14 deg | +11.3% |
+| vdf7-trfe2-cfe1 (VVRVVCVVRV) | +0.966 | +0.868 | 0.248 | 0.154 | TG'TG | 11 / 13 deg | +11.6% |

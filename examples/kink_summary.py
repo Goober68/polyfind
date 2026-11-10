@@ -46,6 +46,7 @@ def main():
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--no-tilts", action="store_true", help="do not compute missing pendant tilts")
     ap.add_argument("--out", default="docs/predictions/kink_summary_belt4.md")
+    ap.add_argument("--sheets", default="docs/predictions/kink_formation_belt4_polished.json")
     args = ap.parse_args()
     dil_p, mig_p, mar_p = Path(args.dilute), Path(args.migration), Path(args.margins)
     dil = json.load(open(dil_p)) if dil_p.exists() else {}
@@ -102,6 +103,7 @@ def main():
     # --- the sheet ------------------------------------------------------------------------------------
     md += ["", "**Kink sheet: every chain kinked in register, own cell** (kcal/mol per kink pair against the all-trans crystal)", "",
            "| sequence | the search's cells (line-group all-trans, soft closure) | both cells polished, rigid pendants | with pendant tilts | kinked cell a, b, gamma, c | all-trans cell |", "|---|---|---|---|---|---|"]
+    sheets = {}
     for kkey, d in sorted(mig.get("kinked_references", {}).items()):
         row = kkey.split("@")[0]
         tt = dil.get("all_trans_references", {}).get(row)
@@ -110,7 +112,17 @@ def main():
         search = (d["search_energy"] - tt["search_energy"]) / 2
         pol = (d["energy"] - tt["energy"]) / 2
         tilt = f"{pol + (d['tilt_per_cell'] - tt['tilt_per_cell']) / 2:+.2f}" if "tilt_per_cell" in d and "tilt_per_cell" in tt else "-"
+        if tilt != "-" and kkey.endswith("@0"):
+            letters = DK.sequence(row)[0]
+            sheets[row] = {"letters": letters, "validated_chemistry": set(letters) <= {"V", "R"}, "kink_offset_bonds": 0,
+                           "formation_kcal_per_kink_pair": pol + (d["tilt_per_cell"] - tt["tilt_per_cell"]) / 2, "formation_rigid_kcal_per_kink_pair": pol,
+                           "formation_search_rigid_kcal_per_kink_pair": search}
         md.append(f"| {kkey} | {search:+.2f} | {pol:+.2f} | {tilt} | {', '.join(f'{v:.3f}' for v in d['state'][:4])} | {', '.join(f'{v:.3f}' for v in tt['state'][:4])} |")
+
+    if sheets:  # the sheet energies in the kink-formation files' format, for examples/candidate_frequency_map.py --kinks
+        Path(args.sheets).write_text(json.dumps({"preset": args.preset, "protocol": "the kink sheet (every chain kinked in register, own cell) against the all-trans crystal, "
+                                                 "both cells polished in the mixed cell (every torsion free, closure exact), pendant tilts included",
+                                                 "energy": "kcal/mol per kink pair", "rows": sheets}, indent=1))
 
     # --- the one-monomer step -----------------------------------------------------------------------
     md += ["", "**One chain's kink pair one monomer ahead of its neighbours'** (kcal/mol per moving chain against the sheet; cell fixed)", "",
@@ -119,7 +131,7 @@ def main():
         if "barrier_forward" not in e:
             continue
         nc = e["chains"]
-        rate = 3e12 * np.exp(-e["barrier_forward"] / KT)
+        rate = 3e12 * np.exp(-e["barrier_forward"] * e.get("moving_chains", 1) / KT)  # what moves together must gather its barrier together
         conv = "yes" if e["A-I"]["converged"] and e["I-B"]["converged"] else f"A-I force {e['A-I']['force_max']:.2f}, I-B force {e['I-B']['force_max']:.2f}"
         who = f"all {nc} (the sheet in register)" if str(e.get("mover")) == "all" else f"1 of {nc}"
         md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, {who} | {e['host']} | {e['I']['energy']:+.2f} | {e['A-I']['saddle']:+.2f} | "
