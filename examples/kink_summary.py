@@ -94,6 +94,8 @@ def main():
                 return f"reverts to all-trans ({r['formation']:+.2f})"
             g = np.round(r["kinks"][0]["gauche_deg"], 0)
             capped = f"; {r['angles_at_window']} angles at the window" if r.get("angles_at_window") else ""
+            if r.get("descent") and not r["descent"]["converged"]:
+                capped += f"; a damped descent stopped at its budget, NOT a minimum: gradient {r['descent']['largest_projected_gradient']:.2f}"
             return f"{r['formation']:+.2f} (gauche bonds {g[0]:.0f}, {g[1]:.0f}{capped})"
 
         extra = ""

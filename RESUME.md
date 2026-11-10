@@ -37,15 +37,20 @@ forked child after printing its summary (766 passed, 5 skipped); kill it if it l
 chains: +11.51 in four chains, +9.32 in sixteen (intermediate 17.81, 17.36): the four-chain cell overstates the
 completed single-chain step by about a fifth; the flexible-neighbour band in sixteen chains is NOT run (a day of
 compute: 1600 sites, 10 s per gradient). (b) The lone kink sits at the bottom of the registry well, where the lattice's
-give does not reach (curvature unchanged), so it barely moves: neighbours fixed 25.61 in sixteen chains (25.25 in four),
-neighbours as rigid chains 22.1 (23.07 in four).
-(c) THE TRAP: `MixedModel.relax` (short damped descent, then SLSQP) can step over the rim of a shallow basin. It
-returned the sixteen-chain lone kink with rigid-body neighbours to all-trans; a damped descent from the same start
-settles in the kinked basin. Never report a reversion from `relax` alone: use `dilute_kink.py --descend-to 0.05
-[--descent-only]` (a return to all-trans the descent did not itself reach is discarded), or `MixedModel.relax_in_basin`
-(`relax(trust=...)` in rounds: safe, about ten times the evaluations). Checked by descent alone and confirmed: PVDF four
-chains with flexible neighbours reverts (23.07 -> 15.6 -> 14.1 -> 0.2 -> 0.03, never rising); 71/29 with neighbours
-fixed reverts. `--start-from STAGE` continues a stored row. Evaluations in a 16 x 10 cell cost 10 s each: budget
+give does not reach (curvature unchanged), so it barely moves: neighbours fixed 25.61 in sixteen chains (25.25 in four);
+neighbours as rigid chains 22.25 at the four-chain minimum's kink shape (23.07 there).
+(c) A CAUTION ABOUT REVERSIONS: `MixedModel.relax` (a short damped descent, then SLSQP) is not proof that a basin has
+no rim: SLSQP's later steps are unbounded. Never report a reversion from `relax` alone: use `dilute_kink.py
+--descend-to 0.05 [--descent-only]` (a return to all-trans the descent did not itself reach is discarded), or
+`MixedModel.relax_in_basin` (`relax(trust=...)` in rounds: safe, about ten times the evaluations). Checked by descent
+alone and confirmed: PVDF four chains with flexible neighbours reverts (23.07 -> 15.6 -> 14.1 -> 0.2 -> 0.03, never
+rising); 71/29 with neighbours fixed reverts. NOT SETTLED: the sixteen-chain lone kink with rigid-body neighbours.
+`relax` reverts it; the descent had fallen 25.61 -> 22.25 -> 22.13 -> 22.07 -> 22.01 in 800 evaluations (2.3 h) with
+the gauche bonds opening 94 -> 106 deg and the gradient not shrinking when its budget ended: neither converged nor
+reverted, leaning to "no rim". The stored stage (`vdf10@0 4x2 kinked 0`, host_rigid_bodies) is that unconverged
+point; continue it with `--start-from host_rigid_bodies --stages host_rigid_bodies --descend-to 0.05 --descent-only
+--descend-step 0.1 --descend-steps 1600`, or scan the energy against the kink torsion (task #36). An interim commit
+message (792cd66) and text called the quasi-Newton reversion a jump; that was premature and is corrected in 8.1. `--start-from STAGE` continues a stored row. Evaluations in a 16 x 10 cell cost 10 s each: budget
 accordingly, and seed a scratch `--out` file with the stored all-trans reference or the driver starts a packing search
 on every core.
 

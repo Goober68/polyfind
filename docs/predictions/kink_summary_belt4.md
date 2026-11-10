@@ -5,7 +5,7 @@
 | vdf10@0 | 4 x 10 | 6.80, 5.70 | +25.25 (gauche bonds 95, -91; 1 angles at the window) | +23.07 (gauche bonds 99, -98) | reverts to all-trans (+0.00) |
 | vdf10@0, angle restraint 100 (chain stiffness matched to DFT) | 4 x 10 | 7.15, 5.93 | +20.32 (gauche bonds 88, -85; 5 angles at the window) | +18.55 (gauche bonds 89, -88; 3 angles at the window) | reverts to all-trans (+0.00) |
 | vdf10@0, angle restraint 100 (chain stiffness matched to DFT), angle window 14 deg | 4 x 10 | - | +19.77 (gauche bonds 87, -82) | +18.23 (gauche bonds 89, -85) | - |
-| vdf10@0 | 16 x 10 | - | +25.61 (gauche bonds 94, -90; 1 angles at the window) | - | - |
+| vdf10@0 | 16 x 10 | - | +25.61 (gauche bonds 94, -90; 1 angles at the window) | +22.01 (gauche bonds 106, -105; a damped descent stopped at its budget, NOT a minimum: gradient 0.09) | - |
 | vdf10-trfe4-14@0 | 4 x 14 | 5.84, 4.91 | reverts to all-trans (-0.00) | - | - |
 | vdf14@0 | 4 x 14 | - | +24.17 (gauche bonds 92, -88) | +22.69 (gauche bonds 95, -92) | reverts to all-trans (+0.03) |
 | vdf20@0 | 4 x 20 | - | +23.41 (gauche bonds 90, -87) | +22.39 (gauche bonds 92, -89) | - |
