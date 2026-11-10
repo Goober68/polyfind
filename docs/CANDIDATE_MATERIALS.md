@@ -692,7 +692,7 @@ closure surface, every chain flexible, the cell fixed at the kinked crystal's:
 | PVDF | one chain in four (all six neighbours stay) | +9.85 | 10.35 | 12.66 | +7.88 | 12.7 / 4.8 |
 | 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.42 | 11.7 | +8.98 | 11.7 / 2.7 |
 | 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.05 | 12.1 | +11.25 | 12.1 / 0.8 |
-| PVDF, 64/29/7, 71/29 | every chain together (the sheet in register) | running | | | | |
+| PVDF | every chain together (the sheet in register), per chain | +5.06 | 8.2 | 7.9 | 0.00 | 8.2 / 8.2, which is 16.5 per two-chain cell |
 
 kcal/mol per moving chain against the sheet. The first row is the trial run of the driver, not yet
 re-run into `kink_migration_belt4.json`; the others are that file's. The PVDF bands of rows one and
@@ -717,9 +717,15 @@ second saddles to about 0.3 (the driver resumes a stored band, so they are conti
   pairs on a different unit from their neighbours' is a costly arrangement in a lattice of
   sequence-ordered chains, and the model cell, in which every chain carries the same sequence in
   register, makes it as costly as it can be. With that cost the barrier of the whole step is 11.7
-  and 12.1 kcal/mol, so in this protocol the terpolymer's step is no faster than the matrix's; the
-  protocol that does not carry it, every chain's kink pair moving together, is running, and it is
-  the one to compare chemistries on.
+  and 12.1 kcal/mol, so in this protocol the terpolymer's step is no faster than the matrix's.
+* **Moving every chain together is not the way round that cost.** In PVDF the concerted step of
+  both chains of the cell has a barrier of 8.2 kcal/mol per chain, 16.5 for the cell, against 8.9
+  for one sublattice followed by the other: the sheet moves one chain (or one stack) at a time. In
+  the copolymer cells the concerted band does not settle on a minimum-energy path at all (before
+  the climbing image is switched on its top is 12.7 per chain in 64/29/7, twice the sequential
+  first saddle, and nine images cannot resolve what follows), so those rows are not reported. What
+  would separate the chemistries cleanly is the sequential step in a cell whose chains do not carry
+  the same sequence in register, which is a larger cell than the two-chain one and is not run.
 
 ### 8.4 In a copolymer the sheet sees the sequence
 
