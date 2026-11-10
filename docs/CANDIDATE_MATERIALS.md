@@ -18,9 +18,9 @@ is a model number at zero kelvin on a regular ten-monomer periodic sequence pack
 section 7 says what that leaves out and what decides each row, section 6 reads Dipole's slate of
 other chemistries against the same screen, and section 8 adds the frequency: what a kink pair is
 in the lattice (a sheet, never a lone defect) and the barrier of the step that moves it. **Sections
-3-5 still carry the search's margins; where section 2.1 has a polished margin for a row, that is
-the number, and the readings of 3-5 that rest on a margin within 0.3 of zero are suspended until
-the polished table is complete.***
+3-6 still carry the search's margins and kink energies; where section 2.1 has a polished margin
+for a row, that is the number, and the readings of 3-6 that rest on a margin within 0.3 of zero
+are suspended until the polished table is complete (section 5 says which).***
 
 ## 1. What "optimal tan delta, frequency and strain" means in the program's variables
 
@@ -704,17 +704,17 @@ closure surface, every chain flexible, the cell fixed at the kinked crystal's:
 
 | lattice | who moves | I | saddle A-I | saddle I-B | B | barrier ahead / back |
 |---|---|---|---|---|---|---|
-| PVDF | one sublattice (half the chains, each with its two stack neighbours) | +7.01 | 7.53 | 8.94 | +1.97 | 8.9 / 7.0 |
+| PVDF | one sublattice (half the chains, each with its two stack neighbours) | +7.01 | 7.55 | 8.94 | +1.97 | 8.9 / 7.0 |
 | PVDF | one chain in four (all six neighbours stay) | +9.85 | 10.35 | 12.66 | +7.88 | 12.7 / 4.8 |
 | 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.42 | 11.7 | +8.98 | 11.7 / 2.7 |
 | 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.05 | 12.1 | +11.25 | 12.1 / 0.8 |
 | PVDF | every chain together (the sheet in register), per chain | +5.06 | 8.2 | 7.9 | 0.00 | 8.2 / 8.2, which is 16.5 per two-chain cell |
 
-kcal/mol per moving chain against the sheet. The first row is the trial run of the driver, not yet
-re-run into `kink_migration_belt4.json`; the others are that file's. The PVDF bands of rows one and
-two are converged to 0.1-0.16 kcal/mol per scaled unit; the copolymers' bands stopped at their 400
-iterations with forces of 0.3-1.4, their first saddles steady in the second decimal and their
-second saddles to about 0.3 (the driver resumes a stored band, so they are continued, not redone).
+kcal/mol per moving chain against the sheet (`kink_migration_belt4.json`). The PVDF bands of rows
+one and two are converged to 0.1-0.16 kcal/mol per scaled unit (row one twice, from two separate
+runs, to 0.02 kcal/mol in both saddles); the copolymers' bands stopped at their iteration limit
+with forces of 0.2-1.4, their first saddles reproduced to 0.03 by a second run and their second
+saddles good to about 0.3; the in-register PVDF band stopped at forces of 0.8-1.0.
 
 * **The torsional step itself costs 7.5-9 kcal/mol in the PVDF lattice**: with a 3e12 /s attempt
   frequency, 1e6 steps per second at 300 K. The two saddles are sequential, not concerted: at the
