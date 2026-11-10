@@ -192,18 +192,76 @@ stiffness flag of the previous section is read against the QE cell from here on.
   number is carried by P itself, so the pre-registered set's 29% shortfall in e_11 is its 27%
   shortfall in P, and the belt set's 13% is its 7% in P and a 7% softer relative slope. The
   cross-check prints these lines for any set (`examples/crosscheck_e1_e2.py --polyfind <file>`).
-- **Labelled sets beside the pre-registered one.** Three fitted presets of the crystal stage
+- **Labelled sets beside the pre-registered one.** Five fitted presets of the crystal stage
   (`docs/CRYSTAL_STAGE.md`) have their own E1/E2 files, each a prediction set in its own right
   and none of them the pre-registered one, which stands: `e1/e2_polyfind_crystal.json`
   (`pvdf-dft-valence-crystal`, fixed-charge stage 1, section 4), `e1/e2_polyfind_crystal2.json`
   (`pvdf-dft-valence-crystal2`, induced dipoles with an H-F pair term and the six-cell stiffness
-  as anchors, section 5.3) and `e1/e2_polyfind_belt.json` (`pvdf-dft-valence-belt`, fluorine
-  belt sites, run with `--variant belt`, section 5.10). The last is the first to put every beta
-  and alpha cell axis within 1% of DFT (chain axes +1.0%, +1.4%); its beta set reads against
-  Dipole's records as cell -0.6/-0.1/+0.8%, C_11 1.10, C_22 1.00, C_12 0.83, Berry P 0.93.
+  as anchors, section 5.3), `e1/e2_polyfind_belt.json` (`pvdf-dft-valence-belt`, fluorine
+  belt sites, run with `--variant belt`, section 5.10) and `e1/e2_polyfind_belt2.json`
+  (`pvdf-dft-valence-belt2`, the belt form on Dipole's PBE-D3 chain geometry with the Berry
+  polarization, the polar Berry slope and Dipole's backbone angles as anchors and the
+  refinement's angle restraint fitted, run with `--variant belt --geometry pbe`, section 5.14).
+  The belt set was the first to put every beta and alpha cell axis within 1% of DFT (chain axes
+  +1.0%, +1.4%); its beta set reads against Dipole's records as cell -0.6/-0.1/+0.8%, C_11 1.10,
+  C_22 1.00, C_12 0.83, Berry P 0.93. The belt2 set reads as cell -0.3/-0.6/+0.8%, C_11 1.03,
+  C_22 0.99, C_12 0.85, Berry P 1.00, polar Berry slope 0.92, the first with every anchored
+  quantity within 0.15 of DFT's; what it predicts beyond the anchors is in 5.14. For Dipole's DFPT
+  relaxed-ion tensor the like-for-like number is the Gamma route's, not the sets' rigid-chain
+  eps_0 (`docs/predictions/gamma_dielectric_pvdf-dft-valence-belt2.json`, section 5.16): beta
+  2.24 polar, 4.57 lateral, 2.74 chain, the lateral part one libration at 46 cm^-1. The fifth
+  set, `e1/e2_polyfind_belt3.json` (`pvdf-dft-valence-belt3`, the same problem solved by bounded
+  least squares to a lower minimum, section 5.18; the copolymer cell also in the pre-registered
+  arrangement, `e1_polyfind_belt3_tilt24.json`), reads against Dipole's records as cell
+  -0.1/-0.4/+0.7%, C_11 1.06, C_22 1.01, C_12 0.91, Berry P 1.00, slope 0.92, and predicts the
+  same tensors within a few percent (Gamma-route eps_0 2.23, 4.49, 2.73; section 5.19). The sixth
+  set, `e1/e2_polyfind_belt4.json` (`pvdf-dft-valence-belt4`, section 5.22: the belt3 problem
+  refitted with the alpha-beta gap evaluated with the pendant groups relaxed, and the E2 set made
+  with every conformation's groups relaxed, `--pendant-tilts`), is the first whose E2 margins carry
+  that relaxation: PVDF TTTT +0.744 and T3GT3G' +0.402 above TGTG' (rigid belt3: +0.736, +0.315),
+  and the VDF/TrFE 70/30 model reordered, TGTG' the ground conformation with TTTT +0.145 and
+  T3GT3G' +0.129 above it (rigid belt3: T3GT3G' ground, TTTT +0.021, TGTG' +0.057), because the
+  copolymer's TGTG' releases 0.357 kcal/mol per monomer through its CF2 and CHF groups (CF2 wag 3.1,
+  CHF wag 2.3 and twist 1.3 deg), its T3GT3G' 0.122 and its TTTT 0.040 (the CHF groups break the
+  zigzag's mirror). Its beta rows read against Dipole's records as cell -0.0/-0.6/+0.6%, C_11 1.06,
+  C_22 1.02, C_12 0.87, Berry P 1.00, slope 0.92, Gamma-route eps_0 2.23, 4.61, 2.73. A
+  copolymer row compares across sets only in the same arrangement (section 5.17). One bias runs
+  through every set's TGTG'-type rows (section 5.22, found 2026-11-07): the refinement keeps the
+  CH2 and CF2 groups rigid in the chain builder's symmetric placement, which is exact for the
+  planar zigzag and not for a chain whose two sides of a backbone atom differ; DFT's alpha turns
+  its CF2 groups by two to three degrees, and under `pvdf-dft-valence-belt3` letting the groups
+  turn lowers alpha by 0.23 kcal/mol per monomer and beta by nothing. E2's PVDF TTTT margin is
+  that gap and carries the full 0.23 in every set; T3GT3G' releases only 0.05 (its backbone atoms
+  between trans bonds barely turn), and the TGTG'-type rows of the other chemistries carry a bias
+  of the same order and sign as PVDF's (the gauche conformer too high). The beta
+  rows, the Berry quantities, the stiffnesses and the tensors are untouched by symmetry. The
+  crystal fit now evaluates its gap row with the groups relaxed (`crystal_stage.py
+  --pendant-tilts`); the sixth set above is the one made with the same correction.
   `examples/crosscheck_e1_e2.py --polyfind <file>` reads any of them against the same records.
 - **E2, the defect units.** The CFE, CTFE, CDFE and `-CH=CF-` cells in a beta host (the last
   is the unit both FA and DB name: a CFE that has lost HCl, per the Science 2022 main text read
   2026-11-05; the earlier CF3 reading of FA is withdrawn) are not predicted here: the potential's chlorine and the other defect parameters are unvalidated,
   and their validation is one of the things E2 is for. They will be added to this file, as
   predictions, before Dipole's corresponding records are read.
+
+- **E2, the 70/30 model polished (registered 2026-11-10, before any DFT cell of this sequence).**
+  The cells registered above for the VDF/TrFE model came from the packing search, which refines a
+  recognised state pattern (all-trans, TGTG') under the line group of the pattern: one torsion
+  value per symmetry class. An isotactic VDF/TrFE sequence does not have that symmetry, so its
+  all-trans chain was held exactly planar and its helix to one trans and one gauche value. A DFT
+  relaxation with every atom free will not stop there, so the like-for-like prediction is the
+  cell re-relaxed with every torsion and backbone angle of both chains free, the cell free and
+  each chain periodic exactly (`polyfind.mixedcell`; `examples/polish_margins.py`;
+  `docs/CANDIDATE_MATERIALS.md` 2.1). On `pvdf-dft-valence-belt4`, kcal/mol per monomer, rigid
+  pendants then with the pendant tilts: TTTT -7.6224, -7.6648 (0.078 below the search's cell,
+  torsions deflected by up to 6 degrees, cell 4.882, 8.466, 91.78 deg, 25.846 A); TGTG' -7.6773,
+  -7.8782 (0.305 below, torsions up to 19 degrees off the pattern, cell 5.236, 9.733, 92.40,
+  23.164); the other handedness TG'TG -7.3295, -7.5224. **Margin TTTT minus TGTG' +0.213** (the
+  search's cells: +0.145), axial switch strain +11.6%. Coordinates:
+  `docs/predictions/polished_vdf7-trfe3_TTTT.xyz`, `_TGTGp.xyz`, `_TGpTG.xyz`. PVDF's cells are
+  unchanged by the same polish (the line group is its own symmetry). The request that carries
+  these to Dipole, with the axial-registry single points (E5) and the PVDF kink sheet (E6), is
+  `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`; its registered numbers are the
+  half-monomer sublattice slip of beta-PVDF +1.79 kcal/mol per monomer of the cell rigid and +0.51
+  relaxed with the cell free, one chain of the doubled cell +1.70 (6.8 per monomer of the moved
+  chain), and the kink sheet +5.30 per kink pair.

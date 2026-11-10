@@ -244,6 +244,28 @@ stiffness flag of the previous section is read against the QE cell from here on.
   and their validation is one of the things E2 is for. They will be added to this file, as
   predictions, before Dipole's corresponding records are read.
 
+- **E2, the 70/30 model polished (registered 2026-11-10, before any DFT cell of this sequence).**
+  The cells registered above for the VDF/TrFE model came from the packing search, which refines a
+  recognised state pattern (all-trans, TGTG') under the line group of the pattern: one torsion
+  value per symmetry class. An isotactic VDF/TrFE sequence does not have that symmetry, so its
+  all-trans chain was held exactly planar and its helix to one trans and one gauche value. A DFT
+  relaxation with every atom free will not stop there, so the like-for-like prediction is the
+  cell re-relaxed with every torsion and backbone angle of both chains free, the cell free and
+  each chain periodic exactly (`polyfind.mixedcell`; `examples/polish_margins.py`;
+  `docs/CANDIDATE_MATERIALS.md` 2.1). On `pvdf-dft-valence-belt4`, kcal/mol per monomer, rigid
+  pendants then with the pendant tilts: TTTT -7.6224, -7.6648 (0.078 below the search's cell,
+  torsions deflected by up to 6 degrees, cell 4.882, 8.466, 91.78 deg, 25.846 A); TGTG' -7.6773,
+  -7.8782 (0.305 below, torsions up to 19 degrees off the pattern, cell 5.236, 9.733, 92.40,
+  23.164); the other handedness TG'TG -7.3295, -7.5224. **Margin TTTT minus TGTG' +0.213** (the
+  search's cells: +0.145), axial switch strain +11.6%. Coordinates:
+  `docs/predictions/polished_vdf7-trfe3_TTTT.xyz`, `_TGTGp.xyz`, `_TGpTG.xyz`. PVDF's cells are
+  unchanged by the same polish (the line group is its own symmetry). The request that carries
+  these to Dipole, with the axial-registry single points (E5) and the PVDF kink sheet (E6), is
+  `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`; its registered numbers are the
+  half-monomer sublattice slip of beta-PVDF +1.79 kcal/mol per monomer of the cell rigid and +0.51
+  relaxed with the cell free, one chain of the doubled cell +1.70 (6.8 per monomer of the moved
+  chain), and the kink sheet +5.30 per kink pair.
+
 
 ## E1 predictions
 

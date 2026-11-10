@@ -550,7 +550,7 @@ the one that matters for this programme's objective.
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
-*Rewritten 2026-11-10. The first form of this section (kept below as 8.6) took the formation
+*Rewritten 2026-11-10. The first form of this section (kept below as 8.7) took the formation
 energy of a kink pair in the kinked two-chain cell as the rate factor between chemistries, and
 bracketed a "dilute" kink between that cell and a pinned lattice. `polyfind.mixedcell` (a cell
 whose chains differ, every chain periodic exactly; `examples/dilute_kink.py`,
@@ -580,7 +580,7 @@ slip held and the cell free it is 0.51 kcal/mol per monomer of the cell (the cel
 (`sarco/materials/computational/registry_gate_v1.md`). The chain-axis shears C44 and C55, which
 are this registry's elastic constants, are in no anchor the potential was fitted to
 (`docs/BENCHMARK.md`: structurally absent from the fit path), so the single-chain numbers are
-predictions; the request for the DFT values is filed (section 8.7).
+predictions; the request for the DFT values is filed (section 8.6).
 
 `examples/dilute_kink.py` puts one kinked chain among all-trans neighbours: the polished
 all-trans two-chain cell tiled 2 x 1 (four chains), the cell held at the all-trans values (the
@@ -650,14 +650,18 @@ both chains free, the cell free, each chain periodic exactly):
 |---|---|---|---|---|---|
 | PVDF | +4.47 | +5.30 | +5.06 | 4.958, 8.774, 89.18, 25.201 | 4.754, 8.481, 90.00, 25.877 |
 | 64/29/7, kink pair in a VDF-VDF pair | +0.94 | +3.95 | +3.79 | 5.402, 8.426, 92.67, 35.496 | 5.302, 8.245, 91.70, 36.183 |
-| 71/29 | +5.68 | running | | | |
+| 71/29, kink pair in a VDF-VDF pair | +5.68 | +7.09 | (tilts running) | 5.150, 8.549, 92.16, 35.529 | 4.881, 8.459, 91.78, 36.187 |
 
 kcal/mol per kink pair against the all-trans crystal.
 
-* **The chlorine's loosening of the lattice for kinks, the reading this section was built on, is
-  mostly gone.** The earlier table had the kink pair at 4.3 in PVDF, 5.5 in the 71/29 matrix and
-  1.8 in the 64/29/7 cell, "a factor of 460-900 in rate". Like for like the terpolymer's is 3.8
-  against PVDF's 5.1; the 71/29 number is running and decides what is left of the separation.
+* **The chlorine's loosening of the lattice for kinks survives, on higher numbers.** The earlier
+  table had the kink pair at 4.3 in PVDF, 5.5 in the 71/29 matrix and 1.8 in the 64/29/7 cell.
+  Like for like (rigid pendants) it is 5.3, 7.1 and 3.95: every number is higher, the copolymer
+  matrix by most because its all-trans reference gained most from the polish relative to its kinked
+  cell, and one CFE per fourteen still cuts the matrix's kink pair by 3.1 kcal/mol (it was 3.7).
+  The kinked cells are 2-6% wider along a than the all-trans cells (PVDF 4.75 to 4.96 A, 71/29 4.88
+  to 5.15, 64/29/7 5.30 to 5.40): the terpolymer's all-trans lattice is already most of the way
+  there, which is the loosening.
 * **Kink pairs attract along the chain.** One kink pair per fourteen monomers costs the
   terpolymer chain +3.8, while the chain with a kink pair in every two monomers (the TG helix) lies
   4.4 below all-trans (section 2.1: +0.317 per monomer). The low-energy objects of this lattice are
@@ -724,10 +728,25 @@ map is `nu exp(-(E_step + dU) / kT)` with `E_step` the step barrier of 8.3 in th
 before the stack's cost, the right order for a channel measured at 364 kHz in the terpolymer film
 and three orders above the earlier section's PVDF proxy; the terpolymer's and the matrix's own
 step barriers are the runs in progress, and the map is regenerated on them when they land. Until
-then the frequency columns of 8.6 and of `candidate_frequency_map_belt4*.md` are not to be read as
+then the frequency columns of 8.7 and of `candidate_frequency_map_belt4*.md` are not to be read as
 this model's ranking of chemistries by rate.
 
-### 8.6 The earlier form of this section (2026-11-08), for the record
+### 8.6 What decides these numbers
+
+Everything in 8.1-8.4 rests on one property no anchor of the potential has tested, the energy of
+sliding a chain along its axis, and on the energy of a kink pair in a sheet. The request for both
+is with the DFT seat (`sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`, 2026-11-10, not
+yet dispatched by the PI; it waits for the alpha and Gamma runs): **E5**, single points on the
+accepted beta cell with one sublattice and then one chain of the doubled cell slid along c
+(polyfind registers +1.79 kcal/mol per monomer of the cell for the half-monomer sublattice slip,
++0.51 relaxed with the cell free, +1.70 for one chain in four); the **E2 addendum**, the polished
+70/30 cells (margin +0.213) and the polished 64/29/7 pair for whenever the chlorine cell is
+declared (+0.317); and **E6**, the PVDF kink sheet (+5.30 per kink pair). If the DFT registry is a
+factor of two softer than the model's, the lone kink falls to about 13-16 kcal/mol and nothing
+above changes; if it is a factor of ten softer, kinks are free and this section is wrong. The
+coordinates are in `docs/predictions/polished_*.xyz` (`examples/export_mixed_cell.py`).
+
+### 8.7 The earlier form of this section (2026-11-08), for the record
 
 *Superseded where 8.1-8.5 say so: the "upper bound for a dilute kink pair" (8.1), every kink
 energy of a chiral row and the copolymer-to-terpolymer rate factor (8.2), and the reading of the

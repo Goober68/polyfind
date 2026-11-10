@@ -332,6 +332,45 @@
    "margin": 0.21337629864776186,
    "margin_rigid": 0.05485100516186492,
    "axial_transition_strain": 0.11579421476002438
+  },
+  "vdf8-trfe2": {
+   "letters": "VVRVVVVRVV",
+   "note": "P(VDF-TrFE) 80/20: less TrFE than the 70/30 model",
+   "tg_conformers": [
+    "TG'TG",
+    "GTG'T",
+    "TGTG'",
+    "G'TGT"
+   ],
+   "screen": {
+    "margin": 0.17678286519628195,
+    "margin_rigid": -0.12659957336065464
+   },
+   "cells": {
+    "TTTT": {
+     "search_rigid_per_monomer": -8.125257161519574,
+     "rigid_per_monomer": -8.222198357332728,
+     "polish_gain_per_monomer": 0.09694119581315305,
+     "search_closure_residual_deg": 7.764063772974562e-13,
+     "cell": [
+      4.874450413330739,
+      8.417291641559663,
+      91.76857666053182,
+      25.85651619445869
+     ],
+     "c_per_monomer": 2.5856516194458687,
+     "torsions": [
+      "T T T T T T T T T T T T T T T T T T T T",
+      "T T T T T T T T T T T T T T T T T T T T"
+     ],
+     "largest_torsion_off_ideal_deg": 5.749619887585055,
+     "tilt_per_monomer": -0.02910643818034373,
+     "largest_tilt_deg": 1.8165582265113793,
+     "tilt_seconds": 18.90549874305725,
+     "energy_per_monomer": -8.251304795513072,
+     "seconds": 361.422954082489
+    }
+   }
   }
  },
  "references": {
