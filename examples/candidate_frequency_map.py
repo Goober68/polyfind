@@ -32,6 +32,11 @@ def main():
     ap.add_argument("--out", default="docs/predictions/candidate_frequency_map_belt4.json")
     ap.add_argument("--bias", type=float, default=55.0)
     ap.add_argument("--ac", type=float, default=1.8)
+    ap.add_argument("--steps", default="", help="kink_migration result file: scale each row's rate by the barrier of the sheet's one-monomer step "
+                    "(plus the climb along the sequence from --sites) instead of the kink-pair formation energy; rows are those with a band")
+    ap.add_argument("--sites", default="docs/predictions/kink_site_scan_belt4.json", help="kink_site_scan result file (with --steps)")
+    ap.add_argument("--margins", default="docs/predictions/polished_margins_belt4.json", help="polished margins; a row found there takes its margin and switch strain from it")
+    ap.add_argument("--step-cell", default="1x1", help="which supercell's band to read with --steps (1x1: one sublattice moves)")
     args = ap.parse_args()
     screen = {}
     for path in args.screen.split(","):
@@ -57,11 +62,40 @@ def main():
             mu = dipole_per_monomer(float(np.linalg.norm(tt["P_C_m2"])), tt["cell"]["volume_A3"], int(round(tt["monomers_per_cell"])))
             axial = tt["c_per_monomer_A"] / tg["c_per_monomer_A"] - 1.0
         rows[name] = {"E_form": k["formation_kcal_per_kink_pair"], "margin": margin, "mu_TT": mu, "axial": axial, "validated_chemistry": k["validated_chemistry"]}
+    try:
+        polished = json.load(open(args.margins)).get("rows", {})
+    except FileNotFoundError:
+        polished = {}
+    for name, r in rows.items():  # a polished margin supersedes the screen's (docs/CANDIDATE_MATERIALS.md 2.1)
+        if name in polished and "margin" in polished[name]:
+            r["margin_screen"] = r["margin"]
+            r["margin"] = polished[name]["margin"]
+            r["axial"] = polished[name].get("axial_transition_strain", r["axial"])
+    if args.steps:  # the rate is the sheet's step, not the kink pair's formation
+        steps = json.load(open(args.steps))["rows"]
+        try:
+            sites = json.load(open(args.sites)).get("rows", {})
+        except FileNotFoundError:
+            sites = {}
+        stepped = {}
+        for key, e in steps.items():
+            if "barrier_forward" not in e or e.get("host") != "flexible" or f"{e['supercell'][0]}x{e['supercell'][1]}" != args.step_cell or e.get("direction") != "ahead":
+                continue
+            name = e["row"]
+            if name not in rows:
+                continue
+            scan = sites.get(f"{name}@{e['kink_offset_bonds']}", {}).get("sites", {})
+            # the climb along the matrix: the highest sheet energy on the way between two of its low sites, pins left out (a sheet does not cross them)
+            vals = sorted(v["relative"] for v in scan.values() if v.get("converged", True) and v["relative"] < 4.0)
+            climb = (max(vals) - min(vals)) if len(vals) > 2 else 0.0
+            stepped[name] = dict(rows[name], E_form_sheet=rows[name]["E_form"], E_step=e["barrier_forward"], climb=climb, E_form=e["barrier_forward"])
+        rows = stepped
     if args.ref not in rows:
         raise SystemExit(f"the anchor row {args.ref!r} is not among the rows with a kink energy: {sorted(rows)}")
     e_ref = rows[args.ref]["E_form"]
     tf_factor = (T - base.tf) / T  # an Arrhenius rate change written as a shift of the Vogel-Fulcher activation
-    md = ["| sequence | kink pair, kcal/mol | rate vs CFE row | f_relax proxy at 300 K | margin | polar fraction at bias | S_ac 34 / 66 kHz | tan delta 34 / 66 kHz | tan delta per % strain, 34 kHz | efficiency 34 / 66 kHz |",
+    first = "step barrier, kcal/mol" if args.steps else "kink pair, kcal/mol"
+    md = [f"| sequence | {first} | rate vs anchor row | f_relax proxy at 300 K | margin | polar fraction at bias | S_ac 34 / 66 kHz | tan delta 34 / 66 kHz | tan delta per % strain, 34 kHz | efficiency 34 / 66 kHz |",
           "|---|---|---|---|---|---|---|---|---|---|"]
     out = {"reference": args.ref, "operating_point": {"bias_V_um": args.bias, "ac_V_um": args.ac}, "rows": {}}
     for name, r in rows.items():
