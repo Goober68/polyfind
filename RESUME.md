@@ -32,7 +32,22 @@ neighbours is an upper bound. Registered and NOT requested: the cheapest DFT tes
 with the lateral cell free at Dipole's repeat, +0.708 kcal/mol per monomer of the cell (1.668 rigid), a +5.1%, b +4.2%
 (`docs/E1_E2_PREDICTIONS.md`, last E5 entry; `chain_slide.py --c-per-monomer 2.5807377932516 --cell-free`).
 New flags: `kink_migration.py --ends-only --trust-tiled`. NOTE: a full-suite run under load left pytest sleeping on a
-forked child after printing its summary (766 passed, 5 skipped); kill it if it lingers.
+forked child after printing its summary (766 passed, 5 skipped); kill it if it lingers (the next run, 767, exited clean).
+**What it changes in section 8, and a trap.** (a) One chain's kink a monomer ahead of its sheet, neighbours as rigid
+chains: +11.51 in four chains, +9.32 in sixteen (intermediate 17.81, 17.36): the four-chain cell overstates the
+completed single-chain step by about a fifth; the flexible-neighbour band in sixteen chains is NOT run (a day of
+compute: 1600 sites, 10 s per gradient). (b) The lone kink sits at the bottom of the registry well, where the lattice's
+give does not reach (curvature unchanged), so it barely moves: neighbours fixed 25.61 in sixteen chains (25.25 in four),
+neighbours as rigid chains 22.1 (23.07 in four).
+(c) THE TRAP: `MixedModel.relax` (short damped descent, then SLSQP) can step over the rim of a shallow basin. It
+returned the sixteen-chain lone kink with rigid-body neighbours to all-trans; a damped descent from the same start
+settles in the kinked basin. Never report a reversion from `relax` alone: use `dilute_kink.py --descend-to 0.05
+[--descent-only]` (a return to all-trans the descent did not itself reach is discarded), or `MixedModel.relax_in_basin`
+(`relax(trust=...)` in rounds: safe, about ten times the evaluations). Checked by descent alone and confirmed: PVDF four
+chains with flexible neighbours reverts (23.07 -> 15.6 -> 14.1 -> 0.2 -> 0.03, never rising); 71/29 with neighbours
+fixed reverts. `--start-from STAGE` continues a stored row. Evaluations in a 16 x 10 cell cost 10 s each: budget
+accordingly, and seed a scratch `--out` file with the stored all-trans reference or the driver starts a packing search
+on every core.
 
 **Correction and results, 2026-11-10 (read before the 2026-11-08 block below; it corrects it).** The PI asked for
 the dilute kink and the migration barrier. Both needed a cell whose chains differ: `polyfind.mixedcell` (energy and

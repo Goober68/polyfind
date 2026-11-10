@@ -649,8 +649,10 @@ relaxed at fixed cell, kcal/mol per monomer of the slid chain:
   laterally. The relaxed state is a minimum in every other coordinate (reached from perturbed
   starts as well as the symmetric one; in the four-chain cell the symmetric start stops on a
   stationary point 0.56 higher), and releasing the other chains' axial shifts leaves it where it
-  is (energy change under 1e-7). A stationary point with one descending direction is the
-  transition state of the slide. The relaxed energy rises to it smoothly, the same there and back
+  is in every cell of sixteen chains or more (energy change under 1e-7; in the four-chain cell,
+  where every chain is a neighbour of the slid one, it falls by 0.75, one more reason not to use
+  that cell). A stationary point with one descending direction is the transition state of the
+  slide. The relaxed energy rises to it smoothly, the same there and back
   (sixteen chains; slip in monomer periods, rigid then relaxed: 1/8 0.74, 0.66; 1/4 2.86, 2.04;
   3/8 5.52, 3.24; 1/2 6.80, 3.70).
 * **The bottom of the well does not move.** The lattice's give is second order in the slip: the
@@ -671,9 +673,10 @@ relaxed at fixed cell, kcal/mol per monomer of the slid chain:
   repeat in the four-chain cell the relaxation finds a state 0.04 lower in which the chains are no
   longer uniform along their length (torsions up to 13 degrees off trans) and which is not
   stationary along the slide.
-* **The copolymer lattices give the same factor.** With one chain in four slid and the lateral
-  cell free (the affordable protocol for fourteen-monomer chains; for PVDF it gives 2.86 against
-  the dilute limit's 3.15), the highest point of the relaxed slide over one monomer period is 2.37
+* **The copolymer lattices give the same factor.** With one chain in four slid, the other chains'
+  axial shifts held and the lateral cell free (the affordable protocol for fourteen-monomer
+  chains, and not a saddle search; for PVDF it gives 2.86 against the dilute limit's 3.15), the
+  highest point of the relaxed slide over one monomer period is 2.37
   kcal/mol per monomer in 71/29 (rigid 5.84) and 2.04 in 64/29/7 (rigid 4.56; the relaxed top is
   at 0.6 of a period, the rigid one at 0.5): 41% and 45% of the rigid lattice, PVDF 42%. The order
   of the three lattices is unchanged; the chlorine's loosening of the registry, 0.78 of the 71/29
@@ -690,12 +693,16 @@ stages that each bound the next from above.
 | PVDF | 4 x 10 | +25.25 | +23.07 | reverts to all-trans |
 | PVDF | 4 x 14 | +24.17 | +22.69 | reverts to all-trans |
 | PVDF | 4 x 20 | +23.41 | +22.39 | not run |
+| PVDF, sixteen chains (added 2026-11-10) | 16 x 10 | +25.61 | +22.1 (damped descent; see below) | not run |
 | PVDF, chain stiffness matched to DFT (see below) | 4 x 10 | +19.77 | +18.23 | reverts to all-trans |
 | 64/29/7 | 4 x 14 | +21.16 | +20.13 | reverts to all-trans |
 | 71/29 | 4 x 14 | reverts to all-trans | - | - |
 
 kcal/mol per kink pair against the all-trans supercell (which stage `host_check` confirms is the
-minimum with every chain free: 0.0000 below the tiled cell in all three lattices).
+minimum with every chain free: 0.0000 below the tiled cell in all three lattices; the sixteen-chain
+cell was not given that check, which costs a day there). The sixteen-chain row's second number is
+a damped descent to a projected gradient of 0.05-0.09; the others are the quasi-Newton relaxation,
+whose four-chain rigid-body minimum the same descent reproduces to 0.02 (23.09 against 23.07).
 
 * **It costs 20-25 kcal/mol where the neighbours hold still** (18-20 with the chain's stiffness
   corrected, below), 30-42 kT at 300 K: a population of 1e-13 per site at most. The strained kink's gauche bonds are flattened to 85-99 degrees and its
@@ -706,6 +713,11 @@ minimum with every chain free: 0.0000 below the tiled cell in all three lattices
   in a sheet, 8.2) and 16 the stretch of the chain on either side of it, held by the registry over
   a decay length of about seven monomers (the Frenkel-Kontorova length from the model's own chain
   stiffness and registry curvature; the same estimate gives 12-28 for a 0.68-1.04 A deficit).
+  *Added 2026-11-10:* all of these are four-chain cells, in which the lattice cannot give way
+  laterally. That give halves the top of the registry (above) and leaves its bottom alone, and the
+  kink's strain field lives at the bottom: in a sixteen-chain cell the ten-monomer numbers are
+  25.6 with the neighbours fixed (25.3 in four chains) and 22.1 with the neighbours shifting and
+  turning (23.1). One kcal/mol, not a factor of two.
 * **A known bias in that number, and its size.** The mixed cell's chains are built from torsions
   and backbone angles with rigid bonds, and with the preset's angle restraint (233 kcal/mol/rad^2,
   fitted to the backbone angles) their axial stiffness is 674 GPa, where the DFT seat's beta cell
@@ -716,10 +728,23 @@ minimum with every chain free: 0.0000 below the tiled cell in all three lattices
   better preset), the ten-monomer numbers are 19.8 and 18.2 where the preset gives 25.2 and 23.1:
   the lone kink with a chain of the right stiffness is about 18 at ten monomers and 16-17 at
   infinite repeat. The sheet energies and the step of 8.2-8.3 involve no stretch of this kind.
-* **It is not even metastable once the neighbours respond.** With every chain's torsions and
+* **It is not even metastable once the neighbours flex.** With every chain's torsions and
   angles free the kink reverts to all-trans without a barrier, in PVDF and in the terpolymer
-  lattice (the relaxation is a damped descent before the quasi-Newton step, so this is the basin's
-  fate and not an optimiser's jump); in the 71/29 lattice it reverts with the neighbours fixed.
+  lattice; in the 71/29 lattice it reverts with the neighbours fixed. *Corrected 2026-11-10:* the
+  parenthesis that stood here, that the relaxation's damped descent before its quasi-Newton step
+  made this the basin's fate and not an optimiser's jump, was not a proof: that descent is short,
+  and in the sixteen-chain cell the quasi-Newton iteration did step over the rim of a basin,
+  returning the kink among rigid-body neighbours to all-trans from a start where a descent with
+  steps of 0.05-0.1 (a degree of torsion, a tenth of an angstrom), which cannot cross a barrier,
+  settles at 22.1 with its gauche bonds at 102 and -100 degrees. That reversion is discarded
+  (`dilute_kink.py --descend-to`, which never accepts a return to all-trans the descent did not
+  itself reach; `MixedModel.relax_in_basin`). The reversions quoted in this bullet were then run
+  again by descent alone and stand: PVDF with flexible neighbours, four chains, falls in every
+  round, 23.1, 15.6, 14.1 (gauche bonds at 124 degrees), 0.2, 0.03; 71/29 with the neighbours fixed
+  falls from its strained start through 10.3 to 0.01. The terpolymer's and the fourteen-monomer
+  PVDF's were not rerun. So: with rigid neighbours of either cell the lone kink is a shallow
+  minimum 22-25 kcal/mol up; with flexible ones (four chains) it has no rim at all; flexible
+  neighbours in sixteen chains are not run.
 * **So the "dilute kink" the earlier section asked for does not exist**, and its pinned-lattice
   column was not an upper bound on one: a kink pair on every chain of a cell held at the all-trans
   a and b (9.3 in PVDF) is still a sheet, with no chain shorter than its neighbour, and costs less
