@@ -16,7 +16,10 @@ torsional move that leaves both stems of the chain parallel), through the wide k
 
 The end points A, I, B are relaxed at the kinked crystal's cell with every chain periodic exactly
 (polyfind.mixedcell), and the two segments A -> I and I -> B are relaxed as bands on the closure
-surface with a climbing image.  Reported per row: the energies of I and B above A (the price of
+surface with a climbing image.  A is the kinked crystal of the packing search
+(examples/kink_formation_screen.py's own-basin cell: a relaxation started from the all-trans
+lattice stops in a symmetric cell that lies higher), polished with every torsion free and the
+closure exact, as the all-trans reference it is measured against is (examples/dilute_kink.py).  Reported per row: the energies of I and B above A (the price of
 leaving the sheet by one monomer), the two saddle energies, and so the forward barrier of the
 one-monomer step, in kcal/mol per chain that moves.
 
@@ -47,8 +50,7 @@ def _eval_one(x):
     return _MODEL.value_and_grad(x)
 
 
-def wrap(a):
-    return (np.asarray(a, dtype=float) + 180.0) % 360.0 - 180.0
+wrap = DK.wrap
 
 
 def letters_of(t) -> str:
@@ -136,37 +138,49 @@ def main():
     with PRESET_PARAMETERS[args.preset].applied():
         polymer = DK.C.make_polymer(args.row, letters)
         stored = (json.load(open(ref_path)) if ref_path.exists() else {}).get("all_trans_references", {}).get(args.row)
-        d = DK.all_trans_reference(polymer, args.row, stored)
-        if stored is None:
-            locked_update(ref_path, lambda disk: disk.setdefault("all_trans_references", {}).__setitem__(
-                args.row, {k: (v.tolist() if isinstance(v, np.ndarray) else v) for k, v in d.items()}))
-        model, x_tt, tt = DK.make_model(polymer, d, args.nx, args.ny)
+        d_tt = DK.all_trans_reference(polymer, args.row, stored)
+        if stored is None or "state" not in stored:
+            locked_update(ref_path, lambda disk: disk.setdefault("all_trans_references", {}).__setitem__(args.row, DK.as_json(d_tt)))
+        kkey = f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''}"
+        stored = (json.load(open(out_path)) if out_path.exists() else {}).get("kinked_references", {}).get(kkey)
+        P = polymer.bonds_per_repeat
+        g = 2 if args.mirror_kink else 1
+        seq = [int(v) for v in np.roll(np.array([g, 0, 3 - g] + [0] * (P - 3)), args.kink_at % P)]
+        d = DK.refined_cell(polymer, args.row, seq, f"{args.row} kink@{args.kink_at}{'~' if args.mirror_kink else ''}", stored)
+        if stored is None or "state" not in stored:
+            locked_update(out_path, lambda disk: disk.setdefault("kinked_references", {}).__setitem__(kkey, DK.as_json(d)))
+        model, x0, ch = DK.make_model(polymer, d, args.nx, args.ny)
         _MODEL = model
-        nc, n_mon, P = model.nc, tt.n_monomers, model.P
-        e_tt = model.physical_energy(x_tt)
+        nc, n_mon, P = model.nc, ch.n_monomers, model.P
+        e_tt = float(d_tt["energy"]) * nc / 2  # the polished all-trans crystal, per supercell
         entry.update(row=args.row, letters=letters, note=note, supercell=[args.nx, args.ny], chains=nc, sites=int(model.pk.N), monomers_per_chain=int(n_mon),
                      mover=args.mover, kink_offset_bonds=args.kink_at, kink_mirrored=bool(args.mirror_kink), direction="back" if args.backward else "ahead",
                      host=args.host, images_per_segment=args.images, fmax=args.fmax)
-        log(f"{key}: {nc} chains of {n_mon} monomers, {model.pk.N} sites")
+        search = (float(d["search_energy"]) - float(d_tt["search_energy"])) / 2
+        log(f"{key}: {nc} chains of {n_mon} monomers, {model.pk.N} sites; kink pair in the search's cells {search:+.3f} kcal/mol "
+            f"(kinked cell's closure residual {d['search_closure_residual'][0]:.3f} deg), polished {(float(d['energy']) - float(d_tt['energy'])) / 2:+.3f}")
 
-        # --- A: the kinked crystal, every chain's kink pair at the same offset, cell free -----------
+        # --- A: the kinked crystal, every chain's kink pair at the same offset ----------------------
         t0 = time.time()
-        x = x_tt.copy()
-        for s in range(nc):
-            x[model.index("tors", s)] = DK.kinked_torsions(d["tors"], args.kink_at, args.mirror_kink)
-        x[3] = float(model.terms(x)["repeats"][0])  # the kinked chain's own repeat: no chain starts under tension
         everyone = list(range(nc))
-        x = model.project(x, model.index("internal"), everyone)
-        cell_free = np.setdiff1d(np.arange(model.n_var), np.concatenate([model.index("xy", nc - 1), model.index("z", nc - 1)]))
-        xA, info = model.relax(x, free=cell_free, closed=everyone, maxiter=600, angle_window=args.angle_window)
-        eA = model.physical_energy(xA)
+        xA, eA, info = x0, model.physical_energy(x0), {"iterations": 0, "message": "the polished two-chain cell, tiled"}
+        if nc > 2:  # in the supercell the chains may differ: is the tiled cell still the minimum?
+            cell_free = np.setdiff1d(np.arange(model.n_var), np.concatenate([model.index("xy", nc - 1), model.index("z", nc - 1)]))
+            xp = x0.copy()
+            xp[model.index("tors")] += np.random.default_rng(1).uniform(-0.5, 0.5, nc * P)
+            xp = model.project(xp, model.index("internal"), everyone)
+            xr, info = model.relax(xp, free=cell_free, closed=everyone, maxiter=600, angle_window=args.angle_window)
+            if model.physical_energy(xr) < eA - 1e-4:
+                xA, eA = xr, model.physical_energy(xr)
         stA = model.state(xA)
         form = (eA - e_tt) / nc
-        entry["kinked_crystal"] = {"formation_per_kink_pair": form, "cell": stA.lattice.tolist(), "all_trans_cell": model.state(x_tt).lattice.tolist(),
+        entry["kinked_crystal"] = {"formation_per_kink_pair": form, "formation_per_kink_pair_search": search,
+                                   "formation_per_kink_pair_two_chain_cell": (float(d["energy"]) - float(d_tt["energy"])) / 2, "cell": stA.lattice.tolist(),
+                                   "all_trans_cell": (np.asarray(d_tt["state"][:4]) * np.array([args.nx, args.ny, 1.0, 1.0])).tolist(),
                                    "torsions": [letters_of(stA.tors[s]) for s in range(nc)], "iterations": info["iterations"], "message": info["message"],
                                    "seconds": time.time() - t0, "state": xA.tolist()}
-        log(f"   kinked crystal: {form:+.3f} kcal/mol per kink pair against all-trans; cell {np.round(stA.lattice, 3).tolist()} (all-trans {np.round(model.state(x_tt).lattice, 3).tolist()}); "
-            f"{info['iterations']} it, {time.time() - t0:.0f} s; {info['message']}")
+        log(f"   kinked crystal: {form:+.3f} kcal/mol per kink pair against all-trans; cell {np.round(stA.lattice, 3).tolist()} "
+            f"(all-trans {np.round(entry['kinked_crystal']['all_trans_cell'], 3).tolist()}); {info['iterations']} it, {time.time() - t0:.0f} s; {info['message']}")
         log(f"      chain {args.mover}: {letters_of(stA.tors[args.mover])}")
         save()
 

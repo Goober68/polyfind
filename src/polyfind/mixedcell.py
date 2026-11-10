@@ -63,6 +63,7 @@ __all__ = [
     "placed_energy_and_grad",
     "placing_frame",
     "supercell_state",
+    "tile_state",
     "tilt_relaxation",
 ]
 
@@ -250,6 +251,15 @@ class MixedState:
         return MixedState(np.array(self.lattice, dtype=float), np.array(self.place, dtype=float),
                           np.array(self.tors, dtype=float), np.array(self.angs, dtype=float))
 
+    @staticmethod
+    def from_vector(x, n_chains: int, n_torsions: int) -> "MixedState":
+        """The state a variable vector of ``n_chains`` chains of ``n_torsions`` torsions each
+        stands for (the inverse of :meth:`vector`)."""
+        x = np.asarray(x, dtype=float).ravel()
+        nc, P = int(n_chains), int(n_torsions)
+        internal = x[4 + 4 * nc:].reshape(nc, -1)
+        return MixedState(x[:4].copy(), x[4:4 + 4 * nc].reshape(nc, 4).copy(), internal[:, :P].copy(), internal[:, P:].copy())
+
 
 def supercell_state(params, c: float, tors, angs, nx: int = 2, ny: int = 1):
     """``(state, flips)`` of the ``nx x ny`` tiling of the packer's two-chain cell at ``params``.
@@ -268,6 +278,25 @@ def supercell_state(params, c: float, tors, angs, nx: int = 2, ny: int = 1):
     tors, angs = np.asarray(tors, dtype=float).ravel(), np.asarray(angs, dtype=float).ravel()
     return MixedState(np.array([nx * a, ny * b, gam, float(c)]), np.array(place),
                       np.tile(tors, (nc, 1)), np.tile(angs, (nc, 1))), np.array(flips)
+
+
+def tile_state(state: MixedState, flips, nx: int = 2, ny: int = 1):
+    """``(state, flips)`` of the ``nx x ny`` tiling of a mixed cell: every chain of ``state``
+    repeated at each lattice point of the tiling with its own conformation, setting angle and
+    axial shift.  Chain order is ``(ix, iy, k)`` with ``k`` the chain within ``state``, which for a
+    two-chain cell is the order of :func:`supercell_state`."""
+    A, B, gam, c = (float(v) for v in state.lattice)
+    flips = np.asarray(flips, dtype=bool).ravel()
+    place, tors, angs, fl = [], [], [], []
+    for ix in range(nx):
+        for iy in range(ny):
+            for k in range(state.place.shape[0]):
+                fa, fb, phi, z = state.place[k]
+                place.append([(ix + fa) / nx, (iy + fb) / ny, phi, z])
+                tors.append(state.tors[k])
+                angs.append(state.angs[k])
+                fl.append(bool(flips[k]))
+    return MixedState(np.array([nx * A, ny * B, gam, c]), np.array(place), np.array(tors, dtype=float), np.array(angs, dtype=float)), np.array(fl)
 
 
 class MixedModel:
@@ -515,23 +544,105 @@ class MixedModel:
         return x
 
     # --- relaxation --------------------------------------------------------------------------
+    def _bounds(self, x0, free, sc, angle_window, cell_window, c_window) -> list:
+        """Per free variable ``(low, high)`` in scaled units: the backbone-angle window, and the
+        cell edges, cell angle and repeat about their values at ``x0``."""
+        bounds = [(None, None)] * len(free)
+        ang = {int(i): k for k, i in enumerate(self.index("angs"))} if angle_window is not None else {}
+        for j, i in enumerate(free):
+            i = int(i)
+            if i in ang:
+                a0 = self.angles0[ang[i] % self.R]
+                bounds[j] = ((a0 - angle_window) / sc[j], (a0 + angle_window) / sc[j])
+            elif i in (0, 1):
+                lo, hi = (0.0, None) if cell_window is None else (cell_window[0] * x0[i], cell_window[1] * x0[i])
+                bounds[j] = (max(2.0, lo) / sc[j], None if hi is None else hi / sc[j])
+            elif i == 2:
+                bounds[j] = (55.0 / sc[j], 125.0 / sc[j])
+            elif i == 3 and c_window is not None:
+                bounds[j] = (c_window[0] * x0[i] / sc[j], c_window[1] * x0[i] / sc[j])
+        return bounds
+
+    def descend(self, x0, free=None, closed=None, steps: int = 200, max_step: float = 0.1, gtol: float = 1.5,
+                angle_window: float | None = 8.0, cell_window=(0.6, 1.6), c_window=(0.85, 1.15)):
+        """Damped descent (FIRE) on the closure surface of ``closed``, no step longer than
+        ``max_step`` scaled units in any variable: what takes a strained start down to where a
+        quasi-Newton method is safe, without leaving the basin the start is in.  Stops when the
+        largest component of the gradient along the surface (kcal/mol per scaled unit) is under
+        ``gtol`` or after ``steps`` evaluations.  Returns ``(x, largest gradient component, evaluations)``."""
+        x0 = np.asarray(x0, dtype=float).ravel().copy()
+        free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
+        closed = [] if closed is None else [int(s) for s in closed]
+        sc = self.scale(x0)[free]
+        bounds = self._bounds(x0, free, sc, angle_window, cell_window, c_window)
+        lo = np.array([-np.inf if b[0] is None else b[0] for b in bounds])
+        hi = np.array([np.inf if b[1] is None else b[1] for b in bounds])
+        y = np.clip(x0[free] / sc, lo, hi)
+        v = np.zeros_like(y)
+        dt, dt_max, a_fire, n_pos = 0.05, 0.5, 0.1, 0
+        gm, it = float("inf"), 0
+
+        def full(yy):
+            x = x0.copy()
+            x[free] = yy * sc
+            return x
+
+        for it in range(1, steps + 1):
+            x = full(y)
+            _, g = self.value_and_grad(x)
+            f = -g[free] * sc
+            f[((y <= lo) & (f < 0.0)) | ((y >= hi) & (f > 0.0))] = 0.0  # a variable at its bound does not push through it
+            if closed:
+                Jf = self.closure(x, closed)[1][:, free] * sc
+                _, sv, Vt = np.linalg.svd(Jf, full_matrices=False)
+                Q = Vt[sv > 1e-10 * max(float(sv.max()), 1e-300)].T
+                f -= Q @ (Q.T @ f)
+                v -= Q @ (Q.T @ v)
+            gm = float(np.abs(f).max())
+            if gm < gtol:
+                break
+            if float(f @ v) > 0.0:
+                n_pos += 1
+                v = (1.0 - a_fire) * v + a_fire * (float(np.linalg.norm(v)) / max(float(np.linalg.norm(f)), 1e-300)) * f
+                if n_pos > 5:
+                    dt, a_fire = min(dt * 1.1, dt_max), a_fire * 0.99
+            else:
+                n_pos, v, dt, a_fire = 0, np.zeros_like(v), dt * 0.5, 0.1
+            v = v + dt * f
+            step = dt * v
+            big = float(np.abs(step).max())
+            if big > max_step:
+                step *= max_step / big
+            y = np.clip(y + step, lo, hi)
+            if closed:
+                for _ in range(12):
+                    h, J = self.closure(full(y), closed)
+                    if float(np.abs(h).max()) < 1e-9:
+                        break
+                    Jf = J[:, free] * sc
+                    y = np.clip(y - Jf.T @ np.linalg.lstsq(Jf @ Jf.T, h, rcond=None)[0], lo, hi)
+        return full(y), gm, it
+
     def relax(self, x0, free=None, closed=None, ftol: float = 1e-9, maxiter: int = 400, angle_window: float | None = 8.0,
-              first_step: float | None = 0.3, cell_window=(0.6, 1.6), c_window=(0.85, 1.15)):
+              first_step: float | None = 0.3, presteps: int = 300, cell_window=(0.6, 1.6), c_window=(0.85, 1.15)):
         """Constrained minimisation (SLSQP) over the ``free`` variables (indices; default all), in
         the scaled variables of :meth:`scale`, with the closure of the chains in ``closed`` held as
         equality constraints.  ``closed`` defaults to every chain with a free internal coordinate,
         or to every chain when the repeat ``c`` is free.  ``angle_window`` bounds each backbone
         angle to the polymer's own value +/- that many degrees, the refinement's bound; ``None``
-        leaves them free.  Returns ``(x, info)`` with the optimiser's message, its iteration and
-        evaluation counts and the closure residuals at the result.
+        leaves them free.  ``cell_window`` and ``c_window`` bound the cell edges and the repeat to
+        those multiples of their starting values.  Returns ``(x, info)`` with the optimiser's
+        message, its iteration and evaluation counts and the closure residuals at the result.
 
         SLSQP starts from a unit Hessian, so its first step is the (constrained) steepest-descent
         step at full length: from a strained start that is hundreds of degrees of torsion, enough
-        to leave the basin the caller put the structure in, or to send a free cell somewhere
-        absurd.  ``first_step`` (scaled units, about 1 A of atom motion; ``None`` for the raw
-        behaviour) scales the objective so that the first step is no longer than that; the
-        quasi-Newton updates take over from there.  ``cell_window`` and ``c_window`` bound the
-        cell edges and the repeat to those multiples of their starting values."""
+        to leave the basin the caller put the structure in.  With ``first_step`` set (scaled
+        units, about 1 A of atom motion; ``None`` for the raw behaviour) a strained start is first
+        taken down by :meth:`descend` (at most ``presteps`` evaluations, no step longer than a
+        third of ``first_step``) until the gradient along the surface is under five times
+        ``first_step``, and the objective handed to SLSQP is scaled so that its first step is no
+        longer than ``first_step``: a factor of at most five, which leaves its unit Hessian
+        inside the range of the real one."""
         x0 = np.asarray(x0, dtype=float).ravel().copy()
         free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
         if closed is None:
@@ -539,21 +650,14 @@ class MixedModel:
             closed = [s for s in range(self.nc) if 3 in fs or fs.intersection(self.index("internal", s).tolist())]
         closed = [int(s) for s in closed]
         sc = self.scale(x0)[free]
-        bounds = [(None, None)] * len(free)
-        if angle_window is not None:
-            ang = {int(i): k for k, i in enumerate(self.index("angs"))}
-            for j, i in enumerate(free):
-                if int(i) in ang:
-                    a0 = self.angles0[ang[int(i)] % self.R]
-                    bounds[j] = ((a0 - angle_window) / sc[j], (a0 + angle_window) / sc[j])
-        for j, i in enumerate(free):
-            if int(i) in (0, 1):
-                lo, hi = (0.0, None) if cell_window is None else (cell_window[0] * x0[i], cell_window[1] * x0[i])
-                bounds[j] = (max(2.0, lo) / sc[j], None if hi is None else hi / sc[j])
-            elif int(i) == 2:
-                bounds[j] = (55.0 / sc[j], 125.0 / sc[j])
-            elif int(i) == 3 and c_window is not None:
-                bounds[j] = (c_window[0] * x0[i] / sc[j], c_window[1] * x0[i] / sc[j])
+        bounds = self._bounds(x0, free, sc, angle_window, cell_window, c_window)
+        pre = 0
+        if first_step is not None and presteps > 0:
+            xd, _, pre = self.descend(x0, free, closed, steps=presteps, max_step=first_step / 3.0, gtol=5.0 * first_step,
+                                      angle_window=angle_window, cell_window=cell_window, c_window=c_window)
+            start = xd
+        else:
+            start = x0
 
         def full(y):
             x = x0.copy()
@@ -581,7 +685,7 @@ class MixedModel:
                 return ccache["h"], ccache["J"]
 
             cons = [{"type": "eq", "fun": lambda y: hj(y)[0], "jac": lambda y: hj(y)[1]}]
-        y0 = x0[free] / sc
+        y0 = start[free] / sc
         fs = 1.0
         if first_step is not None:
             g0 = fg(y0)[1].copy()
@@ -598,9 +702,9 @@ class MixedModel:
                 x = self.project(x, on_surface, closed)
         h = self.closure(x, closed)[0].reshape(-1, 4) if closed else np.zeros((1, 4))
         rot, dc = float(np.linalg.norm(h[:, :3], axis=1).max()), float(np.abs(h[:, 3]).max() / CLOSURE_C)
-        return x, {"message": str(res.message), "iterations": int(res.nit), "evaluations": int(res.nfev),
+        return x, {"message": str(res.message), "iterations": int(res.nit), "evaluations": int(res.nfev) + pre,
                    "energy": self.physical_energy(x), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed,
-                   "objective_scale": fs}
+                   "objective_scale": fs, "descent_evaluations": pre}
 
 
 # ------------------------------------------------------------------- pendant tilts

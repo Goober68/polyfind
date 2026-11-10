@@ -240,3 +240,25 @@ def test_neb_on_a_constraint_surface_is_the_neb_of_the_reduced_problem():
     assert res.energies.max() == pytest.approx(ref.energies.max(), abs=0.02)
     np.testing.assert_allclose(res.images[res.climbing, :2], ref.images[ref.climbing], atol=5e-3)
     assert abs(ref.energies.max() - (-40.6648)) > 1.0  # and it is not the unconstrained surface's saddle
+
+
+def test_tiling_a_mixed_state_keeps_the_energy_per_chain():
+    """A two-chain cell whose chains differ, tiled: the same energy per chain, and the state
+    vector round trip."""
+    def body(polymer, seq, params, kw):
+        m, x, ch = _model(polymer, seq, params, **kw)
+        rng = np.random.default_rng(5)
+        x = x.copy()
+        x[m.index("tors")] += rng.uniform(-4, 4, m.nc * m.P)
+        x[m.index("angs")] += rng.uniform(-1, 1, m.nc * m.R)
+        x[m.index("place")] += rng.uniform(-0.02, 0.02, 4 * m.nc)
+        x = m.project(x, m.index("internal"))
+        st = MC.MixedState.from_vector(x, m.nc, m.P)
+        np.testing.assert_array_equal(st.vector(), x)
+        e2 = m.physical_energy(x)
+        for nx, ny in ((2, 1), (1, 2)):
+            big, flips = MC.tile_state(st, m.flips, nx, ny)
+            pk = pack_mod.CrystalPacker(ch, n_chains=2 * nx * ny, **kw)
+            mm = MC.MixedModel(polymer, m.name, pk, flips, [ch] * (2 * nx * ny), angle_stiffness=105.0)
+            assert mm.physical_energy(big.vector()) == pytest.approx(e2 * nx * ny, rel=1e-11, abs=1e-8)
+    _run(CASES[3], body)
