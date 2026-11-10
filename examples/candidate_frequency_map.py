@@ -56,6 +56,8 @@ def main():
         if name in screen and screen[name].get("derived"):
             d = screen[name]["derived"]; tt = screen[name]["conformations"]["TTTT"]
             margin, mu, axial = d["margin_TT_minus_TG_kcal_per_monomer"], tt["dipole_per_monomer_eA"], d["axial_transition_strain"]
+        elif name not in ("vdf10", "vdf7-trfe3"):
+            continue  # a sequence with a kink energy and no statics row (a site-scan sequence)
         else:
             key = {"vdf10": "pvdf", "vdf7-trfe3": "vdftrfe"}[name]
             c = e2[key]["conformations"]; tt, tg = c["TTTT"], c["TGTG'"]

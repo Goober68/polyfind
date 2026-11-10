@@ -3529,7 +3529,8 @@
     "evaluations": 212,
     "message": "Optimization terminated successfully",
     "seconds": 103.1783766746521
-   }
+   },
+   "tilt_per_cell": -1.3954221351223168
   },
   "vdf10-trfe4-14-pairs@0": {
    "params": [
@@ -4488,7 +4489,8 @@
     "evaluations": 257,
     "message": "Optimization terminated successfully",
     "seconds": 121.07838201522827
-   }
+   },
+   "tilt_per_cell": -1.2279075584376642
   },
   "vdf10-trfe4-14@0~": {
    "params": [
@@ -5447,7 +5449,8 @@
     "evaluations": 268,
     "message": "Optimization terminated successfully",
     "seconds": 131.5283887386322
-   }
+   },
+   "tilt_per_cell": -1.3230588889198316
   }
  },
  "preset": "pvdf-dft-valence-belt4",

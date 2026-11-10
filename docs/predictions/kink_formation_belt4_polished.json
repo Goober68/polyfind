@@ -3,6 +3,14 @@
  "protocol": "the kink sheet (every chain kinked in register, own cell) against the all-trans crystal, both cells polished in the mixed cell (every torsion free, closure exact), pendant tilts included",
  "energy": "kcal/mol per kink pair",
  "rows": {
+  "vdf10-trfe4-14-pairs": {
+   "letters": "VVVVVRRVVVVVRR",
+   "validated_chemistry": true,
+   "kink_offset_bonds": 0,
+   "formation_kcal_per_kink_pair": 4.869895683189341,
+   "formation_rigid_kcal_per_kink_pair": 5.048679390740418,
+   "formation_search_rigid_kcal_per_kink_pair": 2.216949982482035
+  },
   "vdf10-trfe4-14": {
    "letters": "VVRVVRVVVVRVVR",
    "validated_chemistry": true,

@@ -43,6 +43,7 @@ def main():
     ap.add_argument("--dilute", default="docs/predictions/dilute_kink_belt4.json")
     ap.add_argument("--migration", default="docs/predictions/kink_migration_belt4.json")
     ap.add_argument("--margins", default="docs/predictions/polished_margins_belt4.json")
+    ap.add_argument("--sites", default="docs/predictions/kink_site_scan_belt4.json")
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--no-tilts", action="store_true", help="do not compute missing pendant tilts")
     ap.add_argument("--out", default="docs/predictions/kink_summary_belt4.md")
@@ -52,6 +53,7 @@ def main():
     dil = json.load(open(dil_p)) if dil_p.exists() else {}
     mig = json.load(open(mig_p)) if mig_p.exists() else {}
     mar = json.load(open(mar_p)) if mar_p.exists() else {}
+    sit = json.load(open(args.sites)) if Path(args.sites).exists() else {}
     md = []
 
     # --- pendant tilts of the polished cells the sheet energies need -------------------------------
@@ -136,6 +138,31 @@ def main():
         who = f"all {nc} (the sheet in register)" if str(e.get("mover")) == "all" else f"1 of {nc}"
         md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, {who} | {e['host']} | {e['I']['energy']:+.2f} | {e['A-I']['saddle']:+.2f} | "
                   f"{e['I-B']['saddle']:+.2f} | {e['B']['energy']:+.2f} | {e['barrier_forward']:.2f} / {e['barrier_back']:.2f} | {rate:.2g} /s | {conv} |")
+
+    # --- the sheet along the sequence -----------------------------------------------------------------
+    scans = {k: v for k, v in sit.get("rows", {}).items() if not v.get("fixed_cell")}
+    if scans:
+        md += ["", "**The kink sheet along the sequence** (kcal/mol per kink pair against the all-trans crystal, rigid pendants; the kink pair's first unit is the monomer named, "
+               "gauche bonds on the even bonds; `~` is the mirrored kink pair G- T G+)", ""]
+        stats = {}
+        for key, e in sorted(scans.items()):
+            letters = e["letters"]
+            n = len(letters)
+            row = key.split("@")[0]
+            by = {int(o) // 2: v for o, v in e["sites"].items() if v.get("converged", True)}
+            cells = " ".join(f"{letters[m]}{letters[(m + 1) % n]} {by[m]['formation']:.2f}" if m in by else f"{letters[m]}{letters[(m + 1) % n]} -" for m in range(n))
+            md.append(f"* `{letters}` {'G- T G+' if e.get('mirrored') else 'G+ T G-'} ({len(by)} of {n} positions): {cells}")
+            st = stats.setdefault(row, {"letters": letters, "E": [], "scans": 0})
+            st["E"] += [v["formation"] for v in by.values()]
+            st["scans"] += 1
+        md += ["", "| sequence | scans (handednesses) | lowest site | highest site | sheets per repeat at 300 K, sum over sites of exp(-E/kT) | against 64/29/7 |", "|---|---|---|---|---|---|"]
+        ref = stats.get("vdf9-trfe4-cfe1-14")
+        zref = float(np.exp(-np.array(ref["E"]) / KT).sum()) / ref["scans"] if ref else None
+        for row, st in stats.items():
+            E = np.array(st["E"])
+            z = float(np.exp(-E / KT).sum()) / st["scans"]  # per handedness scanned, so that rows with one and with two scans compare
+            md.append(f"| {row} ({st['letters']}) | {st['scans']} | {E.min():.2f} | {E.max():.2f} | {z:.2e} per handedness | {z / zref:.3f} |" if zref else
+                      f"| {row} ({st['letters']}) | {st['scans']} | {E.min():.2f} | {E.max():.2f} | {z:.2e} per handedness | - |")
 
     # --- the margins ------------------------------------------------------------------------------------
     md += ["", "**Margins with both cells polished** (kcal/mol per monomer, all-trans minus TG; positive when TG is lower)", "",

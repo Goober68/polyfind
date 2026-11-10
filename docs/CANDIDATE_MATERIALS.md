@@ -119,15 +119,17 @@ exactly, started half a degree off the search's torsions), then the pendant tilt
 | 65/30/5, one CFE per twenty | +0.055 | **+0.258** | 0.175 | 0.517 | TGTG' | 10 / 21 deg | +12.1% |
 | 64/29/7 with CDFE in place of CFE | +0.402 | **+0.685** | 0.150 | 0.637 | TGTG' | 14 / 25 deg | +12.1% |
 | one CFE and one CDFE per fourteen | +0.641 | **+0.807** | 0.251 | 0.581 | TG'TG | 19 / 20 deg | +12.2% |
+| 64/29/7 with CTFE in place of CFE | +0.135 | **+0.300** | 0.186 | 0.664 | TG'TG | 14 / 24 deg | +11.8% |
+| 64/29/7 with AN in place of CFE | -0.154 | **+0.197** | 0.087 | 0.614 | TG'TG | 5 / 24 deg | +12.5% |
 | 70/30, ten monomers (the E2 cell) | +0.145 | **+0.213** | 0.078 | 0.305 | TGTG' | 6 / 19 deg | +11.6% |
 | 80/20, ten monomers | +0.177 | **+0.229** | 0.097 | 0.241 | G'TGT | 6 / 14 deg | +11.3% |
 | 60/40, ten monomers | -0.329 | **-0.199** | 0.049 | 0.414 | TGTG' | 6 / 20 deg | +11.0% |
 | 70/20/10 CFE, ten monomers | +0.966 | **+0.868** | 0.248 | 0.154 | TG'TG | 11 / 13 deg | +11.6% |
 | 70/20/10 CDFE, ten monomers | +0.146 | **+0.392** | 0.220 | 0.719 | TGTG' | 16 / 23 deg | +12.8% |
 
-kcal/mol per monomer, all-trans minus TG, pendant tilts included (`polished_margins_belt4.json`;
-the CFE+CDFE, CTFE and AN fourteen-monomer cells and the other ten-monomer rows are still
-running; `kink_summary_belt4.md` carries the table as it fills).
+kcal/mol per monomer, all-trans minus TG, pendant tilts included (`polished_margins_belt4.json`).
+Every long cell is in; of the ten-monomer rows the five above, and the rest are not polished (the
+FAN cells cannot be: their tilts are not treated).
 
 * **Both cells fall, the helix by more.** The all-trans chain of a VDF/TrFE sequence is not
   planar: its torsions deflect by 2-6 degrees in a pattern that follows the TrFE units (ten at the
@@ -137,7 +139,7 @@ running; `kink_summary_belt4.md` carries the table as it fills).
   bend in the 64/29/7 cell), and free to vary its torsions along the sequence (trans bonds
   160-180, gauche 47-76 degrees) it closes at half that bend. Nothing in either polished cell is at
   a bound, and the closest contacts are the all-trans cell's own (F-H 2.30 against 2.36 A).
-* **Every margin but one moves toward the helix, by 0.05-0.28** (the ten-monomer 70/20/10 CFE cell,
+* **Every margin but one moves toward the helix, by 0.05-0.35** (the ten-monomer 70/20/10 CFE cell,
   whose helix the handedness correction had already found, moves the other way by 0.10). The matrix stays degenerate within the
   model's resolution but on the other side of zero (+0.06 and +0.08 for 29 and 36 mol% TrFE), and
   the 64/29/7 cell is at +0.32, not +0.11: the CFE pin is +3.7 kcal/mol per unit at one per
@@ -147,6 +149,13 @@ running; `kink_summary_belt4.md` carries the table as it fills).
   law of the earlier pass holds with the new numbers: the margin of a 29-36 mol% matrix with one
   CFE per N monomers is about +0.06 + 3.7/N, and the steep part of the curve (+0.07, section 3) is
   the matrix with almost no pin.
+* **Every unit tried at one per fourteen now tips the matrix toward the helix.** Against the 71/29
+  matrix (+0.056): CFE +0.317 (3.7 kcal/mol per unit), CTFE +0.300 (3.4), AN +0.197 (2.0), CDFE
+  +0.685 (8.8), CFE with CDFE +0.807 (the two pins add: 3.7 + 8.8 = 12.5 against 10.5 found). The
+  nitrile's sign has changed: on the search's cells it left the all-trans lattice lowest (-0.154)
+  and was read as saturating the matrix; polished, its helix gains 0.61 kcal/mol per monomer and its
+  all-trans cell 0.09, and it is a weak pin of the chlorines' kind. Section 6's reading of AN as the
+  one unit that favours the all-trans lattice at the film's dilution is withdrawn.
 * **What this does to the pass.** The search's cells are constrained minima of the same potential
   and the polished cells are lower, so the polished margins supersede the table's wherever both
   exist. The readings that do not move: TrFE content sets the matrix's margin and brings it to
@@ -690,7 +699,9 @@ kcal/mol per kink pair against the all-trans crystal.
   table had the kink pair at 4.3 in PVDF, 5.5 in the 71/29 matrix and 1.8 in the 64/29/7 cell.
   Like for like it is 5.1, 6.9 and 3.8 (5.3, 7.1 and 3.95 with rigid pendants): every number is higher, the copolymer
   matrix by most because its all-trans reference gained most from the polish relative to its kinked
-  cell, and one CFE per fourteen still cuts the matrix's kink pair by 3.1 kcal/mol (it was 3.7).
+  cell, and one CFE per fourteen still cuts the matrix's kink pair by 3.1 kcal/mol (it was 3.7) at
+  this site, a VDF-VDF pair with a TrFE after it; the matrix has cheaper sites in its VDF run and
+  between the cheapest sites of the two lattices the cut is 1.2 (8.4).
   The kinked cells are 2-6% wider along a than the all-trans cells (PVDF 4.75 to 4.96 A, 71/29 4.88
   to 5.15, 64/29/7 5.30 to 5.40): the terpolymer's all-trans lattice is already most of the way
   there, which is the loosening.
@@ -759,38 +770,48 @@ at forces of 0.8-1.0.
 
 ### 8.4 In a copolymer the sheet sees the sequence
 
-`examples/kink_site_scan.py` walks the sheet along the 64/29/7 sequence `VVRVVRVCVVRVVR` one
-monomer at a time from the polished kinked crystal, relaxing the cell at each position (the
-lattice the sheet carries with it, not a new packing search):
+`examples/kink_site_scan.py` walks the sheet along a sequence one monomer at a time from the
+polished kinked crystal, relaxing the cell at each position. Sheet energy in kcal/mol per kink
+pair against the all-trans crystal, rigid pendants, the kink pair named by the two units it sits
+on, in order along the chain (`kink_site_scan_belt4.json`; profiles in `kink_summary_belt4.md`):
 
-| the kink pair's two units | sheet energy, kcal/mol per kink pair | positions (monomer pairs of `VVRVVRVCVVRVVR`) |
-|---|---|---|
-| VDF-VDF, away from the CFE | 3.95, 3.96, 4.06 | 0-1, 11-12, 3-4 |
-| VDF-VDF, next to the CFE | 4.75 | 8-9 |
-| TrFE-VDF | 4.47, 4.51, 4.56 | 10-11, 13-0, 2-3 |
-| VDF-TrFE | 5.25, 5.30, 5.33, 5.45 | 4-5, 1-2, 12-13, 9-10 |
-| TrFE-VDF, the VDF next to the CFE | 5.88 | 5-6 |
-| VDF-CFE | **12.11** | 6-7 |
-| CFE-VDF | **11.41** | 7-8 |
+| sequence, kink pair | profile along one repeat |
+|---|---|
+| 64/29/7 `VVRVVRVCVVRVVR`, G+ T G- | VV 3.95, VR 5.30, RV 4.56, VV 4.06, VR 5.25, RV 5.88, **VC 12.11, CV 11.41**, VV 4.75, VR 5.45, RV 4.47, VV 3.96, VR 5.33, RV 4.51 |
+| 64/29/7, the mirrored pair G- T G+ | VV 4.18, VR 5.45, RV 3.73, VV 4.05, VR 3.57, RV 3.42, **VC 8.07, CV 8.28**, VV 4.14, VR 4.46, RV 3.83, VV 4.23, VR 4.36, RV 3.81 |
+| 71/29 `VVRVVRVVVVRVVR`, G+ T G- | VV 7.09, VR 6.50, RV 7.20, VV 7.05, VR 6.47, RV 6.87, VV 4.81, VV 5.14, VV 7.09, VR 6.47, RV 7.20, VV 7.09, VR 6.50, RV 7.21 |
+| 71/29, the mirrored pair | VV 5.79, VR 8.27, RV 5.42, VV 5.81, VR 8.28, RV 5.08, VV 4.66, VV 4.97, VV 5.74, VR 8.40, RV 5.41, VV 5.79, VR 8.28, RV 5.41 |
+| 71/29 with the TrFE in pairs `VVVVVRRVVVVVRR`, G+ T G- | VV 5.05, VV 5.11, VV 5.40, VV 7.83, VR 10.41, RR 7.37, RV 7.16, and the same again (the two halves of the repeat agree to 0.001) |
 
-(`kink_site_scan_belt4.json`; rigid pendants; G+ T G-, gauche bonds on the even bonds.)
+Is a site's energy the site's, or the packing basin its relaxation fell into? In the 71/29 cell,
+where neighbouring VDF-VDF positions come out 2 kcal/mol apart in cells 0.15 A apart in a, four
+sites re-relaxed from the low sites' lattice returned to their scan energies and cells to three
+decimals: the lattice follows the site.
 
-* **The matrix's own sequence is a corrugation for the sheet.** It sits in the VDF-VDF pairs
-  (3.95-4.06) and climbs 1.3-1.5 kcal/mol to pass each TrFE, on top of the step barrier, with a
-  period of three monomers in this cell. A VDF run is flat to 0.1.
-* **The kink pair does not sit at the CFE and does not cross it.** With a gauche bond on either
-  side of the chlorinated unit the sheet is 7.5-8.2 kcal/mol above its VDF-VDF sites, and the
-  lattice it would need there is a different one (5.11 x 9.20 A against 5.40 x 8.43). The pin of
-  the statics, which favours the helix around itself by 3.7 kcal/mol per unit (2.1), is to this
-  kink pair a wall: a sheet of this handedness lives in the segment between two CFE units and
-  turns back at each. The mirrored kink pair (G- T G+), which the chiral unit treats differently
-  (the pinned-lattice handedness split of 8.7 was 9 kcal/mol at the CFE), and the kink pair on the
-  odd bonds are not scanned yet; until they are, "does not cross" is this handedness's statement.
-* **What this says to a sequence designer**, as far as it goes: between pins the channel's speed is
-  set by how many TrFE units the sheet must pass and how they are spaced (a climb of 1.3-1.5 at
-  each, a factor of ten in rate at 300 K), so at fixed composition a sequence that groups its VDF
-  units into runs gives the sheet flat stretches, and one that alternates gives it a washboard.
-  That is a prediction the site scan can test sequence by sequence, and has not yet.
+* **In the matrix a kink pair costs 5 where VDF follows it and 7 where TrFE does.** A VDF-VDF pair
+  whose next unit along the chain is VDF costs 4.7-5.4 (PVDF: 5.3); the same pair with a TrFE next
+  costs 7.0-7.8, a pair with a TrFE in it 6.5-7.2, and one sitting on two TrFE units or leading into
+  them 7.4-10.4. The kink pair is directional, and the mirrored one reads the same sequence
+  differently (5.1-5.8 on the pairs the first finds at 7, 8.3-8.4 where the first finds 6.5, and
+  the same 4.7-5.0 inside the VDF run), so a chain's cheapest kink away from a VDF run depends on
+  its handedness as well as its place.
+* **The chlorinated unit lowers every site of the matrix and is itself a wall.** In the 64/29/7
+  lattice the TrFE-flanked VDF-VDF pairs that cost 7.1 in the matrix cost 3.95-4.06, and no matrix
+  site is above 5.9 for either handedness: the wider lattice (8.2) takes the TrFE's penalty away.
+  That is the loosening, 3.1 kcal/mol at the same site and 1.2 between the cheapest sites of the
+  two lattices (3.42 against 4.66). With a gauche bond on either side of the CFE itself the sheet
+  costs 11.4-12.1 for one handedness and 8.1-8.3 for the other, 4 to 8 above the matrix sites:
+  neither kink pair sits at the CFE or passes it. The pin of the statics, which favours the helix
+  around itself by 3.7 kcal/mol per unit (2.1), is to a single kink pair a wall, and a sheet lives
+  in the segment between two of them. (The kink pair on the odd bonds is not scanned.)
+* **What this says to a sequence designer.** At 71/29 the regular sequence gives the sheet two
+  cheap sites in fourteen (its one four-VDF run) and a floor of 6.5-7.2 everywhere else, a
+  corrugation of 0.7; grouping the TrFE in pairs gives it three cheap sites in seven (5.05-5.40)
+  and a wall of 10.4 at each pair. Summed over sites, exp(-E/kT) at 300 K is 1.0e-3 per repeat and
+  handedness for the regular sequence and 1.1e-3 for the paired one (one handedness scanned),
+  against 11e-3 for the 64/29/7 cell: VDF runs are where kink sheets are cheap, TrFE units next to
+  them are what they climb, and a chlorine does for every site what a VDF run does for its own. Whether cheap sites
+  or a low wall matters more is the question of which rate model holds (8.5).
 
 ### 8.5 What the frequency map becomes
 
@@ -805,17 +826,18 @@ and `--steps kink_migration_belt4.json`; the 64/29/7 cell is the anchor at 364 k
 | lattice | kink sheet, kcal/mol per kink pair | f_relax if the sheet's energy sets the rate | step barrier (one sublattice) | f_relax if the step sets the rate | margin (polished) | polar fraction at 55 V/um |
 |---|---|---|---|---|---|---|
 | 64/29/7 | 3.79 | 364 kHz (anchor) | 11.4 | 364 kHz (anchor) | +0.317 | 0.00 |
-| 71/29 | 6.85 | 2 kHz | 12.0 | 120 kHz | +0.056 | 0.61 |
+| 71/29 | 6.85 | 2 kHz at this site; 33 kHz summed over the sequence's sites (8.4) | 12.0 | 120 kHz | +0.056 | 0.61 |
 | PVDF | 5.06 | 43 kHz | 8.9 | 21 MHz | +0.744 | 0.00 |
 
 (`candidate_frequency_map_belt4_polished.md` and `_steps.md`. At the operating point the 71/29 row
 reads 0.012% AC strain at tan delta 1.0 on the first rate model and 0.18% at 0.26 on the second;
 the other two rows carry no strain on either.)
 
-* **The two rate models bracket the matrix between frozen and following.** If the population of
+* **The two rate models bracket the matrix between slow and following.** If the population of
   kink sheets limits the channel (the earlier section's assumption, on corrected energies) the 71/29
-  matrix sits at 2 kHz, frozen at a 34-66 kHz drive, as the copolymer is known to be, and the
-  chlorine's 3.1 kcal/mol is a factor of 180. If the step limits it, the matrix is within a factor
+  matrix sits at 2 kHz on the energy of the one site the sheet was first put on and at 33 kHz on
+  the sum over all the sites of its sequence and both kink handednesses (8.4: 9% of the 64/29/7
+  cell's), at the bottom of a 34-66 kHz drive band rather than far below it. If the step limits it, the matrix is within a factor
   of three of the terpolymer, because the chlorine hardly lowers the step. The bench's Vogel-Fulcher
   fit on a copolymer film beside the terpolymer's decides between them; the model's own next piece
   is the wall of a helix run (8.2), whose creation and motion are the two quantities these proxies

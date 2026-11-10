@@ -25,16 +25,17 @@ a damped pre-descent, `descend`, `project`; `tile_state`; a climbing-image band 
 the line group of the pattern, which a copolymer sequence does not have, and holds a kinked chain periodic only by a
 penalty. Polished (every torsion free, closure exact) the all-trans cells fall 0.05-0.25 kcal/mol per monomer and the
 TG cells 0.15-0.72, so margins move, all but one toward the helix: 64/29/7 +0.317 (was +0.110), 71/29 +0.056
-(-0.051), 64/36 +0.083 (-0.058), 65/30/5 twenty-monomer +0.19 or more (+0.055; second helix running), CDFE-14 +0.685
-(+0.402), ten-monomer 70/30 +0.213 (+0.145), 80/20 +0.229 (+0.177), 60/40 -0.199 (-0.329), 70/20/10 CFE +0.868
-(+0.966), 70/20/10 CDFE +0.392 (+0.146); PVDF unchanged. The matrix is still degenerate within resolution; the CFE
-pin is +3.7 kcal/mol per unit at one per fourteen (2.6 at one per twenty) and the film's cell is no longer on the
-steep part of the curve at the bias, while the measured film is. The recommendation "one CFE per fourteen to sixteen"
+(-0.051), 64/36 +0.083 (-0.058), 65/30/5 twenty-monomer +0.258 (+0.055), CDFE-14 +0.685 (+0.402), CFE+CDFE-14 +0.807
+(+0.641), CTFE-14 +0.300 (+0.135), AN-14 +0.197 (-0.154: its sign changes, AN is a weak helix pin at the film's
+dilution and section 6's reading of it is withdrawn), ten-monomer 70/30 +0.213 (+0.145), 80/20 +0.229 (+0.177),
+60/40 -0.199 (-0.329), 70/20/10 CFE +0.868 (+0.966), 70/20/10 CDFE +0.392 (+0.146); PVDF unchanged. The matrix is
+still degenerate within resolution; the CFE pin is +3.7 kcal/mol per unit at one per fourteen and at one per twenty
+(margin +0.06 + 3.7/N) and the film's cell is no longer on the steep part of the curve at the bias, while the
+measured film is. The recommendation "one CFE per fourteen to sixteen"
 was read off the search's margins and is SUSPENDED (`docs/CANDIDATE_MATERIALS.md` 2.1 and the note at section 5);
-sections 3-6 and the old loss and frequency maps still carry the search's numbers. STILL TO POLISH (resumable,
-`polish_margins.py --rows ...`; two detached runs were going at the time of writing, logs in the session scratchpad,
-results accumulate in `polished_margins_belt4.json`): the twenty-monomer cell's TGTG', CFE+CDFE-14, CTFE-14, AN-14,
-and the ten-monomer rows not listed above. (2) **A lone kink pair does not exist.** It shortens its chain by 1 A and
+sections 3-6 and the old loss and frequency maps still carry the search's numbers. Every long cell is polished
+(`polished_margins_belt4.json`); NOT polished: the ten-monomer rows not listed above (`polish_margins.py --rows ...`,
+resumable) and the FAN cells (their tilts are not treated). (2) **A lone kink pair does not exist.** It shortens its chain by 1 A and
 the axial registry holds the chain (one PVDF chain slid rigidly: 6.8 kcal/mol per monomer; a sublattice half-slip
 relaxed with the cell free 0.51 per monomer of the cell against the DFT seat's GFN1 0.56): 25/23 kcal/mol in PVDF
 with the neighbours fixed/rigid at ten monomers, 21.7 at infinite repeat, 21/20 in 64/29/7, and it reverts to
@@ -53,22 +54,31 @@ short axis); every chain together 8.2 per chain = 16.5 per cell (the concerted r
 one, and in the copolymer cells its band does not settle: not reported). 64/29/7 and 71/29, one sublattice from a
 VDF-VDF pair onto VDF-TrFE: first saddle 6.43 and 7.02, second 11.4 (11.4/11.7 in two runs, not converged) and
 12.02 (converged), ending 9.0 and 11.3 up, which the sequence-registered model cell overstates. (5) **The sheet sees
-the sequence** (`kink_site_scan.py`, 64/29/7, complete for G+ T G- on the even bonds): VDF-VDF 3.95-4.06 (4.75 next
-to the CFE), TrFE-VDF 4.5, VDF-TrFE 5.3-5.5, and with a gauche bond on either side of the CFE 11.4-12.1: this
-kink pair does not cross a CFE. NOT RUN: the mirrored kink (G- T G+), the odd bonds, the 71/29 scan. (6) **Frequency
+the sequence** (`kink_site_scan.py`; five scans complete, both kink handednesses for 64/29/7 and 71/29, one for
+71/29 with the TrFE in pairs `VVVVVRRVVVVVRR`; profiles in `kink_summary_belt4.md`; a site's energy is the site's
+own: four 71/29 sites re-relaxed from another site's lattice returned to the same energies and cells). In the matrix
+a kink pair costs 4.7-5.4 where a VDF unit follows it (PVDF 5.3) and 7.0-7.8 where a TrFE does, 6.5-7.2 with a TrFE in
+it, up to 10.4 at a TrFE pair; the mirrored kink reads the same sequence differently (5.1-5.8 and 8.3-8.4). In
+64/29/7 every matrix site is 3.4-5.9 (the chlorine's wider lattice removes the TrFE penalty: 3.1 at the same site,
+1.2 between the cheapest sites, 3.42 against 4.66), and with a gauche bond on either side of the CFE the sheet costs
+11.4-12.1 (G+ T G-) and 8.1-8.3 (G- T G+): neither kink pair sits at a CFE or passes it. Summed over sites,
+exp(-E/kT) per repeat and handedness is 1.0e-3 (71/29), 1.1e-3 (71/29 in pairs), 11e-3 (64/29/7). NOT RUN: the
+kink pair on the odd bonds; other sequences. (6) **Frequency
 map on two rate models** with polished margins, 64/29/7 anchored at 364 kHz
 (`candidate_frequency_map_belt4_polished.md`: rate by the sheet's energy; `_steps.md`: rate by the step barrier,
-`--steps ... --step-mover 0`): the 71/29 matrix is at 2 kHz on the first and 120 kHz on the second; only the matrix
-is on the switching curve (polar fraction 0.61), the 64/29/7 cell is pinned off it (+0.32). Which rate model holds
+`--steps ... --step-mover 0`): the 71/29 matrix is at 2 kHz on the first by the one site the sheet was put on and
+33 kHz by the sum over its sites (9% of the terpolymer's), and 120 kHz on the second; only the matrix is on the
+switching curve (polar fraction 0.61), the 64/29/7 cell is pinned off it (+0.32). Which rate model holds
 is the bench's Vogel-Fulcher fit on a copolymer film beside the terpolymer's. (7) Asked of Dipole (NOT dispatched by
 the PI): `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md` (E5 registry single points on the accepted beta
 cell, the polished 70/30 cells, the polished 64/29/7 pair for the chlorine cell, E6 the PVDF kink sheet), numbers
 registered in `docs/E1_E2_PREDICTIONS.md` (its notes file is now level with it; re-rendering is safe); coordinates
 in `docs/predictions/polished_*.xyz`. Dipole at 04:23 UTC: alpha at BFGS 5, Gamma at representation 26 of 36, no
-result delivered. Next, in order: finish the polished margin table and rewrite sections 3-6 on it; the mirrored-kink
-and 71/29 site scans; site scans of alternative sequences at fixed composition (VDF runs against alternation: the
-sheet climbs 1.3-1.5 at each TrFE); partial sheets (8-16 chains) for nucleation; the wall of a helix run, which is
-what moves in the relaxor; a step in a cell whose chains do not carry the same sequence in register.
+result delivered. Next, in order: rewrite sections 3-6 on the polished margin table (and polish the remaining
+ten-monomer rows if they are kept); site scans of further sequences at fixed composition, now that the rule is
+known (VDF after the kink 5, TrFE after it 7, a TrFE pair 10, a CFE 8-12); partial sheets (8-16 chains) for
+nucleation; the wall of a helix run, which is what moves in the relaxor; a step in a cell whose chains do not carry
+the same sequence in register.
 
 **Dipole, 2026-11-08 22:33 UTC.** A power outage on Dipole's host killed both DFT successors (alpha at BFGS 37/120
 after 27 h, Gamma at representation 22/36); Dipole marked them lost and started fresh ones under the PI's standing
