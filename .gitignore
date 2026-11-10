@@ -12,3 +12,6 @@ dist/
 # stray interaction-table cache: POLYFIND_TABLE_CACHE=1 is a flag, not a path
 1/
 .polyfind_table_cache/
+
+# lock files of the resumable prediction scripts
+docs/predictions/*.json.lock

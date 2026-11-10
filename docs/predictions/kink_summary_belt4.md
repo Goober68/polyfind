@@ -5,10 +5,35 @@
 | vdf10@0 | 4 x 10 | 6.80, 5.70 | +25.25 (gauche bonds 95, -91; 1 angles at the window) | +23.07 (gauche bonds 99, -98) | reverts to all-trans (+0.00) |
 | vdf10@0, angle restraint 100 (chain stiffness matched to DFT) | 4 x 10 | 7.15, 5.93 | +20.32 (gauche bonds 88, -85; 5 angles at the window) | +18.55 (gauche bonds 89, -88; 3 angles at the window) | reverts to all-trans (+0.00) |
 | vdf10@0, angle restraint 100 (chain stiffness matched to DFT), angle window 14 deg | 4 x 10 | - | +19.77 (gauche bonds 87, -82) | +18.23 (gauche bonds 89, -85) | - |
+| vdf10@0 | 16 x 10 | - | +25.61 (gauche bonds 94, -90; 1 angles at the window) | - | - |
 | vdf10-trfe4-14@0 | 4 x 14 | 5.84, 4.91 | reverts to all-trans (-0.00) | - | - |
 | vdf14@0 | 4 x 14 | - | +24.17 (gauche bonds 92, -88) | +22.69 (gauche bonds 95, -92) | reverts to all-trans (+0.03) |
 | vdf20@0 | 4 x 20 | - | +23.41 (gauche bonds 90, -87) | +22.39 (gauche bonds 92, -89) | - |
 | vdf9-trfe4-cfe1-14@0 | 4 x 14 | 4.56, 3.77 | +21.16 (gauche bonds 85, -85) | +20.13 (gauche bonds 86, -86) | reverts to all-trans (+0.00) |
+
+**One chain slid half a monomer along its axis, the lattice responding** (kcal/mol per monomer of the slid chain against the unslid lattice; cell fixed unless stated; examples/chain_slide.py)
+
+| repeat and cell | chains | rigid lattice | neighbours turn | turn and move aside | and flex | with pendant tilts | turn and move aside, lateral cell free | the two nearest shells at 'turn and move aside': largest move, turn |
+|---|---|---|---|---|---|---|---|---|
+| vdf1 2x1 | 4 | 6.798 | 6.798 | 6.074 | - | - | 2.861 (a +5.19%, b +4.20%) | 4.75 A: 0.142 A, 7.5 deg; 4.86 A: 0.128 A, 11.5 deg |
+| vdf1 4x2 | 16 | 6.797 | 6.027 | 3.696 | - | - | 3.093 (a +1.35%, b +1.08%) | 4.75 A: 0.166 A, 0.0 deg; 4.86 A: 0.137 A, 5.0 deg |
+| vdf1 4x3 | 24 | 6.797 | 6.017 | 3.537 | - | - | - | 4.75 A: 0.168 A, 0.0 deg; 4.86 A: 0.163 A, 5.1 deg |
+| vdf1 6x2 | 24 | 6.798 | 6.026 | 3.503 | - | - | - | 4.75 A: 0.192 A, 0.0 deg; 4.86 A: 0.140 A, 5.1 deg |
+| vdf1 6x3 | 36 | 6.798 | 6.016 | 3.359 | - | - | 3.122 (a +0.58%, b +0.48%) | 4.75 A: 0.193 A, 0.0 deg; 4.86 A: 0.162 A, 5.2 deg |
+| vdf1 6x4 | 48 | 6.798 | 6.016 | 3.312 | - | - | - | 4.75 A: 0.188 A, 0.0 deg; 4.86 A: 0.171 A, 5.1 deg |
+| vdf1 8x4 | 64 | 6.798 | 6.016 | 3.263 | - | - | 3.135 (a +0.32%, b +0.27%) | 4.75 A: 0.196 A, 0.0 deg; 4.86 A: 0.171 A, 5.1 deg |
+| vdf2 2x1 | 4 | 6.798 | 6.798 | 6.074 | 6.074 | 5.934 | - | 4.75 A: 0.142 A, 7.5 deg; 4.86 A: 0.128 A, 11.5 deg |
+| vdf2 4x2 | 16 | 6.797 | 6.027 | 3.696 | 3.696 | 3.684 | - | 4.75 A: 0.166 A, 0.0 deg; 4.86 A: 0.137 A, 5.0 deg |
+| vdf10 2x1 | 4 | 6.798 | - | 6.074 | 6.030 (not stationary along the slide) | 5.896 | - | 4.75 A: 0.188 A, 7.5 deg; 4.86 A: 0.128 A, 11.5 deg |
+| vdf1 2x1 c2.5807 | 4 | 6.672 | - | 5.968 | - | - | 2.833 (a +5.12%, b +4.17%) | 4.76 A: 0.142 A, 7.4 deg; 4.87 A: 0.127 A, 11.4 deg |
+
+Dilute limit, linear in one over the number of chains from the two largest cells of the 2:1 family: fixed cell 3.140 (from 36 and 64 chains), lateral cell free 3.152 (from 36 and 64): **3.15**, 46% of the rigid lattice's 6.80. The fixed cell bounds it from above and the free cell from below at every size.
+
+Along the slide (slip in monomer periods: rigid lattice, relaxed):
+
+* `vdf1 4x2`, shift: 0.0625: 0.19, 0.18; 0.125: 0.74, 0.66; 0.188: 1.66, 1.33; 0.25: 2.86, 2.04; 0.312: 4.23, 2.70; 0.375: 5.52, 3.24; 0.438: 6.45, 3.58; 0.5: 6.80, 3.70. Highest relaxed 3.70 at 0.5 (rigid 6.80 at 0.5); the two sweeps differ by 0.000 at most.
+* `vdf10-trfe4-14 2x1`, shift cell free: 0.1: 0.43, 0.37; 0.2: 1.66, 1.10; 0.3: 3.44, 1.75; 0.4: 5.11, 2.18; 0.5: 5.84, 2.37; 0.6: 5.24, 2.33; 0.7: 3.73, 2.07; 0.8: 2.17, 1.60; 0.9: 1.18, 1.09; 1: 1.01, 0.95. Highest relaxed 2.37 at 0.5 (rigid 5.84 at 0.5); the two sweeps differ by 0.000 at most.
+* `vdf9-trfe4-cfe1-14 2x1`, shift cell free: 0.1: 0.33, 0.29; 0.2: 1.28, 0.88; 0.3: 2.64, 1.43; 0.4: 3.93, 1.81; 0.5: 4.56, 2.01; 0.6: 4.30, 2.04; 0.7: 3.47, 1.90; 0.8: 2.63, 1.62; 0.9: 2.12, 1.30; 1: 2.00, 1.19. Highest relaxed 2.04 at 0.6 (rigid 4.56 at 0.5); the two sweeps differ by 0.000 at most.
 
 **Kink sheet: every chain kinked in register, own cell** (kcal/mol per kink pair against the all-trans crystal)
 

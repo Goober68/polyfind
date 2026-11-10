@@ -306,6 +306,20 @@ stiffness flag of the previous section is read against the QE cell from here on.
   within a factor 1.5. `examples/crosscheck_e5.py --dipole <records>` recognises Dipole's records
   by their geometry and prints the comparison. E6 (the PVDF kink sheet, +5.30 per kink pair) is
   registered in the same ask and is not dispatched.
+- **E5, one relaxed number registered in case it is asked for (2026-11-10; not requested, not
+  dispatched).** Part c is a rigid lattice. With the lattice responding the half-slip of one chain
+  costs polyfind 3.15 kcal/mol per monomer of the chain in the dilute limit, 46% of the rigid
+  6.80, almost all of it from the neighbours moving aside by 0.2 A (`docs/CANDIDATE_MATERIALS.md`
+  8.1, `examples/chain_slide.py`). The cheapest DFT test of that is the c/2 cell of part c,
+  `beta_2a_slide_c2.xyz` (24 atoms), relaxed with the lateral cell free and the repeat held (in QE
+  a variable-cell run with only the a-b components of the cell free; the slip is held by the
+  mirror plane, as in b). polyfind for that protocol, at the repeat of Dipole's cell (2.5807 A per
+  monomer) and its own lateral cell there (4.7626, 8.4853; Dipole's is 4.7568, 8.5282):
+  **+0.708 kcal/mol per monomer of the cell** (2.83 per monomer of the moved chain, 4.52 mEh per
+  cell) against 1.668 rigid at the same repeat, with a opening by 5.1% and b by 4.2%
+  (`docs/predictions/chain_slide_belt4.json`, row `vdf1 2x1 c2.5807`). One slid chain in four
+  with the lateral cell free is 9% under polyfind's dilute limit at its own repeat (2.86 against
+  3.15), so the test is of the mechanism and its size, not of the limit.
 
 
 ## E1 predictions

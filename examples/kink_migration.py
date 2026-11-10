@@ -124,6 +124,9 @@ def main():
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--angle-window", type=float, default=8.0)
+    ap.add_argument("--ends-only", action="store_true", help="relax the end points A, I, B and stop: no bands")
+    ap.add_argument("--trust-tiled", action="store_true",
+                    help="take the tiled polished kinked cell as A without relaxing the supercell with every chain free (in the four-chain PVDF cell that check returns the tiled cell)")
     ap.add_argument("--references", default="docs/predictions/dilute_kink_belt4.json", help="the all-trans reference cells (shared with dilute_kink.py)")
     ap.add_argument("--out", default="docs/predictions/kink_migration_belt4.json")
     args = ap.parse_args()
@@ -182,7 +185,7 @@ def main():
         t0 = time.time()
         everyone = list(range(nc))
         xA, eA, info = x0, model.physical_energy(x0), {"iterations": 0, "message": "the polished two-chain cell, tiled"}
-        if nc > 2:  # in the supercell the chains may differ: is the tiled cell still the minimum?
+        if nc > 2 and not args.trust_tiled:  # in the supercell the chains may differ: is the tiled cell still the minimum?
             cell_free = np.setdiff1d(np.arange(model.n_var), np.concatenate([model.index("xy", nc - 1), model.index("z", nc - 1)]))
             xp = x0.copy()
             xp[model.index("tors")] += np.random.default_rng(1).uniform(-0.5, 0.5, nc * P)
@@ -240,6 +243,10 @@ def main():
             ends[name] = xr
             entry[name] = rec
             save()
+
+        if args.ends_only:
+            log(f"   end points only; written {out_path}")
+            return
 
         # --- the two bands ----------------------------------------------------------------------------
         pool = mp.get_context("fork").Pool(args.workers) if args.workers > 1 else None

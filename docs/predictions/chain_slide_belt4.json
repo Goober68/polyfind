@@ -1,0 +1,2102 @@
+{
+ "references": {
+  "vdf1": {
+   "params": [
+    4.754070728728579,
+    8.480849553496686,
+    90.0,
+    360.0,
+    360.0,
+    2.5876808798194744,
+    0.0
+   ],
+   "c": 2.5876818504105077,
+   "tors": [
+    180.0,
+    180.0
+   ],
+   "angs": [
+    115.72081926866657,
+    115.72081926866657
+   ],
+   "E_cell": -19.05147164439302,
+   "bend_per_monomer": 0.08917660272285124,
+   "frame": [
+    [
+     0.9452751245230786,
+     3.6981784620422374e-16,
+     -0.0056087152749769555
+    ],
+    [
+     1.5922701730175772,
+     0.8846543998780557,
+     -0.005608715274977955
+    ],
+    [
+     1.5922701730175783,
+     -0.8846543998780537,
+     -0.0056087152749768445
+    ],
+    [
+     0.132403879943708,
+     6.765986207837029e-17,
+     1.2882322099302754
+    ],
+    [
+     -0.710369891750323,
+     -1.1007088896454944,
+     1.2882322099302768
+    ],
+    [
+     -1.266163170803808,
+     -0.6751576812592709,
+     1.2882322099302772
+    ],
+    [
+     -0.154576612696838,
+     -1.5262600980317178,
+     1.2882322099302765
+    ],
+    [
+     -0.7103698917503242,
+     1.1007088896454937,
+     1.2882322099302759
+    ],
+    [
+     -1.2661631708038088,
+     0.6751576812592697,
+     1.2882322099302763
+    ],
+    [
+     -0.15457661269684006,
+     1.5262600980317178,
+     1.2882322099302754
+    ]
+   ],
+   "seconds": 3.301462411880493,
+   "state": [
+    4.754070728728579,
+    8.480849553496686,
+    90.0,
+    2.5876818504105077,
+    0.0,
+    0.0,
+    360.0,
+    0.0,
+    0.5,
+    0.5,
+    360.0,
+    2.5876808798194744,
+    179.9999999999993,
+    180.0000000000008,
+    115.72081926866686,
+    115.72081926866683,
+    180.00000000001197,
+    180.00000000001677,
+    115.72081926866694,
+    115.72081926866699
+   ],
+   "flips": [
+    0.0,
+    0.0
+   ],
+   "energy": -18.87311843894721,
+   "search_energy": -18.873118438947316,
+   "search_closure_residual": [
+    5.0654010799565945e-14,
+    0.0
+   ],
+   "polish": {
+    "iterations": 1,
+    "evaluations": 2,
+    "message": "Optimization terminated successfully",
+    "seconds": 0.06711769104003906
+   }
+  },
+  "vdf2": {
+   "params": [
+    4.754070202211991,
+    8.48085011082889,
+    90.0,
+    180.0,
+    180.0,
+    2.5604395201713332,
+    1.0
+   ],
+   "c": 5.175363764242495,
+   "tors": [
+    180.0,
+    180.0,
+    180.0,
+    180.0
+   ],
+   "angs": [
+    115.72081662878254,
+    115.72081852895103,
+    115.72082637885751,
+    115.72082447868894
+   ],
+   "E_cell": -38.10294471149297,
+   "bend_per_monomer": 0.08917695839881551,
+   "frame": [
+    [
+     0.945275161900782,
+     2.337726733252182e-16,
+     -0.013621171519286868
+    ],
+    [
+     1.5922702103952795,
+     0.8846543998780558,
+     -0.013621154722889706
+    ],
+    [
+     1.592270210395282,
+     -0.8846543998780534,
+     -0.01362115472288793
+    ],
+    [
+     0.13240385392584234,
+     -3.7057097058426933e-16,
+     1.2802197138569298
+    ],
+    [
+     -0.7103699177681873,
+     -1.1007088896454955,
+     1.2802196780030375
+    ],
+    [
+     -1.2661631968216716,
+     -0.6751576812592724,
+     1.2802196543580755
+    ],
+    [
+     -0.1545766387147029,
+     -1.5262600980317185,
+     1.280219701647999
+    ],
+    [
+     -0.71036991776819,
+     1.1007088896454926,
+     1.2802196780030357
+    ],
+    [
+     -1.2661631968216742,
+     0.6751576812592681,
+     1.2802196543580755
+    ],
+    [
+     -0.15457663871470587,
+     1.5262600980317174,
+     1.2802197016479964
+    ],
+    [
+     0.9452750518137427,
+     1.4160188711275594e-15,
+     2.574060668396664
+    ],
+    [
+     1.5922701003082402,
+     0.8846543998780569,
+     2.5740606516002646
+    ],
+    [
+     1.5922701003082431,
+     -0.8846543998780524,
+     2.5740606516002646
+    ],
+    [
+     0.1324039211036991,
+     1.0110896390888395e-15,
+     3.8679016651416958
+    ],
+    [
+     -0.7103698505903304,
+     -1.1007088896454942,
+     3.8679017009955934
+    ],
+    [
+     -1.2661631296438156,
+     -0.6751576812592711,
+     3.8679017246405567
+    ],
+    [
+     -0.1545765715368454,
+     -1.526260098031717,
+     3.8679016773506305
+    ],
+    [
+     -0.7103698505903332,
+     1.1007088896454942,
+     3.8679017009955925
+    ],
+    [
+     -1.2661631296438172,
+     0.6751576812592698,
+     3.867901724640555
+    ],
+    [
+     -0.15457657153684937,
+     1.5262600980317187,
+     3.867901677350629
+    ]
+   ],
+   "seconds": 5.865677356719971,
+   "state": [
+    4.754070379123456,
+    8.48084945890334,
+    90.0000000073016,
+    5.175363815911741,
+    4.954837509267443e-09,
+    -6.822974938149945e-10,
+    180.00000004735736,
+    5.746361461014586e-08,
+    0.5,
+    0.5,
+    179.9999999530504,
+    2.5604395201713332,
+    179.99999562088954,
+    179.99999376494176,
+    180.00000437911044,
+    180.0000062350582,
+    115.72082306240898,
+    115.7208235299304,
+    115.72082358715058,
+    115.72082311965035,
+    179.99998673780485,
+    179.99998916135337,
+    180.00001326219515,
+    180.00001083864663,
+    115.72082328095163,
+    115.72082324788748,
+    115.72082336857794,
+    115.7208234016928
+   ],
+   "flips": [
+    0.0,
+    1.0
+   ],
+   "energy": -37.74623687787584,
+   "search_energy": -37.74623687789771,
+   "search_closure_residual": [
+    1.0880643635960518e-13,
+    0.0
+   ],
+   "polish": {
+    "iterations": 19,
+    "evaluations": 35,
+    "message": "Optimization terminated successfully",
+    "seconds": 1.0718023777008057
+   }
+  }
+ },
+ "preset": "pvdf-dft-valence-belt4",
+ "energy": "kcal/mol per monomer of the slid chain against the unslid lattice; fixed cell; rigid pendants unless stated",
+ "rows": {
+  "vdf1 2x1": {
+   "chains": 4,
+   "sites": 40,
+   "repeat_monomers": 1,
+   "monomer_period_A": 2.5876818504105077,
+   "anchor_chain_distance_A": 4.86122406505807,
+   "nearest_neighbours_A": [
+    4.754070728728579,
+    4.86122406505807,
+    4.86122406505807
+   ],
+   "rigid": 6.797682680685963,
+   "turn": {
+    "barrier": 6.797682680685963,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 6.797682680685963,
+     "as started, seed 0": 6.797682680687739,
+     "as started, seed 1": 6.7976826807101
+    },
+    "distinct_minima": [
+     6.798
+    ],
+    "slid_chain_turn_deg": 0.0,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 0.0,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -1.3564134724505954e-05,
+    "largest_axial_force_on_another": 7.369970612664449e-06,
+    "shells_A": {
+     "4.75": {
+      "chains": 1,
+      "largest_turn_deg": 0.0,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 2,
+      "largest_turn_deg": 0.0,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -1.0309938197063815,
+     "largest_axial_shift_A": 11.134133891536905,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 6.0737409190576805,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 6.0737409190576805,
+     "as started": 6.630565685342393
+    },
+    "distinct_minima": [
+     6.074,
+     6.631
+    ],
+    "slid_chain_turn_deg": 8.85955260640526,
+    "slid_chain_move_A": 0.217547722557789,
+    "largest_turn_deg": 11.495069791496292,
+    "largest_move_A": 0.217547722557789,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -1.0144582242145739e-05,
+    "largest_axial_force_on_another": 7.133450990606224e-06,
+    "shells_A": {
+     "4.75": {
+      "chains": 1,
+      "largest_turn_deg": 7.472160680356296,
+      "largest_move_A": 0.1421528451776503
+     },
+     "4.86": {
+      "chains": 2,
+      "largest_turn_deg": 11.495069791496292,
+      "largest_move_A": 0.1281299681606102
+     }
+    },
+    "drag_released": {
+     "energy_change": -0.7462140865340565,
+     "largest_axial_shift_A": 0.8147866771369114,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift_cell_free": {
+    "barrier": 2.8611065835007494,
+    "from": "continued 0, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "continued 0, seed 0": 2.8611065835007494,
+     "as started": 2.861106583517447,
+     "as started, seed 0": 2.8611065837292884,
+     "continued 0": 2.861106583899648
+    },
+    "distinct_minima": [
+     2.861
+    ],
+    "slid_chain_turn_deg": 6.526567887021884e-05,
+    "slid_chain_move_A": 0.05765523850982985,
+    "largest_turn_deg": 0.00016000358573364792,
+    "largest_move_A": 0.3107528875990604,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -2.8961483440713834e-06,
+    "largest_axial_force_on_another": 2.247600154444535e-06,
+    "shells_A": {
+     "4.75": {
+      "chains": 1,
+      "largest_turn_deg": 0.00016000358573364792,
+      "largest_move_A": 0.18878831482624553
+     },
+     "4.86": {
+      "chains": 2,
+      "largest_turn_deg": 8.67574150333894e-05,
+      "largest_move_A": 0.3107528875990604
+     }
+    },
+    "cell_change": {
+     "a": 0.05185270994339697,
+     "b": 0.042030857845446024,
+     "gamma_deg": 5.3859295036318144e-05
+    }
+   }
+  },
+  "vdf1 2x1 c2.5807": {
+   "chains": 4,
+   "sites": 40,
+   "repeat_monomers": 1,
+   "monomer_period_A": 2.5807377932516,
+   "anchor_chain_distance_A": 4.865253685446311,
+   "nearest_neighbours_A": [
+    4.762571371588182,
+    4.865253685446295,
+    4.865253685446311
+   ],
+   "rigid": 6.672047572920889,
+   "shift": {
+    "barrier": 5.9676441388497,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 5.9676441388497,
+     "as started": 6.510053495840914
+    },
+    "distinct_minima": [
+     5.968,
+     6.51
+    ],
+    "slid_chain_turn_deg": 8.841897276044847,
+    "slid_chain_move_A": 0.21737021559053366,
+    "largest_turn_deg": 11.414180295093388,
+    "largest_move_A": 0.21737021559053366,
+    "largest_torsion_off_trans_deg": 2.842170943040401e-14,
+    "axial_force_on_slid_chain": -3.818890164051589e-05,
+    "largest_axial_force_on_another": 2.6999971510449006e-05,
+    "shells_A": {
+     "4.76": {
+      "chains": 1,
+      "largest_turn_deg": 7.44802912907312,
+      "largest_move_A": 0.14215913906687536
+     },
+     "4.87": {
+      "chains": 2,
+      "largest_turn_deg": 11.414180295093388,
+      "largest_move_A": 0.12652824306363558
+     }
+    },
+    "drag_released": {
+     "energy_change": -0.7177242616169792,
+     "largest_axial_shift_A": 0.8104016811105043,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift_cell_free": {
+    "barrier": 2.8334860136337596,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 2.8334860136337596,
+     "continued 0, seed 0": 2.8334860136751345,
+     "continued 0": 2.833486013960119,
+     "as started, seed 0": 2.833486014050365
+    },
+    "distinct_minima": [
+     2.833
+    ],
+    "slid_chain_turn_deg": 4.100376713722653e-07,
+    "slid_chain_move_A": 0.056844410305987886,
+    "largest_turn_deg": 5.935649483035377e-07,
+    "largest_move_A": 0.3083130315627486,
+    "largest_torsion_off_trans_deg": 2.842170943040401e-14,
+    "axial_force_on_slid_chain": -1.1011771526495925e-05,
+    "largest_axial_force_on_another": 8.561779182964164e-06,
+    "shells_A": {
+     "4.76": {
+      "chains": 1,
+      "largest_turn_deg": 1.4903832834534114e-08,
+      "largest_move_A": 0.18708207754086886
+     },
+     "4.87": {
+      "chains": 2,
+      "largest_turn_deg": 5.935649483035377e-07,
+      "largest_move_A": 0.3083130315627486
+     }
+    },
+    "cell_change": {
+     "a": 0.05123145187569644,
+     "b": 0.04172857722305556,
+     "gamma_deg": -7.1339627538691275e-09
+    }
+   }
+  },
+  "vdf1 4x2": {
+   "chains": 16,
+   "sites": 160,
+   "repeat_monomers": 1,
+   "monomer_period_A": 2.5876818504105077,
+   "anchor_chain_distance_A": 12.74086194588343,
+   "nearest_neighbours_A": [
+    4.754070728728579,
+    4.754070728728579,
+    4.86122406505807,
+    4.86122406505807,
+    4.86122406505807,
+    4.86122406505807
+   ],
+   "rigid": 6.797486713944181,
+   "turn": {
+    "barrier": 6.026510412284495,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 6.026510412284495,
+     "as started, seed 0": 6.02651041257738
+    },
+    "distinct_minima": [
+     6.027
+    ],
+    "slid_chain_turn_deg": 3.183231456205249e-12,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 5.6660407870233485,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -9.160700939788827e-06,
+    "largest_axial_force_on_another": 1.1892758670052195e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 7.389644451905042e-12,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.6660407870233485,
+      "largest_move_A": 0.0
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.3316608374568659,
+      "largest_move_A": 0.0
+     },
+     "8.48": {
+      "chains": 1,
+      "largest_turn_deg": 2.6147972675971687e-12,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -1.5334543696239393,
+     "largest_axial_shift_A": 0.8131828783722208,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 3.6961099851914696,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 3.6961099851914696,
+     "as started": 3.6961099862022877
+    },
+    "distinct_minima": [
+     3.696
+    ],
+    "slid_chain_turn_deg": 0.0005685339113483678,
+    "slid_chain_move_A": 0.011403587151703174,
+    "largest_turn_deg": 5.005655061992115,
+    "largest_move_A": 0.16626617288016107,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -4.65393268448317e-06,
+    "largest_axial_force_on_another": 1.63683501083541e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 0.0003983701992638089,
+      "largest_move_A": 0.16626617288016107
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.005655061992115,
+      "largest_move_A": 0.13738814428990412
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.6785912837403316,
+      "largest_move_A": 0.02717544031204833
+     },
+     "8.48": {
+      "chains": 1,
+      "largest_turn_deg": 0.0003086919422230494,
+      "largest_move_A": 0.009381943795298326
+     }
+    },
+    "drag_released": {
+     "energy_change": 2.2394033294403926e-09,
+     "largest_axial_shift_A": 2.7182497465805255e-05,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift_cell_free": {
+    "barrier": 3.093221971413783,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 3.093221971413783,
+     "continued 0, seed 0": 3.0932219722883474,
+     "as started, seed 0": 3.0932219723540584,
+     "continued 0": 3.0932219744541385
+    },
+    "distinct_minima": [
+     3.093
+    ],
+    "slid_chain_turn_deg": 2.2561408741239575e-07,
+    "slid_chain_move_A": 0.004400512166938795,
+    "largest_turn_deg": 4.43261812605266,
+    "largest_move_A": 0.2113568786564579,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -3.3570433116161e-06,
+    "largest_axial_force_on_another": 1.156635557915208e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 4.749301751871826e-08,
+      "largest_move_A": 0.20166092224893364
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 4.43261812605266,
+      "largest_move_A": 0.2113568786564579
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.5482376723039124,
+      "largest_move_A": 0.1855464561550556
+     },
+     "8.48": {
+      "chains": 1,
+      "largest_turn_deg": 4.2250297838108963e-07,
+      "largest_move_A": 0.09192246386397758
+     }
+    },
+    "cell_change": {
+     "a": 0.013466973785404512,
+     "b": 0.010765524777011759,
+     "gamma_deg": 6.685752396151656e-09
+    }
+   },
+   "profile_shift": {
+    "0.0625": {
+     "rigid": 0.1859921116354144,
+     "up": 0.18032568264121096,
+     "up_axial_force": 2.163581775202337,
+     "down": 0.18032568239576108,
+     "down_axial_force": 2.163583227157386,
+     "relaxed": 0.18032568239576108
+    },
+    "0.1250": {
+     "rigid": 0.7429562991210332,
+     "up": 0.6638074464194688,
+     "up_axial_force": 3.6788549717925165,
+     "down": 0.6638074464194688,
+     "down_axial_force": 3.6788549717925165,
+     "relaxed": 0.6638074464194688
+    },
+    "0.1875": {
+     "rigid": 1.655853500439889,
+     "up": 1.3255897585924572,
+     "up_axial_force": 4.373678236447578,
+     "down": 1.3255897584926686,
+     "down_axial_force": 4.37366724805924,
+     "relaxed": 1.3255897584926686
+    },
+    "0.2500": {
+     "rigid": 2.8644955554602802,
+     "up": 2.039943889406487,
+     "up_axial_force": 4.353564695771566,
+     "down": 2.039943889617291,
+     "down_axial_force": 4.353569094832708,
+     "relaxed": 2.039943889406487
+    },
+    "0.3125": {
+     "rigid": 4.22897083558496,
+     "up": 2.703258863775318,
+     "up_axial_force": 3.766568438802728,
+     "down": 2.7032588636322714,
+     "down_axial_force": 3.7665509783844473,
+     "relaxed": 2.7032588636322714
+    },
+    "0.3750": {
+     "rigid": 5.51900550271057,
+     "up": 3.2352552210400063,
+     "up_axial_force": 2.752403522123332,
+     "down": 3.2352552213778267,
+     "down_axial_force": 2.752406392345571,
+     "relaxed": 3.2352552210400063
+    },
+    "0.4375": {
+     "rigid": 6.454390691332492,
+     "up": 3.5779449766516507,
+     "up_axial_force": 1.449021769401212,
+     "down": 3.5779449765849733,
+     "down_axial_force": 1.449021965429043,
+     "relaxed": 3.5779449765849733
+    },
+    "0.5000": {
+     "rigid": 6.797486713944181,
+     "up": 3.6961099851914696,
+     "up_axial_force": -4.65393268448317e-06,
+     "down": 3.6961099851914696,
+     "down_axial_force": -4.65393268448317e-06,
+     "relaxed": 3.6961099851914696
+    }
+   }
+  },
+  "vdf1 4x3": {
+   "chains": 24,
+   "sites": 240,
+   "repeat_monomers": 1,
+   "monomer_period_A": 2.5876818504105077,
+   "anchor_chain_distance_A": 14.58367219517421,
+   "nearest_neighbours_A": [
+    4.754070728728579,
+    4.754070728728579,
+    4.861224065058069,
+    4.861224065058069,
+    4.86122406505807,
+    4.86122406505807
+   ],
+   "rigid": 6.79747344920429,
+   "turn": {
+    "barrier": 6.017123667186411,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 6.017123667186411,
+     "as started": 6.017123667244874
+    },
+    "distinct_minima": [
+     6.017
+    ],
+    "slid_chain_turn_deg": 1.6489340623593307e-05,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 5.754092488634569,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -9.119753112519506e-06,
+    "largest_axial_force_on_another": 9.672912305834693e-06,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 7.293449419876197e-05,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.754092488634569,
+      "largest_move_A": 0.0
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.38896225298600484,
+      "largest_move_A": 0.0
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.4512716118665594,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -2.022295129771379,
+     "largest_axial_shift_A": 0.8785257736942608,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 3.5366644797383913,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 3.5366644797383913,
+     "continued 0, seed 0": 3.536664480088234,
+     "as started, seed 0": 3.536664480575581,
+     "continued 0": 3.5366644817231645
+    },
+    "distinct_minima": [
+     3.537
+    ],
+    "slid_chain_turn_deg": 2.2243483499551076e-07,
+    "slid_chain_move_A": 0.013457782976906727,
+    "largest_turn_deg": 5.057981990705059,
+    "largest_move_A": 0.16817105672410143,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -3.946356539237544e-06,
+    "largest_axial_force_on_another": 1.1891693932368285e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 4.990075694877305e-07,
+      "largest_move_A": 0.16817105672410143
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.057981990705059,
+      "largest_move_A": 0.16258147476749246
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.8425115850071734,
+      "largest_move_A": 0.0364286269844264
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.034124749116699604,
+      "largest_move_A": 0.07197348282965421
+     }
+    },
+    "drag_released": {
+     "energy_change": -6.285347353696125e-08,
+     "largest_axial_shift_A": 0.0011709069658551038,
+     "message": "Optimization terminated successfully"
+    }
+   }
+  },
+  "vdf1 6x2": {
+   "chains": 24,
+   "sites": 240,
+   "repeat_monomers": 1,
+   "monomer_period_A": 2.5876818504105077,
+   "anchor_chain_distance_A": 16.59323674250536,
+   "nearest_neighbours_A": [
+    4.754070728728578,
+    4.754070728728579,
+    4.86122406505807,
+    4.86122406505807,
+    4.86122406505807,
+    4.861224065058071
+   ],
+   "rigid": 6.797558963383608,
+   "turn": {
+    "barrier": 6.026213699531354,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 6.026213699531354,
+     "as started, seed 0": 6.026213700212537
+    },
+    "distinct_minima": [
+     6.026
+    ],
+    "slid_chain_turn_deg": 3.296918293926865e-12,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 5.669864820696034,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -9.159005396067446e-06,
+    "largest_axial_force_on_another": 1.1896093241692443e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 7.275957614183426e-12,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.669864820696034,
+      "largest_move_A": 0.0
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.34797494521092176,
+      "largest_move_A": 0.0
+     },
+     "8.48": {
+      "chains": 1,
+      "largest_turn_deg": 2.5579538487363607e-12,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -1.9215502365032933,
+     "largest_axial_shift_A": 0.8406684267008453,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 3.502689815822123,
+    "from": "continued 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "continued 0": 3.502689815822123,
+     "as started": 3.502689816219487,
+     "as started, seed 0": 3.502689816231026,
+     "continued 0, seed 0": 3.502689816857526
+    },
+    "distinct_minima": [
+     3.503
+    ],
+    "slid_chain_turn_deg": -6.65000925437198e-08,
+    "slid_chain_move_A": 0.00584280068523012,
+    "largest_turn_deg": 5.062841786632021,
+    "largest_move_A": 0.19160719426942216,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -4.594787198773188e-06,
+    "largest_axial_force_on_another": 1.6070450111960823e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 3.094157818850363e-08,
+      "largest_move_A": 0.19160719426942216
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.062841786632021,
+      "largest_move_A": 0.14030436958662165
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.6508161268226331,
+      "largest_move_A": 0.043905572500985764
+     },
+     "8.48": {
+      "chains": 1,
+      "largest_turn_deg": 1.1823408385680523e-07,
+      "largest_move_A": 0.005811609410440795
+     }
+    },
+    "drag_released": {
+     "energy_change": 1.6208048236876493e-08,
+     "largest_axial_shift_A": 0.0001972748108425293,
+     "message": "Optimization terminated successfully"
+    }
+   }
+  },
+  "vdf1 6x3": {
+   "chains": 36,
+   "sites": 360,
+   "repeat_monomers": 1,
+   "monomer_period_A": 2.5876818504105077,
+   "anchor_chain_distance_A": 17.409429877836693,
+   "nearest_neighbours_A": [
+    4.754070728728578,
+    4.754070728728579,
+    4.861224065058069,
+    4.86122406505807,
+    4.86122406505807,
+    4.86122406505807
+   ],
+   "rigid": 6.797529707938793,
+   "turn": {
+    "barrier": 6.016489956257487,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 6.016489956257487,
+     "as started, seed 0": 6.016489956415626
+    },
+    "distinct_minima": [
+     6.016
+    ],
+    "slid_chain_turn_deg": 8.58335624798201e-12,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 5.761016357901724,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -9.116616696989403e-06,
+    "largest_axial_force_on_another": 9.675722158395574e-06,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 6.0254023992456496e-12,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.761016357901724,
+      "largest_move_A": 0.0
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.412474748738191,
+      "largest_move_A": 0.0
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.4330542920766902,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -2.0695080069982055,
+     "largest_axial_shift_A": 0.8699465155933973,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 3.3594360394266687,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 3.3594360394266687,
+     "as started": 3.359436044957249
+    },
+    "distinct_minima": [
+     3.359
+    ],
+    "slid_chain_turn_deg": -3.9013410059851594e-05,
+    "slid_chain_move_A": 0.008145405563279431,
+    "largest_turn_deg": 5.166678630832337,
+    "largest_move_A": 0.1928519145926534,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -3.938553485144246e-06,
+    "largest_axial_force_on_another": 1.1740419584680119e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 0.00015856248933232564,
+      "largest_move_A": 0.1928519145926534
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.166678630832337,
+      "largest_move_A": 0.16205269956749763
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.9084530660225596,
+      "largest_move_A": 0.04474850160787925
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.019684904250368618,
+      "largest_move_A": 0.06912615608355861
+     }
+    },
+    "drag_released": {
+     "energy_change": -4.391722541186027e-10,
+     "largest_axial_shift_A": 2.516416924780367e-05,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift_cell_free": {
+    "barrier": 3.121521497799108,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 3.121521497799108,
+     "continued 0, seed 0": 3.1215214978737436,
+     "continued 0": 3.1215214980433643,
+     "as started, seed 0": 3.121521499063874
+    },
+    "distinct_minima": [
+     3.122
+    ],
+    "slid_chain_turn_deg": -5.968397545075277e-07,
+    "slid_chain_move_A": 0.00647372095180887,
+    "largest_turn_deg": 4.8641597737970415,
+    "largest_move_A": 0.19581868419806783,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -3.4300436889372964e-06,
+    "largest_axial_force_on_another": 1.010888397687811e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 2.0576089809765108e-07,
+      "largest_move_A": 0.19581868419806783
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 4.8641597737970415,
+      "largest_move_A": 0.1830849384288219
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.8010971676748113,
+      "largest_move_A": 0.11869336507099842
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.0043507454706741555,
+      "largest_move_A": 0.10734040802490265
+     }
+    },
+    "cell_change": {
+     "a": 0.005761850904159482,
+     "b": 0.004799429312311698,
+     "gamma_deg": -3.857665831219492e-08
+    }
+   }
+  },
+  "vdf1 6x4": {
+   "chains": 48,
+   "sites": 480,
+   "repeat_monomers": 1,
+   "monomer_period_A": 2.5876818504105077,
+   "anchor_chain_distance_A": 22.16100027164759,
+   "nearest_neighbours_A": [
+    4.754070728728578,
+    4.754070728728579,
+    4.86122406505807,
+    4.86122406505807,
+    4.86122406505807,
+    4.861224065058071
+   ],
+   "rigid": 6.797525712283459,
+   "turn": {
+    "barrier": 6.015715086781142,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 6.015715086781142,
+     "as started, seed 0": 6.015715086797115
+    },
+    "distinct_minima": [
+     6.016
+    ],
+    "slid_chain_turn_deg": 8.86757334228605e-12,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 5.768208132353777,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -9.113339670154787e-06,
+    "largest_axial_force_on_another": 9.63553470198413e-06,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 5.9117155615240335e-12,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.768208132353777,
+      "largest_move_A": 0.0
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.4185269123826174,
+      "largest_move_A": 0.0
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.4266879264229715,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -2.362311281753705,
+     "largest_axial_shift_A": 0.9101301459936539,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 3.3124503599501622,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 3.3124503599501622,
+     "continued 0, seed 0": 3.312450362859863,
+     "as started, seed 0": 3.3124503629400692,
+     "continued 0": 3.3124503637042153
+    },
+    "distinct_minima": [
+     3.312
+    ],
+    "slid_chain_turn_deg": -1.805022975531756e-07,
+    "slid_chain_move_A": 0.0035738955931880027,
+    "largest_turn_deg": 5.059123705705986,
+    "largest_move_A": 0.1880967187549039,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -3.739125562530864e-06,
+    "largest_axial_force_on_another": 1.0784456141843066e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 1.6788260381872533e-07,
+      "largest_move_A": 0.1880967187549039
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.059123705705986,
+      "largest_move_A": 0.17104174947739437
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.9627595689519808,
+      "largest_move_A": 0.04289634574568088
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.03302927551027324,
+      "largest_move_A": 0.08996393237329722
+     }
+    },
+    "drag_released": {
+     "energy_change": -6.7561813921201974e-09,
+     "largest_axial_shift_A": 0.00020126890479023942,
+     "message": "Optimization terminated successfully"
+    }
+   }
+  },
+  "vdf1 8x4": {
+   "chains": 64,
+   "sites": 640,
+   "repeat_monomers": 1,
+   "monomer_period_A": 2.5876818504105077,
+   "anchor_chain_distance_A": 25.48172389176686,
+   "nearest_neighbours_A": [
+    4.754070728728579,
+    4.754070728728579,
+    4.86122406505807,
+    4.86122406505807,
+    4.86122406505807,
+    4.86122406505807
+   ],
+   "rigid": 6.797546174218041,
+   "turn": {
+    "barrier": 6.015677577394854,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 6.015677577394854,
+     "as started": 6.01567757757266
+    },
+    "distinct_minima": [
+     6.016
+    ],
+    "slid_chain_turn_deg": 3.0401869764773437e-05,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 5.768790673495005,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -9.11310594476063e-06,
+    "largest_axial_force_on_another": 9.635579516204555e-06,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 9.261659681669698e-05,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.768790673495005,
+      "largest_move_A": 0.0
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.420311516480524,
+      "largest_move_A": 0.0
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.42463303462250224,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -2.426669772417995,
+     "largest_axial_shift_A": 0.9122649995471597,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 3.2633016249598086,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 3.2633016249598086
+    },
+    "distinct_minima": [
+     3.263
+    ],
+    "slid_chain_turn_deg": 1.2587349829118466e-08,
+    "slid_chain_move_A": 0.002186216365708246,
+    "largest_turn_deg": 5.113351402203193,
+    "largest_move_A": 0.19574701260553698,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -3.7350562094346333e-06,
+    "largest_axial_force_on_another": 1.0749679580408752e-05,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 1.4971647033235058e-08,
+      "largest_move_A": 0.19574701260553698
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.113351402203193,
+      "largest_move_A": 0.17098116637077718
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.9216195116785002,
+      "largest_move_A": 0.049666660024852746
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.028758096329170257,
+      "largest_move_A": 0.08815059308997042
+     }
+    },
+    "drag_released": {
+     "energy_change": -2.2955305212235544e-08,
+     "largest_axial_shift_A": 0.0003753387509499514,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift_cell_free": {
+    "barrier": 3.1346942612746034,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 3.1346942612746034,
+     "continued 0": 3.1346942657771706
+    },
+    "distinct_minima": [
+     3.135
+    ],
+    "slid_chain_turn_deg": -8.174509957825649e-08,
+    "slid_chain_move_A": 0.0012551791089528473,
+    "largest_turn_deg": 4.936871877966496,
+    "largest_move_A": 0.19970988065014084,
+    "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+    "axial_force_on_slid_chain": -3.4601271319709915e-06,
+    "largest_axial_force_on_another": 9.90238161023784e-06,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 3.908246526407311e-08,
+      "largest_move_A": 0.19970988065014084
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 4.936871877966496,
+      "largest_move_A": 0.18278243554928825
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.8568608848034387,
+      "largest_move_A": 0.0816510202824448
+     },
+     "8.48": {
+      "chains": 2,
+      "largest_turn_deg": 0.017083086084653587,
+      "largest_move_A": 0.10923764241652234
+     }
+    },
+    "cell_change": {
+     "a": 0.003184005939502077,
+     "b": 0.0027097267691198468,
+     "gamma_deg": -5.560380600400094e-09
+    }
+   }
+  },
+  "vdf10 2x1": {
+   "chains": 4,
+   "sites": 400,
+   "repeat_monomers": 10,
+   "monomer_period_A": 2.587681897137157,
+   "anchor_chain_distance_A": 4.861223950584074,
+   "nearest_neighbours_A": [
+    4.754070390732875,
+    4.861223949385279,
+    4.861223950584074
+   ],
+   "rigid": 6.797690870899305,
+   "shift": {
+    "barrier": 6.073747949505742,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 6.073747949505742,
+     "as started": 6.630573990056462
+    },
+    "distinct_minima": [
+     6.074,
+     6.631
+    ],
+    "slid_chain_turn_deg": 8.859574663548642,
+    "slid_chain_move_A": 0.2648991380307905,
+    "largest_turn_deg": 11.495021279076468,
+    "largest_move_A": 0.2648991380307905,
+    "largest_torsion_off_trans_deg": 6.189341377194069e-07,
+    "axial_force_on_slid_chain": 1.8993759618733426e-07,
+    "largest_axial_force_on_another": 1.335597365304077e-07,
+    "shells_A": {
+     "4.75": {
+      "chains": 1,
+      "largest_turn_deg": 7.4721309108860225,
+      "largest_move_A": 0.18792099864711578
+     },
+     "4.86": {
+      "chains": 2,
+      "largest_turn_deg": 11.495021279076468,
+      "largest_move_A": 0.12812758412666708
+     }
+    },
+    "drag_released": {
+     "energy_change": -0.7462215670798514,
+     "largest_axial_shift_A": 0.7863300436459882,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "flexible": {
+    "barrier": 6.029844588811346,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 6.029844588811346,
+     "continued 0": 6.07374794950581,
+     "continued 0, seed 0": 6.073747949556354,
+     "as started": 6.63057399005641
+    },
+    "distinct_minima": [
+     6.03,
+     6.074,
+     6.631
+    ],
+    "slid_chain_turn_deg": 0.00018597804614728375,
+    "slid_chain_move_A": 0.02279688612224266,
+    "largest_turn_deg": 0.00018597804614728375,
+    "largest_move_A": 0.11007855872672123,
+    "largest_torsion_off_trans_deg": 12.947872206316958,
+    "axial_force_on_slid_chain": -0.518815582552695,
+    "largest_axial_force_on_another": 1.201973531705561,
+    "shells_A": {
+     "4.75": {
+      "chains": 1,
+      "largest_turn_deg": 0.00012162592392428451,
+      "largest_move_A": 0.028456239598166864
+     },
+     "4.86": {
+      "chains": 2,
+      "largest_turn_deg": 6.166085864833803e-05,
+      "largest_move_A": 0.11007855872672123
+     }
+    },
+    "drag_released": {
+     "energy_change": -0.8717496487459414,
+     "largest_axial_shift_A": 0.8735697328140888,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "flexible_with_tilts": {
+    "barrier": 5.895531621080039,
+    "tilt_gain": -0.13431296773130724,
+    "largest_tilt_deg": 1.9472110851032438
+   }
+  },
+  "vdf10-trfe4-14 2x1": {
+   "chains": 4,
+   "sites": 592,
+   "repeat_monomers": 14,
+   "monomer_period_A": 2.584798658755205,
+   "anchor_chain_distance_A": 4.880573495200408,
+   "nearest_neighbours_A": [
+    4.816848642014606,
+    4.816848691661153,
+    4.880573495200408
+   ],
+   "rigid": 5.83859917059879,
+   "shift": {
+    "barrier": 3.9380079161540573,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 3.9380079161540573
+    },
+    "distinct_minima": [
+     3.938
+    ],
+    "slid_chain_turn_deg": -3.673416178756952,
+    "slid_chain_move_A": 0.08843434658189721,
+    "largest_turn_deg": 7.124260966115628,
+    "largest_move_A": 0.17747621043708905,
+    "largest_torsion_off_trans_deg": 5.911984436916157,
+    "axial_force_on_slid_chain": 4.092565366411368,
+    "largest_axial_force_on_another": 3.64639070747812,
+    "shells_A": {
+     "4.82": {
+      "chains": 2,
+      "largest_turn_deg": 3.051896599977624,
+      "largest_move_A": 0.17747621043708905
+     },
+     "4.88": {
+      "chains": 1,
+      "largest_turn_deg": 7.124260966115628,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -4.087025718035875e-05,
+     "largest_axial_shift_A": 0.00267908296921604,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift_cell_free": {
+    "barrier": 2.372616319180598,
+    "from": "continued 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "continued 0": 2.372616319180598,
+     "as started": 2.3726163191869563
+    },
+    "distinct_minima": [
+     2.373
+    ],
+    "slid_chain_turn_deg": -0.8259757688649927,
+    "slid_chain_move_A": 0.04448884930655349,
+    "largest_turn_deg": 4.654156592769851,
+    "largest_move_A": 0.2768214947010207,
+    "largest_torsion_off_trans_deg": 5.911984436916157,
+    "axial_force_on_slid_chain": 4.152766386927491,
+    "largest_axial_force_on_another": 3.1821676941252015,
+    "shells_A": {
+     "4.82": {
+      "chains": 2,
+      "largest_turn_deg": 1.2882620457640996,
+      "largest_move_A": 0.2768214947010207
+     },
+     "4.88": {
+      "chains": 1,
+      "largest_turn_deg": 4.654156592769851,
+      "largest_move_A": 0.1967365695900174
+     }
+    },
+    "cell_change": {
+     "a": 0.0403101339103602,
+     "b": 0.03170598861816187,
+     "gamma_deg": 0.13039111521854352
+    }
+   },
+   "profile_shift_cell_free": {
+    "0.1000": {
+     "rigid": 0.4267808393499633,
+     "up": 0.3737324525412272,
+     "up_axial_force": 35.43808601625496,
+     "down": 0.3737324525333747,
+     "down_axial_force": 35.43802087809939,
+     "relaxed": 0.3737324525333747
+    },
+    "0.2000": {
+     "rigid": 1.6600275880548128,
+     "up": 1.1032780033476601,
+     "up_axial_force": 39.55710596950238,
+     "down": 1.1032780033476601,
+     "down_axial_force": 39.55710554644952,
+     "relaxed": 1.1032780033476601
+    },
+    "0.3000": {
+     "rigid": 3.437978325301206,
+     "up": 1.7507051066429458,
+     "up_axial_force": 29.559827249063193,
+     "down": 1.7507051066428647,
+     "down_axial_force": 29.559831655373724,
+     "relaxed": 1.7507051066428647
+    },
+    "0.4000": {
+     "rigid": 5.110550502167728,
+     "up": 2.1795403128018376,
+     "up_axial_force": 16.815314167200675,
+     "down": 2.1795403127741224,
+     "down_axial_force": 16.81534568951476,
+     "relaxed": 2.1795403127741224
+    },
+    "0.5000": {
+     "rigid": 5.83859917059879,
+     "up": 2.3726163191869563,
+     "up_axial_force": 4.152766631873824,
+     "down": 2.3726163191869563,
+     "down_axial_force": 4.152766631873824,
+     "relaxed": 2.3726163191869563
+    },
+    "0.6000": {
+     "rigid": 5.235032659459421,
+     "up": 2.334207764087572,
+     "up_axial_force": -8.29214330563288,
+     "down": 2.334207764087572,
+     "down_axial_force": -8.29214330563288,
+     "relaxed": 2.334207764087572
+    },
+    "0.7000": {
+     "rigid": 3.7333811260054,
+     "up": 2.0685578043451107,
+     "up_axial_force": -20.303618461326796,
+     "down": 2.068557804344607,
+     "down_axial_force": -20.303629393124577,
+     "relaxed": 2.068557804344607
+    },
+    "0.8000": {
+     "rigid": 2.1734004356917143,
+     "up": 1.6045119583214873,
+     "up_axial_force": -28.79328212062174,
+     "down": 1.6045119583213736,
+     "down_axial_force": -28.793284356242754,
+     "relaxed": 1.6045119583213736
+    },
+    "0.9000": {
+     "rigid": 1.1803521857233525,
+     "up": 1.0933292136509098,
+     "up_axial_force": -22.61764079267272,
+     "down": 1.0933292136517951,
+     "down_axial_force": -22.617641034301716,
+     "relaxed": 1.0933292136509098
+    },
+    "1.0000": {
+     "rigid": 1.0054977751218368,
+     "up": 0.9514754246431737,
+     "up_axial_force": 11.060951701970126,
+     "down": 0.9514754246431737,
+     "down_axial_force": 11.060951701970126,
+     "relaxed": 0.9514754246431737
+    }
+   }
+  },
+  "vdf2 2x1": {
+   "chains": 4,
+   "sites": 80,
+   "repeat_monomers": 2,
+   "monomer_period_A": 2.5876819079558704,
+   "anchor_chain_distance_A": 4.861223944533113,
+   "nearest_neighbours_A": [
+    4.754070379123455,
+    4.861223922025167,
+    4.861223944533113
+   ],
+   "rigid": 6.7976912074456095,
+   "turn": {
+    "barrier": 6.7976912074456095,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 6.7976912074456095,
+     "as started, seed 0": 6.797691207446057,
+     "as started, seed 1": 6.7976912074460785
+    },
+    "distinct_minima": [
+     6.798
+    ],
+    "slid_chain_turn_deg": 0.0,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 0.0,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.3262195153629364e-05,
+    "axial_force_on_slid_chain": -4.496352854186738e-07,
+    "largest_axial_force_on_another": 2.4430677448639384e-07,
+    "shells_A": {
+     "4.75": {
+      "chains": 1,
+      "largest_turn_deg": 0.0,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 2,
+      "largest_turn_deg": 0.0,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -1.031002310125757,
+     "largest_axial_shift_A": 0.7834099952815418,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 6.073748214595923,
+    "from": "as started, seed 1",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 1": 6.073748214595923,
+     "continued 0, seed 1": 6.073748214595923,
+     "as started, seed 0": 6.073748214607569,
+     "continued 0, seed 0": 6.073748214607569,
+     "as started": 6.630574301372391,
+     "continued 0": 6.630574301372391
+    },
+    "distinct_minima": [
+     6.074,
+     6.631
+    ],
+    "slid_chain_turn_deg": -8.859568279160698,
+    "slid_chain_move_A": 0.21754889335582847,
+    "largest_turn_deg": 11.495037792774013,
+    "largest_move_A": 0.21754889335582847,
+    "largest_torsion_off_trans_deg": 1.3262195153629364e-05,
+    "axial_force_on_slid_chain": -3.362811447370711e-07,
+    "largest_axial_force_on_another": 2.3646677646080893e-07,
+    "shells_A": {
+     "4.75": {
+      "chains": 1,
+      "largest_turn_deg": 7.472138499994685,
+      "largest_move_A": 0.1421542352405755
+     },
+     "4.86": {
+      "chains": 2,
+      "largest_turn_deg": 11.495037792774013,
+      "largest_move_A": 0.12812783910338765
+     }
+    },
+    "drag_released": {
+     "energy_change": -0.7462214775720355,
+     "largest_axial_shift_A": 0.8147854892027664,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "flexible": {
+    "barrier": 6.073748214575591,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 6.073748214575591,
+     "continued 0": 6.073748214595103,
+     "continued 0, seed 1": 6.073748214778661,
+     "continued 0, seed 0": 6.073748214835408,
+     "as started, seed 1": 6.073748215169815,
+     "as started": 6.630574301309
+    },
+    "distinct_minima": [
+     6.074,
+     6.631
+    ],
+    "slid_chain_turn_deg": 8.859579583558485,
+    "slid_chain_move_A": 0.2175489890741846,
+    "largest_turn_deg": 11.495026711923117,
+    "largest_move_A": 0.2175489890741846,
+    "largest_torsion_off_trans_deg": 4.2029720020764216e-05,
+    "axial_force_on_slid_chain": -3.362690067494454e-07,
+    "largest_axial_force_on_another": 2.36449996999003e-07,
+    "shells_A": {
+     "4.75": {
+      "chains": 1,
+      "largest_turn_deg": 7.472132137061664,
+      "largest_move_A": 0.1421543277066995
+     },
+     "4.86": {
+      "chains": 2,
+      "largest_turn_deg": 11.495026711923117,
+      "largest_move_A": 0.12812759687111838
+     }
+    },
+    "drag_released": {
+     "energy_change": -0.7462214774872855,
+     "largest_axial_shift_A": 0.8147846797685246,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "flexible_with_tilts": {
+    "barrier": 5.933855924211141,
+    "tilt_gain": -0.1398922903644504,
+    "largest_tilt_deg": 2.0353883175477088
+   }
+  },
+  "vdf2 4x2": {
+   "chains": 16,
+   "sites": 320,
+   "repeat_monomers": 2,
+   "monomer_period_A": 2.5876819079558704,
+   "anchor_chain_distance_A": 12.740861360310964,
+   "nearest_neighbours_A": [
+    4.754070379123455,
+    4.754070379123456,
+    4.861223922025166,
+    4.861223931591704,
+    4.861223944533112,
+    4.8612239551566
+   ],
+   "rigid": 6.797495240820808,
+   "turn": {
+    "barrier": 6.026518440647806,
+    "from": "as started, seed 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 0": 6.026518440647806,
+     "as started, seed 1": 6.026518440737391,
+     "as started": 6.026518440828994
+    },
+    "distinct_minima": [
+     6.027
+    ],
+    "slid_chain_turn_deg": 1.9542746116485432e-05,
+    "slid_chain_move_A": 0.0,
+    "largest_turn_deg": 5.666046522824246,
+    "largest_move_A": 0.0,
+    "largest_torsion_off_trans_deg": 1.3262195153629364e-05,
+    "axial_force_on_slid_chain": -3.036583043488217e-07,
+    "largest_axial_force_on_another": 3.94240002325758e-07,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 4.072904127383481e-05,
+      "largest_move_A": 0.0
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.666046522824246,
+      "largest_move_A": 0.0
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.33167296538096025,
+      "largest_move_A": 0.0
+     },
+     "8.48": {
+      "chains": 1,
+      "largest_turn_deg": 2.400912194389093e-06,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -1.5334577853061546,
+     "largest_axial_shift_A": 0.8131833171588126,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift": {
+    "barrier": 3.6961140087585136,
+    "from": "as started, seed 1",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started, seed 1": 3.6961140087585136,
+     "continued 0": 3.6961140087789772,
+     "continued 0, seed 0": 3.6961140088988316,
+     "as started, seed 0": 3.6961140089115645,
+     "continued 0, seed 1": 3.6961140089795492,
+     "as started": 3.696114009490458
+    },
+    "distinct_minima": [
+     3.696
+    ],
+    "slid_chain_turn_deg": 0.00032709998862401335,
+    "slid_chain_move_A": 0.011403999986506593,
+    "largest_turn_deg": 5.005563390471025,
+    "largest_move_A": 0.16626578685756038,
+    "largest_torsion_off_trans_deg": 1.3262195153629364e-05,
+    "axial_force_on_slid_chain": -1.542737355519756e-07,
+    "largest_axial_force_on_another": 5.425854692244452e-07,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 0.00021448707363447284,
+      "largest_move_A": 0.16626578685756038
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.005563390471025,
+      "largest_move_A": 0.1373878702520833
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.6785691533172553,
+      "largest_move_A": 0.027175300935268824
+     },
+     "8.48": {
+      "chains": 1,
+      "largest_turn_deg": 0.00016018725247590737,
+      "largest_move_A": 0.009381419262516968
+     }
+    },
+    "drag_released": {
+     "energy_change": 5.154845439392375e-10,
+     "largest_axial_shift_A": 1.3342072792621825e-05,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "flexible": {
+    "barrier": 3.696114008755444,
+    "from": "continued 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "continued 0": 3.696114008755444,
+     "continued 0, seed 0": 3.696114008844944,
+     "as started, seed 0": 3.6961140089024127,
+     "as started, seed 1": 3.6961140091869424,
+     "continued 0, seed 1": 3.6961140092060134,
+     "as started": 3.696114009355142
+    },
+    "distinct_minima": [
+     3.696
+    ],
+    "slid_chain_turn_deg": 0.00032678461755608623,
+    "slid_chain_move_A": 0.011403749020382235,
+    "largest_turn_deg": 5.0055629503636965,
+    "largest_move_A": 0.1662660132812224,
+    "largest_torsion_off_trans_deg": 1.3243907659443721e-05,
+    "axial_force_on_slid_chain": -1.5427357568649992e-07,
+    "largest_axial_force_on_another": 5.4258503189036e-07,
+    "shells_A": {
+     "4.75": {
+      "chains": 2,
+      "largest_turn_deg": 0.00021448634583975945,
+      "largest_move_A": 0.1662660132812224
+     },
+     "4.86": {
+      "chains": 4,
+      "largest_turn_deg": 5.0055629503636965,
+      "largest_move_A": 0.13738789675468485
+     },
+     "8.30": {
+      "chains": 4,
+      "largest_turn_deg": 0.6785693809582085,
+      "largest_move_A": 0.027175306833201646
+     },
+     "8.48": {
+      "chains": 1,
+      "largest_turn_deg": 0.000160426608886155,
+      "largest_move_A": 0.009381410236469878
+     }
+    },
+    "drag_released": {
+     "energy_change": 3.977618234785041e-10,
+     "largest_axial_shift_A": 1.404889906832432e-05,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "flexible_with_tilts": {
+    "barrier": 3.684265291529641,
+    "tilt_gain": -0.01184871722580283,
+    "largest_tilt_deg": 0.4467607901934946
+   }
+  },
+  "vdf9-trfe4-cfe1-14 2x1": {
+   "chains": 4,
+   "sites": 584,
+   "repeat_monomers": 14,
+   "monomer_period_A": 2.584489327319165,
+   "anchor_chain_distance_A": 5.302449825890688,
+   "nearest_neighbours_A": [
+    4.8348496307650395,
+    4.8348496435549375,
+    5.302449825890688
+   ],
+   "rigid": 4.559256888501425,
+   "shift": {
+    "barrier": 3.0479004332193296,
+    "from": "as started",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "as started": 3.0479004332193296
+    },
+    "distinct_minima": [
+     3.048
+    ],
+    "slid_chain_turn_deg": -3.8936449323124975,
+    "slid_chain_move_A": 0.031481738327259444,
+    "largest_turn_deg": 3.8936449323124975,
+    "largest_move_A": 0.1387236906861626,
+    "largest_torsion_off_trans_deg": 10.498618922334089,
+    "axial_force_on_slid_chain": 9.927617891470264,
+    "largest_axial_force_on_another": 8.739523059915307,
+    "shells_A": {
+     "4.83": {
+      "chains": 2,
+      "largest_turn_deg": 3.741239583598059,
+      "largest_move_A": 0.1387236906861626
+     },
+     "5.30": {
+      "chains": 1,
+      "largest_turn_deg": 2.792805909020217,
+      "largest_move_A": 0.0
+     }
+    },
+    "drag_released": {
+     "energy_change": -0.0003814214117109519,
+     "largest_axial_shift_A": 0.009141234360441786,
+     "message": "Optimization terminated successfully"
+    }
+   },
+   "shift_cell_free": {
+    "barrier": 2.012036245434363,
+    "from": "continued 0",
+    "message": "Optimization terminated successfully",
+    "starts": {
+     "continued 0": 2.012036245434363,
+     "as started": 2.0120362454440914
+    },
+    "distinct_minima": [
+     2.012
+    ],
+    "slid_chain_turn_deg": -2.499836561350378,
+    "slid_chain_move_A": 0.03080670364945025,
+    "largest_turn_deg": 2.548770773708668,
+    "largest_move_A": 0.2811852776856445,
+    "largest_torsion_off_trans_deg": 10.498618922334089,
+    "axial_force_on_slid_chain": 6.11156444706653,
+    "largest_axial_force_on_another": 4.996270246527986,
+    "shells_A": {
+     "4.83": {
+      "chains": 2,
+      "largest_turn_deg": 2.1509012946077064,
+      "largest_move_A": 0.2811852776856445
+     },
+     "5.30": {
+      "chains": 1,
+      "largest_turn_deg": 2.548770773708668,
+      "largest_move_A": 0.1870890005649981
+     }
+    },
+    "cell_change": {
+     "a": 0.0352835024274778,
+     "b": 0.027722908722452866,
+     "gamma_deg": -0.1995493865868383
+    }
+   },
+   "profile_shift_cell_free": {
+    "0.1000": {
+     "rigid": 0.3318581234605712,
+     "up": 0.29421701121696386,
+     "up_axial_force": 28.16620785178399,
+     "down": 0.29421701121378063,
+     "down_axial_force": 28.16613958052736,
+     "relaxed": 0.29421701121378063
+    },
+    "0.2000": {
+     "rigid": 1.2834679647036344,
+     "up": 0.8840209657958228,
+     "up_axial_force": 32.55274800375046,
+     "down": 0.8840209657951164,
+     "down_axial_force": 32.552751719604125,
+     "relaxed": 0.8840209657951164
+    },
+    "0.3000": {
+     "rigid": 2.6427210811763353,
+     "up": 1.4278943644633597,
+     "up_axial_force": 25.48765446827801,
+     "down": 1.4278943644723898,
+     "down_axial_force": 25.487663746576768,
+     "relaxed": 1.4278943644633597
+    },
+    "0.4000": {
+     "rigid": 3.92843070047281,
+     "up": 1.8102565347138824,
+     "up_axial_force": 15.81825442654715,
+     "down": 1.8102565347146375,
+     "down_axial_force": 15.818256079366371,
+     "relaxed": 1.8102565347138824
+    },
+    "0.5000": {
+     "rigid": 4.559256888501425,
+     "up": 2.012036245435403,
+     "up_axial_force": 6.1115632945112734,
+     "down": 2.012036245432463,
+     "down_axial_force": 6.1115589000469,
+     "relaxed": 2.012036245432463
+    },
+    "0.6000": {
+     "rigid": 4.298931116666836,
+     "up": 2.0392299002532304,
+     "up_axial_force": -3.0695016638056036,
+     "down": 2.0392299002532304,
+     "down_axial_force": -3.0695016638056036,
+     "relaxed": 2.0392299002532304
+    },
+    "0.7000": {
+     "rigid": 3.4718399403818045,
+     "up": 1.902644912458803,
+     "up_axial_force": -11.576351697468473,
+     "down": 1.9026449124589655,
+     "down_axial_force": -11.576349552756522,
+     "relaxed": 1.902644912458803
+    },
+    "0.8000": {
+     "rigid": 2.631874928082295,
+     "up": 1.6241242033936163,
+     "up_axial_force": -17.906221723210624,
+     "down": 1.6241242033936163,
+     "down_axial_force": -17.906221723210624,
+     "relaxed": 1.6241242033936163
+    },
+    "0.9000": {
+     "rigid": 2.1180336465774223,
+     "up": 1.295768254466241,
+     "up_axial_force": -15.119936596864312,
+     "down": 1.2957682544652016,
+     "down_axial_force": -15.120007146520445,
+     "relaxed": 1.2957682544652016
+    },
+    "1.0000": {
+     "rigid": 2.0005405554533615,
+     "up": 1.189579234175166,
+     "up_axial_force": 6.384804281625122,
+     "down": 1.189579234175645,
+     "down_axial_force": 6.384805364458876,
+     "relaxed": 1.189579234175166
+    }
+   }
+  }
+ }
+}

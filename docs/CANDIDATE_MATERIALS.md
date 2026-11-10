@@ -618,6 +618,66 @@ are this registry's elastic constants, are in no anchor the potential was fitted
 (`docs/BENCHMARK.md`: structurally absent from the fit path), so the single-chain numbers are
 predictions; the request for the DFT values is filed (section 8.6).
 
+**The same slide with the lattice responding (added 2026-11-10; `examples/chain_slide.py`,
+`docs/predictions/chain_slide_belt4.json`).** The table above is a rigid lattice. One PVDF chain
+held at the half-monomer slip in an `nx x ny` tiling of the polished cell, every other chain
+relaxed at fixed cell, kcal/mol per monomer of the slid chain:
+
+| chains in the cell | rigid lattice | neighbours turn about their axes | turn and move aside | the same with the lateral cell free |
+|---|---|---|---|---|
+| 4 | 6.80 | 6.80 | 6.07 | 2.86 |
+| 16 | 6.80 | 6.03 | 3.70 | 3.09 |
+| 36 | 6.80 | 6.02 | 3.36 | 3.12 |
+| 64 | 6.80 | 6.02 | 3.26 | 3.13 |
+| dilute limit | 6.80 | 6.02 | **3.15** | **3.15** |
+
+* **The single-chain barrier is 3.15 kcal/mol per monomer, 46% of the rigid number.** At fixed
+  cell the supercell's own strain bounds the dilute limit from above; with the lateral cell free
+  (one slid chain per supercell at zero lateral stress) it is bounded from below. The two series
+  are monotonic and extrapolate, linearly in one over the number of chains from 36 and 64, to 3.14
+  and 3.15. Flexing chains add nothing (two-monomer repeat, sixteen chains: the chains stay planar
+  and the number is the same to four figures) and the pendant tilts 0.01.
+* **What gives way is the lattice's spacing, not the chains' orientation.** Turning alone is worth
+  11%. In the 64-chain cell the two stack neighbours (along the short axis, 4.75 A away) move
+  aside by 0.20 A without turning, the four diagonal neighbours (4.86 A) by 0.17 A and turn 5
+  degrees, the next shell by under 0.09 A; the slid chain neither turns nor moves. A four-chain
+  cell has no room for this (6.07), which matters for every other four-chain number of this
+  section (below). The coupling of slip to spacing is what E5 (b) asks the DFT seat for, the cell
+  opening by 7.7% under a sublattice slip, so that request tests this number too.
+* **It is a saddle, and needs no path.** The all-trans chain has a mirror plane normal to its
+  axis, so at the half-slip the axial force on every chain is zero whatever the lattice does
+  laterally. The relaxed state is a minimum in every other coordinate (reached from perturbed
+  starts as well as the symmetric one; in the four-chain cell the symmetric start stops on a
+  stationary point 0.56 higher), and releasing the other chains' axial shifts leaves it where it
+  is (energy change under 1e-7). A stationary point with one descending direction is the
+  transition state of the slide. The relaxed energy rises to it smoothly, the same there and back
+  (sixteen chains; slip in monomer periods, rigid then relaxed: 1/8 0.74, 0.66; 1/4 2.86, 2.04;
+  3/8 5.52, 3.24; 1/2 6.80, 3.70).
+* **The bottom of the well does not move.** The lattice's give is second order in the slip: the
+  curvature at the minimum is 14.2 kcal/mol/A^2 per monomer rigid and 14.2 relaxed (13.5 by 0.2
+  A), and at 1 A the relaxed energy is 3.0 (36 chains) against 5.7. For small displacements the
+  registry is as stiff as the table says; at the top it is half as high.
+* **A different softness, which is not a barrier.** If the neighbours' axial shifts are free too,
+  the lattice held only far away, they follow a displaced chain (the first shell by 62% of its
+  displacement in sixteen chains) and the curvature the chain sees falls to 5.8 (sixteen chains)
+  and 4.9 (thirty-six): anti-plane shear of the lattice, whose compliance grows as the logarithm
+  of the distance to whatever holds it. That is the elastic constant C44/C55, it vanishes at the
+  half-slip (no axial forces there), and it leaves the saddle and the 3.15 where they are.
+* **A long chain does not slide this way.** These are energies per monomer of a uniform slide: the
+  amplitude of the registry. With a ten-monomer repeat in the four-chain cell the relaxation
+  already finds a state 0.04 lower that is not uniform along the chain (torsions 13 degrees off
+  trans, a residual axial force): the beginning of the localized path a long chain takes, whose
+  cost goes as the square root of this amplitude times the chain's stiffness and not as the
+  amplitude times the length.
+* **The copolymer lattices give the same factor.** With one chain in four slid and the lateral
+  cell free (the affordable protocol for fourteen-monomer chains; for PVDF it gives 2.86 against
+  the dilute limit's 3.15), the highest point of the relaxed slide over one monomer period is 2.37
+  kcal/mol per monomer in 71/29 (rigid 5.84) and 2.04 in 64/29/7 (rigid 4.56; the relaxed top is
+  at 0.6 of a period, the rigid one at 0.5): 41% and 45% of the rigid lattice, PVDF 42%. The order
+  of the three lattices is unchanged; the chlorine's loosening of the registry, 0.78 of the 71/29
+  value in a rigid lattice, is 0.86 relaxed. After one whole period the slid chain sits in another
+  sequence register with its neighbours, 0.95 (71/29) and 1.19 (64/29/7) above where it started.
+
 `examples/dilute_kink.py` puts one kinked chain among all-trans neighbours: the polished
 all-trans two-chain cell tiled 2 x 1 (four chains), the cell held at the all-trans values (the
 boundary condition of a kink far from any other), every chain periodic exactly, relaxed in three
@@ -888,7 +948,11 @@ degrees about their axes in opposite senses and the cost falls from 1.79 to 1.44
 monomer of the cell. With the cell free (the 0.51 of 8.1, which is the symmetric cell) the lowest
 state has the chains deflected 7.4 degrees off trans and c 1.15% shorter, at 0.50. The
 single-chain barriers of the table in 8.1 are rigid-lattice numbers, as E5's single points are;
-how far the neighbours' turning lowers them for one chain leaving a sheet has not been computed.
+with the lattice responding the half-slip of one chain costs 3.15, not 6.80 (8.1). The cheapest
+DFT test of that is one relaxation of a cell the DFT seat already holds for E5 (c), with the
+lateral cell free; polyfind's number for it is registered (`docs/E1_E2_PREDICTIONS.md`, last E5
+entry: +0.71 kcal/mol per monomer of the cell against 1.67 rigid, a +5.1%, b +4.2%). It is not
+requested and not dispatched.
 
 ### 8.7 The earlier form of this section (2026-11-08), for the record
 

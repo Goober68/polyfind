@@ -44,6 +44,7 @@ def main():
     ap.add_argument("--migration", default="docs/predictions/kink_migration_belt4.json")
     ap.add_argument("--margins", default="docs/predictions/polished_margins_belt4.json")
     ap.add_argument("--sites", default="docs/predictions/kink_site_scan_belt4.json")
+    ap.add_argument("--slide", default="docs/predictions/chain_slide_belt4.json")
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--no-tilts", action="store_true", help="do not compute missing pendant tilts")
     ap.add_argument("--out", default="docs/predictions/kink_summary_belt4.md")
@@ -101,6 +102,62 @@ def main():
         if abs(e.get("angle_window_deg", 8.0) - 8.0) > 1e-9:
             extra += f", angle window {e['angle_window_deg']:g} deg"
         md.append(f"| {key.split(' ')[0]}{extra} | {e['chains']} x {e['monomers_per_chain']} | {reg} | {cell('rigid_host')} | {cell('host_rigid_bodies')} | {cell('flexible_host')} |")
+
+    # --- one chain slid, the lattice responding ----------------------------------------------------
+    sld = json.load(open(args.slide)) if Path(args.slide).exists() else {}
+    rows = {k: r for k, r in sld.get("rows", {}).items() if r.get("chains", 0) >= 4}
+    if rows:
+        def val(r, name):
+            if name not in r:
+                return "-"
+            moving = abs(r[name].get("axial_force_on_slid_chain", 0.0)) > 0.01 * r.get("repeat_monomers", 1)
+            return f"{r[name]['barrier']:.3f}" + (" (not stationary along the slide)" if moving else "")
+
+        def moves(r):
+            sh = list(r.get("shift", {}).get("shells_A", {}).items())[:2]
+            return "; ".join(f"{float(k):.2f} A: {v['largest_move_A']:.3f} A, {v['largest_turn_deg']:.1f} deg" for k, v in sh) or "-"
+
+        def order(kv):
+            name, cell = kv[0].split(" ")[:2]
+            return (not name.startswith("vdf"), len(kv[0].split(" ")) > 2, len(name), name, kv[1]["chains"], cell)
+
+        md += ["", "**One chain slid half a monomer along its axis, the lattice responding** (kcal/mol per monomer of the slid chain against the unslid lattice; "
+               "cell fixed unless stated; examples/chain_slide.py)", "",
+               "| repeat and cell | chains | rigid lattice | neighbours turn | turn and move aside | and flex | with pendant tilts | turn and move aside, lateral cell free "
+               "| the two nearest shells at 'turn and move aside': largest move, turn |", "|---|---|---|---|---|---|---|---|---|"]
+        for key, r in sorted(rows.items(), key=order):
+            if key.split(" ")[0] not in ("vdf1", "vdf2", "vdf10"):
+                continue
+            free = r.get("shift_cell_free")
+            cf = f"{free['barrier']:.3f} (a {free['cell_change']['a']:+.2%}, b {free['cell_change']['b']:+.2%})" if free else "-"
+            tl = r.get("flexible_with_tilts")
+            md.append(f"| {key} | {r['chains']} | {r['rigid']:.3f} | {val(r, 'turn')} | {val(r, 'shift')} | {val(r, 'flexible')} | {tl['barrier']:.3f} | {cf} | {moves(r)} |" if tl else
+                      f"| {key} | {r['chains']} | {r['rigid']:.3f} | {val(r, 'turn')} | {val(r, 'shift')} | {val(r, 'flexible')} | - | {cf} | {moves(r)} |")
+        fam = {r["chains"]: r for k, r in rows.items() if k.split(" ")[0] == "vdf1" and len(k.split(" ")) == 2 and k.split(" ")[1] in ("2x1", "4x2", "6x3", "8x4")}
+
+        def limit(name):
+            ser = {n: r[name]["barrier"] for n, r in fam.items() if name in r}
+            if len(ser) < 2:
+                return None
+            n1, n2 = sorted(ser)[-2:]
+            slope = (ser[n1] - ser[n2]) / (1 / n1 - 1 / n2)
+            return ser[n2] - slope / n2, n1, n2
+
+        lf, lc = limit("shift"), limit("shift_cell_free")
+        if lf and lc:
+            md += ["", f"Dilute limit, linear in one over the number of chains from the two largest cells of the 2:1 family: fixed cell {lf[0]:.3f} (from {lf[1]} and {lf[2]} chains), "
+                       f"lateral cell free {lc[0]:.3f} (from {lc[1]} and {lc[2]}): **{0.5 * (lf[0] + lc[0]):.2f}**, {0.5 * (lf[0] + lc[0]) / fam[max(fam)]['rigid']:.0%} of the rigid lattice's "
+                       f"{fam[max(fam)]['rigid']:.2f}. The fixed cell bounds it from above and the free cell from below at every size."]
+        prof = [(k, r, name) for k, r in sorted(rows.items(), key=order) for name in r if name.startswith("profile_")]
+        if prof:
+            md += ["", "Along the slide (slip in monomer periods: rigid lattice, relaxed):", ""]
+            for key, r, name in prof:
+                pts = sorted(r[name].items(), key=lambda kv: float(kv[0]))
+                top = max(pts, key=lambda kv: kv[1]["relaxed"])
+                rtop = max(pts, key=lambda kv: kv[1]["rigid"])
+                hyst = max(abs(e.get("up", e["relaxed"]) - e.get("down", e["relaxed"])) for _, e in pts)
+                md.append(f"* `{key}`, {name[8:].replace('_', ' ')}: " + "; ".join(f"{float(k):.3g}: {e['rigid']:.2f}, {e['relaxed']:.2f}" for k, e in pts)
+                          + f". Highest relaxed {top[1]['relaxed']:.2f} at {float(top[0]):.3g} (rigid {rtop[1]['rigid']:.2f} at {float(rtop[0]):.3g}); the two sweeps differ by {hyst:.3f} at most.")
 
     # --- the sheet ------------------------------------------------------------------------------------
     md += ["", "**Kink sheet: every chain kinked in register, own cell** (kcal/mol per kink pair against the all-trans crystal)", "",
