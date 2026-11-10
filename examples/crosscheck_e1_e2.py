@@ -2,6 +2,7 @@
 
     python examples/crosscheck_e1_e2.py --polyfind docs/predictions/e1_polyfind.json --dipole docs/predictions/e1_dipole_existing.json
     python examples/crosscheck_e1_e2.py --e2 docs/predictions/e2_polyfind.json --e2-dipole <file>
+    python examples/crosscheck_e1_e2.py --polyfind "" --dipole "" --e2 docs/predictions/e2_polished_polyfind_belt4.json --e2-dipole <file> [--e2-rigid-pendants]
 
 Dipole's values are read in Dipole's frame (x = a lateral, y = b polar, z = chain) and mapped
 to polyfind's (x polar, y lateral, z chain) by swapping x and y.  The acceptance rules are the
@@ -143,7 +144,14 @@ def crosscheck_e1(pf_all, dp_all, floor):
                       f"{np.asarray(pf['e_proper_C_m2']['values'])[0][pf['e_proper_C_m2']['cols_voigt'].index(2)]:+.3f}")
 
 
-def crosscheck_e2(pf_all, dp_all):
+def crosscheck_e2(pf_all, dp_all, field: str = "energy_per_monomer_kcal"):
+    """``field`` is polyfind's energy to compare: the default (with the pendant-tilt relaxation where
+    the file has one) for relaxed DFT cells or single points on tilt-relaxed atoms,
+    ``energy_rigid_pendants_per_monomer_kcal`` for single points on rigid-pendant atoms."""
+    if field != "energy_per_monomer_kcal":
+        pf_all = {**pf_all, "systems": {k: {**v, "conformations": {c: ({**e, "energy_per_monomer_kcal": e[field]} if field in e else e)
+                                                                  for c, e in v["conformations"].items()}} for k, v in pf_all.get("systems", {}).items()}}
+        print(f"E2: polyfind energies from '{field}'")
     for key, dp in dp_all.get("systems", {}).items():
         pf = pf_all.get("systems", {}).get(key)
         if pf is None:
@@ -181,6 +189,8 @@ def main():
     ap.add_argument("--dipole", default="docs/predictions/e1_dipole_existing.json")
     ap.add_argument("--e2", default=None)
     ap.add_argument("--e2-dipole", default=None)
+    ap.add_argument("--e2-rigid-pendants", action="store_true",
+                    help="compare E2 with polyfind's rigid-pendant energies: for DFT single points on files exported without the pendant tilts")
     ap.add_argument("--floor", type=float, default=0.05)
     args = ap.parse_args()
     if args.polyfind and args.dipole:
@@ -195,7 +205,7 @@ def main():
             pf2 = json.load(fh)
         with open(args.e2_dipole) as fh:
             dp2 = json.load(fh)
-        crosscheck_e2(pf2, dp2)
+        crosscheck_e2(pf2, dp2, "energy_rigid_pendants_per_monomer_kcal" if args.e2_rigid_pendants else "energy_per_monomer_kcal")
 
 
 if __name__ == "__main__":

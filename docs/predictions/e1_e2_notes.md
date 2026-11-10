@@ -269,7 +269,8 @@ stiffness flag of the previous section is read against the QE cell from here on.
   ones, **+0.055** (70/30) and **+0.140** (64/29/7); the `_tilted.xyz` files have every CH2, CF2
   and CHF group tilt-relaxed about its carbon (`examples/export_mixed_cell.py --tilts`), and their
   model margins are **+0.213** and **+0.317**. A DFT single point on a file is compared with that
-  file's margin; a DFT relaxation from either is compared with the tilted one. No polarization is
+  file's margin (`crosscheck_e1_e2.py --e2-rigid-pendants` for the first kind); a DFT relaxation
+  from either is compared with the tilted one. No polarization is
   registered for the polished cells. **Dispatched by the PI on 2026-11-10 ("Go on E5 and the E2
   addendum")**: the request is
   `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`, the files are in

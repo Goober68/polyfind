@@ -81,7 +81,9 @@ like-for-like set for the single points) +0.172, +0.656, +1.251, +1.533 and +0.6
 70/30 cells and the 64/29/7 pair in the E2 schema with file hashes (`docs/predictions/e2_polished_polyfind_belt4.json`,
 copies of the XYZ files in `sarco/.../requests/polished_e2_cells_v1/`). Ingesters, tested: `examples/crosscheck_e5.py
 --dipole <result.json ...>` (recognises records by geometry) and `examples/crosscheck_e1_e2.py --e2
-docs/predictions/e2_polished_polyfind_belt4.json --e2-dipole <file>`. All registered in `docs/E1_E2_PREDICTIONS.md`
+docs/predictions/e2_polished_polyfind_belt4.json --e2-dipole <file>` (add `--e2-rigid-pendants` when Dipole's numbers
+are single points on the rigid-pendant files: margins +0.055 and +0.140; the `_tilted` files and relaxations go with
++0.213 and +0.317). All registered in `docs/E1_E2_PREDICTIONS.md`
 (its notes file is level with it; re-rendering is safe). Dipole at 15:23 UTC: alpha at BFGS 18 (forces and stress
 under threshold, energy gate not met), Gamma's 36 representations and dynmat finished, controller validating, not
 delivered: WHEN GAMMA LANDS, ingest it against the registered eps_0 prediction first. Next, in order: rewrite sections 3-6 on the polished margin table (and polish the remaining
