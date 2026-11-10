@@ -24,14 +24,20 @@ the cell in which the chains differ:
   lattice energy, the Fourier torsion term and the backbone-angle restraint of every chain.  All
   derivatives are analytic.
 
-**One repeat for all chains.**  The cell has one ``c``, and a chain built from its internal
-coordinates has its own natural repeat ``c_s`` and, off a commensurate conformation, a residual
-rotation ``w_s`` of its repeat transform.  Both are held by penalties, ``k_c (c_s - c)^2`` and
-``pen_rot |w_s|^2`` (the second is the refinement's own, with the same default); at a relaxed
-structure they are reported (:meth:`MixedModel.terms`) and are not part of the physical energy.
-A chain shorter than its neighbours, which is what a kink pair makes, therefore reaches the
-cell's repeat through its own bends and torsions and carries the tension that costs -- the
-periodic model's finite-length effect, which falls as the inverse repeat length.
+**One repeat for all chains, held exactly.**  The cell has one ``c``, and a chain built from its
+internal coordinates has its own natural repeat ``c_s`` and, off a commensurate conformation, a
+residual rotation ``w_s`` of its repeat transform.  Periodicity is the four constraints
+``w_s = 0``, ``c_s = c`` per chain (:meth:`MixedModel.closure`, with their analytic Jacobian), and
+:meth:`MixedModel.relax` imposes them as equality constraints of a sequential quadratic programme;
+:func:`neb` keeps every image on the constraint surface by projection.  A penalty is not enough,
+and it is also the wrong tool: with every torsion free a chain can buy lattice energy with a tenth
+of a degree of residual rotation (a few tenths of a kcal/mol per chain at the refinement's default
+penalty, the size of the differences this module is for), and a penalty stiff enough to stop that
+makes the torsion space too ill-conditioned for a quasi-Newton method to finish.  The penalty and
+multiplier terms remain available (``pen_rot``, ``k_c``, off by default) for a caller who wants
+the refinement's own objective.  A chain shorter than its neighbours, which is what a kink pair
+makes, reaches the cell's repeat through its own bends and torsions and carries the tension that
+costs -- the periodic model's finite-length effect, which falls as the inverse repeat length.
 
 **What is not here.**  Charge flux and an applied field (refused), and the pendant tilts, which
 :func:`tilt_relaxation` adds afterwards exactly as :func:`polyfind.pendants.tilt_relaxation` does
@@ -62,6 +68,7 @@ __all__ = [
 
 _FLIP = np.diag([1.0, -1.0, -1.0])
 _RAD = np.pi / 180.0
+CLOSURE_C = 10.0  # the repeat-mismatch constraint in tenths of an angstrom, the size of a degree of residual rotation
 
 
 def placing_frame(phi_deg: float, flip: bool) -> np.ndarray:
@@ -273,12 +280,13 @@ class MixedModel:
     discontinuously; see :func:`polyfind.pack._align_about_z`), fixed for the life of the model so
     a setting angle means the same thing at every point of a path.  ``angle_stiffness`` is the
     refinement's backbone-angle restraint (kcal/mol/rad^2,
-    :func:`polyfind.refine.resolve_angle_stiffness`), ``pen_rot`` its commensurability penalty per
-    degree^2 and ``k_c`` the penalty tying each chain's natural repeat to the cell's (kcal/mol/A^2).
+    :func:`polyfind.refine.resolve_angle_stiffness`).  ``pen_rot`` (the refinement's
+    commensurability penalty, per degree^2) and ``k_c`` (a penalty tying each chain's natural repeat
+    to the cell's, kcal/mol/A^2) are zero by default: :meth:`relax` holds the closure exactly.
     """
 
     def __init__(self, polymer, name: str, packer, flips, refs, angle_stiffness: float,
-                 pen_rot: float = 5.0, k_c: float = 2000.0, valences=None):
+                 pen_rot: float = 0.0, k_c: float = 0.0, valences=None):
         self.polymer, self.name, self.pk = polymer, name, packer
         self.nc, self.n = int(packer.n_chains), int(packer.n)
         self.flips = np.asarray(flips, dtype=bool).reshape(self.nc)
@@ -297,6 +305,30 @@ class MixedModel:
         self.pen_rot, self.k_c = float(pen_rot), float(k_c)
         self.valences = valences
         self.n_evaluations = 0
+        self.reset_multipliers()
+
+    # --- closure multipliers -----------------------------------------------------------------
+    def reset_multipliers(self) -> None:
+        """Zero the augmented-Lagrangian multipliers of the closure constraints."""
+        self.lam_w = np.zeros((self.nc, 3))  # kcal/mol per degree, on each chain's rotation vector
+        self.lam_c = np.zeros(self.nc)       # kcal/mol per A, on each chain's repeat mismatch
+
+    def multipliers(self) -> tuple:
+        return self.lam_w.copy(), self.lam_c.copy()
+
+    def set_multipliers(self, lam) -> None:
+        self.lam_w, self.lam_c = np.array(lam[0], dtype=float).reshape(self.nc, 3), np.array(lam[1], dtype=float).reshape(self.nc)
+
+    def update_multipliers(self, x) -> tuple:
+        """The first-order multiplier update at ``x``; returns the residuals it used,
+        ``(max |w| in degrees, max |c_s - c| in A)``."""
+        c = float(np.asarray(x, dtype=float).ravel()[3])
+        built = self.build(x)[4]
+        w = np.array([b[3] for b in built])
+        dc = np.array([float(b[0].c) - c for b in built])
+        self.lam_w = self.lam_w + 2.0 * self.pen_rot * w
+        self.lam_c = self.lam_c + 2.0 * self.k_c * dc
+        return float(np.linalg.norm(w, axis=1).max()), float(np.abs(dc).max())
 
     # --- the variable vector -------------------------------------------------------------
     @property
@@ -369,9 +401,9 @@ class MixedModel:
         """Energy with the closure penalties, and its gradient with respect to every variable.
 
         ``parts``, if a dict is given, receives the pieces: ``lattice`` (the packer's energy of the
-        placed cell without torsions), ``torsion``, ``bend``, ``penalty_rotation``, ``penalty_c``,
-        ``physical`` (the first three), and per chain the natural repeats, their mismatch to the
-        cell's and the residual rotations."""
+        placed cell without torsions), ``torsion``, ``bend``, ``penalty_rotation``, ``penalty_c``
+        (the closure terms, multipliers included), ``physical`` (the first three), and per chain
+        the natural repeats, their mismatch to the cell's and the residual rotations."""
         x = np.asarray(x, dtype=float).ravel()
         self.n_evaluations += 1
         st = self.state(x)
@@ -406,12 +438,14 @@ class MixedModel:
             d = (st.angs[s] - self.angles0) * _RAD
             e_bend += 0.5 * k_ang * float((d * d).sum()) * self.n_repeats
             gv[P:] += k_ang * d * _RAD * self.n_repeats
-            p_rot += self.pen_rot * float(w @ w)
-            gv += 2.0 * self.pen_rot * (dw @ w)
+            lw, lc = self.lam_w[s], float(self.lam_c[s])
+            p_rot += self.pen_rot * float(w @ w) + float(lw @ w)
+            gv += dw @ (2.0 * self.pen_rot * w + lw)
             dcz = float(chain.c) - c
-            p_c += self.k_c * dcz * dcz
-            gv += 2.0 * self.k_c * dcz * dc
-            gc -= 2.0 * self.k_c * dcz
+            p_c += self.k_c * dcz * dcz + lc * dcz
+            tension = 2.0 * self.k_c * dcz + lc
+            gv += tension * dc
+            gc -= tension
             g[base + s * (P + R):base + (s + 1) * (P + R)] = gv
         g[:4] = [gA, gB, gG, gc]
         if parts is not None:
@@ -432,18 +466,69 @@ class MixedModel:
 
     def physical_energy(self, x) -> float:
         """Lattice energy plus every chain's torsion and bend energy: the number the crystal
-        refinement reports for the packer's cell, kcal/mol per cell.  The closure penalties are
-        left out; at a relaxed structure they are small and :meth:`terms` says how small."""
+        refinement reports for the packer's cell, kcal/mol per cell.  The closure terms are left
+        out; at a closed structure (:meth:`relax_closed`) they are zero."""
         return float(self.terms(x)["physical"])
 
+    # --- closure ---------------------------------------------------------------------------------
+    def closure(self, x, chains=None):
+        """``(h, J)``: the closure residuals of ``chains`` (default all) and their Jacobian.
+
+        Four per chain, in the order ``(w_x, w_y, w_z, CLOSURE_C * (c_s - c))``: the rotation
+        vector of the chain's repeat transform in degrees and its repeat mismatch to the cell's in
+        A, the second scaled so that both are of one size.  ``J`` is ``(4 m, n_var)``."""
+        x = np.asarray(x, dtype=float).ravel()
+        st = self.state(x)
+        ch = range(self.nc) if chains is None else [int(s) for s in np.atleast_1d(chains)]
+        P, R = self.P, self.R
+        base = 4 + 4 * self.nc
+        h = np.zeros(4 * len(ch))
+        J = np.zeros((4 * len(ch), self.n_var))
+        for k, s in enumerate(ch):
+            chains_, _, dc, w, dw = repeat_chains_and_jacobian(self.polymer, self.name, st.tors[s][None], st.angs[s], self.refs[s])
+            cols = slice(base + s * (P + R), base + (s + 1) * (P + R))
+            h[4 * k:4 * k + 3] = w[0]
+            J[4 * k:4 * k + 3, cols] = dw[0].T
+            h[4 * k + 3] = CLOSURE_C * (float(chains_[0].c) - st.lattice[3])
+            J[4 * k + 3, cols] = CLOSURE_C * dc[0]
+            J[4 * k + 3, 3] = -CLOSURE_C
+        return h, J
+
+    def closure_residual(self, x) -> tuple:
+        """``(largest residual rotation in degrees, largest repeat mismatch in A)`` over the chains."""
+        h, _ = self.closure(x)
+        h = h.reshape(-1, 4)
+        return float(np.linalg.norm(h[:, :3], axis=1).max()), float(np.abs(h[:, 3]).max() / CLOSURE_C)
+
+    def project(self, x, free, chains=None, tol: float = 1e-9, maxiter: int = 30):
+        """``x`` moved onto the closure surface of ``chains`` by the smallest change of the ``free``
+        variables (in the scaled metric of :meth:`scale`): Newton steps ``-J^+ h``."""
+        x = np.asarray(x, dtype=float).ravel().copy()
+        free = np.unique(np.asarray(free, dtype=int))
+        sc = self.scale(x)[free]
+        for _ in range(maxiter):
+            h, J = self.closure(x, chains)
+            if float(np.abs(h).max()) < tol:
+                break
+            Jf = J[:, free] * sc
+            x[free] -= sc * (Jf.T @ np.linalg.lstsq(Jf @ Jf.T, h, rcond=None)[0])
+        return x
+
     # --- relaxation --------------------------------------------------------------------------
-    def relax(self, x0, free=None, gtol: float = 2e-3, maxiter: int = 400, angle_window: float | None = 8.0):
-        """L-BFGS-B over the ``free`` variables (indices; default all), in the scaled variables of
-        :meth:`scale`.  ``angle_window`` bounds each backbone angle to the polymer's own value +/-
-        that many degrees, the refinement's bound; ``None`` leaves them free.  Returns
-        ``(x, info)`` with ``info`` the optimiser's message, iteration count and final gradient."""
+    def relax(self, x0, free=None, closed=None, ftol: float = 1e-9, maxiter: int = 400, angle_window: float | None = 8.0):
+        """Constrained minimisation (SLSQP) over the ``free`` variables (indices; default all), in
+        the scaled variables of :meth:`scale`, with the closure of the chains in ``closed`` held as
+        equality constraints.  ``closed`` defaults to every chain with a free internal coordinate,
+        or to every chain when the repeat ``c`` is free.  ``angle_window`` bounds each backbone
+        angle to the polymer's own value +/- that many degrees, the refinement's bound; ``None``
+        leaves them free.  Returns ``(x, info)`` with the optimiser's message, its iteration and
+        evaluation counts and the closure residuals at the result."""
         x0 = np.asarray(x0, dtype=float).ravel().copy()
         free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
+        if closed is None:
+            fs = set(free.tolist())
+            closed = [s for s in range(self.nc) if 3 in fs or fs.intersection(self.index("internal", s).tolist())]
+        closed = [int(s) for s in closed]
         sc = self.scale(x0)[free]
         bounds = [(None, None)] * len(free)
         if angle_window is not None:
@@ -458,19 +543,38 @@ class MixedModel:
             elif int(i) == 2:
                 bounds[j] = (55.0 / sc[j], 125.0 / sc[j])
 
-        def fg(y):
+        def full(y):
             x = x0.copy()
             x[free] = y * sc
-            e, g = self.value_and_grad(x)
-            return e, g[free] * sc
+            return x
 
-        res = minimize(fg, x0[free] / sc, jac=True, method="L-BFGS-B", bounds=bounds,
-                       options={"gtol": gtol, "ftol": 1e-12, "maxiter": maxiter, "maxfun": 3 * maxiter})
-        x = x0.copy()
-        x[free] = res.x * sc
+        cache: dict = {}
+
+        def fg(y):
+            key = y.tobytes()
+            if cache.get("key") != key:
+                e, g = self.value_and_grad(full(y))
+                cache.update(key=key, e=e, g=g[free] * sc)
+            return cache["e"], cache["g"]
+
+        cons = []
+        if closed:
+            ccache: dict = {}
+
+            def hj(y):
+                key = y.tobytes()
+                if ccache.get("key") != key:
+                    h, J = self.closure(full(y), closed)
+                    ccache.update(key=key, h=h, J=J[:, free] * sc)
+                return ccache["h"], ccache["J"]
+
+            cons = [{"type": "eq", "fun": lambda y: hj(y)[0], "jac": lambda y: hj(y)[1]}]
+        res = minimize(lambda y: fg(y)[0], x0[free] / sc, jac=lambda y: fg(y)[1], method="SLSQP", bounds=bounds,
+                       constraints=cons, options={"ftol": ftol, "maxiter": maxiter})
+        x = full(res.x)
+        rot, dc = self.closure_residual(x) if closed else (0.0, 0.0)
         return x, {"message": str(res.message), "iterations": int(res.nit), "evaluations": int(res.nfev),
-                   "grad_max_scaled": float(np.abs(res.jac).max()) if res.jac is not None else float("nan"),
-                   "energy": float(res.fun)}
+                   "energy": float(res.fun), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed}
 
 
 # ------------------------------------------------------------------- pendant tilts

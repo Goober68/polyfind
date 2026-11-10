@@ -114,16 +114,55 @@ def test_state_and_index_roundtrip():
     assert m.flips.tolist() == [False, True, False, True]
 
 
-def test_relaxation_lowers_the_energy_and_closes_the_chains():
-    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0], pen_rot=5.0, k_c=2000.0)
-    e0 = m.terms(x)
-    x1, info = m.relax(x, maxiter=150)
-    e1 = m.terms(x1)
-    assert e1["total"] < e0["total"] - 1.0
-    assert np.abs(e1["c_mismatch"]).max() < 0.02 and e1["rotation_error"].max() < 0.5
-    held, _ = m.relax(x, free=m.index("place"), maxiter=10)  # only the placements move
+def test_closure_residual_jacobian_and_projection():
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0], nx=2, ny=1)
+    assert max(m.closure_residual(x)) < 1e-9  # the built chain is periodic
+    rng = np.random.default_rng(2)
+    x[m.index("tors")] += rng.uniform(-6, 6, m.nc * m.P)
+    x[m.index("angs")] += rng.uniform(-1.5, 1.5, m.nc * m.R)
+    x[3] += 0.05
+    h, J = m.closure(x)
+    assert h.shape == (4 * m.nc,) and J.shape == (4 * m.nc, m.n_var) and np.abs(h).max() > 0.1
+    for i in np.concatenate([[3], rng.choice(m.index("internal"), size=8, replace=False)]):
+        xp_, xm_ = x.copy(), x.copy()
+        xp_[i] += 1e-5
+        xm_[i] -= 1e-5
+        np.testing.assert_allclose((m.closure(xp_)[0] - m.closure(xm_)[0]) / 2e-5, J[:, i], atol=2e-6)
+    h1, J1 = m.closure(x, [2])  # one chain's four residuals are that chain's rows
+    np.testing.assert_array_equal(h1, h[8:12])
+    np.testing.assert_array_equal(J1, J[8:12])
+    free = m.index("internal")
+    y = m.project(x, free)
+    assert max(m.closure_residual(y)) < 1e-8
+    np.testing.assert_array_equal(y[:4 + 4 * m.nc], x[:4 + 4 * m.nc])  # only the free variables moved
+    assert np.abs(y - x).max() < 6.0
+
+
+def test_constrained_relaxation_lowers_the_energy_on_the_closure_surface():
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    e0 = m.physical_energy(x)
+    x1, info = m.relax(x, maxiter=60)
+    assert info["closed_chains"] == [0, 1]
+    assert m.physical_energy(x1) < e0 - 1.0
+    assert info["rotation_error_max"] < 1e-6 and info["c_mismatch_max"] < 1e-7  # periodic, exactly
+    held, info = m.relax(x, free=m.index("place"), maxiter=10)  # only the placements move: nothing to close
+    assert info["closed_chains"] == []
     np.testing.assert_array_equal(held[m.index("internal")], x[m.index("internal")])
     np.testing.assert_array_equal(held[:4], x[:4])
+    assert m.physical_energy(held) < e0
+
+
+def test_penalty_terms_are_off_by_default_and_available():
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    x[m.index("tors")] += 3.0
+    parts: dict = {}
+    total, _ = m.value_and_grad(x, parts)
+    assert parts["penalty_rotation"] == 0.0 and parts["penalty_c"] == 0.0 and total == parts["physical"]
+    assert parts["rotation_error"].max() > 0.1
+    m.pen_rot, m.k_c = 5.0, 50.0
+    parts2: dict = {}
+    total2, _ = m.value_and_grad(x, parts2)
+    assert total2 > parts2["physical"] == parts["physical"]
 
 
 def test_tilt_relaxation_matches_the_packers_own():
