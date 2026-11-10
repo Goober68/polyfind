@@ -55,7 +55,8 @@ C = importlib.util.module_from_spec(CS)
 CS.loader.exec_module(C)
 T = 0
 EXTRA = {"vdf10": ("VVVVVVVVVV", "PVDF as a ten-monomer sequence"), "vdf7-trfe3": ("VVRVVRVVVR", "the 70/30 model of the E2 set"),
-         "vdf14": ("V" * 14, "PVDF as a fourteen-monomer sequence"), "vdf20": ("V" * 20, "PVDF as a twenty-monomer sequence")}
+         "vdf14": ("V" * 14, "PVDF as a fourteen-monomer sequence"), "vdf20": ("V" * 20, "PVDF as a twenty-monomer sequence"),
+         "vdf10-trfe4-14-pairs": ("VVVVVRRVVVVVRR", "71/29 with the TrFE units in pairs and the VDF in runs of five: the same composition as vdf10-trfe4-14, another sequence")}
 KW = dict(lj_cutoff="force", coulomb="ewald", ewald=EwaldSpec(), polarizable=Polarizable())
 GAUCHE = 60.0
 K_ANGLE = None  # backbone-angle restraint, kcal/mol/rad^2; None: the preset's (--angle-stiffness sets it for a sensitivity run)
