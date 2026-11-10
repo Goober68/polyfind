@@ -14,6 +14,26 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The single-chain barrier with the lattice responding, 2026-11-10 (later; PI: "Work on the relaxed single-chain
+barrier").** `examples/chain_slide.py` (tests `tests/test_chain_slide.py`; data `docs/predictions/chain_slide_belt4.json`;
+tables in `kink_summary_belt4.md`; text in `docs/CANDIDATE_MATERIALS.md` 8.1, the block after the registry table). One
+beta-PVDF chain held at the half-monomer slip in an nx x ny tiling, the rest relaxed. kcal/mol per monomer of the slid
+chain: rigid 6.80; neighbours turning 6.02; turning and moving aside 6.07 / 3.70 / 3.36 / 3.26 in 4 / 16 / 36 / 64
+chains at fixed cell and 2.86 / 3.09 / 3.12 / 3.13 with the lateral cell free; both series extrapolate (1/chains) to
+**3.15**, 46% of rigid. The half-slip is the saddle by the chain's mirror plane (zero axial force on every chain, a
+minimum in all else, unmoved when the others' axial shifts are released). Stack neighbours move aside 0.20 A, diagonal
+ones 0.17 A and turn 5 deg. Flexing adds nothing, tilts 0.01. The curvature at the minimum is unchanged (14.2); with
+the neighbours' axial shifts free it is 5.8 (16 chains), 4.9 (36): anti-plane shear, not a barrier. Short repeats
+(one or two monomers per chain) reproduce the ten-monomer crystal exactly, which is what makes 64 chains affordable;
+a one-monomer repeat has no internal freedom, `flexible` needs two. Copolymers by the affordable protocol (one chain
+in four, lateral cell free; PVDF 2.86): 71/29 2.37 (rigid 5.84), 64/29/7 2.04 (rigid 4.56). A four-chain cell cannot
+give way laterally (6.07 against 3.15), so every four-chain number of section 8 with one chain out of step with its
+neighbours is an upper bound. Registered and NOT requested: the cheapest DFT test, E5 c's 24-atom c/2 cell relaxed
+with the lateral cell free at Dipole's repeat, +0.708 kcal/mol per monomer of the cell (1.668 rigid), a +5.1%, b +4.2%
+(`docs/E1_E2_PREDICTIONS.md`, last E5 entry; `chain_slide.py --c-per-monomer 2.5807377932516 --cell-free`).
+New flags: `kink_migration.py --ends-only --trust-tiled`. NOTE: a full-suite run under load left pytest sleeping on a
+forked child after printing its summary (766 passed, 5 skipped); kill it if it lingers.
+
 **Correction and results, 2026-11-10 (read before the 2026-11-08 block below; it corrects it).** The PI asked for
 the dilute kink and the migration barrier. Both needed a cell whose chains differ: `polyfind.mixedcell` (energy and
 analytic gradients equal to the packer's to rounding; each chain closed exactly by equality constraints, `relax` with

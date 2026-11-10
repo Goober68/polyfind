@@ -624,7 +624,8 @@ class MixedModel:
         return full(y), gm, it
 
     def relax(self, x0, free=None, closed=None, ftol: float = 1e-9, maxiter: int = 400, angle_window: float | None = 8.0,
-              first_step: float | None = 0.3, presteps: int = 300, cell_window=(0.6, 1.6), c_window=(0.85, 1.15)):
+              first_step: float | None = 0.3, presteps: int = 300, cell_window=(0.6, 1.6), c_window=(0.85, 1.15),
+              trust: float | None = None):
         """Constrained minimisation (SLSQP) over the ``free`` variables (indices; default all), in
         the scaled variables of :meth:`scale`, with the closure of the chains in ``closed`` held as
         equality constraints.  ``closed`` defaults to every chain with a free internal coordinate,
@@ -642,7 +643,15 @@ class MixedModel:
         third of ``first_step``) until the gradient along the surface is under five times
         ``first_step``, and the objective handed to SLSQP is scaled so that its first step is no
         longer than ``first_step``: a factor of at most five, which leaves its unit Hessian
-        inside the range of the real one."""
+        inside the range of the real one.
+
+        Neither of those bounds the later steps, and from a shallow basin the quasi-Newton
+        iteration can step over the rim (a lone kink pair among mobile neighbours does: it is
+        returned all-trans from a start that a damped descent shows to be a minimum).  ``trust``
+        (scaled units) confines every free variable to that distance from where the optimiser
+        starts, so one call cannot move a torsion by more than ``10 * trust`` degrees or a chain by
+        more than ``trust`` A; ``info["at_trust_bound"]`` says whether a variable ended on the
+        box.  :meth:`relax_in_basin` repeats such calls until none does."""
         x0 = np.asarray(x0, dtype=float).ravel().copy()
         free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
         if closed is None:
@@ -686,6 +695,8 @@ class MixedModel:
 
             cons = [{"type": "eq", "fun": lambda y: hj(y)[0], "jac": lambda y: hj(y)[1]}]
         y0 = start[free] / sc
+        if trust is not None:
+            bounds = [(y - trust if lo is None else max(lo, y - trust), y + trust if hi is None else min(hi, y + trust)) for (lo, hi), y in zip(bounds, y0)]
         fs = 1.0
         if first_step is not None:
             g0 = fg(y0)[1].copy()
@@ -702,9 +713,33 @@ class MixedModel:
                 x = self.project(x, on_surface, closed)
         h = self.closure(x, closed)[0].reshape(-1, 4) if closed else np.zeros((1, 4))
         rot, dc = float(np.linalg.norm(h[:, :3], axis=1).max()), float(np.abs(h[:, 3]).max() / CLOSURE_C)
+        at_bound = bool(trust is not None and float(np.abs(res.x - y0).max()) > trust * (1.0 - 1e-6))
         return x, {"message": str(res.message), "iterations": int(res.nit), "evaluations": int(res.nfev) + pre,
                    "energy": self.physical_energy(x), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed,
-                   "objective_scale": fs, "descent_evaluations": pre}
+                   "objective_scale": fs, "descent_evaluations": pre, "at_trust_bound": at_bound}
+
+    def relax_in_basin(self, x0, free=None, closed=None, trust: float = 0.3, rounds: int = 100, callback=None, **kw):
+        """:meth:`relax` in a trust box of half-width ``trust`` (scaled units), repeated from each
+        result until no variable ends on its box and the optimiser reports success: quasi-Newton
+        steps that cannot leave the basin they start in unless it has no rim.  Each round ends at
+        the lowest point of its box that the optimiser finds, so the energy never rises from one
+        round to the next, and a minimum behind a barrier wider than the box is out of reach.
+        ``callback(round, x, info)`` is called after every round.  Returns ``(x, info)``; ``info``
+        has the last round's fields, ``rounds``, the summed ``iterations`` and ``evaluations``,
+        and ``converged`` (false if the rounds ran out with a variable still on its box)."""
+        x = np.asarray(x0, dtype=float).ravel().copy()
+        kw = {"presteps": 0, "first_step": None, **kw}
+        info, its, evs, done = {}, 0, 0, False
+        for k in range(int(rounds)):
+            x, info = self.relax(x, free=free, closed=closed, trust=trust, **kw)
+            its += info["iterations"]
+            evs += info["evaluations"]
+            if callback is not None:
+                callback(k, x, info)
+            if not info["at_trust_bound"] and "success" in info["message"].lower():
+                done = True
+                break
+        return x, {**info, "rounds": k + 1, "iterations": its, "evaluations": evs, "converged": done}
 
 
 # ------------------------------------------------------------------- pendant tilts

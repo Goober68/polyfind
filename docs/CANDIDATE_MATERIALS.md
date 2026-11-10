@@ -664,11 +664,13 @@ relaxed at fixed cell, kcal/mol per monomer of the slid chain:
   of the distance to whatever holds it. That is the elastic constant C44/C55, it vanishes at the
   half-slip (no axial forces there), and it leaves the saddle and the 3.15 where they are.
 * **A long chain does not slide this way.** These are energies per monomer of a uniform slide: the
-  amplitude of the registry. With a ten-monomer repeat in the four-chain cell the relaxation
-  already finds a state 0.04 lower that is not uniform along the chain (torsions 13 degrees off
-  trans, a residual axial force): the beginning of the localized path a long chain takes, whose
-  cost goes as the square root of this amplitude times the chain's stiffness and not as the
-  amplitude times the length.
+  amplitude of the registry. A stem of N monomers sliding uniformly pays N times as much, and
+  beyond a few tens of monomers a localized defect is cheaper: its cost goes as the square root of
+  this amplitude times the chain's stiffness (the Frenkel-Kontorova estimate used below), not as
+  the amplitude times the length. A first sign is already in these cells: with a ten-monomer
+  repeat in the four-chain cell the relaxation finds a state 0.04 lower in which the chains are no
+  longer uniform along their length (torsions up to 13 degrees off trans) and which is not
+  stationary along the slide.
 * **The copolymer lattices give the same factor.** With one chain in four slid and the lateral
   cell free (the affordable protocol for fourteen-monomer chains; for PVDF it gives 2.86 against
   the dilute limit's 3.15), the highest point of the relaxed slide over one monomer period is 2.37
@@ -809,6 +811,15 @@ at forces of 0.8-1.0.
   short axis moves as a unit, and the sheet advances stack by stack, not chain by chain. In PVDF
   the sheet is therefore a flat, slow object: the first chain of a stack to move pays 12.7
   (2e3 /s at 300 K), and what the next ones pay beside it is not computed.
+  *Added 2026-11-10: these are four-chain cells, one chain in four ahead, in a lattice that cannot
+  give way laterally (8.1: the uniform half-slip of one chain is 6.07 there and 3.15 in the dilute
+  limit). With the neighbours as rigid chains (`kink_migration.py --host bodies --ends-only`) the
+  same end state is 11.5 in four chains and 9.3 in sixteen, one chain in sixteen ahead, and the
+  wide-kink intermediate 17.8 and 17.4. So the cramped cell overstates the cost of the completed
+  step by about a fifth and its intermediate hardly at all. The flexible-neighbour numbers quoted
+  above, and the band, are not run in sixteen chains; if the same ratio holds the 7.9 is about
+  6.4, still three times what a stack pays when it moves together, and the statement stands with
+  a smaller margin.*
 * **In the copolymer lattices the first saddle is lower and the completed step is not.** Into the
   wide kink the barrier is 6.4 in 64/29/7 and 7.0 in 71/29 against PVDF's 7.5, so the torsional
   event is no slower beside TrFE and chlorine. But the step computed here takes the kink pair from

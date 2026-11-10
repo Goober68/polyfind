@@ -291,3 +291,32 @@ def test_the_climbing_image_waits_for_a_relaxed_band():
     res = MC.neb(_muller_brown, images, k_spring=200.0, climb_after=0, climb_force=20.0, fmax=0.05, maxiter=3000, max_step=0.02)
     assert res.converged and res.climbing > 0
     assert res.energies.max() == pytest.approx(-40.6648, abs=0.01)
+
+
+def test_a_trust_box_bounds_one_relaxation_and_its_rounds_find_the_basins_minimum():
+    """``relax(trust=t)`` moves no free variable further than ``t`` scaled units from its start and
+    says when it stopped on the box.  ``relax_in_basin`` repeats such rounds from each result: the
+    energy never rises between rounds, the last round is not on its box, and from a start inside
+    a basin the rounds end at that basin's minimum (here the one the unbounded relaxation of a
+    nearby start reaches).  The quasi-Newton iteration without a box can step over the rim of a
+    shallow basin (examples/dilute_kink.py met it); with one, it cannot move past the box."""
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    free = np.setdiff1d(np.arange(m.n_var), np.concatenate([m.index("xy", 1), m.index("z", 1)]))
+    sc = m.scale(x)
+    x1, info = m.relax(x, free=free, trust=0.2, presteps=0, first_step=None, maxiter=80)
+    assert info["at_trust_bound"] and m.physical_energy(x1) < m.physical_energy(x)
+    assert np.abs((x1 - x) / sc)[free].max() <= 0.2 + 0.02  # the box, and the final projection onto the closure
+    np.testing.assert_array_equal(x1[m.index("xy", 1)], x[m.index("xy", 1)])
+    # a minimum, a start inside its basin, and the rounds back to it
+    xm, im = m.relax(x, free=free, maxiter=600)
+    xm, im = m.relax(xm, free=free, maxiter=600)
+    assert "success" in im["message"].lower()
+    start = xm.copy()
+    start[free] += np.random.default_rng(5).uniform(-0.25, 0.25, len(free)) * sc[free]
+    start = m.project(start, m.index("internal"))
+    energies = [m.physical_energy(start)]
+    xb, ib = m.relax_in_basin(start, free=free, trust=0.1, rounds=60, maxiter=200, callback=lambda k, y, i: energies.append(m.physical_energy(y)))
+    assert ib["converged"] and not ib["at_trust_bound"] and ib["rounds"] >= 3
+    assert all(b <= a + 1e-7 for a, b in zip(energies, energies[1:]))
+    assert abs(m.physical_energy(xb) - m.physical_energy(xm)) < 2e-3
+    assert max(m.closure_residual(xb)) < 1e-6

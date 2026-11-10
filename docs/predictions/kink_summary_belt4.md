@@ -56,6 +56,13 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | vdf10@0 ahead | 2x1, 1 of 4 | flexible | +9.85 | +10.35 | +12.66 | +7.88 | 12.66 / 4.78 | 1.8e+03 /s | A-I force 0.10, I-B force 0.16 |
 | vdf9-trfe4-cfe1-14@0 ahead | 1x1, 1 of 2 | flexible | +6.33 | +6.43 | +11.37 | +8.98 | 11.37 / 2.39 | 1.6e+04 /s | A-I force 0.10, I-B force 0.69 |
 
+End points only (no band): the same step with the neighbours as rigid chains, in cells of two sizes
+
+| sequence | cell, moving chains | host | wide kink I | B (one monomer ahead) |
+|---|---|---|---|---|
+| vdf10@0 ahead | 2x1, 1 of 4 | bodies | +17.81 | +11.51 |
+| vdf10@0 ahead | 4x2, 1 of 16 | bodies | +17.36 | +9.32 |
+
 **The kink sheet along the sequence** (kcal/mol per kink pair against the all-trans crystal, rigid pendants; the kink pair's first unit is the monomer named, gauche bonds on the even bonds; `~` is the mirrored kink pair G- T G+)
 
 * `VVVVVRRVVVVVRR` G+ T G- (14 of 14 positions): VV 5.05 VV 5.11 VV 5.40 VV 7.83 VR 10.41 RR 7.37 RV 7.16 VV 5.05 VV 5.11 VV 5.40 VV 7.83 VR 10.41 RR 7.37 RV 7.16

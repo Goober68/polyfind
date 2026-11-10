@@ -213,6 +213,17 @@ def main():
     ap.add_argument("--angle-stiffness", type=float, default=None,
                     help="backbone-angle restraint in kcal/mol/rad^2 for a sensitivity run (default: the preset's 233). The mixed cell's chains have rigid bonds, "
                          "so with the preset's restraint their axial stiffness is about twice the full valence form's; about 114 matches that form's C33")
+    ap.add_argument("--start-from", default="", help="a stage of this row's stored run: keep the stages up to it and continue from its state with --stages")
+    ap.add_argument("--descend-to", type=float, default=None,
+                    help="before each stage's quasi-Newton relaxation, follow a damped descent (steps of 0.05 at most, which cannot jump a barrier) until the largest "
+                         "projected gradient is under this; if the quasi-Newton step then leaves a basin the descent had converged in, the basin is the result")
+    ap.add_argument("--descend-steps", type=int, default=3000, help="evaluation budget of that descent per stage")
+    ap.add_argument("--descend-step", type=float, default=0.05, help="its step limit in scaled units (1 A, 10 degrees of torsion)")
+    ap.add_argument("--descent-only", action="store_true", help="with --descend-to: the descent's last point is the stage's result; no quasi-Newton relaxation after it")
+    ap.add_argument("--trust", type=float, default=None,
+                    help="relax each stage by quasi-Newton rounds in a trust box of this half-width (scaled units: 1 A, 10 degrees of torsion or setting angle), "
+                         "MixedModel.relax_in_basin: fast, and unable to leave the basin a stage starts in unless it has no rim")
+    ap.add_argument("--trust-rounds", type=int, default=200)
     ap.add_argument("--out", default="docs/predictions/dilute_kink_belt4.json")
     args = ap.parse_args()
     global K_ANGLE
@@ -269,6 +280,17 @@ def main():
         log(f"{key}: {nc} chains of {n_mon} monomers, {model.pk.N} sites; all-trans cell {np.round(st_tt.lattice, 4).tolist()}, {e_tt / (nc * n_mon):.5f} kcal/mol per monomer "
             f"({entry['all_trans_cell']['polish_gain_per_monomer']:.4f} below the search's line-group cell; torsions up to {entry['all_trans_cell']['largest_torsion_off_trans_deg']:.1f} deg off trans)")
         stages = [s for s in args.stages.split(",") if s]
+        prior_row = {}
+        if args.start_from:
+            prior_row = (json.load(open(out_path)) if out_path.exists() else {}).get("rows", {}).get(key, {})
+            if args.start_from not in prior_row.get("states", {}):
+                raise SystemExit(f"no stored state of stage {args.start_from} for {key}")
+            keep = STAGES[:STAGES.index(args.start_from) + 1]
+            entry["stages"] = {k: v for k, v in prior_row.get("stages", {}).items() if k in keep}
+            entry["states"] = {k: v for k, v in prior_row.get("states", {}).items() if k in keep}
+            for k in ("slide", "host_check"):
+                if k in prior_row:
+                    entry[k] = prior_row[k]
         sets = stage_sets(model, kinked)
         everyone = list(range(nc))
 
@@ -319,12 +341,52 @@ def main():
         entry["projected_start"] = {"energy_above_all_trans": model.physical_energy(x) - e_tt, **kink_shape(model, x, kinked[0], args.kink_at, args.mirror_kink)}
         tilt_stages = [s for s in args.tilt_stages.split(",") if s]
         tilt_ref = None
+        if args.start_from:
+            x = np.asarray(prior_row["states"][args.start_from], dtype=float)
+            log(f"   continuing from the stored {args.start_from}: {(model.physical_energy(x) - e_tt) / len(kinked):+.3f} kcal/mol per kink pair")
         for stage in stages:
             if stage not in sets:
                 continue
             free, closed = sets[stage]
             t0 = time.time()
-            x, info = model.relax(x, free=free, closed=closed, maxiter=args.maxiter, angle_window=args.angle_window)
+            descent, xd = None, None
+            if args.descend_to:  # a damped descent first: it follows the basin the stage starts in and cannot jump out of it
+                xd, total, gmax, rose, e_last = x, 0, np.inf, 0, model.physical_energy(x)
+                while total < args.descend_steps:
+                    xd, gmax, ev = model.descend(xd, free=free, closed=closed, steps=min(200, args.descend_steps - total), max_step=args.descend_step,
+                                                 gtol=args.descend_to, angle_window=args.angle_window)
+                    total += ev
+                    e_now = model.physical_energy(xd)
+                    rose += int(e_now > e_last + 1e-6)
+                    e_last = e_now
+                    sh = kink_shape(model, xd, kinked[0], args.kink_at, args.mirror_kink)
+                    log(f"      descent, {total:5d} evaluations: {(e_now - e_tt) / len(kinked):+9.4f}; largest projected gradient {gmax:.3f}; gauche bonds {np.round(sh['gauche_deg'], 1).tolist()}; "
+                        f"{time.time() - t0:.0f} s")
+                    if gmax < args.descend_to:
+                        break
+                shapes_d = [kink_shape(model, xd, s, args.kink_at, args.mirror_kink) for s in kinked]
+                descent = {"evaluations": int(total), "largest_projected_gradient": float(gmax), "converged": bool(gmax < args.descend_to), "step_limit": args.descend_step,
+                           "formation": (e_last - e_tt) / len(kinked), "collapsed": bool(all(sh["collapsed"] for sh in shapes_d)), "rounds_in_which_the_energy_rose": int(rose)}
+                x = xd
+            if args.descent_only and descent:
+                rot, dc = model.closure_residual(x)
+                info = {"iterations": 0, "evaluations": descent["evaluations"], "rotation_error_max": rot, "c_mismatch_max": dc,
+                        "message": f"damped descent only ({'converged' if descent['converged'] else 'NOT converged'}: largest projected gradient {descent['largest_projected_gradient']:.3f})"}
+            elif args.trust:
+                def report(k, y, i, t0=t0):
+                    sh = kink_shape(model, y, kinked[0], args.kink_at, args.mirror_kink)
+                    log(f"      round {k + 1:3d}: {(i['energy'] - e_tt) / len(kinked):+9.4f}; gauche bonds {np.round(sh['gauche_deg'], 1).tolist()}; {i['iterations']} it, "
+                        f"{'on the box' if i['at_trust_bound'] else 'inside the box'}; {time.time() - t0:.0f} s")
+
+                x, info = model.relax_in_basin(x, free=free, closed=closed, trust=args.trust, rounds=args.trust_rounds, callback=report,
+                                               maxiter=args.maxiter, angle_window=args.angle_window)
+            else:
+                x, info = model.relax(x, free=free, closed=closed, maxiter=args.maxiter, angle_window=args.angle_window)
+            jumped = False
+            if descent and not descent["collapsed"] and all(kink_shape(model, x, s, args.kink_at, args.mirror_kink)["collapsed"] for s in kinked):
+                # the quasi-Newton iteration returned to all-trans from a point the descent, which cannot jump, had not left the
+                # kinked basin by: that is not shown to be the basin's fate, and the descent's last point is the stage's result
+                x, jumped = xd, True
             e = model.physical_energy(x)
             st = model.state(x)
             shapes = [kink_shape(model, x, s, args.kink_at, args.mirror_kink) for s in kinked]
@@ -333,6 +395,15 @@ def main():
                    "cell": st.lattice.tolist(), "seconds": time.time() - t0, "kinks": shapes, "collapsed": bool(all(sh["collapsed"] for sh in shapes)),
                    "host_setting_angles_deg": [float(st.place[s, 2]) for s in range(nc) if s not in kinked],
                    "angles_at_window": int(sum(int((np.abs(st.angs[s] - model.angles0) > args.angle_window - 1e-3).sum()) for s in range(nc)))}
+            if args.trust:
+                rec["trust_box"] = {"half_width": args.trust, "rounds": int(info["rounds"]), "converged": bool(info["converged"])}
+            if descent:
+                rec["descent"] = descent
+                rec["quasi_newton_left_the_basin"] = bool(jumped)
+                if jumped:
+                    rec["message"] = (f"damped descent ({'converged' if descent['converged'] else 'NOT converged'}: largest projected gradient "
+                                      f"{descent['largest_projected_gradient']:.3f}) in the kinked basin; the quasi-Newton relaxation from its last point returned to all-trans and is not used")
+                    info = {**info, "message": rec["message"]}
             entry["stages"][stage] = rec
             entry["states"][stage] = x.tolist()
             log(f"   {stage:18s}: {rec['formation']:+8.3f} kcal/mol per kink pair{' (COLLAPSED to all-trans)' if rec['collapsed'] else ''}; gauche bonds {np.round(shapes[0]['gauche_deg'], 1).tolist()}, "
