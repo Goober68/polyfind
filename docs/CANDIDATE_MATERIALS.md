@@ -693,17 +693,16 @@ stages that each bound the next from above.
 | PVDF | 4 x 10 | +25.25 | +23.07 | reverts to all-trans |
 | PVDF | 4 x 14 | +24.17 | +22.69 | reverts to all-trans |
 | PVDF | 4 x 20 | +23.41 | +22.39 | not run |
-| PVDF, sixteen chains (added 2026-11-10) | 16 x 10 | +25.61 | +22.0 and still falling (not a minimum found; see below) | not run |
+| PVDF, sixteen chains (added 2026-11-10) | 16 x 10 | +25.61 | +22.2, a shelf and not a minimum (last bullet) | not run |
 | PVDF, chain stiffness matched to DFT (see below) | 4 x 10 | +19.77 | +18.23 | reverts to all-trans |
 | 64/29/7 | 4 x 14 | +21.16 | +20.13 | reverts to all-trans |
 | 71/29 | 4 x 14 | reverts to all-trans | - | - |
 
 kcal/mol per kink pair against the all-trans supercell (which stage `host_check` confirms is the
 minimum with every chain free: 0.0000 below the tiled cell in all three lattices; the sixteen-chain
-cell was not given that check, which costs a day there). The sixteen-chain row's second number is
-where a damped descent stood when its budget of 800 evaluations ended; the others are minima of
-the quasi-Newton relaxation, and the four-chain rigid-body one is reproduced by the same descent,
-which stops there (23.09 against 23.07).
+cell was not given that check, which costs a day there). The first column's numbers are minima.
+The second column's are shelves: minima held by 0.02 kcal/mol in the four-chain cells and by
+nothing in the sixteen-chain one (last bullet below).
 
 * **It costs 20-25 kcal/mol where the neighbours hold still** (18-20 with the chain's stiffness
   corrected, below), 30-42 kT at 300 K: a population of 1e-13 per site at most. The strained kink's gauche bonds are flattened to 85-99 degrees and its
@@ -742,18 +741,29 @@ which stops there (23.09 against 23.07).
   23.1, 15.6, 14.1 (gauche bonds at 124 degrees), 0.2, 0.03; 71/29 with the neighbours fixed falls
   from its strained start through 10.3 to 0.01. The terpolymer's and the fourteen-monomer PVDF's
   were not rerun.
-* **In sixteen chains it may not survive even rigid neighbours; this is not settled.** With the
-  neighbours shifting and turning as rigid chains the four-chain cell holds the kink in a minimum
-  at 23.07 (gauche bonds at 99 and -98 degrees), and the damped descent stops there (23.09). In
-  the sixteen-chain cell the quasi-Newton relaxation returns the kink to all-trans, and the
-  damped descent from the same start does not stop: 25.61, 22.25, 22.13, 22.07, 22.01 at 200
-  evaluations apart, the gauche bonds opening steadily (94, 99, 102, 104, 106 degrees), the
-  projected gradient no longer shrinking (0.14, 0.09, 0.07, 0.09). Its budget ended there, 14
-  degrees short of the torsional barrier, so it has neither converged nor reverted. The indication
-  is that the four-chain minimum at this level is the cramped lattice's doing and that a lattice
-  free to give way leaves the lone kink no rim even with rigid neighbours; a few more hours of
-  descent, or the energy against the kink's torsion with everything else relaxed, would settle
-  it, and neither is run.
+* **How well the kinked state is held, measured.** The energy against the kink's own torsion: the
+  two gauche bonds held at +tau and -tau, the rest of the stage relaxed, every point from the
+  stage's stored state (`examples/kink_torsion_scan.py`; ten monomers, kcal/mol above all-trans,
+  tau in degrees):
+  - neighbours fixed, four chains: 93: 25.33; 99: 25.49; 105: 25.94; 112: 26.58; 116: 26.90; then
+    the rest of the chain jumps to another branch (120: 19.12; 130: 14.09);
+  - neighbours shifting and turning, four chains: 99: 23.08; 101: 23.09; 103: 23.09; 105: 22.93;
+    108: 22.36; 112: 21.00; 120: 17.66; 130: 13.41;
+  - neighbours shifting and turning, sixteen chains: 100: 22.17; 112: 20.21; 120: 17.03; 130: 12.98.
+
+  With the neighbours fixed the kink is a real minimum (25.25, gauche bonds at 95 and -91
+  degrees) behind a rim of at least 1.6 kcal/mol (26.90 at 116 degrees against the scan's own
+  minimum of 25.33), 2.6 kT at 300 K. With the neighbours shifting
+  and turning in the four-chain cell the minimum (23.07 at 99 degrees) has a lip of 0.02 kcal/mol
+  at 102-103 degrees and nothing after it: a shelf. In sixteen chains there is no lip: the
+  quasi-Newton relaxation returns the kink to all-trans, a damped descent with steps too short to
+  jump crawls across the shelf without stopping (25.61, 22.25, 22.13, 22.07, 22.01 at 200
+  evaluations apart, gauche bonds 94, 99, 102, 104, 106 degrees, when its budget ended), and the
+  scan continues it down through the eclipsed position. So the second column of the table is the
+  height of a shelf the strained kink crosses on its way back, and the lone kink is a state with
+  a lifetime only where nothing around it can move. (An interim note here, and two commit
+  messages, read the slow descent as a minimum and the quasi-Newton reversion as an optimiser's
+  jump. The scan shows the relaxation was right and the descent merely slow on a flat stretch.)
 * **So the "dilute kink" the earlier section asked for does not exist**, and its pinned-lattice
   column was not an upper bound on one: a kink pair on every chain of a cell held at the all-trans
   a and b (9.3 in PVDF) is still a sheet, with no chain shorter than its neighbour, and costs less

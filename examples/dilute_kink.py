@@ -222,7 +222,7 @@ def main():
     ap.add_argument("--descent-only", action="store_true", help="with --descend-to: the descent's last point is the stage's result; no quasi-Newton relaxation after it")
     ap.add_argument("--trust", type=float, default=None,
                     help="relax each stage by quasi-Newton rounds in a trust box of this half-width (scaled units: 1 A, 10 degrees of torsion or setting angle), "
-                         "MixedModel.relax_in_basin: fast, and unable to leave the basin a stage starts in unless it has no rim")
+                         "MixedModel.relax_in_basin: no round can move past its box, at about ten times the evaluations of the plain relaxation")
     ap.add_argument("--trust-rounds", type=int, default=200)
     ap.add_argument("--out", default="docs/predictions/dilute_kink_belt4.json")
     args = ap.parse_args()

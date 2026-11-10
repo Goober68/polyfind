@@ -298,8 +298,8 @@ def test_a_trust_box_bounds_one_relaxation_and_its_rounds_find_the_basins_minimu
     says when it stopped on the box.  ``relax_in_basin`` repeats such rounds from each result: the
     energy never rises between rounds, the last round is not on its box, and from a start inside
     a basin the rounds end at that basin's minimum (here the one the unbounded relaxation of a
-    nearby start reaches).  The quasi-Newton iteration without a box can step over the rim of a
-    shallow basin (examples/dilute_kink.py met it); with one, it cannot move past the box."""
+    nearby start reaches).  Nothing bounds the later steps of the quasi-Newton iteration without
+    a box; with one, no call can move a variable past it."""
     m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
     free = np.setdiff1d(np.arange(m.n_var), np.concatenate([m.index("xy", 1), m.index("z", 1)]))
     sc = m.scale(x)

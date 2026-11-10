@@ -105,6 +105,17 @@ def main():
             extra += f", angle window {e['angle_window_deg']:g} deg"
         md.append(f"| {key.split(' ')[0]}{extra} | {e['chains']} x {e['monomers_per_chain']} | {reg} | {cell('rigid_host')} | {cell('host_rigid_bodies')} | {cell('flexible_host')} |")
 
+    held = [(key, e) for key, e in sorted(dil.get("rows", {}).items(), key=lambda kv: (kv[1].get("row", ""), kv[1].get("chains", 0), kv[0])) if e.get("torsion_scan")]
+    if held:
+        md += ["", "Energy against the kink's own torsion (the two gauche bonds held at +tau and -tau degrees, the rest of the stage relaxed from the stage's stored state; "
+               "kcal/mol above all-trans; examples/kink_torsion_scan.py). A rise before 120 degrees is the rim that holds the kink; a break in the curve is another branch.", ""]
+        for key, e in held:
+            for stage in [st for st in ("rigid_host", "host_rigid_bodies", "flexible_host") if st in e["torsion_scan"]]:
+                pts = sorted(e["torsion_scan"][stage].items(), key=lambda kv: float(kv[0]))
+                stored = e.get("stages", {}).get(stage, {})
+                note = f"stored state {stored['formation']:+.2f}" + (", a descent's last point and not a minimum" if stored.get("descent") and not stored["descent"]["converged"] else "") if stored else ""
+                md.append(f"* `{key}`, {stage.replace('_', ' ')} ({e['chains']} chains; {note}): " + "; ".join(f"{float(k):g}: {v['energy']:.2f}" for k, v in pts))
+
     # --- one chain slid, the lattice responding ----------------------------------------------------
     sld = json.load(open(args.slide)) if Path(args.slide).exists() else {}
     rows = {k: r for k, r in sld.get("rows", {}).items() if r.get("chains", 0) >= 4}

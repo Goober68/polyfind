@@ -39,18 +39,19 @@ completed single-chain step by about a fifth; the flexible-neighbour band in six
 compute: 1600 sites, 10 s per gradient). (b) The lone kink sits at the bottom of the registry well, where the lattice's
 give does not reach (curvature unchanged), so it barely moves: neighbours fixed 25.61 in sixteen chains (25.25 in four);
 neighbours as rigid chains 22.25 at the four-chain minimum's kink shape (23.07 there).
-(c) A CAUTION ABOUT REVERSIONS: `MixedModel.relax` (a short damped descent, then SLSQP) is not proof that a basin has
-no rim: SLSQP's later steps are unbounded. Never report a reversion from `relax` alone: use `dilute_kink.py
---descend-to 0.05 [--descent-only]` (a return to all-trans the descent did not itself reach is discarded), or
-`MixedModel.relax_in_basin` (`relax(trust=...)` in rounds: safe, about ten times the evaluations). Checked by descent
-alone and confirmed: PVDF four chains with flexible neighbours reverts (23.07 -> 15.6 -> 14.1 -> 0.2 -> 0.03, never
-rising); 71/29 with neighbours fixed reverts. NOT SETTLED: the sixteen-chain lone kink with rigid-body neighbours.
-`relax` reverts it; the descent had fallen 25.61 -> 22.25 -> 22.13 -> 22.07 -> 22.01 in 800 evaluations (2.3 h) with
-the gauche bonds opening 94 -> 106 deg and the gradient not shrinking when its budget ended: neither converged nor
-reverted, leaning to "no rim". The stored stage (`vdf10@0 4x2 kinked 0`, host_rigid_bodies) is that unconverged
-point; continue it with `--start-from host_rigid_bodies --stages host_rigid_bodies --descend-to 0.05 --descent-only
---descend-step 0.1 --descend-steps 1600`, or scan the energy against the kink torsion (task #36). An interim commit
-message (792cd66) and text called the quasi-Newton reversion a jump; that was premature and is corrected in 8.1. `--start-from STAGE` continues a stored row. Evaluations in a 16 x 10 cell cost 10 s each: budget
+(c) HOW WELL THE LONE KINK IS HELD, MEASURED (`examples/kink_torsion_scan.py`: the two gauche bonds held at +/-tau, the
+rest of a stage relaxed from its stored state; data in the rows' `torsion_scan`): neighbours fixed, four chains: a real
+minimum (25.25) behind a rim of at least 1.6 kcal/mol (26.90 at 116 deg, then another branch); neighbours as rigid
+chains, four chains: a lip of 0.02 (23.07 at 99 deg, 23.09 at 102-103, then down); sixteen chains: no lip (100: 22.17;
+112: 20.21; 120: 17.03; 130: 12.98). So the "rigid bodies" column of 8.1's table is a shelf, not a state. HISTORY OF
+THIS POINT, so it is not repeated: `MixedModel.relax` returned the sixteen-chain kink to all-trans; a damped descent
+(`dilute_kink.py --descend-to 0.05 --descent-only`) crawled 25.61 -> 22.01 in 800 evaluations (2.3 h) without stopping,
+and interim commits (792cd66, 482ffed) read that as a minimum and the reversion as an optimiser's jump. Both readings
+were wrong: the stretch is flat, the relaxation was right. A relaxation's reversion and a slow descent are both weak
+evidence about a rim; the torsion scan is the test. Confirmed by descent alone all the same: PVDF four chains with
+flexible neighbours reverts (23.07 -> 15.6 -> 14.1 -> 0.2 -> 0.03, never rising); 71/29 with neighbours fixed reverts.
+Tools kept from the detour: `relax(trust=...)` / `relax_in_basin` (boxed quasi-Newton rounds, about ten times the
+evaluations), `dilute_kink.py --descend-to/--descent-only/--trust/--start-from`. `--start-from STAGE` continues a stored row. Evaluations in a 16 x 10 cell cost 10 s each: budget
 accordingly, and seed a scratch `--out` file with the stored all-trans reference or the driver starts a packing search
 on every core.
 

@@ -645,13 +645,14 @@ class MixedModel:
         longer than ``first_step``: a factor of at most five, which leaves its unit Hessian
         inside the range of the real one.
 
-        Neither of those bounds the later steps, and from a shallow basin the quasi-Newton
-        iteration can step over the rim (a lone kink pair among mobile neighbours does: it is
-        returned all-trans from a start that a damped descent shows to be a minimum).  ``trust``
-        (scaled units) confines every free variable to that distance from where the optimiser
-        starts, so one call cannot move a torsion by more than ``10 * trust`` degrees or a chain by
-        more than ``trust`` A; ``info["at_trust_bound"]`` says whether a variable ended on the
-        box.  :meth:`relax_in_basin` repeats such calls until none does."""
+        Neither of those bounds the later steps, so the basin this method ends in is not
+        guaranteed to be the one it started in, and a structure it returns to another basin is not
+        by itself shown to have had no rim (nor is a slow damped descent shown to have found one:
+        examples/kink_torsion_scan.py is the test for a kink).  ``trust`` (scaled units) confines
+        every free variable to that distance from where the optimiser starts, so one call cannot
+        move a torsion by more than ``10 * trust`` degrees or a chain by more than ``trust`` A;
+        ``info["at_trust_bound"]`` says whether a variable ended on the box.
+        :meth:`relax_in_basin` repeats such calls until none does."""
         x0 = np.asarray(x0, dtype=float).ravel().copy()
         free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
         if closed is None:

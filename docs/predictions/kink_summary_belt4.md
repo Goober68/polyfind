@@ -11,6 +11,12 @@
 | vdf20@0 | 4 x 20 | - | +23.41 (gauche bonds 90, -87) | +22.39 (gauche bonds 92, -89) | - |
 | vdf9-trfe4-cfe1-14@0 | 4 x 14 | 4.56, 3.77 | +21.16 (gauche bonds 85, -85) | +20.13 (gauche bonds 86, -86) | reverts to all-trans (+0.00) |
 
+Energy against the kink's own torsion (the two gauche bonds held at +tau and -tau degrees, the rest of the stage relaxed from the stage's stored state; kcal/mol above all-trans; examples/kink_torsion_scan.py). A rise before 120 degrees is the rim that holds the kink; a break in the curve is another branch.
+
+* `vdf10@0 2x1 kinked 0`, rigid host (4 chains; stored state +25.25): 91: 25.37; 93: 25.33; 95: 25.34; 97: 25.40; 99: 25.49; 101: 25.62; 103: 25.77; 105: 25.94; 108: 26.21; 112: 26.58; 116: 26.90; 120: 19.12; 130: 14.09
+* `vdf10@0 2x1 kinked 0`, host rigid bodies (4 chains; stored state +23.07): 97: 23.10; 99: 23.08; 100: 23.08; 101: 23.09; 102: 23.09; 103: 23.09; 104: 23.04; 105: 22.93; 106: 22.78; 108: 22.36; 112: 21.00; 120: 17.66; 130: 13.41
+* `vdf10@0 4x2 kinked 0`, host rigid bodies (16 chains; stored state +22.01, a descent's last point and not a minimum): 100: 22.17; 112: 20.21; 120: 17.03; 130: 12.98
+
 **One chain slid half a monomer along its axis, the lattice responding** (kcal/mol per monomer of the slid chain against the unslid lattice; cell fixed unless stated; examples/chain_slide.py)
 
 | repeat and cell | chains | rigid lattice | neighbours turn | turn and move aside | and flex | with pendant tilts | turn and move aside, lateral cell free | the two nearest shells at 'turn and move aside': largest move, turn |
