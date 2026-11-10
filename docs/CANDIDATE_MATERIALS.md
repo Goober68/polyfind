@@ -592,14 +592,15 @@ stages that each bound the next from above.
 | PVDF | 4 x 10 | +25.25 | +23.07 | reverts to all-trans |
 | PVDF | 4 x 14 | +24.17 | +22.69 | reverts to all-trans |
 | PVDF | 4 x 20 | +23.41 | +22.39 | not run |
+| PVDF, chain stiffness matched to DFT (see below) | 4 x 10 | +19.77 | +18.23 | reverts to all-trans |
 | 64/29/7 | 4 x 14 | +21.16 | +20.13 | reverts to all-trans |
 | 71/29 | 4 x 14 | reverts to all-trans | - | - |
 
 kcal/mol per kink pair against the all-trans supercell (which stage `host_check` confirms is the
 minimum with every chain free: 0.0000 below the tiled cell in all three lattices).
 
-* **It costs 20-25 kcal/mol where the neighbours hold still**, 35-42 kT at 300 K: a population of
-  1e-15 per site. The strained kink's gauche bonds are flattened to 85-99 degrees and its
+* **It costs 20-25 kcal/mol where the neighbours hold still** (18-20 with the chain's stiffness
+  corrected, below), 30-42 kT at 300 K: a population of 1e-13 per site at most. The strained kink's gauche bonds are flattened to 85-99 degrees and its
   backbone angles opened to 122 degrees.
 * **The cost is a strain field, not the size of the cell.** Against the repeat length the PVDF
   numbers fall as 21.6 + 36/N (neighbours fixed) and 21.7 + 13/N (rigid bodies): the limit of an
@@ -607,12 +608,16 @@ minimum with every chain free: 0.0000 below the tiled cell in all three lattices
   in a sheet, 8.2) and 16 the stretch of the chain on either side of it, held by the registry over
   a decay length of about seven monomers (the Frenkel-Kontorova length from the model's own chain
   stiffness and registry curvature; the same estimate gives 12-28 for a 0.68-1.04 A deficit).
-* **A known bias in that number.** The mixed cell's chains are built from torsions and backbone
-  angles with rigid bonds, and with the preset's angle restraint their axial stiffness is 674 GPa
-  where the potential's full valence form gives 330 (`docs/BENCHMARK.md`). The strain part scales
-  as the square root of the chain stiffness, so with the right chain it is about 12 and the lone
-  kink about 17. A run with the restraint matched to that C33 is in progress and its row goes
-  here. The sheet energies and the step of 8.2-8.3 involve no stretch of this kind.
+* **A known bias in that number, and its size.** The mixed cell's chains are built from torsions
+  and backbone angles with rigid bonds, and with the preset's angle restraint (233 kcal/mol/rad^2,
+  fitted to the backbone angles) their axial stiffness is 674 GPa, where the DFT seat's beta cell
+  has C33 = 303 GPa and the potential's full valence form 330. The strain part of the lone kink
+  scales as the square root of that stiffness. Run again with the restraint lowered to 100, which
+  gives the chain 327 GPa (`--angle-stiffness 100 --angle-window 14`; the softer restraint shifts
+  the all-trans backbone angle from 115.7 to 117.1 degrees, so this is a sensitivity run and not a
+  better preset), the ten-monomer numbers are 19.8 and 18.2 where the preset gives 25.2 and 23.1:
+  the lone kink with a chain of the right stiffness is about 18 at ten monomers and 16-17 at
+  infinite repeat. The sheet energies and the step of 8.2-8.3 involve no stretch of this kind.
 * **It is not even metastable once the neighbours respond.** With every chain's torsions and
   angles free the kink reverts to all-trans without a barrier, in PVDF and in the terpolymer
   lattice (the relaxation is a damped descent before the quasi-Newton step, so this is the basin's
@@ -650,13 +655,13 @@ both chains free, the cell free, each chain periodic exactly):
 |---|---|---|---|---|---|
 | PVDF | +4.47 | +5.30 | +5.06 | 4.958, 8.774, 89.18, 25.201 | 4.754, 8.481, 90.00, 25.877 |
 | 64/29/7, kink pair in a VDF-VDF pair | +0.94 | +3.95 | +3.79 | 5.402, 8.426, 92.67, 35.496 | 5.302, 8.245, 91.70, 36.183 |
-| 71/29, kink pair in a VDF-VDF pair | +5.68 | +7.09 | (tilts running) | 5.150, 8.549, 92.16, 35.529 | 4.881, 8.459, 91.78, 36.187 |
+| 71/29, kink pair in a VDF-VDF pair | +5.68 | +7.09 | +6.85 | 5.150, 8.549, 92.16, 35.529 | 4.881, 8.459, 91.78, 36.187 |
 
 kcal/mol per kink pair against the all-trans crystal.
 
 * **The chlorine's loosening of the lattice for kinks survives, on higher numbers.** The earlier
   table had the kink pair at 4.3 in PVDF, 5.5 in the 71/29 matrix and 1.8 in the 64/29/7 cell.
-  Like for like (rigid pendants) it is 5.3, 7.1 and 3.95: every number is higher, the copolymer
+  Like for like it is 5.1, 6.9 and 3.8 (5.3, 7.1 and 3.95 with rigid pendants): every number is higher, the copolymer
   matrix by most because its all-trans reference gained most from the polish relative to its kinked
   cell, and one CFE per fourteen still cuts the matrix's kink pair by 3.1 kcal/mol (it was 3.7).
   The kinked cells are 2-6% wider along a than the all-trans cells (PVDF 4.75 to 4.96 A, 71/29 4.88
@@ -684,21 +689,32 @@ closure surface, every chain flexible, the cell fixed at the kinked crystal's:
 | lattice | who moves | I | saddle A-I | saddle I-B | B | barrier ahead / back |
 |---|---|---|---|---|---|---|
 | PVDF | one sublattice (half the chains, each with its two stack neighbours) | +7.01 | 7.53 | 8.94 | +1.97 | 8.9 / 7.0 |
-| PVDF | one chain in four (all six neighbours stay) | +9.85 | running | running | +7.88 | running |
-| 71/29 | one sublattice | running | | | | |
+| PVDF | one chain in four (all six neighbours stay) | +9.85 | 10.35 | 12.66 | +7.88 | 12.7 / 4.8 |
+| 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.42 | running | +8.98 | running |
+| 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.05 | running | +11.25 | running |
 
-kcal/mol per moving chain against the sheet (the first row is the trial run of the driver, to be
-re-run into `kink_migration_belt4.json`; the second is that file's).
+kcal/mol per moving chain against the sheet. The first row is the trial run of the driver, not yet
+re-run into `kink_migration_belt4.json`; the others are that file's. Bands are converged to 0.1
+kcal/mol per scaled unit except the one-in-four I-B band (0.16) and the copolymers' A-I bands
+(0.3 and 0.7), whose saddle energies had stopped moving in the second decimal.
 
 * **The torsional step itself costs 7.5-9 kcal/mol in the PVDF lattice**: with a 3e12 /s attempt
   frequency, 1e6 steps per second at 300 K. The two saddles are sequential, not concerted: at the
   second the trailing gauche bond is at 111 degrees and the bond it is moving to has not started.
 * **A sheet is stiff against one chain leaving it.** One chain's kink pair one monomer ahead of
-  all six neighbours' costs 7.9 kcal/mol; with its two stack neighbours moving too it costs 2.0.
-  The same anisotropy as the registry: the stack along the short axis moves as a unit, and the
-  sheet advances stack by stack, not chain by chain. In PVDF the sheet is therefore a flat, slow
-  object: the activation of its motion is the step barrier plus the cost of the first chain of a
-  stack leaving, 12 kcal/mol or more.
+  all six neighbours' costs 7.9 kcal/mol and has a 12.7 barrier; with its two stack neighbours
+  moving too it costs 2.0 behind 8.9. The same anisotropy as the registry: the stack along the
+  short axis moves as a unit, and the sheet advances stack by stack, not chain by chain. In PVDF
+  the sheet is therefore a flat, slow object: the first chain of a stack to move pays 12.7
+  (2e3 /s at 300 K), and what the next ones pay beside it is not computed.
+* **In the copolymer lattices the first saddle is lower and the completed step is not.** Into the
+  wide kink the barrier is 6.4 in 64/29/7 and 7.0 in 71/29 against PVDF's 7.5, so the torsional
+  event is no slower beside TrFE and chlorine. But the step computed here takes the kink pair from
+  a VDF-VDF pair onto a TrFE unit, and it lands 9.0 (64/29/7) and 11.3 (71/29) kcal/mol up, far
+  more than the 1.3 the whole sheet pays for the same move (8.4): half the chains with their kink
+  pairs on a different unit from their neighbours' is a costly arrangement in a lattice of
+  sequence-ordered chains, and the model cell, in which every chain carries the same sequence in
+  register, makes it as costly as it can be. The saddles of that second segment are running.
 
 ### 8.4 In a copolymer the sheet sees the sequence
 
@@ -706,16 +722,34 @@ re-run into `kink_migration_belt4.json`; the second is that file's).
 monomer at a time from the polished kinked crystal, relaxing the cell at each position (the
 lattice the sheet carries with it, not a new packing search):
 
-| the kink pair's two units | sheet energy, kcal/mol per kink pair | positions (first bond) |
+| the kink pair's two units | sheet energy, kcal/mol per kink pair | positions (monomer pairs of `VVRVVRVCVVRVVR`) |
 |---|---|---|
-| VDF-VDF | 3.95-4.06 | 0, 6, 22 |
-| TrFE-VDF | 4.51-4.56 | 4, 26 |
-| VDF-TrFE | 5.25-5.33 | 2, 8, 24 |
-| around the CFE | running | 10-20 |
+| VDF-VDF, away from the CFE | 3.95, 3.96, 4.06 | 0-1, 11-12, 3-4 |
+| VDF-VDF, next to the CFE | 4.75 | 8-9 |
+| TrFE-VDF | 4.47, 4.51, 4.56 | 10-11, 13-0, 2-3 |
+| VDF-TrFE | 5.25, 5.30, 5.33, 5.45 | 4-5, 1-2, 12-13, 9-10 |
+| TrFE-VDF, the VDF next to the CFE | 5.88 | 5-6 |
+| VDF-CFE | **12.11** | 6-7 |
+| CFE-VDF | **11.41** | 7-8 |
 
-The sheet sits in the VDF-VDF pairs and climbs 1.3 kcal/mol to pass each TrFE, on top of the
-step barrier: the matrix's own sequence is a corrugation for the sheet, with a period of three
-monomers in this cell, before the pin is counted. The positions at the CFE are running.
+(`kink_site_scan_belt4.json`; rigid pendants; G+ T G-, gauche bonds on the even bonds.)
+
+* **The matrix's own sequence is a corrugation for the sheet.** It sits in the VDF-VDF pairs
+  (3.95-4.06) and climbs 1.3-1.5 kcal/mol to pass each TrFE, on top of the step barrier, with a
+  period of three monomers in this cell. A VDF run is flat to 0.1.
+* **The kink pair does not sit at the CFE and does not cross it.** With a gauche bond on either
+  side of the chlorinated unit the sheet is 7.5-8.2 kcal/mol above its VDF-VDF sites, and the
+  lattice it would need there is a different one (5.11 x 9.20 A against 5.40 x 8.43). The pin of
+  the statics, which favours the helix around itself by 3.8 kcal/mol per unit (2.1), is to this
+  kink pair a wall: a sheet of this handedness lives in the segment between two CFE units and
+  turns back at each. The mirrored kink pair (G- T G+), which the chiral unit treats differently
+  (the pinned-lattice handedness split of 8.7 was 9 kcal/mol at the CFE), and the kink pair on the
+  odd bonds are not scanned yet; until they are, "does not cross" is this handedness's statement.
+* **What this says to a sequence designer**, as far as it goes: between pins the channel's speed is
+  set by how many TrFE units the sheet must pass and how they are spaced (a climb of 1.3-1.5 at
+  each, a factor of ten in rate at 300 K), so at fixed composition a sequence that groups its VDF
+  units into runs gives the sheet flat stretches, and one that alternates gives it a washboard.
+  That is a prediction the site scan can test sequence by sequence, and has not yet.
 
 ### 8.5 What the frequency map becomes
 

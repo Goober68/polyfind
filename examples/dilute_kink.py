@@ -217,6 +217,7 @@ def main():
     global K_ANGLE
     K_ANGLE = args.angle_stiffness
     tag = "" if K_ANGLE is None else f" k{K_ANGLE:g}"  # a sensitivity run keeps its own reference cell and its own rows
+    wtag = "" if abs(args.angle_window - 8.0) < 1e-9 else f" w{args.angle_window:g}"  # and so does a run with another angle window
     out_path = Path(args.out)
     letters, note = sequence(args.row)
     log = lambda s: print(s, flush=True)  # noqa: E731
@@ -253,7 +254,7 @@ def main():
         model, x_tt, tt = make_model(polymer, d, args.nx, args.ny)
         nc, n_mon, P = model.nc, tt.n_monomers, model.P
         kinked = list(range(nc)) if args.kinked == "all" else sorted(int(v) for v in args.kinked.split(","))
-        key = f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''} {args.nx}x{args.ny} kinked {','.join(map(str, kinked))}{tag}"
+        key = f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''} {args.nx}x{args.ny} kinked {','.join(map(str, kinked))}{tag}{wtag}"
         e_tt = model.physical_energy(x_tt)
         st_tt = model.state(x_tt)
         entry.update(row=args.row, letters=letters, note=note, supercell=[args.nx, args.ny], chains=nc, sites=int(model.pk.N), monomers_per_chain=int(n_mon),

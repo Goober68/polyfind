@@ -89,9 +89,15 @@ def main():
             if r.get("collapsed"):
                 return f"reverts to all-trans ({r['formation']:+.2f})"
             g = np.round(r["kinks"][0]["gauche_deg"], 0)
-            return f"{r['formation']:+.2f} (gauche bonds {g[0]:.0f}, {g[1]:.0f})"
+            capped = f"; {r['angles_at_window']} angles at the window" if r.get("angles_at_window") else ""
+            return f"{r['formation']:+.2f} (gauche bonds {g[0]:.0f}, {g[1]:.0f}{capped})"
 
-        md.append(f"| {key.split(' ')[0]} | {e['chains']} x {e['monomers_per_chain']} | {reg} | {cell('rigid_host')} | {cell('host_rigid_bodies')} | {cell('flexible_host')} |")
+        extra = ""
+        if abs(e.get("angle_stiffness", 233.037) - 233.037) > 0.5:
+            extra += f", angle restraint {e['angle_stiffness']:g} (chain stiffness matched to DFT)"
+        if abs(e.get("angle_window_deg", 8.0) - 8.0) > 1e-9:
+            extra += f", angle window {e['angle_window_deg']:g} deg"
+        md.append(f"| {key.split(' ')[0]}{extra} | {e['chains']} x {e['monomers_per_chain']} | {reg} | {cell('rigid_host')} | {cell('host_rigid_bodies')} | {cell('flexible_host')} |")
 
     # --- the sheet ------------------------------------------------------------------------------------
     md += ["", "**Kink sheet: every chain kinked in register, own cell** (kcal/mol per kink pair against the all-trans crystal)", "",
