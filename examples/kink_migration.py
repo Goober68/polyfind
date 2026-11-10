@@ -72,19 +72,24 @@ def move_kink(t, k0: int, step: int):
     return t
 
 
-def free_sets(model, mover: int, host: str):
-    """``(free indices, chains whose closure is held)`` at a fixed cell for the chosen host freedom."""
+def free_sets(model, movers, host: str):
+    """``(free indices, chains whose closure is held)`` at a fixed cell for the chosen host freedom.
+    One chain's lateral position and axial shift stay fixed (the last chain that does not move, or
+    the last chain when all do), which removes the cell's rigid translation."""
     nc = model.nc
-    others = [s for s in range(nc) if s != mover]
-    anchor = others[-1]
+    movers = [int(m) for m in movers]
+    others = [s for s in range(nc) if s not in movers]
+    anchor = others[-1] if others else movers[-1]
     place = lambda chains: np.concatenate([model.index("place", [s for s in chains if s != anchor]),  # noqa: E731
                                            model.index("phi", [s for s in chains if s == anchor])]).astype(int)
-    m_int = model.index("internal", mover)
-    if host == "rigid":
-        return np.concatenate([m_int, model.index("place", mover)]).astype(int), [mover]
-    if host == "bodies":
-        return np.concatenate([m_int, model.index("place", mover), place(others)]).astype(int), [mover]
-    return np.concatenate([m_int, model.index("place", mover), place(others), model.index("internal", others)]).astype(int), list(range(nc))
+    m_int = model.index("internal", movers)
+    if host == "rigid" and others:
+        return np.concatenate([m_int, place(movers)]).astype(int), movers
+    if host == "bodies" and others:
+        return np.concatenate([m_int, place(movers), place(others)]).astype(int), movers
+    o_int = model.index("internal", others) if others else np.zeros(0, dtype=int)
+    o_place = place(others) if others else np.zeros(0, dtype=int)
+    return np.concatenate([m_int, place(movers), o_place, o_int]).astype(int), list(range(nc))
 
 
 def band(model, xa, xb, n_images: int, free, closed):
@@ -106,7 +111,8 @@ def main():
     ap.add_argument("--row", default="vdf10")
     ap.add_argument("--nx", type=int, default=1)
     ap.add_argument("--ny", type=int, default=1)
-    ap.add_argument("--mover", type=int, default=0, help="the chain whose kink pair moves")
+    ap.add_argument("--mover", default="0", help="the chain whose kink pair moves, or 'all': every chain's moves together, the sheet in register "
+                    "(the step without the cost of a chain leaving its neighbours; energies are then per chain)")
     ap.add_argument("--kink-at", type=int, default=0, help="bond offset of every chain's kink pair in the kinked crystal")
     ap.add_argument("--mirror-kink", action="store_true", help="G- T G+ instead of G+ T G-")
     ap.add_argument("--backward", action="store_true", help="move the kink pair one monomer back instead of ahead")
@@ -162,6 +168,8 @@ def main():
         model, x0, ch = DK.make_model(polymer, d, args.nx, args.ny)
         _MODEL = model
         nc, n_mon, P = model.nc, ch.n_monomers, model.P
+        movers = list(range(nc)) if args.mover == "all" else [int(args.mover)]
+        nm, m0 = len(movers), movers[0]
         e_tt = float(d_tt["energy"]) * nc / 2  # the polished all-trans crystal, per supercell
         entry.update(row=args.row, letters=letters, note=note, supercell=[args.nx, args.ny], chains=nc, sites=int(model.pk.N), monomers_per_chain=int(n_mon),
                      mover=args.mover, kink_offset_bonds=args.kink_at, kink_mirrored=bool(args.mirror_kink), direction="back" if args.backward else "ahead",
@@ -191,20 +199,21 @@ def main():
                                    "seconds": time.time() - t0, "state": xA.tolist()}
         log(f"   kinked crystal: {form:+.3f} kcal/mol per kink pair against all-trans; cell {np.round(stA.lattice, 3).tolist()} "
             f"(all-trans {np.round(entry['kinked_crystal']['all_trans_cell'], 3).tolist()}); {info['iterations']} it, {time.time() - t0:.0f} s; {info['message']}")
-        log(f"      chain {args.mover}: {letters_of(stA.tors[args.mover])}")
+        log(f"      chain {m0}: {letters_of(stA.tors[m0])}")
         save()
 
         # --- I and B: the mover's kink pair widened, then one monomer on ---------------------------
-        free, closed = free_sets(model, args.mover, args.host)
-        m_t, m_a = model.index("tors", args.mover), model.index("angs", args.mover)
+        free, closed = free_sets(model, movers, args.host)
         k0, step = args.kink_at % P, (-2 if args.backward else 2)
-        tA = xA[m_t].copy()
         lead = (k0 + 2) % P if not args.backward else k0  # the gauche bond that moves first
-        tI = tA.copy()
-        tI[(lead + step) % P], tI[lead] = tA[lead], 180.0
         xI0, xB0 = xA.copy(), xA.copy()
-        xI0[m_t] = tI
-        xB0[m_t] = move_kink(tA, k0, step)
+        for m in movers:
+            m_t = model.index("tors", m)
+            tA = xA[m_t].copy()
+            tI = tA.copy()
+            tI[(lead + step) % P], tI[lead] = tA[lead], 180.0
+            xI0[m_t] = tI
+            xB0[m_t] = move_kink(tA, k0, step)
         ends = {"A": xA}
         for name, x0 in (("I", xI0), ("B", xB0)):
             t0 = time.time()
@@ -213,7 +222,7 @@ def main():
                 xr, rec = np.asarray(old["state"], dtype=float), old
                 log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (from the stored run); {rec['torsions']}")
             else:
-                x0 = model.project(x0, model.index("internal", args.mover), [args.mover])
+                x0 = model.project(x0, model.index("internal", movers), movers)
                 xr, info = model.relax(x0, free=free, closed=closed, maxiter=600, angle_window=args.angle_window)
                 for _ in range(3):  # a strained start can take more than one round
                     if "success" in info["message"].lower():
@@ -221,12 +230,12 @@ def main():
                     xr, more = model.relax(xr, free=free, closed=closed, maxiter=600, angle_window=args.angle_window)
                     info = {**more, "iterations": info["iterations"] + more["iterations"]}
                 st = model.state(xr)
-                rec = {"energy": model.physical_energy(xr) - eA, "torsions": letters_of(st.tors[args.mover]), "torsions_deg": wrap(st.tors[args.mover]).tolist(),
-                       "start_energy": model.physical_energy(x0) - eA, "iterations": info["iterations"], "message": info["message"],
+                rec = {"energy": (model.physical_energy(xr) - eA) / nm, "torsions": letters_of(st.tors[m0]), "torsions_deg": wrap(st.tors[m0]).tolist(),
+                       "start_energy": (model.physical_energy(x0) - eA) / nm, "iterations": info["iterations"], "message": info["message"],
                        "converged": "success" in info["message"].lower(),
                        "angles_at_window": int((np.abs(st.angs - model.angles0[None]) > args.angle_window - 1e-3).sum()),
                        "seconds": time.time() - t0, "state": xr.tolist()}
-                log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (start {rec['start_energy']:+.3f}); {letters_of(st.tors[args.mover])}; "
+                log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (start {rec['start_energy']:+.3f}); {letters_of(st.tors[m0])}; "
                     f"{info['iterations']} it, {time.time() - t0:.0f} s; {rec['angles_at_window']} angles at the window; {info['message']}")
             ends[name] = xr
             entry[name] = rec
@@ -248,31 +257,32 @@ def main():
             same_ends = "images" in old and len(old["images"]) == args.images and np.allclose(old["images"][0], ends[a], atol=1e-9) and np.allclose(old["images"][-1], ends[b], atol=1e-9)
             if same_ends and old.get("converged"):
                 entry[seg] = old
-                top = max(top, eA + old["saddle"])
+                top = max(top, eA + old["saddle"] * nm)
                 log(f"   {seg}: saddle {old['saddle']:+.3f} (from the stored run)")
                 continue
             imgs = np.asarray(old["images"], dtype=float) if same_ends else band(model, ends[a], ends[b], args.images, free, closed)
 
             def progress(it, E, fm, climbing, seg=seg, t0=t0):
                 if it == 1 or it % 10 == 0:
-                    log(f"      {seg} it {it:4d}: force {fm:8.4f}, top {E.max() - eA:+8.4f}, climbing {climbing}, energies {np.round(E - eA, 3).tolist()}  ({time.time() - t0:.0f} s)")
+                    log(f"      {seg} it {it:4d}: force {fm:8.4f}, top {(E.max() - eA) / nm:+8.4f}, climbing {climbing}, energies {np.round((E - eA) / nm, 3).tolist()}  ({time.time() - t0:.0f} s)")
 
             res = MC.neb(evaluate, imgs, scale=sc, free=free, k_spring=args.k_spring, climb_after=40, fmax=args.fmax, maxiter=args.maxiter,
                          constraint=constraint, callback=progress)
             i_top = int(np.argmax(res.energies))
             st = model.state(res.images[i_top])
             dips = [i for i in range(1, args.images - 1) if res.energies[i] < min(res.energies[i - 1], res.energies[i + 1]) - 1e-3]
-            entry[seg] = {"energies": (res.energies - eA).tolist(), "saddle": float(res.energies.max() - eA), "saddle_image": i_top, "converged": bool(res.converged),
+            entry[seg] = {"energies": ((res.energies - eA) / nm).tolist(), "saddle": float(res.energies.max() - eA) / nm, "saddle_image": i_top, "converged": bool(res.converged),
                           "force_max": res.force_max, "iterations": res.iterations, "interior_minima": dips,
-                          "saddle_torsions_deg": wrap(st.tors[args.mover]).tolist(), "seconds": time.time() - t0, "images": res.images.tolist()}
+                          "saddle_torsions_deg": wrap(st.tors[m0]).tolist(), "seconds": time.time() - t0, "images": res.images.tolist()}
             top = max(top, float(res.energies.max()))
-            log(f"   {seg}: saddle {res.energies.max() - eA:+.3f} at image {i_top}{'' if res.converged else ' (NOT converged)'}; force {res.force_max:.4f}; "
+            log(f"   {seg}: saddle {(res.energies.max() - eA) / nm:+.3f} at image {i_top}{'' if res.converged else ' (NOT converged)'}; force {res.force_max:.4f}; "
                 f"{res.iterations} it, {time.time() - t0:.0f} s{'; interior minima at ' + str(dips) if dips else ''}")
             save()
         if pool is not None:
             pool.close()
-        entry["barrier_forward"] = top - eA
-        entry["barrier_back"] = top - model.physical_energy(ends["B"])
+        entry["barrier_forward"] = (top - eA) / nm
+        entry["barrier_back"] = (top - model.physical_energy(ends["B"])) / nm
+        entry["moving_chains"] = nm
         log(f"   one-monomer step: barrier {entry['barrier_forward']:+.3f} ahead, {entry['barrier_back']:+.3f} back; B lies {entry['B']['energy']:+.3f} above A")
         save()
     log(f"written {out_path}")

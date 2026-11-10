@@ -36,7 +36,8 @@ def main():
                     "(plus the climb along the sequence from --sites) instead of the kink-pair formation energy; rows are those with a band")
     ap.add_argument("--sites", default="docs/predictions/kink_site_scan_belt4.json", help="kink_site_scan result file (with --steps)")
     ap.add_argument("--margins", default="docs/predictions/polished_margins_belt4.json", help="polished margins; a row found there takes its margin and switch strain from it")
-    ap.add_argument("--step-cell", default="1x1", help="which supercell's band to read with --steps (1x1: one sublattice moves)")
+    ap.add_argument("--step-cell", default="1x1", help="which supercell's band to read with --steps")
+    ap.add_argument("--step-mover", default="all", help="which mover's band to read with --steps: 'all' (the sheet in register) or a chain index")
     args = ap.parse_args()
     screen = {}
     for path in args.screen.split(","):
@@ -79,7 +80,8 @@ def main():
             sites = {}
         stepped = {}
         for key, e in steps.items():
-            if "barrier_forward" not in e or e.get("host") != "flexible" or f"{e['supercell'][0]}x{e['supercell'][1]}" != args.step_cell or e.get("direction") != "ahead":
+            if ("barrier_forward" not in e or e.get("host") != "flexible" or f"{e['supercell'][0]}x{e['supercell'][1]}" != args.step_cell
+                    or e.get("direction") != "ahead" or str(e.get("mover")) != args.step_mover):
                 continue
             name = e["row"]
             if name not in rows:

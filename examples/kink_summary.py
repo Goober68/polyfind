@@ -121,7 +121,8 @@ def main():
         nc = e["chains"]
         rate = 3e12 * np.exp(-e["barrier_forward"] / KT)
         conv = "yes" if e["A-I"]["converged"] and e["I-B"]["converged"] else f"A-I force {e['A-I']['force_max']:.2f}, I-B force {e['I-B']['force_max']:.2f}"
-        md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, 1 of {nc} | {e['host']} | {e['I']['energy']:+.2f} | {e['A-I']['saddle']:+.2f} | "
+        who = f"all {nc} (the sheet in register)" if str(e.get("mover")) == "all" else f"1 of {nc}"
+        md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, {who} | {e['host']} | {e['I']['energy']:+.2f} | {e['A-I']['saddle']:+.2f} | "
                   f"{e['I-B']['saddle']:+.2f} | {e['B']['energy']:+.2f} | {e['barrier_forward']:.2f} / {e['barrier_back']:.2f} | {rate:.2g} /s | {conv} |")
 
     # --- the margins ------------------------------------------------------------------------------------
