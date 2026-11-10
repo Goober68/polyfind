@@ -116,8 +116,9 @@ exactly, started half a degree off the search's torsions), then the pendant tilt
 | 64/29/7, one CFE per fourteen | +0.110 | **+0.317** | 0.206 | 0.533 | TG'TG | 10 / 21 deg | +12.1% |
 | 71/29, the matrix without the pin | -0.051 | **+0.056** | 0.081 | 0.375 | TGTG' | 6 / 19 deg | +11.7% |
 | 64/36 matrix | -0.058 | **+0.083** | 0.061 | 0.407 | TGTG' | 6 / 21 deg | +11.8% |
-| 65/30/5, one CFE per twenty | +0.055 | **+0.187** or more (one TG conformer in) | 0.175 | 0.452 | TG'TG | 10 / 27 deg | +11.1% |
+| 65/30/5, one CFE per twenty | +0.055 | **+0.258** | 0.175 | 0.517 | TGTG' | 10 / 21 deg | +12.1% |
 | 64/29/7 with CDFE in place of CFE | +0.402 | **+0.685** | 0.150 | 0.637 | TGTG' | 14 / 25 deg | +12.1% |
+| one CFE and one CDFE per fourteen | +0.641 | **+0.807** | 0.251 | 0.581 | TG'TG | 19 / 20 deg | +12.2% |
 | 70/30, ten monomers (the E2 cell) | +0.145 | **+0.213** | 0.078 | 0.305 | TGTG' | 6 / 19 deg | +11.6% |
 | 80/20, ten monomers | +0.177 | **+0.229** | 0.097 | 0.241 | G'TGT | 6 / 14 deg | +11.3% |
 | 60/40, ten monomers | -0.329 | **-0.199** | 0.049 | 0.414 | TGTG' | 6 / 20 deg | +11.0% |
@@ -125,8 +126,8 @@ exactly, started half a degree off the search's torsions), then the pendant tilt
 | 70/20/10 CDFE, ten monomers | +0.146 | **+0.392** | 0.220 | 0.719 | TGTG' | 16 / 23 deg | +12.8% |
 
 kcal/mol per monomer, all-trans minus TG, pendant tilts included (`polished_margins_belt4.json`;
-the twenty-monomer cell's second helix, the CFE+CDFE, CTFE and AN fourteen-monomer cells and the
-other ten-monomer rows are still running; `kink_summary_belt4.md` carries the table as it fills).
+the CFE+CDFE, CTFE and AN fourteen-monomer cells and the other ten-monomer rows are still
+running; `kink_summary_belt4.md` carries the table as it fills).
 
 * **Both cells fall, the helix by more.** The all-trans chain of a VDF/TrFE sequence is not
   planar: its torsions deflect by 2-6 degrees in a pattern that follows the TrFE units (ten at the
@@ -142,10 +143,10 @@ other ten-monomer rows are still running; `kink_summary_belt4.md` carries the ta
   the 64/29/7 cell is at +0.32, not +0.11: the CFE pin is +3.7 kcal/mol per unit at one per
   fourteen (it was +2.3), and the cell no longer sits on the steep part of the switching curve at
   55 V/um (E* near 300 MV/m on the all-trans dipole). The twenty-monomer cell with one CFE is at
-  +0.19 with one of its two helix handednesses polished (a lower bound; it was +0.055), a pin of
-  2.6 per unit, so the pin weakens somewhat as it is diluted and the margin of a 29-36 mol% matrix
-  with one CFE per N monomers is about +0.06 + (2.6 to 3.7)/N: the steep part of the curve (+0.07,
-  section 3) is the matrix with almost no pin.
+  +0.26 (it was +0.055), the same pin per unit (3.5-4.0 against a 29-36 mol% matrix), so the 1/N
+  law of the earlier pass holds with the new numbers: the margin of a 29-36 mol% matrix with one
+  CFE per N monomers is about +0.06 + 3.7/N, and the steep part of the curve (+0.07, section 3) is
+  the matrix with almost no pin.
 * **What this does to the pass.** The search's cells are constrained minima of the same potential
   and the polished cells are lower, so the polished margins supersede the table's wherever both
   exist. The readings that do not move: TrFE content sets the matrix's margin and brings it to
@@ -400,7 +401,7 @@ not +2.3) and the CDFE cell at +0.69 instead of +0.40; with the kink pair measur
 direction of item 2 (the chlorine pins the helix and cheapens the kink sheet, by 3.1 kcal/mol) and
 item 5. What does not: the density. On the polished numbers one CFE per fourteen holds the perfect
 crystal off the switching curve at 55 V/um altogether (polar fraction 0.00 in the mapping), and the
-margin law +0.06 + (2.6 to 3.7)/N puts the steep part at pins far sparser than any terpolymer that is known
+margin law +0.06 + 3.7/N puts the steep part at pins far sparser than any terpolymer that is known
 to work, while the measured 63/30/7 film does switch there. The model and the film now disagree on
 that one number, and the two explanations (the chlorine's untested parameters overstate its pin;
 the film switches where the perfect crystal's margin does not apply) are decided by a DFT cell with
