@@ -58,9 +58,18 @@ def letters_of(t) -> str:
     return " ".join("G+" if 0.0 < v < 120.0 else ("G-" if -120.0 < v < 0.0 else "T") for v in wrap(t))
 
 
-def shifted(v, k: int):
-    """A per-bond array moved ``k`` bonds along the chain (cyclically)."""
-    return np.roll(np.asarray(v, dtype=float), k)
+def move_kink(t, k0: int, step: int):
+    """Torsions ``t`` with the kink pair at bonds ``k0, k0 + 2`` moved ``step`` bonds along: the two
+    gauche values carried to their new bonds, the bonds they leave and the bond between set
+    trans.  Every other torsion keeps its value, so a copolymer chain keeps the deflections that
+    belong to its sequence."""
+    t = np.array(t, dtype=float)
+    P = len(t)
+    g1, g2 = t[k0 % P], t[(k0 + 2) % P]
+    for k in (k0, k0 + 1, k0 + 2):
+        t[k % P] = 180.0
+    t[(k0 + step) % P], t[(k0 + step + 1) % P], t[(k0 + step + 2) % P] = g1, 180.0, g2
+    return t
 
 
 def free_sets(model, mover: int, host: str):
@@ -118,6 +127,7 @@ def main():
     key = (f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''} {args.nx}x{args.ny} mover {args.mover} "
            f"{'back' if args.backward else 'ahead'} host {args.host}")
     entry: dict = {}
+    prior = (json.load(open(out_path)) if out_path.exists() else {}).get("rows", {}).get(key, {})  # a stored run of this row: its end points and bands are reused
 
     def locked_update(path: Path, fn):
         import fcntl
@@ -188,26 +198,38 @@ def main():
         free, closed = free_sets(model, args.mover, args.host)
         m_t, m_a = model.index("tors", args.mover), model.index("angs", args.mover)
         k0, step = args.kink_at % P, (-2 if args.backward else 2)
-        tA, aA = xA[m_t].copy(), xA[m_a].copy()
+        tA = xA[m_t].copy()
         lead = (k0 + 2) % P if not args.backward else k0  # the gauche bond that moves first
         tI = tA.copy()
         tI[(lead + step) % P], tI[lead] = tA[lead], 180.0
         xI0, xB0 = xA.copy(), xA.copy()
         xI0[m_t] = tI
-        xB0[m_t], xB0[m_a] = shifted(tA, step), shifted(aA, step)
+        xB0[m_t] = move_kink(tA, k0, step)
         ends = {"A": xA}
         for name, x0 in (("I", xI0), ("B", xB0)):
             t0 = time.time()
-            x0 = model.project(x0, model.index("internal", args.mover), [args.mover])
-            xr, info = model.relax(x0, free=free, closed=closed, maxiter=600, angle_window=args.angle_window)
+            old = prior.get(name, {})
+            if "state" in old and old.get("converged") and len(old["state"]) == model.n_var and abs(prior.get("kinked_crystal", {}).get("formation_per_kink_pair", 1e9) - form) < 1e-6:
+                xr, rec = np.asarray(old["state"], dtype=float), old
+                log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (from the stored run); {rec['torsions']}")
+            else:
+                x0 = model.project(x0, model.index("internal", args.mover), [args.mover])
+                xr, info = model.relax(x0, free=free, closed=closed, maxiter=600, angle_window=args.angle_window)
+                for _ in range(3):  # a strained start can take more than one round
+                    if "success" in info["message"].lower():
+                        break
+                    xr, more = model.relax(xr, free=free, closed=closed, maxiter=600, angle_window=args.angle_window)
+                    info = {**more, "iterations": info["iterations"] + more["iterations"]}
+                st = model.state(xr)
+                rec = {"energy": model.physical_energy(xr) - eA, "torsions": letters_of(st.tors[args.mover]), "torsions_deg": wrap(st.tors[args.mover]).tolist(),
+                       "start_energy": model.physical_energy(x0) - eA, "iterations": info["iterations"], "message": info["message"],
+                       "converged": "success" in info["message"].lower(),
+                       "angles_at_window": int((np.abs(st.angs - model.angles0[None]) > args.angle_window - 1e-3).sum()),
+                       "seconds": time.time() - t0, "state": xr.tolist()}
+                log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (start {rec['start_energy']:+.3f}); {letters_of(st.tors[args.mover])}; "
+                    f"{info['iterations']} it, {time.time() - t0:.0f} s; {rec['angles_at_window']} angles at the window; {info['message']}")
             ends[name] = xr
-            st = model.state(xr)
-            entry[name] = {"energy": model.physical_energy(xr) - eA, "torsions": letters_of(st.tors[args.mover]), "torsions_deg": wrap(st.tors[args.mover]).tolist(),
-                           "start_energy": model.physical_energy(x0) - eA, "iterations": info["iterations"], "message": info["message"],
-                           "angles_at_window": int((np.abs(st.angs - model.angles0[None]) > args.angle_window - 1e-3).sum()),
-                           "seconds": time.time() - t0, "state": xr.tolist()}
-            log(f"   {name}: {entry[name]['energy']:+.3f} kcal/mol above the kinked crystal (start {entry[name]['start_energy']:+.3f}); {letters_of(st.tors[args.mover])}; "
-                f"{info['iterations']} it, {time.time() - t0:.0f} s; {entry[name]['angles_at_window']} angles at the window; {info['message']}")
+            entry[name] = rec
             save()
 
         # --- the two bands ----------------------------------------------------------------------------
@@ -222,7 +244,14 @@ def main():
         top = eA
         for seg, (a, b) in (("A-I", ("A", "I")), ("I-B", ("I", "B"))):
             t0 = time.time()
-            imgs = band(model, ends[a], ends[b], args.images, free, closed)
+            old = prior.get(seg, {})
+            same_ends = "images" in old and len(old["images"]) == args.images and np.allclose(old["images"][0], ends[a], atol=1e-9) and np.allclose(old["images"][-1], ends[b], atol=1e-9)
+            if same_ends and old.get("converged"):
+                entry[seg] = old
+                top = max(top, eA + old["saddle"])
+                log(f"   {seg}: saddle {old['saddle']:+.3f} (from the stored run)")
+                continue
+            imgs = np.asarray(old["images"], dtype=float) if same_ends else band(model, ends[a], ends[b], args.images, free, closed)
 
             def progress(it, E, fm, climbing, seg=seg, t0=t0):
                 if it == 1 or it % 10 == 0:
