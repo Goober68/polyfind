@@ -14,6 +14,12 @@ against its neighbour (a flipped chain) has its kink moved the other way along i
 so that the sheet stays one plane in space.
 
 Energies are in kcal/mol per kink pair against the polished all-trans crystal, rigid pendants.
+Relaxing the cell at each position could mix two things, the site's own energy and the packing
+basin the relaxation falls in.  In the 71/29 cell, where neighbouring VDF-VDF positions come out
+2 kcal/mol apart in cells 0.15 A apart in a, it does not: four sites re-relaxed from another
+site's lattice returned to the same energies and the same cells, so the lattice follows the site.
+``--fixed-cell`` is there for a lattice where that check fails: it holds the cell at the starting
+kinked crystal's and relaxes only the chains.
 ``--parity 1`` puts the gauche bonds on the other kind of backbone bond (offsets ``--kink-at`` + 1,
 + 3, ...), which is a different kink pair.
 """
@@ -42,6 +48,7 @@ def main():
     ap.add_argument("--offsets", default="", help="comma list of offsets (bonds) to visit; default every position of the parity, walked outward from the start")
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--maxiter", type=int, default=600)
+    ap.add_argument("--fixed-cell", action="store_true", help="hold the cell at the starting kinked crystal's; relax only the chains")
     ap.add_argument("--references", default="docs/predictions/dilute_kink_belt4.json")
     ap.add_argument("--kinked-references", default="docs/predictions/kink_migration_belt4.json")
     ap.add_argument("--out", default="docs/predictions/kink_site_scan_belt4.json")
@@ -50,6 +57,7 @@ def main():
     out_path = Path(args.out)
     letters, note = DK.sequence(args.row)
     key = f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''}"
+    out_key = key + (" fixed cell" if args.fixed_cell else "")  # the stored kinked crystal is under ``key``; the scan's rows under ``out_key``
 
     def locked_update(path: Path, fn):
         import fcntl
@@ -77,21 +85,22 @@ def main():
         model, xA, ch = DK.make_model(polymer, d, 1, 1)
         nc, n_mon = model.nc, ch.n_monomers
         e_tt = float(d_tt["energy"])
-        free = np.setdiff1d(np.arange(model.n_var), np.concatenate([model.index("xy", nc - 1), model.index("z", nc - 1)]))
+        held = [model.index("xy", nc - 1), model.index("z", nc - 1)] + ([model.index("lattice"), model.index("c")] if args.fixed_cell else [])
+        free = np.setdiff1d(np.arange(model.n_var), np.concatenate(held))
         everyone = list(range(nc))
         sense = np.where(model.flips, -1, 1)  # a flipped chain runs the other way along the cell's axis
-        prior = (json.load(open(out_path)) if out_path.exists() else {}).get("rows", {}).get(key, {}).get("sites", {})
+        prior = (json.load(open(out_path)) if out_path.exists() else {}).get("rows", {}).get(out_key, {}).get("sites", {})
         sites = dict(prior)
         e0 = (model.physical_energy(xA) - e_tt) / nc
         sites[str(args.kink_at)] = {"formation": e0, "relative": 0.0, "units": letters[(args.kink_at // 2) % n_mon] + letters[(args.kink_at // 2 + 1) % n_mon],
                                     "torsions": KM.letters_of(model.state(xA).tors[0]), "cell": model.state(xA).lattice.tolist(), "converged": True, "state": xA.tolist()}
-        log(f"{key}: {letters}; kink sheet at offset {args.kink_at} (units {sites[str(args.kink_at)]['units']}): {e0:+.3f} kcal/mol per kink pair against all-trans")
+        log(f"{out_key}: {letters}; kink sheet at offset {args.kink_at} (units {sites[str(args.kink_at)]['units']}): {e0:+.3f} kcal/mol per kink pair against all-trans")
 
         def save():
             locked_update(out_path, lambda disk: (disk.update(preset=args.preset, energy="kcal/mol per kink pair against the polished all-trans crystal, rigid pendants; "
                                                               "the sheet moved along the sequence from the stored kinked crystal, cell relaxed at each position"),
-                                                  disk.setdefault("rows", {}).__setitem__(key, {"letters": letters, "note": note, "start_offset": args.kink_at,
-                                                                                               "mirrored": bool(args.mirror_kink), "sites": sites})))
+                                                  disk.setdefault("rows", {}).__setitem__(out_key, {"letters": letters, "note": note, "start_offset": args.kink_at,
+                                                                                                   "mirrored": bool(args.mirror_kink), "fixed_cell": bool(args.fixed_cell), "sites": sites})))
         save()
         if args.offsets:
             targets = [int(v) for v in args.offsets.split(",")]
