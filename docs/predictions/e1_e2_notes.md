@@ -259,9 +259,49 @@ stiffness flag of the previous section is read against the QE cell from here on.
   23.164); the other handedness TG'TG -7.3295, -7.5224. **Margin TTTT minus TGTG' +0.213** (the
   search's cells: +0.145), axial switch strain +11.6%. Coordinates:
   `docs/predictions/polished_vdf7-trfe3_TTTT.xyz`, `_TGTGp.xyz`, `_TGpTG.xyz`. PVDF's cells are
-  unchanged by the same polish (the line group is its own symmetry). The request that carries
-  these to Dipole, with the axial-registry single points (E5) and the PVDF kink sheet (E6), is
-  `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`; its registered numbers are the
-  half-monomer sublattice slip of beta-PVDF +1.79 kcal/mol per monomer of the cell rigid and +0.51
-  relaxed with the cell free, one chain of the doubled cell +1.70 (6.8 per monomer of the moved
-  chain), and the kink sheet +5.30 per kink pair.
+  unchanged by the same polish (the line group is its own symmetry). The same cells in the E2
+  schema, with the 64/29/7 pair (`VVRVVRVCVVRVVR`: TTTT -7.2215, -7.2636; TG'TG -7.3615, -7.5811;
+  margin **+0.317**, the first registration's cells +0.110) and the hash of every exported file,
+  are `docs/predictions/e2_polished_polyfind_belt4.json` (`examples/e2_polished_predictions.py`),
+  which `examples/crosscheck_e1_e2.py --e2` reads as it reads the first registration. Each cell
+  is exported twice, because a single point sees the atoms it is given: the files named above have
+  the rigid pendant groups of the chain builder, and their model margins are the rigid-pendant
+  ones, **+0.055** (70/30) and **+0.140** (64/29/7); the `_tilted.xyz` files have every CH2, CF2
+  and CHF group tilt-relaxed about its carbon (`examples/export_mixed_cell.py --tilts`), and their
+  model margins are **+0.213** and **+0.317**. A DFT single point on a file is compared with that
+  file's margin; a DFT relaxation from either is compared with the tilted one. No polarization is
+  registered for the polished cells. **Dispatched by the PI on 2026-11-10 ("Go on E5 and the E2
+  addendum")**: the request is
+  `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`, the files are in
+  `sarco/materials/electrostriction/requests/polished_e2_cells_v1/`.
+- **E5, the axial registry of beta-PVDF (registered 2026-11-10 and dispatched the same day; no
+  DFT number exists).** What confines a conformational kink pair to sheets in polyfind's
+  mixed-conformation cell is the energy of sliding a chain along its axis against its neighbours
+  (`docs/CANDIDATE_MATERIALS.md` 8), which no anchor of the potential tests. Dipole is asked for
+  it as single points on its accepted beta cell (`pvdf_beta_ref_v1`), on cells built from its own
+  record atom for atom (`docs/predictions/e5_structures/`, written by `examples/axial_registry.py
+  --write-structures`). polyfind's numbers on `pvdf-dft-valence-belt4`, kcal/mol per monomer of
+  the cell, rigid pendants (`docs/predictions/e5_polyfind_belt4.json`):
+
+  | part | cell and displacement | polyfind's own cell (registered with the ask) | polyfind in Dipole's cell (like for like) |
+  |---|---|---|---|
+  | a | two chains; one sublattice slid rigidly by c/8, c/4, 3c/8, c/2 | +0.198, +0.759, +1.455, **+1.788** | +0.172, +0.656, +1.251, **+1.533** |
+  | b | the c/2 cell of (a) relaxed with the slip held, cell free | **+0.513** (a -0.56%, b +7.71%, c -0.02%) | a relaxation: one number |
+  | c | four chains (doubled along a); one chain slid rigidly by c/4, c/2 | +0.716, **+1.699** (6.80 per monomer of the moved chain) | +0.671, **+1.585** (6.34) |
+
+  "In Dipole's cell" is polyfind with the cell set to Dipole's accepted one (4.7568, 8.5282,
+  2.5807 A; polyfind's own minimum is 4.7541, 8.4808, 2.5877) and its chains relaxed in it. The
+  atoms then sit within 0.010 A of Dipole's, so the rigid slides are the structures the DFT runs
+  and the difference between the two minima is out of the comparison; it is worth 14% of the
+  barrier in (a) and 7% in (c) (Dipole's b is 0.56% longer). One chain of four costs 1.9 to 2.1
+  times one sublattice per moved monomer, which is the anisotropy that makes a kink sheet advance
+  stack by stack. The c/2 cell is symmetric (every atom on a mirror plane normal to c), so a
+  relaxation started on it keeps the symmetry, here and in a DFT code that keeps the symmetry it
+  finds: that is the registered protocol of (b). From a start with the symmetry broken polyfind's
+  (b) is +0.498 (0.015 lower: torsions 7.4 degrees off trans, c 1.15% shorter), and the c/2 cell
+  relaxed at the fixed cell, which nobody is asked for, falls from +1.788 to +1.438 by the two
+  sublattices turning 11.9 degrees about their axes in opposite senses. Acceptance: the sign, the
+  ordering along the slide, one chain of four above one sublattice per moved monomer, magnitudes
+  within a factor 1.5. `examples/crosscheck_e5.py --dipole <records>` recognises Dipole's records
+  by their geometry and prints the comparison. E6 (the PVDF kink sheet, +5.30 per kink pair) is
+  registered in the same ask and is not dispatched.

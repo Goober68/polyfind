@@ -862,16 +862,33 @@ the other two rows carry no strain on either.)
 
 Everything in 8.1-8.4 rests on one property no anchor of the potential has tested, the energy of
 sliding a chain along its axis, and on the energy of a kink pair in a sheet. The request for both
-is with the DFT seat (`sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`, 2026-11-10, not
-yet dispatched by the PI; it waits for the alpha and Gamma runs): **E5**, single points on the
-accepted beta cell with one sublattice and then one chain of the doubled cell slid along c
-(polyfind registers +1.79 kcal/mol per monomer of the cell for the half-monomer sublattice slip,
-+0.51 relaxed with the cell free, +1.70 for one chain in four); the **E2 addendum**, the polished
-70/30 cells (margin +0.213) and the polished 64/29/7 pair for whenever the chlorine cell is
-declared (+0.317); and **E6**, the PVDF kink sheet (+5.30 per kink pair). If the DFT registry is a
-factor of two softer than the model's, the lone kink falls to about 13-16 kcal/mol and nothing
-above changes; if it is a factor of ten softer, kinks are free and this section is wrong. The
-coordinates are in `docs/predictions/polished_*.xyz` (`examples/export_mixed_cell.py`).
+is with the DFT seat (`sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`, 2026-11-10; **E5
+and the E2 addendum dispatched by the PI the same day**, E6 not; they wait for the alpha and Gamma
+runs): **E5**, single points on the accepted beta cell with one sublattice and then one chain of
+the doubled cell slid along c (polyfind registers +1.79 kcal/mol per monomer of the cell for the
+half-monomer sublattice slip, +0.51 relaxed with the cell free, +1.70 for one chain in four); the
+**E2 addendum**, the polished 70/30 cells (margin +0.213) and the polished 64/29/7 pair for
+whenever the chlorine cell is declared (+0.317); and **E6**, the PVDF kink sheet (+5.30 per kink
+pair). If the DFT registry is a factor of two softer than the model's, the lone kink falls to
+about 13-16 kcal/mol and nothing above changes; if it is a factor of ten softer, kinks are free
+and this section is wrong. The coordinates are in `docs/predictions/polished_*.xyz`
+(`examples/export_mixed_cell.py`).
+
+With the dispatch the E5 cells were built from Dipole's own record, atom for atom
+(`docs/predictions/e5_structures/`, `examples/axial_registry.py`), and polyfind's numbers were
+registered a second time in Dipole's cell, where its atoms sit within 0.010 A of the DFT's:
++1.53 for the half-monomer sublattice slip and +1.59 for one chain in four (6.3 per monomer of
+the moved chain, 2.1 times the sublattice's), 14% and 7% under the values at polyfind's own
+minimum because Dipole's b is 0.56% longer. Those are the like-for-like numbers for the single
+points (`docs/predictions/e5_polyfind_belt4.json`; `docs/E1_E2_PREDICTIONS.md`, E5).
+
+Two things the half-slipped lattice does in the model, found while registering (b), bear on 8.1.
+At the fixed cell it is a saddle held by symmetry: released, the two sublattices turn 11.9
+degrees about their axes in opposite senses and the cost falls from 1.79 to 1.44 kcal/mol per
+monomer of the cell. With the cell free (the 0.51 of 8.1, which is the symmetric cell) the lowest
+state has the chains deflected 7.4 degrees off trans and c 1.15% shorter, at 0.50. The
+single-chain barriers of the table in 8.1 are rigid-lattice numbers, as E5's single points are;
+how far the neighbours' turning lowers them for one chain leaving a sheet has not been computed.
 
 ### 8.7 The earlier form of this section (2026-11-08), for the record
 

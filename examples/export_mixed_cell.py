@@ -7,6 +7,13 @@ comment line (``Lattice="ax ay az bx by bz cx cy cz"``), c along z.
 
     python examples/export_mixed_cell.py --row vdf7-trfe3 --cell TTTT --out docs/predictions/polished_vdf7-trfe3_TTTT.xyz
     python examples/export_mixed_cell.py --row vdf10 --cell kink@0 --out docs/predictions/polished_vdf10_kink0.xyz
+    python examples/export_mixed_cell.py --row vdf7-trfe3 --cell TTTT --tilts --out docs/predictions/polished_vdf7-trfe3_TTTT_tilted.xyz
+
+The stored cells have rigid pendant groups in the builder's orientation.  ``--tilts`` relaxes every
+CH2/CF2/CHF group as a rigid tilt about its carbon (``polyfind.mixedcell.tilt_relaxation``: the
+carbons, the cell and the groups' own geometry fixed) and writes those atoms: the structure whose
+model energy is the "with pendant tilts" number.  A DFT single point on a file without the tilts
+is like for like with the rigid-pendant energy, on a tilted file with the tilted one.
 """
 import argparse
 import importlib.util
@@ -41,6 +48,7 @@ def main():
     ap.add_argument("--nx", type=int, default=1)
     ap.add_argument("--ny", type=int, default=1)
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
+    ap.add_argument("--tilts", action="store_true", help="write the atoms with the pendant groups tilt-relaxed")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     letters, note = DK.sequence(args.row)
@@ -52,16 +60,26 @@ def main():
         el = np.array([str(e) for e in list(model.pk.elements) * model.nc])
         keep = np.array([e in ATOMS for e in el])
         e_cell = model.physical_energy(x)
+        pendants, largest = "rigid pendants", 0.0
+        if args.tilts:
+            from polyfind import pendants as PD
+
+            dE, tilts, groups = DK.MC.tilt_relaxation(model, x)
+            Pn = Pn.copy()
+            Pn[keep] += PD.group_displacements(groups, np.radians(tilts), int(keep.sum())).reshape(-1, 3)
+            e_cell += dE
+            largest = float(np.abs(tilts).max())
+            pendants = f"pendant groups tilt-relaxed (largest tilt {largest:.2f} deg, {dE:.4f} kcal/mol per cell)"
     P, el = Pn[keep], el[keep]
     frac = P @ np.linalg.inv(latn)
     P = (frac - np.floor(frac)) @ latn  # wrapped into the cell
     lat = " ".join(f"{v:.8f}" for v in latn.ravel())
     lines = [str(len(P)), f'Lattice="{lat}" Properties=species:S:1:pos:R:3 pbc="T T T" source="polyfind {args.preset} {args.row} {args.cell} '
-                          f'{args.nx}x{args.ny}, {model.nc} chains of {ch.n_monomers} monomers; model energy {e_cell:.4f} kcal/mol per cell, rigid pendants"']
+                          f'{args.nx}x{args.ny}, {model.nc} chains of {ch.n_monomers} monomers; model energy {e_cell:.4f} kcal/mol per cell, {pendants}"']
     lines += [f"{e:2s} {p[0]:14.8f} {p[1]:14.8f} {p[2]:14.8f}" for e, p in zip(el, P)]
     Path(args.out).write_text("\n".join(lines) + "\n")
     counts = {str(e): int((el == e).sum()) for e in sorted(set(el.tolist()))}
-    print(f"{args.out}: {len(P)} atoms {counts}; cell {np.round(model.state(x).lattice, 4).tolist()}")
+    print(f"{args.out}: {len(P)} atoms {counts}; cell {np.round(model.state(x).lattice, 4).tolist()}; {e_cell:.4f} kcal/mol per cell, {pendants}")
 
 
 if __name__ == "__main__":

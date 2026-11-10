@@ -1,0 +1,181 @@
+{
+ "potential": "pvdf-dft-valence-belt4, induced dipoles, Ewald, force-shifted LJ, fluorine belt sites, PBE-D3 chain geometry, rigid bonds, 0 K; every torsion and backbone angle of both chains free, closure exact (examples/polish_margins.py)",
+ "frame": "x polar, y lateral, z chain",
+ "energy": "kcal/mol per monomer, with the pendant-tilt relaxation (the atoms of file_tilted); energy_rigid_pendants_per_monomer_kcal without it (the atoms of file_rigid_pendants)",
+ "systems": {
+  "vdftrfe": {
+   "label": "VDF/TrFE 70/30 model, polished cells",
+   "sequence": "VVRVVRVVVR",
+   "row": "vdf7-trfe3",
+   "ground_helix": "TGTG'",
+   "margin_TT_minus_TG_kcal": 0.21337629864776186,
+   "registered_margin_kcal": 0.1448873113049629,
+   "conformations": {
+    "TTTT": {
+     "energy_per_monomer_kcal": -7.664801024908954,
+     "energy_rigid_pendants_per_monomer_kcal": -7.622412929609911,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.04238809529904301,
+     "c_per_monomer_A": 2.584633936437627,
+     "cell": {
+      "a": 4.881699212029286,
+      "b": 8.465776516498208,
+      "gamma_deg": 91.77609378766188,
+      "c": 25.84633936437627
+     },
+     "n_chains": 2,
+     "monomers_per_cell": 20,
+     "largest_torsion_off_ideal_deg": 5.963466887498043,
+     "gain_over_the_registered_cell_per_monomer_kcal": 0.07752278103923516,
+     "margin_vs_ground_kcal": 0.21337629864776186,
+     "margin_rigid_pendants_vs_ground_kcal": 0.05485100516186492,
+     "conformational_strain_vs_ground": 0.11579421476002438,
+     "file_rigid_pendants": {
+      "name": "polished_vdf7-trfe3_TTTT.xyz",
+      "sha256": "f5a0c48dcbc60d819bf6cb95b7cdd10aa9cf9987a0854a2c3ff9939ae374d458"
+     },
+     "file_tilted": {
+      "name": "polished_vdf7-trfe3_TTTT_tilted.xyz",
+      "sha256": "73d81ea7c87883f6fb9cbc98e0dece03c5c5eb39f811ec8e94870b8c411d4efe"
+     }
+    },
+    "TGTG'": {
+     "energy_per_monomer_kcal": -7.878177323556716,
+     "energy_rigid_pendants_per_monomer_kcal": -7.6772639347717755,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.20091338878494014,
+     "c_per_monomer_A": 2.316407364590529,
+     "cell": {
+      "a": 5.235724909289045,
+      "b": 9.733284286124253,
+      "gamma_deg": 92.39836710767715,
+      "c": 23.164073645905294
+     },
+     "n_chains": 2,
+     "monomers_per_cell": 20,
+     "largest_torsion_off_ideal_deg": 19.447049772967205,
+     "gain_over_the_registered_cell_per_monomer_kcal": 0.30463769155252435,
+     "margin_vs_ground_kcal": 0.0,
+     "margin_rigid_pendants_vs_ground_kcal": 0.0,
+     "conformational_strain_vs_ground": 0.0,
+     "file_rigid_pendants": {
+      "name": "polished_vdf7-trfe3_TGTGp.xyz",
+      "sha256": "c137453d533315660e2712485c8032bd299871b146ba6ea8bdee0dd7beb6966b"
+     },
+     "file_tilted": {
+      "name": "polished_vdf7-trfe3_TGTGp_tilted.xyz",
+      "sha256": "3a9d3f9d5a3b50a37c225396e171ae8ce40926684314245f072830e186608a67"
+     }
+    },
+    "TG'TG": {
+     "energy_per_monomer_kcal": -7.522416959082207,
+     "energy_rigid_pendants_per_monomer_kcal": -7.3295338313273195,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.19288312775488806,
+     "c_per_monomer_A": 2.31193597380051,
+     "cell": {
+      "a": 5.24504566877579,
+      "b": 9.704197904521568,
+      "gamma_deg": 92.98848067846676,
+      "c": 23.1193597380051
+     },
+     "n_chains": 2,
+     "monomers_per_cell": 20,
+     "largest_torsion_off_ideal_deg": 19.85252073986453,
+     "gain_over_the_registered_cell_per_monomer_kcal": 0.4677688761490927,
+     "margin_vs_ground_kcal": 0.35576036447450843,
+     "margin_rigid_pendants_vs_ground_kcal": 0.347730103444456,
+     "conformational_strain_vs_ground": -0.001930312801785461,
+     "file_rigid_pendants": {
+      "name": "polished_vdf7-trfe3_TGpTG.xyz",
+      "sha256": "1ca1b5fa44a48e4ffcda0d71c271d9ef21c2caa979a67d59412f3aee363705b3"
+     },
+     "file_tilted": {
+      "name": "polished_vdf7-trfe3_TGpTG_tilted.xyz",
+      "sha256": "811256a48406116122563fc1029c2308d4949947e8570b6fe88b0c4fd9fe3f03"
+     }
+    }
+   }
+  },
+  "vdftrfecfe_64_29_7": {
+   "label": "VDF/TrFE/CFE 64/29/7 (one CFE in fourteen), polished cells",
+   "sequence": "VVRVVRVCVVRVVR",
+   "row": "vdf9-trfe4-cfe1-14",
+   "ground_helix": "TG'TG",
+   "margin_TT_minus_TG_kcal": 0.31749769371237946,
+   "registered_margin_kcal": 0.11034108377162788,
+   "conformations": {
+    "TTTT": {
+     "energy_per_monomer_kcal": -7.263556120327414,
+     "energy_rigid_pendants_per_monomer_kcal": -7.221453196565237,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.042102923762176454,
+     "c_per_monomer_A": 2.584489327319165,
+     "cell": {
+      "a": 5.302449825890688,
+      "b": 8.24509860050431,
+      "gamma_deg": 91.70037421353955,
+      "c": 36.18285058246831
+     },
+     "n_chains": 2,
+     "monomers_per_cell": 28,
+     "largest_torsion_off_ideal_deg": 10.498618922334089,
+     "gain_over_the_registered_cell_per_monomer_kcal": 0.20566705054123297,
+     "margin_vs_ground_kcal": 0.31749769371237946,
+     "margin_rigid_pendants_vs_ground_kcal": 0.140093797593269,
+     "conformational_strain_vs_ground": 0.12134386353943238,
+     "file_rigid_pendants": {
+      "name": "polished_vdf9-trfe4-cfe1-14_TTTT.xyz",
+      "sha256": "0a3705e558d0ec4bbafbece510199d3708bc663c4d473e076871d14e8a5ba16c"
+     },
+     "file_tilted": {
+      "name": "polished_vdf9-trfe4-cfe1-14_TTTT_tilted.xyz",
+      "sha256": "2e64087933e3c11124f8c03983fccd2baf20fcea74f2780258c19c6ecd4a667f"
+     }
+    },
+    "TG'TG": {
+     "energy_per_monomer_kcal": -7.581053814039794,
+     "energy_rigid_pendants_per_monomer_kcal": -7.361546994158506,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.21950681988128704,
+     "c_per_monomer_A": 2.304814260240771,
+     "cell": {
+      "a": 5.412683346392889,
+      "b": 9.743572469797487,
+      "gamma_deg": 92.18801118163078,
+      "c": 32.267399643370794
+     },
+     "n_chains": 2,
+     "monomers_per_cell": 28,
+     "largest_torsion_off_ideal_deg": 21.372404475326732,
+     "gain_over_the_registered_cell_per_monomer_kcal": 0.533087999437622,
+     "margin_vs_ground_kcal": 0.0,
+     "margin_rigid_pendants_vs_ground_kcal": 0.0,
+     "conformational_strain_vs_ground": 0.0,
+     "file_rigid_pendants": {
+      "name": "polished_vdf9-trfe4-cfe1-14_TGpTG.xyz",
+      "sha256": "f4b37d73b9bac4c17e5f46cce1002f24325a6fad840eb7d52a153ef92935df8b"
+     },
+     "file_tilted": {
+      "name": "polished_vdf9-trfe4-cfe1-14_TGpTG_tilted.xyz",
+      "sha256": "d6613c05c1b7f77ec27e4e55bf1a7e61bf7a4b5b3376e95aa4369b79335c2ff3"
+     }
+    },
+    "TGTG'": {
+     "energy_per_monomer_kcal": -7.471431602986548,
+     "energy_rigid_pendants_per_monomer_kcal": -7.251685743496919,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.21974585948962858,
+     "c_per_monomer_A": 2.3344917994238545,
+     "cell": {
+      "a": 5.192731954730238,
+      "b": 9.884399711448538,
+      "gamma_deg": 91.30591002603369,
+      "c": 32.68288519193396
+     },
+     "n_chains": 2,
+     "monomers_per_cell": 28,
+     "largest_torsion_off_ideal_deg": 27.19379870612019,
+     "gain_over_the_registered_cell_per_monomer_kcal": 0.44254869716993284,
+     "margin_vs_ground_kcal": 0.10962221105324588,
+     "margin_rigid_pendants_vs_ground_kcal": 0.10986125066158703,
+     "conformational_strain_vs_ground": 0.012876325739143546
+    }
+   }
+  }
+ }
+}

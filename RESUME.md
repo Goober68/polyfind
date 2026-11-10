@@ -69,12 +69,22 @@ map on two rate models** with polished margins, 64/29/7 anchored at 364 kHz
 `--steps ... --step-mover 0`): the 71/29 matrix is at 2 kHz on the first by the one site the sheet was put on and
 33 kHz by the sum over its sites (9% of the terpolymer's), and 120 kHz on the second; only the matrix is on the
 switching curve (polar fraction 0.61), the 64/29/7 cell is pinned off it (+0.32). Which rate model holds
-is the bench's Vogel-Fulcher fit on a copolymer film beside the terpolymer's. (7) Asked of Dipole (NOT dispatched by
-the PI): `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md` (E5 registry single points on the accepted beta
-cell, the polished 70/30 cells, the polished 64/29/7 pair for the chlorine cell, E6 the PVDF kink sheet), numbers
-registered in `docs/E1_E2_PREDICTIONS.md` (its notes file is now level with it; re-rendering is safe); coordinates
-in `docs/predictions/polished_*.xyz`. Dipole at 04:23 UTC: alpha at BFGS 5, Gamma at representation 26 of 36, no
-result delivered. Next, in order: rewrite sections 3-6 on the polished margin table (and polish the remaining
+is the bench's Vogel-Fulcher fit on a copolymer film beside the terpolymer's. (7) Asked of Dipole:
+`sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`. **E5 and the E2 addendum DISPATCHED by the PI on
+2026-11-10 ("Go on E5 and the E2 addendum"); E6 (the PVDF kink sheet) is NOT dispatched.** E5: seven cells built from
+Dipole's accepted beta record atom for atom (`docs/predictions/e5_structures/`, copies in
+`sarco/materials/electrostriction/requests/beta_axial_registry_e5_v1/`), polyfind's numbers registered twice
+(`docs/predictions/e5_polyfind_belt4.json`, `examples/axial_registry.py`): at its own minimum, per monomer of the cell,
+sublattice slid c/8..c/2 +0.198, +0.759, +1.455, +1.788; c/2 relaxed with the slip held +0.513 (b +7.7%; +0.498 from a
+symmetry-broken start); one chain of four +0.716, +1.699; and in Dipole's cell (atoms within 0.010 A of the DFT's, the
+like-for-like set for the single points) +0.172, +0.656, +1.251, +1.533 and +0.671, +1.585. E2 addendum: the polished
+70/30 cells and the 64/29/7 pair in the E2 schema with file hashes (`docs/predictions/e2_polished_polyfind_belt4.json`,
+copies of the XYZ files in `sarco/.../requests/polished_e2_cells_v1/`). Ingesters, tested: `examples/crosscheck_e5.py
+--dipole <result.json ...>` (recognises records by geometry) and `examples/crosscheck_e1_e2.py --e2
+docs/predictions/e2_polished_polyfind_belt4.json --e2-dipole <file>`. All registered in `docs/E1_E2_PREDICTIONS.md`
+(its notes file is level with it; re-rendering is safe). Dipole at 15:23 UTC: alpha at BFGS 18 (forces and stress
+under threshold, energy gate not met), Gamma's 36 representations and dynmat finished, controller validating, not
+delivered: WHEN GAMMA LANDS, ingest it against the registered eps_0 prediction first. Next, in order: rewrite sections 3-6 on the polished margin table (and polish the remaining
 ten-monomer rows if they are kept); site scans of further sequences at fixed composition, now that the rule is
 known (VDF after the kink 5, TrFE after it 7, a TrFE pair 10, a CFE 8-12); partial sheets (8-16 chains) for
 nucleation; the wall of a helix run, which is what moves in the relaxor; a step in a cell whose chains do not carry

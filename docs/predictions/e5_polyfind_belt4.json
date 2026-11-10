@@ -1,0 +1,494 @@
+{
+ "schema": "polyfind_e5_prediction_v1",
+ "potential": "pvdf-dft-valence-belt4: induced dipoles, Ewald, force-shifted LJ, fluorine belt sites, PBE-D3 chain geometry, rigid bonds, 0 K; rigid pendants unless stated",
+ "frame": "x polar (short axis a), y lateral (long axis b), z chain",
+ "energy": "kcal/mol. per_cell_monomer: the cell's energy change over the monomers in the cell (the ask's unit); per_moved_monomer: over the monomers of the moved chain; dE_cell: per DFT cell (12 atoms in a and b, 24 in c), also in mEh",
+ "model_cell": "two chains of 10 VDF monomers (vdf10), the polished all-trans reference of examples/dilute_kink.py; energies reduced to one monomer per chain",
+ "dipole_reference": {
+  "case": "pvdf_beta_ref_v1",
+  "result_sha256": "c2c4e73f1dca08ddfbe870b8dc5c1f41656c15200a713d0180e934add2c18534",
+  "energy_Eh": -137.9035152031639,
+  "cell_A": [
+   4.7567822852259996,
+   8.528227514836319,
+   90.0,
+   2.5807377932516005
+  ]
+ },
+ "structures": {
+  "beta_a_slide_c8": {
+   "file": "beta_a_slide_c8.xyz",
+   "sha256": "e10331d8cb259f96f9c021be142b9243f940fb2a6786b1e484e1609d932186cc",
+   "part": "a",
+   "slide_fraction_of_c": 0.125,
+   "atoms": 12,
+   "mesh": [
+    8,
+    4,
+    16
+   ]
+  },
+  "beta_a_slide_c4": {
+   "file": "beta_a_slide_c4.xyz",
+   "sha256": "6aab9e6dca3cb9c360e70f8a8e5038a1b212e360056cda489d87716f9a0612a2",
+   "part": "a",
+   "slide_fraction_of_c": 0.25,
+   "atoms": 12,
+   "mesh": [
+    8,
+    4,
+    16
+   ]
+  },
+  "beta_a_slide_3c8": {
+   "file": "beta_a_slide_3c8.xyz",
+   "sha256": "73c6b76d9b41b01c8a9d0094e99b690e21f083884c16fcf69b2d07d9ce3ddd47",
+   "part": "a",
+   "slide_fraction_of_c": 0.375,
+   "atoms": 12,
+   "mesh": [
+    8,
+    4,
+    16
+   ]
+  },
+  "beta_a_slide_c2": {
+   "file": "beta_a_slide_c2.xyz",
+   "sha256": "b9ad2be7bc8eb2822891a9ff3625ab5e8666bbfc21e3f2e90de1c7470aadb67a",
+   "part": "a",
+   "slide_fraction_of_c": 0.5,
+   "atoms": 12,
+   "mesh": [
+    8,
+    4,
+    16
+   ]
+  },
+  "beta_2a_reference": {
+   "file": "beta_2a_reference.xyz",
+   "sha256": "d5db17b1cfb79af2300d9dc76502d6264b6f93f5cd398a323ef87ad56140c005",
+   "part": "c",
+   "slide_fraction_of_c": 0.0,
+   "atoms": 24,
+   "mesh": [
+    4,
+    4,
+    16
+   ]
+  },
+  "beta_2a_slide_c4": {
+   "file": "beta_2a_slide_c4.xyz",
+   "sha256": "d5bb697b33151c4ad65ecfe9dc963ff55bbae78d0d3650651d418821ea90c36e",
+   "part": "c",
+   "slide_fraction_of_c": 0.25,
+   "atoms": 24,
+   "mesh": [
+    4,
+    4,
+    16
+   ]
+  },
+  "beta_2a_slide_c2": {
+   "file": "beta_2a_slide_c2.xyz",
+   "sha256": "23b5449239aa75d58cf0619a44bbbdff7dbfe28b483df5b3eed71a2fe7f4bcc1",
+   "part": "c",
+   "slide_fraction_of_c": 0.5,
+   "atoms": 24,
+   "mesh": [
+    4,
+    4,
+    16
+   ]
+  }
+ },
+ "own_cell": {
+  "description": "polyfind's own relaxed beta cell (the registered protocol)",
+  "cell": [
+   4.754070390732875,
+   8.480849480989322,
+   90.00000001728047,
+   2.587681897137157
+  ],
+  "energy_per_monomer_kcal": -9.43655921947662,
+  "a": {
+   "cell": "two chains, 12 atoms",
+   "moved": "one chain (one sublattice), rigid",
+   "zero": "the unslid cell",
+   "slides": {
+    "c/8": {
+     "dE_cell_kcal": 0.39570616676526243,
+     "dE_cell_mEh": 0.6305979162403398,
+     "per_cell_monomer_kcal": 0.19785308338263122,
+     "per_moved_monomer_kcal": 0.39570616676526243
+    },
+    "c/4": {
+     "dE_cell_kcal": 1.5184069291393143,
+     "dE_cell_mEh": 2.419735465199732,
+     "per_cell_monomer_kcal": 0.7592034645696571,
+     "per_moved_monomer_kcal": 1.5184069291393143
+    },
+    "3c/8": {
+     "dE_cell_kcal": 2.9099428494885613,
+     "dE_cell_mEh": 4.637289108396709,
+     "per_cell_monomer_kcal": 1.4549714247442807,
+     "per_moved_monomer_kcal": 2.9099428494885613
+    },
+    "c/2": {
+     "dE_cell_kcal": 3.575607313173964,
+     "dE_cell_mEh": 5.69809295471197,
+     "per_cell_monomer_kcal": 1.787803656586982,
+     "per_moved_monomer_kcal": 3.575607313173964
+    }
+   },
+   "curve_fraction_of_c": {
+    "0.0625": {
+     "dE_cell_kcal": 0.09919096918388277,
+     "dE_cell_mEh": 0.15807087109239168,
+     "per_cell_monomer_kcal": 0.04959548459194139,
+     "per_moved_monomer_kcal": 0.09919096918388277
+    },
+    "0.1250": {
+     "dE_cell_kcal": 0.39570616676526243,
+     "dE_cell_mEh": 0.6305979162403398,
+     "per_cell_monomer_kcal": 0.19785308338263122,
+     "per_moved_monomer_kcal": 0.39570616676526243
+    },
+    "0.1875": {
+     "dE_cell_kcal": 0.8800706553127384,
+     "dE_cell_mEh": 1.4024818615316106,
+     "per_cell_monomer_kcal": 0.4400353276563692,
+     "per_moved_monomer_kcal": 0.8800706553127384
+    },
+    "0.2500": {
+     "dE_cell_kcal": 1.5184069291393143,
+     "dE_cell_mEh": 2.419735465199732,
+     "per_cell_monomer_kcal": 0.7592034645696571,
+     "per_moved_monomer_kcal": 1.5184069291393143
+    },
+    "0.3125": {
+     "dE_cell_kcal": 2.2353637021763917,
+     "dE_cell_mEh": 3.5622788094377227,
+     "per_cell_monomer_kcal": 1.1176818510881958,
+     "per_moved_monomer_kcal": 2.2353637021763917
+    },
+    "0.3750": {
+     "dE_cell_kcal": 2.9099428494885613,
+     "dE_cell_mEh": 4.637289108396709,
+     "per_cell_monomer_kcal": 1.4549714247442807,
+     "per_moved_monomer_kcal": 2.9099428494885613
+    },
+    "0.4375": {
+     "dE_cell_kcal": 3.397238484681634,
+     "dE_cell_mEh": 5.4138441331963385,
+     "per_cell_monomer_kcal": 1.698619242340817,
+     "per_moved_monomer_kcal": 3.397238484681634
+    },
+    "0.5000": {
+     "dE_cell_kcal": 3.575607313173964,
+     "dE_cell_mEh": 5.69809295471197,
+     "per_cell_monomer_kcal": 1.787803656586982,
+     "per_moved_monomer_kcal": 3.575607313173964
+    }
+   }
+  },
+  "c": {
+   "cell": "four chains (doubled along a), 24 atoms",
+   "moved": "one chain of four, rigid",
+   "zero": "the unslid doubled cell",
+   "slides": {
+    "c/4": {
+     "dE_cell_kcal": 2.8645506445820503,
+     "dE_cell_mEh": 4.5649520254000215,
+     "per_cell_monomer_kcal": 0.7161376611455126,
+     "per_moved_monomer_kcal": 2.8645506445820503
+    },
+    "c/2": {
+     "dE_cell_kcal": 6.797690870899305,
+     "dE_cell_mEh": 10.832809944500939,
+     "per_cell_monomer_kcal": 1.6994227177248262,
+     "per_moved_monomer_kcal": 6.797690870899305
+    }
+   }
+  },
+  "anisotropy_c_over_a_per_moved_monomer_at_half": 1.9011290322217151,
+  "half_slip_ions_relaxed_fixed_cell": {
+   "dE_cell_kcal": 3.575607313173964,
+   "dE_cell_mEh": 5.69809295471197,
+   "per_cell_monomer_kcal": 1.787803656586982,
+   "per_moved_monomer_kcal": 3.575607313173964,
+   "slip_A": 1.293840946751336,
+   "requested": false,
+   "symmetry": "kept (as started)",
+   "message": "Optimization terminated successfully",
+   "iterations": 1,
+   "setting_angle_turn_deg": [
+    5.2054701882298104e-08,
+    -1.7479294456279604e-08
+   ],
+   "largest_torsion_off_trans_deg": 6.189341377194069e-07,
+   "lateral_offset_fraction": [
+    -5.268608544477583e-10,
+    1.099112771305001e-10
+   ],
+   "symmetry_broken": {
+    "dE_cell_kcal": 2.8758963427282795,
+    "dE_cell_mEh": 4.583032546276887,
+    "per_cell_monomer_kcal": 1.4379481713641398,
+    "per_moved_monomer_kcal": 2.8758963427282795,
+    "below_symmetric_per_cell_monomer_kcal": 0.34985548522284216,
+    "slip_A": 1.293830976349378,
+    "message": "Optimization terminated successfully",
+    "iterations": 62,
+    "setting_angle_turn_deg": [
+     11.868744598056509,
+     -11.868977098723292
+    ],
+    "largest_torsion_off_trans_deg": 5.898220903149479,
+    "lateral_offset_fraction": [
+     -2.8679852449371956e-07,
+     0.031151298719532233
+    ]
+   }
+  },
+  "b": {
+   "cell": "two chains, 12 atoms",
+   "held": "the slip (every atom's coordinate along c, in units of c)",
+   "free": "the cell (a, b, gamma, c) and everything else",
+   "zero": "the relaxed unslid cell",
+   "symmetry": "kept (as started): the registered protocol",
+   "dE_cell_kcal": 1.0267964322870569,
+   "dE_cell_mEh": 1.636304270656806,
+   "per_cell_monomer_kcal": 0.5133982161435284,
+   "per_moved_monomer_kcal": 1.0267964322870569,
+   "with_pendant_tilts": {
+    "dE_cell_kcal": 1.0267964322870342,
+    "dE_cell_mEh": 1.63630427065677,
+    "per_cell_monomer_kcal": 0.5133982161435171,
+    "per_moved_monomer_kcal": 1.0267964322870342
+   },
+   "relaxed_cell": [
+    4.72763113434103,
+    9.134612721848768,
+    89.99999999381293,
+    2.587208625634444
+   ],
+   "cell_change": {
+    "a": -0.005561393546755777,
+    "b": 0.07708699963664278,
+    "gamma_deg": -2.3467535470445e-08,
+    "c": -0.00018289400379400966
+   },
+   "largest_tilt_deg": 9.946073045777764e-07,
+   "slip_A": 1.2936043128314738,
+   "message": "Optimization terminated successfully",
+   "iterations": 13,
+   "setting_angle_turn_deg": [
+    1.9935652062486042e-07,
+    -1.937383444783336e-07
+   ],
+   "largest_torsion_off_trans_deg": 6.476463170201896e-07,
+   "lateral_offset_fraction": [
+    3.7045875490127174e-08,
+    -1.0467972206409557e-08
+   ],
+   "symmetry_broken": {
+    "dE_cell_kcal": 0.9960965155818571,
+    "dE_cell_mEh": 1.5873808392599555,
+    "per_cell_monomer_kcal": 0.49804825779092854,
+    "per_moved_monomer_kcal": 0.9960965155818571,
+    "with_pendant_tilts": {
+     "dE_cell_kcal": 0.9887661079375193,
+     "dE_cell_mEh": 1.575699091099448,
+     "per_cell_monomer_kcal": 0.49438305396875964,
+     "per_moved_monomer_kcal": 0.9887661079375193
+    },
+    "below_symmetric_per_cell_monomer_kcal": 0.01534995835259989,
+    "relaxed_cell": [
+     4.7342850001927905,
+     9.068007551555498,
+     90.00000067174325,
+     2.5579688733825185
+    ],
+    "cell_change": {
+     "a": -0.004161779046993552,
+     "b": 0.06923340307858905,
+     "gamma_deg": 6.544627808580117e-07,
+     "c": -0.011482487004106257
+    },
+    "largest_tilt_deg": 0.5723962988804238,
+    "slip_A": 1.2789843624574266,
+    "message": "Optimization terminated successfully",
+    "iterations": 658,
+    "setting_angle_turn_deg": [
+     -0.00022777568463538955,
+     -0.00014871038393948766
+    ],
+    "largest_torsion_off_trans_deg": 7.428488530723627,
+    "lateral_offset_fraction": [
+     2.1325826153678074e-06,
+     -3.2331339271781533e-10
+    ]
+   }
+  }
+ },
+ "dipole_cell": {
+  "description": "the cell set to Dipole's accepted one, polyfind's chains relaxed in it (like for like with the DFT single points)",
+  "cell": [
+   4.7567822852259996,
+   8.528227514836319,
+   90.0,
+   2.5807377932516005
+  ],
+  "energy_per_monomer_kcal": -9.416565166545606,
+  "a": {
+   "cell": "two chains, 12 atoms",
+   "moved": "one chain (one sublattice), rigid",
+   "zero": "the unslid cell",
+   "slides": {
+    "c/8": {
+     "dE_cell_kcal": 0.34386704048970385,
+     "dE_cell_mEh": 0.5479870100815813,
+     "per_cell_monomer_kcal": 0.17193352024485192,
+     "per_moved_monomer_kcal": 0.34386704048970385
+    },
+    "c/4": {
+     "dE_cell_kcal": 1.312279910821826,
+     "dE_cell_mEh": 2.0912511524724295,
+     "per_cell_monomer_kcal": 0.656139955410913,
+     "per_moved_monomer_kcal": 1.312279910821826
+    },
+    "3c/8": {
+     "dE_cell_kcal": 2.501074012944605,
+     "dE_cell_mEh": 3.985715142673856,
+     "per_cell_monomer_kcal": 1.2505370064723025,
+     "per_moved_monomer_kcal": 2.501074012944605
+    },
+    "c/2": {
+     "dE_cell_kcal": 3.066146843051297,
+     "dE_cell_mEh": 4.886216017103475,
+     "per_cell_monomer_kcal": 1.5330734215256485,
+     "per_moved_monomer_kcal": 3.066146843051297
+    }
+   },
+   "curve_fraction_of_c": {
+    "0.0625": {
+     "dE_cell_kcal": 0.086340284551693,
+     "dE_cell_mEh": 0.13759200158786916,
+     "per_cell_monomer_kcal": 0.0431701422758465,
+     "per_moved_monomer_kcal": 0.086340284551693
+    },
+    "0.1250": {
+     "dE_cell_kcal": 0.34386704048970385,
+     "dE_cell_mEh": 0.5479870100815813,
+     "per_cell_monomer_kcal": 0.17193352024485192,
+     "per_moved_monomer_kcal": 0.34386704048970385
+    },
+    "0.1875": {
+     "dE_cell_kcal": 0.7628607162236222,
+     "dE_cell_mEh": 1.2156959340934377,
+     "per_cell_monomer_kcal": 0.3814303581118111,
+     "per_moved_monomer_kcal": 0.7628607162236222
+    },
+    "0.2500": {
+     "dE_cell_kcal": 1.312279910821826,
+     "dE_cell_mEh": 2.0912511524724295,
+     "per_cell_monomer_kcal": 0.656139955410913,
+     "per_moved_monomer_kcal": 1.312279910821826
+    },
+    "0.3125": {
+     "dE_cell_kcal": 1.9261583808956175,
+     "dE_cell_mEh": 3.069528764918584,
+     "per_cell_monomer_kcal": 0.9630791904478088,
+     "per_moved_monomer_kcal": 1.9261583808956175
+    },
+    "0.3750": {
+     "dE_cell_kcal": 2.501074012944605,
+     "dE_cell_mEh": 3.985715142673856,
+     "per_cell_monomer_kcal": 1.2505370064723025,
+     "per_moved_monomer_kcal": 2.501074012944605
+    },
+    "0.4375": {
+     "dE_cell_kcal": 2.914938577977614,
+     "dE_cell_mEh": 4.645250308498926,
+     "per_cell_monomer_kcal": 1.457469288988807,
+     "per_moved_monomer_kcal": 2.914938577977614
+    },
+    "0.5000": {
+     "dE_cell_kcal": 3.066146843051297,
+     "dE_cell_mEh": 4.886216017103475,
+     "per_cell_monomer_kcal": 1.5330734215256485,
+     "per_moved_monomer_kcal": 3.066146843051297
+    }
+   }
+  },
+  "c": {
+   "cell": "four chains (doubled along a), 24 atoms",
+   "moved": "one chain of four, rigid",
+   "zero": "the unslid doubled cell",
+   "slides": {
+    "c/4": {
+     "dE_cell_kcal": 2.6823080207715293,
+     "dE_cell_mEh": 4.274529918096195,
+     "per_cell_monomer_kcal": 0.6705770051928823,
+     "per_moved_monomer_kcal": 2.6823080207715293
+    },
+    "c/2": {
+     "dE_cell_kcal": 6.341758203773838,
+     "dE_cell_mEh": 10.106234990702522,
+     "per_cell_monomer_kcal": 1.5854395509434596,
+     "per_moved_monomer_kcal": 6.341758203773838
+    }
+   }
+  },
+  "anisotropy_c_over_a_per_moved_monomer_at_half": 2.068315227023763,
+  "half_slip_ions_relaxed_fixed_cell": {
+   "dE_cell_kcal": 3.066146843051297,
+   "dE_cell_mEh": 4.886216017103475,
+   "per_cell_monomer_kcal": 1.5330734215256485,
+   "per_moved_monomer_kcal": 3.066146843051297,
+   "slip_A": 1.2903688776080593,
+   "requested": false,
+   "symmetry": "kept (as started)",
+   "message": "Optimization terminated successfully",
+   "iterations": 1,
+   "setting_angle_turn_deg": [
+    5.031256478105206e-08,
+    -1.8818695934896823e-08
+   ],
+   "largest_torsion_off_trans_deg": 6.941894810097438e-07,
+   "lateral_offset_fraction": [
+    -1.691315185790443e-10,
+    4.9008500140328115e-11
+   ],
+   "symmetry_broken": {
+    "dE_cell_kcal": 2.3910687633243044,
+    "dE_cell_mEh": 3.8104106187309412,
+    "per_cell_monomer_kcal": 1.1955343816621522,
+    "per_moved_monomer_kcal": 2.3910687633243044,
+    "below_symmetric_per_cell_monomer_kcal": 0.3375390398634963,
+    "slip_A": 1.2903309790601931,
+    "message": "Optimization terminated successfully",
+    "iterations": 66,
+    "setting_angle_turn_deg": [
+     9.863793413961105,
+     -9.864131656201266
+    ],
+    "largest_torsion_off_trans_deg": 6.921126211904095,
+    "lateral_offset_fraction": [
+     4.55090167609676e-06,
+     0.02578670825040574
+    ]
+   }
+  },
+  "deviation_from_dipole_positions": {
+   "largest_A": 0.009544366372230708,
+   "rms_A": 0.006734507462196342
+  },
+  "above_own_minimum_per_monomer_kcal": 0.01999405293101546
+ },
+ "acceptance": {
+  "a, c": "sign, the ordering along the slide, and c per moved monomer above a per moved monomer; magnitudes within a factor 1.5",
+  "b": "sign; magnitude within a factor 1.5; b opening and a closing"
+ },
+ "seconds": 540.131920337677
+}
