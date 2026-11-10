@@ -58,6 +58,11 @@ EXTRA = {"vdf10": ("VVVVVVVVVV", "PVDF as a ten-monomer sequence"), "vdf7-trfe3"
          "vdf14": ("V" * 14, "PVDF as a fourteen-monomer sequence"), "vdf20": ("V" * 20, "PVDF as a twenty-monomer sequence")}
 KW = dict(lj_cutoff="force", coulomb="ewald", ewald=EwaldSpec(), polarizable=Polarizable())
 GAUCHE = 60.0
+K_ANGLE = None  # backbone-angle restraint, kcal/mol/rad^2; None: the preset's (--angle-stiffness sets it for a sensitivity run)
+
+
+def angle_stiffness() -> float:
+    return resolve_angle_stiffness(K_ANGLE, None)
 STAGES = ("host_check", "slide", "rigid_host", "host_rigid_bodies", "flexible_host", "c_free", "cell_free")
 
 
@@ -87,9 +92,10 @@ def polish(polymer, d: dict, seed: int = 0, maxiter: int = 800) -> dict:
     ch = reference_chain(polymer, d)
     pk = pack_mod.CrystalPacker(ch, n_chains=2, **KW)
     st, flips = MC.supercell_state(d["params"], ch.c, d["tors"], d["angs"], 1, 1)
-    model = MC.MixedModel(polymer, "ref", pk, flips, [ch, ch], angle_stiffness=resolve_angle_stiffness(None, None))
+    model = MC.MixedModel(polymer, "ref", pk, flips, [ch, ch], angle_stiffness=angle_stiffness())
     x0 = st.vector()
-    e_search = float(d["E_cell"]) + float(d["bend_per_monomer"]) * 2 * ch.n_monomers
+    # the search's bend energy was computed with the preset's restraint; it is linear in the restraint
+    e_search = float(d["E_cell"]) + float(d["bend_per_monomer"]) * (angle_stiffness() / resolve_angle_stiffness(None, None)) * 2 * ch.n_monomers
     if abs(model.physical_energy(x0) - e_search) > 1e-6:
         raise RuntimeError("the mixed cell does not reproduce the packing search's two-chain cell")
     residual = model.closure_residual(x0)
@@ -135,7 +141,7 @@ def make_model(polymer, d: dict, nx: int, ny: int):
     nc = 2 * nx * ny
     pk = pack_mod.CrystalPacker(ch, n_chains=nc, **KW)
     st, flips = MC.tile_state(MC.MixedState.from_vector(d["state"], 2, len(d["tors"])), np.asarray(d["flips"]) > 0.5, nx, ny)
-    model = MC.MixedModel(polymer, "ref", pk, flips, [ch] * nc, angle_stiffness=resolve_angle_stiffness(None, None))
+    model = MC.MixedModel(polymer, "ref", pk, flips, [ch] * nc, angle_stiffness=angle_stiffness())
     x = st.vector()
     if abs(model.physical_energy(x) * 2 / nc - float(d["energy"])) > 1e-6:
         raise RuntimeError("the tiled supercell does not reproduce the polished two-chain cell")
@@ -203,8 +209,14 @@ def main():
     ap.add_argument("--angle-window", type=float, default=8.0, help="bound on each backbone angle about the polymer's own, degrees (the refinement's)")
     ap.add_argument("--stages", default=",".join(STAGES))
     ap.add_argument("--tilt-stages", default="", help="comma list of stages after which the pendant tilts of the cell are relaxed")
+    ap.add_argument("--angle-stiffness", type=float, default=None,
+                    help="backbone-angle restraint in kcal/mol/rad^2 for a sensitivity run (default: the preset's 233). The mixed cell's chains have rigid bonds, "
+                         "so with the preset's restraint their axial stiffness is about twice the full valence form's; about 114 matches that form's C33")
     ap.add_argument("--out", default="docs/predictions/dilute_kink_belt4.json")
     args = ap.parse_args()
+    global K_ANGLE
+    K_ANGLE = args.angle_stiffness
+    tag = "" if K_ANGLE is None else f" k{K_ANGLE:g}"  # a sensitivity run keeps its own reference cell and its own rows
     out_path = Path(args.out)
     letters, note = sequence(args.row)
     log = lambda s: print(s, flush=True)  # noqa: E731
@@ -229,18 +241,24 @@ def main():
 
     with PRESET_PARAMETERS[args.preset].applied():
         polymer = C.make_polymer(args.row, letters)
-        stored = (json.load(open(out_path)) if out_path.exists() else {}).get("all_trans_references", {}).get(args.row)
+        refs = (json.load(open(out_path)) if out_path.exists() else {}).get("all_trans_references", {})
+        stored = refs.get(args.row + tag)
+        if stored is None and tag and args.row in refs:  # the search's cell is the same; only its polish depends on the restraint
+            stored = {k: v for k, v in refs[args.row].items() if k in ("params", "c", "tors", "angs", "E_cell", "bend_per_monomer", "frame", "seconds")}
+            if "frame" not in stored and "state" in refs[args.row]:
+                stored["frame"] = refs[args.row]["frame"]
         d = all_trans_reference(polymer, args.row, stored)
         if stored is None or "state" not in stored:
-            locked_update(lambda disk: disk["all_trans_references"].__setitem__(args.row, as_json(d)))
+            locked_update(lambda disk: disk["all_trans_references"].__setitem__(args.row + tag, as_json(d)))
         model, x_tt, tt = make_model(polymer, d, args.nx, args.ny)
         nc, n_mon, P = model.nc, tt.n_monomers, model.P
         kinked = list(range(nc)) if args.kinked == "all" else sorted(int(v) for v in args.kinked.split(","))
-        key = f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''} {args.nx}x{args.ny} kinked {','.join(map(str, kinked))}"
+        key = f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''} {args.nx}x{args.ny} kinked {','.join(map(str, kinked))}{tag}"
         e_tt = model.physical_energy(x_tt)
         st_tt = model.state(x_tt)
         entry.update(row=args.row, letters=letters, note=note, supercell=[args.nx, args.ny], chains=nc, sites=int(model.pk.N), monomers_per_chain=int(n_mon),
                      kinked_chains=kinked, kink_offset_bonds=args.kink_at, kink_mirrored=bool(args.mirror_kink), angle_window_deg=args.angle_window,
+                     angle_stiffness=angle_stiffness(),
                      all_trans_cell={"lattice": st_tt.lattice.tolist(), "energy_per_monomer": e_tt / (nc * n_mon),
                                      "search_energy_per_monomer": float(d["search_energy"]) / (2 * n_mon),
                                      "polish_gain_per_monomer": (float(d["search_energy"]) - float(d["energy"])) / (2 * n_mon),

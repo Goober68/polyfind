@@ -4,7 +4,11 @@
 first pass ran one of an isotactic sequence's four TG conformers, and for every chlorine and
 nitrile row the other handedness is 0.9-1.5 kcal/mol per monomer lower, which turned the defect
 rows' margins from near zero to +0.57-0.97 and the reading of the defects from margin tuners into
-TG-favouring pins), on what the model can say today: the crystal terms of
+TG-favouring pins), and again 2026-11-10 for two properties of the packing search that the
+mixed-conformation cell exposed (sections 2.1 and 8: the search holds a chiral chain at the
+symmetry of its state pattern, so every chiral row's margin moves when both of its cells are
+relaxed with every torsion free, 64/29/7 from +0.11 to +0.32; and it holds a kinked chain periodic
+only by a penalty), on what the model can say today: the crystal terms of
 `pvdf-dft-valence-belt4` (docs/CRYSTAL_STAGE.md 5.22), the pendant-group relaxation of the
 same section, the loss model of docs/ELECTROSTRICTION_RESEARCH.md 11-12 and the 2025-2026
 literature pass. Code: `examples/candidate_screen.py` (the crystal screen),
@@ -12,8 +16,11 @@ literature pass. Code: `examples/candidate_screen.py` (the crystal screen),
 `docs/predictions/candidate_screen_belt4.json`, `candidate_loss_map_belt4.json`. Every number here
 is a model number at zero kelvin on a regular ten-monomer periodic sequence packed as two chains;
 section 7 says what that leaves out and what decides each row, section 6 reads Dipole's slate of
-other chemistries against the same screen, and section 8 adds the frequency: the kink-pair formation
-energy in the lattice as the first piece of the dynamics.*
+other chemistries against the same screen, and section 8 adds the frequency: what a kink pair is
+in the lattice (a sheet, never a lone defect) and the barrier of the step that moves it. **Sections
+3-5 still carry the search's margins; where section 2.1 has a polished margin for a row, that is
+the number, and the readings of 3-5 that rest on a margin within 0.3 of zero are suspended until
+the polished table is complete.***
 
 ## 1. What "optimal tan delta, frequency and strain" means in the program's variables
 
@@ -94,7 +101,58 @@ extrapolations. The E2 request to Dipole (docs/E1_E2_PREDICTIONS.md) is what val
 | vdf9-trfe4-ctfe1-14 | chlorine (extrapolated) | +0.135 (-0.190) | -0.416 | +9.5%, -12.1% | 0.138 | 0.508 | 115 | 390 |
 | vdf13-trfe6-cfe1-20 | chlorine (extrapolated) | +0.055 (-0.253) | -0.426 | +10.1%, -13.8% | 0.156 | 0.552 | 43 | 146 |
 
-**Reading the screen.**
+### 2.1 The margins with both cells relaxed alike (2026-11-10)
+
+The table above takes each conformation's cell from the packing search, which refines a
+recognised state pattern (all-trans, TGTG') under the line group of the pattern: one torsion value
+per symmetry class. For PVDF that is the molecule's symmetry, and re-relaxing its cells with every
+torsion free changes nothing. For a chiral (isotactic copolymer) sequence it is a constraint the
+molecule does not have. `examples/polish_margins.py` re-relaxes both cells of a row in the mixed
+cell (every torsion and backbone angle of both chains free, the cell free, each chain periodic
+exactly, started half a degree off the search's torsions), then the pendant tilts as before:
+
+| sequence | the table's margin | both cells polished | all-trans cell lower by | TG cell lower by | TG conformer | torsions off the pattern, TT / TG | axial switch strain |
+|---|---|---|---|---|---|---|---|
+| 64/29/7, one CFE per fourteen | +0.110 | **+0.317** | 0.206 | 0.533 | TG'TG | 10 / 21 deg | +12.1% |
+| 71/29, the matrix without the pin | -0.051 | **+0.046** | 0.081 | 0.382 | TG'TG | 6 / 22 deg | +11.4% |
+| 64/36 matrix | -0.058 | **+0.083** | 0.061 | 0.407 | TGTG' | 6 / 21 deg | +11.8% |
+| 70/30, ten monomers (the E2 cell) | +0.145 | **+0.213** | 0.078 | 0.305 | TGTG' | 6 / 19 deg | +11.6% |
+
+kcal/mol per monomer, all-trans minus TG, pendant tilts included (`polished_margins_belt4.json`;
+the remaining rows are running and the table is completed from `kink_summary_belt4.md`).
+
+* **Both cells fall, the helix by more.** The all-trans chain of a VDF/TrFE sequence is not
+  planar: its torsions deflect by 2-6 degrees in a pattern that follows the TrFE units (ten at the
+  CFE), which is the deflected-trans chain known for the TrFE-rich copolymers, and it gains
+  0.06-0.21 kcal/mol per monomer. The TG chain gains 0.3-0.5: held to one trans and one gauche
+  value it had to strain its backbone angles to stay commensurate (0.73 kcal/mol per monomer of
+  bend in the 64/29/7 cell), and free to vary its torsions along the sequence (trans bonds
+  160-180, gauche 47-76 degrees) it closes at half that bend. Nothing in either polished cell is at
+  a bound, and the closest contacts are the all-trans cell's own (F-H 2.30 against 2.36 A).
+* **Every margin moves toward the helix, by 0.07-0.21.** The matrix stays degenerate within the
+  model's resolution but on the other side of zero (+0.05 and +0.08 for 29 and 36 mol% TrFE), and
+  the 64/29/7 cell is at +0.32, not +0.11: the CFE pin is +3.8 kcal/mol per unit at one per
+  fourteen (it was +2.3), and the cell no longer sits on the steep part of the switching curve at
+  55 V/um (E* near 300 MV/m on the all-trans dipole). On these numbers the margin of a 29-36 mol%
+  matrix with one CFE per N monomers is about +0.05 + 3.8/N, and the steep part (+0.07, section 3)
+  is the matrix with almost no pin; the twenty-monomer cell that tests the 1/N law is running.
+* **What this does to the pass.** The search's cells are constrained minima of the same potential
+  and the polished cells are lower, so the polished margins supersede the table's wherever both
+  exist. The readings that do not move: TrFE content sets the matrix's margin and brings it to
+  zero near 30 mol%; chlorine and nitrile units pin the helix; the pin's strength is a property of
+  the unit in its matrix. The reading that does: where the film's composition sits on the
+  switching curve. The search's +0.11 put the 64/29/7 crystal at a polar fraction of 0.24 at the
+  bias, which is about what the measured film does; the polished +0.32 puts the perfect crystal
+  near zero there. Either the chlorine's parameters, which no crystal anchor has tested, overstate
+  its pin, or the film switches where the crystal's margin does not apply (interfaces, the
+  statistical sequence, the segments between distant pins). The first is decided by Dipole's E2
+  cell with a CFE in it; this document cannot decide it, and section 5's recommendation of one
+  CFE per fourteen to sixteen, which was read off the search's margins, is suspended with it.
+* **The pre-registered E2 numbers** (`docs/E1_E2_PREDICTIONS.md`) were the search's cells. The
+  polished 70/30 cells are registered there as an addendum before any DFT cell of that sequence
+  exists, with their coordinates (`docs/predictions/polished_vdf7-trfe3_*.xyz`).
+
+### 2.2 Reading the search's table (as written 2026-11-08)
 
 * **The helix handedness is the first lesson of this pass, and it corrected the pass.** The first
   run (2026-11-07) packed one TG conformer, TGTG'. For the VDF/TrFE copolymer rows that is enough:
@@ -490,7 +548,191 @@ cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind doe
 those Dipole's single-chain and GFN1 numbers are the only ones, and the barrier column above is
 the one that matters for this programme's objective.
 
-## 8. Frequency and loss: the kink-pair formation energy
+## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
+
+*Rewritten 2026-11-10. The first form of this section (kept below as 8.6) took the formation
+energy of a kink pair in the kinked two-chain cell as the rate factor between chemistries, and
+bracketed a "dilute" kink between that cell and a pinned lattice. `polyfind.mixedcell` (a cell
+whose chains differ, every chain periodic exactly; `examples/dilute_kink.py`,
+`kink_migration.py`, `kink_site_scan.py`, `polish_margins.py`, tables by `kink_summary.py` in
+`docs/predictions/kink_summary_belt4.md`) has now computed the dilute kink itself, the kinked
+crystal against a reference relaxed the same way, and the barrier of the step that moves a kink.
+Three of the earlier section's statements do not survive, and they are named where they fall.*
+
+### 8.1 A lone kink pair is not a defect the crystal can hold
+
+A kink pair T G+ T G- T makes its chain about 1.0 A shorter (0.68 A once it has relaxed inside a
+kinked crystal). In an all-trans crystal the chain cannot give that length up, because every
+chain is held in axial registry by its six neighbours. Sliding one chain rigidly along its axis in
+the polished all-trans four-chain cell costs, per monomer of the sliding chain:
+
+| lattice | barrier over one monomer period | at 1 A | curvature, kcal/mol/A^2 |
+|---|---|---|---|
+| PVDF | 6.80 | 5.70 | 14.2 |
+| 71/29 (fourteen monomers) | 5.84 | 4.91 | 12.8 |
+| 64/29/7 (fourteen monomers) | 4.56 | 3.77 | 10.0 |
+
+Most of it is the two neighbours along the short axis (the stack the dipoles point along, 4.75 A
+apart, CF2 meshed between CH2): sliding one whole sublattice, which keeps each chain in register
+with those two, costs 3.58 in PVDF, and that number has an independent check. Relaxed with the
+slip held and the cell free it is 0.51 kcal/mol per monomer of the cell (the cell opens b from
+8.48 to 9.14 A), against 0.56 from the DFT seat's GFN1 registry gate for the same slip
+(`sarco/materials/computational/registry_gate_v1.md`). The chain-axis shears C44 and C55, which
+are this registry's elastic constants, are in no anchor the potential was fitted to
+(`docs/BENCHMARK.md`: structurally absent from the fit path), so the single-chain numbers are
+predictions; the request for the DFT values is filed (section 8.7).
+
+`examples/dilute_kink.py` puts one kinked chain among all-trans neighbours: the polished
+all-trans two-chain cell tiled 2 x 1 (four chains), the cell held at the all-trans values (the
+boundary condition of a kink far from any other), every chain periodic exactly, relaxed in three
+stages that each bound the next from above.
+
+| sequence | chains x monomers | neighbours fixed | neighbours free to shift and turn as rigid chains | neighbours fully flexible |
+|---|---|---|---|---|
+| PVDF | 4 x 10 | +25.25 | +23.07 | reverts to all-trans |
+| PVDF | 4 x 14 | +24.17 | +22.69 | reverts to all-trans |
+| PVDF | 4 x 20 | +23.41 | +22.39 | not run |
+| 64/29/7 | 4 x 14 | +21.16 | +20.13 | reverts to all-trans |
+| 71/29 | 4 x 14 | reverts to all-trans | - | - |
+
+kcal/mol per kink pair against the all-trans supercell (which stage `host_check` confirms is the
+minimum with every chain free: 0.0000 below the tiled cell in all three lattices).
+
+* **It costs 20-25 kcal/mol where the neighbours hold still**, 35-42 kT at 300 K: a population of
+  1e-15 per site. The strained kink's gauche bonds are flattened to 85-99 degrees and its
+  backbone angles opened to 122 degrees.
+* **The cost is a strain field, not the size of the cell.** Against the repeat length the PVDF
+  numbers fall as 21.6 + 36/N (neighbours fixed) and 21.7 + 13/N (rigid bodies): the limit of an
+  isolated kink pair on an infinite chain is 21.7, of which 5.3 is the kink pair itself (its energy
+  in a sheet, 8.2) and 16 the stretch of the chain on either side of it, held by the registry over
+  a decay length of about seven monomers (the Frenkel-Kontorova length from the model's own chain
+  stiffness and registry curvature; the same estimate gives 12-28 for a 0.68-1.04 A deficit).
+* **A known bias in that number.** The mixed cell's chains are built from torsions and backbone
+  angles with rigid bonds, and with the preset's angle restraint their axial stiffness is 674 GPa
+  where the potential's full valence form gives 330 (`docs/BENCHMARK.md`). The strain part scales
+  as the square root of the chain stiffness, so with the right chain it is about 12 and the lone
+  kink about 17. A run with the restraint matched to that C33 is in progress and its row goes
+  here. The sheet energies and the step of 8.2-8.3 involve no stretch of this kind.
+* **It is not even metastable once the neighbours respond.** With every chain's torsions and
+  angles free the kink reverts to all-trans without a barrier, in PVDF and in the terpolymer
+  lattice (the relaxation is a damped descent before the quasi-Newton step, so this is the basin's
+  fate and not an optimiser's jump); in the 71/29 lattice it reverts with the neighbours fixed.
+* **So the "dilute kink" the earlier section asked for does not exist**, and its pinned-lattice
+  column was not an upper bound on one: a kink pair on every chain of a cell held at the all-trans
+  a and b (9.3 in PVDF) is still a sheet, with no chain shorter than its neighbour, and costs less
+  than half of what one kink pair alone does. That statement is withdrawn.
+* **Kink pairs exist in register**: on every chain at the same height, a sheet normal to the chain
+  axis, which shortens the whole crystal by 0.68 A and strains nothing; or at a chain end, where
+  the short side can slide. The edge of a sheet that covers part of a crystal is a dislocation line
+  with its Burgers vector along the chain, and the lone kink is its smallest loop; the energies of
+  partial sheets (two to eight chains kinked among sixteen) are the nucleation calculation and are
+  not run.
+
+### 8.2 The sheet, measured against a reference relaxed the same way
+
+The kinked crystal of the earlier section is that sheet, one per repeat. Two things were wrong
+with its numbers, both found by re-relaxing in the mixed cell (every torsion and backbone angle of
+both chains free, the cell free, each chain periodic exactly):
+
+1. **The closure was soft.** The packing search holds a chain periodic by a penalty, and a kinked
+   chain keeps 0.33-0.40 degrees of residual rotation per repeat and gains 0.8 kcal/mol per kink
+   pair from it. PVDF's +4.47 (rigid pendants) is +5.30 with the closure exact.
+2. **The all-trans reference of a chiral sequence was not relaxed.** The search refines a
+   recognised state pattern (all-trans, TGTG') under the line group of the pattern, one torsion
+   value per symmetry class. That is the molecule's own symmetry for PVDF, whose polished cell is
+   unchanged to 1e-4. A copolymer sequence has no such symmetry: its all-trans chain was held
+   planar, and polished it is deflected by up to ten degrees per bond and lies 0.06-0.21 kcal/mol
+   per monomer lower (section 2.1). The kinked chain, which has no recognised pattern, was refined
+   with every torsion free. The comparison was not like for like, by 2.9 kcal/mol per chain in the
+   64/29/7 cell.
+
+| sequence | the search's cells | both cells polished, rigid pendants | with pendant tilts | kinked cell a, b, gamma, c | all-trans cell |
+|---|---|---|---|---|---|
+| PVDF | +4.47 | +5.30 | +5.06 | 4.958, 8.774, 89.18, 25.201 | 4.754, 8.481, 90.00, 25.877 |
+| 64/29/7, kink pair in a VDF-VDF pair | +0.94 | +3.95 | +3.79 | 5.402, 8.426, 92.67, 35.496 | 5.302, 8.245, 91.70, 36.183 |
+| 71/29 | +5.68 | running | | | |
+
+kcal/mol per kink pair against the all-trans crystal.
+
+* **The chlorine's loosening of the lattice for kinks, the reading this section was built on, is
+  mostly gone.** The earlier table had the kink pair at 4.3 in PVDF, 5.5 in the 71/29 matrix and
+  1.8 in the 64/29/7 cell, "a factor of 460-900 in rate". Like for like the terpolymer's is 3.8
+  against PVDF's 5.1; the 71/29 number is running and decides what is left of the separation.
+* **Kink pairs attract along the chain.** One kink pair per fourteen monomers costs the
+  terpolymer chain +3.8, while the chain with a kink pair in every two monomers (the TG helix) lies
+  4.4 below all-trans (section 2.1: +0.317 per monomer). The low-energy objects of this lattice are
+  therefore not kinks but runs of helix and runs of trans with a wall between them, about 2
+  kcal/mol per wall per chain, which is the two-state unit of the loss model with its coupling
+  (plan sections 11-12) seen from inside the crystal.
+
+### 8.3 The step that moves a kink pair
+
+`examples/kink_migration.py` moves ONE chain's kink pair one monomer ahead of its neighbours' in
+the kinked crystal, where every chain has a kink pair and none is shorter than another. The move
+is two gauche migrations (counter-rotations of two second-neighbour bonds, the torsional move
+that leaves both stems parallel) through the wide kink, each segment a climbing-image band on the
+closure surface, every chain flexible, the cell fixed at the kinked crystal's:
+
+    A   G+ T G- T T     in register with the neighbours' (the sheet)
+    I   G+ T T T G-     the leading gauche bond moved two bonds on
+    B   T T G+ T G-     the trailing one followed: one monomer ahead
+
+| lattice | who moves | I | saddle A-I | saddle I-B | B | barrier ahead / back |
+|---|---|---|---|---|---|---|
+| PVDF | one sublattice (half the chains, each with its two stack neighbours) | +7.01 | 7.53 | 8.94 | +1.97 | 8.9 / 7.0 |
+| PVDF | one chain in four (all six neighbours stay) | +9.85 | running | running | +7.88 | running |
+| 71/29 | one sublattice | running | | | | |
+
+kcal/mol per moving chain against the sheet (the first row is the trial run of the driver, to be
+re-run into `kink_migration_belt4.json`; the second is that file's).
+
+* **The torsional step itself costs 7.5-9 kcal/mol in the PVDF lattice**: with a 3e12 /s attempt
+  frequency, 1e6 steps per second at 300 K. The two saddles are sequential, not concerted: at the
+  second the trailing gauche bond is at 111 degrees and the bond it is moving to has not started.
+* **A sheet is stiff against one chain leaving it.** One chain's kink pair one monomer ahead of
+  all six neighbours' costs 7.9 kcal/mol; with its two stack neighbours moving too it costs 2.0.
+  The same anisotropy as the registry: the stack along the short axis moves as a unit, and the
+  sheet advances stack by stack, not chain by chain. In PVDF the sheet is therefore a flat, slow
+  object: the activation of its motion is the step barrier plus the cost of the first chain of a
+  stack leaving, 12 kcal/mol or more.
+
+### 8.4 In a copolymer the sheet sees the sequence
+
+`examples/kink_site_scan.py` walks the sheet along the 64/29/7 sequence `VVRVVRVCVVRVVR` one
+monomer at a time from the polished kinked crystal, relaxing the cell at each position (the
+lattice the sheet carries with it, not a new packing search):
+
+| the kink pair's two units | sheet energy, kcal/mol per kink pair | positions (first bond) |
+|---|---|---|
+| VDF-VDF | 3.95-4.06 | 0, 6, 22 |
+| TrFE-VDF | 4.51-4.56 | 4, 26 |
+| VDF-TrFE | 5.25-5.33 | 2, 8, 24 |
+| around the CFE | running | 10-20 |
+
+The sheet sits in the VDF-VDF pairs and climbs 1.3 kcal/mol to pass each TrFE, on top of the
+step barrier: the matrix's own sequence is a corrugation for the sheet, with a period of three
+monomers in this cell, before the pin is counted. The positions at the CFE are running.
+
+### 8.5 What the frequency map becomes
+
+The map of the earlier section scaled each chemistry's relaxation rate by
+`exp(-E_form / kT)` with the kinked-cell formation energies of the search, anchored on the
+measured 364 kHz. Those energies carried the two biases of 8.2, and a formation energy is not
+what limits the motion of a sheet that is already there: the step is. The rate that belongs in the
+map is `nu exp(-(E_step + dU) / kT)` with `E_step` the step barrier of 8.3 in that lattice and
+`dU` the climb of 8.4 along that sequence. For PVDF's lattice that is 3e12 exp(-8.9/kT) = 9e5 /s
+before the stack's cost, the right order for a channel measured at 364 kHz in the terpolymer film
+and three orders above the earlier section's PVDF proxy; the terpolymer's and the matrix's own
+step barriers are the runs in progress, and the map is regenerated on them when they land. Until
+then the frequency columns of 8.6 and of `candidate_frequency_map_belt4*.md` are not to be read as
+this model's ranking of chemistries by rate.
+
+### 8.6 The earlier form of this section (2026-11-08), for the record
+
+*Superseded where 8.1-8.5 say so: the "upper bound for a dilute kink pair" (8.1), every kink
+energy of a chiral row and the copolymer-to-terpolymer rate factor (8.2), and the reading of the
+formation energy as the rate (8.5). The protocol comparisons between the search's own cells stand
+as comparisons of those cells.*
 
 The tables above screen the statics. The objective is loss at the drive frequency, which is
 `omega tau`, and `tau` is dynamics: the collective barrier to nucleate and move a kink pair in a

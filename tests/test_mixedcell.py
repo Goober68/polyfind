@@ -262,3 +262,20 @@ def test_tiling_a_mixed_state_keeps_the_energy_per_chain():
             mm = MC.MixedModel(polymer, m.name, pk, flips, [ch] * (2 * nx * ny), angle_stiffness=105.0)
             assert mm.physical_energy(big.vector()) == pytest.approx(e2 * nx * ny, rel=1e-11, abs=1e-8)
     _run(CASES[3], body)
+
+
+def test_descent_stays_on_the_closure_surface_and_in_step():
+    """The damped pre-relaxation: energy down, every chain still periodic, no variable moved
+    further than the step limit times the number of steps."""
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    rng = np.random.default_rng(3)
+    x = x.copy()
+    x[m.index("tors")] += rng.uniform(-8, 8, m.nc * m.P)
+    x = m.project(x, m.index("internal"))
+    free = np.setdiff1d(np.arange(m.n_var), np.concatenate([m.index("xy", 1), m.index("z", 1)]))
+    e0 = m.physical_energy(x)
+    y, gmax, n = m.descend(x, free, [0, 1], steps=25, max_step=0.05, gtol=1e-3)
+    assert n == 25 and m.physical_energy(y) < e0
+    assert max(m.closure_residual(y)) < 1e-7
+    assert np.abs((y - x) / m.scale(x)).max() <= 25 * 0.05 + 1e-6
+    np.testing.assert_array_equal(y[m.index("xy", 1)], x[m.index("xy", 1)])  # what is not free does not move

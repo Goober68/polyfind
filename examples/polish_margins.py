@@ -46,6 +46,13 @@ def screen_row(row: str, window: float):
             tgs = {k: v for k, v in confs.items() if k != "TTTT"}
             low = min(v["energy_per_monomer_kcal"] for v in tgs.values())
             return confs["TTTT"], {k: v for k, v in tgs.items() if v["energy_per_monomer_kcal"] <= low + window}
+    e2 = Path("docs/predictions/e2_polyfind_belt4.json")
+    key = {"vdf10": "pvdf", "vdf7-trfe3": "vdftrfe"}.get(row)
+    if key and e2.exists():  # the E2 set's two rows: their TTTT and TGTG' cells are the pre-registered ones
+        confs = json.load(open(e2))["systems"][key]["conformations"]
+        rigid = lambda r: r.get("energy_rigid_per_monomer_kcal", r["energy_per_monomer_kcal"] - r.get("pendant_tilt_relaxation_per_monomer_kcal", 0.0))  # noqa: E731
+        return ({**confs["TTTT"], "energy_rigid_per_monomer_kcal": rigid(confs["TTTT"])},
+                {"TGTG'": {**confs["TGTG'"], "energy_rigid_per_monomer_kcal": rigid(confs["TGTG'"])}})
     raise KeyError(f"{row} is in no screen file with a derived margin")
 
 
