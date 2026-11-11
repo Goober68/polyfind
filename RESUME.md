@@ -28,9 +28,14 @@ the neighbours' axial shifts free it is 5.8 (16 chains), 4.9 (36): anti-plane sh
 a one-monomer repeat has no internal freedom, `flexible` needs two. Copolymers by the affordable protocol (one chain
 in four, lateral cell free; PVDF 2.86): 71/29 2.37 (rigid 5.84), 64/29/7 2.04 (rigid 4.56). A four-chain cell cannot
 give way laterally (6.07 against 3.15), so every four-chain number of section 8 with one chain out of step with its
-neighbours is an upper bound. Registered and NOT requested: the cheapest DFT test, E5 c's 24-atom c/2 cell relaxed
-with the lateral cell free at Dipole's repeat, +0.708 kcal/mol per monomer of the cell (1.668 rigid), a +5.1%, b +4.2%
-(`docs/E1_E2_PREDICTIONS.md`, last E5 entry; `chain_slide.py --c-per-monomer 2.5807377932516 --cell-free`).
+neighbours is an upper bound. **E5 d, DISPATCHED by the PI on 2026-11-11 ("Go on the DFT check")**: the cheapest DFT
+test of the 3.15, E5 c's 24-atom c/2 cell (`beta_2a_slide_c2.xyz`) relaxed with the lateral cell free and the repeat
+held. Registered for exactly that protocol (`examples/e5d_prediction.py --period-two` ->
+`docs/predictions/e5d_polyfind_belt4.json`; `docs/E1_E2_PREDICTIONS.md`, E5 d): +0.708 kcal/mol per monomer of the
+cell (4.515 mEh per cell) at Dipole's repeat against 1.668 rigid there, a +5.1%, b +4.2%, relaxed over the DFT's own
+rigid part c 0.45; symmetric start = perturbed starts, no chain turns, pendants untilted even from tilted starts.
+`examples/crosscheck_e5.py` recognises the record by geometry (or `beta_d_relaxed` in a table). The specification
+Dipole reads is the README of `sarco/materials/electrostriction/requests/beta_axial_registry_e5_v1/`.
 New flags: `kink_migration.py --ends-only --trust-tiled`. NOTE: a full-suite run under load left pytest sleeping on a
 forked child after printing its summary (766 passed, 5 skipped); kill it if it lingers (the next run, 767, exited clean).
 **What it changes in section 8, and a trap.** (a) One chain's kink a monomer ahead of its sheet, neighbours as rigid

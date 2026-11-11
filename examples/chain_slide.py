@@ -61,6 +61,19 @@ def reference(letters: str, stored: dict | None = None):
     return polymer, name, DK.all_trans_reference(polymer, name, stored)
 
 
+def at_repeat(polymer, d: dict, c_per_monomer: float, n_mon: int, maxiter: int = 600):
+    """The polished two-chain cell ``d`` taken to another chain repeat: the repeat set and held, the
+    lateral cell and the placements relaxed.  Returns ``(cell dict, info)``; the dict is ``d`` with
+    its ``state`` and ``energy`` replaced, which is what :func:`dilute_kink.make_model` tiles."""
+    m2, x2, _ = DK.make_model(polymer, d, 1, 1)
+    x2 = x2.copy()
+    x2[3] = c_per_monomer * n_mon
+    x2 = m2.project(x2, m2.index("internal"), [0, 1])
+    free2 = np.setdiff1d(np.arange(m2.n_var), np.concatenate([m2.index("c"), m2.index("xy", 1), m2.index("z", 1)]))
+    x2, info = relax(m2, x2, free2, maxiter)
+    return dict(d, state=np.asarray(x2, dtype=float), energy=float(m2.physical_energy(x2))), info
+
+
 def axis_positions(model, x) -> np.ndarray:
     """Cartesian lateral position (A) of every chain axis."""
     st = model.state(x)
@@ -246,15 +259,10 @@ def main():
         tag = ""
         if args.c_per_monomer:
             # the two-chain cell at the given repeat: lateral cell and placements relaxed, the repeat held
-            m2, x2, _ = DK.make_model(polymer, d, 1, 1)
-            x2 = x2.copy()
-            x2[3] = args.c_per_monomer * n_mon
-            x2 = m2.project(x2, m2.index("internal"), [0, 1])
-            free2 = np.setdiff1d(np.arange(m2.n_var), np.concatenate([m2.index("c"), m2.index("xy", 1), m2.index("z", 1)]))
-            x2, info2 = relax(m2, x2, free2, args.maxiter)
-            log(f"   repeat set to {args.c_per_monomer:.6f} A per monomer: lateral cell {np.round(x2[:3], 5).tolist()} (was {np.round(np.asarray(d['state'][:3], dtype=float), 5).tolist()}), "
-                f"E {m2.physical_energy(x2) / (2 * n_mon):.6f} kcal/mol per monomer; {info2['message']}")
-            d = dict(d, state=np.asarray(x2, dtype=float), energy=float(m2.physical_energy(x2)))
+            was = np.round(np.asarray(d["state"][:3], dtype=float), 5).tolist()
+            d, info2 = at_repeat(polymer, d, args.c_per_monomer, n_mon, args.maxiter)
+            log(f"   repeat set to {args.c_per_monomer:.6f} A per monomer: lateral cell {np.round(d['state'][:3], 5).tolist()} (was {was}), "
+                f"E {float(d['energy']) / (2 * n_mon):.6f} kcal/mol per monomer; {info2['message']}")
             tag = f" c{args.c_per_monomer:.4f}"
         cm = float(d["state"][3]) / n_mon
         log(f"{name}: cell {np.round(np.asarray(d['state'][:3], dtype=float), 5).tolist()}, monomer period {cm:.5f} A, E {float(d['energy']) / (2 * n_mon):.6f} kcal/mol per monomer")

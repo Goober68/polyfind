@@ -20,8 +20,11 @@ def _load(name):
 
 AR = _load("axial_registry")
 CX = _load("crosscheck_e5")
+E5D = _load("e5d_prediction")
 IDX = json.load(open(ROOT / "docs" / "predictions" / "e5_structures" / "e5_structures.json"))
 PRED = json.load(open(ROOT / "docs" / "predictions" / "e5_polyfind_belt4.json"))
+PRED_D = json.load(open(ROOT / "docs" / "predictions" / "e5d_polyfind_belt4.json"))
+SLIDE = json.load(open(ROOT / "docs" / "predictions" / "chain_slide_belt4.json"))
 EXPECTED = {"beta_a_slide_c8": ("a", "c/8"), "beta_a_slide_c4": ("a", "c/4"), "beta_a_slide_3c8": ("a", "3c/8"), "beta_a_slide_c2": ("a", "c/2"),
             "beta_2a_reference": ("c0", None), "beta_2a_slide_c4": ("c", "c/4"), "beta_2a_slide_c2": ("c", "c/2")}
 
@@ -78,6 +81,16 @@ def test_every_cell_is_recognised_by_its_geometry_alone():
     frac = np.array(init["positions_A"]) @ np.linalg.inv(cell)
     # an affine change of the cell stretches the chains across b; the bonds along the chain survive, which is what the reader uses
     assert CX.classify({"cell_A": relaxed, "positions_A": frac @ relaxed, "symbols": init["symbols"]}, ref["cell_A"]) == ("b", "c/2")
+    # part d: the half-slipped doubled cell with its lateral cell opened and the repeat unchanged; the unslid cell opened the same way is nothing
+    for name, want in (("beta_2a_slide_c2", ("d", "c/2")), ("beta_2a_reference", (None, None)), ("beta_2a_slide_c4", (None, None))):
+        init = IDX["structures"][name]["initial"]
+        cell = np.array(init["cell_A"])
+        opened = cell * np.array([[1.05], [1.04], [1.0]])
+        frac = np.array(init["positions_A"]) @ np.linalg.inv(cell)
+        assert CX.classify({"cell_A": opened, "positions_A": frac @ opened, "symbols": init["symbols"]}, ref["cell_A"]) == want, name
+    stretched = np.array(IDX["structures"]["beta_2a_slide_c2"]["initial"]["cell_A"]) * np.array([[1.05], [1.04], [1.01]])
+    frac = np.array(IDX["structures"]["beta_2a_slide_c2"]["initial"]["positions_A"]) @ np.linalg.inv(np.array(IDX["structures"]["beta_2a_slide_c2"]["initial"]["cell_A"]))
+    assert CX.classify({"cell_A": stretched, "positions_A": frac @ stretched, "symbols": IDX["structures"]["beta_2a_slide_c2"]["initial"]["symbols"]}, ref["cell_A"]) == (None, None)
 
 
 def test_the_ingester_returns_the_energies_it_is_given():
@@ -137,3 +150,57 @@ def test_the_registry_is_even_and_periodic_in_the_slide():
         a = [block["a"]["slides"][k]["per_cell_monomer_kcal"] for k in ("c/8", "c/4", "3c/8", "c/2")]
         assert all(q > p > 0 for p, q in zip([1e-9] + a[:-1], a))
         assert block["anisotropy_c_over_a_per_moved_monomer_at_half"] > 1.5
+
+
+def test_part_d_is_read_against_its_own_registration():
+    """Part d, the half-slipped doubled cell relaxed with its lateral cell free: a record carrying the
+    zero of part c plus polyfind's registered difference comes back as that difference per monomer of
+    the cell, with the cell's opening and the ratio to the rigid number of part c, from a record
+    recognised by geometry and from the plain table."""
+    ref = _reference()
+    e_ref, reg = ref["energy_Eh"], PRED_D["registered"]
+    c2 = IDX["structures"]["beta_2a_slide_c2"]["initial"]
+    cell = np.array(c2["cell_A"])
+    opened = cell * np.array([[1.0 + reg["cell_change"]["a"]], [1.0 + reg["cell_change"]["b"]], [1.0]])
+    frac = np.array(c2["positions_A"]) @ np.linalg.inv(cell)
+    rigid = PRED["dipole_cell"]["c"]["slides"]["c/2"]
+    records = [{"name": "c0", "energy_Eh": 2 * e_ref, **IDX["structures"]["beta_2a_reference"]["initial"]},
+               {"name": "c at c/2", "energy_Eh": 2 * e_ref + rigid["dE_cell_mEh"] * 1e-3, **c2},
+               {"name": "d", "energy_Eh": 2 * e_ref + reg["dE_cell_mEh"] * 1e-3, "cell_A": opened, "positions_A": frac @ opened, "symbols": c2["symbols"]}]
+    out = CX.crosscheck(PRED, IDX["structures"], records, log=lambda s: None, pred_d=PRED_D)
+    assert abs(out["d"]["dipole"] - reg["per_cell_monomer_kcal"]) < 1e-6 and abs(out["d"]["polyfind"] - reg["per_cell_monomer_kcal"]) < 1e-12
+    assert abs(out["d"]["cell_change"]["a"] - reg["cell_change"]["a"]) < 1e-9 and abs(out["d"]["cell_change"]["b"] - reg["cell_change"]["b"]) < 1e-9
+    assert abs(out["d"]["cell_change"]["c"]) < 1e-12
+    assert abs(out["d"]["relaxed_over_rigid"]["dipole"] - reg["per_cell_monomer_kcal"] / rigid["per_cell_monomer_kcal"]) < 1e-6
+    table = {"structures": {"beta_2a_reference": {"energy_Eh": 2 * e_ref}, "beta_d_relaxed": {"energy_Eh": 2 * e_ref + 3e-3, "cell_A": opened.tolist()}}}
+    path = ROOT / "tests" / "data" / "_e5d_table_tmp.json"
+    path.write_text(json.dumps(table))
+    try:
+        out = CX.crosscheck(PRED, IDX["structures"], CX.read_records([str(path)], IDX["structures"]), log=lambda s: None, pred_d=PRED_D)
+    finally:
+        path.unlink()
+    assert abs(out["d"]["dipole"] - 3e-3 * CX.KCAL_PER_EH / 4) < 1e-9 and out["d"]["cell_change"]["a"] > 0.05
+
+
+def test_the_part_d_registration_is_what_its_script_computes():
+    """The registered number: one chain of four at the half-slip, lateral cell free, at the DFT seat's
+    repeat.  The symmetric start is the lowest of its starts (a DFT code keeping the symmetry it finds
+    is like for like), no chain turns, the pendant groups stay untilted from tilted starts too, and the
+    number is under half the rigid one.  It equals the row of examples/chain_slide.py for the same
+    repeat, and the script reproduces it from the stored one-monomer cell."""
+    reg, blk = PRED_D["registered"], PRED_D["dft_repeat"]
+    assert PRED_D["dft_start"]["sha256"] == IDX["structures"]["beta_2a_slide_c2"]["sha256"]
+    assert blk["shift"]["symmetric_start_is_lowest"] and max(abs(v) for v in blk["shift"]["chain_turns_deg"]) < 1e-3
+    assert abs(blk["with_pendant_tilts"]["tilt_gain_per_cell_kcal"]) < 1e-6 and abs(blk["with_pendant_tilts"]["from_tilted_starts"]["tilt_gain_per_cell_kcal"]) < 1e-6
+    assert 0.40 < reg["ratio_to_rigid"] < 0.45 and reg["cell_change"]["a"] > 0.04 and reg["cell_change"]["b"] > 0.03
+    row = SLIDE["rows"]["vdf1 2x1 c2.5807"]
+    assert abs(reg["per_moved_monomer_kcal"] - row["shift_cell_free"]["barrier"]) < 1e-4
+    assert abs(PRED_D["own_repeat"]["shift"]["per_moved_monomer_kcal"] - SLIDE["rows"]["vdf1 2x1"]["shift_cell_free"]["barrier"]) < 1e-4
+    with PRESET_PARAMETERS["pvdf-dft-valence-belt4"].applied():
+        polymer, _, d = E5D.CS.reference("V", SLIDE["references"]["vdf1"])
+        d_dft, _ = E5D.CS.at_repeat(polymer, d, blk["chain_repeat_A"], 1, 300)
+        again = E5D.block(polymer, d_dft, lambda s: None, [0], 300)
+    assert abs(again["shift"]["per_cell_monomer_kcal"] - reg["rigid_pendants"]["per_cell_monomer_kcal"]) < 1e-4
+    assert abs(again["rigid_half_slip"]["per_cell_monomer_kcal"] - reg["rigid_half_slip_at_this_repeat"]["per_cell_monomer_kcal"]) < 1e-4
+    assert abs(again["zero_cell"]["a"] - blk["zero_cell"]["a"]) < 1e-4 and abs(again["zero_cell"]["b"] - blk["zero_cell"]["b"]) < 1e-4
+

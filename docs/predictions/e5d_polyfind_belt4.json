@@ -1,0 +1,356 @@
+{
+ "schema": "polyfind_e5d_prediction_v1",
+ "potential": "pvdf-dft-valence-belt4: induced dipoles, Ewald, force-shifted LJ, fluorine belt sites, PBE-D3 chain geometry, rigid bonds, 0 K",
+ "protocol": "one chain of the four-chain cell (the beta cell doubled along its short axis) at the half-monomer slip; the lateral cell (a, b, gamma) and every chain's lateral position and setting angle free; the chain repeat held; the other chains' axial shifts held; zero: the unslid cell at the same repeat with its lateral cell relaxed",
+ "dft_start": {
+  "file": "beta_2a_slide_c2.xyz",
+  "sha256": "23b5449239aa75d58cf0619a44bbbdff7dbfe28b483df5b3eed71a2fe7f4bcc1",
+  "atoms": 24,
+  "mesh": [
+   4,
+   4,
+   16
+  ],
+  "zero": "beta_2a_reference (or twice the accepted energy)"
+ },
+ "energy": "kcal/mol; per_cell_monomer: over the four monomers of the 24-atom cell (E5's unit); per_moved_monomer: per monomer of the slid chain; dE_cell: per 24-atom cell",
+ "model_cell": "four chains of 1 VDF monomer, as in the DFT's 24-atom cell",
+ "dft_repeat": {
+  "chain_repeat_A": 2.5807377932516,
+  "monomers_per_chain_in_the_model": 1,
+  "zero_cell": {
+   "a": 4.762571371588182,
+   "b": 8.48532189288527,
+   "gamma_deg": 90.0
+  },
+  "zero_energy_per_monomer_kcal": -9.418809944988825,
+  "rigid_half_slip": {
+   "dE_cell_kcal": 6.672047572920889,
+   "dE_cell_mEh": 10.63258460421264,
+   "per_cell_monomer_kcal": 1.6680118932302221,
+   "per_moved_monomer_kcal": 6.672047572920889
+  },
+  "shift": {
+   "dE_cell_kcal": 2.8334860136337596,
+   "dE_cell_mEh": 4.515447384861052,
+   "per_cell_monomer_kcal": 0.7083715034084399,
+   "per_moved_monomer_kcal": 2.8334860136337596,
+   "ratio_to_rigid": 0.4246801274519864,
+   "cell_change": {
+    "a": 0.05123145187569644,
+    "b": 0.04172857722305556,
+    "gamma_deg": -7.1339627538691275e-09
+   },
+   "relaxed_cell": {
+    "a": 5.006564817616272,
+    "b": 8.839402302755017,
+    "gamma_deg": 89.99999999286604
+   },
+   "symmetric_start_per_moved_monomer": 2.8334860136337596,
+   "lowest_start": "as started",
+   "starts_per_moved_monomer": {
+    "as started": 2.8334860136337596,
+    "as started, seed 1": 2.8334860136455546,
+    "as started, seed 2": 2.8334860136712763,
+    "as started, seed 0": 2.833486014050365
+   },
+   "symmetric_start_is_lowest": true,
+   "chain_turns_deg": [
+    4.100376713722653e-07,
+    -1.6597368812654167e-08,
+    -1.4903832834534114e-08,
+    -5.935649483035377e-07
+   ],
+   "chain_fractional_shifts": [
+    [
+     -0.005676987353119473,
+     4.864250132180106e-08
+    ],
+    [
+     0.0,
+     0.0
+    ],
+    [
+     -0.005683674391567917,
+     2.7748009737280707e-09
+    ],
+    [
+     -0.011342532899440094,
+     -3.323714342640116e-08
+    ]
+   ],
+   "largest_torsion_off_trans_deg": 2.842170943040401e-14,
+   "axial_force_on_slid_chain": -1.1011771526495925e-05,
+   "largest_axial_force_on_another": 8.561779182964164e-06,
+   "message": "Optimization terminated successfully"
+  },
+  "with_pendant_tilts": {
+   "dE_cell_kcal": 2.8334860136360263,
+   "dE_cell_mEh": 4.515447384864665,
+   "per_cell_monomer_kcal": 0.7083715034090066,
+   "per_moved_monomer_kcal": 2.8334860136360263,
+   "tilt_gain_per_cell_kcal": 2.2666313270747196e-12,
+   "largest_tilt_deg": 5.668019237984818e-06,
+   "ratio_to_rigid": 0.42468012745232614,
+   "from_tilted_starts": {
+    "tilt_gain_per_cell_kcal": 2.2595258997171186e-12,
+    "largest_tilt_deg": 6.101710253484896e-06,
+    "per_cell_monomer_kcal": 0.7083715034090048
+   }
+  }
+ },
+ "own_repeat": {
+  "chain_repeat_A": 2.5876818504105077,
+  "monomers_per_chain_in_the_model": 1,
+  "zero_cell": {
+   "a": 4.754070728728579,
+   "b": 8.480849553496686,
+   "gamma_deg": 90.0
+  },
+  "zero_energy_per_monomer_kcal": -9.436559219473585,
+  "rigid_half_slip": {
+   "dE_cell_kcal": 6.797682680685963,
+   "dE_cell_mEh": 10.832796892565185,
+   "per_cell_monomer_kcal": 1.6994206701714907,
+   "per_moved_monomer_kcal": 6.797682680685963
+  },
+  "shift": {
+   "dE_cell_kcal": 2.861106583421879,
+   "dE_cell_mEh": 4.559463564583851,
+   "per_cell_monomer_kcal": 0.7152766458554698,
+   "per_moved_monomer_kcal": 2.861106583421879,
+   "ratio_to_rigid": 0.4208944014922982,
+   "cell_change": {
+    "a": 0.0518526702424873,
+    "b": 0.04203096004922835,
+    "gamma_deg": -3.0708391847156236e-06
+   },
+   "relaxed_cell": {
+    "a": 5.000581990534804,
+    "b": 8.837307802263222,
+    "gamma_deg": 89.99999692916082
+   },
+   "symmetric_start_per_moved_monomer": 2.861106583517447,
+   "lowest_start": "as started, seed 2",
+   "starts_per_moved_monomer": {
+    "as started, seed 2": 2.861106583421879,
+    "as started, seed 1": 2.86110658347674,
+    "as started": 2.861106583517447,
+    "as started, seed 0": 2.8611065837292884
+   },
+   "symmetric_start_is_lowest": true,
+   "chain_turns_deg": [
+    -7.753127880505417e-05,
+    3.574179038423608e-05,
+    -8.1172142813557e-05,
+    3.0410016677251406e-05
+   ],
+   "chain_fractional_shifts": [
+    [
+     -0.005764792450677353,
+     2.009331910896523e-07
+    ],
+    [
+     0.0,
+     0.0
+    ],
+    [
+     -0.005771623530823999,
+     2.437811953775611e-07
+    ],
+    [
+     -0.011518475616303259,
+     1.0821304741170934e-07
+    ]
+   ],
+   "largest_torsion_off_trans_deg": 1.6768808563938364e-11,
+   "axial_force_on_slid_chain": -2.896141308452254e-06,
+   "largest_axial_force_on_another": 2.2475936850314717e-06,
+   "message": "Optimization terminated successfully"
+  },
+  "with_pendant_tilts": {
+   "dE_cell_kcal": 2.861106583419847,
+   "dE_cell_mEh": 4.559463564580612,
+   "per_cell_monomer_kcal": 0.7152766458549618,
+   "per_moved_monomer_kcal": 2.861106583419847,
+   "tilt_gain_per_cell_kcal": -2.0321522242738865e-12,
+   "largest_tilt_deg": 9.027929995233904e-06,
+   "ratio_to_rigid": 0.4208944014919992,
+   "from_tilted_starts": {
+    "tilt_gain_per_cell_kcal": -1.9966250874858815e-12,
+    "largest_tilt_deg": 9.369417425206186e-06,
+    "per_cell_monomer_kcal": 0.7152766458549706
+   }
+  }
+ },
+ "period_two_flexible_dft_repeat": {
+  "chain_repeat_A": 2.5807377932516,
+  "monomers_per_chain_in_the_model": 2,
+  "zero_cell": {
+   "a": 4.762565643263454,
+   "b": 8.485323254307998,
+   "gamma_deg": 90.00000000444994
+  },
+  "zero_energy_per_monomer_kcal": -9.418809945120158,
+  "rigid_half_slip": {
+   "dE_cell_kcal": 6.672167980723543,
+   "dE_cell_mEh": 10.632776486260054,
+   "per_cell_monomer_kcal": 1.6680419951808858,
+   "per_moved_monomer_kcal": 6.672167980723543
+  },
+  "shift": {
+   "dE_cell_kcal": 2.833486014106036,
+   "dE_cell_mEh": 4.515447385613673,
+   "per_cell_monomer_kcal": 0.708371503526509,
+   "per_moved_monomer_kcal": 2.833486014106036,
+   "ratio_to_rigid": 0.4246724636268476,
+   "cell_change": {
+    "a": 0.05123238272405217,
+    "b": 0.04172837500736115,
+    "gamma_deg": -4.729931333713466e-06
+   },
+   "relaxed_cell": {
+    "a": 5.00656322904755,
+    "b": 8.839402005122444,
+    "gamma_deg": 89.99999527451861
+   },
+   "symmetric_start_per_moved_monomer": 2.8334860142430855,
+   "lowest_start": "as started, seed 0",
+   "starts_per_moved_monomer": {
+    "as started, seed 0": 2.833486014106036,
+    "as started": 2.8334860142430855
+   },
+   "symmetric_start_is_lowest": true,
+   "chain_turns_deg": [
+    -0.00014487957204778468,
+    0.00010503418189955482,
+    -0.0001445440502436668,
+    4.946551450757397e-05
+   ],
+   "chain_fractional_shifts": [
+    [
+     0.00567676003517837,
+     -3.818350382189409e-07
+    ],
+    [
+     0.011342396749260852,
+     -6.256330314924341e-08
+    ],
+    [
+     0.005683495724263188,
+     -3.913584236205647e-07
+    ],
+    [
+     0.0,
+     0.0
+    ]
+   ],
+   "largest_torsion_off_trans_deg": 9.74442423284927e-06,
+   "axial_force_on_slid_chain": 2.0114843043526946e-05,
+   "largest_axial_force_on_another": 1.56394794714484e-05,
+   "message": "Optimization terminated successfully"
+  },
+  "flexible": {
+   "dE_cell_kcal": 2.827217119587388,
+   "dE_cell_mEh": 4.5054572662963395,
+   "per_cell_monomer_kcal": 0.706804279896847,
+   "per_moved_monomer_kcal": 2.827217119587388,
+   "ratio_to_rigid": 0.4237329047703021,
+   "cell_change": {
+    "a": 0.050436286268514596,
+    "b": 0.04269974530903986,
+    "gamma_deg": 1.4350243304761534e-07
+   },
+   "relaxed_cell": {
+    "a": 5.0027717674196825,
+    "b": 8.847644396131823,
+    "gamma_deg": 90.00000014795238
+   },
+   "symmetric_start_per_moved_monomer": 2.833486014242922,
+   "lowest_start": "continued 0, seed 0",
+   "starts_per_moved_monomer": {
+    "continued 0, seed 0": 2.827217119587388,
+    "as started, seed 0": 2.827217119633495,
+    "continued 0": 2.833486014106036,
+    "as started": 2.833486014242922
+   },
+   "symmetric_start_is_lowest": false,
+   "chain_turns_deg": [
+    -6.543530162161915e-09,
+    -1.9281790741842997e-07,
+    1.7740461544235586e-08,
+    1.4620979982282734e-08
+   ],
+   "chain_fractional_shifts": [
+    [
+     0.0056032016991166755,
+     -1.7496579009005124e-08
+    ],
+    [
+     0.010787633449550915,
+     2.8327085122015205e-10
+    ],
+    [
+     0.005607596010390514,
+     -1.7265541910989632e-08
+    ],
+    [
+     0.0,
+     0.0
+    ]
+   ],
+   "largest_torsion_off_trans_deg": 4.548941543503588,
+   "axial_force_on_slid_chain": 1.9655320817449362e-05,
+   "largest_axial_force_on_another": 1.624533412936151e-05,
+   "message": "Optimization terminated successfully"
+  },
+  "with_pendant_tilts": {
+   "dE_cell_kcal": 2.798694104291201,
+   "dE_cell_mEh": 4.460002948114493,
+   "per_cell_monomer_kcal": 0.6996735260728002,
+   "per_moved_monomer_kcal": 2.798694104291201,
+   "tilt_gain_per_cell_kcal": -0.028523015296187282,
+   "largest_tilt_deg": 1.2635166845519124,
+   "ratio_to_rigid": 0.4194579801313253,
+   "from_tilted_starts": {
+    "tilt_gain_per_cell_kcal": -0.02852301529625123,
+    "largest_tilt_deg": 1.2635156269639916,
+    "per_cell_monomer_kcal": 0.6996735260727842
+   }
+  }
+ },
+ "registered": {
+  "what": "the number to compare with the DFT's relaxed energy of beta_2a_slide_c2 against its zero: pendant groups tilt-relaxed, at the DFT seat's repeat",
+  "dE_cell_kcal": 2.8334860136360263,
+  "dE_cell_mEh": 4.515447384864665,
+  "per_cell_monomer_kcal": 0.7083715034090066,
+  "per_moved_monomer_kcal": 2.8334860136360263,
+  "tilt_gain_per_cell_kcal": 2.2666313270747196e-12,
+  "largest_tilt_deg": 5.668019237984818e-06,
+  "ratio_to_rigid": 0.42468012745232614,
+  "from_tilted_starts": {
+   "tilt_gain_per_cell_kcal": 2.2595258997171186e-12,
+   "largest_tilt_deg": 6.101710253484896e-06,
+   "per_cell_monomer_kcal": 0.7083715034090048
+  },
+  "rigid_pendants": {
+   "dE_cell_kcal": 2.8334860136337596,
+   "dE_cell_mEh": 4.515447384861052,
+   "per_cell_monomer_kcal": 0.7083715034084399,
+   "per_moved_monomer_kcal": 2.8334860136337596
+  },
+  "cell_change": {
+   "a": 0.05123145187569644,
+   "b": 0.04172857722305556,
+   "gamma_deg": -7.1339627538691275e-09
+  },
+  "rigid_half_slip_at_this_repeat": {
+   "dE_cell_kcal": 6.672047572920889,
+   "dE_cell_mEh": 10.63258460421264,
+   "per_cell_monomer_kcal": 1.6680118932302221,
+   "per_moved_monomer_kcal": 6.672047572920889
+  }
+ },
+ "acceptance": "the sign; the relaxed energy within a factor 1.5; a and b both opening; the relaxed number under two thirds of the DFT's own rigid one (E5 c at c/2)",
+ "seconds": 77.35433411598206
+}

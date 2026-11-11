@@ -744,8 +744,14 @@ class MixedModel:
 
 
 # ------------------------------------------------------------------- pendant tilts
-def tilt_relaxation(model: MixedModel, x, polymer=None, k_backbone: float | None = None, gtol: float = 1e-7):
+def tilt_relaxation(model: MixedModel, x, polymer=None, k_backbone: float | None = None, gtol: float = 1e-7,
+                    perturb: float = 0.0, seed: int = 0):
     """:func:`polyfind.pendants.tilt_relaxation` for a mixed cell: ``(dE_per_cell, tilts_deg, groups)``.
+
+    The search starts from zero tilts, where a structure with a symmetry has no gradient along a
+    tilt that would break it, so a symmetric arrangement is returned untilted whether or not it is
+    stable.  ``perturb`` (degrees) starts instead from random tilts of up to that size (``seed``):
+    the same result from both starts is the evidence that the untilted groups are a minimum.
 
     Every CH2/CF2/CHF group of every chain may turn rigidly about its carbon, with the carbons,
     the cell, the bond lengths and the X-C-X angles fixed, the belt sites following their groups
@@ -779,7 +785,10 @@ def tilt_relaxation(model: MixedModel, x, polymer=None, k_backbone: float | None
             grad[i] = gX @ (PD.group_displacements(groups, tp, len(atoms)) - PD.group_displacements(groups, tm, len(atoms))) / (2 * h)
         return float(E), grad
 
-    res = minimize(eg, np.zeros(3 * len(groups)), jac=True, method="L-BFGS-B",
+    t0 = np.zeros(3 * len(groups))
+    if perturb:
+        t0 = np.radians(np.random.default_rng(seed).uniform(-float(perturb), float(perturb), t0.size))
+    res = minimize(eg, t0, jac=True, method="L-BFGS-B",
                    options={"maxiter": 2000, "gtol": gtol, "ftol": 1e-15})
     if float(res.fun) > float(E0) + 1e-9:  # the start is admissible; never report a rise
         return 0.0, np.zeros((len(groups), 3)), groups

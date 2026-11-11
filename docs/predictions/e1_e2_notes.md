@@ -306,17 +306,35 @@ stiffness flag of the previous section is read against the QE cell from here on.
   within a factor 1.5. `examples/crosscheck_e5.py --dipole <records>` recognises Dipole's records
   by their geometry and prints the comparison. E6 (the PVDF kink sheet, +5.30 per kink pair) is
   registered in the same ask and is not dispatched.
-- **E5, one relaxed number registered in case it is asked for (2026-11-10; not requested, not
-  dispatched).** Part c is a rigid lattice. With the lattice responding the half-slip of one chain
-  costs polyfind 3.15 kcal/mol per monomer of the chain in the dilute limit, 46% of the rigid
-  6.80, almost all of it from the neighbours moving aside by 0.2 A (`docs/CANDIDATE_MATERIALS.md`
-  8.1, `examples/chain_slide.py`). The cheapest DFT test of that is the c/2 cell of part c,
-  `beta_2a_slide_c2.xyz` (24 atoms), relaxed with the lateral cell free and the repeat held (in QE
-  a variable-cell run with only the a-b components of the cell free; the slip is held by the
-  mirror plane, as in b). polyfind for that protocol, at the repeat of Dipole's cell (2.5807 A per
-  monomer) and its own lateral cell there (4.7626, 8.4853; Dipole's is 4.7568, 8.5282):
-  **+0.708 kcal/mol per monomer of the cell** (2.83 per monomer of the moved chain, 4.52 mEh per
-  cell) against 1.668 rigid at the same repeat, with a opening by 5.1% and b by 4.2%
-  (`docs/predictions/chain_slide_belt4.json`, row `vdf1 2x1 c2.5807`). One slid chain in four
-  with the lateral cell free is 9% under polyfind's dilute limit at its own repeat (2.86 against
-  3.15), so the test is of the mechanism and its size, not of the limit.
+- **E5 d, the half-slip with the lattice giving way (registered 2026-11-10; dispatched by the PI
+  on 2026-11-11: "Go on the DFT check"; no DFT number exists).** Part c is a rigid lattice. With
+  the lattice responding the half-slip of one chain costs polyfind 3.15 kcal/mol per monomer of
+  the chain in the dilute limit, 46% of the rigid 6.80, almost all of it from the neighbours
+  moving aside by 0.2 A (`docs/CANDIDATE_MATERIALS.md` 8.1, `examples/chain_slide.py`). The
+  cheapest DFT test of that is the c/2 cell of part c, `beta_2a_slide_c2.xyz` (24 atoms), relaxed
+  with the lateral cell free and the chain repeat held (in QE a variable-cell run with only the
+  a-b components of the cell free). The slip needs no constraint: every atom of that cell sits on
+  a mirror plane normal to c, as in b. polyfind for exactly that protocol
+  (`examples/e5d_prediction.py`, `docs/predictions/e5d_polyfind_belt4.json`), at the repeat of
+  Dipole's cell (2.5807 A per monomer), from the unslid cell with its lateral cell relaxed at
+  that repeat (4.7626, 8.4853; Dipole's accepted cell is 4.7568, 8.5282):
+
+  | | kcal/mol per monomer of the cell | per monomer of the moved chain | mEh per 24-atom cell |
+  |---|---|---|---|
+  | rigid half-slip at that repeat (for the ratio) | 1.668 | 6.67 | 10.633 |
+  | **relaxed, lateral cell free (the registered number)** | **+0.708** | 2.83 | **4.515** |
+
+  with a opening by **5.1%** and b by **4.2%**, the two chains diagonal to the slid one moving
+  0.06 A further from it along a, and no chain turning. The comparison is like for like in three
+  respects that were checked rather than assumed: the relaxation started on the symmetric lattice,
+  as a DFT code that keeps the symmetry it finds starts, reaches the same state as three perturbed
+  starts; the pendant groups stay untilted, from tilted starts as well as from zero; and the model
+  cell has one monomer per chain, as the DFT's has (with two monomers per chain and every torsion
+  free, a period-doubling the DFT cell cannot have, the number is 0.707, and 0.700 with the tilts
+  that then appear). Against the DFT's own rigid number, part c at c/2 (polyfind in Dipole's cell
+  1.585), the registered ratio of relaxed to rigid is **0.45**. Acceptance: the sign; the relaxed
+  energy within a factor 1.5; a and b both opening; the relaxed number under two thirds of the
+  DFT's own rigid one. One slid chain in four with the lateral cell free is 9% under polyfind's
+  dilute limit at its own repeat (2.86 against 3.15), so this tests the mechanism and its size,
+  not the limit. `examples/crosscheck_e5.py` recognises the record (24 atoms, one chain of four at
+  c/2, another lateral cell, the same repeat) and prints the comparison.

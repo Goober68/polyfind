@@ -1005,9 +1005,12 @@ state has the chains deflected 7.4 degrees off trans and c 1.15% shorter, at 0.5
 single-chain barriers of the table in 8.1 are rigid-lattice numbers, as E5's single points are;
 with the lattice responding the half-slip of one chain costs 3.15, not 6.80 (8.1). The cheapest
 DFT test of that is one relaxation of a cell the DFT seat already holds for E5 (c), with the
-lateral cell free; polyfind's number for it is registered (`docs/E1_E2_PREDICTIONS.md`, last E5
-entry: +0.71 kcal/mol per monomer of the cell against 1.67 rigid, a +5.1%, b +4.2%). It is not
-requested and not dispatched.
+lateral cell free: **E5 d, dispatched by the PI on 2026-11-11**. polyfind's number for it is
+registered for exactly that protocol (`docs/E1_E2_PREDICTIONS.md`, E5 d;
+`docs/predictions/e5d_polyfind_belt4.json`): +0.708 kcal/mol per monomer of the cell against
+1.668 rigid, a +5.1%, b +4.2%. If the DFT's relaxed number stays near its rigid one, the lattice
+does not give way as the model says and the 3.15 of 8.1 goes back toward 6.8; if it comes out
+near 0.45 of it, the mechanism stands.
 
 ### 8.7 The earlier form of this section (2026-11-08), for the record
 

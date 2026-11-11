@@ -11,10 +11,18 @@ carbons along c gives its slip in units of c, and the cell says which part it is
     12 atoms, slip c/8 ... c/2, the reference cell      part a
     12 atoms, slip c/2, another cell                    part b (relaxed with the slip held)
     24 atoms, one chain of four slipped by 0, c/4, c/2  part c (0: its zero)
+    24 atoms, one chain of four at c/2, another lateral cell, the same repeat
+                                                        part d (relaxed with the lateral cell free)
 
 A plain table is read as well: ``{"structures": {"beta_a_slide_c2": {"energy_Eh": ...}, ...}}``
-with the names of docs/predictions/e5_structures/e5_structures.json (``beta_b_relaxed`` for part b,
-with ``cell_A`` if the cell change is to be compared).
+with the names of docs/predictions/e5_structures/e5_structures.json (``beta_b_relaxed`` for part b
+and ``beta_d_relaxed`` for part d, each with ``cell_A`` if the cell change is to be compared).
+
+Part d (dispatched 2026-11-11) is the c/2 cell of part c relaxed with the lateral cell free and the
+repeat held: polyfind's number for it is docs/predictions/e5d_polyfind_belt4.json
+(examples/e5d_prediction.py), read with ``--part-d``.  Its zero is part c's; its acceptance, the
+sign, a factor 1.5, a and b both opening, and the relaxed energy under two thirds of the DFT's own
+rigid one (part c at c/2).
 
 Energies are compared per monomer of the cell (kcal/mol), against polyfind's two registered
 sets (docs/predictions/e5_polyfind_belt4.json): ``own_cell``, polyfind's own minimum slid the same
@@ -103,18 +111,24 @@ def classify(rec: dict, ref_cell, tol_cell: float = 2e-3, tol_slip: float = 0.01
     if len(sym) == 24 and len(h) == 4:
         ref2 = ref_cell.copy()
         ref2[0] *= 2.0
-        if not np.allclose(np.abs(cell), np.abs(ref2), atol=tol_cell * np.abs(ref2).max()):
+        same_cell = np.allclose(np.abs(cell), np.abs(ref2), atol=tol_cell * np.abs(ref2).max())
+        same_repeat = abs(np.linalg.norm(cell[2]) - np.linalg.norm(ref2[2])) < tol_cell * np.linalg.norm(ref2[2])
+        if not same_cell and not same_repeat:
             return None, None
         # the odd chain out: the one whose height differs from the other three
         d = np.array([[fold(h[i] - h[j]) for j in range(4)] for i in range(4)])
         if d.max() < tol_slip:
-            return "c0", None
+            return ("c0", None) if same_cell else (None, None)
         odd = int(np.argmax(d.sum(axis=1)))
         rest = [i for i in range(4) if i != odd]
         if max(d[i, j] for i in rest for j in rest) > tol_slip:
             return None, None
         k = near(C_KEYS, float(np.mean([d[odd, i] for i in rest])))
-        return ("c", C_KEYS[k]) if k is not None else (None, None)
+        if k is None:
+            return None, None
+        if same_cell:
+            return "c", C_KEYS[k]
+        return ("d", "c/2") if k == 0.5 else (None, None)  # the half-slipped cell with its lateral cell relaxed, the repeat held
     return None, None
 
 
@@ -134,7 +148,7 @@ def read_records(paths, structures: dict) -> list:
                 continue
             init = structures.get(name, {}).get("initial", {})
             entry = {"name": name, "energy_Eh": float(r["energy_Eh"]), "cell_A": r.get("cell_A", init.get("cell_A")), "positions_A": r.get("positions_A", init.get("positions_A")),
-                     "symbols": r.get("symbols", init.get("symbols")), "table_part": "b" if name == "beta_b_relaxed" else None}
+                     "symbols": r.get("symbols", init.get("symbols")), "table_part": {"beta_b_relaxed": "b", "beta_d_relaxed": "d"}.get(name)}
             out.append(entry)
     return out
 
@@ -146,15 +160,19 @@ def verdict(pf: float, dp: float) -> str:
     return f"ratio {ratio:.2f}: " + ("within 1.5" if 1 / 1.5 <= ratio <= 1.5 else "OUTSIDE 1.5")
 
 
-def crosscheck(pred: dict, structures: dict, records: list, log=print) -> dict:
-    """Compare; returns ``{part: {key: {dipole, own_cell, dipole_cell, ...}}}`` for a caller or a test."""
+def crosscheck(pred: dict, structures: dict, records: list, log=print, pred_d: dict | None = None) -> dict:
+    """Compare; returns ``{part: {key: {dipole, own_cell, dipole_cell, ...}}}`` for a caller or a test.
+    ``pred_d`` is the part-d registration (docs/predictions/e5d_polyfind_belt4.json), if there is one."""
     ref_cell = np.diag([pred["dipole_reference"]["cell_A"][0], pred["dipole_reference"]["cell_A"][1], pred["dipole_reference"]["cell_A"][3]])
     e_ref = float(pred["dipole_reference"]["energy_Eh"])
     found = {"a": {}, "c": {}}
-    zero, c0, b = None, None, None
+    zero, c0, b, dd = None, None, None, None
     for r in records:
         if r.get("table_part") == "b":
             b = r
+            continue
+        if r.get("table_part") == "d":
+            dd = r
             continue
         if r["cell_A"] is None or r["positions_A"] is None:
             log(f"  {r['name']}: no geometry, skipped")
@@ -166,6 +184,8 @@ def crosscheck(pred: dict, structures: dict, records: list, log=print) -> dict:
             c0 = r
         elif part == "b":
             b = r
+        elif part == "d":
+            dd = r
         elif part in ("a", "c"):
             found[part][key] = r
         else:
@@ -175,7 +195,7 @@ def crosscheck(pred: dict, structures: dict, records: list, log=print) -> dict:
     e0 = zero["energy_Eh"] if zero else e_ref
     log(f"zero of a and b: {'the unslid record ' + zero['name'] if zero else 'the accepted reference energy'} ({e0:.10f} Eh)"
         + (f"; differs from the accepted reference by {(e0 - e_ref) * KCAL_PER_EH:+.5f} kcal/mol per cell" if zero else ""))
-    out = {"a": {}, "b": {}, "c": {}}
+    out = {"a": {}, "b": {}, "c": {}, "d": {}}
     own, dip = pred["own_cell"], pred.get("dipole_cell", {})
     if found["a"]:
         log("\npart a: one sublattice slid rigidly; kcal/mol per monomer of the cell")
@@ -223,7 +243,34 @@ def crosscheck(pred: dict, structures: dict, records: list, log=print) -> dict:
             out["anisotropy"] = {"dipole": float(ratio_d), "own_cell": float(ratio_p), "dipole_cell": float(dip.get("anisotropy_c_over_a_per_moved_monomer_at_half", float("nan")))}
             log(f"\none chain of four against one sublattice, per moved monomer at c/2: Dipole {ratio_d:.2f}   polyfind {ratio_p:.2f} (own cell), "
                 f"{out['anisotropy']['dipole_cell']:.2f} (Dipole's cell)   {'one chain costs more on both sides' if ratio_d > 1 else 'THE ANISOTROPY IS REVERSED'}")
-    if not (found["a"] or found["c"] or b is not None):
+    if dd is not None:
+        e0c = c0["energy_Eh"] if c0 else 2.0 * e0
+        dE = (dd["energy_Eh"] - e0c) * KCAL_PER_EH / 4
+        out["d"] = {"dipole": dE}
+        log(f"\npart d: one chain of four at c/2, the lateral cell relaxed, the repeat held; kcal/mol per monomer of the cell; zero: "
+            f"{'the unslid doubled record ' + c0['name'] if c0 else 'twice the zero of a (no doubled reference record)'}")
+        if pred_d is None:
+            log(f"  Dipole {dE:+8.3f}   (no part-d registration given: --part-d)")
+        else:
+            reg = pred_d["registered"]
+            p_d = reg["per_cell_monomer_kcal"]
+            out["d"].update(polyfind=p_d, polyfind_rigid_pendants=reg["rigid_pendants"]["per_cell_monomer_kcal"])
+            log(f"  Dipole {dE:+8.3f}   polyfind {p_d:+8.3f} ({verdict(p_d, dE)})")
+            if dd.get("cell_A") is not None:
+                cell = np.asarray(dd["cell_A"], dtype=float)
+                ch = {"a": float(np.linalg.norm(cell[0]) / (2 * ref_cell[0, 0]) - 1), "b": float(np.linalg.norm(cell[1]) / ref_cell[1, 1] - 1),
+                      "c": float(np.linalg.norm(cell[2]) / ref_cell[2, 2] - 1)}
+                out["d"]["cell_change"] = ch
+                pc = reg["cell_change"]
+                log(f"  cell change: Dipole a {ch['a']:+.2%}, b {ch['b']:+.2%}, c {ch['c']:+.2%} (held)   polyfind a {pc['a']:+.2%}, b {pc['b']:+.2%}   "
+                    + ("a and b open on both sides" if ch["a"] > 0 and ch["b"] > 0 else "THE CELL DOES NOT OPEN IN BOTH DIRECTIONS"))
+            if "c/2" in out["c"]:
+                ratio_d = dE / out["c"]["c/2"]["dipole"]
+                ratio_p = p_d / out["c"]["c/2"]["dipole_cell"] if np.isfinite(out["c"]["c/2"]["dipole_cell"]) else float("nan")
+                out["d"]["relaxed_over_rigid"] = {"dipole": float(ratio_d), "polyfind": float(ratio_p)}
+                log(f"  relaxed over rigid (part d over part c at c/2): Dipole {ratio_d:.2f}   polyfind {ratio_p:.2f}   "
+                    + ("the lattice's give takes more than a third off on both sides" if ratio_d < 2 / 3 else "THE DFT LATTICE GIVES WAY BY LESS THAN A THIRD"))
+    if not (found["a"] or found["c"] or b is not None or dd is not None):
         log("no E5 structure among the records")
     return out
 
@@ -232,12 +279,14 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--polyfind", default="docs/predictions/e5_polyfind_belt4.json")
     ap.add_argument("--structures", default="docs/predictions/e5_structures/e5_structures.json")
+    ap.add_argument("--part-d", default="docs/predictions/e5d_polyfind_belt4.json", help="the part-d registration, used if the file exists")
     ap.add_argument("--dipole", nargs="+", required=True, help="Dipole result.json files, or a plain table of energies by structure name")
     args = ap.parse_args()
     pred = json.load(open(args.polyfind))
     structures = json.load(open(args.structures))["structures"] if Path(args.structures).exists() else {}
+    pred_d = json.load(open(args.part_d)) if args.part_d and Path(args.part_d).exists() else None
     print(f"E5: polyfind {pred['potential']}")
-    crosscheck(pred, structures, read_records(args.dipole, structures))
+    crosscheck(pred, structures, read_records(args.dipole, structures), pred_d=pred_d)
 
 
 if __name__ == "__main__":
