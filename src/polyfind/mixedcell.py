@@ -665,13 +665,16 @@ class MixedModel:
         ``patience`` (a number of evaluations) with ``patience_tol`` (kcal/mol per cell) is a second
         way to stop: when the lowest energy found on the closure surface (residuals under 1e-3)
         has not fallen by ``patience_tol`` over the last ``patience`` evaluations made on it, the
-        lowest point is returned with ``info["stalled"]`` true.  SLSQP's own test is a change of the energy under ``ftol``, and
-        the energy of a 1600-site cell carries rounding noise of that size (1e-12 of 1400
-        kcal/mol), so on a large cell that test is passed by luck or not at all: a sixteen-chain
-        end state stationary to 5e-5 kcal/mol per scaled unit was still iterating 250 evaluations
-        later.  Either way ``info["gradient_max"]`` says how stationary the result is: the largest
-        component, in kcal/mol per scaled unit, of the gradient along the closure surface (a
-        variable held by a bound it pushes against left out).
+        lowest point is returned with ``info["stalled"]`` true.  SLSQP's own test asks, from one
+        iteration to the next, for an energy change and a closure residual both under ``ftol``
+        (1e-9), and a large cell can go on failing it long after the energy has settled: the two
+        end states of the sixteen-chain step were still iterating 220 and 80 evaluations after
+        their lowest energy had stopped changing in the fourth decimal, at gradients of 7e-5 and
+        1e-3 kcal/mol per scaled unit.  It is not rounding (the energy of that cell at points 1e-9
+        scaled units apart scatters by 8e-12 kcal/mol about a straight line); which of the two
+        conditions held it was not looked into.  Either way ``info["gradient_max"]`` says how
+        stationary the result is: the largest component, in kcal/mol per scaled unit, of the
+        gradient along the closure surface (a variable held by a bound it pushes against left out).
 
         The variables' units are those of :meth:`scale`, equal amounts of atom motion.  Units that
         even out the curvature instead (one factor per kind of variable, from the mean of

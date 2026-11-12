@@ -111,8 +111,8 @@ def main():
     ap.add_argument("--row", default="vdf10")
     ap.add_argument("--nx", type=int, default=1)
     ap.add_argument("--ny", type=int, default=1)
-    ap.add_argument("--mover", default="0", help="the chain whose kink pair moves, or 'all': every chain's moves together, the sheet in register "
-                    "(the step without the cost of a chain leaving its neighbours; energies are then per chain)")
+    ap.add_argument("--mover", default="0", help="the chain whose kink pair moves; several chains separated by commas (they move together; energies are per moving chain); "
+                    "or 'all': every chain's moves together, the sheet in register (the step without the cost of a chain leaving its neighbours)")
     ap.add_argument("--kink-at", type=int, default=0, help="bond offset of every chain's kink pair in the kinked crystal")
     ap.add_argument("--mirror-kink", action="store_true", help="G- T G+ instead of G+ T G-")
     ap.add_argument("--backward", action="store_true", help="move the kink pair one monomer back instead of ahead")
@@ -138,9 +138,9 @@ def main():
                     "taken from that row's images, everything else runs straight between this row's end points")
     ap.add_argument("--end-maxiter", type=int, default=600, help="iterations of one relaxation round of an end point (three rounds at most)")
     ap.add_argument("--patience", type=int, default=None,
-                    help="stop a relaxation when the lowest energy has not fallen by --patience-tol over this many evaluations (the optimiser's own test, an energy change "
-                    "under 1e-9 kcal/mol, is at the rounding of a 1600-site cell's energy and is not met there); the result counts as converged if its gradient along the "
-                    "closure surface is under --end-gradient")
+                    help="stop a relaxation when the lowest energy has not fallen by --patience-tol over this many evaluations (in a sixteen-chain cell the optimiser's own "
+                    "test, an energy change and a closure residual under 1e-9 between iterations, went on being failed for hundreds of evaluations after the energy had settled to 1e-4); "
+                    "the result counts as converged if its gradient along the closure surface is under --end-gradient")
     ap.add_argument("--patience-tol", type=float, default=1e-5, help="kcal/mol per supercell")
     ap.add_argument("--end-gradient", type=float, default=0.01, help="kcal/mol per scaled unit (a tenth of the band's default convergence)")
     ap.add_argument("--checkpoints", default=None, metavar="DIR",
@@ -181,8 +181,10 @@ def main():
             fcntl.flock(lock, fcntl.LOCK_EX)
             disk = json.load(open(path)) if path.exists() else {}
             fn(disk)
-            with open(path, "w") as fh:
+            tmp = Path(str(path) + ".tmp")  # written whole, then moved: a reader without the lock never sees half a file
+            with open(tmp, "w") as fh:
                 json.dump(disk, fh, indent=1)
+            tmp.replace(path)
 
     def save():
         """Merge what this process computed into the stored row (field by field: another process may hold the other pieces of the row)."""
@@ -213,7 +215,9 @@ def main():
         model, x0, ch = DK.make_model(polymer, d, args.nx, args.ny)
         _MODEL = model
         nc, n_mon, P = model.nc, ch.n_monomers, model.P
-        movers = list(range(nc)) if args.mover == "all" else [int(args.mover)]
+        movers = list(range(nc)) if args.mover == "all" else [int(v) for v in str(args.mover).split(",")]
+        if len(set(movers)) != len(movers) or min(movers) < 0 or max(movers) >= nc:
+            raise SystemExit(f"--mover: chains {args.mover} in a cell of {nc}")
         nm, m0 = len(movers), movers[0]
         e_tt = float(d_tt["energy"]) * nc / 2  # the polished all-trans crystal, per supercell
         entry.update(row=args.row, letters=letters, note=note, supercell=[args.nx, args.ny], chains=nc, sites=int(model.pk.N), monomers_per_chain=int(n_mon),
@@ -343,6 +347,7 @@ def main():
                     info = {**more, "iterations": info["iterations"] + more["iterations"], "evaluations": info["evaluations"] + more["evaluations"]}
                 st = model.state(xr)
                 rec = {"energy": (model.physical_energy(xr) - eA) / nm, "torsions": letters_of(st.tors[m0]), "torsions_deg": wrap(st.tors[m0]).tolist(),
+                       **({"torsions_movers": {str(m): letters_of(st.tors[m]) for m in movers}} if 1 < nm < nc else {}),
                        "start": start, "start_energy": (e_start - eA) / nm, "iterations": info["iterations"], "evaluations": info["evaluations"],
                        "message": info["message"], "converged": bool(ended(info)), "gradient_max": info["gradient_max"],
                        "angles_at_window": int((np.abs(st.angs - model.angles0[None]) > args.angle_window - 1e-3).sum()),

@@ -242,13 +242,14 @@ def main():
         md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, {who} | {e['host']} | {e['I']['energy']:+.2f} | {e['A-I']['saddle']:+.2f} | "
                   f"{e['I-B']['saddle']:+.2f} | {e['B']['energy']:+.2f} | {e['barrier_forward']:.2f} / {e['barrier_back']:.2f} | {rate:.2g} /s | {conv} |")
 
-    ends = [(k, e) for k, e in sorted(mig.get("rows", {}).items(), key=lambda kv: (kv[1].get("row", ""), kv[1].get("host", ""), kv[1].get("chains", 0)))
+    ends = [(k, e) for k, e in sorted(mig.get("rows", {}).items(), key=lambda kv: (kv[1].get("row", ""), kv[1].get("host", ""), kv[1].get("chains", 0), str(kv[1].get("mover"))))
             if "barrier_forward" not in e and "I" in e and "B" in e and str(e.get("mover")) != "all"]
     if ends:
         md += ["", "End points only (no band)", "",
                "| sequence | cell, moving chains | host | wide kink I | B (one monomer ahead) |", "|---|---|---|---|---|"]
         for key, e in ends:
-            md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, 1 of {e['chains']} | {e['host']} | {e['I']['energy']:+.2f} | {e['B']['energy']:+.2f} |")
+            who = f"1 of {e['chains']}" if "," not in str(e.get("mover")) else f"chains {e['mover']} of {e['chains']} together, per chain"
+            md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, {who} | {e['host']} | {e['I']['energy']:+.2f} | {e['B']['energy']:+.2f} |")
 
     # --- the single-chain step against the size of the cell ------------------------------------------
     single = {}

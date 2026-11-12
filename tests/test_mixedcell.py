@@ -175,10 +175,11 @@ def test_a_relaxation_says_how_stationary_it_is_and_can_stop_when_the_energy_sta
     """``info["gradient_max"]`` is the largest component of the gradient along the closure surface:
     small at a converged result, large at one cut short.  With ``patience`` the relaxation stops
     when the lowest energy on the surface has stopped falling, at the same minimum to within the
-    tolerance it was given, on the surface, and says that it stalled.  The case that needs it is an
-    energy tolerance the optimiser cannot meet (below the rounding of a large cell's energy; here
-    simply 1e-16): without ``patience`` it runs to its iteration limit at an energy that stopped
-    changing long before."""
+    tolerance it was given, on the surface, and says that it stalled.  The case that needs it is a
+    relaxation whose own test goes on being failed after the energy has settled (the sixteen-chain
+    step's end states, for hundreds of evaluations; here a test of 1e-16, which nothing passes):
+    without ``patience`` it runs to its iteration limit at an energy that stopped changing long
+    before."""
     m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
     x1, full = m.relax(x, maxiter=400)
     assert "success" in full["message"].lower() and not full["stalled"] and full["gradient_max"] < 1e-3
