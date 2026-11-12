@@ -628,7 +628,7 @@ class MixedModel:
 
     def relax(self, x0, free=None, closed=None, ftol: float = 1e-9, maxiter: int = 400, angle_window: float | None = 8.0,
               first_step: float | None = 0.3, presteps: int = 300, cell_window=(0.6, 1.6), c_window=(0.85, 1.15),
-              trust: float | None = None, progress=None, patience: int | None = None, patience_tol: float = 1e-6):
+              trust: float | None = None, progress=None, patience: int | None = None, patience_tol: float = 1e-6, linear=None):
         """Constrained minimisation (SLSQP) over the ``free`` variables (indices; default all), in
         the scaled variables of :meth:`scale`, with the closure of the chains in ``closed`` held as
         equality constraints.  ``closed`` defaults to every chain with a free internal coordinate,
@@ -676,6 +676,13 @@ class MixedModel:
         stationary the result is: the largest component, in kcal/mol per scaled unit, of the
         gradient along the closure surface (a variable held by a bound it pushes against left out).
 
+        ``linear`` = ``(a, b)`` holds ``a . y = b`` as one more equality, ``y`` being the free
+        variables in scaled units and ``a`` a vector of their number: the relaxation then finds the
+        minimum in a hyperplane (:func:`saddle_polish`).  The damped pre-descent, which knows only
+        the closure, is skipped; ``gradient_max`` leaves the hyperplane's normal out as it does the
+        closure's; and ``info["linear_force"]`` is the multiplier of the new constraint, the
+        derivative of the constrained minimum's energy with respect to ``b``.
+
         The variables' units are those of :meth:`scale`, equal amounts of atom motion.  Units that
         even out the curvature instead (one factor per kind of variable, from the mean of
         ``z . H z`` over random signs ``z`` on that kind) were tried on the four-chain step and are
@@ -692,7 +699,10 @@ class MixedModel:
         sc = self.scale(x0)[free]
         bounds = self._bounds(x0, free, sc, angle_window, cell_window, c_window)
         pre = 0
-        if first_step is not None and presteps > 0:
+        a_lin = None if linear is None else np.asarray(linear[0], dtype=float).ravel()
+        if a_lin is not None and a_lin.size != free.size:
+            raise ValueError(f"linear: {a_lin.size} coefficients for {free.size} free variables")
+        if first_step is not None and presteps > 0 and linear is None:
             xd, _, pre = self.descend(x0, free, closed, steps=presteps, max_step=first_step / 3.0, gtol=5.0 * first_step,
                                       angle_window=angle_window, cell_window=cell_window, c_window=c_window,
                                       progress=None if progress is None else (lambda k, e, x: progress("descent", k, e, x)))
@@ -741,14 +751,17 @@ class MixedModel:
             return cache["e"], cache["g"]
 
         cons = [{"type": "eq", "fun": lambda y: hj(y)[0], "jac": lambda y: hj(y)[1]}] if closed else []
+        if a_lin is not None:
+            b_lin = float(linear[1])
+            cons.append({"type": "eq", "fun": lambda y: np.array([float(a_lin @ y) - b_lin]), "jac": lambda y: a_lin[None, :]})
         y0 = start[free] / sc
         if trust is not None:
             bounds = [(y - trust if lo is None else max(lo, y - trust), y + trust if hi is None else min(hi, y + trust)) for (lo, hi), y in zip(bounds, y0)]
         fs = 1.0
         if first_step is not None:
             g0 = fg(y0)[1].copy()
-            if closed:  # the part of the gradient the constraints do not carry
-                J0 = hj(y0)[1]
+            if closed or a_lin is not None:  # the part of the gradient the constraints do not carry
+                J0 = np.vstack(([hj(y0)[1]] if closed else []) + ([a_lin[None, :]] if a_lin is not None else []))
                 g0 -= J0.T @ np.linalg.lstsq(J0 @ J0.T, J0 @ g0, rcond=None)[0]
             fs = max(1.0, float(np.abs(g0).max()) / float(first_step))
         its = [0]
@@ -774,15 +787,19 @@ class MixedModel:
         lo = np.array([-np.inf if b[0] is None else b[0] for b in bounds])
         hi = np.array([np.inf if b[1] is None else b[1] for b in bounds])
         gf[((yf <= lo + 1e-9) & (gf > 0.0)) | ((yf >= hi - 1e-9) & (gf < 0.0))] = 0.0
-        if closed:
-            Jf = self.closure(x, closed)[1][:, free] * sc
+        normals = ([self.closure(x, closed)[1][:, free] * sc] if closed else []) + ([a_lin[None, :]] if a_lin is not None else [])
+        multiplier = None
+        if normals:
+            Jf = np.vstack(normals)
+            if a_lin is not None:  # gradient = (closure normals) mu + a lambda: lambda is dE/db of the constrained minimum
+                multiplier = float(np.linalg.lstsq(Jf.T, gf, rcond=None)[0][-1])
             _, sv, Vt = np.linalg.svd(Jf, full_matrices=False)
             Q = Vt[sv > 1e-10 * max(float(sv.max()), 1e-300)].T
             gf = gf - Q @ (Q.T @ gf)
         return x, {"message": message, "iterations": nit, "evaluations": nfev + pre,
                    "energy": float(parts["physical"]), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed,
                    "objective_scale": fs, "descent_evaluations": pre, "at_trust_bound": at_bound, "stalled": stalled,
-                   "gradient_max": float(np.abs(gf).max()) if gf.size else 0.0}
+                   "gradient_max": float(np.abs(gf).max()) if gf.size else 0.0, "linear_force": multiplier}
 
     def relax_in_basin(self, x0, free=None, closed=None, trust: float = 0.3, rounds: int = 100, callback=None, **kw):
         """:meth:`relax` in a trust box of half-width ``trust`` (scaled units), repeated from each
@@ -806,6 +823,76 @@ class MixedModel:
                 done = True
                 break
         return x, {**info, "rounds": k + 1, "iterations": its, "evaluations": evs, "converged": done}
+
+
+# --------------------------------------------------------------------- a saddle, settled
+def saddle_polish(model: MixedModel, x, tangent, free=None, closed=None, tol: float = 0.01, first: float = 0.05,
+                  longest: float = 0.3, rounds: int = 10, log=None, **relax_kw):
+    """The stationary point near ``x`` that is a maximum along ``tangent`` and a minimum across it.
+
+    A band's climbing image finds where a pass is; this settles it.  With ``a`` the unit vector of
+    ``tangent`` (a difference of two states, in the variables' own units) in the scaled free
+    variables, taken along the closure surface at ``x``, and ``s = a . (y - y(x))``: the energy is
+    minimised in the hyperplane of fixed ``s`` by :meth:`MixedModel.relax` (every direction
+    across the path at once, soft ones included, by the quasi-Newton method the end states are
+    relaxed with), which also gives ``dE_min/ds``, the multiplier of the hyperplane; and ``s`` is
+    moved by secant steps to where that derivative vanishes.  At that point the gradient has no
+    component in the hyperplane (a minimum there) and none along its normal: a stationary point,
+    and a first-order saddle if the derivative falls through zero as ``s`` grows, which the secant
+    slope says.  The normal need not be the unstable direction exactly, only close enough for the
+    constrained minima to form a continuous curve.
+
+    ``first`` is the first move of ``s`` (scaled units, uphill), ``longest`` the longest later one,
+    ``tol`` the largest ``|dE_min/ds|`` accepted (kcal/mol per scaled unit), ``rounds`` the most
+    hyperplanes tried; ``relax_kw`` goes to :meth:`MixedModel.relax` (``patience`` is the one a
+    large cell needs).  ``log(text)`` gets a line per hyperplane.  Returns ``(x, info)``: ``energy``,
+    ``force`` (the last ``dE_min/ds``), ``gradient_max`` (across the path), ``slope``
+    (``d2E_min/ds2`` from the last two hyperplanes, negative at a saddle; ``None`` if only one was
+    needed), ``displacement`` (the final ``s``), ``converged``, ``evaluations`` and ``rounds``, the
+    list of hyperplanes tried."""
+    x = np.asarray(x, dtype=float).ravel().copy()
+    free = np.arange(model.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
+    closed = [] if closed is None else [int(c) for c in closed]
+    sc = model.scale(x)[free]
+    a = np.asarray(tangent, dtype=float).ravel()[free] / sc
+    if closed:  # along the closure surface: the part of the tangent the closure's normals do not carry
+        Jf = model.closure(x, closed)[1][:, free] * sc
+        _, sv, Vt = np.linalg.svd(Jf, full_matrices=False)
+        Q = Vt[sv > 1e-10 * max(float(sv.max()), 1e-300)].T
+        a = a - Q @ (Q.T @ a)
+    norm = float(np.linalg.norm(a))
+    if norm < 1e-12:
+        raise ValueError("the tangent has no component along the closure surface in the free variables")
+    a /= norm
+    b0 = float(a @ (x[free] / sc))
+    on_surface = np.intersect1d(free, model.index("internal", closed)) if closed else np.zeros(0, dtype=int)
+    s, tried, slope, done, total = 0.0, [], None, False, 0
+    kw = {"presteps": 0, **relax_kw}
+    info: dict = {}
+    for k in range(int(rounds)):
+        x, info = model.relax(x, free=free, closed=closed, linear=(a, b0 + s), **kw)
+        total += info["evaluations"]
+        tried.append({"displacement": s, "energy": info["energy"], "force": info["linear_force"], "gradient_max": info["gradient_max"],
+                      "evaluations": info["evaluations"], "message": info["message"]})
+        if log is not None:
+            log(f"hyperplane {k + 1}: s {s:+.4f}, energy {info['energy']:.5f}, dE/ds {info['linear_force']:+.4f}, across {info['gradient_max']:.1e}, "
+                f"{info['evaluations']} evaluations; {info['message'][:40]}")
+        g = float(info["linear_force"])
+        if len(tried) > 1:
+            ds_last = s - tried[-2]["displacement"]
+            slope = (g - tried[-2]["force"]) / ds_last if abs(ds_last) > 1e-12 else slope
+        if abs(g) < tol:
+            done = True
+            break
+        step = -g / slope if slope is not None and slope < 0.0 else float(np.sign(g)) * first  # uphill until the curve is seen to bend down
+        step = float(np.clip(step, -longest, longest))
+        s += step
+        x = x.copy()
+        x[free] += sc * a * step
+        if on_surface.size:
+            x = model.project(x, on_surface, closed)
+    return x, {"energy": info["energy"], "force": float(info["linear_force"]), "gradient_max": info["gradient_max"], "slope": slope, "displacement": s,
+               "converged": bool(done), "evaluations": total, "rounds": tried}
 
 
 # ------------------------------------------------------------------- pendant tilts
@@ -895,6 +982,14 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
     tangent space at each image, and after every step each image is returned to the surface by
     Newton steps along the constraint normals (the smallest move in the scaled metric).  The end
     points and the initial images must lie on it already.
+
+    The band is good for finding where the top is and poor at settling it: where the energy has a
+    soft direction across the path the climbing image creeps along it for hundreds of iterations at
+    forces already under the criterion (the second top of the four-chain single-chain step: 12.66
+    at a force of 0.16, 12.51 after 320 more iterations at 0.11, still falling).  A limited-memory
+    quasi-Newton step on the band force was tried for that and is no better (forces of 0.15 to 0.8
+    for 130 iterations, the images bunching towards one end).  :func:`saddle_polish` takes the
+    climbing image and the band's tangent there and finds the stationary point itself.
 
     ``callback(iteration, energies, force_max, climbing)`` is called once per iteration, and
     ``snapshot(iteration, images)`` with the whole band as it stands (end points included): what a

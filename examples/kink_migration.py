@@ -121,6 +121,12 @@ def main():
     ap.add_argument("--fmax", type=float, default=0.1, help="band convergence, kcal/mol per scaled unit (10 degrees of torsion, 1 A)")
     ap.add_argument("--maxiter", type=int, default=400)
     ap.add_argument("--k-spring", type=float, default=1.0)
+    ap.add_argument("--polish", action="store_true",
+                    help="settle the top of each stored band instead of relaxing the band further: from its highest image, the energy minimised in the hyperplane normal "
+                    "to the band's tangent and the hyperplane moved to where the force along the tangent vanishes (polyfind.mixedcell.saddle_polish); "
+                    "the result is stored in the band's record as 'polished'")
+    ap.add_argument("--polish-tol", type=float, default=0.01, help="the force along the tangent at which a polished saddle is accepted, kcal/mol per scaled unit")
+    ap.add_argument("--band-step", type=float, default=0.15, help="the longest move of any variable in one band iteration, scaled units")
     ap.add_argument("--climb-after", type=int, default=40, help="band iterations before the climbing image may be switched on (it also waits for the band's largest force "
                     "to fall under 1); 0 when a band that was already climbing is continued")
     ap.add_argument("--workers", type=int, default=1)
@@ -418,6 +424,27 @@ def main():
                     log(f"   {seg}: the end points {a} and {b} are not both stored for this row; nothing done")
                 continue
             same_ends = "images" in old and len(old["images"]) == args.images and same(old["images"][0], ends[a]) and same(old["images"][-1], ends[b])
+            if args.polish:
+                if not do(seg):
+                    continue
+                if not same_ends:
+                    log(f"   {seg}: no stored band between this row's end points to polish")
+                    continue
+                imgs, i_top = np.asarray(old["images"], dtype=float), int(old["saddle_image"])
+                xs, info = MC.saddle_polish(model, imgs[i_top], imgs[i_top + 1] - imgs[i_top - 1], free, closed, tol=args.polish_tol,
+                                            log=lambda text, seg=seg, t0=t0: log(f"      {seg} polish, {text}  ({time.time() - t0:.0f} s)"),
+                                            patience=args.patience if args.patience is not None else 40, patience_tol=args.patience_tol, angle_window=args.angle_window)
+                st = model.state(xs)
+                entry[seg] = {**old, "polished": {
+                    "saddle": (info["energy"] - eA) / nm, "band_top": old["saddle"], "band_force": old["force_max"], "force_along": info["force"], "gradient_across": info["gradient_max"],
+                    "curvature_along": info["slope"], "displacement": info["displacement"], "converged": info["converged"], "evaluations": info["evaluations"],
+                    "rounds": info["rounds"], "torsions_deg": wrap(st.tors[m0]).tolist(), "seconds": time.time() - t0, "state": xs.tolist()}}
+                mine.add(seg)
+                log(f"   {seg}: polished saddle {entry[seg]['polished']['saddle']:+.4f} (the band's top {old['saddle']:+.4f} at force {old['force_max']:.3f}); force along the tangent "
+                    f"{info['force']:+.4f}, across {info['gradient_max']:.1e}, curvature along {'not measured' if info['slope'] is None else format(info['slope'], '+.3f')}; "
+                    f"{info['evaluations']} evaluations, {time.time() - t0:.0f} s{'' if info['converged'] else ' (NOT converged)'}")
+                save()
+                continue
             if same_ends and old.get("converged") and old.get("fmax", prior.get("fmax", args.fmax)) <= args.fmax:  # a tighter --fmax continues a stored band
                 entry[seg] = old
                 log(f"   {seg}: saddle {old['saddle']:+.3f} (from the stored run)")
@@ -427,10 +454,8 @@ def main():
             ck = checkpoint(seg)
             start = (f"the stored band (saddle {old['saddle']:+.4f} at force {old['force_max']:.3f} after {old.get('iterations', 0)} iterations), continued"
                      if same_ends else ("straight between the end points" if guide is None else f"the movers' internal coordinates from the band of {args.band_from!r}"))
-            if same_ends and old.get("converged"):  # a finished band continued to a tighter force: its own images, not an older checkpoint
-                imgs = np.asarray(old["images"], dtype=float)
-            elif ck is not None and ck.exists() and np.load(ck).shape == (args.images, model.n_var) and same(np.load(ck)[0], ends[a]) and same(np.load(ck)[-1], ends[b]):
-                imgs, start = np.load(ck), start + f"; resumed from {ck}"
+            if ck is not None and ck.exists() and np.load(ck).shape == (args.images, model.n_var) and same(np.load(ck)[0], ends[a]) and same(np.load(ck)[-1], ends[b]):
+                imgs, start = np.load(ck), start + f"; resumed from {ck}"  # a checkpoint is removed when its band is stored, so one that is there is newer than the record
             elif same_ends:
                 imgs = np.asarray(old["images"], dtype=float)
             else:
@@ -448,9 +473,7 @@ def main():
                     write_checkpoint(ck, X)
 
             res = MC.neb(evaluate, imgs, scale=sc, free=free, k_spring=args.k_spring, climb_after=args.climb_after, climb_force=1.0, fmax=args.fmax, maxiter=args.maxiter,
-                         constraint=constraint, callback=progress, snapshot=snapshot)
-            if ck is not None:
-                write_checkpoint(ck, res.images)
+                         constraint=constraint, callback=progress, snapshot=snapshot, max_step=args.band_step)
             i_top = int(np.argmax(res.energies))
             st = model.state(res.images[i_top])
             dips = [i for i in range(1, args.images - 1) if res.energies[i] < min(res.energies[i - 1], res.energies[i + 1]) - 1e-3]
@@ -463,6 +486,8 @@ def main():
             log(f"   {seg}: saddle {(res.energies.max() - eA) / nm:+.3f} at image {i_top}{'' if res.converged else ' (NOT converged)'}; force {res.force_max:.4f}; "
                 f"{res.iterations} it, {time.time() - t0:.0f} s{'; interior minima at ' + str(dips) if dips else ''}")
             save()
+            if ck is not None and ck.exists():
+                ck.unlink()  # the stored record is the band now
         if pool is not None:
             pool.close()
 
@@ -472,6 +497,10 @@ def main():
                 top = max(0.0, float(row["A-I"]["saddle"]), float(row["I-B"]["saddle"]))
                 row.update(barrier_forward=top, barrier_back=top - float(row["B"]["energy"]), moving_chains=nm,
                            bands_converged=bool(row["A-I"].get("converged") and row["I-B"].get("converged")))
+                if all(row[k].get("polished", {}).get("converged") for k in ("A-I", "I-B")):
+                    ptop = max(0.0, float(row["A-I"]["polished"]["saddle"]), float(row["I-B"]["polished"]["saddle"]))
+                    row.update(barrier_forward_polished=ptop, barrier_back_polished=ptop - float(row["B"]["energy"]))
+                    log(f"   with both saddles polished: barrier {ptop:+.3f} ahead, {ptop - float(row['B']['energy']):+.3f} back")
                 log(f"   one-monomer step: barrier {top:+.3f} ahead, {top - float(row['B']['energy']):+.3f} back; B lies {float(row['B']['energy']):+.3f} above A"
                     f"{'' if row['bands_converged'] else ' (a band is NOT converged)'}")
         locked_update(out_path, summarise)

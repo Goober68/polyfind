@@ -96,6 +96,65 @@ def test_the_stored_sixteen_chain_end_states_are_the_states_they_are_named_for()
     assert abs(row["I"]["energy"] - rows["vdf10@0 2x1 mover 0 ahead host flexible"]["I"]["energy"]) < 0.3  # and not I
 
 
+def test_the_stored_sixteen_chain_bands_join_their_end_states_over_one_top_each():
+    """Each band of the sixteen-chain row starts and ends on the stored end states, rises to one top
+    and comes down again with no dip between, its top is where the moving chain's torsions say the
+    gauche bond is in flight, and the barriers quoted for the row are the higher top against A and
+    against B.  The completed step lies lower than in four chains and so does its barrier."""
+    rows = json.load(open(MIG))["rows"]
+    row, four = rows.get("vdf10@0 4x2 mover 0 ahead host flexible"), rows["vdf10@0 2x1 mover 0 ahead host flexible"]
+    if row is None or "A-I" not in row or "I-B" not in row:
+        pytest.skip("the sixteen-chain bands are not stored")
+    nc = row["chains"]
+    ends = {"A": (np.asarray(row["kinked_crystal"]["state"]), 0.0), "I": (np.asarray(row["I"]["state"]), row["I"]["energy"]), "B": (np.asarray(row["B"]["state"]), row["B"]["energy"])}
+    periodic = np.zeros(4 + nc * 44, dtype=bool)
+    periodic[6:4 + 4 * nc:4] = True  # the setting angles
+    for s in range(nc):
+        periodic[4 + 4 * nc + 44 * s:4 + 4 * nc + 44 * s + 20] = True  # the torsions
+    for seg, (a, b) in (("A-I", ("A", "I")), ("I-B", ("I", "B"))):
+        e = row[seg]
+        imgs, E = np.asarray(e["images"]), np.asarray(e["energies"])
+        assert imgs.shape == (9, 4 + nc * 44) and e["force_max"] < 0.1 and not e["interior_minima"]  # 0.1: the criterion of every band of section 8.3
+        for img, (x, energy), got in ((imgs[0], ends[a], E[0]), (imgs[-1], ends[b], E[-1])):
+            diff = img - x
+            diff[periodic] = (diff[periodic] + 180.0) % 360.0 - 180.0
+            assert np.abs(diff).max() < 1e-8 and got == pytest.approx(energy, abs=1e-6)
+        top = int(np.argmax(E))
+        assert top == e["saddle_image"] and 0 < top < 8 and E[top] == pytest.approx(e["saddle"])
+        assert np.all(np.diff(E[:top + 1]) > 0) and np.all(np.diff(E[top:]) < 0)
+        np.testing.assert_array_equal(imgs[:, :4], np.tile(imgs[0, :4], (9, 1)))  # the cell is fixed along the band
+    # in flight: at the first top the leading gauche bond is between bonds 2 and 4, at the second the trailing one has left bond 0
+    t1, t2 = np.asarray(row["A-I"]["saddle_torsions_deg"]), np.asarray(row["I-B"]["saddle_torsions_deg"])
+    assert 60 < t1[0] < 120 and -170 < t1[2] < -120 and -130 < t1[4] < -90
+    assert 120 < t2[0] < 150 and abs(t2[2]) > 150 and -120 < t2[4] < -60
+    top = max(row["A-I"]["saddle"], row["I-B"]["saddle"])
+    assert row["barrier_forward"] == pytest.approx(top) and row["barrier_back"] == pytest.approx(top - row["B"]["energy"])
+    assert row["I-B"]["saddle"] > row["A-I"]["saddle"] > row["I"]["energy"] > row["B"]["energy"] > 5.0
+    assert row["barrier_forward"] < four["barrier_forward"] - 0.4 and row["barrier_back"] > four["barrier_back"] + 0.5
+
+
+def test_saddle_polish_settles_a_band_top_into_a_stationary_point():
+    """The first top of the stored two-chain band, polished: a point on the closure surface with no
+    force left along the band's tangent nor across it (what a descent would feel there is under the
+    tolerance), a little below the band's top, and above both of the band's end states."""
+    row = json.load(open(MIG))["rows"][STACK]
+    with PRESET_PARAMETERS["pvdf-dft-valence-belt4"].applied():
+        model = _two_chain_model()
+        free, closed = KM.free_sets(model, [0], "flexible")
+        seg = row["A-I"]
+        imgs, i = np.asarray(seg["images"]), seg["saddle_image"]
+        e_a = model.physical_energy(imgs[0])
+        x, info = KM.MC.saddle_polish(model, imgs[i], imgs[i + 1] - imgs[i - 1], free, closed, tol=0.01, patience=30, patience_tol=1e-6)
+        assert info["converged"] and abs(info["force"]) < 0.01 and info["gradient_max"] < 0.02
+        e = info["energy"] - e_a
+        assert seg["saddle"] - 0.05 < e <= seg["saddle"] + 1e-6 and e > row["I"]["energy"] + 0.3
+        assert max(model.closure_residual(x)) < 1e-6
+        _, gmax, n = model.descend(x, free, closed, steps=1, gtol=1e9)
+        assert n == 1 and gmax < 0.02  # the whole gradient along the closure surface, tangent included
+        t = np.asarray(model.state(x).tors[0])
+        assert KM.letters_of(t).split()[0] == "G+" and -170 < KM.wrap(t)[2] < -120 and -130 < KM.wrap(t)[4] < -90  # the leading gauche bond in flight
+
+
 def test_the_pieces_of_a_row_run_one_per_process_and_merge(tmp_path):
     """The driver on the two-chain cell with the other chain fixed: I and B from separate processes into
     one row (each keeps the other's fields), I seeded from another row's and B checkpointed; then one

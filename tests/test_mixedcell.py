@@ -197,6 +197,32 @@ def test_a_relaxation_says_how_stationary_it_is_and_can_stop_when_the_energy_sta
     assert n == 1 and gmax == pytest.approx(full["gradient_max"], rel=1e-6, abs=1e-9)
 
 
+def test_a_relaxation_in_a_hyperplane_reports_the_force_that_holds_it_there():
+    """``relax(linear=(a, b))`` ends on ``a . y = b`` and on the closure surface, at a minimum of the
+    energy there (no gradient left across the normal), and ``info["linear_force"]`` is the derivative
+    of that minimum's energy with respect to ``b``: checked against two more relaxations at
+    ``b`` -+ a step."""
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    x0, _ = m.relax(x, maxiter=400)
+    free = np.setdiff1d(np.arange(m.n_var), np.concatenate([np.arange(4), m.index("xy", 1), m.index("z", 1)]))  # the cell and one chain's position held: no free translation
+    sc = m.scale(x0)[free]
+    rng = np.random.default_rng(4)
+    a = rng.normal(size=free.size)
+    a /= np.linalg.norm(a)
+    b0 = float(a @ (x0[free] / sc))
+    kw = dict(free=free, closed=[0, 1], maxiter=400, ftol=1e-13)
+    out = {}
+    for db in (-0.02, 0.0, 0.02):
+        y, info = m.relax(x0, linear=(a, b0 + 0.1 + db), **kw)
+        assert float(a @ (y[free] / sc)) == pytest.approx(b0 + 0.1 + db, abs=1e-7)
+        assert info["rotation_error_max"] < 1e-6 and info["gradient_max"] < 2e-3
+        out[db] = info
+    assert out[0.0]["energy"] > m.physical_energy(x0)  # pushed off the minimum
+    fd = (out[0.02]["energy"] - out[-0.02]["energy"]) / 0.04
+    assert out[0.0]["linear_force"] == pytest.approx(fd, rel=2e-2, abs=1e-3) and abs(fd) > 0.01
+    assert m.relax(x0, **kw)[1]["linear_force"] is None
+
+
 def test_penalty_terms_are_off_by_default_and_available():
     m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
     x[m.index("tors")] += 3.0

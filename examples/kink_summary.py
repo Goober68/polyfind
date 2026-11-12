@@ -230,17 +230,27 @@ def main():
                                                  "energy": "kcal/mol per kink pair", "rows": sheets}, indent=1))
 
     # --- the one-monomer step -----------------------------------------------------------------------
-    md += ["", "**One chain's kink pair one monomer ahead of its neighbours'** (kcal/mol per moving chain against the sheet; cell fixed)", "",
-           "| sequence | cell, moving chains | host | wide kink I | saddle A-I | saddle I-B | B (one monomer ahead) | barrier ahead / back | rate at 300 K, 3e12 /s attempt | bands converged |", "|---|---|---|---|---|---|---|---|---|---|"]
+    def top(e, seg):
+        """A band's top, and the polished saddle beside it where the top was settled (examples/kink_migration.py --polish)."""
+        pol = e[seg].get("polished")
+        if not pol:
+            return f"{e[seg]['saddle']:+.2f}"
+        return f"{e[seg]['saddle']:+.2f}, **{pol['saddle']:+.2f}**" + ("" if pol.get("converged") else " (polish not converged)")
+
+    md += ["", "**One chain's kink pair one monomer ahead of its neighbours'** (kcal/mol per moving chain against the sheet; cell fixed). A saddle is given as the band's top and, "
+           "in bold where it was done, the stationary point settled from it (minimum in the hyperplane normal to the band's tangent, zero force along it); "
+           "the barrier and the rate are on the settled saddles where both exist.", "",
+           "| sequence | cell, moving chains | host | wide kink I | saddle A-I | saddle I-B | B (one monomer ahead) | barrier ahead / back | rate at 300 K, 3e12 /s attempt | bands' forces |", "|---|---|---|---|---|---|---|---|---|---|"]
     for key, e in sorted(mig.get("rows", {}).items()):
         if "barrier_forward" not in e:
             continue
         nc = e["chains"]
-        rate = 3e12 * np.exp(-e["barrier_forward"] * e.get("moving_chains", 1) / KT)  # what moves together must gather its barrier together
-        conv = "yes" if e["A-I"]["converged"] and e["I-B"]["converged"] else f"A-I force {e['A-I']['force_max']:.2f}, I-B force {e['I-B']['force_max']:.2f}"
+        fwd, back = e.get("barrier_forward_polished", e["barrier_forward"]), e.get("barrier_back_polished", e["barrier_back"])
+        rate = 3e12 * np.exp(-fwd * e.get("moving_chains", 1) / KT)  # what moves together must gather its barrier together
+        conv = f"{e['A-I']['force_max']:.2f}, {e['I-B']['force_max']:.2f}"
         who = f"all {nc} (the sheet in register)" if str(e.get("mover")) == "all" else f"1 of {nc}"
-        md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, {who} | {e['host']} | {e['I']['energy']:+.2f} | {e['A-I']['saddle']:+.2f} | "
-                  f"{e['I-B']['saddle']:+.2f} | {e['B']['energy']:+.2f} | {e['barrier_forward']:.2f} / {e['barrier_back']:.2f} | {rate:.2g} /s | {conv} |")
+        md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, {who} | {e['host']} | {e['I']['energy']:+.2f} | {top(e, 'A-I')} | "
+                  f"{top(e, 'I-B')} | {e['B']['energy']:+.2f} | {fwd:.2f} / {back:.2f} | {rate:.2g} /s | {conv} |")
 
     ends = [(k, e) for k, e in sorted(mig.get("rows", {}).items(), key=lambda kv: (kv[1].get("row", ""), kv[1].get("host", ""), kv[1].get("chains", 0), str(kv[1].get("mover"))))
             if "barrier_forward" not in e and "I" in e and "B" in e and str(e.get("mover")) != "all"]
@@ -260,9 +270,8 @@ def main():
         def band(e):
             if e is None or "A-I" not in e or "I-B" not in e:
                 return "- | - | -"
-            unc = "" if e["A-I"].get("converged") and e["I-B"].get("converged") else f" (forces {e['A-I']['force_max']:.2f}, {e['I-B']['force_max']:.2f})"
-            top = max(0.0, e["A-I"]["saddle"], e["I-B"]["saddle"])
-            return f"{e['A-I']['saddle']:.2f} | {e['I-B']['saddle']:.2f} | {top:.2f} / {top - e['B']['energy']:.2f}{unc}"
+            fwd, back = e.get("barrier_forward_polished", e["barrier_forward"]), e.get("barrier_back_polished", e["barrier_back"])
+            return f"{top(e, 'A-I')} | {top(e, 'I-B')} | {fwd:.2f} / {back:.2f}"
 
         md += ["", "**The single-chain step against the size of the cell** (PVDF, chain 0's kink pair one monomer ahead of every other chain's; kcal/mol against the sheet; cell fixed)", "",
                "| cell (a x b tiling of the two-chain cell) | one chain in | neighbours rigid chains: I, B | neighbours flexible: I | saddle A-I | saddle I-B | barrier ahead / back | B |",
