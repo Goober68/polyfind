@@ -52,22 +52,59 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | vdf9-trfe4-cfe1-14@0 | +0.94 | +3.95 | +3.79 | 5.402, 8.426, 92.669, 35.496 | 5.302, 8.245, 91.700, 36.183 |
 | vdf9-trfe4-cfe1-14@0~ | +0.65 | +4.18 | +4.07 | 5.004, 9.075, 93.871, 35.529 | 5.302, 8.245, 91.700, 36.183 |
 
-**One chain's kink pair one monomer ahead of its neighbours'** (kcal/mol per moving chain against the sheet; cell fixed)
+**One chain's kink pair one monomer ahead of its neighbours'** (kcal/mol per moving chain against the sheet; cell fixed). A saddle is given as the band's top and, in bold where it was done, the stationary point settled from it (minimum in the hyperplane normal to the band's tangent, zero force along it); the barrier and the rate are on the settled saddles where both exist.
 
-| sequence | cell, moving chains | host | wide kink I | saddle A-I | saddle I-B | B (one monomer ahead) | barrier ahead / back | rate at 300 K, 3e12 /s attempt | bands converged |
+| sequence | cell, moving chains | host | wide kink I | saddle A-I | saddle I-B | B (one monomer ahead) | barrier ahead / back | rate at 300 K, 3e12 /s attempt | bands' forces |
 |---|---|---|---|---|---|---|---|---|---|
-| vdf10-trfe4-14@0 ahead | 1x1, 1 of 2 | flexible | +6.47 | +7.02 | +12.02 | +11.25 | 12.02 / 0.77 | 5.2e+03 /s | A-I force 0.21, I-B force 0.10 |
-| vdf10@0 ahead | 1x1, 1 of 2 | flexible | +7.01 | +7.55 | +8.94 | +1.97 | 8.94 / 6.97 | 9.2e+05 /s | yes |
-| vdf10@0 ahead | 1x1, all 2 (the sheet in register) | flexible | +5.06 | +8.23 | +7.87 | -0.00 | 8.23 / 8.23 | 3 /s | A-I force 1.04, I-B force 0.81 |
-| vdf10@0 ahead | 2x1, 1 of 4 | flexible | +9.85 | +10.35 | +12.66 | +7.88 | 12.66 / 4.78 | 1.8e+03 /s | A-I force 0.10, I-B force 0.16 |
-| vdf9-trfe4-cfe1-14@0 ahead | 1x1, 1 of 2 | flexible | +6.33 | +6.43 | +11.37 | +8.98 | 11.37 / 2.39 | 1.6e+04 /s | A-I force 0.10, I-B force 0.69 |
+| vdf10-trfe4-14@0 ahead | 1x1, 1 of 2 | flexible | +6.47 | +7.02, **+7.05** | +12.02, **+12.02** | +11.25 | 12.02 / 0.77 | 5.2e+03 /s | 0.21, 0.10 |
+| vdf10@0 ahead | 1x1, 1 of 2 | flexible | +7.01 | +7.55, **+7.54** | +8.94, **+8.91** | +1.97 | 8.91 / 6.95 | 9.6e+05 /s | 0.10, 0.10 |
+| vdf10@0 ahead | 1x1, all 2 (the sheet in register) | flexible | +5.06 | +8.23, **+7.38** | +7.87, **+7.34** (polish not converged) | -0.00 | 8.23 / 8.23 | 3 /s | 1.04, 0.81 |
+| vdf10@0 ahead | 2x1, 1 of 4 | flexible | +9.85 | +10.29, **+10.27** | +12.49, **+12.46** | +7.88 | 12.46 / 4.59 | 2.5e+03 /s | 0.03, 0.08 |
+| vdf10@0 ahead | 4x2, 1 of 16 | flexible | +9.96 | +10.73 | +11.84, **+11.64** | +5.91 | 11.64 / 5.73 | 9.9e+03 /s | 0.09, 0.09 |
+| vdf9-trfe4-cfe1-14@0 ahead | 1x1, 1 of 2 | flexible | +6.33 | +6.43, **+6.43** | +11.37, **+11.48** | +8.98 | 11.48 / 2.50 | 1.3e+04 /s | 0.10, 0.69 |
 
-End points only (no band): the same step with the neighbours as rigid chains, in cells of two sizes
+End points only (no band)
 
 | sequence | cell, moving chains | host | wide kink I | B (one monomer ahead) |
 |---|---|---|---|---|
 | vdf10@0 ahead | 2x1, 1 of 4 | bodies | +17.81 | +11.51 |
 | vdf10@0 ahead | 4x2, 1 of 16 | bodies | +17.36 | +9.32 |
+| vdf10@0 ahead | 4x1, 1 of 8 | flexible | +10.02 | +6.47 |
+| vdf10@0 ahead | 2x2, 1 of 8 | flexible | +9.98 | +7.51 |
+
+**The single-chain step against the size of the cell** (PVDF, chain 0's kink pair one monomer ahead of every other chain's; kcal/mol against the sheet; cell fixed)
+
+| cell (a x b tiling of the two-chain cell) | one chain in | neighbours rigid chains: I, B | neighbours flexible: I | saddle A-I | saddle I-B | barrier ahead / back | B |
+|---|---|---|---|---|---|---|---|
+| 1x1 | 2 (its a-neighbours move too: a stack) | - | +7.01 | +7.55, **+7.54** | +8.94, **+8.91** | 8.91 / 6.95 | +1.966 |
+| 2x1 | 4 | +17.81, +11.51 | +9.85 | +10.29, **+10.27** | +12.49, **+12.46** | 12.46 / 4.59 | +7.876 |
+| 4x1 | 8 | - | +10.02 | - | - | - | +6.470 |
+| 2x2 | 8 | - | +9.98 | - | - | - | +7.512 |
+| 4x2 | 16 | +17.36, +9.32 | +9.96 | +10.73 | +11.84, **+11.64** | 11.64 / 5.73 | +5.911 |
+
+How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displacements against the kinked crystal, relative to the median of the chains whose kink pair stays
+
+| state | chain or shell (distance from the moving chain) | chains | moves aside by, at most | turns, at most | shifts along the axis, at most | largest torsion change |
+|---|---|---|---|---|---|---|
+| wide kink I | the moving chain (gauche bonds at +95, -84 deg) | 1 | 0.17 A | -5.3 deg | -0.06 A | - |
+| | 4.96 A | 6 | 0.07 A | 1.8 deg | -0.07 A | 16.2 deg |
+| | 8.58 A | 5 | 0.03 A | 0.5 deg | +0.02 A | 3.1 deg |
+| | 9.92 A | 2 | 0.01 A | 0.1 deg | +0.02 A | 0.9 deg |
+| | 10.14 A | 1 | 0.00 A | 0.3 deg | -0.01 A | 4.8 deg |
+| | 13.33 A | 1 | 0.01 A | 0.0 deg | +0.01 A | 0.6 deg |
+| B, one monomer ahead | the moving chain (gauche bonds at +86, -64 deg) | 1 | 0.11 A | +3.9 deg | -0.32 A | - |
+| | 4.96 A | 6 | 0.08 A | 0.9 deg | +0.19 A | 10.5 deg |
+| | 8.58 A | 5 | 0.03 A | 0.4 deg | +0.06 A | 2.9 deg |
+| | 9.92 A | 2 | 0.02 A | 0.2 deg | +0.04 A | 1.8 deg |
+| | 10.14 A | 1 | 0.02 A | 0.4 deg | -0.01 A | 3.0 deg |
+| | 13.33 A | 1 | 0.01 A | 0.1 deg | +0.02 A | 0.3 deg |
+
+**Two chains one monomer ahead together** (end state only; kcal/mol against the sheet, neighbours flexible, cell fixed)
+
+| cell | the two chains, and how far apart | B for the two | two separate single steps | gained by stepping side by side | per chain |
+|---|---|---|---|---|---|
+| 4x2 (16 chains) | 0,1, 5.07 A | +9.05 | +11.82 | +2.77 | +4.53 |
+| 4x2 (16 chains) | 0,4, 4.96 A | +8.35 | +11.82 | +3.47 | +4.17 |
 
 **The kink sheet along the sequence** (kcal/mol per kink pair against the all-trans crystal, rigid pendants; the kink pair's first unit is the monomer named, gauche bonds on the even bonds; `~` is the mirrored kink pair G- T G+)
 

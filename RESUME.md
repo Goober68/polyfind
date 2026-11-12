@@ -14,25 +14,56 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
-**The single-chain step in sixteen chains, 2026-11-12 (PI: "Work on the single-chain step in 16 chains"). IN PROGRESS:
-the numbers are not in; nothing below is a result of the step.** What is done: (1) SPEED. One energy and gradient of
-the 16 x 10 cell (1600 sites, 960 of them electrostatically active, 708 variables) cost 9.9 s, 9.3 of it in
-`Ewald.terms`: twelve general (960 x 14482) x (14482 x 960) products for the reciprocal part of the dipole tensor, and a
-dense pass over the 27 images of the real-space grid of which one holds any pair. Rewritten exactly
-(`src/polyfind/ewald.py`): the tensor's reciprocal part as six symmetric products on half of the k vectors (the
-summand is even in k; off-diagonal components from k_a k_b = [(k_a + k_b)^2 - k_a^2 - k_b^2] / 2), images that cannot
-hold a pair inside the cutoff skipped (`Ewald.prune_images`, a test's switch), cos(k.r) and sin(k.r) kept between the
-two calls of one induced-dipole evaluation (`Ewald._phases`). Every output is bit-for-bit what it was except the
-tensor (1e-13 of 1e2); the evaluation is 4.3 s (2.3 times faster), the same energy to the last digit. Tests:
-`tests/test_polarizable.py` (pruning on/off bitwise, every column of the tensor against the structure-factor path,
-the phase cache). NUMPY'S BLAS IS FOUR-THREADED HERE: set `OPENBLAS_NUM_THREADS=1` for jobs that run side by side.
-(2) JOB CONTROL in `examples/kink_migration.py`: `--only A|I|B|A-I|I-B` (one piece of a row per process, each writes
-its own fields; A is the supercell check of the kinked crystal), `--seed-from ROW` (I and B started from another
-row's, here the rigid-chain-neighbour row), `--band-from ROW` (the mover's internal coordinates of each image from
-another row's band), `--end-maxiter`, `--checkpoints DIR` (lowest point seen so far, every ten evaluations; bands
-every ten iterations; resumed if there). `MixedModel.relax/descend(progress=)`, `neb(snapshot=)`.
-(3) RUNNING (detached, logs in the session scratch, checkpoints in `docs/predictions/running/`, to be removed when the
-row is complete): the row `vdf10@0 4x2 mover 0 ahead host flexible`, pieces A, I, B, each one process.
+**The single-chain step in sixteen chains, 2026-11-12 (PI: "Work on the single-chain step in 16 chains").** Text:
+`docs/CANDIDATE_MATERIALS.md` 8.3 (table, the paragraph on saddles, the bullet "A sheet is stiff ...") and 8.5; tables:
+`docs/predictions/kink_summary_belt4.md`; data: `kink_migration_belt4.json`, row `vdf10@0 4x2 mover 0 ahead host
+flexible` (and `4x1`, `2x2`, `4x2 mover 0,4`, `4x2 mover 0,1`); tests: `tests/test_kink_step.py`. RESULT, kcal/mol against the sheet,
+one chain's kink pair one monomer ahead of the other fifteen's, every chain flexible, cell fixed: wide kink I +9.96,
+B +5.91, second saddle 11.64 (settled), first saddle 10.73 (its band's top; see below): barrier 11.6 ahead, 5.7 back
+(1e4 /s and 2e8 /s at 300 K, 3e12 /s attempt). Four chains, same protocol and now settled too: +9.85, +7.88, saddles
+10.27 and 12.46: 12.5 / 4.6. So the cramped cell overstated B by 2.0 and the barrier by 0.8; the 6.4 guessed on
+2026-11-10 is 5.91. Checks: the perturbed sixteen-chain sheet relaxes back to the tiled cell (2e-9 per chain); B by
+two routes (from the rigid-chain-neighbour state and from the sheet with the mover's torsions reset) 5.911 both;
+conformations as intended in every chain. SIZE SERIES for B: 2a x b 7.88, 2a x 2b 7.51, 4a x b 6.47, 4a x 2b 5.91
+(room along the stack axis a is what counts; I is 9.85-10.02 in all four): sixteen chains is NOT the dilute limit of
+B. HOW IT GIVES: the moving chain slides 0.32 A back along its axis, its six neighbours shift up to 0.19 A along
+theirs and under 0.1 A aside, torsions up to 11 deg (the single-chain slide of 8.1 again). PAIR: two a-neighbours
+ahead together +8.35 (4.17 each) against 11.8 apart: the second chain costs 2.4; a diagonal pair (chains 0 and 1)
++9.05 (4.53 each): the second costs 3.1. The barrier of the second chain's step is NOT computed: that is the
+next number (it decides whether a stepped chain is joined or recalled, 2e8 /s back).
+**SADDLES ARE NOW SETTLED, NOT READ OFF BANDS** (`MixedModel.relax(linear=)`, `mixedcell.saddle_polish`,
+`kink_migration.py --polish`, stored as `row[seg]["polished"]`, barriers `barrier_forward_polished`): minimum in the
+hyperplane normal to the band's tangent at its top, the hyperplane moved by secant steps until the force along the
+tangent vanishes; under 0.01 along and across, curvature along negative. WHY: a band's force criterion does not
+settle a top that is soft across the path. Four-chain second top: 12.66 (force 0.16, the old stored value), 12.49
+after 600 more FIRE iterations, 12.46 settled. Sixteen-chain second top: 11.84 at the 0.1 criterion, 11.64 settled.
+Every band of the file was polished: PVDF one sublattice 7.54 / 8.91 (band 7.55 / 8.94), 64/29/7 6.43 / 11.48 (the
+"11.4 or 11.7" is 11.48), 71/29 7.05 / 12.02, PVDF in register first saddle 7.38 (band 8.23 at force 1.0; second NOT
+settled, its band is too rough). The step-based frequency map was regenerated on them
+(`candidate_frequency_map_belt4_steps`; needs `--screen` with all five screen files, `--step-mover 0`, `--ref
+vdf9-trfe4-cfe1-14`): 71/29 147 kHz (was 121), tan delta 0.21 at 0.18% (was 0.26), PVDF 27 MHz. OPEN: the
+sixteen-chain FIRST saddle is its band's top: its polish was stopped by hand after 105 minutes in its first
+hyperplane (a second copy with a progress log went 10.731 -> 10.690 in its first 70 evaluations, still descending;
+slow, not shown to be wrong); it lies a kcal/mol under the second and does not enter the barrier. The second
+saddle's three hyperplanes took 364, 153 and 301 evaluations.
+**Tools and traps of the day.** (1) SPEED: one energy+gradient of the 16 x 10 cell 9.9 s -> 4.3 s
+(`src/polyfind/ewald.py`: the reciprocal part of the dipole tensor as six symmetric products on half of the k vectors,
+off-diagonal components from k_a k_b = [(k_a + k_b)^2 - k_a^2 - k_b^2] / 2; real-space images that cannot hold a pair
+inside the cutoff skipped (`Ewald.prune_images`); cos/sin(k.r) kept between the two calls of one evaluation). Every
+output bit-for-bit except the tensor (1e-13). NUMPY'S BLAS IS FOUR-THREADED HERE: `OPENBLAS_NUM_THREADS=1` for jobs
+side by side. (2) `kink_migration.py`: `--only A|I|B|A-I|I-B` (one piece per process, fields merged under the file
+lock, file written whole and moved), `--seed-from ROW`, `--band-from ROW` (mover's internal coordinates from another
+row's band), `--checkpoints DIR` (lowest point so far; a band's checkpoint is removed when the band is stored),
+`--patience N --patience-tol --end-gradient` (see 3), `--mover a,b` (several chains together), `--fmax` tighter than a
+stored band continues it, `--climb-after`, `--band-step`, `--polish`. (3) `relax(patience=, patience_tol=)` stops when
+the lowest energy on the closure surface stalls, and every relaxation reports `gradient_max`. SLSQP's own test (energy
+change and closure residual under 1e-9 between iterations) was not passed 220 and 80 evaluations after the
+sixteen-chain end states' energies had stopped changing in the fourth decimal. IT IS NOT ROUNDING (scatter of that
+cell's energy 8e-12; an interim commit, 2e35ba2, said it was and 00d1e09 corrected it); the reason was not looked
+into. (4) TRIED AND NOT KEPT: units that even out the curvature per kind of variable (1072 evaluations against 429:
+single torsions are the stiffest directions, the soft motions are concerted); a limited-memory quasi-Newton step on
+the band force (noisy, images bunch). Both findings are in the docstrings (`relax`, `neb`). (5) A pkill pattern that
+matches the row's common prefix kills every job of the row, queued ones included: match on `--only X` or the out file.
 
 **The single-chain barrier with the lattice responding, 2026-11-10 (later; PI: "Work on the relaxed single-chain
 barrier").** `examples/chain_slide.py` (tests `tests/test_chain_slide.py`; data `docs/predictions/chain_slide_belt4.json`;
@@ -119,7 +150,9 @@ G+ T T T G-), kcal/mol per moving chain: PVDF one sublattice 7.55 and 8.94 (sadd
 short axis); every chain together 8.2 per chain = 16.5 per cell (the concerted route costs more than the sequential
 one, and in the copolymer cells its band does not settle: not reported). 64/29/7 and 71/29, one sublattice from a
 VDF-VDF pair onto VDF-TrFE: first saddle 6.43 and 7.02, second 11.4 (11.4/11.7 in two runs, not converged) and
-12.02 (converged), ending 9.0 and 11.3 up, which the sequence-registered model cell overstates. (5) **The sheet sees
+12.02 (converged), ending 9.0 and 11.3 up, which the sequence-registered model cell overstates. [THESE ARE BAND TOPS;
+the settled saddles of 2026-11-12 are in the block at the top: 7.54 / 8.91, 10.27 / 12.46, 7.38 / not settled,
+6.43 / 11.48, 7.05 / 12.02, and one chain in sixteen 10.73 (band) / 11.64 ending 5.91 up.] (5) **The sheet sees
 the sequence** (`kink_site_scan.py`; five scans complete, both kink handednesses for 64/29/7 and 71/29, one for
 71/29 with the TrFE in pairs `VVVVVRRVVVVVRR`; profiles in `kink_summary_belt4.md`; a site's energy is the site's
 own: four 71/29 sites re-relaxed from another site's lattice returned to the same energies and cells). In the matrix
@@ -133,7 +166,7 @@ kink pair on the odd bonds; other sequences. (6) **Frequency
 map on two rate models** with polished margins, 64/29/7 anchored at 364 kHz
 (`candidate_frequency_map_belt4_polished.md`: rate by the sheet's energy; `_steps.md`: rate by the step barrier,
 `--steps ... --step-mover 0`): the 71/29 matrix is at 2 kHz on the first by the one site the sheet was put on and
-33 kHz by the sum over its sites (9% of the terpolymer's), and 120 kHz on the second; only the matrix is on the
+33 kHz by the sum over its sites (9% of the terpolymer's), and 120 kHz on the second (147 kHz on the settled saddles, 2026-11-12); only the matrix is on the
 switching curve (polar fraction 0.61), the 64/29/7 cell is pinned off it (+0.32). Which rate model holds
 is the bench's Vogel-Fulcher fit on a copolymer film beside the terpolymer's. (7) Asked of Dipole:
 `sarco/materials/ask-polyfind-dipole-registry-kink-v1.md`. **E5 and the E2 addendum DISPATCHED by the PI on

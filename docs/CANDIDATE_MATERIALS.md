@@ -832,38 +832,76 @@ closure surface, every chain flexible, the cell fixed at the kinked crystal's:
 
 | lattice | who moves | I | saddle A-I | saddle I-B | B | barrier ahead / back |
 |---|---|---|---|---|---|---|
-| PVDF | one sublattice (half the chains, each with its two stack neighbours) | +7.01 | 7.55 | 8.94 | +1.97 | 8.9 / 7.0 |
-| PVDF | one chain in four (all six neighbours stay) | +9.85 | 10.35 | 12.66 | +7.88 | 12.7 / 4.8 |
-| 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.43 | 11.4 (11.4, 11.7 in two runs) | +8.98 | 11.4 / 2.4 |
-| 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.02 | 12.0 | +11.25 | 12.0 / 0.8 |
-| PVDF | every chain together (the sheet in register), per chain | +5.06 | 8.2 | 7.9 | 0.00 | 8.2 / 8.2, which is 16.5 per two-chain cell |
+| PVDF | one sublattice (half the chains, each with its two stack neighbours) | +7.01 | 7.54 | 8.91 | +1.97 | 8.9 / 6.9 |
+| PVDF | one chain in four (all six neighbours stay) | +9.85 | 10.27 | 12.46 | +7.88 | 12.5 / 4.6 |
+| PVDF | one chain in sixteen (2026-11-12) | +9.96 | 10.73 (the band's top; see below) | 11.64 | +5.91 | 11.6 / 5.7 |
+| 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.43 | 11.48 | +8.98 | 11.5 / 2.5 |
+| 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.05 | 12.02 | +11.25 | 12.0 / 0.8 |
+| PVDF | every chain together (the sheet in register), per chain | +5.06 | 7.38 | not settled (the band's top 7.9) | 0.00 | at least 7.4 each way, 14.8 per two-chain cell |
 
-kcal/mol per moving chain against the sheet (`kink_migration_belt4.json`). The PVDF bands of rows
-one and two are converged to 0.1-0.16 kcal/mol per scaled unit (row one twice, from two separate
-runs, to 0.02 kcal/mol in both saddles). The copolymers' bands were each run twice from a fresh
-straight path: the first saddles agree to 0.03 (the terpolymer's converged), the 71/29 second
-saddle converged at 12.02 (12.07 in the first run) and the terpolymer's stopped at its iteration
-limit both times, at 11.4 and 11.7, so it is good to about 0.3. The in-register PVDF band stopped
-at forces of 0.8-1.0.
+kcal/mol per moving chain against the sheet (`kink_migration_belt4.json`; tables with the bands'
+tops beside the saddles in `kink_summary_belt4.md`).
 
-* **The torsional step itself costs 7.5-9 kcal/mol in the PVDF lattice**: with a 3e12 /s attempt
+**The saddles are stationary points, not band tops (2026-11-12).** Each band's highest image was
+settled by minimising the energy in the hyperplane normal to the band's tangent and moving the
+hyperplane until the force along the tangent vanished (`kink_migration.py --polish`,
+`polyfind.mixedcell.saddle_polish`): under 0.01 kcal/mol per scaled unit along the path and across
+it, with the curvature along the path negative. This replaced the bands' tops because a band's
+force criterion does not settle a top that is soft across the path: the four-chain second top
+stood at 12.66 when its band stopped at a force of 0.16, crept to 12.49 over 600 more iterations
+at forces of 0.08-0.19, and is 12.46 settled; the sixteen-chain one was still falling
+(11.84) when its band met the 0.1 criterion and is 11.64. The tops of the other
+bands that had converged were within 0.03 of their saddles. The terpolymer's
+second top, quoted before as 11.4 and 11.7 from two runs that stopped at their iteration limit, is
+11.48. The in-register band had stopped at forces of 0.8-1.0: its first top was
+0.86 too high and its second did not settle from that band.
+The sixteen-chain first top is the one number of the table that is a band's (10.73 at a force of
+0.09): its settling was stopped after 105 minutes in its first hyperplane (a second copy with a
+progress log went from 10.73 to 10.69 in its first 70 evaluations and was still descending), and
+since it lies a kcal/mol under the second saddle it does not enter the barrier.
+
+* **The torsional step itself costs 7.5-8.9 kcal/mol in the PVDF lattice**: with a 3e12 /s attempt
   frequency, 1e6 steps per second at 300 K. The two saddles are sequential, not concerted: at the
-  second the trailing gauche bond is at 111 degrees and the bond it is moving to has not started.
-* **A sheet is stiff against one chain leaving it.** One chain's kink pair one monomer ahead of
-  all six neighbours' costs 7.9 kcal/mol and has a 12.7 barrier; with its two stack neighbours
-  moving too it costs 2.0 behind 8.9. The same anisotropy as the registry: the stack along the
-  short axis moves as a unit, and the sheet advances stack by stack, not chain by chain. In PVDF
-  the sheet is therefore a flat, slow object: the first chain of a stack to move pays 12.7
-  (2e3 /s at 300 K), and what the next ones pay beside it is not computed.
-  *Added 2026-11-10: these are four-chain cells, one chain in four ahead, in a lattice that cannot
-  give way laterally (8.1: the uniform half-slip of one chain is 6.07 there and 3.15 in the dilute
-  limit). With the neighbours as rigid chains (`kink_migration.py --host bodies --ends-only`) the
-  same end state is 11.5 in four chains and 9.3 in sixteen, one chain in sixteen ahead, and the
-  wide-kink intermediate 17.8 and 17.4. So the cramped cell overstates the cost of the completed
-  step by about a fifth and its intermediate hardly at all. The flexible-neighbour numbers quoted
-  above, and the band, are not run in sixteen chains; if the same ratio holds the 7.9 is about
-  6.4, still three times what a stack pays when it moves together, and the statement stands with
-  a smaller margin.*
+  second the trailing gauche bond is at 110 degrees and the bond it is moving to has not started.
+* **A sheet is stiff against one chain leaving it, and the cost is now measured in a cell where
+  it is one chain** (2026-11-12: sixteen chains, one in sixteen ahead, every chain flexible). The
+  completed step lies 5.9 kcal/mol up behind a barrier of 11.6, with 5.7 to come back; in the
+  four-chain cell the same three numbers are 7.9, 12.5 and 4.6. So the cramped cell overstated the
+  end state by 2.0 and the barrier by 0.8, and the 6.4 guessed on 2026-11-10 from rigid-chain
+  neighbours is 5.91. With its stack moving too the step costs 2.0 behind 8.9 (row one), so one
+  chain alone still pays three times what a chain of a moving stack does.
+  - *Checks.* The sixteen-chain sheet, perturbed and relaxed with every chain and the cell free,
+    returns to the tiled two-chain cell (2e-09 kcal/mol per chain, torsions within
+    0.001 degrees). B was reached by two routes, from the rigid-chain-neighbour state and from
+    the sheet with the moving chain's torsions reset: 5.911 and 5.911, the two structures within
+    0.2 degrees in every torsion. In I and in B the moving chain's gauche bonds are where the step
+    puts them and the other fifteen chains keep their kink pairs in the sheet.
+  - *It is the completed step that needs the room, and it needs it along the stack.* B is
+    +7.88, +7.51, +6.47 and +5.91 in cells of 2a x b, 2a x 2b, 4a x b and 4a x 2b (a the 4.96 A
+    stack axis): doubling a is worth 1.4-1.6, doubling b 0.4-0.6. The wide kink is +9.85, +9.98,
+    +10.02 and +9.96 in the same four cells, and its saddle 10.27 in four chains and at most 10.73 in
+    sixteen: it does not gain from the room. Sixteen chains is therefore not the dilute limit
+    of B; a wider cell along a was not run (an energy of the sixteen-chain cell is 4 s after
+    the speed work of this date, and of a thirty-two-chain one an estimated five to six times
+    that).
+  - *How the lattice gives.* In B the moving chain has a monomer's length out of axial register
+    with its neighbours (a kink pair shortens its chain by about 1 A, and this one sits a
+    monomer further on than theirs), and it shares that out: the chain slides 0.32 A back
+    along its axis against the rest, its six neighbours shift by up to 0.19 A along theirs,
+    move aside by under 0.1 A and adjust their torsions by up to 11 degrees; beyond the first
+    shell nothing moves by more than 0.06 A or 3 degrees. This is the single-chain slide of 8.1
+    again (6.07 in four chains, 3.70 in sixteen, 3.15 dilute), which is why the two depend on
+    the cell alike. In the wide kink the answer is one diagonal neighbour's torsions
+    (16 degrees) and little else.
+  - *The stack follows cheaply.* A second chain one monomer ahead beside the first along a
+    brings the two to +8.35, 4.17 each, against 11.8 for two apart: the second costs
+    2.4 where the first cost 5.9. A diagonal neighbour instead (5.07 A away, the other
+    sublattice) brings them to +9.05, so it costs 3.1: the stack axis is the cheap direction,
+    as it is for the registry (8.1). A whole sublattice ahead is 1.97 per chain. So the sheet
+    advances by one chain stepping out, 1e4 /s per chain at 300 K with a 3e12 /s attempt
+    frequency (2e3 /s on the four-chain barrier), returning at 2e8 /s unless a neighbour
+    follows, which costs it less than half as much in energy. The barrier of that second step,
+    and so the rate at which a stepped chain is joined rather than recalled, is not computed.
 * **In the copolymer lattices the first saddle is lower and the completed step is not.** Into the
   wide kink the barrier is 6.4 in 64/29/7 and 7.0 in 71/29 against PVDF's 7.5, so the torsional
   event is no slower beside TrFE and chlorine. But the step computed here takes the kink pair from
@@ -871,12 +909,14 @@ at forces of 0.8-1.0.
   more than the 1.3 the whole sheet pays for the same move (8.4): half the chains with their kink
   pairs on a different unit from their neighbours' is a costly arrangement in a lattice of
   sequence-ordered chains, and the model cell, in which every chain carries the same sequence in
-  register, makes it as costly as it can be. With that cost the barrier of the whole step is 11.4
-  and 12.0 kcal/mol, so in this protocol the terpolymer's step is a factor of three faster than the
-  matrix's and no more.
+  register, makes it as costly as it can be. With that cost the barrier of the whole step is 11.5
+  and 12.0 kcal/mol, so in this protocol the terpolymer's step is a factor of 2.5 faster than
+  the matrix's and no more.
 * **Moving every chain together is not the way round that cost.** In PVDF the concerted step of
-  both chains of the cell has a barrier of 8.2 kcal/mol per chain, 16.5 for the cell, against 8.9
-  for one sublattice followed by the other: the sheet moves one chain (or one stack) at a time. In
+  both chains of the cell has a first saddle of 7.4 kcal/mol per chain (14.8 for the cell; the band,
+  stopped at a force of 1.0, had 8.2), and a second that the band puts at 7.9 and that did not
+  settle from it: at least 14.8 for the cell against 8.9 for one sublattice followed by the other. The
+  sheet moves one chain (or one stack) at a time. In
   the copolymer cells the concerted band does not settle on a minimum-energy path at all (before
   the climbing image is switched on its top is 12.7 per chain in 64/29/7, twice the sequential
   first saddle, and nine images cannot resolve what follows), so those rows are not reported. What
@@ -940,36 +980,41 @@ and `--steps kink_migration_belt4.json`; the 64/29/7 cell is the anchor at 364 k
 
 | lattice | kink sheet, kcal/mol per kink pair | f_relax if the sheet's energy sets the rate | step barrier (one sublattice) | f_relax if the step sets the rate | margin (polished) | polar fraction at 55 V/um |
 |---|---|---|---|---|---|---|
-| 64/29/7 | 3.79 | 364 kHz (anchor) | 11.4 | 364 kHz (anchor) | +0.317 | 0.00 |
-| 71/29 | 6.85 | 2 kHz at this site; 33 kHz summed over the sequence's sites (8.4) | 12.0 | 120 kHz | +0.056 | 0.61 |
-| PVDF | 5.06 | 43 kHz | 8.9 | 21 MHz | +0.744 | 0.00 |
+| 64/29/7 | 3.79 | 364 kHz (anchor) | 11.5 | 364 kHz (anchor) | +0.317 | 0.00 |
+| 71/29 | 6.85 | 2 kHz at this site; 33 kHz summed over the sequence's sites (8.4) | 12.0 | 147 kHz | +0.056 | 0.61 |
+| PVDF | 5.06 | 43 kHz | 8.9 | 27 MHz | +0.744 | 0.00 |
 
 (`candidate_frequency_map_belt4_polished.md` and `_steps.md`. At the operating point the 71/29 row
-reads 0.012% AC strain at tan delta 1.0 on the first rate model and 0.18% at 0.26 on the second;
-the other two rows carry no strain on either.)
+reads 0.012% AC strain at tan delta 1.0 on the first rate model and 0.18% at 0.21 on the second;
+the other two rows carry no strain on either. The step barriers are on the saddles settled on
+2026-11-12 (8.3): the terpolymer's is 11.48 where the band's top was read as 11.37, which moves the
+71/29 row from 121 to 147 kHz and its tan delta from 0.26 to 0.21, and PVDF from 21 to 27 MHz.)
 
 * **The two rate models bracket the matrix between slow and following.** If the population of
   kink sheets limits the channel (the earlier section's assumption, on corrected energies) the 71/29
   matrix sits at 2 kHz on the energy of the one site the sheet was first put on and at 33 kHz on
   the sum over all the sites of its sequence and both kink handednesses (8.4: 9% of the 64/29/7
   cell's), at the bottom of a 34-66 kHz drive band rather than far below it. If the step limits it, the matrix is within a factor
-  of three of the terpolymer, because the chlorine hardly lowers the step. The bench's Vogel-Fulcher
+  of two and a half of the terpolymer, because the chlorine hardly lowers the step. The bench's Vogel-Fulcher
   fit on a copolymer film beside the terpolymer's decides between them; the model's own next piece
   is the wall of a helix run (8.2), whose creation and motion are the two quantities these proxies
   stand in for.
 * **Only the pinless matrix is on the switching curve, and whether it delivers depends on the
   rate model.** The matrix sits on the steep part (polar fraction 0.61): frozen and lossy on the
   first rate model, and on the second the best row this document has had (0.18% at tan delta
-  0.26, loss per strain 1.4), which is a ferroelectric copolymer and in a real film switches with
+  0.21, loss per strain 1.2), which is a ferroelectric copolymer and in a real film switches with
   hysteresis this equilibrium mapping does not contain; the 64/29/7 cell
   is fast and pinned off the curve (+0.32); PVDF does not switch. The earlier section's row for the
   64/29/7 cell (tan delta 0.07 for 0.125% strain) came from the search's margin of +0.11 and is
   withdrawn with it (section 5).
-* **Absolute rates.** With a 3e12 /s attempt frequency the step barriers give 9e5 /s (PVDF), 2e4 /s
+* **Absolute rates.** With a 3e12 /s attempt frequency the step barriers give 1e6 /s (PVDF), 1e4 /s
   (64/29/7) and 5e3 /s (71/29) per chain at 300 K, so the terpolymer's computed step is two
-  orders slower than the measured channel (364 kHz is 2e6 /s): its second saddle is good to 0.3
-  only (8.3), the model cell overstates the cost of a chain stepping onto a TrFE
-  unit ahead of its neighbours, and the film's channel need not be this step. The earlier
+  orders slower than the measured channel (364 kHz is 2e6 /s). Its saddle is no longer the
+  uncertain part (settled at 11.48, 8.3); what remains is that the model cell overstates the cost
+  of a chain stepping onto a TrFE unit ahead of its neighbours, and that the film's channel need
+  not be this step. These are the steps of half the chains at once, in a two-chain cell; one PVDF
+  chain alone, in sixteen, has a barrier of 11.6 (1e4 /s), and the copolymers' single-chain steps
+  are not computed. The earlier
   polyfind number for a kink-row hop in perfect beta, 8.2 kcal/mol (`ask ... verification-v1.md`,
   E3), is PVDF's 7.5-8.9 here by a different route.
 

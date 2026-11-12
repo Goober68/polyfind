@@ -72,6 +72,34 @@ def move_kink(t, k0: int, step: int):
     return t
 
 
+def settled_barrier(row: dict, log=None) -> None:
+    """Put the row's barriers on its settled saddles (``barrier_forward_polished``, ``barrier_back_polished``).
+
+    Both saddles settled: the higher of the two.  One settled and the other not: still given when the
+    settled one lies above the other band's top and that band had converged (a converged band's top has
+    been at or above its saddle in every case settled so far), with ``barrier_polished_note`` saying
+    which top is a band's; otherwise the fields are removed."""
+    for k in ("barrier_forward_polished", "barrier_back_polished", "barrier_polished_note"):
+        row.pop(k, None)
+    done = {k: row[k].get("polished", {}).get("converged") for k in ("A-I", "I-B")}
+    if not any(done.values()):
+        return
+    tops = {k: float(row[k]["polished"]["saddle"] if done[k] else row[k]["saddle"]) for k in done}
+    high = max(tops, key=tops.get)
+    if not done[high]:
+        return  # the higher top is a band's: nothing settled about the barrier
+    other = "A-I" if high == "I-B" else "I-B"
+    if not done[other] and not (row[other].get("force_max", 1e9) < 0.11):
+        return
+    ptop = max(0.0, tops[high])
+    row.update(barrier_forward_polished=ptop, barrier_back_polished=ptop - float(row["B"]["energy"]))
+    if not done[other]:
+        row["barrier_polished_note"] = f"the saddle {high} is settled; {other} is its band's top ({tops[other]:+.3f} at a force of {row[other]['force_max']:.2f}), which lies below it"
+    if log is not None:
+        log(f"   on the settled saddle{'s' if all(done.values()) else ''}: barrier {ptop:+.3f} ahead, {ptop - float(row['B']['energy']):+.3f} back"
+            f"{'' if all(done.values()) else ' (' + row['barrier_polished_note'] + ')'}")
+
+
 def free_sets(model, movers, host: str):
     """``(free indices, chains whose closure is held)`` at a fixed cell for the chosen host freedom.
     One chain's lateral position and axial shift stay fixed (the last chain that does not move, or
@@ -433,7 +461,8 @@ def main():
                 imgs, i_top = np.asarray(old["images"], dtype=float), int(old["saddle_image"])
                 xs, info = MC.saddle_polish(model, imgs[i_top], imgs[i_top + 1] - imgs[i_top - 1], free, closed, tol=args.polish_tol,
                                             log=lambda text, seg=seg, t0=t0: log(f"      {seg} polish, {text}  ({time.time() - t0:.0f} s)"),
-                                            patience=args.patience if args.patience is not None else 40, patience_tol=args.patience_tol, angle_window=args.angle_window)
+                                            patience=args.patience if args.patience is not None else 40, patience_tol=args.patience_tol, angle_window=args.angle_window,
+                                            progress=watch(f"{seg} polish", eA, nm, t0))
                 st = model.state(xs)
                 entry[seg] = {**old, "polished": {
                     "saddle": (info["energy"] - eA) / nm, "band_top": old["saddle"], "band_force": old["force_max"], "force_along": info["force"], "gradient_across": info["gradient_max"],
@@ -497,10 +526,7 @@ def main():
                 top = max(0.0, float(row["A-I"]["saddle"]), float(row["I-B"]["saddle"]))
                 row.update(barrier_forward=top, barrier_back=top - float(row["B"]["energy"]), moving_chains=nm,
                            bands_converged=bool(row["A-I"].get("converged") and row["I-B"].get("converged")))
-                if all(row[k].get("polished", {}).get("converged") for k in ("A-I", "I-B")):
-                    ptop = max(0.0, float(row["A-I"]["polished"]["saddle"]), float(row["I-B"]["polished"]["saddle"]))
-                    row.update(barrier_forward_polished=ptop, barrier_back_polished=ptop - float(row["B"]["energy"]))
-                    log(f"   with both saddles polished: barrier {ptop:+.3f} ahead, {ptop - float(row['B']['energy']):+.3f} back")
+                settled_barrier(row, log)
                 log(f"   one-monomer step: barrier {top:+.3f} ahead, {top - float(row['B']['energy']):+.3f} back; B lies {float(row['B']['energy']):+.3f} above A"
                     f"{'' if row['bands_converged'] else ' (a band is NOT converged)'}")
         locked_update(out_path, summarise)

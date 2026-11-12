@@ -280,8 +280,9 @@ def main():
             fl, bd = single[cell].get("flexible"), single[cell].get("bodies")
             n = 2 * cell[0] * cell[1]
             note = " (its a-neighbours move too: a stack)" if cell == (1, 1) else ""
-            md.append(f"| {cell[0]}x{cell[1]} | {n}{note} | {f'{bd['I']['energy']:+.2f}, {bd['B']['energy']:+.2f}' if bd else '-'} | {f'{fl['I']['energy']:+.2f}' if fl else '-'} | "
-                      f"{band(fl)} | {f'{fl['B']['energy']:+.3f}' if fl else '-'} |")
+            rigid = "{:+.2f}, {:+.2f}".format(bd["I"]["energy"], bd["B"]["energy"]) if bd else "-"
+            wide, ahead = ("{:+.2f}".format(fl["I"]["energy"]), "{:+.3f}".format(fl["B"]["energy"])) if fl else ("-", "-")
+            md.append(f"| {cell[0]}x{cell[1]} | {n}{note} | {rigid} | {wide} | {band(fl)} | {ahead} |")
         big = max((c for c in single if "flexible" in single[c]), key=lambda c: c[0] * c[1])
         e = single[big]["flexible"]
         md += ["", f"How the lattice answers in the {big[0]}x{big[1]} cell ({e['chains']} chains, neighbours flexible): displacements against the kinked crystal, "

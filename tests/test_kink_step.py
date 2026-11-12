@@ -110,7 +110,7 @@ def test_the_stored_sixteen_chain_bands_join_their_end_states_over_one_top_each(
     periodic = np.zeros(4 + nc * 44, dtype=bool)
     periodic[6:4 + 4 * nc:4] = True  # the setting angles
     for s in range(nc):
-        periodic[4 + 4 * nc + 44 * s:4 + 4 * nc + 44 * s + 20] = True  # the torsions
+        periodic[4 + 4 * nc + 40 * s:4 + 4 * nc + 40 * s + 20] = True  # the torsions: twenty of each chain's forty internal coordinates
     for seg, (a, b) in (("A-I", ("A", "I")), ("I-B", ("I", "B"))):
         e = row[seg]
         imgs, E = np.asarray(e["images"]), np.asarray(e["energies"])
@@ -131,6 +131,59 @@ def test_the_stored_sixteen_chain_bands_join_their_end_states_over_one_top_each(
     assert row["barrier_forward"] == pytest.approx(top) and row["barrier_back"] == pytest.approx(top - row["B"]["energy"])
     assert row["I-B"]["saddle"] > row["A-I"]["saddle"] > row["I"]["energy"] > row["B"]["energy"] > 5.0
     assert row["barrier_forward"] < four["barrier_forward"] - 0.4 and row["barrier_back"] > four["barrier_back"] + 0.5
+
+
+def test_the_stored_saddles_are_stationary_points_near_their_bands_tops():
+    """Every settled saddle in the result file: no force left along the band's tangent nor across
+    it, the curvature along the path negative where it was measured, above both ends of its band,
+    and within 0.25 kcal/mol of the band's top unless the band had stopped far from convergence
+    (a force over 0.5).  A row's barriers on the settled saddles are the higher of its two."""
+    rows = json.load(open(MIG))["rows"]
+    seen = 0
+    for key, row in rows.items():
+        ends = {"A": 0.0, "I": row.get("I", {}).get("energy"), "B": row.get("B", {}).get("energy")}
+        for seg, (a, b) in (("A-I", ("A", "I")), ("I-B", ("I", "B"))):
+            pol = row.get(seg, {}).get("polished")
+            if not pol or not pol["converged"]:
+                continue
+            seen += 1
+            assert abs(pol["force_along"]) < 0.01 and pol["gradient_across"] < 0.02, (key, seg)
+            assert pol["curvature_along"] is None or pol["curvature_along"] < 0.0, (key, seg)
+            assert pol["saddle"] > max(ends[a], ends[b]), (key, seg)
+            assert pol["band_top"] == pytest.approx(row[seg]["saddle"]) and pol["band_force"] == pytest.approx(row[seg]["force_max"])
+            if row[seg]["force_max"] < 0.5:
+                assert abs(pol["saddle"] - row[seg]["saddle"]) < 0.25, (key, seg)
+        if all(row.get(seg, {}).get("polished", {}).get("converged") for seg in ("A-I", "I-B")):
+            top = max(row["A-I"]["polished"]["saddle"], row["I-B"]["polished"]["saddle"])
+            assert row["barrier_forward_polished"] == pytest.approx(top) and row["barrier_back_polished"] == pytest.approx(top - row["B"]["energy"])
+    assert seen >= 9
+
+
+def test_b_was_reached_twice_and_a_second_chain_beside_the_first_costs_less():
+    """The sixteen-chain B from the sheet with the mover's torsions reset is the B relaxed from the
+    rigid-chain-neighbour state; and two chains one monomer ahead side by side along the stack lie
+    lower than two apart, both with their kink pairs where the step puts them."""
+    rows = json.load(open(MIG))["rows"]
+    one, two = rows.get("vdf10@0 4x2 mover 0 ahead host flexible"), rows.get("vdf10@0 4x2 mover 0,4 ahead host flexible")
+    if one is None or two is None or "independent_start" not in one.get("B", {}):
+        pytest.skip("the sixteen-chain pair or the second route to B is not stored")
+    again = one["B"]["independent_start"]
+    assert again["energy"] == pytest.approx(one["B"]["energy"], abs=1e-3) and again["start_energy"] > 100.0
+    far = again["largest_difference_from_the_stored_B"]
+    assert far["lateral_A"] < 0.01 and far["axial_A"] < 0.01 and far["torsion_deg"] < 0.5 and far["setting_angle_deg"] < 0.05
+    assert two["B"]["converged"] and two["B"]["gradient_max"] < 0.01
+    assert set(two["B"]["torsions_movers"]) == {"0", "4"}
+    for letters in two["B"]["torsions_movers"].values():
+        assert letters.split()[:5] == ["T", "T", "G+", "T", "G-"]
+    tors = np.asarray(two["B"]["state"])[4 + 4 * 16:].reshape(16, 40)[:, :20]
+    assert [s for s in range(16) if [k for k, v in enumerate(KM.letters_of(tors[s]).split()) if v != "T"] == [2, 4]] == [0, 4]
+    assert 2 * two["B"]["energy"] < 2 * one["B"]["energy"] - 3.0  # side by side: more than 3 kcal/mol below two apart
+    assert 2 * two["B"]["energy"] > one["B"]["energy"] + 1.0     # and the second chain is not free
+    diag = rows.get("vdf10@0 4x2 mover 0,1 ahead host flexible")
+    if diag is not None:  # a diagonal neighbour instead: cheaper than two apart, dearer than along the stack
+        assert diag["B"]["converged"] and set(diag["B"]["torsions_movers"]) == {"0", "1"}
+        assert all(v.split()[:5] == ["T", "T", "G+", "T", "G-"] for v in diag["B"]["torsions_movers"].values())
+        assert two["B"]["energy"] < diag["B"]["energy"] < one["B"]["energy"] - 1.0
 
 
 def test_saddle_polish_settles_a_band_top_into_a_stationary_point():
@@ -179,7 +232,7 @@ def test_the_pieces_of_a_row_run_one_per_process_and_merge(tmp_path):
     row = json.load(open(out))["rows"][key]
     assert "I" in row and "B" not in row and row["I"]["start"].startswith("I of the row") and row["kinked_crystal"]["message"].startswith("the polished")
     assert "end points only" in log_i
-    log_b = run("--only", "B", "--patience", "25")
+    run("--only", "B", "--patience", "25")
     row = json.load(open(out))["rows"][key]
     assert {"I", "B", "kinked_crystal", "chains", "host"} <= set(row) and row["host"] == "rigid" and row["chains"] == 2
     assert row["I"]["converged"] and row["B"]["converged"] and row["B"]["gradient_max"] < 0.01
@@ -196,7 +249,7 @@ def test_the_pieces_of_a_row_run_one_per_process_and_merge(tmp_path):
     np.testing.assert_allclose(seg["images"][0], row["kinked_crystal"]["state"], atol=1e-12)
     assert seg["energies"][0] == 0.0 and seg["energies"][-1] == pytest.approx(row["I"]["energy"], abs=1e-6)
     assert "barrier_forward" not in row and "I-B" not in row  # one band of two: no barrier yet
-    assert (ck / "vdf10_0_1x1_mover_0_ahead_host_rigid.A-I.npy").exists()
+    assert not (ck / "vdf10_0_1x1_mover_0_ahead_host_rigid.A-I.npy").exists()  # a band's checkpoint goes when the band is stored: one that is there is an unfinished run's
     assert {"I", "B"} <= set(row) and stored["rows"][STACK] == json.load(open(out))["rows"][STACK]  # nothing else was touched
 
 

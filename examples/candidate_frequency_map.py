@@ -92,7 +92,8 @@ def main():
             # the climb along the matrix: the highest sheet energy on the way between two of its low sites, pins left out (a sheet does not cross them)
             vals = sorted(v["relative"] for v in scan.values() if v.get("converged", True) and v["relative"] < 4.0)
             climb = (max(vals) - min(vals)) if len(vals) > 2 else 0.0
-            stepped[name] = dict(rows[name], E_form_sheet=rows[name]["E_form"], E_step=e["barrier_forward"], climb=climb, E_form=e["barrier_forward"])
+            barrier = e.get("barrier_forward_polished", e["barrier_forward"])  # the settled saddles where both were polished (kink_migration.py --polish), else the bands' tops
+            stepped[name] = dict(rows[name], E_form_sheet=rows[name]["E_form"], E_step=barrier, climb=climb, E_form=barrier, step_saddles="polished" if "barrier_forward_polished" in e else "band tops")
         rows = stepped
     if args.ref not in rows:
         raise SystemExit(f"the anchor row {args.ref!r} is not among the rows with a kink energy: {sorted(rows)}")
