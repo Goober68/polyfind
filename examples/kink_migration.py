@@ -127,6 +127,18 @@ def main():
     ap.add_argument("--ends-only", action="store_true", help="relax the end points A, I, B and stop: no bands")
     ap.add_argument("--trust-tiled", action="store_true",
                     help="take the tiled polished kinked cell as A without relaxing the supercell with every chain free (in the four-chain PVDF cell that check returns the tiled cell)")
+    ap.add_argument("--only", default=None, metavar="PIECES",
+                    help="comma-separated pieces to compute in this process, of A (the supercell check of the kinked crystal), I, B, A-I, I-B; the others are "
+                    "read from the stored row.  Each process writes the fields it computed, so the pieces of one row can run side by side")
+    ap.add_argument("--seed-from", default=None, metavar="ROW",
+                    help="start I and B from the stored I and B of another row of the same supercell (the rigid-chain-neighbour row, say) "
+                    "instead of from the kinked crystal with the mover's torsions reset")
+    ap.add_argument("--band-from", default=None, metavar="ROW",
+                    help="start each band from the converged band of another row (a smaller supercell, say): the mover's torsions and backbone angles are "
+                    "taken from that row's images, everything else runs straight between this row's end points")
+    ap.add_argument("--end-maxiter", type=int, default=600, help="iterations of one relaxation round of an end point (three rounds at most)")
+    ap.add_argument("--checkpoints", default=None, metavar="DIR",
+                    help="write the running state of every relaxation and band into DIR every ten evaluations, and resume from it when it is there")
     ap.add_argument("--references", default="docs/predictions/dilute_kink_belt4.json", help="the all-trans reference cells (shared with dilute_kink.py)")
     ap.add_argument("--out", default="docs/predictions/kink_migration_belt4.json")
     args = ap.parse_args()
@@ -136,7 +148,26 @@ def main():
     key = (f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''} {args.nx}x{args.ny} mover {args.mover} "
            f"{'back' if args.backward else 'ahead'} host {args.host}")
     entry: dict = {}
-    prior = (json.load(open(out_path)) if out_path.exists() else {}).get("rows", {}).get(key, {})  # a stored run of this row: its end points and bands are reused
+    mine: set = set()  # the fields this process computed and has not written yet
+    stored_rows = (json.load(open(out_path)) if out_path.exists() else {}).get("rows", {})
+    prior = stored_rows.get(key, {})  # a stored run of this row: its end points and bands are reused
+    pieces = ("A", "I", "B", "A-I", "I-B")
+    only = None if args.only is None else {v.strip() for v in args.only.split(",")}
+    if only is not None and not only <= set(pieces):
+        raise SystemExit(f"--only takes {', '.join(pieces)}; got {args.only}")
+    do = lambda piece: only is None or piece in only  # noqa: E731
+    ck_dir = None if args.checkpoints is None else Path(args.checkpoints)
+    if ck_dir is not None:
+        ck_dir.mkdir(parents=True, exist_ok=True)
+    slug = "".join(ch if ch.isalnum() else "_" for ch in key)
+
+    def checkpoint(piece: str):
+        return None if ck_dir is None else ck_dir / f"{slug}.{piece}.npy"
+
+    def write_checkpoint(path, arr):
+        tmp = path.with_suffix(".tmp.npy")
+        np.save(tmp, np.asarray(arr, dtype=float))
+        tmp.replace(path)
 
     def locked_update(path: Path, fn):
         import fcntl
@@ -148,11 +179,16 @@ def main():
                 json.dump(disk, fh, indent=1)
 
     def save():
+        """Merge what this process computed into the stored row (field by field: another process may hold the other pieces of the row)."""
         def put(disk):
             disk.update(preset=args.preset, energy="kcal/mol per chain whose kink pair moves, against the kinked crystal with every kink pair in register; "
                         "cell fixed at the kinked crystal's, every chain periodic exactly")
-            disk.setdefault("rows", {})[key] = entry
+            row = disk.setdefault("rows", {}).setdefault(key, {})
+            row.update({k: v for k, v in entry.items() if k in mine or k not in pieces_fields})
+            mine.clear()
         locked_update(out_path, put)
+
+    pieces_fields = ("kinked_crystal", "I", "B", "A-I", "I-B")
 
     with PRESET_PARAMETERS[args.preset].applied():
         polymer = DK.C.make_polymer(args.row, letters)
@@ -184,24 +220,73 @@ def main():
         # --- A: the kinked crystal, every chain's kink pair at the same offset ----------------------
         t0 = time.time()
         everyone = list(range(nc))
-        xA, eA, info = x0, model.physical_energy(x0), {"iterations": 0, "message": "the polished two-chain cell, tiled"}
-        if nc > 2 and not args.trust_tiled:  # in the supercell the chains may differ: is the tiled cell still the minimum?
-            cell_free = np.setdiff1d(np.arange(model.n_var), np.concatenate([model.index("xy", nc - 1), model.index("z", nc - 1)]))
-            xp = x0.copy()
-            xp[model.index("tors")] += np.random.default_rng(1).uniform(-0.5, 0.5, nc * P)
-            xp = model.project(xp, model.index("internal"), everyone)
-            xr, info = model.relax(xp, free=cell_free, closed=everyone, maxiter=600, angle_window=args.angle_window)
-            if model.physical_energy(xr) < eA - 1e-4:
-                xA, eA = xr, model.physical_energy(xr)
-        stA = model.state(xA)
-        form = (eA - e_tt) / nc
-        entry["kinked_crystal"] = {"formation_per_kink_pair": form, "formation_per_kink_pair_search": search,
-                                   "formation_per_kink_pair_two_chain_cell": (float(d["energy"]) - float(d_tt["energy"])) / 2, "cell": stA.lattice.tolist(),
-                                   "all_trans_cell": (np.asarray(d_tt["state"][:4]) * np.array([args.nx, args.ny, 1.0, 1.0])).tolist(),
-                                   "torsions": [letters_of(stA.tors[s]) for s in range(nc)], "iterations": info["iterations"], "message": info["message"],
-                                   "seconds": time.time() - t0, "state": xA.tolist()}
-        log(f"   kinked crystal: {form:+.3f} kcal/mol per kink pair against all-trans; cell {np.round(stA.lattice, 3).tolist()} "
-            f"(all-trans {np.round(entry['kinked_crystal']['all_trans_cell'], 3).tolist()}); {info['iterations']} it, {time.time() - t0:.0f} s; {info['message']}")
+
+        def watch(piece, e_ref, per, t_start):
+            """A progress hook for model.relax: every ten evaluations a log line, and the lowest point
+            seen so far as the checkpoint (the latest evaluation may be a trial step of a line search)."""
+            path = checkpoint(piece)
+            best = {"e": np.inf, "x": None, "n": 0}
+
+            def hook(stage, k, e, x):
+                best["n"] += 1
+                if e < best["e"]:
+                    best.update(e=e, x=x.copy())
+                if k == 1 or k % 10 == 0:
+                    log(f"      {piece} {stage} {k:5d}: {(e - e_ref) / per:+10.4f}, lowest so far {(best['e'] - e_ref) / per:+10.4f}  "
+                        f"({best['n']} evaluations, {time.time() - t_start:.0f} s)")
+                    if path is not None:
+                        write_checkpoint(path, best["x"])
+            return hook
+
+        def resumed(piece, x_start, free_, closed_):
+            """The checkpoint of ``piece`` if there is one, returned to the closure surface; else ``x_start``."""
+            ck = checkpoint(piece)
+            if ck is None or not ck.exists() or np.load(ck).shape != (model.n_var,):
+                return x_start
+            log(f"   {piece}: resumed from {ck}")
+            return model.project(np.load(ck), np.intersect1d(free_, model.index("internal", closed_)), closed_)
+
+        old = prior.get("kinked_crystal", {})
+        check = nc > 2 and not args.trust_tiled and do("A")  # in the supercell the chains may differ: is the tiled cell still the minimum?
+        if not check and "state" in old and len(old["state"]) == model.n_var:
+            xA = np.asarray(old["state"], dtype=float)
+            eA = model.physical_energy(xA)
+            entry["kinked_crystal"] = old
+            stA = model.state(xA)
+            form = (eA - e_tt) / nc
+            log(f"   kinked crystal: {form:+.3f} kcal/mol per kink pair against all-trans (from the stored run: {old.get('message')})")
+        else:
+            xA, eA, info = x0, model.physical_energy(x0), {"iterations": 0, "message": "the polished two-chain cell, tiled"}
+            checked = None
+            if check:
+                cell_free = np.setdiff1d(np.arange(model.n_var), np.concatenate([model.index("xy", nc - 1), model.index("z", nc - 1)]))
+                xp = x0.copy()
+                xp[model.index("tors")] += np.random.default_rng(1).uniform(-0.5, 0.5, nc * P)
+                xp = model.project(xp, model.index("internal"), everyone)
+                e_start = model.physical_energy(xp)
+                xr, info = model.relax(resumed("A", xp, cell_free, everyone), free=cell_free, closed=everyone, maxiter=args.end_maxiter,
+                                       angle_window=args.angle_window, progress=watch("A", eA, nc, t0))
+                e_r = model.physical_energy(xr)
+                checked = {"start_above_tiled_per_chain": (e_start - eA) / nc, "relaxed_above_tiled_per_chain": (e_r - eA) / nc,
+                           "cell_relaxed": model.state(xr).lattice.tolist(), "converged": "success" in info["message"].lower(),
+                           "largest_torsion_change_deg": float(np.abs(wrap(model.state(xr).tors - model.state(x0).tors)).max()),
+                           "state_relaxed": xr.tolist()}
+                log(f"   A check: the perturbed supercell, every chain and the cell free, relaxed to {(e_r - eA) / nc:+.6f} kcal/mol per chain against the tiled cell "
+                    f"(start {(e_start - eA) / nc:+.4f}); largest torsion change {checked['largest_torsion_change_deg']:.3f} deg; {info['message']}")
+                if e_r < eA - 1e-4:
+                    xA, eA = xr, e_r
+            stA = model.state(xA)
+            form = (eA - e_tt) / nc
+            entry["kinked_crystal"] = {"formation_per_kink_pair": form, "formation_per_kink_pair_search": search,
+                                       "formation_per_kink_pair_two_chain_cell": (float(d["energy"]) - float(d_tt["energy"])) / 2, "cell": stA.lattice.tolist(),
+                                       "all_trans_cell": (np.asarray(d_tt["state"][:4]) * np.array([args.nx, args.ny, 1.0, 1.0])).tolist(),
+                                       "torsions": [letters_of(stA.tors[s]) for s in range(nc)], "iterations": info["iterations"], "message": info["message"],
+                                       "seconds": time.time() - t0, "state": xA.tolist()}
+            if checked is not None:
+                entry["kinked_crystal"]["supercell_check"] = checked
+            mine.add("kinked_crystal")
+            log(f"   kinked crystal: {form:+.3f} kcal/mol per kink pair against all-trans; cell {np.round(stA.lattice, 3).tolist()} "
+                f"(all-trans {np.round(entry['kinked_crystal']['all_trans_cell'], 3).tolist()}); {info['iterations']} it, {time.time() - t0:.0f} s; {info['message']}")
         log(f"      chain {m0}: {letters_of(stA.tors[m0])}")
         save()
 
@@ -218,38 +303,54 @@ def main():
             xI0[m_t] = tI
             xB0[m_t] = move_kink(tA, k0, step)
         ends = {"A": xA}
+        seed = None
+        if args.seed_from is not None:
+            seed = stored_rows.get(args.seed_from)
+            if seed is None or abs(seed.get("kinked_crystal", {}).get("formation_per_kink_pair", 1e9) - form) > 1e-6:
+                raise SystemExit(f"--seed-from: no stored row {args.seed_from!r} on this kinked crystal")
         for name, x0 in (("I", xI0), ("B", xB0)):
             t0 = time.time()
             old = prior.get(name, {})
             if "state" in old and old.get("converged") and len(old["state"]) == model.n_var and abs(prior.get("kinked_crystal", {}).get("formation_per_kink_pair", 1e9) - form) < 1e-6:
                 xr, rec = np.asarray(old["state"], dtype=float), old
                 log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (from the stored run); {rec['torsions']}")
+            elif not do(name):
+                continue
             else:
+                start = "the kinked crystal with the mover's torsions reset"
+                if seed is not None:
+                    if len(seed.get(name, {}).get("state", [])) != model.n_var:
+                        raise SystemExit(f"--seed-from: row {args.seed_from!r} holds no {name} of this supercell")
+                    x0, start = np.asarray(seed[name]["state"], dtype=float), f"{name} of the row {args.seed_from!r}"
                 x0 = model.project(x0, model.index("internal", movers), movers)
-                xr, info = model.relax(x0, free=free, closed=closed, maxiter=600, angle_window=args.angle_window)
+                e_start = model.physical_energy(x0)
+                x0 = resumed(name, x0, free, closed)
+                hook = watch(name, eA, nm, t0)
+                xr, info = model.relax(x0, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook)
                 for _ in range(3):  # a strained start can take more than one round
                     if "success" in info["message"].lower():
                         break
-                    xr, more = model.relax(xr, free=free, closed=closed, maxiter=600, angle_window=args.angle_window)
-                    info = {**more, "iterations": info["iterations"] + more["iterations"]}
+                    xr, more = model.relax(xr, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook)
+                    info = {**more, "iterations": info["iterations"] + more["iterations"], "evaluations": info["evaluations"] + more["evaluations"]}
                 st = model.state(xr)
                 rec = {"energy": (model.physical_energy(xr) - eA) / nm, "torsions": letters_of(st.tors[m0]), "torsions_deg": wrap(st.tors[m0]).tolist(),
-                       "start_energy": (model.physical_energy(x0) - eA) / nm, "iterations": info["iterations"], "message": info["message"],
-                       "converged": "success" in info["message"].lower(),
+                       "start": start, "start_energy": (e_start - eA) / nm, "iterations": info["iterations"], "evaluations": info["evaluations"],
+                       "message": info["message"], "converged": "success" in info["message"].lower(),
                        "angles_at_window": int((np.abs(st.angs - model.angles0[None]) > args.angle_window - 1e-3).sum()),
                        "seconds": time.time() - t0, "state": xr.tolist()}
+                mine.add(name)
                 log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (start {rec['start_energy']:+.3f}); {letters_of(st.tors[m0])}; "
                     f"{info['iterations']} it, {time.time() - t0:.0f} s; {rec['angles_at_window']} angles at the window; {info['message']}")
             ends[name] = xr
             entry[name] = rec
             save()
 
-        if args.ends_only:
+        if args.ends_only or (only is not None and not (only & {"A-I", "I-B"})):
             log(f"   end points only; written {out_path}")
             return
 
         # --- the two bands ----------------------------------------------------------------------------
-        pool = mp.get_context("fork").Pool(args.workers) if args.workers > 1 else None
+        pool = None  # made when a band is run: the workers are forks of this process and its model
 
         def evaluate(X):
             res = pool.map(_eval_one, list(X)) if pool is not None else [_eval_one(x) for x in X]
@@ -257,47 +358,101 @@ def main():
 
         constraint = lambda x: model.closure(x, closed)  # noqa: E731
         sc = model.scale(xA)
-        top = eA
+        per = np.concatenate([model.index("tors"), model.index("phi")])
+
+        def same(u, v):  # the same structure: equal up to whole turns of the torsions and setting angles
+            dv = np.asarray(u, dtype=float) - np.asarray(v, dtype=float)
+            dv[per] = wrap(dv[per])
+            return bool(np.abs(dv).max() < 1e-8)
+
+        guide = None
+        if args.band_from is not None:
+            guide = stored_rows.get(args.band_from)
+            if guide is None:
+                raise SystemExit(f"--band-from: no stored row {args.band_from!r}")
+
+        def guided(seg, a, b):
+            """The straight band between this row's end points with the movers' internal coordinates
+            taken from the images of the guide row's band (the same chain in another supercell)."""
+            g_imgs = np.asarray(guide[seg]["images"], dtype=float)
+            g_nc = int(guide["chains"])
+            g_base, width = 4 + 4 * g_nc, model.P + model.R
+            if len(g_imgs) != args.images or g_imgs.shape[1] != g_base + g_nc * width or guide["mover"] != args.mover or len(movers) != 1:
+                raise SystemExit(f"--band-from: the band {seg} of {args.band_from!r} does not fit this row (images, chain length or mover)")
+            imgs = band(model, ends[a], ends[b], args.images, free, closed)
+            m_int = model.index("internal", m0)
+            g_int = np.arange(g_base + m0 * width, g_base + (m0 + 1) * width)
+            d0 = wrap(g_imgs[0, g_int] - ends[a][m_int])  # the guide's end points are not this row's: carry the difference along the band
+            d1 = wrap(g_imgs[-1, g_int] - ends[b][m_int])
+            t_tors = np.arange(width) < model.P
+            for i in range(1, args.images - 1):
+                w = i / (args.images - 1.0)
+                v = g_imgs[i, g_int] - ((1.0 - w) * d0 + w * d1)
+                ref = imgs[i][m_int]
+                imgs[i][m_int] = np.where(t_tors, ref + wrap(v - ref), v)
+                imgs[i] = model.project(imgs[i], np.intersect1d(free, model.index("internal", closed)), closed)
+            return imgs
+
         for seg, (a, b) in (("A-I", ("A", "I")), ("I-B", ("I", "B"))):
             t0 = time.time()
             old = prior.get(seg, {})
-            def same(u, v):  # the same structure: equal up to whole turns of the torsions and setting angles
-                dv = np.asarray(u, dtype=float) - np.asarray(v, dtype=float)
-                per = np.concatenate([model.index("tors"), model.index("phi")])
-                dv[per] = wrap(dv[per])
-                return bool(np.abs(dv).max() < 1e-8)
-
+            if a not in ends or b not in ends:
+                if do(seg):
+                    log(f"   {seg}: the end points {a} and {b} are not both stored for this row; nothing done")
+                continue
             same_ends = "images" in old and len(old["images"]) == args.images and same(old["images"][0], ends[a]) and same(old["images"][-1], ends[b])
             if same_ends and old.get("converged"):
                 entry[seg] = old
-                top = max(top, eA + old["saddle"] * nm)
                 log(f"   {seg}: saddle {old['saddle']:+.3f} (from the stored run)")
                 continue
-            imgs = np.asarray(old["images"], dtype=float) if same_ends else band(model, ends[a], ends[b], args.images, free, closed)
+            if not do(seg):
+                continue
+            ck = checkpoint(seg)
+            start = "the stored band, continued" if same_ends else ("straight between the end points" if guide is None else f"the movers' internal coordinates from the band of {args.band_from!r}")
+            if ck is not None and ck.exists() and np.load(ck).shape == (args.images, model.n_var) and same(np.load(ck)[0], ends[a]) and same(np.load(ck)[-1], ends[b]):
+                imgs, start = np.load(ck), start + f"; resumed from {ck}"
+            elif same_ends:
+                imgs = np.asarray(old["images"], dtype=float)
+            else:
+                imgs = band(model, ends[a], ends[b], args.images, free, closed) if guide is None else guided(seg, a, b)
+            log(f"   {seg}: start: {start}")
+            if pool is None and args.workers > 1:
+                pool = mp.get_context("fork").Pool(args.workers)
 
             def progress(it, E, fm, climbing, seg=seg, t0=t0):
                 if it == 1 or it % 10 == 0:
                     log(f"      {seg} it {it:4d}: force {fm:8.4f}, top {(E.max() - eA) / nm:+8.4f}, climbing {climbing}, energies {np.round((E - eA) / nm, 3).tolist()}  ({time.time() - t0:.0f} s)")
 
+            def snapshot(it, X, ck=ck):
+                if ck is not None and it % 10 == 0:
+                    write_checkpoint(ck, X)
+
             res = MC.neb(evaluate, imgs, scale=sc, free=free, k_spring=args.k_spring, climb_after=40, climb_force=1.0, fmax=args.fmax, maxiter=args.maxiter,
-                         constraint=constraint, callback=progress)
+                         constraint=constraint, callback=progress, snapshot=snapshot)
+            if ck is not None:
+                write_checkpoint(ck, res.images)
             i_top = int(np.argmax(res.energies))
             st = model.state(res.images[i_top])
             dips = [i for i in range(1, args.images - 1) if res.energies[i] < min(res.energies[i - 1], res.energies[i + 1]) - 1e-3]
             entry[seg] = {"energies": ((res.energies - eA) / nm).tolist(), "saddle": float(res.energies.max() - eA) / nm, "saddle_image": i_top, "converged": bool(res.converged),
-                          "force_max": res.force_max, "iterations": res.iterations, "interior_minima": dips,
-                          "saddle_torsions_deg": wrap(st.tors[m0]).tolist(), "seconds": time.time() - t0, "images": res.images.tolist()}
-            top = max(top, float(res.energies.max()))
+                          "force_max": res.force_max, "fmax": args.fmax, "iterations": res.iterations + (old.get("iterations", 0) if same_ends else 0), "interior_minima": dips,
+                          "start": start, "saddle_torsions_deg": wrap(st.tors[m0]).tolist(), "seconds": time.time() - t0, "images": res.images.tolist()}
+            mine.add(seg)
             log(f"   {seg}: saddle {(res.energies.max() - eA) / nm:+.3f} at image {i_top}{'' if res.converged else ' (NOT converged)'}; force {res.force_max:.4f}; "
                 f"{res.iterations} it, {time.time() - t0:.0f} s{'; interior minima at ' + str(dips) if dips else ''}")
             save()
         if pool is not None:
             pool.close()
-        entry["barrier_forward"] = (top - eA) / nm
-        entry["barrier_back"] = (top - model.physical_energy(ends["B"])) / nm
-        entry["moving_chains"] = nm
-        log(f"   one-monomer step: barrier {entry['barrier_forward']:+.3f} ahead, {entry['barrier_back']:+.3f} back; B lies {entry['B']['energy']:+.3f} above A")
-        save()
+
+        def summarise(disk):  # the barriers, from the row as it now stands on disk (another process may have written the other band)
+            row = disk.get("rows", {}).get(key, {})
+            if all(k in row for k in ("A-I", "I-B", "B")):
+                top = max(0.0, float(row["A-I"]["saddle"]), float(row["I-B"]["saddle"]))
+                row.update(barrier_forward=top, barrier_back=top - float(row["B"]["energy"]), moving_chains=nm,
+                           bands_converged=bool(row["A-I"].get("converged") and row["I-B"].get("converged")))
+                log(f"   one-monomer step: barrier {top:+.3f} ahead, {top - float(row['B']['energy']):+.3f} back; B lies {float(row['B']['energy']):+.3f} above A"
+                    f"{'' if row['bands_converged'] else ' (a band is NOT converged)'}")
+        locked_update(out_path, summarise)
     log(f"written {out_path}")
 
 

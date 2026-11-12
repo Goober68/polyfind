@@ -14,6 +14,26 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The single-chain step in sixteen chains, 2026-11-12 (PI: "Work on the single-chain step in 16 chains"). IN PROGRESS:
+the numbers are not in; nothing below is a result of the step.** What is done: (1) SPEED. One energy and gradient of
+the 16 x 10 cell (1600 sites, 960 of them electrostatically active, 708 variables) cost 9.9 s, 9.3 of it in
+`Ewald.terms`: twelve general (960 x 14482) x (14482 x 960) products for the reciprocal part of the dipole tensor, and a
+dense pass over the 27 images of the real-space grid of which one holds any pair. Rewritten exactly
+(`src/polyfind/ewald.py`): the tensor's reciprocal part as six symmetric products on half of the k vectors (the
+summand is even in k; off-diagonal components from k_a k_b = [(k_a + k_b)^2 - k_a^2 - k_b^2] / 2), images that cannot
+hold a pair inside the cutoff skipped (`Ewald.prune_images`, a test's switch), cos(k.r) and sin(k.r) kept between the
+two calls of one induced-dipole evaluation (`Ewald._phases`). Every output is bit-for-bit what it was except the
+tensor (1e-13 of 1e2); the evaluation is 4.3 s (2.3 times faster), the same energy to the last digit. Tests:
+`tests/test_polarizable.py` (pruning on/off bitwise, every column of the tensor against the structure-factor path,
+the phase cache). NUMPY'S BLAS IS FOUR-THREADED HERE: set `OPENBLAS_NUM_THREADS=1` for jobs that run side by side.
+(2) JOB CONTROL in `examples/kink_migration.py`: `--only A|I|B|A-I|I-B` (one piece of a row per process, each writes
+its own fields; A is the supercell check of the kinked crystal), `--seed-from ROW` (I and B started from another
+row's, here the rigid-chain-neighbour row), `--band-from ROW` (the mover's internal coordinates of each image from
+another row's band), `--end-maxiter`, `--checkpoints DIR` (lowest point seen so far, every ten evaluations; bands
+every ten iterations; resumed if there). `MixedModel.relax/descend(progress=)`, `neb(snapshot=)`.
+(3) RUNNING (detached, logs in the session scratch, checkpoints in `docs/predictions/running/`, to be removed when the
+row is complete): the row `vdf10@0 4x2 mover 0 ahead host flexible`, pieces A, I, B, each one process.
+
 **The single-chain barrier with the lattice responding, 2026-11-10 (later; PI: "Work on the relaxed single-chain
 barrier").** `examples/chain_slide.py` (tests `tests/test_chain_slide.py`; data `docs/predictions/chain_slide_belt4.json`;
 tables in `kink_summary_belt4.md`; text in `docs/CANDIDATE_MATERIALS.md` 8.1, the block after the registry table). One

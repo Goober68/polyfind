@@ -564,12 +564,13 @@ class MixedModel:
         return bounds
 
     def descend(self, x0, free=None, closed=None, steps: int = 200, max_step: float = 0.1, gtol: float = 1.5,
-                angle_window: float | None = 8.0, cell_window=(0.6, 1.6), c_window=(0.85, 1.15)):
+                angle_window: float | None = 8.0, cell_window=(0.6, 1.6), c_window=(0.85, 1.15), progress=None):
         """Damped descent (FIRE) on the closure surface of ``closed``, no step longer than
         ``max_step`` scaled units in any variable: what takes a strained start down to where a
         quasi-Newton method is safe, without leaving the basin the start is in.  Stops when the
         largest component of the gradient along the surface (kcal/mol per scaled unit) is under
-        ``gtol`` or after ``steps`` evaluations.  Returns ``(x, largest gradient component, evaluations)``."""
+        ``gtol`` or after ``steps`` evaluations.  ``progress(evaluation, energy, x)``, if given, is
+        called after every evaluation.  Returns ``(x, largest gradient component, evaluations)``."""
         x0 = np.asarray(x0, dtype=float).ravel().copy()
         free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
         closed = [] if closed is None else [int(s) for s in closed]
@@ -589,7 +590,9 @@ class MixedModel:
 
         for it in range(1, steps + 1):
             x = full(y)
-            _, g = self.value_and_grad(x)
+            e, g = self.value_and_grad(x)
+            if progress is not None:
+                progress(it, float(e), x)
             f = -g[free] * sc
             f[((y <= lo) & (f < 0.0)) | ((y >= hi) & (f > 0.0))] = 0.0  # a variable at its bound does not push through it
             if closed:
@@ -625,7 +628,7 @@ class MixedModel:
 
     def relax(self, x0, free=None, closed=None, ftol: float = 1e-9, maxiter: int = 400, angle_window: float | None = 8.0,
               first_step: float | None = 0.3, presteps: int = 300, cell_window=(0.6, 1.6), c_window=(0.85, 1.15),
-              trust: float | None = None):
+              trust: float | None = None, progress=None):
         """Constrained minimisation (SLSQP) over the ``free`` variables (indices; default all), in
         the scaled variables of :meth:`scale`, with the closure of the chains in ``closed`` held as
         equality constraints.  ``closed`` defaults to every chain with a free internal coordinate,
@@ -652,7 +655,12 @@ class MixedModel:
         every free variable to that distance from where the optimiser starts, so one call cannot
         move a torsion by more than ``10 * trust`` degrees or a chain by more than ``trust`` A;
         ``info["at_trust_bound"]`` says whether a variable ended on the box.
-        :meth:`relax_in_basin` repeats such calls until none does."""
+        :meth:`relax_in_basin` repeats such calls until none does.
+
+        ``progress(stage, evaluation, energy, x)``, if given, is called after every energy
+        evaluation, ``stage`` being ``"descent"`` or ``"slsqp"``: a log line and a checkpoint for a
+        relaxation that runs for hours (a cell of sixteen ten-monomer chains is seconds per
+        evaluation and hundreds of evaluations)."""
         x0 = np.asarray(x0, dtype=float).ravel().copy()
         free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
         if closed is None:
@@ -664,7 +672,8 @@ class MixedModel:
         pre = 0
         if first_step is not None and presteps > 0:
             xd, _, pre = self.descend(x0, free, closed, steps=presteps, max_step=first_step / 3.0, gtol=5.0 * first_step,
-                                      angle_window=angle_window, cell_window=cell_window, c_window=c_window)
+                                      angle_window=angle_window, cell_window=cell_window, c_window=c_window,
+                                      progress=None if progress is None else (lambda k, e, x: progress("descent", k, e, x)))
             start = xd
         else:
             start = x0
@@ -679,8 +688,11 @@ class MixedModel:
         def fg(y):
             key = y.tobytes()
             if cache.get("key") != key:
-                e, g = self.value_and_grad(full(y))
-                cache.update(key=key, e=e, g=g[free] * sc)
+                x = full(y)
+                e, g = self.value_and_grad(x)
+                cache.update(key=key, e=e, g=g[free] * sc, n=cache.get("n", 0) + 1)
+                if progress is not None:
+                    progress("slsqp", cache["n"], float(e), x)
             return cache["e"], cache["g"]
 
         cons = []
@@ -809,7 +821,7 @@ class NEBResult:
 
 def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_after: int = 30,
         fmax: float = 0.05, maxiter: int = 300, max_step: float = 0.15, callback=None,
-        constraint=None, constraint_tol: float = 1e-8, climb_force: float | None = None) -> NEBResult:
+        constraint=None, constraint_tol: float = 1e-8, climb_force: float | None = None, snapshot=None) -> NEBResult:
     """Nudged elastic band with the improved tangent and a climbing image, relaxed by FIRE.
 
     ``evaluate(X)`` takes the moving images ``(m, n_var)`` and returns ``(energies (m,), gradients
@@ -830,6 +842,10 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
     tangent space at each image, and after every step each image is returned to the surface by
     Newton steps along the constraint normals (the smallest move in the scaled metric).  The end
     points and the initial images must lie on it already.
+
+    ``callback(iteration, energies, force_max, climbing)`` is called once per iteration, and
+    ``snapshot(iteration, images)`` with the whole band as it stands (end points included): what a
+    caller writes to disk to resume a band that runs for hours.
     """
     X = np.array(images, dtype=float)
     M, nv = X.shape
@@ -906,6 +922,10 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
         history.append({"iteration": it, "force_max": fm, "barrier": float(E.max() - E[0]), "climbing": climbing})
         if callback is not None:
             callback(it, E.copy(), fm, climbing)
+        if snapshot is not None:
+            Xs = X.copy()
+            Xs[:, free] = Y * scf
+            snapshot(it, Xs)
         if fm < fmax and (climbing > 0 or climb_after >= maxiter):
             converged = True
             break

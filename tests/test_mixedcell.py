@@ -152,6 +152,25 @@ def test_constrained_relaxation_lowers_the_energy_on_the_closure_surface():
     assert m.physical_energy(held) < e0
 
 
+def test_a_relaxation_reports_every_evaluation_to_its_progress_hook():
+    """``progress(stage, evaluation, energy, x)``: the descent's steps, then the optimiser's own
+    evaluations counted from one, each with the energy at the point it was given; the result is
+    the one the same relaxation gives without a hook."""
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    seen = []
+    x1, info = m.relax(x, maxiter=8, presteps=5, progress=lambda stage, k, e, y: seen.append((stage, k, e, y.copy())))
+    stages = [s[0] for s in seen]
+    n_d = stages.count("descent")
+    assert 1 <= n_d <= 5 and stages == ["descent"] * n_d + ["slsqp"] * (len(seen) - n_d) and len(seen) > n_d
+    assert [s[1] for s in seen[:n_d]] == list(range(1, n_d + 1))
+    assert [s[1] for s in seen[n_d:]] == list(range(1, len(seen) - n_d + 1))
+    assert info["evaluations"] == pytest.approx(len(seen), abs=2)  # the optimiser may ask for a point twice; the hook sees new points
+    for stage, k, e, y in (seen[0], seen[-1]):
+        assert e == pytest.approx(m.value_and_grad(y)[0], abs=1e-9) and y.shape == x.shape
+    x2, _ = m.relax(x, maxiter=8, presteps=5)
+    np.testing.assert_array_equal(x1, x2)
+
+
 def test_penalty_terms_are_off_by_default_and_available():
     m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
     x[m.index("tors")] += 3.0
@@ -205,6 +224,26 @@ def test_neb_finds_the_muller_brown_saddle():
     assert res.energies.max() == pytest.approx(-40.6648, abs=0.01)  # the saddle between them
     np.testing.assert_allclose(res.images[res.climbing], [-0.8220, 0.6243], atol=2e-3)
     np.testing.assert_array_equal(res.images[[0, -1]], images[[0, -1]])
+
+
+def test_neb_hands_the_whole_band_to_its_snapshot_hook():
+    """``snapshot(iteration, images)`` gets the band as it stands at every iteration, end points
+    included and fixed; the last one is the band that is returned, and a band restarted from a
+    snapshot goes on from there."""
+    a, b = np.array([-0.5582236, 1.4417258]), np.array([-0.0500108, 0.4666941])
+    images = np.linspace(a, b, 9)
+    shots = []
+    res = MC.neb(_muller_brown, images, k_spring=200.0, climb_after=40, fmax=0.05, maxiter=60, max_step=0.02,
+                 snapshot=lambda it, X: shots.append((it, X.copy())))
+    assert [s[0] for s in shots] == list(range(1, res.iterations + 1))
+    for _, X in shots:
+        assert X.shape == images.shape
+        np.testing.assert_array_equal(X[[0, -1]], images[[0, -1]])
+    assert not res.converged
+    more = MC.neb(_muller_brown, shots[-1][1], k_spring=200.0, climb_after=40, fmax=0.05, maxiter=2000, max_step=0.02)
+    assert more.converged and more.energies.max() == pytest.approx(-40.6648, abs=0.01)
+    plain = MC.neb(_muller_brown, images, k_spring=200.0, climb_after=40, fmax=0.05, maxiter=60, max_step=0.02)
+    np.testing.assert_array_equal(plain.images, res.images)  # the hook changes nothing
 
 
 def test_neb_on_a_constraint_surface_is_the_neb_of_the_reduced_problem():

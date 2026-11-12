@@ -249,6 +249,8 @@ class Ewald:
         self.chunk_elems = int(chunk_elems)
         self._real_grid: dict = {}
         self._recip_grid: dict = {}
+        self._phase_cache: tuple | None = None
+        self.prune_images = True  # False builds every image of the grid, the ones out of reach too (a test's switch)
 
     def describe(self) -> str:
         return (f"Ewald(boundary={self.boundary}, alpha={self.alpha:.4f} 1/A, rc={self.rc:.3f} A, "
@@ -264,6 +266,29 @@ class Ewald:
             g = np.stack(np.meshgrid(*rngs, indexing="ij"), axis=-1).reshape(-1, 3)
             cache[key] = g
         return g
+
+    def _phases(self, X, k):
+        """``cos(k.r)`` and ``sin(k.r)``, ``(N, K)`` each, kept from the last call.
+
+        An induced-dipole evaluation calls :meth:`terms` twice on one geometry (the field and the
+        tensor for the solve, then the gradient at the solved dipoles), and on a large cell these
+        two arrays are a tenth of each call.  The arrays of the last geometry are returned when
+        the coordinates and the vectors are the same numbers, element for element; they are
+        read-only so that no caller can change what the next call gets.  Small problems are not
+        kept: there is nothing to save and nothing worth holding.
+        """
+        hit = self._phase_cache
+        if hit is not None and hit[0].shape == X.shape and hit[1].shape == k.shape and np.array_equal(hit[0], X) and np.array_equal(hit[1], k):
+            return hit[2], hit[3]
+        kr = X @ k.T  # (N, K)
+        cos, sin = np.cos(kr), np.sin(kr)
+        if kr.size >= 1_000_000:
+            cos.setflags(write=False)
+            sin.setflags(write=False)
+            self._phase_cache = (X.copy(), k.copy(), cos, sin)
+        else:
+            self._phase_cache = None
+        return cos, sin
 
     # ------------------------------------------------------------------ the sum
     def terms(self, coords, charges, lat, grad: bool = False, charge_grad: bool = False,
@@ -362,8 +387,21 @@ class Ewald:
         def scatter_vec(idx, W):
             return np.stack([np.bincount(idx, weights=W[:, c], minlength=N) for c in range(3)], axis=1)
 
+        # An image whose shift alone puts every pair beyond the cutoff is not built: in the
+        # minimum-image frame a pair's fractional separation along axis i is within 1/2 of the
+        # image integer, so its distance is at least (|m_i| - 1/2) times the cell's width along
+        # that axis.  In a cell wider than twice the cutoff that leaves the one image m = 0 of
+        # the 27 of the grid (a sixteen-chain cell: 0.65 s of 0.68 spent on images that held
+        # nothing).  The images that are kept are visited in the grid's order and in its chunks,
+        # so every sum below runs over the same entries in the same order as before.
+        can_hold = np.all((np.abs(m_all) - 0.5) * widths[None, :] < self.rc * (1.0 + 1e-9), axis=1)
+        if not self.prune_images:
+            can_hold[:] = True
         for t in range(0, m_all.shape[0], step):
             m = m_all[t : t + step]
+            m = m[can_hold[t : t + step]]
+            if m.shape[0] == 0:
+                continue
             D = base[None] + (m @ h)[:, None, None, :]  # (I, N, N, 3)
             r2 = np.einsum("mijc,mijc->mij", D, D)
             mi, ii, jj = np.nonzero((r2 < rc2) & (r2 > 1e-12))
@@ -477,9 +515,9 @@ class Ewald:
         k2 = np.einsum("kc,kc->k", k, k)
         keep = (k2 > 1e-12) & (k2 <= self.kmax * self.kmax)
         k, k2 = k[keep], k2[keep]
+        mkept = mk[keep] if tensor else None
         Ak = np.exp(-k2 / (4.0 * self.alpha ** 2)) / k2
-        kr = X @ k.T  # (N, K)
-        cos, sin = np.cos(kr), np.sin(kr)
+        cos, sin = self._phases(X, k)  # (N, K) each
         ck, sk = q @ cos, q @ sin
         pre = 2.0 * np.pi / V * self.pref
         if has_p:
@@ -515,12 +553,33 @@ class Ewald:
         if field:
             Fq -= 2.0 * pre * ((Ak[None, :] * (sk[None, :] * cos - ck[None, :] * sin)) @ k)
         if tensor:
-            # T_jl,ab -= 2 pre sum_k A_k k_a k_b cos(k.(r_j - r_l)): six (N, K) @ (K, N) products,
-            # one per unique (a, b), instead of a three-operand einsum over (N, N, K, 3, 3)
+            # T_jl,ab -= 2 pre sum_k A_k k_a k_b cos(k.(r_j - r_l)).  The summand is even in k, so
+            # the sum runs over one of each pair (k, -k) at twice the weight; and with
+            # M = [cos | sin] on that half, S(v) = sum_k 2 A_k (v.k)^2 cos(k.(r_j - r_l)) is the one
+            # symmetric product (M s)(M s)^T with s = sqrt(2 A_k) |v.k|, which the BLAS forms at
+            # half the cost of a general one.  The diagonal components are S(e_a) and the others
+            # follow from k_a k_b = [(k_a + k_b)^2 - k_a^2 - k_b^2] / 2: six symmetric products of
+            # width K where there were twelve general ones (cos and sin apart, k and -k both), a
+            # quarter of the arithmetic.  On a sixteen-chain cell (960 sites, 14 482 vectors) this
+            # was half of the whole energy evaluation (measured 2026-11-12: 4.8 s of 10.2).
+            half = (mkept[:, 0] > 0) | ((mkept[:, 0] == 0) & ((mkept[:, 1] > 0) | ((mkept[:, 1] == 0) & (mkept[:, 2] > 0))))
+            kh = k[half]
+            Mh = np.concatenate([cos[:, half], sin[:, half]], axis=1)  # (N, K)
+            Mw = np.empty_like(Mh)
+            root = np.sqrt(2.0 * Ak[half])
+            sym = {}
+            for v in ((1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (1, 0, 1), (0, 1, 1)):
+                sv = root * (kh @ np.array(v, dtype=float))
+                np.multiply(Mh, np.concatenate([sv, sv])[None, :], out=Mw)
+                sym[v] = Mw @ Mw.T
+            del Mh, Mw
             for a in range(3):
                 for b in range(a, 3):
-                    w = Ak * k[:, a] * k[:, b]  # (K,)
-                    tab = (cos * w[None, :]) @ cos.T + (sin * w[None, :]) @ sin.T
+                    ea, eb = tuple(int(c == a) for c in range(3)), tuple(int(c == b) for c in range(3))
+                    if a == b:
+                        tab = sym[ea]
+                    else:
+                        tab = 0.5 * (sym[tuple(x + y for x, y in zip(ea, eb))] - sym[ea] - sym[eb])
                     Tm[:, :, a, b] -= 2.0 * pre * tab
                     if b != a:
                         Tm[:, :, b, a] -= 2.0 * pre * tab

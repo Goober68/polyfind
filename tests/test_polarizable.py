@@ -103,6 +103,98 @@ def test_charge_dipole_gradients_against_central_differences(boundary):
     assert t.tensor == pytest.approx(t.tensor.transpose(1, 0, 3, 2), abs=1e-10)
 
 
+def _same_terms(a, b):
+    assert (a.real, a.recip, a.self_, a.background, a.surface) == (b.real, b.recip, b.self_, b.background, b.surface)
+    for name in ("grad_coords", "grad_lattice", "grad_charges", "grad_dipoles", "field", "tensor"):
+        u, v = getattr(a, name), getattr(b, name)
+        assert (u is None) == (v is None)
+        if u is not None:
+            np.testing.assert_array_equal(u, v, err_msg=name)
+
+
+@pytest.mark.parametrize("wide", [False, True])
+def test_images_out_of_reach_are_skipped_without_changing_a_bit(wide):
+    """The real-space sum does not build an image whose shift alone puts every pair beyond the
+    cutoff.  In a narrow skewed cell with atoms outside it that drops the outer shell of the
+    grid; in a cell wider than twice the cutoff it leaves the one image m = 0.  Either way every
+    number is the one the full grid gives, to the last bit."""
+    rng = np.random.default_rng(11)
+    n = 9
+    h = np.diag([19.0, 17.5, 21.0]) if wide else np.array([[5.1, 0.3, 0.0], [-1.2, 8.3, 0.4], [0.2, -0.6, 2.7]])
+    X = rng.uniform(-0.7, 1.6, (n, 3)) @ h
+    q = rng.normal(size=n)
+    q -= q.mean()
+    p = 0.2 * rng.normal(size=(n, 3))
+    sc = np.full((n, n), 1.3)
+    kw = dict(dipoles=p, thole=Thole(), thole_scale=sc, grad=True, charge_grad=True, dipole_grad=True, field=True, tensor=True)
+    out = []
+    for prune in (True, False):
+        ew = Ewald(8.0, EwaldSpec(charge_damping=4.0))
+        ew.prune_images = prune
+        out.append((ew.terms(X, q, h, **kw), ew.terms(X, q, h, grad=True, charge_grad=True)))
+    for a, b in zip(*out):
+        _same_terms(a, b)
+    # and the grid is the same: the images are skipped, not removed from the count
+    assert out[0][0].n_image == out[1][0].n_image == (27 if wide else 7 * 5 * 9)
+
+
+@pytest.mark.parametrize("thole", [None, Thole()])
+def test_the_whole_dipole_tensor_is_the_field_of_unit_dipoles(thole):
+    """Every column of the tensor against the path that never builds it: with a unit dipole on one
+    site along one axis, ``dE/dp`` at the other sites is minus the field of that dipole.  The
+    reciprocal part of the tensor is summed as symmetric products over half of the k vectors and
+    its off-diagonal components come from a difference of three of them; the structure-factor
+    path used here sums every k, component by component."""
+    X, q, _, h, s = _random_cell(seed=5, n=6)
+    ew = Ewald(9.0, EwaldSpec(accuracy=1e-10))
+    kw = dict(thole=thole, thole_scale=None if thole is None else s)
+    zero = np.zeros_like(X)
+    Tm = ew.terms(X, zero[:, 0], h, tensor=True, **kw).tensor
+    assert Tm == pytest.approx(Tm.transpose(1, 0, 3, 2), abs=1e-11)
+    built = np.zeros_like(Tm)
+    for j in range(X.shape[0]):
+        for b in range(3):
+            p = zero.copy()
+            p[j, b] = 1.0
+            built[:, j, :, b] = -ew.terms(X, zero[:, 0], h, dipoles=p, dipole_grad=True, **kw).grad_dipoles
+    assert Tm == pytest.approx(built, abs=1e-10)
+
+
+def test_the_phase_arrays_are_kept_for_the_same_geometry_and_only_for_it():
+    """cos(k.r) and sin(k.r) of a large problem are kept between calls (an induced-dipole
+    evaluation makes two on one geometry).  A second call gives the first call's numbers, a moved
+    atom or a strained cell gives what a fresh sum gives, and a caller changing its own array in
+    place afterwards does not reach what was kept."""
+    rng = np.random.default_rng(2)
+    n = 90
+    h = np.diag([18.0, 19.0, 20.0])
+    X = rng.uniform(0, 1, (n, 3)) @ h
+    q = rng.normal(size=n)
+    q -= q.mean()
+    ew = Ewald(8.0)
+    first = ew.terms(X, q, h, grad=True)
+    assert ew._phase_cache is not None and first.n_kvec * n >= 1_000_000
+    kept = ew._phase_cache[2]
+    again = ew.terms(X, q, h, grad=True)
+    assert ew._phase_cache[2] is kept  # reused, not rebuilt
+    _same_terms(first, again)
+    with pytest.raises(ValueError):
+        kept[0, 0] = 0.0  # read-only: a caller cannot change what the next call gets
+    Y = X.copy()
+    Y[3] += [0.3, -0.2, 0.1]
+    _same_terms(ew.terms(Y, q, h, grad=True), Ewald(8.0).terms(Y, q, h, grad=True))
+    h2 = h * 1.01
+    _same_terms(ew.terms(Y, q, h2, grad=True), Ewald(8.0).terms(Y, q, h2, grad=True))
+    X0 = X.copy()
+    ew.terms(X, q, h)
+    X[5] += 0.4  # the caller's array, changed in place after the call
+    _same_terms(ew.terms(X, q, h, grad=True), Ewald(8.0).terms(X, q, h, grad=True))
+    _same_terms(ew.terms(X0, q, h, grad=True), first)
+    small = Ewald(8.0)
+    small.terms(X[:5], q[:5] - q[:5].mean(), h)
+    assert small._phase_cache is None  # nothing worth holding
+
+
 def test_charge_only_path_is_untouched():
     """Asking for nothing dipole-related gives the same five terms, expression for expression."""
     X, q, _, h, _ = _random_cell()
