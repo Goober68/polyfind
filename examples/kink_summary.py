@@ -285,6 +285,23 @@ def main():
             for sh in r["shells"]:
                 md.append(f"| | {sh['distance_A']:.2f} A | {sh['chains']} | {sh['move_A']:.2f} A | {sh['turn_deg']:.1f} deg | {sh['axial_A']:+.2f} A | {sh['torsion_deg']:.1f} deg |")
 
+    # --- two chains ahead together --------------------------------------------------------------------
+    together = [e for e in mig.get("rows", {}).values() if e.get("row") == "vdf10" and "," in str(e.get("mover")) and e.get("host") == "flexible" and "B" in e
+                and e.get("direction") == "ahead" and tuple(e["supercell"]) in single and "flexible" in single[tuple(e["supercell"])]]
+    if together:
+        md += ["", "**Two chains one monomer ahead together** (end state only; kcal/mol against the sheet, neighbours flexible, cell fixed)", "",
+               "| cell | the two chains, and how far apart | B for the two | two separate single steps | gained by stepping side by side | per chain |", "|---|---|---|---|---|---|"]
+        for e in sorted(together, key=lambda e: (e["chains"], str(e["mover"]))):
+            one = single[tuple(e["supercell"])]["flexible"]["B"]["energy"]
+            nc, movers = int(e["chains"]), [int(v) for v in str(e["mover"]).split(",")]
+            xA = np.asarray(e["kinked_crystal"]["state"], dtype=float)
+            lat = np.array([[xA[0], 0.0], [xA[1] * np.cos(np.deg2rad(xA[2])), xA[1] * np.sin(np.deg2rad(xA[2]))]])
+            pl = xA[4:4 + 4 * nc].reshape(nc, 4)[:, :2]
+            dd = pl[movers[1]] - pl[movers[0]]
+            dist = float(np.linalg.norm((dd - np.round(dd)) @ lat))
+            both = e["B"]["energy"] * len(movers)
+            md.append(f"| {e['supercell'][0]}x{e['supercell'][1]} ({nc} chains) | {e['mover']}, {dist:.2f} A | {both:+.2f} | {len(movers) * one:+.2f} | {len(movers) * one - both:+.2f} | {e['B']['energy']:+.2f} |")
+
     # --- the sheet along the sequence -----------------------------------------------------------------
     scans = {k: v for k, v in sit.get("rows", {}).items() if not v.get("fixed_cell")}
     if scans:

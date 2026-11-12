@@ -121,6 +121,8 @@ def main():
     ap.add_argument("--fmax", type=float, default=0.1, help="band convergence, kcal/mol per scaled unit (10 degrees of torsion, 1 A)")
     ap.add_argument("--maxiter", type=int, default=400)
     ap.add_argument("--k-spring", type=float, default=1.0)
+    ap.add_argument("--climb-after", type=int, default=40, help="band iterations before the climbing image may be switched on (it also waits for the band's largest force "
+                    "to fall under 1); 0 when a band that was already climbing is continued")
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--angle-window", type=float, default=8.0)
@@ -416,15 +418,18 @@ def main():
                     log(f"   {seg}: the end points {a} and {b} are not both stored for this row; nothing done")
                 continue
             same_ends = "images" in old and len(old["images"]) == args.images and same(old["images"][0], ends[a]) and same(old["images"][-1], ends[b])
-            if same_ends and old.get("converged"):
+            if same_ends and old.get("converged") and old.get("fmax", prior.get("fmax", args.fmax)) <= args.fmax:  # a tighter --fmax continues a stored band
                 entry[seg] = old
                 log(f"   {seg}: saddle {old['saddle']:+.3f} (from the stored run)")
                 continue
             if not do(seg):
                 continue
             ck = checkpoint(seg)
-            start = "the stored band, continued" if same_ends else ("straight between the end points" if guide is None else f"the movers' internal coordinates from the band of {args.band_from!r}")
-            if ck is not None and ck.exists() and np.load(ck).shape == (args.images, model.n_var) and same(np.load(ck)[0], ends[a]) and same(np.load(ck)[-1], ends[b]):
+            start = (f"the stored band (saddle {old['saddle']:+.4f} at force {old['force_max']:.3f} after {old.get('iterations', 0)} iterations), continued"
+                     if same_ends else ("straight between the end points" if guide is None else f"the movers' internal coordinates from the band of {args.band_from!r}"))
+            if same_ends and old.get("converged"):  # a finished band continued to a tighter force: its own images, not an older checkpoint
+                imgs = np.asarray(old["images"], dtype=float)
+            elif ck is not None and ck.exists() and np.load(ck).shape == (args.images, model.n_var) and same(np.load(ck)[0], ends[a]) and same(np.load(ck)[-1], ends[b]):
                 imgs, start = np.load(ck), start + f"; resumed from {ck}"
             elif same_ends:
                 imgs = np.asarray(old["images"], dtype=float)
@@ -442,7 +447,7 @@ def main():
                 if ck is not None and it % 10 == 0:
                     write_checkpoint(ck, X)
 
-            res = MC.neb(evaluate, imgs, scale=sc, free=free, k_spring=args.k_spring, climb_after=40, climb_force=1.0, fmax=args.fmax, maxiter=args.maxiter,
+            res = MC.neb(evaluate, imgs, scale=sc, free=free, k_spring=args.k_spring, climb_after=args.climb_after, climb_force=1.0, fmax=args.fmax, maxiter=args.maxiter,
                          constraint=constraint, callback=progress, snapshot=snapshot)
             if ck is not None:
                 write_checkpoint(ck, res.images)
@@ -451,7 +456,9 @@ def main():
             dips = [i for i in range(1, args.images - 1) if res.energies[i] < min(res.energies[i - 1], res.energies[i + 1]) - 1e-3]
             entry[seg] = {"energies": ((res.energies - eA) / nm).tolist(), "saddle": float(res.energies.max() - eA) / nm, "saddle_image": i_top, "converged": bool(res.converged),
                           "force_max": res.force_max, "fmax": args.fmax, "iterations": res.iterations + (old.get("iterations", 0) if same_ends else 0), "interior_minima": dips,
-                          "start": start, "saddle_torsions_deg": wrap(st.tors[m0]).tolist(), "seconds": time.time() - t0, "images": res.images.tolist()}
+                          "start": old.get("start", start) if same_ends else start, "saddle_history": (old.get("saddle_history", [[old.get("iterations", 0), old["saddle"], old["force_max"]]]) if same_ends else [])
+                          + [[res.iterations + (old.get("iterations", 0) if same_ends else 0), float(res.energies.max() - eA) / nm, res.force_max]],
+                          "saddle_torsions_deg": wrap(st.tors[m0]).tolist(), "seconds": time.time() - t0, "images": res.images.tolist()}
             mine.add(seg)
             log(f"   {seg}: saddle {(res.energies.max() - eA) / nm:+.3f} at image {i_top}{'' if res.converged else ' (NOT converged)'}; force {res.force_max:.4f}; "
                 f"{res.iterations} it, {time.time() - t0:.0f} s{'; interior minima at ' + str(dips) if dips else ''}")
