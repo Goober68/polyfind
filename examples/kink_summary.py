@@ -38,6 +38,39 @@ def tilt_of(polymer, d: dict) -> float:
     return float(MC.tilt_relaxation(model, x)[0])
 
 
+def step_response(row: dict, name: str) -> dict:
+    """How each chain of a step row's cell sits in the state ``name`` (I or B) against the kinked
+    crystal: pure geometry from the stored state vectors.  The lateral and axial displacements are
+    taken against the median of the chains that do not move their kink pair (one chain of the cell
+    is held, so the raw numbers carry that chain's share).  Returns the mover's own record and one
+    record per shell of neighbours (chains at the same distance from the mover to 0.2 A)."""
+    wrap = lambda a: (np.asarray(a, dtype=float) + 180.0) % 360.0 - 180.0  # noqa: E731
+    nc, P = int(row["chains"]), 2 * int(row["monomers_per_chain"])
+    xA, x = np.asarray(row["kinked_crystal"]["state"], dtype=float), np.asarray(row[name]["state"], dtype=float)
+    A, B, gam = xA[:3]
+    lat = np.array([[A, 0.0], [B * np.cos(np.deg2rad(gam)), B * np.sin(np.deg2rad(gam))]])
+    pA, px = xA[4:4 + 4 * nc].reshape(nc, 4), x[4:4 + 4 * nc].reshape(nc, 4)
+    iA, ix = xA[4 + 4 * nc:].reshape(nc, -1), x[4 + 4 * nc:].reshape(nc, -1)
+    m = int(row["mover"])
+    d = pA[:, :2] - pA[m, :2]
+    dist = np.linalg.norm((d - np.round(d)) @ lat, axis=1)
+    others = [s for s in range(nc) if s != m]
+    shift = (px[:, :2] - pA[:, :2]) @ lat
+    shift -= np.median(shift[others], axis=0)
+    axial = px[:, 3] - pA[:, 3]
+    axial = axial - np.median(axial[others])
+    turn = wrap(px[:, 2] - pA[:, 2])
+    dt = np.abs(wrap(ix[:, :P] - iA[:, :P]))
+    one = lambda s: {"move_A": float(np.linalg.norm(shift[s])), "turn_deg": float(turn[s]), "axial_A": float(axial[s]), "torsion_deg": float(dt[s].max())}  # noqa: E731
+    shells: dict = {}
+    for s in sorted(others, key=lambda s: dist[s]):
+        key = next((k for k in shells if abs(k - dist[s]) < 0.2), float(dist[s]))
+        shells.setdefault(key, []).append(one(s))
+    return {"mover": one(m), "mover_gauche_deg": [float(v) for v in wrap(ix[m, :P]) if abs(v) < 120.0],
+            "shells": [{"distance_A": k, "chains": len(v), "move_A": max(c["move_A"] for c in v), "turn_deg": max(abs(c["turn_deg"]) for c in v),
+                        "axial_A": max((c["axial_A"] for c in v), key=abs), "torsion_deg": max(c["torsion_deg"] for c in v)} for k, v in shells.items()]}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--dilute", default="docs/predictions/dilute_kink_belt4.json")
@@ -212,10 +245,44 @@ def main():
     ends = [(k, e) for k, e in sorted(mig.get("rows", {}).items(), key=lambda kv: (kv[1].get("row", ""), kv[1].get("host", ""), kv[1].get("chains", 0)))
             if "barrier_forward" not in e and "I" in e and "B" in e and str(e.get("mover")) != "all"]
     if ends:
-        md += ["", "End points only (no band): the same step with the neighbours as rigid chains, in cells of two sizes", "",
+        md += ["", "End points only (no band)", "",
                "| sequence | cell, moving chains | host | wide kink I | B (one monomer ahead) |", "|---|---|---|---|---|"]
         for key, e in ends:
             md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, 1 of {e['chains']} | {e['host']} | {e['I']['energy']:+.2f} | {e['B']['energy']:+.2f} |")
+
+    # --- the single-chain step against the size of the cell ------------------------------------------
+    single = {}
+    for key, e in mig.get("rows", {}).items():
+        if e.get("row") == "vdf10" and str(e.get("mover")) == "0" and e.get("direction") == "ahead" and e.get("kink_offset_bonds") == 0 and not e.get("kink_mirrored") and "B" in e and "I" in e:
+            single.setdefault(tuple(e["supercell"]), {})[e["host"]] = e
+    if single:
+        def band(e):
+            if e is None or "A-I" not in e or "I-B" not in e:
+                return "- | - | -"
+            unc = "" if e["A-I"].get("converged") and e["I-B"].get("converged") else f" (forces {e['A-I']['force_max']:.2f}, {e['I-B']['force_max']:.2f})"
+            top = max(0.0, e["A-I"]["saddle"], e["I-B"]["saddle"])
+            return f"{e['A-I']['saddle']:.2f} | {e['I-B']['saddle']:.2f} | {top:.2f} / {top - e['B']['energy']:.2f}{unc}"
+
+        md += ["", "**The single-chain step against the size of the cell** (PVDF, chain 0's kink pair one monomer ahead of every other chain's; kcal/mol against the sheet; cell fixed)", "",
+               "| cell (a x b tiling of the two-chain cell) | one chain in | neighbours rigid chains: I, B | neighbours flexible: I | saddle A-I | saddle I-B | barrier ahead / back | B |",
+               "|---|---|---|---|---|---|---|---|"]
+        for cell in sorted(single, key=lambda c: (2 * c[0] * c[1], -c[0])):
+            fl, bd = single[cell].get("flexible"), single[cell].get("bodies")
+            n = 2 * cell[0] * cell[1]
+            note = " (its a-neighbours move too: a stack)" if cell == (1, 1) else ""
+            md.append(f"| {cell[0]}x{cell[1]} | {n}{note} | {f'{bd['I']['energy']:+.2f}, {bd['B']['energy']:+.2f}' if bd else '-'} | {f'{fl['I']['energy']:+.2f}' if fl else '-'} | "
+                      f"{band(fl)} | {f'{fl['B']['energy']:+.3f}' if fl else '-'} |")
+        big = max((c for c in single if "flexible" in single[c]), key=lambda c: c[0] * c[1])
+        e = single[big]["flexible"]
+        md += ["", f"How the lattice answers in the {big[0]}x{big[1]} cell ({e['chains']} chains, neighbours flexible): displacements against the kinked crystal, "
+               "relative to the median of the chains whose kink pair stays", "",
+               "| state | chain or shell (distance from the moving chain) | chains | moves aside by, at most | turns, at most | shifts along the axis, at most | largest torsion change |", "|---|---|---|---|---|---|---|"]
+        for name, label in (("I", "wide kink I"), ("B", "B, one monomer ahead")):
+            r = step_response(e, name)
+            g = ", ".join(f"{v:+.0f}" for v in r["mover_gauche_deg"])
+            md.append(f"| {label} | the moving chain (gauche bonds at {g} deg) | 1 | {r['mover']['move_A']:.2f} A | {r['mover']['turn_deg']:+.1f} deg | {r['mover']['axial_A']:+.2f} A | - |")
+            for sh in r["shells"]:
+                md.append(f"| | {sh['distance_A']:.2f} A | {sh['chains']} | {sh['move_A']:.2f} A | {sh['turn_deg']:.1f} deg | {sh['axial_A']:+.2f} A | {sh['torsion_deg']:.1f} deg |")
 
     # --- the sheet along the sequence -----------------------------------------------------------------
     scans = {k: v for k, v in sit.get("rows", {}).items() if not v.get("fixed_cell")}

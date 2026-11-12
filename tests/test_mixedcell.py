@@ -171,6 +171,31 @@ def test_a_relaxation_reports_every_evaluation_to_its_progress_hook():
     np.testing.assert_array_equal(x1, x2)
 
 
+def test_a_relaxation_says_how_stationary_it_is_and_can_stop_when_the_energy_stalls():
+    """``info["gradient_max"]`` is the largest component of the gradient along the closure surface:
+    small at a converged result, large at one cut short.  With ``patience`` the relaxation stops
+    when the lowest energy on the surface has stopped falling, at the same minimum to within the
+    tolerance it was given, on the surface, and says that it stalled.  The case that needs it is an
+    energy tolerance the optimiser cannot meet (below the rounding of a large cell's energy; here
+    simply 1e-16): without ``patience`` it runs to its iteration limit at an energy that stopped
+    changing long before."""
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    x1, full = m.relax(x, maxiter=400)
+    assert "success" in full["message"].lower() and not full["stalled"] and full["gradient_max"] < 1e-3
+    _, short = m.relax(x, maxiter=5)
+    assert short["gradient_max"] > 0.1 and short["energy"] > full["energy"] + 0.1
+    _, endless = m.relax(x, maxiter=60, ftol=1e-16)
+    assert "limit" in endless["message"].lower() and endless["energy"] == pytest.approx(full["energy"], abs=1e-6)
+    x2, held = m.relax(x, maxiter=400, ftol=1e-16, patience=12, patience_tol=1e-5)
+    assert held["stalled"] and held["message"].startswith("stalled") and held["evaluations"] < endless["evaluations"]
+    assert held["energy"] == pytest.approx(full["energy"], abs=1e-5) and held["gradient_max"] < 1e-3
+    assert held["rotation_error_max"] < 1e-6 and held["c_mismatch_max"] < 1e-7
+    assert held["energy"] == pytest.approx(m.physical_energy(x2), abs=1e-12)
+    # the gradient reported is the one a descent would feel: zero steps from a stationary point
+    _, gmax, n = m.descend(x1, closed=[0, 1], steps=3, gtol=max(2.0 * full["gradient_max"], 1e-6))
+    assert n == 1 and gmax == pytest.approx(full["gradient_max"], rel=1e-6, abs=1e-9)
+
+
 def test_penalty_terms_are_off_by_default_and_available():
     m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
     x[m.index("tors")] += 3.0

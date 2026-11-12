@@ -628,7 +628,7 @@ class MixedModel:
 
     def relax(self, x0, free=None, closed=None, ftol: float = 1e-9, maxiter: int = 400, angle_window: float | None = 8.0,
               first_step: float | None = 0.3, presteps: int = 300, cell_window=(0.6, 1.6), c_window=(0.85, 1.15),
-              trust: float | None = None, progress=None):
+              trust: float | None = None, progress=None, patience: int | None = None, patience_tol: float = 1e-6):
         """Constrained minimisation (SLSQP) over the ``free`` variables (indices; default all), in
         the scaled variables of :meth:`scale`, with the closure of the chains in ``closed`` held as
         equality constraints.  ``closed`` defaults to every chain with a free internal coordinate,
@@ -660,7 +660,26 @@ class MixedModel:
         ``progress(stage, evaluation, energy, x)``, if given, is called after every energy
         evaluation, ``stage`` being ``"descent"`` or ``"slsqp"``: a log line and a checkpoint for a
         relaxation that runs for hours (a cell of sixteen ten-monomer chains is seconds per
-        evaluation and hundreds of evaluations)."""
+        evaluation and hundreds of evaluations).
+
+        ``patience`` (a number of evaluations) with ``patience_tol`` (kcal/mol per cell) is a second
+        way to stop: when the lowest energy found on the closure surface (residuals under 1e-3)
+        has not fallen by ``patience_tol`` over the last ``patience`` evaluations made on it, the
+        lowest point is returned with ``info["stalled"]`` true.  SLSQP's own test is a change of the energy under ``ftol``, and
+        the energy of a 1600-site cell carries rounding noise of that size (1e-12 of 1400
+        kcal/mol), so on a large cell that test is passed by luck or not at all: a sixteen-chain
+        end state stationary to 5e-5 kcal/mol per scaled unit was still iterating 250 evaluations
+        later.  Either way ``info["gradient_max"]`` says how stationary the result is: the largest
+        component, in kcal/mol per scaled unit, of the gradient along the closure surface (a
+        variable held by a bound it pushes against left out).
+
+        The variables' units are those of :meth:`scale`, equal amounts of atom motion.  Units that
+        even out the curvature instead (one factor per kind of variable, from the mean of
+        ``z . H z`` over random signs ``z`` on that kind) were tried on the four-chain step and are
+        worse, 1072 evaluations against 429 to the same minimum: one torsion turned alone swings
+        the rest of its chain through the neighbours and is the stiffest direction there is
+        (2000 kcal/mol per (10 deg)^2), while what a relaxation has to find is concerted turns of
+        several, which no diagonal scaling can favour."""
         x0 = np.asarray(x0, dtype=float).ravel().copy()
         free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
         if closed is None:
@@ -684,6 +703,18 @@ class MixedModel:
             return x
 
         cache: dict = {}
+        ccache: dict = {}
+        low = {"e": np.inf, "y": None, "mark": np.inf, "since": 0}
+
+        class _Stalled(Exception):
+            pass
+
+        def hj(y):
+            key = y.tobytes()
+            if ccache.get("key") != key:
+                h, J = self.closure(full(y), closed)
+                ccache.update(key=key, h=h, J=J[:, free] * sc)
+            return ccache["h"], ccache["J"]
 
         def fg(y):
             key = y.tobytes()
@@ -693,20 +724,20 @@ class MixedModel:
                 cache.update(key=key, e=e, g=g[free] * sc, n=cache.get("n", 0) + 1)
                 if progress is not None:
                     progress("slsqp", cache["n"], float(e), x)
+                if patience is not None and (not closed or float(np.abs(hj(y)[0]).max()) < 1e-3):
+                    # only points on the closure surface count, as a new lowest or as an evaluation without one:
+                    # the optimiser's early iterates leave the surface, and their energies say nothing either way
+                    if e < low["e"]:
+                        low.update(e=float(e), y=y.copy())
+                    if low["e"] < low["mark"] - patience_tol:
+                        low.update(mark=low["e"], since=0)
+                    else:
+                        low["since"] += 1
+                    if low["since"] >= patience:
+                        raise _Stalled
             return cache["e"], cache["g"]
 
-        cons = []
-        if closed:
-            ccache: dict = {}
-
-            def hj(y):
-                key = y.tobytes()
-                if ccache.get("key") != key:
-                    h, J = self.closure(full(y), closed)
-                    ccache.update(key=key, h=h, J=J[:, free] * sc)
-                return ccache["h"], ccache["J"]
-
-            cons = [{"type": "eq", "fun": lambda y: hj(y)[0], "jac": lambda y: hj(y)[1]}]
+        cons = [{"type": "eq", "fun": lambda y: hj(y)[0], "jac": lambda y: hj(y)[1]}] if closed else []
         y0 = start[free] / sc
         if trust is not None:
             bounds = [(y - trust if lo is None else max(lo, y - trust), y + trust if hi is None else min(hi, y + trust)) for (lo, hi), y in zip(bounds, y0)]
@@ -717,19 +748,38 @@ class MixedModel:
                 J0 = hj(y0)[1]
                 g0 -= J0.T @ np.linalg.lstsq(J0 @ J0.T, J0 @ g0, rcond=None)[0]
             fs = max(1.0, float(np.abs(g0).max()) / float(first_step))
-        res = minimize(lambda y: fg(y)[0] / fs, y0, jac=lambda y: fg(y)[1] / fs, method="SLSQP", bounds=bounds,
-                       constraints=cons, options={"ftol": ftol / fs, "maxiter": maxiter})
-        x = full(res.x)
+        its = [0]
+        try:
+            res = minimize(lambda y: fg(y)[0] / fs, y0, jac=lambda y: fg(y)[1] / fs, method="SLSQP", bounds=bounds,
+                           constraints=cons, options={"ftol": ftol / fs, "maxiter": maxiter}, callback=lambda yk: its.__setitem__(0, its[0] + 1))
+            y_end, message, nit, nfev, stalled = res.x, str(res.message), int(res.nit), int(res.nfev), False
+        except _Stalled:
+            y_end, nit, nfev, stalled = low["y"], its[0], int(cache["n"]), True
+            message = f"stalled: the lowest energy on the closure surface has not fallen by {patience_tol:g} kcal/mol in {patience} evaluations"
+        x = full(y_end)
         if closed:  # an iterate that stopped short of convergence is still returned periodic
             on_surface = np.intersect1d(free, np.concatenate([self.index("internal", closed), self.index("c")]))
             if on_surface.size:
                 x = self.project(x, on_surface, closed)
         h = self.closure(x, closed)[0].reshape(-1, 4) if closed else np.zeros((1, 4))
         rot, dc = float(np.linalg.norm(h[:, :3], axis=1).max()), float(np.abs(h[:, 3]).max() / CLOSURE_C)
-        at_bound = bool(trust is not None and float(np.abs(res.x - y0).max()) > trust * (1.0 - 1e-6))
-        return x, {"message": str(res.message), "iterations": int(res.nit), "evaluations": int(res.nfev) + pre,
-                   "energy": self.physical_energy(x), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed,
-                   "objective_scale": fs, "descent_evaluations": pre, "at_trust_bound": at_bound}
+        at_bound = bool(trust is not None and float(np.abs(y_end - y0).max()) > trust * (1.0 - 1e-6))
+        # how stationary the result is: the gradient along the closure surface, bounds that hold a variable left out
+        parts: dict = {}
+        _, g = self.value_and_grad(x, parts)
+        yf, gf = x[free] / sc, g[free] * sc
+        lo = np.array([-np.inf if b[0] is None else b[0] for b in bounds])
+        hi = np.array([np.inf if b[1] is None else b[1] for b in bounds])
+        gf[((yf <= lo + 1e-9) & (gf > 0.0)) | ((yf >= hi - 1e-9) & (gf < 0.0))] = 0.0
+        if closed:
+            Jf = self.closure(x, closed)[1][:, free] * sc
+            _, sv, Vt = np.linalg.svd(Jf, full_matrices=False)
+            Q = Vt[sv > 1e-10 * max(float(sv.max()), 1e-300)].T
+            gf = gf - Q @ (Q.T @ gf)
+        return x, {"message": message, "iterations": nit, "evaluations": nfev + pre,
+                   "energy": float(parts["physical"]), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed,
+                   "objective_scale": fs, "descent_evaluations": pre, "at_trust_bound": at_bound, "stalled": stalled,
+                   "gradient_max": float(np.abs(gf).max()) if gf.size else 0.0}
 
     def relax_in_basin(self, x0, free=None, closed=None, trust: float = 0.3, rounds: int = 100, callback=None, **kw):
         """:meth:`relax` in a trust box of half-width ``trust`` (scaled units), repeated from each

@@ -137,6 +137,12 @@ def main():
                     help="start each band from the converged band of another row (a smaller supercell, say): the mover's torsions and backbone angles are "
                     "taken from that row's images, everything else runs straight between this row's end points")
     ap.add_argument("--end-maxiter", type=int, default=600, help="iterations of one relaxation round of an end point (three rounds at most)")
+    ap.add_argument("--patience", type=int, default=None,
+                    help="stop a relaxation when the lowest energy has not fallen by --patience-tol over this many evaluations (the optimiser's own test, an energy change "
+                    "under 1e-9 kcal/mol, is at the rounding of a 1600-site cell's energy and is not met there); the result counts as converged if its gradient along the "
+                    "closure surface is under --end-gradient")
+    ap.add_argument("--patience-tol", type=float, default=1e-5, help="kcal/mol per supercell")
+    ap.add_argument("--end-gradient", type=float, default=0.01, help="kcal/mol per scaled unit (a tenth of the band's default convergence)")
     ap.add_argument("--checkpoints", default=None, metavar="DIR",
                     help="write the running state of every relaxation and band into DIR every ten evaluations, and resume from it when it is there")
     ap.add_argument("--references", default="docs/predictions/dilute_kink_belt4.json", help="the all-trans reference cells (shared with dilute_kink.py)")
@@ -246,6 +252,9 @@ def main():
             log(f"   {piece}: resumed from {ck}")
             return model.project(np.load(ck), np.intersect1d(free_, model.index("internal", closed_)), closed_)
 
+        stop = dict(patience=args.patience, patience_tol=args.patience_tol)
+        ended = lambda info: "success" in info["message"].lower() or (info["stalled"] and info["gradient_max"] < args.end_gradient)  # noqa: E731
+
         old = prior.get("kinked_crystal", {})
         check = nc > 2 and not args.trust_tiled and do("A")  # in the supercell the chains may differ: is the tiled cell still the minimum?
         if not check and "state" in old and len(old["state"]) == model.n_var:
@@ -265,10 +274,10 @@ def main():
                 xp = model.project(xp, model.index("internal"), everyone)
                 e_start = model.physical_energy(xp)
                 xr, info = model.relax(resumed("A", xp, cell_free, everyone), free=cell_free, closed=everyone, maxiter=args.end_maxiter,
-                                       angle_window=args.angle_window, progress=watch("A", eA, nc, t0))
+                                       angle_window=args.angle_window, progress=watch("A", eA, nc, t0), **stop)
                 e_r = model.physical_energy(xr)
                 checked = {"start_above_tiled_per_chain": (e_start - eA) / nc, "relaxed_above_tiled_per_chain": (e_r - eA) / nc,
-                           "cell_relaxed": model.state(xr).lattice.tolist(), "converged": "success" in info["message"].lower(),
+                           "cell_relaxed": model.state(xr).lattice.tolist(), "converged": bool(ended(info)), "gradient_max": info["gradient_max"],
                            "largest_torsion_change_deg": float(np.abs(wrap(model.state(xr).tors - model.state(x0).tors)).max()),
                            "state_relaxed": xr.tolist()}
                 log(f"   A check: the perturbed supercell, every chain and the cell free, relaxed to {(e_r - eA) / nc:+.6f} kcal/mol per chain against the tiled cell "
@@ -326,21 +335,22 @@ def main():
                 e_start = model.physical_energy(x0)
                 x0 = resumed(name, x0, free, closed)
                 hook = watch(name, eA, nm, t0)
-                xr, info = model.relax(x0, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook)
+                xr, info = model.relax(x0, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook, **stop)
                 for _ in range(3):  # a strained start can take more than one round
-                    if "success" in info["message"].lower():
+                    if ended(info):
                         break
-                    xr, more = model.relax(xr, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook)
+                    xr, more = model.relax(xr, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook, **stop)
                     info = {**more, "iterations": info["iterations"] + more["iterations"], "evaluations": info["evaluations"] + more["evaluations"]}
                 st = model.state(xr)
                 rec = {"energy": (model.physical_energy(xr) - eA) / nm, "torsions": letters_of(st.tors[m0]), "torsions_deg": wrap(st.tors[m0]).tolist(),
                        "start": start, "start_energy": (e_start - eA) / nm, "iterations": info["iterations"], "evaluations": info["evaluations"],
-                       "message": info["message"], "converged": "success" in info["message"].lower(),
+                       "message": info["message"], "converged": bool(ended(info)), "gradient_max": info["gradient_max"],
                        "angles_at_window": int((np.abs(st.angs - model.angles0[None]) > args.angle_window - 1e-3).sum()),
                        "seconds": time.time() - t0, "state": xr.tolist()}
                 mine.add(name)
                 log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (start {rec['start_energy']:+.3f}); {letters_of(st.tors[m0])}; "
-                    f"{info['iterations']} it, {time.time() - t0:.0f} s; {rec['angles_at_window']} angles at the window; {info['message']}")
+                    f"{info['iterations']} it, {info['evaluations']} evaluations, {time.time() - t0:.0f} s; gradient {info['gradient_max']:.1e}; "
+                    f"{rec['angles_at_window']} angles at the window; {info['message']}")
             ends[name] = xr
             entry[name] = rec
             save()
@@ -377,7 +387,7 @@ def main():
             g_imgs = np.asarray(guide[seg]["images"], dtype=float)
             g_nc = int(guide["chains"])
             g_base, width = 4 + 4 * g_nc, model.P + model.R
-            if len(g_imgs) != args.images or g_imgs.shape[1] != g_base + g_nc * width or guide["mover"] != args.mover or len(movers) != 1:
+            if len(g_imgs) != args.images or g_imgs.shape[1] != g_base + g_nc * width or str(guide["mover"]) != str(args.mover) or len(movers) != 1:
                 raise SystemExit(f"--band-from: the band {seg} of {args.band_from!r} does not fit this row (images, chain length or mover)")
             imgs = band(model, ends[a], ends[b], args.images, free, closed)
             m_int = model.index("internal", m0)
