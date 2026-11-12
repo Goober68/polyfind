@@ -153,6 +153,8 @@ def main():
                     help="settle the top of each stored band instead of relaxing the band further: from its highest image, the energy minimised in the hyperplane normal "
                     "to the band's tangent and the hyperplane moved to where the force along the tangent vanishes (polyfind.mixedcell.saddle_polish); "
                     "the result is stored in the band's record as 'polished'")
+    ap.add_argument("--polish-trust", type=float, default=None, help="confine each hyperplane's minimisation to this distance (scaled units) from its start; "
+                    "one that ends on its box is continued in the same hyperplane")
     ap.add_argument("--polish-tol", type=float, default=0.01, help="the force along the tangent at which a polished saddle is accepted, kcal/mol per scaled unit")
     ap.add_argument("--band-step", type=float, default=0.15, help="the longest move of any variable in one band iteration, scaled units")
     ap.add_argument("--climb-after", type=int, default=40, help="band iterations before the climbing image may be switched on (it also waits for the band's largest force "
@@ -462,7 +464,7 @@ def main():
                 xs, info = MC.saddle_polish(model, imgs[i_top], imgs[i_top + 1] - imgs[i_top - 1], free, closed, tol=args.polish_tol,
                                             log=lambda text, seg=seg, t0=t0: log(f"      {seg} polish, {text}  ({time.time() - t0:.0f} s)"),
                                             patience=args.patience if args.patience is not None else 40, patience_tol=args.patience_tol, angle_window=args.angle_window,
-                                            progress=watch(f"{seg} polish", eA, nm, t0))
+                                            progress=watch(f"{seg} polish", eA, nm, t0), **({} if args.polish_trust is None else {"trust": args.polish_trust}))
                 st = model.state(xs)
                 entry[seg] = {**old, "polished": {
                     "saddle": (info["energy"] - eA) / nm, "band_top": old["saddle"], "band_force": old["force_max"], "force_along": info["force"], "gradient_across": info["gradient_max"],

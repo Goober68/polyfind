@@ -186,10 +186,12 @@ def test_b_was_reached_twice_and_a_second_chain_beside_the_first_costs_less():
         assert two["B"]["energy"] < diag["B"]["energy"] < one["B"]["energy"] - 1.0
 
 
-def test_saddle_polish_settles_a_band_top_into_a_stationary_point():
+@pytest.mark.parametrize("box", [None, 0.5])
+def test_saddle_polish_settles_a_band_top_into_a_stationary_point(box):
     """The first top of the stored two-chain band, polished: a point on the closure surface with no
     force left along the band's tangent nor across it (what a descent would feel there is under the
-    tolerance), a little below the band's top, and above both of the band's end states."""
+    tolerance), a little below the band's top, and above both of the band's end states.  With each
+    minimisation confined to a box about its start the saddle is the same."""
     row = json.load(open(MIG))["rows"][STACK]
     with PRESET_PARAMETERS["pvdf-dft-valence-belt4"].applied():
         model = _two_chain_model()
@@ -197,9 +199,11 @@ def test_saddle_polish_settles_a_band_top_into_a_stationary_point():
         seg = row["A-I"]
         imgs, i = np.asarray(seg["images"]), seg["saddle_image"]
         e_a = model.physical_energy(imgs[0])
-        x, info = KM.MC.saddle_polish(model, imgs[i], imgs[i + 1] - imgs[i - 1], free, closed, tol=0.01, patience=30, patience_tol=1e-6)
+        x, info = KM.MC.saddle_polish(model, imgs[i], imgs[i + 1] - imgs[i - 1], free, closed, tol=0.01, patience=30, patience_tol=1e-6,
+                                      **({} if box is None else {"trust": box}))
         assert info["converged"] and abs(info["force"]) < 0.01 and info["gradient_max"] < 0.02
         e = info["energy"] - e_a
+        assert e == pytest.approx(row["A-I"]["polished"]["saddle"], abs=2e-3)  # the stored one, found without a box
         assert seg["saddle"] - 0.05 < e <= seg["saddle"] + 1e-6 and e > row["I"]["energy"] + 0.3
         assert max(model.closure_residual(x)) < 1e-6
         _, gmax, n = model.descend(x, free, closed, steps=1, gtol=1e9)

@@ -845,7 +845,10 @@ def saddle_polish(model: MixedModel, x, tangent, free=None, closed=None, tol: fl
     ``first`` is the first move of ``s`` (scaled units, uphill), ``longest`` the longest later one,
     ``tol`` the largest ``|dE_min/ds|`` accepted (kcal/mol per scaled unit), ``rounds`` the most
     hyperplanes tried; ``relax_kw`` goes to :meth:`MixedModel.relax` (``patience`` is the one a
-    large cell needs).  ``log(text)`` gets a line per hyperplane.  Returns ``(x, info)``: ``energy``,
+    large cell needs).  With ``trust`` among them each minimisation is confined to that distance
+    (scaled units) from its start, which keeps the optimiser's trial steps out of the far field,
+    and one that ends on its box is continued from there in the same hyperplane, up to five
+    times, before its energy and force are used.  ``log(text)`` gets a line per hyperplane.  Returns ``(x, info)``: ``energy``,
     ``force`` (the last ``dE_min/ds``), ``gradient_max`` (across the path), ``slope``
     (``d2E_min/ds2`` from the last two hyperplanes, negative at a saddle; ``None`` if only one was
     needed), ``displacement`` (the final ``s``), ``converged``, ``evaluations`` and ``rounds``, the
@@ -872,6 +875,12 @@ def saddle_polish(model: MixedModel, x, tangent, free=None, closed=None, tol: fl
     for k in range(int(rounds)):
         x, info = model.relax(x, free=free, closed=closed, linear=(a, b0 + s), **kw)
         total += info["evaluations"]
+        for _ in range(5):  # a boxed minimisation that stopped on its box has not found the hyperplane's minimum yet
+            if not info.get("at_trust_bound"):
+                break
+            x, more = model.relax(x, free=free, closed=closed, linear=(a, b0 + s), **kw)
+            total += more["evaluations"]
+            info = {**more, "evaluations": info["evaluations"] + more["evaluations"]}
         tried.append({"displacement": s, "energy": info["energy"], "force": info["linear_force"], "gradient_max": info["gradient_max"],
                       "evaluations": info["evaluations"], "message": info["message"]})
         if log is not None:
