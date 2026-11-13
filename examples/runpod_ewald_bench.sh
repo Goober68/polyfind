@@ -14,6 +14,7 @@
 # twenty-eight on the device alone.  Everything printed is also in ewald_bench_<time>/log.txt,
 # and the JSON files beside it are the result.
 #
+#   EWALD_BENCH_OUT=/some/dir    where the log and the JSON files go (default ewald_bench_<time>/)
 #   EWALD_BENCH_CHAINS="16 32"   stop at thirty-two chains
 #   EWALD_BENCH_LARGE=0          skip the device-only 128-chain run
 #   EWALD_BENCH_DRY=1            no GPU needed: the same steps on small cells with the tests'
@@ -26,7 +27,7 @@ if [ ! -f pyproject.toml ] || ! grep -q '^name = "polyfind"' pyproject.toml; the
   git clone --depth 1 --branch "$BRANCH" https://github.com/Goober68/polyfind.git polyfind
   cd polyfind
 fi
-OUT="ewald_bench_$(date +%Y%m%d_%H%M%S)"
+OUT="${EWALD_BENCH_OUT:-ewald_bench_$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "$OUT"
 exec > >(tee "$OUT/log.txt") 2>&1
 
