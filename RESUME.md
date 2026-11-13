@@ -33,6 +33,14 @@ If the two add, 8a x 4b is 5.49 and the series' tails are 0.04 and 0.11: B IS AB
 extrapolation; the sixteen-chain 5.91 overstates it by about 0.5). The thirty-two-chain states were started from
 the sixteen-chain ones with the sheet let in where that cell is farthest from the moving chain (scratch scripts
 `wide_seed.py`, `wide_seed_b.py`: `--seed-from` takes only a row of the same cell); 93 and 95 evaluations each.
+THE SADDLES IN THIRTY-TWO CHAINS (8a x 2b; no band there: `saddle_polish` on the surface from the 4x2 band's top
+images and tangents let into the wider cell, scratch `polish32.py`; stored as `row["saddles"]`): first 10.6601
+(sixteen: 10.6600), second 11.4725 (sixteen: 11.6366). So in thirty-two chains I +9.97, B +5.69, barrier 11.47
+ahead / 5.78 back: the second saddle follows B down three quarters as far, the way back does not change, the first
+saddle and the wide kink do not depend on the cell. Continued to B's dilute limit: about 11.2-11.3 ahead, 5.8-5.9
+back. In thirty-two chains every minimisation spent half of its evaluations between an energy settled in the fourth
+decimal and its stopping test (gtol 1e-4, or 40 evaluations of stall): use `--surface-gtol 3e-4` or a shorter
+`--patience` there. Three thirty-two-chain jobs at once exceed the machine's memory (one was killed); two fit.
 WHY SLSQP WAS SLOW AND STOPPED SHORT (measured, four- and sixteen-chain cells): (a) it tries straight steps, which
 leave the closure surface at second order, and off the surface a chain meets its own image: 10.331 at a closure
 residual of 0.017 deg where the point returned to the surface is 10.279 (from 10.290), so most evaluations are

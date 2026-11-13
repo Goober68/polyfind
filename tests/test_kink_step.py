@@ -186,6 +186,43 @@ def test_b_was_reached_twice_and_a_second_chain_beside_the_first_costs_less():
         assert two["B"]["energy"] < diag["B"]["energy"] < one["B"]["energy"] - 1.0
 
 
+def test_the_completed_step_falls_as_the_cell_grows_and_the_way_back_does_not_change():
+    """The stored rows of the single-chain step in cells of up to thirty-two chains: B falls with
+    every doubling of the cell, by less each time along the stack; the wide kink does not move; in
+    every B only the moving chain's kink pair has left the sheet.  And where the saddles were
+    settled in the thirty-two-chain cell, the second has come down with B, so the barrier back is
+    the sixteen-chain one to a tenth."""
+    rows = json.load(open(MIG))["rows"]
+    get = lambda cell: rows.get(f"vdf10@0 {cell} mover 0 ahead host flexible")  # noqa: E731
+    cells = {c: get(c) for c in ("2x1", "4x1", "8x1", "2x2", "4x2", "8x2", "4x4")}
+    if any(v is None for v in cells.values()):
+        pytest.skip("the wider cells of the single-chain step are not stored")
+    b = {c: v["B"]["energy"] for c, v in cells.items()}
+    assert b["2x1"] > b["4x1"] > b["8x1"] and b["2x2"] > b["4x2"] > b["8x2"] and b["4x1"] > b["4x2"] > b["4x4"]
+    assert b["2x1"] - b["4x1"] > 3.0 * (b["4x1"] - b["8x1"]) and b["2x2"] - b["4x2"] > 3.0 * (b["4x2"] - b["8x2"])  # closing along the stack
+    assert 0.1 < b["4x2"] - b["8x2"] < 0.35 and 0.1 < b["4x2"] - b["4x4"] < 0.35
+    wide = [v["I"]["energy"] for v in cells.values() if "I" in v]
+    assert len(wide) >= 6 and max(wide) - min(wide) < 0.25
+    for c in ("8x1", "8x2", "4x4"):
+        row = cells[c]
+        assert row["B"]["converged"] and row["B"]["gradient_max"] < 1e-3 and row["B"]["method"].startswith("on the closure surface")
+        nc = row["chains"]
+        tors = np.asarray(row["B"]["state"])[4 + 4 * nc:].reshape(nc, 40)[:, :20]
+        where = [[k for k, v in enumerate(KM.letters_of(t).split()) if v != "T"] for t in tors]
+        assert where[0] == [2, 4] and where[1:] == [[0, 2]] * (nc - 1)
+    sd = cells["8x2"].get("saddles", {})
+    if "I-B" in sd:
+        small = cells["4x2"]
+        assert sd["I-B"]["converged"] and abs(sd["I-B"]["force_along"]) < 0.01 and sd["I-B"]["gradient_across"] < 1e-3 and sd["I-B"]["curvature_along"] < 0.0
+        fall = small["I-B"]["polished"]["saddle"] - sd["I-B"]["saddle"]
+        assert 0.05 < fall < b["4x2"] - b["8x2"] + 0.05
+        back16, back32 = small["I-B"]["polished"]["saddle"] - b["4x2"], sd["I-B"]["saddle"] - b["8x2"]
+        assert abs(back32 - back16) < 0.1
+    if "A-I" in sd:
+        assert sd["A-I"]["converged"] and sd["A-I"]["saddle"] == pytest.approx(cells["4x2"]["A-I"]["polished"]["saddle"], abs=0.05)
+        assert sd["A-I"]["saddle"] < sd.get("I-B", {}).get("saddle", np.inf)
+
+
 @pytest.mark.parametrize("how", ["slsqp", "box", "surface"])
 def test_saddle_polish_settles_a_band_top_into_a_stationary_point(how):
     """The first top of the stored two-chain band, polished: a point on the closure surface with no
