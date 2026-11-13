@@ -915,14 +915,17 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     puts them and the other fifteen chains keep their kink pairs in the sheet.
   - *It is the completed step that needs the room, and it needs it along the stack.* B is
     +7.88, +7.51, +6.47 and +5.91 in cells of 2a x b, 2a x 2b, 4a x b and 4a x 2b (a the 4.96 A
-    stack axis): doubling a is worth 1.4-1.6, doubling b 0.4-0.6. Doubling a once more is worth
-    0.28 (2026-11-13: +6.19 in 8a x b, sixteen chains in one row), so along the stack the series
-    is closing by a factor of five per doubling and 8a is within about 0.1 of its end. The wide
-    kink is +9.85, +9.98, +10.02, +9.96 and +10.05 in the five cells, and its saddle 10.27 in
-    four chains and 10.66 in sixteen: it does not gain from the room. Sixteen chains as 4a x 2b
-    is therefore not the dilute limit of B but is near it: the same correction along a puts
-    8a x 2b at about 5.6, and what a third and fourth row along b would add is not measured
-    (the first doubling of b gave 0.56 at 4a).
+    stack axis): doubling a is worth 1.4-1.6, doubling b 0.4-0.6. Thirty-two chains, either way
+    (2026-11-13, started from the sixteen-chain state with the sheet let in where that cell is
+    farthest from the moving chain): +5.69 in 8a x 2b and +5.71 in 4a x 4b, so the next doubling
+    is worth 0.22 along the stack and 0.20 across it, and in one row (8a x b, +6.19) 0.28. Along
+    a the gain falls by a factor of five to seven per doubling; across the stack only by three.
+    If the two add, 8a x 4b is at 5.49, and what the two series leave beyond that, each
+    continued at its own ratio, is 0.04 along the stack and 0.11 across it: **the completed step
+    lies about 5.4 kcal/mol up in the dilute limit (an extrapolation: the largest cells computed
+    give 5.69 and 5.71), and the sixteen-chain cell overstates it by about 0.5.** The wide kink is +9.85, +9.98, +10.02, +9.96 and +10.05 in the
+    five cells of up to sixteen chains and +9.97 in 8a x 2b, and its saddle 10.27 in four chains
+    and 10.66 in sixteen: it does not gain from the room.
   - *How the lattice gives.* In B the moving chain has a monomer's length out of axial register
     with its neighbours (a kink pair shortens its chain by about 1 A, and this one sits a
     monomer further on than theirs), and it shares that out: the chain slides 0.32 A back

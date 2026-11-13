@@ -72,6 +72,7 @@ End points only (no band)
 | vdf10@0 ahead | 4x1, 1 of 8 | flexible | +10.02 | +6.47 |
 | vdf10@0 ahead | 2x2, 1 of 8 | flexible | +9.98 | +7.51 |
 | vdf10@0 ahead | 8x1, 1 of 16 | flexible | +10.05 | +6.19 |
+| vdf10@0 ahead | 8x2, 1 of 32 | flexible | +9.97 | +5.69 |
 
 **The single-chain step against the size of the cell** (PVDF, chain 0's kink pair one monomer ahead of every other chain's; kcal/mol against the sheet; cell fixed)
 
@@ -83,6 +84,8 @@ End points only (no band)
 | 2x2 | 8 | - | +9.98 | - | - | - | +7.512 |
 | 8x1 | 16 | - | +10.05 | - | - | - | +6.191 |
 | 4x2 | 16 | +17.36, +9.32 | +9.96 | +10.73, **+10.66** | +11.84, **+11.64** | 11.64 / 5.73 | +5.911 |
+| 8x2 | 32 | - | +9.97 | - | - | - | +5.692 |
+| 4x4 | 32 | - | - | - | - | - | +5.712 |
 
 How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displacements against the kinked crystal, relative to the median of the chains whose kink pair stays
 

@@ -264,10 +264,18 @@ def main():
     # --- the single-chain step against the size of the cell ------------------------------------------
     single = {}
     for key, e in mig.get("rows", {}).items():
-        if e.get("row") == "vdf10" and str(e.get("mover")) == "0" and e.get("direction") == "ahead" and e.get("kink_offset_bonds") == 0 and not e.get("kink_mirrored") and "B" in e and "I" in e:
+        if e.get("row") == "vdf10" and str(e.get("mover")) == "0" and e.get("direction") == "ahead" and e.get("kink_offset_bonds") == 0 and not e.get("kink_mirrored") and "B" in e:
             single.setdefault(tuple(e["supercell"]), {})[e["host"]] = e
     if single:
         def band(e):
+            if e is not None and "saddles" in e and ("A-I" not in e or "I-B" not in e):
+                # no band in this cell: saddles settled from the top images of a smaller cell's bands (stored as e["saddles"])
+                sd = e["saddles"]
+                cols = [f"**{sd[seg]['saddle']:+.2f}** (from the {sd[seg].get('from_cell', 'smaller')} band)" + ("" if sd[seg].get("converged") else " (not converged)") if seg in sd else "-"
+                        for seg in ("A-I", "I-B")]
+                done = [sd[seg]["saddle"] for seg in ("A-I", "I-B") if seg in sd and sd[seg].get("converged")]
+                bar = f"{max(done):.2f} / {max(done) - e['B']['energy']:.2f}" + ("" if len(done) == 2 else " (on the one saddle settled)") if done else "-"
+                return f"{cols[0]} | {cols[1]} | {bar}"
             if e is None or "A-I" not in e or "I-B" not in e:
                 return "- | - | -"
             fwd, back = e.get("barrier_forward_polished", e["barrier_forward"]), e.get("barrier_back_polished", e["barrier_back"])
@@ -280,10 +288,11 @@ def main():
             fl, bd = single[cell].get("flexible"), single[cell].get("bodies")
             n = 2 * cell[0] * cell[1]
             note = " (its a-neighbours move too: a stack)" if cell == (1, 1) else ""
-            rigid = "{:+.2f}, {:+.2f}".format(bd["I"]["energy"], bd["B"]["energy"]) if bd else "-"
-            wide, ahead = ("{:+.2f}".format(fl["I"]["energy"]), "{:+.3f}".format(fl["B"]["energy"])) if fl else ("-", "-")
+            rigid = "{:+.2f}, {:+.2f}".format(bd["I"]["energy"], bd["B"]["energy"]) if bd and "I" in bd else "-"
+            wide, ahead = ("{:+.2f}".format(fl["I"]["energy"]) if "I" in fl else "-", "{:+.3f}".format(fl["B"]["energy"])) if fl else ("-", "-")
             md.append(f"| {cell[0]}x{cell[1]} | {n}{note} | {rigid} | {wide} | {band(fl)} | {ahead} |")
-        big = max((c for c in single if "flexible" in single[c]), key=lambda c: (c[0] * c[1], "I-B" in single[c]["flexible"]))  # the largest; of two as large, the one with bands
+        big = max((c for c in single if "flexible" in single[c] and "I" in single[c]["flexible"]),
+                  key=lambda c: ("I-B" in single[c]["flexible"], c[0] * c[1]))  # the largest cell with bands (the wider ones hold end states only)
         e = single[big]["flexible"]
         md += ["", f"How the lattice answers in the {big[0]}x{big[1]} cell ({e['chains']} chains, neighbours flexible): displacements against the kinked crystal, "
                "relative to the median of the chains whose kink pair stays", "",

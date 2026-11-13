@@ -26,8 +26,13 @@ across; 87 evaluations, 6 minutes). The SECOND saddle redone the same way is 11.
 (151 evaluations against 818), and the stored I and B relaxed further fall by 0.0000 and 0.0001: the barrier
 11.6 / 5.7 and the end states stand. Four chains: both saddles reproduced to four decimals (10.2684, 12.4644) in 78
 and 203 evaluations against 391 and 1360. The loose SLSQP result for the first saddle (10.669, 0.016 left across) is
-kept in the row as `polished["earlier"]`. WIDE CELL: 8a x b (sixteen chains in one row) I +10.05, B +6.19, against
-+10.02 and +6.47 in 4a x b: along the stack B closes by a factor of five per doubling (1.41, then 0.28).
+kept in the row as `polished["earlier"]`. WIDER CELLS (rows `8x1`, `8x2`, `4x4`; end states only): B is +6.19 in 8a x b (4a x b: +6.47), +5.69 in 8a x 2b
+and +5.71 in 4a x 4b (4a x 2b: +5.91); I is +10.05 in 8a x b and +9.97 in 8a x 2b (flat). So the next doubling is
+worth 0.22 along the stack and 0.20 across it; the gain falls by a factor of 5-7 per doubling along a and 3 across.
+If the two add, 8a x 4b is 5.49 and the series' tails are 0.04 and 0.11: B IS ABOUT 5.4 IN THE DILUTE LIMIT (an
+extrapolation; the sixteen-chain 5.91 overstates it by about 0.5). The thirty-two-chain states were started from
+the sixteen-chain ones with the sheet let in where that cell is farthest from the moving chain (scratch scripts
+`wide_seed.py`, `wide_seed_b.py`: `--seed-from` takes only a row of the same cell); 93 and 95 evaluations each.
 WHY SLSQP WAS SLOW AND STOPPED SHORT (measured, four- and sixteen-chain cells): (a) it tries straight steps, which
 leave the closure surface at second order, and off the surface a chain meets its own image: 10.331 at a closure
 residual of 0.017 deg where the point returned to the surface is 10.279 (from 10.290), so most evaluations are
