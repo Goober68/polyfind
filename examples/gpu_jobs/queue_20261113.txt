@@ -19,3 +19,11 @@ device_check.sh 16 32 64 large 128
 #    and 0.04 along a below the sixty-four-chain cell).  The cell fills the card (82 GB at one evaluation).
 step_wide.sh 8x4 b to 8 8 B
 step_wide.sh 8x4 a to 16 4 B
+# 6. the second saddle did not follow B down across the stack (11.47 in 8x2, 11.53 in 8x4, the same
+#    saddle chain by chain).  Two checks: the sixteen-chain cell doubled along b instead (4x4: its
+#    wide kink and both saddles were never computed), and the 8x4 saddle by the other route, through
+#    that cell.  If doubling b raises the saddle at 4x4 too and the two routes meet, it is the cell.
+step_wide.sh 4x2 b to 4 4
+saddle_wide.sh A-I 4 4 band 4x2 b start 4x2 b
+saddle_wide.sh I-B 4 4 band 4x2 b start 4x2 b
+saddle_wide.sh I-B 8 4 band 4x2 b a start 4x4 a as from_4x4

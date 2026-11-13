@@ -61758,7 +61758,72 @@
    },
    "saddles_note": "no band was run in this cell: each saddle was settled (saddle_polish on the closure surface, per-chain metric) from the top image of the 4x2 row's band and the band's tangent there, let into this cell with the sheet in between; the hyperplane's normal is therefore the smaller cell's",
    "barrier_forward_polished": 11.47253413190083,
-   "barrier_back_polished": 5.780463975017483
+   "barrier_back_polished": 5.780463975017483,
+   "again_on_device": {
+    "note": "the same seeds relaxed again with the whole evaluation in its batched form on an NVIDIA A100 (CuPy), 2026-11-13: examples/gpu_jobs/queue_20261113.txt jobs 2 to 4; 0.25 s an evaluation against 19.7 s on four host cores",
+    "I": {
+     "energy": 9.973979198325651,
+     "torsions": "G+ T T T G- T T T T T T T T T T T T T T T",
+     "start": "I of the row 'seed 8x2 from 4x2'",
+     "start_energy": 11.058703760876142,
+     "iterations": 70,
+     "evaluations": 81,
+     "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+     "converged": true,
+     "gradient_max": 0.0002683735375415657,
+     "method": "on the closure surface, one curvature block per chain as the metric",
+     "angles_at_window": 0,
+     "seconds": 19.91213297843933
+    },
+    "B": {
+     "energy": 5.692070187883019,
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T",
+     "start": "B of the row 'seed 8x2 from 4x2'",
+     "start_energy": 7.021226460125945,
+     "iterations": 77,
+     "evaluations": 86,
+     "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+     "converged": true,
+     "gradient_max": 0.0001849912564563491,
+     "method": "on the closure surface, one curvature block per chain as the metric",
+     "angles_at_window": 0,
+     "seconds": 21.488113403320312
+    },
+    "saddles": {
+     "A-I": {
+      "saddle": 10.660147332774613,
+      "start": "the settled saddle of the 4x2 cell let into the 8x2 cell (+11.1040), the tangent of the 4x2 band let in with it",
+      "in_the_4x2_cell": 10.659951869768975,
+      "force_along": 0.004809108977168464,
+      "gradient_across": 8.45104889528857e-05,
+      "curvature_along": null,
+      "displacement": 0.0,
+      "converged": true,
+      "evaluations": 78,
+      "method": "on the closure surface, one curvature block per chain as the metric",
+      "torsions": "G+ T T T G- T T T T T T T T T T T T T T T",
+      "seconds": 18.09958243370056,
+      "from_cell": "4x2",
+      "evaluated": "batched, on cupy"
+     },
+     "I-B": {
+      "saddle": 11.472583955991013,
+      "start": "the settled saddle of the 4x2 cell let into the 8x2 cell (+12.1997), the tangent of the 4x2 band let in with it",
+      "in_the_4x2_cell": 11.636561147876137,
+      "force_along": 0.0009262620053225312,
+      "gradient_across": 0.0001827005070875213,
+      "curvature_along": -0.3537121229951848,
+      "displacement": -0.22145239240898063,
+      "converged": true,
+      "evaluations": 207,
+      "method": "on the closure surface, one curvature block per chain as the metric",
+      "torsions": "T T T T G- T T T T T T T T T T T T T T T",
+      "seconds": 47.88949203491211,
+      "from_cell": "4x2",
+      "evaluated": "batched, on cupy"
+     }
+    }
+   }
   },
   "vdf10@0 4x2 mover 4 ahead host flexible beside 0": {
    "row": "vdf10",
