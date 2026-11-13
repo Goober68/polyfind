@@ -1,0 +1,143 @@
+........................................................................ [ 98%]
+.                                                                        [100%]
+73 passed, 4 deselected in 6.93s
+{
+ "python": "3.10.12",
+ "numpy": "2.2.6",
+ "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+ "scipy": "1.15.3",
+ "cpu_count": 128,
+ "cpus_usable": 128,
+ "cpus_allotted": {
+  "affinity": 128,
+  "cgroup_quota": 13.6,
+  "RUNPOD_CPU_COUNT": 16,
+  "cores": 13
+ },
+ "cpu": "AMD EPYC 7742 64-Core Processor",
+ "memory_gb": 2113.6,
+ "blas": [
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.29",
+   "threading_layer": "pthreads"
+  },
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.28",
+   "threading_layer": "pthreads"
+  }
+ ],
+ "nvidia_smi": [
+  "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+ ],
+ "device_module": "cupy 14.2.0",
+ "device": {
+  "id": 0,
+  "name": "NVIDIA A100-SXM4-80GB",
+  "memory_gb": 85.1,
+  "free_gb": 84.6,
+  "compute_capability": "80",
+  "visible_devices": 1
+ }
+}
+
+== 16 chains (4x2), 708 variables; built in 0.2 s
+   device: whole evaluation 0.052 s (first call 0.6 s), of which the dipole step 0.036 s; energy -1415.424977
+   device: tensor and field 0.020 s, solve 0.004 s, gradient 0.009 s; memory pool 1.43 GB
+   device: the evaluation part by part (ms): build 8.0, valence 0.0, pair sums 4.7, electrostatics 33.7, exclusions 1.0, assembly 2.6; the host's parts (build, valence, exclusions, assembly) 11.5 of 49.9
+   device: 150 evaluations back to back in 8.0 s (53 ms each); card utilisation 45% (lowest sample 42%, highest 48%, 36 samples)
+   device: gradient against its own energy difference: relative error 2.2e-05; tiling against the two-chain cell: 2.3e-13 kcal/mol
+   extras: {"symmetric_product": {"shape": [960, 14486], "gemm_s": 0.0015224330127239227, "syrk_s": 0.0014297068119049072, "gflops_gemm": 17538.10839416018, "largest_difference": 1.027526615410162e-14}, "solve": {"unknowns": 2880, "lu_s": 0.012454587034881115, "cholesky_s": 0.0026011918671429157, "asymmetry_of_matrix": 0.0, "largest_difference": 1.8051164241952584e-15}}
+
+== 32 chains (8x2), 1412 variables; built in 0.4 s
+   device: whole evaluation 0.130 s (first call 0.2 s), of which the dipole step 0.105 s; energy -2836.867424
+   device: tensor and field 0.071 s, solve 0.010 s, gradient 0.019 s; memory pool 5.46 GB
+   device: the evaluation part by part (ms): build 12.3, valence 0.0, pair sums 6.1, electrostatics 107.3, exclusions 1.8, assembly 4.3; the host's parts (build, valence, exclusions, assembly) 18.5 of 131.9
+   device: 59 evaluations back to back in 8.0 s (136 ms each); card utilisation 71% (lowest sample 62%, highest 80%, 36 samples)
+   device: gradient against its own energy difference: relative error 2.4e-06; tiling against the two-chain cell: 4.5e-13 kcal/mol
+   extras: {"symmetric_product": {"shape": [1920, 28920], "gemm_s": 0.011180916335433722, "syrk_s": 0.007667178753763437, "gflops_gemm": 19070.116402201744, "largest_difference": 1.5844791239622685e-14}, "solve": {"unknowns": 5760, "lu_s": 0.03578804573044181, "cholesky_s": 0.008698899764567614, "asymmetry_of_matrix": 0.0, "largest_difference": 1.9907443968255587e-15}}
+
+== 64 chains (8x4), 2820 variables; built in 1.3 s
+   device: whole evaluation 0.566 s (first call 0.6 s), of which the dipole step 0.522 s; energy -5656.870831
+   device: tensor and field 0.407 s, solve 0.046 s, gradient 0.058 s; memory pool 21.11 GB
+   device: the evaluation part by part (ms): build 24.9, valence 0.0, pair sums 10.7, electrostatics 523.5, exclusions 3.6, assembly 7.8; the host's parts (build, valence, exclusions, assembly) 36.3 of 570.5
+   device: 15 evaluations back to back in 8.6 s (571 ms each); card utilisation 89% (lowest sample 70%, highest 100%, 41 samples)
+   device: gradient against its own energy difference: relative error 8.3e-06; tiling against the two-chain cell: 6.8e-13 kcal/mol
+   extras: {"symmetric_product": {"shape": [3840, 57886], "gemm_s": 0.09424703288823366, "syrk_s": 0.05520036397501826, "gflops_gemm": 18113.329946678114, "largest_difference": 2.4501722929731747e-14}, "solve": {"unknowns": 11520, "lu_s": 0.12642976036295295, "cholesky_s": 0.043061086907982826, "asymmetry_of_matrix": 0.0, "largest_difference": 3.832948832249742e-15}}
+
+(host: the faster of its runs, with its BLAS threads; speedup: against that run)
+chains  sites  k vectors | host: whole  dipole step  threads | device: whole  dipole step  first call  memory | speedup  largest difference
+-------------------------------------------------------------------------------------------------------------------------------------
+    16    960      14486 |            -            -        - |        0.052 s      0.036 s       0.6 s   1.43 GB |       -  (no host run; tiling 2.3e-13 kcal/mol, gradient 2.2e-05)
+    32   1920      28920 |            -            -        - |        0.130 s      0.105 s       0.2 s   5.46 GB |       -  (no host run; tiling 4.5e-13 kcal/mol, gradient 2.4e-06)
+    64   3840      57886 |            -            -        - |        0.566 s      0.522 s       0.6 s  21.11 GB |       -  (no host run; tiling 6.8e-13 kcal/mol, gradient 8.3e-06)
+   16 chains, 1 process on the card: 18.7 evaluations per second in all, 54 ms each; card utilisation 46%
+   16 chains, 2 processes on the card: 23.0 evaluations per second in all, 87 ms each; card utilisation 79%
+   16 chains, 3 processes on the card: 28.5 evaluations per second in all, 105 ms each; card utilisation 98%
+   16 chains, 4 processes on the card: 28.4 evaluations per second in all, 141 ms each; card utilisation 100%
+   32 chains, 1 process on the card: 7.4 evaluations per second in all, 135 ms each; card utilisation 72%
+   32 chains, 2 processes on the card: 7.6 evaluations per second in all, 263 ms each; card utilisation 89%
+   32 chains, 3 processes on the card: 8.6 evaluations per second in all, 349 ms each; card utilisation 100%
+   32 chains, 4 processes on the card: 8.6 evaluations per second in all, 467 ms each; card utilisation 100%
+
+written to /srv/bench/<token>/jobs/08_device_check/ewald_device_benchmark.json
+{
+ "python": "3.10.12",
+ "numpy": "2.2.6",
+ "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+ "scipy": "1.15.3",
+ "cpu_count": 128,
+ "cpus_usable": 128,
+ "cpus_allotted": {
+  "affinity": 128,
+  "cgroup_quota": 13.6,
+  "RUNPOD_CPU_COUNT": 16,
+  "cores": 13
+ },
+ "cpu": "AMD EPYC 7742 64-Core Processor",
+ "memory_gb": 2113.6,
+ "blas": [
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.28",
+   "threading_layer": "pthreads"
+  },
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.29",
+   "threading_layer": "pthreads"
+  }
+ ],
+ "nvidia_smi": [
+  "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+ ],
+ "device_module": "cupy 14.2.0",
+ "device": {
+  "id": 0,
+  "name": "NVIDIA A100-SXM4-80GB",
+  "memory_gb": 85.1,
+  "free_gb": 84.6,
+  "compute_capability": "80",
+  "visible_devices": 1
+ }
+}
+
+== 128 chains (16x4), 5636 variables; built in 5.2 s
+   device: whole evaluation 3.670 s (first call 7.7 s), of which the dipole step 3.584 s; energy -11316.948646
+   device: tensor and field 3.061 s, solve 0.292 s, gradient 0.212 s; memory pool 82.47 GB
+   device: the evaluation part by part (ms): build 41.0, valence 0.0, pair sums 22.9, electrostatics 3586.8, exclusions 7.4, assembly 14.8; the host's parts (build, valence, exclusions, assembly) 63.1 of 3672.9
+   device: 3 evaluations back to back in 10.9 s (3634 ms each); card utilisation 89% (lowest sample 0%, highest 100%, 68 samples)
+   device: gradient against its own energy difference: relative error 2.7e-05; tiling against the two-chain cell: 6.8e-13 kcal/mol
+   extras: {"symmetric_product": {"shape": [7680, 115706], "gemm_s": 0.8725770660676062, "syrk_s": 0.46149705490097404, "gflops_gemm": 15642.44085661366, "largest_difference": 0.0}, "solve": {"unknowns": 23040, "lu_s": 0.6685750270262361, "cholesky_s": 0.28159678634256124, "asymmetry_of_matrix": 0.0, "largest_difference": 5.373896446918062e-15}}
+
+(host: the faster of its runs, with its BLAS threads; speedup: against that run)
+chains  sites  k vectors | host: whole  dipole step  threads | device: whole  dipole step  first call  memory | speedup  largest difference
+-------------------------------------------------------------------------------------------------------------------------------------
+   128   7680     115706 |            -            -        - |        3.670 s      3.584 s       7.7 s  82.47 GB |       -  (no host run; tiling 6.8e-13 kcal/mol, gradient 2.7e-05)
+
+written to /srv/bench/<token>/jobs/08_device_check/ewald_device_benchmark_128.json

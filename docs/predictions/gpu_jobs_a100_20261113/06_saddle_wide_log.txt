@@ -1,0 +1,20 @@
+64 chains (8x4); the sheet let in against the tiled two-chain cell: +0.00e+00 kcal/mol
+A-I: the settled saddle of the 8x2 cell let in: +12.5184 (in its own cell +10.6601); closure residual 3.8e-10
+      surface    1: +12.5184, lowest so far +12.5184  (1 evaluations, 2 s)
+      surface   10: +10.6592, lowest so far +10.6592  (10 evaluations, 12 s)
+      surface   20: +10.6401, lowest so far +10.6401  (20 evaluations, 22 s)
+      surface   30: +10.6289, lowest so far +10.6289  (30 evaluations, 32 s)
+      surface   40: +10.6281, lowest so far +10.6281  (40 evaluations, 42 s)
+      surface   50: +10.6278, lowest so far +10.6278  (50 evaluations, 51 s)
+      surface   60: +10.6278, lowest so far +10.6278  (60 evaluations, 61 s)
+      surface   70: +10.6278, lowest so far +10.6278  (70 evaluations, 71 s)
+      surface   80: +10.6278, lowest so far +10.6278  (80 evaluations, 81 s)
+   A-I polish, hyperplane 1: s +0.0000, energy -5689.70121, dE/ds -0.0179, across 9.1e-05, 88 evaluations; Optimization terminated successfully: th  (88 s)
+      surface    1: +10.6285, lowest so far +10.6278  (89 evaluations, 91 s)
+      surface   10: +10.6283, lowest so far +10.6278  (98 evaluations, 99 s)
+      surface   20: +10.6283, lowest so far +10.6278  (108 evaluations, 109 s)
+      surface   30: +10.6283, lowest so far +10.6278  (118 evaluations, 118 s)
+      surface   40: +10.6283, lowest so far +10.6278  (128 evaluations, 127 s)
+   A-I polish, hyperplane 2: s -0.0500, energy -5689.70063, dE/ds -0.0051, across 7.6e-05, 41 evaluations; Optimization terminated successfully: th  (129 s)
+A-I: saddle +10.6283 in 64 chains (+10.6601 in the 8x2 cell); along -0.0051, across 7.6e-05, curvature -0.25491178077915455; 129 evaluations, 129 s
+written /srv/bench/<token>/jobs/shared/saddles_8x4.json

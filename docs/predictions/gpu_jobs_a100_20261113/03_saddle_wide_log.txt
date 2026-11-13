@@ -1,0 +1,13 @@
+32 chains (8x2); the sheet let in against the tiled two-chain cell: +0.00e+00 kcal/mol
+A-I: the settled saddle of the 4x2 cell let in: +11.1040 (in its own cell +10.6600); closure residual 5.3e-11
+      surface    1: +11.1040, lowest so far +11.1040  (1 evaluations, 0 s)
+      surface   10: +10.6807, lowest so far +10.6807  (10 evaluations, 3 s)
+      surface   20: +10.6646, lowest so far +10.6646  (20 evaluations, 5 s)
+      surface   30: +10.6607, lowest so far +10.6607  (30 evaluations, 7 s)
+      surface   40: +10.6603, lowest so far +10.6603  (40 evaluations, 10 s)
+      surface   50: +10.6602, lowest so far +10.6602  (50 evaluations, 12 s)
+      surface   60: +10.6602, lowest so far +10.6602  (60 evaluations, 14 s)
+      surface   70: +10.6601, lowest so far +10.6601  (70 evaluations, 16 s)
+   A-I polish, hyperplane 1: s +0.0000, energy -2839.50434, dE/ds +0.0048, across 8.5e-05, 78 evaluations; Optimization terminated successfully: th  (18 s)
+A-I: saddle +10.6601 in 32 chains (+10.6600 in the 4x2 cell); along +0.0048, across 8.5e-05, curvature None; 78 evaluations, 18 s
+written /srv/bench/<token>/jobs/shared/saddles_8x2.json

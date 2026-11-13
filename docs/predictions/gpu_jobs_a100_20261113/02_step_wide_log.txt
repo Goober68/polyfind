@@ -1,0 +1,29 @@
+== 8x2 from the 4x2 row of docs/predictions/kink_migration_belt4.json, let in along a; pieces I,B
+written /srv/bench/<token>/jobs/shared/wide_steps.json: row 'seed 8x2 from 4x2', 32 chains (8x2), states ['I', 'B'] of 'vdf10@0 4x2 mover 0 ahead host flexible' let in along a
+vdf10@0 8x2 mover 0 ahead host flexible: 32 chains of 10 monomers, 3200 sites; kink pair in the search's cells +4.466 kcal/mol (kinked cell's closure residual 0.397 deg), polished +5.298
+   kinked crystal: +5.298 kcal/mol per kink pair against all-trans; cell [39.665, 17.548, 89.178, 25.201] (all-trans [38.033, 16.962, 90.0, 25.877]); 0 it, 0 s; the polished two-chain cell, tiled
+      chain 0: G+ T G- T T T T T T T T T T T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (63 s)
+      I descent     1:   +11.0587, lowest so far   +11.0587  (1 evaluations, 0 s)
+      I surface     1:   +10.2970, lowest so far   +10.2970  (9 evaluations, 2 s)
+      I surface    10:   +10.0104, lowest so far   +10.0104  (18 evaluations, 4 s)
+      I surface    20:    +9.9855, lowest so far    +9.9855  (28 evaluations, 7 s)
+      I surface    30:    +9.9760, lowest so far    +9.9760  (38 evaluations, 9 s)
+      I surface    40:    +9.9743, lowest so far    +9.9743  (48 evaluations, 12 s)
+      I surface    50:    +9.9740, lowest so far    +9.9740  (58 evaluations, 14 s)
+      I surface    60:    +9.9740, lowest so far    +9.9740  (68 evaluations, 17 s)
+      I surface    70:    +9.9740, lowest so far    +9.9740  (78 evaluations, 19 s)
+   I: +9.974 kcal/mol above the kinked crystal (start +11.059); G+ T T T G- T T T T T T T T T T T T T T T; 70 it, 81 evaluations, 20 s; gradient 2.7e-04; 0 angles at the window; Optimization terminated successfully: the gradient along the surface is under gtol
+      B descent     1:    +7.0212, lowest so far    +7.0212  (1 evaluations, 0 s)
+      B surface     1:    +6.1967, lowest so far    +6.1967  (8 evaluations, 2 s)
+      B surface    10:    +5.7567, lowest so far    +5.7567  (17 evaluations, 4 s)
+      B surface    20:    +5.7109, lowest so far    +5.7109  (27 evaluations, 7 s)
+      B surface    30:    +5.6951, lowest so far    +5.6951  (37 evaluations, 9 s)
+      B surface    40:    +5.6927, lowest so far    +5.6927  (47 evaluations, 12 s)
+      B surface    50:    +5.6921, lowest so far    +5.6921  (57 evaluations, 14 s)
+      B surface    60:    +5.6921, lowest so far    +5.6921  (67 evaluations, 17 s)
+      B surface    70:    +5.6921, lowest so far    +5.6921  (77 evaluations, 19 s)
+   B: +5.692 kcal/mol above the kinked crystal (start +7.021); T T G+ T G- T T T T T T T T T T T T T T T; 77 it, 86 evaluations, 21 s; gradient 1.8e-04; 0 angles at the window; Optimization terminated successfully: the gradient along the surface is under gtol
+   end points only; written /srv/bench/<token>/jobs/shared/wide_steps.json
+   I: +9.9740 kcal/mol in 32 chains; 81 evaluations, 20 s; gradient 2.7e-04; G+ T T T G- T T T T T T T T T T T T T T T
+   B: +5.6921 kcal/mol in 32 chains; 86 evaluations, 21 s; gradient 1.8e-04; T T G+ T G- T T T T T T T T T T T T T T T

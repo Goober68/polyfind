@@ -1,0 +1,5 @@
+== 8x8 from the 8x4 row of /srv/bench/<token>/jobs/shared/wide_steps.json, let in along b; pieces B
+written /srv/bench/<token>/jobs/shared/wide_steps.json: row 'seed 8x8 from 8x4', 128 chains (8x8), states ['I', 'B'] of 'vdf10@0 8x4 mover 0 ahead host flexible' let in along b
+vdf10@0 8x8 mover 0 ahead host flexible: 128 chains of 10 monomers, 12800 sites; kink pair in the search's cells +4.466 kcal/mol (kinked cell's closure residual 0.397 deg), polished +5.298
+   kinked crystal: +5.298 kcal/mol per kink pair against all-trans; cell [39.665, 70.193, 89.178, 25.201] (all-trans [38.033, 67.847, 90.0, 25.877]); 0 it, 4 s; the polished two-chain cell, tiled
+      chain 0: G+ T G- T T T T T T T T T T T T T T T T T

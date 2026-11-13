@@ -235,6 +235,12 @@ def store(args) -> None:
         row = {k: v for k, v in wide.items() if k not in ("seed_of", "let_in_along")}
         if args.note:
             row["evaluated"] = args.note
+        before = table["rows"].get(args.row)
+        if before is not None and args.keep_old:  # the row it replaces: its energies stay, as the other route
+            row[args.keep_old] = {name: {k: v for k, v in before[name].items() if k not in ("state", "torsions_deg")} for name in ("I", "B") if name in before}
+            for name in ("I", "B"):
+                if name in row and name in before:
+                    print(f"   {name}: {row[name]['energy']:+.4f}, {before[name]['energy']:+.4f} in the row it replaces ({row[name]['energy'] - before[name]['energy']:+.1e})")
         if saddles:
             row["saddles"] = saddles
             row["saddles_note"] = ("no band in this cell: each saddle settled on the closure surface from a narrower cell's saddle let into this one, "
@@ -284,6 +290,8 @@ def main() -> None:
     t.add_argument("--saddles", default=None, help="the job's saddles of that cell (jobs/shared/saddles_NXxNY.json)")
     t.add_argument("--beside", default=None, metavar="FIELD",
                    help="the table holds this row already: keep it, and put this run's energies (no states) beside it under FIELD")
+    t.add_argument("--keep-old", default=None, metavar="FIELD",
+                   help="the table holds this row already: replace it, and keep the old row's energies (no states) in the new one under FIELD")
     t.add_argument("--note", default=None, help="where and how it was evaluated")
     t.add_argument("--table", default=str(STORED))
     t.set_defaults(run=store)

@@ -1,0 +1,37 @@
+..........F.F........................................................... [ 98%]
+.                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_an_ewald_object_pickles_without_its_module_or_its_phases _________
+
+    def test_an_ewald_object_pickles_without_its_module_or_its_phases():
+        X, q, h, p = _wide_cell()
+        ew = Ewald(8.0)
+        e0 = ew.terms(X, q, h).total
+        assert ew._phase_cache is not None
+        twin = pickle.loads(pickle.dumps(ew))
+>       assert twin.xp is np and twin._phase_cache is None and twin.device_min_sites == ew.device_min_sites
+E       AssertionError: assert (<module 'cupy' from '/root/polyfind/.venv_ewald_bench/lib/python3.10/site-packages/cupy/__init__.py'> is np)
+E        +  where <module 'cupy' from '/root/polyfind/.venv_ewald_bench/lib/python3.10/site-packages/cupy/__init__.py'> = <polyfind.ewald.Ewald object at 0x74597ab98e50>.xp
+
+tests/test_ewald_device.py:197: AssertionError
+_________ test_the_induced_dipole_evaluation_on_a_device_is_the_hosts __________
+
+    def test_the_induced_dipole_evaluation_on_a_device_is_the_hosts():
+        """The whole energy and gradient of a cell of four chains: sums, solve and gradient on the
+        device, and neither the tensor nor the matrix of the solve brought back."""
+        with PRESET_PARAMETERS[BELT4].applied():
+            m, x = _model(2, 1)
+            rng = np.random.default_rng(0)
+            x = x + 0.02 * rng.standard_normal(x.size) * m.scale(x)
+            e_host, g_host = m.value_and_grad(x)
+            ew = m.pk._ewald
+            na = m.pk.N if m.pk._es_idx is None else len(m.pk._es_idx)
+>           assert ew.xp is np and na < ew.device_min_sites
+E           AssertionError: assert (<module 'cupy' from '/root/polyfind/.venv_ewald_bench/lib/python3.10/site-packages/cupy/__init__.py'> is np)
+E            +  where <module 'cupy' from '/root/polyfind/.venv_ewald_bench/lib/python3.10/site-packages/cupy/__init__.py'> = <polyfind.ewald.Ewald object at 0x74597ad9b1c0>.xp
+
+tests/test_ewald_device.py:241: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_ewald_device.py::test_an_ewald_object_pickles_without_its_module_or_its_phases
+FAILED tests/test_ewald_device.py::test_the_induced_dipole_evaluation_on_a_device_is_the_hosts
+2 failed, 71 passed, 4 deselected in 23.72s

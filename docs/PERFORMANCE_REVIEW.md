@@ -1749,3 +1749,52 @@ only if bands or Hessians at sixty-four chains and more become routine, and befo
 that expectation the two things to measure on a rented card are several processes on one card
 and the rank-k update.
 
+### 17.9 Measured on an A100: the rank-k form, several processes on one card, and the card at work (2026-11-13)
+
+A fourth pod (one A100-SXM4-80GB, CuPy 14.2.0, host AMD EPYC 7742 with 13 cores allotted of 128
+visible) did not run a benchmark script: it followed a queue of jobs on the branch
+(`examples/runpod_jobs_pod.sh`, `examples/gpu_jobs/queue_20261113.txt`), each job a script under
+`examples/gpu_jobs/`, so the next job could be decided on the last one's result without anything
+being sent to the pod.  Files: `docs/predictions/gpu_jobs_a100_20261113/` (its job 8 is the
+device check: 73 device tests passed, then the tables below from
+`examples/ewald_device_summary.py`).
+
+**The tensor's six products as rank-k updates** (`backend.gram`: `cupy.cublas.syrk` on the
+transposed view, the mixed products through `k_a k_b = ((k_a + k_b)^2 - k_a^2 - k_b^2) / 2`).
+One whole evaluation, and the tensor-and-field step inside it, against 17.8:
+
+| chains | evaluation, general products (17.8) | evaluation, rank-k | tensor and field, before | after |
+|---|---|---|---|---|
+| 16 | 48.8 ms | 52.1 ms | 19.4 ms | 19.9 ms |
+| 32 | 0.14 s | 0.13 s | 88.8 ms | 70.9 ms |
+| 64 | 0.76 s | 0.57 s | 0.61 s | 0.41 s |
+| 128 | 6.00 s | 3.67 s | 5.40 s | 3.06 s |
+
+17.8 predicted 0.2 s and 2.5 s off at sixty-four and a hundred and twenty-eight chains from the
+side measurement; it is 0.19 s and 2.3 s.  Sixteen chains do not gain (the products are 1.5 ms
+each there) and this pod's slower host cores cost it 2 ms: its host parts are 11.5, 18.5, 36.3
+and 63.1 ms where the third pod's were 9.2, 14.8, 27.8 and 55.3.  Agreement is unchanged: the
+tiling against the stored two-chain cell 2.3e-13 to 6.8e-13 kcal/mol, and the thirty-two-chain
+relaxations below.
+
+**Several processes on one card** (each its own process and cell, evaluating back to back over a
+common window; no MPS daemon, the default time-slicing between processes):
+
+| chains | processes | evaluations per second, all together | one evaluation, per process | card utilisation |
+|---|---|---|---|---|
+| 16 | 1 | 18.7 | 54 ms | 46% |
+| 16 | 2 | 23.0 | 87 ms | 79% |
+| 16 | 3 | 28.5 | 0.11 s | 98% |
+| 16 | 4 | 28.4 | 0.14 s | 100% |
+| 32 | 1 | 7.4 | 0.14 s | 72% |
+| 32 | 2 | 7.6 | 0.26 s | 89% |
+| 32 | 3 | 8.6 | 0.35 s | 100% |
+| 32 | 4 | 8.6 | 0.47 s | 100% |
+
+So a card's idle half at sixteen chains is not there for a second process to take: three
+processes get 1.5 times the throughput of one and a fourth adds nothing, and at thirty-two
+chains three get 1.16 times.  The utilisation figure says when the card is busy, not how much of
+it; processes sharing a card take turns on it.  (Whether the MPS daemon, which lets processes
+run on a card at once, changes that was not measured.)  **The farm answer of 17.8 changes in one
+place: count one process per card.**  Independent evaluations (images of a band, columns of a
+Hessian) scale with the number of cards and hardly with processes per card.

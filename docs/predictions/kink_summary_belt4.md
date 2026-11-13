@@ -83,8 +83,9 @@ End points only (no band)
 | 2x2 | 8 | - | +9.98 | - | - | - | +7.512 |
 | 8x1 | 16 | - | +10.05 | - | - | - | +6.191 |
 | 4x2 | 16 | +17.36, +9.32 | +9.96 | +10.73, **+10.66** | +11.84, **+11.64** | 11.64 / 5.73 | +5.911 |
-| 8x2 | 32 | - | +9.97 | **+10.66** (from the 4x2 band) | **+11.47** (from the 4x2 band) | 11.47 / 5.78 | +5.692 |
+| 8x2 | 32 | - | +9.97 | **+10.66** (from the 4x2 cell's) | **+11.47** (from the 4x2 cell's) | 11.47 / 5.78 | +5.692 |
 | 4x4 | 32 | - | - | - | - | - | +5.712 |
+| 8x4 | 64 | - | +9.89 | **+10.63** (from the 8x2 cell's) | **+11.53** (from the 8x2 cell's) | 11.53 / 6.04 | +5.495 |
 
 How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displacements against the kinked crystal, relative to the median of the chains whose kink pair stays
 

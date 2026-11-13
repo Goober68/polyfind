@@ -269,9 +269,9 @@ def main():
     if single:
         def band(e):
             if e is not None and "saddles" in e and ("A-I" not in e or "I-B" not in e):
-                # no band in this cell: saddles settled from the top images of a smaller cell's bands (stored as e["saddles"])
+                # no band in this cell: saddles settled from a smaller cell's band tops or saddles, let in (stored as e["saddles"])
                 sd = e["saddles"]
-                cols = [f"**{sd[seg]['saddle']:+.2f}** (from the {sd[seg].get('from_cell', 'smaller')} band)" + ("" if sd[seg].get("converged") else " (not converged)") if seg in sd else "-"
+                cols = [f"**{sd[seg]['saddle']:+.2f}** (from the {sd[seg].get('from_cell', 'smaller')} cell's)" + ("" if sd[seg].get("converged") else " (not converged)") if seg in sd else "-"
                         for seg in ("A-I", "I-B")]
                 done = [sd[seg]["saddle"] for seg in ("A-I", "I-B") if seg in sd and sd[seg].get("converged")]
                 bar = f"{max(done):.2f} / {max(done) - e['B']['energy']:.2f}" + ("" if len(done) == 2 else " (on the one saddle settled)") if done else "-"

@@ -1,0 +1,145 @@
+{
+ "machine": {
+  "python": "3.10.12",
+  "numpy": "2.2.6",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+  "scipy": "1.15.3",
+  "cpu_count": 128,
+  "cpus_usable": 128,
+  "cpus_allotted": {
+   "affinity": 128,
+   "cgroup_quota": 13.6,
+   "RUNPOD_CPU_COUNT": 16,
+   "cores": 13
+  },
+  "cpu": "AMD EPYC 7742 64-Core Processor",
+  "memory_gb": 2113.6,
+  "blas": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.28",
+    "threading_layer": "pthreads"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.29",
+    "threading_layer": "pthreads"
+   }
+  ],
+  "nvidia_smi": [
+   "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+  ],
+  "device_module": "cupy 14.2.0",
+  "device": {
+   "id": 0,
+   "name": "NVIDIA A100-SXM4-80GB",
+   "memory_gb": 85.1,
+   "free_gb": 84.6,
+   "compute_capability": "80",
+   "visible_devices": 1
+  }
+ },
+ "preset": "pvdf-dft-valence-belt4",
+ "row": "vdf10",
+ "batched_kernels": "host, float64",
+ "host_blas_threads_timed": [
+  1,
+  8,
+  13
+ ],
+ "rows": [
+  {
+   "chains": 128,
+   "tiling": [
+    16,
+    4
+   ],
+   "variables": 5636,
+   "build_s": 5.180541924200952,
+   "sites": 7680,
+   "k_vectors": 115706,
+   "device": {
+    "first_call_s": 7.656570547260344,
+    "whole_s": 3.6696464554406703,
+    "dipole_step_s": 3.584035476204008,
+    "energy": -11316.94864570245,
+    "pool_gb_after_evaluation": 75.360047616,
+    "sites": 7680,
+    "tensor_s": 3.061189303640276,
+    "tensor_all_s": [
+     3.0630577951669693,
+     3.061189303640276,
+     3.0638200137764215
+    ],
+    "solve_s": 0.29192600259557366,
+    "solve_all_s": [
+     0.29192600259557366,
+     0.29197612777352333,
+     0.29317044792696834
+    ],
+    "gradient_s": 0.21202636603266,
+    "gradient_all_s": [
+     0.21211280999705195,
+     0.21252310927957296,
+     0.21202636603266
+    ],
+    "k_vectors": 115706,
+    "images": 27,
+    "solve_method": "cholesky",
+    "pool_gb_peak": 82.469024256,
+    "device_gb_in_use": 82.980962304,
+    "device_gb_total": 85.094825984,
+    "parts_s": {
+     "build": 0.04095180658623576,
+     "valence": 4.3081119656562805e-05,
+     "pair sums": 0.02293573273345828,
+     "electrostatics": 3.586835947353393,
+     "exclusions": 0.007359033916145563,
+     "assembly": 0.014764576219022274,
+     "host_parts": 0.06311849784106016,
+     "all": 3.6728901779279113
+    },
+    "busy": {
+     "seconds": 10.9011388621293,
+     "evaluations": 3,
+     "per_evaluation_s": 3.6337129540431,
+     "utilization_mean": 88.61764705882354,
+     "utilization_min": 0.0,
+     "utilization_max": 100.0,
+     "utilization_samples": 68
+    },
+    "gradient_check": {
+     "analytic": 6.158148813494658,
+     "difference": 6.15831646996412,
+     "relative_error": 2.7225140953846046e-05
+    },
+    "tiling_check": {
+     "per_two_chains": -178.13528050130228,
+     "stored_two_chain_cell": -178.13528050130296,
+     "difference": 6.821210263296962e-13
+    },
+    "extras": {
+     "symmetric_product": {
+      "shape": [
+       7680,
+       115706
+      ],
+      "gemm_s": 0.8725770660676062,
+      "syrk_s": 0.46149705490097404,
+      "gflops_gemm": 15642.44085661366,
+      "largest_difference": 0.0
+     },
+     "solve": {
+      "unknowns": 23040,
+      "lu_s": 0.6685750270262361,
+      "cholesky_s": 0.28159678634256124,
+      "asymmetry_of_matrix": 0.0,
+      "largest_difference": 5.373896446918062e-15
+     }
+    }
+   }
+  }
+ ]
+}
