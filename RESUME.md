@@ -43,8 +43,8 @@ decimal and its stopping test (gtol 1e-4, or 40 evaluations of stall): use `--su
 `--patience` there. Three thirty-two-chain jobs at once exceed the machine's memory (one was killed); two fit.
 WHY SLSQP WAS SLOW AND STOPPED SHORT (measured, four- and sixteen-chain cells): (a) it tries straight steps, which
 leave the closure surface at second order, and off the surface a chain meets its own image: 10.331 at a closure
-residual of 0.017 deg where the point returned to the surface is 10.279 (from 10.290), so most evaluations are
-rejected trial points; (b) conditioning: the Hessian along the surface (energy's plus the closure's curvature times
+residual of 0.017 deg where the point returned to the surface is 10.279 (from 10.290; a step of Newton's length),
+so its steps stay short and most evaluations are rejected trial points (2.5-3 per accepted step; on the surface 1); (b) conditioning: the Hessian along the surface (energy's plus the closure's curvature times
 its multipliers; without that term it has negative values at a minimum, -3.1 against +2.0 measured) runs from 0.031
 to 421 in the scaled variables, 0.018 to 2.1 in the per-chain metric (blocks of placement AND internal coordinates;
 internal alone does nothing, 0.08 to 415). The metric handed to SLSQP does not help (174 against 185): (a) is the

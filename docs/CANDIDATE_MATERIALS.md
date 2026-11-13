@@ -866,9 +866,11 @@ at 10.669 after 246 evaluations of SLSQP and at 10.664 after 1435, still falling
 its minimum is 10.660. Two things were wrong, and both are properties of the method, not of this
 saddle. SLSQP is handed the chains' closure as equality constraints and tries straight steps; a
 straight step leaves the closure surface at second order, a chain that does not close meets its
-own image, and the energy there says nothing about the energy on the surface (the first full step
-in the four-chain cell: 10.331 off the surface at a closure residual of 0.017 degrees, 10.279 once
-returned to it, from 10.290), so most evaluations go to trial points that are then rejected. And
+own image, and the energy there says nothing about the energy on the surface (a step of Newton's
+length in the four-chain cell: 10.331 off the surface at a closure residual of 0.017 degrees,
+10.279 once returned to it, from 10.290), so its steps stay short and most of its evaluations go
+to trial points that are then rejected (2.5 to 3 evaluations per accepted step in the four- and
+sixteen-chain hyperplanes; on the surface, one). And
 the problem is badly conditioned in any per-variable units: the Hessian of the sixteen-chain sheet
 along the closure surface has eigenvalues from 0.031 to 421 kcal/mol per scaled unit squared,
 because one torsion turned alone swings the rest of its chain through the neighbours while the

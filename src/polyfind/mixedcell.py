@@ -816,10 +816,12 @@ class MixedModel:
         :meth:`relax` hands the closure to SLSQP as equality constraints, and SLSQP tries straight
         steps: a step along the tangent leaves the surface at second order, a chain that does not
         close meets its own image, and the energy there says nothing about the energy on the
-        surface (the full step of the first-saddle hyperplane of the four-chain step: 10.331 off
-        the surface at a closure residual of 0.017 degrees, 10.279 once returned to it, from
-        10.290).  So most of its evaluations are spent on trial points it then rejects.  Here
-        nothing is evaluated off the surface, and a step is judged by the energy alone.
+        surface (a step of Newton's length in the first-saddle hyperplane of the four-chain step:
+        10.331 off the surface at a closure residual of 0.017 degrees, 10.279 once returned to it,
+        from 10.290).  So its steps stay short and most of its evaluations are spent on trial
+        points it then rejects (2.5 to 3 per accepted step there and in sixteen chains).  Here
+        nothing is evaluated off the surface, a step is judged by the energy alone, and nearly
+        every step is accepted.
 
         ``metric`` is a matrix ``T`` (free x free): the method works in ``w`` with ``dy = T dw``,
         ``y`` being the free variables in the units of :meth:`scale`.  With ``T`` an inverse square
