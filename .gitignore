@@ -20,3 +20,4 @@ docs/predictions/*.json.lock
 .venv_ewald_bench/
 ewald_bench_*/
 ewald_device_benchmark*.json
+.ewald_bench_python

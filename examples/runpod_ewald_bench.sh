@@ -24,6 +24,7 @@
 #                                the process is allotted, which is the default)
 #   EWALD_BENCH_LOOP_FORM=1      also run the loop form with the sums on the device (the organisation
 #                                before the batched form: host loops, the card at 5 to 10%)
+#   EWALD_BENCH_SETUP_ONLY=1     install, check that CuPy reaches the device, and stop
 #   EWALD_BENCH_DRY=1            no GPU needed: the same steps on small cells with the tests'
 #                                NumPy-backed stand-in for the device (checks this script itself)
 set -euo pipefail
@@ -103,6 +104,13 @@ fi
 # The package's batched kernels (the screen) go to a GPU in float32 by themselves; the large cells
 # are float64 work on the host with their Ewald sums on the device, which is asked for per object.
 export POLYFIND_DEVICE=cpu
+
+if [ "${EWALD_BENCH_SETUP_ONLY:-0}" = "1" ]; then
+  # for a caller that wants the installation and nothing else (examples/runpod_jobs_pod.sh)
+  echo "$PY" > .ewald_bench_python
+  echo "== set up in $(pwd): $PY, device $DEVICE"
+  exit 0
+fi
 
 echo "== device tests =="
 "$PY" -m pytest tests/test_ewald_device.py tests/test_mixed_batched.py tests/test_gpu.py -q -k "ewald or double or device or dipole or batched or mixed" -p no:cacheprovider

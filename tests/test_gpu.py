@@ -229,3 +229,17 @@ def test_device_cholesky_solve_is_the_general_solve_and_says_when_it_cannot():
     import cupyx
 
     assert cupyx.geterr()["linalg"] == "ignore"  # the status was asked for inside, and the setting put back
+
+
+def test_device_gram_is_the_plain_product():
+    """``polyfind.backend.gram``: the rank-k update on the transposed view, both triangles filled."""
+    import cupy
+
+    m = cupy.asarray(np.random.default_rng(0).standard_normal((70, 333)))
+    want = (m @ m.T).get()
+    got = bk.gram(cupy, m)
+    assert isinstance(got, cupy.ndarray) and got.shape == (70, 70)
+    np.testing.assert_allclose(got.get(), want, rtol=0, atol=1e-12 * float(np.abs(want).max()))
+    np.testing.assert_array_equal(got.get(), got.get().T)
+    host = np.random.default_rng(1).standard_normal((5, 9))
+    np.testing.assert_array_equal(bk.gram(np, host), host @ host.T)

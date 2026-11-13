@@ -636,8 +636,8 @@ class Ewald:
             # width K where there were twelve general ones (cos and sin apart, k and -k both), a
             # quarter of the arithmetic.  On a sixteen-chain cell (960 sites, 14 482 vectors) this
             # was half of the whole energy evaluation (measured 2026-11-12: 4.8 s of 10.2).
-            # (On a device the same line is a general product: CuPy 14 does not hand ``a @ a.T`` to
-            # the symmetric update.  docs/PERFORMANCE_REVIEW.md 17.3.)
+            # (CuPy 14 does not hand ``a @ a.T`` to the symmetric update, so on a device the product
+            # is asked for by name: ``backend.gram``.  docs/PERFORMANCE_REVIEW.md 17.3 and 17.8.)
             half = (mkept[:, 0] > 0) | ((mkept[:, 0] == 0) & ((mkept[:, 1] > 0) | ((mkept[:, 1] == 0) & (mkept[:, 2] > 0))))
             kh = k[half]
             ih = xp.asarray(np.flatnonzero(half))  # the same columns as the mask, as positions
@@ -648,7 +648,7 @@ class Ewald:
             for v in ((1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (1, 0, 1), (0, 1, 1)):
                 sv = root * (kh @ np.array(v, dtype=float))
                 xp.multiply(Mh, xp.asarray(np.concatenate([sv, sv]))[None, :], out=Mw)
-                sym[v] = Mw @ Mw.T
+                sym[v] = Mw @ Mw.T if host else bk.gram(xp, Mw)
             del Mh, Mw
             for a in range(3):
                 for b in range(a, 3):

@@ -40,6 +40,13 @@ def host_run(r, threads=None):
     return next((h for h in runs if h["blas_threads"] == threads), None)
 
 
+def several(paths) -> list:
+    out = []
+    for p in paths:
+        out += json.loads(Path(p).read_text()).get("several_processes", [])
+    return sorted(out, key=lambda r: (r["chains"], r["processes"]))
+
+
 def main(paths) -> None:
     machine, rows = load(paths)
     if not rows:
@@ -122,6 +129,19 @@ def main(paths) -> None:
             if hb and h:
                 print(f"| {r['chains']} | {seconds(h['whole_s'])} | {seconds(hb['whole_s'])} | {hb['difference_from_loops']['energy']:.1e} | "
                       f"{hb['difference_from_loops']['gradient']:.1e} |")
+
+    shared = several(paths)
+    if shared:
+        print("\nSeveral processes on the one card, each with its own cell, evaluating back to back over a common window:\n")
+        print("| chains | processes | evaluations per second, all together | one evaluation, per process | card utilisation |")
+        print("|---|---|---|---|---|")
+        for r in shared:
+            if "evaluations_per_second" in r:
+                each = sum(r["per_process_s"]) / len(r["per_process_s"])
+                use = f"{r['utilization_mean']:.0f}%" if "utilization_mean" in r else "-"
+                print(f"| {r['chains']} | {r['processes']} | {r['evaluations_per_second']:.1f} | {seconds(each)} | {use} |")
+            else:
+                print(f"| {r['chains']} | {r['processes']} | failed | - | - |")
 
     print("\nChecks that need no host run, and the first call:\n")
     print("| chains | tiling against the stored two-chain cell | gradient against the device's own energy difference | first device evaluation | device memory in use |")

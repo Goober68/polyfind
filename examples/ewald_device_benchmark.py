@@ -416,6 +416,87 @@ def busy_check(model, x, xp, seconds: float) -> dict:
     return out
 
 
+def busy_child(args) -> None:
+    """One of several processes on a card: build the cell, warm up, wait for the common start, then
+    evaluate back to back until the common end and write how many evaluations that was."""
+    from polyfind import backend as bk
+    from polyfind.fitting import PRESET_PARAMETERS
+
+    bk.set_backend("cpu")
+    cp, why = device_module(args.device)
+    if cp is None:
+        raise SystemExit(f"no device: {why}")
+    dk = load_drivers()
+    start, nc = args.busy_child, args.chains[0]
+    with PRESET_PARAMETERS[PRESET].applied():
+        model, x, _, _ = build(dk, nc)
+        ew = model.pk._ewald
+        ew.xp, ew.device_min_sites = cp, 0
+        rng = np.random.default_rng(os.getpid())
+        sc = model.scale(x)
+        for _ in range(2):
+            model.value_and_grad(x + 1e-4 * rng.standard_normal(x.size) * sc)
+        bk.synchronize(cp)
+        ready = time.time()
+        while time.time() < start:
+            time.sleep(0.01)
+        t0 = time.perf_counter()
+        n = 0
+        while time.time() < start + args.busy_seconds:
+            model.value_and_grad(x + 1e-4 * rng.standard_normal(x.size) * sc)
+            n += 1
+        bk.synchronize(cp)
+        wall = time.perf_counter() - t0
+    Path(args.out).write_text(json.dumps({"evaluations": n, "seconds": wall, "ready_before_start_s": start - ready}))
+
+
+def several_processes(args, nc: int, count: int) -> dict:
+    """``count`` processes on one card at once, each its own cell of ``nc`` chains and its own
+    evaluations: what the card delivers when one process leaves it partly idle.  The processes
+    are started fresh (a process that has used the device cannot fork ones that use it), given
+    time to build and warm up, and timed over one common window."""
+    lead = 14.0 + 2.0 * count + (20.0 if nc >= 64 else 0.0)
+    start = time.time() + lead
+    procs = []
+    for i in range(count):
+        out = Path(args.out).with_suffix(f".proc{nc}_{count}_{i}.json")
+        cmd = [sys.executable, __file__, "--chains", str(nc), "--device", args.device, "--busy-child", repr(start),
+               "--busy-seconds", str(args.busy_seconds), "--out", str(out)]
+        procs.append((out, subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)))
+    meter = None
+    try:
+        meter = subprocess.Popen(["nvidia-smi", "--query-gpu=index,utilization.gpu", "--format=csv,noheader,nounits", "-lms", "200"],
+                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+    except OSError:
+        pass
+    t_meter = time.time()
+    runs = []
+    for out, p in procs:
+        err = p.communicate()[1]
+        runs.append(json.loads(out.read_text()) if p.returncode == 0 and out.exists() else {"failed": (err or "")[-400:]})
+        out.unlink(missing_ok=True)
+    res = {"processes": count, "chains": nc, "runs": runs}
+    if meter is not None:
+        meter.terminate()
+        per_card: dict = {}
+        for line in meter.communicate()[0].splitlines():
+            try:
+                card, value = (v.strip() for v in line.split(","))
+                per_card.setdefault(int(card), []).append(float(value))
+            except ValueError:
+                continue
+        first = int((start - t_meter + 1.5) / 0.2)  # the samples of the common window, less the meter's lag
+        last = int((start - t_meter + args.busy_seconds) / 0.2)
+        kept = max(per_card.values(), key=lambda v: sum(v[first:last]), default=[])[first:last]
+        if kept:
+            res.update(utilization_mean=sum(kept) / len(kept), utilization_min=min(kept), utilization_max=max(kept))
+    good = [r for r in runs if "evaluations" in r]
+    if good:
+        res["evaluations_per_second"] = sum(r["evaluations"] / r["seconds"] for r in good)
+        res["per_process_s"] = [r["seconds"] / max(1, r["evaluations"]) for r in good]
+    return res
+
+
 def tiling_check(model, x_tiled, e_two: float) -> dict:
     """The untouched tiling against the two-chain cell it tiles: the same energy per chain, whatever
     the size of the cell.  The stored number is the host's, so this holds a device to the host at
@@ -654,12 +735,21 @@ def main() -> None:
     ap.add_argument("--no-extras", action="store_true", help="skip the two side measurements")
     ap.add_argument("--busy-seconds", type=float, default=8.0, help="how long evaluations run back to back while the card's "
                     "utilisation is sampled (0 to skip)")
+    ap.add_argument("--processes", type=int, nargs="+", default=None, metavar="N",
+                    help="after the run, for each size: N processes at once on the one card, each evaluating its own cell back to "
+                    "back for --busy-seconds, for every N given (1 2 4, say): the card's throughput when it is shared")
+    ap.add_argument("--processes-max-chains", type=int, default=32, help="the largest cell --processes is run at (each process "
+                    "holds its own cell on the card: 21 GB at sixty-four chains)")
+    ap.add_argument("--busy-child", type=float, default=None, help=argparse.SUPPRESS)  # one process of --processes: the common start time
     ap.add_argument("--loop-form", action="store_true", help="also time, and sample the card under, the loop form with the sums "
                     "on the device (the organisation before the batched form): host work with the card nearly idle, which "
                     "is the point of the comparison and the reason it is not run unless asked for")
     ap.add_argument("--all-devices", action="store_true", help="after the run, repeat it on every visible device at once")
     ap.add_argument("--out", default="ewald_device_benchmark.json")
     args = ap.parse_args()
+    if args.busy_child is not None:
+        busy_child(args)
+        return
 
     from polyfind import backend as bk
     from polyfind.fitting import PRESET_PARAMETERS
@@ -686,6 +776,19 @@ def main() -> None:
             result["rows"].append(one_size(dk, nc, cp, args))
             Path(args.out).write_text(json.dumps(result, indent=1, default=float))
     log("\n" + table(result["rows"]))
+    if args.processes and cp is not None and hasattr(cp, "cuda"):
+        result["several_processes"] = []
+        for nc in sorted(c for c in args.chains if c <= args.processes_max_chains):
+            for count in args.processes:
+                res = several_processes(args, nc, count)
+                result["several_processes"].append(res)
+                Path(args.out).write_text(json.dumps(result, indent=1, default=float))
+                failed = sum("failed" in r for r in res["runs"])
+                log(f"   {nc} chains, {count} process{'es' if count > 1 else ''} on the card: "
+                    + (f"{res['evaluations_per_second']:.1f} evaluations per second in all, "
+                       f"{1e3 * sum(res['per_process_s']) / len(res['per_process_s']):.0f} ms each" if "evaluations_per_second" in res else "none ran")
+                    + (f"; card utilisation {res['utilization_mean']:.0f}%" if "utilization_mean" in res else "")
+                    + (f"; {failed} FAILED: {next(r['failed'] for r in res['runs'] if 'failed' in r)[-200:]}" if failed else ""))
     if args.all_devices and cp is not None and hasattr(cp, "cuda"):
         n = int(cp.cuda.runtime.getDeviceCount())
         if n > 1:

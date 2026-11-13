@@ -1,0 +1,14 @@
+# 2026-11-13, one A100 (examples/runpod_jobs_pod.sh).  One job a line; append, never edit a line that has run.
+#
+# 1. the device as it stands now: tests, the benchmark with the tensor's products as rank-k updates,
+#    and several processes sharing the card
+device_check.sh 16 32 64 large 128
+# 2. the single-chain step in thirty-two chains again, on the card, from the sixteen-chain row: the stored
+#    numbers are the host's (I +9.974, B +5.692, saddles +10.660 and +11.473) and are what this must give
+step_wide.sh 4x2 a to 8 2
+saddle_wide.sh A-I 8 2 band 4x2 a start 4x2 a
+saddle_wide.sh I-B 8 2 band 4x2 a start 4x2 a
+# 3. sixty-four chains (8a x 4b): the cell the additive estimate of B's dilute limit (5.49) was made for
+step_wide.sh 8x2 b to 8 4
+saddle_wide.sh A-I 8 4 band 4x2 a b start 8x2 b
+saddle_wide.sh I-B 8 4 band 4x2 a b start 8x2 b

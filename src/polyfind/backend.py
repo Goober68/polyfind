@@ -150,6 +150,28 @@ def cholesky_solve(xp, a, b):
         return None
 
 
+def gram(xp, m):
+    """``m @ m.T`` for a C-ordered ``(N, K)`` array ``m`` of the module ``xp``.
+
+    NumPy's product of an array with its own transpose is the BLAS's symmetric rank-k update
+    already.  CuPy's is a general product, twice the arithmetic; its ``cupy.cublas.syrk`` is the
+    update, and given the transposed *view* (column-ordered, so nothing is copied) it fills the
+    upper triangle of the result and leaves the lower at zero.  Measured on an A100 against the
+    general product: 51 ms against 88 for 3,840 x 57,886 and 0.43 s against 0.85 for 7,680 x
+    115,706, where six of these are most of an evaluation; 1.7 against 1.8 ms for 960 x 14,486
+    (docs/PERFORMANCE_REVIEW.md 17.8).  Any other module takes the plain product.
+    """
+    if getattr(xp, "__name__", "") != "cupy":
+        return m @ m.T
+    from cupy import cublas  # type: ignore
+
+    out = cublas.syrk("T", m.T)
+    out = out + out.T
+    d = xp.arange(out.shape[0])
+    out[d, d] *= 0.5
+    return out
+
+
 def default_rng(seed=None):
     """Random generator for the active backend (both expose ``.random(size)``)."""
     xp = get_backend()

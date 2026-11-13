@@ -427,3 +427,31 @@ def _two_chain_model():
         seq = [1, 0, 2] + [0] * (polymer.bonds_per_repeat - 3)
         d = KM.DK.refined_cell(polymer, "vdf10", seq, "vdf10 kink@0", stored)
         return KM.DK.make_model(polymer, d, 1, 1)[0]
+
+
+def test_a_state_let_into_a_wider_cell_keeps_the_moving_chains_neighbours_and_lets_the_sheet_in():
+    """examples/kink_wide_cell.py: the doubling behind every row of the cell-size series.  The sheet
+    let into itself is the stored wider sheet; a completed step let in keeps chain 0's own layer and
+    the layers beside it on both sides, and is the sheet where the narrower cell is farthest away."""
+    KW = _load("kink_wide_cell")
+    rows = json.loads(MIG.read_text())["rows"]
+    key = lambda cell: f"vdf10@0 {cell} mover 0 ahead host flexible"
+    sheet = np.asarray(rows[key("4x2")]["kinked_crystal"]["state"])
+    stepped = np.asarray(rows[key("4x2")]["B"]["state"])
+    for cell, along in (("8x2", "a"), ("4x4", "b")):
+        assert np.array_equal(KW.let_in(sheet, sheet, 4, 2, along), np.asarray(rows[key(cell)]["kinked_crystal"]["state"]))
+    wide_sheet = KW.let_in(sheet, sheet, 4, 2, "a")
+    wide = KW.let_in(stepped, sheet, 4, 2, "a")
+    nc, width = 16, (sheet.size - 4 - 4 * 16) // 16
+    inner = lambda x, n: x[4 + 4 * n:].reshape(n, width)
+    per = 4  # chains per layer along a in the 4x2 cell
+    for layer2, layer in ((0, 0), (1, 1), (6, 2), (7, 3)):  # chain 0's side, and its far side through the boundary
+        assert np.array_equal(inner(wide, 32)[layer2 * per:(layer2 + 1) * per], inner(stepped, nc)[layer * per:(layer + 1) * per])
+    for layer2 in (2, 3, 4, 5):  # the sheet, let in between
+        assert np.array_equal(inner(wide, 32)[layer2 * per:(layer2 + 1) * per], inner(wide_sheet, 32)[layer2 * per:(layer2 + 1) * per])
+    assert wide[0] == 2.0 * sheet[0] and np.array_equal(wide[1:4], sheet[1:4])
+    both, both_sheet, nx, ny = KW.through(stepped, sheet, 4, 2, ["a", "b"])
+    assert (nx, ny) == (8, 4) and both.size == 4 + 64 * (4 + width)
+    assert np.array_equal(both_sheet, KW.let_in(wide_sheet, wide_sheet, 8, 2, "b"))
+    with pytest.raises(ValueError, match="no far side"):
+        KW.let_in(np.zeros(4 + 4 * (4 + width)), np.zeros(4 + 4 * (4 + width)), 2, 1, "b")
