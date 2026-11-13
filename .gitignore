@@ -15,3 +15,8 @@ dist/
 
 # lock files of the resumable prediction scripts
 docs/predictions/*.json.lock
+
+# what examples/runpod_ewald_bench.sh leaves in a clone it is run in
+.venv_ewald_bench/
+ewald_bench_*/
+ewald_device_benchmark*.json

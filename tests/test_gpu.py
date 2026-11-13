@@ -72,3 +72,98 @@ def test_forcefield_batch_on_gpu(cuda_backend):
     e = ff.energy_batch(structs)
     for s, ei in zip(structs, e):
         assert abs(ff.energy(s) - ei) < 1e-3 * max(1.0, abs(ei))
+
+
+# --------------------------------------------------------------------------------------------
+# The Ewald sum and the induced-dipole solve on the device (float64; asked for per Ewald object
+# or with POLYFIND_EWALD_DEVICE=cuda, independently of the backend of the batched kernels above).
+# ``tests/test_ewald_device.py`` runs the same comparisons everywhere on a NumPy-backed stand-in;
+# these are the ones only a real device can make.
+@pytest.fixture
+def host_kernels():
+    """The batched kernels on the host in float64, as a mixed cell needs them, whatever the machine
+    would choose by itself; put back afterwards."""
+    import os
+
+    before = os.environ.get("POLYFIND_DEVICE")
+    bk.set_backend("cpu")
+    yield
+    if before is None:
+        os.environ.pop("POLYFIND_DEVICE", None)
+        bk._backend = bk._backend_name = None
+    else:
+        bk.set_backend(before)
+
+
+def test_ewald_terms_on_the_device_are_the_hosts():
+    import cupy
+    from test_ewald_device import _cell, _on, _same
+
+    from polyfind.ewald import EwaldSpec, Thole
+
+    X, q, h, p, scale = _cell(60)
+    for boundary in ("tinfoil", "vacuum"):
+        spec = EwaldSpec(boundary=boundary, charge_damping=4.0)
+        for th in (Thole(), Thole(a=0.39, form="cubic"), None):
+            kw = {} if th is None else dict(thole=th, thole_scale=scale)
+            for flags in (dict(dipoles=p, grad=True, charge_grad=True, dipole_grad=True, field=True, tensor=True),
+                          dict(dipoles=p, grad=True), dict(field=True, tensor=True)):
+                _same(_on(np, spec).terms(X, q, h, **flags, **kw), _on(cupy, spec).terms(X, q, h, **flags, **kw), rel=1e-10)
+        for flags in (dict(), dict(grad=True, charge_grad=True)):
+            _same(_on(np, spec).terms(X, q + 0.01, h, **flags), _on(cupy, spec).terms(X, q + 0.01, h, **flags), rel=1e-10)
+    kept = _on(cupy).terms(X, q, h, thole=Thole(), thole_scale=cupy.asarray(scale), tensor=True, device_tensor=True)
+    assert isinstance(kept.tensor, cupy.ndarray) and kept.tensor.dtype == np.float64
+
+
+def test_ewald_phases_are_kept_on_the_device_between_the_two_calls_of_an_evaluation():
+    import cupy
+    from test_ewald_device import _on, _wide_cell
+
+    X, q, h, p = _wide_cell()
+    ew = _on(cupy)
+    first = ew.terms(X, q, h)
+    kept = ew._phase_cache[2]
+    assert isinstance(kept, cupy.ndarray)
+    second = ew.terms(X, q, h, dipoles=p, grad=True)
+    assert ew._phase_cache[2] is kept
+    host = _on(np).terms(X, q, h, dipoles=p, grad=True)
+    assert second.total == pytest.approx(host.total, rel=1e-11)
+    np.testing.assert_allclose(second.grad_coords, host.grad_coords, rtol=0, atol=1e-9 * float(np.abs(host.grad_coords).max()))
+    assert first.total == pytest.approx(_on(np).terms(X, q, h).total, rel=1e-11)
+    ew.release()
+    assert ew._phase_cache is None
+
+
+def test_ewald_induced_dipole_evaluation_on_the_device_is_the_hosts(host_kernels):
+    """Energy and every gradient of a four-chain cell with the sums, the solve and the gradient on
+    the device, against the same evaluation on the host."""
+    import cupy
+    from test_ewald_device import BELT4, _model
+
+    from polyfind.fitting import PRESET_PARAMETERS
+
+    with PRESET_PARAMETERS[BELT4].applied():
+        m, x = _model(2, 1)
+        x = x + 0.02 * np.random.default_rng(0).standard_normal(x.size) * m.scale(x)
+        e_host, g_host = m.value_and_grad(x)
+        ew = m.pk._ewald
+        ew.xp, ew.device_min_sites = cupy, 0
+        try:
+            e_dev, g_dev = m.value_and_grad(x)
+            assert isinstance(m.pk._thole_scale_dev[2], cupy.ndarray)
+        finally:
+            ew.xp, ew.device_min_sites = np, 256
+            ew.release()
+    assert e_dev == pytest.approx(e_host, rel=1e-11)
+    np.testing.assert_allclose(g_dev, g_host, rtol=0, atol=1e-9 * max(1.0, float(np.abs(g_host).max())))
+
+
+def test_ewald_device_is_asked_for_by_its_own_switch(monkeypatch):
+    import cupy
+
+    from polyfind.ewald import Ewald
+
+    monkeypatch.setenv("POLYFIND_EWALD_DEVICE", "cuda")
+    assert bk.ewald_backend() is cupy and Ewald(8.0).xp is cupy
+    monkeypatch.delenv("POLYFIND_EWALD_DEVICE")
+    assert Ewald(8.0).xp is np  # whatever the backend of the batched kernels is

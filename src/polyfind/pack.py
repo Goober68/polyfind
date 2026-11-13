@@ -1323,8 +1323,18 @@ class CrystalPacker:
         idx = self._es_idx
         Pa, qa = (Pn, q_cell) if idx is None else (Pn[idx], q_cell[idx])
         Na = Pa.shape[0]
-        t0 = ew.terms(Pa, qa, latn, thole=self._thole, thole_scale=self._thole_scale_es,
-                      field=True, tensor=True)
+        # The array module the Ewald sum of a cell this size runs on.  On a device the tensor is
+        # left there and the solve is done there: the (3Na)^2 matrix never crosses to the host,
+        # and neither does the (Na, Na) table of Thole lengths after its first use.
+        xp = ew.array_module(Na)
+        thole_scale = self._thole_scale_es
+        if xp is not np:
+            kept = getattr(self, "_thole_scale_dev", None)
+            if kept is None or kept[0] is not xp or kept[1] is not self._thole_scale_es:
+                kept = self._thole_scale_dev = (xp, self._thole_scale_es, xp.asarray(self._thole_scale_es))
+            thole_scale = kept[2]
+        t0 = ew.terms(Pa, qa, latn, thole=self._thole, thole_scale=thole_scale,
+                      field=True, tensor=True, device_tensor=True)
         F = np.zeros((N, 3))
         if idx is None:
             F[:] = t0.field
@@ -1351,8 +1361,11 @@ class CrystalPacker:
         E0 = F if not self._field_on else F + EV_TO_KCAL * np.asarray(self.field, dtype=float)[None, :]
         E0a = E0 if idx is None else E0[idx]
         A = -t0.tensor.transpose(0, 2, 1, 3).reshape(3 * Na, 3 * Na)
-        A[np.arange(3 * Na), np.arange(3 * Na)] += np.repeat(pref / self._alpha_es, 3)
-        pa = np.linalg.solve(A, E0a.ravel()).reshape(Na, 3)
+        diag = xp.arange(3 * Na)
+        A[diag, diag] += xp.asarray(np.repeat(pref / self._alpha_es, 3))
+        pa = bk.to_numpy(xp.linalg.solve(A, xp.asarray(E0a.ravel()))).reshape(Na, 3)
+        del A
+        t0.tensor = None  # the largest array of the evaluation, not needed again
         if idx is None:
             p = pa
         else:
@@ -1361,7 +1374,7 @@ class CrystalPacker:
         e_es = t0.total + (-0.5 * float((pa * E0a).sum()))
         if not grad:
             return e_es, p, E0, None
-        t = ew.terms(Pa, qa, latn, dipoles=pa, thole=self._thole, thole_scale=self._thole_scale_es,
+        t = ew.terms(Pa, qa, latn, dipoles=pa, thole=self._thole, thole_scale=thole_scale,
                      grad=True, charge_grad=charge_grad)
         glat = t.grad_lattice.copy()
         if idx is None:

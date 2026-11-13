@@ -77,6 +77,55 @@ def to_numpy(a):
     return _np.asarray(a)
 
 
+def ewald_backend() -> ModuleType:
+    """The array module of the Ewald sums and the induced-dipole solve (:mod:`polyfind.ewald`).
+
+    NumPy unless ``POLYFIND_EWALD_DEVICE=cuda``, which asks for CuPy (and raises if it cannot
+    be imported).  This is a separate switch from ``POLYFIND_DEVICE`` on purpose: that one
+    turns itself on wherever a device is found and runs the batched screen in float32, while
+    this path is float64, serves cells of a few dozen sites as well as of thousands, and
+    gives the stored numbers of every large-cell result -- so it moves to a device only when
+    asked, and then only for cells large enough to gain (``Ewald.device_min_sites``).
+    """
+    want = os.environ.get("POLYFIND_EWALD_DEVICE", "cpu").lower()
+    if want in ("", "cpu"):
+        return _np
+    if want == "cuda":
+        import cupy as _cp  # type: ignore
+
+        return _cp
+    raise ValueError(f"POLYFIND_EWALD_DEVICE must be 'cpu' or 'cuda', got {want!r}")
+
+
+def erfc_of(xp):
+    """The complementary error function of an array module.
+
+    SciPy's for NumPy and ``cupyx.scipy.special``'s for CuPy; any other module (a test's
+    stand-in for a device) carries its own as ``xp.erfc``.
+    """
+    if xp is _np:
+        from scipy.special import erfc
+
+        return erfc
+    own = getattr(xp, "erfc", None)
+    if own is not None:
+        return own
+    from cupyx.scipy.special import erfc  # type: ignore
+
+    return erfc
+
+
+def synchronize(xp) -> None:
+    """Wait until the device has finished what it was given (nothing to wait for on the host).
+
+    A device call returns when the work is queued, not when it is done, so a clock read
+    without this measures the queueing.
+    """
+    cuda = getattr(xp, "cuda", None)
+    if cuda is not None:
+        cuda.get_current_stream().synchronize()
+
+
 def default_rng(seed=None):
     """Random generator for the active backend (both expose ``.random(size)``)."""
     xp = get_backend()

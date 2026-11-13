@@ -57,22 +57,36 @@ and ``kmax = 2 alpha p`` (so ``exp(-kmax^2/4 alpha^2) = accuracy``).  Both are
 overridable, and both *must* be overridable: the fact that the total does not move when
 they are is the test that the implementation is right.
 
-**Scope.**  NumPy and float64 only.  This is the deformable/direct path -- polish,
-refinement, response -- not the batched screen; see :mod:`polyfind.lattice_table` for why
-the screen cannot use it (the reciprocal sum is not pairwise, so it cannot be tabulated as
-a chain-pair interaction).
+**Scope.**  Float64 only.  This is the deformable/direct path -- polish, refinement,
+response -- not the batched screen; see :mod:`polyfind.lattice_table` for why the screen
+cannot use it (the reciprocal sum is not pairwise, so it cannot be tabulated as a
+chain-pair interaction).
+
+**Array module.**  The sum is written once against an array module ``xp``.  With NumPy,
+the default, it is the arithmetic every stored number was measured with, operation for
+operation.  With CuPy (``POLYFIND_EWALD_DEVICE=cuda``, or ``Ewald(..., xp=cupy)``) the
+arrays that grow with the cell -- the pair separations, the neighbour list, the ``(N, K)``
+phases and the ``(N, N, 3, 3)`` tensor -- are built and kept on the device, the 3 x 3
+lattice algebra and the list of k vectors stay on the host, and what comes back is on the
+host again except the tensor when the caller asks to keep it where it is (the
+induced-dipole solve, :meth:`polyfind.pack.CrystalPacker._polarize`).  A cell of a few
+dozen sites is a millisecond on the host and slower on a device, so cells below
+``Ewald.device_min_sites`` stay on the host whatever the module.  A device sums in another
+order (its matrix products, and the scatter-adds, whose order is not even fixed from run to
+run), so its numbers agree with the host's to rounding, not bit for bit.
 """
 from __future__ import annotations
 
+import importlib
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.special import erfc
 
+from . import backend as bk
 from .forcefield import COULOMB
 
 BOUNDARIES = ("tinfoil", "vacuum")
-_TWO_OVER_SQRT_PI = 2.0 / np.sqrt(np.pi)
+_TWO_OVER_SQRT_PI = float(2.0 / np.sqrt(np.pi))  # a plain float: the same number on every array module
 
 
 @dataclass(frozen=True)
@@ -164,20 +178,20 @@ class Thole:
         if not float(self.a) > 0.0:
             raise ValueError(f"Thole a must be positive, got {self.a!r}")
 
-    def damping(self, u):
-        """``(f3, f5, df3/du, df5/du)`` at scaled distance ``u`` (array)."""
+    def damping(self, u, xp=np):
+        """``(f3, f5, df3/du, df5/du)`` at scaled distance ``u`` (an array of the module ``xp``)."""
         a = float(self.a)
-        u = np.asarray(u, dtype=float)
+        u = xp.asarray(u, dtype=float)
         if self.form == "exp":
             au = a * u
-            e = np.exp(-au)
+            e = xp.exp(-au)
             f3 = e * (1.0 + au + 0.5 * au * au)
             f5 = f3 + e * au * au * au / 6.0
             d3 = -0.5 * a ** 3 * u * u * e
             d5 = -(a ** 4) * u * u * u / 6.0 * e
         else:
             u3 = u * u * u
-            e = np.exp(-a * u3)
+            e = xp.exp(-a * u3)
             f3 = e
             f5 = (1.0 + a * u3) * e
             d3 = -3.0 * a * u * u * e
@@ -199,6 +213,10 @@ class EwaldTerms:
     ``(N, N, 3, 3)`` dipole interaction matrix ``T`` with ``field_i = sum_j T_ij p_j``,
     Ewald-summed, self-interaction with the images included on the diagonal blocks, and
     Thole-damped when a :class:`Thole` was given.
+
+    Every array is a NumPy array on the host, whatever array module the sum ran on, with one
+    exception: ``tensor`` is left on the device when :meth:`Ewald.terms` was called with
+    ``device_tensor=True``.
     """
 
     real: float
@@ -235,8 +253,13 @@ class Ewald:
     """
 
     def __init__(self, rc: float, spec: EwaldSpec | None = None, eps_r: float = 1.0,
-                 coulomb: float = COULOMB, chunk_elems: int = 4_000_000):
+                 coulomb: float = COULOMB, chunk_elems: int = 4_000_000, xp=None):
         spec = EwaldSpec() if spec is None else spec
+        # The array module of the sums: NumPy unless asked otherwise (see the module docstring
+        # and polyfind.backend.ewald_backend).  Cells of fewer than ``device_min_sites`` sites
+        # are summed on the host whatever the module.
+        self.xp = bk.ewald_backend() if xp is None else xp
+        self.device_min_sites = 256
         self.spec = spec
         self.boundary = spec.boundary
         self.rc = float(rc if spec.rc is None else spec.rc)
@@ -256,6 +279,26 @@ class Ewald:
         return (f"Ewald(boundary={self.boundary}, alpha={self.alpha:.4f} 1/A, rc={self.rc:.3f} A, "
                 f"kmax={self.kmax:.4f} 1/A, eps_r={self.eps_r:g})")
 
+    def array_module(self, n_sites: int):
+        """The array module a cell of ``n_sites`` sites is summed with (NumPy for a small one)."""
+        return np if self.xp is np or int(n_sites) < self.device_min_sites else self.xp
+
+    def release(self) -> None:
+        """Drop the phases kept from the last call (on a device they are the memory it still holds)."""
+        self._phase_cache = None
+
+    def __getstate__(self):
+        # a module does not pickle and the kept phases are not worth sending: the module goes by
+        # name and the phases are rebuilt by whoever needs them
+        state = dict(self.__dict__)
+        state["_phase_cache"] = None
+        state["xp"] = None if self.xp is np else getattr(self.xp, "__name__", None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.xp = np if state.get("xp") is None else importlib.import_module(state["xp"])
+
     # ------------------------------------------------------------------ grids
     @staticmethod
     def _grid(nmax, cache):
@@ -267,7 +310,7 @@ class Ewald:
             cache[key] = g
         return g
 
-    def _phases(self, X, k):
+    def _phases(self, X, k, xp=np, on_device=None):
         """``cos(k.r)`` and ``sin(k.r)``, ``(N, K)`` each, kept from the last call.
 
         An induced-dipole evaluation calls :meth:`terms` twice on one geometry (the field and the
@@ -276,24 +319,32 @@ class Ewald:
         the coordinates and the vectors are the same numbers, element for element; they are
         read-only so that no caller can change what the next call gets.  Small problems are not
         kept: there is nothing to save and nothing worth holding.
+
+        ``X`` and ``k`` are host arrays (they are what the kept arrays are recognised by); the
+        phases are arrays of ``xp`` and are kept for that module only.  ``on_device`` is the pair
+        ``(X, k)`` as arrays of ``xp`` when the caller has them already.  A device array has no
+        read-only flag, so there it is this module's own care that nothing writes into them.
         """
         hit = self._phase_cache
-        if hit is not None and hit[0].shape == X.shape and hit[1].shape == k.shape and np.array_equal(hit[0], X) and np.array_equal(hit[1], k):
+        if (hit is not None and hit[4] is xp and hit[0].shape == X.shape and hit[1].shape == k.shape
+                and np.array_equal(hit[0], X) and np.array_equal(hit[1], k)):
             return hit[2], hit[3]
-        kr = X @ k.T  # (N, K)
-        cos, sin = np.cos(kr), np.sin(kr)
+        self._phase_cache = hit = None  # the last geometry's arrays go before this one's are built
+        Xd, kd = (xp.asarray(X), xp.asarray(k)) if on_device is None else on_device
+        kr = Xd @ kd.T  # (N, K)
+        cos, sin = xp.cos(kr), xp.sin(kr)
         if kr.size >= 1_000_000:
-            cos.setflags(write=False)
-            sin.setflags(write=False)
-            self._phase_cache = (X.copy(), k.copy(), cos, sin)
-        else:
-            self._phase_cache = None
+            if xp is np:
+                cos.setflags(write=False)
+                sin.setflags(write=False)
+            self._phase_cache = (X.copy(), k.copy(), cos, sin, xp)
         return cos, sin
 
     # ------------------------------------------------------------------ the sum
     def terms(self, coords, charges, lat, grad: bool = False, charge_grad: bool = False,
               dipoles=None, thole: Thole | None = None, thole_scale=None,
-              dipole_grad: bool = False, field: bool = False, tensor: bool = False) -> EwaldTerms:
+              dipole_grad: bool = False, field: bool = False, tensor: bool = False,
+              device_tensor: bool = False) -> EwaldTerms:
         r"""Every term of the sum for one configuration, optionally with gradients.
 
         With ``dipoles`` ``(N, 3)`` (e.A) every site carries a point dipole as well as a
@@ -325,6 +376,11 @@ class Ewald:
         The charge-only path (``dipoles=None`` and none of the three flags) is the one every
         earlier number was measured with and its arithmetic is untouched, expression for
         expression.
+
+        ``coords``, ``charges``, ``lat`` and ``dipoles`` are host arrays.  On a device (see the
+        module docstring) ``thole_scale`` may be handed over as a device array, which saves
+        sending an ``(N, N)`` array at every call, and ``device_tensor=True`` leaves the tensor
+        on the device for a solve there; every other result comes back as a host array.
         """
         X = np.asarray(coords, dtype=float).reshape(-1, 3)
         q = np.asarray(charges, dtype=float).reshape(-1)
@@ -342,15 +398,24 @@ class Ewald:
         want_dip = has_p or field or tensor or dipole_grad
         if (thole is None) != (thole_scale is None):
             raise ValueError("Thole damping needs both `thole` and the (N, N) `thole_scale`")
-        sth = None if thole is None else np.asarray(thole_scale, dtype=float).reshape(N, N)
-        gX = np.zeros((N, 3)) if grad else None
-        gq = np.zeros(N) if charge_grad else None
-        gp = np.zeros((N, 3)) if dipole_grad else None
-        Fq = np.zeros((N, 3)) if field else None
-        Tm = np.zeros((N, N, 3, 3)) if tensor else None
+        # Below, X, q, h, hinv, p and everything made of the k vectors alone are host arrays;
+        # Xd, qd, hd, hinvd, pd, kd and every array that grows with the cell are arrays of ``xp``.
+        # With NumPy the two are the same objects and each line is the expression it always was.
+        xp = self.array_module(N)
+        host = xp is np
+        to_host = bk.to_numpy
+        erfc = bk.erfc_of(xp)
+        Xd, qd, hd, hinvd = xp.asarray(X), xp.asarray(q), xp.asarray(h), xp.asarray(hinv)
+        pd = None if p is None else xp.asarray(p)
+        sth = None if thole is None else xp.asarray(thole_scale, dtype=float).reshape(N, N)
+        gX = xp.zeros((N, 3)) if grad else None
+        gq = xp.zeros(N) if charge_grad else None
+        gp = xp.zeros((N, 3)) if dipole_grad else None
+        Fq = xp.zeros((N, 3)) if field else None
+        Tm = xp.zeros((N, N, 3, 3)) if tensor else None
         glat = np.zeros((3, 3)) if grad else None
         deps = np.zeros((3, 3)) if grad else None  # dE/d(strain), converted to dE/dh at the end
-        I3 = np.eye(3)
+        I3 = xp.eye(3)
 
         # --- real space ------------------------------------------------------------
         # Pair separations are taken in the minimum-image *fractional* frame and then
@@ -358,19 +423,22 @@ class Ewald:
         # sum, but the integer box needed to cover the cutoff is the tight one.  The
         # effective integers ``m - round(ds)`` are what the lattice derivative needs, since
         # ``round`` is locally constant and the atoms are held at fixed Cartesian positions.
-        S = X @ hinv
+        S = Xd @ hinvd
         dS = S[:, None, :] - S[None, :, :]
-        nint = np.round(dS)
-        base = (dS - nint) @ h  # (N, N, 3)
+        nint = xp.round(dS)
+        if host:
+            base = (dS - nint) @ h  # (N, N, 3)
+        else:  # one product of an (N^2, 3) array, not N stacked ones
+            base = ((dS - nint).reshape(N * N, 3) @ hd).reshape(N, N, 3)
         widths = V / np.linalg.norm(np.cross(np.roll(h, -1, axis=0), np.roll(h, -2, axis=0)), axis=1)
         nmax = np.ceil(self.rc / widths + 0.5).astype(int)
         m_all = self._grid(nmax, self._real_grid)
         e_real = 0.0
-        gq_real = np.zeros(N) if charge_grad else None
-        A1 = np.zeros((3, 3)) if grad else None
-        A2 = np.zeros((3, 3)) if grad else None  # sum_k nint_k (x) W_k: the image-shift part of dE/dh
-        qq = q[:, None] * q[None, :]
-        pp = None if not has_p else p @ p.T
+        gq_real = xp.zeros(N) if charge_grad else None
+        A1 = xp.zeros((3, 3)) if grad else None
+        A2 = xp.zeros((3, 3)) if grad else None  # sum_k nint_k (x) W_k: the image-shift part of dE/dh
+        qq = qd[:, None] * qd[None, :]
+        pp = None if not has_p else pd @ pd.T
         rc2 = self.rc * self.rc
         step = max(1, self.chunk_elems // max(1, N * N))
 
@@ -382,10 +450,10 @@ class Ewald:
         # scatter-adds (bincount) and the lattice derivative's two moments are accumulated as
         # (3, 3) matrices, so no (N, N, 3) intermediate survives the loop.
         def scatter(idx, w):
-            return np.bincount(idx, weights=w, minlength=N)
+            return xp.bincount(idx, weights=w, minlength=N)
 
         def scatter_vec(idx, W):
-            return np.stack([np.bincount(idx, weights=W[:, c], minlength=N) for c in range(3)], axis=1)
+            return xp.stack([xp.bincount(idx, weights=W[:, c], minlength=N) for c in range(3)], axis=1)
 
         # An image whose shift alone puts every pair beyond the cutoff is not built: in the
         # minimum-image frame a pair's fractional separation along axis i is within 1/2 of the
@@ -402,27 +470,30 @@ class Ewald:
             m = m[can_hold[t : t + step]]
             if m.shape[0] == 0:
                 continue
-            D = base[None] + (m @ h)[:, None, None, :]  # (I, N, N, 3)
-            r2 = np.einsum("mijc,mijc->mij", D, D)
-            mi, ii, jj = np.nonzero((r2 < rc2) & (r2 > 1e-12))
+            md = xp.asarray(m)
+            D = base[None] + (md @ hd)[:, None, None, :]  # (I, N, N, 3)
+            # (a device's einsum would run this as one tiny matrix product per pair)
+            r2 = xp.einsum("mijc,mijc->mij", D, D) if host else (D * D).sum(axis=-1)
+            mi, ii, jj = xp.nonzero((r2 < rc2) & (r2 > 1e-12))
             if mi.size == 0:
                 continue
             Dk = D[mi, ii, jj]  # (K, 3)
             r2k = r2[mi, ii, jj]
-            rk = np.sqrt(r2k)
+            del D, r2
+            rk = xp.sqrt(r2k)
             ark = self.alpha * rk
             erfck = erfc(ark)
             fk = erfck / rk
             qqk = qq[ii, jj]
             e_real += 0.5 * self.pref * float(qqk @ fk)
             if charge_grad:
-                gq_real += self.pref * scatter(ii, fk * q[jj])
+                gq_real += self.pref * scatter(ii, fk * qd[jj])
             if grad:
-                mk = m[mi]  # (K, 3) image integers
+                mk = md[mi]  # (K, 3) image integers
                 nk = nint[ii, jj]  # (K, 3) the round() shifts of the minimum-image frame
             if grad and not want_dip:
                 # f'(r) = -erfc(a r)/r^2 - (2a/sqrt(pi)) exp(-a^2 r^2)/r
-                fp = -(erfck / r2k + _TWO_OVER_SQRT_PI * self.alpha * np.exp(-ark * ark) / rk)
+                fp = -(erfck / r2k + _TWO_OVER_SQRT_PI * self.alpha * xp.exp(-ark * ark) / rk)
                 W = (self.pref * qqk * fp / rk)[:, None] * Dk  # dE/dd per pair-image
                 gX += scatter_vec(ii, W)
                 A1 += mk.T @ W
@@ -431,11 +502,11 @@ class Ewald:
                 # charge penetration: -q_i q_j g(r), g = (1 + b r/2) exp(-b r) / r, on the same list
                 # (the bonded exclusions take their share back out in exclusion_correction)
                 bq = self.charge_damping
-                ebr = np.exp(-bq * rk)
+                ebr = xp.exp(-bq * rk)
                 gd = (1.0 + 0.5 * bq * rk) * ebr / rk
                 e_real -= 0.5 * self.pref * float(qqk @ gd)
                 if charge_grad:
-                    gq_real -= self.pref * scatter(ii, gd * q[jj])
+                    gq_real -= self.pref * scatter(ii, gd * qd[jj])
                 if grad:
                     # g'(r) = -exp(-b r) [ (b/2 + b^2 r/2) / r + (1 + b r/2) / r^2 ]
                     gdp = -ebr * ((0.5 * bq + 0.5 * bq * bq * rk) / rk + (1.0 + 0.5 * bq * rk) / r2k)
@@ -444,34 +515,34 @@ class Ewald:
                     A1 += mk.T @ Wd
                     A2 += nk.T @ Wd
             if want_dip:
-                gk = _TWO_OVER_SQRT_PI * self.alpha * np.exp(-ark * ark)
+                gk = _TWO_OVER_SQRT_PI * self.alpha * xp.exp(-ark * ark)
                 B1 = (fk + gk) / r2k
                 B2 = (3.0 * B1 + 2.0 * self.alpha ** 2 * gk) / r2k
                 C1, C2 = B1, B2  # the dipole-dipole kernels, Thole-damped when asked
                 if thole is not None:
                     sk = sth[ii, jj]
-                    f3, f5, d3, d5 = thole.damping(rk / sk)
+                    f3, f5, d3, d5 = thole.damping(rk / sk, xp)
                     r3 = r2k * rk
                     r5 = r3 * r2k
                     C1 = B1 - f3 / r3
                     C2 = B2 - 3.0 * f5 / r5
                 if field:
-                    Fq += self.pref * scatter_vec(ii, (B1 * q[jj])[:, None] * Dk)
+                    Fq += self.pref * scatter_vec(ii, (B1 * qd[jj])[:, None] * Dk)
                 if tensor:
                     pair = ii * N + jj
                     for a in range(3):
                         for b in range(a, 3):
-                            tab = np.bincount(pair, weights=C2 * Dk[:, a] * Dk[:, b], minlength=N * N).reshape(N, N)
+                            tab = xp.bincount(pair, weights=C2 * Dk[:, a] * Dk[:, b], minlength=N * N).reshape(N, N)
                             Tm[:, :, a, b] += self.pref * tab
                             if b != a:
                                 Tm[:, :, b, a] += self.pref * tab
-                    c1 = np.bincount(pair, weights=C1, minlength=N * N).reshape(N, N)
+                    c1 = xp.bincount(pair, weights=C1, minlength=N * N).reshape(N, N)
                     Tm -= self.pref * c1[:, :, None, None] * I3[None, None]
                 if has_p:
-                    pi_, pj_ = p[ii], p[jj]
+                    pi_, pj_ = pd[ii], pd[jj]
                     pdj = (Dk * pj_).sum(axis=1)  # p_j . d
                     pid = (Dk * pi_).sum(axis=1)  # p_i . d
-                    cross = q[ii] * pdj - q[jj] * pid  # q_i p_j.d - q_j p_i.d
+                    cross = qd[ii] * pdj - qd[jj] * pid  # q_i p_j.d - q_j p_i.d
                     ppk = pp[ii, jj]
                     e_real += 0.5 * self.pref * float(cross @ B1)
                     e_real += 0.5 * self.pref * float((ppk * C1 - pid * pdj * C2).sum())
@@ -489,7 +560,7 @@ class Ewald:
                         # under negation and every term is odd in d, so the 1/2 cancels)
                         scal = -qqk * B1 - cross * B2 + ppk * C1p - pid * pdj * C2p
                         W = self.pref * (scal[:, None] * Dk
-                                         + B1[:, None] * (q[ii, None] * pj_ - q[jj, None] * pi_)
+                                         + B1[:, None] * (qd[ii][:, None] * pj_ - qd[jj][:, None] * pi_)
                                          - C2[:, None] * (pdj[:, None] * pi_ + pid[:, None] * pj_))
                         gX += scatter_vec(ii, W)
                         A1 += mk.T @ W
@@ -500,9 +571,10 @@ class Ewald:
                     A1 += mk.T @ W
                     A2 += nk.T @ W
                 if dipole_grad:
-                    gp += -self.pref * scatter_vec(ii, (B1 * q[jj])[:, None] * Dk)
+                    gp += -self.pref * scatter_vec(ii, (B1 * qd[jj])[:, None] * Dk)
+        del base, dS, nint, S
         if grad:
-            glat = 0.5 * (A1 - A2)
+            glat = to_host(0.5 * (A1 - A2))
             del A1, A2
         if charge_grad:
             gq += gq_real
@@ -517,41 +589,43 @@ class Ewald:
         k, k2 = k[keep], k2[keep]
         mkept = mk[keep] if tensor else None
         Ak = np.exp(-k2 / (4.0 * self.alpha ** 2)) / k2
-        cos, sin = self._phases(X, k)  # (N, K) each
-        ck, sk = q @ cos, q @ sin
+        kd, k2d, Akd = xp.asarray(k), xp.asarray(k2), xp.asarray(Ak)
+        cos, sin = self._phases(X, k, xp, (Xd, kd))  # (N, K) each
+        ck, sk = qd @ cos, qd @ sin
         pre = 2.0 * np.pi / V * self.pref
         if has_p:
-            kp = p @ k.T  # (N, K)  k . p_j
+            kp = pd @ kd.T  # (N, K)  k . p_j
             # S(k) = sum_j (q_j + i k.p_j) e^{i k.r_j}
             ReS = ck - (kp * sin).sum(axis=0)
             ImS = sk + (kp * cos).sum(axis=0)
         else:
             ReS, ImS = ck, sk
         s2 = ReS * ReS + ImS * ImS
-        e_recip = pre * float(Ak @ s2)
+        e_recip = pre * float(Akd @ s2)
         if grad or charge_grad or dipole_grad:
             wgt = ImS[None, :] * cos - ReS[None, :] * sin  # (N, K)
             if has_p:
-                wq = q[:, None] * wgt - kp * (ReS[None, :] * cos + ImS[None, :] * sin)
+                wq = qd[:, None] * wgt - kp * (ReS[None, :] * cos + ImS[None, :] * sin)
         if grad:
             if has_p:
-                gX += 2.0 * pre * ((Ak[None, :] * wq) @ k)
+                gX += 2.0 * pre * ((Akd[None, :] * wq) @ kd)
             else:
-                gX += 2.0 * pre * (q[:, None] * ((Ak[None, :] * wgt) @ k))
+                gX += 2.0 * pre * (qd[:, None] * ((Akd[None, :] * wgt) @ kd))
             # dE/dk for each k, then dE/d(strain) = -sum_k u_k (x) k  -  E_recip I
-            u = 2.0 * pre * (Ak * (-1.0 / (4.0 * self.alpha ** 2) - 1.0 / k2) * s2 * k.T
-                             + Ak * ((q[:, None] * X).T @ wgt))  # (3, K)
             if has_p:
-                u = 2.0 * pre * (Ak * (-1.0 / (4.0 * self.alpha ** 2) - 1.0 / k2) * s2 * k.T
-                                 + Ak * (X.T @ wq + p.T @ wgt))
-            deps -= u @ k
+                u = 2.0 * pre * (Akd * (-1.0 / (4.0 * self.alpha ** 2) - 1.0 / k2d) * s2 * kd.T
+                                 + Akd * (Xd.T @ wq + pd.T @ wgt))  # (3, K)
+            else:
+                u = 2.0 * pre * (Akd * (-1.0 / (4.0 * self.alpha ** 2) - 1.0 / k2d) * s2 * kd.T
+                                 + Akd * ((qd[:, None] * Xd).T @ wgt))
+            deps -= to_host(u @ kd)
             deps -= e_recip * np.eye(3)
         if charge_grad:
-            gq += 2.0 * pre * ((Ak * ReS) @ cos.T + (Ak * ImS) @ sin.T)
+            gq += 2.0 * pre * ((Akd * ReS) @ cos.T + (Akd * ImS) @ sin.T)
         if dipole_grad:
-            gp += 2.0 * pre * ((Ak[None, :] * wgt) @ k)
+            gp += 2.0 * pre * ((Akd[None, :] * wgt) @ kd)
         if field:
-            Fq -= 2.0 * pre * ((Ak[None, :] * (sk[None, :] * cos - ck[None, :] * sin)) @ k)
+            Fq -= 2.0 * pre * ((Akd[None, :] * (sk[None, :] * cos - ck[None, :] * sin)) @ kd)
         if tensor:
             # T_jl,ab -= 2 pre sum_k A_k k_a k_b cos(k.(r_j - r_l)).  The summand is even in k, so
             # the sum runs over one of each pair (k, -k) at twice the weight; and with
@@ -562,15 +636,18 @@ class Ewald:
             # width K where there were twelve general ones (cos and sin apart, k and -k both), a
             # quarter of the arithmetic.  On a sixteen-chain cell (960 sites, 14 482 vectors) this
             # was half of the whole energy evaluation (measured 2026-11-12: 4.8 s of 10.2).
+            # (On a device the same line is a general product: CuPy 14 does not hand ``a @ a.T`` to
+            # the symmetric update.  docs/PERFORMANCE_REVIEW.md 17.3.)
             half = (mkept[:, 0] > 0) | ((mkept[:, 0] == 0) & ((mkept[:, 1] > 0) | ((mkept[:, 1] == 0) & (mkept[:, 2] > 0))))
             kh = k[half]
-            Mh = np.concatenate([cos[:, half], sin[:, half]], axis=1)  # (N, K)
-            Mw = np.empty_like(Mh)
+            ih = xp.asarray(np.flatnonzero(half))  # the same columns as the mask, as positions
+            Mh = xp.concatenate([cos[:, ih], sin[:, ih]], axis=1)  # (N, K)
+            Mw = xp.empty_like(Mh)
             root = np.sqrt(2.0 * Ak[half])
             sym = {}
             for v in ((1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (1, 0, 1), (0, 1, 1)):
                 sv = root * (kh @ np.array(v, dtype=float))
-                np.multiply(Mh, np.concatenate([sv, sv])[None, :], out=Mw)
+                xp.multiply(Mh, xp.asarray(np.concatenate([sv, sv]))[None, :], out=Mw)
                 sym[v] = Mw @ Mw.T
             del Mh, Mw
             for a in range(3):
@@ -585,6 +662,10 @@ class Ewald:
                         Tm[:, :, b, a] -= 2.0 * pre * tab
 
         # --- self, background, surface ---------------------------------------------
+        # From here on the per-site results are host arrays (on NumPy they already were, and
+        # nothing is copied); only the tensor stays an array of ``xp``.
+        del cos, sin
+        gX, gq, gp, Fq = (None if arr is None else to_host(arr) for arr in (gX, gq, gp, Fq))
         e_self = -self.alpha / np.sqrt(np.pi) * self.pref * float(q @ q)
         Q = float(q.sum())
         e_bg = -np.pi / (2.0 * V * self.alpha ** 2) * self.pref * Q * Q
@@ -603,7 +684,7 @@ class Ewald:
             if self.boundary == "vacuum":
                 gX += 4.0 * np.pi / (3.0 * V) * self.pref * q[:, None] * M[None, :]
             glat = glat + hinv.T @ deps
-        dself = 2.0 * self.alpha ** 3 / (3.0 * np.sqrt(np.pi)) * self.pref
+        dself = float(2.0 * self.alpha ** 3 / (3.0 * np.sqrt(np.pi)) * self.pref)
         if has_p:
             e_self += -dself * float((p * p).sum())
         if dipole_grad:
@@ -614,9 +695,12 @@ class Ewald:
         if field and self.boundary == "vacuum":
             Fq -= 4.0 * np.pi / (3.0 * V) * self.pref * Mq[None, :]
         if tensor:
-            Tm[np.arange(N), np.arange(N)] += 2.0 * dself * I3
+            diag = xp.arange(N)
+            Tm[diag, diag] += 2.0 * dself * I3
             if self.boundary == "vacuum":
                 Tm -= 4.0 * np.pi / (3.0 * V) * self.pref * I3[None, None]
+            if not device_tensor:
+                Tm = to_host(Tm)
 
         return EwaldTerms(real=e_real, recip=e_recip, self_=e_self, background=e_bg, surface=e_surf,
                           grad_coords=gX, grad_lattice=glat, grad_charges=gq, grad_dipoles=gp,

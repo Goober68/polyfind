@@ -1336,3 +1336,172 @@ on a quiet machine, 601 s of it build and tensors, against 1,356 s for the belt 
 the change (1,719 s under load): 1.75x, with the cell, polarization and permittivities unchanged
 and the stiffness block within 2e-4 relative, the relaxation's noise floor.
 
+
+## 17. The many-chain cell on a device (2026-11-13): the port, and what it has not been measured on
+
+Scope: one energy-and-gradient evaluation of a `polyfind.mixedcell` cell of sixteen and more
+chains of the ten-monomer PVDF repeat (960 electrostatically active sites per sixteen chains),
+the unit of work of every relaxation, band and saddle search of `docs/CANDIDATE_MATERIALS.md`
+section 8.  The PI can rent an A100 and can buy four to six.  This section is the port that
+makes the question answerable and the list of what it answers; **no device time appears in it,
+because none has been measured**.  This container has four cores and no GPU.
+
+### 17.1 Where the time goes on the host
+
+Measured here with `examples/ewald_device_benchmark.py --device none`, each evaluation on a
+geometry the Ewald object had not seen.  The package holds the BLAS to one thread
+(`polyfind/__init__.py`; `POLYFIND_BLAS_THREADS` lifts it), so both settings are given; the
+sixteen-chain rows are the range of three runs each, taken in alternation:
+
+| chains | sites | k vectors | BLAS threads | whole evaluation | tensor and field | solve | gradient |
+|---|---|---|---|---|---|---|---|
+| 16 | 960 | 14,486 | 1 | 5.3 to 6.5 s | 3.0 to 3.1 s | 0.4 to 0.5 s | 1.0 to 1.4 s |
+| 16 | 960 | 14,486 | 4 | 4.4 to 4.7 s | 2.2 to 2.4 s | 0.2 s | 0.8 to 0.9 s |
+| 32 | 1,920 | 28,920 | 1 | 34.5 s | 19.2 s | 3.1 s | 10.9 s |
+| 32 | 1,920 | 28,920 | 4 | 24.7 s | 11.9 s | 1.4 s | 7.5 s |
+
+(The three steps are timed apart on the evaluation's own arguments.  This container's speed is
+not steady, as the ranges show.)
+
+**A correction.**  RESUME's note of this morning, and the answer given to the PI on it, said
+that four BLAS threads change nothing (26.7 s against 28.2 at thirty-two chains) because the
+routine is elementwise.  That comparison did not vary the threads: the package sets the loaded
+BLAS to one thread when it is imported, and `OPENBLAS_NUM_THREADS` in the environment does not
+undo that in a script that has imported NumPy first, as every script here does.  Both runs were
+at one.
+Varied properly (`POLYFIND_BLAS_THREADS=4`), four threads make the whole evaluation 1.2 to 1.4
+times faster: the solve halves, the six tensor products gain a quarter to a third, the
+elementwise arithmetic gains nothing.  A large-cell job that has the machine to itself should
+set it; jobs run side by side should not.
+
+The dipole step is `CrystalPacker._polarize`: `Ewald.terms` for the permanent field and the
+`(N, N, 3, 3)` dipole tensor, the dense solve for the induced dipoles, `Ewald.terms` again for
+the gradient at the solved dipoles, and the bonded-exclusion corrections chain by chain.  Inside
+`terms` the time is the reciprocal sum (line profile, sixteen chains, one thread, 3.2 s for the
+tensor call: the six symmetric products that assemble the tensor 1.3 s, `cos` and `sin` of the
+`(N, K)` phases 0.5 s, the field 0.3 s; 1.2 s for the gradient call, all of it elementwise
+arithmetic on `(N, K)` arrays and products with the k vectors).  The real-space neighbour list
+does not show.
+
+What the port leaves on the host, from cProfile of one whole evaluation at one thread: 0.9 s
+of 6.7 at sixteen chains (the short-range pair sums 0.39 s, the chains' geometry and its
+Jacobians 0.26 s, the bonded-exclusion corrections 0.19 s) and 1.9 s of 33.7 at thirty-two.
+
+The work grows as the cube of the cell: the number of k vectors `K` is proportional to the
+volume, so the tensor is `N^2 K ~ N^3`, like the solve; the gradient call is `N K ~ N^2`.
+
+### 17.2 What moved
+
+`Ewald.terms` is written once against an array module `xp` (`ewald.py`).  With NumPy, the
+default, it is the routine it was: every result bit for bit equal to the previous version's on
+six reference cases (the sixteen-chain cell's tensor-and-field, gradient-with-dipoles and
+charge-only calls, and a small skewed cell with every flag, charges alone, and the undamped
+tensor).  With a device module the arrays that grow with the cell are built and kept there (the
+pair separations, the neighbour list and its kernels, the `(N, K)` phases, the tensor); the 3 x 3
+lattice algebra and the list of k vectors are made on the host and sent; the per-site results
+come back, and the tensor comes back only if the caller does not ask to keep it
+(`device_tensor=True`).  `_polarize` (`pack.py`) asks, builds the `3N x 3N` matrix on the
+device, solves there, and brings back the dipoles; the `(N, N)` table of Thole lengths goes
+over once per packer.  Per sixteen-chain evaluation 2.0 MB goes to the device in 26 pieces
+(coordinates, k vectors and their weights) and 69 kB comes back in 13, the largest of them a
+per-site array of 23 kB (counted by the stand-in of 17.4).
+
+The switch is its own: `POLYFIND_EWALD_DEVICE=cuda`, or `Ewald(..., xp=cupy)`.  It is not
+`POLYFIND_DEVICE`, which turns itself on wherever CuPy finds a device and runs the batched screen
+in float32.  This path is float64, serves cells of a few dozen sites as well as of thousands,
+and is the arithmetic of every stored large-cell number, so it moves only when asked and only
+for cells of at least `Ewald.device_min_sites` (256) sites.  A device sums in another order,
+and CuPy's weighted `bincount` is an atomic add whose order is not fixed, so device numbers
+agree with the host's to rounding and are not reproducible bit for bit from run to run.
+
+One trap found on the way and closed: on a machine with a GPU the packer's batched kernels go
+to it in float32 unasked, and a mixed cell built on such a packer would have run its float64
+host loops through them, block by block across the bus, at seven digits.  `MixedModel` now
+refuses such a packer and says what to set (`POLYFIND_DEVICE=cpu`).
+
+What did not move: the short-range pair sums (`mixedcell.placed_energy_and_grad`, a host loop
+over chain pairs), the chains' geometry and its Jacobians, and the bonded-exclusion
+corrections: the 0.9 s and 1.9 s of 17.1.  They grow linearly with the cell, and they are the
+ceiling of this port: with the three ported steps at zero cost an evaluation still takes that
+long, against 4.4 s and 24.7 s for the host on four threads.  Five times at sixteen chains and
+thirteen at thirty-two is therefore the most a card can give over this host until those move
+too.  The whole evaluation on the host is the same arithmetic as before the port: energy and
+gradient of the two-, four- and sixteen-chain cells are bit for bit those of the previous
+commit.
+
+### 17.3 Read from CuPy's source, not assumed
+
+Against the 14.2.0 release (the current one; wheels `cupy-cuda12x` and `cupy-cuda13x`, NumPy
+2.0 to 2.5):
+
+* `einsum` with batch axes and no cuTENSOR becomes `matmul` of stacks of matrices: the
+  neighbour-distance step `einsum("mijc,mijc->mij", D, D)` would have been one 1 x 3 by 3 x 1
+  product per pair-image.  On a device it is `(D * D).sum(-1)`.
+* `a @ a.T` is a general `gemm`; nothing routes it to `syrk`.  The six products of the
+  reciprocal tensor were arranged as symmetric rank-k updates because the host's BLAS forms
+  those at half the cost (16.2); on a device they are general products, twice the arithmetic
+  needed.  `cupy.cublas.syrk` exists and fills one triangle.  Not used yet: the benchmark
+  times it beside the general product on the cell's own shapes.
+* `linalg.solve` is LU (`gesv`) on copies of both operands, and by default does not report a
+  singular matrix.  `cupyx.lapack.posv` (Cholesky) exists; the matrix is symmetric positive
+  definite at any state short of a polarization catastrophe.  Also timed, not used.
+* `bincount` with weights returns float64 from an `atomicAdd` kernel and synchronises twice.
+* An array has no `setflags` and its flags are read-only: the kept phases cannot be marked
+  read-only on a device as they are on the host.
+* A reduction returns a zero-dimensional array; `float()` of it is a transfer; a NumPy array
+  met in arithmetic, or converted implicitly, is a `TypeError`.
+
+### 17.4 Tested without a device
+
+`tests/device_double.py` is an array module that is NumPy underneath and has those last
+rules on top: its arrays are not NumPy arrays, do not become one except through `get()` or
+`float()`, do not mix with one in arithmetic, in a function or as an index, return
+zero-dimensional arrays from reductions, and have no `setflags`; and it counts the bytes that
+cross.  `tests/test_ewald_device.py` runs the device path on it: every term and gradient with
+both boundary conditions, both Thole forms, charge penetration and a charged cell agrees with
+the host to 1e-12 of the result's size (the only arithmetic that differs is the two places
+above); the tensor stays only when asked; nothing of the size of `N^2` or `N K` crosses in a
+call; a small cell stays on the host whatever the module; the phases are kept per module; an
+`Ewald` object pickles without its module; and a whole four-chain evaluation, solve included,
+is the host's to 1e-12 with the Thole table sent once.  The benchmark itself runs on the
+double (`--device double`): at sixteen chains the largest relative difference from the host
+over every result is 3e-15.
+
+What this cannot show is that CuPy's own functions behave as read, and how long they take.
+`tests/test_gpu.py` holds the same comparisons for a real device; they are skipped here and are
+the first thing the pod script runs.
+
+### 17.5 The measurement
+
+`bash examples/runpod_ewald_bench.sh` on a fresh pod: installs, checks that CuPy reaches the
+device, cuBLAS, cuSOLVER and the kernel compiler (taking NVIDIA's runtime wheels if the image
+has no libraries CuPy can find), runs the device tests, then
+`examples/ewald_device_benchmark.py` at 16, 32 and 64 chains with the host beside it, and at 128
+on the device alone.  For a cell the host is not run on, the device is held to two things that
+need no host run: the untouched tiling must have the stored two-chain cell's energy per chain
+(1e-13 kcal/mol on the host at sixteen chains), and the gradient must agree with the device's
+own fourth-order energy difference (which has a floor of about 2e-5 at sixteen chains from pairs
+crossing the real-space cutoff, on the host as anywhere).
+
+What each number it reports decides:
+
+| number | decides |
+|---|---|
+| largest difference from the host, per size | whether the port is right on a real device |
+| whole evaluation, device against the host at one thread and at every core | what one card buys a relaxation, which is sequential |
+| the share left on the host | whether the pair sums are the next thing to move |
+| memory pool at each size | which cells fit a 40 GB card and which need 80 |
+| general product against `syrk`, LU against Cholesky | the next two changes on the device, or not |
+| first call | the one-time kernel compilation a short job pays |
+| `--all-devices` (more than one card) | whether cards add up for independent evaluations |
+
+A farm of cards multiplies what is independent: the images of a band, the columns of a
+difference Hessian, separate starts, the rows of a fit.  It does nothing for one relaxation,
+whose evaluations follow one another; there the gain is one card's, capped by what 17.1 says
+stays on the host.  Past about a hundred chains the cube is the issue and the remedy is not hardware: a
+matrix-free solve of the dipoles on a particle mesh is `N log N` per iteration.  None of that is
+designed here.
+
+One limit of the present code on a device: a process that has used the device cannot fork
+workers that use it (`examples/kink_migration.py --workers`); independent evaluations on
+several cards want one process per card started fresh, which is how `--all-devices` runs.

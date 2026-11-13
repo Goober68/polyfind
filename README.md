@@ -20,8 +20,14 @@ design and validation results.
 ```bash
 pip install -e .          # numpy, scipy
 pip install -e .[dev]     # + pytest
-pip install cupy-cuda12x  # optional: GPU backend for the batched kernels
+pip install cupy-cuda12x  # optional: GPU backend (cupy-cuda13x for CUDA 13)
 ```
+
+The GPU backend serves two separate things. The batched kernels of the screen move to a
+device by themselves when one is present (`POLYFIND_DEVICE=cuda|cpu`, float32). The Ewald
+sums and the induced-dipole solve of the large cells are float64 and move only when asked
+(`POLYFIND_EWALD_DEVICE=cuda`), and only for cells large enough to gain; a many-chain cell
+(`mixedcell.py`) wants `POLYFIND_DEVICE=cpu` beside it and says so.
 
 ## Quick start
 
@@ -78,10 +84,10 @@ model = fit_ris(PVDF, ASECalculator(mace_mp()), third_order=True).model
 | `enumerate.py` | periodic candidate generation, dedupe, ranking |
 | `forcefield.py` | `SimpleFF` (illustrative), `ASECalculator` adapter, `fit_ris` |
 | `pack.py` | rigid-helix crystal packing: batched lattice-energy kernel, search, CIF export |
-| `ewald.py` | Ewald lattice electrostatics (`CrystalPacker(coulomb="ewald")`), tinfoil or vacuum boundary |
+| `ewald.py` | Ewald lattice electrostatics (`CrystalPacker(coulomb="ewald")`), tinfoil or vacuum boundary; NumPy, or CuPy for large cells |
 | `refine.py` | continuous refinement of torsions + cell with a commensurability penalty |
 | `amorphous.py` | Boltzmann ensembles, run statistics, lamella-interface sampling |
-| `backend.py` | NumPy / CuPy selection for the batched kernels |
+| `backend.py` | NumPy / CuPy selection: the batched kernels, and separately the Ewald path |
 | `pipeline.py`, `cli.py` | the funnel and the command line |
 
 ## Caveats
@@ -99,4 +105,9 @@ device are present).  `python examples/benchmark.py` prints per-kernel timings
 for the active backend; `bash examples/runpod_gpu_bench.sh` (Linux, e.g. a RunPod
 pod) or `.\examples\gpu_bench.ps1` (Windows PowerShell) does the whole GPU
 validation: CuPy install, GPU tests, full suite on the CuPy backend, CPU vs GPU
-timings.
+timings.  For the large cells, `bash examples/runpod_ewald_bench.sh` checks the Ewald
+sums, the dipole solve and a whole evaluation on the device against the host and times
+both at 16 to 128 chains (`examples/ewald_device_benchmark.py`;
+`docs/PERFORMANCE_REVIEW.md` section 17); `tests/test_ewald_device.py` runs the same
+device code path on any machine, on a NumPy-backed stand-in that is as strict about
+mixing host and device arrays as CuPy is.

@@ -14,6 +14,61 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The large cells on a device, 2026-11-13 (PI: "Write it an evaluate - I can get a RunPod instance when you're ready",
+and "I have ability to order 4-6 A100s for cheap, so I might build a local GPU farm").** STATE: the port is written and
+tested here WITHOUT a GPU. NOTHING HAS BEEN RUN ON A DEVICE: there is no device time anywhere in the repository, and
+none may be quoted until the pod run comes back. Text: `docs/PERFORMANCE_REVIEW.md` section 17.
+NEXT (waits on the PI): on an A100 pod, `bash examples/runpod_ewald_bench.sh` (about half an hour, most of it the
+host's own sixty-four-chain evaluations); it writes `ewald_bench_<time>/` with `log.txt` and the JSON files. When they
+come back: (a) add 17.6 "Measured on an A100" from the JSON, nothing from memory; (b) the extras decide whether the
+six tensor products become `cupy.cublas.syrk` and the solve Cholesky; (c) answer the farm question with those numbers
+(what one card buys one relaxation; which cell sizes fit 40 GB and which need 80; whether cards add up, `--all-devices`);
+(d) if the share left on the host is what caps the gain, move the pair sums, the chain building and the exclusion
+corrections next.
+WHAT IS IN: `Ewald.terms` written once against an array module (`ewald.py`; `Ewald(..., xp=)`, `array_module`,
+`device_min_sites` 256, `release`, `device_tensor=`); the tensor kept and the dipoles solved on the device in
+`CrystalPacker._polarize`; the switch `POLYFIND_EWALD_DEVICE=cuda` (`backend.ewald_backend`, `erfc_of`, `synchronize`);
+`tests/device_double.py` (NumPy underneath, CuPy's refusals on top, counts what crosses), `tests/test_ewald_device.py`
+(13 tests, run everywhere), four tests in `tests/test_gpu.py` (real device, skipped here);
+`examples/ewald_device_benchmark.py` (`--device none|double|auto|N`, `--chains`, `--host-max-chains`, `--host-threads`,
+`--all-devices`; the host is timed at one BLAS thread and at every core and a device is compared with the faster) and
+`examples/runpod_ewald_bench.sh` (`EWALD_BENCH_DRY=1` runs the whole script without a GPU on the stand-in; done here
+on a copy of the tree, exit 0).
+MEASURED HERE (host). One evaluation at ONE BLAS thread, the package's setting: 5.3-6.5 s at sixteen chains, 34.5 s at
+thirty-two; at FOUR (`POLYFIND_BLAS_THREADS=4`): 4.4-4.7 s and 24.7 s. A CORRECTION of note (5) of the block below and
+of what the PI was told on it ("four BLAS threads change nothing"): that comparison never varied the threads, because
+`polyfind/__init__.py` sets the loaded BLAS to one thread at import, and `OPENBLAS_NUM_THREADS=4` does not undo that
+in a script that imported NumPy first (every script here; so every large-cell job of this week ran NumPy's BLAS on one
+thread whatever its command line said); varied properly, four threads are 1.2-1.4x (the solve halves, the tensor
+products gain a quarter to a third, the elementwise part nothing).
+A LARGE-CELL JOB THAT HAS THE MACHINE TO ITSELF SHOULD SET `POLYFIND_BLAS_THREADS=4`; jobs side by side should not.
+The three ported steps are 86% and 94% of an evaluation (cProfile, one thread: 5.77 of 6.68 s, 31.7 of 33.65 s); what
+stays on the host is 0.9 s and 1.9 s (pair sums 0.39, chain building 0.26, exclusion corrections 0.19 at sixteen), so
+over this host on four threads a card can give at most 5 times at sixteen chains and 13 at thirty-two until those
+move too. The host path is bit for bit the previous commit's: `Ewald.terms` on six
+reference cases, and energy and gradient of the two-, four- and sixteen-chain cells. On the stand-in the device path
+agrees with the host to 3e-15 of each result's size at sixteen chains; 2.0 MB crosses to the device per evaluation and
+69 kB back.
+Suite 808 passed, 9 skipped (the GPU ones).
+TO USE IT in a run, once measured: `POLYFIND_DEVICE=cpu POLYFIND_EWALD_DEVICE=cuda python examples/kink_migration.py ...`,
+serial (no `--workers`).
+TRAPS. (1) On a machine with a GPU `POLYFIND_DEVICE` defaults to the device in FLOAT32 for the packer's batched kernels,
+and the mixed cell's pair sums borrow those: `MixedModel` now refuses such a packer and names the remedy
+(`POLYFIND_DEVICE=cpu`); the benchmark and the pod script set it. (2) A process that has used the device cannot fork
+workers that use it: several cards want one fresh process per card (`--all-devices` does that). (3) Device numbers
+agree to rounding, not bit for bit, and not from run to run (CuPy's weighted `bincount` is an atomic add). (4) CuPy
+14.2 wants NumPy 2.0-2.5 and has wheels for CUDA 12 and 13 only. (5) Read from CuPy's source, each of which would have
+cost a pod session to find: its `einsum` would have run the neighbour distances as one tiny matrix product per pair
+(the device path multiplies and sums instead); `a @ a.T` is a general product there, not `syrk`; an array has no
+`setflags`. (6) Timing repeats of one geometry reuse the kept phases (0.5 s of 6.5): the benchmark drops them before
+each evaluation; a timing that does not is that half second too fast. (7) The energy's own difference check of the
+gradient has a floor of 2e-5 at sixteen chains (pairs crossing the real-space cutoff at erfc ~ 1e-8); for cells the
+host is not run on the benchmark holds the device to the stored two-chain cell's energy per chain instead (1e-13 on
+the host). (8) The pod script has not been run on a pod. Its dry mode covers everything but the CuPy steps: the CuPy
+install, the check that CuPy reaches the device and its libraries, and the fallback to NVIDIA's runtime wheels
+(`cupy-cuda12x[ctk]`) when it does not, are untested. (9) The benchmark's machine record is what caught the thread
+error above (`"num_threads": 1` under a label that said four): read it.
+
 **The second chain's step, 2026-11-13 (PI: "Go" on "the second chain's barrier").** Text: `docs/CANDIDATE_MATERIALS.md`
 8.3, the sub-bullet "But a stepped chain is recalled, not joined" and its table; table: the last step table of
 `docs/predictions/kink_summary_belt4.md`; data: rows `vdf10@0 4x2 mover 4 ahead host flexible beside 0` and `... mover 12
@@ -97,10 +152,12 @@ windows (`info["outside_windows"]` counts leavers; none so far) and has no trust
 evaluation is 28 s alone on one thread (the 38 s first noted was two such jobs side by side), 5.8 times the sixteen-chain
 4.9 s. PROFILED 2026-11-13 (scratch `profile16.py`): `Ewald.terms`, the dense pair and reciprocal sums, is 84% of it
 (79% at sixteen chains); the dense solve for the induced dipoles is 9% (7%); chain building 2%. Four BLAS threads change
-nothing (26.7 s against 28.2): that function is elementwise NumPy and is not threaded. An earlier version of this note
+nothing (26.7 s against 28.2): that function is elementwise NumPy and is not threaded. [WRONG, CORRECTED LATER THE SAME
+DAY, block at the top: both of those runs were at one thread; four threads are 1.2-1.4x.] An earlier version of this note
 blamed the cubic solve; that was not measured and is wrong. `ewald.py` is NumPy only (the CuPy backend of
 `polyfind.backend` covers the batched packing kernels, not this path): the large cells are one function away from a
-GPU or from threads, and neither port is made.
+GPU or from threads, and neither port is made. [THE DEVICE PORT WAS WRITTEN LATER THE SAME DAY, block at the top; not
+yet run on a device.]
 (6) The container restarted once in this window: background jobs died, the working tree and the scratch directory
 survived. Commit results as they land.
 

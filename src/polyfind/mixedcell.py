@@ -318,6 +318,16 @@ class MixedModel:
                  pen_rot: float = 0.0, k_c: float = 0.0, valences=None):
         self.polymer, self.name, self.pk = polymer, name, packer
         self.nc, self.n = int(packer.n_chains), int(packer.n)
+        # The pair sums of a mixed cell are host loops in float64 that borrow the packer's kernel.
+        # On a machine with a GPU the packer's batched kernels move to the device in float32 by
+        # themselves (polyfind.backend), and this cell would then be evaluated block by block
+        # across the bus at seven digits: wrong for a relaxation and slow.  Say so instead.
+        if getattr(packer, "xp", np) is not np or np.dtype(getattr(packer, "_dt", np.float64)) != np.float64:
+            raise ValueError(
+                "a mixed cell evaluates its pair sums on the host in float64, and this packer was built for the "
+                "batched device backend (float32): set POLYFIND_DEVICE=cpu, or call polyfind.backend.set_backend('cpu'), "
+                "before building the packer.  The Ewald sums and the dipole solve go to a device separately, with "
+                "POLYFIND_EWALD_DEVICE=cuda.")
         self.flips = np.asarray(flips, dtype=bool).reshape(self.nc)
         if len(refs) != self.nc:
             raise ValueError(f"{len(refs)} reference chains for a cell of {self.nc}")
