@@ -683,6 +683,10 @@ class MixedModel:
         closure's; and ``info["linear_force"]`` is the multiplier of the new constraint, the
         derivative of the constrained minimum's energy with respect to ``b``.
 
+        In a cell of many chains this method is slow and stops short, for two reasons that
+        :meth:`relax_on_surface` removes (trial points off the closure surface, and the
+        conditioning): use that one there.
+
         The variables' units are those of :meth:`scale`, equal amounts of atom motion.  Units that
         even out the curvature instead (one factor per kind of variable, from the mean of
         ``z . H z`` over random signs ``z`` on that kind) were tried on the four-chain step and are
