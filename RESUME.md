@@ -94,7 +94,13 @@ SLSQP from a strained start: in the small test model, from 13 kcal/mol above the
 1 kcal/mol up. The driver runs the damped descent first (`presteps=300`) and the conformation letters of the moving
 chain are stored with every end state: look at them. (4) `relax_on_surface` does not enforce the angle and cell
 windows (`info["outside_windows"]` counts leavers; none so far) and has no trust box. (5) A thirty-two-chain
-evaluation is 38 s (two BLAS threads), nine times the sixteen-chain one: the induced-dipole solve is cubic.
+evaluation is 28 s alone on one thread (the 38 s first noted was two such jobs side by side), 5.8 times the sixteen-chain
+4.9 s. PROFILED 2026-11-13 (scratch `profile16.py`): `Ewald.terms`, the dense pair and reciprocal sums, is 84% of it
+(79% at sixteen chains); the dense solve for the induced dipoles is 9% (7%); chain building 2%. Four BLAS threads change
+nothing (26.7 s against 28.2): that function is elementwise NumPy and is not threaded. An earlier version of this note
+blamed the cubic solve; that was not measured and is wrong. `ewald.py` is NumPy only (the CuPy backend of
+`polyfind.backend` covers the batched packing kernels, not this path): the large cells are one function away from a
+GPU or from threads, and neither port is made.
 (6) The container restarted once in this window: background jobs died, the working tree and the scratch directory
 survived. Commit results as they land.
 
