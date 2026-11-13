@@ -23,8 +23,8 @@ For each cell size this script
    must agree with the device's own energy differences;
 3. times the three steps and the whole evaluation on both, the clock read only after the
    device has finished, the first device call (which compiles kernels, once per machine)
-   reported apart; the host is timed at one BLAS thread, which is what the package sets, and
-   at every usable core, and the device is compared with the faster of the two;
+   reported apart; the host is timed at one BLAS thread, which is what the package sets, at
+   eight, and at every core it is allotted, and the device is compared with the fastest;
 4. reports the device memory the evaluation needed;
 5. times two things the port does not use yet, to decide whether it should: the symmetric
    rank-k update against the general matrix product it replaces, and a Cholesky solve against
@@ -63,6 +63,43 @@ def log(msg: str = "") -> None:
 
 
 # --------------------------------------------------------------------------- the machine
+def allotted_cores() -> dict:
+    """How many CPUs this process may really use, and what says so.
+
+    A container can see every CPU of its host and still be held to a few of them by a quota: a
+    Runpod pod on a 256-thread machine reports 256 usable CPUs and is allotted 32, and a BLAS
+    given 256 threads there ran a sixteen-chain evaluation slower than on one (measured
+    2026-11-13).  So the count is the affinity mask cut down by the control group's quota and by
+    the pod's own statement of its allotment."""
+    out = {}
+    try:
+        out["affinity"] = len(os.sched_getaffinity(0))
+    except AttributeError:
+        out["affinity"] = os.cpu_count() or 1
+    try:  # control groups, version 2 then version 1
+        quota, period = open("/sys/fs/cgroup/cpu.max").read().split()[:2]
+        if quota != "max":
+            out["cgroup_quota"] = float(quota) / float(period)
+    except Exception:
+        try:
+            quota = float(open("/sys/fs/cgroup/cpu/cpu.cfs_quota_us").read())
+            period = float(open("/sys/fs/cgroup/cpu/cpu.cfs_period_us").read())
+            if quota > 0:
+                out["cgroup_quota"] = quota / period
+        except Exception:
+            pass
+    env = os.environ.get("RUNPOD_CPU_COUNT", "")
+    if env.isdigit() and int(env) > 0:
+        out["RUNPOD_CPU_COUNT"] = int(env)
+    limits = [out["affinity"]]
+    if "cgroup_quota" in out:
+        limits.append(max(1, int(out["cgroup_quota"])))
+    if "RUNPOD_CPU_COUNT" in out:
+        limits.append(out["RUNPOD_CPU_COUNT"])
+    out["cores"] = max(1, min(limits))
+    return out
+
+
 def machine(cp) -> dict:
     info = {"python": platform.python_version(), "numpy": np.__version__, "platform": platform.platform()}
     try:
@@ -76,6 +113,7 @@ def machine(cp) -> dict:
         info["cpus_usable"] = len(os.sched_getaffinity(0))
     except Exception:
         pass
+    info["cpus_allotted"] = allotted_cores()
     try:
         with open("/proc/cpuinfo") as fh:
             names = {line.split(":", 1)[1].strip() for line in fh if line.startswith("model name")}
@@ -361,8 +399,8 @@ def one_size(dk, nc: int, cp, args) -> dict:
     if do_host:
         # The package holds the BLAS to one thread (polyfind/__init__.py: its parallelism is
         # processes, and many threads on small solves were found to be slower).  For a cell this
-        # size threads help, so the host is timed both ways and a device is compared with the
-        # faster of the two.
+        # size threads help, so the host is timed at several counts and a device is compared with
+        # the fastest of them.
         ew.xp = np
         row["host_runs"] = []
         for threads in args.host_threads:
@@ -495,7 +533,8 @@ def main() -> None:
                     "host evaluation takes minutes and about 12 GB)")
     ap.add_argument("--repeat", type=int, default=3)
     ap.add_argument("--host-threads", type=int, nargs="+", default=None, help="BLAS thread counts the host is timed at "
-                    "(default: 1, the package's own setting, and every usable core)")
+                    "(default: 1, the package's own setting; 8; and every core this process is allotted, which in a "
+                    "container is the quota and not what the machine has)")
     ap.add_argument("--device", default="auto", help="'auto', a device number, 'none' for the host columns alone, or 'double' "
                     "for the tests' NumPy-backed stand-in (no speed in it: it checks the script and the port's bookkeeping "
                     "on a machine without a GPU)")
@@ -512,11 +551,8 @@ def main() -> None:
     # for the screen, not for this, and the cell refuses it.
     bk.set_backend("cpu")
     if args.host_threads is None:
-        try:
-            cores = len(os.sched_getaffinity(0))
-        except AttributeError:
-            cores = os.cpu_count() or 1
-        args.host_threads = [1] + ([cores] if cores > 1 else [])
+        cores = allotted_cores()["cores"]
+        args.host_threads = sorted({1, min(8, cores), cores})
     cp, why = device_module(args.device)
     result = {"machine": machine(cp), "preset": PRESET, "row": ROW, "batched_kernels": "host, float64",
               "host_blas_threads_timed": args.host_threads, "rows": []}
