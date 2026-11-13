@@ -32,8 +32,8 @@ For each cell size this script
    eight, and at every core it is allotted, and the device is compared with the fastest;
 4. reports the device memory the evaluation needed, the evaluation part by part (which parts
    are the host's), and -- the direct answer to "is the GPU being used" -- the card's own
-   utilisation figure sampled while evaluations run back to back, for the batched form and, at
-   the smallest size, for the loop form it replaces;
+   utilisation figure sampled while evaluations run back to back, for the batched form and, with
+   ``--loop-form``, for the loop form it replaces;
 5. times two things the port does not use yet, to decide whether it should: the symmetric
    rank-k update against the general matrix product it replaces, and a Cholesky solve against
    the LU solve.
@@ -558,7 +558,7 @@ def one_size(dk, nc: int, cp, args) -> dict:
             log(f"   device: {b['evaluations']} evaluations back to back in {b['seconds']:.1f} s ({1e3 * b['per_evaluation_s']:.0f} ms each)"
                 + (f"; card utilisation {b['utilization_mean']:.0f}% (lowest sample {b['utilization_min']:.0f}%, highest {b['utilization_max']:.0f}%, "
                    f"{b['utilization_samples']} samples)" if "utilization_mean" in b else "; no utilisation figure on this machine"))
-            if nc == min(args.chains):  # the form this replaces, on the same card: sums on the device, loops on the host
+            if args.loop_form:  # the form this replaces, on the same card: sums on the device, loops on the host
                 model.xp = "loops"
                 try:
                     whole_l = evaluate(model, x, cp, args.repeat)
@@ -654,6 +654,9 @@ def main() -> None:
     ap.add_argument("--no-extras", action="store_true", help="skip the two side measurements")
     ap.add_argument("--busy-seconds", type=float, default=8.0, help="how long evaluations run back to back while the card's "
                     "utilisation is sampled (0 to skip)")
+    ap.add_argument("--loop-form", action="store_true", help="also time, and sample the card under, the loop form with the sums "
+                    "on the device (the organisation before the batched form): host work with the card nearly idle, which "
+                    "is the point of the comparison and the reason it is not run unless asked for")
     ap.add_argument("--all-devices", action="store_true", help="after the run, repeat it on every visible device at once")
     ap.add_argument("--out", default="ewald_device_benchmark.json")
     args = ap.parse_args()

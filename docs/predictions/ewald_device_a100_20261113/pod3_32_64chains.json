@@ -1,0 +1,247 @@
+{
+ "machine": {
+  "python": "3.10.12",
+  "numpy": "2.2.6",
+  "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.35",
+  "scipy": "1.15.3",
+  "cpu_count": 192,
+  "cpus_usable": 192,
+  "cpus_allotted": {
+   "affinity": 192,
+   "cgroup_quota": 20.4,
+   "RUNPOD_CPU_COUNT": 24,
+   "cores": 20
+  },
+  "cpu": "Intel(R) Xeon(R) Platinum 8470",
+  "memory_gb": 990.7,
+  "blas": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.28",
+    "threading_layer": "pthreads"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.29",
+    "threading_layer": "pthreads"
+   }
+  ],
+  "nvidia_smi": [
+   "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+  ],
+  "device_module": "cupy 14.2.0",
+  "device": {
+   "id": 0,
+   "name": "NVIDIA A100-SXM4-80GB",
+   "memory_gb": 85.1,
+   "free_gb": 84.6,
+   "compute_capability": "80",
+   "visible_devices": 1
+  }
+ },
+ "preset": "pvdf-dft-valence-belt4",
+ "row": "vdf10",
+ "batched_kernels": "host, float64",
+ "host_blas_threads_timed": [
+  20
+ ],
+ "rows": [
+  {
+   "chains": 32,
+   "tiling": [
+    8,
+    2
+   ],
+   "variables": 1412,
+   "build_s": 0.430889958050102,
+   "sites": 1920,
+   "k_vectors": 28920,
+   "device": {
+    "first_call_s": 0.391911949031055,
+    "whole_s": 0.14317160425707698,
+    "dipole_step_s": 0.12244872795417905,
+    "energy": -2836.8674240653554,
+    "pool_gb_after_evaluation": 5.0156032,
+    "sites": 1920,
+    "tensor_s": 0.08883375069126487,
+    "tensor_all_s": [
+     0.08890515239909291,
+     0.08891431521624327,
+     0.08883375069126487
+    ],
+    "solve_s": 0.009367445018142462,
+    "solve_all_s": [
+     0.009411450941115618,
+     0.009394412860274315,
+     0.009367445018142462
+    ],
+    "gradient_s": 0.018943781033158302,
+    "gradient_all_s": [
+     0.018997643142938614,
+     0.018977792002260685,
+     0.018943781033158302
+    ],
+    "k_vectors": 28920,
+    "images": 27,
+    "solve_method": "cholesky",
+    "pool_gb_peak": 5.4598144,
+    "device_gb_in_use": 5.94837504,
+    "device_gb_total": 85.094825984,
+    "parts_s": {
+     "build": 0.009398297872394323,
+     "valence": 2.527981996536255e-05,
+     "pair sums": 0.005889568943530321,
+     "electrostatics": 0.12328085396438837,
+     "exclusions": 0.0017171981744468212,
+     "assembly": 0.003674847073853016,
+     "host_parts": 0.014815622940659523,
+     "all": 0.14398604584857821
+    },
+    "busy": {
+     "seconds": 8.050483237951994,
+     "evaluations": 55,
+     "per_evaluation_s": 0.14637242250821808,
+     "utilization_mean": 76.86111111111111,
+     "utilization_min": 67.0,
+     "utilization_max": 84.0,
+     "utilization_samples": 36
+    },
+    "loop_form": {
+     "whole_s": 1.0964054251089692,
+     "dipole_step_s": 0.3304606447927654,
+     "busy": {
+      "seconds": 8.860433442052454,
+      "evaluations": 8,
+      "per_evaluation_s": 1.1075541802565567,
+      "utilization_mean": 9.688888888888888,
+      "utilization_min": 0.0,
+      "utilization_max": 62.0,
+      "utilization_samples": 45
+     }
+    },
+    "gradient_check": {
+     "analytic": 3.0957471652462996,
+     "difference": 3.095754608333815,
+     "relative_error": 2.404294381406654e-06
+    },
+    "tiling_check": {
+     "per_two_chains": -178.13528050130273,
+     "stored_two_chain_cell": -178.13528050130296,
+     "difference": 2.2737367544323206e-13
+    },
+    "extras": {
+     "symmetric_product": {
+      "shape": [
+       1920,
+       28920
+      ],
+      "gemm_s": 0.011044478043913841,
+      "syrk_s": 0.00833095470443368,
+      "gflops_gemm": 19305.699658436784,
+      "largest_difference": 1.5844791239622685e-14
+     },
+     "solve": {
+      "unknowns": 5760,
+      "lu_s": 0.03886997094377875,
+      "cholesky_s": 0.008557775057852268,
+      "asymmetry_of_matrix": 0.0,
+      "largest_difference": 2.352697923521122e-15
+     }
+    }
+   }
+  },
+  {
+   "chains": 64,
+   "tiling": [
+    8,
+    4
+   ],
+   "variables": 2820,
+   "build_s": 1.4485871805809438,
+   "sites": 3840,
+   "k_vectors": 57886,
+   "device": {
+    "first_call_s": 0.8528179968707263,
+    "whole_s": 0.757594482973218,
+    "dipole_step_s": 0.7211778718046844,
+    "energy": -5656.870830984115,
+    "pool_gb_after_evaluation": 19.331915264,
+    "sites": 3840,
+    "tensor_s": 0.6064182291738689,
+    "tensor_all_s": [
+     0.6064182291738689,
+     0.6094646668061614,
+     0.6082067769020796
+    ],
+    "solve_s": 0.04559310059994459,
+    "solve_all_s": [
+     0.045962778851389885,
+     0.045609266962856054,
+     0.04559310059994459
+    ],
+    "gradient_s": 0.05865625198930502,
+    "gradient_all_s": [
+     0.05882405303418636,
+     0.05865625198930502,
+     0.05918848793953657
+    ],
+    "k_vectors": 57886,
+    "images": 27,
+    "solve_method": "cholesky",
+    "pool_gb_peak": 21.110173184,
+    "device_gb_in_use": 21.59312896,
+    "device_gb_total": 85.094825984,
+    "parts_s": {
+     "build": 0.017858585808426142,
+     "valence": 3.537023440003395e-05,
+     "pair sums": 0.01073737209662795,
+     "electrostatics": 0.7236582119949162,
+     "exclusions": 0.0035696160048246384,
+     "assembly": 0.006308956071734428,
+     "host_parts": 0.027772528119385242,
+     "all": 0.7621681122109294
+    },
+    "busy": {
+     "seconds": 8.39973734691739,
+     "evaluations": 11,
+     "per_evaluation_s": 0.7636124860833992,
+     "utilization_mean": 90.58536585365853,
+     "utilization_min": 0.0,
+     "utilization_max": 100.0,
+     "utilization_samples": 41
+    },
+    "gradient_check": {
+     "analytic": 28.829543177086062,
+     "difference": 28.829783882429183,
+     "relative_error": 8.349259703563726e-06
+    },
+    "tiling_check": {
+     "per_two_chains": -178.13528050130273,
+     "stored_two_chain_cell": -178.13528050130296,
+     "difference": 2.2737367544323206e-13
+    },
+    "extras": {
+     "symmetric_product": {
+      "shape": [
+       3840,
+       57886
+      ],
+      "gemm_s": 0.08809634810313582,
+      "syrk_s": 0.051100864075124264,
+      "gflops_gemm": 19377.961061466907,
+      "largest_difference": 2.4501722929731747e-14
+     },
+     "solve": {
+      "unknowns": 11520,
+      "lu_s": 0.13563167536631227,
+      "cholesky_s": 0.04268710874021053,
+      "asymmetry_of_matrix": 0.0,
+      "largest_difference": 4.015470205214035e-15
+     }
+    }
+   }
+  }
+ ]
+}

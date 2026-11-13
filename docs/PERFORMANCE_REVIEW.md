@@ -1619,16 +1619,19 @@ for all hundred bonds are suffix sums along the chain (`polyfind.chainjac.oligom
 alignment of the repeat to its reference is carried back the same way
 (`aligned_block_vjp`: the chain rule of `aligned_block_jacobian` read backwards), and the repeat
 transform's own derivative, which the closure terms need, comes from running sums over the two
-backbone windows (`backbone_transform_jacobian`).  Sixteen chains: 117 ms to about 7 ms; the
-gradient agrees with the Jacobian's to 2e-14 of its size.  The sequential part -- the backbone
+backbone windows (`backbone_transform_jacobian`).  The chains of an evaluation, on this
+container: 112 ms to 4.4 ms at sixteen chains and 432 ms to 13 ms at sixty-four; the gradient
+agrees with the Jacobian's to 2e-14 of its size.  The sequential part -- the backbone
 recursion, a hundred steps -- stays on the host, where a hundred small steps cost less than a
 hundred launches.
 
 **The closure constraints** rebuilt every chain's whole Jacobian to read two windows of it:
-117 ms per call at sixteen chains, and a constrained relaxation calls it as often as the energy.
-`MixedModel.closure` now differentiates the window atoms alone, in one build for all chains:
-bit for bit the same residuals and Jacobian (`tests/test_mixed_batched.py` asserts it with
-`==`), 12 ms; beside the batched evaluation it uses the running sums, 6 ms, the same to 1e-10.
+112 ms per call at sixteen chains and 432 ms at sixty-four, and a constrained relaxation calls it
+as often as the energy.  `MixedModel.closure` now differentiates the window atoms alone, in one
+build for all chains: bit for bit the same residuals and Jacobian (`tests/test_mixed_batched.py`
+asserts it with `==`), 10 ms and 51 ms; beside the batched evaluation it uses the running sums,
+4.6 ms and 14 ms, the same to 1e-10.  The first of these is a gain for every constrained
+relaxation on the host, whatever form its energy takes.
 
 **The solve is Cholesky on a device** (17.6): `polyfind.backend.cholesky_solve`.  CuPy does not
 look at a factorization's status unless told to (`cupyx.errstate(linalg="raise")`; the default
@@ -1649,4 +1652,100 @@ on.  `tests/test_mixed_batched.py` (50 tests) holds each piece to the routine it
 NumPy and on the device stand-in, where an evaluation after the first sends and brings back
 nothing larger than a per-site array in a number of transfers that does not grow with the
 cell; `tests/test_gpu.py` has the same comparison for a real device.
+
+### 17.8 Measured on an A100: the whole evaluation in the batched form (2026-11-13)
+
+A third pod (one A100-SXM4-80GB, CuPy 14.2.0, host Intel Xeon Platinum 8470 with 20 cores
+allotted of 192 visible) ran commit 4349f40 for six minutes.  Files and the tables below
+(`examples/ewald_device_summary.py`; nothing typed in): `pod3_*` in
+`docs/predictions/ewald_device_a100_20261113/`.  The device tests passed (72, the batched form
+against the loops on the card among them).
+
+One whole evaluation, energy and gradient:
+
+| chains | sites | k vectors | host loops, 20 threads | device | device against host | largest difference | card memory |
+|---|---|---|---|---|---|---|---|
+| 16 | 960 | 14,486 | 2.88 s | 48.8 ms | 59x | 8.6e-15 | 1.4 GB |
+| 32 | 1,920 | 28,920 | - | 0.14 s | - | no host run | 5.5 GB |
+| 64 | 3,840 | 57,886 | - | 0.76 s | - | no host run | 21.1 GB |
+| 128 | 7,680 | 115,706 | - | 6.00 s | - | no host run | 82.5 GB |
+
+Against 17.6 on the same card model: 511 ms to 49 ms at sixteen chains and 1.14 s to 0.14 s at
+thirty-two.  Against the host times of 17.6 (another pod's cores, so to one figure): thirty-two
+chains 10.8 s on thirteen cores, 75 times; sixty-four chains 59 s on eight threads, 78 times.
+
+One device evaluation part by part (the device waited for at the end of each part; build,
+exclusions and assembly are the host's):
+
+| chains | build | pair sums | electrostatics | exclusions | assembly | the host's parts | of the evaluation |
+|---|---|---|---|---|---|---|---|
+| 16 | 6.0 ms | 4.4 ms | 34.7 ms | 0.9 ms | 2.3 ms | 9.2 ms | 19% |
+| 32 | 9.4 ms | 5.9 ms | 0.12 s | 1.7 ms | 3.7 ms | 14.8 ms | 10% |
+| 64 | 17.9 ms | 10.7 ms | 0.72 s | 3.6 ms | 6.3 ms | 27.8 ms | 4% |
+| 128 | 34.9 ms | 23.3 ms | 5.90 s | 8.2 ms | 12.3 ms | 55.3 ms | 1% |
+
+Evaluations back to back, each at a new geometry as a relaxation's are, with the card's own
+utilisation figure (`nvidia-smi`) read five times a second meanwhile; "loops" is the
+organisation of 17.6, the sums on the card and everything else in host loops:
+
+| chains | form | one evaluation | per second | card utilisation, mean (lowest to highest sample) |
+|---|---|---|---|---|
+| 16 | batched | 49.5 ms | 20.2 | 49% (47 to 50%) |
+| 16 | loops | 0.50 s | 2.0 | 5% (0 to 13%) |
+| 32 | batched | 0.15 s | 6.8 | 77% (67 to 84%) |
+| 32 | loops | 1.11 s | 0.9 | 10% (0 to 62%) |
+| 64 | batched | 0.76 s | 1.3 | 91% (0 to 100%) |
+| 128 | batched | 5.96 s | 0.2 | 92% (0 to 100%) |
+| 128 | loops | 10.9 s | 0.1 | 56% (0 to 100%) |
+
+Checks that need no host run: the untouched tiling against the stored two-chain cell 2.3e-13
+kcal/mol at 16, 32 and 64 chains and 6.8e-13 at 128; the gradient against the device's own
+energy difference 2.2e-5, 2.4e-6, 8.3e-6 and 2.7e-5 (the cutoff floor of 17.5).  The batched
+form on the host at sixteen chains and twenty threads: 2.41 s against the loops' 2.88 s, the
+energy to 1.3e-15 and the gradient to 6.0e-15.  The three steps apart: tensor and field 19.4 ms,
+88.8 ms, 0.61 s and 5.40 s; the solve, now Cholesky, 3.4 ms, 9.4 ms, 45.6 ms and 0.28 s; the
+gradient 8.9 ms, 18.9 ms, 58.7 ms and 0.21 s.  First evaluation of a process (kernels compiled
+once per machine): 0.4 s to 0.9 s, and 8 s at 128 chains.
+
+What it says:
+
+* **The card now does the work.**  The host's share of an evaluation is a fifth at sixteen
+  chains and a hundredth at a hundred and twenty-eight, and the card's meter reads 49%, 77%, 91%
+  and 92% where the loop form read 5% and 10%.
+* **Sixteen chains is a small job for this card.**  At 49 ms the evaluation is bounded by the
+  issuing of work, not by arithmetic: the card is idle half the time between launches.  Two
+  consequences.  A second process on the same card (another image of a band, another column of a
+  Hessian) should cost little; that is not measured yet and is the first thing to measure
+  before sizing a farm.  And further gains at this size are in the number of device calls the
+  Ewald routine makes, not in what any of them computes.
+* **From sixty-four chains the evaluation is the cube**: the tensor's reciprocal sum is 0.61 s of
+  0.76 s, and 5.4 s of 6.0 s at a hundred and twenty-eight.  Inside it the six symmetric products
+  are general matrix products, 88 ms each at sixty-four chains and 0.85 s at a hundred and
+  twenty-eight, where the rank-k update takes 51 ms and 0.43 s (side measurement, same sizes).
+  That reverses 17.6's verdict for the large cells: written as six rank-k updates (the mixed
+  products through `k_a k_b = ((k_a + k_b)^2 - k_a^2 - k_b^2) / 2`, so that every weight is
+  non-negative), the evaluation would lose about 0.2 s of 0.76 s and 2.5 s of 6.0 s.  Not done
+  here: it can only be tested on a card.
+* **Memory is the square, and a hundred and twenty-eight chains fill an 80 GB card**: 1.4, 5.5,
+  21.1 and 82.5 GB of pool.  A 40 GB card holds sixty-four chains and not a hundred and
+  twenty-eight; beyond that the tensor has to stop being stored, which is the same particle-mesh
+  change that removes the cube (17.5).
+* **What it buys the work of section 8 of the candidate document**: a sixteen-chain relaxation of
+  five hundred evaluations is 25 s where it was 37 minutes on this container's four cores (4.4 s
+  an evaluation); a nine-image band iteration half a second; the closure constraints beside each
+  evaluation 5 ms.
+
+**The farm question** (PI: four to six A100s for cheap), on these numbers.  One card already
+changes what is feasible; more cards multiply only what is independent -- images of a band,
+columns of a difference Hessian, separate starts, rows of a fit -- at one process per card, or
+several per card at the sizes where one process leaves the card half idle.  A single
+relaxation's evaluations follow one another and use one card.  Each process wants one fast host
+core (the host's part is single-threaded: 9 to 55 ms an evaluation) and the host memory of its
+cell's tables (the packer keeps about a dozen site-by-site tables: 1.3 GB each at a hundred and
+twenty-eight chains).  Card memory decides the
+largest cell: 80 GB cards for a hundred and twenty-eight chains, 40 GB for sixty-four.  So: two
+80 GB cards cover everything in the present plan with bands at full speed; four to six pay off
+only if bands or Hessians at sixty-four chains and more become routine, and before buying on
+that expectation the two things to measure on a rented card are several processes on one card
+and the rank-k update.
 

@@ -1,0 +1,277 @@
+{
+ "machine": {
+  "python": "3.10.12",
+  "numpy": "2.2.6",
+  "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.35",
+  "scipy": "1.15.3",
+  "cpu_count": 192,
+  "cpus_usable": 192,
+  "cpus_allotted": {
+   "affinity": 192,
+   "cgroup_quota": 20.4,
+   "RUNPOD_CPU_COUNT": 24,
+   "cores": 20
+  },
+  "cpu": "Intel(R) Xeon(R) Platinum 8470",
+  "memory_gb": 990.7,
+  "blas": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.28",
+    "threading_layer": "pthreads"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.29",
+    "threading_layer": "pthreads"
+   }
+  ],
+  "nvidia_smi": [
+   "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+  ],
+  "device_module": "cupy 14.2.0",
+  "device": {
+   "id": 0,
+   "name": "NVIDIA A100-SXM4-80GB",
+   "memory_gb": 85.1,
+   "free_gb": 84.6,
+   "compute_capability": "80",
+   "visible_devices": 1
+  }
+ },
+ "preset": "pvdf-dft-valence-belt4",
+ "row": "vdf10",
+ "batched_kernels": "host, float64",
+ "host_blas_threads_timed": [
+  20
+ ],
+ "rows": [
+  {
+   "chains": 16,
+   "tiling": [
+    4,
+    2
+   ],
+   "variables": 708,
+   "build_s": 0.1724217957817018,
+   "host_runs": [
+    {
+     "blas_threads": 20,
+     "whole_s": 2.8839579918421805,
+     "dipole_step_s": 2.5091643962077796,
+     "energy": -1415.4249771530972,
+     "sites": 960,
+     "tensor_s": 1.392565953079611,
+     "tensor_all_s": [
+      1.4249658910557628,
+      1.392565953079611,
+      1.3964494299143553
+     ],
+     "solve_s": 0.4044571300037205,
+     "solve_all_s": [
+      0.40841722395271063,
+      0.40656966995447874,
+      0.4044571300037205
+     ],
+     "gradient_s": 0.5847321199253201,
+     "gradient_all_s": [
+      0.5847321199253201,
+      0.5899951551109552,
+      0.5867342320270836
+     ],
+     "k_vectors": 14486,
+     "images": 27,
+     "solve_method": "lu",
+     "gradient_check": {
+      "analytic": 9.67632124829393,
+      "difference": 9.676106076436023,
+      "relative_error": 2.2236948566002227e-05
+     },
+     "tiling_check": {
+      "per_two_chains": -178.13528050130262,
+      "stored_two_chain_cell": -178.13528050130296,
+      "difference": 3.410605131648481e-13
+     }
+    }
+   ],
+   "sites": 960,
+   "k_vectors": 14486,
+   "host": {
+    "blas_threads": 20,
+    "whole_s": 2.8839579918421805,
+    "dipole_step_s": 2.5091643962077796,
+    "energy": -1415.4249771530972,
+    "sites": 960,
+    "tensor_s": 1.392565953079611,
+    "tensor_all_s": [
+     1.4249658910557628,
+     1.392565953079611,
+     1.3964494299143553
+    ],
+    "solve_s": 0.4044571300037205,
+    "solve_all_s": [
+     0.40841722395271063,
+     0.40656966995447874,
+     0.4044571300037205
+    ],
+    "gradient_s": 0.5847321199253201,
+    "gradient_all_s": [
+     0.5847321199253201,
+     0.5899951551109552,
+     0.5867342320270836
+    ],
+    "k_vectors": 14486,
+    "images": 27,
+    "solve_method": "lu",
+    "gradient_check": {
+     "analytic": 9.67632124829393,
+     "difference": 9.676106076436023,
+     "relative_error": 2.2236948566002227e-05
+    },
+    "tiling_check": {
+     "per_two_chains": -178.13528050130262,
+     "stored_two_chain_cell": -178.13528050130296,
+     "difference": 3.410605131648481e-13
+    }
+   },
+   "host_batched": {
+    "blas_threads": 20,
+    "whole_s": 2.413456062786281,
+    "dipole_step_s": 2.3338978425599635,
+    "energy": -1415.424977153099,
+    "parts_s": {
+     "build": 0.0063912770710885525,
+     "valence": 7.243826985359192e-06,
+     "pair sums": 0.06929792510345578,
+     "electrostatics": 2.3647499410435557,
+     "exclusions": 0.0009346781298518181,
+     "assembly": 0.0023850607685744762,
+     "host_parts": 0.009718259796500206,
+     "all": 2.4437661259435117
+    },
+    "difference_from_loops": {
+     "energy": 1.2851189098022455e-15,
+     "gradient": 6.01780172711845e-15
+    }
+   },
+   "device": {
+    "first_call_s": 0.37896247720345855,
+    "whole_s": 0.04875465203076601,
+    "dipole_step_s": 0.03496326180174947,
+    "energy": -1415.424977153099,
+    "pool_gb_after_evaluation": 1.318854144,
+    "sites": 960,
+    "tensor_s": 0.019448571372777224,
+    "tensor_all_s": [
+     0.019734160043299198,
+     0.019448571372777224,
+     0.01950620301067829
+    ],
+    "solve_s": 0.003400938119739294,
+    "solve_all_s": [
+     0.0034338845871388912,
+     0.0034430380910634995,
+     0.003400938119739294
+    ],
+    "gradient_s": 0.008928205817937851,
+    "gradient_all_s": [
+     0.009844096843153238,
+     0.008928205817937851,
+     0.0089552141726017
+    ],
+    "k_vectors": 14486,
+    "images": 27,
+    "solve_method": "cholesky",
+    "pool_gb_peak": 1.430106624,
+    "device_gb_in_use": 1.940717568,
+    "device_gb_total": 85.094825984,
+    "parts_s": {
+     "build": 0.0059922607615590096,
+     "valence": 2.2075138986110687e-05,
+     "pair sums": 0.004440793767571449,
+     "electrostatics": 0.03471580194309354,
+     "exclusions": 0.0009134551510214806,
+     "assembly": 0.002289596013724804,
+     "host_parts": 0.009217387065291405,
+     "all": 0.04837398277595639
+    },
+    "busy": {
+     "seconds": 8.018889544997364,
+     "evaluations": 162,
+     "per_evaluation_s": 0.049499318178996075,
+     "utilization_mean": 48.611111111111114,
+     "utilization_min": 47.0,
+     "utilization_max": 50.0,
+     "utilization_samples": 36
+    },
+    "loop_form": {
+     "whole_s": 0.502755181863904,
+     "dipole_step_s": 0.13542610313743353,
+     "busy": {
+      "seconds": 8.07862904900685,
+      "evaluations": 16,
+      "per_evaluation_s": 0.5049143155629281,
+      "utilization_mean": 5.2105263157894735,
+      "utilization_min": 0.0,
+      "utilization_max": 13.0,
+      "utilization_samples": 38
+     }
+    },
+    "gradient_check": {
+     "analytic": 9.67632124829603,
+     "difference": 9.676106077212884,
+     "relative_error": 2.2236868498398153e-05
+    },
+    "tiling_check": {
+     "per_two_chains": -178.13528050130273,
+     "stored_two_chain_cell": -178.13528050130296,
+     "difference": 2.2737367544323206e-13
+    },
+    "difference_from_host": {
+     "energy_terms.real": 2.0977429821596505e-16,
+     "energy_terms.recip": 0.0,
+     "energy_terms.self_": 0.0,
+     "energy_terms.background": 0.0,
+     "energy_terms.surface": 0.0,
+     "gradient_terms.real": 2.266379735793224e-16,
+     "gradient_terms.recip": 1.7679441369724695e-16,
+     "gradient_terms.self_": 0.0,
+     "gradient_terms.background": 0.0,
+     "gradient_terms.surface": 0.0,
+     "field": 2.7690408786318335e-15,
+     "dipoles": 4.388568282645609e-15,
+     "grad_coords": 4.057123089543596e-15,
+     "grad_lattice": 7.992571626559567e-16,
+     "tensor": 3.1709970012165393e-15,
+     "largest": 8.55739197923377e-15,
+     "whole.energy": 1.2851189098022455e-15,
+     "whole.gradient": 8.55739197923377e-15
+    },
+    "speedup_whole": 59.15246795366922,
+    "speedup_dipole_step": 71.76574114953507,
+    "speedup_against_blas_threads": 20,
+    "extras": {
+     "symmetric_product": {
+      "shape": [
+       960,
+       14486
+      ],
+      "gemm_s": 0.0018085800111293793,
+      "syrk_s": 0.0016735373064875603,
+      "gflops_gemm": 14763.29221582331,
+      "largest_difference": 1.027526615410162e-14
+     },
+     "solve": {
+      "unknowns": 2880,
+      "lu_s": 0.01665671681985259,
+      "cholesky_s": 0.0030945059843361378,
+      "asymmetry_of_matrix": 0.0,
+      "largest_difference": 1.8051164241952636e-15
+     }
+    }
+   }
+  }
+ ]
+}

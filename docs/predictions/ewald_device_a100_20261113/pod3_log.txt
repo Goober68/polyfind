@@ -1,0 +1,280 @@
+Fri Nov 13 22:47:38 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.91.07              Driver Version: 595.91.07      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-80GB          On  |   00000000:09:00.0 Off |                    0 |
+| N/A   28C    P0             69W /  500W |       0MiB /  81920MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+Python 3.10.12
+  /tmp/pip-build-env-877ryt3y/overlay/lib/python3.10/site-packages/setuptools/config/_apply_pyprojecttoml.py:82: BuildBackendWarning: `project.license` as a TOML table is deprecated
+  !!
+  
+          ********************************************************************************
+          Please use a simple string containing a SPDX expression for `project.license`. You can also use `project.license-files`. (Both options available on setuptools>=77.0.0).
+  
+          By 2027-Feb-18, you need to update your project and remove deprecated calls
+          or your builds will no longer be supported.
+  
+          See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+          ********************************************************************************
+  
+  !!
+    corresp(dist, value, root_dir)
+  /tmp/pip-build-env-877ryt3y/overlay/lib/python3.10/site-packages/setuptools/config/_apply_pyprojecttoml.py:82: BuildBackendWarning: `project.license` as a TOML table is deprecated
+  !!
+  
+          ********************************************************************************
+          Please use a simple string containing a SPDX expression for `project.license`. You can also use `project.license-files`. (Both options available on setuptools>=77.0.0).
+  
+          By 2027-Feb-18, you need to update your project and remove deprecated calls
+          or your builds will no longer be supported.
+  
+          See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+          ********************************************************************************
+  
+  !!
+    corresp(dist, value, root_dir)
+  /tmp/pip-build-env-877ryt3y/overlay/lib/python3.10/site-packages/setuptools/config/_apply_pyprojecttoml.py:82: BuildBackendWarning: `project.license` as a TOML table is deprecated
+  !!
+  
+          ********************************************************************************
+          Please use a simple string containing a SPDX expression for `project.license`. You can also use `project.license-files`. (Both options available on setuptools>=77.0.0).
+  
+          By 2027-Feb-18, you need to update your project and remove deprecated calls
+          or your builds will no longer be supported.
+  
+          See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+          ********************************************************************************
+  
+  !!
+    corresp(dist, value, root_dir)
+cupy 14.2.0 | numpy 2.2.6 | devices 1 | NVIDIA A100-SXM4-80GB
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+  File "cupy/_core/core.pyx", line 1590, in cupy._core.core._ndarray_base.__matmul__
+  File "cupy/_core/_routines_linalg.pyx", line 842, in cupy._core._routines_linalg.matmul
+  File "/root/polyfind/.venv_ewald_bench/lib/python3.10/site-packages/cupy_backends/cuda/libs/__init__.py", line 41, in __getattr__
+    return _importlib.import_module(f'cupy_backends.cuda.libs.{name}')
+  File "/usr/lib/python3.10/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+ImportError: libcublas.so.13: cannot open shared object file: No such file or directory
+== CuPy could not use the device with the libraries it found; installing the CUDA runtime wheels
+cupy 14.2.0 | numpy 2.2.6 | devices 1 | NVIDIA A100-SXM4-80GB
+CuPy reaches the device, cuBLAS, cuSOLVER and the kernel compiler
+== device tests ==
+........................................................................ [100%]
+72 passed, 4 deselected in 15.93s
+== benchmark ==
+{
+ "python": "3.10.12",
+ "numpy": "2.2.6",
+ "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.35",
+ "scipy": "1.15.3",
+ "cpu_count": 192,
+ "cpus_usable": 192,
+ "cpus_allotted": {
+  "affinity": 192,
+  "cgroup_quota": 20.4,
+  "RUNPOD_CPU_COUNT": 24,
+  "cores": 20
+ },
+ "cpu": "Intel(R) Xeon(R) Platinum 8470",
+ "memory_gb": 990.7,
+ "blas": [
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.28",
+   "threading_layer": "pthreads"
+  },
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.29",
+   "threading_layer": "pthreads"
+  }
+ ],
+ "nvidia_smi": [
+  "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+ ],
+ "device_module": "cupy 14.2.0",
+ "device": {
+  "id": 0,
+  "name": "NVIDIA A100-SXM4-80GB",
+  "memory_gb": 85.1,
+  "free_gb": 84.6,
+  "compute_capability": "80",
+  "visible_devices": 1
+ }
+}
+
+== 16 chains (4x2), 708 variables; built in 0.2 s
+   host, 20 BLAS threads: whole evaluation 2.88 s, of which the dipole step 2.51 s; energy -1415.424977
+      tensor and field 1.39 s, solve 0.40 s, gradient 0.58 s (960 sites, 14486 k vectors)
+      gradient against its own energy difference: relative error 2.2e-05; tiling against the two-chain cell: 3.4e-13 kcal/mol
+   host, batched form, 20 BLAS thread(s): whole evaluation 2.41 s, of which the dipole step 2.33 s; against the loops: energy 1.3e-15, gradient 6.0e-15
+   device: whole evaluation 0.049 s (first call 0.4 s), of which the dipole step 0.035 s; energy -1415.424977
+   device: tensor and field 0.019 s, solve 0.003 s, gradient 0.009 s; memory pool 1.43 GB
+   device: the evaluation part by part (ms): build 6.0, valence 0.0, pair sums 4.4, electrostatics 34.7, exclusions 0.9, assembly 2.3; the host's parts (build, valence, exclusions, assembly) 9.2 of 48.4
+   device: 162 evaluations back to back in 8.0 s (49 ms each); card utilisation 49% (lowest sample 47%, highest 50%, 36 samples)
+   device, loop form (the sums on the card, the rest in host loops, as before): whole evaluation 0.503 s; card utilisation 5%
+   device: gradient against its own energy difference: relative error 2.2e-05; tiling against the two-chain cell: 2.3e-13 kcal/mol
+   device against host: largest relative difference 8.6e-15 (energy 1.3e-15, gradient 8.6e-15, tensor 3.2e-15)
+   speedup against the host on 20 thread(s): whole evaluation 59.2x, dipole step 71.8x; outside the dipole step: 0.014 s of 0.049 s
+   extras: {"symmetric_product": {"shape": [960, 14486], "gemm_s": 0.0018085800111293793, "syrk_s": 0.0016735373064875603, "gflops_gemm": 14763.29221582331, "largest_difference": 1.027526615410162e-14}, "solve": {"unknowns": 2880, "lu_s": 0.01665671681985259, "cholesky_s": 0.0030945059843361378, "asymmetry_of_matrix": 0.0, "largest_difference": 1.8051164241952636e-15}}
+
+(host: the faster of its runs, with its BLAS threads; speedup: against that run)
+chains  sites  k vectors | host: whole  dipole step  threads | device: whole  dipole step  first call  memory | speedup  largest difference
+-------------------------------------------------------------------------------------------------------------------------------------
+    16    960      14486 |       2.88 s       2.51 s       20 |        0.049 s      0.035 s       0.4 s   1.43 GB |   59.2x  8.6e-15
+
+written to /srv/bench/<token>/run/ewald_device_benchmark_16.json
+{
+ "python": "3.10.12",
+ "numpy": "2.2.6",
+ "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.35",
+ "scipy": "1.15.3",
+ "cpu_count": 192,
+ "cpus_usable": 192,
+ "cpus_allotted": {
+  "affinity": 192,
+  "cgroup_quota": 20.4,
+  "RUNPOD_CPU_COUNT": 24,
+  "cores": 20
+ },
+ "cpu": "Intel(R) Xeon(R) Platinum 8470",
+ "memory_gb": 990.7,
+ "blas": [
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.28",
+   "threading_layer": "pthreads"
+  },
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.29",
+   "threading_layer": "pthreads"
+  }
+ ],
+ "nvidia_smi": [
+  "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+ ],
+ "device_module": "cupy 14.2.0",
+ "device": {
+  "id": 0,
+  "name": "NVIDIA A100-SXM4-80GB",
+  "memory_gb": 85.1,
+  "free_gb": 84.6,
+  "compute_capability": "80",
+  "visible_devices": 1
+ }
+}
+
+== 32 chains (8x2), 1412 variables; built in 0.4 s
+   device: whole evaluation 0.143 s (first call 0.4 s), of which the dipole step 0.122 s; energy -2836.867424
+   device: tensor and field 0.089 s, solve 0.009 s, gradient 0.019 s; memory pool 5.46 GB
+   device: the evaluation part by part (ms): build 9.4, valence 0.0, pair sums 5.9, electrostatics 123.3, exclusions 1.7, assembly 3.7; the host's parts (build, valence, exclusions, assembly) 14.8 of 144.0
+   device: 55 evaluations back to back in 8.1 s (146 ms each); card utilisation 77% (lowest sample 67%, highest 84%, 36 samples)
+   device, loop form (the sums on the card, the rest in host loops, as before): whole evaluation 1.096 s; card utilisation 10%
+   device: gradient against its own energy difference: relative error 2.4e-06; tiling against the two-chain cell: 2.3e-13 kcal/mol
+   extras: {"symmetric_product": {"shape": [1920, 28920], "gemm_s": 0.011044478043913841, "syrk_s": 0.00833095470443368, "gflops_gemm": 19305.699658436784, "largest_difference": 1.5844791239622685e-14}, "solve": {"unknowns": 5760, "lu_s": 0.03886997094377875, "cholesky_s": 0.008557775057852268, "asymmetry_of_matrix": 0.0, "largest_difference": 2.352697923521122e-15}}
+
+== 64 chains (8x4), 2820 variables; built in 1.4 s
+   device: whole evaluation 0.758 s (first call 0.9 s), of which the dipole step 0.721 s; energy -5656.870831
+   device: tensor and field 0.606 s, solve 0.046 s, gradient 0.059 s; memory pool 21.11 GB
+   device: the evaluation part by part (ms): build 17.9, valence 0.0, pair sums 10.7, electrostatics 723.7, exclusions 3.6, assembly 6.3; the host's parts (build, valence, exclusions, assembly) 27.8 of 762.2
+   device: 11 evaluations back to back in 8.4 s (764 ms each); card utilisation 91% (lowest sample 0%, highest 100%, 41 samples)
+   device: gradient against its own energy difference: relative error 8.3e-06; tiling against the two-chain cell: 2.3e-13 kcal/mol
+   extras: {"symmetric_product": {"shape": [3840, 57886], "gemm_s": 0.08809634810313582, "syrk_s": 0.051100864075124264, "gflops_gemm": 19377.961061466907, "largest_difference": 2.4501722929731747e-14}, "solve": {"unknowns": 11520, "lu_s": 0.13563167536631227, "cholesky_s": 0.04268710874021053, "asymmetry_of_matrix": 0.0, "largest_difference": 4.015470205214035e-15}}
+
+(host: the faster of its runs, with its BLAS threads; speedup: against that run)
+chains  sites  k vectors | host: whole  dipole step  threads | device: whole  dipole step  first call  memory | speedup  largest difference
+-------------------------------------------------------------------------------------------------------------------------------------
+    32   1920      28920 |            -            -        - |        0.143 s      0.122 s       0.4 s   5.46 GB |       -  (no host run; tiling 2.3e-13 kcal/mol, gradient 2.4e-06)
+    64   3840      57886 |            -            -        - |        0.758 s      0.721 s       0.9 s  21.11 GB |       -  (no host run; tiling 2.3e-13 kcal/mol, gradient 8.3e-06)
+
+--all-devices: one device visible, nothing to repeat
+
+written to /srv/bench/<token>/run/ewald_device_benchmark.json
+{
+ "python": "3.10.12",
+ "numpy": "2.2.6",
+ "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.35",
+ "scipy": "1.15.3",
+ "cpu_count": 192,
+ "cpus_usable": 192,
+ "cpus_allotted": {
+  "affinity": 192,
+  "cgroup_quota": 20.4,
+  "RUNPOD_CPU_COUNT": 24,
+  "cores": 20
+ },
+ "cpu": "Intel(R) Xeon(R) Platinum 8470",
+ "memory_gb": 990.7,
+ "blas": [
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.29",
+   "threading_layer": "pthreads"
+  },
+  {
+   "internal_api": "openblas",
+   "num_threads": 1,
+   "version": "0.3.28",
+   "threading_layer": "pthreads"
+  }
+ ],
+ "nvidia_smi": [
+  "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+ ],
+ "device_module": "cupy 14.2.0",
+ "device": {
+  "id": 0,
+  "name": "NVIDIA A100-SXM4-80GB",
+  "memory_gb": 85.1,
+  "free_gb": 84.6,
+  "compute_capability": "80",
+  "visible_devices": 1
+ }
+}
+
+== 128 chains (16x4), 5636 variables; built in 5.7 s
+   device: whole evaluation 5.997 s (first call 8.0 s), of which the dipole step 5.923 s; energy -11316.948646
+   device: tensor and field 5.397 s, solve 0.279 s, gradient 0.212 s; memory pool 82.47 GB
+   device: the evaluation part by part (ms): build 34.9, valence 0.0, pair sums 23.3, electrostatics 5895.7, exclusions 8.2, assembly 12.3; the host's parts (build, valence, exclusions, assembly) 55.3 of 5974.3
+   device: 2 evaluations back to back in 11.9 s (5962 ms each); card utilisation 92% (lowest sample 0%, highest 100%, 85 samples)
+   device, loop form (the sums on the card, the rest in host loops, as before): whole evaluation 10.897 s; card utilisation 56%
+   device: gradient against its own energy difference: relative error 2.7e-05; tiling against the two-chain cell: 6.8e-13 kcal/mol
+   extras: {"symmetric_product": {"shape": [7680, 115706], "gemm_s": 0.8458213331177831, "syrk_s": 0.4285042630508542, "gflops_gemm": 16137.255723365994, "largest_difference": 0.0}, "solve": {"unknowns": 23040, "lu_s": 0.6618923707865179, "cholesky_s": 0.2689521312713623, "asymmetry_of_matrix": 0.0, "largest_difference": 5.7382284094209805e-15}}
+
+(host: the faster of its runs, with its BLAS threads; speedup: against that run)
+chains  sites  k vectors | host: whole  dipole step  threads | device: whole  dipole step  first call  memory | speedup  largest difference
+-------------------------------------------------------------------------------------------------------------------------------------
+   128   7680     115706 |            -            -        - |        5.997 s      5.923 s       8.0 s  82.47 GB |       -  (no host run; tiling 6.8e-13 kcal/mol, gradient 2.7e-05)
+
+written to /srv/bench/<token>/run/ewald_device_benchmark_128.json
+
+== done.  The results are the JSON files in /root/polyfind//srv/bench/<token>/run ; log.txt beside them is this output.
+total 36
+drwxr-xr-x 2 root root   153 Nov 13 22:53 .
+drwxr-xr-x 3 root root    43 Nov 13 22:47 ..
+-rw-r--r-- 1 root root  6222 Nov 13 22:50 ewald_device_benchmark.json
+-rw-r--r-- 1 root root  3788 Nov 13 22:53 ewald_device_benchmark_128.json
+-rw-r--r-- 1 root root  7338 Nov 13 22:49 ewald_device_benchmark_16.json
+-rw-r--r-- 1 root root 15553 Nov 13 22:53 log.txt

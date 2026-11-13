@@ -17,10 +17,25 @@ against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit on
 **The whole evaluation on a device, 2026-11-13 evening (PI, on the first A100 run: "Are you actually using the GPU? I'm
 seeing 0% utilization", then "So port the work - we're using a GPU, let's actually use the GPU" and "I terminated - do
 the port properly").** Text: `docs/PERFORMANCE_REVIEW.md` 17.6 (the first run), 17.7 (this port), 17.8 (measured).
-STATE at this commit: the port is written, and tested here on the host and on the device stand-in (the loop form bit for
-bit the previous commit's: energy, gradient, placed coordinates, Jacobian and closure at 2, 4 and 16 chains; the batched
-form against it to 1e-15). ITS A100 RUN IS IN PROGRESS: until 17.8 exists, no device time of the batched form may be
-quoted.
+STATE: DONE AND MEASURED ON AN A100 (third pod, commit 4349f40, 6 minutes, $0.23; files `pod3_*` in
+`docs/predictions/ewald_device_a100_20261113/`; 72 device tests passed on the card; suite here 854 passed, 14 skipped --
+NOTE the suite can hang AT EXIT, after its summary, on a forked worker of `tests/test_lattice_table.py`'s parallel build
+(Python 3.13, fork + ProcessPoolExecutor shutdown; nothing of this work): if a piped run seems stuck after seven minutes,
+`py-spy dump` shows `_python_exit`, and killing the worker lets the summary through). ONE EVALUATION: 49 ms at 16 chains
+(was 511 ms with only the sums on the card; 2.88 s on the pod's 20 Xeon cores, 59x), 0.14 s at 32 (was 1.14 s), 0.76 s at
+64 (59 s on eight host threads), 6.0 s at 128. THE HOST'S SHARE: 19%, 10%, 4%, 1%. THE CARD'S OWN UTILISATION FIGURE while
+evaluations run back to back: 49%, 77%, 91%, 92% (the loop form: 5%, 10%, -, 56%). Agreement: 8.6e-15 against the host
+loops at 16 chains; the tiling check 2e-13 to 7e-13 kcal/mol at every size. MEMORY: 1.4, 5.5, 21.1, 82.5 GB -- 128 chains
+FILL an 80 GB card. The PI watched the card's meter through the run: CPU-only at first (the installation, my host
+baseline at 16 chains, my loop-form comparisons), then "100% GPU and GPU Mem usage, that's more like it" at 64-128.
+THE POD SCRIPT NOW RUNS NO HOST BASELINE AND NO LOOP-FORM COMPARISON UNLESS ASKED (`EWALD_BENCH_HOST_MAX`,
+`EWALD_BENCH_LOOP_FORM`): a rented card's meter should show the card's work.
+NEXT ON THE DEVICE, in order of what the numbers say (17.8): (a) SEVERAL PROCESSES ON ONE CARD at 16-32 chains, where one
+process leaves the card half idle (not measured; decides how many cards a band needs -- the farm question); (b) THE SIX
+TENSOR PRODUCTS AS RANK-K UPDATES (`cupy.cublas.syrk`): 88 -> 51 ms each at 64 chains, 0.85 -> 0.43 s at 128, i.e. about
+0.2 s of 0.76 s and 2.5 s of 6.0 s -- testable only on a card; (c) fewer device calls inside `Ewald.terms` for the small
+cells. THE FARM ANSWER given to the PI: two 80 GB cards cover the present plan; four to six only if bands or Hessians at
+64+ chains become routine; measure (a) and (b) on a rented card before buying.
 THE FIRST RUN, in one line: on an A100 the three ported steps (tensor and field, solve, gradient) ran 46x and 65x faster
 than 13 EPYC cores at 16 and 32 chains and agreed to 8e-15, but the evaluation was only 5.3x and 9.5x faster because 70%
 of it (more, counting the exclusion loops inside the dipole step) was host loops, the card idle meanwhile. Files:
@@ -34,9 +49,10 @@ of the bonded pairs of all chains (`ewald.exclusion_pairs`, `exclusion_correctio
 on the host (11,520 entries). (3) VALENCE terms of all chains at once (`ChainValence.energy_and_grad_batch`).
 (4) THE CHAINS built in one batch and the gradient carried back to torsions and angles as TORQUES, not through the
 Jacobian of the coordinates (`chainjac.oligomer`, `oligomer_vjp`, `aligned_block_vjp`, `backbone_transform_jacobian`;
-`MixedModel._build_light`): 117 ms -> about 7 ms at 16 chains. (5) `MixedModel.closure` no longer builds every chain's
-whole Jacobian to read two windows of it: 117 ms -> 12 ms per call, BIT FOR BIT the same numbers (and 6 ms beside the
-batched evaluation, to rounding). This one speeds up every constrained relaxation on the host too. (6) The dipole solve
+`MixedModel._build_light`): 112 ms -> 4.4 ms at 16 chains, 432 -> 13 ms at 64 (this container). (5) `MixedModel.closure`
+no longer builds every chain's whole Jacobian to read two windows of it: 112 ms -> 10 ms per call at 16 chains (432 -> 51 ms
+at 64), BIT FOR BIT the same numbers (and 4.6 / 14 ms beside the batched evaluation, to rounding). THIS ONE SPEEDS UP
+EVERY CONSTRAINED RELAXATION ON THE HOST TOO, with no change in any number. (6) The dipole solve
 is CHOLESKY on a device (`backend.cholesky_solve`; a fifth of the LU solve's time on the A100), with the factorization's
 status asked for -- CuPy ignores a failed factorization by default -- and the general solve as the fallback.
 WHICH FORM RUNS: `MixedModel(xp=None)` follows the Ewald sums: the batched form on the device when they are there
