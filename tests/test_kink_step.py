@@ -223,6 +223,60 @@ def test_the_completed_step_falls_as_the_cell_grows_and_the_way_back_does_not_ch
         assert sd["A-I"]["saddle"] < sd.get("I-B", {}).get("saddle", np.inf)
 
 
+def test_a_stepped_chain_is_recalled_not_joined():
+    """The stored rows of the second chain's step (sixteen chains, energies against the state with
+    chain 0 one monomer on).  Both stack neighbours end 2.44 above that start, the stored pair
+    state; the one that has the stepped chain at -a goes through a wide kink (found from two
+    starts) and two saddles, the second the higher; the one that has it at +a has no wide kink: one
+    saddle, and from the wide-kink geometry a descent in short steps that never rises and ends in
+    the completed step.  Either way the neighbour's barrier to join is far above the first chain's
+    barrier to come back, and a pair parts more slowly than one chain returns."""
+    rows = json.load(open(MIG))["rows"]
+    one, pair = rows.get("vdf10@0 4x2 mover 0 ahead host flexible"), rows.get("vdf10@0 4x2 mover 0,4 ahead host flexible")
+    hard, easy = rows.get("vdf10@0 4x2 mover 4 ahead host flexible beside 0"), rows.get("vdf10@0 4x2 mover 12 ahead host flexible beside 0")
+    if any(v is None for v in (one, pair, hard, easy)):
+        pytest.skip("the second chain's step is not stored")
+    back = one["barrier_back_polished"]
+    for row, mover in ((hard, 4), (easy, 12)):
+        assert row["beside"]["chains"] == [0] and row["beside"]["above_the_sheet"] == pytest.approx(one["B"]["energy"], abs=1e-9)
+        np.testing.assert_allclose(row["beside"]["state"], one["B"]["state"], atol=1e-12)
+        assert row["B"]["converged"] and row["B"]["energy"] + row["beside"]["above_the_sheet"] == pytest.approx(2 * pair["B"]["energy"], abs=1e-3)
+        nc = row["chains"]
+        tors = np.asarray(row["B"]["state"])[4 + 4 * nc:].reshape(nc, 40)[:, :20]
+        where = [[k for k, v in enumerate(KM.letters_of(t).split()) if v != "T"] for t in tors]
+        assert [s for s, w in enumerate(where) if w == [2, 4]] == sorted([0, mover]) and sum(1 for w in where if w == [0, 2]) == nc - 2
+        pol = row["A-I"]["polished"]
+        assert pol["converged"] and abs(pol["force_along"]) < 0.01 and pol["gradient_across"] < 2e-3 and pol["curvature_along"] < 0.0
+        assert pol["method"].startswith("on the closure surface") and pol["saddle"] < row["A-I"]["saddle"] + 1e-6
+        assert row["barrier_back_polished"] == pytest.approx(row["barrier_forward_polished"] - row["B"]["energy"])
+        assert row["barrier_forward_polished"] > back + 5.0  # joined far more rarely than recalled
+        assert row["barrier_back_polished"] > back + 2.0     # and a pair holds: it parts more slowly than one chain comes back
+    assert hard["B"]["energy"] == pytest.approx(easy["B"]["energy"], abs=1e-4)  # the two pairs are translates of each other
+    # the neighbour that has the stepped chain at -a: a wide kink, by two starts, and two saddles
+    assert hard["I"]["converged"] and hard["I"]["torsions"].split()[:5] == ["G+", "T", "T", "T", "G-"] and "not_a_minimum" not in hard["I"]
+    again = hard["I"]["independent_start"]
+    assert again["energy"] == pytest.approx(hard["I"]["energy"], abs=1e-4) and again["start_energy"] > 100.0 and again["largest_difference_from_the_stored_I"]["torsion_deg"] < 0.05
+    second = hard["I-B"]["polished"]
+    assert second["converged"] and abs(second["force_along"]) < 0.01 and second["gradient_across"] < 1e-3 and second["curvature_along"] < 0.0
+    assert second["saddle"] > hard["A-I"]["polished"]["saddle"] > hard["I"]["energy"] > hard["B"]["energy"]
+    assert hard["barrier_forward_polished"] == pytest.approx(second["saddle"]) and second["saddle"] > one["I-B"]["polished"]["saddle"] + 1.0
+    # the neighbour that has it at +a: no wide kink, one saddle, then downhill all the way
+    assert easy["I"]["not_a_minimum"] and easy["single_pass"] and "I-B" not in easy
+    assert easy["I_relaxed_from_the_wide_kink"]["torsions"].split()[:5] == ["T", "T", "G+", "T", "G-"]  # relaxed from the wide kink it ends in the completed step
+    assert easy["I_relaxed_from_the_wide_kink"]["energy"] == pytest.approx(easy["B"]["energy"], abs=1e-3)
+    slide = easy["slide"]
+    e = slide["energies_every_fifth_evaluation"]
+    assert all(b <= a + 1e-9 for a, b in zip(e, e[1:])) and e[0] == pytest.approx(slide["start_energy"]) and e[0] > 9.0
+    assert e[-1] == pytest.approx(easy["B"]["energy"], abs=1e-3) and abs(slide["end_against_the_stored_B"]["energy_difference"]) < 1e-3
+    assert slide["end_against_the_stored_B"]["largest_torsion_difference_deg"] < 0.05
+    turn = slide["trailing_gauche_bond_deg_every_fifth_evaluation"]
+    assert turn[0] < 100.0 and turn[-1] > 170.0  # the trailing gauche bond goes from where a wide kink has it to trans
+    assert easy["barrier_forward_polished"] == pytest.approx(easy["A-I"]["polished"]["saddle"]) and easy["I"]["energy"] < easy["A-I"]["polished"]["saddle"] - 2.0
+    assert easy["barrier_forward_polished"] < hard["barrier_forward_polished"] - 1.5
+    t = np.asarray(easy["A-I"]["polished"]["torsions_deg"])
+    assert 120.0 < t[0] < 160.0 and (t[2] < -150.0 or t[2] > 150.0) and -140.0 < t[4] < -100.0  # at the one saddle both gauche bonds are on their way
+
+
 @pytest.mark.parametrize("how", ["slsqp", "box", "surface"])
 def test_saddle_polish_settles_a_band_top_into_a_stationary_point(how):
     """The first top of the stored two-chain band, polished: a point on the closure surface with no
@@ -317,13 +371,29 @@ def test_the_pieces_of_a_row_run_one_per_process_and_merge(tmp_path):
     log_band = run("--only", "A-I", "--band-from", STACK, "--maxiter", "3")
     row = json.load(open(out))["rows"][key]
     seg = row["A-I"]
-    assert "from the stored run" in log_band and "start: the movers' internal coordinates from the band of" in log_band
+    assert "from the stored run" in log_band and "start: the straight band bent as the band of" in log_band
     assert np.asarray(seg["images"]).shape == (9, 4 + 2 * 44) and not seg["converged"] and seg["iterations"] == 3
     np.testing.assert_allclose(seg["images"][0], row["kinked_crystal"]["state"], atol=1e-12)
     assert seg["energies"][0] == 0.0 and seg["energies"][-1] == pytest.approx(row["I"]["energy"], abs=1e-6)
     assert "barrier_forward" not in row and "I-B" not in row  # one band of two: no barrier yet
     assert not (ck / "vdf10_0_1x1_mover_0_ahead_host_rigid.A-I.npy").exists()  # a band's checkpoint goes when the band is stored: one that is there is an unfinished run's
     assert {"I", "B"} <= set(row) and stored["rows"][STACK] == json.load(open(out))["rows"][STACK]  # nothing else was touched
+    # --beside: the other chain's step from the state in which this one has stepped.  In the two-chain cell that completes the
+    # sheet's own move by one monomer, so it runs downhill from its start; not all the way to the sheet's energy, because the
+    # first chain is held as it was when it stood alone.
+    log_2 = subprocess.run(base[:base.index("--mover")] + ["--mover", "1", "--beside", "0"] + base[base.index("--mover") + 2:] + ["--only", "B", "--patience", "25"],
+                           capture_output=True, text=True, env=env, cwd=ROOT, timeout=900)
+    assert log_2.returncode == 0, log_2.stdout[-2000:] + log_2.stderr[-2000:]
+    rows = json.load(open(out))["rows"]
+    second = rows["vdf10@0 1x1 mover 1 ahead host rigid beside 0"]
+    assert second["beside"]["chains"] == [0] and second["beside"]["row"] == key and second["beside"]["above_the_sheet"] == pytest.approx(row["B"]["energy"], abs=1e-9)
+    np.testing.assert_allclose(second["beside"]["state"], row["B"]["state"], atol=1e-12)
+    assert "energies below are against it" in log_2.stdout and second["B"]["converged"] and second["B"]["torsions"].split()[:5] == ["T", "T", "G+", "T", "G-"]
+    assert second["B"]["energy"] < -1.0 and -1e-6 < second["beside"]["above_the_sheet"] + second["B"]["energy"] < second["beside"]["above_the_sheet"]
+    assert rows[key] == row  # the first chain's row is read, not written
+    refused = subprocess.run(base[:base.index("--mover")] + ["--mover", "0", "--beside", "0"] + base[base.index("--mover") + 2:] + ["--only", "B"],
+                             capture_output=True, text=True, env=env, cwd=ROOT, timeout=900)
+    assert refused.returncode != 0 and "cannot already have stepped" in refused.stderr
 
 
 def test_free_sets_name_what_each_host_lets_move():

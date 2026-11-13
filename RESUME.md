@@ -14,6 +14,36 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The second chain's step, 2026-11-13 (PI: "Go" on "the second chain's barrier").** Text: `docs/CANDIDATE_MATERIALS.md`
+8.3, the sub-bullet "But a stepped chain is recalled, not joined" and its table; table: the last step table of
+`docs/predictions/kink_summary_belt4.md`; data: rows `vdf10@0 4x2 mover 4 ahead host flexible beside 0` and `... mover 12
+... beside 0` of `kink_migration_belt4.json`; tests: `test_a_stepped_chain_is_recalled_not_joined` and the `--beside` part
+of the driver's end-to-end test. RESULT (sixteen chains, every chain flexible; energies against the START, the state
+with chain 0 one monomer on, 5.91 above the sheet). The two stack neighbours differ. Chain 12 (it has the stepped chain
+at +a): NO wide-kink minimum; one saddle 10.96 at which both gauche bonds are in flight (the trailing one at 137 deg);
+both ahead +2.44; barrier 10.96 to join, 8.52 to part again. Chain 4 (stepped chain at -a): wide kink +9.40, saddles
+10.43 and 13.12, both ahead +2.44; 13.12 / 10.68. The first chain's own barrier to come back is 5.73: it comes back
+6500 times for each time the easier neighbour joins (3e4 /s against 2e8 /s at 300 K). A pair parts at 2e6 /s, a hundred
+times slower than one chain returns. From the sheet a pair is 8.35 up behind a top of 16.87: 1.5 /s per chain. So in
+zero field the sheet does not advance by chains following one another; an advance needs a drive of about 2 kcal/mol
+per stepped chain, and what a drive does to these barriers is NOT computed. Not computed either: the diagonal
+neighbours (other sublattice; pair energy 9.05), a third chain.
+HOW (driver): `--beside 0` takes the stored B of the row `... mover 0 ...` as the start and measures every energy
+against it (`row["beside"]`); `--band-from` a row of the SAME cell whose mover is this row's translate now carries the
+guide band's whole displacement field (every chain's deviation from the guide's own straight band, translated) onto
+this row's straight band: the first band started at a force of 5.7 with a top of 10.7 (84 and 22.7 with the mover's
+coordinates alone) and converged in 66 iterations (the single-chain bands took 160). CHECKS: both-ahead is 2.438 from
+either neighbour and equals the stored pair state (8.349 above the sheet); chain 4's wide kink 9.3959 from two starts
+(one 129, one 198 above; structures within 0.0004 deg); chain 12: the driver's own relaxation from the wide-kink start
+ran to the completed step, a descent in steps of at most 0.05 scaled units from the wide-kink geometry does the same
+(280 evaluations, energy falling throughout, ending within 0.001 deg of the stored state; `row["slide"]`), and its
+band's fixed end `row["I"]` is a point of that slope marked `not_a_minimum`.
+TRAPS: (1) the BAND TOPS were far off again: chain 12's band stopped at 11.67 (force 0.148) and its saddle is 10.96;
+chain 4's second top 13.35 against 13.12. Never quote a band top. (2) One long band over the whole step (17 images,
+scratch `one_band.py`) did not converge (forces stuck near 30, images zig-zagging at the ends): two segments, or a
+segment to a point on the slope, do. (3) A relaxation that starts in the wide-kink geometry and ends in the completed
+step is not a failed relaxation of I: look at the letters and ask whether I exists (scratch `find_wide.py`).
+
 **Minimising on the closure surface, 2026-11-13 (the follow-up of the sixteen-chain step that settled its first
 saddle).** Text: `docs/CANDIDATE_MATERIALS.md` 8.3 (the paragraph of that name and its table); code:
 `MixedModel.relax_on_surface`, `mixedcell.chain_metric` / `chain_blocks` / `closure_curvature` /
@@ -80,7 +110,7 @@ B (8a x b: 6.19, block above). HOW IT GIVES: the moving chain slides 0.32 A back
 theirs and under 0.1 A aside, torsions up to 11 deg (the single-chain slide of 8.1 again). PAIR: two a-neighbours
 ahead together +8.35 (4.17 each) against 11.8 apart: the second chain costs 2.4; a diagonal pair (chains 0 and 1)
 +9.05 (4.53 each): the second costs 3.1. The barrier of the second chain's step is NOT computed: that is the
-next number (it decides whether a stepped chain is joined or recalled, 2e8 /s back).
+next number (it decides whether a stepped chain is joined or recalled, 2e8 /s back). [COMPUTED 2026-11-13, top block: recalled.]
 **SADDLES ARE NOW SETTLED, NOT READ OFF BANDS** (`MixedModel.relax(linear=)`, `mixedcell.saddle_polish`,
 `kink_migration.py --polish`, stored as `row[seg]["polished"]`, barriers `barrier_forward_polished`): minimum in the
 hyperplane normal to the band's tangent at its top, the hyperplane moved by secant steps until the force along the

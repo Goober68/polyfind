@@ -945,16 +945,46 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     again (6.07 in four chains, 3.70 in sixteen, 3.15 dilute), which is why the two depend on
     the cell alike. In the wide kink the answer is one diagonal neighbour's torsions
     (16 degrees) and little else.
-  - *The stack follows cheaply.* A second chain one monomer ahead beside the first along a
-    brings the two to +8.35, 4.17 each, against 11.8 for two apart: the second costs
+  - *The stack follows cheaply in energy.* A second chain one monomer ahead beside the first
+    along a brings the two to +8.35, 4.17 each, against 11.8 for two apart: the second costs
     2.4 where the first cost 5.9. A diagonal neighbour instead (5.07 A away, the other
     sublattice) brings them to +9.05, so it costs 3.1: the stack axis is the cheap direction,
-    as it is for the registry (8.1). A whole sublattice ahead is 1.97 per chain. So the sheet
-    advances by one chain stepping out, 1e4 /s per chain at 300 K with a 3e12 /s attempt
-    frequency (2e3 /s on the four-chain barrier, 1.3e4 on the thirty-two-chain one), returning at
-    2e8 /s unless a neighbour
-    follows, which costs it less than half as much in energy. The barrier of that second step,
-    and so the rate at which a stepped chain is joined rather than recalled, is not computed.
+    as it is for the registry (8.1). A whole sublattice ahead is 1.97 per chain. One chain steps
+    out at 1e4 /s at 300 K with a 3e12 /s attempt frequency (2e3 /s on the four-chain barrier,
+    1.3e4 on the thirty-two-chain one) and returns at 2e8 /s.
+  - *But a stepped chain is recalled, not joined* (2026-11-13; sixteen chains, every chain
+    flexible, `kink_migration.py --beside 0`: the step of a stack neighbour from the state in
+    which chain 0 is already one monomer on, energies against that state, which is 5.91 above
+    the sheet). The two stack neighbours are not alike, because the kink pair gives the stack a
+    sense:
+
+    | the neighbour that steps second | wide kink | first saddle | second saddle | both ahead | barrier to join / to part again |
+    |---|---|---|---|---|---|
+    | the one that has the stepped chain at +a | none | 10.96 | none | +2.44 | 11.0 / 8.5 |
+    | the one that has it at -a | +9.40 | 10.43 | 13.12 | +2.44 | 13.1 / 10.7 |
+
+    On the first side the stepped chain has already pushed its neighbour (0.19 A along its
+    axis, its gauche bonds opened by up to 8 degrees), and that neighbour has no wide-kink
+    state left: its two gauche migrations run together over one saddle (at it the leading
+    gauche bond is in flight and the trailing one is already at 137 degrees), and from the
+    wide-kink geometry a descent in steps of half a degree slides without a stop into the
+    completed step. On the other side the neighbour is hardly disturbed (0.07 A) and steps as
+    a chain of the sheet does, through a wide kink, but its second saddle is 13.1: there the
+    stepped chain's own gauche bond is forced open to 105 degrees. So a neighbour joins over
+    11.0 at best (3e4 /s) while the first chain comes back over 5.7 (2e8 /s): **it comes back
+    6500 times for each time it is joined**, and 240 000 times for each time the harder
+    neighbour joins. The pair, once made, parts again over 8.5 (2e6 /s), a hundred times
+    slower than one chain alone comes back, so stepped chains do hold each other. From the
+    sheet a pair is 8.35 up behind a top of 16.9 (5.91 + 10.96): 1.5 pairs per second per
+    chain. The second chain costs 2.4 more and a whole sublattice 1.97 per chain, so further
+    chains are uphill too: in zero field the sheet does not advance by chains following one
+    another, and what the single-chain step gives is a local excursion that is nearly always
+    undone. An advance needs a drive that pays about 2 kcal/mol per stepped chain; what such
+    a drive does to these barriers is not computed. Checks: both ahead is 2.438 above the start from either neighbour, as it has to
+    be (the two pairs are translates), and 8.349 above the sheet, the stored pair state; the
+    second neighbour's wide kink is 9.3959 by two starts (structures within 0.0004 degrees);
+    the first neighbour's descent ends within 0.001 degrees of the stored completed step. The
+    diagonal neighbours' steps are not computed.
 * **In the copolymer lattices the first saddle is lower and the completed step is not.** Into the
   wide kink the barrier is 6.4 in 64/29/7 and 7.0 in 71/29 against PVDF's 7.5, so the torsional
   event is no slower beside TrFE and chlorine. But the step computed here takes the kink pair from

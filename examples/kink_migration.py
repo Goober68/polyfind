@@ -33,6 +33,11 @@ minimisations (the end states, the hyperplanes of ``--polish``) need ``--surface
 surface with one curvature block per chain as the metric (MixedModel.relax_on_surface,
 chain_metric), tens of evaluations where SLSQP with the closure as constraints takes hundreds
 and stops short of the minimum.  ``--refine`` relaxes a stored end state further as a check.
+
+``--beside CHAINS`` makes the step from the state in which those chains have already stepped (the
+stored B of their row), and measures every energy against that state: the second chain's step.  A
+band is then best started with ``--band-from`` the first chain's row, which in the same cell carries
+that band's whole displacement field over to the chain that moves.
 """
 import argparse
 import importlib.util
@@ -148,6 +153,10 @@ def main():
     ap.add_argument("--ny", type=int, default=1)
     ap.add_argument("--mover", default="0", help="the chain whose kink pair moves; several chains separated by commas (they move together; energies are per moving chain); "
                     "or 'all': every chain's moves together, the sheet in register (the step without the cost of a chain leaving its neighbours)")
+    ap.add_argument("--beside", default=None, metavar="CHAINS",
+                    help="chains whose kink pair is ALREADY one monomer ahead (comma-separated): the step is made from the stored B of the row in which they are the movers "
+                    "(same cell, direction and host), and every energy of the row is against that state, not against the sheet.  The second chain's step: does a "
+                    "chain that has stepped out get joined by a neighbour, or come back?")
     ap.add_argument("--kink-at", type=int, default=0, help="bond offset of every chain's kink pair in the kinked crystal")
     ap.add_argument("--mirror-kink", action="store_true", help="G- T G+ instead of G+ T G-")
     ap.add_argument("--backward", action="store_true", help="move the kink pair one monomer back instead of ahead")
@@ -206,6 +215,11 @@ def main():
     letters, note = DK.sequence(args.row)
     key = (f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''} {args.nx}x{args.ny} mover {args.mover} "
            f"{'back' if args.backward else 'ahead'} host {args.host}")
+    base_key = None
+    if args.beside is not None:  # the row whose completed step is this row's start
+        base_key = (f"{args.row}@{args.kink_at}{'~' if args.mirror_kink else ''} {args.nx}x{args.ny} mover {args.beside} "
+                    f"{'back' if args.backward else 'ahead'} host {args.host}")
+        key += f" beside {args.beside}"
     entry: dict = {}
     mine: set = set()  # the fields this process computed and has not written yet
     stored_rows = (json.load(open(out_path)) if out_path.exists() else {}).get("rows", {})
@@ -381,6 +395,29 @@ def main():
 
         k0, step = args.kink_at % P, (-2 if args.backward else 2)
         lead = (k0 + 2) % P if not args.backward else k0  # the gauche bond that moves first
+        if base_key is not None:
+            # the start is not the sheet but the sheet with some chains' kink pairs already one monomer on: the stored B of their row
+            base = stored_rows.get(base_key)
+            stepped = [int(v) for v in str(args.beside).split(",")]
+            if base is None or len(base.get("B", {}).get("state", [])) != model.n_var or abs(base.get("kinked_crystal", {}).get("formation_per_kink_pair", 1e9) - form) > 1e-6:
+                raise SystemExit(f"--beside: no stored B of the row {base_key!r} on this kinked crystal")
+            if set(stepped) & set(movers):
+                raise SystemExit(f"--beside {args.beside}: a chain that moves cannot already have stepped")
+            x_sheet, e_sheet = xA, eA
+            xA = np.asarray(base["B"]["state"], dtype=float)
+            eA = model.physical_energy(xA)
+            above = eA - e_sheet
+            if abs(above - float(base["B"]["energy"]) * len(stepped)) > 1e-6:
+                raise SystemExit(f"--beside: the stored B of {base_key!r} is {above:+.6f} above the sheet in this model, its record says {float(base['B']['energy']) * len(stepped):+.6f}")
+            stA = model.state(xA)
+            where = lambda t: [k for k, v in enumerate(letters_of(t).split()) if v != "T"]  # noqa: E731
+            on, off = sorted({(k0 + step) % P, (k0 + step + 2) % P}), sorted({k0, (k0 + 2) % P})
+            wrong = [s_ for s_ in range(nc) if where(stA.tors[s_]) != (on if s_ in stepped else off)]
+            if wrong:
+                raise SystemExit(f"--beside: in the stored B of {base_key!r} the kink pairs of chains {wrong} are not where a step of chains {stepped} leaves them")
+            entry["beside"] = {"chains": stepped, "row": base_key, "above_the_sheet": above, "state": xA.tolist(),
+                               "note": "every energy of this row is against this state: the sheet with these chains' kink pairs one monomer on"}
+            log(f"   beside {args.beside}: the step starts from the stored B of {base_key!r}, {above:+.3f} kcal/mol above the sheet; energies below are against it")
         xI0, xB0 = xA.copy(), xA.copy()
         for m in movers:
             m_t = model.index("tors", m)
@@ -390,6 +427,7 @@ def main():
             xI0[m_t] = tI
             xB0[m_t] = move_kink(tA, k0, step)
         ends = {"A": xA}
+        zero = "the kinked crystal" if base_key is None else f"the start (the sheet with chain {args.beside} one monomer on)"
         seed = None
         if args.seed_from is not None:
             seed = stored_rows.get(args.seed_from)
@@ -402,11 +440,11 @@ def main():
                           and abs(prior.get("kinked_crystal", {}).get("formation_per_kink_pair", 1e9) - form) < 1e-6)
             if stored_end and not (args.refine and only is not None and name in only):
                 xr, rec = np.asarray(old["state"], dtype=float), old
-                log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (from the stored run); {rec['torsions']}")
+                log(f"   {name}: {rec['energy']:+.3f} kcal/mol above {zero} (from the stored run); {rec['torsions']}")
             elif not do(name):
                 continue
             else:
-                start = "the kinked crystal with the mover's torsions reset"
+                start = "the kinked crystal with the mover's torsions reset" if base_key is None else "the stepped start with the mover's torsions reset"
                 if seed is not None:
                     if len(seed.get(name, {}).get("state", [])) != model.n_var:
                         raise SystemExit(f"--seed-from: row {args.seed_from!r} holds no {name} of this supercell")
@@ -431,7 +469,7 @@ def main():
                        "method": "on the closure surface, one curvature block per chain as the metric" if args.surface else "SLSQP, the closure as equality constraints",
                        "angles_at_window": int((np.abs(st.angs - model.angles0[None]) > args.angle_window - 1e-3).sum()),
                        "seconds": time.time() - t0, "state": xr.tolist()}
-                log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (start {rec['start_energy']:+.3f}); {letters_of(st.tors[m0])}; "
+                log(f"   {name}: {rec['energy']:+.3f} kcal/mol above {zero} (start {rec['start_energy']:+.3f}); {letters_of(st.tors[m0])}; "
                     f"{info['iterations']} it, {info['evaluations']} evaluations, {time.time() - t0:.0f} s; gradient {info['gradient_max']:.1e}; "
                     f"{rec['angles_at_window']} angles at the window; {info['message']}")
                 if stored_end:
@@ -472,16 +510,47 @@ def main():
                 raise SystemExit(f"--band-from: no stored row {args.band_from!r}")
 
         def guided(seg, a, b):
-            """The straight band between this row's end points with the movers' internal coordinates
-            taken from the images of the guide row's band (the same chain in another supercell)."""
+            """The straight band between this row's end points, bent as the guide row's band is.
+
+            From a band of another supercell: the mover's internal coordinates of each image, the
+            difference between the guide's end points and this row's carried along.  From a band of
+            this supercell whose moving chain is this row's own or its translate (``--beside``):
+            the whole of what the guide's band adds to its own straight band, every chain's
+            placement and internal coordinates, moved along with the translation that takes the
+            guide's moving chain onto this row's.  That carries the neighbours' answer as well as
+            the mover's path, and is what makes the start smooth."""
             g_imgs = np.asarray(guide[seg]["images"], dtype=float)
             g_nc = int(guide["chains"])
             g_base, width = 4 + 4 * g_nc, model.P + model.R
-            if len(g_imgs) != args.images or g_imgs.shape[1] != g_base + g_nc * width or str(guide["mover"]) != str(args.mover) or len(movers) != 1:
-                raise SystemExit(f"--band-from: the band {seg} of {args.band_from!r} does not fit this row (images, chain length or mover)")
+            if len(g_imgs) != args.images or g_imgs.shape[1] != g_base + g_nc * width or "," in str(guide["mover"]) or str(guide["mover"]) == "all" or len(movers) != 1:
+                raise SystemExit(f"--band-from: the band {seg} of {args.band_from!r} does not fit this row (images, chain length or movers)")
             imgs = band(model, ends[a], ends[b], args.images, free, closed)
             m_int = model.index("internal", m0)
-            g_int = np.arange(g_base + m0 * width, g_base + (m0 + 1) * width)
+            g_m = int(guide["mover"])  # the guide's own moving chain: this row's, or (--beside) its translate
+            inner = np.intersect1d(free, model.index("internal", closed))
+            n0 = nc // (args.nx * args.ny)
+            if list(guide.get("supercell", [])) == [args.nx, args.ny] and g_nc == nc and g_m % n0 == m0 % n0 and args.host == "flexible":
+                # the same cell: the whole deviation of the guide's band from its straight band, translated
+                where = lambda s_: divmod(s_ // n0, args.ny)  # noqa: E731  (ix, iy) of a chain
+                dx, dy = where(m0)[0] - where(g_m)[0], where(m0)[1] - where(g_m)[1]
+                to = [(((where(s_)[0] + dx) % args.nx) * args.ny + (where(s_)[1] + dy) % args.ny) * n0 + s_ % n0 for s_ in range(nc)]
+                g_line = band(model, g_imgs[0], g_imgs[-1], args.images, free, closed)
+                anchor_place = np.setdiff1d(model.index("place"), free)  # the placement held fixed to pin the crystal (one chain's position)
+                for i in range(1, args.images - 1):
+                    dev = g_imgs[i] - g_line[i]
+                    dev[per] = wrap(dev[per])
+                    add = np.zeros(model.n_var)
+                    for s_ in range(nc):
+                        for kind in ("place", "internal"):
+                            add[model.index(kind, [to[s_]])] = dev[model.index(kind, [s_])]
+                    # the crystal as a whole must not move: take out what the translation put on the pinned placements
+                    for q in range(4):
+                        held = [v for v in anchor_place if (v - 4) % 4 == q]
+                        if held:
+                            add[model.index("place")[q::4]] -= add[held[0]]
+                    imgs[i] = model.project(imgs[i] + add, inner, closed)
+                return imgs
+            g_int = np.arange(g_base + g_m * width, g_base + (g_m + 1) * width)
             d0 = wrap(g_imgs[0, g_int] - ends[a][m_int])  # the guide's end points are not this row's: carry the difference along the band
             d1 = wrap(g_imgs[-1, g_int] - ends[b][m_int])
             t_tors = np.arange(width) < model.P
@@ -490,7 +559,7 @@ def main():
                 v = g_imgs[i, g_int] - ((1.0 - w) * d0 + w * d1)
                 ref = imgs[i][m_int]
                 imgs[i][m_int] = np.where(t_tors, ref + wrap(v - ref), v)
-                imgs[i] = model.project(imgs[i], np.intersect1d(free, model.index("internal", closed)), closed)
+                imgs[i] = model.project(imgs[i], inner, closed)
             return imgs
 
         for seg, (a, b) in (("A-I", ("A", "I")), ("I-B", ("I", "B"))):
@@ -535,7 +604,7 @@ def main():
                 continue
             ck = checkpoint(seg)
             start = (f"the stored band (saddle {old['saddle']:+.4f} at force {old['force_max']:.3f} after {old.get('iterations', 0)} iterations), continued"
-                     if same_ends else ("straight between the end points" if guide is None else f"the movers' internal coordinates from the band of {args.band_from!r}"))
+                     if same_ends else ("straight between the end points" if guide is None else f"the straight band bent as the band of {args.band_from!r} is"))
             if ck is not None and ck.exists() and np.load(ck).shape == (args.images, model.n_var) and same(np.load(ck)[0], ends[a]) and same(np.load(ck)[-1], ends[b]):
                 imgs, start = np.load(ck), start + f"; resumed from {ck}"  # a checkpoint is removed when its band is stored, so one that is there is newer than the record
             elif same_ends:

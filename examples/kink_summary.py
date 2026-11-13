@@ -242,7 +242,7 @@ def main():
            "the barrier and the rate are on the settled saddles where both exist.", "",
            "| sequence | cell, moving chains | host | wide kink I | saddle A-I | saddle I-B | B (one monomer ahead) | barrier ahead / back | rate at 300 K, 3e12 /s attempt | bands' forces |", "|---|---|---|---|---|---|---|---|---|---|"]
     for key, e in sorted(mig.get("rows", {}).items()):
-        if "barrier_forward" not in e:
+        if "barrier_forward" not in e or "beside" in e:  # a step beside a stepped chain is measured against another state: its own table below
             continue
         nc = e["chains"]
         fwd, back = e.get("barrier_forward_polished", e["barrier_forward"]), e.get("barrier_back_polished", e["barrier_back"])
@@ -253,7 +253,7 @@ def main():
                   f"{top(e, 'I-B')} | {e['B']['energy']:+.2f} | {fwd:.2f} / {back:.2f} | {rate:.2g} /s | {conv} |")
 
     ends = [(k, e) for k, e in sorted(mig.get("rows", {}).items(), key=lambda kv: (kv[1].get("row", ""), kv[1].get("host", ""), kv[1].get("chains", 0), str(kv[1].get("mover"))))
-            if "barrier_forward" not in e and "I" in e and "B" in e and str(e.get("mover")) != "all"]
+            if "barrier_forward" not in e and "barrier_forward_polished" not in e and "I" in e and "B" in e and str(e.get("mover")) != "all" and "beside" not in e]
     if ends:
         md += ["", "End points only (no band)", "",
                "| sequence | cell, moving chains | host | wide kink I | B (one monomer ahead) |", "|---|---|---|---|---|"]
@@ -320,6 +320,38 @@ def main():
             dist = float(np.linalg.norm((dd - np.round(dd)) @ lat))
             both = e["B"]["energy"] * len(movers)
             md.append(f"| {e['supercell'][0]}x{e['supercell'][1]} ({nc} chains) | {e['mover']}, {dist:.2f} A | {both:+.2f} | {len(movers) * one:+.2f} | {len(movers) * one - both:+.2f} | {e['B']['energy']:+.2f} |")
+
+    # --- a second chain beside a stepped one -----------------------------------------------------------
+    second = [e for e in mig.get("rows", {}).values() if "beside" in e and "B" in e and "I" in e]
+    if second:
+        md += ["", "**A second chain stepping beside one that has stepped** (kcal/mol against the START, the sheet with the first chain one monomer on; every chain flexible, cell fixed; "
+               "saddles as in the first table. The last columns set the neighbour's barrier to join against the first chain's own barrier to come back, at 300 K with the same attempt "
+               "frequency for both)", "",
+               "| cell | the chain that steps; the one already ahead, and where it is | the start above the sheet | wide kink I | saddle A-I | saddle I-B | B (both ahead) | "
+               "barrier to join / to part again | both ahead, above the sheet | the first chain's barrier to come back | it comes back, for each time this neighbour joins |",
+               "|---|---|---|---|---|---|---|---|---|---|---|"]
+        for e in sorted(second, key=lambda e: (e["chains"], str(e["mover"]))):
+            nc, base = int(e["chains"]), mig["rows"].get(e["beside"]["row"], {})
+            xS = np.asarray(e["kinked_crystal"]["state"], dtype=float)
+            lat = np.array([[xS[0], 0.0], [xS[1] * np.cos(np.deg2rad(xS[2])), xS[1] * np.sin(np.deg2rad(xS[2]))]])
+            pl = xS[4:4 + 4 * nc].reshape(nc, 4)[:, :2]
+            dd = pl[int(e["beside"]["chains"][0])] - pl[int(e["mover"])]
+            dd = (dd - np.round(dd)) @ lat
+            side = f"{np.linalg.norm(dd):.2f} A away, at ({dd[0]:+.2f}, {dd[1]:+.2f}) A from it"
+            one_pass = bool(e["I"].get("not_a_minimum"))
+            wide = "none: no minimum there, the chain slides on to B" if one_pass else f"{e['I']['energy']:+.2f}"
+            fwd = e.get("barrier_forward_polished", e.get("barrier_forward"))
+            if fwd is not None:
+                back = e.get("barrier_back_polished", e.get("barrier_back"))
+                tops = f"{top(e, 'A-I')} | " + ("none (downhill)" if one_pass or "I-B" not in e else top(e, "I-B"))
+                bar = f"{fwd:.2f} / {back:.2f}"
+            else:
+                tops, bar = "- | -", "-"
+            ret = base.get("barrier_back_polished", base.get("barrier_back"))
+            ratio = "-" if fwd is None or ret is None else f"{np.exp((fwd - ret) / KT):.2g} times"
+            md.append(f"| {e['supercell'][0]}x{e['supercell'][1]} ({nc} chains) | {e['mover']}; {', '.join(str(c) for c in e['beside']['chains'])}, {side} | {e['beside']['above_the_sheet']:+.2f} | "
+                      f"{wide} | {tops} | {e['B']['energy']:+.2f} | {bar} | {e['beside']['above_the_sheet'] + e['B']['energy']:+.2f} | "
+                      f"{'-' if ret is None else format(ret, '.2f')} | {ratio} |")
 
     # --- the sheet along the sequence -----------------------------------------------------------------
     scans = {k: v for k, v in sit.get("rows", {}).items() if not v.get("fixed_cell")}

@@ -72,7 +72,6 @@ End points only (no band)
 | vdf10@0 ahead | 4x1, 1 of 8 | flexible | +10.02 | +6.47 |
 | vdf10@0 ahead | 2x2, 1 of 8 | flexible | +9.98 | +7.51 |
 | vdf10@0 ahead | 8x1, 1 of 16 | flexible | +10.05 | +6.19 |
-| vdf10@0 ahead | 8x2, 1 of 32 | flexible | +9.97 | +5.69 |
 
 **The single-chain step against the size of the cell** (PVDF, chain 0's kink pair one monomer ahead of every other chain's; kcal/mol against the sheet; cell fixed)
 
@@ -110,6 +109,13 @@ How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displa
 |---|---|---|---|---|---|
 | 4x2 (16 chains) | 0,1, 5.07 A | +9.05 | +11.82 | +2.77 | +4.53 |
 | 4x2 (16 chains) | 0,4, 4.96 A | +8.35 | +11.82 | +3.47 | +4.17 |
+
+**A second chain stepping beside one that has stepped** (kcal/mol against the START, the sheet with the first chain one monomer on; every chain flexible, cell fixed; saddles as in the first table. The last columns set the neighbour's barrier to join against the first chain's own barrier to come back, at 300 K with the same attempt frequency for both)
+
+| cell | the chain that steps; the one already ahead, and where it is | the start above the sheet | wide kink I | saddle A-I | saddle I-B | B (both ahead) | barrier to join / to part again | both ahead, above the sheet | the first chain's barrier to come back | it comes back, for each time this neighbour joins |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 4x2 (16 chains) | 12; 0, 4.96 A away, at (+4.96, +0.00) A from it | +5.91 | none: no minimum there, the chain slides on to B | +11.67, **+10.96** | none (downhill) | +2.44 | 10.96 / 8.52 | +8.35 | 5.73 | 6.5e+03 times |
+| 4x2 (16 chains) | 4; 0, 4.96 A away, at (-4.96, +0.00) A from it | +5.91 | +9.40 | +10.52, **+10.43** | +13.35, **+13.12** | +2.44 | 13.12 / 10.68 | +8.35 | 5.73 | 2.4e+05 times |
 
 **The kink sheet along the sequence** (kcal/mol per kink pair against the all-trans crystal, rigid pendants; the kink pair's first unit is the monomer named, gauche bonds on the even bonds; `~` is the mirrored kink pair G- T G+)
 
