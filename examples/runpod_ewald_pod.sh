@@ -38,11 +38,22 @@ SERVER=$!
 remove_pod() {
   [ "${BENCH_KEEP:-0}" = "1" ] && return 0
   [ -n "${RUNPOD_POD_ID:-}" ] || return 0
-  # the pod's own key: the command line tool in its new and its old spelling, then the API itself
+  # With the pod's own key.  The command line tool has spelled this three ways over its
+  # versions, and an image carries whichever it was built with; then the API itself; and if
+  # the pod cannot be removed, stopping it at least ends the billing of the GPU.
   runpodctl config --apiKey "${RUNPOD_API_KEY:-}" >/dev/null 2>&1
-  runpodctl pod delete "$RUNPOD_POD_ID" 2>/dev/null \
-    || runpodctl remove pod "$RUNPOD_POD_ID" 2>/dev/null \
-    || curl -s -X DELETE "https://rest.runpod.io/v1/pods/$RUNPOD_POD_ID" -H "Authorization: Bearer ${RUNPOD_API_KEY:-}"
+  for attempt in "runpodctl pod remove" "runpodctl pod delete" "runpodctl remove pod"; do
+    if $attempt "$RUNPOD_POD_ID" >/dev/null 2>&1; then echo "   removed with: $attempt" >> "$STATUS"; return 0; fi
+  done
+  code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "https://rest.runpod.io/v1/pods/$RUNPOD_POD_ID" \
+           -H "Authorization: Bearer ${RUNPOD_API_KEY:-}")
+  echo "   command line removal failed; API delete answered $code" >> "$STATUS"
+  case "$code" in 2*) return 0 ;; esac
+  for attempt in "runpodctl pod stop" "runpodctl stop pod"; do
+    if $attempt "$RUNPOD_POD_ID" >/dev/null 2>&1; then echo "   could not remove; stopped with: $attempt" >> "$STATUS"; return 0; fi
+  done
+  echo "   THE POD COULD NOT REMOVE OR STOP ITSELF: remove it by hand" >> "$STATUS"
+  return 1
 }
 
 echo "started $(date -u +%FT%TZ) pod ${RUNPOD_POD_ID:-none}" > "$STATUS"
