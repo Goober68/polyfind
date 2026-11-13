@@ -819,7 +819,7 @@ class MixedModel:
         surface (a step of Newton's length in the first-saddle hyperplane of the four-chain step:
         10.331 off the surface at a closure residual of 0.017 degrees, 10.279 once returned to it,
         from 10.290).  So its steps stay short and most of its evaluations are spent on trial
-        points it then rejects (2.5 to 3 per accepted step there and in sixteen chains).  Here
+        points it then rejects (2.2 to 2.8 per iteration in cells of four to sixteen chains).  Here
         nothing is evaluated off the surface, a step is judged by the energy alone, and nearly
         every step is accepted.
 

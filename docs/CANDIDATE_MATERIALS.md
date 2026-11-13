@@ -869,8 +869,8 @@ straight step leaves the closure surface at second order, a chain that does not 
 own image, and the energy there says nothing about the energy on the surface (a step of Newton's
 length in the four-chain cell: 10.331 off the surface at a closure residual of 0.017 degrees,
 10.279 once returned to it, from 10.290), so its steps stay short and most of its evaluations go
-to trial points that are then rejected (2.5 to 3 evaluations per accepted step in the four- and
-sixteen-chain hyperplanes; on the surface, one). And
+to trial points that are then rejected (2.2 to 2.8 evaluations per iteration in the stored
+relaxations of four to sixteen chains, these included; on the surface, 1.0 to 1.2). And
 the problem is badly conditioned in any per-variable units: the Hessian of the sixteen-chain sheet
 along the closure surface has eigenvalues from 0.031 to 421 kcal/mol per scaled unit squared,
 because one torsion turned alone swings the rest of its chain through the neighbours while the
