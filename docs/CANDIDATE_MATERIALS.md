@@ -834,7 +834,7 @@ closure surface, every chain flexible, the cell fixed at the kinked crystal's:
 |---|---|---|---|---|---|---|
 | PVDF | one sublattice (half the chains, each with its two stack neighbours) | +7.01 | 7.54 | 8.91 | +1.97 | 8.9 / 6.9 |
 | PVDF | one chain in four (all six neighbours stay) | +9.85 | 10.27 | 12.46 | +7.88 | 12.5 / 4.6 |
-| PVDF | one chain in sixteen (2026-11-12) | +9.96 | 10.73 (the band's top; see below) | 11.64 | +5.91 | 11.6 / 5.7 |
+| PVDF | one chain in sixteen (2026-11-12, first saddle 2026-11-13) | +9.96 | 10.66 | 11.64 | +5.91 | 11.6 / 5.7 |
 | 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.43 | 11.48 | +8.98 | 11.5 / 2.5 |
 | 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.05 | 12.02 | +11.25 | 12.0 / 0.8 |
 | PVDF | every chain together (the sheet in register), per chain | +5.06 | 7.38 | not settled (the band's top 7.9) | 0.00 | at least 7.4 each way, 14.8 per two-chain cell |
@@ -855,10 +855,47 @@ bands that had converged were within 0.03 of their saddles. The terpolymer's
 second top, quoted before as 11.4 and 11.7 from two runs that stopped at their iteration limit, is
 11.48. The in-register band had stopped at forces of 0.8-1.0: its first top was
 0.86 too high and its second did not settle from that band.
-The sixteen-chain first top is the one number of the table that is a band's (10.73 at a force of
-0.09): its settling was stopped after 105 minutes in its first hyperplane (a second copy with a
-progress log went from 10.73 to 10.69 in its first 70 evaluations and was still descending), and
-since it lies a kcal/mol under the second saddle it does not enter the barrier.
+The sixteen-chain first saddle was the last to settle, and it took another way of minimising to
+settle it (2026-11-13): 10.660, 0.07 under its band's top, with 0.0005 kcal/mol per scaled unit
+left along the path and 0.00007 across it. It lies a kcal/mol under the second saddle and does not
+enter the barrier; the wide kink behind it is 0.70 deep on that side and 1.67 on the other.
+
+**Minimising on the closure surface (2026-11-13).** The hyperplane through that band's top was
+at 10.669 after 246 evaluations of SLSQP and at 10.664 after 1435, still falling by 0.002 an hour;
+its minimum is 10.660. Two things were wrong, and both are properties of the method, not of this
+saddle. SLSQP is handed the chains' closure as equality constraints and tries straight steps; a
+straight step leaves the closure surface at second order, a chain that does not close meets its
+own image, and the energy there says nothing about the energy on the surface (the first full step
+in the four-chain cell: 10.331 off the surface at a closure residual of 0.017 degrees, 10.279 once
+returned to it, from 10.290), so most evaluations go to trial points that are then rejected. And
+the problem is badly conditioned in any per-variable units: the Hessian of the sixteen-chain sheet
+along the closure surface has eigenvalues from 0.031 to 421 kcal/mol per scaled unit squared,
+because one torsion turned alone swings the rest of its chain through the neighbours while the
+same torsion turned with the chain's placement and its other torsions following costs almost
+nothing. (That Hessian is the energy's plus the closure's own curvature times the closure's
+multipliers, the tension the kinked chains are under; without that term it has negative values at
+a minimum.) `MixedModel.relax_on_surface` is a limited-memory quasi-Newton method in the tangent
+space of the closure surface, every trial point returned to the surface before its energy is
+asked for; `chain_metric` gives it one 44 x 44 curvature block per chain as its metric, in which
+the same Hessian runs from 0.018 to 2.1 with half of its values within 0.13 of one.
+The blocks hardly depend on the cell (four chains against sixteen: 3.6 in elements of up to
+1400), so they are taken from the four-chain tiling in a minute. With `kink_migration.py
+--surface`:
+
+| | SLSQP, closure as constraints | on the closure surface, per-chain metric |
+|---|---|---|
+| four chains, first-saddle hyperplane | 10.26582 in 185 evaluations (stalled) | 10.26582 in 29 (converged) |
+| four chains, both saddles settled | 10.2684 and 12.4644 in 391 and 1360 | 10.2684 and 12.4644 in 78 and 203 |
+| sixteen chains, first-saddle hyperplane | 10.669 in 246, 10.664 in 1435, not converged | 10.6596 in 64 |
+| sixteen chains, first saddle | 10.669, 0.016 left across the path, in 292 | 10.660, 0.00007 across, in 87 (6 minutes) |
+| sixteen chains, second saddle | 11.6366 in 818 | 11.6366 in 151 |
+| sixteen chains, I and B relaxed further | (stored: gradients 7e-05 and 2e-03) | fall by 0.0000 and 0.0001 |
+
+So the second saddle, the end states and with them the barrier stand as they were, the four-chain
+saddles are reproduced to four decimals by a different minimiser, and the one number SLSQP had
+not converged was 0.009 too high. The metric given to SLSQP instead changes little (174
+evaluations against 185): the waste was the trial points off the surface. On the surface without
+the metric the four-chain hyperplane takes 110 evaluations and ends on the stall rule.
 
 * **The torsional step itself costs 7.5-8.9 kcal/mol in the PVDF lattice**: with a 3e12 /s attempt
   frequency, 1e6 steps per second at 300 K. The two saddles are sequential, not concerted: at the
@@ -878,12 +915,14 @@ since it lies a kcal/mol under the second saddle it does not enter the barrier.
     puts them and the other fifteen chains keep their kink pairs in the sheet.
   - *It is the completed step that needs the room, and it needs it along the stack.* B is
     +7.88, +7.51, +6.47 and +5.91 in cells of 2a x b, 2a x 2b, 4a x b and 4a x 2b (a the 4.96 A
-    stack axis): doubling a is worth 1.4-1.6, doubling b 0.4-0.6. The wide kink is +9.85, +9.98,
-    +10.02 and +9.96 in the same four cells, and its saddle 10.27 in four chains and at most 10.73 in
-    sixteen: it does not gain from the room. Sixteen chains is therefore not the dilute limit
-    of B; a wider cell along a was not run (an energy of the sixteen-chain cell is 4 s after
-    the speed work of this date, and of a thirty-two-chain one an estimated five to six times
-    that).
+    stack axis): doubling a is worth 1.4-1.6, doubling b 0.4-0.6. Doubling a once more is worth
+    0.28 (2026-11-13: +6.19 in 8a x b, sixteen chains in one row), so along the stack the series
+    is closing by a factor of five per doubling and 8a is within about 0.1 of its end. The wide
+    kink is +9.85, +9.98, +10.02, +9.96 and +10.05 in the five cells, and its saddle 10.27 in
+    four chains and 10.66 in sixteen: it does not gain from the room. Sixteen chains as 4a x 2b
+    is therefore not the dilute limit of B but is near it: the same correction along a puts
+    8a x 2b at about 5.6, and what a third and fourth row along b would add is not measured
+    (the first doubling of b gave 0.56 at 4a).
   - *How the lattice gives.* In B the moving chain has a monomer's length out of axial register
     with its neighbours (a kink pair shortens its chain by about 1 A, and this one sits a
     monomer further on than theirs), and it shares that out: the chain slides 0.32 A back

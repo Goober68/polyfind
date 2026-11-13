@@ -283,7 +283,7 @@ def main():
             rigid = "{:+.2f}, {:+.2f}".format(bd["I"]["energy"], bd["B"]["energy"]) if bd else "-"
             wide, ahead = ("{:+.2f}".format(fl["I"]["energy"]), "{:+.3f}".format(fl["B"]["energy"])) if fl else ("-", "-")
             md.append(f"| {cell[0]}x{cell[1]} | {n}{note} | {rigid} | {wide} | {band(fl)} | {ahead} |")
-        big = max((c for c in single if "flexible" in single[c]), key=lambda c: c[0] * c[1])
+        big = max((c for c in single if "flexible" in single[c]), key=lambda c: (c[0] * c[1], "I-B" in single[c]["flexible"]))  # the largest; of two as large, the one with bands
         e = single[big]["flexible"]
         md += ["", f"How the lattice answers in the {big[0]}x{big[1]} cell ({e['chains']} chains, neighbours flexible): displacements against the kinked crystal, "
                "relative to the median of the chains whose kink pair stays", "",

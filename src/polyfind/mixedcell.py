@@ -801,6 +801,226 @@ class MixedModel:
                    "objective_scale": fs, "descent_evaluations": pre, "at_trust_bound": at_bound, "stalled": stalled,
                    "gradient_max": float(np.abs(gf).max()) if gf.size else 0.0, "linear_force": multiplier}
 
+    def relax_on_surface(self, x0, free=None, closed=None, metric=None, linear=None, gtol: float = 1e-4, ftol: float = 1e-9,
+                         maxiter: int = 500, memory: int = 30, longest: float = 0.5, first_step: float | None = 0.3,
+                         presteps: int = 0, angle_window: float | None = 8.0, cell_window=(0.6, 1.6), c_window=(0.85, 1.15),
+                         progress=None, patience: int | None = None, patience_tol: float = 1e-6):
+        """The minimisation of :meth:`relax` done on the closure surface: a limited-memory
+        quasi-Newton method in the surface's tangent space, every trial point returned to the
+        surface (and to the hyperplane of ``linear``) before its energy is evaluated.
+
+        :meth:`relax` hands the closure to SLSQP as equality constraints, and SLSQP tries straight
+        steps: a step along the tangent leaves the surface at second order, a chain that does not
+        close meets its own image, and the energy there says nothing about the energy on the
+        surface (the full step of the first-saddle hyperplane of the four-chain step: 10.331 off
+        the surface at a closure residual of 0.017 degrees, 10.279 once returned to it, from
+        10.290).  So most of its evaluations are spent on trial points it then rejects.  Here
+        nothing is evaluated off the surface, and a step is judged by the energy alone.
+
+        ``metric`` is a matrix ``T`` (free x free): the method works in ``w`` with ``dy = T dw``,
+        ``y`` being the free variables in the units of :meth:`scale`.  With ``T`` an inverse square
+        root of the Hessian the first step is Newton's; :func:`chain_metric` builds one from one
+        block per chain, which is what the conditioning needs (the constrained Hessian of the
+        sixteen-chain sheet has eigenvalues from 0.03 to 420 in the scaled variables, 0.02 to 2
+        in those).  Without it the method is the same one in the scaled variables.
+
+        ``gtol`` is the largest component of the gradient along the surface at which it stops
+        (kcal/mol per scaled unit; what :meth:`relax` reports as ``gradient_max``), ``ftol`` a
+        fall of the energy (kcal/mol per cell) under which two successive steps also end it,
+        ``longest`` the longest move of any variable in one step (scaled units), ``first_step``
+        that of a step taken without curvature information, ``memory`` the number of steps
+        remembered.  ``presteps`` > 0 runs :meth:`descend` first, as :meth:`relax` does.
+        ``progress(stage, evaluation, energy, x)``, ``patience`` and ``patience_tol`` are those of
+        :meth:`relax`; every evaluation here is on the surface.  The windows on the backbone
+        angles and the cell are not enforced (near a minimum none is active):
+        ``info["outside_windows"]`` counts the variables that ended outside theirs.  Returns
+        ``(x, info)`` with the fields of :meth:`relax`."""
+        from collections import deque
+
+        x0 = np.asarray(x0, dtype=float).ravel().copy()
+        free = np.arange(self.n_var) if free is None else np.unique(np.asarray(free, dtype=int))
+        if closed is None:
+            fset = set(free.tolist())
+            closed = [s for s in range(self.nc) if 3 in fset or fset.intersection(self.index("internal", s).tolist())]
+        closed = [int(s) for s in closed]
+        sc = self.scale(x0)[free]
+        n = free.size
+        bounds = self._bounds(x0, free, sc, angle_window, cell_window, c_window)
+        a_lin = None if linear is None else np.asarray(linear[0], dtype=float).ravel()
+        if a_lin is not None and a_lin.size != n:
+            raise ValueError(f"linear: {a_lin.size} coefficients for {n} free variables")
+        b_lin = None if linear is None else float(linear[1])
+        T = None if metric is None else np.asarray(metric, dtype=float)
+        if T is not None and T.shape != (n, n):
+            raise ValueError(f"metric: shape {T.shape} for {n} free variables")
+        Tinv = None if T is None else np.linalg.inv(T)
+        pre, start = 0, x0
+        if presteps > 0 and linear is None:
+            fstep = 0.3 if first_step is None else float(first_step)
+            start, _, pre = self.descend(x0, free, closed, steps=presteps, max_step=fstep / 3.0, gtol=5.0 * fstep,
+                                         angle_window=angle_window, cell_window=cell_window, c_window=c_window,
+                                         progress=None if progress is None else (lambda k, e, x: progress("descent", k, e, x)))
+
+        def full(y):
+            x = x0.copy()
+            x[free] = y * sc
+            return x
+
+        def constraint(y):
+            vals, rows = [], []
+            if closed:
+                h, J = self.closure(full(y), closed)
+                vals.append(h)
+                rows.append(J[:, free] * sc)
+            if a_lin is not None:
+                vals.append(np.array([float(a_lin @ y) - b_lin]))
+                rows.append(a_lin[None, :])
+            if not rows:
+                return np.zeros(0), np.zeros((0, n))
+            return np.concatenate(vals), np.vstack(rows)
+
+        def retract(y):  # back to the constraints by Newton steps, each the shortest in the metric; (None, None) if they do not converge
+            for _ in range(40):
+                c, N = constraint(y)
+                if c.size == 0 or float(np.abs(c).max()) < 1e-9:
+                    return y, N
+                if not np.all(np.isfinite(c)):
+                    break
+                Nw = N if T is None else N @ T
+                dw = Nw.T @ np.linalg.lstsq(Nw @ Nw.T, c, rcond=None)[0]
+                y = y - (dw if T is None else T @ dw)
+            return None, None
+
+        def normals(N, in_metric: bool):  # orthonormal columns spanning the constraints' normals, in w or in y
+            if N.shape[0] == 0:
+                return np.zeros((n, 0))
+            M = N @ T if (in_metric and T is not None) else N
+            _, sv, Vt = np.linalg.svd(M, full_matrices=False)
+            return Vt[sv > 1e-10 * max(float(sv.max()), 1e-300)].T
+
+        def along(gy, N):  # the gradient along the surface, in the scaled variables
+            Qy = normals(N, False)
+            return gy - Qy @ (Qy.T @ gy)
+
+        count = {"n": 0}
+        low = {"e": np.inf, "y": None, "mark": np.inf, "since": 0}
+
+        class _Stalled(Exception):
+            pass
+
+        def energy(y):
+            x = full(y)
+            e, g = self.value_and_grad(x)
+            count["n"] += 1
+            if progress is not None:
+                progress("surface", count["n"], float(e), x)
+            if e < low["e"]:
+                low.update(e=float(e), y=y.copy())
+            if patience is not None:
+                if low["e"] < low["mark"] - patience_tol:
+                    low.update(mark=low["e"], since=0)
+                else:
+                    low["since"] += 1
+                if low["since"] >= patience:
+                    raise _Stalled
+            return float(e), g[free] * sc
+
+        pairs: deque = deque(maxlen=int(memory))
+
+        def two_loop(v):
+            q, hist = v.copy(), []
+            for s_, y_ in reversed(pairs):
+                rho = 1.0 / float(s_ @ y_)
+                al = rho * float(s_ @ q)
+                hist.append((al, rho, s_, y_))
+                q -= al * y_
+            if pairs:
+                s_, y_ = pairs[-1]
+                q *= float(s_ @ y_) / float(y_ @ y_)
+            for al, rho, s_, y_ in reversed(hist):
+                q += (al - rho * float(y_ @ q)) * s_
+            return q
+
+        y, N = retract(start[free] / sc)
+        if y is None:
+            raise RuntimeError("the start cannot be returned to the closure surface")
+        message, stalled, its, small = "iteration limit reached", False, 0, 0
+        try:
+            e, gy = energy(y)
+            Q = normals(N, True)
+            r = gy if T is None else T.T @ gy
+            r = r - Q @ (Q.T @ r)
+            for its in range(1, int(maxiter) + 1):
+                if float(np.abs(along(gy, N)).max()) < gtol:
+                    message = "Optimization terminated successfully: the gradient along the surface is under gtol"
+                    break
+                d = -two_loop(r)
+                d -= Q @ (Q.T @ d)
+                slope = float(r @ d)
+                if not slope < -1e-12 * float(np.linalg.norm(r) * np.linalg.norm(d)):
+                    pairs.clear()
+                    d, slope = -r, -float(r @ r)
+                step = d if T is None else T @ d
+                big = max(float(np.abs(step).max()), 1e-300)
+                cap = longest if (pairs or first_step is None) else min(longest, float(first_step))
+                alpha = min(1.0, cap / big)
+                accepted = False
+                for _ in range(30):
+                    yt, Nt = retract(y + alpha * step)
+                    if yt is None:
+                        alpha *= 0.25
+                    else:
+                        et, gyt = energy(yt)
+                        if et <= e + 1e-4 * alpha * slope:
+                            accepted = True
+                            break
+                        denom = 2.0 * (et - e - alpha * slope)
+                        new = -slope * alpha * alpha / denom if denom > 0.0 and np.isfinite(denom) else 0.25 * alpha
+                        alpha = min(max(new, 0.1 * alpha), 0.5 * alpha)
+                    if alpha * big < 1e-10:
+                        break
+                if not accepted:
+                    if pairs:  # the curvature remembered is no guide here: once more along the steepest descent
+                        pairs.clear()
+                        continue
+                    message = "no lower point along the steepest descent"
+                    break
+                Qt = normals(Nt, True)
+                rt = gyt if T is None else T.T @ gyt
+                rt = rt - Qt @ (Qt.T @ rt)
+                sw = (yt - y) if T is None else Tinv @ (yt - y)
+                sw = sw - Qt @ (Qt.T @ sw)
+                yw = rt - (r - Qt @ (Qt.T @ r))
+                if float(sw @ yw) > 1e-10 * float(np.linalg.norm(sw) * np.linalg.norm(yw)):
+                    pairs.append((sw, yw))
+                small = small + 1 if e - et < ftol else 0
+                y, N, Q, e, gy, r = yt, Nt, Qt, et, gyt, rt
+                if small >= 2:
+                    message = "Optimization terminated successfully: the energy has stopped falling (ftol)"
+                    break
+        except _Stalled:
+            y, stalled = low["y"], True
+            N = constraint(y)[1]
+            message = f"stalled: the lowest energy on the closure surface has not fallen by {patience_tol:g} kcal/mol in {patience} evaluations"
+        x = full(y)
+        h = self.closure(x, closed)[0].reshape(-1, 4) if closed else np.zeros((1, 4))
+        rot, dc = float(np.linalg.norm(h[:, :3], axis=1).max()), float(np.abs(h[:, 3]).max() / CLOSURE_C)
+        parts: dict = {}
+        _, g = self.value_and_grad(x, parts)
+        yf, gf = x[free] / sc, g[free] * sc
+        lo = np.array([-np.inf if b[0] is None else b[0] for b in bounds])
+        hi = np.array([np.inf if b[1] is None else b[1] for b in bounds])
+        outside = int(np.count_nonzero((yf < lo - 1e-9) | (yf > hi + 1e-9)))
+        multiplier = None
+        if N.shape[0]:
+            if a_lin is not None:
+                multiplier = float(np.linalg.lstsq(N.T, gf, rcond=None)[0][-1])
+            gf = along(gf, N)
+        return x, {"message": message, "iterations": its, "evaluations": count["n"] + pre,
+                   "energy": float(parts["physical"]), "rotation_error_max": rot, "c_mismatch_max": dc, "closed_chains": closed,
+                   "objective_scale": 1.0, "descent_evaluations": pre, "at_trust_bound": False, "stalled": stalled,
+                   "gradient_max": float(np.abs(gf).max()) if gf.size else 0.0, "linear_force": multiplier, "outside_windows": outside}
+
     def relax_in_basin(self, x0, free=None, closed=None, trust: float = 0.3, rounds: int = 100, callback=None, **kw):
         """:meth:`relax` in a trust box of half-width ``trust`` (scaled units), repeated from each
         result until no variable ends on its box and the optimiser reports success: quasi-Newton
@@ -827,7 +1047,7 @@ class MixedModel:
 
 # --------------------------------------------------------------------- a saddle, settled
 def saddle_polish(model: MixedModel, x, tangent, free=None, closed=None, tol: float = 0.01, first: float = 0.05,
-                  longest: float = 0.3, rounds: int = 10, log=None, **relax_kw):
+                  longest: float = 0.3, rounds: int = 10, log=None, on_surface: bool = False, **relax_kw):
     """The stationary point near ``x`` that is a maximum along ``tangent`` and a minimum across it.
 
     A band's climbing image finds where a pass is; this settles it.  With ``a`` the unit vector of
@@ -848,7 +1068,12 @@ def saddle_polish(model: MixedModel, x, tangent, free=None, closed=None, tol: fl
     large cell needs).  With ``trust`` among them each minimisation is confined to that distance
     (scaled units) from its start, which keeps the optimiser's trial steps out of the far field,
     and one that ends on its box is continued from there in the same hyperplane, up to five
-    times, before its energy and force are used.  ``log(text)`` gets a line per hyperplane.  Returns ``(x, info)``: ``energy``,
+    times, before its energy and force are used.  ``on_surface`` minimises with
+    :meth:`MixedModel.relax_on_surface` instead (``relax_kw`` then goes to it: ``metric``, ``gtol``),
+    which is what a cell of sixteen chains needs: the first-saddle hyperplane of the sixteen-chain
+    step is at +10.6596 after 64 evaluations that way, and was at +10.6688 after 246 and +10.6637
+    after 1435, still falling, with :meth:`MixedModel.relax`.  ``log(text)`` gets a line per
+    hyperplane.  Returns ``(x, info)``: ``energy``,
     ``force`` (the last ``dE_min/ds``), ``gradient_max`` (across the path), ``slope``
     (``d2E_min/ds2`` from the last two hyperplanes, negative at a saddle; ``None`` if only one was
     needed), ``displacement`` (the final ``s``), ``converged``, ``evaluations`` and ``rounds``, the
@@ -868,17 +1093,18 @@ def saddle_polish(model: MixedModel, x, tangent, free=None, closed=None, tol: fl
         raise ValueError("the tangent has no component along the closure surface in the free variables")
     a /= norm
     b0 = float(a @ (x[free] / sc))
-    on_surface = np.intersect1d(free, model.index("internal", closed)) if closed else np.zeros(0, dtype=int)
+    inner = np.intersect1d(free, model.index("internal", closed)) if closed else np.zeros(0, dtype=int)  # what returns a moved point to the surface
     s, tried, slope, done, total = 0.0, [], None, False, 0
     kw = {"presteps": 0, **relax_kw}
+    minimise = model.relax_on_surface if on_surface else model.relax
     info: dict = {}
     for k in range(int(rounds)):
-        x, info = model.relax(x, free=free, closed=closed, linear=(a, b0 + s), **kw)
+        x, info = minimise(x, free=free, closed=closed, linear=(a, b0 + s), **kw)
         total += info["evaluations"]
         for _ in range(5):  # a boxed minimisation that stopped on its box has not found the hyperplane's minimum yet
             if not info.get("at_trust_bound"):
                 break
-            x, more = model.relax(x, free=free, closed=closed, linear=(a, b0 + s), **kw)
+            x, more = minimise(x, free=free, closed=closed, linear=(a, b0 + s), **kw)
             total += more["evaluations"]
             info = {**more, "evaluations": info["evaluations"] + more["evaluations"]}
         tried.append({"displacement": s, "energy": info["energy"], "force": info["linear_force"], "gradient_max": info["gradient_max"],
@@ -898,10 +1124,156 @@ def saddle_polish(model: MixedModel, x, tangent, free=None, closed=None, tol: fl
         s += step
         x = x.copy()
         x[free] += sc * a * step
-        if on_surface.size:
-            x = model.project(x, on_surface, closed)
+        if inner.size:
+            x = model.project(x, inner, closed)
     return x, {"energy": info["energy"], "force": float(info["linear_force"]), "gradient_max": info["gradient_max"], "slope": slope, "displacement": s,
                "converged": bool(done), "evaluations": total, "rounds": tried}
+
+
+# ------------------------------------------------------------- curvature and a metric
+def hessian_columns(model: MixedModel, x, columns, step: float = 1e-3, progress=None) -> np.ndarray:
+    """``H[:, columns]`` of the energy at ``x`` in the scaled variables of :meth:`MixedModel.scale`
+    (rows and columns both): central differences of the analytic gradient, two evaluations per
+    column, ``step`` in scaled units.  ``progress(done, of)`` is called after each column."""
+    x = np.asarray(x, dtype=float).ravel()
+    sc = model.scale(x)
+    columns = [int(j) for j in np.atleast_1d(columns)]
+    out = np.zeros((model.n_var, len(columns)))
+    for k, j in enumerate(columns):
+        xp, xm = x.copy(), x.copy()
+        xp[j] += step * sc[j]
+        xm[j] -= step * sc[j]
+        out[:, k] = (model.value_and_grad(xp)[1] - model.value_and_grad(xm)[1]) / (2.0 * step) * sc
+        if progress is not None:
+            progress(k + 1, len(columns))
+    return out
+
+
+def tiled_hessian(model: MixedModel, x, nx: int, ny: int, step: float = 1e-3, progress=None) -> np.ndarray:
+    """The whole Hessian (scaled variables) at a state that is the ``nx x ny`` tiling of a smaller
+    cell, chains in the order of :func:`tile_state`: the columns of the first cell's chains and of
+    the four cell variables by :func:`hessian_columns`, every other chain's by translation (the
+    column of a chain is the column of its translate with the rows moved along).  For a
+    sixteen-chain tiling of a two-chain cell that is 92 columns instead of 708.  Symmetrised."""
+    x = np.asarray(x, dtype=float).ravel()
+    nc, n = model.nc, model.n_var
+    n0 = nc // (nx * ny)
+    if n0 * nx * ny != nc:
+        raise ValueError(f"{nc} chains are not an {nx} x {ny} tiling")
+    slots = lambda s: np.concatenate([model.index("place", [s]), model.index("internal", [s])])  # noqa: E731
+    chain = lambda ix, iy, k: ((ix % nx) * ny + (iy % ny)) * n0 + k  # noqa: E731
+    first = np.concatenate([np.arange(4)] + [slots(k) for k in range(n0)])
+    H = np.zeros((n, n))
+    H[:, first] = hessian_columns(model, x, first, step, progress)
+    for dx in range(nx):
+        for dy in range(ny):
+            if dx == 0 and dy == 0:
+                continue
+            moved = np.arange(n)  # where each row goes under the translation by (dx, dy)
+            for ix in range(nx):
+                for iy in range(ny):
+                    for k in range(n0):
+                        moved[slots(chain(ix, iy, k))] = slots(chain(ix + dx, iy + dy, k))
+            for k in range(n0):
+                H[np.ix_(moved, slots(chain(dx, dy, k)))] = H[:, slots(k)]
+    return 0.5 * (H + H.T)
+
+
+def closure_multipliers(model: MixedModel, x, free, closed) -> np.ndarray:
+    """``mu`` (chains of ``closed`` x 4) with ``gradient + sum_k mu_k dh_k/dy = 0`` in the least
+    squares over the ``free`` variables: the closure's multipliers at a constrained minimum, the
+    tension and the torques each chain's periodicity holds."""
+    x = np.asarray(x, dtype=float).ravel()
+    free = np.unique(np.asarray(free, dtype=int))
+    closed = [int(s) for s in closed]
+    sc = model.scale(x)[free]
+    g = model.value_and_grad(x)[1][free] * sc
+    J = model.closure(x, closed)[1][:, free] * sc
+    return -np.linalg.lstsq(J.T, g, rcond=None)[0].reshape(len(closed), 4)
+
+
+def closure_curvature(model: MixedModel, x, closed, multipliers, step: float = 1e-4) -> np.ndarray:
+    """``sum_k mu_k d2h_k/dy dy`` (scaled variables, the full ``n_var x n_var`` matrix): what the
+    closure adds to the Hessian of the energy to make the Hessian of the Lagrangian, whose values
+    along the closure surface are the curvatures of the energy on it.  At the kinked sheet the
+    energy's own Hessian has negative values along the surface (-3.1 the lowest in the four-chain
+    cell) where the energy on the surface rises (+2.0 by second differences): the chains are under
+    tension, and the tension's part is not small.  With it the two agree to three figures.
+    Differences of the analytic closure Jacobian, which costs no energy evaluation."""
+    x = np.asarray(x, dtype=float).ravel()
+    sc = model.scale(x)
+    out = np.zeros((model.n_var, model.n_var))
+    mu = np.asarray(multipliers, dtype=float).reshape(-1, 4)
+    for q, s in enumerate([int(v) for v in closed]):
+        for j in np.concatenate([model.index("internal", [s]), model.index("c")]):
+            xp, xm = x.copy(), x.copy()
+            xp[j] += step * sc[j]
+            xm[j] -= step * sc[j]
+            out[:, j] += (mu[q] @ (model.closure(xp, [s])[1] - model.closure(xm, [s])[1])) / (2.0 * step) * sc
+    return 0.5 * (out + out.T)
+
+
+def chain_blocks(model: MixedModel, x, chains, step: float = 1e-3, progress=None) -> dict:
+    """``{chain: block}``: the Hessian of the energy in each listed chain's own 44-odd variables
+    (its placement, then its torsions and backbone angles; scaled) with every other chain held,
+    by :func:`hessian_columns`.  The block of a chain in a sheet hardly depends on the size of the
+    cell around it (four chains against sixteen: 3.6 in elements of up to 1400), so the blocks of a
+    large cell can be taken from a small one."""
+    out = {}
+    for s in [int(v) for v in np.atleast_1d(chains)]:
+        own = np.concatenate([model.index("place", [s]), model.index("internal", [s])])
+        out[s] = hessian_columns(model, x, own, step, progress)[own]
+    return out
+
+
+def chain_metric(model: MixedModel, x, free, closed, blocks: dict, floor: float = 0.1, across: float = 10.0) -> np.ndarray:
+    """The metric of :meth:`MixedModel.relax_on_surface` from one block per chain.
+
+    For each chain the curvature of the energy on its own closure surface (its block of
+    ``blocks``, plus the closure's curvature with the multipliers at ``x``, projected onto the
+    tangent space of its four closure conditions; ``across`` along their normals) and its inverse
+    square root, eigenvalues under ``floor`` raised to it; the blocks side by side are ``T``, with
+    ones for a free variable that belongs to no chain.  ``blocks`` holds the blocks of some chains,
+    in the order :func:`chain_blocks` uses; chain ``s`` takes that of the chain ``s`` modulo their
+    number, which for a tiling of the cell they were computed in is its own translate.
+
+    What it does: a chain's stiff directions are single torsions, each of which swings the rest
+    of the chain through its neighbours unless the chain's placement and the other torsions
+    follow, and its soft ones are those concerted moves.  No diagonal scaling tells the two apart;
+    the chain's own block does.  The constrained Hessian of the kinked sheet, sixteen chains, has
+    eigenvalues from 0.031 to 421 in the scaled variables and from 0.018 to 2.1 in these, half of
+    them within 0.13 of one; what is left is the coupling between chains.  (Blocks
+    of the internal coordinates alone do nothing: 0.08 to 415.)  The sheet's blocks serve for a
+    state with one chain's kink elsewhere: the four-chain first-saddle hyperplane takes 29
+    evaluations with them and 26 with the moving chain's block recomputed at the start."""
+    x = np.asarray(x, dtype=float).ravel()
+    free = np.unique(np.asarray(free, dtype=int))
+    closed = [int(s) for s in closed]
+    sc = model.scale(x)
+    pos = {int(v): i for i, v in enumerate(free)}
+    keys = sorted(blocks)
+    mu = closure_multipliers(model, x, free, closed) if closed else np.zeros((0, 4))
+    T = np.eye(free.size)
+    for s in range(model.nc):
+        own = np.concatenate([model.index("place", [s]), model.index("internal", [s])])
+        keep = np.array([i for i, v in enumerate(own) if int(v) in pos], dtype=int)
+        if keep.size == 0:
+            continue
+        Hs = np.asarray(blocks[keys[s % len(keys)]], dtype=float)
+        if Hs.shape != (own.size, own.size):
+            raise ValueError(f"block of chain {keys[s % len(keys)]}: shape {Hs.shape} for {own.size} variables")
+        N = np.zeros((keep.size, 0))
+        if s in closed:
+            Hs = Hs + closure_curvature(model, x, [s], mu[closed.index(s)])[np.ix_(own, own)]
+            Js = model.closure(x, [s])[1][:, own[keep]] * sc[own[keep]]
+            _, sv, Vt = np.linalg.svd(Js, full_matrices=False)
+            N = Vt[sv > 1e-10 * max(float(sv.max()), 1e-300)].T
+        P = np.eye(keep.size) - N @ N.T
+        M = P @ Hs[np.ix_(keep, keep)] @ P + across * (N @ N.T)
+        w, V = np.linalg.eigh(0.5 * (M + M.T))
+        loc = np.array([pos[int(own[i])] for i in keep])
+        T[np.ix_(loc, loc)] = (V / np.sqrt(np.maximum(w, floor))) @ V.T
+    return T
 
 
 # ------------------------------------------------------------------- pendant tilts

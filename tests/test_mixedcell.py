@@ -223,6 +223,120 @@ def test_a_relaxation_in_a_hyperplane_reports_the_force_that_holds_it_there():
     assert m.relax(x0, **kw)[1]["linear_force"] is None
 
 
+def _held(m):
+    """Everything free but the cell and one chain's position: no free translation."""
+    return np.setdiff1d(np.arange(m.n_var), np.concatenate([np.arange(4), m.index("xy", 1), m.index("z", 1)]))
+
+
+def test_the_minimiser_on_the_closure_surface_evaluates_nothing_off_it():
+    """``relax_on_surface`` ends at the minimum ``relax`` finds, and every point it asks the energy
+    of is periodic to rounding, where SLSQP's trial points leave the surface by tenths of a degree;
+    it counts its evaluations from one, reports the fields ``relax`` does, leaves the held variables
+    alone, and stops by the stall rule when its own tests cannot be passed."""
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    free, closed = _held(m), [0, 1]
+    start, _, _ = m.descend(x, free, closed, steps=10)
+    off = []
+    _, slsqp = m.relax(start, free=free, closed=closed, maxiter=400, presteps=0, progress=lambda s, k, e, y: off.append(max(m.closure_residual(y))))
+    assert "success" in slsqp["message"].lower() and max(off) > 0.1
+    seen = []
+    x1, info = m.relax_on_surface(start, free=free, closed=closed, progress=lambda s, k, e, y: seen.append((s, k, max(m.closure_residual(y)), e)))
+    assert max(r for _, _, r, _ in seen) < 1e-8
+    assert [s for s, *_ in seen] == ["surface"] * len(seen) and [k for _, k, *_ in seen] == list(range(1, len(seen) + 1))
+    assert info["evaluations"] == len(seen) and info["iterations"] <= len(seen)
+    assert "success" in info["message"].lower() and not info["stalled"] and info["gradient_max"] < 1e-4
+    assert info["energy"] == pytest.approx(slsqp["energy"], abs=1e-7) and info["energy"] == pytest.approx(m.physical_energy(x1), abs=1e-12)
+    assert info["energy"] <= min(e for *_, e in seen) + 1e-9  # the lowest point it saw is the one it returns
+    assert info["rotation_error_max"] < 1e-6 and info["c_mismatch_max"] < 1e-7
+    assert info["outside_windows"] == 0 and info["linear_force"] is None and info["closed_chains"] == closed and not info["at_trust_bound"]
+    fixed = np.setdiff1d(np.arange(m.n_var), free)
+    np.testing.assert_array_equal(x1[fixed], start[fixed])
+    _, held = m.relax_on_surface(start, free=free, closed=closed, gtol=0.0, ftol=0.0, patience=8, patience_tol=1e-6)
+    assert held["stalled"] and held["message"].startswith("stalled") and held["energy"] == pytest.approx(slsqp["energy"], abs=1e-5)
+    with pytest.raises(ValueError):
+        m.relax_on_surface(start, free=free, closed=closed, metric=np.eye(3))
+    with pytest.raises(ValueError):
+        m.relax_on_surface(start, free=free, closed=closed, linear=(np.ones(3), 0.0))
+
+
+def test_the_closures_curvature_makes_the_hessian_of_the_energy_on_the_surface():
+    """At a minimum on the closure surface the Hessian of the energy alone has a negative value along
+    the surface: the chains are under tension, and the surface curves.  With the closure's own
+    curvature times its multipliers (``closure_multipliers``, ``closure_curvature``) every value
+    along the surface is positive and equals the second difference of the energy along it.  And
+    ``tiled_hessian`` builds the whole matrix of a tiling from the columns of one cell: the same as
+    every column by differences."""
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    free, closed = _held(m), [0, 1]
+    x0, info = m.relax_on_surface(x, free=free, closed=closed, presteps=40, gtol=1e-7, ftol=0.0)
+    assert info["gradient_max"] < 1e-6
+    H = MC.tiled_hessian(m, x0, 1, 1)
+    cols = MC.hessian_columns(m, x0, np.arange(m.n_var))
+    np.testing.assert_allclose(H, 0.5 * (cols + cols.T), atol=1e-9)
+    mu = MC.closure_multipliers(m, x0, free, closed)
+    assert mu.shape == (2, 4) and np.abs(mu).max() > 0.5
+    sc = m.scale(x0)
+    g, J = m.value_and_grad(x0)[1][free] * sc[free], m.closure(x0, closed)[1][:, free] * sc[free]
+    assert np.abs(g + J.T @ mu.ravel()).max() < 1e-5 < np.abs(g).max()  # the gradient is the closure's to hold
+    HL = H + MC.closure_curvature(m, x0, closed, mu)
+    Z = np.linalg.svd(J, full_matrices=True)[2][J.shape[0]:].T
+    bare, whole = np.linalg.eigvalsh(Z.T @ H[np.ix_(free, free)] @ Z), np.linalg.eigvalsh(Z.T @ HL[np.ix_(free, free)] @ Z)
+    assert bare[0] < -0.05 and whole[0] > 0.05
+    inner, e0, rng = np.intersect1d(free, m.index("internal", closed)), m.physical_energy(x0), np.random.default_rng(2)
+    for _ in range(3):
+        z = Z @ rng.normal(size=Z.shape[1])
+        z /= np.linalg.norm(z)
+        ends = []
+        for sign in (1.0, -1.0):
+            y = x0.copy()
+            y[free] += sign * 0.02 * z * sc[free]
+            y = m.project(y, inner, closed)
+            ends.append((m.physical_energy(y), float(z @ ((y - x0)[free] / sc[free]))))
+        along = (ends[0][0] + ends[1][0] - 2.0 * e0) / (0.5 * (ends[0][1] - ends[1][1])) ** 2
+        assert float(z @ HL[np.ix_(free, free)] @ z) == pytest.approx(along, rel=1e-2)
+    m2, _, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0], nx=2)
+    x2 = MC.tile_state(m.state(x0), m.flips, 2, 1)[0].vector()
+    assert m2.physical_energy(x2) == pytest.approx(2.0 * e0, abs=1e-8)
+    all2 = MC.hessian_columns(m2, x2, np.arange(m2.n_var))
+    np.testing.assert_allclose(MC.tiled_hessian(m2, x2, 2, 1), 0.5 * (all2 + all2.T), atol=1e-6)
+    with pytest.raises(ValueError):
+        MC.tiled_hessian(m2, x2, 3, 1)
+
+
+def test_one_block_per_chain_evens_out_the_curvature_and_shortens_a_minimisation():
+    """``chain_metric``: in its variables the Hessian along the closure surface is close to the unit
+    matrix (its condition number here falls from 170 to about 2), and a minimisation in a hyperplane
+    reaches the same point with the same force in a fraction of the evaluations: fewer on the
+    surface than SLSQP, fewer again with the metric."""
+    m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
+    free, closed = _held(m), [0, 1]
+    x0, _ = m.relax_on_surface(x, free=free, closed=closed, presteps=40, gtol=1e-7, ftol=0.0)
+    blocks = MC.chain_blocks(m, x0, [0, 1])
+    assert set(blocks) == {0, 1} and blocks[0].shape == (4 + m.P + m.R,) * 2
+    Tm = MC.chain_metric(m, x0, free, closed, blocks)
+    assert Tm.shape == (free.size, free.size)
+    np.testing.assert_allclose(Tm, Tm.T, atol=1e-12)
+    sc = m.scale(x0)[free]
+    J = m.closure(x0, closed)[1][:, free] * sc
+    HL = (MC.tiled_hessian(m, x0, 1, 1) + MC.closure_curvature(m, x0, closed, MC.closure_multipliers(m, x0, free, closed)))[np.ix_(free, free)]
+    Z = np.linalg.svd(J, full_matrices=True)[2][J.shape[0]:].T
+    Zw = np.linalg.svd(J @ Tm, full_matrices=True)[2][J.shape[0]:].T
+    plain, evened = np.linalg.eigvalsh(Z.T @ HL @ Z), np.linalg.eigvalsh(Zw.T @ Tm.T @ HL @ Tm @ Zw)
+    assert plain[-1] / plain[0] > 100.0 and evened[-1] / evened[0] < 5.0 and 0.3 < evened[0] and evened[-1] < 3.0
+    a = np.random.default_rng(4).normal(size=free.size)
+    a /= np.linalg.norm(a)
+    b = float(a @ (x0[free] / sc)) + 0.1
+    y0, slsqp = m.relax(x0, free=free, closed=closed, linear=(a, b), maxiter=400, ftol=1e-13)
+    y1, plain_run = m.relax_on_surface(x0, free=free, closed=closed, linear=(a, b), gtol=1e-6)
+    y2, metric_run = m.relax_on_surface(x0, free=free, closed=closed, linear=(a, b), gtol=1e-6, metric=Tm)
+    for y, run in ((y1, plain_run), (y2, metric_run)):
+        assert float(a @ (y[free] / sc)) == pytest.approx(b, abs=1e-8) and max(m.closure_residual(y)) < 1e-8
+        assert run["energy"] == pytest.approx(slsqp["energy"], abs=1e-8) and run["linear_force"] == pytest.approx(slsqp["linear_force"], abs=1e-4)
+        assert "success" in run["message"].lower() and run["gradient_max"] < 1e-4
+    assert metric_run["evaluations"] < plain_run["evaluations"] < slsqp["evaluations"] and metric_run["evaluations"] <= 12
+    assert abs(slsqp["linear_force"]) > 0.01
+
+
 def test_penalty_terms_are_off_by_default_and_available():
     m, x, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0])
     x[m.index("tors")] += 3.0

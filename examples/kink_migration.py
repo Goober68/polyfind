@@ -156,6 +156,14 @@ def main():
     ap.add_argument("--polish-trust", type=float, default=None, help="confine each hyperplane's minimisation to this distance (scaled units) from its start; "
                     "one that ends on its box is continued in the same hyperplane")
     ap.add_argument("--polish-tol", type=float, default=0.01, help="the force along the tangent at which a polished saddle is accepted, kcal/mol per scaled unit")
+    ap.add_argument("--surface", action="store_true",
+                    help="minimise on the closure surface with one curvature block per chain as the metric (MixedModel.relax_on_surface, chain_metric) instead of "
+                    "handing the closure to SLSQP: the end states I and B and the hyperplanes of --polish.  What a cell of sixteen chains needs (tens of evaluations "
+                    "where SLSQP takes hundreds and stops short); the blocks come from the four-chain tiling of the same sheet, about a minute")
+    ap.add_argument("--surface-gtol", type=float, default=1e-4, help="with --surface: the gradient along the surface at which a minimisation ends, kcal/mol per scaled unit")
+    ap.add_argument("--refine", action="store_true",
+                    help="relax the stored end states named by --only further instead of reusing them (with --surface, on the closure surface); a result is stored "
+                    "only if it is lower, with the earlier energy kept beside it.  The stored bands end on the earlier states and are kept")
     ap.add_argument("--band-step", type=float, default=0.15, help="the longest move of any variable in one band iteration, scaled units")
     ap.add_argument("--climb-after", type=int, default=40, help="band iterations before the climbing image may be switched on (it also waits for the band's largest force "
                     "to fall under 1); 0 when a band that was already climbing is continued")
@@ -343,6 +351,27 @@ def main():
 
         # --- I and B: the mover's kink pair widened, then one monomer on ---------------------------
         free, closed = free_sets(model, movers, args.host)
+        metric = None
+        if args.surface:
+            t_m = time.time()
+            mfile = None if ck_dir is None else ck_dir / f"{''.join(c if c.isalnum() else '_' for c in kkey)}.chain_blocks.npz"
+            if mfile is not None and mfile.exists():
+                blocks = {int(k): v for k, v in np.load(mfile).items()}
+            else:  # one chain's block hardly depends on the cell around it: take them from the four-chain tiling
+                small, xs, _ = (model, x0, ch) if (args.nx, args.ny) == (2, 1) else DK.make_model(polymer, d, 2, 1)
+                blocks = MC.chain_blocks(small, xs, range(2))
+                if mfile is not None:
+                    np.savez(mfile, **{str(k): v for k, v in blocks.items()})
+            metric = MC.chain_metric(model, xA, free, closed, blocks)
+            log(f"   metric: one curvature block per chain, from the four-chain tiling of the sheet ({time.time() - t_m:.0f} s)")
+
+        def minimise(x, hook):
+            """One end state's relaxation: SLSQP with the closure as constraints, or with --surface on the closure surface."""
+            if args.surface:
+                return model.relax_on_surface(x, free=free, closed=closed, metric=metric, gtol=args.surface_gtol, maxiter=args.end_maxiter,
+                                              presteps=300, angle_window=args.angle_window, progress=hook, **stop)
+            return model.relax(x, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook, **stop)
+
         k0, step = args.kink_at % P, (-2 if args.backward else 2)
         lead = (k0 + 2) % P if not args.backward else k0  # the gauche bond that moves first
         xI0, xB0 = xA.copy(), xA.copy()
@@ -362,7 +391,9 @@ def main():
         for name, x0 in (("I", xI0), ("B", xB0)):
             t0 = time.time()
             old = prior.get(name, {})
-            if "state" in old and old.get("converged") and len(old["state"]) == model.n_var and abs(prior.get("kinked_crystal", {}).get("formation_per_kink_pair", 1e9) - form) < 1e-6:
+            stored_end = ("state" in old and old.get("converged") and len(old["state"]) == model.n_var
+                          and abs(prior.get("kinked_crystal", {}).get("formation_per_kink_pair", 1e9) - form) < 1e-6)
+            if stored_end and not (args.refine and only is not None and name in only):
                 xr, rec = np.asarray(old["state"], dtype=float), old
                 log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (from the stored run); {rec['torsions']}")
             elif not do(name):
@@ -373,27 +404,36 @@ def main():
                     if len(seed.get(name, {}).get("state", [])) != model.n_var:
                         raise SystemExit(f"--seed-from: row {args.seed_from!r} holds no {name} of this supercell")
                     x0, start = np.asarray(seed[name]["state"], dtype=float), f"{name} of the row {args.seed_from!r}"
+                if stored_end:  # --refine
+                    x0, start = np.asarray(old["state"], dtype=float), f"the stored {name} ({old['energy']:+.6f}; {old.get('message', '')[:40]}), relaxed further"
                 x0 = model.project(x0, model.index("internal", movers), movers)
                 e_start = model.physical_energy(x0)
                 x0 = resumed(name, x0, free, closed)
                 hook = watch(name, eA, nm, t0)
-                xr, info = model.relax(x0, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook, **stop)
+                xr, info = minimise(x0, hook)
                 for _ in range(3):  # a strained start can take more than one round
                     if ended(info):
                         break
-                    xr, more = model.relax(xr, free=free, closed=closed, maxiter=args.end_maxiter, angle_window=args.angle_window, progress=hook, **stop)
+                    xr, more = minimise(xr, hook)
                     info = {**more, "iterations": info["iterations"] + more["iterations"], "evaluations": info["evaluations"] + more["evaluations"]}
                 st = model.state(xr)
                 rec = {"energy": (model.physical_energy(xr) - eA) / nm, "torsions": letters_of(st.tors[m0]), "torsions_deg": wrap(st.tors[m0]).tolist(),
                        **({"torsions_movers": {str(m): letters_of(st.tors[m]) for m in movers}} if 1 < nm < nc else {}),
                        "start": start, "start_energy": (e_start - eA) / nm, "iterations": info["iterations"], "evaluations": info["evaluations"],
                        "message": info["message"], "converged": bool(ended(info)), "gradient_max": info["gradient_max"],
+                       "method": "on the closure surface, one curvature block per chain as the metric" if args.surface else "SLSQP, the closure as equality constraints",
                        "angles_at_window": int((np.abs(st.angs - model.angles0[None]) > args.angle_window - 1e-3).sum()),
                        "seconds": time.time() - t0, "state": xr.tolist()}
-                mine.add(name)
                 log(f"   {name}: {rec['energy']:+.3f} kcal/mol above the kinked crystal (start {rec['start_energy']:+.3f}); {letters_of(st.tors[m0])}; "
                     f"{info['iterations']} it, {info['evaluations']} evaluations, {time.time() - t0:.0f} s; gradient {info['gradient_max']:.1e}; "
                     f"{rec['angles_at_window']} angles at the window; {info['message']}")
+                if stored_end:
+                    gain = float(old["energy"]) - rec["energy"]
+                    log(f"   {name}: the stored state relaxed further falls by {gain:.6f} kcal/mol to {rec['energy']:+.6f} (gradient {old.get('gradient_max', float('nan')):.1e} before, {info['gradient_max']:.1e} now)")
+                    check = {"energy": rec["energy"], "fall": gain, "gradient_max": info["gradient_max"], "evaluations": info["evaluations"], "message": info["message"], "method": rec["method"],
+                             "largest_torsion_change_deg": float(np.abs(wrap(st.tors - model.state(np.asarray(old["state"], dtype=float)).tors)).max()), "seconds": time.time() - t0}
+                    xr, rec = np.asarray(old["state"], dtype=float), {**old, "relaxed_further": check}  # the bands end on the stored state: it stays, with the check beside it
+                mine.add(name)
             ends[name] = xr
             entry[name] = rec
             save()
@@ -461,12 +501,16 @@ def main():
                     log(f"   {seg}: no stored band between this row's end points to polish")
                     continue
                 imgs, i_top = np.asarray(old["images"], dtype=float), int(old["saddle_image"])
+                how = dict(on_surface=True, metric=metric, gtol=args.surface_gtol) if args.surface else ({} if args.polish_trust is None else {"trust": args.polish_trust})
                 xs, info = MC.saddle_polish(model, imgs[i_top], imgs[i_top + 1] - imgs[i_top - 1], free, closed, tol=args.polish_tol,
                                             log=lambda text, seg=seg, t0=t0: log(f"      {seg} polish, {text}  ({time.time() - t0:.0f} s)"),
                                             patience=args.patience if args.patience is not None else 40, patience_tol=args.patience_tol, angle_window=args.angle_window,
-                                            progress=watch(f"{seg} polish", eA, nm, t0), **({} if args.polish_trust is None else {"trust": args.polish_trust}))
+                                            progress=watch(f"{seg} polish", eA, nm, t0), **how)
                 st = model.state(xs)
+                earlier = [{k: v for k, v in old["polished"].items() if k not in ("state", "rounds", "torsions_deg", "earlier")}] if "polished" in old else []
                 entry[seg] = {**old, "polished": {
+                    "method": "on the closure surface, one curvature block per chain as the metric" if args.surface else "SLSQP, the closure as equality constraints",
+                    **({"earlier": old["polished"].get("earlier", []) + earlier} if earlier else {}),
                     "saddle": (info["energy"] - eA) / nm, "band_top": old["saddle"], "band_force": old["force_max"], "force_along": info["force"], "gradient_across": info["gradient_max"],
                     "curvature_along": info["slope"], "displacement": info["displacement"], "converged": info["converged"], "evaluations": info["evaluations"],
                     "rounds": info["rounds"], "torsions_deg": wrap(st.tors[m0]).tolist(), "seconds": time.time() - t0, "state": xs.tolist()}}

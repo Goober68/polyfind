@@ -60,7 +60,7 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | vdf10@0 ahead | 1x1, 1 of 2 | flexible | +7.01 | +7.55, **+7.54** | +8.94, **+8.91** | +1.97 | 8.91 / 6.95 | 9.6e+05 /s | 0.10, 0.10 |
 | vdf10@0 ahead | 1x1, all 2 (the sheet in register) | flexible | +5.06 | +8.23, **+7.38** | +7.87, **+7.34** (polish not converged) | -0.00 | 8.23 / 8.23 | 3 /s | 1.04, 0.81 |
 | vdf10@0 ahead | 2x1, 1 of 4 | flexible | +9.85 | +10.29, **+10.27** | +12.49, **+12.46** | +7.88 | 12.46 / 4.59 | 2.5e+03 /s | 0.03, 0.08 |
-| vdf10@0 ahead | 4x2, 1 of 16 | flexible | +9.96 | +10.73 | +11.84, **+11.64** | +5.91 | 11.64 / 5.73 | 9.9e+03 /s | 0.09, 0.09 |
+| vdf10@0 ahead | 4x2, 1 of 16 | flexible | +9.96 | +10.73, **+10.66** | +11.84, **+11.64** | +5.91 | 11.64 / 5.73 | 9.9e+03 /s | 0.09, 0.09 |
 | vdf9-trfe4-cfe1-14@0 ahead | 1x1, 1 of 2 | flexible | +6.33 | +6.43, **+6.43** | +11.37, **+11.48** | +8.98 | 11.48 / 2.50 | 1.3e+04 /s | 0.10, 0.69 |
 
 End points only (no band)
@@ -71,6 +71,7 @@ End points only (no band)
 | vdf10@0 ahead | 4x2, 1 of 16 | bodies | +17.36 | +9.32 |
 | vdf10@0 ahead | 4x1, 1 of 8 | flexible | +10.02 | +6.47 |
 | vdf10@0 ahead | 2x2, 1 of 8 | flexible | +9.98 | +7.51 |
+| vdf10@0 ahead | 8x1, 1 of 16 | flexible | +10.05 | +6.19 |
 
 **The single-chain step against the size of the cell** (PVDF, chain 0's kink pair one monomer ahead of every other chain's; kcal/mol against the sheet; cell fixed)
 
@@ -80,7 +81,8 @@ End points only (no band)
 | 2x1 | 4 | +17.81, +11.51 | +9.85 | +10.29, **+10.27** | +12.49, **+12.46** | 12.46 / 4.59 | +7.876 |
 | 4x1 | 8 | - | +10.02 | - | - | - | +6.470 |
 | 2x2 | 8 | - | +9.98 | - | - | - | +7.512 |
-| 4x2 | 16 | +17.36, +9.32 | +9.96 | +10.73 | +11.84, **+11.64** | 11.64 / 5.73 | +5.911 |
+| 8x1 | 16 | - | +10.05 | - | - | - | +6.191 |
+| 4x2 | 16 | +17.36, +9.32 | +9.96 | +10.73, **+10.66** | +11.84, **+11.64** | 11.64 / 5.73 | +5.911 |
 
 How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displacements against the kinked crystal, relative to the median of the chains whose kink pair stays
 

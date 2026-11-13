@@ -186,12 +186,14 @@ def test_b_was_reached_twice_and_a_second_chain_beside_the_first_costs_less():
         assert two["B"]["energy"] < diag["B"]["energy"] < one["B"]["energy"] - 1.0
 
 
-@pytest.mark.parametrize("box", [None, 0.5])
-def test_saddle_polish_settles_a_band_top_into_a_stationary_point(box):
+@pytest.mark.parametrize("how", ["slsqp", "box", "surface"])
+def test_saddle_polish_settles_a_band_top_into_a_stationary_point(how):
     """The first top of the stored two-chain band, polished: a point on the closure surface with no
     force left along the band's tangent nor across it (what a descent would feel there is under the
     tolerance), a little below the band's top, and above both of the band's end states.  With each
-    minimisation confined to a box about its start the saddle is the same."""
+    minimisation confined to a box about its start the saddle is the same; and so it is with the
+    minimisations done on the closure surface in the per-chain metric, in a fraction of the
+    evaluations and with less force left across the path."""
     row = json.load(open(MIG))["rows"][STACK]
     with PRESET_PARAMETERS["pvdf-dft-valence-belt4"].applied():
         model = _two_chain_model()
@@ -199,17 +201,47 @@ def test_saddle_polish_settles_a_band_top_into_a_stationary_point(box):
         seg = row["A-I"]
         imgs, i = np.asarray(seg["images"]), seg["saddle_image"]
         e_a = model.physical_energy(imgs[0])
-        x, info = KM.MC.saddle_polish(model, imgs[i], imgs[i + 1] - imgs[i - 1], free, closed, tol=0.01, patience=30, patience_tol=1e-6,
-                                      **({} if box is None else {"trust": box}))
-        assert info["converged"] and abs(info["force"]) < 0.01 and info["gradient_max"] < 0.02
+        kw = {"slsqp": {}, "box": {"trust": 0.5}}.get(how)
+        if kw is None:
+            blocks = KM.MC.chain_blocks(model, imgs[0], [0, 1])
+            kw = {"on_surface": True, "metric": KM.MC.chain_metric(model, imgs[0], free, closed, blocks)}
+        x, info = KM.MC.saddle_polish(model, imgs[i], imgs[i + 1] - imgs[i - 1], free, closed, tol=0.01, patience=30, patience_tol=1e-6, **kw)
+        assert info["converged"] and abs(info["force"]) < 0.01 and info["gradient_max"] < (1e-3 if how == "surface" else 0.02)
         e = info["energy"] - e_a
         assert e == pytest.approx(row["A-I"]["polished"]["saddle"], abs=2e-3)  # the stored one, found without a box
         assert seg["saddle"] - 0.05 < e <= seg["saddle"] + 1e-6 and e > row["I"]["energy"] + 0.3
         assert max(model.closure_residual(x)) < 1e-6
+        if how == "surface":
+            assert info["evaluations"] < 40 and all("success" in r["message"].lower() for r in info["rounds"])
         _, gmax, n = model.descend(x, free, closed, steps=1, gtol=1e9)
         assert n == 1 and gmax < 0.02  # the whole gradient along the closure surface, tangent included
         t = np.asarray(model.state(x).tors[0])
         assert KM.letters_of(t).split()[0] == "G+" and -170 < KM.wrap(t)[2] < -120 and -130 < KM.wrap(t)[4] < -90  # the leading gauche bond in flight
+
+
+def test_the_sixteen_chain_step_was_settled_on_the_closure_surface():
+    """The sixteen-chain row's two saddles, as stored: each found with every hyperplane minimised on
+    the closure surface to its own test (no stall), a force across the path a hundred times smaller
+    than SLSQP left, and not above what SLSQP gave (kept beside it as ``earlier``); and its two end
+    states relaxed further the same way fall by less than a thousandth, so the energies the bands
+    start and end on stand."""
+    row = json.load(open(MIG))["rows"].get("vdf10@0 4x2 mover 0 ahead host flexible")
+    if row is None or not all("method" in row.get(seg, {}).get("polished", {}) for seg in ("A-I", "I-B")):
+        pytest.skip("the sixteen-chain saddles settled on the closure surface are not stored")
+    for seg in ("A-I", "I-B"):
+        pol = row[seg]["polished"]
+        assert pol["method"].startswith("on the closure surface") and pol["converged"]
+        assert abs(pol["force_along"]) < 0.01 and pol["gradient_across"] < 1e-3 and pol["curvature_along"] < 0.0
+        assert all("success" in r["message"].lower() for r in pol["rounds"])
+        before = pol["earlier"][-1]
+        assert before["method"].startswith("SLSQP") if "method" in before else True
+        assert pol["saddle"] < before["saddle"] + 2e-3 and pol["evaluations"] < before["evaluations"]
+    assert row["I-B"]["polished"]["saddle"] > row["A-I"]["polished"]["saddle"] > row["I"]["energy"]
+    for name in ("I", "B"):
+        check = row[name]["relaxed_further"]
+        assert 0.0 <= check["fall"] < 1e-3 and check["gradient_max"] < 2e-4
+        assert check["largest_torsion_change_deg"] < 1.0  # soft: B's torsions move by up to 0.7 degrees for a fall of 0.0001
+        assert "success" in check["message"].lower()
 
 
 def test_the_pieces_of_a_row_run_one_per_process_and_merge(tmp_path):

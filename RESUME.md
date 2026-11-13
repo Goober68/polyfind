@@ -14,19 +14,55 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**Minimising on the closure surface, 2026-11-13 (the follow-up of the sixteen-chain step that settled its first
+saddle).** Text: `docs/CANDIDATE_MATERIALS.md` 8.3 (the paragraph of that name and its table); code:
+`MixedModel.relax_on_surface`, `mixedcell.chain_metric` / `chain_blocks` / `closure_curvature` /
+`closure_multipliers` / `tiled_hessian` / `hessian_columns`, `saddle_polish(on_surface=True)`; driver:
+`kink_migration.py --surface` (end states I and B, and `--polish`), `--refine` (relax a stored end state further
+as a check; the stored state stays, the check is stored beside it as `relaxed_further`); tests:
+`tests/test_mixedcell.py` (three new) and `tests/test_kink_step.py` (the `surface` case and the stored sixteen-chain
+checks). RESULT: the sixteen-chain FIRST saddle is 10.660 (band top 10.731; 0.0005 left along the path, 0.00007
+across; 87 evaluations, 6 minutes). The SECOND saddle redone the same way is 11.6366, the same to four decimals
+(151 evaluations against 818), and the stored I and B relaxed further fall by 0.0000 and 0.0001: the barrier
+11.6 / 5.7 and the end states stand. Four chains: both saddles reproduced to four decimals (10.2684, 12.4644) in 78
+and 203 evaluations against 391 and 1360. The loose SLSQP result for the first saddle (10.669, 0.016 left across) is
+kept in the row as `polished["earlier"]`. WIDE CELL: 8a x b (sixteen chains in one row) I +10.05, B +6.19, against
++10.02 and +6.47 in 4a x b: along the stack B closes by a factor of five per doubling (1.41, then 0.28).
+WHY SLSQP WAS SLOW AND STOPPED SHORT (measured, four- and sixteen-chain cells): (a) it tries straight steps, which
+leave the closure surface at second order, and off the surface a chain meets its own image: 10.331 at a closure
+residual of 0.017 deg where the point returned to the surface is 10.279 (from 10.290), so most evaluations are
+rejected trial points; (b) conditioning: the Hessian along the surface (energy's plus the closure's curvature times
+its multipliers; without that term it has negative values at a minimum, -3.1 against +2.0 measured) runs from 0.031
+to 421 in the scaled variables, 0.018 to 2.1 in the per-chain metric (blocks of placement AND internal coordinates;
+internal alone does nothing, 0.08 to 415). The metric handed to SLSQP does not help (174 against 185): (a) is the
+waste. On the surface without the metric: 110.
+TRAPS. (1) `relax`, `relax_on_surface` and `saddle_polish` SORT the free variables (`np.unique`); `free_sets` of
+the driver returns them unsorted. A vector over the free variables (a hyperplane's normal, a metric) must be in the
+sorted order. Three hours of "the metric makes the first step explode" were a normal passed in the unsorted order.
+(2) The blocks come from the four-chain tiling of the same sheet (a minute) and are cached as
+`<row>_<kink>.chain_blocks.npz` in `--checkpoints`; they are the SHEET's, used for every state of the row
+(recomputing the moving chain's at the start saves 3 evaluations of 29 and costs 88). (3) The metric is bolder than
+SLSQP from a strained start: in the small test model, from 13 kcal/mol above the minimum, it ended in another minimum
+1 kcal/mol up. The driver runs the damped descent first (`presteps=300`) and the conformation letters of the moving
+chain are stored with every end state: look at them. (4) `relax_on_surface` does not enforce the angle and cell
+windows (`info["outside_windows"]` counts leavers; none so far) and has no trust box. (5) A thirty-two-chain
+evaluation is 38 s (two BLAS threads), nine times the sixteen-chain one: the induced-dipole solve is cubic.
+(6) The container restarted once in this window: background jobs died, the working tree and the scratch directory
+survived. Commit results as they land.
+
 **The single-chain step in sixteen chains, 2026-11-12 (PI: "Work on the single-chain step in 16 chains").** Text:
 `docs/CANDIDATE_MATERIALS.md` 8.3 (table, the paragraph on saddles, the bullet "A sheet is stiff ...") and 8.5; tables:
 `docs/predictions/kink_summary_belt4.md`; data: `kink_migration_belt4.json`, row `vdf10@0 4x2 mover 0 ahead host
 flexible` (and `4x1`, `2x2`, `4x2 mover 0,4`, `4x2 mover 0,1`); tests: `tests/test_kink_step.py`. RESULT, kcal/mol against the sheet,
 one chain's kink pair one monomer ahead of the other fifteen's, every chain flexible, cell fixed: wide kink I +9.96,
-B +5.91, second saddle 11.64 (settled), first saddle 10.73 (its band's top; see below): barrier 11.6 ahead, 5.7 back
+B +5.91, second saddle 11.64 (settled), first saddle 10.73 (its band's top; SETTLED ON 2026-11-13 AT 10.66, block above): barrier 11.6 ahead, 5.7 back
 (1e4 /s and 2e8 /s at 300 K, 3e12 /s attempt). Four chains, same protocol and now settled too: +9.85, +7.88, saddles
 10.27 and 12.46: 12.5 / 4.6. So the cramped cell overstated B by 2.0 and the barrier by 0.8; the 6.4 guessed on
 2026-11-10 is 5.91. Checks: the perturbed sixteen-chain sheet relaxes back to the tiled cell (2e-9 per chain); B by
 two routes (from the rigid-chain-neighbour state and from the sheet with the mover's torsions reset) 5.911 both;
 conformations as intended in every chain. SIZE SERIES for B: 2a x b 7.88, 2a x 2b 7.51, 4a x b 6.47, 4a x 2b 5.91
 (room along the stack axis a is what counts; I is 9.85-10.02 in all four): sixteen chains is NOT the dilute limit of
-B. HOW IT GIVES: the moving chain slides 0.32 A back along its axis, its six neighbours shift up to 0.19 A along
+B (8a x b: 6.19, block above). HOW IT GIVES: the moving chain slides 0.32 A back along its axis, its six neighbours shift up to 0.19 A along
 theirs and under 0.1 A aside, torsions up to 11 deg (the single-chain slide of 8.1 again). PAIR: two a-neighbours
 ahead together +8.35 (4.17 each) against 11.8 apart: the second chain costs 2.4; a diagonal pair (chains 0 and 1)
 +9.05 (4.53 each): the second costs 3.1. The barrier of the second chain's step is NOT computed: that is the
@@ -41,7 +77,7 @@ Every band of the file was polished: PVDF one sublattice 7.54 / 8.91 (band 7.55 
 "11.4 or 11.7" is 11.48), 71/29 7.05 / 12.02, PVDF in register first saddle 7.38 (band 8.23 at force 1.0; second NOT
 settled, its band is too rough). The step-based frequency map was regenerated on them
 (`candidate_frequency_map_belt4_steps`; needs `--screen` with all five screen files, `--step-mover 0`, `--ref
-vdf9-trfe4-cfe1-14`): 71/29 147 kHz (was 121), tan delta 0.21 at 0.18% (was 0.26), PVDF 27 MHz. OPEN: the
+vdf9-trfe4-cfe1-14`): 71/29 147 kHz (was 121), tan delta 0.21 at 0.18% (was 0.26), PVDF 27 MHz. OPEN THEN, CLOSED ON 2026-11-13 (10.660, block above): the
 sixteen-chain FIRST saddle is its band's top: its polish was stopped by hand after 105 minutes in its first
 hyperplane (a second copy with a progress log went 10.731 -> 10.690 in its first 70 evaluations, still descending;
 slow, not shown to be wrong); it lies a kcal/mol under the second and does not enter the barrier. The second
