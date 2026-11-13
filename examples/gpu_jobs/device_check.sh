@@ -12,7 +12,9 @@ while [ $# -gt 0 ]; do
 done
 [ ${#SIZES[@]} -gt 0 ] || SIZES=(16 32 64)
 DEVICE="${BENCH_DEVICE:-auto}"
-"$PY" -m pytest tests/test_ewald_device.py tests/test_mixed_batched.py tests/test_gpu.py -q \
+# (the tests choose their own array modules and start from the package's default, the host:
+# the switch the pod sets for its jobs is taken away for them)
+env -u POLYFIND_EWALD_DEVICE "$PY" -m pytest tests/test_ewald_device.py tests/test_mixed_batched.py tests/test_gpu.py -q \
   -k "ewald or double or device or dipole or batched or mixed or gram" -p no:cacheprovider || exit 1
 "$PY" examples/ewald_device_benchmark.py --device "$DEVICE" --chains "${SIZES[@]}" --host-max-chains 0 \
   --processes ${BENCH_PROCESSES:-1 2 3 4} --processes-max-chains "${BENCH_PROCESSES_MAX:-32}" \

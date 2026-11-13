@@ -12,3 +12,6 @@ saddle_wide.sh I-B 8 2 band 4x2 a start 4x2 a
 step_wide.sh 8x2 b to 8 4
 saddle_wide.sh A-I 8 4 band 4x2 a b start 8x2 b
 saddle_wide.sh I-B 8 4 band 4x2 a b start 8x2 b
+# 4. the device check again (line 1 stopped at its tests: two of them assume the package's default
+#    module, and the pod's switch was set for them; taken away now)
+device_check.sh 16 32 64 large 128

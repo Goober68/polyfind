@@ -212,6 +212,44 @@ def polish(args) -> None:
     log(f"written {out}")
 
 
+def store(args) -> None:
+    """A wider cell's row (and its saddles) from a job's files into the stored table; or, with
+    ``--beside``, its energies alone beside the row the table already holds, as a second route."""
+    wide = load_rows(args.wide_file)["rows"][args.row]
+    table_path = Path(args.table)
+    table = load_rows(table_path)
+    saddles = load_rows(args.saddles)["saddles"] if args.saddles else {}
+    if args.beside:
+        have = table["rows"][args.row]
+        rec = {"note": args.note, **{name: {k: v for k, v in wide[name].items() if k not in ("state", "torsions_deg")} for name in ("I", "B") if name in wide}}
+        if saddles:
+            rec["saddles"] = {seg: {k: v for k, v in sd.items() if k not in ("state", "torsions_deg", "rounds")} for seg, sd in saddles.items()}
+        have[args.beside] = rec
+        for name in ("I", "B"):
+            if name in wide and name in have:
+                print(f"   {name}: {wide[name]['energy']:+.4f} again, {have[name]['energy']:+.4f} stored ({wide[name]['energy'] - have[name]['energy']:+.4f})")
+        for seg, sd in saddles.items():
+            if seg in have.get("saddles", {}):
+                print(f"   saddle {seg}: {sd['saddle']:+.4f} again, {have['saddles'][seg]['saddle']:+.4f} stored ({sd['saddle'] - have['saddles'][seg]['saddle']:+.4f})")
+    else:
+        row = {k: v for k, v in wide.items() if k not in ("seed_of", "let_in_along")}
+        if args.note:
+            row["evaluated"] = args.note
+        if saddles:
+            row["saddles"] = saddles
+            row["saddles_note"] = ("no band in this cell: each saddle settled on the closure surface from a narrower cell's saddle let into this one, "
+                                   "with the tangent of the sixteen-chain band let in the same way (examples/kink_wide_cell.py polish)")
+            done = [sd["saddle"] for sd in saddles.values() if sd.get("converged")]
+            if len(done) == 2 and "B" in row:
+                row["barrier_forward_polished"], row["barrier_back_polished"] = max(done), max(done) - row["B"]["energy"]
+        table["rows"][args.row] = row
+        print(f"   stored {args.row!r}: " + ", ".join(f"{name} {row[name]['energy']:+.4f}" for name in ("I", "B") if name in row)
+              + "".join(f", saddle {seg} {sd['saddle']:+.4f}" for seg, sd in saddles.items()))
+    tmp = table_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(table, indent=1))
+    tmp.replace(table_path)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="what", required=True)
@@ -240,6 +278,15 @@ def main() -> None:
     p.add_argument("--preset", default="pvdf-dft-valence-belt4")
     p.add_argument("--out", required=True)
     p.set_defaults(run=polish)
+    t = sub.add_parser("store", help="a job's row of a wider cell, and its saddles, into the stored table")
+    t.add_argument("--wide-file", required=True, help="the job's table (jobs/shared/wide_steps.json)")
+    t.add_argument("--row", required=True)
+    t.add_argument("--saddles", default=None, help="the job's saddles of that cell (jobs/shared/saddles_NXxNY.json)")
+    t.add_argument("--beside", default=None, metavar="FIELD",
+                   help="the table holds this row already: keep it, and put this run's energies (no states) beside it under FIELD")
+    t.add_argument("--note", default=None, help="where and how it was evaluated")
+    t.add_argument("--table", default=str(STORED))
+    t.set_defaults(run=store)
     args = ap.parse_args()
     args.run(args)
 
