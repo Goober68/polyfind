@@ -1,0 +1,252 @@
+{
+ "machine": {
+  "python": "3.10.12",
+  "numpy": "2.2.6",
+  "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.35",
+  "scipy": "1.15.3",
+  "cpu_count": 128,
+  "cpus_usable": 128,
+  "cpus_allotted": {
+   "affinity": 128,
+   "cgroup_quota": 13.6,
+   "RUNPOD_CPU_COUNT": 16,
+   "cores": 13
+  },
+  "cpu": "AMD EPYC 7742 64-Core Processor",
+  "memory_gb": 2101.2,
+  "blas": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.28",
+    "threading_layer": "pthreads"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.29",
+    "threading_layer": "pthreads"
+   }
+  ],
+  "nvidia_smi": [
+   "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+  ],
+  "device_module": "cupy 14.2.0",
+  "device": {
+   "id": 0,
+   "name": "NVIDIA A100-SXM4-80GB",
+   "memory_gb": 85.1,
+   "free_gb": 84.6,
+   "compute_capability": "80",
+   "visible_devices": 1
+  }
+ },
+ "preset": "pvdf-dft-valence-belt4",
+ "row": "vdf10",
+ "batched_kernels": "host, float64",
+ "host_blas_threads_timed": [
+  1,
+  8,
+  13
+ ],
+ "rows": [
+  {
+   "chains": 32,
+   "tiling": [
+    8,
+    2
+   ],
+   "variables": 1412,
+   "build_s": 0.4143472402356565,
+   "host_runs": [
+    {
+     "blas_threads": 1,
+     "whole_s": 23.174227699637413,
+     "dipole_step_s": 22.394105521962047,
+     "energy": -2836.8674240653427,
+     "sites": 1920,
+     "tensor_s": 17.63871931284666,
+     "tensor_all_s": [
+      17.63871931284666
+     ],
+     "solve_s": 3.0454063918441534,
+     "solve_all_s": [
+      3.0454063918441534
+     ],
+     "gradient_s": 1.3760547158308327,
+     "gradient_all_s": [
+      1.3760547158308327
+     ],
+     "k_vectors": 28920,
+     "images": 27
+    },
+    {
+     "blas_threads": 8,
+     "whole_s": 11.691687135025859,
+     "dipole_step_s": 10.913773997686803,
+     "energy": -2836.8674240653645,
+     "sites": 1920,
+     "tensor_s": 6.380064083728939,
+     "tensor_all_s": [
+      6.440136554185301,
+      6.380064083728939,
+      6.438668743241578
+     ],
+     "solve_s": 3.0504684280604124,
+     "solve_all_s": [
+      3.092816235963255,
+      3.0504684280604124,
+      3.0680953431874514
+     ],
+     "gradient_s": 1.2203535926528275,
+     "gradient_all_s": [
+      1.2333559850230813,
+      1.2203535926528275,
+      1.2239402630366385
+     ],
+     "k_vectors": 28920,
+     "images": 27
+    },
+    {
+     "blas_threads": 13,
+     "whole_s": 10.773466954007745,
+     "dipole_step_s": 9.99609819194302,
+     "energy": -2836.8674240653645,
+     "sites": 1920,
+     "tensor_s": 5.691049485001713,
+     "tensor_all_s": [
+      5.691049485001713,
+      5.723260319326073,
+      5.738994074054062
+     ],
+     "solve_s": 3.0412789550609887,
+     "solve_all_s": [
+      3.1145963077433407,
+      3.0412789550609887,
+      3.1317131430841982
+     ],
+     "gradient_s": 1.2123757940717041,
+     "gradient_all_s": [
+      1.741876952815801,
+      1.2123757940717041,
+      1.2125781499780715
+     ],
+     "k_vectors": 28920,
+     "images": 27
+    }
+   ],
+   "sites": 1920,
+   "k_vectors": 28920,
+   "host": {
+    "blas_threads": 13,
+    "whole_s": 10.773466954007745,
+    "dipole_step_s": 9.99609819194302,
+    "energy": -2836.8674240653645,
+    "sites": 1920,
+    "tensor_s": 5.691049485001713,
+    "tensor_all_s": [
+     5.691049485001713,
+     5.723260319326073,
+     5.738994074054062
+    ],
+    "solve_s": 3.0412789550609887,
+    "solve_all_s": [
+     3.1145963077433407,
+     3.0412789550609887,
+     3.1317131430841982
+    ],
+    "gradient_s": 1.2123757940717041,
+    "gradient_all_s": [
+     1.741876952815801,
+     1.2123757940717041,
+     1.2125781499780715
+    ],
+    "k_vectors": 28920,
+    "images": 27
+   },
+   "device": {
+    "first_call_s": 1.3596877972595394,
+    "whole_s": 1.1378613859415054,
+    "dipole_step_s": 0.3660904271528125,
+    "energy": -2836.867424065357,
+    "pool_gb_after_evaluation": 4.645019136,
+    "sites": 1920,
+    "tensor_s": 0.09229362290352583,
+    "tensor_all_s": [
+     0.09229362290352583,
+     0.09246851596981287,
+     0.09242092492058873
+    ],
+    "solve_s": 0.040385476779192686,
+    "solve_all_s": [
+     0.04176801582798362,
+     0.04070758866146207,
+     0.040385476779192686
+    ],
+    "gradient_s": 0.019637958146631718,
+    "gradient_all_s": [
+     0.019637958146631718,
+     0.01977493893355131,
+     0.019642356783151627
+    ],
+    "k_vectors": 28920,
+    "images": 27,
+    "pool_gb_peak": 5.089230336,
+    "device_gb_in_use": 5.577179136,
+    "device_gb_total": 85.094825984,
+    "gradient_check": {
+     "analytic": 3.095747165246468,
+     "difference": 3.095754609281206,
+     "relative_error": 2.4046003567494804e-06
+    },
+    "tiling_check": {
+     "per_two_chains": -178.13528050130228,
+     "stored_two_chain_cell": -178.13528050130296,
+     "difference": 6.821210263296962e-13
+    },
+    "difference_from_host": {
+     "energy_terms.real": 1.6778601025490602e-15,
+     "energy_terms.recip": 2.292166745573503e-16,
+     "energy_terms.self_": 0.0,
+     "energy_terms.background": 0.0,
+     "energy_terms.surface": 0.0,
+     "gradient_terms.real": 1.8126107357306583e-15,
+     "gradient_terms.recip": 1.7670112084421726e-16,
+     "gradient_terms.self_": 0.0,
+     "gradient_terms.background": 0.0,
+     "gradient_terms.surface": 0.0,
+     "field": 2.906393751312293e-15,
+     "dipoles": 8.269447763875438e-15,
+     "grad_coords": 5.735648961922354e-15,
+     "grad_lattice": 6.690623148092891e-16,
+     "tensor": 3.1582639959001805e-15,
+     "largest": 8.269447763875438e-15,
+     "whole.energy": 2.5647859157819355e-15,
+     "whole.gradient": 6.7378071993412785e-15
+    },
+    "speedup_whole": 9.468171683401849,
+    "speedup_dipole_step": 27.304997482959244,
+    "speedup_against_blas_threads": 13,
+    "extras": {
+     "symmetric_product": {
+      "shape": [
+       1920,
+       28920
+      ],
+      "gemm_s": 0.01106815505772829,
+      "syrk_s": 0.008465264923870564,
+      "gflops_gemm": 19264.400876921136,
+      "largest_difference": 1.5844791239622685e-14
+     },
+     "solve": {
+      "unknowns": 5760,
+      "lu_s": 0.03948245011270046,
+      "cholesky_s": 0.00858081504702568,
+      "asymmetry_of_matrix": 0.0,
+      "largest_difference": 2.1717211601733434e-15
+     }
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,244 @@
+{
+ "machine": {
+  "python": "3.10.12",
+  "numpy": "2.2.6",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+  "scipy": "1.15.3",
+  "cpu_count": 256,
+  "cpus_usable": 256,
+  "cpu": "AMD EPYC 7742 64-Core Processor",
+  "memory_gb": 2113.5,
+  "blas": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.29",
+    "threading_layer": "pthreads"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "version": "0.3.28",
+    "threading_layer": "pthreads"
+   }
+  ],
+  "nvidia_smi": [
+   "0, NVIDIA A100-SXM4-80GB, 81920 MiB, 595.91.07"
+  ],
+  "device_module": "cupy 14.2.0",
+  "device": {
+   "id": 0,
+   "name": "NVIDIA A100-SXM4-80GB",
+   "memory_gb": 85.1,
+   "free_gb": 84.6,
+   "compute_capability": "80",
+   "visible_devices": 1
+  }
+ },
+ "preset": "pvdf-dft-valence-belt4",
+ "row": "vdf10",
+ "batched_kernels": "host, float64",
+ "host_blas_threads_timed": [
+  1,
+  256
+ ],
+ "rows": [
+  {
+   "chains": 16,
+   "tiling": [
+    4,
+    2
+   ],
+   "variables": 708,
+   "build_s": 0.17759573925286531,
+   "host_runs": [
+    {
+     "blas_threads": 1,
+     "whole_s": 4.305330149363726,
+     "dipole_step_s": 3.942728878930211,
+     "energy": -1415.4249771530976,
+     "sites": 960,
+     "tensor_s": 2.902417322155088,
+     "tensor_all_s": [
+      2.902417322155088,
+      2.9240261162631214,
+      2.9307706621475518
+     ],
+     "solve_s": 0.4656075397506356,
+     "solve_all_s": [
+      0.4669631142169237,
+      0.4656075397506356,
+      0.4669536962173879
+     ],
+     "gradient_s": 0.45991622703149915,
+     "gradient_all_s": [
+      0.4647311316803098,
+      0.46285542473196983,
+      0.45991622703149915
+     ],
+     "k_vectors": 14486,
+     "images": 27,
+     "gradient_check": {
+      "analytic": 9.67632124829357,
+      "difference": 9.676106076616028,
+      "relative_error": 2.2236929926257284e-05
+     },
+     "tiling_check": {
+      "per_two_chains": -178.1352805013017,
+      "stored_two_chain_cell": -178.13528050130296,
+      "difference": 1.2505552149377763e-12
+     }
+    },
+    {
+     "blas_threads": 256,
+     "whole_s": 5.021663416642696,
+     "dipole_step_s": 4.659082665108144,
+     "energy": -1415.4249771531013,
+     "sites": 960,
+     "tensor_s": 3.050660191103816,
+     "tensor_all_s": [
+      3.050660191103816,
+      3.0750488229095936,
+      3.1015153252519667
+     ],
+     "solve_s": 0.46479810029268265,
+     "solve_all_s": [
+      0.4747891128063202,
+      0.47885732678696513,
+      0.46479810029268265
+     ],
+     "gradient_s": 0.9089156379923224,
+     "gradient_all_s": [
+      0.9089156379923224,
+      1.0943522551096976,
+      1.0077832518145442
+     ],
+     "k_vectors": 14486,
+     "images": 27
+    }
+   ],
+   "sites": 960,
+   "k_vectors": 14486,
+   "host": {
+    "blas_threads": 1,
+    "whole_s": 4.305330149363726,
+    "dipole_step_s": 3.942728878930211,
+    "energy": -1415.4249771530976,
+    "sites": 960,
+    "tensor_s": 2.902417322155088,
+    "tensor_all_s": [
+     2.902417322155088,
+     2.9240261162631214,
+     2.9307706621475518
+    ],
+    "solve_s": 0.4656075397506356,
+    "solve_all_s": [
+     0.4669631142169237,
+     0.4656075397506356,
+     0.4669536962173879
+    ],
+    "gradient_s": 0.45991622703149915,
+    "gradient_all_s": [
+     0.4647311316803098,
+     0.46285542473196983,
+     0.45991622703149915
+    ],
+    "k_vectors": 14486,
+    "images": 27,
+    "gradient_check": {
+     "analytic": 9.67632124829357,
+     "difference": 9.676106076616028,
+     "relative_error": 2.2236929926257284e-05
+    },
+    "tiling_check": {
+     "per_two_chains": -178.1352805013017,
+     "stored_two_chain_cell": -178.13528050130296,
+     "difference": 1.2505552149377763e-12
+    }
+   },
+   "device": {
+    "first_call_s": 0.9756223098374903,
+    "whole_s": 0.5123040699400008,
+    "dipole_step_s": 0.1550893960520625,
+    "energy": -1415.4249771530976,
+    "pool_gb_after_evaluation": 1.177637376,
+    "sites": 960,
+    "tensor_s": 0.020768586546182632,
+    "tensor_all_s": [
+     0.02162996493279934,
+     0.020804514177143574,
+     0.020768586546182632
+    ],
+    "solve_s": 0.01732166763395071,
+    "solve_all_s": [
+     0.01736507983878255,
+     0.017343088053166866,
+     0.01732166763395071
+    ],
+    "gradient_s": 0.009542426094412804,
+    "gradient_all_s": [
+     0.009650961961597204,
+     0.009605174884200096,
+     0.009542426094412804
+    ],
+    "k_vectors": 14486,
+    "images": 27,
+    "pool_gb_peak": 1.288889856,
+    "device_gb_in_use": 1.787625472,
+    "device_gb_total": 85.094825984,
+    "gradient_check": {
+     "analytic": 9.676321248293563,
+     "difference": 9.67610607623707,
+     "relative_error": 2.2236969088888928e-05
+    },
+    "tiling_check": {
+     "per_two_chains": -178.13528050130262,
+     "stored_two_chain_cell": -178.13528050130296,
+     "difference": 3.410605131648481e-13
+    },
+    "difference_from_host": {
+     "energy_terms.real": 0.0,
+     "energy_terms.recip": 4.58218016402112e-16,
+     "energy_terms.self_": 0.0,
+     "energy_terms.background": 0.0,
+     "energy_terms.surface": 0.0,
+     "gradient_terms.real": 1.1331898678966127e-16,
+     "gradient_terms.recip": 0.0,
+     "gradient_terms.self_": 0.0,
+     "gradient_terms.background": 0.0,
+     "gradient_terms.surface": 0.0,
+     "field": 2.4613696698949636e-15,
+     "dipoles": 4.827425110910128e-15,
+     "grad_coords": 3.7626544782057285e-15,
+     "grad_lattice": 5.708979733256836e-16,
+     "tensor": 3.082913751182747e-15,
+     "largest": 5.4971325959315104e-15,
+     "whole.energy": 0.0,
+     "whole.gradient": 5.4971325959315104e-15
+    },
+    "speedup_whole": 8.403857009896392,
+    "speedup_dipole_step": 25.422298231187014,
+    "speedup_against_blas_threads": 1,
+    "extras": {
+     "symmetric_product": {
+      "shape": [
+       960,
+       14486
+      ],
+      "gemm_s": 0.0018368829041719437,
+      "syrk_s": 0.0016665621660649776,
+      "gflops_gemm": 14535.817791845842,
+      "largest_difference": 1.027526615410162e-14
+     },
+     "solve": {
+      "unknowns": 2880,
+      "lu_s": 0.016894319094717503,
+      "cholesky_s": 0.0031374930404126644,
+      "asymmetry_of_matrix": 0.0,
+      "largest_difference": 1.895372245405026e-15
+     }
+    }
+   }
+  }
+ ]
+}
