@@ -990,7 +990,12 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     it, which is one more reason not to read a barrier off a band. Because of that distance the
     saddle was tested directly: from it, descents either way end in the start (to 0.0001) and
     in the completed step (to 0.001 degrees), no point on the way more than 0.006 above the
-    saddle (the displaced starts). The diagonal neighbours' steps are not computed.
+    saddle (the displaced starts). And since one neighbour steps in a single concerted pass,
+    the same was looked for where a chain steps out of the flat sheet: that saddle's geometry
+    carried onto a chain of the sheet does not hold (the trailing gauche bond returns from 134
+    to 91 degrees) and the search ends on the sequential path's first saddle, 10.660 for the
+    third time; so the first chain's 11.64 is not undercut by this route. The diagonal
+    neighbours' steps are not computed.
 * **In the copolymer lattices the first saddle is lower and the completed step is not.** Into the
   wide kink the barrier is 6.4 in 64/29/7 and 7.0 in 71/29 against PVDF's 7.5, so the torsional
   event is no slower beside TrFE and chlorine. But the step computed here takes the kink pair from

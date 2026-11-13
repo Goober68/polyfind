@@ -43005,7 +43005,39 @@
       115.8673652761182,
       115.29535888753587,
       116.08956334194889
-     ]
+     ],
+     "found_again": {
+      "what": "a search for a concerted pass of the single chain: the single-pass saddle of the second chain's step (row '... mover 12 ... beside 0'), as a displacement from its own start, carried by translation onto this chain in the flat sheet and settled there. It does not hold: the trailing gauche bond returns from 134 to 91 degrees and the search ends on this saddle",
+      "start_energy": 34.65815739830259,
+      "energy": 10.659905998584463,
+      "force_along": 0.00530706609538667,
+      "gradient_across": 3.2719104350055645e-05,
+      "curvature_along": -0.31455999822796454,
+      "evaluations": 257,
+      "torsions_deg": [
+       90.53271993724087,
+       178.02156426737304,
+       -144.15515031353232,
+       -175.5503559110585,
+       -109.2669034603922,
+       -171.67873763323144,
+       173.30401968530697,
+       -171.35866166845886,
+       176.3745291687684,
+       -178.695212946195,
+       179.00782343907304,
+       179.83402875034142,
+       -179.6611980413919,
+       -179.68214358752766,
+       179.52678693968033,
+       179.40671893516986,
+       -177.812608005375,
+       -177.99171132522156,
+       170.76713042006583,
+       160.32091378135
+      ],
+      "largest_torsion_difference_from_the_stored_saddle_deg": 0.12458190090896437
+     }
     }
    },
    "barrier_forward": 11.838125647426523,

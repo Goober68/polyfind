@@ -39,7 +39,9 @@ ran to the completed step, a descent in steps of at most 0.05 scaled units from 
 (280 evaluations, energy falling throughout, ending within 0.001 deg of the stored state; `row["slide"]`), and its
 band's fixed end `row["I"]` is a point of that slope marked `not_a_minimum`; its saddle, 0.71 below its band's top, was
 tested by descents either way (scratch `connect.py`; stored as `polished["connects"]`): one ends in the start, the other
-in the completed step.
+in the completed step. A CONCERTED PASS FOR THE FIRST CHAIN was looked for and not found: chain 12's saddle geometry carried
+onto a chain of the flat sheet (scratch `concerted_single.py`) relaxes onto the sequential path and settles on its first
+saddle (10.6599; stored as `polished["found_again"]` of the single-chain row): the 11.64 stands.
 TRAPS: (1) the BAND TOPS were far off again: chain 12's band stopped at 11.67 (force 0.148) and its saddle is 10.96;
 chain 4's second top 13.35 against 13.12. Never quote a band top. (2) One long band over the whole step (17 images,
 scratch `one_band.py`) did not converge (forces stuck near 30, images zig-zagging at the ends): two segments, or a

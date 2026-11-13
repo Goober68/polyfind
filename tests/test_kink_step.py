@@ -335,6 +335,10 @@ def test_the_sixteen_chain_step_was_settled_on_the_closure_surface():
         assert before["method"].startswith("SLSQP") if "method" in before else True
         assert pol["saddle"] < before["saddle"] + 2e-3 and pol["evaluations"] < before["evaluations"]
     assert row["I-B"]["polished"]["saddle"] > row["A-I"]["polished"]["saddle"] > row["I"]["energy"]
+    again = row["A-I"]["polished"].get("found_again")
+    if again is not None:  # a search started from a concerted geometry ends on the same first saddle: the single chain steps in two passes
+        assert again["energy"] == pytest.approx(row["A-I"]["polished"]["saddle"], abs=1e-3) and again["start_energy"] > 20.0
+        assert again["largest_torsion_difference_from_the_stored_saddle_deg"] < 1.0 and 80.0 < again["torsions_deg"][0] < 100.0
     for name in ("I", "B"):
         check = row[name]["relaxed_further"]
         assert 0.0 <= check["fall"] < 1e-3 and check["gradient_max"] < 2e-4
