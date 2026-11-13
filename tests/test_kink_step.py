@@ -137,7 +137,10 @@ def test_the_stored_saddles_are_stationary_points_near_their_bands_tops():
     """Every settled saddle in the result file: no force left along the band's tangent nor across
     it, the curvature along the path negative where it was measured, above both ends of its band,
     and within 0.25 kcal/mol of the band's top unless the band had stopped far from convergence
-    (a force over 0.5).  A row's barriers on the settled saddles are the higher of its two."""
+    (a force over 0.5).  One saddle is 0.7 below a band that had met its criterion (the second
+    chain's single-pass step: the band sat on the sequential side of a concerted pass); that one
+    is held to more: descents from it either way end in the two states.  A row's barriers on the
+    settled saddles are the higher of its two."""
     rows = json.load(open(MIG))["rows"]
     seen = 0
     for key, row in rows.items():
@@ -151,7 +154,11 @@ def test_the_stored_saddles_are_stationary_points_near_their_bands_tops():
             assert pol["curvature_along"] is None or pol["curvature_along"] < 0.0, (key, seg)
             assert pol["saddle"] > max(ends[a], ends[b]), (key, seg)
             assert pol["band_top"] == pytest.approx(row[seg]["saddle"]) and pol["band_force"] == pytest.approx(row[seg]["force_max"])
-            if row[seg]["force_max"] < 0.5:
+            if "connects" in pol:  # a saddle far from its band's top: shown by descents either way to join the two states it is said to
+                ways = [pol["connects"][k]["largest_torsion_difference_from_the_stored_states_deg"] for k in ("towards_the_start", "towards_both_ahead")]
+                assert ways[0]["A"] < 1.0 and ways[1]["B"] < 1.0 and ways[0]["B"] > 90.0 and ways[1]["A"] > 90.0, (key, seg)
+                assert all(pol["connects"][k]["highest_energy_on_the_way"] < pol["saddle"] + 0.01 for k in ("towards_the_start", "towards_both_ahead")), (key, seg)
+            elif row[seg]["force_max"] < 0.5:
                 assert abs(pol["saddle"] - row[seg]["saddle"]) < 0.25, (key, seg)
         if all(row.get(seg, {}).get("polished", {}).get("converged") for seg in ("A-I", "I-B")):
             top = max(row["A-I"]["polished"]["saddle"], row["I-B"]["polished"]["saddle"])

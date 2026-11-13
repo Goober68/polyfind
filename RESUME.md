@@ -37,7 +37,9 @@ either neighbour and equals the stored pair state (8.349 above the sheet); chain
 (one 129, one 198 above; structures within 0.0004 deg); chain 12: the driver's own relaxation from the wide-kink start
 ran to the completed step, a descent in steps of at most 0.05 scaled units from the wide-kink geometry does the same
 (280 evaluations, energy falling throughout, ending within 0.001 deg of the stored state; `row["slide"]`), and its
-band's fixed end `row["I"]` is a point of that slope marked `not_a_minimum`.
+band's fixed end `row["I"]` is a point of that slope marked `not_a_minimum`; its saddle, 0.71 below its band's top, was
+tested by descents either way (scratch `connect.py`; stored as `polished["connects"]`): one ends in the start, the other
+in the completed step.
 TRAPS: (1) the BAND TOPS were far off again: chain 12's band stopped at 11.67 (force 0.148) and its saddle is 10.96;
 chain 4's second top 13.35 against 13.12. Never quote a band top. (2) One long band over the whole step (17 images,
 scratch `one_band.py`) did not converge (forces stuck near 30, images zig-zagging at the ends): two segments, or a

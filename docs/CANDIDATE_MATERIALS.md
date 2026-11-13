@@ -983,8 +983,14 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     a drive does to these barriers is not computed. Checks: both ahead is 2.438 above the start from either neighbour, as it has to
     be (the two pairs are translates), and 8.349 above the sheet, the stored pair state; the
     second neighbour's wide kink is 9.3959 by two starts (structures within 0.0004 degrees);
-    the first neighbour's descent ends within 0.001 degrees of the stored completed step. The
-    diagonal neighbours' steps are not computed.
+    the first neighbour's descent ends within 0.001 degrees of the stored completed step. That
+    neighbour's band, relaxed to its force criterion of 0.15, had its top at 11.67, 0.71 above
+    the saddle, with the trailing gauche bond at 105 degrees where the saddle has it at 137: a
+    band started along the sequential path creeps towards a concerted pass and does not reach
+    it, which is one more reason not to read a barrier off a band. Because of that distance the
+    saddle was tested directly: from it, descents either way end in the start (to 0.0001) and
+    in the completed step (to 0.001 degrees), no point on the way more than 0.006 above the
+    saddle (the displaced starts). The diagonal neighbours' steps are not computed.
 * **In the copolymer lattices the first saddle is lower and the completed step is not.** Into the
   wide kink the barrier is 6.4 in 64/29/7 and 7.0 in 71/29 against PVDF's 7.5, so the torsional
   event is no slower beside TrFE and chlorine. But the step computed here takes the kink pair from
@@ -1097,7 +1103,10 @@ the other two rows carry no strain on either. The step barriers are on the saddl
   of a chain stepping onto a TrFE unit ahead of its neighbours, and that the film's channel need
   not be this step. These are the steps of half the chains at once, in a two-chain cell; one PVDF
   chain alone has a barrier of 11.6 in sixteen chains and 11.5 in thirty-two (1e4 /s), and the
-  copolymers' single-chain steps are not computed. The earlier
+  copolymers' single-chain steps are not computed. Nor is the single-chain rate the rate at
+  which a sheet advances: in PVDF a chain that has stepped out comes back 6500 times for each
+  time a stack neighbour joins it (8.3), so in zero field that step is a local excursion, and
+  an advance needs a drive whose effect on these barriers is not computed. The earlier
   polyfind number for a kink-row hop in perfect beta, 8.2 kcal/mol (`ask ... verification-v1.md`,
   E3), is PVDF's 7.5-8.9 here by a different route.
 

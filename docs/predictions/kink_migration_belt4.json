@@ -89386,7 +89386,36 @@
       115.2595969237626,
       115.32661527520428,
       115.4855813356831
-     ]
+     ],
+     "connects": {
+      "towards_the_start": {
+       "step_along_the_tangent": -0.1,
+       "longest_step": 0.05,
+       "start_energy": 10.961705490225995,
+       "end_energy": -9.154224972007796e-05,
+       "evaluations": 267,
+       "largest_torsion_difference_from_the_stored_states_deg": {
+        "A": 0.663,
+        "B": 175.688
+       },
+       "highest_energy_on_the_way": 10.964606590407811,
+       "message": "Optimization terminated successfully: the gradient along the surface is under gtol"
+      },
+      "towards_both_ahead": {
+       "step_along_the_tangent": 0.1,
+       "longest_step": 0.05,
+       "start_energy": 10.963602631318054,
+       "end_energy": 2.4380606486963643,
+       "evaluations": 326,
+       "largest_torsion_difference_from_the_stored_states_deg": {
+        "A": 175.686,
+        "B": 0.001
+       },
+       "highest_energy_on_the_way": 10.96725577051393,
+       "message": "Optimization terminated successfully: the gradient along the surface is under gtol"
+      },
+      "what": "from the settled saddle, a step of 0.1 scaled units either way along the band's tangent and a descent on the closure surface in steps of at most 0.05: one ends in the start, the other in the completed step"
+     }
     }
    },
    "slide": {
