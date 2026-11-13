@@ -52,7 +52,7 @@ def main(paths) -> None:
 
     threads = sorted({h["blas_threads"] for r in rows for h in r.get("host_runs", [])})
     head = ["chains", "sites", "k vectors"] + [f"host, {t} thread{'s' if t > 1 else ''}" for t in threads] + \
-           ["device", "of it on the host", "device against fastest host", "largest difference", "card memory"]
+           ["device", "of it outside the dipole step", "device against fastest host", "largest difference", "card memory"]
     print("One whole evaluation (energy and gradient):\n")
     print("| " + " | ".join(head) + " |")
     print("|" + "---|" * len(head))
@@ -66,7 +66,7 @@ def main(paths) -> None:
             cells += ["failed: " + d["failed"][:60], "-", "-", "-", "-"]
         elif d:
             best = host_run(r)
-            left = d["whole_s"] - d["dipole_step_s"]
+            left = d["whole_s"] - d["dipole_step_s"]  # outside the dipole step
             diff = d.get("difference_from_host", {}).get("largest")
             cells += [seconds(d["whole_s"]), f"{seconds(left)} ({100 * left / d['whole_s']:.0f}%)",
                       f"{best['whole_s'] / d['whole_s']:.1f}x" if best else "-",
@@ -90,6 +90,38 @@ def main(paths) -> None:
                   f"{seconds(h['gradient_s'])} / {seconds(d['gradient_s'])} | {seconds(three_h)} / {seconds(three_d)} | {three_h / three_d:.0f}x |")
         else:
             print(f"| {r['chains']} | - / {seconds(d['tensor_s'])} | - / {seconds(d['solve_s'])} | - / {seconds(d['gradient_s'])} | - / {seconds(three_d)} | - |")
+
+    if any("parts_s" in (r.get("device") or {}) for r in rows):
+        names = ["build", "valence", "pair sums", "electrostatics", "exclusions", "assembly"]
+        print("\nOne device evaluation part by part (the device waited for at the end of each part; build, valence, "
+              "exclusions and assembly are the host's):\n")
+        print("| chains | " + " | ".join(names) + " | the host's parts | of the evaluation |")
+        print("|---|" + "---|" * (len(names) + 2))
+        for r in rows:
+            ps = (r.get("device") or {}).get("parts_s")
+            if ps:
+                print(f"| {r['chains']} | " + " | ".join(seconds(ps.get(k, 0.0)) for k in names)
+                      + f" | {seconds(ps['host_parts'])} | {100 * ps['host_parts'] / ps['all']:.0f}% |")
+        print("\nEvaluations back to back, each at a new geometry, and the card's own utilisation figure meanwhile:\n")
+        print("| chains | form | one evaluation | evaluations per second | card utilisation, mean (lowest to highest sample) |")
+        print("|---|---|---|---|---|")
+        for r in rows:
+            d = r.get("device") or {}
+            for label, b in (("batched: pair sums and electrostatics on the card", d.get("busy")),
+                             ("loops: electrostatics on the card, the rest in host loops", (d.get("loop_form") or {}).get("busy"))):
+                if b:
+                    use = (f"{b['utilization_mean']:.0f}% ({b['utilization_min']:.0f} to {b['utilization_max']:.0f}%)"
+                           if "utilization_mean" in b else "-")
+                    print(f"| {r['chains']} | {label} | {seconds(b['per_evaluation_s'])} | {1.0 / b['per_evaluation_s']:.1f} | {use} |")
+    if any("host_batched" in r for r in rows):
+        print("\nThe batched form on the host (same BLAS threads as the fastest loop run):\n")
+        print("| chains | loops | batched | difference in energy | in the gradient |")
+        print("|---|---|---|---|---|")
+        for r in rows:
+            hb, h = r.get("host_batched"), host_run(r)
+            if hb and h:
+                print(f"| {r['chains']} | {seconds(h['whole_s'])} | {seconds(hb['whole_s'])} | {hb['difference_from_loops']['energy']:.1e} | "
+                      f"{hb['difference_from_loops']['gradient']:.1e} |")
 
     print("\nChecks that need no host run, and the first call:\n")
     print("| chains | tiling against the stored two-chain cell | gradient against the device's own energy difference | first device evaluation | device memory in use |")

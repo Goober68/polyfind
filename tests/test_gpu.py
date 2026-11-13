@@ -167,3 +167,65 @@ def test_ewald_device_is_asked_for_by_its_own_switch(monkeypatch):
     assert bk.ewald_backend() is cupy and Ewald(8.0).xp is cupy
     monkeypatch.delenv("POLYFIND_EWALD_DEVICE")
     assert Ewald(8.0).xp is np  # whatever the backend of the batched kernels is
+
+
+# A mixed cell's whole evaluation on the device: the batched form (``tests/test_mixed_batched.py``
+# holds it to the loop form on the host and on the stand-in), with CuPy's own functions.
+@pytest.mark.parametrize("case", [0, 1, 2, 3])
+def test_mixed_cell_on_the_device_is_the_loop_form(host_kernels, case):
+    """Placed energy, both gradients, and the model's value and gradient with the pair sums on the
+    card: truncated Coulomb and Ewald with induced dipoles, flipped chains, several images along
+    short repeats."""
+    import cupy
+    from test_mixedcell import CASES, _model, _run
+
+    from polyfind import mixedcell as MC
+
+    def body(polymer, seq, params, kw):
+        m, x, _ = _model(polymer, seq, params, nx=2, ny=1, pen_rot=0.7, k_c=3.0, **kw)
+        x = x + 0.02 * np.random.default_rng(case).standard_normal(x.size) * m.scale(x)
+        latn, frames, _, Pn, _ = m.build(x)
+        E0, g0, l0 = MC.placed_energy_and_grad(m.pk, frames, Pn, latn)
+        e0, v0 = m.value_and_grad(x)
+        ew = m.pk._ewald
+        try:
+            if ew is not None:
+                ew.xp, ew.device_min_sites = cupy, 0
+            E1, g1, l1 = MC.placed_energy_and_grad(m.pk, frames, Pn, latn, xp=cupy)
+            m.xp = cupy
+            e1, v1 = m.value_and_grad(x)
+            small = MC._pair_sums(m.pk, Pn.reshape(m.nc, m.n, 3), latn, m.flips, int(np.ceil(m.pk.rc / latn[2, 2])) + 1, cupy,
+                                  block_elems=2 * m.n * m.n)
+            whole = MC._pair_sums(m.pk, Pn.reshape(m.nc, m.n, 3), latn, m.flips, int(np.ceil(m.pk.rc / latn[2, 2])) + 1, cupy)
+        finally:
+            m.xp = None
+            if ew is not None:
+                ew.xp, ew.device_min_sites = np, 256
+                ew.release()
+        assert E1 == pytest.approx(E0, rel=1e-11, abs=1e-9) and e1 == pytest.approx(e0, rel=1e-11, abs=1e-9)
+        for a, b in ((g1, g0), (l1, l0), (v1, v0), (small[1], whole[1]), (small[2], whole[2])):
+            assert isinstance(a, np.ndarray)
+            np.testing.assert_allclose(a, b, rtol=0, atol=1e-10 * max(1.0, float(np.abs(b).max())))
+        assert small[0] == pytest.approx(whole[0], rel=1e-12)
+
+    _run(CASES[case], body)
+
+
+def test_device_cholesky_solve_is_the_general_solve_and_says_when_it_cannot():
+    """``polyfind.backend.cholesky_solve``: the general solve's answer for a positive definite
+    matrix, and ``None`` -- not numbers -- for one that is not."""
+    import cupy
+
+    rng = np.random.default_rng(0)
+    M = rng.standard_normal((300, 300))
+    a = cupy.asarray(M @ M.T + 300.0 * np.eye(300))
+    b = cupy.asarray(rng.standard_normal(300))
+    x = bk.cholesky_solve(cupy, a, b)
+    assert isinstance(x, cupy.ndarray) and x.shape == (300,)
+    np.testing.assert_allclose(x.get(), cupy.linalg.solve(a, b).get(), rtol=0, atol=1e-12)
+    indefinite = a - 2000.0 * cupy.eye(300)
+    assert bk.cholesky_solve(cupy, indefinite, b) is None
+    assert bk.cholesky_solve(np, M @ M.T, rng.standard_normal(300)) is None  # the host has its own solve
+    import cupyx
+
+    assert cupyx.geterr()["linalg"] == "ignore"  # the status was asked for inside, and the setting put back

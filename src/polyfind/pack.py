@@ -63,7 +63,14 @@ from scipy.optimize import minimize
 
 from . import backend as bk
 from .chain import build_chain
-from .ewald import Ewald, EwaldSpec, charge_dipole_exclusion, exclusion_correction
+from .ewald import (
+    Ewald,
+    EwaldSpec,
+    charge_dipole_exclusion,
+    charge_dipole_exclusion_pairs,
+    exclusion_correction,
+    exclusion_pairs,
+)
 from .forcefield import COULOMB, _valence_lookup, erfc_approx, valence_topology
 from .polarizability import Polarizable
 from .helix import HelixParams, helix_parameters, kabsch, rotation_to_z
@@ -395,15 +402,17 @@ def _orient_blocks(coords: np.ndarray, bb_local: list[int]) -> np.ndarray:
 
 
 def _align_about_z_batch(coords: np.ndarray, ref: np.ndarray) -> np.ndarray:
-    """:func:`_align_about_z` over a batch (M, n, 3) against one reference (n, 3)."""
-    cw = (coords[:, :, 0] * ref[:, 0] + coords[:, :, 1] * ref[:, 1]).sum(axis=1)
-    sw = (coords[:, :, 0] * ref[:, 1] - coords[:, :, 1] * ref[:, 0]).sum(axis=1)
+    """:func:`_align_about_z` over a batch (M, n, 3) against one reference (n, 3), or against one
+    reference per row (M, n, 3)."""
+    xr, yr, zr = ref[..., 0], ref[..., 1], ref[..., 2]
+    cw = (coords[:, :, 0] * xr + coords[:, :, 1] * yr).sum(axis=1)
+    sw = (coords[:, :, 0] * yr - coords[:, :, 1] * xr).sum(axis=1)
     ang = np.arctan2(sw, cw)
     ca, sa = np.cos(ang)[:, None], np.sin(ang)[:, None]
     out = np.empty_like(coords)
     out[:, :, 0] = ca * coords[:, :, 0] - sa * coords[:, :, 1]
     out[:, :, 1] = sa * coords[:, :, 0] + ca * coords[:, :, 1]
-    out[:, :, 2] = coords[:, :, 2] + (ref[:, 2] - coords[:, :, 2]).mean(axis=1, keepdims=True)
+    out[:, :, 2] = coords[:, :, 2] + (zr - coords[:, :, 2]).mean(axis=1, keepdims=True)
     return out
 
 
@@ -607,6 +616,61 @@ class ChainValence:
             np.add.at(gX, self.ang_j, -(fi + fk))
             gc += float((self.ang_si * fi[:, 2]).sum() + (self.ang_sk * fk[:, 2]).sum())
         return E, gX, gc
+
+    def energy_and_grad_batch(self, coords, c: float, image_sign=None):
+        """:meth:`energy_and_grad` for ``M`` geometries of this topology that share one repeat ``c``.
+
+        ``coords`` is ``(M, n, 3)``; returns ``(sum of the M energies, dE/dcoords (M, n, 3), the sum
+        of the M dE/dc)``.  ``image_sign`` (``(M,)`` of +1 or -1) is for geometries given in a
+        frame mirrored along z, where the neighbouring repeat an image index points at lies the
+        other way -- the placed coordinates of a flipped chain.  The same closed forms as
+        :meth:`energy_and_grad`, with every chain of a cell in one array.
+        """
+        X = np.asarray(coords, dtype=float)
+        M, n = X.shape[0], X.shape[1]
+        sg = np.ones(M) if image_sign is None else np.asarray(image_sign, dtype=float).reshape(M)
+        cz = float(c)
+        E = 0.0
+        gc = 0.0
+        acc = np.zeros((M * n, 3))
+        rows = (np.arange(M) * n)[:, None]
+
+        def scatter(idx, f) -> None:
+            flat = (rows + idx[None, :]).ravel()
+            for a in range(3):
+                acc[:, a] += np.bincount(flat, weights=f[:, :, a].ravel(), minlength=M * n)
+
+        if self.n_bonds:
+            sb = sg[:, None] * self.bond_s[None, :]
+            d = X[:, self.bond_i] - X[:, self.bond_j]
+            d[..., 2] -= sb * cz
+            r = np.sqrt(np.einsum("mbc,mbc->mb", d, d))
+            dr = r - self.bond_r0
+            E += 0.5 * float((self.bond_k * dr * dr).sum())
+            f = (self.bond_k * dr / r)[..., None] * d
+            scatter(self.bond_i, f)
+            scatter(self.bond_j, -f)
+            gc -= float((sb * f[..., 2]).sum())
+        if self.n_angles:
+            si, sk = sg[:, None] * self.ang_si[None, :], sg[:, None] * self.ang_sk[None, :]
+            u = X[:, self.ang_i] - X[:, self.ang_j]
+            v = X[:, self.ang_k] - X[:, self.ang_j]
+            u[..., 2] += si * cz
+            v[..., 2] += sk * cz
+            nu, nv = np.sqrt(np.einsum("mbc,mbc->mb", u, u)), np.sqrt(np.einsum("mbc,mbc->mb", v, v))
+            uh, vh = u / nu[..., None], v / nv[..., None]
+            cos = np.clip(np.einsum("mbc,mbc->mb", uh, vh), -1.0, 1.0)
+            da = np.arccos(cos) - self.ang_t0
+            E += 0.5 * float((self.ang_kk * da * da).sum())
+            sn = np.maximum(np.sqrt(1.0 - cos * cos), 1e-9)
+            w = self.ang_kk * da
+            fi = (w / (nu * sn))[..., None] * (cos[..., None] * uh - vh)
+            fk = (w / (nv * sn))[..., None] * (cos[..., None] * vh - uh)
+            scatter(self.ang_i, fi)
+            scatter(self.ang_k, fk)
+            scatter(self.ang_j, -(fi + fk))
+            gc += float((si * fi[..., 2]).sum() + (sk * fk[..., 2]).sum())
+        return E, acc.reshape(M, n, 3), gc
 
 
 def chain_valence(chain: PeriodicChain, bond_table: dict, angle_table: dict) -> ChainValence | None:
@@ -1270,6 +1334,26 @@ class CrystalPacker:
                                     pref=COULOMB / self.eps_r, grad=grad, charge_grad=charge_grad,
                                     charge_damping=self._ewald.charge_damping)
 
+    def _exclusion_pairs(self, K: int, flipped):
+        """The bonded pairs of every chain of the cell as flat lists
+        (:class:`polyfind.ewald.ExclusionPairs`), for the electrostatically active sites, in the
+        placed frame: ``flipped`` has one flag per chain.  Topology alone, so kept per ``(K,
+        flips)``."""
+        fl = np.asarray(flipped, dtype=bool).reshape(self.n_chains)
+        key = (int(K), fl.tobytes())
+        cache = self.__dict__.setdefault("_exclusion_pair_cache", {})
+        hit = cache.get(key)
+        if hit is None:
+            active = None
+            if self._es_idx is not None:
+                active = np.zeros(self.N, dtype=bool)
+                active[self._es_idx] = True
+                active = active[: self.n]
+            if len(cache) > 8:
+                cache.clear()
+            hit = cache[key] = exclusion_pairs(self._scale_column_np(K), fl, select=active)
+        return hit
+
     def _ewald_rows(self, P, lat, q_rows=None, flips=None) -> np.ndarray:
         """The Ewald energy of every row of a placed chunk, in kcal/mol per cell.
 
@@ -1292,7 +1376,7 @@ class CrystalPacker:
                          for i in range(Pn.shape[0])])
 
     # --- induced dipoles ---------------------------------------------------------------
-    def _polarize(self, Pn, q_cell, latn, flip, grad: bool = False, charge_grad: bool = False):
+    def _polarize(self, Pn, q_cell, latn, flip, grad: bool = False, charge_grad: bool = False, pairs=None):
         r"""Induced dipoles of ONE placed configuration, solved self-consistently.
 
         ``E0_i`` is the permanent field at site ``i``: the Ewald field of every charge in the
@@ -1313,6 +1397,12 @@ class CrystalPacker:
         through the exclusion images, all taken *at fixed* ``p``, which at the solution is the
         total derivative.  The stationarity that makes this true is asserted numerically in
         ``tests/test_polarizable.py``.
+
+        ``pairs`` (:meth:`_exclusion_pairs`) evaluates the bonded-exclusion corrections of all
+        chains from their flat lists instead of chain by chain on dense stacks: the same sums to
+        rounding, in a number of array operations that does not grow with the number of chains
+        (:mod:`polyfind.mixedcell`'s batched evaluation).  The field it returns is then zero at
+        the electrostatically inert sites, which have no dipole for it to act on.
         """
         ew = self._ewald
         N, n, nc = self.N, self.n, self.n_chains
@@ -1342,7 +1432,12 @@ class CrystalPacker:
             F[idx] = t0.field
         cz = float(latn[2, 2])
         stacks = []
-        if self.polarizable.exclude_bonded:
+        if pairs is not None:
+            if charge_grad:
+                raise ValueError("the exclusion lists do not carry the charge derivative; leave pairs=None for it")
+            if self.polarizable.exclude_bonded:
+                F += charge_dipole_exclusion_pairs(Pn, q_cell, cz, pairs, pref=pref)[3]
+        elif self.polarizable.exclude_bonded:
             Sk = self._scale_column_np(int(np.ceil(self.rc / cz)) + 1)
             # ``flip`` is the packer's own scalar (chain 2 of the two-chain cell) or one flag per
             # chain, which is what a cell of more than two chains (polyfind.mixedcell) passes
@@ -1363,8 +1458,14 @@ class CrystalPacker:
         A = -t0.tensor.transpose(0, 2, 1, 3).reshape(3 * Na, 3 * Na)
         diag = xp.arange(3 * Na)
         A[diag, diag] += xp.asarray(np.repeat(pref / self._alpha_es, 3))
-        pa = bk.to_numpy(xp.linalg.solve(A, xp.asarray(E0a.ravel()))).reshape(Na, 3)
-        del A
+        rhs = xp.asarray(E0a.ravel())
+        # The matrix is symmetric, and positive definite wherever the model is stable (no
+        # polarization catastrophe): on a device that is a Cholesky solve, a fifth of the general
+        # one's time.  Where it is not available, or the matrix is not positive definite, the
+        # general solve answers as it always did.
+        sol = bk.cholesky_solve(xp, A, rhs) if xp is not np else None
+        pa = bk.to_numpy(xp.linalg.solve(A, rhs) if sol is None else sol).reshape(Na, 3)
+        del A, sol
         t0.tensor = None  # the largest array of the evaluation, not needed again
         if idx is None:
             p = pa
@@ -1388,6 +1489,10 @@ class CrystalPacker:
                 gq = np.zeros(N)
                 gq[idx] = t.grad_charges
         gc = 0.0
+        if pairs is not None and self.polarizable.exclude_bonded:
+            _, exX, exc, _ = charge_dipole_exclusion_pairs(Pn, q_cell, cz, pairs, dipoles=p, pref=pref, grad=True)
+            gP += exX
+            gc += exc
         for sl, sc in stacks:
             _, exX, exc, exq, _ = charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, dipoles=p[sl], pref=pref,
                                                           grad=True, charge_grad=charge_grad)

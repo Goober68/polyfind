@@ -126,6 +126,30 @@ def synchronize(xp) -> None:
         cuda.get_current_stream().synchronize()
 
 
+def cholesky_solve(xp, a, b):
+    """``a x = b`` by Cholesky for a symmetric positive definite ``a`` on a CuPy device, or ``None``.
+
+    ``None`` means "use the general solve": the module is not CuPy, or the factorization failed
+    (``a`` is not positive definite).  CuPy's general solve is an LU factorization, measured on an
+    A100 at 16.9 ms for 2,880 unknowns and 39.5 ms for 5,760 against 3.1 and 8.6 ms for this one,
+    the two solutions agreeing to 2e-15 (docs/predictions/ewald_device_a100_20261113).  By default
+    CuPy does not look at the factorization's status -- a failed one returns numbers without a
+    word -- so the status is asked for here, which is what makes ``None`` reliable.
+    """
+    if getattr(xp, "__name__", "") != "cupy":
+        return None
+    try:
+        import cupyx  # type: ignore
+        from cupyx import lapack  # type: ignore
+    except ImportError:
+        return None
+    try:
+        with cupyx.errstate(linalg="raise"):
+            return lapack.posv(a, b)
+    except _np.linalg.LinAlgError:
+        return None
+
+
 def default_rng(seed=None):
     """Random generator for the active backend (both expose ``.random(size)``)."""
     xp = get_backend()

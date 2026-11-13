@@ -1342,9 +1342,12 @@ and the stiffness block within 2e-4 relative, the relaxation's noise floor.
 Scope: one energy-and-gradient evaluation of a `polyfind.mixedcell` cell of sixteen and more
 chains of the ten-monomer PVDF repeat (960 electrostatically active sites per sixteen chains),
 the unit of work of every relaxation, band and saddle search of `docs/CANDIDATE_MATERIALS.md`
-section 8.  The PI can rent an A100 and can buy four to six.  This section is the port that
-makes the question answerable and the list of what it answers; **no device time appears in it,
-because none has been measured**.  This container has four cores and no GPU.
+section 8.  The PI can rent an A100 and can buy four to six.  17.1 to 17.5 are the first port
+(the Ewald sums and the dipole solve) and its measurement plan, written before any device time
+existed; 17.6 is that port measured on a rented A100, which showed that it was not enough; 17.7
+is the rest of the evaluation, moved after that; 17.8 is the whole measured again.  This
+container has four cores and no GPU: every device number below is from a pod, and its files are
+in `docs/predictions/`.
 
 ### 17.1 Where the time goes on the host
 
@@ -1505,3 +1508,145 @@ designed here.
 One limit of the present code on a device: a process that has used the device cannot fork
 workers that use it (`examples/kink_migration.py --workers`); independent evaluations on
 several cards want one process per card started fresh, which is how `--all-devices` runs.
+
+### 17.6 Measured on an A100: the three steps alone (2026-11-13)
+
+Two rented pods, one NVIDIA A100-SXM4-80GB each (driver 595.91.07, CuPy 14.2.0, NumPy 2.2.6, host
+AMD EPYC 7742 with 13 cores allotted of the 128 the container sees), ran
+`examples/runpod_ewald_pod.sh` at commits 2fe1c9e and 73b556f.  Files, logs and the tables below
+(`examples/ewald_device_summary.py` on the JSON; nothing typed in):
+`docs/predictions/ewald_device_a100_20261113/`.  The device tests passed on both (17 passed).
+
+One whole evaluation, energy and gradient:
+
+| chains | sites | k vectors | host, 1 thread | host, 8 threads | host, 13 threads | device | of it outside the three steps | device against fastest host | largest difference | card memory |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 16 | 960 | 14,486 | 15.8 s | 2.80 s | 2.73 s | 0.51 s | 0.36 s (70%) | 5.3x | 7.3e-15 | 1.3 GB |
+| 32 | 1,920 | 28,920 | 23.2 s | 11.7 s | 10.8 s | 1.14 s | 0.77 s (68%) | 9.5x | 8.3e-15 | 5.1 GB |
+
+The three ported steps, timed apart (fastest host run against the device):
+
+| chains | tensor and field | solve | gradient | the three together | device against host |
+|---|---|---|---|---|---|
+| 16 | 1.38 s / 20.7 ms | 0.44 s / 17.3 ms | 0.38 s / 9.6 ms | 2.20 s / 47.6 ms | 46x |
+| 32 | 5.69 s / 92.3 ms | 3.04 s / 40.4 ms | 1.21 s / 19.6 ms | 9.94 s / 0.15 s | 65x |
+
+Side measurements: the general product against the rank-k update 1.8 / 1.6 ms and 11.1 / 8.5 ms
+(14.5 and 19.3 TFLOP/s in double precision); the LU solve against Cholesky 16.9 / 3.1 ms and
+39.5 / 8.6 ms, the two solutions agreeing to 2e-15 and the matrix exactly symmetric.
+
+What it says:
+
+* **The port is right on a real device**: 8e-15 of each result's size against the host, the
+  tiling check 3e-13 and 7e-13 kcal/mol, the gradient against the device's own energy difference
+  2e-5 and 2e-6 (the cutoff floor of 17.5).
+* **The three steps are no longer the evaluation.**  They run 46 and 65 times faster than
+  thirteen host cores, and the evaluation 5.3 and 9.5 times, because 70% of the device
+  evaluation is what was left on the host: 0.36 s of 0.51 s and 0.77 s of 1.14 s, the card idle
+  meanwhile.  (More than 70%, in fact: the dipole step still held the bonded-exclusion
+  corrections chain by chain on the host, 0.11 s of its 0.16 s at sixteen chains.  The three
+  steps themselves are 48 ms.)  The PI saw it as 0% utilisation on the card's own meter.
+  17.7 is the consequence.
+* **Cholesky, yes; the rank-k update, no.**  The solve is a third of the three steps and
+  Cholesky is a fifth of it; the rank-k update gains a tenth to a quarter of a step that is 2 to
+  11 ms.
+* **Memory**: 1.3 GB of pool at sixteen chains and 5.1 GB at thirty-two (1.8 and 5.6 GB in use
+  on the card), growing as the square of the cell: sixty-four chains want about 20 GB and a
+  hundred and twenty-eight about 80.
+* **Host times on a rented pod are noisy** and are not the reference for anything but this
+  comparison: the container is held to its allotment by a quota, and one run of the first pod
+  on "all cores" (256 BLAS threads under a 32-core allotment) was slower than one thread, which
+  is why the benchmark now reads the allotment.  Sixty-four chains, host only, from the second
+  pod's log: 462.6 s at one thread and 59.4 s at eight.  The second pod was stopped there, before
+  its sixty-four-chain device row, because the card was idle through those minutes.
+
+### 17.7 The rest of the evaluation: the batched form (2026-11-13)
+
+PI, on the first run: "we're using a GPU, let's actually use the GPU", then "do the port
+properly".  What was left on the host was not one routine but everything organised as a loop
+over chains or chain pairs.  cProfile of one host evaluation at sixteen chains and one thread
+(3.45 s; `Ewald.terms` 2.61 s and the solve 0.30 s are the ported steps), the rest by function:
+
+| what | seconds | how it was organised |
+|---|---|---|
+| the chains and their Jacobians (`MixedModel.build`) | 0.139 | one `repeat_chains_and_jacobian` per chain; 0.108 s of it the Jacobian of the five-block oligomer, of which one block is read |
+| chain-pair sums (`_pair_and_dv` and the loop around it) | 0.172 | 144 blocks of `(5 images, 100, 100)` through the packer's kernel, one by one |
+| same-site columns (`_intra_column_and_grad`) | 0.024 | one per chain |
+| dipole exclusion corrections (`charge_dipole_exclusion`) | 0.092 | two dense `(5, 100, 100, 3)` evaluations per chain, of which a few hundred terms are not zero |
+| charge exclusion correction (`exclusion_correction`) | 0.019 | one dense evaluation per chain |
+
+All of it grows with the number of chains and none of it is the cube: on a card the cube takes
+tens of milliseconds, and these took the rest.  The batched form
+(`placed_energy_and_grad(..., xp=)`, `MixedModel._value_and_grad_batched`) is the same energy to
+rounding as a fixed number of array operations whatever the number of chains.
+
+**Pair sums: two stacks of blocks through one kernel, on the device.**  The blocks are the
+loop's own (every chain pair and lateral image whose axes are within reach), chosen on the host
+from the chains' centres with one further test that needs no pair distances (the nearest site
+of one chain to the moved centre of the other): 144 of the 158 within reach at sixteen chains,
+the same 144 the loop's exact test keeps.  Each site pair is evaluated at its nearest image
+along the chain and as many further images either side as the cutoff reaches -- none once `c`
+is at least twice the cutoff, which is every cell of this section -- where the loop evaluates a
+range of images for the whole block (five at `c` = 25 A): a fifth of the elements.  The
+same-site columns are one more stack, at half weight, the bonded scale of each element gathered
+by its image (minus the image for a flipped chain).  The kernel is the packer's expression with
+its mask, written against the array module, truncated Coulomb included; per-site gradients come
+back through one product with a 0/1 chains-by-blocks matrix, the lattice gradient from the
+block sums.  Sixteen chains are 1.4 million pair elements in the first stack, of which 0.26
+million are inside the cutoff, and 0.16 million in the second.  A neighbour list would evaluate only
+those; it would also need a list kept valid between evaluations, and a wrong list is a wrong
+energy with no symptom.  The stack is rebuilt from the coordinates every time and cannot be
+stale.
+
+**Exclusion corrections: flat lists.**  The bonded pairs of a chain are a few hundred `(image,
+i, j)` entries fixed by the topology (720 per chain for this repeat, among the electrostatically
+active sites); `polyfind.ewald.exclusion_pairs` lists them for every chain of the cell, with
+the image index in the placed frame, and `exclusion_correction_pairs` /
+`charge_dipole_exclusion_pairs` evaluate each correction for all chains in one pass: 86 ms
+chain by chain, 2.3 ms from the lists at sixteen chains, the same numbers to 5e-15.  They stay
+on the host: 11,520 entries is below the size at which a device call is worth its launch.
+
+**Valence terms**: `ChainValence.energy_and_grad_batch`, all chains that share a valence object
+in one array, on the placed coordinates (a flipped chain's image indices change sign).
+
+**The chains: one build, and torques in place of the Jacobian.**  The builder was already
+batched over rows; batching alone gained nothing (117 ms chain by chain, 97 ms in one call),
+because the time is the Jacobian of the coordinates -- forty variables times the 513 atoms of
+five blocks, of which the evaluation contracts one block with a gradient.  That contraction does
+not need the Jacobian: every variable is a rotation generator, the derivative of an energy along
+it is the torque of the Cartesian gradient about its axis, `u . (T - a x F)`, and `F` and `T`
+for all hundred bonds are suffix sums along the chain (`polyfind.chainjac.oligomer_vjp`).  The
+alignment of the repeat to its reference is carried back the same way
+(`aligned_block_vjp`: the chain rule of `aligned_block_jacobian` read backwards), and the repeat
+transform's own derivative, which the closure terms need, comes from running sums over the two
+backbone windows (`backbone_transform_jacobian`).  Sixteen chains: 117 ms to about 7 ms; the
+gradient agrees with the Jacobian's to 2e-14 of its size.  The sequential part -- the backbone
+recursion, a hundred steps -- stays on the host, where a hundred small steps cost less than a
+hundred launches.
+
+**The closure constraints** rebuilt every chain's whole Jacobian to read two windows of it:
+117 ms per call at sixteen chains, and a constrained relaxation calls it as often as the energy.
+`MixedModel.closure` now differentiates the window atoms alone, in one build for all chains:
+bit for bit the same residuals and Jacobian (`tests/test_mixed_batched.py` asserts it with
+`==`), 12 ms; beside the batched evaluation it uses the running sums, 6 ms, the same to 1e-10.
+
+**The solve is Cholesky on a device** (17.6): `polyfind.backend.cholesky_solve`.  CuPy does not
+look at a factorization's status unless told to (`cupyx.errstate(linalg="raise")`; the default
+is `ignore`, read in its source), so the status is asked for and a matrix that is not positive
+definite goes to the general solve as before.
+
+**Which form runs.**  `MixedModel(xp=None)`, the default, follows the packer's Ewald sums: on a
+device when they are (`POLYFIND_EWALD_DEVICE=cuda` and a cell of at least 256 active sites),
+otherwise the loops -- the form every stored number was computed with, unchanged and bit for
+bit what it was (the closure included).  `POLYFIND_MIXED_BATCHED=1`, or `xp=numpy`, asks for the
+batched form on the host; `xp="loops"` for the loops wherever the sums are.
+
+**Agreement.**  Batched against loops, on the host: energy, every component of the gradient and
+all nine lattice entries to 1e-15 of their size on twelve small cells (truncated Coulomb and
+Ewald with induced dipoles, flipped chains, repeats short enough for seven images along the
+chain) and on the sixteen-chain kinked cell, with both closure penalties and their multipliers
+on.  `tests/test_mixed_batched.py` (50 tests) holds each piece to the routine it replaces, on
+NumPy and on the device stand-in, where an evaluation after the first sends and brings back
+nothing larger than a per-site array in a number of transfers that does not grow with the
+cell; `tests/test_gpu.py` has the same comparison for a real device.
+

@@ -27,7 +27,9 @@ The GPU backend serves two separate things. The batched kernels of the screen mo
 device by themselves when one is present (`POLYFIND_DEVICE=cuda|cpu`, float32). The Ewald
 sums and the induced-dipole solve of the large cells are float64 and move only when asked
 (`POLYFIND_EWALD_DEVICE=cuda`), and only for cells large enough to gain; a many-chain cell
-(`mixedcell.py`) wants `POLYFIND_DEVICE=cpu` beside it and says so.
+(`mixedcell.py`) wants `POLYFIND_DEVICE=cpu` beside it and says so, and with its Ewald sums on
+the device it evaluates everything else in its batched form, the pair sums on the device too
+(the same energy to rounding; `POLYFIND_MIXED_BATCHED=1` asks for that form on the host).
 
 ## Quick start
 
@@ -106,8 +108,9 @@ for the active backend; `bash examples/runpod_gpu_bench.sh` (Linux, e.g. a RunPo
 pod) or `.\examples\gpu_bench.ps1` (Windows PowerShell) does the whole GPU
 validation: CuPy install, GPU tests, full suite on the CuPy backend, CPU vs GPU
 timings.  For the large cells, `bash examples/runpod_ewald_bench.sh` checks the Ewald
-sums, the dipole solve and a whole evaluation on the device against the host and times
-both at 16 to 128 chains (`examples/ewald_device_benchmark.py`;
-`docs/PERFORMANCE_REVIEW.md` section 17); `tests/test_ewald_device.py` runs the same
-device code path on any machine, on a NumPy-backed stand-in that is as strict about
-mixing host and device arrays as CuPy is.
+sums, the dipole solve and a whole evaluation on the device against the host, times
+them at 16 to 128 chains and reads the card's utilisation while evaluations run
+(`examples/ewald_device_benchmark.py`; `docs/PERFORMANCE_REVIEW.md` section 17);
+`tests/test_ewald_device.py` and `tests/test_mixed_batched.py` run the same device code
+path on any machine, on a NumPy-backed stand-in that is as strict about mixing host and
+device arrays as CuPy is.

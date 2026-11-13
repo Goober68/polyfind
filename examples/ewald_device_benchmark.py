@@ -1,15 +1,20 @@
-"""The large-cell electrostatics on a GPU: is it right there, and what does it buy.
+"""A large cell's evaluation on a GPU: is it right there, what does it buy, and is the card busy.
 
     python examples/ewald_device_benchmark.py                 # 16, 32 and 64 chains
     python examples/ewald_device_benchmark.py --chains 16     # a few minutes; start here
-    python examples/ewald_device_benchmark.py --chains 16 32 64 128 --host-max-chains 64
+    python examples/ewald_device_benchmark.py --chains 16 32 64 128 --host-max-chains 16
 
 One energy-and-gradient evaluation of a cell of many chains (``polyfind.mixedcell``) is, on a
 CPU, four fifths the Ewald sums of the induced-dipole model (``polyfind.ewald.Ewald.terms``,
 twice: the field and the dipole tensor for the solve, then the gradient at the solved dipoles)
 and a tenth the solve between them (measured 2026-11-13, sixteen and thirty-two chains).  Those
-three steps run on a device when the Ewald object is given a device array module; the rest of
-the evaluation (the chains' geometry, the short-range pair sums) stays on the host.
+three steps run on a device when the Ewald object is given a device array module, and the model
+then evaluates everything else in its batched form: the pair sums of all chain pairs on the
+device, and what is left for the host -- building the chains, the bonded lists, carrying the
+gradient back to the torsions -- as a fixed number of array operations.  The first A100 run
+(docs/predictions/ewald_device_a100_20261113) had only the three steps on the card and showed
+why that is not enough: they ran 46 to 65 times faster and the evaluation 5 to 10, because 70%
+of it was still the host's loops and the card sat idle meanwhile.
 
 For each cell size this script
 
@@ -25,7 +30,10 @@ For each cell size this script
    device has finished, the first device call (which compiles kernels, once per machine)
    reported apart; the host is timed at one BLAS thread, which is what the package sets, at
    eight, and at every core it is allotted, and the device is compared with the fastest;
-4. reports the device memory the evaluation needed;
+4. reports the device memory the evaluation needed, the evaluation part by part (which parts
+   are the host's), and -- the direct answer to "is the GPU being used" -- the card's own
+   utilisation figure sampled while evaluations run back to back, for the batched form and, at
+   the smallest size, for the loop form it replaces;
 5. times two things the port does not use yet, to decide whether it should: the symmetric
    rank-k update against the general matrix product it replaces, and a Cholesky solve against
    the LU solve.
@@ -222,11 +230,11 @@ def evaluate(model, x, xp=np, repeat: int = 1):
         caught = {}
         inner = pk._polarize
 
-        def spy(Pn, q_cell, latn, flip, grad=False, charge_grad=False):
+        def spy(Pn, q_cell, latn, flip, grad=False, charge_grad=False, **kw):
             caught.update(Pn=np.array(Pn), q=np.array(q_cell), lat=np.array(latn), flip=np.array(flip))
             bk.synchronize(xp)
             t0 = time.perf_counter()
-            out = inner(Pn, q_cell, latn, flip, grad=grad, charge_grad=charge_grad)
+            out = inner(Pn, q_cell, latn, flip, grad=grad, charge_grad=charge_grad, **kw)
             bk.synchronize(xp)
             caught["seconds"] = time.perf_counter() - t0
             caught["out"] = out
@@ -288,7 +296,10 @@ def steps(pk, caught, xp, repeat: int):
         diag = xp.arange(3 * na)
         A[diag, diag] += xp.asarray(np.repeat(pref / pk._alpha_es, 3))
         keep["A"] = A
-        keep["p"] = bk.to_numpy(xp.linalg.solve(A, xp.asarray(E0a.ravel()))).reshape(na, 3)
+        rhs = xp.asarray(E0a.ravel())
+        sol = bk.cholesky_solve(xp, A, rhs) if xp is not np else None  # as CrystalPacker._polarize solves it
+        keep["cholesky"] = sol is not None
+        keep["p"] = bk.to_numpy(xp.linalg.solve(A, rhs) if sol is None else sol).reshape(na, 3)
         return keep["p"]
 
     def gradient_step():
@@ -299,6 +310,7 @@ def steps(pk, caught, xp, repeat: int):
     out["solve_s"], out["solve_all_s"], p = clock(solve_step, xp, repeat)
     out["gradient_s"], out["gradient_all_s"], t1 = clock(gradient_step, xp, repeat)
     out["k_vectors"], out["images"] = int(t0.n_kvec), int(t0.n_image)
+    out["solve_method"] = "cholesky" if keep["cholesky"] else "lu"
     results = {"energy_terms": {n: float(getattr(t0, n)) for n in ("real", "recip", "self_", "background", "surface")},
                "field": np.asarray(t0.field), "tensor": t0.tensor, "dipoles": p,
                "gradient_terms": {n: float(getattr(t1, n)) for n in ("real", "recip", "self_", "background", "surface")},
@@ -339,6 +351,69 @@ def directional_check(model, x, g, seed: int = 1, h: float = 2e-3) -> dict:
     num = (-f(2 * h) + 8.0 * f(h) - 8.0 * f(-h) + f(-2 * h)) / (12.0 * h)
     ana = float(g @ d)
     return {"analytic": ana, "difference": float(num), "relative_error": abs(num - ana) / max(1e-12, abs(ana))}
+
+
+HOST_PARTS = ("build", "valence", "exclusions", "assembly")  # of the batched form; the rest is on the array module
+
+
+def parts_of(model, x, xp) -> dict:
+    """One batched evaluation with the clock read at the end of each part (the device waited for
+    each time, which an ordinary evaluation does not do)."""
+    model.pk._ewald.release()
+    model.timings = {}
+    try:
+        model.value_and_grad(x)
+        parts = dict(model.timings)
+    finally:
+        model.timings = None
+    parts["host_parts"] = sum(parts.get(k, 0.0) for k in HOST_PARTS)
+    parts["all"] = sum(v for k, v in parts.items() if k != "host_parts")
+    return parts
+
+
+def busy_check(model, x, xp, seconds: float) -> dict:
+    """Evaluations back to back for ``seconds``, each at a new geometry as a relaxation's are, with
+    the card's own utilisation figure (``nvidia-smi``: the share of the last sample period in
+    which a kernel was running) read five times a second meanwhile."""
+    from polyfind import backend as bk
+
+    proc = None
+    if hasattr(xp, "cuda"):
+        try:
+            proc = subprocess.Popen(["nvidia-smi", "--query-gpu=index,utilization.gpu", "--format=csv,noheader,nounits", "-lms", "200"],
+                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+        except OSError:
+            proc = None
+    rng = np.random.default_rng(5)
+    sc = model.scale(x)
+    model.value_and_grad(x)  # warm
+    bk.synchronize(xp)
+    time.sleep(1.2)  # let the figure forget whatever ran before
+    t0 = time.perf_counter()
+    n = 0
+    while time.perf_counter() - t0 < seconds:
+        model.value_and_grad(x + 1e-4 * rng.standard_normal(x.size) * sc)
+        n += 1
+    bk.synchronize(xp)
+    wall = time.perf_counter() - t0
+    out = {"seconds": wall, "evaluations": n, "per_evaluation_s": wall / n}
+    if proc is not None:
+        proc.terminate()
+        per_card: dict = {}
+        for line in proc.communicate()[0].splitlines():
+            try:
+                card, value = (v.strip() for v in line.split(","))
+                per_card.setdefault(int(card), []).append(float(value))
+            except ValueError:
+                continue
+        # the samples from one period after the start (the figure lags by its period) to the end
+        skip = 6 + 5
+        busiest = max(per_card.values(), key=lambda v: sum(v[skip:]) / max(1, len(v[skip:])), default=[])
+        kept = busiest[skip:]
+        if kept:
+            out.update(utilization_mean=sum(kept) / len(kept), utilization_min=min(kept), utilization_max=max(kept),
+                       utilization_samples=len(kept))
+    return out
 
 
 def tiling_check(model, x_tiled, e_two: float) -> dict:
@@ -431,6 +506,23 @@ def one_size(dk, nc: int, cp, args) -> dict:
                 row["host_runs"].append(run)
                 ew.release()
         row["host"] = min(row["host_runs"], key=lambda r: r["whole_s"])  # the faster one: what a device has to beat
+        # the batched form on the host, at the thread count the loops were fastest with: the same
+        # numbers to rounding, and what the host itself gains from the reorganisation
+        with threadpool_limits(limits=row["host"]["blas_threads"], user_api="blas"):
+            model.xp = np
+            try:
+                c, e_b, g_b, whole_b = evaluate(model, x, np, 1 if row["host"]["whole_s"] > 20.0 else args.repeat)
+                row["host_batched"] = {"blas_threads": row["host"]["blas_threads"], "whole_s": whole_b, "dipole_step_s": c["seconds"],
+                                       "energy": e_b, "parts_s": parts_of(model, x, np),
+                                       "difference_from_loops": {"energy": abs(e_b - e_host) / max(1.0, abs(e_host)),
+                                                                 "gradient": float(np.abs(g_b - g_host).max() / np.abs(g_host).max())}}
+            finally:
+                model.xp = None
+            hb = row["host_batched"]
+            log(f"   host, batched form, {hb['blas_threads']} BLAS thread(s): whole evaluation {whole_b:.2f} s, of which the dipole step "
+                f"{c['seconds']:.2f} s; against the loops: energy {hb['difference_from_loops']['energy']:.1e}, gradient "
+                f"{hb['difference_from_loops']['gradient']:.1e}")
+            ew.release()
     if cp is None:
         return row
     pool = cp.get_default_memory_pool() if hasattr(cp, "get_default_memory_pool") else None
@@ -456,6 +548,27 @@ def one_size(dk, nc: int, cp, args) -> dict:
         row["sites"], row["k_vectors"] = st["sites"], st["k_vectors"]
         log(f"   device: tensor and field {st['tensor_s']:.3f} s, solve {st['solve_s']:.3f} s, gradient {st['gradient_s']:.3f} s; "
             f"memory pool {dev['pool_gb_peak']:.2f} GB")
+        dev["parts_s"] = parts_of(model, x, cp)
+        ps = dev["parts_s"]
+        log("   device: the evaluation part by part (ms): " + ", ".join(f"{k} {1e3 * v:.1f}" for k, v in ps.items() if k not in ("host_parts", "all"))
+            + f"; the host's parts ({', '.join(HOST_PARTS)}) {1e3 * ps['host_parts']:.1f} of {1e3 * ps['all']:.1f}")
+        if args.busy_seconds > 0:
+            dev["busy"] = busy_check(model, x, cp, args.busy_seconds)
+            b = dev["busy"]
+            log(f"   device: {b['evaluations']} evaluations back to back in {b['seconds']:.1f} s ({1e3 * b['per_evaluation_s']:.0f} ms each)"
+                + (f"; card utilisation {b['utilization_mean']:.0f}% (lowest sample {b['utilization_min']:.0f}%, highest {b['utilization_max']:.0f}%, "
+                   f"{b['utilization_samples']} samples)" if "utilization_mean" in b else "; no utilisation figure on this machine"))
+            if nc == min(args.chains):  # the form this replaces, on the same card: sums on the device, loops on the host
+                model.xp = "loops"
+                try:
+                    whole_l = evaluate(model, x, cp, args.repeat)
+                    dev["loop_form"] = {"whole_s": whole_l[3], "dipole_step_s": whole_l[0]["seconds"],
+                                        "busy": busy_check(model, x, cp, args.busy_seconds)}
+                finally:
+                    model.xp = None
+                lf = dev["loop_form"]
+                log(f"   device, loop form (the sums on the card, the rest in host loops, as before): whole evaluation {lf['whole_s']:.3f} s"
+                    + (f"; card utilisation {lf['busy']['utilization_mean']:.0f}%" if "utilization_mean" in lf["busy"] else ""))
         dev["gradient_check"] = directional_check(model, x, g_dev)
         dev["tiling_check"] = tiling_check(model, x_tiled, e_two)
         log(f"   device: gradient against its own energy difference: relative error {dev['gradient_check']['relative_error']:.1e}; "
@@ -472,7 +585,7 @@ def one_size(dk, nc: int, cp, args) -> dict:
             log(f"   device against host: largest relative difference {diff['largest']:.1e} "
                 f"(energy {diff['whole.energy']:.1e}, gradient {diff['whole.gradient']:.1e}, tensor {diff['tensor']:.1e})")
             log(f"   speedup against the host on {row['host']['blas_threads']} thread(s): whole evaluation {dev['speedup_whole']:.1f}x, "
-                f"dipole step {dev['speedup_dipole_step']:.1f}x; left on the host: {whole - polar:.2f} s of {whole:.2f} s")
+                f"dipole step {dev['speedup_dipole_step']:.1f}x; outside the dipole step: {whole - polar:.3f} s of {whole:.3f} s")
         if not args.no_extras:
             dev["extras"] = extras(cp, dev_res, st["sites"], st["k_vectors"])
             log(f"   extras: {json.dumps(dev['extras'], default=float)}")
@@ -515,7 +628,7 @@ def all_devices(args, n: int) -> list:
     for i in range(n):
         out = Path(args.out).with_suffix(f".device{i}.json")
         cmd = [sys.executable, __file__, "--chains", *map(str, args.chains), "--host-max-chains", "0", "--repeat", str(args.repeat),
-               "--device", "0", "--no-extras", "--out", str(out)]
+               "--device", "0", "--no-extras", "--busy-seconds", "0", "--out", str(out)]
         with open(out.with_suffix(".log"), "w") as fh:  # the child keeps its own copy of the handle
             procs.append((i, out, subprocess.Popen(cmd, env={**os.environ, "CUDA_VISIBLE_DEVICES": str(i)},
                                                    stdout=fh, stderr=subprocess.STDOUT)))
@@ -534,11 +647,13 @@ def main() -> None:
     ap.add_argument("--repeat", type=int, default=3)
     ap.add_argument("--host-threads", type=int, nargs="+", default=None, help="BLAS thread counts the host is timed at "
                     "(default: 1, the package's own setting; 8; and every core this process is allotted, which in a "
-                    "container is the quota and not what the machine has)")
+                    "container is the quota and not what the machine has; 0 stands for that last count)")
     ap.add_argument("--device", default="auto", help="'auto', a device number, 'none' for the host columns alone, or 'double' "
                     "for the tests' NumPy-backed stand-in (no speed in it: it checks the script and the port's bookkeeping "
                     "on a machine without a GPU)")
     ap.add_argument("--no-extras", action="store_true", help="skip the two side measurements")
+    ap.add_argument("--busy-seconds", type=float, default=8.0, help="how long evaluations run back to back while the card's "
+                    "utilisation is sampled (0 to skip)")
     ap.add_argument("--all-devices", action="store_true", help="after the run, repeat it on every visible device at once")
     ap.add_argument("--out", default="ewald_device_benchmark.json")
     args = ap.parse_args()
@@ -546,13 +661,15 @@ def main() -> None:
     from polyfind import backend as bk
     from polyfind.fitting import PRESET_PARAMETERS
 
-    # The short-range pair sums of a mixed cell are host loops in float64.  Left to itself the
-    # package moves its batched kernels to a GPU in float32 wherever it finds one; that backend is
-    # for the screen, not for this, and the cell refuses it.
+    # A mixed cell is evaluated in float64.  Left to itself the package moves its *screening*
+    # kernels to a GPU in float32 wherever it finds one; that backend is for the screen, not for
+    # this, and the cell refuses a packer built for it.  The device this script is about is the
+    # one the Ewald object is given below, which the model's batched form follows.
     bk.set_backend("cpu")
+    cores = allotted_cores()["cores"]
     if args.host_threads is None:
-        cores = allotted_cores()["cores"]
         args.host_threads = sorted({1, min(8, cores), cores})
+    args.host_threads = sorted({cores if t == 0 else t for t in args.host_threads})  # 0: every allotted core
     cp, why = device_module(args.device)
     result = {"machine": machine(cp), "preset": PRESET, "row": ROW, "batched_kernels": "host, float64",
               "host_blas_threads_timed": args.host_threads, "rows": []}

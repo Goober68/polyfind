@@ -834,6 +834,120 @@ def charge_dipole_exclusion(coords, charges, c: float, scales, dipoles=None, pre
     return e, gX, gc, gq, F
 
 
+# ------------------------------------------------ bonded exclusions, all chains of a cell at once
+@dataclass(frozen=True)
+class ExclusionPairs:
+    """The bonded pairs of every chain of a cell as flat lists.
+
+    One entry per ``(image k, site i, site j)`` of a chain whose scale differs from 1, for every
+    chain: ``i`` and ``j`` index the sites of the *cell*, ``k`` is the image of ``j`` along z in
+    the *placed* frame (a flipped chain's own image ``k`` is the placed ``-k``), and ``w`` is
+    ``1 - scale``.  The dense routines above evaluate ``(2K + 1) n^2`` terms per chain of which a
+    few hundred are not zero; these lists are those few hundred, for all chains in one array, so
+    the corrections of a cell of any number of chains are a fixed number of array operations.
+    """
+
+    i: np.ndarray
+    j: np.ndarray
+    k: np.ndarray
+    w: np.ndarray
+    n_sites: int
+
+    def __len__(self) -> int:
+        return int(self.i.size)
+
+
+def exclusion_pairs(scales, flipped, select=None) -> ExclusionPairs:
+    """:class:`ExclusionPairs` of a cell whose chains all carry the stack ``scales`` (``(2K+1, n, n)``).
+
+    ``flipped`` has one flag per chain (a mirrored chain reads the stack reversed, as
+    :func:`charge_dipole_exclusion` is told to with ``scales[::-1]``); ``select`` (``(n,)`` bool)
+    keeps the pairs both of whose sites are selected -- the electrostatically active sites, since
+    a site with no charge and no dipole contributes nothing to either correction.
+    """
+    Sk = np.asarray(scales, dtype=float)
+    n = Sk.shape[1]
+    K = (Sk.shape[0] - 1) // 2
+    w = 1.0 - Sk
+    live = np.abs(w) > 0.0
+    live[K, np.arange(n), np.arange(n)] = False  # the site with itself: the Ewald self term
+    if select is not None:
+        sel = np.asarray(select, dtype=bool)
+        live &= sel[None, :, None] & sel[None, None, :]
+    kk, ii, jj = np.nonzero(live)
+    ww = w[kk, ii, jj]
+    kz = (kk - K).astype(float)
+    fl = np.asarray(flipped, dtype=bool).ravel()
+    base = (np.arange(fl.size) * n)[:, None]
+    sign = np.where(fl, -1.0, 1.0)[:, None]
+    return ExclusionPairs(i=(base + ii[None, :]).ravel(), j=(base + jj[None, :]).ravel(),
+                          k=(sign * kz[None, :]).ravel(), w=np.tile(ww, fl.size), n_sites=int(fl.size * n))
+
+
+def _scatter(idx, W, n: int) -> np.ndarray:
+    """``out[idx[e]] += W[e]`` for vectors: (L,) indices, (L, 3) values -> (n, 3)."""
+    return np.stack([np.bincount(idx, weights=W[:, c], minlength=n) for c in range(3)], axis=1)
+
+
+def exclusion_correction_pairs(coords, charges, c: float, pairs: ExclusionPairs, pref: float = COULOMB,
+                               charge_damping: float | None = None):
+    """:func:`exclusion_correction` of every chain of a cell at once: ``(E, dE/dcoords (N, 3), dE/dc)``.
+
+    ``coords`` and ``charges`` are the cell's, in the placed frame; the sum of the per-chain
+    corrections, which do not depend on the frame."""
+    X = np.asarray(coords, dtype=float).reshape(-1, 3)
+    q = np.asarray(charges, dtype=float).reshape(-1)
+    d = X[pairs.i] - X[pairs.j]
+    d[:, 2] -= pairs.k * float(c)
+    r2 = np.einsum("ec,ec->e", d, d)
+    r = np.sqrt(r2)
+    u = pairs.w * q[pairs.i] * q[pairs.j]
+    h = 1.0 / r
+    hp_over_r = -1.0 / (r2 * r)
+    if charge_damping is not None:
+        bq = float(charge_damping)
+        ebr = np.exp(-bq * r)
+        h = h - (1.0 + 0.5 * bq * r) * ebr / r
+        hp_over_r = hp_over_r + ebr * ((0.5 * bq + 0.5 * bq * bq * r) / r + (1.0 + 0.5 * bq * r) / r2) / r
+    e = -0.5 * pref * float((u * h).sum())
+    f = (-pref * u * hp_over_r)[:, None] * d
+    N = X.shape[0]
+    gX = 0.5 * (_scatter(pairs.i, f, N) - _scatter(pairs.j, f, N))
+    gc = -0.5 * float((f[:, 2] * pairs.k).sum())
+    return e, gX, gc
+
+
+def charge_dipole_exclusion_pairs(coords, charges, c: float, pairs: ExclusionPairs, dipoles=None,
+                                  pref: float = COULOMB, grad: bool = False):
+    """:func:`charge_dipole_exclusion` of every chain of a cell at once.
+
+    Returns ``(E, dE/dcoords (N, 3), dE/dc, F (N, 3))`` with the dense routine's conventions; the
+    field ``F`` is returned whatever ``dipoles`` is.  A site outside the lists' selection gets no
+    field: it has no dipole for one to act on."""
+    X = np.asarray(coords, dtype=float).reshape(-1, 3)
+    q = np.asarray(charges, dtype=float).reshape(-1)
+    N = X.shape[0]
+    i, j = pairs.i, pairs.j
+    R = X[i] - X[j]
+    R[:, 2] -= pairs.k * float(c)
+    r2 = np.einsum("ec,ec->e", R, R)
+    inv3 = pairs.w / (r2 * np.sqrt(r2))
+    qi, qj = q[i], q[j]
+    F = 0.5 * pref * (_scatter(j, (inv3 * qi)[:, None] * R, N) - _scatter(i, (inv3 * qj)[:, None] * R, N))
+    if dipoles is None:
+        return 0.0, None, None, F
+    p = np.asarray(dipoles, dtype=float).reshape(N, 3)
+    pi, pj = p[i], p[j]
+    cross = qi * np.einsum("ec,ec->e", R, pj) - qj * np.einsum("ec,ec->e", R, pi)
+    e = -0.5 * pref * float((inv3 * cross).sum())
+    gX = gc = None
+    if grad:
+        G = pref * (inv3[:, None] * (qi[:, None] * pj - qj[:, None] * pi) - (3.0 * inv3 / r2 * cross)[:, None] * R)
+        gX = -0.5 * (_scatter(i, G, N) - _scatter(j, G, N))
+        gc = 0.5 * float((pairs.k * G[:, 2]).sum())
+    return e, gX, gc, F
+
+
 # --------------------------------------------------------------------- validation
 def madelung_nacl(spec: EwaldSpec | None = None, rc: float = 12.0, a: float = 1.0) -> float:
     """Madelung constant of the rock-salt lattice from this module's own sum.

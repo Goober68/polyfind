@@ -8,15 +8,20 @@
 #
 # It installs the package and CuPy (into a virtual environment of its own where the image lets it
 # make one), makes sure CuPy can reach the device and its libraries, runs the device tests (the
-# Ewald sum, the dipole solve and a whole evaluation against the host), and then the benchmark
-# (examples/ewald_device_benchmark.py): sixteen chains first, a few minutes; then thirty-two and
-# sixty-four, where the host's own evaluations take most of the time; then a hundred and
-# twenty-eight on the device alone.  Everything printed is also in ewald_bench_<time>/log.txt,
-# and the JSON files beside it are the result.
+# Ewald sum, the dipole solve, the batched evaluation of a cell, each against the host), and then
+# the benchmark (examples/ewald_device_benchmark.py): sixteen chains first, with the host timed
+# beside the device; then thirty-two and sixty-four and a hundred and twenty-eight on the device
+# alone, held to the stored two-chain cell and to its own energy differences.  The whole run is
+# a few minutes, nearly all of it with the card at work.  Everything printed is also in
+# ewald_bench_<time>/log.txt, and the JSON files beside it are the result.
 #
 #   EWALD_BENCH_OUT=/some/dir    where the log and the JSON files go (default ewald_bench_<time>/)
 #   EWALD_BENCH_CHAINS="16 32"   stop at thirty-two chains
 #   EWALD_BENCH_LARGE=0          skip the device-only 128-chain run
+#   EWALD_BENCH_HOST_MAX=64      time the host up to sixty-four chains (minutes of CPU work per
+#                                size, the card idle meanwhile; default 16)
+#   EWALD_BENCH_HOST_THREADS="1 8 0"   the BLAS thread counts the host is timed at (0: every core
+#                                the process is allotted, which is the default)
 #   EWALD_BENCH_DRY=1            no GPU needed: the same steps on small cells with the tests'
 #                                NumPy-backed stand-in for the device (checks this script itself)
 set -euo pipefail
@@ -88,15 +93,23 @@ fi
 export POLYFIND_DEVICE=cpu
 
 echo "== device tests =="
-"$PY" -m pytest tests/test_ewald_device.py tests/test_gpu.py -q -k "ewald or double or device or dipole" -p no:cacheprovider
+"$PY" -m pytest tests/test_ewald_device.py tests/test_mixed_batched.py tests/test_gpu.py -q -k "ewald or double or device or dipole or batched or mixed" -p no:cacheprovider
 
 echo "== benchmark =="
 if [ "$DRY" = "1" ]; then CHAINS="${EWALD_BENCH_CHAINS:-2 4}"; else CHAINS="${EWALD_BENCH_CHAINS:-16 32 64}"; fi
+# A host baseline is CPU work with the card idle, and a rented card is paid for by the minute: by
+# default the host is timed at the first size alone and at one thread count, every core the
+# process is allotted (the fastest of the three the first A100 run timed).  The full set:
+#   EWALD_BENCH_HOST_MAX=64 EWALD_BENCH_HOST_THREADS="1 8 0"     (0 stands for every allotted core)
+HOSTMAX="${EWALD_BENCH_HOST_MAX:-16}"
+THREADS="${EWALD_BENCH_HOST_THREADS:-0}"
 FIRST="${CHAINS%% *}"
-"$PY" examples/ewald_device_benchmark.py --device "$DEVICE" --chains $FIRST --out "$OUT/ewald_device_benchmark_$FIRST.json"
+"$PY" examples/ewald_device_benchmark.py --device "$DEVICE" --chains $FIRST --host-max-chains "$HOSTMAX" --host-threads $THREADS \
+  --out "$OUT/ewald_device_benchmark_$FIRST.json"
 REST="${CHAINS#"$FIRST"}"
 if [ -n "${REST// /}" ]; then
-  "$PY" examples/ewald_device_benchmark.py --device "$DEVICE" --chains $REST --all-devices --out "$OUT/ewald_device_benchmark.json"
+  "$PY" examples/ewald_device_benchmark.py --device "$DEVICE" --chains $REST --host-max-chains "$HOSTMAX" --host-threads $THREADS \
+    --all-devices --out "$OUT/ewald_device_benchmark.json"
 fi
 if [ "${EWALD_BENCH_LARGE:-1}" = "1" ]; then
   # no host run at this size (it would take the better part of an hour); the device is held to the

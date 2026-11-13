@@ -255,6 +255,8 @@ def test_the_induced_dipole_evaluation_on_a_device_is_the_hosts():
     np.testing.assert_allclose(g_dev, g_host, rtol=0, atol=1e-10 * max(1.0, float(np.abs(g_host).max())))
     assert isinstance(g_dev, np.ndarray)
     # the largest thing brought back is a per-site array, not the (3 Na)^2 matrix or the tensor
-    assert first["largest_to_host"] <= 8 * 3 * na < 8 * 9 * na * na
-    # the Thole table went over once, with the first evaluation, and not again
-    assert first["largest_to_device"] == 8 * na * na and second["largest_to_device"] < 8 * na * na
+    # (per site of the cell: with the Ewald sums on a device the pair sums are there too)
+    assert first["largest_to_host"] <= 8 * 3 * m.pk.N < 8 * 9 * na * na
+    # the cell's tables (Thole lengths, pair tables, bonded scales) went over once, with the first
+    # evaluation, and not again
+    assert first["largest_to_device"] >= 8 * na * na and second["largest_to_device"] < 8 * na * na

@@ -370,6 +370,10 @@ def test_tilt_relaxation_matches_the_packers_own():
         theirs = PD.tilt_relaxation(ref, pb)
         assert dE == pytest.approx(theirs.dE_per_cell, abs=1e-7) and dE < -0.5
         assert len(groups) == len(theirs.groups) and tilts.shape == (len(groups), 3)
+        m.xp = np  # the model's batched form of the same evaluations (tests/test_mixed_batched.py)
+        dE_batched, tilts_batched, _ = MC.tilt_relaxation(m, x)
+        assert dE_batched == pytest.approx(dE, abs=1e-6)
+        np.testing.assert_allclose(tilts_batched, tilts, atol=1e-2)
 
 
 def _muller_brown(X):

@@ -45,15 +45,27 @@ for the packer's cell.
 """
 from __future__ import annotations
 
+import os
+import time
 from dataclasses import dataclass, replace
 
 import numpy as np
 from scipy.optimize import minimize
 
 from . import backend as bk
+from . import chainjac as CJ
 from . import phonon as PH
-from .linegroup import repeat_chains_and_jacobian
-from .pack import PeriodicChain
+from .ewald import exclusion_correction_pairs
+from .forcefield import COULOMB
+from .linegroup import _windows, repeat_chains_and_jacobian
+from .pack import (
+    PeriodicChain,
+    _block_atoms,
+    _derfc_pos,
+    _erfc_pos,
+    _finish_repeat_chains,
+    _template,
+)
 
 __all__ = [
     "MixedModel",
@@ -88,7 +100,7 @@ def lattice_rows(A: float, B: float, gamma_deg: float, c: float) -> np.ndarray:
 
 
 # ----------------------------------------------------------------------- the energy
-def placed_energy_and_grad(packer, frames, Pn, latn, valences=None):
+def placed_energy_and_grad(packer, frames, Pn, latn, valences=None, xp=None, timings=None):
     """``(E, dE/dPn (N, 3), dE/dlattice (3, 3))`` of ``n_chains`` placed chains of one sequence.
 
     ``packer`` is a :class:`~polyfind.pack.CrystalPacker` built with ``n_chains`` equal to the
@@ -104,6 +116,15 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None):
     lattice derivative is taken at fixed Cartesian coordinates, the packer's own convention; its
     ``[2, 2]`` entry is ``dE/dc`` and carries every dependence on the repeat (the image shifts
     of the same-site columns and of the exclusions included).
+
+    ``xp`` chooses how the sums are organised.  ``None`` is the loop over chains and chain pairs
+    below, on the host, block by block: the form every stored number was computed with.  An
+    array module -- NumPy itself, or a device's -- evaluates the same terms as a fixed number of
+    array operations whatever the number of chains (:func:`_placed_batched`): the pair sums of
+    all chain pairs as one stack of blocks on that module, the bonded exclusions and the
+    valence terms of all chains from flat lists.  The two agree to rounding, not bit for bit
+    (the sums are taken in another order).  ``timings``, a dict, receives the seconds each part
+    of the batched form took.
     """
     n, N, nc = packer.n, packer.N, packer.n_chains
     Pn = np.asarray(Pn, dtype=float).reshape(N, 3)
@@ -115,6 +136,8 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None):
         raise ValueError("an applied field is not carried by the mixed cell; clear it with set_field(None)")
     if abs(latn[0, 2]) + abs(latn[1, 2]) + abs(latn[2, 0]) + abs(latn[2, 1]) > 1e-12:
         raise ValueError("the mixed cell wants c along z and the other two lattice vectors in the plane")
+    if xp is not None:
+        return _placed_batched(packer, frames, Pn, latn, valences, xp, timings)
     cz = float(latn[2, 2])
     rc, rc2 = float(packer.rc), float(packer.rc2)
     K = int(np.ceil(rc / cz)) + 1
@@ -227,6 +250,287 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None):
     return E, gP, glat
 
 
+# ------------------------------------------- the same energy as a fixed number of array operations
+HOST_BLOCK_ELEMS = 120_000    # pair elements per stack of blocks on the host: what stays in cache
+DEVICE_BLOCK_ELEMS = 8_000_000  # and on a device, where one large stack is one launch
+
+
+class _Stopwatch:
+    """Adds the time since the last mark to ``timings[name]``.  On a device the mark waits for the
+    device first: a device call returns when the work is queued, not when it is done."""
+
+    def __init__(self, timings, xp=np):
+        self.timings, self.xp = timings, xp
+        self.last = time.perf_counter() if timings is not None else 0.0
+
+    def __call__(self, name: str) -> None:
+        if self.timings is None:
+            return
+        if self.xp is not np:
+            bk.synchronize(self.xp)
+        now = time.perf_counter()
+        self.timings[name] = self.timings.get(name, 0.0) + (now - self.last)
+        self.last = now
+
+
+def _pair_kernel(xp, r2, tab, rc2: float, alpha: float):
+    """``(V, 2 dV/dr^2)`` of the packer's pair potential on squared distances, on any array module.
+
+    The expressions of :meth:`polyfind.pack.CrystalPacker._pair_energy_and_dv` with its mask;
+    ``tab`` is ``(A, B, qq or None, qq_f, const)`` on that module (``qq`` is ``None`` under Ewald,
+    where the kernel carries no Coulomb term).  The factor two of ``dV/d(separation vector) =
+    2 dV/dr^2 * (separation vector)`` is folded in."""
+    A, B, qq, qqf, cst = tab
+    mask = (r2 < rc2) & (r2 > 1e-8)
+    r2s = xp.where(mask, r2, 1.0)
+    rr = xp.sqrt(r2s)
+    ir6 = 1.0 / (r2s * r2s * r2s)
+    y = A * ir6
+    v = ir6 * (y - B) + qqf * rr + cst
+    t2 = 6.0 * ir6 * (B - 2.0 * y) / r2s + qqf / rr
+    if qq is not None:
+        ar = alpha * rr
+        ef = _erfc_pos(ar, xp)
+        v = v + qq * (ef / rr)
+        t2 = t2 + qq * (alpha * _derfc_pos(ar, xp) / rr - ef / r2s) / rr
+    return xp.where(mask, v, 0.0), xp.where(mask, t2, 0.0)
+
+
+def _module_key(xp) -> str:
+    return getattr(xp, "__name__", repr(xp))
+
+
+def _pair_tables(packer, xp) -> tuple:
+    """The repeat's pair tables ``(A, B, qq or None, qq_f, const)``, each ``(n, n)``, on ``xp``.
+    Kept on the packer per array module: they depend on the topology and the charges alone."""
+    cache = packer.__dict__.setdefault("_mixed_pair_tables", {})
+    key = (_module_key(xp), id(packer._q_cell))
+    hit = cache.get(key)
+    if hit is None:
+        n = packer.n
+        q = np.asarray(packer._q_cell[:n], dtype=float)
+        qq, qqf, cst = PH._charge_tables(packer, q, q)
+        A = np.asarray(bk.to_numpy(packer._A_nn), dtype=float)
+        B = np.asarray(bk.to_numpy(packer._B_nn), dtype=float)
+        cache.clear()
+        hit = cache[key] = (xp.asarray(A), xp.asarray(B), None if packer._ewald is not None else xp.asarray(qq),
+                            xp.asarray(qqf), xp.asarray(cst))
+    return hit
+
+
+def _scale_stack(packer, K: int, xp) -> tuple:
+    """The bonded-scale stack ``(2K+1, n, n)`` on ``xp`` with the two index grids that gather from it."""
+    cache = packer.__dict__.setdefault("_mixed_scale_stacks", {})
+    key = (_module_key(xp), int(K))
+    hit = cache.get(key)
+    if hit is None:
+        n = packer.n
+        ar = xp.arange(n)
+        if len(cache) > 4:
+            cache.clear()
+        hit = cache[key] = (xp.asarray(packer._scale_column_np(K)), ar[None, :, None], ar[None, None, :])
+    return hit
+
+
+def _chain_pair_blocks(P3, latn, rc: float) -> tuple:
+    """Every (chain, chain, lateral image) that can hold a pair of sites inside the cutoff.
+
+    ``(s, t, i, j, shift (nb, 2))``: chain ``s`` against chain ``t`` moved by ``i A + j B``, each
+    unordered block once -- ``s < t`` with any image, and a chain with its own images in one
+    half plane (the other half is the same blocks seen from the other side).  The test of the
+    loop form, then one more that needs no pair distances: the nearest site of one chain to the
+    moved centre of the other is at least the other's radius nearer than any of its sites.
+    """
+    nc = P3.shape[0]
+    A2, B2 = latn[0, :2], latn[1, :2]
+    area = abs(A2[0] * B2[1] - A2[1] * B2[0])
+    wa, wb = area / float(np.linalg.norm(B2)), area / float(np.linalg.norm(A2))
+    Minv = np.linalg.inv(np.array([A2, B2]))  # lateral Cartesian -> fractional (row vectors)
+    xy = P3[:, :, :2]
+    cen = xy.mean(axis=1)
+    rad = np.sqrt(((xy - cen[:, None, :]) ** 2).sum(axis=-1)).max(axis=1)
+    s, t = np.triu_indices(nc)
+    reach = rc + rad[s] + rad[t]
+    d0 = cen[s] - cen[t]
+    f0 = d0 @ Minv
+    ri, rj = int(np.ceil(float(reach.max()) / wa)) + 1, int(np.ceil(float(reach.max()) / wb)) + 1
+    di, dj = (g.ravel() for g in np.meshgrid(np.arange(-ri, ri + 1), np.arange(-rj, rj + 1), indexing="ij"))
+    I = np.round(f0[:, 0]).astype(int)[:, None] + di[None, :]
+    J = np.round(f0[:, 1]).astype(int)[:, None] + dj[None, :]
+    shx, shy = I * A2[0] + J * B2[0], I * A2[1] + J * B2[1]
+    keep = np.hypot(d0[:, 0:1] - shx, d0[:, 1:2] - shy) < reach[:, None]
+    keep &= (s != t)[:, None] | (I > 0) | ((I == 0) & (J > 0))
+    pi, im = np.nonzero(keep)
+    bs, bt, bi, bj = s[pi], t[pi], I[pi, im], J[pi, im]
+    sh = np.stack([shx[pi, im], shy[pi, im]], axis=1)
+    da = np.sqrt(((xy[bs] - (cen[bt] + sh)[:, None, :]) ** 2).sum(axis=-1)).min(axis=1) - rad[bt]
+    db = np.sqrt(((xy[bt] - (cen[bs] - sh)[:, None, :]) ** 2).sum(axis=-1)).min(axis=1) - rad[bs]
+    near = (da < rc) & (db < rc)
+    return bs[near], bt[near], bi[near], bj[near], sh[near]
+
+
+def _pair_sums(packer, P3, latn, flips, K: int, xp, block_elems: int | None = None):
+    """The pair energy of the placed cell, ``(E, dE/dP (nc, n, 3), dE/dlattice (3, 3))``, on ``xp``.
+
+    Two stacks of ``(n, n)`` blocks through one kernel.  The blocks of
+    :func:`_chain_pair_blocks`, at weight one, each site pair at its nearest image along z and
+    as many further images either side as the cutoff can reach (none once ``c`` is at least
+    twice the cutoff); and every chain against itself at no lateral shift, at half weight with
+    the bonded scales gathered by image -- for a flipped chain by minus the image, since the
+    stack is the chain's own frame's.  The lattice derivative follows the loop form's
+    convention: the same-site column gives its ``[2, 2]`` entry alone.
+    """
+    nc, n = P3.shape[0], P3.shape[1]
+    cz, rc, rc2 = float(latn[2, 2]), float(packer.rc), float(packer.rc2)
+    alpha = float(packer.alpha)
+    if block_elems is None:
+        block_elems = HOST_BLOCK_ELEMS if xp is np else DEVICE_BLOCK_ELEMS
+    per = max(1, int(block_elems) // (n * n))
+    bs, bt, bi, bj, sh = _chain_pair_blocks(P3, latn, rc)
+    tab = _pair_tables(packer, xp)
+    Pd = xp.asarray(P3)
+    reach_k = max(0, int(np.ceil(rc / cz - 0.5)))  # images either side of the nearest that the cutoff reaches
+    offsets = [float(o) for o in range(-reach_k, reach_k + 1)]
+    inv_cz = 1.0 / cz
+    E = 0.0
+    g3 = xp.zeros((nc, n * 3))
+    lat01 = xp.zeros((2, 3))
+    lat2 = xp.zeros(3)
+    chain_ids = xp.arange(nc)
+    ij = np.stack([bi, bj]).astype(float)
+
+    def forces(t2, dx, dy, dz):
+        fx, fy, fz = t2 * dx, t2 * dy, t2 * dz
+        on_first = xp.stack([fx.sum(axis=2), fy.sum(axis=2), fz.sum(axis=2)], axis=2)
+        on_second = xp.stack([fx.sum(axis=1), fy.sum(axis=1), fz.sum(axis=1)], axis=2)
+        return fx, fy, fz, on_first, on_second
+
+    for lo in range(0, bs.size, per):
+        hi = min(lo + per, bs.size)
+        sd, td, shd = xp.asarray(bs[lo:hi]), xp.asarray(bt[lo:hi]), xp.asarray(sh[lo:hi])
+        Pa, Pb = Pd[sd], Pd[td]
+        dx = Pa[:, :, None, 0] - (Pb[:, :, 0] + shd[:, 0][:, None])[:, None, :]
+        dy = Pa[:, :, None, 1] - (Pb[:, :, 1] + shd[:, 1][:, None])[:, None, :]
+        dz0 = Pa[:, :, None, 2] - Pb[:, None, :, 2]
+        dxy2 = dx * dx + dy * dy
+        kn = xp.round(dz0 * inv_cz)
+        gs = gt = None
+        for off in offsets:
+            kel = kn + off if off else kn
+            dz = dz0 - kel * cz
+            v, t2 = _pair_kernel(xp, dxy2 + dz * dz, tab, rc2, alpha)
+            E = E + v.sum()
+            fx, fy, fz, a, b = forces(t2, dx, dy, dz)
+            gs, gt = (a, b) if gs is None else (gs + a, gt + b)
+            # the image shift is i A + j B + k C, and dE/d(shift) = -sum of the pair forces
+            lat2 = lat2 - xp.stack([(kel * fx).sum(), (kel * fy).sum(), (kel * fz).sum()])
+        nb = hi - lo
+        hot_s = (chain_ids[:, None] == sd[None, :]).astype(float)
+        hot_t = (chain_ids[:, None] == td[None, :]).astype(float)
+        g3 = g3 + hot_s @ gs.reshape(nb, n * 3) - hot_t @ gt.reshape(nb, n * 3)
+        lat01 = lat01 - xp.asarray(np.ascontiguousarray(ij[:, lo:hi])) @ gs.sum(axis=1)
+
+    Sd, row, col = _scale_stack(packer, K, xp)
+    sign = xp.asarray(np.where(np.asarray(flips, dtype=bool), -1.0, 1.0))
+    lat22 = 0.0
+    for lo in range(0, nc, per):
+        hi = min(lo + per, nc)
+        Pc = Pd[lo:hi]
+        dx = Pc[:, :, None, 0] - Pc[:, None, :, 0]
+        dy = Pc[:, :, None, 1] - Pc[:, None, :, 1]
+        dz0 = Pc[:, :, None, 2] - Pc[:, None, :, 2]
+        dxy2 = dx * dx + dy * dy
+        kn = xp.round(dz0 * inv_cz)
+        sg = sign[lo:hi][:, None, None]
+        for off in offsets:
+            kel = kn + off if off else kn
+            dz = dz0 - kel * cz
+            v, t2 = _pair_kernel(xp, dxy2 + dz * dz, tab, rc2, alpha)
+            inside = abs(kel) <= K  # the loop form's own range of images
+            kidx = (xp.where(inside, sg * kel, 0.0) + K).astype(np.int64)
+            wgt = xp.where(inside, Sd[kidx, row, col], 0.0)
+            E = E + 0.5 * (v * wgt).sum()
+            fx, fy, fz, a, b = forces(t2 * wgt, dx, dy, dz)
+            g3[lo:hi] += 0.5 * (a - b).reshape(hi - lo, n * 3)
+            lat22 = lat22 - 0.5 * (kel * fz).sum()
+
+    glat = np.zeros((3, 3))
+    glat[:2] = bk.to_numpy(lat01)
+    glat[2] = bk.to_numpy(lat2)
+    glat[2, 2] += float(lat22)
+    return float(E), np.asarray(bk.to_numpy(g3), dtype=float).reshape(nc, n, 3), glat
+
+
+def _valence_groups(packer, valences, nc: int) -> list:
+    """``[(ChainValence, chain indices)]``: the chains that share one valence object, together."""
+    if valences is None:
+        return [] if packer._valence is None else [(packer._valence, np.arange(nc))]
+    groups: dict = {}
+    for s, val in enumerate(valences):
+        if val is not None:
+            groups.setdefault(id(val), (val, []))[1].append(s)
+    return [(val, np.array(chains)) for val, chains in groups.values()]
+
+
+def _placed_batched(packer, frames, Pn, latn, valences, xp, timings=None):
+    """:func:`placed_energy_and_grad` as a fixed number of array operations: see there."""
+    n, N, nc = packer.n, packer.N, packer.n_chains
+    cz, rc = float(latn[2, 2]), float(packer.rc)
+    K = int(np.ceil(rc / cz)) + 1
+    flips = frames[:, 2, 2] < 0.0
+    P3 = Pn.reshape(nc, n, 3)
+    mark = _Stopwatch(timings, xp)
+    E = 0.0
+    gP = np.zeros((N, 3))
+    glat = np.zeros((3, 3))
+    g3 = gP.reshape(nc, n, 3)
+
+    # --- valence, on the placed coordinates: a flipped chain's neighbouring repeats lie the other way
+    sign = np.where(flips, -1.0, 1.0)
+    for val, chains in _valence_groups(packer, valences, nc):
+        Ev, gv, gcv = val.energy_and_grad_batch(P3[chains], cz, image_sign=sign[chains])
+        E += Ev
+        g3[chains] += gv
+        glat[2, 2] += gcv
+    mark("valence")
+
+    # --- every pair of sites inside the cutoff, same-site columns included
+    Ep, gp, glp = _pair_sums(packer, P3, latn, flips, K, xp)
+    E += Ep
+    g3 += gp
+    glat += glp
+    mark("pair sums")
+
+    # --- electrostatics of an Ewald packer
+    if packer._ewald is not None:
+        q_cell = np.asarray(packer._q_cell, dtype=float)
+        pairs = packer._exclusion_pairs(K, flips)
+        if packer.polarizable is not None:
+            e_es, _, _, (gPe, glate, _, gce) = packer._polarize(Pn, q_cell, latn, flips.astype(float), grad=True, pairs=pairs)
+            glat[2, 2] += float(gce)
+        else:
+            idx = packer._es_idx
+            if idx is None:
+                terms = packer._ewald.terms(Pn, q_cell, latn, grad=True)
+                gPe = terms.grad_coords
+            else:
+                terms = packer._ewald.terms(Pn[idx], q_cell[idx], latn, grad=True)
+                gPe = np.zeros((N, 3))
+                gPe[idx] = terms.grad_coords
+            e_es, glate = terms.total, terms.grad_lattice
+        E += float(e_es)
+        gP += gPe
+        glat += glate
+        mark("electrostatics")
+        ex_e, ex_g, ex_c = exclusion_correction_pairs(Pn, q_cell, cz, pairs, pref=COULOMB / packer.eps_r,
+                                                      charge_damping=packer._ewald.charge_damping)
+        E += ex_e
+        gP += ex_g
+        glat[2, 2] += ex_c
+        mark("exclusions")
+    return E, gP, glat
+
+
 # ------------------------------------------------------------------------- the model
 @dataclass
 class MixedState:
@@ -312,11 +616,24 @@ class MixedModel:
     :func:`polyfind.refine.resolve_angle_stiffness`).  ``pen_rot`` (the refinement's
     commensurability penalty, per degree^2) and ``k_c`` (a penalty tying each chain's natural repeat
     to the cell's, kcal/mol/A^2) are zero by default: :meth:`relax` holds the closure exactly.
+
+    **Two forms of one evaluation.**  :meth:`value_and_grad` is either the loop over chains and
+    chain pairs every stored number was computed with, or the batched form
+    (:meth:`_value_and_grad_batched`): the same energy to rounding as a fixed number of array
+    operations, with the pair sums on an array module.  ``xp`` chooses: ``None`` (the default)
+    follows the packer's Ewald sums -- on a device when they are (``POLYFIND_EWALD_DEVICE=cuda``
+    and a cell of at least ``Ewald.device_min_sites`` sites), where the loops would leave the
+    device idle most of the evaluation, otherwise the loops, or the batched form on the host if
+    ``POLYFIND_MIXED_BATCHED=1``; an array module asks for the batched form on it (NumPy
+    included), and ``"loops"`` for the loops wherever the Ewald sums are.  ``timings``, set to a
+    dict, collects the seconds each part of the batched form takes.
     """
 
     def __init__(self, polymer, name: str, packer, flips, refs, angle_stiffness: float,
-                 pen_rot: float = 0.0, k_c: float = 0.0, valences=None):
+                 pen_rot: float = 0.0, k_c: float = 0.0, valences=None, xp=None):
         self.polymer, self.name, self.pk = polymer, name, packer
+        self.xp = xp
+        self.timings = None
         self.nc, self.n = int(packer.n_chains), int(packer.n)
         # The pair sums of a mixed cell are host loops in float64 that borrow the packer's kernel.
         # On a machine with a GPU the packer's batched kernels move to the device in float32 by
@@ -361,10 +678,10 @@ class MixedModel:
     def update_multipliers(self, x) -> tuple:
         """The first-order multiplier update at ``x``; returns the residuals it used,
         ``(max |w| in degrees, max |c_s - c| in A)``."""
-        c = float(np.asarray(x, dtype=float).ravel()[3])
-        built = self.build(x)[4]
-        w = np.array([b[3] for b in built])
-        dc = np.array([float(b[0].c) - c for b in built])
+        st = self.state(x)
+        chains, tr, _ = self._build_light(st.tors, st.angs, np.arange(self.nc))
+        w = np.degrees(tr["w"])
+        dc = np.array([float(ch.c) for ch in chains]) - float(st.lattice[3])
         self.lam_w = self.lam_w + 2.0 * self.pen_rot * w
         self.lam_c = self.lam_c + 2.0 * self.k_c * dc
         return float(np.linalg.norm(w, axis=1).max()), float(np.abs(dc).max())
@@ -435,6 +752,131 @@ class MixedModel:
         """The :class:`~polyfind.pack.PeriodicChain` of every chain at ``x`` (own frame)."""
         return [b[0] for b in self.build(x)[4]]
 
+    def _topology(self) -> dict:
+        """What the light build reads from the repeat's topology, resolved once."""
+        top = self.__dict__.get("_light_topology")
+        if top is None:
+            tpl = _template(self.polymer, self.P)
+            _, atoms0 = _block_atoms(tpl, self.P, 0)
+            sx, sy = _windows(self.P)
+            back = np.asarray(tpl.backbone)
+            top = self._light_topology = {
+                "atoms0": np.asarray(atoms0, dtype=int), "sx": sx, "sy": sy, "n_window": int(back[sx].size),
+                "window": np.concatenate([back[sx], back[sy]]), "refs": np.stack(self.refs)}
+        return top
+
+    def _build_light(self, tors, angs, chains, sums: bool = False):
+        """``(chains, transform, oligomer)`` of the chains ``chains`` built together.
+
+        The :class:`~polyfind.pack.PeriodicChain` objects are those of :meth:`build` (the same
+        oligomer, the same batched tail), and ``transform`` is the repeat transform of the two
+        backbone windows -- ``c``, the rotation vector ``w`` and the repeat axis with their
+        derivatives, in radians.  Its derivative comes from the Jacobian of the window atoms
+        alone (:func:`polyfind.chainjac.window_transform_jacobian`: bit for bit what the whole
+        chain's Jacobian gives), or with ``sums`` from running sums along the backbone
+        (:func:`polyfind.chainjac.backbone_transform_jacobian`: the same to rounding, a fifth of
+        the time), which is what the batched evaluation uses.  The derivative of the coordinates
+        is not formed: a gradient is carried back through ``oligomer`` ``(coords, bb, owner,
+        is_pendant)`` by :func:`polyfind.chainjac.oligomer_vjp`.
+        """
+        top = self._topology()
+        tors, angs = np.atleast_2d(np.asarray(tors, dtype=float)), np.atleast_2d(np.asarray(angs, dtype=float))
+        coords, bb, owner, is_pendant = CJ.oligomer(self.polymer, tors, angs)
+        built = _finish_repeat_chains(self.polymer, self.name, tors, coords, 0.5, top["refs"][np.asarray(chains, dtype=int)])
+        if sums:
+            tr = CJ.backbone_transform_jacobian(bb, top["sx"], top["sy"], self.P, self.R)
+        else:
+            jw = CJ.oligomer_jacobian(coords, bb, owner, is_pendant, self.P, self.R, atoms=top["window"])
+            nw = top["n_window"]
+            tr = CJ.window_transform_jacobian(bb[:, top["sx"]], bb[:, top["sy"]], jw[:, :, :nw], jw[:, :, nw:])
+        return built, tr, (coords, bb, owner, is_pendant)
+
+    def batched_module(self):
+        """The array module of the batched evaluation, or ``None`` for the loops (see the class)."""
+        if isinstance(self.xp, str):
+            if self.xp != "loops":
+                raise ValueError(f"MixedModel.xp is an array module, None or 'loops', not {self.xp!r}")
+            return None
+        if self.xp is not None:
+            return self.xp
+        ew = self.pk._ewald
+        if ew is not None:
+            n_sites = self.pk.N if self.pk._es_idx is None else len(self.pk._es_idx)
+            xp = ew.array_module(n_sites)
+            if xp is not np:
+                return xp
+        return np if os.environ.get("POLYFIND_MIXED_BATCHED", "") == "1" else None
+
+    def _value_and_grad_batched(self, x, parts, xp):
+        """:meth:`value_and_grad` as a fixed number of array operations, the pair sums on ``xp``.
+
+        Every chain is built in one batch; the placed cell is evaluated by
+        :func:`placed_energy_and_grad` with ``xp``; and the gradient with respect to the torsions
+        and angles is the torque of the Cartesian gradient about each bond and each angle's
+        normal (:func:`polyfind.chainjac.oligomer_vjp`), not a product with the Jacobian of the
+        coordinates, which is forty variables times a hundred sites per chain and was a third of
+        the host's work.
+        """
+        mark = _Stopwatch(self.timings)
+        st = self.state(x)
+        B, gam, c = st.lattice[1:]
+        latn = lattice_rows(*st.lattice)
+        nc, n, P, R = self.nc, self.n, self.P, self.R
+        top = self._topology()
+        built, tr, (coords, bb, owner, is_pendant) = self._build_light(st.tors, st.angs, np.arange(nc), sums=True)
+        Xa = np.stack([ch.coords for ch in built])
+        cs = np.array([float(ch.c) for ch in built])
+        phi = st.place[:, 2] * _RAD
+        cp, sp = np.cos(phi), np.sin(phi)
+        frames = np.zeros((nc, 3, 3))
+        frames[:, 0, 0], frames[:, 0, 1], frames[:, 1, 0], frames[:, 1, 1], frames[:, 2, 2] = cp, -sp, sp, cp, 1.0
+        frames[self.flips, :, 1:] *= -1.0  # Rz(phi) after the (x, -y, -z) flip
+        offs = st.place[:, 0:1] * latn[0] + st.place[:, 1:2] * latn[1]
+        offs[:, 2] += st.place[:, 3]
+        Q = np.einsum("sni,sji->snj", Xa, frames)
+        Pn = (Q + offs[:, None, :]).reshape(nc * n, 3)
+        mark("build")
+        E_lat, gP, glat = placed_energy_and_grad(self.pk, frames, Pn, latn, valences=self.valences, xp=xp, timings=self.timings)
+        mark = _Stopwatch(self.timings)
+        cg, sg = np.cos(gam * _RAD), np.sin(gam * _RAD)
+        g3 = gP.reshape(nc, n, 3)
+        F = g3.sum(axis=1)
+        fa, fb = st.place[:, 0], st.place[:, 1]
+        g = np.zeros(self.n_var)
+        gA = glat[0, 0] + float((fa * F[:, 0]).sum())
+        gB = cg * glat[1, 0] + sg * glat[1, 1] + float((fb * (cg * F[:, 0] + sg * F[:, 1])).sum())
+        gG = _RAD * B * (-sg * glat[1, 0] + cg * glat[1, 1]) + _RAD * B * float((fb * (-sg * F[:, 0] + cg * F[:, 1])).sum())
+        gc = glat[2, 2]
+        g[4:4 + 4 * nc] = np.stack([F @ latn[0], F @ latn[1],
+                                    _RAD * (g3[:, :, 1] * Q[:, :, 0] - g3[:, :, 0] * Q[:, :, 1]).sum(axis=1), F[:, 2]], axis=1).ravel()
+        # the Cartesian gradient in each chain's own frame, carried back to its torsions and angles
+        G = np.einsum("sni,sij->snj", g3, frames)
+        gv, Gp = CJ.aligned_block_vjp(coords[:, top["atoms0"]], tr["axis"], tr["daxis"], top["refs"], G)
+        gv += CJ.oligomer_vjp(coords, bb, owner, is_pendant, P, R, top["atoms0"], Gp)
+        V1, V2, V3 = self.pk.torsion
+        ph = np.deg2rad(st.tors)
+        e_tors = float((0.5 * (V1 * (1 + np.cos(ph)) + V2 * (1 - np.cos(2 * ph)) + V3 * (1 + np.cos(3 * ph)))).sum())
+        gv[:, :P] += 0.5 * (-V1 * np.sin(ph) + 2.0 * V2 * np.sin(2 * ph) - 3.0 * V3 * np.sin(3 * ph)) * (np.pi / 180.0)
+        d = (st.angs - self.angles0) * _RAD
+        e_bend = 0.5 * self.angle_stiffness * float((d * d).sum()) * self.n_repeats
+        gv[:, P:] += self.angle_stiffness * d * _RAD * self.n_repeats
+        w, dw = np.degrees(tr["w"]), np.degrees(tr["dw"])
+        p_rot = self.pen_rot * float((w * w).sum()) + float((self.lam_w * w).sum())
+        gv += np.einsum("svi,si->sv", dw, 2.0 * self.pen_rot * w + self.lam_w)
+        dcz = cs - c
+        p_c = float((self.k_c * dcz * dcz + self.lam_c * dcz).sum())
+        tension = 2.0 * self.k_c * dcz + self.lam_c
+        gv += tension[:, None] * tr["dc"]
+        gc -= float(tension.sum())
+        g[4 + 4 * nc:] = gv.ravel()
+        g[:4] = [gA, gB, gG, gc]
+        if parts is not None:
+            parts.update(lattice=E_lat, torsion=e_tors, bend=e_bend, penalty_rotation=p_rot, penalty_c=p_c,
+                         physical=E_lat + e_tors + e_bend, repeats=cs.copy(), c_mismatch=dcz,
+                         rotation_error=np.linalg.norm(w, axis=1))
+        mark("assembly")
+        return E_lat + e_tors + e_bend + p_rot + p_c, g
+
     # --- energy ------------------------------------------------------------------------------
     def value_and_grad(self, x, parts: dict | None = None):
         """Energy with the closure penalties, and its gradient with respect to every variable.
@@ -445,6 +887,9 @@ class MixedModel:
         the natural repeats, their mismatch to the cell's and the residual rotations."""
         x = np.asarray(x, dtype=float).ravel()
         self.n_evaluations += 1
+        xp = self.batched_module()
+        if xp is not None:
+            return self._value_and_grad_batched(x, parts, xp)
         st = self.state(x)
         A, B, gam, c = st.lattice
         latn, frames, offs, Pn, built = self.build(x)
@@ -518,18 +963,24 @@ class MixedModel:
         A, the second scaled so that both are of one size.  ``J`` is ``(4 m, n_var)``."""
         x = np.asarray(x, dtype=float).ravel()
         st = self.state(x)
-        ch = range(self.nc) if chains is None else [int(s) for s in np.atleast_1d(chains)]
+        ch = np.arange(self.nc) if chains is None else np.array([int(s) for s in np.atleast_1d(chains)], dtype=int)
         P, R = self.P, self.R
         base = 4 + 4 * self.nc
         h = np.zeros(4 * len(ch))
         J = np.zeros((4 * len(ch), self.n_var))
+        if len(ch) == 0:
+            return h, J
+        # the repeat transform reads two windows of the backbone: all chains in one build, and the
+        # derivative of those atoms alone (the same numbers as the whole chain's Jacobian gives);
+        # beside the batched evaluation, from running sums along the backbone (to rounding)
+        built, tr, _ = self._build_light(st.tors[ch], st.angs[ch], ch, sums=self.batched_module() is not None)
+        w, dw = np.degrees(tr["w"]), np.degrees(tr["dw"])
         for k, s in enumerate(ch):
-            chains_, _, dc, w, dw = repeat_chains_and_jacobian(self.polymer, self.name, st.tors[s][None], st.angs[s], self.refs[s])
             cols = slice(base + s * (P + R), base + (s + 1) * (P + R))
-            h[4 * k:4 * k + 3] = w[0]
-            J[4 * k:4 * k + 3, cols] = dw[0].T
-            h[4 * k + 3] = CLOSURE_C * (float(chains_[0].c) - st.lattice[3])
-            J[4 * k + 3, cols] = CLOSURE_C * dc[0]
+            h[4 * k:4 * k + 3] = w[k]
+            J[4 * k:4 * k + 3, cols] = dw[k].T
+            h[4 * k + 3] = CLOSURE_C * (float(built[k].c) - st.lattice[3])
+            J[4 * k + 3, cols] = CLOSURE_C * tr["dc"][k]
             J[4 * k + 3, 3] = -CLOSURE_C
         return h, J
 
@@ -1319,12 +1770,13 @@ def tilt_relaxation(model: MixedModel, x, polymer=None, k_backbone: float | None
     groups = PD.pendant_groups(latn, P0[atoms], sym)
     if not groups:
         raise ValueError("no backbone atom with two backbone neighbours and two single-atom pendants")
-    E0, _, _ = placed_energy_and_grad(pk, frames, P0, latn, valences=vals)
+    xp = model.batched_module()  # the form the model's own evaluations take: the loops, or batched on a module
+    E0, _, _ = placed_energy_and_grad(pk, frames, P0, latn, valences=vals, xp=xp)
     h = 1e-6
 
     def eg(t):
         dX = PD.group_displacements(groups, t, len(atoms))
-        E, g, _ = placed_energy_and_grad(pk, frames, P0 + (J @ dX).reshape(-1, 3), latn, valences=vals)
+        E, g, _ = placed_energy_and_grad(pk, frames, P0 + (J @ dX).reshape(-1, 3), latn, valences=vals, xp=xp)
         gX = J.T @ np.asarray(g, dtype=float).ravel()
         grad = np.empty_like(t)
         for i in range(len(t)):

@@ -274,6 +274,14 @@ less, less_equal, greater, greater_equal, equal, not_equal, bitwise_and, bitwise
                                   np.bitwise_and, np.bitwise_or))
 
 
+def where(condition, x, y):
+    """The three-argument form only, as a ufunc of the module: the condition is a device array, the
+    two choices device arrays or scalars (CuPy's is ``_where_ufunc(condition.astype('?'), x, y)``)."""
+    if not isinstance(condition, DeviceArray):
+        _refuse(condition)
+    return _wrap(np.where(condition._a, _raw(x), _raw(y)))
+
+
 def einsum(subscripts, *operands):
     return _wrap(np.einsum(subscripts, *(_raw(o) for o in operands)))
 

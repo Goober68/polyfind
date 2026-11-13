@@ -14,6 +14,58 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The whole evaluation on a device, 2026-11-13 evening (PI, on the first A100 run: "Are you actually using the GPU? I'm
+seeing 0% utilization", then "So port the work - we're using a GPU, let's actually use the GPU" and "I terminated - do
+the port properly").** Text: `docs/PERFORMANCE_REVIEW.md` 17.6 (the first run), 17.7 (this port), 17.8 (measured).
+STATE at this commit: the port is written, and tested here on the host and on the device stand-in (the loop form bit for
+bit the previous commit's: energy, gradient, placed coordinates, Jacobian and closure at 2, 4 and 16 chains; the batched
+form against it to 1e-15). ITS A100 RUN IS IN PROGRESS: until 17.8 exists, no device time of the batched form may be
+quoted.
+THE FIRST RUN, in one line: on an A100 the three ported steps (tensor and field, solve, gradient) ran 46x and 65x faster
+than 13 EPYC cores at 16 and 32 chains and agreed to 8e-15, but the evaluation was only 5.3x and 9.5x faster because 70%
+of it (more, counting the exclusion loops inside the dipole step) was host loops, the card idle meanwhile. Files:
+`docs/predictions/ewald_device_a100_20261113/`.
+WHAT MOVED (all in `src/polyfind/`, each held to what it replaces by `tests/test_mixed_batched.py`):
+(1) PAIR SUMS on the array module: `mixedcell._pair_sums` -- the chain-pair blocks chosen on the host
+(`_chain_pair_blocks`), every block through one kernel (`_pair_kernel`) at the nearest image along the chain, the
+same-site columns as a second stack with the bonded scales gathered by image. (2) EXCLUSION CORRECTIONS from flat lists
+of the bonded pairs of all chains (`ewald.exclusion_pairs`, `exclusion_correction_pairs`,
+`charge_dipole_exclusion_pairs`, `CrystalPacker._exclusion_pairs`, `_polarize(pairs=)`): 86 ms -> 2.3 ms at 16 chains,
+on the host (11,520 entries). (3) VALENCE terms of all chains at once (`ChainValence.energy_and_grad_batch`).
+(4) THE CHAINS built in one batch and the gradient carried back to torsions and angles as TORQUES, not through the
+Jacobian of the coordinates (`chainjac.oligomer`, `oligomer_vjp`, `aligned_block_vjp`, `backbone_transform_jacobian`;
+`MixedModel._build_light`): 117 ms -> about 7 ms at 16 chains. (5) `MixedModel.closure` no longer builds every chain's
+whole Jacobian to read two windows of it: 117 ms -> 12 ms per call, BIT FOR BIT the same numbers (and 6 ms beside the
+batched evaluation, to rounding). This one speeds up every constrained relaxation on the host too. (6) The dipole solve
+is CHOLESKY on a device (`backend.cholesky_solve`; a fifth of the LU solve's time on the A100), with the factorization's
+status asked for -- CuPy ignores a failed factorization by default -- and the general solve as the fallback.
+WHICH FORM RUNS: `MixedModel(xp=None)` follows the Ewald sums: the batched form on the device when they are there
+(`POLYFIND_EWALD_DEVICE=cuda`, at least 256 active sites), otherwise THE LOOPS, unchanged and bit for bit what they
+were -- every stored number is still the loops'. `POLYFIND_MIXED_BATCHED=1` or `xp=numpy` asks for the batched form on
+the host (same numbers to 1e-15); `xp="loops"` forces the loops. `model.timings = {}`
+collects the seconds per part.
+TO USE IT in a run: `POLYFIND_DEVICE=cpu POLYFIND_EWALD_DEVICE=cuda python examples/kink_migration.py ...`, serial.
+RUNPOD (set up 2026-11-13 at the PI's request, guide https://agents.runpod.io/): the API key is a network secret of the
+session's environment for host `rest.runpod.io` (the proxy adds it; it is never visible here) -- saved on the PI's
+DEFAULT environment, because the session could not be moved to the `polyfind-sarco` environment created for it; the
+Runpod plugin and its MCP server were installed in that session's container only (the MCP sign-in is the PI's step).
+A pod is created with `POST https://rest.runpod.io/v1/pods` (image `runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04`,
+ports `["8000/http"]`, start command `bash -c "curl -sL .../examples/runpod_ewald_pod.sh | bash"`, env `BENCH_TOKEN`,
+`BENCH_LIMIT_S`, `BENCH_LINGER_S`), its results read at `https://<pod>-8000.proxy.runpod.net/<token>/`, and it is
+deleted with `DELETE /v1/pods/<id>` and the deletion confirmed by a read. TRAPS: (a) do NOT send `allowedCudaVersions`:
+the API's list stops at 13.0, the A100 hosts report 13.2, and the create then fails as "no instances available" for
+every card; (b) a container sees 128-256 CPUs and is allotted 13-32: BLAS at the visible count is slower than one
+thread (the benchmark reads the allotment); (c) the image's CUDA 12 libraries do not serve the `cupy-cuda13x` wheel the
+driver's version selects: the script falls back to `cupy-cuda13x[ctk]` (works; a few hundred MB more to download);
+(d) HOST BASELINES ARE CPU WORK WITH THE CARD IDLE AND THE METER RUNNING: the pod script now times the host at the
+first size and one thread count only (`EWALD_BENCH_HOST_MAX`, `EWALD_BENCH_HOST_THREADS` for more); (e) a stopped pod
+("Exited") is still on the account: delete it.
+NOT MOVED, and why: the backbone recursion (a hundred sequential steps: launches would cost more than the steps), the
+bonded lists (too small for a device call to pay), `mixedcell.tilt_relaxation`'s own gradient loop (a Python loop over
+the tilt variables around each evaluation: the next thing if tilt relaxations of large cells are run on a device), and
+the cube itself (17.5: past about a hundred chains the tensor's reciprocal sum, N^2 K, is the wall, and the remedy is a
+particle-mesh solve, not hardware).
+
 **The large cells on a device, 2026-11-13 (PI: "Write it an evaluate - I can get a RunPod instance when you're ready",
 and "I have ability to order 4-6 A100s for cheap, so I might build a local GPU farm").** STATE: the port is written and
 tested here WITHOUT a GPU. NOTHING HAS BEEN RUN ON A DEVICE: there is no device time anywhere in the repository, and
