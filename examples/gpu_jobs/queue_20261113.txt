@@ -15,3 +15,7 @@ saddle_wide.sh I-B 8 4 band 4x2 a b start 8x2 b
 # 4. the device check again (line 1 stopped at its tests: two of them assume the package's default
 #    module, and the pod's switch was set for them; taken away now)
 device_check.sh 16 32 64 large 128
+# 5. a hundred and twenty-eight chains, B alone: the two tails of the series (the estimate was 0.11 along b
+#    and 0.04 along a below the sixty-four-chain cell).  The cell fills the card (82 GB at one evaluation).
+step_wide.sh 8x4 b to 8 8 B
+step_wide.sh 8x4 a to 16 4 B
