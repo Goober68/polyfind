@@ -26,6 +26,13 @@ one-monomer step, in kcal/mol per chain that moves.
 ``--host`` sets what may respond: ``rigid`` (the neighbours fixed as they are in the kinked
 crystal), ``bodies`` (each neighbour free to shift and turn as a rigid chain) or ``flexible``
 (every torsion and backbone angle of every chain).
+
+A band finds where a pass is and does not settle it: ``--polish`` takes each stored band's top to
+the stationary point (polyfind.mixedcell.saddle_polish).  In a cell of sixteen chains and more the
+minimisations (the end states, the hyperplanes of ``--polish``) need ``--surface``: on the closure
+surface with one curvature block per chain as the metric (MixedModel.relax_on_surface,
+chain_metric), tens of evaluations where SLSQP with the closure as constraints takes hundreds
+and stops short of the minimum.  ``--refine`` relaxes a stored end state further as a check.
 """
 import argparse
 import importlib.util
