@@ -1798,3 +1798,36 @@ it; processes sharing a card take turns on it.  (Whether the MPS daemon, which l
 run on a card at once, changes that was not measured.)  **The farm answer of 17.8 changes in one
 place: count one process per card.**  Independent evaluations (images of a band, columns of a
 Hessian) scale with the number of cards and hardly with processes per card.
+
+**The card at work** (jobs 2 to 10 of the queue: the single-chain step of
+`docs/CANDIDATE_MATERIALS.md` 8.3 in cells of thirty-two to a hundred and twenty-eight chains,
+relaxed on the closure surface by `examples/kink_migration.py --surface` and
+`examples/kink_wide_cell.py polish`, the evaluation choosing the batched form on the card by
+itself):
+
+| cell | what was relaxed | evaluations | seconds | per evaluation | one bare evaluation |
+|---|---|---|---|---|---|
+| 32 chains | I, B, the two saddles | 81, 86, 78, 207 | 20, 21, 18, 48 | 0.25 s, 0.23 s | 0.13 s |
+| 64 chains | I, B, the two saddles | 98, 116, 129, 268 | 105, 125, 129, 260 | 1.07 s, 0.98 s | 0.57 s |
+| 128 chains | B | 117 | 882 | 7.5 s | 3.67 s |
+
+* **It is the same calculation.**  The thirty-two-chain row had been computed on four host cores
+  with the loop form: the card, from the same seeds, gives the end states to 5e-9 and 3e-8
+  kcal/mol and the saddles to 2e-8 and 5e-5 (the second from a different start: the narrower
+  cell's settled saddle instead of its band's top), with the structures within 0.003 in every
+  variable.
+* **What took 3.2 hours takes 107 seconds**: the host needed 19.7 s an evaluation at thirty-two
+  chains (1,337, 1,857, 2,215 and 6,228 s for the four relaxations), the card 0.25 s, 80 times.
+  The sixty-four-chain row, end states and both saddles, is 10 minutes of relaxation; on the
+  host it would have been days (59 s an evaluation on eight threads, 17.6).
+* **Half of a relaxation is no longer the evaluation.**  A step of the surface method costs
+  0.25 s, 1.07 s and 7.5 s where the evaluation in it is 0.13 s, 0.57 s and 3.67 s.  The rest is
+  the method's own linear algebra on the host, dense where the problem is not: the closure's
+  normals (four rows per chain, each touching its own chain's 44 variables when the cell is
+  fixed) are orthonormalised by a singular value decomposition of the whole 4 nc x 44 nc matrix,
+  twice a step, and multiplied through the metric as a dense 44 nc x 44 nc matrix.  On four host
+  cores, matrices of those shapes: the decomposition 38 ms, 0.15 s and 0.56 s at thirty-two,
+  sixty-four and a hundred and twenty-eight chains, the product with the metric 3, 16 and 149 ms.
+  Done chain by chain (a 4 x 44 block each, with the cell's columns and a hyperplane's row as a
+  border) it is microseconds.  That is the next thing to do for the large cells, and it needs no
+  card to write or test.
