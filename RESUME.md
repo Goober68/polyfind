@@ -1,5 +1,12 @@
 # Resume: polyfind, state as of 2026-09-13 (afternoon)
 
+**STANDING OBJECTIVE (PI, 2026-11-14; also in `CLAUDE.md`).** "strain is NOT the sole metric by which to gauge. What we want
+is the to be able to evaluate candidates for the optimal point on the strain/tanD/freq curve. For example: a high frequency,
+low loss moderate strain polymer will outperform our CFE." Every candidate is reported and ranked on strain, tan delta and
+frequency together; one with less strain than the CFE terpolymer is not out. The window reading of section 3 of
+`docs/CANDIDATE_MATERIALS.md` is strain only and is a partial result by this rule; the columns that carry all three are the
+frequency maps' (`tan delta per % strain`, `efficiency`).
+
 **Final status of the 14-hour window, 2026-11-07 19:06 UTC.** Closed today: the stage-7 problem solved by bounded
 least squares (`pvdf-dft-valence-belt3`, 5.18-5.19); the sensitivity, screen and basin analyses (5.15, 5.17, 5.20); the
 Gamma-route relaxed-ion tensor (5.16); the pendant-group finding and its fix (5.22: the rigid refinement cannot tilt the
