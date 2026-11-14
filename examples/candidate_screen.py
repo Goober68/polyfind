@@ -66,10 +66,61 @@ def fan_belt(d: float = D) -> Polymer:
                              BackboneAtom("C", (belt_fluorine(1.3863, -0.20, d), NITRILE), (None, None), 114.6, 108.0, +0.30, (None, None))))
 
 
+# The three groups the crystal anchors have tested, on the belt chain's PBE-D3 geometry: the CH2 and CF2 of
+# pvdf_belt and the CHF of trfe_belt, each neutral by itself.
+def _ch2() -> BackboneAtom:
+    return BackboneAtom("C", "H", 1.0960, 114.6, 107.64, -0.20, +0.10)
+
+
+def _cf2(d: float = D) -> BackboneAtom:
+    return BackboneAtom("C", belt_fluorine(1.3863, -0.20, d), None, 114.6, 105.12, +0.40, None)
+
+
+def _chf(d: float = D) -> BackboneAtom:
+    return BackboneAtom("C", ("H", belt_fluorine(1.3863, -0.20, d)), (1.0960, None), 114.6, 109.0, +0.10, (+0.10, None))
+
+
+def regrouped(name: str, formula: str, first: BackboneAtom, second: BackboneAtom) -> Polymer:
+    """A unit made of two of the tested groups in an order no anchor has seen: the groups' own
+    parameters are the fitted ones, the junctions they make with their neighbours (CF2-CF2,
+    CH2-CH2, CHF-CHF) are not anchored."""
+    return Polymer(name=f"{name}-belt-pbe", formula=formula, bond_length=1.5331, backbone=(first, second))
+
+
+def tfe_belt() -> Polymer:
+    """CF2-CF2, tetrafluoroethylene."""
+    return regrouped("tfe", "-(CF2-CF2)n-", _cf2(), _cf2())
+
+
+def reversed_vdf_belt() -> Polymer:
+    """CF2-CH2: a VDF unit added the other way round, the head-to-head defect of every PVDF."""
+    return regrouped("rvdf", "-(CF2-CH2)n-", _cf2(), _ch2())
+
+
+def vf_belt() -> Polymer:
+    """CH2-CHF, vinyl fluoride."""
+    return regrouped("vf", "-(CH2-CHF)n-", _ch2(), _chf())
+
+
+def ethylene_belt() -> Polymer:
+    """CH2-CH2 (no fluorine, so no belt site; named with the others)."""
+    return regrouped("e", "-(CH2-CH2)n-", _ch2(), _ch2())
+
+
+def dfe_belt() -> Polymer:
+    """CHF-CHF, 1,2-difluoroethylene."""
+    return regrouped("dfe", "-(CHF-CHF)n-", _chf(), _chf())
+
+
 UNITS = {"V": lambda: monomer_of(pvdf_belt(D, "pbe"), "vdf"), "R": lambda: monomer_of(trfe_belt(D, "pbe"), "trfe"),
          "C": lambda: monomer_of(cfe_belt(), "cfe"), "K": lambda: monomer_of(ctfe_belt(), "ctfe"), "D": lambda: monomer_of(cdfe_belt(), "cdfe"),
-         "A": lambda: monomer_of(an_belt(), "an"), "N": lambda: monomer_of(fan_belt(), "fan")}
+         "A": lambda: monomer_of(an_belt(), "an"), "N": lambda: monomer_of(fan_belt(), "fan"),
+         "F": lambda: monomer_of(tfe_belt(), "tfe"), "I": lambda: monomer_of(reversed_vdf_belt(), "rvdf"), "Y": lambda: monomer_of(vf_belt(), "vf"),
+         "E": lambda: monomer_of(ethylene_belt(), "e"), "X": lambda: monomer_of(dfe_belt(), "dfe")}
+FORMULAS = {"V": "(CH2-CF2)", "R": "(CHF-CF2)", "C": "(CH2-CFCl)", "K": "(CF2-CFCl)", "D": "(CHCl-CF2)", "A": "(CH2-CH(CN))", "N": "(CH2-CF(CN))",
+            "F": "(CF2-CF2)", "I": "(CF2-CH2)", "Y": "(CH2-CHF)", "E": "(CH2-CH2)", "X": "(CHF-CHF)"}
 VALIDATED = set("VR")  # chemistries the crystal anchors have tested
+REGROUPED = set("FIYEX")  # units of the tested groups in an untested order
 
 # name: (sequence letters, what the row asks)
 SEQUENCES = {
@@ -101,6 +152,18 @@ SEQUENCES = {
     "vdf9-trfe4-fan1-14": ("VVRVVRVNVVRVVR", "the 64/29/7 cell with 2-fluoroacrylonitrile in place of CFE"),
     "vdf9-trfe4-ctfe1-14": ("VVRVVRVKVVRVVR", "the 64/29/7 cell with CTFE in place of CFE"),
     "vdf13-trfe6-cfe1-20": ("VVRVVRVVRVCVVRVVRVVR", "twenty monomers, 65/30/5: one CFE per twenty in a 30 mol% matrix, the pin-density lever"),
+    # the unit screen of 2026-11-14: one unit of the tested groups in another order, in place of the 64/29/7 cell's CFE
+    "vdf9-trfe4-tfe1-14": ("VVRVVRVFVVRVVR", "the 64/29/7 cell with tetrafluoroethylene (CF2-CF2) in place of CFE"),
+    "vdf9-trfe4-rvdf1-14": ("VVRVVRVIVVRVVR", "the 64/29/7 cell with a reversed VDF unit (CF2-CH2, the head-to-head defect) in place of CFE"),
+    "vdf9-trfe4-vf1-14": ("VVRVVRVYVVRVVR", "the 64/29/7 cell with vinyl fluoride (CH2-CHF) in place of CFE"),
+    "vdf9-trfe4-e1-14": ("VVRVVRVEVVRVVR", "the 64/29/7 cell with ethylene (CH2-CH2) in place of CFE"),
+    "vdf9-trfe4-dfe1-14": ("VVRVVRVXVVRVVR", "the 64/29/7 cell with 1,2-difluoroethylene (CHF-CHF) in place of CFE"),
+    # designed from the screen: a loosening pin with a trans-favouring unit seven monomers from it, to pay the pin's margin back
+    "vdf8-trfe4-an1-tfe1-14": ("FVRVVRVAVVRVVR", "one AN and one TFE per fourteen, seven apart: the nitrile's loosening with its pin paid back"),
+    "vdf8-trfe4-an1-e1-14": ("EVRVVRVAVVRVVR", "one AN and one ethylene per fourteen, seven apart"),
+    "vdf8-trfe4-ctfe1-rvdf1-14": ("IVRVVRVKVVRVVR", "one CTFE and one reversed VDF per fourteen, seven apart"),
+    # and a matrix without TrFE: PVDF with two reversed units per fourteen (14% head-to-head defects)
+    "vdf12-rvdf2-14": ("VVVVIVVVVVVIVV", "PVDF with one reversed VDF unit in seven: is the degeneracy TrFE buys available from regio-defects, at the full VDF dipole"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 CONFORMATION_UNITS = {"TTTT": [T], "TGTG'": [T, GP, T, GM], "TG'TG": [T, GM, T, GP], "GTG'T": [GP, T, GM, T], "G'TGT": [GM, T, GP, T]}
@@ -121,7 +184,7 @@ CONFORMATIONS.update(TG_VARIANTS)
 
 def make_polymer(name: str, letters: str) -> Polymer:
     units = [UNITS[c]() for c in letters]
-    formula = "-" + "-".join({"V": "(CH2-CF2)", "R": "(CHF-CF2)", "C": "(CH2-CFCl)", "K": "(CF2-CFCl)", "D": "(CHCl-CF2)", "A": "(CH2-CH(CN))", "N": "(CH2-CF(CN))"}[c] for c in letters) + "-"
+    formula = "-" + "-".join(FORMULAS[c] for c in letters) + "-"
     return copolymer(name=f"{name}-belt-pbe", formula=formula, units=units, bond_length=PVDF.bond_length)
 
 

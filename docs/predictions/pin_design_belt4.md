@@ -7,6 +7,11 @@ Pin strength per unit
 | AN, one per fourteen in 29 mol% TrFE | +0.197 | +0.056 | +0.2 | -1.7 | **+2.0** |
 | CDFE, one per fourteen in 29 mol% TrFE | +0.685 | +0.056 | +18.6 | +9.8 | **+8.8** |
 | CFE and CDFE, one of each per fourteen (mean per unit) | +0.807 | +0.056 | +11.4 | +6.1 | **+5.3** |
+| TFE (CF2-CF2), one per fourteen in 29 mol% TrFE | -0.050 | +0.056 | +15.6 | +17.1 | **-1.5** |
+| reversed VDF (CF2-CH2), one per fourteen in 29 mol% TrFE | -0.289 | +0.056 | -5.2 | -0.4 | **-4.8** |
+| VF (CH2-CHF), one per fourteen in 29 mol% TrFE | +0.087 | +0.056 | +5.2 | +4.8 | **+0.4** |
+| ethylene (CH2-CH2), one per fourteen in 29 mol% TrFE | -0.066 | +0.056 | +11.4 | +13.1 | **-1.7** |
+| DFE (CHF-CHF), one per fourteen in 29 mol% TrFE | +0.263 | +0.056 | +4.7 | +1.8 | **+2.9** |
 | CFE, one per ten beside 20 mol% TrFE | +0.868 | +0.229 | +6.1 | -0.3 | **+6.4** |
 | CFE next to a TrFE, one per ten | +0.875 | +0.229 | +7.1 | +0.6 | **+6.5** |
 | CTFE, one per ten beside 20 mol% TrFE | +0.900 | +0.229 | +20.8 | +14.1 | **+6.7** |
@@ -18,13 +23,61 @@ Pin strength per unit
 
 What a unit costs and what it buys
 
-| unit, one per fourteen | pin per unit | kink sheet, kcal/mol per kink pair | cut against the matrix | cut per kcal/mol of pin | sheets' population against the CFE cell's | all-trans dipole per monomer, e.A | axial switch strain |
-|---|---|---|---|---|---|---|---|
-| none: the matrix (vdf10-trfe4-14) | 0 | 6.85 | 0 | - | 0.006 | 0.562 | +11.7% |
-| AN | +2.0 | 3.06 | 3.79 | **1.93** | 3.4 | 0.524 | +12.5% |
-| CTFE | +3.4 | 2.04 | 4.81 | **1.41** | 18.8 | 0.508 | +11.8% |
-| CFE | +3.7 | 3.79 | 3.06 | **0.84** | 1.0 | 0.552 | +12.1% |
-| CDFE | +8.8 | 2.65 | 4.20 | **0.48** | 6.8 | 0.529 | +12.1% |
+| unit, one per fourteen | pin per unit | kink sheet, kcal/mol per kink pair | cut against the matrix | cut per kcal/mol of pin | decades of frequency per 0.1 kcal/mol of margin | sheets' population against the CFE cell's | all-trans dipole per monomer, e.A | axial switch strain |
+|---|---|---|---|---|---|---|---|---|
+| none: the matrix (vdf10-trfe4-14) | 0 | 6.85 | 0 | - | - | 0.006 | 0.562 | +11.7% |
+| reversed VDF (CF2-CH2) | -4.8 | 5.68 | +1.17 | no cost: it lowers the margin | - | 0.042 | 0.471 | +11.5% |
+| ethylene (CH2-CH2) | -1.7 | 6.62 | +0.23 | no cost: it lowers the margin | - | 0.0087 | 0.517 | +11.6% |
+| TFE (CF2-CF2) | -1.5 | 5.44 | +1.41 | no cost: it lowers the margin | - | 0.063 | 0.511 | +11.9% |
+| VF (CH2-CHF) | +0.4 | 6.56 | +0.29 | **0.66** | 0.7 | 0.0096 | 0.531 | +11.5% |
+| AN | +2.0 | 3.06 | +3.79 | **1.93** | 2.0 | 3.4 | 0.524 | +12.5% |
+| DFE (CHF-CHF) | +2.9 | 6.20 | +0.65 | **0.22** | 0.2 | 0.018 | 0.518 | +11.5% |
+| CTFE | +3.4 | 2.04 | +4.81 | **1.41** | 1.4 | 19 | 0.508 | +11.8% |
+| CFE | +3.7 | 3.79 | +3.06 | **0.84** | 0.9 | 1 | 0.552 | +12.1% |
+| CDFE | +8.8 | 2.65 | +4.20 | **0.48** | 0.5 | 6.8 | 0.529 | +12.1% |
+
+Strain, tan delta and frequency together (the rate from the kink sheets' population)
+
+| unit, one per N | margin | relaxation frequency | AC strain at 1.8 V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds |
+|---|---|---|---|---|---|---|
+| the measured 63/30/7 film's channel as calibrated | +0.000 | 364 kHz | 0.080% / 0.080% | 0.060 / 0.115 | **0.066%** / 0.035% | 1.5 (heat) / 0.8 (heat) |
+| none: the matrix | +0.056 | 2 kHz | 0.012% / 0.006% | 1.009 / 0.548 | **0.007%** / 0.003% | 1.0 (heat) / 1.0 (heat) |
+| reversed VDF (CF2-CH2), 14 | -0.289 | 15 kHz | 0.044% / 0.025% | 1.031 / 1.168 | **0.015%** / 0.008% | 0.6 (heat) / 0.5 (heat) |
+| reversed VDF (CF2-CH2), 20 | -0.186 | 8 kHz | 0.028% / 0.015% | 1.208 / 0.979 | **0.011%** / 0.006% | 0.7 (heat) / 0.7 (heat) |
+| reversed VDF (CF2-CH2), 28 | -0.117 | 6 kHz | 0.020% / 0.010% | 1.147 / 0.777 | **0.009%** / 0.005% | 0.8 (heat) / 0.8 (heat) |
+| reversed VDF (CF2-CH2), 40 | -0.065 | 4 kHz | 0.015% / 0.008% | 1.023 / 0.628 | **0.008%** / 0.004% | 0.9 (heat) / 0.9 (heat) |
+| ethylene (CH2-CH2), 14 | -0.066 | 3 kHz | 0.011% / 0.006% | 0.821 / 0.467 | **0.007%** / 0.003% | 1.1 (heat) / 1.1 (heat) |
+| ethylene (CH2-CH2), 20 | -0.029 | 3 kHz | 0.010% / 0.005% | 0.772 / 0.433 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) |
+| ethylene (CH2-CH2), 28 | -0.005 | 3 kHz | 0.009% / 0.005% | 0.739 / 0.411 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) |
+| ethylene (CH2-CH2), 40 | +0.014 | 2 kHz | 0.010% / 0.005% | 0.822 / 0.453 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) |
+| TFE (CF2-CF2), 14 | -0.050 | 23 kHz | 0.059% / 0.038% | 0.785 / 1.151 | **0.018%** / 0.009% | 0.6 (heat) / 0.4 (heat) |
+| TFE (CF2-CF2), 20 | -0.018 | 11 kHz | 0.037% / 0.020% | 1.169 / 1.166 | **0.013%** / 0.007% | 0.6 (heat) / 0.6 (heat) |
+| TFE (CF2-CF2), 28 | +0.003 | 7 kHz | 0.025% / 0.013% | 1.277 / 0.967 | **0.010%** / 0.005% | 0.7 (heat) / 0.7 (heat) |
+| TFE (CF2-CF2), 40 | +0.019 | 5 kHz | 0.021% / 0.011% | 1.366 / 0.881 | **0.009%** / 0.005% | 0.8 (heat) / 0.8 (heat) |
+| VF (CH2-CHF), 14 | +0.087 | 3 kHz | 0.018% / 0.009% | 1.314 / 0.761 | **0.008%** / 0.004% | 0.8 (heat) / 0.8 (heat) |
+| VF (CH2-CHF), 20 | +0.078 | 3 kHz | 0.016% / 0.008% | 1.256 / 0.710 | **0.008%** / 0.004% | 0.9 (heat) / 0.9 (heat) |
+| VF (CH2-CHF), 28 | +0.072 | 3 kHz | 0.015% / 0.008% | 1.199 / 0.668 | **0.007%** / 0.004% | 0.9 (heat) / 0.9 (heat) |
+| VF (CH2-CHF), 40 | +0.067 | 3 kHz | 0.014% / 0.007% | 1.148 / 0.634 | **0.007%** / 0.004% | 0.9 (heat) / 0.9 (heat) |
+| AN, 14 | +0.197 | 1.2 MHz | 0.018% / 0.018% | 0.005 / 0.010 | **0.085%** / 0.046% | 8.5 (heat) / 4.6 (heat) |
+| AN, 20 | +0.154 | 184 kHz | 0.055% / 0.055% | 0.081 / 0.157 | **0.046%** / 0.024% | 1.5 (heat) / 0.8 (heat) |
+| AN, 28 | +0.126 | 52 kHz | 0.095% / 0.077% | 0.427 / 0.778 | **0.029%** / 0.015% | 0.5 (heat) / 0.3 (heat) |
+| AN, 40 | +0.105 | 20 kHz | 0.083% / 0.049% | 1.206 / 1.689 | **0.019%** / 0.010% | 0.4 (heat) / 0.4 (heat) |
+| DFE (CHF-CHF), 14 | +0.263 | 6 kHz | 0.002% / 0.002% | 0.084 / 0.096 | **0.004%** / 0.002% | 3.3 (heat) / 2.3 (heat) |
+| DFE (CHF-CHF), 20 | +0.201 | 5 kHz | 0.007% / 0.004% | 0.412 / 0.281 | **0.005%** / 0.003% | 1.4 (heat) / 1.3 (heat) |
+| DFE (CHF-CHF), 28 | +0.160 | 4 kHz | 0.010% / 0.005% | 0.725 / 0.435 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) |
+| DFE (CHF-CHF), 40 | +0.129 | 3 kHz | 0.013% / 0.006% | 0.963 / 0.551 | **0.007%** / 0.004% | 1.0 (heat) / 1.0 (heat) |
+| CTFE, 14 | +0.300 | 6.8 MHz | 0.001% / 0.001% | 0.000 / 0.000 | **0.005%** / 0.005% | 10.0 (field) / 10.0 (field) |
+| CTFE, 20 | +0.227 | 609 kHz | 0.007% / 0.007% | 0.004 / 0.008 | **0.041%** / 0.026% | 10.0 (field) / 6.2 (heat) |
+| CTFE, 28 | +0.178 | 121 kHz | 0.029% / 0.029% | 0.080 / 0.153 | **0.031%** / 0.016% | 1.9 (heat) / 1.0 (heat) |
+| CTFE, 40 | +0.141 | 36 kHz | 0.064% / 0.049% | 0.491 / 0.849 | **0.022%** / 0.011% | 0.6 (heat) / 0.4 (heat) |
+| CFE, 14 | +0.317 | 364 kHz | 0.001% / 0.001% | 0.000 / 0.001 | **0.004%** / 0.004% | 10.0 (field) / 10.0 (field) |
+| CFE, 20 | +0.239 | 78 kHz | 0.006% / 0.006% | 0.028 / 0.053 | **0.017%** / 0.009% | 5.0 (heat) / 2.6 (heat) |
+| CFE, 28 | +0.187 | 28 kHz | 0.024% / 0.020% | 0.296 / 0.497 | **0.015%** / 0.008% | 1.1 (heat) / 0.7 (heat) |
+| CFE, 40 | +0.148 | 13 kHz | 0.038% / 0.022% | 1.015 / 1.155 | **0.013%** / 0.007% | 0.6 (heat) / 0.5 (heat) |
+| CDFE, 14 | +0.685 | 2.5 MHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.000%** / 0.000% | 10.0 (field) / 10.0 (field) |
+| CDFE, 20 | +0.496 | 299 kHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.000%** / 0.000% | 10.0 (field) / 10.0 (field) |
+| CDFE, 28 | +0.370 | 73 kHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.001%** / 0.001% | 10.0 (field) / 10.0 (field) |
+| CDFE, 40 | +0.276 | 25 kHz | 0.002% / 0.002% | 0.022 / 0.041 | **0.008%** / 0.004% | 6.4 (heat) / 3.4 (heat) |
 
 Uniform spacing on the vdf10-trfe4-14 matrix (margin +0.056)
 

@@ -794,3 +794,25 @@ def test_the_pin_units_are_ranked_by_what_they_buy_per_unit_of_pin():
     stat = pins["statistical"]["rows"]["CFE"]["0.07"]
     assert stat["uniform"]["strain_ac"] < 2e-5 < 3e-4 < stat["statistical"]["strain_ac"] < pins["calibrated_film"]["strain_ac"]
     assert 0.2 < stat["share_in_runs_of_forty_or_more"] < 0.24
+
+
+def test_the_regrouped_units_are_the_tested_groups_in_another_order():
+    """The unit screen of 2026-11-14 (docs/CANDIDATE_MATERIALS.md 5.6): tetrafluoroethylene, a
+    reversed VDF unit, vinyl fluoride, ethylene and 1,2-difluoroethylene are built from the CH2
+    and CF2 of the belt PVDF and the CHF of the belt TrFE, unchanged, so they bring no new
+    parameter; each group is neutral, and each unit stands where the 64/29/7 cell's CFE does."""
+    C = KM.DK.C
+    from polyfind.polymers import pvdf_belt, trfe_belt
+    ch2, cf2 = pvdf_belt(C.D, "pbe").backbone
+    chf = trfe_belt(C.D, "pbe").backbone[0]
+    groups = {"tfe": (cf2, cf2), "rvdf": (cf2, ch2), "vf": (ch2, chf), "e": (ch2, ch2), "dfe": (chf, chf)}
+    made = {"tfe": C.tfe_belt(), "rvdf": C.reversed_vdf_belt(), "vf": C.vf_belt(), "e": C.ethylene_belt(), "dfe": C.dfe_belt()}
+    for name, (a, b) in groups.items():
+        assert made[name].backbone == (a, b) and made[name].bond_length == pytest.approx(pvdf_belt(C.D, "pbe").bond_length)
+        for atom in (a, b):
+            assert atom.charge + sum(atom.sub_charges) == pytest.approx(0.0, abs=1e-12)
+    cfe_row = C.SEQUENCES["vdf9-trfe4-cfe1-14"][0]
+    for name, letter in (("tfe", "F"), ("rvdf", "I"), ("vf", "Y"), ("e", "E"), ("dfe", "X")):
+        letters = C.SEQUENCES[f"vdf9-trfe4-{name}1-14"][0]
+        assert letters == cfe_row.replace("C", letter) and letter in C.REGROUPED and letter not in C.VALIDATED
+        assert C.make_polymer("x", letters).bonds_per_repeat == 28

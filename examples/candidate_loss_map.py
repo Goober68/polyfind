@@ -54,7 +54,7 @@ def main():
         if not d:
             continue
         c = e["conformations"]
-        rows[name] = {"validated_chemistry": e["validated_chemistry"], "note": e["note"], "margin": d["margin_TT_minus_TG_kcal_per_monomer"],
+        rows[name] = {"validated_chemistry": e["validated_chemistry"], "note": e["note"], "letters": e.get("letters", ""), "margin": d["margin_TT_minus_TG_kcal_per_monomer"],
                       "margin_rigid": d["margin_rigid_kcal_per_monomer"], "mu_TT": c["TTTT"]["dipole_per_monomer_eA"], "dmu_diff": d["dipole_gain_eA_per_monomer"],
                       "axial": d["axial_transition_strain"], "areal": d["areal_transition_strain"], "P_TT": d["P_TT_C_m2"], "P_TG": d["P_TG_C_m2"],
                       "tilt_TG": c[d.get("tg_conformer") or "TGTG'"].get("pendant_tilt_relaxation_per_monomer_kcal", 0.0) or 0.0, "tg_conformer": d.get("tg_conformer", "TGTG'")}
@@ -85,7 +85,7 @@ def main():
         dmu = r["mu_TT"]  # the gain along the field: the TGTG' state's dipole has no preferred direction in a relaxor
         est = threshold(r["margin"], dmu)
         est_lo = threshold(r["margin"], r["dmu_diff"]) if r["dmu_diff"] > 0 else float("inf")
-        md.append(f"| {name} | {'VDF/TrFE (validated)' if r['validated_chemistry'] else 'chlorine (extrapolated)'} | {r['margin']:+.3f} ({r['margin_rigid']:+.3f}) | {r['tilt_TG']:+.3f} | "
+        md.append(f"| {name} | {'VDF/TrFE (validated)' if r['validated_chemistry'] else ('tested groups in an untested order' if r.get('letters') and set(r['letters']) <= set('VRFIYEX') else 'chlorine or nitrile (extrapolated)')} | {r['margin']:+.3f} ({r['margin_rigid']:+.3f}) | {r['tilt_TG']:+.3f} | "
                   f"{r['axial'] * 100:+.1f}%, {r['areal'] * 100:+.1f}% | {r['P_TT']:.3f} | {r['mu_TT']:.3f} | {est:.0f} | {est_lo:.0f} |")
         ch = base.scaled(dmu_factor=dmu / base.dmu_mon, de_mon=max(r["margin"], 0.0), label=name)
         ch = L.replace(ch, s_switch=r["axial"])

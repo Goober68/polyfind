@@ -7,26 +7,31 @@ Screen
 | vdf8-trfe2 | VDF/TrFE (validated) | +0.229 (+0.018) | -0.343 | +11.3%, -16.4% | 0.174 | 0.578 | 172 | 579 |
 | vdf6-trfe4 | VDF/TrFE (validated) | -0.199 (-0.369) | -0.441 | +11.0%, -16.7% | 0.162 | 0.546 | 0 | 0 |
 | vdf5-trfe5 | VDF/TrFE (validated) | +0.736 (+0.517) | -0.253 | +10.8%, -19.6% | 0.160 | 0.537 | 595 | 1332 |
-| vdf7-trfe2-cfe1 | chlorine (extrapolated) | +0.868 (+0.662) | -0.332 | +11.6%, -14.5% | 0.159 | 0.566 | 665 | 1045 |
-| vdf7-trfe2-cfe1-adj | chlorine (extrapolated) | +0.875 (+0.642) | -0.326 | +11.6%, -14.6% | 0.159 | 0.566 | 671 | 1053 |
-| vdf7-trfe2-ctfe1 | chlorine (extrapolated) | +0.900 (+0.716) | -0.455 | +11.8%, -12.3% | 0.136 | 0.506 | 770 | 1188 |
-| vdf7-trfe2-cdfe1 | chlorine (extrapolated) | +0.392 (+0.232) | -0.447 | +12.8%, -8.8% | 0.130 | 0.532 | 320 | 646 |
-| vdf9-cfe1 | chlorine (extrapolated) | +0.967 (+0.725) | -0.308 | +10.2%, -14.7% | 0.176 | 0.614 | 682 | 1403 |
-| vdf8-cfe2 | chlorine (extrapolated) | +0.812 (+0.592) | -0.416 | +11.2%, -13.1% | 0.147 | 0.536 | 656 | 1781 |
-| vdf7-trfe2-an1 | chlorine (extrapolated) | +0.565 (+0.391) | -0.288 | +11.9%, -16.9% | 0.146 | 0.558 | 439 | 799 |
-| vdf7-trfe2-fan1 | chlorine (extrapolated) | +0.912 (+0.912) | +0.000 | +11.0%, -12.9% | 0.144 | 0.581 | 681 | 1155 |
-| vdf9-an1 | chlorine (extrapolated) | +0.555 (+0.363) | -0.300 | +12.8%, -16.3% | 0.163 | 0.590 | 408 | 994 |
-| vdf6-trfe3-cdfe1 | chlorine (extrapolated) | +1.012 (+0.869) | -0.362 | +12.2%, -8.4% | 0.127 | 0.523 | 839 | 1282 |
-| vdf6-trfe3-cfe1 | chlorine (extrapolated) | +0.338 (+0.154) | -0.424 | +11.3%, -14.4% | 0.153 | 0.549 | 267 | 806 |
-| vdf9-trfe4-cfe1-14 | chlorine (extrapolated) | +0.317 (+0.140) | -0.420 | +12.1%, -14.2% | 0.156 | 0.552 | 249 | 803 |
+| vdf7-trfe2-cfe1 | chlorine or nitrile (extrapolated) | +0.868 (+0.662) | -0.332 | +11.6%, -14.5% | 0.159 | 0.566 | 665 | 1045 |
+| vdf7-trfe2-cfe1-adj | chlorine or nitrile (extrapolated) | +0.875 (+0.642) | -0.326 | +11.6%, -14.6% | 0.159 | 0.566 | 671 | 1053 |
+| vdf7-trfe2-ctfe1 | chlorine or nitrile (extrapolated) | +0.900 (+0.716) | -0.455 | +11.8%, -12.3% | 0.136 | 0.506 | 770 | 1188 |
+| vdf7-trfe2-cdfe1 | chlorine or nitrile (extrapolated) | +0.392 (+0.232) | -0.447 | +12.8%, -8.8% | 0.130 | 0.532 | 320 | 646 |
+| vdf9-cfe1 | chlorine or nitrile (extrapolated) | +0.967 (+0.725) | -0.308 | +10.2%, -14.7% | 0.176 | 0.614 | 682 | 1403 |
+| vdf8-cfe2 | chlorine or nitrile (extrapolated) | +0.812 (+0.592) | -0.416 | +11.2%, -13.1% | 0.147 | 0.536 | 656 | 1781 |
+| vdf7-trfe2-an1 | chlorine or nitrile (extrapolated) | +0.565 (+0.391) | -0.288 | +11.9%, -16.9% | 0.146 | 0.558 | 439 | 799 |
+| vdf7-trfe2-fan1 | chlorine or nitrile (extrapolated) | +0.912 (+0.912) | +0.000 | +11.0%, -12.9% | 0.144 | 0.581 | 681 | 1155 |
+| vdf9-an1 | chlorine or nitrile (extrapolated) | +0.555 (+0.363) | -0.300 | +12.8%, -16.3% | 0.163 | 0.590 | 408 | 994 |
+| vdf6-trfe3-cdfe1 | chlorine or nitrile (extrapolated) | +1.012 (+0.869) | -0.362 | +12.2%, -8.4% | 0.127 | 0.523 | 839 | 1282 |
+| vdf6-trfe3-cfe1 | chlorine or nitrile (extrapolated) | +0.338 (+0.154) | -0.424 | +11.3%, -14.4% | 0.153 | 0.549 | 267 | 806 |
+| vdf9-trfe4-cfe1-14 | chlorine or nitrile (extrapolated) | +0.317 (+0.140) | -0.420 | +12.1%, -14.2% | 0.156 | 0.552 | 249 | 803 |
 | vdf10-trfe4-14 | VDF/TrFE (validated) | +0.056 (-0.106) | -0.382 | +11.7%, -16.5% | 0.168 | 0.562 | 43 | 142 |
 | vdf9-trfe5-14 | VDF/TrFE (validated) | +0.083 (-0.067) | -0.393 | +11.8%, -17.1% | 0.164 | 0.551 | 65 | 190 |
-| vdf9-trfe4-cdfe1-14 | chlorine (extrapolated) | +0.685 (+0.564) | -0.381 | +12.1%, -9.6% | 0.134 | 0.529 | 561 | 978 |
-| vdf8-trfe4-cfe1-cdfe1-14 | chlorine (extrapolated) | +0.807 (+0.633) | -0.458 | +12.2%, -14.0% | 0.129 | 0.526 | 666 | 1861 |
-| vdf9-trfe4-an1-14 | chlorine (extrapolated) | +0.197 (+0.033) | -0.393 | +12.5%, -15.4% | 0.145 | 0.524 | 163 | 615 |
-| vdf9-trfe4-fan1-14 | chlorine (extrapolated) | -0.091 (-0.091) | +0.000 | +10.6%, -12.2% | 0.141 | 0.537 | 0 | 0 |
-| vdf9-trfe4-ctfe1-14 | chlorine (extrapolated) | +0.300 (+0.124) | -0.416 | +11.8%, -12.1% | 0.138 | 0.508 | 256 | 870 |
-| vdf13-trfe6-cfe1-20 | chlorine (extrapolated) | +0.258 (+0.093) | -0.426 | +12.1%, -13.8% | 0.156 | 0.552 | 203 | 686 |
+| vdf9-trfe4-cdfe1-14 | chlorine or nitrile (extrapolated) | +0.685 (+0.564) | -0.381 | +12.1%, -9.6% | 0.134 | 0.529 | 561 | 978 |
+| vdf8-trfe4-cfe1-cdfe1-14 | chlorine or nitrile (extrapolated) | +0.807 (+0.633) | -0.458 | +12.2%, -14.0% | 0.129 | 0.526 | 666 | 1861 |
+| vdf9-trfe4-an1-14 | chlorine or nitrile (extrapolated) | +0.197 (+0.033) | -0.393 | +12.5%, -15.4% | 0.145 | 0.524 | 163 | 615 |
+| vdf9-trfe4-fan1-14 | chlorine or nitrile (extrapolated) | -0.091 (-0.091) | +0.000 | +10.6%, -12.2% | 0.141 | 0.537 | 0 | 0 |
+| vdf9-trfe4-ctfe1-14 | chlorine or nitrile (extrapolated) | +0.300 (+0.124) | -0.416 | +11.8%, -12.1% | 0.138 | 0.508 | 256 | 870 |
+| vdf9-trfe4-tfe1-14 | tested groups in an untested order | -0.050 (-0.226) | -0.378 | +11.9%, -16.0% | 0.149 | 0.511 | 0 | 0 |
+| vdf9-trfe4-rvdf1-14 | tested groups in an untested order | -0.289 (-0.428) | -0.368 | +11.5%, -16.5% | 0.139 | 0.471 | 0 | 0 |
+| vdf9-trfe4-vf1-14 | tested groups in an untested order | +0.087 (-0.037) | -0.364 | +11.5%, -16.9% | 0.159 | 0.531 | 71 | 226 |
+| vdf9-trfe4-e1-14 | tested groups in an untested order | -0.066 (-0.188) | -0.340 | +11.6%, -16.4% | 0.155 | 0.517 | 0 | 0 |
+| vdf9-trfe4-dfe1-14 | tested groups in an untested order | +0.263 (+0.132) | -0.371 | +11.5%, -16.8% | 0.155 | 0.518 | 220 | 637 |
+| vdf13-trfe6-cfe1-20 | chlorine or nitrile (extrapolated) | +0.258 (+0.093) | -0.426 | +12.1%, -13.8% | 0.156 | 0.552 | 203 | 686 |
 
 Loss model
 
@@ -56,6 +61,11 @@ Loss model
 | vdf9-trfe4-an1-14 | +0.197 | 163 | 0.02 | 0.018% | 0.017 / 0.032 | 0.5 / 1.9 | 0.09 / 0.05 | 6 / 12 |
 | vdf9-trfe4-fan1-14 | -0.091 (search) | 0 | 0.87 | 0.074% | 0.054 / 0.105 | 5.9 / 20.9 | 0.14 / 0.08 | 25 / 48 |
 | vdf9-trfe4-ctfe1-14 | +0.300 | 256 | 0.00 | 0.001% | 0.000 / 0.001 | 0.0 / 0.0 | 0.02 / 0.01 | 0 / 1 |
+| vdf9-trfe4-tfe1-14 | -0.050 | 0 | 0.86 | 0.085% | 0.056 / 0.108 | 6.1 / 21.3 | 0.17 / 0.10 | 29 / 56 |
+| vdf9-trfe4-rvdf1-14 | -0.289 | 0 | 0.85 | 0.083% | 0.058 / 0.113 | 6.0 / 21.1 | 0.16 / 0.10 | 28 / 55 |
+| vdf9-trfe4-vf1-14 | +0.087 | 71 | 0.36 | 0.166% | 0.084 / 0.163 | 18.8 / 63.9 | 0.20 / 0.12 | 57 / 109 |
+| vdf9-trfe4-e1-14 | -0.066 | 0 | 0.87 | 0.082% | 0.055 / 0.107 | 6.1 / 21.3 | 0.16 / 0.09 | 28 / 54 |
+| vdf9-trfe4-dfe1-14 | +0.263 | 220 | 0.00 | 0.003% | 0.002 / 0.004 | 0.0 / 0.1 | 0.03 / 0.02 | 1 / 2 |
 | vdf13-trfe6-cfe1-20 | +0.258 | 203 | 0.00 | 0.004% | 0.003 / 0.006 | 0.0 / 0.2 | 0.04 / 0.02 | 1 / 2 |
 
 The switching curve against the margin
