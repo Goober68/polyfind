@@ -1,0 +1,19 @@
+N-L: settled:N (+7.7221) to settled:L (+5.4227); start: straight between the two states
+      it    1: force 827.5068, top +170.5215, climbing -1, energies [7.722, 12.459, 27.22, 55.61, 168.283, 170.522, 50.397, 12.04, 5.423]  (1 s)
+      it   20: force  17.7926, top +29.5318, climbing -1, energies [7.722, 9.495, 15.953, 23.512, 29.532, 25.234, 16.075, 7.398, 5.423]  (13 s)
+      it   40: force   7.5438, top +20.6517, climbing -1, energies [7.722, 8.748, 12.956, 18.967, 20.652, 17.865, 10.758, 6.666, 5.423]  (26 s)
+      it   60: force   2.0525, top +14.9860, climbing -1, energies [7.722, 8.573, 11.385, 14.125, 14.986, 14.95, 10.082, 6.387, 5.423]  (39 s)
+      it   80: force   1.6271, top +13.7669, climbing -1, energies [7.722, 8.543, 11.038, 13.456, 13.361, 13.767, 11.981, 7.089, 5.423]  (52 s)
+      it  100: force   1.2768, top +13.9618, climbing 5, energies [7.722, 8.54, 11.344, 13.022, 12.818, 13.962, 10.158, 6.486, 5.423]  (65 s)
+      it  120: force   2.1176, top +13.8391, climbing 5, energies [7.722, 8.829, 11.985, 12.988, 13.418, 13.839, 10.369, 6.741, 5.423]  (78 s)
+      it  140: force   1.5147, top +13.8500, climbing 5, energies [7.722, 8.906, 12.349, 12.917, 12.683, 13.85, 10.366, 6.658, 5.423]  (91 s)
+      it  160: force   1.4151, top +13.7248, climbing 5, energies [7.722, 8.794, 12.039, 13.438, 12.255, 13.725, 10.352, 6.573, 5.423]  (103 s)
+      it  180: force   0.6168, top +13.6948, climbing 5, energies [7.722, 8.511, 11.458, 13.066, 12.174, 13.695, 9.867, 6.434, 5.423]  (116 s)
+      it  200: force   0.5096, top +13.6787, climbing 5, energies [7.722, 8.511, 11.277, 12.944, 12.143, 13.679, 10.096, 6.54, 5.423]  (128 s)
+      it  220: force   0.2728, top +13.6683, climbing 5, energies [7.722, 8.706, 11.752, 12.81, 12.132, 13.668, 9.893, 6.467, 5.423]  (140 s)
+      it  240: force   0.1537, top +13.6653, climbing 5, energies [7.722, 8.758, 11.838, 12.779, 12.13, 13.665, 10.036, 6.527, 5.423]  (151 s)
+      it  260: force   0.1343, top +13.6621, climbing 5, energies [7.722, 8.82, 12.02, 12.711, 12.114, 13.662, 9.933, 6.492, 5.423]  (163 s)
+N-L: top +13.6612 at image 5; force 0.0909; 271 it, 169 s; interior minima at [4]
+      N-L polish, hyperplane 1: s +0.0000, energy -1411.42563, dE/ds -0.0006, across 1.7e-04, 51 evaluations; Optimization terminated successfully: th  (4 s)
+N-L: settled saddle +13.6566 (the band's top +13.6612); along -0.0006, across 1.7e-04, curvature not measured (one hyperplane); 51 evaluations
+written /srv/bench/<token>/jobs/shared/states.json

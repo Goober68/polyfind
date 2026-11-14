@@ -1,0 +1,27 @@
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf10-trfe4-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+N-NN12: settled:N (+8.9443) to settled:NN12 (+18.7298); start: straight between the two states
+      it    1: force 159.4165, top +67.6018, climbing -1, energies [8.944, 17.382, 41.35, 67.602, 65.645, 61.633, 55.643, 31.11, 18.73]  (1 s)
+      it   20: force  23.9710, top +33.1310, climbing -1, energies [8.944, 12.939, 21.918, 27.907, 31.39, 33.131, 28.785, 21.751, 18.73]  (21 s)
+      it   40: force   5.4423, top +26.0695, climbing -1, energies [8.944, 11.225, 16.108, 22.978, 26.069, 25.823, 22.69, 19.797, 18.73]  (42 s)
+      it   60: force   1.4642, top +23.5721, climbing -1, energies [8.944, 11.556, 18.345, 23.572, 23.166, 23.484, 21.526, 19.544, 18.73]  (63 s)
+      it   80: force   0.8960, top +22.9466, climbing 5, energies [8.944, 11.825, 20.009, 22.871, 22.527, 22.947, 21.216, 19.515, 18.73]  (84 s)
+      it  100: force   0.9131, top +23.1842, climbing 5, energies [8.944, 12.231, 19.671, 22.952, 22.333, 23.184, 20.843, 19.305, 18.73]  (104 s)
+      it  120: force   0.5354, top +23.1626, climbing 5, energies [8.944, 12.339, 19.714, 22.947, 22.326, 23.163, 20.81, 19.296, 18.73]  (122 s)
+      it  140: force   0.5711, top +23.0344, climbing 5, energies [8.944, 12.768, 19.862, 22.929, 22.311, 23.034, 20.745, 19.243, 18.73]  (142 s)
+      it  160: force   0.2841, top +23.0558, climbing 5, energies [8.944, 12.726, 19.804, 22.89, 22.325, 23.056, 20.823, 19.276, 18.73]  (160 s)
+      it  180: force   0.1785, top +23.0544, climbing 5, energies [8.944, 12.603, 19.722, 22.852, 22.345, 23.054, 20.913, 19.309, 18.73]  (179 s)
+      it  200: force   0.1204, top +23.0527, climbing 5, energies [8.944, 12.586, 19.776, 22.92, 22.313, 23.053, 20.872, 19.295, 18.73]  (197 s)
+N-NN12: top +23.0526 at image 5; force 0.0957; 215 it, 211 s; interior minima at [4]
+      N-NN12 polish, hyperplane 1: s +0.0000, energy -1589.84945, dE/ds +0.0681, across 2.7e-04, 73 evaluations; Optimization terminated successfully: th  (9 s)
+      N-NN12 polish, hyperplane 2: s +0.0500, energy -1590.87839, dE/ds -2.2219, across 1.9e-04, 227 evaluations; Optimization terminated successfully: th  (38 s)
+      N-NN12 polish, hyperplane 3: s +0.0015, energy -1590.76967, dE/ds -2.2604, across 2.3e-04, 63 evaluations; Optimization terminated successfully: th  (46 s)
+      N-NN12 polish, hyperplane 4: s -0.0485, energy -1590.65566, dE/ds -2.2998, across 2.9e-04, 61 evaluations; Optimization terminated successfully: th  (53 s)
+      N-NN12 polish, hyperplane 5: s -0.0985, energy -1590.53969, dE/ds -2.3388, across 2.8e-04, 64 evaluations; Optimization terminated successfully: th  (61 s)
+      N-NN12 polish, hyperplane 6: s -0.1485, energy -1590.42179, dE/ds -2.3773, across 2.6e-04, 58 evaluations; Optimization terminated successfully: th  (68 s)
+      N-NN12 polish, hyperplane 7: s -0.1985, energy -1590.30197, dE/ds -2.4154, across 2.5e-04, 59 evaluations; Optimization terminated successfully: th  (75 s)
+      N-NN12 polish, hyperplane 8: s -0.2485, energy -1590.18026, dE/ds -2.4527, across 2.9e-04, 60 evaluations; Optimization terminated successfully: th  (82 s)
+      N-NN12 polish, hyperplane 9: s -0.2985, energy -1590.05671, dE/ds -2.4893, across 2.7e-04, 61 evaluations; Optimization terminated successfully: th  (90 s)
+      N-NN12 polish, hyperplane 10: s -0.3485, energy -1589.93135, dE/ds -2.5248, across 2.1e-04, 66 evaluations; Optimization terminated successfully: th  (98 s)
+N-NN12: settled saddle +22.9694 (the band's top +23.0526); along -2.5248, across 2.1e-04, curvature +0.710; 792 evaluations  (NOT a saddle between the two: not converged, below an end state, or a minimum along the path)
+written /srv/bench/<token>/jobs/shared/states.json

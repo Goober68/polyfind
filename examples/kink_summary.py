@@ -356,6 +356,16 @@ def main():
             md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {n['N']:+.2f} | {t['barrier_back']:.2f} | {t['N2']:+.2f}, {t['barrier_on']:.2f} | {t['B2']:+.2f} | {pairs} | {joins} | "
                       f"{t['returns_for_each_move_on']:.1e} | {t['returns_for_each_time_a_neighbour_joins']:.1e} |")
 
+    to_l = [e for e in mig.get("rows", {}).values() if "to_L" in e]
+    if to_l:
+        md += ["", "**Where one chain's kink pair ends up: L, three bonds on with the sheet's hand** (gauche bonds 3 and 5; straight from the sheet, or from N; "
+               "kcal/mol against the sheet; from N, how often the chain goes on to L for each time it goes back to the sheet, at 300 K with equal attempt frequencies)", "",
+               "| sequence, cell | L | straight from the sheet | from N: saddle, above N | N back to the sheet | to L per return | the way to L, barrier / back |", "|---|---|---|---|---|---|---|"]
+        for e in sorted(to_l, key=lambda e: e["row"]):
+            t = e["to_L"]
+            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {t['L']:+.2f} | {t['straight_from_the_sheet']['highest']:.2f} | {t['from_N']['highest']:.2f}, {t['barrier_from_N']:.2f} | "
+                      f"{t['N_back_to_the_sheet']:.2f} | {t['to_L_for_each_return_from_N']:.2g} | {t['the_way']}, {t['barrier_forward']:.2f} / {t['barrier_back']:.2f} |")
+
     # --- two chains ahead together --------------------------------------------------------------------
     together = [e for e in mig.get("rows", {}).values() if e.get("row") == "vdf10" and "," in str(e.get("mover")) and e.get("host") == "flexible" and "B" in e
                 and e.get("direction") == "ahead" and tuple(e["supercell"]) in single and "flexible" in single[tuple(e["supercell"])]]

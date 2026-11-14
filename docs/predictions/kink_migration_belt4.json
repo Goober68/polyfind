@@ -43177,6 +43177,33 @@
     "note": "from the sheet straight to N (a kink pair of the other hand two monomers on), not through the wide kink: the band A-N of docs/predictions/kink_states_belt4.json, in the per-chain metric, and the saddle settled from its top",
     "the_step_to_B": 11.636561147876137,
     "cheaper_than_the_step_by": -0.749991329322711
+   },
+   "to_L": {
+    "L": 5.422726524128166,
+    "gauche_bonds": [
+     3,
+     5
+    ],
+    "straight_from_the_sheet": {
+     "band_top": 11.821099757876482,
+     "band_converged": false,
+     "settled_saddle": 11.820463812198113,
+     "highest": 11.820463812198113
+    },
+    "from_N": {
+     "band_top": 13.66117544970507,
+     "band_converged": true,
+     "settled_saddle": 13.656610126574606,
+     "highest": 13.66117544970507
+    },
+    "barrier_from_N": 5.939055916273219,
+    "N_back_to_the_sheet": 4.664432943766997,
+    "to_L_for_each_return_from_N": 0.1178162409407883,
+    "by_way_of_N": 13.66117544970507,
+    "barrier_forward": 11.820463812198113,
+    "the_way": "straight from the sheet",
+    "barrier_back": 6.397737288069948,
+    "note": "L: the kink pair three bonds on with the sheet's hand; bands A-L and N-L of docs/predictions/kink_states_belt4.json, in the per-chain metric"
    }
   },
   "vdf10@0 4x1 mover 0 ahead host flexible": {
@@ -160604,7 +160631,79 @@
     "barrier_back": 2.948427225933756,
     "note": "from the sheet straight to N (a kink pair of the other hand two monomers on), not through the wide kink: the band A-N of docs/predictions/kink_states_belt4.json, in the per-chain metric, and the saddle settled from its top",
     "the_step_to_B": 14.99997257425889,
-    "cheaper_than_the_step_by": 3.1072495758332934
+    "cheaper_than_the_step_by": 3.1072495758332934,
+    "then": {
+     "N2": 12.660278905395899,
+     "N2_above_N": 3.715983132904057,
+     "to_N2": {
+      "band_top": 14.591983195028433,
+      "band_converged": false,
+      "settled_saddle": null,
+      "highest": 14.591983195028433
+     },
+     "barrier_on": 5.647687422536592,
+     "B2": 12.591078521521922,
+     "the_turn_over_is_worth": 3.6467827490300806,
+     "barrier_back": 2.948427225933756,
+     "neighbours": {
+      "4": {
+       "both_in_N": 18.729764359191904,
+       "the_second_costs": 9.785468586700063,
+       "more_than_the_first_by": 0.8411728142082211,
+       "band": {
+        "band_top": 22.145504035790736,
+        "band_converged": false,
+        "settled_saddle": null,
+        "highest": 22.145504035790736
+       },
+       "barrier_to_join": 13.201208263298895,
+       "the_first_chains_own_barrier": 11.892722998425597
+      },
+      "12": {
+       "both_in_N": 18.729764256659564,
+       "the_second_costs": 9.785468484167723,
+       "more_than_the_first_by": 0.8411727116758811,
+       "band": {
+        "band_top": 23.052614659100982,
+        "band_converged": true,
+        "settled_saddle": null,
+        "highest": 23.052614659100982
+       },
+       "barrier_to_join": 14.10831888660914,
+       "the_first_chains_own_barrier": 11.892722998425597
+      }
+     },
+     "returns_for_each_move_on": 92.66214801579785,
+     "returns_for_each_time_a_neighbour_joins": 29581293.62114242,
+     "note": "from N (docs/predictions/kink_states_belt4.json: states N2, B2, NN4, NN12 and the bands N-N2, N-NN4, N-NN12, in the per-chain metric): the same move again, and a stack neighbour making the move beside it; barriers are from N, rates compare at 300 K with equal attempt frequencies"
+    }
+   },
+   "to_L": {
+    "L": 3.7439958312575072,
+    "gauche_bonds": [
+     3,
+     5
+    ],
+    "straight_from_the_sheet": {
+     "band_top": 15.57945366068384,
+     "band_converged": true,
+     "settled_saddle": null,
+     "highest": 15.57945366068384
+    },
+    "from_N": {
+     "band_top": 10.5640948177695,
+     "band_converged": false,
+     "settled_saddle": 10.557412206030222,
+     "highest": 10.557412206030222
+    },
+    "barrier_from_N": 1.61311643353838,
+    "N_back_to_the_sheet": 2.948427225933756,
+    "to_L_for_each_return_from_N": 9.39760011398473,
+    "by_way_of_N": 11.892722998425597,
+    "barrier_forward": 11.892722998425597,
+    "the_way": "by way of N",
+    "barrier_back": 8.14872716716809,
+    "note": "L: the kink pair three bonds on with the sheet's hand; bands A-L and N-L of docs/predictions/kink_states_belt4.json, in the per-chain metric"
    }
   },
   "vdf9-trfe4-cfe1-14@0 2x1 mover 0 ahead host flexible": {
@@ -189713,7 +189812,79 @@
      }
     },
     "the_step_to_B": 14.491103710246989,
-    "cheaper_than_the_step_by": 3.0950855192024846
+    "cheaper_than_the_step_by": 3.0950855192024846,
+    "then": {
+     "N2": 14.88389114843153,
+     "N2_above_N": 6.064383200138309,
+     "to_N2": {
+      "band_top": 16.043125029559178,
+      "band_converged": true,
+      "settled_saddle": 16.034692702028906,
+      "highest": 16.043125029559178
+     },
+     "barrier_on": 7.223617081265957,
+     "B2": 12.39759442200625,
+     "the_turn_over_is_worth": 3.5780864737130287,
+     "barrier_back": 2.576510242751283,
+     "neighbours": {
+      "4": {
+       "both_in_N": 19.895554478549002,
+       "the_second_costs": 11.07604653025578,
+       "more_than_the_first_by": 2.256538581962559,
+       "band": {
+        "band_top": 21.339992449288047,
+        "band_converged": true,
+        "settled_saddle": 21.29784782142201,
+        "highest": 21.339992449288047
+       },
+       "barrier_to_join": 12.520484500994826,
+       "the_first_chains_own_barrier": 11.396018191044504
+      },
+      "12": {
+       "both_in_N": 19.991222666537624,
+       "the_second_costs": 11.171714718244402,
+       "more_than_the_first_by": 2.352206769951181,
+       "band": {
+        "band_top": 20.514484598637182,
+        "band_converged": true,
+        "settled_saddle": 20.00060931469352,
+        "highest": 20.514484598637182
+       },
+       "barrier_to_join": 11.69497665034396,
+       "the_first_chains_own_barrier": 11.396018191044504
+      }
+     },
+     "returns_for_each_move_on": 2433.678371747196,
+     "returns_for_each_time_a_neighbour_joins": 4410242.705616221,
+     "note": "from N (docs/predictions/kink_states_belt4.json: states N2, B2, NN4, NN12 and the bands N-N2, N-NN4, N-NN12, in the per-chain metric): the same move again, and a stack neighbour making the move beside it; barriers are from N, rates compare at 300 K with equal attempt frequencies"
+    }
+   },
+   "to_L": {
+    "L": 4.969184785839843,
+    "gauche_bonds": [
+     3,
+     5
+    ],
+    "straight_from_the_sheet": {
+     "band_top": 15.290188834545233,
+     "band_converged": true,
+     "settled_saddle": 15.289949467860424,
+     "highest": 15.290188834545233
+    },
+    "from_N": {
+     "band_top": 10.49269291444034,
+     "band_converged": true,
+     "settled_saddle": 10.49268352199715,
+     "highest": 10.49269291444034
+    },
+    "barrier_from_N": 1.6731849661471188,
+    "N_back_to_the_sheet": 2.576510242751283,
+    "to_L_for_each_return_from_N": 4.552362992915597,
+    "by_way_of_N": 11.396018191044504,
+    "barrier_forward": 11.396018191044504,
+    "the_way": "by way of N",
+    "barrier_back": 6.426833405204661,
+    "note": "L: the kink pair three bonds on with the sheet's hand; bands A-L and N-L of docs/predictions/kink_states_belt4.json, in the per-chain metric"
    }
   }
  }

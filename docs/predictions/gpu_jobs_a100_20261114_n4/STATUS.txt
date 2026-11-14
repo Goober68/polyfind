@@ -1,0 +1,21 @@
+2026-11-14T05:41:30Z started pod mx6wpsedyeg334, queue examples/gpu_jobs/queue_20261114_n4.txt of claude/polymeric-stable-arrangements-uh06b1
+2026-11-14T05:42:03Z set up
+2026-11-14T05:42:04Z job 1 started: settle.sh vdf10-trfe4-14 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71 (commit 8d2aae5)
+2026-11-14T05:42:52Z job 1 ended: exit 0 (01_settle)
+2026-11-14T05:42:53Z job 2 started: settle.sh vdf9-trfe4-cfe1-14 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71 (commit 8d2aae5)
+2026-11-14T05:43:21Z job 2 ended: exit 0 (02_settle)
+2026-11-14T05:43:21Z job 3 started: settle.sh vdf10 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71 (commit 8d2aae5)
+2026-11-14T05:44:22Z job 3 ended: exit 0 (03_settle)
+2026-11-14T05:44:23Z job 4 started: between.sh vdf10-trfe4-14 4 2 kinked_crystal.state settled:L A-L (commit 8d2aae5)
+2026-11-14T05:48:28Z job 4 ended: exit 0 (04_between)
+2026-11-14T05:48:29Z job 5 started: between.sh vdf9-trfe4-cfe1-14 4 2 kinked_crystal.state settled:L A-L (commit 8d2aae5)
+2026-11-14T05:51:32Z job 5 ended: exit 0 (05_between)
+2026-11-14T05:51:33Z job 6 started: between.sh vdf10 4 2 kinked_crystal.state settled:L A-L (commit 8d2aae5)
+2026-11-14T05:54:56Z job 6 ended: exit 0 (06_between)
+2026-11-14T05:55:53Z job 7 started: between.sh vdf10-trfe4-14 4 2 settled:N settled:L N-L (commit e6535d0)
+2026-11-14T06:00:43Z job 7 ended: exit 0 (07_between)
+2026-11-14T06:00:43Z job 8 started: between.sh vdf9-trfe4-cfe1-14 4 2 settled:N settled:L N-L (commit e6535d0)
+2026-11-14T06:03:16Z job 8 ended: exit 0 (08_between)
+2026-11-14T06:03:17Z job 9 started: between.sh vdf10 4 2 settled:N settled:L N-L (commit e6535d0)
+2026-11-14T06:06:17Z job 9 ended: exit 0 (09_between)
+2026-11-14T06:06:18Z stop: finished exit 0

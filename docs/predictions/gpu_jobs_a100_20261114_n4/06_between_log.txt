@@ -1,0 +1,22 @@
+A-L: kinked_crystal.state (+0.0000) to settled:L (+5.4227); start: straight between the two states
+      it    1: force 157.6507, top +54.1053, climbing -1, energies [0.0, 4.342, 18.931, 40.205, 54.105, 42.799, 25.11, 10.589, 5.423]  (1 s)
+      it   20: force  23.3465, top +24.0350, climbing -1, energies [0.0, 2.911, 9.02, 17.203, 24.035, 16.694, 10.597, 6.84, 5.423]  (13 s)
+      it   40: force   5.5211, top +17.7442, climbing -1, energies [0.0, 2.119, 7.132, 12.892, 17.744, 12.99, 9.097, 6.334, 5.423]  (27 s)
+      it   60: force   2.6911, top +16.5997, climbing -1, energies [0.0, 2.557, 7.302, 12.69, 16.6, 12.163, 8.573, 6.126, 5.423]  (40 s)
+      it   80: force   0.8572, top +16.4796, climbing 4, energies [0.0, 2.291, 6.676, 11.545, 16.48, 13.155, 9.133, 6.271, 5.423]  (53 s)
+      it  100: force   0.6408, top +15.9589, climbing 4, energies [0.0, 2.091, 6.888, 12.052, 15.959, 13.053, 9.219, 6.298, 5.423]  (66 s)
+      it  120: force   1.7218, top +13.7472, climbing 4, energies [0.0, 3.538, 10.163, 13.291, 13.747, 12.085, 8.495, 6.174, 5.423]  (79 s)
+      it  140: force   1.5240, top +12.6645, climbing 4, energies [0.0, 4.053, 10.491, 12.664, 11.882, 11.847, 9.336, 6.52, 5.423]  (92 s)
+      it  160: force   2.1866, top +12.5290, climbing 4, energies [0.0, 4.005, 9.519, 12.529, 11.071, 9.816, 10.202, 6.797, 5.423]  (104 s)
+      it  180: force   1.8182, top +12.1445, climbing 4, energies [0.0, 3.294, 7.917, 11.547, 12.145, 10.018, 10.609, 7.671, 5.423]  (118 s)
+      it  200: force   0.4639, top +12.0634, climbing 4, energies [0.0, 2.802, 7.264, 10.589, 12.063, 9.526, 10.261, 7.769, 5.423]  (130 s)
+      it  220: force   1.4096, top +11.8241, climbing 4, energies [0.0, 3.134, 7.483, 10.434, 11.824, 8.838, 7.883, 9.123, 5.423]  (142 s)
+      it  240: force   0.4968, top +11.8304, climbing 4, energies [0.0, 3.63, 7.994, 10.681, 11.83, 8.646, 7.917, 8.715, 5.423]  (154 s)
+      it  260: force   0.8358, top +11.8229, climbing 4, energies [0.0, 3.873, 8.23, 10.763, 11.823, 8.502, 8.066, 8.554, 5.423]  (166 s)
+      it  280: force   0.1819, top +11.8215, climbing 4, energies [0.0, 3.889, 8.245, 10.765, 11.822, 8.461, 8.03, 8.599, 5.423]  (178 s)
+      it  300: force   0.4198, top +11.8211, climbing 4, energies [0.0, 3.798, 8.132, 10.701, 11.821, 8.516, 7.863, 8.635, 5.423]  (190 s)
+A-L: top +11.8211 at image 4 (NOT converged); force 0.4198; 300 it, 190 s; interior minima at [6]
+      A-L polish, hyperplane 1: s +0.0000, energy -1413.26223, dE/ds +0.0175, across 2.3e-04, 44 evaluations; Optimization terminated successfully: th  (3 s)
+      A-L polish, hyperplane 2: s +0.0500, energy -1413.26178, dE/ds +0.0006, across 2.4e-04, 41 evaluations; Optimization terminated successfully: th  (6 s)
+A-L: settled saddle +11.8205 (the band's top +11.8211); along +0.0006, across 2.4e-04, curvature -0.339; 85 evaluations
+written /srv/bench/<token>/jobs/shared/states.json

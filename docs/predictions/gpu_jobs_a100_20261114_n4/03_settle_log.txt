@@ -1,0 +1,7 @@
+/srv/bench/<token>/jobs/shared/steps.json: 6 kinked crystals, 3 rows; copied from the stored table: ['vdf10@0 4x2 mover 0 ahead host flexible']
+      surface    1: +99.0572  (0 s)
+      surface   20: +5.5106  (2 s)
+      surface   40: +5.4228  (4 s)
+      surface   60: +5.4227  (5 s)
+L: +5.4227 kcal/mol above the sheet (start +99.0572); the moving chain T T T G+ T G- T T T T T T T T T T T T T T (gauche bonds [3, 5]; in the sheet [0, 2]); chains off the sheet's conformation: ['0']; 68 evaluations, 6 s; gradient 2.2e-04; Optimization terminated successfully: the gradient along the surface is under gtol
+written /srv/bench/<token>/jobs/shared/states.json

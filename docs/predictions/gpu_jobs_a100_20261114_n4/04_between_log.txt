@@ -1,0 +1,25 @@
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf10-trfe4-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+A-L: kinked_crystal.state (+0.0000) to settled:L (+3.7440); start: straight between the two states
+      it    1: force 300.9770, top +75.0888, climbing -1, energies [0.0, 10.459, 42.715, 66.575, 72.195, 75.089, 52.333, 18.39, 3.744]  (1 s)
+      it   20: force  27.4330, top +24.6002, climbing -1, energies [0.0, 4.484, 12.113, 20.039, 24.6, 19.3, 13.536, 6.662, 3.744]  (21 s)
+      it   40: force   7.4402, top +17.7666, climbing -1, energies [0.0, 2.814, 8.185, 14.997, 17.767, 13.741, 8.435, 4.899, 3.744]  (41 s)
+      it   60: force   1.8395, top +16.1895, climbing -1, energies [0.0, 2.775, 8.066, 14.539, 16.189, 12.764, 7.45, 4.563, 3.744]  (60 s)
+      it   80: force   3.3583, top +15.6073, climbing 4, energies [0.0, 3.583, 9.287, 13.896, 15.607, 12.092, 6.752, 4.315, 3.744]  (79 s)
+      it  100: force   1.1268, top +15.6346, climbing 4, energies [0.0, 2.851, 8.02, 12.452, 15.635, 13.149, 8.846, 4.536, 3.744]  (97 s)
+      it  120: force   0.2384, top +15.5869, climbing 4, energies [0.0, 3.026, 8.458, 12.978, 15.587, 12.887, 8.499, 4.452, 3.744]  (115 s)
+      it  140: force   0.1544, top +15.5839, climbing 4, energies [0.0, 2.976, 8.367, 12.804, 15.584, 13.16, 9.136, 4.528, 3.744]  (133 s)
+      it  160: force   0.1280, top +15.5801, climbing 4, energies [0.0, 2.939, 8.314, 12.788, 15.58, 13.17, 9.216, 4.549, 3.744]  (151 s)
+A-L: top +15.5795 at image 4; force 0.0759; 166 it, 156 s
+      A-L polish, hyperplane 1: s +0.0000, energy -1597.32541, dE/ds -0.0332, across 1.5e-04, 59 evaluations; Optimization terminated successfully: th  (7 s)
+      A-L polish, hyperplane 2: s -0.0500, energy -1602.62741, dE/ds +1.4707, across 2.5e-04, 95 evaluations; Optimization terminated successfully: th  (18 s)
+      A-L polish, hyperplane 3: s -0.0011, energy -1602.55553, dE/ds +1.4694, across 2.9e-04, 43 evaluations; Optimization terminated successfully: th  (23 s)
+      A-L polish, hyperplane 4: s +0.2989, energy -1602.11609, dE/ds +1.4591, across 2.2e-04, 58 evaluations; Optimization terminated successfully: th  (30 s)
+      A-L polish, hyperplane 5: s +0.5989, energy -1601.68110, dE/ds +1.4383, across 2.2e-04, 60 evaluations; Optimization terminated successfully: th  (38 s)
+      A-L polish, hyperplane 6: s +0.8989, energy -1601.25514, dE/ds +1.3970, across 1.6e-04, 61 evaluations; Optimization terminated successfully: th  (45 s)
+      A-L polish, hyperplane 7: s +1.1989, energy -1600.84634, dE/ds +1.3212, across 1.3e-04, 58 evaluations; Optimization terminated successfully: th  (52 s)
+      A-L polish, hyperplane 8: s +1.4989, energy -1600.46787, dE/ds +1.1906, across 2.8e-04, 59 evaluations; Optimization terminated successfully: th  (59 s)
+      A-L polish, hyperplane 9: s +1.7989, energy -1604.48364, dE/ds -0.4389, across 1.7e-04, 114 evaluations; Optimization terminated successfully: th  (73 s)
+      A-L polish, hyperplane 10: s +1.7181, energy -1604.44671, dE/ds -0.4749, across 2.9e-04, 49 evaluations; Optimization terminated successfully: th  (79 s)
+A-L: settled saddle +8.4541 (the band's top +15.5795); along -0.4749, across 2.9e-04, curvature +0.446; 656 evaluations  (NOT a saddle between the two: not converged, below an end state, or a minimum along the path)
+written /srv/bench/<token>/jobs/shared/states.json

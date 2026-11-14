@@ -115,13 +115,24 @@ How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displa
 | sequence, cell | state | gauche bonds of the moving chain | its first seven torsions, deg | above the sheet | I | B |
 |---|---|---|---|---|---|---|
 | vdf10-trfe4-14, 2x1 | M | 4 | +178, +179, +132, +165, -100, -180, +178 | +11.680 | +9.53 | +12.31 |
+| vdf10-trfe4-14, 4x2 | B2 | 4, 6 | -169, -180, -165, +171, +81, +169, -78 | +12.591 | +9.36 | +10.70 |
+| vdf10-trfe4-14, 4x2 | L | 3, 5 | -174, -163, -176, +78, -169, -82, -180 | +3.744 | +9.36 | +10.70 |
 | vdf10-trfe4-14, 4x2 | M | 2, 4 | +180, +175, +116, +168, -94, +179, -178 | +13.432 | +9.36 | +10.70 |
 | vdf10-trfe4-14, 4x2 | N | 4, 6 | -171, -167, +171, +164, -90, -169, +94 | +8.944 | +9.36 | +10.70 |
+| vdf10-trfe4-14, 4x2 | N2 | 8, 10 | -170, -171, +175, +154, -159, -171, -172 | +12.660 | +9.36 | +10.70 |
+| vdf10-trfe4-14, 4x2 | NN12 | 4, 6 | -172, -172, -168, -176, -96, -172, +78 | +18.730 | +9.36 | +10.70 |
+| vdf10-trfe4-14, 4x2 | NN4 | 4, 6 | -174, -167, +171, +168, -86, -168, +90 | +18.730 | +9.36 | +10.70 |
 | vdf10-trfe4-14, 4x2 | P | 4, 6 | +145, +163, -163, -159, -65, -170, +91 | +11.167 | +9.36 | +10.70 |
+| vdf10, 4x2 | L | 3, 5 | +178, -173, -175, +82, -168, -75, +174 | +5.423 | +9.96 | +5.91 |
 | vdf10, 4x2 | N | 4, 6 | +174, +179, +170, -178, -73, -166, +83 | +7.722 | +9.96 | +5.91 |
 | vdf9-trfe4-cfe1-14, 2x1 | M | 4 | +178, +179, +144, +162, -107, +180, +178 | +11.204 | +9.04 | +13.00 |
+| vdf9-trfe4-cfe1-14, 4x2 | B2 | 4, 6 | +175, +173, -150, +180, +78, +173, -76 | +12.398 | +9.05 | +11.79 |
+| vdf9-trfe4-cfe1-14, 4x2 | L | 3, 5 | -177, -162, -171, +81, -167, -77, +175 | +4.969 | +9.05 | +11.79 |
 | vdf9-trfe4-cfe1-14, 4x2 | M | 4 | +174, +179, +134, +162, -101, +180, +179 | +13.088 | +9.05 | +11.79 |
 | vdf9-trfe4-cfe1-14, 4x2 | N | 4, 6 | -176, -161, +171, +155, -90, -172, +101 | +8.820 | +9.05 | +11.79 |
+| vdf9-trfe4-cfe1-14, 4x2 | N2 | 8, 10 | -176, -166, +175, +149, -152, -171, -172 | +14.884 | +9.05 | +11.79 |
+| vdf9-trfe4-cfe1-14, 4x2 | NN12 | 4, 6 | -176, -165, +168, +159, -88, -172, +101 | +19.991 | +9.05 | +11.79 |
+| vdf9-trfe4-cfe1-14, 4x2 | NN4 | 4, 6 | -176, -155, +172, +150, -100, -176, +115 | +19.896 | +9.05 | +11.79 |
 | vdf9-trfe4-cfe1-14, 4x2 | P | 0, 2 | +92, -179, -71, -174, +177, -178, +179 | +0.000 | +9.05 | +11.79 |
 | vdf9-trfe4-cfe1-14, 4x2 | Q | 4, 6 | +148, +161, -164, -160, -64, -172, +92 | +10.333 | +9.05 | +11.79 |
 
@@ -129,22 +140,34 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 
 | sequence, cell | band | from, to | the band's top (force, iterations) | settled saddle | curvature along the path |
 |---|---|---|---|---|---|
+| vdf10-trfe4-14, 4x2 | A-L | kinked_crystal.state, settled:L | +15.579 (0.08, 166) | not settled (the search ended at +8.45) | +0.45 |
 | vdf10-trfe4-14, 4x2 | A-N | kinked_crystal.state, settled:N | +11.893 (0.40, 300, not converged) | **+11.893** | - |
 | vdf10-trfe4-14, 4x2 | I-M | I.state, settled:M | +15.067 (0.18, 300, not converged) | **+15.000** | -0.70 |
 | vdf10-trfe4-14, 4x2 | I-N | I.state, settled:N | +13.810 (0.09, 555) | not settled (the search ended at +9.53) | -0.03 |
 | vdf10-trfe4-14, 4x2 | I-P | I.state, settled:P | +13.799 (0.09, 132) | **+13.786** | -0.28 |
 | vdf10-trfe4-14, 4x2 | M-B | settled:M, B.state | +13.587 (0.09, 164) | **+13.567** | -0.32 |
+| vdf10-trfe4-14, 4x2 | N-L | settled:N, settled:L | +10.564 (0.17, 300, not converged) | **+10.557** | -0.29 |
+| vdf10-trfe4-14, 4x2 | N-N2 | settled:N, settled:N2 | +14.592 (1.66, 600, not converged) | not settled (the search ended at +7.98) | +0.42 |
+| vdf10-trfe4-14, 4x2 | N-NN12 | settled:N, settled:NN12 | +23.053 (0.10, 215) | not settled (the search ended at +22.97) | +0.71 |
+| vdf10-trfe4-14, 4x2 | N-NN4 | settled:N, settled:NN4 | +22.146 (8.74, 300, not converged) | not settled (the search ended at +9.08) | +0.20 |
 | vdf10-trfe4-14, 4x2 | P-N | settled:P, settled:N | +12.351 (0.09, 172) | not settled (the search ended at +12.31) | -0.58 |
+| vdf10, 4x2 | A-L | kinked_crystal.state, settled:L | +11.821 (0.42, 300, not converged) | **+11.820** | -0.34 |
 | vdf10, 4x2 | A-N | kinked_crystal.state, settled:N | +12.388 (0.10, 128) | **+12.387** | -0.17 |
 | vdf10, 4x2 | I-N | I.state, settled:N | +11.637 (4.82, 600, not converged) | **+11.637** | -0.41 |
+| vdf10, 4x2 | N-L | settled:N, settled:L | +13.661 (0.09, 271) | **+13.657** | - |
 | vdf9-trfe4-cfe1-14, 2x1 | I-M | I.state, settled:M | +13.066 (0.11, 300, not converged) | **+12.999** | -0.19 |
 | vdf9-trfe4-cfe1-14, 2x1 | M-B | settled:M, B.state | +13.412 (0.09, 183) | **+13.307** | -0.25 |
+| vdf9-trfe4-cfe1-14, 4x2 | A-L | kinked_crystal.state, settled:L | +15.290 (0.10, 178) | **+15.290** | - |
 | vdf9-trfe4-cfe1-14, 4x2 | A-N | kinked_crystal.state, settled:N | +11.402 (0.08, 148) | **+11.396** | -1.72 |
 | vdf9-trfe4-cfe1-14, 4x2 | I-B | I.state, B.state | +15.307 (0.08, 106) | **+15.293** | - |
 | vdf9-trfe4-cfe1-14, 4x2 | I-M | I.state, settled:M | +14.771 (0.18, 300, not converged) | **+14.491** | -0.78 |
 | vdf9-trfe4-cfe1-14, 4x2 | I-N | I.state, settled:N | +11.523 (0.24, 900, not converged) | **+11.519** | -0.29 |
 | vdf9-trfe4-cfe1-14, 4x2 | I-P | I.state, settled:P | +9.109 (0.10, 94) | **+9.109** | - |
 | vdf9-trfe4-cfe1-14, 4x2 | M-B | settled:M, B.state | +14.089 (0.10, 168) | **+13.982** | -0.52 |
+| vdf9-trfe4-cfe1-14, 4x2 | N-L | settled:N, settled:L | +10.493 (0.09, 148) | **+10.493** | -0.19 |
+| vdf9-trfe4-cfe1-14, 4x2 | N-N2 | settled:N, settled:N2 | +16.043 (0.10, 210) | **+16.035** | -0.22 |
+| vdf9-trfe4-cfe1-14, 4x2 | N-NN12 | settled:N, settled:NN12 | +20.514 (0.10, 255) | **+20.001** | -0.64 |
+| vdf9-trfe4-cfe1-14, 4x2 | N-NN4 | settled:N, settled:NN4 | +21.340 (0.07, 152) | **+21.298** | -0.60 |
 | vdf9-trfe4-cfe1-14, 4x2 | P-Q | settled:P, settled:Q | +10.627 (0.08, 105) | **+10.626** | - |
 | vdf9-trfe4-cfe1-14, 4x2 | Q-N | settled:Q, settled:N | +11.397 (0.10, 176) | **+11.396** | -1.10 |
 
@@ -155,6 +178,21 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 | vdf10, 4x2 | +5.91 | 11.64 / 5.73 | +7.72 | 12.39 / 4.66 | the step to B, 11.64 | 9.9e+03 /s |
 | vdf10-trfe4-14, 4x2 | +10.70 | 15.00 / 4.30 | +8.94 | 11.89 / 2.95 | to N, 11.89 | 6.5e+03 /s |
 | vdf9-trfe4-cfe1-14, 4x2 | +11.79 | 14.49 / 2.70 | +8.82 | 11.40 / 2.58 | to N, 11.40 | 1.5e+04 /s |
+
+**What N does next** (from N: the same move again, to N2; a stack neighbour making the move beside it; barriers from N, and how often N goes back to the sheet for each of them at 300 K with equal attempt frequencies)
+
+| sequence, cell | N | back to the sheet | N2, barrier on | the sheet's hand at N's site | a neighbour beside it: the pair, what the second costs | barrier for it to join | returns per move on | returns per neighbour joining |
+|---|---|---|---|---|---|---|---|---|
+| vdf10-trfe4-14, 4x2 | +8.94 | 2.95 | +12.66, 5.65 | +12.59 | chain 4: +18.73, +9.79; chain 12: +18.73, +9.79 | 13.20, 14.11 | 9.3e+01 | 3.0e+07 |
+| vdf9-trfe4-cfe1-14, 4x2 | +8.82 | 2.58 | +14.88, 7.22 | +12.40 | chain 4: +19.90, +11.08; chain 12: +19.99, +11.17 | 12.52, 11.69 | 2.4e+03 | 4.4e+06 |
+
+**Where one chain's kink pair ends up: L, three bonds on with the sheet's hand** (gauche bonds 3 and 5; straight from the sheet, or from N; kcal/mol against the sheet; from N, how often the chain goes on to L for each time it goes back to the sheet, at 300 K with equal attempt frequencies)
+
+| sequence, cell | L | straight from the sheet | from N: saddle, above N | N back to the sheet | to L per return | the way to L, barrier / back |
+|---|---|---|---|---|---|---|
+| vdf10, 4x2 | +5.42 | 11.82 | 13.66, 5.94 | 4.66 | 0.12 | straight from the sheet, 11.82 / 6.40 |
+| vdf10-trfe4-14, 4x2 | +3.74 | 15.58 | 10.56, 1.61 | 2.95 | 9.4 | by way of N, 11.89 / 8.15 |
+| vdf9-trfe4-cfe1-14, 4x2 | +4.97 | 15.29 | 10.49, 1.67 | 2.58 | 4.6 | by way of N, 11.40 / 6.43 |
 
 **Two chains one monomer ahead together** (end state only; kcal/mol against the sheet, neighbours flexible, cell fixed)
 
