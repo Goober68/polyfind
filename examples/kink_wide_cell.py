@@ -315,13 +315,16 @@ def between(args) -> None:
                                         log=lambda text: log(f"      {args.name} polish, {text}  ({time.time() - t1:.0f} s)"))
             st = model.state(xs)
             ends = max(float(res.energies[0]), float(res.energies[-1])) - eA
-            ok = bool(info["converged"]) and info["energy"] - eA >= ends - 1e-3 and info["slope"] is not None and info["slope"] < 0.0
+            # converged, above both end states, and a maximum along the path where that was measured (a search that
+            # needs one hyperplane only measures no curvature: the band's climbing image was already on the saddle)
+            ok = bool(info["converged"]) and info["energy"] - eA >= ends - 1e-3 and (info["slope"] is None or info["slope"] < 0.0)
             rec["polished"] = {"saddle": info["energy"] - eA, "band_top": rec["saddle"], "force_along": info["force"], "gradient_across": info["gradient_max"],
                                "curvature_along": info["slope"], "displacement": info["displacement"], "converged": bool(info["converged"]),
                                "a_saddle_between_the_two": ok, "evaluations": info["evaluations"], "torsions": KM.letters_of(st.tors[0]),
                                "torsions_deg": KM.wrap(st.tors[0]).tolist(), "seconds": time.time() - t1, "state": xs.tolist()}
             log(f"{args.name}: settled saddle {info['energy'] - eA:+.4f} (the band's top {rec['saddle']:+.4f}); along {info['force']:+.4f}, across {info['gradient_max']:.1e}, "
-                f"curvature {info['slope']}; {info['evaluations']} evaluations{'' if ok else '  (NOT a saddle between the two: not converged, below an end state, or no negative curvature)'}")
+                f"curvature {'not measured (one hyperplane)' if info['slope'] is None else format(info['slope'], '+.3f')}; {info['evaluations']} evaluations"
+                f"{'' if ok else '  (NOT a saddle between the two: not converged, below an end state, or a minimum along the path)'}")
         else:
             log(f"{args.name}: the band's highest image is an end point: no barrier on this band beyond the end state itself")
     disk = load_rows(out) if out.exists() else {}
