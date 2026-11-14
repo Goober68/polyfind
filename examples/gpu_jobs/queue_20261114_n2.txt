@@ -1,0 +1,10 @@
+# From the sheet straight to N, in the three materials (PI, 2026-11-14: "Go"; continued).  A queue
+# for examples/runpod_jobs_pod.sh, run beside queue_20261114_n.txt on a pod of its own.
+#
+# The pieces of the terpolymer's band from I to N showed that the way to N does not go through
+# the wide kink: the band's second image relaxes to the sheet itself, and from the sheet a band
+# reaches an N-like state Q (+10.33) over a settled saddle of +10.63, and N from there over
+# +11.40.  The band from the sheet to N itself, bands in the per-chain metric, sixteen chains:
+between.sh vdf9-trfe4-cfe1-14 4 2 kinked_crystal.state settled:N A-N
+between.sh vdf10-trfe4-14 4 2 kinked_crystal.state settled:N A-N
+between.sh vdf10 4 2 kinked_crystal.state settled:N A-N
