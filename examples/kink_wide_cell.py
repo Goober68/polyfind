@@ -221,12 +221,13 @@ def store(args) -> None:
     saddles = load_rows(args.saddles)["saddles"] if args.saddles else {}
     if args.beside:
         have = table["rows"][args.row]
-        rec = {"note": args.note, **{name: {k: v for k, v in wide[name].items() if k not in ("state", "torsions_deg")} for name in ("I", "B") if name in wide}}
+        again = [name for name in ("I", "B") if name in wide and not (name in have and have[name]["energy"] == wide[name]["energy"])]  # not the stored run itself
+        rec = {"note": args.note, **{name: {k: v for k, v in wide[name].items() if k not in ("state", "torsions_deg")} for name in again}}
         if saddles:
             rec["saddles"] = {seg: {k: v for k, v in sd.items() if k not in ("state", "torsions_deg", "rounds")} for seg, sd in saddles.items()}
         have[args.beside] = rec
-        for name in ("I", "B"):
-            if name in wide and name in have:
+        for name in again:
+            if name in have:
                 print(f"   {name}: {wide[name]['energy']:+.4f} again, {have[name]['energy']:+.4f} stored ({wide[name]['energy'] - have[name]['energy']:+.4f})")
         for seg, sd in saddles.items():
             if seg in have.get("saddles", {}):

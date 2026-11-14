@@ -234,9 +234,12 @@ def test_the_step_in_sixty_four_chains_and_the_thirty_two_chain_row_computed_twi
     """The rows evaluated on a card in the batched form (docs/PERFORMANCE_REVIEW.md 17.9).  The
     thirty-two-chain row computed again from the same seeds is the host's to 1e-4 in all four
     numbers.  In sixty-four chains (8a x 4b) the completed step is where the two thirty-two-chain
-    doublings put it if they add; the wide kink and the first saddle have come down a little;
-    the second saddle has NOT followed B down, so the barrier ahead stays within 0.1 of the
-    sixteen- and thirty-two-chain ones and the way back grows."""
+    doublings put it if they add; the wide kink and the first saddle come down across the stack
+    and not along it; the second saddle has NOT followed B down (reached by two routes, the same
+    to 1e-5), is not additive in the two doublings, and stays within 0.2 over the four cells of
+    sixteen to sixty-four chains, so the barrier ahead does not move and the way back grows.  In
+    a hundred and twenty-eight chains B has come down again by a third to a quarter of the
+    doubling before, each way."""
     rows = json.load(open(MIG))["rows"]
     get = lambda cell: rows.get(f"vdf10@0 {cell} mover 0 ahead host flexible")  # noqa: E731
     r16, r32, r32b, r64 = get("4x2"), get("8x2"), get("4x4"), get("8x4")
@@ -271,6 +274,32 @@ def test_the_step_in_sixty_four_chains_and_the_thirty_two_chain_row_computed_twi
     assert r64["barrier_forward_polished"] == pytest.approx(sd["I-B"]["saddle"])
     assert r64["barrier_back_polished"] == pytest.approx(sd["I-B"]["saddle"] - b["8x4"])
     assert r64["barrier_back_polished"] > r32["barrier_back_polished"] + 0.15
+
+    # the sixteen-chain cell doubled across the stack instead (4a x 4b): B is the host's, the rest is new
+    assert "batched" in r32b["evaluated"] and r32b["on_host"]["B"]["energy"] == pytest.approx(b["4x4"], abs=1e-6)
+    wide = {c: v["I"]["energy"] for c, v in (("4x2", r16), ("8x2", r32), ("4x4", r32b), ("8x4", r64))}
+    assert 0.03 < wide["4x2"] - wide["4x4"] < 0.15 and 0.03 < wide["8x2"] - wide["8x4"] < 0.15     # across the stack
+    assert abs(wide["4x2"] - wide["8x2"]) < 0.03 and abs(wide["4x4"] - wide["8x4"]) < 0.03         # along it
+    for seg in ("A-I", "I-B"):
+        assert r32b["saddles"][seg]["converged"] and abs(r32b["saddles"][seg]["force_along"]) < 0.01 and r32b["saddles"][seg]["curvature_along"] < 0.0
+    other = r64["second_route"]["saddles"]["I-B"]
+    assert other["converged"] and other["from_cell"] == "4x4" and "state" not in other
+    assert other["saddle"] == pytest.approx(sd["I-B"]["saddle"], abs=1e-5)
+    top = {"4x2": tops[0], "8x2": tops[1], "4x4": r32b["saddles"]["I-B"]["saddle"], "8x4": tops[2]}
+    assert max(top.values()) - min(top.values()) < 0.2
+    assert abs(top["8x4"] - (top["8x2"] + top["4x4"] - top["4x2"])) > 0.05  # where B's doublings add to 0.002
+
+    r128a, r128b = get("16x4"), get("8x8")
+    if r128a is None or r128b is None:
+        return
+    for row, small, before in ((r128a, b["4x4"], "along a"), (r128b, b["8x2"], "along b")):
+        st, n = row["B"], row["chains"]
+        assert n == 128 and st["converged"] and st["gradient_max"] < 1e-3
+        tors = np.asarray(st["state"])[4 + 4 * n:].reshape(n, 40)[:, :20]
+        where = [[k for k, v in enumerate(KM.letters_of(t).split()) if v != "T"] for t in tors]
+        assert where[0] == [2, 4] and where[1:] == [[0, 2]] * (n - 1), before
+        gain, gain_before = b["8x4"] - st["energy"], small - b["8x4"]
+        assert 0.04 < gain < 0.08 and 2.5 < gain_before / gain < 5.0, before
 
 
 def test_a_stepped_chain_is_recalled_not_joined():

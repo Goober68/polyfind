@@ -14,6 +14,58 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The card at work, 2026-11-13 night into 11-14 (PI: "Well, we have $46 in credits left - use them if appropriate").**
+Text: `docs/PERFORMANCE_REVIEW.md` 17.9 and `docs/CANDIDATE_MATERIALS.md` 8.3. Files:
+`docs/predictions/gpu_jobs_a100_20261113/` (every job's log, the device check's result files and summary). Rows in
+`kink_migration_belt4.json`: `8x4`, `8x8`, `16x4` new; `4x4` replaced by the card's (the host's B kept as `on_host`);
+`8x2["again_on_device"]`; `8x4["second_route"]`. STATE: DONE, THE POD DELETED AND CONFIRMED BY A READ (fourth pod, one
+A100-SXM4-80GB, 63 minutes at $2.19/h, about $2.30; the four pods together about $3.70; the PI's credit stood at $46
+before this one). Tests: `tests/test_kink_step.py::test_the_step_in_sixty_four_chains_and_the_thirty_two_chain_row_computed_twice`.
+HOW IT WAS RUN: not a benchmark script but A QUEUE OF JOBS ON THE BRANCH. `examples/runpod_jobs_pod.sh` (the pod's start
+command, fetched from raw.githubusercontent.com at a commit) installs once (28 s), then follows the branch and runs the
+next line of `BENCH_QUEUE` (`examples/gpu_jobs/queue_20261113.txt`), each line a script under `examples/gpu_jobs/`
+(`device_check.sh`, `step_wide.sh`, `saddle_wide.sh`); the next job is decided by pushing a line, a `stop` line ends
+it, nothing is ever sent to the pod, and results are read from its proxy URL under a serving token (scratch only: every
+32-hex string is scrubbed from a log before it is committed). Pod: REST `POST https://rest.runpod.io/v1/pods`, image
+`runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04`, ports `8000/http`, env `BENCH_TOKEN`, `BENCH_QUEUE`,
+`BENCH_LIMIT_S`, `BENCH_IDLE_S`, `BENCH_LINGER_S`. A job that tests must unset the pod's `POLYFIND_EWALD_DEVICE` for
+pytest (the first device check failed two tests that assert the default module is NumPy).
+THE DEVICE (17.9): (1) THE TENSOR'S SIX PRODUCTS AS RANK-K UPDATES (`backend.gram`, `cupy.cublas.syrk`): one evaluation
+52 ms, 0.13 s, 0.57 s, 3.67 s at 16, 32, 64, 128 chains (was 49 ms, 0.14 s, 0.76 s, 6.00 s; the prediction was 0.2 s and
+2.5 s off, it is 0.19 s and 2.3 s). (2) SEVERAL PROCESSES ON ONE CARD DO NOT PAY: 18.7, 23.0, 28.5, 28.4 evaluations per
+second for one to four processes at 16 chains, 7.4, 7.6, 8.6, 8.6 at 32 (no MPS daemon; MPS not measured). The card's
+"half idle" at 16 chains is not there for a second process to take. THE FARM ANSWER CHANGES IN ONE PLACE: COUNT ONE
+PROCESS PER CARD. (3) IN PRODUCTION HALF OF A RELAXATION IS NOT THE EVALUATION: a step of `relax_on_surface` costs 0.25 s,
+1.07 s, 7.5 s at 32, 64, 128 chains where the evaluation is 0.13, 0.57, 3.67 s. The rest is the method's dense linear
+algebra on the host: an SVD of the whole closure-normal matrix (4 nc x 44 nc) twice a step (38 ms, 0.15 s, 0.56 s on
+four cores) and dense products with the metric (44 nc x 44 nc). The normals are block-diagonal by chain when the cell
+is fixed (a hyperplane adds one dense row, a free cell a few dense columns). NEXT SPEED ITEM, NO CARD NEEDED: do
+`retract`, `normals` and the metric products of `MixedModel.relax_on_surface` chain by chain.
+THE SCIENCE (8.3), all PVDF, one chain's kink pair one monomer ahead, kcal/mol against the sheet:
+    cell   chains  I       saddle A-I  saddle I-B  B       ahead / back
+    4x2    16      9.963   10.660      11.637      5.911   11.64 / 5.73   (host, before)
+    8x2    32      9.974   10.660      11.473      5.692   11.47 / 5.78   (host; the card again: 5e-9, 3e-8, 2e-8, 5e-5)
+    4x4    32      9.900   10.635      11.620      5.712   11.62 / 5.91   (card; B was the host's)
+    8x4    64      9.888   10.628      11.533      5.495   11.53 / 6.04   (card; second saddle by two routes, 1e-7)
+    16x4   128     -       -           -           5.436
+    8x8    128     -       -           -           5.430
+B: THE TWO DOUBLINGS ADD (8x4 measured 5.495, from the 32-chain cells 5.493) and each series closes by 3.7 (along a) and
+3.1 (across) per doubling at the last step; both doublings 5.37, tails 0.02 + 0.03: B IS ABOUT 5.3 IN THE DILUTE LIMIT
+(was "about 5.4"; sixteen chains overstate it by 0.6). THE BARRIER AHEAD DOES NOT DEPEND ON THE CELL: the second saddle
+is 11.64, 11.47, 11.62, 11.53, no trend, not additive (0.08). THE 11.2-11.3 EXTRAPOLATED ON 2026-11-13 FROM THE 8x2 CELL
+("the saddle follows B down three quarters as far") IS WITHDRAWN: that was that cell. Barrier ahead 11.5-11.6 (1e4 /s);
+the way back grows with the room, 6.0 in 64 chains and about 6.2 against B's dilute limit (9e7 /s, was 2e8). The wide
+kink and its saddle gain nothing along the stack and 0.06-0.09 and 0.03 per doubling across it.
+WHEN THE 8x4 SADDLE CAME OUT ABOVE THE 8x2 ONE I checked three things before believing it: the same chains respond by
+the same amounts in both (chain by chain), the 4x4 cell (its saddle falls by 0.02 only), and the other route to 8x4
+through 4x4 (same energy to 1e-7).
+NOT DONE, PROPOSED TO THE PI (each is minutes of card now): the candidate chemistries' single-chain step in sixteen
+chains (the frequency map rests on two-chain cells for the terpolymers, where one sublattice moves: PVDF went from 8.9
+to 11.6 between those two protocols) -- needs a four-chain band of the terpolymer first, then the let-in route of
+`kink_wide_cell.py` (which starts at 2x1; it has no 1x1 -> 2x1 step); the diagonal neighbour's step; prefactors from
+Hessians; I and the saddles in 128 chains (about 35 minutes of card each at 7.5 s a step, less after the blockwise
+algebra).
+
 **The whole evaluation on a device, 2026-11-13 evening (PI, on the first A100 run: "Are you actually using the GPU? I'm
 seeing 0% utilization", then "So port the work - we're using a GPU, let's actually use the GPU" and "I terminated - do
 the port properly").** Text: `docs/PERFORMANCE_REVIEW.md` 17.6 (the first run), 17.7 (this port), 17.8 (measured).
@@ -186,7 +238,7 @@ and 203 evaluations against 391 and 1360. The loose SLSQP result for the first s
 kept in the row as `polished["earlier"]`. WIDER CELLS (rows `8x1`, `8x2`, `4x4`; end states only): B is +6.19 in 8a x b (4a x b: +6.47), +5.69 in 8a x 2b
 and +5.71 in 4a x 4b (4a x 2b: +5.91); I is +10.05 in 8a x b and +9.97 in 8a x 2b (flat). So the next doubling is
 worth 0.22 along the stack and 0.20 across it; the gain falls by a factor of 5-7 per doubling along a and 3 across.
-If the two add, 8a x 4b is 5.49 and the series' tails are 0.04 and 0.11: B IS ABOUT 5.4 IN THE DILUTE LIMIT (an
+(SUPERSEDED 2026-11-14 by the block "The card at work" above: 8x4 measured 5.495, 128 chains 5.43-5.44, dilute about 5.3.) If the two add, 8a x 4b is 5.49 and the series' tails are 0.04 and 0.11: B IS ABOUT 5.4 IN THE DILUTE LIMIT (an
 extrapolation; the sixteen-chain 5.91 overstates it by about 0.5). The thirty-two-chain states were started from
 the sixteen-chain ones with the sheet let in where that cell is farthest from the moving chain (scratch scripts
 `wide_seed.py`, `wide_seed_b.py`: `--seed-from` takes only a row of the same cell); 93 and 95 evaluations each.
@@ -194,7 +246,7 @@ THE SADDLES IN THIRTY-TWO CHAINS (8a x 2b; no band there: `saddle_polish` on the
 images and tangents let into the wider cell, scratch `polish32.py`; stored as `row["saddles"]`): first 10.6601
 (sixteen: 10.6600), second 11.4725 (sixteen: 11.6366). So in thirty-two chains I +9.97, B +5.69, barrier 11.47
 ahead / 5.78 back: the second saddle follows B down three quarters as far, the way back does not change, the first
-saddle and the wide kink do not depend on the cell. Continued to B's dilute limit: about 11.2-11.3 ahead, 5.8-5.9
+saddle and the wide kink do not depend on the cell. (WITHDRAWN 2026-11-14: in 4x4 and 8x4 the second saddle is 11.62 and 11.53; the barrier ahead is 11.5-11.6 in every cell.) Continued to B's dilute limit: about 11.2-11.3 ahead, 5.8-5.9
 back. In thirty-two chains every minimisation spent half of its evaluations between an energy settled in the fourth
 decimal and its stopping test (gtol 1e-4, or 40 evaluations of stall): use `--surface-gtol 3e-4` or a shorter
 `--patience` there. Three thirty-two-chain jobs at once exceed the machine's memory (one was killed); two fit.

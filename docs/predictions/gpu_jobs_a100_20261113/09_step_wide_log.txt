@@ -3,3 +3,20 @@ written /srv/bench/<token>/jobs/shared/wide_steps.json: row 'seed 8x8 from 8x4',
 vdf10@0 8x8 mover 0 ahead host flexible: 128 chains of 10 monomers, 12800 sites; kink pair in the search's cells +4.466 kcal/mol (kinked cell's closure residual 0.397 deg), polished +5.298
    kinked crystal: +5.298 kcal/mol per kink pair against all-trans; cell [39.665, 70.193, 89.178, 25.201] (all-trans [38.033, 67.847, 90.0, 25.877]); 0 it, 4 s; the polished two-chain cell, tiled
       chain 0: G+ T G- T T T T T T T T T T T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (78 s)
+      B descent     1:   +12.5416, lowest so far   +12.5416  (1 evaluations, 18 s)
+      B descent    10:    +7.4596, lowest so far    +7.4596  (10 evaluations, 63 s)
+      B surface     1:    +7.3472, lowest so far    +7.3472  (13 evaluations, 78 s)
+      B surface    10:    +5.8656, lowest so far    +5.8656  (22 evaluations, 152 s)
+      B surface    20:    +5.5399, lowest so far    +5.5399  (32 evaluations, 233 s)
+      B surface    30:    +5.5139, lowest so far    +5.5139  (42 evaluations, 312 s)
+      B surface    40:    +5.4586, lowest so far    +5.4586  (52 evaluations, 394 s)
+      B surface    50:    +5.4370, lowest so far    +5.4370  (62 evaluations, 470 s)
+      B surface    60:    +5.4344, lowest so far    +5.4344  (72 evaluations, 542 s)
+      B surface    70:    +5.4322, lowest so far    +5.4322  (82 evaluations, 617 s)
+      B surface    80:    +5.4307, lowest so far    +5.4307  (92 evaluations, 688 s)
+      B surface    90:    +5.4305, lowest so far    +5.4305  (102 evaluations, 760 s)
+      B surface   100:    +5.4305, lowest so far    +5.4305  (112 evaluations, 834 s)
+   B: +5.430 kcal/mol above the kinked crystal (start +12.542); T T G+ T G- T T T T T T T T T T T T T T T; 101 it, 117 evaluations, 882 s; gradient 2.7e-04; 0 angles at the window; Optimization terminated successfully: the gradient along the surface is under gtol
+   end points only; written /srv/bench/<token>/jobs/shared/wide_steps.json
+   B: +5.4305 kcal/mol in 128 chains; 117 evaluations, 882 s; gradient 2.7e-04; T T G+ T G- T T T T T T T T T T T T T T T

@@ -1799,7 +1799,7 @@ run on a card at once, changes that was not measured.)  **The farm answer of 17.
 place: count one process per card.**  Independent evaluations (images of a band, columns of a
 Hessian) scale with the number of cards and hardly with processes per card.
 
-**The card at work** (jobs 2 to 10 of the queue: the single-chain step of
+**The card at work** (jobs 2 to 14 of the queue; the table is jobs 2 to 10: the single-chain step of
 `docs/CANDIDATE_MATERIALS.md` 8.3 in cells of thirty-two to a hundred and twenty-eight chains,
 relaxed on the closure surface by `examples/kink_migration.py --surface` and
 `examples/kink_wide_cell.py polish`, the evaluation choosing the batched form on the card by
@@ -1809,7 +1809,7 @@ itself):
 |---|---|---|---|---|---|
 | 32 chains | I, B, the two saddles | 81, 86, 78, 207 | 20, 21, 18, 48 | 0.25 s, 0.23 s | 0.13 s |
 | 64 chains | I, B, the two saddles | 98, 116, 129, 268 | 105, 125, 129, 260 | 1.07 s, 0.98 s | 0.57 s |
-| 128 chains | B | 117 | 882 | 7.5 s | 3.67 s |
+| 128 chains (8a x 8b, 16a x 4b) | B in each | 117, 127 | 882, 944 | 7.5 s, 7.4 s | 3.67 s |
 
 * **It is the same calculation.**  The thirty-two-chain row had been computed on four host cores
   with the loop form: the card, from the same seeds, gives the end states to 5e-9 and 3e-8

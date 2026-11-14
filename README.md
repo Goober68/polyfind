@@ -113,4 +113,8 @@ them at 16 to 128 chains and reads the card's utilisation while evaluations run
 (`examples/ewald_device_benchmark.py`; `docs/PERFORMANCE_REVIEW.md` section 17);
 `tests/test_ewald_device.py` and `tests/test_mixed_batched.py` run the same device code
 path on any machine, on a NumPy-backed stand-in that is as strict about mixing host and
-device arrays as CuPy is.
+device arrays as CuPy is.  To put a rented card to work rather than time it,
+`examples/runpod_jobs_pod.sh` is a pod's start command that follows a branch and runs the
+next line of a queue file on it (`examples/gpu_jobs/`: each job a script, the next one
+decided by pushing a line, `stop` to end); `docs/PERFORMANCE_REVIEW.md` 17.9 is what the
+first such queue did.

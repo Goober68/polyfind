@@ -1,0 +1,40 @@
+{
+ "row": "vdf10@0 8x8 mover 0 ahead host flexible",
+ "chains": 128,
+ "B": {
+  "energy": 5.430491661376436,
+  "torsions": "T T G+ T G- T T T T T T T T T T T T T T T",
+  "torsions_deg": [
+   175.11014699577322,
+   164.93066797740283,
+   84.76187177063122,
+   178.44765847063832,
+   -63.488328759065396,
+   -166.60189554769022,
+   174.08740320211803,
+   -179.64069041974142,
+   178.02142978316078,
+   -179.6971709859306,
+   179.2361501797228,
+   -179.86650200137012,
+   179.82413144921463,
+   -179.5483661408644,
+   179.89550151012907,
+   -179.18544818219527,
+   178.87154399839574,
+   -179.89545359431867,
+   176.1550696322223,
+   177.56648614406362
+  ],
+  "start": "B of the row 'seed 8x8 from 8x4'",
+  "start_energy": 12.541572567623007,
+  "iterations": 101,
+  "evaluations": 117,
+  "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+  "converged": true,
+  "gradient_max": 0.00026986936927222006,
+  "method": "on the closure surface, one curvature block per chain as the metric",
+  "angles_at_window": 0,
+  "seconds": 882.0102796554565
+ }
+}

@@ -836,6 +836,8 @@ closure surface, every chain flexible, the cell fixed at the kinked crystal's:
 | PVDF | one chain in four (all six neighbours stay) | +9.85 | 10.27 | 12.46 | +7.88 | 12.5 / 4.6 |
 | PVDF | one chain in sixteen (2026-11-12, first saddle 2026-11-13) | +9.96 | 10.66 | 11.64 | +5.91 | 11.6 / 5.7 |
 | PVDF | one chain in thirty-two (8a x 2b, 2026-11-13; saddles settled from the sixteen-chain band's tops) | +9.97 | 10.66 | 11.47 | +5.69 | 11.5 / 5.8 |
+| PVDF | one chain in thirty-two, the other way (4a x 4b, 2026-11-14, on a card; saddles settled from the sixteen-chain cell's) | +9.90 | 10.64 | 11.62 | +5.71 | 11.6 / 5.9 |
+| PVDF | one chain in sixty-four (8a x 4b, 2026-11-13, on a card; saddles settled from the thirty-two-chain cells', the second by both routes) | +9.89 | 10.63 | 11.53 | +5.50 | 11.5 / 6.0 |
 | 64/29/7, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.33 | 6.43 | 11.48 | +8.98 | 11.5 / 2.5 |
 | 71/29, from a VDF-VDF pair onto VDF-TrFE | one sublattice | +6.47 | 7.05 | 12.02 | +11.25 | 12.0 / 0.8 |
 | PVDF | every chain together (the sheet in register), per chain | +5.06 | 7.38 | not settled (the band's top 7.9) | 0.00 | at least 7.4 each way, 14.8 per two-chain cell |
@@ -898,7 +900,13 @@ So the second saddle, the end states and with them the barrier stand as they wer
 saddles are reproduced to four decimals by a different minimiser, and the one number SLSQP had
 not converged was 0.009 too high. In the thirty-two-chain cell no band was run: its two saddles
 were settled the same way from the top images of the sixteen-chain bands, let into the wider cell
-with the sheet in between, in 112 and 321 evaluations of 19 s. The metric given to SLSQP instead changes little (174
+with the sheet in between, in 112 and 321 evaluations of 19 s. The other thirty-two-chain cell
+(4a x 4b) and the sixty-four-chain one (8a x 4b) were done the same way on a rented card
+(2026-11-13 and 14: `examples/kink_wide_cell.py`, `examples/gpu_jobs/`, `docs/PERFORMANCE_REVIEW.md`
+17.9), each saddle started from a narrower cell's settled saddle; the thirty-two-chain row
+computed again there agrees with the host's to 3e-8 in the end states and 5e-5 in the saddles,
+and the sixty-four-chain second saddle, reached from both thirty-two-chain cells, is the same
+to 1e-7. The metric given to SLSQP instead changes little (174
 evaluations against 185): the waste was the trial points off the surface. On the surface without
 the metric the four-chain hyperplane takes 110 evaluations and ends on the stall rule.
 
@@ -910,11 +918,18 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
   completed step lies 5.9 kcal/mol up behind a barrier of 11.6, with 5.7 to come back; in the
   four-chain cell the same three numbers are 7.9, 12.5 and 4.6. So the cramped cell overstated the
   end state by 2.0 and the barrier by 0.8, and the 6.4 guessed on 2026-11-10 from rigid-chain
-  neighbours is 5.91. In thirty-two chains (8a x 2b, 2026-11-13) the three are 5.7, 11.5 and 5.8:
-  the second saddle comes down with the completed step, three quarters as far (0.16 for 0.22),
-  and the way back does not change. The first saddle and the wide kink do not move at all
-  (10.6601 against 10.6600, 9.97 against 9.96). Continued to the dilute limit of the completed
-  step (about 5.4, below), that is a barrier of about 11.2-11.3 ahead and 5.8-5.9 back. With its
+  neighbours is 5.91. In thirty-two chains (8a x 2b, 2026-11-13) the three are 5.7, 11.5 and 5.8,
+  and in sixty-four (8a x 4b, 2026-11-13) 5.5, 11.5 and 6.0. **The barrier ahead does not depend
+  on the cell: the second saddle is 11.64, 11.47, 11.62 and 11.53 in 4a x 2b, 8a x 2b, 4a x 4b
+  and 8a x 4b**, with no trend to continue: along the stack it falls by 0.16 and by 0.09, across
+  it it falls by 0.02 and rises by 0.06, and the two doublings do not add (0.08 apart, where the
+  completed step's add to 0.002). What the first thirty-two-chain cell suggested, that the saddle
+  follows the completed step down three quarters as far, was that cell, and the 11.2-11.3
+  extrapolated from it on 2026-11-13 is withdrawn. The barrier ahead is 11.5-11.6. The way back
+  grows as the completed step falls: 5.7, 5.8, 5.9 and 6.0 in the four cells, and about 6.2
+  against the completed step's dilute limit (5.3, below). The first saddle and the wide kink do
+  not move along the stack (10.6601 against 10.6600, 9.97 against 9.96) and come down a little
+  across it (10.64 and 9.90 in 4a x 4b, 10.63 and 9.89 in 8a x 4b). With its
   stack moving too the step costs 2.0 behind 8.9 (row one), so one chain alone still pays
   nearly three times what a chain of a moving stack does.
   - *Checks.* The sixteen-chain sheet, perturbed and relaxed with every chain and the cell free,
@@ -930,12 +945,20 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     farthest from the moving chain): +5.69 in 8a x 2b and +5.71 in 4a x 4b, so the next doubling
     is worth 0.22 along the stack and 0.20 across it, and in one row (8a x b, +6.19) 0.28. Along
     a the gain falls by a factor of five to seven per doubling; across the stack only by three.
-    If the two add, 8a x 4b is at 5.49, and what the two series leave beyond that, each
-    continued at its own ratio, is 0.04 along the stack and 0.11 across it: **the completed step
-    lies about 5.4 kcal/mol up in the dilute limit (an extrapolation: the largest cells computed
-    give 5.69 and 5.71), and the sixteen-chain cell overstates it by about 0.5.** The wide kink is +9.85, +9.98, +10.02, +9.96 and +10.05 in the
-    five cells of up to sixteen chains and +9.97 in 8a x 2b, and its saddle 10.27 in four chains
-    and 10.66 in sixteen and in thirty-two: it does not gain from the room.
+    The two add: 8a x 4b, sixty-four chains, is +5.495 where the two thirty-two-chain cells put
+    it at 5.493 (2026-11-13, on a card). And each series goes on closing: a hundred and
+    twenty-eight chains are +5.436 as 16a x 4b and +5.430 as 8a x 8b (2026-11-14), 0.059 and
+    0.065 below the sixty-four-chain cell, 3.7 and 3.1 times less than the doubling before in
+    the same direction (the five to seven along a were the first doublings, out of the cramped
+    cells). Both doublings together would be 5.37, and what the two series leave beyond that,
+    each continued at its last ratio, is 0.02 along the stack and 0.03 across it: **the
+    completed step lies about 5.3 kcal/mol up in the dilute limit (an extrapolation of 0.11 from
+    the largest cells computed, 5.43 and 5.44 in a hundred and twenty-eight chains); the
+    sixteen-chain cell overstates it by 0.6 and the sixty-four-chain cell by 0.2.** The wide kink is +9.85, +9.98, +10.02, +9.96 and +10.05 in the
+    five cells of up to sixteen chains, +9.97 in 8a x 2b, +9.90 in 4a x 4b and +9.89 in 8a x 4b,
+    and its saddle 10.27 in four chains, 10.66 in sixteen and in 8a x 2b, 10.64 in 4a x 4b and
+    10.63 in 8a x 4b: room along the stack does nothing for them, and a doubling across it is
+    worth 0.06-0.09 to the wide kink and 0.03 to its saddle, against 0.20 to the completed step.
   - *How the lattice gives.* In B the moving chain has a monomer's length out of axial register
     with its neighbours (a kink pair shortens its chain by about 1 A, and this one sits a
     monomer further on than theirs), and it shares that out: the chain slides 0.32 A back
@@ -951,7 +974,9 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     sublattice) brings them to +9.05, so it costs 3.1: the stack axis is the cheap direction,
     as it is for the registry (8.1). A whole sublattice ahead is 1.97 per chain. One chain steps
     out at 1e4 /s at 300 K with a 3e12 /s attempt frequency (2e3 /s on the four-chain barrier,
-    1.3e4 on the thirty-two-chain one) and returns at 2e8 /s.
+    1.0e4 to 1.3e4 on the four cells of sixteen to sixty-four chains) and returns at 2e8 /s on
+    the sixteen-chain cell's way back, 1.2e8 on the sixty-four-chain one's and about 9e7 against
+    the completed step's dilute limit.
   - *But a stepped chain is recalled, not joined* (2026-11-13; sixteen chains, every chain
     flexible, `kink_migration.py --beside 0`: the step of a stack neighbour from the state in
     which chain 0 is already one monomer on, energies against that state, which is 5.91 above
@@ -1107,7 +1132,7 @@ the other two rows carry no strain on either. The step barriers are on the saddl
   uncertain part (settled at 11.48, 8.3); what remains is that the model cell overstates the cost
   of a chain stepping onto a TrFE unit ahead of its neighbours, and that the film's channel need
   not be this step. These are the steps of half the chains at once, in a two-chain cell; one PVDF
-  chain alone has a barrier of 11.6 in sixteen chains and 11.5 in thirty-two (1e4 /s), and the
+  chain alone has a barrier of 11.6 in sixteen chains and 11.5 in thirty-two and in sixty-four (1e4 /s), and the
   copolymers' single-chain steps are not computed. Nor is the single-chain rate the rate at
   which a sheet advances: in PVDF a chain that has stepped out comes back 6500 times for each
   time a stack neighbour joins it (8.3), so in zero field that step is a local excursion, and
