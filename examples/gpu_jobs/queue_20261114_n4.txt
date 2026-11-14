@@ -1,0 +1,14 @@
+# A kink pair three bonds on (PI, 2026-11-14: "Go" on what N does next; found on the way).  A
+# queue for examples/runpod_jobs_pod.sh on a pod of its own; sixteen chains, bands in the
+# per-chain metric.
+#
+# The dip under N on the matrix's band from N to N2 relaxed to L: the moving chain's kink pair on
+# bonds 3 and 5 (the sheet's hand, G+ T G-; the sheet's are 0 and 2), +3.74 above the sheet, far
+# under N (+8.94), I and B.  Is it there in the terpolymer and in PVDF, built the same way from
+# the sheet (the matrix's again as the check of the construction), and what is the barrier to it?
+settle.sh vdf10-trfe4-14 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71
+settle.sh vdf9-trfe4-cfe1-14 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71
+settle.sh vdf10 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71
+between.sh vdf10-trfe4-14 4 2 kinked_crystal.state settled:L A-L
+between.sh vdf9-trfe4-cfe1-14 4 2 kinked_crystal.state settled:L A-L
+between.sh vdf10 4 2 kinked_crystal.state settled:L A-L
