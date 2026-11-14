@@ -1818,8 +1818,9 @@ itself):
   variable.
 * **What took 3.2 hours takes 107 seconds**: the host needed 19.7 s an evaluation at thirty-two
   chains (1,337, 1,857, 2,215 and 6,228 s for the four relaxations), the card 0.25 s, 80 times.
-  The sixty-four-chain row, end states and both saddles, is 10 minutes of relaxation; on the
-  host it would have been days (59 s an evaluation on eight threads, 17.6).
+  The sixty-four-chain row, end states and both saddles, is 611 evaluations and 10 minutes of
+  relaxation; at the 59 s an evaluation a host took for that cell (eight threads, 17.6) it is
+  ten hours.
 * **Half of a relaxation is no longer the evaluation.**  A step of the surface method costs
   0.25 s, 1.07 s and 7.5 s where the evaluation in it is 0.13 s, 0.57 s and 3.67 s.  The rest is
   the method's own linear algebra on the host, dense where the problem is not: the closure's

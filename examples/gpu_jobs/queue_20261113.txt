@@ -27,3 +27,5 @@ step_wide.sh 4x2 b to 4 4
 saddle_wide.sh A-I 4 4 band 4x2 b start 4x2 b
 saddle_wide.sh I-B 4 4 band 4x2 b start 4x2 b
 saddle_wide.sh I-B 8 4 band 4x2 b a start 4x4 a as from_4x4
+# 7. nothing after the cross-checks: the pod removes itself.
+stop
