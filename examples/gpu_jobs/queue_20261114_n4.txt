@@ -12,3 +12,10 @@ settle.sh vdf10 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71
 between.sh vdf10-trfe4-14 4 2 kinked_crystal.state settled:L A-L
 between.sh vdf9-trfe4-cfe1-14 4 2 kinked_crystal.state settled:L A-L
 between.sh vdf10 4 2 kinked_crystal.state settled:L A-L
+# 2. L is there in all three (+3.74, +4.97, +5.42) and the straight way to it from the sheet is
+#    high in the copolymers (+15.6, +15.3; PVDF +11.8).  But the matrix's band from N towards N2
+#    had an image fall into L: is L where N goes?  The band from N to L, then the pod removes itself.
+between.sh vdf10-trfe4-14 4 2 settled:N settled:L N-L
+between.sh vdf9-trfe4-cfe1-14 4 2 settled:N settled:L N-L
+between.sh vdf10 4 2 settled:N settled:L N-L
+stop
