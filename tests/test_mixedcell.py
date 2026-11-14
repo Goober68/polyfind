@@ -572,3 +572,70 @@ def test_a_trust_box_bounds_one_relaxation_and_its_rounds_find_the_basins_minimu
     assert all(b <= a + 1e-7 for a, b in zip(energies, energies[1:]))
     assert abs(m.physical_energy(xb) - m.physical_energy(xm)) < 2e-3
     assert max(m.closure_residual(xb)) < 1e-6
+
+
+FIELD = np.array([0.004, -0.0055, 0.002])  # V/A; 0.0055 V/A is 55 V/um
+
+
+@pytest.mark.parametrize("case", [CASES[0], CASES[3]])
+def test_an_applied_field_is_carried_as_the_packer_carries_it(case):
+    """With a field set on the packer the two-chain mixed cell is still the packer's cell, energy
+    and gradients; a tiling keeps the energy per chain; and the derivative of the energy with
+    respect to the field is minus the cell's dipole, static plus induced."""
+    def body(polymer, seq, params, kw):
+        m, x, _ = _model(polymer, seq, params, **kw)
+        e0 = m.physical_energy(x)
+        m.pk.set_field(FIELD)
+        E, g_cell, _, g_c = m.pk.energy_and_grad(params)
+        parts: dict = {}
+        _, g = m.value_and_grad(x, parts)
+        assert abs(E - e0) > 1e-3  # the field does something to this cell
+        assert parts["physical"] == pytest.approx(E, rel=1e-11, abs=1e-9)
+        np.testing.assert_allclose(g[:3], g_cell[:3], atol=1e-9)
+        assert g[3] == pytest.approx(g_c, abs=1e-8)
+        mu = m.dipole(x)
+        np.testing.assert_allclose(mu["total"], m.pk.dipole(params[None])[0], atol=1e-10)
+        h = 1e-5
+        for d in range(3):
+            fp, fm = FIELD.copy(), FIELD.copy()
+            fp[d] += h
+            fm[d] -= h
+            m.pk.set_field(fp)
+            ep = m.physical_energy(x)
+            m.pk.set_field(fm)
+            em = m.physical_energy(x)
+            assert -(ep - em) / (2 * h) / pack_mod.EV_TO_KCAL == pytest.approx(mu["total"][d], rel=1e-6, abs=1e-7)
+        m4, x4, _ = _model(polymer, seq, params, nx=2, ny=1, **kw)
+        m4.pk.set_field(FIELD)
+        assert m4.physical_energy(x4) / 2 == pytest.approx(E, rel=1e-10, abs=1e-8)
+    _run(case, body)
+
+
+@pytest.mark.parametrize("batched", [False, True])
+def test_gradient_under_a_field_matches_central_differences_in_both_forms(batched, monkeypatch):
+    if batched:
+        monkeypatch.setenv("POLYFIND_MIXED_BATCHED", "1")
+    else:
+        monkeypatch.delenv("POLYFIND_MIXED_BATCHED", raising=False)
+
+    def body(polymer, seq, params, kw):
+        m, x, _ = _model(polymer, seq, params, nx=2, ny=1, **kw)
+        m.pk.set_field(FIELD)
+        rng = np.random.default_rng(3)
+        x[m.index("tors")] += rng.uniform(-6, 6, m.nc * m.P)
+        x[m.index("angs")] += rng.uniform(-1.5, 1.5, m.nc * m.R)
+        x[m.index("phi")] += rng.uniform(-8, 8, m.nc)
+        x[:4] += np.array([0.07, -0.05, 1.3, 0.04])
+        e, g = m.value_and_grad(x)
+        m.pk.set_field(None)
+        e0, g0 = m.value_and_grad(x)
+        m.pk.set_field(FIELD)
+        assert abs(e - e0) > 1e-3 and float(np.abs(g - g0).max()) > 1e-4
+        for i in np.concatenate([np.arange(4), rng.choice(np.arange(4, m.n_var), size=10, replace=False)]):
+            h = 1e-5 * max(1.0, abs(x[i])) if i >= 4 else 1e-5
+            xp_, xm_ = x.copy(), x.copy()
+            xp_[i] += h
+            xm_[i] -= h
+            fd = (m.value_and_grad(xp_)[0] - m.value_and_grad(xm_)[0]) / (2 * h)
+            assert fd == pytest.approx(g[i], rel=2e-5, abs=2e-5)
+    _run(CASES[3], body)

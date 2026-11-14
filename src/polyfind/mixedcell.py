@@ -39,7 +39,15 @@ the refinement's own objective.  A chain shorter than its neighbours, which is w
 makes, reaches the cell's repeat through its own bends and torsions and carries the tension that
 costs -- the periodic model's finite-length effect, which falls as the inverse repeat length.
 
-**What is not here.**  Charge flux and an applied field (refused), and the pendant tilts, which
+**An applied field.**  A uniform field set on the packer (:meth:`polyfind.pack.CrystalPacker.set_field`,
+V/A) is carried as it is in the packer's own cell: ``-mu . E`` on the placed charges, and the field
+added to the permanent field the induced dipoles answer, so the energy is the electric enthalpy
+``U - mu_total . E`` of the cell at that macroscopic field and its derivative with respect to the
+field is minus the cell's dipole, static plus induced (:func:`cell_dipole`).  The dipole is the
+sum over the atoms as placed, every chain whole: between two states joined by a continuous path
+its difference is defined without a polarization quantum.
+
+**What is not here.**  Charge flux (refused), and the pendant tilts, which
 :func:`tilt_relaxation` adds afterwards exactly as :func:`polyfind.pendants.tilt_relaxation` does
 for the packer's cell.
 """
@@ -59,6 +67,7 @@ from .ewald import exclusion_correction_pairs
 from .forcefield import COULOMB
 from .linegroup import _windows, repeat_chains_and_jacobian
 from .pack import (
+    EV_TO_KCAL,
     PeriodicChain,
     _block_atoms,
     _derfc_pos,
@@ -70,6 +79,7 @@ from .pack import (
 __all__ = [
     "MixedModel",
     "MixedState",
+    "cell_dipole",
     "lattice_rows",
     "neb",
     "placed_energy_and_grad",
@@ -132,8 +142,6 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None, xp=None, tim
     frames = np.asarray(frames, dtype=float).reshape(nc, 3, 3)
     if getattr(packer, "_flux", None) is not None:
         raise ValueError("charge flux is not carried by the mixed cell: every chain has the repeat's fixed charges")
-    if getattr(packer, "_field_on", False):
-        raise ValueError("an applied field is not carried by the mixed cell; clear it with set_field(None)")
     if abs(latn[0, 2]) + abs(latn[1, 2]) + abs(latn[2, 0]) + abs(latn[2, 1]) > 1e-12:
         raise ValueError("the mixed cell wants c along z and the other two lattice vectors in the plane")
     if xp is not None:
@@ -245,9 +253,38 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None, xp=None, tim
             gX[s] += ex_gX
             glat[2, 2] += float(ex_gc)
 
+    if getattr(packer, "_field_on", False):
+        e_f, g_f = _applied_field(packer, Pn)
+        E += e_f
+        gP += g_f
     for s in range(nc):
         gP[sl[s]] += gX[s] @ frames[s].T
     return E, gP, glat
+
+
+def _applied_field(packer, Pn) -> tuple:
+    """``(-mu_static . E, its derivative with respect to the placed coordinates)`` in kcal/mol, for
+    the packer's set field (V/A).  The induced dipoles' part is in the dipole solve, whose permanent
+    field carries the applied one (:meth:`polyfind.pack.CrystalPacker._polarize`).  The lattice
+    derivative at fixed Cartesian coordinates is zero, and so is the net force on a neutral chain."""
+    f = np.asarray(packer.field, dtype=float)
+    q = np.asarray(packer._q_cell, dtype=float)
+    return -EV_TO_KCAL * float(q @ (Pn @ f)), -EV_TO_KCAL * q[:, None] * f[None, :]
+
+
+def cell_dipole(packer, frames, Pn, latn) -> tuple:
+    """``(static, induced)`` dipole of the placed cell in e.A, at the packer's set field: the sum
+    of ``q r`` over the atoms as placed (every chain whole), and the sum of the induced dipoles
+    (zeros without a polarizable model).  Their sum is ``-dE/dE_applied`` of
+    :func:`placed_energy_and_grad`, in eV per V/A."""
+    Pn = np.asarray(Pn, dtype=float).reshape(packer.N, 3)
+    q = np.asarray(packer._q_cell, dtype=float)
+    static = q @ Pn
+    induced = np.zeros(3)
+    if packer.polarizable is not None and packer._ewald is not None:
+        flips = np.asarray(frames, dtype=float).reshape(packer.n_chains, 3, 3)[:, 2, 2] < 0.0
+        induced = packer._polarize(Pn, q, np.asarray(latn, dtype=float).reshape(3, 3), flips.astype(float))[1].sum(axis=0)
+    return static, induced
 
 
 # ------------------------------------------- the same energy as a fixed number of array operations
@@ -528,6 +565,10 @@ def _placed_batched(packer, frames, Pn, latn, valences, xp, timings=None):
         gP += ex_g
         glat[2, 2] += ex_c
         mark("exclusions")
+    if getattr(packer, "_field_on", False):
+        e_f, g_f = _applied_field(packer, Pn)
+        E += e_f
+        gP += g_f
     return E, gP, glat
 
 
@@ -751,6 +792,13 @@ class MixedModel:
     def chains(self, x) -> list:
         """The :class:`~polyfind.pack.PeriodicChain` of every chain at ``x`` (own frame)."""
         return [b[0] for b in self.build(x)[4]]
+
+    def dipole(self, x) -> dict:
+        """The cell's dipole at ``x`` in e.A, at the packer's set field: ``static`` (the placed
+        charges), ``induced`` and ``total`` (:func:`cell_dipole`)."""
+        latn, frames, _, Pn, _ = self.build(np.asarray(x, dtype=float).ravel())
+        static, induced = cell_dipole(self.pk, frames, Pn, latn)
+        return {"static": static, "induced": induced, "total": static + induced}
 
     def _topology(self) -> dict:
         """What the light build reads from the repeat's topology, resolved once."""

@@ -1,0 +1,3161 @@
+{
+ "what": "What a bias field does to the kink states and the barriers between them.",
+ "preset": "pvdf-dft-valence-belt4",
+ "rows": {
+  "vdf10@0 2x1 mover 0 ahead host flexible": {
+   "row": "vdf10",
+   "supercell": [
+    2,
+    1
+   ],
+   "chains": 4,
+   "monomers_per_chain": 10,
+   "states": {
+    "A": {
+     "kind": "the sheet",
+     "stored_energy": 0.0,
+     "static": [
+      18.84756627992467,
+      -2.721627430791746,
+      2.057901675556753
+     ],
+     "induced": [
+      2.871048506378314,
+      -0.6684984480274292,
+      0.5015218159179369
+     ],
+     "total": [
+      21.718614786302986,
+      -3.390125878819175,
+      2.55942349147469
+     ],
+     "energy": 0.0,
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.0,
+      "across_it": 0.0,
+      "along_the_chains": 0.0,
+      "induced_part_along_the_polar_axis": 0.0
+     }
+    },
+    "I": {
+     "kind": "state",
+     "stored_energy": 9.84611975848793,
+     "static": [
+      18.231987629419134,
+      -3.7803458969369643,
+      2.2061166478675194
+     ],
+     "induced": [
+      2.8021114663703375,
+      -0.9461343145282836,
+      0.46704237470512083
+     ],
+     "total": [
+      21.034099095789472,
+      -4.7264802114652475,
+      2.6731590225726403
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.6845156910640817,
+      "across_it": -1.3363543323640574,
+      "along_the_chains": 0.1137355310979502,
+      "induced_part_along_the_polar_axis": -0.06893704012236032
+     }
+    },
+    "B": {
+     "kind": "state",
+     "stored_energy": 7.876362399350228,
+     "static": [
+      18.8167069649046,
+      -2.8388542390281537,
+      1.9750443297368747
+     ],
+     "induced": [
+      2.947793345852978,
+      -0.66659464641056,
+      0.4298434364023353
+     ],
+     "total": [
+      21.76450031075758,
+      -3.505448885438714,
+      2.40488776613921
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.045885524407081525,
+      "across_it": -0.11532300663844323,
+      "along_the_chains": -0.1545357253354802,
+      "induced_part_along_the_polar_axis": 0.0767448394754485
+     }
+    },
+    "A-I saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 10.268398919350602,
+     "static": [
+      18.392069176591516,
+      -3.7117253454052124,
+      2.1306152344635407
+     ],
+     "induced": [
+      2.812060808157415,
+      -0.8907388214073694,
+      0.44988969089643577
+     ],
+     "total": [
+      21.20412998474893,
+      -4.602464166812582,
+      2.5805049253599766
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.5144848020535285,
+      "across_it": -1.212338287781443,
+      "along_the_chains": 0.021081433885286494,
+      "induced_part_along_the_polar_axis": -0.0589876983124603
+     }
+    },
+    "I-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 12.4643840881335,
+     "static": [
+      18.56765184402236,
+      -3.5574685881123003,
+      2.028252927411847
+     ],
+     "induced": [
+      2.8591262268702806,
+      -0.8579243422699041,
+      0.45019661863239296
+     ],
+     "total": [
+      21.42677807089264,
+      -4.415392930382204,
+      2.47844954604424
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.2918367158327463,
+      "across_it": -1.0252670514427944,
+      "along_the_chains": -0.08097394543045011,
+      "induced_part_along_the_polar_axis": -0.011922279586075363
+     }
+    }
+   },
+   "all_trans": {
+    "static": [
+     -10.628499140273846,
+     -3.2070930355843075e-09,
+     -8.409939411535561e-15
+    ],
+    "induced": [
+     -1.9494466410865372,
+     -1.974922433922721e-09,
+     -5.4034884227407245e-15
+    ],
+    "total": [
+     -12.577945781360382,
+     -5.182015469507029e-09,
+     -1.3813427834276285e-14
+    ],
+    "chains": 2
+   },
+   "polar_axis_from": "the all-trans crystal's dipole in the lattice's frame (that cell turned half round about the chain axis)",
+   "all_trans_dipole_per_monomer": 0.6288972890680191,
+   "all_trans_induced_fraction": 0.15498927050357283,
+   "kink_pair_in_the_sheet": {
+    "dipole_against_all_trans_per_kink_pair": {
+     "along_the_polar_axis": -0.859319194453621,
+     "across_it": -0.8475314719417687
+    },
+    "note": "the sheet's dipole per chain less the all-trans crystal's; the component along the chains depends on where a repeat is cut and is left out"
+   },
+   "polar_axis": [
+    1.0,
+    4.1199219328695196e-10,
+    0.0
+   ],
+   "sheet_dipole_per_monomer": 0.542965369622657,
+   "sheet_dipole_turned_from_the_axis_deg": -8.871883421550967,
+   "relaxed_under_the_field": {
+    "+0 V/um": {
+     "A": {
+      "enthalpy_change": -7.681876468268456e-09,
+      "first_order": -0.0,
+      "gradient_max": 4.691443673140507e-05,
+      "evaluations": 3
+     },
+     "I": {
+      "energy": 9.846119766169807,
+      "zero_field": 9.84611975848793,
+      "first_order": 9.84611975848793,
+      "gradient_max": 4.811171598566802e-06,
+      "evaluations": 1,
+      "beyond_first_order": 7.681876468268456e-09
+     },
+     "B": {
+      "energy": 7.876362407032104,
+      "zero_field": 7.876362399350228,
+      "first_order": 7.876362399350228,
+      "gradient_max": 8.632767014329747e-06,
+      "evaluations": 1,
+      "beyond_first_order": 7.681876468268456e-09
+     },
+     "A-I saddle": {
+      "energy": 10.268398927029864,
+      "zero_field": 10.268398919350602,
+      "first_order": 10.268398919350602,
+      "force_along": 0.000388114320905419,
+      "gradient_across": 6.168712216416968e-06,
+      "curvature_along": null,
+      "converged": true,
+      "evaluations": 1,
+      "beyond_first_order": 7.679261671000859e-09
+     },
+     "I-B saddle": {
+      "energy": 12.464384095815376,
+      "zero_field": 12.4643840881335,
+      "first_order": 12.4643840881335,
+      "force_along": 0.0021087874684588403,
+      "gradient_across": 3.116928402834412e-05,
+      "curvature_along": null,
+      "converged": true,
+      "evaluations": 1,
+      "beyond_first_order": 7.681876468268456e-09
+     }
+    },
+    "+55 V/um": {
+     "A": {
+      "enthalpy_change": -2.759200903052033,
+      "first_order": -2.7546316393603223,
+      "gradient_max": 0.00014006998234711746,
+      "evaluations": 15
+     },
+     "I": {
+      "energy": 9.932776085567127,
+      "zero_field": 9.84611975848793,
+      "first_order": 9.932938766003739,
+      "gradient_max": 0.00011010843085723608,
+      "evaluations": 31,
+      "beyond_first_order": -0.00016268043661149534
+     },
+     "B": {
+      "energy": 7.870480583436347,
+      "zero_field": 7.876362399350228,
+      "first_order": 7.870542612104486,
+      "gradient_max": 8.852894789752058e-05,
+      "evaluations": 31,
+      "beyond_first_order": -6.202866813875829e-05
+     },
+     "A-I saddle": {
+      "energy": 10.33374791862957,
+      "zero_field": 10.268398919350602,
+      "first_order": 10.333652441628256,
+      "force_along": -0.0011972082289038225,
+      "gradient_across": 9.933027358109121e-05,
+      "curvature_along": -0.19324146730829772,
+      "converged": true,
+      "evaluations": 54,
+      "beyond_first_order": 9.547700131307124e-05
+     },
+     "I-B saddle": {
+      "energy": 12.501478283908568,
+      "zero_field": 12.4643840881335,
+      "first_order": 12.501398541353534,
+      "force_along": -0.001476592849399058,
+      "gradient_across": 9.21653652214159e-05,
+      "curvature_along": -0.17335806807249096,
+      "converged": true,
+      "evaluations": 66,
+      "beyond_first_order": 7.974255503384597e-05
+     }
+    },
+    "-55 V/um": {
+     "A": {
+      "enthalpy_change": 2.7500621825823828,
+      "first_order": 2.7546316393603223,
+      "gradient_max": 9.883222596107829e-05,
+      "evaluations": 16
+     },
+     "I": {
+      "energy": 9.759137757573512,
+      "zero_field": 9.84611975848793,
+      "first_order": 9.759300750972121,
+      "gradient_max": 4.6656625785894616e-05,
+      "evaluations": 30,
+      "beyond_first_order": -0.00016299339860914586
+     },
+     "B": {
+      "energy": 7.882120082555161,
+      "zero_field": 7.876362399350228,
+      "first_order": 7.88218218659597,
+      "gradient_max": 9.460053284841864e-05,
+      "evaluations": 31,
+      "beyond_first_order": -6.210404080864151e-05
+     },
+     "A-I saddle": {
+      "energy": 10.203201890996354,
+      "zero_field": 10.268398919350602,
+      "first_order": 10.203145397072948,
+      "force_along": 0.00199443117002452,
+      "gradient_across": 8.236766422801019e-05,
+      "curvature_along": -0.19341806600407518,
+      "converged": true,
+      "evaluations": 49,
+      "beyond_first_order": 5.649392340600912e-05
+     },
+     "I-B saddle": {
+      "energy": 12.427770192840342,
+      "zero_field": 12.4643840881335,
+      "first_order": 12.427369634913465,
+      "force_along": 0.0005692432434553855,
+      "gradient_across": 9.836176860301808e-05,
+      "curvature_along": -0.1586791174432864,
+      "converged": true,
+      "evaluations": 102,
+      "beyond_first_order": 0.0004005579268770987
+     }
+    },
+    "+550 V/um": {
+     "A": {
+      "enthalpy_change": -28.003043101295304,
+      "first_order": -27.546316393603224,
+      "gradient_max": 6.873299024779822e-05,
+      "evaluations": 20
+     },
+     "I": {
+      "energy": 10.698026904562084,
+      "zero_field": 9.84611975848793,
+      "first_order": 10.71430983364601,
+      "gradient_max": 0.00015415204941879578,
+      "evaluations": 42,
+      "beyond_first_order": -0.016282929083924813
+     },
+     "B": {
+      "energy": 7.811869169584156,
+      "zero_field": 7.876362399350228,
+      "first_order": 7.818164526892805,
+      "gradient_max": 9.328371103582806e-05,
+      "evaluations": 42,
+      "beyond_first_order": -0.006295357308649052
+     },
+     "A-I saddle": {
+      "energy": 10.929341792734704,
+      "zero_field": 10.268398919350602,
+      "first_order": 10.920934142127148,
+      "force_along": 0.0008084271618411889,
+      "gradient_across": 9.970839778154292e-05,
+      "curvature_along": -0.18207747618859124,
+      "converged": true,
+      "evaluations": 106,
+      "beyond_first_order": 0.00840765060755544
+     },
+     "I-B saddle": {
+      "energy": 12.85009503589714,
+      "zero_field": 12.4643840881335,
+      "first_order": 12.834528620333858,
+      "force_along": -0.025976652701755525,
+      "gradient_across": 7.69113022881218e-05,
+      "curvature_along": -0.29761534673495615,
+      "converged": false,
+      "evaluations": 463,
+      "beyond_first_order": 0.015566415563283087
+     }
+    },
+    "-550 V/um": {
+     "A": {
+      "enthalpy_change": 27.08917078048256,
+      "first_order": 27.546316393603224,
+      "gradient_max": 5.290893230063274e-05,
+      "evaluations": 20
+     },
+     "I": {
+      "energy": 8.96153376601319,
+      "zero_field": 9.84611975848793,
+      "first_order": 8.977929683329851,
+      "gradient_max": 7.514737730472878e-05,
+      "evaluations": 31,
+      "beyond_first_order": -0.016395917316661013
+     },
+     "B": {
+      "energy": 7.928398054452771,
+      "zero_field": 7.876362399350228,
+      "first_order": 7.9345602718076504,
+      "gradient_max": 9.795298543915444e-05,
+      "evaluations": 38,
+      "beyond_first_order": -0.006162217354879651
+     },
+     "A-I saddle": {
+      "energy": 9.624026353757529,
+      "zero_field": 10.268398919350602,
+      "first_order": 9.615863696574056,
+      "force_along": 0.0004994536870542452,
+      "gradient_across": 0.0001531229289339714,
+      "curvature_along": -0.19814374063622625,
+      "converged": true,
+      "evaluations": 105,
+      "beyond_first_order": 0.008162657183472533
+     },
+     "I-B saddle": {
+      "energy": 12.144760472825624,
+      "zero_field": 12.4643840881335,
+      "first_order": 12.094239555933141,
+      "force_along": 0.001327477079028664,
+      "gradient_across": 8.26802383327871e-05,
+      "curvature_along": -0.06748961143127201,
+      "converged": true,
+      "evaluations": 264,
+      "beyond_first_order": 0.050520916892482504
+     }
+    }
+   }
+  },
+  "vdf10-trfe4-14@0 2x1 mover 0 ahead host flexible": {
+   "row": "vdf10-trfe4-14",
+   "supercell": [
+    2,
+    1
+   ],
+   "chains": 4,
+   "monomers_per_chain": 14,
+   "states": {
+    "A": {
+     "kind": "the sheet",
+     "stored_energy": 0.0,
+     "static": [
+      6.077521617927583,
+      22.200866223623883,
+      2.20499447365263
+     ],
+     "induced": [
+      0.21400829418470216,
+      4.002190496790738,
+      0.588184014107676
+     ],
+     "total": [
+      6.291529912112285,
+      26.203056720414622,
+      2.793178487760306
+     ],
+     "energy": 0.0,
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.0,
+      "across_it": 0.0,
+      "along_the_chains": 0.0,
+      "induced_part_along_the_polar_axis": 0.0
+     }
+    },
+    "I": {
+     "kind": "state",
+     "stored_energy": 9.52527106174091,
+     "static": [
+      7.266512416809211,
+      21.863553450683,
+      1.9974098676390692
+     ],
+     "induced": [
+      0.5544180533545122,
+      3.9682912176278027,
+      0.4465513144617345
+     ],
+     "total": [
+      7.820930470163723,
+      25.8318446683108,
+      2.4439611821008036
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.11497686747275132,
+      "across_it": -1.5696001957636643,
+      "along_the_chains": -0.3492173056595025,
+      "induced_part_along_the_polar_axis": 0.022471160477748896
+     }
+    },
+    "B": {
+     "kind": "state",
+     "stored_energy": 12.310942481663233,
+     "static": [
+      7.116047203840039,
+      22.48801827948109,
+      1.7045799318389845
+     ],
+     "induced": [
+      0.561336328627326,
+      4.029095062213494,
+      0.4155995343974324
+     ],
+     "total": [
+      7.677383532467365,
+      26.517113341694582,
+      2.120179466236417
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.5374090930022184,
+      "across_it": -1.3154517418664964,
+      "along_the_chains": -0.6729990215238892,
+      "induced_part_along_the_polar_axis": 0.08358556008709869
+     }
+    },
+    "A-I saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 9.582665647675583,
+     "static": [
+      7.131704114808386,
+      21.922697101459338,
+      1.9767462301019343
+     ],
+     "induced": [
+      0.5183976950068964,
+      3.9815125636013313,
+      0.4481843115452275
+     ],
+     "total": [
+      7.650101809815283,
+      25.90420966506067,
+      2.4249305416471616
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.07165209243417171,
+      "across_it": -1.3892059391508005,
+      "along_the_chains": -0.3682479461131445,
+      "induced_part_along_the_polar_axis": 0.029596849510500293
+     }
+    },
+    "I-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 13.675354191624479,
+     "static": [
+      7.0701016143419135,
+      22.32097684139742,
+      1.7274399449084328
+     ],
+     "induced": [
+      0.5343127413598596,
+      4.025193919533606,
+      0.40761992009975545
+     ],
+     "total": [
+      7.604414355701773,
+      26.346170760931027,
+      2.1350598650081882
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.35680323040771894,
+      "across_it": -1.2715497023643343,
+      "along_the_chains": -0.6581186227521179,
+      "induced_part_along_the_polar_axis": 0.07529894771640822
+     }
+    },
+    "M": {
+     "kind": "state",
+     "stored_energy": 11.679728147160176,
+     "static": [
+      6.999624266895454,
+      22.539194798581686,
+      1.5905024144097455
+     ],
+     "induced": [
+      0.5144818105562242,
+      4.06339999886813,
+      0.38709206712849825
+     ],
+     "total": [
+      7.514106077451678,
+      26.602594797449818,
+      1.9775944815382438
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.5949124395050909,
+      "across_it": -1.1403518511315085,
+      "along_the_chains": -0.8155840062220623,
+      "induced_part_along_the_polar_axis": 0.10972908101691421
+     }
+    }
+   },
+   "all_trans": {
+    "static": [
+     2.501201131514529,
+     12.56514749965481,
+     -9.354399921335244e-08
+    ],
+    "induced": [
+     0.007163411056259188,
+     2.4996855491372787,
+     -5.5041059321414565e-08
+    ],
+    "total": [
+     2.508364542570788,
+     15.064833048792089,
+     -1.48585058534767e-07
+    ],
+    "chains": 2
+   },
+   "polar_axis_from": "the all-trans crystal's dipole in the lattice's frame",
+   "all_trans_dipole_per_monomer": 0.5454368772594093,
+   "all_trans_induced_fraction": 0.161529490055886,
+   "kink_pair_in_the_sheet": {
+    "dipole_against_all_trans_per_kink_pair": {
+     "along_the_polar_axis": -0.9159769092350467,
+     "across_it": -0.47560219572745727
+    },
+    "note": "the sheet's dipole per chain less the all-trans crystal's; the component along the chains depends on where a repeat is cut and is left out"
+   },
+   "polar_axis": [
+    0.1642434746969821,
+    0.9864198300011318,
+    0.0
+   ],
+   "sheet_dipole_per_monomer": 0.4800099551711915,
+   "sheet_dipole_turned_from_the_axis_deg": -4.048225333645348
+  },
+  "vdf9-trfe4-cfe1-14@0 2x1 mover 0 ahead host flexible": {
+   "row": "vdf9-trfe4-cfe1-14",
+   "supercell": [
+    2,
+    1
+   ],
+   "chains": 4,
+   "monomers_per_chain": 14,
+   "states": {
+    "A": {
+     "kind": "the sheet",
+     "stored_energy": 0.0,
+     "static": [
+      4.796230613109901,
+      22.661017766850797,
+      2.2912413366103674
+     ],
+     "induced": [
+      0.013083611479211608,
+      4.063453820929424,
+      0.6345554394622861
+     ],
+     "total": [
+      4.809314224589112,
+      26.724471587780222,
+      2.9257967760726533
+     ],
+     "energy": 0.0,
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.0,
+      "across_it": 0.0,
+      "along_the_chains": 0.0,
+      "induced_part_along_the_polar_axis": 0.0
+     }
+    },
+    "I": {
+     "kind": "state",
+     "stored_energy": 9.04482582485042,
+     "static": [
+      5.961656405583831,
+      22.33264197070822,
+      2.0841603559689252
+     ],
+     "induced": [
+      0.3080525001105547,
+      4.0062248408505985,
+      0.49747851048486463
+     ],
+     "total": [
+      6.269708905694386,
+      26.33886681155882,
+      2.58163886645379
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.2144820898293562,
+      "across_it": -1.4951391578002908,
+      "along_the_chains": -0.3441579096188634,
+      "induced_part_along_the_polar_axis": -0.022803832013068542
+     }
+    },
+    "B": {
+     "kind": "state",
+     "stored_energy": 12.999072034595144,
+     "static": [
+      5.832865869433461,
+      22.974463744469308,
+      1.7902856148129285
+     ],
+     "induced": [
+      0.3227144829549599,
+      4.080869121930492,
+      0.4460952914363087
+     ],
+     "total": [
+      6.155580352388421,
+      27.0553328663998,
+      2.236380906249237
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.4840246707662256,
+      "across_it": -1.2990849820697545,
+      "along_the_chains": -0.6894158698234163,
+      "induced_part_along_the_polar_axis": 0.05303381858593929
+     }
+    },
+    "A-I saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 9.084192229893063,
+     "static": [
+      5.972905311264148,
+      22.36763576992568,
+      2.0493611234935765
+     ],
+     "induced": [
+      0.3105254037098097,
+      4.029315566703195,
+      0.48629997538067743
+     ],
+     "total": [
+      6.283430714973957,
+      26.396951336628874,
+      2.535661098874254
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.1552020461610503,
+      "across_it": -1.5020656666757946,
+      "along_the_chains": -0.3901356771983995,
+      "induced_part_along_the_polar_axis": 0.00041799778593712623
+     }
+    },
+    "I-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 13.306746148447246,
+     "static": [
+      5.749711748764452,
+      23.06352374693598,
+      1.8035756502939844
+     ],
+     "induced": [
+      0.3000606355022854,
+      4.105091000087539,
+      0.44695894989091783
+     ],
+     "total": [
+      6.0497723842667375,
+      27.16861474702352,
+      2.2505346001849023
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.584338147215559,
+      "across_it": -1.1809100395551324,
+      "along_the_chains": -0.6752621758877511,
+      "induced_part_along_the_polar_axis": 0.07447933200091975
+     }
+    },
+    "M": {
+     "kind": "state",
+     "stored_energy": 11.20412661632298,
+     "static": [
+      5.709342323494036,
+      23.02664732300201,
+      1.6619846541360337
+     ],
+     "induced": [
+      0.28619650218723286,
+      4.120836238127937,
+      0.4175510014577737
+     ],
+     "total": [
+      5.995538825681269,
+      27.147483561129945,
+      2.0795356555938076
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.5570890007153393,
+      "across_it": -1.1294776576433276,
+      "along_the_chains": -0.8462611204788457,
+      "induced_part_along_the_polar_axis": 0.0885192799711496
+     }
+    },
+    "I-M saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 12.999440478597194,
+     "static": [
+      5.973339589180748,
+      22.714380209307006,
+      1.805628184469759
+     ],
+     "induced": [
+      0.35444231931342024,
+      4.057496700155238,
+      0.4329425304282845
+     ],
+     "total": [
+      6.327781908494168,
+      26.771876909462243,
+      2.2385707148980436
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.2223368241139465,
+      "across_it": -1.5028498621720945,
+      "along_the_chains": -0.6872260611746097,
+      "induced_part_along_the_polar_axis": 0.03347932583833278
+     }
+    },
+    "M-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 13.306750422006985,
+     "static": [
+      5.7507998159363645,
+      23.06263264054286,
+      1.8037529165404464
+     ],
+     "induced": [
+      0.300433396756985,
+      4.104674750474412,
+      0.4469949410434097
+     ],
+     "total": [
+      6.051233212693349,
+      27.16730739101727,
+      2.250747857583856
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.5832081232862841,
+      "across_it": -1.182511990034496,
+      "along_the_chains": -0.6750489184887973,
+      "induced_part_along_the_polar_axis": 0.0741088847009212
+     }
+    }
+   },
+   "all_trans": {
+    "static": [
+     1.928765911025325,
+     12.801305947197758,
+     -2.652695663130089e-08
+    ],
+    "induced": [
+     -0.15358786942281058,
+     2.4772368685553645,
+     -1.558831328428434e-08
+    ],
+    "total": [
+     1.7751780416025145,
+     15.278542815753122,
+     -4.211526991558523e-08
+    ],
+    "chains": 2
+   },
+   "polar_axis_from": "the all-trans crystal's dipole in the lattice's frame",
+   "all_trans_dipole_per_monomer": 0.5493329996043591,
+   "all_trans_induced_fraction": 0.1588262293603296,
+   "kink_pair_in_the_sheet": {
+    "dipole_against_all_trans_per_kink_pair": {
+     "along_the_polar_axis": -0.9154264443686246,
+     "across_it": -0.4232180886621186
+    },
+    "note": "the sheet's dipole per chain less the all-trans crystal's; the component along the chains depends on where a repeat is cut and is left out"
+   },
+   "polar_axis": [
+    0.11541126387306022,
+    0.9933177941480877,
+    0.0
+   ],
+   "sheet_dipole_per_monomer": 0.4839453964351716,
+   "sheet_dipole_turned_from_the_axis_deg": -3.5743620928418474,
+   "relaxed_under_the_field": {
+    "+0 V/um": {
+     "A": {
+      "enthalpy_change": 0.0,
+      "first_order": -0.0,
+      "gradient_max": 3.2967720173699687e-06,
+      "evaluations": 1
+     },
+     "I": {
+      "energy": 9.044825815442834,
+      "zero_field": 9.04482582485042,
+      "first_order": 9.04482582485042,
+      "gradient_max": 0.0001055546241682837,
+      "evaluations": 9,
+      "beyond_first_order": -9.407585821463726e-09
+     },
+     "B": {
+      "energy": 12.999071914234946,
+      "zero_field": 12.999072034595144,
+      "first_order": 12.999072034595144,
+      "gradient_max": 9.40733712138554e-05,
+      "evaluations": 23,
+      "beyond_first_order": -1.2036019825245603e-07
+     },
+     "M": {
+      "energy": 11.204126586796974,
+      "zero_field": 11.20412661632298,
+      "first_order": 11.20412661632298,
+      "gradient_max": 6.120569524636251e-05,
+      "evaluations": 13,
+      "beyond_first_order": -2.9526006528612925e-08
+     },
+     "A-I saddle": {
+      "energy": 9.08419222365103,
+      "zero_field": 9.084192229893063,
+      "first_order": 9.084192229893063,
+      "force_along": 0.0022537124062560736,
+      "gradient_across": 8.835815653194085e-05,
+      "curvature_along": null,
+      "converged": true,
+      "evaluations": 3,
+      "beyond_first_order": -6.242032668524189e-09
+     },
+     "I-M saddle": {
+      "energy": 12.999440440308547,
+      "zero_field": 12.999440478597194,
+      "first_order": 12.999440478597194,
+      "force_along": -0.002005532396551462,
+      "gradient_across": 9.103797942795385e-05,
+      "curvature_along": null,
+      "converged": true,
+      "evaluations": 12,
+      "beyond_first_order": -3.8288646919681923e-08
+     },
+     "M-B saddle": {
+      "energy": 13.306768497409621,
+      "zero_field": 13.306750422006985,
+      "first_order": 13.306750422006985,
+      "force_along": 8.257818445155545e-06,
+      "gradient_across": 9.857191764079996e-05,
+      "curvature_along": -0.2535660444179728,
+      "converged": true,
+      "evaluations": 86,
+      "beyond_first_order": 1.8075402635986393e-05
+     }
+    },
+    "+55 V/um": {
+     "A": {
+      "enthalpy_change": -3.4445711715274,
+      "first_order": -3.4372870268639297,
+      "gradient_max": 7.535269293997141e-05,
+      "evaluations": 25
+     },
+     "I": {
+      "energy": 9.07187840016195,
+      "zero_field": 9.04482582485042,
+      "first_order": 9.072029178129224,
+      "gradient_max": 7.23090911368946e-05,
+      "evaluations": 33,
+      "beyond_first_order": -0.00015077796727425152
+     },
+     "B": {
+      "energy": 12.937335567002776,
+      "zero_field": 12.999072034595144,
+      "first_order": 12.93768185453402,
+      "gradient_max": 8.132879034782837e-05,
+      "evaluations": 51,
+      "beyond_first_order": -0.00034628753124366085
+     },
+     "M": {
+      "energy": 11.133282310524407,
+      "zero_field": 11.20412661632298,
+      "first_order": 11.133469486367503,
+      "gradient_max": 8.569486913247821e-05,
+      "evaluations": 54,
+      "beyond_first_order": -0.00018717584309513313
+     },
+     "A-I saddle": {
+      "energy": 9.104167758712208,
+      "zero_field": 9.084192229893063,
+      "first_order": 9.103876932213296,
+      "force_along": 0.0001785312226132098,
+      "gradient_across": 6.844562729295696e-05,
+      "curvature_along": -0.05912410886026412,
+      "converged": true,
+      "evaluations": 59,
+      "beyond_first_order": 0.000290826498911656
+     },
+     "I-M saddle": {
+      "energy": 12.971527943991248,
+      "zero_field": 12.999440478597194,
+      "first_order": 12.971240887768555,
+      "force_along": -0.0029981906801558496,
+      "gradient_across": 7.269249326571056e-05,
+      "curvature_along": -0.19663092211942848,
+      "converged": true,
+      "evaluations": 67,
+      "beyond_first_order": 0.0002870562226924278
+     },
+     "M-B saddle": {
+      "energy": 13.232600109749853,
+      "zero_field": 13.306750422006985,
+      "first_order": 13.232780531908247,
+      "force_along": 0.002560737508333913,
+      "gradient_across": 9.848651891715163e-05,
+      "curvature_along": null,
+      "converged": true,
+      "evaluations": 32,
+      "beyond_first_order": -0.000180422158393867
+     }
+    },
+    "-55 V/um": {
+     "A": {
+      "enthalpy_change": 3.4299966826091577,
+      "first_order": 3.4372870268639297,
+      "gradient_max": 6.622031878990097e-05,
+      "evaluations": 25
+     },
+     "I": {
+      "energy": 9.017477535520129,
+      "zero_field": 9.04482582485042,
+      "first_order": 9.017622471571617,
+      "gradient_max": 6.267759469982191e-05,
+      "evaluations": 31,
+      "beyond_first_order": -0.00014493605148757638
+     },
+     "B": {
+      "energy": 13.060124940967057,
+      "zero_field": 12.999072034595144,
+      "first_order": 13.060462214656269,
+      "gradient_max": 5.930933039463924e-05,
+      "evaluations": 52,
+      "beyond_first_order": -0.00033727368921177003
+     },
+     "M": {
+      "energy": 11.27460097184479,
+      "zero_field": 11.20412661632298,
+      "first_order": 11.274783746278459,
+      "gradient_max": 7.74475833395398e-05,
+      "evaluations": 55,
+      "beyond_first_order": -0.00018277443366798707
+     },
+     "A-I saddle": {
+      "energy": 9.064412346035851,
+      "zero_field": 9.084192229893063,
+      "first_order": 9.064507527572829,
+      "force_along": -0.0023637096999324864,
+      "gradient_across": 5.7151931990365534e-05,
+      "curvature_along": null,
+      "converged": true,
+      "evaluations": 21,
+      "beyond_first_order": -9.518153697740672e-05
+     },
+     "I-M saddle": {
+      "energy": 13.027727101214964,
+      "zero_field": 12.999440478597194,
+      "first_order": 13.027640069425832,
+      "force_along": -0.0011182480812827608,
+      "gradient_across": 5.166620804993054e-05,
+      "curvature_along": -0.1988570661466974,
+      "converged": true,
+      "evaluations": 74,
+      "beyond_first_order": 8.703178913194165e-05
+     },
+     "M-B saddle": {
+      "energy": 13.380688328335623,
+      "zero_field": 13.306750422006985,
+      "first_order": 13.380720312105723,
+      "force_along": 9.245694513466415e-06,
+      "gradient_across": 7.782897519018797e-05,
+      "curvature_along": -0.25739253046990923,
+      "converged": true,
+      "evaluations": 97,
+      "beyond_first_order": -3.1983770099941466e-05
+     }
+    }
+   }
+  },
+  "vdf10@0 4x2 mover 0 ahead host flexible": {
+   "row": "vdf10",
+   "supercell": [
+    4,
+    2
+   ],
+   "chains": 16,
+   "monomers_per_chain": 10,
+   "states": {
+    "A": {
+     "kind": "the sheet",
+     "stored_energy": 0.0,
+     "static": [
+      75.39026511969882,
+      -10.886509723166977,
+      8.231606702227024
+     ],
+     "induced": [
+      11.484194025513238,
+      -2.6739937921097403,
+      2.006087263671748
+     ],
+     "total": [
+      86.87445914521206,
+      -13.560503515276718,
+      10.237693965898773
+     ],
+     "energy": 0.0,
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.0,
+      "across_it": 0.0,
+      "along_the_chains": 0.0,
+      "induced_part_along_the_polar_axis": 0.0
+     }
+    },
+    "I": {
+     "kind": "state",
+     "stored_energy": 9.962597872896595,
+     "static": [
+      74.76131935316016,
+      -11.724071579211518,
+      8.401965101438844
+     ],
+     "induced": [
+      11.428913141283383,
+      -2.8708445135752694,
+      1.981420062018667
+     ],
+     "total": [
+      86.19023249444355,
+      -14.594916092786788,
+      10.383385163457511
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.6842266511946781,
+      "across_it": -1.0344125772281736,
+      "along_the_chains": 0.1456911975587385,
+      "induced_part_along_the_polar_axis": -0.05528088431095629
+     }
+    },
+    "B": {
+     "kind": "state",
+     "stored_energy": 5.911104972912199,
+     "static": [
+      75.34426509923263,
+      -10.872877164094351,
+      8.178506841381065
+     ],
+     "induced": [
+      11.567635663809364,
+      -2.6125806630797705,
+      1.9365798610200158
+     ],
+     "total": [
+      86.911900763042,
+      -13.485457827174121,
+      10.115086702401081
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.037441617860859505,
+      "across_it": 0.07504568808717083,
+      "along_the_chains": -0.12260726349769158,
+      "induced_part_along_the_polar_axis": 0.08344163832142756
+     }
+    },
+    "A-I saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 10.659951869768975,
+     "static": [
+      74.9295277488119,
+      -11.788191223495698,
+      8.298882275201898
+     ],
+     "induced": [
+      11.437798104719905,
+      -2.8643218003426005,
+      1.9529457930484355
+     ],
+     "total": [
+      86.36732585353181,
+      -14.6525130238383,
+      10.251828068250333
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.5071332921301469,
+      "across_it": -1.0920095083526464,
+      "along_the_chains": 0.01413410235156043,
+      "induced_part_along_the_polar_axis": -0.046395920871747195
+     }
+    },
+    "I-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 11.636561147876137,
+     "static": [
+      75.02966172953765,
+      -11.688815939017262,
+      8.258954411805245
+     ],
+     "induced": [
+      11.476300047623145,
+      -2.8431499796273503,
+      1.9556452784618386
+     ],
+     "total": [
+      86.50596177716079,
+      -14.531965918644612,
+      10.214599690267084
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.36849736845150044,
+      "across_it": -0.9714624032160765,
+      "along_the_chains": -0.023094275631688532,
+      "induced_part_along_the_polar_axis": -0.007893977959784524
+     }
+    },
+    "N": {
+     "kind": "state",
+     "stored_energy": 7.722119533431851,
+     "static": [
+      75.46892745454949,
+      -9.593411187975793,
+      8.185210755057124
+     ],
+     "induced": [
+      11.639910712838583,
+      -2.370433191717155,
+      1.9938466248190603
+     ],
+     "total": [
+      87.10883816738807,
+      -11.963844379692947,
+      10.179057379876184
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.23437902283382558,
+      "across_it": 1.5966591354872084,
+      "along_the_chains": -0.05863658602258859,
+      "induced_part_along_the_polar_axis": 0.15571668745040965
+     }
+    },
+    "L": {
+     "kind": "state",
+     "stored_energy": 5.422726524128166,
+     "static": [
+      75.35577632629983,
+      -11.162335241471556,
+      7.245305809177355
+     ],
+     "induced": [
+      11.584853988787012,
+      -2.7009147026163784,
+      1.773222533771466
+     ],
+     "total": [
+      86.94063031508685,
+      -13.863249944087935,
+      9.018528342948821
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.06617116975006304,
+      "across_it": -0.30274642883847874,
+      "along_the_chains": -1.2191656229499515,
+      "induced_part_along_the_polar_axis": 0.1006599632626827
+     }
+    },
+    "I-N saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 11.63656034137125,
+     "static": [
+      75.02977795075955,
+      -11.688771251578826,
+      8.258899342698042
+     ],
+     "induced": [
+      11.476309924187015,
+      -2.8431344836457915,
+      1.9556298684747933
+     ],
+     "total": [
+      86.50608787494657,
+      -14.531905735224617,
+      10.214529211172835
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.3683712706656946,
+      "across_it": -0.9714022197961333,
+      "along_the_chains": -0.023164754725938153,
+      "induced_part_along_the_polar_axis": -0.007884101395907393
+     }
+    },
+    "A-N saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 12.386552477198848,
+     "static": [
+      75.00121043090272,
+      -10.290179808132857,
+      8.492992166907282
+     ],
+     "induced": [
+      11.508839327667479,
+      -2.5578239283158797,
+      2.0532841286539503
+     ],
+     "total": [
+      86.51004975857019,
+      -12.848003736448737,
+      10.546276295561231
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.3644093863483228,
+      "across_it": 0.7124997789781148,
+      "along_the_chains": 0.3085823296624586,
+      "induced_part_along_the_polar_axis": 0.024645302202101843
+     }
+    },
+    "A-L saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 11.820463812198113,
+     "static": [
+      75.16511414243922,
+      -9.815900129840209,
+      7.669809507527743
+     ],
+     "induced": [
+      11.50725394192181,
+      -2.41038076539032,
+      1.8874298947596917
+     ],
+     "total": [
+      86.67236808436104,
+      -12.226280895230529,
+      9.557239402287435
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.2020910603013285,
+      "across_it": 1.334222620129449,
+      "along_the_chains": -0.6804545636113382,
+      "induced_part_along_the_polar_axis": 0.023059916517178588
+     }
+    },
+    "N-L saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 13.656610126574606,
+     "static": [
+      75.81857853170693,
+      -10.489568893934582,
+      7.624212474900705
+     ],
+     "induced": [
+      11.65264626034288,
+      -2.538575041221063,
+      1.8688596541604454
+     ],
+     "total": [
+      87.47122479204981,
+      -13.028143935155644,
+      9.49307212906115
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.5967656470570807,
+      "across_it": 0.5323595798752115,
+      "along_the_chains": -0.7446218368376218,
+      "induced_part_along_the_polar_axis": 0.16845223488543368
+     }
+    }
+   },
+   "all_trans": {
+    "static": [
+     -10.628499140273846,
+     -3.2070930355843075e-09,
+     -8.409939411535561e-15
+    ],
+    "induced": [
+     -1.9494466410865372,
+     -1.974922433922721e-09,
+     -5.4034884227407245e-15
+    ],
+    "total": [
+     -12.577945781360382,
+     -5.182015469507029e-09,
+     -1.3813427834276285e-14
+    ],
+    "chains": 2
+   },
+   "polar_axis_from": "the all-trans crystal's dipole in the lattice's frame (that cell turned half round about the chain axis)",
+   "all_trans_dipole_per_monomer": 0.6288972890680191,
+   "all_trans_induced_fraction": 0.15498927050357283,
+   "kink_pair_in_the_sheet": {
+    "dipole_against_all_trans_per_kink_pair": {
+     "along_the_polar_axis": -0.8593191944536139,
+     "across_it": -0.8475314719417698
+    },
+    "note": "the sheet's dipole per chain less the all-trans crystal's; the component along the chains depends on where a repeat is cut and is left out"
+   },
+   "polar_axis": [
+    1.0,
+    4.1199219328695196e-10,
+    0.0
+   ],
+   "sheet_dipole_per_monomer": 0.5429653696226577,
+   "sheet_dipole_turned_from_the_axis_deg": -8.871883421550967
+  },
+  "vdf10-trfe4-14@0 4x2 mover 0 ahead host flexible": {
+   "row": "vdf10-trfe4-14",
+   "supercell": [
+    4,
+    2
+   ],
+   "chains": 16,
+   "monomers_per_chain": 14,
+   "states": {
+    "A": {
+     "kind": "the sheet",
+     "stored_energy": 0.0,
+     "static": [
+      24.31008647171032,
+      88.80346489449552,
+      8.819977894610545
+     ],
+     "induced": [
+      0.8560331767387979,
+      16.008761987162952,
+      2.352736056430701
+     ],
+     "total": [
+      25.16611964844912,
+      104.81222688165848,
+      11.172713951041246
+     ],
+     "energy": 0.0,
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.0,
+      "across_it": 0.0,
+      "along_the_chains": 0.0,
+      "induced_part_along_the_polar_axis": 0.0
+     }
+    },
+    "I": {
+     "kind": "state",
+     "stored_energy": 9.35501231259218,
+     "static": [
+      25.34649988425221,
+      88.51331374795596,
+      8.675398030551484
+     ],
+     "induced": [
+      1.1410021277000428,
+      15.958001726251801,
+      2.2458183181594773
+     ],
+     "total": [
+      26.48750201195225,
+      104.47131547420776,
+      10.921216348710962
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.1192533417979192,
+      "across_it": -1.359430240496799,
+      "along_the_chains": -0.25149760233028395,
+      "induced_part_along_the_polar_axis": -0.0032666372521617153
+     }
+    },
+    "B": {
+     "kind": "state",
+     "stored_energy": 10.702821685511708,
+     "static": [
+      25.278738400204357,
+      89.16577903678358,
+      8.339774031481909
+     ],
+     "induced": [
+      1.1786287246815454,
+      16.06730142703726,
+      2.15551866477895
+     ],
+     "total": [
+      26.457367124885902,
+      105.23308046382084,
+      10.495292696260858
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.6272172911956548,
+      "across_it": -1.2045896615231437,
+      "along_the_chains": -0.6774212547803877,
+      "induced_part_along_the_polar_axis": 0.1107286780450712
+     }
+    },
+    "A-I saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 9.526430942241177,
+     "static": [
+      25.323727236215543,
+      88.55738092653502,
+      8.638911182309263
+     ],
+     "induced": [
+      1.1309687249085674,
+      15.98473322961515,
+      2.2402376152728256
+     ],
+     "total": [
+      26.45469596112411,
+      104.54211415615016,
+      10.879148797582088
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.05480429777108637,
+      "across_it": -1.315441479889707,
+      "along_the_chains": -0.29356515345915746,
+      "induced_part_along_the_polar_axis": 0.021453926813681422
+     }
+    },
+    "I-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 14.99997257425889,
+     "static": [
+      25.486142165341782,
+      88.9573745278832,
+      8.254638913171544
+     ],
+     "induced": [
+      1.228620064854737,
+      16.00763016090258,
+      2.1356270294234063
+     ],
+     "total": [
+      26.71476223019652,
+      104.96500468878578,
+      10.39026594259495
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.40505749722436285,
+      "across_it": -1.5025189943206112,
+      "along_the_chains": -0.7824480084462948,
+      "induced_part_along_the_polar_axis": 0.060078509263349594
+     }
+    },
+    "M": {
+     "kind": "state",
+     "stored_energy": 13.431745298964415,
+     "static": [
+      25.41673790266668,
+      89.18564597808002,
+      8.21211914644971
+     ],
+     "induced": [
+      1.2156890096217046,
+      16.056872386574973,
+      2.110887359370912
+     ],
+     "total": [
+      26.632426912288384,
+      105.24251836465498,
+      10.323006505820622
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.6652794514947368,
+      "across_it": -1.3757219936258889,
+      "along_the_chains": -0.8497074452206235,
+      "induced_part_along_the_polar_axis": 0.10652817569701813
+     }
+    },
+    "N": {
+     "kind": "state",
+     "stored_energy": 8.944295772491841,
+     "static": [
+      23.509324731622502,
+      89.45597077745902,
+      8.453874134467815
+     ],
+     "induced": [
+      0.7869492121576022,
+      16.18555492131562,
+      2.204289019588926
+     ],
+     "total": [
+      24.296273943780104,
+      105.64152569877464,
+      10.65816315405674
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.6751703172147864,
+      "across_it": 0.9942399714120804,
+      "along_the_chains": -0.5145507969845049,
+      "induced_part_along_the_polar_axis": 0.16304546566361805
+     }
+    },
+    "P": {
+     "kind": "state",
+     "stored_energy": 11.167139381355355,
+     "static": [
+      24.13820057356934,
+      89.05842952682367,
+      8.788175665120319
+     ],
+     "induced": [
+      0.9419828610395724,
+      16.107886939452055,
+      2.3308574766537657
+     ],
+     "total": [
+      25.080183434608912,
+      105.16631646627573,
+      11.119033141774084
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.3351665254999067,
+      "across_it": 0.14292608917874633,
+      "along_the_chains": -0.05368080926716168,
+      "induced_part_along_the_polar_axis": 0.1118954933845546
+     }
+    },
+    "N2": {
+     "kind": "state",
+     "stored_energy": 12.660278905395899,
+     "static": [
+      25.473016929298037,
+      89.21775245792634,
+      8.241057488386307
+     ],
+     "induced": [
+      1.1956164818688657,
+      16.127656176795128,
+      2.148664024701671
+     ],
+     "total": [
+      26.6686334111669,
+      105.34540863472147,
+      10.389721513087977
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.7727191353849061,
+      "across_it": -1.3945377466263422,
+      "along_the_chains": -0.7829924379532684,
+      "induced_part_along_the_polar_axis": 0.17305392830874103
+     }
+    },
+    "B2": {
+     "kind": "state",
+     "stored_energy": 12.591078521521922,
+     "static": [
+      24.83222085010774,
+      88.70111322743423,
+      8.685139446679647
+     ],
+     "induced": [
+      1.039482370530266,
+      16.017435535904262,
+      2.296190175982142
+     ],
+     "total": [
+      25.871703220638004,
+      104.7185487633385,
+      10.98132962266179
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.023481544037399462,
+      "across_it": -0.7113876469860988,
+      "along_the_chains": -0.1913843283794563,
+      "induced_part_along_the_polar_axis": 0.03868609349358041
+     }
+    },
+    "NN4": {
+     "kind": "state",
+     "stored_energy": 18.729764359191904,
+     "static": [
+      22.458955470077342,
+      89.99179328648614,
+      8.204844607860174
+     ],
+     "induced": [
+      0.6162897188273285,
+      16.382216725974594,
+      2.096068819262354
+     ],
+     "total": [
+      23.07524518890467,
+      106.37401001246073,
+      10.300913427122529
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 1.1971613639938405,
+      "across_it": 2.3189927170636366,
+      "along_the_chains": -0.8718005239187168,
+      "induced_part_along_the_polar_axis": 0.32900686140844737
+     }
+    },
+    "NN12": {
+     "kind": "state",
+     "stored_energy": 18.729764256659564,
+     "static": [
+      22.458958121040926,
+      89.99181506979136,
+      8.204835538492219
+     ],
+     "induced": [
+      0.6162783854486454,
+      16.382218508031464,
+      2.096061211968568
+     ],
+     "total": [
+      23.07523650648957,
+      106.37403357782281,
+      10.300896750460787
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 1.1971831833042774,
+      "across_it": 2.3190051520270143,
+      "along_the_chains": -0.871817200580459,
+      "induced_part_along_the_polar_axis": 0.3290067578311872
+     }
+    },
+    "L": {
+     "kind": "state",
+     "stored_energy": 3.7439958312575072,
+     "static": [
+      24.658651505682514,
+      88.72413490607317,
+      7.7610347881806
+     ],
+     "induced": [
+      0.9229806801666283,
+      16.080985904799007,
+      2.0820464665994214
+     ],
+     "total": [
+      25.58163218584914,
+      104.80512081087218,
+      9.84308125478002
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.06123565378574866,
+      "across_it": -0.4110369322628528,
+      "along_the_chains": -1.3296326962612248,
+      "induced_part_along_the_polar_axis": 0.08223879514184838
+     }
+    },
+    "I-M saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 14.99999396927501,
+     "static": [
+      25.485418087555907,
+      88.95817573433662,
+      8.254173460064585
+     ],
+     "induced": [
+      1.228440224475923,
+      16.00784178760662,
+      2.135557283559046
+     ],
+     "total": [
+      26.713858312031828,
+      104.96601752194324,
+      10.38973074362363
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.40590811327515386,
+      "across_it": -1.5014610002811912,
+      "along_the_chains": -0.7829832074176153,
+      "induced_part_along_the_polar_axis": 0.06025772443206515
+     }
+    },
+    "M-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 13.5673324084878,
+     "static": [
+      25.4362541021099,
+      89.1900780670856,
+      8.260620015092526
+     ],
+     "induced": [
+      1.2284389294486782,
+      16.048020879128096,
+      2.118370091531705
+     ],
+     "total": [
+      26.664693031558578,
+      105.23809894621368,
+      10.378990106624231
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.666219549051088,
+      "across_it": -1.4082757941521291,
+      "along_the_chains": -0.7937238444170145,
+      "induced_part_along_the_polar_axis": 0.09989096436050571
+     }
+    },
+    "I-N saddle": {
+     "kind": "saddle (band top)",
+     "stored_energy": 13.810393186064857,
+     "static": [
+      24.64536825185517,
+      88.75474343017787,
+      8.835210796361668
+     ],
+     "induced": [
+      1.0145869276212223,
+      16.064301487700188,
+      2.305666777206517
+     ],
+     "total": [
+      25.659955179476395,
+      104.81904491787806,
+      11.140877573568185
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.08783470967341342,
+      "across_it": -0.4860093426051299,
+      "along_the_chains": -0.031836377473061006,
+      "induced_part_along_the_polar_axis": 0.08082668364945729
+     }
+    },
+    "I-P saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 13.786156419387453,
+     "static": [
+      24.644992941433127,
+      88.72974909391907,
+      8.846937726319783
+     ],
+     "induced": [
+      1.0182744239554316,
+      16.058439102390142,
+      2.3092146101727606
+     ],
+     "total": [
+      25.66326736538856,
+      104.7881881963092,
+      11.156152336492545
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.05794103255212989,
+      "across_it": -0.4943445636377655,
+      "along_the_chains": -0.016561614548701087,
+      "induced_part_along_the_polar_axis": 0.07564955773938381
+     }
+    },
+    "P-N saddle": {
+     "kind": "saddle (band top)",
+     "stored_energy": 12.351309452444411,
+     "static": [
+      24.06011487230825,
+      89.24981101466543,
+      8.609994618998357
+     ],
+     "induced": [
+      0.9719488994922789,
+      16.11156788566848,
+      2.2626406574685642
+     ],
+     "total": [
+      25.03206377180053,
+      105.3613789003339,
+      10.872635276466921
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.5196766379222805,
+      "across_it": 0.2224300107384677,
+      "along_the_chains": -0.30007867457432447,
+      "induced_part_along_the_polar_axis": 0.12044817800398185
+     }
+    },
+    "A-N saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 11.892722998425597,
+     "static": [
+      23.953068949366326,
+      88.85637750728458,
+      8.972854996503848
+     ],
+     "induced": [
+      0.8819516767565226,
+      16.067277231026175,
+      2.354079749254829
+     ],
+     "total": [
+      24.835020626122848,
+      104.92365473831074,
+      11.326934745758678
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.05553379352068226,
+      "across_it": 0.34490393967122684,
+      "along_the_chains": 0.15422079471743189,
+      "induced_part_along_the_polar_axis": 0.06197754140587993
+     }
+    },
+    "N-N2 saddle": {
+     "kind": "saddle (band top, band not converged)",
+     "stored_energy": 14.591983195028433,
+     "static": [
+      24.760586473155502,
+      89.49693005196987,
+      8.189189552634598
+     ],
+     "induced": [
+      0.9881967270515688,
+      16.233853885948033,
+      2.1345286652116737
+     ],
+     "total": [
+      25.748783200207072,
+      105.7307839379179,
+      10.323718217846272
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 1.0017815816017788,
+      "across_it": -0.42388387904545566,
+      "along_the_chains": -0.8489957331949736,
+      "induced_part_along_the_polar_axis": 0.24374211326587042
+     }
+    },
+    "N-NN4 saddle": {
+     "kind": "saddle (band top, band not converged)",
+     "stored_energy": 22.145504035790736,
+     "static": [
+      23.1461196079121,
+      89.60779985239071,
+      8.459082971097079
+     ],
+     "induced": [
+      0.6507275909629741,
+      16.25301333693805,
+      2.197971390236641
+     ],
+     "total": [
+      23.796847198875074,
+      105.86081318932877,
+      10.65705436133372
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.8094522624287539,
+      "across_it": 1.5229009556255093,
+      "along_the_chains": -0.5156595897075249,
+      "induced_part_along_the_polar_axis": 0.20721427214017854
+     }
+    },
+    "N-NN12 saddle": {
+     "kind": "saddle (band top)",
+     "stored_energy": 23.052614659100982,
+     "static": [
+      22.89505643524157,
+      89.73140810908947,
+      8.36014592873854
+     ],
+     "induced": [
+      0.7859349841847464,
+      16.28411965579946,
+      2.1616717802860044
+     ],
+     "total": [
+      23.680991419426316,
+      106.01552776488893,
+      10.521817709024544
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.9430372319711162,
+      "across_it": 1.6625942533702716,
+      "along_the_chains": -0.6508962420167013,
+      "induced_part_along_the_polar_axis": 0.260105093970878
+     }
+    },
+    "A-L saddle": {
+     "kind": "saddle (band top)",
+     "stored_energy": 15.57945366068384,
+     "static": [
+      24.919698556033037,
+      88.26510602273498,
+      8.26107244870041
+     ],
+     "induced": [
+      0.9810430798090383,
+      15.979527664884989,
+      2.2014136061108474
+     ],
+     "total": [
+      25.900741635842074,
+      104.24463368761997,
+      10.462486054811258
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.4392283141750432,
+      "across_it": -0.8178691743224957,
+      "along_the_chains": -0.7102278962299877,
+      "induced_part_along_the_polar_axis": -0.00830525435983753
+     }
+    },
+    "N-L saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 10.557412206030222,
+     "static": [
+      24.013156751580297,
+      89.47828542081379,
+      8.278291302267851
+     ],
+     "induced": [
+      0.8897190046946005,
+      16.18620404155361,
+      2.163188912457697
+     ],
+     "total": [
+      24.9028757562749,
+      105.6644894623674,
+      10.441480214725548
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.7974526184357712,
+      "across_it": 0.3996475629771811,
+      "along_the_chains": -0.7312337363156978,
+      "induced_part_along_the_polar_axis": 0.18056503855858874
+     }
+    }
+   },
+   "all_trans": {
+    "static": [
+     2.501201131514529,
+     12.56514749965481,
+     -9.354399921335244e-08
+    ],
+    "induced": [
+     0.007163411056259188,
+     2.4996855491372787,
+     -5.5041059321414565e-08
+    ],
+    "total": [
+     2.508364542570788,
+     15.064833048792089,
+     -1.48585058534767e-07
+    ],
+    "chains": 2
+   },
+   "polar_axis_from": "the all-trans crystal's dipole in the lattice's frame",
+   "all_trans_dipole_per_monomer": 0.5454368772594093,
+   "all_trans_induced_fraction": 0.161529490055886,
+   "kink_pair_in_the_sheet": {
+    "dipole_against_all_trans_per_kink_pair": {
+     "along_the_polar_axis": -0.9159769092350478,
+     "across_it": -0.47560219572745616
+    },
+    "note": "the sheet's dipole per chain less the all-trans crystal's; the component along the chains depends on where a repeat is cut and is left out"
+   },
+   "polar_axis": [
+    0.1642434746969821,
+    0.9864198300011318,
+    0.0
+   ],
+   "sheet_dipole_per_monomer": 0.48000995517119144,
+   "sheet_dipole_turned_from_the_axis_deg": -4.048225333645338
+  },
+  "vdf9-trfe4-cfe1-14@0 4x2 mover 0 ahead host flexible": {
+   "row": "vdf9-trfe4-cfe1-14",
+   "supercell": [
+    4,
+    2
+   ],
+   "chains": 16,
+   "monomers_per_chain": 14,
+   "states": {
+    "A": {
+     "kind": "the sheet",
+     "stored_energy": 0.0,
+     "static": [
+      19.18492245243958,
+      90.64407106740323,
+      9.164965346441472
+     ],
+     "induced": [
+      0.052334445916829515,
+      16.253815283717746,
+      2.538221757849152
+     ],
+     "total": [
+      19.23725689835641,
+      106.89788635112097,
+      11.703187104290624
+     ],
+     "energy": 0.0,
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.0,
+      "across_it": 0.0,
+      "along_the_chains": 0.0,
+      "induced_part_along_the_polar_axis": 0.0
+     }
+    },
+    "I": {
+     "kind": "state",
+     "stored_energy": 9.053465195070885,
+     "static": [
+      20.307240321842336,
+      90.34533089837113,
+      8.976440150713238
+     ],
+     "induced": [
+      0.3318461839207322,
+      16.191833398439794,
+      2.4192321170812354
+     ],
+     "total": [
+      20.639086505763068,
+      106.53716429681093,
+      11.395672267794474
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.19652470856234278,
+      "across_it": -1.43409368159547,
+      "along_the_chains": -0.30751483649614997,
+      "induced_part_along_the_polar_axis": -0.029308906611048707
+     }
+    },
+    "B": {
+     "kind": "state",
+     "stored_energy": 11.794672396292981,
+     "static": [
+      20.176854669435755,
+      91.02746206028138,
+      8.624844522197666
+     ],
+     "induced": [
+      0.3434772066095385,
+      16.308769620927222,
+      2.3163401160416974
+     ],
+     "total": [
+      20.520331876045294,
+      107.3362316812086,
+      10.941184638239363
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.5834975211767309,
+      "across_it": -1.223911218006262,
+      "along_the_chains": -0.7620024660512605,
+      "induced_part_along_the_polar_axis": 0.08818827499482507
+     }
+    },
+    "A-I saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 9.108963967479667,
+     "static": [
+      20.283995217630768,
+      90.38612163325092,
+      8.96324367173786
+     ],
+     "induced": [
+      0.3242292761990186,
+      16.21559830445779,
+      2.419084420666709
+     ],
+     "total": [
+      20.608224493829788,
+      106.60171993770871,
+      11.382328092404569
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.1359622655488295,
+      "across_it": -1.395987447872784,
+      "along_the_chains": -0.32085901188605526,
+      "induced_part_along_the_polar_axis": -0.006581879534084984
+     }
+    },
+    "I-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 15.29285423151532,
+     "static": [
+      20.41218261869429,
+      90.7369477171081,
+      8.657881179959356
+     ],
+     "induced": [
+      0.40935596973846067,
+      16.21339675055814,
+      2.320773177306873
+     ],
+     "total": [
+      20.821538588432748,
+      106.95034446766624,
+      10.97865435726623
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.23495153279456632,
+      "across_it": -1.567640936164943,
+      "along_the_chains": -0.7245327470243943,
+      "induced_part_along_the_polar_axis": 0.0010558570933390714
+     }
+    },
+    "M": {
+     "kind": "state",
+     "stored_energy": 13.088487460204988,
+     "static": [
+      20.185730259843794,
+      91.11750309251084,
+      8.440260421072477
+     ],
+     "induced": [
+      0.3391972285999063,
+      16.338159671418364,
+      2.2675333550426435
+     ],
+     "total": [
+      20.5249274884437,
+      107.45566276392921,
+      10.707793776115121
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.7026609262526556,
+      "across_it": -1.2146924293740944,
+      "along_the_chains": -0.9953933281755027,
+      "induced_part_along_the_polar_axis": 0.11688797744714591
+     }
+    },
+    "N": {
+     "kind": "state",
+     "stored_energy": 8.819507948293221,
+     "static": [
+      18.540734818690858,
+      91.368268246558,
+      8.66883242162087
+     ],
+     "induced": [
+      0.03115681948590575,
+      16.46174587546049,
+      2.342042280035465
+     ],
+     "total": [
+      18.571891638176762,
+      107.8300141220185,
+      11.010874701656334
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.849108455637541,
+      "across_it": 0.7684971966748779,
+      "along_the_chains": -0.6923124026342897,
+      "induced_part_along_the_polar_axis": 0.20409702009358538
+     }
+    },
+    "P": {
+     "kind": "state",
+     "stored_energy": 3.5252469388069585e-08,
+     "static": [
+      19.18491948898245,
+      90.64407249217032,
+      9.164964549359457
+     ],
+     "induced": [
+      0.05233496662085092,
+      16.25381328754781,
+      2.538216614306649
+     ],
+     "total": [
+      19.237254455603303,
+      106.89788577971814,
+      11.703181163666105
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -8.495058282311179e-07,
+      "across_it": 2.360483804735314e-06,
+      "along_the_chains": -5.940624518530058e-06,
+      "induced_part_along_the_polar_axis": -1.9227360074893005e-06
+     }
+    },
+    "Q": {
+     "kind": "state",
+     "stored_energy": 10.332912717794215,
+     "static": [
+      19.3486736133327,
+      90.79102615844052,
+      9.089730967178987
+     ],
+     "induced": [
+      0.23646275670207512,
+      16.296044750463786,
+      2.5018205776696787
+     ],
+     "total": [
+      19.585136370034775,
+      107.08707090890431,
+      11.591551544848667
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.22806959712611638,
+      "across_it": -0.32372084051791467,
+      "along_the_chains": -0.11163555944195735,
+      "induced_part_along_the_polar_axis": 0.06319776181876319
+     }
+    },
+    "N2": {
+     "kind": "state",
+     "stored_energy": 14.88389114843153,
+     "static": [
+      20.32338504884759,
+      91.20257294513716,
+      8.522883215519371
+     ],
+     "induced": [
+      0.2756030752463755,
+      16.417264913975398,
+      2.305429732916382
+     ],
+     "total": [
+      20.598988124093967,
+      107.61983785911256,
+      10.828312948435753
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.8742864012178755,
+      "across_it": -1.269310521379831,
+      "along_the_chains": -0.8748741558548705,
+      "induced_part_along_the_polar_axis": 0.18812514087598037
+     }
+    },
+    "B2": {
+     "kind": "state",
+     "stored_energy": 12.39759442200625,
+     "static": [
+      19.894721038401048,
+      90.6122277046531,
+      9.015611942548862
+     ],
+     "induced": [
+      0.25312127870149836,
+      16.302071361258935,
+      2.474493177322271
+     ],
+     "total": [
+      20.147842317102548,
+      106.91429906591203,
+      11.490105119871133
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.12139485569410803,
+      "across_it": -0.902606487374702,
+      "along_the_chains": -0.21308198441949067,
+      "induced_part_along_the_polar_axis": 0.07110668263820114
+     }
+    },
+    "NN4": {
+     "kind": "state",
+     "stored_energy": 19.895554478549002,
+     "static": [
+      18.08585560300679,
+      92.0528564671732,
+      8.12698239078616
+     ],
+     "induced": [
+      0.0011008744790347354,
+      16.631770657256336,
+      2.129791975019179
+     ],
+     "total": [
+      18.086956477485828,
+      108.68462712442954,
+      10.25677436580534
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 1.6420437782509258,
+      "across_it": 1.3488238875278544,
+      "along_the_chains": -1.446412738485284,
+      "induced_part_along_the_polar_axis": 0.36951686669740247
+     }
+    },
+    "NN12": {
+     "kind": "state",
+     "stored_energy": 19.991222666537624,
+     "static": [
+      18.249800123867583,
+      91.93894627531657,
+      8.16774190761749
+     ],
+     "induced": [
+      0.04531242895799403,
+      16.555720068089904,
+      2.1417098134620662
+     ],
+     "total": [
+      18.29511255282558,
+      108.49466634340646,
+      10.309451721079556
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 1.477375910008254,
+      "across_it": 1.120135140108663,
+      "along_the_chains": -1.3937353832110677,
+      "induced_part_along_the_polar_axis": 0.2990769746031495
+     }
+    },
+    "L": {
+     "kind": "state",
+     "stored_energy": 4.969184785839843,
+     "static": [
+      19.47740962767344,
+      90.63332069840895,
+      8.072481151158382
+     ],
+     "induced": [
+      0.07757096546031855,
+      16.327781444520415,
+      2.246997034362429
+     ],
+     "total": [
+      19.554980593133756,
+      106.96110214292936,
+      10.319478185520811
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.09946226405110573,
+      "across_it": -0.3083047852154711,
+      "along_the_chains": -1.3837089187698126,
+      "induced_part_along_the_polar_axis": 0.07638448230638155
+     }
+    },
+    "I-M saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 14.491103710246989,
+     "static": [
+      20.43466206736062,
+      90.78836117122506,
+      8.556947128050002
+     ],
+     "induced": [
+      0.4183364111804864,
+      16.23811515544759,
+      2.300115056842894
+     ],
+     "total": [
+      20.852998478541107,
+      107.02647632667265,
+      10.857062184892897
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.31420548872591925,
+      "across_it": -1.5901041307425836,
+      "along_the_chains": -0.8461249193977274,
+      "induced_part_along_the_polar_axis": 0.0266455326099508
+     }
+    },
+    "M-B saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 13.982267242370426,
+     "static": [
+      20.32741464157514,
+      91.07384532648483,
+      8.569434272567616
+     ],
+     "induced": [
+      0.3761131278263706,
+      16.294038747499197,
+      2.283846697092455
+     ],
+     "total": [
+      20.70352776940151,
+      107.36788407398403,
+      10.853280969660071
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.6360812757365228,
+      "across_it": -1.402229916037029,
+      "along_the_chains": -0.8499061346305528,
+      "induced_part_along_the_polar_axis": 0.07732238921072067
+     }
+    },
+    "I-N saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 11.519039427724465,
+     "static": [
+      19.917920367386753,
+      90.48338182918441,
+      9.084620967738097
+     ],
+     "induced": [
+      0.29757928007023193,
+      16.25216441550533,
+      2.46425194806387
+     ],
+     "total": [
+      20.215499647456983,
+      106.73554624468974,
+      11.548872915801967
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.04835508437368148,
+      "across_it": -0.9904418065384581,
+      "along_the_chains": -0.15431418848865697,
+      "induced_part_along_the_polar_axis": 0.026664179496797513
+     }
+    },
+    "I-P saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 9.109202739727607,
+     "static": [
+      20.28314250967846,
+      90.38701917254092,
+      8.963117019280743
+     ],
+     "induced": [
+      0.3240205498973108,
+      16.216015746193023,
+      2.4190778167626896
+     ],
+     "total": [
+      20.607163059575768,
+      106.60303491873394,
+      11.382194836043432
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.13477857296627446,
+      "across_it": -1.3947813427188571,
+      "along_the_chains": -0.32099226824719196,
+      "induced_part_along_the_polar_axis": -0.006191316596740814
+     }
+    },
+    "P-Q saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 10.626179864098049,
+     "static": [
+      19.238555892172734,
+      90.68529731703396,
+      9.174583893810219
+     ],
+     "induced": [
+      0.19593358943324862,
+      16.295342486203044,
+      2.5083498391178836
+     ],
+     "total": [
+      19.434489481605983,
+      106.980639803237,
+      11.682933732928102
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.10496333822380927,
+      "across_it": -0.18636395402902564,
+      "along_the_chains": -0.020253371362521477,
+      "induced_part_along_the_polar_axis": 0.057822667814156264
+     }
+    },
+    "Q-N saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 11.396019288132493,
+     "static": [
+      19.178484192396176,
+      91.05600401892511,
+      8.888410961999053
+     ],
+     "induced": [
+      0.23580271979943793,
+      16.324002728518607,
+      2.418857886845727
+     ],
+     "total": [
+      19.414286912195614,
+      107.38000674744372,
+      11.30726884884478
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.4993300262297556,
+      "across_it": -0.12020493856617503,
+      "along_the_chains": -0.395918255445844,
+      "induced_part_along_the_polar_axis": 0.09089274321588321
+     }
+    },
+    "A-N saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 11.396018191044504,
+     "static": [
+      19.17868880907703,
+      91.05581336056451,
+      8.888405280420276
+     ],
+     "induced": [
+      0.23584178901920697,
+      16.323975496930853,
+      2.418864294876252
+     ],
+     "total": [
+      19.41453059809624,
+      107.37978885749537,
+      11.307269575296528
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.49914171636467725,
+      "across_it": -0.12047214306177213,
+      "along_the_chains": -0.3959175289940955,
+      "induced_part_along_the_polar_axis": 0.09087020262323582
+     }
+    },
+    "N-N2 saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 16.034692702028906,
+     "static": [
+      19.987787093369324,
+      91.30402516516486,
+      8.420648656017804
+     ],
+     "induced": [
+      0.2192062888133632,
+      16.458207756043333,
+      2.275564825002992
+     ],
+     "total": [
+      20.206993382182688,
+      107.7622329212082,
+      10.696213481020795
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.9704893416007123,
+      "across_it": -0.8635011749411302,
+      "along_the_chains": -1.006973623269829,
+      "induced_part_along_the_polar_axis": 0.22228557004444185
+     }
+    },
+    "N-NN4 saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 21.29784782142201,
+     "static": [
+      18.586346784234564,
+      91.86535871200807,
+      8.331407486041638
+     ],
+     "induced": [
+      0.1516432848531309,
+      16.56096448942129,
+      2.2138499065807764
+     ],
+     "total": [
+      18.737990069087694,
+      108.42632320142937,
+      10.545257392622414
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 1.4606025048671885,
+      "across_it": 0.6723294541847625,
+      "along_the_chains": -1.15792971166821,
+      "induced_part_along_the_polar_axis": 0.31655813009918793
+     }
+    },
+    "N-NN12 saddle": {
+     "kind": "saddle (band top)",
+     "stored_energy": 20.514484598637182,
+     "static": [
+      19.398156455360443,
+      91.28301425062446,
+      8.534697909196996
+     ],
+     "induced": [
+      0.28777440717047414,
+      16.389127930051817,
+      2.319501938276697
+     ],
+     "total": [
+      19.685930862530917,
+      107.67214218067627,
+      10.854199847473694
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.8208641219924854,
+      "across_it": -0.3563179885354372,
+      "along_the_chains": -0.8489872568169297,
+      "induced_part_along_the_polar_axis": 0.16158088287140768
+     }
+    },
+    "A-L saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 15.289949467860424,
+     "static": [
+      19.88641491389133,
+      90.01990337299443,
+      8.505135698413355
+     ],
+     "induced": [
+      0.1911041630425953,
+      16.197890309478968,
+      2.3557904246618917
+     ],
+     "total": [
+      20.077519076933925,
+      106.2177936824734,
+      10.860926123075247
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": -0.5785724294229333,
+      "across_it": -0.9131377281701024,
+      "along_the_chains": -0.842260981215377,
+      "induced_part_along_the_polar_axis": -0.039535683607859654
+     }
+    },
+    "N-L saddle": {
+     "kind": "saddle (settled)",
+     "stored_energy": 10.49268352199715,
+     "static": [
+      18.98283765301708,
+      91.38012295530986,
+      8.532740009498848
+     ],
+     "induced": [
+      0.08225953108886784,
+      16.463532989670405,
+      2.3142041011897683
+     ],
+     "total": [
+      19.065097184105948,
+      107.84365594498027,
+      10.846944110688616
+     ],
+     "against_the_sheet": {
+      "along_the_polar_axis": 0.9195805965349783,
+      "across_it": 0.2801617717604463,
+      "along_the_chains": -0.8562429936020077,
+      "induced_part_along_the_polar_axis": 0.2117700209719068
+     }
+    }
+   },
+   "all_trans": {
+    "static": [
+     1.928765911025325,
+     12.801305947197758,
+     -2.652695663130089e-08
+    ],
+    "induced": [
+     -0.15358786942281058,
+     2.4772368685553645,
+     -1.558831328428434e-08
+    ],
+    "total": [
+     1.7751780416025145,
+     15.278542815753122,
+     -4.211526991558523e-08
+    ],
+    "chains": 2
+   },
+   "polar_axis_from": "the all-trans crystal's dipole in the lattice's frame",
+   "all_trans_dipole_per_monomer": 0.5493329996043591,
+   "all_trans_induced_fraction": 0.1588262293603296,
+   "kink_pair_in_the_sheet": {
+    "dipole_against_all_trans_per_kink_pair": {
+     "along_the_polar_axis": -0.9154264443686196,
+     "across_it": -0.4232180886621155
+    },
+    "note": "the sheet's dipole per chain less the all-trans crystal's; the component along the chains depends on where a repeat is cut and is left out"
+   },
+   "polar_axis": [
+    0.11541126387306022,
+    0.9933177941480877,
+    0.0
+   ],
+   "sheet_dipole_per_monomer": 0.483945396435172,
+   "sheet_dipole_turned_from_the_axis_deg": -3.5743620928418185
+  }
+ },
+ "bias_V_um": 55.0,
+ "moves": {
+  "vdf10@0 2x1 mover 0 ahead host flexible": {
+   "the sheet to the wide kink (I)": {
+    "from": "A",
+    "saddle": "A-I saddle",
+    "to": "I",
+    "barrier": 10.268398919350602,
+    "activation_dipole": -0.5144848020535285,
+    "barrier_shift_at_bias": 0.06525352227765469,
+    "rate_factor_at_bias": 0.8962949134986429,
+    "barrier_back": 0.42227916086267214,
+    "activation_dipole_back": 0.1700308890105532,
+    "rate_factor_back_at_bias": 1.036846297728703,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to the completed step (B)": {
+    "from": "I",
+    "saddle": "I-B saddle",
+    "to": "B",
+    "barrier": 2.6182643296455694,
+    "activation_dipole": 0.39267897523133544,
+    "barrier_shift_at_bias": -0.04980455429577217,
+    "rate_factor_at_bias": 1.0871555393877654,
+    "barrier_back": 4.588021688783272,
+    "activation_dipole_back": -0.33772224023982783,
+    "rate_factor_back_at_bias": 0.9306523091827802,
+    "saddle_kind": "saddle (settled)"
+   }
+  },
+  "vdf10-trfe4-14@0 2x1 mover 0 ahead host flexible": {
+   "the sheet to the wide kink (I)": {
+    "from": "A",
+    "saddle": "A-I saddle",
+    "to": "I",
+    "barrier": 9.582665647675583,
+    "activation_dipole": -0.07165209243417171,
+    "barrier_shift_at_bias": 0.009087831926680194,
+    "rate_factor_at_bias": 0.9848676225957579,
+    "barrier_back": 0.057394585934673614,
+    "activation_dipole_back": 0.04332477503857961,
+    "rate_factor_back_at_bias": 1.0092624325357902,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to the completed step (B)": {
+    "from": "I",
+    "saddle": "I-B saddle",
+    "to": "B",
+    "barrier": 4.150083129883569,
+    "activation_dipole": 0.47178009788047026,
+    "barrier_shift_at_bias": -0.059837167209449225,
+    "rate_factor_at_bias": 1.105610787975821,
+    "barrier_back": 1.3644117099612458,
+    "activation_dipole_back": -0.18060586259449946,
+    "rate_factor_back_at_bias": 0.9622950942949506,
+    "saddle_kind": "saddle (settled)"
+   }
+  },
+  "vdf9-trfe4-cfe1-14@0 2x1 mover 0 ahead host flexible": {
+   "the sheet to the wide kink (I)": {
+    "from": "A",
+    "saddle": "A-I saddle",
+    "to": "I",
+    "barrier": 9.084192229893063,
+    "activation_dipole": -0.1552020461610503,
+    "barrier_shift_at_bias": 0.019684702320232957,
+    "rate_factor_at_bias": 0.9675114456420085,
+    "barrier_back": 0.03936640504264233,
+    "activation_dipole_back": 0.059280043668305915,
+    "rate_factor_back_at_bias": 1.0126950932940475,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to the completed step (B)": {
+    "from": "I",
+    "saddle": "I-B saddle",
+    "to": "B",
+    "barrier": 4.261920323596826,
+    "activation_dipole": 0.7988202370449152,
+    "barrier_shift_at_bias": -0.10131656742005848,
+    "rate_factor_at_bias": 1.1852980247399278,
+    "barrier_back": 0.3076741138521015,
+    "activation_dipole_back": 0.10031347644933342,
+    "rate_factor_back_at_bias": 1.0215768578362359,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to M": {
+    "from": "I",
+    "saddle": "I-M saddle",
+    "to": "M",
+    "barrier": 3.9546146537467735,
+    "activation_dipole": 0.43681891394330274,
+    "barrier_shift_at_bias": -0.05540294410744244,
+    "rate_factor_at_bias": 1.0974155988497494,
+    "barrier_back": 1.795313862274213,
+    "activation_dipole_back": -0.3347521766013928,
+    "rate_factor_back_at_bias": 0.9312407131854108,
+    "saddle_kind": "saddle (settled)"
+   },
+   "M to B": {
+    "from": "M",
+    "saddle": "M-B saddle",
+    "to": "B",
+    "barrier": 2.1026238056840043,
+    "activation_dipole": 0.02611912257094484,
+    "barrier_shift_at_bias": -0.003312760143260005,
+    "rate_factor_at_bias": 1.0055737985223996,
+    "barrier_back": 0.3076783874118405,
+    "activation_dipole_back": 0.09918345252005856,
+    "rate_factor_back_at_bias": 1.0213312220618331,
+    "saddle_kind": "saddle (settled)"
+   }
+  },
+  "vdf10@0 4x2 mover 0 ahead host flexible": {
+   "the sheet to the wide kink (I)": {
+    "from": "A",
+    "saddle": "A-I saddle",
+    "to": "I",
+    "barrier": 10.659951869768975,
+    "activation_dipole": -0.5071332921301469,
+    "barrier_shift_at_bias": 0.0643211100574199,
+    "rate_factor_at_bias": 0.897698219521357,
+    "barrier_back": 0.6973539968723799,
+    "activation_dipole_back": 0.17709335906453116,
+    "rate_factor_back_at_bias": 1.0384057875701502,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to the completed step (B)": {
+    "from": "I",
+    "saddle": "I-B saddle",
+    "to": "B",
+    "barrier": 1.673963274979542,
+    "activation_dipole": 0.31572928274317763,
+    "barrier_shift_at_bias": -0.04004481318584477,
+    "rate_factor_at_bias": 1.0694978977164438,
+    "barrier_back": 5.725456174963938,
+    "activation_dipole_back": -0.4059389863123599,
+    "rate_factor_back_at_bias": 0.9172396434731342,
+    "saddle_kind": "saddle (settled)"
+   },
+   "the sheet to N": {
+    "from": "A",
+    "saddle": "A-N saddle",
+    "to": "N",
+    "barrier": 12.386552477198848,
+    "activation_dipole": -0.3644093863483228,
+    "barrier_shift_at_bias": 0.046219044596370246,
+    "rate_factor_at_bias": 0.925381927082087,
+    "barrier_back": 4.664432943766997,
+    "activation_dipole_back": -0.5987884091821484,
+    "rate_factor_back_at_bias": 0.8803584349867184,
+    "saddle_kind": "saddle (settled)"
+   },
+   "N to L": {
+    "from": "N",
+    "saddle": "N-L saddle",
+    "to": "L",
+    "barrier": 5.934490593142755,
+    "activation_dipole": 0.36238662422325507,
+    "barrier_shift_at_bias": -0.04596249211345206,
+    "rate_factor_at_bias": 1.0801698263106778,
+    "barrier_back": 8.23388360244644,
+    "activation_dipole_back": 0.5305944773070177,
+    "rate_factor_back_at_bias": 1.1195356725828471,
+    "saddle_kind": "saddle (settled)"
+   },
+   "the sheet straight to L": {
+    "from": "A",
+    "saddle": "A-L saddle",
+    "to": "L",
+    "barrier": 11.820463812198113,
+    "activation_dipole": -0.2020910603013285,
+    "barrier_shift_at_bias": 0.025631764928433328,
+    "rate_factor_at_bias": 0.9579053389656245,
+    "barrier_back": 6.397737288069948,
+    "activation_dipole_back": -0.26826223005139155,
+    "rate_factor_back_at_bias": 0.9445109671945661,
+    "saddle_kind": "saddle (settled)"
+   }
+  },
+  "vdf10-trfe4-14@0 4x2 mover 0 ahead host flexible": {
+   "the sheet to the wide kink (I)": {
+    "from": "A",
+    "saddle": "A-I saddle",
+    "to": "I",
+    "barrier": 9.526430942241177,
+    "activation_dipole": -0.05480429777108637,
+    "barrier_shift_at_bias": 0.006950979798125756,
+    "rate_factor_at_bias": 0.9884050280881881,
+    "barrier_back": 0.171418629648997,
+    "activation_dipole_back": 0.06444904402683282,
+    "rate_factor_back_at_bias": 1.0138096683017892,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to the completed step (B)": {
+    "from": "I",
+    "saddle": "I-B saddle",
+    "to": "B",
+    "barrier": 5.644960261666711,
+    "activation_dipole": 0.524310839022282,
+    "barrier_shift_at_bias": -0.06649978556800336,
+    "rate_factor_at_bias": 1.118039630101701,
+    "barrier_back": 4.297150888747183,
+    "activation_dipole_back": -0.22215979397129199,
+    "rate_factor_back_at_bias": 0.9538230789897714,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to M": {
+    "from": "I",
+    "saddle": "I-M saddle",
+    "to": "M",
+    "barrier": 5.64498165668283,
+    "activation_dipole": 0.5251614550730731,
+    "barrier_shift_at_bias": -0.06660767154091933,
+    "rate_factor_at_bias": 1.1182420323015363,
+    "barrier_back": 1.5682486703105951,
+    "activation_dipole_back": -0.2593713382195829,
+    "rate_factor_back_at_bias": 0.9462997120475087,
+    "saddle_kind": "saddle (settled)"
+   },
+   "M to B": {
+    "from": "M",
+    "saddle": "M-B saddle",
+    "to": "B",
+    "barrier": 0.13558710952338515,
+    "activation_dipole": 0.0009400975563512715,
+    "barrier_shift_at_bias": -0.00011923515834031175,
+    "rate_factor_at_bias": 1.0002000790036383,
+    "barrier_back": 2.8645107229760924,
+    "activation_dipole_back": 0.03900225785543321,
+    "rate_factor_back_at_bias": 1.008334478946919,
+    "saddle_kind": "saddle (settled)"
+   },
+   "the sheet to N": {
+    "from": "A",
+    "saddle": "A-N saddle",
+    "to": "N",
+    "barrier": 11.892722998425597,
+    "activation_dipole": 0.05553379352068226,
+    "barrier_shift_at_bias": -0.007043503750160314,
+    "rate_factor_at_bias": 1.0118880672990798,
+    "barrier_back": 2.948427225933756,
+    "activation_dipole_back": -0.6196365236941042,
+    "rate_factor_back_at_bias": 0.8764612733405264,
+    "saddle_kind": "saddle (settled)"
+   },
+   "N to L": {
+    "from": "N",
+    "saddle": "N-L saddle",
+    "to": "L",
+    "barrier": 1.61311643353838,
+    "activation_dipole": 0.12228230122098482,
+    "barrier_shift_at_bias": -0.015509400540185866,
+    "rate_factor_at_bias": 1.0263640251139514,
+    "barrier_back": 6.813416374772714,
+    "activation_dipole_back": 0.7362169646500225,
+    "rate_factor_back_at_bias": 1.169611742087887,
+    "saddle_kind": "saddle (settled)"
+   },
+   "the sheet straight to L": {
+    "from": "A",
+    "saddle": "A-L saddle",
+    "to": "L",
+    "barrier": 15.57945366068384,
+    "activation_dipole": -0.4392283141750432,
+    "barrier_shift_at_bias": 0.05570853496468472,
+    "rate_factor_at_bias": 0.9107647058568927,
+    "barrier_back": 11.835457829426332,
+    "activation_dipole_back": -0.5004639679607918,
+    "rate_factor_back_at_bias": 0.898973205969605,
+    "saddle_kind": "saddle (band top)"
+   },
+   "N to N2": {
+    "from": "N",
+    "saddle": "N-N2 saddle",
+    "to": "N2",
+    "barrier": 5.647687422536592,
+    "activation_dipole": 0.3266112643869924,
+    "barrier_shift_at_bias": -0.04142500484317932,
+    "rate_factor_at_bias": 1.0719774657619126,
+    "barrier_back": 1.9317042896325347,
+    "activation_dipole_back": 0.22906244621687266,
+    "rate_factor_back_at_bias": 1.0499536356494348,
+    "saddle_kind": "saddle (band top, band not converged)"
+   },
+   "N: a neighbour joins (chain 4)": {
+    "from": "N",
+    "saddle": "N-NN4 saddle",
+    "to": "NN4",
+    "barrier": 13.201208263298895,
+    "activation_dipole": 0.13428194521396752,
+    "barrier_shift_at_bias": -0.017031348386836842,
+    "rate_factor_at_bias": 1.0289883014122836,
+    "barrier_back": 3.4157396765988324,
+    "activation_dipole_back": -0.38770910156508664,
+    "rate_factor_back_at_bias": 0.9208049310931846,
+    "saddle_kind": "saddle (band top, band not converged)"
+   },
+   "N: a neighbour joins (chain 12)": {
+    "from": "N",
+    "saddle": "N-NN12 saddle",
+    "to": "NN12",
+    "barrier": 14.10831888660914,
+    "activation_dipole": 0.26786691475632984,
+    "barrier_shift_at_bias": -0.0339742974325609,
+    "rate_factor_at_bias": 1.0586598912596232,
+    "barrier_back": 4.322850402441418,
+    "activation_dipole_back": -0.2541459513331612,
+    "rate_factor_back_at_bias": 0.947352579735625,
+    "saddle_kind": "saddle (band top)"
+   }
+  },
+  "vdf9-trfe4-cfe1-14@0 4x2 mover 0 ahead host flexible": {
+   "the sheet to the wide kink (I)": {
+    "from": "A",
+    "saddle": "A-I saddle",
+    "to": "I",
+    "barrier": 9.108963967479667,
+    "activation_dipole": -0.1359622655488295,
+    "barrier_shift_at_bias": 0.01724446803578831,
+    "rate_factor_at_bias": 0.9714808994909595,
+    "barrier_back": 0.055498772408782315,
+    "activation_dipole_back": 0.06056244301351327,
+    "rate_factor_back_at_bias": 1.0129714986181053,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to the completed step (B)": {
+    "from": "I",
+    "saddle": "I-B saddle",
+    "to": "B",
+    "barrier": 6.239389036444436,
+    "activation_dipole": 0.4314762413569091,
+    "barrier_shift_at_bias": -0.05472531825096052,
+    "rate_factor_at_bias": 1.096168594480916,
+    "barrier_back": 3.49818183522234,
+    "activation_dipole_back": -0.3485459883821646,
+    "rate_factor_back_at_bias": 0.9285111438006294,
+    "saddle_kind": "saddle (settled)"
+   },
+   "I to M": {
+    "from": "I",
+    "saddle": "I-M saddle",
+    "to": "M",
+    "barrier": 5.437638515176104,
+    "activation_dipole": 0.5107301972882621,
+    "barrier_shift_at_bias": -0.06477731543011284,
+    "rate_factor_at_bias": 1.114813103692881,
+    "barrier_back": 1.4026162500420014,
+    "activation_dipole_back": -0.3884554375267364,
+    "rate_factor_back_at_bias": 0.9206586956431853,
+    "saddle_kind": "saddle (settled)"
+   },
+   "M to B": {
+    "from": "M",
+    "saddle": "M-B saddle",
+    "to": "B",
+    "barrier": 0.8937797821654385,
+    "activation_dipole": -0.0665796505161328,
+    "barrier_shift_at_bias": 0.008444480169000044,
+    "rate_factor_at_bias": 0.9859313112157124,
+    "barrier_back": 2.1875948460774453,
+    "activation_dipole_back": 0.05258375455979192,
+    "rate_factor_back_at_bias": 1.0112530156323654,
+    "saddle_kind": "saddle (settled)"
+   },
+   "the sheet to N": {
+    "from": "A",
+    "saddle": "A-N saddle",
+    "to": "N",
+    "barrier": 11.396018191044504,
+    "activation_dipole": 0.49914171636467725,
+    "barrier_shift_at_bias": -0.06330751652625202,
+    "rate_factor_at_bias": 1.1120672440994208,
+    "barrier_back": 2.576510242751283,
+    "activation_dipole_back": -0.34996673927286376,
+    "rate_factor_back_at_bias": 0.9282304553425064,
+    "saddle_kind": "saddle (settled)"
+   },
+   "N to L": {
+    "from": "N",
+    "saddle": "N-L saddle",
+    "to": "L",
+    "barrier": 1.6731755737039293,
+    "activation_dipole": 0.07047214089743725,
+    "barrier_shift_at_bias": -0.008938175428409436,
+    "rate_factor_at_bias": 1.015109956992189,
+    "barrier_back": 5.523498736157308,
+    "activation_dipole_back": 0.8201183324838726,
+    "rate_factor_back_at_bias": 1.1906824337629411,
+    "saddle_kind": "saddle (settled)"
+   },
+   "the sheet straight to L": {
+    "from": "A",
+    "saddle": "A-L saddle",
+    "to": "L",
+    "barrier": 15.289949467860424,
+    "activation_dipole": -0.5785724294229333,
+    "barrier_shift_at_bias": 0.07338193229789156,
+    "rate_factor_at_bias": 0.884153978685249,
+    "barrier_back": 10.320764682020581,
+    "activation_dipole_back": -0.678034693474039,
+    "rate_factor_back_at_bias": 0.8656364377075378,
+    "saddle_kind": "saddle (settled)"
+   },
+   "N to N2": {
+    "from": "N",
+    "saddle": "N-N2 saddle",
+    "to": "N2",
+    "barrier": 7.215184753735684,
+    "activation_dipole": 0.12138088596317131,
+    "barrier_shift_at_bias": -0.01539507156414542,
+    "rate_factor_at_bias": 1.0261671595200665,
+    "barrier_back": 1.1508015535973755,
+    "activation_dipole_back": 0.09620294038283683,
+    "rate_factor_back_at_bias": 1.0206836249113738,
+    "saddle_kind": "saddle (settled)"
+   },
+   "N: a neighbour joins (chain 4)": {
+    "from": "N",
+    "saddle": "N-NN4 saddle",
+    "to": "NN4",
+    "barrier": 12.478339873128789,
+    "activation_dipole": 0.6114940492296475,
+    "barrier_shift_at_bias": -0.07755747187243159,
+    "rate_factor_at_bias": 1.138976425105909,
+    "barrier_back": 1.4022933428730084,
+    "activation_dipole_back": -0.1814412733837374,
+    "rate_factor_back_at_bias": 0.962124031762638,
+    "saddle_kind": "saddle (settled)"
+   },
+   "N: a neighbour joins (chain 12)": {
+    "from": "N",
+    "saddle": "N-NN12 saddle",
+    "to": "NN12",
+    "barrier": 11.69497665034396,
+    "activation_dipole": -0.02824433364505563,
+    "barrier_shift_at_bias": 0.00358230650811993,
+    "rate_factor_at_bias": 0.9940074460183722,
+    "barrier_back": 0.5232619320995582,
+    "activation_dipole_back": -0.6565117880157686,
+    "rate_factor_back_at_bias": 0.8696103340769137,
+    "saddle_kind": "saddle (band top)"
+   }
+  }
+ }
+}
