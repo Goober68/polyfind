@@ -162,15 +162,16 @@ def polish(args) -> None:
         free, closed = KM.free_sets(model, [0], "flexible")
         free = np.unique(free)
         # the start: the narrower cell's saddle (its settled state if it has one, else its band's top image)
-        if "state" in start_row.get("saddles", {}).get(seg, {}):
+        settled = lambda rec: bool(rec.get("converged")) and "state" in rec  # noqa: E731  (a search that did not converge left no saddle)
+        if settled(start_row.get("saddles", {}).get(seg, {})):
             x_from, what = start_row["saddles"][seg]["state"], f"the settled saddle of the {sx}x{sy} cell"
             known = float(start_row["saddles"][seg]["saddle"])
-        elif "state" in start_row.get(seg, {}).get("polished", {}):
+        elif settled(start_row.get(seg, {}).get("polished", {})):
             x_from, what = start_row[seg]["polished"]["state"], f"the settled saddle of the {sx}x{sy} cell"
             known = float(start_row[seg]["polished"]["saddle"])
         else:
             x_from, what = start_row[seg]["images"][int(start_row[seg]["saddle_image"])], f"the top image of the {sx}x{sy} band"
-            known = float(start_row[seg].get("polished", {}).get("saddle", start_row[seg]["saddle"]))
+            known = float(start_row[seg]["saddle"])
         x_top, sheet, wx, wy = through(x_from, start_sheet, sx, sy, list(args.start_path))
         if (wx, wy) != (args.nx, args.ny) or sheet.size != model.n_var:
             raise SystemExit(f"--start-path takes the {sx}x{sy} cell to {wx}x{wy}, not to {args.nx}x{args.ny}")
@@ -227,6 +228,167 @@ def polish(args) -> None:
     disk = load_rows(out) if out.exists() else {}
     disk.setdefault("saddles", {})[seg] = rec
     disk["cell"] = [args.nx, args.ny]
+    out.write_text(json.dumps(disk, indent=1))
+    log(f"written {out}")
+
+
+def held_state(row: dict, key: str, where: str, settled_file=None) -> np.ndarray:
+    """A state held in a row by a dotted path ("I.state", "I-B.polished.state", "I-B.images.5"),
+    or, as "settled:NAME", a record that :func:`settle` left in ``settled_file``."""
+    if where.startswith("settled:"):
+        return np.asarray(load_rows(settled_file)["settled"][key][where.split(":", 1)[1]]["state"], dtype=float)
+    x = row
+    for part in where.split("."):
+        x = x[int(part)] if isinstance(x, list) else x[part]
+    return np.asarray(x, dtype=float)
+
+
+def between(args) -> None:
+    """A band between two states of a row that are not its named end points (an intermediate a
+    saddle search fell into, say), and the saddle settled from its top: what kink_migration.py
+    does for A-I and I-B, for any pair.  The record goes into ``--out`` under ``bands``."""
+    from polyfind import mixedcell as MC
+    from polyfind.fitting import PRESET_PARAMETERS
+
+    spec = importlib.util.spec_from_file_location("kink_migration", ROOT / "examples" / "kink_migration.py")
+    KM = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(KM)
+    DK = KM.DK
+    log = lambda s: print(s, flush=True)
+    src = load_rows(args.source)
+    row = src["rows"][args.row]
+    nx, ny = row["supercell"]
+    row_name, kink = row["row"], int(row["kink_offset_bonds"])
+    kkey = f"{row_name}@{kink}{'~' if row.get('kink_mirrored') else ''}"
+    letters, _ = DK.sequence(row_name)
+    out = Path(args.out)
+    with PRESET_PARAMETERS[args.preset].applied():
+        polymer = DK.C.make_polymer(row_name, letters)
+        model, _, _ = DK.make_model(polymer, src["kinked_references"][kkey], nx, ny)
+        sheet = np.asarray(row["kinked_crystal"]["state"], dtype=float)
+        free, closed = KM.free_sets(model, [0], "flexible")
+        free = np.unique(free)
+        blocks = {int(k): v for k, v in np.load(args.blocks).items()}
+        metric = MC.chain_metric(model, sheet, free, closed, blocks)
+        eA = model.physical_energy(sheet)
+        xa, xb = held_state(row, args.row, args.start, out), held_state(row, args.row, args.end, out)
+        prior = (load_rows(out) if out.exists() else {}).get("bands", {}).get(args.row, {}).get(args.name)
+        if prior is not None and not prior.get("converged") and len(prior["images"]) == args.images:
+            imgs, done, start = np.asarray(prior["images"], dtype=float), int(prior["iterations"]), "the stored band, continued"
+        else:
+            imgs, done, start = KM.band(model, xa, xb, args.images, free, closed), 0, "straight between the two states"
+        t0 = time.time()
+        log(f"{args.name}: {args.start} ({model.physical_energy(xa) - eA:+.4f}) to {args.end} ({model.physical_energy(xb) - eA:+.4f}); start: {start}")
+
+        def evaluate(X):
+            res = [model.value_and_grad(x) for x in X]
+            return np.array([r[0] for r in res]), np.array([r[1] for r in res])
+
+        def progress(it, E, fm, climbing):
+            if it == 1 or it % 20 == 0:
+                log(f"      it {it:4d}: force {fm:8.4f}, top {E.max() - eA:+8.4f}, climbing {climbing}, energies {np.round(E - eA, 3).tolist()}  ({time.time() - t0:.0f} s)")
+
+        res = MC.neb(evaluate, imgs, scale=model.scale(sheet), free=free, k_spring=1.0, climb_after=40 if done == 0 else 0, climb_force=1.0, fmax=args.fmax,
+                     maxiter=args.maxiter, constraint=lambda x: model.closure(x, closed), callback=progress, max_step=0.15)
+        i_top = int(np.argmax(res.energies))
+        rec = {"from": args.start, "to": args.end, "energies": (res.energies - eA).tolist(), "saddle": float(res.energies.max() - eA), "saddle_image": i_top,
+               "converged": bool(res.converged), "force_max": res.force_max, "iterations": done + res.iterations, "start": start,
+               "interior_minima": [i for i in range(1, args.images - 1) if res.energies[i] < min(res.energies[i - 1], res.energies[i + 1]) - 1e-3],
+               "seconds": time.time() - t0, "images": res.images.tolist()}
+        log(f"{args.name}: top {rec['saddle']:+.4f} at image {i_top}{'' if res.converged else ' (NOT converged)'}; force {res.force_max:.4f}; {rec['iterations']} it, {time.time() - t0:.0f} s"
+            f"{'; interior minima at ' + str(rec['interior_minima']) if rec['interior_minima'] else ''}")
+        if 0 < i_top < args.images - 1:
+            t1 = time.time()
+            xs, info = MC.saddle_polish(model, res.images[i_top], res.images[i_top + 1] - res.images[i_top - 1], free, closed, tol=0.01, on_surface=True, metric=metric,
+                                        gtol=args.gtol, patience=40, patience_tol=1e-5,
+                                        log=lambda text: log(f"      {args.name} polish, {text}  ({time.time() - t1:.0f} s)"))
+            st = model.state(xs)
+            ends = max(float(res.energies[0]), float(res.energies[-1])) - eA
+            ok = bool(info["converged"]) and info["energy"] - eA >= ends - 1e-3 and info["slope"] is not None and info["slope"] < 0.0
+            rec["polished"] = {"saddle": info["energy"] - eA, "band_top": rec["saddle"], "force_along": info["force"], "gradient_across": info["gradient_max"],
+                               "curvature_along": info["slope"], "displacement": info["displacement"], "converged": bool(info["converged"]),
+                               "a_saddle_between_the_two": ok, "evaluations": info["evaluations"], "torsions": KM.letters_of(st.tors[0]),
+                               "torsions_deg": KM.wrap(st.tors[0]).tolist(), "seconds": time.time() - t1, "state": xs.tolist()}
+            log(f"{args.name}: settled saddle {info['energy'] - eA:+.4f} (the band's top {rec['saddle']:+.4f}); along {info['force']:+.4f}, across {info['gradient_max']:.1e}, "
+                f"curvature {info['slope']}; {info['evaluations']} evaluations{'' if ok else '  (NOT a saddle between the two: not converged, below an end state, or no negative curvature)'}")
+        else:
+            log(f"{args.name}: the band's highest image is an end point: no barrier on this band beyond the end state itself")
+    disk = load_rows(out) if out.exists() else {}
+    disk.setdefault("bands", {}).setdefault(args.row, {})[args.name] = rec
+    out.write_text(json.dumps(disk, indent=1))
+    log(f"written {out}")
+
+
+def settle(args) -> None:
+    """Relax a state held somewhere in a row (a band image, the end of a saddle search that left
+    its path) to the minimum it belongs to, on the closure surface, and say which state that is:
+    its energy against the sheet, the moving chain's gauche bonds, the chains that have left the
+    sheet's conformation.  The result goes into ``--out`` under the row's ``settled`` records."""
+    from polyfind import mixedcell as MC
+    from polyfind.fitting import PRESET_PARAMETERS
+
+    spec = importlib.util.spec_from_file_location("kink_migration", ROOT / "examples" / "kink_migration.py")
+    KM = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(KM)
+    DK = KM.DK
+    log = lambda s: print(s, flush=True)
+    src = load_rows(args.source)
+    row = src["rows"][args.row]
+    x = held_state(row, args.row, args.state, args.out)
+    nx, ny = row["supercell"]
+    if args.mover_from:  # the moving chain's own coordinates from a settled state of another cell of the same row
+        other_row, other_name = args.mover_from
+        other = np.asarray(load_rows(args.out)["settled"][other_row][other_name]["state"], dtype=float)
+        n_here, n_there = int(row["chains"]), int(src["rows"][other_row]["chains"])
+        width = (x.size - 4 - 4 * n_here) // n_here
+        if (other.size - 4 - 4 * n_there) // n_there != width:
+            raise SystemExit("--mover-from: the two rows' chains differ in length")
+        x = x.copy()
+        x[4 + 4 * n_here:4 + 4 * n_here + width] = other[4 + 4 * n_there:4 + 4 * n_there + width]
+    row_name, kink = row["row"], int(row["kink_offset_bonds"])
+    kkey = f"{row_name}@{kink}{'~' if row.get('kink_mirrored') else ''}"
+    letters, _ = DK.sequence(row_name)
+    with PRESET_PARAMETERS[args.preset].applied():
+        polymer = DK.C.make_polymer(row_name, letters)
+        model, _, _ = DK.make_model(polymer, src["kinked_references"][kkey], nx, ny)
+        sheet = np.asarray(row["kinked_crystal"]["state"], dtype=float)
+        if x.size != model.n_var:
+            raise SystemExit(f"--state: {x.size} numbers, the {nx}x{ny} cell has {model.n_var} variables")
+        free, closed = KM.free_sets(model, [0], "flexible")
+        free = np.unique(free)
+        if args.blocks and Path(args.blocks).exists():
+            blocks = {int(k): v for k, v in np.load(args.blocks).items()}
+        else:
+            small, xs_, _ = DK.make_model(polymer, src["kinked_references"][kkey], 2, 1)
+            blocks = MC.chain_blocks(small, xs_, range(2))
+            if args.blocks:
+                np.savez(args.blocks, **{str(k): v for k, v in blocks.items()})
+        metric = MC.chain_metric(model, sheet, free, closed, blocks)
+        eA = model.physical_energy(sheet)
+        x = model.project(x, np.intersect1d(free, model.index("internal", closed)), closed)
+        e_start = model.physical_energy(x) - eA
+        t0 = time.time()
+
+        def progress(stage, k, e, x_):
+            if k == 1 or k % 20 == 0:
+                log(f"      {stage} {k:4d}: {e - eA:+.4f}  ({time.time() - t0:.0f} s)")
+
+        xr, info = model.relax_on_surface(x, free=free, closed=closed, metric=metric, gtol=args.gtol, maxiter=args.maxiter,
+                                          patience=args.patience, patience_tol=1e-5, progress=progress)
+        st, st0 = model.state(xr), model.state(sheet)
+        gauche = lambda t: [k for k, v in enumerate(KM.letters_of(t).split()) if v != "T"]  # noqa: E731
+        away = {str(c): KM.letters_of(st.tors[c]) for c in range(model.nc) if gauche(st.tors[c]) != gauche(st0.tors[c])}
+        rec = {"energy": model.physical_energy(xr) - eA, "start": f"{args.state} of the row", "start_energy": e_start,
+               "torsions": KM.letters_of(st.tors[0]), "torsions_deg": KM.wrap(st.tors[0]).tolist(), "gauche_bonds": gauche(st.tors[0]),
+               "chains_off_the_sheet": away, "iterations": info["iterations"], "evaluations": info["evaluations"], "message": info["message"],
+               "gradient_max": info["gradient_max"], "converged": bool("success" in info["message"].lower() or (info.get("stalled") and info["gradient_max"] < 0.01)),
+               "method": "on the closure surface, one curvature block per chain as the metric", "seconds": time.time() - t0, "state": xr.tolist()}
+        log(f"{args.name}: {rec['energy']:+.4f} kcal/mol above the sheet (start {e_start:+.4f}); the moving chain {rec['torsions']} (gauche bonds {rec['gauche_bonds']}; "
+            f"in the sheet {gauche(st0.tors[0])}); chains off the sheet's conformation: {sorted(away, key=int)}; {info['evaluations']} evaluations, "
+            f"{time.time() - t0:.0f} s; gradient {info['gradient_max']:.1e}; {info['message']}")
+    out = Path(args.out)
+    disk = load_rows(out) if out.exists() else {}
+    disk.setdefault("settled", {}).setdefault(args.row, {})[args.name] = rec
     out.write_text(json.dumps(disk, indent=1))
     log(f"written {out}")
 
@@ -312,6 +474,34 @@ def main() -> None:
     p.add_argument("--preset", default="pvdf-dft-valence-belt4")
     p.add_argument("--out", required=True)
     p.set_defaults(run=polish)
+    e = sub.add_parser("settle", help="relax a state held in a row to its minimum and say which state it is")
+    e.add_argument("--source", default=str(STORED), help="the table holding the row")
+    e.add_argument("--row", required=True)
+    e.add_argument("--state", required=True, help="where in the row: a dotted path, e.g. I-B.polished.state or I-B.images.5")
+    e.add_argument("--name", required=True, help="the record's name")
+    e.add_argument("--mover-from", nargs=2, default=None, metavar=("ROW", "NAME"),
+                   help="replace the moving chain's own coordinates by those of a settled record of another cell of the same sequence (in --out)")
+    e.add_argument("--blocks", default=None)
+    e.add_argument("--gtol", type=float, default=3e-4)
+    e.add_argument("--maxiter", type=int, default=600)
+    e.add_argument("--patience", type=int, default=40)
+    e.add_argument("--preset", default="pvdf-dft-valence-belt4")
+    e.add_argument("--out", required=True)
+    e.set_defaults(run=settle)
+    n = sub.add_parser("between", help="a band between two states held in a row, and the saddle settled from its top")
+    n.add_argument("--source", default=str(STORED))
+    n.add_argument("--row", required=True)
+    n.add_argument("--start", required=True, help="a dotted path in the row (I.state) or settled:NAME")
+    n.add_argument("--end", required=True)
+    n.add_argument("--name", required=True)
+    n.add_argument("--images", type=int, default=9)
+    n.add_argument("--maxiter", type=int, default=300)
+    n.add_argument("--fmax", type=float, default=0.1)
+    n.add_argument("--gtol", type=float, default=3e-4)
+    n.add_argument("--blocks", required=True)
+    n.add_argument("--preset", default="pvdf-dft-valence-belt4")
+    n.add_argument("--out", required=True)
+    n.set_defaults(run=between)
     b = sub.add_parser("table", help="a table for a job's rows: the stored table's kinked crystals, none of its rows but those named")
     b.add_argument("--source", default=str(STORED))
     b.add_argument("--row", action="append", help="a stored row to copy in (repeatable)")

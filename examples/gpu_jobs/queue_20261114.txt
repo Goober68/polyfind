@@ -24,3 +24,15 @@ band_row.sh vdf10 4 2 from 2x1 stored tiled
 #    The same rows again: a stored band that has not converged is continued, a converged one kept.
 band_row.sh vdf9-trfe4-cfe1-14 2 1 tiled
 band_row.sh vdf9-trfe4-cfe1-14 4 2 from 2x1 tiled
+# 6. the saddle search from the four-chain I-B band's top did not slide at random: it fell into a
+#    third state of the moving chain, M (one sharp gauche bond, its partner spread over two bonds;
+#    +11.20 between I +9.04 and B +13.00; docs/predictions/kink_states_belt4.json), which the band
+#    from I to B jumps over.  Bands through it, in four chains and (M looked for with the moving
+#    chain's coordinates from the four-chain M) in sixteen; and where the sixteen-chain search
+#    ended (N: gauche bonds at 4 and 6, at or under +8.9 before relaxing).
+between.sh vdf9-trfe4-cfe1-14 2 1 I.state settled:M I-M
+between.sh vdf9-trfe4-cfe1-14 2 1 settled:M B.state M-B
+settle.sh vdf9-trfe4-cfe1-14 4 2 I.state M mover 2x1 M
+between.sh vdf9-trfe4-cfe1-14 4 2 I.state settled:M I-M
+between.sh vdf9-trfe4-cfe1-14 4 2 settled:M B.state M-B
+settle.sh vdf9-trfe4-cfe1-14 4 2 I-B.polished.state N
