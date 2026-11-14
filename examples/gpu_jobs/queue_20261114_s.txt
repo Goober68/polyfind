@@ -1,0 +1,21 @@
+# The single-chain step in the leaders of the unit screen (PI, 2026-11-14: "Go on both").  A
+# queue for examples/runpod_jobs_pod.sh; sixteen chains, bands in the per-chain metric.
+#
+# The unit screen's rates (docs/CANDIDATE_MATERIALS.md 5.6) are on one of the two rate models,
+# the kink sheets' population.  The other is one chain's cheapest move out of the sheet, which in
+# the 64/29/7 cell and the matrix is not the one-monomer step (14.5, 15.0) but the way to N, the
+# kink pair two monomers on with the other hand (11.40, 11.89).  The same two numbers for the
+# nitrile cell and for the cell with CTFE and a reversed VDF unit: the row from nothing (end
+# states I and B, the two bands, their saddles), N built from the sheet, the band from the sheet
+# to N.  Then L (three bonds on, the sheet's hand) and the band from N to it, which is where a
+# copolymer chain in N goes.
+band_row.sh vdf9-trfe4-an1-14 4 2 tiled metric
+settle.sh vdf9-trfe4-an1-14 4 2 kinked_crystal.state N torsions 0:180,2:180,4:-90,6:97
+between.sh vdf9-trfe4-an1-14 4 2 kinked_crystal.state settled:N A-N
+band_row.sh vdf8-trfe4-ctfe1-rvdf1-14 4 2 tiled metric
+settle.sh vdf8-trfe4-ctfe1-rvdf1-14 4 2 kinked_crystal.state N torsions 0:180,2:180,4:-90,6:97
+between.sh vdf8-trfe4-ctfe1-rvdf1-14 4 2 kinked_crystal.state settled:N A-N
+settle.sh vdf9-trfe4-an1-14 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71
+between.sh vdf9-trfe4-an1-14 4 2 settled:N settled:L N-L
+settle.sh vdf8-trfe4-ctfe1-rvdf1-14 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71
+between.sh vdf8-trfe4-ctfe1-rvdf1-14 4 2 settled:N settled:L N-L
