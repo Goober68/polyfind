@@ -163,7 +163,7 @@ SEQUENCES = {
     "vdf8-trfe4-an1-e1-14": ("EVRVVRVAVVRVVR", "one AN and one ethylene per fourteen, seven apart"),
     "vdf8-trfe4-ctfe1-rvdf1-14": ("IVRVVRVKVVRVVR", "one CTFE and one reversed VDF per fourteen, seven apart"),
     # and a matrix without TrFE: PVDF with two reversed units per fourteen (14% head-to-head defects)
-    "vdf12-rvdf2-14": ("VVVVIVVVVVVIVV", "PVDF with one reversed VDF unit in seven: is the degeneracy TrFE buys available from regio-defects, at the full VDF dipole"),
+    "vdf12-rvdf2-14": ("VVVVIVVVVVVIVV", "PVDF with one reversed VDF unit in seven: is the degeneracy TrFE buys available from regio-defects (each reversed unit turns its own dipole over)"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 CONFORMATION_UNITS = {"TTTT": [T], "TGTG'": [T, GP, T, GM], "TG'TG": [T, GM, T, GP], "GTG'T": [GP, T, GM, T], "G'TGT": [GM, T, GP, T]}

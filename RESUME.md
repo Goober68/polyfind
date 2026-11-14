@@ -21,6 +21,44 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The unit screen on three axes, 2026-11-14 (PI: "Go on the screen"; scored by the standing objective above).** Text:
+`docs/CANDIDATE_MATERIALS.md` 5.6 (and the strain-only notes it put into 3, 5.3, 5.4, 5.5; section 7 says what the 364 kHz
+anchor is). STATE: DONE, CPU ONLY, NO POD (spend unchanged: about $11.60 of the $46).
+UNITS (`examples/candidate_screen.py`: letters F = TFE, I = reversed VDF, Y = vinyl fluoride, E = ethylene, X =
+1,2-difluoroethylene; built from pvdf_belt's CH2 and CF2 and trfe_belt's CHF, no new parameter, junctions unanchored).
+One per fourteen in the 71/29 matrix, pin per unit and kink sheet (matrix 6.85):
+    reversed VDF -4.8, 5.68 | ethylene -1.7, 6.62 | TFE -1.5, 5.44 | vinyl fluoride +0.4, 6.56 | DFE +2.9, 6.20
+    (AN +2.0, 3.06 | CTFE +3.4, 2.04 | CFE +3.7, 3.79 | CDFE +8.8, 2.65)
+THREE LOWER THE MARGIN; NONE LOOSENS AS THE BULKY UNITS DO (the cut goes with the all-trans cell's width).
+THREE AXES (`examples/pin_design.py`, tables "three_axes" and "combinations" in `pin_design_belt4.json/.md`): relaxation
+frequency = 364 kHz x exp(-(E_sheet - 3.79)/kT) (the sheets' population model); strain and tan delta at 34 kHz at the
+bias; AND THE AC STRAIN AT THE HEAT BUDGET (`loss.SwitchingChannel.budget_point`: the field solved from 4 MW/m^3, capped at
+10 V/um; ceiling 0.19% from the assumed mechanical loss):
+    measured film's channel as calibrated   364 kHz   tan d 0.060   0.066% at the budget
+    AN one per 14                           1.2 MHz   0.005         0.085%     (one per 28: 52 kHz, 0.43, 0.029%)
+    AN with TFE / with ethylene             1.6 / 1.1 MHz  0.004 / 0.019   0.097% / 0.110%   (margins +0.186 / -0.119)
+    CTFE with reversed VDF                  52 MHz    0.001         0.189%     (margin +0.076, kink sheet 0.84)
+    PVDF, 2 reversed units per 14, no TrFE  0.9 MHz   0.010         0.076%     (margin +0.162, kink 3.24, dipole 0.44)
+    the model's CFE cell                    364 kHz   0.000         0.004%
+STRAIN ALONE RANKS THEM BACKWARDS: on this rate model the dense weak pin wins and the sparse pin loses. THE TWO RATE
+MODELS NOW DISAGREE ABOUT THE DESIGN (dense against sparse); the bench's Vogel-Fulcher fit on a copolymer film decides.
+TRAPS. (1) NO BEST DRIVE FREQUENCY: at the heat budget the stroke rate is flat above f_relax, a sweep's maximum is its
+ceiling (the exchange optimizer's 277 against 695 kHz; `tests/test_loss.py`). (2) Two units' pins do NOT add (off by
++1.3, -2.7, +1.7, -1.9 kcal/mol per chain): compute the cell. (3) In the two-unit cells the kink pair (site 0) sits ON
+the second unit, not like for like with the single-unit cells; no cell's kink sites are scanned, so every kink energy is
+an upper bound on the lattice's cheapest. (4) A reversed VDF unit turns its own dipole over: the TrFE-free matrix pays
+29% of the dipole. (5) The search's margins of these rows are 0.15 to 0.6 below the polished ones: never read them.
+(6) Only two of the four helix conformers ran per row.
+REPRODUCE: `examples/candidate_screen.py --sequences ROW --conformations "TTTT,TGTG',TG'TG" --out <screen file>`;
+`polish_margins.py --rows ROW`; `kink_migration.py --row ROW --nx 1 --ny 1 --mover all --reference-only`;
+`kink_summary.py`; `candidate_loss_map.py --screen <all seven candidate_screen_belt4*.json>`;
+`candidate_frequency_map.py --screen <the same> --kinks docs/predictions/kink_formation_belt4_polished.json --ref
+vdf9-trfe4-cfe1-14 --out docs/predictions/candidate_frequency_map_belt4_polished.json`; `pin_design.py`.
+NEXT, proposed to the PI: (a) kink-site scans of the leading cells (AN; CTFE with reversed VDF; PVDF with reversed
+units) so their rates go by the cheapest site; (b) DFT cells from Dipole, cheapest first: PVDF with reversed units
+(VDF's groups only), the AN cell, the CTFE cell with a reversed unit; (c) the single-chain step barriers of the leaders
+(a pod-hour) for the other rate model; (d) the other two helix conformers of the designed rows.
+
 **The ranking rewritten, the bias on the kink barriers, and what makes the terpolymer work, 2026-11-14 (PI: "Both", then
 mid-turn: "I still feel that there are better molecules out there. What are the aspects of pvdf cfe that make it suited?
 How do we optimize those characteristics").** Text: `docs/CANDIDATE_MATERIALS.md` sections 3, 4, 5 (new: 5.1 to 5.5), 6

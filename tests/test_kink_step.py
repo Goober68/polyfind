@@ -816,3 +816,76 @@ def test_the_regrouped_units_are_the_tested_groups_in_another_order():
         letters = C.SEQUENCES[f"vdf9-trfe4-{name}1-14"][0]
         assert letters == cfe_row.replace("C", letter) and letter in C.REGROUPED and letter not in C.VALIDATED
         assert C.make_polymer("x", letters).bonds_per_repeat == 28
+
+
+def test_the_unit_screen_on_three_axes():
+    """The unit screen of 2026-11-14 (docs/CANDIDATE_MATERIALS.md 5.6).  Of the five units made of
+    the tested groups, three lower the margin (reversed VDF most), vinyl fluoride is neutral, and
+    none cuts the kink sheet's energy as the bulky units do; a unit's cut goes with the widening of
+    its all-trans cell.  On strain, tan delta and relaxation frequency together, at the heat
+    budget, the nitrile at one per fourteen is ahead of the measured film's channel on all three,
+    and thinning it out loses on all three on the rate model the table is built on."""
+    pred = MIG.parent
+    path = pred / "pin_design_belt4.json"
+    if not path.exists() or "three_axes" not in json.loads(path.read_text()):
+        pytest.skip("the three-axis table is not stored")
+    d = json.loads(path.read_text())
+    u = {k: d["units"].get(f"vdf9-trfe4-{k}1-14") for k in ("tfe", "rvdf", "vf", "e", "dfe", "an", "ctfe", "cfe", "cdfe")}
+    if any(v is None for v in u.values()):
+        pytest.skip("the screen's units are not all stored")
+    assert u["rvdf"]["pin_per_unit"] < -4.0 < u["e"]["pin_per_unit"] < u["tfe"]["pin_per_unit"] < -1.0  # three lower the margin
+    assert abs(u["vf"]["pin_per_unit"]) < 0.6 and 2.5 < u["dfe"]["pin_per_unit"] < 3.3
+    new, bulky = [u[k]["cut"] for k in ("tfe", "rvdf", "vf", "e", "dfe")], [u[k]["cut"] for k in ("an", "ctfe", "cfe", "cdfe")]
+    assert 0.0 < min(new) and max(new) < 1.6 < 3.0 < min(bulky)  # none loosens as the bulky units do
+    assert all(u[k]["cut_per_pin"] is None for k in ("tfe", "rvdf", "e")) and u["dfe"]["cut_per_pin"] < 0.3 < u["an"]["cut_per_pin"]
+    refs = json.loads((pred / "dilute_kink_belt4.json").read_text())["all_trans_references"]
+    width = lambda k: refs[f"vdf9-trfe4-{k}1-14"]["state"][0] - refs["vdf10-trfe4-14"]["state"][0]  # noqa: E731
+    assert all(width(k) < 0.13 for k in ("tfe", "rvdf", "vf", "e", "dfe")) and all(width(k) > 0.4 for k in ("an", "ctfe", "cfe", "cdfe"))
+    assert width("e") < width("dfe") < width("tfe") + 0.03 and u["e"]["cut"] < u["dfe"]["cut"] < u["tfe"]["cut"]
+    t = d["three_axes"]
+    assert t["heat_budget_w_per_m3"] == 4e6 and t["ac_max_V_um"] == 10.0
+    rows, film = t["rows"], t["rows"]["calibrated_film"]
+    an14, an28 = rows["vdf9-trfe4-an1-14"]["14"], rows["vdf9-trfe4-an1-14"]["28"]
+    hb = lambda r: r["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
+    assert film["f_relax_hz"] == pytest.approx(3.64e5, rel=0.01) and film["at_the_heat_budget"]["binds"][0] == "heat"
+    assert film["at_the_heat_budget"]["heat_w_per_m3"][0] == pytest.approx(4e6, rel=1e-6)
+    assert hb(an14) > hb(film) and an14["tan_delta"][0] < 0.2 * film["tan_delta"][0] and an14["f_relax_hz"] > 3.0 * film["f_relax_hz"]
+    assert hb(an28) < hb(an14) and an28["tan_delta"][0] > an14["tan_delta"][0] and an28["f_relax_hz"] < an14["f_relax_hz"]
+    assert an28["strain_ac"][0] > 3.0 * an14["strain_ac"][0]  # ... though at the program's AC field the thinner pin strains more: strain alone misleads
+    for k in ("tfe", "rvdf", "vf", "e", "dfe"):
+        assert hb(rows[f"vdf9-trfe4-{k}1-14"]["14"]) < 0.3 * hb(an14)
+    cfe14 = rows["vdf9-trfe4-cfe1-14"]["14"]
+    assert cfe14["at_the_heat_budget"]["binds"][0] == "field" and cfe14["at_the_heat_budget"]["field_ac_V_um"][0] == pytest.approx(10.0)
+
+
+def test_the_designed_cells_are_computed_not_summed():
+    """Designed from the unit screen (docs/CANDIDATE_MATERIALS.md 5.6): a loosening pin with a
+    trans-favouring unit seven monomers from it, and PVDF with reversed units in place of TrFE.
+    Two units' pins do not add to better than a few kcal/mol per cell, in either sense; the
+    cell with CTFE and a reversed VDF unit sits on the switching curve with the cheapest kink
+    sheet of the table and leads on all three axes; a reversed unit turns its own dipole over,
+    so the matrix without TrFE pays for its margin with more dipole than TrFE costs."""
+    pred = MIG.parent
+    path = pred / "pin_design_belt4.json"
+    d = json.loads(path.read_text()) if path.exists() else {}
+    c = d.get("combinations", {})
+    names = ("vdf8-trfe4-an1-tfe1-14", "vdf8-trfe4-an1-e1-14", "vdf8-trfe4-ctfe1-rvdf1-14", "vdf12-rvdf2-14")
+    if any(n not in c or "three_axes" not in c[n] for n in names):
+        pytest.skip("the designed cells are not stored")
+    off = {n: 14.0 * (c[n]["margin"] - c[n]["margin_if_the_pins_added"]) for n in names[:3] + ("vdf8-trfe4-cfe1-cdfe1-14",)}
+    assert all(1.0 < abs(v) < 3.0 for v in off.values()) and min(off.values()) < 0.0 < max(off.values())
+    film = d["three_axes"]["rows"]["calibrated_film"]
+    hb = lambda r: r["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
+    best = c["vdf8-trfe4-ctfe1-rvdf1-14"]
+    assert 0.03 < best["margin"] < 0.13 and best["kink_sheet"] < 1.5 and 0.2 < best["three_axes"]["polar_fraction"] < 0.6
+    for n in names:
+        t = c[n]["three_axes"]
+        assert hb(t) > hb(film) and t["tan_delta"][0] < 0.4 * film["tan_delta"][0] and t["f_relax_hz"] > 2.0 * film["f_relax_hz"]
+        assert hb(t) <= hb(best["three_axes"]) + 1e-12
+    assert hb(best["three_axes"]) > 2.5 * hb(film) and best["three_axes"]["at_the_heat_budget"]["binds"][0] == "heat"
+    regio = c["vdf12-rvdf2-14"]
+    assert regio["margin"] < 0.2 < 0.7 < regio["pvdf_margin"] and -4.5 < regio["per_reversed_unit"] < -3.6
+    assert regio["kink_sheet"] < regio["pvdf_kink_sheet"] - 1.5
+    loss = json.loads((pred / "candidate_loss_map_belt4.json").read_text())["rows"]
+    assert loss["vdf12-rvdf2-14"]["mu_TT"] == pytest.approx(loss["pvdf"]["mu_TT"] * 10.0 / 14.0, rel=0.03)  # twelve units up, two down
+    assert loss["vdf12-rvdf2-14"]["mu_TT"] < 0.85 * loss["vdf10-trfe4-14"]["mu_TT"]

@@ -49,6 +49,15 @@ PINS = {
     "vdf7-trfe2-cdfe1": ("vdf8-trfe2", 10, 1, "CDFE, one per ten beside 20 mol% TrFE"),
     "vdf7-trfe2-an1": ("vdf8-trfe2", 10, 1, "AN, one per ten beside 20 mol% TrFE"),
 }
+# two units in one cell, seven monomers apart: (the cell, its first unit's cell, its second unit's cell, what it is)
+COMBINATIONS = {
+    "vdf8-trfe4-an1-tfe1-14": ("vdf9-trfe4-an1-14", "vdf9-trfe4-tfe1-14", "AN with TFE"),
+    "vdf8-trfe4-an1-e1-14": ("vdf9-trfe4-an1-14", "vdf9-trfe4-e1-14", "AN with ethylene"),
+    "vdf8-trfe4-ctfe1-rvdf1-14": ("vdf9-trfe4-ctfe1-14", "vdf9-trfe4-rvdf1-14", "CTFE with reversed VDF"),
+    "vdf8-trfe4-cfe1-cdfe1-14": ("vdf9-trfe4-cfe1-14", "vdf9-trfe4-cdfe1-14", "CFE with CDFE"),
+}
+# a matrix without TrFE: (the cell, reversed units per fourteen)
+REGIO_MATRICES = {"vdf12-rvdf2-14": 2}
 # a pin in PVDF: the matrix's margin is the E2 set's (polishing changes nothing in PVDF's cells)
 PINS_IN_PVDF = {"vdf9-cfe1": (10, 1, "CFE, one per ten VDF"), "vdf8-cfe2": (10, 2, "CFE, two per ten VDF (per unit)"), "vdf9-an1": (10, 1, "AN, one per ten VDF")}
 
@@ -162,6 +171,35 @@ def main():
         pt = point(m0, e0, mat["mu_TT"], mat["axial"])
         out["three_axes"]["rows"]["matrix"] = pt
         md_3.append(line("none: the matrix", pt))
+        # designed cells: two units together, the margin and the kink sheet computed, beside what the single units would add up to
+        md_c = ["| cell | margin: computed, if the pins added | kink sheet: computed, if the cuts added | relaxation frequency | AC strain at "
+                f"{args.ac:g} V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds |", "|---|---|---|---|---|---|---|---|"]
+        out["combinations"] = {}
+        for name, (first, second, what) in COMBINATIONS.items():
+            if "margin" not in rows.get(name, {}) or first not in out["pins"] or second not in out["pins"]:
+                continue
+            added_m = m0 + (out["pins"][first]["pin_per_unit"] + out["pins"][second]["pin_per_unit"]) / 14.0
+            rec = {"what": what, "margin": rows[name]["margin"], "margin_if_the_pins_added": added_m}
+            cells = f"| {what}, one of each per fourteen | {rows[name]['margin']:+.3f}, {added_m:+.3f} | "
+            if name in sheets and first in out["units"] and second in out["units"]:
+                e = sheets[name]["formation_kcal_per_kink_pair"]
+                added_e = e0 - out["units"][first]["cut"] - out["units"][second]["cut"]
+                pt = point(rows[name]["margin"], e, loss[name]["mu_TT"], loss[name]["axial"])
+                rec.update(kink_sheet=e, kink_sheet_if_the_cuts_added=added_e, three_axes=pt)
+                md_c.append(cells + f"{e:.2f}, {added_e:.2f} | " + line("", pt).split("|", 3)[3].lstrip())
+            else:
+                md_c.append(cells + "not computed | - | - | - | - | - |")
+            out["combinations"][name] = rec
+        for name, n_rev in REGIO_MATRICES.items():  # PVDF with reversed units and no TrFE, against PVDF itself
+            if "margin" not in rows.get(name, {}) or name not in sheets or "vdf10" not in sheets:
+                continue
+            e = sheets[name]["formation_kcal_per_kink_pair"]
+            pt = point(rows[name]["margin"], e, loss[name]["mu_TT"], loss[name]["axial"])
+            out["combinations"][name] = {"what": f"PVDF with {n_rev} reversed units per fourteen, no TrFE", "margin": rows[name]["margin"], "pvdf_margin": m_pvdf,
+                                         "per_reversed_unit": 14.0 * (rows[name]["margin"] - m_pvdf) / n_rev, "kink_sheet": e,
+                                         "pvdf_kink_sheet": sheets["vdf10"]["formation_kcal_per_kink_pair"], "mu_TT": loss[name]["mu_TT"], "three_axes": pt}
+            md_c.append(f"| PVDF with {n_rev} reversed units per fourteen, no TrFE (PVDF itself: {m_pvdf:+.3f}, {sheets['vdf10']['formation_kcal_per_kink_pair']:.2f}) | {rows[name]['margin']:+.3f}, - | {e:.2f}, - | "
+                        + line("", pt).split("|", 3)[3].lstrip())
         for name, u in out["units"].items():
             for n in (14, 20, 28, 40):
                 w = 14.0 / n
@@ -206,10 +244,13 @@ def main():
     film = base.operating_point(34e3, args.bias * V_UM, args.ac * V_UM, 0.2e9, 300.0, 0.05)
     out["calibrated_film"] = {"polar_fraction": film["polar_fraction"], "strain_ac": film["strain_ac"], "tan_delta": film["tan_delta"],
                               "note": "the literature channel as calibrated on the 63/30/7 film (margin zero, n 17)"}
-    out["tables_md"] = {"pins": "\n".join(md), "units": "\n".join(md_k), "three_axes": "\n".join(md_3), "uniform": "\n".join(md_u), "statistical": "\n".join(md_s)}
+    md_c = md_c if out.get("combinations") else []
+    out["tables_md"] = {"pins": "\n".join(md), "units": "\n".join(md_k), "three_axes": "\n".join(md_3), "combinations": "\n".join(md_c),
+                        "uniform": "\n".join(md_u), "statistical": "\n".join(md_s)}
     with open(args.out, "w") as fh:
         json.dump(out, fh, indent=1)
-    text = ("Pin strength per unit\n\n" + "\n".join(md) + "\n\nWhat a unit costs and what it buys\n\n" + "\n".join(md_k) + "\n\nStrain, tan delta and frequency together (the rate from the kink sheets' population)\n\n" + "\n".join(md_3) + f"\n\nUniform spacing on the {args.matrix} matrix (margin {m0:+.3f})\n\n" + "\n".join(md_u)
+    text = ("Pin strength per unit\n\n" + "\n".join(md) + "\n\nWhat a unit costs and what it buys\n\n" + "\n".join(md_k) + "\n\nStrain, tan delta and frequency together (the rate from the kink sheets' population)\n\n" + "\n".join(md_3)
+            + "\n\nDesigned cells: two units together\n\n" + "\n".join(md_c) + f"\n\nUniform spacing on the {args.matrix} matrix (margin {m0:+.3f})\n\n" + "\n".join(md_u)
             + "\n\nStatistical against uniform, the margin law read locally\n\n" + "\n".join(md_s)
             + f"\n\nThe calibrated film's channel at the operating point: polar fraction {film['polar_fraction']:.2f}, S_ac {film['strain_ac'] * 100:.3f}%, tan delta {film['tan_delta']:.3f}.\n")
     with open(args.out.replace(".json", ".md"), "w") as fh:

@@ -79,6 +79,16 @@ Strain, tan delta and frequency together (the rate from the kink sheets' populat
 | CDFE, 28 | +0.370 | 73 kHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.001%** / 0.001% | 10.0 (field) / 10.0 (field) |
 | CDFE, 40 | +0.276 | 25 kHz | 0.002% / 0.002% | 0.022 / 0.041 | **0.008%** / 0.004% | 6.4 (heat) / 3.4 (heat) |
 
+Designed cells: two units together
+
+| cell | margin: computed, if the pins added | kink sheet: computed, if the cuts added | relaxation frequency | AC strain at 1.8 V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds |
+|---|---|---|---|---|---|---|---|
+| AN with TFE, one of each per fourteen | +0.186, +0.091 | 2.89, 1.65 | 1.6 MHz | 0.018% / 0.018% | 0.004 / 0.007 | **0.097%** / 0.053% | 9.5 (heat) / 5.2 (heat) |
+| AN with ethylene, one of each per fourteen | -0.119, +0.075 | 3.14, 2.83 | 1.1 MHz | 0.090% / 0.090% | 0.019 / 0.038 | **0.110%** / 0.062% | 2.2 (heat) / 1.2 (heat) |
+| CTFE with reversed VDF, one of each per fourteen | +0.076, -0.046 | 0.84, 0.87 | 51.7 MHz | 0.117% / 0.117% | 0.001 / 0.001 | **0.189%** / 0.133% | 2.9 (heat) / 2.0 (heat) |
+| CFE with CDFE, one of each per fourteen | +0.807, +0.946 | not computed | - | - | - | - | - |
+| PVDF with 2 reversed units per fourteen, no TrFE (PVDF itself: +0.744, 5.06) | +0.162, - | 3.24, - | 919 kHz | 0.025% / 0.025% | 0.010 / 0.020 | **0.076%** / 0.041% | 5.4 (heat) / 2.9 (heat) |
+
 Uniform spacing on the vdf10-trfe4-14 matrix (margin +0.056)
 
 | one pin per | mol% | AN (+2.0): margin, polar fraction, S_ac, tan delta 34 kHz | CTFE (+3.4): margin, polar fraction, S_ac, tan delta 34 kHz | CFE (+3.7): margin, polar fraction, S_ac, tan delta 34 kHz | CDFE (+8.8): margin, polar fraction, S_ac, tan delta 34 kHz |
