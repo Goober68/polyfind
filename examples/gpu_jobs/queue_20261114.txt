@@ -19,3 +19,8 @@ band_row.sh vdf10-trfe4-14 4 2 from 2x1 tiled
 # 4. the protocol at sixteen chains: PVDF from nothing, against the stored host row (I +9.963,
 #    B +5.911, saddles +10.660 and +11.637; its bands took 2.7 hours on the host).
 band_row.sh vdf10 4 2 from 2x1 stored tiled
+# 5. the terpolymer's second band had not converged in its 300 iterations (four chains: top
+#    +14.33 at a force of 0.31 and falling, and the saddle search from it slid off the path).
+#    The same rows again: a stored band that has not converged is continued, a converged one kept.
+band_row.sh vdf9-trfe4-cfe1-14 2 1 tiled
+band_row.sh vdf9-trfe4-cfe1-14 4 2 from 2x1 tiled
