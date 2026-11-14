@@ -2,13 +2,14 @@
 # Relax a state held in a row of band_row.sh's table to the minimum it belongs to and say which
 # state that is (examples/kink_wide_cell.py settle).  A job of examples/runpod_jobs_pod.sh.
 #
-#   settle.sh ROW NX NY STATE NAME [mover CELL NAME2 | torsions K:DEG,...]
+#   settle.sh ROW NX NY STATE NAME [mover CELL NAME2] [torsions K:DEG,...] [copyto CHAIN]
 #
 # STATE is a dotted path in the row (I.state, I-B.polished.state, I-B.images.5) or settled:NAME.
 # "mover CELL NAME2": first give the moving chain the coordinates it has in the settled record
 # NAME2 of the same sequence's CELL (a state found in a smaller cell, looked for in this one).
 # "torsions 0:180,6:100": first set those torsions of the moving chain (a state looked for by its
-# gauche bonds).
+# gauche bonds).  "copyto 4": give chain 4 (of the moving chain's sublattice) the moving chain's
+# coordinates and its displacement from the sheet: a neighbour in the same state.
 # Records go to jobs/shared/states.json, which starts from docs/predictions/kink_states_belt4.json.
 # SETTLE_EXTRA: further arguments for the relaxation (a dry run's --maxiter 2).
 set -euo pipefail
@@ -25,8 +26,14 @@ fi
 key() { echo "$ROW@$KINK $1 mover 0 ahead host flexible"; }
 SLUG="$(echo "$ROW@$KINK" | sed 's/[^[:alnum:]]/_/g')"
 MOVER=()
-if [ "${1:-}" = "mover" ]; then MOVER=(--mover-from "$(key "$2")" "$3"); fi
-if [ "${1:-}" = "torsions" ]; then MOVER=(--mover-torsions "$2"); fi
+while [ $# -gt 0 ]; do
+  case "$1" in
+    mover) MOVER+=(--mover-from "$(key "$2")" "$3"); shift 3 ;;
+    torsions) MOVER+=(--mover-torsions "$2"); shift 2 ;;
+    copyto) MOVER+=(--copy-mover-to "$2"); shift 2 ;;
+    *) echo "settle.sh: unknown argument $1"; exit 2 ;;
+  esac
+done
 "$PY" examples/kink_wide_cell.py settle --source "$SHARED/steps.json" --row "$(key "${NX}x${NY}")" --state "$STATE" --name "$NAME" \
   "${MOVER[@]}" --blocks "$SHARED/ck/${SLUG}.chain_blocks.npz" --out "$STATES" ${SETTLE_EXTRA:-}
 cp "$STATES" "$JOB_OUT/"

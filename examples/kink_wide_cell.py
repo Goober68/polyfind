@@ -374,6 +374,12 @@ def settle(args) -> None:
         sheet = np.asarray(row["kinked_crystal"]["state"], dtype=float)
         if x.size != model.n_var:
             raise SystemExit(f"--state: {x.size} numbers, the {nx}x{ny} cell has {model.n_var} variables")
+        for other in args.copy_mover_to or []:  # another chain given what the moving chain has: its own coordinates and its displacement from the sheet
+            if other % 2 != 0 or bool(model.flips[other]) != bool(model.flips[0]):  # chain order: (layer, row, chain of the two-chain cell)
+                raise SystemExit(f"--copy-mover-to {other}: that chain is not a translate of the moving chain (the other chain of the two-chain cell)")
+            x = x.copy()
+            x[model.index("internal", [other])] = x[model.index("internal", [0])]
+            x[model.index("place", [other])] = sheet[model.index("place", [other])] + (x[model.index("place", [0])] - sheet[model.index("place", [0])])
         free, closed = KM.free_sets(model, [0], "flexible")
         free = np.unique(free)
         if args.blocks and Path(args.blocks).exists():
@@ -398,7 +404,10 @@ def settle(args) -> None:
         st, st0 = model.state(xr), model.state(sheet)
         gauche = lambda t: [k for k, v in enumerate(KM.letters_of(t).split()) if v != "T"]  # noqa: E731
         away = {str(c): KM.letters_of(st.tors[c]) for c in range(model.nc) if gauche(st.tors[c]) != gauche(st0.tors[c])}
-        rec = {"energy": model.physical_energy(xr) - eA, "start": f"{args.state} of the row", "start_energy": e_start,
+        made = "".join([f", the moving chain's torsions set to {args.mover_torsions}" if args.mover_torsions else "",
+                        f", the moving chain's coordinates and displacement given to chain {', '.join(map(str, args.copy_mover_to))} too" if args.copy_mover_to else "",
+                        f", the moving chain's coordinates from {args.mover_from[1]} of {args.mover_from[0]}" if args.mover_from else ""])
+        rec = {"energy": model.physical_energy(xr) - eA, "start": f"{args.state} of the row{made}", "start_energy": e_start,
                "torsions": KM.letters_of(st.tors[0]), "torsions_deg": KM.wrap(st.tors[0]).tolist(), "gauche_bonds": gauche(st.tors[0]),
                "chains_off_the_sheet": away, "iterations": info["iterations"], "evaluations": info["evaluations"], "message": info["message"],
                "gradient_max": info["gradient_max"], "converged": bool("success" in info["message"].lower() or (info.get("stalled") and info["gradient_max"] < 0.01)),
@@ -501,6 +510,8 @@ def main() -> None:
     e.add_argument("--name", required=True, help="the record's name")
     e.add_argument("--mover-from", nargs=2, default=None, metavar=("ROW", "NAME"),
                    help="replace the moving chain's own coordinates by those of a settled record of another cell of the same sequence (in --out)")
+    e.add_argument("--copy-mover-to", type=int, nargs="+", default=None, metavar="CHAIN",
+                   help="give these chains (of the moving chain's sublattice) its coordinates and its displacement from the sheet: a neighbour in the same state")
     e.add_argument("--mover-torsions", default=None, metavar="K:DEG,...", help="set these torsions of the moving chain before relaxing (0:180,6:100)")
     e.add_argument("--blocks", default=None)
     e.add_argument("--gtol", type=float, default=3e-4)

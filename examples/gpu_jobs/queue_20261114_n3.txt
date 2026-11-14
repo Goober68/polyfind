@@ -1,0 +1,27 @@
+# What N does next (PI, 2026-11-14: "Go").  A queue for examples/runpod_jobs_pod.sh; sixteen
+# chains, bands in the per-chain metric; the rows and the states are the stored ones.
+#
+# N is one chain's kink pair two monomers on with the other hand (gauche bonds 4 and 6, G- T G+;
+# the sheet's are 0 and 2, G+ T G-), the cheaper move of one chain in both copolymers.  From it:
+#   N2    the same move again: bonds 8 and 10, the sheet's hand (four monomers on)
+#   B2    the sheet's hand at N's own site (bonds 4 and 6, G+ T G-): is the turn-over what makes N cheap?
+#   NN4, NN12   a stack neighbour (the chain 4.96 A behind, 4, or ahead, 12) in the state N too
+# and the bands from N to N2 and to the two pairs: N's barrier back to the sheet is 2.58 (64/29/7)
+# and 2.95 (71/29); does N go on, get joined, or come back?
+#
+# 1. the terpolymer, 64/29/7
+settle.sh vdf9-trfe4-cfe1-14 4 2 settled:N N2 torsions 4:180,6:180,8:92,10:-71
+settle.sh vdf9-trfe4-cfe1-14 4 2 settled:N B2 torsions 4:92,6:-71
+settle.sh vdf9-trfe4-cfe1-14 4 2 settled:N NN4 copyto 4
+settle.sh vdf9-trfe4-cfe1-14 4 2 settled:N NN12 copyto 12
+between.sh vdf9-trfe4-cfe1-14 4 2 settled:N settled:N2 N-N2
+between.sh vdf9-trfe4-cfe1-14 4 2 settled:N settled:NN4 N-NN4
+between.sh vdf9-trfe4-cfe1-14 4 2 settled:N settled:NN12 N-NN12
+# 2. its matrix, 71/29
+settle.sh vdf10-trfe4-14 4 2 settled:N N2 torsions 4:180,6:180,8:92,10:-71
+settle.sh vdf10-trfe4-14 4 2 settled:N B2 torsions 4:92,6:-71
+settle.sh vdf10-trfe4-14 4 2 settled:N NN4 copyto 4
+settle.sh vdf10-trfe4-14 4 2 settled:N NN12 copyto 12
+between.sh vdf10-trfe4-14 4 2 settled:N settled:N2 N-N2
+between.sh vdf10-trfe4-14 4 2 settled:N settled:NN4 N-NN4
+between.sh vdf10-trfe4-14 4 2 settled:N settled:NN12 N-NN12
