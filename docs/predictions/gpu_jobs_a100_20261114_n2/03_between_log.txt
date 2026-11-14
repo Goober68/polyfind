@@ -1,0 +1,15 @@
+/srv/bench/<token>/jobs/shared/steps.json: 6 kinked crystals, 3 rows; copied from the stored table: ['vdf10@0 4x2 mover 0 ahead host flexible']
+A-N: kinked_crystal.state (+0.0000) to settled:N (+7.7221); start: straight between the two states
+      it    1: force 142.5130, top +42.1291, climbing -1, energies [0.0, 3.501, 14.471, 30.905, 42.129, 37.073, 24.024, 12.275, 7.722]  (1 s)
+      it   20: force  25.1032, top +18.9653, climbing -1, energies [0.0, 2.408, 7.867, 15.208, 18.965, 16.908, 13.343, 9.379, 7.722]  (13 s)
+      it   40: force   7.1086, top +15.4083, climbing -1, energies [0.0, 2.125, 7.13, 12.845, 15.408, 13.407, 10.781, 8.628, 7.722]  (26 s)
+      it   60: force   3.1660, top +12.7839, climbing -1, energies [0.0, 3.015, 9.231, 12.784, 12.715, 10.335, 8.964, 8.211, 7.722]  (39 s)
+      it   80: force   1.4723, top +12.6371, climbing 3, energies [0.0, 4.529, 10.252, 12.637, 12.098, 10.023, 8.863, 8.171, 7.722]  (52 s)
+      it  100: force   0.6173, top +12.3975, climbing 3, energies [0.0, 7.432, 10.703, 12.398, 11.079, 9.35, 8.663, 8.023, 7.722]  (64 s)
+      it  120: force   0.2568, top +12.3925, climbing 3, energies [0.0, 6.744, 10.572, 12.392, 11.414, 9.569, 8.735, 8.074, 7.722]  (76 s)
+A-N: top +12.3884 at image 3; force 0.0992; 128 it, 80 s
+      A-N polish, hyperplane 1: s +0.0000, energy -1412.69732, dE/ds +0.0233, across 2.8e-04, 50 evaluations; Optimization terminated successfully: th  (4 s)
+      A-N polish, hyperplane 2: s +0.0500, energy -1412.69636, dE/ds +0.0151, across 2.0e-04, 29 evaluations; Optimization terminated successfully: th  (6 s)
+      A-N polish, hyperplane 3: s +0.1420, energy -1412.69569, dE/ds -0.0007, across 2.7e-04, 35 evaluations; Optimization terminated successfully: th  (9 s)
+A-N: settled saddle +12.3866 (the band's top +12.3884); along -0.0007, across 2.7e-04, curvature -0.172; 114 evaluations
+written /srv/bench/<token>/jobs/shared/states.json

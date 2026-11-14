@@ -1,0 +1,7 @@
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe4-cfe1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+      surface    1: +10.5345  (0 s)
+      surface   20: +10.3361  (3 s)
+      surface   40: +10.3329  (5 s)
+Q: +10.3329 kcal/mol above the sheet (start +10.5345); the moving chain T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T (gauche bonds [4, 6]; in the sheet [0, 2]); chains off the sheet's conformation: ['0']; 59 evaluations, 8 s; gradient 2.0e-04; Optimization terminated successfully: the gradient along the surface is under gtol
+written /srv/bench/<token>/jobs/shared/states.json

@@ -117,24 +117,44 @@ How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displa
 | vdf10-trfe4-14, 2x1 | M | 4 | +178, +179, +132, +165, -100, -180, +178 | +11.680 | +9.53 | +12.31 |
 | vdf10-trfe4-14, 4x2 | M | 2, 4 | +180, +175, +116, +168, -94, +179, -178 | +13.432 | +9.36 | +10.70 |
 | vdf10-trfe4-14, 4x2 | N | 4, 6 | -171, -167, +171, +164, -90, -169, +94 | +8.944 | +9.36 | +10.70 |
+| vdf10-trfe4-14, 4x2 | P | 4, 6 | +145, +163, -163, -159, -65, -170, +91 | +11.167 | +9.36 | +10.70 |
 | vdf10, 4x2 | N | 4, 6 | +174, +179, +170, -178, -73, -166, +83 | +7.722 | +9.96 | +5.91 |
 | vdf9-trfe4-cfe1-14, 2x1 | M | 4 | +178, +179, +144, +162, -107, +180, +178 | +11.204 | +9.04 | +13.00 |
 | vdf9-trfe4-cfe1-14, 4x2 | M | 4 | +174, +179, +134, +162, -101, +180, +179 | +13.088 | +9.05 | +11.79 |
 | vdf9-trfe4-cfe1-14, 4x2 | N | 4, 6 | -176, -161, +171, +155, -90, -172, +101 | +8.820 | +9.05 | +11.79 |
+| vdf9-trfe4-cfe1-14, 4x2 | P | 0, 2 | +92, -179, -71, -174, +177, -178, +179 | +0.000 | +9.05 | +11.79 |
+| vdf9-trfe4-cfe1-14, 4x2 | Q | 4, 6 | +148, +161, -164, -160, -64, -172, +92 | +10.333 | +9.05 | +11.79 |
 
 Bands between those states and the named ones (FIRE, nine images; the saddle settled from the band's top as in the first table):
 
 | sequence, cell | band | from, to | the band's top (force, iterations) | settled saddle | curvature along the path |
 |---|---|---|---|---|---|
+| vdf10-trfe4-14, 4x2 | A-N | kinked_crystal.state, settled:N | +11.893 (0.40, 300, not converged) | **+11.893** | - |
 | vdf10-trfe4-14, 4x2 | I-M | I.state, settled:M | +15.067 (0.18, 300, not converged) | **+15.000** | -0.70 |
-| vdf10-trfe4-14, 4x2 | I-N | I.state, settled:N | +14.821 (0.34, 300, not converged) | not settled (the search ended at +5.85) | +0.45 |
+| vdf10-trfe4-14, 4x2 | I-N | I.state, settled:N | +13.810 (0.09, 555) | not settled (the search ended at +9.53) | -0.03 |
+| vdf10-trfe4-14, 4x2 | I-P | I.state, settled:P | +13.799 (0.09, 132) | **+13.786** | -0.28 |
 | vdf10-trfe4-14, 4x2 | M-B | settled:M, B.state | +13.587 (0.09, 164) | **+13.567** | -0.32 |
-| vdf10, 4x2 | I-N | I.state, settled:N | +13.320 (0.25, 300, not converged) | not settled (the search ended at +11.11) | +0.22 |
+| vdf10-trfe4-14, 4x2 | P-N | settled:P, settled:N | +12.351 (0.09, 172) | not settled (the search ended at +12.31) | -0.58 |
+| vdf10, 4x2 | A-N | kinked_crystal.state, settled:N | +12.388 (0.10, 128) | **+12.387** | -0.17 |
+| vdf10, 4x2 | I-N | I.state, settled:N | +11.637 (4.82, 600, not converged) | **+11.637** | -0.41 |
 | vdf9-trfe4-cfe1-14, 2x1 | I-M | I.state, settled:M | +13.066 (0.11, 300, not converged) | **+12.999** | -0.19 |
 | vdf9-trfe4-cfe1-14, 2x1 | M-B | settled:M, B.state | +13.412 (0.09, 183) | **+13.307** | -0.25 |
+| vdf9-trfe4-cfe1-14, 4x2 | A-N | kinked_crystal.state, settled:N | +11.402 (0.08, 148) | **+11.396** | -1.72 |
+| vdf9-trfe4-cfe1-14, 4x2 | I-B | I.state, B.state | +15.307 (0.08, 106) | **+15.293** | - |
 | vdf9-trfe4-cfe1-14, 4x2 | I-M | I.state, settled:M | +14.771 (0.18, 300, not converged) | **+14.491** | -0.78 |
-| vdf9-trfe4-cfe1-14, 4x2 | I-N | I.state, settled:N | +12.504 (3.43, 600, not converged) | not settled (the search ended at +8.85) | +0.14 |
+| vdf9-trfe4-cfe1-14, 4x2 | I-N | I.state, settled:N | +11.523 (0.24, 900, not converged) | **+11.519** | -0.29 |
+| vdf9-trfe4-cfe1-14, 4x2 | I-P | I.state, settled:P | +9.109 (0.10, 94) | **+9.109** | - |
 | vdf9-trfe4-cfe1-14, 4x2 | M-B | settled:M, B.state | +14.089 (0.10, 168) | **+13.982** | -0.52 |
+| vdf9-trfe4-cfe1-14, 4x2 | P-Q | settled:P, settled:Q | +10.627 (0.08, 105) | **+10.626** | - |
+| vdf9-trfe4-cfe1-14, 4x2 | Q-N | settled:Q, settled:N | +11.397 (0.10, 176) | **+11.396** | -1.10 |
+
+**One chain's kink pair: the one-monomer step, or two monomers on with the other hand** (N; from the sheet straight to it, the band in the per-chain metric and its saddle settled; kcal/mol against the sheet, neighbours flexible, cell fixed; rates at 300 K with a 3e12 /s attempt frequency)
+
+| sequence, cell | B | barrier to B / back | N | barrier to N / back | the cheaper move | its rate |
+|---|---|---|---|---|---|---|
+| vdf10, 4x2 | +5.91 | 11.64 / 5.73 | +7.72 | 12.39 / 4.66 | the step to B, 11.64 | 9.9e+03 /s |
+| vdf10-trfe4-14, 4x2 | +10.70 | 15.00 / 4.30 | +8.94 | 11.89 / 2.95 | to N, 11.89 | 6.5e+03 /s |
+| vdf9-trfe4-cfe1-14, 4x2 | +11.79 | 14.49 / 2.70 | +8.82 | 11.40 / 2.58 | to N, 11.40 | 1.5e+04 /s |
 
 **Two chains one monomer ahead together** (end state only; kcal/mol against the sheet, neighbours flexible, cell fixed)
 

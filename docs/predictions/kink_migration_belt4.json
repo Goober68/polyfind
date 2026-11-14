@@ -43160,6 +43160,23 @@
       "seconds": 7.820555925369263
      }
     }
+   },
+   "to_N": {
+    "N": 7.722119533431851,
+    "gauche_bonds": [
+     4,
+     6
+    ],
+    "saddle": 12.386552477198848,
+    "band_top": 12.388435880984389,
+    "band_converged": true,
+    "band_iterations": 128,
+    "curvature_along": -0.1715418214604199,
+    "barrier_forward": 12.386552477198848,
+    "barrier_back": 4.664432943766997,
+    "note": "from the sheet straight to N (a kink pair of the other hand two monomers on), not through the wide kink: the band A-N of docs/predictions/kink_states_belt4.json, in the per-chain metric, and the saddle settled from its top",
+    "the_step_to_B": 11.636561147876137,
+    "cheaper_than_the_step_by": -0.749991329322711
    }
   },
   "vdf10@0 4x1 mover 0 ahead host flexible": {
@@ -160571,6 +160588,23 @@
     "barrier_forward": 14.99999396927501,
     "barrier_back": 4.297172283763302,
     "note": "I to M to B: bands between the states and their settled saddles in docs/predictions/kink_states_belt4.json"
+   },
+   "to_N": {
+    "N": 8.944295772491841,
+    "gauche_bonds": [
+     4,
+     6
+    ],
+    "saddle": 11.892722998425597,
+    "band_top": 11.892810078751609,
+    "band_converged": false,
+    "band_iterations": 300,
+    "curvature_along": null,
+    "barrier_forward": 11.892722998425597,
+    "barrier_back": 2.948427225933756,
+    "note": "from the sheet straight to N (a kink pair of the other hand two monomers on), not through the wide kink: the band A-N of docs/predictions/kink_states_belt4.json, in the per-chain metric, and the saddle settled from its top",
+    "the_step_to_B": 14.99997257425889,
+    "cheaper_than_the_step_by": 3.1072495758332934
    }
   },
   "vdf9-trfe4-cfe1-14@0 2x1 mover 0 ahead host flexible": {
@@ -189655,7 +189689,32 @@
    },
    "barrier_forward_polished": 14.491103710246989,
    "barrier_back_polished": 2.696431313954008,
-   "barrier_polished_note": "by way of the intermediate state M (by_way_of_M): the direct band's top, +15.41, is not a settled saddle (the search from it left the path)"
+   "barrier_polished_note": "by way of the intermediate state M (by_way_of_M): the direct band's top, +15.41, is not a settled saddle (the search from it left the path)",
+   "to_N": {
+    "N": 8.819507948293221,
+    "gauche_bonds": [
+     4,
+     6
+    ],
+    "saddle": 11.396018191044504,
+    "band_top": 11.401706222428402,
+    "band_converged": true,
+    "band_iterations": 148,
+    "curvature_along": -1.7176775818939591,
+    "barrier_forward": 11.396018191044504,
+    "barrier_back": 2.576510242751283,
+    "note": "from the sheet straight to N (a kink pair of the other hand two monomers on), not through the wide kink: the band A-N of docs/predictions/kink_states_belt4.json, in the per-chain metric, and the saddle settled from its top",
+    "in_pieces": {
+     "through": "Q",
+     "Q": 10.332912717794215,
+     "saddles": {
+      "P-Q": 10.626179864098049,
+      "Q-N": 11.396019288132493
+     }
+    },
+    "the_step_to_B": 14.491103710246989,
+    "cheaper_than_the_step_by": 3.0950855192024846
+   }
   }
  }
 }

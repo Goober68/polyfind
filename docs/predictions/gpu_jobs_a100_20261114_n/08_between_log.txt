@@ -1,0 +1,13 @@
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe4-cfe1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+P-Q: settled:P (+0.0000) to settled:Q (+10.3329); start: straight between the two states
+      it    1: force  38.0458, top +22.0404, climbing -1, energies [0.0, 2.489, 8.201, 15.073, 20.498, 22.04, 18.795, 13.427, 10.333]  (1 s)
+      it   20: force   8.2023, top +14.0643, climbing -1, energies [0.0, 1.798, 5.664, 9.756, 12.877, 14.064, 13.075, 11.304, 10.333]  (21 s)
+      it   40: force   2.7466, top +11.1046, climbing -1, energies [0.0, 1.286, 4.728, 8.698, 10.603, 11.06, 11.105, 10.659, 10.333]  (44 s)
+      it   60: force   0.6893, top +10.5801, climbing 6, energies [0.0, 1.592, 5.698, 8.79, 9.985, 10.449, 10.58, 10.557, 10.333]  (65 s)
+      it   80: force   0.3030, top +10.6174, climbing 6, energies [0.0, 2.728, 7.212, 9.037, 10.192, 10.434, 10.617, 10.495, 10.333]  (86 s)
+      it  100: force   0.3702, top +10.6268, climbing 6, energies [0.0, 2.676, 7.291, 9.229, 10.282, 10.451, 10.627, 10.466, 10.333]  (106 s)
+P-Q: top +10.6266 at image 6; force 0.0773; 105 it, 110 s
+      P-Q polish, hyperplane 1: s +0.0000, energy -1543.74672, dE/ds +0.0066, across 2.8e-04, 29 evaluations; Optimization terminated successfully: th  (4 s)
+P-Q: settled saddle +10.6262 (the band's top +10.6266); along +0.0066, across 2.8e-04, curvature not measured (one hyperplane); 29 evaluations
+written /srv/bench/<token>/jobs/shared/states.json

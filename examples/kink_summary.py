@@ -330,6 +330,18 @@ def main():
                     curv = "-" if pol is None or pol.get("curvature_along") is None else f"{pol['curvature_along']:+.2f}"
                     md.append(f"| {short(key)} | {name} | {b['from']}, {b['to']} | {b['saddle']:+.3f} ({b['force_max']:.2f}, {b['iterations']}{'' if b['converged'] else ', not converged'}) | {settled} | {curv} |")
 
+    # --- the cheaper of the two moves: the step to B, or straight to N ---------------------------------
+    to_n = [e for e in mig.get("rows", {}).values() if "to_N" in e]
+    if to_n:
+        md += ["", "**One chain's kink pair: the one-monomer step, or two monomers on with the other hand** (N; from the sheet straight to it, the band in the per-chain metric "
+               "and its saddle settled; kcal/mol against the sheet, neighbours flexible, cell fixed; rates at 300 K with a 3e12 /s attempt frequency)", "",
+               "| sequence, cell | B | barrier to B / back | N | barrier to N / back | the cheaper move | its rate |", "|---|---|---|---|---|---|---|"]
+        for e in sorted(to_n, key=lambda e: e["row"]):
+            n, step = e["to_N"], e["barrier_forward_polished"]
+            low = min(step, n["barrier_forward"])
+            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {e['B']['energy']:+.2f} | {step:.2f} / {e['barrier_back_polished']:.2f} | {n['N']:+.2f} | "
+                      f"{n['barrier_forward']:.2f} / {n['barrier_back']:.2f} | {'to N' if n['barrier_forward'] < step else 'the step to B'}, {low:.2f} | {3e12 * np.exp(-low / KT):.2g} /s |")
+
     # --- two chains ahead together --------------------------------------------------------------------
     together = [e for e in mig.get("rows", {}).values() if e.get("row") == "vdf10" and "," in str(e.get("mover")) and e.get("host") == "flexible" and "B" in e
                 and e.get("direction") == "ahead" and tuple(e["supercell"]) in single and "flexible" in single[tuple(e["supercell"])]]

@@ -1,0 +1,12 @@
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe4-cfe1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+I-P: I.state (+9.0535) to settled:P (+0.0000); start: straight between the two states
+      it    1: force  45.9469, top +17.9560, climbing -1, energies [9.053, 11.135, 16.554, 17.956, 13.879, 9.532, 5.32, 1.683, 0.0]  (1 s)
+      it   20: force   6.4959, top  +9.9952, climbing -1, energies [9.053, 9.409, 9.995, 9.931, 8.993, 6.923, 3.919, 1.339, 0.0]  (21 s)
+      it   40: force   2.6835, top  +9.1541, climbing -1, energies [9.053, 9.154, 9.141, 8.764, 7.796, 5.845, 3.189, 1.0, 0.0]  (41 s)
+      it   60: force   0.4381, top  +9.1068, climbing 1, energies [9.053, 9.107, 9.037, 8.607, 7.603, 5.622, 3.041, 0.856, 0.0]  (61 s)
+      it   80: force   0.2206, top  +9.1080, climbing 1, energies [9.053, 9.108, 9.023, 8.598, 7.618, 5.659, 3.03, 0.791, 0.0]  (81 s)
+I-P: top +9.1094 at image 1; force 0.0970; 94 it, 95 s
+      I-P polish, hyperplane 1: s +0.0000, energy -1545.26370, dE/ds +0.0066, across 2.2e-04, 24 evaluations; Optimization terminated successfully: th  (3 s)
+I-P: settled saddle +9.1092 (the band's top +9.1094); along +0.0066, across 2.2e-04, curvature not measured (one hyperplane); 24 evaluations
+written /srv/bench/<token>/jobs/shared/states.json

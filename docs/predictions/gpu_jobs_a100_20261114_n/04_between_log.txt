@@ -1,0 +1,24 @@
+/srv/bench/<token>/jobs/shared/steps.json: 6 kinked crystals, 3 rows; copied from the stored table: ['vdf10@0 4x2 mover 0 ahead host flexible']
+I-N: I.state (+9.9626) to settled:N (+7.7221); start: the stored band, continued
+      it    1: force   5.0221, top +13.3110, climbing -1, energies [9.963, 10.504, 11.776, 12.966, 13.311, 12.526, 9.922, 8.48, 7.722]  (1 s)
+      it   20: force   4.0240, top +13.0647, climbing -1, energies [9.963, 10.488, 11.756, 12.951, 13.065, 12.271, 9.604, 8.413, 7.722]  (14 s)
+      it   40: force   2.1020, top +12.9087, climbing -1, energies [9.963, 11.12, 12.909, 12.251, 11.929, 10.862, 8.942, 8.195, 7.722]  (29 s)
+      it   60: force   0.9902, top +12.5632, climbing -1, energies [9.963, 11.543, 12.563, 11.305, 11.718, 10.773, 8.836, 8.149, 7.722]  (43 s)
+      it   80: force   2.8127, top +12.0310, climbing 2, energies [9.963, 10.979, 12.031, 11.66, 10.815, 11.674, 9.825, 8.204, 7.722]  (58 s)
+      it  100: force   3.0511, top +11.6561, climbing 2, energies [9.963, 11.656, 10.251, 11.223, 10.533, 11.074, 11.013, 8.28, 7.722]  (73 s)
+      it  120: force   2.3043, top +11.6646, climbing 2, energies [9.963, 11.665, 10.567, 11.206, 10.944, 11.122, 11.467, 8.295, 7.722]  (87 s)
+      it  140: force   2.7311, top +11.4097, climbing 2, energies [9.963, 11.41, 10.86, 10.133, 10.935, 10.705, 11.03, 8.636, 7.722]  (102 s)
+      it  160: force   2.0316, top +11.3747, climbing 2, energies [9.963, 11.042, 11.375, 10.234, 11.282, 10.484, 10.688, 8.439, 7.722]  (116 s)
+      it  180: force   2.0503, top +11.5823, climbing 2, energies [9.963, 10.845, 11.582, 10.389, 9.934, 10.762, 10.434, 8.896, 7.722]  (131 s)
+      it  200: force   2.3143, top +11.6535, climbing 2, energies [9.963, 10.717, 11.654, 10.459, 10.087, 11.253, 10.327, 10.13, 7.722]  (145 s)
+      it  220: force   1.6915, top +11.6253, climbing 2, energies [9.963, 10.628, 11.625, 10.483, 10.675, 9.636, 10.98, 11.375, 7.722]  (159 s)
+      it  240: force   2.6469, top +12.4012, climbing 2, energies [9.963, 10.623, 11.618, 10.586, 10.081, 8.616, 12.364, 12.401, 7.722]  (173 s)
+      it  260: force   3.7565, top +12.8343, climbing 2, energies [9.963, 10.764, 11.669, 9.74, 9.015, 7.34, 12.834, 12.736, 7.722]  (188 s)
+      it  280: force   1.6929, top +11.6314, climbing 2, energies [9.963, 10.754, 11.631, 10.165, 8.089, 7.625, 11.253, 9.571, 7.722]  (202 s)
+      it  300: force   4.8224, top +11.6371, climbing 2, energies [9.963, 10.649, 11.637, 10.631, 9.018, 9.977, 10.69, 10.346, 7.722]  (217 s)
+I-N: top +11.6371 at image 2 (NOT converged); force 4.8224; 600 it, 217 s; interior minima at [4]
+      I-N polish, hyperplane 1: s +0.0000, energy -1413.45545, dE/ds +0.0887, across 2.7e-04, 48 evaluations; Optimization terminated successfully: th  (4 s)
+      I-N polish, hyperplane 2: s +0.0500, energy -1413.45151, dE/ds +0.0688, across 2.9e-04, 40 evaluations; Optimization terminated successfully: th  (8 s)
+      I-N polish, hyperplane 3: s +0.2228, energy -1413.44568, dE/ds -0.0017, across 2.9e-04, 54 evaluations; Optimization terminated successfully: th  (13 s)
+I-N: settled saddle +11.6366 (the band's top +11.6371); along -0.0017, across 2.9e-04, curvature -0.408; 142 evaluations
+written /srv/bench/<token>/jobs/shared/states.json

@@ -1090,17 +1090,49 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     15.000. So a converged band's top is not yet a saddle on the lowest way, and a settled
     saddle is only as low as the route it was looked for on; these are upper bounds in that
     sense, as every band's result is.
-  - *There is a lower state than either, and for the terpolymer it may be the cheaper way out.*
-    Where the sixteen-chain search ended is a minimum too, **N**: a kink pair of the other hand
-    two monomers on (gauche bonds 4 and 6, G- T G+, where the sheet's are 0 and 2, G+ T G-), at
-    +8.82 (64/29/7), +8.94 (71/29) and +7.72 (PVDF) in sixteen chains. For the two copolymers it
-    is the lowest state found for one chain off the sheet, below the wide kink. The bands from I
-    to N did not converge in the time the card was up, so their tops are bounds and not saddles:
-    12.5 after 600 iterations for the terpolymer, 14.8 and 13.3 after 300 for the matrix and for
-    PVDF. For PVDF that is no competitor of the step (11.6). For the terpolymer it is 2 below the
-    step's 14.5: one terpolymer chain may leave the sheet more cheaply by re-forming its kink
-    pair two monomers on with the other hand than by the one-monomer step this section set out
-    to compute. Not settled; it is the next thing to settle.
+  - *There is a lower state than either, and for both copolymers the way to it is the cheaper
+    move (2026-11-14, PI: "Go"; settled).* Where the sixteen-chain search ended is a minimum
+    too, **N**: a kink pair of the other hand two monomers on (gauche bonds 4 and 6, G- T G+,
+    where the sheet's are 0 and 2, G+ T G-), at +8.82 (64/29/7), +8.94 (71/29) and +7.72 (PVDF)
+    in sixteen chains. For the two copolymers it is the lowest state found for one chain off the
+    sheet, below the wide kink. The way to it does not go through the wide kink: an image of the
+    band from I to N relaxes to the sheet itself, and from the sheet a band reaches N directly.
+    Bands in the per-chain metric (below), saddles settled from their tops:
+
+    | lattice, sixteen chains | the step: B, barrier ahead / back | to N: N, barrier ahead / back | the cheaper move | its rate at 300 K |
+    |---|---|---|---|---|
+    | PVDF | +5.91, 11.64 / 5.73 | +7.72, 12.39 / 4.66 | the step, 11.64 | 1.0e4 /s |
+    | 64/29/7 | +11.79, 14.49 / 2.70 | +8.82, 11.40 / 2.58 | to N, 11.40 | 1.5e4 /s |
+    | 71/29 | +10.70, 15.00 / 4.30 | +8.94, 11.89 / 2.95 | to N, 11.89 | 6.5e3 /s |
+
+    The terpolymer's 11.40 is the same saddle by two routes: the direct band from the sheet to
+    N (top 11.402, settled 11.3960) and the band in pieces through an N-like state Q at +10.33
+    (saddles 10.63 and 11.3960). The matrix's direct band had not converged along its plateau
+    when its top settled (11.893, in one hyperplane); its way through the wide kink is 13.79.
+    PVDF's band from I to N runs through B over the step's own saddle (11.637): there N lies
+    beyond the completed step, and the direct way to it from the sheet costs 12.39, more than
+    the step. So in PVDF a chain moves its kink pair one monomer at a time; in the two copolymer
+    lattices, where one monomer on means onto a TrFE unit at +10.7 to +11.8, it moves it two
+    monomers on and turns it over, for 3.1 kcal/mol less than the step in both. **On the cheaper
+    move the three lattices are within 0.5 kcal/mol of one another (11.4, 11.6, 11.9), and the
+    terpolymer is the fastest.** The frequency map on it
+    (`candidate_frequency_map_belt4_steps_4x2_cheapest.md`) keeps the matrix where every
+    protocol has put it, at 0.44 of the terpolymer's rate (158 kHz; 147 on the two-chain steps,
+    155 on the sixteen-chain ones), and brings PVDF from 44 MHz down to 243 kHz. What N does
+    next (its own next move, whether a neighbour follows it, and where the kink pair is after
+    two such moves) is not computed.
+  - *A band in the chains' own metric (2026-11-14).* The bands above crept: 900 to 1100
+    iterations to find a dip, or convergence on a top that would not settle. The minimisations
+    had been cured of the same disease by working in variables in which each chain's stiff
+    single-torsion directions and its soft concerted ones have curvatures of order one
+    (`chain_metric`); the band now does the same (`polyfind.mixedcell.neb`, `metric`;
+    `kink_migration.py --band-metric`). PVDF's four-chain bands from nothing: 108 and 116
+    iterations to the usual force, with tops of 10.268 and 12.477 where the settled saddles are
+    10.2684 and 12.4644; in per-variable units 171 iterations to a top of 10.345, and over 1000
+    without converging to one of 12.49. In sixteen chains the terpolymer's direct band from I to
+    B converged in 106 iterations (242 before) and its top now settles (15.293) where the
+    per-variable band's (15.41) would not. It is still the higher of the two ways from I to B
+    (14.49 through M): the metric cures the creep, it does not choose the route.
 * **Moving every chain together is not the way round that cost.** In PVDF the concerted step of
   both chains of the cell has a first saddle of 7.4 kcal/mol per chain (14.8 for the cell; the band,
   stopped at a force of 1.0, had 8.2), and a second that the band puts at 7.9 and that did not

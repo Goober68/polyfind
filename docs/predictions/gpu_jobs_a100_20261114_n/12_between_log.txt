@@ -1,0 +1,25 @@
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf10-trfe4-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+P-N: settled:P (+11.1671) to settled:N (+8.9443); start: straight between the two states
+      it    1: force 135.4816, top +34.6686, climbing -1, energies [11.167, 12.29, 16.466, 24.963, 34.669, 33.742, 20.989, 11.439, 8.944]  (1 s)
+      it   20: force   7.2870, top +14.7507, climbing -1, energies [11.167, 11.58, 12.794, 14.458, 14.751, 12.96, 11.177, 9.652, 8.944]  (21 s)
+      it   40: force   2.5642, top +13.3013, climbing -1, energies [11.167, 11.466, 12.318, 13.301, 12.758, 10.946, 9.936, 9.226, 8.944]  (42 s)
+      it   60: force   1.7527, top +12.6352, climbing -1, energies [11.167, 11.45, 12.236, 12.635, 11.265, 10.054, 9.575, 9.11, 8.944]  (63 s)
+      it   80: force   1.2512, top +12.4156, climbing 3, energies [11.167, 11.349, 11.857, 12.416, 11.287, 10.041, 9.546, 9.105, 8.944]  (84 s)
+      it  100: force   0.5845, top +12.3933, climbing 3, energies [11.167, 11.324, 11.812, 12.393, 11.37, 10.092, 9.582, 9.12, 8.944]  (103 s)
+      it  120: force   0.6193, top +12.3615, climbing 3, energies [11.167, 11.34, 11.9, 12.361, 11.136, 10.067, 9.587, 9.126, 8.944]  (123 s)
+      it  140: force   0.1922, top +12.3608, climbing 3, energies [11.167, 11.334, 11.883, 12.361, 11.163, 10.066, 9.583, 9.123, 8.944]  (142 s)
+      it  160: force   0.1241, top +12.3517, climbing 3, energies [11.167, 11.316, 11.826, 12.352, 11.24, 10.085, 9.59, 9.126, 8.944]  (160 s)
+P-N: top +12.3513 at image 3; force 0.0930; 172 it, 172 s
+      P-N polish, hyperplane 1: s +0.0000, energy -1600.58485, dE/ds +0.4111, across 2.0e-04, 90 evaluations; Optimization terminated successfully: th  (12 s)
+      P-N polish, hyperplane 2: s +0.0500, energy -1600.56541, dE/ds +0.3638, across 2.6e-04, 55 evaluations; Optimization terminated successfully: th  (19 s)
+      P-N polish, hyperplane 3: s +0.3500, energy -1600.81767, dE/ds -1.0945, across 3.0e-04, 87 evaluations; Optimization terminated successfully: th  (30 s)
+      P-N polish, hyperplane 4: s +0.1248, energy -1600.61120, dE/ds -0.6939, across 2.1e-04, 64 evaluations; Optimization terminated successfully: th  (39 s)
+      P-N polish, hyperplane 5: s -0.1752, energy -1600.66621, dE/ds +0.5044, across 2.8e-04, 83 evaluations; Optimization terminated successfully: th  (50 s)
+      P-N polish, hyperplane 6: s -0.0489, energy -1600.60584, dE/ds +0.4459, across 3.0e-04, 57 evaluations; Optimization terminated successfully: th  (57 s)
+      P-N polish, hyperplane 7: s +0.2511, energy -1600.71630, dE/ds -0.9505, across 2.4e-04, 92 evaluations; Optimization terminated successfully: th  (69 s)
+      P-N polish, hyperplane 8: s +0.0469, energy -1600.56696, dE/ds -0.4065, across 2.2e-04, 75 evaluations; Optimization terminated successfully: th  (79 s)
+      P-N polish, hyperplane 9: s -0.1057, energy -1600.63207, dE/ds +0.4767, across 3.0e-04, 84 evaluations; Optimization terminated successfully: th  (90 s)
+      P-N polish, hyperplane 10: s -0.0233, energy -1600.59464, dE/ds +0.4288, across 2.9e-04, 55 evaluations; Optimization terminated successfully: th  (97 s)
+P-N: settled saddle +12.3061 (the band's top +12.3513); along +0.4288, across 2.9e-04, curvature -0.582; 742 evaluations  (NOT a saddle between the two: not converged, below an end state, or a minimum along the path)
+written /srv/bench/<token>/jobs/shared/states.json

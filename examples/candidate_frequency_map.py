@@ -38,6 +38,7 @@ def main():
     ap.add_argument("--margins", default="docs/predictions/polished_margins_belt4.json", help="polished margins; a row found there takes its margin and switch strain from it")
     ap.add_argument("--step-cell", default="1x1", help="which supercell's band to read with --steps")
     ap.add_argument("--step-mover", default="all", help="which mover's band to read with --steps: 'all' (the sheet in register) or a chain index")
+    ap.add_argument("--cheapest", action="store_true", help="with --steps: where a row holds the way from the sheet to N (to_N), take the lower of that barrier and the step's")
     args = ap.parse_args()
     screen = {}
     for path in args.screen.split(","):
@@ -93,7 +94,11 @@ def main():
             vals = sorted(v["relative"] for v in scan.values() if v.get("converged", True) and v["relative"] < 4.0)
             climb = (max(vals) - min(vals)) if len(vals) > 2 else 0.0
             barrier = e.get("barrier_forward_polished", e["barrier_forward"])  # the settled saddles where both were polished (kink_migration.py --polish), else the bands' tops
-            stepped[name] = dict(rows[name], E_form_sheet=rows[name]["E_form"], E_step=barrier, climb=climb, E_form=barrier, step_saddles="polished" if "barrier_forward_polished" in e else "band tops")
+            move = "the step to B"
+            if args.cheapest and "to_N" in e and e["to_N"]["barrier_forward"] < barrier:
+                barrier, move = e["to_N"]["barrier_forward"], "to N"
+            stepped[name] = dict(rows[name], E_form_sheet=rows[name]["E_form"], E_step=barrier, climb=climb, E_form=barrier, step_saddles="polished" if "barrier_forward_polished" in e else "band tops",
+                                 **({"move": move} if args.cheapest else {}))
         rows = stepped
     if args.ref not in rows:
         raise SystemExit(f"the anchor row {args.ref!r} is not among the rows with a kink energy: {sorted(rows)}")

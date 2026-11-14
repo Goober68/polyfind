@@ -1,0 +1,13 @@
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe4-cfe1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+I-B: I.state (+9.0535) to B.state (+11.7947); start: straight between the two states
+      it    1: force 180.6645, top +47.2548, climbing -1, energies [9.053, 12.412, 24.83, 42.685, 47.255, 36.076, 23.598, 15.327, 11.795]  (1 s)
+      it   20: force   9.6899, top +19.4447, climbing -1, energies [9.053, 10.198, 13.554, 17.521, 19.445, 18.481, 15.826, 12.984, 11.795]  (21 s)
+      it   40: force   3.0029, top +16.3106, climbing -1, energies [9.053, 9.689, 11.88, 14.781, 16.311, 15.99, 14.22, 12.444, 11.795]  (42 s)
+      it   60: force   0.9697, top +15.3535, climbing -1, energies [9.053, 9.515, 11.457, 14.075, 15.353, 15.301, 13.757, 12.372, 11.795]  (63 s)
+      it   80: force   0.4569, top +15.3672, climbing 4, energies [9.053, 9.646, 12.365, 14.318, 15.367, 14.712, 13.464, 12.286, 11.795]  (83 s)
+      it  100: force   0.2055, top +15.3161, climbing 4, energies [9.053, 9.681, 12.559, 14.412, 15.316, 14.615, 13.299, 12.221, 11.795]  (103 s)
+I-B: top +15.3069 at image 4; force 0.0839; 106 it, 109 s
+      I-B polish, hyperplane 1: s +0.0000, energy -1539.08005, dE/ds -0.0094, across 2.9e-04, 51 evaluations; Optimization terminated successfully: th  (6 s)
+I-B: settled saddle +15.2929 (the band's top +15.3069); along -0.0094, across 2.9e-04, curvature None; 51 evaluations  (NOT a saddle between the two: not converged, below an end state, or no negative curvature)
+written /srv/bench/<token>/jobs/shared/states.json
