@@ -338,6 +338,43 @@ stiffness flag of the previous section is read against the QE cell from here on.
   dilute limit at its own repeat (2.86 against 3.15), so this tests the mechanism and its size,
   not the limit. `examples/crosscheck_e5.py` recognises the record (24 atoms, one chain of four at
   c/2, another lateral cell, the same repeat) and prints the comparison.
+- **E7, the cells of the unit screen (registered 2026-11-14 and dispatched by the PI the same day:
+  "Go on both"; no DFT number exists).** The unit screen (`docs/CANDIDATE_MATERIALS.md` 5.6) ranks
+  cells on strain, tan delta and relaxation frequency together, and its leaders rest on three
+  things no anchor has tested: the junctions a reversed VDF unit makes (CF2-CF2, CH2-CH2), the
+  nitrile's parameters, and the chlorine's. Dipole is asked for the margin all-trans minus helix
+  of the cells below, cheapest first, as single points on polyfind's polished structures or as
+  relaxations from them. On `pvdf-dft-valence-belt4`, kcal/mol per monomer
+  (`docs/predictions/e7_polyfind_belt4.json`, written by `examples/e2_polished_predictions.py --set
+  e7` in the E2 schema, with the hash of every exported file):
+
+  | part | cell | atoms | helix | margin, rigid pendants | margin, pendants tilted | axial switch strain |
+  |---|---|---|---|---|---|---|
+  | a | PVDF with one reversed VDF unit in six, `VVVVIV` | 72 | TGTG' | -0.113 | **+0.064** | +10.7% |
+  | b | VDF/TrFE/AN 70/20/10, `VVRVVAVVRV` | 122 | TG'TG | +0.391 | **+0.565** | +11.9% |
+  | b' | its matrix, VDF/TrFE 80/20, `VVRVVVVRVV` | 120 | G'TGT | +0.018 | **+0.229** | +11.3% |
+  | c | 64/29/7 with AN in place of CFE, `VVRVVRVAVVRVVR` | 170 | TG'TG | +0.033 | **+0.197** | +12.5% |
+  | d | one CTFE and one reversed VDF per fourteen, `IVRVVRVKVVRVVR` | 168 | TGTG' | -0.079 | **+0.076** | +10.7% |
+  | e | PVDF with two reversed units per fourteen, `VVVVIVVVVVVIVV` | 168 | TGTG' | -0.020 | **+0.162** | +10.8% |
+
+  (I is the reversed unit, CF2-CH2 where VDF is CH2-CF2; A is CH2-CH(CN); K is CF2-CFCl.) Each cell
+  is exported twice, as for the E2 addendum: `docs/predictions/polished_<row>_<cell>.xyz` with the
+  chain builder's rigid pendant groups, whose margin is the rigid-pendant column, and
+  `_tilted.xyz` with every CH2, CF2 and CHF group tilt-relaxed, whose margin is the tilted column.
+  A DFT single point on a file is compared with that file's margin; a relaxation from either with
+  the tilted one. What each part tests: (a) and (e), whether reversed units pull the margin down
+  as the model says, 4.1 kcal/mol per reversed unit from PVDF's +0.744 (in a cell of VDF's own
+  groups, which is why it is first); (b) against (b'), the nitrile's pin, +3.4 per unit beside 20
+  mol% TrFE; (c), the nitrile cell the screen ranks, +2.0 per unit against the 71/29 matrix's
+  +0.056; (d), the cell that leads the screen. Acceptance is E2's: margins within 0.1 kcal/mol per
+  monomer, the helix lower or higher as registered, the conformational strain within 10%; for (a)
+  and (e) also the sign and, within a factor 1.5, the size of the shift from PVDF's own margin.
+  Only two of the four helix conformers were polished for the fourteen-monomer cells, so their
+  registered helix is the lower of two. No polarization is registered. The request is
+  `sarco/materials/ask-polyfind-dipole-unit-screen-cells-v1.md`, the files are in
+  `sarco/materials/electrostriction/requests/unit_screen_cells_e7_v1/`;
+  `examples/crosscheck_e1_e2.py --e2 docs/predictions/e7_polyfind_belt4.json --e2-dipole <file>`
+  reads the answers (`--e2-rigid-pendants` for single points on the rigid-pendant files).
 
 
 ## E1 predictions

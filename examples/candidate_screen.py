@@ -163,6 +163,8 @@ SEQUENCES = {
     "vdf8-trfe4-an1-e1-14": ("EVRVVRVAVVRVVR", "one AN and one ethylene per fourteen, seven apart"),
     "vdf8-trfe4-ctfe1-rvdf1-14": ("IVRVVRVKVVRVVR", "one CTFE and one reversed VDF per fourteen, seven apart"),
     # and a matrix without TrFE: PVDF with two reversed units per fourteen (14% head-to-head defects)
+    # the same question in the smallest cell that holds both conformations, for a DFT check (seventy-two atoms in two chains)
+    "vdf5-rvdf1-6": ("VVVVIV", "PVDF with one reversed VDF unit in six (17% head-to-head defects): the regio-defect matrix in a cell small enough for DFT"),
     "vdf12-rvdf2-14": ("VVVVIVVVVVVIVV", "PVDF with one reversed VDF unit in seven: is the degeneracy TrFE buys available from regio-defects (each reversed unit turns its own dipole over)"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
