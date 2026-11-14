@@ -234,10 +234,15 @@ def polish(args) -> None:
 
 def held_state(row: dict, key: str, where: str, settled_file=None) -> np.ndarray:
     """A state held in a row by a dotted path ("I.state", "I-B.polished.state", "I-B.images.5"),
-    or, as "settled:NAME", a record that :func:`settle` left in ``settled_file``."""
+    or, as "settled:NAME" or "band:NAME.path", a record that :func:`settle` or :func:`between`
+    left in ``settled_file``."""
     if where.startswith("settled:"):
         return np.asarray(load_rows(settled_file)["settled"][key][where.split(":", 1)[1]]["state"], dtype=float)
-    x = row
+    if where.startswith("band:"):  # "band:I-N.polished.state", "band:I-N.images.4": a band :func:`between` left there
+        x = load_rows(settled_file)["bands"][key]
+        where = where.split(":", 1)[1]
+    else:
+        x = row
     for part in where.split("."):
         x = x[int(part)] if isinstance(x, list) else x[part]
     return np.asarray(x, dtype=float)

@@ -1,0 +1,204 @@
+/srv/bench/<token>/jobs/shared/steps.json: 6 kinked crystals, 3 rows
+== vdf10-trfe4-14@0 4x2 mover 0 ahead host flexible: end states and bands, each band started from that of the 2x1 cell
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf10-trfe4-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+vdf10-trfe4-14@0 4x2 mover 0 ahead host flexible: 16 chains of 14 monomers, 2368 sites; kink pair in the search's cells +5.684 kcal/mol (kinked cell's closure residual 0.317 deg), polished +7.087
+   kinked crystal: +7.087 kcal/mol per kink pair against all-trans; cell [20.598, 17.097, 92.162, 35.529] (all-trans [19.522, 16.918, 91.781, 36.187]); 0 it, 0 s; the polished two-chain cell, tiled
+      chain 0: G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (7 s)
+      I descent     1:  +332.0439, lowest so far  +332.0439  (1 evaluations, 0 s)
+      I descent    10:   +49.2615, lowest so far   +49.2615  (10 evaluations, 1 s)
+      I descent    20:   +35.9736, lowest so far   +35.9736  (20 evaluations, 3 s)
+      I descent    30:   +23.1084, lowest so far   +23.1084  (30 evaluations, 4 s)
+      I descent    40:   +20.0747, lowest so far   +20.0747  (40 evaluations, 5 s)
+      I descent    50:   +15.2436, lowest so far   +15.2074  (50 evaluations, 7 s)
+      I surface     1:   +15.0789, lowest so far   +15.0789  (54 evaluations, 7 s)
+      I surface    10:   +10.1892, lowest so far   +10.1892  (63 evaluations, 8 s)
+      I surface    20:    +9.3929, lowest so far    +9.3929  (73 evaluations, 10 s)
+      I surface    30:    +9.3575, lowest so far    +9.3575  (83 evaluations, 11 s)
+      I surface    40:    +9.3554, lowest so far    +9.3554  (93 evaluations, 13 s)
+      I surface    50:    +9.3550, lowest so far    +9.3550  (103 evaluations, 14 s)
+      I surface    60:    +9.3550, lowest so far    +9.3550  (113 evaluations, 15 s)
+      I surface    70:    +9.3550, lowest so far    +9.3550  (123 evaluations, 16 s)
+   I: +9.355 kcal/mol above the kinked crystal (start +332.044); G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T; 69 it, 123 evaluations, 16 s; gradient 2.8e-04; 0 angles at the window; Optimization terminated successfully: the gradient along the surface is under gtol
+      B descent     1:  +369.3879, lowest so far  +369.3879  (1 evaluations, 0 s)
+      B descent    10:   +38.3082, lowest so far   +38.3082  (10 evaluations, 1 s)
+      B descent    20:   +33.5541, lowest so far   +33.5541  (20 evaluations, 3 s)
+      B descent    30:   +27.6571, lowest so far   +27.6571  (30 evaluations, 4 s)
+      B descent    40:   +20.6309, lowest so far   +20.6309  (40 evaluations, 5 s)
+      B surface     1:   +20.0226, lowest so far   +20.0226  (50 evaluations, 7 s)
+      B surface    10:   +13.1076, lowest so far   +13.1076  (59 evaluations, 8 s)
+      B surface    20:   +11.0431, lowest so far   +11.0431  (69 evaluations, 9 s)
+      B surface    30:   +10.7184, lowest so far   +10.7184  (79 evaluations, 11 s)
+      B surface    40:   +10.7042, lowest so far   +10.7042  (89 evaluations, 12 s)
+      B surface    50:   +10.7031, lowest so far   +10.7031  (99 evaluations, 13 s)
+      B surface    60:   +10.7029, lowest so far   +10.7029  (109 evaluations, 15 s)
+      B surface    70:   +10.7028, lowest so far   +10.7028  (119 evaluations, 16 s)
+   B: +10.703 kcal/mol above the kinked crystal (start +369.388); T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T; 75 it, 127 evaluations, 17 s; gradient 3.0e-04; 0 angles at the window; Optimization terminated successfully: the gradient along the surface is under gtol
+   A-I: start: the straight band bent as the band of 'vdf10-trfe4-14@0 2x1 mover 0 ahead host flexible' is
+      A-I it    1: force  43.5575, top +16.9181, climbing -1, energies [0.0, 1.137, 4.541, 9.023, 14.289, 16.918, 13.196, 10.339, 9.355]  (2 s)
+      A-I it   10: force   7.3248, top +12.6505, climbing -1, energies [0.0, 0.997, 3.974, 7.729, 11.057, 12.65, 11.495, 10.057, 9.355]  (10 s)
+      A-I it   20: force   3.3391, top +11.2003, climbing -1, energies [0.0, 0.91, 3.681, 7.207, 10.084, 11.2, 10.669, 9.822, 9.355]  (19 s)
+      A-I it   30: force   2.3775, top +10.1116, climbing -1, energies [0.0, 0.858, 3.483, 6.843, 9.369, 10.112, 10.04, 9.633, 9.355]  (29 s)
+      A-I it   40: force   0.9767, top  +9.9963, climbing -1, energies [0.0, 0.847, 3.448, 6.781, 9.247, 9.996, 9.964, 9.609, 9.355]  (38 s)
+      A-I it   50: force   0.6517, top  +9.8076, climbing 5, energies [0.0, 0.824, 3.368, 6.638, 9.027, 9.783, 9.808, 9.549, 9.355]  (47 s)
+      A-I it   60: force   0.3535, top  +9.7945, climbing 5, energies [0.0, 0.821, 3.359, 6.625, 9.008, 9.766, 9.795, 9.544, 9.355]  (56 s)
+      A-I it   70: force   0.8130, top  +9.7328, climbing 5, energies [0.0, 0.808, 3.316, 6.552, 8.924, 9.692, 9.733, 9.52, 9.355]  (65 s)
+      A-I it   80: force   0.3114, top  +9.6897, climbing 5, energies [0.0, 0.798, 3.281, 6.496, 8.856, 9.642, 9.69, 9.503, 9.355]  (74 s)
+      A-I it   90: force   0.2683, top  +9.6870, climbing 5, energies [0.0, 0.797, 3.279, 6.492, 8.852, 9.639, 9.687, 9.502, 9.355]  (83 s)
+      A-I it  100: force   0.2455, top  +9.6667, climbing 5, energies [0.0, 0.791, 3.26, 6.464, 8.825, 9.616, 9.667, 9.494, 9.355]  (92 s)
+      A-I it  110: force   0.7491, top  +9.6252, climbing 5, energies [0.0, 0.778, 3.219, 6.403, 8.772, 9.571, 9.625, 9.477, 9.355]  (101 s)
+      A-I it  120: force   0.2366, top  +9.6243, climbing 5, energies [0.0, 0.777, 3.218, 6.402, 8.767, 9.57, 9.624, 9.476, 9.355]  (110 s)
+      A-I it  130: force   0.1899, top  +9.6186, climbing 5, energies [0.0, 0.775, 3.212, 6.394, 8.76, 9.564, 9.619, 9.474, 9.355]  (119 s)
+      A-I it  140: force   0.1549, top  +9.5917, climbing 5, energies [0.0, 0.765, 3.183, 6.359, 8.731, 9.536, 9.592, 9.463, 9.355]  (128 s)
+      A-I it  150: force   0.1523, top  +9.5899, climbing 5, energies [0.0, 0.764, 3.181, 6.357, 8.729, 9.534, 9.59, 9.462, 9.355]  (137 s)
+      A-I it  160: force   0.6140, top  +9.5751, climbing 5, energies [0.0, 0.757, 3.166, 6.343, 8.721, 9.521, 9.575, 9.455, 9.355]  (146 s)
+      A-I it  170: force   0.1234, top  +9.5707, climbing 5, energies [0.0, 0.756, 3.163, 6.34, 8.716, 9.516, 9.571, 9.453, 9.355]  (155 s)
+      A-I it  180: force   0.2638, top  +9.5638, climbing 5, energies [0.0, 0.753, 3.158, 6.339, 8.715, 9.51, 9.564, 9.45, 9.355]  (165 s)
+      A-I it  190: force   0.1125, top  +9.5599, climbing 5, energies [0.0, 0.751, 3.156, 6.339, 8.715, 9.507, 9.56, 9.448, 9.355]  (174 s)
+      A-I it  200: force   0.1078, top  +9.5559, climbing 5, energies [0.0, 0.75, 3.154, 6.341, 8.716, 9.504, 9.556, 9.446, 9.355]  (183 s)
+      A-I it  210: force   0.1212, top  +9.5504, climbing 5, energies [0.0, 0.748, 3.154, 6.347, 8.719, 9.5, 9.55, 9.443, 9.355]  (192 s)
+   A-I: saddle +9.550 at image 6; force 0.0999; 215 it, 196 s
+   I-B: start: the straight band bent as the band of 'vdf10-trfe4-14@0 2x1 mover 0 ahead host flexible' is
+      I-B it    1: force 123.0547, top +40.7458, climbing -1, energies [9.355, 10.838, 16.371, 25.653, 40.746, 32.897, 21.893, 17.884, 10.703]  (2 s)
+      I-B it   10: force  18.9289, top +21.0292, climbing -1, energies [9.355, 10.487, 13.781, 17.002, 19.951, 21.029, 17.657, 15.466, 10.703]  (10 s)
+      I-B it   20: force   6.8397, top +20.1153, climbing -1, energies [9.355, 10.446, 13.55, 16.647, 18.555, 20.115, 17.233, 15.22, 10.703]  (19 s)
+      I-B it   30: force   2.5186, top +18.2147, climbing -1, energies [9.355, 10.291, 12.961, 15.776, 17.377, 18.215, 15.795, 14.305, 10.703]  (29 s)
+      I-B it   40: force   5.3015, top +16.6008, climbing -1, energies [9.355, 10.046, 12.276, 14.576, 15.988, 16.601, 14.538, 13.531, 10.703]  (38 s)
+      I-B it   50: force   0.8375, top +16.3401, climbing -1, energies [9.355, 9.999, 12.093, 14.351, 15.672, 16.34, 14.376, 13.426, 10.703]  (47 s)
+      I-B it   60: force   0.7475, top +16.2330, climbing 5, energies [9.355, 9.986, 12.05, 14.283, 15.592, 16.233, 14.306, 13.381, 10.703]  (56 s)
+      I-B it   70: force   0.9420, top +15.9568, climbing 5, energies [9.355, 9.919, 11.863, 13.982, 15.304, 15.957, 14.096, 13.252, 10.703]  (65 s)
+      I-B it   80: force   1.9837, top +15.8230, climbing 5, energies [9.355, 9.875, 11.744, 13.775, 15.131, 15.823, 13.993, 13.186, 10.703]  (74 s)
+      I-B it   90: force   1.0173, top +15.8128, climbing 5, energies [9.355, 9.872, 11.727, 13.764, 15.121, 15.813, 13.986, 13.182, 10.703]  (83 s)
+      I-B it  100: force   0.6948, top +15.7517, climbing 5, energies [9.355, 9.858, 11.679, 13.689, 15.05, 15.752, 13.943, 13.155, 10.703]  (93 s)
+      I-B it  110: force   0.3329, top +15.5881, climbing 5, energies [9.355, 9.809, 11.524, 13.43, 14.828, 15.588, 13.824, 13.081, 10.703]  (102 s)
+      I-B it  120: force   0.2929, top +15.5713, climbing 5, energies [9.355, 9.805, 11.51, 13.406, 14.806, 15.571, 13.812, 13.075, 10.703]  (111 s)
+      I-B it  130: force   7.0490, top +15.4584, climbing 5, energies [9.355, 9.778, 11.596, 13.257, 14.663, 15.458, 13.736, 13.031, 10.703]  (120 s)
+      I-B it  140: force   0.2440, top +15.4549, climbing 5, energies [9.355, 9.778, 11.414, 13.22, 14.638, 15.455, 13.735, 13.03, 10.703]  (129 s)
+      I-B it  150: force   0.2420, top +15.4462, climbing 5, energies [9.355, 9.776, 11.408, 13.206, 14.626, 15.446, 13.729, 13.027, 10.703]  (138 s)
+      I-B it  160: force   1.6262, top +15.3852, climbing 5, energies [9.355, 9.766, 11.377, 13.11, 14.536, 15.385, 13.692, 13.01, 10.703]  (147 s)
+      I-B it  170: force   0.2098, top +15.3687, climbing 5, energies [9.355, 9.763, 11.356, 13.082, 14.511, 15.369, 13.682, 13.006, 10.703]  (156 s)
+      I-B it  180: force   0.1937, top +15.3373, climbing 5, energies [9.355, 9.76, 11.339, 13.032, 14.463, 15.337, 13.664, 13.0, 10.703]  (165 s)
+      I-B it  190: force   0.2235, top +15.3079, climbing 5, energies [9.355, 9.757, 11.325, 12.986, 14.418, 15.308, 13.647, 12.995, 10.703]  (174 s)
+      I-B it  200: force   0.1753, top +15.2910, climbing 5, energies [9.355, 9.756, 11.318, 12.96, 14.392, 15.291, 13.638, 12.994, 10.703]  (183 s)
+      I-B it  210: force   0.4811, top +15.2664, climbing 5, energies [9.355, 9.756, 11.31, 12.922, 14.355, 15.266, 13.624, 12.993, 10.703]  (192 s)
+      I-B it  220: force   0.2037, top +15.2653, climbing 5, energies [9.355, 9.756, 11.309, 12.92, 14.353, 15.265, 13.624, 12.993, 10.703]  (201 s)
+      I-B it  230: force   0.1625, top +15.2561, climbing 5, energies [9.355, 9.756, 11.306, 12.906, 14.339, 15.256, 13.619, 12.994, 10.703]  (210 s)
+      I-B it  240: force   0.1485, top +15.2261, climbing 5, energies [9.355, 9.757, 11.299, 12.861, 14.292, 15.226, 13.603, 12.996, 10.703]  (219 s)
+      I-B it  250: force   0.1475, top +15.2218, climbing 5, energies [9.355, 9.757, 11.298, 12.855, 14.285, 15.222, 13.601, 12.997, 10.703]  (228 s)
+      I-B it  260: force   0.4843, top +15.1938, climbing 5, energies [9.355, 9.76, 11.296, 12.814, 14.242, 15.194, 13.587, 13.002, 10.703]  (237 s)
+      I-B it  270: force   0.1352, top +15.1915, climbing 5, energies [9.355, 9.761, 11.295, 12.811, 14.238, 15.191, 13.585, 13.003, 10.703]  (246 s)
+      I-B it  280: force   2.7661, top +15.1714, climbing 5, energies [9.355, 9.764, 11.324, 12.783, 14.207, 15.171, 13.575, 13.009, 10.703]  (255 s)
+      I-B it  290: force   0.1217, top +15.1707, climbing 5, energies [9.355, 9.764, 11.295, 12.782, 14.206, 15.171, 13.575, 13.009, 10.703]  (264 s)
+      I-B it  300: force   0.2061, top +15.1692, climbing 5, energies [9.355, 9.765, 11.296, 12.78, 14.203, 15.169, 13.574, 13.009, 10.703]  (272 s)
+   I-B: saddle +15.169 at image 5 (NOT converged); force 0.2061; 300 it, 273 s
+   one-monomer step: barrier +15.169 ahead, +4.466 back; B lies +10.703 above A (a band is NOT converged)
+written /srv/bench/<token>/jobs/shared/steps.json
+== round 1: a band has not converged
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf10-trfe4-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+vdf10-trfe4-14@0 4x2 mover 0 ahead host flexible: 16 chains of 14 monomers, 2368 sites; kink pair in the search's cells +5.684 kcal/mol (kinked cell's closure residual 0.317 deg), polished +7.087
+   kinked crystal: +7.087 kcal/mol per kink pair against all-trans (from the stored run: the polished two-chain cell, tiled)
+      chain 0: G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (7 s)
+   I: +9.355 kcal/mol above the kinked crystal (from the stored run); G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T
+   B: +10.703 kcal/mol above the kinked crystal (from the stored run); T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T
+   A-I: saddle +9.550 (from the stored run)
+   I-B: start: the stored band (saddle +15.1692 at force 0.206 after 300 iterations), continued
+      I-B it    1: force   0.6602, top +15.1688, climbing -1, energies [9.355, 9.765, 11.295, 12.78, 14.203, 15.169, 13.574, 13.009, 10.703]  (1 s)
+      I-B it   10: force   0.6160, top +15.1621, climbing -1, energies [9.355, 9.765, 11.296, 12.776, 14.199, 15.162, 13.573, 13.01, 10.703]  (9 s)
+      I-B it   20: force   0.5550, top +15.0908, climbing -1, energies [9.355, 9.77, 11.299, 12.751, 14.184, 15.091, 13.559, 13.018, 10.703]  (18 s)
+      I-B it   30: force   0.3178, top +15.0843, climbing -1, energies [9.355, 9.77, 11.299, 12.75, 14.186, 15.084, 13.557, 13.018, 10.703]  (27 s)
+      I-B it   40: force   3.1899, top +15.0230, climbing -1, energies [9.355, 9.774, 11.341, 12.735, 14.207, 15.023, 13.54, 13.022, 10.703]  (36 s)
+      I-B it   50: force   0.2507, top +15.0218, climbing 5, energies [9.355, 9.774, 11.303, 12.735, 14.208, 15.022, 13.539, 13.022, 10.703]  (45 s)
+      I-B it   60: force   0.2488, top +15.0222, climbing 5, energies [9.355, 9.775, 11.303, 12.734, 14.21, 15.022, 13.538, 13.022, 10.703]  (53 s)
+      I-B it   70: force   0.3300, top +15.0252, climbing 5, energies [9.355, 9.778, 11.308, 12.731, 14.225, 15.025, 13.528, 13.021, 10.703]  (63 s)
+      I-B it   80: force   0.2306, top +15.0281, climbing 5, energies [9.355, 9.781, 11.311, 12.728, 14.234, 15.028, 13.521, 13.02, 10.703]  (71 s)
+      I-B it   90: force   0.2209, top +15.0299, climbing 5, energies [9.355, 9.783, 11.315, 12.728, 14.233, 15.03, 13.517, 13.018, 10.703]  (81 s)
+      I-B it  100: force   0.2076, top +15.0325, climbing 5, energies [9.355, 9.786, 11.322, 12.728, 14.23, 15.033, 13.512, 13.015, 10.703]  (89 s)
+      I-B it  110: force   0.2069, top +15.0326, climbing 5, energies [9.355, 9.786, 11.322, 12.728, 14.23, 15.033, 13.512, 13.015, 10.703]  (98 s)
+      I-B it  120: force   0.2014, top +15.0335, climbing 5, energies [9.355, 9.787, 11.325, 12.727, 14.227, 15.034, 13.511, 13.014, 10.703]  (107 s)
+      I-B it  130: force   1.0216, top +15.0363, climbing 5, energies [9.355, 9.793, 11.341, 12.726, 14.214, 15.036, 13.506, 13.011, 10.703]  (116 s)
+      I-B it  140: force   0.1820, top +15.0364, climbing 5, energies [9.355, 9.793, 11.337, 12.726, 14.214, 15.036, 13.506, 13.011, 10.703]  (124 s)
+      I-B it  150: force   0.1791, top +15.0367, climbing 5, energies [9.355, 9.794, 11.339, 12.725, 14.212, 15.037, 13.506, 13.011, 10.703]  (133 s)
+      I-B it  160: force   1.8003, top +15.0385, climbing 5, energies [9.355, 9.801, 11.364, 12.722, 14.193, 15.038, 13.503, 13.011, 10.703]  (142 s)
+      I-B it  170: force   0.1581, top +15.0385, climbing 5, energies [9.355, 9.801, 11.353, 12.722, 14.193, 15.039, 13.503, 13.011, 10.703]  (150 s)
+      I-B it  180: force   0.1566, top +15.0386, climbing 5, energies [9.355, 9.801, 11.354, 12.722, 14.191, 15.039, 13.503, 13.011, 10.703]  (159 s)
+      I-B it  190: force   0.1623, top +15.0390, climbing 5, energies [9.355, 9.805, 11.361, 12.719, 14.18, 15.039, 13.502, 13.013, 10.703]  (168 s)
+      I-B it  200: force   0.1363, top +15.0392, climbing 5, energies [9.355, 9.809, 11.367, 12.716, 14.169, 15.039, 13.502, 13.016, 10.703]  (177 s)
+      I-B it  210: force   0.1301, top +15.0391, climbing 5, energies [9.355, 9.812, 11.371, 12.714, 14.162, 15.039, 13.502, 13.018, 10.703]  (186 s)
+      I-B it  220: force   0.2356, top +15.0388, climbing 5, energies [9.355, 9.817, 11.38, 12.709, 14.147, 15.039, 13.502, 13.023, 10.703]  (195 s)
+      I-B it  230: force   0.1728, top +15.0386, climbing 5, energies [9.355, 9.819, 11.382, 12.708, 14.142, 15.039, 13.502, 13.025, 10.703]  (204 s)
+      I-B it  240: force   0.1040, top +15.0378, climbing 5, energies [9.355, 9.823, 11.388, 12.703, 14.129, 15.038, 13.502, 13.031, 10.703]  (213 s)
+      I-B it  250: force   0.1015, top +15.0376, climbing 5, energies [9.355, 9.824, 11.39, 12.702, 14.125, 15.038, 13.502, 13.032, 10.703]  (222 s)
+   I-B: saddle +15.037 at image 5; force 0.1000; 252 it, 224 s
+   one-monomer step: barrier +15.037 ahead, +4.335 back; B lies +10.703 above A
+written /srv/bench/<token>/jobs/shared/steps.json
+== vdf10-trfe4-14@0 4x2 mover 0 ahead host flexible: the saddles, settled from the tops of the bands
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf10-trfe4-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+vdf10-trfe4-14@0 4x2 mover 0 ahead host flexible: 16 chains of 14 monomers, 2368 sites; kink pair in the search's cells +5.684 kcal/mol (kinked cell's closure residual 0.317 deg), polished +7.087
+   kinked crystal: +7.087 kcal/mol per kink pair against all-trans (from the stored run: the polished two-chain cell, tiled)
+      chain 0: G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (7 s)
+   I: +9.355 kcal/mol above the kinked crystal (from the stored run); G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T
+   B: +10.703 kcal/mol above the kinked crystal (from the stored run); T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T
+      A-I polish surface     1:    +9.5499, lowest so far    +9.5499  (1 evaluations, 0 s)
+      A-I polish surface    10:    +9.5242, lowest so far    +9.5242  (10 evaluations, 1 s)
+      A-I polish surface    20:    +9.5240, lowest so far    +9.5240  (20 evaluations, 3 s)
+      A-I polish surface    30:    +9.5240, lowest so far    +9.5240  (30 evaluations, 4 s)
+      A-I polish surface    40:    +9.5240, lowest so far    +9.5240  (40 evaluations, 5 s)
+      A-I polish, hyperplane 1: s +0.0000, energy -1603.37678, dE/ds -0.0201, across 3.0e-04, 46 evaluations; Optimization terminated successfully: th  (6 s)
+      A-I polish surface     1:    +9.5249, lowest so far    +9.5240  (47 evaluations, 6 s)
+      A-I polish surface    10:    +9.5249, lowest so far    +9.5240  (56 evaluations, 7 s)
+      A-I polish, hyperplane 2: s -0.0500, energy -1603.37588, dE/ds -0.0161, across 2.9e-04, 14 evaluations; Optimization terminated successfully: th  (8 s)
+      A-I polish surface     1:    +9.5266, lowest so far    +9.5240  (61 evaluations, 8 s)
+      A-I polish surface    10:    +9.5264, lowest so far    +9.5240  (70 evaluations, 9 s)
+      A-I polish surface    20:    +9.5264, lowest so far    +9.5240  (80 evaluations, 10 s)
+      A-I polish, hyperplane 3: s -0.2508, energy -1603.37434, dE/ds +0.0010, across 2.6e-04, 26 evaluations; Optimization terminated successfully: th  (11 s)
+   A-I: polished saddle +9.5264 (the band's top +9.5499 at force 0.100); force along the tangent +0.0010, across 2.6e-04, curvature along -0.085; 86 evaluations, 11 s
+      I-B polish surface     1:   +15.0374, lowest so far   +15.0374  (1 evaluations, 0 s)
+      I-B polish surface    10:   +14.9781, lowest so far   +14.9781  (10 evaluations, 1 s)
+      I-B polish surface    20:   +14.9591, lowest so far   +14.9591  (20 evaluations, 3 s)
+      I-B polish surface    30:   +14.9515, lowest so far   +14.9515  (30 evaluations, 4 s)
+      I-B polish surface    40:   +14.9503, lowest so far   +14.9503  (40 evaluations, 6 s)
+      I-B polish surface    50:   +14.9440, lowest so far   +14.9440  (50 evaluations, 7 s)
+      I-B polish surface    60:   +14.9430, lowest so far   +14.9430  (60 evaluations, 8 s)
+      I-B polish surface    70:   +14.9430, lowest so far   +14.9430  (70 evaluations, 10 s)
+      I-B polish surface    80:   +14.9430, lowest so far   +14.9430  (80 evaluations, 11 s)
+      I-B polish surface    90:   +14.9430, lowest so far   +14.9430  (90 evaluations, 12 s)
+      I-B polish, hyperplane 1: s +0.0000, energy -1597.95781, dE/ds -0.3980, across 2.0e-04, 94 evaluations; Optimization terminated successfully: th  (13 s)
+      I-B polish surface     1:   +14.9626, lowest so far   +14.9430  (95 evaluations, 13 s)
+      I-B polish surface    10:   +14.9622, lowest so far   +14.9430  (104 evaluations, 14 s)
+      I-B polish surface    20:   +14.9616, lowest so far   +14.9430  (114 evaluations, 15 s)
+      I-B polish surface    30:   +14.9613, lowest so far   +14.9430  (124 evaluations, 17 s)
+      I-B polish surface    40:   +14.9613, lowest so far   +14.9430  (134 evaluations, 18 s)
+      I-B polish surface    50:   +14.9613, lowest so far   +14.9430  (144 evaluations, 19 s)
+      I-B polish surface    60:   +14.9613, lowest so far   +14.9430  (154 evaluations, 20 s)
+      I-B polish, hyperplane 2: s -0.0500, energy -1597.93947, dE/ds -0.3349, across 2.3e-04, 60 evaluations; Optimization terminated successfully: th  (20 s)
+      I-B polish surface     1:   +15.0387, lowest so far   +14.9430  (155 evaluations, 21 s)
+      I-B polish surface    10:   +15.0237, lowest so far   +14.9430  (164 evaluations, 22 s)
+      I-B polish surface    20:   +15.0093, lowest so far   +14.9430  (174 evaluations, 23 s)
+      I-B polish surface    30:   +15.0047, lowest so far   +14.9430  (184 evaluations, 25 s)
+      I-B polish surface    40:   +15.0045, lowest so far   +14.9430  (194 evaluations, 26 s)
+      I-B polish surface    50:   +15.0042, lowest so far   +14.9430  (204 evaluations, 27 s)
+      I-B polish surface    60:   +15.0004, lowest so far   +14.9430  (214 evaluations, 29 s)
+      I-B polish surface    70:   +14.9997, lowest so far   +14.9430  (224 evaluations, 30 s)
+      I-B polish surface    80:   +14.9996, lowest so far   +14.9430  (234 evaluations, 31 s)
+      I-B polish surface    90:   +14.9996, lowest so far   +14.9430  (244 evaluations, 33 s)
+      I-B polish, hyperplane 3: s -0.3156, energy -1597.90116, dE/ds +0.0280, across 2.8e-04, 96 evaluations; Optimization terminated successfully: th  (33 s)
+      I-B polish surface     1:   +15.0001, lowest so far   +14.9430  (251 evaluations, 34 s)
+      I-B polish surface    10:   +15.0000, lowest so far   +14.9430  (260 evaluations, 35 s)
+      I-B polish surface    20:   +15.0000, lowest so far   +14.9430  (270 evaluations, 36 s)
+      I-B polish surface    30:   +15.0000, lowest so far   +14.9430  (280 evaluations, 37 s)
+      I-B polish, hyperplane 4: s -0.2951, energy -1597.90080, dE/ds +0.0069, across 3.0e-04, 34 evaluations; Optimization terminated successfully: th  (38 s)
+   I-B: polished saddle +15.0000 (the band's top +15.0374 at force 0.100); force along the tangent +0.0069, across 3.0e-04, curvature along -1.029; 284 evaluations, 38 s
+   on the settled saddles: barrier +15.000 ahead, +4.297 back
+   one-monomer step: barrier +15.037 ahead, +4.335 back; B lies +10.703 above A
+written /srv/bench/<token>/jobs/shared/steps.json
+   vdf10-trfe4-14@0 4x2 mover 0 ahead host flexible: 16 chains
+   I: +9.3550; 123 evaluations, 16 s; gradient 2.8e-04; converged True; G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T
+   B: +10.7028; 127 evaluations, 17 s; gradient 3.0e-04; converged True; T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T
+   A-I: band top +9.5499 at force 0.100 after 215 iterations (196 s, converged True); settled saddle +9.5264, along +0.0010, across 2.6e-04, 86 evaluations, converged True
+   I-B: band top +15.0374 at force 0.100 after 552 iterations (224 s, converged True); settled saddle +15.0000, along +0.0069, across 3.0e-04, 284 evaluations, converged True
+   barrier on the settled saddles: 15.0000 ahead, 4.2972 back

@@ -1,0 +1,114 @@
+/srv/bench/<token>/jobs/shared/steps.json: 6 kinked crystals, 6 rows
+== vdf9-trfe4-cfe1-14@0 4x2 mover 0 ahead host flexible: end states and bands, each band started from that of the 2x1 cell
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe4-cfe1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+vdf9-trfe4-cfe1-14@0 4x2 mover 0 ahead host flexible: 16 chains of 14 monomers, 2336 sites; kink pair in the search's cells +0.936 kcal/mol (kinked cell's closure residual 0.332 deg), polished +3.952
+   kinked crystal: +3.952 kcal/mol per kink pair against all-trans (from the stored run: the polished two-chain cell, tiled)
+      chain 0: G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (7 s)
+   I: +9.053 kcal/mol above the kinked crystal (from the stored run); G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T
+   B: +11.795 kcal/mol above the kinked crystal (from the stored run); T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T
+   A-I: saddle +9.108 (from the stored run)
+   I-B: saddle +15.413 (from the stored run)
+   one-monomer step: barrier +15.413 ahead, +3.618 back; B lies +11.795 above A
+written /srv/bench/<token>/jobs/shared/steps.json
+== vdf9-trfe4-cfe1-14@0 4x2 mover 0 ahead host flexible: the saddles, settled from the tops of the bands
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe4-cfe1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+vdf9-trfe4-cfe1-14@0 4x2 mover 0 ahead host flexible: 16 chains of 14 monomers, 2336 sites; kink pair in the search's cells +0.936 kcal/mol (kinked cell's closure residual 0.332 deg), polished +3.952
+   kinked crystal: +3.952 kcal/mol per kink pair against all-trans (from the stored run: the polished two-chain cell, tiled)
+      chain 0: G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (7 s)
+   I: +9.053 kcal/mol above the kinked crystal (from the stored run); G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T
+   B: +11.795 kcal/mol above the kinked crystal (from the stored run); T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T
+      A-I polish surface     1:    +9.1080, lowest so far    +9.1080  (1 evaluations, 0 s)
+      A-I polish surface    10:    +9.1021, lowest so far    +9.1021  (10 evaluations, 1 s)
+      A-I polish surface    20:    +9.1020, lowest so far    +9.1020  (20 evaluations, 3 s)
+      A-I polish surface    30:    +9.1020, lowest so far    +9.1020  (30 evaluations, 4 s)
+      A-I polish, hyperplane 1: s +0.0000, energy -1545.27092, dE/ds -0.0293, across 2.5e-04, 31 evaluations; Optimization terminated successfully: th  (4 s)
+      A-I polish surface     1:    +9.1034, lowest so far    +9.1020  (32 evaluations, 4 s)
+      A-I polish surface    10:    +9.1034, lowest so far    +9.1020  (41 evaluations, 5 s)
+      A-I polish, hyperplane 2: s -0.0500, energy -1545.26951, dE/ds -0.0270, across 3.0e-04, 12 evaluations; Optimization terminated successfully: th  (6 s)
+      A-I polish surface     1:    +9.1091, lowest so far    +9.1020  (44 evaluations, 6 s)
+      A-I polish surface    10:    +9.1090, lowest so far    +9.1020  (53 evaluations, 7 s)
+      A-I polish surface    20:    +9.1090, lowest so far    +9.1020  (63 evaluations, 8 s)
+      A-I polish surface    30:    +9.1090, lowest so far    +9.1020  (73 evaluations, 9 s)
+      A-I polish surface    40:    +9.1090, lowest so far    +9.1020  (83 evaluations, 10 s)
+      A-I polish, hyperplane 3: s -0.3500, energy -1545.26394, dE/ds -0.0088, across 4.9e-04, 47 evaluations; stalled: the lowest energy on the closur  (11 s)
+   A-I: polished saddle +9.1090 (the band's top +9.1080 at force 0.100); force along the tangent -0.0088, across 4.9e-04, curvature along -0.061; 90 evaluations, 11 s
+      I-B polish surface     1:   +15.4126, lowest so far   +15.4126  (1 evaluations, 0 s)
+      I-B polish surface    10:   +15.1644, lowest so far   +15.1644  (10 evaluations, 1 s)
+      I-B polish surface    20:   +13.7403, lowest so far   +13.7403  (20 evaluations, 3 s)
+      I-B polish surface    30:   +13.2506, lowest so far   +13.2506  (30 evaluations, 4 s)
+      I-B polish surface    40:   +13.1718, lowest so far   +13.1718  (40 evaluations, 6 s)
+      I-B polish surface    50:   +13.1692, lowest so far   +13.1692  (50 evaluations, 7 s)
+      I-B polish surface    60:   +13.1690, lowest so far   +13.1690  (60 evaluations, 8 s)
+      I-B polish surface    70:   +13.1690, lowest so far   +13.1690  (70 evaluations, 10 s)
+      I-B polish, hyperplane 1: s +0.0000, energy -1541.20391, dE/ds -0.1589, across 1.8e-04, 79 evaluations; Optimization terminated successfully: th  (11 s)
+      I-B polish surface     1:   +13.1803, lowest so far   +13.1690  (80 evaluations, 11 s)
+      I-B polish surface    10:   +13.1772, lowest so far   +13.1690  (89 evaluations, 12 s)
+      I-B polish surface    20:   +13.1771, lowest so far   +13.1690  (99 evaluations, 13 s)
+      I-B polish surface    30:   +13.1771, lowest so far   +13.1690  (109 evaluations, 15 s)
+      I-B polish, hyperplane 2: s -0.0500, energy -1541.19581, dE/ds -0.1649, across 1.6e-04, 34 evaluations; Optimization terminated successfully: th  (15 s)
+      I-B polish surface     1:   +13.1887, lowest so far   +13.1690  (114 evaluations, 15 s)
+      I-B polish surface    10:   +13.1856, lowest so far   +13.1690  (123 evaluations, 17 s)
+      I-B polish surface    20:   +13.1855, lowest so far   +13.1690  (133 evaluations, 18 s)
+      I-B polish surface    30:   +13.1855, lowest so far   +13.1690  (143 evaluations, 19 s)
+      I-B polish, hyperplane 3: s -0.1000, energy -1541.18743, dE/ds -0.1704, across 2.9e-04, 33 evaluations; Optimization terminated successfully: th  (20 s)
+      I-B polish surface     1:   +13.1973, lowest so far   +13.1690  (147 evaluations, 20 s)
+      I-B polish surface    10:   +13.1942, lowest so far   +13.1690  (156 evaluations, 21 s)
+      I-B polish surface    20:   +13.1941, lowest so far   +13.1690  (166 evaluations, 22 s)
+      I-B polish surface    30:   +13.1941, lowest so far   +13.1690  (176 evaluations, 23 s)
+      I-B polish, hyperplane 4: s -0.1500, energy -1541.17878, dE/ds -0.1752, across 2.8e-04, 35 evaluations; Optimization terminated successfully: th  (24 s)
+      I-B polish surface     1:   +13.2062, lowest so far   +13.1690  (182 evaluations, 24 s)
+      I-B polish surface    10:   +13.2031, lowest so far   +13.1690  (191 evaluations, 26 s)
+      I-B polish surface    20:   +13.2030, lowest so far   +13.1690  (201 evaluations, 27 s)
+      I-B polish surface    30:   +13.2030, lowest so far   +13.1690  (211 evaluations, 28 s)
+      I-B polish, hyperplane 5: s -0.2000, energy -1541.16992, dE/ds -0.1792, across 2.8e-04, 38 evaluations; Optimization terminated successfully: th  (29 s)
+      I-B polish surface     1:   +13.2153, lowest so far   +13.1690  (220 evaluations, 29 s)
+      I-B polish surface    10:   +13.2122, lowest so far   +13.1690  (229 evaluations, 30 s)
+      I-B polish surface    20:   +13.2120, lowest so far   +13.1690  (239 evaluations, 32 s)
+      I-B polish surface    30:   +13.2120, lowest so far   +13.1690  (249 evaluations, 33 s)
+      I-B polish, hyperplane 6: s -0.2500, energy -1541.16089, dE/ds -0.1821, across 2.8e-04, 36 evaluations; Optimization terminated successfully: th  (34 s)
+      I-B polish surface     1:   +13.2245, lowest so far   +13.1690  (256 evaluations, 34 s)
+      I-B polish surface    10:   +13.2214, lowest so far   +13.1690  (265 evaluations, 35 s)
+      I-B polish surface    20:   +13.2212, lowest so far   +13.1690  (275 evaluations, 36 s)
+      I-B polish surface    30:   +13.2212, lowest so far   +13.1690  (285 evaluations, 38 s)
+      I-B polish, hyperplane 7: s -0.3000, energy -1541.15173, dE/ds -0.1838, across 1.7e-04, 37 evaluations; Optimization terminated successfully: th  (38 s)
+      I-B polish surface     1:   +13.2338, lowest so far   +13.1690  (293 evaluations, 39 s)
+      I-B polish surface    10:   +13.2306, lowest so far   +13.1690  (302 evaluations, 40 s)
+      I-B polish surface    20:   +13.2304, lowest so far   +13.1690  (312 evaluations, 41 s)
+      I-B polish surface    30:   +13.2304, lowest so far   +13.1690  (322 evaluations, 42 s)
+      I-B polish, hyperplane 8: s -0.3500, energy -1541.14253, dE/ds -0.1840, across 2.7e-04, 37 evaluations; Optimization terminated successfully: th  (43 s)
+      I-B polish surface     1:   +13.2430, lowest so far   +13.1690  (330 evaluations, 43 s)
+      I-B polish surface    10:   +13.2398, lowest so far   +13.1690  (339 evaluations, 45 s)
+      I-B polish surface    20:   +13.2395, lowest so far   +13.1690  (349 evaluations, 46 s)
+      I-B polish surface    30:   +13.2395, lowest so far   +13.1690  (359 evaluations, 47 s)
+      I-B polish surface    40:   +13.2395, lowest so far   +13.1690  (369 evaluations, 48 s)
+      I-B polish, hyperplane 9: s -0.4000, energy -1541.13338, dE/ds -0.1819, across 2.4e-04, 40 evaluations; Optimization terminated successfully: th  (48 s)
+      I-B polish surface     1:   +13.4181, lowest so far   +13.1690  (370 evaluations, 49 s)
+      I-B polish surface    10:   +13.3008, lowest so far   +13.1690  (379 evaluations, 50 s)
+      I-B polish surface    20:   +13.2488, lowest so far   +13.1690  (389 evaluations, 51 s)
+      I-B polish surface    30:   +11.4968, lowest so far   +11.4968  (399 evaluations, 53 s)
+      I-B polish surface    40:   +11.1697, lowest so far   +11.1697  (409 evaluations, 54 s)
+      I-B polish surface    50:   +11.0928, lowest so far   +11.0928  (419 evaluations, 56 s)
+      I-B polish surface    60:   +11.0814, lowest so far   +11.0814  (429 evaluations, 57 s)
+      I-B polish surface    70:   +11.0809, lowest so far   +11.0809  (439 evaluations, 58 s)
+      I-B polish surface    80:   +11.0809, lowest so far   +11.0809  (449 evaluations, 59 s)
+      I-B polish surface    90:   +10.9304, lowest so far   +10.9304  (459 evaluations, 61 s)
+      I-B polish surface   100:    +9.0704, lowest so far    +9.0704  (469 evaluations, 62 s)
+      I-B polish surface   110:    +8.9434, lowest so far    +8.9434  (479 evaluations, 64 s)
+      I-B polish surface   120:    +8.9218, lowest so far    +8.9218  (489 evaluations, 65 s)
+      I-B polish surface   130:    +8.9214, lowest so far    +8.9214  (499 evaluations, 66 s)
+      I-B polish surface   140:    +8.9214, lowest so far    +8.9214  (509 evaluations, 67 s)
+      I-B polish surface   150:    +8.9214, lowest so far    +8.9214  (519 evaluations, 69 s)
+      I-B polish, hyperplane 10: s -0.7000, energy -1545.45152, dE/ds +0.3944, across 2.9e-04, 150 evaluations; Optimization terminated successfully: th  (69 s)
+   I-B: polished saddle +8.9214 (the band's top +15.4126 at force 0.098); force along the tangent +0.3944, across 2.9e-04, curvature along -1.921; 519 evaluations, 69 s (NOT converged)
+   one-monomer step: barrier +15.413 ahead, +3.618 back; B lies +11.795 above A
+written /srv/bench/<token>/jobs/shared/steps.json
+   vdf9-trfe4-cfe1-14@0 4x2 mover 0 ahead host flexible: 16 chains
+   I: +9.0535; 106 evaluations, 14 s; gradient 2.7e-04; converged True; G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T
+   B: +11.7947; 128 evaluations, 17 s; gradient 1.9e-04; converged True; T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T
+   A-I: band top +9.1080 at force 0.100 after 202 iterations (184 s, converged True); settled saddle +9.1090, along -0.0088, across 4.9e-04, 90 evaluations, converged True
+   I-B: band top +15.4126 at force 0.098 after 242 iterations (221 s, converged True); settled saddle +8.9214, along +0.3944, across 2.9e-04, 519 evaluations, converged False
+   barrier on the bands' tops: 15.4126 ahead, 3.6179 back

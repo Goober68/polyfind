@@ -1,0 +1,7 @@
+      surface    1: +3006.6245  (0 s)
+      surface   20: +8.6217  (2 s)
+      surface   40: +7.7268  (4 s)
+      surface   60: +7.7222  (6 s)
+      surface   80: +7.7221  (8 s)
+N: +7.7221 kcal/mol above the sheet (start +3006.6245); the moving chain T T T T G- T G+ T T T T T T T T T T T T T (gauche bonds [4, 6]; in the sheet [0, 2]); chains off the sheet's conformation: ['0']; 91 evaluations, 9 s; gradient 2.2e-04; Optimization terminated successfully: the gradient along the surface is under gtol
+written /srv/bench/<token>/jobs/shared/states.json

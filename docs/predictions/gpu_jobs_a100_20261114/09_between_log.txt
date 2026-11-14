@@ -1,0 +1,26 @@
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe4-cfe1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+I-M: I.state (+9.0448) to settled:M (+11.2041); start: straight between the two states
+      it    1: force  24.1792, top +20.2200, climbing -1, energies [9.045, 10.348, 13.72, 17.775, 20.22, 19.816, 17.253, 13.301, 11.204]  (1 s)
+      it   20: force   3.0914, top +15.6167, climbing -1, energies [9.045, 9.891, 11.872, 14.12, 15.617, 15.57, 14.377, 12.407, 11.204]  (10 s)
+      it   40: force   1.2980, top +14.4199, climbing -1, energies [9.045, 9.611, 11.03, 12.778, 14.136, 14.42, 13.79, 12.187, 11.204]  (20 s)
+      it   60: force   0.6132, top +14.1353, climbing 5, energies [9.045, 9.549, 10.851, 12.501, 13.801, 14.135, 13.63, 12.121, 11.204]  (31 s)
+      it   80: force   0.9133, top +13.8139, climbing 5, energies [9.045, 9.476, 10.634, 12.162, 13.403, 13.814, 13.458, 12.06, 11.204]  (41 s)
+      it  100: force   0.2554, top +13.5396, climbing 5, energies [9.045, 9.423, 10.468, 11.895, 13.07, 13.54, 13.3, 12.003, 11.204]  (51 s)
+      it  120: force   6.4557, top +13.3906, climbing 5, energies [9.045, 9.401, 10.455, 11.751, 12.878, 13.391, 13.193, 11.966, 11.204]  (61 s)
+      it  140: force   1.8258, top +13.3006, climbing 5, energies [9.045, 9.386, 10.349, 11.671, 12.784, 13.301, 13.137, 11.947, 11.204]  (71 s)
+      it  160: force   0.3380, top +13.2781, climbing 5, energies [9.045, 9.382, 10.333, 11.652, 12.759, 13.278, 13.121, 11.941, 11.204]  (81 s)
+      it  180: force   0.1846, top +13.2080, climbing 5, energies [9.045, 9.374, 10.303, 11.594, 12.681, 13.208, 13.064, 11.919, 11.204]  (91 s)
+      it  200: force   0.1925, top +13.1581, climbing 5, energies [9.045, 9.368, 10.285, 11.558, 12.629, 13.158, 13.018, 11.899, 11.204]  (101 s)
+      it  220: force   2.6763, top +13.1280, climbing 5, energies [9.045, 9.365, 10.29, 11.539, 12.599, 13.128, 12.987, 11.883, 11.204]  (111 s)
+      it  240: force   0.2800, top +13.1232, climbing 5, energies [9.045, 9.365, 10.277, 11.537, 12.596, 13.123, 12.983, 11.88, 11.204]  (120 s)
+      it  260: force   0.1365, top +13.0982, climbing 5, energies [9.045, 9.363, 10.273, 11.527, 12.574, 13.098, 12.955, 11.864, 11.204]  (130 s)
+      it  280: force   0.1233, top +13.0782, climbing 5, energies [9.045, 9.362, 10.274, 11.522, 12.559, 13.078, 12.931, 11.848, 11.204]  (140 s)
+      it  300: force   0.1136, top +13.0656, climbing 5, energies [9.045, 9.362, 10.276, 11.522, 12.552, 13.066, 12.913, 11.836, 11.204]  (150 s)
+I-M: top +13.0656 at image 5 (NOT converged); force 0.1136; 300 it, 150 s
+      I-M polish, hyperplane 1: s +0.0000, energy -375.61748, dE/ds +0.0918, across 2.6e-04, 51 evaluations; Optimization terminated successfully: th  (3 s)
+      I-M polish, hyperplane 2: s +0.0500, energy -375.61310, dE/ds +0.0831, across 2.9e-04, 19 evaluations; Optimization terminated successfully: th  (4 s)
+      I-M polish, hyperplane 3: s +0.3500, energy -375.59612, dE/ds +0.0297, across 2.2e-04, 35 evaluations; Optimization terminated successfully: th  (6 s)
+      I-M polish, hyperplane 4: s +0.5165, energy -375.59379, dE/ds -0.0020, across 2.6e-04, 34 evaluations; Optimization terminated successfully: th  (8 s)
+I-M: settled saddle +12.9994 (the band's top +13.0656); along -0.0020, across 2.6e-04, curvature -0.1902272451038503; 139 evaluations
+written /srv/bench/<token>/jobs/shared/states.json

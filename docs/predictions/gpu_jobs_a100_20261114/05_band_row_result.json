@@ -1,0 +1,180 @@
+{
+ "row": "vdf10-trfe4-14",
+ "letters": "VVRVVRVVVVRVVR",
+ "note": "the same cell with the CFE replaced by VDF (71/29): the matrix without the pin",
+ "supercell": [
+  4,
+  2
+ ],
+ "chains": 16,
+ "sites": 2368,
+ "monomers_per_chain": 14,
+ "mover": "0",
+ "kink_offset_bonds": 0,
+ "kink_mirrored": false,
+ "direction": "ahead",
+ "host": "flexible",
+ "images_per_segment": 9,
+ "fmax": 0.1,
+ "kinked_crystal": {
+  "formation_per_kink_pair": 7.086960372794508,
+  "formation_per_kink_pair_search": 5.684390068186659,
+  "formation_per_kink_pair_two_chain_cell": 7.0869603727945645,
+  "cell": [
+   20.598163517359776,
+   17.097268815469594,
+   92.16179659517213,
+   35.52917539148609
+  ],
+  "all_trans_cell": [
+   19.52229398080163,
+   16.917968666336506,
+   91.78106230989337,
+   36.187181222572875
+  ],
+  "torsions": [
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T"
+  ],
+  "iterations": 0,
+  "message": "the polished two-chain cell, tiled",
+  "seconds": 0.08030223846435547
+ },
+ "I": {
+  "energy": 9.35501231259218,
+  "torsions": "G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T",
+  "start": "the kinked crystal with the mover's torsions reset",
+  "start_energy": 332.04390671338297,
+  "iterations": 69,
+  "evaluations": 123,
+  "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+  "converged": true,
+  "gradient_max": 0.0002766364729086698,
+  "method": "on the closure surface, one curvature block per chain as the metric",
+  "angles_at_window": 0,
+  "seconds": 16.479762315750122
+ },
+ "B": {
+  "energy": 10.702821685511708,
+  "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+  "start": "the kinked crystal with the mover's torsions reset",
+  "start_energy": 369.38792544885973,
+  "iterations": 75,
+  "evaluations": 127,
+  "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+  "converged": true,
+  "gradient_max": 0.0002971523746870765,
+  "method": "on the closure surface, one curvature block per chain as the metric",
+  "angles_at_window": 0,
+  "seconds": 16.987502813339233
+ },
+ "A-I": {
+  "energies": [
+   0.0,
+   0.7479611273975024,
+   3.153995741301287,
+   6.347480846233793,
+   8.719863589318493,
+   9.499411089039995,
+   9.54989646556055,
+   9.44271043488834,
+   9.35501231257399
+  ],
+  "saddle": 9.54989646556055,
+  "saddle_image": 6,
+  "converged": true,
+  "force_max": 0.09990753495121521,
+  "fmax": 0.1,
+  "iterations": 215,
+  "interior_minima": [],
+  "start": "the straight band bent as the band of 'vdf10-trfe4-14@0 2x1 mover 0 ahead host flexible' is",
+  "saddle_history": [
+   [
+    215,
+    9.54989646556055,
+    0.09990753495121521
+   ]
+  ],
+  "seconds": 196.16320824623108,
+  "polished": {
+   "method": "on the closure surface, one curvature block per chain as the metric",
+   "saddle": 9.526430942241177,
+   "band_top": 9.54989646556055,
+   "band_force": 0.09990753495121521,
+   "force_along": 0.0009771548032240784,
+   "gradient_across": 0.0002553165003070875,
+   "curvature_along": -0.08485597260564691,
+   "displacement": -0.25078711168602397,
+   "converged": true,
+   "evaluations": 86,
+   "seconds": 11.13352918624878
+  }
+ },
+ "I-B": {
+  "energies": [
+   9.35501231259218,
+   9.825073633429156,
+   11.390865277883677,
+   12.701526049678478,
+   14.123279456128785,
+   15.037433139755194,
+   13.501666012099577,
+   13.033207738527835,
+   10.702821685498975
+  ],
+  "saddle": 15.037433139755194,
+  "saddle_image": 5,
+  "converged": true,
+  "force_max": 0.09999934622365203,
+  "fmax": 0.1,
+  "iterations": 552,
+  "interior_minima": [],
+  "start": "the straight band bent as the band of 'vdf10-trfe4-14@0 2x1 mover 0 ahead host flexible' is",
+  "saddle_history": [
+   [
+    300,
+    15.169197621494504,
+    0.2061372444076883
+   ],
+   [
+    552,
+    15.037433139755194,
+    0.09999934622365203
+   ]
+  ],
+  "seconds": 223.53598952293396,
+  "polished": {
+   "method": "on the closure surface, one curvature block per chain as the metric",
+   "saddle": 14.99997257425889,
+   "band_top": 15.037433139755194,
+   "band_force": 0.09999934622365203,
+   "force_along": 0.006911333841458589,
+   "gradient_across": 0.0002959488140590077,
+   "curvature_along": -1.029048746801559,
+   "displacement": -0.29509282097088496,
+   "converged": true,
+   "evaluations": 284,
+   "seconds": 37.86864900588989
+  }
+ },
+ "barrier_forward": 15.037433139755194,
+ "barrier_back": 4.334611454243486,
+ "moving_chains": 1,
+ "bands_converged": true,
+ "barrier_forward_polished": 14.99997257425889,
+ "barrier_back_polished": 4.297150888747183
+}

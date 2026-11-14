@@ -160553,7 +160553,25 @@
    "bands_converged": true,
    "barrier_forward_polished": 14.99997257425889,
    "barrier_back_polished": 4.297150888747183,
-   "evaluated": "from nothing on an NVIDIA A100 in the batched form (CuPy), 2026-11-14: examples/gpu_jobs/band_row.sh, queue_20261114.txt; end states from the kinked crystal with the moving chain's torsions reset, bands by FIRE, saddles settled on the closure surface; each band started from the four-chain one; job 5"
+   "evaluated": "from nothing on an NVIDIA A100 in the batched form (CuPy), 2026-11-14: examples/gpu_jobs/band_row.sh, queue_20261114.txt; end states from the kinked crystal with the moving chain's torsions reset, bands by FIRE, saddles settled on the closure surface; each band started from the four-chain one; job 5",
+   "by_way_of_M": {
+    "M": 13.431745298964415,
+    "gauche_bonds": [
+     2,
+     4
+    ],
+    "saddles": {
+     "I-M": 14.99999396927501,
+     "M-B": 13.5673324084878
+    },
+    "curvature_along": {
+     "I-M": -0.6984687997139631,
+     "M-B": -0.3184551009952177
+    },
+    "barrier_forward": 14.99999396927501,
+    "barrier_back": 4.297172283763302,
+    "note": "I to M to B: bands between the states and their settled saddles in docs/predictions/kink_states_belt4.json"
+   }
   },
   "vdf9-trfe4-cfe1-14@0 2x1 mover 0 ahead host flexible": {
    "row": "vdf9-trfe4-cfe1-14",
@@ -166886,7 +166904,24 @@
    "bands_converged": true,
    "barrier_forward_polished": 13.306746148447246,
    "barrier_back_polished": 0.3076741138521015,
-   "evaluated": "from nothing on an NVIDIA A100 in the batched form (CuPy), 2026-11-14: examples/gpu_jobs/band_row.sh, queue_20261114.txt; end states from the kinked crystal with the moving chain's torsions reset, bands by FIRE, saddles settled on the closure surface; jobs 2 and 7 (the second band took 1101 iterations to find its way through the intermediate state M)"
+   "evaluated": "from nothing on an NVIDIA A100 in the batched form (CuPy), 2026-11-14: examples/gpu_jobs/band_row.sh, queue_20261114.txt; end states from the kinked crystal with the moving chain's torsions reset, bands by FIRE, saddles settled on the closure surface; jobs 2 and 7 (the second band took 1101 iterations to find its way through the intermediate state M)",
+   "by_way_of_M": {
+    "M": 11.20412661632298,
+    "gauche_bonds": [
+     4
+    ],
+    "saddles": {
+     "I-M": 12.999440478597194,
+     "M-B": 13.306750422006985
+    },
+    "curvature_along": {
+     "I-M": -0.1902272451038503,
+     "M-B": -0.2505766100871073
+    },
+    "barrier_forward": 13.306750422006985,
+    "barrier_back": 0.3076783874118405,
+    "note": "I to M to B: bands between the states and their settled saddles in docs/predictions/kink_states_belt4.json"
+   }
   },
   "vdf9-trfe4-cfe1-14@0 4x2 mover 0 ahead host flexible": {
    "row": "vdf9-trfe4-cfe1-14",
@@ -188489,7 +188524,7 @@
       115.8193430273753
      ]
     ],
-    "polished": {
+    "search_left_the_path": {
      "method": "on the closure surface, one curvature block per chain as the metric",
      "earlier": [
       {
@@ -189600,7 +189635,27 @@
    "barrier_back": 3.617942085851382,
    "moving_chains": 1,
    "bands_converged": true,
-   "evaluated": "from nothing on an NVIDIA A100 in the batched form (CuPy), 2026-11-14: examples/gpu_jobs/band_row.sh, queue_20261114.txt; end states from the kinked crystal with the moving chain's torsions reset, bands by FIRE, saddles settled on the closure surface; each band started from the four-chain one as it stood after 300 iterations; jobs 3 and 8"
+   "evaluated": "from nothing on an NVIDIA A100 in the batched form (CuPy), 2026-11-14: examples/gpu_jobs/band_row.sh, queue_20261114.txt; end states from the kinked crystal with the moving chain's torsions reset, bands by FIRE, saddles settled on the closure surface; each band started from the four-chain one as it stood after 300 iterations; jobs 3 and 8",
+   "by_way_of_M": {
+    "M": 13.088487460204988,
+    "gauche_bonds": [
+     4
+    ],
+    "saddles": {
+     "I-M": 14.491103710246989,
+     "M-B": 13.982267242370426
+    },
+    "curvature_along": {
+     "I-M": -0.7778226541066482,
+     "M-B": -0.5151690194899494
+    },
+    "barrier_forward": 14.491103710246989,
+    "barrier_back": 2.696431313954008,
+    "note": "I to M to B: bands between the states and their settled saddles in docs/predictions/kink_states_belt4.json"
+   },
+   "barrier_forward_polished": 14.491103710246989,
+   "barrier_back_polished": 2.696431313954008,
+   "barrier_polished_note": "by way of the intermediate state M (by_way_of_M): the direct band's top, +15.41, is not a settled saddle (the search from it left the path)"
   }
  }
 }

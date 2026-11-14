@@ -64,6 +64,8 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | vdf10@0 ahead | 2x1, 1 of 4 | flexible | +9.85 | +10.29, **+10.27** | +12.49, **+12.46** | +7.88 | 12.46 / 4.59 | 2.5e+03 /s | 0.03, 0.08 |
 | vdf10@0 ahead | 4x2, 1 of 16 | flexible | +9.96 | +10.73, **+10.66** | +11.84, **+11.64** | +5.91 | 11.64 / 5.73 | 9.9e+03 /s | 0.09, 0.09 |
 | vdf9-trfe4-cfe1-14@0 ahead | 1x1, 1 of 2 | flexible | +6.33 | +6.43, **+6.43** | +11.37, **+11.48** | +8.98 | 11.48 / 2.50 | 1.3e+04 /s | 0.10, 0.69 |
+| vdf9-trfe4-cfe1-14@0 ahead | 2x1, 1 of 4 | flexible | +9.04 | +9.11, **+9.08** | +13.31, **+13.31** | +13.00 | 13.31 / 0.31 | 6e+02 /s | 0.10, 0.10 |
+| vdf9-trfe4-cfe1-14@0 ahead | 4x2, 1 of 16 | flexible | +9.05 | +9.11, **+9.11** | +15.41 | +11.79 | 14.49 / 2.70 (by way of M, below) | 83 /s | 0.10, 0.10 |
 
 End points only (no band)
 
@@ -107,6 +109,32 @@ How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displa
 | | 9.92 A | 2 | 0.02 A | 0.2 deg | +0.04 A | 1.8 deg |
 | | 10.14 A | 1 | 0.02 A | 0.4 deg | -0.01 A | 3.0 deg |
 | | 13.33 A | 1 | 0.01 A | 0.1 deg | +0.02 A | 0.3 deg |
+
+**States of the moving chain that are neither I nor B** (found where a saddle search or a band left the named path; relaxed on the closure surface; kcal/mol against the sheet, in which the chain's gauche bonds are 0 and 2; `kink_states_belt4.json`)
+
+| sequence, cell | state | gauche bonds of the moving chain | its first seven torsions, deg | above the sheet | I | B |
+|---|---|---|---|---|---|---|
+| vdf10-trfe4-14, 2x1 | M | 4 | +178, +179, +132, +165, -100, -180, +178 | +11.680 | +9.53 | +12.31 |
+| vdf10-trfe4-14, 4x2 | M | 2, 4 | +180, +175, +116, +168, -94, +179, -178 | +13.432 | +9.36 | +10.70 |
+| vdf10-trfe4-14, 4x2 | N | 4, 6 | -171, -167, +171, +164, -90, -169, +94 | +8.944 | +9.36 | +10.70 |
+| vdf10, 4x2 | N | 4, 6 | +174, +179, +170, -178, -73, -166, +83 | +7.722 | +9.96 | +5.91 |
+| vdf9-trfe4-cfe1-14, 2x1 | M | 4 | +178, +179, +144, +162, -107, +180, +178 | +11.204 | +9.04 | +13.00 |
+| vdf9-trfe4-cfe1-14, 4x2 | M | 4 | +174, +179, +134, +162, -101, +180, +179 | +13.088 | +9.05 | +11.79 |
+| vdf9-trfe4-cfe1-14, 4x2 | N | 4, 6 | -176, -161, +171, +155, -90, -172, +101 | +8.820 | +9.05 | +11.79 |
+
+Bands between those states and the named ones (FIRE, nine images; the saddle settled from the band's top as in the first table):
+
+| sequence, cell | band | from, to | the band's top (force, iterations) | settled saddle | curvature along the path |
+|---|---|---|---|---|---|
+| vdf10-trfe4-14, 4x2 | I-M | I.state, settled:M | +15.067 (0.18, 300, not converged) | **+15.000** | -0.70 |
+| vdf10-trfe4-14, 4x2 | I-N | I.state, settled:N | +14.821 (0.34, 300, not converged) | not settled (the search ended at +5.85) | +0.45 |
+| vdf10-trfe4-14, 4x2 | M-B | settled:M, B.state | +13.587 (0.09, 164) | **+13.567** | -0.32 |
+| vdf10, 4x2 | I-N | I.state, settled:N | +13.320 (0.25, 300, not converged) | not settled (the search ended at +11.11) | +0.22 |
+| vdf9-trfe4-cfe1-14, 2x1 | I-M | I.state, settled:M | +13.066 (0.11, 300, not converged) | **+12.999** | -0.19 |
+| vdf9-trfe4-cfe1-14, 2x1 | M-B | settled:M, B.state | +13.412 (0.09, 183) | **+13.307** | -0.25 |
+| vdf9-trfe4-cfe1-14, 4x2 | I-M | I.state, settled:M | +14.771 (0.18, 300, not converged) | **+14.491** | -0.78 |
+| vdf9-trfe4-cfe1-14, 4x2 | I-N | I.state, settled:N | +12.504 (3.43, 600, not converged) | not settled (the search ended at +8.85) | +0.14 |
+| vdf9-trfe4-cfe1-14, 4x2 | M-B | settled:M, B.state | +14.089 (0.10, 168) | **+13.982** | -0.52 |
 
 **Two chains one monomer ahead together** (end state only; kcal/mol against the sheet, neighbours flexible, cell fixed)
 

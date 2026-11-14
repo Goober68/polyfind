@@ -251,7 +251,7 @@ def main():
         conv = f"{e['A-I']['force_max']:.2f}, {e['I-B']['force_max']:.2f}"
         who = f"all {nc} (the sheet in register)" if str(e.get("mover")) == "all" else f"1 of {nc}"
         md.append(f"| {e['row']}@{e['kink_offset_bonds']} {e['direction']} | {e['supercell'][0]}x{e['supercell'][1]}, {who} | {e['host']} | {e['I']['energy']:+.2f} | {top(e, 'A-I')} | "
-                  f"{top(e, 'I-B')} | {e['B']['energy']:+.2f} | {fwd:.2f} / {back:.2f} | {rate:.2g} /s | {conv} |")
+                  f"{top(e, 'I-B')} | {e['B']['energy']:+.2f} | {fwd:.2f} / {back:.2f}{' (by way of M, below)' if 'barrier_polished_note' in e and 'by_way_of_M' in e else ''} | {rate:.2g} /s | {conv} |")
 
     ends = [(k, e) for k, e in sorted(mig.get("rows", {}).items(), key=lambda kv: (kv[1].get("row", ""), kv[1].get("host", ""), kv[1].get("chains", 0), str(kv[1].get("mover"))))
             if "barrier_forward" not in e and "barrier_forward_polished" not in e and "I" in e and "B" in e and str(e.get("mover")) != "all" and "beside" not in e]
