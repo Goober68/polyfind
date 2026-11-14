@@ -25,3 +25,9 @@ settle.sh vdf10-trfe4-14 4 2 settled:N NN12 copyto 12
 between.sh vdf10-trfe4-14 4 2 settled:N settled:N2 N-N2
 between.sh vdf10-trfe4-14 4 2 settled:N settled:NN4 N-NN4
 between.sh vdf10-trfe4-14 4 2 settled:N settled:NN12 N-NN12
+# 3. the matrix's band from N to N2 had not converged in 300 iterations (top +14.77) and has a dip
+#    under N itself on its second image (+8.18; N is +8.94).  The dip relaxed and named, the band
+#    once more, then the pod removes itself.
+settle.sh vdf10-trfe4-14 4 2 band:N-N2.images.2 L
+between.sh vdf10-trfe4-14 4 2 settled:N settled:N2 N-N2
+stop

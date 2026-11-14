@@ -342,6 +342,20 @@ def main():
             md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {e['B']['energy']:+.2f} | {step:.2f} / {e['barrier_back_polished']:.2f} | {n['N']:+.2f} | "
                       f"{n['barrier_forward']:.2f} / {n['barrier_back']:.2f} | {'to N' if n['barrier_forward'] < step else 'the step to B'}, {low:.2f} | {3e12 * np.exp(-low / KT):.2g} /s |")
 
+    then = [e for e in to_n if "then" in e["to_N"]]
+    if then:
+        md += ["", "**What N does next** (from N: the same move again, to N2; a stack neighbour making the move beside it; barriers from N, and how often N goes back to the sheet "
+               "for each of them at 300 K with equal attempt frequencies)", "",
+               "| sequence, cell | N | back to the sheet | N2, barrier on | the sheet's hand at N's site | a neighbour beside it: the pair, what the second costs | barrier for it to join | "
+               "returns per move on | returns per neighbour joining |", "|---|---|---|---|---|---|---|---|---|"]
+        for e in sorted(then, key=lambda e: e["row"]):
+            n, t = e["to_N"], e["to_N"]["then"]
+            nb = t["neighbours"]
+            pairs = "; ".join(f"chain {c}: {v['both_in_N']:+.2f}, {v['the_second_costs']:+.2f}" for c, v in nb.items())
+            joins = ", ".join(f"{v['barrier_to_join']:.2f}" for v in nb.values())
+            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {n['N']:+.2f} | {t['barrier_back']:.2f} | {t['N2']:+.2f}, {t['barrier_on']:.2f} | {t['B2']:+.2f} | {pairs} | {joins} | "
+                      f"{t['returns_for_each_move_on']:.1e} | {t['returns_for_each_time_a_neighbour_joins']:.1e} |")
+
     # --- two chains ahead together --------------------------------------------------------------------
     together = [e for e in mig.get("rows", {}).values() if e.get("row") == "vdf10" and "," in str(e.get("mover")) and e.get("host") == "flexible" and "B" in e
                 and e.get("direction") == "ahead" and tuple(e["supercell"]) in single and "flexible" in single[tuple(e["supercell"])]]
