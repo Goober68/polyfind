@@ -1732,6 +1732,18 @@ the steep part of its curve.
   cost of the handedness changes. The protocols' resolution is 0.15 kcal/mol per kink pair
   (section 8's translation check) and about 0.1-0.2 kcal/mol per monomer between symmetry-related
   packings of the chlorine rows, so margins are not read below 0.1.
+* **What the 364 kHz anchor is (2026-11-14, the PI's question).** A measured number, not a
+  computed one: the frequency at which the small-signal dielectric loss of a 63/30/7 film peaks
+  at 300 K and zero bias. The paper (Scientific Reports 2025, DOI 10.1038/s41598-025-19461-1; 330
+  nm spin-coated films, nine frequencies from 100 Hz to 1 MHz) fitted the complex permittivity
+  at each temperature with a Cole-Cole model, took its characteristic time, and fitted those
+  times with Vogel-Fulcher (`tau0` 8.08e-13 s, `Ea` 124 meV, `Tf` 191 K); at 300 K that is 4.4e-7
+  s, and `1 / 2 pi tau` is 364 kHz (96 kHz at 290 K, 1.1 MHz at 310 K). It is the centre of a
+  broad distribution of times, a polarization measurement and not a strain one, at a drive level
+  the paper does not state, and the authors assign it to polar nanoregions; the neutron work of
+  Pramanick et al. (2018) puts the dispersive part of the permittivity at the crystal-amorphous
+  interface instead. Assigning it to the 64/29/7 model cell's kink process is this document's
+  assumption. Every other row's frequency is that number times a ratio the model computes.
 * **The offset and the window (2026-11-14).** The switching curve at the bias is a window 0.12
   kcal/mol per monomer wide in the margin (section 3), and the margin's offset is not known better
   than that. The model places a composition by differences measured the same way (a unit's pin, the
