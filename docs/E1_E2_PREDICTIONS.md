@@ -369,8 +369,9 @@ stiffness flag of the previous section is read against the QE cell from here on.
   +0.056; (d), the cell that leads the screen. Acceptance is E2's: margins within 0.1 kcal/mol per
   monomer, the helix lower or higher as registered, the conformational strain within 10%; for (a)
   and (e) also the sign and, within a factor 1.5, the size of the shift from PVDF's own margin.
-  Only two of the four helix conformers were polished for the fourteen-monomer cells, so their
-  registered helix is the lower of two. No polarization is registered. The request is
+  For the fourteen-monomer cells the search ran the two handednesses of the helix (not the two
+  other phases) and the lower was polished (both for d, where the other lies 0.03 higher), so
+  their registered helix is the lowest that was polished. No polarization is registered. The request is
   `sarco/materials/ask-polyfind-dipole-unit-screen-cells-v1.md`, the files are in
   `sarco/materials/electrostriction/requests/unit_screen_cells_e7_v1/`;
   `examples/crosscheck_e1_e2.py --e2 docs/predictions/e7_polyfind_belt4.json --e2-dipole <file>`
