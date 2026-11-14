@@ -16,6 +16,9 @@ channel (polyfind.loss.literature_terpolymer, as examples/candidate_loss_map.py 
   together, the frequency on the rate model in which the kink sheets' population sets it,
   anchored on the 64/29/7 cell at the measured film's 364 kHz.  The pin and the cut are both
   taken to fall as one over the spacing (measured for CFE at fourteen and twenty).
+* **sites**: where a cell's kink sites have been scanned (examples/kink_site_scan.py), the rate
+  goes by all of them: the sum of ``exp(-E / kT)`` over the sites of the repeat and both hands
+  of the kink pair, against the same sum for the 64/29/7 cell, in place of one site's energy.
 * **statistical**: the same law read locally, each pin-free run of ``L`` monomers at the margin
   ``m0 + s / (L + 1)``, averaged over the runs of a random sequence with pin fraction ``p``
   (run lengths geometric, each monomer weighted by its run).  A hypothesis, not a result: the law
@@ -72,6 +75,7 @@ def main():
     ap.add_argument("--ac", type=float, default=1.8)
     ap.add_argument("--heat-budget", type=float, default=4e6, help="W/m^3")
     ap.add_argument("--ac-max", type=float, default=10.0, help="V/um: the largest AC field the small-signal response is used at, at the heat budget")
+    ap.add_argument("--sites", default="docs/predictions/kink_site_scan_belt4.json", help="the kink-site scans (examples/kink_site_scan.py)")
     ap.add_argument("--out", default="docs/predictions/pin_design_belt4.json")
     args = ap.parse_args()
     rows = json.load(open(args.margins))["rows"]
@@ -200,6 +204,47 @@ def main():
                                          "pvdf_kink_sheet": sheets["vdf10"]["formation_kcal_per_kink_pair"], "mu_TT": loss[name]["mu_TT"], "three_axes": pt}
             md_c.append(f"| PVDF with {n_rev} reversed units per fourteen, no TrFE (PVDF itself: {m_pvdf:+.3f}, {sheets['vdf10']['formation_kcal_per_kink_pair']:.2f}) | {rows[name]['margin']:+.3f}, - | {e:.2f}, - | "
                         + line("", pt).split("|", 3)[3].lstrip())
+        # the rate by every scanned kink site: sum over the repeat's sites and both hands of exp(-E / kT), against the anchor cell's sum
+        try:
+            scans = json.load(open(args.sites)).get("rows", {})
+        except FileNotFoundError:
+            scans = {}
+
+        def site_sum(row):
+            hands = [scans[k] for k in (f"{row}@0", f"{row}@0~") if k in scans]
+            if not hands:
+                return None
+            zs, low = [], None
+            for h in hands:
+                es = [(v["formation"], v["units"], int(o)) for o, v in h["sites"].items() if v.get("converged", True) and v.get("kink_kept", True)]
+                zs.append(float(sum(np.exp(-e / 0.596) for e, _, _ in es)) * (len(h["letters"]) * 1.0 / len(es)) / len(h["letters"]))  # per site, so that a half-scanned repeat compares
+                best = min(es)
+                low = best if low is None or best < low else low
+            return {"z_per_site": float(np.mean(zs)), "hands_scanned": len(hands), "sites_scanned": [len(h["sites"]) for h in hands],
+                    "cheapest": {"energy": low[0], "units": low[1], "offset_bonds": low[2]}, "start_site": hands[0]["sites"]["0"]["formation"]}
+
+        md_z = ["| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at "
+                f"{args.ac:g} V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |", "|---|---|---|---|---|---|---|---|"]
+        out["sites"] = {"note": "kcal/mol per kink pair against all-trans, rigid pendants; the sum is over the scanned sites of the repeat and the scanned hands of the kink pair, "
+                                "per site; the frequency is the measured film's 364 kHz times the ratio of sums", "rows": {}}
+        z_ref = site_sum("vdf9-trfe4-cfe1-14")
+        if z_ref is not None:
+            cells_z = [("vdf9-trfe4-cfe1-14", "64/29/7 (one CFE per fourteen): the anchor", rows["vdf9-trfe4-cfe1-14"]["margin"]),
+                       (args.matrix, "the 71/29 matrix", m0)]
+            cells_z += [(n, out["units"][n]["what"] + ", one per fourteen", rows[n]["margin"]) for n in out["units"] if n != "vdf9-trfe4-cfe1-14"]
+            cells_z += [(n, c["what"] + ("" if n in REGIO_MATRICES else ", one of each per fourteen"), c["margin"]) for n, c in out["combinations"].items()]
+            for name, label, margin in cells_z:
+                z = site_sum(name)
+                if z is None or name not in loss:
+                    continue
+                ratio = z["z_per_site"] / z_ref["z_per_site"]
+                pt = point(margin, e_cfe - 0.596 * float(np.log(ratio)), loss[name]["mu_TT"], loss[name]["axial"])
+                out["sites"]["rows"][name] = dict(z, what=label, ratio_to_the_anchor=ratio, three_axes=pt)
+                hb = pt["at_the_heat_budget"]
+                fr = pt["f_relax_hz"]
+                fr = f"{fr / 1e6:.1f} MHz" if fr >= 1e6 else (f"{fr / 1e3:.0f} kHz" if fr >= 1e3 else f"{fr:.0f} Hz")
+                md_z.append(f"| {label} | {z['start_site']:.2f} | {z['cheapest']['energy']:.2f} ({z['cheapest']['units']}) | {ratio:.3g} | {fr} | {pt['strain_ac'][0] * 100:.3f}% | {pt['tan_delta'][0]:.3f} | "
+                            f"**{hb['strain_ac'][0] * 100:.3f}%** |")
         for name, u in out["units"].items():
             for n in (14, 20, 28, 40):
                 w = 14.0 / n
@@ -245,12 +290,13 @@ def main():
     out["calibrated_film"] = {"polar_fraction": film["polar_fraction"], "strain_ac": film["strain_ac"], "tan_delta": film["tan_delta"],
                               "note": "the literature channel as calibrated on the 63/30/7 film (margin zero, n 17)"}
     md_c = md_c if out.get("combinations") else []
-    out["tables_md"] = {"pins": "\n".join(md), "units": "\n".join(md_k), "three_axes": "\n".join(md_3), "combinations": "\n".join(md_c),
+    md_z = md_z if out.get("sites", {}).get("rows") else []
+    out["tables_md"] = {"pins": "\n".join(md), "units": "\n".join(md_k), "three_axes": "\n".join(md_3), "combinations": "\n".join(md_c), "sites": "\n".join(md_z),
                         "uniform": "\n".join(md_u), "statistical": "\n".join(md_s)}
     with open(args.out, "w") as fh:
         json.dump(out, fh, indent=1)
     text = ("Pin strength per unit\n\n" + "\n".join(md) + "\n\nWhat a unit costs and what it buys\n\n" + "\n".join(md_k) + "\n\nStrain, tan delta and frequency together (the rate from the kink sheets' population)\n\n" + "\n".join(md_3)
-            + "\n\nDesigned cells: two units together\n\n" + "\n".join(md_c) + f"\n\nUniform spacing on the {args.matrix} matrix (margin {m0:+.3f})\n\n" + "\n".join(md_u)
+            + "\n\nDesigned cells: two units together\n\n" + "\n".join(md_c) + "\n\nThe rate by every scanned kink site\n\n" + "\n".join(md_z) + f"\n\nUniform spacing on the {args.matrix} matrix (margin {m0:+.3f})\n\n" + "\n".join(md_u)
             + "\n\nStatistical against uniform, the margin law read locally\n\n" + "\n".join(md_s)
             + f"\n\nThe calibrated film's channel at the operating point: polar fraction {film['polar_fraction']:.2f}, S_ac {film['strain_ac'] * 100:.3f}%, tan delta {film['tan_delta']:.3f}.\n")
     with open(args.out.replace(".json", ".md"), "w") as fh:

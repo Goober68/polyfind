@@ -54,7 +54,9 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | vdf8-trfe4-an1-e1-14@0 | +1.53 | +3.26 | +3.14 | 5.540, 8.353, 92.265, 35.462 | 5.480, 8.201, 91.079, 36.139 |
 | vdf8-trfe4-an1-tfe1-14@0 | +0.78 | +2.89 | +2.89 | 5.595, 8.424, 91.561, 35.474 | 5.505, 8.238, 91.065, 36.144 |
 | vdf8-trfe4-ctfe1-rvdf1-14@0 | -4.41 | +1.00 | +0.84 | 5.657, 8.491, 91.641, 35.444 | 5.063, 9.150, 84.696, 36.027 |
+| vdf8-trfe4-ctfe1-rvdf1-14@0~ | -3.76 | +1.59 | +1.47 | 5.595, 8.550, 89.696, 35.455 | 5.063, 9.150, 84.696, 36.027 |
 | vdf9-trfe4-an1-14@0 | +1.82 | +3.25 | +3.06 | 5.526, 8.380, 92.297, 35.455 | 5.465, 8.200, 91.259, 36.162 |
+| vdf9-trfe4-an1-14@0~ | +2.09 | +3.65 | +3.56 | 5.082, 9.177, 95.474, 35.497 | 5.465, 8.200, 91.259, 36.162 |
 | vdf9-trfe4-cdfe1-14@0 | +1.46 | +2.79 | +2.65 | 5.212, 9.522, 83.916, 35.414 | 5.712, 8.404, 90.089, 36.165 |
 | vdf9-trfe4-cfe1-14@0 | +0.94 | +3.95 | +3.79 | 5.402, 8.426, 92.669, 35.496 | 5.302, 8.245, 91.700, 36.183 |
 | vdf9-trfe4-cfe1-14@0~ | +0.65 | +4.18 | +4.07 | 5.004, 9.075, 93.871, 35.529 | 5.302, 8.245, 91.700, 36.183 |
@@ -226,6 +228,11 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 * `VVVVVRRVVVVVRR` G+ T G- (14 of 14 positions): VV 5.05 VV 5.11 VV 5.40 VV 7.83 VR 10.41 RR 7.37 RV 7.16 VV 5.05 VV 5.11 VV 5.40 VV 7.83 VR 10.41 RR 7.37 RV 7.16
 * `VVRVVRVVVVRVVR` G+ T G- (14 of 14 positions): VV 7.09 VR 6.50 RV 7.20 VV 7.05 VR 6.47 RV 6.87 VV 4.81 VV 5.14 VV 7.09 VR 6.47 RV 7.20 VV 7.09 VR 6.50 RV 7.21
 * `VVRVVRVVVVRVVR` G- T G+ (14 of 14 positions): VV 5.79 VR 8.27 RV 5.42 VV 5.81 VR 8.28 RV 5.08 VV 4.66 VV 4.97 VV 5.74 VR 8.40 RV 5.41 VV 5.79 VR 8.28 RV 5.41
+* `VVVVIVVVVVVIVV` G+ T G- (7 of 14 positions): VV 3.29 VV 3.80 VV 5.46 VI 6.14 IV 3.27 VV 3.67 VV 3.28 VV - VV - VV - VI - IV - VV - VV -
+* `IVRVVRVKVVRVVR` G+ T G- (14 of 14 positions): IV 1.00 VR 1.53 RV 0.54 VV 0.80 VR 2.33 RV 1.96 VK 11.07 KV 5.70 VV 1.63 VR 2.72 RV 0.35 VV 0.61 VR 2.61 RI 3.61
+* `IVRVVRVKVVRVVR` G- T G+ (14 of 14 positions): IV 1.59 VR 1.31 RV 1.43 VV 1.46 VR 3.13 RV 4.27 VK 6.48 KV 1.58 VV 1.91 VR 0.90 RV 1.17 VV 2.36 VR 1.81 RI 1.69
+* `VVRVVRVAVVRVVR` G+ T G- (14 of 14 positions): VV 3.25 VR 4.92 RV 3.71 VV 3.47 VR 5.15 RV 5.43 VA 16.09 AV 8.64 VV 3.76 VR 5.03 RV 3.48 VV 3.27 VR 4.93 RV 3.61
+* `VVRVVRVAVVRVVR` G- T G+ (14 of 14 positions): VV 3.65 VR 4.62 RV 3.33 VV 3.57 VR 2.15 RV 2.26 VA 3.63 AV 3.63 VV 4.31 VR 3.79 RV 3.41 VV 3.67 VR 3.28 RV 3.38
 * `VVRVVRVCVVRVVR` G+ T G- (14 of 14 positions): VV 3.95 VR 5.30 RV 4.56 VV 4.06 VR 5.25 RV 5.88 VC 12.11 CV 11.41 VV 4.75 VR 5.45 RV 4.47 VV 3.96 VR 5.33 RV 4.51
 * `VVRVVRVCVVRVVR` G- T G+ (14 of 14 positions): VV 4.18 VR 5.45 RV 3.73 VV 4.05 VR 3.57 RV 3.42 VC 8.07 CV 8.28 VV 4.14 VR 4.46 RV 3.83 VV 4.23 VR 4.36 RV 3.81
 
@@ -233,6 +240,9 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 |---|---|---|---|---|---|
 | vdf10-trfe4-14-pairs (VVVVVRRVVVVVRR) | 1 | 5.05 | 10.41 | 1.05e-03 per handedness | 0.095 |
 | vdf10-trfe4-14 (VVRVVRVVVVRVVR) | 2 | 4.66 | 8.40 | 1.02e-03 per handedness | 0.092 |
+| vdf12-rvdf2-14 (VVVVIVVVVVVIVV) | 1 | 3.27 | 6.14 | 1.62e-02 per handedness | 1.455 |
+| vdf8-trfe4-ctfe1-rvdf1-14 (IVRVVRVKVVRVVR) | 2 | 0.35 | 11.07 | 1.48e+00 per handedness | 132.459 |
+| vdf9-trfe4-an1-14 (VVRVVRVAVVRVVR) | 2 | 2.15 | 16.09 | 4.99e-02 per handedness | 4.474 |
 | vdf9-trfe4-cfe1-14 (VVRVVRVCVVRVVR) | 2 | 3.42 | 12.11 | 1.12e-02 per handedness | 1.000 |
 
 **Margins with both cells polished** (kcal/mol per monomer, all-trans minus TG; positive when TG is lower)
@@ -270,3 +280,4 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 | vdf8-trfe4-ctfe1-rvdf1-14 (IVRVVRVKVVRVVR) | -0.089 | +0.076 | 0.403 | 0.659 | TGTG' | 21 / 52 deg | +10.7% |
 | vdf8-trfe4-an1-tfe1-14 (FVRVVRVAVVRVVR) | -0.249 | +0.186 | 0.147 | 0.730 | TG'TG | 7 / 27 deg | +12.4% |
 | vdf12-rvdf2-14 (VVVVIVVVVVVIVV) | -0.411 | +0.162 | 0.000 | 3.206 | TGTG' | 0 / 11 deg | +10.8% |
+| vdf5-rvdf1-6 (VVVVIV) | -0.505 | +0.064 | 0.000 | 3.484 | TGTG' | 0 / 11 deg | +10.7% |

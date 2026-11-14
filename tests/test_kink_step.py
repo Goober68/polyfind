@@ -889,3 +889,42 @@ def test_the_designed_cells_are_computed_not_summed():
     loss = json.loads((pred / "candidate_loss_map_belt4.json").read_text())["rows"]
     assert loss["vdf12-rvdf2-14"]["mu_TT"] == pytest.approx(loss["pvdf"]["mu_TT"] * 10.0 / 14.0, rel=0.03)  # twelve units up, two down
     assert loss["vdf12-rvdf2-14"]["mu_TT"] < 0.85 * loss["vdf10-trfe4-14"]["mu_TT"]
+
+
+def test_the_leaders_rates_go_by_every_scanned_kink_site():
+    """The leaders of the unit screen with their kink sites scanned (docs/CANDIDATE_MATERIALS.md
+    5.6 and 8.4, 2026-11-14).  The sum of exp(-E/kT) over a lattice's sites against the 64/29/7
+    cell's sum gives the matrix the 9% of section 8.4; the nitrile cell, PVDF with reversed units
+    and CTFE with a reversed unit stay ahead of the measured film's channel on strain at the heat
+    budget, tan delta and relaxation frequency; and the CTFE cell is cheap at its sites generally,
+    not at the reversed unit alone."""
+    pred = MIG.parent
+    d = json.loads((pred / "pin_design_belt4.json").read_text()) if (pred / "pin_design_belt4.json").exists() else {}
+    rows = d.get("sites", {}).get("rows", {})
+    names = ("vdf9-trfe4-an1-14", "vdf8-trfe4-ctfe1-rvdf1-14", "vdf12-rvdf2-14")
+    if any(n not in rows for n in names):
+        pytest.skip("the leaders' site scans are not stored")
+    assert rows["vdf9-trfe4-cfe1-14"]["ratio_to_the_anchor"] == pytest.approx(1.0) and rows["vdf10-trfe4-14"]["ratio_to_the_anchor"] == pytest.approx(0.092, abs=0.004)
+    film = d["three_axes"]["rows"]["calibrated_film"]
+    hb = lambda r: r["three_axes"]["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
+    for n in names:
+        r = rows[n]
+        assert r["ratio_to_the_anchor"] > 2.5 and r["cheapest"]["energy"] <= r["start_site"] + 1e-9
+        assert hb(r) > film["at_the_heat_budget"]["strain_ac"][0] and r["three_axes"]["tan_delta"][0] < 0.2 * film["tan_delta"][0]
+    assert rows["vdf9-trfe4-an1-14"]["hands_scanned"] == 2 and rows["vdf9-trfe4-an1-14"]["cheapest"]["energy"] < rows["vdf9-trfe4-an1-14"]["start_site"] - 1.0
+    assert hb(rows["vdf8-trfe4-ctfe1-rvdf1-14"]) > hb(rows["vdf9-trfe4-an1-14"]) > hb(rows["vdf12-rvdf2-14"]) > hb(rows["vdf10-trfe4-14"])
+    scans = json.loads((pred / "kink_site_scan_belt4.json").read_text())["rows"]
+    for hand in ("vdf8-trfe4-ctfe1-rvdf1-14@0", "vdf8-trfe4-ctfe1-rvdf1-14@0~"):
+        kept = [v["formation"] for v in scans[hand]["sites"].values() if v.get("kink_kept", True)]
+        assert len(kept) >= 12 and sorted(kept)[len(kept) // 2] < 2.0  # most sites under 2 kcal/mol, not one
+        assert all(v["converged"] for v in scans[hand]["sites"].values())
+    wall = scans["vdf9-trfe4-an1-14@0"]["sites"]
+    assert max(v["formation"] for v in wall.values()) > 15.0 and {v["units"] for v in wall.values() if v["formation"] > 8.0} == {"VA", "AV"}
+    regio = [v["formation"] for v in scans["vdf12-rvdf2-14@0"]["sites"].values()]
+    assert len(regio) == 7 and sum(e < 3.9 for e in regio) == 5 and max(regio) < 6.3
+    e7 = json.loads((pred / "e7_polyfind_belt4.json").read_text())["systems"]
+    six = e7["pvdf_reversed_6"]
+    assert six["sequence"] == "VVVVIV" and six["margin_TT_minus_TG_kcal"] == pytest.approx(0.064, abs=2e-3)
+    assert all("file_tilted" in six["conformations"][c] and (pred / six["conformations"][c]["file_tilted"]["name"]).exists() for c in ("TTTT", "TGTG'"))
+    assert {k: round(v["margin_TT_minus_TG_kcal"], 2) for k, v in e7.items()} == {"pvdf_reversed_6": 0.06, "pvdf_reversed_14": 0.16, "vdftrfe_an_70_20_10": 0.57,
+                                                                                 "vdftrfe_80_20": 0.23, "vdftrfe_an_64_29_7": 0.2, "vdftrfe_ctfe_rvdf_57_29_7_7": 0.08}

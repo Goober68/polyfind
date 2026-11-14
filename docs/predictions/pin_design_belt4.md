@@ -89,6 +89,16 @@ Designed cells: two units together
 | CFE with CDFE, one of each per fourteen | +0.807, +0.946 | not computed | - | - | - | - | - |
 | PVDF with 2 reversed units per fourteen, no TrFE (PVDF itself: +0.744, 5.06) | +0.162, - | 3.24, - | 919 kHz | 0.025% / 0.025% | 0.010 / 0.020 | **0.076%** / 0.041% | 5.4 (heat) / 2.9 (heat) |
 
+The rate by every scanned kink site
+
+| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
+|---|---|---|---|---|---|---|---|
+| 64/29/7 (one CFE per fourteen): the anchor | 3.95 | 3.42 (RV) | 1 | 364 kHz | 0.001% | 0.000 | **0.004%** |
+| the 71/29 matrix | 7.09 | 4.66 (VV) | 0.0917 | 33 kHz | 0.131% | 0.889 | **0.026%** |
+| AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** |
+| CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.117% | 0.001 | **0.189%** |
+| PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** |
+
 Uniform spacing on the vdf10-trfe4-14 matrix (margin +0.056)
 
 | one pin per | mol% | AN (+2.0): margin, polar fraction, S_ac, tan delta 34 kHz | CTFE (+3.4): margin, polar fraction, S_ac, tan delta 34 kHz | CFE (+3.7): margin, polar fraction, S_ac, tan delta 34 kHz | CDFE (+8.8): margin, polar fraction, S_ac, tan delta 34 kHz |

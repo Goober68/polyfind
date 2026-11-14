@@ -753,10 +753,38 @@ with reversed units in place of TrFE.**
   A designed cell has to be computed, not summed.
 * **What qualifies the designed cells' rates.** In the two-unit cells the kink pair sits on the
   trans-favouring unit itself, not on the VDF-VDF pair of the single-unit cells, so their kink
-  energies are not like for like with the table above. A lattice's rate goes by its cheapest kink
-  site, and no cell of this screen has had its sites scanned (`kink_site_scan.py`): every kink
-  energy here is an upper bound on its lattice's cheapest. Only two of the four helix conformers
-  were run for each cell, so each margin is a lower bound by the usual 0.1 to 0.2.
+  energies are not like for like with the table above. A lattice's rate goes by all of its kink
+  sites; the three leading cells have been scanned since (below), and for the others the one
+  kink energy here is an upper bound on the lattice's cheapest. Only two of the four helix
+  conformers were run for each cell, so each margin is a lower bound by the usual 0.1 to 0.2.
+
+**The leaders' rates by every kink site (2026-11-14; PI: "Go on both").** The tables above take
+each lattice's rate from one kink site. `examples/kink_site_scan.py` has now walked the kink sheet
+along the whole repeat, for both hands of the kink pair, in the nitrile cell, the CTFE cell with a
+reversed unit and PVDF with reversed units (profiles in 8.4), and the rate is taken from the sum
+of `exp(-E / kT)` over all of a lattice's sites against the same sum for the 64/29/7 cell
+(rigid pendants, as scanned):
+
+| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
+|---|---|---|---|---|---|---|---|
+| 64/29/7 (one CFE per fourteen): the anchor | 3.95 | 3.42 (RV) | 1 | 364 kHz | 0.001% | 0.000 | **0.004%** |
+| the 71/29 matrix | 7.09 | 4.66 (VV) | 0.0917 | 33 kHz | 0.131% | 0.889 | **0.026%** |
+| AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** |
+| CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.117% | 0.001 | **0.189%** |
+| PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** |
+
+* **The order of the leaders stands, and the nitrile gains.** By its sites' sum the nitrile cell
+  is at 1.8 MHz (1.2 from the one site) with 0.097% at the heat budget; PVDF with reversed units at
+  1.1 MHz and 0.081%; CTFE with a reversed unit at 52 MHz and the mechanical ceiling. All three
+  stay ahead of the measured film's channel (364 kHz, 0.066%) on the three axes.
+* **The matrix is at 33 kHz by its sum, not 2 kHz,** as 8.4 had it: the single site overstated
+  how slow a pinless lattice is. A sparse pin is still slow by this count (tan delta 0.9 at 34
+  kHz for the matrix), so the dense cells still lead on the three axes.
+* **The CTFE cell's kink sheets cost about kT at most of its sites** (8.4). That is what makes it
+  fast in this table, and it is also the sign that the model's all-trans state for this cell is
+  close to not existing: the number to trust least here is the one that leads.
+* The two-unit nitrile cells (with TFE, with ethylene) and the single units other than the
+  nitrile are not scanned; their rates remain the one-site ones above.
 
 **Where this leaves the ranking.** On the three axes the order of the cells in hand is CTFE with
 reversed VDF, the nitrile with ethylene or TFE, the nitrile alone, PVDF with reversed units, the
@@ -764,9 +792,10 @@ measured film's channel, and far behind them the model's own CFE cell and every 
 of the leaders are dense: two units in fourteen monomers. What is solid is the direction: a
 loosening pin made affordable by a trans-favouring unit, with the pair placed within the window
 by computing the cell. What is not: every number that rests on chlorine or nitrile parameters or
-on an unanchored junction, the rate model, and the kink sites. The cheapest DFT tests, in order:
-the PVDF cell with reversed units (VDF's groups only), the nitrile cell, the CTFE cell with a
-reversed unit.
+on an unanchored junction, and the rate model. The DFT tests are asked for (E7, dispatched
+2026-11-14: `sarco/materials/ask-polyfind-dipole-unit-screen-cells-v1.md`), cheapest first: PVDF
+with one reversed unit in six (72 atoms; polyfind: +0.064, on the top of the curve with no TrFE),
+the nitrile cells, the CTFE cell with a reversed unit.
 
 ## 6. The slate's other chemistries
 
@@ -1551,6 +1580,11 @@ on, in order along the chain (`kink_site_scan_belt4.json`; profiles in `kink_sum
 | 71/29 `VVRVVRVVVVRVVR`, G+ T G- | VV 7.09, VR 6.50, RV 7.20, VV 7.05, VR 6.47, RV 6.87, VV 4.81, VV 5.14, VV 7.09, VR 6.47, RV 7.20, VV 7.09, VR 6.50, RV 7.21 |
 | 71/29, the mirrored pair | VV 5.79, VR 8.27, RV 5.42, VV 5.81, VR 8.28, RV 5.08, VV 4.66, VV 4.97, VV 5.74, VR 8.40, RV 5.41, VV 5.79, VR 8.28, RV 5.41 |
 | 71/29 with the TrFE in pairs `VVVVVRRVVVVVRR`, G+ T G- | VV 5.05, VV 5.11, VV 5.40, VV 7.83, VR 10.41, RR 7.37, RV 7.16, and the same again (the two halves of the repeat agree to 0.001) |
+| 64/29/7 with AN in place of CFE `VVRVVRVAVVRVVR`, G+ T G- (2026-11-14) | VV 3.25, VR 4.92, RV 3.71, VV 3.47, VR 5.15, RV 5.43, **VA 16.09**, **AV 8.64**, VV 3.76, VR 5.03, RV 3.48, VV 3.27, VR 4.93, RV 3.61 |
+| the same, the mirrored pair | VV 3.65, VR 4.62, RV 3.33, VV 3.57, VR 2.15, RV 2.26, (VA 3.63: the kink pair did not stay), (AV 3.63: the kink pair did not stay), VV 4.31, VR 3.79, RV 3.41, VV 3.67, VR 3.28, RV 3.38 |
+| one CTFE and one reversed VDF per fourteen `IVRVVRVKVVRVVR`, G+ T G- (2026-11-14) | IV 1.00, VR 1.53, RV 0.54, VV 0.80, VR 2.33, RV 1.96, **VK 11.07**, (KV 5.70: the kink pair did not stay), VV 1.63, VR 2.72, RV 0.35, VV 0.61, VR 2.61, RI 3.61 |
+| the same, the mirrored pair | IV 1.59, VR 1.31, RV 1.43, VV 1.46, VR 3.13, RV 4.27, (VK 6.48: the kink pair did not stay), (KV 1.58: the kink pair did not stay), VV 1.91, VR 0.90, RV 1.17, VV 2.36, VR 1.81, RI 1.69 |
+| PVDF with two reversed units per fourteen `VVVVIVVVVVVIVV`, one period (2026-11-14) | VV 3.29, VV 3.80, VV 5.46, **VI 6.14**, IV 3.27, VV 3.67, VV 3.28 |
 
 Is a site's energy the site's, or the packing basin its relaxation fell into? In the 71/29 cell,
 where neighbouring VDF-VDF positions come out 2 kcal/mol apart in cells 0.15 A apart in a, four
@@ -1573,6 +1607,17 @@ decimals: the lattice follows the site.
   neither kink pair sits at the CFE or passes it. The pin of the statics, which favours the helix
   around itself by 3.7 kcal/mol per unit (2.1), is to a single kink pair a wall, and a sheet lives
   in the segment between two of them. (The kink pair on the odd bonds is not scanned.)
+* **The leaders of the unit screen, scanned (2026-11-14; PI: "Go on both").** *The nitrile* is a
+  wall to one hand of the kink pair (16.1 and 8.6 with a gauche bond beside it) and no site at all
+  to the other (the kink pair does not stay there), and its lattice has every other site between
+  2.2 and 5.4: the cheapest, 2.15, is the mirrored pair two monomers before the nitrile, 1.1
+  under the site the screen had used. *CTFE with a reversed VDF unit* is cheap everywhere but at
+  the CTFE (11.1 for one hand): 0.35 to 3.6 for one hand and 0.9 to 4.3 for the other, so the
+  0.84 of the screen was the lattice's and not the reversed unit's. Kink sheets at 0.4 to 1
+  kcal/mol are about kT: this all-trans lattice is barely one, and the two-state picture the loss
+  model is built on is at its limit there. *PVDF with reversed units* costs 3.3 to 3.8 at five
+  sites of seven and 5.5 to 6.1 at the two before the reversed unit (PVDF: 5.3 everywhere). The
+  rates that follow from the sums over these sites are in 5.6.
 * **What this says to a sequence designer.** At 71/29 the regular sequence gives the sheet two
   cheap sites in fourteen (its one four-VDF run) and a floor of 6.5-7.2 everywhere else, a
   corrugation of 0.7; grouping the TrFE in pairs gives it three cheap sites in seven (5.05-5.40)

@@ -21,6 +21,33 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The leaders' kink sites scanned, and E7 asked of Dipole, 2026-11-14 (PI: "Go on both").** Text:
+`docs/CANDIDATE_MATERIALS.md` 5.6 ("The leaders' rates by every kink site") and 8.4 (profiles);
+`docs/E1_E2_PREDICTIONS.md` (E7). STATE: DONE, CPU ONLY (spend unchanged: about $11.60 of the $46).
+(1) SITE SCANS (`examples/kink_site_scan.py --row ROW [--mirror-kink]`, `kink_site_scan_belt4.json`; `pin_design.py` table
+"sites": the rate from the sum of exp(-E/kT) over a lattice's sites and both hands against the 64/29/7 cell's sum):
+    64/29/7 (anchor) 364 kHz | 71/29 matrix 33 kHz (ratio 0.092) | AN one per 14: 4.8x, 1.8 MHz, 0.097% at the budget
+    CTFE with reversed VDF: 143x, 52 MHz, 0.189% | PVDF with 2 reversed units per 14: 2.9x, 1.1 MHz, 0.081%
+The leaders' order stands. AN's cheapest site is 2.15 (mirrored pair, two monomers before the nitrile; the nitrile is a
+wall to the other hand, 16.1/8.6). THE CTFE CELL IS CHEAP AT EVERY SITE BUT THE CTFE (0.35 to 3.6): its low kink energy
+is the lattice's, and at about kT it says the all-trans state of that cell is barely a lattice: trust it least.
+(2) E7 (`sarco/materials/ask-polyfind-dipole-unit-screen-cells-v1.md`, files and README in
+`sarco/materials/electrostriction/requests/unit_screen_cells_e7_v1/`; polyfind registration at `7d860b9`): margins of six
+cell pairs, single points on the tilted files first, cheapest first:
+    a  PVDF, one reversed unit in six `VVVVIV` (72 atoms)      +0.064  (new row `vdf5-rvdf1-6`: 4.1 per reversed unit, as the 14-mer)
+    b  VDF/TrFE/AN 70/20/10 (122)  +0.565   b' its 80/20 matrix (120)  +0.229
+    c  64/29/7 with AN (170)  +0.197   d  CTFE with reversed VDF (168)  +0.076   e  PVDF, 2 reversed per 14 (168)  +0.162
+Prediction file `docs/predictions/e7_polyfind_belt4.json` (`examples/e2_polished_predictions.py --set e7`); read answers
+with `examples/crosscheck_e1_e2.py --polyfind "" --dipole "" --e2 docs/predictions/e7_polyfind_belt4.json --e2-dipole
+<file>`. It queues behind E2's running relaxation, E5, E5 d and the E2 addendum.
+TRAPS. A scan started while another process scans the same row repeats its work (the sites file is locked, the plan is
+not): start one process per row and hand. Sites where the kink pair did not stay (`kink_kept` false) are left out of
+the sums. The scans are rigid-pendant energies; the one-site tables of 5.6 carry the tilts.
+NEXT, proposed to the PI: (a) site scans of the two-unit nitrile cells and of CTFE alone, to see what the reversed unit
+adds to CTFE; (b) the single-chain step barriers of the leaders in sixteen chains (a pod-hour), the other rate model;
+(c) the other two helix conformers of the designed rows; (d) when E7 a lands, a regio-defect matrix with a loosening
+pin in it (PVDF, reversed units, CTFE or AN; no TrFE).
+
 **The unit screen on three axes, 2026-11-14 (PI: "Go on the screen"; scored by the standing objective above).** Text:
 `docs/CANDIDATE_MATERIALS.md` 5.6 (and the strain-only notes it put into 3, 5.3, 5.4, 5.5; section 7 says what the 364 kHz
 anchor is). STATE: DONE, CPU ONLY, NO POD (spend unchanged: about $11.60 of the $46).
