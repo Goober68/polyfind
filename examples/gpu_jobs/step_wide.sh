@@ -3,15 +3,17 @@
 # (examples/kink_wide_cell.py seed, then examples/kink_migration.py --surface --seed-from).
 # A job of examples/runpod_jobs_pod.sh.  Arguments:
 #
-#   step_wide.sh FROM ALONG... to NX NY [PIECES]
+#   step_wide.sh [row ROW] FROM ALONG... to NX NY [PIECES]
 #
 # FROM is the narrower cell ("4x2"), ALONG the doublings ("a", "b", or both in order), NX NY the
-# cell they lead to, PIECES what to relax (default "I,B").  The narrower row is read from the
-# shared table of earlier jobs if it is there, else from the stored one; the result goes to the
-# shared table (jobs/shared/wide_steps.json), so a later job can start from it.
+# cell they lead to, PIECES what to relax (default "I,B"), ROW the sequence row (default vdf10).
+# The narrower row is read from the shared tables of earlier jobs if it is there (wide_steps.json,
+# then band_row.sh's steps.json), else from the stored one; the result goes to the shared table
+# (jobs/shared/wide_steps.json), so a later job can start from it.
 set -euo pipefail
 ROW="${STEP_ROW:-vdf10}"
 KINK="${STEP_KINK:-0}"
+if [ "${1:-}" = "row" ]; then ROW="$2"; shift 2; fi
 FROM="$1"; shift
 ALONG=()
 while [ "$1" != "to" ]; do ALONG+=("$1"); shift; done
@@ -22,9 +24,11 @@ mkdir -p "$SHARED/ck"
 TABLE="$SHARED/wide_steps.json"
 KEY="$ROW@$KINK $FROM mover 0 ahead host flexible"
 SOURCE="docs/predictions/kink_migration_belt4.json"
-if [ -f "$TABLE" ] && "$PY" -c "import json,sys; sys.exit(0 if sys.argv[2] in json.load(open(sys.argv[1]))['rows'] and 'B' in json.load(open(sys.argv[1]))['rows'][sys.argv[2]] else 1)" "$TABLE" "$KEY"; then
-  SOURCE="$TABLE"
-fi
+for f in "$TABLE" "$SHARED/steps.json"; do
+  if [ -f "$f" ] && "$PY" -c "import json,sys; sys.exit(0 if 'B' in json.load(open(sys.argv[1]))['rows'].get(sys.argv[2], {}) else 1)" "$f" "$KEY"; then
+    SOURCE="$f"; break
+  fi
+done
 SEED="seed ${NX}x${NY} from $FROM"
 echo "== ${NX}x${NY} from the $FROM row of $SOURCE, let in along ${ALONG[*]}; pieces $PIECES"
 "$PY" examples/kink_wide_cell.py seed --source "$SOURCE" --row "$KEY" --along "${ALONG[@]}" --name "$SEED" --out "$TABLE"

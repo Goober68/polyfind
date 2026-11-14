@@ -244,6 +244,14 @@ def store(args) -> None:
         rec = {"note": args.note, **{name: {k: v for k, v in wide[name].items() if k not in ("state", "torsions_deg")} for name in again}}
         if saddles:
             rec["saddles"] = {seg: {k: v for k, v in sd.items() if k not in ("state", "torsions_deg", "rounds")} for seg, sd in saddles.items()}
+        heavy = ("state", "images", "rounds", "torsions_deg", "saddle_torsions_deg", "earlier")
+        for seg in ("A-I", "I-B"):  # a row computed with its own bands: their tops and settled saddles, without the images
+            if seg in wide:
+                rec[seg] = {k: ({a: b for a, b in v.items() if a not in heavy} if k == "polished" else v) for k, v in wide[seg].items() if k not in heavy}
+                if seg in have:
+                    mine, theirs = wide[seg].get("polished", {}).get("saddle"), have[seg].get("polished", {}).get("saddle")
+                    print(f"   band {seg}: top {wide[seg]['saddle']:+.4f} again, {have[seg]['saddle']:+.4f} stored"
+                          + (f"; settled saddle {mine:+.4f} again, {theirs:+.4f} stored ({mine - theirs:+.4f})" if mine is not None and theirs is not None else ""))
         have[args.beside] = rec
         for name in again:
             if name in have:
