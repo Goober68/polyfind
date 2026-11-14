@@ -14,6 +14,36 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**What N does next: it falls into L, 2026-11-14 (PI: "Go" on "what N does next").** Text: `docs/CANDIDATE_MATERIALS.md` 8.3
+("What N does next"). Files: `kink_states_belt4.json` (states N2, B2, NN4, NN12, L; bands N-N2, N-NN4, N-NN12, A-L,
+N-L), each sixteen-chain row's `to_N.then` (copolymers) and `to_L` (all three) in `kink_migration_belt4.json`, tables in
+`kink_summary_belt4.md`, job logs in `docs/predictions/gpu_jobs_a100_20261114_n3/` and `_n4/`. Test:
+`tests/test_kink_step.py::test_n_is_a_doorway_to_l_in_the_copolymers`. STATE: DONE; BOTH PODS DELETED AND CONFIRMED (43
+and 26 minutes, $2.51; about $11.60 of the $46 used in all).
+SIXTEEN CHAINS, kcal/mol against the sheet, bands in the per-chain metric:
+    from N                              64/29/7                         71/29
+    back to the sheet                   2.58                            2.95
+    N2 (the move again)                 +14.88, 7.2 above N             +12.66, 5.6 (band top, NOT converged)
+    a stack neighbour in N too          pair +19.9/+20.0 (2.3 MORE than two apart), 12.5 / 11.7 to join
+                                                                        pair +18.73 (0.8 more), 13.2 / 14.1
+    B2 (sheet's hand at N's site)       +12.40                          +12.59
+    to L                                1.67 above N                    1.61 above N
+L = THE KINK PAIR THREE BONDS ON (A MONOMER AND A HALF), THE SHEET'S HAND (gauche bonds 3, 5): +4.97 (64/29/7), +3.74
+(71/29), +5.42 (PVDF): the lowest one-chain state off the sheet in all three (under PVDF's B, +5.91). Straight from
+the sheet: 15.29, 15.58, 11.82. FROM N: 10.49 and 10.56 (settled), UNDER N's way back, so N goes on to L 4.6 and 9.4
+times per return. THE COPOLYMERS' ONE-CHAIN MOVE IS SHEET -> N -> L: barrier 11.40 / 11.89 (N's, unchanged, so the
+cheaper-move frequency map stands), back 6.43 / 8.15. PVDF: N -> L is 5.9 above N (13.66); its moves are the step
+(11.64, B) or straight to L (11.82).
+L was found by accident (a dip on the matrix's N-N2 band) and built from the sheet for the other two with
+`settle.sh ROW 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71`. New tool: `settle --copy-mover-to CHAIN`
+(job keyword `copyto`): a translate of the moving chain put in its state. A SEARCH FROM A BAND TOP THAT SITS NEXT TO AN
+END STATE STILL SLIDES; a converged band's top in the metric is the number to take then (the rows' records say which
+was used: `highest`). ODD-BOND KINK SITES HAD NOT BEEN LOOKED AT FOR ONE CHAIN: every state before L had its gauche
+bonds on even bonds.
+NEXT: (a) does a neighbour follow a chain that is in L (`copyto` + `between`), and L's own next move: this is the
+advance question now; (b) L and N in four and thirty-two chains; (c) the other odd-bond sites (1,3; 5,7) for one chain
+in the three lattices: L may not be the only one; (d) the matrix's unconverged bands (N-N2, N-NN4).
+
 **The way to N, and bands in the per-chain metric, 2026-11-14 (PI: "Go" on "write the preconditioned band on CPU, then a
 short pod").** Text: `docs/CANDIDATE_MATERIALS.md` 8.3 (the last two sub-points of "One chain alone in the copolymer
 lattices"), `docs/PERFORMANCE_REVIEW.md` 17.10. Files: `kink_states_belt4.json` (states M, N, P, Q; bands), each

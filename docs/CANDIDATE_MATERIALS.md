@@ -1118,9 +1118,47 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     terpolymer is the fastest.** The frequency map on it
     (`candidate_frequency_map_belt4_steps_4x2_cheapest.md`) keeps the matrix where every
     protocol has put it, at 0.44 of the terpolymer's rate (158 kHz; 147 on the two-chain steps,
-    155 on the sixteen-chain ones), and brings PVDF from 44 MHz down to 243 kHz. What N does
-    next (its own next move, whether a neighbour follows it, and where the kink pair is after
-    two such moves) is not computed.
+    155 on the sixteen-chain ones), and brings PVDF from 44 MHz down to 243 kHz.
+  - *What N does next: it does not go on, it is not joined, and in the copolymers it does not
+    come back either; it falls into a third state (2026-11-14, PI: "Go").* From N, sixteen
+    chains, bands in the per-chain metric (`kink_states_belt4.json`; each row's `to_N.then` and
+    `to_L`):
+
+    | from N | 64/29/7 | 71/29 |
+    |---|---|---|
+    | back to the sheet | 2.58 | 2.95 |
+    | the same move again (N2: bonds 8 and 10, the sheet's hand, four monomers on) | N2 at +14.88, 7.2 above N to get there | N2 at +12.66, 5.6 (the band's top; not converged) |
+    | a stack neighbour making the move beside it | the pair +19.90 and +19.99, 2.3 more than two apart; 12.5 and 11.7 for the neighbour to join | the pair +18.73, 0.8 more than two apart; 13.2 and 14.1 |
+    | the sheet's hand at N's own site (B2) | +12.40: the turn-over is worth 3.6 | +12.59: 3.6 |
+    | to L | 1.67 above N | 1.61 above N |
+
+    N does not lead on along the chain (the next such move is 6.1 and 3.7 uphill) and it does
+    not recruit: where a second PVDF chain beside a stepped one cost less than the first (2.4
+    for 5.9), a second copolymer chain in N beside the first costs more (11.1 for 8.8; 9.8 for
+    8.9). But N is not a short excursion from the sheet either. A dip under N on the matrix's
+    band towards N2 relaxed to **L: the kink pair three bonds on, a monomer and a half, with the
+    sheet's own hand** (gauche bonds 3 and 5), at +3.74 (71/29), +4.97 (64/29/7) and +5.42
+    (PVDF) in sixteen chains: the lowest state of one chain off the sheet in all three, under
+    PVDF's completed step (+5.91) too. Straight from the sheet it lies behind 15.3 (64/29/7)
+    and 15.6 (71/29), and 11.82 in PVDF. From N it lies behind a settled saddle 1.67 and 1.61
+    above N, lower than N's way back, so a copolymer chain in N goes on to L 4.6 and 9.4 times
+    for each time it returns to the sheet:
+
+    | lattice, sixteen chains | one chain's move, where it ends | barrier | barrier back |
+    |---|---|---|---|
+    | 64/29/7 | sheet, N (+8.82), L (+4.97): three bonds on | 11.40 | 6.43 |
+    | 71/29 | sheet, N (+8.94), L (+3.74): three bonds on | 11.89 | 8.15 |
+    | PVDF | the step: one monomer on, B (+5.91); or straight to L (+5.42), three bonds on | 11.64; 11.82 | 5.73; 6.40 |
+
+    The barriers are those of the cheaper-move table above, so the frequency map on it stands;
+    what changes is what the move is. **In the copolymer lattices one chain's kink pair does not
+    step a monomer onto the next unit: it turns over two monomers on and comes to rest a
+    monomer and a half on, and it stays there for 6.4 to 8.2 kcal/mol** (6e7 and 3e6 /s back
+    with the 3e12 /s attempt frequency, against the 4e10 and 2e10 /s at which N alone would
+    have returned). In PVDF, N lies beyond the step
+    and L is reached from the sheet at the step's own price. Not computed: whether a neighbour
+    follows a chain that is in L (the question that showed PVDF's stepped chain recalled and
+    N not joined), L's own next move, and L in the smaller and larger cells.
   - *A band in the chains' own metric (2026-11-14).* The bands above crept: 900 to 1100
     iterations to find a dip, or convergence on a top that would not settle. The minimisations
     had been cured of the same disease by working in variables in which each chain's stiff
@@ -1238,7 +1276,10 @@ the other two rows carry no strain on either. The step barriers are on the saddl
   one copolymer chain alone 14.5 (64/29/7) and 15.0 (71/29) in sixteen by the one-monomer step
   (83 and 35 /s) and 11.4 and 11.9 by its cheaper move, two monomers on with the other hand
   (1.5e4 and 6.5e3 /s; 8.3, 2026-11-14): still two orders slower than the measured channel, as
-  the two-chain step was. Nor is the single-chain rate the rate at
+  the two-chain step was. That move does not stop two monomers on: the chain goes on over 1.6
+  to a state a monomer and a half on (L) and stays there, 6e7 and 3e6 /s back (8.3), so in the
+  copolymers the single-chain move is a displacement that lasts, where PVDF's step is an
+  excursion. Nor is the single-chain rate the rate at
   which a sheet advances: in PVDF a chain that has stepped out comes back 6500 times for each
   time a stack neighbour joins it (8.3), so in zero field that step is a local excursion, and
   an advance needs a drive whose effect on these barriers is not computed. The earlier

@@ -661,3 +661,40 @@ def test_the_copolymers_cheaper_move_is_to_n_and_pvdfs_is_the_step():
     direct = states["bands"][key(ter)]["I-B"]  # the method check: converged in the metric, settles, and is still the higher way to B
     assert direct["converged"] and direct["iterations"] < 150 and direct["polished"]["a_saddle_between_the_two"]
     assert direct["polished"]["saddle"] > rows[key(ter)]["by_way_of_M"]["barrier_forward"] + 0.5
+
+
+def test_n_is_a_doorway_to_l_in_the_copolymers():
+    """What N does next (docs/CANDIDATE_MATERIALS.md 8.3, 2026-11-14), sixteen chains.  In both
+    copolymers the move made again is uphill, a stack neighbour in N beside the first costs more
+    than the first did, and the way from N to L (the kink pair three bonds on, the sheet's hand)
+    is lower than N's way back to the sheet; L is the lowest one-chain state in all three
+    lattices; in PVDF the way from N to L is above N's way back and L is reached from the sheet."""
+    rows = json.load(open(MIG))["rows"]
+    states_path = MIG.with_name("kink_states_belt4.json")
+    key = lambda row: f"{row}@0 4x2 mover 0 ahead host flexible"  # noqa: E731
+    ter, mat, pvdf = "vdf9-trfe4-cfe1-14", "vdf10-trfe4-14", "vdf10"
+    if not states_path.exists() or any("to_L" not in rows.get(key(r), {}) for r in (ter, mat, pvdf)):
+        pytest.skip("the ways to L are not stored")
+    states = json.loads(states_path.read_text())
+    for row in (ter, mat, pvdf):
+        r, t, st = rows[key(row)], rows[key(row)]["to_L"], states["settled"][key(row)]
+        L = st["L"]
+        assert L["converged"] and L["gauche_bonds"] == [3, 5] and L["torsions_deg"][3] > 0.0 > L["torsions_deg"][5] and L["chains_off_the_sheet"].keys() == {"0"}
+        assert t["L"] == pytest.approx(L["energy"]) and L["energy"] < min(r["I"]["energy"], r["B"]["energy"], st["N"]["energy"])
+        assert t["barrier_back"] == pytest.approx(t["barrier_forward"] - t["L"]) and t["barrier_back"] > 6.0
+        leg = states["bands"][key(row)]["N-L"]["polished"]
+        assert leg["converged"] and leg["a_saddle_between_the_two"] and t["from_N"]["highest"] == pytest.approx(leg["saddle"], abs=0.01)
+    for row in (ter, mat):
+        r, t, then = rows[key(row)], rows[key(row)]["to_L"], rows[key(row)]["to_N"]["then"]
+        assert t["the_way"] == "by way of N" and t["barrier_forward"] == pytest.approx(r["to_N"]["saddle"])  # N's saddle is the highest on the way
+        assert 1.4 < t["barrier_from_N"] < 1.9 and t["barrier_from_N"] < t["N_back_to_the_sheet"] - 0.8 and t["to_L_for_each_return_from_N"] > 4.0
+        assert t["straight_from_the_sheet"]["highest"] > t["barrier_forward"] + 3.0
+        assert then["N2_above_N"] > 3.5 and then["barrier_on"] > then["barrier_back"] + 2.5 and 3.4 < then["the_turn_over_is_worth"] < 3.8
+        for nb in then["neighbours"].values():  # a neighbour in N too: dearer than the first, and a higher barrier than the first's own
+            assert nb["more_than_the_first_by"] > 0.5 and nb["barrier_to_join"] > nb["the_first_chains_own_barrier"]
+        pair = states["settled"][key(row)]["NN4"]
+        assert pair["chains_off_the_sheet"].keys() == {"0", "4"} and pair["gauche_bonds"] == [4, 6]
+    t = rows[key(pvdf)]["to_L"]
+    assert t["the_way"] == "straight from the sheet" and t["barrier_from_N"] > t["N_back_to_the_sheet"] + 1.0
+    assert abs(t["barrier_forward"] - rows[key(pvdf)]["barrier_forward_polished"]) < 0.3  # at the step's own price
+    assert states["settled"][key(mat)]["L"]["energy"] == pytest.approx(3.744, abs=1e-3)
