@@ -57,6 +57,8 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | sequence | cell, moving chains | host | wide kink I | saddle A-I | saddle I-B | B (one monomer ahead) | barrier ahead / back | rate at 300 K, 3e12 /s attempt | bands' forces |
 |---|---|---|---|---|---|---|---|---|---|
 | vdf10-trfe4-14@0 ahead | 1x1, 1 of 2 | flexible | +6.47 | +7.02, **+7.05** | +12.02, **+12.02** | +11.25 | 12.02 / 0.77 | 5.2e+03 /s | 0.21, 0.10 |
+| vdf10-trfe4-14@0 ahead | 2x1, 1 of 4 | flexible | +9.53 | +9.59, **+9.58** | +13.69, **+13.68** | +12.31 | 13.68 / 1.36 | 3.3e+02 /s | 0.10, 0.29 |
+| vdf10-trfe4-14@0 ahead | 4x2, 1 of 16 | flexible | +9.36 | +9.55, **+9.53** | +15.04, **+15.00** | +10.70 | 15.00 / 4.30 | 35 /s | 0.10, 0.10 |
 | vdf10@0 ahead | 1x1, 1 of 2 | flexible | +7.01 | +7.55, **+7.54** | +8.94, **+8.91** | +1.97 | 8.91 / 6.95 | 9.6e+05 /s | 0.10, 0.10 |
 | vdf10@0 ahead | 1x1, all 2 (the sheet in register) | flexible | +5.06 | +8.23, **+7.38** | +7.87, **+7.34** (polish not converged) | -0.00 | 8.23 / 8.23 | 3 /s | 1.04, 0.81 |
 | vdf10@0 ahead | 2x1, 1 of 4 | flexible | +9.85 | +10.29, **+10.27** | +12.49, **+12.46** | +7.88 | 12.46 / 4.59 | 2.5e+03 /s | 0.03, 0.08 |

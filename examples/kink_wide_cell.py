@@ -345,6 +345,12 @@ def settle(args) -> None:
             raise SystemExit("--mover-from: the two rows' chains differ in length")
         x = x.copy()
         x[4 + 4 * n_here:4 + 4 * n_here + width] = other[4 + 4 * n_there:4 + 4 * n_there + width]
+    if args.mover_torsions:  # the moving chain's torsions set by hand, "0:180,6:100": a state looked for by its gauche bonds
+        x = x.copy()
+        first = 4 + 4 * int(row["chains"])
+        for item in args.mover_torsions.split(","):
+            k, v = item.split(":")
+            x[first + int(k)] = float(v)
     row_name, kink = row["row"], int(row["kink_offset_bonds"])
     kkey = f"{row_name}@{kink}{'~' if row.get('kink_mirrored') else ''}"
     letters, _ = DK.sequence(row_name)
@@ -481,6 +487,7 @@ def main() -> None:
     e.add_argument("--name", required=True, help="the record's name")
     e.add_argument("--mover-from", nargs=2, default=None, metavar=("ROW", "NAME"),
                    help="replace the moving chain's own coordinates by those of a settled record of another cell of the same sequence (in --out)")
+    e.add_argument("--mover-torsions", default=None, metavar="K:DEG,...", help="set these torsions of the moving chain before relaxing (0:180,6:100)")
     e.add_argument("--blocks", default=None)
     e.add_argument("--gtol", type=float, default=3e-4)
     e.add_argument("--maxiter", type=int, default=600)

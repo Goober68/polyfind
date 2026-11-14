@@ -44,3 +44,12 @@ settle.sh vdf10-trfe4-14 2 1 I-B.images.6 M
 settle.sh vdf10-trfe4-14 4 2 I.state M mover 2x1 M
 between.sh vdf10-trfe4-14 4 2 I.state settled:M I-M
 between.sh vdf10-trfe4-14 4 2 settled:M B.state M-B
+# 8. where the terpolymer's sixteen-chain search had ended is a minimum too: N, a kink pair of the
+#    other hand two monomers on (gauche bonds 4 and 6, G- T G+), +8.82, under I (+9.05) and B
+#    (+11.79).  The way to it from I; and whether the matrix and PVDF have one (looked for from I
+#    with the trailing gauche bond set trans and bond 6 set gauche), and their way to it.
+between.sh vdf9-trfe4-cfe1-14 4 2 I.state settled:N I-N
+settle.sh vdf10-trfe4-14 4 2 I.state N torsions 0:180,6:100
+settle.sh vdf10 4 2 I.state N torsions 0:180,6:100
+between.sh vdf10-trfe4-14 4 2 I.state settled:N I-N
+between.sh vdf10 4 2 I.state settled:N I-N
