@@ -14,6 +14,44 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The ranking rewritten, the bias on the kink barriers, and what makes the terpolymer work, 2026-11-14 (PI: "Both", then
+mid-turn: "I still feel that there are better molecules out there. What are the aspects of pvdf cfe that make it suited?
+How do we optimize those characteristics").** Text: `docs/CANDIDATE_MATERIALS.md` sections 3, 4, 5 (new: 5.1 to 5.5), 6
+(nitrile paragraphs), 7, 2.1 (nine more rows), 8.2 and 8.5 (more lattices), 8.3 ("What a bias does to these barriers").
+STATE: DONE, CPU ONLY, NO POD (spend unchanged: about $11.60 of the $46).
+(1) STATICS ON THE POLISHED MARGINS. Every row is polished now but the two FAN cells (`polished_margins_belt4.json`).
+`candidate_loss_map.py` takes `--margins` (default) and writes a margin sweep; `examples/pin_design.py` writes
+`pin_design_belt4.json/.md` (pin per unit, units' cost against benefit, uniform spacing, statistical against uniform).
+THE WINDOW at 55 V/um is 0.12 kcal/mol per monomer wide: half switched at +0.07, a tenth polar at +0.15. ONLY THE PINLESS
+MATRIX IS ON IT (71/29 +0.056: 0.61 polar, 0.18% AC strain; 64/36 +0.083); every cell with a pin at 5-10 mol% is off it
+(64/29/7 +0.317, 65/30/5 +0.258, CTFE +0.300, AN +0.197). PIN PER UNIT at one per fourteen: AN 2.0, CTFE 3.4, CFE 3.7,
+CDFE 8.8; margin = m0 + s/N. THE OFFSET (m0) IS NOT KNOWN BETTER THAN THE WINDOW'S WIDTH: the model ranks by differences.
+(2) UNITS, COST AGAINST BENEFIT (5.2). Kink sheet like for like (`kink_migration.py --row ROW --nx 1 --ny 1 --mover all
+--reference-only`, then `kink_summary.py`, which adds the tilts and rewrites `kink_formation_belt4_polished.json`):
+matrix 6.85, CFE 3.79, AN 3.06, CDFE 2.65, CTFE 2.04; one CFE per twenty 4.59. CUT PER KCAL OF PIN: AN 1.93, CTFE 1.41,
+CFE 0.84, CDFE 0.48. The cut falls as 1/N like the pin (CFE: 43 and 45 over N at 14 and 20), so the ratio is the number
+to choose a unit by. The search's "CTFE lattice metastable against kinking (-0.6)" is withdrawn (+2.04 like for like).
+(3) THE BIAS (8.3; `examples/kink_field.py dipoles | relaxed | table`, `kink_field_belt4.json/.md`). The mixed cell now
+carries a field (`packer.set_field`; `MixedModel.dipole`, `mixedcell.cell_dipole`): dE/dE_applied = -(static + induced
+dipole). Activation dipoles of every one-chain move in the three sixteen-chain lattices are under 0.82 e.A: AT 55 V/um NO
+BARRIER MOVES BY MORE THAN 0.10 kcal/mol, no rate by more than a fifth. Checked by relaxing and settling under the field
+in four chains: within 0.0004 at the bias (PVDF and the terpolymer), second order 0.05 at 550 V/um. The field moves the
+balance (0.07 per monomer, the window), not the rate.
+TRAPS. The all-trans and the kinked reference cells were polished apart and can be turned half round about the chains
+(PVDF's are): `kink_field.py` takes the polar axis from the all-trans cell in the lattice's frame and fixes the sign by
+the sheet. A converged metric band's top is read instead of its settled saddle only when the search slid (top more than
+0.05 above it): `saddle_of`. At 550 V/um the terpolymer's shallow state I is no longer a minimum: not a first-order
+check there. A row being polished has no `margin` yet: `pin_design.py` skips it.
+THREE READINGS OF WHY THE FILM SWITCHES AT 7 mol% CFE WHEN THE MODEL CRYSTAL DOES NOT (5.3): the chlorine's pin overstated
+(Dipole's E2 CFE cell decides); the film switches in its long pin-free runs (statistical 7 mol%: 22% of monomers in runs
+of forty or more, 0.038% AC strain under a local margin law against the uniform sequence's 0.001% and the calibrated
+film's 0.080%); or at the interfaces (tier 4).
+NEXT, proposed to the PI: (a) THE UNIT SCREEN of 5.5: units built from groups the potential already has (TFE, reversed
+VDF, vinyl fluoride, ethylene, 1,2-difluoroethylene), two numbers each (pin, cut), about half an hour of CPU per unit,
+no pod; (b) the helix-wall cell (a long run with the pins at its ends): tests the local margin law and the blocky
+sequence; (c) AN's and CTFE's single-chain barriers in sixteen chains (a pod-hour); (d) ask Dipole for an AN-bearing
+cell beside the CFE one.
+
 **What N does next: it falls into L, 2026-11-14 (PI: "Go" on "what N does next").** Text: `docs/CANDIDATE_MATERIALS.md` 8.3
 ("What N does next"). Files: `kink_states_belt4.json` (states N2, B2, NN4, NN12, L; bands N-N2, N-NN4, N-NN12, A-L,
 N-L), each sixteen-chain row's `to_N.then` (copolymers) and `to_L` (all three) in `kink_migration_belt4.json`, tables in

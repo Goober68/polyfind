@@ -698,3 +698,99 @@ def test_n_is_a_doorway_to_l_in_the_copolymers():
     assert t["the_way"] == "straight from the sheet" and t["barrier_from_N"] > t["N_back_to_the_sheet"] + 1.0
     assert abs(t["barrier_forward"] - rows[key(pvdf)]["barrier_forward_polished"]) < 0.3  # at the step's own price
     assert states["settled"][key(mat)]["L"]["energy"] == pytest.approx(3.744, abs=1e-3)
+
+
+def test_a_bias_moves_the_kink_barriers_by_a_hundredth_of_themselves():
+    """What a 55 V/um bias does to one chain's moves (docs/CANDIDATE_MATERIALS.md 8.3, 2026-11-14;
+    examples/kink_field.py).  The stored dipoles give activation dipoles under one e.A in the
+    three sixteen-chain lattices, so no barrier moves by more than 0.13 kcal/mol and no rate by
+    more than a quarter; a kink pair in the sheet takes about a monomer and a half of dipole off
+    its chain; and relaxing and settling again under the field agrees with the first order to a
+    thousandth of a kcal/mol at the bias, with a second order a hundred times larger at ten times
+    the bias."""
+    path = MIG.with_name("kink_field_belt4.json")
+    if not path.exists():
+        pytest.skip("the field table is not stored")
+    d = json.loads(path.read_text())
+    per_e_a = d["bias_V_um"] * 1e-4 * 23.0605
+    assert d["bias_V_um"] == 55.0 and per_e_a == pytest.approx(0.1268, abs=1e-3)
+    key = lambda row, cell="4x2": f"{row}@0 {cell} mover 0 ahead host flexible"  # noqa: E731
+    for row, mu_tt in (("vdf10", 0.629), ("vdf10-trfe4-14", 0.545), ("vdf9-trfe4-cfe1-14", 0.549)):
+        r, moves = d["rows"][key(row)], d["moves"][key(row)]
+        assert r["all_trans_dipole_per_monomer"] == pytest.approx(mu_tt, abs=2e-3) and 0.14 < r["all_trans_induced_fraction"] < 0.18
+        kink = r["kink_pair_in_the_sheet"]["dipole_against_all_trans_per_kink_pair"]["along_the_polar_axis"]
+        assert 1.3 < -kink / r["all_trans_dipole_per_monomer"] < 1.8  # a monomer and a half of dipole
+        assert {"the sheet to N", "N to L", "the sheet straight to L", "the sheet to the wide kink (I)"} <= set(moves)
+        for m in moves.values():
+            for a, f in ((m["activation_dipole"], m["rate_factor_at_bias"]), (m["activation_dipole_back"], m["rate_factor_back_at_bias"])):
+                assert abs(a) < 1.0 and abs(a) * per_e_a < 0.13 and 0.8 < f < 1.25
+                assert f == pytest.approx(np.exp(a * per_e_a / 0.596))
+            assert m["barrier_shift_at_bias"] == pytest.approx(-m["activation_dipole"] * per_e_a)
+        one_chain = [abs(g["against_the_sheet"]["along_the_polar_axis"]) for n, g in r["states"].items() if "NN" not in n and " saddle" not in n]
+        assert max(one_chain) < 0.9
+    # the copolymers' way sheet, N, L under the bias: the stored zero-field barriers, moved by less than 0.1
+    for row in ("vdf10-trfe4-14", "vdf9-trfe4-cfe1-14"):
+        m, stored = d["moves"][key(row)], json.load(open(MIG))["rows"][key(row)]
+        assert m["the sheet to N"]["barrier"] == pytest.approx(stored["to_N"]["barrier_forward"], abs=0.01)
+        assert m["N to L"]["barrier"] == pytest.approx(stored["to_L"]["barrier_from_N"], abs=0.01)
+        assert abs(m["the sheet to N"]["barrier_shift_at_bias"]) < 0.1 and abs(m["N to L"]["barrier_shift_at_bias"]) < 0.02
+    # beyond the first order: four chains, relaxed and settled again under the field
+    for row, n_checked in (("vdf10", 4), ("vdf9-trfe4-cfe1-14", 6)):
+        rel = d["rows"][key(row, "2x1")]["relaxed_under_the_field"]
+        for tag in ("+55 V/um", "-55 V/um"):
+            beyond = [abs(g["beyond_first_order"]) for n, g in rel[tag].items() if n != "A"]
+            assert len(beyond) == n_checked and max(beyond) < 1e-3
+            assert all(g.get("converged", True) for g in rel[tag].values())
+    rel = d["rows"][key("vdf10", "2x1")]["relaxed_under_the_field"]
+    for name in ("I", "B"):  # second order: a hundred times larger at ten times the field
+        ratio = rel["+550 V/um"][name]["beyond_first_order"] / rel["+55 V/um"][name]["beyond_first_order"]
+        assert 70.0 < ratio < 130.0
+
+
+def test_a_saddle_is_read_from_its_settled_state_unless_a_metric_bands_search_slid():
+    KF = _load("kink_field")
+    band = {"saddle_image": 1, "energies": [0.0, 5.0, 1.0], "images": [[0.0], [1.0], [2.0]], "converged": True,
+            "polished": {"converged": True, "a_saddle_between_the_two": True, "saddle": 4.9, "state": [1.1]}}
+    assert KF.saddle_of(band)[1:] == (4.9, "settled")  # a band in per-variable units overstates its top
+    x, e, how = KF.saddle_of(dict(band, band_variables="the chains' metric", polished=dict(band["polished"], saddle=1.01)))
+    assert (float(x[0]), e, how) == (1.0, 5.0, "band top")  # the search slid to a saddle beside the end state
+    assert KF.saddle_of(dict(band, polished=dict(band["polished"], a_saddle_between_the_two=False)))[2] == "band top"
+    assert KF.saddle_of(dict(band, converged=False, polished={}))[2] == "band top, band not converged"
+
+
+def test_the_pin_units_are_ranked_by_what_they_buy_per_unit_of_pin():
+    """Sections 3 to 5 of docs/CANDIDATE_MATERIALS.md as rewritten on the polished margins
+    (2026-11-14; examples/candidate_loss_map.py, examples/pin_design.py).  The switching curve at
+    the bias is a window in the margin about 0.12 wide; the pinless matrices are on it and every
+    cell with a pin at 5-10 mol% is off it; every unit pins the helix at the film's dilution; and
+    per unit of pin the nitrile buys most loosening of the kink sheet and CDFE least."""
+    pred = MIG.parent
+    loss, pins = pred / "candidate_loss_map_belt4.json", pred / "pin_design_belt4.json"
+    if not loss.exists() or not pins.exists():
+        pytest.skip("the maps are not stored")
+    loss, pins = json.loads(loss.read_text()), json.loads(pins.read_text())
+    rows = loss["rows"]
+    assert sum(r["cells"] == "search" for r in rows.values()) == 2 and all("fan" in n for n, r in rows.items() if r["cells"] == "search")
+    sweep = {round(p["margin"], 2): p for p in loss["margin_sweep"]["points"]}
+    assert 0.45 < sweep[0.07]["polar_fraction"] < 0.55 and sweep[0.15]["polar_fraction"] < 0.11 < sweep[0.13]["polar_fraction"]
+    assert max(sweep.values(), key=lambda p: p["strain_ac"])["margin"] == pytest.approx(0.07)
+    x = lambda n: rows[n]["operating"]["34kHz"]["polar_fraction"]  # noqa: E731
+    assert 0.35 < x("vdf9-trfe5-14") < x("vdf10-trfe4-14") < 0.7
+    for n in ("vdf9-trfe4-cfe1-14", "vdf13-trfe6-cfe1-20", "vdf9-trfe4-ctfe1-14", "vdf9-trfe4-an1-14", "vdf9-trfe4-cdfe1-14"):
+        assert x(n) < 0.03 and rows[n]["margin"] > 0.19
+    p = {k: pins["pins"][f"vdf9-trfe4-{k}1-14"]["pin_per_unit"] for k in ("an", "ctfe", "cfe", "cdfe")}
+    assert 1.8 < p["an"] < p["ctfe"] < p["cfe"] < 4.0 < p["cdfe"] < 9.5
+    m0 = pins["uniform"]["matrix_margin"]
+    assert 3.3 < 20 * (rows["vdf13-trfe6-cfe1-20"]["margin"] - m0) < 4.2  # the same pin per unit at one per twenty: the 1/N law
+    assert pins["pins"]["vdf7-trfe2-cdfe1"]["pin_per_unit"] < pins["pins"]["vdf7-trfe2-an1"]["pin_per_unit"] < pins["pins"]["vdf7-trfe2-cfe1"]["pin_per_unit"]
+    assert abs(pins["pins"]["vdf7-trfe2-cfe1"]["pin_per_unit"] - pins["pins"]["vdf7-trfe2-cfe1-adj"]["pin_per_unit"]) < 0.2  # placement beside TrFE is no lever
+    u = {k: pins["units"][f"vdf9-trfe4-{k}1-14"] for k in ("an", "ctfe", "cfe", "cdfe")}
+    assert u["an"]["cut_per_pin"] > u["ctfe"]["cut_per_pin"] > u["cfe"]["cut_per_pin"] > u["cdfe"]["cut_per_pin"] > 0.4
+    assert all(2.9 < v["cut"] < 5.0 for v in u.values()) and u["an"]["cut_per_pin"] > 2.0 * u["cfe"]["cut_per_pin"]
+    sheets = json.loads((pred / "kink_formation_belt4_polished.json").read_text())["rows"]
+    cut14 = sheets["vdf10-trfe4-14"]["formation_kcal_per_kink_pair"] - sheets["vdf9-trfe4-cfe1-14"]["formation_kcal_per_kink_pair"]
+    cut20 = sheets["vdf10-trfe4-14"]["formation_kcal_per_kink_pair"] - sheets["vdf13-trfe6-cfe1-20"]["formation_kcal_per_kink_pair"]
+    assert 14 * cut14 == pytest.approx(20 * cut20, rel=0.1)  # the cut falls as one over the spacing, as the pin does
+    stat = pins["statistical"]["rows"]["CFE"]["0.07"]
+    assert stat["uniform"]["strain_ac"] < 2e-5 < 3e-4 < stat["statistical"]["strain_ac"] < pins["calibrated_film"]["strain_ac"]
+    assert 0.2 < stat["share_in_runs_of_forty_or_more"] < 0.24

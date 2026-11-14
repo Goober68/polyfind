@@ -18,9 +18,10 @@ is a model number at zero kelvin on a regular ten-monomer periodic sequence pack
 section 7 says what that leaves out and what decides each row, section 6 reads Dipole's slate of
 other chemistries against the same screen, and section 8 adds the frequency: what a kink pair is
 in the lattice (a sheet, never a lone defect) and the barrier of the step that moves it. **Sections
-3-6 still carry the search's margins and kink energies; where section 2.1 has a polished margin
-for a row, that is the number, and the readings of 3-6 that rest on a margin within 0.3 of zero
-are suspended until the polished table is complete (section 5 says which).***
+3 to 6 were rewritten on 2026-11-14 on the polished margins (every row but the two FAN cells is
+polished now) and on section 8's kink energies; section 5 carries the ranking and what makes the
+CFE terpolymer work. Section 2.2 is the search's table as it was read on 2026-11-08, kept for the
+record.***
 
 ## 1. What "optimal tan delta, frequency and strain" means in the program's variables
 
@@ -126,10 +127,20 @@ exactly, started half a degree off the search's torsions), then the pendant tilt
 | 60/40, ten monomers | -0.329 | **-0.199** | 0.049 | 0.414 | TGTG' | 6 / 20 deg | +11.0% |
 | 70/20/10 CFE, ten monomers | +0.966 | **+0.868** | 0.248 | 0.154 | TG'TG | 11 / 13 deg | +11.6% |
 | 70/20/10 CDFE, ten monomers | +0.146 | **+0.392** | 0.220 | 0.719 | TGTG' | 16 / 23 deg | +12.8% |
+| 50/50 alternating, ten monomers | +0.752 | **+0.736** | 0.010 | 0.002 | TGTG' | 1 / 4 deg | +10.8% |
+| 70/20/10 CFE next to a TrFE, ten monomers | +0.961 | **+0.875** | 0.252 | 0.136 | TG'TG | 11 / 12 deg | +11.6% |
+| 70/20/10 CTFE, ten monomers | +0.790 | **+0.900** | 0.233 | 0.510 | TG'TG | 14 / 23 deg | +11.8% |
+| 70/20/10 AN, ten monomers | +0.568 | **+0.565** | 0.125 | 0.181 | TG'TG | 6 / 14 deg | +11.9% |
+| 60/30/10 CFE, ten monomers | +0.297 | **+0.338** | 0.250 | 0.403 | TGTG' | 11 / 19 deg | +11.3% |
+| 60/30/10 CDFE, ten monomers | +0.805 | **+1.012** | 0.135 | 0.524 | TGTG' | 10 / 21 deg | +12.2% |
+| VDF/CFE 90/10, ten monomers | +0.982 | **+0.967** | 0.206 | 0.175 | G'TGT | 11 / 14 deg | +10.2% |
+| VDF/CFE 80/20, ten monomers | +0.835 | **+0.812** | 0.303 | 0.389 | TGTG' | 14 / 15 deg | +11.2% |
+| VDF/AN 90/10, ten monomers | +0.470 | **+0.555** | 0.139 | 0.305 | TGTG' | 7 / 14 deg | +12.8% |
 
 kcal/mol per monomer, all-trans minus TG, pendant tilts included (`polished_margins_belt4.json`).
-Every long cell is in; of the ten-monomer rows the five above, and the rest are not polished (the
-FAN cells cannot be: their tilts are not treated).
+Every row is in but the two FAN cells, which cannot be polished (their tilts are not treated); the
+last nine rows were added on 2026-11-14 and none of them moves a reading: every one stays where
+the search had it, off the curve on the helix's side.
 
 * **Both cells fall, the helix by more.** The all-trans chain of a VDF/TrFE sequence is not
   planar: its torsions deflect by 2-6 degrees in a pattern that follows the TrFE units (ten at the
@@ -275,122 +286,196 @@ carries it is the matrix between the pins.
 
 ## 3. The same candidates through the loss model
 
+*Rewritten 2026-11-14 on the polished margins of 2.1 (PI: "Both"). The table this section carried
+from 2026-11-08, on the search's cells, read the 64/29/7 cell onto the switching curve (polar
+fraction 0.24) and the pinless matrix past it (0.88). With both cells of a row relaxed alike it is
+the other way round. The earlier text is in the repository's history (commit 5f66549).*
+
 `examples/candidate_loss_map.py` puts each candidate's margin, dipole gain and axial switch strain
 into the calibrated literature channel (the 63/30/7 terpolymer's Vogel-Fulcher relaxation,
 `tau0 = 8.08e-13 s`, `Ea = 0.124 eV`, `Tf = 191 K`, dielectric strength 45, halved under 60 MV/m;
-plan section 11) and evaluates the program's operating point. The relaxation is the same for every
-row, so the table separates what the chemistry changes in this model (the polar fraction at bias,
-the strain per field, the heat at a given strain) from what it does not yet (the loss per unit
-strain, which is `omega tau` and is the bench's number until tier 3 computes a barrier per
-chemistry).
+plan section 11) and evaluates the program's operating point (55 V/um bias, 1.8 V/um AC, 34 and
+66 kHz). A row takes its margin and switch strain from the polished cells (`--margins`, the
+default); the two rows marked "(search)" have none (the FAN cells, whose tilts are not treated).
+The relaxation is the same for every row here, so the table shows what the chemistry does to the
+statics: the polar fraction at bias, the strain per field, the heat at a given strain. The rates
+per chemistry are section 8's.
 
 | sequence | margin kcal/mol per monomer | E* MV/m | polar fraction at 55 V/um | S_ac at 1.8 V/um, 34 kHz | tan delta 34 / 66 kHz | heat MW/m^3 34 / 66 kHz | efficiency 34 / 66 kHz | stroke per lever 34 / 66 kHz |
 |---|---|---|---|---|---|---|---|---|
 | pvdf | +0.744 | 513 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf7-trfe3 | +0.145 | 112 | 0.11 | 0.068% | 0.051 / 0.098 | 5.3 / 18.8 | 0.13 / 0.07 | 23 / 45 |
-| vdf8-trfe2 | +0.177 | 133 | 0.05 | 0.034% | 0.032 / 0.061 | 1.9 / 6.8 | 0.10 / 0.05 | 12 / 22 |
-| vdf6-trfe4 | -0.329 | 0 | 0.88 | 0.071% | 0.054 / 0.104 | 5.8 / 20.8 | 0.13 / 0.07 | 24 / 47 |
-| vdf5-trfe5 | +0.752 | 607 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf7-trfe2-cfe1 | +0.966 | 740 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf7-trfe2-cfe1-adj | +0.961 | 736 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf7-trfe2-ctfe1 | +0.790 | 676 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf7-trfe2-cdfe1 | +0.146 | 119 | 0.10 | 0.062% | 0.047 / 0.091 | 4.1 / 14.7 | 0.14 / 0.08 | 21 / 41 |
-| vdf9-cfe1 | +0.982 | 693 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf8-cfe2 | +0.835 | 675 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf7-trfe2-an1 | +0.568 | 441 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf7-trfe2-fan1 | +0.912 | 681 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf9-an1 | +0.470 | 345 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf6-trfe3-cdfe1 | +0.805 | 668 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf6-trfe3-cfe1 | +0.297 | 235 | 0.00 | 0.001% | 0.001 / 0.001 | 0.0 / 0.0 | 0.02 / 0.01 | 0 / 1 |
-| vdf9-trfe4-cfe1-14 | +0.110 | 87 | 0.24 | 0.125% | 0.074 / 0.143 | 13.7 / 47.8 | 0.16 / 0.10 | 42 / 82 |
-| vdf10-trfe4-14 | -0.051 | 0 | 0.88 | 0.071% | 0.052 / 0.102 | 5.8 / 20.6 | 0.13 / 0.07 | 24 / 46 |
-| vdf9-trfe5-14 | -0.058 | 0 | 0.88 | 0.072% | 0.053 / 0.103 | 5.8 / 20.8 | 0.13 / 0.08 | 24 / 47 |
-| vdf9-trfe4-cdfe1-14 | +0.402 | 329 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf8-trfe4-cfe1-cdfe1-14 | +0.641 | 529 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
-| vdf9-trfe4-an1-14 | -0.154 | 0 | 0.87 | 0.076% | 0.055 / 0.107 | 5.9 / 21.0 | 0.14 / 0.08 | 26 / 50 |
-| vdf9-trfe4-fan1-14 | -0.091 | 0 | 0.87 | 0.074% | 0.054 / 0.105 | 5.9 / 20.9 | 0.14 / 0.08 | 25 / 48 |
-| vdf9-trfe4-ctfe1-14 | +0.135 | 115 | 0.12 | 0.060% | 0.052 / 0.101 | 4.8 / 17.4 | 0.11 / 0.06 | 20 / 39 |
-| vdf13-trfe6-cfe1-20 | +0.055 | 43 | 0.60 | 0.157% | 0.086 / 0.167 | 20.6 / 71.1 | 0.17 / 0.10 | 53 / 102 |
+| vdf7-trfe3 | +0.213 | 165 | 0.02 | 0.013% | 0.013 / 0.025 | 0.4 / 1.3 | 0.07 / 0.04 | 4 / 8 |
+| vdf8-trfe2 | +0.229 | 172 | 0.01 | 0.009% | 0.009 / 0.018 | 0.2 / 0.8 | 0.06 / 0.03 | 3 / 6 |
+| vdf6-trfe4 | -0.199 | 0 | 0.88 | 0.076% | 0.054 / 0.104 | 5.9 / 20.9 | 0.14 / 0.08 | 26 / 50 |
+| vdf5-trfe5 | +0.736 | 595 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf7-trfe2-cfe1 | +0.868 | 665 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf7-trfe2-cfe1-adj | +0.875 | 671 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf7-trfe2-ctfe1 | +0.900 | 770 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf7-trfe2-cdfe1 | +0.392 | 320 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.01 / 0.00 | 0 / 0 |
+| vdf9-cfe1 | +0.967 | 682 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf8-cfe2 | +0.812 | 656 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf7-trfe2-an1 | +0.565 | 439 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf7-trfe2-fan1 | +0.912 (search) | 681 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf9-an1 | +0.555 | 408 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf6-trfe3-cdfe1 | +1.012 | 839 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf6-trfe3-cfe1 | +0.338 | 267 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.01 / 0.01 | 0 / 0 |
+| vdf9-trfe4-cfe1-14 | +0.317 | 249 | 0.00 | 0.001% | 0.000 / 0.001 | 0.0 / 0.0 | 0.02 / 0.01 | 0 / 0 |
+| vdf10-trfe4-14 | +0.056 | 43 | 0.61 | 0.184% | 0.086 / 0.167 | 22.2 / 75.3 | 0.21 / 0.13 | 63 / 120 |
+| vdf9-trfe5-14 | +0.083 | 65 | 0.41 | 0.185% | 0.086 / 0.168 | 21.8 / 73.9 | 0.21 / 0.13 | 63 / 121 |
+| vdf9-trfe4-cdfe1-14 | +0.685 | 561 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf8-trfe4-cfe1-cdfe1-14 | +0.807 | 666 | 0.00 | 0.000% | 0.000 / 0.000 | 0.0 / 0.0 | 0.00 / 0.00 | 0 / 0 |
+| vdf9-trfe4-an1-14 | +0.197 | 163 | 0.02 | 0.018% | 0.017 / 0.032 | 0.5 / 1.9 | 0.09 / 0.05 | 6 / 12 |
+| vdf9-trfe4-fan1-14 | -0.091 (search) | 0 | 0.87 | 0.074% | 0.054 / 0.105 | 5.9 / 20.9 | 0.14 / 0.08 | 25 / 48 |
+| vdf9-trfe4-ctfe1-14 | +0.300 | 256 | 0.00 | 0.001% | 0.000 / 0.001 | 0.0 / 0.0 | 0.02 / 0.01 | 0 / 1 |
+| vdf13-trfe6-cfe1-20 | +0.258 | 203 | 0.00 | 0.004% | 0.003 / 0.006 | 0.0 / 0.2 | 0.04 / 0.02 | 1 / 2 |
 
-**Reading the mapping.** The operating point is 55 V/um bias, 1.8 V/um AC; the polar fraction
-at bias is where the crystal margin puts the channel on its own switching curve, and the strain
-per field is largest where that fraction is near one half: with `dmu` about 0.57 e.A the
-margin that does it at 55 V/um is about +0.07 kcal/mol per monomer. After the handedness
-correction no ten-monomer row sits there: the no-defect 70/30 and 80/20 and the CDFE row sit low
-on the curve (polar fraction 0.05-0.11) and give 0.03-0.07% AC strain, the TT-ground 60/40 is
-saturated (0.88) and gives the same, and every pinned defect row (CFE, CTFE, AN, FAN, margins
-+0.57 to +0.97), PVDF, the alternating 50/50 and the VDF/CFE copolymers do not switch at all.
-The rows that do sit on the curve are the long cells of section 2: the 64/29/7 cell (margin +0.11,
-polar fraction 0.24 at 55 V/um) carries 0.125% AC strain at 34 kHz (tan delta 0.074, efficiency
-0.16), the 65/30/5 twenty-monomer cell (margin +0.055, polar fraction 0.60) the largest strain of
-the table (0.157%, tan delta 0.086, efficiency 0.17), and the 71/29 matrix control (margin -0.05)
-is saturated (0.88) with half that strain, which is the pin doing its job: it holds the matrix off
-saturation at the bias, and the pin density sets where on the curve the cell sits. Section 8
-carries these rows with their own kink energies. The loss per
-unit strain is the same for every switchable row (efficiency 0.10-0.15 at 34 kHz, 0.05-0.09 at
-66 kHz) because the relaxation is the same: a candidate with more strain at this bias also has
-more loss and more heat, and all of them exceed the 4 MW/m^3 budget at 1.8 V/um at 34 kHz (the
-level-1 and level-2 result of plan sections 11-12), so the AC amplitude, not the chemistry, sets
-the heat in this picture. **The chemistry lever on loss per strain is `tau`, and this pass does
-not compute it.** The literature channel's `f_relax` is 360 kHz at 300 K, a factor 5-10 above
-the drive, so `tan delta` is about `omega tau` there (0.05-0.17 across the rows); halving it at
-the same strain means doubling `f_relax`, i.e. a lower `Tf` (smaller cooperative units: more
-defects, shorter trans runs) or a lower local barrier, and which defect does that is tier 3's
-question (the E3 kink/flip barrier asked of Dipole, the bench's Vogel-Fulcher fit per film).
+**The switching curve at the bias is a window 0.12 kcal/mol per monomer wide.** With the matrix's
+dipole (0.56 e.A per monomer) and switch strain, as a function of the margin alone
+(`candidate_loss_map_belt4.md`):
+
+| margin kcal/mol per monomer | E* MV/m | polar fraction at 55 V/um | S_ac at 1.8 V/um, 34 kHz | tan delta 34 kHz | heat MW/m^3 34 kHz |
+|---|---|---|---|---|---|
+| -0.10 | 0 | 0.88 | 0.079% | 0.052 | 5.9 |
+| -0.05 | 0 | 0.88 | 0.079% | 0.052 | 5.9 |
+| +0.00 | 0 | 0.88 | 0.079% | 0.052 | 5.9 |
+| +0.03 | 23 | 0.76 | 0.139% | 0.073 | 14.3 |
+| +0.05 | 39 | 0.65 | 0.176% | 0.084 | 20.7 |
+| +0.07 | 54 | 0.51 | 0.193% | 0.088 | 23.9 |
+| +0.09 | 69 | 0.37 | 0.180% | 0.085 | 21.4 |
+| +0.11 | 85 | 0.25 | 0.145% | 0.075 | 15.1 |
+| +0.13 | 100 | 0.16 | 0.103% | 0.061 | 8.9 |
+| +0.15 | 116 | 0.10 | 0.067% | 0.047 | 4.6 |
+| +0.20 | 154 | 0.02 | 0.019% | 0.018 | 0.6 |
+| +0.25 | 193 | 0.01 | 0.005% | 0.004 | 0.1 |
+| +0.30 | 231 | 0.00 | 0.001% | 0.001 | 0.0 |
+| +0.35 | 270 | 0.00 | 0.000% | 0.000 | 0.0 |
+
+The cell is half switched where the margin's `E*` equals the bias, at +0.07. It is more than a
+tenth polar below +0.15 and more than a quarter below +0.11. At zero or under it the all-trans
+lattice is the ground state and the channel is the degenerate one (0.88 polar, 0.08% AC strain).
+The AC strain peaks at 0.19% (tan delta 0.088) and stays above 0.10% from +0.03 to +0.13.
+
+**Reading the mapping.**
+
+* **Only the pinless matrix is on the curve.** The 71/29 cell (+0.056) and the 64/36 cell (+0.083)
+  sit at polar fractions 0.61 and 0.41 and carry 0.18% AC strain at 34 kHz (tan delta 0.086 with
+  the terpolymer's relaxation, which is not the matrix's: 8.5). Every cell with a pin at 5-10 mol%
+  is off the curve on the helix's side: 64/29/7 at +0.317 (`E*` 249 MV/m, 0.001% AC strain),
+  65/30/5 at +0.258, the CTFE cell at +0.300, and nearest the AN cell at +0.197 (polar fraction
+  0.02, 0.018%). The ten-monomer 70/30 and 80/20 cells (+0.21, +0.23) are at its foot and the
+  60/40 cell (-0.20) is past it.
+* **What the mapping resolves.** The margin's offset is known to about 0.1 (section 7), which is
+  the width of the window, so where the matrix sits inside the window is not a result of this
+  model. What are results: the differences between rows that share a matrix and a protocol (the
+  pin strength per unit, section 4), the 1/N law they follow, and the width of the window, which
+  is the loss model's (the all-trans dipole times the bias, 0.07 kcal/mol per monomer).
+* **Heat.** A row on the curve exceeds the 4 MW/m^3 budget at 1.8 V/um AC at 34 kHz (22 MW/m^3
+  for the two matrix rows, 9 or more anywhere between +0.03 and +0.13), as before: the AC
+  amplitude, not the chemistry, sets the heat in this picture.
+* **Loss per strain** is `omega tau`, and here it is the same for every row because the relaxation
+  is. The chemistry's own rates are in 8.5 and section 5: on them the matrix's tan delta at 34 kHz
+  is 0.2 if the kink's step limits the rate and 1.0 if the population of kink sheets does, not the
+  0.086 of this table.
 
 ## 4. Defect type, concentration and placement: what the model says and what it cannot
 
-**Type.** At one defect per ten monomers beside 20 mol% TrFE, every defect but CDFE pins its
-neighbourhood in the non-polar helix. Against the 80/20 copolymer cell it replaces one VDF of
-(TTTT -8.165, TG -8.341 kcal/mol per monomer), the cost of the defect in each conformation, per
-defect unit, and the pin strength it leaves (TT cost minus TG cost: how much the unit prefers the
-helix) are:
+*Rewritten 2026-11-14 on the polished cells; the numbers are `examples/pin_design.py`'s
+(`docs/predictions/pin_design_belt4.md`).*
 
-| defect, one per ten beside 20 mol% TrFE | TT cost per unit, kcal/mol | TG cost per unit | pin strength (TT - TG) | margin TT-TG per monomer |
-|---|---|---|---|---|
-| CFE (CH2-CFCl), two from either TrFE | +6.9 | -1.0 | +7.9 | +0.97 |
-| CFE next to a TrFE | +7.9 | 0.0 | +7.9 | +0.96 |
-| CTFE (CF2-CFCl) | +21.9 | +15.8 | +6.1 | +0.79 |
-| CDFE (CHCl-CF2) | +17.2 | +17.6 | -0.3 (other handedness not buildable) | +0.15 |
-| AN (CH2-CH(CN)) | -0.7 | -4.6 | +3.9 | +0.57 |
-| FAN (CH2-CF(CN)) | +5.9 | -1.5 | +7.4 | +0.91 |
+**Type: every unit tried pins the helix, and by how much depends on the matrix.** A unit's pin
+strength is what it adds to the margin, per unit: the cost of the unit in the all-trans lattice
+less its cost in the helical one. The two costs each carry the unit's own valence energy, so only
+their difference is a physical quantity; they are given because they show which lattice the unit
+strains.
 
-In this cell CFE, FAN and CTFE pin at 6-8 kcal/mol per unit, AN at 4, CDFE not at all: the chlorine
-on the hydrogen-bearing carbon costs the all-trans and the helical lattice the same 17 kcal/mol, a
-large unit that fits neither, where CFE's chlorine on the fluorine-bearing carbon costs TTTT 7 and
-the helix nothing. These numbers are the unit's in a 20 mol% TrFE cell with a pin every ten; in the
-fourteen-monomer 29 mol% cell the same CFE pins at +2.3, CTFE at +2.6, CDFE at +6.3, AN at -1.4 (it
-favours the all-trans lattice there) and FAN at about +4 with rigid pendants (sections 2 and 6), so
-a pin strength is a property of the unit in its matrix and the fourteen-monomer cells are the ones
-to design on. CTFE's two costs are both large (it is the bulkiest unit) and its pin is the
-difference of two big numbers. The nitrile pins by packing *better* into the helix (TG cost -4.6)
-rather than worse into the all-trans lattice (-0.7), the opposite route to the chlorines'. These
-are the rows whose chemistry is extrapolated; the pin strength of CFE against CDFE is the
-quantity most worth a DFT cell (two 120-atom cells each).
+| unit and dilution | margin | matrix's margin | all-trans cost per unit | helix cost per unit | pin strength per unit (TT - TG) |
+|---|---|---|---|---|---|
+| CFE, one per fourteen in 29 mol% TrFE | +0.317 | +0.056 | +6.8 | +3.1 | **+3.7** |
+| CTFE, one per fourteen in 29 mol% TrFE | +0.300 | +0.056 | +22.9 | +19.5 | **+3.4** |
+| AN, one per fourteen in 29 mol% TrFE | +0.197 | +0.056 | +0.2 | -1.7 | **+2.0** |
+| CDFE, one per fourteen in 29 mol% TrFE | +0.685 | +0.056 | +18.6 | +9.8 | **+8.8** |
+| CFE and CDFE, one of each per fourteen (mean per unit) | +0.807 | +0.056 | +11.4 | +6.1 | **+5.3** |
+| CFE, one per ten beside 20 mol% TrFE | +0.868 | +0.229 | +6.1 | -0.3 | **+6.4** |
+| CFE next to a TrFE, one per ten | +0.875 | +0.229 | +7.1 | +0.6 | **+6.5** |
+| CTFE, one per ten beside 20 mol% TrFE | +0.900 | +0.229 | +20.8 | +14.1 | **+6.7** |
+| CDFE, one per ten beside 20 mol% TrFE | +0.392 | +0.229 | +15.6 | +14.0 | **+1.6** |
+| AN, one per ten beside 20 mol% TrFE | +0.565 | +0.229 | -0.8 | -4.2 | **+3.4** |
+| CFE, one per ten VDF | +0.967 | +0.744 | - | - | **+2.2** |
+| CFE, two per ten VDF (per unit) | +0.812 | +0.744 | - | - | **+0.3** |
+| AN, one per ten VDF | +0.555 | +0.744 | - | - | **-1.9** |
 
-**Concentration.** The two levers are different in kind, as the first pass said, but the
-division of labour is now the opposite of what it claimed: TrFE sets the margin of the matrix
-(the near-degeneracy at 30-40 mol%), the pin sets how much of the chain is held in the helix and
-how the polar order is broken into the relaxor's nanodomains, and the pin density decides whether
-any matrix is left between pins: one CFE per ten in a 20 mol% matrix pins the whole cell (+0.97);
-one per fourteen in a 29 mol% matrix leaves it at +0.11. CFE without TrFE does not do TrFE's job
-(one or two per ten VDF leave the helix lowest by 0.84-0.98 with all four conformers run). The terpolymer recipe the literature converged on (about 30 mol% TrFE, 7-10 mol% CFE) is
-what the fourteen-monomer cell reproduces; the ten-monomer 70/20/10 cell does not, and the margin
-near zero it showed in the first pass was the handedness artefact, not the recipe.
+* At the film's dilution, one per fourteen in the 29 mol% TrFE matrix, the order is AN 2.0, CTFE
+  3.4, CFE 3.7, CDFE 8.8 kcal/mol per unit. Beside 20 mol% TrFE at one per ten it is CDFE 1.6, AN
+  3.4, CFE 6.4, CTFE 6.7: CDFE goes from the weakest pin to the strongest, and the other three
+  pin about half as hard in the richer matrix. A pin strength is a property of the unit in its
+  matrix, and the fourteen-monomer cells are the ones to design on.
+* The units pin by different routes. CFE costs the all-trans lattice 6.8 and the helix 3.1. The
+  two bulkiest units cost both lattices heavily (CTFE 22.9 and 19.5, CDFE 18.6 and 9.8), and their
+  pins are differences of large numbers. The nitrile costs the all-trans lattice almost nothing
+  (+0.2) and packs 1.7 better into the helix.
+* Two pins in one cell add less than their sum: CFE with CDFE gives 10.5 for the pair against
+  3.7 + 8.8 = 12.5.
+* In a VDF host without TrFE the units behave differently again: one CFE per ten VDF takes
+  PVDF's +0.74 to +0.97 and two per ten leave it at +0.81, and one AN per ten lowers it to +0.56,
+  a trans-favouring unit there (-1.9 per unit). CFE without TrFE does not do TrFE's job.
+* Every chlorine and nitrile parameter is extrapolated (section 7). The pin of CFE against CDFE
+  and against AN is the quantity most worth a DFT cell.
 
-**Placement.** Moving the single CFE from two monomers away from either TrFE to the position
-next to one changes the sequence's margin by 0.005 kcal/mol per monomer: the TT cost of the unit
-rises by 1.0 kcal/mol and its TG cost by the same, so the pin strength and the margin do not move.
-The local-margin spread a statistical terpolymer carries from random placement is then not the
-spread of the pin's position relative to TrFE (0.05 kcal/mol per unit) but the spread of the
-distances between pins, i.e. of the matrix segment lengths, which the fourteen-against-ten
-comparison puts at about 0.9 kcal/mol per monomer between a segment of three and one of six. That
-is a large spread, the one the driven lattice of plan section 12 found to suppress the stroke at
-bias and broaden the loss peak, and it is exactly what a controlled sequence sets by choice: a
-strictly periodic pin spacing makes it zero and the switch as sharp as the chain's own
-cooperativity allows, at the risk of ordering ferroelectrically when the coupling exceeds about
-0.03 eV. The model cannot say which spread is optimal; the lattice model can, once the bench's
-`S(E_dc)` curve fixes its coupling.
+**Concentration: the margin is the matrix's plus the pin's strength over its spacing.** One CFE
+per fourteen gives +0.317 and one per twenty +0.258, the same pin per unit (3.5 to 4.0 against the
+29-36 mol% matrices), so a matrix of margin `m0` with one pin of strength `s` every `N` monomers
+sits at `m0 + s / N`. TrFE sets `m0` (near zero from 29 to 36 mol%, -0.20 at 40 mol% in the
+ten-monomer cell); the pin and its spacing set the rest. On the 71/29 matrix:
+
+| one pin per | mol% | AN (+2.0): margin, polar fraction, S_ac, tan delta 34 kHz | CTFE (+3.4): margin, polar fraction, S_ac, tan delta 34 kHz | CFE (+3.7): margin, polar fraction, S_ac, tan delta 34 kHz | CDFE (+8.8): margin, polar fraction, S_ac, tan delta 34 kHz |
+|---|---|---|---|---|---|
+| 10 | 10.0 | +0.253, 0.01, 0.004%, 0.004 | +0.397, 0.00, 0.000%, 0.000 | +0.422, 0.00, 0.000%, 0.000 | +0.936, 0.00, 0.000%, 0.000 |
+| 14 | 7.1 | +0.197, 0.03, 0.021%, 0.020 | +0.300, 0.00, 0.001%, 0.001 | +0.317, 0.00, 0.001%, 0.000 | +0.685, 0.00, 0.000%, 0.000 |
+| 20 | 5.0 | +0.154, 0.09, 0.060%, 0.044 | +0.227, 0.01, 0.009%, 0.009 | +0.239, 0.01, 0.006%, 0.006 | +0.496, 0.00, 0.000%, 0.000 |
+| 28 | 3.6 | +0.126, 0.17, 0.110%, 0.064 | +0.178, 0.05, 0.034%, 0.029 | +0.187, 0.04, 0.027%, 0.025 | +0.370, 0.00, 0.000%, 0.000 |
+| 40 | 2.5 | +0.105, 0.27, 0.154%, 0.078 | +0.141, 0.12, 0.081%, 0.053 | +0.148, 0.10, 0.071%, 0.049 | +0.276, 0.00, 0.002%, 0.002 |
+| 56 | 1.8 | +0.091, 0.36, 0.178%, 0.084 | +0.117, 0.21, 0.130%, 0.070 | +0.121, 0.19, 0.120%, 0.068 | +0.213, 0.02, 0.013%, 0.013 |
+| 80 | 1.2 | +0.081, 0.43, 0.190%, 0.087 | +0.099, 0.31, 0.166%, 0.081 | +0.102, 0.29, 0.161%, 0.080 | +0.166, 0.06, 0.046%, 0.036 |
+| 120 | 0.8 | +0.073, 0.49, 0.193%, 0.088 | +0.085, 0.41, 0.186%, 0.087 | +0.087, 0.39, 0.184%, 0.086 | +0.129, 0.16, 0.104%, 0.062 |
+
+A uniform spacing reaches the curve (a tenth polar) at one AN per 20 to 28 monomers, one CFE or
+CTFE per 40, and one CDFE per about 100. At the working terpolymers' 5-10 mol% every one of
+them holds the perfect crystal off the curve at 55 V/um.
+
+**Placement.** Moving the single CFE from two monomers away from either TrFE to the position next
+to one changes the margin by 0.007 kcal/mol per monomer (pin 6.4 against 6.5): where the pin sits
+relative to TrFE is not a lever. The spacing between pins is. If the margin law holds locally,
+each pin-free run of `L` monomers sitting at `m0 + s / (L + 1)`, a statistical sequence and a
+uniform one of the same composition are different materials:
+
+| pin, mol% | uniform spacing: margin, polar fraction, S_ac | statistical sequence (local law): polar fraction, S_ac | monomers in pin-free runs of forty or more |
+|---|---|---|---|
+| AN, 3 | +0.115, 0.22, 0.134% | 0.32, 0.151% | 0.66 |
+| AN, 5 | +0.154, 0.09, 0.060% | 0.22, 0.116% | 0.40 |
+| AN, 7 | +0.194, 0.03, 0.022% | 0.16, 0.088% | 0.22 |
+| AN, 10 | +0.253, 0.01, 0.004% | 0.09, 0.058% | 0.08 |
+| CTFE, 3 | +0.159, 0.08, 0.055% | 0.21, 0.112% | 0.66 |
+| CTFE, 5 | +0.227, 0.01, 0.009% | 0.12, 0.069% | 0.40 |
+| CTFE, 7 | +0.295, 0.00, 0.001% | 0.07, 0.043% | 0.22 |
+| CTFE, 10 | +0.397, 0.00, 0.000% | 0.03, 0.021% | 0.08 |
+| CFE, 3 | +0.166, 0.06, 0.046% | 0.20, 0.107% | 0.66 |
+| CFE, 5 | +0.239, 0.01, 0.006% | 0.11, 0.064% | 0.40 |
+| CFE, 7 | +0.312, 0.00, 0.001% | 0.06, 0.038% | 0.22 |
+| CFE, 10 | +0.422, 0.00, 0.000% | 0.03, 0.018% | 0.08 |
+| CDFE, 3 | +0.320, 0.00, 0.001% | 0.06, 0.037% | 0.66 |
+| CDFE, 5 | +0.496, 0.00, 0.000% | 0.02, 0.012% | 0.40 |
+| CDFE, 7 | +0.672, 0.00, 0.000% | 0.01, 0.004% | 0.22 |
+| CDFE, 10 | +0.936, 0.00, 0.000% | 0.00, 0.001% | 0.08 |
+
+A statistical terpolymer at 7 mol% CFE has 22% of its monomers in pin-free runs of forty or more,
+and through them it carries 0.038% AC strain at the operating point where the uniform
+one-per-fourteen sequence carries 0.001%. The channel calibrated on the measured 63/30/7 film
+carries 0.080%. This is a hypothesis, not a result: the law was measured on periodic cells whose
+chains are in register, and a run's neighbours in a real crystal are other chains with their pins
+elsewhere. What it would take to test is in section 5. If it holds, a strictly periodic dense
+spacing, which the first pass recommended as the sharpest switch, is the worst arrangement of a
+given composition, and the sequence-controlled route's lever is the opposite one: long matrix
+runs, with the pins gathered at their ends.
 
 **Location in the larger sense.** The screen puts every defect inside a crystalline chain. The
 literature's finding is that the giant strain is produced at and around the crystals, in the
@@ -401,80 +486,132 @@ along a chain of a given length the defects go so that the chain folds with them
 
 ## 5. Candidates, ranked for the sequence-controlled route
 
-*Suspended in part, 2026-11-10. Items 1-4 below were read off the search's margins and the
-search's kink energies. With both cells of a row relaxed alike (2.1) the matrix sits at +0.05 to
-+0.08 instead of -0.05, the 64/29/7 cell at +0.32 instead of +0.11 (a pin of +3.7 kcal/mol per CFE,
-not +2.3) and the CDFE cell at +0.69 instead of +0.40; with the kink pair measured like for like
-(8.2) it costs 6.9, 3.8 and 5.1 kcal/mol in the 71/29, 64/29/7 and PVDF lattices instead of 5.5,
-1.8 and 4.3. What survives: item 1 (the matrix is where the near-degeneracy comes from), the
-direction of item 2 (the chlorine pins the helix and cheapens the kink sheet, by 3.1 kcal/mol) and
-item 5. What does not: the density. On the polished numbers one CFE per fourteen holds the perfect
-crystal off the switching curve at 55 V/um altogether (polar fraction 0.00 in the mapping), and the
-margin law +0.06 + 3.7/N puts the steep part at pins far sparser than any terpolymer that is known
-to work, while the measured 63/30/7 film does switch there. The model and the film now disagree on
-that one number, and the two explanations (the chlorine's untested parameters overstate its pin;
-the film switches where the perfect crystal's margin does not apply) are decided by a DFT cell with
-a CFE in it, not here. No pin density is recommended until that cell or the remaining polished
-rows say which.*
+*Rewritten 2026-11-14 on the polished margins and on section 8's kink energies and barriers (PI:
+"Both", and the PI's question of the same day: what makes the CFE terpolymer suited, and how
+those characteristics are optimised). It supersedes the ranking of 2026-11-08 (one CFE per
+fourteen to sixteen in a 30 mol% matrix), which was read off the search's margins and suspended
+on 2026-11-10.*
 
-For a sequence-controlled material aimed at the bias-hold operating point, on this model and
-with the confidence stated in section 7 (and after the handedness correction, which withdrew the
-first pass's ranking):
+### 5.1 What makes the CFE terpolymer work, in the model's quantities
 
-1. **The matrix: VDF/TrFE at 29-36 mol% TrFE.** Degenerate within the model's resolution in the
-   fourteen-monomer cells (71/29 -0.05, 64/36 -0.06; the ten-monomer 70/30 and 80/20 cells +0.15
-   and +0.18), validated chemistry: this is
-   where the near-degeneracy the relaxor needs comes from, as it does in every giant-strain
-   terpolymer made so far. Without a pin it is a ferroelectric copolymer with hysteresis, which
-   this equilibrium picture does not contain (the lattice model's coupling does).
-2. **The pin: CFE at one per fourteen to twenty (5-7 mol%).** A TG pin (+7.9 kcal/mol per unit in
-   the 20 mol% cell, +2.3 in the 29 mol% one) that holds the matrix off saturation at the bias
-   (polar fraction 0.24 at one per fourteen, 0.60 at one per twenty, against the pinless matrix's
-   0.88) and loosens the lattice for the kinks that switching needs (kink pair 5.5 kcal/mol in the
-   71/29 matrix, 1.8 with the pin: section 8), so the cell both switches at 55 V/um and follows a
-   34-66 kHz drive. The pin density is the dial: the margin is -0.05 + 2.3/N for one CFE per N
-   monomers, and the loss model's steep part (margin near +0.07) sits at one per sixteen to twenty
-   on the statics; but the sparser pin leaves a stiffer lattice (kink pair 2.3 at one per twenty
-   against 1.8 at one per fourteen) and a slower channel (157 against 364 kHz), so its loss at the
-   drive is 0.20 against 0.07 for 0.154 against 0.125% strain (section 8). Under the objective (loss
-   first, stroke as a floor) the controlled sequence this pass recommends is a 30 mol% TrFE matrix
-   with one CFE every fourteen to sixteen monomers, strictly periodic: tan delta 0.07-0.1 for
-   0.12-0.14% AC strain at the operating point in the mapping. Its placement relative to TrFE is not a lever for the
-   margin (0.005 per monomer); the pin spacing is (section 4), and a controlled sequence fixes it.
-   Chlorine chemistry: extrapolated until a DFT cell tests it.
-3. **Alternative pins.** In the ten-monomer 20 mol% cell FAN (+7.4) and CTFE (+6.1) pin as CFE
-   does and AN at half the strength (+3.9); at the film's dilution in the 29 mol% matrix AN favours
-   the all-trans lattice instead (-1.4 per unit, the cell saturated at the bias) and FAN pins at
-   about +4 (rigid pendants) and overshoots like CDFE, so neither nitrile is the relaxor's pin in
-   a TrFE matrix (section 6). CTFE at one per fourteen pins as CFE does (+0.135 against +0.11) with
-   12% less polarization and 10% less switch strain, and its kink pair is -0.6: the all-trans CTFE
-   lattice is metastable against kinking at this dilution as it was at one per ten, so its polar
-   phase is a kinked one and the rate proxy has no meaning for it (section 8). It ranks below CFE on
-   stroke and its dynamics are undetermined. CDFE does not pin in the ten-monomer 20 mol% cell (-0.3) but tips the fourteen-
-   monomer 29 mol% cell by +0.45 per monomer, more than CFE (+0.16), leaving it at +0.40: at the
-   film's composition it is a stronger pin than CFE and overshoots the steep part of the curve;
-   its kink pair is the cheapest of the table (section 8). The first pass's CDFE rows were read
-   wrongly on both points.
-4. **A hypothesis tested and failed as posed:** that the pin (CFE) and a lattice loosener (CDFE,
-   neutral in the ten-monomer cell with a free kink pair) do different jobs, so one of each per
-   fourteen would hold the relaxor's disorder with the pin and buy its dynamics with the loosener.
-   In the 29 mol% fourteen-monomer cell CDFE is not neutral (+0.45 per monomer, more than CFE's
-   +0.16) and the two add: the CFE+CDFE cell sits at +0.64, off the curve, and CDFE alone at +0.40.
-   What the idea needs is a unit that costs the all-trans and the helical lattice alike *at the
-   film's dilution*, which neither chlorine is; the loosening both chlorines bring (kink pair 1.1-1.8
-   against the matrix's 5.5) comes with the pinning, and at one per fourteen CFE's is the usable
-   combination.
-5. **Out:** PVDF and the alternating 50/50 (not switchable in the crystal), CFE without TrFE (the
-   helix by 0.8-1.0), and the ten-monomer 70/20/10 cells as models of the switching unit.
+| property | what it is in the model | what sets it | headroom |
+|---|---|---|---|
+| a switch that carries dipole and strain together | helix to all-trans: 0.51-0.63 e.A of dipole per monomer along the field and +10 to +13% along the chain (-8 to -20% in area) | the vinylidene backbone's two conformations | none inside the family: every sequence screened lies in those ranges |
+| near-degeneracy of the two conformations | margin +0.06 to +0.08 kcal/mol per monomer at 29-36 mol% TrFE, against PVDF's +0.74 | TrFE content | tunable continuously; its price is 11% of the dipole (0.63 to 0.56 e.A per monomer) |
+| a defect that makes the switch diffuse, reversible and fast | one CFE per fourteen cuts the kink sheet from 6.85 to 3.79 kcal/mol per kink pair and one chain's move from 11.9 to 11.4, and a chain that has moved stays (8.3); it also pins the helix by 3.7 per unit | the unit, its density and its spacing | the largest: units differ fourfold in what they buy per unit of pin (5.2), and the spacing is free in a controlled sequence |
+| cooperativity | the calibrated channel switches seventeen monomers at a time; in the lattice kink pairs attract along the chain and the low-energy objects are runs of helix and of all-trans with a wall between them (8.2) | the lattice, and the distance between pins | the same lever as the spacing |
 
-Section 8 adds the frequency reading, which does not depend on the margin: a kink pair in the
-all-trans lattice costs 4.3-9.3 kcal/mol in PVDF and 4.9-7.6 in the copolymers but 1.2-3.1 in the
-CFE cell and 0.1-0.6 in the CDFE cell, so the chlorine loosens the lattice for the kinks that
-switching needs, by a factor 200-1600 in rate. The operating-point loss and strain, which do
-depend on the margin, now belong to the fourteen-monomer cell: its kink energy is the next
-computation. What would change the ranking: the migration barrier and the cooperativity (not
-computed); Dipole's E2 cells; and the bench's Vogel-Fulcher and bias-suppression numbers, which
-replace the literature channel the mappings are built on.
+The first two properties are the family's and the matrix's. The third and fourth are where a
+better material can come from, and both are properties of the defect unit and of where it is put.
+The bias itself adds nothing to this list: it moves the balance between the conformations by the
+0.07 kcal/mol per monomer that defines the window, and the barriers that set the rate by a
+hundredth of themselves (8.3).
+
+### 5.2 What a unit costs and what it buys
+
+A unit does two things in this model. It pins the helix, which costs stroke at the bias (section
+4). It loosens the all-trans lattice for the kinks that switching needs, which buys speed: the
+kink sheet's energy like for like (8.2; `kink_formation_belt4_polished.json`), at the same site
+in every cell, a VDF-VDF pair midway between two units.
+
+| unit, one per fourteen | pin per unit | kink sheet, kcal/mol per kink pair | cut against the matrix | cut per kcal/mol of pin | sheets' population against the CFE cell's | all-trans dipole per monomer, e.A | axial switch strain |
+|---|---|---|---|---|---|---|---|
+| none: the matrix (vdf10-trfe4-14) | 0 | 6.85 | 0 | - | 0.006 | 0.562 | +11.7% |
+| AN | +2.0 | 3.06 | 3.79 | **1.93** | 3.4 | 0.524 | +12.5% |
+| CTFE | +3.4 | 2.04 | 4.81 | **1.41** | 18.8 | 0.508 | +11.8% |
+| CFE | +3.7 | 3.79 | 3.06 | **0.84** | 1.0 | 0.552 | +12.1% |
+| CDFE | +8.8 | 2.65 | 4.20 | **0.48** | 6.8 | 0.529 | +12.1% |
+
+* **CFE is not the best unit on the model's own two quantities.** AN buys more loosening (3.8
+  against 3.1) for half the pin. CTFE buys the most (4.8) at CFE's pin. CDFE loosens as much as
+  the others and pins more than twice as hard.
+* **What a unit buys per unit of margin does not depend on how densely it is used.** With one CFE
+  per twenty the kink sheet costs 4.59: the cut is 2.26 where it was 3.06 at one per fourteen,
+  about 44 over the spacing, and the pin falls the same way (section 4). So thinning a unit out
+  to bring the margin onto the curve gives back its loosening in proportion (a CFE cut of about
+  1.1 at one per forty, if the scaling holds; two points), and the bold column of the table is
+  the number to choose a unit by: for the same margin spent AN buys 2.3 times CFE's loosening.
+* **The loosening follows the widening of the all-trans cell.** Its short axis is 4.88 A in the
+  matrix and 5.30 (CFE), 5.47 (AN), 5.51 (CTFE) and 5.71 A (CDFE) with one unit per fourteen. The
+  pin is a separate property: how much more the unit costs the all-trans lattice than the helix.
+  The unit to look for widens the all-trans lattice and costs the two lattices alike; AN comes
+  nearest of the four because it is almost free in the all-trans lattice.
+* **What qualifies these numbers.** All four units are extrapolated chemistry. The kink site is
+  one site; the matrix has cheaper sites in its VDF run, and between the cheapest sites of the
+  matrix and of the CFE cell the cut is 1.2, not 3.1 (8.4). The earlier readings that the CTFE
+  cell's all-trans lattice was metastable against kinking (-0.6) and that AN's kink pair was 2.0
+  were the search's protocol; like for like they are +2.04 and +3.06. The single-chain barriers
+  of 8.3 exist for CFE and the matrix only.
+
+### 5.3 The density, and the disagreement with the film
+
+At the working terpolymers' 7 mol% a uniform CFE spacing puts the crystal at +0.32 (`E*` 250
+MV/m): off the curve at 55 V/um. The measured 63/30/7 film switches there. Three readings, and
+what decides each:
+
+1. **The chlorine's pin is overstated.** Its parameters have no crystal anchor. Decided by
+   Dipole's E2 cell with a CFE in it (polyfind's number is registered: +0.317).
+2. **The film switches in its long pin-free runs.** A statistical sequence has them and a
+   periodic model cell does not; read locally the margin law gives the statistical terpolymer
+   half the calibrated film's AC strain (section 4). Decided inside the model by a cell that holds
+   a long run with the pins at its ends and lets the run switch while the pinned stretch stays
+   helical (the helix wall of 8.2, not yet built), and on the bench by a blocky sequence against
+   a statistical one of the same composition.
+3. **The film switches where the crystal's margin does not apply:** at the lamellar surfaces and
+   in the oriented amorphous fraction (tier 4; not computable here).
+
+No density is recommended until the first two are separated. What can be said for each:
+
+* If the pin is as computed and the law is local: the sparsest pin that still gives the speed, or
+  the pins gathered at the ends of matrix runs of forty or more. One AN per 28 to 40 (2.5-3.6
+  mol%) sits at +0.11 to +0.13 with 0.11-0.15% AC strain; one CFE per 56 to 80 the same. The
+  kink energies at those dilutions are not computed; by the scaling of 5.2 the AN lattice would
+  keep a cut of 1.3 to 1.9 kcal/mol there and the CFE lattice 0.5 to 0.8.
+* If the pin is weaker than computed by a factor `k`: the spacings above shrink by `k`. The
+  search's cells had CFE at 2.3 per unit, which would put the same margins at one per 35 to 50.
+* Either way a dense, strictly periodic spacing is not the design: on the polished matrix the top
+  of the curve is the matrix with almost no pin, and the pin's job is the dynamics.
+
+### 5.4 The ranking
+
+1. **The matrix: VDF/TrFE at 29-36 mol% TrFE** (validated chemistry). Within the model's
+   resolution of the top of the switching curve at 55 V/um by itself. Its lattice is the stiff
+   one: on the two rate models of 8.5 it is 2.3 to 170 times slower than the 64/29/7 cell, tan
+   delta 0.2 to 1.0 at 34 kHz. Without a pin it is a ferroelectric copolymer with hysteresis that
+   this equilibrium picture does not contain.
+2. **The unit: AN first, then CTFE and CFE, on what each buys per unit of pin** (5.2), subject
+   to the DFT test of the chlorine and nitrile parameters. AN is also the unit Dipole's slate
+   calls the makeable track (section 6). Its costs: 7% less dipole per monomer than the matrix
+   (0.524 against 0.562 e.A), and in a VDF host without TrFE it favours the all-trans lattice, so
+   it needs the TrFE matrix. CTFE loosens most and gives up 10% of the dipole. CFE keeps the
+   dipole (0.552) and is the weakest loosener of the four.
+3. **The arrangement: sparse or blocky, not dense and periodic** (5.3).
+4. **Out:** CDFE as a pin at any practical density (8.8 per unit); PVDF and the alternating 50/50
+   (not switchable in the crystal); CFE without TrFE; the ten-monomer 70/20/10 CFE and CTFE cells
+   as models of the switching unit (+0.87 to +0.90: one such pin per ten pins the whole cell).
+
+### 5.5 Where a better molecule would come from
+
+The model turns the question into a screen with two numbers per unit, the pin and the cut in the
+kink sheet's energy, at one per fourteen in the 71/29 matrix: three polished cells, about half an
+hour of one processor per unit. Three places to look, none of them computed yet:
+
+* **Units built from groups the potential already has.** Tetrafluoroethylene (CF2-CF2), a
+  reversed VDF unit (the head-to-head defect every PVDF carries at a few percent), vinyl fluoride
+  (CH2-CHF), ethylene and 1,2-difluoroethylene are CH2, CHF and CF2 groups in other orders. They
+  need no new parameters. Two of them (TFE, reversed VDF) are known to favour the all-trans
+  chain, which is the missing kind of unit: one that could loosen the lattice while pulling the
+  margin down instead of up, alone or beside a pin.
+* **Units that need parameters and one DFT cell each.** Hexafluoropropene, bromotrifluoroethylene,
+  3,3,3-trifluoropropene, and the unit of the FA tetrapolymer the slate is ranked against. The
+  chemistry-extension path exists (docs/CHEMISTRY_EXTENSION.md); the anchor is Dipole's.
+* **The matrix comonomer.** TrFE buys the degeneracy at 11% of the dipole. Whether TFE or
+  reversed VDF units buy it for less is the same two cells per composition.
+
+What would change the ranking: Dipole's E2 cells (the 70/30 pair first, then a CFE-bearing and an
+AN-bearing sequence); the helix-wall cell; the single-chain barriers for AN and CTFE; and the
+bench's Vogel-Fulcher and bias-suppression numbers, which replace the literature channel the
+mappings are built on.
 
 ## 6. The slate's other chemistries
 
@@ -505,10 +642,11 @@ not automatically the recommendation") is the lens:
   flanking exit bond is 4.3; AN's host bond 10.2, its approach bond 7.6). Dipole's own conclusion
   from the same table is the one that matters here: the field moves these barriers by 1-4% at
   100 MV/m, so a single monomer cannot be switched by the field, switching is collective, and the
-  single-chain barrier does not decide the loss. The quantity that does, the collective switching
-  barrier of a trans run inside the lattice, has not been computed per chemistry by either seat
-  (polyfind's one number is the kink-row hop in perfect beta, 0.357 eV); section 8 below starts on
-  it with the kink-pair formation energy in the packed cell.
+  single-chain barrier does not decide the loss. The lattice says the same from its side: a 55
+  V/um bias moves the kink barriers of section 8 by 0.1 kcal/mol at most, a hundredth of
+  themselves (8.3). The quantity that decides the loss, the barrier of a trans run switching inside
+  the lattice, is what section 8 computes piece by piece: the kink sheet's energy for six lattices
+  and one chain's barriers for three.
 * **Orientation.** Mirroring an asymmetric defect's substituents in an otherwise unchanged
   lattice moves the packing energy by 0.3-0.5 kcal/mol per monomer (AN 0.53, CFE 0.35; SCN 1.7;
   the symmetric VDCN 0.006 as the control). That is the same statement section 2 makes from the
@@ -542,42 +680,41 @@ recommendation asks (AN as "the makeable track"); the belt4 screen's rows for it
 
 | sequence (belt4 preset, as section 2) | margin TT-TG (rigid), kcal/mol per monomer | TGTG' tilt release | switch strain axial, areal | P(TTTT) C/m^2 | mu(TTTT) e.A | E* |
 |---|---|---|---|---|---|---|
-| VDF/TrFE/AN 70/20/10 | +0.57 (+0.33), TG'TG lowest; TGTG' alone gave -0.73 | -0.29 | +11.6%, -16.9% | 0.146 | 0.558 | 440 MV/m |
+| VDF/TrFE/AN 70/20/10 | +0.57 (+0.39) polished, TG'TG lowest; TGTG' alone gave -0.73 on the search's cells | -0.29 | +11.9%, -16.9% | 0.146 | 0.558 | 440 MV/m |
 | VDF/TrFE/FAN 70/20/10 | +0.91 (+0.91; tilts not treated: the FAN carbon's pendants are a fluorine and a nitrile fragment), TG'TG lowest; TGTG' alone gave -0.57 | - | +11.0%, -12.9% | 0.144 | 0.581 | 680 MV/m |
-| VDF/TrFE/CFE 70/20/10, for comparison | +0.97 (+0.76), TG'TG lowest; TGTG' alone gave +0.03 | -0.33 | +11.5%, -14.5% | 0.159 | 0.566 | 740 MV/m |
-| 64/29/7 with AN in place of CFE, fourteen monomers | -0.15 (-0.49): TTTT the ground state, the matrix alone is -0.05 | -0.39 | +10.8%, -15.4% | 0.145 | 0.516 | 0 |
-| 64/29/7 with FAN in place of CFE, fourteen monomers | -0.09 rigid (tilts not treated for the FAN cell); about +0.25 with the other units' tilts added by hand | - | +10.6%, -12.2% | 0.141 | 0.516 | 0 (rigid) |
-| 64/29/7 with CFE, fourteen monomers, for comparison | +0.11 (-0.19) | -0.42 | +10.5%, -14.2% | 0.156 | 0.552 | 280 MV/m |
+| VDF/TrFE/CFE 70/20/10, for comparison | +0.87 (+0.66) polished, TG'TG lowest; TGTG' alone gave +0.03 on the search's cells | -0.33 | +11.6%, -14.5% | 0.159 | 0.566 | 670 MV/m |
+| 64/29/7 with AN in place of CFE, fourteen monomers | +0.20 (+0.03) polished, TG'TG lowest: a weak pin; the matrix alone is +0.06. The search's cells gave -0.15 | -0.39 | +12.5%, -15.4% | 0.145 | 0.524 | 160 MV/m |
+| 64/29/7 with FAN in place of CFE, fourteen monomers | -0.09 rigid on the search's cells (not polishable: tilts not treated for the FAN cell). The other chiral rows moved +0.05 to +0.35 toward the helix when polished, so its sign is not known | - | +10.6%, -12.2% | 0.141 | 0.516 | not known |
+| 64/29/7 with CFE, fourteen monomers, for comparison | +0.32 (+0.14) polished | -0.42 | +12.1%, -14.2% | 0.156 | 0.552 | 250 MV/m |
 
 A nitrile defect beside 20 mol% TrFE is a TG-favouring pin of about half CFE's strength (section
-4: +3.9 against +7.9 kcal/mol per unit), and it pins by the opposite route: where CFE's chlorine
-costs the all-trans lattice 7 kcal/mol per unit and the helix nothing, the nitrile costs the
-all-trans lattice nothing (-0.7) and packs 4.6 better into the helix (the TG'TG cell opens to 63-67
-A^3 per monomer around it). With the lowest handedness its margin is +0.57; the first pass's TGTG'
-alone gave -0.73 (TTTT the ground state) and the reading built on it, that a nitrile drives the
-TrFE host to a saturated ferroelectric, is withdrawn. So a nitrile is a weaker relaxor pin than
-CFE, needing about twice the density for the same hold, at a polarization beside TrFE of 0.146
-C/m^2 against CFE's 0.159. In a VDF host without TrFE the VDF/AN 90/10 row stands with all four conformers run: one
-acrylonitrile per ten VDF takes PVDF's +0.74 to +0.47 (threshold 510 to 840 MV/m on the TT-TG
-dipole difference, 335 on the TTTT dipole; TTTT polarization 0.193 to 0.163 C/m^2), so a nitrile
-is a weak trans-favouring unit in a VDF host and a weak helix-favouring pin beside TrFE: it
-follows the lattice it is put in rather than setting it. Dipole's registry gate reads AN as
+4: +3.4 against +6.4 kcal/mol per unit, polished), and it pins by the opposite route: where CFE's
+chlorine costs the all-trans lattice 6 kcal/mol per unit and the helix nothing, the nitrile costs
+the all-trans lattice nothing (-0.8) and packs 4.2 better into the helix (the TG'TG cell opens to
+63-67 A^3 per monomer around it). With the lowest handedness its margin is +0.57; the first pass's
+TGTG' alone gave -0.73 (TTTT the ground state) and the reading built on it, that a nitrile drives
+the TrFE host to a saturated ferroelectric, is withdrawn. So a nitrile is a weaker pin than CFE,
+which on the polished margins is the property to want (section 5): the same hold at about twice
+the density, at a polarization beside TrFE of 0.146 C/m^2 against CFE's 0.159. In a VDF host
+without TrFE one acrylonitrile per ten VDF takes PVDF's +0.74 to +0.56 polished (+0.47 on the
+search's cells; TTTT polarization 0.193 to 0.163 C/m^2), so a nitrile is a weak trans-favouring
+unit in a VDF host and a weak helix-favouring pin beside TrFE: it follows the lattice it is put in
+rather than setting it. Dipole's registry gate reads AN as
 "marginal" (-0.11), a different quantity saying something compatible from the lattice's side: the
 nitrile does not frustrate the polar crystal strongly. Its single-bond barriers do not settle its
 speed either way (host bond 10.2 against CFE's 6.8, defect bonds' mean 9.6 against 12.2; see the
 barrier paragraph above).
 
-At the film's dilution, one per fourteen in the 29 mol% TrFE matrix, the nitrile does the opposite
-of what a relaxor pin does: AN takes the degenerate matrix (-0.05) to -0.15, the all-trans lattice
-lowest (per unit: TTTT 0.0, the helix +1.4), so it saturates the matrix at the bias (polar fraction
-0.88, the pinless matrix's) instead of holding it on the steep part as CFE does (0.24). FAN at the
-same dilution is -0.09 with rigid pendants, which the other units' tilt release would turn to about
-+0.25 (the FAN cell's tilts cannot be treated: its carbon carries a fluorine and a nitrile
-fragment), a pin of about CDFE's kind with the same overshoot; its chemistry is the least tested
-of the table. So in this model the nitriles are not the relaxor's pin in a TrFE matrix. AN does loosen the
-lattice it leaves ferroelectric (kink pair 2.0 against the matrix's 5.5, channel 285 kHz on the
-fourteen-monomer anchor): a fast saturated ferroelectric, which under the bias-hold operating point
-gives the pinless matrix's strain (0.076%) and loss (tan delta 0.055), not the relaxor's.
+At the film's dilution, one per fourteen in the 29 mol% TrFE matrix, the nitrile is the weakest
+pin of the four units and the one that buys most for it (rewritten 2026-11-14; the reading of
+2026-11-08, that AN left the all-trans lattice lowest there and saturated the matrix, was the
+search's cells and is withdrawn, 2.1). Polished, AN takes the matrix from +0.06 to +0.20 (2.0
+kcal/mol per unit against CFE's 3.7): the all-trans lattice hardly feels it (+0.2 per unit) and
+the helix packs 1.7 better around it. Like for like its kink sheet costs 3.06 kcal/mol per kink
+pair against the matrix's 6.85 and the CFE cell's 3.79, so it loosens the lattice more than CFE
+at half the pin (section 5.2). FAN at the same dilution is -0.09 with rigid pendants on the
+search's cells and cannot be polished (its carbon carries a fluorine and a nitrile fragment, whose
+tilts are not treated), so its sign is not known; its chemistry is the least tested of the table.
 
 **What this seat cannot compute.** CNEPO, SCN, SF5, nitro, isocyanide, the cyano-alkenes and
 cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind does not have; for
@@ -798,6 +935,10 @@ both chains free, the cell free, each chain periodic exactly):
 | PVDF | +4.47 | +5.30 | +5.06 | 4.958, 8.774, 89.18, 25.201 | 4.754, 8.481, 90.00, 25.877 |
 | 64/29/7, kink pair in a VDF-VDF pair | +0.94 | +3.95 | +3.79 | 5.402, 8.426, 92.67, 35.496 | 5.302, 8.245, 91.70, 36.183 |
 | 71/29, kink pair in a VDF-VDF pair | +5.68 | +7.09 | +6.85 | 5.150, 8.549, 92.16, 35.529 | 4.881, 8.459, 91.78, 36.187 |
+| 64/29/7 with AN in place of CFE (2026-11-14) | +1.82 | +3.25 | +3.06 | 5.526, 8.380, 92.30, 35.455 | 5.465, 8.200, 91.26, 36.162 |
+| 64/29/7 with CTFE in place of CFE (2026-11-14) | -0.87 | +2.16 | +2.04 | 5.639, 8.487, 91.63, 35.424 | 5.510, 8.276, 90.61, 36.137 |
+| 64/29/7 with CDFE in place of CFE (2026-11-14) | +1.46 | +2.79 | +2.65 | 5.212, 9.522, 83.92, 35.414 | 5.712, 8.404, 90.09, 36.165 |
+| 65/30/5, one CFE per twenty (2026-11-14) | +0.88 | +4.70 | +4.59 | 5.329, 8.381, 92.27, 51.012 | 5.242, 8.262, 91.60, 51.692 |
 
 kcal/mol per kink pair against the all-trans crystal.
 
@@ -811,6 +952,17 @@ kcal/mol per kink pair against the all-trans crystal.
   The kinked cells are 2-6% wider along a than the all-trans cells (PVDF 4.75 to 4.96 A, 71/29 4.88
   to 5.15, 64/29/7 5.30 to 5.40): the terpolymer's all-trans lattice is already most of the way
   there, which is the loosening.
+* **The other units loosen it more than CFE does (2026-11-14).** With the unit of the 64/29/7
+  cell replaced, the same kink pair at the same site costs 3.06 (AN), 2.65 (CDFE) and 2.04 (CTFE)
+  against CFE's 3.79 and the matrix's 6.85 (`kink_migration.py --reference-only`). The search's
+  cells had put the CTFE cell's kink pair below zero (-0.87, read at the time as an all-trans
+  lattice metastable against kinking); like for like it is +2.04 and that reading is withdrawn.
+  The cut follows the short axis of the all-trans cell (4.88 A in the matrix; 5.30, 5.47, 5.51
+  and 5.71 with CFE, AN, CTFE and CDFE), and the CDFE cell kinks into a sheared lattice (gamma
+  84 degrees). With one CFE per twenty instead of fourteen the kink pair costs 4.59: the cut
+  against the matrix falls from 3.06 to 2.26, as one over the spacing (43 and 45 kcal/mol times
+  monomers), which is how the pin falls too. Section 5.2 sets these against what each unit costs
+  in margin.
 * **Kink pairs attract along the chain.** One kink pair per fourteen monomers costs the
   terpolymer chain +3.8, while the chain with a kink pair in every two monomers (the TG helix) lies
   4.4 below all-trans (section 2.1: +0.317 per monomer). The low-energy objects of this lattice are
@@ -1005,7 +1157,7 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     chains are uphill too: in zero field the sheet does not advance by chains following one
     another, and what the single-chain step gives is a local excursion that is nearly always
     undone. An advance needs a drive that pays about 2 kcal/mol per stepped chain; what such
-    a drive does to these barriers is not computed. Checks: both ahead is 2.438 above the start from either neighbour, as it has to
+    a drive does to these barriers was not computed then; it is now, and it is next to nothing (the sub-point on the bias below). Checks: both ahead is 2.438 above the start from either neighbour, as it has to
     be (the two pairs are translates), and 8.349 above the sheet, the stored pair state; the
     second neighbour's wide kink is 9.3959 by two starts (structures within 0.0004 degrees);
     the first neighbour's descent ends within 0.001 degrees of the stored completed step. That
@@ -1159,6 +1311,54 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     and L is reached from the sheet at the step's own price. Not computed: whether a neighbour
     follows a chain that is in L (the question that showed PVDF's stepped chain recalled and
     N not joined), L's own next move, and L in the smaller and larger cells.
+  - *What a bias does to these barriers: almost nothing. The field moves the balance, not the
+    rate (2026-11-14, PI: "Both").* The mixed cell now carries an applied field as the packer
+    does (`polyfind.mixedcell`, "An applied field"): the energy is the electric enthalpy at the
+    macroscopic field, and its derivative with respect to the field is minus the cell's dipole,
+    static plus induced. To first order a state or a saddle therefore moves against the sheet by
+    its dipole difference times the field, and a barrier by its activation dipole, the saddle's
+    dipole less the starting state's (`examples/kink_field.py`; `kink_field_belt4.json` and
+    `.md`). Sixteen chains; dipoles in e.A along the all-trans crystal's polar axis, the bias
+    along the polarization; at 55 V/um one e.A is 0.127 kcal/mol, and kT is 0.6:
+
+    | one chain's move | 64/29/7: barrier, activation dipole, rate factor at the bias | 71/29 | PVDF |
+    |---|---|---|---|
+    | the sheet to N | 11.40, +0.50, 1.11 | 11.89, +0.06, 1.01 | 12.39, -0.36, 0.93 |
+    | N back to the sheet | 2.58, -0.35, 0.93 | 2.95, -0.62, 0.88 | 4.66, -0.60, 0.88 |
+    | N on to L | 1.67, +0.07, 1.02 | 1.61, +0.12, 1.03 | 5.93, +0.36, 1.08 |
+    | L back to N | 5.52, +0.82, 1.19 | 6.81, +0.74, 1.17 | 8.23, +0.53, 1.12 |
+    | the sheet straight to L | 15.29, -0.58, 0.88 | 15.58, -0.44, 0.91 | 11.82, -0.20, 0.96 |
+    | the step's first half: the sheet to the wide kink I | 9.11, -0.14, 0.97 | 9.53, -0.05, 0.99 | 10.66, -0.51, 0.90 |
+    | the step's second half: I on (to M in the copolymers, to B in PVDF) | 5.44, +0.51, 1.11 | 5.64, +0.53, 1.12 | 1.67, +0.32, 1.07 |
+
+    No activation dipole exceeds 0.82 e.A, so no barrier moves by more than 0.10 kcal/mol at the
+    bias and no rate by more than a fifth, in either sense. The states move as little: one chain
+    off the sheet by 0.11 at most (N in the terpolymer; L by 0.01), two chains in N by 0.21. The
+    reason is in what the moves are. The all-trans crystals carry 0.63 (PVDF) and 0.55 e.A per
+    monomer (both copolymers), 16% of it induced, and a kink pair in the sheet takes 0.86 to 0.92
+    e.A of that away, a monomer and a half's worth. The moves above carry that deficit from one
+    site to another or turn its hand over; they do not change how much helix there is, so they
+    exchange a few tenths of an e.A with the field. For a barrier to move by kT on a 0.5 e.A
+    activation dipole the field would have to be 520 V/um, ten times the bias and more than a
+    film holds.
+
+    Checked beyond first order by relaxing the states and settling the saddles again under the
+    field (four chains, fixed cell): at 55 V/um along and against the axis, PVDF's two states and
+    two saddles and the terpolymer's three states and three saddles all lie within 0.0004
+    kcal/mol of the dipoles' prediction; at 550 V/um PVDF's lie within 0.05, the second order a
+    hundred times larger as it should be.
+
+    **So the drive does not work through these barriers.** What the bias moves is the balance
+    between all-trans and helix, 0.07 kcal/mol per monomer converted (the all-trans dipole times
+    the field: the width of section 3's window), which is 1.2 kcal/mol, two kT, on the calibrated
+    channel's unit of seventeen monomers. The barriers of 9 to 12 kcal/mol that set the rate move
+    by a hundredth of themselves. The loss model's separation, a margin the field shifts and a
+    relaxation time it does not, is what the lattice gives, and Dipole's single-chain statement
+    (the field moves a torsional barrier by 1-4% at 100 MV/m; section 6) holds inside the
+    crystal. A reading for the bench follows: the channel's relaxation frequency should not shift
+    by more than about a fifth between zero bias and 55 V/um, whatever the bias does to the
+    dielectric strength. Not computed: the field's effect with the cell free to strain, and the
+    dipole of a helix wall moving, which is the event that does change how much helix there is.
   - *A band in the chains' own metric (2026-11-14).* The bands above crept: 900 to 1100
     iterations to find a dip, or convergence on a top that would not settle. The minimisations
     had been cured of the same disease by working in variables in which each chain's stiff
@@ -1249,6 +1449,13 @@ the other two rows carry no strain on either. The step barriers are on the saddl
 2026-11-12 (8.3): the terpolymer's is 11.48 where the band's top was read as 11.37, which moves the
 71/29 row from 121 to 147 kHz and its tan delta from 0.26 to 0.21, and PVDF from 21 to 27 MHz.)
 
+* **Three more lattices on the first rate model (2026-11-14).** With the like-for-like sheet
+  energies of 8.2 for the AN, CTFE and CDFE cells at one per fourteen, the sheets' population
+  puts their channels at 1.2, 6.8 and 2.5 MHz against the CFE cell's 364 kHz, and the cell with
+  one CFE per twenty at 96 kHz (`candidate_frequency_map_belt4_polished.md`). None of the four
+  has a step barrier yet, and all are off the switching curve (+0.20, +0.30, +0.69, +0.26), so
+  the map gives them a rate and no strain; what the rates are for is section 5.2's comparison of
+  the units.
 * **The two rate models bracket the matrix between slow and following.** If the population of
   kink sheets limits the channel (the earlier section's assumption, on corrected energies) the 71/29
   matrix sits at 2 kHz on the energy of the one site the sheet was first put on and at 33 kHz on
@@ -1282,7 +1489,8 @@ the other two rows carry no strain on either. The step barriers are on the saddl
   excursion. Nor is the single-chain rate the rate at
   which a sheet advances: in PVDF a chain that has stepped out comes back 6500 times for each
   time a stack neighbour joins it (8.3), so in zero field that step is a local excursion, and
-  an advance needs a drive whose effect on these barriers is not computed. The earlier
+  the drive does not supply an advance through these barriers either: a 55 V/um bias moves them
+  by 0.1 kcal/mol at most (8.3). The earlier
   polyfind number for a kink-row hop in perfect beta, 8.2 kcal/mol (`ask ... verification-v1.md`,
   E3), is PVDF's 7.5-8.9 here by a different route.
 
@@ -1510,7 +1718,8 @@ the steep part of its curve.
 ## 7. Confidence, and what decides each row
 
 * **Validated against DFT:** the VDF and TrFE crystal terms (cells, polarization, stiffness,
-  polar Berry slope, backbone angles; 5.22). **Not validated:** every chlorine parameter; the
+  polar Berry slope, backbone angles; 5.22). **Not validated:** every chlorine and nitrile
+  parameter, hence every pin strength and every unit's cut in the kink sheet (section 5.2); the
   TrFE unit's own margins (the 70/30 model's conformational ordering is a prediction awaiting
   Dipole's E2 cells, 5.22); the polar-fraction mapping of section 3 (calibrated to one published
   film).
@@ -1523,6 +1732,11 @@ the steep part of its curve.
   cost of the handedness changes. The protocols' resolution is 0.15 kcal/mol per kink pair
   (section 8's translation check) and about 0.1-0.2 kcal/mol per monomer between symmetry-related
   packings of the chlorine rows, so margins are not read below 0.1.
+* **The offset and the window (2026-11-14).** The switching curve at the bias is a window 0.12
+  kcal/mol per monomer wide in the margin (section 3), and the margin's offset is not known better
+  than that. The model places a composition by differences measured the same way (a unit's pin, the
+  1/N law, a unit's cut in the kink sheet's energy), not by where it sits on the curve; that offset
+  is set by one measured film or one DFT pair.
 * **The model cell:** a regular, periodic, isotactic ten- or fourteen-monomer sequence packed as
   two chains at zero kelvin. Real copolymers are statistical and atactic, their crystals are lamellae a few
   nanometres thick with the switching at and near the interfaces, and the measured strain is
