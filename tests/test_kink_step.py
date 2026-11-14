@@ -622,7 +622,42 @@ def test_one_copolymer_chain_alone_pays_three_more_than_a_sublattice_and_the_che
         n, r = states["settled"][key(row, "4x2")]["N"], get(row, "4x2")
         assert n["converged"] and n["gauche_bonds"] == [4, 6] and n["torsions_deg"][4] < 0.0 < n["torsions_deg"][6] and n["chains_off_the_sheet"].keys() == {"0"}
         assert (n["energy"] < r["I"]["energy"]) and ((n["energy"] < r["B"]["energy"]) == (row != pvdf))
-        band = states["bands"][key(row, "4x2")]["I-N"]  # not converged: a bound, not a saddle
-        assert not band["converged"] and not band["polished"]["a_saddle_between_the_two"] and band["saddle"] > max(r["I"]["energy"], n["energy"]) + 3.0
+        assert "I-N" in states["bands"][key(row, "4x2")]  # the way there from the wide kink; the way from the sheet is the test below
     legs = states["bands"][key(ter, "4x2")]
     assert legs["I-M"]["polished"]["a_saddle_between_the_two"] and legs["M-B"]["polished"]["a_saddle_between_the_two"]
+
+
+def test_the_copolymers_cheaper_move_is_to_n_and_pvdfs_is_the_step():
+    """Sixteen chains, bands in the per-chain metric (docs/CANDIDATE_MATERIALS.md 8.3, 2026-11-14).
+    From the sheet straight to N, a kink pair of the other hand two monomers on: the saddle is
+    settled in all three lattices; it is 3 below the one-monomer step's in both copolymers and
+    above it in PVDF; the terpolymer's is the same saddle by the direct band and by the band in
+    pieces through Q; on the cheaper move the three lattices are within half a kcal/mol."""
+    rows = json.load(open(MIG))["rows"]
+    states_path = MIG.with_name("kink_states_belt4.json")
+    key = lambda row: f"{row}@0 4x2 mover 0 ahead host flexible"  # noqa: E731
+    ter, mat, pvdf = "vdf9-trfe4-cfe1-14", "vdf10-trfe4-14", "vdf10"
+    if not states_path.exists() or any("to_N" not in rows.get(key(r), {}) for r in (ter, mat, pvdf)):
+        pytest.skip("the ways to N are not stored")
+    states = json.loads(states_path.read_text())
+    low = {}
+    for row in (ter, mat, pvdf):
+        r, n = rows[key(row)], rows[key(row)]["to_N"]
+        band = states["bands"][key(row)]["A-N"]
+        assert band["from"] == "kinked_crystal.state" and band["energies"][0] == pytest.approx(0.0, abs=1e-9) and "metric" in band["band_variables"]
+        pol = band["polished"]
+        assert pol["converged"] and pol["a_saddle_between_the_two"] and abs(pol["force_along"]) < 0.01 and pol["gradient_across"] < 1e-3
+        assert n["saddle"] == pytest.approx(pol["saddle"]) and n["N"] == pytest.approx(states["settled"][key(row)]["N"]["energy"])
+        assert n["barrier_back"] == pytest.approx(n["saddle"] - n["N"]) and n["the_step_to_B"] == pytest.approx(r["barrier_forward_polished"])
+        assert abs(band["saddle"] - pol["saddle"]) < 0.02  # in the metric a band's top is its saddle
+        low[row] = min(n["saddle"], r["barrier_forward_polished"])
+    assert all(2.9 < rows[key(r)]["to_N"]["cheaper_than_the_step_by"] < 3.3 for r in (ter, mat))
+    assert rows[key(pvdf)]["to_N"]["cheaper_than_the_step_by"] < -0.5
+    assert low[ter] < low[pvdf] < low[mat] and low[mat] - low[ter] < 0.6
+    pieces = rows[key(ter)]["to_N"]["in_pieces"]
+    assert max(pieces["saddles"].values()) == pytest.approx(rows[key(ter)]["to_N"]["saddle"], abs=1e-3) and pieces["Q"] > rows[key(ter)]["to_N"]["N"]
+    settled = states["settled"][key(ter)]
+    assert abs(settled["P"]["energy"]) < 1e-3 and settled["P"]["gauche_bonds"] == [0, 2] and settled["Q"]["gauche_bonds"] == [4, 6]
+    direct = states["bands"][key(ter)]["I-B"]  # the method check: converged in the metric, settles, and is still the higher way to B
+    assert direct["converged"] and direct["iterations"] < 150 and direct["polished"]["a_saddle_between_the_two"]
+    assert direct["polished"]["saddle"] > rows[key(ter)]["by_way_of_M"]["barrier_forward"] + 0.5

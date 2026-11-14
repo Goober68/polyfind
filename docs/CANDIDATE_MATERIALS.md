@@ -1235,9 +1235,10 @@ the other two rows carry no strain on either. The step barriers are on the saddl
   of a chain stepping onto a TrFE unit ahead of its neighbours, and that the film's channel need
   not be this step. These are the steps of half the chains at once, in a two-chain cell; one PVDF
   chain alone has a barrier of 11.6 in sixteen chains and 11.5 in thirty-two and in sixty-four (1e4 /s), and
-  one copolymer chain alone 14.5 (64/29/7) and 15.0 (71/29) in sixteen (83 and 35 /s; 8.3,
-  2026-11-14): four orders slower than the measured channel, which makes the second reading the
-  likelier one, that the film's channel is not this step. Nor is the single-chain rate the rate at
+  one copolymer chain alone 14.5 (64/29/7) and 15.0 (71/29) in sixteen by the one-monomer step
+  (83 and 35 /s) and 11.4 and 11.9 by its cheaper move, two monomers on with the other hand
+  (1.5e4 and 6.5e3 /s; 8.3, 2026-11-14): still two orders slower than the measured channel, as
+  the two-chain step was. Nor is the single-chain rate the rate at
   which a sheet advances: in PVDF a chain that has stepped out comes back 6500 times for each
   time a stack neighbour joins it (8.3), so in zero field that step is a local excursion, and
   an advance needs a drive whose effect on these barriers is not computed. The earlier

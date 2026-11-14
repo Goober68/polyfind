@@ -14,6 +14,38 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The way to N, and bands in the per-chain metric, 2026-11-14 (PI: "Go" on "write the preconditioned band on CPU, then a
+short pod").** Text: `docs/CANDIDATE_MATERIALS.md` 8.3 (the last two sub-points of "One chain alone in the copolymer
+lattices"), `docs/PERFORMANCE_REVIEW.md` 17.10. Files: `kink_states_belt4.json` (states M, N, P, Q; bands), each
+sixteen-chain row's `to_N` in `kink_migration_belt4.json`, `candidate_frequency_map_belt4_steps_4x2_cheapest`, job
+logs in `docs/predictions/gpu_jobs_a100_20261114_n/` and `_n2/`. Tests: `tests/test_mixedcell.py::test_neb_in_a_metric_...`,
+`tests/test_kink_step.py::test_the_copolymers_cheaper_move_is_to_n_and_pvdfs_is_the_step`. STATE: DONE; BOTH PODS DELETED
+AND CONFIRMED (35 and 11 minutes, $1.71; about $9.10 of the $46 used in all).
+THE CODE: `polyfind.mixedcell.neb(metric=T)`: the band in `w` with `y = T w` (`chain_metric`'s T), tangents, springs,
+constraint projections and FIRE in `w`, the reported force and `max_step` still in the scaled variables; no metric =
+the old path bit for bit. `kink_migration.py --band-metric` (needs `--surface`), `band_row.sh ... metric`,
+`kink_wide_cell.py between` (metric unless `--plain`). MEASURED: PVDF four-chain bands from nothing on a host, 108 and
+116 iterations with tops 10.268 and 12.477 (saddles 10.2684, 12.4644) against 171 iterations to 10.345 and >1000 to
+12.49 in per-variable units. A CONVERGED BAND'S TOP IN THE METRIC IS THE SADDLE TO 0.01. It does NOT choose the route:
+the terpolymer's direct I-B band converges in 106 iterations on a saddle of 15.293, still above the way through M (14.49).
+THE SCIENCE, sixteen chains, kcal/mol against the sheet:
+    lattice   the step: B, ahead / back     to N: N, ahead / back      the cheaper move
+    PVDF      +5.91, 11.64 / 5.73           +7.72, 12.39 / 4.66        the step, 11.64 (1.0e4 /s)
+    64/29/7   +11.79, 14.49 / 2.70          +8.82, 11.40 / 2.58        to N, 11.40 (1.5e4 /s)
+    71/29     +10.70, 15.00 / 4.30          +8.94, 11.89 / 2.95        to N, 11.89 (6.5e3 /s)
+N = a kink pair of the other hand two monomers on (gauche bonds 4, 6: G- T G+). THE WAY TO IT IS FROM THE SHEET, NOT
+THROUGH THE WIDE KINK (an image of the I-N band relaxed to the sheet; the direct band A-N then). The terpolymer's 11.40
+is one saddle by two routes (direct band; in pieces through the N-like Q at +10.33: 10.63, 11.396). The matrix's top
+settled (11.893, one hyperplane) while its plateau behind it had not converged. PVDF's I-N band runs through B over the
+step's own saddle. SO: PVDF moves its kink pair one monomer at a time; BOTH COPOLYMERS MOVE IT TWO MONOMERS ON AND TURN
+IT OVER, 3.1 CHEAPER THAN STEPPING ONTO THE TrFE UNIT. On the cheaper move the three lattices are within 0.5 (11.4,
+11.6, 11.9), the terpolymer fastest. FREQUENCY MAP ON IT: matrix 158 kHz (0.44 of the terpolymer; 0.40-0.43 on every
+earlier protocol), PVDF 243 kHz (was 44 MHz on the steps).
+NEXT: (a) what N does next: its own next move (to a third site), whether a neighbour follows it (the `--beside`
+question of 8.3 for N), where the pair is after two such moves -- the rate of ADVANCE is not the rate of the first
+move; (b) the matrix's plateau behind its top (continue `A-N`); (c) thirty-two chains for the copolymers' N;
+(d) `device_min_sites` for mixed cells. Bands from here on: `metric`.
+
 **One copolymer chain alone, 2026-11-14 (PI: "Go" on "the terpolymers' single-chain step in sixteen chains").**
 Text: `docs/CANDIDATE_MATERIALS.md` 8.3 ("One chain alone in the copolymer lattices"), `docs/PERFORMANCE_REVIEW.md` 17.10.
 Files: rows `<row>@0 2x1` and `4x2 mover 0 ahead host flexible` for `vdf9-trfe4-cfe1-14` (64/29/7) and `vdf10-trfe4-14`

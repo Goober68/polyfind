@@ -1865,10 +1865,21 @@ step from the kinked crystal to the settled saddles in one job each
   minimisations went from hundreds of evaluations to tens when they were given one curvature
   block per chain as their metric; the band still works in per-variable units.  A band in that
   metric is the thing to try next, and it needs no card to write or test.
+  **Done the same day** (`polyfind.mixedcell.neb(metric=...)`, `kink_migration.py
+  --band-metric`, the default of `kink_wide_cell.py between`): the band lives in `w` with
+  `y = T w`, tangents, springs, the constraint projections and FIRE's velocities in `w`, the
+  reported force and the step limit still in the scaled variables; without a metric the code
+  path is the old one bit for bit.  On the host, the four-chain PVDF bands from nothing: 108 and
+  116 iterations to a force of 0.1 with tops of 10.268 and 12.477 (settled saddles 10.2684 and
+  12.4644), where the bands in per-variable units took 171 iterations to stop at 10.345 and
+  over 1000 without converging to stop at 12.49.  On the card, sixteen chains of the terpolymer:
+  the direct band from I to B in 106 iterations (242) with a top that settles; bands of 94 to
+  176 iterations between the states on the way to N.  A converged band's top in the metric is
+  the saddle to 0.01, so the settling step after it is a check and no longer a rescue.  Two short
+  pods (35 and 11 minutes, $1.71) did in all what the afternoon's pod could not finish.
 * **A saddle search says when it has left its path.**  `saddle_polish` from a band's top that
   runs over the shoulder of an intermediate state slides into that state; it ends unconverged
   with positive curvature along the path.  `examples/kink_wide_cell.py between` accepts a settled
   saddle only if the search converged, the point lies above both of the band's end states and
   the curvature along the path is negative; `settle` relaxes wherever a search ended to the
   minimum it belongs to and names it.  That is how the states M and N were found.
-
