@@ -14,6 +14,53 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**One copolymer chain alone, 2026-11-14 (PI: "Go" on "the terpolymers' single-chain step in sixteen chains").**
+Text: `docs/CANDIDATE_MATERIALS.md` 8.3 ("One chain alone in the copolymer lattices"), `docs/PERFORMANCE_REVIEW.md` 17.10.
+Files: rows `<row>@0 2x1` and `4x2 mover 0 ahead host flexible` for `vdf9-trfe4-cfe1-14` (64/29/7) and `vdf10-trfe4-14`
+(71/29) in `kink_migration_belt4.json`; `vdf10@0 4x2 ...["again_on_device"]`; the states M and N and the bands through
+them in `docs/predictions/kink_states_belt4.json`; job logs in `docs/predictions/gpu_jobs_a100_20261114/`; maps
+`candidate_frequency_map_belt4_steps_2x1` and `_steps_4x2`. Tests:
+`tests/test_kink_step.py::test_one_copolymer_chain_alone_...`, `tests/test_mixed_batched.py::test_batched_form_on_a_copolymer_cell_...`.
+STATE: DONE AS FAR AS THE CARD WAS UP; POD DELETED AND CONFIRMED (one A100 for 98 minutes, about $3.60, and $0.06 for a
+first pod deleted 98 s in; with the earlier ones about $7.40 of the $46 the PI named).
+NUMBERS, kcal/mol against the sheet, one chain's kink pair one monomer ahead, neighbours flexible, cell fixed:
+    64/29/7  2 chains (a sublattice)  I 6.33  S1 6.43  top 11.48  B 8.98   11.5 / 2.5
+             4 chains                 I 9.04  S1 9.08  top 13.31  B 13.00  13.3 / 0.3
+             16 chains                I 9.05  S1 9.11  top 14.49  B 11.79  14.5 / 2.7   (by way of M; direct band's top 15.41 NOT a settled saddle)
+    71/29    2 chains                 I 6.47  S1 7.05  top 12.02  B 11.25  12.0 / 0.8
+             4 chains                 I 9.53  S1 9.58  top 13.68  B 12.31  13.7 / 1.4
+             16 chains                I 9.36  S1 9.53  top 15.00  B 10.70  15.0 / 4.3   (the same saddle by the direct band and through M)
+    PVDF     2 / 4 / 16 chains        tops 8.91 / 12.46 / 11.64; the 16-chain row from nothing on the card is the stored one to 1e-4
+THE POINT: from the two-chain protocol to one chain in sixteen every barrier rises by about 3 (3.0, 3.0, 2.7), so THE
+DIFFERENCES BETWEEN THE MATERIALS STAY (matrix 0.5 above the terpolymer, PVDF 2.6-2.9 below) AND THE STEP-BASED FREQUENCY
+MAP DOES NOT MOVE: 71/29 at 155 kHz (was 147), PVDF 44 MHz (was 27), the anchor is the terpolymer. Absolute rates: 83 /s
+and 35 /s per copolymer chain against the film's 2e6 /s: the film's channel is not this step.
+TWO THINGS FOUND ON THE WAY. (1) M: a third state of the moving chain between I and B (gauche bond 4 sharp, its
+partner spread over bonds 2-3): 11.20 / 13.09 (64/29/7, 4 / 16 chains), 11.68 / 13.43 (71/29). A band from I to B runs
+over its shoulder: the four-chain bands found the dip after 900-1100 iterations; the sixteen-chain terpolymer band
+CONVERGED (force 0.1) with its top at 15.41 and `saddle_polish` from it slid away twice. A CONVERGED BAND'S TOP IS NOT A
+SADDLE ON THE LOWEST WAY; every number here is an upper bound in that sense. (2) N: a kink pair of the other hand two
+monomers on (gauche bonds 4 and 6, G- T G+), +8.82 (64/29/7), +8.94 (71/29), +7.72 (PVDF) in sixteen chains: for the
+copolymers the lowest state found for one chain off the sheet, below I. The bands from I to N did NOT converge (tops
+12.5 after 600 iterations for the terpolymer, 14.8 and 13.3 after 300 for the matrix and PVDF): bounds. FOR THE
+TERPOLYMER THE BOUND IS 2 BELOW THE STEP'S 14.5: its cheapest way out of the sheet may be N, not the step. OPEN.
+TOOLS (all `examples/`): `mixed_forms_check.py` (the loops against the batched form on a row's own cell);
+`gpu_jobs/band_row.sh ROW NX NY [from CELL [stored]] [tiled]` (a row from nothing; bands continued in rounds until
+converged); `kink_wide_cell.py table | settle | between` and jobs `settle.sh`, `between.sh` (a held state relaxed and
+named; a band between any two held states, its saddle accepted only if converged, above both ends and with negative
+curvature); `step_wide.sh` / `saddle_wide.sh` take `row ROW` first (dry run on a host: 64/29/7 in eight chains, 4a x b,
+I +9.50, B +12.47, first saddle +9.58; not stored). The one-off curation of the route barriers
+(`by_way_of_M`, the terpolymer 4x2 row's `I-B.search_left_the_path`) was a scratch script: the fields are described in
+the row's `barrier_polished_note`.
+TRAPS: a cell under 256 charged sites is evaluated on the host whatever the pod has (four PVDF chains: 240): do not
+queue one. The job runner reads a queue line as `script args`, no environment. The mirror runs inside a Monitor that
+expires after 30 minutes: re-arm it or the local copy stops. `letters_of` calls 116 degrees gauche (the matrix's
+sixteen-chain M shows as "2, 4").
+NEXT, in order: (a) settle the way from I to N for the terpolymer in sixteen chains (a longer band, or better a band in
+the per-chain metric, 17.10) -- it decides whether the terpolymer's rate is the step's or N's; (b) N as a start: its
+own step, and whether a neighbour joins it; (c) thirty-two chains for the copolymers (`step_wide.sh row ...`), since
+their barrier RISES from four to sixteen chains; (d) lower `device_min_sites` for mixed cells.
+
 **The card at work, 2026-11-13 night into 11-14 (PI: "Well, we have $46 in credits left - use them if appropriate").**
 Text: `docs/PERFORMANCE_REVIEW.md` 17.9 and `docs/CANDIDATE_MATERIALS.md` 8.3. Files:
 `docs/predictions/gpu_jobs_a100_20261113/` (every job's log, the device check's result files and summary). Rows in

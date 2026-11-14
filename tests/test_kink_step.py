@@ -553,3 +553,76 @@ def test_a_job_table_starts_from_the_stored_kinked_crystals_and_a_held_state_is_
     settled = tmp_path / "states.json"
     settled.write_text(json.dumps({"settled": {key: {"M": {"state": [1.0, 2.0]}}}}))
     assert KW.held_state(row, key, "settled:M", settled).tolist() == [1.0, 2.0]
+
+
+def test_one_copolymer_chain_alone_pays_three_more_than_a_sublattice_and_the_chemistries_keep_their_distances():
+    """The single-chain step of the terpolymer (64/29/7) and of its matrix (71/29) in four and in
+    sixteen chains, computed on a card (docs/CANDIDATE_MATERIALS.md 8.3, 2026-11-14), with PVDF's
+    sixteen-chain row computed again the same way as the control.  The end states are the states
+    they are named for; from the two-chain protocol to one chain in sixteen every barrier rises
+    by about three, so the differences between the materials stay; the terpolymer's sixteen-chain
+    barrier is the route through the intermediate state M, its direct band's top not being a
+    settled saddle; and the states M and N are what the stored file says they are."""
+    rows = json.load(open(MIG))["rows"]
+    get = lambda row, cell: rows.get(f"{row}@0 {cell} mover 0 ahead host flexible")  # noqa: E731
+    ter, mat, pvdf = "vdf9-trfe4-cfe1-14", "vdf10-trfe4-14", "vdf10"
+    states_path = MIG.with_name("kink_states_belt4.json")
+    if get(ter, "4x2") is None or get(mat, "4x2") is None or not states_path.exists():
+        pytest.skip("the copolymers' single-chain rows are not stored")
+    states = json.loads(states_path.read_text())
+    key = lambda row, cell: f"{row}@0 {cell} mover 0 ahead host flexible"  # noqa: E731
+
+    again, host = get(pvdf, "4x2")["again_on_device"], get(pvdf, "4x2")  # the control: the protocol from nothing, on the card
+    for name in ("I", "B"):
+        assert again[name]["converged"] and again[name]["energy"] == pytest.approx(host[name]["energy"], abs=2e-4) and "state" not in again[name]
+    for seg in ("A-I", "I-B"):
+        assert again[seg]["converged"] and "images" not in again[seg] and again[seg]["polished"]["converged"]
+        assert again[seg]["polished"]["saddle"] == pytest.approx(host[seg]["polished"]["saddle"], abs=2e-4)
+        assert again[seg]["seconds"] < 0.05 * host[seg]["seconds"]
+
+    for row in (ter, mat):
+        for cell in ("2x1", "4x2"):
+            r = get(row, cell)
+            nc = r["chains"]
+            assert nc == {"2x1": 4, "4x2": 16}[cell] and r["monomers_per_chain"] == 14 and "batched" in r["evaluated"]
+            for name, gauche in (("I", [0, 4]), ("B", [2, 4])):
+                st = r[name]
+                assert st["converged"] and st["gradient_max"] < 1e-3 and st["start"].startswith("the kinked crystal")
+                tors = np.asarray(st["state"])[4 + 4 * nc:].reshape(nc, 56)[:, :28]
+                where = [[k for k, v in enumerate(KM.letters_of(t).split()) if v != "T"] for t in tors]
+                assert where[0] == gauche and where[1:] == [[0, 2]] * (nc - 1)
+            first = r["A-I"]["polished"]
+            assert first["converged"] and 0.0 < first["saddle"] - r["I"]["energy"] < 0.25  # the wide kink is barely a minimum
+            assert r["barrier_back_polished"] == pytest.approx(r["barrier_forward_polished"] - r["B"]["energy"])
+    check = get(ter, "2x1")["kinked_crystal"]["supercell_check"]
+    assert check["converged"] and abs(check["relaxed_above_tiled_per_chain"]) < 1e-6
+    assert abs(get(mat, "2x1")["kinked_crystal"]["supercell_check"]["relaxed_above_tiled_per_chain"]) < 1e-3
+
+    bar = {(row, cell): get(row, cell)["barrier_forward_polished"] for row in (ter, mat, pvdf) for cell in ("1x1", "2x1", "4x2")}
+    for row in (ter, mat, pvdf):
+        assert 2.5 < bar[row, "4x2"] - bar[row, "1x1"] < 3.3
+    assert (bar[mat, "4x2"] - bar[ter, "4x2"]) == pytest.approx(bar[mat, "1x1"] - bar[ter, "1x1"], abs=0.1)
+    assert all(2.4 < bar[ter, cell] - bar[pvdf, cell] < 3.0 for cell in ("1x1", "4x2"))
+    assert all(get(row, "4x2")["B"]["energy"] > 1.7 * get(pvdf, "4x2")["B"]["energy"] for row in (ter, mat))
+    assert all(bar[row, "4x2"] > bar[row, "2x1"] and get(row, "4x2")["B"]["energy"] < get(row, "2x1")["B"]["energy"] for row in (ter, mat))
+
+    r = get(ter, "4x2")  # its barrier is the route's: the direct band's top is not a settled saddle
+    assert "polished" not in r["I-B"] and not r["I-B"]["search_left_the_path"]["converged"] and r["I-B"]["converged"]
+    way = r["by_way_of_M"]
+    assert r["barrier_forward_polished"] == pytest.approx(max(way["saddles"].values())) and way["barrier_forward"] < r["I-B"]["saddle"] - 0.5
+    assert all(v < 0.0 for v in way["curvature_along"].values()) and "by way of" in r["barrier_polished_note"]
+    for row, cell in ((ter, "2x1"), (mat, "4x2")):  # where the direct band settled, the route through M ends on the same saddle
+        assert get(row, cell)["by_way_of_M"]["barrier_forward"] == pytest.approx(get(row, cell)["I-B"]["polished"]["saddle"], abs=2e-3)
+
+    for row, cell in ((ter, "2x1"), (ter, "4x2"), (mat, "2x1"), (mat, "4x2")):
+        m, r = states["settled"][key(row, cell)]["M"], get(row, cell)
+        t = m["torsions_deg"]
+        assert m["converged"] and -110.0 < t[4] < -90.0 and 110.0 < t[2] < 150.0 and 150.0 < abs(t[0]) and r["I"]["energy"] < m["energy"]
+    for row in (ter, mat, pvdf):
+        n, r = states["settled"][key(row, "4x2")]["N"], get(row, "4x2")
+        assert n["converged"] and n["gauche_bonds"] == [4, 6] and n["torsions_deg"][4] < 0.0 < n["torsions_deg"][6] and n["chains_off_the_sheet"].keys() == {"0"}
+        assert (n["energy"] < r["I"]["energy"]) and ((n["energy"] < r["B"]["energy"]) == (row != pvdf))
+        band = states["bands"][key(row, "4x2")]["I-N"]  # not converged: a bound, not a saddle
+        assert not band["converged"] and not band["polished"]["a_saddle_between_the_two"] and band["saddle"] > max(r["I"]["energy"], n["energy"]) + 3.0
+    legs = states["bands"][key(ter, "4x2")]
+    assert legs["I-M"]["polished"]["a_saddle_between_the_two"] and legs["M-B"]["polished"]["a_saddle_between_the_two"]

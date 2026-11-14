@@ -1832,3 +1832,43 @@ itself):
   Done chain by chain (a 4 x 44 block each, with the cell's columns and a hyperplane's row as a
   border) it is microseconds.  That is the next thing to do for the large cells, and it needs no
   card to write or test.
+
+### 17.10 A whole row from nothing on the card: bands (2026-11-14)
+
+The queue of 2026-11-14 (`examples/gpu_jobs/queue_20261114.txt`, files in
+`docs/predictions/gpu_jobs_a100_20261114/`; one A100 for 98 minutes) ran rows of the single-chain
+step from the kinked crystal to the settled saddles in one job each
+(`examples/gpu_jobs/band_row.sh`), which is the first use of the card for bands.
+
+* **The control.**  PVDF in sixteen chains from nothing: end states in 11 and 10 s (124 and 111
+  evaluations), bands in 104 s (166 iterations) and 88 s (140), saddles in 64 and 85 evaluations;
+  the job took five minutes.  The stored row's bands took 4976 and 4803 s on the host.  The four
+  numbers agree with the stored ones to 1e-4 kcal/mol.
+* **The evaluation on other chains.**  Every test of the batched form was on PVDF.  On the stored
+  kinked cells of 64/29/7 and 71/29 (146 and 148 sites a chain, a 28-bond chiral repeat, belt
+  sites on some atoms only), in four and in sixteen chains, the card's batched form and the
+  host's loops agree to rounding (`examples/mixed_forms_check.py`, job 1; the same on the host
+  and on the device stand-in in `tests/test_mixed_batched.py`).
+* **A band iteration** is seven evaluations one after another and the band's own work on the
+  host: 0.5 s at four copolymer chains (an evaluation is 0.04-0.05 s there) and 0.9 s at sixteen
+  (0.08 s).  So a third to a half of a band iteration is the host's again, as in 17.9: each
+  image's closure normals are orthonormalised by a dense decomposition every iteration.
+* **A cell under 256 charged sites stays on the host** (`Ewald.device_min_sites`), whatever the
+  machine has.  Four chains of PVDF are 240: a first pod was deleted 98 seconds in because its
+  second job was that row and the card would have idled for 25 minutes.  The threshold was set
+  for the Ewald step alone; the whole batched evaluation gains from the card well under it (336
+  sites: 0.045 s against the loops' 0.28 s).  Lowering it for mixed cells is a small change, not
+  made.  Until it is: check a job's cell against it before queueing.
+* **What costs iterations is the band, not the evaluation.**  The copolymers' second bands
+  needed 900 to 1100 FIRE iterations to find a dip between their end states, or converged to the
+  usual force on a top that was not the lowest way (`docs/CANDIDATE_MATERIALS.md` 8.3).  The
+  minimisations went from hundreds of evaluations to tens when they were given one curvature
+  block per chain as their metric; the band still works in per-variable units.  A band in that
+  metric is the thing to try next, and it needs no card to write or test.
+* **A saddle search says when it has left its path.**  `saddle_polish` from a band's top that
+  runs over the shoulder of an intermediate state slides into that state; it ends unconverged
+  with positive curvature along the path.  `examples/kink_wide_cell.py between` accepts a settled
+  saddle only if the search converged, the point lies above both of the band's end states and
+  the curvature along the path is negative; `settle` relaxes wherever a search ended to the
+  minimum it belongs to and names it.  That is how the states M and N were found.
+

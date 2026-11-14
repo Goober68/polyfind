@@ -116,5 +116,7 @@ path on any machine, on a NumPy-backed stand-in that is as strict about mixing h
 device arrays as CuPy is.  To put a rented card to work rather than time it,
 `examples/runpod_jobs_pod.sh` is a pod's start command that follows a branch and runs the
 next line of a queue file on it (`examples/gpu_jobs/`: each job a script, the next one
-decided by pushing a line, `stop` to end); `docs/PERFORMANCE_REVIEW.md` 17.9 is what the
-first such queue did.
+decided by pushing a line, `stop` to end); `docs/PERFORMANCE_REVIEW.md` 17.9 and 17.10 are
+what the first two such queues did.  `python examples/mixed_forms_check.py --row <sequence
+row>` holds the batched form of a mixed-cell evaluation to the loop form on that row's own
+cell, which is the check to run before a new chemistry goes to a card.
