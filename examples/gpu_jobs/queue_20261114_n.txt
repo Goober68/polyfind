@@ -15,3 +15,12 @@ between.sh vdf9-trfe4-cfe1-14 4 2 I.state B.state I-B
 #    300 iterations).
 between.sh vdf10-trfe4-14 4 2 I.state settled:N I-N
 between.sh vdf10 4 2 I.state settled:N I-N
+# 4. the terpolymer's band to N in the metric has its highest saddle settled at +11.52 (right
+#    after I) and two dips behind it (images 2 and 4, +10.46 and +10.53) with a hump of +11.1
+#    after them that nine images do not resolve.  The dips relaxed and named (P, Q), and the
+#    pieces between: is any later saddle above the first?
+settle.sh vdf9-trfe4-cfe1-14 4 2 band:I-N.images.2 P
+settle.sh vdf9-trfe4-cfe1-14 4 2 band:I-N.images.4 Q
+between.sh vdf9-trfe4-cfe1-14 4 2 I.state settled:P I-P
+between.sh vdf9-trfe4-cfe1-14 4 2 settled:P settled:Q P-Q
+between.sh vdf9-trfe4-cfe1-14 4 2 settled:Q settled:N Q-N
