@@ -36,3 +36,11 @@ settle.sh vdf9-trfe4-cfe1-14 4 2 I.state M mover 2x1 M
 between.sh vdf9-trfe4-cfe1-14 4 2 I.state settled:M I-M
 between.sh vdf9-trfe4-cfe1-14 4 2 settled:M B.state M-B
 settle.sh vdf9-trfe4-cfe1-14 4 2 I-B.polished.state N
+# 7. the matrix the same way.  Its four-chain second band, given 900 iterations, found a dip by
+#    itself (image 6, +11.75) and its saddle settled at +13.68; its sixteen-chain band converged
+#    without one, on a saddle at +15.00.  The dip relaxed and named (M), looked for in sixteen
+#    chains, and the bands through it there.
+settle.sh vdf10-trfe4-14 2 1 I-B.images.6 M
+settle.sh vdf10-trfe4-14 4 2 I.state M mover 2x1 M
+between.sh vdf10-trfe4-14 4 2 I.state settled:M I-M
+between.sh vdf10-trfe4-14 4 2 settled:M B.state M-B

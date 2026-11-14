@@ -527,3 +527,29 @@ def test_a_state_let_into_a_wider_cell_keeps_the_moving_chains_neighbours_and_le
     assert np.array_equal(both_sheet, KW.let_in(wide_sheet, wide_sheet, 8, 2, "b"))
     with pytest.raises(ValueError, match="no far side"):
         KW.let_in(np.zeros(4 + 4 * (4 + width)), np.zeros(4 + 4 * (4 + width)), 2, 1, "b")
+
+
+def test_a_job_table_starts_from_the_stored_kinked_crystals_and_a_held_state_is_found_by_its_path(tmp_path):
+    """examples/kink_wide_cell.py: ``table`` gives a job a table with the stored kinked crystals and
+    none of the stored rows but those named (so a row that is stored is computed again), and
+    ``held_state`` reads a state out of a row by a dotted path or out of the settled records."""
+    import types
+
+    KW = _load("kink_wide_cell")
+    stored = json.loads(MIG.read_text())
+    key = "vdf10@0 2x1 mover 0 ahead host flexible"
+    out = tmp_path / "steps.json"
+    KW.table(types.SimpleNamespace(source=str(MIG), out=str(out), row=None))
+    first = json.loads(out.read_text())
+    assert first["rows"] == {} and first["kinked_references"] == stored["kinked_references"] and first["preset"] == stored["preset"]
+    KW.table(types.SimpleNamespace(source=str(MIG), out=str(out), row=[key]))
+    KW.table(types.SimpleNamespace(source=str(MIG), out=str(out), row=[key]))  # again: nothing changes
+    second = json.loads(out.read_text())
+    assert list(second["rows"]) == [key] and second["rows"][key] == stored["rows"][key]
+    row = stored["rows"][key]
+    assert np.array_equal(KW.held_state(row, key, "I.state"), np.asarray(row["I"]["state"]))
+    assert np.array_equal(KW.held_state(row, key, "I-B.images.3"), np.asarray(row["I-B"]["images"][3]))
+    assert np.array_equal(KW.held_state(row, key, "A-I.polished.state"), np.asarray(row["A-I"]["polished"]["state"]))
+    settled = tmp_path / "states.json"
+    settled.write_text(json.dumps({"settled": {key: {"M": {"state": [1.0, 2.0]}}}}))
+    assert KW.held_state(row, key, "settled:M", settled).tolist() == [1.0, 2.0]
