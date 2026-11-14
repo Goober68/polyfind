@@ -273,7 +273,12 @@ def between(args) -> None:
         sheet = np.asarray(row["kinked_crystal"]["state"], dtype=float)
         free, closed = KM.free_sets(model, [0], "flexible")
         free = np.unique(free)
-        blocks = {int(k): v for k, v in np.load(args.blocks).items()}
+        if Path(args.blocks).exists():
+            blocks = {int(k): v for k, v in np.load(args.blocks).items()}
+        else:  # from the four-chain tiling, as the driver takes them
+            small, xs_, _ = DK.make_model(polymer, src["kinked_references"][kkey], 2, 1)
+            blocks = MC.chain_blocks(small, xs_, range(2))
+            np.savez(args.blocks, **{str(k): v for k, v in blocks.items()})
         metric = MC.chain_metric(model, sheet, free, closed, blocks)
         eA = model.physical_energy(sheet)
         xa, xb = held_state(row, args.row, args.start, out), held_state(row, args.row, args.end, out)
@@ -294,10 +299,11 @@ def between(args) -> None:
                 log(f"      it {it:4d}: force {fm:8.4f}, top {E.max() - eA:+8.4f}, climbing {climbing}, energies {np.round(E - eA, 3).tolist()}  ({time.time() - t0:.0f} s)")
 
         res = MC.neb(evaluate, imgs, scale=model.scale(sheet), free=free, k_spring=1.0, climb_after=40 if done == 0 else 0, climb_force=1.0, fmax=args.fmax,
-                     maxiter=args.maxiter, constraint=lambda x: model.closure(x, closed), callback=progress, max_step=0.15)
+                     maxiter=args.maxiter, constraint=lambda x: model.closure(x, closed), callback=progress, max_step=0.15, metric=None if args.plain else metric)
         i_top = int(np.argmax(res.energies))
         rec = {"from": args.start, "to": args.end, "energies": (res.energies - eA).tolist(), "saddle": float(res.energies.max() - eA), "saddle_image": i_top,
                "converged": bool(res.converged), "force_max": res.force_max, "iterations": done + res.iterations, "start": start,
+               "band_variables": "per-variable units" if args.plain else "one curvature block per chain as the metric",
                "interior_minima": [i for i in range(1, args.images - 1) if res.energies[i] < min(res.energies[i - 1], res.energies[i + 1]) - 1e-3],
                "seconds": time.time() - t0, "images": res.images.tolist()}
         log(f"{args.name}: top {rec['saddle']:+.4f} at image {i_top}{'' if res.converged else ' (NOT converged)'}; force {res.force_max:.4f}; {rec['iterations']} it, {time.time() - t0:.0f} s"
@@ -510,6 +516,7 @@ def main() -> None:
     n.add_argument("--maxiter", type=int, default=300)
     n.add_argument("--fmax", type=float, default=0.1)
     n.add_argument("--gtol", type=float, default=3e-4)
+    n.add_argument("--plain", action="store_true", help="the band in per-variable units, not in the per-chain metric (the bands of 2026-11-14 were run so)")
     n.add_argument("--blocks", required=True)
     n.add_argument("--preset", default="pvdf-dft-valence-belt4")
     n.add_argument("--out", required=True)

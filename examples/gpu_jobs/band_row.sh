@@ -4,9 +4,10 @@
 # saddles settled from the bands' tops; all minimisations on the closure surface.  A job of
 # examples/runpod_jobs_pod.sh.  Arguments:
 #
-#   band_row.sh ROW NX NY [from CELL [stored]] [tiled]
+#   band_row.sh ROW NX NY [from CELL [stored]] [tiled] [metric]
 #
 # ROW is a sequence row with a stored kinked crystal ("vdf9-trfe4-cfe1-14"), NX NY the cell.
+# "metric": run the bands in the per-chain metric the minimisations use.
 # "from CELL": start each band from the band of the same row in that cell (an earlier job's, in
 # the shared table; with "stored" after it, the stored table's, copied in).  "tiled": take the tiled two-chain cell as the sheet without the check that
 # relaxes the perturbed supercell with every chain and the cell free.  The row goes to the shared
@@ -22,12 +23,13 @@
 # chains of PVDF: 240) is evaluated on the host whatever the pod has: do not queue one.
 set -euo pipefail
 ROW="$1"; NX="$2"; NY="$3"; shift 3
-FROM=""; TILED=(); COPY=()
+FROM=""; TILED=(); COPY=(); BMETRIC=()
 while [ $# -gt 0 ]; do
   case "$1" in
     from) FROM="$2"; shift 2 ;;
     stored) COPY=(--row "$ROW@${STEP_KINK:-0} $FROM mover 0 ahead host flexible"); shift ;;
     tiled) TILED=(--trust-tiled); shift ;;
+    metric) BMETRIC=(--band-metric); shift ;;
     *) echo "band_row.sh: unknown argument $1"; exit 2 ;;
   esac
 done
@@ -44,7 +46,7 @@ BAND=()
 [ -n "$FROM" ] && BAND=(--band-from "$(key "$FROM")")
 echo "== $(key "${NX}x${NY}"): end states and bands${FROM:+, each band started from that of the $FROM cell}"
 for round in $(seq 1 "${STEP_BAND_ROUNDS:-3}"); do
-  "$PY" examples/kink_migration.py "${COMMON[@]}" "${TILED[@]}" --maxiter "${STEP_BAND_MAXITER:-300}" --fmax "${STEP_FMAX:-0.1}" "${BAND[@]}"
+  "$PY" examples/kink_migration.py "${COMMON[@]}" "${TILED[@]}" --maxiter "${STEP_BAND_MAXITER:-300}" --fmax "${STEP_FMAX:-0.1}" "${BAND[@]}" "${BMETRIC[@]}"
   TILED=(--trust-tiled)   # the sheet was checked in the first round, if it was to be
   if "$PY" -c "import json,sys; r=json.load(open(sys.argv[1]))['rows'][sys.argv[2]]; sys.exit(0 if all(r.get(s, {}).get('converged') for s in ('A-I', 'I-B')) else 1)" "$TABLE" "$(key "${NX}x${NY}")"; then
     break

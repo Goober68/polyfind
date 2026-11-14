@@ -18,6 +18,10 @@ SHARED="$(dirname "$JOB_OUT")/shared"
 mkdir -p "$SHARED/ck"
 STATES="$SHARED/states.json"
 [ -f "$STATES" ] || cp docs/predictions/kink_states_belt4.json "$STATES"
+# a row no earlier job of this pod computed is taken from the stored table
+if ! { [ -f "$SHARED/steps.json" ] && "$PY" -c "import json,sys; sys.exit(0 if sys.argv[2] in json.load(open(sys.argv[1]))['rows'] else 1)" "$SHARED/steps.json" "$ROW@$KINK ${NX}x${NY} mover 0 ahead host flexible"; }; then
+  "$PY" examples/kink_wide_cell.py table --out "$SHARED/steps.json" --row "$ROW@$KINK ${NX}x${NY} mover 0 ahead host flexible"
+fi
 key() { echo "$ROW@$KINK $1 mover 0 ahead host flexible"; }
 SLUG="$(echo "$ROW@$KINK" | sed 's/[^[:alnum:]]/_/g')"
 MOVER=()

@@ -1810,7 +1810,8 @@ class NEBResult:
 
 def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_after: int = 30,
         fmax: float = 0.05, maxiter: int = 300, max_step: float = 0.15, callback=None,
-        constraint=None, constraint_tol: float = 1e-8, climb_force: float | None = None, snapshot=None) -> NEBResult:
+        constraint=None, constraint_tol: float = 1e-8, climb_force: float | None = None, snapshot=None,
+        metric=None) -> NEBResult:
     """Nudged elastic band with the improved tangent and a climbing image, relaxed by FIRE.
 
     ``evaluate(X)`` takes the moving images ``(m, n_var)`` and returns ``(energies (m,), gradients
@@ -1843,24 +1844,48 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
     ``callback(iteration, energies, force_max, climbing)`` is called once per iteration, and
     ``snapshot(iteration, images)`` with the whole band as it stands (end points included): what a
     caller writes to disk to resume a band that runs for hours.
+
+    ``metric`` is a matrix ``T`` (free x free), as :meth:`MixedModel.relax_on_surface` takes: the
+    band then lives in ``w`` with ``y = T w``, ``y`` being the scaled free variables.  Tangents,
+    springs, the projections onto the constraint surface and FIRE's velocities are all taken in
+    ``w``; with ``T`` an inverse square root of the Hessian's chain blocks
+    (:func:`chain_metric`) a chain's stiff single-torsion directions and its soft concerted ones
+    have curvatures of order one alike, which is what lets FIRE's one time step serve both (the
+    soft ones are where a band in per-variable units creeps for hundreds of iterations).  The
+    force the band reports and converges on is carried back to the scaled variables
+    (``T^-T F``), and ``max_step`` still limits a move in them, so both keep their meaning.
+    Without ``metric`` nothing changes.
     """
     X = np.array(images, dtype=float)
     M, nv = X.shape
     free = np.arange(nv) if free is None else np.unique(np.asarray(free, dtype=int))
     sc = np.ones(nv) if scale is None else np.asarray(scale, dtype=float)
     scf = sc[free]
-    Y = X[:, free] / scf  # scaled, free
+    T = None if metric is None else np.asarray(metric, dtype=float)
+    if T is not None and T.shape != (len(free), len(free)):
+        raise ValueError(f"metric: shape {T.shape} for {len(free)} free variables")
+    Tinv = None if T is None else np.linalg.inv(T)
+    Y = X[:, free] / scf  # scaled, free; in the metric's variables w (y = T w) when there is one
+    if T is not None:
+        Y = Y @ Tinv.T
+
+    def scaled(w):  # the scaled free variables of a point of the band
+        return w if T is None else T @ w
 
     def full(i):
         x = X[i].copy()
-        x[free] = Y[i] * scf
+        x[free] = scaled(Y[i]) * scf
         return x
 
+    def jacobian(J):  # the constraints' Jacobian in the band's variables
+        Jf = np.asarray(J, dtype=float)[:, free] * scf
+        return Jf if T is None else Jf @ T
+
     def normals(i):
-        """Orthonormal columns spanning the constraint normals of image ``i`` in the scaled free
+        """Orthonormal columns spanning the constraint normals of image ``i`` in the band's
         variables, and the residual."""
         h, J = constraint(full(i))
-        Jf = np.asarray(J, dtype=float)[:, free] * scf
+        Jf = jacobian(J)
         _, sv, Vt = np.linalg.svd(Jf, full_matrices=False)
         keep = sv > 1e-10 * max(float(sv.max()), 1e-300)
         return Vt[keep].T, np.asarray(h, dtype=float), Jf
@@ -1871,7 +1896,7 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
             h = np.asarray(h, dtype=float)
             if float(np.abs(h).max()) < constraint_tol:
                 return
-            Jf = np.asarray(J, dtype=float)[:, free] * scf
+            Jf = jacobian(J)
             Y[i] -= Jf.T @ np.linalg.lstsq(Jf @ Jf.T, h, rcond=None)[0]
 
     e_end, _ = evaluate(X[[0, M - 1]])
@@ -1883,10 +1908,12 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
     converged, it, fm = False, 0, float("inf")
     for it in range(1, maxiter + 1):
         Xm = X[1:-1].copy()
-        Xm[:, free] = Y[1:-1] * scf
+        Xm[:, free] = (Y[1:-1] if T is None else Y[1:-1] @ T.T) * scf
         e, g = evaluate(Xm)
         E[1:-1] = np.asarray(e, dtype=float)
         G = np.asarray(g, dtype=float)[:, free] * scf  # scaled gradient of the moving images
+        if T is not None:
+            G = G @ T  # the gradient in the metric's variables (T^T g)
         Q = [None] * M
         if constraint is not None:
             for i in range(1, M - 1):
@@ -1915,13 +1942,16 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
             else:
                 f_spring = k_spring * (float(np.linalg.norm(tp)) - float(np.linalg.norm(tm))) * tau
                 Fn[i - 1] = f_true - float(f_true @ tau) * tau + f_spring
-        fm = float(np.abs(Fn).max())
+        fm = float(np.abs(Fn if T is None else Fn @ Tinv).max())  # in the scaled variables, with or without a metric
         history.append({"iteration": it, "force_max": fm, "barrier": float(E.max() - E[0]), "climbing": climbing})
         if callback is not None:
             callback(it, E.copy(), fm, climbing)
         if snapshot is not None:
             Xs = X.copy()
-            Xs[:, free] = Y * scf
+            if T is None:
+                Xs[:, free] = Y * scf
+            else:  # the end points as they were given, not through the metric and back
+                Xs[1:-1, free] = (Y[1:-1] @ T.T) * scf
             snapshot(it, Xs)
         if fm < fmax and (climbing > 0 or climb_after >= maxiter):
             converged = True
@@ -1938,12 +1968,15 @@ def neb(evaluate, images, scale=None, free=None, k_spring: float = 1.0, climb_af
             n_pos, V, dt, a_fire = 0, np.zeros_like(V), dt * 0.5, 0.1
         V = V + dt * Fn
         step = dt * V
-        big = float(np.abs(step).max())
+        big = float(np.abs(step if T is None else step @ T.T).max())  # the longest move of a scaled variable
         if big > max_step:
             step *= max_step / big
         Y[1:-1] += step
         if constraint is not None:
             for i in range(1, M - 1):
                 retract(i)
-    X[:, free] = Y * scf
+    if T is None:
+        X[:, free] = Y * scf
+    else:
+        X[1:-1, free] = (Y[1:-1] @ T.T) * scf
     return NEBResult(images=X, energies=E, force_max=fm, climbing=climbing, iterations=it, converged=converged, history=history)

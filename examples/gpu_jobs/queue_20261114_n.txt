@@ -1,0 +1,17 @@
+# The way from the wide kink to N, with the bands in the per-chain metric (PI, 2026-11-14: "Go").
+# A queue for examples/runpod_jobs_pod.sh: one job per line, run in order, each at the branch's
+# commit of the moment; lines are only ever added while a pod follows it.  The rows and the
+# states M and N are the stored ones (docs/predictions/kink_migration_belt4.json,
+# kink_states_belt4.json); every cell is sixteen chains, on the card.
+#
+# 1. the terpolymer's band from I to N, continued in the metric from where it stood after 600
+#    iterations in per-variable units (top +12.50, not converged), and its saddle settled.
+between.sh vdf9-trfe4-cfe1-14 4 2 I.state settled:N I-N
+# 2. the method on a band whose answer is known: the terpolymer's direct band from I to B from
+#    nothing, in the metric.  In per-variable units it converged on a top of +15.41 that was not
+#    the lowest way; the route through M has settled saddles at +14.49 and +13.98.
+between.sh vdf9-trfe4-cfe1-14 4 2 I.state B.state I-B
+# 3. the matrix's and PVDF's bands to N, continued in the metric (tops +14.82 and +13.32 after
+#    300 iterations).
+between.sh vdf10-trfe4-14 4 2 I.state settled:N I-N
+between.sh vdf10 4 2 I.state settled:N I-N

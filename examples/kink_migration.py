@@ -183,6 +183,9 @@ def main():
     ap.add_argument("--band-step", type=float, default=0.15, help="the longest move of any variable in one band iteration, scaled units")
     ap.add_argument("--climb-after", type=int, default=40, help="band iterations before the climbing image may be switched on (it also waits for the band's largest force "
                     "to fall under 1); 0 when a band that was already climbing is continued")
+    ap.add_argument("--band-metric", action="store_true",
+                    help="run the bands in the metric --surface gives the minimisations (one curvature block per chain): a band in per-variable units creeps "
+                    "along its soft directions for hundreds of iterations (polyfind.mixedcell.neb, metric)")
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--angle-window", type=float, default=8.0)
@@ -210,6 +213,8 @@ def main():
     ap.add_argument("--references", default="docs/predictions/dilute_kink_belt4.json", help="the all-trans reference cells (shared with dilute_kink.py)")
     ap.add_argument("--out", default="docs/predictions/kink_migration_belt4.json")
     args = ap.parse_args()
+    if args.band_metric and not args.surface:
+        raise SystemExit("--band-metric takes its metric from --surface")
     log = lambda s: print(s, flush=True)  # noqa: E731
     out_path, ref_path = Path(args.out), Path(args.references)
     letters, note = DK.sequence(args.row)
@@ -624,12 +629,13 @@ def main():
                     write_checkpoint(ck, X)
 
             res = MC.neb(evaluate, imgs, scale=sc, free=free, k_spring=args.k_spring, climb_after=args.climb_after, climb_force=1.0, fmax=args.fmax, maxiter=args.maxiter,
-                         constraint=constraint, callback=progress, snapshot=snapshot, max_step=args.band_step)
+                         constraint=constraint, callback=progress, snapshot=snapshot, max_step=args.band_step, metric=metric if args.band_metric else None)
             i_top = int(np.argmax(res.energies))
             st = model.state(res.images[i_top])
             dips = [i for i in range(1, args.images - 1) if res.energies[i] < min(res.energies[i - 1], res.energies[i + 1]) - 1e-3]
             entry[seg] = {"energies": ((res.energies - eA) / nm).tolist(), "saddle": float(res.energies.max() - eA) / nm, "saddle_image": i_top, "converged": bool(res.converged),
                           "force_max": res.force_max, "fmax": args.fmax, "iterations": res.iterations + (old.get("iterations", 0) if same_ends else 0), "interior_minima": dips,
+                          **({"band_variables": "one curvature block per chain as the metric"} if args.band_metric else {}),
                           "start": old.get("start", start) if same_ends else start, "saddle_history": (old.get("saddle_history", [[old.get("iterations", 0), old["saddle"], old["force_max"]]]) if same_ends else [])
                           + [[res.iterations + (old.get("iterations", 0) if same_ends else 0), float(res.energies.max() - eA) / nm, res.force_max]],
                           "saddle_torsions_deg": wrap(st.tors[m0]).tolist(), "seconds": time.time() - t0, "images": res.images.tolist()}

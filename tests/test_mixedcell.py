@@ -416,6 +416,49 @@ def test_neb_hands_the_whole_band_to_its_snapshot_hook():
     np.testing.assert_array_equal(plain.images, res.images)  # the hook changes nothing
 
 
+def _stiff_and_soft(X, stiff=400.0, soft=0.02):
+    """A double well along x with one stiff and one soft variable that follow it nonlinearly:
+    minima at x = -1 and +1 (energy 0), the saddle at the origin (energy 1)."""
+    X = np.atleast_2d(X)
+    x, u, v = X[:, 0], X[:, 1], X[:, 2]
+    du, dv = u - 0.5 * x * x, v - 3.0 * x ** 3
+    e = (x * x - 1.0) ** 2 + 0.5 * stiff * du * du + 0.5 * soft * dv * dv
+    gx = 4.0 * x * (x * x - 1.0) - stiff * du * x - soft * dv * 9.0 * x * x
+    return e, np.stack([gx, stiff * du, soft * dv], axis=1)
+
+
+def test_neb_in_a_metric_finds_the_same_saddle_in_fewer_iterations():
+    """``metric``: the band in variables in which every direction has a curvature of order one.
+    On the Muller-Brown surface a metric that mixes and rescales the two variables changes
+    nothing about where the band ends; on a path with a stiff and a soft variable beside it the
+    band in per-variable units needs several times the iterations of the band in the metric,
+    and both end on the saddle.  The identity as the metric is no metric."""
+    a, b = np.array([-0.5582236, 1.4417258]), np.array([-0.0500108, 0.4666941])
+    images = np.linspace(a, b, 11)
+    kw = dict(k_spring=200.0, climb_after=40, fmax=0.05, maxiter=4000, max_step=0.02)
+    plain = MC.neb(_muller_brown, images, **kw)
+    same = MC.neb(_muller_brown, images, metric=np.eye(2), **kw)
+    np.testing.assert_allclose(same.images, plain.images, atol=1e-12)
+    assert same.iterations == plain.iterations and same.force_max == pytest.approx(plain.force_max, rel=1e-9)
+    mixed = MC.neb(_muller_brown, images, metric=np.array([[0.8, 0.3], [-0.2, 1.3]]), **kw)
+    assert mixed.converged and mixed.energies.max() == pytest.approx(-40.6648, abs=0.01)
+    np.testing.assert_allclose(mixed.images[mixed.climbing], [-0.8220, 0.6243], atol=3e-3)
+    np.testing.assert_array_equal(mixed.images[[0, -1]], images[[0, -1]])
+    with pytest.raises(ValueError, match="metric"):
+        MC.neb(_muller_brown, images, metric=np.eye(3), **kw)
+
+    ends = np.array([[-1.0, 0.5, -3.0], [1.0, 0.5, 3.0]])
+    band = np.linspace(ends[0], ends[1], 9)
+    kw = dict(k_spring=1.0, climb_after=20, fmax=2e-3, maxiter=20000, max_step=0.2)
+    slow = MC.neb(_stiff_and_soft, band, **kw)
+    T = np.diag([1.0 / np.sqrt(8.0), 1.0 / np.sqrt(400.0), 1.0 / np.sqrt(0.02)])  # inverse square roots of the curvatures at a minimum
+    fast = MC.neb(_stiff_and_soft, band, metric=T, **kw)
+    for res in (slow, fast):
+        assert res.converged and res.energies.max() == pytest.approx(1.0, abs=2e-3)
+        np.testing.assert_allclose(res.images[res.climbing], [0.0, 0.0, 0.0], atol=0.05)
+    assert 3 * fast.iterations < slow.iterations
+
+
 def test_neb_on_a_constraint_surface_is_the_neb_of_the_reduced_problem():
     """Three variables, the third tied to the others by z = 0.3 x y, and an energy that depends on
     all three: the band on that surface has the saddle of the two-variable function it reduces to."""
