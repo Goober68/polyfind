@@ -82,6 +82,7 @@ def main():
     ap.add_argument("--no-tilts", action="store_true", help="do not compute missing pendant tilts")
     ap.add_argument("--out", default="docs/predictions/kink_summary_belt4.md")
     ap.add_argument("--sheets", default="docs/predictions/kink_formation_belt4_polished.json")
+    ap.add_argument("--states", default="docs/predictions/kink_states_belt4.json", help="states of a moving chain off its row's named path, and the bands through them")
     args = ap.parse_args()
     dil_p, mig_p, mar_p = Path(args.dilute), Path(args.migration), Path(args.margins)
     dil = json.load(open(dil_p)) if dil_p.exists() else {}
@@ -303,6 +304,31 @@ def main():
             md.append(f"| {label} | the moving chain (gauche bonds at {g} deg) | 1 | {r['mover']['move_A']:.2f} A | {r['mover']['turn_deg']:+.1f} deg | {r['mover']['axial_A']:+.2f} A | - |")
             for sh in r["shells"]:
                 md.append(f"| | {sh['distance_A']:.2f} A | {sh['chains']} | {sh['move_A']:.2f} A | {sh['turn_deg']:.1f} deg | {sh['axial_A']:+.2f} A | {sh['torsion_deg']:.1f} deg |")
+
+    # --- states off the named path, and the bands through them ---------------------------------------
+    states = json.load(open(args.states)) if Path(args.states).exists() else {}
+    if states.get("settled"):
+        short = lambda key: f"{key.split(' ')[0].split('@')[0]}, {key.split(' ')[1]}"  # noqa: E731
+        md += ["", "**States of the moving chain that are neither I nor B** (found where a saddle search or a band left the named path; relaxed on the closure surface; "
+               "kcal/mol against the sheet, in which the chain's gauche bonds are 0 and 2; `kink_states_belt4.json`)", "",
+               "| sequence, cell | state | gauche bonds of the moving chain | its first seven torsions, deg | above the sheet | I | B |", "|---|---|---|---|---|---|---|"]
+        for key in sorted(states["settled"], key=lambda k: (k.split(" ")[0], mig["rows"].get(k, {}).get("chains", 0))):
+            row = mig["rows"].get(key, {})
+            for name, r in sorted(states["settled"][key].items()):
+                ends = [f"{row[n]['energy']:+.2f}" if n in row else "-" for n in ("I", "B")]
+                md.append(f"| {short(key)} | {name} | {', '.join(str(v) for v in r['gauche_bonds'])} | {', '.join(f'{v:+.0f}' for v in r['torsions_deg'][:7])} | {r['energy']:+.3f} | {ends[0]} | {ends[1]} |")
+        if states.get("bands"):
+            md += ["", "Bands between those states and the named ones (FIRE, nine images; the saddle settled from the band's top as in the first table):", "",
+                   "| sequence, cell | band | from, to | the band's top (force, iterations) | settled saddle | curvature along the path |", "|---|---|---|---|---|---|"]
+            for key in sorted(states["bands"], key=lambda k: (k.split(" ")[0], mig["rows"].get(k, {}).get("chains", 0))):
+                for name, b in sorted(states["bands"][key].items()):
+                    pol = b.get("polished")
+                    if pol is None:
+                        settled = "none: the band's highest point is an end state"
+                    else:
+                        settled = f"**{pol['saddle']:+.3f}**" if pol.get("a_saddle_between_the_two") else f"not settled (the search ended at {pol['saddle']:+.2f})"
+                    curv = "-" if pol is None or pol.get("curvature_along") is None else f"{pol['curvature_along']:+.2f}"
+                    md.append(f"| {short(key)} | {name} | {b['from']}, {b['to']} | {b['saddle']:+.3f} ({b['force_max']:.2f}, {b['iterations']}{'' if b['converged'] else ', not converged'}) | {settled} | {curv} |")
 
     # --- two chains ahead together --------------------------------------------------------------------
     together = [e for e in mig.get("rows", {}).values() if e.get("row") == "vdf10" and "," in str(e.get("mover")) and e.get("host") == "flexible" and "B" in e

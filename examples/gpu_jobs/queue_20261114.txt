@@ -53,3 +53,7 @@ settle.sh vdf10-trfe4-14 4 2 I.state N torsions 0:180,6:100
 settle.sh vdf10 4 2 I.state N torsions 0:180,6:100
 between.sh vdf10-trfe4-14 4 2 I.state settled:N I-N
 between.sh vdf10 4 2 I.state settled:N I-N
+# 9. the terpolymer's band from I to N had not converged in 300 iterations (top +13.50 at a force
+#    of 0.41, a dip beside it): once more, then the pod removes itself.
+between.sh vdf9-trfe4-cfe1-14 4 2 I.state settled:N I-N
+stop
