@@ -160,3 +160,51 @@ def test_three_state_calibration_matches_the_two_state_unit_at_half_polar_and_a_
         assert ch3.dx_de(E) / ch2.dx_de(E) == pytest.approx(2.0 * np.tanh(y / 2.0))
     op = ch3.operating_point(50e3, 0.0055, 0.00018, 2e8)
     assert 0.0 < op["net_polar_fraction"] < op["polar_fraction"] < 1.0
+
+
+def test_the_field_at_the_heat_budget_is_solved_not_swept():
+    """The heat is quadratic in the AC field, so the field the budget allows is exact; a cap on
+    the field takes over where the budget would allow more."""
+    ch = L.literature_terpolymer()
+    bias, Y, Q = 0.0055, 0.2e9, 4e6
+    p = ch.budget_point(34e3, bias, Y, 300.0, 0.05, Q)
+    assert p["binds"] == "heat" and p["heat_w_per_m3"] == pytest.approx(Q, rel=1e-9)
+    ref = ch.operating_point(34e3, bias, 0.00018, Y, 300.0, 0.05)
+    assert p["strain_ac"] == pytest.approx(ref["strain_ac"] * np.sqrt(Q / ref["heat_w_per_m3"]), rel=1e-9)  # the linear scaling of examples/loss_level2.py
+    assert p["field_ac"] == pytest.approx(0.00018 * np.sqrt(Q / ref["heat_w_per_m3"]), rel=1e-9)
+    capped = ch.budget_point(34e3, bias, Y, 300.0, 0.05, Q, field_ac_max=0.5 * p["field_ac"])
+    assert capped["binds"] == "field" and capped["heat_w_per_m3"] == pytest.approx(0.25 * Q, rel=1e-9)
+    assert capped["field_ac_at_the_heat_budget"] == pytest.approx(p["field_ac"], rel=1e-12)
+    quiet = L.replace(ch, fraction=0.0, tan_bg=0.0)  # no channel and no background: no loss without a mechanical one
+    with pytest.raises(ValueError):
+        quiet.budget_point(34e3, bias, Y, 300.0, 0.0, Q)
+    assert quiet.budget_point(34e3, bias, Y, 300.0, 0.0, Q, field_ac_max=0.001)["binds"] == "field"
+
+
+@pytest.mark.parametrize("alpha", [0.0, 0.3])
+def test_a_frequency_sweep_at_the_heat_budget_has_no_maximum_of_its_own(alpha):
+    """The trap of a sweep ceiling (found in the exchange's operating-point optimizer, 2026-11-14:
+    a winner at 277 kHz under one ceiling, 695 kHz under a higher one).  At the heat budget the
+    stroke rate ``S_ac f`` does not come down above the relaxation frequency, so the best point of
+    any grid is its last one, whatever the ceiling: a 'best drive frequency' read off a sweep is
+    the sweep's.  What does not move with the grid is the point at a given frequency."""
+    ch = L.replace(L.literature_terpolymer(), alpha=alpha, tan_bg=0.0)
+    bias, Y = 0.0055, 0.2e9
+    f_relax = ch.f_relax(300.0, bias)
+
+    def stroke(f):
+        return ch.budget_point(float(f), bias, Y, 300.0, 0.05)["stroke_rate_per_lambda"]
+
+    winners = []
+    for ceiling in (3.0, 30.0, 300.0):
+        grid = np.geomspace(1e3, ceiling * f_relax, 60)
+        v = np.array([stroke(f) for f in grid])
+        winners.append(float(grid[int(np.argmax(v))]))
+        assert int(np.argmax(v)) == len(grid) - 1  # the ceiling wins
+    assert winners[0] < winners[1] < winners[2]
+    above = np.array([stroke(f) for f in np.geomspace(2.0 * f_relax, 2000.0 * f_relax, 30)])
+    assert np.all(np.diff(above) >= -1e-9 * above[:-1])  # flat or creeping up, never falling
+    if alpha == 0.0:
+        assert above[-1] / above[0] < 1.2  # Debye: a plateau
+    coarse, fine = stroke(34e3), ch.budget_point(34e3, bias, Y, 300.0, 0.05)["stroke_rate_per_lambda"]
+    assert coarse == pytest.approx(fine, rel=1e-12)

@@ -43,7 +43,8 @@ Debye) and the strain of the channel follows the same spectral function:
 **Operating point.**  Per cycle and per m^3: electrical loss ``pi eps0 eps'' E_ac^2`` (plus
 a background ``pi eps0 eps' tan_bg E_ac^2``), mechanical loss ``pi Y tan_m S_ac^2``, work at
 a matched load ``Y S_ac^2 / 4``; efficiency is work over work plus losses, and the heat is
-the losses times the frequency, to be held under the program's budget.
+the losses times the frequency, to be held under the program's budget
+(:meth:`SwitchingChannel.budget_point` solves the AC field that does it).
 """
 from __future__ import annotations
 
@@ -317,6 +318,35 @@ class SwitchingChannel:
             "heat_w_per_m3": float(freq * (loss_e + loss_m)),
             "stroke_rate_per_lambda": s_ac * float(freq),
         }
+
+    def budget_point(self, freq: float, field_bias: float, young_modulus_pa: float, temperature: float = 300.0,
+                     tan_delta_mech: float = 0.0, heat_budget_w_per_m3: float = 4e6, field_ac_max: float | None = None) -> dict:
+        """The operating point at the heat budget, the AC field solved from the budget and not swept.
+
+        Every loss of :meth:`operating_point` is quadratic in the AC field, so the heat at one
+        frequency is ``h1 E_ac^2`` and the field the budget allows is ``sqrt(Q / h1)`` exactly:
+        there is no grid in the field to be too coarse.  ``field_ac_max`` (V/A) caps it, at the
+        range the small-signal response is trusted over or at what the film holds above its bias;
+        the returned ``binds`` says which limit the point sits on (``"heat"`` or ``"field"``) and
+        ``field_ac`` is the field used.  The rest is :meth:`operating_point` at that field.
+
+        **There is no best drive frequency to take from this.**  Above the relaxation frequency
+        the heat-limited strain of a Debye channel falls as ``1 / f``, so the stroke rate
+        ``S_ac f`` runs flat (it creeps up as ``f^(alpha / 2)`` with Cole-Cole broadening): the
+        largest value on any frequency grid is at or beside the grid's ceiling and moves when the
+        grid is extended.  A maximum read off such a sweep is the sweep's, not the material's
+        (``tests/test_loss.py`` holds this as a regression test).  What the model does fix is the
+        relaxation frequency and the point at a given drive frequency."""
+        probe = 1e-6  # V/A; the response is linear in the field, so any small value serves
+        h1 = self.operating_point(freq, field_bias, probe, young_modulus_pa, temperature, tan_delta_mech)["heat_w_per_m3"] / probe ** 2
+        e_heat = float(np.sqrt(heat_budget_w_per_m3 / h1)) if h1 > 0 else float("inf")
+        if not np.isfinite(e_heat) and field_ac_max is None:
+            raise ValueError("no loss at this point and no field_ac_max: the budget allows any field")
+        e_ac = e_heat if field_ac_max is None else min(e_heat, float(field_ac_max))
+        out = self.operating_point(freq, field_bias, e_ac, young_modulus_pa, temperature, tan_delta_mech)
+        out.update(field_ac=e_ac, field_ac_at_the_heat_budget=e_heat, binds="heat" if e_ac == e_heat else "field",
+                   heat_budget_w_per_m3=float(heat_budget_w_per_m3))
+        return out
 
     def scaled(self, dmu_factor: float = 1.0, de_mon: float | None = None, ea_shift_ev: float = 0.0,
                tf: float | None = None, fraction: float | None = None, n: int | None = None,
