@@ -117,6 +117,25 @@ def seed(args) -> None:
           f"of {args.row!r} let in along {' then '.join(path)}", flush=True)
 
 
+def table(args) -> None:
+    """A table for a job to write its rows into: the stored one's kinked crystals and settings and
+    none of its rows, except those asked for (a band to start another cell's from, say)."""
+    src = load_rows(args.source)
+    out = Path(args.out)
+    disk = load_rows(out) if out.exists() else {k: v for k, v in src.items() if k != "rows"}
+    rows = disk.setdefault("rows", {})
+    added = []
+    for key in args.row or []:
+        if key not in rows:
+            rows[key] = src["rows"][key]
+            added.append(key)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_suffix(".tmp")
+    tmp.write_text(json.dumps(disk, indent=1))
+    tmp.replace(out)
+    print(f"{out}: {len(disk.get('kinked_references', {}))} kinked crystals, {len(rows)} rows" + (f"; copied from the stored table: {added}" if added else ""), flush=True)
+
+
 def polish(args) -> None:
     from polyfind import mixedcell as MC
     from polyfind.fitting import PRESET_PARAMETERS
@@ -285,6 +304,11 @@ def main() -> None:
     p.add_argument("--preset", default="pvdf-dft-valence-belt4")
     p.add_argument("--out", required=True)
     p.set_defaults(run=polish)
+    b = sub.add_parser("table", help="a table for a job's rows: the stored table's kinked crystals, none of its rows but those named")
+    b.add_argument("--source", default=str(STORED))
+    b.add_argument("--row", action="append", help="a stored row to copy in (repeatable)")
+    b.add_argument("--out", required=True)
+    b.set_defaults(run=table)
     t = sub.add_parser("store", help="a job's row of a wider cell, and its saddles, into the stored table")
     t.add_argument("--wide-file", required=True, help="the job's table (jobs/shared/wide_steps.json)")
     t.add_argument("--row", required=True)

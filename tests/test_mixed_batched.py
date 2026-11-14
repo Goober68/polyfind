@@ -438,3 +438,31 @@ def test_transform_derivative_from_running_sums_is_the_one_from_the_window_jacob
         assert np.array_equal(a[key], b[key])
     for key in ("delta", "dt", "dc", "daxis", "dw"):
         np.testing.assert_allclose(b[key], a[key], rtol=0, atol=1e-10 * max(1e-3, float(np.abs(a[key]).max())))
+
+
+# ------------------------------------------------------------------ a copolymer cell
+@pytest.mark.parametrize("row", ["vdf9-trfe4-cfe1-14", "vdf10-trfe4-14"])
+@pytest.mark.parametrize("module", ["numpy", "double"])
+def test_batched_form_on_a_copolymer_cell_is_the_loop_form(row, module):
+    """Everything above is PVDF.  The stored kinked cells of the terpolymer and of its matrix,
+    tiled to four chains and displaced in every variable (examples/mixed_forms_check.py): sites
+    that differ along the chain, a 28-bond repeat, a chiral chain, belt sites on some atoms only.
+    Energy and gradient to rounding, the closure bit for bit."""
+    import importlib.util
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    stored = root / "docs" / "predictions" / "kink_migration_belt4.json"
+    if not stored.exists() or f"{row}@0" not in json.loads(stored.read_text()).get("kinked_references", {}):
+        pytest.skip("no stored kinked cell of this row")
+    spec = importlib.util.spec_from_file_location("mixed_forms_check", root / "examples" / "mixed_forms_check.py")
+    FC = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(FC)
+    table = json.loads(stored.read_text())
+    with PRESET_PARAMETERS[table["preset"]].applied():
+        r = FC.forms(row, 2, 1, table=table, module=np if module == "numpy" else dd)
+    assert r["chains"] == 4 and r["variables"] == 4 + 4 * (4 + 56) and r["module"] == ("numpy" if module == "numpy" else dd.__name__)
+    assert r["above_the_sheet"] > 100.0  # a displaced geometry, far from the minimum the cell was stored at
+    assert FC.agree(r), r
+    assert r["closure_difference"] == 0.0
