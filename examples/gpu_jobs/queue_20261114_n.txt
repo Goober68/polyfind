@@ -24,3 +24,10 @@ settle.sh vdf9-trfe4-cfe1-14 4 2 band:I-N.images.4 Q
 between.sh vdf9-trfe4-cfe1-14 4 2 I.state settled:P I-P
 between.sh vdf9-trfe4-cfe1-14 4 2 settled:P settled:Q P-Q
 between.sh vdf9-trfe4-cfe1-14 4 2 settled:Q settled:N Q-N
+# 5. the matrix's band to N converged in the metric with its top at +13.81 on the image next to I
+#    (the search from there slid back towards I) and a dip at image 3 (+11.36).  The dip relaxed
+#    and named, and the two pieces.
+settle.sh vdf10-trfe4-14 4 2 band:I-N.images.3 P
+between.sh vdf10-trfe4-14 4 2 I.state settled:P I-P
+between.sh vdf10-trfe4-14 4 2 settled:P settled:N P-N
+stop
