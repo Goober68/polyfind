@@ -4,23 +4,25 @@
 # saddles settled from the bands' tops; all minimisations on the closure surface.  A job of
 # examples/runpod_jobs_pod.sh.  Arguments:
 #
-#   band_row.sh ROW NX NY [from CELL] [tiled]
+#   band_row.sh ROW NX NY [from CELL [stored]] [tiled]
 #
 # ROW is a sequence row with a stored kinked crystal ("vdf9-trfe4-cfe1-14"), NX NY the cell.
 # "from CELL": start each band from the band of the same row in that cell (an earlier job's, in
-# the shared table).  "tiled": take the tiled two-chain cell as the sheet without the check that
+# the shared table; with "stored" after it, the stored table's, copied in).  "tiled": take the tiled two-chain cell as the sheet without the check that
 # relaxes the perturbed supercell with every chain and the cell free.  The row goes to the shared
 # table (jobs/shared/steps.json), which starts from the stored table's kinked crystals and holds
 # none of its rows: a row that is stored already is computed again.  A band gets 300 iterations
 # (STEP_BAND_MAXITER) and need not converge: the saddle is settled from its top afterwards, and in
 # the four-chain PVDF cell forty iterations (tops 1.1 and 3.8 kcal/mol too high, forces of 4 and
-# 6) settle to the stored saddles in the fourth decimal.
+# 6) settle to the stored saddles in the fourth decimal.  A cell of fewer than 256 charged sites
+# (four chains of PVDF: 240) is evaluated on the host whatever the pod has: do not queue one.
 set -euo pipefail
 ROW="$1"; NX="$2"; NY="$3"; shift 3
-FROM=""; TILED=()
+FROM=""; TILED=(); COPY=()
 while [ $# -gt 0 ]; do
   case "$1" in
     from) FROM="$2"; shift 2 ;;
+    stored) COPY=(--row "$ROW@${STEP_KINK:-0} $FROM mover 0 ahead host flexible"); shift ;;
     tiled) TILED=(--trust-tiled); shift ;;
     *) echo "band_row.sh: unknown argument $1"; exit 2 ;;
   esac
@@ -30,7 +32,7 @@ SHARED="$(dirname "$JOB_OUT")/shared"
 mkdir -p "$SHARED/ck"
 TABLE="$SHARED/steps.json"
 key() { echo "$ROW@$KINK $1 mover 0 ahead host flexible"; }
-"$PY" examples/kink_wide_cell.py table --out "$TABLE"
+"$PY" examples/kink_wide_cell.py table --out "$TABLE" "${COPY[@]}"
 COMMON=(--row "$ROW" --kink-at "$KINK" --nx "$NX" --ny "$NY" --mover 0 --host flexible --surface --workers 1
         --patience "${STEP_PATIENCE:-40}" --surface-gtol "${STEP_GTOL:-3e-4}" --end-maxiter "${STEP_END_MAXITER:-600}"
         --checkpoints "$SHARED/ck" --out "$TABLE")

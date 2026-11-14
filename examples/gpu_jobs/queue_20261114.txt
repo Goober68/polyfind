@@ -1,20 +1,21 @@
 # The single-chain step of the terpolymer and of its matrix in four and in sixteen chains
 # (PI, 2026-11-14: "Go").  A queue for examples/runpod_jobs_pod.sh: one job per line, run in
-# order, each at the branch's commit of the moment; lines are only ever added.
+# order, each at the branch's commit of the moment; lines are only ever added while a pod
+# follows it.  (A first pod ran job 1 and was deleted 98 s in: the second line was then the
+# four-chain PVDF row, 240 charged sites, which the code keeps on the host; 25 minutes of a
+# rented card idle.  That control had already been run on a host before the pod, and is not
+# queued any more; the sixteen-chain control takes its bands' start from the stored row.)
 #
 # 1. the evaluation: the batched form on the card against the host's loops, on the three rows'
 #    own cells of four and sixteen chains (PVDF is the control: its tests are on PVDF).
 forms_check.sh vdf9-trfe4-cfe1-14 vdf10-trfe4-14 vdf10
-# 2. the protocol: PVDF in four chains from nothing, against the stored host row
-#    (I +9.846, B +7.876, saddles +10.268 and +12.464).
-band_row.sh vdf10 2 1
-# 3. the terpolymer, 64/29/7: four chains (with the check of the sheet), then sixteen with each
+# 2. the terpolymer, 64/29/7: four chains (with the check of the sheet), then sixteen with each
 #    band started from the four-chain one.
 band_row.sh vdf9-trfe4-cfe1-14 2 1
 band_row.sh vdf9-trfe4-cfe1-14 4 2 from 2x1 tiled
-# 4. its matrix, 71/29.
+# 3. its matrix, 71/29.
 band_row.sh vdf10-trfe4-14 2 1
 band_row.sh vdf10-trfe4-14 4 2 from 2x1 tiled
-# 5. the protocol at sixteen chains: PVDF, against the stored host row (I +9.963, B +5.911,
-#    saddles +10.660 and +11.637; its bands took 2.7 hours on the host).
-band_row.sh vdf10 4 2 from 2x1 tiled
+# 4. the protocol at sixteen chains: PVDF from nothing, against the stored host row (I +9.963,
+#    B +5.911, saddles +10.660 and +11.637; its bands took 2.7 hours on the host).
+band_row.sh vdf10 4 2 from 2x1 stored tiled
