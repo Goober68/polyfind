@@ -190,6 +190,9 @@ def main():
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--angle-window", type=float, default=8.0)
     ap.add_argument("--ends-only", action="store_true", help="relax the end points A, I, B and stop: no bands")
+    ap.add_argument("--reference-only", action="store_true",
+                    help="make and store the polished kinked two-chain cell (and the all-trans one) and stop: no row.  The sheet's energy like for like, "
+                    "which examples/kink_summary.py tabulates from the stored references")
     ap.add_argument("--trust-tiled", action="store_true",
                     help="take the tiled polished kinked cell as A without relaxing the supercell with every chain free (in the four-chain PVDF cell that check returns the tiled cell)")
     ap.add_argument("--only", default=None, metavar="PIECES",
@@ -284,6 +287,10 @@ def main():
         d = DK.refined_cell(polymer, args.row, seq, f"{args.row} kink@{args.kink_at}{'~' if args.mirror_kink else ''}", stored)
         if stored is None or "state" not in stored:
             locked_update(out_path, lambda disk: disk.setdefault("kinked_references", {}).__setitem__(kkey, DK.as_json(d)))
+        if args.reference_only:
+            print(f"{kkey}: kink pair in the sheet {(float(d['energy']) - float(d_tt['energy'])) / 2:+.3f} kcal/mol against all-trans, both cells polished, rigid pendants "
+                  f"(the search's cells {(float(d['search_energy']) - float(d_tt['search_energy'])) / 2:+.3f}); kinked cell {np.round(np.asarray(d['state'][:4]), 3).tolist()}", flush=True)
+            return
         model, x0, ch = DK.make_model(polymer, d, args.nx, args.ny)
         _MODEL = model
         nc, n_mon, P = model.nc, ch.n_monomers, model.P

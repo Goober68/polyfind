@@ -49,8 +49,12 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | vdf10-trfe4-14@0 | +5.68 | +7.09 | +6.85 | 5.150, 8.549, 92.162, 35.529 | 4.881, 8.459, 91.781, 36.187 |
 | vdf10-trfe4-14@0~ | +3.70 | +5.79 | +5.70 | 4.984, 8.715, 90.352, 35.527 | 4.881, 8.459, 91.781, 36.187 |
 | vdf10@0 | +4.47 | +5.30 | +5.06 | 4.958, 8.774, 89.178, 25.201 | 4.754, 8.481, 90.000, 25.877 |
+| vdf13-trfe6-cfe1-20@0 | +0.88 | +4.70 | +4.59 | 5.329, 8.381, 92.266, 51.012 | 5.242, 8.262, 91.604, 51.692 |
+| vdf9-trfe4-an1-14@0 | +1.82 | +3.25 | +3.06 | 5.526, 8.380, 92.297, 35.455 | 5.465, 8.200, 91.259, 36.162 |
+| vdf9-trfe4-cdfe1-14@0 | +1.46 | +2.79 | +2.65 | 5.212, 9.522, 83.916, 35.414 | 5.712, 8.404, 90.089, 36.165 |
 | vdf9-trfe4-cfe1-14@0 | +0.94 | +3.95 | +3.79 | 5.402, 8.426, 92.669, 35.496 | 5.302, 8.245, 91.700, 36.183 |
 | vdf9-trfe4-cfe1-14@0~ | +0.65 | +4.18 | +4.07 | 5.004, 9.075, 93.871, 35.529 | 5.302, 8.245, 91.700, 36.183 |
+| vdf9-trfe4-ctfe1-14@0 | -0.87 | +2.16 | +2.04 | 5.639, 8.487, 91.630, 35.424 | 5.510, 8.276, 90.610, 36.137 |
 
 **One chain's kink pair one monomer ahead of its neighbours'** (kcal/mol per moving chain against the sheet; cell fixed). A saddle is given as the band's top and, in bold where it was done, the stationary point settled from it (minimum in the hyperplane normal to the band's tangent, zero force along it); the barrier and the rate are on the settled saddles where both exist.
 
@@ -239,3 +243,12 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 | vdf8-trfe4-cfe1-cdfe1-14 (DVRVVRVCVVRVVR) | +0.641 | +0.807 | 0.251 | 0.581 | TG'TG | 19 / 20 deg | +12.2% |
 | vdf9-trfe4-ctfe1-14 (VVRVVRVKVVRVVR) | +0.135 | +0.300 | 0.186 | 0.664 | TG'TG | 14 / 24 deg | +11.8% |
 | vdf9-trfe4-an1-14 (VVRVVRVAVVRVVR) | -0.154 | +0.197 | 0.087 | 0.614 | TG'TG | 5 / 24 deg | +12.5% |
+| vdf6-trfe3-cfe1 (RVVRVCVRVV) | +0.297 | +0.338 | 0.250 | 0.403 | TGTG' | 11 / 19 deg | +11.3% |
+| vdf7-trfe2-ctfe1 (VVRVVKVVRV) | +0.790 | +0.900 | 0.233 | 0.510 | TG'TG | 14 / 23 deg | +11.8% |
+| vdf7-trfe2-an1 (VVRVVAVVRV) | +0.568 | +0.565 | 0.125 | 0.181 | TG'TG | 6 / 14 deg | +11.9% |
+| vdf7-trfe2-cfe1-adj (VVRCVVVVRV) | +0.961 | +0.875 | 0.252 | 0.136 | TG'TG | 11 / 12 deg | +11.6% |
+| vdf6-trfe3-cdfe1 (RVVRVDVRVV) | +0.805 | +1.012 | 0.135 | 0.524 | TGTG' | 10 / 21 deg | +12.2% |
+| vdf8-cfe2 (VVCVVVVCVV) | +0.835 | +0.812 | 0.303 | 0.389 | TGTG' | 14 / 15 deg | +11.2% |
+| vdf9-cfe1 (VVVVCVVVVV) | +0.982 | +0.967 | 0.206 | 0.175 | G'TGT | 11 / 14 deg | +10.2% |
+| vdf9-an1 (VVVVAVVVVV) | +0.470 | +0.555 | 0.139 | 0.305 | TGTG' | 7 / 14 deg | +12.8% |
+| vdf5-trfe5 (VRVRVRVRVR) | +0.752 | +0.736 | 0.010 | 0.002 | TGTG' | 1 / 4 deg | +10.8% |

@@ -1,0 +1,600 @@
+{
+ "margins": "docs/predictions/polished_margins_belt4.json",
+ "operating_point": {
+  "bias_V_um": 55.0,
+  "ac_V_um": 1.8
+ },
+ "pins": {
+  "vdf9-trfe4-cfe1-14": {
+   "what": "CFE, one per fourteen in 29 mol% TrFE",
+   "matrix": "vdf10-trfe4-14",
+   "margin": 0.31749769371237946,
+   "matrix_margin": 0.05611974904922867,
+   "tt_cost_per_unit": 6.772307306431422,
+   "tg_cost_per_unit": 3.113016081147311,
+   "pin_per_unit": 3.659291225284111,
+   "tg_conformer": "TG'TG"
+  },
+  "vdf9-trfe4-ctfe1-14": {
+   "what": "CTFE, one per fourteen in 29 mol% TrFE",
+   "matrix": "vdf10-trfe4-14",
+   "margin": 0.2999561136884026,
+   "matrix_margin": 0.05611974904922867,
+   "tt_cost_per_unit": 22.875405889784993,
+   "tg_cost_per_unit": 19.461696784836555,
+   "pin_per_unit": 3.4137091049484347,
+   "tg_conformer": "TG'TG"
+  },
+  "vdf9-trfe4-an1-14": {
+   "what": "AN, one per fourteen in 29 mol% TrFE",
+   "matrix": "vdf10-trfe4-14",
+   "margin": 0.19658876021101257,
+   "matrix_margin": 0.05611974904922867,
+   "tt_cost_per_unit": 0.2467406405503123,
+   "tg_cost_per_unit": -1.7198255157146622,
+   "pin_per_unit": 1.9665661562649746,
+   "tg_conformer": "TG'TG"
+  },
+  "vdf9-trfe4-cdfe1-14": {
+   "what": "CDFE, one per fourteen in 29 mol% TrFE",
+   "matrix": "vdf10-trfe4-14",
+   "margin": 0.6847441914938157,
+   "matrix_margin": 0.05611974904922867,
+   "tt_cost_per_unit": 18.61471815759263,
+   "tg_cost_per_unit": 9.813975963368412,
+   "pin_per_unit": 8.800742194224219,
+   "tg_conformer": "TGTG'"
+  },
+  "vdf8-trfe4-cfe1-cdfe1-14": {
+   "what": "CFE and CDFE, one of each per fourteen (mean per unit)",
+   "matrix": "vdf10-trfe4-14",
+   "margin": 0.8068979368052007,
+   "matrix_margin": 0.05611974904922867,
+   "tt_cost_per_unit": 11.374698668590547,
+   "tg_cost_per_unit": 6.1192513542987435,
+   "pin_per_unit": 5.255447314291804,
+   "tg_conformer": "TG'TG"
+  },
+  "vdf7-trfe2-cfe1": {
+   "what": "CFE, one per ten beside 20 mol% TrFE",
+   "matrix": "vdf8-trfe2",
+   "margin": 0.8679646444744042,
+   "matrix_margin": 0.22874089385351581,
+   "tt_cost_per_unit": 6.1286459569700025,
+   "tg_cost_per_unit": -0.26359154923888184,
+   "pin_per_unit": 6.392237506208884,
+   "tg_conformer": "TG'TG"
+  },
+  "vdf7-trfe2-cfe1-adj": {
+   "what": "CFE next to a TrFE, one per ten",
+   "matrix": "vdf8-trfe2",
+   "margin": 0.8752083525973333,
+   "matrix_margin": 0.22874089385351581,
+   "tt_cost_per_unit": 7.066892268929497,
+   "tg_cost_per_unit": 0.6022176814913216,
+   "pin_per_unit": 6.464674587438175,
+   "tg_conformer": "TG'TG"
+  },
+  "vdf7-trfe2-ctfe1": {
+   "what": "CTFE, one per ten beside 20 mol% TrFE",
+   "matrix": "vdf8-trfe2",
+   "margin": 0.8996814110220894,
+   "matrix_margin": 0.22874089385351581,
+   "tt_cost_per_unit": 20.777369598075197,
+   "tg_cost_per_unit": 14.067964426389459,
+   "pin_per_unit": 6.709405171685736,
+   "tg_conformer": "TG'TG"
+  },
+  "vdf7-trfe2-cdfe1": {
+   "what": "CDFE, one per ten beside 20 mol% TrFE",
+   "matrix": "vdf8-trfe2",
+   "margin": 0.3924028166492137,
+   "matrix_margin": 0.22874089385351581,
+   "tt_cost_per_unit": 15.644294723072223,
+   "tg_cost_per_unit": 14.007675495115244,
+   "pin_per_unit": 1.6366192279569791,
+   "tg_conformer": "TGTG'"
+  },
+  "vdf7-trfe2-an1": {
+   "what": "AN, one per ten beside 20 mol% TrFE",
+   "matrix": "vdf8-trfe2",
+   "margin": 0.5650201885148594,
+   "matrix_margin": 0.22874089385351581,
+   "tt_cost_per_unit": -0.8052787404889195,
+   "tg_cost_per_unit": -4.168071687102355,
+   "pin_per_unit": 3.3627929466134354,
+   "tg_conformer": "TG'TG"
+  },
+  "vdf9-cfe1": {
+   "what": "CFE, one per ten VDF",
+   "matrix": "pvdf",
+   "margin": 0.9668400580795904,
+   "matrix_margin": 0.7440161570572776,
+   "pin_per_unit": 2.2282390102231275,
+   "tg_conformer": "G'TGT"
+  },
+  "vdf8-cfe2": {
+   "what": "CFE, two per ten VDF (per unit)",
+   "matrix": "pvdf",
+   "margin": 0.8115206235232826,
+   "matrix_margin": 0.7440161570572776,
+   "pin_per_unit": 0.3375223323300247,
+   "tg_conformer": "TGTG'"
+  },
+  "vdf9-an1": {
+   "what": "AN, one per ten VDF",
+   "matrix": "pvdf",
+   "margin": 0.5550024307138948,
+   "matrix_margin": 0.7440161570572776,
+   "pin_per_unit": -1.8901372634338287,
+   "tg_conformer": "TGTG'"
+  }
+ },
+ "units": {
+  "vdf9-trfe4-an1-14": {
+   "pin_per_unit": 1.9665661562649746,
+   "kink_sheet": 3.05933210541626,
+   "cut": 3.789368985239605,
+   "cut_per_pin": 1.9268962669613983,
+   "population_against_cfe": 3.4047791787302923,
+   "mu_TT": 0.5237202748510051,
+   "axial": 0.12465761633469663
+  },
+  "vdf9-trfe4-ctfe1-14": {
+   "pin_per_unit": 3.4137091049484347,
+   "kink_sheet": 2.0406064587049144,
+   "cut": 4.808094631950951,
+   "cut_per_pin": 1.4084664170656036,
+   "population_against_cfe": 18.81117869858353,
+   "mu_TT": 0.5084320629921063,
+   "axial": 0.1180236046126979
+  },
+  "vdf9-trfe4-cfe1-14": {
+   "pin_per_unit": 3.659291225284111,
+   "kink_sheet": 3.7895394363366535,
+   "cut": 3.0591616543192117,
+   "cut_per_pin": 0.8359984122558312,
+   "population_against_cfe": 1.0,
+   "mu_TT": 0.5523975867692842,
+   "axial": 0.12134386353943238
+  },
+  "vdf9-trfe4-cdfe1-14": {
+   "pin_per_unit": 8.800742194224219,
+   "kink_sheet": 2.6457345789349205,
+   "cut": 4.202966511720945,
+   "cut_per_pin": 0.4775695525406121,
+   "population_against_cfe": 6.815065435442597,
+   "mu_TT": 0.5292824225026498,
+   "axial": 0.12112587035429923
+  }
+ },
+ "uniform": {
+  "matrix": "vdf10-trfe4-14",
+  "matrix_margin": 0.05611974904922867,
+  "pins": {
+   "AN": 1.9665661562649746,
+   "CTFE": 3.4137091049484347,
+   "CFE": 3.659291225284111,
+   "CDFE": 8.800742194224219
+  },
+  "rows": {
+   "AN": {
+    "10": {
+     "margin": 0.2527763646757261,
+     "polar_fraction": 0.0056206809478997685,
+     "strain_ac": 4.3335177788331926e-05,
+     "tan_delta": 0.003934224553480915
+    },
+    "14": {
+     "margin": 0.19658876021101257,
+     "polar_fraction": 0.027293523551653317,
+     "strain_ac": 0.00020577007616173626,
+     "tan_delta": 0.01980178731721165
+    },
+    "20": {
+     "margin": 0.1544480568624774,
+     "polar_fraction": 0.0853517836843234,
+     "strain_ac": 0.0006045298610259463,
+     "tan_delta": 0.04412280818732017
+    },
+    "28": {
+     "margin": 0.12635425463012062,
+     "polar_fraction": 0.1721249338958678,
+     "strain_ac": 0.0011022324931678098,
+     "tan_delta": 0.06408273891778765
+    },
+    "40": {
+     "margin": 0.10528390295585303,
+     "polar_fraction": 0.27491950894132133,
+     "strain_ac": 0.0015403810382038194,
+     "tan_delta": 0.07780972930753102
+    },
+    "56": {
+     "margin": 0.09123700183967465,
+     "polar_fraction": 0.3614108102588691,
+     "strain_ac": 0.0017824709999120377,
+     "tan_delta": 0.0844917761215214
+    },
+    "80": {
+     "margin": 0.08070182600254086,
+     "polar_fraction": 0.43319499519378823,
+     "strain_ac": 0.001895859093793039,
+     "tan_delta": 0.08745408764972844
+    },
+    "120": {
+     "margin": 0.0725078003514368,
+     "polar_fraction": 0.4912088067175211,
+     "strain_ac": 0.0019295752767590922,
+     "tan_delta": 0.08831662290714802
+    }
+   },
+   "CTFE": {
+    "10": {
+     "margin": 0.39749065954407214,
+     "polar_fraction": 9.1205335051585e-05,
+     "strain_ac": 7.071667958819855e-07,
+     "tan_delta": 1.1345301696662311e-05
+    },
+    "14": {
+     "margin": 0.2999561136884026,
+     "polar_fraction": 0.0014699836277410603,
+     "strain_ac": 1.1381628831979804e-05,
+     "tan_delta": 0.0006683888850589435
+    },
+    "20": {
+     "margin": 0.2268052042966504,
+     "polar_fraction": 0.01171526453153934,
+     "strain_ac": 8.976114352611911e-05,
+     "tan_delta": 0.009009331511091593
+    },
+    "28": {
+     "margin": 0.17803793136881563,
+     "polar_fraction": 0.04545804885121576,
+     "strain_ac": 0.00033621657508016564,
+     "tan_delta": 0.029284466133804404
+    },
+    "40": {
+     "margin": 0.14146247667293954,
+     "polar_fraction": 0.11904926360403277,
+     "strain_ac": 0.0008117585279693352,
+     "tan_delta": 0.05324090025419001
+    },
+    "56": {
+     "margin": 0.11707884020902215,
+     "polar_fraction": 0.21313246094232285,
+     "strain_ac": 0.001296659126977268,
+     "tan_delta": 0.07048314428826087
+    },
+    "80": {
+     "margin": 0.09879111286108411,
+     "polar_fraction": 0.31331698314845596,
+     "strain_ac": 0.0016621019533977074,
+     "tan_delta": 0.08123470791462609
+    },
+    "120": {
+     "margin": 0.08456732492379897,
+     "polar_fraction": 0.4063548236395716,
+     "strain_ac": 0.001862746155127814,
+     "tan_delta": 0.08659899958945988
+    }
+   },
+   "CFE": {
+    "10": {
+     "margin": 0.42204887157763976,
+     "polar_fraction": 4.527988589697299e-05,
+     "strain_ac": 3.510970948872218e-07,
+     "tan_delta": 3.981686848141865e-06
+    },
+    "14": {
+     "margin": 0.31749769371237946,
+     "polar_fraction": 0.0008919174393641575,
+     "strain_ac": 6.909908474149064e-06,
+     "tan_delta": 0.000328221086675519
+    },
+    "20": {
+     "margin": 0.23908431031343422,
+     "polar_fraction": 0.0082830506072818,
+     "strain_ac": 6.368801654248262e-05,
+     "tan_delta": 0.006190448936194703
+    },
+    "28": {
+     "margin": 0.18680872138080407,
+     "polar_fraction": 0.03575871456590424,
+     "strain_ac": 0.00026720733667347186,
+     "tan_delta": 0.02453745600827354
+    },
+    "40": {
+     "margin": 0.14760202968133146,
+     "polar_fraction": 0.10187722008682677,
+     "strain_ac": 0.0007083736006215298,
+     "tan_delta": 0.04887488629524036
+    },
+    "56": {
+     "margin": 0.12146423521501637,
+     "polar_fraction": 0.19291193515136898,
+     "strain_ac": 0.0012040516778453554,
+     "tan_delta": 0.06750488371015953
+    },
+    "80": {
+     "margin": 0.10186088936528007,
+     "polar_fraction": 0.294797891798028,
+     "strain_ac": 0.001606238355533269,
+     "tan_delta": 0.07968015763284737
+    },
+    "120": {
+     "margin": 0.08661384259326294,
+     "polar_fraction": 0.392357547848734,
+     "strain_ac": 0.0018410797801108193,
+     "tan_delta": 0.08603511000825141
+    }
+   },
+   "CDFE": {
+    "10": {
+     "margin": 0.9361939684716505,
+     "polar_fraction": 1.9436907316063357e-11,
+     "strain_ac": 1.5071937493218152e-13,
+     "tan_delta": 1.1234604741592102e-15
+    },
+    "14": {
+     "margin": 0.6847441914938157,
+     "polar_fraction": 2.52721561983397e-08,
+     "strain_ac": 1.9596756961371343e-10,
+     "tan_delta": 5.267198811064124e-11
+    },
+    "20": {
+     "margin": 0.4961568587604396,
+     "polar_fraction": 5.472065533544481e-06,
+     "strain_ac": 4.243173523371296e-08,
+     "tan_delta": 1.6775427606675742e-07
+    },
+    "28": {
+     "margin": 0.3704319702715222,
+     "polar_fraction": 0.00019727659071019156,
+     "strain_ac": 1.5294324313702952e-06,
+     "tan_delta": 3.5820271302257094e-05
+    },
+    "40": {
+     "margin": 0.2761383039048341,
+     "polar_fraction": 0.002895061440118093,
+     "strain_ac": 2.2383020684445607e-05,
+     "tan_delta": 0.0016906970314698197
+    },
+    "56": {
+     "margin": 0.21327585966037543,
+     "polar_fraction": 0.017136181434496547,
+     "strain_ac": 0.000130563477872046,
+     "tan_delta": 0.013130056853578972
+    },
+    "80": {
+     "margin": 0.1661290264770314,
+     "polar_fraction": 0.06268777082669295,
+     "strain_ac": 0.00045516008068267937,
+     "tan_delta": 0.03643202469697324
+    },
+    "120": {
+     "margin": 0.1294592673344305,
+     "polar_fraction": 0.15987162982350572,
+     "strain_ac": 0.0010390666606893406,
+     "tan_delta": 0.06187239940630206
+    }
+   }
+  }
+ },
+ "statistical": {
+  "hypothesis": "each pin-free run of L monomers at the margin m0 + s / (L + 1); runs geometric; every monomer weighted by its run",
+  "rows": {
+   "AN": {
+    "0.03": {
+     "statistical": {
+      "polar_fraction": 0.3240913273806166,
+      "strain_ac": 0.0015065911413733595
+     },
+     "share_in_runs_of_forty_or_more": 0.6615419212949666,
+     "uniform": {
+      "margin": 0.1151167337371779,
+      "polar_fraction": 0.2226663705419254,
+      "strain_ac": 0.0013381233619337888
+     }
+    },
+    "0.05": {
+     "statistical": {
+      "polar_fraction": 0.2224463105760089,
+      "strain_ac": 0.001161176638250855
+     },
+     "share_in_runs_of_forty_or_more": 0.39906406512321524,
+     "uniform": {
+      "margin": 0.15444805686247742,
+      "polar_fraction": 0.08535178368432339,
+      "strain_ac": 0.0006045298610259462
+     }
+    },
+    "0.07": {
+     "statistical": {
+      "polar_fraction": 0.15610351430615563,
+      "strain_ac": 0.000880328234682877
+     },
+     "share_in_runs_of_forty_or_more": 0.22006137661989641,
+     "uniform": {
+      "margin": 0.19377937998777692,
+      "polar_fraction": 0.02950285917032753,
+      "strain_ac": 0.0002219133313871498
+     }
+    },
+    "0.1": {
+     "statistical": {
+      "polar_fraction": 0.09459337989053766,
+      "strain_ac": 0.0005771906398421877
+     },
+     "share_in_runs_of_forty_or_more": 0.08047369601447728,
+     "uniform": {
+      "margin": 0.2527763646757262,
+      "polar_fraction": 0.005620680947899764,
+      "strain_ac": 4.333517778833189e-05
+     }
+    }
+   },
+   "CTFE": {
+    "0.03": {
+     "statistical": {
+      "polar_fraction": 0.21373611907123313,
+      "strain_ac": 0.0011242999160941264
+     },
+     "share_in_runs_of_forty_or_more": 0.6615419212949666,
+     "uniform": {
+      "margin": 0.15853102219768173,
+      "polar_fraction": 0.07669046894738277,
+      "strain_ac": 0.0005483964571738801
+     }
+    },
+    "0.05": {
+     "statistical": {
+      "polar_fraction": 0.11773404217551467,
+      "strain_ac": 0.0006944400842988402
+     },
+     "share_in_runs_of_forty_or_more": 0.39906406512321524,
+     "uniform": {
+      "margin": 0.2268052042966504,
+      "polar_fraction": 0.01171526453153934,
+      "strain_ac": 8.976114352611911e-05
+     }
+    },
+    "0.07": {
+     "statistical": {
+      "polar_fraction": 0.06798612891066642,
+      "strain_ac": 0.00043001199201020884
+     },
+     "share_in_runs_of_forty_or_more": 0.22006137661989641,
+     "uniform": {
+      "margin": 0.29507938639561915,
+      "polar_fraction": 0.001688930722106338,
+      "strain_ac": 1.3073951352697458e-05
+     }
+    },
+    "0.1": {
+     "statistical": {
+      "polar_fraction": 0.03173080872512679,
+      "strain_ac": 0.00021424863463710751
+     },
+     "share_in_runs_of_forty_or_more": 0.08047369601447728,
+     "uniform": {
+      "margin": 0.39749065954407214,
+      "polar_fraction": 9.1205335051585e-05,
+      "strain_ac": 7.071667958819855e-07
+     }
+    }
+   },
+   "CFE": {
+    "0.03": {
+     "statistical": {
+      "polar_fraction": 0.19980867798325677,
+      "strain_ac": 0.0010676459165606105
+     },
+     "share_in_runs_of_forty_or_more": 0.6615419212949666,
+     "uniform": {
+      "margin": 0.16589848580775202,
+      "polar_fraction": 0.06307516100102231,
+      "strain_ac": 0.00045778084324800704
+     }
+    },
+    "0.05": {
+     "statistical": {
+      "polar_fraction": 0.10637550460988794,
+      "strain_ac": 0.0006366793671976809
+     },
+     "share_in_runs_of_forty_or_more": 0.39906406512321524,
+     "uniform": {
+      "margin": 0.23908431031343425,
+      "polar_fraction": 0.008283050607281793,
+      "strain_ac": 6.368801654248256e-05
+     }
+    },
+    "0.07": {
+     "statistical": {
+      "polar_fraction": 0.0596298314359305,
+      "strain_ac": 0.0003821329417889648
+     },
+     "share_in_runs_of_forty_or_more": 0.22006137661989641,
+     "uniform": {
+      "margin": 0.3122701348191165,
+      "polar_fraction": 0.0010351463421574376,
+      "strain_ac": 8.018369108940407e-06
+     }
+    },
+    "0.1": {
+     "statistical": {
+      "polar_fraction": 0.026760354635278653,
+      "strain_ac": 0.00018266561157747265
+     },
+     "share_in_runs_of_forty_or_more": 0.08047369601447728,
+     "uniform": {
+      "margin": 0.4220488715776398,
+      "polar_fraction": 4.527988589697299e-05,
+      "strain_ac": 3.510970948872218e-07
+     }
+    }
+   },
+   "CDFE": {
+    "0.03": {
+     "statistical": {
+      "polar_fraction": 0.05683982038366844,
+      "strain_ac": 0.000365031943205788
+     },
+     "share_in_runs_of_forty_or_more": 0.6615419212949666,
+     "uniform": {
+      "margin": 0.3201420148759552,
+      "polar_fraction": 0.0008271892371078966,
+      "strain_ac": 6.408865233884518e-06
+     }
+    },
+    "0.05": {
+     "statistical": {
+      "polar_fraction": 0.016895484783413045,
+      "strain_ac": 0.00011804525274371323
+     },
+     "share_in_runs_of_forty_or_more": 0.39906406512321524,
+     "uniform": {
+      "margin": 0.49615685876043963,
+      "polar_fraction": 5.472065533544481e-06,
+      "strain_ac": 4.243173523371296e-08
+     }
+    },
+    "0.07": {
+     "statistical": {
+      "polar_fraction": 0.005778446249451276,
+      "strain_ac": 4.207161120893248e-05
+     },
+     "share_in_runs_of_forty_or_more": 0.22006137661989641,
+     "uniform": {
+      "margin": 0.672171702644924,
+      "polar_fraction": 3.616954534025473e-08,
+      "strain_ac": 2.804690569393967e-10
+     }
+    },
+    "0.1": {
+     "statistical": {
+      "polar_fraction": 0.0013678452614506284,
+      "strain_ac": 1.0268664603461776e-05
+     },
+     "share_in_runs_of_forty_or_more": 0.08047369601447728,
+     "uniform": {
+      "margin": 0.9361939684716506,
+      "polar_fraction": 1.943690731606329e-11,
+      "strain_ac": 1.5071937493218096e-13
+     }
+    }
+   }
+  }
+ },
+ "calibrated_film": {
+  "polar_fraction": 0.8358314956396972,
+  "strain_ac": 0.0008020539519208919,
+  "tan_delta": 0.05951865652131868,
+  "note": "the literature channel as calibrated on the 63/30/7 film (margin zero, n 17)"
+ },
+ "tables_md": {
+  "pins": "| unit and dilution | margin | matrix's margin | all-trans cost per unit | helix cost per unit | pin strength per unit (TT - TG) |\n|---|---|---|---|---|---|\n| CFE, one per fourteen in 29 mol% TrFE | +0.317 | +0.056 | +6.8 | +3.1 | **+3.7** |\n| CTFE, one per fourteen in 29 mol% TrFE | +0.300 | +0.056 | +22.9 | +19.5 | **+3.4** |\n| AN, one per fourteen in 29 mol% TrFE | +0.197 | +0.056 | +0.2 | -1.7 | **+2.0** |\n| CDFE, one per fourteen in 29 mol% TrFE | +0.685 | +0.056 | +18.6 | +9.8 | **+8.8** |\n| CFE and CDFE, one of each per fourteen (mean per unit) | +0.807 | +0.056 | +11.4 | +6.1 | **+5.3** |\n| CFE, one per ten beside 20 mol% TrFE | +0.868 | +0.229 | +6.1 | -0.3 | **+6.4** |\n| CFE next to a TrFE, one per ten | +0.875 | +0.229 | +7.1 | +0.6 | **+6.5** |\n| CTFE, one per ten beside 20 mol% TrFE | +0.900 | +0.229 | +20.8 | +14.1 | **+6.7** |\n| CDFE, one per ten beside 20 mol% TrFE | +0.392 | +0.229 | +15.6 | +14.0 | **+1.6** |\n| AN, one per ten beside 20 mol% TrFE | +0.565 | +0.229 | -0.8 | -4.2 | **+3.4** |\n| CFE, one per ten VDF | +0.967 | +0.744 | - | - | **+2.2** |\n| CFE, two per ten VDF (per unit) | +0.812 | +0.744 | - | - | **+0.3** |\n| AN, one per ten VDF | +0.555 | +0.744 | - | - | **-1.9** |",
+  "units": "| unit, one per fourteen | pin per unit | kink sheet, kcal/mol per kink pair | cut against the matrix | cut per kcal/mol of pin | sheets' population against the CFE cell's | all-trans dipole per monomer, e.A | axial switch strain |\n|---|---|---|---|---|---|---|---|\n| none: the matrix (vdf10-trfe4-14) | 0 | 6.85 | 0 | - | 0.006 | 0.562 | +11.7% |\n| AN | +2.0 | 3.06 | 3.79 | **1.93** | 3.4 | 0.524 | +12.5% |\n| CTFE | +3.4 | 2.04 | 4.81 | **1.41** | 18.8 | 0.508 | +11.8% |\n| CFE | +3.7 | 3.79 | 3.06 | **0.84** | 1.0 | 0.552 | +12.1% |\n| CDFE | +8.8 | 2.65 | 4.20 | **0.48** | 6.8 | 0.529 | +12.1% |",
+  "uniform": "| one pin per | mol% | AN (+2.0): margin, polar fraction, S_ac, tan delta 34 kHz | CTFE (+3.4): margin, polar fraction, S_ac, tan delta 34 kHz | CFE (+3.7): margin, polar fraction, S_ac, tan delta 34 kHz | CDFE (+8.8): margin, polar fraction, S_ac, tan delta 34 kHz |\n|---|---|---|---|---|---|\n| 10 | 10.0 | +0.253, 0.01, 0.004%, 0.004 | +0.397, 0.00, 0.000%, 0.000 | +0.422, 0.00, 0.000%, 0.000 | +0.936, 0.00, 0.000%, 0.000 |\n| 14 | 7.1 | +0.197, 0.03, 0.021%, 0.020 | +0.300, 0.00, 0.001%, 0.001 | +0.317, 0.00, 0.001%, 0.000 | +0.685, 0.00, 0.000%, 0.000 |\n| 20 | 5.0 | +0.154, 0.09, 0.060%, 0.044 | +0.227, 0.01, 0.009%, 0.009 | +0.239, 0.01, 0.006%, 0.006 | +0.496, 0.00, 0.000%, 0.000 |\n| 28 | 3.6 | +0.126, 0.17, 0.110%, 0.064 | +0.178, 0.05, 0.034%, 0.029 | +0.187, 0.04, 0.027%, 0.025 | +0.370, 0.00, 0.000%, 0.000 |\n| 40 | 2.5 | +0.105, 0.27, 0.154%, 0.078 | +0.141, 0.12, 0.081%, 0.053 | +0.148, 0.10, 0.071%, 0.049 | +0.276, 0.00, 0.002%, 0.002 |\n| 56 | 1.8 | +0.091, 0.36, 0.178%, 0.084 | +0.117, 0.21, 0.130%, 0.070 | +0.121, 0.19, 0.120%, 0.068 | +0.213, 0.02, 0.013%, 0.013 |\n| 80 | 1.2 | +0.081, 0.43, 0.190%, 0.087 | +0.099, 0.31, 0.166%, 0.081 | +0.102, 0.29, 0.161%, 0.080 | +0.166, 0.06, 0.046%, 0.036 |\n| 120 | 0.8 | +0.073, 0.49, 0.193%, 0.088 | +0.085, 0.41, 0.186%, 0.087 | +0.087, 0.39, 0.184%, 0.086 | +0.129, 0.16, 0.104%, 0.062 |",
+  "statistical": "| pin, mol% | uniform spacing: margin, polar fraction, S_ac | statistical sequence (local law): polar fraction, S_ac | monomers in pin-free runs of forty or more |\n|---|---|---|---|\n| AN, 3 | +0.115, 0.22, 0.134% | 0.32, 0.151% | 0.66 |\n| AN, 5 | +0.154, 0.09, 0.060% | 0.22, 0.116% | 0.40 |\n| AN, 7 | +0.194, 0.03, 0.022% | 0.16, 0.088% | 0.22 |\n| AN, 10 | +0.253, 0.01, 0.004% | 0.09, 0.058% | 0.08 |\n| CTFE, 3 | +0.159, 0.08, 0.055% | 0.21, 0.112% | 0.66 |\n| CTFE, 5 | +0.227, 0.01, 0.009% | 0.12, 0.069% | 0.40 |\n| CTFE, 7 | +0.295, 0.00, 0.001% | 0.07, 0.043% | 0.22 |\n| CTFE, 10 | +0.397, 0.00, 0.000% | 0.03, 0.021% | 0.08 |\n| CFE, 3 | +0.166, 0.06, 0.046% | 0.20, 0.107% | 0.66 |\n| CFE, 5 | +0.239, 0.01, 0.006% | 0.11, 0.064% | 0.40 |\n| CFE, 7 | +0.312, 0.00, 0.001% | 0.06, 0.038% | 0.22 |\n| CFE, 10 | +0.422, 0.00, 0.000% | 0.03, 0.018% | 0.08 |\n| CDFE, 3 | +0.320, 0.00, 0.001% | 0.06, 0.037% | 0.66 |\n| CDFE, 5 | +0.496, 0.00, 0.000% | 0.02, 0.012% | 0.40 |\n| CDFE, 7 | +0.672, 0.00, 0.000% | 0.01, 0.004% | 0.22 |\n| CDFE, 10 | +0.936, 0.00, 0.000% | 0.00, 0.001% | 0.08 |"
+ }
+}

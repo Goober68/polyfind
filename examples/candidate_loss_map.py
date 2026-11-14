@@ -26,6 +26,9 @@ def main():
     ap.add_argument("--bias", type=float, default=55.0, help="V/um")
     ap.add_argument("--ac", type=float, default=1.8, help="V/um")
     ap.add_argument("--young", type=float, default=0.2e9)
+    ap.add_argument("--margins", default="docs/predictions/polished_margins_belt4.json",
+                    help="polished margins (examples/polish_margins.py): a row found there takes its margin and axial switch strain from it; '' for the search's cells only")
+    ap.add_argument("--sweep-row", default="vdf10-trfe4-14", help="the row whose dipole and switch strain the margin sweep is run with (the matrix)")
     ap.add_argument("--out", default="docs/predictions/candidate_loss_map_belt4.json")
     args = ap.parse_args()
     screen = {"sequences": {}}
@@ -55,6 +58,17 @@ def main():
                       "margin_rigid": d["margin_rigid_kcal_per_monomer"], "mu_TT": c["TTTT"]["dipole_per_monomer_eA"], "dmu_diff": d["dipole_gain_eA_per_monomer"],
                       "axial": d["axial_transition_strain"], "areal": d["areal_transition_strain"], "P_TT": d["P_TT_C_m2"], "P_TG": d["P_TG_C_m2"],
                       "tilt_TG": c[d.get("tg_conformer") or "TGTG'"].get("pendant_tilt_relaxation_per_monomer_kcal", 0.0) or 0.0, "tg_conformer": d.get("tg_conformer", "TGTG'")}
+    try:
+        polished = json.load(open(args.margins)).get("rows", {}) if args.margins else {}
+    except FileNotFoundError:
+        polished = {}
+    for name, r in rows.items():  # both cells relaxed alike supersede the search's cells (docs/CANDIDATE_MATERIALS.md 2.1)
+        r["cells"] = "search"
+        if name in polished and "margin" in polished[name]:
+            r.update(margin_search=r["margin"], margin=polished[name]["margin"], margin_rigid=polished[name].get("margin_rigid", r["margin_rigid"]),
+                     axial=polished[name].get("axial_transition_strain", r["axial"]), cells="polished")
+        elif name == "pvdf":
+            r["cells"] = "polished"  # the search's symmetry is the molecule's: polishing PVDF's cells changes nothing (2.1)
     base = L.literature_terpolymer()
     out = {"operating_point": {"bias_V_um": args.bias, "ac_V_um": args.ac, "young_Pa": args.young, "frequencies_hz": [34e3, 66e3]},
            "baseline": {"dmu_mon": base.dmu_mon, "de_mon": base.de_mon, "n": base.n, "fraction": base.fraction, "f_relax_hz_300K": base.f_relax(300.0)},
@@ -83,15 +97,30 @@ def main():
         out["rows"][name] = r2
         o34, o66 = ops["34kHz"], ops["66kHz"]
         print(f"{name:24s} {'yes' if r['validated_chemistry'] else 'Cl':5s} {r['margin']:+7.3f} {dmu:6.3f} {est:6.0f} {r['axial'] * 100:+5.1f}% | {o34['polar_fraction']:7.3f} {o34['strain_ac']:9.2e} {o34['tan_delta']:9.3f} {o34['heat_w_per_m3'] / 1e6:8.1f} {o34['efficiency']:7.3f} | {o66['tan_delta']:9.3f} {o66['strain_ac']:9.2e}")
-        out["rows"][name]["loss_row_md"] = (f"| {name} | {r['margin']:+.3f} | {est:.0f} | {o34['polar_fraction']:.2f} | {o34['strain_ac'] * 100:.3f}% | {o34['tan_delta']:.3f} / {o66['tan_delta']:.3f} | "
+        out["rows"][name]["loss_row_md"] = (f"| {name} | {r['margin']:+.3f}{'' if r['cells'] == 'polished' else ' (search)'} | {est:.0f} | {o34['polar_fraction']:.2f} | {o34['strain_ac'] * 100:.3f}% | {o34['tan_delta']:.3f} / {o66['tan_delta']:.3f} | "
                                             f"{o34['heat_w_per_m3'] / 1e6:.1f} / {o66['heat_w_per_m3'] / 1e6:.1f} | {o34['efficiency']:.2f} / {o66['efficiency']:.2f} | {o34['stroke_rate_per_lambda']:.0f} / {o66['stroke_rate_per_lambda']:.0f} |")
     md_loss = ["| sequence | margin kcal/mol per monomer | E* MV/m | polar fraction at 55 V/um | S_ac at 1.8 V/um, 34 kHz | tan delta 34 / 66 kHz | heat MW/m^3 34 / 66 kHz | efficiency 34 / 66 kHz | stroke per lever 34 / 66 kHz |",
                "|---|---|---|---|---|---|---|---|---|"] + [out["rows"][n]["loss_row_md"] for n in out["rows"]]
-    out["tables_md"] = {"screen": "\n".join(md), "loss": "\n".join(md_loss)}
+    # the switching curve at the bias as a function of the margin alone, with the matrix's dipole and switch strain:
+    # where on it a matrix of margin m0 with one pin of strength s per N monomers sits is m0 + s / N
+    md_sweep = []
+    if args.sweep_row in rows:
+        r = rows[args.sweep_row]
+        md_sweep = [f"| margin kcal/mol per monomer | E* MV/m | polar fraction at {args.bias:g} V/um | S_ac at {args.ac:g} V/um, 34 kHz | tan delta 34 kHz | heat MW/m^3 34 kHz |", "|---|---|---|---|---|---|"]
+        sweep = []
+        for m in (-0.10, -0.05, 0.0, 0.03, 0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.20, 0.25, 0.30, 0.35):
+            ch = L.replace(base.scaled(dmu_factor=r["mu_TT"] / base.dmu_mon, de_mon=max(m, 0.0), label="sweep"), s_switch=r["axial"])
+            o = ch.operating_point(34e3, args.bias * V_UM, args.ac * V_UM, args.young, 300.0, 0.05)
+            sweep.append({"margin": m, "threshold_MV_m": threshold(m, r["mu_TT"]), "polar_fraction": o["polar_fraction"], "strain_ac": o["strain_ac"],
+                          "tan_delta": o["tan_delta"], "heat_w_per_m3": o["heat_w_per_m3"]})
+            md_sweep.append(f"| {m:+.2f} | {sweep[-1]['threshold_MV_m']:.0f} | {o['polar_fraction']:.2f} | {o['strain_ac'] * 100:.3f}% | {o['tan_delta']:.3f} | {o['heat_w_per_m3'] / 1e6:.1f} |")
+        out["margin_sweep"] = {"row": args.sweep_row, "mu_TT": r["mu_TT"], "axial": r["axial"], "points": sweep,
+                               "note": "a margin at or below zero is the all-trans ground state: the channel's own degenerate limit"}
+    out["tables_md"] = {"screen": "\n".join(md), "loss": "\n".join(md_loss), "sweep": "\n".join(md_sweep)}
     with open(args.out, "w") as fh:
         json.dump(out, fh, indent=1)
     with open(args.out.replace(".json", ".md"), "w") as fh:
-        fh.write("Screen\n\n" + "\n".join(md) + "\n\nLoss model\n\n" + "\n".join(md_loss) + "\n")
+        fh.write("Screen\n\n" + "\n".join(md) + "\n\nLoss model\n\n" + "\n".join(md_loss) + "\n\nThe switching curve against the margin\n\n" + "\n".join(md_sweep) + "\n")
     print(f"written {args.out} and the tables beside it")
 
 

@@ -27,6 +27,30 @@
    "formation_rigid_kcal_per_kink_pair": 5.297951944114729,
    "formation_search_rigid_kcal_per_kink_pair": 4.4664835220147125
   },
+  "vdf13-trfe6-cfe1-20": {
+   "letters": "VVRVVRVVRVCVVRVVRVVR",
+   "validated_chemistry": false,
+   "kink_offset_bonds": 0,
+   "formation_kcal_per_kink_pair": 4.585929553097827,
+   "formation_rigid_kcal_per_kink_pair": 4.703940050667853,
+   "formation_search_rigid_kcal_per_kink_pair": 0.8801556175509404
+  },
+  "vdf9-trfe4-an1-14": {
+   "letters": "VVRVVRVAVVRVVR",
+   "validated_chemistry": false,
+   "kink_offset_bonds": 0,
+   "formation_kcal_per_kink_pair": 3.05933210541626,
+   "formation_rigid_kcal_per_kink_pair": 3.2542191181149605,
+   "formation_search_rigid_kcal_per_kink_pair": 1.8177847644354017
+  },
+  "vdf9-trfe4-cdfe1-14": {
+   "letters": "VVRVVRVDVVRVVR",
+   "validated_chemistry": false,
+   "kink_offset_bonds": 0,
+   "formation_kcal_per_kink_pair": 2.6457345789349205,
+   "formation_rigid_kcal_per_kink_pair": 2.7895329552219295,
+   "formation_search_rigid_kcal_per_kink_pair": 1.4639804836059511
+  },
   "vdf9-trfe4-cfe1-14": {
    "letters": "VVRVVRVCVVRVVR",
    "validated_chemistry": false,
@@ -34,6 +58,14 @@
    "formation_kcal_per_kink_pair": 3.7895394363366535,
    "formation_rigid_kcal_per_kink_pair": 3.9520382488709487,
    "formation_search_rigid_kcal_per_kink_pair": 0.9356526592655143
+  },
+  "vdf9-trfe4-ctfe1-14": {
+   "letters": "VVRVVRVKVVRVVR",
+   "validated_chemistry": false,
+   "kink_offset_bonds": 0,
+   "formation_kcal_per_kink_pair": 2.0406064587049144,
+   "formation_rigid_kcal_per_kink_pair": 2.1634558443812892,
+   "formation_search_rigid_kcal_per_kink_pair": -0.8738674298766114
   }
  }
 }
