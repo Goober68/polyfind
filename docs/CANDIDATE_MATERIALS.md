@@ -816,12 +816,13 @@ the 64/29/7 cell and the matrix, the cheapest move is the one to N, two monomers
 other hand. The frequency is the film's 364 kHz times `exp(-(barrier - 11.40) / kT)`, 11.40 being
 the same move in the 64/29/7 cell (`pin_design.py`, table "moves"):
 
-| cell | the cheapest move, barrier from the sheet | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
+| cell | the cheapest move, barrier from the sheet (the sheet's energy at the start site) | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
 |---|---|---|---|---|---|---|---|---|
-| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** |
-| the 71/29 matrix | to N, 11.89 | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** |
-| AN, one per fourteen | to N, 10.56 | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** |
-| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.117% | 0.006 | **0.160%** |
+| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 (from the sheet at 3.95) | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** |
+| the 71/29 matrix | to N, 11.89 (from the sheet at 7.09) | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** |
+| AN, one per fourteen | to N, 10.56 (from the sheet at 3.25) | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** |
+| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 (from the sheet at 1.00) | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.117% | 0.006 | **0.160%** |
+| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | to N, 10.22 (from the sheet at 1.86; from the site at 2.60: to N, 10.66) | 10.35 | 7.22 | 2.6 MHz | 6.9 MHz | 0.130% | 0.011 | **0.142%** |
 
 * **The two rate models agree on the nitrile cell.** 1.5 MHz by the move and 1.8 MHz by the
   sites' sum, tan delta 0.004 and 0.003 at 34 kHz, 0.091% and 0.097% at the heat budget. Its
@@ -865,12 +866,12 @@ CPU: the nitrile with a reversed VDF unit seven monomers from it (`IVRVVRVAVVRVV
 three TrFE in fourteen instead of four (`IVRVVRVAVVVVVR`, 21 mol% TrFE), and the 64/29/7 cell
 with a reversed unit (`IVRVVRVCVVRVVR`). All four helix conformers were polished for each, so
 these three margins are the model's numbers and not lower bounds; the kink sites are scanned for
-both hands, and the rate is the sum over sites against the 64/29/7 cell's (no single-chain move
-is computed for these cells):
+both hands, and the rate is the sum over sites against the 64/29/7 cell's; for the cell on 21
+mol% TrFE one chain's move is computed as well (below):
 
 | cell | margin: computed, if the pins added | all-trans dipole per monomer, e.A | sum over kink sites against the 64/29/7 cell's | relaxation frequency by the sum | tan delta, 34 / 66 kHz | AC strain at 1.8 V/um, 34 kHz | AC strain at the heat budget, 34 / 66 kHz |
 |---|---|---|---|---|---|---|---|
-| AN with reversed VDF, on 21 mol% TrFE | **+0.037** | 0.449 | 18.9 | **6.9 MHz** | **0.004** / 0.008 | 0.130% | **0.168%** / 0.108% |
+| AN with reversed VDF, on 21 mol% TrFE | **+0.037** | 0.449 | 18.9 | **6.9 MHz** (2.6 by one chain's move) | **0.004** / 0.008 (0.011 / 0.022) | 0.130% | **0.168%** / 0.108% (0.142% / 0.085%) |
 | AN with reversed VDF, on 29 mol% TrFE | -0.148, -0.149 | 0.434 | 13.2 | 4.8 MHz | the all-trans side of zero | | |
 | CFE with reversed VDF, on 29 mol% TrFE | -0.044, -0.028 | 0.464 | 2.8 | 1.0 MHz | the all-trans side of zero | | |
 | AN alone, on 29 mol% TrFE | +0.197 | 0.524 | 4.8 | 1.8 MHz | 0.003 / 0.007 | 0.018% | 0.097% / 0.053% |
@@ -910,11 +911,24 @@ is computed for these cells):
   defect-free 64/29/7 cell. If the measured film is that cell with PVDF's ordinary defects, the
   anchor cell's own sum is up to 2.8 times larger and every frequency quoted against it falls by
   up to that factor (6.9 MHz becomes 2.4); the ratios between candidates do not change.
-* **What qualifies the new cell.** Its rate is on the sheets' model alone. For the nitrile cell
-  the two rate models agreed and for the CTFE cell with a reversed unit they were a decade
-  apart; this cell's sheets lie between those two, so one chain's move, when computed, is
-  expected to give less than 6.9 MHz. The nitrile's parameters and the junctions at the
-  reversed unit have no crystal anchor, and the cell is one regular placement of the two units.
+* **By one chain's move the new cell is at 2.6 MHz, and it keeps second place (2026-11-15; PI:
+  "Go both").** Sixteen chains, bands in the per-chain metric, from two start sites (one pod, 25
+  minutes: `docs/predictions/gpu_jobs_a100_20261115_t/`; the states are in 8.3). From the sheet
+  at its cheapest site for this hand, a VDF-VDF pair in the five-VDF run (+1.86), the move to N
+  costs 10.22 and the one-monomer step 10.35; from the site on the reversed unit (+2.60), the
+  move to N costs 10.66. Against the same move in the 64/29/7 cell (11.40) that is 7.2 times
+  the rate: **2.6 MHz, tan delta 0.011 at 34 kHz and 0.142% at the heat budget**, where the sum
+  over sites gave 6.9 MHz, 0.004 and 0.168%. On either model the cell is ahead of the measured
+  film's channel on all three axes (seven to nineteen times its frequency, a fifth to a
+  fourteenth of its tan delta, 2.1 to 2.5 times its strain) and ahead of the nitrile alone; the
+  CTFE cell with a reversed unit stays first (5.1 MHz and 0.160% by the move).
+* **The two rate models now differ by 2.6 times on this cell,** between the nitrile alone (1.2)
+  and the CTFE cell with a reversed unit (10), in the order of how cheap their sheets are. The
+  lower figure is again the one to carry.
+* **What still qualifies the new cell.** The nitrile's parameters and the junctions at the
+  reversed unit have no crystal anchor; the cell is one regular placement of the two units; the
+  frequency is anchored on the defect-free 64/29/7 cell (above); and the place within the
+  window is the bench's to find.
 
 **Where this leaves the ranking.** On the three axes the order of the cells in hand is CTFE with
 reversed VDF, the nitrile with reversed VDF on 21 mol% TrFE (2026-11-15), the nitrile with TFE
@@ -922,9 +936,10 @@ and the nitrile alone, PVDF with reversed units, the
 measured film's channel, and far behind them the model's own CFE cell and every sparse pin. (The
 nitrile with ethylene, ranked here until 2026-11-15, lies on the all-trans side of zero and is
 left out.) The
-nitrile cell and the CTFE cell with a reversed unit keep their places when the rate is taken from
-one chain's move instead of the sheets' population (2026-11-15); the other cells have the sheets'
-model only. All
+nitrile cell, the nitrile cell with a reversed unit on 21 mol% TrFE and the CTFE cell with a
+reversed unit keep their places when the rate is taken from one chain's move instead of the
+sheets' population (2026-11-15: 1.5, 2.6 and 5.1 MHz; 0.091%, 0.142% and 0.160% at the heat
+budget); the other cells have the sheets' model only. All
 of the leaders are dense: two units in fourteen monomers. What is solid is the direction: a
 loosening pin made affordable by a trans-favouring unit, with the pair placed within the window
 by computing the cell. What is not: every number that rests on chlorine or nitrile parameters or
@@ -1665,6 +1680,30 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     from it to B ran straight from the sheet across a cis bond and did not converge. B exists
     at +11.03 and no path to it was found; it would take a path through a state like I, which
     this lattice does not offer at this site. The rates these barriers give are in 5.6.
+
+    *The nitrile cell with a reversed unit on 21 mol% TrFE (`IVRVVRVAVVVVVR`), from two start
+    sites (2026-11-15, PI: "Go both"; `gpu_jobs_a100_20261115_t/`).* The job scripts now take
+    the sheet's site (`ROW@OFFSET`), so a move can start where the sheet is cheapest:
+
+    | sixteen chains, kcal/mol against the sheet at the start site | from the VDF run (bond offset 18) | from the reversed unit (offset 0) |
+    |---|---|---|
+    | the sheet at this site, against all-trans | 1.86 | 2.60 |
+    | the wide kink I | +8.46 | not a state: it relaxes to the sheet |
+    | one monomer on, B | +6.79 | +12.85 |
+    | the step to B, and back | 10.35 / 3.56 (saddles settled: 9.55 and 10.35) | not run |
+    | N | +7.03 | +7.98 |
+    | the sheet to N, and back | **10.22** / 3.19 | 10.66 / 2.68 |
+    | L | +6.12 | +4.48 |
+    | N on to L, above N | no path found (the band did not converge; two minima on the way) | 2.13 |
+    | to L for each return from N to the sheet | - | 2.5 |
+
+    Inside the VDF run the kink pair behaves as in PVDF: the completed step lies low (+6.79;
+    PVDF: +5.91) and the one-monomer step costs about what the move to N does (10.35 against
+    10.22), so there a chain has two moves at nearly the same price. At the reversed unit it
+    behaves as in the other pinned lattices: N, then L, 2.5 times for each return. **The wide
+    kink is not a state at the reversed unit's site in this cell either**, as in the CTFE cell:
+    that is the site's property, not the chlorine's. The cheapest move, 10.22, is 1.18 under the
+    64/29/7 cell's (5.6).
   - *What a bias does to these barriers: almost nothing. The field moves the balance, not the
     rate (2026-11-14, PI: "Both").* The mixed cell now carries an applied field as the packer
     does (`polyfind.mixedcell`, "An applied field"): the energy is the electric enthalpy at the
@@ -1847,7 +1886,8 @@ the other two rows carry no strain on either. The step barriers are on the saddl
   their kink sites give 1.8 and 52 MHz (`candidate_frequency_map_belt4_steps_4x2_cheapest.md`;
   `pin_design_belt4.md`, table "moves"). The models agree on the nitrile cell and are a decade
   apart on the cell whose sheets cost about kT; both cells stay ahead of the measured film's
-  channel on strain, tan delta and frequency under either (5.6).
+  channel on strain, tan delta and frequency under either (5.6). A third since: the nitrile cell
+  with a reversed unit on 21 mol% TrFE, 10.22 from its cheapest site (2.6 MHz; 6.9 by the sum).
 * **The two rate models bracket the matrix between slow and following.** If the population of
   kink sheets limits the channel (the earlier section's assumption, on corrected energies) the 71/29
   matrix sits at 2 kHz on the energy of the one site the sheet was first put on and at 33 kHz on

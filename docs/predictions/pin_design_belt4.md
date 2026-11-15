@@ -108,12 +108,13 @@ The rate by every scanned kink site
 
 The rate by one chain's cheapest move in sixteen chains
 
-| cell | the cheapest move, barrier from the sheet | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
+| cell | the cheapest move, barrier from the sheet (the sheet's energy at the start site) | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
 |---|---|---|---|---|---|---|---|---|
-| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** |
-| the 71/29 matrix | to N, 11.89 | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** |
-| AN, one per fourteen | to N, 10.56 | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** |
-| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.117% | 0.006 | **0.160%** |
+| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 (from the sheet at 3.95) | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** |
+| the 71/29 matrix | to N, 11.89 (from the sheet at 7.09) | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** |
+| AN, one per fourteen | to N, 10.56 (from the sheet at 3.25) | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** |
+| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 (from the sheet at 1.00) | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.117% | 0.006 | **0.160%** |
+| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | to N, 10.22 (from the sheet at 1.86; from the site at 2.60: to N, 10.66) | 10.35 | 7.22 | 2.6 MHz | 6.9 MHz | 0.130% | 0.011 | **0.142%** |
 
 Uniform spacing on the vdf10-trfe4-14 matrix (margin +0.056)
 

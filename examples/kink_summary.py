@@ -308,7 +308,7 @@ def main():
     # --- states off the named path, and the bands through them ---------------------------------------
     states = json.load(open(args.states)) if Path(args.states).exists() else {}
     if states.get("settled"):
-        short = lambda key: f"{key.split(' ')[0].split('@')[0]}, {key.split(' ')[1]}"  # noqa: E731
+        short = lambda key: f"{key.split(' ')[0][:-2] if key.split(' ')[0].endswith('@0') else key.split(' ')[0]}, {key.split(' ')[1]}"  # noqa: E731  (the start site where it is not offset 0)
         md += ["", "**States of the moving chain that are neither I nor B** (found where a saddle search or a band left the named path; relaxed on the closure surface; "
                "kcal/mol against the sheet, in which the chain's gauche bonds are 0 and 2; `kink_states_belt4.json`)", "",
                "| sequence, cell | state | gauche bonds of the moving chain | its first seven torsions, deg | above the sheet | I | B |", "|---|---|---|---|---|---|---|"]
@@ -341,8 +341,9 @@ def main():
             n, step = e["to_N"], e.get("barrier_forward_polished", e.get("barrier_forward"))
             back = e.get("barrier_back_polished", e.get("barrier_back"))
             low = n["barrier_forward"] if step is None else min(step, n["barrier_forward"])
-            to_b = "no path found" if step is None else f"{step:.2f} / {back:.2f}" + ("" if "barrier_forward_polished" in e else " (the band's top)")
-            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {e['B']['energy']:+.2f} | {to_b} | {n['N']:+.2f} | "
+            to_b = (("not run (I is not a state)" if "step_to_B_not_run" in e else "no path found") if step is None
+                    else f"{step:.2f} / {back:.2f}" + ("" if "barrier_forward_polished" in e else " (the band's top)"))
+            md.append(f"| {e['row']}{'' if not e['kink_offset_bonds'] else '@' + str(e['kink_offset_bonds'])}, {e['supercell'][0]}x{e['supercell'][1]} | {e['B']['energy']:+.2f} | {to_b} | {n['N']:+.2f} | "
                       f"{n['barrier_forward']:.2f} / {n['barrier_back']:.2f} | {'to N' if step is None or n['barrier_forward'] < step else 'the step to B'}, {low:.2f} | {3e12 * np.exp(-low / KT):.2g} /s |")
 
     then = [e for e in to_n if "then" in e["to_N"]]
@@ -367,7 +368,7 @@ def main():
         for e in sorted(to_l, key=lambda e: e["row"]):
             t = e["to_L"]
             direct = "not run" if t["straight_from_the_sheet"] is None else f"{t['straight_from_the_sheet']['highest']:.2f}"
-            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {t['L']:+.2f} | {direct} | {t['from_N']['highest']:.2f}, {t['barrier_from_N']:.2f} | "
+            md.append(f"| {e['row']}{'' if not e['kink_offset_bonds'] else '@' + str(e['kink_offset_bonds'])}, {e['supercell'][0]}x{e['supercell'][1]} | {t['L']:+.2f} | {direct} | {t['from_N']['highest']:.2f}, {t['barrier_from_N']:.2f} | "
                       f"{t['N_back_to_the_sheet']:.2f} | {t['to_L_for_each_return_from_N']:.2g} | {t['the_way']}, {t['barrier_forward']:.2f} / {t['barrier_back']:.2f} |")
 
     # --- two chains ahead together --------------------------------------------------------------------

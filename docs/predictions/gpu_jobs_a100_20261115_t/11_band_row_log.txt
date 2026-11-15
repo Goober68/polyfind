@@ -1,0 +1,78 @@
+/srv/bench/<token>/jobs/shared/steps.json: 29 kinked crystals, 2 rows
+== vdf9-trfe3-an1-rvdf1-14@18 4x2 mover 0 ahead host flexible: end states and bands
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe3-an1-rvdf1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+vdf9-trfe3-an1-rvdf1-14@18 4x2 mover 0 ahead host flexible: 16 chains of 14 monomers, 2288 sites; kink pair in the search's cells +0.220 kcal/mol (kinked cell's closure residual 0.257 deg), polished +1.856
+   kinked crystal: +1.856 kcal/mol per kink pair against all-trans (from the stored run: the polished two-chain cell, tiled)
+      chain 0: T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (7 s)
+   I: +8.458 kcal/mol above the kinked crystal (from the stored run); T T T T T T T T T T T T T T T T T T G+ T T T G- T T T T T
+   B: +6.790 kcal/mol above the kinked crystal (from the stored run); T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T
+   A-I: start: straight between the end points
+      A-I it    1: force 170.6573, top +41.1965, climbing -1, energies [0.0, 1.705, 5.309, 11.782, 28.39, 41.196, 22.769, 10.796, 8.458]  (2 s)
+      A-I it   10: force  28.2041, top +13.7000, climbing -1, energies [0.0, 1.601, 4.949, 10.261, 13.7, 12.086, 10.808, 9.55, 8.458]  (11 s)
+      A-I it   20: force   9.0057, top +11.8857, climbing -1, energies [0.0, 1.281, 4.082, 7.44, 10.076, 11.886, 10.793, 9.08, 8.458]  (22 s)
+      A-I it   30: force   6.7341, top +10.1609, climbing -1, energies [0.0, 1.095, 3.669, 6.671, 9.085, 10.161, 9.839, 8.93, 8.458]  (33 s)
+      A-I it   40: force   4.3919, top  +9.8163, climbing -1, energies [0.0, 0.765, 2.825, 5.743, 8.451, 9.816, 9.626, 8.834, 8.458]  (44 s)
+      A-I it   50: force   1.4215, top  +9.6296, climbing -1, energies [0.0, 0.703, 2.679, 5.582, 8.33, 9.63, 9.494, 8.795, 8.458]  (55 s)
+      A-I it   60: force   0.9323, top  +9.5571, climbing 5, energies [0.0, 0.709, 2.711, 5.828, 8.447, 9.557, 9.346, 8.729, 8.458]  (66 s)
+      A-I it   70: force   0.6733, top  +9.5537, climbing 5, energies [0.0, 0.664, 2.697, 5.855, 8.491, 9.554, 9.307, 8.705, 8.458]  (76 s)
+      A-I it   80: force   0.4152, top  +9.5648, climbing 5, energies [0.0, 0.634, 2.896, 6.284, 8.809, 9.565, 9.182, 8.649, 8.458]  (87 s)
+      A-I it   90: force   0.2296, top  +9.5620, climbing 5, energies [0.0, 0.647, 2.919, 6.297, 8.801, 9.562, 9.186, 8.651, 8.458]  (97 s)
+      A-I it  100: force   0.1039, top  +9.5609, climbing 5, energies [0.0, 0.636, 2.894, 6.273, 8.794, 9.561, 9.186, 8.651, 8.458]  (108 s)
+   A-I: saddle +9.561 at image 5; force 0.0986; 101 it, 109 s
+   I-B: start: straight between the end points
+      I-B it    1: force 102.9942, top +29.0570, climbing -1, energies [8.458, 10.347, 17.479, 27.7, 29.057, 21.513, 14.11, 9.03, 6.79]  (2 s)
+      I-B it   10: force  18.5149, top +19.2764, climbing -1, energies [8.458, 9.943, 13.621, 17.516, 19.276, 17.164, 12.812, 8.698, 6.79]  (11 s)
+      I-B it   20: force   6.0162, top +13.9572, climbing -1, energies [8.458, 9.198, 11.35, 13.957, 13.952, 12.066, 9.669, 7.644, 6.79]  (22 s)
+      I-B it   30: force   5.5786, top +12.8285, climbing -1, energies [8.458, 9.004, 10.67, 12.828, 12.649, 10.784, 8.694, 7.263, 6.79]  (33 s)
+      I-B it   40: force   3.5342, top +11.9578, climbing -1, energies [8.458, 8.871, 10.291, 11.958, 11.39, 9.763, 8.069, 7.111, 6.79]  (44 s)
+      I-B it   50: force   2.4863, top +10.8777, climbing -1, energies [8.458, 8.843, 10.211, 10.878, 10.13, 8.85, 7.775, 7.068, 6.79]  (55 s)
+      I-B it   60: force   1.5822, top +10.4792, climbing 3, energies [8.458, 8.851, 10.329, 10.479, 9.771, 8.67, 7.722, 7.063, 6.79]  (65 s)
+      I-B it   70: force   1.0751, top +10.4189, climbing 3, energies [8.458, 8.71, 9.841, 10.419, 9.755, 8.59, 7.676, 7.046, 6.79]  (75 s)
+      I-B it   80: force   0.4396, top +10.3734, climbing 3, energies [8.458, 8.661, 9.587, 10.373, 9.871, 8.953, 7.874, 7.122, 6.79]  (86 s)
+      I-B it   90: force   0.2549, top +10.3584, climbing 3, energies [8.458, 8.647, 9.563, 10.358, 9.82, 8.77, 7.865, 7.124, 6.79]  (96 s)
+      I-B it  100: force   0.1657, top +10.3545, climbing 3, energies [8.458, 8.651, 9.59, 10.355, 9.793, 8.708, 7.882, 7.133, 6.79]  (106 s)
+   I-B: saddle +10.354 at image 3; force 0.0921; 109 it, 115 s
+   one-monomer step: barrier +10.354 ahead, +3.563 back; B lies +6.790 above A
+written /srv/bench/<token>/jobs/shared/steps.json
+== vdf9-trfe3-an1-rvdf1-14@18 4x2 mover 0 ahead host flexible: the saddles, settled from the tops of the bands
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe3-an1-rvdf1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+vdf9-trfe3-an1-rvdf1-14@18 4x2 mover 0 ahead host flexible: 16 chains of 14 monomers, 2288 sites; kink pair in the search's cells +0.220 kcal/mol (kinked cell's closure residual 0.257 deg), polished +1.856
+   kinked crystal: +1.856 kcal/mol per kink pair against all-trans (from the stored run: the polished two-chain cell, tiled)
+      chain 0: T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (7 s)
+   I: +8.458 kcal/mol above the kinked crystal (from the stored run); T T T T T T T T T T T T T T T T T T G+ T T T G- T T T T T
+   B: +6.790 kcal/mol above the kinked crystal (from the stored run); T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T
+      A-I polish surface     1:    +9.5606, lowest so far    +9.5606  (1 evaluations, 0 s)
+      A-I polish surface    10:    +9.5544, lowest so far    +9.5544  (10 evaluations, 1 s)
+      A-I polish surface    20:    +9.5536, lowest so far    +9.5536  (20 evaluations, 3 s)
+      A-I polish surface    30:    +9.5536, lowest so far    +9.5536  (30 evaluations, 4 s)
+      A-I polish surface    40:    +9.5536, lowest so far    +9.5536  (40 evaluations, 5 s)
+      A-I polish, hyperplane 1: s +0.0000, energy -1554.24723, dE/ds -0.0096, across 2.8e-04, 45 evaluations; Optimization terminated successfully: th  (6 s)
+   A-I: polished saddle +9.5536 (the band's top +9.5606 at force 0.099); force along the tangent -0.0096, across 2.8e-04, curvature along not measured; 45 evaluations, 6 s
+      I-B polish surface     1:   +10.3535, lowest so far   +10.3535  (1 evaluations, 0 s)
+      I-B polish surface    10:   +10.3511, lowest so far   +10.3511  (10 evaluations, 1 s)
+      I-B polish surface    20:   +10.3501, lowest so far   +10.3501  (20 evaluations, 3 s)
+      I-B polish surface    30:   +10.3500, lowest so far   +10.3500  (30 evaluations, 4 s)
+      I-B polish surface    40:   +10.3500, lowest so far   +10.3500  (40 evaluations, 5 s)
+      I-B polish surface    50:   +10.3500, lowest so far   +10.3500  (50 evaluations, 6 s)
+      I-B polish surface    60:   +10.3500, lowest so far   +10.3500  (60 evaluations, 7 s)
+      I-B polish surface    70:   +10.3500, lowest so far   +10.3500  (70 evaluations, 8 s)
+      I-B polish, hyperplane 1: s +0.0000, energy -1553.45078, dE/ds +0.0122, across 2.9e-04, 70 evaluations; Optimization terminated successfully: th  (9 s)
+      I-B polish surface     1:   +10.3506, lowest so far   +10.3500  (71 evaluations, 9 s)
+      I-B polish surface    10:   +10.3504, lowest so far   +10.3500  (80 evaluations, 10 s)
+      I-B polish surface    20:   +10.3504, lowest so far   +10.3500  (90 evaluations, 11 s)
+      I-B polish surface    30:   +10.3504, lowest so far   +10.3500  (100 evaluations, 12 s)
+      I-B polish, hyperplane 2: s +0.0500, energy -1553.45044, dE/ds +0.0014, across 1.5e-04, 36 evaluations; Optimization terminated successfully: th  (13 s)
+   I-B: polished saddle +10.3504 (the band's top +10.3535 at force 0.092); force along the tangent +0.0014, across 1.5e-04, curvature along -0.216; 106 evaluations, 13 s
+   on the settled saddles: barrier +10.350 ahead, +3.560 back
+   one-monomer step: barrier +10.354 ahead, +3.563 back; B lies +6.790 above A
+written /srv/bench/<token>/jobs/shared/steps.json
+   vdf9-trfe3-an1-rvdf1-14@18 4x2 mover 0 ahead host flexible: 16 chains
+   I: +8.4581; 125 evaluations, 17 s; gradient 2.4e-04; converged True; T T T T T T T T T T T T T T T T T T G+ T T T G- T T T T T
+   B: +6.7904; 125 evaluations, 17 s; gradient 2.1e-04; converged True; T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T
+   A-I: band top +9.5606 at force 0.099 after 101 iterations (109 s, converged True); settled saddle +9.5536, along -0.0096, across 2.8e-04, 45 evaluations, converged True
+   I-B: band top +10.3535 at force 0.092 after 109 iterations (115 s, converged True); settled saddle +10.3504, along +0.0014, across 1.5e-04, 106 evaluations, converged True
+   barrier on the settled saddles: 10.3504 ahead, 3.5600 back

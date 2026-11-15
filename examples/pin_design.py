@@ -264,10 +264,7 @@ def main():
         except FileNotFoundError:
             steps = {}
 
-        def cheapest_move(row):
-            e = steps.get(f"{row}@0 4x2 mover 0 ahead host flexible")
-            if e is None:
-                return None
+        def one_start(e):
             step = e.get("barrier_forward_polished", e.get("barrier_forward"))
             moves = {} if step is None else {"the step to B": step}
             if "to_N" in e:
@@ -276,10 +273,21 @@ def main():
                 return None
             name = min(moves, key=moves.get)
             return {"move": name, "barrier": moves[name], "step_to_B": step, "to_N": moves.get("to N"), "start_sheet": e["kinked_crystal"]["formation_per_kink_pair"],
+                    "start_offset_bonds": e["kink_offset_bonds"],
                     "N_back_to_the_sheet": e["to_N"]["barrier_back"] if "to_N" in e else None,
                     "L": e["to_L"]["L"] if "to_L" in e else None, "N_to_L": e["to_L"]["barrier_from_N"] if "to_L" in e else None}
 
-        md_m = ["| cell | the cheapest move, barrier from the sheet | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at "
+        def cheapest_move(row):
+            """One chain's cheapest move from the sheet, sixteen chains.  Where a row has more than one start site stored
+            (ROW@OFFSET), the move from the cheapest sheet is the row's: a sheet sits at its cheap sites.  The others are kept beside it."""
+            starts = [m for m in (one_start(e) for k, e in steps.items() if e.get("row") == row and k.endswith(" 4x2 mover 0 ahead host flexible")
+                                  and not e.get("kink_mirrored")) if m is not None]
+            if not starts:
+                return None
+            starts.sort(key=lambda m: m["start_sheet"])
+            return dict(starts[0], other_starts=[{k: m[k] for k in ("start_offset_bonds", "start_sheet", "move", "barrier", "step_to_B", "to_N")} for m in starts[1:]])
+
+        md_m = ["| cell | the cheapest move, barrier from the sheet (the sheet's energy at the start site) | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at "
                 f"{args.ac:g} V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |", "|---|---|---|---|---|---|---|---|---|"]
         out["moves"] = {"note": "kcal/mol against the sheet at the start site (kink offset 0), sixteen chains, neighbours flexible, cell fixed; the frequency is the measured film's "
                                 "364 kHz times exp(-(barrier - the 64/29/7 cell's) / kT)", "rows": {}}
@@ -298,7 +306,8 @@ def main():
                 def hz(fr):
                     return "-" if fr is None else (f"{fr / 1e6:.1f} MHz" if fr >= 1e6 else (f"{fr / 1e3:.0f} kHz" if fr >= 1e3 else f"{fr:.0f} Hz"))
                 to_b = "no path found" if mv["step_to_B"] is None else f"{mv['step_to_B']:.2f}"
-                md_m.append(f"| {label} | {mv['move']}, {mv['barrier']:.2f} | {to_b} | {ratio:.3g} | {hz(pt['f_relax_hz'])} | {hz(by_sum)} | {pt['strain_ac'][0] * 100:.3f}% | {pt['tan_delta'][0]:.3f} | "
+                others = "".join(f"; from the site at {o['start_sheet']:.2f}: {o['move']}, {o['barrier']:.2f}" for o in mv["other_starts"])
+                md_m.append(f"| {label} | {mv['move']}, {mv['barrier']:.2f} (from the sheet at {mv['start_sheet']:.2f}{others}) | {to_b} | {ratio:.3g} | {hz(pt['f_relax_hz'])} | {hz(by_sum)} | {pt['strain_ac'][0] * 100:.3f}% | {pt['tan_delta'][0]:.3f} | "
                             f"**{hb['strain_ac'][0] * 100:.3f}%** |")
         for name, u in out["units"].items():
             for n in (14, 20, 28, 40):

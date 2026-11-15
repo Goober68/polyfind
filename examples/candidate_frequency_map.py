@@ -89,7 +89,11 @@ def main():
                     or e.get("direction") != "ahead" or str(e.get("mover")) != args.step_mover):
                 continue
             name = e["row"]
-            if name not in rows:
+            if name not in rows or e.get("kink_mirrored"):
+                continue
+            # a row stored from more than one start site (ROW@OFFSET): the move from the cheapest sheet is the row's
+            sheet = e["kinked_crystal"]["formation_per_kink_pair"]
+            if name in stepped and stepped[name]["start_sheet"] <= sheet:
                 continue
             scan = sites.get(f"{name}@{e['kink_offset_bonds']}", {}).get("sites", {})
             # the climb along the matrix: the highest sheet energy on the way between two of its low sites, pins left out (a sheet does not cross them)
@@ -100,6 +104,7 @@ def main():
             if args.cheapest and "to_N" in e and (barrier is None or e["to_N"]["barrier_forward"] < barrier):
                 barrier, move = e["to_N"]["barrier_forward"], "to N" if barrier is not None else "to N (no path to B found)"
             stepped[name] = dict(rows[name], E_form_sheet=rows[name]["E_form"], E_step=barrier, climb=climb, E_form=barrier, step_saddles="polished" if "barrier_forward_polished" in e else "band tops",
+                                 start_sheet=sheet, start_offset_bonds=e["kink_offset_bonds"],
                                  **({"move": move} if args.cheapest else {}))
         rows = stepped
     if args.ref not in rows:

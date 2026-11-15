@@ -21,6 +21,41 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**One chain's move in the nitrile cell with a reversed unit on 21 mol% TrFE; the note to Dipole, 2026-11-15 (PI: "Go
+both").** Text: `docs/CANDIDATE_MATERIALS.md` 5.6 (the block "The reversed unit beside the nitrile, and beside CFE": the
+bullet "By one chain's move..."; the moves table) and 8.3 (the cell from two start sites); `docs/E1_E2_PREDICTIONS.md` (E7:
+"What E7 a also decides"); job logs and README in `docs/predictions/gpu_jobs_a100_20261115_t/`. STATE: DONE; THE POD IS
+DELETED AND CONFIRMED BY A READ (GET 404, 0 pods; 25 minutes, about $0.91; about $14.05 of the $46 used in all). The
+fallback check-in is deleted.
+(1) THE MOVES, sixteen chains, per-chain metric (queue `examples/gpu_jobs/queue_20261115_t.txt`; rows
+`vdf9-trfe3-an1-rvdf1-14@18 4x2 ...` and `@0 4x2 ...` of `kink_migration_belt4.json`; states in `kink_states_belt4.json`),
+kcal/mol against the sheet at the start site:
+    from the VDF run (offset 18, sheet +1.86): I +8.46, B +6.79, the step 10.35 / 3.56 back (settled), N +7.03,
+        sheet to N 10.22 / 3.19 back, L +6.12, NO PATH FROM N TO L (band not converged)
+    from the reversed unit (offset 0, sheet +2.60): I NOT A STATE, B +12.85, N +7.98, sheet to N 10.66 / 2.68 back,
+        L +4.48, N to L 2.13 above N (2.5 to L per return)
+(2) THREE AXES ON BOTH RATE MODELS for this cell (`pin_design.py`; the film's channel: 364 kHz, 0.060, 0.066%):
+    by one chain's move (10.22 against the anchor's 11.40: 7.2x): 2.6 MHz, tan delta 0.011 at 34 kHz, 0.142% at the heat budget
+    by the sum over kink sites (18.9x):                              6.9 MHz, 0.004, 0.168%
+    The models differ by 2.6x here (the nitrile alone 1.2x, the CTFE cell with a reversed unit 10x). SECOND PLACE STANDS:
+    by the move the order is CTFE with reversed VDF 5.1 MHz / 0.160%, this cell 2.6 MHz / 0.142%, the nitrile 1.5 MHz / 0.091%.
+(3) THE NOTE TO DIPOLE: `sarco/materials/ask-polyfind-dipole-film-regio-defects-v1.md` (sarco main `b9a1aee7`): E7 a now
+also decides reading 4 of the film; asked, with no computation: the regio-defect content of the bench's 63/30/7 film.
+Dipole is still on E2's fourth geometry (SCF 10 on 2026-11-14); nothing of E5, E7 has started.
+CODE: `examples/gpu_jobs/band_row.sh`, `settle.sh`, `between.sh` take `ROW@OFFSET`; `band_row.sh ... ends` runs the end
+states only; `pin_design.py` and `candidate_frequency_map.py --cheapest` take, for a row stored from several start sites,
+the move from the cheapest sheet (the others are listed beside it); `kink_summary.py` labels a row's start site.
+Test: `tests/test_kink_step.py::test_the_nitrile_cell_with_a_reversed_unit_by_one_chains_move`.
+TRAPS: (1) A start site needs its polished two-chain kinked cell first: `kink_migration.py --row ROW --kink-at K --nx 1
+--ny 1 --mover all --reference-only` (CPU, about ten minutes), committed before the pod starts. (2) Queue `band_row.sh
+... ends` first for a new lattice or site and read I: where I is the sheet (+0.000) do not queue the step's bands. The
+wide kink is not a state at a reversed unit's site (two cells now). (3) A sixteen-chain dry run on CPU takes minutes per
+state: check a script change by its first lines and stop it.
+NEXT, proposed to the PI: (a) the film's cell with the measured defect content, once the number comes, and the anchor
+re-read on it; (b) the nitrile pair's TrFE content between 21 and 29 mol% in a larger repeat (a twenty-eight-monomer
+cell) to place the margin at the window's middle; (c) the remaining helix conformers of the rows polished earlier;
+(d) the CTFE cell's move from its cheapest site (the scripts can now start there).
+
 **The reversed unit beside the nitrile and beside CFE, 2026-11-15 (PI: "Go").** Text: `docs/CANDIDATE_MATERIALS.md` 5.6
 ("The reversed unit beside the nitrile, and beside CFE"), 5.3 (reading 4 of why the film switches), 8.4 (profiles).
 STATE: DONE, CPU ONLY (spend unchanged: about $13.15 of the $46).

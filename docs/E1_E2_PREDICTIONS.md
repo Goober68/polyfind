@@ -376,6 +376,19 @@ stiffness flag of the previous section is read against the QE cell from here on.
   `sarco/materials/electrostriction/requests/unit_screen_cells_e7_v1/`;
   `examples/crosscheck_e1_e2.py --e2 docs/predictions/e7_polyfind_belt4.json --e2-dipole <file>`
   reads the answers (`--e2-rigid-pendants` for single points on the rigid-pendant files).
+- **What E7 a also decides, and one number asked of the bench (2026-11-15; PI: "Go both"; no new
+  DFT cell).** A reversed VDF unit in the cell at the film's composition takes its margin from
+  +0.317 to -0.044 (`vdf8-trfe4-cfe1-rvdf1-14`, `IVRVVRVCVVRVVR`; rigid pendants -0.199; all four
+  helix conformers polished): 0.050 per mol% of reversed units (0.048 beside AN and in the 71/29
+  matrix, 0.031 beside CTFE, 0.041 in PVDF). Ordinary PVDF carries 3.5 to 6.0 mol% of them, which
+  read linearly puts the film's cell between +0.14 and +0.01: on the switching window, where the
+  head-to-tail cell is not (`docs/CANDIDATE_MATERIALS.md` 5.3, reading 4). The pull that E7 a
+  measures (4.1 per reversed unit in polyfind) scales this, so part a is now the test of that
+  reading too. Registered beside it, from the literature: PVDF goes from alpha to beta above
+  about 11.4 mol% of head-to-head defects, and polyfind's PVDF crosses zero at 18 mol%; a DFT
+  pull near 6.5 per unit would reconcile the two. Asked with no computation: the regio-defect
+  content of the bench's 63/30/7 film (19F NMR, the supplier or the literature). The note is
+  `sarco/materials/ask-polyfind-dipole-film-regio-defects-v1.md`.
 
 
 ## E1 predictions

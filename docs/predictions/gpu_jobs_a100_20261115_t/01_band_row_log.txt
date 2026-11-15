@@ -1,0 +1,42 @@
+/srv/bench/<token>/jobs/shared/steps.json: 29 kinked crystals, 0 rows
+== vdf9-trfe3-an1-rvdf1-14@18 4x2 mover 0 ahead host flexible: end states only
+/root/polyfind/src/polyfind/pack.py:314: UserWarning: polymer 'vdf9-trfe3-an1-rvdf1-14-belt-pbe' has backbone atoms with two different substituents, i.e. stereocentres. The chain built here is the ISOTACTIC one (pendant 1 on a fixed side of the local frame at every backbone atom); syndiotactic and atactic chains are not expressible in this model. Because the repeat is chiral, G+ and G- conformers are no longer mirror-equivalent: they are the two handednesses of a one-handed helix and have genuinely different energies. The relation that does hold is mirror composed with chain reversal, E(phi_1..phi_N) == E(-phi_N..-phi_1). fit_ris (symmetrize='auto'), enumerate_periodic and linegroup all take that from Polymer.is_chiral, so forcing symmetrize=True is the one way left to average the asymmetry away. See Polymer.is_chiral and docs/CHEMISTRY_EXTENSION.md.
+  tpl = _TEMPLATE_CACHE[key] = build_chain(polymer, np.zeros(5 * nb), cap=False)
+vdf9-trfe3-an1-rvdf1-14@18 4x2 mover 0 ahead host flexible: 16 chains of 14 monomers, 2288 sites; kink pair in the search's cells +0.220 kcal/mol (kinked cell's closure residual 0.257 deg), polished +1.856
+   kinked crystal: +1.856 kcal/mol per kink pair against all-trans; cell [21.929, 17.016, 92.307, 35.374] (all-trans [22.005, 16.415, 91.657, 36.131]); 0 it, 0 s; the polished two-chain cell, tiled
+      chain 0: T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T
+   metric: one curvature block per chain, from the four-chain tiling of the sheet (18 s)
+      I descent     1:  +736.1197, lowest so far  +736.1197  (1 evaluations, 0 s)
+      I descent    10:   +41.9716, lowest so far   +41.9716  (10 evaluations, 1 s)
+      I descent    20:   +26.0424, lowest so far   +26.0424  (20 evaluations, 3 s)
+      I descent    30:   +19.0250, lowest so far   +19.0250  (30 evaluations, 4 s)
+      I descent    40:   +16.2613, lowest so far   +16.2613  (40 evaluations, 6 s)
+      I descent    50:   +12.3857, lowest so far   +12.3857  (50 evaluations, 7 s)
+      I surface     1:   +11.8627, lowest so far   +11.8627  (53 evaluations, 7 s)
+      I surface    10:    +8.6010, lowest so far    +8.6010  (62 evaluations, 9 s)
+      I surface    20:    +8.4683, lowest so far    +8.4683  (72 evaluations, 10 s)
+      I surface    30:    +8.4594, lowest so far    +8.4594  (82 evaluations, 11 s)
+      I surface    40:    +8.4582, lowest so far    +8.4582  (92 evaluations, 13 s)
+      I surface    50:    +8.4581, lowest so far    +8.4581  (102 evaluations, 14 s)
+      I surface    60:    +8.4581, lowest so far    +8.4581  (112 evaluations, 15 s)
+      I surface    70:    +8.4581, lowest so far    +8.4581  (122 evaluations, 17 s)
+   I: +8.458 kcal/mol above the kinked crystal (start +736.120); T T T T T T T T T T T T T T T T T T G+ T T T G- T T T T T; 71 it, 125 evaluations, 17 s; gradient 2.4e-04; 0 angles at the window; Optimization terminated successfully: the gradient along the surface is under gtol
+      B descent     1: +2326.9431, lowest so far +2326.9431  (1 evaluations, 0 s)
+      B descent    10:   +36.0582, lowest so far   +36.0582  (10 evaluations, 1 s)
+      B descent    20:   +26.9579, lowest so far   +26.9579  (20 evaluations, 3 s)
+      B descent    30:   +18.9135, lowest so far   +18.9135  (30 evaluations, 4 s)
+      B descent    40:   +15.7232, lowest so far   +15.7232  (40 evaluations, 5 s)
+      B surface     1:   +15.3163, lowest so far   +15.3163  (43 evaluations, 6 s)
+      B surface    10:    +8.1715, lowest so far    +8.1715  (52 evaluations, 7 s)
+      B surface    20:    +6.9644, lowest so far    +6.9644  (62 evaluations, 9 s)
+      B surface    30:    +6.8020, lowest so far    +6.8020  (72 evaluations, 10 s)
+      B surface    40:    +6.7916, lowest so far    +6.7916  (82 evaluations, 12 s)
+      B surface    50:    +6.7907, lowest so far    +6.7907  (92 evaluations, 13 s)
+      B surface    60:    +6.7904, lowest so far    +6.7904  (102 evaluations, 14 s)
+      B surface    70:    +6.7904, lowest so far    +6.7904  (112 evaluations, 15 s)
+      B surface    80:    +6.7904, lowest so far    +6.7904  (122 evaluations, 17 s)
+   B: +6.790 kcal/mol above the kinked crystal (start +2326.943); T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T; 81 it, 125 evaluations, 17 s; gradient 2.1e-04; 0 angles at the window; Optimization terminated successfully: the gradient along the surface is under gtol
+   end points only; written /srv/bench/<token>/jobs/shared/steps.json
+   vdf9-trfe3-an1-rvdf1-14@18 4x2 mover 0 ahead host flexible: 16 chains
+   I: +8.4581; 125 evaluations, 17 s; gradient 2.4e-04; converged True; T T T T T T T T T T T T T T T T T T G+ T T T G- T T T T T
+   B: +6.7904; 125 evaluations, 17 s; gradient 2.1e-04; converged True; T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T

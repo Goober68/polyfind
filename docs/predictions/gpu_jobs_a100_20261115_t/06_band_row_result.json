@@ -1,0 +1,85 @@
+{
+ "row": "vdf9-trfe3-an1-rvdf1-14",
+ "letters": "IVRVVRVAVVVVVR",
+ "note": "the same with three TrFE in place of four (21 mol%): the TrFE lever on the nitrile pair's margin",
+ "supercell": [
+  4,
+  2
+ ],
+ "chains": 16,
+ "sites": 2288,
+ "monomers_per_chain": 14,
+ "mover": "0",
+ "kink_offset_bonds": 0,
+ "kink_mirrored": false,
+ "direction": "ahead",
+ "host": "flexible",
+ "images_per_segment": 9,
+ "fmax": 0.1,
+ "kinked_crystal": {
+  "formation_per_kink_pair": 2.601833141015746,
+  "formation_per_kink_pair_search": 1.0376442281243783,
+  "formation_per_kink_pair_two_chain_cell": 2.6018331410158595,
+  "cell": [
+   22.215201528333726,
+   16.729393050461002,
+   92.65725913277893,
+   35.47930960042799
+  ],
+  "all_trans_cell": [
+   22.004981748902154,
+   16.415417069140325,
+   91.65689342087883,
+   36.13074073392329
+  ],
+  "torsions": [
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T"
+  ],
+  "iterations": 0,
+  "message": "the polished two-chain cell, tiled",
+  "seconds": 0.08399510383605957
+ },
+ "I": {
+  "energy": 1.3067165127722546e-08,
+  "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+  "start": "the kinked crystal with the mover's torsions reset",
+  "start_energy": 111.28136568264063,
+  "iterations": 89,
+  "evaluations": 135,
+  "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+  "converged": true,
+  "gradient_max": 0.00017152526555967157,
+  "method": "on the closure surface, one curvature block per chain as the metric",
+  "angles_at_window": 0,
+  "seconds": 19.04551362991333
+ },
+ "B": {
+  "energy": 12.845651975856981,
+  "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+  "start": "the kinked crystal with the mover's torsions reset",
+  "start_energy": 141.1224114157958,
+  "iterations": 71,
+  "evaluations": 118,
+  "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+  "converged": true,
+  "gradient_max": 0.000287226804562253,
+  "method": "on the closure surface, one curvature block per chain as the metric",
+  "angles_at_window": 0,
+  "seconds": 15.858506917953491
+ }
+}

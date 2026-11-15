@@ -1020,3 +1020,41 @@ def test_the_reversed_unit_beside_the_nitrile_and_beside_cfe():
     assert len(lower) == 14 and sum(v > 0.15 for v in lower.values()) == 13 and lower["26"] < -1.5 and both["26"]["units"] == "RI"
     wall = scans[CF + "@0"]["sites"]
     assert {v["units"] for v in wall.values() if v["formation"] > 8.0} == {"VC", "CV"} and max(v["formation"] for v in wall.values()) < 10.5
+
+
+def test_the_nitrile_cell_with_a_reversed_unit_by_one_chains_move():
+    """One chain's moves in the nitrile cell with a reversed VDF unit on 21 mol% TrFE, from two
+    start sites (docs/CANDIDATE_MATERIALS.md 5.6 and 8.3, 2026-11-15).  From the sheet's cheapest
+    site, in the VDF run, the move to N and the one-monomer step cost nearly the same and the
+    completed step lies as low as PVDF's; at the reversed unit the wide kink is not a state, as
+    in the CTFE cell.  The table takes the move from the cheapest sheet, and on it the cell is
+    between the nitrile alone and the CTFE cell with a reversed unit on all three axes."""
+    pred = MIG.parent
+    table = json.loads(MIG.read_text())["rows"]
+    ROW, AN, CK, TER = "vdf9-trfe3-an1-rvdf1-14", "vdf9-trfe4-an1-14", "vdf8-trfe4-ctfe1-rvdf1-14", "vdf9-trfe4-cfe1-14"
+    run, rev = (table.get(f"{ROW}@{k} 4x2 mover 0 ahead host flexible") for k in (18, 0))
+    d = json.loads((pred / "pin_design_belt4.json").read_text()) if (pred / "pin_design_belt4.json").exists() else {}
+    if run is None or rev is None or ROW not in d.get("moves", {}).get("rows", {}):
+        pytest.skip("the nitrile cell with a reversed unit's sixteen-chain rows are not stored")
+    assert run["kink_offset_bonds"] == 18 and rev["kink_offset_bonds"] == 0
+    assert run["kinked_crystal"]["formation_per_kink_pair"] == pytest.approx(1.856, abs=0.005)
+    assert run["kinked_crystal"]["formation_per_kink_pair"] < rev["kinked_crystal"]["formation_per_kink_pair"]
+    # in the VDF run: the step and the move to N within 0.2 of one another, B low, every saddle settled
+    assert run["to_N"]["barrier_forward"] == pytest.approx(10.22, abs=0.02) and run["barrier_forward_polished"] == pytest.approx(10.35, abs=0.02)
+    assert run["B"]["energy"] == pytest.approx(6.79, abs=0.01) and run["A-I"]["polished"]["converged"] and run["I-B"]["polished"]["converged"]
+    assert "to_L" not in run and not run["L_no_path_found"]["band_converged"]
+    # at the reversed unit: no wide kink, N then L
+    assert abs(rev["I"]["energy"]) < 1e-3 and "barrier_forward" not in rev and "step_to_B_not_run" in rev
+    assert rev["to_N"]["barrier_forward"] == pytest.approx(10.66, abs=0.02) and rev["to_L"]["to_L_for_each_return_from_N"] == pytest.approx(2.5, abs=0.1)
+    ck = table[f"{CK}@0 4x2 mover 0 ahead host flexible"]
+    assert abs(ck["I"]["energy"]) < 1e-3  # the same at the CTFE cell's reversed unit
+    mv, st, film = d["moves"]["rows"], d["sites"]["rows"], d["three_axes"]["rows"]["calibrated_film"]
+    r = mv[ROW]
+    assert r["start_offset_bonds"] == 18 and r["move"] == "to N" and r["barrier"] == pytest.approx(10.22, abs=0.02)
+    assert [o["start_offset_bonds"] for o in r["other_starts"]] == [0] and r["other_starts"][0]["barrier"] > r["barrier"]
+    assert r["ratio_to_the_anchor"] == pytest.approx(7.2, rel=0.03) and st[ROW]["ratio_to_the_anchor"] / r["ratio_to_the_anchor"] == pytest.approx(2.6, rel=0.05)
+    assert mv[TER]["other_starts"] == [] and mv[TER]["barrier"] == pytest.approx(11.40, abs=0.01)
+    hb = lambda x: x["three_axes"]["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
+    f = lambda x: x["three_axes"]["f_relax_hz"]  # noqa: E731
+    assert f(mv[CK]) > f(r) > f(mv[AN]) > 4.0 * film["f_relax_hz"] and hb(mv[CK]) > hb(r) > hb(mv[AN]) > film["at_the_heat_budget"]["strain_ac"][0]
+    assert r["three_axes"]["tan_delta"][0] < 0.2 * film["tan_delta"][0] and hb(r) > 2.0 * film["at_the_heat_budget"]["strain_ac"][0]
