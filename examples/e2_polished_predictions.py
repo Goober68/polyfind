@@ -32,14 +32,19 @@ E7_SYSTEMS = {"pvdf_reversed_6": ("vdf5-rvdf1-6", "PVDF with one reversed VDF un
               "vdftrfe_80_20": ("vdf8-trfe2", "VDF/TrFE 80/20, the matrix of the 70/20/10 nitrile cell, polished cells"),
               "vdftrfe_an_64_29_7": ("vdf9-trfe4-an1-14", "the 64/29/7 cell with acrylonitrile in place of CFE (one in fourteen), polished cells"),
               "vdftrfe_ctfe_rvdf_57_29_7_7": ("vdf8-trfe4-ctfe1-rvdf1-14", "one CTFE and one reversed VDF unit per fourteen in the 29 mol% TrFE matrix, polished cells")}
-SETS = {"e2": (SYSTEMS, "docs/predictions/e2_polished_polyfind_belt4.json"), "e7": (E7_SYSTEMS, "docs/predictions/e7_polyfind_belt4.json")}
+# E7 addendum (2026-11-15): part d again, once all four helix conformers of its cell were polished.  The registered set's
+# part d has the TGTG' helix as its ground (+0.076); the lowest helix is GTG'T (+0.245).  The registered file is kept as
+# it was sent (do not write the e7 set again: it would take the new ground); this set is the correction beside it.
+E7B_SYSTEMS = {"vdftrfe_ctfe_rvdf_57_29_7_7": E7_SYSTEMS["vdftrfe_ctfe_rvdf_57_29_7_7"]}
+SETS = {"e2": (SYSTEMS, "docs/predictions/e2_polished_polyfind_belt4.json"), "e7": (E7_SYSTEMS, "docs/predictions/e7_polyfind_belt4.json"),
+        "e7b": (E7B_SYSTEMS, "docs/predictions/e7_addendum_polyfind_belt4.json")}
 FILE_TAG = {"TTTT": "TTTT", "TGTG'": "TGTGp", "TG'TG": "TGpTG", "GTG'T": "GTGpT", "G'TGT": "GpTGT"}
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--margins", default="docs/predictions/polished_margins_belt4.json")
-    ap.add_argument("--set", default="e2", choices=sorted(SETS), help="which request's cells: e2 (the E2 addendum) or e7 (the unit screen's cells)")
+    ap.add_argument("--set", default="e2", choices=sorted(SETS), help="which request's cells: e2 (the E2 addendum), e7 (the unit screen's cells) or e7b (E7 part d on its lowest helix)")
     ap.add_argument("--out", default=None, help="default: the set's own file")
     args = ap.parse_args()
     systems, default_out = SETS[args.set]

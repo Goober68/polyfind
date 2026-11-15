@@ -21,6 +21,48 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**Every helix conformer polished: five margins moved and the head of the ranking with them, 2026-11-15 (PI: "Go").**
+Text: `docs/CANDIDATE_MATERIALS.md` 5.6 (corrected in place, each correction dated; the bullet "Every helix conformer is
+polished since 2026-11-15"), 5.4, 5.5, 8.5, header; `docs/E1_E2_PREDICTIONS.md` ("E7 part d, corrected"). STATE: DONE, CPU
+ONLY (spend unchanged: about $14.05 of the $46).
+THIS BLOCK SUPERSEDES, IN EVERY BLOCK BELOW: that CTFE with a reversed VDF unit is on the switching window, leads, or
+carries 0.16 to 0.19% (its margin is +0.245, not +0.076: it is fast and does not switch); the reversed unit's pin of
+-4.8 (it is -3.1) and its margin -0.289 (-0.162); that the nitrile pair's pins add; TFE's -1.5 and ethylene's -1.7
+(-1.2, -1.4).
+WHAT WAS RUN: `polish_margins.py --rows ROW --tg "TGTG',TG'TG,GTG'T,G'TGT"` for the 28 rows with fewer than four helix
+conformers (about 75 minutes on four cores). 24 completed; in the four CDFE rows some conformers cannot be built (a
+chlorine within bonding distance of a fluorine: `offset_sites` raises), tried one by one.
+MOVED (before -> now, kcal/mol per monomer; the new lowest helix):
+    vdf8-trfe4-ctfe1-rvdf1-14  +0.076 -> +0.245  GTG'T (TGTG' +0.169 above it)   THE SCREEN'S LEADER: OFF THE WINDOW
+    vdf9-trfe4-rvdf1-14        -0.289 -> -0.162  GTG'T                            the reversed unit's pin -4.84 -> -3.06
+    vdf6-trfe3-cfe1            +0.338 -> +0.454  G'TGT                            a ten-monomer row, not in the ranking
+    vdf9-trfe4-tfe1-14         -0.050 -> -0.026  G'TGT        vdf9-trfe4-e1-14   -0.066 -> -0.045  G'TGT
+STOOD: the 64/29/7 cell +0.317, the matrix +0.056, AN +0.197, CTFE +0.300, AN with TFE +0.186, AN with ethylene -0.119,
+PVDF with reversed units +0.162, the six-mer +0.064, 70/20/10 AN +0.565, 80/20 +0.229, and the three rows of today
+that had all four from the start (+0.037, -0.148, -0.044).
+THE RANKING NOW (three axes; the film's channel 364 kHz, tan delta 0.060, 0.066% at the heat budget):
+    1. the nitrile with a reversed VDF unit on 21 mol% TrFE: 2.6 MHz (one chain's move) to 6.9 MHz (sites' sum),
+       tan delta 0.011 to 0.004, 0.142 to 0.168%
+    2. the nitrile with TFE (one site: 1.6 MHz, 0.097%) and the nitrile alone (1.5 to 1.8 MHz, 0.003 to 0.004, 0.091 to 0.097%)
+    3. PVDF with reversed units (0.9 to 1.1 MHz, 0.076 to 0.081%)        4. the film's channel
+    out: both CTFE cells (5 to 52 MHz, 0.005 and 0.011%: off the window), the model's CFE cell, every sparse pin.
+THE REVERSED UNIT'S PULL GOES WITH ITS NEIGHBOUR: per unit in fourteen 0.36 beside CFE, 0.35 beside AN, 0.22 alone in
+the matrix, 0.06 beside CTFE; 4.1 per unit in PVDF. Reading 4 of the film (5.3) rests on the CFE figure and stands.
+REGISTERED NUMBERS: `e7_polyfind_belt4.json` is KEPT AS SENT (never write `--set e7` again: it would take the new
+ground helix); part d's correction is `e7_addendum_polyfind_belt4.json` (`--set e7b`) with
+`polished_vdf8-trfe4-ctfe1-rvdf1-14_GTGpT[.xyz, _tilted.xyz]`. Sent to Dipole (sarco main; see the commit after this one).
+Tests: `tests/test_kink_step.py::test_every_helix_conformer_is_polished_and_five_margins_moved`; six earlier tests
+re-pointed at the corrected numbers.
+TRAPS: (1) NEVER RANK A CELL ON FEWER THAN FOUR HELIX CONFORMERS. `polish_margins.py` without `--tg` takes those within 0.3
+of the SEARCH's lowest, and the polish moves a helix by 0.4 to 0.9. (2) THE CONTAINER WAS REPLACED at about 05:27 UTC
+on 2026-11-15: the working copy came back empty and the scratchpad was lost; nothing unpushed was lost. To restore:
+`git fetch --depth 50 origin claude/polymeric-stable-arrangements-uh06b1`, check it out, `pip install -e ".[dev]"`,
+clone `Goober68/sarco` beside it. Push before leaving anything running for long.
+NEXT, proposed to the PI: (a) bring the CTFE pair back to the window with TrFE (one more TrFE in fourteen, 36 mol%: the
+fastest lattice, if the nitrile pair's lever holds there), all four conformers from the start; (b) the nitrile pair
+between 21 and 29 mol% TrFE in a twenty-eight-monomer repeat; (c) the film's cell with the measured defect content when
+the number comes; (d) Dipole's E7 a.
+
 **One chain's move in the nitrile cell with a reversed unit on 21 mol% TrFE; the note to Dipole, 2026-11-15 (PI: "Go
 both").** Text: `docs/CANDIDATE_MATERIALS.md` 5.6 (the block "The reversed unit beside the nitrile, and beside CFE": the
 bullet "By one chain's move..."; the moves table) and 8.3 (the cell from two start sites); `docs/E1_E2_PREDICTIONS.md` (E7:

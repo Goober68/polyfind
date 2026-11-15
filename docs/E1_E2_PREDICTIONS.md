@@ -371,16 +371,31 @@ stiffness flag of the previous section is read against the QE cell from here on.
   and (e) also the sign and, within a factor 1.5, the size of the shift from PVDF's own margin.
   For the fourteen-monomer cells the search ran the two handednesses of the helix (not the two
   other phases) and the lower was polished (both for d, where the other lies 0.03 higher), so
-  their registered helix is the lowest that was polished. No polarization is registered. The request is
+  their registered helix is the lowest that was polished. **All four helix conformers of every
+  part were polished on 2026-11-15: a, b, b', c and e stand as registered; part d does not (the
+  next entry).** No polarization is registered. The request is
   `sarco/materials/ask-polyfind-dipole-unit-screen-cells-v1.md`, the files are in
   `sarco/materials/electrostriction/requests/unit_screen_cells_e7_v1/`;
   `examples/crosscheck_e1_e2.py --e2 docs/predictions/e7_polyfind_belt4.json --e2-dipole <file>`
   reads the answers (`--e2-rigid-pendants` for single points on the rigid-pendant files).
+- **E7 part d, corrected (2026-11-15; no DFT number exists, and Dipole had not started E7).** The
+  registered margin of part d, +0.076, is all-trans against the TGTG' helix. With the other two
+  helix conformers polished the lowest helix of `IVRVVRVKVVRVVR` is GTG'T, 0.169 below TGTG', and
+  the margin is **+0.245** (rigid pendants +0.112; axial switch strain +9.9%): off the switching
+  window, so the cell that led the unit screen no longer does (`docs/CANDIDATE_MATERIALS.md`
+  5.6). The registered set `e7_polyfind_belt4.json` is kept as it was sent; the correction is
+  `docs/predictions/e7_addendum_polyfind_belt4.json` (`examples/e2_polished_predictions.py --set
+  e7b`), with the GTG'T cell exported as `polished_vdf8-trfe4-ctfe1-rvdf1-14_GTGpT.xyz` and
+  `_GTGpT_tilted.xyz`. What part d now tests: the margin +0.245 against GTG'T, and that GTG'T
+  lies below TGTG' by 0.17; the all-trans and TGTG' files sent are still right for their own
+  numbers. Sent to Dipole as `sarco/materials/ask-polyfind-dipole-unit-screen-cells-v1.md`,
+  correction of 2026-11-15.
 - **What E7 a also decides, and one number asked of the bench (2026-11-15; PI: "Go both"; no new
   DFT cell).** A reversed VDF unit in the cell at the film's composition takes its margin from
   +0.317 to -0.044 (`vdf8-trfe4-cfe1-rvdf1-14`, `IVRVVRVCVVRVVR`; rigid pendants -0.199; all four
-  helix conformers polished): 0.050 per mol% of reversed units (0.048 beside AN and in the 71/29
-  matrix, 0.031 beside CTFE, 0.041 in PVDF). Ordinary PVDF carries 3.5 to 6.0 mol% of them, which
+  helix conformers polished): 0.050 per mol% of reversed units (0.048 beside AN, 0.041 in PVDF, and,
+  corrected on 2026-11-15 when every helix conformer was polished, 0.031 in the 71/29 matrix
+  and 0.008 beside CTFE). Ordinary PVDF carries 3.5 to 6.0 mol% of them, which
   read linearly puts the film's cell between +0.14 and +0.01: on the switching window, where the
   head-to-tail cell is not (`docs/CANDIDATE_MATERIALS.md` 5.3, reading 4). The pull that E7 a
   measures (4.1 per reversed unit in polyfind) scales this, so part a is now the test of that

@@ -296,20 +296,20 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 
 | sequence | the screen's margin | polished | all-trans cell lower by | TG cell lower by | TG conformer | torsions off the ideal pattern, TT / TG | axial transition strain |
 |---|---|---|---|---|---|---|---|
-| vdf9-trfe4-cfe1-14 (VVRVVRVCVVRVVR) | +0.110 | +0.317 | 0.206 | 0.533 | TG'TG | 10 / 21 deg | +12.1% |
-| vdf10-trfe4-14 (VVRVVRVVVVRVVR) | -0.051 | +0.056 | 0.081 | 0.375 | TGTG' | 6 / 19 deg | +11.7% |
-| vdf9-trfe5-14 (VVRVVRVRVVRVVR) | -0.058 | +0.083 | 0.061 | 0.407 | TGTG' | 6 / 21 deg | +11.8% |
-| vdf9-trfe4-cdfe1-14 (VVRVVRVDVVRVVR) | +0.402 | +0.685 | 0.150 | 0.637 | TGTG' | 14 / 25 deg | +12.1% |
-| vdf7-trfe3 (VVRVVRVVVR) | +0.145 | +0.213 | 0.078 | 0.305 | TGTG' | 6 / 19 deg | +11.6% |
+| vdf9-trfe4-cfe1-14 (VVRVVRVCVVRVVR) | +0.110 | +0.317 | 0.206 | 0.533 | G'TGT | 10 / 21 deg | +12.1% |
+| vdf10-trfe4-14 (VVRVVRVVVVRVVR) | -0.051 | +0.056 | 0.081 | 0.375 | GTG'T | 6 / 19 deg | +11.7% |
+| vdf9-trfe5-14 (VVRVVRVRVVRVVR) | -0.058 | +0.083 | 0.061 | 0.407 | G'TGT | 6 / 21 deg | +11.8% |
+| vdf9-trfe4-cdfe1-14 (VVRVVRVDVVRVVR) | +0.402 | +0.685 | 0.150 | 0.639 | G'TGT | 14 / 34 deg | +11.9% |
+| vdf7-trfe3 (VVRVVRVVVR) | +0.145 | +0.213 | 0.078 | 0.305 | G'TGT | 6 / 19 deg | +11.6% |
 | vdf8-trfe2 (VVRVVVVRVV) | +0.177 | +0.229 | 0.097 | 0.241 | G'TGT | 6 / 14 deg | +11.3% |
 | vdf7-trfe2-cfe1 (VVRVVCVVRV) | +0.966 | +0.868 | 0.248 | 0.154 | TG'TG | 11 / 13 deg | +11.6% |
 | vdf7-trfe2-cdfe1 (VVRVVDVVRV) | +0.146 | +0.392 | 0.220 | 0.719 | TGTG' | 16 / 23 deg | +12.8% |
-| vdf13-trfe6-cfe1-20 (VVRVVRVVRVCVVRVVRVVR) | +0.055 | +0.258 | 0.175 | 0.517 | TGTG' | 10 / 21 deg | +12.1% |
-| vdf6-trfe4 (VRVRVVRVRV) | -0.329 | -0.199 | 0.049 | 0.414 | TGTG' | 6 / 20 deg | +11.0% |
+| vdf13-trfe6-cfe1-20 (VVRVVRVVRVCVVRVVRVVR) | +0.055 | +0.258 | 0.175 | 0.517 | GTG'T | 10 / 21 deg | +12.1% |
+| vdf6-trfe4 (VRVRVVRVRV) | -0.329 | -0.199 | 0.049 | 0.414 | TG'TG | 6 / 20 deg | +11.0% |
 | vdf8-trfe4-cfe1-cdfe1-14 (DVRVVRVCVVRVVR) | +0.641 | +0.807 | 0.251 | 0.581 | TG'TG | 19 / 20 deg | +12.2% |
 | vdf9-trfe4-ctfe1-14 (VVRVVRVKVVRVVR) | +0.135 | +0.300 | 0.186 | 0.664 | TG'TG | 14 / 24 deg | +11.8% |
 | vdf9-trfe4-an1-14 (VVRVVRVAVVRVVR) | -0.154 | +0.197 | 0.087 | 0.614 | TG'TG | 5 / 24 deg | +12.5% |
-| vdf6-trfe3-cfe1 (RVVRVCVRVV) | +0.297 | +0.338 | 0.250 | 0.403 | TGTG' | 11 / 19 deg | +11.3% |
+| vdf6-trfe3-cfe1 (RVVRVCVRVV) | +0.297 | +0.454 | 0.250 | 0.423 | G'TGT | 11 / 21 deg | +12.1% |
 | vdf7-trfe2-ctfe1 (VVRVVKVVRV) | +0.790 | +0.900 | 0.233 | 0.510 | TG'TG | 14 / 23 deg | +11.8% |
 | vdf7-trfe2-an1 (VVRVVAVVRV) | +0.568 | +0.565 | 0.125 | 0.181 | TG'TG | 6 / 14 deg | +11.9% |
 | vdf7-trfe2-cfe1-adj (VVRCVVVVRV) | +0.961 | +0.875 | 0.252 | 0.136 | TG'TG | 11 / 12 deg | +11.6% |
@@ -317,17 +317,17 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 | vdf8-cfe2 (VVCVVVVCVV) | +0.835 | +0.812 | 0.303 | 0.389 | TGTG' | 14 / 15 deg | +11.2% |
 | vdf9-cfe1 (VVVVCVVVVV) | +0.982 | +0.967 | 0.206 | 0.175 | G'TGT | 11 / 14 deg | +10.2% |
 | vdf9-an1 (VVVVAVVVVV) | +0.470 | +0.555 | 0.139 | 0.305 | TGTG' | 7 / 14 deg | +12.8% |
-| vdf5-trfe5 (VRVRVRVRVR) | +0.752 | +0.736 | 0.010 | 0.002 | TGTG' | 1 / 4 deg | +10.8% |
-| vdf9-trfe4-e1-14 (VVRVVRVEVVRVVR) | -0.226 | -0.066 | 0.071 | 0.436 | TGTG' | 6 / 21 deg | +11.6% |
-| vdf9-trfe4-vf1-14 (VVRVVRVYVVRVVR) | -0.061 | +0.087 | 0.106 | 0.446 | TGTG' | 7 / 27 deg | +11.5% |
+| vdf5-trfe5 (VRVRVRVRVR) | +0.752 | +0.736 | 0.010 | 0.002 | G'TGT | 1 / 4 deg | +10.8% |
+| vdf9-trfe4-e1-14 (VVRVVRVEVVRVVR) | -0.226 | -0.045 | 0.071 | 0.417 | G'TGT | 6 / 17 deg | +11.1% |
+| vdf9-trfe4-vf1-14 (VVRVVRVYVVRVVR) | -0.061 | +0.087 | 0.106 | 0.446 | GTG'T | 7 / 27 deg | +11.5% |
 | vdf9-trfe4-dfe1-14 (VVRVVRVXVVRVVR) | +0.098 | +0.263 | 0.082 | 0.444 | TGTG' | 9 / 24 deg | +11.5% |
-| vdf9-trfe4-rvdf1-14 (VVRVVRVIVVRVVR) | -0.514 | -0.289 | 0.118 | 0.503 | TGTG' | 7 / 26 deg | +11.5% |
-| vdf9-trfe4-tfe1-14 (VVRVVRVFVVRVVR) | -0.248 | -0.050 | 0.161 | 0.484 | TGTG' | 7 / 23 deg | +11.9% |
+| vdf9-trfe4-rvdf1-14 (VVRVVRVIVVRVVR) | -0.514 | -0.162 | 0.118 | 0.698 | GTG'T | 7 / 42 deg | +11.2% |
+| vdf9-trfe4-tfe1-14 (VVRVVRVFVVRVVR) | -0.248 | -0.026 | 0.161 | 0.551 | G'TGT | 7 / 21 deg | +11.7% |
 | vdf8-trfe4-an1-e1-14 (EVRVVRVAVVRVVR) | -0.522 | -0.119 | 0.086 | 0.668 | TG'TG | 5 / 26 deg | +12.4% |
-| vdf8-trfe4-ctfe1-rvdf1-14 (IVRVVRVKVVRVVR) | -0.089 | +0.076 | 0.403 | 0.659 | TGTG' | 21 / 52 deg | +10.7% |
+| vdf8-trfe4-ctfe1-rvdf1-14 (IVRVVRVKVVRVVR) | -0.089 | +0.245 | 0.403 | 0.781 | GTG'T | 21 / 41 deg | +9.9% |
 | vdf8-trfe4-an1-tfe1-14 (FVRVVRVAVVRVVR) | -0.249 | +0.186 | 0.147 | 0.730 | TG'TG | 7 / 27 deg | +12.4% |
 | vdf12-rvdf2-14 (VVVVIVVVVVVIVV) | -0.411 | +0.162 | 0.000 | 3.206 | TGTG' | 0 / 11 deg | +10.8% |
-| vdf5-rvdf1-6 (VVVVIV) | -0.505 | +0.064 | 0.000 | 3.484 | TGTG' | 0 / 11 deg | +10.7% |
+| vdf5-rvdf1-6 (VVVVIV) | -0.505 | +0.064 | 0.000 | 3.484 | TG'TG | 0 / 11 deg | +10.7% |
 | vdf9-trfe3-an1-rvdf1-14 (IVRVVRVAVVVVVR) | -0.326 | +0.037 | 0.108 | 0.573 | TGTG' | 6 / 49 deg | +10.6% |
 | vdf8-trfe4-an1-rvdf1-14 (IVRVVRVAVVRVVR) | -0.670 | -0.148 | 0.111 | 0.785 | TG'TG | 6 / 27 deg | +12.3% |
 | vdf8-trfe4-cfe1-rvdf1-14 (IVRVVRVCVVRVVR) | -0.365 | -0.044 | 0.213 | 0.707 | TG'TG | 11 / 25 deg | +12.5% |

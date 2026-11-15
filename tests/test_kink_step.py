@@ -833,7 +833,8 @@ def test_the_unit_screen_on_three_axes():
     u = {k: d["units"].get(f"vdf9-trfe4-{k}1-14") for k in ("tfe", "rvdf", "vf", "e", "dfe", "an", "ctfe", "cfe", "cdfe")}
     if any(v is None for v in u.values()):
         pytest.skip("the screen's units are not all stored")
-    assert u["rvdf"]["pin_per_unit"] < -4.0 < u["e"]["pin_per_unit"] < u["tfe"]["pin_per_unit"] < -1.0  # three lower the margin
+    assert u["rvdf"]["pin_per_unit"] < -2.8 < u["e"]["pin_per_unit"] < u["tfe"]["pin_per_unit"] < -1.0  # three lower the margin
+    assert u["rvdf"]["pin_per_unit"] == pytest.approx(-3.06, abs=0.03)  # -4.84 while two of its four helix conformers were polished (2026-11-15)
     assert abs(u["vf"]["pin_per_unit"]) < 0.6 and 2.5 < u["dfe"]["pin_per_unit"] < 3.3
     new, bulky = [u[k]["cut"] for k in ("tfe", "rvdf", "vf", "e", "dfe")], [u[k]["cut"] for k in ("an", "ctfe", "cfe", "cdfe")]
     assert 0.0 < min(new) and max(new) < 1.6 < 3.0 < min(bulky)  # none loosens as the bulky units do
@@ -862,9 +863,11 @@ def test_the_designed_cells_are_computed_not_summed():
     """Designed from the unit screen (docs/CANDIDATE_MATERIALS.md 5.6): a loosening pin with a
     trans-favouring unit seven monomers from it, and PVDF with reversed units in place of TrFE.
     Two units' pins do not add to better than a few kcal/mol per cell, in either sense; the
-    cell with CTFE and a reversed VDF unit sits on the switching curve with the cheapest kink
-    sheet of the table and leads on all three axes; a reversed unit turns its own dipole over,
-    so the matrix without TrFE pays for its margin with more dipole than TrFE costs."""
+    cell with CTFE and a reversed VDF unit has the cheapest kink sheet of the table and, with
+    all four helix conformers polished (2026-11-15), a margin of +0.245: off the switching
+    window, fast and without strain, where two conformers had put it on the window at +0.076;
+    a reversed unit turns its own dipole over, so the matrix without TrFE pays for its margin
+    with more dipole than TrFE costs."""
     pred = MIG.parent
     path = pred / "pin_design_belt4.json"
     d = json.loads(path.read_text()) if path.exists() else {}
@@ -873,16 +876,19 @@ def test_the_designed_cells_are_computed_not_summed():
     if any(n not in c or "three_axes" not in c[n] for n in names):
         pytest.skip("the designed cells are not stored")
     off = {n: 14.0 * (c[n]["margin"] - c[n]["margin_if_the_pins_added"]) for n in names[:3] + ("vdf8-trfe4-cfe1-cdfe1-14",)}
-    assert all(1.0 < abs(v) < 3.0 for v in off.values()) and min(off.values()) < 0.0 < max(off.values())
+    assert all(0.9 < abs(v) < 3.1 for v in off.values()) and min(off.values()) < 0.0 < max(off.values())
     film = d["three_axes"]["rows"]["calibrated_film"]
     hb = lambda r: r["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
-    best = c["vdf8-trfe4-ctfe1-rvdf1-14"]
-    assert 0.03 < best["margin"] < 0.13 and best["kink_sheet"] < 1.5 and 0.2 < best["three_axes"]["polar_fraction"] < 0.6
-    for n in names:
+    fast = c["vdf8-trfe4-ctfe1-rvdf1-14"]
+    assert fast["margin"] == pytest.approx(0.245, abs=0.003) and fast["kink_sheet"] < 1.5 and fast["three_axes"]["polar_fraction"] < 0.02
+    assert hb(fast["three_axes"]) < 0.3 * hb(film) and fast["three_axes"]["at_the_heat_budget"]["binds"][0] == "field"
+    assert fast["three_axes"]["f_relax_hz"] > 50.0 * film["f_relax_hz"]
+    margins = json.loads((pred / "polished_margins_belt4.json").read_text())["rows"]
+    cells = {k: v["energy_per_monomer"] for k, v in margins["vdf8-trfe4-ctfe1-rvdf1-14"]["cells"].items() if k != "TTTT"}
+    assert len(cells) == 4 and min(cells, key=cells.get) == "GTG'T" and cells["TGTG'"] - cells["GTG'T"] == pytest.approx(0.169, abs=0.005)
+    for n in (names[0], names[1], names[3]):
         t = c[n]["three_axes"]
         assert hb(t) > hb(film) and t["tan_delta"][0] < 0.4 * film["tan_delta"][0] and t["f_relax_hz"] > 2.0 * film["f_relax_hz"]
-        assert hb(t) <= hb(best["three_axes"]) + 1e-12
-    assert hb(best["three_axes"]) > 2.5 * hb(film) and best["three_axes"]["at_the_heat_budget"]["binds"][0] == "heat"
     regio = c["vdf12-rvdf2-14"]
     assert regio["margin"] < 0.2 < 0.7 < regio["pvdf_margin"] and -4.5 < regio["per_reversed_unit"] < -3.6
     assert regio["kink_sheet"] < regio["pvdf_kink_sheet"] - 1.5
@@ -910,9 +916,12 @@ def test_the_leaders_rates_go_by_every_scanned_kink_site():
     for n in names:
         r = rows[n]
         assert r["ratio_to_the_anchor"] > 2.5 and r["cheapest"]["energy"] <= r["start_site"] + 1e-9
+        if n == "vdf8-trfe4-ctfe1-rvdf1-14":  # fast and off the switching window (+0.245 with all four helix conformers): no strain
+            assert r["ratio_to_the_anchor"] > 100.0 and hb(r) < 0.3 * film["at_the_heat_budget"]["strain_ac"][0]
+            continue
         assert hb(r) > film["at_the_heat_budget"]["strain_ac"][0] and r["three_axes"]["tan_delta"][0] < 0.2 * film["tan_delta"][0]
     assert rows["vdf9-trfe4-an1-14"]["hands_scanned"] == 2 and rows["vdf9-trfe4-an1-14"]["cheapest"]["energy"] < rows["vdf9-trfe4-an1-14"]["start_site"] - 1.0
-    assert hb(rows["vdf8-trfe4-ctfe1-rvdf1-14"]) > hb(rows["vdf9-trfe4-an1-14"]) > hb(rows["vdf12-rvdf2-14"]) > hb(rows["vdf10-trfe4-14"])
+    assert hb(rows["vdf9-trfe4-an1-14"]) > hb(rows["vdf12-rvdf2-14"]) > hb(rows["vdf10-trfe4-14"]) > hb(rows["vdf8-trfe4-ctfe1-rvdf1-14"])
     scans = json.loads((pred / "kink_site_scan_belt4.json").read_text())["rows"]
     for hand in ("vdf8-trfe4-ctfe1-rvdf1-14@0", "vdf8-trfe4-ctfe1-rvdf1-14@0~"):
         kept = [v["formation"] for v in scans[hand]["sites"].values() if v.get("kink_kept", True)]
@@ -935,10 +944,11 @@ def test_the_leaders_by_one_chains_cheapest_move_and_ctfe_alone():
     (docs/CANDIDATE_MATERIALS.md 5.6 and 8.3, 2026-11-15).  One chain's cheapest move out of the
     sheet in sixteen chains is the move to N in every copolymer lattice, and the pins order its
     barrier as they order the sheets' energies.  The two rate models agree on the nitrile cell and
-    are a decade apart on the CTFE cell with a reversed unit; both leaders stay ahead of the
-    measured film's channel on all three axes under either.  CTFE alone is fast and does not
-    switch: the reversed unit is what brings its margin into the window, and it lowers the kink
-    sites along the whole repeat, not beside itself."""
+    are a decade apart on the CTFE cell with a reversed unit; the nitrile cell stays ahead of
+    the measured film's channel on all three axes under either.  CTFE is fast and does not
+    switch, with or without the reversed unit (margins +0.300 and, all four helix conformers
+    polished, +0.245): the reversed unit lowers the kink sites along the whole repeat, not
+    beside itself, and hardly moves the margin."""
     pred = MIG.parent
     table = json.loads(MIG.read_text())["rows"]
     key = "{}@0 4x2 mover 0 ahead host flexible".format
@@ -964,10 +974,10 @@ def test_the_leaders_by_one_chains_cheapest_move_and_ctfe_alone():
     assert mv[CK]["ratio_to_the_anchor"] == pytest.approx(13.9, rel=0.03) and st[CK]["ratio_to_the_anchor"] / mv[CK]["ratio_to_the_anchor"] > 9.0
     hb = lambda r: r["three_axes"]["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
     for rows in (mv, st):
+        assert hb(rows[AN]) > 1.3 * film["at_the_heat_budget"]["strain_ac"][0] and rows[AN]["three_axes"]["tan_delta"][0] < 0.1 * film["tan_delta"][0]
         for r in (AN, CK):
-            assert hb(rows[r]) > 1.3 * film["at_the_heat_budget"]["strain_ac"][0] and rows[r]["three_axes"]["tan_delta"][0] < 0.1 * film["tan_delta"][0]
             assert rows[r]["three_axes"]["f_relax_hz"] > 4.0 * film["f_relax_hz"]
-        assert hb(rows[CK]) > hb(rows[AN])
+        assert hb(rows[CK]) < 0.3 * film["at_the_heat_budget"]["strain_ac"][0] and rows[CK]["three_axes"]["margin"] == pytest.approx(0.245, abs=0.003)
     # CTFE alone: eighteen times the anchor's sites' sum, and no strain (its margin is off the window)
     ct = st[CT]
     assert ct["ratio_to_the_anchor"] == pytest.approx(18.1, rel=0.03) and ct["three_axes"]["margin"] == pytest.approx(0.300, abs=0.003)
@@ -983,7 +993,7 @@ def test_the_leaders_by_one_chains_cheapest_move_and_ctfe_alone():
 def test_the_reversed_unit_beside_the_nitrile_and_beside_cfe():
     """A reversed VDF unit seven monomers from the nitrile and from CFE (docs/CANDIDATE_MATERIALS.md
     5.6, 5.3 and 8.4, 2026-11-15).  Beside the nitrile on 29 mol% TrFE the margin overshoots to the
-    all-trans side of zero and the pins add; one TrFE fewer brings the cell onto the switching
+    all-trans side of zero, by more than the single units' pins add up to; one TrFE fewer brings the cell onto the switching
     window, where it is ahead of the measured film's channel and of the nitrile alone on strain at
     the heat budget, tan delta and relaxation frequency.  The same unit takes the 64/29/7 cell
     from +0.32 to under zero: 0.05 per mol%, the lever of the fourth reading of why the film
@@ -1003,7 +1013,10 @@ def test_the_reversed_unit_beside_the_nitrile_and_beside_cfe():
     assert m[AN3]["margin"] - m[AN4]["margin"] == pytest.approx(0.184, abs=0.005)
     assert m[AN]["margin"] - m[AN4]["margin"] == pytest.approx(0.345, abs=0.005) and m[CFE]["margin"] - m[CF]["margin"] == pytest.approx(0.361, abs=0.005)
     c = d["combinations"]
-    assert abs(c[AN4]["margin"] - c[AN4]["margin_if_the_pins_added"]) < 0.01 and abs(c[CF]["margin"] - c[CF]["margin_if_the_pins_added"]) < 0.03
+    # the reversed unit pulls harder beside a pin (0.35 and 0.36 per unit in fourteen) than alone in the matrix (0.22)
+    assert c[AN4]["margin_if_the_pins_added"] - c[AN4]["margin"] == pytest.approx(0.126, abs=0.01)
+    assert c[CF]["margin_if_the_pins_added"] - c[CF]["margin"] == pytest.approx(0.143, abs=0.01)
+    assert m["vdf10-trfe4-14"]["margin"] - m["vdf9-trfe4-rvdf1-14"]["margin"] == pytest.approx(0.218, abs=0.005)
     assert c[AN3]["mu_TT"] == pytest.approx(0.449, abs=0.003)
     film = d["three_axes"]["rows"]["calibrated_film"]
     hb = lambda r: r["three_axes"]["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
@@ -1011,7 +1024,7 @@ def test_the_reversed_unit_beside_the_nitrile_and_beside_cfe():
     assert 0.03 < t["margin"] < 0.13 and 0.5 < t["polar_fraction"] < 0.8  # on the window
     assert r["hands_scanned"] == 2 and r["sites_scanned"] == [14, 14] and r["ratio_to_the_anchor"] == pytest.approx(18.9, rel=0.03)
     assert t["f_relax_hz"] == pytest.approx(6.9e6, rel=0.03) and t["tan_delta"][0] < 0.1 * film["tan_delta"][0]
-    assert hb(r) > 2.4 * film["at_the_heat_budget"]["strain_ac"][0] and hb(st[CK]) > hb(r) > hb(st[AN])
+    assert hb(r) > 2.4 * film["at_the_heat_budget"]["strain_ac"][0] and hb(r) > hb(st[AN]) > hb(st[CK])
     # what the reversed unit does to the sums over sites, and site by site in the nitrile lattice
     assert st[AN4]["ratio_to_the_anchor"] / st[AN]["ratio_to_the_anchor"] == pytest.approx(2.75, rel=0.05) and st[CF]["ratio_to_the_anchor"] == pytest.approx(2.82, rel=0.05)
     scans = json.loads((pred / "kink_site_scan_belt4.json").read_text())["rows"]
@@ -1028,7 +1041,8 @@ def test_the_nitrile_cell_with_a_reversed_unit_by_one_chains_move():
     site, in the VDF run, the move to N and the one-monomer step cost nearly the same and the
     completed step lies as low as PVDF's; at the reversed unit the wide kink is not a state, as
     in the CTFE cell.  The table takes the move from the cheapest sheet, and on it the cell is
-    between the nitrile alone and the CTFE cell with a reversed unit on all three axes."""
+    ahead of the nitrile alone on all three axes; the CTFE cell with a reversed unit is faster
+    and does not switch."""
     pred = MIG.parent
     table = json.loads(MIG.read_text())["rows"]
     ROW, AN, CK, TER = "vdf9-trfe3-an1-rvdf1-14", "vdf9-trfe4-an1-14", "vdf8-trfe4-ctfe1-rvdf1-14", "vdf9-trfe4-cfe1-14"
@@ -1056,5 +1070,46 @@ def test_the_nitrile_cell_with_a_reversed_unit_by_one_chains_move():
     assert mv[TER]["other_starts"] == [] and mv[TER]["barrier"] == pytest.approx(11.40, abs=0.01)
     hb = lambda x: x["three_axes"]["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
     f = lambda x: x["three_axes"]["f_relax_hz"]  # noqa: E731
-    assert f(mv[CK]) > f(r) > f(mv[AN]) > 4.0 * film["f_relax_hz"] and hb(mv[CK]) > hb(r) > hb(mv[AN]) > film["at_the_heat_budget"]["strain_ac"][0]
+    assert f(mv[CK]) > f(r) > f(mv[AN]) > 4.0 * film["f_relax_hz"] and hb(r) > hb(mv[AN]) > film["at_the_heat_budget"]["strain_ac"][0] > hb(mv[CK])
     assert r["three_axes"]["tan_delta"][0] < 0.2 * film["tan_delta"][0] and hb(r) > 2.0 * film["at_the_heat_budget"]["strain_ac"][0]
+
+
+def test_every_helix_conformer_is_polished_and_five_margins_moved():
+    """All four helix conformers of every polished row (2026-11-15; docs/CANDIDATE_MATERIALS.md 5.6).
+    Until then the polish took the conformers within 0.3 kcal/mol of the search's lowest, one or
+    two per row, and a margin was a lower bound.  Completing them moved five margins, the cell
+    with CTFE and a reversed VDF unit off the switching window among them; the rows the ranking
+    and the requests to Dipole rest on stood.  Part d of E7 is registered again beside the set
+    that was sent, which is kept."""
+    import hashlib
+    pred = MIG.parent
+    m = json.loads((pred / "polished_margins_belt4.json").read_text())["rows"]
+    four = {"TGTG'", "TG'TG", "GTG'T", "G'TGT"}
+    short = {n for n, r in m.items() if set(r["cells"]) - {"TTTT"} != four}
+    assert short == {"vdf9-trfe4-cdfe1-14", "vdf7-trfe2-cdfe1", "vdf8-trfe4-cfe1-cdfe1-14", "vdf6-trfe3-cdfe1"}  # CDFE: some conformers cannot be built
+    for n, r in m.items():
+        tg = {k: v["energy_per_monomer"] for k, v in r["cells"].items() if k != "TTTT"}
+        assert r["tg_conformer"] == min(tg, key=tg.get) and r["margin"] == pytest.approx(r["cells"]["TTTT"]["energy_per_monomer"] - min(tg.values()), abs=1e-9)
+    moved = {"vdf8-trfe4-ctfe1-rvdf1-14": (0.076, 0.245), "vdf9-trfe4-rvdf1-14": (-0.289, -0.162), "vdf6-trfe3-cfe1": (0.338, 0.454),
+             "vdf9-trfe4-tfe1-14": (-0.050, -0.026), "vdf9-trfe4-e1-14": (-0.066, -0.045)}
+    for n, (was, now) in moved.items():
+        r = m[n]
+        assert r["margin"] == pytest.approx(now, abs=0.003) and r["margin"] > was + 0.015  # a lower helix raises the margin
+    stood = {"vdf9-trfe4-cfe1-14": 0.317, "vdf10-trfe4-14": 0.056, "vdf9-trfe4-an1-14": 0.197, "vdf9-trfe4-ctfe1-14": 0.300, "vdf12-rvdf2-14": 0.162,
+             "vdf5-rvdf1-6": 0.064, "vdf7-trfe2-an1": 0.565, "vdf8-trfe2": 0.229, "vdf8-trfe4-an1-e1-14": -0.119, "vdf8-trfe4-an1-tfe1-14": 0.186,
+             "vdf9-trfe3-an1-rvdf1-14": 0.037, "vdf8-trfe4-an1-rvdf1-14": -0.148, "vdf8-trfe4-cfe1-rvdf1-14": -0.044, "vdf7-trfe3": 0.213}
+    for n, v in stood.items():
+        assert m[n]["margin"] == pytest.approx(v, abs=0.003)
+    # the registered set is as it was sent; the addendum carries part d on its lowest helix, with its files
+    sent = json.loads((pred / "e7_polyfind_belt4.json").read_text())["systems"]["vdftrfe_ctfe_rvdf_57_29_7_7"]
+    assert sent["ground_helix"] == "TGTG'" and sent["margin_TT_minus_TG_kcal"] == pytest.approx(0.076, abs=0.002)
+    again = json.loads((pred / "e7_addendum_polyfind_belt4.json").read_text())["systems"]["vdftrfe_ctfe_rvdf_57_29_7_7"]
+    assert again["ground_helix"] == "GTG'T" and again["margin_TT_minus_TG_kcal"] == pytest.approx(0.245, abs=0.003)
+    c = again["conformations"]
+    assert c["TGTG'"]["margin_vs_ground_kcal"] == pytest.approx(0.169, abs=0.005) and c["TTTT"]["margin_rigid_pendants_vs_ground_kcal"] == pytest.approx(0.112, abs=0.003)
+    for conf in ("TTTT", "TGTG'", "GTG'T"):
+        for field in ("file_rigid_pendants", "file_tilted"):
+            f = c[conf][field]
+            assert hashlib.sha256((pred / f["name"]).read_bytes()).hexdigest() == f["sha256"]
+    for conf in ("TTTT", "TGTG'"):  # the files that were sent are unchanged
+        assert c[conf]["file_tilted"]["sha256"] == sent["conformations"][conf]["file_tilted"]["sha256"]
