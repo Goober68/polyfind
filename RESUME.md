@@ -21,6 +21,16 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**THE PI IS THE BENCH (2026-11-15: "Im the bench, so go").** Bench asks go to the PI directly, in the conversation,
+and are filed in the exchange for the record. Filed: `sarco/materials/ask-polyfind-bench-film-stiffness-v1.md`
+(four numbers on the baseline 25 um P(VDF-TrFE-CFE) film, in order: (1) the storage modulus, from the DMA run E4 already
+lists, or the small-strain tensile modulus; (2) crystallinity and draw; (3) the blocked force itself against a stiff
+stop at the operating point, with the free strain; (4) the regio-defect content, 19F NMR or the supplier's figure).
+WHEN THEY COME: (1) into `pin_design.py --young`; (1)+(2) into a two-phase estimate between the film's modulus and the
+crystals' (`crystal_stiffness_belt4.json`); (3) calibrates the blocked-force column on the baseline; (4) into the film's
+cell (a cell at the measured defect content) and the anchor of the relaxation frequencies. The bench's instruments and
+limits are in `sarco/materials/bench-expectations-v1.md` and `sarco/materials/electrostriction/BENCH_E4.md`.
+
 **The crystals' stiffness, and the blocked force through the crystal, 2026-11-15 (PI: "Go").** Text:
 `docs/CANDIDATE_MATERIALS.md` 5.6 ("The fourth part: blocked force, per area": rewritten with both readings). STATE: DONE,
 CPU ONLY (spend unchanged: about $14.05 of the $46).
