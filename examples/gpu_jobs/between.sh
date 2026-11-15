@@ -3,7 +3,7 @@
 # and the saddle settled from its top (examples/kink_wide_cell.py between).  A job of
 # examples/runpod_jobs_pod.sh.
 #
-#   between.sh ROW NX NY START END NAME [plain]
+#   between.sh ROW[@OFFSET] NX NY START END NAME [plain]
 #
 # START and END are dotted paths in the row (I.state, B.state) or settled:NAME (a record of
 # settle.sh, or of docs/predictions/kink_states_belt4.json).  The same line again continues a band
@@ -13,6 +13,7 @@ set -euo pipefail
 ROW="$1"; NX="$2"; NY="$3"; START="$4"; END="$5"; NAME="$6"
 PLAIN=(); [ "${7:-}" = "plain" ] && PLAIN=(--plain)   # the band in per-variable units, not in the per-chain metric
 KINK="${STEP_KINK:-0}"
+case "$ROW" in *@*) KINK="${ROW##*@}"; ROW="${ROW%@*}" ;; esac   # ROW@OFFSET: the sheet's kink pair at that bond offset
 SHARED="$(dirname "$JOB_OUT")/shared"
 mkdir -p "$SHARED/ck"
 STATES="$SHARED/states.json"

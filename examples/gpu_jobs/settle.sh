@@ -2,7 +2,7 @@
 # Relax a state held in a row of band_row.sh's table to the minimum it belongs to and say which
 # state that is (examples/kink_wide_cell.py settle).  A job of examples/runpod_jobs_pod.sh.
 #
-#   settle.sh ROW NX NY STATE NAME [mover CELL NAME2] [torsions K:DEG,...] [copyto CHAIN]
+#   settle.sh ROW[@OFFSET] NX NY STATE NAME [mover CELL NAME2] [torsions K:DEG,...] [copyto CHAIN]
 #
 # STATE is a dotted path in the row (I.state, I-B.polished.state, I-B.images.5) or settled:NAME.
 # "mover CELL NAME2": first give the moving chain the coordinates it has in the settled record
@@ -15,6 +15,7 @@
 set -euo pipefail
 ROW="$1"; NX="$2"; NY="$3"; STATE="$4"; NAME="$5"; shift 5
 KINK="${STEP_KINK:-0}"
+case "$ROW" in *@*) KINK="${ROW##*@}"; ROW="${ROW%@*}" ;; esac   # ROW@OFFSET: the sheet's kink pair at that bond offset
 SHARED="$(dirname "$JOB_OUT")/shared"
 mkdir -p "$SHARED/ck"
 STATES="$SHARED/states.json"

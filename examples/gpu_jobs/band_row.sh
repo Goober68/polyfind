@@ -4,9 +4,14 @@
 # saddles settled from the bands' tops; all minimisations on the closure surface.  A job of
 # examples/runpod_jobs_pod.sh.  Arguments:
 #
-#   band_row.sh ROW NX NY [from CELL [stored]] [tiled] [metric]
+#   band_row.sh ROW[@OFFSET] NX NY [from CELL [stored]] [tiled] [metric] [ends]
 #
 # ROW is a sequence row with a stored kinked crystal ("vdf9-trfe4-cfe1-14"), NX NY the cell.
+# "@OFFSET": the bond offset of the sheet's kink pair (a stored kinked crystal ROW@OFFSET), where
+# the environment's STEP_KINK or 0 is not the one meant: a queue line cannot set the environment.
+# "ends": the end states I and B only, no bands and no saddles (the row other jobs' states and
+# bands hang on, where the one-monomer step is not wanted, or before it is known that I is a
+# state at all: where it is not, the band from I to B is a straight path across cis).
 # "metric": run the bands in the per-chain metric the minimisations use.
 # "from CELL": start each band from the band of the same row in that cell (an earlier job's, in
 # the shared table; with "stored" after it, the stored table's, copied in).  "tiled": take the tiled two-chain cell as the sheet without the check that
@@ -23,17 +28,19 @@
 # chains of PVDF: 240) is evaluated on the host whatever the pod has: do not queue one.
 set -euo pipefail
 ROW="$1"; NX="$2"; NY="$3"; shift 3
-FROM=""; TILED=(); COPY=(); BMETRIC=()
+KINK="${STEP_KINK:-0}"
+case "$ROW" in *@*) KINK="${ROW##*@}"; ROW="${ROW%@*}" ;; esac
+FROM=""; TILED=(); COPY=(); BMETRIC=(); ENDS=""
 while [ $# -gt 0 ]; do
   case "$1" in
     from) FROM="$2"; shift 2 ;;
-    stored) COPY=(--row "$ROW@${STEP_KINK:-0} $FROM mover 0 ahead host flexible"); shift ;;
+    stored) COPY=(--row "$ROW@$KINK $FROM mover 0 ahead host flexible"); shift ;;
     tiled) TILED=(--trust-tiled); shift ;;
     metric) BMETRIC=(--band-metric); shift ;;
+    ends) ENDS=1; shift ;;
     *) echo "band_row.sh: unknown argument $1"; exit 2 ;;
   esac
 done
-KINK="${STEP_KINK:-0}"
 SHARED="$(dirname "$JOB_OUT")/shared"
 mkdir -p "$SHARED/ck"
 TABLE="$SHARED/steps.json"
@@ -44,8 +51,13 @@ COMMON=(--row "$ROW" --kink-at "$KINK" --nx "$NX" --ny "$NY" --mover 0 --host fl
         --checkpoints "$SHARED/ck" --out "$TABLE")
 BAND=()
 [ -n "$FROM" ] && BAND=(--band-from "$(key "$FROM")")
-echo "== $(key "${NX}x${NY}"): end states and bands${FROM:+, each band started from that of the $FROM cell}"
-for round in $(seq 1 "${STEP_BAND_ROUNDS:-3}"); do
+if [ -n "$ENDS" ]; then
+  echo "== $(key "${NX}x${NY}"): end states only"
+  "$PY" examples/kink_migration.py "${COMMON[@]}" "${TILED[@]}" --ends-only
+fi
+[ -z "$ENDS" ] && echo "== $(key "${NX}x${NY}"): end states and bands${FROM:+, each band started from that of the $FROM cell}"
+ROUNDS="${STEP_BAND_ROUNDS:-3}"; [ -n "$ENDS" ] && ROUNDS=0
+for round in $(seq 1 "$ROUNDS"); do
   "$PY" examples/kink_migration.py "${COMMON[@]}" "${TILED[@]}" --maxiter "${STEP_BAND_MAXITER:-300}" --fmax "${STEP_FMAX:-0.1}" "${BAND[@]}" "${BMETRIC[@]}"
   TILED=(--trust-tiled)   # the sheet was checked in the first round, if it was to be
   if "$PY" -c "import json,sys; r=json.load(open(sys.argv[1]))['rows'][sys.argv[2]]; sys.exit(0 if all(r.get(s, {}).get('converged') for s in ('A-I', 'I-B')) else 1)" "$TABLE" "$(key "${NX}x${NY}")"; then
@@ -53,8 +65,10 @@ for round in $(seq 1 "${STEP_BAND_ROUNDS:-3}"); do
   fi
   echo "== round $round: a band has not converged"
 done
-echo "== $(key "${NX}x${NY}"): the saddles, settled from the tops of the bands"
-"$PY" examples/kink_migration.py "${COMMON[@]}" --trust-tiled --polish
+if [ -z "$ENDS" ]; then
+  echo "== $(key "${NX}x${NY}"): the saddles, settled from the tops of the bands"
+  "$PY" examples/kink_migration.py "${COMMON[@]}" --trust-tiled --polish
+fi
 "$PY" - "$TABLE" "$(key "${NX}x${NY}")" "$JOB_OUT/result.json" <<'PY'
 import json, sys
 table, key, out = sys.argv[1:4]

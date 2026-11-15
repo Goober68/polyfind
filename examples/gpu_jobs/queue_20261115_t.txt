@@ -1,0 +1,16 @@
+# One chain's moves in the nitrile cell with a reversed VDF unit on 21 mol% TrFE
+# (vdf9-trfe3-an1-rvdf1-14, IVRVVRVAVVVVVR), sixteen chains, bands in the per-chain metric.
+# Two starts: the sheet at the G+ T G- hand's cheapest site (bond offset 18, a VDF-VDF pair in the
+# five-VDF run, +1.86) and at offset 0 (the pair on the reversed unit, +2.60: the position the
+# other rows' moves started from).  End states only: the one-monomer step's bands are not run.
+# N: the kink pair two monomers on with the other hand; L: three bonds on with the sheet's hand.
+band_row.sh vdf9-trfe3-an1-rvdf1-14@18 4 2 tiled ends
+settle.sh vdf9-trfe3-an1-rvdf1-14@18 4 2 kinked_crystal.state N torsions 18:180,20:180,22:-90,24:97
+between.sh vdf9-trfe3-an1-rvdf1-14@18 4 2 kinked_crystal.state settled:N A-N
+settle.sh vdf9-trfe3-an1-rvdf1-14@18 4 2 kinked_crystal.state L torsions 18:180,20:180,21:92,23:-71
+between.sh vdf9-trfe3-an1-rvdf1-14@18 4 2 settled:N settled:L N-L
+band_row.sh vdf9-trfe3-an1-rvdf1-14@0 4 2 tiled ends
+settle.sh vdf9-trfe3-an1-rvdf1-14@0 4 2 kinked_crystal.state N torsions 0:180,2:180,4:-90,6:97
+between.sh vdf9-trfe3-an1-rvdf1-14@0 4 2 kinked_crystal.state settled:N A-N
+settle.sh vdf9-trfe3-an1-rvdf1-14@0 4 2 kinked_crystal.state L torsions 0:180,2:180,3:92,5:-71
+between.sh vdf9-trfe3-an1-rvdf1-14@0 4 2 settled:N settled:L N-L
