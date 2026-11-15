@@ -61,6 +61,7 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | vdf9-trfe4-cfe1-14@0 | +0.94 | +3.95 | +3.79 | 5.402, 8.426, 92.669, 35.496 | 5.302, 8.245, 91.700, 36.183 |
 | vdf9-trfe4-cfe1-14@0~ | +0.65 | +4.18 | +4.07 | 5.004, 9.075, 93.871, 35.529 | 5.302, 8.245, 91.700, 36.183 |
 | vdf9-trfe4-ctfe1-14@0 | -0.87 | +2.16 | +2.04 | 5.639, 8.487, 91.630, 35.424 | 5.510, 8.276, 90.610, 36.137 |
+| vdf9-trfe4-ctfe1-14@0~ | -0.13 | +2.55 | - | 5.155, 9.340, 96.305, 35.458 | 5.510, 8.276, 90.610, 36.137 |
 | vdf9-trfe4-dfe1-14@0 | +5.17 | +6.43 | +6.20 | 5.188, 8.546, 92.512, 35.484 | 4.980, 8.325, 89.098, 36.162 |
 | vdf9-trfe4-e1-14@0 | +5.66 | +6.85 | +6.62 | 5.172, 8.550, 92.135, 35.496 | 4.878, 8.471, 91.779, 36.159 |
 | vdf9-trfe4-rvdf1-14@0 | +4.03 | +5.79 | +5.68 | 5.194, 8.576, 92.258, 35.483 | 4.979, 8.411, 88.707, 36.149 |
@@ -78,6 +79,7 @@ Along the slide (slip in monomer periods: rigid lattice, relaxed):
 | vdf10@0 ahead | 1x1, all 2 (the sheet in register) | flexible | +5.06 | +8.23, **+7.38** | +7.87, **+7.34** (polish not converged) | -0.00 | 8.23 / 8.23 | 3 /s | 1.04, 0.81 |
 | vdf10@0 ahead | 2x1, 1 of 4 | flexible | +9.85 | +10.29, **+10.27** | +12.49, **+12.46** | +7.88 | 12.46 / 4.59 | 2.5e+03 /s | 0.03, 0.08 |
 | vdf10@0 ahead | 4x2, 1 of 16 | flexible | +9.96 | +10.73, **+10.66** | +11.84, **+11.64** | +5.91 | 11.64 / 5.73 | 9.9e+03 /s | 0.09, 0.09 |
+| vdf9-trfe4-an1-14@0 ahead | 4x2, 1 of 16 | flexible | +8.87 | +8.92, **+8.93** | +14.98 | +11.86 | 14.98 / 3.12 | 37 /s | 0.09, 0.10 |
 | vdf9-trfe4-cfe1-14@0 ahead | 1x1, 1 of 2 | flexible | +6.33 | +6.43, **+6.43** | +11.37, **+11.48** | +8.98 | 11.48 / 2.50 | 1.3e+04 /s | 0.10, 0.69 |
 | vdf9-trfe4-cfe1-14@0 ahead | 2x1, 1 of 4 | flexible | +9.04 | +9.11, **+9.08** | +13.31, **+13.31** | +13.00 | 13.31 / 0.31 | 6e+02 /s | 0.10, 0.10 |
 | vdf9-trfe4-cfe1-14@0 ahead | 4x2, 1 of 16 | flexible | +9.05 | +9.11, **+9.11** | +15.41 | +11.79 | 14.49 / 2.70 (by way of M, below) | 83 /s | 0.10, 0.10 |
@@ -91,6 +93,7 @@ End points only (no band)
 | vdf10@0 ahead | 4x1, 1 of 8 | flexible | +10.02 | +6.47 |
 | vdf10@0 ahead | 2x2, 1 of 8 | flexible | +9.98 | +7.51 |
 | vdf10@0 ahead | 8x1, 1 of 16 | flexible | +10.05 | +6.19 |
+| vdf8-trfe4-ctfe1-rvdf1-14@0 ahead | 4x2, 1 of 16 | flexible | -0.00 | +11.03 |
 
 **The single-chain step against the size of the cell** (PVDF, chain 0's kink pair one monomer ahead of every other chain's; kcal/mol against the sheet; cell fixed)
 
@@ -140,6 +143,10 @@ How the lattice answers in the 4x2 cell (16 chains, neighbours flexible): displa
 | vdf10-trfe4-14, 4x2 | P | 4, 6 | +145, +163, -163, -159, -65, -170, +91 | +11.167 | +9.36 | +10.70 |
 | vdf10, 4x2 | L | 3, 5 | +178, -173, -175, +82, -168, -75, +174 | +5.423 | +9.96 | +5.91 |
 | vdf10, 4x2 | N | 4, 6 | +174, +179, +170, -178, -73, -166, +83 | +7.722 | +9.96 | +5.91 |
+| vdf8-trfe4-ctfe1-rvdf1-14, 4x2 | L | 3, 5 | +180, -174, -176, +82, -171, -72, +176 | +3.405 | -0.00 | +11.03 |
+| vdf8-trfe4-ctfe1-rvdf1-14, 4x2 | N | 4, 6 | -177, -174, +170, +159, -91, -174, +95 | +7.248 | -0.00 | +11.03 |
+| vdf9-trfe4-an1-14, 4x2 | L | 3, 5 | +179, -157, -169, +81, -166, -74, +175 | +4.448 | +8.87 | +11.86 |
+| vdf9-trfe4-an1-14, 4x2 | N | 4, 6 | -176, -161, +172, +155, -89, -172, +100 | +7.950 | +8.87 | +11.86 |
 | vdf9-trfe4-cfe1-14, 2x1 | M | 4 | +178, +179, +144, +162, -107, +180, +178 | +11.204 | +9.04 | +13.00 |
 | vdf9-trfe4-cfe1-14, 4x2 | B2 | 4, 6 | +175, +173, -150, +180, +78, +173, -76 | +12.398 | +9.05 | +11.79 |
 | vdf9-trfe4-cfe1-14, 4x2 | L | 3, 5 | -177, -162, -171, +81, -167, -77, +175 | +4.969 | +9.05 | +11.79 |
@@ -170,6 +177,10 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 | vdf10, 4x2 | A-N | kinked_crystal.state, settled:N | +12.388 (0.10, 128) | **+12.387** | -0.17 |
 | vdf10, 4x2 | I-N | I.state, settled:N | +11.637 (4.82, 600, not converged) | **+11.637** | -0.41 |
 | vdf10, 4x2 | N-L | settled:N, settled:L | +13.661 (0.09, 271) | **+13.657** | - |
+| vdf8-trfe4-ctfe1-rvdf1-14, 4x2 | A-N | kinked_crystal.state, settled:N | +9.824 (0.10, 135) | **+9.826** | -0.20 |
+| vdf8-trfe4-ctfe1-rvdf1-14, 4x2 | N-L | settled:N, settled:L | +10.192 (0.08, 127) | **+10.185** | - |
+| vdf9-trfe4-an1-14, 4x2 | A-N | kinked_crystal.state, settled:N | +10.572 (0.10, 183) | **+10.562** | -1.63 |
+| vdf9-trfe4-an1-14, 4x2 | N-L | settled:N, settled:L | +10.002 (0.09, 134) | **+10.001** | - |
 | vdf9-trfe4-cfe1-14, 2x1 | I-M | I.state, settled:M | +13.066 (0.11, 300, not converged) | **+12.999** | -0.19 |
 | vdf9-trfe4-cfe1-14, 2x1 | M-B | settled:M, B.state | +13.412 (0.09, 183) | **+13.307** | -0.25 |
 | vdf9-trfe4-cfe1-14, 4x2 | A-L | kinked_crystal.state, settled:L | +15.290 (0.10, 178) | **+15.290** | - |
@@ -192,6 +203,8 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 |---|---|---|---|---|---|---|
 | vdf10, 4x2 | +5.91 | 11.64 / 5.73 | +7.72 | 12.39 / 4.66 | the step to B, 11.64 | 9.9e+03 /s |
 | vdf10-trfe4-14, 4x2 | +10.70 | 15.00 / 4.30 | +8.94 | 11.89 / 2.95 | to N, 11.89 | 6.5e+03 /s |
+| vdf8-trfe4-ctfe1-rvdf1-14, 4x2 | +11.03 | no path found | +7.25 | 9.83 / 2.58 | to N, 9.83 | 2.1e+05 /s |
+| vdf9-trfe4-an1-14, 4x2 | +11.86 | 14.98 / 3.12 (the band's top) | +7.95 | 10.56 / 2.61 | to N, 10.56 | 6e+04 /s |
 | vdf9-trfe4-cfe1-14, 4x2 | +11.79 | 14.49 / 2.70 | +8.82 | 11.40 / 2.58 | to N, 11.40 | 1.5e+04 /s |
 
 **What N does next** (from N: the same move again, to N2; a stack neighbour making the move beside it; barriers from N, and how often N goes back to the sheet for each of them at 300 K with equal attempt frequencies)
@@ -207,6 +220,8 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 |---|---|---|---|---|---|---|
 | vdf10, 4x2 | +5.42 | 11.82 | 13.66, 5.94 | 4.66 | 0.12 | straight from the sheet, 11.82 / 6.40 |
 | vdf10-trfe4-14, 4x2 | +3.74 | 15.58 | 10.56, 1.61 | 2.95 | 9.4 | by way of N, 11.89 / 8.15 |
+| vdf8-trfe4-ctfe1-rvdf1-14, 4x2 | +3.40 | not run | 10.19, 2.94 | 2.58 | 0.54 | by way of N, 10.19 / 6.79 |
+| vdf9-trfe4-an1-14, 4x2 | +4.45 | not run | 10.00, 2.05 | 2.61 | 2.6 | by way of N, 10.56 / 6.11 |
 | vdf9-trfe4-cfe1-14, 4x2 | +4.97 | 15.29 | 10.49, 1.67 | 2.58 | 4.6 | by way of N, 11.40 / 6.43 |
 
 **Two chains one monomer ahead together** (end state only; kcal/mol against the sheet, neighbours flexible, cell fixed)
@@ -235,6 +250,8 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 * `VVRVVRVAVVRVVR` G- T G+ (14 of 14 positions): VV 3.65 VR 4.62 RV 3.33 VV 3.57 VR 2.15 RV 2.26 VA 3.63 AV 3.63 VV 4.31 VR 3.79 RV 3.41 VV 3.67 VR 3.28 RV 3.38
 * `VVRVVRVCVVRVVR` G+ T G- (14 of 14 positions): VV 3.95 VR 5.30 RV 4.56 VV 4.06 VR 5.25 RV 5.88 VC 12.11 CV 11.41 VV 4.75 VR 5.45 RV 4.47 VV 3.96 VR 5.33 RV 4.51
 * `VVRVVRVCVVRVVR` G- T G+ (14 of 14 positions): VV 4.18 VR 5.45 RV 3.73 VV 4.05 VR 3.57 RV 3.42 VC 8.07 CV 8.28 VV 4.14 VR 4.46 RV 3.83 VV 4.23 VR 4.36 RV 3.81
+* `VVRVVRVKVVRVVR` G+ T G- (14 of 14 positions): VV 2.16 VR 3.73 RV 2.22 VV 2.31 VR 4.03 RV 3.50 VK 14.17 KV 5.79 VV 3.33 VR 4.17 RV 2.17 VV 2.14 VR 3.67 RV 2.19
+* `VVRVVRVKVVRVVR` G- T G+ (14 of 14 positions): VV 2.55 VR 3.04 RV 2.73 VV 2.89 VR 4.51 RV 5.60 VK 8.82 KV 2.54 VV 2.95 VR 1.80 RV 2.35 VV 2.51 VR 1.78 RV 2.43
 
 | sequence | scans (handednesses) | lowest site | highest site | sheets per repeat at 300 K, sum over sites of exp(-E/kT) | against 64/29/7 |
 |---|---|---|---|---|---|
@@ -244,6 +261,7 @@ Bands between those states and the named ones (FIRE, nine images; the saddle set
 | vdf8-trfe4-ctfe1-rvdf1-14 (IVRVVRVKVVRVVR) | 2 | 0.35 | 11.07 | 1.48e+00 per handedness | 132.459 |
 | vdf9-trfe4-an1-14 (VVRVVRVAVVRVVR) | 2 | 2.15 | 16.09 | 4.99e-02 per handedness | 4.474 |
 | vdf9-trfe4-cfe1-14 (VVRVVRVCVVRVVR) | 2 | 3.42 | 12.11 | 1.12e-02 per handedness | 1.000 |
+| vdf9-trfe4-ctfe1-14 (VVRVVRVKVVRVVR) | 2 | 1.78 | 14.17 | 1.86e-01 per handedness | 16.690 |
 
 **Margins with both cells polished** (kcal/mol per monomer, all-trans minus TG; positive when TG is lower)
 

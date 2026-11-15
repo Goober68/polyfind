@@ -761,7 +761,8 @@ with reversed units in place of TrFE.**
 **The leaders' rates by every kink site (2026-11-14; PI: "Go on both").** The tables above take
 each lattice's rate from one kink site. `examples/kink_site_scan.py` has now walked the kink sheet
 along the whole repeat, for both hands of the kink pair, in the nitrile cell, the CTFE cell with a
-reversed unit and PVDF with reversed units (profiles in 8.4), and the rate is taken from the sum
+reversed unit and PVDF with reversed units, and on 2026-11-15 in the CTFE cell without the
+reversed unit (profiles in 8.4), and the rate is taken from the sum
 of `exp(-E / kT)` over all of a lattice's sites against the same sum for the 64/29/7 cell
 (rigid pendants, as scanned):
 
@@ -770,6 +771,7 @@ of `exp(-E / kT)` over all of a lattice's sites against the same sum for the 64/
 | 64/29/7 (one CFE per fourteen): the anchor | 3.95 | 3.42 (RV) | 1 | 364 kHz | 0.001% | 0.000 | **0.004%** |
 | the 71/29 matrix | 7.09 | 4.66 (VV) | 0.0917 | 33 kHz | 0.131% | 0.889 | **0.026%** |
 | AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** |
+| CTFE, one per fourteen | 2.16 | 1.78 (VR) | 18.1 | 6.6 MHz | 0.001% | 0.000 | **0.005%** |
 | CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.117% | 0.001 | **0.189%** |
 | PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** |
 
@@ -784,11 +786,68 @@ of `exp(-E / kT)` over all of a lattice's sites against the same sum for the 64/
   fast in this table, and it is also the sign that the model's all-trans state for this cell is
   close to not existing: the number to trust least here is the one that leads.
 * The two-unit nitrile cells (with TFE, with ethylene) and the single units other than the
-  nitrile are not scanned; their rates remain the one-site ones above.
+  nitrile and CTFE are not scanned; their rates remain the one-site ones above.
+
+**The leaders by the other rate model, and CTFE without the reversed unit (2026-11-15; PI: "Go on
+both").** The tables above take a lattice's rate from how many kink sheets it holds. The other
+candidate for what limits the channel is how fast one chain moves its kink pair out of a sheet
+(8.3, 8.5). That move is now computed for the nitrile cell and for the CTFE cell with a reversed
+unit, in sixteen chains with the bands in the per-chain metric (one pod, 42 minutes:
+`docs/predictions/gpu_jobs_a100_20261115_s/`; the states and barriers are in 8.3). In both, as in
+the 64/29/7 cell and the matrix, the cheapest move is the one to N, two monomers on with the
+other hand. The frequency is the film's 364 kHz times `exp(-(barrier - 11.40) / kT)`, 11.40 being
+the same move in the 64/29/7 cell (`pin_design.py`, table "moves"):
+
+| cell | the cheapest move, barrier from the sheet | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
+|---|---|---|---|---|---|---|---|---|
+| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** |
+| the 71/29 matrix | to N, 11.89 | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** |
+| AN, one per fourteen | to N, 10.56 | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** |
+| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.117% | 0.006 | **0.160%** |
+
+* **The two rate models agree on the nitrile cell.** 1.5 MHz by the move and 1.8 MHz by the
+  sites' sum, tan delta 0.004 and 0.003 at 34 kHz, 0.091% and 0.097% at the heat budget. Its
+  place on the three axes no longer hangs on which model holds: four to five times the film's
+  relaxation frequency, a fifteenth of its tan delta, 1.4 to 1.5 times its strain at the heat
+  budget (the film's channel: 364 kHz, 0.060, 0.066%).
+* **They are a decade apart on the CTFE cell with a reversed unit, and it leads on both.** 5.1
+  MHz by the move against 52 MHz by the sum; tan delta 0.006 against 0.001; 0.160% against 0.189%
+  at the heat budget. This lattice's sheets cost about kT, which the sum counts in full, while
+  the barrier out of a sheet falls by half of what the sheet's energy does (1.57 under the
+  64/29/7 cell's, where the sheets at the start sites differ by 2.95). The lower figure is the
+  cautious one to carry. Two caveats on it: the move starts from the sheet at the reversed unit
+  (1.00), not at the lattice's cheapest site (0.35), and the one-monomer step has no path in
+  this lattice (8.3).
+* **Across the four lattices the move's barrier spans 2.1 kcal/mol where the sheet's energy spans
+  6.1** (the move: 9.83, 10.56, 11.40, 11.89; the sheet at the start site: 1.00, 3.25, 3.95,
+  7.09). That is the whole of the disagreement between the two models: on the sheets a pin buys
+  decades, on the move a factor of a few. The matrix is at 158 kHz by the move and 33 kHz by the
+  sum (tan delta 0.20 against 0.89), so it is the sparse-pin designs whose verdict hangs on the
+  rate model; the two dense leaders computed here do not.
+* **What the reversed unit adds to CTFE is the strain; most of the speed was CTFE's already.**
+  CTFE alone at one per fourteen, scanned over its repeat for both hands (8.4), has 18 times the
+  64/29/7 cell's sum over sites (6.6 MHz) and a margin of +0.300, off the switching window: 0.1%
+  of the cell is polar at the bias, tan delta is nil because nothing switches, and the strain at
+  the heat budget is 0.005%, the model's CFE cell again. Diluting it to bring the margin in
+  gives the speed back (the table by spacing above: +0.141 at one per forty, at 36 kHz and tan
+  delta 0.49). The reversed unit does it without diluting: the margin comes to +0.076 (34% polar
+  at the bias, 0.16 to 0.19% at the heat budget) and the sum over sites rises a further 7.9
+  times. Site by site it lowers the kink sheet by 1.1 to 3.1 kcal/mol at twelve of the thirteen
+  sites both scans hold, all along the repeat and not beside itself (the mirrored hand: 0.7 to
+  1.7 at ten of twelve); the one site that rises, by 1.4, is the one just before the reversed
+  unit. That is the 1.2 it takes off the matrix's sheet on its own (5.68 against 6.85): **the
+  two units' cuts add (0.84 computed, 0.87 summed) where their pins do not (+0.076 computed,
+  -0.046 summed).** So the roles separate. The chlorinated unit supplies the cheap kinks, the
+  reversed unit places the margin, and each keeps its effect on the kink sheet beside the other.
+  The same pairing with the nitrile in place of CTFE (no chlorine; the nitrile's cut per pin is
+  the best of the units) is not computed.
 
 **Where this leaves the ranking.** On the three axes the order of the cells in hand is CTFE with
 reversed VDF, the nitrile with ethylene or TFE, the nitrile alone, PVDF with reversed units, the
-measured film's channel, and far behind them the model's own CFE cell and every sparse pin. All
+measured film's channel, and far behind them the model's own CFE cell and every sparse pin. The
+nitrile cell and the CTFE cell with a reversed unit keep their places when the rate is taken from
+one chain's move instead of the sheets' population (2026-11-15); the other cells have the sheets'
+model only. All
 of the leaders are dense: two units in fourteen monomers. What is solid is the direction: a
 loosening pin made affordable by a trans-favouring unit, with the pair placed within the window
 by computing the cell. What is not: every number that rests on chlorine or nitrile parameters or
@@ -1495,6 +1554,40 @@ the metric the four-chain hyperplane takes 110 evaluations and ends on the stall
     and L is reached from the sheet at the step's own price. Not computed: whether a neighbour
     follows a chain that is in L (the question that showed PVDF's stepped chain recalled and
     N not joined), L's own next move, and L in the smaller and larger cells.
+  - *The same moves in the unit screen's leaders: N is the cheapest move again, and the
+    barriers span 2.1 where the sheets span 6.1 (2026-11-15, PI: "Go on both").* The nitrile
+    cell (`VVRVVRVAVVRVVR`) and the cell with one CTFE and one reversed VDF unit
+    (`IVRVVRVKVVRVVR`): sixteen chains, one moving, from the polished kinked cells at kink
+    offset 0, bands in the per-chain metric (`gpu_jobs_a100_20261115_s/`; each row's `to_N` and
+    `to_L` in `kink_migration_belt4.json`), beside the two lattices above:
+
+    | sixteen chains, kcal/mol against the sheet | AN cell | CTFE with reversed VDF | 64/29/7 | 71/29 |
+    |---|---|---|---|---|
+    | the sheet at this site, against all-trans | 3.25 | 1.00 | 3.95 | 7.09 |
+    | the wide kink I | +8.87 | not a state: it relaxes to the sheet | +9.05 | +9.36 |
+    | one monomer on, B | +11.86 | +11.03 | +11.79 | +10.70 |
+    | the step to B | 14.98 (the band's top) | no path found | 14.49 (by way of M) | 15.00 |
+    | N | +7.95 | +7.25 | +8.82 | +8.94 |
+    | the sheet to N, and back | **10.56** / 2.61 | **9.83** / 2.58 | 11.40 / 2.58 | 11.89 / 2.95 |
+    | L | +4.45 | +3.40 | +4.97 | +3.74 |
+    | N on to L, above N | 2.05 | 2.94 | 1.67 | 1.61 |
+    | to L for each return from N to the sheet | 2.6 | 0.54 | 4.6 | 9.4 |
+    | the way to L, and L back | 10.56 / 6.11 | 10.19 / 6.79 | 11.40 / 6.43 | 11.89 / 8.15 |
+
+    In both lattices the cheapest move is the one to N, and N's way back to the sheet is the
+    same 2.6 in all three pinned lattices: a pin lowers N and the saddle before it together.
+    The saddle to N holds a shallow minimum on the way in both (as the terpolymer's holds Q),
+    not settled on its own. From N the nitrile cell's chain goes on to L 2.6 times for each
+    return, as the terpolymer's does; in the CTFE cell the saddle to L (10.19) is above the one
+    the chain came over (9.83), so it returns to the sheet about twice for each time it reaches
+    L. L is the lowest state off the sheet in both and holds the chain for 6.1 and 6.8. The
+    one-monomer step is 4.4 above the move to N in the nitrile cell (a converged band's top;
+    the search for its settled saddle slid off the path, and the way through M that lowers this
+    step by 0.9 in the terpolymer was not looked for). In the CTFE cell the wide kink is not a
+    state: the moving chain's reset torsions relax back to the sheet, so the band meant to run
+    from it to B ran straight from the sheet across a cis bond and did not converge. B exists
+    at +11.03 and no path to it was found; it would take a path through a state like I, which
+    this lattice does not offer at this site. The rates these barriers give are in 5.6.
   - *What a bias does to these barriers: almost nothing. The field moves the balance, not the
     rate (2026-11-14, PI: "Both").* The mixed cell now carries an applied field as the packer
     does (`polyfind.mixedcell`, "An applied field"): the energy is the electric enthalpy at the
@@ -1582,6 +1675,8 @@ on, in order along the chain (`kink_site_scan_belt4.json`; profiles in `kink_sum
 | 71/29 with the TrFE in pairs `VVVVVRRVVVVVRR`, G+ T G- | VV 5.05, VV 5.11, VV 5.40, VV 7.83, VR 10.41, RR 7.37, RV 7.16, and the same again (the two halves of the repeat agree to 0.001) |
 | 64/29/7 with AN in place of CFE `VVRVVRVAVVRVVR`, G+ T G- (2026-11-14) | VV 3.25, VR 4.92, RV 3.71, VV 3.47, VR 5.15, RV 5.43, **VA 16.09**, **AV 8.64**, VV 3.76, VR 5.03, RV 3.48, VV 3.27, VR 4.93, RV 3.61 |
 | the same, the mirrored pair | VV 3.65, VR 4.62, RV 3.33, VV 3.57, VR 2.15, RV 2.26, (VA 3.63: the kink pair did not stay), (AV 3.63: the kink pair did not stay), VV 4.31, VR 3.79, RV 3.41, VV 3.67, VR 3.28, RV 3.38 |
+| 64/29/7 with CTFE in place of CFE `VVRVVRVKVVRVVR`, G+ T G- (2026-11-15) | VV 2.16, VR 3.73, RV 2.22, VV 2.31, VR 4.03, RV 3.50, **VK 14.17**, (KV 5.79: the kink pair did not stay), VV 3.33, VR 4.17, RV 2.17, VV 2.14, VR 3.67, RV 2.19 |
+| the same, the mirrored pair | VV 2.55, VR 3.04, RV 2.73, VV 2.89, VR 4.51, RV 5.60, (VK 8.82: the kink pair did not stay), (KV 2.54: the kink pair did not stay), VV 2.95, VR 1.80, RV 2.35, VV 2.51, VR 1.78, RV 2.43 |
 | one CTFE and one reversed VDF per fourteen `IVRVVRVKVVRVVR`, G+ T G- (2026-11-14) | IV 1.00, VR 1.53, RV 0.54, VV 0.80, VR 2.33, RV 1.96, **VK 11.07**, (KV 5.70: the kink pair did not stay), VV 1.63, VR 2.72, RV 0.35, VV 0.61, VR 2.61, RI 3.61 |
 | the same, the mirrored pair | IV 1.59, VR 1.31, RV 1.43, VV 1.46, VR 3.13, RV 4.27, (VK 6.48: the kink pair did not stay), (KV 1.58: the kink pair did not stay), VV 1.91, VR 0.90, RV 1.17, VV 2.36, VR 1.81, RI 1.69 |
 | PVDF with two reversed units per fourteen `VVVVIVVVVVVIVV`, one period (2026-11-14) | VV 3.29, VV 3.80, VV 5.46, **VI 6.14**, IV 3.27, VV 3.67, VV 3.28 |
@@ -1616,8 +1711,11 @@ decimals: the lattice follows the site.
   0.84 of the screen was the lattice's and not the reversed unit's. Kink sheets at 0.4 to 1
   kcal/mol are about kT: this all-trans lattice is barely one, and the two-state picture the loss
   model is built on is at its limit there. *PVDF with reversed units* costs 3.3 to 3.8 at five
-  sites of seven and 5.5 to 6.1 at the two before the reversed unit (PVDF: 5.3 everywhere). The
-  rates that follow from the sums over these sites are in 5.6.
+  sites of seven and 5.5 to 6.1 at the two before the reversed unit (PVDF: 5.3 everywhere).
+  *CTFE without the reversed unit* (2026-11-15) has every site away from the chlorinated unit
+  between 1.8 and 5.6, a wall of 14.2 there for one hand and no site for the other; the reversed
+  unit takes 1.1 to 3.1 off twelve of the thirteen sites the two scans share and adds 1.4 to the
+  one before itself. The rates that follow from the sums over these sites are in 5.6.
 * **What this says to a sequence designer.** At 71/29 the regular sequence gives the sheet two
   cheap sites in fourteen (its one four-VDF run) and a floor of 6.5-7.2 everywhere else, a
   corrugation of 0.7; grouping the TrFE in pairs gives it three cheap sites in seven (5.05-5.40)
@@ -1653,9 +1751,16 @@ the other two rows carry no strain on either. The step barriers are on the saddl
   energies of 8.2 for the AN, CTFE and CDFE cells at one per fourteen, the sheets' population
   puts their channels at 1.2, 6.8 and 2.5 MHz against the CFE cell's 364 kHz, and the cell with
   one CFE per twenty at 96 kHz (`candidate_frequency_map_belt4_polished.md`). None of the four
-  has a step barrier yet, and all are off the switching curve (+0.20, +0.30, +0.69, +0.26), so
+  had a step barrier then, and all are off the switching curve (+0.20, +0.30, +0.69, +0.26), so
   the map gives them a rate and no strain; what the rates are for is section 5.2's comparison of
   the units.
+* **Two of the unit screen's cells on the second model as well (2026-11-15).** One chain's
+  cheapest move in sixteen chains is 10.56 in the AN cell and 9.83 in the CTFE cell with a
+  reversed unit, against 11.40 in the 64/29/7 cell (8.3): 1.5 and 5.1 MHz, where the sums over
+  their kink sites give 1.8 and 52 MHz (`candidate_frequency_map_belt4_steps_4x2_cheapest.md`;
+  `pin_design_belt4.md`, table "moves"). The models agree on the nitrile cell and are a decade
+  apart on the cell whose sheets cost about kT; both cells stay ahead of the measured film's
+  channel on strain, tan delta and frequency under either (5.6).
 * **The two rate models bracket the matrix between slow and following.** If the population of
   kink sheets limits the channel (the earlier section's assumption, on corrected energies) the 71/29
   matrix sits at 2 kHz on the energy of the one site the sheet was first put on and at 33 kHz on

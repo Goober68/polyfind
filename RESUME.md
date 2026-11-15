@@ -21,6 +21,49 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The leaders by one chain's move, and CTFE without the reversed unit, 2026-11-15 (PI: "Go on both").** Text:
+`docs/CANDIDATE_MATERIALS.md` 5.6 ("The leaders by the other rate model, and CTFE without the reversed unit"), 8.3 ("The
+same moves in the unit screen's leaders"), 8.4 (CTFE alone's profile), 8.5; job logs and README in
+`docs/predictions/gpu_jobs_a100_20261115_s/`. STATE: DONE; THE POD IS DELETED AND CONFIRMED BY A READ (GET 404, 0 pods;
+42 minutes, about $1.53; about $13.15 of the $46 used in all). The fallback check-in is deleted.
+(1) ONE CHAIN'S MOVES, sixteen chains, per-chain metric (queue `examples/gpu_jobs/queue_20261114_s.txt`; rows
+`<row>@0 4x2 mover 0 ahead host flexible` of `kink_migration_belt4.json` with `to_N` and `to_L`; states N, L and bands A-N,
+N-L in `kink_states_belt4.json`), kcal/mol against the sheet:
+    AN cell (vdf9-trfe4-an1-14): I +8.87, B +11.86, step 14.98 (band top; its settle slid), N +7.95, sheet to N 10.56 / 2.61
+        back, L +4.45, N to L 2.05 above N (2.6 to L per return), L back 6.11
+    CTFE with reversed VDF (vdf8-trfe4-ctfe1-rvdf1-14): I NOT A STATE (relaxes to the sheet), B +11.03, NO PATH TO B, N +7.25,
+        sheet to N 9.83 / 2.58 back, L +3.40, N to L 2.94 above N (0.54 per return: the saddle to L, 10.19, is the higher), L back 6.79
+    for comparison 64/29/7: to N 11.40 / 2.58; 71/29: 11.89 / 2.95
+(2) THREE AXES ON BOTH RATE MODELS (`pin_design.py`, tables "sites" and "moves"; frequency, tan delta at 34 kHz, AC strain
+at the heat budget at 34 kHz; the film's calibrated channel is 364 kHz, 0.060, 0.066%):
+    AN, one per 14:            by the move 1.5 MHz, 0.004, 0.091% | by the sites' sum 1.8 MHz, 0.003, 0.097%   (AGREE)
+    CTFE with reversed VDF:    by the move 5.1 MHz, 0.006, 0.160% | by the sites' sum 52 MHz, 0.001, 0.189%   (A DECADE APART)
+    71/29 matrix:              by the move 158 kHz, 0.198, 0.054% | by the sites' sum 33 kHz, 0.889, 0.026%
+    The move's barrier spans 2.1 across the four lattices where the sheet's energy spans 6.1: that is the two models'
+    whole disagreement. Carry the lower figure for the CTFE cell.
+(3) CTFE ALONE, one per 14 (`vdf9-trfe4-ctfe1-14@0` and `@0~` in `kink_site_scan_belt4.json`): sites 1.8 to 5.6, wall VK 14.2
+for one hand; 18x the anchor's sum (6.6 MHz); margin +0.300, OFF THE WINDOW: 0.1% polar, 0.005% at the heat budget. The
+reversed unit brings the margin to +0.076 (the strain) and lowers twelve of thirteen sites by 1.1 to 3.1 (the mirrored hand:
+0.7 to 1.7 at ten of twelve), +1.4 at the site before itself; the sum rises 7.9x. THE TWO UNITS' CUTS ADD (0.84 computed, 0.87
+summed); THEIR PINS DO NOT (+0.076 computed, -0.046 summed).
+CODE: `kink_summary.py` and `candidate_frequency_map.py --cheapest` take a row with a way to N and no step to B;
+`pin_design.py --steps` (table "moves"). Test: `tests/test_kink_step.py::test_the_leaders_by_one_chains_cheapest_move_and_ctfe_alone`.
+TRAPS: (1) A queue line cannot set the kink offset: both rows start from the sheet at offset 0, which in the CTFE cell with
+a reversed unit is the site at the reversed unit (1.00), not the cheapest (0.35). (2) Where the wide kink I is not a
+state, `band_row.sh` still runs the "I-B" band, as a straight path from the sheet to B across cis: 900 iterations and
+17 minutes of the pod for nothing. Settle I first and look at its energy before queueing the bands of a new lattice.
+(3) The AN row's settle of the I-B top slid (to +7.85): stored as `search_left_the_path`; the band's top is the number.
+(4) The CTFE row's failed band is stored as `step_to_B_not_found`, without `barrier_forward`.
+REPRODUCE: `kink_site_scan.py --row vdf9-trfe4-ctfe1-14 [--mirror-kink]`; the queue on a pod (`examples/runpod_jobs_pod.sh`);
+`kink_summary.py --no-tilts`; `candidate_frequency_map.py --screen <the seven screen files, comma list> --kinks
+docs/predictions/kink_formation_belt4_polished.json --steps docs/predictions/kink_migration_belt4.json --step-cell 4x2
+--step-mover 0 --cheapest --ref vdf9-trfe4-cfe1-14 --out docs/predictions/candidate_frequency_map_belt4_steps_4x2_cheapest.json`;
+`pin_design.py`.
+NEXT, proposed to the PI: (a) the nitrile with a reversed VDF unit (no chlorine; the nitrile's cut per pin is the best
+of the units, the reversed unit places the margin and adds its own cut): screen, polish, kink reference, site scan, all
+CPU; (b) the CTFE cell's move from its cheapest site (offset 20) and a path to B through an I-like state; (c) Dipole's
+E7 when it lands; (d) the other two helix conformers of the designed rows.
+
 **The leaders' kink sites scanned, and E7 asked of Dipole, 2026-11-14 (PI: "Go on both").** Text:
 `docs/CANDIDATE_MATERIALS.md` 5.6 ("The leaders' rates by every kink site") and 8.4 (profiles);
 `docs/E1_E2_PREDICTIONS.md` (E7). STATE: DONE, CPU ONLY (spend unchanged: about $11.60 of the $46).

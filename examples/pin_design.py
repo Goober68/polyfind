@@ -76,6 +76,7 @@ def main():
     ap.add_argument("--heat-budget", type=float, default=4e6, help="W/m^3")
     ap.add_argument("--ac-max", type=float, default=10.0, help="V/um: the largest AC field the small-signal response is used at, at the heat budget")
     ap.add_argument("--sites", default="docs/predictions/kink_site_scan_belt4.json", help="the kink-site scans (examples/kink_site_scan.py)")
+    ap.add_argument("--steps", default="docs/predictions/kink_migration_belt4.json", help="the single-chain moves in sixteen chains (rows '<row>@0 4x2 mover 0 ahead host flexible')")
     ap.add_argument("--out", default="docs/predictions/pin_design_belt4.json")
     args = ap.parse_args()
     rows = json.load(open(args.margins))["rows"]
@@ -245,6 +246,49 @@ def main():
                 fr = f"{fr / 1e6:.1f} MHz" if fr >= 1e6 else (f"{fr / 1e3:.0f} kHz" if fr >= 1e3 else f"{fr:.0f} Hz")
                 md_z.append(f"| {label} | {z['start_site']:.2f} | {z['cheapest']['energy']:.2f} ({z['cheapest']['units']}) | {ratio:.3g} | {fr} | {pt['strain_ac'][0] * 100:.3f}% | {pt['tan_delta'][0]:.3f} | "
                             f"**{hb['strain_ac'][0] * 100:.3f}%** |")
+        # the other rate model: one chain's cheapest move out of the sheet in sixteen chains (the step to B, or straight to N),
+        # against the same move in the anchor cell
+        try:
+            steps = json.load(open(args.steps)).get("rows", {})
+        except FileNotFoundError:
+            steps = {}
+
+        def cheapest_move(row):
+            e = steps.get(f"{row}@0 4x2 mover 0 ahead host flexible")
+            if e is None:
+                return None
+            step = e.get("barrier_forward_polished", e.get("barrier_forward"))
+            moves = {} if step is None else {"the step to B": step}
+            if "to_N" in e:
+                moves["to N"] = e["to_N"]["barrier_forward"]
+            if not moves:
+                return None
+            name = min(moves, key=moves.get)
+            return {"move": name, "barrier": moves[name], "step_to_B": step, "to_N": moves.get("to N"), "start_sheet": e["kinked_crystal"]["formation_per_kink_pair"],
+                    "N_back_to_the_sheet": e["to_N"]["barrier_back"] if "to_N" in e else None,
+                    "L": e["to_L"]["L"] if "to_L" in e else None, "N_to_L": e["to_L"]["barrier_from_N"] if "to_L" in e else None}
+
+        md_m = ["| cell | the cheapest move, barrier from the sheet | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at "
+                f"{args.ac:g} V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |", "|---|---|---|---|---|---|---|---|---|"]
+        out["moves"] = {"note": "kcal/mol against the sheet at the start site (kink offset 0), sixteen chains, neighbours flexible, cell fixed; the frequency is the measured film's "
+                                "364 kHz times exp(-(barrier - the 64/29/7 cell's) / kT)", "rows": {}}
+        m_ref = cheapest_move("vdf9-trfe4-cfe1-14")
+        if m_ref is not None:
+            for name, label, margin in cells_z if z_ref is not None else []:
+                mv = cheapest_move(name)
+                if mv is None or name not in loss:
+                    continue
+                ratio = float(np.exp(-(mv["barrier"] - m_ref["barrier"]) / 0.596))
+                pt = point(margin, e_cfe - 0.596 * float(np.log(ratio)), loss[name]["mu_TT"], loss[name]["axial"])
+                by_sum = out["sites"]["rows"].get(name, {}).get("three_axes", {}).get("f_relax_hz")
+                out["moves"]["rows"][name] = dict(mv, what=label, ratio_to_the_anchor=ratio, three_axes=pt, f_relax_by_the_sites_sum_hz=by_sum)
+                hb = pt["at_the_heat_budget"]
+
+                def hz(fr):
+                    return "-" if fr is None else (f"{fr / 1e6:.1f} MHz" if fr >= 1e6 else (f"{fr / 1e3:.0f} kHz" if fr >= 1e3 else f"{fr:.0f} Hz"))
+                to_b = "no path found" if mv["step_to_B"] is None else f"{mv['step_to_B']:.2f}"
+                md_m.append(f"| {label} | {mv['move']}, {mv['barrier']:.2f} | {to_b} | {ratio:.3g} | {hz(pt['f_relax_hz'])} | {hz(by_sum)} | {pt['strain_ac'][0] * 100:.3f}% | {pt['tan_delta'][0]:.3f} | "
+                            f"**{hb['strain_ac'][0] * 100:.3f}%** |")
         for name, u in out["units"].items():
             for n in (14, 20, 28, 40):
                 w = 14.0 / n
@@ -291,12 +335,13 @@ def main():
                               "note": "the literature channel as calibrated on the 63/30/7 film (margin zero, n 17)"}
     md_c = md_c if out.get("combinations") else []
     md_z = md_z if out.get("sites", {}).get("rows") else []
-    out["tables_md"] = {"pins": "\n".join(md), "units": "\n".join(md_k), "three_axes": "\n".join(md_3), "combinations": "\n".join(md_c), "sites": "\n".join(md_z),
+    md_m = md_m if out.get("moves", {}).get("rows") else []
+    out["tables_md"] = {"pins": "\n".join(md), "units": "\n".join(md_k), "three_axes": "\n".join(md_3), "combinations": "\n".join(md_c), "sites": "\n".join(md_z), "moves": "\n".join(md_m),
                         "uniform": "\n".join(md_u), "statistical": "\n".join(md_s)}
     with open(args.out, "w") as fh:
         json.dump(out, fh, indent=1)
     text = ("Pin strength per unit\n\n" + "\n".join(md) + "\n\nWhat a unit costs and what it buys\n\n" + "\n".join(md_k) + "\n\nStrain, tan delta and frequency together (the rate from the kink sheets' population)\n\n" + "\n".join(md_3)
-            + "\n\nDesigned cells: two units together\n\n" + "\n".join(md_c) + "\n\nThe rate by every scanned kink site\n\n" + "\n".join(md_z) + f"\n\nUniform spacing on the {args.matrix} matrix (margin {m0:+.3f})\n\n" + "\n".join(md_u)
+            + "\n\nDesigned cells: two units together\n\n" + "\n".join(md_c) + "\n\nThe rate by every scanned kink site\n\n" + "\n".join(md_z) + "\n\nThe rate by one chain's cheapest move in sixteen chains\n\n" + "\n".join(md_m) + f"\n\nUniform spacing on the {args.matrix} matrix (margin {m0:+.3f})\n\n" + "\n".join(md_u)
             + "\n\nStatistical against uniform, the margin law read locally\n\n" + "\n".join(md_s)
             + f"\n\nThe calibrated film's channel at the operating point: polar fraction {film['polar_fraction']:.2f}, S_ac {film['strain_ac'] * 100:.3f}%, tan delta {film['tan_delta']:.3f}.\n")
     with open(args.out.replace(".json", ".md"), "w") as fh:

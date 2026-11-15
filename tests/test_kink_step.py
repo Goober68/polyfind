@@ -928,3 +928,53 @@ def test_the_leaders_rates_go_by_every_scanned_kink_site():
     assert all("file_tilted" in six["conformations"][c] and (pred / six["conformations"][c]["file_tilted"]["name"]).exists() for c in ("TTTT", "TGTG'"))
     assert {k: round(v["margin_TT_minus_TG_kcal"], 2) for k, v in e7.items()} == {"pvdf_reversed_6": 0.06, "pvdf_reversed_14": 0.16, "vdftrfe_an_70_20_10": 0.57,
                                                                                  "vdftrfe_80_20": 0.23, "vdftrfe_an_64_29_7": 0.2, "vdftrfe_ctfe_rvdf_57_29_7_7": 0.08}
+
+
+def test_the_leaders_by_one_chains_cheapest_move_and_ctfe_alone():
+    """The unit screen's leaders under the other rate model, and CTFE without the reversed unit
+    (docs/CANDIDATE_MATERIALS.md 5.6 and 8.3, 2026-11-15).  One chain's cheapest move out of the
+    sheet in sixteen chains is the move to N in every copolymer lattice, and the pins order its
+    barrier as they order the sheets' energies.  The two rate models agree on the nitrile cell and
+    are a decade apart on the CTFE cell with a reversed unit; both leaders stay ahead of the
+    measured film's channel on all three axes under either.  CTFE alone is fast and does not
+    switch: the reversed unit is what brings its margin into the window, and it lowers the kink
+    sites along the whole repeat, not beside itself."""
+    pred = MIG.parent
+    table = json.loads(MIG.read_text())["rows"]
+    key = "{}@0 4x2 mover 0 ahead host flexible".format
+    AN, CK, CT, TER, MAT = "vdf9-trfe4-an1-14", "vdf8-trfe4-ctfe1-rvdf1-14", "vdf9-trfe4-ctfe1-14", "vdf9-trfe4-cfe1-14", "vdf10-trfe4-14"
+    d = json.loads((pred / "pin_design_belt4.json").read_text()) if (pred / "pin_design_belt4.json").exists() else {}
+    if key(AN) not in table or key(CK) not in table or "moves" not in d or CT not in d.get("sites", {}).get("rows", {}):
+        pytest.skip("the leaders' sixteen-chain rows or the CTFE cell's site scans are not stored")
+    an, ck, ter, mat = (table[key(r)] for r in (AN, CK, TER, MAT))
+    to_n = lambda r: r["to_N"]["barrier_forward"]  # noqa: E731
+    assert to_n(ck) < to_n(an) < to_n(ter) < to_n(mat)
+    assert to_n(an) == pytest.approx(10.56, abs=0.02) and to_n(ck) == pytest.approx(9.83, abs=0.02)
+    for r in (an, ck, ter):  # N's way back to the sheet is the same in the three pinned lattices
+        assert r["to_N"]["barrier_back"] == pytest.approx(2.6, abs=0.05) and r["to_N"]["gauche_bonds"] == [4, 6] and r["to_L"]["gauche_bonds"] == [3, 5]
+    # from N the nitrile cell's chain goes on to L more often than back, the CTFE cell's goes back more often; L is deep in both
+    assert an["to_L"]["to_L_for_each_return_from_N"] > 2.0 and ck["to_L"]["to_L_for_each_return_from_N"] < 0.7
+    assert ck["to_L"]["L"] < an["to_L"]["L"] < ter["to_L"]["L"] and ck["to_L"]["barrier_back"] > 6.0 and an["to_L"]["barrier_back"] > 6.0
+    # the one-monomer step: a converged band in the nitrile cell (its top; the search from it slid), no path in the CTFE cell, whose wide kink is not a state
+    assert an["I-B"]["converged"] and "polished" not in an["I-B"] and an["barrier_forward"] == pytest.approx(14.98, abs=0.01)
+    assert abs(ck["I"]["energy"]) < 1e-3 and "barrier_forward" not in ck and not ck["step_to_B_not_found"]["converged"] and ck["B"]["energy"] == pytest.approx(11.03, abs=0.01)
+    mv, st, film = d["moves"]["rows"], d["sites"]["rows"], d["three_axes"]["rows"]["calibrated_film"]
+    assert all(mv[r]["move"] == "to N" for r in (AN, CK, TER, MAT)) and mv[CK]["step_to_B"] is None
+    assert mv[AN]["ratio_to_the_anchor"] == pytest.approx(4.05, rel=0.03) and st[AN]["ratio_to_the_anchor"] == pytest.approx(4.82, rel=0.03)
+    assert mv[CK]["ratio_to_the_anchor"] == pytest.approx(13.9, rel=0.03) and st[CK]["ratio_to_the_anchor"] / mv[CK]["ratio_to_the_anchor"] > 9.0
+    hb = lambda r: r["three_axes"]["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
+    for rows in (mv, st):
+        for r in (AN, CK):
+            assert hb(rows[r]) > 1.3 * film["at_the_heat_budget"]["strain_ac"][0] and rows[r]["three_axes"]["tan_delta"][0] < 0.1 * film["tan_delta"][0]
+            assert rows[r]["three_axes"]["f_relax_hz"] > 4.0 * film["f_relax_hz"]
+        assert hb(rows[CK]) > hb(rows[AN])
+    # CTFE alone: eighteen times the anchor's sites' sum, and no strain (its margin is off the window)
+    ct = st[CT]
+    assert ct["ratio_to_the_anchor"] == pytest.approx(18.1, rel=0.03) and ct["three_axes"]["margin"] == pytest.approx(0.300, abs=0.003)
+    assert hb(ct) < 0.1 * film["at_the_heat_budget"]["strain_ac"][0] and st[CK]["ratio_to_the_anchor"] / ct["ratio_to_the_anchor"] == pytest.approx(7.9, rel=0.05)
+    scans = json.loads((pred / "kink_site_scan_belt4.json").read_text())["rows"]
+    alone, both = scans[CT + "@0"]["sites"], scans[CK + "@0"]["sites"]
+    kept = [o for o in alone if alone[o].get("kink_kept", True) and both[o].get("kink_kept", True)]
+    lower = {o: alone[o]["formation"] - both[o]["formation"] for o in kept}
+    assert len(kept) == 13 and sum(v > 1.0 for v in lower.values()) == 12
+    assert min(lower, key=lower.get) == "26" and both["26"]["units"] == "RI" and lower["26"] < -1.0  # the one site that rises is the one before the reversed unit

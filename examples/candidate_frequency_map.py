@@ -83,7 +83,9 @@ def main():
             sites = {}
         stepped = {}
         for key, e in steps.items():
-            if ("barrier_forward" not in e or e.get("host") != "flexible" or f"{e['supercell'][0]}x{e['supercell'][1]}" != args.step_cell
+            # a row counts with a step to B, or, under --cheapest, with the way to N alone (a lattice where no path to B was found)
+            has_move = "barrier_forward" in e or (args.cheapest and "to_N" in e)
+            if (not has_move or e.get("host") != "flexible" or "supercell" not in e or f"{e['supercell'][0]}x{e['supercell'][1]}" != args.step_cell
                     or e.get("direction") != "ahead" or str(e.get("mover")) != args.step_mover):
                 continue
             name = e["row"]
@@ -93,10 +95,10 @@ def main():
             # the climb along the matrix: the highest sheet energy on the way between two of its low sites, pins left out (a sheet does not cross them)
             vals = sorted(v["relative"] for v in scan.values() if v.get("converged", True) and v["relative"] < 4.0)
             climb = (max(vals) - min(vals)) if len(vals) > 2 else 0.0
-            barrier = e.get("barrier_forward_polished", e["barrier_forward"])  # the settled saddles where both were polished (kink_migration.py --polish), else the bands' tops
+            barrier = e.get("barrier_forward_polished", e.get("barrier_forward"))  # the settled saddles where both were polished (kink_migration.py --polish), else the bands' tops
             move = "the step to B"
-            if args.cheapest and "to_N" in e and e["to_N"]["barrier_forward"] < barrier:
-                barrier, move = e["to_N"]["barrier_forward"], "to N"
+            if args.cheapest and "to_N" in e and (barrier is None or e["to_N"]["barrier_forward"] < barrier):
+                barrier, move = e["to_N"]["barrier_forward"], "to N" if barrier is not None else "to N (no path to B found)"
             stepped[name] = dict(rows[name], E_form_sheet=rows[name]["E_form"], E_step=barrier, climb=climb, E_form=barrier, step_saddles="polished" if "barrier_forward_polished" in e else "band tops",
                                  **({"move": move} if args.cheapest else {}))
         rows = stepped

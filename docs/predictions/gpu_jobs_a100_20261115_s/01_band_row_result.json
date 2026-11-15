@@ -1,0 +1,175 @@
+{
+ "row": "vdf9-trfe4-an1-14",
+ "letters": "VVRVVRVAVVRVVR",
+ "note": "the 64/29/7 cell with acrylonitrile in place of CFE: the nitrile pin at the film's dilution",
+ "supercell": [
+  4,
+  2
+ ],
+ "chains": 16,
+ "sites": 2320,
+ "monomers_per_chain": 14,
+ "mover": "0",
+ "kink_offset_bonds": 0,
+ "kink_mirrored": false,
+ "direction": "ahead",
+ "host": "flexible",
+ "images_per_segment": 9,
+ "fmax": 0.1,
+ "kinked_crystal": {
+  "formation_per_kink_pair": 3.2542191181151168,
+  "formation_per_kink_pair_search": 1.8177847644354017,
+  "formation_per_kink_pair_two_chain_cell": 3.2542191181149605,
+  "cell": [
+   22.103888560039646,
+   16.760353692943564,
+   92.296574020419,
+   35.455493635474895
+  ],
+  "all_trans_cell": [
+   21.86063249210621,
+   16.399475694551864,
+   91.25883263746003,
+   36.161875089654664
+  ],
+  "torsions": [
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+   "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T"
+  ],
+  "iterations": 0,
+  "message": "the polished two-chain cell, tiled",
+  "seconds": 0.08358955383300781
+ },
+ "I": {
+  "energy": 8.86916591421459,
+  "torsions": "G+ T T T G- T T T T T T T T T T T T T T T T T T T T T T T",
+  "start": "the kinked crystal with the mover's torsions reset",
+  "start_energy": 135.45317326786653,
+  "iterations": 60,
+  "evaluations": 115,
+  "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+  "converged": true,
+  "gradient_max": 0.00027660867318806434,
+  "method": "on the closure surface, one curvature block per chain as the metric",
+  "angles_at_window": 0,
+  "seconds": 16.058327436447144
+ },
+ "B": {
+  "energy": 11.858523531050423,
+  "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+  "start": "the kinked crystal with the mover's torsions reset",
+  "start_energy": 328.27738818450166,
+  "iterations": 76,
+  "evaluations": 132,
+  "message": "Optimization terminated successfully: the gradient along the surface is under gtol",
+  "converged": true,
+  "gradient_max": 0.0002880129932631257,
+  "method": "on the closure surface, one curvature block per chain as the metric",
+  "angles_at_window": 0,
+  "seconds": 18.13518524169922
+ },
+ "A-I": {
+  "energies": [
+   0.0,
+   0.8985475951410535,
+   3.0807468298914955,
+   5.5416964692783495,
+   7.42997043789569,
+   8.415739171166933,
+   8.84921062174135,
+   8.924590529705256,
+   8.869165914241876
+  ],
+  "saddle": 8.924590529705256,
+  "saddle_image": 7,
+  "converged": true,
+  "force_max": 0.08811177172994762,
+  "fmax": 0.1,
+  "iterations": 78,
+  "interior_minima": [],
+  "band_variables": "one curvature block per chain as the metric",
+  "start": "straight between the end points",
+  "saddle_history": [
+   [
+    78,
+    8.924590529705256,
+    0.08811177172994762
+   ]
+  ],
+  "seconds": 81.6816873550415,
+  "polished": {
+   "method": "on the closure surface, one curvature block per chain as the metric",
+   "saddle": 8.92757364370732,
+   "band_top": 8.924590529705256,
+   "band_force": 0.08811177172994762,
+   "force_along": -0.0028901334214659347,
+   "gradient_across": 0.00016827211285030648,
+   "curvature_along": -0.0695919308878427,
+   "displacement": -0.35,
+   "converged": true,
+   "evaluations": 82,
+   "seconds": 10.863280773162842
+  }
+ },
+ "I-B": {
+  "energies": [
+   8.86916591421459,
+   9.396118721933135,
+   11.940280931946518,
+   13.970041962786354,
+   14.97740006110007,
+   14.12083082567824,
+   13.252550798728862,
+   12.280272107320116,
+   11.858523531057699
+  ],
+  "saddle": 14.97740006110007,
+  "saddle_image": 4,
+  "converged": true,
+  "force_max": 0.09893174834053108,
+  "fmax": 0.1,
+  "iterations": 110,
+  "interior_minima": [],
+  "band_variables": "one curvature block per chain as the metric",
+  "start": "straight between the end points",
+  "saddle_history": [
+   [
+    110,
+    14.97740006110007,
+    0.09893174834053108
+   ]
+  ],
+  "seconds": 115.88327884674072,
+  "polished": {
+   "method": "on the closure surface, one curvature block per chain as the metric",
+   "saddle": 7.853889481978058,
+   "band_top": 14.97740006110007,
+   "band_force": 0.09893174834053108,
+   "force_along": -0.2579259890842416,
+   "gradient_across": 0.00019408042000761735,
+   "curvature_along": 0.40585183764138677,
+   "displacement": -0.49999999999999994,
+   "converged": false,
+   "evaluations": 473,
+   "seconds": 62.38290858268738
+  }
+ },
+ "barrier_forward": 14.97740006110007,
+ "barrier_back": 3.118876530049647,
+ "moving_chains": 1,
+ "bands_converged": true
+}

@@ -337,10 +337,13 @@ def main():
                "and its saddle settled; kcal/mol against the sheet, neighbours flexible, cell fixed; rates at 300 K with a 3e12 /s attempt frequency)", "",
                "| sequence, cell | B | barrier to B / back | N | barrier to N / back | the cheaper move | its rate |", "|---|---|---|---|---|---|---|"]
         for e in sorted(to_n, key=lambda e: e["row"]):
-            n, step = e["to_N"], e["barrier_forward_polished"]
-            low = min(step, n["barrier_forward"])
-            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {e['B']['energy']:+.2f} | {step:.2f} / {e['barrier_back_polished']:.2f} | {n['N']:+.2f} | "
-                      f"{n['barrier_forward']:.2f} / {n['barrier_back']:.2f} | {'to N' if n['barrier_forward'] < step else 'the step to B'}, {low:.2f} | {3e12 * np.exp(-low / KT):.2g} /s |")
+            # the step's barrier: on settled saddles where both were settled, else the bands' tops; None where no path to B was found
+            n, step = e["to_N"], e.get("barrier_forward_polished", e.get("barrier_forward"))
+            back = e.get("barrier_back_polished", e.get("barrier_back"))
+            low = n["barrier_forward"] if step is None else min(step, n["barrier_forward"])
+            to_b = "no path found" if step is None else f"{step:.2f} / {back:.2f}" + ("" if "barrier_forward_polished" in e else " (the band's top)")
+            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {e['B']['energy']:+.2f} | {to_b} | {n['N']:+.2f} | "
+                      f"{n['barrier_forward']:.2f} / {n['barrier_back']:.2f} | {'to N' if step is None or n['barrier_forward'] < step else 'the step to B'}, {low:.2f} | {3e12 * np.exp(-low / KT):.2g} /s |")
 
     then = [e for e in to_n if "then" in e["to_N"]]
     if then:
@@ -363,7 +366,8 @@ def main():
                "| sequence, cell | L | straight from the sheet | from N: saddle, above N | N back to the sheet | to L per return | the way to L, barrier / back |", "|---|---|---|---|---|---|---|"]
         for e in sorted(to_l, key=lambda e: e["row"]):
             t = e["to_L"]
-            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {t['L']:+.2f} | {t['straight_from_the_sheet']['highest']:.2f} | {t['from_N']['highest']:.2f}, {t['barrier_from_N']:.2f} | "
+            direct = "not run" if t["straight_from_the_sheet"] is None else f"{t['straight_from_the_sheet']['highest']:.2f}"
+            md.append(f"| {e['row']}, {e['supercell'][0]}x{e['supercell'][1]} | {t['L']:+.2f} | {direct} | {t['from_N']['highest']:.2f}, {t['barrier_from_N']:.2f} | "
                       f"{t['N_back_to_the_sheet']:.2f} | {t['to_L_for_each_return_from_N']:.2g} | {t['the_way']}, {t['barrier_forward']:.2f} / {t['barrier_back']:.2f} |")
 
     # --- two chains ahead together --------------------------------------------------------------------
