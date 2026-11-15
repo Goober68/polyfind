@@ -19,3 +19,17 @@ How it is applied (an interpretation, not the PI's words):
   it can be the better material, and the write-up has to say so.
 - A result that reads only on strain (a polar fraction at the bias, a margin's place in the
   switching window) is a partial result until its loss and its rate are beside it.
+
+## Blocked force is the fourth part (PI, 2026-11-15)
+
+The PI's words: "Do we have a way to estimate blocked force?  Thats the 4th part of the equation"
+
+Scope: the same as above. Every evaluation, ranking and recommendation of a candidate material.
+
+How it is applied (an interpretation, not the PI's words):
+
+- A candidate is reported on four things together: strain, tan delta, the frequency it follows,
+  and the blocked stress it can hold (force per area; a force needs the actuator's cross-section).
+- Blocked stress is stiffness times free strain, so it is a separate axis only where the
+  candidate's own stiffness is known. With one assumed modulus for every candidate it is the
+  strain axis again, and the write-up has to say which of the two it is.
