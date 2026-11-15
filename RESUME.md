@@ -50,7 +50,9 @@ THE REVERSED UNIT'S PULL GOES WITH ITS NEIGHBOUR: per unit in fourteen 0.36 besi
 the matrix, 0.06 beside CTFE; 4.1 per unit in PVDF. Reading 4 of the film (5.3) rests on the CFE figure and stands.
 REGISTERED NUMBERS: `e7_polyfind_belt4.json` is KEPT AS SENT (never write `--set e7` again: it would take the new
 ground helix); part d's correction is `e7_addendum_polyfind_belt4.json` (`--set e7b`) with
-`polished_vdf8-trfe4-ctfe1-rvdf1-14_GTGpT[.xyz, _tilted.xyz]`. Sent to Dipole (sarco main; see the commit after this one).
+`polished_vdf8-trfe4-ctfe1-rvdf1-14_GTGpT[.xyz, _tilted.xyz]`. Sent to Dipole: sarco main `a0d6ede3` (the request's README and ask carry a dated correction; the two GTG'T files and
+the addendum set are in `materials/electrostriction/requests/unit_screen_cells_e7_v1/`; two rows of the regio-defect
+note's table corrected).
 Tests: `tests/test_kink_step.py::test_every_helix_conformer_is_polished_and_five_margins_moved`; six earlier tests
 re-pointed at the corrected numbers.
 TRAPS: (1) NEVER RANK A CELL ON FEWER THAN FOUR HELIX CONFORMERS. `polish_margins.py` without `--tg` takes those within 0.3
