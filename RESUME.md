@@ -21,6 +21,43 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The reversed unit beside the nitrile and beside CFE, 2026-11-15 (PI: "Go").** Text: `docs/CANDIDATE_MATERIALS.md` 5.6
+("The reversed unit beside the nitrile, and beside CFE"), 5.3 (reading 4 of why the film switches), 8.4 (profiles).
+STATE: DONE, CPU ONLY (spend unchanged: about $13.15 of the $46).
+THREE NEW ROWS (`candidate_screen.py` SEQUENCES; screen file `candidate_screen_belt4_14mer_f.json`; ALL FOUR helix
+conformers polished for each, so these margins are not lower bounds; kink sites scanned for both hands):
+    vdf8-trfe4-an1-rvdf1-14  IVRVVRVAVVRVVR  margin -0.148 (pins add: -0.149)  sites' sum 13.2x  4.8 MHz  ALL-TRANS SIDE OF ZERO
+    vdf9-trfe3-an1-rvdf1-14  IVRVVRVAVVVVVR  margin +0.037 (21 mol% TrFE)      sites' sum 18.9x  6.9 MHz  tan delta 0.004 at 34 kHz
+                                             0.130% at 1.8 V/um, 0.168% at the heat budget (34 kHz); dipole 0.449 e.A
+    vdf8-trfe4-cfe1-rvdf1-14 IVRVVRVCVVRVVR  margin -0.044 (CFE alone +0.317)  sites' sum 2.8x   1.0 MHz  ALL-TRANS SIDE OF ZERO
+READINGS: (1) THE NITRILE WITH A REVERSED UNIT ON 21 MOL% TrFE IS SECOND ON THE THREE AXES, WITHOUT CHLORINE (the film's
+channel: 364 kHz, 0.060, 0.066%; CTFE with reversed VDF: 52 MHz by the sum, 5.1 by one chain's move, 0.16 to 0.19%).
+Its rate is the sites' sum only: one chain's move is NOT computed for it. (2) Two levers place a margin: one TrFE in
+fourteen is 0.18 (0.026 per mol%), one reversed unit in fourteen 0.35 (0.05 per mol%; 0.22 beside CTFE). The window is
+0.12 wide. (3) A cell at or under zero gets the degenerate channel from the loss mapping (section 3): a convention, not
+a prediction. The nitrile with ethylene (-0.119) was ranked on it and is now left out of the ranking. (4) READING 4 OF
+THE FILM (5.3): the model's 64/29/7 cell is head-to-tail only; ordinary PVDF carries 3.5 to 6.0 mol% reversed units
+(Bell Labs 1987, found by web search 2026-11-15; no figure found for the terpolymer); at 0.05 per mol% that puts the
+cell at +0.14 to +0.01, the window's middle at 4.9 mol%. The same paper: PVDF goes alpha to beta above 11.4 mol%; the
+model's PVDF crosses zero at 18 mol% (direction right, two thirds of the strength). (5) THE ANCHOR: every frequency is
+364 kHz times a ratio to the defect-free 64/29/7 cell; if the film is the cell with defects, frequencies fall by up to
+2.8x (6.9 MHz to 2.4); ratios between candidates do not change. (6) Beside the nitrile and CFE the reversed unit gives
+2.7 to 2.8x on the sum over sites; beside CTFE 7.9x.
+CODE: `pin_design.py` OTHER_CELLS (a designed cell on another matrix), COMBINATIONS gained the two 29 mol% cells.
+Test: `tests/test_kink_step.py::test_the_reversed_unit_beside_the_nitrile_and_beside_cfe`.
+TRAPS: (1) `polish_margins.py` polishes only the helix conformers within 0.3 of the SEARCH's lowest; the polish moves a
+helix by 0.6 to 0.9, so pass `--tg "TGTG',TG'TG,GTG'T,G'TGT"` to make a margin a number. It did not change these three,
+but the rows polished before 2026-11-15 still carry two conformers at most. (2) The screen list is now EIGHT files
+(`_14mer_f`), comma-separated in one `--screen` argument.
+REPRODUCE: `candidate_screen.py --sequences ROW --conformations "TTTT,TGTG',TG'TG" --out <file>`; `polish_margins.py
+--rows ROW --tg "TGTG',TG'TG,GTG'T,G'TGT"`; `kink_migration.py --row ROW --nx 1 --ny 1 --mover all --reference-only`;
+`kink_site_scan.py --row ROW [--mirror-kink]`; `candidate_loss_map.py --screen <eight files>`; `kink_summary.py`;
+`candidate_frequency_map.py` (both forms); `pin_design.py`.
+NEXT, proposed to the PI: (a) one chain's move in the nitrile cell with a reversed unit on 21 mol% TrFE (a pod, under an
+hour: the other rate model for the new second place); (b) tell Dipole that E7 a (the reversed unit in PVDF) now also
+decides reading 4 of the film, and ask the bench or the literature for the terpolymer's regio-defect content; (c) the
+remaining helix conformers of the rows polished earlier (CPU); (d) the CTFE cell's move from its cheapest site.
+
 **The leaders by one chain's move, and CTFE without the reversed unit, 2026-11-15 (PI: "Go on both").** Text:
 `docs/CANDIDATE_MATERIALS.md` 5.6 ("The leaders by the other rate model, and CTFE without the reversed unit"), 8.3 ("The
 same moves in the unit screen's leaders"), 8.4 (CTFE alone's profile), 8.5; job logs and README in

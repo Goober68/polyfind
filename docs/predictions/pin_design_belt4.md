@@ -86,8 +86,11 @@ Designed cells: two units together
 | AN with TFE, one of each per fourteen | +0.186, +0.091 | 2.89, 1.65 | 1.6 MHz | 0.018% / 0.018% | 0.004 / 0.007 | **0.097%** / 0.053% | 9.5 (heat) / 5.2 (heat) |
 | AN with ethylene, one of each per fourteen | -0.119, +0.075 | 3.14, 2.83 | 1.1 MHz | 0.090% / 0.090% | 0.019 / 0.038 | **0.110%** / 0.062% | 2.2 (heat) / 1.2 (heat) |
 | CTFE with reversed VDF, one of each per fourteen | +0.076, -0.046 | 0.84, 0.87 | 51.7 MHz | 0.117% / 0.117% | 0.001 / 0.001 | **0.189%** / 0.133% | 2.9 (heat) / 2.0 (heat) |
+| AN with reversed VDF, one of each per fourteen | -0.148, -0.149 | 2.74, 1.89 | 2.1 MHz | 0.090% / 0.090% | 0.010 / 0.020 | **0.136%** / 0.080% | 2.7 (heat) / 1.6 (heat) |
+| CFE with reversed VDF, one of each per fourteen | -0.044, -0.028 | 3.24, 2.62 | 911 kHz | 0.091% / 0.091% | 0.023 / 0.046 | **0.105%** / 0.059% | 2.1 (heat) / 1.2 (heat) |
 | CFE with CDFE, one of each per fourteen | +0.807, +0.946 | not computed | - | - | - | - | - |
 | PVDF with 2 reversed units per fourteen, no TrFE (PVDF itself: +0.744, 5.06) | +0.162, - | 3.24, - | 919 kHz | 0.025% / 0.025% | 0.010 / 0.020 | **0.076%** / 0.041% | 5.4 (heat) / 2.9 (heat) |
+| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | +0.037, - | 2.73, - | 2.2 MHz | 0.130% / 0.130% | 0.014 / 0.027 | **0.135%** / 0.079% | 1.9 (heat) / 1.1 (heat) |
 
 The rate by every scanned kink site
 
@@ -98,7 +101,10 @@ The rate by every scanned kink site
 | AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** |
 | CTFE, one per fourteen | 2.16 | 1.78 (VR) | 18.1 | 6.6 MHz | 0.001% | 0.000 | **0.005%** |
 | CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.117% | 0.001 | **0.189%** |
+| AN with reversed VDF, one of each per fourteen | 2.61 | 1.39 (VR) | 13.2 | 4.8 MHz | 0.090% | 0.005 | **0.161%** |
+| CFE with reversed VDF, one of each per fourteen | 3.08 | 2.90 (RV) | 2.82 | 1.0 MHz | 0.091% | 0.021 | **0.110%** |
 | PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** |
+| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | 2.60 | 1.39 (VR) | 18.9 | 6.9 MHz | 0.130% | 0.004 | **0.168%** |
 
 The rate by one chain's cheapest move in sixteen chains
 

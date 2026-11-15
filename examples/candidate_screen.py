@@ -162,6 +162,10 @@ SEQUENCES = {
     "vdf8-trfe4-an1-tfe1-14": ("FVRVVRVAVVRVVR", "one AN and one TFE per fourteen, seven apart: the nitrile's loosening with its pin paid back"),
     "vdf8-trfe4-an1-e1-14": ("EVRVVRVAVVRVVR", "one AN and one ethylene per fourteen, seven apart"),
     "vdf8-trfe4-ctfe1-rvdf1-14": ("IVRVVRVKVVRVVR", "one CTFE and one reversed VDF per fourteen, seven apart"),
+    # 2026-11-15: the reversed unit beside the other loosening pins, and the TrFE lever on the nitrile pair
+    "vdf8-trfe4-an1-rvdf1-14": ("IVRVVRVAVVRVVR", "one AN and one reversed VDF per fourteen, seven apart: the nitrile's cheap kinks with the margin placed by the reversed unit, no chlorine"),
+    "vdf9-trfe3-an1-rvdf1-14": ("IVRVVRVAVVVVVR", "the same with three TrFE in place of four (21 mol%): the TrFE lever on the nitrile pair's margin"),
+    "vdf8-trfe4-cfe1-rvdf1-14": ("IVRVVRVCVVRVVR", "the 64/29/7 cell with one reversed VDF unit, seven from the CFE: the film's composition with a head-to-head defect in the chain"),
     # and a matrix without TrFE: PVDF with two reversed units per fourteen (14% head-to-head defects)
     # the same question in the smallest cell that holds both conformations, for a DFT check (seventy-two atoms in two chains)
     "vdf5-rvdf1-6": ("VVVVIV", "PVDF with one reversed VDF unit in six (17% head-to-head defects): the regio-defect matrix in a cell small enough for DFT"),

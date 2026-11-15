@@ -57,10 +57,14 @@ COMBINATIONS = {
     "vdf8-trfe4-an1-tfe1-14": ("vdf9-trfe4-an1-14", "vdf9-trfe4-tfe1-14", "AN with TFE"),
     "vdf8-trfe4-an1-e1-14": ("vdf9-trfe4-an1-14", "vdf9-trfe4-e1-14", "AN with ethylene"),
     "vdf8-trfe4-ctfe1-rvdf1-14": ("vdf9-trfe4-ctfe1-14", "vdf9-trfe4-rvdf1-14", "CTFE with reversed VDF"),
+    "vdf8-trfe4-an1-rvdf1-14": ("vdf9-trfe4-an1-14", "vdf9-trfe4-rvdf1-14", "AN with reversed VDF"),
+    "vdf8-trfe4-cfe1-rvdf1-14": ("vdf9-trfe4-cfe1-14", "vdf9-trfe4-rvdf1-14", "CFE with reversed VDF"),
     "vdf8-trfe4-cfe1-cdfe1-14": ("vdf9-trfe4-cfe1-14", "vdf9-trfe4-cdfe1-14", "CFE with CDFE"),
 }
 # a matrix without TrFE: (the cell, reversed units per fourteen)
 REGIO_MATRICES = {"vdf12-rvdf2-14": 2}
+# designed cells on another matrix: given as computed, with no sum of single units beside them
+OTHER_CELLS = {"vdf9-trfe3-an1-rvdf1-14": "AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%)"}
 # a pin in PVDF: the matrix's margin is the E2 set's (polishing changes nothing in PVDF's cells)
 PINS_IN_PVDF = {"vdf9-cfe1": (10, 1, "CFE, one per ten VDF"), "vdf8-cfe2": (10, 2, "CFE, two per ten VDF (per unit)"), "vdf9-an1": (10, 1, "AN, one per ten VDF")}
 
@@ -205,6 +209,13 @@ def main():
                                          "pvdf_kink_sheet": sheets["vdf10"]["formation_kcal_per_kink_pair"], "mu_TT": loss[name]["mu_TT"], "three_axes": pt}
             md_c.append(f"| PVDF with {n_rev} reversed units per fourteen, no TrFE (PVDF itself: {m_pvdf:+.3f}, {sheets['vdf10']['formation_kcal_per_kink_pair']:.2f}) | {rows[name]['margin']:+.3f}, - | {e:.2f}, - | "
                         + line("", pt).split("|", 3)[3].lstrip())
+        for name, what in OTHER_CELLS.items():
+            if "margin" not in rows.get(name, {}) or name not in sheets or name not in loss:
+                continue
+            e = sheets[name]["formation_kcal_per_kink_pair"]
+            pt = point(rows[name]["margin"], e, loss[name]["mu_TT"], loss[name]["axial"])
+            out["combinations"][name] = {"what": what, "margin": rows[name]["margin"], "kink_sheet": e, "mu_TT": loss[name]["mu_TT"], "three_axes": pt}
+            md_c.append(f"| {what} | {rows[name]['margin']:+.3f}, - | {e:.2f}, - | " + line("", pt).split("|", 3)[3].lstrip())
         # the rate by every scanned kink site: sum over the repeat's sites and both hands of exp(-E / kT), against the anchor cell's sum
         try:
             scans = json.load(open(args.sites)).get("rows", {})
@@ -233,7 +244,7 @@ def main():
             cells_z = [("vdf9-trfe4-cfe1-14", "64/29/7 (one CFE per fourteen): the anchor", rows["vdf9-trfe4-cfe1-14"]["margin"]),
                        (args.matrix, "the 71/29 matrix", m0)]
             cells_z += [(n, out["units"][n]["what"] + ", one per fourteen", rows[n]["margin"]) for n in out["units"] if n != "vdf9-trfe4-cfe1-14"]
-            cells_z += [(n, c["what"] + ("" if n in REGIO_MATRICES else ", one of each per fourteen"), c["margin"]) for n, c in out["combinations"].items()]
+            cells_z += [(n, c["what"] + ("" if n in REGIO_MATRICES or n in OTHER_CELLS else ", one of each per fourteen"), c["margin"]) for n, c in out["combinations"].items()]
             for name, label, margin in cells_z:
                 z = site_sum(name)
                 if z is None or name not in loss:

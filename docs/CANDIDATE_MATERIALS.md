@@ -550,7 +550,7 @@ in every cell, a VDF-VDF pair midway between two units.
 ### 5.3 The density, and the disagreement with the film
 
 At the working terpolymers' 7 mol% a uniform CFE spacing puts the crystal at +0.32 (`E*` 250
-MV/m): off the curve at 55 V/um. The measured 63/30/7 film switches there. Three readings, and
+MV/m): off the curve at 55 V/um. The measured 63/30/7 film switches there. Four readings, and
 what decides each:
 
 1. **The chlorine's pin is overstated.** Its parameters have no crystal anchor. Decided by
@@ -563,8 +563,23 @@ what decides each:
    a statistical one of the same composition.
 3. **The film switches where the crystal's margin does not apply:** at the lamellar surfaces and
    in the oriented amorphous fraction (tier 4; not computable here).
+4. **The film's chains carry head-to-head defects and the model cell's do not (2026-11-15).** The
+   model's 64/29/7 cell is a strictly head-to-tail chain. Radical polymerization leaves reversed
+   VDF units in the chain: 3.5 to 6.0 mol% in ordinary PVDF ("The role of molecular defects on
+   the structure and phase transitions of poly(vinylidene fluoride)", Bell Labs, 1987; no figure
+   was found for the terpolymer). One reversed unit per fourteen in the 64/29/7 cell (7.1 mol%)
+   takes its margin from +0.317 to -0.044 (5.6): 0.05 per mol%. Read linearly, PVDF's ordinary
+   defect content puts the cell between +0.14 and +0.01, with the middle of the switching window
+   (+0.07) at 4.9 mol%. On this reading the pin is as strong as computed and the film switches
+   because it is not the defect-free chain. Decided by the film's regio-defect content (19F NMR)
+   and by the DFT cell with a reversed unit already asked for (E7 a). The same paper checks the
+   reversed unit's sign and size: PVDF's structure goes from alpha to beta above about 11.4 mol%
+   of these defects, and the model's PVDF crosses zero at 18 mol% (+0.744 less 0.041 per mol%).
+   The model has the direction and about two thirds of the strength, so the real effect on the
+   film would be larger than this estimate, not smaller.
 
-No density is recommended until the first two are separated. What can be said for each, on
+No density is recommended until the first two are separated, and the fourth changes what a
+"pin-free matrix" is: a real chain's margin is already lowered by its defects. What can be said for each, on
 strain alone (5.6 reads the same cells on strain, loss and frequency together, and there the
 dense weak pin beats the sparse one on the rate model that table uses):
 
@@ -586,7 +601,7 @@ dense weak pin beats the sparse one on the rate model that table uses):
    delta 0.2 to 1.0 at 34 kHz. Without a pin it is a ferroelectric copolymer with hysteresis that
    this equilibrium picture does not contain.
 2. **The unit: AN first, then CTFE and CFE, on what each buys per unit of pin** (5.2; on the three
-   axes of 5.6 the leading cells are CTFE with a reversed VDF unit and AN with ethylene or TFE), subject
+   axes of 5.6 the leading cells are CTFE with a reversed VDF unit and AN with a reversed VDF unit on 21 mol% TrFE), subject
    to the DFT test of the chlorine and nitrile parameters. AN is also the unit Dipole's slate
    calls the makeable track (section 6). Its costs: 7% less dipole per monomer than the matrix
    (0.524 against 0.562 e.A), and in a VDF host without TrFE it favours the all-trans lattice, so
@@ -773,7 +788,10 @@ of `exp(-E / kT)` over all of a lattice's sites against the same sum for the 64/
 | AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** |
 | CTFE, one per fourteen | 2.16 | 1.78 (VR) | 18.1 | 6.6 MHz | 0.001% | 0.000 | **0.005%** |
 | CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.117% | 0.001 | **0.189%** |
+| AN with reversed VDF, one of each per fourteen | 2.61 | 1.39 (VR) | 13.2 | 4.8 MHz | 0.090% | 0.005 | **0.161%** |
+| CFE with reversed VDF, one of each per fourteen | 3.08 | 2.90 (RV) | 2.82 | 1.0 MHz | 0.091% | 0.021 | **0.110%** |
 | PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** |
+| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | 2.60 | 1.39 (VR) | 18.9 | 6.9 MHz | 0.130% | 0.004 | **0.168%** |
 
 * **The order of the leaders stands, and the nitrile gains.** By its sites' sum the nitrile cell
   is at 1.8 MHz (1.2 from the one site) with 0.097% at the heat budget; PVDF with reversed units at
@@ -839,12 +857,71 @@ the same move in the 64/29/7 cell (`pin_design.py`, table "moves"):
   two units' cuts add (0.84 computed, 0.87 summed) where their pins do not (+0.076 computed,
   -0.046 summed).** So the roles separate. The chlorinated unit supplies the cheap kinks, the
   reversed unit places the margin, and each keeps its effect on the kink sheet beside the other.
-  The same pairing with the nitrile in place of CTFE (no chlorine; the nitrile's cut per pin is
-  the best of the units) is not computed.
+  (Beside the nitrile and beside CFE, computed since and given next, the reversed unit keeps
+  less of its cut: 2.7 to 2.8 times on the sum over sites where its own cut is worth 7.)
+
+**The reversed unit beside the nitrile, and beside CFE (2026-11-15; PI: "Go").** Three cells, on
+CPU: the nitrile with a reversed VDF unit seven monomers from it (`IVRVVRVAVVRVVR`), the same on
+three TrFE in fourteen instead of four (`IVRVVRVAVVVVVR`, 21 mol% TrFE), and the 64/29/7 cell
+with a reversed unit (`IVRVVRVCVVRVVR`). All four helix conformers were polished for each, so
+these three margins are the model's numbers and not lower bounds; the kink sites are scanned for
+both hands, and the rate is the sum over sites against the 64/29/7 cell's (no single-chain move
+is computed for these cells):
+
+| cell | margin: computed, if the pins added | all-trans dipole per monomer, e.A | sum over kink sites against the 64/29/7 cell's | relaxation frequency by the sum | tan delta, 34 / 66 kHz | AC strain at 1.8 V/um, 34 kHz | AC strain at the heat budget, 34 / 66 kHz |
+|---|---|---|---|---|---|---|---|
+| AN with reversed VDF, on 21 mol% TrFE | **+0.037** | 0.449 | 18.9 | **6.9 MHz** | **0.004** / 0.008 | 0.130% | **0.168%** / 0.108% |
+| AN with reversed VDF, on 29 mol% TrFE | -0.148, -0.149 | 0.434 | 13.2 | 4.8 MHz | the all-trans side of zero | | |
+| CFE with reversed VDF, on 29 mol% TrFE | -0.044, -0.028 | 0.464 | 2.8 | 1.0 MHz | the all-trans side of zero | | |
+| AN alone, on 29 mol% TrFE | +0.197 | 0.524 | 4.8 | 1.8 MHz | 0.003 / 0.007 | 0.018% | 0.097% / 0.053% |
+| CTFE with reversed VDF, on 29 mol% TrFE | +0.076, -0.046 | 0.414 | 143 | 52 MHz (5.1 by one chain's move) | 0.001 / 0.001 | 0.117% | 0.189% / 0.133% |
+| the measured film's channel as calibrated | 0 | | | 364 kHz | 0.060 / 0.115 | 0.080% | 0.066% / 0.035% |
+
+* **On 29 mol% TrFE the pair overshoots.** The margin is -0.148, and here the two pins do add
+  (-0.149 summed). The all-trans lattice is the ground state: in the model this cell is a
+  ferroelectric, past the window on the polar side. The loss mapping gives every cell at or
+  under zero the degenerate channel (section 3), which would read 0.16% at the heat budget; that
+  is a convention and not a prediction, a real crystal there answers with hysteresis, and the
+  cell is not a candidate at this TrFE content. The same holds for the nitrile with ethylene
+  (-0.119) above, which should not have been ranked on its table entry.
+* **One TrFE fewer puts it on the window, and it is then second on the three axes without
+  chlorine.** On 21 mol% TrFE the margin is +0.037 (64% polar at the bias). By the sum over its
+  kink sites it is at 6.9 MHz with tan delta 0.004 at 34 kHz and 0.168% at the heat budget
+  (0.130% at 1.8 V/um): nineteen times the measured film's relaxation frequency, a fourteenth of
+  its tan delta and two and a half times its strain. Its all-trans dipole is 0.449 e.A per
+  monomer, 20% under the matrix's.
+* **Two levers place the margin.** One TrFE in fourteen is worth 0.18 (0.026 per mol%) on this
+  pair, and one reversed unit in fourteen is worth 0.35 beside the nitrile and 0.36 beside CFE
+  (0.05 per mol%; 0.22 beside CTFE). The window is 0.12 wide, so 2 mol% of TrFE or 1 mol% of
+  reversed units is half of it: these are the composition tolerances a synthesis would have to
+  hold, and the margin's own offset (0.1, section 7) says the place within the window has to be
+  found on the bench with these two levers, not read from this table.
+* **What the reversed unit does to the nitrile lattice's kink sites.** It lowers thirteen of
+  fourteen for one hand by 0.2 to 1.4 kcal/mol and nine of twelve for the other by 0.3 to 1.1,
+  and raises the site before itself by 1.8 (profiles in 8.4). The sum over sites is 2.7 times
+  the nitrile cell's (13.2 against 4.8), and the cell on 21 mol% TrFE gains again from its
+  four-VDF run (sites at 1.9; 18.9). The cheapest site in both is 1.39, the mirrored kink pair
+  two monomers before the nitrile.
+* **The film's composition with a reversed unit** has a margin of -0.044 where the defect-free
+  cell has +0.317, and 2.8 times its sum over kink sites; the wall at the CFE drops from
+  12.1 and 11.4 to 10.3 and 10.2 for one hand and from 8.1 and 8.3 to 6.4 and 7.3 for the other.
+  What that says about why the film switches is 5.3, reading 4. **It also qualifies the
+  anchor.** Every frequency in this section is the film's 364 kHz times a ratio to the
+  defect-free 64/29/7 cell. If the measured film is that cell with PVDF's ordinary defects, the
+  anchor cell's own sum is up to 2.8 times larger and every frequency quoted against it falls by
+  up to that factor (6.9 MHz becomes 2.4); the ratios between candidates do not change.
+* **What qualifies the new cell.** Its rate is on the sheets' model alone. For the nitrile cell
+  the two rate models agreed and for the CTFE cell with a reversed unit they were a decade
+  apart; this cell's sheets lie between those two, so one chain's move, when computed, is
+  expected to give less than 6.9 MHz. The nitrile's parameters and the junctions at the
+  reversed unit have no crystal anchor, and the cell is one regular placement of the two units.
 
 **Where this leaves the ranking.** On the three axes the order of the cells in hand is CTFE with
-reversed VDF, the nitrile with ethylene or TFE, the nitrile alone, PVDF with reversed units, the
-measured film's channel, and far behind them the model's own CFE cell and every sparse pin. The
+reversed VDF, the nitrile with reversed VDF on 21 mol% TrFE (2026-11-15), the nitrile with TFE
+and the nitrile alone, PVDF with reversed units, the
+measured film's channel, and far behind them the model's own CFE cell and every sparse pin. (The
+nitrile with ethylene, ranked here until 2026-11-15, lies on the all-trans side of zero and is
+left out.) The
 nitrile cell and the CTFE cell with a reversed unit keep their places when the rate is taken from
 one chain's move instead of the sheets' population (2026-11-15); the other cells have the sheets'
 model only. All
@@ -1679,6 +1756,12 @@ on, in order along the chain (`kink_site_scan_belt4.json`; profiles in `kink_sum
 | the same, the mirrored pair | VV 2.55, VR 3.04, RV 2.73, VV 2.89, VR 4.51, RV 5.60, (VK 8.82: the kink pair did not stay), (KV 2.54: the kink pair did not stay), VV 2.95, VR 1.80, RV 2.35, VV 2.51, VR 1.78, RV 2.43 |
 | one CTFE and one reversed VDF per fourteen `IVRVVRVKVVRVVR`, G+ T G- (2026-11-14) | IV 1.00, VR 1.53, RV 0.54, VV 0.80, VR 2.33, RV 1.96, **VK 11.07**, (KV 5.70: the kink pair did not stay), VV 1.63, VR 2.72, RV 0.35, VV 0.61, VR 2.61, RI 3.61 |
 | the same, the mirrored pair | IV 1.59, VR 1.31, RV 1.43, VV 1.46, VR 3.13, RV 4.27, (VK 6.48: the kink pair did not stay), (KV 1.58: the kink pair did not stay), VV 1.91, VR 0.90, RV 1.17, VV 2.36, VR 1.81, RI 1.69 |
+| the nitrile with a reversed VDF unit `IVRVVRVAVVRVVR`, G+ T G- (2026-11-15) | IV 2.61, VR 3.49, RV 2.72, VV 2.73, VR 4.27, RV 4.56, **VA 14.86**, AV 7.81, VV 2.91, VR 4.32, RV 2.34, VV 2.56, VR 4.73, RI 5.40 |
+| the same, the mirrored pair | IV 2.97, VR 3.56, RV 2.78, VV 2.90, VR 1.39, RV 1.83, (VA 9.19: the kink pair did not stay), (AV 3.63: the kink pair did not stay), VV 3.90, VR 3.46, RV 3.08, VV 4.24, VR 3.74, RI 3.43 |
+| the same on three TrFE `IVRVVRVAVVVVVR`, G+ T G- (2026-11-15) | IV 2.60, VR 3.55, RV 2.84, VV 2.74, VR 4.32, RV 4.71, **VA 14.66**, AV 6.07, VV 2.36, VV 1.86, VV 1.89, VV 2.54, VR 4.68, RI 5.35 |
+| the same, the mirrored pair | IV 3.17, VR 3.84, RV 2.93, VV 3.14, VR 1.39, RV 1.97, (VA 9.04: the kink pair did not stay), (AV 7.10: the kink pair did not stay), VV 2.48, VV 1.93, VV 2.45, VV 4.48, VR 3.70, RI 3.41 |
+| 64/29/7 with a reversed VDF unit `IVRVVRVCVVRVVR`, G+ T G- (2026-11-15) | IV 3.08, VR 3.75, RV 3.36, VV 3.15, VR 4.25, RV 4.95, **VC 10.30**, **CV 10.21**, VV 3.71, VR 4.59, RV 3.08, VV 3.08, VR 5.24, RI 5.93 |
+| the same, the mirrored pair | IV 3.19, VR 4.33, RV 3.07, VV 3.33, VR 4.56, RV 2.90, VC 6.41, CV 7.34, VV 3.66, VR 3.97, RV 3.48, VV 4.79, VR 4.63, RI 3.93 |
 | PVDF with two reversed units per fourteen `VVVVIVVVVVVIVV`, one period (2026-11-14) | VV 3.29, VV 3.80, VV 5.46, **VI 6.14**, IV 3.27, VV 3.67, VV 3.28 |
 
 Is a site's energy the site's, or the packing basin its relaxation fell into? In the 71/29 cell,
@@ -1715,7 +1798,11 @@ decimals: the lattice follows the site.
   *CTFE without the reversed unit* (2026-11-15) has every site away from the chlorinated unit
   between 1.8 and 5.6, a wall of 14.2 there for one hand and no site for the other; the reversed
   unit takes 1.1 to 3.1 off twelve of the thirteen sites the two scans share and adds 1.4 to the
-  one before itself. The rates that follow from the sums over these sites are in 5.6.
+  one before itself. *The reversed unit beside the nitrile and beside CFE* (2026-11-15) does
+  the same with less: 0.2 to 1.4 off thirteen of the nitrile lattice's fourteen sites for one
+  hand and 0.9 to 1.8 off twelve of the CFE lattice's, with the site before the reversed unit
+  raised by 1.8 and 1.4, and the CFE's own wall lowered by 1.2 to 1.8. The rates that follow
+  from the sums over these sites are in 5.6.
 * **What this says to a sequence designer.** At 71/29 the regular sequence gives the sheet two
   cheap sites in fourteen (its one four-VDF run) and a floor of 6.5-7.2 everywhere else, a
   corrugation of 0.7; grouping the TrFE in pairs gives it three cheap sites in seven (5.05-5.40)

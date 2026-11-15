@@ -978,3 +978,45 @@ def test_the_leaders_by_one_chains_cheapest_move_and_ctfe_alone():
     lower = {o: alone[o]["formation"] - both[o]["formation"] for o in kept}
     assert len(kept) == 13 and sum(v > 1.0 for v in lower.values()) == 12
     assert min(lower, key=lower.get) == "26" and both["26"]["units"] == "RI" and lower["26"] < -1.0  # the one site that rises is the one before the reversed unit
+
+
+def test_the_reversed_unit_beside_the_nitrile_and_beside_cfe():
+    """A reversed VDF unit seven monomers from the nitrile and from CFE (docs/CANDIDATE_MATERIALS.md
+    5.6, 5.3 and 8.4, 2026-11-15).  Beside the nitrile on 29 mol% TrFE the margin overshoots to the
+    all-trans side of zero and the pins add; one TrFE fewer brings the cell onto the switching
+    window, where it is ahead of the measured film's channel and of the nitrile alone on strain at
+    the heat budget, tan delta and relaxation frequency.  The same unit takes the 64/29/7 cell
+    from +0.32 to under zero: 0.05 per mol%, the lever of the fourth reading of why the film
+    switches.  All four helix conformers are polished for the three rows."""
+    pred = MIG.parent
+    m = json.loads((pred / "polished_margins_belt4.json").read_text())["rows"]
+    d = json.loads((pred / "pin_design_belt4.json").read_text()) if (pred / "pin_design_belt4.json").exists() else {}
+    AN4, AN3, CF = "vdf8-trfe4-an1-rvdf1-14", "vdf9-trfe3-an1-rvdf1-14", "vdf8-trfe4-cfe1-rvdf1-14"
+    AN, CFE, CK = "vdf9-trfe4-an1-14", "vdf9-trfe4-cfe1-14", "vdf8-trfe4-ctfe1-rvdf1-14"
+    st = d.get("sites", {}).get("rows", {})
+    if any(n not in m or n not in st for n in (AN4, AN3, CF)):
+        pytest.skip("the reversed unit's cells beside the nitrile and CFE are not stored")
+    for n in (AN4, AN3, CF):
+        assert set(m[n]["cells"]) == {"TTTT", "TGTG'", "TG'TG", "GTG'T", "G'TGT"}
+    assert m[AN4]["margin"] == pytest.approx(-0.148, abs=0.003) and m[AN3]["margin"] == pytest.approx(0.037, abs=0.003) and m[CF]["margin"] == pytest.approx(-0.044, abs=0.003)
+    # the two levers: one TrFE in fourteen, one reversed unit in fourteen
+    assert m[AN3]["margin"] - m[AN4]["margin"] == pytest.approx(0.184, abs=0.005)
+    assert m[AN]["margin"] - m[AN4]["margin"] == pytest.approx(0.345, abs=0.005) and m[CFE]["margin"] - m[CF]["margin"] == pytest.approx(0.361, abs=0.005)
+    c = d["combinations"]
+    assert abs(c[AN4]["margin"] - c[AN4]["margin_if_the_pins_added"]) < 0.01 and abs(c[CF]["margin"] - c[CF]["margin_if_the_pins_added"]) < 0.03
+    assert c[AN3]["mu_TT"] == pytest.approx(0.449, abs=0.003)
+    film = d["three_axes"]["rows"]["calibrated_film"]
+    hb = lambda r: r["three_axes"]["at_the_heat_budget"]["strain_ac"][0]  # noqa: E731
+    r, t = st[AN3], st[AN3]["three_axes"]
+    assert 0.03 < t["margin"] < 0.13 and 0.5 < t["polar_fraction"] < 0.8  # on the window
+    assert r["hands_scanned"] == 2 and r["sites_scanned"] == [14, 14] and r["ratio_to_the_anchor"] == pytest.approx(18.9, rel=0.03)
+    assert t["f_relax_hz"] == pytest.approx(6.9e6, rel=0.03) and t["tan_delta"][0] < 0.1 * film["tan_delta"][0]
+    assert hb(r) > 2.4 * film["at_the_heat_budget"]["strain_ac"][0] and hb(st[CK]) > hb(r) > hb(st[AN])
+    # what the reversed unit does to the sums over sites, and site by site in the nitrile lattice
+    assert st[AN4]["ratio_to_the_anchor"] / st[AN]["ratio_to_the_anchor"] == pytest.approx(2.75, rel=0.05) and st[CF]["ratio_to_the_anchor"] == pytest.approx(2.82, rel=0.05)
+    scans = json.loads((pred / "kink_site_scan_belt4.json").read_text())["rows"]
+    alone, both = scans[AN + "@0"]["sites"], scans[AN4 + "@0"]["sites"]
+    lower = {o: alone[o]["formation"] - both[o]["formation"] for o in alone}
+    assert len(lower) == 14 and sum(v > 0.15 for v in lower.values()) == 13 and lower["26"] < -1.5 and both["26"]["units"] == "RI"
+    wall = scans[CF + "@0"]["sites"]
+    assert {v["units"] for v in wall.values() if v["formation"] > 8.0} == {"VC", "CV"} and max(v["formation"] for v in wall.values()) < 10.5
