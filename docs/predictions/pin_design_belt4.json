@@ -288,7 +288,8 @@
    "is": "force per area on a rigid clamp (the actuator has no fixed cross-section): the film's Young's modulus times the AC strain",
    "unit": "blocked_stress_pa is in Pa; the tables give pN/nm^2, which is the same number as MPa and N/mm^2 (1 pN/nm^2 = 1e6 Pa)",
    "young_modulus_pa": 200000000.0,
-   "caveat": "one assumed modulus for every cell: with it the blocked force ranks as the strain ranks; it becomes an axis of its own when a cell's own stiffness is known (the crystal's from polyfind.mechanics.elastic_constants, the film's from the bench)"
+   "caveat": "one assumed modulus for every cell: with it the blocked force ranks as the strain ranks; it becomes an axis of its own when a cell's own stiffness is known (the crystal's from examples/crystal_stiffness.py, the film's from the bench)",
+   "through_the_crystal": "blocked_stress_through_the_crystal_pa: the same strain carried by the crystal across the chains, an upper bound: the crystal's lateral Young's modulus at the bias (its two states in series, weighted by the polar fraction) times the lateral strain (the axial strain times the switch's lateral-to-axial ratio, the areal strain split evenly)"
   },
   "frequency_is": "the relaxation frequency of the small-signal permittivity (a Cole-Cole fit to a thin film's permittivity sets the anchor): how fast the polarization follows, not a measured strain response and not an actuator's speed",
   "rate_model": "the kink sheets' population sets the rate: exp(-(E_sheet - E_sheet of the 64/29/7 cell) / kT) times the measured film's 364 kHz",
@@ -336,10 +337,23 @@
      "work_j_per_m3": [
       21.807281971360144,
       6.133595135257949
+     ],
+     "blocked_stress_through_the_crystal_pa": [
+      6464650.946507255,
+      3428481.9220128777
      ]
     },
     "margin": 0.0,
-    "f_relax_hz": 363984.70013235195
+    "f_relax_hz": 363984.70013235195,
+    "crystal": {
+     "young_lateral_all_trans_pa": 13702248174.30666,
+     "young_lateral_helix_pa": 11516932389.29965,
+     "helix": "G'TGT",
+     "young_lateral_at_the_bias_pa": 13288308615.03588,
+     "areal_switch_strain": -0.17078519064867959,
+     "lateral_per_axial_strain": 0.736647309917273,
+     "row": "vdf9-trfe4-cfe1-14"
+    }
    },
    "matrix": {
     "strain_ac": [
@@ -383,11 +397,24 @@
      "work_j_per_m3": [
       0.21575963613669188,
       0.057290533980636
+     ],
+     "blocked_stress_through_the_crystal_pa": [
+      700899.2287140632,
+      361170.2057893785
      ]
     },
     "margin": 0.056119764202634315,
     "kink_sheet": 6.848701090655865,
-    "f_relax_hz": 2147.4697024761776
+    "f_relax_hz": 2147.4697024761776,
+    "crystal": {
+     "young_lateral_all_trans_pa": 14103509278.388624,
+     "young_lateral_helix_pa": 11097845205.671438,
+     "helix": "GTG'T",
+     "young_lateral_at_the_bias_pa": 12744862259.12145,
+     "areal_switch_strain": -0.18566744920809342,
+     "lateral_per_axial_strain": 0.8371828779193355,
+     "row": "vdf10-trfe4-14"
+    }
    },
    "vdf9-trfe4-rvdf1-14": {
     "14": {
@@ -1208,11 +1235,24 @@
       "work_j_per_m3": [
        35.91726603397006,
        10.509172657980766
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       5670514.471630534,
+       3067291.781948692
       ]
      },
      "margin": 0.19658876021101257,
      "kink_sheet": 3.05933210541626,
-     "f_relax_hz": 1239287.528387021
+     "f_relax_hz": 1239287.528387021,
+     "crystal": {
+      "young_lateral_all_trans_pa": 10616560985.07098,
+      "young_lateral_helix_pa": 10209910159.376268,
+      "helix": "TG'TG",
+      "young_lateral_at_the_bias_pa": 10219246844.339659,
+      "areal_switch_strain": -0.1565640811051806,
+      "lateral_per_axial_strain": 0.6546918581312992,
+      "row": "vdf9-trfe4-an1-14"
+     }
     },
     "20": {
      "strain_ac": [
@@ -1790,11 +1830,24 @@
       "work_j_per_m3": [
        0.0719948310188294,
        0.07198884354726098
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       321974.71303258324,
+       321961.32419274404
       ]
      },
      "margin": 0.31749793708900764,
      "kink_sheet": 3.7895394363366535,
-     "f_relax_hz": 363984.70013235195
+     "f_relax_hz": 363984.70013235195,
+     "crystal": {
+      "young_lateral_all_trans_pa": 13702248174.30666,
+      "young_lateral_helix_pa": 11516932389.29965,
+      "helix": "G'TGT",
+      "young_lateral_at_the_bias_pa": 11518515243.242756,
+      "areal_switch_strain": -0.17078519064867959,
+      "lateral_per_axial_strain": 0.736647309917273,
+      "row": "vdf9-trfe4-cfe1-14"
+     }
     },
     "20": {
      "strain_ac": [
@@ -2186,11 +2239,24 @@
      "work_j_per_m3": [
       46.628812578765256,
       14.073694007568106
+     ],
+     "blocked_stress_through_the_crystal_pa": [
+      5737904.155012028,
+      3152319.029466215
      ]
     },
     "margin": 0.1860217002952549,
     "kink_sheet": 2.8888330563422926,
-    "f_relax_hz": 1649725.434272297
+    "f_relax_hz": 1649725.434272297,
+    "crystal": {
+     "young_lateral_all_trans_pa": 8626478527.44429,
+     "young_lateral_helix_pa": 9252083239.18113,
+     "helix": "TG'TG",
+     "young_lateral_at_the_bias_pa": 9233964196.209356,
+     "areal_switch_strain": -0.15303739394339722,
+     "lateral_per_axial_strain": 0.6434620339524296,
+     "row": "vdf8-trfe4-an1-tfe1-14"
+    }
    }
   },
   "vdf8-trfe4-an1-e1-14": {
@@ -2468,11 +2534,24 @@
      "work_j_per_m3": [
       28.83456917961448,
       8.269600704504898
+     ],
+     "blocked_stress_through_the_crystal_pa": [
+      6569737.41552911,
+      3518305.5089393933
      ]
     },
     "margin": 0.16182001828105363,
     "kink_sheet": 3.2373579748473276,
-    "f_relax_hz": 919280.038086646
+    "f_relax_hz": 919280.038086646,
+    "crystal": {
+     "young_lateral_all_trans_pa": 10138519019.134481,
+     "young_lateral_helix_pa": 12134222584.13636,
+     "helix": "TGTG'",
+     "young_lateral_at_the_bias_pa": 12022757095.473423,
+     "areal_switch_strain": -0.1488138781061571,
+     "lateral_per_axial_strain": 0.719568606421367,
+     "row": "vdf12-rvdf2-14"
+    }
    }
   },
   "vdf9-trfe3-an1-rvdf1-14": {
@@ -2522,11 +2601,24 @@
      "work_j_per_m3": [
       90.93748348612053,
       31.566186348384655
+     ],
+     "blocked_stress_through_the_crystal_pa": [
+      7098029.653606339,
+      4181936.1863922463
      ]
     },
     "margin": 0.03658928136722572,
     "kink_sheet": 2.7290710634530484,
-    "f_relax_hz": 2156886.8429445997
+    "f_relax_hz": 2156886.8429445997,
+    "crystal": {
+     "young_lateral_all_trans_pa": 8538230278.959573,
+     "young_lateral_helix_pa": 7219282805.686435,
+     "helix": "TGTG'",
+     "young_lateral_at_the_bias_pa": 8013121961.370234,
+     "areal_switch_strain": -0.13478380664579936,
+     "lateral_per_axial_strain": 0.6568248764502848,
+     "row": "vdf9-trfe3-an1-rvdf1-14"
+    }
    }
   }
  },
@@ -2590,11 +2682,24 @@
       "work_j_per_m3": [
        0.0719948310188294,
        0.07198884354726098
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       321974.71303258324,
+       321961.32419274404
       ]
      },
      "margin": 0.31749793708900764,
      "kink_sheet": 3.7895394363366535,
-     "f_relax_hz": 363984.70013235195
+     "f_relax_hz": 363984.70013235195,
+     "crystal": {
+      "young_lateral_all_trans_pa": 13702248174.30666,
+      "young_lateral_helix_pa": 11516932389.29965,
+      "helix": "G'TGT",
+      "young_lateral_at_the_bias_pa": 11518515243.242756,
+      "areal_switch_strain": -0.17078519064867959,
+      "lateral_per_axial_strain": 0.736647309917273,
+      "row": "vdf9-trfe4-cfe1-14"
+     }
     }
    },
    "vdf10-trfe4-14": {
@@ -2654,11 +2759,24 @@
       "work_j_per_m3": [
        3.297059111392636,
        0.8825115769499317
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       2739894.5486794254,
+       1417524.8699987202
       ]
      },
      "margin": 0.056119764202634315,
      "kink_sheet": 5.213291365151178,
-     "f_relax_hz": 33390.32929544585
+     "f_relax_hz": 33390.32929544585,
+     "crystal": {
+      "young_lateral_all_trans_pa": 14103509278.388624,
+      "young_lateral_helix_pa": 11097845205.671438,
+      "helix": "GTG'T",
+      "young_lateral_at_the_bias_pa": 12744862259.12145,
+      "areal_switch_strain": -0.18566744920809342,
+      "lateral_per_axial_strain": 0.8371828779193355,
+      "row": "vdf10-trfe4-14"
+     }
     }
    },
    "vdf9-trfe4-an1-14": {
@@ -2718,11 +2836,24 @@
       "work_j_per_m3": [
        47.11990339409556,
        14.242515567308956
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       6494908.290306077,
+       3570788.9226240935
       ]
      },
      "margin": 0.19658876021101257,
      "kink_sheet": 2.851634430548356,
-     "f_relax_hz": 1755972.2151184164
+     "f_relax_hz": 1755972.2151184164,
+     "crystal": {
+      "young_lateral_all_trans_pa": 10616560985.07098,
+      "young_lateral_helix_pa": 10209910159.376268,
+      "helix": "TG'TG",
+      "young_lateral_at_the_bias_pa": 10219246844.339659,
+      "areal_switch_strain": -0.1565640811051806,
+      "lateral_per_axial_strain": 0.6546918581312992,
+      "row": "vdf9-trfe4-an1-14"
+     }
     }
    },
    "vdf9-trfe4-ctfe1-14": {
@@ -3037,11 +3168,24 @@
       "work_j_per_m3": [
        32.46481450319962,
        9.406292242212912
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       6971042.670047721,
+       3752325.562878589
       ]
      },
      "margin": 0.16182001828105363,
      "kink_sheet": 3.1528426709972814,
-     "f_relax_hz": 1059333.268758981
+     "f_relax_hz": 1059333.268758981,
+     "crystal": {
+      "young_lateral_all_trans_pa": 10138519019.134481,
+      "young_lateral_helix_pa": 12134222584.13636,
+      "helix": "TGTG'",
+      "young_lateral_at_the_bias_pa": 12022757095.473423,
+      "areal_switch_strain": -0.1488138781061571,
+      "lateral_per_axial_strain": 0.719568606421367,
+      "row": "vdf12-rvdf2-14"
+     }
     }
    },
    "vdf9-trfe3-an1-rvdf1-14": {
@@ -3101,11 +3245,24 @@
       "work_j_per_m3": [
        140.5471023305062,
        58.63973846883924
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       8824239.595747236,
+       5699835.945206506
       ]
      },
      "margin": 0.03658928136722572,
      "kink_sheet": 2.037964810457243,
-     "f_relax_hz": 6877396.438146759
+     "f_relax_hz": 6877396.438146759,
+     "crystal": {
+      "young_lateral_all_trans_pa": 8538230278.959573,
+      "young_lateral_helix_pa": 7219282805.686435,
+      "helix": "TGTG'",
+      "young_lateral_at_the_bias_pa": 8013121961.370234,
+      "areal_switch_strain": -0.13478380664579936,
+      "lateral_per_axial_strain": 0.6568248764502848,
+      "row": "vdf9-trfe3-an1-rvdf1-14"
+     }
     }
    }
   }
@@ -3168,11 +3325,24 @@
       "work_j_per_m3": [
        0.0719948310188294,
        0.07198884354726098
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       321974.71303258324,
+       321961.32419274404
       ]
      },
      "margin": 0.31749793708900764,
      "kink_sheet": 3.7895394363366535,
-     "f_relax_hz": 363984.70013235195
+     "f_relax_hz": 363984.70013235195,
+     "crystal": {
+      "young_lateral_all_trans_pa": 13702248174.30666,
+      "young_lateral_helix_pa": 11516932389.29965,
+      "helix": "G'TGT",
+      "young_lateral_at_the_bias_pa": 11518515243.242756,
+      "areal_switch_strain": -0.17078519064867959,
+      "lateral_per_axial_strain": 0.736647309917273,
+      "row": "vdf9-trfe4-cfe1-14"
+     }
     },
     "f_relax_by_the_sites_sum_hz": 363984.70013235195
    },
@@ -3231,11 +3401,24 @@
       "work_j_per_m3": [
        14.648805994566375,
        4.040791788546179
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       5775260.724120105,
+       3033218.6529111653
       ]
      },
      "margin": 0.056119764202634315,
      "kink_sheet": 4.286244243717746,
-     "f_relax_hz": 158176.97582313942
+     "f_relax_hz": 158176.97582313942,
+     "crystal": {
+      "young_lateral_all_trans_pa": 14103509278.388624,
+      "young_lateral_helix_pa": 11097845205.671438,
+      "helix": "GTG'T",
+      "young_lateral_at_the_bias_pa": 12744862259.12145,
+      "areal_switch_strain": -0.18566744920809342,
+      "lateral_per_axial_strain": 0.8371828779193355,
+      "row": "vdf10-trfe4-14"
+     }
     },
     "f_relax_by_the_sites_sum_hz": 33390.32929544585
    },
@@ -3294,11 +3477,24 @@
       "work_j_per_m3": [
        41.26075674228663,
        12.259672289902618
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       6077702.276860796,
+       3312914.731625521
       ]
      },
      "margin": 0.19658876021101257,
      "kink_sheet": 2.955216187861069,
-     "f_relax_hz": 1475840.6762651727
+     "f_relax_hz": 1475840.6762651727,
+     "crystal": {
+      "young_lateral_all_trans_pa": 10616560985.07098,
+      "young_lateral_helix_pa": 10209910159.376268,
+      "helix": "TG'TG",
+      "young_lateral_at_the_bias_pa": 10219246844.339659,
+      "areal_switch_strain": -0.1565640811051806,
+      "lateral_per_axial_strain": 0.6546918581312992,
+      "row": "vdf9-trfe4-an1-14"
+     }
     },
     "f_relax_by_the_sites_sum_hz": 1755972.2151184164
    },
@@ -3429,11 +3625,24 @@
       "work_j_per_m3": [
        100.13915439444327,
        35.87845412270635
+      ],
+      "blocked_stress_through_the_crystal_pa": [
+       7448491.103148116,
+       4458442.857039872
       ]
      },
      "margin": 0.03658928136722572,
      "kink_sheet": 2.611737504456741,
-     "f_relax_hz": 2626190.4374416564
+     "f_relax_hz": 2626190.4374416564,
+     "crystal": {
+      "young_lateral_all_trans_pa": 8538230278.959573,
+      "young_lateral_helix_pa": 7219282805.686435,
+      "helix": "TGTG'",
+      "young_lateral_at_the_bias_pa": 8013121961.370234,
+      "areal_switch_strain": -0.13478380664579936,
+      "lateral_per_axial_strain": 0.6568248764502848,
+      "row": "vdf9-trfe3-an1-rvdf1-14"
+     }
     },
     "f_relax_by_the_sites_sum_hz": 6877396.438146759
    }
@@ -3865,10 +4074,10 @@
  "tables_md": {
   "pins": "| unit and dilution | margin | matrix's margin | all-trans cost per unit | helix cost per unit | pin strength per unit (TT - TG) |\n|---|---|---|---|---|---|\n| CFE, one per fourteen in 29 mol% TrFE | +0.317 | +0.056 | +6.8 | +3.1 | **+3.7** |\n| CTFE, one per fourteen in 29 mol% TrFE | +0.300 | +0.056 | +22.9 | +19.5 | **+3.4** |\n| AN, one per fourteen in 29 mol% TrFE | +0.197 | +0.056 | +0.2 | -1.7 | **+2.0** |\n| CDFE, one per fourteen in 29 mol% TrFE | +0.685 | +0.056 | +18.6 | +9.8 | **+8.8** |\n| CFE and CDFE, one of each per fourteen (mean per unit) | +0.807 | +0.056 | +11.4 | +6.1 | **+5.3** |\n| TFE (CF2-CF2), one per fourteen in 29 mol% TrFE | -0.026 | +0.056 | +15.6 | +16.7 | **-1.2** |\n| reversed VDF (CF2-CH2), one per fourteen in 29 mol% TrFE | -0.162 | +0.056 | -5.2 | -2.1 | **-3.1** |\n| VF (CH2-CHF), one per fourteen in 29 mol% TrFE | +0.087 | +0.056 | +5.2 | +4.8 | **+0.4** |\n| ethylene (CH2-CH2), one per fourteen in 29 mol% TrFE | -0.045 | +0.056 | +11.4 | +12.8 | **-1.4** |\n| DFE (CHF-CHF), one per fourteen in 29 mol% TrFE | +0.263 | +0.056 | +4.7 | +1.8 | **+2.9** |\n| CFE, one per ten beside 20 mol% TrFE | +0.868 | +0.229 | +6.1 | -0.3 | **+6.4** |\n| CFE next to a TrFE, one per ten | +0.875 | +0.229 | +7.1 | +0.6 | **+6.5** |\n| CTFE, one per ten beside 20 mol% TrFE | +0.900 | +0.229 | +20.8 | +14.1 | **+6.7** |\n| CDFE, one per ten beside 20 mol% TrFE | +0.392 | +0.229 | +15.6 | +14.0 | **+1.6** |\n| AN, one per ten beside 20 mol% TrFE | +0.565 | +0.229 | -0.8 | -4.2 | **+3.4** |\n| CFE, one per ten VDF | +0.967 | +0.744 | - | - | **+2.2** |\n| CFE, two per ten VDF (per unit) | +0.812 | +0.744 | - | - | **+0.3** |\n| AN, one per ten VDF | +0.555 | +0.744 | - | - | **-1.9** |",
   "units": "| unit, one per fourteen | pin per unit | kink sheet, kcal/mol per kink pair | cut against the matrix | cut per kcal/mol of pin | decades of frequency per 0.1 kcal/mol of margin | sheets' population against the CFE cell's | all-trans dipole per monomer, e.A | axial switch strain |\n|---|---|---|---|---|---|---|---|---|\n| none: the matrix (vdf10-trfe4-14) | 0 | 6.85 | 0 | - | - | 0.006 | 0.562 | +11.7% |\n| reversed VDF (CF2-CH2) | -3.1 | 5.68 | +1.17 | no cost: it lowers the margin | - | 0.042 | 0.471 | +11.2% |\n| ethylene (CH2-CH2) | -1.4 | 6.62 | +0.23 | no cost: it lowers the margin | - | 0.0087 | 0.517 | +11.1% |\n| TFE (CF2-CF2) | -1.2 | 5.44 | +1.41 | no cost: it lowers the margin | - | 0.063 | 0.511 | +11.7% |\n| VF (CH2-CHF) | +0.4 | 6.56 | +0.29 | **0.66** | 0.7 | 0.0096 | 0.531 | +11.5% |\n| AN | +2.0 | 3.06 | +3.79 | **1.93** | 2.0 | 3.4 | 0.524 | +12.5% |\n| DFE (CHF-CHF) | +2.9 | 6.20 | +0.65 | **0.22** | 0.2 | 0.018 | 0.518 | +11.5% |\n| CTFE | +3.4 | 2.04 | +4.81 | **1.41** | 1.4 | 19 | 0.508 | +11.8% |\n| CFE | +3.7 | 3.79 | +3.06 | **0.84** | 0.9 | 1 | 0.552 | +12.1% |\n| CDFE | +8.8 | 2.65 | +4.20 | **0.48** | 0.5 | 6.8 | 0.529 | +11.9% |",
-  "three_axes": "| unit, one per N | margin | relaxation frequency | AC strain at 1.8 V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds | blocked force per area there, pN/nm2, 34 / 66 kHz |\n|---|---|---|---|---|---|---|---|\n| the measured 63/30/7 film's channel as calibrated | +0.000 | 364 kHz | 0.080% / 0.080% | 0.060 / 0.115 | **0.066%** / 0.035% | 1.5 (heat) / 0.8 (heat) | 0.13 / 0.07 |\n| none: the matrix | +0.056 | 2 kHz | 0.012% / 0.006% | 1.009 / 0.548 | **0.007%** / 0.003% | 1.0 (heat) / 1.0 (heat) | 0.01 / 0.01 |\n| reversed VDF (CF2-CH2), 14 | -0.162 | 15 kHz | 0.043% / 0.025% | 1.031 / 1.168 | **0.014%** / 0.007% | 0.6 (heat) / 0.5 (heat) | 0.03 / 0.01 |\n| reversed VDF (CF2-CH2), 20 | -0.097 | 8 kHz | 0.027% / 0.015% | 1.208 / 0.979 | **0.011%** / 0.006% | 0.7 (heat) / 0.7 (heat) | 0.02 / 0.01 |\n| reversed VDF (CF2-CH2), 28 | -0.053 | 6 kHz | 0.019% / 0.010% | 1.147 / 0.777 | **0.009%** / 0.005% | 0.8 (heat) / 0.8 (heat) | 0.02 / 0.01 |\n| reversed VDF (CF2-CH2), 40 | -0.020 | 4 kHz | 0.015% / 0.008% | 1.023 / 0.628 | **0.008%** / 0.004% | 0.9 (heat) / 0.9 (heat) | 0.02 / 0.01 |\n| ethylene (CH2-CH2), 14 | -0.045 | 3 kHz | 0.011% / 0.006% | 0.821 / 0.467 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01 / 0.01 |\n| ethylene (CH2-CH2), 20 | -0.015 | 3 kHz | 0.010% / 0.005% | 0.772 / 0.433 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01 / 0.01 |\n| ethylene (CH2-CH2), 28 | +0.005 | 3 kHz | 0.010% / 0.005% | 0.783 / 0.434 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01 / 0.01 |\n| ethylene (CH2-CH2), 40 | +0.021 | 2 kHz | 0.011% / 0.006% | 0.877 / 0.482 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01 / 0.01 |\n| TFE (CF2-CF2), 14 | -0.026 | 23 kHz | 0.058% / 0.038% | 0.785 / 1.151 | **0.018%** / 0.009% | 0.6 (heat) / 0.4 (heat) | 0.04 / 0.02 |\n| TFE (CF2-CF2), 20 | -0.002 | 11 kHz | 0.036% / 0.020% | 1.169 / 1.166 | **0.012%** / 0.006% | 0.6 (heat) / 0.6 (heat) | 0.02 / 0.01 |\n| TFE (CF2-CF2), 28 | +0.015 | 7 kHz | 0.028% / 0.015% | 1.447 / 1.089 | **0.011%** / 0.005% | 0.7 (heat) / 0.7 (heat) | 0.02 / 0.01 |\n| TFE (CF2-CF2), 40 | +0.027 | 5 kHz | 0.023% / 0.012% | 1.465 / 0.943 | **0.009%** / 0.005% | 0.7 (heat) / 0.7 (heat) | 0.02 / 0.01 |\n| VF (CH2-CHF), 14 | +0.087 | 3 kHz | 0.018% / 0.009% | 1.314 / 0.761 | **0.008%** / 0.004% | 0.8 (heat) / 0.8 (heat) | 0.02 / 0.01 |\n| VF (CH2-CHF), 20 | +0.078 | 3 kHz | 0.016% / 0.008% | 1.256 / 0.710 | **0.008%** / 0.004% | 0.9 (heat) / 0.9 (heat) | 0.02 / 0.01 |\n| VF (CH2-CHF), 28 | +0.072 | 3 kHz | 0.015% / 0.008% | 1.199 / 0.668 | **0.007%** / 0.004% | 0.9 (heat) / 0.9 (heat) | 0.01 / 0.01 |\n| VF (CH2-CHF), 40 | +0.067 | 3 kHz | 0.014% / 0.007% | 1.148 / 0.634 | **0.007%** / 0.004% | 0.9 (heat) / 0.9 (heat) | 0.01 / 0.01 |\n| AN, 14 | +0.197 | 1.2 MHz | 0.018% / 0.018% | 0.005 / 0.010 | **0.085%** / 0.046% | 8.5 (heat) / 4.6 (heat) | 0.17 / 0.09 |\n| AN, 20 | +0.154 | 184 kHz | 0.055% / 0.055% | 0.081 / 0.157 | **0.046%** / 0.024% | 1.5 (heat) / 0.8 (heat) | 0.09 / 0.05 |\n| AN, 28 | +0.126 | 52 kHz | 0.095% / 0.077% | 0.427 / 0.778 | **0.029%** / 0.015% | 0.5 (heat) / 0.3 (heat) | 0.06 / 0.03 |\n| AN, 40 | +0.105 | 20 kHz | 0.083% / 0.049% | 1.206 / 1.689 | **0.019%** / 0.010% | 0.4 (heat) / 0.4 (heat) | 0.04 / 0.02 |\n| DFE (CHF-CHF), 14 | +0.263 | 6 kHz | 0.002% / 0.002% | 0.084 / 0.096 | **0.004%** / 0.002% | 3.3 (heat) / 2.3 (heat) | 0.01 / 0.00 |\n| DFE (CHF-CHF), 20 | +0.201 | 5 kHz | 0.007% / 0.004% | 0.412 / 0.281 | **0.005%** / 0.003% | 1.4 (heat) / 1.3 (heat) | 0.01 / 0.01 |\n| DFE (CHF-CHF), 28 | +0.160 | 4 kHz | 0.010% / 0.005% | 0.725 / 0.435 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01 / 0.01 |\n| DFE (CHF-CHF), 40 | +0.129 | 3 kHz | 0.013% / 0.006% | 0.963 / 0.551 | **0.007%** / 0.004% | 1.0 (heat) / 1.0 (heat) | 0.01 / 0.01 |\n| CTFE, 14 | +0.300 | 6.8 MHz | 0.001% / 0.001% | 0.000 / 0.000 | **0.005%** / 0.005% | 10.0 (field) / 10.0 (field) | 0.01 / 0.01 |\n| CTFE, 20 | +0.227 | 609 kHz | 0.007% / 0.007% | 0.004 / 0.008 | **0.041%** / 0.026% | 10.0 (field) / 6.2 (heat) | 0.08 / 0.05 |\n| CTFE, 28 | +0.178 | 121 kHz | 0.029% / 0.029% | 0.080 / 0.153 | **0.031%** / 0.016% | 1.9 (heat) / 1.0 (heat) | 0.06 / 0.03 |\n| CTFE, 40 | +0.141 | 36 kHz | 0.064% / 0.049% | 0.491 / 0.849 | **0.022%** / 0.011% | 0.6 (heat) / 0.4 (heat) | 0.04 / 0.02 |\n| CFE, 14 | +0.317 | 364 kHz | 0.001% / 0.001% | 0.000 / 0.001 | **0.004%** / 0.004% | 10.0 (field) / 10.0 (field) | 0.01 / 0.01 |\n| CFE, 20 | +0.239 | 78 kHz | 0.006% / 0.006% | 0.028 / 0.053 | **0.017%** / 0.009% | 5.0 (heat) / 2.6 (heat) | 0.03 / 0.02 |\n| CFE, 28 | +0.187 | 28 kHz | 0.024% / 0.020% | 0.296 / 0.497 | **0.015%** / 0.008% | 1.1 (heat) / 0.7 (heat) | 0.03 / 0.02 |\n| CFE, 40 | +0.148 | 13 kHz | 0.038% / 0.022% | 1.015 / 1.155 | **0.013%** / 0.007% | 0.6 (heat) / 0.5 (heat) | 0.03 / 0.01 |\n| CDFE, 14 | +0.685 | 2.5 MHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.000%** / 0.000% | 10.0 (field) / 10.0 (field) | 0.00 / 0.00 |\n| CDFE, 20 | +0.496 | 299 kHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.000%** / 0.000% | 10.0 (field) / 10.0 (field) | 0.00 / 0.00 |\n| CDFE, 28 | +0.371 | 73 kHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.001%** / 0.001% | 10.0 (field) / 10.0 (field) | 0.00 / 0.00 |\n| CDFE, 40 | +0.276 | 25 kHz | 0.002% / 0.002% | 0.022 / 0.040 | **0.007%** / 0.004% | 6.4 (heat) / 3.4 (heat) | 0.01 / 0.01 |",
-  "combinations": "| cell | margin: computed, if the pins added | kink sheet: computed, if the cuts added | relaxation frequency | AC strain at 1.8 V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds | blocked force per area there, pN/nm2, 34 / 66 kHz |\n|---|---|---|---|---|---|---|---|---|\n| AN with TFE, one of each per fourteen | +0.186, +0.114 | 2.89, 1.65 | 1.6 MHz | 0.018% / 0.018% | 0.004 / 0.007 | **0.097%** / 0.053% | 9.5 (heat) / 5.2 (heat) | 0.19 / 0.11 |\n| AN with ethylene, one of each per fourteen | -0.119, +0.095 | 3.14, 2.83 | 1.1 MHz | 0.090% / 0.090% | 0.019 / 0.038 | **0.110%** / 0.062% | 2.2 (heat) / 1.2 (heat) | 0.22 / 0.12 |\n| CTFE with reversed VDF, one of each per fourteen | +0.245, +0.082 | 0.84, 0.87 | 51.7 MHz | 0.002% / 0.002% | 0.000 / 0.000 | **0.011%** / 0.011% | 10.0 (field) / 10.0 (field) | 0.02 / 0.02 |\n| AN with reversed VDF, one of each per fourteen | -0.148, -0.022 | 2.74, 1.89 | 2.1 MHz | 0.090% / 0.090% | 0.010 / 0.020 | **0.136%** / 0.080% | 2.7 (heat) / 1.6 (heat) | 0.27 / 0.16 |\n| CFE with reversed VDF, one of each per fourteen | -0.044, +0.099 | 3.24, 2.62 | 911 kHz | 0.091% / 0.091% | 0.023 / 0.046 | **0.105%** / 0.059% | 2.1 (heat) / 1.2 (heat) | 0.21 / 0.12 |\n| CFE with CDFE, one of each per fourteen | +0.807, +0.946 | not computed | - | - | - | - | - | - |\n| PVDF with 2 reversed units per fourteen, no TrFE (PVDF itself: +0.744, 5.06) | +0.162, - | 3.24, - | 919 kHz | 0.025% / 0.025% | 0.010 / 0.020 | **0.076%** / 0.041% | 5.4 (heat) / 2.9 (heat) | 0.15 / 0.08 |\n| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | +0.037, - | 2.73, - | 2.2 MHz | 0.130% / 0.130% | 0.014 / 0.027 | **0.135%** / 0.079% | 1.9 (heat) / 1.1 (heat) | 0.27 / 0.16 |",
-  "sites": "| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2 |\n|---|---|---|---|---|---|---|---|---|\n| 64/29/7 (one CFE per fourteen): the anchor | 3.95 | 3.42 (RV) | 1 | 364 kHz | 0.001% | 0.000 | **0.004%** | 0.01 |\n| the 71/29 matrix | 7.09 | 4.66 (VV) | 0.0917 | 33 kHz | 0.131% | 0.889 | **0.026%** | 0.05 |\n| AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** | 0.19 |\n| CTFE, one per fourteen | 2.16 | 1.78 (VR) | 18.1 | 6.6 MHz | 0.001% | 0.000 | **0.005%** | 0.01 |\n| CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.002% | 0.000 | **0.011%** | 0.02 |\n| AN with reversed VDF, one of each per fourteen | 2.61 | 1.39 (VR) | 13.2 | 4.8 MHz | 0.090% | 0.005 | **0.161%** | 0.32 |\n| CFE with reversed VDF, one of each per fourteen | 3.08 | 2.90 (RV) | 2.82 | 1.0 MHz | 0.091% | 0.021 | **0.110%** | 0.22 |\n| PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** | 0.16 |\n| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | 2.60 | 1.39 (VR) | 18.9 | 6.9 MHz | 0.130% | 0.004 | **0.168%** | 0.34 |",
-  "moves": "| cell | the cheapest move, barrier from the sheet (the sheet's energy at the start site) | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2 |\n|---|---|---|---|---|---|---|---|---|---|\n| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 (from the sheet at 3.95) | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** | 0.01 |\n| the 71/29 matrix | to N, 11.89 (from the sheet at 7.09) | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** | 0.11 |\n| AN, one per fourteen | to N, 10.56 (from the sheet at 3.25) | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** | 0.18 |\n| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 (from the sheet at 1.00) | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.002% | 0.000 | **0.011%** | 0.02 |\n| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | to N, 10.22 (from the sheet at 1.86; from the site at 2.60: to N, 10.66) | 10.35 | 7.22 | 2.6 MHz | 6.9 MHz | 0.130% | 0.011 | **0.142%** | 0.28 |",
+  "three_axes": "| unit, one per N | margin | relaxation frequency | AC strain at 1.8 V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds | blocked force per area there at 34 kHz, pN/nm2: by the film's assumed modulus; through the crystal across the chains |\n|---|---|---|---|---|---|---|---|\n| the measured 63/30/7 film's channel as calibrated | +0.000 | 364 kHz | 0.080% / 0.080% | 0.060 / 0.115 | **0.066%** / 0.035% | 1.5 (heat) / 0.8 (heat) | 0.13; 6.5 |\n| none: the matrix | +0.056 | 2 kHz | 0.012% / 0.006% | 1.009 / 0.548 | **0.007%** / 0.003% | 1.0 (heat) / 1.0 (heat) | 0.01; 0.7 |\n| reversed VDF (CF2-CH2), 14 | -0.162 | 15 kHz | 0.043% / 0.025% | 1.031 / 1.168 | **0.014%** / 0.007% | 0.6 (heat) / 0.5 (heat) | 0.03; - |\n| reversed VDF (CF2-CH2), 20 | -0.097 | 8 kHz | 0.027% / 0.015% | 1.208 / 0.979 | **0.011%** / 0.006% | 0.7 (heat) / 0.7 (heat) | 0.02; - |\n| reversed VDF (CF2-CH2), 28 | -0.053 | 6 kHz | 0.019% / 0.010% | 1.147 / 0.777 | **0.009%** / 0.005% | 0.8 (heat) / 0.8 (heat) | 0.02; - |\n| reversed VDF (CF2-CH2), 40 | -0.020 | 4 kHz | 0.015% / 0.008% | 1.023 / 0.628 | **0.008%** / 0.004% | 0.9 (heat) / 0.9 (heat) | 0.02; - |\n| ethylene (CH2-CH2), 14 | -0.045 | 3 kHz | 0.011% / 0.006% | 0.821 / 0.467 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01; - |\n| ethylene (CH2-CH2), 20 | -0.015 | 3 kHz | 0.010% / 0.005% | 0.772 / 0.433 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01; - |\n| ethylene (CH2-CH2), 28 | +0.005 | 3 kHz | 0.010% / 0.005% | 0.783 / 0.434 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01; - |\n| ethylene (CH2-CH2), 40 | +0.021 | 2 kHz | 0.011% / 0.006% | 0.877 / 0.482 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01; - |\n| TFE (CF2-CF2), 14 | -0.026 | 23 kHz | 0.058% / 0.038% | 0.785 / 1.151 | **0.018%** / 0.009% | 0.6 (heat) / 0.4 (heat) | 0.04; - |\n| TFE (CF2-CF2), 20 | -0.002 | 11 kHz | 0.036% / 0.020% | 1.169 / 1.166 | **0.012%** / 0.006% | 0.6 (heat) / 0.6 (heat) | 0.02; - |\n| TFE (CF2-CF2), 28 | +0.015 | 7 kHz | 0.028% / 0.015% | 1.447 / 1.089 | **0.011%** / 0.005% | 0.7 (heat) / 0.7 (heat) | 0.02; - |\n| TFE (CF2-CF2), 40 | +0.027 | 5 kHz | 0.023% / 0.012% | 1.465 / 0.943 | **0.009%** / 0.005% | 0.7 (heat) / 0.7 (heat) | 0.02; - |\n| VF (CH2-CHF), 14 | +0.087 | 3 kHz | 0.018% / 0.009% | 1.314 / 0.761 | **0.008%** / 0.004% | 0.8 (heat) / 0.8 (heat) | 0.02; - |\n| VF (CH2-CHF), 20 | +0.078 | 3 kHz | 0.016% / 0.008% | 1.256 / 0.710 | **0.008%** / 0.004% | 0.9 (heat) / 0.9 (heat) | 0.02; - |\n| VF (CH2-CHF), 28 | +0.072 | 3 kHz | 0.015% / 0.008% | 1.199 / 0.668 | **0.007%** / 0.004% | 0.9 (heat) / 0.9 (heat) | 0.01; - |\n| VF (CH2-CHF), 40 | +0.067 | 3 kHz | 0.014% / 0.007% | 1.148 / 0.634 | **0.007%** / 0.004% | 0.9 (heat) / 0.9 (heat) | 0.01; - |\n| AN, 14 | +0.197 | 1.2 MHz | 0.018% / 0.018% | 0.005 / 0.010 | **0.085%** / 0.046% | 8.5 (heat) / 4.6 (heat) | 0.17; 5.7 |\n| AN, 20 | +0.154 | 184 kHz | 0.055% / 0.055% | 0.081 / 0.157 | **0.046%** / 0.024% | 1.5 (heat) / 0.8 (heat) | 0.09; - |\n| AN, 28 | +0.126 | 52 kHz | 0.095% / 0.077% | 0.427 / 0.778 | **0.029%** / 0.015% | 0.5 (heat) / 0.3 (heat) | 0.06; - |\n| AN, 40 | +0.105 | 20 kHz | 0.083% / 0.049% | 1.206 / 1.689 | **0.019%** / 0.010% | 0.4 (heat) / 0.4 (heat) | 0.04; - |\n| DFE (CHF-CHF), 14 | +0.263 | 6 kHz | 0.002% / 0.002% | 0.084 / 0.096 | **0.004%** / 0.002% | 3.3 (heat) / 2.3 (heat) | 0.01; - |\n| DFE (CHF-CHF), 20 | +0.201 | 5 kHz | 0.007% / 0.004% | 0.412 / 0.281 | **0.005%** / 0.003% | 1.4 (heat) / 1.3 (heat) | 0.01; - |\n| DFE (CHF-CHF), 28 | +0.160 | 4 kHz | 0.010% / 0.005% | 0.725 / 0.435 | **0.006%** / 0.003% | 1.1 (heat) / 1.1 (heat) | 0.01; - |\n| DFE (CHF-CHF), 40 | +0.129 | 3 kHz | 0.013% / 0.006% | 0.963 / 0.551 | **0.007%** / 0.004% | 1.0 (heat) / 1.0 (heat) | 0.01; - |\n| CTFE, 14 | +0.300 | 6.8 MHz | 0.001% / 0.001% | 0.000 / 0.000 | **0.005%** / 0.005% | 10.0 (field) / 10.0 (field) | 0.01; - |\n| CTFE, 20 | +0.227 | 609 kHz | 0.007% / 0.007% | 0.004 / 0.008 | **0.041%** / 0.026% | 10.0 (field) / 6.2 (heat) | 0.08; - |\n| CTFE, 28 | +0.178 | 121 kHz | 0.029% / 0.029% | 0.080 / 0.153 | **0.031%** / 0.016% | 1.9 (heat) / 1.0 (heat) | 0.06; - |\n| CTFE, 40 | +0.141 | 36 kHz | 0.064% / 0.049% | 0.491 / 0.849 | **0.022%** / 0.011% | 0.6 (heat) / 0.4 (heat) | 0.04; - |\n| CFE, 14 | +0.317 | 364 kHz | 0.001% / 0.001% | 0.000 / 0.001 | **0.004%** / 0.004% | 10.0 (field) / 10.0 (field) | 0.01; 0.3 |\n| CFE, 20 | +0.239 | 78 kHz | 0.006% / 0.006% | 0.028 / 0.053 | **0.017%** / 0.009% | 5.0 (heat) / 2.6 (heat) | 0.03; - |\n| CFE, 28 | +0.187 | 28 kHz | 0.024% / 0.020% | 0.296 / 0.497 | **0.015%** / 0.008% | 1.1 (heat) / 0.7 (heat) | 0.03; - |\n| CFE, 40 | +0.148 | 13 kHz | 0.038% / 0.022% | 1.015 / 1.155 | **0.013%** / 0.007% | 0.6 (heat) / 0.5 (heat) | 0.03; - |\n| CDFE, 14 | +0.685 | 2.5 MHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.000%** / 0.000% | 10.0 (field) / 10.0 (field) | 0.00; - |\n| CDFE, 20 | +0.496 | 299 kHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.000%** / 0.000% | 10.0 (field) / 10.0 (field) | 0.00; - |\n| CDFE, 28 | +0.371 | 73 kHz | 0.000% / 0.000% | 0.000 / 0.000 | **0.001%** / 0.001% | 10.0 (field) / 10.0 (field) | 0.00; - |\n| CDFE, 40 | +0.276 | 25 kHz | 0.002% / 0.002% | 0.022 / 0.040 | **0.007%** / 0.004% | 6.4 (heat) / 3.4 (heat) | 0.01; - |",
+  "combinations": "| cell | margin: computed, if the pins added | kink sheet: computed, if the cuts added | relaxation frequency | AC strain at 1.8 V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds | blocked force per area there at 34 kHz, pN/nm2: by the film's assumed modulus; through the crystal across the chains |\n|---|---|---|---|---|---|---|---|---|\n| AN with TFE, one of each per fourteen | +0.186, +0.114 | 2.89, 1.65 | 1.6 MHz | 0.018% / 0.018% | 0.004 / 0.007 | **0.097%** / 0.053% | 9.5 (heat) / 5.2 (heat) | 0.19; 5.7 |\n| AN with ethylene, one of each per fourteen | -0.119, +0.095 | 3.14, 2.83 | 1.1 MHz | 0.090% / 0.090% | 0.019 / 0.038 | **0.110%** / 0.062% | 2.2 (heat) / 1.2 (heat) | 0.22; - |\n| CTFE with reversed VDF, one of each per fourteen | +0.245, +0.082 | 0.84, 0.87 | 51.7 MHz | 0.002% / 0.002% | 0.000 / 0.000 | **0.011%** / 0.011% | 10.0 (field) / 10.0 (field) | 0.02; - |\n| AN with reversed VDF, one of each per fourteen | -0.148, -0.022 | 2.74, 1.89 | 2.1 MHz | 0.090% / 0.090% | 0.010 / 0.020 | **0.136%** / 0.080% | 2.7 (heat) / 1.6 (heat) | 0.27; - |\n| CFE with reversed VDF, one of each per fourteen | -0.044, +0.099 | 3.24, 2.62 | 911 kHz | 0.091% / 0.091% | 0.023 / 0.046 | **0.105%** / 0.059% | 2.1 (heat) / 1.2 (heat) | 0.21; - |\n| CFE with CDFE, one of each per fourteen | +0.807, +0.946 | not computed | - | - | - | - | - | - |\n| PVDF with 2 reversed units per fourteen, no TrFE (PVDF itself: +0.744, 5.06) | +0.162, - | 3.24, - | 919 kHz | 0.025% / 0.025% | 0.010 / 0.020 | **0.076%** / 0.041% | 5.4 (heat) / 2.9 (heat) | 0.15; 6.6 |\n| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | +0.037, - | 2.73, - | 2.2 MHz | 0.130% / 0.130% | 0.014 / 0.027 | **0.135%** / 0.079% | 1.9 (heat) / 1.1 (heat) | 0.27; 7.1 |",
+  "sites": "| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2: by the film's assumed modulus; through the crystal across the chains |\n|---|---|---|---|---|---|---|---|---|\n| 64/29/7 (one CFE per fourteen): the anchor | 3.95 | 3.42 (RV) | 1 | 364 kHz | 0.001% | 0.000 | **0.004%** | 0.01; 0.3 |\n| the 71/29 matrix | 7.09 | 4.66 (VV) | 0.0917 | 33 kHz | 0.131% | 0.889 | **0.026%** | 0.05; 2.7 |\n| AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** | 0.19; 6.5 |\n| CTFE, one per fourteen | 2.16 | 1.78 (VR) | 18.1 | 6.6 MHz | 0.001% | 0.000 | **0.005%** | 0.01; - |\n| CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.002% | 0.000 | **0.011%** | 0.02; - |\n| AN with reversed VDF, one of each per fourteen | 2.61 | 1.39 (VR) | 13.2 | 4.8 MHz | 0.090% | 0.005 | **0.161%** | 0.32; - |\n| CFE with reversed VDF, one of each per fourteen | 3.08 | 2.90 (RV) | 2.82 | 1.0 MHz | 0.091% | 0.021 | **0.110%** | 0.22; - |\n| PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** | 0.16; 7.0 |\n| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | 2.60 | 1.39 (VR) | 18.9 | 6.9 MHz | 0.130% | 0.004 | **0.168%** | 0.34; 8.8 |",
+  "moves": "| cell | the cheapest move, barrier from the sheet (the sheet's energy at the start site) | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2: by the film's assumed modulus; through the crystal across the chains |\n|---|---|---|---|---|---|---|---|---|---|\n| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 (from the sheet at 3.95) | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** | 0.01; 0.3 |\n| the 71/29 matrix | to N, 11.89 (from the sheet at 7.09) | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** | 0.11; 5.8 |\n| AN, one per fourteen | to N, 10.56 (from the sheet at 3.25) | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** | 0.18; 6.1 |\n| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 (from the sheet at 1.00) | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.002% | 0.000 | **0.011%** | 0.02; - |\n| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | to N, 10.22 (from the sheet at 1.86; from the site at 2.60: to N, 10.66) | 10.35 | 7.22 | 2.6 MHz | 6.9 MHz | 0.130% | 0.011 | **0.142%** | 0.28; 7.4 |",
   "uniform": "| one pin per | mol% | AN (+2.0): margin, polar fraction, S_ac, tan delta 34 kHz | CTFE (+3.4): margin, polar fraction, S_ac, tan delta 34 kHz | CFE (+3.7): margin, polar fraction, S_ac, tan delta 34 kHz | CDFE (+8.8): margin, polar fraction, S_ac, tan delta 34 kHz |\n|---|---|---|---|---|---|\n| 10 | 10.0 | +0.253, 0.01, 0.004%, 0.004 | +0.397, 0.00, 0.000%, 0.000 | +0.422, 0.00, 0.000%, 0.000 | +0.937, 0.00, 0.000%, 0.000 |\n| 14 | 7.1 | +0.197, 0.03, 0.021%, 0.020 | +0.300, 0.00, 0.001%, 0.001 | +0.317, 0.00, 0.001%, 0.000 | +0.685, 0.00, 0.000%, 0.000 |\n| 20 | 5.0 | +0.154, 0.09, 0.060%, 0.044 | +0.227, 0.01, 0.009%, 0.009 | +0.239, 0.01, 0.006%, 0.006 | +0.496, 0.00, 0.000%, 0.000 |\n| 28 | 3.6 | +0.126, 0.17, 0.110%, 0.064 | +0.178, 0.05, 0.034%, 0.029 | +0.187, 0.04, 0.027%, 0.025 | +0.371, 0.00, 0.000%, 0.000 |\n| 40 | 2.5 | +0.105, 0.27, 0.154%, 0.078 | +0.141, 0.12, 0.081%, 0.053 | +0.148, 0.10, 0.071%, 0.049 | +0.276, 0.00, 0.002%, 0.002 |\n| 56 | 1.8 | +0.091, 0.36, 0.178%, 0.084 | +0.117, 0.21, 0.130%, 0.070 | +0.121, 0.19, 0.120%, 0.068 | +0.213, 0.02, 0.013%, 0.013 |\n| 80 | 1.2 | +0.081, 0.43, 0.190%, 0.087 | +0.099, 0.31, 0.166%, 0.081 | +0.102, 0.29, 0.161%, 0.080 | +0.166, 0.06, 0.045%, 0.036 |\n| 120 | 0.8 | +0.073, 0.49, 0.193%, 0.088 | +0.085, 0.41, 0.186%, 0.087 | +0.087, 0.39, 0.184%, 0.086 | +0.129, 0.16, 0.104%, 0.062 |",
   "statistical": "| pin, mol% | uniform spacing: margin, polar fraction, S_ac | statistical sequence (local law): polar fraction, S_ac | monomers in pin-free runs of forty or more |\n|---|---|---|---|\n| AN, 3 | +0.115, 0.22, 0.134% | 0.32, 0.151% | 0.66 |\n| AN, 5 | +0.154, 0.09, 0.060% | 0.22, 0.116% | 0.40 |\n| AN, 7 | +0.194, 0.03, 0.022% | 0.16, 0.088% | 0.22 |\n| AN, 10 | +0.253, 0.01, 0.004% | 0.09, 0.058% | 0.08 |\n| CTFE, 3 | +0.159, 0.08, 0.055% | 0.21, 0.112% | 0.66 |\n| CTFE, 5 | +0.227, 0.01, 0.009% | 0.12, 0.069% | 0.40 |\n| CTFE, 7 | +0.295, 0.00, 0.001% | 0.07, 0.043% | 0.22 |\n| CTFE, 10 | +0.397, 0.00, 0.000% | 0.03, 0.021% | 0.08 |\n| CFE, 3 | +0.166, 0.06, 0.046% | 0.20, 0.107% | 0.66 |\n| CFE, 5 | +0.239, 0.01, 0.006% | 0.11, 0.064% | 0.40 |\n| CFE, 7 | +0.312, 0.00, 0.001% | 0.06, 0.038% | 0.22 |\n| CFE, 10 | +0.422, 0.00, 0.000% | 0.03, 0.018% | 0.08 |\n| CDFE, 3 | +0.320, 0.00, 0.001% | 0.06, 0.036% | 0.66 |\n| CDFE, 5 | +0.496, 0.00, 0.000% | 0.02, 0.012% | 0.40 |\n| CDFE, 7 | +0.672, 0.00, 0.000% | 0.01, 0.004% | 0.22 |\n| CDFE, 10 | +0.937, 0.00, 0.000% | 0.00, 0.001% | 0.08 |"
  }

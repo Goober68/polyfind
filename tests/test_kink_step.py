@@ -1143,3 +1143,46 @@ def test_the_blocked_force_per_area_is_the_films_modulus_times_the_strain():
     assert by_force == sorted(points, key=lambda t: t["at_the_heat_budget"]["strain_ac"][0])  # one modulus: the strain's order
     for name in ("three_axes", "combinations", "sites", "moves"):
         assert "pN/nm2" in d["tables_md"][name].splitlines()[0]
+
+
+def test_the_crystals_stiffness_and_the_blocked_force_through_it():
+    """The crystals' elastic constants from strained, re-relaxed polished cells (2026-11-15;
+    docs/CANDIDATE_MATERIALS.md 5.6; examples/crystal_stiffness.py), and the second reading of the
+    blocked force per area they give.  Beta-PVDF's lateral constants come out at DFT's; every
+    pin softens the crystal across the chains and the leading cell's is the softest; carried
+    through the crystal, the blocked force per area keeps the leading cell first by a quarter
+    where strain alone had it first by more than twice."""
+    pred = MIG.parent
+    path = pred / "crystal_stiffness_belt4.json"
+    d = json.loads((pred / "pin_design_belt4.json").read_text()) if (pred / "pin_design_belt4.json").exists() else {}
+    if not path.exists() or "through_the_crystal" not in d.get("three_axes", {}).get("blocked_force", {}):
+        pytest.skip("the crystals' stiffness is not stored")
+    st = json.loads(path.read_text())["cells"]
+    assert all(c["stable"] for c in st.values()) and len(st) == 13
+    pv = st["vdf10 TTTT"]["C_GPa"]
+    for key, dft, tol in (("11", 22.77, 0.10), ("22", 24.52, 0.10), ("12", 5.88, 0.15)):
+        assert pv[key] == pytest.approx(dft, rel=tol)
+    assert st["vdf10 TTTT"]["young_GPa"]["z"] > 2.0 * 302.6  # rigid bonds: the chain-axis modulus is an upper bound and is not used
+    lat = lambda k: 0.5 * (st[k]["young_GPa"]["x"] + st[k]["young_GPa"]["y"])  # noqa: E731
+    L, AN, RV, ANT, MAT, CFE = "vdf9-trfe3-an1-rvdf1-14", "vdf9-trfe4-an1-14", "vdf12-rvdf2-14", "vdf8-trfe4-an1-tfe1-14", "vdf10-trfe4-14", "vdf9-trfe4-cfe1-14"
+    tt = [lat(f"{r} TTTT") for r in ("vdf10", MAT, CFE, AN, RV, ANT, L)]
+    assert tt == sorted(tt, reverse=True) and tt[0] == pytest.approx(23.6, abs=0.3) and tt[-1] == pytest.approx(8.5, abs=0.2)
+    assert lat(f"{L} TGTG'") == pytest.approx(7.2, abs=0.2) and lat(f"{L} TGTG'") < min(lat(k) for k in st if k != f"{L} TGTG'")
+    mv, sr, film = d["moves"]["rows"], d["sites"]["rows"], d["three_axes"]["rows"]["calibrated_film"]
+    thr = lambda t: t["at_the_heat_budget"]["blocked_stress_through_the_crystal_pa"][0] / 1e6  # noqa: E731  (pN/nm2)
+    flm = lambda t: t["at_the_heat_budget"]["blocked_stress_pa"][0] / 1e6  # noqa: E731
+    for t in (film, mv[L]["three_axes"], sr[L]["three_axes"], sr[AN]["three_axes"]):
+        c = t["crystal"]
+        x = min(max(t["polar_fraction"], 0.0), 1.0)
+        series = 1.0 / (x / c["young_lateral_all_trans_pa"] + (1.0 - x) / c["young_lateral_helix_pa"])
+        assert c["young_lateral_at_the_bias_pa"] == pytest.approx(series, rel=1e-9)
+        assert thr(t) * 1e6 == pytest.approx(series * c["lateral_per_axial_strain"] * t["at_the_heat_budget"]["strain_ac"][0], rel=1e-9)
+        assert 0.6 < c["lateral_per_axial_strain"] < 0.9 and 20.0 < thr(t) / flm(t) < 55.0
+    assert thr(mv[L]["three_axes"]) == pytest.approx(7.4, abs=0.2) and thr(sr[L]["three_axes"]) == pytest.approx(8.8, abs=0.2)
+    assert thr(film) == pytest.approx(6.5, abs=0.2) and thr(sr[RV]["three_axes"]) == pytest.approx(7.0, abs=0.2)
+    # the leader stays first on both readings; its lead over the film's channel shrinks from over 2 to about 1.2 to 1.4
+    for rows in (mv, sr):
+        lead = rows[L]["three_axes"]
+        assert 1.1 < thr(lead) / thr(film) < 1.4 and flm(lead) / flm(film) > 2.0
+        assert thr(lead) > thr(rows[AN]["three_axes"]) and 0.9 < thr(rows[AN]["three_axes"]) / thr(film) < 1.05
+    assert thr(sr[RV]["three_axes"]) > thr(sr[AN]["three_axes"]) and "through the crystal" in d["tables_md"]["moves"].splitlines()[0]

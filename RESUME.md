@@ -21,6 +21,34 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The crystals' stiffness, and the blocked force through the crystal, 2026-11-15 (PI: "Go").** Text:
+`docs/CANDIDATE_MATERIALS.md` 5.6 ("The fourth part: blocked force, per area": rewritten with both readings). STATE: DONE,
+CPU ONLY (spend unchanged: about $14.05 of the $46).
+WHAT WAS RUN: `examples/crystal_stiffness.py --rows ROW --cells TTTT,helix` (new): the polished two-chain cell strained
+along xx, yy, zz and the shear xy, every internal coordinate relaxed at the fixed cell on the closure surface, the
+elastic constants by central differences over 33 cells; ten minutes per fourteen-monomer cell. Thirteen cells in
+`docs/predictions/crystal_stiffness_belt4.json`. CHECK: beta-PVDF C_11 24.4, C_22 25.3, C_12 5.2 GPa (DFT 22.8, 24.5, 5.9).
+C_33 IS NOT USABLE (rigid bonds: 674 GPa for beta-PVDF, DFT 303).
+YOUNG'S MODULUS ACROSS THE CHAINS (mean of the two lateral axes, GPa; all-trans / helix):
+    beta-PVDF 23.6 | 71/29 matrix 14.1 / 11.1 | 64/29/7 (the film's composition) 13.7 / 11.5 | nitrile alone 10.6 / 10.2
+    PVDF with reversed units 10.1 / 12.1 | nitrile with TFE 8.6 / 9.3 | the leader (nitrile + reversed VDF, 21% TrFE) 8.5 / 7.2
+BLOCKED FORCE PER AREA, TWO READINGS (pN/nm2, heat budget, 34 kHz; `pin_design.py`, `--stiffness`):
+                                             film's assumed modulus     through the crystal across the chains (upper bound)
+    the leader, by the move / by the sum      0.28 / 0.34                7.4 / 8.8
+    PVDF with reversed units (sum)            0.16                       7.0
+    the film's channel                        0.13                       6.5
+    the nitrile alone, move / sum             0.18 / 0.19                6.1 / 6.5
+    the nitrile with TFE (one site)           0.19                       5.7
+READINGS: (1) every pin softens the crystal across the chains and the leader's is the softest; (2) on the crystal's
+reading the ranking flattens: the leader stays first by 1.15 to 1.35x over the film's channel (2.1 to 2.5x on strain
+alone), the nitrile alone is level with the film, PVDF with reversed units is second; (3) the two readings are 25 to 50x
+apart and a real film is between them: the load path (crystallinity, orientation) decides, which is the bench's modulus.
+ASSUMPTIONS of the crystal reading: the two states in series by the polar fraction; the switch's areal strain split
+evenly between the lateral axes; rigid pendants; the film's channel on its composition's cell.
+Test: `tests/test_kink_step.py::test_the_crystals_stiffness_and_the_blocked_force_through_it`.
+NEXT, proposed to the PI: (a) ask the bench for the film's modulus at 34 to 66 kHz and its crystallinity (the number
+that places a film between the two readings); (b) the CTFE pair on more TrFE; (c) the stiffness of the CTFE cells.
+
 **The fourth part of the objective: blocked force, per area, 2026-11-15 (PI: "Do we have a way to estimate blocked
 force? Thats the 4th part of the equation"; then "Actuator has no fixed xsection, so establish an abstract, say force =
 N/nm2").** Both are in `CLAUDE.md`. Text: `docs/CANDIDATE_MATERIALS.md` 5.6 ("The fourth part: blocked force, per area")
