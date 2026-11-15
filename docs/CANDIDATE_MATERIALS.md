@@ -55,6 +55,10 @@ So a chemistry has three independent handles, and the pass below reads them sepa
 | transition strain | the stroke per switched unit | the conformational pair, hence the chemistry's ground conformation | the crystal screen, exactly |
 | `Ea`, `Tf`, `tau0` | `f_relax`, hence loss per strain at 34-66 kHz and the heat | defect pinning (Ea), the size of the cooperative unit (Tf), chain stiffness | the kink-pair formation energy in the lattice (section 8), the first piece, as a bracket between the relaxed kink crystal and the pinned lattice; the migration barrier and `Tf` are not computed (the bench's Vogel-Fulcher fit is the input) |
 
+(Since 2026-11-15 the objective has a fourth part beside strain, tan delta and frequency: the
+blocked force, carried per area in pN/nm2. It is the film's stiffness times the strain; 5.6 has
+it, and says why it is not yet an axis of its own.)
+
 and a fourth that is a property of the sequence rather than of any unit: the **spread of local
 margins** along the chain, which the driven lattice (plan section 12) found to be the knob that
 suppresses the stroke at bias and broadens the loss peak. A controlled sequence is the one place
@@ -799,17 +803,17 @@ reversed unit (profiles in 8.4), and the rate is taken from the sum
 of `exp(-E / kT)` over all of a lattice's sites against the same sum for the 64/29/7 cell
 (rigid pendants, as scanned):
 
-| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
-|---|---|---|---|---|---|---|---|
-| 64/29/7 (one CFE per fourteen): the anchor | 3.95 | 3.42 (RV) | 1 | 364 kHz | 0.001% | 0.000 | **0.004%** |
-| the 71/29 matrix | 7.09 | 4.66 (VV) | 0.0917 | 33 kHz | 0.131% | 0.889 | **0.026%** |
-| AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** |
-| CTFE, one per fourteen | 2.16 | 1.78 (VR) | 18.1 | 6.6 MHz | 0.001% | 0.000 | **0.005%** |
-| CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.002% | 0.000 | **0.011%** |
-| AN with reversed VDF, one of each per fourteen | 2.61 | 1.39 (VR) | 13.2 | 4.8 MHz | 0.090% | 0.005 | **0.161%** |
-| CFE with reversed VDF, one of each per fourteen | 3.08 | 2.90 (RV) | 2.82 | 1.0 MHz | 0.091% | 0.021 | **0.110%** |
-| PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** |
-| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | 2.60 | 1.39 (VR) | 18.9 | 6.9 MHz | 0.130% | 0.004 | **0.168%** |
+| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2 |
+|---|---|---|---|---|---|---|---|---|
+| 64/29/7 (one CFE per fourteen): the anchor | 3.95 | 3.42 (RV) | 1 | 364 kHz | 0.001% | 0.000 | **0.004%** | 0.01 |
+| the 71/29 matrix | 7.09 | 4.66 (VV) | 0.0917 | 33 kHz | 0.131% | 0.889 | **0.026%** | 0.05 |
+| AN, one per fourteen | 3.25 | 2.15 (VR) | 4.82 | 1.8 MHz | 0.018% | 0.003 | **0.097%** | 0.19 |
+| CTFE, one per fourteen | 2.16 | 1.78 (VR) | 18.1 | 6.6 MHz | 0.001% | 0.000 | **0.005%** | 0.01 |
+| CTFE with reversed VDF, one of each per fourteen | 1.00 | 0.35 (RV) | 143 | 52.0 MHz | 0.002% | 0.000 | **0.011%** | 0.02 |
+| AN with reversed VDF, one of each per fourteen | 2.61 | 1.39 (VR) | 13.2 | 4.8 MHz | 0.090% | 0.005 | **0.161%** | 0.32 |
+| CFE with reversed VDF, one of each per fourteen | 3.08 | 2.90 (RV) | 2.82 | 1.0 MHz | 0.091% | 0.021 | **0.110%** | 0.22 |
+| PVDF with 2 reversed units per fourteen, no TrFE | 3.29 | 3.27 (IV) | 2.91 | 1.1 MHz | 0.025% | 0.009 | **0.081%** | 0.16 |
+| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | 2.60 | 1.39 (VR) | 18.9 | 6.9 MHz | 0.130% | 0.004 | **0.168%** | 0.34 |
 
 * **The nitrile gains.** By its sites' sum the nitrile cell
   is at 1.8 MHz (1.2 from the one site) with 0.097% at the heat budget; PVDF with reversed units at
@@ -835,13 +839,13 @@ the 64/29/7 cell and the matrix, the cheapest move is the one to N, two monomers
 other hand. The frequency is the film's 364 kHz times `exp(-(barrier - 11.40) / kT)`, 11.40 being
 the same move in the 64/29/7 cell (`pin_design.py`, table "moves"):
 
-| cell | the cheapest move, barrier from the sheet (the sheet's energy at the start site) | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |
-|---|---|---|---|---|---|---|---|---|
-| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 (from the sheet at 3.95) | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** |
-| the 71/29 matrix | to N, 11.89 (from the sheet at 7.09) | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** |
-| AN, one per fourteen | to N, 10.56 (from the sheet at 3.25) | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** |
-| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 (from the sheet at 1.00) | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.002% | 0.000 | **0.011%** |
-| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | to N, 10.22 (from the sheet at 1.86; from the site at 2.60: to N, 10.66) | 10.35 | 7.22 | 2.6 MHz | 6.9 MHz | 0.130% | 0.011 | **0.142%** |
+| cell | the cheapest move, barrier from the sheet (the sheet's energy at the start site) | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at 1.8 V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2 |
+|---|---|---|---|---|---|---|---|---|---|
+| 64/29/7 (one CFE per fourteen): the anchor | to N, 11.40 (from the sheet at 3.95) | 14.49 | 1 | 364 kHz | 364 kHz | 0.001% | 0.000 | **0.004%** | 0.01 |
+| the 71/29 matrix | to N, 11.89 (from the sheet at 7.09) | 15.00 | 0.435 | 158 kHz | 33 kHz | 0.181% | 0.198 | **0.054%** | 0.11 |
+| AN, one per fourteen | to N, 10.56 (from the sheet at 3.25) | 14.98 | 4.05 | 1.5 MHz | 1.8 MHz | 0.018% | 0.004 | **0.091%** | 0.18 |
+| CTFE with reversed VDF, one of each per fourteen | to N, 9.83 (from the sheet at 1.00) | no path found | 13.9 | 5.1 MHz | 52.0 MHz | 0.002% | 0.000 | **0.011%** | 0.02 |
+| AN with reversed VDF, one of each per fourteen, on three TrFE in fourteen (21 mol%) | to N, 10.22 (from the sheet at 1.86; from the site at 2.60: to N, 10.66) | 10.35 | 7.22 | 2.6 MHz | 6.9 MHz | 0.130% | 0.011 | **0.142%** | 0.28 |
 
 * **The two rate models agree on the nitrile cell.** 1.5 MHz by the move and 1.8 MHz by the
   sites' sum, tan delta 0.004 and 0.003 at 34 kHz, 0.091% and 0.097% at the heat budget. Its
@@ -955,6 +959,42 @@ mol% TrFE one chain's move is computed as well (below):
   reversed unit have no crystal anchor; the cell is one regular placement of the two units; the
   frequency is anchored on the defect-free 64/29/7 cell (above); and the place within the
   window is the bench's to find.
+
+**The fourth part: blocked force, per area (2026-11-15).** The PI's objective gained a fourth part
+on 2026-11-15 (`CLAUDE.md`): blocked force. The actuator has no fixed cross-section, so it is
+carried as force per area, the stress the material puts on a rigid clamp, in **pN/nm2**: the
+same number as MPa and N/mm2 (plain N/nm2 would put every value here near 1e-13). A chain's
+cross-section in these crystals is 0.23 nm2, so 1 pN/nm2 is 0.23 pN per chain. In the loss model
+the blocked force per area is the film's Young's modulus times the AC strain, and the work per
+cycle against a matched load a quarter of their product (`polyfind.loss`, `operating_point`;
+`pin_design.py --young`, tabulated at the heat budget):
+
+| cell | relaxation frequency | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2 | work per cycle against a matched load, J/m3 |
+|---|---|---|---|---|---|
+| the nitrile with reversed VDF on 21 mol% TrFE, by one chain's move | 2.6 MHz | 0.011 | 0.142% | **0.28** | 100 |
+| the same, by the sum over kink sites | 6.9 MHz | 0.004 | 0.168% | **0.34** | 141 |
+| the nitrile alone, by one chain's move | 1.5 MHz | 0.004 | 0.091% | **0.18** | 41 |
+| the same, by the sum over kink sites | 1.8 MHz | 0.003 | 0.097% | **0.19** | 47 |
+| PVDF with reversed units, by the sum over kink sites | 1.1 MHz | 0.009 | 0.081% | **0.16** | 32 |
+| the measured film's channel as calibrated | 364 kHz | 0.060 | 0.066% | **0.13** | 22 |
+| CTFE with reversed VDF, by one chain's move | 5.1 MHz | 0.000 | 0.011% | **0.02** | 1 |
+
+* **With one modulus for every cell this is the strain axis again.** The modulus is 0.2 GPa for
+  all of them: assumed, not computed and not measured. The column ranks as the strain ranks and
+  separates nothing until a candidate's own stiffness is in it.
+* **What would make it an axis of its own.** The crystal's stiffness polyfind can compute
+  (`polyfind.mechanics.elastic_constants` and the blocking stress beside it, run so far on
+  beta-PVDF for the DFT check E1); it has not been run on these cells. The film's modulus is
+  mostly the amorphous fraction's and the morphology's (crystallinity, orientation), which a
+  crystal model does not hold: that is the bench's number at 34 to 66 kHz, or a bound from an
+  assumed crystallinity.
+* **The switching does not limit the force at these levels.** A stress along the chain moves the
+  margin by the switch strain times the monomer's volume: 0.0009 kcal/mol per pN/nm2 in the
+  leading cell, so half of the switching window is 67 pN/nm2. The blocked stresses above are
+  under 0.4. The crystal makes the stroke and decides the operating range; the soft fraction in
+  the load path decides how much force arrives.
+* **A trade-off to expect, not computed:** the units that buy speed make the chain irregular, an
+  irregular chain crystallises less, and a less crystalline film is softer.
 
 **Where this leaves the ranking.** On the three axes the order of the cells in hand is the
 nitrile with reversed VDF on 21 mol% TrFE, the nitrile with TFE and the nitrile alone, PVDF with

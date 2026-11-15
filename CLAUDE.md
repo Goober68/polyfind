@@ -33,3 +33,12 @@ How it is applied (an interpretation, not the PI's words):
 - Blocked stress is stiffness times free strain, so it is a separate axis only where the
   candidate's own stiffness is known. With one assumed modulus for every candidate it is the
   strain axis again, and the write-up has to say which of the two it is.
+
+The PI's words on its unit (2026-11-15): "Actuator has no fixed xsection, so establish an
+abstract, say force = N/nm2"
+
+How it is applied (an interpretation, not the PI's words):
+
+- Blocked force is reported per area, never as a force for an assumed cross-section.
+- The unit is pN/nm2, which is the same number as MPa and N/mm2. Plain N/nm2 would put the
+  values near 1e-13; say so once where the unit is introduced.

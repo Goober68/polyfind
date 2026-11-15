@@ -53,6 +53,7 @@ PINS = {
     "vdf7-trfe2-an1": ("vdf8-trfe2", 10, 1, "AN, one per ten beside 20 mol% TrFE"),
 }
 # two units in one cell, seven monomers apart: (the cell, its first unit's cell, its second unit's cell, what it is)
+PN_NM2 = 1e6  # Pa in one pN/nm^2 (= 1 MPa = 1 N/mm^2): the unit the blocked force per area is tabulated in
 COMBINATIONS = {
     "vdf8-trfe4-an1-tfe1-14": ("vdf9-trfe4-an1-14", "vdf9-trfe4-tfe1-14", "AN with TFE"),
     "vdf8-trfe4-an1-e1-14": ("vdf9-trfe4-an1-14", "vdf9-trfe4-e1-14", "AN with ethylene"),
@@ -77,6 +78,8 @@ def main():
     ap.add_argument("--sheets", default="docs/predictions/kink_formation_belt4_polished.json", help="the kink sheets' energies like for like (examples/kink_summary.py)")
     ap.add_argument("--bias", type=float, default=55.0)
     ap.add_argument("--ac", type=float, default=1.8)
+    ap.add_argument("--young", type=float, default=0.2e9, help="Pa: the film's Young's modulus, ONE assumed value for every cell (not computed, not measured); "
+                    "the blocked force per area is this times the AC strain, so with one modulus it ranks as strain ranks")
     ap.add_argument("--heat-budget", type=float, default=4e6, help="W/m^3")
     ap.add_argument("--ac-max", type=float, default=10.0, help="V/um: the largest AC field the small-signal response is used at, at the heat budget")
     ap.add_argument("--sites", default="docs/predictions/kink_site_scan_belt4.json", help="the kink-site scans (examples/kink_site_scan.py)")
@@ -140,9 +143,14 @@ def main():
     m0 = rows[args.matrix]["margin"]
 
     # strain, tan delta and frequency together: a unit at one per N, the rate from the kink sheets' population
-    md_3 = [f"| unit, one per N | margin | relaxation frequency | AC strain at {args.ac:g} V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds |",
-            "|---|---|---|---|---|---|---|"]
+    md_3 = [f"| unit, one per N | margin | relaxation frequency | AC strain at {args.ac:g} V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds | blocked force per area there, pN/nm2, 34 / 66 kHz |",
+            "|---|---|---|---|---|---|---|---|"]
     out["three_axes"] = {"heat_budget_w_per_m3": args.heat_budget, "ac_max_V_um": args.ac_max,
+                         "blocked_force": {"is": "force per area on a rigid clamp (the actuator has no fixed cross-section): the film's Young's modulus times the AC strain",
+                                           "unit": "blocked_stress_pa is in Pa; the tables give pN/nm^2, which is the same number as MPa and N/mm^2 (1 pN/nm^2 = 1e6 Pa)",
+                                           "young_modulus_pa": args.young,
+                                           "caveat": "one assumed modulus for every cell: with it the blocked force ranks as the strain ranks; it becomes an axis of its own "
+                                                     "when a cell's own stiffness is known (the crystal's from polyfind.mechanics.elastic_constants, the film's from the bench)"},
                          "frequency_is": "the relaxation frequency of the small-signal permittivity (a Cole-Cole fit to a thin film's permittivity sets the anchor): how fast the "
                                          "polarization follows, not a measured strain response and not an actuator's speed",
                          "rate_model": "the kink sheets' population sets the rate: exp(-(E_sheet - E_sheet of the 64/29/7 cell) / kT) times the measured film's 364 kHz",
@@ -159,19 +167,24 @@ def main():
         def axes(ch):
             """The three axes of a channel: the point at the program's AC field and the point at the heat budget
             (the field solved from the budget, capped at --ac-max), at both drive frequencies."""
-            o = {f: ch.operating_point(f, args.bias * V_UM, args.ac * V_UM, 0.2e9, 300.0, 0.05) for f in (34e3, 66e3)}
-            b = {f: ch.budget_point(f, args.bias * V_UM, 0.2e9, 300.0, 0.05, args.heat_budget, args.ac_max * V_UM) for f in (34e3, 66e3)}
+            o = {f: ch.operating_point(f, args.bias * V_UM, args.ac * V_UM, args.young, 300.0, 0.05) for f in (34e3, 66e3)}
+            b = {f: ch.budget_point(f, args.bias * V_UM, args.young, 300.0, 0.05, args.heat_budget, args.ac_max * V_UM) for f in (34e3, 66e3)}
             return {"strain_ac": [o[34e3]["strain_ac"], o[66e3]["strain_ac"]], "tan_delta": [o[34e3]["tan_delta"], o[66e3]["tan_delta"]],
                     "efficiency": [o[34e3]["efficiency"], o[66e3]["efficiency"]], "polar_fraction": o[34e3]["polar_fraction"],
+                    "blocked_stress_pa": [o[34e3]["blocking_stress_pa"], o[66e3]["blocking_stress_pa"]],
                     "at_the_heat_budget": {"strain_ac": [b[34e3]["strain_ac"], b[66e3]["strain_ac"]], "field_ac_V_um": [b[34e3]["field_ac"] / V_UM, b[66e3]["field_ac"] / V_UM],
-                                           "binds": [b[34e3]["binds"], b[66e3]["binds"]], "heat_w_per_m3": [b[34e3]["heat_w_per_m3"], b[66e3]["heat_w_per_m3"]]}}
+                                           "binds": [b[34e3]["binds"], b[66e3]["binds"]], "heat_w_per_m3": [b[34e3]["heat_w_per_m3"], b[66e3]["heat_w_per_m3"]],
+                                           # the fourth part: force per area on a rigid clamp (Pa; 1e6 Pa = 1 pN/nm^2), and the work per cycle against a matched load
+                                           "blocked_stress_pa": [b[34e3]["blocking_stress_pa"], b[66e3]["blocking_stress_pa"]],
+                                           "work_j_per_m3": [b[34e3]["work_j_per_m3"], b[66e3]["work_j_per_m3"]]}}
 
         def line(label, pt):
             fr = pt["f_relax_hz"]
             fr = f"{fr / 1e6:.1f} MHz" if fr >= 1e6 else (f"{fr / 1e3:.0f} kHz" if fr >= 1e3 else f"{fr:.0f} Hz")
             hb = pt["at_the_heat_budget"]
             return (f"| {label} | {pt['margin']:+.3f} | {fr} | {pt['strain_ac'][0] * 100:.3f}% / {pt['strain_ac'][1] * 100:.3f}% | {pt['tan_delta'][0]:.3f} / {pt['tan_delta'][1]:.3f} | "
-                    f"**{hb['strain_ac'][0] * 100:.3f}%** / {hb['strain_ac'][1] * 100:.3f}% | {hb['field_ac_V_um'][0]:.1f} ({hb['binds'][0]}) / {hb['field_ac_V_um'][1]:.1f} ({hb['binds'][1]}) |")
+                    f"**{hb['strain_ac'][0] * 100:.3f}%** / {hb['strain_ac'][1] * 100:.3f}% | {hb['field_ac_V_um'][0]:.1f} ({hb['binds'][0]}) / {hb['field_ac_V_um'][1]:.1f} ({hb['binds'][1]}) | "
+                    f"{hb['blocked_stress_pa'][0] / PN_NM2:.2f} / {hb['blocked_stress_pa'][1] / PN_NM2:.2f} |")
 
         film = dict(axes(base), margin=0.0, f_relax_hz=f_anchor)
         out["three_axes"]["rows"]["calibrated_film"] = film
@@ -182,7 +195,8 @@ def main():
         md_3.append(line("none: the matrix", pt))
         # designed cells: two units together, the margin and the kink sheet computed, beside what the single units would add up to
         md_c = ["| cell | margin: computed, if the pins added | kink sheet: computed, if the cuts added | relaxation frequency | AC strain at "
-                f"{args.ac:g} V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds |", "|---|---|---|---|---|---|---|---|"]
+                f"{args.ac:g} V/um, 34 / 66 kHz | tan delta 34 / 66 kHz | AC strain at the heat budget, 34 / 66 kHz | AC field there, V/um, and what binds | blocked force per area there, pN/nm2, 34 / 66 kHz |",
+                "|---|---|---|---|---|---|---|---|---|"]
         out["combinations"] = {}
         for name, (first, second, what) in COMBINATIONS.items():
             if "margin" not in rows.get(name, {}) or first not in out["pins"] or second not in out["pins"]:
@@ -197,7 +211,7 @@ def main():
                 rec.update(kink_sheet=e, kink_sheet_if_the_cuts_added=added_e, three_axes=pt)
                 md_c.append(cells + f"{e:.2f}, {added_e:.2f} | " + line("", pt).split("|", 3)[3].lstrip())
             else:
-                md_c.append(cells + "not computed | - | - | - | - | - |")
+                md_c.append(cells + "not computed | - | - | - | - | - | - |")
             out["combinations"][name] = rec
         for name, n_rev in REGIO_MATRICES.items():  # PVDF with reversed units and no TrFE, against PVDF itself
             if "margin" not in rows.get(name, {}) or name not in sheets or "vdf10" not in sheets:
@@ -236,7 +250,7 @@ def main():
                     "cheapest": {"energy": low[0], "units": low[1], "offset_bonds": low[2]}, "start_site": hands[0]["sites"]["0"]["formation"]}
 
         md_z = ["| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at "
-                f"{args.ac:g} V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |", "|---|---|---|---|---|---|---|---|"]
+                f"{args.ac:g} V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2 |", "|---|---|---|---|---|---|---|---|---|"]
         out["sites"] = {"note": "kcal/mol per kink pair against all-trans, rigid pendants; the sum is over the scanned sites of the repeat and the scanned hands of the kink pair, "
                                 "per site; the frequency is the measured film's 364 kHz times the ratio of sums", "rows": {}}
         z_ref = site_sum("vdf9-trfe4-cfe1-14")
@@ -256,7 +270,7 @@ def main():
                 fr = pt["f_relax_hz"]
                 fr = f"{fr / 1e6:.1f} MHz" if fr >= 1e6 else (f"{fr / 1e3:.0f} kHz" if fr >= 1e3 else f"{fr:.0f} Hz")
                 md_z.append(f"| {label} | {z['start_site']:.2f} | {z['cheapest']['energy']:.2f} ({z['cheapest']['units']}) | {ratio:.3g} | {fr} | {pt['strain_ac'][0] * 100:.3f}% | {pt['tan_delta'][0]:.3f} | "
-                            f"**{hb['strain_ac'][0] * 100:.3f}%** |")
+                            f"**{hb['strain_ac'][0] * 100:.3f}%** | {hb['blocked_stress_pa'][0] / PN_NM2:.2f} |")
         # the other rate model: one chain's cheapest move out of the sheet in sixteen chains (the step to B, or straight to N),
         # against the same move in the anchor cell
         try:
@@ -288,7 +302,7 @@ def main():
             return dict(starts[0], other_starts=[{k: m[k] for k in ("start_offset_bonds", "start_sheet", "move", "barrier", "step_to_B", "to_N")} for m in starts[1:]])
 
         md_m = ["| cell | the cheapest move, barrier from the sheet (the sheet's energy at the start site) | the step to B | rate against the 64/29/7 cell's | relaxation frequency by the move | by the sites' sum | AC strain at "
-                f"{args.ac:g} V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz |", "|---|---|---|---|---|---|---|---|---|"]
+                f"{args.ac:g} V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2 |", "|---|---|---|---|---|---|---|---|---|---|"]
         out["moves"] = {"note": "kcal/mol against the sheet at the start site (kink offset 0), sixteen chains, neighbours flexible, cell fixed; the frequency is the measured film's "
                                 "364 kHz times exp(-(barrier - the 64/29/7 cell's) / kT)", "rows": {}}
         m_ref = cheapest_move("vdf9-trfe4-cfe1-14")
@@ -308,7 +322,7 @@ def main():
                 to_b = "no path found" if mv["step_to_B"] is None else f"{mv['step_to_B']:.2f}"
                 others = "".join(f"; from the site at {o['start_sheet']:.2f}: {o['move']}, {o['barrier']:.2f}" for o in mv["other_starts"])
                 md_m.append(f"| {label} | {mv['move']}, {mv['barrier']:.2f} (from the sheet at {mv['start_sheet']:.2f}{others}) | {to_b} | {ratio:.3g} | {hz(pt['f_relax_hz'])} | {hz(by_sum)} | {pt['strain_ac'][0] * 100:.3f}% | {pt['tan_delta'][0]:.3f} | "
-                            f"**{hb['strain_ac'][0] * 100:.3f}%** |")
+                            f"**{hb['strain_ac'][0] * 100:.3f}%** | {hb['blocked_stress_pa'][0] / PN_NM2:.2f} |")
         for name, u in out["units"].items():
             for n in (14, 20, 28, 40):
                 w = 14.0 / n
@@ -318,7 +332,7 @@ def main():
 
     def op(m):
         ch = L.replace(base.scaled(dmu_factor=mat["mu_TT"] / base.dmu_mon, de_mon=max(m, 0.0), label="x"), s_switch=mat["axial"])
-        return ch.operating_point(34e3, args.bias * V_UM, args.ac * V_UM, 0.2e9, 300.0, 0.05)
+        return ch.operating_point(34e3, args.bias * V_UM, args.ac * V_UM, args.young, 300.0, 0.05)
 
     pins = {k: out["pins"][n]["pin_per_unit"] for k, n in (("AN", "vdf9-trfe4-an1-14"), ("CTFE", "vdf9-trfe4-ctfe1-14"), ("CFE", "vdf9-trfe4-cfe1-14"), ("CDFE", "vdf9-trfe4-cdfe1-14"))
             if n in out["pins"]}
@@ -350,7 +364,7 @@ def main():
                                                 "uniform": {"margin": m0 + s * p, "polar_fraction": u["polar_fraction"], "strain_ac": u["strain_ac"]}}
             md_s.append(f"| {k}, {100 * p:g} | {m0 + s * p:+.3f}, {u['polar_fraction']:.2f}, {u['strain_ac'] * 100:.3f}% | {x:.2f}, {sa * 100:.3f}% | {float(w[runs >= 40].sum()):.2f} |")
     out["statistical"] = {"hypothesis": "each pin-free run of L monomers at the margin m0 + s / (L + 1); runs geometric; every monomer weighted by its run", "rows": stat}
-    film = base.operating_point(34e3, args.bias * V_UM, args.ac * V_UM, 0.2e9, 300.0, 0.05)
+    film = base.operating_point(34e3, args.bias * V_UM, args.ac * V_UM, args.young, 300.0, 0.05)
     out["calibrated_film"] = {"polar_fraction": film["polar_fraction"], "strain_ac": film["strain_ac"], "tan_delta": film["tan_delta"],
                               "note": "the literature channel as calibrated on the 63/30/7 film (margin zero, n 17)"}
     md_c = md_c if out.get("combinations") else []
@@ -360,7 +374,7 @@ def main():
                         "uniform": "\n".join(md_u), "statistical": "\n".join(md_s)}
     with open(args.out, "w") as fh:
         json.dump(out, fh, indent=1)
-    text = ("Pin strength per unit\n\n" + "\n".join(md) + "\n\nWhat a unit costs and what it buys\n\n" + "\n".join(md_k) + "\n\nStrain, tan delta and frequency together (the rate from the kink sheets' population)\n\n" + "\n".join(md_3)
+    text = ("Pin strength per unit\n\n" + "\n".join(md) + "\n\nWhat a unit costs and what it buys\n\n" + "\n".join(md_k) + "\n\nStrain, tan delta, frequency and blocked force per area together (the rate from the kink sheets' population)\n\n" + "\n".join(md_3)
             + "\n\nDesigned cells: two units together\n\n" + "\n".join(md_c) + "\n\nThe rate by every scanned kink site\n\n" + "\n".join(md_z) + "\n\nThe rate by one chain's cheapest move in sixteen chains\n\n" + "\n".join(md_m) + f"\n\nUniform spacing on the {args.matrix} matrix (margin {m0:+.3f})\n\n" + "\n".join(md_u)
             + "\n\nStatistical against uniform, the margin law read locally\n\n" + "\n".join(md_s)
             + f"\n\nThe calibrated film's channel at the operating point: polar fraction {film['polar_fraction']:.2f}, S_ac {film['strain_ac'] * 100:.3f}%, tan delta {film['tan_delta']:.3f}.\n")

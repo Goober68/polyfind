@@ -21,6 +21,24 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**The fourth part of the objective: blocked force, per area, 2026-11-15 (PI: "Do we have a way to estimate blocked
+force? Thats the 4th part of the equation"; then "Actuator has no fixed xsection, so establish an abstract, say force =
+N/nm2").** Both are in `CLAUDE.md`. Text: `docs/CANDIDATE_MATERIALS.md` 5.6 ("The fourth part: blocked force, per area")
+and a sentence in section 1. STATE: THE COLUMN IS IN; IT IS NOT YET AN AXIS OF ITS OWN.
+WHAT IS IN: `pin_design.py` carries `blocked_stress_pa` and `work_j_per_m3` at the heat budget for every cell (and
+`--young`, default 0.2 GPa) and its four tables print "blocked force per area, pN/nm2" (1 pN/nm2 = 1 MPa = 1 N/mm2;
+plain N/nm2 would be 1e-13-sized numbers). It is `polyfind.loss` `operating_point`'s `blocking_stress_pa` = Young's
+modulus times the AC strain; work per cycle against a matched load is a quarter of their product.
+    the nitrile with reversed VDF on 21 mol% TrFE: 0.28 (one chain's move) to 0.34 (sites' sum) pN/nm2, 100 to 141 J/m3 per cycle
+    the nitrile alone 0.18 to 0.19 | PVDF with reversed units 0.16 | the film's channel 0.13 | CTFE with reversed VDF 0.02
+WHAT IT IS NOT: one assumed modulus for every cell, so it ranks as strain ranks. To make it separate: (a) the crystal's
+stiffness per candidate, `polyfind.mechanics.elastic_constants` (and its `Actuator` blocking stress), run so far on
+beta-PVDF only (E1); (b) the film's modulus, which is the amorphous fraction's and the morphology's: the bench's number
+at 34 to 66 kHz or a bound from an assumed crystallinity. The switching is not the limit: a stress moves the margin by
+0.0009 kcal/mol per pN/nm2, half the window at 67 pN/nm2.
+Test: `tests/test_kink_step.py::test_the_blocked_force_per_area_is_the_films_modulus_times_the_strain`.
+NEXT, proposed to the PI: the crystal stiffness of the four leading cells (CPU), then the CTFE pair on more TrFE.
+
 **Every helix conformer polished: five margins moved and the head of the ranking with them, 2026-11-15 (PI: "Go").**
 Text: `docs/CANDIDATE_MATERIALS.md` 5.6 (corrected in place, each correction dated; the bullet "Every helix conformer is
 polished since 2026-11-15"), 5.4, 5.5, 8.5, header; `docs/E1_E2_PREDICTIONS.md` ("E7 part d, corrected"). STATE: DONE, CPU

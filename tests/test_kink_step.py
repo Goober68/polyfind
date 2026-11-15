@@ -1113,3 +1113,33 @@ def test_every_helix_conformer_is_polished_and_five_margins_moved():
             assert hashlib.sha256((pred / f["name"]).read_bytes()).hexdigest() == f["sha256"]
     for conf in ("TTTT", "TGTG'"):  # the files that were sent are unchanged
         assert c[conf]["file_tilted"]["sha256"] == sent["conformations"][conf]["file_tilted"]["sha256"]
+
+
+def test_the_blocked_force_per_area_is_the_films_modulus_times_the_strain():
+    """The fourth part of the objective (CLAUDE.md, 2026-11-15; docs/CANDIDATE_MATERIALS.md 5.6):
+    blocked force, carried per area because the actuator has no fixed cross-section, in pN/nm2
+    (1e6 Pa).  In the tables it is one assumed modulus times the AC strain, so it ranks as the
+    strain ranks; the record says so, and holds the modulus it used."""
+    pred = MIG.parent
+    d = json.loads((pred / "pin_design_belt4.json").read_text()) if (pred / "pin_design_belt4.json").exists() else {}
+    bf = d.get("three_axes", {}).get("blocked_force")
+    if bf is None:
+        pytest.skip("the blocked force is not in the stored table")
+    young = bf["young_modulus_pa"]
+    assert young == 0.2e9 and "one assumed modulus" in bf["caveat"] and "pN/nm^2" in bf["unit"]
+    L, AN = "vdf9-trfe3-an1-rvdf1-14", "vdf9-trfe4-an1-14"
+    film = d["three_axes"]["rows"]["calibrated_film"]
+    points = [film] + [d[src]["rows"][n]["three_axes"] for src in ("moves", "sites") for n in (L, AN)]
+    for t in points:
+        hb = t["at_the_heat_budget"]
+        for i in (0, 1):
+            assert hb["blocked_stress_pa"][i] == pytest.approx(young * hb["strain_ac"][i], rel=1e-9)
+            assert hb["work_j_per_m3"][i] == pytest.approx(0.25 * young * hb["strain_ac"][i] ** 2, rel=1e-9)
+        assert t["blocked_stress_pa"][0] == pytest.approx(young * t["strain_ac"][0], rel=1e-9)
+    pn = lambda t: t["at_the_heat_budget"]["blocked_stress_pa"][0] / 1e6  # noqa: E731  (pN/nm2)
+    assert pn(d["moves"]["rows"][L]["three_axes"]) == pytest.approx(0.28, abs=0.01) and pn(d["sites"]["rows"][L]["three_axes"]) == pytest.approx(0.34, abs=0.01)
+    assert pn(film) == pytest.approx(0.13, abs=0.01) and pn(d["moves"]["rows"][AN]["three_axes"]) == pytest.approx(0.18, abs=0.01)
+    by_force = sorted(points, key=pn)
+    assert by_force == sorted(points, key=lambda t: t["at_the_heat_budget"]["strain_ac"][0])  # one modulus: the strain's order
+    for name in ("three_axes", "combinations", "sites", "moves"):
+        assert "pN/nm2" in d["tables_md"][name].splitlines()[0]
