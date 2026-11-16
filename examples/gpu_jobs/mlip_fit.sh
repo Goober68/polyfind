@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Fit our own interatomic potential on the card, from one or more seeds at once, and test each
+# fit against the DFT anchor (examples/mlip_train.py; docs/MLIP_SECOND_OPINION.md 3.3 and 3.5).
+# A job of examples/runpod_jobs_pod.sh.  Arguments:
+#
+#   mlip_fit.sh NAME EPOCHS SEED [SEED...] [frames FILE...]
+#
+# NAME_sSEED names each fit.  The frames default to the two PVDF files.  The seeds are fitted
+# side by side on the one card (a fit of cells this small does not fill it), then tested one
+# after another on the host's processors: held-out errors, beta minus alpha, the antipolar
+# pair, beta's elastic constants, and the cells relaxed in the potential written out for DFT
+# single points (those are run elsewhere: the pod has no DFT program).
+#
+# Into $JOB_OUT: each fit's log, its model, its results (mlip_own_NAME_sSEED.json), its relaxed
+# cells (probe/), and seconds.txt.  MLIP_DEVICE=cpu and a small EPOCHS try the script without a card.
+set -euo pipefail
+NAME="$1"; EPOCHS="$2"; shift 2
+SEEDS=(); FRAMES=()
+while [ $# -gt 0 ] && [ "$1" != "frames" ]; do SEEDS+=("$1"); shift; done
+if [ "${1:-}" = "frames" ]; then shift; FRAMES=("$@"); fi
+[ ${#FRAMES[@]} -gt 0 ] || FRAMES=(docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz)
+PY="${PY:-python3}"
+DEVICE="${MLIP_DEVICE:-cuda}"
+THREADS="${MLIP_THREADS:-8}"   # a pod shows far more processors than it is given
+export OMP_NUM_THREADS="$THREADS" MKL_NUM_THREADS="$THREADS"
+DATA="$JOB_OUT/data"
+
+if ! "$PY" -c "import mace, torch_dftd, ase" 2>/dev/null; then
+  "$PY" -m pip install -q mace-torch ase torch-dftd
+fi
+"$PY" - <<'PY'
+import torch, mace, ase
+print("torch", torch.__version__, "mace", mace.__version__, "ase", ase.__version__)
+print("card:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none")
+PY
+
+"$PY" examples/mlip_train.py prepare --frames "${FRAMES[@]}" --data "$DATA"
+t0=$(date +%s)
+for seed in "${SEEDS[@]}"; do
+  "$PY" examples/mlip_train.py train --data "$DATA" --name "${NAME}_s${seed}" --seed "$seed" --epochs "$EPOCHS" \
+    --device "$DEVICE" > "$JOB_OUT/${NAME}_s${seed}.launch.txt" 2>&1 &
+done
+wait || true
+echo "fits: $(( $(date +%s) - t0 )) s for ${#SEEDS[@]} seeds of $EPOCHS epochs on $DEVICE" | tee "$JOB_OUT/seconds.txt"
+
+mkdir -p "$JOB_OUT/probe"
+for seed in "${SEEDS[@]}"; do
+  fit="${NAME}_s${seed}"
+  cat "$JOB_OUT/$fit.launch.txt"
+  grep -E "Epoch|Error-table|Default" "$DATA/$fit.train.log" | tail -n 40 > "$JOB_OUT/$fit.epochs.txt" || true
+  model="$DATA/${fit}_stagetwo.model"
+  [ -f "$model" ] || model="$DATA/$fit.model"
+  if [ ! -f "$model" ]; then echo "$fit: NO MODEL (see $fit.train.log)"; cp "$DATA/$fit.train.log" "$JOB_OUT/" || true; continue; fi
+  cp "$model" "$JOB_OUT/$fit.model"
+  t1=$(date +%s)
+  "$PY" examples/mlip_train.py evaluate --data "$DATA" --model "$model" --name "$fit" --probe "$JOB_OUT/probe" --threads "$THREADS"
+  cp "docs/predictions/mlip_own_$fit.json" "$JOB_OUT/"
+  echo "$fit tested in $(( $(date +%s) - t1 )) s" | tee -a "$JOB_OUT/seconds.txt"
+done

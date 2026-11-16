@@ -1,0 +1,5 @@
+# Our own interatomic potential on a card (docs/MLIP_SECOND_OPINION.md 3.5): fits on from
+# MACE-MP-0b3 on the 130 PVDF frames (the 76 and the 54 near the minima), each tested against
+# the DFT anchor.  First a short fit to time an epoch on the card; the long fits and their
+# seeds are added as lines once that time is known.
+mlip_fit.sh timing 20 1

@@ -104,8 +104,9 @@ def prepare(args):
 
 
 def train(args):
+    program = Path(sys.executable).with_name("mace_run_train")  # the one beside this Python, if it is there
     common = [
-        "mace_run_train", f"--name={args.name}", f"--work_dir={args.data}",
+        str(program) if program.exists() else "mace_run_train", f"--name={args.name}", f"--work_dir={args.data}",
         f"--train_file={args.data / 'train.xyz'}", "--valid_fraction=0.1", f"--test_file={args.data / 'test.xyz'}",
         "--energy_key=REF_energy", "--forces_key=REF_forces", "--stress_key=REF_stress",
         "--loss=stress", "--compute_stress=True", "--error_table=PerAtomRMSEstressvirials",
@@ -122,7 +123,7 @@ def train(args):
                    "--swa", f"--start_swa={int(0.6 * args.epochs)}", "--swa_energy_weight=1000",
                    "--swa_forces_weight=100", "--swa_stress_weight=10", f"--swa_lr={args.lr / 10}"]
     if args.start:
-        pass
+        pass  # the starting point and its reference energies are set above
     elif args.scratch:
         common += ["--model=ScaleShiftMACE", "--num_channels=64", "--max_L=1", "--r_max=6.0", "--E0s=average",
                    f"--lr={10 * args.lr}"]
