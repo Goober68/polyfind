@@ -12,3 +12,7 @@ mlip_fit.sh timing 20 1
 #   pvdf_s1, pvdf_s2:   stress 100, energy 1000 in the second stage
 #   pvdfb_s1, pvdfb_s2: stress 1000, energy 10000 in the second stage
 mlip_fit.sh pvdf 400 1 2 train --stress-weight 100 also --stress-weight 1000 --energy-weight 10000
+# Measured with the four side by side: 29 s an epoch each, the card's time shared between them, so
+# nothing is gained over one after another (the same finding as 2026-11-14: one process a card).
+# The four end near 20:40 UTC; the pod's own limit is 21:02. Nothing more is queued.
+stop
