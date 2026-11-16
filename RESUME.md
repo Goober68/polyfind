@@ -53,7 +53,9 @@ NOT DONE, IN ORDER:
     spend now about $16.23 of $46). It removed itself after `stop` (its status page went from 200 to 404 at
     20:44:33). THE REMOVAL IS NOT CONFIRMED BY AN API READ: since a container restart at about 18:50 UTC every
     request to `rest.runpod.io` answers 502 "upstream request failed" through the session's proxy (the key is still
-    on the environment; other hosts answer). THE PI HAS BEEN ASKED TO LOOK AT THE RUNPOD CONSOLE. Retry
+    on the environment; other hosts answer). THE PI LOOKED (2026-11-16, their words: "The pod has run to
+    completion."), so it is not running and not billing for the card. Whether it is deleted or only listed as
+    exited was asked and not yet answered. Retry
     `curl https://rest.runpod.io/v1/pods/wylsqwj1no08y4` (it must say the pod does not exist); if the pod is still
     listed, DELETE it and read again.
     WHAT RAN: `examples/gpu_jobs/mlip_fit.sh` (queue `queue_20261116_mlip.txt`; its own Python 3.12 environment,
