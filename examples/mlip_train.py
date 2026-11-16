@@ -3,7 +3,7 @@
 The frames are `examples/mlip_frames.py`'s: cells with the energy, forces and stress of the
 anchor's recipe (PBE with two-body D3(BJ)). Three steps:
 
-    python examples/mlip_train.py prepare  --frames docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz --data DIR
+    python examples/mlip_train.py prepare  --frames docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz [MORE ...] --data DIR
     python examples/mlip_train.py train    --data DIR --name NAME [--foundation medium-0b3 | --scratch]
     python examples/mlip_train.py evaluate --data DIR --model DIR/NAME.model --name NAME
 
@@ -68,7 +68,7 @@ def prepare(args):
 
     ry = create_units("2006")["Ry"]  # the constant ase's reader used for the labels
     d3 = _second_opinion().d3_calculator()
-    frames = read(args.frames, index=":")
+    frames = [a for f in args.frames for a in read(f, index=":")]
     tail, train, test = [], [], []
     for i, a in enumerate(frames):
         b = a.copy()
@@ -322,7 +322,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = p.add_subparsers(dest="step", required=True)
     s = sub.add_parser("prepare")
-    s.add_argument("--frames", type=Path, required=True)
+    s.add_argument("--frames", type=Path, required=True, nargs="+", help="one or more files of labelled frames")
     s.add_argument("--data", type=Path, required=True, help="working directory, outside the repository")
     s = sub.add_parser("train")
     s.add_argument("--data", type=Path, required=True)

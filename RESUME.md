@@ -55,7 +55,8 @@ NOT DONE, IN ORDER:
     cell by cell, `--minutes` ends a run by itself): the build was running at this commit. Then
     `mlip_frames.py cutoff` on a chlorine pair and a nitrile pair (90/360 against 100/800 Ry), then `label` (about
     ten hours on four cores), `collect` to `docs/predictions/mlip/units_frames_pbe_d3bj.extxyz`.
-(c) PVDF frames near the minima (strains of 1% and 4%, two axes at once, shakes of 0.01 A): not written yet.
+(c) PVDF frames near the minima (strains of 1% and 4%, two axes at once, shakes of 0.01 A): 54 made with
+    `mlip_frames.py make --set near --frames /opt/dft/near`, NOT LABELLED yet (about 70 minutes of DFT).
 (d) the test that matters for a candidate: DFT single points on a candidate's own cells (the 72-atom
     `polished_vdf5-rvdf1-6_*_tilted.xyz` pair first) against the potential on the same geometries.
 RUNNING THINGS HERE: one heavy job at a time (a fit, a DFT run and a sampler run each want all four cores; two

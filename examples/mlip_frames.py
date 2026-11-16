@@ -12,7 +12,7 @@ its energy to the last digit before any label is trusted.
 
 Three steps; `label` is resumable:
 
-    python examples/mlip_frames.py make    --frames DIR [--set pvdf | units]
+    python examples/mlip_frames.py make    --frames DIR [--set pvdf | near | units]
     python examples/mlip_frames.py label   --frames DIR --pw PW.X --pseudo DIR [--np 4]
     python examples/mlip_frames.py collect --frames DIR --out docs/predictions/mlip/NAME.extxyz
 
@@ -33,6 +33,9 @@ antipolar betas):
 
 What the PVDF set does not hold, and so what a potential trained on it cannot be asked: any
 unit but VDF, and any geometry on the way between all-trans and the helix (a barrier).
+
+The near set, 54 frames, is PVDF again at the bottom of each well (strains of 1% and 4%, both
+lateral axes at once, shakes of 0.01 A): what the first fits lacked to get the lattice right.
 
 The units set, 168 frames, is for the first of those: TrFE, CFE, CTFE, acrylonitrile, the
 reversed VDF unit and TFE put into the DFT-relaxed PVDF cells (a unit's groups replaced along
@@ -154,6 +157,40 @@ def pvdf_set(model, threads):
         for i, s in enumerate(md_snapshots(base, 10, rng, model, MD_K, 100, threads)):
             add(strained(s, rng.uniform(-STRAIN, STRAIN, 6)), "md",
                 f"{MD_K:.0f} K in {model} (sampler only), 100 fs apart, random strain to {STRAIN}, snapshot {i}")
+    return frames
+
+
+def near_set(model, threads):
+    """PVDF frames at the bottom of each well, where the margins and the lattice are decided.
+
+    The first fits (docs/MLIP_SECOND_OPINION.md 3.3) had the atoms right and the lattice across
+    the chains wrong: at the 2% strains of the PVDF set the energy is a quarter of a meV per
+    atom above the minimum, under the fits' error. These are strains of 1% and 4% across the
+    chains, 1% along them, both lateral axes at once, and shakes of 0.01 A.
+    """
+    rng = np.random.default_rng(SEED + 2)
+    frames = []
+
+    def add(a, family, note):
+        a = a.copy()
+        a.calc = None
+        a.info = {**a.info, "family": family, "note": note}
+        frames.append(a)
+
+    for name in ("alpha", "polar", "anti"):
+        base = cell(name)
+        singles = [(0, "xx", e) for e in (-0.04, -0.01, 0.01, 0.04)] + [(1, "yy", e) for e in (-0.04, -0.01, 0.01, 0.04)]
+        singles += [(2, "zz", e) for e in (-0.01, 0.01)]
+        for axis, label, e in singles:
+            strain = np.zeros(6)
+            strain[axis] = e
+            add(strained(base, strain), "n-strain", f"{label} {e:+.3f}")
+        for e in (-0.04, -0.02, 0.02, 0.04):
+            add(strained(base, np.array([e, e, 0.0, 0.0, 0.0, 0.0])), "n-strain", f"xx and yy {e:+.3f}")
+        for i in range(4):
+            a = strained(base, rng.uniform(-0.01, 0.01, 6))
+            a.positions += rng.normal(0.0, 0.01, a.positions.shape)
+            add(a, "n-rattle", f"random strain to 0.01, sigma 0.01 A, draw {i}")
     return frames
 
 
@@ -326,7 +363,7 @@ def make(args):
         done = sum((args.frames / f"units_{i:02d}_0.start.xyz").exists() for i in range(len(cells)))
         print(f"{done} of {len(cells)} cells made, {len(list(args.frames.glob('units_*.start.xyz')))} frames in {args.frames}")
         return
-    frames = pvdf_set(args.sampler, args.threads)
+    frames = {"pvdf": pvdf_set, "near": near_set}[args.set](args.sampler, args.threads)
     for i, a in enumerate(frames):
         a.info["frame"] = f"{args.set}_{i:03d}"
         write(args.frames / f"{a.info['frame']}.start.xyz", a, format="extxyz")
@@ -521,7 +558,7 @@ def main():
         s = sub.add_parser(name)
         s.add_argument("--frames", type=Path, required=True, help="working directory, outside the repository")
         if name == "make":
-            s.add_argument("--set", default="pvdf", choices=["pvdf", "units"])
+            s.add_argument("--set", default="pvdf", choices=["pvdf", "near", "units"])
             s.add_argument("--sampler", default="medium-0b3", help="pretrained MACE-MP model for the dynamics")
             s.add_argument("--threads", type=int, default=4)
             s.add_argument("--minutes", type=float, default=0.0,
