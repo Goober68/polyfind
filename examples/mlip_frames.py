@@ -270,38 +270,41 @@ def sampler_relaxed(atoms, model, threads, fmax, steps):
     return out
 
 
-def units_set(model, threads):
-    """Cells holding the candidates' other units: TrFE, CFE, CTFE, the nitrile, reversed VDF, TFE."""
-    rng = np.random.default_rng(SEED + 1)
+def units_cells():
+    """The cells of the units set: (PVDF base, each chain's sequence, what it is after)."""
+    small = [(f"{conf}2", seqs, "") for seqs in UNIT_SMALL for conf in ("TT", "TG")]
+    large = [(f"{conf}4", seqs, what) for seqs, what in UNIT_LARGE for conf in ("TT", "TG")]
+    return small + large
+
+
+def units_cell(index, model, threads):
+    """One cell of the units set: relaxed in the sampler, a shaken copy, dynamics snapshots."""
+    base_name, seqs, what = units_cells()[index]
+    rng = np.random.default_rng([SEED + 1, index])  # a cell's frames do not depend on the others
+    source, repeat, per_chain = UNIT_BASES[base_name]
+    base = cell(source, repeat)
+    tag = f"{base_name} {'|'.join(seqs)}"
+    start = with_units(base, seqs, rng)
+    start.info = {**base.info, "source": tag, "sequences": "|".join(seqs), "conformation": base_name[:2]}
+    relaxed = sampler_relaxed(start, model, threads, 0.1, 200)
     frames = []
 
     def add(a, family, note):
         a = a.copy()
         a.calc = None
-        a.info = {**a.info, "family": family, "note": note}
+        a.info = {**relaxed.info, "family": family, "note": note}
         frames.append(a)
 
-    small = [(f"{conf}2", seqs, "") for seqs in UNIT_SMALL for conf in ("TT", "TG")]
-    large = [(f"{conf}4", seqs, what) for seqs, what in UNIT_LARGE for conf in ("TT", "TG")]
-    for base_name, seqs, what in small + large:
-        source, repeat, per_chain = UNIT_BASES[base_name]
-        base = cell(source, repeat)
-        tag = f"{base_name} {'|'.join(seqs)}"
-        start = with_units(base, seqs, rng)
-        start.info = {**base.info, "source": tag, "sequences": "|".join(seqs), "conformation": base_name[:2]}
-        relaxed = sampler_relaxed(start, model, threads, 0.1, 200)
-        add(relaxed, "units", f"{tag}{': ' + what if what else ''}; from the PVDF cell, relaxed in {model} with D3 "
-                              f"(sampler only), volume {relaxed.info['sampler_volume_change_percent']:+.1f}%")
-        r = strained(relaxed, rng.uniform(-STRAIN, STRAIN, 6))
-        r.positions += rng.normal(0.0, RATTLE_A, r.positions.shape)
-        add(r, "u-rattle", f"{tag}; random strain to {STRAIN}, sigma {RATTLE_A} A")
-        n_md = 3 if per_chain == 2 else 2
-        for k, s in enumerate(md_snapshots(relaxed, n_md, rng, model, MD_K, 100, threads)):
-            s.info = dict(relaxed.info)
-            add(strained(s, rng.uniform(-STRAIN, STRAIN, 6)), "u-md",
-                f"{tag}; {MD_K:.0f} K in {model} (sampler only), 100 fs apart, random strain to {STRAIN}, snapshot {k}")
-        print(f"{tag}: {len(start)} atoms, sampler volume {relaxed.info['sampler_volume_change_percent']:+.1f}%, "
-              f"largest force left {relaxed.info['sampler_largest_force']:.2f} eV/A", flush=True)
+    add(relaxed, "units", f"{tag}{': ' + what if what else ''}; from the PVDF cell, relaxed in {model} with D3 "
+                          f"(sampler only), volume {relaxed.info['sampler_volume_change_percent']:+.1f}%")
+    r = strained(relaxed, rng.uniform(-STRAIN, STRAIN, 6))
+    r.positions += rng.normal(0.0, RATTLE_A, r.positions.shape)
+    add(r, "u-rattle", f"{tag}; random strain to {STRAIN}, sigma {RATTLE_A} A")
+    for k, snap in enumerate(md_snapshots(relaxed, 3 if per_chain == 2 else 2, rng, model, MD_K, 100, threads)):
+        add(strained(snap, rng.uniform(-STRAIN, STRAIN, 6)), "u-md",
+            f"{tag}; {MD_K:.0f} K in {model} (sampler only), 100 fs apart, random strain to {STRAIN}, snapshot {k}")
+    print(f"{tag}: {len(start)} atoms, sampler volume {relaxed.info['sampler_volume_change_percent']:+.1f}%, "
+          f"largest force left {relaxed.info['sampler_largest_force']:.2f} eV/A", flush=True)
     return frames
 
 
@@ -309,7 +312,21 @@ def make(args):
     from ase.io import write
 
     args.frames.mkdir(parents=True, exist_ok=True)
-    frames = {"pvdf": pvdf_set, "units": units_set}[args.set](args.sampler, args.threads)
+    if args.set == "units":  # cell by cell, so a run can stop and the next one go on
+        began, cells = time.time(), units_cells()
+        for index in range(len(cells)):
+            if (args.frames / f"units_{index:02d}_0.start.xyz").exists():
+                continue
+            if args.minutes and time.time() - began > 60 * args.minutes:
+                break
+            made = units_cell(index, args.sampler, args.threads)
+            for k, a in reversed(list(enumerate(made))):  # the first frame last: it marks the cell as done
+                a.info["frame"] = f"units_{index:02d}_{k}"
+                write(args.frames / f"{a.info['frame']}.start.xyz", a, format="extxyz")
+        done = sum((args.frames / f"units_{i:02d}_0.start.xyz").exists() for i in range(len(cells)))
+        print(f"{done} of {len(cells)} cells made, {len(list(args.frames.glob('units_*.start.xyz')))} frames in {args.frames}")
+        return
+    frames = pvdf_set(args.sampler, args.threads)
     for i, a in enumerate(frames):
         a.info["frame"] = f"{args.set}_{i:03d}"
         write(args.frames / f"{a.info['frame']}.start.xyz", a, format="extxyz")
@@ -507,6 +524,8 @@ def main():
             s.add_argument("--set", default="pvdf", choices=["pvdf", "units"])
             s.add_argument("--sampler", default="medium-0b3", help="pretrained MACE-MP model for the dynamics")
             s.add_argument("--threads", type=int, default=4)
+            s.add_argument("--minutes", type=float, default=0.0,
+                           help="units set: start no new cell after this long (the next run goes on)")
         if name in ("check", "label", "cutoff"):
             s.add_argument("--pw", required=True, help="path to pw.x (Quantum ESPRESSO 7.5)")
             s.add_argument("--pseudo", required=True, help="directory with the SSSP 1.3.0 PBE precision files")
