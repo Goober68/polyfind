@@ -208,12 +208,12 @@ it and, with an assumed stiffness across the chains, moves the cell's other fram
 and one and a half times the strain the stress points to; then those are labelled. The DFT
 minimum is then inside what is labelled whichever way the sampler was wrong.
 
-It was wrong both ways. On the 36 relaxed cells (labelled; 3.2 hours of DFT) the DFT stress
+It was wrong both ways. On the 36 relaxed cells (labelled; 3.0 hours of DFT) the DFT stress
 across the chains is -1.3 to -2.6 GPa on the all-trans cells the sampler left at PVDF's density
-(TrFE and CFE: compressed, they want 7 to 12% more along each lateral axis) and +0.1 to +1.4
-GPa on the all-trans cells it expanded (a little too large, mostly along b). Along the chain
-every all-trans cell is under -0.2 to -2.2 GPa: DFT wants the chains straighter than the
-sampler left them. The helix cells are within 1.6 GPa either way.
+(TrFE and CFE: compressed; by the assumed stiffness they want 7 to 12% more along each lateral
+axis) and -0.4 to +1.4 GPa on the all-trans cells it expanded (a little too large, mostly
+along b). Along the chain every all-trans cell is under -0.2 to -2.2 GPa: DFT wants the chains
+straighter than the sampler left them. The helix cells are within 1.9 GPa either way.
 
 Cost, measured: a 24-atom frame takes 2.3 minutes on this container's four cores and a
 48-atom frame 6.5, so the set is about ten hours of DFT here and costs nothing. (Building it
