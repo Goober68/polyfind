@@ -234,5 +234,6 @@ against the potential on the same geometries.
    to 0.03 can be used, one they scatter on by 0.2 cannot.
 3. **Frames near the minima.** Strains of 1% and 4% beside the 2%, two axes at once, and
    shakes of 0.01 A: the bottom of each well, where the margins and the lattice are decided.
-   About an hour of DFT here.
+   Done: 54 frames, 1.2 hours of DFT, `docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz`
+   (`mlip_frames.py make --set near`). No fit has used them yet.
 4. The other units' frames (3.4), which the container can label while a GPU fits.
