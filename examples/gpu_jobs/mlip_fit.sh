@@ -3,10 +3,11 @@
 # fit against the DFT anchor (examples/mlip_train.py; docs/MLIP_SECOND_OPINION.md 3.3 and 3.5).
 # A job of examples/runpod_jobs_pod.sh.  Arguments:
 #
-#   mlip_fit.sh NAME EPOCHS SEED [SEED...] [frames FILE...] [train ARGUMENT...]
+#   mlip_fit.sh NAME EPOCHS SEED [SEED...] [frames FILE...] [train ARGUMENT...] [also ARGUMENT...]
 #
 # NAME_sSEED names each fit.  The frames default to the two PVDF files; what follows `train` is
-# given to `mlip_train.py train` (e.g. `train --stress-weight 100`).  The seeds are fitted
+# given to `mlip_train.py train` (e.g. `train --stress-weight 100`); what follows `also` is a
+# second set of arguments, fitted from the same seeds as NAMEb_sSEED.  The fits are made
 # side by side on the one card (a fit of cells this small does not fill it), then tested one
 # after another on the host's processors: held-out errors, beta minus alpha, the antipolar
 # pair, beta's elastic constants, and the cells relaxed in the potential written out for DFT
@@ -17,10 +18,11 @@
 # card; MLIP_SKIP_TEST=1 stops after the fits.
 set -euo pipefail
 NAME="$1"; EPOCHS="$2"; shift 2
-SEEDS=(); FRAMES=(); TRAIN=()
-while [ $# -gt 0 ] && [ "$1" != "frames" ] && [ "$1" != "train" ]; do SEEDS+=("$1"); shift; done
-if [ "${1:-}" = "frames" ]; then shift; while [ $# -gt 0 ] && [ "$1" != "train" ]; do FRAMES+=("$1"); shift; done; fi
-if [ "${1:-}" = "train" ]; then shift; TRAIN=("$@"); fi
+SEEDS=(); FRAMES=(); TRAIN=(); ALSO=(); SECOND=0
+while [ $# -gt 0 ] && [ "$1" != "frames" ] && [ "$1" != "train" ] && [ "$1" != "also" ]; do SEEDS+=("$1"); shift; done
+if [ "${1:-}" = "frames" ]; then shift; while [ $# -gt 0 ] && [ "$1" != "train" ] && [ "$1" != "also" ]; do FRAMES+=("$1"); shift; done; fi
+if [ "${1:-}" = "train" ]; then shift; while [ $# -gt 0 ] && [ "$1" != "also" ]; do TRAIN+=("$1"); shift; done; fi
+if [ "${1:-}" = "also" ]; then shift; ALSO=("$@"); SECOND=1; fi
 [ ${#FRAMES[@]} -gt 0 ] || FRAMES=(docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz)
 PY="${PY:-python3}"
 DEVICE="${MLIP_DEVICE:-cuda}"
@@ -58,22 +60,29 @@ PY
 
 "$PY" examples/mlip_train.py prepare --frames "${FRAMES[@]}" --data "$DATA"
 t0=$(date +%s)
-each=$(( THREADS / ${#SEEDS[@]} )); [ "$each" -ge 1 ] || each=1
+FITS=()
+for seed in "${SEEDS[@]}"; do FITS+=("${NAME}_s${seed}"); done
+if [ "$SECOND" = "1" ]; then for seed in "${SEEDS[@]}"; do FITS+=("${NAME}b_s${seed}"); done; fi
+each=$(( THREADS / ${#FITS[@]} )); [ "$each" -ge 1 ] || each=1
 for seed in "${SEEDS[@]}"; do
   OMP_NUM_THREADS="$each" MKL_NUM_THREADS="$each" "$PY" examples/mlip_train.py train --data "$DATA" \
     --name "${NAME}_s${seed}" --seed "$seed" --epochs "$EPOCHS" --device "$DEVICE" "${TRAIN[@]}" \
     > "$JOB_OUT/${NAME}_s${seed}.launch.txt" 2>&1 &
+  if [ "$SECOND" = "1" ]; then
+    OMP_NUM_THREADS="$each" MKL_NUM_THREADS="$each" "$PY" examples/mlip_train.py train --data "$DATA" \
+      --name "${NAME}b_s${seed}" --seed "$seed" --epochs "$EPOCHS" --device "$DEVICE" "${ALSO[@]}" \
+      > "$JOB_OUT/${NAME}b_s${seed}.launch.txt" 2>&1 &
+  fi
 done
 wait || true
-echo "fits: $(( $(date +%s) - t0 )) s for ${#SEEDS[@]} seeds of $EPOCHS epochs on $DEVICE" | tee "$JOB_OUT/seconds.txt"
-for seed in "${SEEDS[@]}"; do
-  grep -E "Epoch|Error-table|Default" "$DATA/${NAME}_s${seed}.train.log" | tail -n 60 > "$JOB_OUT/${NAME}_s${seed}.epochs.txt" || true
+echo "fits: $(( $(date +%s) - t0 )) s for ${#FITS[@]} fits of $EPOCHS epochs on $DEVICE" | tee "$JOB_OUT/seconds.txt"
+for fit in "${FITS[@]}"; do
+  grep -E "Epoch|Error-table|Default" "$DATA/$fit.train.log" | tail -n 60 > "$JOB_OUT/$fit.epochs.txt" || true
 done
 [ "${MLIP_SKIP_TEST:-0}" = "1" ] && exit 0
 
 mkdir -p "$JOB_OUT/probe"
-for seed in "${SEEDS[@]}"; do
-  fit="${NAME}_s${seed}"
+for fit in "${FITS[@]}"; do
   cat "$JOB_OUT/$fit.launch.txt"
   model="$DATA/${fit}_stagetwo.model"
   [ -f "$model" ] || model="$DATA/$fit.model"
