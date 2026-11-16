@@ -21,32 +21,56 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
-**A machine-learned potential as a second opinion: pretrained ones fail, our own is started, 2026-11-16 (PI: "Go on 1",
-then "You're using ots solutions? Thought we would train our own?").** Text: `docs/MLIP_SECOND_OPINION.md`.
+**A machine-learned potential as a second opinion: pretrained ones fail; our own is right to 0.1 to 0.2 kcal/mol after
+two short fits, not yet inside the 0.1 needed, 2026-11-16 (PI: "Go on 1", then "You're using ots solutions? Thought we
+would train our own?").** Text: `docs/MLIP_SECOND_OPINION.md` (3.3 has the table, 3.5 what is needed).
 THE TEST: PVDF's beta minus alpha, +0.726 kcal/mol per monomer in PBE-D3(BJ), the one margin held from DFT; a second
 opinion has to resolve 0.1 (the switching window is 0.12 wide).
 PRETRAINED, DONE, NONE PASSES (`examples/mlip_second_opinion.py`, `docs/predictions/mlip_second_opinion.json`,
 `tests/test_mlip_second_opinion.py`): MACE-MPA-0, MP-0b3, MP-0a (MIT, with D3(BJ) added) and Egret-1, Egret-1T (MIT)
-give +2.56, -1.99, +2.19, +3.96, +4.64 on the DFT geometries and +1.96, -1.42, +2.76, +3.72, +2.87 relaxed in the
-potential: off by 1.2 to 3.9, outside the 0.62 to 1.55 that published functionals span, no agreement on the sign. The
-D3 add-on alone is right (+20.05 meV against the DFT margin's +20.09). NOT RUN: models under academic or gated licences
-(MACE-OFF23, OMAT, MATPES, OMOL, UMA): the PI's decision.
-OUR OWN, STATE: (1) the anchor's DFT recipe runs in the cloud session and returns the anchor's beta-PVDF energy to the
-last digit in 52 s on four cores: DONE. (2) PVDF frames (76: ends 4, strains 24, rattles 18, dynamics snapshots 30;
-12 and 24 atoms), `examples/mlip_frames.py make / label / collect`: see the commit after this one for whether they are
-in `docs/predictions/mlip/`. (3) training and its tests (beta minus alpha to 0.1; antipolar minus polar -1.1 meV;
-beta's C_11 22.8, C_22 24.5, C_12 5.9, C_33 303 GPa; held-out forces): NOT STARTED at this commit. (4) frames with
-TrFE, CFE, the nitrile, the reversed unit (48 atoms and more): NOT STARTED, needs a rented machine and the PI's go.
-TO RESTORE THE DFT SIDE IN A NEW CONTAINER (nothing of it is in the repository but the scripts):
+are off by 1.2 to 3.9, outside the 0.62 to 1.55 that published functionals span, no agreement on the sign. NOT RUN:
+models under academic or gated licences (MACE-OFF23, OMAT, MATPES, OMOL, UMA): the PI's decision.
+OUR OWN, DONE SO FAR:
+(1) the anchor's DFT recipe runs in the cloud session (QE 7.5, the anchor's energy to the last digit, 52 s).
+(2) PVDF frames, 76 (ends 4, strains 24, rattles 18, dynamics snapshots 30; 2.5 h of DFT on four cores):
+    `docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz`. `examples/mlip_frames.py make / label / collect / cutoff`.
+(3) two fits on from MACE-MP-0b3, `examples/mlip_train.py prepare / train / evaluate / closure`, results in
+    `docs/predictions/mlip_own_pvdf_ft_0b3.json` (60 epochs, 1 h) and `mlip_own_pvdf_ft_0b3_b.json` (30 more with energy
+    and stress weighted up, 37 min); `tests/test_mlip_own.py`. beta minus alpha: +0.671 / +0.700 relaxed (first fit),
+    +0.617 / +0.566 (second); DFT +0.726. Antipolar minus polar beta +2.7 and +4.2 meV (DFT -1.1). C_11 39 and 31 GPa
+    (DFT 22.8); relaxed volumes 0 to 7% off. DFT single points on the cells each fit relaxed
+    (`docs/predictions/mlip/pvdf_probe_frames_pbe_d3bj.extxyz`): forces left 0.01 to 0.08 eV/A; gaps between cells off
+    by 0.011 to 0.246 kcal/mol; the two fits differ from each other by more than 0.1 on every gap.
+    READING: ten times better than pretrained, at the edge of the resolution needed and not inside it; atoms right,
+    lattice across the chains not; the fits are under a thousand optimiser steps each (4 s a step on four cores).
+    BY-PRODUCT: DFT puts the helix cell with one chain turned half a turn (dipoles adding, delta-PVDF's kind) level
+    with alpha (0.4 meV per monomer below alpha's minimum on one geometry, 2.0 above on the other, neither relaxed in
+    DFT). The anchor's +0.726 is against alpha; against the lowest helix packing found it is +0.735 at least.
+NOT DONE, IN ORDER:
+(a) ASKED OF THE PI, NO ANSWER YET: a GPU pod for the fits (Runpod Secure Cloud, RTX A6000 in stock at $0.69/h on
+    2026-11-16 11:20 UTC; three to four hours, about $3 of the $32 left). Long fits and several seeds (the spread
+    between fits is the second opinion's error bar). NOTHING IS RENTED WITHOUT THE PI'S GO.
+(b) frames for the other units, `mlip_frames.py make --set units --frames /opt/dft/units` (36 cells, 168 frames of 24
+    to 51 atoms: TrFE, CFE, CTFE, the nitrile, reversed VDF, TFE in the PVDF cells, all-trans and helix; resumable
+    cell by cell, `--minutes` ends a run by itself): the build was running at this commit. Then
+    `mlip_frames.py cutoff` on a chlorine pair and a nitrile pair (90/360 against 100/800 Ry), then `label` (about
+    ten hours on four cores), `collect` to `docs/predictions/mlip/units_frames_pbe_d3bj.extxyz`.
+(c) PVDF frames near the minima (strains of 1% and 4%, two axes at once, shakes of 0.01 A): not written yet.
+(d) the test that matters for a candidate: DFT single points on a candidate's own cells (the 72-atom
+    `polished_vdf5-rvdf1-6_*_tilted.xyz` pair first) against the potential on the same geometries.
+RUNNING THINGS HERE: one heavy job at a time (a fit, a DFT run and a sampler run each want all four cores; two
+together slow each other by more than half). A background job is stopped at two hours and is not to be relaunched
+as it was: use runs that end by themselves (`--minutes`), or foreground runs under ten minutes.
+TO RESTORE THE DFT SIDE IN A NEW CONTAINER (nothing of it is in the repository but the scripts and the frames):
     pip install torch --index-url https://download.pytorch.org/whl/cpu; pip install mace-torch ase torch-dftd
     micromamba (https://micro.mamba.pm/api/micromamba/linux-64/latest) create -p /opt/mm/qe -c conda-forge "qe=7.5"
         (run it in the foreground; Ubuntu's own quantum-espresso 6.7 package crashes on reading a pseudopotential)
     SSSP_1.3.0_PBE_precision.tar.gz from https://archive.materialscloud.org/records/rcyfm-68h65 -> /opt/pseudo
         (H_ONCV_PBE-1.0.oncvpsp.upf, C.pbe-n-kjpaw_psl.1.0.0.UPF, F.oncvpsp.upf, N.oncvpsp.upf,
         Cl.pbe-n-rrkjus_psl.1.0.0.UPF; checksums of the first three in deliverables/polar_margin_dft/raw_stages.json)
-    python -I examples/mlip_frames.py make --frames /opt/dft/frames   (9 min; the sampler is seeded)
-    python -I examples/mlip_frames.py label --frames /opt/dft/frames --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo
-        (resumable; 45 s per 12-atom frame, about 2 min per 24-atom frame)
+    python -I examples/mlip_train.py prepare --frames docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz --data /opt/dft/train
+    python -I examples/mlip_train.py train --data /opt/dft/train --name pvdf_ft_0b3      (the first fit again: 1 h)
+    The model files are not in the repository (13 MB each, and a model file is a pickled network).
 Egret's model files: `add_repo rowansci/egret-public` (read), clone to /home/user/rowansci/egret-public; a model file
 is a pickled network, run the Python that loads one with `-I`.
 

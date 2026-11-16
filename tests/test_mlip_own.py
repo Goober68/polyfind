@@ -89,3 +89,42 @@ def test_dft_on_the_first_fits_own_cells():
     assert gaps["anti_minus_beta_meV"]["difference_kcal"] == pytest.approx(0.17, abs=0.005)
     # DFT puts the turned-chain helix cell 3.5 meV per monomer below the alpha cell beside it
     assert gaps["turned_minus_beta_meV"]["dft"] - gaps["alpha_minus_beta_meV"]["dft"] == pytest.approx(-3.5, abs=0.1)
+
+
+def test_the_second_fit_is_no_better_and_the_two_differ_by_the_resolution_needed():
+    """Thirty more epochs with energy and stress weighted up: stress better, energies worse."""
+    a, b = _result("pvdf_ft_0b3"), _result("pvdf_ft_0b3_b")
+    assert b["held_out"]["stress_rmse_GPa"] == pytest.approx(0.27, abs=0.01)
+    assert b["held_out"]["stress_rmse_GPa"] < a["held_out"]["stress_rmse_GPa"]
+    assert b["held_out"]["energy_rmse_meV_per_atom"] == pytest.approx(0.55, abs=0.01)
+    assert b["held_out"]["energy_rmse_meV_per_atom"] > a["held_out"]["energy_rmse_meV_per_atom"]
+    m = b["margins"]
+    assert m["on_the_dft_geometries"]["margin_kcal"] == pytest.approx(0.617, abs=0.001)
+    assert m["relaxed_in_the_potential"]["margin_kcal"] == pytest.approx(0.566, abs=0.001)
+    assert all(abs(m[r]["margin_error_kcal"]) > NEEDED_KCAL for r in ("on_the_dft_geometries", "relaxed_in_the_potential"))
+    e = b["beta_elastic_GPa"]
+    assert e["ours"]["C_11"] / e["dft"]["C_11"] == pytest.approx(1.37, abs=0.01)
+    assert e["ours"]["C_22"] / e["dft"]["C_22"] == pytest.approx(0.78, abs=0.01)
+    gaps_a = a["dft_on_the_potentials_cells"]["gaps"]
+    gaps_b = b["dft_on_the_potentials_cells"]["gaps"]
+    assert gaps_b["alpha_minus_beta_meV"]["difference_kcal"] == pytest.approx(0.229, abs=0.002)
+    assert gaps_b["anti_minus_beta_meV"]["difference_kcal"] == pytest.approx(-0.246, abs=0.002)
+    assert gaps_b["turned_minus_beta_meV"]["difference_kcal"] == pytest.approx(0.105, abs=0.002)
+    # fit against fit, on the same test: as large as the 0.1 the second opinion has to resolve
+    spread = [abs(gaps_a[k]["difference_kcal"] - gaps_b[k]["difference_kcal"]) for k in gaps_a]
+    assert min(spread) > NEEDED_KCAL
+    # every gap of either fit is within 0.25 of DFT: the pretrained potentials were off by 1.2 to 3.9
+    errors = [abs(g[k]["difference_kcal"]) for g in (gaps_a, gaps_b) for k in g]
+    errors += [abs(r["margins"][x]["margin_error_kcal"]) for r in (a, b) for x in ("on_the_dft_geometries", "relaxed_in_the_potential")]
+    assert max(errors) < 0.25 and min(errors) > 0.01
+
+
+def test_dft_puts_the_turned_chain_helix_cell_level_with_alpha():
+    """A by-product: the helix packing with the chains' dipoles adding is not above alpha in DFT."""
+    alpha_minimum = [f[2] for f in _frames() if f[1] == "end"][0]
+    turned = {name: _result(name)["dft_on_the_potentials_cells"]["cells"]["turned"]["dft_eV_per_monomer"]
+              for name in ("pvdf_ft_0b3", "pvdf_ft_0b3_b")}
+    assert 1e3 * (turned["pvdf_ft_0b3"] - alpha_minimum) == pytest.approx(2.0, abs=0.1)
+    assert 1e3 * (turned["pvdf_ft_0b3_b"] - alpha_minimum) == pytest.approx(-0.4, abs=0.1)
+    probes = (PRED / "mlip" / "pvdf_probe_frames_pbe_d3bj.extxyz").read_text()
+    assert probes.count("family=probe") == 8
