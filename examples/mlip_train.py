@@ -109,13 +109,21 @@ def train(args):
         f"--train_file={args.data / 'train.xyz'}", "--valid_fraction=0.1", f"--test_file={args.data / 'test.xyz'}",
         "--energy_key=REF_energy", "--forces_key=REF_forces", "--stress_key=REF_stress",
         "--loss=stress", "--compute_stress=True", "--error_table=PerAtomRMSEstressvirials",
-        "--energy_weight=1", "--forces_weight=100", "--stress_weight=10",
-        "--swa", f"--start_swa={int(0.6 * args.epochs)}", "--swa_energy_weight=1000", "--swa_forces_weight=100",
-        "--swa_stress_weight=10", f"--swa_lr={args.lr / 10}",
         "--ema", "--ema_decay=0.99", f"--batch_size={args.batch}", f"--max_num_epochs={args.epochs}",
         f"--default_dtype={args.dtype}", "--device=" + args.device, f"--seed={args.seed}", "--eval_interval=5",
     ]
-    if args.scratch:
+    if args.start:
+        # one stage on from a model of ours, with the weights given: its reference energies are kept
+        common += [f"--energy_weight={args.energy_weight}", "--forces_weight=100", f"--stress_weight={args.stress_weight}",
+                   f"--foundation_model={args.start}", "--multiheads_finetuning=False", "--E0s=foundation",
+                   f"--lr={args.lr / 10}"]
+    else:
+        common += ["--energy_weight=1", "--forces_weight=100", "--stress_weight=10",
+                   "--swa", f"--start_swa={int(0.6 * args.epochs)}", "--swa_energy_weight=1000",
+                   "--swa_forces_weight=100", "--swa_stress_weight=10", f"--swa_lr={args.lr / 10}"]
+    if args.start:
+        pass
+    elif args.scratch:
         common += ["--model=ScaleShiftMACE", "--num_channels=64", "--max_L=1", "--r_max=6.0", "--E0s=average",
                    f"--lr={10 * args.lr}"]
     else:
@@ -321,6 +329,10 @@ def main():
     s.add_argument("--name", required=True)
     s.add_argument("--foundation", default="medium-0b3", help="pretrained MACE-MP model to start from (MIT)")
     s.add_argument("--scratch", action="store_true", help="a small network from nothing instead")
+    s.add_argument("--start", type=Path, help="a model of ours to fit on from, in one stage with the weights below")
+    s.add_argument("--energy-weight", type=float, default=3e5,
+                   help="with --start; forces are 100. The first fit's 1000 left energy at 0.4%% of its loss")
+    s.add_argument("--stress-weight", type=float, default=1e4, help="with --start; the first fit's 10 left stress at 0.05%%")
     s.add_argument("--epochs", type=int, default=60)
     s.add_argument("--batch", type=int, default=4)
     s.add_argument("--lr", type=float, default=0.001,
