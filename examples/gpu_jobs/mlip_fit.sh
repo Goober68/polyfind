@@ -3,21 +3,24 @@
 # fit against the DFT anchor (examples/mlip_train.py; docs/MLIP_SECOND_OPINION.md 3.3 and 3.5).
 # A job of examples/runpod_jobs_pod.sh.  Arguments:
 #
-#   mlip_fit.sh NAME EPOCHS SEED [SEED...] [frames FILE...]
+#   mlip_fit.sh NAME EPOCHS SEED [SEED...] [frames FILE...] [train ARGUMENT...]
 #
-# NAME_sSEED names each fit.  The frames default to the two PVDF files.  The seeds are fitted
+# NAME_sSEED names each fit.  The frames default to the two PVDF files; what follows `train` is
+# given to `mlip_train.py train` (e.g. `train --stress-weight 100`).  The seeds are fitted
 # side by side on the one card (a fit of cells this small does not fill it), then tested one
 # after another on the host's processors: held-out errors, beta minus alpha, the antipolar
 # pair, beta's elastic constants, and the cells relaxed in the potential written out for DFT
 # single points (those are run elsewhere: the pod has no DFT program).
 #
 # Into $JOB_OUT: each fit's log, its model, its results (mlip_own_NAME_sSEED.json), its relaxed
-# cells (probe/), and seconds.txt.  MLIP_DEVICE=cpu and a small EPOCHS try the script without a card.
+# cells (probe/), and seconds.txt.  MLIP_DEVICE=cpu and a small EPOCHS try the script without a
+# card; MLIP_SKIP_TEST=1 stops after the fits.
 set -euo pipefail
 NAME="$1"; EPOCHS="$2"; shift 2
-SEEDS=(); FRAMES=()
-while [ $# -gt 0 ] && [ "$1" != "frames" ]; do SEEDS+=("$1"); shift; done
-if [ "${1:-}" = "frames" ]; then shift; FRAMES=("$@"); fi
+SEEDS=(); FRAMES=(); TRAIN=()
+while [ $# -gt 0 ] && [ "$1" != "frames" ] && [ "$1" != "train" ]; do SEEDS+=("$1"); shift; done
+if [ "${1:-}" = "frames" ]; then shift; while [ $# -gt 0 ] && [ "$1" != "train" ]; do FRAMES+=("$1"); shift; done; fi
+if [ "${1:-}" = "train" ]; then shift; TRAIN=("$@"); fi
 [ ${#FRAMES[@]} -gt 0 ] || FRAMES=(docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz)
 PY="${PY:-python3}"
 DEVICE="${MLIP_DEVICE:-cuda}"
@@ -25,29 +28,42 @@ THREADS="${MLIP_THREADS:-8}"   # a pod shows far more processors than it is give
 export OMP_NUM_THREADS="$THREADS" MKL_NUM_THREADS="$THREADS"
 DATA="$JOB_OUT/data"
 
-if ! "$PY" -c "import mace, torch_dftd, ase" 2>/dev/null; then
-  "$PY" -m pip install -q mace-torch ase torch-dftd
+# mace-torch 0.3.17 asks for torch 2.5 or later; the pod image is CUDA 12.1, and a CUDA 12.1 build
+# of torch runs on any driver from 530 on, where the newest wheel may ask for a newer driver.
+if ! "$PY" -c "import torch" 2>/dev/null; then
+  "$PY" -m pip install -q "torch==${MLIP_TORCH:-2.5.1}" --index-url "https://download.pytorch.org/whl/${MLIP_CUDA:-cu121}"
 fi
-"$PY" - <<'PY'
+if ! "$PY" -c "import mace, torch_dftd, ase" 2>/dev/null; then
+  "$PY" -m pip install -q "mace-torch==0.3.17" "torch-dftd==0.5.3" ase
+fi
+"$PY" - "$DEVICE" <<'PY'
+import sys
 import torch, mace, ase
 print("torch", torch.__version__, "mace", mace.__version__, "ase", ase.__version__)
 print("card:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none")
+if sys.argv[1] == "cuda" and not torch.cuda.is_available():
+    sys.exit("torch does not reach the card: nothing is fitted")
 PY
 
 "$PY" examples/mlip_train.py prepare --frames "${FRAMES[@]}" --data "$DATA"
 t0=$(date +%s)
+each=$(( THREADS / ${#SEEDS[@]} )); [ "$each" -ge 1 ] || each=1
 for seed in "${SEEDS[@]}"; do
-  "$PY" examples/mlip_train.py train --data "$DATA" --name "${NAME}_s${seed}" --seed "$seed" --epochs "$EPOCHS" \
-    --device "$DEVICE" > "$JOB_OUT/${NAME}_s${seed}.launch.txt" 2>&1 &
+  OMP_NUM_THREADS="$each" MKL_NUM_THREADS="$each" "$PY" examples/mlip_train.py train --data "$DATA" \
+    --name "${NAME}_s${seed}" --seed "$seed" --epochs "$EPOCHS" --device "$DEVICE" "${TRAIN[@]}" \
+    > "$JOB_OUT/${NAME}_s${seed}.launch.txt" 2>&1 &
 done
 wait || true
 echo "fits: $(( $(date +%s) - t0 )) s for ${#SEEDS[@]} seeds of $EPOCHS epochs on $DEVICE" | tee "$JOB_OUT/seconds.txt"
+for seed in "${SEEDS[@]}"; do
+  grep -E "Epoch|Error-table|Default" "$DATA/${NAME}_s${seed}.train.log" | tail -n 60 > "$JOB_OUT/${NAME}_s${seed}.epochs.txt" || true
+done
+[ "${MLIP_SKIP_TEST:-0}" = "1" ] && exit 0
 
 mkdir -p "$JOB_OUT/probe"
 for seed in "${SEEDS[@]}"; do
   fit="${NAME}_s${seed}"
   cat "$JOB_OUT/$fit.launch.txt"
-  grep -E "Epoch|Error-table|Default" "$DATA/$fit.train.log" | tail -n 40 > "$JOB_OUT/$fit.epochs.txt" || true
   model="$DATA/${fit}_stagetwo.model"
   [ -f "$model" ] || model="$DATA/$fit.model"
   if [ ! -f "$model" ]; then echo "$fit: NO MODEL (see $fit.train.log)"; cp "$DATA/$fit.train.log" "$JOB_OUT/" || true; continue; fi
