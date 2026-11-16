@@ -149,11 +149,159 @@ def pvdf_set(model, threads):
     return frames
 
 
+# What a VDF unit's two carbons carry after it is turned into another unit: (the CH2 carbon's
+# two groups, the CF2 carbon's two groups). The letters are examples/candidate_screen.py's.
+UNIT_GROUPS = {
+    "V": (("H", "H"), ("F", "F")),
+    "R": (("H", "F"), ("F", "F")),    # TrFE, CHF-CF2
+    "C": (("H", "H"), ("F", "Cl")),   # CFE, CH2-CFCl
+    "K": (("F", "F"), ("F", "Cl")),   # CTFE, CF2-CFCl
+    "A": (("H", "H"), ("H", "CN")),   # acrylonitrile, CH2-CH(CN)
+    "I": (("F", "F"), ("H", "H")),    # a reversed VDF unit, CF2-CH2 (the head-to-head defect)
+    "F": (("F", "F"), ("F", "F")),    # TFE, CF2-CF2
+}
+BOND_A = {"H": 1.09, "F": 1.36, "Cl": 1.77, "CN": 1.47}
+NITRILE_A = 1.16
+# name: (the PVDF cell, its repeat along the chain, monomers per chain). Two chains each.
+UNIT_BASES = {"TT2": ("polar", (1, 1, 2), 2), "TG2": ("alpha", (1, 1, 1), 2),
+              "TT4": ("polar", (1, 1, 4), 4), "TG4": ("alpha", (1, 1, 2), 4)}
+# One unit at a time in the smallest cell that holds both conformations (two monomers per
+# chain), then pairs of units facing each other on neighbouring chains.
+UNIT_SMALL = [("VR", "VV"), ("VR", "VR"), ("VC", "VV"), ("VK", "VV"), ("VA", "VV"), ("VI", "VV"), ("VF", "VV"),
+              ("VR", "VC"), ("VR", "VA"), ("VI", "VA"), ("VR", "VK"), ("VI", "VK")]
+# Four monomers per chain, after the cells the ranking is led by (docs/CANDIDATE_MATERIALS.md 5.6).
+UNIT_LARGE = [
+    (("VVRV", "VRVV"), "a TrFE matrix, 25 mol%"),
+    (("VRVA", "IVRV"), "the nitrile with a reversed unit in a TrFE matrix (the leader's units)"),
+    (("VRVC", "VVRV"), "CFE in a TrFE matrix (the film's units)"),
+    (("VRVK", "IVRV"), "CTFE with a reversed unit in a TrFE matrix"),
+    (("VIVV", "VVIV"), "PVDF with reversed units"),
+    (("VAVF", "VRVV"), "the nitrile with TFE"),
+]
+
+
+def pvdf_chains(atoms):
+    """Each chain's monomers along the chain: (CH2 carbon, its two H, CF2 carbon, its two F)."""
+    from ase.neighborlist import natural_cutoffs, neighbor_list
+
+    i, j = neighbor_list("ij", atoms, natural_cutoffs(atoms, mult=1.1))
+    sym = atoms.get_chemical_symbols()
+    bonded = {k: [int(b) for a, b in zip(i, j) if a == k] for k in range(len(atoms))}
+    carbons = {k: [b for b in bonded[k] if sym[b] == "C"] for k in range(len(atoms)) if sym[k] == "C"}
+    groups = {k: [b for b in bonded[k] if sym[b] != "C"] for k in carbons}
+    if any(len(v) != 2 for v in groups.values()):
+        raise ValueError("not a PVDF cell: a carbon without two groups")
+    chains, seen = [], set()
+    for start in sorted(k for k in carbons if sym[groups[k][0]] == "H"):
+        if start in seen:
+            continue
+        if len(set(carbons[start])) != 2:
+            raise ValueError("a chain of one monomer per cell: repeat the cell along the chain first")
+        walk = [start, carbons[start][0]]  # either way along the chain: a sequence reads both ways
+        while True:
+            nxt = [b for b in carbons[walk[-1]] if b != walk[-2]][0]
+            if nxt == start:
+                break
+            walk.append(nxt)
+        seen.update(walk)
+        if len(walk) % 2:
+            raise ValueError("a chain with an odd number of carbons")
+        chains.append([(walk[m], groups[walk[m]], walk[m + 1], groups[walk[m + 1]]) for m in range(0, len(walk), 2)])
+    if len(seen) != len(carbons):
+        raise ValueError("carbons left outside the chains")
+    return chains
+
+
+def with_units(atoms, sequences, rng):
+    """The PVDF cell with each chain's monomers turned into the units of its sequence.
+
+    A group is replaced along its own bond at the new bond's length; which of a carbon's two
+    groups is the one replaced is drawn at random, so both hands of a chiral unit occur. The
+    result is a start for a relaxation, not a geometry: the cell is still PVDF's.
+    """
+    from ase import Atom
+
+    a = atoms.copy()
+    chains = pvdf_chains(a)
+    if len(chains) != len(sequences) or any(len(c) != len(s) for c, s in zip(chains, sequences)):
+        raise ValueError(f"{[len(c) for c in chains]} monomers per chain against the sequences {sequences}")
+    extra = []
+    for chain, letters in zip(chains, sequences):
+        for (c1, g1, c2, g2), letter in zip(chain, letters):
+            for carbon, old, new in ((c1, g1, UNIT_GROUPS[letter][0]), (c2, g2, UNIT_GROUPS[letter][1])):
+                new = list(new) if new[0] == new[1] else [new[k] for k in rng.permutation(2)]
+                for atom, group in zip(old, new):
+                    bond = a.get_distance(carbon, atom, mic=True, vector=True)
+                    bond /= np.linalg.norm(bond)
+                    a.positions[atom] = a.positions[carbon] + BOND_A[group] * bond
+                    a[atom].symbol = "C" if group == "CN" else group
+                    if group == "CN":
+                        extra.append(Atom("N", a.positions[atom] + NITRILE_A * bond))
+    for atom in extra:
+        a.append(atom)
+    return a
+
+
+def sampler_relaxed(atoms, model, threads, fmax, steps):
+    """Atoms and cell relaxed in the pretrained potential with D3: a sampler's geometry."""
+    import torch
+    from ase.filters import FrechetCellFilter
+    from ase.optimize import BFGS
+    from mace.calculators import mace_mp
+
+    torch.set_num_threads(threads)
+    a = atoms.copy()
+    a.calc = mace_mp(model=model, dispersion=True, default_dtype="float64", device="cpu")
+    # atoms first at PVDF's cell (a chlorine or a nitrile starts in contact), then the cell with them
+    BFGS(a, logfile=None, maxstep=0.1).run(fmax=5 * fmax, steps=steps // 2)
+    opt = BFGS(FrechetCellFilter(a), logfile=None, maxstep=0.1)
+    opt.run(fmax=fmax, steps=steps)
+    out = a.copy()
+    out.info = {**atoms.info, "sampler_volume_change_percent": float(100 * (a.get_volume() / atoms.get_volume() - 1)),
+                "sampler_largest_force": float(np.abs(a.get_forces()).max())}
+    return out
+
+
+def units_set(model, threads):
+    """Cells holding the candidates' other units: TrFE, CFE, CTFE, the nitrile, reversed VDF, TFE."""
+    rng = np.random.default_rng(SEED + 1)
+    frames = []
+
+    def add(a, family, note):
+        a = a.copy()
+        a.calc = None
+        a.info = {**a.info, "family": family, "note": note}
+        frames.append(a)
+
+    small = [(f"{conf}2", seqs, "") for seqs in UNIT_SMALL for conf in ("TT", "TG")]
+    large = [(f"{conf}4", seqs, what) for seqs, what in UNIT_LARGE for conf in ("TT", "TG")]
+    for base_name, seqs, what in small + large:
+        source, repeat, per_chain = UNIT_BASES[base_name]
+        base = cell(source, repeat)
+        tag = f"{base_name} {'|'.join(seqs)}"
+        start = with_units(base, seqs, rng)
+        start.info = {**base.info, "source": tag, "sequences": "|".join(seqs), "conformation": base_name[:2]}
+        relaxed = sampler_relaxed(start, model, threads, 0.1, 200)
+        add(relaxed, "units", f"{tag}{': ' + what if what else ''}; from the PVDF cell, relaxed in {model} with D3 "
+                              f"(sampler only), volume {relaxed.info['sampler_volume_change_percent']:+.1f}%")
+        r = strained(relaxed, rng.uniform(-STRAIN, STRAIN, 6))
+        r.positions += rng.normal(0.0, RATTLE_A, r.positions.shape)
+        add(r, "u-rattle", f"{tag}; random strain to {STRAIN}, sigma {RATTLE_A} A")
+        n_md = 3 if per_chain == 2 else 2
+        for k, s in enumerate(md_snapshots(relaxed, n_md, rng, model, MD_K, 100, threads)):
+            s.info = dict(relaxed.info)
+            add(strained(s, rng.uniform(-STRAIN, STRAIN, 6)), "u-md",
+                f"{tag}; {MD_K:.0f} K in {model} (sampler only), 100 fs apart, random strain to {STRAIN}, snapshot {k}")
+        print(f"{tag}: {len(start)} atoms, sampler volume {relaxed.info['sampler_volume_change_percent']:+.1f}%, "
+              f"largest force left {relaxed.info['sampler_largest_force']:.2f} eV/A", flush=True)
+    return frames
+
+
 def make(args):
     from ase.io import write
 
     args.frames.mkdir(parents=True, exist_ok=True)
-    frames = {"pvdf": pvdf_set}[args.set](args.sampler, args.threads)
+    frames = {"pvdf": pvdf_set, "units": units_set}[args.set](args.sampler, args.threads)
     for i, a in enumerate(frames):
         a.info["frame"] = f"{args.set}_{i:03d}"
         write(args.frames / f"{a.info['frame']}.start.xyz", a, format="extxyz")
@@ -164,14 +312,14 @@ def make(args):
           + f"; atoms {min(len(a) for a in frames)} to {max(len(a) for a in frames)}")
 
 
-def pw_input(atoms, pseudo_dir, outdir, conv_thr):
+def pw_input(atoms, pseudo_dir, outdir, conv_thr, ecut=(90, 360)):
     """The anchor's input (`deliverables/polar_margin_dft/inputs/*/scf_k1.in`) for this cell."""
     species = sorted(set(atoms.get_chemical_symbols()), key=lambda s: -atoms.get_chemical_symbols().count(s))
     lines = [
         "&CONTROL", "  calculation = 'scf'", "  prefix = 'frame'", f"  pseudo_dir = '{pseudo_dir}'",
         f"  outdir = '{outdir}'", "  tstress = .true.", "  tprnfor = .true.", "  disk_io = 'low'", "/", "",
         "&SYSTEM", "  ibrav = 0", f"  nat = {len(atoms)}", f"  ntyp = {len(species)}", "  input_dft = 'PBE'",
-        "  occupations = 'fixed'", "  ecutwfc = 90", "  ecutrho = 360", "  vdw_corr = 'grimme-d3'",
+        "  occupations = 'fixed'", f"  ecutwfc = {ecut[0]}", f"  ecutrho = {ecut[1]}", "  vdw_corr = 'grimme-d3'",
         "  dftd3_version = 4", "  dftd3_threebody = .false.", "/", "",
         "&ELECTRONS", f"  conv_thr = {conv_thr:.1e}".replace("e", "d"), "  electron_maxstep = 200",
         "  mixing_mode = 'plain'", "  mixing_beta = 0.3", "  startingwfc = 'atomic+random'", "/", "",
@@ -270,6 +418,56 @@ def label(args):
               f"{np.abs(r['forces']).max():.2f} eV/A, {seconds:.0f} s", flush=True)
 
 
+def cutoff(args):
+    """Labelled frames again at a higher plane-wave cutoff: what the anchor's 90/360 Ry costs.
+
+    The anchor's cutoffs were set for H, C and F. The chlorine file is ultrasoft and the SSSP
+    table asks 100/800 Ry of it, so the frames with chlorine (and nitrogen) are checked: the
+    forces, the stress, and the energy of one frame against another of the same atoms, which
+    is what a margin is. An energy's own shift with the cutoff is the same in both and is not
+    an error of a margin.
+    """
+    from ase import units
+    from ase.io import read
+
+    ecut = tuple(int(v) for v in args.ecut.split(","))
+    rows = {}
+    for name in args.names.split(","):
+        a = read(args.frames / f"{name}.dft.xyz")
+        work = args.frames / "work" / f"{name}_ecut"
+        out, seconds = run_pw(args.pw, args.np, pw_input(a, args.pseudo, work / "scratch", args.conv_thr, ecut), work, name)
+        r = read_pw(out)
+        shutil.rmtree(work / "scratch", ignore_errors=True)
+        if r is None:
+            raise SystemExit(f"{name}: no converged result at {ecut}, see {out}")
+        n = a.info["n_monomers"]
+        df = r["forces"] - a.arrays["REF_forces"]
+        ds = (r["stress"] - np.asarray(a.info["REF_stress"]).reshape(3, 3)) / units.GPa
+        rows[name] = {
+            "source": str(a.info["source"]), "atoms": len(a), "seconds": round(seconds),
+            "energy_eV_per_monomer": {"anchor_cutoffs": a.info["REF_energy"] / n, "higher": r["energy"] / n},
+            "force_change_rms_meV_per_A": float(1e3 * np.sqrt((df ** 2).mean())),
+            "force_change_largest_meV_per_A": float(1e3 * np.abs(df).max()),
+            "stress_change_largest_GPa": float(np.abs(ds).max()),
+        }
+        print(f"{name} {rows[name]['source']}: forces change by {rows[name]['force_change_rms_meV_per_A']:.1f} meV/A rms "
+              f"({rows[name]['force_change_largest_meV_per_A']:.1f} largest), stress by "
+              f"{rows[name]['stress_change_largest_GPa']:.3f} GPa, {seconds:.0f} s", flush=True)
+    names = list(rows)
+    pairs = {}
+    for a, b in zip(names[::2], names[1::2]):
+        gap = {k: 1e3 * (rows[b]["energy_eV_per_monomer"][k] - rows[a]["energy_eV_per_monomer"][k])
+               for k in ("anchor_cutoffs", "higher")}
+        pairs[f"{b} minus {a}"] = {**{f"{k}_meV_per_monomer": v for k, v in gap.items()},
+                                   "change_kcal_per_monomer": 0.023060548 * (gap["higher"] - gap["anchor_cutoffs"])}
+        print(f"{rows[b]['source']} minus {rows[a]['source']}: {gap['anchor_cutoffs']:+.3f} meV per monomer at 90/360, "
+              f"{gap['higher']:+.3f} at {ecut[0]}/{ecut[1]}: {pairs[f'{b} minus {a}']['change_kcal_per_monomer']:+.4f} kcal/mol",
+              flush=True)
+    args.out.write_text(json.dumps({"anchor_cutoffs_ry": [90, 360], "higher_cutoffs_ry": list(ecut),
+                                    "frames": rows, "pairs": pairs}, indent=1) + "\n")
+    print(f"wrote {args.out}")
+
+
 def collect(args):
     from ase.io import read, write
 
@@ -288,24 +486,28 @@ def collect(args):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = p.add_subparsers(dest="step", required=True)
-    for name in ("make", "check", "label", "collect"):
+    for name in ("make", "check", "label", "cutoff", "collect"):
         s = sub.add_parser(name)
         s.add_argument("--frames", type=Path, required=True, help="working directory, outside the repository")
         if name == "make":
-            s.add_argument("--set", default="pvdf", choices=["pvdf"])
+            s.add_argument("--set", default="pvdf", choices=["pvdf", "units"])
             s.add_argument("--sampler", default="medium-0b3", help="pretrained MACE-MP model for the dynamics")
             s.add_argument("--threads", type=int, default=4)
-        if name in ("check", "label"):
+        if name in ("check", "label", "cutoff"):
             s.add_argument("--pw", required=True, help="path to pw.x (Quantum ESPRESSO 7.5)")
             s.add_argument("--pseudo", required=True, help="directory with the SSSP 1.3.0 PBE precision files")
             s.add_argument("--np", type=int, default=4)
         if name == "label":
             s.add_argument("--conv-thr", type=float, default=1e-9)
             s.add_argument("--only", default="", help="families to label, comma-separated")
-        if name == "collect":
+        if name == "cutoff":
+            s.add_argument("--names", required=True, help="labelled frames, comma-separated; taken in pairs of the same atoms")
+            s.add_argument("--ecut", default="100,800", help="wavefunction and density cutoffs, Ry")
+            s.add_argument("--conv-thr", type=float, default=1e-9)
+        if name in ("collect", "cutoff"):
             s.add_argument("--out", type=Path, required=True)
     args = p.parse_args()
-    {"make": make, "check": check, "label": label, "collect": collect}[args.step](args)
+    {"make": make, "check": check, "label": label, "cutoff": cutoff, "collect": collect}[args.step](args)
 
 
 if __name__ == "__main__":

@@ -100,8 +100,11 @@ def single_points(calc, cells):
     return out
 
 
-def relaxed(calc, cells, fmax, steps):
-    """Each cell relaxed in the potential, atoms and lattice, from the DFT geometry."""
+def relaxed(calc, cells, fmax, steps, keep=None):
+    """Each cell relaxed in the potential, atoms and lattice, from the DFT geometry.
+
+    `keep`, a dict, receives the relaxed cells themselves (for a DFT single point on them).
+    """
     from ase.filters import FrechetCellFilter
     from ase.optimize import BFGS
 
@@ -122,6 +125,10 @@ def relaxed(calc, cells, fmax, steps):
                 "lattice_change_percent": [float(100 * (b / c - 1)) for b, c in zip(cell1[:3], cell0[:3])],
                 "volume_change_percent": float(100 * (a.get_volume() / atoms.get_volume() - 1)),
             }
+            if keep is not None:
+                b = a.copy()
+                b.calc = None
+                keep[k] = b
         except Exception as err:
             out[k] = {"error": str(err)[:200]}
     return out
@@ -143,7 +150,7 @@ def gaps(points, add=None):
     }
 
 
-def run(models, relax, fmax, steps, threads):
+def run(models, relax, fmax, steps, threads, keep=None):
     import torch
     from ase.calculators.mixing import SumCalculator
 
@@ -199,7 +206,7 @@ def run(models, relax, fmax, steps, threads):
                 f"{g['anti_minus_beta_meV']:+.1f} meV (DFT {DFT['anti_minus_beta_meV']:+.2f}); largest force "
                 f"{max(points[k]['largest_force_eV_per_A'] for k in CELLS):.2f} eV/A")
         if relax:
-            own = relaxed(calc, cells, fmax, steps)
+            own = relaxed(calc, cells, fmax, steps, keep)
             rec["relaxed_in_the_potential"] = {"cells": own, **(gaps(own) or {})}
             r = rec["relaxed_in_the_potential"]
             if "margin_kcal" in r:

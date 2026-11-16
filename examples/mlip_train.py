@@ -51,11 +51,15 @@ OUT = ROOT / "docs" / "predictions"
 DFT_ELASTIC_GPA = {"C_11": 22.77, "C_22": 24.52, "C_12": 5.88, "C_33": 302.6}
 
 
-def _second_opinion():
-    spec = importlib.util.spec_from_file_location("mlip_second_opinion", ROOT / "examples" / "mlip_second_opinion.py")
+def _example(name):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "examples" / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _second_opinion():
+    return _example("mlip_second_opinion")
 
 
 def prepare(args):
@@ -178,10 +182,29 @@ def elastic(calc, atoms, h, fmax):
     }
 
 
+def turned_chain(atoms, frames_module):
+    """The helix cell with its second chain turned half a turn about its own axis.
+
+    In alpha-PVDF the two chains' dipoles across the chain cancel; turned, they add. It is a
+    polar packing of the helix (delta-PVDF's kind) that no training frame was made from.
+    """
+    a = atoms.copy()
+    chain = frames_module.pvdf_chains(a)[1]
+    members = sorted({i for c1, g1, c2, g2 in chain for i in (c1, *g1, c2, *g2)})
+    first = chain[0][0]
+    rel = np.array([a.get_distance(first, i, mic=True, vector=True) for i in members])
+    carbons = [members.index(i) for c1, g1, c2, g2 in chain for i in (c1, c2)]
+    axis = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+    rel -= rel[carbons].mean(axis=0)
+    centre = a.positions[first] - rel[members.index(first)]
+    a.positions[members] = centre + (2.0 * np.outer(rel @ axis, axis) - rel)
+    return a
+
+
 def evaluate(args):
     import torch
     from ase.calculators.mixing import SumCalculator
-    from ase.io import read
+    from ase.io import read, write
     from mace.calculators import MACECalculator
 
     warnings.filterwarnings("ignore")
@@ -191,8 +214,32 @@ def evaluate(args):
     out = {"model": args.model.name, "prepare": json.loads((args.data / "prepare.json").read_text())}
     out["held_out"] = held_out(bare, read(args.data / "test.xyz", index=":"))
     print("held out:", json.dumps(out["held_out"]), flush=True)
-    margins = so.run([(args.name, "file+d3", args.model)], True, 0.01, 400, args.threads)
+    kept = {}
+    margins = so.run([(args.name, "file+d3", args.model)], True, 0.01, 400, args.threads, kept)
     out["margins"] = {"dft": margins["dft"], **margins["models"][args.name]}
+    if args.probe:
+        # the potential's own minima, and a packing it was not shown, for a DFT single point each
+        from ase.filters import FrechetCellFilter
+        from ase.optimize import BFGS
+
+        mf = _example("mlip_frames")
+        args.probe.mkdir(parents=True, exist_ok=True)
+        source = {"alpha": "alpha", "beta": "polar", "anti": "anti"}
+        turned = turned_chain(mf.cell("alpha"), mf)
+        turned.calc = SumCalculator([bare, so.d3_calculator()])
+        opt = BFGS(FrechetCellFilter(turned), logfile=None, maxstep=0.1)
+        opt.run(fmax=0.01, steps=600)
+        kept["turned"] = turned
+        for k, a in kept.items():
+            b = a.copy()
+            b.calc = None
+            b.info = {**mf.cell(source.get(k, "alpha")).info, "family": "probe", "frame": f"{args.name}_{k}",
+                      "note": f"{k}, relaxed in {args.name} with D3" + (
+                          ": the helix cell with its second chain turned half a turn" if k == "turned" else "")}
+            write(args.probe / f"{args.name}_{k}.start.xyz", b, format="extxyz")
+        out["probe_cells_written"] = sorted(kept)
+        print(f"wrote {len(kept)} cells relaxed in the potential to {args.probe} for DFT single points "
+              f"(turned-chain helix: {opt.get_number_of_steps()} steps)", flush=True)
     beta = so.dft_cells()["beta"][0]
     out["beta_elastic_GPa"] = {"ours": elastic(SumCalculator([bare, so.d3_calculator()]), beta, 0.005, 0.005),
                                "dft": DFT_ELASTIC_GPA}
@@ -202,6 +249,65 @@ def evaluate(args):
     path = OUT / f"mlip_own_{args.name}.json"
     path.write_text(json.dumps(out, indent=1) + "\n")
     print(f"wrote {path.relative_to(ROOT)}")
+
+
+def closure(args):
+    """DFT single points on the cells the potential relaxed: is its minimum the DFT's?
+
+    For each cell: the DFT energy at the potential's geometry against DFT's own minimum (never
+    below it; how far above is what the potential's geometry costs), the DFT force and stress
+    left there, and the gaps between cells by DFT and by the potential on the same geometries.
+    """
+    import torch
+    from ase import units
+    from ase.calculators.mixing import SumCalculator
+    from ase.io import read
+    from mace.calculators import MACECalculator
+
+    warnings.filterwarnings("ignore")
+    torch.set_num_threads(args.threads)
+    so = _second_opinion()
+    calc = SumCalculator([MACECalculator(model_paths=str(args.model), device="cpu", default_dtype="float64"),
+                          so.d3_calculator()])
+    own_minimum = {a.info["source"]: a.info["REF_energy"] / a.info["n_monomers"]
+                   for a in read(args.frames, index=":") if a.info["family"] == "end"}
+    source = {"alpha": "alpha", "beta": "polar", "anti": "anti"}
+    cells = {}
+    for f in sorted(args.probe.glob(f"{args.name}_*.dft.xyz")):
+        a = read(f)
+        k = a.info["frame"].replace(f"{args.name}_", "")
+        b = a.copy()
+        b.calc = calc
+        n = a.info["n_monomers"]
+        cells[k] = {
+            "dft_eV_per_monomer": a.info["REF_energy"] / n,
+            "potential_eV_per_monomer": float(b.get_potential_energy() / n),
+            "dft_largest_force_eV_per_A": float(np.abs(a.arrays["REF_forces"]).max()),
+            "dft_stress_xx_yy_zz_GPa": [float(v) for v in np.diag(np.asarray(a.info["REF_stress"]).reshape(3, 3)) / units.GPa],
+        }
+        if k in source:
+            cells[k]["dft_above_its_own_minimum_meV_per_monomer"] = 1e3 * (cells[k]["dft_eV_per_monomer"] - own_minimum[source[k]])
+    gaps = {}
+    for k in cells:
+        if k == "beta" or "beta" not in cells:
+            continue
+        gaps[f"{k}_minus_beta_meV"] = {
+            who: 1e3 * (cells[k][f"{who}_eV_per_monomer"] - cells["beta"][f"{who}_eV_per_monomer"])
+            for who in ("dft", "potential")}
+        gaps[f"{k}_minus_beta_meV"]["difference_kcal"] = so.KCAL_PER_EV * 1e-3 * (
+            gaps[f"{k}_minus_beta_meV"]["potential"] - gaps[f"{k}_minus_beta_meV"]["dft"])
+    path = OUT / f"mlip_own_{args.name}.json"
+    out = json.loads(path.read_text())
+    out["dft_on_the_potentials_cells"] = {"cells": cells, "gaps": gaps}
+    path.write_text(json.dumps(out, indent=1) + "\n")
+    for k, c in cells.items():
+        print(f"{k:7s} DFT force left {c['dft_largest_force_eV_per_A']:.3f} eV/A, stress "
+              + " ".join(f"{v:+.2f}" for v in c["dft_stress_xx_yy_zz_GPa"]) + " GPa"
+              + (f", DFT energy {c['dft_above_its_own_minimum_meV_per_monomer']:+.2f} meV per monomer above its own minimum"
+                 if "dft_above_its_own_minimum_meV_per_monomer" in c else ""))
+    for k, g in gaps.items():
+        print(f"{k}: DFT {g['dft']:+.2f}, the potential {g['potential']:+.2f} ({g['difference_kcal']:+.3f} kcal/mol)")
+    print(f"added to {path.relative_to(ROOT)}")
 
 
 def main():
@@ -227,8 +333,15 @@ def main():
     s.add_argument("--model", type=Path, required=True)
     s.add_argument("--name", required=True)
     s.add_argument("--threads", type=int, default=4)
+    s.add_argument("--probe", type=Path, help="write the cells relaxed in the potential here, for DFT single points")
+    s = sub.add_parser("closure")
+    s.add_argument("--frames", type=Path, required=True, help="the labelled frames (for DFT's own minima)")
+    s.add_argument("--probe", type=Path, required=True, help="the directory `evaluate --probe` wrote, labelled")
+    s.add_argument("--model", type=Path, required=True)
+    s.add_argument("--name", required=True)
+    s.add_argument("--threads", type=int, default=4)
     args = p.parse_args()
-    {"prepare": prepare, "train": train, "evaluate": evaluate}[args.step](args)
+    {"prepare": prepare, "train": train, "evaluate": evaluate, "closure": closure}[args.step](args)
 
 
 if __name__ == "__main__":
