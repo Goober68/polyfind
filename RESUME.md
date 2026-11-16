@@ -65,6 +65,11 @@ NOT DONE, IN ORDER:
     21:10 UTC, DELETE it and read again). If the pod's limit comes before the fits end, fetch the newest
     `jobs/03_mlip_fit/data/checkpoints/*.pt` first and export the models here with `--restart_latest`.
     Spend before this pod about $14.05 of $46.
+    AFTER A CONTAINER RESTART AT ABOUT 18:50 UTC (files kept, the running DFT job lost and started again) EVERY
+    REQUEST TO `rest.runpod.io` ANSWERS 502 "upstream request failed" THROUGH THE SESSION'S PROXY (the key is still
+    on the environment; the pod's own proxy URL and the public price list answer). So the pod cannot be read or
+    deleted from here until that clears: retry the read; if it still fails once the pod should be gone, the evidence
+    is its proxy URL no longer answering, and the PI has to look at the Runpod console. Say so plainly.
 (b) frames for the other units, `mlip_frames.py make --set units --frames /opt/dft/units` (36 cells, 168 frames of 24
     to 51 atoms: TrFE, CFE, CTFE, the nitrile, reversed VDF, TFE in the PVDF cells, all-trans and helix; resumable
     cell by cell, `--minutes` ends a run by itself): BUILT (the sampler put many all-trans cells 22 to 37% above
