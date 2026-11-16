@@ -16,7 +16,9 @@ Three steps; `label` is resumable:
     python examples/mlip_frames.py label   --frames DIR --pw PW.X --pseudo DIR [--np 4]
     python examples/mlip_frames.py collect --frames DIR --out docs/predictions/mlip/NAME.extxyz
 
-and `cutoff`, which reruns labelled frames at a higher plane-wave cutoff.
+and `cutoff`, which reruns labelled frames at a higher plane-wave cutoff, and `aim`, which
+moves the units set's unlabelled frames to where the DFT stress on each cell's relaxed frame
+points (label the relaxed frames first: `label --only units`).
 
 The PVDF set, 76 frames from the four DFT-relaxed cells (helix alpha, polar beta, the two
 antipolar betas):
@@ -486,6 +488,49 @@ def label(args):
               f"{np.abs(r['forces']).max():.2f} eV/A, {seconds:.0f} s", flush=True)
 
 
+# An assumed stiffness across the chains (C_11 = C_22, C_12, GPa), only to turn a stress into a
+# strain to aim at: PVDF's is 23 to 25 and 6, the candidates' cells are softer.
+AIM_C_GPA = (15.0, 5.0)
+AIM_LIMIT = 0.12
+
+
+def aim(args):
+    """Move a cell's unlabelled frames to where DFT's stress on its relaxed frame points.
+
+    The sampler's relaxed cells are not DFT's (it put many all-trans cells 20 to 37% above
+    PVDF's volume). Once a cell's relaxed frame is labelled, its DFT stress across the chains
+    and an assumed stiffness give the strain to DFT's minimum; the cell's other frames, not
+    yet labelled, are strained by half of it, all of it and one and a half times it, so that
+    the minimum is inside what is labelled whichever way the sampler was wrong.
+    """
+    from ase import units
+    from ase.io import read, write
+
+    c11, c12 = AIM_C_GPA
+    moved = 0
+    for first in sorted(args.frames.glob("units_*_0.dft.xyz")):
+        cell_name = first.name[:8]
+        a = read(first)
+        s = np.asarray(a.info["REF_stress"]).reshape(3, 3) / units.GPa
+        ex = -(c11 * s[0, 0] - c12 * s[1, 1]) / (c11 ** 2 - c12 ** 2)
+        ey = -(c11 * s[1, 1] - c12 * s[0, 0]) / (c11 ** 2 - c12 ** 2)
+        ex, ey = (float(np.clip(v, -AIM_LIMIT, AIM_LIMIT)) for v in (ex, ey))
+        others = [f for f in sorted(args.frames.glob(f"{cell_name}_[1-9].start.xyz"))
+                  if not (args.frames / f.name.replace(".start.xyz", ".dft.xyz")).exists()]
+        todo = [(f, read(f)) for f in others]
+        todo = [(f, b) for f, b in todo if "aimed_strain" not in b.info]
+        for (f, b), step in zip(todo, np.linspace(0.5, 1.5, len(todo))):
+            info = dict(b.info)
+            b = strained(b, np.array([step * ex, step * ey, 0.0, 0.0, 0.0, 0.0]))
+            b.info = {**info, "aimed_strain": f"{step * ex:+.4f} {step * ey:+.4f}",
+                      "aimed_from_stress_GPa": f"{s[0, 0]:+.3f} {s[1, 1]:+.3f}"}
+            write(f, b, format="extxyz")
+            moved += 1
+        print(f"{cell_name} {str(a.info['source']):16s} DFT stress xx {s[0, 0]:+.2f} yy {s[1, 1]:+.2f} zz {s[2, 2]:+.2f} GPa: "
+              f"aim at strain xx {ex:+.3f} yy {ey:+.3f}; {len(todo)} frames moved", flush=True)
+    print(f"{moved} frames moved")
+
+
 def cutoff(args):
     """Labelled frames again at a higher plane-wave cutoff: what the anchor's 90/360 Ry costs.
 
@@ -554,7 +599,7 @@ def collect(args):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = p.add_subparsers(dest="step", required=True)
-    for name in ("make", "check", "label", "cutoff", "collect"):
+    for name in ("make", "check", "label", "aim", "cutoff", "collect"):
         s = sub.add_parser(name)
         s.add_argument("--frames", type=Path, required=True, help="working directory, outside the repository")
         if name == "make":
@@ -579,7 +624,7 @@ def main():
         if name in ("collect", "cutoff"):
             s.add_argument("--out", type=Path, required=True)
     args = p.parse_args()
-    {"make": make, "check": check, "label": label, "cutoff": cutoff, "collect": collect}[args.step](args)
+    {"make": make, "check": check, "label": label, "aim": aim, "cutoff": cutoff, "collect": collect}[args.step](args)
 
 
 if __name__ == "__main__":

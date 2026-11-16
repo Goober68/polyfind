@@ -185,7 +185,7 @@ The anchor's +0.726 is all-trans against alpha; against the lowest helix packing
 +0.735 at least. The two DFT single points are in
 `docs/predictions/mlip/pvdf_probe_frames_pbe_d3bj.extxyz` with the six others.
 
-### 3.4 The other units (frames: being built on this container; no rented machine needed)
+### 3.4 The other units (168 frames built, labelling not started; no rented machine needed)
 
 `examples/mlip_frames.py make --set units`. TrFE, CFE, CTFE, acrylonitrile, the reversed VDF
 unit and TFE are put into the DFT-relaxed PVDF cells by replacing a unit's groups along their
@@ -199,8 +199,18 @@ with D3), which again only chooses the geometries.
 
 Each cell gives its relaxed geometry, one shaken copy and two or three dynamics snapshots.
 
+The sampler's cells are not to be trusted for their volume. It kept every chain's conformation
+(all-trans stayed all-trans, the helix stayed a helix), but it put most all-trans cells holding
+CTFE, the nitrile, the reversed unit or TFE 22 to 37% above PVDF's volume (64 to 72 A3 per
+monomer, an amorphous density) while leaving the CFE and TrFE ones within 4%. So the order of
+labelling is: each cell's relaxed frame first; then `mlip_frames.py aim` reads the DFT stress on
+it and, with an assumed stiffness across the chains, moves the cell's other frames to half, all
+and one and a half times the strain the stress points to; then those are labelled. The DFT
+minimum is then inside what is labelled whichever way the sampler was wrong.
+
 Cost, measured: a 24-atom frame takes 2.3 minutes on this container's four cores and a
-48-atom frame 6.5, so the set is about ten hours of DFT here and costs nothing. A rented
+48-atom frame 6.5, so the set is about ten hours of DFT here and costs nothing. (Building it
+took 70 minutes of the sampler.) A rented
 32-core machine would do it in about an hour and a half for a few dollars; that is the PI's
 call and is not needed.
 
