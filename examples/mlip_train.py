@@ -224,12 +224,13 @@ def evaluate(args):
     warnings.filterwarnings("ignore")
     torch.set_num_threads(args.threads)
     so = _second_opinion()
-    bare = MACECalculator(model_paths=str(args.model), device="cpu", default_dtype="float64")
+    bare = so.file_calculator(args.model)
     out = {"model": args.model.name, "prepare": json.loads((args.data / "prepare.json").read_text())}
     out["held_out"] = held_out(bare, read(args.data / "test.xyz", index=":"))
     print("held out:", json.dumps(out["held_out"]), flush=True)
     kept = {}
-    margins = so.run([(args.name, "file+d3", args.model)], True, 0.01, 400, args.threads, kept)
+    margins = so.run([(args.name, "file+d3", args.model)], True, args.fmax, 800, args.threads, kept)
+    out["relaxation_fmax_eV_per_A"] = args.fmax
     out["margins"] = {"dft": margins["dft"], **margins["models"][args.name]}
     if args.probe:
         # the potential's own minima, and a packing it was not shown, for a DFT single point each
@@ -242,7 +243,7 @@ def evaluate(args):
         turned = turned_chain(mf.cell("alpha"), mf)
         turned.calc = SumCalculator([bare, so.d3_calculator()])
         opt = BFGS(FrechetCellFilter(turned), logfile=None, maxstep=0.1)
-        opt.run(fmax=0.01, steps=600)
+        opt.run(fmax=args.fmax, steps=1200)
         kept["turned"] = turned
         for k, a in kept.items():
             b = a.copy()
@@ -281,8 +282,7 @@ def closure(args):
     warnings.filterwarnings("ignore")
     torch.set_num_threads(args.threads)
     so = _second_opinion()
-    calc = SumCalculator([MACECalculator(model_paths=str(args.model), device="cpu", default_dtype="float64"),
-                          so.d3_calculator()])
+    calc = SumCalculator([so.file_calculator(args.model), so.d3_calculator()])
     own_minimum = {a.info["source"]: a.info["REF_energy"] / a.info["n_monomers"]
                    for a in read(args.frames, index=":") if a.info["family"] == "end"}
     source = {"alpha": "alpha", "beta": "polar", "anti": "anti"}
@@ -354,6 +354,8 @@ def main():
     s.add_argument("--name", required=True)
     s.add_argument("--threads", type=int, default=4)
     s.add_argument("--probe", type=Path, help="write the cells relaxed in the potential here, for DFT single points")
+    s.add_argument("--fmax", type=float, default=0.01,
+                   help="eV/A; at 0.01 a cell under 0.2 GPa counts as relaxed and does not move: 0.002 finds the potential's own cell")
     s = sub.add_parser("closure")
     s.add_argument("--frames", type=Path, required=True, help="the labelled frames (for DFT's own minima)")
     s.add_argument("--probe", type=Path, required=True, help="the directory `evaluate --probe` wrote, labelled")

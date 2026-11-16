@@ -21,8 +21,9 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
-**A machine-learned potential as a second opinion: pretrained ones fail; our own is right to 0.1 to 0.2 kcal/mol after
-two short fits, not yet inside the 0.1 needed, 2026-11-16 (PI: "Go on 1", then "You're using ots solutions? Thought we
+**A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
+DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then
+one DFT single point, 2026-11-16 (PI: "Go on 1", then "You're using ots solutions? Thought we
 would train our own?").** Text: `docs/MLIP_SECOND_OPINION.md` (3.3 has the table, 3.5 what is needed).
 THE TEST: PVDF's beta minus alpha, +0.726 kcal/mol per monomer in PBE-D3(BJ), the one margin held from DFT; a second
 opinion has to resolve 0.1 (the switching window is 0.12 wide).
@@ -47,29 +48,33 @@ OUR OWN, DONE SO FAR:
     with alpha (0.4 meV per monomer below alpha's minimum on one geometry, 2.0 above on the other, neither relaxed in
     DFT). The anchor's +0.726 is against alpha; against the lowest helix packing found it is +0.735 at least.
 NOT DONE, IN ORDER:
-(a) THE PI SAID "Go on runpod" (2026-11-16). A POD IS RUNNING AT THIS COMMIT: `wylsqwj1no08y4`, Runpod Secure Cloud, one
-    A40 at $0.59/h, created 17:02:34 UTC, read back RUNNING; it removes itself (queue `stop`, or its own limit at
-    21:02 UTC: at most $2.36). Queue `examples/gpu_jobs/queue_20261116_mlip.txt`, job `examples/gpu_jobs/mlip_fit.sh`
-    (makes its own Python 3.12 environment: the image's 3.10 is too old for mace-torch 0.3.17; torch 2.5.1 for CUDA
-    12.1). Job 2 (20 epochs, timing): 7 s an epoch for one fit. JOB 3, RUNNING SINCE 17:15: four fits side by side on
-    the 130 PVDF frames (the 76 and the 54 near the minima), 400 epochs each: `pvdf_s1`, `pvdf_s2` (stress weight 100,
-    energy 1000 in stage two), `pvdfb_s1`, `pvdfb_s2` (stress 1000, energy 10000); 29 s an epoch each (the card's
-    time is shared: nothing gained over one after another), so they end near 20:40 UTC.
-    TO COLLECT: scratch scripts `scratchpad/runpod/wait13.sh PATTERN` (STATUS) and `get13.sh PATH` (a served file),
-    which read the pod id and the serving token from `pod_id13.txt`, `token13.txt` there (the token is never shown
-    or committed; scrub every 32-hex string). Wanted from `jobs/03_mlip_fit/`: `mlip_own_<fit>.json`, `<fit>.model`,
-    `<fit>.epochs.txt`, `probe/<fit>_{alpha,beta,anti,turned}.start.xyz`, `log.txt`. Then here: label the probe cells
-    with DFT (`mlip_frames.py label --frames DIR --minutes 8`), `mlip_train.py closure` for each fit, write the
-    spread between the fits into docs/MLIP_SECOND_OPINION.md 3.3 and tests, and CONFIRM BY A READ THAT THE POD IS GONE
-    (`curl https://rest.runpod.io/v1/pods/wylsqwj1no08y4` must say it does not exist; if it is still there after
-    21:10 UTC, DELETE it and read again). If the pod's limit comes before the fits end, fetch the newest
-    `jobs/03_mlip_fit/data/checkpoints/*.pt` first and export the models here with `--restart_latest`.
-    Spend before this pod about $14.05 of $46.
-    AFTER A CONTAINER RESTART AT ABOUT 18:50 UTC (files kept, the running DFT job lost and started again) EVERY
-    REQUEST TO `rest.runpod.io` ANSWERS 502 "upstream request failed" THROUGH THE SESSION'S PROXY (the key is still
-    on the environment; the pod's own proxy URL and the public price list answer). So the pod cannot be read or
-    deleted from here until that clears: retry the read; if it still fails once the pod should be gone, the evidence
-    is its proxy URL no longer answering, and the PI has to look at the Runpod console. Say so plainly.
+(a) THE LONG FITS ON A RENTED CARD ARE DONE (PI: "Go on runpod", 2026-11-16). docs/MLIP_SECOND_OPINION.md 3.6.
+    Pod `wylsqwj1no08y4`, Runpod Secure Cloud, one A40 at $0.59/h, 17:02:34 to 20:44:31 UTC (3.7 h, about $2.18;
+    spend now about $16.23 of $46). It removed itself after `stop` (its status page went from 200 to 404 at
+    20:44:33). THE REMOVAL IS NOT CONFIRMED BY AN API READ: since a container restart at about 18:50 UTC every
+    request to `rest.runpod.io` answers 502 "upstream request failed" through the session's proxy (the key is still
+    on the environment; other hosts answer). THE PI HAS BEEN ASKED TO LOOK AT THE RUNPOD CONSOLE. Retry
+    `curl https://rest.runpod.io/v1/pods/wylsqwj1no08y4` (it must say the pod does not exist); if the pod is still
+    listed, DELETE it and read again.
+    WHAT RAN: `examples/gpu_jobs/mlip_fit.sh` (queue `queue_20261116_mlip.txt`; its own Python 3.12 environment,
+    torch 2.5.1 for CUDA 12.1): four fits of 400 epochs on the 130 PVDF frames (76 + 54), stress weight 100 or 1000,
+    two seeds: `docs/predictions/mlip_own_pvdf_s1.json`, `_s2`, `mlip_own_pvdfb_s1.json`, `_s2`.
+    RESULT: beta minus alpha +0.721 to +0.732 on the DFT geometries (DFT +0.726); antipolar minus polar beta -0.5 to
+    -1.2 meV (DFT -1.1); C_11 21.4 to 23.7 GPa (DFT 22.8), C_12 40% high. DFT single points on the cells each fit
+    relaxed: gaps on the trained packings right to 0.014 kcal/mol (one fit 0.083), THE UNSEEN TURNED-CHAIN HELIX
+    PACKING OFF BY 0.07 TO 0.21, always too low; DFT on the four fits' turned cells agrees with itself to 1 meV.
+    Relaxed strictly (fmax 0.002, `mlip_own_pvdfb_s1_tight.json`, `_s2_tight`): cells within 0.8% of DFT's volume,
+    DFT energy within 0.5 meV per monomer of its own minima.
+    READING, AND HOW IT IS USED: relax a cell in the potential, then ONE DFT single point for its energy. The
+    potential's own energy is trusted only for kinds of cell it has been checked on.
+    FILES OUTSIDE THE REPOSITORY (lost with the container): the four models `/opt/dft/gpu13/*.model` (13 MB each;
+    saved on the card: load with `mlip_second_opinion.file_calculator`), DFT single points `/opt/dft/probe13`,
+    `/opt/dft/probe13t` (all 32 are in `docs/predictions/mlip/pvdf_probe_frames_pbe_d3bj.extxyz`).
+    LESSONS FOR THE NEXT POD: one fit at a time on a card (four side by side took four times as long each); 7 s an
+    epoch for 112 small frames on an A40; a job must end well inside the pod's own limit; fetch results as they
+    appear (`scratchpad/runpod/mirror13.sh` did). The image's Python 3.10 is too old for mace-torch 0.3.17.
+    NEXT (docs 3.7): when the units frames are labelled, one fit on everything on a second pod (ASK THE PI FIRST:
+    a new spend), then a candidate's own cells relaxed in it and one DFT single point each.
 (b) frames for the other units, `mlip_frames.py make --set units --frames /opt/dft/units` (36 cells, 168 frames of 24
     to 51 atoms: TrFE, CFE, CTFE, the nitrile, reversed VDF, TFE in the PVDF cells, all-trans and helix; resumable
     cell by cell, `--minutes` ends a run by itself): BUILT (the sampler put many all-trans cells 22 to 37% above

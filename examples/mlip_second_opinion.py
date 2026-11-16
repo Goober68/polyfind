@@ -80,6 +80,24 @@ def d3_calculator():
     )
 
 
+def file_calculator(path):
+    """A model file as a calculator on the processor, wherever it was saved.
+
+    A model fitted on a card holds compiled parts saved on the card, and e3nn reloads those
+    without saying where to put them, so on a machine without a card the load fails. They are
+    sent to the processor for the length of the load.
+    """
+    import torch
+    from mace.calculators import MACECalculator
+
+    load = torch.jit.load
+    torch.jit.load = lambda f, *args, **kwargs: load(f, *args, **{**kwargs, "map_location": "cpu"})
+    try:
+        return MACECalculator(model_paths=str(path), device="cpu", default_dtype="float64")
+    finally:
+        torch.jit.load = load
+
+
 def single_points(calc, cells):
     from ase import units
 
@@ -180,15 +198,11 @@ def run(models, relax, fmax, steps, threads, keep=None):
             calc, add = SumCalculator([bare, d3]), d3_e
             fitted_to = "PBE without dispersion; D3(BJ) added as in the anchor"
         elif kind == "file+d3":
-            from mace.calculators import MACECalculator
-
-            bare = MACECalculator(model_paths=str(source), device="cpu", default_dtype="float64")
+            bare = file_calculator(source)
             calc, add = SumCalculator([bare, d3]), d3_e
             fitted_to = "the anchor's recipe less its D3(BJ) part; D3(BJ) added back"
         else:
-            from mace.calculators import MACECalculator
-
-            bare = MACECalculator(model_paths=str(source), device="cpu", default_dtype="float64")
+            bare = file_calculator(source)
             calc, add = bare, None
             fitted_to = "its own dispersion-corrected functional, not the anchor's PBE-D3(BJ)"
         rec = {"kind": kind, "fitted_to": fitted_to}

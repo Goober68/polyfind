@@ -1,0 +1,236 @@
+{
+ "model": "pvdfb_s1.model",
+ "prepare": {
+  "frames": 76,
+  "train": 64,
+  "test": 12,
+  "test_ends": 4,
+  "d3_addon_less_dft_program_far_tail_meV_A3_per_atom": [
+   1.0100602579880495,
+   0.0022967339665489967
+  ],
+  "largest_force_eV_per_A": 9.51215944
+ },
+ "held_out": {
+  "frames": 8,
+  "energy_rmse_meV_per_atom": 0.34586387964384335,
+  "energy_offset_meV_per_atom": 0.11066846102873265,
+  "force_rmse_meV_per_A": 26.74279174219827,
+  "force_rms_of_the_labels_meV_per_A": 1399.7920499924626,
+  "stress_rmse_GPa": 0.07907978908716953
+ },
+ "relaxation_fmax_eV_per_A": 0.002,
+ "margins": {
+  "dft": {
+   "alpha_minus_beta_meV": -31.46,
+   "alpha_minus_beta_pbe_part_meV": -51.55,
+   "alpha_minus_beta_d3_part_meV": 20.09,
+   "anti_minus_beta_meV": -1.11,
+   "margin_kcal": 0.726
+  },
+  "kind": "file+d3",
+  "fitted_to": "the anchor's recipe less its D3(BJ) part; D3(BJ) added back",
+  "elements": [
+   1,
+   6,
+   9
+  ],
+  "cutoff_A": 6.0,
+  "on_the_dft_geometries": {
+   "cells": {
+    "alpha": {
+     "energy_eV_per_monomer": -1875.9676597923465,
+     "largest_force_eV_per_A": 0.02689272465809356,
+     "stress_xx_yy_zz_GPa": [
+      -0.9821665119833466,
+      -0.8758836802270142,
+      -1.009647802062996
+     ]
+    },
+    "beta": {
+     "energy_eV_per_monomer": -1875.915878287482,
+     "largest_force_eV_per_A": 0.009530204661492458,
+     "stress_xx_yy_zz_GPa": [
+      -1.115659525553473,
+      -1.117645800452299,
+      -1.1235645148446651
+     ]
+    },
+    "anti": {
+     "energy_eV_per_monomer": -1875.913735495376,
+     "largest_force_eV_per_A": 0.008921891114704872,
+     "stress_xx_yy_zz_GPa": [
+      -1.1019674309684078,
+      -1.1865965974475805,
+      -1.145828603630854
+     ]
+    }
+   },
+   "alpha_minus_beta_meV": -31.735496678265918,
+   "anti_minus_beta_meV": -1.2177533567410137,
+   "margin_kcal": 0.7318379444529918,
+   "margin_error_kcal": 0.0058379444529917945,
+   "times_the_needed_accuracy": 0.058379444529917945
+  },
+  "relaxed_in_the_potential": {
+   "cells": {
+    "alpha": {
+     "energy_eV_per_monomer": -1876.3038237572405,
+     "converged": true,
+     "steps": 61,
+     "largest_force_eV_per_A": 0.001526948876769959,
+     "lattice_A_deg": [
+      4.939099566607238,
+      9.594704992061,
+      4.66255488614854,
+      90.00000000010577,
+      88.15515700784783,
+      89.9999999996396
+     ],
+     "lattice_change_percent": [
+      -0.1260979390145467,
+      -0.4285398903086546,
+      0.06403061018995793
+     ],
+     "volume_change_percent": -0.46374879854158557
+    },
+    "beta": {
+     "energy_eV_per_monomer": -1876.27186664123,
+     "converged": true,
+     "steps": 3,
+     "largest_force_eV_per_A": 0.0009315575576667682,
+     "lattice_A_deg": [
+      4.756785341642248,
+      8.528187427340969,
+      2.5808127555232976,
+      90.0,
+      90.0,
+      90.00000000014428
+     ],
+     "lattice_change_percent": [
+      -0.00037313627267998584,
+      0.00043457654212986085,
+      0.0022163092169069643
+     ],
+     "volume_change_percent": 0.0022777492264758337
+    },
+    "anti": {
+     "energy_eV_per_monomer": -1876.2735512397587,
+     "converged": true,
+     "steps": 31,
+     "largest_force_eV_per_A": 0.0009121720813679941,
+     "lattice_A_deg": [
+      4.734982987449933,
+      8.57770364299999,
+      2.581053832805378,
+      89.99999999978195,
+      90.00000085926175,
+      90.00018488776698
+     ],
+     "lattice_change_percent": [
+      -0.16796166279399172,
+      0.6885244759207598,
+      0.00883104140034785
+     ],
+     "volume_change_percent": 0.5282832658773495
+    }
+   },
+   "alpha_minus_beta_meV": -31.957116010516984,
+   "anti_minus_beta_meV": -1.6845985287545773,
+   "margin_kcal": 0.7369486077020955,
+   "margin_error_kcal": 0.010948607702095492,
+   "times_the_needed_accuracy": 0.10948607702095492
+  },
+  "seconds": 50.85761260986328
+ },
+ "probe_cells_written": [
+  "alpha",
+  "anti",
+  "beta",
+  "turned"
+ ],
+ "beta_elastic_GPa": {
+  "ours": {
+   "C_11": 21.842936102758575,
+   "C_22": 25.58490591294279,
+   "C_33": 297.80273916504876,
+   "C_12": 8.54163360023409,
+   "C_12_asymmetry": 2.4319168055087843,
+   "lattice_A": [
+    4.756803091,
+    8.528150366,
+    2.580755558
+   ]
+  },
+  "dft": {
+   "C_11": 22.77,
+   "C_22": 24.52,
+   "C_12": 5.88,
+   "C_33": 302.6
+  }
+ },
+ "dft_on_the_potentials_cells": {
+  "cells": {
+   "alpha": {
+    "dft_eV_per_monomer": -1876.3042231361364,
+    "potential_eV_per_monomer": -1876.3038237572423,
+    "dft_largest_force_eV_per_A": 0.00323933,
+    "dft_stress_xx_yy_zz_GPa": [
+     -0.009414724257805084,
+     -0.0008826303991692265,
+     0.00764946345946663
+    ],
+    "dft_above_its_own_minimum_meV_per_monomer": -0.1385059438234748
+   },
+   "anti": {
+    "dft_eV_per_monomer": -1876.2733388957338,
+    "potential_eV_per_monomer": -1876.2735512397533,
+    "dft_largest_force_eV_per_A": 0.00871938,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.013092350921010194,
+     0.0700220116674253,
+     0.03780600209774854
+    ],
+    "dft_above_its_own_minimum_meV_per_monomer": 0.3906874435415375
+   },
+   "beta": {
+    "dft_eV_per_monomer": -1876.2726203791426,
+    "potential_eV_per_monomer": -1876.271866641231,
+    "dft_largest_force_eV_per_A": 0.00186559,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.010444459723502515,
+     0.014122086386707623,
+     0.009561829324333289
+    ],
+    "dft_above_its_own_minimum_meV_per_monomer": 0.0
+   },
+   "turned": {
+    "dft_eV_per_monomer": -1876.3042422521332,
+    "potential_eV_per_monomer": -1876.3099478953275,
+    "dft_largest_force_eV_per_A": 0.02893674,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.22404101632245532,
+     0.011327090122671742,
+     -0.014563401586292237
+    ]
+   }
+  },
+  "gaps": {
+   "alpha_minus_beta_meV": {
+    "dft": -31.60275699383419,
+    "potential": -31.957116011199105,
+    "difference_kcal": -0.008171713129176424
+   },
+   "anti_minus_beta_meV": {
+    "dft": -0.7185165911778313,
+    "potential": -1.6845985221607407,
+    "difference_kcal": -0.02227837874136407
+   },
+   "turned_minus_beta_meV": {
+    "dft": -31.621872990626798,
+    "potential": -38.081254096368866,
+    "difference_kcal": -0.14895686803925803
+   }
+  }
+ }
+}

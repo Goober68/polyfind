@@ -127,7 +127,7 @@ def test_dft_puts_the_turned_chain_helix_cell_level_with_alpha():
     assert 1e3 * (turned["pvdf_ft_0b3"] - alpha_minimum) == pytest.approx(2.0, abs=0.1)
     assert 1e3 * (turned["pvdf_ft_0b3_b"] - alpha_minimum) == pytest.approx(-0.4, abs=0.1)
     probes = (PRED / "mlip" / "pvdf_probe_frames_pbe_d3bj.extxyz").read_text()
-    assert probes.count("family=probe") == 8
+    assert probes.count("family=probe") == 32  # two short fits, four long ones, two of those relaxed strictly
 
 
 def test_the_anchors_cutoffs_hold_for_chlorine_and_the_nitrile():
@@ -142,3 +142,66 @@ def test_the_anchors_cutoffs_hold_for_chlorine_and_the_nitrile():
         assert frame["stress_change_largest_GPa"] < 0.02
     changes = [abs(pair["change_kcal_per_monomer"]) for pair in check["pairs"].values()]
     assert len(changes) == 2 and max(changes) < 0.002 < NEEDED_KCAL / 10
+
+
+LONG_FITS = ("pvdf_s1", "pvdf_s2", "pvdfb_s1", "pvdfb_s2")
+
+
+def test_the_long_fits_are_the_dft_where_frames_are_near():
+    """Four fits of 400 epochs on 130 frames (a rented card): the tests on the trained packings."""
+    for name in LONG_FITS:
+        r = _result(name)
+        assert r["prepare"]["frames"] == 130 and r["prepare"]["train"] == 112 and r["prepare"]["test"] == 18
+        held = r["held_out"]
+        assert held["energy_rmse_meV_per_atom"] < 0.35 and held["stress_rmse_GPa"] < 0.11
+        assert held["force_rmse_meV_per_A"] / held["force_rms_of_the_labels_meV_per_A"] < 0.02
+        m = r["margins"]["on_the_dft_geometries"]
+        assert abs(m["margin_error_kcal"]) < 0.007
+        assert -1.3 < m["anti_minus_beta_meV"] < -0.5  # DFT -1.11: the sign the short fits had wrong
+        e = r["beta_elastic_GPa"]
+        for key, tolerance in (("C_11", 0.07), ("C_22", 0.07), ("C_33", 0.07)):
+            assert e["ours"][key] / e["dft"][key] == pytest.approx(1.0, abs=tolerance), (name, key)
+        assert 1.35 < e["ours"]["C_12"] / e["dft"]["C_12"] < 1.46  # the one constant that is not right
+        gaps = r["dft_on_the_potentials_cells"]["gaps"]
+        assert abs(gaps["anti_minus_beta_meV"]["difference_kcal"]) < 0.015
+        cells = r["dft_on_the_potentials_cells"]["cells"]
+        assert max(cells[k]["dft_largest_force_eV_per_A"] for k in ("alpha", "beta", "anti")) < 0.015
+    alpha = [_result(n)["dft_on_the_potentials_cells"]["gaps"]["alpha_minus_beta_meV"]["difference_kcal"] for n in LONG_FITS]
+    assert sorted(abs(v) for v in alpha)[:3] == pytest.approx([0.005, 0.006, 0.007], abs=0.001)
+    assert min(alpha) == pytest.approx(-0.083, abs=0.002)  # the fit that let its helix cell shrink by 1%
+
+
+def test_the_long_fits_are_not_the_dft_on_a_packing_they_were_not_shown():
+    """The turned-chain helix cell: every fit too low, and DFT on their cells agrees with itself."""
+    gaps = [_result(n)["dft_on_the_potentials_cells"]["gaps"]["turned_minus_beta_meV"] for n in LONG_FITS]
+    errors = [g["difference_kcal"] for g in gaps]
+    assert all(e < 0 for e in errors)
+    assert min(errors) == pytest.approx(-0.210, abs=0.002) and max(errors) == pytest.approx(-0.068, abs=0.002)
+    assert sum(abs(e) > NEEDED_KCAL for e in errors) == 3
+    by_potential = [g["potential"] for g in gaps]
+    by_dft = [g["dft"] for g in gaps]
+    # the fits' spread flags the cell, but their mean is as far off as the spread is wide
+    assert 0.0230605 * (max(by_potential) - min(by_potential)) == pytest.approx(0.143, abs=0.003)
+    assert sum(errors) / 4 == pytest.approx(-0.132, abs=0.003)
+    # DFT single points on four different relaxed geometries: the same gap to 1 meV per monomer
+    assert max(by_dft) - min(by_dft) < 1.0
+    forces = [_result(n)["dft_on_the_potentials_cells"]["cells"]["turned"]["dft_largest_force_eV_per_A"] for n in LONG_FITS]
+    assert max(forces) < 0.04
+    # and that packing is level with alpha in DFT, to within 1 meV per monomer
+    alpha_minimum = [f[2] for f in _frames() if f[1] == "end"][0]
+    turned = [1e3 * (_result(n)["dft_on_the_potentials_cells"]["cells"]["turned"]["dft_eV_per_monomer"] - alpha_minimum)
+              for n in LONG_FITS]
+    assert -0.2 < min(turned) and max(turned) < 1.0
+
+
+def test_relaxed_strictly_the_potentials_cells_are_dfts():
+    for name in ("pvdfb_s1_tight", "pvdfb_s2_tight"):
+        r = _result(name)
+        assert r["relaxation_fmax_eV_per_A"] == 0.002
+        volumes = [abs(c["volume_change_percent"]) for c in r["margins"]["relaxed_in_the_potential"]["cells"].values()]
+        assert max(volumes) < 0.8
+        closure = r["dft_on_the_potentials_cells"]
+        above = [closure["cells"][k]["dft_above_its_own_minimum_meV_per_monomer"] for k in ("alpha", "beta", "anti")]
+        assert -0.2 < min(above) and max(above) < 0.5
+        assert abs(closure["gaps"]["alpha_minus_beta_meV"]["difference_kcal"]) < 0.01
+        assert abs(closure["gaps"]["anti_minus_beta_meV"]["difference_kcal"]) < 0.025

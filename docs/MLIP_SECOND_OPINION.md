@@ -5,10 +5,13 @@ potential as a second opinion on polyfind's margins, tested before it is trusted
 seeing pretrained ones tested: "You're using ots solutions? Thought we would train our own?"
 
 Section 1 is the test. Section 2 is done: no pretrained potential passes it. Section 3 is our
-own, and says for each part whether it is done, running or not started. In one line: our own
-potential, after two short fits on 76 PVDF frames, is right to 0.1 to 0.2 kcal/mol per monomer
-where the pretrained ones are off by 1.2 to 3.9, and that is not yet inside the 0.1 needed
-(3.3). What separates it from there is training time, which a rented GPU buys (3.5).
+own, and says for each part whether it is done, running or not started. In short: two short
+fits on 76 PVDF frames were right to 0.1 to 0.2 kcal/mol per monomer where the pretrained ones
+are off by 1.2 to 3.9 (3.3). Four long fits on a rented card, on 130 frames, are right to 0.01
+on the packings that have frames near them and off by 0.07 to 0.21 on a packing they were not
+shown; DFT single points on the cells they relax are right to 0.02 either way (3.6). So the
+potential is used to relax a cell and DFT is asked once for its energy; the potential's own
+energy is trusted only where it has been checked.
 
 ## 1. The test
 
@@ -108,7 +111,7 @@ What this set does not hold, and so what a potential fitted to it cannot be aske
 but VDF, and any geometry on the way between all-trans and the helix. A margin of a candidate
 needs the first; a barrier needs the second.
 
-### 3.3 Training and its tests (two fits done; neither is inside the 0.1 with room to spare)
+### 3.3 Training and its tests (the two short fits; the long ones are in 3.6)
 
 `examples/mlip_train.py prepare / train / evaluate / closure`; results in
 `docs/predictions/mlip_own_pvdf_ft_0b3.json` and `..._0b3_b.json`; `tests/test_mlip_own.py`.
@@ -234,7 +237,7 @@ The test of the result is not in this set: DFT single points on a candidate's ow
 and helix cells (the 72-atom `vdf5-rvdf1-6` pair first: about twenty minutes each here),
 against the potential on the same geometries.
 
-### 3.5 What separates it from the 0.1 (recommended to the PI; not started)
+### 3.5 What separated the short fits from the 0.1 (items 1 to 3 done: see 3.6)
 
 1. **Training time, which is a GPU.** A fit of ten to thirty thousand steps is hours to days
    on this container's four cores and under an hour on one GPU. Runpod's Secure Cloud had an
@@ -248,3 +251,87 @@ against the potential on the same geometries.
    Done: 54 frames, 1.2 hours of DFT, `docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz`
    (`mlip_frames.py make --set near`). No fit has used them yet.
 4. The other units' frames (3.4), which the container can label while a GPU fits.
+
+### 3.6 Four long fits on a rented card (done, 2026-11-16; PI: "Go on runpod")
+
+One A40 on Runpod's Secure Cloud at $0.59 an hour, 3.7 hours, about $2.18 (the pod removed
+itself; its record could not be read back from the session afterwards, see `RESUME.md`).
+`examples/gpu_jobs/mlip_fit.sh`, queue `examples/gpu_jobs/queue_20261116_mlip.txt`; results
+`docs/predictions/mlip_own_pvdf_s1.json`, `..._s2`, `mlip_own_pvdfb_s1.json`, `..._s2`.
+
+The fits: on from MACE-MP-0b3 as before, on the 130 PVDF frames (the 76 and the 54 near the
+minima; 112 in the fit, 18 out), 400 epochs each, about 10,000 steps of the optimiser where the
+first fit had 900. Two weightings of the stress and of the second stage's energy (100 and 1000;
+1000 and 10000; forces 100), two seeds of each.
+
+| test | DFT | stress 100, seed 1 | seed 2 | stress 1000, seed 1 | seed 2 |
+|---|---:|---:|---:|---:|---:|
+| held out: energy, meV per atom | | 0.34 | 0.31 | 0.28 | 0.21 |
+| held out: force, meV/A (of 1190 rms) | | 21 | 19 | 22 | 20 |
+| held out: stress, GPa | | 0.10 | 0.11 | 0.07 | 0.07 |
+| 1. beta minus alpha on the DFT geometries, kcal/mol | +0.726 | +0.732 | +0.722 | +0.732 | +0.721 |
+| 2. antipolar minus polar beta, meV | -1.11 | -0.62 | -0.71 | -1.22 | -0.52 |
+| 3. C_11, GPa | 22.8 | 21.4 | 23.7 | 21.8 | 22.3 |
+| 3. C_22 | 24.5 | 24.8 | 26.1 | 25.6 | 26.1 |
+| 3. C_12 | 5.9 | 8.2 | 8.5 | 8.5 | 8.3 |
+| 3. C_33 | 303 | 284 | 285 | 298 | 299 |
+| 5. DFT force left on its relaxed alpha, beta and antipolar cells, eV/A | 0 | 0.009 | 0.013 | 0.005 | 0.006 |
+| 5. alpha minus beta on its own cells: the potential less DFT, kcal/mol | | -0.007 | -0.083 | -0.006 | +0.005 |
+| 5. antipolar minus polar beta on its own cells: the potential less DFT | | +0.011 | +0.009 | -0.003 | +0.014 |
+| 6. turned-chain helix minus beta on its own cells: the potential less DFT | | -0.210 | -0.103 | -0.146 | -0.068 |
+| 6. the same gap by DFT on each fit's own cell, meV | | -31.19 | -30.59 | -31.56 | -31.15 |
+
+What the table says:
+
+- **Where frames are near, the potential is the DFT.** On the helix, polar and antipolar cells
+  every gap is within 0.014 kcal/mol of DFT, with the antipolar pair's sign right in all four
+  (the short fits had it wrong), except one fit that let its helix cell shrink by 1% and is
+  off by 0.08 there. C_11, C_22 and C_33 are within 7%; C_12 is 40% high in all four.
+- **On a packing it was not shown, it is not.** The helix cell with one chain turned (test 6)
+  comes out 3 to 9 meV per monomer too low in every fit: 0.07 to 0.21 kcal/mol, outside the 0.1
+  in three of four, and always the same way. The four fits differ among themselves by 0.14 on
+  it, so their spread does flag the cell as uncertain, but their mean is still 0.13 off: the
+  spread is a warning and not an error bar.
+- **A DFT single point on the cell the potential relaxed is right either way.** The four fits
+  relaxed the turned-chain cell to four slightly different geometries; DFT's energy on them is
+  the same to 1 meV per monomer (0.02 kcal/mol), and DFT finds 0.03 to 0.04 eV/A of force left.
+  The error is in the potential's energy, not in the geometry it finds.
+- The stress weighting matters less than the length of the fit. The heavier one has the lower
+  stress and energy errors on held-out frames and the better C_33.
+
+The relaxations of test 5 stop at 0.01 eV/A, and by that measure a cell under 0.2 GPa has
+arrived, so three of the four fits left DFT's cells where they were. Relaxed to 0.002 eV/A
+instead (the two heavier-weighted fits; `mlip_own_pvdfb_s1_tight.json`, `..._s2_tight`), the
+potential's own cells are within 0.8% of DFT's in volume, DFT's energy on them is within 0.5
+meV per monomer of its own minima (on the helix cell 0.1 meV below: the anchor's own
+relaxation had that much left), and the gaps on them are the potential's to 0.02 kcal/mol.
+The turned-chain cell is as before: 0.07 and 0.15 off by the potential, the same to 0.3 meV by
+DFT.
+
+All 32 DFT single points on cells the fits relaxed are in
+`docs/predictions/mlip/pvdf_probe_frames_pbe_d3bj.extxyz`. None is in a fit yet.
+
+**How it is to be used, from this.** Relax a cell in the potential, then ask DFT once for the
+energy of the result: one self-consistent calculation in place of the dozens to hundreds of a
+DFT relaxation. The potential's own energy is taken only for cells of a kind it has been
+checked on, and every DFT single point made this way goes back into the frames.
+
+The by-product stands, sharper: on the four fits' turned-chain cells DFT puts that packing
+-0.1 to +0.9 meV per monomer from the alpha cell's own minimum. The polar packing of the helix
+(delta-PVDF's kind) and alpha are level in this recipe to within 1 meV.
+
+What a card costs for this, measured: 7 seconds an epoch for one fit of 112 frames on the A40;
+four fits side by side took four times as long each (the card's time is shared between
+processes), so they should be run one after another or on separate cards.
+
+### 3.7 Next (not started)
+
+1. **The other units.** When the 168 frames of 3.4 are labelled, one fit on everything (PVDF,
+   near, the DFT single points of 3.6, the units): a second pod, one fit at a time. An epoch
+   will be longer than the 7 s measured (three times the frames, twice the atoms in the large
+   cells), so the first job there is again a timing.
+2. **The test that matters.** A candidate's own all-trans and helix cells (the 72-atom
+   `vdf5-rvdf1-6` pair first) relaxed in that potential, then one DFT single point each: the
+   margin by DFT, against polyfind's and against the potential's own.
+3. Each round's DFT single points go back into the frames. The turned-chain cell is the first
+   case: with its six single points in the fit, is the next unseen packing still off?

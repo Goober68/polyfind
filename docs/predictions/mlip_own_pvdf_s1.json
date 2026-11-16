@@ -167,5 +167,69 @@
    "C_12": 5.88,
    "C_33": 302.6
   }
+ },
+ "dft_on_the_potentials_cells": {
+  "cells": {
+   "alpha": {
+    "dft_eV_per_monomer": -1876.3041115354483,
+    "potential_eV_per_monomer": -1876.3041829630197,
+    "dft_largest_force_eV_per_A": 0.00916521,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.09767776417472773,
+     0.025154966376322956,
+     0.05089835301875873
+    ],
+    "dft_above_its_own_minimum_meV_per_monomer": -0.02690525570869795
+   },
+   "anti": {
+    "dft_eV_per_monomer": -1876.2737295831773,
+    "potential_eV_per_monomer": -1876.2730005201556,
+    "dft_largest_force_eV_per_A": 0.00256056,
+    "dft_stress_xx_yy_zz_GPa": [
+     -0.011915510388784559,
+     -0.004266046929317928,
+     0.00867919892516406
+    ],
+    "dft_above_its_own_minimum_meV_per_monomer": 0.0
+   },
+   "beta": {
+    "dft_eV_per_monomer": -1876.2726203791426,
+    "potential_eV_per_monomer": -1876.2723777436313,
+    "dft_largest_force_eV_per_A": 0.00032704,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.0032363114636204974,
+     -0.0057370975945999735,
+     0.0029421013305640886
+    ],
+    "dft_above_its_own_minimum_meV_per_monomer": 0.0
+   },
+   "turned": {
+    "dft_eV_per_monomer": -1876.3038142170656,
+    "potential_eV_per_monomer": -1876.3126798967444,
+    "dft_largest_force_eV_per_A": 0.02948773,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.1825573875615017,
+     -0.005148677328487154,
+     0.1032677567027995
+    ]
+   }
+  },
+  "gaps": {
+   "alpha_minus_beta_meV": {
+    "dft": -31.491156305719414,
+    "potential": -31.80521938838865,
+    "difference_kcal": -0.007242466792921882
+   },
+   "anti_minus_beta_meV": {
+    "dft": -1.1092040347193688,
+    "potential": -0.6227765243238537,
+    "difference_kcal": 0.011217284951996276
+   },
+   "turned_minus_beta_meV": {
+    "dft": -31.193837922955936,
+    "potential": -40.302153113088934,
+    "difference_kcal": -0.21004273964119113
+   }
+  }
  }
 }
