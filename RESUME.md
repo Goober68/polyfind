@@ -21,6 +21,35 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**A machine-learned potential as a second opinion: pretrained ones fail, our own is started, 2026-11-16 (PI: "Go on 1",
+then "You're using ots solutions? Thought we would train our own?").** Text: `docs/MLIP_SECOND_OPINION.md`.
+THE TEST: PVDF's beta minus alpha, +0.726 kcal/mol per monomer in PBE-D3(BJ), the one margin held from DFT; a second
+opinion has to resolve 0.1 (the switching window is 0.12 wide).
+PRETRAINED, DONE, NONE PASSES (`examples/mlip_second_opinion.py`, `docs/predictions/mlip_second_opinion.json`,
+`tests/test_mlip_second_opinion.py`): MACE-MPA-0, MP-0b3, MP-0a (MIT, with D3(BJ) added) and Egret-1, Egret-1T (MIT)
+give +2.56, -1.99, +2.19, +3.96, +4.64 on the DFT geometries and +1.96, -1.42, +2.76, +3.72, +2.87 relaxed in the
+potential: off by 1.2 to 3.9, outside the 0.62 to 1.55 that published functionals span, no agreement on the sign. The
+D3 add-on alone is right (+20.05 meV against the DFT margin's +20.09). NOT RUN: models under academic or gated licences
+(MACE-OFF23, OMAT, MATPES, OMOL, UMA): the PI's decision.
+OUR OWN, STATE: (1) the anchor's DFT recipe runs in the cloud session and returns the anchor's beta-PVDF energy to the
+last digit in 52 s on four cores: DONE. (2) PVDF frames (76: ends 4, strains 24, rattles 18, dynamics snapshots 30;
+12 and 24 atoms), `examples/mlip_frames.py make / label / collect`: see the commit after this one for whether they are
+in `docs/predictions/mlip/`. (3) training and its tests (beta minus alpha to 0.1; antipolar minus polar -1.1 meV;
+beta's C_11 22.8, C_22 24.5, C_12 5.9, C_33 303 GPa; held-out forces): NOT STARTED at this commit. (4) frames with
+TrFE, CFE, the nitrile, the reversed unit (48 atoms and more): NOT STARTED, needs a rented machine and the PI's go.
+TO RESTORE THE DFT SIDE IN A NEW CONTAINER (nothing of it is in the repository but the scripts):
+    pip install torch --index-url https://download.pytorch.org/whl/cpu; pip install mace-torch ase torch-dftd
+    micromamba (https://micro.mamba.pm/api/micromamba/linux-64/latest) create -p /opt/mm/qe -c conda-forge "qe=7.5"
+        (run it in the foreground; Ubuntu's own quantum-espresso 6.7 package crashes on reading a pseudopotential)
+    SSSP_1.3.0_PBE_precision.tar.gz from https://archive.materialscloud.org/records/rcyfm-68h65 -> /opt/pseudo
+        (H_ONCV_PBE-1.0.oncvpsp.upf, C.pbe-n-kjpaw_psl.1.0.0.UPF, F.oncvpsp.upf, N.oncvpsp.upf,
+        Cl.pbe-n-rrkjus_psl.1.0.0.UPF; checksums of the first three in deliverables/polar_margin_dft/raw_stages.json)
+    python -I examples/mlip_frames.py make --frames /opt/dft/frames   (9 min; the sampler is seeded)
+    python -I examples/mlip_frames.py label --frames /opt/dft/frames --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo
+        (resumable; 45 s per 12-atom frame, about 2 min per 24-atom frame)
+Egret's model files: `add_repo rowansci/egret-public` (read), clone to /home/user/rowansci/egret-public; a model file
+is a pickled network, run the Python that loads one with `-I`.
+
 **THE PI IS THE BENCH (2026-11-15: "Im the bench, so go").** Bench asks go to the PI directly, in the conversation,
 and are filed in the exchange for the record. Filed: `sarco/materials/ask-polyfind-bench-film-stiffness-v1.md`
 (four numbers on the baseline 25 um P(VDF-TrFE-CFE) film, in order: (1) the storage modulus, from the DMA run E4 already
