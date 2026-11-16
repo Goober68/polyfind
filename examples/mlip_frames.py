@@ -457,6 +457,8 @@ def label(args):
     starts = sorted(args.frames.glob("*.start.xyz"))
     if args.only:
         starts = [s for s in starts if any(k in read(s).info["family"] for k in args.only.split(","))]
+    if args.names:
+        starts = [s for s in starts if s.name.replace(".start.xyz", "") in args.names.split(",")]
     began = time.time()
     for n, start in enumerate(starts):
         name = start.name.replace(".start.xyz", "")
@@ -615,6 +617,7 @@ def main():
         if name == "label":
             s.add_argument("--conv-thr", type=float, default=1e-9)
             s.add_argument("--only", default="", help="families to label, comma-separated")
+            s.add_argument("--names", default="", help="frames to label, comma-separated")
             s.add_argument("--minutes", type=float, default=0.0,
                            help="start no new frame after this long, so a run ends inside a time limit")
         if name == "cutoff":
