@@ -10,11 +10,13 @@ Quantum ESPRESSO 7.5, PBE with two-body D3(BJ), the SSSP 1.3.0 PBE precision fil
 the anchor's k-point density. `check` reruns the anchor's own beta-PVDF input and must return
 its energy to the last digit before any label is trusted.
 
-Three steps, each resumable:
+Three steps; `label` is resumable:
 
-    python examples/mlip_frames.py make    --frames DIR [--set pvdf]
+    python examples/mlip_frames.py make    --frames DIR [--set pvdf | units]
     python examples/mlip_frames.py label   --frames DIR --pw PW.X --pseudo DIR [--np 4]
     python examples/mlip_frames.py collect --frames DIR --out docs/predictions/mlip/NAME.extxyz
+
+and `cutoff`, which reruns labelled frames at a higher plane-wave cutoff.
 
 The PVDF set, 76 frames from the four DFT-relaxed cells (helix alpha, polar beta, the two
 antipolar betas):
@@ -29,11 +31,17 @@ antipolar betas):
   geometries are labelled, not what their labels are. These carry the soft modes: torsions,
   the chains' rotation and sliding.
 
-What the set does not hold, and so what a potential trained on it cannot be asked: any unit
-but VDF, and any geometry on the way between all-trans and the helix (a barrier). The first
-needs cells of 48 atoms and more, which is a rented machine's work.
+What the PVDF set does not hold, and so what a potential trained on it cannot be asked: any
+unit but VDF, and any geometry on the way between all-trans and the helix (a barrier).
 
-Needs ase; `make --set pvdf` also needs torch and mace-torch for the sampler.
+The units set, 168 frames, is for the first of those: TrFE, CFE, CTFE, acrylonitrile, the
+reversed VDF unit and TFE put into the DFT-relaxed PVDF cells (a unit's groups replaced along
+their own bonds), then relaxed and shaken in the pretrained sampler. Twelve compositions with
+two monomers per chain (24 to 27 atoms: each unit alone, and pairs facing each other on
+neighbouring chains) and six with four monomers per chain (48 to 51 atoms: the leading cells'
+units together), each all-trans and helix.
+
+Needs ase; `make` also needs torch and mace-torch for the sampler.
 """
 
 from __future__ import annotations

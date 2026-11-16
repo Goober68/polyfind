@@ -106,19 +106,58 @@ needs the first; a barrier needs the second.
 
 ### 3.3 Training and its tests (not started)
 
-Held out of the fit: the four relaxed cells. The tests, in order of what they decide:
+`examples/mlip_train.py prepare / train / evaluate / closure`.
+
+The network is fitted to the PBE part of each label; the D3(BJ) part is taken out before the
+fit and added back analytically when the potential is used, as the pretrained MACE-MP models
+are built. The fit starts from a pretrained network (MACE-MP-0b3, MIT licence) with every
+weight free. Held out of the fit: the four relaxed cells, and one frame in nine of the rest.
+
+The tests, in order of what they decide:
 
 1. beta minus alpha against +0.726 kcal/mol per monomer, to 0.1;
 2. antipolar minus polar beta against -1.1 meV;
 3. beta-PVDF's elastic constants against DFT's C_11 22.8, C_22 24.5, C_12 5.9, C_33 303 GPa
    (polyfind's rigid bonds cannot give C_33 at all);
-4. the force error on frames left out of the fit.
+4. the force error on frames left out of the fit;
+5. closure: each cell relaxed in the potential is given back to DFT for a single point. The
+   DFT force left there and the DFT energy above DFT's own minimum say whether the potential's
+   minimum is the DFT's;
+6. a packing no frame was made from: the helix cell with one chain turned half a turn, so the
+   two chains' dipoles add (delta-PVDF's kind). Relaxed in the potential, then a DFT single
+   point: its gap to beta by the potential against the same gap by DFT.
 
-Passing these on PVDF says the method can reach the resolution. It does not say a candidate's
-margin is right: that needs frames with the candidate's units in them.
+What the tests are worth. Tests 1 to 3 are on cells whose strained and shaken copies are in
+the fit, so they show the potential can hold the resolution between frames it was shown
+neighbours of: an interpolation. Tests 5 and 6 are on geometries the potential chose itself,
+and 6 on a packing it never saw. None of them says a candidate's margin is right: that needs
+frames with the candidate's units in them, and then a DFT single point on a candidate's own
+cells as the test.
 
-### 3.4 The other units (not started; needs a rented machine and the PI's go)
+### 3.4 The other units (frames: being built on this container; no rented machine needed)
 
-TrFE, CFE, the nitrile and the reversed VDF unit need cells of 48 atoms and more, which four
-cores label too slowly. The cost is to be measured on one such frame and put to the PI before
-anything is rented.
+`examples/mlip_frames.py make --set units`. TrFE, CFE, CTFE, acrylonitrile, the reversed VDF
+unit and TFE are put into the DFT-relaxed PVDF cells by replacing a unit's groups along their
+own bonds; the cell is then relaxed and shaken in the pretrained sampler (atoms and lattice,
+with D3), which again only chooses the geometries.
+
+| cells | atoms | what they hold | frames |
+|---|---:|---|---:|
+| two monomers per chain, all-trans and helix, 12 compositions | 24 to 27 | each unit alone in PVDF (TrFE also at 50 mol%); pairs of units facing each other on neighbouring chains | 120 |
+| four monomers per chain, all-trans and helix, 6 compositions | 48 to 51 | the leading cells' units together: a TrFE matrix; the nitrile with a reversed unit; CFE in TrFE; CTFE with a reversed unit; PVDF with reversed units; the nitrile with TFE | 48 |
+
+Each cell gives its relaxed geometry, one shaken copy and two or three dynamics snapshots.
+
+Cost, measured: a 24-atom frame takes 2.3 minutes on this container's four cores and a
+48-atom frame 6.5, so the set is about ten hours of DFT here and costs nothing. A rented
+32-core machine would do it in about an hour and a half for a few dollars; that is the PI's
+call and is not needed.
+
+The cutoffs are the anchor's 90/360 Ry, set for H, C and F. The chlorine file is ultrasoft and
+its table value is 100/800 Ry, so a chlorine pair and a nitrile pair are rerun at 100/800
+(`mlip_frames.py cutoff`) and the change in the forces and in the gap between two frames of the
+same atoms is recorded before those labels are used.
+
+The test of the result is not in this set: DFT single points on a candidate's own all-trans
+and helix cells (the 72-atom `vdf5-rvdf1-6` pair first: about twenty minutes each here),
+against the potential on the same geometries.
