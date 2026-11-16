@@ -47,9 +47,24 @@ OUR OWN, DONE SO FAR:
     with alpha (0.4 meV per monomer below alpha's minimum on one geometry, 2.0 above on the other, neither relaxed in
     DFT). The anchor's +0.726 is against alpha; against the lowest helix packing found it is +0.735 at least.
 NOT DONE, IN ORDER:
-(a) ASKED OF THE PI, NO ANSWER YET: a GPU pod for the fits (Runpod Secure Cloud, RTX A6000 in stock at $0.69/h on
-    2026-11-16 11:20 UTC; three to four hours, about $3 of the $32 left). Long fits and several seeds (the spread
-    between fits is the second opinion's error bar). NOTHING IS RENTED WITHOUT THE PI'S GO.
+(a) THE PI SAID "Go on runpod" (2026-11-16). A POD IS RUNNING AT THIS COMMIT: `wylsqwj1no08y4`, Runpod Secure Cloud, one
+    A40 at $0.59/h, created 17:02:34 UTC, read back RUNNING; it removes itself (queue `stop`, or its own limit at
+    21:02 UTC: at most $2.36). Queue `examples/gpu_jobs/queue_20261116_mlip.txt`, job `examples/gpu_jobs/mlip_fit.sh`
+    (makes its own Python 3.12 environment: the image's 3.10 is too old for mace-torch 0.3.17; torch 2.5.1 for CUDA
+    12.1). Job 2 (20 epochs, timing): 7 s an epoch for one fit. JOB 3, RUNNING SINCE 17:15: four fits side by side on
+    the 130 PVDF frames (the 76 and the 54 near the minima), 400 epochs each: `pvdf_s1`, `pvdf_s2` (stress weight 100,
+    energy 1000 in stage two), `pvdfb_s1`, `pvdfb_s2` (stress 1000, energy 10000); 29 s an epoch each (the card's
+    time is shared: nothing gained over one after another), so they end near 20:40 UTC.
+    TO COLLECT: scratch scripts `scratchpad/runpod/wait13.sh PATTERN` (STATUS) and `get13.sh PATH` (a served file),
+    which read the pod id and the serving token from `pod_id13.txt`, `token13.txt` there (the token is never shown
+    or committed; scrub every 32-hex string). Wanted from `jobs/03_mlip_fit/`: `mlip_own_<fit>.json`, `<fit>.model`,
+    `<fit>.epochs.txt`, `probe/<fit>_{alpha,beta,anti,turned}.start.xyz`, `log.txt`. Then here: label the probe cells
+    with DFT (`mlip_frames.py label --frames DIR --minutes 8`), `mlip_train.py closure` for each fit, write the
+    spread between the fits into docs/MLIP_SECOND_OPINION.md 3.3 and tests, and CONFIRM BY A READ THAT THE POD IS GONE
+    (`curl https://rest.runpod.io/v1/pods/wylsqwj1no08y4` must say it does not exist; if it is still there after
+    21:10 UTC, DELETE it and read again). If the pod's limit comes before the fits end, fetch the newest
+    `jobs/03_mlip_fit/data/checkpoints/*.pt` first and export the models here with `--restart_latest`.
+    Spend before this pod about $14.05 of $46.
 (b) frames for the other units, `mlip_frames.py make --set units --frames /opt/dft/units` (36 cells, 168 frames of 24
     to 51 atoms: TrFE, CFE, CTFE, the nitrile, reversed VDF, TFE in the PVDF cells, all-trans and helix; resumable
     cell by cell, `--minutes` ends a run by itself): BUILT (the sampler put many all-trans cells 22 to 37% above
