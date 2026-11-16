@@ -1,0 +1,171 @@
+{
+ "model": "pvdf_s1_stagetwo.model",
+ "prepare": {
+  "frames": 130,
+  "train": 112,
+  "test": 18,
+  "test_ends": 4,
+  "d3_addon_less_dft_program_far_tail_meV_A3_per_atom": [
+   1.0099593915285836,
+   0.0026039160926735415
+  ],
+  "largest_force_eV_per_A": 9.51215944
+ },
+ "held_out": {
+  "frames": 14,
+  "energy_rmse_meV_per_atom": 0.3356562987053292,
+  "energy_offset_meV_per_atom": -0.005316625076613409,
+  "force_rmse_meV_per_A": 21.15304454282659,
+  "force_rms_of_the_labels_meV_per_A": 1193.4065429776485,
+  "stress_rmse_GPa": 0.09840396624606051
+ },
+ "margins": {
+  "dft": {
+   "alpha_minus_beta_meV": -31.46,
+   "alpha_minus_beta_pbe_part_meV": -51.55,
+   "alpha_minus_beta_d3_part_meV": 20.09,
+   "anti_minus_beta_meV": -1.11,
+   "margin_kcal": 0.726
+  },
+  "kind": "file+d3",
+  "fitted_to": "the anchor's recipe less its D3(BJ) part; D3(BJ) added back",
+  "elements": [
+   1,
+   6,
+   9
+  ],
+  "cutoff_A": 6.0,
+  "on_the_dft_geometries": {
+   "cells": {
+    "alpha": {
+     "energy_eV_per_monomer": -1875.9681993933382,
+     "largest_force_eV_per_A": 0.026845085828734017,
+     "stress_xx_yy_zz_GPa": [
+      -0.9615052489426976,
+      -0.8361607451125138,
+      -1.151492910987099
+     ]
+    },
+    "beta": {
+     "energy_eV_per_monomer": -1875.916389704001,
+     "largest_force_eV_per_A": 0.009576921646083592,
+     "stress_xx_yy_zz_GPa": [
+      -1.0506100934971732,
+      -1.089611306181641,
+      -1.2255362373644558
+     ]
+    },
+    "anti": {
+     "energy_eV_per_monomer": -1875.913651935062,
+     "largest_force_eV_per_A": 0.007128226424841677,
+     "stress_xx_yy_zz_GPa": [
+      -1.1825704463783602,
+      -1.1202829749860088,
+      -1.1782265677722732
+     ]
+    }
+   },
+   "alpha_minus_beta_meV": -31.763681151005585,
+   "anti_minus_beta_meV": -0.6227765238691063,
+   "margin_kcal": 0.7324878938394596,
+   "margin_error_kcal": 0.00648789383945958,
+   "times_the_needed_accuracy": 0.0648789383945958
+  },
+  "relaxed_in_the_potential": {
+   "cells": {
+    "alpha": {
+     "energy_eV_per_monomer": -1876.304182963038,
+     "converged": true,
+     "steps": 4,
+     "largest_force_eV_per_A": 0.008040089547116502,
+     "lattice_A_deg": [
+      4.945256605839349,
+      9.63547341009412,
+      4.659887179120332,
+      90.00000000000588,
+      87.7372117709409,
+      90.00000000000382
+     ],
+     "lattice_change_percent": [
+      -0.0015959878064797373,
+      -0.005455395967368659,
+      0.00677841171770055
+     ],
+     "volume_change_percent": 0.00036818626212298255
+    },
+    "beta": {
+     "energy_eV_per_monomer": -1876.2723777436374,
+     "converged": true,
+     "steps": 0,
+     "largest_force_eV_per_A": 0.0007855596446074207,
+     "lattice_A_deg": [
+      4.756803091,
+      8.528150366,
+      2.580755558,
+      90.0,
+      90.0,
+      90.0
+     ],
+     "lattice_change_percent": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "volume_change_percent": 0.0
+    },
+    "anti": {
+     "energy_eV_per_monomer": -1876.2730005201613,
+     "converged": true,
+     "steps": 0,
+     "largest_force_eV_per_A": 0.002505634630530485,
+     "lattice_A_deg": [
+      4.742949324,
+      8.519047913003545,
+      2.580825919,
+      90.0,
+      90.0,
+      89.99994772722702
+     ],
+     "lattice_change_percent": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "volume_change_percent": 0.0
+    }
+   },
+   "alpha_minus_beta_meV": -31.80521940066683,
+   "anti_minus_beta_meV": -0.6227765238691063,
+   "margin_kcal": 0.7334457886396086,
+   "margin_error_kcal": 0.0074457886396086526,
+   "times_the_needed_accuracy": 0.07445788639608653
+  },
+  "seconds": 2.582872152328491
+ },
+ "probe_cells_written": [
+  "alpha",
+  "anti",
+  "beta",
+  "turned"
+ ],
+ "beta_elastic_GPa": {
+  "ours": {
+   "C_11": 21.363953986825187,
+   "C_22": 24.84959571693271,
+   "C_33": 283.6906956438498,
+   "C_12": 8.151996824980607,
+   "C_12_asymmetry": 2.28287764900802,
+   "lattice_A": [
+    4.7553795300296615,
+    8.527492178959275,
+    2.582281976711572
+   ]
+  },
+  "dft": {
+   "C_11": 22.77,
+   "C_22": 24.52,
+   "C_12": 5.88,
+   "C_33": 302.6
+  }
+ }
+}
