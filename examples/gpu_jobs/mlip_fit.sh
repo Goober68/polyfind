@@ -28,8 +28,19 @@ THREADS="${MLIP_THREADS:-8}"   # a pod shows far more processors than it is give
 export OMP_NUM_THREADS="$THREADS" MKL_NUM_THREADS="$THREADS"
 DATA="$JOB_OUT/data"
 
-# mace-torch 0.3.17 asks for torch 2.5 or later; the pod image is CUDA 12.1, and a CUDA 12.1 build
-# of torch runs on any driver from 530 on, where the newest wheel may ask for a newer driver.
+# mace-torch 0.3.17 asks for Python 3.11 or later and the pod image's is 3.10: an environment of
+# its own, with a Python that uv fetches (kept beside the jobs, so a later job finds it made).
+if ! "$PY" -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)"; then
+  ENV="${MLIP_ENV:-$(dirname "$JOB_OUT")/shared/mlip_env}"
+  if [ ! -x "$ENV/bin/python" ]; then
+    mkdir -p "$(dirname "$ENV")"
+    "$PY" -m pip install -q uv
+    "$PY" -m uv venv -q --seed --python "${MLIP_PYTHON:-3.12}" "$ENV"
+  fi
+  PY="$ENV/bin/python"
+fi
+# It asks for torch 2.5 or later; the pod image is CUDA 12.1, and a CUDA 12.1 build of torch runs
+# on any driver from 530 on, where the newest wheel may ask for a newer driver.
 if ! "$PY" -c "import torch" 2>/dev/null; then
   "$PY" -m pip install -q "torch==${MLIP_TORCH:-2.5.1}" --index-url "https://download.pytorch.org/whl/${MLIP_CUDA:-cu121}"
 fi

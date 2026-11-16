@@ -3,3 +3,6 @@
 # the DFT anchor.  First a short fit to time an epoch on the card; the long fits and their
 # seeds are added as lines once that time is known.
 mlip_fit.sh timing 20 1
+# The first line failed in a minute: the pod's Python is 3.10 and mace-torch 0.3.17 asks for 3.11.
+# The job now makes its own Python 3.12 environment.
+mlip_fit.sh timing 20 1
