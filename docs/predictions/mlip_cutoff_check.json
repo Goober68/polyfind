@@ -1,0 +1,72 @@
+{
+ "anchor_cutoffs_ry": [
+  90,
+  360
+ ],
+ "higher_cutoffs_ry": [
+  100,
+  800
+ ],
+ "frames": {
+  "units_04_0": {
+   "source": "TT2 VC|VV",
+   "atoms": 24,
+   "seconds": 190,
+   "energy_eV_per_monomer": {
+    "anchor_cutoffs": -1826.1980457318932,
+    "higher": -1826.1986675120145
+   },
+   "force_change_rms_meV_per_A": 0.9448983297373923,
+   "force_change_largest_meV_per_A": 4.447232666984591,
+   "stress_change_largest_GPa": 0.012356825588369333
+  },
+  "units_05_0": {
+   "source": "TG2 VC|VV",
+   "atoms": 24,
+   "seconds": 211,
+   "energy_eV_per_monomer": {
+    "anchor_cutoffs": -1826.2914579228254,
+    "higher": -1826.2920013001467
+   },
+   "force_change_rms_meV_per_A": 1.5633661277730284,
+   "force_change_largest_meV_per_A": 7.418146231929878,
+   "stress_change_largest_GPa": 0.008973409058220517
+  },
+  "units_08_0": {
+   "source": "TT2 VA|VV",
+   "atoms": 25,
+   "seconds": 252,
+   "energy_eV_per_monomer": {
+    "anchor_cutoffs": -1677.8696813786537,
+    "higher": -1677.8701466252892
+   },
+   "force_change_rms_meV_per_A": 1.4073952039260693,
+   "force_change_largest_meV_per_A": 5.9760130884484175,
+   "stress_change_largest_GPa": 0.010444459723502372
+  },
+  "units_09_0": {
+   "source": "TG2 VA|VV",
+   "atoms": 25,
+   "seconds": 253,
+   "energy_eV_per_monomer": {
+    "anchor_cutoffs": -1677.8468516058324,
+    "higher": -1677.8472627698427
+   },
+   "force_change_rms_meV_per_A": 1.64262257108084,
+   "force_change_largest_meV_per_A": 7.991761790127949,
+   "stress_change_largest_GPa": 0.011621300255728162
+  }
+ },
+ "pairs": {
+  "units_05_0 minus units_04_0": {
+   "anchor_cutoffs_meV_per_monomer": -93.41219093221298,
+   "higher_meV_per_monomer": -93.33378813221316,
+   "change_kcal_per_monomer": 0.0018080115327302857
+  },
+  "units_09_0 minus units_08_0": {
+   "anchor_cutoffs_meV_per_monomer": 22.8297728212965,
+   "higher_meV_per_monomer": 22.883855446480084,
+   "change_kcal_per_monomer": 0.0012471749740120112
+  }
+ }
+}

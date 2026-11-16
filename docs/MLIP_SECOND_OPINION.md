@@ -215,9 +215,13 @@ took 70 minutes of the sampler.) A rented
 call and is not needed.
 
 The cutoffs are the anchor's 90/360 Ry, set for H, C and F. The chlorine file is ultrasoft and
-its table value is 100/800 Ry, so a chlorine pair and a nitrile pair are rerun at 100/800
-(`mlip_frames.py cutoff`) and the change in the forces and in the gap between two frames of the
-same atoms is recorded before those labels are used.
+its table value is 100/800 Ry, so a chlorine pair and a nitrile pair (one CFE, and one
+acrylonitrile, in four monomers; all-trans and helix) were rerun at 100/800 before the labels
+are used (`mlip_frames.py cutoff`, `docs/predictions/mlip_cutoff_check.json`). Done, and the
+anchor's cutoffs hold: the forces change by 0.9 to 1.6 meV/A rms (8 at the largest), the stress
+by 0.01 GPa, and the gap between the two cells of the same atoms by 0.002 kcal/mol per monomer
+for chlorine and 0.001 for the nitrile. (Those gaps are between sampler geometries and are not
+margins.)
 
 The test of the result is not in this set: DFT single points on a candidate's own all-trans
 and helix cells (the 72-atom `vdf5-rvdf1-6` pair first: about twenty minutes each here),

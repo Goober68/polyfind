@@ -54,7 +54,8 @@ NOT DONE, IN ORDER:
     to 51 atoms: TrFE, CFE, CTFE, the nitrile, reversed VDF, TFE in the PVDF cells, all-trans and helix; resumable
     cell by cell, `--minutes` ends a run by itself): BUILT (the sampler put many all-trans cells 22 to 37% above
     PVDF's volume: label each cell's relaxed frame first, `label --only units`, then `mlip_frames.py aim`, which
-    moves the other frames by the DFT stress, then label the rest). Before trusting chlorine and nitrile labels:
+    moves the other frames by the DFT stress, then label the rest). THE CUTOFF CHECK IS DONE AND PASSES (a CFE pair
+    and a nitrile pair at 100/800 Ry: gaps change by 0.002 kcal/mol, `docs/predictions/mlip_cutoff_check.json`). It was:
     `mlip_frames.py cutoff` on a chlorine pair and a nitrile pair (90/360 against 100/800 Ry), then `label` (about
     ten hours on four cores), `collect` to `docs/predictions/mlip/units_frames_pbe_d3bj.extxyz`.
 (c) PVDF frames near the minima (strains of 1% and 4%, two axes at once, shakes of 0.01 A): 54 made with

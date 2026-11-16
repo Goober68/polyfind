@@ -128,3 +128,17 @@ def test_dft_puts_the_turned_chain_helix_cell_level_with_alpha():
     assert 1e3 * (turned["pvdf_ft_0b3_b"] - alpha_minimum) == pytest.approx(-0.4, abs=0.1)
     probes = (PRED / "mlip" / "pvdf_probe_frames_pbe_d3bj.extxyz").read_text()
     assert probes.count("family=probe") == 8
+
+
+def test_the_anchors_cutoffs_hold_for_chlorine_and_the_nitrile():
+    """A CFE pair and an acrylonitrile pair again at 100/800 Ry: nothing a margin would see."""
+    check = json.loads((PRED / "mlip_cutoff_check.json").read_text())
+    assert check["anchor_cutoffs_ry"] == [90, 360] and check["higher_cutoffs_ry"] == [100, 800]
+    sources = [f["source"] for f in check["frames"].values()]
+    assert sources == ["TT2 VC|VV", "TG2 VC|VV", "TT2 VA|VV", "TG2 VA|VV"]
+    for frame in check["frames"].values():
+        assert frame["force_change_rms_meV_per_A"] < 2.0
+        assert frame["force_change_largest_meV_per_A"] < 10.0
+        assert frame["stress_change_largest_GPa"] < 0.02
+    changes = [abs(pair["change_kcal_per_monomer"]) for pair in check["pairs"].values()]
+    assert len(changes) == 2 and max(changes) < 0.002 < NEEDED_KCAL / 10
