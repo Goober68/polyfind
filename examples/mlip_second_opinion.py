@@ -172,6 +172,12 @@ def run(models, relax, fmax, steps, threads):
             bare = mace_mp(model=source, dispersion=False, default_dtype="float64", device="cpu")
             calc, add = SumCalculator([bare, d3]), d3_e
             fitted_to = "PBE without dispersion; D3(BJ) added as in the anchor"
+        elif kind == "file+d3":
+            from mace.calculators import MACECalculator
+
+            bare = MACECalculator(model_paths=str(source), device="cpu", default_dtype="float64")
+            calc, add = SumCalculator([bare, d3]), d3_e
+            fitted_to = "the anchor's recipe less its D3(BJ) part; D3(BJ) added back"
         else:
             from mace.calculators import MACECalculator
 
@@ -216,6 +222,8 @@ def main():
     p.add_argument("--mace-mp", default="", help="MACE-MP model names, comma-separated (PBE; D3(BJ) is added)")
     p.add_argument("--model-file", action="append", default=[], metavar="NAME=PATH",
                    help="a MACE-architecture model file with dispersion in its reference (run as it is)")
+    p.add_argument("--model-file-d3", action="append", default=[], metavar="NAME=PATH",
+                   help="a model file fitted to the anchor's recipe less D3(BJ) (ours); D3(BJ) is added back")
     p.add_argument("--relax", action="store_true", help="also relax each cell in the potential")
     p.add_argument("--fmax", type=float, default=0.01)
     p.add_argument("--steps", type=int, default=400)
@@ -225,9 +233,10 @@ def main():
     args = p.parse_args()
     warnings.filterwarnings("ignore")
     models = [(m, "mace-mp", m) for m in args.mace_mp.split(",") if m]
-    for item in args.model_file:
-        name, path = item.split("=", 1)
-        models.append((name, "file", Path(path)))
+    for kind, items in (("file", args.model_file), ("file+d3", args.model_file_d3)):
+        for item in items:
+            name, path = item.split("=", 1)
+            models.append((name, kind, Path(path)))
     out = run(models, args.relax, args.fmax, args.steps, args.threads)
     if args.merge and args.out.exists():
         old = json.loads(args.out.read_text())
