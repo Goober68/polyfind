@@ -510,16 +510,16 @@ def dft_relax(args):
 
         def __init__(self, name, count):
             super().__init__()
-            self.name, self.count = name, count
+            self.cell, self.count = name, count  # `name` is the base class's own
 
         def calculate(self, atoms=None, properties=("energy",), system_changes=all_changes):
             super().calculate(atoms, properties, system_changes)
             self.count += 1
-            frame = f"{self.name}_d{self.count:02d}"
+            frame = f"{self.cell}_d{self.count:02d}"
             work = args.frames / "work" / frame
             shutil.rmtree(work, ignore_errors=True)
             a = self.atoms.copy()
-            a.info = dict(start_info[self.name])
+            a.info = dict(start_info[self.cell])
             out, seconds = run_pw(args.pw, args.np, pw_input(a, args.pseudo, work / "scratch", args.conv_thr), work, frame)
             r = read_pw(out)
             if r is None:
@@ -527,7 +527,7 @@ def dft_relax(args):
             a.info.update({"frame": frame, "family": "dft-relax", "REF_energy": r["energy"], "REF_stress": r["stress"],
                            "dft_energy_ry": r["energy_ry"], "dft_d3_ry": r["d3_ry"], "dft_kpoints": r["kpoints"],
                            "dft_seconds": round(seconds, 1), "dft_conv_thr_ry": args.conv_thr,
-                           "note": f"DFT relaxation of {self.name}, evaluation {self.count}"})
+                           "note": f"DFT relaxation of {self.cell}, evaluation {self.count}"})
             a.arrays["REF_forces"] = r["forces"]
             write(args.frames / f"{frame}.dft.xyz", a, format="extxyz")
             shutil.copy(out, args.frames / f"{frame}.pw.out")
