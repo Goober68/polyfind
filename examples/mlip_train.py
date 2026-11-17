@@ -6,6 +6,7 @@ anchor's recipe (PBE with two-body D3(BJ)). Three steps:
     python examples/mlip_train.py prepare  --frames docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz [MORE ...] --data DIR
     python examples/mlip_train.py train    --data DIR --name NAME [--foundation medium-0b3 | --scratch]
     python examples/mlip_train.py evaluate --data DIR --model DIR/NAME.model --name NAME
+    python examples/mlip_train.py relax    --model FILE --name NAME --cells FRAME... --out DIR
 
 `prepare` takes the D3(BJ) part out of every label, so the network is fitted to the PBE part
 alone and D3 is added back analytically when the potential is used. That is how the pretrained
@@ -282,6 +283,48 @@ def evaluate(args):
     print(f"wrote {path.relative_to(ROOT)}")
 
 
+def relax(args):
+    """Cells relaxed in the potential (atoms and lattice), written out for a DFT single point each.
+
+    This is how the potential is used (docs/MLIP_SECOND_OPINION.md 3.6): it finds the geometry,
+    DFT is asked once for the energy. Each cell is a frame file of `mlip_frames.py` (its
+    monomer count and k-point mesh in the header); the relaxed cell keeps them.
+    """
+    import torch
+    from ase.calculators.mixing import SumCalculator
+    from ase.filters import FrechetCellFilter
+    from ase.io import read, write
+    from ase.optimize import BFGS
+
+    warnings.filterwarnings("ignore")
+    torch.set_num_threads(args.threads)
+    so = _second_opinion()
+    calc = SumCalculator([so.file_calculator(args.model), so.d3_calculator()])
+    args.out.mkdir(parents=True, exist_ok=True)
+    for f in args.cells:
+        start = read(f)
+        a = start.copy()
+        a.calc = calc
+        n = start.info["n_monomers"]
+        e0, f0 = a.get_potential_energy() / n, float(np.abs(a.get_forces()).max())
+        opt = BFGS(FrechetCellFilter(a), logfile=None, maxstep=0.1)
+        done = bool(opt.run(fmax=args.fmax, steps=args.steps))
+        e1 = a.get_potential_energy() / n
+        b = a.copy()
+        b.calc = None
+        frame = f"{start.info['frame']}_in_{args.name}"
+        b.info = {**start.info, "frame": frame, "family": "relaxed",
+                  "note": f"{start.info.get('source', start.info['frame'])}, relaxed in {args.name} with D3 "
+                          f"to {args.fmax} eV/A ({opt.get_number_of_steps()} steps{'' if done else ', NOT converged'})",
+                  "potential_eV_per_monomer": float(e1), "potential_start_eV_per_monomer": float(e0)}
+        write(args.out / f"{frame}.start.xyz", b, format="extxyz")
+        change = 100 * (a.cell.cellpar()[:3] / start.cell.cellpar()[:3] - 1)
+        print(f"{frame}: {opt.get_number_of_steps()} steps, converged {done}; the potential's energy {1e3 * (e1 - e0):+.1f} meV "
+              f"per monomer from the start (largest force there {f0:.2f} eV/A); lattice "
+              + " ".join(f"{v:+.1f}%" for v in change) + f", volume {100 * (a.get_volume() / start.get_volume() - 1):+.1f}%",
+              flush=True)
+
+
 def closure(args):
     """DFT single points on the cells the potential relaxed: is its minimum the DFT's?
 
@@ -374,6 +417,14 @@ def main():
     s.add_argument("--probe", type=Path, help="write the cells relaxed in the potential here, for DFT single points")
     s.add_argument("--fmax", type=float, default=0.01,
                    help="eV/A; at 0.01 a cell under 0.2 GPa counts as relaxed and does not move: 0.002 finds the potential's own cell")
+    s = sub.add_parser("relax")
+    s.add_argument("--model", type=Path, required=True)
+    s.add_argument("--name", required=True, help="a name for the potential, used in the frames' names")
+    s.add_argument("--cells", type=Path, nargs="+", required=True, help="frame files (mlip_frames.py's .start.xyz or .dft.xyz)")
+    s.add_argument("--out", type=Path, required=True, help="where the relaxed cells go, for mlip_frames.py label")
+    s.add_argument("--fmax", type=float, default=0.005)
+    s.add_argument("--steps", type=int, default=1500)
+    s.add_argument("--threads", type=int, default=4)
     s = sub.add_parser("closure")
     s.add_argument("--frames", type=Path, required=True, help="the labelled frames (for DFT's own minima)")
     s.add_argument("--probe", type=Path, required=True, help="the directory `evaluate --probe` wrote, labelled")
@@ -381,7 +432,7 @@ def main():
     s.add_argument("--name", required=True)
     s.add_argument("--threads", type=int, default=4)
     args = p.parse_args()
-    {"prepare": prepare, "train": train, "evaluate": evaluate, "closure": closure}[args.step](args)
+    {"prepare": prepare, "train": train, "evaluate": evaluate, "relax": relax, "closure": closure}[args.step](args)
 
 
 if __name__ == "__main__":
