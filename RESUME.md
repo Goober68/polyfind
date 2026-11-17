@@ -77,18 +77,22 @@ NOT DONE, IN ORDER:
     appear (`scratchpad/runpod/mirror13.sh` did). The image's Python 3.10 is too old for mace-torch 0.3.17.
     NEXT (docs 3.7): when the units frames are labelled, one fit on everything on a second pod (ASK THE PI FIRST:
     a new spend), then a candidate's own cells relaxed in it and one DFT single point each.
-(b) frames for the other units, `mlip_frames.py make --set units --frames /opt/dft/units` (36 cells, 168 frames of 24
-    to 51 atoms: TrFE, CFE, CTFE, the nitrile, reversed VDF, TFE in the PVDF cells, all-trans and helix; resumable
-    cell by cell, `--minutes` ends a run by itself): BUILT (the sampler put many all-trans cells 22 to 37% above
-    PVDF's volume: label each cell's relaxed frame first, `label --only units` (DONE, all 36), then `mlip_frames.py aim`
-    (DONE: 132 frames moved; do not run it twice on a frame, it marks them `aimed_strain`), which
-    moves the other frames by the DFT stress, then label the rest). THE CUTOFF CHECK IS DONE AND PASSES (a CFE pair
-    and a nitrile pair at 100/800 Ry: gaps change by 0.002 kcal/mol, `docs/predictions/mlip_cutoff_check.json`). It was:
-    `mlip_frames.py cutoff` on a chlorine pair and a nitrile pair (90/360 against 100/800 Ry), then `label` (about
-    ten hours on four cores), `collect` to `docs/predictions/mlip/units_frames_pbe_d3bj.extxyz`.
-(c) PVDF frames near the minima (strains of 1% and 4%, two axes at once, shakes of 0.01 A): 54 made with
-    `mlip_frames.py make --set near`, LABELLED (1.2 h of DFT): `docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz`.
-    Not yet in any fit: `mlip_train.py prepare --frames` takes both PVDF files.
+(b) FRAMES FOR THE OTHER UNITS: DONE, 2026-11-17 04:01 UTC. 168 frames in 36 cells (TrFE, CFE, CTFE, the nitrile,
+    reversed VDF, TFE in the PVDF cells, all-trans and helix; 24 to 49 atoms), 13.5 h of DFT on four cores:
+    `docs/predictions/mlip/units_frames_pbe_d3bj.extxyz`. `mlip_frames.py make --set units`, `label --only units`,
+    `aim` (the sampler's volumes were wrong both ways; the other 132 frames were moved by the DFT stress on each
+    relaxed cell), `label`. In all 36 cells the labelled frames have the DFT stress on both sides of zero along both
+    lateral axes. The cutoff check passes (`docs/predictions/mlip_cutoff_check.json`: a CFE pair and a nitrile pair
+    at 100/800 Ry, gaps change by 0.002 kcal/mol). docs 3.4.
+(c) PVDF FRAMES NEAR THE MINIMA: DONE, 54 (`docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz`), in the long fits.
+    THE WHOLE SET IS 330 FRAMES: `python -I examples/mlip_train.py prepare --frames` the four files `--data DIR
+    --hold-out "VAVF|VRVV"` gives 282 in the fit, 48 out (one composition whole). It was run here and passes.
+    NEXT, WAITING ON THE PI'S GO (asked 2026-11-17): a second pod, queue `examples/gpu_jobs/queue_20261117_mlip.txt`
+    (a timing job first, then ONE fit of everything, stress 1000 / energy 10000; set the pod's `MLIP_HOLD_OUT` to
+    `VAVF|VRVV`). AND IT NEEDS `rest.runpod.io` TO ANSWER FROM THE SESSION: still 502 after three container restarts
+    (only that host, the one with the saved key); the PI saving the key again through the secure form
+    (`request_credential`) is the first thing to try, a new session the second.
+    THE CONTAINER RESTARTED AT 18:50, 00:04 AND 01:47 UTC: files kept, the running job killed each time.
 (d) the test that matters for a candidate: DFT single points on a candidate's own cells (the 72-atom
     `polished_vdf5-rvdf1-6_*_tilted.xyz` pair first) against the potential on the same geometries.
 RUNNING THINGS HERE: one heavy job at a time (a fit, a DFT run and a sampler run each want all four cores; two

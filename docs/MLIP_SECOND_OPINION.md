@@ -188,7 +188,9 @@ The anchor's +0.726 is all-trans against alpha; against the lowest helix packing
 +0.735 at least. The two DFT single points are in
 `docs/predictions/mlip/pvdf_probe_frames_pbe_d3bj.extxyz` with the six others.
 
-### 3.4 The other units (168 frames built; the 36 relaxed cells labelled, the other 132 being labelled)
+### 3.4 The other units (done: 168 frames labelled, 13.5 hours of DFT here, no rented machine)
+
+The labelled frames are `docs/predictions/mlip/units_frames_pbe_d3bj.extxyz`.
 
 `examples/mlip_frames.py make --set units`. TrFE, CFE, CTFE, acrylonitrile, the reversed VDF
 unit and TFE are put into the DFT-relaxed PVDF cells by replacing a unit's groups along their
@@ -217,6 +219,16 @@ across the chains is -1.3 to -2.6 GPa on the all-trans cells the sampler left at
 axis) and -0.4 to +1.4 GPa on the all-trans cells it expanded (a little too large, mostly
 along b). Along the chain every all-trans cell is under -0.2 to -2.2 GPa: DFT wants the chains
 straighter than the sampler left them. The helix cells are within 1.9 GPa either way.
+
+The steering did what it was for: in every one of the 36 cells the labelled frames have the
+DFT stress on both sides of zero along both lateral axes, so each cell's DFT minimum is inside
+what is labelled. The frames span 52.5 to 74.0 A3 per monomer; 66 hold chlorine and 46 nitrogen.
+
+With the PVDF sets and the DFT single points of 3.6 this is 330 frames. `mlip_train.py prepare`
+takes them all (282 into the fit, 48 out, among them every frame of one composition, the
+nitrile with TFE, kept whole as a composition the fit has not seen). The D3 add-on's far tail
+against the DFT program's is one number per composition, 1.01 to 1.31 meV A3 per atom over the
+16 compositions and the same within each to 1%: the add-on is right for chlorine and nitrogen.
 
 Cost, measured: a 24-atom frame takes 2.3 minutes on this container's four cores and a
 48-atom frame 6.5, so the set is about ten hours of DFT here and costs nothing. (Building it
@@ -326,10 +338,11 @@ processes), so they should be run one after another or on separate cards.
 
 ### 3.7 Next (not started)
 
-1. **The other units.** When the 168 frames of 3.4 are labelled, one fit on everything (PVDF,
-   near, the DFT single points of 3.6, the units): a second pod, one fit at a time. An epoch
-   will be longer than the 7 s measured (three times the frames, twice the atoms in the large
-   cells), so the first job there is again a timing.
+1. **The other units.** The 168 frames of 3.4 are labelled, so: one fit on everything (the
+   330 frames), on a second pod, one fit at a time (`examples/gpu_jobs/queue_20261117_mlip.txt`).
+   An epoch will be longer than the 7 s measured (two and a half times the frames, twice the
+   atoms in the large cells), so the first job there is again a timing. Waits on the PI's go,
+   and on the session reaching Runpod's control API again.
 2. **The test that matters.** A candidate's own all-trans and helix cells (the 72-atom
    `vdf5-rvdf1-6` pair first) relaxed in that potential, then one DFT single point each: the
    margin by DFT, against polyfind's and against the potential's own.

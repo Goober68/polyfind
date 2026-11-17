@@ -1,0 +1,6 @@
+# One fit of our own interatomic potential on everything (docs/MLIP_SECOND_OPINION.md 3.7):
+# the PVDF frames (76), those near the minima (54), the DFT single points on cells earlier
+# fits relaxed (32) and the other units (168), with one composition kept whole out of the fit
+# (the pod's MLIP_HOLD_OUT). One fit at a time on the card. First a short one to time an epoch
+# with these frames; the long fit is added as a line once that time is known.
+mlip_fit.sh timing 10 1 frames docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz docs/predictions/mlip/pvdf_probe_frames_pbe_d3bj.extxyz docs/predictions/mlip/units_frames_pbe_d3bj.extxyz train --stress-weight 1000 --energy-weight 10000

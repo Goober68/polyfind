@@ -205,3 +205,27 @@ def test_relaxed_strictly_the_potentials_cells_are_dfts():
         assert -0.2 < min(above) and max(above) < 0.5
         assert abs(closure["gaps"]["alpha_minus_beta_meV"]["difference_kcal"]) < 0.01
         assert abs(closure["gaps"]["anti_minus_beta_meV"]["difference_kcal"]) < 0.025
+
+
+def test_the_other_units_frames_are_the_set_the_write_up_describes():
+    """168 frames in 36 cells, each cell's DFT minimum inside what is labelled."""
+    lines = (PRED / "mlip" / "units_frames_pbe_d3bj.extxyz").read_text().splitlines()
+    cells, families, atoms, i = {}, {}, set(), 0
+    while i < len(lines):
+        n = int(lines[i])
+        head = lines[i + 1]
+        frame = head.split("frame=")[1].split()[0]
+        family = head.split("family=")[1].split()[0]
+        stress = head.split('REF_stress="')[1].split('"')[0].replace("_JSON", "")
+        s = json.loads(stress)
+        cells.setdefault(frame[:8], []).append((s[0][0], s[1][1]))
+        families[family] = families.get(family, 0) + 1
+        atoms.add(n)
+        i += n + 2
+    assert sum(families.values()) == 168 and families == {"units": 36, "u-rattle": 36, "u-md": 96}
+    assert len(cells) == 36 and min(atoms) == 24 and max(atoms) == 49
+    for name, stresses in cells.items():
+        for axis in (0, 1):
+            values = [v[axis] for v in stresses]
+            assert min(values) < 0 < max(values), (name, axis)
+    assert any(line.startswith("Cl ") for line in lines) and any(line.startswith("N ") for line in lines)
