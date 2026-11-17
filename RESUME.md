@@ -125,8 +125,14 @@ NOT DONE, IN ORDER:
     -0.269, -0.268, -0.267. SO DFT PUTS ALL-TRANS 0.27 BELOW THE HELIX WHERE POLYFIND PUTS IT 0.06 ABOVE: 0.33 apart,
     6.0 against 4.1 kcal/mol per reversed unit. NOT FINAL (target 0.05 eV/A) AND NOT A SEARCH: the helix cell's other
     arrangements (axial registry) were not looked for. If it holds, every cell placed by a reversed unit sits about
-    0.13 per monomer lower at one in fourteen. NEXT ON THIS: finish the relaxation; then look for a lower helix
-    arrangement (shear the helix cell as the all-trans one sheared, relax, one DFT point).
+    0.13 per monomer lower at one in fourteen. FINISHED 20:50 UTC: BOTH RELAXED IN DFT TO 0.05 eV/A (7 and 10 steps;
+    17 frames, 5.3 h), THE MARGIN -0.261 (polyfind +0.064; 5.9 against 4.1 per reversed unit).
+    RUNNING AT THIS COMMIT: the helix cell with its neighbours along b or a moved by whole monomers along the chain
+    (seven cells, /opt/dft/cand_shear/*.start.xyz, made from the DFT-relaxed helix cell), relaxed in `pvdfb_s2`
+    (`mlip_train.py relax --fmax 0.01 --out /opt/dft/cand_shear_relaxed`), then DFT single points
+    (`mlip_frames.py label --frames /opt/dft/cand_shear_relaxed --minutes 50`; log /opt/dft/cand_shear_N.log).
+    COMPARE each one's DFT energy with the helix cell at the same stage (relaxed in the potential only:
+    -1876.25088 eV per monomer; DFT-relaxed -1876.25601): one lower by X meV raises the margin by X meV.
     THE FASTER ROUTE, for this and the larger candidates: the fit on all 330 frames (54 hold a reversed unit), then
     `python -I examples/mlip_train.py relax --model NEW.model --name NAME --cells /opt/dft/cand/cand_vdf5-rvdf1-6_*.dft.xyz
     --out DIR`, `mlip_frames.py label --frames DIR`, and the gap from the two DFT energies; the DFT force left says

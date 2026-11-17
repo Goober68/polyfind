@@ -124,23 +124,41 @@
   "force_rmse_meV_per_A": 150.9370682134846,
   "force_rms_of_the_labels_meV_per_A": 1596.4398373031925
  },
- "reading": "not a DFT margin yet: the relaxed cells still carry 0.6 to 0.9 eV/A in DFT, and the potential that relaxed them was not shown a reversed unit",
+ "reading": "between the two minima reached downhill from polyfind's own cells, relaxed in DFT to 0.05 eV/A, all-trans is below the helix; the helix cell's other arrangements have not been searched",
  "dft_relaxation_from_the_relaxed_cells": {
   "what": "both cells relaxed on in DFT itself (atoms and lattice, BFGS on DFT forces and stress), evaluation 0 being the cell the PVDF-only potential left",
   "target_fmax_eV_per_A": 0.05,
-  "relaxed": false,
+  "relaxed": true,
   "steps": [
    {
     "evaluation": 0,
     "all_trans": {
      "dft_eV_per_monomer": -1876.2628473312607,
      "dft_largest_force_eV_per_A": 0.84690158,
-     "dft_largest_stress_GPa": 0.17078898223924535
+     "dft_largest_stress_GPa": 0.17078898223924535,
+     "lattice_A_deg": [
+      5.1170749233749495,
+      8.875899938910365,
+      15.361024932106671,
+      105.20086122103004,
+      81.28017705556354,
+      90.14393719183998
+     ],
+     "volume_A3_per_monomer": 55.41480916865776
     },
     "helix": {
      "dft_eV_per_monomer": -1876.2508763178614,
      "dft_largest_force_eV_per_A": 0.62904096,
-     "dft_largest_stress_GPa": 0.22713022271954766
+     "dft_largest_stress_GPa": 0.22713022271954766,
+     "lattice_A_deg": [
+      4.975842743456207,
+      9.604570772571519,
+      14.023988733199017,
+      88.44735849050538,
+      90.0000000554669,
+      89.99999792497775
+     ],
+     "volume_A3_per_monomer": 55.83100380242606
     },
     "all_trans_minus_helix_kcal": -0.2760581291023063
    },
@@ -149,12 +167,30 @@
     "all_trans": {
      "dft_eV_per_monomer": -1876.265251026178,
      "dft_largest_force_eV_per_A": 0.17998982,
-     "dft_largest_stress_GPa": 0.15784373638476334
+     "dft_largest_stress_GPa": 0.15784373638476334,
+     "lattice_A_deg": [
+      5.117074899699059,
+      8.875896722029529,
+      15.361058239733998,
+      105.20094163852373,
+      81.28013491820154,
+      90.14390244115708
+     ],
+     "volume_A3_per_monomer": 55.41487928274162
     },
     "helix": {
      "dft_eV_per_monomer": -1876.2530441694473,
      "dft_largest_force_eV_per_A": 0.21186301,
-     "dft_largest_stress_GPa": 0.10341486176932771
+     "dft_largest_stress_GPa": 0.10341486176932771,
+     "lattice_A_deg": [
+      4.9758412673571515,
+      9.60454593150639,
+      14.02399019439802,
+      88.44723050178436,
+      90.00000005547345,
+      89.99999792495906
+     ],
+     "volume_A3_per_monomer": 55.83084527642057
     },
     "all_trans_minus_helix_kcal": -0.2814968055674225
    },
@@ -163,12 +199,30 @@
     "all_trans": {
      "dft_eV_per_monomer": -1876.266165748185,
      "dft_largest_force_eV_per_A": 0.13255168,
-     "dft_largest_stress_GPa": 0.17814423556565553
+     "dft_largest_stress_GPa": 0.17814423556565553,
+     "lattice_A_deg": [
+      5.117085502356429,
+      8.875910850121269,
+      15.361116913807727,
+      105.20119012425978,
+      81.27999875881913,
+      90.14385277682739
+     ],
+     "volume_A3_per_monomer": 55.41520353678502
     },
     "helix": {
      "dft_eV_per_monomer": -1876.2544161334074,
      "dft_largest_force_eV_per_A": 0.13906403,
-     "dft_largest_stress_GPa": 0.18726474969040421
+     "dft_largest_stress_GPa": 0.18726474969040421,
+     "lattice_A_deg": [
+      4.975846640025259,
+      9.604517205260828,
+      14.024007559602229,
+      88.44706172929263,
+      90.00000073300968,
+      89.9999982705959
+     ],
+     "volume_A3_per_monomer": 55.83080324923304
     },
     "all_trans_minus_helix_kcal": -0.2709525555580487
    },
@@ -177,12 +231,30 @@
     "all_trans": {
      "dft_eV_per_monomer": -1876.2667071413432,
      "dft_largest_force_eV_per_A": 0.19451861,
-     "dft_largest_stress_GPa": 0.19035395608749653
+     "dft_largest_stress_GPa": 0.19035395608749653,
+     "lattice_A_deg": [
+      5.117104883286515,
+      8.875941205188491,
+      15.361206696382467,
+      105.2015046579981,
+      81.27982430234457,
+      90.14381756325251
+     ],
+     "volume_A3_per_monomer": 55.415813111270474
     },
     "helix": {
      "dft_eV_per_monomer": -1876.2550472447663,
      "dft_largest_force_eV_per_A": 0.15723067,
-     "dft_largest_stress_GPa": 0.22139312512494763
+     "dft_largest_stress_GPa": 0.22139312512494763,
+     "lattice_A_deg": [
+      4.975863548300885,
+      9.604502706174925,
+      14.024028813229519,
+      88.4470484331864,
+      90.00000207097516,
+      89.99999838155833
+     ],
+     "volume_A3_per_monomer": 55.83099294459037
     },
     "all_trans_minus_helix_kcal": -0.2688836046873276
    },
@@ -191,12 +263,30 @@
     "all_trans": {
      "dft_eV_per_monomer": -1876.2668996051937,
      "dft_largest_force_eV_per_A": 0.06265881,
-     "dft_largest_stress_GPa": 0.1887358003556863
+     "dft_largest_stress_GPa": 0.1887358003556863,
+     "lattice_A_deg": [
+      5.1171151156460235,
+      8.875960793539576,
+      15.361243785993992,
+      105.20157738897045,
+      81.27978142766166,
+      90.14384290266308
+     ],
+     "volume_A3_per_monomer": 55.41615465092344
     },
     "helix": {
      "dft_eV_per_monomer": -1876.2552823511226,
      "dft_largest_force_eV_per_A": 0.08457541,
-     "dft_largest_stress_GPa": 0.18476396355942476
+     "dft_largest_stress_GPa": 0.18476396355942476,
+     "lattice_A_deg": [
+      4.975876242822039,
+      9.604509962393632,
+      14.02403917579452,
+      88.4471789221196,
+      90.00000284528464,
+      89.99999819789849
+     ],
+     "volume_A3_per_monomer": 55.83122226381615
     },
     "all_trans_minus_helix_kcal": -0.26790024513474403
    },
@@ -205,19 +295,132 @@
     "all_trans": {
      "dft_eV_per_monomer": -1876.2671122621587,
      "dft_largest_force_eV_per_A": 0.07499908,
-     "dft_largest_stress_GPa": 0.1919721118193068
+     "dft_largest_stress_GPa": 0.1919721118193068,
+     "lattice_A_deg": [
+      5.117140824198838,
+      8.876014425104058,
+      15.361346287756342,
+      105.20175746029498,
+      81.27967072053274,
+      90.14395986786181
+     ],
+     "volume_A3_per_monomer": 55.41707629940432
     },
     "helix": {
      "dft_eV_per_monomer": -1876.2555173440985,
      "dft_largest_force_eV_per_A": 0.07847932,
-     "dft_largest_stress_GPa": 0.11518326709158407
+     "dft_largest_stress_GPa": 0.11518326709158407,
+     "lattice_A_deg": [
+      4.975905156809718,
+      9.604522630113086,
+      14.0240649909726,
+      88.44750419149955,
+      90.00000487272422,
+      89.99999771700122
+     ],
+     "volume_A3_per_monomer": 55.831731693003086
     },
     "all_trans_minus_helix_kcal": -0.2673851644822636
+   },
+   {
+    "evaluation": 6,
+    "all_trans": {
+     "dft_eV_per_monomer": -1876.2672517658532,
+     "dft_largest_force_eV_per_A": 0.10738752,
+     "dft_largest_stress_GPa": 0.2199220744596656,
+     "lattice_A_deg": [
+      5.1171687156815135,
+      8.876079853975625,
+      15.361464739920505,
+      105.20197079585037,
+      81.27953328348227,
+      90.1441708233937
+     ],
+     "volume_A3_per_monomer": 55.4181433281988
+    },
+    "helix": {
+     "dft_eV_per_monomer": -1876.2556014045983,
+     "dft_largest_force_eV_per_A": 0.06104467,
+     "dft_largest_stress_GPa": 0.12165589001882507,
+     "lattice_A_deg": [
+      4.975911761473282,
+      9.604524203068754,
+      14.024076464575927,
+      88.44760011167455,
+      90.00000564966349,
+      89.9999977275751
+     ],
+     "volume_A3_per_monomer": 55.83186315505689
+    },
+    "all_trans_minus_helix_kcal": -0.26866371493483876
+   },
+   {
+    "evaluation": 7,
+    "all_trans": {
+     "dft_eV_per_monomer": -1876.2673215970672,
+     "dft_largest_force_eV_per_A": 0.03520663,
+     "dft_largest_stress_GPa": 0.2337499507133168,
+     "lattice_A_deg": [
+      5.11717478628776,
+      8.876102628625738,
+      15.36149867328685,
+      105.20203095318668,
+      81.27948727941798,
+      90.1443146766034
+     ],
+     "volume_A3_per_monomer": 55.41845589628506
+    },
+    "helix": {
+     "dft_eV_per_monomer": -1876.2557393663146,
+     "dft_largest_force_eV_per_A": 0.06459794,
+     "dft_largest_stress_GPa": 0.12812851294606606,
+     "lattice_A_deg": [
+      4.975935596354396,
+      9.604534074683633,
+      14.024119047862522,
+      88.44791852358418,
+      90.0000083435612,
+      89.99999776423138
+     ],
+     "volume_A3_per_monomer": 55.8323659166177
+    },
+    "all_trans_minus_helix_kcal": -0.26709258821597237
    }
   ],
+  "final": {
+   "all_trans": {
+    "dft_eV_per_monomer": -1876.2673215970672,
+    "dft_largest_force_eV_per_A": 0.03520663,
+    "dft_largest_stress_GPa": 0.2337499507133168,
+    "lattice_A_deg": [
+     5.11717478628776,
+     8.876102628625738,
+     15.36149867328685,
+     105.20203095318668,
+     81.27948727941798,
+     90.1443146766034
+    ],
+    "volume_A3_per_monomer": 55.41845589628506
+   },
+   "helix": {
+    "dft_eV_per_monomer": -1876.2560082374632,
+    "dft_largest_force_eV_per_A": 0.04705427,
+    "dft_largest_stress_GPa": 0.13695481693775832,
+    "lattice_A_deg": [
+     4.976043647716697,
+     9.604619874755825,
+     14.024337894193946,
+     88.44917760919017,
+     90.00002192660477,
+     89.99999871820104
+    ],
+    "volume_A3_per_monomer": 55.83498160469856
+   },
+   "all_trans_minus_helix_kcal": -0.26089227218805966
+  },
   "evaluations": {
-   "all_trans": 6,
-   "helix": 5
+   "all_trans": 7,
+   "helix": 10
   }
  }
 }

@@ -385,10 +385,12 @@ What it says, and what it does not:
   polyfind +0.06. Settling it is what the fit on all 330 frames is for (reversed units are in
   54 of them), followed by the same two steps: relax, then one DFT single point.
 
-**Relaxing on in DFT itself (running; 2026-11-17).** `mlip_frames.py relax` takes both cells
-on from where the potential left them, on DFT's own forces and stress, about twenty minutes a
-step here; every step is a frame (`docs/predictions/mlip/candidate_relaxation_frames_pbe_d3bj.extxyz`).
-After five to six steps each:
+**Relaxed on in DFT itself (done, 2026-11-17).** `mlip_frames.py relax` takes both cells on
+from where the potential left them, on DFT's own forces and stress, about twenty minutes a step
+here; every step is a frame (`docs/predictions/mlip/candidate_relaxation_frames_pbe_d3bj.extxyz`,
+17 of them, 5.3 hours of DFT). Seven steps for the all-trans cell and ten for the helix reached
+the 0.05 eV/A asked for (0.035 and 0.047 left; stress under 0.25 GPa): **all-trans minus helix
+-0.261 kcal/mol per monomer.** The first steps:
 
 | DFT step | all-trans minus helix, kcal/mol | largest DFT force left, eV/A (all-trans, helix) |
 |---:|---:|---:|
@@ -399,13 +401,13 @@ After five to six steps each:
 | 4 | -0.268 | 0.06, 0.09 |
 | 5 | -0.267 | 0.08, 0.08 |
 
-The two energies are still falling, by 0.2 meV per monomer a step and together, and the gap
-has not moved by more than 0.01 since the first step. Both cells kept their conformation (every
-backbone torsion of the all-trans cell within a degree of 180; the helix still TGTG'). Not yet
-at the 0.05 eV/A asked for, so this is not final, but the reading is already plain: **between
-the two minima reached from polyfind's own cells, DFT puts all-trans 0.27 kcal/mol per monomer
-below the helix, where polyfind puts it 0.06 above.** A difference of 0.33, against a switching
-window 0.12 wide.
+The two energies fell together, by 0.2 meV per monomer a step toward the end, and the gap never
+moved by more than 0.02 from its first value. Both cells kept their conformation (every
+backbone torsion of the all-trans cell within a degree of 180; the helix still TGTG'). In all,
+DFT's energy is 47 meV per monomer below polyfind's own all-trans cell and 29 below its helix
+cell. **Between the two minima reached from polyfind's own cells, DFT puts all-trans 0.26
+kcal/mol per monomer below the helix, where polyfind puts it 0.06 above.** A difference of
+0.33, against a switching window 0.12 wide.
 
 What that is and is not:
 
@@ -416,7 +418,7 @@ What that is and is not:
   bring the gap back toward polyfind's. That has not been searched.
 - It is one composition, one reversed unit in six, in PBE-D3(BJ). Against PVDF in the same
   recipe (+0.726) the reversed units lower the margin by 0.99 in DFT and by 0.68 in polyfind
-  (+0.744 to +0.064): 6.0 against 4.1 kcal/mol per reversed unit, if it scales with their
+  (+0.744 to +0.064): 5.9 against 4.1 kcal/mol per reversed unit, if it scales with their
   number as polyfind's own two cells do. Whether it does at one in fourteen is not known.
 - If it holds, every cell whose margin is placed by a reversed unit sits lower than polyfind
   has it: by about 0.13 per monomer at one in fourteen, more than the window is wide.
