@@ -18,7 +18,8 @@ Three steps; `label` is resumable:
 
 and `cutoff`, which reruns labelled frames at a higher plane-wave cutoff, and `aim`, which
 moves the units set's unlabelled frames to where the DFT stress on each cell's relaxed frame
-points (label the relaxed frames first: `label --only units`).
+points (label the relaxed frames first: `label --only units`), and `relax`, which relaxes a
+cell in DFT itself and keeps every step as a frame.
 
 The PVDF set, 76 frames from the four DFT-relaxed cells (helix alpha, polar beta, the two
 antipolar betas):
@@ -490,6 +491,83 @@ def label(args):
               f"{np.abs(r['forces']).max():.2f} eV/A, {seconds:.0f} s", flush=True)
 
 
+def dft_relax(args):
+    """Relax cells in DFT itself, atoms and lattice, every step kept as a labelled frame.
+
+    The slow way to a DFT minimum (a 72-atom step is a quarter of an hour on four cores), for
+    cells the potential cannot be trusted to relax yet, and a source of frames along the way.
+    The named cells are stepped in turn; a run that is stopped goes on from each cell's last
+    frame (the optimiser's memory of the curvature starts again, the geometry does not).
+    Frames are NAME_dNN.dft.xyz, NN counting DFT evaluations.
+    """
+    from ase.calculators.calculator import Calculator, all_changes
+    from ase.filters import FrechetCellFilter
+    from ase.io import read, write
+    from ase.optimize import BFGS
+
+    class Dft(Calculator):
+        implemented_properties = ["energy", "forces", "stress"]
+
+        def __init__(self, name, count):
+            super().__init__()
+            self.name, self.count = name, count
+
+        def calculate(self, atoms=None, properties=("energy",), system_changes=all_changes):
+            super().calculate(atoms, properties, system_changes)
+            self.count += 1
+            frame = f"{self.name}_d{self.count:02d}"
+            work = args.frames / "work" / frame
+            shutil.rmtree(work, ignore_errors=True)
+            a = self.atoms.copy()
+            a.info = dict(start_info[self.name])
+            out, seconds = run_pw(args.pw, args.np, pw_input(a, args.pseudo, work / "scratch", args.conv_thr), work, frame)
+            r = read_pw(out)
+            if r is None:
+                raise SystemExit(f"{frame}: no converged result, see {out}")
+            a.info.update({"frame": frame, "family": "dft-relax", "REF_energy": r["energy"], "REF_stress": r["stress"],
+                           "dft_energy_ry": r["energy_ry"], "dft_d3_ry": r["d3_ry"], "dft_kpoints": r["kpoints"],
+                           "dft_seconds": round(seconds, 1), "dft_conv_thr_ry": args.conv_thr,
+                           "note": f"DFT relaxation of {self.name}, evaluation {self.count}"})
+            a.arrays["REF_forces"] = r["forces"]
+            write(args.frames / f"{frame}.dft.xyz", a, format="extxyz")
+            shutil.copy(out, args.frames / f"{frame}.pw.out")
+            shutil.rmtree(work, ignore_errors=True)
+            stress = r["stress"]
+            self.results = {"energy": r["energy"], "forces": r["forces"],
+                            "stress": np.array([stress[0, 0], stress[1, 1], stress[2, 2], stress[1, 2], stress[0, 2], stress[0, 1]])}
+            print(f"{frame}: {r['energy'] / a.info['n_monomers']:.5f} eV per monomer, largest force "
+                  f"{np.abs(r['forces']).max():.3f} eV/A, stress " + " ".join(f"{v / 0.006241509:+.2f}" for v in np.diag(stress))
+                  + f" GPa, {seconds:.0f} s", flush=True)
+
+    began = time.time()
+    names = args.names.split(",")
+    start_info, optimisers = {}, {}
+    for name in names:
+        steps = sorted(args.frames.glob(f"{name}_d[0-9][0-9].dft.xyz"))
+        last = read(steps[-1] if steps else args.frames / f"{name}.dft.xyz")
+        start_info[name] = {k: last.info[k] for k in ("source", "n_monomers", "kmesh") if k in last.info}
+        a = last.copy()
+        a.calc = Dft(name, len(steps))
+        # the last frame is labelled already: its DFT result is handed over, not computed again
+        stress = np.asarray(last.info["REF_stress"]).reshape(3, 3)
+        a.calc.atoms = a.copy()
+        a.calc.results = {"energy": float(last.info["REF_energy"]), "forces": np.array(last.arrays["REF_forces"]),
+                          "stress": np.array([stress[0, 0], stress[1, 1], stress[2, 2], stress[1, 2], stress[0, 2], stress[0, 1]])}
+        optimisers[name] = (a, BFGS(FrechetCellFilter(a), logfile=None, maxstep=args.maxstep))
+    done = {name: False for name in names}
+    while not all(done.values()):
+        for name in names:
+            if done[name]:
+                continue
+            if args.minutes and time.time() - began > 60 * args.minutes:
+                print(f"the {args.minutes:g} minutes are used; not yet relaxed: " + ", ".join(n for n in names if not done[n]), flush=True)
+                return
+            a, opt = optimisers[name]
+            done[name] = bool(opt.run(fmax=args.fmax, steps=1))  # one more step each turn; the curvature is kept
+            if done[name]:
+                print(f"{name}: relaxed to {args.fmax} eV/A after {a.calc.count} DFT evaluations in all", flush=True)
+
+
 # An assumed stiffness across the chains (C_11 = C_22, C_12, GPa), only to turn a stress into a
 # strain to aim at: PVDF's is 23 to 25 and 6, the candidates' cells are softer.
 AIM_C_GPA = (15.0, 5.0)
@@ -601,7 +679,7 @@ def collect(args):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = p.add_subparsers(dest="step", required=True)
-    for name in ("make", "check", "label", "aim", "cutoff", "collect"):
+    for name in ("make", "check", "label", "aim", "cutoff", "relax", "collect"):
         s = sub.add_parser(name)
         s.add_argument("--frames", type=Path, required=True, help="working directory, outside the repository")
         if name == "make":
@@ -610,7 +688,7 @@ def main():
             s.add_argument("--threads", type=int, default=4)
             s.add_argument("--minutes", type=float, default=0.0,
                            help="units set: start no new cell after this long (the next run goes on)")
-        if name in ("check", "label", "cutoff"):
+        if name in ("check", "label", "cutoff", "relax"):
             s.add_argument("--pw", required=True, help="path to pw.x (Quantum ESPRESSO 7.5)")
             s.add_argument("--pseudo", required=True, help="directory with the SSSP 1.3.0 PBE precision files")
             s.add_argument("--np", type=int, default=4)
@@ -620,6 +698,12 @@ def main():
             s.add_argument("--names", default="", help="frames to label, comma-separated")
             s.add_argument("--minutes", type=float, default=0.0,
                            help="start no new frame after this long, so a run ends inside a time limit")
+        if name == "relax":
+            s.add_argument("--names", required=True, help="labelled frames to relax, comma-separated; stepped in turn")
+            s.add_argument("--fmax", type=float, default=0.05, help="eV/A, on the atoms and on the cell's gradient")
+            s.add_argument("--maxstep", type=float, default=0.08)
+            s.add_argument("--conv-thr", type=float, default=1e-9)
+            s.add_argument("--minutes", type=float, default=0.0, help="start no new DFT evaluation after this long")
         if name == "cutoff":
             s.add_argument("--names", required=True, help="labelled frames, comma-separated; taken in pairs of the same atoms")
             s.add_argument("--ecut", default="100,800", help="wavefunction and density cutoffs, Ry")
@@ -627,7 +711,8 @@ def main():
         if name in ("collect", "cutoff"):
             s.add_argument("--out", type=Path, required=True)
     args = p.parse_args()
-    {"make": make, "check": check, "label": label, "aim": aim, "cutoff": cutoff, "collect": collect}[args.step](args)
+    {"make": make, "check": check, "label": label, "aim": aim, "cutoff": cutoff, "relax": dft_relax,
+     "collect": collect}[args.step](args)
 
 
 if __name__ == "__main__":
