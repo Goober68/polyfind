@@ -14,8 +14,8 @@ reaches further, and the add-on reproduces the DFT margin's dispersion part to 0
 (`examples/mlip_second_opinion.py`). The D3 energy the add-on gives for each frame is checked
 against the one Quantum ESPRESSO printed for it: they differ by the tail between the add-on's
 40 Bohr and the program's 95, which is 0.11 meV per atom, goes as the density and nothing else
-(1.01 meV A3 per atom, the same in every frame to 2%), and is left in the labels for the
-network. The four relaxed cells (`end`) are held out
+(1.01 meV A3 per atom in PVDF, up to 1.31 with chlorine: one number per composition, the same
+in each of its frames to 2%), and is left in the labels for the network. The four relaxed cells (`end`) are held out
 of the fit whole; one frame in nine of the rest is held out for the force error.
 
 `train` runs MACE's own training program. With `--foundation` the fit starts from a pretrained
@@ -69,7 +69,7 @@ def prepare(args):
     ry = create_units("2006")["Ry"]  # the constant ase's reader used for the labels
     d3 = _second_opinion().d3_calculator()
     frames = [a for f in args.frames for a in read(f, index=":")]
-    tail, train, test = [], [], []
+    tail, formula, train, test = [], [], [], []
     for i, a in enumerate(frames):
         b = a.copy()
         b.calc = d3
@@ -77,6 +77,7 @@ def prepare(args):
         # the add-on stops at 40 Bohr, the DFT program's D3 at 95: what is left is the far tail,
         # an energy per atom that goes as the density and nothing else (meV A3)
         tail.append(1e3 * (e - a.info["dft_d3_ry"] * ry) / len(a) * a.get_volume() / len(a))
+        formula.append(a.get_chemical_formula())
         out = a.copy()
         out.calc = None
         for key in ("REF_energy", "REF_stress"):
@@ -85,18 +86,25 @@ def prepare(args):
         out.info["REF_stress"] = np.asarray(a.info["REF_stress"]).reshape(3, 3) - s
         out.arrays["REF_forces"] = a.arrays["REF_forces"] - f
         out.info["d3_energy"] = float(e)
-        (test if a.info["family"] == "end" or i % 9 == 5 else train).append(out)
-    tail = np.array(tail)
-    if tail.std() > 0.02 * abs(tail.mean()) or abs(tail.mean()) > 2.0:
-        raise SystemExit(f"the D3 add-on and the DFT program's D3 differ by more than a far tail: "
-                         f"{tail.mean():.3f} +/- {tail.std():.3f} meV A3 per atom")
+        whole = any(k in str(a.info.get("source", "")) for k in args.hold_out)
+        (test if a.info["family"] == "end" or whole or i % 9 == 5 else train).append(out)
+    tail, formula = np.array(tail), np.array(formula)
+    # the tail's size goes with the atoms' dispersion coefficients, so it is one number per
+    # composition (1.01 for PVDF, up to 1.31 with chlorine): the same within each to 2%
+    by_composition = {k: tail[formula == k] for k in sorted(set(formula))}
+    for k, v in by_composition.items():
+        if v.std() > 0.02 * abs(v.mean()) or not 0.8 < v.mean() < 1.6:
+            raise SystemExit(f"the D3 add-on and the DFT program's D3 differ by more than a far tail in {k}: "
+                             f"{v.mean():.3f} +/- {v.std():.3f} meV A3 per atom")
     args.data.mkdir(parents=True, exist_ok=True)
     write(args.data / "train.xyz", train, format="extxyz")
     write(args.data / "test.xyz", test, format="extxyz")
     summary = {
         "frames": len(frames), "train": len(train), "test": len(test),
         "test_ends": sum(a.info["family"] == "end" for a in test),
+        "held_out_whole": {k: sum(k in str(a.info.get("source", "")) for a in test) for k in args.hold_out},
         "d3_addon_less_dft_program_far_tail_meV_A3_per_atom": [float(tail.mean()), float(tail.std())],
+        "far_tail_by_composition_meV_A3_per_atom": {k: [float(v.mean()), float(v.std())] for k, v in by_composition.items()},
         "largest_force_eV_per_A": float(max(np.abs(a.arrays["REF_forces"]).max() for a in frames)),
     }
     (args.data / "prepare.json").write_text(json.dumps(summary, indent=1))
@@ -146,18 +154,26 @@ def held_out(calc, frames):
     """Errors on the held-out frames that are not relaxed cells, against the PBE part."""
     from ase import units
 
-    de, df, ds = [], [], []
+    de, df, ds, same = [], [], [], {}
     for a in frames:
         if a.info["family"] == "end":
             continue
         b = a.copy()
         b.calc = calc
-        de.append((b.get_potential_energy() - a.info["REF_energy"]) / len(a))
+        error = b.get_potential_energy() - a.info["REF_energy"]
+        de.append(error / len(a))
+        # frames of the same atoms: their energies against each other are what a margin is
+        same.setdefault(a.get_chemical_formula(), []).append(1e3 * error / a.info["n_monomers"])
         df.append((b.get_forces() - a.arrays["REF_forces"]).ravel())
         ds.append((b.get_stress(voigt=False) - np.asarray(a.info["REF_stress"]).reshape(3, 3)).ravel() / units.GPa)
     de = np.array(de)
+    groups = {k: np.array(v) - np.mean(v) for k, v in same.items() if len(v) > 1}
+    pooled = np.concatenate(list(groups.values())) if groups else np.array([])
     return {
         "frames": len(de),
+        "same_atoms_groups": {k: len(v) for k, v in groups.items()},
+        "same_atoms_energy_rmse_meV_per_monomer": float(np.sqrt(np.mean(pooled ** 2))) if len(pooled) else None,
+        "same_atoms_energy_rmse_by_group_meV_per_monomer": {k: float(np.sqrt(np.mean(v ** 2))) for k, v in groups.items()},
         # a constant offset per atom is the reference energies' business, not the fit's
         "energy_rmse_meV_per_atom": float(1e3 * np.sqrt(np.mean((de - de.mean()) ** 2))),
         "energy_offset_meV_per_atom": float(1e3 * de.mean()),
@@ -330,6 +346,8 @@ def main():
     s = sub.add_parser("prepare")
     s.add_argument("--frames", type=Path, required=True, nargs="+", help="one or more files of labelled frames")
     s.add_argument("--data", type=Path, required=True, help="working directory, outside the repository")
+    s.add_argument("--hold-out", nargs="*", default=[], metavar="SOURCE",
+                   help="keep every frame whose source holds this text out of the fit (a whole composition unseen)")
     s = sub.add_parser("train")
     s.add_argument("--data", type=Path, required=True)
     s.add_argument("--name", required=True)

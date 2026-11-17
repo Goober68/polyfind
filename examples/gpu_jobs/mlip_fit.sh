@@ -58,7 +58,9 @@ if sys.argv[1] == "cuda" and not torch.cuda.is_available():
     sys.exit("torch does not reach the card: nothing is fitted")
 PY
 
-"$PY" examples/mlip_train.py prepare --frames "${FRAMES[@]}" --data "$DATA"
+# MLIP_HOLD_OUT: sources kept whole out of the fit, e.g. "VAVF|VRVV" (see mlip_train.py prepare)
+read -r -a HOLD <<< "${MLIP_HOLD_OUT:-}"
+"$PY" examples/mlip_train.py prepare --frames "${FRAMES[@]}" --data "$DATA" --hold-out "${HOLD[@]}"
 t0=$(date +%s)
 FITS=()
 for seed in "${SEEDS[@]}"; do FITS+=("${NAME}_s${seed}"); done
