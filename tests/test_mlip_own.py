@@ -229,3 +229,26 @@ def test_the_other_units_frames_are_the_set_the_write_up_describes():
             values = [v[axis] for v in stresses]
             assert min(values) < 0 < max(values), (name, axis)
     assert any(line.startswith("Cl ") for line in lines) and any(line.startswith("N ") for line in lines)
+
+
+def test_a_candidates_cells_first_pass_is_a_caution_not_a_margin():
+    """PVDF with one reversed unit in six: DFT on polyfind's cells, and on them relaxed in the PVDF-only potential."""
+    r = json.loads((PRED / "mlip_candidate_vdf5-rvdf1-6.json").read_text())
+    assert r["polyfind_margin_kcal"] == pytest.approx(0.064, abs=0.001)
+    as_given, relaxed = r["dft_on_polyfinds_cells"], r["dft_on_the_relaxed_cells"]
+    assert as_given["all_trans_minus_helix_kcal"] == pytest.approx(0.164, abs=0.002)
+    assert relaxed["all_trans_minus_helix_kcal"] == pytest.approx(-0.276, abs=0.002)
+    # polyfind's cells are far from DFT's minima: 1.6 to 2.3 eV/A on the atoms
+    forces = sorted(c["dft_largest_force_eV_per_A"] for c in as_given["cells"].values())
+    assert forces == pytest.approx([1.62, 2.26], abs=0.01)
+    # relaxing lowers DFT's energy by 0.55 and 1.0 kcal/mol per monomer, unequally
+    lowered = r["dft_energy_lowered_by_the_relaxation_meV_per_monomer"]
+    assert lowered["TTTT"] == pytest.approx(-42.8, abs=0.1) and lowered["TGTGp"] == pytest.approx(-23.7, abs=0.1)
+    # and the relaxed cells are not DFT minima either: this potential was not shown a reversed unit
+    left = sorted(c["dft_largest_force_eV_per_A"] for c in relaxed["cells"].values())
+    assert left == pytest.approx([0.63, 0.85], abs=0.01)
+    outside = r["the_pvdf_potential_on_the_h_c_f_frames_of_the_units_set"]
+    assert outside["frames"] == 56
+    assert 0.0230605 * outside["same_atoms_energy_rmse_meV_per_monomer"] == pytest.approx(0.57, abs=0.01)
+    assert outside["force_rmse_meV_per_A"] / outside["force_rms_of_the_labels_meV_per_A"] == pytest.approx(0.095, abs=0.002)
+    assert r["the_potentials_own_all_trans_minus_helix_kcal"]["relaxed"] == pytest.approx(-1.01, abs=0.01)

@@ -1,0 +1,128 @@
+{
+ "candidate": "vdf5-rvdf1-6: PVDF with one reversed VDF unit in six (VVVVIV), two chains, 72 atoms",
+ "margin_is": "E(all-trans) - E(helix), kcal/mol per monomer",
+ "polyfind_margin_kcal": 0.06386778635724255,
+ "polyfind_margin_rigid_pendants_kcal": -0.11262076805201815,
+ "dft_on_polyfinds_cells": {
+  "cells": {
+   "TTTT": {
+    "dft_eV_per_monomer": -1876.2200789384633,
+    "dft_largest_force_eV_per_A": 2.25832435,
+    "dft_force_rms_eV_per_A": 0.35862076316336217,
+    "dft_stress_xx_yy_zz_GPa": [
+     -0.4395499387862748,
+     -0.9270561292607443,
+     0.731847705977817
+    ],
+    "lattice_A_deg": [
+     4.96664744,
+     8.409576965434184,
+     15.49158263,
+     90.0,
+     90.0,
+     87.74847746262274
+    ],
+    "volume_A3_per_monomer": 53.878638895849825
+   },
+   "TGTGp": {
+    "dft_eV_per_monomer": -1876.2271922096295,
+    "dft_largest_force_eV_per_A": 1.61788492,
+    "dft_force_rms_eV_per_A": 0.28980263222091895,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.45087702890894654,
+     0.22227575552411688,
+     -0.1666700403764556
+    ],
+    "lattice_A_deg": [
+     5.06362658,
+     9.672315090000097,
+     13.991364,
+     90.0,
+     90.0,
+     89.99999182531018
+    ],
+    "volume_A3_per_monomer": 57.10457663475139
+   }
+  },
+  "all_trans_minus_helix_kcal": 0.16403593116494777
+ },
+ "relaxed_in": "pvdfb_s2, fitted to PVDF frames only (no reversed unit in its frames), with D3, to 0.005 eV/A",
+ "dft_on_the_relaxed_cells": {
+  "cells": {
+   "TTTT": {
+    "dft_eV_per_monomer": -1876.2628473312607,
+    "dft_largest_force_eV_per_A": 0.84690158,
+    "dft_force_rms_eV_per_A": 0.11994181479917108,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.005884202661128177,
+     0.054281769548907434,
+     -0.17078898223924535
+    ],
+    "lattice_A_deg": [
+     5.1170749233749495,
+     8.875899938910365,
+     15.361024932106671,
+     105.20086122103004,
+     81.28017705556354,
+     90.14393719183998
+    ],
+    "volume_A3_per_monomer": 55.41480916865776,
+    "potential_eV_per_monomer": -1876.255249158595,
+    "potential_start_eV_per_monomer": -1876.2002231781016
+   },
+   "TGTGp": {
+    "dft_eV_per_monomer": -1876.2508763178614,
+    "dft_largest_force_eV_per_A": 0.62904096,
+    "dft_force_rms_eV_per_A": 0.10886677512540101,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.025743386642435775,
+     0.22713022271954766,
+     -0.006472622927240995
+    ],
+    "lattice_A_deg": [
+     4.975842743456207,
+     9.604570772571519,
+     14.023988733199017,
+     88.44735849050538,
+     90.0000000554669,
+     89.99999792497775
+    ],
+    "volume_A3_per_monomer": 55.83100380242606,
+    "potential_eV_per_monomer": -1876.2115486672856,
+    "potential_start_eV_per_monomer": -1876.1893808139791
+   }
+  },
+  "all_trans_minus_helix_kcal": -0.2760581291023063
+ },
+ "dft_energy_lowered_by_the_relaxation_meV_per_monomer": {
+  "TTTT": -42.768392797370325,
+  "TGTGp": -23.6841082319188
+ },
+ "the_potentials_own_all_trans_minus_helix_kcal": {
+  "on_polyfinds_cells": -0.25003085827996807,
+  "relaxed": -1.0077572774648544
+ },
+ "the_pvdf_potential_on_the_h_c_f_frames_of_the_units_set": {
+  "frames": 56,
+  "compositions": {
+   "VR|VV": 10,
+   "VR|VR": 10,
+   "VI|VV": 10,
+   "VF|VV": 10,
+   "VVRV|VRVV": 8,
+   "VIVV|VVIV": 8
+  },
+  "same_atoms_energy_rmse_meV_per_monomer": 24.51320524347715,
+  "by_composition": {
+   "VR|VV": 11.004564745164638,
+   "VR|VR": 49.09453832461285,
+   "VI|VV": 18.483491998758492,
+   "VF|VV": 17.481070791633197,
+   "VVRV|VRVV": 6.116780842617071,
+   "VIVV|VVIV": 13.986200252415461
+  },
+  "force_rmse_meV_per_A": 150.9370682134846,
+  "force_rms_of_the_labels_meV_per_A": 1596.4398373031925
+ },
+ "reading": "not a DFT margin yet: the relaxed cells still carry 0.6 to 0.9 eV/A in DFT, and the potential that relaxed them was not shown a reversed unit"
+}

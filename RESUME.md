@@ -93,8 +93,21 @@ NOT DONE, IN ORDER:
     (only that host, the one with the saved key); the PI saving the key again through the secure form
     (`request_credential`) is the first thing to try, a new session the second.
     THE CONTAINER RESTARTED AT 18:50, 00:04 AND 01:47 UTC: files kept, the running job killed each time.
-(d) the test that matters for a candidate: DFT single points on a candidate's own cells (the 72-atom
-    `polished_vdf5-rvdf1-6_*_tilted.xyz` pair first) against the potential on the same geometries.
+(d) THE TEST THAT MATTERS, FIRST PASS DONE, NOT SETTLED (2026-11-17, docs 3.8, `docs/predictions/
+    mlip_candidate_vdf5-rvdf1-6.json`, frames `docs/predictions/mlip/candidate_frames_pbe_d3bj.extxyz`). PVDF with one
+    reversed unit in six, 72 atoms, polyfind's margin +0.064. DFT single points (15 to 18 min each here):
+    on polyfind's cells as they are, all-trans minus helix +0.164 kcal/mol with 1.6 to 2.3 eV/A left on the atoms;
+    on the same cells relaxed in the PVDF-only potential `pvdfb_s2` (`mlip_train.py relax`), -0.276 with 0.6 to 0.9
+    eV/A left. Relaxing lowered DFT's energy by 43 (all-trans) and 24 (helix) meV per monomer.
+    READINGS: (1) a DFT single point on polyfind's cell does not test polyfind's margin at the 0.1 level (this is
+    how E7's first-step answers from Dipole must be read); (2) the PVDF-only potential is outside its frames on
+    reversed units (0.57 kcal/mol rms between frames of the same atoms on the 56 H/C/F frames of the units set), so
+    -0.276 is not the DFT margin; (3) THE SIGN OF THIS CANDIDATE'S DFT MARGIN IS OPEN.
+    TO SETTLE IT: the fit on all 330 frames (54 hold a reversed unit), then
+    `python -I examples/mlip_train.py relax --model NEW.model --name NAME --cells /opt/dft/cand/cand_vdf5-rvdf1-6_*.dft.xyz
+    --out DIR`, `mlip_frames.py label --frames DIR`, and the gap from the two DFT energies; the DFT force left says
+    whether to believe it. If /opt/dft/cand is gone: the start files are made from
+    `docs/predictions/polished_vdf5-rvdf1-6_{TTTT,TGTGp}_tilted.xyz` with n_monomers 12, kmesh "4 2 2".
 RUNNING THINGS HERE: one heavy job at a time (a fit, a DFT run and a sampler run each want all four cores; two
 together slow each other by more than half). A background job is stopped at two hours and is not to be relaunched
 as it was: use runs that end by themselves (`--minutes`), or foreground runs under ten minutes.

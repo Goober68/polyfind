@@ -5,7 +5,8 @@ potential as a second opinion on polyfind's margins, tested before it is trusted
 seeing pretrained ones tested: "You're using ots solutions? Thought we would train our own?"
 
 Section 1 is the test. Section 2 is done: no pretrained potential passes it. Section 3 is our
-own, and says for each part whether it is done, running or not started. In short: two short
+own, and says for each part whether it is done, running or not started. Where it stands on a
+real candidate is 3.8: not settled, and waiting on the fit of 3.7. In short: two short
 fits on 76 PVDF frames were right to 0.1 to 0.2 kcal/mol per monomer where the pretrained ones
 are off by 1.2 to 3.9 (3.3). Four long fits on a rented card, on 130 frames, are right to 0.01
 on the packings that have frames near them and off by 0.07 to 0.21 on a packing they were not
@@ -348,3 +349,41 @@ processes), so they should be run one after another or on separate cards.
    margin by DFT, against polyfind's and against the potential's own.
 3. Each round's DFT single points go back into the frames. The turned-chain cell is the first
    case: with its six single points in the fit, is the next unseen packing still off?
+
+### 3.8 A candidate's own cells, first pass: a caution, not yet a margin (2026-11-17)
+
+PVDF with one reversed unit in six (`vdf5-rvdf1-6`, 72 atoms, H, C and F only; polyfind's
+margin +0.064 kcal/mol per monomer with the pendants tilted, -0.113 with them rigid). Its
+cells are `docs/predictions/polished_vdf5-rvdf1-6_{TTTT,TGTGp}_tilted.xyz`, the ones Dipole
+was asked for single points on (E7 a). Numbers in
+`docs/predictions/mlip_candidate_vdf5-rvdf1-6.json`; the four DFT single points in
+`docs/predictions/mlip/candidate_frames_pbe_d3bj.extxyz`. A 72-atom single point takes 15 to
+18 minutes on this container's four cores.
+
+| | all-trans minus helix by DFT, kcal/mol | DFT force left, largest (rms), eV/A | DFT stress, largest, GPa |
+|---|---:|---:|---:|
+| polyfind's cells as they are | +0.164 | 2.26 (0.36) and 1.62 (0.29) | 0.93 |
+| the same cells relaxed in the PVDF-only potential (`pvdfb_s2`) | -0.276 | 0.85 (0.12) and 0.63 (0.11) | 0.23 |
+| polyfind | +0.064 | | |
+
+What it says, and what it does not:
+
+- **A DFT single point on polyfind's cell is not a test of polyfind's margin at the 0.1
+  level.** DFT finds up to 2.3 eV/A on the atoms of polyfind's cells, mostly on the carbons
+  (the bonds and angles polyfind holds rigid, taken from PVDF, in a chain that now has CF2-CF2
+  and CH2-CH2 neighbours). Relaxing lowers DFT's energy by 43 meV per monomer in the all-trans
+  cell and 24 in the helix: 1.0 and 0.55 kcal/mol, unequal by 0.44. That is how the answers to
+  E7's first step (single points on the files as given) have to be read.
+- **The -0.276 is not the DFT margin either.** The relaxed cells still carry 0.6 to 0.9 eV/A in
+  DFT, and they were relaxed by a potential that was never shown a reversed unit. On the 56
+  frames of the units set made of H, C and F that potential misses the energy between frames
+  of the same atoms by 0.57 kcal/mol rms and the forces by 9.5% (1.7% on PVDF); its own margin
+  for this cell is -1.0. It moved the all-trans cell a long way (a sheared lattice, the two
+  chains' defects no longer level with their neighbours'), and DFT agrees that this is lower,
+  but not that it is a minimum.
+- So the sign of this candidate's margin in DFT is open: +0.16 unrelaxed, -0.28 half relaxed,
+  polyfind +0.06. Settling it is what the fit on all 330 frames is for (reversed units are in
+  54 of them), followed by the same two steps: relax, then one DFT single point.
+
+This reads on the margin alone, which places a cell on the strain axis; it says nothing yet of
+loss, rate or blocked force.
