@@ -252,3 +252,22 @@ def test_a_candidates_cells_first_pass_is_a_caution_not_a_margin():
     assert 0.0230605 * outside["same_atoms_energy_rmse_meV_per_monomer"] == pytest.approx(0.57, abs=0.01)
     assert outside["force_rmse_meV_per_A"] / outside["force_rms_of_the_labels_meV_per_A"] == pytest.approx(0.095, abs=0.002)
     assert r["the_potentials_own_all_trans_minus_helix_kcal"]["relaxed"] == pytest.approx(-1.01, abs=0.01)
+
+
+def test_the_candidates_cells_relaxed_on_in_dft_keep_all_trans_below_the_helix():
+    """Step by step in DFT from the cells the potential left: the gap does not move by more than 0.01."""
+    r = json.loads((PRED / "mlip_candidate_vdf5-rvdf1-6.json").read_text())["dft_relaxation_from_the_relaxed_cells"]
+    steps = r["steps"]
+    assert len(steps) >= 6
+    gaps = [row["all_trans_minus_helix_kcal"] for row in steps]
+    assert gaps[0] == pytest.approx(-0.276, abs=0.002)
+    assert max(gaps) - min(gaps) < 0.02 and all(-0.29 < g < -0.26 for g in gaps)
+    # both energies only go down, and the forces fall from 0.85 to under 0.12 eV/A by the fifth step
+    for cell in ("all_trans", "helix"):
+        energies = [row[cell]["dft_eV_per_monomer"] for row in steps]
+        assert all(b < a for a, b in zip(energies, energies[1:]))
+    assert max(steps[0][c]["dft_largest_force_eV_per_A"] for c in ("all_trans", "helix")) == pytest.approx(0.85, abs=0.01)
+    assert max(steps[5][c]["dft_largest_force_eV_per_A"] for c in ("all_trans", "helix")) < 0.12
+    # against polyfind's +0.064: a third of a kcal/mol, with a switching window 0.12 wide
+    polyfind = json.loads((PRED / "mlip_candidate_vdf5-rvdf1-6.json").read_text())["polyfind_margin_kcal"]
+    assert polyfind - gaps[5] == pytest.approx(0.33, abs=0.01)

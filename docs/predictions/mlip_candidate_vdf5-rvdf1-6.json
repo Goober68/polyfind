@@ -124,5 +124,100 @@
   "force_rmse_meV_per_A": 150.9370682134846,
   "force_rms_of_the_labels_meV_per_A": 1596.4398373031925
  },
- "reading": "not a DFT margin yet: the relaxed cells still carry 0.6 to 0.9 eV/A in DFT, and the potential that relaxed them was not shown a reversed unit"
+ "reading": "not a DFT margin yet: the relaxed cells still carry 0.6 to 0.9 eV/A in DFT, and the potential that relaxed them was not shown a reversed unit",
+ "dft_relaxation_from_the_relaxed_cells": {
+  "what": "both cells relaxed on in DFT itself (atoms and lattice, BFGS on DFT forces and stress), evaluation 0 being the cell the PVDF-only potential left",
+  "target_fmax_eV_per_A": 0.05,
+  "relaxed": false,
+  "steps": [
+   {
+    "evaluation": 0,
+    "all_trans": {
+     "dft_eV_per_monomer": -1876.2628473312607,
+     "dft_largest_force_eV_per_A": 0.84690158,
+     "dft_largest_stress_GPa": 0.17078898223924535
+    },
+    "helix": {
+     "dft_eV_per_monomer": -1876.2508763178614,
+     "dft_largest_force_eV_per_A": 0.62904096,
+     "dft_largest_stress_GPa": 0.22713022271954766
+    },
+    "all_trans_minus_helix_kcal": -0.2760581291023063
+   },
+   {
+    "evaluation": 1,
+    "all_trans": {
+     "dft_eV_per_monomer": -1876.265251026178,
+     "dft_largest_force_eV_per_A": 0.17998982,
+     "dft_largest_stress_GPa": 0.15784373638476334
+    },
+    "helix": {
+     "dft_eV_per_monomer": -1876.2530441694473,
+     "dft_largest_force_eV_per_A": 0.21186301,
+     "dft_largest_stress_GPa": 0.10341486176932771
+    },
+    "all_trans_minus_helix_kcal": -0.2814968055674225
+   },
+   {
+    "evaluation": 2,
+    "all_trans": {
+     "dft_eV_per_monomer": -1876.266165748185,
+     "dft_largest_force_eV_per_A": 0.13255168,
+     "dft_largest_stress_GPa": 0.17814423556565553
+    },
+    "helix": {
+     "dft_eV_per_monomer": -1876.2544161334074,
+     "dft_largest_force_eV_per_A": 0.13906403,
+     "dft_largest_stress_GPa": 0.18726474969040421
+    },
+    "all_trans_minus_helix_kcal": -0.2709525555580487
+   },
+   {
+    "evaluation": 3,
+    "all_trans": {
+     "dft_eV_per_monomer": -1876.2667071413432,
+     "dft_largest_force_eV_per_A": 0.19451861,
+     "dft_largest_stress_GPa": 0.19035395608749653
+    },
+    "helix": {
+     "dft_eV_per_monomer": -1876.2550472447663,
+     "dft_largest_force_eV_per_A": 0.15723067,
+     "dft_largest_stress_GPa": 0.22139312512494763
+    },
+    "all_trans_minus_helix_kcal": -0.2688836046873276
+   },
+   {
+    "evaluation": 4,
+    "all_trans": {
+     "dft_eV_per_monomer": -1876.2668996051937,
+     "dft_largest_force_eV_per_A": 0.06265881,
+     "dft_largest_stress_GPa": 0.1887358003556863
+    },
+    "helix": {
+     "dft_eV_per_monomer": -1876.2552823511226,
+     "dft_largest_force_eV_per_A": 0.08457541,
+     "dft_largest_stress_GPa": 0.18476396355942476
+    },
+    "all_trans_minus_helix_kcal": -0.26790024513474403
+   },
+   {
+    "evaluation": 5,
+    "all_trans": {
+     "dft_eV_per_monomer": -1876.2671122621587,
+     "dft_largest_force_eV_per_A": 0.07499908,
+     "dft_largest_stress_GPa": 0.1919721118193068
+    },
+    "helix": {
+     "dft_eV_per_monomer": -1876.2555173440985,
+     "dft_largest_force_eV_per_A": 0.07847932,
+     "dft_largest_stress_GPa": 0.11518326709158407
+    },
+    "all_trans_minus_helix_kcal": -0.2673851644822636
+   }
+  ],
+  "evaluations": {
+   "all_trans": 6,
+   "helix": 5
+  }
+ }
 }

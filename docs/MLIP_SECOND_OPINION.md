@@ -385,5 +385,41 @@ What it says, and what it does not:
   polyfind +0.06. Settling it is what the fit on all 330 frames is for (reversed units are in
   54 of them), followed by the same two steps: relax, then one DFT single point.
 
+**Relaxing on in DFT itself (running; 2026-11-17).** `mlip_frames.py relax` takes both cells
+on from where the potential left them, on DFT's own forces and stress, about twenty minutes a
+step here; every step is a frame (`docs/predictions/mlip/candidate_relaxation_frames_pbe_d3bj.extxyz`).
+After five to six steps each:
+
+| DFT step | all-trans minus helix, kcal/mol | largest DFT force left, eV/A (all-trans, helix) |
+|---:|---:|---:|
+| 0 (as the potential left them) | -0.276 | 0.85, 0.63 |
+| 1 | -0.281 | 0.18, 0.21 |
+| 2 | -0.271 | 0.13, 0.14 |
+| 3 | -0.269 | 0.20, 0.16 |
+| 4 | -0.268 | 0.06, 0.09 |
+| 5 | -0.267 | 0.08, 0.08 |
+
+The two energies are still falling, by 0.2 meV per monomer a step and together, and the gap
+has not moved by more than 0.01 since the first step. Both cells kept their conformation (every
+backbone torsion of the all-trans cell within a degree of 180; the helix still TGTG'). Not yet
+at the 0.05 eV/A asked for, so this is not final, but the reading is already plain: **between
+the two minima reached from polyfind's own cells, DFT puts all-trans 0.27 kcal/mol per monomer
+below the helix, where polyfind puts it 0.06 above.** A difference of 0.33, against a switching
+window 0.12 wide.
+
+What that is and is not:
+
+- It is the gap between two local minima, each reached downhill from polyfind's cell. The
+  all-trans cell moved a long way on the way (its lattice sheared: the chains' defects are no
+  longer level with their neighbours'); the helix cell did not. A lower helix arrangement that
+  a downhill relaxation does not find (another registry of the chains along their axis) would
+  bring the gap back toward polyfind's. That has not been searched.
+- It is one composition, one reversed unit in six, in PBE-D3(BJ). Against PVDF in the same
+  recipe (+0.726) the reversed units lower the margin by 0.99 in DFT and by 0.68 in polyfind
+  (+0.744 to +0.064): 6.0 against 4.1 kcal/mol per reversed unit, if it scales with their
+  number as polyfind's own two cells do. Whether it does at one in fourteen is not known.
+- If it holds, every cell whose margin is placed by a reversed unit sits lower than polyfind
+  has it: by about 0.13 per monomer at one in fourteen, more than the window is wide.
+
 This reads on the margin alone, which places a cell on the strain axis; it says nothing yet of
 loss, rate or blocked force.

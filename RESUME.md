@@ -87,7 +87,22 @@ NOT DONE, IN ORDER:
 (c) PVDF FRAMES NEAR THE MINIMA: DONE, 54 (`docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz`), in the long fits.
     THE WHOLE SET IS 330 FRAMES: `python -I examples/mlip_train.py prepare --frames` the four files `--data DIR
     --hold-out "VAVF|VRVV"` gives 282 in the fit, 48 out (one composition whole). It was run here and passes.
-    NEXT, WAITING ON THE PI'S GO (asked 2026-11-17): a second pod, queue `examples/gpu_jobs/queue_20261117_mlip.txt`
+    THE PI SAID "Go" (2026-11-17) AND SAVED THE KEY AGAIN (the secure form, 19:07 UTC): `rest.runpod.io` STILL
+    ANSWERS 502 in 0.3 s from this session, so no pod can be made from it. The pod needs a NEW SESSION (asked of the PI).
+    IN A NEW SESSION: check `curl -sS -o /dev/null -w "%{http_code}" https://rest.runpod.io/v1/pods` gives 200; confirm
+    stock and price (public GraphQL, as in docs 3.5); state the hourly cost; POST https://rest.runpod.io/v1/pods with
+    name polyfind-mlip-fit-all, imageName runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04, gpuTypeIds
+    ["NVIDIA A40", "NVIDIA RTX A6000"], gpuCount 1, computeType GPU, cloudType SECURE, interruptible false,
+    containerDiskInGb 40, volumeInGb 0, ports ["8000/http"], env BENCH_TOKEN (32 hex, kept in the scratchpad, never
+    shown or committed), BENCH_QUEUE examples/gpu_jobs/queue_20261117_mlip.txt, BENCH_LIMIT_S 18000, BENCH_IDLE_S
+    2400, BENCH_LINGER_S 3600, MLIP_HOLD_OUT "VAVF|VRVV", dockerStartCmd ["bash","-c","curl -sL
+    https://raw.githubusercontent.com/Goober68/polyfind/<head commit>/examples/runpod_jobs_pod.sh | bash"] (do NOT
+    send allowedCudaVersions); read the pod back; after the timing job add ONE line to the queue for the long fit
+    (`mlip_fit.sh all EPOCHS 1 frames <the four files> train --stress-weight 1000 --energy-weight 10000`, EPOCHS so
+    that it ends well inside the limit) and push; fetch results as they appear (STATUS, jobs/NN_mlip_fit/*.model,
+    mlip_own_*.json, probe/, log.txt at https://<pod>-8000.proxy.runpod.net/<token>/); push `stop`; confirm by a read
+    that the pod is gone. The model (13 MB) then has to reach the machine with the DFT program.
+    THE PLAN AS IT WAS: a second pod, queue `examples/gpu_jobs/queue_20261117_mlip.txt`
     (a timing job first, then ONE fit of everything, stress 1000 / energy 10000; set the pod's `MLIP_HOLD_OUT` to
     `VAVF|VRVV`). AND IT NEEDS `rest.runpod.io` TO ANSWER FROM THE SESSION: still 502 after three container restarts
     (only that host, the one with the saved key); the PI saving the key again through the secure form
@@ -103,7 +118,16 @@ NOT DONE, IN ORDER:
     how E7's first-step answers from Dipole must be read); (2) the PVDF-only potential is outside its frames on
     reversed units (0.57 kcal/mol rms between frames of the same atoms on the 56 H/C/F frames of the units set), so
     -0.276 is not the DFT margin; (3) THE SIGN OF THIS CANDIDATE'S DFT MARGIN IS OPEN.
-    TO SETTLE IT: the fit on all 330 frames (54 hold a reversed unit), then
+    RELAXING ON IN DFT ITSELF (`mlip_frames.py relax --frames /opt/dft/cand_dft --names rvdf6_TT,rvdf6_TG --fmax 0.05
+    --minutes 100`, runs that end by themselves, about 20 min a step; frames in `docs/predictions/mlip/
+    candidate_relaxation_frames_pbe_d3bj.extxyz`; the step table is in the result JSON and docs 3.8). AFTER 5 TO 6
+    STEPS EACH (2026-11-17 19:10 UTC, run 3 started then): forces 0.06 to 0.11 eV/A, the gap -0.276, -0.281, -0.271,
+    -0.269, -0.268, -0.267. SO DFT PUTS ALL-TRANS 0.27 BELOW THE HELIX WHERE POLYFIND PUTS IT 0.06 ABOVE: 0.33 apart,
+    6.0 against 4.1 kcal/mol per reversed unit. NOT FINAL (target 0.05 eV/A) AND NOT A SEARCH: the helix cell's other
+    arrangements (axial registry) were not looked for. If it holds, every cell placed by a reversed unit sits about
+    0.13 per monomer lower at one in fourteen. NEXT ON THIS: finish the relaxation; then look for a lower helix
+    arrangement (shear the helix cell as the all-trans one sheared, relax, one DFT point).
+    THE FASTER ROUTE, for this and the larger candidates: the fit on all 330 frames (54 hold a reversed unit), then
     `python -I examples/mlip_train.py relax --model NEW.model --name NAME --cells /opt/dft/cand/cand_vdf5-rvdf1-6_*.dft.xyz
     --out DIR`, `mlip_frames.py label --frames DIR`, and the gap from the two DFT energies; the DFT force left says
     whether to believe it. If /opt/dft/cand is gone: the start files are made from
