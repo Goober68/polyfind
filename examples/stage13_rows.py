@@ -19,7 +19,10 @@ kinds, every one read from files in the repository:
 * **the lone chain's line** (``docs/predictions/chain_stretch_pbe_d3bj.json``, examples/chain_stretch.py):
   plain PVDF's chain alone, held at each repeat DFT was asked at, its torsions, backbone angles
   and pendant groups relaxed: the helix from 6% shorter to 6% longer than it likes to be
-  (:data:`LINE_HELIX_MAX`), and the all-trans chain about its own repeat.  A row a point,
+  (:data:`LINE_STRETCH_MAX`), and the all-trans chain about its own repeat.  The same for the
+  polymer with every second unit reversed (``chain_stretch_hh_pbe_d3bj.json``: its all-trans chain
+  and its two folded ones, the CF2-CF2 and CH2-CH2 bonds gauche or the CF2-CH2 bonds), which is
+  what those two bonds' own torsion triples are fitted to.  A row a point,
   the energy per monomer against the point where DFT is lowest, at ``hypot(0.05, 0.05 |DFT|)``
   kcal/mol; together they count as :data:`LINE_COUNT` rows.  Nothing between chains is in them:
   they are what holds the torsion terms and the backbone angle's stiffness to the chain itself,
@@ -72,20 +75,21 @@ RIGID_TOL = (0.03, 0.15)        # kcal/mol per monomer, and a fraction of DFT's 
 POTENTIAL_TOL = 0.15            # kcal/mol per e
 CONFORMER_TOL = (0.15, 0.15)    # kcal/mol, kcal/mol/A
 LINE_TOL = (0.05, 0.05)         # kcal/mol per monomer, and a fraction of DFT's value
-LINE_COUNT = 8.0                # how many rows the lone chain's line counts as
+LINE_COUNT = 8.0                # how many rows the lone chain's line counts as, a polymer
 REVERSED_COUNT = 4.0            # and the reversed unit's lone conformers
 CANDIDATE = ("vdf5-rvdf1-6", "TG'TG", {"TTTT": "cand_vdf5-rvdf1-6_TTTT_in_pvdfb_s2_upright", "GTG'T": "rvdf6_GTGpT_in_pvdfb_s2"}, "cand_vdf5-rvdf1-6_TGTGp_in_pvdfb_s2")
 CANDIDATE_TOL = {"cell": 0.05, "inside": {"TTTT": 0.15, "GTG'T": 0.10}}  # kcal/mol per monomer
-LINE_HELIX_MAX = 4.96           # A: the helix branch is a row up to this repeat (6% stretched; DFT's C-C bonds are 1 to 3% longer there,
-                                # which a chain of fixed bond lengths cannot follow, and further out polyfind's helix has let go)
+LINE_STRETCH_MAX = 1.065        # a branch is a row up to this many times the repeat where DFT has it lowest (the helix: 4.95 A; DFT's C-C
+                                # bonds are 1 to 3% longer there, which a chain of fixed bond lengths cannot follow, and further out
+                                # polyfind's helix has let go)
 REFERENCE_PRESET = "pvdf-dft-valence-belt4"  # the charges the stored potential samples' patterns were built with
 
 
 class Rows:
     def __init__(self, rigid=PRED / "interchain_belt4.json", potential=PRED / "chain_potential_pbe_samples_sites.npz",
                  torsions=PRED / "valence_torsions_stage13.json", trainset: str | None = None, log=None, chains=None, conformers: bool = True,
-                 line=PRED / "chain_stretch_pbe_d3bj.json", reversed_chains=PRED / "chain_conformers_pbe_d3bj.json", split=PRED / "chain_split_pbe_d3bj.json",
-                 frozen=None):
+                 line=(PRED / "chain_stretch_pbe_d3bj.json", PRED / "chain_stretch_hh_pbe_d3bj.json"), reversed_chains=PRED / "chain_conformers_pbe_d3bj.json",
+                 split=PRED / "chain_split_pbe_d3bj.json", frozen=None):
         self.log = log or (lambda *a, **k: None)
         t0 = time.time()
         self.CP = _load("chain_potential")
@@ -99,11 +103,15 @@ class Rows:
         ref = {(a, b): float(d) for a, b, d in PRESET_PARAMETERS[REFERENCE_PRESET].charge_increments}
         self.ref_increments = (ref[("C", "H")], ref[("C", "F")])
         # --- the lone chain's line
-        self.line = None
-        if line is not None and Path(line).exists():
-            self.ST = _load("chain_stretch")
-            self.line = {name: {**br, "points": [q for q in br["points"] if name != "helix" or q["repeat"] <= LINE_HELIX_MAX]}
-                         for name, br in json.loads(Path(line).read_text())["branches"].items()}
+        self.line = []  # one set of branches a polymer, each on its own scale
+        for f in ([] if line is None else [line] if isinstance(line, (str, Path)) else list(line)):
+            if Path(f).exists():
+                self.ST = _load("chain_stretch")
+                branches = {}
+                for name, br in json.loads(Path(f).read_text())["branches"].items():
+                    longest = LINE_STRETCH_MAX * min(br["points"], key=lambda q: q["energy"])["repeat"]
+                    branches[name] = {**br, "points": [q for q in br["points"] if q["repeat"] <= longest]}
+                self.line.append(branches)
         # --- the reversed unit: lone conformers, and the candidate's cells on frozen geometry
         self.reversed = None
         if reversed_chains is not None and Path(reversed_chains).exists():
@@ -125,7 +133,7 @@ class Rows:
             self.x_valence = np.array(stored["x"], dtype=float)
             self.reference = stored["valence_fit"]
         self.log(f"stage 13's outside rows: {sum(len(b['frames']) - 1 for b in self.table.values())} rigid cells in {len(self.table)} packings, "
-                 f"{len(self.blocks)} chains' potentials, {'no line of the lone chain' if self.line is None else str(sum(len(b['points']) for b in self.line.values())) + ' points of the lone chain'}, "
+                 f"{len(self.blocks)} chains' potentials, {'no line of a lone chain' if not self.line else str(sum(len(b['points']) for fam in self.line for b in fam.values())) + ' points of lone chains'}, "
                  f"{'no conformers (set $' + F.REFERENCE_ENV + ')' if self.design is None else str(len(self.design.frames)) + ' conformer frames'}; "
                  f"{time.time() - t0:.0f} s")
 
@@ -161,23 +169,22 @@ class Rows:
         return out
 
     def lone(self, params) -> dict:
-        if self.line is None:
-            return {}
+        out = {}
         previous = self.SR.C.SITES_FOR
         self.SR.C.SITES_FOR = params
         try:
             with params.applied():
-                lines = self.ST.polyfind_branches(self.IF.SP, self.IF, self.table, self.line)
+                lines = [self.ST.polyfind_branches(self.IF.SP, self.IF, self.table, fam) for fam in self.line]
         finally:
             self.SR.C.SITES_FOR = previous
-        flat = [(name, q, r) for name, br in self.line.items() for q, r in zip(br["points"], lines[name])]
-        ref = int(np.argmin([q["energy"] for _, q, _ in flat]))
-        weight = np.sqrt(LINE_COUNT / (len(flat) - 1))
-        out = {}
-        for k, (name, q, r) in enumerate(flat):
-            if k != ref:
-                e, dft = r["energy"] - flat[ref][2]["energy"], q["energy"]
-                out[f"lone chain, {name} at {q['repeat']:.3f} A"] = (e, dft, weight * (e - dft) / np.hypot(LINE_TOL[0], LINE_TOL[1] * dft))
+        for fam, mine in zip(self.line, lines):
+            flat = [(name, q, r) for name, br in fam.items() for q, r in zip(br["points"], mine[name])]
+            ref = int(np.argmin([q["energy"] for _, q, _ in flat]))
+            weight = np.sqrt(LINE_COUNT / (len(flat) - 1))
+            for k, (name, q, r) in enumerate(flat):
+                if k != ref:
+                    e, dft = r["energy"] - flat[ref][2]["energy"], q["energy"]
+                    out[f"lone chain, {name} at {q['repeat']:.3f} A"] = (e, dft, weight * (e - dft) / np.hypot(LINE_TOL[0], LINE_TOL[1] * dft))
         return out
 
     def reversed_unit(self, params) -> dict:

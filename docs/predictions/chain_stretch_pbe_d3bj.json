@@ -154,7 +154,10 @@
      ],
      "energy": 5.599558380247875
     }
-   ]
+   ],
+   "start": {
+    "pack": "alpha"
+   }
   },
   "trans": {
    "monomers": 1,
@@ -224,7 +227,10 @@
      ],
      "energy": 4.192509687049985
     }
-   ]
+   ],
+   "start": {
+    "pack": "beta"
+   }
   }
  },
  "lowest_eV_per_monomer": -1876.0967953148358

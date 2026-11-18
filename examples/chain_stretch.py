@@ -86,7 +86,14 @@ def scan(args):
         last = done
 
 
-BRANCHES = {"helix": "alpha", "trans": "beta"}  # a branch of the line: the packing whose chain polyfind starts it from
+# A branch of a line, and where polyfind starts it: the chain of a packing (examples/interchain_frames.py),
+# or a chain built at a conformer's nominal torsions (examples/chain_conformers.py: the letters of
+# its repeat and the angles its bonds of each type take in turn).  A file holds one polymer's
+# branches, on one scale.
+BRANCHES = {"helix": {"pack": "alpha"}, "trans": {"pack": "beta"},
+            "hh_tt": {"letters": "VI", "pattern": {}},
+            "hh_special": {"letters": "VI", "pattern": {"CF2-CF2": (60.0,), "other": (-60.0,)}},
+            "hh_plain": {"letters": "VI", "pattern": {"CF2-CH2": (60.0, -60.0)}}}
 
 
 def collect(args):
@@ -98,9 +105,9 @@ def collect(args):
     from ase.io import read
 
     out = json.loads(args.out.read_text()) if args.out.exists() else {
-        "what": "a lone chain of plain PVDF in a 16 A box held at a repeat, PBE-D3(BJ), relaxed at each (examples/chain_stretch.py): energy per monomer "
+        "what": "a lone chain in a 16 A box held at a repeat, PBE-D3(BJ), relaxed at each (examples/chain_stretch.py): energy per monomer "
                 "against the lowest point of all branches (kcal/mol), the tension dE/dc per monomer (kcal/mol/A, from DFT's stress), the forces left "
-                "on the atoms (eV/A). The helix branch starts at the chain of alpha, the trans branch at the chain of beta.", "branches": {}}
+                "on the atoms (eV/A). Each branch is one conformer followed along its repeat; a file holds one polymer.", "branches": {}}
     points = []
     for f in sorted(args.frames.glob("*.dft.xyz")):
         if not any(fnmatch.fnmatch(f.name[:-8], pat) for pat in args.names.split(",")):
@@ -114,7 +121,7 @@ def collect(args):
                        "largest_force": float(np.abs(frc).max()), "tension": szz * a.get_volume() / float(a.cell[2, 2]) / n * EV,
                        "dihedrals": dihedrals(a)[:2 * n]})
     points.sort(key=lambda q: q["repeat"])
-    out["branches"][args.branch] = {"monomers": n, "points": points}
+    out["branches"][args.branch] = {"monomers": n, "start": BRANCHES[args.branch], "points": points}
     low = min(q["energy_eV_per_monomer"] for br in out["branches"].values() for q in br["points"])
     out["lowest_eV_per_monomer"] = low
     for name, br in out["branches"].items():
@@ -127,27 +134,21 @@ def collect(args):
     print(f"written {args.out}")
 
 
-def polyfind_line(SP, model, x, ch, repeats, tilts: bool = True, chain: int = 0) -> list:
-    """One chain of a cell alone on the 16 A lattice under the parameter set in force, held at each
-    repeat (A, for the model's own repeat unit) in turn: its torsions and backbone angles free, then
-    its pendant groups tilted.  The repeats are visited outward from the one nearest the cell's.
-    ``[{repeat, energy, torsions, tilt}]`` in the order given, energies in kcal/mol per chain repeat."""
+def walk(one, y0, repeats, tilts: bool = True) -> list:
+    """A one-chain model held at each repeat (A, the model's own repeat unit) in turn, outward from
+    the one nearest ``y0``'s: its torsions and backbone angles free, then its pendant groups tilted.
+    ``[{repeat, energy, torsions, tilt, ...}]`` in the order given, kcal/mol per chain repeat."""
     from polyfind import mixedcell as MC
 
-    CS = _load("chain_split")
-    pk1 = SP.pack_mod.CrystalPacker(ch, n_chains=1, **SP.DK.KW)
-    st = model.state(x)
-    one = MC.MixedModel(model.polymer, model.name, pk1, model.flips[chain:chain + 1], [ch], angle_stiffness=model.angle_stiffness)
-    y0 = np.concatenate([[CS.BOX, CS.BOX, 90.0, st.lattice[3]], [0.0, 0.0, st.place[chain, 2], 0.0], st.tors[chain], st.angs[chain]])
     free = one.index("internal")
     repeats = [float(c) for c in repeats]
-    first = int(np.argmin([abs(c - st.lattice[3]) for c in repeats]))
+    first = int(np.argmin([abs(c - y0[3]) for c in repeats]))
     order = sorted(range(len(repeats)), key=lambda k: repeats[k])
     at = order.index(first)
     out = {}
-    for walk in (order[at:], order[:at][::-1]):
-        y = y0.copy()
-        for k in walk:
+    for leg in (order[at:], order[:at][::-1]):
+        y = np.array(y0, dtype=float)
+        for k in leg:
             y[3] = repeats[k]
             one.reset_multipliers()
             y, info = one.relax(y, free=free, closed=[0], maxiter=800, patience=60, patience_tol=1e-6)
@@ -162,17 +163,50 @@ def polyfind_line(SP, model, x, ch, repeats, tilts: bool = True, chain: int = 0)
     return [out[k] for k in range(len(repeats))]
 
 
+def polyfind_line(SP, model, x, ch, repeats, tilts: bool = True, chain: int = 0) -> list:
+    """:func:`walk` for one chain of a cell, alone on the 16 A lattice under the parameter set in force."""
+    from polyfind import mixedcell as MC
+
+    CS = _load("chain_split")
+    pk1 = SP.pack_mod.CrystalPacker(ch, n_chains=1, **SP.DK.KW)
+    st = model.state(x)
+    one = MC.MixedModel(model.polymer, model.name, pk1, model.flips[chain:chain + 1], [ch], angle_stiffness=model.angle_stiffness)
+    y0 = np.concatenate([[CS.BOX, CS.BOX, 90.0, st.lattice[3]], [0.0, 0.0, st.place[chain, 2], 0.0], st.tors[chain], st.angs[chain]])
+    return walk(one, y0, repeats, tilts)
+
+
+def polyfind_line_from_torsions(SP, polymer, torsions, repeats, tilts: bool = True):
+    """:func:`walk` for a chain built at ``torsions`` (the model's bond order); ``(line, monomers in the model's repeat)``."""
+    from polyfind import mixedcell as MC
+    from polyfind.pack import periodic_chain_from_torsions
+
+    CS = _load("chain_split")
+    tors = np.asarray(torsions, dtype=float)
+    ch = periodic_chain_from_torsions(polymer, "lone", tors)
+    pk1 = SP.pack_mod.CrystalPacker(ch, n_chains=1, **SP.DK.KW)
+    one = MC.MixedModel(polymer, "lone", pk1, np.array([False]), [ch], angle_stiffness=SP.DK.angle_stiffness())
+    y0 = np.concatenate([[CS.BOX, CS.BOX, 90.0, ch.c], np.zeros(4), tors, one.angles0])
+    return walk(one, y0, repeats, tilts), int(ch.n_monomers)
+
+
 def polyfind_branches(SP, IF, table, branches: dict, tilts: bool = True) -> dict:
     """``{branch: [energy per monomer at each of its repeats]}`` under the parameter set in force,
-    every branch on one scale (the chains are the same polymer), with the gauche angle beside it."""
+    every branch on one scale (the chains are one polymer), with the gauche angle beside it."""
     out = {}
     for name, br in branches.items():
-        pack = BRANCHES[name]
-        model, x0, ch, _ = IF.model_of(pack, table[pack].get("cell"), check=False)
-        scale = ch.n_monomers / br["monomers"]  # the model's repeat unit against the branch's cell
-        line = polyfind_line(SP, model, x0, ch, [q["repeat"] * scale for q in br["points"]], tilts=tilts)
-        out[name] = [{"repeat": q["repeat"], "energy": r["energy"] / ch.n_monomers, "tilt": r["tilt"] / ch.n_monomers, "c_mismatch": r["c_mismatch"],
-                      "gauche": float(np.abs(np.mod(np.array(r["torsions"]) + 180.0, 360.0) - 180.0).min()), "angles": r["angles"]}
+        spec = BRANCHES[name]
+        if "pack" in spec:
+            model, x0, ch, _ = IF.model_of(spec["pack"], table[spec["pack"]].get("cell"), check=False)
+            n = ch.n_monomers
+            line = polyfind_line(SP, model, x0, ch, [q["repeat"] * n / br["monomers"] for q in br["points"]], tilts=tilts)
+        else:
+            CC = _load("chain_conformers")
+            polymer = SP.C.make_polymer(name, spec["letters"])
+            tors = CC.torsions_of(CC.chain_types(polymer, 2 * len(spec["letters"])), spec["pattern"])
+            line, n = polyfind_line_from_torsions(SP, polymer, tors, [q["repeat"] * len(spec["letters"]) / br["monomers"] for q in br["points"]], tilts=tilts)
+        out[name] = [{"repeat": q["repeat"], "energy": r["energy"] / n, "tilt": r["tilt"] / n, "c_mismatch": r["c_mismatch"],
+                      "gauche": float(np.abs(np.mod(np.array(r["torsions"]) + 180.0, 360.0) - 180.0).min()), "angles": r["angles"],
+                      "torsions": [float(v) for v in (np.mod(np.array(r["torsions"]) + 180.0, 360.0) - 180.0)]}
                      for q, r in zip(br["points"], line)]
     return out
 

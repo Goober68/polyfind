@@ -68,8 +68,9 @@ def test_the_lone_chains_line_is_a_row_a_point_on_one_scale(rows):
     falls when pushed, which is what the rows are there to say."""
     mod, r = rows
     line = json.loads((PRED / "chain_stretch_pbe_d3bj.json").read_text())["branches"]
-    out = r.lone(PRESET_PARAMETERS[BELT4])
-    helix = [q for q in line["helix"]["points"] if q["repeat"] <= mod.LINE_HELIX_MAX and q["energy"] > 0]
+    out = {k: v for k, v in r.lone(PRESET_PARAMETERS[BELT4]).items() if " hh_" not in k}  # plain PVDF's; the reversed polymer's have their own test
+    helix = [q for q in line["helix"]["points"] if q["repeat"] <= 4.96 and q["energy"] > 0]
+    assert mod.LINE_STRETCH_MAX * 4.6502 == pytest.approx(4.95, abs=0.01)
     assert set(out) == {f"lone chain, helix at {q['repeat']:.3f} A" for q in helix} | {f"lone chain, trans at {q['repeat']:.3f} A" for q in line["trans"]["points"]}
     assert len(out) == 11
     for q in helix:

@@ -6,7 +6,8 @@ or trans together, so the cells give one number for both.  The polymer in which 
 unit is reversed can turn them apart: with two monomers a repeat, both at once or neither; with
 four, the CF2-CF2 bonds alone (T3G T3G') or the CH2-CH2 bonds alone.
 
-DFT's chain is settled in rounds: relaxed in our own potential, labelled, then relaxed in the
+DFT's chain is settled in rounds (with ``--fixed-repeat`` at the repeat it was built with, and
+then walked along its repeat by examples/chain_stretch.py scan): relaxed in our own potential, labelled, then relaxed in the
 potential tilted to DFT's forces there and labelled again (examples/mlip_train.py relax
 --dft-gradient; no atom may move more than a set distance in a round, since a tilt has no end
 along a soft turn).  Polyfind's chain is held at DFT's torsions with its backbone angles, its
@@ -120,7 +121,8 @@ def settle(args):
             done = args.frames / f"{frame}.dft.xyz"
             if not done.exists():
                 if not (args.frames / f"{frame}.start.xyz").exists():
-                    subprocess.run([sys.executable, "-I", "-W", "ignore", str(HERE / "mlip_train.py"), "relax", "--model", str(args.model), "--name", "lone", "--mask", "0 0 1 0 0 0",
+                    subprocess.run([sys.executable, "-I", "-W", "ignore", str(HERE / "mlip_train.py"), "relax", "--model", str(args.model), "--name", "lone",
+                                    "--mask", "0 0 0 0 0 0" if args.fixed_repeat else "0 0 1 0 0 0",
                                     "--frame", frame, "--threads", str(args.threads), "--fmax", str(args.fmax), "--cells", str(last), "--out", str(args.frames)]
                                    + (["--dft-gradient", "--max-move", str(args.max_move)] if r else []), check=True)
                 subprocess.run([sys.executable, "-W", "ignore", str(HERE / "mlip_frames.py"), "label", "--frames", str(args.frames), "--pw", args.pw, "--pseudo", args.pseudo,
@@ -238,6 +240,8 @@ def main():
     s.add_argument("--pseudo", required=True)
     s.add_argument("--rounds", type=int, default=2, help="rounds in the tilted potential after the first relaxation")
     s.add_argument("--max-move", type=float, default=0.3)
+    s.add_argument("--fixed-repeat", action="store_true", help="hold the chain at the start's repeat: a folded conformer that is not a minimum of our "
+                                                               "potential opens out to the all-trans chain if its repeat is free")
     s.add_argument("--np", type=int, default=4)
     s.add_argument("--pools", type=int, default=0)
     s.add_argument("--threads", type=int, default=1)
