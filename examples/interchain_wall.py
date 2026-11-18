@@ -162,16 +162,15 @@ def pairs(args):
     cells = []
     with PRESET_PARAMETERS[PRESET].applied():
         table = json.loads((src / "polyfind.json").read_text())
-        alpha = table["alpha"]["cell"]
         tabs = lj_tables(PRESET_PARAMETERS[PRESET])
         worst = 0.0
-        for pack in ("beta", "candidate", "alpha"):
-            model, x0, ch, n_mon = IF.model_of(pack, alpha)
+        for pack in table:
+            model, x0, ch, n_mon = IF.model_of(pack, table[pack].get("cell"))
             rc = float(model.pk.rc)
             el = [str(e) for e in model.pk.elements]
             monomer = float(model.state(x0).lattice[3]) / (n_mon // 2)
             todo = [(row["frame"], (row["scale"][0], row["scale"][1], row["shear_monomers"][0], row["shear_monomers"][1]), src, row) for row in table[pack]["frames"]]
-            if reg is not None and pack != "alpha":
+            if reg is not None and pack in ("beta", "candidate"):
                 rt = json.loads((reg / "polyfind.json").read_text())[pack]["shears"]
                 todo += [(row["frame"], (1.0, 1.0, row["shear_monomers"][0], row["shear_monomers"][1]), reg, row) for row in rt]
             first = None
@@ -196,9 +195,10 @@ def pairs(args):
     print(f"written {out}: {len(cells)} cells, {sum(c['dft'] is not None for c in cells)} with DFT")
 
 
-VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "x_HF", "D_HF", "log10_D_X", "steep", "steep_H")
+VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "x_HF", "D_HF", "log10_D_X", "steep", "steep_H", "x_FF", "D_FF", "x_HH", "D_HH")
 BOUNDS = {"x_C": (0.8, 1.4), "x_H": (0.6, 1.3), "x_F": (0.8, 1.3), "D_C": (0.2, 5.0), "D_H": (0.2, 5.0), "D_F": (0.2, 5.0),
-          "x_HF": (0.7, 1.3), "D_HF": (0.2, 5.0), "log10_D_X": (-6.0, 0.5), "steep": (7.0, 16.0), "steep_H": (7.0, 16.0)}
+          "x_HF": (0.7, 1.3), "D_HF": (0.2, 5.0), "log10_D_X": (-6.0, 0.5), "steep": (7.0, 16.0), "steep_H": (7.0, 16.0),
+          "x_FF": (0.7, 1.3), "D_FF": (0.2, 5.0), "x_HH": (0.7, 1.3), "D_HH": (0.2, 5.0)}
 
 
 def start_vector(form: str) -> dict:
@@ -210,7 +210,7 @@ def start_vector(form: str) -> dict:
     belt = dict((e, d) for e, _, d in PRESET_PARAMETERS[PRESET].lj)["X"]
     z0 = {"exp-6": 13.772, "b14-7": 0.07}.get(form, 12.0)
     return {"x_C": 1.0, "x_H": 1.0, "x_F": 1.0, "D_C": 1.0, "D_H": 1.0, "D_F": 1.0, "x_HF": 1.0, "D_HF": 1.0,
-            "log10_D_X": float(np.log10(belt)), "steep": z0, "steep_H": z0}
+            "log10_D_X": float(np.log10(belt)), "steep": z0, "steep_H": z0, "x_FF": 1.0, "D_FF": 1.0, "x_HH": 1.0, "D_HH": 1.0}
 
 
 def trial_tables(v: dict) -> dict:
@@ -225,6 +225,9 @@ def trial_tables(v: dict) -> dict:
     # the H-F pair keeps the ratio the preset gave it to the mixing rule, times the trial's own multipliers
     mixed = out[("H", "F")]
     out[("H", "F")] = (mixed[0] * hf[0] / hf_rule[0] * v["x_HF"], mixed[1] * hf[1] / hf_rule[1] * v["D_HF"])
+    # like pairs may leave the element's own values too (multipliers on them; one changes nothing)
+    out[("F", "F")] = (out[("F", "F")][0] * v.get("x_FF", 1.0), out[("F", "F")][1] * v.get("D_FF", 1.0))
+    out[("H", "H")] = (out[("H", "H")][0] * v.get("x_HH", 1.0), out[("H", "H")][1] * v.get("D_HH", 1.0))
     for p in (("C", "X"), ("F", "X"), ("X", "X")):
         out[p] = (out[p][0], 0.0)
     return out
@@ -249,7 +252,7 @@ def groups(cells) -> list:
     """``[(label, reference cell, cells)]``: each packing's strained cells against its unstrained
     one, and its sheared cells (examples/shear_registry.py's) against theirs, labelled cells only."""
     out = []
-    for pack in ("beta", "candidate", "alpha"):
+    for pack in dict.fromkeys(c["packing"] for c in cells):
         for kind, prefix in (("strain", "inter_"), ("shear", "shear_")):
             mine = [c for c in cells if c["packing"] == pack and c["frame"].startswith(prefix) and c["dft"] is not None]
             if len(mine) > 1:

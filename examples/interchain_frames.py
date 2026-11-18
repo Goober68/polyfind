@@ -44,7 +44,13 @@ PRED = Path("docs/predictions")
 PRESET = SR.PRESET
 LATERAL = (0.94, 0.96, 0.98, 0.99, 1.01, 1.02, 1.04, 1.06)
 BIAXIAL = (0.96, 0.98, 1.02, 1.04)
-MESH = {"beta": "4 2 8", "candidate": "4 2 8", "alpha": "4 2 4"}
+MESH = {"beta": "4 2 8", "candidate": "4 2 8", "alpha": "4 2 4", "hh": "4 2 4"}
+# The packings built here by the packing search and its polish: (row name, unit letters, conformation).
+# "hh" is the chain in which every second unit is reversed, -CH2-CF2-CF2-CH2-: head to head and tail to
+# tail throughout.  Plain PVDF never puts fluorine against fluorine between chains or hydrogen against
+# hydrogen; this chain does, in every cell, and the reversed-unit candidate's all-trans cell is decided
+# by exactly those contacts (docs/MLIP_SECOND_OPINION.md 3.10).
+BUILT = {"alpha": ("vdf2", "VV", "TGTG'"), "hh": ("vdf1-rvdf1-2", "VI", "TTTT")}
 
 
 def variants(pack: str) -> list:
@@ -53,23 +59,32 @@ def variants(pack: str) -> list:
     out += [(s, 1.0, 0.0, 0.0) for s in LATERAL] + [(1.0, s, 0.0, 0.0) for s in LATERAL] + [(s, s, 0.0, 0.0) for s in BIAXIAL]
     if pack == "alpha":  # the helix repeats every two monomers: a quarter, a half and a whole monomer of shear
         out += [(1.0, 1.0, f, 0.0) for f in (0.25, 0.5, 1.0)] + [(1.0, 1.0, 0.0, f) for f in (0.25, 0.5, 1.0)]
+    elif pack == "hh":  # two monomers to the repeat and no mirror to halve the range: every quarter along each vector, and three mixed
+        out += [(1.0, 1.0, f, 0.0) for f in (0.25, 0.5, 0.75, 1.0, 1.5)] + [(1.0, 1.0, 0.0, f) for f in (0.25, 0.5, 0.75, 1.0, 1.5)]
+        out += [(1.0, 1.0, 0.5, 0.5), (1.0, 1.0, 0.5, -0.5), (1.0, 1.0, 1.0, 1.0), (0.96, 0.96, 0.5, 0.0), (0.96, 0.96, 0.0, 0.5), (0.96, 0.96, 1.0, 0.0)]
     else:  # the unstrained shears are examples/shear_registry.py's; here the same at the narrower and the wider cell
         out += [(s, s, fa, fb) for s in (0.96, 1.04) for fa, fb in ((0.25, 0.0), (0.5, 0.0), (0.0, 0.5))]
     return out
 
 
+def built_cell(pack: str, stored: dict | None = None) -> dict:
+    """The packing search's cell of a :data:`BUILT` packing, polished in the mixed cell
+    (``examples/dilute_kink.py refined_cell``); ``stored`` is that dict from an earlier run."""
+    row, letters, conf = BUILT[pack]
+    polymer = C.make_polymer(row, letters)
+    return DK.refined_cell(polymer, row, C.conformation(conf, polymer.bonds_per_repeat), f"{row} {conf}", stored)
+
+
 def alpha_cell(stored: dict | None = None) -> dict:
-    """The packing search's TGTG' cell of plain PVDF, two monomers per chain, polished in the mixed
-    cell (``examples/dilute_kink.py refined_cell``); ``stored`` is that dict from an earlier run."""
-    polymer = C.make_polymer("vdf2", "VV")
-    return DK.refined_cell(polymer, "vdf2", C.conformation("TGTG'", polymer.bonds_per_repeat), "vdf2 TGTG'", stored)
+    return built_cell("alpha", stored)
 
 
 def model_of(pack: str, alpha: dict | None = None, check: bool = True):
-    """``(model, x, chain, monomers per cell)`` of a packing at no strain and no shear; ``check``
-    false builds the helix cell under parameters other than the ones it was polished with."""
-    if pack == "alpha":
-        polymer = C.make_polymer("vdf2", "VV")
+    """``(model, x, chain, monomers per cell)`` of a packing at no strain and no shear; ``alpha`` is
+    the stored cell of a :data:`BUILT` packing, and ``check`` false builds it under parameters
+    other than the ones it was polished with."""
+    if pack in BUILT:
+        polymer = C.make_polymer(*BUILT[pack][:2])
         d = {k: (np.asarray(v, dtype=float) if isinstance(v, list) else v) for k, v in alpha.items()}
         model, x, ch = SP.sheared_model(polymer, d, check)
         return model, x, ch, 2 * ch.n_monomers
@@ -95,17 +110,17 @@ def frames(args):
     table_path = out / "polyfind.json"
     table = json.loads(table_path.read_text()) if table_path.exists() else {}
     with PRESET_PARAMETERS[PRESET].applied():
-        alpha = alpha_cell(table.get("alpha", {}).get("cell"))
-        for pack in ("beta", "candidate", "alpha"):
-            model, x0, ch, n_mon = model_of(pack, alpha)
+        for pack in [p for p in args.packings.split(",") if p]:
+            cell = built_cell(pack, table.get(pack, {}).get("cell")) if pack in BUILT else None
+            model, x0, ch, n_mon = model_of(pack, cell)
             st = model.state(x0)
             monomer = float(st.lattice[3]) / (n_mon // 2)
             e0, es0 = model.physical_energy(x0), SR.electrostatics(model, x0)
             el, keep = SR.real_atoms(model)
             block = {"cell_A_deg": st.lattice.tolist(), "setting_angles_deg": st.place[:, 2].tolist(), "monomers_per_cell": n_mon,
                      "monomer_A": monomer, "polyfind_kcal_per_monomer": e0 / n_mon, "frames": []}
-            if pack == "alpha":
-                block["cell"] = DK.as_json(alpha)
+            if cell is not None:
+                block["cell"] = DK.as_json(cell)
             for i, v in enumerate(variants(pack)):
                 x = moved(model, x0, ch, v, monomer)
                 e, es = model.physical_energy(x), SR.electrostatics(model, x)
@@ -121,8 +136,8 @@ def frames(args):
                                         "polyfind_electrostatics": (es - es0) / n_mon, "polyfind_repulsion_dispersion": ((e - es) - (e0 - es0)) / n_mon})
             table[pack] = block
             f = block["frames"]
-            print(f"{pack}: cell {np.round(st.lattice, 4).tolist()}, {n_mon} monomers, {len(f)} frames; polyfind at -4% and +4% biaxial "
-                  f"{f[17]['polyfind']:+.3f}, {f[20]['polyfind']:+.3f} kcal/mol per monomer")
+            print(f"{pack}: cell {np.round(st.lattice, 4).tolist()}, setting angles {np.round(st.place[:, 2], 1).tolist()}, {n_mon} monomers, {len(f)} frames; "
+                  f"polyfind at -4% and +4% biaxial {f[17]['polyfind']:+.3f}, {f[20]['polyfind']:+.3f} kcal/mol per monomer")
     table_path.write_text(json.dumps(table, indent=1))
     print(f"written {out}; label with examples/mlip_frames.py label --frames {out}")
 
@@ -167,6 +182,7 @@ def main():
     sub = ap.add_subparsers(dest="step", required=True)
     s = sub.add_parser("frames")
     s.add_argument("--out", required=True, help="working directory for the DFT, outside the repository")
+    s.add_argument("--packings", default="beta,candidate,alpha,hh", help="which packings to (re)build; the others' frames and entries are kept")
     s = sub.add_parser("collect")
     s.add_argument("--frames", required=True)
     s.add_argument("--out", default=str(PRED / "interchain_belt4.json"))
