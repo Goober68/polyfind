@@ -192,4 +192,4 @@ def test_a_parameter_set_carries_the_wall_to_every_packer_built_under_it():
     names, x0, bounds, sigma = C._config(x14)
     assert names[-1] == "wall_delta" and len(names) == 14 and x0[-1] == 0.07 and bounds[-1].tolist() == [0.0, 0.5]
     assert C.ridge_parts(x14)[-1] == pytest.approx((0.2 - 0.07) / sigma[-1])
-    assert C.STAGE10["registry"] and C.STAGE10["angles"]
+    assert C.STAGE12["registry"] and C.STAGE12["angles"]

@@ -2640,7 +2640,7 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
             from .refine import DEFAULT_ANGLE_STIFFNESS
             out = replace(out, angle_stiffness=float(DEFAULT_ANGLE_STIFFNESS * 10.0 ** float(x[12])))
         if len(x) == 14:
-            # stage 10: the pair term is the buffered 14-7 with first buffer x[13] on these diameters
+            # stage 12: the pair term is the buffered 14-7 with first buffer x[13] on these diameters
             # and depths (pack.wall_b147); the belt sites stay a wall alone, in the new form
             out = replace(out, wall=("b14-7", float(x[13])))
     elif len(x) not in (8, 10):
@@ -2653,7 +2653,7 @@ CRYSTAL_STAGE2_VARIABLES = CRYSTAL_STAGE_VARIABLES + ("x_HF", "D_HF")
 CRYSTAL_STAGE3_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("b_q",)
 CRYSTAL_STAGE4_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("log10_D_X", "b_q")
 CRYSTAL_STAGE7_VARIABLES = CRYSTAL_STAGE4_VARIABLES + ("log10_k_angle",)
-CRYSTAL_STAGE10_VARIABLES = CRYSTAL_STAGE7_VARIABLES + ("wall_delta",)
+CRYSTAL_STAGE12_VARIABLES = CRYSTAL_STAGE7_VARIABLES + ("wall_delta",)
 
 
 FITTED_VALENCE_CRYSTAL = crystal_stage_parameters(CRYSTAL_FITTED_X)

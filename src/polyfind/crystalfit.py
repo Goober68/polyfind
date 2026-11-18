@@ -110,7 +110,8 @@ BOUNDS7 = np.vstack([BOUNDS4, [(-0.7, 0.7)]])  # a fifth to five times the defau
 SIGMA7 = np.concatenate([SIGMA4, [0.3]])  # a factor of two is one width
 STAGE7 = {**STAGE6, "angles": True}
 STRAIN_STEP = 2e-3  # the strain of the stiffness and slope states (mechanics.strain_states' default)
-# Stage 9 (docs/MLIP_SECOND_OPINION.md 3.9 and 3.10): stage 7 plus what it costs to move
+# Stage 11 (docs/CRYSTAL_STAGE.md 5.24; stages 8 and 9 are that document's two designs that were
+# never built, 5.21 and 5.23, and 10 is left free beside them): stage 7 plus what it costs to move
 # neighbouring chains along each other.  Plain PVDF, two chains of one monomer, sheared rigidly
 # along the chains in two packings (polyfind's beta cell, and the all-trans packing of the
 # reversed-unit candidate with plain chains in it), against PBE-D3(BJ) single points on the same
@@ -143,20 +144,20 @@ REGISTRY = {
 # Eight rows beside sixteen anchors; the other eighteen cells and the six E5 slides are the check.
 REGISTRY_FIT_ROWS = ((0.25, 0.0), (0.5, 0.0), (0.0, 0.25), (0.0, 0.5))
 TOL["registry"] = 0.2  # relative: a cost within a fifth of DFT's is one tolerance
-STAGE9 = {**STAGE7, "registry": True}
-# Stage 9's wide bounds on the diameters.  The earlier stages held every diameter within a tenth of
+STAGE11 = {**STAGE7, "registry": True}
+# Stage 11's wide bounds on the diameters.  The earlier stages held every diameter within a tenth of
 # its valence value; the registry cost is set by hydrogen's contacts and lowering it by a factor
 # of three is outside that box, so the box is opened where the cost has its handles (the ridge
 # still charges for the distance): hydrogen and the H-F pair may shrink to 0.70, carbon may grow
 # to 1.30 (a smooth wall where hydrogen's is a bumpy one), fluorine to 0.85-1.15.
-BOUNDS9_WIDE = BOUNDS7.copy()
-BOUNDS9_WIDE[0] = (0.90, 1.30)  # x_C
-BOUNDS9_WIDE[1] = (0.70, 1.10)  # x_H
-BOUNDS9_WIDE[2] = (0.85, 1.15)  # x_F
-BOUNDS9_WIDE[8] = (0.70, 1.15)  # x_HF
+BOUNDS11_WIDE = BOUNDS7.copy()
+BOUNDS11_WIDE[0] = (0.90, 1.30)  # x_C
+BOUNDS11_WIDE[1] = (0.70, 1.10)  # x_H
+BOUNDS11_WIDE[2] = (0.85, 1.15)  # x_F
+BOUNDS11_WIDE[8] = (0.70, 1.15)  # x_HF
 
 
-# Stage 10 (docs/MLIP_SECOND_OPINION.md 3.10): stage 9 with the pair term's form changed.  Stage 9
+# Stage 12 (docs/CRYSTAL_STAGE.md 5.25): stage 11 with the pair term's form changed.  Stage 11
 # showed the 12-6 wall cannot give the registry cost and the lattice together; against DFT on rigid
 # chains moved along and towards each other it is too costly the closer the contact, by a factor
 # that grows from 2 to 5 (examples/interchain_frames.py, interchain_wall.py).  The form here is
@@ -167,17 +168,17 @@ BOUNDS9_WIDE[8] = (0.70, 1.15)  # x_HF
 # diameters mean something else under a softer wall, so their box is wide and their ridge widths
 # are three times the earlier stages'; and the torsion terms, fitted with 12-6 between a chain's
 # own atoms, have to be fitted again afterwards.
-VARIABLES10 = VARIABLES7 + ("wall_delta",)
-X0_10 = np.concatenate([X0_7, [0.07]])
-BOUNDS10 = np.vstack([BOUNDS7, [(0.0, 0.5)]])
-BOUNDS10[0] = (0.90, 1.40)  # x_C
-BOUNDS10[1] = (0.80, 1.40)  # x_H
-BOUNDS10[2] = (0.85, 1.25)  # x_F
-BOUNDS10[8] = (0.70, 1.20)  # x_HF
-BOUNDS10[10] = (-5.0, -0.3)  # log10_D_X: the same wall-alone site, in a form where 1e-4 kcal/mol is still felt
-SIGMA10 = np.concatenate([SIGMA7, [0.15]])
-SIGMA10[[0, 1, 2, 8]] = 0.15
-STAGE10 = dict(STAGE9)
+VARIABLES12 = VARIABLES7 + ("wall_delta",)
+X0_12 = np.concatenate([X0_7, [0.07]])
+BOUNDS12 = np.vstack([BOUNDS7, [(0.0, 0.5)]])
+BOUNDS12[0] = (0.90, 1.40)  # x_C
+BOUNDS12[1] = (0.80, 1.40)  # x_H
+BOUNDS12[2] = (0.85, 1.25)  # x_F
+BOUNDS12[8] = (0.70, 1.20)  # x_HF
+BOUNDS12[10] = (-5.0, -0.3)  # log10_D_X: the same wall-alone site, in a form where 1e-4 kcal/mol is still felt
+SIGMA12 = np.concatenate([SIGMA7, [0.15]])
+SIGMA12[[0, 1, 2, 8]] = 0.15
+STAGE12 = dict(STAGE11)
 
 
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
@@ -201,7 +202,7 @@ def _config(x):
     if n == 13:
         return VARIABLES7, X0_7, BOUNDS7, SIGMA7
     if n == 14:
-        return VARIABLES10, X0_10, BOUNDS10, SIGMA10
+        return VARIABLES12, X0_12, BOUNDS12, SIGMA12
     raise ValueError(f"expected 8, 10, 11, 12, 13 or 14 variables, got {n}")
 
 
@@ -221,7 +222,7 @@ def ridge_parts(x) -> np.ndarray:
     if len(x) >= 13:  # the backbone-angle restraint, log10 of its multiplier on the default
         parts += [x[12:13] / sigma[12:13]]
     if len(x) == 14:  # the wall's first buffer, from Halgren's 0.07
-        parts += [(x[13:14] - X0_10[13]) / sigma[13:14]]
+        parts += [(x[13:14] - X0_12[13]) / sigma[13:14]]
     return np.concatenate(parts)
 
 
@@ -349,7 +350,7 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     relaxation energies are added to the refined energies before the difference is taken, and
     recorded in ``Evaluation.extra``.  ``registry`` adds the cost of moving neighbouring chains
     along each other (:func:`registry_costs`, the rows :data:`REGISTRY_FIT_ROWS` of each packing)
-    against DFT's on the same atoms (:data:`STAGE9`).
+    against DFT's on the same atoms (:data:`STAGE11`).
     """
     from .mechanics import elastic_constants, relax_reference, strain_states
     from .polarizability import Polarizable
@@ -455,8 +456,8 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
     parallel where Powell's line searches cannot).  ``maxfev`` then bounds the residual evaluations
     least_squares asks for itself; the Jacobian's evaluations come on top and are in ``history``.
 
-    ``stage=9`` is stage 7 with the registry rows (:data:`STAGE9`); ``bounds`` replaces the
-    stage's box (:data:`BOUNDS9_WIDE` opens the diameters)."""
+    ``stage=11`` is stage 7 with the registry rows (:data:`STAGE11`); ``bounds`` replaces the
+    stage's box (:data:`BOUNDS11_WIDE` opens the diameters)."""
     from scipy.optimize import least_squares, minimize
     if stage in (2, 3, 4):
         eval_kw = {**STAGE2, **eval_kw}
@@ -464,15 +465,15 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
         eval_kw = {**STAGE6, **eval_kw}
     elif stage == 7:
         eval_kw = {**STAGE7, **eval_kw}
-    elif stage == 9:
-        eval_kw = {**STAGE9, **eval_kw}
-    elif stage == 10:
-        eval_kw = {**STAGE10, **eval_kw}
-    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7, 9: X0_7, 10: X0_10}[stage]) if x0 is None else np.asarray(x0, dtype=float)
-    if stage in (7, 9, 10) and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
+    elif stage == 11:
+        eval_kw = {**STAGE11, **eval_kw}
+    elif stage == 12:
+        eval_kw = {**STAGE12, **eval_kw}
+    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7, 11: X0_7, 12: X0_12}[stage]) if x0 is None else np.asarray(x0, dtype=float)
+    if stage in (7, 11, 12) and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
         start = np.concatenate([start, [0.0]])
-    if stage == 10 and len(start) == 13:  # from a 12-6 result: the wall starts at Halgren's buffer
-        start = np.concatenate([start, [X0_10[13]]])
+    if stage == 12 and len(start) == 13:  # from a 12-6 result: the wall starts at Halgren's buffer
+        start = np.concatenate([start, [X0_12[13]]])
     bounds = (_config(start)[2] if bounds is None else np.asarray(bounds, dtype=float)).copy()
     history: list[Evaluation] = []
 
