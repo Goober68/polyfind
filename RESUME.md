@@ -89,6 +89,15 @@ NOT DONE, IN ORDER:
     --hold-out "VAVF|VRVV"` gives 282 in the fit, 48 out (one composition whole). It was run here and passes.
     THE PI SAID "Go" (2026-11-17) AND SAVED THE KEY AGAIN (the secure form, 19:07 UTC): `rest.runpod.io` STILL
     ANSWERS 502 in 0.3 s from this session, so no pod can be made from it. The pod needs a NEW SESSION (asked of the PI).
+    A SECOND ROUTE THAT DOES NOT USE THE KEY OR THAT HOST (PI asked 2026-11-18, "U using the runpod mcp?"; the answer
+    was no: every pod so far was made with curl against the REST API): Runpod's hosted MCP server,
+    `https://mcp.runpod.io/` (https://agents.runpod.io/; sign-in by OAuth, no API key; it answers from the session).
+    It is NOT connected: no Runpod connector on the PI's claude.ai account, no Runpod tools in the session; the plugin
+    installed on 2026-11-13 lived in that container only and its sign-in was never done. For a cloud session the
+    PI adds it as a connector at https://claude.ai/customize/connectors (URL `https://mcp.runpod.io/`, sign in with
+    Runpod) and starts a NEW session: connectors are read when a session starts. Its tools are untested here: check
+    that a pod can be made with an image, a start command, environment variables and an HTTP port before relying
+    on it; if not, it can still read and delete pods.
     IN A NEW SESSION: check `curl -sS -o /dev/null -w "%{http_code}" https://rest.runpod.io/v1/pods` gives 200; confirm
     stock and price (public GraphQL, as in docs 3.5); state the hourly cost; POST https://rest.runpod.io/v1/pods with
     name polyfind-mlip-fit-all, imageName runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04, gpuTypeIds
