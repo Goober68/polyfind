@@ -447,9 +447,10 @@ DFT single point, to set beside the cells relaxed freely at the same stage:
 | polyfind | +0.064 |
 | free to shear | -0.276 |
 
-- **Polyfind's energies are right.** With the cell shaped as polyfind shapes it, DFT gives
-  polyfind's margin to 0.006 kcal/mol. This is the first of polyfind's candidate margins to be
-  met by DFT, and on a chemistry no anchor was fitted to.
+- **Polyfind's energy is right at this registry.** With the cell shaped as polyfind shapes it,
+  DFT gives polyfind's margin to 0.006 kcal/mol. This is the first of polyfind's candidate
+  margins to be met by DFT, and on a chemistry no anchor was fitted to. (As first written this
+  point read "polyfind's energies are right". They are not along the registry: 3.9.)
 - **Polyfind's cell is not.** Free to shear, the all-trans cell is 15 meV per monomer lower in
   DFT (0.35 kcal/mol; 2.1 per reversed unit), and DFT's shear stress on the upright cell says
   the same (0.5 and 0.3 GPa). The helix cell gains nothing from the same freedom (the five
@@ -467,10 +468,122 @@ DFT single point, to set beside the cells relaxed freely at the same stage:
   been measured and need not have the same sign.
 - **What would settle it in polyfind:** two more lattice freedoms (the lattice vectors a and b
   allowed a component along the chain), then the candidates polished again. The number to meet:
-  0.35 kcal/mol per monomer for this cell's all-trans state, nothing for its helix.
+  0.35 kcal/mol per monomer for this cell's all-trans state, nothing for its helix. **Done in
+  3.9: the freedoms are there, and polyfind does not meet the number.**
 
 These comparisons are between cells relaxed in the potential only (0.6 to 0.9 eV/A left in
 DFT); relaxing on in DFT moved the sheared margin by 0.015.
 
 This reads on the margin alone, which places a cell on the strain axis; it says nothing yet of
 loss, rate or blocked force.
+
+### 3.9 The shear in polyfind's cell, and what polyfind charges for registry (2026-11-18; PI: "Yes")
+
+**The freedom is there and exact.** `polyfind.mixedcell.MixedModel(shear=True)` has two more
+variables: what the lattice vectors a and b carry along the chains, in A. A chain's image one a
+away then sits that much higher. Nothing else in the cell changes: the Ewald sum and the dipole
+solve already took any lattice, and the chain-pair sums now move each image along the chains as
+well as across. It is held to a known answer: a cell sheared by half a repeat is an upright
+cell twice as wide, which the old code evaluates, and the two agree to 1e-14 kcal/mol in every
+term, both forms of the sums, four cells and four shears. At no shear the arithmetic is the
+upright cell's bit for bit, so no stored number moves (`tests/test_mixedcell.py`).
+
+**Polyfind does not take it.** The all-trans cell of the reversed-unit candidate, against its
+own upright cell, kcal/mol per monomer (`examples/shear_registry.py candidate`,
+`docs/predictions/shear_registry_belt4.json`):
+
+| | shear along a, b (monomers) | DFT | polyfind |
+|---|---|---:|---:|
+| each free to shear in its own energy | DFT 0.30, -0.90; polyfind 0.026, -0.078 | -0.35 | **-0.03** |
+| at the cell DFT relaxed to, shear held, the rest relaxed in polyfind | 0.30, -0.90 | -0.35 | **+0.43** |
+
+- Polyfind leaves its upright cell in DFT's direction (one of a to minus three of b, exactly, in
+  both) and stops a tenth of the way.
+- DFT's relaxed cell goes into the mixed cell's variables to 0.015 A rms over its 72 atoms
+  (0.03 at worst; the setting angles are polyfind's to 0.01 degree), so polyfind can be asked
+  about that very structure. As fitted it is 1.33 above polyfind's upright cell; with
+  everything but the shear relaxed, 0.43 above. DFT has it 0.35 below.
+- A start at DFT's shear with polyfind's own chains runs back to polyfind's minimum from 1.58
+  above it. Released from DFT's own structure, the shear settles in a second minimum of
+  polyfind's, 0.20 above the upright cell (0.01, -0.93 monomers).
+
+**Why: moving chains along each other costs three times too much in polyfind.** Plain PVDF, no
+reversed unit: two chains of one monomer, sheared rigidly, polyfind and a PBE-D3(BJ) single
+point on the same twelve atoms (`shear_registry.py frames`, `mlip_frames.py label`; 45 s of DFT
+each). Two packings: polyfind's beta cell, and the candidate's all-trans packing with plain
+chains in it. kcal/mol per monomer against the unsheared cell:
+
+| shear, monomers | beta: polyfind | DFT | ratio | candidate's packing: polyfind | DFT | ratio |
+|---|---:|---:|---:|---:|---:|---:|
+| 1/8 along a | 0.223 | 0.085 | 2.6 | 0.096 | 0.040 | 2.4 |
+| 1/4 along a | 0.868 | 0.296 | 2.9 | 0.371 | 0.148 | 2.5 |
+| 3/8 along a | 1.734 | 0.533 | 3.3 | 0.759 | 0.286 | 2.7 |
+| 1/2 along a | 2.343 | 0.692 | 3.4 | 1.132 | 0.405 | 2.8 |
+| 1/8 along b | 0.049 | 0.018 | 2.7 | 0.047 | 0.019 | 2.5 |
+| 1/4 along b | 0.195 | 0.069 | 2.8 | 0.185 | 0.076 | 2.5 |
+| 3/8 along b | 0.430 | 0.147 | 2.9 | 0.411 | 0.160 | 2.6 |
+| 1/2 along b | 0.732 | 0.240 | 3.1 | 0.707 | 0.259 | 2.7 |
+| the candidate's own shear in DFT (0.30, -0.91) | 2.176 | 0.675 | 3.2 | 1.575 | 0.525 | 3.0 |
+
+Eight more cells along that last line give the same (2.6 to 3.5). And the test registered for
+this question, E5 (`docs/E1_E2_PREDICTIONS.md`: one sublattice of beta slid, and one chain of
+four, in Dipole's accepted beta cell), which had been waiting on Dipole, run here in the same
+DFT. The forces on Dipole's unslid cell are zero in it, so it is the same DFT. kcal/mol per
+monomer of the cell:
+
+| E5 cell | polyfind, registered like for like | DFT | ratio |
+|---|---:|---:|---:|
+| one sublattice slid c/8 | 0.172 | 0.066 | 2.6 |
+| c/4 | 0.656 | 0.230 | 2.9 |
+| 3c/8 | 1.251 | 0.396 | 3.2 |
+| c/2 | 1.533 | 0.467 | 3.3 |
+| one chain of four slid c/4 | 0.671 | 0.232 | 2.9 |
+| c/2 | 1.585 | 0.469 | 3.4 |
+
+- **The registered acceptance is not met.** Sign, order along the slide and the anisotropy
+  hold (one chain of four costs 2.01 times one sublattice per moved monomer in DFT, 2.07 in
+  polyfind). The magnitudes, asked to be within a factor 1.5, are 2.6 to 3.4 times DFT's.
+- **Over all 32 cells: 2.4 to 3.5, median 2.9.** The ratio grows with the displacement in
+  every series, so the wall the chains ride over is too steep and not only too high.
+- **It is the repulsion and dispersion terms.** Split by term, polyfind's electrostatics
+  (charges and induced dipoles) lower the sheared cell slightly in every one of the 26 cells,
+  by at most an eighth of what the pair terms raise it. The pair terms alone are 2.7 to 3.7
+  times DFT's whole cost.
+- **Its handles are hydrogen's contacts, and they are the lattice's handles too.** One fitted
+  variable stepped at a time (`shear_registry.py handles`), the cost of half a monomer of shear
+  in the beta cell moves with four: the hydrogen diameter (+2%: +13.5% along a, +14.3% along
+  b), the H-F pair's own diameter (+2%: +6.9%, +13.1%), the depth of the belt wall against H
+  (+0.1 in its logarithm: +10.0%, +7.8%) and the fluorine diameter (+2%: +3.6%, +6.4%). The
+  well depths, the carbon diameter and the charges move it by 1% or less. Each of the four
+  also pushes the cell apart (the lateral forces on the cell go from -0.06 and -0.28 to
+  between -0.3 and -0.7 kcal/mol/A). The fit was given the lattice and its stiffness and no
+  registry, and set these variables for those. On the hydrogen diameter alone a factor 2.9
+  is about 15% off it, which the lattice would not survive unchanged; whether one r^-12 wall
+  can hold both is what a refit would find out.
+- **It accounts for the candidate.** At DFT's shear, plain chains cost 1.57 in polyfind and
+  0.52 in DFT: 1.05 apart. On the candidate itself the two are 0.77 apart (+0.43 and -0.35).
+  What the reversed units gain by leaving their column is of one size in both, about one
+  kcal/mol per monomer; polyfind charges three times too much to get there and stays.
+
+**What stands and what does not.**
+
+- *Stands:* energies compared at one registry. The beta-alpha gap (+0.744 against +0.726),
+  the candidate's margin with both cells upright (+0.064 against +0.070), and the stiffness
+  across the chains (C_11, C_22, C_12 of 24.4, 25.3, 5.2 GPa against DFT's 22.8, 24.5, 5.9).
+- *Does not stand until redone:* anything in which a chain, or part of one, moves along its
+  neighbours. That is the chain-slide barrier (3.15 kcal/mol per monomer of the slid chain),
+  every kink step behind a relaxation frequency, and the two shear constants along the chains,
+  which are the second derivative of exactly this energy (2.4 to 2.7 times too stiff at an
+  eighth of a monomer). How much each relaxed barrier falls has not been computed; the
+  direction is that polyfind overstates them, so its rates are too slow.
+- *The margins of cells with pins:* a pin's registry with the pins of the next chains is worth
+  about as much as the window is wide, DFT moves it where polyfind cannot, and the two-chain
+  cell offers one registry to choose. One row is measured (this candidate: +0.06 to -0.26).
+
+**On the four parts of the objective.** This is a finding about the model, not a candidate's
+evaluation, and it lands on them unequally. Strain (the margin's place in the window): off by
+up to several tenths for rows whose cells shear in DFT, the sign per row unknown. Tan delta and
+frequency: both come from barriers of the kind above, overstated by an amount not yet computed.
+Blocked force per area: unaffected where it is taken through the crystal across the chains,
+which is the constant DFT confirms.
+

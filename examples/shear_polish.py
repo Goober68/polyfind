@@ -82,7 +82,8 @@ def relax_sheared(model, x0, starts=(), maxiter: int = 800, kick: float = 0.05):
         else:
             x[model.index("shear")] = start
             x, _ = model.relax(x, free=rigid, closed=[], maxiter=300)
-        x1, info = model.relax(x, free=everything, closed=[0, 1], maxiter=maxiter)
+        # the optimiser's own test can go on failing at a minimum of a large cell (MixedModel.relax): stop when the energy has
+        x1, info = model.relax(x, free=everything, closed=[0, 1], maxiter=maxiter, patience=60, patience_tol=1e-6)
         e1 = model.physical_energy(x1)
         tried.append({"start_shear_A": [float(v) for v in x[model.index("shear")]] if start is None else [float(v) for v in start], "energy": float(e1),
                       "shear_A": [float(v) for v in model.state(x1).shear]})
@@ -147,7 +148,7 @@ def main():
                        "upright_shear_gradient_kcal_per_A_per_cell": [float(v) for v in g0[model.index("shear")]],
                        "cell_upright": st0.lattice.tolist(), "cell_sheared": st1.lattice.tolist(), "c_per_monomer": float(st1.lattice[3]) / ch.n_monomers,
                        "monomers_per_chain": int(ch.n_monomers), "evaluations": int(info["evaluations"]), "gradient_max": float(info["gradient_max"]),
-                       "message": info["message"], "state": [float(v) for v in x1], "flips": [bool(f) for f in model.flips]}
+                       "message": info["message"], "stalled": bool(info["stalled"]), "state": [float(v) for v in x1], "flips": [bool(f) for f in model.flips]}
                 if fractions:
                     rec["starts"] = [{**t, "energy_per_monomer": t["energy"] / per} for t in tried]
                 if args.tilts:

@@ -1,6 +1,6 @@
 """What it costs to move neighbouring chains along each other: polyfind against DFT on the same atoms.
 
-Three steps, each writing or reading files; the DFT between them is ``examples/mlip_frames.py label``.
+Four steps, each writing or reading files; the DFT between them is ``examples/mlip_frames.py label``.
 
 ``frames --out DIR``
     Plain PVDF, two chains of one monomer, in two packings: polyfind's beta cell (the stored
@@ -22,6 +22,12 @@ Three steps, each writing or reading files; the DFT between them is ``examples/m
 ``collect --frames DIR --out JSON``
     The labelled frames against polyfind's numbers: a table per packing, the E5 cells against the
     registered like-for-like predictions, and the labelled frames gathered into one file.
+
+``handles``
+    Which of the potential's fitted non-bonded variables move the cost: each one stepped by a
+    little, the rigid shear of the beta cell by half a monomer along ``a`` and along ``b``
+    evaluated again, with the cell's lateral forces beside it (what the same step does to the
+    lattice the potential was fitted to hold).
 
     python examples/shear_registry.py frames --out /opt/dft/shear
     python examples/mlip_frames.py label --frames /opt/dft/shear --pw .../pw.x --pseudo .../pseudo
@@ -295,6 +301,46 @@ def collect(args):
     print(f"polyfind over DFT on {len(ratios)} cells: {min(ratios):.2f} to {max(ratios):.2f}, median {np.median(ratios):.2f}; written {out_path} and {args.extxyz} ({len(kept)} frames)")
 
 
+def handles(args):
+    from polyfind import fitting as F
+
+    x_fit = np.array(F.CRYSTAL8_TILT_FITTED_X, dtype=float)
+    names = list(F.CRYSTAL_STAGE7_VARIABLES)
+    steps = {"x_C": 0.02, "x_H": 0.02, "x_F": 0.02, "D_C": 0.02, "D_H": 0.02, "D_F": 0.02, "q_CH": 0.01, "q_CF": 0.01, "x_HF": 0.02, "D_HF": 0.02, "log10_D_X": 0.1}
+
+    def costs(x):
+        with F.crystal_stage_parameters(x).applied():
+            model, x0, ch = plain_model("beta")
+            e0, g = model.value_and_grad(x0)
+            e0 = model.physical_energy(x0)
+            out = []
+            for fa, fb in ((0.5, 0.0), (0.0, 0.5)):
+                xs = x0.copy()
+                xs[model.index("shear")] = [fa * ch.c, fb * ch.c]
+                out.append((model.physical_energy(xs) - e0) / 2)
+            return out + [float(g[0]), float(g[1])]
+
+    base = costs(x_fit)
+    rows = {}
+    for name, step in steps.items():
+        x = x_fit.copy()
+        x[names.index(name)] += step
+        c = costs(x)
+        rows[name] = {"fitted": float(x_fit[names.index(name)]), "step": step, "half_a": c[0], "half_b": c[1],
+                      "half_a_change": c[0] / base[0] - 1.0, "half_b_change": c[1] / base[1] - 1.0, "dE_dA": c[2], "dE_dB": c[3]}
+        print(f"{name:10s} {rows[name]['fitted']:+.4f} {step:+.2f}: half a monomer along a {c[0]:.3f} ({100 * rows[name]['half_a_change']:+.1f}%), "
+              f"along b {c[1]:.3f} ({100 * rows[name]['half_b_change']:+.1f}%); dE/dA {c[2]:+.2f}, dE/dB {c[3]:+.2f} kcal/mol/A per cell")
+    out_path = Path(args.out)
+    disk = json.load(open(out_path)) if out_path.exists() else {}
+    disk["handles"] = {
+        "what": "polyfind's rigid shear cost of the plain beta cell after one fitted variable is stepped (the crystal stage's: Lennard-Jones diameters x and depths D "
+                "as multipliers, bond-charge increments q, the H-F pair's own term, the belt site's depth), with the cell's lateral forces",
+        "energy": "kcal/mol per monomer; forces in kcal/mol/A per cell", "fitted": {"half_a": base[0], "half_b": base[1], "dE_dA": base[2], "dE_dB": base[3]},
+        "steps": rows}
+    out_path.write_text(json.dumps(disk, indent=1))
+    print(f"fitted: {base[0]:.3f} along a, {base[1]:.3f} along b; dE/dA {base[2]:+.2f}, dE/dB {base[3]:+.2f}; written {out_path}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="step", required=True)
@@ -302,12 +348,14 @@ def main():
     s.add_argument("--out", required=True, help="working directory for the DFT, outside the repository")
     s = sub.add_parser("candidate")
     s.add_argument("--out", default=str(PRED / "shear_registry_belt4.json"))
+    s = sub.add_parser("handles")
+    s.add_argument("--out", default=str(PRED / "shear_registry_belt4.json"))
     s = sub.add_parser("collect")
     s.add_argument("--frames", required=True)
     s.add_argument("--out", default=str(PRED / "shear_registry_belt4.json"))
     s.add_argument("--extxyz", default=str(PRED / "mlip" / "shear_registry_frames_pbe_d3bj.extxyz"))
     args = ap.parse_args()
-    {"frames": frames, "candidate": candidate, "collect": collect}[args.step](args)
+    {"frames": frames, "candidate": candidate, "collect": collect, "handles": handles}[args.step](args)
 
 
 if __name__ == "__main__":

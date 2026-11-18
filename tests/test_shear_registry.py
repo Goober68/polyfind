@@ -114,3 +114,18 @@ def test_the_excess_is_polyfinds_repulsion_and_dispersion_and_none_of_it_electro
             es, rd = r["polyfind_electrostatics"], r["polyfind_repulsion_dispersion"]
             assert es + rd == pytest.approx(r["polyfind"], abs=1e-9)
             assert es < 0.0 < r["dft"] < rd and abs(es) < 0.13 * rd
+
+
+def test_the_cost_is_set_by_the_variables_that_place_hydrogens_contacts():
+    """One fitted variable stepped at a time: four move the cost of half a monomer of shear by
+    more than 3%, all of them diameters or the belt wall, and each pushes the cell apart as well;
+    the well depths, the carbon diameter and the charges do not move it."""
+    h = _table()["handles"]
+    steps, fit = h["steps"], h["fitted"]
+    assert fit["half_a"] == pytest.approx(2.343, abs=0.002) and fit["half_b"] == pytest.approx(0.732, abs=0.002)
+    moved = {k for k, r in steps.items() if abs(r["half_a_change"]) > 0.03}
+    assert moved == {"x_H", "x_HF", "log10_D_X", "x_F"}
+    assert steps["x_H"]["half_a_change"] == pytest.approx(0.135, abs=0.003) and steps["x_H"]["half_b_change"] == pytest.approx(0.143, abs=0.003)
+    assert all(abs(steps[k]["half_a_change"]) < 0.011 and abs(steps[k]["half_b_change"]) < 0.011 for k in set(steps) - moved)
+    for k in moved:  # the lateral force on the cell, kcal/mol/A: more negative is a cell that wants to be wider
+        assert steps[k]["dE_dA"] < fit["dE_dA"] - 0.2 and steps[k]["dE_dB"] < fit["dE_dB"] - 0.15
