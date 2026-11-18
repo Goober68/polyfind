@@ -1,0 +1,551 @@
+{
+ "what": "the energy of moving neighbouring chains along each other, polyfind against PBE-D3(BJ) single points on the same atoms",
+ "energy": "kcal/mol per monomer of the cell, against the cell at no shear (no slide); rigid chains, nothing relaxed",
+ "preset": "pvdf-dft-valence-belt4",
+ "dft": "Quantum ESPRESSO 7.5, PBE-D3(BJ), SSSP 1.3.0 precision, 90/360 Ry, 4x2x8 (2x2x8 on the doubled cell): the anchor's setup",
+ "packings": {
+  "beta": {
+   "what": "polyfind's beta cell",
+   "cell_A_deg": [
+    4.754070390732875,
+    8.480849480989322,
+    90.00000001728047,
+    2.58768189713716
+   ],
+   "setting_angles_deg": [
+    180.0000000520547,
+    179.9999999825207
+   ],
+   "second_chain_flipped": true,
+   "polyfind_kcal_per_monomer": -9.390744252948675,
+   "shears": [
+    {
+     "frame": "shear_beta_00",
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.0,
+     "polyfind_electrostatics": 0.0,
+     "polyfind_repulsion_dispersion": 0.0,
+     "dft": 0.0,
+     "dft_largest_force_eV_per_A": 0.38769407
+    },
+    {
+     "frame": "shear_beta_01",
+     "shear_monomers": [
+      0.125,
+      0.0
+     ],
+     "polyfind": 0.22298549194684725,
+     "polyfind_electrostatics": -0.015804417474910792,
+     "polyfind_repulsion_dispersion": 0.2387899094217616,
+     "dft": 0.08472632240172957,
+     "dft_largest_force_eV_per_A": 0.38228087,
+     "ratio": 2.6318325359333112
+    },
+    {
+     "frame": "shear_beta_02",
+     "shear_monomers": [
+      0.25,
+      0.0
+     ],
+     "polyfind": 0.8683664564935327,
+     "polyfind_electrostatics": -0.05625866654027334,
+     "polyfind_repulsion_dispersion": 0.9246251230338061,
+     "dft": 0.2963272064292811,
+     "dft_largest_force_eV_per_A": 0.36904792,
+     "ratio": 2.930431083116796
+    },
+    {
+     "frame": "shear_beta_03",
+     "shear_monomers": [
+      0.375,
+      0.0
+     ],
+     "polyfind": 1.7340720720198002,
+     "polyfind_electrostatics": -0.10412570038077718,
+     "polyfind_repulsion_dispersion": 1.8381977724005836,
+     "dft": 0.5329296346626006,
+     "dft_largest_force_eV_per_A": 0.35474539,
+     "ratio": 3.2538480865633352
+    },
+    {
+     "frame": "shear_beta_04",
+     "shear_monomers": [
+      0.5,
+      0.0
+     ],
+     "polyfind": 2.342552672579658,
+     "polyfind_electrostatics": -0.1410319215681568,
+     "polyfind_repulsion_dispersion": 2.483584594147821,
+     "dft": 0.6922574149016462,
+     "dft_largest_force_eV_per_A": 0.34967157,
+     "ratio": 3.3839329448171833
+    },
+    {
+     "frame": "shear_beta_05",
+     "shear_monomers": [
+      0.0,
+      0.125
+     ],
+     "polyfind": 0.04935335519920514,
+     "polyfind_electrostatics": -0.005282759299490181,
+     "polyfind_repulsion_dispersion": 0.05463611449869887,
+     "dft": 0.018048739806792852,
+     "dft_largest_force_eV_per_A": 0.38793936,
+     "ratio": 2.7344488162342744
+    },
+    {
+     "frame": "shear_beta_06",
+     "shear_monomers": [
+      0.0,
+      0.25
+     ],
+     "polyfind": 0.19542966111603732,
+     "polyfind_electrostatics": -0.020355957595825203,
+     "polyfind_repulsion_dispersion": 0.21578561871186253,
+     "dft": 0.06923154596166871,
+     "dft_largest_force_eV_per_A": 0.38872303,
+     "ratio": 2.8228412120717405
+    },
+    {
+     "frame": "shear_beta_07",
+     "shear_monomers": [
+      0.0,
+      0.375
+     ],
+     "polyfind": 0.4298000848709336,
+     "polyfind_electrostatics": -0.04299527224058863,
+     "polyfind_repulsion_dispersion": 0.4727953571115222,
+     "dft": 0.14694074422497957,
+     "dft_largest_force_eV_per_A": 0.38958615,
+     "ratio": 2.9249891657882907
+    },
+    {
+     "frame": "shear_beta_08",
+     "shear_monomers": [
+      0.0,
+      0.5
+     ],
+     "polyfind": 0.7315692590912732,
+     "polyfind_electrostatics": -0.06982499615631355,
+     "polyfind_repulsion_dispersion": 0.8013942552475868,
+     "dft": 0.23980115753036843,
+     "dft_largest_force_eV_per_A": 0.39073055,
+     "ratio": 3.0507328097389492
+    },
+    {
+     "frame": "shear_beta_09",
+     "shear_monomers": [
+      0.1,
+      -0.3
+     ],
+     "polyfind": 0.416931406238664,
+     "polyfind_electrostatics": -0.03752962244799107,
+     "polyfind_repulsion_dispersion": 0.4544610286866586,
+     "dft": 0.14764982987901032,
+     "dft_largest_force_eV_per_A": 0.38532737,
+     "ratio": 2.823785212487633
+    },
+    {
+     "frame": "shear_beta_10",
+     "shear_monomers": [
+      0.2,
+      -0.6
+     ],
+     "polyfind": 1.4162018229632602,
+     "polyfind_electrostatics": -0.11195959429865354,
+     "polyfind_repulsion_dispersion": 1.52816141726192,
+     "dft": 0.4575218272023895,
+     "dft_largest_force_eV_per_A": 0.37751405,
+     "ratio": 3.09537543076997
+    },
+    {
+     "frame": "shear_beta_11",
+     "shear_monomers": [
+      0.303,
+      -0.909
+     ],
+     "polyfind": 2.175689490781612,
+     "polyfind_electrostatics": -0.15571589793482588,
+     "polyfind_repulsion_dispersion": 2.3314053887164405,
+     "dft": 0.6753695675395203,
+     "dft_largest_force_eV_per_A": 0.36515527,
+     "ratio": 3.221479905747009
+    },
+    {
+     "frame": "shear_beta_12",
+     "shear_monomers": [
+      0.4,
+      -1.2
+     ],
+     "polyfind": 2.384217679015877,
+     "polyfind_electrostatics": -0.15166879040785375,
+     "polyfind_repulsion_dispersion": 2.535886469423737,
+     "dft": 0.7073160723060824,
+     "dft_largest_force_eV_per_A": 0.35320144,
+     "ratio": 3.370795281439803
+    },
+    {
+     "frame": "shear_beta_13",
+     "shear_monomers": [
+      0.5,
+      -1.5
+     ],
+     "polyfind": 2.44051942911229,
+     "polyfind_electrostatics": -0.14166659296651574,
+     "polyfind_repulsion_dispersion": 2.582186022078808,
+     "dft": 0.6913694890648986,
+     "dft_largest_force_eV_per_A": 0.34695752,
+     "ratio": 3.5299784958881792
+    }
+   ],
+   "ratio_range": [
+    2.6318325359333112,
+    3.5299784958881792
+   ]
+  },
+  "candidate": {
+   "what": "the packing of the reversed-unit candidate's all-trans cell, plain chains in it",
+   "cell_A_deg": [
+    4.9666474417274875,
+    8.4095769676478,
+    87.74847749549396,
+    2.5820277490117967
+   ],
+   "setting_angles_deg": [
+    118.88700568626805,
+    118.88700751806567
+   ],
+   "second_chain_flipped": false,
+   "polyfind_kcal_per_monomer": -9.364128844388176,
+   "shears": [
+    {
+     "frame": "shear_candidate_00",
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.0,
+     "polyfind_electrostatics": 0.0,
+     "polyfind_repulsion_dispersion": 0.0,
+     "dft": 0.0,
+     "dft_largest_force_eV_per_A": 0.25856222
+    },
+    {
+     "frame": "shear_candidate_01",
+     "shear_monomers": [
+      0.125,
+      0.0
+     ],
+     "polyfind": 0.09583330416351288,
+     "polyfind_electrostatics": -0.012398876718151541,
+     "polyfind_repulsion_dispersion": 0.10823218088166442,
+     "dft": 0.03988136142748725,
+     "dft_largest_force_eV_per_A": 0.25594998,
+     "ratio": 2.4029596967936535
+    },
+    {
+     "frame": "shear_candidate_02",
+     "shear_monomers": [
+      0.25,
+      0.0
+     ],
+     "polyfind": 0.3707601911292997,
+     "polyfind_electrostatics": -0.044350078596366416,
+     "polyfind_repulsion_dispersion": 0.4151102697256661,
+     "dft": 0.1479008336393515,
+     "dft_largest_force_eV_per_A": 0.24924891,
+     "ratio": 2.5068161010733663
+    },
+    {
+     "frame": "shear_candidate_03",
+     "shear_monomers": [
+      0.375,
+      0.0
+     ],
+     "polyfind": 0.7594339708516529,
+     "polyfind_electrostatics": -0.08268392102394273,
+     "polyfind_repulsion_dispersion": 0.8421178918755956,
+     "dft": 0.2856862153557611,
+     "dft_largest_force_eV_per_A": 0.24598027,
+     "ratio": 2.658280064041383
+    },
+    {
+     "frame": "shear_candidate_04",
+     "shear_monomers": [
+      0.5,
+      0.0
+     ],
+     "polyfind": 1.131728706600164,
+     "polyfind_electrostatics": -0.11301966508705164,
+     "polyfind_repulsion_dispersion": 1.2447483716872156,
+     "dft": 0.40511224011778885,
+     "dft_largest_force_eV_per_A": 0.2405267,
+     "ratio": 2.7936176558652166
+    },
+    {
+     "frame": "shear_candidate_05",
+     "shear_monomers": [
+      0.0,
+      0.125
+     ],
+     "polyfind": 0.046536876112106995,
+     "polyfind_electrostatics": -0.0044538566802714286,
+     "polyfind_repulsion_dispersion": 0.050990732792378424,
+     "dft": 0.018728018754091302,
+     "dft_largest_force_eV_per_A": 0.2538787,
+     "ratio": 2.484879832894262
+    },
+    {
+     "frame": "shear_candidate_06",
+     "shear_monomers": [
+      0.0,
+      0.25
+     ],
+     "polyfind": 0.1852882549732513,
+     "polyfind_electrostatics": -0.01714360751412869,
+     "polyfind_repulsion_dispersion": 0.20243186248738,
+     "dft": 0.07573881867306073,
+     "dft_largest_force_eV_per_A": 0.25061391,
+     "ratio": 2.44641068106804
+    },
+    {
+     "frame": "shear_candidate_07",
+     "shear_monomers": [
+      0.0,
+      0.375
+     ],
+     "polyfind": 0.41095764592613904,
+     "polyfind_electrostatics": -0.0361525451751703,
+     "polyfind_repulsion_dispersion": 0.44711019110130934,
+     "dft": 0.16021256852688823,
+     "dft_largest_force_eV_per_A": 0.24592165,
+     "ratio": 2.565077444951946
+    },
+    {
+     "frame": "shear_candidate_08",
+     "shear_monomers": [
+      0.0,
+      0.5
+     ],
+     "polyfind": 0.706919212872485,
+     "polyfind_electrostatics": -0.05860074931547388,
+     "polyfind_repulsion_dispersion": 0.7655199621879589,
+     "dft": 0.2588413622091229,
+     "dft_largest_force_eV_per_A": 0.24074396,
+     "ratio": 2.7310906063821108
+    },
+    {
+     "frame": "shear_candidate_09",
+     "shear_monomers": [
+      0.1,
+      -0.3
+     ],
+     "polyfind": 0.4058517693616963,
+     "polyfind_electrostatics": -0.03206908684320808,
+     "polyfind_repulsion_dispersion": 0.4379208562049044,
+     "dft": 0.157100121785401,
+     "dft_largest_force_eV_per_A": 0.24903474,
+     "ratio": 2.5833956380765284
+    },
+    {
+     "frame": "shear_candidate_10",
+     "shear_monomers": [
+      0.2,
+      -0.6
+     ],
+     "polyfind": 1.3228301635662874,
+     "polyfind_electrostatics": -0.0942868217736077,
+     "polyfind_repulsion_dispersion": 1.417116985339895,
+     "dft": 0.4367857782869183,
+     "dft_largest_force_eV_per_A": 0.23690145,
+     "ratio": 3.0285559405218074
+    },
+    {
+     "frame": "shear_candidate_11",
+     "shear_monomers": [
+      0.303,
+      -0.909
+     ],
+     "polyfind": 1.5746644781718118,
+     "polyfind_electrostatics": -0.12793867915830504,
+     "polyfind_repulsion_dispersion": 1.7026031573301168,
+     "dft": 0.5248112314772494,
+     "dft_largest_force_eV_per_A": 0.22685897,
+     "ratio": 3.000439746191052
+    },
+    {
+     "frame": "shear_candidate_12",
+     "shear_monomers": [
+      0.4,
+      -1.2
+     ],
+     "polyfind": 1.0912199366784492,
+     "polyfind_electrostatics": -0.1203552010134672,
+     "polyfind_repulsion_dispersion": 1.2115751376919164,
+     "dft": 0.39457165057252475,
+     "dft_largest_force_eV_per_A": 0.24263321,
+     "ratio": 2.7655811944296693
+    },
+    {
+     "frame": "shear_candidate_13",
+     "shear_monomers": [
+      0.5,
+      -1.5
+     ],
+     "polyfind": 0.8484254008862777,
+     "polyfind_electrostatics": -0.10977953537988583,
+     "polyfind_repulsion_dispersion": 0.9582049362661635,
+     "dft": 0.2935379270257595,
+     "dft_largest_force_eV_per_A": 0.25461557,
+     "ratio": 2.8903433688547646
+    }
+   ],
+   "ratio_range": [
+    2.4029596967936535,
+    3.0285559405218074
+   ]
+  }
+ },
+ "e5_like_for_like": {
+  "e5_beta_a_slide_c8": {
+   "part": "a",
+   "slide": "c/8",
+   "atoms": 12,
+   "polyfind_registered": 0.17193352024485192,
+   "dft": 0.06574180917540252,
+   "ratio": 2.615284282580731
+  },
+  "e5_beta_a_slide_c4": {
+   "part": "a",
+   "slide": "c/4",
+   "atoms": 12,
+   "polyfind_registered": 0.656139955410913,
+   "dft": 0.22958922604545115,
+   "ratio": 2.8578865250454686
+  },
+  "e5_beta_a_slide_3c8": {
+   "part": "a",
+   "slide": "3c/8",
+   "atoms": 12,
+   "polyfind_registered": 1.2505370064723025,
+   "dft": 0.3959545244776895,
+   "ratio": 3.158284421984842
+  },
+  "e5_beta_a_slide_c2": {
+   "part": "a",
+   "slide": "c/2",
+   "atoms": 12,
+   "polyfind_registered": 1.5330734215256485,
+   "dft": 0.46676425663146326,
+   "ratio": 3.2844704789297876
+  },
+  "e5_beta_2a_slide_c4": {
+   "part": "c",
+   "slide": "c/4",
+   "atoms": 24,
+   "polyfind_registered": 0.6705770051928823,
+   "dft": 0.2322812414696219,
+   "ratio": 2.8869184655213815
+  },
+  "e5_beta_2a_slide_c2": {
+   "part": "c",
+   "slide": "c/2",
+   "atoms": 24,
+   "polyfind_registered": 1.5854395509434596,
+   "dft": 0.46850873283163863,
+   "ratio": 3.3840128045450895
+  }
+ },
+ "e5_note": "the registered test's zero is the unslid cell; here it is the doubled reference cell at the same k-point density, which is the same crystal",
+ "ratio_range": [
+  2.4029596967936535,
+  3.5299784958881792
+ ],
+ "ratio_median": 2.872402495283425,
+ "cells": 32,
+ "candidate": {
+  "what": "the all-trans cell of vdf5-rvdf1-6 with polyfind's cell free to shear along its chains, and polyfind's energy at the cell DFT relaxed to",
+  "energy": "kcal/mol per monomer against polyfind's polished upright cell, rigid pendants",
+  "preset": "pvdf-dft-valence-belt4",
+  "monomer_A": 2.581930438381201,
+  "upright_shear_gradient_kcal_per_A_per_cell": [
+   -2.6773905963857048,
+   2.6773922415904003
+  ],
+  "polyfind_shear_free_from_upright": {
+   "gain": -0.02908376764487978,
+   "shear_A": [
+    0.0670496422014714,
+    -0.20115187536053547
+   ],
+   "shear_monomers": [
+    0.02596880272402291,
+    -0.07790755024626153
+   ],
+   "cell": [
+    4.96215717918509,
+    8.42543342297144,
+    88.02540126162066,
+    15.491315517985614
+   ],
+   "evaluations": 58,
+   "gradient_max": 7.2688060035214145e-06
+  },
+  "dft_relaxed_cell": {
+   "frame": "rvdf6_TT_d07",
+   "cell_A_deg": [
+    5.0580185565337885,
+    8.56550294539193,
+    87.76261624974065,
+    15.36149867328685
+   ],
+   "shear_A": [
+    0.7758389492536676,
+    -2.3275216790352165
+   ],
+   "shear_monomers": [
+    0.3004879363597794,
+    -0.9014656802661609
+   ],
+   "fit_rms_A": 0.015377583130684103,
+   "fit_worst_A": 0.03140321787510423,
+   "setting_angles_deg": [
+    118.89292099919048,
+    118.89134855206673
+   ],
+   "polyfind_setting_angles_deg": [
+    118.88700568626805,
+    118.88700751806567
+   ]
+  },
+  "polyfind_at_dft_cell": {
+   "as_fitted": 1.32942518367535,
+   "shear_held_rest_relaxed": 0.4255159975151083,
+   "shear_free": 0.20110575904945804,
+   "shear_free_ends_at_A": [
+    0.034676363437677785,
+    -2.406282825649809
+   ],
+   "shear_free_ends_at_monomers": [
+    0.01343040188930067,
+    -0.9319704318441987
+   ]
+  },
+  "polyfind_from_dft_shear_with_its_own_chains": {
+   "rigid_at_start": 1.5756481751075124,
+   "relaxed": -0.029083767662035836,
+   "ends_at_A": [
+    0.06705357480512662,
+    -0.2011482076625947
+   ]
+  },
+  "dft": {
+   "sheared_below_upright": -0.3457336379692404,
+   "source": "mlip_candidate_vdf5-rvdf1-6.json, all_trans_cell_held_upright"
+  },
+  "seconds": 30.622894525527954
+ }
+}

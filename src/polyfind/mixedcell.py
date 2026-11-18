@@ -47,6 +47,15 @@ field is minus the cell's dipole, static plus induced (:func:`cell_dipole`).  Th
 sum over the atoms as placed, every chain whole: between two states joined by a continuous path
 its difference is defined without a polarization quantum.
 
+**A cell sheared along its chains.**  ``c`` is along z.  The other two lattice vectors may each
+carry a component along it (:func:`lattice_rows`, ``MixedModel(shear=True)``), which is the
+freedom a variable-cell calculation has when all six cell parameters are free: a chain's image one
+``a`` away then sits ``sa`` higher than the chain.  Nothing else changes.  The Ewald sum and the
+dipole solve take any lattice; the same-site columns, the bonded exclusions and the valence terms
+are a chain with its own images along ``c``; and the chain-pair sums move each image by its shift
+along z as well as across.  A cell sheared by half a repeat is an upright cell twice as wide, which
+is the known answer the shear is held to (``tests/test_mixedcell.py``).
+
 **What is not here.**  Charge flux (refused), and the pendant tilts, which
 :func:`tilt_relaxation` adds afterwards exactly as :func:`polyfind.pendants.tilt_relaxation` does
 for the packer's cell.
@@ -84,6 +93,7 @@ __all__ = [
     "neb",
     "placed_energy_and_grad",
     "placing_frame",
+    "reduce_shear",
     "supercell_state",
     "tile_state",
     "tilt_relaxation",
@@ -103,10 +113,15 @@ def placing_frame(phi_deg: float, flip: bool) -> np.ndarray:
     return R @ _FLIP if flip else R
 
 
-def lattice_rows(A: float, B: float, gamma_deg: float, c: float) -> np.ndarray:
-    """Lattice vectors as rows: ``A`` along x, ``B`` in the plane at ``gamma``, ``c`` along z."""
+def lattice_rows(A: float, B: float, gamma_deg: float, c: float, sa: float = 0.0, sb: float = 0.0) -> np.ndarray:
+    """Lattice vectors as rows: ``a`` and ``b`` across the chains, ``c`` along z.
+
+    ``A``, ``B`` and ``gamma`` are the lattice of the chain axes seen along the chains (``a``'s
+    part across them along x, ``b``'s at ``gamma`` to it).  ``sa`` and ``sb`` (A) are what ``a``
+    and ``b`` carry along the chains, the shear of the cell: a chain's image one ``a`` away sits
+    ``sa`` higher along z.  Zero for the upright cell.  The volume does not depend on them."""
     g = gamma_deg * _RAD
-    return np.array([[A, 0.0, 0.0], [B * np.cos(g), B * np.sin(g), 0.0], [0.0, 0.0, c]])
+    return np.array([[A, 0.0, sa], [B * np.cos(g), B * np.sin(g), sb], [0.0, 0.0, c]])
 
 
 # ----------------------------------------------------------------------- the energy
@@ -117,8 +132,9 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None, xp=None, tim
     number of chains in this cell (its pair, charge and polarizability tables are the repeat's,
     tiled); ``frames`` (n_chains, 3, 3) are the placing frames of :func:`placing_frame`, which
     take each chain's block of ``Pn`` back to that chain's own frame, where its same-site column
-    and its exclusion correction are evaluated; ``latn`` has ``c`` along z and the other two
-    vectors in the plane.  ``valences`` is ``None`` (the packer's own valence terms on every
+    and its exclusion correction are evaluated; ``latn`` has ``c`` along z, and the other two
+    vectors across it or leaning along it (a cell sheared along its chains, :func:`lattice_rows`).
+    ``valences`` is ``None`` (the packer's own valence terms on every
     chain, if it has any) or one :class:`~polyfind.pack.ChainValence` (or ``None``) per chain.
 
     ``E`` is the packer's lattice energy in kcal/mol per cell **without** the Fourier torsion
@@ -142,8 +158,8 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None, xp=None, tim
     frames = np.asarray(frames, dtype=float).reshape(nc, 3, 3)
     if getattr(packer, "_flux", None) is not None:
         raise ValueError("charge flux is not carried by the mixed cell: every chain has the repeat's fixed charges")
-    if abs(latn[0, 2]) + abs(latn[1, 2]) + abs(latn[2, 0]) + abs(latn[2, 1]) > 1e-12:
-        raise ValueError("the mixed cell wants c along z and the other two lattice vectors in the plane")
+    if abs(latn[2, 0]) + abs(latn[2, 1]) > 1e-12:
+        raise ValueError("the mixed cell wants c along z (the other two lattice vectors may lean along it, not c across it)")
     if xp is not None:
         return _placed_batched(packer, frames, Pn, latn, valences, xp, timings)
     cz = float(latn[2, 2])
@@ -180,6 +196,8 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None, xp=None, tim
     B_nn = np.asarray(bk.to_numpy(packer._B_nn), dtype=float)
     qq, qqf, cst = PH._charge_tables(packer, q, q)
     A2, B2 = latn[0, :2], latn[1, :2]
+    Az, Bz = float(latn[0, 2]), float(latn[1, 2])
+    sheared = Az != 0.0 or Bz != 0.0  # a and b lean along the chains: an image is also moved along z
     area = abs(A2[0] * B2[1] - A2[1] * B2[0])
     wa, wb = area / float(np.linalg.norm(B2)), area / float(np.linalg.norm(A2))
     Minv = np.linalg.inv(np.array([A2, B2]))  # lateral Cartesian -> fractional (row vectors)
@@ -195,9 +213,10 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None, xp=None, tim
             ri, rj = int(np.ceil(reach / wa)) + 1, int(np.ceil(reach / wb)) + 1
             i0, j0 = int(np.round(f0[0])), int(np.round(f0[1]))
             dz0 = Ps[:, None, 2] - Pt[None, :, 2]
-            ks = np.arange(int(np.floor((float(dz0.min()) - rc) / cz)), int(np.ceil((float(dz0.max()) + rc) / cz)) + 1, dtype=float)
-            dz = dz0[None, :, :] - ks[:, None, None] * cz
-            dz2 = dz * dz
+            z_lo, z_hi = float(dz0.min()), float(dz0.max())
+            ks0 = np.arange(int(np.floor((z_lo - rc) / cz)), int(np.ceil((z_hi + rc) / cz)) + 1, dtype=float)
+            dz_0 = dz0[None, :, :] - ks0[:, None, None] * cz
+            dz2_0 = dz_0 * dz_0
             for i in range(i0 - ri, i0 + ri + 1):
                 for j in range(j0 - rj, j0 + rj + 1):
                     if s == t and (i < 0 or (i == 0 and j <= 0)):
@@ -210,6 +229,13 @@ def placed_energy_and_grad(packer, frames, Pn, latn, valences=None, xp=None, tim
                     dxy2 = dx * dx + dy * dy
                     if float(dxy2.min()) >= rc2:
                         continue
+                    shz = i * Az + j * Bz if sheared else 0.0
+                    if shz != 0.0:  # this image is moved along the chains too: its own range of c-images
+                        ks = np.arange(int(np.floor((z_lo - shz - rc) / cz)), int(np.ceil((z_hi - shz + rc) / cz)) + 1, dtype=float)
+                        dz = (dz0 - shz)[None, :, :] - ks[:, None, None] * cz
+                        dz2 = dz * dz
+                    else:
+                        ks, dz, dz2 = ks0, dz_0, dz2_0
                     v, dv = PH._pair_and_dv(packer, dxy2[None, :, :] + dz2, A_nn, B_nn, qq, qqf, cst)
                     E += float(v.sum())
                     t2 = 2.0 * dv  # dV/d(separation vector) = 2 dV/dr^2 * (separation vector)
@@ -372,11 +398,13 @@ def _scale_stack(packer, K: int, xp) -> tuple:
 def _chain_pair_blocks(P3, latn, rc: float) -> tuple:
     """Every (chain, chain, lateral image) that can hold a pair of sites inside the cutoff.
 
-    ``(s, t, i, j, shift (nb, 2))``: chain ``s`` against chain ``t`` moved by ``i A + j B``, each
+    ``(s, t, i, j, shift (nb, 3))``: chain ``s`` against chain ``t`` moved by ``i A + j B``, each
     unordered block once -- ``s < t`` with any image, and a chain with its own images in one
     half plane (the other half is the same blocks seen from the other side).  The test of the
     loop form, then one more that needs no pair distances: the nearest site of one chain to the
     moved centre of the other is at least the other's radius nearer than any of its sites.
+    Both tests are made across the chains, where a shear of the cell changes nothing; the shift's
+    third component is what the image is moved along them.
     """
     nc = P3.shape[0]
     A2, B2 = latn[0, :2], latn[1, :2]
@@ -399,9 +427,9 @@ def _chain_pair_blocks(P3, latn, rc: float) -> tuple:
     keep &= (s != t)[:, None] | (I > 0) | ((I == 0) & (J > 0))
     pi, im = np.nonzero(keep)
     bs, bt, bi, bj = s[pi], t[pi], I[pi, im], J[pi, im]
-    sh = np.stack([shx[pi, im], shy[pi, im]], axis=1)
-    da = np.sqrt(((xy[bs] - (cen[bt] + sh)[:, None, :]) ** 2).sum(axis=-1)).min(axis=1) - rad[bt]
-    db = np.sqrt(((xy[bt] - (cen[bs] - sh)[:, None, :]) ** 2).sum(axis=-1)).min(axis=1) - rad[bs]
+    sh = np.stack([shx[pi, im], shy[pi, im], bi * float(latn[0, 2]) + bj * float(latn[1, 2])], axis=1)
+    da = np.sqrt(((xy[bs] - (cen[bt] + sh[:, :2])[:, None, :]) ** 2).sum(axis=-1)).min(axis=1) - rad[bt]
+    db = np.sqrt(((xy[bt] - (cen[bs] - sh[:, :2])[:, None, :]) ** 2).sum(axis=-1)).min(axis=1) - rad[bs]
     near = (da < rc) & (db < rc)
     return bs[near], bt[near], bi[near], bj[near], sh[near]
 
@@ -424,6 +452,7 @@ def _pair_sums(packer, P3, latn, flips, K: int, xp, block_elems: int | None = No
         block_elems = HOST_BLOCK_ELEMS if xp is np else DEVICE_BLOCK_ELEMS
     per = max(1, int(block_elems) // (n * n))
     bs, bt, bi, bj, sh = _chain_pair_blocks(P3, latn, rc)
+    sheared = bool(np.any(sh[:, 2] != 0.0))
     tab = _pair_tables(packer, xp)
     Pd = xp.asarray(P3)
     reach_k = max(0, int(np.ceil(rc / cz - 0.5)))  # images either side of the nearest that the cutoff reaches
@@ -449,6 +478,8 @@ def _pair_sums(packer, P3, latn, flips, K: int, xp, block_elems: int | None = No
         dx = Pa[:, :, None, 0] - (Pb[:, :, 0] + shd[:, 0][:, None])[:, None, :]
         dy = Pa[:, :, None, 1] - (Pb[:, :, 1] + shd[:, 1][:, None])[:, None, :]
         dz0 = Pa[:, :, None, 2] - Pb[:, None, :, 2]
+        if sheared:
+            dz0 = dz0 - shd[:, 2][:, None, None]
         dxy2 = dx * dx + dy * dy
         kn = xp.round(dz0 * inv_cz)
         gs = gt = None
@@ -578,32 +609,46 @@ class MixedState:
     """The variables of a mixed cell, in the units the optimiser sees.
 
     ``lattice`` is ``(A, B, gamma, c)`` in A and degrees; ``place`` (n_chains, 4) is per chain the
-    fractional lateral position of its axis ``(fa, fb)``, its setting angle in degrees and its
-    axial shift in A; ``tors`` (n_chains, P) and ``angs`` (n_chains, R) are the torsions and
-    backbone angles of each chain's repeat in degrees."""
+    fractional position of its axis ``(fa, fb)``, its setting angle in degrees and its axial
+    shift in A; ``tors`` (n_chains, P) and ``angs`` (n_chains, R) are the torsions and backbone
+    angles of each chain's repeat in degrees.
+
+    ``shear`` is ``None`` for the upright cell, or ``(sa, sb)`` in A: what the lattice vectors
+    ``a`` and ``b`` carry along the chains (:func:`lattice_rows`).  A chain's axis is at
+    ``fa a + fb b`` with those vectors whole, so its height is ``fa sa + fb sb`` plus its own axial
+    shift.  The two are the last two entries of the variable vector, after every chain's internal
+    coordinates, so the vector of an upright cell is what it always was."""
 
     lattice: np.ndarray
     place: np.ndarray
     tors: np.ndarray
     angs: np.ndarray
+    shear: np.ndarray | None = None
 
     def vector(self) -> np.ndarray:
         nc = self.place.shape[0]
-        return np.concatenate([np.asarray(self.lattice, dtype=float).ravel(), np.asarray(self.place, dtype=float).ravel(),
-                               np.concatenate([np.asarray(self.tors, dtype=float), np.asarray(self.angs, dtype=float)], axis=1).reshape(nc, -1).ravel()])
+        parts = [np.asarray(self.lattice, dtype=float).ravel(), np.asarray(self.place, dtype=float).ravel(),
+                 np.concatenate([np.asarray(self.tors, dtype=float), np.asarray(self.angs, dtype=float)], axis=1).reshape(nc, -1).ravel()]
+        if self.shear is not None:
+            parts.append(np.asarray(self.shear, dtype=float).reshape(2))
+        return np.concatenate(parts)
 
     def copy(self) -> "MixedState":
         return MixedState(np.array(self.lattice, dtype=float), np.array(self.place, dtype=float),
-                          np.array(self.tors, dtype=float), np.array(self.angs, dtype=float))
+                          np.array(self.tors, dtype=float), np.array(self.angs, dtype=float),
+                          None if self.shear is None else np.array(self.shear, dtype=float))
 
     @staticmethod
-    def from_vector(x, n_chains: int, n_torsions: int) -> "MixedState":
+    def from_vector(x, n_chains: int, n_torsions: int, shear: bool = False) -> "MixedState":
         """The state a variable vector of ``n_chains`` chains of ``n_torsions`` torsions each
-        stands for (the inverse of :meth:`vector`)."""
+        stands for (the inverse of :meth:`vector`); ``shear`` says whether its last two entries
+        are the cell's shear, which the vector's length alone cannot."""
         x = np.asarray(x, dtype=float).ravel()
         nc, P = int(n_chains), int(n_torsions)
-        internal = x[4 + 4 * nc:].reshape(nc, -1)
-        return MixedState(x[:4].copy(), x[4:4 + 4 * nc].reshape(nc, 4).copy(), internal[:, :P].copy(), internal[:, P:].copy())
+        end = x.size - (2 if shear else 0)
+        internal = x[4 + 4 * nc:end].reshape(nc, -1)
+        return MixedState(x[:4].copy(), x[4:4 + 4 * nc].reshape(nc, 4).copy(), internal[:, :P].copy(), internal[:, P:].copy(),
+                          x[end:].copy() if shear else None)
 
 
 def supercell_state(params, c: float, tors, angs, nx: int = 2, ny: int = 1):
@@ -629,7 +674,9 @@ def tile_state(state: MixedState, flips, nx: int = 2, ny: int = 1):
     """``(state, flips)`` of the ``nx x ny`` tiling of a mixed cell: every chain of ``state``
     repeated at each lattice point of the tiling with its own conformation, setting angle and
     axial shift.  Chain order is ``(ix, iy, k)`` with ``k`` the chain within ``state``, which for a
-    two-chain cell is the order of :func:`supercell_state`."""
+    two-chain cell is the order of :func:`supercell_state`.  A sheared cell tiles to a sheared
+    one: the tiling's ``a`` is ``nx`` of the cell's, with ``nx`` times what it carries along the
+    chains."""
     A, B, gam, c = (float(v) for v in state.lattice)
     flips = np.asarray(flips, dtype=bool).ravel()
     place, tors, angs, fl = [], [], [], []
@@ -641,7 +688,28 @@ def tile_state(state: MixedState, flips, nx: int = 2, ny: int = 1):
                 tors.append(state.tors[k])
                 angs.append(state.angs[k])
                 fl.append(bool(flips[k]))
-    return MixedState(np.array([nx * A, ny * B, gam, c]), np.array(place), np.array(tors, dtype=float), np.array(angs, dtype=float)), np.array(fl)
+    shear = None if state.shear is None else np.array([nx * float(state.shear[0]), ny * float(state.shear[1])])
+    return MixedState(np.array([nx * A, ny * B, gam, c]), np.array(place), np.array(tors, dtype=float), np.array(angs, dtype=float), shear), np.array(fl)
+
+
+def reduce_shear(state: MixedState, upright_tol: float | None = 1e-9) -> MixedState:
+    """The same crystal described with each shear within half a repeat of zero.
+
+    ``a + m c`` generates the lattice ``a`` does, so a shear is defined up to whole repeats.
+    Taking ``m`` repeats off ``a`` leaves every chain where it is when its axial shift takes
+    ``fa m c`` back.  With ``upright_tol`` (A) a result whose two shears are both under it is
+    returned as the upright state it is (``shear`` ``None``): the tiling of a cell sheared by
+    half a repeat, say, which the upright cell's own code can then evaluate."""
+    st = state.copy()
+    if st.shear is None:
+        return st
+    c = float(st.lattice[3])
+    m = np.round(np.asarray(st.shear, dtype=float) / c)
+    st.shear = np.asarray(st.shear, dtype=float) - m * c
+    st.place[:, 3] += (st.place[:, 0] * m[0] + st.place[:, 1] * m[1]) * c
+    if upright_tol is not None and float(np.abs(st.shear).max()) < upright_tol:
+        st.shear = None
+    return st
 
 
 class MixedModel:
@@ -668,12 +736,24 @@ class MixedModel:
     ``POLYFIND_MIXED_BATCHED=1``; an array module asks for the batched form on it (NumPy
     included), and ``"loops"`` for the loops wherever the Ewald sums are.  ``timings``, set to a
     dict, collects the seconds each part of the batched form takes.
+
+    **A cell sheared along its chains.**  With ``shear=True`` the variable vector has two more
+    entries at its end, ``(sa, sb)`` in A: what the lattice vectors ``a`` and ``b`` carry along the
+    chains (:func:`lattice_rows`, :class:`MixedState`).  In the upright cell a chain and its image
+    one ``a`` away are at the same height, whatever the chains of the cell do among themselves;
+    with the shear free that registry is the crystal's to choose, as it is in a variable-cell
+    calculation with all six cell parameters free.  It costs nothing where it is zero (the
+    arithmetic is then the upright cell's, bit for bit) and one more set of pair distances along
+    z for each sheared image where it is not.  Where the measurement is: a head-to-head defect of
+    one chain sits in a column of its own images 5 A apart in the upright cell, and the shear
+    takes it out of that column (docs/MLIP_SECOND_OPINION.md section 3.8).
     """
 
     def __init__(self, polymer, name: str, packer, flips, refs, angle_stiffness: float,
-                 pen_rot: float = 0.0, k_c: float = 0.0, valences=None, xp=None):
+                 pen_rot: float = 0.0, k_c: float = 0.0, valences=None, xp=None, shear: bool = False):
         self.polymer, self.name, self.pk = polymer, name, packer
         self.xp = xp
+        self.sheared = bool(shear)
         self.timings = None
         self.nc, self.n = int(packer.n_chains), int(packer.n)
         # The pair sums of a mixed cell are host loops in float64 that borrow the packer's kernel.
@@ -730,24 +810,39 @@ class MixedModel:
     # --- the variable vector -------------------------------------------------------------
     @property
     def n_var(self) -> int:
+        return self._end + (2 if self.sheared else 0)
+
+    @property
+    def _end(self) -> int:
+        """One past the last chain's internal coordinates: where the shear is, if the cell has one."""
         return 4 + self.nc * (4 + self.P + self.R)
 
     def state(self, x) -> MixedState:
         x = np.asarray(x, dtype=float).ravel()
         nc, P, R = self.nc, self.P, self.R
-        internal = x[4 + 4 * nc:].reshape(nc, P + R)
-        return MixedState(x[:4].copy(), x[4:4 + 4 * nc].reshape(nc, 4).copy(), internal[:, :P].copy(), internal[:, P:].copy())
+        if x.size != self.n_var:
+            raise ValueError(f"a variable vector of {x.size} entries for a model of {self.n_var}"
+                             + (" (this model's cell has a shear: two more entries at the end)" if self.sheared else ""))
+        end = self._end
+        internal = x[4 + 4 * nc:end].reshape(nc, P + R)
+        return MixedState(x[:4].copy(), x[4:4 + 4 * nc].reshape(nc, 4).copy(), internal[:, :P].copy(), internal[:, P:].copy(),
+                          x[end:].copy() if self.sheared else None)
 
     def index(self, what: str, chains=None) -> np.ndarray:
         """Indices into the variable vector: ``what`` is ``"lattice"`` (A, B, gamma), ``"c"``,
-        ``"place"`` (fa, fb, phi, z of ``chains``), ``"xy"``, ``"phi"``, ``"z"``, ``"tors"``,
-        ``"angs"`` or ``"internal"``; ``chains`` defaults to all."""
+        ``"shear"`` (sa, sb: a model built with ``shear=True``), ``"place"`` (fa, fb, phi, z of
+        ``chains``), ``"xy"``, ``"phi"``, ``"z"``, ``"tors"``, ``"angs"`` or ``"internal"``;
+        ``chains`` defaults to all."""
         nc, P, R = self.nc, self.P, self.R
         ch = range(nc) if chains is None else [int(s) for s in np.atleast_1d(chains)]
         if what == "lattice":
             return np.array([0, 1, 2])
         if what == "c":
             return np.array([3])
+        if what == "shear":
+            if not self.sheared:
+                raise ValueError("this model's cell is upright: build it with shear=True for the two shear variables")
+            return np.array([self._end, self._end + 1])
         cols = {"place": [0, 1, 2, 3], "xy": [0, 1], "phi": [2], "z": [3]}
         if what in cols:
             return np.array([4 + 4 * s + k for s in ch for k in cols[what]], dtype=int)
@@ -773,7 +868,7 @@ class MixedModel:
         ``(chain, dcoords (P + R, n, 3), dc (P + R,), w (3,), dw (P + R, 3))``."""
         st = self.state(x)
         A, B, gam, c = st.lattice
-        latn = lattice_rows(A, B, gam, c)
+        latn = lattice_rows(A, B, gam, c, *((0.0, 0.0) if st.shear is None else st.shear))
         nc, n = self.nc, self.n
         Pn = np.empty((nc * n, 3))
         frames = np.empty((nc, 3, 3))
@@ -868,7 +963,7 @@ class MixedModel:
         mark = _Stopwatch(self.timings)
         st = self.state(x)
         B, gam, c = st.lattice[1:]
-        latn = lattice_rows(*st.lattice)
+        latn = lattice_rows(*st.lattice, *((0.0, 0.0) if st.shear is None else st.shear))
         nc, n, P, R = self.nc, self.n, self.P, self.R
         top = self._topology()
         built, tr, (coords, bb, owner, is_pendant) = self._build_light(st.tors, st.angs, np.arange(nc), sums=True)
@@ -916,8 +1011,10 @@ class MixedModel:
         tension = 2.0 * self.k_c * dcz + self.lam_c
         gv += tension[:, None] * tr["dc"]
         gc -= float(tension.sum())
-        g[4 + 4 * nc:] = gv.ravel()
+        g[4 + 4 * nc:self._end] = gv.ravel()
         g[:4] = [gA, gB, gG, gc]
+        if self.sheared:  # a and b along the chains: the images' part, and each chain's height fa sa + fb sb
+            g[self._end:] = [glat[0, 2] + float((fa * F[:, 2]).sum()), glat[1, 2] + float((fb * F[:, 2]).sum())]
         if parts is not None:
             parts.update(lattice=E_lat, torsion=e_tors, bend=e_bend, penalty_rotation=p_rot, penalty_c=p_c,
                          physical=E_lat + e_tors + e_bend, repeats=cs.copy(), c_mismatch=dcz,
@@ -949,6 +1046,7 @@ class MixedModel:
         gB = cg * glat[1, 0] + sg * glat[1, 1]
         gG = _RAD * B * (-sg * glat[1, 0] + cg * glat[1, 1])
         gc = glat[2, 2]
+        gsa, gsb = glat[0, 2], glat[1, 2]
         e_tors = e_bend = p_rot = p_c = 0.0
         base = 4 + 4 * nc
         k_ang = self.angle_stiffness
@@ -961,6 +1059,8 @@ class MixedModel:
             gA += fa * F[0]
             gB += fb * (cg * F[0] + sg * F[1])
             gG += _RAD * B * fb * (-sg * F[0] + cg * F[1])
+            gsa += fa * F[2]
+            gsb += fb * F[2]
             Q = Pn[sl] - offs[s]
             g[4 + 4 * s:8 + 4 * s] = [F @ latn[0], F @ latn[1],
                                       _RAD * float((gPs[:, 1] * Q[:, 0] - gPs[:, 0] * Q[:, 1]).sum()), F[2]]
@@ -980,6 +1080,8 @@ class MixedModel:
             gc -= tension
             g[base + s * (P + R):base + (s + 1) * (P + R)] = gv
         g[:4] = [gA, gB, gG, gc]
+        if self.sheared:  # a and b along the chains: the images' part, and each chain's height fa sa + fb sb
+            g[self._end:] = [gsa, gsb]
         if parts is not None:
             parts.update(lattice=E_lat, torsion=e_tors, bend=e_bend, penalty_rotation=p_rot, penalty_c=p_c,
                          physical=E_lat + e_tors + e_bend,
@@ -1667,7 +1769,7 @@ def hessian_columns(model: MixedModel, x, columns, step: float = 1e-3, progress=
 def tiled_hessian(model: MixedModel, x, nx: int, ny: int, step: float = 1e-3, progress=None) -> np.ndarray:
     """The whole Hessian (scaled variables) at a state that is the ``nx x ny`` tiling of a smaller
     cell, chains in the order of :func:`tile_state`: the columns of the first cell's chains and of
-    the four cell variables by :func:`hessian_columns`, every other chain's by translation (the
+    the cell variables (the shear's two among them, if it has one) by :func:`hessian_columns`, every other chain's by translation (the
     column of a chain is the column of its translate with the rows moved along).  For a
     sixteen-chain tiling of a two-chain cell that is 92 columns instead of 708.  Symmetrised."""
     x = np.asarray(x, dtype=float).ravel()
@@ -1677,7 +1779,7 @@ def tiled_hessian(model: MixedModel, x, nx: int, ny: int, step: float = 1e-3, pr
         raise ValueError(f"{nc} chains are not an {nx} x {ny} tiling")
     slots = lambda s: np.concatenate([model.index("place", [s]), model.index("internal", [s])])  # noqa: E731
     chain = lambda ix, iy, k: ((ix % nx) * ny + (iy % ny)) * n0 + k  # noqa: E731
-    first = np.concatenate([np.arange(4)] + [slots(k) for k in range(n0)])
+    first = np.concatenate([np.arange(4)] + ([model.index("shear")] if model.sheared else []) + [slots(k) for k in range(n0)])
     H = np.zeros((n, n))
     H[:, first] = hessian_columns(model, x, first, step, progress)
     for dx in range(nx):

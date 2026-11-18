@@ -639,3 +639,167 @@ def test_gradient_under_a_field_matches_central_differences_in_both_forms(batche
             fd = (m.value_and_grad(xp_)[0] - m.value_and_grad(xm_)[0]) / (2 * h)
             assert fd == pytest.approx(g[i], rel=2e-5, abs=2e-5)
     _run(CASES[3], body)
+
+
+# ------------------------------------------------------------------- a cell sheared along its chains
+def _sheared(polymer, seq, params, nx=1, ny=1, xp=None, **kw):
+    """``(model, state, flips)``: the packer's cell tiled, in a model whose cell may shear, at no shear."""
+    ch, name, tors, ang0 = _chain(polymer, seq)
+    nc = 2 * nx * ny
+    pk = pack_mod.CrystalPacker(ch, n_chains=nc, **kw)
+    st, flips = MC.supercell_state(params, ch.c, tors, ang0, nx, ny)
+    st.shear = np.zeros(2)
+    return MC.MixedModel(polymer, name, pk, flips, [ch] * nc, angle_stiffness=105.0, shear=True, xp=xp), st, flips
+
+
+@pytest.mark.parametrize("case", CASES)
+def test_a_cell_that_may_shear_is_the_upright_cell_at_no_shear(case):
+    """Bit for bit, in the energy and in the gradient of every variable the two share."""
+    def body(polymer, seq, params, kw):
+        m0, x0, _ = _model(polymer, seq, params, **kw)
+        ms, st, _ = _sheared(polymer, seq, params, **kw)
+        e0, g0 = m0.value_and_grad(x0)
+        es, gs = ms.value_and_grad(st.vector())
+        assert es == e0
+        np.testing.assert_array_equal(gs[:-2], g0)
+        assert gs.size == g0.size + 2
+    _run(case, body)
+
+
+@pytest.mark.parametrize("case", CASES)
+@pytest.mark.parametrize("shear,tiling", [((0.5, 0.0), (2, 1)), ((0.0, 0.5), (1, 2)), ((0.5, -0.5), (2, 2)), ((0.5, 1.0), (2, 1))])
+def test_a_cell_sheared_by_half_a_repeat_is_an_upright_cell_twice_as_wide(case, shear, tiling):
+    """The known answer for the shear: ``2 a`` then carries a whole repeat along the chains, which
+    is no shear at all, so the tiling is a cell the upright code evaluates.  Both forms of the
+    sums, every kind of term (the last case shears ``b`` by a whole repeat as well)."""
+    def body(polymer, seq, params, kw):
+        ms, st, flips = _sheared(polymer, seq, params, **kw)
+        mb, _, _ = _sheared(polymer, seq, params, xp=np, **kw)
+        st.shear = np.array(shear) * float(st.lattice[3])
+        e1 = ms.physical_energy(st.vector())
+        assert abs(e1 - _model(polymer, seq, params, **kw)[0].physical_energy(st.vector()[:-2])) > 0.05  # the shear is felt
+        assert mb.physical_energy(st.vector()) == pytest.approx(e1, rel=1e-11, abs=1e-9)
+        big, fl = MC.tile_state(st, flips, *tiling)
+        np.testing.assert_allclose(big.shear, np.array(shear) * float(st.lattice[3]) * np.array(tiling))
+        up = MC.reduce_shear(big)
+        assert up.shear is None  # whole repeats: upright
+        ch, name, _, _ = _chain(polymer, seq)
+        pk = pack_mod.CrystalPacker(ch, n_chains=len(fl), **kw)
+        mu = MC.MixedModel(polymer, name, pk, fl, [ch] * len(fl), angle_stiffness=105.0)
+        assert mu.physical_energy(up.vector()) * 2 / len(fl) == pytest.approx(e1, rel=1e-10, abs=1e-8)
+    _run(case, body)
+
+
+def test_whole_repeats_of_shear_are_no_shear():
+    def body(polymer, seq, params, kw):
+        ms, st, _ = _sheared(polymer, seq, params, **kw)
+        c = float(st.lattice[3])
+        st.shear = np.array([0.4 + c, -0.9 - 2 * c])
+        red = MC.reduce_shear(st)
+        np.testing.assert_allclose(red.shear, [0.4, -0.9], atol=1e-12)
+        assert red.place[1, 3] == pytest.approx(st.place[1, 3] + 0.5 * c - 0.5 * 2 * c)  # each chain stays where it is
+        assert ms.physical_energy(red.vector()) == pytest.approx(ms.physical_energy(st.vector()), rel=1e-11, abs=1e-9)
+        upright = MC.MixedState(st.lattice, st.place, st.tors, st.angs)
+        assert MC.reduce_shear(upright).shear is None
+        st.shear = np.array([0.4, -0.9])
+        assert MC.reduce_shear(st, upright_tol=None).shear.tolist() == [0.4, -0.9]
+    _run(CASES[3], body)
+
+
+@pytest.mark.parametrize("which", ["dsf", "ewald", "ewald tiled"])
+@pytest.mark.parametrize("batched", [False, True])
+def test_gradient_of_a_sheared_cell_matches_central_differences_in_both_forms(which, batched):
+    """Every kind of variable, the two shears among them, at a point with both shears on.  The
+    cutoff is force-shifted in each case: the default's step in the force at the cutoff shows in a
+    central difference once sheared images spread the pair distances over it."""
+    def body(polymer, seq, params, kw):
+        ms, st, _ = _sheared(polymer, seq, params, xp=np if batched else None, **kw)
+        rng = np.random.default_rng(3)
+        x = st.vector()
+        x[ms.index("tors")] += rng.uniform(-6, 6, ms.nc * ms.P)
+        x[ms.index("angs")] += rng.uniform(-1.5, 1.5, ms.nc * ms.R)
+        x[ms.index("xy")] += rng.uniform(-0.02, 0.02, 2 * ms.nc)
+        x[ms.index("phi")] += rng.uniform(-8, 8, ms.nc)
+        x[ms.index("z")] += rng.uniform(-0.3, 0.3, ms.nc)
+        x[:4] += np.array([0.07, -0.05, 1.3, 0.04])
+        x[ms.index("shear")] = [0.83, -1.37]
+        _, g = ms.value_and_grad(x)
+        assert float(np.abs(g[ms.index("shear")]).min()) > 0.1
+        rest = np.setdiff1d(np.arange(4, ms.n_var), ms.index("shear"))
+        for i in np.concatenate([np.arange(4), ms.index("shear"), rng.choice(rest, size=10, replace=False)]):
+            xp_, xm_ = x.copy(), x.copy()
+            xp_[i] += 1e-5
+            xm_[i] -= 1e-5
+            fd = (ms.value_and_grad(xp_)[0] - ms.value_and_grad(xm_)[0]) / 2e-5
+            assert fd == pytest.approx(g[i], rel=2e-5, abs=2e-5)
+
+    if which == "dsf":
+        polymer, seq, params, _ = CASES[0]
+        body(polymer, seq, np.asarray(params, dtype=float), dict(lj_cutoff="force"))
+    elif which == "ewald":
+        _run(CASES[3], body)
+    else:
+        _run(CASES[2], lambda polymer, seq, params, kw: body(polymer, seq, params, dict(kw, nx=2)))
+
+
+def test_the_two_forms_agree_on_a_sheared_cell():
+    def body(polymer, seq, params, kw):
+        ms, st, _ = _sheared(polymer, seq, params, nx=2, **kw)
+        mb, _, _ = _sheared(polymer, seq, params, nx=2, xp=np, **kw)
+        x = st.vector()
+        rng = np.random.default_rng(5)
+        x[ms.index("tors")] += rng.uniform(-6, 6, ms.nc * ms.P)
+        x[ms.index("z")] += rng.uniform(-0.3, 0.3, ms.nc)
+        x[ms.index("shear")] = [-0.61, 2.9]
+        e, g = ms.value_and_grad(x)
+        eb, gb = mb.value_and_grad(x)
+        assert eb == pytest.approx(e, rel=1e-12, abs=1e-9)
+        np.testing.assert_allclose(gb, g, atol=1e-8)
+    _run(CASES[3], body)
+
+
+def test_shear_in_the_state_the_index_and_the_vector():
+    m0, x0, _ = _model(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0], nx=2, ny=1)
+    ms, st, _ = _sheared(PVDF, [T, GP, T, GM], [5.0, 9.6, 90.0, 30.0, 200.0, 1.1, 1.0], nx=2, ny=1)
+    st.shear = np.array([0.3, -0.7])
+    x = st.vector()
+    assert ms.n_var == m0.n_var + 2 == x.size
+    assert ms.index("shear").tolist() == [m0.n_var, m0.n_var + 1]
+    np.testing.assert_array_equal(x[:-2], x0)  # the upright cell's vector, then the two shears
+    back = ms.state(x)
+    assert back.shear.tolist() == [0.3, -0.7]
+    np.testing.assert_array_equal(back.vector(), x)
+    again = MC.MixedState.from_vector(x, ms.nc, ms.P, shear=True)
+    np.testing.assert_array_equal(again.vector(), x)
+    assert again.copy().shear.tolist() == [0.3, -0.7] and m0.state(x0).shear is None
+    every = np.concatenate([ms.index("lattice"), ms.index("c"), ms.index("place"), ms.index("internal"), ms.index("shear")])
+    assert sorted(every.tolist()) == list(range(ms.n_var))
+    assert ms.scale(x)[ms.index("shear")].tolist() == [1.0, 1.0]
+    latn = ms.build(x)[0]
+    np.testing.assert_allclose(latn, [[10.0, 0.0, 0.3], [0.0, 9.6, -0.7], [0.0, 0.0, x[3]]], atol=1e-12)
+    assert ms.build(x)[2][1, 2] == pytest.approx(st.place[1, 3] + st.place[1, 0] * 0.3 + st.place[1, 1] * -0.7)  # fa sa + fb sb + z
+    with pytest.raises(ValueError, match="upright"):
+        m0.index("shear")
+    with pytest.raises(ValueError, match="two more entries"):
+        ms.state(x0)
+    with pytest.raises(ValueError, match="c along z"):
+        MC.placed_energy_and_grad(ms.pk, ms.build(x)[1], ms.build(x)[3], latn + np.array([[0, 0, 0], [0, 0, 0], [0.1, 0, 0]]))
+
+
+def test_a_relaxation_with_the_shear_free_finds_the_registry_the_upright_cell_cannot():
+    """Two chains per cell, the second half a repeat out of step with what the lattice lets the
+    first chain's images be: from a sheared start the placements and the shear relax together,
+    the energy falls, and the shear's gradient ends at zero."""
+    def body(polymer, seq, params, kw):
+        ms, st, _ = _sheared(polymer, seq, params, **kw)
+        st.shear = np.array([0.35, -0.25])
+        x = st.vector()
+        free = np.concatenate([ms.index("lattice"), ms.index("shear"), ms.index("phi"), ms.index("xy", 0), ms.index("z", 0)])
+        x1, info = ms.relax(x, free=free, maxiter=200)
+        assert info["closed_chains"] == []
+        assert ms.physical_energy(x1) < ms.physical_energy(x) - 0.05
+        assert info["gradient_max"] < 1e-3
+        assert float(np.abs(ms.value_and_grad(x1)[1][ms.index("shear")]).max()) < 1e-3
+        held = np.setdiff1d(np.arange(ms.n_var), free)
+        np.testing.assert_array_equal(x1[held], x[held])
+    _run(CASES[3], body)

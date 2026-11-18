@@ -89,7 +89,7 @@ def test_chain_pair_blocks_hold_every_pair_inside_the_cutoff():
         bs, bt, bi, bj, sh = MC._chain_pair_blocks(P3, latn, rc)
         listed = set(zip(bs.tolist(), bt.tolist(), bi.tolist(), bj.tolist()))
         assert len(listed) == bs.size
-        np.testing.assert_allclose(sh, bi[:, None] * latn[0, :2] + bj[:, None] * latn[1, :2], atol=1e-12)
+        np.testing.assert_allclose(sh, bi[:, None] * latn[0] + bj[:, None] * latn[1], atol=1e-12)  # the image's whole shift, along the chains too
         for s in range(nc):
             for t in range(s, nc):
                 for i in range(-6, 7):
