@@ -54,22 +54,22 @@ REFERENCE_PRESET = "pvdf-dft-valence-belt4"  # the charges the stored potential 
 
 class Rows:
     def __init__(self, rigid=PRED / "interchain_belt4.json", potential=PRED / "chain_potential_pbe_samples_sites.npz",
-                 torsions=PRED / "valence_torsions_stage13.json", trainset: str | None = None, log=None):
+                 torsions=PRED / "valence_torsions_stage13.json", trainset: str | None = None, log=None, chains=None, conformers: bool = True):
         self.log = log or (lambda *a, **k: None)
         t0 = time.time()
         self.CP = _load("chain_potential")
         self.IF, self.SR = self.CP.IF, self.CP.SR
         self.table = json.loads(Path(rigid).read_text())["packings"]
         # --- the potential: every pattern's potential at the sampled points, once
-        data = self.CP.stored_blocks(Path(potential), list(self.CP.CHAINS), 2.2)
+        data = self.CP.stored_blocks(Path(potential), list(self.CP.CHAINS) if chains is None else list(chains), 2.2)
         if any(len(d["patterns"]) != 4 for d in data.values()):
             raise ValueError("the potential samples were not collected from chains built with bond sites (chain_potential.py collect --sites)")
-        self.blocks = self.CP.potential_blocks(data)
+        self.blocks = self.CP.potential_blocks(data, extras=False)
         ref = {(a, b): float(d) for a, b, d in PRESET_PARAMETERS[REFERENCE_PRESET].charge_increments}
         self.ref_increments = (ref[("C", "H")], ref[("C", "F")])
         # --- the conformers
         self.design = None
-        path = trainset or os.environ.get(F.REFERENCE_ENV)
+        path = (trainset or os.environ.get(F.REFERENCE_ENV)) if conformers else None
         if path:
             frames = list(F.load_reference(path))
             train, _ = F.split_systems(frames)

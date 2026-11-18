@@ -254,17 +254,17 @@ def stored_blocks(path: Path, names, r_min: float) -> dict:
     return out
 
 
-def potential_blocks(data: dict) -> dict:
+def potential_blocks(data: dict, extras: bool = True) -> dict:
     """Per chain: DFT's potential at the sampled points and every source's potential there at unit
     strength, each with its own mean over the points removed (the zero of a periodic potential is
-    a convention)."""
+    a convention).  Without ``extras`` only the chain's own charge patterns are summed."""
     blocks = {}
     for name, d in data.items():
         pts, sites, pat, dip, cell = d["points"], d["sites"], d["patterns"], d["dipoles"], d["cell"]
         own = pattern_names(len(pat))
         basis = {own[k]: source_potential(pts, sites, pat[k], dip[k], cell) for k in range(len(pat))}
         bare = sum(source_potential(pts, sites, pat[k], 0.0 * dip[k], cell) for k in range(2))
-        for key, (pos, q) in IW.extra_sources(d["elements"], sites).items():
+        for key, (pos, q) in (IW.extra_sources(d["elements"], sites).items() if extras else ()):
             if key not in basis:  # a chain built with bond sites has the site's potential as polyfind's own, induction in it
                 basis[key] = COULOMB * ewald_potential(pts, pos, q, cell)
         blocks[name] = {"v": d["v"] - d["v"].mean(), "basis": {k: b - b.mean() for k, b in basis.items()}, "bare": bare - bare.mean(), "near": d["near"],
