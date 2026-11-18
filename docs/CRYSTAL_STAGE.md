@@ -1619,6 +1619,176 @@ both fits, and every diameter ends inside the old box). This is the linear estim
 itself: the registry cost and the lateral pressure come from the same contacts through the same
 r^-12, and no values of its coefficients separate them.
 
+### 5.25 Stage 12: a softer wall (the buffered 14-7 form), chosen outside the kernels and then fitted
+
+**The data a wall is fitted to, on one footing.** `examples/interchain_frames.py` builds cells in
+which the chains are rigid and only the cell changes around them: the lateral edges scaled one at
+a time and together (-6% to +6%), and the cell sheared along its chains at the unstrained cell
+and at cells 4% narrower and wider. Everything inside a chain is the same in every frame of a
+packing, so a difference between two frames is energy between chains and nothing else. Four
+packings: plain PVDF in polyfind's beta cell (27 cells), in the reversed-unit candidate's
+all-trans packing (27), in the TGTG' helix cell (27), and the chain with every second unit
+reversed, -CH2-CF2-CF2-CH2- (37; section 5.26). With the 26 sheared cells of
+`docs/MLIP_SECOND_OPINION.md` 3.9 that is 144 cells, each a PBE-D3(BJ) single point on the
+atoms polyfind was given (`examples/mlip_frames.py label`).
+
+**What the beta cells show.** On lateral strain belt4 is right where the cell is stretched and
+1.2 to 1.4 times too stiff at 6% compression. Its registry cost over DFT's grows with the
+closeness of the contacts: 2.2 times in a cell 4% wider, 3 at the cell, about 5 in a cell 4%
+narrower. The wall is too steep close in, which is what stage 11 could not express.
+
+**The trial** (`examples/interchain_wall.py`). Polyfind's energy between chains is its
+electrostatics plus a sum over pairs of sites on different chains. With every cell's pair
+distances taken once (`pairs`; the present form on them is polyfind's own pair energy to 7e-14),
+any form of the pair term is a few array operations a cell and can be fitted to DFT before a
+line of the kernels changes (`fit`). On the 52 plain cells labelled at the time, the well depths
+held and the diameters, the H-F pair and the belt wall free:
+
+| wall | rms error, kcal/mol per monomer |
+|---|---:|
+| 12-6, re-tuned | 0.125 |
+| n-6, the exponent free | 0.044 |
+| exp-6 | 0.014 |
+| buffered 14-7, one buffer free | 0.0073 |
+
+**The form.** Halgren's buffered 14-7, `V = D ((1+d)/(rho+d))^7 ((1+g)/(rho^7+g) - 2)` with
+`rho = r/x`, `g = 0.12` held and the buffer `d` a variable (`polyfind.pack.wall_b147`).
+`V(x) = -D` exactly, and the minimum is within 0.5% of `x` for `d` up to 0.2. It is finite at
+`r = 0`, where exp-6 turns over. Its attraction falls as `r^-7`, so it is an effective form
+inside the cutoff and not the asymptotic dispersion law. A negative depth is the wall alone,
+which is how the belt sites keep their repulsion-only term.
+
+**In the kernels, as an option.** `CrystalPacker(wall=("b14-7", d))`, the mixed cell's loop and
+batched forms, the supercell sum, `SimpleFF(wall=...)` and `FFParameters.wall`, which `applied()`
+forwards. Without it every path is the 12-6 it was, untouched. With it the packer agrees with
+the standalone trial to 4e-11, the gradients with finite differences to 1e-8, and the batched
+form with the loops to 6e-14 (`tests/test_wall.py`). The tabulated screen keeps 12-6: it only
+chooses starts.
+
+**Stage 12** is stage 11 with the wall, its buffer the fourteenth variable (`examples/
+crystal_stage.py --stage 12`). An intermediate fit, stopped by hand at 240 evaluations while
+still falling slowly (`docs/predictions/crystal_stage_v12_wall.json`; **not a preset**):
+
+| | DFT | belt4 | stage 12, intermediate |
+|---|---:|---:|---:|
+| objective on stage 11's rows (ridge) | | 699 (5.2) | 20.0 (11.1) |
+| beta a, b (A) | 4.757, 8.528 | 4.755, 8.478 | 4.743, 8.525 |
+| alpha a, b (A) | 4.945, 9.636 | 4.957, 9.646 | 4.946, 9.470 |
+| E(alpha) - E(beta), kcal/mol | -0.726 | -0.744 | -0.730 |
+| C_11, C_22, C_12 (GPa) | 22.8, 24.5, 5.9 | 24.2, 25.1, 5.1 | 22.0, 22.6, 6.1 |
+| the 8 registry rows, polyfind over DFT | 1 | 2.5 to 3.4 | 0.98 to 1.07 |
+| the 18 sheared cells not in the fit | 1 | 2.4 to 3.5 | 0.97 to 1.08 |
+| buffer d; x_H, x_HF; log10 D_X | | | 0.222; 1.194, 0.880; -3.16 |
+
+Two rows are past a tolerance: alpha b, 1.7% short (z -1.73), and the beta backbone angle (z
++1.46). The ridge toward the valence values has doubled (hydrogen and carbon are a fifth
+wider in this form's meaning of a diameter, which is the minimum's place under a softer wall).
+
+**What it costs the conformers.** `ValenceDesign.lattice = <parameter set>` makes the 467
+conformer frames see the lattice side's non-bonded terms. Energy rms on the training and held-out
+frames, kcal/mol: the valence fit 1.02 and 1.36; with belt4's non-bonded terms 1.31 and 1.72, and
+1.21 and 1.66 once the torsions are refitted under them; with stage 12's 1.68 and 1.97, and 1.49
+and 1.84 refitted. Two things this exposed are older than the wall: the crystal stage has never
+refitted the torsions to its own non-bonded terms, and the lattice side uses one torsion triple
+(the CF2-CH2 type's) for every backbone bond of every copolymer, though the valence fit has
+four types.
+
+**What it does not do.** The reversed-unit candidate (`vdf5-rvdf1-6`): its all-trans cell gains
+0.10 kcal/mol per monomer at a small shear and stands at +0.18 at DFT's shear, where DFT is
+-0.35 (belt4: -0.03 and +0.43). Section 5.26 is about why.
+
+### 5.26 The reversed chain: where the wall stops and the charges begin
+
+**The cells.** The chain with every second unit reversed is the one chain of these elements that
+puts fluorine against fluorine and hydrogen against hydrogen between chains in every cell. Its
+37 rigid cells are labelled (`inter_hh_*`). A buffered wall fitted to them together with the
+plain cells leaves **0.154** kcal/mol per monomer rms on them, against 0.01 to 0.04 on the plain
+groups. Giving the F-F and H-H pairs their own diameters and depths does not lower it (0.153, and
+the fit ends on three bounds). The misses are the long shears, where polyfind's electrostatic
+energy alone is larger than DFT's whole energy: one monomer along `a` is +0.82 electrostatic
+(+0.61 fixed charges, +0.21 induction) against DFT's +0.73 for everything.
+
+**A diagnostic.** With one multiplier on polyfind's electrostatic energy free beside the wall,
+the reversed chain's cells alone ask for 0.38 and the plain cells for 0.92. Rescaling the CH2
+and CF2 groups' charges, or moving charge along the CH2-CF2 backbone bonds, fits about as well
+and mostly ends on a bound. Energies do not say which part of the charge model is at fault.
+
+**The direct measurement** (`examples/chain_potential.py`). One chain alone in a 16 A box; DFT's
+electrostatic potential on a grid (`pp.x`, `plot_num = 11`), sampled 2.2 to 5 A from the nearest
+nucleus, where a neighbouring chain's atoms sit; against the potential of polyfind's point
+charges and the dipoles they induce along the chain, summed over the same periodic box (a plain
+Ewald sum, held to an image sum and to other splittings in `tests/test_chain_potential.py`).
+The sampled potentials are stored (`docs/predictions/chain_potential_pbe_samples.npz`, 0.3 MB),
+so the fit can be redone without the 30 MB grids.
+
+| chain | DFT's potential, rms, kcal/mol per e | polyfind's error, rms | error over potential |
+|---|---:|---:|---:|
+| plain PVDF, all-trans | 11.37 | 0.41 | 3.6% |
+| plain PVDF, TGTG' | 6.90 | 0.38 | 5.5% |
+| every second unit reversed, all-trans | 0.90 | 0.42 | 47% |
+
+Polyfind's charges are right for plain PVDF, and its induced dipoles are part of why (without
+them the plain all-trans chain's error is 3.6 kcal/mol per e, a third of the potential). The
+error is the same size around all three chains. Around the plain chains it is hidden under the
+chain's dipole. The reversed chain has no dipole; what a neighbour feels of it is the finer
+structure of the charge distribution, and there the same error is half of what there is.
+
+**What repairs it** (least squares of source strengths on the three chains together, each chain
+weighing the same; rms error ht, hh, tgtg):
+
+| sources | error |
+|---|---|
+| polyfind as it is | 0.41, 0.42, 0.38 |
+| any charges by atom type (the CH2 group's, the CF2 group's, and charge moved along CH2-CF2 bonds) | 0.29, 0.41, 0.30 |
+| those and one term on fluorine: charge on the belt sites, or a quadrupole or a dipole along C-F | 0.22 to 0.25, 0.40 to 0.42, 0.23 to 0.29 |
+| those and one term on hydrogen: a dipole or a quadrupole along C-H | 0.18, 0.22, 0.13 to 0.15 |
+| those and a charge site on each C-H bond, 0.65 of the way to the hydrogen | 0.18, 0.23, 0.13 |
+| all of them | 0.12, 0.09, 0.10 |
+
+No choice of charges on the nuclei repairs the reversed chain, and no single term on fluorine.
+A term on hydrogen does, on all three chains at once. The density of a C-H bond is drawn into
+the bond: the hydrogen shows a neighbour its proton with that density behind it. As a point
+site on the bond it is -0.30 e on the site, +0.34 on the hydrogen and the carbon near zero; the
+site's place hardly matters between 0.5 and 0.8 of the bond. The numbers hold when the sampling
+starts at 2.6 A in place of 2.2.
+
+**In the kernels, as an option** (`tests/test_bond_sites.py`; no preset uses it).
+`polymers.with_bond_sites(polymer)` gives every C-H bond a site `M`: a charge and nothing else.
+`FFParameters.bond_sites = (("H", charge),)` charges it from its hydrogen, and `applied()`
+refuses a chain built without the sites. The site is excluded from and scaled against its own
+chain exactly as its hydrogen is, its field is damped with its hydrogen's Thole length, it
+carries no induced dipole, and it does not enter the chain's frame, so a chain with sites sits
+exactly where the chain without them does. With no charge on the sites the energy, every
+gradient component, the atoms' places at changed torsions and angles and the pendant relaxation
+are those of the chain without sites; with charge, the lattice sum is an independent Ewald sum
+to 3e-7 kcal/mol per cell and the gradient is the energy's. The cost is two more sites per CH2
+in every pair sum (twelve sites a VDF monomer for ten).
+
+**Carried into the energies.** The charges set by the potential alone, the wall refitted to the
+rigid cells' energies, induction consistent (`interchain_wall.py pairs --charges M=...`, which
+rebuilds every cell with sites); rms error on the reversed chain's 36 cells, kcal/mol per
+monomer:
+
+| electrostatics | reversed chain's cells | plain groups |
+|---|---:|---|
+| polyfind as it is | 0.154 | 0.011 to 0.040 |
+| the site, the two groups' charges rescaled (what the kernels can carry now) | 0.128 | 0.009 to 0.052 |
+| the same with charge moved along the CH2-CF2 backbone bonds (-0.03 e a bond) | 0.089 | 0.011 to 0.066 |
+
+With the charges fitted to the energies as well the error falls to 0.056, by taking the CF2
+groups' charges to zero: energies cannot set the charges, the potential has to. The charge along
+the backbone bonds is worth as much as the site and the bond-increment charge model cannot
+express it yet: it types a bond by its two elements, and both ends of that bond are carbon.
+
+**Where this leaves the reversed-unit candidate.** A chain reversed at every second unit is the
+extreme case and its cells are off by 0.15 rms as polyfind stands, 0.09 with the two terms
+above. The candidate has one reversed unit in six and its all-trans cell is off by 0.5 at DFT's
+shear (5.25). That is more than the charges between rigid chains account for, so part of it has
+to be inside the chains or in how they relax. The candidate's own polished cell sheared rigidly
+along DFT's line (`interchain_frames.py`, packing `cand6`, four cells of 72 atoms) separates the
+two: what DFT gives for that shear with nothing inside a chain allowed to move is the part of
+its 0.35 that is between chains.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
