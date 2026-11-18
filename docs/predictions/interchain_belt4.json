@@ -1951,6 +1951,21 @@
      "polyfind_electrostatics": 0.0,
      "polyfind_repulsion_dispersion": 0.0,
      "dft": 0.0
+    },
+    {
+     "frame": "inter_cand6_02",
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "shear_monomers": [
+      0.3,
+      -0.9
+     ],
+     "polyfind": 1.5761962382970154,
+     "polyfind_electrostatics": -0.021921894458965124,
+     "polyfind_repulsion_dispersion": 1.5981181327559757,
+     "dft": -0.3376079138714
     }
    ]
   }

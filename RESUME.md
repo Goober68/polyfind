@@ -132,14 +132,19 @@ right": true at one registry, not along it).
         With charges from the potential alone and only the wall refitted: hh cells 0.154 -> 0.128 (site) -> 0.089
         (site + pull 0.0155: dCH -0.049, dCF +0.118, site -0.318). TRAP: `applied()` blocks do not nest (the outer
         set's charges win).
-    (j) THE CANDIDATE'S OWN CELL, RIGID (`interchain_frames.py` packing `cand6`: `vdf5-rvdf1-6` all-trans polished
-        cell, own chains rigid, sheared along DFT's line; 4 cells of 72 atoms, DFT RUNNING when this was written,
-        `/opt/dft/interchain_label_cand6.log`). PREDICTIONS REGISTERED BEFORE THE DFT (`interchain_wall.py fit
-        --predict cand6`; kcal/mol per monomer at (0.075,-0.225) / (0.15,-0.45) / (0.30,-0.90) monomers): belt4
-        +0.10 / +0.70 / +1.58; buffered wall, present charges -0.21 / -0.14 / +0.15; with the bond site -0.24 /
-        -0.21 / +0.03; with site and pull -0.25 / -0.23 / -0.04. DFT relaxed (not rigid) is -0.35 at the last.
-        Rebuild the trial's table after new labels: `interchain_wall.py pairs --frames /opt/dft/interchain
-        --registry /opt/dft/shear2 [--charges M=-0.3 --out /opt/dft/interchain/pairs_sites.npy]`.
+    (j) THE CANDIDATE'S OWN CELL, RIGID: THE GAIN IS ALL BETWEEN CHAINS (`interchain_frames.py` packing `cand6`:
+        `vdf5-rvdf1-6` all-trans polished cell, own chains rigid, sheared along DFT's line; 72 atoms, 21 minutes of
+        DFT a cell). DFT ON THE RIGID CELL AT (0.30, -0.90) MONOMERS: -0.338 kcal/mol per monomer (relaxed: -0.346).
+        REGISTERED BEFORE IT (`docs/predictions/interchain_cand6_predictions.json`; at (0.075,-0.225) /
+        (0.15,-0.45) / (0.30,-0.90)): belt4 +0.10 / +0.70 / +1.58; buffered wall, present charges -0.21 / -0.14 /
+        +0.15; with the bond site -0.24 / -0.21 / +0.03; with site and pull -0.25 / -0.23 / -0.04. SO: the wall takes
+        1.4 of the 1.9, the charges 0.2, 0.3 IS LEFT, in F..F at 2.52 A (8 a cell, level reversed units) traded for
+        H..F at 2.42. With that cell in the fit: -0.11; with an F-F pair term of its own -0.19. The other two cells
+        (`inter_cand6_01`, `_03`) and the 18 candidate-packing plain cells were STILL IN DFT when this was written
+        (`/opt/dft/interchain_label_cand6.log`); after them: `interchain_frames.py collect --frames
+        /opt/dft/interchain`, fill the two "running" cells of the table in `docs/CRYSTAL_STAGE.md` 5.26, and extend
+        `tests/test_interchain.py`. Rebuild the trial's table after new labels: `interchain_wall.py pairs --frames
+        /opt/dft/interchain --registry /opt/dft/shear2 [--charges M=-0.3 --out /opt/dft/interchain/pairs_sites.npy]`.
     (k) THE CONFORMER SIDE, STARTED: `ValenceDesign.lattice = <crystal-stage FFParameters>` makes the 467 conformers
         (`POLYFIND_TRAINSET=/home/user/sarco/materials/gpu_bundle/trainset_v1_566.xyz`) see the lattice's
         non-bonded terms; `fit_valence(designs=(design, held), free=range(12), x0=F.VAL_FITTED_X)` refits the
@@ -149,16 +154,21 @@ right": true at one registry, not along it).
         to its own non-bonded terms, and the lattice side uses ONE torsion triple (the CF2-CH2 type's) for every
         backbone bond of every copolymer (`reference_ff_parameters`), though the valence fit has four types. The
         conformer side does not know the bond sites or the pull yet (SimpleFF leaves both out).
-    (l) STILL TO DO, IN ORDER: read the cand6 DFT against the predictions (is the candidate's 0.35 between chains
-        or inside them?); `interchain_frames.py collect` + tests on the stored rigid cells (candidate-packing plain
-        cells still labelling); THE FINAL FIT (a stage 13: stage 12 + site charge + pull, with the potential's
-        three chains and the rigid cells as rows; sited polymers through `params.polymer`) and its preset; torsions
-        consistent with it (and SimpleFF given the two charge terms); the acceptance on `vdf5-rvdf1-6` (upright
-        margin +0.070, all-trans shear gain -0.35 at (0.30, -0.90), helix none); E5 under the new preset; then the
-        35 rows again, the slide and kink barriers, the frequency maps. The plain stage-12 fit was never run to
-        convergence (240 evaluations, objective 20.0): `crystal_stage.py --stage 12 --geometry pbe --method trf
-        --pendant-tilts --x0 docs/predictions/crystal_stage_v12_wall.json --maxfev 250 --out ...` (65 minutes).
-        Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall), 5.26 (the charges).
+    (l) STAGE 13 IS PLUMBED, NOT RUN (`crystalfit.VARIABLES13` = stage 12 + `q_M` + `pull_F`, sited chains, ridge
+        toward the potential's -0.318 and 0.0155; `crystal_stage.py --stage 13`; rows are stage 12's so far). At
+        zero it is stage 12 row for row. With the potential's charges and nothing refitted: lattice holds (beta
+        a, b +0.2%, |P| 0.186, C 9-10% low), alpha-beta gap -0.39 (DFT -0.726): the torsions have to be refitted
+        under the new charges.
+    (m) STILL TO DO, IN ORDER: finish the labels and store them (see (j)); THE FINAL FIT: stage 13 with the
+        potential's three chains, the reversed chain's cells and the candidate's own cells as rows (an F-F pair
+        term is the first thing to try for the 0.3 left on the candidate); SimpleFF given the two charge terms,
+        then the torsions refitted under them (the gap row needs it); its preset; the acceptance on
+        `vdf5-rvdf1-6` (upright margin +0.070, all-trans shear gain -0.35 at (0.30, -0.90), helix none); E5 under
+        the new preset; then the 35 rows again, the slide and kink barriers, the frequency maps. The plain
+        stage-12 fit was never run to convergence (240 evaluations, objective 20.0): `crystal_stage.py --stage 12
+        --geometry pbe --method trf --pendant-tilts --x0 docs/predictions/crystal_stage_v12_wall.json --maxfev 250
+        --out ...` (65 minutes). Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall), 5.26 (the
+        charges and the candidate's rigid cell).
 
 **A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
 DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then

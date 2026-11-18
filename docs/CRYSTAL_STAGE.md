@@ -1780,14 +1780,44 @@ groups' charges to zero: energies cannot set the charges, the potential has to. 
 the backbone bonds is worth as much as the site and the bond-increment charge model cannot
 express it yet: it types a bond by its two elements, and both ends of that bond are carbon.
 
-**Where this leaves the reversed-unit candidate.** A chain reversed at every second unit is the
-extreme case and its cells are off by 0.15 rms as polyfind stands, 0.09 with the two terms
-above. The candidate has one reversed unit in six and its all-trans cell is off by 0.5 at DFT's
-shear (5.25). That is more than the charges between rigid chains account for, so part of it has
-to be inside the chains or in how they relax. The candidate's own polished cell sheared rigidly
-along DFT's line (`interchain_frames.py`, packing `cand6`, four cells of 72 atoms) separates the
-two: what DFT gives for that shear with nothing inside a chain allowed to move is the part of
-its 0.35 that is between chains.
+**The candidate's own cell, rigid: the gain is all between chains.** A chain reversed at every
+second unit is the extreme case, and the candidate has one reversed unit in six, yet its
+all-trans cell is off by 0.5 at DFT's shear (5.25). To separate what is between chains from what
+is inside them, the candidate's own polished cell was sheared along the line DFT's relaxation
+took it with its own chains held rigid (`interchain_frames.py`, packing `cand6`, 72 atoms a
+cell), and DFT run on those atoms. Each variant's number was registered before the DFT existed
+(`docs/predictions/interchain_cand6_predictions.json`; `interchain_wall.py fit --predict`).
+kcal/mol per monomer against the unsheared cell:
+
+| shear, monomers along a, b | (0.075, -0.225) | (0.15, -0.45) | (0.30, -0.90) |
+|---|---:|---:|---:|
+| belt4 as it is | +0.10 | +0.70 | +1.58 |
+| buffered wall, polyfind's charges | -0.21 | -0.14 | +0.15 |
+| buffered wall, the bond site | -0.24 | -0.21 | +0.03 |
+| buffered wall, the bond site and the backbone pull | -0.25 | -0.23 | -0.04 |
+| **DFT on the rigid cell** | running | running | **-0.338** |
+| DFT, everything relaxed (`docs/MLIP_SECOND_OPINION.md` 3.8) | | | -0.346 |
+
+With nothing inside a chain allowed to move DFT gains 0.338 of the 0.346: the candidate's
+all-trans cell is lowered by where its chains sit along each other and by nothing else, so it
+is a test of the energy between chains alone. The wall takes polyfind 1.4 of the 1.9 kcal/mol
+it was off; the two charge terms take 0.2 more, in the right direction; **0.3 is left.** In
+polyfind's unsheared cell the reversed units of neighbouring chains are level and their
+fluorines are 2.52 A apart, eight such contacts a cell; the shear takes them to 3.0 A and
+brings hydrogen and fluorine to 2.42 A where they were 2.68. What is left is in that trade,
+fluorine against fluorine closer than plain PVDF or the fully reversed chain ever put them.
+With this one cell added to the fit after the fact the same forms reach -0.11, and -0.19 with
+the F-F pair given its own diameter and depth (1.23 and 2.7 times the mixed ones); a separate
+buffer for hydrogen's contacts adds nothing. The two cells still in DFT are where the variants
+put the minimum, a quarter to half way along the line.
+
+**What stands after this section.** Between rigid chains of plain PVDF the buffered wall is
+right (0.01 to 0.04 kcal/mol per monomer rms on four groups of cells). The reversed chain needs
+the two charge terms and is then at 0.09. The candidate's cell is half repaired. No preset
+carries any of it: the final fit has to take the potential's rows, the reversed chain's cells
+and the candidate's with the lattice anchors, and the torsion terms have to be fitted again
+under the charges it ends with (with the potential's charges put in and nothing refitted the
+alpha-beta gap goes from -0.730 to -0.39).
 
 ## 6. What it costs, and what it does not touch
 

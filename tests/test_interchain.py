@@ -93,3 +93,32 @@ def test_the_reversed_chain_is_missed_the_other_way():
     err = np.array([r["polyfind"] - r["dft"] for r in hh["frames"][1:]])
     dft = np.array([r["dft"] for r in hh["frames"][1:]])
     assert 0.33 < np.sqrt((err ** 2).mean()) < 0.40 and 0.80 < np.sqrt((dft ** 2).mean()) < 0.90
+
+
+def test_the_candidates_own_cell_gains_as_much_rigid_as_relaxed():
+    """`vdf5-rvdf1-6` all-trans, its own chains rigid, sheared along the line DFT's relaxation took
+    it: DFT gains 0.34 kcal/mol per monomer, where its full relaxation gains 0.35 and belt4 loses
+    1.58.  The gain is between chains."""
+    t = _table()["cand6"]
+    assert t["monomers_per_cell"] == 12
+    end = _row(t, (1.0, 1.0), (0.30, -0.90))
+    assert end["dft"] == pytest.approx(-0.338, abs=0.002)
+    assert end["polyfind"] == pytest.approx(1.576, abs=0.002)
+    relaxed = json.loads((PRED / "shear_registry_belt4.json").read_text())["candidate"]["dft"]["sheared_below_upright"]
+    assert relaxed == pytest.approx(-0.346, abs=0.002) and abs(end["dft"] - relaxed) < 0.02
+
+
+def test_the_predictions_registered_before_the_candidates_dft():
+    """Four variants, each closer than the one before; the best is still 0.30 short."""
+    p = json.loads((PRED / "interchain_cand6_predictions.json").read_text())
+    dft = _row(_table()["cand6"], (1.0, 1.0), (0.30, -0.90))["dft"]
+    names = ["belt4 as it is", "buffered wall, present charges", "buffered wall, bond site", "buffered wall, bond site and backbone pull"]
+    assert list(p["predictions"]) == names
+    at_end = [p["predictions"][n]["cells"]["inter_cand6_02"]["predicted"] for n in names]
+    assert at_end == pytest.approx([1.576, 0.153, 0.029, -0.039], abs=0.002)
+    miss = [v - dft for v in at_end]
+    assert all(a > b > 0 for a, b in zip(miss, miss[1:])) and 0.28 < miss[-1] < 0.32
+    assert p["predictions"][names[0]]["cells"]["inter_cand6_02"]["predicted"] == pytest.approx(_row(_table()["cand6"], (1.0, 1.0), (0.30, -0.90))["polyfind"], abs=1e-6)
+    # the charges of the last variant are the potential's, not fitted to any energy
+    v = p["predictions"][names[-1]]["variables"]
+    assert (v["s_CH"], v["s_CF"], v["d_CC"], v["M_H"]) == (0.300, 0.701, -0.031, 0.318)

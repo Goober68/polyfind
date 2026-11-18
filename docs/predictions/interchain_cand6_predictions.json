@@ -1,0 +1,151 @@
+{
+ "what": "the reversed-unit candidate's own polished all-trans cell (vdf5-rvdf1-6), its own chains held rigid, sheared along the line DFT's relaxation took it: what four variants of polyfind's energy between chains predicted before the DFT single points on those cells existed",
+ "energy": "kcal/mol per monomer against the unsheared cell",
+ "shear": "monomers along a, along b",
+ "registered": "2026-11-18 10:35 UTC; the first DFT energy of a sheared cell came at 11:17 UTC",
+ "tool": "examples/interchain_wall.py fit --predict cand6 (the wall of each variant fitted to the other packings' labelled cells; charges of the last two from DFT's potential around single chains, docs/predictions/chain_potential_belt4.json)",
+ "predictions": {
+  "belt4 as it is": {
+   "variables": {
+    "s_CH": 1.0,
+    "s_CF": 1.0,
+    "d_CC": 0.0,
+    "M_H": 0.0
+   },
+   "cells": {
+    "inter_cand6_03": {
+     "shear": [
+      0.075,
+      -0.225
+     ],
+     "predicted": 0.10290779539665589
+    },
+    "inter_cand6_01": {
+     "shear": [
+      0.15,
+      -0.45
+     ],
+     "predicted": 0.6952604004804547
+    },
+    "inter_cand6_02": {
+     "shear": [
+      0.3,
+      -0.9
+     ],
+     "predicted": 1.5761962382970107
+    }
+   }
+  },
+  "buffered wall, present charges": {
+   "variables": {
+    "x_C": 1.1456502377584643,
+    "x_H": 1.2999999999999998,
+    "x_F": 1.1336498144044307,
+    "x_HF": 0.8044001937236385,
+    "log10_D_X": -3.676767024476751,
+    "steep": 0.1456537279217672,
+    "s_CH": 1.0,
+    "s_CF": 1.0,
+    "d_CC": 0.0,
+    "M_H": 0.0
+   },
+   "cells": {
+    "inter_cand6_03": {
+     "shear": [
+      0.075,
+      -0.225
+     ],
+     "predicted": -0.2092026528920504
+    },
+    "inter_cand6_01": {
+     "shear": [
+      0.15,
+      -0.45
+     ],
+     "predicted": -0.1443932153139258
+    },
+    "inter_cand6_02": {
+     "shear": [
+      0.3,
+      -0.9
+     ],
+     "predicted": 0.15310152100169225
+    }
+   }
+  },
+  "buffered wall, bond site": {
+   "variables": {
+    "x_C": 1.1144933388857932,
+    "x_H": 1.2999999997940173,
+    "x_F": 1.1324472349038899,
+    "x_HF": 0.8181504542947288,
+    "log10_D_X": -3.7248001488093943,
+    "steep": 0.12582162647263098,
+    "s_CH": 0.502,
+    "s_CF": 0.82,
+    "d_CC": 0.0,
+    "M_H": 0.281
+   },
+   "cells": {
+    "inter_cand6_03": {
+     "shear": [
+      0.075,
+      -0.225
+     ],
+     "predicted": -0.24054261504886654
+    },
+    "inter_cand6_01": {
+     "shear": [
+      0.15,
+      -0.45
+     ],
+     "predicted": -0.2073867688660016
+    },
+    "inter_cand6_02": {
+     "shear": [
+      0.3,
+      -0.9
+     ],
+     "predicted": 0.028715723818985833
+    }
+   }
+  },
+  "buffered wall, bond site and backbone pull": {
+   "variables": {
+    "x_C": 1.1261328181220391,
+    "x_H": 1.2999999999999998,
+    "x_F": 1.1260798878015477,
+    "x_HF": 0.8082398007036239,
+    "log10_D_X": -3.7728957329972204,
+    "steep": 0.0956359461667372,
+    "s_CH": 0.3,
+    "s_CF": 0.701,
+    "d_CC": -0.031,
+    "M_H": 0.318
+   },
+   "cells": {
+    "inter_cand6_03": {
+     "shear": [
+      0.075,
+      -0.225
+     ],
+     "predicted": -0.2548377190713798
+    },
+    "inter_cand6_01": {
+     "shear": [
+      0.15,
+      -0.45
+     ],
+     "predicted": -0.23423209920745572
+    },
+    "inter_cand6_02": {
+     "shear": [
+      0.3,
+      -0.9
+     ],
+     "predicted": -0.039228428020408046
+    }
+   }
+  }
+ }
+}
