@@ -124,7 +124,7 @@
   "force_rmse_meV_per_A": 150.9370682134846,
   "force_rms_of_the_labels_meV_per_A": 1596.4398373031925
  },
- "reading": "relaxed in DFT to 0.05 eV/A, all-trans is 0.26 kcal/mol per monomer below the helix (polyfind: 0.06 above); eight other helix arrangements tried by DFT single points, none lower by more than 1.2 meV per monomer",
+ "reading": "held upright as polyfind's cell is, DFT gives polyfind's margin (+0.070 against +0.064); free to shear, the all-trans cell drops 0.35 kcal/mol per monomer and the margin is -0.26: the disagreement is a freedom polyfind's cell lacks, not polyfind's energies",
  "dft_relaxation_from_the_relaxed_cells": {
   "what": "both cells relaxed on in DFT itself (atoms and lattice, BFGS on DFT forces and stress), evaluation 0 being the cell the PVDF-only potential left",
   "target_fmax_eV_per_A": 0.05,
@@ -495,5 +495,31 @@
   "lowest": "TG_b+2",
   "lowest_meV_per_monomer": -1.2466101850350242,
   "margin_if_the_lowest_holds_kcal": -0.23214475817877062
+ },
+ "all_trans_cell_held_upright": {
+  "what": "polyfind's all-trans cell relaxed in pvdfb_s2 with the lattice forbidden to shear along the chains (the chain axis kept upright on the lattice plane, as in polyfind's own cell, where a chain's reversed unit is level with its images'), then one DFT single point; compared with the cells relaxed freely in the same potential",
+  "dft_eV_per_monomer": -1876.247854901854,
+  "dft_largest_force_eV_per_A": 0.57588674,
+  "dft_shear_stress_yz_xz_GPa": [
+   0.5384045434932282,
+   -0.29700512932044476
+  ],
+  "lattice_A_deg": [
+   5.1221838602678735,
+   8.623536502255263,
+   15.38279203838718,
+   90.0,
+   90.0,
+   87.18090457721682
+  ],
+  "volume_A3_per_monomer": 56.55468545123485,
+  "above_the_sheared_all_trans_cell_meV_per_monomer": 14.992429406675,
+  "above_the_sheared_all_trans_cell_kcal": 0.3457336379692404,
+  "all_trans_minus_helix_kcal": {
+   "upright": 0.06967550886693408,
+   "sheared": -0.2760581291023063,
+   "polyfind": 0.06386778635724255
+  },
+  "per_reversed_unit_kcal": 2.0744018278154424
  }
 }

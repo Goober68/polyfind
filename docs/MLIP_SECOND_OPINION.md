@@ -6,7 +6,9 @@ seeing pretrained ones tested: "You're using ots solutions? Thought we would tra
 
 Section 1 is the test. Section 2 is done: no pretrained potential passes it. Section 3 is our
 own, and says for each part whether it is done, running or not started. Where it stands on a
-real candidate is 3.8: not settled, and waiting on the fit of 3.7. In short: two short
+real candidate is 3.8: for PVDF with reversed units, DFT meets polyfind's margin when the cell
+is shaped as polyfind shapes it (+0.070 against +0.064) and puts it 0.33 lower when the cell
+is free to shear along the chains, a freedom polyfind's cell lacks. In short: two short
 fits on 76 PVDF frames were right to 0.1 to 0.2 kcal/mol per monomer where the pretrained ones
 are off by 1.2 to 3.9 (3.3). Four long fits on a rented card, on 130 frames, are right to 0.01
 on the packings that have frames near them and off by 0.07 to 0.21 on a packing they were not
@@ -430,6 +432,45 @@ What that is and is not:
   number as polyfind's own two cells do. Whether it does at one in fourteen is not known.
 - If it holds, every cell whose margin is placed by a reversed unit sits lower than polyfind
   has it: by about 0.13 per monomer at one in fourteen, more than the window is wide.
+
+**Where the 0.33 comes from: a freedom polyfind's cell does not have (2026-11-18).** In
+polyfind's cell the chain axis stands upright on the lattice plane, so a chain's reversed unit
+is level with the reversed units of its own images along a and b: a column of them, 5 A apart.
+The cell DFT prefers is sheared along the chains, the reversed units no longer level. To
+separate that from polyfind's energies, the all-trans cell was relaxed once more in the same
+potential with the shear forbidden (`mlip_train.py relax --mask "1 1 1 0 0 1"`) and given one
+DFT single point, to set beside the cells relaxed freely at the same stage:
+
+| all-trans cell | all-trans minus helix by DFT, kcal/mol |
+|---|---:|
+| held upright, as polyfind's is | **+0.070** |
+| polyfind | +0.064 |
+| free to shear | -0.276 |
+
+- **Polyfind's energies are right.** With the cell shaped as polyfind shapes it, DFT gives
+  polyfind's margin to 0.006 kcal/mol. This is the first of polyfind's candidate margins to be
+  met by DFT, and on a chemistry no anchor was fitted to.
+- **Polyfind's cell is not.** Free to shear, the all-trans cell is 15 meV per monomer lower in
+  DFT (0.35 kcal/mol; 2.1 per reversed unit), and DFT's shear stress on the upright cell says
+  the same (0.5 and 0.3 GPa). The helix cell gains nothing from the same freedom (the five
+  shifts along b above: within 1.2 meV). So the whole difference is on the all-trans side.
+- **Which cell is the material?** In a chain made by polymerisation the reversed units fall at
+  random, and at one in six or one in fourteen a reversed unit's neighbours on the next chains
+  are nearly always ordinary units. The upright cell puts every reversed unit beside reversed
+  units; the sheared one puts it beside ordinary ones. On that count the sheared cell is the
+  nearer to the material and the upright one is the artefact of a small periodic cell. That is
+  an argument, not a calculation: a cell with the defects placed at random has not been run.
+- **What it touches.** The column is there in every polyfind cell with one pin per chain
+  period, whatever the pin and however long the period: its cost per pin does not thin out as
+  the period grows, so at one reversed unit in fourteen it is still about 0.15 per monomer if
+  the 2.1 per unit carries over. For the other pins (CFE, CTFE, the nitrile, TrFE) it has not
+  been measured and need not have the same sign.
+- **What would settle it in polyfind:** two more lattice freedoms (the lattice vectors a and b
+  allowed a component along the chain), then the candidates polished again. The number to meet:
+  0.35 kcal/mol per monomer for this cell's all-trans state, nothing for its helix.
+
+These comparisons are between cells relaxed in the potential only (0.6 to 0.9 eV/A left in
+DFT); relaxing on in DFT moved the sheared margin by 0.015.
 
 This reads on the margin alone, which places a cell on the strain axis; it says nothing yet of
 loss, rate or blocked force.

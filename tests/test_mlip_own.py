@@ -295,4 +295,26 @@ def test_no_other_helix_arrangement_tried_brings_the_candidates_margin_back():
     assert other["margin_if_the_lowest_holds_kcal"] == pytest.approx(-0.232, abs=0.003)
     assert r["polyfind_margin_kcal"] - other["margin_if_the_lowest_holds_kcal"] > 0.29
     lines = (PRED / "mlip" / "candidate_registry_frames_pbe_d3bj.extxyz").read_text()
-    assert lines.count("REF_energy=") == 8
+    assert lines.count("REF_energy=") == 9  # the eight, and the all-trans cell held upright
+
+
+def test_held_upright_as_polyfinds_cell_is_dft_gives_polyfinds_margin():
+    """The disagreement on the reversed-unit candidate is a freedom polyfind's cell lacks, not its energies."""
+    r = json.loads((PRED / "mlip_candidate_vdf5-rvdf1-6.json").read_text())
+    u = r["all_trans_cell_held_upright"]
+    gaps = u["all_trans_minus_helix_kcal"]
+    # the all-trans cell kept from shearing along the chains: DFT's margin is polyfind's to 0.01
+    assert gaps["upright"] == pytest.approx(0.070, abs=0.002)
+    assert abs(gaps["upright"] - gaps["polyfind"]) < 0.01
+    # free to shear it is 15 meV per monomer lower in DFT: 0.35 kcal/mol, 2.1 per reversed unit
+    assert u["above_the_sheared_all_trans_cell_meV_per_monomer"] == pytest.approx(15.0, abs=0.2)
+    assert u["above_the_sheared_all_trans_cell_kcal"] == pytest.approx(0.346, abs=0.003)
+    assert u["per_reversed_unit_kcal"] == pytest.approx(2.07, abs=0.02)
+    assert gaps["sheared"] == pytest.approx(-0.276, abs=0.002)
+    assert gaps["upright"] - gaps["sheared"] == pytest.approx(u["above_the_sheared_all_trans_cell_kcal"], abs=1e-9)
+    # DFT's shear stress on the upright cell points the same way; its axis is upright
+    assert max(abs(v) for v in u["dft_shear_stress_yz_xz_GPa"]) > 0.5
+    assert u["lattice_A_deg"][3] == pytest.approx(90.0, abs=0.01) and u["lattice_A_deg"][4] == pytest.approx(90.0, abs=0.01)
+    # the helix gains nothing from the same freedom: its shifted arrangements along b are within 1.5 meV
+    shifts = r["other_helix_arrangements"]["cells"]
+    assert all(abs(v["dft_against_the_helix_cell_meV_per_monomer"]) < 1.5 for k, v in shifts.items() if k.startswith("TG_b"))

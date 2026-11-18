@@ -143,7 +143,20 @@ NOT DONE, IN ORDER:
     the same stage: along b -0.9, -1.2, +0.3, +0.2, -0.4 meV per monomer; along a +33, +32; GTG'T +8.5. NONE LOWER BY
     MORE THAN 1.2 meV: THE MARGIN IS -0.26 (-0.23 if the lowest holds), POLYFIND +0.064. Not tried: both lattice
     vectors at once, other setting angles, other all-trans arrangements (those can only widen the gap).
-    WHAT THIS MEANS FOR POLYFIND (not yet acted on; the PI has it, 2026-11-18): a reversed unit lowers the margin by
+    WHERE THE 0.33 COMES FROM, DONE 2026-11-18 01:08 UTC (docs 3.8, last part; `all_trans_cell_held_upright` in the
+    JSON): the all-trans cell relaxed in `pvdfb_s2` with the shear along the chains forbidden (`mlip_train.py relax
+    --mask "1 1 1 0 0 1"`, as polyfind's cell is: every reversed unit level with its images' along a and b), one DFT
+    single point: ALL-TRANS MINUS HELIX +0.070 (POLYFIND +0.064), and 15.0 meV per monomer (0.346 kcal/mol, 2.1 per
+    reversed unit) above the sheared cell at the same stage. SO POLYFIND'S ENERGIES ARE RIGHT AND ITS CELL LACKS A
+    FREEDOM: the lattice vectors a and b cannot take a component along the chain, so a pin always sits in a column
+    of pins 5 A apart. In a random copolymer a pin's neighbours are ordinary units, so the sheared cell is argued
+    (not computed) to be the nearer to the material. The column is in every polyfind cell with one pin per chain
+    period; its cost per pin does not thin with the period (about 0.15 per monomer at one in fourteen if 2.1 per
+    unit carries over); for CFE, CTFE, the nitrile and TrFE it is not measured and need not have the same sign.
+    PROPOSED TO THE PI, NOT STARTED: give polyfind's cell the two shear freedoms and polish the candidates again
+    (the number to meet: 0.35 per monomer for this all-trans cell, nothing for its helix); and the same DFT pair
+    (upright against sheared) for one CFE and one nitrile cell once a potential can relax them.
+    WHAT THIS MEANS FOR POLYFIND (written before the upright test; the PI has it, 2026-11-18): a reversed unit lowers the margin by
     5.9 kcal/mol in DFT against 4.1 in polyfind at one in six; if it scales with their number, cells placed by a
     reversed unit sit about 0.13 per monomer lower at one in fourteen than polyfind has them. Possible causes to
     look at: polyfind's rigid PVDF bonds and angles at the CF2-CF2 and CH2-CH2 junctions (DFT finds 2.3 eV/A there),
