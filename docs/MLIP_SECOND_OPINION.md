@@ -414,8 +414,16 @@ What that is and is not:
 - It is the gap between two local minima, each reached downhill from polyfind's cell. The
   all-trans cell moved a long way on the way (its lattice sheared: the chains' defects are no
   longer level with their neighbours'); the helix cell did not. A lower helix arrangement that
-  a downhill relaxation does not find (another registry of the chains along their axis) would
-  bring the gap back toward polyfind's. That has not been searched.
+  a downhill relaxation does not find would bring the gap back toward polyfind's. **Eight were
+  tried and none is lower by more than 1.2 meV per monomer** (0.03 kcal/mol): the helix cell
+  with its neighbours along b moved one, two or three monomers along the chain (-0.9, -1.2,
+  +0.3, +0.2 and -0.4 meV by DFT against the helix cell at the same stage), along a (+33 and
+  +32), and polyfind's other helix conformer, the reversed unit at the other place in the helix
+  (+8.5; polyfind has it +5.2). Each was relaxed in the potential and given one DFT single
+  point (`docs/predictions/mlip/candidate_registry_frames_pbe_d3bj.extxyz`). If the lowest
+  holds, the margin is -0.23 in place of -0.26. Not tried: both lattice vectors moved at once,
+  other setting angles of the chains, and anything on the all-trans side beyond the one
+  arrangement found (a lower one there only widens the gap).
 - It is one composition, one reversed unit in six, in PBE-D3(BJ). Against PVDF in the same
   recipe (+0.726) the reversed units lower the margin by 0.99 in DFT and by 0.68 in polyfind
   (+0.744 to +0.064): 5.9 against 4.1 kcal/mol per reversed unit, if it scales with their

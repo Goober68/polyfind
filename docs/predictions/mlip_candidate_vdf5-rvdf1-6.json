@@ -124,7 +124,7 @@
   "force_rmse_meV_per_A": 150.9370682134846,
   "force_rms_of_the_labels_meV_per_A": 1596.4398373031925
  },
- "reading": "between the two minima reached downhill from polyfind's own cells, relaxed in DFT to 0.05 eV/A, all-trans is below the helix; the helix cell's other arrangements have not been searched",
+ "reading": "relaxed in DFT to 0.05 eV/A, all-trans is 0.26 kcal/mol per monomer below the helix (polyfind: 0.06 above); eight other helix arrangements tried by DFT single points, none lower by more than 1.2 meV per monomer",
  "dft_relaxation_from_the_relaxed_cells": {
   "what": "both cells relaxed on in DFT itself (atoms and lattice, BFGS on DFT forces and stress), evaluation 0 being the cell the PVDF-only potential left",
   "target_fmax_eV_per_A": 0.05,
@@ -422,5 +422,78 @@
    "all_trans": 7,
    "helix": 10
   }
+ },
+ "other_helix_arrangements": {
+  "what": "the DFT-relaxed helix cell with its neighbours along b or a moved by whole monomers along the chain, and polyfind's other helix conformer (GTG'T: the reversed unit at the other place in the helix), each relaxed in pvdfb_s2 and given one DFT single point; compared with the helix cell at the same stage",
+  "the_helix_cell_at_the_same_stage_dft_eV_per_monomer": -1876.2508763178614,
+  "cells": {
+   "GTGpT": {
+    "what": "polyfind vdf5-rvdf1-6 GTG'T tilted (the helix with the reversed unit at its other place)",
+    "dft_eV_per_monomer": -1876.242346512756,
+    "dft_against_the_helix_cell_meV_per_monomer": 8.529805105354171,
+    "dft_largest_force_eV_per_A": 0.55416246,
+    "volume_A3_per_monomer": 57.01752097526511,
+    "the_potentials_own_eV_per_monomer": -1876.2135379703157
+   },
+   "TG_a+1": {
+    "what": "vdf5-rvdf1-6 helix, DFT-relaxed, neighbours along a moved +1 monomers along the chain",
+    "dft_eV_per_monomer": -1876.2177368546543,
+    "dft_against_the_helix_cell_meV_per_monomer": 33.13946320713512,
+    "dft_largest_force_eV_per_A": 0.70841965,
+    "volume_A3_per_monomer": 60.18875320467145,
+    "the_potentials_own_eV_per_monomer": -1876.1858354522262
+   },
+   "TG_a-1": {
+    "what": "vdf5-rvdf1-6 helix, DFT-relaxed, neighbours along a moved -1 monomers along the chain",
+    "dft_eV_per_monomer": -1876.2192632658941,
+    "dft_against_the_helix_cell_meV_per_monomer": 31.613051967269712,
+    "dft_largest_force_eV_per_A": 0.71283449,
+    "volume_A3_per_monomer": 59.08737612710487,
+    "the_potentials_own_eV_per_monomer": -1876.1790831162414
+   },
+   "TG_b+1": {
+    "what": "vdf5-rvdf1-6 helix, DFT-relaxed, neighbours along b moved +1 monomers along the chain",
+    "dft_eV_per_monomer": -1876.2517881146441,
+    "dft_against_the_helix_cell_meV_per_monomer": -0.9117967827023676,
+    "dft_largest_force_eV_per_A": 0.62419289,
+    "volume_A3_per_monomer": 55.658732936683805,
+    "the_potentials_own_eV_per_monomer": -1876.2122116207777
+   },
+   "TG_b+2": {
+    "what": "vdf5-rvdf1-6 helix, DFT-relaxed, neighbours along b moved +2 monomers along the chain",
+    "dft_eV_per_monomer": -1876.2521229280464,
+    "dft_against_the_helix_cell_meV_per_monomer": -1.2466101850350242,
+    "dft_largest_force_eV_per_A": 0.62820895,
+    "volume_A3_per_monomer": 55.83976554787804,
+    "the_potentials_own_eV_per_monomer": -1876.212129293681
+   },
+   "TG_b+3": {
+    "what": "vdf5-rvdf1-6 helix, DFT-relaxed, neighbours along b moved +3 monomers along the chain",
+    "dft_eV_per_monomer": -1876.2505709154295,
+    "dft_against_the_helix_cell_meV_per_monomer": 0.3054024318771553,
+    "dft_largest_force_eV_per_A": 0.62618703,
+    "volume_A3_per_monomer": 55.93455532135281,
+    "the_potentials_own_eV_per_monomer": -1876.2120284921477
+   },
+   "TG_b-1": {
+    "what": "vdf5-rvdf1-6 helix, DFT-relaxed, neighbours along b moved -1 monomers along the chain",
+    "dft_eV_per_monomer": -1876.250721337692,
+    "dft_against_the_helix_cell_meV_per_monomer": 0.15498016932724568,
+    "dft_largest_force_eV_per_A": 0.62497064,
+    "volume_A3_per_monomer": 55.979694576298066,
+    "the_potentials_own_eV_per_monomer": -1876.211701697431
+   },
+   "TG_b-2": {
+    "what": "vdf5-rvdf1-6 helix, DFT-relaxed, neighbours along b moved -2 monomers along the chain",
+    "dft_eV_per_monomer": -1876.2512399413163,
+    "dft_against_the_helix_cell_meV_per_monomer": -0.3636234548594075,
+    "dft_largest_force_eV_per_A": 0.63824602,
+    "volume_A3_per_monomer": 55.84910411549753,
+    "the_potentials_own_eV_per_monomer": -1876.211835659824
+   }
+  },
+  "lowest": "TG_b+2",
+  "lowest_meV_per_monomer": -1.2466101850350242,
+  "margin_if_the_lowest_holds_kcal": -0.23214475817877062
  }
 }

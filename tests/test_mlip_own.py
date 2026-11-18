@@ -277,3 +277,22 @@ def test_the_candidates_cells_relaxed_on_in_dft_keep_all_trans_below_the_helix()
     # against polyfind's +0.064: a third of a kcal/mol, with a switching window 0.12 wide
     polyfind = json.loads((PRED / "mlip_candidate_vdf5-rvdf1-6.json").read_text())["polyfind_margin_kcal"]
     assert polyfind - final["all_trans_minus_helix_kcal"] == pytest.approx(0.325, abs=0.005)
+
+
+def test_no_other_helix_arrangement_tried_brings_the_candidates_margin_back():
+    """Eight helix arrangements by DFT single points: none lower than the helix cell by more than 1.2 meV per monomer."""
+    r = json.loads((PRED / "mlip_candidate_vdf5-rvdf1-6.json").read_text())
+    other = r["other_helix_arrangements"]
+    cells = {k: v["dft_against_the_helix_cell_meV_per_monomer"] for k, v in other["cells"].items()}
+    assert set(cells) == {"TG_b+1", "TG_b-1", "TG_b+2", "TG_b-2", "TG_b+3", "TG_a+1", "TG_a-1", "GTGpT"}
+    assert other["lowest"] == "TG_b+2" and min(cells.values()) == pytest.approx(-1.25, abs=0.1)
+    # along b the neighbours can sit anywhere along the chain to within 1.5 meV; along a they cannot
+    assert all(abs(cells[k]) < 1.5 for k in cells if k.startswith("TG_b"))
+    assert min(cells["TG_a+1"], cells["TG_a-1"]) > 30
+    # polyfind's other helix conformer is higher in DFT as well (polyfind: +0.12 kcal/mol = +5.2 meV)
+    assert cells["GTGpT"] == pytest.approx(8.5, abs=0.2)
+    # so the margin stays negative: -0.26 as relaxed, -0.23 if the lowest arrangement holds; polyfind +0.064
+    assert other["margin_if_the_lowest_holds_kcal"] == pytest.approx(-0.232, abs=0.003)
+    assert r["polyfind_margin_kcal"] - other["margin_if_the_lowest_holds_kcal"] > 0.29
+    lines = (PRED / "mlip" / "candidate_registry_frames_pbe_d3bj.extxyz").read_text()
+    assert lines.count("REF_energy=") == 8

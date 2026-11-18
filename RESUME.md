@@ -127,12 +127,18 @@ NOT DONE, IN ORDER:
     arrangements (axial registry) were not looked for. If it holds, every cell placed by a reversed unit sits about
     0.13 per monomer lower at one in fourteen. FINISHED 20:50 UTC: BOTH RELAXED IN DFT TO 0.05 eV/A (7 and 10 steps;
     17 frames, 5.3 h), THE MARGIN -0.261 (polyfind +0.064; 5.9 against 4.1 per reversed unit).
-    RUNNING AT THIS COMMIT: the helix cell with its neighbours along b or a moved by whole monomers along the chain
-    (seven cells, /opt/dft/cand_shear/*.start.xyz, made from the DFT-relaxed helix cell), relaxed in `pvdfb_s2`
-    (`mlip_train.py relax --fmax 0.01 --out /opt/dft/cand_shear_relaxed`), then DFT single points
-    (`mlip_frames.py label --frames /opt/dft/cand_shear_relaxed --minutes 50`; log /opt/dft/cand_shear_N.log).
-    COMPARE each one's DFT energy with the helix cell at the same stage (relaxed in the potential only:
-    -1876.25088 eV per monomer; DFT-relaxed -1876.25601): one lower by X meV raises the margin by X meV.
+    OTHER HELIX ARRANGEMENTS, DONE 2026-11-18 00:47 UTC: the DFT-relaxed helix cell with its neighbours along b or a
+    moved by whole monomers along the chain (seven cells; each chain made whole before the lattice vector is
+    changed, or the chains break) and polyfind's other helix conformer GTG'T, each relaxed in `pvdfb_s2` and given
+    one DFT single point (`docs/predictions/mlip/candidate_registry_frames_pbe_d3bj.extxyz`). Against the helix cell at
+    the same stage: along b -0.9, -1.2, +0.3, +0.2, -0.4 meV per monomer; along a +33, +32; GTG'T +8.5. NONE LOWER BY
+    MORE THAN 1.2 meV: THE MARGIN IS -0.26 (-0.23 if the lowest holds), POLYFIND +0.064. Not tried: both lattice
+    vectors at once, other setting angles, other all-trans arrangements (those can only widen the gap).
+    WHAT THIS MEANS FOR POLYFIND (not yet acted on; the PI has it, 2026-11-18): a reversed unit lowers the margin by
+    5.9 kcal/mol in DFT against 4.1 in polyfind at one in six; if it scales with their number, cells placed by a
+    reversed unit sit about 0.13 per monomer lower at one in fourteen than polyfind has them. Possible causes to
+    look at: polyfind's rigid PVDF bonds and angles at the CF2-CF2 and CH2-CH2 junctions (DFT finds 2.3 eV/A there),
+    and its cell not letting neighbouring chains' defects sit off level (the all-trans cell sheared to do so).
     THE FASTER ROUTE, for this and the larger candidates: the fit on all 330 frames (54 hold a reversed unit), then
     `python -I examples/mlip_train.py relax --model NEW.model --name NAME --cells /opt/dft/cand/cand_vdf5-rvdf1-6_*.dft.xyz
     --out DIR`, `mlip_frames.py label --frames DIR`, and the gap from the two DFT energies; the DFT force left says
