@@ -65,10 +65,35 @@ right": true at one registry, not along it).
     (`polished_margins_belt4.json`, with tilts) is NOT replaced and the ranking by margin is not settled by either.
 (6) DFT WORKING DIRECTORIES (outside the repository, survive restarts): `/opt/dft/shear2` (the 28 sheared cells and
     the seven E5 cells, start and labelled), `/opt/dft/shear`, `/opt/dft/e5` (the first labelling; the same frames).
-(7) PROPOSED TO THE PI, NOT STARTED: (a) refit polyfind's non-bonded wall with registry in the target set, most
-    likely with a softer wall for hydrogen's contacts (the 32 DFT energies are there; more cost a minute each);
-    (b) after it, the slide and kink barriers and the frequency maps again; (c) margins of cells with pins as a
-    spread over registries, not one upright cell.
+(7) THE REFIT, IN PROGRESS (PI 2026-11-18: "Yes" to "Refit polyfind's non-bonded wall with registry in the target
+    set, probably with a softer wall for hydrogen's contacts?"). After it: the slide and kink barriers and the
+    frequency maps again; margins of cells with pins as a spread over registries, not one upright cell.
+    (a) DONE: stage 9 of the crystal fit (`crystalfit.REGISTRY`, `registry_costs`, `evaluate(registry=True)`,
+        `examples/crystal_stage.py --stage 9 [--wide]`): eight registry rows beside the sixteen anchors, tolerance a
+        fifth of DFT's value. belt4 scores 699 on it (11 on the old objective). TRAP: inside `applied()` build packers
+        as `pack_mod.CrystalPacker(...)`, never from a name imported beforehand (the block rebinds the class on the
+        module; an early import gives the polymer's own charges and the default torsion term, silently).
+    (b) DONE, AND IT IS THE NEGATIVE ANSWER: with the present form the fit brings the registry cost to 1.0-1.3 of DFT's
+        and the lateral cell contracts 2-3% to pay (objective 43 inside the old bounds, 46 with the diameters'
+        bounds opened; `docs/predictions/crystal_stage_v9_registry[_wide].json`, both stopped by hand at 186
+        evaluations, still falling slowly, NOT presets). The form cannot hold both.
+    (c) RUNNING / NEXT: what a new wall is to be fitted to, on one footing. `examples/interchain_frames.py frames`
+        built 81 cells in `/opt/dft/interchain` (plain PVDF, chains rigid, three packings: beta, the candidate's
+        all-trans packing, the TGTG' helix `vdf2`; lateral edges scaled -6..+6% singly and together; shears);
+        label with `python examples/mlip_frames.py label --frames /opt/dft/interchain --pw /opt/mm/qe/bin/pw.x
+        --pseudo /opt/pseudo --np 4 --minutes 100` (resumable; 50 s per 12-atom cell, 2 min per helix cell), then
+        `interchain_frames.py collect --frames /opt/dft/interchain`.
+    (d) NEXT: `examples/interchain_wall.py pairs --frames /opt/dft/interchain --registry /opt/dft/shear2` (the
+        between-chain distances of every cell by element pair; the present form on them is polyfind's own pair
+        energy to 4e-14) and `... fit --form 12-6|n-6|exp-6 --free x_H,...` : try wall shapes against DFT's
+        differences outside the kernels, electrostatics left as they are. Choose the form there.
+    (e) THEN: put the chosen form in the kernels (the 12-6 is written in pack.py (tables and two kernels),
+        mixedcell._pair_kernel, supercell.py, lattice_table.py, forcefield.SimpleFF, fitting's two designs), default
+        unchanged; stage 10 of the crystal fit with the registry and rigid-strain rows; then the valence fit's
+        torsions again under the new wall (the conformer set IS here: `/home/user/sarco/materials/gpu_bundle/
+        trainset_v1_566.xyz`, `POLYFIND_TRAINSET`); then the acceptance on a copolymer DFT has: `vdf5-rvdf1-6`
+        upright margin +0.070, all-trans shear gain -0.35 at (0.30, -0.90) monomers, helix none; E5 and the 18
+        sheared cells not in the fit as the check.
 
 **A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
 DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then
