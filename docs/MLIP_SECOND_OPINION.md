@@ -557,9 +557,13 @@ monomer of the cell:
   well depths, the carbon diameter and the charges move it by 1% or less. Each of the four
   also pushes the cell apart (the lateral forces on the cell go from -0.06 and -0.28 to
   between -0.3 and -0.7 kcal/mol/A). The fit was given the lattice and its stiffness and no
-  registry, and set these variables for those. On the hydrogen diameter alone a factor 2.9
-  is about 15% off it, which the lattice would not survive unchanged; whether one r^-12 wall
-  can hold both is what a refit would find out.
+  registry, and set these variables for those. Taken as linear, the four steps move the two
+  costs and the two lateral forces in nearly the same proportions (condition number 8000 for
+  four targets on four variables): no moderate change of them lowers the cost and holds the
+  lattice. The hydrogen diameter alone reaches the factor 2.9 at 17% off, and leaves forces
+  of +5 and +3 kcal/mol/A closing the cell. So the likely need is a new term, a wall softer
+  than r^-12 for hydrogen's contacts, not new values for the old ones. That is an estimate
+  from eleven steps, not a fit.
 - **It accounts for the candidate.** At DFT's shear, plain chains cost 1.57 in polyfind and
   0.52 in DFT: 1.05 apart. On the candidate itself the two are 0.77 apart (+0.43 and -0.35).
   What the reversed units gain by leaving their column is of one size in both, about one
@@ -579,6 +583,41 @@ monomer of the cell:
 - *The margins of cells with pins:* a pin's registry with the pins of the next chains is worth
   about as much as the window is wide, DFT moves it where polyfind cannot, and the two-chain
   cell offers one registry to choose. One row is measured (this candidate: +0.06 to -0.26).
+
+**Polyfind's own re-polish with the shear free (done; `examples/shear_polish.py`,
+`docs/predictions/sheared_margins_belt4.json`).** All 168 polished cells of the 35 rows, each
+relaxed again from its stored upright cell with the two shears free, every torsion and angle
+free as before, to a gradient under 1e-4. Pendant tilts were not redone: these are rigid
+margins, to be read as changes.
+
+- **The all-trans cells stay upright.** Mean gain 0.004 kcal/mol per monomer; four of 35 gain
+  more than 0.01; the largest is the reversed-unit candidate's 0.029, the cell DFT lowers by
+  0.35.
+- **The helix cells move.** Mean gain 0.038, the largest 0.294; 38 of 133 gain more than 0.05,
+  half of those at about half a monomer of shear along a or b.
+- **So polyfind's margins rise:** by 0.044 on average (median 0.018, from -0.028 to +0.265).
+  Nine rows move by more than half the window and four by more than its 0.12; the lowest
+  helix conformer changes in 16 rows.
+
+| row | rigid margin, upright | shear free | change |
+|---|---:|---:|---:|
+| the nitrile with reversed VDF on 21 mol% TrFE (`vdf9-trfe3-an1-rvdf1-14`) | -0.103 | +0.163 | +0.265 |
+| 60/40 (`vdf6-trfe4`) | -0.369 | -0.186 | +0.183 |
+| `vdf6-trfe3-cfe1` | +0.266 | +0.407 | +0.141 |
+| `vdf8-trfe4-an1-rvdf1-14` | -0.276 | -0.151 | +0.124 |
+| the nitrile alone (`vdf9-trfe4-an1-14`) | +0.033 | +0.148 | +0.115 |
+| the CFE terpolymer, 64/29/7 (`vdf9-trfe4-cfe1-14`) | +0.140 | +0.251 | +0.111 |
+| PVDF with reversed units (`vdf5-rvdf1-6`) | -0.113 | -0.141 | -0.028 |
+
+- **These are not corrections toward DFT.** On the one row DFT has, polyfind's change is
+  -0.03 and DFT's is -0.33, and it comes from the side polyfind does not move. A potential
+  that charges three times too much for registry finds the sheared cells it can afford, not
+  the ones the material would take. What the table does show is the size of the thing: in
+  polyfind's own energy the registry a cell is allowed moves a margin by as much as the
+  window is wide, in a third of the rows.
+- **The ranking by margin is therefore not settled by this table or by the one before it.**
+  It needs the registry cost put right first. And it reads on the margin alone, one of the
+  four parts.
 
 **On the four parts of the objective.** This is a finding about the model, not a candidate's
 evaluation, and it lands on them unequally. Strain (the margin's place in the window): off by

@@ -21,6 +21,55 @@ backbone angles and the pendant tilts (prediction CF2 wag 2.0-2.5, rock 1.1-1.4,
 against 2.23/4.61/2.73 and the Born charges, then re-evaluate belt4 and refit only if a residual leaves 1.5 tolerances
 (task #16). Suite 724 passed, 5 skipped. Branch `claude/polymeric-stable-arrangements-uh06b1`, head 7f68362 before this status commit.
 
+**POLYFIND'S CELL MAY NOW SHEAR ALONG ITS CHAINS, AND IT DOES NOT FOLLOW DFT: POLYFIND CHARGES THREE TIMES DFT FOR
+MOVING CHAINS ALONG EACH OTHER, 2026-11-18 (PI: "Yes" to "give polyfind's cell the two missing shear freedoms and
+re-polish the candidates").** Text: `docs/MLIP_SECOND_OPINION.md` 3.9 (it corrects 3.8's "polyfind's energies are
+right": true at one registry, not along it).
+(1) THE FREEDOM, DONE AND EXACT. `polyfind.mixedcell.MixedModel(shear=True)`: two more variables at the END of the
+    vector (`index("shear")`), what a and b carry along the chains, in A; `lattice_rows(A, B, gamma, c, sa, sb)`;
+    `MixedState.shear` (None = upright; `from_vector(..., shear=True)`); `tile_state` scales it; `reduce_shear` takes
+    whole repeats off. Upright vectors and every stored number are untouched (bit for bit at no shear). Known answer:
+    a cell sheared by half a repeat = the upright cell twice as wide, 1e-14. `tests/test_mixedcell.py` (30 shear tests).
+    TWO TRAPS: (a) many stored cells have a symmetry that makes no shear a stationary point, so a relaxation must
+    start off it (`shear_polish.py --kick`, 0.05 A); (b) SLSQP's own stopping test goes on failing at the minimum of a
+    14-monomer cell (1300 evaluations seen): use `relax(..., patience=60, patience_tol=1e-6)`.
+(2) THE CANDIDATE (`vdf5-rvdf1-6` all-trans; `examples/shear_registry.py candidate`,
+    `docs/predictions/shear_registry_belt4.json`): DFT -0.35 kcal/mol per monomer at shear (0.30, -0.90) monomers;
+    polyfind with the shear free -0.03 at (0.026, -0.078), the same direction, a tenth of the way. DFT's relaxed cell
+    fits the mixed cell's variables to 0.015 A; polyfind there is +0.43 (shear held, the rest relaxed), +1.33 as fitted.
+(3) WHY, MEASURED (`shear_registry.py frames` + `mlip_frames.py label` + `collect`; 35 labelled frames in
+    `docs/predictions/mlip/shear_registry_frames_pbe_d3bj.extxyz`; `tests/test_shear_registry.py`): plain PVDF,
+    twelve-atom cells sheared rigidly, two packings, polyfind against PBE-D3(BJ) single points on the same atoms:
+    polyfind is 2.4 to 3.5 times DFT (median 2.9 over 32 cells; half a monomer along a in beta: 2.34 against 0.69).
+    THE REGISTERED E5 TEST, run here in the same DFT (Dipole never delivered it; the forces on Dipole's beta cell are
+    zero in ours): polyfind 0.172 / 0.656 / 1.251 / 1.533 (one sublattice slid c/8 .. c/2) against DFT 0.066 / 0.230 /
+    0.396 / 0.467, and one chain of four 0.671 / 1.585 against 0.232 / 0.469. Sign, order and anisotropy hold; the
+    factor-1.5 acceptance is missed (2.6 to 3.4). It is all in polyfind's repulsion and dispersion pair terms (its
+    electrostatics lower the sheared cell). Handles (`shear_registry.py handles`): the H diameter, the H-F pair's
+    diameter, the belt wall's depth, the F diameter, which are the lattice's handles too; as a linear estimate no
+    moderate change of them lowers the cost and holds the lattice (a softer wall for H's contacts is the likely need).
+(4) WHAT STANDS: energies at one registry (beta-alpha gap, the candidate's margin with both cells upright, C_11 C_22
+    C_12). WHAT DOES NOT, UNTIL REDONE: every barrier of a chain or a kink moving along its neighbours (the 3.15
+    chain-slide barrier, the kink steps behind every relaxation frequency and tan delta: overstated, by how much not
+    computed, so polyfind's rates are too slow), the shear constants along the chains, and the margins of cells with
+    pins (a pin's registry with the next chains' pins is worth about the window's width; DFT moves it, polyfind cannot).
+(5) POLYFIND'S OWN RE-POLISH WITH THE SHEAR FREE (`examples/shear_polish.py`, resumable, `--minutes`;
+    `docs/predictions/sheared_margins_belt4.json`): DONE, all 35 rows, 168 cells,
+    every one stationary to 1e-4, rigid (tilts NOT redone). The all-trans cells stay upright (mean gain 0.004, largest
+    0.029 = the reversed-unit candidate's, which DFT lowers by 0.35); the helix cells move (mean 0.038, largest 0.294,
+    38 of 133 over 0.05, half of those near half a monomer of shear). Rigid margins: -0.028 to +0.265, mean +0.044;
+    9 rows move by more than 0.06, 4 by more than the window's 0.12 (`vdf9-trfe3-an1-rvdf1-14` +0.265, `vdf6-trfe4`
+    +0.183, `vdf6-trfe3-cfe1` +0.141, `vdf8-trfe4-an1-rvdf1-14` +0.124); the CFE terpolymer +0.111; the lowest helix
+    conformer changes in 16 rows. NOT A CORRECTION TOWARD DFT (polyfind -0.03 where DFT is -0.33, and on the other
+    side): it shows that the registry a cell is allowed moves a margin by the window's width. The polished margin table
+    (`polished_margins_belt4.json`, with tilts) is NOT replaced and the ranking by margin is not settled by either.
+(6) DFT WORKING DIRECTORIES (outside the repository, survive restarts): `/opt/dft/shear2` (the 28 sheared cells and
+    the seven E5 cells, start and labelled), `/opt/dft/shear`, `/opt/dft/e5` (the first labelling; the same frames).
+(7) PROPOSED TO THE PI, NOT STARTED: (a) refit polyfind's non-bonded wall with registry in the target set, most
+    likely with a softer wall for hydrogen's contacts (the 32 DFT energies are there; more cost a minute each);
+    (b) after it, the slide and kink barriers and the frequency maps again; (c) margins of cells with pins as a
+    spread over registries, not one upright cell.
+
 **A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
 DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then
 one DFT single point, 2026-11-16 (PI: "Go on 1", then "You're using ots solutions? Thought we

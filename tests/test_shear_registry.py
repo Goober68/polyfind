@@ -129,3 +129,69 @@ def test_the_cost_is_set_by_the_variables_that_place_hydrogens_contacts():
     assert all(abs(steps[k]["half_a_change"]) < 0.011 and abs(steps[k]["half_b_change"]) < 0.011 for k in set(steps) - moved)
     for k in moved:  # the lateral force on the cell, kcal/mol/A: more negative is a cell that wants to be wider
         assert steps[k]["dE_dA"] < fit["dE_dA"] - 0.2 and steps[k]["dE_dB"] < fit["dE_dB"] - 0.15
+
+
+def test_the_four_handles_move_the_cost_and_the_lattice_together():
+    """The linear estimate the write-up draws from the stored steps: four targets (two costs
+    down by 2.9, two lateral forces unchanged) on the four variables is an ill-conditioned
+    problem, and the hydrogen diameter alone buys the factor with forces that close the cell."""
+    import numpy as np
+
+    h = _table()["handles"]
+    fit, st = h["fitted"], h["steps"]
+    names = ["x_H", "x_HF", "log10_D_X", "x_F"]
+    M = np.array([[np.log1p(st[n]["half_a_change"]) / st[n]["step"] for n in names],
+                  [np.log1p(st[n]["half_b_change"]) / st[n]["step"] for n in names],
+                  [(st[n]["dE_dA"] - fit["dE_dA"]) / st[n]["step"] for n in names],
+                  [(st[n]["dE_dB"] - fit["dE_dB"]) / st[n]["step"] for n in names]])
+    assert np.linalg.cond(M) > 5000
+    exact = np.linalg.solve(M, [-np.log(2.9), -np.log(2.9), 0.0, 0.0])
+    assert abs(exact[0]) > 1.0  # a hydrogen diameter several times over: no such potential
+    cheapest = np.linalg.lstsq(M[:2], np.array([-np.log(2.9)] * 2), rcond=None)[0]
+    assert cheapest[0] == pytest.approx(-0.17, abs=0.01) and abs(cheapest[1]) < 0.03 and abs(cheapest[3]) < 0.03
+    closing = M[2:] @ cheapest
+    assert closing[0] == pytest.approx(5.1, abs=0.2) and closing[1] == pytest.approx(3.0, abs=0.2)
+
+
+def _sheared():
+    return json.loads((PRED / "sheared_margins_belt4.json").read_text())
+
+
+def test_polyfinds_own_re_polish_moves_helix_cells_and_leaves_the_all_trans_ones_upright():
+    """Every polished cell relaxed again with the shear free (examples/shear_polish.py): each
+    starts from its stored upright cell, ends stationary and no higher, and what moves is the
+    helix side."""
+    rows = _sheared()["rows"]
+    polished = json.loads((PRED / "polished_margins_belt4.json").read_text())["rows"]
+    assert set(rows) == set(polished) and len(rows) == 35
+    assert all(set(v["cells"]) == set(polished[r]["cells"]) for r, v in rows.items())
+    cells = [(r, c, x) for r, v in rows.items() for c, x in v["cells"].items()]
+    assert len(cells) == 168
+    for r, c, x in cells:
+        assert x["upright_per_monomer"] == pytest.approx(polished[r]["cells"][c]["rigid_per_monomer"], abs=1e-6)
+        assert x["gain_per_monomer"] < 1e-6 and x["gradient_max"] < 1e-4 and not x.get("stalled")
+        assert x["sheared_per_monomer"] - x["upright_per_monomer"] == pytest.approx(x["gain_per_monomer"], abs=1e-9)
+    tt = [x["gain_per_monomer"] for _, c, x in cells if c == "TTTT"]
+    tg = [x["gain_per_monomer"] for _, c, x in cells if c != "TTTT"]
+    assert min(tt) == pytest.approx(-0.029, abs=0.001) and sum(g < -0.01 for g in tt) == 4
+    assert min(tt) == rows["vdf5-rvdf1-6"]["cells"]["TTTT"]["gain_per_monomer"]  # the reversed-unit candidate's, DFT's -0.35
+    assert min(tg) == pytest.approx(-0.294, abs=0.001) and sum(g < -0.05 for g in tg) == 38
+    assert sum(tt) / len(tt) == pytest.approx(-0.004, abs=0.001) and sum(tg) / len(tg) == pytest.approx(-0.038, abs=0.001)
+
+
+def test_the_rigid_margins_move_by_as_much_as_the_window_is_wide():
+    rows = _sheared()["rows"]
+    for v in rows.values():
+        c = v["cells"]
+        tgs = [k for k in c if k != "TTTT"]
+        assert v["margin_rigid_upright"] == pytest.approx(c["TTTT"]["upright_per_monomer"] - min(c[k]["upright_per_monomer"] for k in tgs), abs=1e-9)
+        assert v["margin_rigid_sheared"] == pytest.approx(c["TTTT"]["sheared_per_monomer"] - min(c[k]["sheared_per_monomer"] for k in tgs), abs=1e-9)
+    change = {r: v["margin_change"] for r, v in rows.items()}
+    assert min(change.values()) == pytest.approx(-0.028, abs=0.001) and max(change.values()) == pytest.approx(0.265, abs=0.001)
+    assert min(change, key=change.get) == "vdf5-rvdf1-6" and max(change, key=change.get) == "vdf9-trfe3-an1-rvdf1-14"
+    assert sum(abs(v) > 0.06 for v in change.values()) == 9 and sum(abs(v) > 0.12 for v in change.values()) == 4  # the window is 0.12 wide
+    assert sum(change.values()) / len(change) == pytest.approx(0.044, abs=0.001)
+    assert change["vdf9-trfe4-cfe1-14"] == pytest.approx(0.111, abs=0.001)  # the terpolymer the candidates are set against
+    assert sum(v["tg_conformer_upright"] != v["tg_conformer_sheared"] for v in rows.values()) == 16
+    # on the one row DFT has, polyfind's change is a twelfth of DFT's: -0.028 against -0.33
+    assert change["vdf5-rvdf1-6"] / (-0.276 - 0.070) == pytest.approx(0.082, abs=0.005)

@@ -84,6 +84,10 @@ def relax_sheared(model, x0, starts=(), maxiter: int = 800, kick: float = 0.05):
             x, _ = model.relax(x, free=rigid, closed=[], maxiter=300)
         # the optimiser's own test can go on failing at a minimum of a large cell (MixedModel.relax): stop when the energy has
         x1, info = model.relax(x, free=everything, closed=[0, 1], maxiter=maxiter, patience=60, patience_tol=1e-6)
+        if info["stalled"] or info["gradient_max"] > 1e-3:  # and finish on the closure surface, where such a run converges
+            x1, last = model.relax_on_surface(x1, free=everything, closed=[0, 1], gtol=1e-4, maxiter=300, patience=60)
+            info = {**info, "message": last["message"], "gradient_max": last["gradient_max"], "stalled": last["stalled"],
+                    "evaluations": info["evaluations"] + last["evaluations"]}
         e1 = model.physical_energy(x1)
         tried.append({"start_shear_A": [float(v) for v in x[model.index("shear")]] if start is None else [float(v) for v in start], "energy": float(e1),
                       "shear_A": [float(v) for v in model.state(x1).shear]})
@@ -102,6 +106,7 @@ def main():
     ap.add_argument("--preset", default="pvdf-dft-valence-belt4")
     ap.add_argument("--maxiter", type=int, default=800)
     ap.add_argument("--minutes", type=float, default=0.0, help="start no new cell after this long; the file holds what is done")
+    ap.add_argument("--redo-unfinished", action="store_true", help="run again the stored cells that stalled or ended with a gradient over 1e-3")
     ap.add_argument("--out", default="docs/predictions/sheared_margins_belt4.json")
     args = ap.parse_args()
     out_path = Path(args.out)
@@ -115,6 +120,10 @@ def main():
                 what="each polished upright cell (polished_margins_belt4.json) relaxed again with the cell free to shear along its chains, from no shear"
                      + (f" and from the shears {args.starts} (fractions of a monomer)" if fractions else ""))
     disk.setdefault("rows", {})
+    if args.redo_unfinished:
+        for entry in disk["rows"].values():
+            for conf in [c for c, r in entry["cells"].items() if r.get("stalled") or r["gradient_max"] > 1e-3]:
+                del entry["cells"][conf]
 
     def save():
         with open(out_path, "w") as fh:
