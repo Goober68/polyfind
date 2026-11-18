@@ -193,3 +193,51 @@ def test_a_parameter_set_carries_the_wall_to_every_packer_built_under_it():
     assert names[-1] == "wall_delta" and len(names) == 14 and x0[-1] == 0.07 and bounds[-1].tolist() == [0.0, 0.5]
     assert C.ridge_parts(x14)[-1] == pytest.approx((0.2 - 0.07) / sigma[-1])
     assert C.STAGE12["registry"] and C.STAGE12["angles"]
+
+
+def test_the_conformer_design_can_see_the_lattice_sides_non_bonded_terms():
+    """``ValenceDesign.lattice``: a crystal-stage parameter set in place of the vector's own
+    Lennard-Jones terms, increments, pair terms and wall, so that the torsions can be scored and
+    fitted again under the potential the lattice has.  ``None`` is the vector as it always was."""
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location("tf", Path(__file__).with_name("test_fitting.py"))
+    TF = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(TF)
+    design = F.ValenceDesign(TF._synthetic_frames())
+    x = TF._valence_x()
+    assert design.lattice is None
+    p0 = design.unpack(x)
+    assert p0.get("wall") is None and not p0.get("lj_pairs")
+    e0, f0, _ = design.evaluate(p0)
+    names = sorted(F._UFF_ALL)
+    belt4 = F.PRESET_PARAMETERS[BELT4]
+    design.lattice = belt4
+    p1 = design.unpack(x)
+    lj = belt4.lj_dict
+    for e in ("C", "H", "F"):
+        assert p1["lj_x"][names.index(e)] == lj[e][0] and p1["lj_d"][names.index(e)] == lj[e][1]
+    assert p1["wall"] is None and list(p1["lj_pairs"]) == [(names.index("F"), names.index("H"))]  # the belt sites are not atoms
+    assert p1["increments"][F.REF_INCREMENTS.index(("C", "F"))] == dict(((a, b), v) for a, b, v in belt4.charge_increments)[("C", "F")]
+    np.testing.assert_array_equal(p1["torsion"], p0["torsion"])  # the torsions stay the vector's
+    design.lattice = C.parameters(np.concatenate([F.CRYSTAL8_TILT_FITTED_X, [0.2]]))
+    p2 = design.unpack(x)
+    assert p2["wall"] == (0.2, WALL_GAMMA)
+    e2, f2, _ = design.evaluate(p2)
+    e1, f1, _ = design.evaluate(p1)
+    assert np.abs(e2 - e1).max() > 0.05 and np.abs(e1 - e0).max() > 0.01  # each change is felt
+    # the forces are the energy's: one atom moved in one frame, with the wall, against the design's own force
+    frames = TF._synthetic_frames()
+    from polyfind.forcefield import Frame
+    f = frames[1]
+    atom, h = 5, 1e-5
+    def energy_of(dx):
+        c = np.array(f.coords, dtype=float)
+        c[atom, 0] += dx
+        moved = F.ValenceDesign([frames[0], Frame(**{**f.__dict__, "coords": c})] + frames[2:])
+        moved.lattice = design.lattice
+        return moved.evaluate(moved.unpack(x))[0][1]
+    fd = -(energy_of(h) - energy_of(-h)) / (2 * h)
+    first = int(np.flatnonzero(design.atom_frame == 1)[0])
+    assert fd == pytest.approx(f2[first + atom, 0], rel=1e-5, abs=1e-5)

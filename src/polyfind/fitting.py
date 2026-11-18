@@ -2127,11 +2127,21 @@ class ValenceDesign:
         q = self.increment_matrix @ p["increments"]
         scale = np.where(self.pair_s14, p["scale14"], 1.0)
         lj_x = np.sqrt(x[self.pair_i] * x[self.pair_j])
-        lj_d = np.sqrt(d[self.pair_i] * d[self.pair_j]) * scale
+        lj_d = np.sqrt(d[self.pair_i] * d[self.pair_j])
+        for (a, b), (x_ab, d_ab) in (p.get("lj_pairs") or {}).items():  # pair terms that leave the mixing rule
+            ea, eb = self.atom_el[self.pair_i], self.atom_el[self.pair_j]
+            m = ((ea == a) & (eb == b)) | ((ea == b) & (eb == a))
+            lj_x = np.where(m, x_ab, lj_x)
+            lj_d = np.where(m, d_ab, lj_d)
+        lj_d = lj_d * scale
         qq = q[self.pair_i] * q[self.pair_j] * scale * COULOMB
-        s6 = (lj_x * self.inv_r) ** 6
-        e_lj = lj_d * (s6 * s6 - 2.0 * s6)
-        dlj_dr = (12.0 * lj_d * self.inv_r) * (s6 - s6 * s6)  # d(LJ)/dr
+        if p.get("wall") is None:
+            s6 = (lj_x * self.inv_r) ** 6
+            e_lj = lj_d * (s6 * s6 - 2.0 * s6)
+            dlj_dr = (12.0 * lj_d * self.inv_r) * (s6 - s6 * s6)  # d(LJ)/dr
+        else:  # the lattice side's other pair form (polyfind.pack.wall_b147), between a chain's own atoms too
+            from .pack import wall_b147
+            e_lj, dlj_dr = wall_b147(np, 1.0 / self.inv_r, lj_d, 1.0 / lj_x, *p["wall"], grad=True)
         f_lj = (-dlj_dr)[:, None] * self.pair_rhat
         # Coulomb between charge sites: the separation is A + d U, so the distance and its
         # direction both move with the one offset parameter and no geometry is rebuilt.
@@ -2192,7 +2202,7 @@ class ValenceDesign:
         of squares is a mean squared error in kcal^2/mol^2 and ``force_weight`` reads as "how
         many of those one kcal^2/(mol A)^2 of force error is worth".
         """
-        p = valence_unpack(x)
+        p = self.unpack(x)
         energy, forces, _ = self.evaluate(p)
         blocks = [(self.centre(energy) - self.energy_ref_centred) / np.sqrt(self.n_frames)]
         if force_weight > 0:
@@ -2204,7 +2214,7 @@ class ValenceDesign:
 
     def errors(self, x) -> dict:
         """Energy, force and torque root-mean-square errors, overall and per system."""
-        p = valence_unpack(x)
+        p = self.unpack(x)
         energy, forces, torque = self.evaluate(p)
         de = self.centre(energy) - self.energy_ref_centred
         df = forces - self.force_ref
@@ -2222,6 +2232,42 @@ class ValenceDesign:
                 "force_ref_rms": float(np.sqrt((self.force_ref ** 2).mean())),
                 "force_corr": float(np.corrcoef(forces.ravel(), self.force_ref.ravel())[0, 1]),
                 "per_system": per, "per_system_force": per_f}
+
+    # --- the lattice side's non-bonded terms on the conformers ---------------------------
+    lattice: "FFParameters | None" = None
+
+    def unpack(self, x) -> dict:
+        """:func:`valence_unpack` of ``x``, with the non-bonded terms of :attr:`lattice` in place of
+        the vector's own if one is set.
+
+        The crystal stage moves the Lennard-Jones terms and the charge increments after the valence
+        fit, gives the H-F pair its own term, and from stage 12 changes the pair form; the torsion
+        terms were fitted with none of that.  Setting ``design.lattice`` to a crystal-stage
+        parameter set makes the conformers see the potential the lattice has -- its diameters and
+        depths (per element), its pair terms (sites that are not atoms left out: the conformers
+        have none), its C-H and C-F increments and its wall -- so that the same ``x`` can be scored
+        on them, and its torsion block fitted again with everything else held
+        (``fit_valence(designs=..., free=range(12))``).  ``None`` is the vector as it is."""
+        p = valence_unpack(x)
+        prm = self.lattice
+        if prm is None:
+            return p
+        names = sorted(_UFF_ALL)
+        lj_x, lj_d = p["lj_x"].copy(), p["lj_d"].copy()
+        for e, xe, de in prm.lj:
+            if e in names:
+                lj_x[names.index(e)], lj_d[names.index(e)] = float(xe), float(de)
+        inc = np.array(p["increments"], dtype=float)
+        for a, b, v in prm.charge_increments:
+            if (a, b) in REF_INCREMENTS:
+                inc[REF_INCREMENTS.index((a, b))] = float(v)
+        pairs = {(names.index(a), names.index(b)): (float(xab), float(dab))
+                 for a, b, xab, dab in prm.lj_pairs if a in names and b in names and "X" not in (a, b)}
+        wall = None
+        if prm.wall:
+            from .pack import WALL_GAMMA
+            wall = (float(prm.wall[1]), float(prm.wall[2]) if len(prm.wall) > 2 else WALL_GAMMA)
+        return dict(p, lj_x=lj_x, lj_d=lj_d, increments=inc, lj_pairs=pairs, wall=wall)
 
 
 @dataclass
