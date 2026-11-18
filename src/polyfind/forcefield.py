@@ -1105,7 +1105,21 @@ class SimpleFF:
     angle_terms: tuple[tuple[str, float, float], ...] | None = None
     charge_offsets: tuple[tuple[str, float], ...] | None = None
     charge_flux: tuple[tuple[str, str, float, float], ...] | None = None
+    # The pair term's form: None is 12-6; ("b14-7", delta[, gamma]) is polyfind.pack.wall_b147 on the
+    # same diameters and depths, the form a lattice-side parameter set with a ``wall`` uses, so that
+    # a chain's own non-bonded energy is the same function here and in a packer.
+    wall: tuple | None = None
     _cache: dict = field(default_factory=dict, repr=False)
+
+    def _pair_term(self, xp, r, lj_x, lj_d):
+        """The non-bonded pair term on distances ``r``: 12-6, or the ``wall``'s form."""
+        if not self.wall:
+            s6 = (lj_x / r) ** 6
+            return lj_d * (s6 * s6 - 2.0 * s6)
+        from .pack import WALL_GAMMA, WALLS, wall_b147
+        if self.wall[0] not in WALLS:
+            raise ValueError(f"unknown wall {self.wall[0]!r} (expected one of {WALLS}, or None for 12-6)")
+        return wall_b147(xp, r, lj_d, 1.0 / lj_x, float(self.wall[1]), float(self.wall[2]) if len(self.wall) > 2 else WALL_GAMMA)
 
     @classmethod
     def from_preset(cls, name: str) -> "SimpleFF":
@@ -1411,8 +1425,7 @@ class SimpleFF:
         lj_x = xp.asarray(top.lj_x)
         lj_d = xp.asarray(top.lj_d)
         qq = xp.asarray(top.qq)
-        s6 = (lj_x / r) ** 6
-        e_lj = (lj_d * (s6 * s6 - 2.0 * s6)).sum(axis=1)
+        e_lj = self._pair_term(xp, r, lj_x, lj_d).sum(axis=1)
         if top.off_atom.size:
             # Off-site charges: the Coulomb term is evaluated between charge *sites*, the
             # Lennard-Jones one between nuclei.  Separating the two is the whole reason the
@@ -1508,8 +1521,7 @@ class SimpleFF:
         top = self._topology(struct)
         c = struct.coords
         r = np.linalg.norm(c[top.pairs_i] - c[top.pairs_j], axis=1)
-        s6 = (top.lj_x / r) ** 6
-        lj = float((top.lj_d * (s6 * s6 - 2 * s6)).sum())
+        lj = float(self._pair_term(np, r, top.lj_x, top.lj_d).sum())
         if top.off_atom.size:
             cc = charge_site_coords(c, list(zip(top.off_atom, top.off_nb, top.off_d)))
             coulomb = float((top.qq / np.linalg.norm(cc[top.pairs_i] - cc[top.pairs_j], axis=1)).sum())

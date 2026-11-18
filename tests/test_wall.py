@@ -241,3 +241,23 @@ def test_the_conformer_design_can_see_the_lattice_sides_non_bonded_terms():
     fd = -(energy_of(h) - energy_of(-h)) / (2 * h)
     first = int(np.flatnonzero(design.atom_frame == 1)[0])
     assert fd == pytest.approx(f2[first + atom, 0], rel=1e-5, abs=1e-5)
+
+
+def test_the_isolated_chain_calculator_uses_the_parameter_sets_wall():
+    """One pair term on both sides: a parameter set with a wall hands it to its SimpleFF, whose
+    non-bonded energy is then wall_b147 over the same pairs, diameters and (1-4 scaled) depths."""
+    from polyfind.chain import build_chain
+    from polyfind.forcefield import SimpleFF
+
+    prm = C.parameters(np.concatenate([F.CRYSTAL8_TILT_FITTED_X, [0.2]]))
+    ff, ff12 = prm.simple_ff(), F.PRESET_PARAMETERS[BELT4].simple_ff()
+    assert ff.wall == ("b14-7", 0.2) and ff12.wall is None and prm.preset_kwargs()["wall"] == ("b14-7", 0.2)
+    chain = build_chain(PVDF, np.radians([172.0, 62.0, 176.0, -58.0, 168.0, 65.0, -175.0]))  # a conformer that does not fold onto itself
+    a, b = ff.components(chain), ff12.components(chain)
+    top = ff._topology(chain)
+    r = np.linalg.norm(chain.coords[top.pairs_i] - chain.coords[top.pairs_j], axis=1)
+    assert a["lj"] == pytest.approx(float(wall_b147(np, r, top.lj_d, 1.0 / top.lj_x, 0.2).sum()), rel=1e-12)
+    assert abs(a["lj"] - b["lj"]) > 0.05 and a["coulomb"] == pytest.approx(b["coulomb"], rel=1e-12)
+    assert ff.energy(chain) - ff12.energy(chain) == pytest.approx(a["lj"] - b["lj"], rel=1e-9, abs=1e-9)
+    with pytest.raises(ValueError, match="unknown wall"):
+        SimpleFF(wall=("exp-6", 12.0)).components(chain)

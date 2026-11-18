@@ -140,8 +140,9 @@ class FFParameters:
     angle_stiffness: float | None = None
     # The pair term's form on the lattice side: empty is the 12-6 every earlier preset has;
     # ("b14-7", delta[, gamma]) is polyfind.pack.wall_b147 on the same diameters and depths
-    # (docs/MLIP_SECOND_OPINION.md 3.10).  Forwarded by :meth:`applied` to every packer built in
-    # the block.  The oligomer side (SimpleFF, the valence fit's designs) does not read it yet.
+    # (docs/CRYSTAL_STAGE.md 5.25).  Forwarded by :meth:`applied` to every packer built in the
+    # block and by :meth:`simple_ff` to the oligomer side; the conformer design reads it through
+    # ``ValenceDesign.lattice``.
     wall: tuple = ()
 
     @property
@@ -155,7 +156,7 @@ class FFParameters:
                         charge_increments=self.charge_increments or None,
                         bond_terms=self.bond_terms or None, angle_terms=self.angle_terms or None,
                         charge_offsets=self.charge_offsets or None,
-                        charge_flux=self.charge_flux or None)
+                        charge_flux=self.charge_flux or None, wall=tuple(self.wall) or None)
 
     def preset_kwargs(self) -> dict:
         """:class:`~polyfind.forcefield.SimpleFF` keyword arguments, for :data:`PRESETS`."""
@@ -175,6 +176,8 @@ class FFParameters:
             kw["charge_offsets"] = tuple((e, float(d)) for e, d in self.charge_offsets)
         if self.charge_flux:
             kw["charge_flux"] = tuple((a, b, float(ka), float(kb)) for a, b, ka, kb in self.charge_flux)
+        if self.wall:
+            kw["wall"] = (str(self.wall[0]),) + tuple(float(v) for v in self.wall[1:])
         return kw
 
     def describe(self) -> str:
