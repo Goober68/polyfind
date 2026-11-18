@@ -133,6 +133,7 @@ def main():
     ap.add_argument("--rows", default="", help="comma list; default every row of the polished table")
     ap.add_argument("--minutes", type=float, default=0.0, help="start no new cell after this long")
     ap.add_argument("--no-tilts", action="store_true")
+    ap.add_argument("--redo-failed", action="store_true", help="run again the stored cells one of whose starts failed")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     out_path = Path(args.out)
@@ -145,6 +146,12 @@ def main():
                      f"a kick, from where belt4's own sheared re-polish took the cell (if it moved it) and, for an all-trans cell, from {LINE} monomers; "
                      "pendant tilts of both (examples/rows_under_preset.py)")
     disk.setdefault("rows", {})
+    if args.redo_failed:
+        for entry in disk["rows"].values():
+            for conf in [c for c, r in entry["cells"].items() if r.get("failed_starts")]:
+                del entry["cells"][conf]
+                for k in ("margin", "margin_upright", "helix_upright", "helix_sheared", "all_trans_shear_gain", "helix_shear_gain", "strain_along_chain"):
+                    entry.pop(k, None)
     began = time.time()
     prm = PRESET_PARAMETERS[args.preset]
     SP.C.SITES_FOR = prm

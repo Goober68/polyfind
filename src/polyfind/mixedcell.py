@@ -722,6 +722,9 @@ def reduce_shear(state: MixedState, upright_tol: float | None = 1e-9) -> MixedSt
     return st
 
 
+SHEAR_WINDOW = 2.5  # monomers: how far a relaxation may take a cell's shear along its chains from where it started
+
+
 class MixedModel:
     """Energy and analytic gradient of a mixed cell in the chain builder's internal coordinates.
 
@@ -1182,6 +1185,11 @@ class MixedModel:
                 bounds[j] = (55.0 / sc[j], 125.0 / sc[j])
             elif i == 3 and c_window is not None:
                 bounds[j] = (c_window[0] * x0[i] / sc[j], c_window[1] * x0[i] / sc[j])
+            elif self.sheared and i >= self._end:
+                # the shear along the chains: the energy repeats with it, so nothing far away pulls a step back;
+                # a relaxation has no business more than a few monomers from where it began
+                w = SHEAR_WINDOW * float(x0[3]) / self.n_monomers
+                bounds[j] = ((x0[i] - w) / sc[j], (x0[i] + w) / sc[j])
         return bounds
 
     def descend(self, x0, free=None, closed=None, steps: int = 200, max_step: float = 0.1, gtol: float = 1.5,
