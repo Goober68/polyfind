@@ -103,13 +103,13 @@ def pinned_valence_packer(ref, polymer, k_backbone: float | None = None, k_bond_
 
 
 def belt_site_constraint(pk, Pn, cz: float | None = None):
-    """``(J (3N, 3Na), atoms)``: the real atoms are free coordinates and each belt site is the fixed
+    """``(J (3N, 3Na), atoms)``: the real atoms are free coordinates, each bond site follows its bond, and each belt site is the fixed
     affine combination of its carbon and that carbon's two pendant atoms that places it (it lies in
     the pendant plane: the two fluorines of a CF2, the fluorine and hydrogen of a CHF), so a rigid
     motion of the group carries it exactly and a deformation to first order.  ``cz`` is the cell's
     repeat along the chains (default the packer's own chain's)."""
     el = np.asarray(list(pk.elements) * pk.n_chains)
-    atoms = np.flatnonzero(el != "X")
+    atoms = np.flatnonzero(~np.isin(el, ("X", "M")))
     col = {int(i): a for a, i in enumerate(atoms)}
     N, Na = pk.N, len(atoms)
     J = np.zeros((3 * N, 3 * Na))
@@ -145,6 +145,20 @@ def belt_site_constraint(pk, Pn, cz: float | None = None):
             J[3 * x + d, 3 * col[int(c)] + d] = 1.0 - ab.sum()
             J[3 * x + d, 3 * col[f1] + d] = ab[0]
             J[3 * x + d, 3 * col[f2] + d] = ab[1]
+    # A charge site on a bond (polymers.bond_site_atom) is a fixed fraction of the way from its carbon to
+    # the atom it follows: an affine combination of those two, exact under any motion of either.
+    for m in np.flatnonzero(el == "M"):
+        h = int(m) - 1
+        s = m // pk.n
+        _, c, shc = nearest(h, [i for i in atoms if i // pk.n == s and el[i] == "C"])
+        pc = Pn[c] + shc
+        bond = Pn[h] - pc
+        f = float((Pn[m] - pc) @ bond / (bond @ bond))
+        if np.linalg.norm(pc + f * bond - Pn[m]) > 1e-6:
+            raise ValueError(f"bond site {m} is off the bond of the atom before it")
+        for d in range(3):
+            J[3 * m + d, 3 * col[int(c)] + d] = 1.0 - f
+            J[3 * m + d, 3 * col[h] + d] = f
     return J, atoms
 
 

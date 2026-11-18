@@ -84,20 +84,37 @@ def charge_patterns(elements, q, n_chains: int) -> np.ndarray:
     electron moved along every backbone bond between a CH2 carbon and a CF2 carbon, from the
     first to the second (the CF2 carbon +1, the CH2 carbon -1 per such bond).  ``elements`` and
     ``q`` are one chain's, backbone carbons in order, each followed by what it carries; the
-    chain closes on its own image."""
+    chain closes on its own image.
+
+    A chain built with charge sites on its C-H bonds (``M``, polyfind.polymers.bond_site_atom)
+    gives a fourth row: -1 on every site and +1 on its hydrogen.  What the sites carry in ``q`` is
+    then taken out of the first row, which is the atoms' own charges as it is without sites."""
     el = [str(e) for e in elements]
+    q = np.asarray(q, dtype=float)
     carbons = [i for i, e in enumerate(el) if e == "C"]
     ends = carbons[1:] + [len(el)]
     kind = ["F" if "F" in el[c + 1:e] else "H" for c, e in zip(carbons, ends)]
-    out = np.zeros((3, len(el)))
+    sited = "M" in el
+    out = np.zeros((4 if sited else 3, len(el)))
     for c, e, k in zip(carbons, ends, kind):
-        out[0 if k == "H" else 1, c:e] = np.asarray(q, dtype=float)[c:e]
+        out[0 if k == "H" else 1, c:e] = q[c:e]
     for k in range(len(carbons)):
         a, b = k, (k + 1) % len(carbons)
         if kind[a] != kind[b]:
             out[2, carbons[a if kind[a] == "F" else b]] += 1.0
             out[2, carbons[b if kind[a] == "F" else a]] -= 1.0
+    if sited:
+        for i in [k for k, e in enumerate(el) if e == "M"]:
+            out[3, i], out[3, i - 1] = -1.0, 1.0
+            out[0, i - 1] += out[0, i]   # the hydrogen as it is without its site
+            out[0, i] = 0.0
     return np.tile(out, (1, n_chains))
+
+
+def site_charge(elements, q) -> float:
+    """What each hydrogen has given its bond's site (e, positive), zero for a chain without sites."""
+    el = [str(e) for e in elements]
+    return float(-np.mean([q[i] for i, e in enumerate(el) if e == "M"])) if "M" in el else 0.0
 
 
 def electrostatic_form(model, x, patterns) -> np.ndarray:
@@ -211,7 +228,7 @@ def first_order_form(el, Pn, latn, patterns) -> np.ndarray:
     start = np.cumsum([0] + [len(p) for p in pos])
     allpos = np.concatenate(pos)
     Q = np.zeros((3 + len(EXTRA), len(allpos)))
-    Q[:3, :len(Pn)] = patterns
+    Q[:3, :len(Pn)] = patterns[:3]
     for k, name in enumerate(EXTRA):
         Q[3 + k, start[k + 1]:start[k + 2]] = extra[name][1]
     return 0.5 * COULOMB * Q @ ewald_green(allpos, latn) @ Q.T
@@ -223,6 +240,8 @@ def by_element(dist: dict, elements) -> dict:
     out = {p: [] for p in PAIRS}
     for (a, b), r in dist.items():
         ea, eb = elements[a], elements[b]
+        if ea not in order or eb not in order:  # a bond's charge site: no pair term with anything
+            continue
         key = (ea, eb) if order[ea] <= order[eb] else (eb, ea)
         out[key].append(r)
     return {p: (np.concatenate(v) if v else np.zeros(0)) for p, v in out.items()}
@@ -300,12 +319,23 @@ def pairs(args):
     src = Path(args.frames)
     reg = Path(args.registry) if args.registry else None
     cells = []
-    with PRESET_PARAMETERS[PRESET].applied():
+    params = PRESET_PARAMETERS[PRESET]
+    if args.charges:
+        # the same rigid cells under other charges: "dCH=..,dCF=..,M=.." are the two bond increments and the
+        # charge of a site on every C-H bond (the chains are then built with those sites)
+        from dataclasses import replace
+
+        new = dict(item.split("=") for item in args.charges.split(","))
+        incr = tuple((a, b, float(new.get(f"d{a}{b}", d))) for a, b, d in params.charge_increments)
+        params = replace(params, charge_increments=incr, bond_sites=((("H", float(new["M"])),) if "M" in new else ()))
+        SR.C.SITES_FOR = params
+        print(params.describe())
+    with params.applied():
         table = json.loads((src / "polyfind.json").read_text())
-        tabs = lj_tables(PRESET_PARAMETERS[PRESET])
+        tabs = lj_tables(params)
         worst = worst_es = worst_1 = 0.0
         for pack in table:
-            model, x0, ch, n_mon = IF.model_of(pack, table[pack].get("cell"))
+            model, x0, ch, n_mon = IF.model_of(pack, table[pack].get("cell"), check=not args.charges)
             rc = float(model.pk.rc)
             el = [str(e) for e in model.pk.elements]
             monomer = float(model.state(x0).lattice[3]) / (n_mon // 2)
@@ -315,19 +345,22 @@ def pairs(args):
                 todo += [(row["frame"], (1.0, 1.0, row["shear_monomers"][0], row["shear_monomers"][1]), reg, row) for row in rt]
             first = None
             pat = charge_patterns(el, np.asarray(model.pk._q_cell, dtype=float)[:model.n], model.nc)
+            q_site = site_charge(el, np.asarray(model.pk._q_cell, dtype=float)[:model.n])
             for name, v, where, row in todo:
                 x = IF.moved(model, x0, ch, v, monomer)
                 latn, _, _, Pn, _ = model.build(x)
                 r = by_element(interchain_distances(Pn, latn, model.n, rc), el)
                 e, es = model.physical_energy(x), SR.electrostatics(model, x)
                 K = electrostatic_form(model, x, pat)
-                worst_es = max(worst_es, abs(K[:2, :2].sum() - es))
+                own = np.array([1.0, 1.0, 0.0, q_site][:len(pat)])
+                worst_es = max(worst_es, abs(own @ K @ own - es))
                 K1 = first_order_form(list(model.pk.elements) * model.nc, Pn, latn, pat)
                 idx = model.pk._es_idx
                 q_all = np.asarray(model.pk._q_cell, dtype=float)
                 fixed = float(model.pk._ewald.terms(Pn if idx is None else Pn[idx], q_all if idx is None else q_all[idx], latn).total)
-                first_fixed = (fixed, K1[:2, :2].sum()) if first is None else first_fixed
-                worst_1 = max(worst_1, abs((fixed - first_fixed[0]) - (K1[:2, :2].sum() - first_fixed[1])))
+                if not q_site:  # the plain sum has the atoms' charges alone
+                    first_fixed = (fixed, K1[:2, :2].sum()) if first is None else first_fixed
+                    worst_1 = max(worst_1, abs((fixed - first_fixed[0]) - (K1[:2, :2].sum() - first_fixed[1])))
                 f = where / f"{name}.dft.xyz"
                 dft = float(read(f).info["REF_energy"]) * EV_TO_KCAL if f.exists() else None
                 cell = {"frame": name, "packing": pack, "variant": list(v), "monomers": n_mon, "rc": rc, "r": r, "polyfind": e, "electrostatics": es, "dft": dft, "K": K, "K1": K1}
@@ -429,6 +462,11 @@ def residuals(v: dict, cells, form: str, split: bool, sigma=(0.02, 0.10)):
         def es(c):
             # polyfind's own energy of the charge patterns (induction in it), and the sources it does not have
             # to first order: with the charges and with each other, nothing induced by them
+            if c["K"].shape[0] == 4:  # cells built with the bond sites: their charge is polyfind's own fourth pattern
+                w4 = np.append(w, v.get("M_H", 0.0))
+                ux = np.where(np.array(EXTRA) == "M_H", 0.0, u)
+                more = 2.0 * float(w @ c["K1"][:3, 3:] @ ux) + float(ux @ c["K1"][3:, 3:] @ ux) if np.any(ux) else 0.0
+                return v.get("es", 1.0) * (float(w4 @ c["K"] @ w4) + more)
             more = 2.0 * float(w @ c["K1"][:3, 3:] @ u) + float(u @ c["K1"][3:, 3:] @ u) if np.any(u) else 0.0
             return v.get("es", 1.0) * (float(w @ c["K"] @ w) + more)
 
@@ -517,6 +555,7 @@ def main():
     s.add_argument("--frames", required=True, help="the working directory of examples/interchain_frames.py")
     s.add_argument("--registry", default="", help="the working directory of examples/shear_registry.py, for its sheared cells too")
     s.add_argument("--out", default="/opt/dft/interchain/pairs.npy")
+    s.add_argument("--charges", default="", help="other charges for the same cells: dCH=..,dCF=..,M=.. (the last a site on every C-H bond)")
     s = sub.add_parser("fit")
     s.add_argument("--pairs", default="/opt/dft/interchain/pairs.npy")
     s.add_argument("--form", default="12-6", choices=("12-6", "n-6", "exp-6", "b14-7"))

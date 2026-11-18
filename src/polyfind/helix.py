@@ -193,6 +193,9 @@ def helix_parameters_batch(polymer: Polymer, seqs, states: RISStates, max_m: int
     assert np.allclose(np.matmul(X, np.transpose(R, (0, 2, 1))) + t[:, None, :], Y, atol=1e-6), "periodic transform is not rigid?"
     # every atom of the period P .. 2P-1 (backbone + pendants), all rows at once
     atoms = _period_atoms(polymer, bb, P, 2 * P)  # (M, n_atoms, 3)
+    period_elements = [e for k in range(P, 2 * P) for e in [polymer.backbone[k % B].element]
+                       + [a.element for g in polymer.backbone[k % B].pendants for a in g.atoms]]
+    counted = None if "M" not in period_elements else np.array([e != "M" for e in period_elements])
     names = states.names
     out = []
     for j in range(M):
@@ -201,7 +204,8 @@ def helix_parameters_batch(polymer: Polymer, seqs, states: RISStates, max_m: int
         n, theta, d, p = screw_decompose(R[j], t[j], points=block)
         if abs(theta) < 1e-6:
             # pure translation: define the axis through the centroid of all atoms of one period
-            p = atoms[j].mean(axis=0)
+            # (a bond's charge site, polymers.bond_site_atom, is not counted: see pack._finish_repeat_chains)
+            p = atoms[j].mean(axis=0) if counted is None else atoms[j][counted].mean(axis=0)
         m, turns = _commensurate(theta, max_m=max_m)
 
         def radius(pts):

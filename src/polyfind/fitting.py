@@ -144,6 +144,20 @@ class FFParameters:
     # block and by :meth:`simple_ff` to the oligomer side; the conformer design reads it through
     # ``ValenceDesign.lattice``.
     wall: tuple = ()
+    # Charge sites on bonds (polyfind.polymers.bond_site_atom): (element of the atom, the site's charge
+    # in e), the atom giving up what its site carries.  Lattice side only, and only for chains built
+    # with the sites (polymers.with_bond_sites); :meth:`applied` refuses a chain without them rather
+    # than leave the term out silently.  Empty: none (docs/CRYSTAL_STAGE.md 5.26).
+    bond_sites: tuple[tuple[str, float], ...] = ()
+    bond_site_fraction: float = 0.65  # where on the bond the site sits, from the backbone atom (polymers.bond_site_atom)
+
+    def polymer(self, polymer):
+        """``polymer`` as this parameter set needs it built: with a charge site on every bond that
+        :attr:`bond_sites` names, or as it is when there are none."""
+        if not self.bond_sites:
+            return polymer
+        from .polymers import with_bond_sites
+        return with_bond_sites(polymer, self.bond_site_fraction, tuple(e for e, _ in self.bond_sites))
 
     @property
     def lj_dict(self) -> dict[str, tuple[float, float]]:
@@ -195,6 +209,7 @@ class FFParameters:
         rest = "" if self.angle_stiffness is None else f" [backbone-angle restraint {self.angle_stiffness:.1f} kcal/mol/rad^2]"
         if self.wall:
             rest += f" [pair wall {self.wall[0]}, delta {self.wall[1]:.4f}]"
+        rest += "".join(f" [{q:+.3f} e on a site on each C-{e} bond]" for e, q in self.bond_sites)
         return (f"torsion=({self.torsion[0]:+.3f}, {self.torsion[1]:+.3f}, {self.torsion[2]:+.3f}) "
                 f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}{flx}{rest}")
 
@@ -257,6 +272,7 @@ class FFParameters:
         wall = tuple(self.wall) or None
         increments = ff.increments()
         offsets = ff.offset_table()
+        sites = {e: float(q) for e, q in self.bond_sites}
 
         class _FittedPacker(pack_mod.CrystalPacker):
             def __init__(self, chain, **kw):
@@ -272,6 +288,17 @@ class FFParameters:
                         # matters.  docs/VALENCE_FIT.md measures what the difference costs.
                         q = project_offset_charges(chain.coords, q,
                                                    offset_sites(chain.elements, bonds, offsets))
+                    if sites:
+                        # each bond site takes its charge from the atom it follows in its pendant
+                        el = list(chain.elements)
+                        if "M" not in el:
+                            raise ValueError("this parameter set puts charge on bond sites and the chain has none: "
+                                             "build the polymer with polyfind.polymers.with_bond_sites")
+                        q = np.array(q, dtype=float)
+                        for i in [k for k, e in enumerate(el) if e == "M"]:
+                            dq = sites.get(el[i - 1], 0.0)
+                            q[i] += dq
+                            q[i - 1] -= dq
                     chain = replace(chain, charges=q * q_scale)
                 elif q_scale != 1.0:
                     chain = replace(chain, charges=np.asarray(chain.charges, dtype=float) * q_scale)

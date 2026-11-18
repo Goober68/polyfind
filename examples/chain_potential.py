@@ -55,11 +55,11 @@ BOX = 16.0   # A, the box's lateral edge: the chain's images are this far apart
 APART = 30.0  # A, the least lateral edge of the cell polyfind's dipoles are solved in
 
 
-def isolated(pack: str, table: dict):
+def isolated(pack: str, table: dict, check: bool = True):
     """One chain of a packing with the others far away: ``(elements, positions, patterns (3, n),
     induced dipoles (3, n, 3) in e A, repeat along the chain in A)`` of its sites, the dipoles
     those each charge pattern induces along the chain itself."""
-    model, x0, ch, _ = IF.model_of(pack, table[pack].get("cell"))
+    model, x0, ch, _ = IF.model_of(pack, table[pack].get("cell"), check)
     x = np.array(x0, dtype=float)
     x[0] *= np.ceil(APART / x[0])
     x[1] *= np.ceil(APART / x[1])
@@ -72,6 +72,11 @@ def isolated(pack: str, table: dict):
     fl = model.flips.astype(float)
     dip = np.array([model.pk._polarize(Pn, p, latn, fl)[1][:n] for p in pat])
     return el, Pn[:n].copy(), pat[:, :n], dip, float(latn[2, 2])
+
+
+def pattern_names(n: int) -> tuple:
+    """The names of a chain's charge patterns: three, or four for a chain built with bond sites."""
+    return PATTERNS if n == 3 else PATTERNS + ("M_H",)
 
 
 def ewald_potential(points, sites, q, cell, alpha: float = 0.4, tol: float = 1e-9):
@@ -123,16 +128,31 @@ def frames(args):
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     table = json.loads(Path(args.cells).read_text())
-    with PRESET_PARAMETERS[PRESET].applied():
+    params = PRESET_PARAMETERS[PRESET]
+    if args.sites:
+        # the same chains with a charge site on every C-H bond, charged so that the lattice sums carry it:
+        # its potential, the dipoles it induces included, is then polyfind's own and not an extra source
+        from dataclasses import replace
+
+        params = replace(params, bond_sites=(("H", -1.0),))
+        SR.C.SITES_FOR = params
+    with params.applied():
         for name in [c for c in args.chains.split(",") if c]:
-            el, P, pat, dip, c = isolated(CHAINS[name][0], table)
+            el, P, pat, dip, c = isolated(CHAINS[name][0], table, check=not args.sites)
             atom = np.array([e in SR.ATOMS for e in el])
             centre = P[atom, :2].mean(axis=0)
             P = P - np.array([centre[0] - BOX / 2.0, centre[1] - BOX / 2.0, 0.0])
             a = Atoms(symbols=[e for e, k in zip(el, atom) if k], positions=P[atom], cell=[BOX, BOX, c], pbc=True)
             a.info.update(frame=f"chain_{name}", kmesh=f"1 1 {max(2, int(round(20.0 / c)))}", source=f"polyfind {PRESET}, one chain: {CHAINS[name][1]}")
-            write(out / f"chain_{name}.start.xyz", a, format="extxyz")
-            np.savez(out / f"chain_{name}.model.npz", elements=np.array(el), sites=P, patterns=pat, dipoles=dip, cell=np.array([BOX, BOX, c]))
+            start = out / f"chain_{name}.start.xyz"
+            if args.sites and start.exists():  # the atoms DFT was run on: the sited chain's must be the same
+                from ase.io import read
+                if np.abs(read(start).positions - a.positions).max() > 1e-8:
+                    raise RuntimeError(f"{name}: the chain with bond sites does not have its atoms where the chain without them does")
+            else:
+                write(start, a, format="extxyz")
+            np.savez(out / f"chain_{name}.model{'_sites' if args.sites else ''}.npz", elements=np.array(el), sites=P, patterns=pat, dipoles=dip,
+                     cell=np.array([BOX, BOX, c]))
             mu = (pat[:2].sum(axis=0)[:, None] * P).sum(axis=0), dip[:2].sum(axis=(0, 1))
             print(f"{name}: {int(atom.sum())} atoms, repeat {c:.4f} A, k {a.info['kmesh']}; dipole per repeat of the charges {np.round(mu[0], 3).tolist()}, "
                   f"of the induced dipoles {np.round(mu[1], 3).tolist()} e A")
@@ -194,25 +214,25 @@ EXTRA = IW.EXTRA
 START = {"s_CH": 1.0, "s_CF": 1.0, "d_CC": 0.0, **{k: 0.0 for k in EXTRA}}
 
 
-def sampled_blocks(src: Path, names, r_min: float, r_max: float, spacing: float) -> dict:
+def sampled_blocks(src: Path, names, r_min: float, r_max: float, spacing: float, sites: bool = False) -> dict:
     """``{chain: sites, patterns, dipoles, cell, points, DFT potential, distance to the nearest
     nucleus}`` from the working directory's potential files."""
     out = {}
     for name in names:
         if not (src / f"chain_{name}.esp.cube").exists():
             continue
-        m = np.load(src / f"chain_{name}.model.npz")
-        el, sites, cell = [str(e) for e in m["elements"]], m["sites"], m["cell"]
+        m = np.load(src / f"chain_{name}.model{'_sites' if sites else ''}.npz")
+        el, where, cell = [str(e) for e in m["elements"]], m["sites"], m["cell"]
         atom = np.array([e in SR.ATOMS for e in el])
-        pts, v, near = samples(src / f"chain_{name}.esp.cube", sites[atom], cell, r_min, r_max, spacing)
-        out[name] = {"elements": el, "sites": sites, "patterns": m["patterns"], "dipoles": m["dipoles"], "cell": cell, "points": pts, "v": v, "near": near}
+        pts, v, near = samples(src / f"chain_{name}.esp.cube", where[atom], cell, r_min, r_max, spacing)
+        out[name] = {"elements": el, "sites": where, "patterns": m["patterns"], "dipoles": m["dipoles"], "cell": cell, "points": pts, "v": v, "near": near}
     return out
 
 
 def collect(args):
     """The sampled potentials in one compressed file the fit can be redone from (the grids
     themselves are 30 MB a chain)."""
-    data = sampled_blocks(Path(args.frames), [c for c in args.chains.split(",") if c], args.r_min, args.r_max, args.spacing)
+    data = sampled_blocks(Path(args.frames), [c for c in args.chains.split(",") if c], args.r_min, args.r_max, args.spacing, args.sites)
     flat = {"chains": np.array(list(data)), "r_min": args.r_min, "r_max": args.r_max, "spacing": args.spacing}
     for name, b in data.items():
         flat.update({f"{name}_elements": np.array(b["elements"]), f"{name}_sites": b["sites"], f"{name}_patterns": b["patterns"], f"{name}_dipoles": b["dipoles"],
@@ -241,10 +261,12 @@ def potential_blocks(data: dict) -> dict:
     blocks = {}
     for name, d in data.items():
         pts, sites, pat, dip, cell = d["points"], d["sites"], d["patterns"], d["dipoles"], d["cell"]
-        basis = {PATTERNS[k]: source_potential(pts, sites, pat[k], dip[k], cell) for k in range(3)}
+        own = pattern_names(len(pat))
+        basis = {own[k]: source_potential(pts, sites, pat[k], dip[k], cell) for k in range(len(pat))}
         bare = sum(source_potential(pts, sites, pat[k], 0.0 * dip[k], cell) for k in range(2))
         for key, (pos, q) in IW.extra_sources(d["elements"], sites).items():
-            basis[key] = COULOMB * ewald_potential(pts, pos, q, cell)
+            if key not in basis:  # a chain built with bond sites has the site's potential as polyfind's own, induction in it
+                basis[key] = COULOMB * ewald_potential(pts, pos, q, cell)
         blocks[name] = {"v": d["v"] - d["v"].mean(), "basis": {k: b - b.mean() for k, b in basis.items()}, "bare": bare - bare.mean(), "near": d["near"],
                         "points": len(pts)}
     return blocks
@@ -267,7 +289,8 @@ def rms_error(b: dict, w: dict) -> float:
 
 def fit(args):
     names = [c for c in args.chains.split(",") if c]
-    data = stored_blocks(Path(args.samples), names, args.r_min) if args.samples else sampled_blocks(Path(args.frames), names, args.r_min, args.r_max, args.spacing)
+    data = (stored_blocks(Path(args.samples), names, args.r_min) if args.samples
+            else sampled_blocks(Path(args.frames), names, args.r_min, args.r_max, args.spacing, args.sites))
     blocks = potential_blocks(data)
 
     def model(b, w):
@@ -321,6 +344,7 @@ def main():
     s.add_argument("--out", required=True, help="working directory for the DFT, outside the repository")
     s.add_argument("--cells", default="/opt/dft/interchain/polyfind.json", help="examples/interchain_frames.py's table, for the packings' cells")
     s.add_argument("--chains", default="ht,hh,tgtg")
+    s.add_argument("--sites", action="store_true", help="the chains with a charge site on every C-H bond (beside the plain ones, same atoms)")
     s = sub.add_parser("dft")
     s.add_argument("--frames", required=True)
     s.add_argument("--pw", required=True)
@@ -333,10 +357,12 @@ def main():
     s.add_argument("--r-min", type=float, default=2.2)
     s.add_argument("--r-max", type=float, default=5.0)
     s.add_argument("--spacing", type=float, default=0.3)
+    s.add_argument("--sites", action="store_true", help="the chains built with bond sites (frames --sites)")
     s.add_argument("--out", default=str(PRED / "chain_potential_pbe_samples.npz"))
     s = sub.add_parser("fit")
     s.add_argument("--frames", default="", help="the working directory with the potential files")
     s.add_argument("--samples", default="", help="collect's file, instead of the working directory")
+    s.add_argument("--sites", action="store_true", help="with --frames: the chains built with bond sites")
     s.add_argument("--chains", default="ht,hh,tgtg")
     s.add_argument("--r-min", type=float, default=2.2, help="A from the nearest nucleus: nearer than a neighbouring chain's atoms come")
     s.add_argument("--r-max", type=float, default=5.0)

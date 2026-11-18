@@ -64,12 +64,13 @@ E5 = {"e5_beta_a_slide_c8": ("a", "c/8"), "e5_beta_a_slide_c4": ("a", "c/4"), "e
 ATOMS = ("C", "H", "F", "Cl", "N", "O")
 
 
-def plain_model(pack: str):
+def plain_model(pack: str, polymer=None):
     """``(model, x, chain, description)``: plain PVDF, two chains of one monomer, in the packing of
     the stored all-trans cell of ``PACKINGS[pack]``: its lateral cell, setting angles and heights
-    (as fractions of a monomer), a one-monomer all-trans chain with that cell's mean backbone angles."""
+    (as fractions of a monomer), a one-monomer all-trans chain with that cell's mean backbone angles.
+    ``polymer`` is another description of the same chain (other sites on it), default the screen's."""
     ref = json.load(open(PRED / "dilute_kink_belt4.json"))["all_trans_references"][PACKINGS[pack][0]]
-    polymer = C.make_polymer("vdf1", "V")
+    polymer = C.make_polymer("vdf1", "V") if polymer is None else polymer
     P = polymer.bonds_per_repeat
     n_ref = len(ref["tors"]) // P
     st_ref = MC.MixedState.from_vector(ref["state"], 2, len(ref["tors"]))

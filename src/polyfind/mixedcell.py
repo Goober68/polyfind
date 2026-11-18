@@ -82,6 +82,7 @@ from .pack import (
     _derfc_pos,
     _erfc_pos,
     _finish_repeat_chains,
+    frame_sites,
     _template,
     wall_b147,
 )
@@ -1003,7 +1004,7 @@ class MixedModel:
                                     _RAD * (g3[:, :, 1] * Q[:, :, 0] - g3[:, :, 0] * Q[:, :, 1]).sum(axis=1), F[:, 2]], axis=1).ravel()
         # the Cartesian gradient in each chain's own frame, carried back to its torsions and angles
         G = np.einsum("sni,sij->snj", g3, frames)
-        gv, Gp = CJ.aligned_block_vjp(coords[:, top["atoms0"]], tr["axis"], tr["daxis"], top["refs"], G)
+        gv, Gp = CJ.aligned_block_vjp(coords[:, top["atoms0"]], tr["axis"], tr["daxis"], top["refs"], G, frame_sites(self.pk.elements))
         gv += CJ.oligomer_vjp(coords, bb, owner, is_pendant, P, R, top["atoms0"], Gp)
         V1, V2, V3 = self.pk.torsion
         ph = np.deg2rad(st.tors)

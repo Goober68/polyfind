@@ -66,7 +66,7 @@ import numpy as np
 from .chain import build_backbone, build_oligomer_coords
 from .chainjac import aligned_block_jacobian, oligomer_and_jacobian, repeat_transform_jacobian
 from .helix import canonical_sequence
-from .pack import PeriodicChain, _block_atoms, _finish_repeat_chains, _template
+from .pack import PeriodicChain, _block_atoms, _finish_repeat_chains, _template, frame_sites
 from .polymers import Polymer, RISStates
 
 
@@ -268,7 +268,12 @@ def repeat_chains_and_jacobian(
     sx, sy = _windows(nb)
     tr = repeat_transform_jacobian(bb, jac[:, :, tpl.backbone], sx, sy)
     ref = align_to.coords if isinstance(align_to, PeriodicChain) else np.asarray(align_to, dtype=float)
-    _, dF = aligned_block_jacobian(coords_full[:, atoms0], jac[:, :, atoms0], tr["axis"], tr["daxis"], ref)
+    counted = frame_sites(chains[0].elements)
+    if counted is not None and ref.shape[-2] == int(counted.sum()):  # a frame stored without the bond sites (pack._finish_repeat_chains)
+        wide = np.zeros((len(counted), 3))
+        wide[counted] = ref
+        ref = wide
+    _, dF = aligned_block_jacobian(coords_full[:, atoms0], jac[:, :, atoms0], tr["axis"], tr["daxis"], ref, counted)
     return chains, dF, tr["dc"], np.degrees(tr["w"]), np.degrees(tr["dw"])
 
 

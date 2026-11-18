@@ -63,6 +63,10 @@ VDS98 = {e: round(v * BOHR3_TO_A3, 5) for e, v in _VDS98_AU.items()}  # A^3
 # out of the Ewald sums and the dipole solve altogether (CrystalPacker._es_idx), so nothing divides
 # by it.  Until 2026-11-07 it was 1e-6 A^3 and rode through both as a 1e-6 dipole (energy 1e-12).
 VDS98["X"] = 0.0
+# The charge site on a bond (polymers.bond_site_atom) has a charge and no polarizability: it takes
+# part in the sums and has no unknown in the dipole solve (CrystalPacker._polarize leaves such
+# sites out of the solve, so nothing divides by its zero either).
+VDS98["M"] = 0.0
 VDS98_THOLE_A = 2.1304
 
 # The same paper's "linear" column (Thole's original piecewise form), for the record only.

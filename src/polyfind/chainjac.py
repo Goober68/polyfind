@@ -379,7 +379,7 @@ def backbone_transform_jacobian(bb, sx, sy, nb: int, R: int):
     return _fit_derivative(fit, dH, dpc, dqc)
 
 
-def aligned_block_jacobian(coords_block, jac_block, axis, daxis, ref):
+def aligned_block_jacobian(coords_block, jac_block, axis, daxis, ref, counted=None):
     """Derivative of the aligned repeat coordinates.
 
     ``coords_block`` ``(M, n, 3)`` are the block's raw coordinates, ``jac_block``
@@ -387,11 +387,16 @@ def aligned_block_jacobian(coords_block, jac_block, axis, daxis, ref):
     derivative, ``ref`` ``(n, 3)`` the reference frame the block is aligned to.  Returns
     ``(F, dF)``: the aligned coordinates -- equal to what
     ``_align_about_z_batch(_orient_blocks(...))`` produces up to rounding -- and their
-    derivative ``(M, nv, n, 3)``.
+    derivative ``(M, nv, n, 3)``.  ``counted`` (:func:`polyfind.pack.frame_sites`) is the mask of
+    the sites that define the frame, ``None`` for all.
     """
     M, n, _ = coords_block.shape
-    point = coords_block.mean(axis=1)
-    dpoint = jac_block.mean(axis=2)
+    if counted is None:
+        counted = np.ones(n, dtype=bool)
+    else:
+        ref = np.where(counted[:, None], ref, 0.0)
+    point = coords_block[:, counted].mean(axis=1)
+    dpoint = jac_block[:, :, counted].mean(axis=2)
     Rot = _rotations_to_z(axis)  # (M, 3, 3)
     W = np.einsum("mij,mnj->mni", Rot, coords_block - point[:, None])
     eps = np.cross(np.einsum("mij,mvj->mvi", Rot, daxis), np.array([0.0, 0.0, 1.0]))  # (M, nv, 3)
@@ -407,17 +412,17 @@ def aligned_block_jacobian(coords_block, jac_block, axis, daxis, ref):
     F = np.empty_like(W)
     F[:, :, 0] = ca[:, None] * W[:, :, 0] - sa[:, None] * W[:, :, 1]
     F[:, :, 1] = sa[:, None] * W[:, :, 0] + ca[:, None] * W[:, :, 1]
-    F[:, :, 2] = W[:, :, 2] - W[:, :, 2].mean(axis=1, keepdims=True) + ref[:, 2].mean()
+    F[:, :, 2] = W[:, :, 2] - W[:, counted, 2].mean(axis=1, keepdims=True) + ref[counted, 2].mean()
     dF = np.empty_like(dW)
     rx = ca[:, None, None] * dW[..., 0] - sa[:, None, None] * dW[..., 1]
     ry = sa[:, None, None] * dW[..., 0] + ca[:, None, None] * dW[..., 1]
     dF[..., 0] = rx - dth[:, :, None] * F[:, None, :, 1]
     dF[..., 1] = ry + dth[:, :, None] * F[:, None, :, 0]
-    dF[..., 2] = dW[..., 2] - dW[..., 2].mean(axis=2, keepdims=True)
+    dF[..., 2] = dW[..., 2] - dW[:, :, counted, 2].mean(axis=2, keepdims=True)
     return F, dF
 
 
-def aligned_block_vjp(coords_block, axis, daxis, ref, G):
+def aligned_block_vjp(coords_block, axis, daxis, ref, G, counted=None):
     """The contraction of :func:`aligned_block_jacobian` with a gradient, without the Jacobian.
 
     ``G`` ``(M, n, 3)`` is the derivative of an energy with respect to the aligned coordinates;
@@ -432,11 +437,19 @@ def aligned_block_vjp(coords_block, axis, daxis, ref, G):
     ``dW_z``, and ``dth`` is itself a sum over the atoms of ``dW``; collecting the factor of each
     ``dW_n`` gives ``H_n`` below.  Then ``dW_n = eps x W_n + Rot (dC_n - mean dC)`` with ``eps``
     the turn of the axis, whose factor is the torque ``sum_n W_n x H_n``.
+
+    With ``counted`` (:func:`polyfind.pack.frame_sites`) the means are over the counted sites
+    alone and the reference of the others is zero: every site still moves with the frame, and
+    only a counted one moves the frame, which is what the transposed means below say.
     """
-    point = coords_block.mean(axis=1)
+    n = coords_block.shape[1]
+    share = np.full(n, 1.0 / n) if counted is None else counted / float(counted.sum())  # each site's part in a mean
+    point = np.einsum("n,mni->mi", share, coords_block) if counted is not None else coords_block.mean(axis=1)
     Rot = _rotations_to_z(axis)  # (M, 3, 3)
     W = np.einsum("mij,mnj->mni", Rot, coords_block - point[:, None])
     xr, yr = ref[..., 0], ref[..., 1]
+    if counted is not None:
+        xr, yr = np.where(counted, xr, 0.0), np.where(counted, yr, 0.0)
     cw = (W[:, :, 0] * xr + W[:, :, 1] * yr).sum(axis=1)
     sw = (W[:, :, 0] * yr - W[:, :, 1] * xr).sum(axis=1)
     th = np.arctan2(sw, cw)
@@ -447,10 +460,16 @@ def aligned_block_vjp(coords_block, axis, daxis, ref, G):
     H = np.empty_like(W)
     H[:, :, 0] = ca * G[:, :, 0] + sa * G[:, :, 1] + tau * (cw[:, None] * yr - sw[:, None] * xr)
     H[:, :, 1] = -sa * G[:, :, 0] + ca * G[:, :, 1] - tau * (cw[:, None] * xr + sw[:, None] * yr)
-    H[:, :, 2] = G[:, :, 2] - G[:, :, 2].mean(axis=1, keepdims=True)
+    if counted is None:
+        H[:, :, 2] = G[:, :, 2] - G[:, :, 2].mean(axis=1, keepdims=True)
+    else:
+        H[:, :, 2] = G[:, :, 2] - share[None, :] * G[:, :, 2].sum(axis=1, keepdims=True)
     L = np.cross(W, H).sum(axis=1)  # (M, 3)
     eps = np.cross(np.einsum("mij,mvj->mvi", Rot, daxis), np.array([0.0, 0.0, 1.0]))  # (M, nv, 3)
     gv = np.einsum("mvi,mi->mv", eps, L)
     Gp = np.einsum("mij,mni->mnj", Rot, H)
-    Gp -= Gp.mean(axis=1, keepdims=True)
+    if counted is None:
+        Gp -= Gp.mean(axis=1, keepdims=True)
+    else:
+        Gp -= share[None, :, None] * Gp.sum(axis=1, keepdims=True)
     return gv, Gp

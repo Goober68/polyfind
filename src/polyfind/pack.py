@@ -135,7 +135,7 @@ def apply_lj_pairs(elements, xs, ds, pairs) -> None:
         xs[mask] = x_ij
         ds[mask] = d_ij
 
-MASS = {"C": 12.011, "H": 1.008, "N": 14.007, "O": 15.999, "F": 18.998, "Cl": 35.45, "X": 0.0}  # "X": massless repulsion-only site (polymers.belt_fluorine)
+MASS = {"C": 12.011, "H": 1.008, "N": 14.007, "O": 15.999, "F": 18.998, "Cl": 35.45, "X": 0.0, "M": 0.0}  # "X", "M": massless sites (polymers.belt_fluorine, polymers.bond_site_atom)
 _TOPO_CACHE: dict = {}
 
 # 1 e/A^2 in C/m^2:  1.602176634e-19 C / (1e-10 m)^2.
@@ -239,13 +239,20 @@ def _same_site_scales(polymer: Polymer, full, nb_block: int, scale14: float) -> 
                         nxt.append(v)
             frontier = nxt
         dist[s] = d
+    # A charge site on a bond (polymers.bond_site_atom) is part of the atom it follows in its pendant:
+    # it is excluded from and scaled against the rest of the chain as that atom is, and excluded from
+    # the atom itself, so the pair's dipole meets every other site as one thing.
+    host = {i: (i - 1 if full.elements[i] == "M" else i) for i in range(full.n_atoms)}
+    for i, h in host.items():
+        if h != i and full.elements[h] in ("X", "M"):
+            raise ValueError(f"bond site {i} does not follow an atom in its pendant")
     out = {}
     for kshift in (-2, -1, 0, 1, 2):
         _, atomsk = _block_atoms(full, nb_block, kshift)
         S = np.ones((n, n))
         for p, ip in enumerate(atoms0):
             for q, iq in enumerate(atomsk):
-                gd = dist[ip].get(iq, 99)
+                gd = dist[host[ip]].get(host[iq], 99)
                 if gd <= 2:
                     S[p, q] = 0.0
                 elif gd == 3:
@@ -442,10 +449,22 @@ def _orient_blocks(coords: np.ndarray, bb_local: list[int]) -> np.ndarray:
     return coords
 
 
-def _align_about_z_batch(coords: np.ndarray, ref: np.ndarray) -> np.ndarray:
+def frame_sites(elements):
+    """Which sites define a chain's frame (its origin, its turn about its axis, its height):
+    ``None`` for all of them, or a mask that leaves out the charge sites on bonds
+    (polymers.bond_site_atom), so that a chain carrying those sites is placed exactly as the same
+    chain without them, whatever its torsions and angles."""
+    if "M" not in elements:
+        return None
+    return np.array([e != "M" for e in elements])
+
+
+def _align_about_z_batch(coords: np.ndarray, ref: np.ndarray, counted=None) -> np.ndarray:
     """:func:`_align_about_z` over a batch (M, n, 3) against one reference (n, 3), or against one
-    reference per row (M, n, 3)."""
+    reference per row (M, n, 3); ``counted`` (:func:`frame_sites`) restricts the fit to those sites."""
     xr, yr, zr = ref[..., 0], ref[..., 1], ref[..., 2]
+    if counted is not None:
+        xr, yr = np.where(counted, xr, 0.0), np.where(counted, yr, 0.0)
     cw = (coords[:, :, 0] * xr + coords[:, :, 1] * yr).sum(axis=1)
     sw = (coords[:, :, 0] * yr - coords[:, :, 1] * xr).sum(axis=1)
     ang = np.arctan2(sw, cw)
@@ -453,7 +472,8 @@ def _align_about_z_batch(coords: np.ndarray, ref: np.ndarray) -> np.ndarray:
     out = np.empty_like(coords)
     out[:, :, 0] = ca * coords[:, :, 0] - sa * coords[:, :, 1]
     out[:, :, 1] = sa * coords[:, :, 0] + ca * coords[:, :, 1]
-    out[:, :, 2] = coords[:, :, 2] + (zr - coords[:, :, 2]).mean(axis=1, keepdims=True)
+    dz = zr - coords[:, :, 2]
+    out[:, :, 2] = coords[:, :, 2] + (dz.mean(axis=1, keepdims=True) if counted is None else dz[:, counted].mean(axis=1, keepdims=True))
     return out
 
 
@@ -474,9 +494,15 @@ def _finish_repeat_chains(polymer: Polymer, name: str, tors_batch: np.ndarray, c
     scales = _same_site_scales(polymer, tpl, nb, scale14)
     elements = [tpl.elements[i] for i in atoms0]
     charges = tpl.charges[atoms0]
+    counted = frame_sites(elements)
     ref = None
     if align_to is not None:
         ref = align_to.coords if isinstance(align_to, PeriodicChain) else np.asarray(align_to, dtype=float)
+        if counted is not None and ref.shape[-2] == int(counted.sum()):
+            # a frame stored for the chain without its bond sites: the sites it has are the ones that count
+            wide = np.zeros(ref.shape[:-2] + (len(elements), 3))
+            wide[..., counted, :] = ref
+            ref = wide
     bbc = coords_full[:, tpl.backbone]
     if nb < 3:  # need >= 3 points for a rigid fit; use two blocks
         X, Y = bbc[:, 2 * nb : 2 * nb + 4], bbc[:, 3 * nb : 3 * nb + 4]
@@ -488,11 +514,13 @@ def _finish_repeat_chains(polymer: Polymer, name: str, tors_batch: np.ndarray, c
     c = _norm_rows(t)
     axis = t / c[:, None]
     block = coords_full[:, atoms0]
-    point = block.mean(axis=1)
+    # the chain's origin is the centroid of its sites; a bond's charge site (polymers.bond_site_atom) is
+    # left out of it, so a chain with those sites sits exactly where the same chain without them does
+    point = block.mean(axis=1) if counted is None else block[:, counted].mean(axis=1)
     Rz = _rotations_to_z(axis)
     coords = _orient_blocks((block - point[:, None]) @ np.transpose(Rz, (0, 2, 1)), bb_local)
     if ref is not None:
-        coords = _align_about_z_batch(coords, ref)
+        coords = _align_about_z_batch(coords, ref, counted)
     radius_all = np.linalg.norm(coords[:, :, :2], axis=2).max(axis=1)
     radius_bb = np.linalg.norm(coords[:, bb_local, :2], axis=2).max(axis=1)
     n_mon = polymer.monomer_count(nb)
@@ -1064,6 +1092,16 @@ class CrystalPacker:
             self._alpha_cell = np.tile(self.polarizable.per_atom(self.elements), n_chains)
             self._thole_scale = (self._alpha_cell[:, None] * self._alpha_cell[None, :]) ** (1.0 / 6.0)
             self._thole = self.polarizable.thole()
+        # A charge site on a bond (polymers.bond_site_atom) has no polarizability of its own, and its
+        # charge is part of its atom's: where a charge's field is damped by the Thole length of the pair,
+        # the site takes its atom's.  ``_alpha_width`` is ``_alpha_cell`` with that substitution.
+        self._alpha_width = self._alpha_cell
+        if self._alpha_cell is not None and "M" in self.elements:
+            el_cell = np.asarray(list(self.elements) * n_chains)
+            self._alpha_width = self._alpha_cell.copy()
+            for i in np.flatnonzero(el_cell == "M"):
+                self._alpha_width[i] = self._alpha_cell[i - 1]
+            self._thole_scale = (self._alpha_width[:, None] * self._alpha_width[None, :]) ** (1.0 / 6.0)
         # Electrostatically inert sites -- no charge and no polarizability, the belt sites of
         # polymers.belt_fluorine -- take no part in the Ewald sums or the dipole solve.  A zero
         # charge adds nothing to any term of the charge sum and a site without a polarizability has
@@ -1075,9 +1113,14 @@ class CrystalPacker:
             active |= self._alpha_cell > 0.0
         self._es_idx = None if bool(active.all()) else np.flatnonzero(active)
         self._alpha_es = self._thole_scale_es = None
+        self._pol_es = None
         if self.polarizable is not None:
             self._alpha_es = self._alpha_cell if self._es_idx is None else self._alpha_cell[self._es_idx]
-            self._thole_scale_es = (self._alpha_es[:, None] * self._alpha_es[None, :]) ** (1.0 / 6.0)
+            width = self._alpha_width if self._es_idx is None else self._alpha_width[self._es_idx]
+            self._thole_scale_es = (width[:, None] * width[None, :]) ** (1.0 / 6.0)
+            # active sites with a charge and no polarizability (the bond sites) have no unknown in the solve
+            if np.any(self._alpha_es <= 0.0):
+                self._pol_es = np.flatnonzero(self._alpha_es > 0.0)
         # kept for backwards compatibility / introspection
         self.lj_x = xp.asarray(tile(xs), dtype=dt)
         self.lj_d = xp.asarray(tile(ds), dtype=dt)
@@ -1517,17 +1560,25 @@ class CrystalPacker:
                 F[sl] += charge_dipole_exclusion(Pn[sl], q_cell[sl], cz, sc, pref=pref)[4]
         E0 = F if not self._field_on else F + EV_TO_KCAL * np.asarray(self.field, dtype=float)[None, :]
         E0a = E0 if idx is None else E0[idx]
-        A = -t0.tensor.transpose(0, 2, 1, 3).reshape(3 * Na, 3 * Na)
-        diag = xp.arange(3 * Na)
-        A[diag, diag] += xp.asarray(np.repeat(pref / self._alpha_es, 3))
-        rhs = xp.asarray(E0a.ravel())
+        pol = self._pol_es  # None: every active site is polarizable (the case before bond sites)
+        T = t0.tensor if pol is None else t0.tensor[xp.asarray(pol)][:, xp.asarray(pol)]
+        Np = Na if pol is None else len(pol)
+        A = -T.transpose(0, 2, 1, 3).reshape(3 * Np, 3 * Np)
+        diag = xp.arange(3 * Np)
+        A[diag, diag] += xp.asarray(np.repeat(pref / (self._alpha_es if pol is None else self._alpha_es[pol]), 3))
+        rhs = xp.asarray((E0a if pol is None else E0a[pol]).ravel())
         # The matrix is symmetric, and positive definite wherever the model is stable (no
         # polarization catastrophe): on a device that is a Cholesky solve, a fifth of the general
         # one's time.  Where it is not available, or the matrix is not positive definite, the
         # general solve answers as it always did.
         sol = bk.cholesky_solve(xp, A, rhs) if xp is not np else None
-        pa = bk.to_numpy(xp.linalg.solve(A, rhs) if sol is None else sol).reshape(Na, 3)
-        del A, sol
+        pp = bk.to_numpy(xp.linalg.solve(A, rhs) if sol is None else sol).reshape(Np, 3)
+        if pol is None:
+            pa = pp
+        else:
+            pa = np.zeros((Na, 3))
+            pa[pol] = pp
+        del A, sol, T
         t0.tensor = None  # the largest array of the evaluation, not needed again
         if idx is None:
             p = pa

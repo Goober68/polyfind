@@ -149,6 +149,50 @@ def belt_fluorine(bond: float = 1.35, charge: float = -0.20, d: float = 0.7) -> 
                    bonds=(), label=f"F-belt-{d:.2f}")
 
 
+BOND_SITE = "M"  # the element symbol of a charge site on a bond (bond_site_atom)
+
+
+def bond_site_atom(element: str, bond: float, charge: float, fraction: float = 0.65) -> Pendant:
+    """A pendant atom with a charge site ``M`` on its bond, ``fraction`` of the way out from the backbone atom.
+
+    An atom-centred charge puts a bonded hydrogen's charge on its nucleus.  The density of a C-H
+    bond is not there: it is drawn into the bond, and what the chain shows a neighbour is the
+    proton with that density behind it, a dipole along the bond that no choice of charges on the
+    nuclei reproduces (docs/CRYSTAL_STAGE.md 5.26 measures it against DFT's potential around
+    three chains).  The site carries that density as a point charge.  It has no mass, no
+    Lennard-Jones term with anything, no polarizability and no bonds; its charge is a parameter
+    of the potential (:attr:`polyfind.fitting.FFParameters.bond_sites`, zero here), taken from
+    the atom it belongs to so the pair stays as neutral as the atom was; and it is excluded
+    from and scaled against the rest of its own chain exactly as that atom is
+    (:func:`polyfind.pack._same_site_scales`), so the bond's dipole is never split by an
+    exclusion.  The atom itself is first, which keeps it the pendant's bonded atom.
+    """
+    if not 0.0 < fraction < 1.0:
+        raise ValueError(f"a bond site sits on the bond, at a fraction between 0 and 1 of it, not {fraction!r}")
+    return Pendant(atoms=(PendantAtom(element, float(charge), (float(bond), 0.0, 0.0)),
+                          PendantAtom(BOND_SITE, 0.0, (float(fraction) * float(bond), 0.0, 0.0))),
+                   bonds=(), label=f"{element}-site-{fraction:.2f}")
+
+
+def with_bond_sites(polymer: "Polymer", fraction: float = 0.65, elements: tuple = ("H",)) -> "Polymer":
+    """``polymer`` with every single-atom pendant of ``elements`` given a :func:`bond_site_atom`
+    site: the same chain, the same charges, two sites more per CH2.  The name gains a suffix so
+    nothing caches across the two."""
+    from dataclasses import replace
+
+    def sited(b: "BackboneAtom") -> "BackboneAtom":
+        new = tuple(bond_site_atom(q.atoms[0].element, q.bond, q.atoms[0].charge, fraction)
+                    if len(q) == 1 and q.atoms[0].element in elements else q for q in b.pendants)
+        if new == b.pendants:
+            return b
+        return BackboneAtom(b.element, new, None, b.backbone_angle, b.sub_angle, b.charge, None)
+
+    kw = {"name": f"{polymer.name}-bs{fraction:.2f}", "backbone": tuple(sited(b) for b in polymer.backbone)}
+    if getattr(polymer, "sequence", None):
+        kw["sequence"] = tuple(replace(m, backbone=tuple(sited(b) for b in m.backbone)) for m in polymer.sequence)
+    return replace(polymer, **kw)
+
+
 def _place_atom(a, b, c, bond: float, angle_deg: float, dihedral_deg: float) -> np.ndarray:
     """NeRF placement for single points: |cd| = ``bond``, angle ``b-c-d``, dihedral ``a-b-c-d``.
 
@@ -913,6 +957,8 @@ UFF_LJ: dict[str, tuple[float, float]] = {
     # polarizability, no bonds; its well depth is zero here so a chain that carries sites has the
     # same energy as one without until a fitted preset gives "X" a depth (docs/CRYSTAL_STAGE.md 5.7).
     "X": (2.600, 0.0),
+    # "M" is a charge site on a bond (bond_site_atom): a charge and nothing else, so no depth, ever.
+    "M": (1.000, 0.0),
 }
 
 

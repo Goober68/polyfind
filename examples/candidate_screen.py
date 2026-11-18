@@ -188,10 +188,14 @@ TG_VARIANTS = {"TG'TG": [T, GM, T, GP] * 5, "GTG'T": [GP, T, GM, T] * 5, "G'TGT"
 CONFORMATIONS.update(TG_VARIANTS)
 
 
+SITES_FOR = None  # a parameter set (polyfind.fitting.FFParameters) whose bond sites the polymers are built with; None: none
+
+
 def make_polymer(name: str, letters: str) -> Polymer:
     units = [UNITS[c]() for c in letters]
     formula = "-" + "-".join(FORMULAS[c] for c in letters) + "-"
-    return copolymer(name=f"{name}-belt-pbe", formula=formula, units=units, bond_length=PVDF.bond_length)
+    polymer = copolymer(name=f"{name}-belt-pbe", formula=formula, units=units, bond_length=PVDF.bond_length)
+    return polymer if SITES_FOR is None else SITES_FOR.polymer(polymer)
 
 
 def one_cell(polymer, seq, label):
