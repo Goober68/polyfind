@@ -1,0 +1,180 @@
+{
+ "what": "a lone chain in a 16 A box held at a repeat, PBE-D3(BJ), relaxed at each (examples/chain_stretch.py): energy per monomer against the lowest point of all branches (kcal/mol), the tension dE/dc per monomer (kcal/mol/A, from DFT's stress), the forces left on the atoms (eV/A). Each branch is one conformer followed along its repeat; a file holds one polymer.",
+ "branches": {
+  "hh_tt": {
+   "monomers": 2,
+   "start": {
+    "letters": "VI",
+    "pattern": {}
+   },
+   "points": [
+    {
+     "frame": "hh2tt_05030",
+     "repeat": 5.03,
+     "energy_eV_per_monomer": -1876.1202259490274,
+     "predicted_minus_dft": -0.017077770265133713,
+     "largest_force": 0.02513562,
+     "tension": -5.916305198496333,
+     "dihedrals": [
+      180.0,
+      180.0,
+      180.0,
+      180.0
+     ],
+     "energy": 0.21308965012043318
+    },
+    {
+     "frame": "hh2_tt_r2",
+     "repeat": 5.102708294317,
+     "energy_eV_per_monomer": -1876.1294663907602,
+     "predicted_minus_dft": -0.0015598460511898912,
+     "largest_force": 0.02654638,
+     "tension": 0.05420343745759359,
+     "dihedrals": [
+      180.0,
+      180.0,
+      180.0,
+      180.0
+     ],
+     "energy": 0.0
+    },
+    {
+     "frame": "hh2tt_05170",
+     "repeat": 5.17,
+     "energy_eV_per_monomer": -1876.1216602610707,
+     "predicted_minus_dft": -0.06410345252034448,
+     "largest_force": 0.05361599,
+     "tension": 5.092412949140912,
+     "dihedrals": [
+      180.0,
+      180.0,
+      180.0,
+      180.0
+     ],
+     "energy": 0.18001362839825388
+    }
+   ]
+  },
+  "hh_special": {
+   "monomers": 2,
+   "start": {
+    "letters": "VI",
+    "pattern": {
+     "CF2-CF2": [
+      60.0
+     ],
+     "other": [
+      -60.0
+     ]
+    }
+   },
+   "points": [
+    {
+     "frame": "hh2specialdown_04400",
+     "repeat": 4.4,
+     "energy_eV_per_monomer": -1875.7606218648816,
+     "predicted_minus_dft": -0.016094212240828555,
+     "largest_force": 0.06564155,
+     "tension": -22.39415018560478,
+     "dihedrals": [
+      46.753540420103725,
+      -167.7930009311463,
+      -56.563473911731926,
+      -167.78765156989618
+     ],
+     "energy": 8.505756893559724
+    },
+    {
+     "frame": "hh2_special_r2",
+     "repeat": 4.54566913765352,
+     "energy_eV_per_monomer": -1875.8660378135785,
+     "predicted_minus_dft": -4.304881109986582e-05,
+     "largest_force": 0.00387671,
+     "tension": -11.499259256628475,
+     "dihedrals": [
+      51.51434041248596,
+      -169.20487220760555,
+      -60.78086987420207,
+      -169.20023632165987
+     ],
+     "energy": 6.07480734866995
+    },
+    {
+     "frame": "hh2specialup_04700",
+     "repeat": 4.7,
+     "energy_eV_per_monomer": -1875.9162298914032,
+     "predicted_minus_dft": 0.035114743176846194,
+     "largest_force": 0.06668876,
+     "tension": -3.55303532534526,
+     "dihedrals": [
+      60.56640394806464,
+      -172.06784569137483,
+      -67.75710830239544,
+      -172.0609864573386
+     ],
+     "energy": 4.9173505287736266
+    }
+   ]
+  },
+  "hh_plain": {
+   "monomers": 2,
+   "start": {
+    "letters": "VI",
+    "pattern": {
+     "CF2-CH2": [
+      60.0,
+      -60.0
+     ]
+    }
+   },
+   "points": [
+    {
+     "frame": "hh2plainlowb_04400",
+     "repeat": 4.4,
+     "energy_eV_per_monomer": -1875.9578446689195,
+     "predicted_minus_dft": -0.009539347979994704,
+     "largest_force": 0.01713589,
+     "tension": -19.564730750318393,
+     "dihedrals": [
+      -179.965377805759,
+      55.016874584167006,
+      -179.87650810747402,
+      -55.07855740969388
+     ],
+     "energy": 3.957690954349315
+    },
+    {
+     "frame": "hh2_plain_r2",
+     "repeat": 4.5456691376535145,
+     "energy_eV_per_monomer": -1876.0490685883894,
+     "predicted_minus_dft": -0.0011262688818939241,
+     "largest_force": 0.01292134,
+     "tension": -9.580457570629664,
+     "dihedrals": [
+      179.9992089628345,
+      65.83466801088902,
+      179.99510100879925,
+      -65.83238992457507
+     ],
+     "energy": 1.8540173806646387
+    },
+    {
+     "frame": "hh2plainup_04700",
+     "repeat": 4.7,
+     "energy_eV_per_monomer": -1876.0803965784348,
+     "predicted_minus_dft": -0.13342986860988887,
+     "largest_force": 0.05447011,
+     "tension": -0.6883836557114386,
+     "dihedrals": [
+      -179.99790246583512,
+      72.88907655926221,
+      -179.9962220611603,
+      -72.89163283598845
+     ],
+     "energy": 1.131576762479549
+    }
+   ]
+  }
+ },
+ "lowest_eV_per_monomer": -1876.1294663907602
+}

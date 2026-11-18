@@ -221,7 +221,7 @@ SIGMA13_CHARGES = np.concatenate([SIGMA12, [0.10, 0.010]])
 SIGMA13_TORSION = np.concatenate([SIGMA13_CHARGES, [np.inf, np.inf, np.inf]])
 SIGMA13 = np.concatenate([SIGMA13_TORSION, [0.15, 1.0]])
 # The twenty-seven-variable form adds the torsion triples of the two bonds a reversed unit makes
-# (``FFParameters.torsion_types``: CF2-CF2, and CH2-CH2 under the type "other").  Each has a weak
+# (``FFParameters.torsion_types``: CF2-CF2 and CH2-CH2; every other bond keeps the CF2-CH2 triple).  Each has a weak
 # ridge toward the CF2-CH2 triple of the same vector; what holds them is rows from outside the
 # module (lone chains of the polymer with every second unit reversed, and the reversed-unit
 # candidate's cells split into inside a chain and between chains; docs/CRYSTAL_STAGE.md 5.29).

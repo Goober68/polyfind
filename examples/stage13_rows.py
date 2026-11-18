@@ -229,9 +229,10 @@ class Rows:
             return {}
         x = self.x_valence.copy()
         x[:3] = params.torsion
-        for name, *triple in params.torsion_types:  # a bond type the set has its own triple for
-            k = F.REF_TORSION_TYPES.index(name)
-            x[3 * k:3 * k + 3] = triple
+        for name, *triple in params.torsion_types:  # a bond type the set has its own triple for (the conformer set has no CH2-CH2 bond)
+            if name in F.REF_TORSION_TYPES:
+                k = F.REF_TORSION_TYPES.index(name)
+                x[3 * k:3 * k + 3] = triple
         self.design.lattice = params
         e = self.design.errors(x)
         return {"conformers, energy rms": (float(e["energy_rms"]), self.reference["energy_rms"], (float(e["energy_rms"]) - self.reference["energy_rms"]) / CONFORMER_TOL[0]),

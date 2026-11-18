@@ -2197,6 +2197,76 @@ reversed unit at its other place. That one is the two bonds the reversed unit ma
 GTG'T and trans in TG'TG, on which this fit has the CF2-CH2 bond's triple; in its cells they
 sit at 93 and 110 degrees where DFT has 62 and 65.
 
+**The reversed unit's two bonds** (`examples/chain_conformers.py`, `examples/chain_stretch.py`,
+`docs/predictions/chain_stretch_hh_pbe_d3bj.json`). Lone chains of the polymer with every
+second unit reversed, twelve atoms a repeat, nine DFT points. Its only minimum is the all-trans
+chain (it has no CF2 two carbons from a CF2 to push it into a helix); folded, it exists only
+held short, and it folds two ways: with the CF2-CF2 and CH2-CH2 bonds gauche, or with the two
+CF2-CH2 bonds gauche. Released, either opens out to all-trans between 4.70 and 4.85 A.
+Energy per monomer against its all-trans chain (repeat 5.103 A):
+
+| repeat of two monomers (A) | 4.40 | 4.546 | 4.70 |
+|---|---:|---:|---:|
+| CF2-CF2 and CH2-CH2 gauche: DFT | +8.51 | +6.08 | +4.92 |
+| belt4 | +4.92 | +3.32 | +1.73 |
+| the fit with the line (one triple on every bond) | +9.21 | +6.17 | +2.92 |
+| with those two bonds' own triples | +8.76 | +6.13 | +4.83 |
+| the CF2-CH2 bonds gauche: DFT | +3.96 | +1.85 | +1.13 |
+| belt4 | +5.10 | +3.00 | +1.72 |
+| the fit with the line | +4.16 | +1.75 | +0.61 |
+
+The fit with the line had never seen this polymer and has both folds at the built repeat to
+0.1 kcal/mol, where belt4 is off by 2.8 and 1.1: what it learned from plain PVDF's lone chain
+carries over. Where it fails is the first fold let out to 4.70 A, which it lets go of (gauche
+at 93 degrees, DFT 61), and that is the same failure as the candidate's GTG'T cell. Six more
+variables, the torsion triples of the CF2-CF2 and the CH2-CH2 bond (`VARIABLES13_TYPED`; every
+other bond keeps the CF2-CH2 triple, as before), fitted with the other twenty-one held
+(`examples/stage13_subfit.py`: these lines, the candidate's four rows on frozen cells, the
+conformers; three rounds of fit and re-relaxation, the same numbers from the second round on;
+`docs/predictions/crystal_stage_v13_typed1.json`), come out at (-1.47, 2.01, 0.16) and (-0.42,
+0.60, 1.04). Left over, and not theirs to mend: the second fold at 4.70 A is 0.5 low, and the
+reversed polymer's all-trans chain is 1.5% long (5.03 and 5.17 A cost +0.83 and -0.22 where
+DFT has +0.21 and +0.18). DFT's chain has its CH2 angle at 111.6 degrees, not 114.2, and bonds
+of 1.557 (CF2-CF2), 1.515 and 1.530 A; polyfind builds a reversed unit with plain PVDF's
+angles and its one bond length.
+
+**The preset `pvdf-dft-chain1`** is those twenty-seven numbers (`polyfind.fitting`; lattice
+side only: a `SimpleFF` does not carry the sites, the pull or the typed torsions, so the name
+is not one of its presets). The acceptance on the reversed-unit candidate under it
+(`docs/predictions/candidate_acceptance_chain1.json`, `chain_split_polyfind_chain1.json`):
+
+| | DFT | belt4 | stage 13, second run | `pvdf-dft-chain1` |
+|---|---:|---:|---:|---:|
+| the all-trans cell's gain from shearing | -0.346 | -0.03 | -0.31 | -0.275 |
+| the helix cell's gain from shearing | none | none | none | -0.034 |
+| all-trans minus helix (TG'TG), cell upright | +0.070 | +0.064 | -0.177 | +0.042 |
+| the same split: inside a chain, between chains | +1.060, -0.990 | +1.708, -1.644 | +1.220, -1.397 | +1.091, -1.049 |
+| all-trans minus helix, everything relaxed | -0.261 | +0.03 | -0.44 | -0.199 |
+| GTG'T minus TG'TG | +0.197 | +0.120 | -0.158 | +0.242 |
+| the same split | +0.415, -0.218 | +0.270, -0.150 | -0.208, +0.049 | +0.209, +0.033 |
+
+**Both halves pass**: every number of the test is within 0.03 to 0.07 kcal/mol per monomer of
+DFT and on DFT's side of zero, in a window of 0.12. Only the candidate's four frozen-cell rows
+among them were fitted, and only by the six torsion numbers; the shear, the relaxed margin and
+both parts of the level were not.
+
+What this preset does not have, in the order it matters for a margin:
+
+1. Alpha's cell is 2.4% short along b and 1.3% long along c, and the gap is -0.651 against
+   -0.726. With the chain right, what is left wrong between chains shows there.
+2. GTG'T minus TG'TG is right as a sum and wrong in its parts by 0.2 each way. The lone chain
+   says where to look: a CF2-CH2 bond next to a reversed unit's bonds is 0.5 too easy to turn.
+3. A reversed unit is built with plain PVDF's backbone angles and bond length, and is 1.5% long
+   for it (the candidate's all-trans cell is 0.8% long along c).
+4. The all-trans cell's shear gain is a fifth short, and it ends at (0.45, -0.56) monomers where
+   DFT ends at (0.30, -0.90).
+5. Absolute cohesion is 0.7 to 1.4 kcal/mol per monomer short (the 8 A cutoff leaves 1.3 to 1.4
+   out of every cell, nearly the same in each, so differences between cells feel it little).
+6. It has been tested on one candidate. The 35 rows are not yet re-evaluated under it, and a
+   margin under it is a partial result until its loss, its rate and its blocked stress are
+   beside it; the chain stiffness those need is now within reach (the line above), the kink and
+   slide barriers have to be redone under it first.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the

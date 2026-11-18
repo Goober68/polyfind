@@ -69,3 +69,39 @@ def test_polyfinds_lone_chain_at_a_repeat_is_closed_at_that_repeat_and_walks_fro
     assert gauche == sorted(gauche) and 35 < gauche[0] < gauche[-1] < 85
     e = np.array([q["energy"] for q in line]) / ch.n_monomers
     assert e[3] - e[1] > 1.0 and abs(e[0] - e[1]) < 0.2
+
+
+def test_the_reversed_polymers_line_has_one_minimum_and_two_folds():
+    """docs/predictions/chain_stretch_hh_pbe_d3bj.json: the all-trans chain is the lowest point; folded
+    at the CF2-CF2 and CH2-CH2 bonds it costs about three times what folding at the CF2-CH2 bonds
+    costs, and both folds fall as the chain is let out."""
+    d = json.loads((ROOT / "docs" / "predictions" / "chain_stretch_hh_pbe_d3bj.json").read_text())["branches"]
+    assert set(d) == {"hh_tt", "hh_special", "hh_plain"} and all(b["monomers"] == 2 for b in d.values())
+    tt = {round(q["repeat"], 2): q["energy"] for q in d["hh_tt"]["points"]}
+    assert tt[5.1] == 0.0 and 0.1 < tt[5.03] < 0.3 and 0.1 < tt[5.17] < 0.3
+    special, plain = [q["energy"] for q in d["hh_special"]["points"]], [q["energy"] for q in d["hh_plain"]["points"]]
+    assert special == sorted(special, reverse=True) and plain == sorted(plain, reverse=True)
+    assert special == pytest.approx([8.51, 6.08, 4.92], abs=0.02) and plain == pytest.approx([3.96, 1.85, 1.13], abs=0.02)
+    assert max(q["largest_force"] for b in d.values() for q in b["points"]) < 0.1
+    # which bonds are turned: read off DFT's own frames
+    for name, turned in (("hh_special", (0, 2)), ("hh_plain", (1, 3))):
+        for q in d[name]["points"]:
+            a = np.abs(q["dihedrals"])
+            order = np.argsort(a)
+            assert set(order[:2]) in ({0, 2}, {1, 3}) and a[order[1]] < 80 and a[order[2]] > 160
+
+
+def test_a_branch_started_from_torsions_walks_like_one_started_from_a_cell():
+    from polyfind.fitting import PRESET_PARAMETERS
+
+    IF = ST._load("interchain_frames")
+    CC = ST._load("chain_conformers")
+    with PRESET_PARAMETERS["pvdf-dft-chain1"].applied():
+        polymer = IF.SP.C.make_polymer("hh", "VI")
+        types = CC.chain_types(polymer, 4)
+        line, n = ST.polyfind_line_from_torsions(IF.SP, polymer, CC.torsions_of(types, ST.BRANCHES["hh_special"]["pattern"]), [4.40, 4.546, 4.70], tilts=False)
+        flat, _ = ST.polyfind_line_from_torsions(IF.SP, polymer, CC.torsions_of(types, {}), [5.103], tilts=False)
+    assert n == 2 and max(q["c_mismatch"] for q in line) < 1e-4
+    e = (np.array([q["energy"] for q in line]) - flat[0]["energy"]) / n
+    # the preset has DFT's 8.5, 6.1 and 4.9 with the pendants tilted; rigid, as here, they are one to two higher
+    assert e[0] > e[1] > e[2] > 4.0 and e[0] < 12.0

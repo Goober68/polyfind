@@ -74,6 +74,7 @@ def scan(args):
             if not (args.out / f"{frame}.start.xyz").exists():
                 subprocess.run([sys.executable, "-I", "-W", "ignore", str(HERE / "mlip_train.py"), "relax", "--model", str(args.model), "--name", args.tag,
                                 "--dft-gradient", "--mask", "0 0 0 0 0 0", "--repeat", f"{c:.6f}", "--frame", frame, "--threads", str(args.threads),
+                                "--max-move", str(args.max_move),
                                 "--fmax", str(args.fmax), "--cells", str(last), "--out", str(args.out)], check=True)
             subprocess.run([sys.executable, "-W", "ignore", str(HERE / "mlip_frames.py"), "label", "--frames", str(args.out), "--pw", args.pw, "--pseudo", args.pseudo,
                             "--np", str(args.np), "--names", frame] + (["--pools", str(args.pools)] if args.pools else []), check=True)
@@ -115,6 +116,9 @@ def collect(args):
         a = read(f)
         n = int(a.info["n_monomers"])
         frc = a.arrays["REF_forces"]
+        if np.abs(frc).max() > args.fmax:  # not settled: a step that went too far for the tilt it was taken in
+            print(f"{a.info['frame']}: left out, DFT's largest force there is {np.abs(frc).max():.2f} eV/A (settle it again from that frame)")
+            continue
         szz = float(np.asarray(a.info["REF_stress"]).reshape(3, 3)[2, 2])
         points.append({"frame": a.info["frame"], "repeat": float(a.cell[2, 2]), "energy_eV_per_monomer": float(a.info["REF_energy"]) / n,
                        "predicted_minus_dft": (float(a.info["dft_predicted_eV_per_monomer"]) - float(a.info["REF_energy"]) / n) * EV,
@@ -265,10 +269,13 @@ def main():
     s.add_argument("--pools", type=int, default=0)
     s.add_argument("--threads", type=int, default=1)
     s.add_argument("--fmax", type=float, default=0.005)
+    s.add_argument("--max-move", type=float, default=0.4, help="A: no atom moves further than this in one relaxation (beyond the cell's own change); "
+                                                               "a chain with soft turns runs away in a tilted potential otherwise")
     s = sub.add_parser("collect")
     s.add_argument("--frames", type=Path, required=True)
     s.add_argument("--names", required=True, help="the branch's frames, comma list, shell patterns allowed (up_*)")
     s.add_argument("--branch", required=True, choices=sorted(BRANCHES))
+    s.add_argument("--fmax", type=float, default=0.1, help="eV/A: a labelled point with a larger force left on an atom is not a point of the line")
     s.add_argument("--out", type=Path, required=True)
     s = sub.add_parser("polyfind")
     s.add_argument("--dft", type=Path, required=True, help="the collected DFT line")

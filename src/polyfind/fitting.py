@@ -157,8 +157,9 @@ class FFParameters:
     # that tells a CF2 beside a CH2 from a CF2 beside a CF2, which an increment typed by a bond's two
     # elements cannot.  Lattice side only, like the sites.  Empty: none (docs/CRYSTAL_STAGE.md 5.26).
     backbone_pull: tuple[tuple[str, float], ...] = ()
-    # The lattice's torsion terms by bond type: (type of :data:`REF_TORSION_TYPES`, V1, V2, V3) for the
-    # types that are not to take :attr:`torsion`.  Empty is what every earlier preset has: the one
+    # The lattice's torsion terms by bond type: (type of :data:`LATTICE_TORSION_TYPES`, V1, V2, V3) for the
+    # types that are not to take :attr:`torsion` ("other" is every bond the first three names leave,
+    # "CH2-CH2" that one bond alone, so that a triple fitted to it does not land on a CH2-CFCl bond).  Empty is what every earlier preset has: the one
     # triple, the CF2-CH2 type's, on every backbone bond of every chain, which is right for PVDF and
     # wrong for a CF2-CHF, a CF2-CF2 or a CH2-CH2 bond.  :meth:`applied` hands each packer one triple a
     # dihedral (:meth:`torsion_for`).  Lattice side only; the oligomer side has ``torsion_by_bond``.
@@ -171,11 +172,12 @@ class FFParameters:
         if not self.torsion_types:
             return tuple(self.torsion)
         own = {t: (float(a), float(b), float(c)) for t, a, b, c in self.torsion_types}
-        unknown = set(own) - set(REF_TORSION_TYPES)
+        unknown = set(own) - set(LATTICE_TORSION_TYPES)
         if unknown:
-            raise ValueError(f"unknown torsion types {sorted(unknown)}: {REF_TORSION_TYPES}")
-        triples = [own.get(t, tuple(float(v) for v in self.torsion)) for t in REF_TORSION_TYPES]
-        return np.array([triples[k] for k in polymer_torsion_types(polymer, n_dihedrals)])
+            raise ValueError(f"unknown torsion types {sorted(unknown)}: {LATTICE_TORSION_TYPES}")
+        plain = tuple(float(v) for v in self.torsion)
+        # a CH2-CH2 bond takes its own triple if it has one, else the catch-all's, else the CF2-CH2 bond's
+        return np.array([own.get(t, own.get("other", plain) if t == "CH2-CH2" else plain) for t in polymer_lattice_torsion_types(polymer, n_dihedrals)])
 
     def polymer(self, polymer):
         """``polymer`` as this parameter set needs it built: with a charge site on every bond that
@@ -1099,10 +1101,22 @@ def chain_check(params: FFParameters = ILLUSTRATIVE, step: float = 20.0, n_monom
 PRESET_PARAMETERS: dict[str, FFParameters] = {}  # the FFParameters behind each fitted preset, by name
 
 
-def register_preset(name: str, params: FFParameters) -> None:
+LATTICE_ONLY_PRESETS: set[str] = set()  # presets with terms only the lattice side carries: not SimpleFF presets
+
+
+def register_preset(name: str, params: FFParameters, lattice_only: bool = False) -> None:
     """Add ``params`` to :data:`polyfind.forcefield.PRESETS` under ``name`` (and keep the
-    :class:`FFParameters` itself in :data:`PRESET_PARAMETERS`, for ``.applied()``)."""
-    PRESETS[name] = params.preset_kwargs()
+    :class:`FFParameters` itself in :data:`PRESET_PARAMETERS`, for ``.applied()``).
+
+    ``lattice_only`` keeps the name out of :data:`~polyfind.forcefield.PRESETS`: a set with
+    charge sites on its bonds, a charge drawn along the backbone or torsion triples by bond type
+    is what the packer and the mixed cell evaluate inside ``applied()``, and a
+    :class:`~polyfind.forcefield.SimpleFF` built from its keyword arguments would be another
+    force field (the bond increments without the sites that carry two thirds of a C-H dipole)."""
+    if lattice_only:
+        LATTICE_ONLY_PRESETS.add(name)
+    else:
+        PRESETS[name] = params.preset_kwargs()
     PRESET_PARAMETERS[name] = params
 
 
@@ -1302,6 +1316,23 @@ def torsion_types(frame: Frame) -> np.ndarray:
     for k, (_, b, c, _) in enumerate(np.asarray(frame.torsions, dtype=int)):
         pair = tuple(sorted((carbon_class(frame, int(b), bb), carbon_class(frame, int(c), bb))))
         out[k] = _CLASS_PAIR_TO_TYPE.get(pair, _NT - 1)
+    return out
+
+
+# The lattice side's bond types: the reference set's, with the CH2-CH2 bond named apart from the
+# catch-all (a reversed unit makes one, and its triple is fitted to lone chains that have it).
+LATTICE_TORSION_TYPES: tuple[str, ...] = REF_TORSION_TYPES[:-1] + ("CH2-CH2", "other")
+
+
+def polymer_lattice_torsion_types(polymer, n_dihedrals: int) -> list[str]:
+    """The name in :data:`LATTICE_TORSION_TYPES` of the bond each dihedral of a chain's repeat turns
+    (as :func:`polymer_torsion_types`, with a CH2-CH2 bond told from the other untyped ones)."""
+    B = polymer.bonds_per_repeat
+    cls = ["".join(sorted(polymer.backbone[k].substituents)) for k in range(B)]
+    out = []
+    for j in range(n_dihedrals):
+        pair = tuple(sorted((cls[(j + 1) % B], cls[(j + 2) % B])))
+        out.append("CH2-CH2" if pair == ("HH", "HH") else REF_TORSION_TYPES[_CLASS_PAIR_TO_TYPE.get(pair, _NT - 1)])
     return out
 
 
@@ -2921,7 +2952,7 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
             # and the torsion triples of the two bonds a reversed unit makes, CF2-CF2 and CH2-CH2, which
             # the triple of x[16:19] (the CF2-CH2 bond's) is wrong for: lone chains of the polymer with
             # every second unit reversed hold them (docs/CRYSTAL_STAGE.md 5.29)
-            out = replace(out, torsion_types=(("CF2-CF2", float(x[21]), float(x[22]), float(x[23])), ("other", float(x[24]), float(x[25]), float(x[26]))))
+            out = replace(out, torsion_types=(("CF2-CF2", float(x[21]), float(x[22]), float(x[23])), ("CH2-CH2", float(x[24]), float(x[25]), float(x[26]))))
     elif len(x) not in (8, 10):
         raise ValueError(f"expected 8, 10, 11, 12, 13, 14, 16, 19, 21 or 27 crystal-stage variables, got {len(x)}")
     return out
@@ -3014,3 +3045,29 @@ register_preset("pvdf-dft-valence-belt3", FITTED_VALENCE_BELT3)
 CRYSTAL8_TILT_FITTED_X = np.array([1.0229262151777028, 1.0055189721724347, 0.9469941195655658, 1.0832204382551116, 1.056607530969089, 0.8147339565878955, -0.044617060471246174, 0.05433040477273087, 1.0092052148491217, 1.1009664851916399, -1.7371267213550259, 4.0000000004, 0.34623571205867687])
 FITTED_VALENCE_BELT4 = crystal_stage_parameters(CRYSTAL8_TILT_FITTED_X)
 register_preset("pvdf-dft-valence-belt4", FITTED_VALENCE_BELT4)
+
+# Stage 13 with the inside of a chain held by its own anchors (docs/CRYSTAL_STAGE.md 5.25 to 5.29).
+# The pair term is the buffered 14-7 wall; every C-H bond carries a charge site and each fluorine
+# draws charge along the backbone (chains have to be built with the sites: FFParameters.polymer,
+# which examples/candidate_screen.make_polymer does inside applied()); the CF2-CH2 torsion triple
+# and the backbone angle's stiffness are held by DFT's line of the lone chain pulled along its
+# axis, and the CF2-CF2 and CH2-CH2 bonds have their own triples from lone chains of the polymer
+# with every second unit reversed.  Twenty-one variables from the joint fit
+# docs/predictions/crystal_stage_v13_line1.json (objective 95: stage 12's rows, 117 rigid cells,
+# three chains' potentials, the conformers, the lone chain's eleven points), six from
+# crystal_stage_v13_typed1.json on top of them.  Against the anchors: beta's cell -1.3%, +0.9%,
+# +1.2%; alpha's +0.3%, -2.4%, +1.3%; P 0.183; E(alpha)-E(beta) -0.651 with the tilts; C_11 22.5
+# (22.8), C_22 22.2 (24.5), C_12 7.0 (5.9) GPa; the registry rows 0.77 to 0.88 of DFT (belt4: 2.5
+# to 3.4 times); rigid cells to 0.03-0.04 kcal/mol (plain) and 0.13 (the reversed chain); the lone
+# helix's line to 0.04; the restraint at 157 kcal/mol/rad^2.  On the reversed-unit candidate, which
+# no row of the 21-variable fit had seen: the all-trans cell's gain from shearing -0.275 (DFT
+# -0.346), all-trans minus helix +0.042 upright and -0.199 relaxed (+0.070, -0.261), the other
+# helix placement +0.242 above the first (+0.197).  What it does NOT have: alpha's cell (above), the
+# split of that last number into inside a chain and between chains (+0.21 + 0.03 where DFT has
+# +0.42 - 0.22), the reversed polymer's all-trans repeat (1.5% long: its backbone angles and bond
+# lengths are plain PVDF's), absolute cohesion (0.7 to 1.4 kcal/mol per monomer short: the 8 A
+# cutoff).  Lattice side only: a SimpleFF does not carry the sites, the pull or the typed torsions,
+# so the name is not a SimpleFF preset.  The gap is consistent with DFT only with pendant tilts.
+CRYSTAL13_CHAIN_FITTED_X = np.array([1.2018212576519955, 1.140470650630188, 1.0276100418925278, 1.114868802086814, 1.0416721973399545, 0.9816574992667221, 0.06458647915892268, -0.007108434218814634, 0.8921327628083221, 1.2606256990881148, -3.3899215940012106, 4.0000000004, 0.17427955821367863, 0.20175170370736645, -0.3292491948271106, 0.014907184310078156, 0.44949988150369585, -0.5215212534921436, 0.7455479179274106, 1.033996560081815, 1.4223361534997534, -1.4744068662622107, 2.0050212203521154, 0.16187957685560858, -0.41697322776350165, 0.6040291046581692, 1.038879428788623])
+FITTED_CHAIN1 = crystal_stage_parameters(CRYSTAL13_CHAIN_FITTED_X)
+register_preset("pvdf-dft-chain1", FITTED_CHAIN1, lattice_only=True)
