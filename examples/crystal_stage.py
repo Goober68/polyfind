@@ -25,6 +25,8 @@ def main():
     ap.add_argument("--pendant-tilts", action="store_true", help="evaluate the alpha-beta gap with each polymorph's CH2/CF2 groups relaxed as rigid tilts about their carbons (polyfind.pendants.tilt_relaxation; docs/CRYSTAL_STAGE.md 5.22): the relaxation DFT's geometry has and the rigid-pendant refinement lacks")
     ap.add_argument("--set", default="", help="start values over --x0's, name=value comma list (a stage's variable names)")
     ap.add_argument("--wide", action="store_true", help="stage 11: the diameters' bounds opened (crystalfit.BOUNDS11_WIDE)")
+    ap.add_argument("--rows", action="store_true", help="stage 13: the rows from outside the module (examples/stage13_rows.py): the rigid cells, "
+                    "the single-chain potentials and the conformers")
     args = ap.parse_args()
     C.BELT_GEOMETRY = args.geometry
     x0 = None
@@ -40,6 +42,10 @@ def main():
             base.append(float(C.X0_12[13]))
         if args.stage == 13 and len(base) == 14:
             base += [0.0, 0.0]
+        if args.stage == 13 and len(base) == 16:
+            base += [float(v) for v in C.X0_13[16:19]]
+        if args.stage == 13 and len(base) == 19:
+            base += [1.0, 1.0]
         for item in args.set.split(","):
             k, v = item.split("=")
             base[names.index(k)] = float(v)
@@ -49,6 +55,14 @@ def main():
     extra = {"pendant_tilts": True} if args.pendant_tilts else {}
     if args.wide:
         extra["bounds"] = C.BOUNDS11_WIDE
+    if args.rows:
+        import importlib.util
+        from pathlib import Path
+
+        spec = importlib.util.spec_from_file_location("stage13_rows", Path(__file__).with_name("stage13_rows.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        extra["extra_rows"] = mod.Rows(log=print)
     best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout, stage=args.stage, x0=x0, method=args.method,
                           checkpoint=args.out, **extra)
     print(f"\nbest of {len(history)} evaluations:\n" + C.table(best))

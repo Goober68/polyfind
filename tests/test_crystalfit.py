@@ -375,7 +375,24 @@ def test_stage13_variables_carry_the_bond_site_and_the_pull():
     with uncharged sites, which are the chains without them); their ridge is toward what DFT's
     potential around single chains gives, not toward zero."""
     x12 = np.array(json.load(open("docs/predictions/crystal_stage_v12_wall.json"))["x"])
-    assert C._config(np.zeros(16))[0] == C.VARIABLES13 == F.CRYSTAL_STAGE13_VARIABLES
+    assert C._config(np.zeros(16))[0] == C.VARIABLES13_CHARGES == F.CRYSTAL_STAGE13_CHARGE_VARIABLES
+    # nineteen: the lattice's torsion triple as well, with no ridge of its own
+    assert C._config(np.zeros(19))[0] == C.VARIABLES13_TORSION == F.CRYSTAL_STAGE13_TORSION_VARIABLES and C.VARIABLES13[16:19] == ("V1", "V2", "V3")
+    # twenty-one: the F-F pair's own diameter and depth, as multipliers on fluorine's
+    assert C._config(np.ones(21))[0] == C.VARIABLES13 == F.CRYSTAL_STAGE13_VARIABLES and C.VARIABLES13[19:] == ("x_FF", "D_FF")
+    x21 = np.concatenate([x12, [-0.318, 0.0155], [-2.0, 0.9, 0.8], [1.25, 2.5]])
+    p21 = C.parameters(x21)
+    lj = p21.lj_dict
+    ff = next((x, d) for a, b, x, d in p21.lj_pairs if (a, b) == ("F", "F"))
+    assert ff == (pytest.approx(1.25 * lj["F"][0]), pytest.approx(2.5 * lj["F"][1])) and p21.torsion == (-2.0, 0.9, 0.8)
+    assert C.ridge(x21) == pytest.approx(C.ridge(x12) + C.RIDGE * ((0.25 / 0.15) ** 2 + np.log(2.5) ** 2), rel=1e-9)
+    assert C.ridge(np.concatenate([x21[:19], [1.0, 1.0]])) == pytest.approx(C.ridge(x12), abs=1e-9)
+    x19 = np.concatenate([x12, [-0.318, 0.0155], [-2.0, 0.9, 0.8]])
+    p19 = C.parameters(x19)
+    assert p19.torsion == (-2.0, 0.9, 0.8) and p19.bond_sites == (("H", -0.318),) and p19.wall == C.parameters(x12).wall
+    assert C.parameters(np.concatenate([x12, [-0.318, 0.0155]])).torsion == F.FITTED_VALENCE.torsion
+    assert C.ridge(x19) == pytest.approx(C.ridge(x12), abs=1e-9)
+    assert np.allclose(C.X0_13[16:19], F.FITTED_VALENCE.torsion) and np.allclose(C.X0_13[19:], 1.0)
     x0 = np.concatenate([x12, [0.0, 0.0]])
     p12, p0 = C.parameters(x12), C.parameters(x0)
     assert p0.wall == p12.wall and p0.lj == p12.lj and p0.charge_increments == p12.charge_increments

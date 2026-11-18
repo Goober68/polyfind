@@ -190,11 +190,36 @@ STAGE12 = dict(STAGE11)
 # Their prior is what the potential alone gives (-0.318 e and 0.0155 e, with the two bond
 # increments at 0.30 and 0.70 of belt4's), not zero: energies cannot set charges (fitted to the
 # rigid cells' energies alone they end with no charge on the CF2 groups).
-VARIABLES13 = VARIABLES12 + ("q_M", "pull_F")
+#
+# The last three variables are the lattice's torsion triple, the CF2-CH2 type's.  The earlier stages
+# held it at the valence fit's.  It cannot stay there: the charges inside a chain have changed, and
+# refitted on the conformers under them the triple leaves the alpha-beta gap at -0.24 kcal/mol for
+# DFT's -0.73, while along one direction of it (the one-fold term down, the two-fold up) the
+# conformers lose 0.03 kcal/mol rms and the gap crosses DFT's.  So the triple is fitted here, with
+# the conformers' own error among the rows (the rows from outside the module: evaluate(extra_rows=...),
+# examples/stage13_rows.py), and it carries no ridge of its own.  ``VARIABLES13_CHARGES`` is the
+# sixteen-variable form without it.
+#
+# The last two are the F-F pair's own diameter and depth, as multipliers on fluorine's (1 and 1 is
+# the mixing rule).  Between rigid chains the reversed-unit candidate's cell turns on fluorine
+# against fluorine at 2.5 A, and with the pair left to the mixing rule no wall holds that cell and
+# the fully reversed chain's together (5.26).  ``VARIABLES13_TORSION`` is the nineteen-variable
+# form without them.
+VARIABLES13_CHARGES = VARIABLES12 + ("q_M", "pull_F")
+VARIABLES13_TORSION = VARIABLES13_CHARGES + ("V1", "V2", "V3")
+VARIABLES13 = VARIABLES13_TORSION + ("x_FF", "D_FF")
 SITE_PRIOR = (-0.318, 0.0155)
-X0_13 = np.concatenate([X0_12, [0.0, 0.0]])
-BOUNDS13 = np.vstack([BOUNDS12, [(-0.6, 0.0), (-0.01, 0.05)]])
-SIGMA13 = np.concatenate([SIGMA12, [0.10, 0.010]])
+X0_13_CHARGES = np.concatenate([X0_12, [0.0, 0.0]])
+X0_13_TORSION = np.concatenate([X0_13_CHARGES, np.asarray(F.FITTED_VALENCE.torsion, dtype=float)])
+X0_13 = np.concatenate([X0_13_TORSION, [1.0, 1.0]])
+BOUNDS13_CHARGES = np.vstack([BOUNDS12, [(-0.6, 0.0), (-0.01, 0.05)]])
+BOUNDS13_CHARGES[1] = (0.70, 1.40)  # x_H: with the H-F and F-F pairs on their own terms the trial fits want hydrogen itself smaller
+BOUNDS13_CHARGES[8] = (0.70, 1.35)  # x_HF
+BOUNDS13_TORSION = np.vstack([BOUNDS13_CHARGES, [(-5.0, 1.0), (-1.5, 3.0), (0.0, 3.0)]])
+BOUNDS13 = np.vstack([BOUNDS13_TORSION, [(0.80, 1.40), (0.3, 4.0)]])
+SIGMA13_CHARGES = np.concatenate([SIGMA12, [0.10, 0.010]])
+SIGMA13_TORSION = np.concatenate([SIGMA13_CHARGES, [np.inf, np.inf, np.inf]])
+SIGMA13 = np.concatenate([SIGMA13_TORSION, [0.15, 1.0]])
 STAGE13 = dict(STAGE12)
 
 
@@ -221,8 +246,12 @@ def _config(x):
     if n == 14:
         return VARIABLES12, X0_12, BOUNDS12, SIGMA12
     if n == 16:
+        return VARIABLES13_CHARGES, X0_13_CHARGES, BOUNDS13_CHARGES, SIGMA13_CHARGES
+    if n == 19:
+        return VARIABLES13_TORSION, X0_13_TORSION, BOUNDS13_TORSION, SIGMA13_TORSION
+    if n == 21:
         return VARIABLES13, X0_13, BOUNDS13, SIGMA13
-    raise ValueError(f"expected 8, 10, 11, 12, 13, 14 or 16 variables, got {n}")
+    raise ValueError(f"expected 8, 10, 11, 12, 13, 14, 16, 19 or 21 variables, got {n}")
 
 
 def ridge_parts(x) -> np.ndarray:
@@ -242,8 +271,11 @@ def ridge_parts(x) -> np.ndarray:
         parts += [x[12:13] / sigma[12:13]]
     if len(x) >= 14:  # the wall's first buffer, from Halgren's 0.07
         parts += [(x[13:14] - X0_12[13]) / sigma[13:14]]
-    if len(x) == 16:  # the bond site's charge and the backbone pull, from what the potential alone gives
+    if len(x) >= 16:  # the bond site's charge and the backbone pull, from what the potential alone gives
         parts += [(x[14:16] - np.array(SITE_PRIOR)) / sigma[14:16]]
+    # (the torsion triple of the nineteen-variable form has no ridge: the conformers' rows hold it)
+    if len(x) == 21:  # the F-F pair: a diameter multiplier and a depth multiplier, from the mixing rule
+        parts += [(x[19:20] - 1.0) / sigma[19:20], np.log(x[20:21]) / sigma[20:21]]
     return np.concatenate(parts)
 
 
@@ -255,7 +287,8 @@ def ridge(x) -> float:
 # Forward-difference steps of the least-squares fitter's Jacobian, per variable (the units of x).
 FD_STEPS = {"x_C": 0.005, "x_H": 0.005, "x_F": 0.005, "D_C": 0.02, "D_H": 0.02, "D_F": 0.02, "q_CH": 0.005,
             "q_CF": 0.005, "x_HF": 0.005, "D_HF": 0.02, "log10_D_X": 0.05, "b_q": 0.1, "log10_k_angle": 0.02,
-            "wall_delta": 0.005, "q_M": 0.01, "pull_F": 0.002}
+            "wall_delta": 0.005, "q_M": 0.01, "pull_F": 0.002, "V1": 0.05, "V2": 0.05, "V3": 0.05,
+            "x_FF": 0.005, "D_FF": 0.05}
 
 
 @dataclass
@@ -294,7 +327,7 @@ def cases_for(x):
         from .polymers import pvdf_belt
         pol = pvdf_belt(BELT_D, BELT_GEOMETRY)
         tag = f"belt-{BELT_D:.2f}" + ("" if BELT_GEOMETRY == "textbook" else f"-{BELT_GEOMETRY}")
-        if len(np.asarray(x)) == 16:  # stage 13: the chains carry a charge site on every C-H bond
+        if len(np.asarray(x)) >= 16:  # stage 13: the chains carry a charge site on every C-H bond
             from .polymers import with_bond_sites
             pol, tag = with_bond_sites(pol), tag + "-bs"
         return (_replace(beta_case, key=f"beta-{tag}", polymer=pol),
@@ -512,6 +545,10 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
         start = np.concatenate([start, [X0_12[13]]])
     if stage == 13 and len(start) == 14:  # from a stage-12 result: no charge on the sites, nothing drawn
         start = np.concatenate([start, [0.0, 0.0]])
+    if stage == 13 and len(start) == 16:  # the torsion triple starts at the valence fit's
+        start = np.concatenate([start, X0_13[16:19]])
+    if stage == 13 and len(start) == 19:  # the F-F pair starts at the mixing rule
+        start = np.concatenate([start, X0_13[19:]])
     bounds = (_config(start)[2] if bounds is None else np.asarray(bounds, dtype=float)).copy()
     history: list[Evaluation] = []
 
@@ -598,6 +635,7 @@ def save(ev: Evaluation, path: str, evaluations: int | None = None, complete: bo
         out["parameters"]["wall"] = list(prm.wall)
     if prm.bond_sites or prm.backbone_pull:
         out["parameters"].update(bond_sites=prm.bond_sites, bond_site_fraction=prm.bond_site_fraction, backbone_pull=prm.backbone_pull)
+    out["parameters"]["torsion"] = list(prm.torsion)
     if ev.extra:
         out.update(ev.extra)
     with open(path, "w") as fh:
