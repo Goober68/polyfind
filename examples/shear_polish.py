@@ -46,15 +46,17 @@ def stored_cell(row: str, conf: str, polished: dict, references: dict) -> dict:
     return {k: (np.asarray(v, dtype=float) if isinstance(v, list) else v) for k, v in stored.items()}
 
 
-def sheared_model(polymer, d: dict):
-    """``(model, x, chain)``: the polished two-chain cell ``d`` in a model whose cell may shear, at no shear."""
+def sheared_model(polymer, d: dict, check: bool = True):
+    """``(model, x, chain)``: the polished two-chain cell ``d`` in a model whose cell may shear, at no
+    shear.  ``check`` holds its energy to the stored one, which is the stored preset's: pass
+    ``False`` to evaluate the same cell under other parameters."""
     ch = DK.reference_chain(polymer, d)
     pk = pack_mod.CrystalPacker(ch, n_chains=2, **DK.KW)
     st = MC.MixedState.from_vector(d["state"], 2, len(d["tors"]))
     st.shear = np.zeros(2)
     model = MC.MixedModel(polymer, "ref", pk, np.asarray(d["flips"]) > 0.5, [ch, ch], angle_stiffness=DK.angle_stiffness(), shear=True)
     x = st.vector()
-    if abs(model.physical_energy(x) - float(d["energy"])) > 1e-6:
+    if check and abs(model.physical_energy(x) - float(d["energy"])) > 1e-6:
         raise RuntimeError("the cell that may shear does not reproduce the polished upright cell at no shear")
     return model, x, ch
 

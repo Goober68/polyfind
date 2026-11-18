@@ -249,6 +249,7 @@ class SupercellEnergy:
         self.alpha = float(packer.alpha)
         self.n = int(packer.n)
         to = lambda Z: np.asarray(bk.to_numpy(Z), dtype=float)  # noqa: E731
+        self._wall = getattr(packer, "_wall", None)  # the packer's pair form: None is 12-6
         self._A, self._B = to(packer._A_nn), to(packer._B_nn)
         self._qq, self._qqf = to(packer._qq_nn), to(packer._qqf_nn)
         self._const = to(packer._const_nn)
@@ -276,6 +277,9 @@ class SupercellEnergy:
         rather than a difference in the potential.
         """
         rr = np.sqrt(r2)
+        if self._wall is not None:  # the packer's other pair form, on the same tables (pack.wall_b147)
+            from .pack import wall_b147
+            return wall_b147(np, rr, A, B, *self._wall) + qq * (_erfc_pos(self.alpha * rr) / rr) + qqf * rr + const
         ir6 = 1.0 / (r2 * r2 * r2)
         return ir6 * (A * ir6 - B) + qq * (_erfc_pos(self.alpha * rr) / rr) + qqf * rr + const
 

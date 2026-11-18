@@ -77,6 +77,44 @@ from .helix import HelixParams, helix_parameters, kabsch, rotation_to_z
 from .polymers import Polymer, RISStates, lj_params
 
 
+WALLS = ("b14-7",)  # the pair forms a packer takes besides its own 12-6 (``wall=None``)
+WALL_GAMMA = 0.12   # Halgren's second buffer; the first, delta, is the variable (0.07 in his MMFF94)
+
+
+def wall_b147(xp, r, D, IX, delta: float, gamma: float = WALL_GAMMA, grad: bool = False):
+    r"""Halgren's buffered 14-7 pair term on distances ``r``: value, and ``dV/dr`` with ``grad``.
+
+        V = D ((1 + delta) / (rho + delta))^7 ((1 + gamma) / (rho^7 + gamma) - 2),   rho = r / x
+
+    with ``IX = 1/x``.  ``V(x) = -D`` exactly; the minimum is there when the two buffers are equal
+    and within half a percent of it, and a thousandth of ``D`` deeper, for the values in use.
+    Against ``D [(x/r)^12 - 2 (x/r)^6]`` it has the same well and a wall that is softer inside it,
+    the more so the larger ``delta``; it is finite at ``r = 0`` (so a start with two sites on top of
+    each other is a large energy, not an infinite or a negative one, which is what an exp-6
+    wall gives there).  Why it is here: against PBE-D3(BJ) on rigid chains moved along and
+    towards each other the 12-6 wall is 2.4 to 5 times too costly the closer the contact, and no
+    choice of diameters repairs that while holding the lattice (docs/MLIP_SECOND_OPINION.md 3.9,
+    3.10; examples/interchain_wall.py).  ``D`` zero gives exactly zero.
+
+    A **negative** ``D`` is a wall alone: ``|D| ((1 + delta)/(rho + delta))^7 (1 + gamma)/(rho^7 +
+    gamma)``, the same expression without its ``- 2``, positive everywhere and ``|D|`` at ``rho =
+    1``.  It is how a repulsion-only site (the belt sites of ``polymers.belt_fluorine``) reaches
+    the kernels, whose two per-pair tables have no third slot for the distinction."""
+    rho = r * IX
+    a = (1.0 + delta) / (rho + delta)
+    a2 = a * a
+    a7 = a2 * a2 * a2 * a
+    rho2 = rho * rho
+    rho6 = rho2 * rho2 * rho2
+    den = 1.0 / (rho6 * rho + gamma)
+    g = (1.0 + gamma) * den - xp.where(D < 0.0, 0.0, 2.0)
+    Da7 = abs(D) * a7
+    v = Da7 * g
+    if not grad:
+        return v
+    return v, -7.0 * IX * Da7 * (g / (rho + delta) + rho6 * (1.0 + gamma) * den * den)
+
+
 def lj_pairs() -> dict:
     """Pair-specific Lennard-Jones overrides ``{(elem_a, elem_b), sorted: (x_ij, D_ij)}`` of the
     geometric-mean mixing in :meth:`CrystalPacker._setup_topology`.  Empty by default;
@@ -915,8 +953,17 @@ class CrystalPacker:
     LJ_CUTOFFS = ("energy", "force")
     COULOMB_SUMS = ("dsf", "ewald")
 
-    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy", charge_flux=None, coulomb: str = "dsf", ewald: EwaldSpec | None = None, polarizable: Polarizable | None = None):
+    def __init__(self, chain: PeriodicChain, n_chains: int = 2, cutoff: float = 8.0, alpha: float = 0.2, eps_r: float = 1.0, torsion=(1.3, -0.05, 2.5), xp=None, field=None, valence=None, lj_cutoff: str = "energy", charge_flux=None, coulomb: str = "dsf", ewald: EwaldSpec | None = None, polarizable: Polarizable | None = None, wall=None):
         self.n_chains = n_chains
+        # the pair term's form: None is the 12-6 every earlier number was computed with; ("b14-7", delta) or
+        # ("b14-7", delta, gamma) is wall_b147 on the same diameters and depths (a belt site stays a wall alone)
+        if not wall:
+            self.wall = self._wall = None
+        else:
+            if wall[0] not in WALLS:
+                raise ValueError(f"unknown wall {wall[0]!r} (expected one of {WALLS}, or None for 12-6)")
+            self.wall = (str(wall[0]), float(wall[1]), float(wall[2]) if len(wall) > 2 else WALL_GAMMA)
+            self._wall = self.wall[1:]
         self.rc = cutoff
         self.rc2 = cutoff ** 2
         self.alpha = alpha
@@ -989,6 +1036,18 @@ class CrystalPacker:
         # linear coefficient and not a Coulomb term.
         self._lj_shift_np = lj_shift
         self._lj_f_np = (12.0 * A / rc ** 13 - 6.0 * B / rc ** 7) if self.lj_cutoff == "force" else None
+        if self._wall is not None:
+            # Another form on the same diameters and depths.  The kernel's two per-pair tables then hold
+            # the depth and the inverse diameter (see _pair_energy_wall); a pair with a belt site is a wall
+            # alone, as it is in 12-6, which wall_b147 reads from a negative depth; and the cutoff's shift
+            # and tangent are this form's.  ``lj_shift`` above stays the 12-6 one: it is what the tabulated
+            # screen reads (lattice_table), which keeps its own 12-6 and only chooses the starts an exact
+            # polish then takes over.
+            A = np.where(self._x_pair_mask, -ds, ds) if self._x_pair_mask is not None else ds.copy()
+            B = 1.0 / np.where(xs > 0.0, xs, 1.0)
+            v_rc, dv_rc = wall_b147(np, rc, A, B, *self._wall, grad=True)
+            self._lj_shift_np = v_rc
+            self._lj_f_np = -dv_rc if self.lj_cutoff == "force" else None
         tile = lambda Z: np.tile(Z, (n_chains, n_chains))  # noqa: E731
         self._A, self._B = xp.asarray(tile(A), dtype=dt), xp.asarray(tile(B), dtype=dt)
         # the same n x n block also serves the (0,0,k) chain1-chain2 column and the intra sum
@@ -1591,6 +1650,8 @@ class CrystalPacker:
     # --- energy ------------------------------------------------------------------
     def _pair_energy(self, r2, A, B, qq, qqf, const):
         """Pair potential (LJ + damped-shifted-force Coulomb) on squared distances."""
+        if self._wall is not None:
+            return self._pair_energy_wall(r2, A, B, qq, qqf, const, False)
         xp = self.xp
         mask = (r2 < self.rc2) & (r2 > 1e-8)
         r2s = xp.where(mask, r2, 1.0)
@@ -1622,6 +1683,8 @@ class CrystalPacker:
         derivative does not -- measurably, in an elastic constant: see
         :class:`polyfind.mechanics.Elastic`.
         """
+        if self._wall is not None:
+            return self._pair_energy_wall(r2, A, B, qq, qqf, const, True)
         xp = self.xp
         mask = (r2 < self.rc2) & (r2 > 1e-8)
         r2s = xp.where(mask, r2, 1.0)
@@ -1639,6 +1702,32 @@ class CrystalPacker:
         dcoul = self.alpha * _derfc_pos(ar, xp) / rr - ef / r2s
         dv = 3.0 * ir6 * (B - 2.0 * A * ir6) / r2s + (qq * dcoul + qqf) / (2.0 * rr)
         return xp.where(mask, v, 0.0), xp.where(mask, dv, 0.0)
+
+    def _pair_energy_wall(self, r2, A, B, qq, qqf, const, grad: bool):
+        """:meth:`_pair_energy` (and with ``grad`` :meth:`_pair_energy_and_dv`) for a packer with a
+        ``wall``: the same mask, Coulomb, linear and constant terms around :func:`wall_b147`, whose
+        depth and inverse diameter arrive in the two per-pair tables (``A`` and ``B``)."""
+        xp = self.xp
+        mask = (r2 < self.rc2) & (r2 > 1e-8)
+        r2s = xp.where(mask, r2, 1.0)
+        rr = xp.sqrt(r2s)
+        delta, gamma = self._wall
+        if grad:
+            w, dw = wall_b147(xp, rr, A, B, delta, gamma, grad=True)
+        else:
+            w = wall_b147(xp, rr, A, B, delta, gamma)
+        if self._ewald is not None:  # no Coulomb term in the kernel under Ewald, as in the 12-6 path
+            v = w + qqf * rr + const
+            if not grad:
+                return xp.where(mask, v, 0.0)
+            return xp.where(mask, v, 0.0), xp.where(mask, (dw + qqf) / (2.0 * rr), 0.0)
+        ar = self.alpha * rr
+        ef = _erfc_pos(ar, xp)
+        v = w + qq * (ef / rr) + qqf * rr + const
+        if not grad:
+            return xp.where(mask, v, 0.0)
+        dcoul = self.alpha * _derfc_pos(ar, xp) / rr - ef / r2s
+        return xp.where(mask, v, 0.0), xp.where(mask, (dw + qq * dcoul + qqf) / (2.0 * rr), 0.0)
 
     def _pair_phi(self, r2):
         """The charge-bilinear factor of the pair potential: ``v_coulomb = qq * phi(r)``.

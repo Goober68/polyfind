@@ -156,6 +156,30 @@ BOUNDS9_WIDE[2] = (0.85, 1.15)  # x_F
 BOUNDS9_WIDE[8] = (0.70, 1.15)  # x_HF
 
 
+# Stage 10 (docs/MLIP_SECOND_OPINION.md 3.10): stage 9 with the pair term's form changed.  Stage 9
+# showed the 12-6 wall cannot give the registry cost and the lattice together; against DFT on rigid
+# chains moved along and towards each other it is too costly the closer the contact, by a factor
+# that grows from 2 to 5 (examples/interchain_frames.py, interchain_wall.py).  The form here is
+# Halgren's buffered 14-7 (polyfind.pack.wall_b147) on the same per-element diameters and depths,
+# its first buffer the fourteenth variable (0.07 is his; larger is softer).  The belt sites stay
+# what they were, a wall alone against hydrogen, in the new form (the trial fits are six times
+# worse without them).  Two things follow from the form and are not choices of the fit: the
+# diameters mean something else under a softer wall, so their box is wide and their ridge widths
+# are three times the earlier stages'; and the torsion terms, fitted with 12-6 between a chain's
+# own atoms, have to be fitted again afterwards.
+VARIABLES10 = VARIABLES7 + ("wall_delta",)
+X0_10 = np.concatenate([X0_7, [0.07]])
+BOUNDS10 = np.vstack([BOUNDS7, [(0.0, 0.5)]])
+BOUNDS10[0] = (0.90, 1.40)  # x_C
+BOUNDS10[1] = (0.80, 1.40)  # x_H
+BOUNDS10[2] = (0.85, 1.25)  # x_F
+BOUNDS10[8] = (0.70, 1.20)  # x_HF
+BOUNDS10[10] = (-5.0, -0.3)  # log10_D_X: the same wall-alone site, in a form where 1e-4 kcal/mol is still felt
+SIGMA10 = np.concatenate([SIGMA7, [0.15]])
+SIGMA10[[0, 1, 2, 8]] = 0.15
+STAGE10 = dict(STAGE9)
+
+
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
     """The valence preset with its C, H, F Lennard-Jones terms and C-H, C-F increments moved
     (:func:`polyfind.fitting.crystal_stage_parameters`; the fitted result is the preset
@@ -176,7 +200,9 @@ def _config(x):
         return VARIABLES4, X0_4, BOUNDS4, SIGMA4
     if n == 13:
         return VARIABLES7, X0_7, BOUNDS7, SIGMA7
-    raise ValueError(f"expected 8, 10, 11, 12 or 13 variables, got {n}")
+    if n == 14:
+        return VARIABLES10, X0_10, BOUNDS10, SIGMA10
+    raise ValueError(f"expected 8, 10, 11, 12, 13 or 14 variables, got {n}")
 
 
 def ridge_parts(x) -> np.ndarray:
@@ -192,8 +218,10 @@ def ridge_parts(x) -> np.ndarray:
         parts += [(x[10:11] - X0_3[10]) / sigma[10:11]]
     if len(x) >= 12:  # the belt wall (log depth, from the probe's 0.01) and the carried penetration
         parts += [(x[10:11] - X0_4[10]) / sigma[10:11], (x[11:12] - X0_4[11]) / sigma[11:12]]
-    if len(x) == 13:  # the backbone-angle restraint, log10 of its multiplier on the default
+    if len(x) >= 13:  # the backbone-angle restraint, log10 of its multiplier on the default
         parts += [x[12:13] / sigma[12:13]]
+    if len(x) == 14:  # the wall's first buffer, from Halgren's 0.07
+        parts += [(x[13:14] - X0_10[13]) / sigma[13:14]]
     return np.concatenate(parts)
 
 
@@ -204,7 +232,8 @@ def ridge(x) -> float:
 
 # Forward-difference steps of the least-squares fitter's Jacobian, per variable (the units of x).
 FD_STEPS = {"x_C": 0.005, "x_H": 0.005, "x_F": 0.005, "D_C": 0.02, "D_H": 0.02, "D_F": 0.02, "q_CH": 0.005,
-            "q_CF": 0.005, "x_HF": 0.005, "D_HF": 0.02, "log10_D_X": 0.05, "b_q": 0.1, "log10_k_angle": 0.02}
+            "q_CF": 0.005, "x_HF": 0.005, "D_HF": 0.02, "log10_D_X": 0.05, "b_q": 0.1, "log10_k_angle": 0.02,
+            "wall_delta": 0.005}
 
 
 @dataclass
@@ -437,10 +466,14 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
         eval_kw = {**STAGE7, **eval_kw}
     elif stage == 9:
         eval_kw = {**STAGE9, **eval_kw}
-    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7, 9: X0_7}[stage]) if x0 is None else np.asarray(x0, dtype=float)
-    if stage in (7, 9) and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
+    elif stage == 10:
+        eval_kw = {**STAGE10, **eval_kw}
+    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7, 9: X0_7, 10: X0_10}[stage]) if x0 is None else np.asarray(x0, dtype=float)
+    if stage in (7, 9, 10) and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
         start = np.concatenate([start, [0.0]])
-    bounds = _config(start)[2] if bounds is None else np.asarray(bounds, dtype=float)
+    if stage == 10 and len(start) == 13:  # from a 12-6 result: the wall starts at Halgren's buffer
+        start = np.concatenate([start, [X0_10[13]]])
+    bounds = (_config(start)[2] if bounds is None else np.asarray(bounds, dtype=float)).copy()
     history: list[Evaluation] = []
 
     def record(ev):
@@ -522,6 +555,8 @@ def save(ev: Evaluation, path: str, evaluations: int | None = None, complete: bo
            "anchors": DFT_ANCHORS, "tolerances": TOL}
     if len(ev.x) >= 12:
         out["belt"] = {"d": BELT_D, "geometry": BELT_GEOMETRY}
+    if prm.wall:
+        out["parameters"]["wall"] = list(prm.wall)
     if ev.extra:
         out.update(ev.extra)
     with open(path, "w") as fh:

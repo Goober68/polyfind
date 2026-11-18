@@ -138,6 +138,11 @@ class FFParameters:
     # forwarded by :meth:`applied`, because it is a parameter of the refinement, not of the
     # rigid-chain lattice energy; the crystal stage fits it (docs/CRYSTAL_STAGE.md 5.13).
     angle_stiffness: float | None = None
+    # The pair term's form on the lattice side: empty is the 12-6 every earlier preset has;
+    # ("b14-7", delta[, gamma]) is polyfind.pack.wall_b147 on the same diameters and depths
+    # (docs/MLIP_SECOND_OPINION.md 3.10).  Forwarded by :meth:`applied` to every packer built in
+    # the block.  The oligomer side (SimpleFF, the valence fit's designs) does not read it yet.
+    wall: tuple = ()
 
     @property
     def lj_dict(self) -> dict[str, tuple[float, float]]:
@@ -185,6 +190,8 @@ class FFParameters:
         flx = ("" if not self.charge_flux else " [charge flux: " + "; ".join(
             f"{a}-{b} ka={ka:+.4f} kb={kb:+.4f}" for a, b, ka, kb in self.charge_flux) + "]")
         rest = "" if self.angle_stiffness is None else f" [backbone-angle restraint {self.angle_stiffness:.1f} kcal/mol/rad^2]"
+        if self.wall:
+            rest += f" [pair wall {self.wall[0]}, delta {self.wall[1]:.4f}]"
         return (f"torsion=({self.torsion[0]:+.3f}, {self.torsion[1]:+.3f}, {self.torsion[2]:+.3f}) "
                 f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}{flx}{rest}")
 
@@ -244,6 +251,7 @@ class FFParameters:
 
         ff = self.simple_ff()
         q_scale, torsion, eps_r, damping = self.charge_scale, tuple(self.torsion), self.eps_r, float(self.charge_damping)
+        wall = tuple(self.wall) or None
         increments = ff.increments()
         offsets = ff.offset_table()
 
@@ -266,6 +274,8 @@ class FFParameters:
                     chain = replace(chain, charges=np.asarray(chain.charges, dtype=float) * q_scale)
                 kw["eps_r"] = eps_r
                 kw["torsion"] = torsion
+                if wall is not None:
+                    kw["wall"] = wall
                 if damping > 0.0 and kw.get("coulomb", "dsf") == "ewald":
                     from .ewald import EwaldSpec
                     kw["ewald"] = replace(kw.get("ewald") or EwaldSpec(), charge_damping=damping)
@@ -2614,7 +2624,7 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
         out = replace(out, lj_pairs=(("F", "H", float(x_hf), float(d_hf)),))
     if len(x) == 11:  # stage 3: charge penetration in the lattice sum, b in 1/A
         out = replace(out, charge_damping=float(x[10]))
-    elif len(x) in (12, 13):
+    elif len(x) in (12, 13, 14):
         # stage 4: fluorine belt sites (polymers.belt_fluorine), a repulsion-only wall against H
         # with well depth 10**x[10] kcal/mol at the fixed diameter BELT_X_DIAMETER; the sites see
         # no C, F or other site.  x[11] is reserved for the charge penetration of stage 3 and is
@@ -2624,13 +2634,17 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
                       lj_pairs=tuple(out.lj_pairs) + (("C", "X", BELT_X_DIAMETER, 0.0), ("F", "X", BELT_X_DIAMETER, 0.0),
                                                       ("X", "X", BELT_X_DIAMETER, 0.0)),
                       charge_damping=float(x[11]))
-        if len(x) == 13:
+        if len(x) >= 13:
             # stage 7: the refinement's backbone-angle restraint, 10**x[12] times its default 105
             # kcal/mol/rad^2 (docs/CRYSTAL_STAGE.md 5.13); reaches refine_crystal through applied()
             from .refine import DEFAULT_ANGLE_STIFFNESS
             out = replace(out, angle_stiffness=float(DEFAULT_ANGLE_STIFFNESS * 10.0 ** float(x[12])))
+        if len(x) == 14:
+            # stage 10: the pair term is the buffered 14-7 with first buffer x[13] on these diameters
+            # and depths (pack.wall_b147); the belt sites stay a wall alone, in the new form
+            out = replace(out, wall=("b14-7", float(x[13])))
     elif len(x) not in (8, 10):
-        raise ValueError(f"expected 8, 10, 11, 12 or 13 crystal-stage variables, got {len(x)}")
+        raise ValueError(f"expected 8, 10, 11, 12, 13 or 14 crystal-stage variables, got {len(x)}")
     return out
 
 
@@ -2639,6 +2653,7 @@ CRYSTAL_STAGE2_VARIABLES = CRYSTAL_STAGE_VARIABLES + ("x_HF", "D_HF")
 CRYSTAL_STAGE3_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("b_q",)
 CRYSTAL_STAGE4_VARIABLES = CRYSTAL_STAGE2_VARIABLES + ("log10_D_X", "b_q")
 CRYSTAL_STAGE7_VARIABLES = CRYSTAL_STAGE4_VARIABLES + ("log10_k_angle",)
+CRYSTAL_STAGE10_VARIABLES = CRYSTAL_STAGE7_VARIABLES + ("wall_delta",)
 
 
 FITTED_VALENCE_CRYSTAL = crystal_stage_parameters(CRYSTAL_FITTED_X)

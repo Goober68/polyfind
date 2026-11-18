@@ -65,12 +65,13 @@ def alpha_cell(stored: dict | None = None) -> dict:
     return DK.refined_cell(polymer, "vdf2", C.conformation("TGTG'", polymer.bonds_per_repeat), "vdf2 TGTG'", stored)
 
 
-def model_of(pack: str, alpha: dict | None = None):
-    """``(model, x, chain, monomers per cell)`` of a packing at no strain and no shear."""
+def model_of(pack: str, alpha: dict | None = None, check: bool = True):
+    """``(model, x, chain, monomers per cell)`` of a packing at no strain and no shear; ``check``
+    false builds the helix cell under parameters other than the ones it was polished with."""
     if pack == "alpha":
         polymer = C.make_polymer("vdf2", "VV")
         d = {k: (np.asarray(v, dtype=float) if isinstance(v, list) else v) for k, v in alpha.items()}
-        model, x, ch = SP.sheared_model(polymer, d)
+        model, x, ch = SP.sheared_model(polymer, d, check)
         return model, x, ch, 2 * ch.n_monomers
     model, x, ch = SR.plain_model(pack)
     return model, x, ch, 2

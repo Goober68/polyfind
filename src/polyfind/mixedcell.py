@@ -83,6 +83,7 @@ from .pack import (
     _erfc_pos,
     _finish_repeat_chains,
     _template,
+    wall_b147,
 )
 
 __all__ = [
@@ -343,14 +344,20 @@ def _pair_kernel(xp, r2, tab, rc2: float, alpha: float):
     ``tab`` is ``(A, B, qq or None, qq_f, const)`` on that module (``qq`` is ``None`` under Ewald,
     where the kernel carries no Coulomb term).  The factor two of ``dV/d(separation vector) =
     2 dV/dr^2 * (separation vector)`` is folded in."""
-    A, B, qq, qqf, cst = tab
+    A, B, qq, qqf, cst = tab[:5]
+    wall = tab[5] if len(tab) > 5 else None
     mask = (r2 < rc2) & (r2 > 1e-8)
     r2s = xp.where(mask, r2, 1.0)
     rr = xp.sqrt(r2s)
-    ir6 = 1.0 / (r2s * r2s * r2s)
-    y = A * ir6
-    v = ir6 * (y - B) + qqf * rr + cst
-    t2 = 6.0 * ir6 * (B - 2.0 * y) / r2s + qqf / rr
+    if wall is None:
+        ir6 = 1.0 / (r2s * r2s * r2s)
+        y = A * ir6
+        v = ir6 * (y - B) + qqf * rr + cst
+        t2 = 6.0 * ir6 * (B - 2.0 * y) / r2s + qqf / rr
+    else:  # the packer's other pair form: the two tables are its depth and inverse diameter (pack.wall_b147)
+        w, dw = wall_b147(xp, rr, A, B, *wall, grad=True)
+        v = w + qqf * rr + cst
+        t2 = (dw + qqf) / rr
     if qq is not None:
         ar = alpha * rr
         ef = _erfc_pos(ar, xp)
@@ -364,7 +371,9 @@ def _module_key(xp) -> str:
 
 
 def _pair_tables(packer, xp) -> tuple:
-    """The repeat's pair tables ``(A, B, qq or None, qq_f, const)``, each ``(n, n)``, on ``xp``.
+    """The repeat's pair tables ``(A, B, qq or None, qq_f, const, wall)``, each ``(n, n)``, on
+    ``xp``; ``wall`` is the packer's pair form (``None`` for 12-6, else the buffers of
+    :func:`polyfind.pack.wall_b147`, whose depth and inverse diameter ``A`` and ``B`` then are).
     Kept on the packer per array module: they depend on the topology and the charges alone."""
     cache = packer.__dict__.setdefault("_mixed_pair_tables", {})
     key = (_module_key(xp), id(packer._q_cell))
@@ -377,7 +386,7 @@ def _pair_tables(packer, xp) -> tuple:
         B = np.asarray(bk.to_numpy(packer._B_nn), dtype=float)
         cache.clear()
         hit = cache[key] = (xp.asarray(A), xp.asarray(B), None if packer._ewald is not None else xp.asarray(qq),
-                            xp.asarray(qqf), xp.asarray(cst))
+                            xp.asarray(qqf), xp.asarray(cst), getattr(packer, "_wall", None))
     return hit
 
 

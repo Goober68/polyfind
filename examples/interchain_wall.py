@@ -13,14 +13,15 @@ and it can be fitted to DFT directly before a line of polyfind's kernels is chan
     pair, with polyfind's electrostatic energy and (where labelled) DFT's energy.  Checks that the
     present form on those distances is polyfind's own repulsion and dispersion to rounding.
 
-``fit --form 12-6 | n-6 | exp-6 [--free ...]``
+``fit --form 12-6 | n-6 | exp-6 | b14-7 [--free ...]``
     Least squares of a form's parameters on DFT's differences minus polyfind's electrostatic ones.
 
 The forms.  ``12-6``: polyfind's, ``D [(x/r)^12 - 2 (x/r)^6]`` per pair with geometric mixing, the
 H-F pair's own term and the belt sites' wall against hydrogen.  ``n-6``: the same with the wall's
 exponent a variable, ``D [6/(n-6) (x/r)^n - n/(n-6) (x/r)^6]`` (the minimum still at ``x`` with
-depth ``D``).  ``exp-6``: ``D [6/(z-6) exp(z (1 - r/x)) - z/(z-6) (x/r)^6]``.  All force-shifted at
-the cutoff as the packer's is.
+depth ``D``).  ``exp-6``: ``D [6/(z-6) exp(z (1 - r/x)) - z/(z-6) (x/r)^6]``.  ``b14-7``: Halgren's
+buffered 14-7, ``D ((1+d)/(r/x+d))^7 ((1+g)/((r/x)^7+g) - 2)``, which stays finite at ``r = 0``
+where exp-6 turns over.  All force-shifted at the cutoff as the packer's is.
 """
 import argparse
 import importlib.util
@@ -105,6 +106,13 @@ def wall(r, x, D, form: str, steep: float, rc: float, dispersion: bool = True):
             rep = D * 6.0 / (z - 6.0) * np.exp(z * (1.0 - rr / x))
             drep = -z / x * rep
             c6 = z / (z - 6.0)
+        elif form == "b14-7":  # Halgren's buffered 14-7, finite at r = 0; ``steep`` is its delta (0.07), gamma 0.12
+            dl, gm = steep, 0.12
+            def b147(q):
+                rho = q / x
+                return D * ((1.0 + dl) / (rho + dl)) ** 7 * ((1.0 + gm) / (rho ** 7 + gm) - (2.0 if dispersion else 0.0))
+            h = 1e-6
+            return b147(rr), (b147(rr + h) - b147(rr - h)) / (2.0 * h)
         else:
             raise ValueError(f"unknown form {form!r}")
         if not dispersion:
@@ -200,7 +208,7 @@ def start_vector(form: str) -> dict:
     its minimum).  ``steep_H`` is the steepness of the pairs that involve hydrogen or a belt site,
     when it is freed separately from the rest."""
     belt = dict((e, d) for e, _, d in PRESET_PARAMETERS[PRESET].lj)["X"]
-    z0 = 13.772 if form == "exp-6" else 12.0
+    z0 = {"exp-6": 13.772, "b14-7": 0.07}.get(form, 12.0)
     return {"x_C": 1.0, "x_H": 1.0, "x_F": 1.0, "D_C": 1.0, "D_H": 1.0, "D_F": 1.0, "x_HF": 1.0, "D_HF": 1.0,
             "log10_D_X": float(np.log10(belt)), "steep": z0, "steep_H": z0}
 
@@ -302,7 +310,8 @@ def fit(args):
     start = summary(residuals(v0, cells, form, split))
     print(f"form {form}; {start['all']['cells']} labelled cells; before: rms error {start['all']['rms_error']:.4f} kcal/mol per monomer, chi2 {start['all']['chi2']:.1f}")
     if free:
-        lo, hi = np.array([BOUNDS[n][0] for n in free]), np.array([BOUNDS[n][1] for n in free])
+        box = dict(BOUNDS, **({"steep": (0.0, 0.6), "steep_H": (0.0, 0.6)} if form == "b14-7" else {}))
+        lo, hi = np.array([box[n][0] for n in free]), np.array([box[n][1] for n in free])
         y0 = np.clip(np.array([v0[n] for n in free]), lo + 1e-9, hi - 1e-9)
         res = least_squares(fun, y0, bounds=(lo, hi), x_scale=np.maximum(np.abs(y0), 0.1) * 0.05, xtol=1e-10, ftol=1e-10)
         v = vec(res.x)
@@ -339,7 +348,7 @@ def main():
     s.add_argument("--out", default="/opt/dft/interchain/pairs.npy")
     s = sub.add_parser("fit")
     s.add_argument("--pairs", default="/opt/dft/interchain/pairs.npy")
-    s.add_argument("--form", default="12-6", choices=("12-6", "n-6", "exp-6"))
+    s.add_argument("--form", default="12-6", choices=("12-6", "n-6", "exp-6", "b14-7"))
     s.add_argument("--free", default="", help=f"comma list of {VARIABLES}; none scores the start")
     s.add_argument("--set", default="", help="start values, name=value comma list")
     s.add_argument("--rows", action="store_true", help="print every cell")
