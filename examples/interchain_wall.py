@@ -77,6 +77,45 @@ def interchain_distances(Pn, latn, n: int, rc: float) -> dict:
     return {k: np.array(v) for k, v in out.items()}
 
 
+def charge_patterns(elements, q, n_chains: int) -> np.ndarray:
+    """``(3, sites of the cell)``: the cell's charges split into the part on the CH2 groups, the
+    part on the CF2 groups, and a third pattern polyfind's charge model does not have: one
+    electron moved along every backbone bond between a CH2 carbon and a CF2 carbon, from the
+    first to the second (the CF2 carbon +1, the CH2 carbon -1 per such bond).  ``elements`` and
+    ``q`` are one chain's, backbone carbons in order, each followed by what it carries; the
+    chain closes on its own image."""
+    el = [str(e) for e in elements]
+    carbons = [i for i, e in enumerate(el) if e == "C"]
+    ends = carbons[1:] + [len(el)]
+    kind = ["F" if "F" in el[c + 1:e] else "H" for c, e in zip(carbons, ends)]
+    out = np.zeros((3, len(el)))
+    for c, e, k in zip(carbons, ends, kind):
+        out[0 if k == "H" else 1, c:e] = np.asarray(q, dtype=float)[c:e]
+    for k in range(len(carbons)):
+        a, b = k, (k + 1) % len(carbons)
+        if kind[a] != kind[b]:
+            out[2, carbons[a if kind[a] == "F" else b]] += 1.0
+            out[2, carbons[b if kind[a] == "F" else a]] -= 1.0
+    return np.tile(out, (1, n_chains))
+
+
+def electrostatic_form(model, x, patterns) -> np.ndarray:
+    """``K`` with the cell's electrostatic energy (fixed charges and the dipoles they induce)
+    equal to ``v K v`` for charges ``v @ patterns``: the energy is a homogeneous quadratic in the
+    charges, so six evaluations give it exactly."""
+    latn, _, _, Pn, _ = model.build(x)
+    fl = model.flips.astype(float)
+    e = lambda q: float(model.pk._polarize(Pn, q, latn, fl)[0])  # noqa: E731
+    m = len(patterns)
+    K = np.zeros((m, m))
+    for i in range(m):
+        K[i, i] = e(patterns[i])
+    for i in range(m):
+        for j in range(i + 1, m):
+            K[i, j] = K[j, i] = 0.5 * (e(patterns[i] + patterns[j]) - K[i, i] - K[j, j])
+    return K
+
+
 def by_element(dist: dict, elements) -> dict:
     """The distances of :func:`interchain_distances` gathered by element pair (sorted as :data:`PAIRS`)."""
     order = {e: i for i, e in enumerate(ELEMENTS)}
@@ -163,7 +202,7 @@ def pairs(args):
     with PRESET_PARAMETERS[PRESET].applied():
         table = json.loads((src / "polyfind.json").read_text())
         tabs = lj_tables(PRESET_PARAMETERS[PRESET])
-        worst = 0.0
+        worst = worst_es = 0.0
         for pack in table:
             model, x0, ch, n_mon = IF.model_of(pack, table[pack].get("cell"))
             rc = float(model.pk.rc)
@@ -174,14 +213,17 @@ def pairs(args):
                 rt = json.loads((reg / "polyfind.json").read_text())[pack]["shears"]
                 todo += [(row["frame"], (1.0, 1.0, row["shear_monomers"][0], row["shear_monomers"][1]), reg, row) for row in rt]
             first = None
+            pat = charge_patterns(el, np.asarray(model.pk._q_cell, dtype=float)[:model.n], model.nc)
             for name, v, where, row in todo:
                 x = IF.moved(model, x0, ch, v, monomer)
                 latn, _, _, Pn, _ = model.build(x)
                 r = by_element(interchain_distances(Pn, latn, model.n, rc), el)
                 e, es = model.physical_energy(x), SR.electrostatics(model, x)
+                K = electrostatic_form(model, x, pat)
+                worst_es = max(worst_es, abs(K[:2, :2].sum() - es))
                 f = where / f"{name}.dft.xyz"
                 dft = float(read(f).info["REF_energy"]) * EV_TO_KCAL if f.exists() else None
-                cell = {"frame": name, "packing": pack, "variant": list(v), "monomers": n_mon, "rc": rc, "r": r, "polyfind": e, "electrostatics": es, "dft": dft}
+                cell = {"frame": name, "packing": pack, "variant": list(v), "monomers": n_mon, "rc": rc, "r": r, "polyfind": e, "electrostatics": es, "dft": dft, "K": K}
                 mine = pair_energy(cell, tabs, rc=rc)
                 first = (e - es, mine) if first is None else first
                 worst = max(worst, abs(((e - es) - first[0]) - (mine - first[1])))
@@ -190,15 +232,17 @@ def pairs(args):
                   + ", ".join(f"{a}-{b} {cells[-len(todo)]['r'][(a, b)].size}" for a, b in PAIRS if cells[-len(todo)]['r'][(a, b)].size))
     print(f"the present form on these distances against polyfind's own repulsion and dispersion, as differences within a packing: "
           f"largest disagreement {worst:.1e} kcal/mol per cell")
+    print(f"the quadratic form of the charges at polyfind's own charges against its electrostatic energy: largest disagreement {worst_es:.1e} kcal/mol per cell")
     out = Path(args.out)
     np.save(out, np.array(cells, dtype=object), allow_pickle=True)
     print(f"written {out}: {len(cells)} cells, {sum(c['dft'] is not None for c in cells)} with DFT")
 
 
-VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "x_HF", "D_HF", "log10_D_X", "steep", "steep_H", "x_FF", "D_FF", "x_HH", "D_HH")
+VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "x_HF", "D_HF", "log10_D_X", "steep", "steep_H", "x_FF", "D_FF", "x_HH", "D_HH", "es", "s_CH", "s_CF", "d_CC")
 BOUNDS = {"x_C": (0.8, 1.4), "x_H": (0.6, 1.3), "x_F": (0.8, 1.3), "D_C": (0.2, 5.0), "D_H": (0.2, 5.0), "D_F": (0.2, 5.0),
           "x_HF": (0.7, 1.3), "D_HF": (0.2, 5.0), "log10_D_X": (-6.0, 0.5), "steep": (7.0, 16.0), "steep_H": (7.0, 16.0),
-          "x_FF": (0.7, 1.3), "D_FF": (0.2, 5.0), "x_HH": (0.7, 1.3), "D_HH": (0.2, 5.0)}
+          "x_FF": (0.7, 1.3), "D_FF": (0.2, 5.0), "x_HH": (0.7, 1.3), "D_HH": (0.2, 5.0), "es": (0.0, 3.0),
+          "s_CH": (0.3, 2.0), "s_CF": (0.3, 2.0), "d_CC": (-0.4, 0.4)}
 
 
 def start_vector(form: str) -> dict:
@@ -206,11 +250,16 @@ def start_vector(form: str) -> dict:
     (the H-F pair's on the pair's own values), the belt wall's depth, and the form's steepness
     (12 for a power, 13.8 for the exponential, the value at which exp-6 has the 12-6 curvature at
     its minimum).  ``steep_H`` is the steepness of the pairs that involve hydrogen or a belt site,
-    when it is freed separately from the rest."""
+    when it is freed separately from the rest.  ``es`` multiplies polyfind's electrostatic energy:
+    a diagnostic, not a parameter of polyfind (its charges and polarisabilities are not on trial
+    here), which says whether what a wall cannot fit has the electrostatics' shape.  ``s_CH`` and
+    ``s_CF`` multiply the charges of the CH2 and the CF2 groups, and ``d_CC`` is a charge moved
+    along each backbone bond from a CH2 carbon to a CF2 carbon (:func:`charge_patterns`), in e."""
     belt = dict((e, d) for e, _, d in PRESET_PARAMETERS[PRESET].lj)["X"]
     z0 = {"exp-6": 13.772, "b14-7": 0.07}.get(form, 12.0)
     return {"x_C": 1.0, "x_H": 1.0, "x_F": 1.0, "D_C": 1.0, "D_H": 1.0, "D_F": 1.0, "x_HF": 1.0, "D_HF": 1.0,
-            "log10_D_X": float(np.log10(belt)), "steep": z0, "steep_H": z0, "x_FF": 1.0, "D_FF": 1.0, "x_HH": 1.0, "D_HH": 1.0}
+            "log10_D_X": float(np.log10(belt)), "steep": z0, "steep_H": z0, "x_FF": 1.0, "D_FF": 1.0, "x_HH": 1.0, "D_HH": 1.0, "es": 1.0,
+            "s_CH": 1.0, "s_CF": 1.0, "d_CC": 0.0}
 
 
 def trial_tables(v: dict) -> dict:
@@ -266,9 +315,11 @@ def residuals(v: dict, cells, form: str, split: bool, sigma=(0.02, 0.10)):
     ``sigma[1]`` of DFT's value in quadrature."""
     out = []
     for label, ref, mine in groups(cells):
-        e_ref = trial_energy(ref, v, form, split) + ref["electrostatics"]
+        w = np.array([v.get("s_CH", 1.0), v.get("s_CF", 1.0), v.get("d_CC", 0.0)])
+        es = lambda c: v.get("es", 1.0) * float(w @ c["K"] @ w)  # noqa: E731
+        e_ref = trial_energy(ref, v, form, split) + es(ref)
         for c in mine:
-            model = (trial_energy(c, v, form, split) + c["electrostatics"] - e_ref) / c["monomers"]
+            model = (trial_energy(c, v, form, split) + es(c) - e_ref) / c["monomers"]
             dft = (c["dft"] - ref["dft"]) / c["monomers"]
             out.append((label, c["frame"], model, dft, (model - dft) / np.hypot(sigma[0], sigma[1] * dft)))
     return out
@@ -291,6 +342,8 @@ def fit(args):
     from scipy.optimize import least_squares
 
     cells = list(np.load(args.pairs, allow_pickle=True))
+    if args.packings:
+        cells = [c for c in cells if c["packing"] in args.packings.split(",")]
     form = args.form
     v0 = start_vector(form)
     free = [n for n in args.free.split(",") if n]
@@ -354,6 +407,7 @@ def main():
     s.add_argument("--form", default="12-6", choices=("12-6", "n-6", "exp-6", "b14-7"))
     s.add_argument("--free", default="", help=f"comma list of {VARIABLES}; none scores the start")
     s.add_argument("--set", default="", help="start values, name=value comma list")
+    s.add_argument("--packings", default="", help="comma list: fit and score these packings' cells alone")
     s.add_argument("--rows", action="store_true", help="print every cell")
     s.add_argument("--name", default="")
     s.add_argument("--out", default="")
