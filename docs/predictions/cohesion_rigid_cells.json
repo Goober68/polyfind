@@ -1,0 +1,53 @@
+{
+ "what": "the energy between the rigid chains of a packing: the unstrained cell minus the same chains alone, kcal/mol per monomer",
+ "dft": {
+  "beta": -7.814955186295265,
+  "alpha": -5.073966679759906,
+  "hh": -3.110348529968178
+ },
+ "dft_note": "PBE-D3(BJ) single points; the chains alone are in a 16 A box (examples/chain_potential.py)",
+ "polyfind": {
+  "belt4": {
+   "beta": {
+    "against_chains_far_apart": -5.991123367333053,
+    "against_a_16_A_lattice": -5.748795611283544
+   },
+   "alpha": {
+    "against_chains_far_apart": -3.2156696515593772,
+    "against_a_16_A_lattice": -3.1241770816320624
+   },
+   "hh": {
+    "against_chains_far_apart": -1.6184327738437219,
+    "against_a_16_A_lattice": -1.618428175157895
+   }
+  },
+  "stage 12 (wall), intermediate": {
+   "beta": {
+    "against_chains_far_apart": -7.094302678271497,
+    "against_a_16_A_lattice": -6.850816710412666
+   },
+   "alpha": {
+    "against_chains_far_apart": -4.23455863929334,
+    "against_a_16_A_lattice": -4.142628605525793
+   },
+   "hh": {
+    "against_chains_far_apart": -2.455734668355362,
+    "against_a_16_A_lattice": -2.4557297487646466
+   }
+  },
+  "stage 13, first run": {
+   "beta": {
+    "against_chains_far_apart": -7.060171778005042,
+    "against_a_16_A_lattice": -6.825563424787319
+   },
+   "alpha": {
+    "against_chains_far_apart": -4.279608955987271,
+    "against_a_16_A_lattice": -4.191289093797948
+   },
+   "hh": {
+    "against_chains_far_apart": -2.1992531047586255,
+    "against_a_16_A_lattice": -2.199255899518022
+   }
+  }
+ }
+}

@@ -1900,6 +1900,97 @@ stage-12 fit, the potential's charges, the scanned torsions) the objective is 52
 the candidate's own cells: the stage-12 wall was fitted to eight plain rows and does not carry
 them in the kernels (0.42 kcal/mol per monomer rms, and 0.29 on the reversed chain).
 
+### 5.28 Stage 13, first run: what one fit carries, a check no fit has seen, and an acceptance test with two outcomes
+
+**The first run** (nine iterations, 190 evaluations; `docs/predictions/crystal_stage_v13_run1.json`;
+not converged and **not a preset**; a second run was going on from it when this was written). The
+objective by iteration: 520, 233, 157, 119, 107, 100, 92, 96, 86, and 81 at the end.
+
+| | DFT | belt4 | stage 13, first run |
+|---|---:|---:|---:|
+| beta a, b (A) | 4.757, 8.528 | 4.755, 8.478 | 4.728, 8.588 |
+| alpha a, b (A) | 4.945, 9.636 | 4.957, 9.646 | 4.911, 9.691 |
+| E(alpha) - E(beta), kcal/mol | -0.726 | -0.744 | -0.772 |
+| beta polarization, C/m2 | 0.1927 | 0.193 | 0.187 |
+| C_11, C_22, C_12 (GPa) | 22.8, 24.5, 5.9 | 24.2, 25.1, 5.1 | 21.6, 22.0, 7.2 |
+| the 8 registry rows, polyfind over DFT | 1 | 2.5 to 3.4 | 0.65 to 0.78 |
+| rigid cells, rms: beta, candidate packing, alpha | 0 | 1.52, 0.72, 0.17 | 0.06, 0.05, 0.05 |
+| rigid cells, rms: the reversed chain | 0 | 0.37 | 0.12 |
+| the candidate's own line (quarter, half, end) | -0.36, -0.41, -0.34 | +0.10, +0.70, +1.58 | -0.30, -0.35, -0.24 |
+| potential around the three chains, rms error | 0 | 0.41, 0.42, 0.38 | 0.20, 0.22, 0.13 |
+| conformers, energy rms (training systems) | 1.02 (the valence fit) | 1.31 | 1.32 |
+
+Every lattice row is within a tolerance and a quarter except C_12 (z +2.2). The charges stay
+where the potential put them (the site -0.330 e, the pull 0.0161 e, the bond increments 0.32 and
+0.67 of belt4's). The torsion triple went to (-1.99, 1.37, 0.86) along the direction of 5.27. The
+plain registry rows are now a quarter too low: the fit trades them against the reversed chain's
+cells and the candidate's. The F-F pair has moved little from the mixing rule (1.03, 1.34), and
+the trial's other basin (hydrogen itself smaller, the pairs on their own terms) has not been
+tried in the kernels.
+
+**A check no fit has seen: what holds a packing together** (`examples/cohesion.py`,
+`docs/predictions/cohesion_rigid_cells.json`). The unstrained rigid cell minus the same chains
+alone is the energy between the chains of a packing, absolute; the single points for both
+already existed. kcal/mol per monomer, polyfind against chains on a 16 A lattice as DFT's box
+has them:
+
+| | beta | alpha | the reversed chain | alpha minus beta |
+|---|---:|---:|---:|---:|
+| DFT | -7.82 | -5.07 | -3.11 | +2.74 |
+| belt4 | -5.75 | -3.12 | -1.62 | +2.63 |
+| the stage-12 wall | -6.85 | -4.14 | -2.46 | +2.71 |
+| stage 13, first run | -6.83 | -4.19 | -2.20 | +2.63 |
+
+Belt4 binds every packing a quarter to a half too weakly; the buffered wall takes two thirds of
+that away without having been asked to, and what is left is about the same 0.9 kcal/mol in all
+three (a pair term cut and shifted to zero at 8 A leaves the dispersion beyond it out). The
+difference between packings is right to 0.1 in every set.
+
+The same single points say something about method. At these rigid geometries DFT's crystal
+alpha minus beta is -0.16, not the -0.726 of its relaxed cells, and its single chains differ by
+-2.90 where polyfind's differ by -3.2 to -3.4: a DFT single point on polyfind's rigid chain sees
+strain that differs between conformers by 0.3 to 0.5 kcal/mol per monomer. Differences within
+one packing, and a cell against its own chains, cancel it. A comparison between conformers on
+polyfind's geometries does not, and is not an anchor.
+
+**The acceptance test on the reversed-unit candidate** (`examples/candidate_acceptance.py`;
+`docs/predictions/candidate_acceptance_stage13_run1.json`, `..._typed.json`). The row's polished
+cells relaxed under the first run's parameters with the cell upright and with the shear free,
+pendant groups tilted; kcal/mol per monomer:
+
+| | DFT | belt4 | stage 13, first run |
+|---|---:|---:|---:|
+| the all-trans cell's gain from shearing | -0.346 | -0.03 | -0.309 |
+| the helix cell's gain from shearing | none | none | -0.004 |
+| all-trans minus helix (TG'TG), cell upright | +0.070 | +0.064 | -0.135 |
+| all-trans minus helix, everything relaxed | -0.261 | +0.03 | -0.444 |
+| the helix with the reversed unit at its other place (GTG'T) minus TG'TG | +0.197 | +0.12 | -0.158 |
+
+It has two outcomes. What the refit was for is there: the all-trans cell shears and gains what
+DFT gains (at (0.34, -0.47) monomers, where DFT ends at (0.30, -0.90) and has its rigid minimum
+half way), and the helix cell does not. What belt4 had right is lost: the levels of the
+candidate's helix cells against its all-trans cell are 0.2 off, and its two helix placements are
+in the wrong order by 0.36. With each bond type given its own torsion triple from the conformer
+refit that last number is worse (-0.46), not better.
+
+**Where the levels went.** At the stored cells, polyfind's energy split into torsion, bend,
+within chains and between chains (the same chains far apart taken off): between belt4 and the
+first run the within-chain part of GTG'T against TG'TG moves by -0.19 kcal/mol per monomer and
+the between-chain part by +0.05. The two placements differ in whether the CF2-CF2 and CH2-CH2
+bonds are gauche, so this is the non-bonded energy around those bonds inside one chain under
+the softer wall and the new charges. For plain PVDF the same shift exists and the gap row with
+the torsion triple absorbs it; for a chain with a reversed unit nothing in the fit holds it. The
+conformer rows are too coarse to (1.3 kcal/mol rms on a whole oligomer is 0.3 per monomer).
+
+**So neither set passes both halves.** Belt4 has the levels at one registry and cannot move
+chains along each other; the first run of stage 13 has the energy between chains (rigid cells,
+registry, cohesion, the candidate's shear) and not the levels inside a chain with a reversed
+unit. What the inside of a chain needs is its own anchors on the same footing the rigid cells
+gave the outside: single chains alone, each conformer relaxed in DFT (a single point on
+polyfind's geometry is not enough, as above), for the plain chain and for the reversed-unit
+chain's two helix placements; then the torsion types fitted to those and the wall and charges
+left to the cells.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the

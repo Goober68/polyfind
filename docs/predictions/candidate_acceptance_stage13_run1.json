@@ -1,0 +1,102 @@
+{
+ "fit": "docs/predictions/crystal_stage_v13_run1.json",
+ "torsions": "",
+ "row": "vdf5-rvdf1-6",
+ "cells": {
+  "TTTT": {
+   "upright": -1.3728690733050348,
+   "sheared": -1.7158571397834654,
+   "gain": -0.34298806647843055,
+   "shear_monomers": [
+    0.34193844568036225,
+    -0.47168019978222736
+   ],
+   "cell_upright": [
+    5.125723761710711,
+    8.513747784364716,
+    87.60425241378398,
+    15.491397277531473
+   ],
+   "cell_sheared": [
+    5.064432648138428,
+    8.56093735659384,
+    88.92107183812641,
+    15.509472981974751
+   ],
+   "tilt_upright": -0.07595520246561212,
+   "tilt_sheared": -0.04204875921620518
+  },
+  "TG'TG": {
+   "upright": -1.0264686712078255,
+   "sheared": -1.0311788758642384,
+   "gain": -0.004710204656413068,
+   "shear_monomers": [
+    1.9509896387620777e-07,
+    -0.06892287877267174
+   ],
+   "cell_upright": [
+    5.048123972414079,
+    9.626745988619511,
+    89.99999784386321,
+    13.946588812802894
+   ],
+   "cell_sheared": [
+    5.049663803091829,
+    9.616274717101838,
+    89.99999502537031,
+    13.9569542631964
+   ],
+   "tilt_upright": -0.286886089250648,
+   "tilt_sheared": -0.28247236274303117
+  },
+  "GTG'T": {
+   "upright": -1.321977016389249,
+   "sheared": -1.3235966072502312,
+   "gain": -0.0016195908609821785,
+   "shear_monomers": [
+    0.03418447063663805,
+    3.2748022943454813e-07
+   ],
+   "cell_upright": [
+    5.085525028017241,
+    9.87566235608378,
+    89.99999227487528,
+    13.94884751237636
+   ],
+   "cell_sheared": [
+    5.094195226906992,
+    9.850625423452216,
+    90.00000270557074,
+    13.953738711486618
+   ],
+   "tilt_upright": -0.1496116141991687,
+   "tilt_sheared": -0.14854960352175794
+  }
+ },
+ "margin_upright_rigid": -0.0508920569157858,
+ "margin_sheared_rigid": -0.39226053253323423,
+ "margin_upright": 0.022764354817770865,
+ "margin_sheared": -0.2857596882276814,
+ "all_trans_shear_gain": -0.3090816232290236,
+ "dft": {
+  "margin_upright": 0.07,
+  "margin_relaxed": -0.261,
+  "all_trans_shear_gain": -0.346,
+  "all_trans_shear_monomers": [
+   0.3,
+   -0.9
+  ]
+ },
+ "what": "examples/candidate_acceptance.py: the row's polished cells relaxed under the fit with the cell upright and with the shear free, kcal/mol per monomer; the fit's one torsion triple on every backbone bond",
+ "against_the_helix_dft_relaxed": {
+  "helix": "TG'TG",
+  "margin_upright": -0.13546951531217344,
+  "margin_sheared": -0.4442546603924009,
+  "other_helix_minus_it": -0.1582338701299444,
+  "dft": {
+   "margin_upright": 0.07,
+   "margin_sheared": -0.261,
+   "other_helix_minus_it": 0.197
+  }
+ }
+}

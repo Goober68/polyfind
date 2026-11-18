@@ -165,24 +165,47 @@ right": true at one registry, not along it).
         Holding the one-fold CF2-CH2 term at -1.6 / -2.0 / -2.4 and refitting the rest: conformers 1.303 / 1.312 /
         1.328 (held-out improves), gap -0.33 / -0.43 / -0.55, alpha b 9.53 / 9.59 / 9.66 (DFT 9.636). THE
         CONFORMERS LEAVE THAT DIRECTION OPEN AND THE CRYSTAL SETS IT. Text: `docs/CRYSTAL_STAGE.md` 5.27.
-    (m) STAGE 13 IS ONE FIT AND IT WAS RUNNING WHEN THIS WAS WRITTEN: 21 variables (`crystalfit.VARIABLES13` =
-        stage 12's 14 + `q_M`, `pull_F` + `V1 V2 V3` (the lattice's torsion triple, no ridge) + `x_FF`, `D_FF`),
-        rows = stage 12's 24 + `examples/stage13_rows.py` (`Rows()(params)`: 117 rigid cells in the kernels, 3
-        potentials, 2 conformer rows; needs `POLYFIND_TRAINSET` for the conformers). Command:
-        `POLYFIND_TRAINSET=/home/user/sarco/materials/gpu_bundle/trainset_v1_566.xyz python -W ignore
-        examples/crystal_stage.py --stage 13 --geometry pbe --method trf --pendant-tilts --rows --x0
-        /opt/dft/stage13_start.json --maxfev 9 --out /opt/dft/crystal_stage_v13.json > /opt/dft/stage13.log`
-        (16 s an evaluation, 22 a Jacobian; the --out file is the checkpoint: resume with `--x0` on it). Start
-        objective 520 (the candidate's own cells 0.42 rms, the reversed chain 0.29 in the kernels under the
-        stage-12 wall). `python examples/stage13_rows.py <fit json>` prints the outside rows of a result.
-    (n) STILL TO DO, IN ORDER: run stage 13 to convergence and read it (lattice, gap, stiffness, registry, the
-        reversed chain, the candidate's line, the potentials, the conformers); refit the three other torsion
-        types under its result and give the lattice typed torsions (it uses the CF2-CH2 triple for every
-        backbone bond: `reference_ff_parameters`); SimpleFF (the oligomer/RIS side) does not know the two charge
-        terms; register the preset; the acceptance on `vdf5-rvdf1-6` (upright margin +0.070, all-trans shear
-        gain -0.35 at (0.30, -0.90), helix none); E5 under the new preset; then the 35 rows again, the slide and
-        kink barriers, the frequency maps. Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall), 5.26
-        (the charges, the rigid cells, the candidate's line), 5.27 (the conformers, the torsion, stage 13).
+    (m) STAGE 13 IS ONE FIT: 21 variables (`crystalfit.VARIABLES13` = stage 12's 14 + `q_M`, `pull_F` + `V1 V2 V3`
+        (the lattice's torsion triple, no ridge) + `x_FF`, `D_FF`), rows = stage 12's 24 + `examples/stage13_rows.py`
+        (`Rows()(params)`: 117 rigid cells in the kernels, 3 potentials, 2 conformer rows; needs `POLYFIND_TRAINSET`).
+        Command: `POLYFIND_TRAINSET=/home/user/sarco/materials/gpu_bundle/trainset_v1_566.xyz python -W ignore
+        examples/crystal_stage.py --stage 13 --geometry pbe --method trf --pendant-tilts --rows --x0 <result or
+        start json> --maxfev 10 --out /opt/dft/crystal_stage_v13.json` (16 s an evaluation, 22 a Jacobian; the
+        --out file is the checkpoint; `python examples/stage13_rows.py <fit json>` prints the outside rows).
+        FIRST RUN DONE (`docs/predictions/crystal_stage_v13_run1.json`, objective 520 -> 81, NOT converged, NOT a
+        preset): lattice within 0.7%, gap -0.772, C 21.6 22.0 7.2, rigid cells 0.05-0.06 plain, 0.12 reversed
+        chain, candidate's line -0.30 -0.35 -0.24, potentials 0.13-0.22, conformers 1.32; plain registry rows now
+        0.65-0.78 of DFT (traded). A SECOND RUN WAS GOING when this was written (`/opt/dft/stage13_run2.log`,
+        73 after two more iterations). Not tried in the kernels: the trial's other basin (hydrogen smaller, pairs on
+        their own terms).
+    (n) A CHECK NO FIT SAW (`examples/cohesion.py`, `docs/predictions/cohesion_rigid_cells.json`): cell minus its own
+        chains alone, DFT beta -7.82 / alpha -5.07 / hh -3.11 kcal/mol per monomer; belt4 -5.75 / -3.12 / -1.62; the
+        wall -6.85 / -4.14 / -2.46; stage 13 run 1 -6.83 / -4.19 / -2.20; alpha minus beta right to 0.1 in all.
+        METHOD NOTE: a DFT single point on polyfind's rigid geometry carries strain that differs between CONFORMERS
+        by 0.3-0.5 kcal/mol per monomer (rigid-geometry alpha minus beta is -0.16 in DFT, -0.726 relaxed): compare
+        only within a packing, or a cell with its own chains.
+    (o) THE ACCEPTANCE ON `vdf5-rvdf1-6` HAS TWO OUTCOMES (`examples/candidate_acceptance.py --fit <json>
+        [--torsions docs/predictions/valence_torsions_stage13.json]`, 7 minutes; stored
+        `docs/predictions/candidate_acceptance_stage13_run1[_typed].json`): PASSES what the refit was for (all-trans
+        shear gain -0.309, DFT -0.346, belt4 -0.03; helix none) and LOSES what belt4 had: all-trans minus DFT's
+        helix (TG'TG) -0.135 upright / -0.444 relaxed (DFT +0.070 / -0.261; belt4 +0.064 upright), and GTG'T minus
+        TG'TG -0.158 (DFT +0.197, belt4 +0.12); typed torsions from the conformer refit make that -0.46. The shear's
+        part of the margin is right (-0.31 against DFT's -0.33); the LEVEL inside a chain with a reversed unit is
+        off by 0.2-0.36. Split at the stored cells: the within-chain non-bonded energy of GTG'T against TG'TG moved
+        by -0.19 between belt4 and run 1 (between chains +0.05). Nothing in the fit holds it; the conformer rows are
+        too coarse (1.3 rms on an oligomer = 0.3 per monomer).
+    (p) STILL TO DO, IN ORDER: (1) let stage 13's second run finish and store it; (2) ANCHORS FOR THE INSIDE OF A
+        CHAIN on the footing the rigid cells gave the outside: single chains alone, each conformer RELAXED in DFT
+        (plain TT and TGTG'; the reversed-unit chain's TT, TG'TG, GTG'T; the protocol that worked is relax in our
+        own potential, then one DFT single point), as rows; then the torsion TYPES fitted to them
+        (`FFParameters.torsion_types`, built and tested, no preset uses it) with the wall and charges left to the
+        cells; (3) rerun the acceptance: both halves have to pass; (4) only then a preset, E5 under it, the 35
+        rows, the slide and kink barriers, the frequency maps. UNTIL THEN, a stopgap that uses what each set has
+        right: a row's level from belt4's upright cells and its shear gain from stage 13 (for the candidate: +0.064
+        - 0.31 = -0.24, DFT -0.261); not adopted, not run on the rows. SimpleFF (oligomer/RIS side) does not know
+        the two charge terms. Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall), 5.26 (the charges,
+        the rigid cells, the candidate's line), 5.27 (the conformers, the torsion, stage 13), 5.28 (first run,
+        cohesion, the acceptance's two outcomes).
 
 **A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
 DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then

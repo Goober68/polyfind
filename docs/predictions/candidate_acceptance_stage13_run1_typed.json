@@ -1,0 +1,148 @@
+{
+ "fit": "docs/predictions/crystal_stage_v13_run1.json",
+ "torsions": "docs/predictions/valence_torsions_stage13.json",
+ "row": "vdf5-rvdf1-6",
+ "cells": {
+  "TTTT": {
+   "upright": -1.3734638353440776,
+   "sheared": -1.715423655381981,
+   "gain": -0.3419598200379035,
+   "shear_monomers": [
+    0.3381185933740223,
+    -0.4738043317217582
+   ],
+   "cell_upright": [
+    5.127374325090678,
+    8.513095701286206,
+    87.61725260182939,
+    15.490031058674694
+   ],
+   "cell_sheared": [
+    5.063836235657632,
+    8.560794530278928,
+    88.91143331808111,
+    15.50988166547708
+   ],
+   "tilt_upright": -0.07588258964262688,
+   "tilt_sheared": -0.042008439357488214
+  },
+  "TGTG'": {
+   "upright": -1.0257433023603986,
+   "sheared": -1.030200982020295,
+   "gain": -0.004457679659896445,
+   "shear_monomers": [
+    5.887496623458204e-08,
+    0.06604769433134666
+   ],
+   "cell_upright": [
+    5.046670537860873,
+    9.628385576103422,
+    89.9999983733327,
+    13.946660895137173
+   ],
+   "cell_sheared": [
+    5.04699914153429,
+    9.619042305523111,
+    90.00000127766354,
+    13.9551985302752
+   ],
+   "tilt_upright": -0.2878706191441154,
+   "tilt_sheared": -0.2854148552280928
+  },
+  "TG'TG": {
+   "upright": -1.0257433023395597,
+   "sheared": -1.0302009819930051,
+   "gain": -0.004457679653445308,
+   "shear_monomers": [
+    7.055787845808113e-08,
+    -0.06604869166054596
+   ],
+   "cell_upright": [
+    5.0466701892140895,
+    9.628385767210428,
+    89.99999818145909,
+    13.946660862100138
+   ],
+   "cell_sheared": [
+    5.0469994577735,
+    9.619041579263378,
+    89.99999858882202,
+    13.955199262617576
+   ],
+   "tilt_upright": -0.28787077813097045,
+   "tilt_sheared": -0.2854143953179194
+  },
+  "GTG'T": {
+   "upright": -1.663780766414748,
+   "sheared": -1.6673830614702145,
+   "gain": -0.003602295055466461,
+   "shear_monomers": [
+    -0.05553061750740093,
+    -7.621679560495596e-08
+   ],
+   "cell_upright": [
+    5.119319336866904,
+    9.899662849490326,
+    89.99999335725124,
+    13.775876760992311
+   ],
+   "cell_sheared": [
+    5.100019389859214,
+    9.946467701173239,
+    89.99999529898764,
+    13.771901272436546
+   ],
+   "tilt_upright": -0.1131558659542975,
+   "tilt_sheared": -0.11424005781856295
+  },
+  "G'TGT": {
+   "upright": -1.6637807664543296,
+   "sheared": -1.6673830614699245,
+   "gain": -0.0036022950155949474,
+   "shear_monomers": [
+    -0.05553061568252216,
+    -3.885499859783224e-08
+   ],
+   "cell_upright": [
+    5.1193190934282224,
+    9.899662548753193,
+    90.00000704727158,
+    13.775877391734266
+   ],
+   "cell_sheared": [
+    5.100019389350032,
+    9.94646770393662,
+    89.99999612271145,
+    13.771901274650615
+   ],
+   "tilt_upright": -0.11315574447169752,
+   "tilt_sheared": -0.11424005850786519
+  }
+ },
+ "margin_upright_rigid": 0.29031693111025203,
+ "margin_sheared_rigid": -0.048040593911766516,
+ "margin_upright": 0.3275902073823409,
+ "margin_sheared": 0.024191025238320465,
+ "all_trans_shear_gain": -0.3080856697527648,
+ "dft": {
+  "margin_upright": 0.07,
+  "margin_relaxed": -0.261,
+  "all_trans_shear_gain": -0.346,
+  "all_trans_shear_monomers": [
+   0.3,
+   -0.9
+  ]
+ },
+ "what": "examples/candidate_acceptance.py: the row's polished cells relaxed under the fit with the cell upright and with the shear free, kcal/mol per monomer; each backbone bond type with its own torsion triple (the three other types from the conformer refit)",
+ "against_the_helix_dft_relaxed": {
+  "helix": "TG'TG",
+  "margin_upright": -0.13573234451617444,
+  "margin_sheared": -0.4418167174285448,
+  "other_helix_minus_it": -0.46332255189851534,
+  "dft": {
+   "margin_upright": 0.07,
+   "margin_sheared": -0.261,
+   "other_helix_minus_it": 0.197
+  }
+ }
+}
