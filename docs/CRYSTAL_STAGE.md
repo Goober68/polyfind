@@ -2015,6 +2015,139 @@ polyfind's geometry is not enough, as above), for the plain chain and for the re
 chain's two helix placements; then the torsion types fitted to those and the wall and charges
 left to the cells.
 
+### 5.29 The inside of a chain: DFT's cells split in two, a lone chain pulled along its axis, and what the torsion term had been paying for
+
+5.28 ended on a wish: anchors for the inside of a chain on the footing the rigid cells gave the
+outside. This section makes them, and they change the reading of everything since stage 7.
+
+**One more single point splits a cell** (`examples/chain_split.py`,
+`docs/predictions/chain_split_pbe_d3bj.json`). A chain of a DFT-relaxed cell is taken out with
+its atoms where the cell has them and put alone in a 16 A box; the cell minus its chains is the
+energy between chains, the chain alone is everything inside it, and both are at DFT's own
+geometry (so neither carries the strain of 5.28's caution). Polyfind's cells are split the same
+way: one-chain packers on the same 16 A square lattice, the pendant tilts of the cell carried
+into the lone chain. The two chains of every cell here are the same chain to 1e-4 A, so one
+stands for both. (A 36-atom chain in that box asks for 21 GB at one k-point pool a process and
+this machine has 15: `examples/mlip_frames.py --pools 1`, 19 to 38 minutes a chain.) kcal/mol
+per monomer:
+
+| plain PVDF, alpha minus beta | cell | inside a chain | between chains |
+|---|---:|---:|---:|
+| DFT | -0.726 | -3.575 | +2.850 |
+| belt4 | -0.746 | -3.621 | +2.875 |
+| stage 13, first run | -0.779 | -3.900 | +3.121 |
+| stage 13, second run | -0.740 | -3.898 | +3.158 |
+
+| the reversed-unit candidate (cells upright) | all-trans minus TG'TG: cell | inside | between | GTG'T minus TG'TG: cell | inside | between |
+|---|---:|---:|---:|---:|---:|---:|
+| DFT | +0.070 | +1.060 | -0.990 | +0.197 | +0.415 | -0.218 |
+| belt4 | +0.064 | +1.708 | -1.644 | +0.120 | +0.270 | -0.150 |
+| stage 13, first run | -0.135 | +1.262 | -1.398 | -0.158 | -0.194 | +0.036 |
+| stage 13, second run | -0.177 | +1.220 | -1.397 | -0.158 | -0.208 | +0.049 |
+
+Three things are in these tables. Belt4 has plain PVDF's split right to 0.05 in both parts.
+Belt4's margin for the candidate (+0.064 against +0.070) is two errors of 0.65 cancelling: the
+all-trans chain 0.65 too high inside, its cell 0.65 too strongly held. And stage 13 has the gap
+of plain PVDF on its anchor with both parts 0.3 off, in opposite directions. Absolute, DFT's
+cells hold their chains by 7.82 (beta), 4.97 (alpha), 5.38, 4.39 and 4.61 (the candidate's
+all-trans, TG'TG and GTG'T); stage 13's second run by 6.92, 3.76, 4.64, 3.24, 3.19: the
+all-trans cells 0.7 to 0.9 short, the helix cells 1.2 to 1.4. A longer pair cutoff is not the
+difference between them: from 8 to 16 A the second run gains 1.43 in beta and 1.29 in alpha
+(the 8 A force-shifted cutoff leaves that much out of every cell), and alpha minus beta moves
+by 0.14.
+
+A caution on the "inside" column. DFT's lone chain at the cell's geometry carries forces of
+0.5 to 1.0 eV/A, nearly all of them inside the CF2 group: the crystal lengthens C-F bonds and a
+chain alone wants them back. Relaxed alone it gains 0.19 (alpha's chain) and 0.32 (beta's), so
+an all-trans chain's "inside" is about 0.1 higher against a helix's than a chain of fixed bond
+lengths can show, and its "between" as much lower. The rows below give the all-trans row a
+tolerance for it.
+
+**Relaxing a lone chain in DFT for the price of one more single point**
+(`examples/mlip_train.py relax --dft-gradient`). Our own potential was fitted to cells; on a
+chain alone its energies are off by 70 to 100 meV per monomer and alpha's chain against beta's
+by 0.7 kcal/mol. Its curvature is still good. So the potential is tilted by a term linear in
+the fractional coordinates and the strain until it has DFT's forces and stress at a labelled
+frame, and the chain is relaxed in that: a Newton step with the potential's curvature and DFT's
+gradient. On the two plain chains the step's predicted energies were DFT's to 0.005 and 0.011
+kcal/mol and the forces left were 0.02 and 0.04 eV/A. On a 36-atom chain with soft turns the
+same step runs away (a linear term has no end along a soft direction: 0.7 eV per monomer
+"gained", every conformer lost), so a round may move no atom more than a set distance
+(`--max-move`) and is then labelled and tilted again.
+
+**A chain alone does not do in polyfind what it does in DFT.** The helix of alpha, alone:
+
+| | gauche angle in the cell | alone | repeat in the cell (A) | alone |
+|---|---:|---:|---:|---:|
+| DFT | 60 | 56 | 4.660 | 4.650 |
+| belt4 | 63 | 41 | 4.668 | 4.564 |
+| stage 13, first run | 53 | 21 | 4.619 | 4.519 |
+| stage 13, second run | 53 | 25 | 4.620 | 4.527 |
+
+DFT's helix is the same helix with or without neighbours. Polyfind's is held open by its
+neighbours and falls shut without them, under belt4 by 22 degrees and under stage 13 by 30:
+the torsion triple of stage 13, (-1.9, 1.4, 0.9), puts the bottom of the gauche well near cis.
+The same shows on the candidate's chains: under stage 13 its GTG'T helix alone is not a
+conformer at all (it runs to a helix with every gauche of one sign, 1.1 kcal/mol per monomer
+below where the cell has it), which is where 5.28's lost helix levels and wrong order of
+placements come from.
+
+**The line** (`examples/chain_stretch.py`, `docs/predictions/chain_stretch_pbe_d3bj.json`).
+The lone helix held at a repeat and relaxed, a point at a time from 6% shorter to the all-trans
+chain's length, and the all-trans chain about its own repeat; fifteen DFT points on 6 and 12
+atoms, each the tilted step from the last labelled point and one single point (prediction
+within 0.04 kcal/mol, forces left under 0.06 eV/A). Energy per monomer against the lone helix:
+
+| repeat of two monomers (A) | 4.35 | 4.45 | 4.55 | 4.65 | 4.75 | 4.85 | 4.95 | 5.05 | 5.12 | 5.18 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| DFT, helix | +2.49 | +1.05 | +0.25 | 0 | +0.25 | +0.93 | +1.99 | +3.38 | +4.52 | +5.60 |
+| its gauche angle | 37 | 43 | 50 | 56 | 61 | 65 | 70 | 76 | 81 | 88 |
+| belt4 | +1.60 | +0.37 | -0.06 | 0 | +0.61 | +1.79 | +3.40 | (lets go) | | |
+| stage 13, second run | +0.98 | -0.27 | -0.49 | 0 | +1.00 | +2.44 | +4.11 | (lets go) | | |
+
+| the all-trans chain, repeat of one monomer (A) | 2.525 | 2.560 | 2.591 | 2.625 | 2.660 |
+|---|---:|---:|---:|---:|---:|
+| DFT | +4.21 | +3.61 | +3.45 | +3.63 | +4.19 |
+| belt4 | +5.07 | +4.01 | +3.78 | +4.35 | +5.95 |
+| stage 13, second run | +5.75 | +4.33 | +3.89 | +4.37 | +6.03 |
+
+DFT's helix sits in a symmetric well (0.25 at 2% either way) and never lets go: at the
+all-trans chain's length it is still a helix with its gauche bonds at 88 degrees, 2.2 kcal/mol
+above the all-trans chain, the two branches crossing near 5.06 A. It stretches by opening its
+backbone angles (116.8 and 118.4 to 121.1 and 122.3 degrees) and its C-C bonds (1.524 and 1.531
+to 1.562 and 1.601 A), which a chain of fixed bond lengths cannot follow; the rows therefore
+stop at 4.95 A, where the bonds are 1 to 3% long. Polyfind's helix is two to three times too
+stiff when pulled, has no well when pushed, and has let go by 5.05 A. Its all-trans chain has
+its repeat within 0.01 A of DFT's and is 1.5 to 3 times too stiff.
+
+The tension along the chain is in the same file (from DFT's stress). Taken either side of
+each chain's own repeat and put over the area a chain has in its own crystal (0.238 and 0.203
+nm2), it is a chain stiffness of about 130 GPa for the helix and 290 GPa for the all-trans
+chain, the second beside the 303 GPa of DFT's beta crystal along c. This is the stiffness the
+blocked stress of a material that switches along its chains is made of, and belt4 and stage 13
+both have it 1.5 to 3 times too high.
+
+**Fitted to the line alone**, with everything else at the second run's values, the torsion
+triple and the backbone angle's stiffness go from (-1.89, 1.40, 0.92) and 264 kcal/mol/rad2 to
+(0.77, -0.44, 0.66) and 167, and the helix's six rows are then within 0.02 kcal/mol and the
+all-trans chain's five within 0.6. So the terms can do it. What they cannot then do is hold
+the gap: with a triple fitted to four points of the line and nothing else moved, E(alpha) -
+E(beta) is -0.19 where DFT has -0.726. **The torsion term of every preset since the gap became
+an anchor has been paying for an error between chains** (alpha's chains held 0.3 to 0.5 too
+weakly against beta's), and the gap row alone could not tell: it is one number for two parts.
+The conformer rows were meant to hold the torsion and are too coarse to (5.27).
+
+**The rows** (`examples/stage13_rows.py`). The line is now eleven rows of the joint fit (the
+helix from 4.35 to 4.95 A and the all-trans chain's five, each against DFT's lowest point at
+`hypot(0.05, 5%)`, counting as eight rows together). For a reversed unit's own two bonds there
+are lone chains of the polymer with every second unit reversed, held at the torsions DFT
+settles them at (`examples/chain_conformers.py`; with two monomers a repeat the CF2-CF2 and
+CH2-CH2 bonds turn together, with four they turn one at a time), and the candidate's own cells
+as four rows, cell and inside a chain, evaluated on cells frozen at an earlier parameter set's
+relaxed geometry (right to first order in how far the parameters have moved; refrozen and run
+again). `crystalfit` has a 27-variable form with those two bonds' torsion triples
+(`VARIABLES13_TYPED`).
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the

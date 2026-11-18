@@ -196,18 +196,42 @@ right": true at one registry, not along it).
         off by 0.2-0.36. Split at the stored cells: the within-chain non-bonded energy of GTG'T against TG'TG moved
         by -0.19 between belt4 and run 1 (between chains +0.05). Nothing in the fit holds it; the conformer rows are
         too coarse (1.3 rms on an oligomer = 0.3 per monomer).
-    (p) STILL TO DO, IN ORDER: (1) stage 13's second run: DONE and stored, see (m); (2) ANCHORS FOR THE INSIDE OF A
-        CHAIN on the footing the rigid cells gave the outside: single chains alone, each conformer RELAXED in DFT
-        (plain TT and TGTG'; the reversed-unit chain's TT, TG'TG, GTG'T; the protocol that worked is relax in our
-        own potential, then one DFT single point), as rows; then the torsion TYPES fitted to them
-        (`FFParameters.torsion_types`, built and tested, no preset uses it) with the wall and charges left to the
-        cells; (3) rerun the acceptance: both halves have to pass; (4) only then a preset, E5 under it, the 35
-        rows, the slide and kink barriers, the frequency maps. UNTIL THEN, a stopgap that uses what each set has
-        right: a row's level from belt4's upright cells and its shear gain from stage 13 (for the candidate: +0.064
-        - 0.31 = -0.24, DFT -0.261); not adopted, not run on the rows. SimpleFF (oligomer/RIS side) does not know
-        the two charge terms. Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall), 5.26 (the charges,
-        the rigid cells, the candidate's line), 5.27 (the conformers, the torsion, stage 13), 5.28 (first run,
-        cohesion, the acceptance's two outcomes).
+    (p) THE INSIDE OF A CHAIN HAS ITS ANCHORS NOW, AND THEY CHANGE THE READING (`docs/CRYSTAL_STAGE.md` 5.29).
+        * A CELL SPLIT IN TWO: `examples/chain_split.py frames|dft|polyfind` takes a chain out of a DFT-relaxed
+          cell alone into a 16 A box (one more single point; `mlip_frames.py label --pools 1` for a 36-atom chain,
+          else out of memory); `docs/predictions/chain_split_pbe_d3bj.json`. Plain alpha-beta: cell -0.726 =
+          inside -3.575 + between +2.850 (belt4 -3.62/+2.88; stage 13 -3.90/+3.16). Candidate, all-trans minus
+          TG'TG: +0.070 = +1.060 - 0.990 (belt4 +1.71 - 1.64: two errors cancelling); GTG'T minus TG'TG: +0.197 =
+          +0.415 - 0.218 (stage 13: -0.19 + 0.04).
+        * A LONE CHAIN RELAXED FOR ONE MORE DFT POINT: `examples/mlip_train.py relax --dft-gradient` (our potential
+          tilted to DFT's forces and stress at a labelled frame = a Newton step; right to 0.01 kcal/mol on 6- and
+          12-atom chains; on a 36-atom chain it RUNS AWAY along soft turns: use `--max-move 0.3` and label again).
+        * POLYFIND'S LONE HELIX FALLS SHUT: gauche angle alone DFT 56 (60 in the cell), belt4 41, stage 13 21-25.
+          Stage 13's torsion triple (-1.9, 1.4, 0.9) was paying for an error between chains; fitted to the lone
+          chain's line alone it is (0.77, -0.44, 0.66) with the angle stiffness 167 (not 264), and then the gap is
+          -0.19 unless the rest moves.
+        * THE LINE: `examples/chain_stretch.py scan|collect|polyfind`, `docs/predictions/chain_stretch_pbe_d3bj.json`
+          (lone helix held at 4.35 to 5.18 A, lone all-trans chain at 2.525 to 2.66 A; tension along the chain in
+          the file; chain stiffness about 130 GPa helix, 290 GPa all-trans). ELEVEN ROWS of the joint fit now
+          (`examples/stage13_rows.py` `Rows.lone`, helix up to 4.95 A).
+        * FOR THE REVERSED UNIT'S TWO BONDS: `examples/chain_conformers.py frames|settle|collect|polyfind` (lone
+          chains of the polymer with every second unit reversed: hh2_tt, hh2_special, hh2_plain on 12 atoms,
+          hh4_ff, hh4_hh on 24; DFT in `/opt/dft/chainconf`, `docs/predictions/chain_conformers_pbe_d3bj.json`
+          when collected), rows `Rows.reversed_unit`; the candidate's cells on FROZEN geometry, rows
+          `Rows.candidate` (`chain_split.py polyfind --freeze FILE`, `crystal_stage.py --frozen FILE`;
+          `docs/predictions/chain_split_frozen_belt4.json` is belt4's); six more variables with
+          `crystal_stage.py --typed` (`crystalfit.VARIABLES13_TYPED`, 27).
+        * THE JOINT FIT WITH THE LINE: `/opt/dft/crystal_stage_v13_line.json` (checkpoint), log
+          `/opt/dft/stage13_line.log`; command as (m) plus `--set V1=0.7745,V2=-0.4425,V3=0.6591,log10_k_angle=0.2014`
+          from the second run. After three iterations 165 -> 97: line rows within 0.7 sigma (helix), gap -0.64,
+          lone alpha-beta -3.47 (DFT -3.45), binding +2.81 (DFT +2.72), paid with alpha b 2.4% short.
+        STILL TO DO, IN ORDER: (1) let that fit run out and store it; (2) collect the reversed chains' DFT, then the
+        27-variable fit with `--typed --frozen` (freeze the candidate's cells at the line fit's result first), refreeze,
+        run again; (3) `examples/candidate_acceptance.py`: both halves have to pass; (4) only then a preset, E5 under
+        it, the 35 rows on all four axes, the slide and kink barriers, the frequency maps. SimpleFF (oligomer/RIS
+        side) does not know the two charge terms. Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall),
+        5.26 (the charges, the rigid cells, the candidate's line), 5.27 (the conformers, the torsion, stage 13),
+        5.28 (the two runs, cohesion, the acceptance's two outcomes), 5.29 (the inside of a chain).
 
 **A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
 DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then
