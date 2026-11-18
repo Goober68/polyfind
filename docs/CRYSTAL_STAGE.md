@@ -1795,25 +1795,42 @@ kcal/mol per monomer against the unsheared cell:
 | buffered wall, polyfind's charges | -0.21 | -0.14 | +0.15 |
 | buffered wall, the bond site | -0.24 | -0.21 | +0.03 |
 | buffered wall, the bond site and the backbone pull | -0.25 | -0.23 | -0.04 |
-| **DFT on the rigid cell** | running | running | **-0.338** |
+| **DFT on the rigid cell** | running | **-0.412** | **-0.338** |
 | DFT, everything relaxed (`docs/MLIP_SECOND_OPINION.md` 3.8) | | | -0.346 |
 
-With nothing inside a chain allowed to move DFT gains 0.338 of the 0.346: the candidate's
-all-trans cell is lowered by where its chains sit along each other and by nothing else, so it
-is a test of the energy between chains alone. The wall takes polyfind 1.4 of the 1.9 kcal/mol
-it was off; the two charge terms take 0.2 more, in the right direction; **0.3 is left.** In
-polyfind's unsheared cell the reversed units of neighbouring chains are level and their
-fluorines are 2.52 A apart, eight such contacts a cell; the shear takes them to 3.0 A and
-brings hydrogen and fluorine to 2.42 A where they were 2.68. What is left is in that trade,
-fluorine against fluorine closer than plain PVDF or the fully reversed chain ever put them.
-With this one cell added to the fit after the fact the same forms reach -0.11, and -0.19 with
-the F-F pair given its own diameter and depth (1.23 and 2.7 times the mixed ones); a separate
-buffer for hydrogen's contacts adds nothing. The two cells still in DFT are where the variants
-put the minimum, a quarter to half way along the line.
+With nothing inside a chain allowed to move DFT gains 0.338 of the 0.346 at the end of the line,
+and more half way along it (the rigid cell's own minimum is part way, which is the shape every
+wall variant gave it): the candidate's all-trans cell is lowered by where its chains sit along
+each other and by nothing else, so it is a test of the energy between chains alone. At the end
+of the line the wall takes polyfind 1.4 of the 1.9 kcal/mol it was off and the two charge terms
+0.2 more, in the right direction; **0.3 is left there and 0.18 half way.** In polyfind's
+unsheared cell the reversed units of neighbouring chains are level and their fluorines are
+2.52 A apart, eight such contacts a cell; the shear takes them to 3.0 A and brings hydrogen and
+fluorine to 2.42 A where they were 2.68. What is left is in that trade.
+
+After the fact, with the two labelled sheared cells in the fit beside the others (the charges
+still the potential's; half way, end; rms error on the reversed chain's cells and on the plain
+sheared cells):
+
+| wall fitted with the candidate's cells | half way | end | reversed chain | plain, sheared |
+|---|---:|---:|---:|---:|
+| DFT | -0.412 | -0.338 | | |
+| the six wall variables | -0.30 | -0.13 | 0.09 | 0.01 |
+| those and the F-F pair's own diameter and depth | -0.37 | -0.19 | 0.10 | 0.02 |
+| the same, the candidate's two cells counted four times | -0.44 | -0.29 | 0.13 | 0.05 |
+| the same without the two charge terms | -0.46 | -0.25 | 0.25 | 0.09 |
+
+One wall with an F-F term of its own (1.23 to 1.27 times the mixed diameter, 2.4 to 2.7 times
+the depth) holds the candidate's line to 0.04 to 0.1, the reversed chain to 0.10 to 0.13 and
+plain PVDF to 0.02 to 0.05. Belt4 is off by 1.1 to 1.9 on the first, 0.37 on the second and
+0.5 to 1.5 on the third. The last row is what the charge terms are for: without them the
+weighting that fits the candidate costs the reversed chain twice as much. A separate buffer for
+hydrogen's contacts adds nothing.
 
 **What stands after this section.** Between rigid chains of plain PVDF the buffered wall is
 right (0.01 to 0.04 kcal/mol per monomer rms on four groups of cells). The reversed chain needs
-the two charge terms and is then at 0.09. The candidate's cell is half repaired. No preset
+the two charge terms and is then at 0.09 to 0.13. The candidate's own line is within 0.04 to 0.1
+once its cells are in the fit with an F-F term, where belt4 was off by more than 1. No preset
 carries any of it: the final fit has to take the potential's rows, the reversed chain's cells
 and the candidate's with the lattice anchors, and the torsion terms have to be fitted again
 under the charges it ends with (with the potential's charges put in and nothing refitted the

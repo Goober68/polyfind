@@ -134,13 +134,18 @@ right": true at one registry, not along it).
         set's charges win).
     (j) THE CANDIDATE'S OWN CELL, RIGID: THE GAIN IS ALL BETWEEN CHAINS (`interchain_frames.py` packing `cand6`:
         `vdf5-rvdf1-6` all-trans polished cell, own chains rigid, sheared along DFT's line; 72 atoms, 21 minutes of
-        DFT a cell). DFT ON THE RIGID CELL AT (0.30, -0.90) MONOMERS: -0.338 kcal/mol per monomer (relaxed: -0.346).
+        DFT a cell). DFT ON THE RIGID CELL: -0.412 kcal/mol per monomer HALF WAY (0.15, -0.45) AND -0.338 AT THE END
+        (0.30, -0.90) (relaxed, at the end: -0.346).
         REGISTERED BEFORE IT (`docs/predictions/interchain_cand6_predictions.json`; at (0.075,-0.225) /
         (0.15,-0.45) / (0.30,-0.90)): belt4 +0.10 / +0.70 / +1.58; buffered wall, present charges -0.21 / -0.14 /
         +0.15; with the bond site -0.24 / -0.21 / +0.03; with site and pull -0.25 / -0.23 / -0.04. SO: the wall takes
         1.4 of the 1.9, the charges 0.2, 0.3 IS LEFT, in F..F at 2.52 A (8 a cell, level reversed units) traded for
-        H..F at 2.42. With that cell in the fit: -0.11; with an F-F pair term of its own -0.19. The other two cells
-        (`inter_cand6_01`, `_03`) and the 18 candidate-packing plain cells were STILL IN DFT when this was written
+        H..F at 2.42. AFTER THE FACT, both cells in the fit, charges the potential's (half way, end; hh rms; plain
+        sheared rms): six wall variables -0.30, -0.13; 0.09; 0.01. With the F-F pair's own diameter and depth
+        (`--free ...,x_FF,D_FF`) -0.37, -0.19; 0.10; 0.02. The same with `--weight cand6=4`: -0.44, -0.29; 0.13;
+        0.05. The same WITHOUT the charge terms: -0.46, -0.25; hh 0.25; 0.09 (the charge terms are what let one
+        wall hold the candidate and the reversed chain together). The quarter-way cell
+        (`inter_cand6_03`) and the 18 candidate-packing plain cells were STILL IN DFT when this was written
         (`/opt/dft/interchain_label_cand6.log`); after them: `interchain_frames.py collect --frames
         /opt/dft/interchain`, fill the two "running" cells of the table in `docs/CRYSTAL_STAGE.md` 5.26, and extend
         `tests/test_interchain.py`. Rebuild the trial's table after new labels: `interchain_wall.py pairs --frames

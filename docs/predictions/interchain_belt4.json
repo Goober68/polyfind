@@ -1953,6 +1953,21 @@
      "dft": 0.0
     },
     {
+     "frame": "inter_cand6_01",
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "shear_monomers": [
+      0.15,
+      -0.45
+     ],
+     "polyfind": 0.6952604004804405,
+     "polyfind_electrostatics": -0.14578353006428793,
+     "polyfind_repulsion_dispersion": 0.8410439305447331,
+     "dft": -0.4119601981804297
+    },
+    {
      "frame": "inter_cand6_02",
      "scale": [
       1.0,

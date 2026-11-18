@@ -104,6 +104,8 @@ def test_the_candidates_own_cell_gains_as_much_rigid_as_relaxed():
     end = _row(t, (1.0, 1.0), (0.30, -0.90))
     assert end["dft"] == pytest.approx(-0.338, abs=0.002)
     assert end["polyfind"] == pytest.approx(1.576, abs=0.002)
+    half = _row(t, (1.0, 1.0), (0.15, -0.45))   # the rigid cell's own minimum is part way along the line
+    assert half["dft"] == pytest.approx(-0.412, abs=0.002) and half["polyfind"] == pytest.approx(0.695, abs=0.002)
     relaxed = json.loads((PRED / "shear_registry_belt4.json").read_text())["candidate"]["dft"]["sheared_below_upright"]
     assert relaxed == pytest.approx(-0.346, abs=0.002) and abs(end["dft"] - relaxed) < 0.02
 
@@ -118,6 +120,12 @@ def test_the_predictions_registered_before_the_candidates_dft():
     assert at_end == pytest.approx([1.576, 0.153, 0.029, -0.039], abs=0.002)
     miss = [v - dft for v in at_end]
     assert all(a > b > 0 for a, b in zip(miss, miss[1:])) and 0.28 < miss[-1] < 0.32
+    # half way the same order holds, the best 0.18 short; and every wall variant has the cell lower half way than at the end, as DFT does
+    half_dft = _row(_table()["cand6"], (1.0, 1.0), (0.15, -0.45))["dft"]
+    at_half = [p["predictions"][n]["cells"]["inter_cand6_01"]["predicted"] for n in names]
+    miss_half = [v - half_dft for v in at_half]
+    assert all(a > b > 0 for a, b in zip(miss_half, miss_half[1:])) and 0.16 < miss_half[-1] < 0.20
+    assert half_dft < dft and all(h < e for h, e in zip(at_half[1:], at_end[1:])) and at_half[0] < at_end[0]
     assert p["predictions"][names[0]]["cells"]["inter_cand6_02"]["predicted"] == pytest.approx(_row(_table()["cand6"], (1.0, 1.0), (0.30, -0.90))["polyfind"], abs=1e-6)
     # the charges of the last variant are the potential's, not fitted to any energy
     v = p["predictions"][names[-1]]["variables"]
