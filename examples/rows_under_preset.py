@@ -13,9 +13,12 @@ blocked stress are not here.
 
     python examples/rows_under_preset.py --preset pvdf-dft-chain1 --out docs/predictions/margins_chain1.json [--rows ROW,...] [--minutes 100]
 
-The output file is also the checkpoint: a run goes on from the cells it holds.
+The output file is also the checkpoint: a run goes on from the cells it holds.  It is read,
+changed and written under a lock, so one run can be split over the cores: ``--part 1/3``,
+``--part 2/3`` and ``--part 3/3`` side by side on the same ``--out`` take every third row each.
 """
 import argparse
+import fcntl
 import importlib.util
 import json
 import time
@@ -154,10 +157,35 @@ def margins(cells: dict) -> dict:
             "strain_along_chain": tt["c_per_monomer_sheared"] / cells[sh]["c_per_monomer_sheared"] - 1.0}
 
 
+def stored(out_path: Path, change) -> dict:
+    """The checkpoint read, changed by ``change(disk)`` and written, all under a lock on a file
+    beside it, so the parts of a split run cannot lose each other's cells."""
+    with open(str(out_path) + ".lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            disk = json.loads(out_path.read_text()) if out_path.exists() else {}
+            change(disk)
+            out_path.write_text(json.dumps(disk, indent=1))
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+    return disk
+
+
+def part_of(rows: list, part: str) -> list:
+    """``K/N``: every N-th row starting at the K-th (K from 1)."""
+    if not part:
+        return rows
+    k, n = (int(v) for v in part.split("/"))
+    if not 1 <= k <= n:
+        raise ValueError(f"--part {part}: K/N with 1 <= K <= N")
+    return rows[k - 1::n]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--preset", required=True)
     ap.add_argument("--rows", default="", help="comma list; default every row of the polished table")
+    ap.add_argument("--part", default="", help="K/N: every N-th of the rows starting at the K-th, for N runs side by side on one --out")
     ap.add_argument("--minutes", type=float, default=0.0, help="start no new cell after this long")
     ap.add_argument("--no-tilts", action="store_true")
     ap.add_argument("--redo-failed", action="store_true", help="run again the stored cells one of whose starts failed")
@@ -166,19 +194,23 @@ def main():
     out_path = Path(args.out)
     pol, ref = json.load(open(SP.POLISHED)), json.load(open(SP.REFERENCES))
     sheared = json.loads(SHEARED.read_text())["rows"] if SHEARED.exists() else {}
-    rows = [r for r in args.rows.split(",") if r] or list(pol["rows"])
-    disk = json.loads(out_path.read_text()) if out_path.exists() else {}
-    disk.update(preset=args.preset, energy="kcal/mol per monomer; margin = all-trans minus the lowest helix placement, shear free, pendants tilted",
-                what="each polished cell (polished_margins_belt4.json) relaxed again under the preset: upright, then free to shear along its chains from "
-                     f"a kick, from where belt4's own sheared re-polish took the cell (if it moved it) and, for an all-trans cell, from {LINE} monomers; "
-                     "pendant tilts of both (examples/rows_under_preset.py)")
-    disk.setdefault("rows", {})
-    if args.redo_failed:
-        for entry in disk["rows"].values():
-            for conf in [c for c, r in entry["cells"].items() if r.get("failed_starts")]:
-                del entry["cells"][conf]
-                for k in ("margin", "margin_upright", "helix_upright", "helix_sheared", "all_trans_shear_gain", "helix_shear_gain", "strain_along_chain"):
-                    entry.pop(k, None)
+    rows = part_of([r for r in args.rows.split(",") if r] or list(pol["rows"]), args.part)
+
+    def begin(disk):
+        disk.update(preset=args.preset, energy="kcal/mol per monomer; margin = all-trans minus the lowest helix placement, shear free, pendants tilted",
+                    what="each polished cell (polished_margins_belt4.json) relaxed again under the preset: upright, then free to shear along its chains from "
+                         f"a kick, from where belt4's own sheared re-polish took the cell (if it moved it) and, for an all-trans cell, from {LINE} monomers; "
+                         "pendant tilts of both (examples/rows_under_preset.py)")
+        disk.setdefault("rows", {})
+        if args.redo_failed:
+            for row in rows:
+                entry = disk["rows"].get(row, {"cells": {}})
+                for conf in [c for c, r in entry["cells"].items() if r.get("failed_starts")]:
+                    del entry["cells"][conf]
+                    for k in ("margin", "margin_upright", "helix_upright", "helix_sheared", "all_trans_shear_gain", "helix_shear_gain", "strain_along_chain"):
+                        entry.pop(k, None)
+
+    disk = stored(out_path, begin)
     began = time.time()
     prm = PRESET_PARAMETERS[args.preset]
     SP.C.SITES_FOR = prm
@@ -186,12 +218,11 @@ def main():
         for row in rows:
             letters, _ = SP.DK.sequence(row)
             polymer = SP.C.make_polymer(row, letters)
-            entry = disk["rows"].setdefault(row, {"letters": letters, "cells": {}})
+            entry = disk["rows"].get(row, {"letters": letters, "cells": {}})
             for conf in pol["rows"][row]["cells"]:
                 if conf in entry["cells"]:
                     continue
                 if args.minutes and time.time() - began > 60 * args.minutes:
-                    out_path.write_text(json.dumps(disk, indent=1))
                     print(f"the {args.minutes:g} minutes are used; stopped before {row} {conf}", flush=True)
                     return
                 t0 = time.time()
@@ -200,14 +231,17 @@ def main():
                 moved = earlier is not None and float(np.abs(earlier["shear_monomers"]).max()) > 0.05 and len(earlier["state"]) == model.n_var
                 rec = cell_under(model, x0, ch, line=LINE if conf == "TTTT" else None, sheared_state=earlier["state"] if moved else None, tilts=not args.no_tilts)
                 rec["seconds"] = time.time() - t0
-                entry["cells"][conf] = rec
-                out_path.write_text(json.dumps(disk, indent=1))
+
+                def put(d, row=row, conf=conf, rec=rec, letters=letters):
+                    d["rows"].setdefault(row, {"letters": letters, "cells": {}})["cells"][conf] = rec
+
+                entry = stored(out_path, put)["rows"][row]
                 print(f"{row:28s} {conf:6s}: upright {rec['upright'] + rec.get('tilt_upright', 0.0):.4f}, shear free {rec['sheared'] + rec.get('tilt_sheared', 0.0):.4f} "
                       f"at {np.round(rec['shear_monomers'], 3).tolist()} monomers; {rec['seconds']:.0f} s"
                       + (f"; FAILED STARTS {rec['failed_starts']}" if rec["failed_starts"] else ""), flush=True)
             if "TTTT" in entry["cells"] and all(c in entry["cells"] for c in pol["rows"][row]["cells"]) and len(entry["cells"]) > 1:
-                entry.update(margins(entry["cells"]))
-                out_path.write_text(json.dumps(disk, indent=1))
+                found = margins(entry["cells"])
+                entry = stored(out_path, lambda d, row=row, found=found: d["rows"][row].update(found))["rows"][row]
                 print(f"  -> {row}: margin {entry['margin']:+.4f} (upright {entry['margin_upright']:+.4f}); helix {entry['helix_sheared']}; "
                       f"strain along the chains {100 * entry['strain_along_chain']:+.1f}%", flush=True)
     print(f"written {out_path}")

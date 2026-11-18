@@ -262,11 +262,14 @@ right": true at one registry, not along it).
         `https://dwyejg77awqh50-8000.proxy.runpod.net/<token>/` (STATUS, jobs/NN_mlip_fit/*.model); the token is in
         the scratchpad only. WHEN DONE: fetch the model to `/opt/dft/gpu14/`, push `stop`, and CONFIRM BY A READ
         (`list-pods`) that the pod is gone; if it is not, `delete-pod`.
-        THE 35 ROWS UNDER chain1, MARGINS: RUNNING IN PIECES (`examples/rows_under_preset.py --preset pvdf-dft-chain1
-        --minutes 105 --out /opt/dft/margins_chain1.json`; the --out file is the checkpoint, run the same command
-        again after every stop or restart; 2 to 3 minutes a 14-monomer cell, 168 cells; logs
-        `/opt/dft/margins_chain1*.log`). Done when this was written: `vdf5-rvdf1-6` -0.199 (upright +0.042, strain
-        +9.0%: the acceptance's numbers again) and `vdf9-trfe4-cfe1-14` +0.259 (upright +0.153; belt4 +0.317).
+        THE 35 ROWS UNDER chain1, MARGINS: RUNNING IN PIECES, THREE SIDE BY SIDE (`for k in 1 2 3; do python
+        examples/rows_under_preset.py --preset pvdf-dft-chain1 --redo-failed --minutes 105 --part $k/3 --out
+        /opt/dft/margins_chain1.json > LOG_$k & done; wait`, one thread each; the --out file is the checkpoint,
+        written under a lock so the parts share it; run the same command again after every stop or restart; about
+        7 minutes a cell on average, the slow ones the cells that need the trust box; 168 cells; logs
+        `/opt/dft/margins_chain1*.log`). 12 of 35 rows had a margin on 2026-11-18 23:50 UTC: `vdf5-rvdf1-6` -0.199
+        (upright +0.042, strain +9.0%: the acceptance's numbers again), `vdf9-trfe4-cfe1-14` +0.259 (upright +0.153;
+        belt4 +0.317), `vdf7-trfe2-cfe1` +0.400, `vdf7-trfe2-cdfe1` -0.095, `vdf6-trfe4` +0.083.
         Copy the file to `docs/predictions/margins_chain1.json` when all 35 rows have a margin. The kink tools
         (`dilute_kink.py`, `kink_migration.py`, `kink_site_scan.py`, `polish_margins.py`) take `--preset`; none has
         been run under chain1 yet.
