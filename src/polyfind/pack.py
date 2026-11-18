@@ -89,8 +89,10 @@ def wall_b147(xp, r, D, IX, delta: float, gamma: float = WALL_GAMMA, grad: bool 
     with ``IX = 1/x``.  ``V(x) = -D`` exactly; the minimum is there when the two buffers are equal,
     and within half a percent of it and a thousandth of ``D`` deeper for ``delta`` up to 0.2 (1.7%
     out at 0.35).
-    Against ``D [(x/r)^12 - 2 (x/r)^6]`` it has the same well and a wall that is softer inside it,
-    the more so the larger ``delta``; it is finite at ``r = 0`` (so a start with two sites on top of
+    Against ``D [(x/r)^12 - 2 (x/r)^6]`` it has the same well, a wall that is softer inside it,
+    the more so the larger ``delta``, and an attraction outside it that is about a sixth weaker at
+    1.4 diameters and falls as ``r^-7``: an effective form for the distances inside a cutoff, not
+    the asymptotic dispersion law; it is finite at ``r = 0`` (so a start with two sites on top of
     each other is a large energy, not an infinite or a negative one, which is what an exp-6
     wall gives there).  Why it is here: against PBE-D3(BJ) on rigid chains moved along and
     towards each other the 12-6 wall is 2.4 to 5 times too costly the closer the contact, and no

@@ -58,7 +58,9 @@ def test_the_term_has_the_wells_depth_at_the_diameter_and_a_softer_wall_inside_i
     inside = np.array([0.6, 0.7, 0.8]) * x  # well inside the minimum; at 0.9 x the wells themselves differ
     soft = [wall_b147(np, inside, D, 1.0 / x, d) for d in (0.07, 0.2, 0.35)]
     assert np.all(soft[0] < lj(inside)) and np.all(soft[1] < soft[0]) and np.all(soft[2] < soft[1])  # softer with the buffer
-    np.testing.assert_allclose(wall_b147(np, 1.4 * x, D, 1.0 / x, 0.07), lj(1.4 * x), rtol=0.12)  # the same tail to a tenth
+    # the attraction is the form's own: weaker than 12-6's outside the well, and falling as r^-7, not r^-6
+    far = wall_b147(np, np.array([3.0, 6.0]) * x, D, 1.0 / x, 0.07)
+    assert far[0] / far[1] == pytest.approx(2.0 ** 7, rel=0.1) and 0.7 < wall_b147(np, 1.4 * x, D, 1.0 / x, 0.07) / lj(1.4 * x) < 0.9
     assert wall_b147(np, r, 0.0, 1.0 / x, 0.2).tolist() == [0.0] * r.size
 
 
