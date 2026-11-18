@@ -86,8 +86,9 @@ def wall_b147(xp, r, D, IX, delta: float, gamma: float = WALL_GAMMA, grad: bool 
 
         V = D ((1 + delta) / (rho + delta))^7 ((1 + gamma) / (rho^7 + gamma) - 2),   rho = r / x
 
-    with ``IX = 1/x``.  ``V(x) = -D`` exactly; the minimum is there when the two buffers are equal
-    and within half a percent of it, and a thousandth of ``D`` deeper, for the values in use.
+    with ``IX = 1/x``.  ``V(x) = -D`` exactly; the minimum is there when the two buffers are equal,
+    and within half a percent of it and a thousandth of ``D`` deeper for ``delta`` up to 0.2 (1.7%
+    out at 0.35).
     Against ``D [(x/r)^12 - 2 (x/r)^6]`` it has the same well and a wall that is softer inside it,
     the more so the larger ``delta``; it is finite at ``r = 0`` (so a start with two sites on top of
     each other is a large energy, not an infinite or a negative one, which is what an exp-6
