@@ -256,9 +256,9 @@ right": true at one registry, not along it).
         A POD IS RUNNING: `dwyejg77awqh50` (`polyfind-mlip-fit-all`, NVIDIA A40, Secure, CA-MTL-1, $0.59/h, created
         2026-11-18 21:40:56 UTC; PI chose "Create, all 558" in the question dialog). It removes itself after 18000 s
         (02:41 UTC at the latest: at most $2.95), 2400 s idle, or 3600 s after `stop`. Queue
-        `examples/gpu_jobs/queue_20261118_mlip.txt` (a timing fit of 10 epochs on all 558 frames first; THEN ADD ONE
-        LINE for the long fit, `mlip_fit.sh all EPOCHS 1 frames <the ten files> train --stress-weight 1000
-        --energy-weight 10000`, EPOCHS so that it ends well inside the limit, and push; then `stop`). Results at
+        `examples/gpu_jobs/queue_20261118_mlip.txt`: the timing fit ran (38 s an epoch on 437 frames; its closing
+        error is a ten-epoch artefact) and THE LONG FIT IS RUNNING SINCE 21:53:18 UTC as job 2 (`all`, 240 epochs,
+        about 2.5 h: it ends near 00:30 UTC, tests 2 minutes more). NOT YET PUSHED: the line `stop`. Results at
         `https://dwyejg77awqh50-8000.proxy.runpod.net/<token>/` (STATUS, jobs/NN_mlip_fit/*.model); the token is in
         the scratchpad only. WHEN DONE: fetch the model to `/opt/dft/gpu14/`, push `stop`, and CONFIRM BY A READ
         (`list-pods`) that the pod is gone; if it is not, `delete-pod`.
