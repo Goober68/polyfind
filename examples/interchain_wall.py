@@ -47,6 +47,7 @@ PRESET = SR.PRESET
 PRED = Path("docs/predictions")
 EV_TO_KCAL = SR.EV_TO_KCAL
 ELEMENTS = ("C", "H", "F", "X")
+COULOMB = 332.0637133  # kcal A / (mol e^2)
 PAIRS = tuple((a, b) for i, a in enumerate(ELEMENTS) for b in ELEMENTS[i:])
 
 
@@ -114,6 +115,106 @@ def electrostatic_form(model, x, patterns) -> np.ndarray:
         for j in range(i + 1, m):
             K[i, j] = K[j, i] = 0.5 * (e(patterns[i] + patterns[j]) - K[i, i] - K[j, j])
     return K
+
+
+EXTRA = ("X_belt", "Q_F", "mu_F", "Q_H", "mu_H", "M_H")
+BOND_SITE = 0.65  # where the C-H bond's own charge site sits, as a fraction of the way from the carbon to the hydrogen
+
+
+def extra_sources(el, sites, h: float = 0.25) -> dict:
+    """Sources polyfind's lattice does not have, each ``(positions, charges)`` of unit strength:
+
+    ``X_belt``  on every fluorine +2 and on each of its two belt sites -1: a quadrupole across the
+                C-F bond in the F-C-F plane, on sites the chain already carries;
+    ``Q_F``, ``Q_H``  a quadrupole along the bond on every fluorine, every hydrogen (+1 at ``h`` A
+                either side, -2 on the nucleus: ``2 h^2`` e A^2);
+    ``mu_F``, ``mu_H``  a dipole along the bond on every fluorine, every hydrogen, pointing away
+                from the carbon (1 e A);
+    ``M_H``     a charge site on every C-H bond, :data:`BOND_SITE` of the way from the carbon to the
+                hydrogen, carrying -1 with +1 on the hydrogen: the one of these a code that sums
+                over point sites can carry as it is.
+
+    ``sites`` are whole chains, not wrapped into the cell: each atom's carbon is the nearest one."""
+    el = np.asarray([str(e) for e in el])
+    sites = np.asarray(sites, dtype=float)
+    C = np.nonzero(el == "C")[0]
+    X = np.nonzero(el == "X")[0]
+    out = {k: ([], []) for k in EXTRA}
+
+    def add(key, pos, q):
+        out[key][0].extend(pos)
+        out[key][1].extend(q)
+
+    for i in np.nonzero((el == "F") | (el == "H"))[0]:
+        c = C[np.argmin(np.linalg.norm(sites[C] - sites[i], axis=1))]
+        u = (sites[i] - sites[c]) / np.linalg.norm(sites[i] - sites[c])
+        e = str(el[i])
+        add(f"Q_{e}", [sites[i] + h * u, sites[i], sites[i] - h * u], [1.0, -2.0, 1.0])
+        add(f"mu_{e}", [sites[i] + h * u, sites[i] - h * u], [0.5 / h, -0.5 / h])
+        if e == "H":
+            add("M_H", [sites[c] + BOND_SITE * (sites[i] - sites[c]), sites[i]], [-1.0, 1.0])
+        if e == "F" and X.size >= 2:
+            near = X[np.argsort(np.linalg.norm(sites[X] - sites[i], axis=1))[:2]]
+            add("X_belt", [sites[i], sites[near[0]], sites[near[1]]], [2.0, -1.0, -1.0])
+    return {k: (np.array(v[0]).reshape(-1, 3), np.array(v[1])) for k, v in out.items()}
+
+
+def ewald_green(pos, lattice, alpha: float = 0.45, tol: float = 1e-10) -> np.ndarray:
+    """``G`` (1/A) with the electrostatic energy of unit point charges at ``pos`` repeated on
+    ``lattice`` (rows) equal to ``(1/2) q G q`` for a neutral set ``q``: every pair's interaction
+    over all images, a charge's with its own images on the diagonal, no term at the zero wave
+    vector.  A plain Ewald sum for a cell of a few hundred sources."""
+    pos = np.asarray(pos, dtype=float)
+    lat = np.asarray(lattice, dtype=float)
+    vol = abs(np.linalg.det(lat))
+    widths = vol / np.linalg.norm(np.cross(np.roll(lat, -1, axis=0), np.roll(lat, -2, axis=0)), axis=1)
+    cut = np.sqrt(-np.log(tol))
+    rc = cut / alpha
+    frac = pos @ np.linalg.inv(lat)
+    span = np.ceil(frac.max(axis=0) - frac.min(axis=0)).astype(int)  # whole chains are not wrapped: pairs can be cells apart
+    reach = np.ceil(rc / widths).astype(int) + span
+    from scipy.special import erfc
+
+    d0 = pos[:, None, :] - pos[None, :, :]
+    G = np.zeros((len(pos), len(pos)))
+    same = np.eye(len(pos), dtype=bool)
+    for i in range(-reach[0], reach[0] + 1):
+        for j in range(-reach[1], reach[1] + 1):
+            for k in range(-reach[2], reach[2] + 1):
+                d = d0 + np.array([i, j, k], dtype=float) @ lat
+                r = np.sqrt((d * d).sum(axis=-1))
+                ok = (r < rc) & ~(same & (i == 0) & (j == 0) & (k == 0)) & (r > 1e-12)
+                G += np.where(ok, erfc(alpha * r) / np.where(ok, r, 1.0), 0.0)
+    rec = 2.0 * np.pi * np.linalg.inv(lat).T
+    gmax = 2.0 * alpha * cut
+    m = np.ceil(gmax / (2.0 * np.pi) * np.linalg.norm(lat, axis=1)).astype(int)
+    idx = np.array([[i, j, k] for i in range(-m[0], m[0] + 1) for j in range(-m[1], m[1] + 1) for k in range(-m[2], m[2] + 1)
+                    if (i, j, k) != (0, 0, 0)], dtype=float)
+    g = idx @ rec
+    g2 = (g * g).sum(axis=1)
+    keep = g2 < gmax * gmax
+    g, g2 = g[keep], g2[keep]
+    ph = np.exp(1j * (pos @ g.T))
+    G += ((ph * (4.0 * np.pi / vol * np.exp(-g2 / (4.0 * alpha * alpha)) / g2)) @ ph.conj().T).real
+    G[same] -= 2.0 * alpha / np.sqrt(np.pi)
+    return G
+
+
+def first_order_form(el, Pn, latn, patterns) -> np.ndarray:
+    """The electrostatic energy (kcal/mol per cell) of fixed point sources, nothing induced, as a
+    quadratic form over the three charge patterns of :func:`charge_patterns` followed by the
+    sources of :func:`extra_sources` at unit strength.  A dipole or quadrupole is a cluster of
+    charges, whose own energy is a constant of the chain and leaves every difference between
+    rigid cells."""
+    extra = extra_sources(el, Pn)
+    pos = [Pn] + [extra[k][0] for k in EXTRA]
+    start = np.cumsum([0] + [len(p) for p in pos])
+    allpos = np.concatenate(pos)
+    Q = np.zeros((3 + len(EXTRA), len(allpos)))
+    Q[:3, :len(Pn)] = patterns
+    for k, name in enumerate(EXTRA):
+        Q[3 + k, start[k + 1]:start[k + 2]] = extra[name][1]
+    return 0.5 * COULOMB * Q @ ewald_green(allpos, latn) @ Q.T
 
 
 def by_element(dist: dict, elements) -> dict:
@@ -202,7 +303,7 @@ def pairs(args):
     with PRESET_PARAMETERS[PRESET].applied():
         table = json.loads((src / "polyfind.json").read_text())
         tabs = lj_tables(PRESET_PARAMETERS[PRESET])
-        worst = worst_es = 0.0
+        worst = worst_es = worst_1 = 0.0
         for pack in table:
             model, x0, ch, n_mon = IF.model_of(pack, table[pack].get("cell"))
             rc = float(model.pk.rc)
@@ -221,9 +322,15 @@ def pairs(args):
                 e, es = model.physical_energy(x), SR.electrostatics(model, x)
                 K = electrostatic_form(model, x, pat)
                 worst_es = max(worst_es, abs(K[:2, :2].sum() - es))
+                K1 = first_order_form(list(model.pk.elements) * model.nc, Pn, latn, pat)
+                idx = model.pk._es_idx
+                q_all = np.asarray(model.pk._q_cell, dtype=float)
+                fixed = float(model.pk._ewald.terms(Pn if idx is None else Pn[idx], q_all if idx is None else q_all[idx], latn).total)
+                first_fixed = (fixed, K1[:2, :2].sum()) if first is None else first_fixed
+                worst_1 = max(worst_1, abs((fixed - first_fixed[0]) - (K1[:2, :2].sum() - first_fixed[1])))
                 f = where / f"{name}.dft.xyz"
                 dft = float(read(f).info["REF_energy"]) * EV_TO_KCAL if f.exists() else None
-                cell = {"frame": name, "packing": pack, "variant": list(v), "monomers": n_mon, "rc": rc, "r": r, "polyfind": e, "electrostatics": es, "dft": dft, "K": K}
+                cell = {"frame": name, "packing": pack, "variant": list(v), "monomers": n_mon, "rc": rc, "r": r, "polyfind": e, "electrostatics": es, "dft": dft, "K": K, "K1": K1}
                 mine = pair_energy(cell, tabs, rc=rc)
                 first = (e - es, mine) if first is None else first
                 worst = max(worst, abs(((e - es) - first[0]) - (mine - first[1])))
@@ -233,16 +340,17 @@ def pairs(args):
     print(f"the present form on these distances against polyfind's own repulsion and dispersion, as differences within a packing: "
           f"largest disagreement {worst:.1e} kcal/mol per cell")
     print(f"the quadratic form of the charges at polyfind's own charges against its electrostatic energy: largest disagreement {worst_es:.1e} kcal/mol per cell")
+    print(f"a plain Ewald sum of polyfind's fixed charges against polyfind's own, as differences within a packing: largest disagreement {worst_1:.1e} kcal/mol per cell")
     out = Path(args.out)
     np.save(out, np.array(cells, dtype=object), allow_pickle=True)
     print(f"written {out}: {len(cells)} cells, {sum(c['dft'] is not None for c in cells)} with DFT")
 
 
-VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "x_HF", "D_HF", "log10_D_X", "steep", "steep_H", "x_FF", "D_FF", "x_HH", "D_HH", "es", "s_CH", "s_CF", "d_CC")
+VARIABLES = ("x_C", "x_H", "x_F", "D_C", "D_H", "D_F", "x_HF", "D_HF", "log10_D_X", "steep", "steep_H", "x_FF", "D_FF", "x_HH", "D_HH", "es", "s_CH", "s_CF", "d_CC") + EXTRA
 BOUNDS = {"x_C": (0.8, 1.4), "x_H": (0.6, 1.3), "x_F": (0.8, 1.3), "D_C": (0.2, 5.0), "D_H": (0.2, 5.0), "D_F": (0.2, 5.0),
           "x_HF": (0.7, 1.3), "D_HF": (0.2, 5.0), "log10_D_X": (-6.0, 0.5), "steep": (7.0, 16.0), "steep_H": (7.0, 16.0),
           "x_FF": (0.7, 1.3), "D_FF": (0.2, 5.0), "x_HH": (0.7, 1.3), "D_HH": (0.2, 5.0), "es": (0.0, 3.0),
-          "s_CH": (0.3, 2.0), "s_CF": (0.3, 2.0), "d_CC": (-0.4, 0.4)}
+          "s_CH": (0.0, 2.0), "s_CF": (0.0, 2.0), "d_CC": (-0.4, 0.4), **{k: (-3.0, 3.0) for k in EXTRA}}
 
 
 def start_vector(form: str) -> dict:
@@ -259,7 +367,7 @@ def start_vector(form: str) -> dict:
     z0 = {"exp-6": 13.772, "b14-7": 0.07}.get(form, 12.0)
     return {"x_C": 1.0, "x_H": 1.0, "x_F": 1.0, "D_C": 1.0, "D_H": 1.0, "D_F": 1.0, "x_HF": 1.0, "D_HF": 1.0,
             "log10_D_X": float(np.log10(belt)), "steep": z0, "steep_H": z0, "x_FF": 1.0, "D_FF": 1.0, "x_HH": 1.0, "D_HH": 1.0, "es": 1.0,
-            "s_CH": 1.0, "s_CF": 1.0, "d_CC": 0.0}
+            "s_CH": 1.0, "s_CF": 1.0, "d_CC": 0.0, **{k: 0.0 for k in EXTRA}}
 
 
 def trial_tables(v: dict) -> dict:
@@ -316,7 +424,14 @@ def residuals(v: dict, cells, form: str, split: bool, sigma=(0.02, 0.10)):
     out = []
     for label, ref, mine in groups(cells):
         w = np.array([v.get("s_CH", 1.0), v.get("s_CF", 1.0), v.get("d_CC", 0.0)])
-        es = lambda c: v.get("es", 1.0) * float(w @ c["K"] @ w)  # noqa: E731
+        u = np.array([v.get(k, 0.0) for k in EXTRA])
+
+        def es(c):
+            # polyfind's own energy of the charge patterns (induction in it), and the sources it does not have
+            # to first order: with the charges and with each other, nothing induced by them
+            more = 2.0 * float(w @ c["K1"][:3, 3:] @ u) + float(u @ c["K1"][3:, 3:] @ u) if np.any(u) else 0.0
+            return v.get("es", 1.0) * (float(w @ c["K"] @ w) + more)
+
         e_ref = trial_energy(ref, v, form, split) + es(ref)
         for c in mine:
             model = (trial_energy(c, v, form, split) + es(c) - e_ref) / c["monomers"]

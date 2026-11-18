@@ -17,7 +17,8 @@ linear in the three multipliers and a least-squares fit gives what DFT's potenti
 
     python examples/chain_potential.py frames --out /opt/dft/chainpot
     python examples/chain_potential.py dft --frames /opt/dft/chainpot --pw .../pw.x --pseudo .../pseudo
-    python examples/chain_potential.py fit --frames /opt/dft/chainpot
+    python examples/chain_potential.py collect --frames /opt/dft/chainpot
+    python examples/chain_potential.py fit --samples docs/predictions/chain_potential_pbe_samples.npz
 """
 import argparse
 import importlib.util
@@ -152,8 +153,11 @@ def dft(args):
         work = src / "work" / name
         text = MF.pw_input(a, args.pseudo, work / "scratch", args.conv_thr).replace("  tstress = .true.", "  tstress = .false.")
         t0 = time.time()
-        out, _ = MF.run_pw(args.pw, args.np, text, work, name)
-        if MF.read_pw(out) is None:
+        out = work / f"{name}.out"
+        finished = lambda: out.exists() and all(k in out.read_text(errors="replace") for k in ("JOB DONE", "convergence has been achieved"))  # noqa: E731
+        if not finished():
+            MF.run_pw(args.pw, args.np, text, work, name)
+        if not finished():
             print(f"{name}: the SCF did not finish ({out})", flush=True)
             continue
         (work / "pp.in").write_text("\n".join([
@@ -186,65 +190,125 @@ def samples(cube: Path, atoms_at, cell, r_min: float, r_max: float, step: float)
     return pts[keep], -RY_TO_KCAL * data[grid[keep, 0], grid[keep, 1], grid[keep, 2]], near[keep]
 
 
-def fit(args):
-    src = Path(args.frames)
-    names = [c for c in args.chains.split(",") if c and (src / f"chain_{c}.esp.cube").exists()]
-    blocks = {}
+EXTRA = IW.EXTRA
+START = {"s_CH": 1.0, "s_CF": 1.0, "d_CC": 0.0, **{k: 0.0 for k in EXTRA}}
+
+
+def sampled_blocks(src: Path, names, r_min: float, r_max: float, spacing: float) -> dict:
+    """``{chain: sites, patterns, dipoles, cell, points, DFT potential, distance to the nearest
+    nucleus}`` from the working directory's potential files."""
+    out = {}
     for name in names:
+        if not (src / f"chain_{name}.esp.cube").exists():
+            continue
         m = np.load(src / f"chain_{name}.model.npz")
-        el, sites, pat, dip, cell = [str(e) for e in m["elements"]], m["sites"], m["patterns"], m["dipoles"], m["cell"]
+        el, sites, cell = [str(e) for e in m["elements"]], m["sites"], m["cell"]
         atom = np.array([e in SR.ATOMS for e in el])
-        pts, v, near = samples(src / f"chain_{name}.esp.cube", sites[atom], cell, args.r_min, args.r_max, args.step)
-        basis = np.stack([source_potential(pts, sites, pat[k], dip[k], cell) for k in range(3)], axis=1)
-        bare = np.stack([source_potential(pts, sites, pat[k], 0.0 * dip[k], cell) for k in range(3)], axis=1)
-        blocks[name] = {"v": v - v.mean(), "basis": basis - basis.mean(axis=0), "bare": bare - bare.mean(axis=0), "near": near, "points": len(pts)}
+        pts, v, near = samples(src / f"chain_{name}.esp.cube", sites[atom], cell, r_min, r_max, spacing)
+        out[name] = {"elements": el, "sites": sites, "patterns": m["patterns"], "dipoles": m["dipoles"], "cell": cell, "points": pts, "v": v, "near": near}
+    return out
 
-    def score(b, w, key="basis"):
-        model = b[key] @ w
-        return float(np.sqrt(((model - b["v"]) ** 2).mean())), float((model * b["v"]).sum() / (b["v"] ** 2).sum())
 
-    def solve(bs, free):
-        A = np.concatenate([b["basis"][:, free] for b in bs])
-        rest = [k for k in range(3) if k not in free]
-        y = np.concatenate([b["v"] - b["basis"][:, rest] @ np.array([1.0, 1.0, 0.0])[rest] for b in bs])
-        w = np.array([1.0, 1.0, 0.0])
-        w[free] = np.linalg.lstsq(A, y, rcond=None)[0]
-        return w
+def collect(args):
+    """The sampled potentials in one compressed file the fit can be redone from (the grids
+    themselves are 30 MB a chain)."""
+    data = sampled_blocks(Path(args.frames), [c for c in args.chains.split(",") if c], args.r_min, args.r_max, args.spacing)
+    flat = {"chains": np.array(list(data)), "r_min": args.r_min, "r_max": args.r_max, "spacing": args.spacing}
+    for name, b in data.items():
+        flat.update({f"{name}_elements": np.array(b["elements"]), f"{name}_sites": b["sites"], f"{name}_patterns": b["patterns"], f"{name}_dipoles": b["dipoles"],
+                     f"{name}_cell": b["cell"], f"{name}_points": b["points"].astype(np.float32), f"{name}_v": b["v"].astype(np.float32),
+                     f"{name}_near": b["near"].astype(np.float32)})
+    np.savez_compressed(args.out, **flat)
+    print(f"written {args.out}: " + ", ".join(f"{n} {len(b['v'])} points" for n, b in data.items()))
+
+
+def stored_blocks(path: Path, names, r_min: float) -> dict:
+    """:func:`sampled_blocks` from :func:`collect`'s file, the points nearer than ``r_min`` dropped."""
+    z = np.load(path)
+    out = {}
+    for name in [str(c) for c in z["chains"] if str(c) in names]:
+        keep = z[f"{name}_near"] >= r_min - 1e-6
+        out[name] = {"elements": [str(e) for e in z[f"{name}_elements"]], "sites": z[f"{name}_sites"], "patterns": z[f"{name}_patterns"],
+                     "dipoles": z[f"{name}_dipoles"], "cell": z[f"{name}_cell"], "points": z[f"{name}_points"][keep].astype(float),
+                     "v": z[f"{name}_v"][keep].astype(float), "near": z[f"{name}_near"][keep].astype(float)}
+    return out
+
+
+def potential_blocks(data: dict) -> dict:
+    """Per chain: DFT's potential at the sampled points and every source's potential there at unit
+    strength, each with its own mean over the points removed (the zero of a periodic potential is
+    a convention)."""
+    blocks = {}
+    for name, d in data.items():
+        pts, sites, pat, dip, cell = d["points"], d["sites"], d["patterns"], d["dipoles"], d["cell"]
+        basis = {PATTERNS[k]: source_potential(pts, sites, pat[k], dip[k], cell) for k in range(3)}
+        bare = sum(source_potential(pts, sites, pat[k], 0.0 * dip[k], cell) for k in range(2))
+        for key, (pos, q) in IW.extra_sources(d["elements"], sites).items():
+            basis[key] = COULOMB * ewald_potential(pts, pos, q, cell)
+        blocks[name] = {"v": d["v"] - d["v"].mean(), "basis": {k: b - b.mean() for k, b in basis.items()}, "bare": bare - bare.mean(), "near": d["near"],
+                        "points": len(pts)}
+    return blocks
+
+
+def solve(blocks: dict, group, free) -> dict:
+    """Least squares of the ``free`` multipliers on the chains of ``group``, the rest held at
+    :data:`START`; each chain weighs the same whatever its number of points, and the errors are
+    absolute (kcal/mol per e), not relative to the chain's own potential."""
+    held = {k: v for k, v in START.items() if k not in free}
+    model = lambda b, w: sum(w[k] * b["basis"][k] for k in w if w[k] != 0.0)  # noqa: E731
+    A = np.concatenate([np.stack([blocks[n]["basis"][k] for k in free], axis=1) / np.sqrt(blocks[n]["points"]) for n in group])
+    y = np.concatenate([(blocks[n]["v"] - model(blocks[n], held)) / np.sqrt(blocks[n]["points"]) for n in group])
+    return {**held, **dict(zip(free, (float(c) for c in np.linalg.lstsq(A, y, rcond=None)[0])))}
+
+
+def rms_error(b: dict, w: dict) -> float:
+    return float(np.sqrt(((sum(w[k] * b["basis"][k] for k in w if w[k] != 0.0) - b["v"]) ** 2).mean()))
+
+
+def fit(args):
+    names = [c for c in args.chains.split(",") if c]
+    data = stored_blocks(Path(args.samples), names, args.r_min) if args.samples else sampled_blocks(Path(args.frames), names, args.r_min, args.r_max, args.spacing)
+    blocks = potential_blocks(data)
+
+    def model(b, w):
+        return sum(w[k] * b["basis"][k] for k in w if w[k] != 0.0)
+
+    def score(b, w):
+        mdl = model(b, w)
+        return float(np.sqrt(((mdl - b["v"]) ** 2).mean())), float((mdl * b["v"]).sum() / (b["v"] ** 2).sum())
 
     out = {"what": "the electrostatic potential around one chain alone in a box, polyfind's charges and induced dipoles against PBE (pp.x plot_num 11)",
            "potential": "kcal/mol per e, each chain's own mean over the sampled points removed", "preset": PRESET,
-           "sampled": f"grid points {args.r_min} to {args.r_max} A from the nearest nucleus, about {args.step} A apart", "chains": {}, "fits": {}}
-    w0 = np.array([1.0, 1.0, 0.0])
+           "sampled": f"grid points {args.r_min} to {args.r_max} A from the nearest nucleus, about {args.spacing} A apart", "chains": {}, "fits": {}}
     for name, b in blocks.items():
         rms = float(np.sqrt((b["v"] ** 2).mean()))
-        e, slope = score(b, w0)
-        eb, slope_b = score(b, w0, "bare")
+        e, slope = score(b, START)
+        eb = float(np.sqrt(((b["bare"] - b["v"]) ** 2).mean()))
         shells = {}
         for lo, hi in ((args.r_min, 2.6), (2.6, 3.2), (3.2, 4.0), (4.0, args.r_max)):
             k = (b["near"] >= lo) & (b["near"] < hi)
             if k.sum() > 10:
-                mdl = b["basis"][k] @ w0
                 shells[f"{lo:.1f}-{hi:.1f}"] = {"points": int(k.sum()), "rms_dft": float(np.sqrt((b["v"][k] ** 2).mean())),
-                                                "model_over_dft": float((mdl * b["v"][k]).sum() / (b["v"][k] ** 2).sum())}
+                                                "rms_error": float(np.sqrt(((model(b, START)[k] - b["v"][k]) ** 2).mean()))}
         out["chains"][name] = {"what": CHAINS[name][1], "points": b["points"], "rms_dft": rms, "rms_error": e, "model_over_dft": slope,
-                               "charges_alone_rms_error": eb, "charges_alone_over_dft": slope_b, "by_distance": shells}
+                               "charges_alone_rms_error": eb, "by_distance": shells}
         print(f"{name} ({CHAINS[name][1]}): {b['points']} points, DFT rms {rms:.3f} kcal/mol per e; polyfind as it is: rms error {e:.3f}, model over DFT {slope:.2f} "
-              f"(its charges without the induced dipoles: {eb:.3f}, {slope_b:.2f})")
-        print("     by distance from the nearest nucleus: " + "; ".join(f"{k} A: DFT rms {s['rms_dft']:.3f}, model over DFT {s['model_over_dft']:.2f}" for k, s in shells.items()))
-    trials = [("each chain alone, the two groups' charges", None, [0, 1]), ("each chain alone, all three", None, [0, 1, 2])]
-    trials += [("all chains together, the two groups' charges", list(blocks), [0, 1]), ("all chains together, the charge along C-C alone", list(blocks), [2]),
-               ("all chains together, all three", list(blocks), [0, 1, 2])]
-    if "ht" in blocks:
-        trials += [("fitted to plain all-trans PVDF alone, all three", ["ht"], [0, 1, 2])]
-    for label, which, free in trials:
-        for group in ([[n] for n in blocks] if which is None else [which]):
-            w = solve([blocks[n] for n in group], free)
-            scores = {n: score(b, w) for n, b in blocks.items()}
-            key = f"{label}: {','.join(group)}"
-            out["fits"][key] = {"fitted_to": group, "free": [PATTERNS[k] for k in free], **{PATTERNS[k]: float(w[k]) for k in range(3)},
-                                "rms_error": {n: s[0] for n, s in scores.items()}, "model_over_dft": {n: s[1] for n, s in scores.items()}}
-            print(f"{key}: " + ", ".join(f"{PATTERNS[k]} {w[k]:+.3f}" for k in range(3)) + "; rms error "
-                  + ", ".join(f"{n} {s[0]:.3f} (x{s[1]:.2f})" for n, s in scores.items()))
+              f"(its charges without the induced dipoles: {eb:.3f})")
+        print("     by distance from the nearest nucleus: " + "; ".join(f"{k} A: DFT rms {s['rms_dft']:.3f}, error {s['rms_error']:.3f}" for k, s in shells.items()))
+    everyone = list(blocks)
+    trials = [(f"{n} alone, the three charge patterns", [n], list(PATTERNS)) for n in blocks]
+    trials += [("together, the three charge patterns", everyone, list(PATTERNS))]
+    trials += [(f"together, charges held, {k}", everyone, [k]) for k in EXTRA]
+    trials += [(f"together, the three charge patterns and {k}", everyone, list(PATTERNS) + [k]) for k in EXTRA]
+    trials += [("together, the CH2 and CF2 groups' charges and M_H", everyone, ["s_CH", "s_CF", "M_H"]),
+               ("together, the three charge patterns, M_H and Q_F", everyone, list(PATTERNS) + ["M_H", "Q_F"]),
+               ("together, everything", everyone, list(PATTERNS) + list(EXTRA))]
+    for label, group, free in trials:
+        w = solve(blocks, group, free)
+        scores = {n: score(b, w) for n, b in blocks.items()}
+        out["fits"][label] = {"fitted_to": group, "free": free, "multipliers": w, "rms_error": {n: s[0] for n, s in scores.items()},
+                              "model_over_dft": {n: s[1] for n, s in scores.items()}}
+        print(f"{label}: " + ", ".join(f"{k} {w[k]:+.3f}" for k in free) + ";  rms error " + ", ".join(f"{n} {s[0]:.3f}" for n, s in scores.items()))
     if args.out:
         Path(args.out).write_text(json.dumps(out, indent=1))
         print(f"written {args.out}")
@@ -263,15 +327,23 @@ def main():
     s.add_argument("--pseudo", required=True)
     s.add_argument("--np", type=int, default=4)
     s.add_argument("--conv-thr", type=float, default=1e-9)
-    s = sub.add_parser("fit")
+    s = sub.add_parser("collect")
     s.add_argument("--frames", required=True)
+    s.add_argument("--chains", default="ht,hh,tgtg")
+    s.add_argument("--r-min", type=float, default=2.2)
+    s.add_argument("--r-max", type=float, default=5.0)
+    s.add_argument("--spacing", type=float, default=0.3)
+    s.add_argument("--out", default=str(PRED / "chain_potential_pbe_samples.npz"))
+    s = sub.add_parser("fit")
+    s.add_argument("--frames", default="", help="the working directory with the potential files")
+    s.add_argument("--samples", default="", help="collect's file, instead of the working directory")
     s.add_argument("--chains", default="ht,hh,tgtg")
     s.add_argument("--r-min", type=float, default=2.2, help="A from the nearest nucleus: nearer than a neighbouring chain's atoms come")
     s.add_argument("--r-max", type=float, default=5.0)
-    s.add_argument("--step", type=float, default=0.3)
+    s.add_argument("--spacing", type=float, default=0.3, help="A between sampled grid points")
     s.add_argument("--out", default="")
     args = ap.parse_args()
-    {"frames": frames, "dft": dft, "fit": fit}[args.step](args)
+    {"frames": frames, "dft": dft, "collect": collect, "fit": fit}[args.step](args)
 
 
 if __name__ == "__main__":
