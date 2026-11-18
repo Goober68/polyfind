@@ -1577,6 +1577,48 @@ become the first valence terms refitted against a crystal. That is the order: st
 lateral coupling with a shape term from belt4; stage 9 moves the tilts inside and refits the
 pendant bends against the native alpha positions.
 
+### 5.24 Stage 11: the cost of moving chains along each other as an anchor, and what the 12-6 form does with it
+
+(Stages 8 and 9 are the two designs above that were never built, 5.21 and 5.23; 10 is left free
+beside them.)
+
+**Why.** `docs/MLIP_SECOND_OPINION.md` 3.9: on 32 rigid cells of plain PVDF the belt4 preset
+charges 2.4 to 3.5 times what PBE-D3(BJ) does for moving neighbouring chains along each other,
+all of it in the repulsion and dispersion terms. No anchor of stages 1 to 7 sees that energy:
+every one of them is taken at a registry the crystal has by symmetry.
+
+**The rows.** `crystalfit.REGISTRY` holds two packings of plain PVDF as mixed-cell states (the
+beta cell, and the reversed-unit candidate's all-trans packing with plain chains in it) and DFT's
+cost of thirteen rigid shears of each. `registry_costs` evaluates them under any parameter set on
+the atoms DFT was given: under belt4 it is the stored measurement to 1e-15
+(`tests/test_crystalfit.py`). Stage 11 is stage 7 plus eight of them, a quarter and half a
+monomer along each lattice vector in each packing, at a tolerance of a fifth of DFT's value. The
+other eighteen and the six E5 slides are kept out as the check. belt4 scores **699** on this
+objective (11.1 on the old one): the eight rows are seven to twelve tolerances out.
+
+**The two fits** (`examples/crystal_stage.py --stage 11 [--wide]`, least squares from belt4, gap
+row with the pendant tilts; both stopped by hand at 186 evaluations, still falling slowly, and
+neither is a preset):
+
+| | belt4 | stage 11, the old box | stage 11, diameters' box opened |
+|---|---|---|---|
+| objective (ridge) | 699 (5.2) | 42.6 (9.7) | 46.1 (8.3) |
+| registry rows, polyfind over DFT | 2.5 to 3.4 | 0.93 to 1.29 | 0.95 to 1.33 |
+| beta a (4.757), z | 4.755 (-0.04) | 4.621 (-2.86) | 4.614 (-3.00) |
+| beta b (8.528) | 8.478 (-0.59) | 8.356 (-2.01) | 8.327 (-2.36) |
+| alpha a (4.945) | 4.957 (+0.24) | 4.880 (-1.31) | 4.862 (-1.68) |
+| alpha b (9.636) | 9.646 (+0.11) | 9.371 (-2.75) | 9.365 (-2.82) |
+| x_H, x_HF, log10 D_X | 1.006, 1.009, -1.74 | 0.982, 1.010, -2.43 | 0.944, 0.992, -2.22 |
+
+**What it says.** The form can have the registry cost or the lattice. Given both, it takes the
+registry rows to within a third of DFT by shrinking what touches hydrogen (the hydrogen
+diameter 2 to 6% smaller, the belt wall three to five times shallower) and pays with the lateral
+cell: 1.3 to 3% in from DFT on all four lateral axes, where belt4 holds them within 0.6%. Opening
+the diameters' box changes nothing of that: the fit does not use the room (carbon grows 7% in
+both fits, and every diameter ends inside the old box). This is the linear estimate of 3.9 confirmed by the fit
+itself: the registry cost and the lateral pressure come from the same contacts through the same
+r^-12, and no values of its coefficients separate them.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
