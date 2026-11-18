@@ -175,8 +175,10 @@ right": true at one registry, not along it).
         FIRST RUN DONE (`docs/predictions/crystal_stage_v13_run1.json`, objective 520 -> 81, NOT converged, NOT a
         preset): lattice within 0.7%, gap -0.772, C 21.6 22.0 7.2, rigid cells 0.05-0.06 plain, 0.12 reversed
         chain, candidate's line -0.30 -0.35 -0.24, potentials 0.13-0.22, conformers 1.32; plain registry rows now
-        0.65-0.78 of DFT (traded). A SECOND RUN WAS GOING when this was written (`/opt/dft/stage13_run2.log`,
-        73 after two more iterations). Not tried in the kernels: the trial's other basin (hydrogen smaller, pairs on
+        0.65-0.78 of DFT (traded). SECOND RUN DONE (`docs/predictions/crystal_stage_v13_run2.json`, 81 -> 62, ten
+        more iterations, still falling 1-3 an iteration, NOT a preset): gap -0.730, C 23.1 22.8 7.1, registry rows
+        0.76-0.86 of DFT, rigid cells 0.03-0.04 plain and 0.13 reversed chain (unmoved: the terms do not reach it),
+        candidate's line -0.32 -0.38 -0.26, conformers 1.29; paid with beta a 1.0% short. Not tried in the kernels: the trial's other basin (hydrogen smaller, pairs on
         their own terms).
     (n) A CHECK NO FIT SAW (`examples/cohesion.py`, `docs/predictions/cohesion_rigid_cells.json`): cell minus its own
         chains alone, DFT beta -7.82 / alpha -5.07 / hh -3.11 kcal/mol per monomer; belt4 -5.75 / -3.12 / -1.62; the
@@ -194,7 +196,7 @@ right": true at one registry, not along it).
         off by 0.2-0.36. Split at the stored cells: the within-chain non-bonded energy of GTG'T against TG'TG moved
         by -0.19 between belt4 and run 1 (between chains +0.05). Nothing in the fit holds it; the conformer rows are
         too coarse (1.3 rms on an oligomer = 0.3 per monomer).
-    (p) STILL TO DO, IN ORDER: (1) let stage 13's second run finish and store it; (2) ANCHORS FOR THE INSIDE OF A
+    (p) STILL TO DO, IN ORDER: (1) stage 13's second run: DONE and stored, see (m); (2) ANCHORS FOR THE INSIDE OF A
         CHAIN on the footing the rigid cells gave the outside: single chains alone, each conformer RELAXED in DFT
         (plain TT and TGTG'; the reversed-unit chain's TT, TG'TG, GTG'T; the protocol that worked is relax in our
         own potential, then one DFT single point), as rows; then the torsion TYPES fitted to them

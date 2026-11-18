@@ -1928,6 +1928,30 @@ cells and the candidate's. The F-F pair has moved little from the mixing rule (1
 the trial's other basin (hydrogen itself smaller, the pairs on their own terms) has not been
 tried in the kernels.
 
+**The second run** (ten more iterations from the first run's result, 211 evaluations;
+`docs/predictions/crystal_stage_v13_run2.json`; still falling by one to three an iteration at
+its end, and **not a preset** either). The objective went 81 to 62, with nothing given back:
+
+| | DFT | first run | second run |
+|---|---:|---:|---:|
+| beta a, b (A) | 4.757, 8.528 | 4.728, 8.588 | 4.709, 8.605 |
+| E(alpha) - E(beta), kcal/mol | -0.726 | -0.772 | -0.730 |
+| C_11, C_22, C_12 (GPa) | 22.8, 24.5, 5.9 | 21.6, 22.0, 7.2 | 23.1, 22.8, 7.1 |
+| the 8 registry rows, polyfind over DFT | 1 | 0.65 to 0.78 | 0.76 to 0.86 |
+| rigid cells, rms: beta, candidate packing, alpha | 0 | 0.06, 0.05, 0.05 | 0.04, 0.03, 0.04 |
+| rigid cells, rms: the reversed chain | 0 | 0.12 | 0.13 |
+| the candidate's own line (quarter, half, end) | -0.36, -0.41, -0.34 | -0.30, -0.35, -0.24 | -0.32, -0.38, -0.26 |
+| potential around the three chains, rms error | 0 | 0.20, 0.22, 0.13 | 0.17, 0.22, 0.13 |
+| conformers, energy rms (training systems) | 1.02 | 1.32 | 1.29 |
+
+The gap is on its anchor, the plain rigid cells are at 0.03 to 0.04, the registry rows have
+come back up to four fifths of DFT and the candidate's line is within 0.04 to 0.08 of DFT's.
+What it paid is the polar axis of beta (a is 1.0% short, the one cell row past its tolerance)
+and nothing on the reversed chain's cells, which stay at 0.13: the terms the fit has do not
+reach what is left there. The variables moved little (depths up 3 to 5%, the torsion triple to
+(-1.89, 1.40, 0.92), the site -0.338 e), so the checks made on the first run below stand for
+the second to within what they resolve.
+
 **A check no fit has seen: what holds a packing together** (`examples/cohesion.py`,
 `docs/predictions/cohesion_rigid_cells.json`). The unstrained rigid cell minus the same chains
 alone is the energy between the chains of a packing, absolute; the single points for both

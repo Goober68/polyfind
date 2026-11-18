@@ -39,6 +39,24 @@ def test_the_first_run_is_a_stage13_vector_and_says_it_is_not_finished():
     assert r["conformers, energy rms"]["polyfind"] == pytest.approx(1.317, abs=0.005)
 
 
+def test_the_second_run_gives_nothing_back():
+    one, two = _fit(), json.loads((PRED / "crystal_stage_v13_run2.json").read_text())
+    assert tuple(two["variables"]) == C.VARIABLES13 and "Not a preset" in two["stopped"]["why"]
+    assert two["objective"] < one["objective"] - 15.0
+    r1, r2 = one["residuals"], two["residuals"]
+    assert r2["E(alpha)-E(beta)"]["polyfind"] == pytest.approx(-0.730, abs=0.002)
+    rms = lambda r, pack: float(np.sqrt(np.mean([(v["polyfind"] - v["dft"]) ** 2 for k, v in r.items() if k.startswith(f"rigid {pack}_")])))  # noqa: E731
+    for pack in ("beta", "candidate", "alpha", "cand6"):
+        assert rms(r2, pack) < rms(r1, pack)
+    # the reversed chain's cells are where the terms the fit has stop
+    assert rms(r2, "hh") == pytest.approx(rms(r1, "hh"), abs=0.015) and rms(r2, "hh") > 0.11
+    registry = [k for k in r2 if k.startswith("registry ")]
+    assert len(registry) == 8 and all(abs(r2[k]["z"]) < abs(r1[k]["z"]) for k in registry)
+    assert all(0.75 < r2[k]["polyfind"] / r2[k]["dft"] < 0.87 for k in registry)
+    # what it paid: beta's polar axis, the one cell row past its tolerance
+    assert r2["beta a (polar)"]["z"] == pytest.approx(-1.01, abs=0.02)
+
+
 def test_what_holds_a_packing_together():
     """The cell minus its own chains: belt4 binds too weakly by a quarter to a half, the buffered
     wall takes most of that away unasked, and the difference between packings is right throughout."""
