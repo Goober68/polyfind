@@ -1320,11 +1320,12 @@ class ReferenceDesign:
     asserts that against the reference implementation rather than trusting it.
     """
 
-    def __init__(self, frames: Sequence[Frame]):
+    def __init__(self, frames: Sequence[Frame], bond_site_fraction: float = 0.65):
         frames = list(frames)
         if not frames:
             raise ValueError("no frames")
         self.frames = frames
+        self.bond_site_fraction = float(bond_site_fraction)
         self.systems = sorted({f.system for f in frames})
         sidx = {s: i for i, s in enumerate(self.systems)}
         el_index = {e: i for i, e in enumerate(sorted(_UFF_ALL))}
@@ -1414,6 +1415,20 @@ class ReferenceDesign:
         x = p["lj_x"][self.atom_el]
         d = p["lj_d"][self.atom_el]
         q = self.increment_matrix @ p["increments"]
+        # The lattice side's charges, when the parameters carry them (:meth:`unpack` with a
+        # :attr:`lattice`): what each fluorine draws along the backbone; the off-nucleus charge
+        # put on the nuclei with its dipole kept, as the packer has it (project_offset_charges);
+        # and each sited hydrogen giving up what its bond's site carries.
+        if p.get("pull"):
+            q = q + float(p["pull"]) * self.pull_F
+        if p.get("project") and self.off_atom.size:
+            # one bond length for every frame, the lattice's own (its chains are rigid): the charges then do
+            # not move with the geometry, and the forces below are the energy's
+            moved = q[self.off_atom] * float(p["project"]) / PROJECT_BOND
+            q = q + np.bincount(self.off_atom, weights=moved, minlength=self.n_atoms) - np.bincount(self.off_nb, weights=moved, minlength=self.n_atoms)
+        q_site = float(p.get("site_q") or 0.0)
+        if q_site:
+            q = q - q_site * (self.site_carbon >= 0)
         scale = np.where(self.pair_s14, p["scale14"], 1.0)
         lj_x = np.sqrt(x[self.pair_i] * x[self.pair_j])
         lj_d = np.sqrt(d[self.pair_i] * d[self.pair_j]) * scale
@@ -1880,6 +1895,7 @@ VAL_ANGLE_TYPES: tuple[str, ...] = ("C-C-C", "C-C-H", "C-C-F", "H-C-H", "F-C-F",
 # the diagnosis is about and the one this package's polarization results turn on; and one
 # element means one parameter, which is the smallest change that can answer the question.
 VAL_OFFSET_ELEMENT = "F"
+PROJECT_BOND = 1.3863  # A: the C-F length of the lattice's chains (polymers.pvdf_belt, "pbe"), at which the packer projects F's off-nucleus charge
 
 _NB, _NA = len(VAL_BOND_TYPES), len(VAL_ANGLE_TYPES)
 
@@ -2030,11 +2046,12 @@ class ValenceDesign:
     ``tests/test_fitting.py`` asserts it rather than trusting it.
     """
 
-    def __init__(self, frames: Sequence[Frame]):
+    def __init__(self, frames: Sequence[Frame], bond_site_fraction: float = 0.65):
         frames = list(frames)
         if not frames:
             raise ValueError("no frames")
         self.frames = frames
+        self.bond_site_fraction = float(bond_site_fraction)
         self.systems = sorted({f.system for f in frames})
         sidx = {s: i for i, s in enumerate(self.systems)}
         self.elements = sorted(_UFF_ALL)
@@ -2047,7 +2064,8 @@ class ValenceDesign:
         a_idx, a_t, a_theta, a_grad = [], [], [], []
         d_frame, d_type, d_phi, d_idx, d_grad, d_tau = [], [], [], [], [], []
         r_dih, r_atom, r_vec = [], [], []
-        o_atom, o_nb, o_proj = [], [], []
+        o_atom, o_nb, o_proj, o_len = [], [], [], []
+        m_i, m_j, m_v1, m_v2, m_v3, s_carbon, pull_F = [], [], [], [], [], [], []
         a_el, a_M, f_ref, energies, f_sys, atom_frame = [], [], [], [], [], []
         n_atoms = n_dih = 0
         for fi, f in enumerate(frames):
@@ -2076,8 +2094,39 @@ class ValenceDesign:
                 o_atom.append(at + base)
                 o_nb.append(nb + base)
                 o_proj.append((np.eye(3) - np.outer(uh, uh)) / n)
+                o_len.append(n)
             p_A.append(c[iu] - c[ju])
             p_U.append(u_dir[iu] - u_dir[ju])
+            # --- the lattice side's two further charge terms (FFParameters.bond_sites, backbone_pull):
+            # a charge site on each C-H bond, and what each fluorine draws onto its carbon from that
+            # carbon's carbon neighbours.  Geometry only here; the strengths come with the parameters.
+            nbrs = [[] for _ in range(f.n_atoms)]
+            for a, b in f.bonds:
+                nbrs[a].append(b)
+                nbrs[b].append(a)
+            carbon = np.full(f.n_atoms, -1)
+            for h in range(f.n_atoms):
+                if f.elements[h] == "H" and len(nbrs[h]) == 1 and f.elements[nbrs[h][0]] == "C":
+                    carbon[h] = nbrs[h][0]
+            sited = carbon >= 0
+            S = c.copy()
+            S[sited] = c[carbon[sited]] + self.bond_site_fraction * (c[sited] - c[carbon[sited]])
+            m_i.append(sited[iu])
+            m_j.append(sited[ju])
+            m_v1.append(S[iu] - c[ju])
+            m_v2.append(c[iu] - S[ju])
+            m_v3.append(S[iu] - S[ju])
+            s_carbon.append(np.where(sited, carbon + base, -1))
+            drawn = np.zeros(f.n_atoms)
+            for a in range(f.n_atoms):
+                if f.elements[a] != "C":
+                    continue
+                n_f = sum(f.elements[b] == "F" for b in nbrs[a])
+                for b in nbrs[a]:
+                    if n_f and f.elements[b] == "C":
+                        drawn[a] -= n_f
+                        drawn[b] += n_f
+            pull_F.append(drawn)
             # --- valence lists
             bl, al = valence_topology(f.elements, f.bonds)
             if bl:
@@ -2150,6 +2199,11 @@ class ValenceDesign:
         self.off_atom = np.array(o_atom, dtype=int)
         self.off_nb = np.array(o_nb, dtype=int)
         self.off_proj = np.array(o_proj).reshape(-1, 3, 3)
+        self.off_len = np.array(o_len, dtype=float)
+        self.ms_i, self.ms_j = np.concatenate(m_i), np.concatenate(m_j)
+        self.ms_v1, self.ms_v2, self.ms_v3 = np.concatenate(m_v1), np.concatenate(m_v2), np.concatenate(m_v3)
+        self.site_carbon = np.concatenate(s_carbon).astype(int)
+        self.pull_F = np.concatenate(pull_F)
         self.atom_el = np.array(a_el, dtype=int)
         self.atom_frame = np.array(atom_frame, dtype=int)
         self.increment_matrix = np.vstack(a_M)
@@ -2178,6 +2232,20 @@ class ValenceDesign:
         x = p["lj_x"][self.atom_el]
         d = p["lj_d"][self.atom_el]
         q = self.increment_matrix @ p["increments"]
+        # The lattice side's charges, when the parameters carry them (:meth:`unpack` with a
+        # :attr:`lattice`): what each fluorine draws along the backbone; the off-nucleus charge
+        # put on the nuclei with its dipole kept, as the packer has it (project_offset_charges);
+        # and each sited hydrogen giving up what its bond's site carries.
+        if p.get("pull"):
+            q = q + float(p["pull"]) * self.pull_F
+        if p.get("project") and self.off_atom.size:
+            # one bond length for every frame, the lattice's own (its chains are rigid): the charges then do
+            # not move with the geometry, and the forces below are the energy's
+            moved = q[self.off_atom] * float(p["project"]) / PROJECT_BOND
+            q = q + np.bincount(self.off_atom, weights=moved, minlength=self.n_atoms) - np.bincount(self.off_nb, weights=moved, minlength=self.n_atoms)
+        q_site = float(p.get("site_q") or 0.0)
+        if q_site:
+            q = q - q_site * (self.site_carbon >= 0)
         scale = np.where(self.pair_s14, p["scale14"], 1.0)
         lj_x = np.sqrt(x[self.pair_i] * x[self.pair_j])
         lj_d = np.sqrt(d[self.pair_i] * d[self.pair_j])
@@ -2215,6 +2283,37 @@ class ValenceDesign:
             corr = dq * np.einsum("nab,nb->na", self.off_proj, forces[self.off_atom])
             idx_list += [self.off_atom, self.off_nb]
             val_list += [corr, -corr]
+        if q_site:
+            # The bond sites: a site stands in every pair its hydrogen stands in, with that pair's scale
+            # (so it is excluded exactly where the hydrogen is), against the other atom, and against the
+            # other atom's site where it has one.  A site's force goes to its carbon and its hydrogen in
+            # the proportions that place it.
+            if dq != 0.0:
+                raise ValueError("bond sites are evaluated with the off-nucleus charges projected onto the nuclei (offset 0)")
+            fr = self.bond_site_fraction
+            sc = scale * COULOMB
+
+            def spread(pair_atoms, sited_side, fvec):
+                """Forces ``fvec`` on one member of each pair: the atom, or its site's carbon and hydrogen."""
+                if not sited_side:
+                    return [pair_atoms], [fvec]
+                return [self.site_carbon[pair_atoms], pair_atoms], [(1.0 - fr) * fvec, fr * fvec]
+
+            for mask, vec, qa, si, sj in ((self.ms_i, self.ms_v1, q_site * q[self.pair_j], True, False),
+                                          (self.ms_j, self.ms_v2, q[self.pair_i] * q_site, False, True),
+                                          (self.ms_i & self.ms_j, self.ms_v3, np.full(len(sc), q_site * q_site), True, True)):
+                k = np.flatnonzero(mask)
+                if not k.size:
+                    continue
+                sep_k = vec[k]
+                r_k = np.sqrt((sep_k * sep_k).sum(1))
+                qq_k = sc[k] * qa[k]
+                energy += np.bincount(self.pair_frame[k], weights=qq_k / r_k, minlength=self.n_frames)
+                f_k = (qq_k / r_k ** 3)[:, None] * sep_k
+                for atoms, side, fv in ((self.pair_i[k], si, f_k), (self.pair_j[k], sj, -f_k)):
+                    ii, vv = spread(atoms, side, fv)
+                    idx_list += ii
+                    val_list += vv
         forces = forces + self._scatter(idx_list, val_list)
         # --- valence
         if self.bond_i.size:
@@ -2320,7 +2419,20 @@ class ValenceDesign:
         if prm.wall:
             from .pack import WALL_GAMMA
             wall = (float(prm.wall[1]), float(prm.wall[2]) if len(prm.wall) > 2 else WALL_GAMMA)
-        return dict(p, lj_x=lj_x, lj_d=lj_d, increments=inc, lj_pairs=pairs, wall=wall)
+        out = dict(p, lj_x=lj_x, lj_d=lj_d, increments=inc, lj_pairs=pairs, wall=wall)
+        if prm.bond_sites or prm.backbone_pull:
+            # The two further charge terms of the lattice (docs/CRYSTAL_STAGE.md 5.26), and with them the
+            # lattice's own way of carrying the off-nucleus charge: on the nucleus, the bond's dipole kept.
+            sites, pull = dict(prm.bond_sites), dict(prm.backbone_pull)
+            if set(sites) - {"H"} or set(pull) - {"F"}:
+                raise ValueError("the conformer design carries bond sites on C-H bonds and the pull of fluorine, nothing else yet")
+            if abs(float(prm.bond_site_fraction) - self.bond_site_fraction) > 1e-12:
+                raise ValueError(f"the design was built for sites {self.bond_site_fraction} of the way out, the parameters say {prm.bond_site_fraction}")
+            offsets = dict(prm.charge_offsets)
+            if set(offsets) - {VAL_OFFSET_ELEMENT}:
+                raise ValueError(f"only {VAL_OFFSET_ELEMENT}'s off-nucleus charge is known to the design")
+            out.update(offset=0.0, project=float(offsets.get(VAL_OFFSET_ELEMENT, 0.0)), site_q=float(sites.get("H", 0.0)), pull=float(pull.get("F", 0.0)))
+        return out
 
 
 @dataclass

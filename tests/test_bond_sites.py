@@ -251,3 +251,93 @@ def test_charge_drawn_along_the_backbone_tells_a_cf2_by_its_neighbours(tools):
         # the same thing as the trial's pattern (examples/interchain_wall.py charge_patterns), at d_CC = -2 pull
         pat = tools.charge_patterns(el, q0, 1)
         assert np.allclose(q - q0, -2 * pull * pat[2])
+
+
+def test_the_conformer_design_carries_the_two_charge_terms():
+    """`ValenceDesign.lattice` with bond sites and a backbone pull: the conformers see the
+    lattice's charges, so the torsions can be fitted again under them.  The Coulomb energy is a
+    plain sum over sites written out here; the forces are the energy's; and without the two terms
+    nothing changes."""
+    spec = importlib.util.spec_from_file_location("tf", ROOT / "tests" / "test_fitting.py")
+    TF = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(TF)
+    from polyfind import fitting as F
+    from polyfind.forcefield import COULOMB, Frame
+
+    frames = TF._synthetic_frames()
+    x = TF._valence_x()
+    belt4 = PRESET_PARAMETERS[BELT4]
+    pull, site, frac = 0.0155, SITE, 0.65
+    prm = replace(belt4, bond_sites=(("H", site),), backbone_pull=(("F", pull),))
+    design = F.ValenceDesign(frames)
+    design.lattice = belt4
+    e_plain = design.evaluate(design.unpack(x))[0]
+    design.lattice = prm
+    p = design.unpack(x)
+    assert (p["offset"], p["site_q"], p["pull"]) == (0.0, site, pull) and p["project"] == dict(belt4.charge_offsets)["F"]
+    e, forces, _ = design.evaluate(p)
+    assert np.abs(e - e_plain).max() > 0.1
+
+    # the Coulomb energy of one frame, as a plain sum over the sites
+    f = frames[1]                                   # PVDF with gauche bonds
+    el, c, n = list(f.elements), np.asarray(f.coords, dtype=float), f.n_atoms
+    nb = [[] for _ in range(n)]
+    for a, b in f.bonds:
+        nb[a].append(b)
+        nb[b].append(a)
+    inc = {(a, b): v for a, b, v in belt4.charge_increments}
+    q = np.zeros(n)
+    for a, b in f.bonds:
+        for i, j in ((a, b), (b, a)):               # the first of an increment's pair gains it, the second loses it
+            q[i] += inc.get((el[i], el[j]), 0.0) - inc.get((el[j], el[i]), 0.0)
+    for a in range(n):                              # each fluorine draws onto its carbon from the carbon's carbon neighbours
+        if el[a] == "C":
+            n_f = sum(el[b] == "F" for b in nb[a])
+            for b in nb[a]:
+                if el[b] == "C":
+                    q[a] -= pull * n_f
+                    q[b] += pull * n_f
+    t = dict(belt4.charge_offsets)["F"]
+    for a in range(n):                              # the off-nucleus charge on the nucleus, the bond's dipole kept
+        if el[a] == "F":
+            moved = q[a] * t / F.PROJECT_BOND
+            q[a] += moved
+            q[nb[a][0]] -= moved
+    assert abs(q.sum()) < 1e-12
+    pos, charge, host = [c[i] for i in range(n)], list(q), list(range(n))
+    for h in range(n):                              # a site on every C-H bond, charged from its hydrogen
+        if el[h] == "H" and el[nb[h][0]] == "C":
+            charge[h] -= site
+            pos.append(c[nb[h][0]] + frac * (c[h] - c[nb[h][0]]))
+            charge.append(site)
+            host.append(h)
+    dist = f.graph_distances()
+    coulomb = 0.0
+    for i in range(len(pos)):
+        for j in range(i + 1, len(pos)):
+            gd = dist[host[i], host[j]]
+            if host[i] == host[j] or gd < 3:        # a site is excluded exactly where its hydrogen is
+                continue
+            coulomb += (p["scale14"] if gd == 3 else 1.0) * COULOMB * charge[i] * charge[j] / np.linalg.norm(pos[i] - pos[j])  # the 1-4 scale is the vector's
+    # the design's Coulomb energy alone: the same parameters with every other term switched off
+    off = dict(p, lj_d=np.zeros_like(p["lj_d"]), lj_pairs={}, torsion=np.zeros_like(p["torsion"]),
+               bond_k=np.zeros_like(p["bond_k"]), angle_k=np.zeros_like(p["angle_k"]))
+    assert design.evaluate(off)[0][1] == pytest.approx(coulomb, abs=1e-9)
+
+    # the forces are the energy's: atoms of both kinds moved, a sited hydrogen and its carbon among them
+    first = int(np.flatnonzero(design.atom_frame == 1)[0])
+    h_atom = next(i for i in range(n) if el[i] == "H")
+    for atom, k in ((h_atom, 0), (nb[h_atom][0], 1), (next(i for i in range(n) if el[i] == "F"), 2)):
+        def energy_of(dx):
+            cc = c.copy()
+            cc[atom, k] += dx
+            moved_design = F.ValenceDesign([frames[0], Frame(**{**f.__dict__, "coords": cc})] + frames[2:])
+            moved_design.lattice = prm
+            return moved_design.evaluate(moved_design.unpack(x))[0][1]
+        fd = -(energy_of(1e-5) - energy_of(-1e-5)) / 2e-5
+        assert fd == pytest.approx(forces[first + atom, k], rel=1e-5, abs=1e-5)
+    # a design built for sites elsewhere on the bond refuses these parameters
+    other = F.ValenceDesign(frames[:2], bond_site_fraction=0.5)
+    other.lattice = prm
+    with pytest.raises(ValueError, match="of the way out"):
+        other.unpack(x)
