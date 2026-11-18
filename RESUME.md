@@ -247,6 +247,14 @@ right": true at one registry, not along it).
         our potential if its repeat is free: `chain_conformers.py settle --fixed-repeat`. A 36-atom chain in the
         16 A box needs `mlip_frames.py label --pools 1` (memory). `Rows.candidate` needs `--frozen` cells relaxed
         under parameters NEAR the ones being evaluated (first order only): refreeze and refit.
+        THE 35 ROWS UNDER chain1, MARGINS: RUNNING IN PIECES (`examples/rows_under_preset.py --preset pvdf-dft-chain1
+        --minutes 105 --out /opt/dft/margins_chain1.json`; the --out file is the checkpoint, run the same command
+        again after every stop or restart; 2 to 3 minutes a 14-monomer cell, 168 cells; logs
+        `/opt/dft/margins_chain1*.log`). Done when this was written: `vdf5-rvdf1-6` -0.199 (upright +0.042, strain
+        +9.0%: the acceptance's numbers again) and `vdf9-trfe4-cfe1-14` +0.259 (upright +0.153; belt4 +0.317).
+        Copy the file to `docs/predictions/margins_chain1.json` when all 35 rows have a margin. The kink tools
+        (`dilute_kink.py`, `kink_migration.py`, `kink_site_scan.py`, `polish_margins.py`) take `--preset`; none has
+        been run under chain1 yet.
         STILL TO DO, IN ORDER: (1) THE 35 ROWS UNDER chain1 ON ALL FOUR AXES (re-polish each row's cells upright and
         with the shear free, pendant tilts; then strain, tan delta, frequency, blocked stress per area, which need
         the slide and kink barriers redone under chain1 and the chain stiffness of the line); E5 under it (the
