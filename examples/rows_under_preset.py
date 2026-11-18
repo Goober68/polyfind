@@ -60,12 +60,29 @@ def fence(model, x0, cm: float) -> None:
 
 
 def settle(model, x, free, closed=(0, 1)):
-    """A relaxation that cannot leave its basin in one step: quasi-Newton rounds in a trust box of 0.3
-    scaled units (about 0.3 A of atom motion), repeated until none ends on its box.  From a cell
-    polished under another preset the plain relaxation takes, once in a while, a step that puts
-    atoms on top of one another, and behind the pair term's finite wall the point charges have no
-    floor: the energy there is minus hundreds of thousands and the minimiser stays."""
-    return model.relax_in_basin(x, free=free, closed=list(closed), trust=0.3, rounds=60, maxiter=200)
+    """Relax, and make sure of it.  The plain relaxation first (examples/candidate_acceptance.py's);
+    if it ends anywhere it should not -- outside the fence, higher than it began, more than 5
+    kcal/mol per monomer lower, or not stationary -- the same start is relaxed again in a trust box
+    of 0.3 scaled units (about 0.3 A of atom motion), in rounds until none ends on its box, which
+    cannot leave a basin in one step and costs three to five times the evaluations.
+
+    From a cell polished under another preset the plain relaxation takes, once in a while, a step
+    that puts atoms on top of one another, and behind the pair term's finite wall the point charges
+    have no floor: the energy there is minus hundreds of thousands and the minimiser stays."""
+    per = 2 * model.n_monomers
+    try:
+        e0 = model.physical_energy(x)
+        if list(closed) == [0, 1]:
+            x1, info = CA.relaxed(model, x, free)
+        else:
+            x1, info = model.relax(x, free=free, closed=list(closed), maxiter=300)
+        e1 = model.physical_energy(x1)
+        if np.isfinite(e1) and -5.0 * per < e1 - e0 < 1e-6 and info["gradient_max"] < 1e-2:
+            return x1, info
+    except (MemoryError, ValueError, FloatingPointError, np.linalg.LinAlgError):
+        pass
+    x1, info = model.relax_in_basin(x, free=free, closed=list(closed), trust=0.3, rounds=60, maxiter=200)
+    return x1, {**info, "in_trust_box": True}
 
 
 def cell_under(model, x0, ch, line=None, sheared_state=None, tilts: bool = True) -> dict:
@@ -117,7 +134,8 @@ def cell_under(model, x0, ch, line=None, sheared_state=None, tilts: bool = True)
            "cell_upright": su.lattice.tolist(), "cell_sheared": sb.lattice.tolist(), "c_per_monomer_upright": float(su.lattice[3]) / ch.n_monomers,
            "c_per_monomer_sheared": float(sb.lattice[3]) / ch.n_monomers, "monomers_per_chain": int(ch.n_monomers),
            "gradient_max": [float(iu["gradient_max"]), float(best[2]["gradient_max"])], "state_upright": [float(v) for v in xu],
-           "state_sheared": [float(v) for v in best[1]], "flips": [bool(f) for f in model.flips], "starts": tried, "failed_starts": failed}
+           "state_sheared": [float(v) for v in best[1]], "flips": [bool(f) for f in model.flips], "starts": tried, "failed_starts": failed,
+           "trust_box": [bool(iu.get("in_trust_box", False)), bool(best[2].get("in_trust_box", False))]}
     if tilts:
         rec["tilt_upright"] = float(MC.tilt_relaxation(model, xu)[0]) / per
         rec["tilt_sheared"] = float(MC.tilt_relaxation(model, best[1])[0]) / per
