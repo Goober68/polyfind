@@ -1,0 +1,184 @@
+{
+ "what": "DFT cells split into their chains alone (in a 16 A box) and the rest; kcal/mol per monomer, each cell against its reference. inside_a_chain / between_chains: the chain with its atoms where the cell has them. lone_chain / binding: the chain relaxed alone (examples/mlip_train.py relax --dft-gradient, then a single point), and the cell against that.",
+ "cells": {
+  "cand_vdf5-rvdf1-6_TTTT_in_pvdfb_s2_upright": {
+   "cell": -43267.30371786124,
+   "chain": -43261.92630278478,
+   "between": -5.377415076465695,
+   "largest_force_on_the_lone_chain": 0.70913442,
+   "repeat": 15.38279203838718,
+   "monomers_in_a_chain": 6,
+   "dihedrals": [
+    179.999966955808,
+    179.99997310207314,
+    -179.99990541665946,
+    -179.9999076315895,
+    179.99988248981626,
+    179.99993289764674,
+    -179.99997716715026,
+    179.99999326641924,
+    -179.99997277170394,
+    -179.9999951682164,
+    -179.99999507083186,
+    -179.99999879161416
+   ],
+   "bonds": [
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CF2",
+    "CF2-CH2",
+    "CH2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "cand_vdf5-rvdf1-6_TGTGp_in_pvdfb_s2": {
+   "cell": -43267.37339337011,
+   "chain": -43262.98640256342,
+   "between": -4.38699080668448,
+   "largest_force_on_the_lone_chain": 0.54205231,
+   "repeat": 14.023988733199017,
+   "monomers_in_a_chain": 6,
+   "dihedrals": [
+    179.2532985913669,
+    62.403506154097386,
+    -177.00129803531678,
+    -63.12290099481801,
+    169.93222303559887,
+    59.95032193609394,
+    175.32176014646356,
+    -71.49150021044281,
+    -173.97523307982414,
+    76.71567092577601,
+    -178.15867354305783,
+    -61.47952047744131
+   ],
+   "bonds": [
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CF2",
+    "CF2-CH2",
+    "CH2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "rvdf6_GTGpT_in_pvdfb_s2": {
+   "cell": -43267.17669139004,
+   "chain": -43262.57144679214,
+   "between": -4.60524459790031,
+   "largest_force_on_the_lone_chain": 0.60795611,
+   "repeat": 14.04289406265406,
+   "monomers_in_a_chain": 6,
+   "dihedrals": [
+    64.30312888777958,
+    -176.62535645664758,
+    -61.66537741794662,
+    -176.50112976009586,
+    61.779502549368246,
+    176.982935828483,
+    -62.18420406850258,
+    171.8685792393999,
+    65.24576878418226,
+    173.26224875469336,
+    -63.47985888603121,
+    -177.64758663122228
+   ],
+   "bonds": [
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CF2",
+    "CF2-CH2",
+    "CH2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "pvdf_000": {
+   "cell": -43268.60040621062,
+   "chain": -43263.63158579013,
+   "between": -4.968820420494012,
+   "largest_force_on_the_lone_chain": 0.64185611,
+   "repeat": 4.659571334191021,
+   "monomers_in_a_chain": 2,
+   "dihedrals": [
+    179.1086840161374,
+    59.947567361423005,
+    -179.10868352596296,
+    -59.94756759698215
+   ],
+   "bonds": [
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ],
+   "lone": -43263.820201003946,
+   "binding": -4.780205206676328,
+   "relaxation": -0.18861521381768398,
+   "lone_steps": 1,
+   "lone_repeat": 4.650245177872249,
+   "lone_predicted": -0.004265145238605328,
+   "lone_largest_force": 0.01658567,
+   "lone_stress_zz_GPa": 0.00853209587799499
+  },
+  "pvdf_001": {
+   "cell": -43267.874823339,
+   "chain": -43260.056430855606,
+   "between": -7.818392483393836,
+   "largest_force_on_the_lone_chain": 1.01260301,
+   "repeat": 2.580755558,
+   "monomers_in_a_chain": 1,
+   "dihedrals": [
+    180.0,
+    180.0
+   ],
+   "bonds": [
+    "CF2-CH2",
+    "CH2-CF2"
+   ],
+   "lone": -43260.37116761974,
+   "binding": -7.503655719257949,
+   "relaxation": -0.3147367641358869,
+   "lone_steps": 1,
+   "lone_repeat": 2.591419111373832,
+   "lone_predicted": -0.011361954835592769,
+   "lone_largest_force": 0.04050619,
+   "lone_stress_zz_GPa": 0.00617841425647913
+  }
+ },
+ "pairs": {
+  "cand_vdf5-rvdf1-6_TTTT_in_pvdfb_s2_upright minus cand_vdf5-rvdf1-6_TGTGp_in_pvdfb_s2": {
+   "cell": 0.06967550886474783,
+   "inside_a_chain": 1.060099778645963,
+   "between_chains": -0.9904242697812151
+  },
+  "rvdf6_GTGpT_in_pvdfb_s2 minus cand_vdf5-rvdf1-6_TGTGp_in_pvdfb_s2": {
+   "cell": 0.1967019800649723,
+   "inside_a_chain": 0.41495577128080186,
+   "between_chains": -0.21825379121582955
+  },
+  "pvdf_000 minus pvdf_001": {
+   "cell": -0.7255828716224642,
+   "inside_a_chain": -3.5751549345222884,
+   "between_chains": 2.8495720628998242,
+   "lone_chain": -3.4490333842040855,
+   "binding": 2.7234505125816213
+  }
+ }
+}

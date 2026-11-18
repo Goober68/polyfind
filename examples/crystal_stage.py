@@ -27,6 +27,10 @@ def main():
     ap.add_argument("--wide", action="store_true", help="stage 11: the diameters' bounds opened (crystalfit.BOUNDS11_WIDE)")
     ap.add_argument("--rows", action="store_true", help="stage 13: the rows from outside the module (examples/stage13_rows.py): the rigid cells, "
                     "the single-chain potentials and the conformers")
+    ap.add_argument("--frozen", default=None, help="stage 13 with --rows: the reversed-unit candidate's relaxed cells (examples/chain_split.py polyfind "
+                    "--freeze), on which its rows are evaluated; without it those rows are left out")
+    ap.add_argument("--typed", action="store_true", help="stage 13: the CF2-CF2 and CH2-CH2 bonds' own torsion triples as six more variables "
+                    "(crystalfit.VARIABLES13_TYPED), started at the CF2-CH2 bond's")
     args = ap.parse_args()
     C.BELT_GEOMETRY = args.geometry
     x0 = None
@@ -36,7 +40,7 @@ def main():
             x0 = json.load(fh)["x"]
     if args.set:
         import numpy as np
-        names = {7: C.VARIABLES7, 11: C.VARIABLES7, 12: C.VARIABLES12, 13: C.VARIABLES13}[args.stage]
+        names = {7: C.VARIABLES7, 11: C.VARIABLES7, 12: C.VARIABLES12, 13: C.VARIABLES13_TYPED}[args.stage]
         base = list(x0) if x0 is not None else list({7: C.X0_7, 11: C.X0_7, 12: C.X0_12, 13: C.X0_13}[args.stage])
         if args.stage in (12, 13) and len(base) == 13:
             base.append(float(C.X0_12[13]))
@@ -46,10 +50,14 @@ def main():
             base += [float(v) for v in C.X0_13[16:19]]
         if args.stage == 13 and len(base) == 19:
             base += [1.0, 1.0]
+        if args.typed and len(base) == 21:
+            base += base[16:19] * 2
         for item in args.set.split(","):
             k, v = item.split("=")
             base[names.index(k)] = float(v)
         x0 = np.array(base)
+    elif args.typed and x0 is not None and len(x0) == 21:
+        x0 = list(x0) + list(x0[16:19]) * 2
     if args.ridge is not None:
         C.RIDGE = float(args.ridge)
     extra = {"pendant_tilts": True} if args.pendant_tilts else {}
@@ -62,7 +70,7 @@ def main():
         spec = importlib.util.spec_from_file_location("stage13_rows", Path(__file__).with_name("stage13_rows.py"))
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        extra["extra_rows"] = mod.Rows(log=print)
+        extra["extra_rows"] = mod.Rows(log=print, frozen=args.frozen)
     best, history = C.fit(maxfev=args.maxfev, coulomb=args.coulomb, log=sys.stdout, stage=args.stage, x0=x0, method=args.method,
                           checkpoint=args.out, **extra)
     print(f"\nbest of {len(history)} evaluations:\n" + C.table(best))

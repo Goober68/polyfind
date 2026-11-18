@@ -60,3 +60,39 @@ def test_the_potential_row_is_linear_in_the_charges(rows):
     better = r.potential(replace(base, charge_increments=scaled, bond_sites=(("H", -0.318),), backbone_pull=(("F", 0.0155),)))["potential around hh"]
     assert better[0] == pytest.approx(0.210, abs=0.003) and inc[("C", "H")] < 0
     assert r.conformers(base) == {}   # built without the reference set
+
+
+def test_the_lone_chains_line_is_a_row_a_point_on_one_scale(rows):
+    """The helix up to 6% stretched and the all-trans chain about its repeat, each against the point
+    where DFT is lowest; under belt4 the helix is two to three times too stiff when pulled and
+    falls when pushed, which is what the rows are there to say."""
+    mod, r = rows
+    line = json.loads((PRED / "chain_stretch_pbe_d3bj.json").read_text())["branches"]
+    out = r.lone(PRESET_PARAMETERS[BELT4])
+    helix = [q for q in line["helix"]["points"] if q["repeat"] <= mod.LINE_HELIX_MAX and q["energy"] > 0]
+    assert set(out) == {f"lone chain, helix at {q['repeat']:.3f} A" for q in helix} | {f"lone chain, trans at {q['repeat']:.3f} A" for q in line["trans"]["points"]}
+    assert len(out) == 11
+    for q in helix:
+        e, dft, z = out[f"lone chain, helix at {q['repeat']:.3f} A"]
+        assert dft == q["energy"] and z == pytest.approx(np.sqrt(mod.LINE_COUNT / 11) * (e - dft) / np.hypot(0.05, 0.05 * dft), abs=1e-9)
+    pulled, pushed = out["lone chain, helix at 4.850 A"], out["lone chain, helix at 4.550 A"]
+    assert 1.6 < pulled[0] / pulled[1] < 2.4 and pushed[0] < 0.0 < pushed[1]
+    # the all-trans chain alone against the helix alone: belt4 has it 0.3 too high
+    low = out["lone chain, trans at 2.591 A"]
+    assert low[1] == pytest.approx(3.449, abs=0.005) and low[0] == pytest.approx(3.78, abs=0.05)
+
+
+def test_the_candidates_rows_on_frozen_cells_are_the_relaxed_split_at_the_set_that_froze_them(rows):
+    """Cells relaxed under belt4 and frozen, evaluated under belt4: the rows are the split of
+    examples/chain_split.py itself (cell +0.064 and +0.120, inside a chain +1.71 and +0.27), DFT's
+    beside them; under another set the same cells give other numbers without being relaxed."""
+    mod, _ = rows
+    r = mod.Rows(chains=("hh",), conformers=False, line=None, reversed_chains=None, frozen=PRED / "chain_split_frozen_belt4.json")
+    out = r.candidate(PRESET_PARAMETERS[BELT4])
+    want = {"candidate TTTT minus TG'TG": (0.064, 0.070), "candidate TTTT minus TG'TG, inside a chain": (1.708, 1.060),
+            "candidate GTG'T minus TG'TG": (0.120, 0.197), "candidate GTG'T minus TG'TG, inside a chain": (0.270, 0.415)}
+    assert set(out) == set(want)
+    for k, (mine, dft) in want.items():
+        assert out[k][0] == pytest.approx(mine, abs=0.002) and out[k][1] == pytest.approx(dft, abs=0.001)
+    assert out["candidate TTTT minus TG'TG"][2] == pytest.approx((out["candidate TTTT minus TG'TG"][0] - out["candidate TTTT minus TG'TG"][1]) / 0.05)
+    assert mod.Rows(chains=("hh",), conformers=False, line=None, reversed_chains=None).candidate(PRESET_PARAMETERS[BELT4]) == {}

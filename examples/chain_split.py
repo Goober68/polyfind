@@ -100,6 +100,20 @@ def frames(args):
               f"{'one stands for all' if len(keep) == 1 else 'each is written'}")
 
 
+def backbone_torsions(atoms) -> dict:
+    """``{dihedrals, bonds}`` of a lone chain's frame: one backbone dihedral a bond of the repeat, in
+    degrees, walking up the chain, and the two groups each turns between (``CF2-CH2``)."""
+    ST = _load("chain_stretch")
+    order, _ = ST.backbone(atoms)
+    n = sum(1 for e in atoms.symbols if e == "C")
+    d = atoms.get_all_distances(mic=True)
+    kind = []
+    for c in order:
+        near = [atoms.symbols[k] for k in np.flatnonzero(d[c] < 1.6) if atoms.symbols[k] != "C"]
+        kind.append("C" + "".join(f"{e}{near.count(e) if near.count(e) > 1 else ''}" for e in ("H", "F") if e in near))
+    return {"dihedrals": ST.dihedrals(atoms)[:n], "bonds": [f"{kind[k + 1]}-{kind[k + 2]}" for k in range(n)]}
+
+
 def split(frames_dir: Path, name: str, relaxed_dir: Path | None = None) -> dict:
     """``{cell, chain, between}`` in kcal/mol per monomer and the largest DFT force on the lone chain
     (eV/A); with ``relaxed_dir``, also the lone chain relaxed (``lone``, its last labelled step
@@ -115,7 +129,7 @@ def split(frames_dir: Path, name: str, relaxed_dir: Path | None = None) -> dict:
     chain = float(np.mean([a.info["REF_energy"] / a.info["n_monomers"] for a in lone])) * EV
     cell = info["cell_eV"] / info["cell_monomers"] * EV
     out = {"cell": cell, "chain": chain, "between": cell - chain, "largest_force_on_the_lone_chain": float(max(np.abs(a.arrays["REF_forces"]).max() for a in lone)),
-           "repeat": float(lone[0].cell[2, 2]), "monomers_in_a_chain": int(info["n_monomers"])}
+           "repeat": float(lone[0].cell[2, 2]), "monomers_in_a_chain": int(info["n_monomers"]), **backbone_torsions(lone[0])}
     if relaxed_dir is not None:
         steps = sorted(relaxed_dir.glob(f"{name}_chain0_in_*.dft.xyz"), key=lambda f: len(f.name))
         if steps:
@@ -162,12 +176,14 @@ def _load(name):
     return mod
 
 
-def polyfind_split(SP, model, x, ch, tilts: bool = True) -> dict:
+def polyfind_split(SP, model, x, ch, tilts=True) -> dict:
     """A cell's energy under the parameter set in force, split as DFT's is: each chain alone on a
     16 A square lattice with its coordinates as the cell has them (one-chain packers, the same
-    terms), and the cell minus those.  kcal/mol per cell.  With ``tilts`` the pendant groups are
-    relaxed as rigid tilts in the cell first (the relaxation DFT's cell has), and the lone
-    chains carry the tilted groups."""
+    terms), and the cell minus those.  kcal/mol per cell.  With ``tilts`` true the pendant groups
+    are relaxed as rigid tilts in the cell first (the relaxation DFT's cell has) and the lone
+    chains carry the tilted groups; with an array (degrees, as ``tilts_deg`` came back) the groups
+    are set to those tilts and nothing is relaxed: a cell frozen at an earlier parameter set's
+    geometry, which is right to first order in how far the parameters have moved since."""
     from polyfind import mixedcell as MC
     from polyfind import pendants as PD
 
@@ -182,18 +198,28 @@ def polyfind_split(SP, model, x, ch, tilts: bool = True) -> dict:
         one = MC.MixedModel(polymer, model.name, pk1, model.flips[k:k + 1], [ch], angle_stiffness=model.angle_stiffness)
         lone += one.physical_energy(np.concatenate([[BOX, BOX, 90.0, st.lattice[3]], [0.0, 0.0, st.place[k, 2], 0.0], st.tors[k], st.angs[k]]))
     out = {"cell": cell, "chain": lone, "between": cell - lone}
-    if tilts:
-        dE, deg, groups = MC.tilt_relaxation(model, x)
+    if tilts is not False and tilts is not None:
+        vals = [PD.pinned_chain_valence(b[0], polymer, None, cz=cz)[0] for b in built]
         J, atoms = PD.belt_site_constraint(model.pk, P0, cz=cz)
+        if tilts is True:
+            dE, deg, groups = MC.tilt_relaxation(model, x)
+        else:
+            deg = np.asarray(tilts, dtype=float)
+            el = np.asarray(list(model.pk.elements) * model.pk.n_chains)
+            groups = PD.pendant_groups(latn, P0[atoms], [str(e) for e in el[atoms]])
+            if deg.shape != (len(groups), 3):
+                raise ValueError(f"tilts for {deg.shape[0]} pendant groups, and the cell has {len(groups)}")
         Pt = P0 + (J @ PD.group_displacements(groups, np.radians(deg).ravel(), len(atoms))).reshape(-1, 3)
+        if tilts is not True:
+            dE = float(MC.placed_energy_and_grad(model.pk, frames, Pt, latn, valences=vals)[0]) - float(MC.placed_energy_and_grad(model.pk, frames, P0, latn, valences=vals)[0])
         box = np.diag([BOX, BOX, cz])
         moved = 0.0
         for k in range(model.nc):
             sl = slice(k * n, (k + 1) * n)
-            val = [PD.pinned_chain_valence(built[k][0], polymer, None, cz=cz)[0]]
-            e = [MC.placed_energy_and_grad(pk1, frames[k:k + 1], P[sl], box, valences=val)[0] for P in (P0, Pt)]
+            e = [MC.placed_energy_and_grad(pk1, frames[k:k + 1], P[sl], box, valences=vals[k:k + 1])[0] for P in (P0, Pt)]
             moved += float(e[1]) - float(e[0])
-        out.update(tilt_cell=float(dE), tilt_chain=moved, cell_tilted=cell + float(dE), chain_tilted=lone + moved, between_tilted=cell + float(dE) - lone - moved)
+        out.update(tilt_cell=float(dE), tilt_chain=moved, cell_tilted=cell + float(dE), chain_tilted=lone + moved, between_tilted=cell + float(dE) - lone - moved,
+                   tilts_deg=np.asarray(deg, dtype=float))
     return out
 
 
@@ -245,7 +271,7 @@ def polyfind(args):
         sets[name] = F.PRESET_PARAMETERS[path] if path in F.PRESET_PARAMETERS else C.parameters(np.array(json.loads(Path(path).read_text())["x"], dtype=float))
     confs = [c for c in (args.confs or ("beta,alpha" if plain else "TG'TG,TTTT,GTG'T")).split(",") if c]
     for name, prm in sets.items():
-        rows = {}
+        rows, frozen = {}, {}
         previous = SP.C.SITES_FOR
         SP.C.SITES_FOR = prm
         try:
@@ -261,7 +287,9 @@ def polyfind(args):
                         per = 2 * ch.n_monomers
                     everything, _ = SP.free_sets(model)
                     xu, _ = CA.relaxed(model, x0, np.setdiff1d(everything, model.index("shear")))
-                    rows[conf] = r = {k: v / per for k, v in polyfind_split(SP, model, xu, ch).items()}
+                    whole = polyfind_split(SP, model, xu, ch)
+                    frozen[conf] = {"x": [float(v) for v in xu], "tilts_deg": whole.pop("tilts_deg").tolist()}
+                    rows[conf] = r = {k: v / per for k, v in whole.items()}
                     lone = polyfind_lone(SP, model, xu, ch)
                     r.update(lone=lone["lone"] / per, binding=r["cell_tilted"] - lone["lone"] / per, lone_repeats=lone["repeats"], lone_torsions=lone["torsions"],
                              repeat=float(model.state(xu).lattice[3]), torsions=[[float(v) for v in t] for t in model.state(xu).tors])
@@ -280,6 +308,11 @@ def polyfind(args):
             print(f"{name}: {conf} minus {confs[0]}: cell {q['cell']:+.3f} = inside a chain {q['inside_a_chain']:+.3f} + between chains {q['between_chains']:+.3f}"
                   f"; = the chains relaxed alone {q['lone_chain']:+.3f} + binding {q['binding']:+.3f}")
         out["sets"].setdefault(name, {})[args.row] = {"cells": rows, "pairs": pairs}
+        if args.freeze:  # the relaxed cells themselves, for rows evaluated on them as the parameters move (examples/stage13_rows.py)
+            state = json.loads(Path(args.freeze).read_text()) if Path(args.freeze).exists() else {}
+            state[args.row] = {"relaxed_under": name, "cells": frozen}
+            Path(args.freeze).write_text(json.dumps(state))
+            print(f"written {args.freeze}")
     if args.out:
         Path(args.out).write_text(json.dumps(out, indent=1))
         print(f"written {args.out}")
@@ -303,6 +336,7 @@ def main():
     s.add_argument("--confs", default="", help="the first is the reference; default TG'TG,TTTT,GTG'T (for plain PVDF beta,alpha)")
     s.add_argument("--fit", action="append", default=[], help="name=crystal-stage result file, or name=preset")
     s.add_argument("--out", default="")
+    s.add_argument("--freeze", default="", help="write the relaxed cells (variables and pendant tilts) of the last --fit here")
     args = ap.parse_args()
     {"frames": frames, "dft": dft, "polyfind": polyfind}[args.step](args)
 

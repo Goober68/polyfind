@@ -2882,7 +2882,7 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
         out = replace(out, lj_pairs=(("F", "H", float(x_hf), float(d_hf)),))
     if len(x) == 11:  # stage 3: charge penetration in the lattice sum, b in 1/A
         out = replace(out, charge_damping=float(x[10]))
-    elif len(x) in (12, 13, 14, 16, 19, 21):
+    elif len(x) in (12, 13, 14, 16, 19, 21, 27):
         # stage 4: fluorine belt sites (polymers.belt_fluorine), a repulsion-only wall against H
         # with well depth 10**x[10] kcal/mol at the fixed diameter BELT_X_DIAMETER; the sites see
         # no C, F or other site.  x[11] is reserved for the charge penetration of stage 3 and is
@@ -2911,14 +2911,19 @@ def crystal_stage_parameters(x, base: FFParameters = FITTED_VALENCE) -> FFParame
             # and the lattice's torsion triple (the CF2-CH2 type's), which the alpha-beta gap sets along
             # a direction the conformers leave open (docs/CRYSTAL_STAGE.md 5.27)
             out = replace(out, torsion=(float(x[16]), float(x[17]), float(x[18])))
-        if len(x) == 21:
+        if len(x) >= 21:
             # and the F-F pair's own term, as multipliers on fluorine's own (already multiplied) diameter
             # and depth: fluorine against fluorine between level reversed units is what the reversed-unit
             # candidate's cell turns on, and the mixing rule has it too soft (5.26)
             table = {e: (xi, di) for e, xi, di in out.lj}
             out = replace(out, lj_pairs=tuple(out.lj_pairs) + (("F", "F", float(x[19] * table["F"][0]), float(x[20] * table["F"][1])),))
+        if len(x) == 27:
+            # and the torsion triples of the two bonds a reversed unit makes, CF2-CF2 and CH2-CH2, which
+            # the triple of x[16:19] (the CF2-CH2 bond's) is wrong for: lone chains of the polymer with
+            # every second unit reversed hold them (docs/CRYSTAL_STAGE.md 5.29)
+            out = replace(out, torsion_types=(("CF2-CF2", float(x[21]), float(x[22]), float(x[23])), ("other", float(x[24]), float(x[25]), float(x[26]))))
     elif len(x) not in (8, 10):
-        raise ValueError(f"expected 8, 10, 11, 12, 13, 14, 16, 19 or 21 crystal-stage variables, got {len(x)}")
+        raise ValueError(f"expected 8, 10, 11, 12, 13, 14, 16, 19, 21 or 27 crystal-stage variables, got {len(x)}")
     return out
 
 

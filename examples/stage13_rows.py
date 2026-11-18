@@ -16,6 +16,28 @@ kinds, every one read from files in the repository:
   The potential is linear in the two bond increments, the site's charge and the backbone pull, so
   it costs nothing per evaluation; the induced dipoles are those of the polarizabilities and the
   damping the chains were built with, which the stage does not vary.
+* **the lone chain's line** (``docs/predictions/chain_stretch_pbe_d3bj.json``, examples/chain_stretch.py):
+  plain PVDF's chain alone, held at each repeat DFT was asked at, its torsions, backbone angles
+  and pendant groups relaxed: the helix from 6% shorter to 6% longer than it likes to be
+  (:data:`LINE_HELIX_MAX`), and the all-trans chain about its own repeat.  A row a point,
+  the energy per monomer against the point where DFT is lowest, at ``hypot(0.05, 0.05 |DFT|)``
+  kcal/mol; together they count as :data:`LINE_COUNT` rows.  Nothing between chains is in them:
+  they are what holds the torsion terms and the backbone angle's stiffness to the chain itself,
+  where the gap between the two crystals alone lets a torsion term pay for an error between chains
+  (docs/CRYSTAL_STAGE.md 5.29).
+* **the reversed unit's bonds** (``docs/predictions/chain_conformers_pbe_d3bj.json``,
+  examples/chain_conformers.py): lone chains of the polymer with every second unit reversed, each
+  conformer held at the torsions DFT settled it at, its energy per monomer against the all-trans
+  chain's at ``hypot(0.05, 0.05 |DFT|)``; together :data:`REVERSED_COUNT` rows.  They are what a
+  CF2-CF2 and a CH2-CH2 bond's torsion triples are fitted to.
+* **the reversed-unit candidate's cells** (``docs/predictions/chain_split_pbe_d3bj.json``,
+  examples/chain_split.py; only with ``frozen``): its two helix placements and its all-trans cell,
+  each against the first placement, as a cell (the margin's tolerance, 0.05) and inside a chain
+  (0.10 and 0.15: DFT's lone chain keeps the bond lengths the crystal gave it, which a chain of
+  fixed bonds has no counterpart of).  Polyfind's cells are not relaxed in a row: they are the
+  cells of ``frozen`` (``chain_split.py polyfind --freeze``, relaxed under an earlier parameter
+  set, pendant tilts included), which is right to first order in how far the parameters have
+  moved; the fit is run again from cells frozen at its result.
 * **the conformers** (the reference set named by ``$POLYFIND_TRAINSET``): the energy and force
   rms of the training systems' DFT frames under the parameter set's non-bonded terms and its
   torsion triple (``ValenceDesign.lattice``), against what the valence fit itself has, at
@@ -49,12 +71,21 @@ COUNT = {"beta": 6.0, "candidate": 6.0, "alpha": 6.0, "hh": 12.0, "cand6": 9.0}
 RIGID_TOL = (0.03, 0.15)        # kcal/mol per monomer, and a fraction of DFT's value
 POTENTIAL_TOL = 0.15            # kcal/mol per e
 CONFORMER_TOL = (0.15, 0.15)    # kcal/mol, kcal/mol/A
+LINE_TOL = (0.05, 0.05)         # kcal/mol per monomer, and a fraction of DFT's value
+LINE_COUNT = 8.0                # how many rows the lone chain's line counts as
+REVERSED_COUNT = 4.0            # and the reversed unit's lone conformers
+CANDIDATE = ("vdf5-rvdf1-6", "TG'TG", {"TTTT": "cand_vdf5-rvdf1-6_TTTT_in_pvdfb_s2_upright", "GTG'T": "rvdf6_GTGpT_in_pvdfb_s2"}, "cand_vdf5-rvdf1-6_TGTGp_in_pvdfb_s2")
+CANDIDATE_TOL = {"cell": 0.05, "inside": {"TTTT": 0.15, "GTG'T": 0.10}}  # kcal/mol per monomer
+LINE_HELIX_MAX = 4.96           # A: the helix branch is a row up to this repeat (6% stretched; DFT's C-C bonds are 1 to 3% longer there,
+                                # which a chain of fixed bond lengths cannot follow, and further out polyfind's helix has let go)
 REFERENCE_PRESET = "pvdf-dft-valence-belt4"  # the charges the stored potential samples' patterns were built with
 
 
 class Rows:
     def __init__(self, rigid=PRED / "interchain_belt4.json", potential=PRED / "chain_potential_pbe_samples_sites.npz",
-                 torsions=PRED / "valence_torsions_stage13.json", trainset: str | None = None, log=None, chains=None, conformers: bool = True):
+                 torsions=PRED / "valence_torsions_stage13.json", trainset: str | None = None, log=None, chains=None, conformers: bool = True,
+                 line=PRED / "chain_stretch_pbe_d3bj.json", reversed_chains=PRED / "chain_conformers_pbe_d3bj.json", split=PRED / "chain_split_pbe_d3bj.json",
+                 frozen=None):
         self.log = log or (lambda *a, **k: None)
         t0 = time.time()
         self.CP = _load("chain_potential")
@@ -67,6 +98,22 @@ class Rows:
         self.blocks = self.CP.potential_blocks(data, extras=False)
         ref = {(a, b): float(d) for a, b, d in PRESET_PARAMETERS[REFERENCE_PRESET].charge_increments}
         self.ref_increments = (ref[("C", "H")], ref[("C", "F")])
+        # --- the lone chain's line
+        self.line = None
+        if line is not None and Path(line).exists():
+            self.ST = _load("chain_stretch")
+            self.line = {name: {**br, "points": [q for q in br["points"] if name != "helix" or q["repeat"] <= LINE_HELIX_MAX]}
+                         for name, br in json.loads(Path(line).read_text())["branches"].items()}
+        # --- the reversed unit: lone conformers, and the candidate's cells on frozen geometry
+        self.reversed = None
+        if reversed_chains is not None and Path(reversed_chains).exists():
+            self.CC = _load("chain_conformers")
+            self.reversed = json.loads(Path(reversed_chains).read_text())["conformers"]
+        self.frozen = None
+        if frozen is not None:
+            self.CS = _load("chain_split")
+            self.frozen = json.loads(Path(frozen).read_text())[CANDIDATE[0]]["cells"]
+            self.split = json.loads(Path(split).read_text())["pairs"]
         # --- the conformers
         self.design = None
         path = (trainset or os.environ.get(F.REFERENCE_ENV)) if conformers else None
@@ -78,7 +125,8 @@ class Rows:
             self.x_valence = np.array(stored["x"], dtype=float)
             self.reference = stored["valence_fit"]
         self.log(f"stage 13's outside rows: {sum(len(b['frames']) - 1 for b in self.table.values())} rigid cells in {len(self.table)} packings, "
-                 f"{len(self.blocks)} chains' potentials, {'no conformers (set $' + F.REFERENCE_ENV + ')' if self.design is None else str(len(self.design.frames)) + ' conformer frames'}; "
+                 f"{len(self.blocks)} chains' potentials, {'no line of the lone chain' if self.line is None else str(sum(len(b['points']) for b in self.line.values())) + ' points of the lone chain'}, "
+                 f"{'no conformers (set $' + F.REFERENCE_ENV + ')' if self.design is None else str(len(self.design.frames)) + ' conformer frames'}; "
                  f"{time.time() - t0:.0f} s")
 
     # ------------------------------------------------------------------ the three kinds
@@ -112,18 +160,78 @@ class Rows:
             out[f"potential around {name}"] = (rms, 0.0, rms / POTENTIAL_TOL)
         return out
 
+    def lone(self, params) -> dict:
+        if self.line is None:
+            return {}
+        previous = self.SR.C.SITES_FOR
+        self.SR.C.SITES_FOR = params
+        try:
+            with params.applied():
+                lines = self.ST.polyfind_branches(self.IF.SP, self.IF, self.table, self.line)
+        finally:
+            self.SR.C.SITES_FOR = previous
+        flat = [(name, q, r) for name, br in self.line.items() for q, r in zip(br["points"], lines[name])]
+        ref = int(np.argmin([q["energy"] for _, q, _ in flat]))
+        weight = np.sqrt(LINE_COUNT / (len(flat) - 1))
+        out = {}
+        for k, (name, q, r) in enumerate(flat):
+            if k != ref:
+                e, dft = r["energy"] - flat[ref][2]["energy"], q["energy"]
+                out[f"lone chain, {name} at {q['repeat']:.3f} A"] = (e, dft, weight * (e - dft) / np.hypot(LINE_TOL[0], LINE_TOL[1] * dft))
+        return out
+
+    def reversed_unit(self, params) -> dict:
+        if self.reversed is None:
+            return {}
+        SP = self.IF.SP
+        with params.applied():
+            mine = self.CC.polyfind_conformers(SP, SP.C, self.reversed)
+        zero = mine[self.CC.REFERENCE]["energy"]
+        weight = np.sqrt(REVERSED_COUNT / (len(self.reversed) - 1))
+        out = {}
+        for name, r in self.reversed.items():
+            if name != self.CC.REFERENCE:
+                e, dft = mine[name]["energy"] - zero, r["energy"]
+                out[f"lone reversed chain, {name}"] = (e, dft, weight * (e - dft) / np.hypot(LINE_TOL[0], LINE_TOL[1] * dft))
+        return out
+
+    def candidate(self, params) -> dict:
+        if self.frozen is None:
+            return {}
+        row, base, others, base_frame = CANDIDATE
+        SP = self.IF.SP
+        pol, ref = json.load(open(SP.POLISHED)), json.load(open(SP.REFERENCES))
+        e = {}
+        with params.applied():
+            polymer = SP.C.make_polymer(row, SP.DK.sequence(row)[0])
+            for conf in (base, *others):
+                model, _, ch = SP.sheared_model(polymer, SP.stored_cell(row, conf, pol, ref), check=False)
+                f = self.frozen[conf]
+                s = self.CS.polyfind_split(SP, model, np.array(f["x"], dtype=float), ch, tilts=np.array(f["tilts_deg"], dtype=float))
+                e[conf] = (s["cell_tilted"] / (2 * ch.n_monomers), s["chain_tilted"] / (2 * ch.n_monomers))
+        out = {}
+        for conf, frame in others.items():
+            dft = self.split[f"{frame} minus {base_frame}"]
+            cell, inside = e[conf][0] - e[base][0], e[conf][1] - e[base][1]
+            out[f"candidate {conf} minus {base}"] = (cell, dft["cell"], (cell - dft["cell"]) / CANDIDATE_TOL["cell"])
+            out[f"candidate {conf} minus {base}, inside a chain"] = (inside, dft["inside_a_chain"], (inside - dft["inside_a_chain"]) / CANDIDATE_TOL["inside"][conf])
+        return out
+
     def conformers(self, params) -> dict:
         if self.design is None:
             return {}
         x = self.x_valence.copy()
         x[:3] = params.torsion
+        for name, *triple in params.torsion_types:  # a bond type the set has its own triple for
+            k = F.REF_TORSION_TYPES.index(name)
+            x[3 * k:3 * k + 3] = triple
         self.design.lattice = params
         e = self.design.errors(x)
         return {"conformers, energy rms": (float(e["energy_rms"]), self.reference["energy_rms"], (float(e["energy_rms"]) - self.reference["energy_rms"]) / CONFORMER_TOL[0]),
                 "conformers, force rms": (float(e["force_rms"]), self.reference["force_rms"], (float(e["force_rms"]) - self.reference["force_rms"]) / CONFORMER_TOL[1])}
 
     def __call__(self, params) -> dict:
-        return {**self.rigid(params), **self.potential(params), **self.conformers(params)}
+        return {**self.rigid(params), **self.potential(params), **self.lone(params), **self.reversed_unit(params), **self.candidate(params), **self.conformers(params)}
 
 
 def summary(rows: dict) -> str:

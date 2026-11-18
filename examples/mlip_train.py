@@ -345,18 +345,30 @@ def relax(args):
         start = read(f)
         a = start.copy()
         a.calc = tilted_calculator(calc, start) if args.dft_gradient else calc
+        at_start = a.get_potential_energy() / start.info["n_monomers"]
+        if args.repeat:  # the cell's third vector set to this length, the atoms carried along; the tilt stays the start's
+            cell = start.cell.array.copy()
+            cell[2] *= args.repeat / np.linalg.norm(cell[2])
+            a.set_cell(cell, scale_atoms=True)
         n = start.info["n_monomers"]
         e0, f0 = a.get_potential_energy() / n, float(np.abs(a.get_forces()).max())
         mask = [int(v) for v in args.mask.split()] if args.mask else None
         opt = BFGS(FrechetCellFilter(a, mask=mask), logfile=None, maxstep=0.1)
-        done = bool(opt.run(fmax=args.fmax, steps=args.steps))
+        s_start, done, held = a.get_scaled_positions(wrap=False), False, False
+        for done in opt.irun(fmax=args.fmax, steps=args.steps):
+            # a tilted potential is only DFT's near where it was tilted: along a soft direction its linear term has no end
+            if args.max_move and np.abs((a.get_scaled_positions(wrap=False) - s_start) @ a.cell.array).max() > args.max_move:
+                held = True
+                break
+        done = bool(done) and not held
         e1 = a.get_potential_energy() / n
         b = a.copy()
         b.calc = None
-        frame = f"{start.info['frame']}_in_{args.name}"
+        frame = args.frame or f"{start.info['frame']}_in_{args.name}"
         b.info = {**start.info, "frame": frame, "family": "relaxed",
                   "note": f"{start.info.get('source', start.info['frame'])}, relaxed in {args.name} with D3 "
-                          f"to {args.fmax} eV/A ({opt.get_number_of_steps()} steps{'' if done else ', NOT converged'})",
+                          f"to {args.fmax} eV/A ({opt.get_number_of_steps()} steps"
+                          f"{'' if done else ', stopped when an atom had moved ' + str(args.max_move) + ' A' if held else ', NOT converged'})",
                   "potential_eV_per_monomer": float(e1), "potential_start_eV_per_monomer": float(e0)}
         for k in ("REF_energy", "REF_stress", "dft_energy_ry", "dft_d3_ry", "dft_kpoints", "dft_seconds", "dft_conv_thr_ry"):
             b.info.pop(k, None)  # the start's labels are not this frame's
@@ -364,10 +376,10 @@ def relax(args):
         if args.dft_gradient:
             b.info["note"] += "; the potential tilted to DFT's forces and stress at the start"
             b.info["start_frame"] = start.info["frame"]
-            b.info["dft_predicted_eV_per_monomer"] = float(start.info["REF_energy"] / n + e1 - e0)
+            b.info["dft_predicted_eV_per_monomer"] = float(start.info["REF_energy"] / n + e1 - at_start)
         write(args.out / f"{frame}.start.xyz", b, format="extxyz")
         change = 100 * (a.cell.cellpar()[:3] / start.cell.cellpar()[:3] - 1)
-        print(f"{frame}: {opt.get_number_of_steps()} steps, converged {done}; the potential's energy {1e3 * (e1 - e0):+.1f} meV "
+        print(f"{frame}: {opt.get_number_of_steps()} steps, {'stopped at the largest move allowed' if held else 'converged ' + str(done)}; the potential's energy {1e3 * (e1 - e0):+.1f} meV "
               f"per monomer from the start (largest force there {f0:.2f} eV/A); lattice "
               + " ".join(f"{v:+.1f}%" for v in change) + f", volume {100 * (a.get_volume() / start.get_volume() - 1):+.1f}%",
               flush=True)
@@ -475,6 +487,11 @@ def main():
                                               "keeps the chain axis upright (no shear along the chains)")
     s.add_argument("--steps", type=int, default=1500)
     s.add_argument("--threads", type=int, default=4)
+    s.add_argument("--repeat", type=float, default=0.0, help="A: set the cell's third vector to this length before relaxing "
+                                                             '(with --mask "0 0 0 0 0 0": a chain held at a repeat)')
+    s.add_argument("--frame", default="", help="the relaxed frame's name (one cell), default START_in_NAME")
+    s.add_argument("--max-move", type=float, default=0.0, help="A: stop when an atom has moved this far from the start (against the cell); "
+                                                               "with --dft-gradient on a chain with soft turns, label there and go on")
     s.add_argument("--dft-gradient", action="store_true",
                    help="the cells are DFT-labelled frames: relax each in the potential tilted to DFT's forces and stress at its start "
                         "(a Newton step with the potential's curvature and DFT's gradient)")

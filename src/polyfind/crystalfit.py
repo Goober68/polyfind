@@ -220,6 +220,15 @@ BOUNDS13 = np.vstack([BOUNDS13_TORSION, [(0.80, 1.40), (0.3, 4.0)]])
 SIGMA13_CHARGES = np.concatenate([SIGMA12, [0.10, 0.010]])
 SIGMA13_TORSION = np.concatenate([SIGMA13_CHARGES, [np.inf, np.inf, np.inf]])
 SIGMA13 = np.concatenate([SIGMA13_TORSION, [0.15, 1.0]])
+# The twenty-seven-variable form adds the torsion triples of the two bonds a reversed unit makes
+# (``FFParameters.torsion_types``: CF2-CF2, and CH2-CH2 under the type "other").  Each has a weak
+# ridge toward the CF2-CH2 triple of the same vector; what holds them is rows from outside the
+# module (lone chains of the polymer with every second unit reversed, and the reversed-unit
+# candidate's cells split into inside a chain and between chains; docs/CRYSTAL_STAGE.md 5.29).
+VARIABLES13_TYPED = VARIABLES13 + ("V1_FF", "V2_FF", "V3_FF", "V1_HH", "V2_HH", "V3_HH")
+X0_13_TYPED = np.concatenate([X0_13, X0_13[16:19], X0_13[16:19]])
+BOUNDS13_TYPED = np.vstack([BOUNDS13, [(-5.0, 4.0), (-3.0, 3.0), (0.0, 4.0)] * 2])
+SIGMA13_TYPED = np.concatenate([SIGMA13, [2.0] * 6])
 STAGE13 = dict(STAGE12)
 
 
@@ -251,7 +260,9 @@ def _config(x):
         return VARIABLES13_TORSION, X0_13_TORSION, BOUNDS13_TORSION, SIGMA13_TORSION
     if n == 21:
         return VARIABLES13, X0_13, BOUNDS13, SIGMA13
-    raise ValueError(f"expected 8, 10, 11, 12, 13, 14, 16, 19 or 21 variables, got {n}")
+    if n == 27:
+        return VARIABLES13_TYPED, X0_13_TYPED, BOUNDS13_TYPED, SIGMA13_TYPED
+    raise ValueError(f"expected 8, 10, 11, 12, 13, 14, 16, 19, 21 or 27 variables, got {n}")
 
 
 def ridge_parts(x) -> np.ndarray:
@@ -274,8 +285,10 @@ def ridge_parts(x) -> np.ndarray:
     if len(x) >= 16:  # the bond site's charge and the backbone pull, from what the potential alone gives
         parts += [(x[14:16] - np.array(SITE_PRIOR)) / sigma[14:16]]
     # (the torsion triple of the nineteen-variable form has no ridge: the conformers' rows hold it)
-    if len(x) == 21:  # the F-F pair: a diameter multiplier and a depth multiplier, from the mixing rule
+    if len(x) >= 21:  # the F-F pair: a diameter multiplier and a depth multiplier, from the mixing rule
         parts += [(x[19:20] - 1.0) / sigma[19:20], np.log(x[20:21]) / sigma[20:21]]
+    if len(x) == 27:  # the two other bonds' torsion triples, each from the CF2-CH2 bond's in the same vector
+        parts += [(x[21:24] - x[16:19]) / sigma[21:24], (x[24:27] - x[16:19]) / sigma[24:27]]
     return np.concatenate(parts)
 
 
@@ -288,7 +301,7 @@ def ridge(x) -> float:
 FD_STEPS = {"x_C": 0.005, "x_H": 0.005, "x_F": 0.005, "D_C": 0.02, "D_H": 0.02, "D_F": 0.02, "q_CH": 0.005,
             "q_CF": 0.005, "x_HF": 0.005, "D_HF": 0.02, "log10_D_X": 0.05, "b_q": 0.1, "log10_k_angle": 0.02,
             "wall_delta": 0.005, "q_M": 0.01, "pull_F": 0.002, "V1": 0.05, "V2": 0.05, "V3": 0.05,
-            "x_FF": 0.005, "D_FF": 0.05}
+            "x_FF": 0.005, "D_FF": 0.05, "V1_FF": 0.05, "V2_FF": 0.05, "V3_FF": 0.05, "V1_HH": 0.05, "V2_HH": 0.05, "V3_HH": 0.05}
 
 
 @dataclass
@@ -636,6 +649,8 @@ def save(ev: Evaluation, path: str, evaluations: int | None = None, complete: bo
     if prm.bond_sites or prm.backbone_pull:
         out["parameters"].update(bond_sites=prm.bond_sites, bond_site_fraction=prm.bond_site_fraction, backbone_pull=prm.backbone_pull)
     out["parameters"]["torsion"] = list(prm.torsion)
+    if prm.torsion_types:
+        out["parameters"]["torsion_types"] = [list(t) for t in prm.torsion_types]
     if ev.extra:
         out.update(ev.extra)
     with open(path, "w") as fh:
