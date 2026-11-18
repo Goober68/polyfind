@@ -575,6 +575,276 @@
      "polyfind_electrostatics": 0.38809443318618264,
      "polyfind_repulsion_dispersion": -0.06864919022073224,
      "dft": 0.36661139942199006
+    },
+    {
+     "frame": "inter_candidate_09",
+     "scale": [
+      1.0,
+      0.94
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.16766917411611004,
+     "polyfind_electrostatics": -0.42122597275010776,
+     "polyfind_repulsion_dispersion": 0.5888951468662214,
+     "dft": 0.15571960105371258
+    },
+    {
+     "frame": "inter_candidate_10",
+     "scale": [
+      1.0,
+      0.96
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.023851952702337087,
+     "polyfind_electrostatics": -0.27847715132431006,
+     "polyfind_repulsion_dispersion": 0.30232910402664714,
+     "dft": 0.01920021959425817
+    },
+    {
+     "frame": "inter_candidate_11",
+     "scale": [
+      1.0,
+      0.98
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": -0.023005955903776965,
+     "polyfind_electrostatics": -0.13795107465742262,
+     "polyfind_repulsion_dispersion": 0.11494511875364566,
+     "dft": -0.02596947750551059
+    },
+    {
+     "frame": "inter_candidate_12",
+     "scale": [
+      1.0,
+      0.99
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": -0.018824709041886933,
+     "polyfind_electrostatics": -0.06863364962460139,
+     "polyfind_repulsion_dispersion": 0.049808940582714456,
+     "dft": -0.020726636273999573
+    },
+    {
+     "frame": "inter_candidate_13",
+     "scale": [
+      1.0,
+      1.01
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.031110218958204428,
+     "polyfind_electrostatics": 0.06791379400996789,
+     "polyfind_repulsion_dispersion": -0.03680357505176346,
+     "dft": 0.03239046767707088
+    },
+    {
+     "frame": "inter_candidate_14",
+     "scale": [
+      1.0,
+      1.02
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.07246721282730206,
+     "polyfind_electrostatics": 0.13507488781370114,
+     "polyfind_repulsion_dispersion": -0.06260767498639552,
+     "dft": 0.07708168884410616
+    },
+    {
+     "frame": "inter_candidate_15",
+     "scale": [
+      1.0,
+      1.04
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.17915104973728546,
+     "polyfind_electrostatics": 0.2670231805712291,
+     "polyfind_repulsion_dispersion": -0.08787213083394363,
+     "dft": 0.19656889576521253
+    },
+    {
+     "frame": "inter_candidate_16",
+     "scale": [
+      1.0,
+      1.06
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.30871741708109823,
+     "polyfind_electrostatics": 0.39564560707999874,
+     "polyfind_repulsion_dispersion": -0.0869281899989005,
+     "dft": 0.34492624250544934
+    },
+    {
+     "frame": "inter_candidate_17",
+     "scale": [
+      0.96,
+      0.96
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.12078535392965506,
+     "polyfind_electrostatics": -0.5874276795295543,
+     "polyfind_repulsion_dispersion": 0.7082130334592094,
+     "dft": 0.1173426934688752
+    },
+    {
+     "frame": "inter_candidate_18",
+     "scale": [
+      0.98,
+      0.98
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": -0.045435835400660096,
+     "polyfind_electrostatics": -0.2827184760470658,
+     "polyfind_repulsion_dispersion": 0.2372826406464057,
+     "dft": -0.043502090813683614
+    },
+    {
+     "frame": "inter_candidate_19",
+     "scale": [
+      1.02,
+      1.02
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.16876802747552944,
+     "polyfind_electrostatics": 0.26216174200528997,
+     "polyfind_repulsion_dispersion": -0.09339371452976053,
+     "dft": 0.1797359554800854
+    },
+    {
+     "frame": "inter_candidate_20",
+     "scale": [
+      1.04,
+      1.04
+     ],
+     "shear_monomers": [
+      0.0,
+      0.0
+     ],
+     "polyfind": 0.40514261174397603,
+     "polyfind_electrostatics": 0.5052257925947856,
+     "polyfind_repulsion_dispersion": -0.10008318085080958,
+     "dft": 0.45314494896004776
+    },
+    {
+     "frame": "inter_candidate_21",
+     "scale": [
+      0.96,
+      0.96
+     ],
+     "shear_monomers": [
+      0.25,
+      0.0
+     ],
+     "polyfind": 1.369098164308049,
+     "polyfind_electrostatics": -0.6614042728487135,
+     "polyfind_repulsion_dispersion": 2.0305024371567626,
+     "dft": 0.4715482315833693
+    },
+    {
+     "frame": "inter_candidate_22",
+     "scale": [
+      0.96,
+      0.96
+     ],
+     "shear_monomers": [
+      0.5,
+      0.0
+     ],
+     "polyfind": 4.112827909981924,
+     "polyfind_electrostatics": -0.776965672040788,
+     "polyfind_repulsion_dispersion": 4.889793582022712,
+     "dft": 1.0922915350084335
+    },
+    {
+     "frame": "inter_candidate_23",
+     "scale": [
+      0.96,
+      0.96
+     ],
+     "shear_monomers": [
+      0.0,
+      0.5
+     ],
+     "polyfind": 2.561233587864855,
+     "polyfind_electrostatics": -0.6876372614560893,
+     "polyfind_repulsion_dispersion": 3.2488708493209444,
+     "dft": 0.7286984559079714
+    },
+    {
+     "frame": "inter_candidate_24",
+     "scale": [
+      1.04,
+      1.04
+     ],
+     "shear_monomers": [
+      0.25,
+      0.0
+     ],
+     "polyfind": 0.5134866104923432,
+     "polyfind_electrostatics": 0.4787416478943527,
+     "polyfind_repulsion_dispersion": 0.034744962597990536,
+     "dft": 0.5080253543889934
+    },
+    {
+     "frame": "inter_candidate_25",
+     "scale": [
+      1.04,
+      1.04
+     ],
+     "shear_monomers": [
+      0.5,
+      0.0
+     ],
+     "polyfind": 0.7287982670600925,
+     "polyfind_electrostatics": 0.4380093923780777,
+     "polyfind_repulsion_dispersion": 0.29078887468201486,
+     "dft": 0.6025157234303111
+    },
+    {
+     "frame": "inter_candidate_26",
+     "scale": [
+      1.04,
+      1.04
+     ],
+     "shear_monomers": [
+      0.0,
+      0.5
+     ],
+     "polyfind": 0.6133115144820991,
+     "polyfind_electrostatics": 0.47087960689135855,
+     "polyfind_repulsion_dispersion": 0.14243190759074054,
+     "dft": 0.553486843369138
     }
    ]
   },
@@ -1981,6 +2251,21 @@
      "polyfind_electrostatics": -0.021921894458965124,
      "polyfind_repulsion_dispersion": 1.5981181327559757,
      "dft": -0.3376079138714
+    },
+    {
+     "frame": "inter_cand6_03",
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "shear_monomers": [
+      0.075,
+      -0.225
+     ],
+     "polyfind": 0.10290779539664167,
+     "polyfind_electrostatics": -0.09463011108104524,
+     "polyfind_repulsion_dispersion": 0.19753790647768218,
+     "dft": -0.35876387116276615
     }
    ]
   }

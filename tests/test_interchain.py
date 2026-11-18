@@ -45,6 +45,7 @@ def test_the_stored_frames_are_the_cells_of_the_table():
     assert sum(pack == "beta" for pack, _ in rows.values()) == 27
     assert sum(pack == "alpha" for pack, _ in rows.values()) == 27
     assert sum(pack == "hh" for pack, _ in rows.values()) == 37
+    assert sum(pack == "candidate" for pack, _ in rows.values()) == 27 and sum(pack == "cand6" for pack, _ in rows.values()) == 4
     atoms = {"beta": 12, "candidate": 12, "alpha": 24, "hh": 24, "cand6": 72}
     for name, (pack, r) in rows.items():
         assert frames[name][0] == atoms[pack] == 6 * t[pack]["monomers_per_cell"]
@@ -106,6 +107,9 @@ def test_the_candidates_own_cell_gains_as_much_rigid_as_relaxed():
     assert end["polyfind"] == pytest.approx(1.576, abs=0.002)
     half = _row(t, (1.0, 1.0), (0.15, -0.45))   # the rigid cell's own minimum is part way along the line
     assert half["dft"] == pytest.approx(-0.412, abs=0.002) and half["polyfind"] == pytest.approx(0.695, abs=0.002)
+    quarter = _row(t, (1.0, 1.0), (0.075, -0.225))
+    assert quarter["dft"] == pytest.approx(-0.359, abs=0.002) and quarter["polyfind"] == pytest.approx(0.103, abs=0.002)
+    assert half["dft"] < quarter["dft"] < end["dft"] < 0.0
     relaxed = json.loads((PRED / "shear_registry_belt4.json").read_text())["candidate"]["dft"]["sheared_below_upright"]
     assert relaxed == pytest.approx(-0.346, abs=0.002) and abs(end["dft"] - relaxed) < 0.02
 
@@ -126,7 +130,69 @@ def test_the_predictions_registered_before_the_candidates_dft():
     miss_half = [v - half_dft for v in at_half]
     assert all(a > b > 0 for a, b in zip(miss_half, miss_half[1:])) and 0.16 < miss_half[-1] < 0.20
     assert half_dft < dft and all(h < e for h, e in zip(at_half[1:], at_end[1:])) and at_half[0] < at_end[0]
+    quarter_dft = _row(_table()["cand6"], (1.0, 1.0), (0.075, -0.225))["dft"]
+    at_quarter = [p["predictions"][n]["cells"]["inter_cand6_03"]["predicted"] for n in names]
+    assert 0.09 < at_quarter[-1] - quarter_dft < 0.12 and at_quarter[0] - quarter_dft > 0.45
     assert p["predictions"][names[0]]["cells"]["inter_cand6_02"]["predicted"] == pytest.approx(_row(_table()["cand6"], (1.0, 1.0), (0.30, -0.90))["polyfind"], abs=1e-6)
     # the charges of the last variant are the potential's, not fitted to any energy
     v = p["predictions"][names[-1]]["variables"]
     assert (v["s_CH"], v["s_CF"], v["d_CC"], v["M_H"]) == (0.300, 0.701, -0.031, 0.318)
+
+
+def _trials():
+    return json.loads((PRED / "interchain_wall_trials.json").read_text())["trials"]
+
+
+def _rms(trial, group):
+    return trial["after"][group]["rms_error"]
+
+
+def test_the_stored_trials_are_fits_of_all_the_cells():
+    """Every trial of `examples/interchain_wall.py` that docs/CRYSTAL_STAGE.md 5.26 quotes, on the
+    150 rigid cells (143 of them rows: each group against its own first cell)."""
+    t = _trials()
+    assert len(t) == 11 and all(tr["after"]["all"]["cells"] == 143 for tr in t.values())
+    groups = {"beta strain": 26, "beta shear": 13, "candidate strain": 26, "candidate shear": 13, "alpha strain": 26, "hh strain": 36, "cand6 strain": 3}
+    for tr in t.values():
+        assert {k: v["cells"] for k, v in tr["after"].items() if k != "all"} == groups
+    table, frames = _table(), {}
+    for pack, b in table.items():
+        frames.update({r["frame"]: r["dft"] for r in b["frames"]})
+    # the DFT the trials were fitted to is the stored table's, row for row
+    first = next(iter(t.values()))
+    for r in first["rows"]:
+        if r["frame"] in frames:
+            assert r["dft"] == pytest.approx(frames[r["frame"]], abs=2e-6)
+    # and the first trial is belt4 itself
+    belt4 = t["belt4 as it is"]
+    for r in belt4["rows"]:
+        if r["frame"].startswith("inter_cand6"):
+            assert r["model"] == pytest.approx(next(x["polyfind"] for x in table["cand6"]["frames"] if x["frame"] == r["frame"]), abs=1e-6)
+
+
+def test_what_the_trials_say():
+    t = _trials()
+    plain = ("beta strain", "beta shear", "candidate strain", "candidate shear", "alpha strain")
+    wall = t["buffered wall, polyfind's charges"]
+    # 12-6 cannot be tuned to the plain cells; the buffered wall can
+    assert max(_rms(t["12-6, diameters and belt wall refitted"], g) for g in plain) > 0.3 and max(_rms(wall, g) for g in plain) < 0.09
+    # the reversed chain is not a matter of the wall: its own F-F and H-H terms do not help, and end on bounds
+    like = t["buffered wall, polyfind's charges, F-F and H-H pair terms"]
+    assert 0.16 < _rms(wall, "hh strain") < 0.18 and _rms(like, "hh strain") > _rms(wall, "hh strain") - 0.01 and len(like["at_bound"]) == 3
+    # the two charge terms, at the potential's strengths, nothing of them fitted to an energy
+    site = t["buffered wall, bond site, charges from the potential"]
+    both = t["buffered wall, bond site and backbone pull, charges from the potential"]
+    assert _rms(site, "hh strain") == pytest.approx(0.142, abs=0.003) and _rms(both, "hh strain") == pytest.approx(0.091, abs=0.003)
+    assert all(k not in both["free"] for k in ("s_CH", "s_CF", "d_CC", "M_H"))
+    assert (both["variables"]["s_CH"], both["variables"]["s_CF"], both["variables"]["d_CC"], both["variables"]["M_H"]) == (0.300, 0.701, -0.031, 0.318)
+    # with an F-F term the candidate's own line comes within 0.09, and weighting it within 0.04 at a cost to the reversed chain
+    ff = t["the same with the F-F pair's own diameter and depth"]
+    heavy = t["the same, the candidate's own cells counted four times"]
+    assert _rms(ff, "cand6 strain") < 0.09 and _rms(ff, "hh strain") < 0.11 and max(_rms(ff, g) for g in plain) < 0.03
+    assert _rms(heavy, "cand6 strain") < 0.04 and 0.12 < _rms(heavy, "hh strain") < 0.14 and max(_rms(heavy, g) for g in plain) < 0.06
+    # the charge terms are what let one wall hold both: the same weighting without them
+    without = t["polyfind's charges, F-F term, the candidate's own cells counted four times"]
+    assert _rms(without, "hh strain") > 0.24
+    # and energies cannot set the charges: fitted to them, the atoms' own increments go to zero
+    free = t["charges fitted to the energies too (they leave the potential's values)"]
+    assert free["variables"]["s_CH"] < 1e-6 and free["variables"]["s_CF"] < 1e-6 and free["variables"]["M_H"] > 0.7

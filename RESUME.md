@@ -83,8 +83,8 @@ right": true at one registry, not along it).
         chain with every second unit reversed, -CH2-CF2-CF2-CH2- (`vdf1-rvdf1-2`, 37 cells: the only ones with
         fluorine against fluorine and hydrogen against hydrogen between chains). Label: `python
         examples/mlip_frames.py label --frames /opt/dft/interchain --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo
-        --np 4 --minutes 100` (resumable; 50 s per 12-atom cell, 2.3 min per 24-atom one). LABELLED: beta 27/27,
-        alpha 27/27, hh 37/37, candidate 9/27 (the rest queued behind `cand6`). Then `interchain_frames.py collect`.
+        --np 4 --minutes 100` (resumable; 50 s per 12-atom cell, 2.3 min per 24-atom one). ALL LABELLED (beta 27, candidate 27,
+        alpha 27, hh 37, cand6 4) and collected (`interchain_frames.py collect --frames /opt/dft/interchain`).
         WHAT BETA SHOWS: polyfind (belt4) is right on the stretched side and 1.2-1.4x too stiff at -6%; its registry
         cost over DFT's is 2.2x at a 4% wider cell, 3x at the cell, 5x at a 4% narrower one: too steep close in.
     (d) DONE: `examples/interchain_wall.py pairs --frames /opt/dft/interchain --registry /opt/dft/shear2` (the
@@ -134,21 +134,19 @@ right": true at one registry, not along it).
         set's charges win).
     (j) THE CANDIDATE'S OWN CELL, RIGID: THE GAIN IS ALL BETWEEN CHAINS (`interchain_frames.py` packing `cand6`:
         `vdf5-rvdf1-6` all-trans polished cell, own chains rigid, sheared along DFT's line; 72 atoms, 21 minutes of
-        DFT a cell). DFT ON THE RIGID CELL: -0.412 kcal/mol per monomer HALF WAY (0.15, -0.45) AND -0.338 AT THE END
-        (0.30, -0.90) (relaxed, at the end: -0.346).
-        REGISTERED BEFORE IT (`docs/predictions/interchain_cand6_predictions.json`; at (0.075,-0.225) /
-        (0.15,-0.45) / (0.30,-0.90)): belt4 +0.10 / +0.70 / +1.58; buffered wall, present charges -0.21 / -0.14 /
-        +0.15; with the bond site -0.24 / -0.21 / +0.03; with site and pull -0.25 / -0.23 / -0.04. SO: the wall takes
-        1.4 of the 1.9, the charges 0.2, 0.3 IS LEFT, in F..F at 2.52 A (8 a cell, level reversed units) traded for
-        H..F at 2.42. AFTER THE FACT, both cells in the fit, charges the potential's (half way, end; hh rms; plain
-        sheared rms): six wall variables -0.30, -0.13; 0.09; 0.01. With the F-F pair's own diameter and depth
-        (`--free ...,x_FF,D_FF`) -0.37, -0.19; 0.10; 0.02. The same with `--weight cand6=4`: -0.44, -0.29; 0.13;
-        0.05. The same WITHOUT the charge terms: -0.46, -0.25; hh 0.25; 0.09 (the charge terms are what let one
-        wall hold the candidate and the reversed chain together). The quarter-way cell
-        (`inter_cand6_03`) and the 18 candidate-packing plain cells were STILL IN DFT when this was written
-        (`/opt/dft/interchain_label_cand6.log`); after them: `interchain_frames.py collect --frames
-        /opt/dft/interchain`, fill the two "running" cells of the table in `docs/CRYSTAL_STAGE.md` 5.26, and extend
-        `tests/test_interchain.py`. Rebuild the trial's table after new labels: `interchain_wall.py pairs --frames
+        DFT a cell; ALL FOUR LABELLED). DFT ON THE RIGID CELLS (quarter, half, end of the line to (0.30, -0.90)
+        monomers): -0.359, -0.412, -0.338 kcal/mol per monomer (relaxed, at the end: -0.346). REGISTERED BEFORE
+        THEM (`docs/predictions/interchain_cand6_predictions.json`): belt4 +0.10, +0.70, +1.58; buffered wall,
+        present charges -0.21, -0.14, +0.15; with the bond site -0.24, -0.21, +0.03; with site and pull -0.25,
+        -0.23, -0.04. SO: the wall takes 1.4 of the 1.9 at the end, the charges 0.2; 0.10 / 0.18 / 0.30 is left, in
+        F..F at 2.52 A (8 a cell, level reversed units) traded for H..F at 2.42.
+        ALL 150 RIGID CELLS ARE LABELLED AND STORED (`docs/predictions/interchain_belt4.json`, frames beside it,
+        `tests/test_interchain.py`), AND THE TRIALS ON THEM (`docs/predictions/interchain_wall_trials.json`, 11
+        trials; hh rms / plain groups / the candidate's line): buffered wall, present charges 0.17 / 0.03-0.09 /
+        -0.28 -0.26 -0.01; site + pull at the potential's strengths 0.09 / 0.01-0.06 / -0.29 -0.30 -0.13; with the
+        F-F pair's own diameter and depth (`--free ...,x_FF,D_FF`) 0.10 / 0.01-0.03 / -0.33 -0.38 -0.20; that with
+        `--weight cand6=4` 0.13 / 0.02-0.05 / -0.36 -0.44 -0.29; the same weighting WITHOUT the charge terms hh
+        0.25. Rebuild the trial's tables after any new label: `interchain_wall.py pairs --frames
         /opt/dft/interchain --registry /opt/dft/shear2 [--charges M=-0.3 --out /opt/dft/interchain/pairs_sites.npy]`.
     (k) THE CONFORMER SIDE, STARTED: `ValenceDesign.lattice = <crystal-stage FFParameters>` makes the 467 conformers
         (`POLYFIND_TRAINSET=/home/user/sarco/materials/gpu_bundle/trainset_v1_566.xyz`) see the lattice's
@@ -164,7 +162,7 @@ right": true at one registry, not along it).
         zero it is stage 12 row for row. With the potential's charges and nothing refitted: lattice holds (beta
         a, b +0.2%, |P| 0.186, C 9-10% low), alpha-beta gap -0.39 (DFT -0.726): the torsions have to be refitted
         under the new charges.
-    (m) STILL TO DO, IN ORDER: finish the labels and store them (see (j)); THE FINAL FIT: stage 13 with the
+    (m) STILL TO DO, IN ORDER: THE FINAL FIT: stage 13 with the
         potential's three chains, the reversed chain's cells and the candidate's own cells as rows (an F-F pair
         term is the first thing to try for the 0.3 left on the candidate); SimpleFF given the two charge terms,
         then the torsions refitted under them (the gap row needs it); its preset; the acceptance on
