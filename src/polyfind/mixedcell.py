@@ -1006,7 +1006,7 @@ class MixedModel:
         G = np.einsum("sni,sij->snj", g3, frames)
         gv, Gp = CJ.aligned_block_vjp(coords[:, top["atoms0"]], tr["axis"], tr["daxis"], top["refs"], G, frame_sites(self.pk.elements))
         gv += CJ.oligomer_vjp(coords, bb, owner, is_pendant, P, R, top["atoms0"], Gp)
-        V1, V2, V3 = self.pk.torsion
+        V1, V2, V3 = self.pk.torsion_terms(P)   # numbers, or one entry a dihedral: either broadcasts over the chains
         ph = np.deg2rad(st.tors)
         e_tors = float((0.5 * (V1 * (1 + np.cos(ph)) + V2 * (1 - np.cos(2 * ph)) + V3 * (1 + np.cos(3 * ph)))).sum())
         gv[:, :P] += 0.5 * (-V1 * np.sin(ph) + 2.0 * V2 * np.sin(2 * ph) - 3.0 * V3 * np.sin(3 * ph)) * (np.pi / 180.0)

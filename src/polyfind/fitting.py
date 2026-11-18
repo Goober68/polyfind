@@ -157,6 +157,25 @@ class FFParameters:
     # that tells a CF2 beside a CH2 from a CF2 beside a CF2, which an increment typed by a bond's two
     # elements cannot.  Lattice side only, like the sites.  Empty: none (docs/CRYSTAL_STAGE.md 5.26).
     backbone_pull: tuple[tuple[str, float], ...] = ()
+    # The lattice's torsion terms by bond type: (type of :data:`REF_TORSION_TYPES`, V1, V2, V3) for the
+    # types that are not to take :attr:`torsion`.  Empty is what every earlier preset has: the one
+    # triple, the CF2-CH2 type's, on every backbone bond of every chain, which is right for PVDF and
+    # wrong for a CF2-CHF, a CF2-CF2 or a CH2-CH2 bond.  :meth:`applied` hands each packer one triple a
+    # dihedral (:meth:`torsion_for`).  Lattice side only; the oligomer side has ``torsion_by_bond``.
+    torsion_types: tuple[tuple[str, float, float, float], ...] = ()
+
+    def torsion_for(self, polymer, n_dihedrals: int):
+        """The torsion term of a chain of ``polymer`` with ``n_dihedrals`` dihedrals in its repeat:
+        :attr:`torsion` when no type has its own, else ``(n_dihedrals, 3)``, each dihedral taking
+        the triple of the bond it turns (:func:`polymer_torsion_types`)."""
+        if not self.torsion_types:
+            return tuple(self.torsion)
+        own = {t: (float(a), float(b), float(c)) for t, a, b, c in self.torsion_types}
+        unknown = set(own) - set(REF_TORSION_TYPES)
+        if unknown:
+            raise ValueError(f"unknown torsion types {sorted(unknown)}: {REF_TORSION_TYPES}")
+        triples = [own.get(t, tuple(float(v) for v in self.torsion)) for t in REF_TORSION_TYPES]
+        return np.array([triples[k] for k in polymer_torsion_types(polymer, n_dihedrals)])
 
     def polymer(self, polymer):
         """``polymer`` as this parameter set needs it built: with a charge site on every bond that
@@ -218,6 +237,7 @@ class FFParameters:
             rest += f" [pair wall {self.wall[0]}, delta {self.wall[1]:.4f}]"
         rest += "".join(f" [{q:+.3f} e on a site on each C-{e} bond]" for e, q in self.bond_sites)
         rest += "".join(f" [each {e} draws {q:.4f} e onto its backbone atom from each backbone neighbour]" for e, q in self.backbone_pull)
+        rest += "".join(f" [{t} torsion ({a:+.3f}, {b:+.3f}, {c:+.3f})]" for t, a, b, c in self.torsion_types)
         return (f"torsion=({self.torsion[0]:+.3f}, {self.torsion[1]:+.3f}, {self.torsion[2]:+.3f}) "
                 f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}{flx}{rest}")
 
@@ -282,6 +302,7 @@ class FFParameters:
         offsets = ff.offset_table()
         sites = {e: float(q) for e, q in self.bond_sites}
         pull = {e: float(q) for e, q in self.backbone_pull}
+        typed, outer = bool(self.torsion_types), self
 
         class _FittedPacker(pack_mod.CrystalPacker):
             def __init__(self, chain, **kw):
@@ -326,7 +347,7 @@ class FFParameters:
                 elif q_scale != 1.0:
                     chain = replace(chain, charges=np.asarray(chain.charges, dtype=float) * q_scale)
                 kw["eps_r"] = eps_r
-                kw["torsion"] = torsion
+                kw["torsion"] = torsion if not typed else outer.torsion_for(chain.polymer, len(chain.dihedrals))
                 if wall is not None:
                     kw["wall"] = wall
                 if damping > 0.0 and kw.get("coulomb", "dsf") == "ewald":
@@ -1267,6 +1288,17 @@ def torsion_types(frame: Frame) -> np.ndarray:
         pair = tuple(sorted((carbon_class(frame, int(b), bb), carbon_class(frame, int(c), bb))))
         out[k] = _CLASS_PAIR_TO_TYPE.get(pair, _NT - 1)
     return out
+
+
+def polymer_torsion_types(polymer, n_dihedrals: int) -> np.ndarray:
+    """Index into :data:`REF_TORSION_TYPES` for each dihedral of a chain's repeat, by the pendants
+    of the two backbone atoms of the bond it turns: the lattice side's :func:`torsion_types`.
+    Dihedral ``j`` of a built chain turns the bond between backbone atoms ``j + 1`` and ``j + 2``
+    of the cycled repeat (``tests/test_typed_torsions.py`` holds that against built coordinates).
+    A pendant counts by the element of its bonded atom, as :func:`carbon_class` counts it."""
+    B = polymer.bonds_per_repeat
+    cls = ["".join(sorted(polymer.backbone[k].substituents)) for k in range(B)]
+    return np.array([_CLASS_PAIR_TO_TYPE.get(tuple(sorted((cls[(j + 1) % B], cls[(j + 2) % B]))), _NT - 1) for j in range(n_dihedrals)], dtype=int)
 
 
 def load_reference(path: str | None = None) -> list[Frame]:

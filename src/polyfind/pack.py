@@ -999,7 +999,9 @@ class CrystalPacker:
         self.rc2 = cutoff ** 2
         self.alpha = alpha
         self.eps_r = eps_r
-        self.torsion = tuple(torsion)
+        # one Fourier triple for every dihedral, or one triple a dihedral of the repeat, (P, 3)
+        # (polyfind.fitting.FFParameters.torsion_for: each bond type its own)
+        self.torsion = tuple(torsion) if np.ndim(torsion) == 1 else np.array(torsion, dtype=float)
         if lj_cutoff not in self.LJ_CUTOFFS:
             raise ValueError(f"unknown lj_cutoff {lj_cutoff!r} (expected one of {self.LJ_CUTOFFS})")
         self.lj_cutoff = lj_cutoff
@@ -1259,16 +1261,25 @@ class CrystalPacker:
         self.e_excl = 0.0 if self._ewald is None else self.n_chains * self._exclusion(
             chain.coords, self._q_cell[: self.n], chain.c, self.K)[0]
 
+    def torsion_terms(self, n_dihedrals: int | None = None):
+        """``(V1, V2, V3)``: three numbers when one triple serves every dihedral, three arrays of one
+        entry a dihedral when each has its own (``n_dihedrals`` then has to be their number)."""
+        if isinstance(self.torsion, tuple):
+            return self.torsion
+        if n_dihedrals is not None and n_dihedrals != self.torsion.shape[0]:
+            raise ValueError(f"the packer has one torsion triple for each of {self.torsion.shape[0]} dihedrals, and was given {n_dihedrals}")
+        return self.torsion[:, 0], self.torsion[:, 1], self.torsion[:, 2]
+
     def torsion_energy(self, dihedrals) -> float:
         """Fourier torsion energy of one chain's repeat (kcal/mol)."""
-        V1, V2, V3 = self.torsion
         phi = np.deg2rad(np.asarray(dihedrals, dtype=float))
+        V1, V2, V3 = self.torsion_terms(phi.shape[-1])
         return float((0.5 * (V1 * (1 + np.cos(phi)) + V2 * (1 - np.cos(2 * phi)) + V3 * (1 + np.cos(3 * phi)))).sum())
 
     def torsion_energy_grad(self, dihedrals) -> np.ndarray:
         """``d torsion_energy / d dihedrals`` (kcal/mol per **degree**), one entry per dihedral."""
-        V1, V2, V3 = self.torsion
         phi = np.deg2rad(np.asarray(dihedrals, dtype=float))
+        V1, V2, V3 = self.torsion_terms(phi.shape[-1])
         return 0.5 * (-V1 * np.sin(phi) + 2.0 * V2 * np.sin(2 * phi) - 3.0 * V3 * np.sin(3 * phi)) * (np.pi / 180.0)
 
     # --- dipole, polarization and the applied field --------------------------------
