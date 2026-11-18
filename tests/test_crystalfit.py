@@ -2,6 +2,7 @@
 import json
 
 import numpy as np
+import pytest
 
 from polyfind import crystalfit as C
 from polyfind import fitting as F
@@ -345,3 +346,24 @@ def test_the_pendant_tilt_evaluation_reproduces_the_saved_belt4_gap_row():
     rigid = ev.alpha.energy_per_monomer - ev.beta.energy_per_monomer
     assert abs(gap - (rigid + ta["dE_per_monomer"] - tb["dE_per_monomer"])) < 1e-9
     assert abs(ev.objective - saved["objective"]) < 0.02
+
+
+def test_the_registry_rows_are_the_stored_dft_cells_and_polyfinds_cost_of_them():
+    """Stage 9's rows (crystalfit.REGISTRY): under the preset before the stage, the cost of every
+    rigid shear is the one examples/shear_registry.py stored beside DFT's single point on the same
+    atoms, so the fit and the measurement are one calculation; DFT's column is the stored one."""
+    import json
+    from pathlib import Path
+    table = json.loads((Path(__file__).resolve().parents[1] / "docs" / "predictions" / "shear_registry_belt4.json").read_text())["packings"]
+    costs = C.registry_costs(C.parameters(np.array(F.CRYSTAL8_TILT_FITTED_X)))
+    assert len(costs) == 26 and set(table) == set(C.REGISTRY)
+    for pack, block in table.items():
+        for row in block["shears"][1:]:
+            got, dft = costs[(pack, row["shear_monomers"][0], row["shear_monomers"][1])]
+            assert got == pytest.approx(row["polyfind"], abs=1e-9) and dft == pytest.approx(row["dft"], abs=1e-12)
+    fitted = C.registry_costs(C.parameters(np.array(F.CRYSTAL8_TILT_FITTED_X)), C.REGISTRY_FIT_ROWS)
+    assert len(fitted) == 8 and {k[0] for k in fitted} == {"beta", "candidate"}
+    # 2.5 to 3.4 times DFT on the rows the fit carries: seven to twelve tolerances each
+    z = [(p - t) / (C.TOL["registry"] * t) for p, t in fitted.values()]
+    assert 7.0 < min(z) and max(z) < 12.5
+    assert C.STAGE9["registry"] and C.STAGE9["angles"] and C.BOUNDS9_WIDE[1].tolist() == [0.70, 1.10] and C.BOUNDS7[1].tolist() == [0.90, 1.10]

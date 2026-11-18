@@ -110,6 +110,50 @@ BOUNDS7 = np.vstack([BOUNDS4, [(-0.7, 0.7)]])  # a fifth to five times the defau
 SIGMA7 = np.concatenate([SIGMA4, [0.3]])  # a factor of two is one width
 STAGE7 = {**STAGE6, "angles": True}
 STRAIN_STEP = 2e-3  # the strain of the stiffness and slope states (mechanics.strain_states' default)
+# Stage 9 (docs/MLIP_SECOND_OPINION.md 3.9 and 3.10): stage 7 plus what it costs to move
+# neighbouring chains along each other.  Plain PVDF, two chains of one monomer, sheared rigidly
+# along the chains in two packings (polyfind's beta cell, and the all-trans packing of the
+# reversed-unit candidate with plain chains in it), against PBE-D3(BJ) single points on the same
+# atoms (docs/predictions/shear_registry_belt4.json; examples/shear_registry.py).  Each packing is
+# its mixed-cell state (lattice A, B, gamma, c; per chain fa, fb, setting angle, height; the
+# backbone angles; which chain is flipped), fixed whatever the potential, so the atoms are the ones
+# DFT was given.  Rows: the shear of a and of b in monomers and DFT's energy against the unsheared
+# cell, kcal/mol per monomer.  The preset before this stage is 2.4 to 3.5 times DFT on them.
+REGISTRY = {
+    "beta": {"lattice": (4.754070390732875, 8.480849480989322, 90.00000001728047, 2.58768189713716),
+             "place": ((-5.268608544477583e-10, 1.099112771305001e-10, 180.0000000520547, -3.962121860770875e-06),
+                       (0.5, 0.5, 179.9999999825207, -0.15544595117388804)),
+             "angles": (115.72082256222639, 115.7208225622264), "flips": (False, True),
+             "rows": ((0.125, 0.0, 0.08472632240172957), (0.25, 0.0, 0.2963272064292811), (0.375, 0.0, 0.5329296346626006),
+                      (0.5, 0.0, 0.6922574149016462), (0.0, 0.125, 0.018048739806792852), (0.0, 0.25, 0.06923154596166871),
+                      (0.0, 0.375, 0.14694074422497957), (0.0, 0.5, 0.23980115753036843), (0.1, -0.3, 0.14764982987901032),
+                      (0.2, -0.6, 0.4575218272023895), (0.303, -0.909, 0.6753695675395203), (0.4, -1.2, 0.7073160723060824),
+                      (0.5, -1.5, 0.6913694890648986))},
+    "candidate": {"lattice": (4.9666474417274875, 8.4095769676478, 87.74847749549396, 2.5820277490117967),
+                  "place": ((-8.4433797942139e-09, -9.589605462579227e-10, 118.88700568626805, -0.00263537545088124),
+                            (0.5, 0.5, 118.88700751806567, -0.0026353935304825765)),
+                  "angles": (115.3233823251748, 115.32338232517456), "flips": (False, False),
+                  "rows": ((0.125, 0.0, 0.03988136142748725), (0.25, 0.0, 0.1479008336393515), (0.375, 0.0, 0.2856862153557611),
+                           (0.5, 0.0, 0.40511224011778885), (0.0, 0.125, 0.018728018754091302), (0.0, 0.25, 0.07573881867306073),
+                           (0.0, 0.375, 0.16021256852688823), (0.0, 0.5, 0.2588413622091229), (0.1, -0.3, 0.157100121785401),
+                           (0.2, -0.6, 0.4367857782869183), (0.303, -0.909, 0.5248112314772494), (0.4, -1.2, 0.39457165057252475),
+                           (0.5, -1.5, 0.2935379270257595))},
+}
+# The rows the fit carries, per packing: a quarter and half a monomer along each lattice vector.
+# Eight rows beside sixteen anchors; the other eighteen cells and the six E5 slides are the check.
+REGISTRY_FIT_ROWS = ((0.25, 0.0), (0.5, 0.0), (0.0, 0.25), (0.0, 0.5))
+TOL["registry"] = 0.2  # relative: a cost within a fifth of DFT's is one tolerance
+STAGE9 = {**STAGE7, "registry": True}
+# Stage 9's wide bounds on the diameters.  The earlier stages held every diameter within a tenth of
+# its valence value; the registry cost is set by hydrogen's contacts and lowering it by a factor
+# of three is outside that box, so the box is opened where the cost has its handles (the ridge
+# still charges for the distance): hydrogen and the H-F pair may shrink to 0.70, carbon may grow
+# to 1.30 (a smooth wall where hydrogen's is a bumpy one), fluorine to 0.85-1.15.
+BOUNDS9_WIDE = BOUNDS7.copy()
+BOUNDS9_WIDE[0] = (0.90, 1.30)  # x_C
+BOUNDS9_WIDE[1] = (0.70, 1.10)  # x_H
+BOUNDS9_WIDE[2] = (0.85, 1.15)  # x_F
+BOUNDS9_WIDE[8] = (0.70, 1.15)  # x_HF
 
 
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
@@ -204,6 +248,48 @@ def cases_for(x):
     return beta_case, alpha_case
 
 
+def registry_costs(params: F.FFParameters, rows=None, coulomb: str = "ewald", polarizable: bool = True,
+                   lj_cutoff: str = "force") -> dict:
+    """``{(packing, shear of a, shear of b): (polyfind, DFT)}`` in kcal/mol per monomer: the cost
+    under ``params`` of each rigid shear of :data:`REGISTRY` against the unsheared cell, beside
+    DFT's on the same atoms.  ``rows`` restricts it to those ``(shear of a, shear of b)`` pairs
+    (monomers) in every packing; ``None`` is all thirteen.  The chains are the candidate screen's
+    VDF unit whatever :data:`BELT_GEOMETRY` says (the belt-site monomer at the PBE-D3 pendant
+    geometry in a copolymer of :data:`polyfind.polymers.PVDF`'s backbone bond length,
+    examples/candidate_screen.py ``make_polymer``): the cells DFT was given were built from it."""
+    from . import mixedcell as MC
+    from . import pack as pack_mod
+    from .linegroup import repeat_chains
+    from .polarizability import Polarizable
+    from .polymers import PVDF, copolymer, monomer_of, pvdf_belt
+    want = None if rows is None else {(float(a), float(b)) for a, b in rows}
+    out = {}
+    with params.applied():
+        polymer = copolymer(name="vdf1-belt-pbe", formula="-(CH2-CF2)-", units=[monomer_of(pvdf_belt(BELT_D, "pbe"), "vdf")],
+                            bond_length=PVDF.bond_length)
+        P = polymer.bonds_per_repeat
+        for pack, data in REGISTRY.items():
+            angs = np.asarray(data["angles"], dtype=float)
+            ch = repeat_chains(polymer, "TT", np.full((1, P), 180.0), angs)[0]
+            # the class is looked up on the module at the call: ``applied`` rebinds it there, and a name imported
+            # beforehand would build a packer with the polymer's own charges and the default torsion term
+            pk = pack_mod.CrystalPacker(ch, n_chains=2, lj_cutoff=lj_cutoff, coulomb=coulomb, ewald=EwaldSpec() if coulomb == "ewald" else None,
+                               polarizable=Polarizable() if polarizable else None)
+            st = MC.MixedState(np.array(data["lattice"], dtype=float), np.array(data["place"], dtype=float),
+                               np.full((2, P), 180.0), np.tile(angs, (2, 1)), np.zeros(2))
+            model = MC.MixedModel(polymer, "TT", pk, np.array(data["flips"], dtype=bool), [ch, ch], angle_stiffness=105.0, shear=True)
+            x0 = st.vector()
+            c = float(data["lattice"][3])
+            e0 = model.physical_energy(x0)
+            for fa, fb, dft in data["rows"]:
+                if want is not None and (fa, fb) not in want:
+                    continue
+                x = x0.copy()
+                x[model.index("shear")] = [fa * c, fb * c]
+                out[(pack, fa, fb)] = ((model.physical_energy(x) - e0) / 2.0, float(dft))
+    return out
+
+
 def polar_slope(states: dict, step: float = STRAIN_STEP) -> float:
     """``d|P_polar|/d eta`` along the polar axis from the ``(0, +1)`` and ``(0, -1)`` states of
     :func:`polyfind.mechanics.strain_states`: the central difference of the true polarization's
@@ -218,7 +304,7 @@ def polar_slope(states: dict, step: float = STRAIN_STEP) -> float:
 
 def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald", verbose: bool = False,
              polarizable: bool = False, lj_cutoff: str = "energy", stiffness: bool = False,
-             slope: bool = False, angles: bool = False, pendant_tilts: bool = False) -> Evaluation:
+             slope: bool = False, angles: bool = False, pendant_tilts: bool = False, registry: bool = False) -> Evaluation:
     """Pack and refine beta and alpha under ``x``; return the normalised residuals and the objective.
 
     ``polarizable`` adds the induced dipoles (:class:`polyfind.polarizability.Polarizable`),
@@ -232,7 +318,9 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     rigid tilts about their carbons (:func:`polyfind.pendants.tilt_relaxation`, the relaxation
     DFT's geometry has and the rigid-pendant refinement lacks; docs/CRYSTAL_STAGE.md 5.22): the two
     relaxation energies are added to the refined energies before the difference is taken, and
-    recorded in ``Evaluation.extra``.
+    recorded in ``Evaluation.extra``.  ``registry`` adds the cost of moving neighbouring chains
+    along each other (:func:`registry_costs`, the rows :data:`REGISTRY_FIT_ROWS` of each packing)
+    against DFT's on the same atoms (:data:`STAGE9`).
     """
     from .mechanics import elastic_constants, relax_reference, strain_states
     from .polarizability import Polarizable
@@ -264,6 +352,7 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
             with params.applied():
                 tilt = {"alpha": tilt_relaxation(reference_from_prediction(alpha, alpha_case, **kw), alpha_case.polymer),
                         "beta": tilt_relaxation(reference_from_prediction(beta, beta_case, **kw), beta_case.polymer)}
+        reg = registry_costs(params, REGISTRY_FIT_ROWS, coulomb=coulomb, polarizable=polarizable, lj_cutoff=lj_cutoff) if registry else None
     except Exception as exc:  # a parameter set that cannot pack is simply bad
         if verbose:
             print(f"  evaluate: {type(exc).__name__}: {exc}", flush=True)
@@ -305,6 +394,9 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
         for name, pred, t in (("alpha angle at CH2", float(a_ang[0]), DFT_ANCHORS["alpha_backbone_angles"][0]),
                               ("alpha angle at CF2", float(a_ang[1]), DFT_ANCHORS["alpha_backbone_angles"][1])):
             res[name] = (pred, t, (pred - t) / TOL["angle"])
+    if reg is not None:
+        for (pack, fa, fb), (pred, t) in reg.items():
+            res[f"registry {pack} ({fa:g}, {fb:g})"] = (pred, t, (pred - t) / (TOL["registry"] * t))
     rg = ridge(x)
     obj = float(sum(r[2] ** 2 for r in res.values())) + rg
     return Evaluation(np.asarray(x, dtype=float), res, obj, rg, time.time() - t0, beta, alpha, extra)
@@ -319,7 +411,7 @@ def table(ev: Evaluation) -> str:
 
 
 def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int = 1,
-        checkpoint: str | None = None, method: str = "powell", **eval_kw) -> tuple[Evaluation, list[Evaluation]]:
+        checkpoint: str | None = None, method: str = "powell", bounds=None, **eval_kw) -> tuple[Evaluation, list[Evaluation]]:
     """Powell with bounds on the eight (stage 1) or ten (stage 2) variables; every evaluation is
     logged.  ``stage=2`` uses :data:`X0_2`, :data:`BOUNDS2` and the :data:`STAGE2` evaluation
     settings unless ``eval_kw`` overrides them; ``x0`` resumes from an earlier best.  With
@@ -332,7 +424,10 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
     so its sum of squares is the objective, and the Jacobian is a forward difference of that vector
     with the per-variable steps :data:`FD_STEPS` (one evaluation per free variable, which can run in
     parallel where Powell's line searches cannot).  ``maxfev`` then bounds the residual evaluations
-    least_squares asks for itself; the Jacobian's evaluations come on top and are in ``history``."""
+    least_squares asks for itself; the Jacobian's evaluations come on top and are in ``history``.
+
+    ``stage=9`` is stage 7 with the registry rows (:data:`STAGE9`); ``bounds`` replaces the
+    stage's box (:data:`BOUNDS9_WIDE` opens the diameters)."""
     from scipy.optimize import least_squares, minimize
     if stage in (2, 3, 4):
         eval_kw = {**STAGE2, **eval_kw}
@@ -340,10 +435,12 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
         eval_kw = {**STAGE6, **eval_kw}
     elif stage == 7:
         eval_kw = {**STAGE7, **eval_kw}
-    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7}[stage]) if x0 is None else np.asarray(x0, dtype=float)
-    if stage == 7 and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
+    elif stage == 9:
+        eval_kw = {**STAGE9, **eval_kw}
+    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7, 9: X0_7}[stage]) if x0 is None else np.asarray(x0, dtype=float)
+    if stage in (7, 9) and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
         start = np.concatenate([start, [0.0]])
-    _, _, bounds, _ = _config(start)
+    bounds = _config(start)[2] if bounds is None else np.asarray(bounds, dtype=float)
     history: list[Evaluation] = []
 
     def record(ev):
