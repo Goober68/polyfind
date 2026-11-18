@@ -367,3 +367,37 @@ def test_the_registry_rows_are_the_stored_dft_cells_and_polyfinds_cost_of_them()
     z = [(p - t) / (C.TOL["registry"] * t) for p, t in fitted.values()]
     assert 7.0 < min(z) and max(z) < 12.5
     assert C.STAGE11["registry"] and C.STAGE11["angles"] and C.BOUNDS11_WIDE[1].tolist() == [0.70, 1.10] and C.BOUNDS7[1].tolist() == [0.90, 1.10]
+
+
+def test_stage13_variables_carry_the_bond_site_and_the_pull():
+    """Sixteen variables: stage 12's fourteen, the charge of a site on every C-H bond and what
+    each fluorine draws along the backbone.  At zero the two change nothing (the chains are built
+    with uncharged sites, which are the chains without them); their ridge is toward what DFT's
+    potential around single chains gives, not toward zero."""
+    x12 = np.array(json.load(open("docs/predictions/crystal_stage_v12_wall.json"))["x"])
+    assert C._config(np.zeros(16))[0] == C.VARIABLES13 == F.CRYSTAL_STAGE13_VARIABLES
+    x0 = np.concatenate([x12, [0.0, 0.0]])
+    p12, p0 = C.parameters(x12), C.parameters(x0)
+    assert p0.wall == p12.wall and p0.lj == p12.lj and p0.charge_increments == p12.charge_increments
+    assert p0.bond_sites == (("H", 0.0),) and p0.backbone_pull == (("F", 0.0),)
+    xs = np.concatenate([x12, [-0.318, 0.0155]])
+    ps = C.parameters(xs)
+    assert ps.bond_sites == (("H", -0.318),) and ps.backbone_pull == (("F", 0.0155),)
+    assert ps.polymer(F.FITTED_CASES[1].polymer).name.endswith("-bs0.65")
+    # the ridge: nothing more than stage 12's at the potential's values, and it grows away from them
+    assert C.ridge(xs) == pytest.approx(C.ridge(x12), abs=1e-9)
+    assert C.ridge(x0) == pytest.approx(C.ridge(x12) + C.RIDGE * ((0.318 / 0.10) ** 2 + (0.0155 / 0.010) ** 2), rel=1e-9)
+    # the cases carry sites, under their own keys
+    geometry = C.BELT_GEOMETRY
+    C.BELT_GEOMETRY = "pbe"
+    try:
+        beta12, beta13 = C.cases_for(x12)[0], C.cases_for(x0)[0]
+        assert beta13.key == beta12.key + "-bs" and beta13.polymer.name == beta12.polymer.name + "-bs0.65"
+        # the registry rows on chains with uncharged sites are stage 12's own, and charging the sites moves them
+        rows = ((0.5, 0.0), (0.0, 0.5))
+        r12, r0, rs = (C.registry_costs(p, rows) for p in (p12, p0, ps))
+        for key in r12:
+            assert r0[key][0] == pytest.approx(r12[key][0], abs=1e-9) and r0[key][1] == r12[key][1]
+        assert max(abs(rs[k][0] - r12[k][0]) for k in r12) > 0.01
+    finally:
+        C.BELT_GEOMETRY = geometry

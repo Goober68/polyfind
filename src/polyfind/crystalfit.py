@@ -180,6 +180,23 @@ SIGMA12 = np.concatenate([SIGMA7, [0.15]])
 SIGMA12[[0, 1, 2, 8]] = 0.15
 STAGE12 = dict(STAGE11)
 
+# Stage 13 (docs/CRYSTAL_STAGE.md 5.26): stage 12 with two more terms of the charges.  DFT's
+# electrostatic potential around single chains (examples/chain_potential.py) says polyfind's
+# charges are right for plain PVDF and miss the same 0.4 kcal/mol per e around every chain, which
+# is half of all there is around a chain without a dipole; a charge site on each C-H bond and a
+# charge drawn along the backbone towards the fluorinated carbons repair most of it.  The
+# fifteenth variable is the site's charge and the sixteenth what each fluorine draws
+# (polyfind.fitting.FFParameters.bond_sites, backbone_pull); the chains are built with the sites.
+# Their prior is what the potential alone gives (-0.318 e and 0.0155 e, with the two bond
+# increments at 0.30 and 0.70 of belt4's), not zero: energies cannot set charges (fitted to the
+# rigid cells' energies alone they end with no charge on the CF2 groups).
+VARIABLES13 = VARIABLES12 + ("q_M", "pull_F")
+SITE_PRIOR = (-0.318, 0.0155)
+X0_13 = np.concatenate([X0_12, [0.0, 0.0]])
+BOUNDS13 = np.vstack([BOUNDS12, [(-0.6, 0.0), (-0.01, 0.05)]])
+SIGMA13 = np.concatenate([SIGMA12, [0.10, 0.010]])
+STAGE13 = dict(STAGE12)
+
 
 def parameters(x, base: F.FFParameters = F.FITTED_VALENCE) -> F.FFParameters:
     """The valence preset with its C, H, F Lennard-Jones terms and C-H, C-F increments moved
@@ -203,7 +220,9 @@ def _config(x):
         return VARIABLES7, X0_7, BOUNDS7, SIGMA7
     if n == 14:
         return VARIABLES12, X0_12, BOUNDS12, SIGMA12
-    raise ValueError(f"expected 8, 10, 11, 12, 13 or 14 variables, got {n}")
+    if n == 16:
+        return VARIABLES13, X0_13, BOUNDS13, SIGMA13
+    raise ValueError(f"expected 8, 10, 11, 12, 13, 14 or 16 variables, got {n}")
 
 
 def ridge_parts(x) -> np.ndarray:
@@ -221,8 +240,10 @@ def ridge_parts(x) -> np.ndarray:
         parts += [(x[10:11] - X0_4[10]) / sigma[10:11], (x[11:12] - X0_4[11]) / sigma[11:12]]
     if len(x) >= 13:  # the backbone-angle restraint, log10 of its multiplier on the default
         parts += [x[12:13] / sigma[12:13]]
-    if len(x) == 14:  # the wall's first buffer, from Halgren's 0.07
+    if len(x) >= 14:  # the wall's first buffer, from Halgren's 0.07
         parts += [(x[13:14] - X0_12[13]) / sigma[13:14]]
+    if len(x) == 16:  # the bond site's charge and the backbone pull, from what the potential alone gives
+        parts += [(x[14:16] - np.array(SITE_PRIOR)) / sigma[14:16]]
     return np.concatenate(parts)
 
 
@@ -234,7 +255,7 @@ def ridge(x) -> float:
 # Forward-difference steps of the least-squares fitter's Jacobian, per variable (the units of x).
 FD_STEPS = {"x_C": 0.005, "x_H": 0.005, "x_F": 0.005, "D_C": 0.02, "D_H": 0.02, "D_F": 0.02, "q_CH": 0.005,
             "q_CF": 0.005, "x_HF": 0.005, "D_HF": 0.02, "log10_D_X": 0.05, "b_q": 0.1, "log10_k_angle": 0.02,
-            "wall_delta": 0.005}
+            "wall_delta": 0.005, "q_M": 0.01, "pull_F": 0.002}
 
 
 @dataclass
@@ -273,6 +294,9 @@ def cases_for(x):
         from .polymers import pvdf_belt
         pol = pvdf_belt(BELT_D, BELT_GEOMETRY)
         tag = f"belt-{BELT_D:.2f}" + ("" if BELT_GEOMETRY == "textbook" else f"-{BELT_GEOMETRY}")
+        if len(np.asarray(x)) == 16:  # stage 13: the chains carry a charge site on every C-H bond
+            from .polymers import with_bond_sites
+            pol, tag = with_bond_sites(pol), tag + "-bs"
         return (_replace(beta_case, key=f"beta-{tag}", polymer=pol),
                 _replace(alpha_case, key=f"alpha-{tag}", polymer=pol))
     return beta_case, alpha_case
@@ -295,8 +319,8 @@ def registry_costs(params: F.FFParameters, rows=None, coulomb: str = "ewald", po
     want = None if rows is None else {(float(a), float(b)) for a, b in rows}
     out = {}
     with params.applied():
-        polymer = copolymer(name="vdf1-belt-pbe", formula="-(CH2-CF2)-", units=[monomer_of(pvdf_belt(BELT_D, "pbe"), "vdf")],
-                            bond_length=PVDF.bond_length)
+        polymer = params.polymer(copolymer(name="vdf1-belt-pbe", formula="-(CH2-CF2)-", units=[monomer_of(pvdf_belt(BELT_D, "pbe"), "vdf")],
+                                           bond_length=PVDF.bond_length))
         P = polymer.bonds_per_repeat
         for pack, data in REGISTRY.items():
             angs = np.asarray(data["angles"], dtype=float)
@@ -469,11 +493,15 @@ def fit(maxfev: int = 240, coulomb: str = "ewald", log=None, x0=None, stage: int
         eval_kw = {**STAGE11, **eval_kw}
     elif stage == 12:
         eval_kw = {**STAGE12, **eval_kw}
-    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7, 11: X0_7, 12: X0_12}[stage]) if x0 is None else np.asarray(x0, dtype=float)
-    if stage in (7, 11, 12) and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
+    elif stage == 13:
+        eval_kw = {**STAGE13, **eval_kw}
+    start = ({1: X0, 2: X0_2, 3: X0_3, 4: X0_4, 6: X0_4, 7: X0_7, 11: X0_7, 12: X0_12, 13: X0_13}[stage]) if x0 is None else np.asarray(x0, dtype=float)
+    if stage in (7, 11, 12, 13) and len(start) == 12:  # from a stage-4/5/6 result: the restraint starts at the default
         start = np.concatenate([start, [0.0]])
-    if stage == 12 and len(start) == 13:  # from a 12-6 result: the wall starts at Halgren's buffer
+    if stage in (12, 13) and len(start) == 13:  # from a 12-6 result: the wall starts at Halgren's buffer
         start = np.concatenate([start, [X0_12[13]]])
+    if stage == 13 and len(start) == 14:  # from a stage-12 result: no charge on the sites, nothing drawn
+        start = np.concatenate([start, [0.0, 0.0]])
     bounds = (_config(start)[2] if bounds is None else np.asarray(bounds, dtype=float)).copy()
     history: list[Evaluation] = []
 
@@ -558,6 +586,8 @@ def save(ev: Evaluation, path: str, evaluations: int | None = None, complete: bo
         out["belt"] = {"d": BELT_D, "geometry": BELT_GEOMETRY}
     if prm.wall:
         out["parameters"]["wall"] = list(prm.wall)
+    if prm.bond_sites or prm.backbone_pull:
+        out["parameters"].update(bond_sites=prm.bond_sites, bond_site_fraction=prm.bond_site_fraction, backbone_pull=prm.backbone_pull)
     if ev.extra:
         out.update(ev.extra)
     with open(path, "w") as fh:

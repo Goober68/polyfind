@@ -17,7 +17,7 @@ def main():
     ap.add_argument("--maxfev", type=int, default=240)
     ap.add_argument("--out", default="docs/predictions/crystal_stage_v1.json")
     ap.add_argument("--coulomb", default="ewald", choices=("ewald", "dsf"))
-    ap.add_argument("--stage", type=int, default=1, choices=(1, 2, 3, 4, 6, 7, 11, 12), help="12: stage 11 with the buffered 14-7 wall in place of 12-6, its first buffer a variable (crystalfit.STAGE12); 11: stage 7 plus the cost of moving chains along each other against DFT (crystalfit.REGISTRY); 2: induced dipoles, force-shifted LJ, H-F pair term, stiffness anchors; 3: plus charge penetration; 4: fluorine belt sites; 6: the belt form with Dipole's polar Berry slope as a further anchor; 7: stage 6 plus the backbone-angle restraint's stiffness as a variable, Dipole's backbone angles as anchors (run with --geometry pbe)")
+    ap.add_argument("--stage", type=int, default=1, choices=(1, 2, 3, 4, 6, 7, 11, 12, 13), help="13: stage 12 with a charge site on every C-H bond and a charge drawn along the backbone, the chains built with the sites (crystalfit.STAGE13); 12: stage 11 with the buffered 14-7 wall in place of 12-6, its first buffer a variable (crystalfit.STAGE12); 11: stage 7 plus the cost of moving chains along each other against DFT (crystalfit.REGISTRY); 2: induced dipoles, force-shifted LJ, H-F pair term, stiffness anchors; 3: plus charge penetration; 4: fluorine belt sites; 6: the belt form with Dipole's polar Berry slope as a further anchor; 7: stage 6 plus the backbone-angle restraint's stiffness as a variable, Dipole's backbone angles as anchors (run with --geometry pbe)")
     ap.add_argument("--x0", default=None, help="JSON result file to resume from (its best x)")
     ap.add_argument("--ridge", type=float, default=None, help="weight of the ridge toward the valence values (crystalfit.RIDGE, default 1.0): a probe of how far the crystal terms would leave the valence fit if the prior were weaker")
     ap.add_argument("--method", default="powell", choices=("powell", "trf"), help="powell: bounded Powell (the stages so far); trf: bounded least squares on the same objective with a forward-difference Jacobian (one evaluation per free variable per iteration)")
@@ -34,10 +34,12 @@ def main():
             x0 = json.load(fh)["x"]
     if args.set:
         import numpy as np
-        names = {7: C.VARIABLES7, 11: C.VARIABLES7, 12: C.VARIABLES12}[args.stage]
-        base = list(x0) if x0 is not None else list({7: C.X0_7, 11: C.X0_7, 12: C.X0_12}[args.stage])
-        if args.stage == 12 and len(base) == 13:
+        names = {7: C.VARIABLES7, 11: C.VARIABLES7, 12: C.VARIABLES12, 13: C.VARIABLES13}[args.stage]
+        base = list(x0) if x0 is not None else list({7: C.X0_7, 11: C.X0_7, 12: C.X0_12, 13: C.X0_13}[args.stage])
+        if args.stage in (12, 13) and len(base) == 13:
             base.append(float(C.X0_12[13]))
+        if args.stage == 13 and len(base) == 14:
+            base += [0.0, 0.0]
         for item in args.set.split(","):
             k, v = item.split("=")
             base[names.index(k)] = float(v)
