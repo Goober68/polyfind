@@ -157,21 +157,32 @@ right": true at one registry, not along it).
         to its own non-bonded terms, and the lattice side uses ONE torsion triple (the CF2-CH2 type's) for every
         backbone bond of every copolymer (`reference_ff_parameters`), though the valence fit has four types. The
         conformer side does not know the bond sites or the pull yet (SimpleFF leaves both out).
-    (l) STAGE 13 IS PLUMBED, NOT RUN (`crystalfit.VARIABLES13` = stage 12 + `q_M` + `pull_F`, sited chains, ridge
-        toward the potential's -0.318 and 0.0155; `crystal_stage.py --stage 13`; rows are stage 12's so far). At
-        zero it is stage 12 row for row. With the potential's charges and nothing refitted: lattice holds (beta
-        a, b +0.2%, |P| 0.186, C 9-10% low), alpha-beta gap -0.39 (DFT -0.726): the torsions have to be refitted
-        under the new charges.
-    (m) STILL TO DO, IN ORDER: THE FINAL FIT: stage 13 with the
-        potential's three chains, the reversed chain's cells and the candidate's own cells as rows (an F-F pair
-        term is the first thing to try for the 0.3 left on the candidate); SimpleFF given the two charge terms,
-        then the torsions refitted under them (the gap row needs it); its preset; the acceptance on
-        `vdf5-rvdf1-6` (upright margin +0.070, all-trans shear gain -0.35 at (0.30, -0.90), helix none); E5 under
-        the new preset; then the 35 rows again, the slide and kink barriers, the frequency maps. The plain
-        stage-12 fit was never run to convergence (240 evaluations, objective 20.0): `crystal_stage.py --stage 12
-        --geometry pbe --method trf --pendant-tilts --x0 docs/predictions/crystal_stage_v12_wall.json --maxfev 250
-        --out ...` (65 minutes). Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall), 5.26 (the
-        charges and the candidate's rigid cell).
+    (l) THE CONFORMER SIDE KNOWS THE TWO CHARGE TERMS (`ValenceDesign.lattice` with `bond_sites`/`backbone_pull`;
+        off-nucleus F charge then projected as the packer does, at `fitting.PROJECT_BOND`). Torsions refitted on
+        the 467 conformers under each set (train / held-out energy rms): valence fit 1.02 / 1.36; belt4 1.21 /
+        1.66; stage-12 wall 1.49 / 1.84; that wall with the potential's charges 1.30 / 1.63 and the best force rms
+        of all (4.600 / 5.207). BUT the conformer-refitted torsions leave the alpha-beta gap at -0.24 (DFT -0.726).
+        Holding the one-fold CF2-CH2 term at -1.6 / -2.0 / -2.4 and refitting the rest: conformers 1.303 / 1.312 /
+        1.328 (held-out improves), gap -0.33 / -0.43 / -0.55, alpha b 9.53 / 9.59 / 9.66 (DFT 9.636). THE
+        CONFORMERS LEAVE THAT DIRECTION OPEN AND THE CRYSTAL SETS IT. Text: `docs/CRYSTAL_STAGE.md` 5.27.
+    (m) STAGE 13 IS ONE FIT AND IT WAS RUNNING WHEN THIS WAS WRITTEN: 21 variables (`crystalfit.VARIABLES13` =
+        stage 12's 14 + `q_M`, `pull_F` + `V1 V2 V3` (the lattice's torsion triple, no ridge) + `x_FF`, `D_FF`),
+        rows = stage 12's 24 + `examples/stage13_rows.py` (`Rows()(params)`: 117 rigid cells in the kernels, 3
+        potentials, 2 conformer rows; needs `POLYFIND_TRAINSET` for the conformers). Command:
+        `POLYFIND_TRAINSET=/home/user/sarco/materials/gpu_bundle/trainset_v1_566.xyz python -W ignore
+        examples/crystal_stage.py --stage 13 --geometry pbe --method trf --pendant-tilts --rows --x0
+        /opt/dft/stage13_start.json --maxfev 9 --out /opt/dft/crystal_stage_v13.json > /opt/dft/stage13.log`
+        (16 s an evaluation, 22 a Jacobian; the --out file is the checkpoint: resume with `--x0` on it). Start
+        objective 520 (the candidate's own cells 0.42 rms, the reversed chain 0.29 in the kernels under the
+        stage-12 wall). `python examples/stage13_rows.py <fit json>` prints the outside rows of a result.
+    (n) STILL TO DO, IN ORDER: run stage 13 to convergence and read it (lattice, gap, stiffness, registry, the
+        reversed chain, the candidate's line, the potentials, the conformers); refit the three other torsion
+        types under its result and give the lattice typed torsions (it uses the CF2-CH2 triple for every
+        backbone bond: `reference_ff_parameters`); SimpleFF (the oligomer/RIS side) does not know the two charge
+        terms; register the preset; the acceptance on `vdf5-rvdf1-6` (upright margin +0.070, all-trans shear
+        gain -0.35 at (0.30, -0.90), helix none); E5 under the new preset; then the 35 rows again, the slide and
+        kink barriers, the frequency maps. Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall), 5.26
+        (the charges, the rigid cells, the candidate's line), 5.27 (the conformers, the torsion, stage 13).
 
 **A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
 DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then

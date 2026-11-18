@@ -1838,6 +1838,68 @@ and the candidate's with the lattice anchors, and the torsion terms have to be f
 under the charges it ends with (with the potential's charges put in and nothing refitted the
 alpha-beta gap goes from -0.730 to -0.39).
 
+### 5.27 Stage 13: the conformers, the torsion the crystal sets, and one fit for all of it
+
+**The conformers under the lattice's charges.** `ValenceDesign` (the DFT conformers' energies and
+forces, `docs/VALENCE_FIT.md`) carries the two charge terms when its `lattice` parameter set has
+them: a site on every C-H bond standing in every pair its hydrogen stands in, with that pair's
+scale; what each fluorine draws onto its carbon from the carbon's carbon neighbours; and the
+off-nucleus fluorine charge on the nucleus with the bond's dipole kept, as the packer has it.
+The Coulomb energy is a written-out sum over sites to 1e-9 and the forces are finite differences
+of the energy (`tests/test_bond_sites.py`). On the 467 frames, with the torsions refitted under
+each set of non-bonded terms (training and held-out systems):
+
+| non-bonded terms | energy rms, kcal/mol | force rms, kcal/mol/A |
+|---|---|---|
+| the valence fit's own | 1.02, 1.36 | 4.645, 5.231 |
+| belt4 | 1.21, 1.66 | 4.755, 5.328 |
+| the stage-12 wall | 1.49, 1.84 | 4.687, 5.230 |
+| the stage-12 wall with the potential's charges (site, pull) | 1.30, 1.63 | 4.600, 5.207 |
+
+The two charge terms were set by the potential around three chains and by nothing else, and
+they lower the conformers' error on systems they never saw; the forces are better than the
+valence fit's own. That is the second independent check on them, after the rigid cells.
+
+**What the conformers leave open.** With the torsions refitted on the conformers the crystal's
+alpha-beta gap is -0.24 kcal/mol for DFT's -0.726, under either charge model. Holding the
+one-fold CF2-CH2 term and refitting the other eleven:
+
+| one-fold CF2-CH2 term | the triple | conformers, energy rms | alpha-beta gap | alpha b (9.636) |
+|---:|---|---|---:|---:|
+| free (-1.20) | -1.20, 0.37, 1.15 | 1.300, 1.631 | -0.242 | 9.492 |
+| -1.6 | -1.60, 0.64, 0.99 | 1.303, 1.620 | -0.325 | 9.532 |
+| -2.0 | -2.00, 0.91, 0.83 | 1.312, 1.612 | -0.425 | 9.586 |
+| -2.4 | -2.40, 1.19, 0.67 | 1.328, 1.609 | -0.549 | 9.660 |
+
+Along that direction (the one-fold term down, the two-fold up, the three-fold down) the
+conformers lose 0.03 kcal/mol on the training systems and gain on the held-out ones, the gap
+crosses to DFT's, and the helix cell's long axis, the one row stage 12 left past a tolerance,
+comes right. The conformers do not determine this direction and the crystal does. It is the
+same thing the ridge of every earlier stage stood in for: the crystal stage held the torsions at
+the valence values and moved the non-bonded terms to carry the gap.
+
+**Stage 13** is therefore one fit (`examples/crystal_stage.py --stage 13 --rows`). Twenty-one
+variables: stage 12's fourteen; the bond site's charge and the backbone pull, with a ridge
+toward the potential's values; the lattice's torsion triple, with no ridge of its own; and the
+F-F pair's own diameter and depth (5.26). Its rows are stage 12's twenty-four and, from outside
+the module (`examples/stage13_rows.py`, `crystalfit.evaluate(extra_rows=...)`, every input a
+file of the repository):
+
+- the 117 rigid cells of `docs/predictions/interchain_belt4.json`, evaluated in the kernels on
+  chains built with the bond sites, at a tolerance of 0.03 kcal/mol per monomer and 15% of DFT's
+  value; each packing's cells together count as a fixed number of rows (six for each plain
+  packing, twelve for the reversed chain, nine for the candidate's own three cells);
+- the potential around the three chains, one row a chain at 0.15 kcal/mol per e (linear in the
+  charges, so free per evaluation);
+- the conformers' energy and force rms on the training systems, against the valence fit's own
+  at 0.15 kcal/mol and 0.15 kcal/mol/A, the three other torsion types held where the scan above
+  left them (`docs/predictions/valence_torsions_stage13.json`).
+
+An evaluation takes about 16 seconds and a Jacobian twenty-two of them. At its start (the stored
+stage-12 fit, the potential's charges, the scanned torsions) the objective is 520, most of it
+the candidate's own cells: the stage-12 wall was fitted to eight plain rows and does not carry
+them in the kernels (0.42 kcal/mol per monomer rms, and 0.29 on the reversed chain).
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the
