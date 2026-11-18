@@ -150,6 +150,13 @@ class FFParameters:
     # than leave the term out silently.  Empty: none (docs/CRYSTAL_STAGE.md 5.26).
     bond_sites: tuple[tuple[str, float], ...] = ()
     bond_site_fraction: float = 0.65  # where on the bond the site sits, from the backbone atom (polymers.bond_site_atom)
+    # Charge drawn along the backbone: (element, e).  Each pendant atom of that element on a backbone
+    # atom draws this much negative charge onto its backbone atom from each of that atom's two backbone
+    # neighbours (the inductive effect one bond further than a bond increment reaches).  Two carbons
+    # that carry the same pendants draw equally on each other and nothing moves, so it is the term
+    # that tells a CF2 beside a CH2 from a CF2 beside a CF2, which an increment typed by a bond's two
+    # elements cannot.  Lattice side only, like the sites.  Empty: none (docs/CRYSTAL_STAGE.md 5.26).
+    backbone_pull: tuple[tuple[str, float], ...] = ()
 
     def polymer(self, polymer):
         """``polymer`` as this parameter set needs it built: with a charge site on every bond that
@@ -210,6 +217,7 @@ class FFParameters:
         if self.wall:
             rest += f" [pair wall {self.wall[0]}, delta {self.wall[1]:.4f}]"
         rest += "".join(f" [{q:+.3f} e on a site on each C-{e} bond]" for e, q in self.bond_sites)
+        rest += "".join(f" [each {e} draws {q:.4f} e onto its backbone atom from each backbone neighbour]" for e, q in self.backbone_pull)
         return (f"torsion=({self.torsion[0]:+.3f}, {self.torsion[1]:+.3f}, {self.torsion[2]:+.3f}) "
                 f"eps_r={self.eps_r:.3f} charge_scale={self.charge_scale:.3f} [{lj}] [{q}]{val}{off}{flx}{rest}")
 
@@ -273,6 +281,7 @@ class FFParameters:
         increments = ff.increments()
         offsets = ff.offset_table()
         sites = {e: float(q) for e, q in self.bond_sites}
+        pull = {e: float(q) for e, q in self.backbone_pull}
 
         class _FittedPacker(pack_mod.CrystalPacker):
             def __init__(self, chain, **kw):
@@ -288,6 +297,20 @@ class FFParameters:
                         # matters.  docs/VALENCE_FIT.md measures what the difference costs.
                         q = project_offset_charges(chain.coords, q,
                                                    offset_sites(chain.elements, bonds, offsets))
+                    if pull:
+                        # each pendant atom draws charge onto its backbone atom from that atom's two backbone
+                        # neighbours; the backbone closes on its own image, so the block's ends are neighbours
+                        q = np.array(q, dtype=float)
+                        bb = [int(k) for k in chain.backbone]
+                        drawn = np.zeros(len(bb))
+                        for a, b in bonds:
+                            for i, j in ((a, b), (b, a)):
+                                if i in bb and j not in bb:
+                                    drawn[bb.index(i)] += pull.get(chain.elements[j], 0.0)
+                        for k, i in enumerate(bb):
+                            for nb in (bb[k - 1], bb[(k + 1) % len(bb)]):
+                                q[i] -= drawn[k]
+                                q[nb] += drawn[k]
                     if sites:
                         # each bond site takes its charge from the atom it follows in its pendant
                         el = list(chain.elements)

@@ -211,3 +211,43 @@ def test_the_cell_with_charged_sites_has_the_gradient_of_its_energy_in_both_form
         # the pendant relaxation runs with the sites following their bonds
         dE, tilts, _ = MC.tilt_relaxation(m, x0)
         assert dE <= 1e-9 and np.isfinite(np.asarray(tilts)).all()
+
+
+def test_charge_drawn_along_the_backbone_tells_a_cf2_by_its_neighbours(tools):
+    """`FFParameters.backbone_pull`: each fluorine draws charge onto its carbon from that carbon's
+    backbone neighbours.  In plain PVDF every CF2 has two CH2 neighbours and gains twice what one
+    bond carries; where two CF2 meet they draw equally on each other and that bond carries
+    nothing; the chain stays neutral and nothing but backbone carbons changes."""
+    import json
+
+    IF = tools.IF
+    base = PRESET_PARAMETERS[BELT4]
+    pull = 0.0155
+    params = replace(base, backbone_pull=(("F", pull),))
+    assert "draws 0.0155 e" in params.describe()
+    table = json.loads((ROOT / "docs" / "predictions" / "dilute_kink_belt4.json").read_text())
+    assert "all_trans_references" in table
+
+    def charges(prm, row, letters):
+        with prm.applied():
+            polymer = IF.C.make_polymer(row, letters)
+            ch = IF.DK.repeat_chains(polymer, "TT", np.full((1, polymer.bonds_per_repeat), 180.0),
+                                     np.array([polymer.backbone[k].backbone_angle for k in range(polymer.bonds_per_repeat)], dtype=float))[0]
+            from polyfind import pack as pack_mod
+            pk = pack_mod.CrystalPacker(ch, n_chains=2, **IF.DK.KW)
+            return list(pk.elements), np.asarray(pk._q_cell)[:pk.n].copy()
+
+    for row, letters, expect in (("vdf1", "V", [+2, -2]), ("vdf1-rvdf1-2", "VI", [+1, -1, -1, +1]), ("vdf5-rvdf1-6", "VVVVIV", None)):
+        el, q0 = charges(base, row, letters)
+        _, q = charges(params, row, letters)
+        carbons = [i for i, e in enumerate(el) if e == "C"]
+        rest = [i for i in range(len(el)) if i not in carbons]
+        assert abs(q.sum()) < 1e-12 and np.array_equal(q[rest], q0[rest])
+        moved = (q - q0)[carbons] / (2 * pull)   # in units of what one CH2-CF2 bond carries, onto the CH2 carbon
+        if expect is not None:
+            assert np.allclose(moved, expect)
+        else:  # one reversed unit in six: the CF2-CF2 and CH2-CH2 bonds carry nothing
+            assert sorted(np.round(moved, 6)) == sorted([2.0] * 4 + [1.0] * 2 + [-2.0] * 4 + [-1.0] * 2)
+        # the same thing as the trial's pattern (examples/interchain_wall.py charge_patterns), at d_CC = -2 pull
+        pat = tools.charge_patterns(el, q0, 1)
+        assert np.allclose(q - q0, -2 * pull * pat[2])

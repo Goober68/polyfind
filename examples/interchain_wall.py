@@ -327,7 +327,8 @@ def pairs(args):
 
         new = dict(item.split("=") for item in args.charges.split(","))
         incr = tuple((a, b, float(new.get(f"d{a}{b}", d))) for a, b, d in params.charge_increments)
-        params = replace(params, charge_increments=incr, bond_sites=((("H", float(new["M"])),) if "M" in new else ()))
+        params = replace(params, charge_increments=incr, bond_sites=((("H", float(new["M"])),) if "M" in new else ()),
+                         backbone_pull=((("F", float(new["pull_F"])),) if "pull_F" in new else ()))
         SR.C.SITES_FOR = params
         print(params.describe())
     with params.applied():
@@ -555,7 +556,7 @@ def main():
     s.add_argument("--frames", required=True, help="the working directory of examples/interchain_frames.py")
     s.add_argument("--registry", default="", help="the working directory of examples/shear_registry.py, for its sheared cells too")
     s.add_argument("--out", default="/opt/dft/interchain/pairs.npy")
-    s.add_argument("--charges", default="", help="other charges for the same cells: dCH=..,dCF=..,M=.. (the last a site on every C-H bond)")
+    s.add_argument("--charges", default="", help="other charges for the same cells: dCH=..,dCF=..,M=..,pull_F=.. (a site on every C-H bond; what each F draws along the backbone)")
     s = sub.add_parser("fit")
     s.add_argument("--pairs", default="/opt/dft/interchain/pairs.npy")
     s.add_argument("--form", default="12-6", choices=("12-6", "n-6", "exp-6", "b14-7"))
