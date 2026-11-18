@@ -184,9 +184,11 @@ def collect(args):
             print(f"   A x{r['scale'][0]:.2f} B x{r['scale'][1]:.2f} shear ({r['shear_monomers'][0]:+.2f}, {r['shear_monomers'][1]:+.2f}): "
                   f"polyfind {r['polyfind']:+.4f}, DFT {r['dft']:+.4f}")
     out_path.write_text(json.dumps({
-        "what": "the energy between rigid chains of plain PVDF as the cell is strained and sheared around them, polyfind against PBE-D3(BJ) single points on the same atoms",
+        "what": "the energy between rigid chains as the cell is strained and sheared around them, polyfind against PBE-D3(BJ) single points on the same atoms: "
+                "plain PVDF in three packings (beta, candidate, alpha), the chain with every second unit reversed (hh), and the reversed-unit candidate's own "
+                "polished all-trans cell with its own chains (cand6)",
         "energy": "kcal/mol per monomer against the packing's own unstrained, unsheared cell", "preset": PRESET,
-        "dft": "Quantum ESPRESSO 7.5, PBE-D3(BJ), SSSP 1.3.0 precision, 90/360 Ry; 4x2x8 on the one-monomer cells, 4x2x4 on the helix cell",
+        "dft": "Quantum ESPRESSO 7.5, PBE-D3(BJ), SSSP 1.3.0 precision, 90/360 Ry; 4x2x8 on the one-monomer cells, 4x2x4 on the two-monomer cells, 4x2x2 on the six-monomer cell",
         "packings": done}, indent=1))
     write(args.extxyz, kept, format="extxyz")
     print(f"written {out_path} and {args.extxyz} ({len(kept)} frames)")
