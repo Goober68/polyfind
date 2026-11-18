@@ -123,6 +123,7 @@ def test_the_parameter_set_charges_the_sites_from_their_atoms(tools):
     assert "site on each C-H bond" in params.describe() and "site" not in base.describe()
     assert params.polymer(SR.C.make_polymer("vdf1", "V")).name.endswith("-bs0.65")
     assert base.polymer(PM.PVDF) is PM.PVDF
+    plain = SR.C.make_polymer("vdf1", "V")          # built outside any block: no sites
     with base.applied():
         q0 = np.asarray(SR.plain_model("beta")[0].pk._q_cell)[:10]
     with params.applied():
@@ -137,7 +138,9 @@ def test_the_parameter_set_charges_the_sites_from_their_atoms(tools):
         assert np.allclose(q[[i for i, e in enumerate(el) if e in ("C", "F", "X")]], q0[[0, 3, 4, 5, 6, 7, 8, 9]])
         # a chain without sites is refused, not given the charges without the term
         with pytest.raises(ValueError, match="with_bond_sites"):
-            SR.plain_model("beta")
+            SR.plain_model("beta", plain)
+        # while a chain the screen builds inside the block carries them without being asked
+        assert SR.plain_model("beta")[0].n == m.n
 
 
 def test_a_site_is_excluded_and_scaled_as_its_atom_is(tools):
@@ -341,3 +344,23 @@ def test_the_conformer_design_carries_the_two_charge_terms():
     other.lattice = prm
     with pytest.raises(ValueError, match="of the way out"):
         other.unpack(x)
+
+
+def test_a_polymer_built_inside_a_sets_block_is_built_as_the_set_needs_it(tools):
+    """`fitting.active_parameters` and the screen's `make_polymer`: inside the block of a set with
+    bond sites the row's chain carries them; outside, or inside a set without, it does not."""
+    from polyfind.fitting import active_parameters
+
+    C = tools.SR.C
+    base = PRESET_PARAMETERS[BELT4]
+    sited = replace(base, bond_sites=(("H", SITE),))
+    assert active_parameters() is None and C.SITES_FOR is None
+    assert not C.make_polymer("vdf1", "V").name.endswith("-bs0.65")
+    with base.applied():
+        assert active_parameters() is base and not C.make_polymer("vdf1", "V").name.endswith("-bs0.65")
+    with sited.applied():
+        assert active_parameters() is sited
+        assert C.make_polymer("vdf1", "V").name.endswith("-bs0.65")
+        with base.applied():          # blocks do not nest: the outer set's charges are the ones a packer gets
+            assert active_parameters() is sited
+    assert active_parameters() is None

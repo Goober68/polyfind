@@ -188,14 +188,21 @@ TG_VARIANTS = {"TG'TG": [T, GM, T, GP] * 5, "GTG'T": [GP, T, GM, T] * 5, "G'TGT"
 CONFORMATIONS.update(TG_VARIANTS)
 
 
-SITES_FOR = None  # a parameter set (polyfind.fitting.FFParameters) whose bond sites the polymers are built with; None: none
+SITES_FOR = None  # a parameter set (polyfind.fitting.FFParameters) whose bond sites the polymers are built with; None: the running block's
 
 
 def make_polymer(name: str, letters: str) -> Polymer:
+    """The copolymer of a row.  Built as the parameter set in force needs it: :data:`SITES_FOR` if
+    one is set, else the set whose ``applied()`` block is running (so a script that builds its
+    polymers inside the block of a preset with bond sites gets chains that carry them, and one
+    that builds them outside is refused by the block rather than run without the term)."""
+    from polyfind.fitting import active_parameters
+
     units = [UNITS[c]() for c in letters]
     formula = "-" + "-".join(FORMULAS[c] for c in letters) + "-"
     polymer = copolymer(name=f"{name}-belt-pbe", formula=formula, units=units, bond_length=PVDF.bond_length)
-    return polymer if SITES_FOR is None else SITES_FOR.polymer(polymer)
+    params = SITES_FOR if SITES_FOR is not None else active_parameters()
+    return polymer if params is None else params.polymer(polymer)
 
 
 def one_cell(polymer, seq, label):

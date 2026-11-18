@@ -363,14 +363,29 @@ class FFParameters:
         pack_mod.CrystalPacker = _FittedPacker
         refine_mod.CrystalPacker = _FittedPacker
         refine_mod.ANGLE_STIFFNESS = None if self.angle_stiffness is None else float(self.angle_stiffness)
+        _ACTIVE.append(self)
         try:
             yield ff
         finally:
+            _ACTIVE.pop()
             pack_mod.lj_params = old_lj
             pack_mod.lj_pairs = old_pairs
             pack_mod.CrystalPacker = old_packer_pack
             refine_mod.CrystalPacker = old_packer_refine
             refine_mod.ANGLE_STIFFNESS = old_angle
+
+
+_ACTIVE: list = []  # the parameter sets of the :meth:`FFParameters.applied` blocks being run, outermost first
+
+
+def active_parameters() -> "FFParameters | None":
+    """The parameter set whose :meth:`FFParameters.applied` block is running, or ``None``.
+
+    For code that builds a polymer inside the block and has to build it as the set needs it
+    (:meth:`FFParameters.polymer`: with a charge site on its C-H bonds, for a set that charges
+    them).  The outermost block's set is the one returned, because it is the one whose charges a
+    packer built inside nested blocks gets."""
+    return _ACTIVE[0] if _ACTIVE else None
 
 
 ILLUSTRATIVE = FFParameters()  # exactly today's defaults
