@@ -247,6 +247,21 @@ right": true at one registry, not along it).
         our potential if its repeat is free: `chain_conformers.py settle --fixed-repeat`. A 36-atom chain in the
         16 A box needs `mlip_frames.py label --pools 1` (memory). `Rows.candidate` needs `--frozen` cells relaxed
         under parameters NEAR the ones being evaluated (first order only): refreeze and refit.
+        RUNPOD WORKS AGAIN, THROUGH ITS MCP SERVER (2026-11-18): `https://mcp.runpod.io/` answers from the session
+        (the REST host still 502s); the PI saved the key for that host through the secure form, the proxy adds it.
+        There are no Runpod tools in the session: speak MCP over HTTP (`initialize`, `tools/list`, `tools/call`; a
+        40-line client was in the scratchpad as `runpod/mcp.py`). The key reads pods and capacity (`list-pods`,
+        `get-pod`, `get-capacity` = stock and $/h) and creates and deletes pods; it does NOT read the catalog or
+        billing (403, final). The old pod `wylsqwj1no08y4` is GONE (404; 0 pods, 0 volumes).
+        A POD IS RUNNING: `dwyejg77awqh50` (`polyfind-mlip-fit-all`, NVIDIA A40, Secure, CA-MTL-1, $0.59/h, created
+        2026-11-18 21:40:56 UTC; PI chose "Create, all 558" in the question dialog). It removes itself after 18000 s
+        (02:41 UTC at the latest: at most $2.95), 2400 s idle, or 3600 s after `stop`. Queue
+        `examples/gpu_jobs/queue_20261118_mlip.txt` (a timing fit of 10 epochs on all 558 frames first; THEN ADD ONE
+        LINE for the long fit, `mlip_fit.sh all EPOCHS 1 frames <the ten files> train --stress-weight 1000
+        --energy-weight 10000`, EPOCHS so that it ends well inside the limit, and push; then `stop`). Results at
+        `https://dwyejg77awqh50-8000.proxy.runpod.net/<token>/` (STATUS, jobs/NN_mlip_fit/*.model); the token is in
+        the scratchpad only. WHEN DONE: fetch the model to `/opt/dft/gpu14/`, push `stop`, and CONFIRM BY A READ
+        (`list-pods`) that the pod is gone; if it is not, `delete-pod`.
         THE 35 ROWS UNDER chain1, MARGINS: RUNNING IN PIECES (`examples/rows_under_preset.py --preset pvdf-dft-chain1
         --minutes 105 --out /opt/dft/margins_chain1.json`; the --out file is the checkpoint, run the same command
         again after every stop or restart; 2 to 3 minutes a 14-monomer cell, 168 cells; logs
