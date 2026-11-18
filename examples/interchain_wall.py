@@ -514,8 +514,11 @@ def fit(args):
         v.update(dict(zip(free, y)))
         return v
 
+    weights = {k: float(w) for k, w in (item.split("=") for item in args.weight.split(",") if item)}
+
     def fun(y):
-        return np.array([r[4] for r in residuals(vec(y), cells, form, split)])
+        # a packing's rows may count more than once (--weight): a few cells that matter beside many that do not
+        return np.array([r[4] * weights.get(r[0].split()[0], 1.0) for r in residuals(vec(y), cells, form, split)])
 
     start = summary(residuals(v0, cells, form, split))
     print(f"form {form}; {start['all']['cells']} labelled cells; before: rms error {start['all']['rms_error']:.4f} kcal/mol per monomer, chi2 {start['all']['chi2']:.1f}")
@@ -573,6 +576,7 @@ def main():
     s.add_argument("--set", default="", help="start values, name=value comma list")
     s.add_argument("--packings", default="", help="comma list: fit and score these packings' cells alone")
     s.add_argument("--rows", action="store_true", help="print every cell")
+    s.add_argument("--weight", default="", help="packing=factor comma list: multiply that packing's rows' residuals in the fit")
     s.add_argument("--predict", default="", help="comma list of packings: the fitted variables on all their cells, labelled or not")
     s.add_argument("--name", default="")
     s.add_argument("--out", default="")

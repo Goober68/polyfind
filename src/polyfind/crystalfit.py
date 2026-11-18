@@ -358,7 +358,8 @@ def polar_slope(states: dict, step: float = STRAIN_STEP) -> float:
 
 def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald", verbose: bool = False,
              polarizable: bool = False, lj_cutoff: str = "energy", stiffness: bool = False,
-             slope: bool = False, angles: bool = False, pendant_tilts: bool = False, registry: bool = False) -> Evaluation:
+             slope: bool = False, angles: bool = False, pendant_tilts: bool = False, registry: bool = False,
+             extra_rows=None) -> Evaluation:
     """Pack and refine beta and alpha under ``x``; return the normalised residuals and the objective.
 
     ``polarizable`` adds the induced dipoles (:class:`polyfind.polarizability.Polarizable`),
@@ -374,7 +375,11 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     relaxation energies are added to the refined energies before the difference is taken, and
     recorded in ``Evaluation.extra``.  ``registry`` adds the cost of moving neighbouring chains
     along each other (:func:`registry_costs`, the rows :data:`REGISTRY_FIT_ROWS` of each packing)
-    against DFT's on the same atoms (:data:`STAGE11`).
+    against DFT's on the same atoms (:data:`STAGE11`).  ``extra_rows`` is a callable taking the
+    parameter set and returning further rows ``{name: (polyfind, reference, z)}``, for anchors that
+    live outside this module (the rigid cells and the single-chain potentials of
+    examples/interchain_frames.py and examples/chain_potential.py); a failure in it is a parameter
+    set that cannot be evaluated, like a failure to pack.
     """
     from .mechanics import elastic_constants, relax_reference, strain_states
     from .polarizability import Polarizable
@@ -407,6 +412,7 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
                 tilt = {"alpha": tilt_relaxation(reference_from_prediction(alpha, alpha_case, **kw), alpha_case.polymer),
                         "beta": tilt_relaxation(reference_from_prediction(beta, beta_case, **kw), beta_case.polymer)}
         reg = registry_costs(params, REGISTRY_FIT_ROWS, coulomb=coulomb, polarizable=polarizable, lj_cutoff=lj_cutoff) if registry else None
+        more = dict(extra_rows(params)) if extra_rows is not None else {}
     except Exception as exc:  # a parameter set that cannot pack is simply bad
         if verbose:
             print(f"  evaluate: {type(exc).__name__}: {exc}", flush=True)
@@ -451,6 +457,10 @@ def evaluate(x, base: F.FFParameters = F.FITTED_VALENCE, coulomb: str = "ewald",
     if reg is not None:
         for (pack, fa, fb), (pred, t) in reg.items():
             res[f"registry {pack} ({fa:g}, {fb:g})"] = (pred, t, (pred - t) / (TOL["registry"] * t))
+    for name, (pred, t, z) in more.items():
+        if name in res:
+            raise ValueError(f"extra row {name!r} has the name of a row of this module")
+        res[name] = (float(pred), float(t), float(z))
     rg = ridge(x)
     obj = float(sum(r[2] ** 2 for r in res.values())) + rg
     return Evaluation(np.asarray(x, dtype=float), res, obj, rg, time.time() - t0, beta, alpha, extra)

@@ -401,3 +401,24 @@ def test_stage13_variables_carry_the_bond_site_and_the_pull():
         assert max(abs(rs[k][0] - r12[k][0]) for k in r12) > 0.01
     finally:
         C.BELT_GEOMETRY = geometry
+
+
+def test_extra_rows_join_the_objective(monkeypatch):
+    """`evaluate(extra_rows=...)`: rows from outside the module enter the residual table and the
+    objective as their own z squared; a name already taken is refused."""
+    x = np.array(json.load(open("docs/predictions/crystal_stage_v12_wall.json"))["x"])
+    seen = []
+
+    def rows(params):
+        seen.append(params.wall)
+        return {"a row from outside": (1.5, 1.0, 2.0)}
+
+    monkeypatch.setattr(C, "BELT_GEOMETRY", "pbe")
+    kw = dict(polarizable=True, lj_cutoff="force", registry=True)
+    ev = C.evaluate(x, extra_rows=rows, **kw)
+    assert len(seen) == 1 and seen[0][0] == "b14-7" and seen[0][1] == pytest.approx(x[13])
+    assert ev.residuals["a row from outside"] == (1.5, 1.0, 2.0)
+    assert ev.objective == pytest.approx(sum(r[2] ** 2 for r in ev.residuals.values()) + ev.ridge, abs=1e-9)
+    assert sum(r[2] ** 2 for k, r in ev.residuals.items() if k != "a row from outside") == pytest.approx(ev.objective - ev.ridge - 4.0, abs=1e-9)
+    with pytest.raises(ValueError, match="has the name of a row"):
+        C.evaluate(x, extra_rows=lambda p: {"beta a (polar)": (0.0, 0.0, 0.0)}, **kw)
