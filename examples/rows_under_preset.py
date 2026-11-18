@@ -34,6 +34,31 @@ LINE = (0.3, -0.9)   # monomers: the shear DFT's relaxation took the reversed-un
 SHEARED = Path("docs/predictions/sheared_margins_belt4.json")  # where belt4's own re-polish with the shear free took each cell
 
 
+def fence(model, x0, cm: float) -> None:
+    """Keep a relaxation of ``model`` inside cells that are cells: outside a wide fence about the
+    stored cell (lateral edges between half and twice the stored, the angle between them within 50
+    degrees of it, the repeat within a fifth, a shear of at most three monomers) the energy is a
+    wall and no sum is taken.  A step that leaves is then stepped back by the minimiser's own line
+    search; evaluated, a cell driven flat asks the lattice sums for more memory than the machine
+    has, and the run is killed without a word."""
+    lat0 = np.array(model.state(x0).lattice, dtype=float)
+    inner = model.value_and_grad
+
+    def guarded(x, parts=None):
+        st = model.state(x)
+        lat = np.asarray(st.lattice, dtype=float)
+        shear = np.zeros(2) if st.shear is None else np.asarray(st.shear, dtype=float)
+        inside = (np.all(lat[:2] > 0.5 * lat0[:2]) and np.all(lat[:2] < 2.0 * lat0[:2]) and abs(lat[2] - lat0[2]) < 50.0
+                  and abs(lat[3] / lat0[3] - 1.0) < 0.2 and np.all(np.abs(shear) < 3.0 * cm) and np.all(np.isfinite(x)))
+        if not inside:
+            if parts is not None:
+                raise ValueError(f"a cell of {np.round(lat, 2).tolist()}, sheared {np.round(shear / cm, 2).tolist()} monomers, is outside the fence")
+            return 1.0e9, np.zeros(model.n_var)
+        return inner(x, parts)
+
+    model.value_and_grad = guarded
+
+
 def cell_under(model, x0, ch, line=None, sheared_state=None, tilts: bool = True) -> dict:
     """One stored cell relaxed under the parameter set in force: upright, then with the shear free
     from a kick off the upright cell, from ``sheared_state`` (the variables of an earlier preset's
@@ -46,6 +71,7 @@ def cell_under(model, x0, ch, line=None, sheared_state=None, tilts: bool = True)
     model = MC.MixedModel(model.polymer, model.name, model.pk, model.flips, [ch, ch], angle_stiffness=model.angle_stiffness, shear=True, xp=np)
     per = 2 * ch.n_monomers
     cm = float(model.state(x0).lattice[3]) / ch.n_monomers
+    fence(model, x0, cm)
     everything, rigid = SP.free_sets(model)
     upright = np.setdiff1d(everything, model.index("shear"))
     xu, iu = CA.relaxed(model, x0, upright)
