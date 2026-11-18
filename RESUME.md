@@ -77,23 +77,50 @@ right": true at one registry, not along it).
         and the lateral cell contracts 2-3% to pay (objective 43 inside the old bounds, 46 with the diameters'
         bounds opened; `docs/predictions/crystal_stage_v11_registry[_wide].json`, both stopped by hand at 186
         evaluations, still falling slowly, NOT presets). The form cannot hold both.
-    (c) RUNNING / NEXT: what a new wall is to be fitted to, on one footing. `examples/interchain_frames.py frames`
-        built 81 cells in `/opt/dft/interchain` (plain PVDF, chains rigid, three packings: beta, the candidate's
-        all-trans packing, the TGTG' helix `vdf2`; lateral edges scaled -6..+6% singly and together; shears);
-        label with `python examples/mlip_frames.py label --frames /opt/dft/interchain --pw /opt/mm/qe/bin/pw.x
-        --pseudo /opt/pseudo --np 4 --minutes 100` (resumable; 50 s per 12-atom cell, 2 min per helix cell), then
-        `interchain_frames.py collect --frames /opt/dft/interchain`.
-    (d) NEXT: `examples/interchain_wall.py pairs --frames /opt/dft/interchain --registry /opt/dft/shear2` (the
+    (c) DONE: the data a wall is fitted to on one footing. `examples/interchain_frames.py frames --out
+        /opt/dft/interchain [--packings ...]`: plain PVDF, chains RIGID, lateral edges scaled -6..+6% singly and
+        together, shears; packings `beta` (27 cells), `candidate` (27), `alpha` = TGTG' `vdf2` (27), and `hh` = the
+        chain with every second unit reversed, -CH2-CF2-CF2-CH2- (`vdf1-rvdf1-2`, 37 cells: the only ones with
+        fluorine against fluorine and hydrogen against hydrogen between chains). Label: `python
+        examples/mlip_frames.py label --frames /opt/dft/interchain --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo
+        --np 4 --minutes 100` (resumable; 50 s per 12-atom cell, 2.3 min per 24-atom one). LABELLED WHEN THIS WAS
+        WRITTEN: beta 27/27, candidate 9/27, alpha 1/27, hh in progress. Then `interchain_frames.py collect`.
+        WHAT BETA SHOWS: polyfind (belt4) is right on the stretched side and 1.2-1.4x too stiff at -6%; its registry
+        cost over DFT's is 2.2x at a 4% wider cell, 3x at the cell, 5x at a 4% narrower one: too steep close in.
+    (d) DONE: `examples/interchain_wall.py pairs --frames /opt/dft/interchain --registry /opt/dft/shear2` (the
         between-chain distances of every cell by element pair; the present form on them is polyfind's own pair
-        energy to 4e-14) and `... fit --form 12-6|n-6|exp-6 --free x_H,...` : try wall shapes against DFT's
-        differences outside the kernels, electrostatics left as they are. Choose the form there.
-    (e) THEN: put the chosen form in the kernels (the 12-6 is written in pack.py (tables and two kernels),
-        mixedcell._pair_kernel, supercell.py, lattice_table.py, forcefield.SimpleFF, fitting's two designs), default
-        unchanged; stage 12 of the crystal fit with the registry and rigid-strain rows; then the valence fit's
-        torsions again under the new wall (the conformer set IS here: `/home/user/sarco/materials/gpu_bundle/
-        trainset_v1_566.xyz`, `POLYFIND_TRAINSET`); then the acceptance on a copolymer DFT has: `vdf5-rvdf1-6`
-        upright margin +0.070, all-trans shear gain -0.35 at (0.30, -0.90) monomers, helix none; E5 and the 18
-        sheared cells not in the fit as the check.
+        energy to 4e-14; RERUN IT after new labels, it reads the DFT energies) and `... fit --form
+        12-6|n-6|exp-6|b14-7 --free ...`. On 52 cells, depths held: 12-6 0.12 kcal/mol per monomer rms, n-6 0.04,
+        exp-6 0.014, buffered 14-7 with its buffer free 0.007 and nothing at a bound. Variables `x_FF, D_FF, x_HH,
+        D_HH` give the like pairs their own terms (for the hh cells).
+    (e) DONE: THE NEW WALL IN THE KERNELS, AS AN OPTION. `pack.wall_b147`, `CrystalPacker(wall=("b14-7", delta))`
+        (two tables = depth and inverse diameter; NEGATIVE depth = a wall alone = the belt sites, which stay),
+        mixedcell's batched kernel, supercell's sum, `FFParameters.wall` forwarded by `applied()`. `wall=None` is
+        12-6, untouched. Checked against the standalone trial to 4e-11; `tests/test_wall.py` (11). Its attraction
+        falls as r^-7 (an effective form inside the cutoff). The tabulated screen stays 12-6 (it only picks starts).
+    (f) DONE, INTERMEDIATE: stage 12 = stage 11 with the wall, its buffer the 14th variable
+        (`crystal_stage.py --stage 12 --geometry pbe --method trf --pendant-tilts --x0 <belt4 file> --set
+        x_C=...`; `docs/predictions/crystal_stage_v12_wall.json`, stopped by hand at 240 evaluations, NOT a
+        preset): objective 20.0 (11.1 of it ridge), gap -0.730, beta cell within 0.3%, C_11 C_22 C_12 22.0 22.6 6.1,
+        all 8 registry rows within 7%, alpha b 1.7% short (the one row past a tolerance). HELD OUT: the 18 other
+        sheared plain cells 0.97-1.08 of DFT (belt4 2.4-3.5).
+    (g) IT DOES NOT YET CARRY THE REVERSED-UNIT CANDIDATE: all-trans cell gains 0.10 at shear (0.07, -0.21)
+        monomers and is +0.18 at DFT's shear, where DFT is -0.35 (belt4: -0.03, +0.43). In DFT that cell trades
+        F..F between chains (2.64 A upright -> 2.89 sheared) for H..F (2.73 -> 2.46): contacts plain PVDF never
+        makes. Hence the hh cells; then F-F and H-H pair terms in the trial tool, then in the stage's variables.
+    (h) THE CONFORMER SIDE, STARTED: `ValenceDesign.lattice = <crystal-stage FFParameters>` makes the 467 conformers
+        (`POLYFIND_TRAINSET=/home/user/sarco/materials/gpu_bundle/trainset_v1_566.xyz`) see the lattice's
+        non-bonded terms; `fit_valence(designs=(design, held), free=range(12), x0=F.VAL_FITTED_X)` refits the
+        torsions under them in 9 s. Energy rms train/held-out: valence fit 1.02/1.36; belt4 1.31/1.72, torsions
+        refitted 1.21/1.66; stage 12 1.68/1.97, refitted 1.49/1.84. NOT ACTED ON: no preset carries refitted
+        torsions. TWO THINGS THIS EXPOSED, BOTH OLDER THAN THE REFIT: the crystal stage never refitted the torsions
+        to its own non-bonded terms, and the lattice side uses ONE torsion triple (the CF2-CH2 type's) for every
+        backbone bond of every copolymer (`reference_ff_parameters`), though the valence fit has four types.
+    (i) STILL TO DO, IN ORDER: finish labelling (hh, alpha, candidate); trial fits with the hh cells; the final
+        stage-12 fit (maybe with F-F/H-H terms and a few rigid-cell rows) and its preset; torsions consistent with
+        it; SimpleFF on the wall (the oligomer/RIS side is still 12-6); the acceptance on `vdf5-rvdf1-6` (upright
+        margin +0.070, all-trans shear gain -0.35 at (0.30, -0.90), helix none); E5 under the new preset; then the
+        35 rows again, the slide and kink barriers, the frequency maps. Text so far: `docs/CRYSTAL_STAGE.md` 5.24.
 
 **A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
 DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then
