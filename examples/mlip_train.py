@@ -307,7 +307,8 @@ def relax(args):
         a.calc = calc
         n = start.info["n_monomers"]
         e0, f0 = a.get_potential_energy() / n, float(np.abs(a.get_forces()).max())
-        opt = BFGS(FrechetCellFilter(a), logfile=None, maxstep=0.1)
+        mask = [int(v) for v in args.mask.split()] if args.mask else None
+        opt = BFGS(FrechetCellFilter(a, mask=mask), logfile=None, maxstep=0.1)
         done = bool(opt.run(fmax=args.fmax, steps=args.steps))
         e1 = a.get_potential_energy() / n
         b = a.copy()
@@ -423,6 +424,8 @@ def main():
     s.add_argument("--cells", type=Path, nargs="+", required=True, help="frame files (mlip_frames.py's .start.xyz or .dft.xyz)")
     s.add_argument("--out", type=Path, required=True, help="where the relaxed cells go, for mlip_frames.py label")
     s.add_argument("--fmax", type=float, default=0.005)
+    s.add_argument("--mask", default="", help='which strains the lattice may take, xx yy zz yz xz xy, e.g. "1 1 1 0 0 1" '
+                                              "keeps the chain axis upright (no shear along the chains)")
     s.add_argument("--steps", type=int, default=1500)
     s.add_argument("--threads", type=int, default=4)
     s = sub.add_parser("closure")
