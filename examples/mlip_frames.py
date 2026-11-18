@@ -400,12 +400,17 @@ def pw_input(atoms, pseudo_dir, outdir, conv_thr, ecut=(90, 360)):
     return "\n".join(lines)
 
 
+POOLS = 0  # k-point pools of a pw.x run; 0: one a process (--pools)
+
+
 def run_pw(pw, np_, text, workdir, name):
+    """Each k-point pool holds the whole cell's arrays: a chain in a wide box at one pool a process
+    asks for more memory than the cell with four times its atoms, and fewer pools is the way out."""
     workdir.mkdir(parents=True, exist_ok=True)
     (workdir / f"{name}.in").write_text(text)
     mpirun = Path(pw).with_name("mpirun")
     cmd = [str(mpirun if mpirun.exists() else "mpirun"), "--allow-run-as-root", "--oversubscribe", "-np", str(np_),
-           str(pw), "-nk", str(np_), "-in", f"{name}.in"]
+           str(pw), "-nk", str(POOLS or np_), "-in", f"{name}.in"]
     env = {**os.environ, "OMP_NUM_THREADS": "1", "PATH": f"{Path(pw).parent}:{os.environ.get('PATH', '/usr/bin:/bin')}"}
     t0 = time.time()
     with open(workdir / f"{name}.out", "w") as out:
@@ -692,6 +697,8 @@ def main():
             s.add_argument("--pw", required=True, help="path to pw.x (Quantum ESPRESSO 7.5)")
             s.add_argument("--pseudo", required=True, help="directory with the SSSP 1.3.0 PBE precision files")
             s.add_argument("--np", type=int, default=4)
+            s.add_argument("--pools", type=int, default=0, help="k-point pools (default one a process); 1 for a frame whose arrays "
+                                                                 "do not fit in memory once a pool")
         if name == "label":
             s.add_argument("--conv-thr", type=float, default=1e-9)
             s.add_argument("--only", default="", help="families to label, comma-separated")
@@ -711,6 +718,8 @@ def main():
         if name in ("collect", "cutoff"):
             s.add_argument("--out", type=Path, required=True)
     args = p.parse_args()
+    global POOLS
+    POOLS = int(getattr(args, "pools", 0))
     {"make": make, "check": check, "label": label, "aim": aim, "cutoff": cutoff, "relax": dft_relax,
      "collect": collect}[args.step](args)
 

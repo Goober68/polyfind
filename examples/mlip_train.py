@@ -283,6 +283,46 @@ def evaluate(args):
     print(f"wrote {path.relative_to(ROOT)}")
 
 
+def tilted_calculator(base, start):
+    """``base`` plus a term linear in the fractional coordinates and the strain, chosen so that at
+    ``start`` (a DFT-labelled frame) the sum has DFT's forces and stress.
+
+    A relaxation in it is a Newton step with the potential's curvature and DFT's gradient: where
+    the potential is wrong by a slope, as on an arrangement it was not fitted to, the minimum it
+    finds is DFT's to first order in the potential's curvature error, and the energy it loses on
+    the way is the estimate of what DFT loses.
+    """
+    from ase.calculators.calculator import Calculator, all_changes
+
+    class Tilted(Calculator):
+        implemented_properties = ["energy", "forces", "stress"]
+
+        def __init__(self):
+            super().__init__()
+            a = start.copy()
+            a.calc = base
+            self.cell0 = start.cell.array.copy()
+            self.s0 = start.get_scaled_positions(wrap=False)
+            self.gs = -(start.arrays["REF_forces"] - a.get_forces()) @ self.cell0.T
+            self.ge = (np.asarray(start.info["REF_stress"], dtype=float).reshape(3, 3) - a.get_stress(voigt=False)) * start.get_volume()
+
+        def calculate(self, atoms=None, properties=("energy",), system_changes=all_changes):
+            super().calculate(atoms, properties, system_changes)
+            b = atoms.copy()
+            b.calc = base
+            cell = atoms.cell.array
+            grown = np.linalg.solve(self.cell0, cell)  # this cell in the start's: the strain so far, plus one
+            eps = 0.5 * (grown + grown.T) - np.eye(3)
+            ds = atoms.get_scaled_positions(wrap=False) - self.s0
+            lin = grown.T @ self.ge
+            lin = 0.5 * (lin + lin.T) / atoms.get_volume()
+            self.results = {"energy": b.get_potential_energy() + float((self.gs * ds).sum() + (self.ge * eps).sum()),
+                            "forces": b.get_forces() - self.gs @ np.linalg.inv(cell).T,
+                            "stress": b.get_stress(voigt=True) + lin[[0, 1, 2, 1, 0, 0], [0, 1, 2, 2, 2, 1]]}
+
+    return Tilted()
+
+
 def relax(args):
     """Cells relaxed in the potential (atoms and lattice), written out for a DFT single point each.
 
@@ -304,7 +344,7 @@ def relax(args):
     for f in args.cells:
         start = read(f)
         a = start.copy()
-        a.calc = calc
+        a.calc = tilted_calculator(calc, start) if args.dft_gradient else calc
         n = start.info["n_monomers"]
         e0, f0 = a.get_potential_energy() / n, float(np.abs(a.get_forces()).max())
         mask = [int(v) for v in args.mask.split()] if args.mask else None
@@ -318,6 +358,13 @@ def relax(args):
                   "note": f"{start.info.get('source', start.info['frame'])}, relaxed in {args.name} with D3 "
                           f"to {args.fmax} eV/A ({opt.get_number_of_steps()} steps{'' if done else ', NOT converged'})",
                   "potential_eV_per_monomer": float(e1), "potential_start_eV_per_monomer": float(e0)}
+        for k in ("REF_energy", "REF_stress", "dft_energy_ry", "dft_d3_ry", "dft_kpoints", "dft_seconds", "dft_conv_thr_ry"):
+            b.info.pop(k, None)  # the start's labels are not this frame's
+        b.arrays.pop("REF_forces", None)
+        if args.dft_gradient:
+            b.info["note"] += "; the potential tilted to DFT's forces and stress at the start"
+            b.info["start_frame"] = start.info["frame"]
+            b.info["dft_predicted_eV_per_monomer"] = float(start.info["REF_energy"] / n + e1 - e0)
         write(args.out / f"{frame}.start.xyz", b, format="extxyz")
         change = 100 * (a.cell.cellpar()[:3] / start.cell.cellpar()[:3] - 1)
         print(f"{frame}: {opt.get_number_of_steps()} steps, converged {done}; the potential's energy {1e3 * (e1 - e0):+.1f} meV "
@@ -428,6 +475,9 @@ def main():
                                               "keeps the chain axis upright (no shear along the chains)")
     s.add_argument("--steps", type=int, default=1500)
     s.add_argument("--threads", type=int, default=4)
+    s.add_argument("--dft-gradient", action="store_true",
+                   help="the cells are DFT-labelled frames: relax each in the potential tilted to DFT's forces and stress at its start "
+                        "(a Newton step with the potential's curvature and DFT's gradient)")
     s = sub.add_parser("closure")
     s.add_argument("--frames", type=Path, required=True, help="the labelled frames (for DFT's own minima)")
     s.add_argument("--probe", type=Path, required=True, help="the directory `evaluate --probe` wrote, labelled")

@@ -100,11 +100,13 @@ def frames(args):
               f"{'one stands for all' if len(keep) == 1 else 'each is written'}")
 
 
-def split(frames_dir: Path, name: str) -> dict:
-    """``{cell, chain, between}`` in kcal/mol per monomer, and the largest DFT force on the lone chain (eV/A)."""
+def split(frames_dir: Path, name: str, relaxed_dir: Path | None = None) -> dict:
+    """``{cell, chain, between}`` in kcal/mol per monomer and the largest DFT force on the lone chain
+    (eV/A); with ``relaxed_dir``, also the lone chain relaxed (``lone``, its last labelled step
+    there) and the cell against it (``binding``)."""
     from ase.io import read
 
-    lone = [read(f) for f in sorted(frames_dir.glob(f"{name}_chain*.dft.xyz"))]
+    lone = [read(f) for f in sorted(frames_dir.glob(f"{name}_chain*.dft.xyz")) if f.name[len(name) + 6:-8].isdigit()]
     if not lone:
         raise FileNotFoundError(f"no labelled chain of {name} in {frames_dir}")
     info = lone[0].info
@@ -112,21 +114,42 @@ def split(frames_dir: Path, name: str) -> dict:
         raise ValueError(f"{name}: {len(lone)} of its {info['chains_in_cell']} chains are labelled")
     chain = float(np.mean([a.info["REF_energy"] / a.info["n_monomers"] for a in lone])) * EV
     cell = info["cell_eV"] / info["cell_monomers"] * EV
-    return {"cell": cell, "chain": chain, "between": cell - chain, "largest_force_on_the_lone_chain": float(max(np.abs(a.arrays["REF_forces"]).max() for a in lone)),
-            "repeat": float(lone[0].cell[2, 2]), "monomers_in_a_chain": int(info["n_monomers"])}
+    out = {"cell": cell, "chain": chain, "between": cell - chain, "largest_force_on_the_lone_chain": float(max(np.abs(a.arrays["REF_forces"]).max() for a in lone)),
+           "repeat": float(lone[0].cell[2, 2]), "monomers_in_a_chain": int(info["n_monomers"])}
+    if relaxed_dir is not None:
+        steps = sorted(relaxed_dir.glob(f"{name}_chain0_in_*.dft.xyz"), key=lambda f: len(f.name))
+        if steps:
+            r = read(steps[-1])
+            e = r.info["REF_energy"] / r.info["n_monomers"] * EV
+            out.update(lone=e, binding=cell - e, relaxation=e - chain, lone_steps=len(steps), lone_repeat=float(r.cell[2, 2]),
+                       lone_predicted=r.info["dft_predicted_eV_per_monomer"] * EV - e,
+                       lone_largest_force=float(np.abs(r.arrays["REF_forces"]).max()), lone_stress_zz_GPa=float(np.asarray(r.info["REF_stress"]).reshape(3, 3)[2, 2] * 160.2177))
+    return out
 
 
 def dft(args):
-    out = {"what": "DFT cells split into their chains alone (in a 16 A box, atoms where the cell has them) and what is between the chains; "
-                   "kcal/mol per monomer, each cell against its reference", "pairs": {}}
+    out = {"what": "DFT cells split into their chains alone (in a 16 A box) and the rest; kcal/mol per monomer, each cell against its reference. "
+                   "inside_a_chain / between_chains: the chain with its atoms where the cell has them. lone_chain / binding: the chain relaxed alone "
+                   "(examples/mlip_train.py relax --dft-gradient, then a single point), and the cell against that.", "cells": {}, "pairs": {}}
+    cells = {}
+    for item in args.pairs:
+        for name in item.split("="):
+            if name not in cells:
+                cells[name] = split(args.frames, name, args.relaxed)
+    out["cells"] = cells
     for item in args.pairs:
         name, ref = item.split("=")
-        a, b = split(args.frames, name), split(args.frames, ref)
-        out["pairs"][f"{name} minus {ref}"] = {"cell": a["cell"] - b["cell"], "inside_a_chain": a["chain"] - b["chain"], "between_chains": a["between"] - b["between"],
-                                              "absolute_between": [a["between"], b["between"]], "largest_force_on_the_lone_chains": [a["largest_force_on_the_lone_chain"], b["largest_force_on_the_lone_chain"]]}
-        r = out["pairs"][f"{name} minus {ref}"]
-        print(f"{name} minus {ref}: cell {r['cell']:+.3f} = inside a chain {r['inside_a_chain']:+.3f} + between chains {r['between_chains']:+.3f} "
-              f"(between: {a['between']:+.3f}, {b['between']:+.3f}; largest force on the lone chains {a['largest_force_on_the_lone_chain']:.2f}, {b['largest_force_on_the_lone_chain']:.2f} eV/A)")
+        a, b = cells[name], cells[ref]
+        out["pairs"][f"{name} minus {ref}"] = r = {"cell": a["cell"] - b["cell"], "inside_a_chain": a["chain"] - b["chain"], "between_chains": a["between"] - b["between"]}
+        text = f"{name} minus {ref}: cell {r['cell']:+.3f} = inside a chain {r['inside_a_chain']:+.3f} + between chains {r['between_chains']:+.3f}"
+        if "lone" in a and "lone" in b:
+            r.update(lone_chain=a["lone"] - b["lone"], binding=a["binding"] - b["binding"])
+            text += f"; = the chains relaxed alone {r['lone_chain']:+.3f} + binding {r['binding']:+.3f}"
+        print(text)
+    for name, c in cells.items():
+        print(f"  {name}: between {c['between']:+.3f}, largest force on the lone chain {c['largest_force_on_the_lone_chain']:.2f} eV/A"
+              + (f"; relaxed alone {c['relaxation']:+.3f} (predicted {c['relaxation'] + c['lone_predicted']:+.3f}), binding {c['binding']:+.3f}, "
+                 f"largest force left {c['lone_largest_force']:.3f} eV/A, repeat {c['repeat']:.4f} -> {c['lone_repeat']:.4f} A" if "lone" in c else ""))
     if args.out:
         Path(args.out).write_text(json.dumps(out, indent=1))
         print(f"written {args.out}")
@@ -139,60 +162,124 @@ def _load(name):
     return mod
 
 
-def polyfind_split(model, x) -> dict:
-    """A cell's energy under the parameter set in force, split: the terms of one chain's own
-    coordinates, the lattice sum with the chains on a 16 A lattice (inside a chain and its images
-    as DFT's box has them), and the rest of the lattice sum (between chains)."""
-    here, box = {}, {}
-    model.value_and_grad(x, here)
-    y = np.array(x, dtype=float)
-    y[0], y[1], y[2] = BOX, 2.0 * BOX, 90.0
-    model.value_and_grad(y, box)
-    own = sum(v for k, v in here.items() if k != "lattice")
-    return {"cell": here["lattice"] + own, "chain": box["lattice"] + own, "between": here["lattice"] - box["lattice"], "terms": {k: float(v) for k, v in here.items()}}
+def polyfind_split(SP, model, x, ch, tilts: bool = True) -> dict:
+    """A cell's energy under the parameter set in force, split as DFT's is: each chain alone on a
+    16 A square lattice with its coordinates as the cell has them (one-chain packers, the same
+    terms), and the cell minus those.  kcal/mol per cell.  With ``tilts`` the pendant groups are
+    relaxed as rigid tilts in the cell first (the relaxation DFT's cell has), and the lone
+    chains carry the tilted groups."""
+    from polyfind import mixedcell as MC
+    from polyfind import pendants as PD
+
+    polymer = model.polymer
+    latn, frames, offs, P0, built = model.build(x)
+    cz, n = float(latn[2, 2]), model.n
+    cell = model.physical_energy(x)
+    pk1 = SP.pack_mod.CrystalPacker(ch, n_chains=1, **SP.DK.KW)
+    st = model.state(x)
+    lone = 0.0
+    for k in range(model.nc):
+        one = MC.MixedModel(polymer, model.name, pk1, model.flips[k:k + 1], [ch], angle_stiffness=model.angle_stiffness)
+        lone += one.physical_energy(np.concatenate([[BOX, BOX, 90.0, st.lattice[3]], [0.0, 0.0, st.place[k, 2], 0.0], st.tors[k], st.angs[k]]))
+    out = {"cell": cell, "chain": lone, "between": cell - lone}
+    if tilts:
+        dE, deg, groups = MC.tilt_relaxation(model, x)
+        J, atoms = PD.belt_site_constraint(model.pk, P0, cz=cz)
+        Pt = P0 + (J @ PD.group_displacements(groups, np.radians(deg).ravel(), len(atoms))).reshape(-1, 3)
+        box = np.diag([BOX, BOX, cz])
+        moved = 0.0
+        for k in range(model.nc):
+            sl = slice(k * n, (k + 1) * n)
+            val = [PD.pinned_chain_valence(built[k][0], polymer, None, cz=cz)[0]]
+            e = [MC.placed_energy_and_grad(pk1, frames[k:k + 1], P[sl], box, valences=val)[0] for P in (P0, Pt)]
+            moved += float(e[1]) - float(e[0])
+        out.update(tilt_cell=float(dE), tilt_chain=moved, cell_tilted=cell + float(dE), chain_tilted=lone + moved, between_tilted=cell + float(dE) - lone - moved)
+    return out
+
+
+def polyfind_lone(SP, model, x, ch, tilts: bool = True) -> dict:
+    """Each chain of the cell relaxed alone on the 16 A lattice under the parameter set in force:
+    its torsions, backbone angles and repeat free from where the cell has them, then (``tilts``)
+    its pendant groups.  ``{lone, repeats, torsions}``, the energy summed over the chains."""
+    from polyfind import mixedcell as MC
+
+    pk1 = SP.pack_mod.CrystalPacker(ch, n_chains=1, **SP.DK.KW)
+    st = model.state(x)
+    total, repeats, torsions = 0.0, [], []
+    for k in range(model.nc):
+        one = MC.MixedModel(model.polymer, model.name, pk1, model.flips[k:k + 1], [ch], angle_stiffness=model.angle_stiffness)
+        y = np.concatenate([[BOX, BOX, 90.0, st.lattice[3]], [0.0, 0.0, st.place[k, 2], 0.0], st.tors[k], st.angs[k]])
+        free = np.concatenate([one.index("c"), one.index("internal")])
+        y1, info = one.relax(y, free=free, closed=[0], maxiter=800, patience=60, patience_tol=1e-6)
+        if info["stalled"] or info["gradient_max"] > 1e-3:
+            y1, info = one.relax_on_surface(y1, free=free, closed=[0], gtol=1e-4, maxiter=300, patience=60)
+        e = one.physical_energy(y1)
+        if tilts:
+            e += float(MC.tilt_relaxation(one, y1)[0])
+        total += e
+        s1 = one.state(y1)
+        repeats.append(float(s1.lattice[3]))
+        torsions.append([float(v) for v in s1.tors[0]])
+    return {"lone": total, "repeats": repeats, "torsions": torsions}
+
+
+PLAIN = "pvdf"   # --row: plain PVDF's two packings (examples/interchain_frames.py) in place of a row's polished cells
 
 
 def polyfind(args):
     from polyfind import crystalfit as C
     from polyfind import fitting as F
-    from polyfind import mixedcell as MC
 
     CA = _load("candidate_acceptance")
     SP = CA.SP
-    pol, ref = json.load(open(SP.POLISHED)), json.load(open(SP.REFERENCES))
-    out = json.loads(Path(args.out).read_text()) if args.out and Path(args.out).exists() else {"what": "polyfind's relaxed cells of a row split as the DFT cells are (examples/chain_split.py)", "sets": {}}
+    plain = args.row == PLAIN
+    if plain:
+        IF = _load("interchain_frames")
+        table = json.loads((Path(__file__).resolve().parents[1] / "docs" / "predictions" / "interchain_belt4.json").read_text())["packings"]
+    else:
+        pol, ref = json.load(open(SP.POLISHED)), json.load(open(SP.REFERENCES))
+    out = json.loads(Path(args.out).read_text()) if args.out and Path(args.out).exists() else {"what": "polyfind's relaxed upright cells split as the DFT cells are (examples/chain_split.py); kcal/mol per monomer", "sets": {}}
     sets = {}
     for item in args.fit:
         name, path = item.split("=", 1)
         sets[name] = F.PRESET_PARAMETERS[path] if path in F.PRESET_PARAMETERS else C.parameters(np.array(json.loads(Path(path).read_text())["x"], dtype=float))
-    confs = [c for c in args.confs.split(",") if c]
+    confs = [c for c in (args.confs or ("beta,alpha" if plain else "TG'TG,TTTT,GTG'T")).split(",") if c]
     for name, prm in sets.items():
         rows = {}
         previous = SP.C.SITES_FOR
         SP.C.SITES_FOR = prm
         try:
             with prm.applied():
-                letters, _ = SP.DK.sequence(args.row)
-                polymer = SP.C.make_polymer(args.row, letters)
+                if not plain:
+                    letters, _ = SP.DK.sequence(args.row)
+                    polymer = SP.C.make_polymer(args.row, letters)
                 for conf in confs:
-                    model, x0, ch = SP.sheared_model(polymer, SP.stored_cell(args.row, conf, pol, ref), check=False)
-                    per = 2 * ch.n_monomers
+                    if plain:
+                        model, x0, ch, per = IF.model_of(conf, table[conf].get("cell"), check=False)
+                    else:
+                        model, x0, ch = SP.sheared_model(polymer, SP.stored_cell(args.row, conf, pol, ref), check=False)
+                        per = 2 * ch.n_monomers
                     everything, _ = SP.free_sets(model)
-                    upright = np.setdiff1d(everything, model.index("shear"))
-                    xu, _ = CA.relaxed(model, x0, upright)
-                    s = polyfind_split(model, xu)
-                    tilt = float(MC.tilt_relaxation(model, xu)[0]) / per
-                    rows[conf] = {"cell": s["cell"] / per, "chain": s["chain"] / per, "between": s["between"] / per, "pendant_tilts": tilt,
-                                  "terms": {k: v / per for k, v in s["terms"].items()}}
-                    print(f"{name} {conf}: cell {rows[conf]['cell']:.4f} = chain {rows[conf]['chain']:.4f} + between {rows[conf]['between']:+.4f}; pendant tilts {tilt:+.4f}", flush=True)
+                    xu, _ = CA.relaxed(model, x0, np.setdiff1d(everything, model.index("shear")))
+                    rows[conf] = r = {k: v / per for k, v in polyfind_split(SP, model, xu, ch).items()}
+                    lone = polyfind_lone(SP, model, xu, ch)
+                    r.update(lone=lone["lone"] / per, binding=r["cell_tilted"] - lone["lone"] / per, lone_repeats=lone["repeats"], lone_torsions=lone["torsions"],
+                             repeat=float(model.state(xu).lattice[3]), torsions=[[float(v) for v in t] for t in model.state(xu).tors])
+                    print(f"{name} {conf}: cell {r['cell_tilted']:.4f} = chain {r['chain_tilted']:.4f} + between {r['between_tilted']:+.4f}"
+                          f" (pendant tilts: cell {r['tilt_cell']:+.4f}, of which inside the chains {r['tilt_chain']:+.4f}); "
+                          f"the chains relaxed alone {r['lone']:.4f} ({r['lone'] - r['chain_tilted']:+.4f}), binding {r['binding']:+.4f}, repeat {r['repeat']:.3f} -> {lone['repeats'][0]:.3f} A", flush=True)
         finally:
             SP.C.SITES_FOR = previous
         base = rows[confs[0]]
+        pairs = {}
         for conf in confs[1:]:
             r = rows[conf]
-            print(f"{name}: {conf} minus {confs[0]}: cell {r['cell'] - base['cell']:+.3f} = inside a chain {r['chain'] - base['chain']:+.3f} + between chains {r['between'] - base['between']:+.3f}"
-                  f"; with the pendants tilted {r['cell'] + r['pendant_tilts'] - base['cell'] - base['pendant_tilts']:+.3f}")
-        out["sets"][name] = {"row": args.row, "cells": rows}
+            pairs[f"{conf} minus {confs[0]}"] = q = {"cell": r["cell_tilted"] - base["cell_tilted"], "inside_a_chain": r["chain_tilted"] - base["chain_tilted"],
+                                                     "between_chains": r["between_tilted"] - base["between_tilted"], "lone_chain": r["lone"] - base["lone"],
+                                                     "binding": r["binding"] - base["binding"]}
+            print(f"{name}: {conf} minus {confs[0]}: cell {q['cell']:+.3f} = inside a chain {q['inside_a_chain']:+.3f} + between chains {q['between_chains']:+.3f}"
+                  f"; = the chains relaxed alone {q['lone_chain']:+.3f} + binding {q['binding']:+.3f}")
+        out["sets"].setdefault(name, {})[args.row] = {"cells": rows, "pairs": pairs}
     if args.out:
         Path(args.out).write_text(json.dumps(out, indent=1))
         print(f"written {args.out}")
@@ -209,10 +296,11 @@ def main():
     s = sub.add_parser("dft")
     s.add_argument("--frames", type=Path, required=True)
     s.add_argument("--pairs", nargs="+", required=True, help="CELL=REFERENCE, frame names of the cells")
+    s.add_argument("--relaxed", type=Path, default=None, help="directory of the lone chains relaxed and labelled")
     s.add_argument("--out", default="")
     s = sub.add_parser("polyfind")
-    s.add_argument("--row", default="vdf5-rvdf1-6")
-    s.add_argument("--confs", default="TG'TG,TTTT,GTG'T", help="the first is the reference")
+    s.add_argument("--row", default="vdf5-rvdf1-6", help=f"a row with polished cells, or '{PLAIN}' for plain PVDF's beta and alpha")
+    s.add_argument("--confs", default="", help="the first is the reference; default TG'TG,TTTT,GTG'T (for plain PVDF beta,alpha)")
     s.add_argument("--fit", action="append", default=[], help="name=crystal-stage result file, or name=preset")
     s.add_argument("--out", default="")
     args = ap.parse_args()
