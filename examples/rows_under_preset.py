@@ -59,6 +59,15 @@ def fence(model, x0, cm: float) -> None:
     model.value_and_grad = guarded
 
 
+def settle(model, x, free, closed=(0, 1)):
+    """A relaxation that cannot leave its basin in one step: quasi-Newton rounds in a trust box of 0.3
+    scaled units (about 0.3 A of atom motion), repeated until none ends on its box.  From a cell
+    polished under another preset the plain relaxation takes, once in a while, a step that puts
+    atoms on top of one another, and behind the pair term's finite wall the point charges have no
+    floor: the energy there is minus hundreds of thousands and the minimiser stays."""
+    return model.relax_in_basin(x, free=free, closed=list(closed), trust=0.3, rounds=60, maxiter=200)
+
+
 def cell_under(model, x0, ch, line=None, sheared_state=None, tilts: bool = True) -> dict:
     """One stored cell relaxed under the parameter set in force: upright, then with the shear free
     from a kick off the upright cell, from ``sheared_state`` (the variables of an earlier preset's
@@ -74,7 +83,7 @@ def cell_under(model, x0, ch, line=None, sheared_state=None, tilts: bool = True)
     fence(model, x0, cm)
     everything, rigid = SP.free_sets(model)
     upright = np.setdiff1d(everything, model.index("shear"))
-    xu, iu = CA.relaxed(model, x0, upright)
+    xu, iu = settle(model, x0, upright)
     eu = model.physical_energy(xu)
     starts = [("kick", None)] + ([("the earlier preset's sheared cell", np.asarray(sheared_state, dtype=float))] if sheared_state is not None else []) \
         + ([("line", line)] if line is not None else [])
@@ -89,8 +98,8 @@ def cell_under(model, x0, ch, line=None, sheared_state=None, tilts: bool = True)
             else:
                 x = xu.copy()
                 x[model.index("shear")] = [start[0] * cm, start[1] * cm]
-                x, _ = model.relax(x, free=rigid, closed=[], maxiter=300)
-            x1, i1 = CA.relaxed(model, x, everything)
+                x, _ = settle(model, x, rigid, closed=())
+            x1, i1 = settle(model, x, everything)
             e1 = model.physical_energy(x1)
             lat = model.state(x1).lattice
             if not (np.isfinite(e1) and 2.0 < lat[0] < 60.0 and 2.0 < lat[1] < 60.0 and 20.0 < lat[2] < 160.0):
