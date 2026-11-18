@@ -83,8 +83,8 @@ right": true at one registry, not along it).
         chain with every second unit reversed, -CH2-CF2-CF2-CH2- (`vdf1-rvdf1-2`, 37 cells: the only ones with
         fluorine against fluorine and hydrogen against hydrogen between chains). Label: `python
         examples/mlip_frames.py label --frames /opt/dft/interchain --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo
-        --np 4 --minutes 100` (resumable; 50 s per 12-atom cell, 2.3 min per 24-atom one). LABELLED WHEN THIS WAS
-        WRITTEN: beta 27/27, candidate 9/27, alpha 1/27, hh in progress. Then `interchain_frames.py collect`.
+        --np 4 --minutes 100` (resumable; 50 s per 12-atom cell, 2.3 min per 24-atom one). LABELLED: beta 27/27,
+        alpha 27/27, hh 37/37, candidate 9/27 (the rest queued behind `cand6`). Then `interchain_frames.py collect`.
         WHAT BETA SHOWS: polyfind (belt4) is right on the stretched side and 1.2-1.4x too stiff at -6%; its registry
         cost over DFT's is 2.2x at a 4% wider cell, 3x at the cell, 5x at a 4% narrower one: too steep close in.
     (d) DONE: `examples/interchain_wall.py pairs --frames /opt/dft/interchain --registry /opt/dft/shear2` (the
@@ -104,23 +104,61 @@ right": true at one registry, not along it).
         preset): objective 20.0 (11.1 of it ridge), gap -0.730, beta cell within 0.3%, C_11 C_22 C_12 22.0 22.6 6.1,
         all 8 registry rows within 7%, alpha b 1.7% short (the one row past a tolerance). HELD OUT: the 18 other
         sheared plain cells 0.97-1.08 of DFT (belt4 2.4-3.5).
-    (g) IT DOES NOT YET CARRY THE REVERSED-UNIT CANDIDATE: all-trans cell gains 0.10 at shear (0.07, -0.21)
-        monomers and is +0.18 at DFT's shear, where DFT is -0.35 (belt4: -0.03, +0.43). In DFT that cell trades
-        F..F between chains (2.64 A upright -> 2.89 sheared) for H..F (2.73 -> 2.46): contacts plain PVDF never
-        makes. Hence the hh cells; then F-F and H-H pair terms in the trial tool, then in the stage's variables.
-    (h) THE CONFORMER SIDE, STARTED: `ValenceDesign.lattice = <crystal-stage FFParameters>` makes the 467 conformers
+    (g) THE REVERSED CHAIN (`hh`, 37 cells, ALL LABELLED): a buffered wall fitted with the plain cells leaves 0.154
+        kcal/mol per monomer rms on them (plain groups 0.01-0.04); F-F and H-H pair terms of their own DO NOT help
+        (0.153, three bounds). The misses are long shears where polyfind's electrostatics alone exceed DFT's whole
+        energy. `interchain_wall.py fit` can now move the electrostatics: `es` (a multiplier, diagnostic: hh alone
+        asks 0.38, plain 0.92), `s_CH`, `s_CF` (the two groups' charges), `d_CC` (charge along each CH2-CF2 backbone
+        bond), every cell's electrostatic energy stored as its exact quadratic form in them (`K`, induction in it),
+        and the extra sources of `extra_sources` to first order (`K1`, a plain Ewald pair matrix `ewald_green`).
+        ENERGIES CANNOT SET CHARGES: such fits end on bounds (CF2 charges to zero).
+    (h) THE POTENTIAL, MEASURED (`examples/chain_potential.py frames|dft|collect|fit`, working directory
+        `/opt/dft/chainpot`, DFT 3 to 6 minutes a chain on one core; stored samples
+        `docs/predictions/chain_potential_pbe_samples.npz`, fit `chain_potential_belt4.json`,
+        `tests/test_chain_potential.py`): one chain alone in a 16 A box, DFT's electrostatic potential (pp.x
+        plot_num 11) 2.2-5 A from the nuclei against polyfind's charges + induced dipoles. Error 0.41 / 0.38 / 0.42
+        kcal/mol per e rms around plain all-trans / plain TGTG' / the reversed chain = 3.6% / 5.5% / 47% of the
+        potential (the reversed chain has no dipole). No atom charges repair it, no single term on F; A TERM ON
+        HYDROGEN DOES on all three (a dipole or quadrupole along C-H, or a charge site on the bond): 0.18 / 0.13 /
+        0.23. Text: `docs/CRYSTAL_STAGE.md` 5.26.
+    (i) TWO OPTIONAL CHARGE TERMS IN THE KERNELS, OFF BY DEFAULT, NO PRESET USES THEM (`tests/test_bond_sites.py`):
+        `polymers.with_bond_sites(polymer)` puts a site `M` on every C-H bond (0.65 of the way out; charge only: no
+        LJ, no polarizability, no dipole, excluded and scaled as its hydrogen, not counted in the chain's frame, so
+        a sited chain sits exactly where the plain one does and old stored frames still place it);
+        `FFParameters.bond_sites=(("H", q),)` charges it (and `applied()` REFUSES a chain without sites);
+        `FFParameters.polymer(p)` builds what a set needs; examples: `candidate_screen.SITES_FOR = params` makes
+        `make_polymer` build sited chains. `FFParameters.backbone_pull=(("F", e),)`: each F draws e onto its carbon
+        from each backbone neighbour (= the trial's `d_CC` at -2e; tells CF2-beside-CH2 from CF2-beside-CF2).
+        With charges from the potential alone and only the wall refitted: hh cells 0.154 -> 0.128 (site) -> 0.089
+        (site + pull 0.0155: dCH -0.049, dCF +0.118, site -0.318). TRAP: `applied()` blocks do not nest (the outer
+        set's charges win).
+    (j) THE CANDIDATE'S OWN CELL, RIGID (`interchain_frames.py` packing `cand6`: `vdf5-rvdf1-6` all-trans polished
+        cell, own chains rigid, sheared along DFT's line; 4 cells of 72 atoms, DFT RUNNING when this was written,
+        `/opt/dft/interchain_label_cand6.log`). PREDICTIONS REGISTERED BEFORE THE DFT (`interchain_wall.py fit
+        --predict cand6`; kcal/mol per monomer at (0.075,-0.225) / (0.15,-0.45) / (0.30,-0.90) monomers): belt4
+        +0.10 / +0.70 / +1.58; buffered wall, present charges -0.21 / -0.14 / +0.15; with the bond site -0.24 /
+        -0.21 / +0.03; with site and pull -0.25 / -0.23 / -0.04. DFT relaxed (not rigid) is -0.35 at the last.
+        Rebuild the trial's table after new labels: `interchain_wall.py pairs --frames /opt/dft/interchain
+        --registry /opt/dft/shear2 [--charges M=-0.3 --out /opt/dft/interchain/pairs_sites.npy]`.
+    (k) THE CONFORMER SIDE, STARTED: `ValenceDesign.lattice = <crystal-stage FFParameters>` makes the 467 conformers
         (`POLYFIND_TRAINSET=/home/user/sarco/materials/gpu_bundle/trainset_v1_566.xyz`) see the lattice's
         non-bonded terms; `fit_valence(designs=(design, held), free=range(12), x0=F.VAL_FITTED_X)` refits the
         torsions under them in 9 s. Energy rms train/held-out: valence fit 1.02/1.36; belt4 1.31/1.72, torsions
         refitted 1.21/1.66; stage 12 1.68/1.97, refitted 1.49/1.84. NOT ACTED ON: no preset carries refitted
         torsions. TWO THINGS THIS EXPOSED, BOTH OLDER THAN THE REFIT: the crystal stage never refitted the torsions
         to its own non-bonded terms, and the lattice side uses ONE torsion triple (the CF2-CH2 type's) for every
-        backbone bond of every copolymer (`reference_ff_parameters`), though the valence fit has four types.
-    (i) STILL TO DO, IN ORDER: finish labelling (hh, alpha, candidate); trial fits with the hh cells; the final
-        stage-12 fit (maybe with F-F/H-H terms and a few rigid-cell rows) and its preset; torsions consistent with
-        it; SimpleFF on the wall (the oligomer/RIS side is still 12-6); the acceptance on `vdf5-rvdf1-6` (upright
+        backbone bond of every copolymer (`reference_ff_parameters`), though the valence fit has four types. The
+        conformer side does not know the bond sites or the pull yet (SimpleFF leaves both out).
+    (l) STILL TO DO, IN ORDER: read the cand6 DFT against the predictions (is the candidate's 0.35 between chains
+        or inside them?); `interchain_frames.py collect` + tests on the stored rigid cells (candidate-packing plain
+        cells still labelling); THE FINAL FIT (a stage 13: stage 12 + site charge + pull, with the potential's
+        three chains and the rigid cells as rows; sited polymers through `params.polymer`) and its preset; torsions
+        consistent with it (and SimpleFF given the two charge terms); the acceptance on `vdf5-rvdf1-6` (upright
         margin +0.070, all-trans shear gain -0.35 at (0.30, -0.90), helix none); E5 under the new preset; then the
-        35 rows again, the slide and kink barriers, the frequency maps. Text so far: `docs/CRYSTAL_STAGE.md` 5.24.
+        35 rows again, the slide and kink barriers, the frequency maps. The plain stage-12 fit was never run to
+        convergence (240 evaluations, objective 20.0): `crystal_stage.py --stage 12 --geometry pbe --method trf
+        --pendant-tilts --x0 docs/predictions/crystal_stage_v12_wall.json --maxfev 250 --out ...` (65 minutes).
+        Text: `docs/CRYSTAL_STAGE.md` 5.24 (12-6 cannot), 5.25 (the wall), 5.26 (the charges).
 
 **A machine-learned potential as a second opinion: pretrained ones fail; our own, fitted long on a rented card, is the
 DFT to 0.01 kcal/mol where it has frames near and off by 0.07 to 0.21 on a packing it was not shown; relax in it, then

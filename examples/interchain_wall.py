@@ -538,12 +538,21 @@ def fit(args):
     if args.rows:
         for r in rows:
             print(f"      {r[0]:18s} {r[1]:22s} model {r[2]:+.4f} DFT {r[3]:+.4f} z {r[4]:+.2f}")
+    predicted = {}
+    for pack in [p for p in args.predict.split(",") if p]:
+        # the fitted variables on a packing's cells whether DFT has them or not: against its first cell, kcal/mol per monomer
+        mine = [c for c in cells if c["packing"] == pack and c["frame"].startswith("inter_")]
+        both = residuals(v, [dict(c, dft=0.0) for c in mine], form, split)
+        predicted[pack] = {r[1]: r[2] for r in both}
+        print(f"   predicted, {pack}: " + ", ".join(f"{c['variant'][2]:+.3f},{c['variant'][3]:+.3f}: {predicted[pack][c['frame']]:+.4f}"
+                                                   + (f" (DFT {(c['dft'] - mine[0]['dft']) / c['monomers']:+.4f})" if c["dft"] is not None and mine[0]["dft"] is not None else "")
+                                                   for c in mine[1:]))
     if args.out:
         out_path = Path(args.out)
         disk = json.loads(out_path.read_text()) if out_path.exists() else {"what": "trial walls between rigid chains fitted to DFT outside polyfind's kernels (examples/interchain_wall.py)",
                                                                            "energy": "kcal/mol per monomer", "preset": PRESET, "trials": {}}
         disk["trials"][args.name or f"{form} free {args.free or 'nothing'}"] = {
-            "form": form, "free": free, "set": args.set, "variables": v, "at_bound": at_bound, "before": start, "after": end,
+            "form": form, "free": free, "set": args.set, "variables": v, "at_bound": at_bound, "before": start, "after": end, "predicted": predicted,
             "rows": [{"group": r[0], "frame": r[1], "model": r[2], "dft": r[3]} for r in rows]}
         out_path.write_text(json.dumps(disk, indent=1))
         print(f"written {out_path}")
@@ -564,6 +573,7 @@ def main():
     s.add_argument("--set", default="", help="start values, name=value comma list")
     s.add_argument("--packings", default="", help="comma list: fit and score these packings' cells alone")
     s.add_argument("--rows", action="store_true", help="print every cell")
+    s.add_argument("--predict", default="", help="comma list of packings: the fitted variables on all their cells, labelled or not")
     s.add_argument("--name", default="")
     s.add_argument("--out", default="")
     args = ap.parse_args()
