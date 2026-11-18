@@ -2148,6 +2148,55 @@ relaxed geometry (right to first order in how far the parameters have moved; ref
 again). `crystalfit` has a 27-variable form with those two bonds' torsion triples
 (`VARIABLES13_TYPED`).
 
+**The joint fit with the line** (`docs/predictions/crystal_stage_v13_line1.json`: from the
+second run with the four chain variables set by the line alone; five iterations, 129
+evaluations, the objective 165 to 95, stopped by the fitter's own tolerance; **not a preset**):
+
+| | DFT | second run | with the line |
+|---|---:|---:|---:|
+| beta a, b (A) | 4.757, 8.528 | 4.709, 8.605 | 4.695, 8.603 |
+| alpha a, b, c (A) | 4.945, 9.636, 4.660 | 4.916, 9.686, 4.633 | 4.960, 9.408, 4.722 |
+| E(alpha) - E(beta), kcal/mol | -0.726 | -0.730 | -0.651 |
+| C_11, C_22, C_12 (GPa) | 22.8, 24.5, 5.9 | 23.1, 22.8, 7.1 | 22.5, 22.2, 7.0 |
+| beta's backbone angle (degrees) | 114.6 | 115.9 | 116.7 |
+| the 8 registry rows, polyfind over DFT | 1 | 0.76 to 0.86 | 0.77 to 0.88 |
+| rigid cells, rms: beta, candidate packing, alpha | 0 | 0.04, 0.03, 0.04 | 0.04, 0.03, 0.04 |
+| rigid cells, rms: the reversed chain | 0 | 0.13 | 0.13 |
+| the candidate's own line (quarter, half, end) | -0.36, -0.41, -0.34 | -0.32, -0.38, -0.26 | -0.32, -0.38, -0.26 |
+| potential around the three chains, rms error | 0 | 0.17, 0.22, 0.13 | 0.28, 0.23, 0.21 |
+| conformers, energy rms | 1.02 | 1.29 | 1.32 |
+| the lone helix's six rows, largest error | 0 | 2.1 | 0.04 |
+| the lone helix: gauche angle, repeat (A) | 56, 4.650 | 25, 4.527 | 50, 4.651 |
+| the torsion triple; the angle's stiffness | | (-1.89, 1.40, 0.92); 264 | (0.45, -0.52, 0.75); 157 |
+
+The lone chain is DFT's now, and everything between chains that the second run had it kept.
+What it paid: the gap is 0.075 off (1.5 tolerances), alpha is 2.4% short along b and 1.3% long
+along c, beta's backbone angle is 2 degrees open, the potentials around the chains are a third
+worse. With the torsion no longer able to hide it, what is left of the error between chains
+shows in alpha's cell, where it is. Split as above, plain PVDF's alpha minus beta under this
+fit is -0.671 = -3.312 inside + 2.642 between, and against the chains relaxed alone -3.484 +
+2.813 where DFT has -3.449 + 2.723.
+
+**The acceptance under it** (`docs/predictions/candidate_acceptance_stage13_line1.json`,
+`chain_split_polyfind_line1.json`), which no row of that fit had seen:
+
+| | DFT | belt4 | second run | with the line |
+|---|---:|---:|---:|---:|
+| the all-trans cell's gain from shearing | -0.346 | -0.03 | -0.31 | -0.272 |
+| the helix cell's gain from shearing | none | none | none | -0.035 |
+| all-trans minus helix (TG'TG), cell upright | +0.070 | +0.064 | -0.177 | +0.041 |
+| the same split: inside a chain, between chains | +1.060, -0.990 | +1.708, -1.644 | +1.220, -1.397 | +1.095, -1.054 |
+| all-trans minus helix, everything relaxed | -0.261 | +0.03 | -0.44 | -0.197 |
+| GTG'T minus TG'TG | +0.197 | +0.120 | -0.158 | -0.130 |
+| the same split | +0.415, -0.218 | +0.270, -0.150 | -0.208, +0.049 | -0.169, +0.039 |
+
+The level of the candidate's helix against its all-trans cell, which the first runs of stage 13
+had lost, is back, and for the first time both of its parts are right (to 0.04 and 0.06) and
+not only their sum; the shear's gain is a fifth short. One row still fails: the helix with the
+reversed unit at its other place. That one is the two bonds the reversed unit makes, gauche in
+GTG'T and trans in TG'TG, on which this fit has the CF2-CH2 bond's triple; in its cells they
+sit at 93 and 110 degrees where DFT has 62 and 65.
+
 ## 6. What it costs, and what it does not touch
 
 (Stage 1; the same applies to stages 2 to 4, whose extra terms are likewise outside the

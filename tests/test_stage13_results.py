@@ -88,3 +88,52 @@ def test_the_acceptance_on_the_candidate_has_two_outcomes():
     assert (a["margin_sheared"] - a["margin_upright"]) == pytest.approx(a["dft"]["margin_sheared"] - a["dft"]["margin_upright"], abs=0.03)
     # typed torsions from the conformer refit make the order of the placements worse
     assert typed["against_the_helix_dft_relaxed"]["other_helix_minus_it"] < a["other_helix_minus_it"] - 0.25
+
+
+def test_with_the_lone_chains_line_in_the_rows_the_chain_is_dfts_and_the_candidates_level_is_back():
+    """docs/CRYSTAL_STAGE.md 5.29: the joint fit with the line, and the acceptance no row of it had seen."""
+    two, line = json.loads((PRED / "crystal_stage_v13_run2.json").read_text()), json.loads((PRED / "crystal_stage_v13_line1.json").read_text())
+    assert tuple(line["variables"]) == C.VARIABLES13 and "Not a preset" in line["stopped"]["why"]
+    r = line["residuals"]
+    helix = [k for k in r if k.startswith("lone chain, helix")]
+    assert len(helix) == 6 and max(abs(r[k]["polyfind"] - r[k]["dft"]) for k in helix) < 0.05
+    x1, x2 = dict(zip(line["variables"], line["x"])), dict(zip(two["variables"], two["x"]))
+    # the torsion no longer leans toward cis, and the backbone angle is softer
+    assert x2["V1"] < -1.5 and 0.2 < x1["V1"] < 0.7 and x1["log10_k_angle"] < x2["log10_k_angle"] - 0.15
+    # what is between chains is kept
+    rms = lambda q, pack: float(np.sqrt(np.mean([(v["polyfind"] - v["dft"]) ** 2 for k, v in q.items() if k.startswith(f"rigid {pack}_")])))  # noqa: E731
+    for pack in ("beta", "candidate", "alpha", "hh", "cand6"):
+        assert rms(r, pack) < rms(two["residuals"], pack) + 0.005
+    # what it paid shows in alpha's cell and in the gap
+    assert r["alpha b"]["z"] < -2.0 and r["E(alpha)-E(beta)"]["polyfind"] == pytest.approx(-0.651, abs=0.003)
+    a = json.loads((PRED / "candidate_acceptance_stage13_line1.json").read_text())
+    h = a["against_the_helix_dft_relaxed"]
+    assert h["margin_upright"] == pytest.approx(0.041, abs=0.003) and abs(h["margin_upright"] - h["dft"]["margin_upright"]) < 0.05
+    assert h["margin_sheared"] == pytest.approx(-0.197, abs=0.003) and a["all_trans_shear_gain"] == pytest.approx(-0.272, abs=0.003)
+    assert h["other_helix_minus_it"] < 0.0 < h["dft"]["other_helix_minus_it"]  # the one row that still fails
+    s = json.loads((PRED / "chain_split_polyfind_line1.json").read_text())["sets"]["stage 13 with the line"]
+    dft = json.loads((PRED / "chain_split_pbe_d3bj.json").read_text())["pairs"]
+    mine = s["vdf5-rvdf1-6"]["pairs"]["TTTT minus TG'TG"]
+    ref = dft["cand_vdf5-rvdf1-6_TTTT_in_pvdfb_s2_upright minus cand_vdf5-rvdf1-6_TGTGp_in_pvdfb_s2"]
+    # both parts of the level, not only their sum
+    assert abs(mine["inside_a_chain"] - ref["inside_a_chain"]) < 0.05 and abs(mine["between_chains"] - ref["between_chains"]) < 0.08
+    plain = s["pvdf"]["pairs"]["alpha minus beta"]
+    assert plain["lone_chain"] == pytest.approx(dft["pvdf_000 minus pvdf_001"]["lone_chain"], abs=0.05)
+
+
+def test_dfts_split_of_the_cells():
+    d = json.loads((PRED / "chain_split_pbe_d3bj.json").read_text())
+    for pair in d["pairs"].values():
+        assert pair["cell"] == pytest.approx(pair["inside_a_chain"] + pair["between_chains"], abs=1e-9)
+    plain = d["pairs"]["pvdf_000 minus pvdf_001"]
+    assert plain["cell"] == pytest.approx(-0.726, abs=0.002) and plain["inside_a_chain"] == pytest.approx(-3.575, abs=0.003)
+    assert plain["lone_chain"] == pytest.approx(-3.449, abs=0.003)
+    cells = d["cells"]
+    assert cells["pvdf_001"]["between"] == pytest.approx(-7.818, abs=0.003) and cells["pvdf_000"]["between"] == pytest.approx(-4.969, abs=0.003)
+    # the lone chain at the cell's geometry is pulled on, mostly inside its CF2 groups; relaxed alone it gains a few tenths
+    assert all(0.5 < c["largest_force_on_the_lone_chain"] < 1.1 for c in cells.values())
+    assert cells["pvdf_001"]["relaxation"] == pytest.approx(-0.315, abs=0.005) and abs(cells["pvdf_001"]["lone_predicted"]) < 0.02
+    # DFT's helix cells of the candidate: every gauche bond between 60 and 77 degrees, the reversed unit's two bonds trans in one and gauche in the other
+    one, other = cells["cand_vdf5-rvdf1-6_TGTGp_in_pvdfb_s2"], cells["rvdf6_GTGpT_in_pvdfb_s2"]
+    special = lambda c: [abs(v) for b, v in zip(c["bonds"], c["dihedrals"]) if b in ("CF2-CF2", "CH2-CH2")]  # noqa: E731
+    assert min(special(one)) > 170 and max(special(other)) < 70
