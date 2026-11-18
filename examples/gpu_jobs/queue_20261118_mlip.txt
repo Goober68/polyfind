@@ -1,0 +1,10 @@
+# One fit of our own interatomic potential on everything labelled so far (docs/MLIP_SECOND_OPINION.md 3.7):
+# the 330 frames the fit was planned on (PVDF 76, near the minima 54, single points on cells
+# earlier fits relaxed 32, the other units 168), and what has been labelled since: the
+# reversed-unit candidate's cells (30), the rigid cells strained and sheared (122), the sheared
+# registry and E5 cells (35), and chains alone in a 16 A box (41: the cells' own chains, the
+# lone helix and all-trans chain along their repeats, the polymer with every second unit
+# reversed).  558 frames, 485 in the fit; one composition is kept whole out of it (the pod's
+# MLIP_HOLD_OUT).  One fit at a time on the card.  First a short one to time an epoch with these
+# frames; the long fit is added as a line once that time is known.
+mlip_fit.sh timing 10 1 frames docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz docs/predictions/mlip/pvdf_probe_frames_pbe_d3bj.extxyz docs/predictions/mlip/units_frames_pbe_d3bj.extxyz docs/predictions/mlip/candidate_frames_pbe_d3bj.extxyz docs/predictions/mlip/candidate_registry_frames_pbe_d3bj.extxyz docs/predictions/mlip/candidate_relaxation_frames_pbe_d3bj.extxyz docs/predictions/mlip/interchain_frames_pbe_d3bj.extxyz docs/predictions/mlip/shear_registry_frames_pbe_d3bj.extxyz docs/predictions/mlip/lone_chain_frames_pbe_d3bj.extxyz train --stress-weight 1000 --energy-weight 10000
