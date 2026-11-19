@@ -121,3 +121,28 @@ def test_the_acceptance_under_chain1_passes_both_halves():
     # what it does not have: the order of the placements is right as a sum, not in its parts
     order = s["vdf5-rvdf1-6"]["pairs"]["GTG'T minus TG'TG"]
     assert order["between_chains"] > 0 > ref["rvdf6_GTGpT_in_pvdfb_s2 minus cand_vdf5-rvdf1-6_TGTGp_in_pvdfb_s2"]["between_chains"]
+
+
+def test_every_units_chain_has_its_helix_placements_and_no_two_opposite_gauche_bonds_meet():
+    spec = importlib.util.spec_from_file_location("chain_conformers_units", ROOT / "examples" / "chain_conformers.py")
+    CC = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(CC)
+    assert {"cfe2", "cfe4", "an2", "vf2", "cdfe2", "e2", "tfe2", "dfe2", "ctfe2"} <= set(CC.CHAINS)
+    for chain, (letters, confs) in CC.CHAINS.items():
+        assert "tt" in confs or chain == "hh4"
+        assert CC.ZERO[chain] in {f"{c}_tt" for c in CC.CHAINS}
+    # the angles of a chain's bonds themselves are a pattern too
+    assert list(CC.torsions_of(["CF2-CH2", "other", "other", "CF2-CH2"], CC.H4["h3"])) == [180.0, 60.0, 180.0, -60.0]
+    with pytest.raises(ValueError):
+        CC.torsions_of(["CF2-CH2", "other"], CC.H4["h1"])
+    # a gauche bond next to one of the opposite sense is not a conformer: none of the units' sets has one
+    for chain in ("cfe2", "cfe4", "an2", "vf2", "cdfe2", "e2", "tfe2", "dfe2", "ctfe2"):
+        letters, confs = CC.CHAINS[chain]
+        types = {"cfe2": ["CF2-CH2", "other", "other", "CF2-CH2"], "cfe4": ["CF2-CH2"] * 5 + ["other", "other", "CF2-CH2"]}.get(chain, ["x"] * 4)
+        for conf, pattern in confs.items():
+            t = CC.torsions_of(types, pattern)
+            for k in range(len(t)):
+                a, b = t[k], t[(k + 1) % len(t)]
+                assert not (abs(abs(a) - 60) < 1 and abs(abs(b) - 60) < 1 and a * b < 0), (chain, conf)
+    # a bond's reference type from the two groups it joins, either way round
+    assert [CC.type_of(b) for b in ("CH2-CF2", "CHF-CF2", "CF2-CF2", "CFCl-CH2", "CH2-CHCN")] == ["CF2-CH2", "CF2-CHF", "CF2-CF2", "other", "other"]

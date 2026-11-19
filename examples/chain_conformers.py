@@ -45,10 +45,23 @@ CHAINS = {
     "cfe4": ("VVVC", {"tt": {}, "helix": {"CF2-CH2": (60.0, 180.0, -60.0, 180.0, 60.0, 180.0), "other": (180.0, -60.0)},
                       "helix2": {"CF2-CH2": (-60.0, 180.0, 60.0, 180.0, -60.0, 180.0), "other": (180.0, 60.0)}}),
 }
-ZERO = {"hh2": "hh2_tt", "hh4": "hh2_tt", "cfe2": "cfe2_tt", "cfe4": "cfe4_tt"}   # the zero of each chain's energies: a chain of the same composition
+# The helix of a chain of two monomers a repeat, bond by bond: the first and third bonds gauche (h1, and h2 its other
+# sense) or the second and fourth (h3, h4).  Which of the four differ is the chain's own business: where its constitution
+# reads the same both ways (a CFE, a nitrile, a VF or a CDFE at every second unit) h3 and h4 are h1 and h2 again; where it
+# is also its own mirror image (ethylene, TFE) all four are one.
+H4 = {"h1": (60.0, 180.0, -60.0, 180.0), "h2": (-60.0, 180.0, 60.0, 180.0), "h3": (180.0, 60.0, 180.0, -60.0), "h4": (180.0, -60.0, 180.0, 60.0)}
+for _name, _letter, _helices in (("an2", "A", "h1 h2"), ("vf2", "Y", "h1 h2"), ("cdfe2", "D", "h1 h2"), ("e2", "E", "h1"), ("tfe2", "F", "h1"),
+                                 ("dfe2", "X", "h1 h2 h3 h4"), ("ctfe2", "K", "h1 h2 h3 h4")):
+    CHAINS[_name] = ("V" + _letter, {"tt": {}, **{h: H4[h] for h in _helices.split()}})
+ZERO = {"hh2": "hh2_tt", "hh4": "hh2_tt", **{c: f"{c}_tt" for c in CHAINS if c not in ("hh2", "hh4")}}   # the zero of each chain's energies: a chain of the same composition
 REFERENCE = "hh2_tt"   # the zero of the head-to-head set, as written before the others were added
 DEFAULT_CHAINS = "hh2,hh4"
-TYPE_OF = {"CF2-CH2": "CF2-CH2", "CH2-CF2": "CF2-CH2", "CF2-CF2": "CF2-CF2", "CH2-CH2": "other", "CH2-CFCl": "other", "CFCl-CH2": "other"}
+_REF_PAIRS = {("CF2", "CH2"): "CF2-CH2", ("CF2", "CHF"): "CF2-CHF", ("CF2", "CF2"): "CF2-CF2"}
+
+
+def type_of(bond: str) -> str:
+    """The reference set's type (``polyfind.fitting.REF_TORSION_TYPES``) of a bond named by the two groups it joins, either way round."""
+    return _REF_PAIRS.get(tuple(sorted(bond.split("-"))), "other")
 ATOMS = ("C", "H", "F", "Cl", "N")
 
 
@@ -60,7 +73,12 @@ def _load(name):
 
 
 def torsions_of(types, pattern: dict) -> np.ndarray:
-    """A conformer's torsions for a chain whose bonds have these types (names), from its pattern."""
+    """A conformer's torsions for a chain whose bonds have these types (names), from its pattern:
+    the angles of each bond type in turn, or the angles of the chain's bonds themselves."""
+    if not isinstance(pattern, dict):
+        if len(pattern) != len(types):
+            raise ValueError(f"{len(pattern)} angles for a chain of {len(types)} bonds")
+        return np.array(pattern, dtype=float)
     seen, out = {}, []
     for t in types:
         angles = pattern.get(t)
@@ -76,7 +94,7 @@ def model_order(dihedrals, bonds, types) -> np.ndarray:
     """DFT's dihedrals (walking up the chain from some atom, either way round) put on a model's
     bonds: the turn of the list, forward or reversed, whose bond types are the model's.  Chains
     that differ by where the walk began or by its direction are the same chain."""
-    mine = [TYPE_OF[b] for b in bonds]
+    mine = [type_of(b) for b in bonds]
     d = np.asarray(dihedrals, dtype=float)
     n = len(types)
     if len(d) != n:
