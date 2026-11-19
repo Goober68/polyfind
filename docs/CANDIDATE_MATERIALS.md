@@ -59,6 +59,56 @@ the smallest cell that holds it (four monomers a chain) and compare the margin w
   margins only: the loss, the rate and the blocked stress of sections 5 and 8 have not been
   redone under it.
 
+**The four axes at the potential's margins (2026-11-19), for the four cells it has been run on.**
+`examples/four_axes_at_margins.py` puts the potential's margins of 3.14 through the tables of 5.6
+(`examples/pin_design.py`) and changes nothing else: the dipole, the switch strain, the kink
+energies that set the rate and the loss, and the crystal stiffness are belt4's, and none of them
+has a DFT test. So this says what the corrected margin does to the four axes, and no more. The
+brackets are the range as the margin is moved by -0.1 to +0.1, the potential's error on the
+small cells. Frequency is the relaxation frequency of the small-signal permittivity; the strain
+is the AC strain at the heat budget at 34 kHz; blocked force is per area, by the film's assumed
+modulus and through the crystal (an upper bound). Where two numbers are given they are the two
+rate models of 5.6 (the sum over kink sites; one chain's move).
+
+| cell | margin: the potential (belt4) | relaxation frequency | tan delta, 34 kHz | AC strain at the heat budget | blocked force per area, pN/nm2: film's modulus; through the crystal |
+|---|---|---|---|---|---|
+| the measured 63/30/7 film's channel as calibrated | - | 364 kHz | 0.060 | 0.066% | 0.13; 6.5 |
+| the cell of the film's composition, 64/29/7 | +0.078 (+0.317) | 364 kHz, the anchor | 0.088 [0.028 to 0.088] | 0.081% [0.055 to 0.081] | 0.16 [0.11 to 0.16]; 7.4 [4.7 to 7.4] |
+| the leader of 5.6: the nitrile with reversed VDF on 21 mol% TrFE | -0.055 (+0.037) | 6.9 MHz; 2.6 MHz | 0.003; 0.008 [to 0.005; 0.012] | 0.162%; 0.133% [to 0.168; 0.142] | 0.32; 0.27, and 8.8; 7.2 through the crystal: **if its margin is not below zero** |
+| the nitrile alone | -0.118 (+0.197) | 1.8 MHz; 1.5 MHz | 0.011; 0.014 | 0.126%; 0.120% | 0.25; 0.24, and 8.7; 8.3: **if its margin is not below zero, which the potential's bar barely reaches** |
+| the 71/29 matrix | -0.024 (+0.056) | 33 kHz; 158 kHz | 0.54; 0.12 [to 0.91; 0.20] | 0.021%; 0.044% [to 0.026; 0.055] | 0.04; 0.09, and 2.4; 5.1 |
+
+- **The model's own cell of the film's composition now lands on the measured film.** At belt4's
+  +0.317 it had a thousandth of its cells polar at the bias and 0.004% of strain, seventeen
+  times under the film it stands for. At the potential's +0.078 it has 0.081% against the film's
+  0.066% and tan delta 0.088 against 0.060, and it stays within 0.055 to 0.081% and 0.03 to
+  0.09 over the whole error bar. Its frequency is the anchor, so that one is not a test. This
+  is the first time the crystal's margin and the film's measured channel agree, and it is on
+  the margin DFT's potential gives.
+- **The loss model takes a margin below zero as zero** (`polyfind.loss`: the channel is then
+  degenerate at no field, as the film's is calibrated). A cell with all-trans the lower one is a
+  ferroelectric with a remanent polarization, which the model does not hold. So for the two
+  nitrile cells and the matrix the rows above are what they would do at the top of the curve,
+  and whether they are there is the margin's question.
+- **The leader's standing is now one question: which side of zero it is on.** The potential has
+  it at -0.055 and has been 0.1 off either way. If it is at zero or above, it leads on all four
+  axes as it did: twice to two and a half times the film's strain, seven to nineteen times its
+  frequency, a fifth to a twentieth of its loss, and 7.2 to 8.8 pN/nm2 through the crystal
+  against 6.5. If it is below, it is a ferroelectric and not a candidate of this kind. Its
+  speed and loss do not depend on which: they come from the kink energies.
+- **Those kink energies are the weakest input here.** They are belt4's, belt4 has the nitrile's
+  effect on the margin wrong in sign, and no kink sheet has been put to DFT or to the potential.
+  The frequency and tan delta of every nitrile row carry that.
+- **The nitrile alone is below zero over all of the potential's bar but its last 0.02.** On
+  this evidence it is a ferroelectric.
+- The matrix is slow and lossy at any margin in the bar: its kink sheets are the dear ones, and
+  that is what a pin is for.
+
+What would settle the leader: DFT on its all-trans cell and its lowest helix cell at their own
+size (170 atoms each; one to two hours a cell on this machine), and a kink sheet in the potential
+or in DFT. Files: `docs/predictions/four_axes_potential_margins.json`; test
+`tests/test_four_axes_at_margins.py`.
+
 Until those are redone, read every table below as belt4's, with the errors above.
 
 

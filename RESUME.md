@@ -359,6 +359,23 @@ right": true at one registry, not along it).
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
         /opt/dft/chainsplit/check --threads 4 --np 4` (1.9 hours). NOTE: "DFT" on a row's cell is a DFT single
         point on the cell the potential relaxed (forces left are stored), as in docs 3.6 and 3.10.
+        THE FOUR AXES AT THE POTENTIAL'S MARGINS (2026-11-19 16:40 UTC; `examples/four_axes_at_margins.py --out
+        docs/predictions/four_axes_potential_margins.json`; table at the head of `docs/CANDIDATE_MATERIALS.md`;
+        test `tests/test_four_axes_at_margins.py`): the potential's margins of the four fourteen-monomer rows put
+        through `pin_design.py`, EVERYTHING ELSE belt4's (dipole, switch strain, KINK ENERGIES, stiffness: no DFT
+        test on any). (1) THE CELL OF THE FILM'S COMPOSITION LANDS ON THE MEASURED FILM: at +0.078, tan delta
+        0.088 and AC strain at the heat budget 0.081% against the film's calibrated 0.060 and 0.066% (0.03 to
+        0.09 and 0.055 to 0.081% over margin -0.1 to +0.1); at belt4's +0.317 it had 0.004%. (2) THE LOSS MODEL
+        TAKES A MARGIN BELOW ZERO AS ZERO; below zero the cell is a ferroelectric the model does not hold. (3) THE
+        LEADER (-0.055 in the potential): if not below zero it leads on all four axes as before (2.6 to 6.9 MHz,
+        tan delta 0.003 to 0.012, 0.133 to 0.168%, 7.2 to 8.8 pN/nm2 through the crystal against the film's 364
+        kHz, 0.060, 0.066%, 6.5); if below, it is not a candidate of this kind. ITS STANDING IS ONE QUESTION: THE
+        SIGN OF ITS MARGIN, which the potential's 0.1 cannot answer. WHAT SETTLES IT: DFT on its all-trans and
+        TGTG' cells as the potential relaxed them (170 atoms each,
+        `/opt/dft/rows14an/row_vdf9-trfe3-an1-rvdf1-14_{TTTT,TGTGp}_cfe_in_all_s1.start.xyz`; an estimated one to
+        two hours a cell on four cores, 15 GB of memory here: NOT STARTED). (4) The nitrile alone (-0.118) is
+        below zero over all of the bar but its last 0.02. (5) THE KINK ENERGIES ARE THE WEAKEST INPUT: belt4's,
+        untested, and belt4 has the nitrile wrong in sign on the margin.
         NEXT ON THIS (running 16:10 UTC): lone VDF-TrFE chains on each sense, `chain_conformers.py settle
         --frames /opt/dft/trfeconf --names trfe2_tt,trfe2_h1,trfe2_h2 --model
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --np 3` (`trfe2`

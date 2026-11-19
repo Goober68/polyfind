@@ -1242,7 +1242,9 @@ place:
   11.5%.
 
 **What this reads on.** The margin, which places a row on the strain axis, and the lattice strain
-of one cell. No loss, rate or blocked stress.
+of one cell. The potential's margins of 3.14 have been put through the loss, rate and blocked
+force tables with every other input as belt4 has it: that table and what it rests on are at the
+head of `docs/CANDIDATE_MATERIALS.md`.
 
 Files: `docs/predictions/row_cells_dft_vdf4-trfe2-6.json`,
 `chain_split_dft_vdf4-trfe2-6.json`, `mlip/row_cells_vdf4-trfe2-6_frames_pbe_d3bj.extxyz` (2
