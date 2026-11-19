@@ -1,0 +1,303 @@
+{
+ "row": "vdf3-trfe1-4",
+ "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)",
+ "energy": "eV per monomer; margins kcal/mol per monomer, all-trans minus helix",
+ "lines": {
+  "row_vdf3-trfe1-4_TGpTG_chain1": {
+   "all_trans": false,
+   "conformation": "TG'TG",
+   "source": "polyfind pvdf-dft-chain1, vdf3-trfe1-4 TG'TG, cell sheared, pendants as built",
+   "steps": [
+    {
+     "frame": "row_vdf3-trfe1-4_TGpTG_chain1",
+     "eV_per_monomer": -2039.8076469720993,
+     "largest_force_eV_per_A": 1.26691031,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -0.5554687239992165,
+      -0.4617627978372724,
+      1.6842058848164803,
+      0.022065759692765485,
+      -0.6275502056622505,
+      0.24949018959286845
+     ],
+     "cell_A_deg": [
+      5.305507093479546,
+      9.697375131258674,
+      9.369217351689715,
+      90.33604549499591,
+      100.7020645119524,
+      89.54605578851988
+     ],
+     "volume_A3_per_monomer": 59.20466230087571
+    },
+    {
+     "frame": "row_vdf3-trfe1-4_TGpTG_chain1_in_all_s1",
+     "eV_per_monomer": -2039.8418626342004,
+     "largest_force_eV_per_A": 0.07841582,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -0.03648205602537227,
+      0.07340542724459985,
+      0.09238198058037816,
+      0.0022065759692765485,
+      -0.09605960719583909,
+      -0.03442258512071416
+     ],
+     "cell_A_deg": [
+      5.225802367475244,
+      9.651378582229754,
+      9.320934004778449,
+      90.94377602426232,
+      99.94994205281526,
+      90.2482794228845
+     ],
+     "volume_A3_per_monomer": 57.870803245604776
+    }
+   ]
+  },
+  "row_vdf3-trfe1-4_TGpTG_chain1_upright": {
+   "all_trans": false,
+   "conformation": "TG'TG",
+   "source": "polyfind pvdf-dft-chain1, vdf3-trfe1-4 TG'TG, cell upright, pendants as built",
+   "steps": [
+    {
+     "frame": "row_vdf3-trfe1-4_TGpTG_chain1_upright",
+     "eV_per_monomer": -2039.7976222812763,
+     "largest_force_eV_per_A": 1.37795369,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -0.5644421329409411,
+      -0.5320790187248852,
+      1.6074170410856565,
+      -0.014857611526462096,
+      -0.41910232909792583,
+      0.2480191389466841
+     ],
+     "cell_A_deg": [
+      5.263899988814188,
+      9.815739070101976,
+      9.396462467414311,
+      90.0,
+      90.0,
+      89.57994804157713
+     ],
+     "volume_A3_per_monomer": 60.686677266746486
+    },
+    {
+     "frame": "row_vdf3-trfe1-4_TGpTG_chain1_upright_in_all_s1",
+     "eV_per_monomer": -2039.834331339488,
+     "largest_force_eV_per_A": 0.04943897,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -0.025007860985134217,
+      0.16667003821268864,
+      0.17064187495738645,
+      0.0389828421238857,
+      0.21859812602299675,
+      -0.013239455815659293
+     ],
+     "cell_A_deg": [
+      5.235161147187403,
+      9.761340237039196,
+      9.33675175376491,
+      90.0,
+      90.0,
+      90.08529024388851
+     ],
+     "volume_A3_per_monomer": 59.64099069513573
+    }
+   ]
+  },
+  "row_vdf3-trfe1-4_TTTT_chain1": {
+   "all_trans": true,
+   "conformation": "TTTT",
+   "source": "polyfind pvdf-dft-chain1, vdf3-trfe1-4 TTTT, cell sheared, pendants as built",
+   "steps": [
+    {
+     "frame": "row_vdf3-trfe1-4_TTTT_chain1",
+     "eV_per_monomer": -2039.788649242411,
+     "largest_force_eV_per_A": 1.31385223,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -0.22227575263845767,
+      -1.6522840857942798,
+      1.330271099344522,
+      -0.00014710506461843657,
+      -0.00014710506461843657,
+      -0.39188789214351505
+     ],
+     "cell_A_deg": [
+      5.04046335777204,
+      8.63216317874181,
+      10.38956810685827,
+      89.99997185342713,
+      89.99995911446076,
+      90.65962961139428
+     ],
+     "volume_A3_per_monomer": 56.502651561891504
+    },
+    {
+     "frame": "row_vdf3-trfe1-4_TTTT_chain1_in_all_s1",
+     "eV_per_monomer": -2039.8124480636332,
+     "largest_force_eV_per_A": 0.06888525,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      0.07443516269692892,
+      0.09282329577423348,
+      0.026037596437463274,
+      -0.00029421012923687315,
+      -0.00014710506461843657,
+      0.005884202584737463
+     ],
+     "cell_A_deg": [
+      5.03107366607959,
+      8.723576457155104,
+      10.306555278617834,
+      89.99998992372161,
+      89.99998484895384,
+      90.8733584386336
+     ],
+     "volume_A3_per_monomer": 56.53642490700876
+    }
+   ]
+  },
+  "units_24_0": {
+   "all_trans": true,
+   "conformation": "TT",
+   "source": "TT4 VVRV|VRVV",
+   "steps": [
+    {
+     "frame": "units_24_0",
+     "eV_per_monomer": -2039.7773868758068,
+     "largest_force_eV_per_A": 0.56052826,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -1.8324877899518646,
+      -1.8482280318660371,
+      -1.0220859889688974,
+      -0.022948390080476107,
+      0.0,
+      0.0
+     ],
+     "cell_A_deg": [
+      4.76142116003126,
+      8.5564193994573,
+      10.317305787393789,
+      90.0039531626388,
+      89.99999999942816,
+      89.99999998777147
+     ],
+     "volume_A3_per_monomer": 52.54180348963629
+    },
+    {
+     "frame": "units_24_0_in_all_s1",
+     "eV_per_monomer": -2039.8048236549664,
+     "largest_force_eV_per_A": 0.06722124,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      0.10179670471595811,
+      0.006325517778592774,
+      0.01588734697879115,
+      -0.05133966755183436,
+      0.0,
+      -0.0
+     ],
+     "cell_A_deg": [
+      5.084798510311354,
+      8.887086666446868,
+      10.287849751324623,
+      87.50622952749524,
+      90.00000006598837,
+      89.99999989157133
+     ],
+     "volume_A3_per_monomer": 58.05722848472507
+    }
+   ]
+  },
+  "units_25_0": {
+   "all_trans": false,
+   "conformation": "TG",
+   "source": "TG4 VVRV|VRVV",
+   "steps": [
+    {
+     "frame": "units_25_0",
+     "eV_per_monomer": -2039.8139526490754,
+     "largest_force_eV_per_A": 0.32863069,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -1.2818735330850564,
+      -0.4317533646551113,
+      -0.39232920733737037,
+      0.07369963737383674,
+      -0.005295782326263717,
+      0.02103602424043643
+     ],
+     "cell_A_deg": [
+      4.989360379193775,
+      9.672603554705503,
+      9.286484418397725,
+      89.89906031653501,
+      87.47318667997361,
+      89.95237044795252
+     ],
+     "volume_A3_per_monomer": 55.966267184372725
+    },
+    {
+     "frame": "units_25_0_in_all_s1",
+     "eV_per_monomer": -2039.8391995070829,
+     "largest_force_eV_per_A": 0.03982716,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -0.010444459587908997,
+      -0.012503930492567109,
+      0.19432579036095474,
+      0.0038247316800793514,
+      0.020741814111199557,
+      0.06104860181665118
+     ],
+     "cell_A_deg": [
+      5.27947887034313,
+      9.626799972399986,
+      9.344891769068791,
+      90.40247920735321,
+      85.41488836464228,
+      89.78541994770681
+     ],
+     "volume_A3_per_monomer": 59.17665544779474
+    }
+   ]
+  }
+ },
+ "margins": {
+  "free": {
+   "all_trans": "row_vdf3-trfe1-4_TTTT_chain1",
+   "helix": "row_vdf3-trfe1-4_TGpTG_chain1",
+   "dft": 0.6783147045665077,
+   "dft_at_the_starts": 0.438097145474291,
+   "largest_force_left_eV_per_A": 0.07841582
+  },
+  "upright": {
+   "all_trans": "row_vdf3-trfe1-4_TTTT_chain1",
+   "helix": "row_vdf3-trfe1-4_TGpTG_chain1_upright",
+   "dft": 0.5046392828510335,
+   "dft_at_the_starts": 0.2069227627504546,
+   "largest_force_left_eV_per_A": 0.06888525
+  },
+  "sampler": {
+   "all_trans": "units_24_0",
+   "helix": "units_25_0",
+   "dft": 0.7927243377315003,
+   "dft_at_the_starts": 0.8432250144616718,
+   "largest_force_left_eV_per_A": 0.06722124
+  }
+ },
+ "polyfind": {
+  "chain1": {
+   "margin": 0.6707816960262631,
+   "margin_upright": 0.42060121899444813,
+   "helix_sheared": "TG'TG",
+   "helix_upright": "GTG'T",
+   "all_trans_shear_gain": -3.7520886619901717e-08,
+   "helix_shear_gain": -0.25018090092433054
+  },
+  "belt4": {
+   "margin": 0.6410364990348274,
+   "margin_upright": 0.5774008274133777,
+   "helix_sheared": "TG'TG",
+   "helix_upright": "GTG'T",
+   "all_trans_shear_gain": 0.0,
+   "helix_shear_gain": -0.0636360867676995
+  }
+ }
+}
