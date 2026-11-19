@@ -231,3 +231,20 @@ def test_the_second_nitrile_cell_and_the_nitrile_fits_that_do_not_pass_it():
         prm = F.PRESET_PARAMETERS[name]
         assert "N" not in {e for e, *_ in prm.lj} and "CH2-CHCN" not in {t for t, *_ in prm.torsion_types}
         assert dict(((a, b), v) for a, b, v in prm.charge_increments)[("C", "N")] == pytest.approx(0.370, abs=0.001)
+
+
+def test_chain1_has_the_cdfe_cells_margin_and_not_its_parts():
+    """VRVD, one CDFE and one TrFE in four: the sum is met to 0.01 with the two parts 0.7 off each way, which is not a pass."""
+    r = _stored("vdf2-trfe1-cdfe1-4")
+    m = r["margins"]["free"]
+    assert m["dft"] == pytest.approx(0.968, abs=0.002) and m["largest_force_left_eV_per_A"] < 0.23
+    assert r["polyfind"]["chain1"]["margin"] - m["dft"] == pytest.approx(+0.007, abs=0.003)
+    assert r["polyfind"]["belt4"]["margin"] - m["dft"] == pytest.approx(+0.752, abs=0.003)
+    split = next(iter(json.loads((PRED / "chain_split_dft_vdf2-trfe1-cdfe1-4.json").read_text())["pairs"].values()))
+    assert split["inside_a_chain"] == pytest.approx(2.394, abs=0.003) and split["between_chains"] == pytest.approx(-1.426, abs=0.003)
+    own = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]["chain1"]["vdf2-trfe1-cdfe1-4"]["pairs"]["TTTT minus TGTG'"]
+    assert own["inside_a_chain"] - split["inside_a_chain"] == pytest.approx(+0.717, abs=0.005)
+    assert own["between_chains"] - split["between_chains"] == pytest.approx(-0.791, abs=0.005)
+    # one helix placement of this small cell does not build at its ideal torsions, and the polish says so
+    polished = json.loads((PRED / "polished_margins_belt4_dft_rows.json").read_text())["rows"]["vdf2-trfe1-cdfe1-4"]
+    assert list(polished["not_built"]) == ["TG'TG"] and "TG'TG" not in polished["cells"]
