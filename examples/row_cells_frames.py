@@ -198,7 +198,7 @@ def sheets_potential(args):
                "potential": (float(a.info["potential_eV_per_monomer"]) - float(all_trans[row]["cells"]["TTTT"]["eV_per_monomer"])) * n * KCAL / chains,
                "polyfind": float(a.info["polyfind_kcal_per_kink_pair"]), "kink_kept": bool(kept), "gauche_bonds_deg": [[round(t, 1) for _, t in g] for g in gauche],
                "cell_A_deg": [float(v) for v in a.cell.cellpar()], "source": str(a.info.get("source", ""))}
-        out["rows"][row] = rec
+        out["rows"][row if row not in out["rows"] else f"{row}@{rec['site']}"] = rec   # a row's second site is keyed with its site
         print(f"{row:26s} site {rec['site']:4s}: the potential {rec['potential']:+.3f}, polyfind {rec['polyfind']:+.3f} kcal/mol per kink pair; "
               f"{'kink kept' if kept else 'KINK NOT KEPT'}, gauche bonds {rec['gauche_bonds_deg']}")
     Path(args.out).write_text(json.dumps(out, indent=1))
