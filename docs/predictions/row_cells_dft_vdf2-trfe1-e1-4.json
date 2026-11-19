@@ -1,0 +1,95 @@
+{
+ "row": "vdf2-trfe1-e1-4",
+ "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)",
+ "energy": "eV per monomer; margins kcal/mol per monomer, all-trans minus helix",
+ "lines": {
+  "row_vdf2-trfe1-e1-4_GpTGT_chain1": {
+   "all_trans": false,
+   "conformation": "G'TGT",
+   "source": "polyfind pvdf-dft-chain1, vdf2-trfe1-e1-4 G'TGT, cell sheared, pendants as built",
+   "steps": [
+    {
+     "frame": "row_vdf2-trfe1-e1-4_GpTGT_chain1_in_all_s1",
+     "eV_per_monomer": -1712.506318452293,
+     "largest_force_eV_per_A": 0.1075423,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -0.0007355253230921829,
+      -0.05457597897343997,
+      -0.22683600964162923,
+      -0.07634752853696859,
+      -0.04913309158255782,
+      0.027802857212884512
+     ],
+     "cell_A_deg": [
+      5.375970037984296,
+      9.177369680172562,
+      9.304438383074991,
+      99.09760334851762,
+      94.39539368593252,
+      90.82196576491806
+     ],
+     "volume_A3_per_monomer": 56.47304707953429,
+     "potential_eV_per_monomer": -1712.5380118353733
+    }
+   ]
+  },
+  "row_vdf2-trfe1-e1-4_TTTT_chain1": {
+   "all_trans": true,
+   "conformation": "TTTT",
+   "source": "polyfind pvdf-dft-chain1, vdf2-trfe1-e1-4 TTTT, cell sheared, pendants as built",
+   "steps": [
+    {
+     "frame": "row_vdf2-trfe1-e1-4_TTTT_chain1_in_all_s1",
+     "eV_per_monomer": -1712.5126334831823,
+     "largest_force_eV_per_A": 0.11455036,
+     "stress_GPa_xx_yy_zz_yz_xz_xy": [
+      -0.09120514006343068,
+      -0.0728170069861261,
+      -0.12856982647651358,
+      -0.01412208620336991,
+      0.019564973594252067,
+      -0.03280442940991136
+     ],
+     "cell_A_deg": [
+      4.96843420565724,
+      8.789052804924419,
+      10.243758963091278,
+      98.35857918134182,
+      91.04743466137994,
+      88.52093919615008
+     ],
+     "volume_A3_per_monomer": 55.29699265884291,
+     "potential_eV_per_monomer": -1712.541561548965
+    }
+   ]
+  }
+ },
+ "margins": {
+  "free": {
+   "all_trans": "row_vdf2-trfe1-e1-4_TTTT_chain1",
+   "helix": "row_vdf2-trfe1-e1-4_GpTGT_chain1",
+   "dft": -0.14562776982165473,
+   "potential": -0.081858170284572,
+   "dft_at_the_starts": null,
+   "largest_force_left_eV_per_A": 0.11455036
+  }
+ },
+ "polyfind": {
+  "chain1": {
+   "margin": -0.23241894954208453,
+   "margin_upright": -0.11996289024196116,
+   "helix_sheared": "G'TGT",
+   "helix_upright": "TG'TG",
+   "all_trans_shear_gain": -0.16141722179777063,
+   "helix_shear_gain": -0.264229076466913
+  },
+  "belt4": {
+   "margin": 0.4996823883387749,
+   "margin_upright": 0.44877979469891693,
+   "helix_sheared": "G'TGT",
+   "helix_upright": "G'TGT",
+   "all_trans_shear_gain": -0.00472547455743344,
+   "helix_shear_gain": -0.05562806819729138
+  }
+ }
+}

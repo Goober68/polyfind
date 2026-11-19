@@ -398,3 +398,16 @@ def test_the_lone_trfe_chains_and_the_trfe_term_that_is_not_adopted():
     # so it is not adopted: no preset carries it
     from polyfind import fitting as F
     assert F.parameters_of("pvdf-dft-chain1-cfe").torsion_types != F.parameters_of(str(PRED / "unit_torsion_trfe_chain1.json")).torsion_types
+
+
+def test_the_ethylene_cell_is_met_at_the_edge_by_chain1_and_missed_in_sign_by_belt4():
+    stored = _stored("vdf2-trfe1-e1-4")
+    m = stored["margins"]["free"]
+    assert m["dft"] == pytest.approx(-0.146, abs=0.002) and m["potential"] == pytest.approx(-0.082, abs=0.002) and m["largest_force_left_eV_per_A"] < 0.12
+    chain1, belt4 = stored["polyfind"]["chain1"]["margin"], stored["polyfind"]["belt4"]["margin"]
+    assert chain1 == pytest.approx(-0.232, abs=0.002) and abs(chain1 - m["dft"]) < NEEDED_KCAL
+    assert belt4 == pytest.approx(+0.500, abs=0.002) and belt4 * m["dft"] < 0
+    dft = next(iter(json.loads((PRED / "chain_split_dft_vdf2-trfe1-e1-4.json").read_text())["pairs"].values()))
+    q = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]["chain1"]["vdf2-trfe1-e1-4"]["pairs"]["TTTT minus G'TGT"]
+    # chain1's error is between chains again: the all-trans cell 0.23 too strongly bound
+    assert q["inside_a_chain"] - dft["inside_a_chain"] == pytest.approx(+0.041, abs=0.004) and q["between_chains"] - dft["between_chains"] == pytest.approx(-0.231, abs=0.004)
