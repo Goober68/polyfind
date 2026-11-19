@@ -64,6 +64,7 @@ def main():
     ap.add_argument("--np", type=int, default=4)
     ap.add_argument("--check", type=Path, default=None, help="a labelled directory whose anchor check is copied (saves recomputing it)")
     ap.add_argument("--polyfind-only", action="store_true", help="stop after step 1")
+    ap.add_argument("--no-dft", action="store_true", help="stop after step 2: the cells relaxed in the potential, which one core can do while the others are busy")
     args = ap.parse_args()
     from ase.io import read
 
@@ -112,6 +113,9 @@ def main():
             kept.append(c)
     print(f"{row}: in the potential, kcal/mol per monomer above its lowest helix cell: " + ", ".join(f"{c} {KCAL * (v - low):+.3f}" for c, v in own.items())
           + f"; DFT on TTTT and {kept}", flush=True)
+
+    if args.no_dft:
+        return
 
     # 3. DFT on the relaxed cells
     relaxed = {c: f"{name_of[c]}_in_all_s1" for c in ["TTTT"] + kept}
