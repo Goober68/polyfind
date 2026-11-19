@@ -168,3 +168,24 @@ def test_the_cfcl_triple_meets_dft_on_cells_it_was_not_fitted_to():
     t, c = own["chain1-cfe"]
     assert (c["inside_a_chain"] - t["inside_a_chain"]) - (cfe_s["inside_a_chain"] - trfe_s["inside_a_chain"]) == pytest.approx(+0.048, abs=0.005)
     assert (c["between_chains"] - t["between_chains"]) - (cfe_s["between_chains"] - trfe_s["between_chains"]) == pytest.approx(+0.070, abs=0.005)
+
+
+def test_the_nitrile_cell_has_all_trans_below_every_helix_and_the_presets_miss_it_between_chains():
+    """VRVA, one acrylonitrile and one TrFE in four: DFT on the all-trans cell and three helix placements."""
+    r = _stored("vdf2-trfe1-an1-4")
+    m = r["margins"]
+    got = {r["lines"][v["helix"]]["conformation"]: v["dft"] for v in m.values()}
+    assert got == pytest.approx({"TGTG'": -0.386, "TG'TG": -0.404, "G'TGT": -0.678}, abs=0.002)
+    assert max(v["largest_force_left_eV_per_A"] for v in m.values()) < 0.16
+    # both presets have a helix cell below the all-trans one: the sign is wrong, by 0.64 and 0.74
+    assert r["polyfind"]["chain1"]["margin"] - m["free"]["dft"] == pytest.approx(+0.644, abs=0.003)
+    assert r["polyfind"]["belt4"]["margin"] - m["free"]["dft"] == pytest.approx(+0.739, abs=0.003)
+    # the potential, which never saw this cell, has the sign and is within 0.08 of DFT on the lowest placement
+    assert m["free"]["potential"] - m["free"]["dft"] == pytest.approx(-0.080, abs=0.003)
+    split = next(iter(json.loads((PRED / "chain_split_dft_vdf2-trfe1-an1-4.json").read_text())["pairs"].values()))
+    assert split["inside_a_chain"] == pytest.approx(2.128, abs=0.003) and split["between_chains"] == pytest.approx(-2.514, abs=0.003)
+    poly = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]
+    off = {n: {k: poly[n]["vdf2-trfe1-an1-4"]["pairs"]["TTTT minus TGTG'"][k] - split[k] for k in ("inside_a_chain", "between_chains")} for n in ("chain1", "belt4")}
+    # the error is between chains in both (0.59 and 0.37), where the CFE unit's was inside the chain: a torsion term does not reach it
+    assert off["chain1"]["between_chains"] == pytest.approx(+0.590, abs=0.005) and off["chain1"]["inside_a_chain"] == pytest.approx(-0.144, abs=0.005)
+    assert off["belt4"]["between_chains"] == pytest.approx(+0.365, abs=0.005) and off["belt4"]["inside_a_chain"] == pytest.approx(-0.277, abs=0.005)

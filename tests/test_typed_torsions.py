@@ -180,3 +180,25 @@ def test_a_parameter_set_is_read_from_a_name_or_a_file(tmp_path):
     g = tmp_path / "stage.json"
     g.write_text(json.dumps({"x": list(F.CRYSTAL13_CHAIN_FITTED_X)}))
     assert F.parameters_of(g).torsion_types == F.PRESET_PARAMETERS["pvdf-dft-chain1"].torsion_types
+
+
+def test_a_units_own_wall_and_bond_charge_go_on_a_preset(tmp_path):
+    import json
+
+    from polyfind import fitting as F
+
+    base = F.PRESET_PARAMETERS["pvdf-dft-chain1-cfe"]
+    assert "N" not in {e for e, *_ in base.lj}  # nitrogen is at its UFF values in the preset
+    prm = F.with_terms(base, lj={"N": (3.5, 0.08)}, charge_increments={"C-N": 0.55})
+    assert ("N", 3.5, 0.08) in prm.lj and ("C", "N", 0.55) in prm.charge_increments
+    assert [e for e, *_ in prm.lj][:-1] == [e for e, *_ in base.lj] and len(prm.charge_increments) == len(base.charge_increments)
+    assert prm.torsion_types == base.torsion_types and prm.wall == base.wall and F.with_terms(base) == base
+    # a bond named the other way round moves the opposite charge
+    assert F.with_terms(base, charge_increments={"N-C": -0.55}).charge_increments == prm.charge_increments
+    assert F.with_terms(prm, lj={"N": (3.7, 0.05)}).lj[-1] == ("N", 3.7, 0.05)
+    f = tmp_path / "unit.json"
+    f.write_text(json.dumps({"base": "pvdf-dft-chain1-cfe", "lj": {"N": [3.5, 0.08]}, "charge_increments": {"C-N": 0.55}, "torsion_types": {}}))
+    assert F.parameters_of(f) == prm
+    g = tmp_path / "both.json"
+    g.write_text(json.dumps({"base": str(f), "torsion_types": {"CH2-CHCN": [0.1, 0.2, 0.3]}}))
+    assert F.parameters_of(g) == F.typed_on(prm, {"CH2-CHCN": (0.1, 0.2, 0.3)})

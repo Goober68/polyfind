@@ -3092,18 +3092,44 @@ def typed_on(base: FFParameters, types: dict) -> FFParameters:
     return replace(base, torsion_types=tuple((t, *own[t]) for t in own))
 
 
+def with_terms(base: FFParameters, lj: dict | None = None, charge_increments: dict | None = None) -> FFParameters:
+    """``base`` with the non-bonded terms of single elements replaced or added: ``lj``
+    ``{element: (x, D)}`` (the wall's distance and depth, as :attr:`FFParameters.lj`) and
+    ``charge_increments`` ``{"C-N": q}`` (the charge a bond moves, as
+    :attr:`FFParameters.charge_increments`).  What a unit's own atoms need when its error is
+    between chains (the nitrile: nitrogen is at its UFF values in every preset and the C-N increment
+    was never a target)."""
+    out = base
+    if lj:
+        own = {e: (float(x), float(d)) for e, x, d in base.lj}
+        own.update({e: (float(v[0]), float(v[1])) for e, v in lj.items()})
+        out = replace(out, lj=tuple((e, *own[e]) for e in own))
+    if charge_increments:
+        own = {(a, b): float(q) for a, b, q in base.charge_increments}
+        for pair, q in charge_increments.items():
+            a, b = pair.split("-")
+            key = (a, b) if (a, b) in own or (b, a) not in own else (b, a)
+            own[key] = float(q) if key == (a, b) else -float(q)
+        out = replace(out, charge_increments=tuple((a, b, own[(a, b)]) for a, b in own))
+    return out
+
+
 def parameters_of(spec) -> FFParameters:
     """A parameter set from what a tool is given for one: a preset's name; a crystal-stage result
-    file (its ``x``); or a file naming a ``base`` (either of these again) and ``torsion_types`` to
-    put on it (examples/unit_torsion_fit.py)."""
+    file (its ``x``); or a file naming a ``base`` (either of these again) and what to put on it:
+    ``torsion_types`` (examples/unit_torsion_fit.py), ``lj`` and ``charge_increments``
+    (:func:`with_terms`)."""
     import json
     from pathlib import Path
 
     if str(spec) in PRESET_PARAMETERS:
         return PRESET_PARAMETERS[str(spec)]
     data = json.loads(Path(spec).read_text())
-    if "torsion_types" in data and "base" in data:
-        return typed_on(parameters_of(data["base"]), data["torsion_types"])
+    if "base" in data:
+        prm = parameters_of(data["base"])
+        if data.get("torsion_types"):
+            prm = typed_on(prm, data["torsion_types"])
+        return with_terms(prm, lj=data.get("lj"), charge_increments=data.get("charge_increments"))
     return crystal_stage_parameters(np.array(data["x"], dtype=float))
 
 
