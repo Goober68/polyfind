@@ -49,13 +49,14 @@ the smallest cell that holds it (four monomers a chain) and compare the margin w
   apart (+0.222 against -0.024). DFT on a six-monomer cell of the matrix's motif (3.15) is with
   the potential: -0.044 in DFT, -0.096 in the potential, -0.014 in belt4, +0.139 in the new
   preset. The preset has the inside of the chain and the binding between chains each off by 0.1
-  to 0.4, opposite ways; its margins pass where the two are equal and are about 0.2 high where a
-  chain holds TrFE on both gauche senses, as every row below with more than one TrFE can.
+  to 0.4, opposite ways; its margins pass where the two are equal (one TrFE in four) and are
+  0.18 high on the six-monomer cell (one in three). The rows below at 29 mol% are between. A
+  term for the TrFE alone moves the error and does not remove it (3.16).
 - **Where that leaves the two reference materials** (estimates: each evaluator corrected by its
   own error on the six-monomer cell, no DFT at fourteen monomers): the TrFE matrix at about
   +0.03, just under the switching window, and the CFE terpolymer at +0.13 to +0.18, at its top.
   The 25 rows without a nitrile or an unchecked unit have their margins under the new preset in
-  3.13: read their levels with the 0.2, and the differences a unit makes as they are. They are
+  3.13: read their levels as up to 0.2 high, and the differences a unit makes as they are. They are
   margins only: the loss, the rate and the blocked stress of sections 5 and 8 have not been
   redone under it.
 
@@ -105,8 +106,9 @@ rate models of 5.6 (the sum over kink sites; one chain's move).
   that is what a pin is for.
 
 What would settle the leader: DFT on its all-trans cell and its lowest helix cell at their own
-size (170 atoms each; one to two hours a cell on this machine), and a kink sheet in the potential
-or in DFT. Files: `docs/predictions/four_axes_potential_margins.json`; test
+size (170 atoms each), and a kink sheet in the potential or in DFT. The DFT does not fit this
+machine: the helix cell asks for 15.7 GB at the recipe's cutoffs where there are 15, and the run
+was stopped. It is a job for a rented machine with more memory. Files: `docs/predictions/four_axes_potential_margins.json`; test
 `tests/test_four_axes_at_margins.py`.
 
 Until those are redone, read every table below as belt4's, with the errors above.

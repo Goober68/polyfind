@@ -1,0 +1,77 @@
+{
+ "what": "lone chains (trfe2) in a 16 A box, each conformer settled in DFT (PBE-D3(BJ); examples/chain_conformers.py): energy per monomer against trfe2_tt (kcal/mol), backbone dihedrals (degrees) with the two groups each turns between",
+ "conformers": {
+  "trfe2_tt": {
+   "chain": "trfe2",
+   "letters": "VR",
+   "conformer": "tt",
+   "rounds": 2,
+   "repeat": 5.184100111694596,
+   "energy_eV_per_monomer": -2203.125937817791,
+   "largest_force": 0.0027827,
+   "predicted_minus_dft": -9.504746360689751e-07,
+   "dihedrals": [
+    -177.60375843344517,
+    177.60375841842944,
+    177.64145353292938,
+    -177.64145351160926
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ],
+   "zero": "trfe2_tt",
+   "energy": 0.0
+  },
+  "trfe2_h1": {
+   "chain": "trfe2",
+   "letters": "VR",
+   "conformer": "h1",
+   "rounds": 2,
+   "repeat": 4.725861242248494,
+   "energy_eV_per_monomer": -2203.0985645942196,
+   "largest_force": 0.00437113,
+   "predicted_minus_dft": -1.7844522650757427e-06,
+   "dihedrals": [
+    48.63739361914067,
+    -175.55747055410353,
+    -52.91652032021351,
+    -175.5660910625882
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ],
+   "zero": "trfe2_tt",
+   "energy": 0.6312415360837061
+  },
+  "trfe2_h2": {
+   "chain": "trfe2",
+   "letters": "VR",
+   "conformer": "h2",
+   "rounds": 2,
+   "repeat": 4.674711665646467,
+   "energy_eV_per_monomer": -2203.2474554226055,
+   "largest_force": 0.00311181,
+   "predicted_minus_dft": -3.7272959960500885e-07,
+   "dihedrals": [
+    -61.668420660314986,
+    -179.81140211340357,
+    62.261628255564496,
+    178.49467963225482
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ],
+   "zero": "trfe2_tt",
+   "energy": -2.802262558669146
+  }
+ }
+}

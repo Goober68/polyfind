@@ -1,0 +1,37 @@
+{
+ "base": "pvdf-dft-chain1-cfe",
+ "torsion_types": {
+  "CF2-CHF": [
+   0.07906732994294713,
+   0.4002210797584473,
+   0.3262351804858191
+  ]
+ },
+ "what": "torsion triples (V1, V2, V3; kcal/mol) to put on the base, fitted to DFT's lone-chain conformers (examples/unit_torsion_fit.py)",
+ "dft": [
+  "docs/predictions/chain_conformers_trfe_pbe_d3bj.json"
+ ],
+ "fitted": [
+  "trfe2_h1",
+  "trfe2_h2"
+ ],
+ "objective": 0.41149963737002826,
+ "objective_at_the_base": 5.093265523113456,
+ "ridge": 0.29066309398570284,
+ "evaluations": 13,
+ "stopped": "`gtol` termination condition is satisfied.",
+ "rows": {
+  "trfe2_h1": {
+   "polyfind": 0.6387583755945885,
+   "dft": 0.6312415360837061,
+   "at_the_base": 0.5510980236675636,
+   "fitted": true
+  },
+  "trfe2_h2": {
+   "polyfind": -2.850394023758622,
+   "dft": -2.802262558669146,
+   "at_the_base": -3.0707086649218214,
+   "fitted": true
+  }
+ }
+}

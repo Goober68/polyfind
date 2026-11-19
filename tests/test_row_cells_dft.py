@@ -370,3 +370,31 @@ def test_the_six_monomer_matrix_cell_puts_dft_with_the_potential_and_chain1_high
     rows14 = json.loads((PRED / "rows14_potential.json").read_text())["rows"]
     under = json.loads((PRED / "margins_chain1-cfe.json").read_text())["rows"]
     assert chain1["margin"] - m["potential"] == pytest.approx(under["vdf10-trfe4-14"]["margin"] - rows14["vdf10-trfe4-14"]["margin"], abs=0.02)
+
+
+def test_the_lone_trfe_chains_and_the_trfe_term_that_is_not_adopted():
+    """chain1 has the two gauche senses of a TrFE apart as DFT has; a term that puts its lone chains right costs the four-monomer cells 0.1."""
+    conf = json.loads((PRED / "chain_conformers_trfe_pbe_d3bj.json").read_text())["conformers"]
+    assert all(c["largest_force"] < 0.01 for c in conf.values())
+    fav, other = conf["trfe2_h2"], conf["trfe2_h1"]
+    assert fav["bonds"][0] == "CF2-CHF" and fav["dihedrals"][0] == pytest.approx(-62, abs=2) and other["dihedrals"][0] == pytest.approx(+49, abs=2)
+    assert (fav["energy"], other["energy"]) == pytest.approx((-2.802, +0.631), abs=0.003)
+    fit = json.loads((PRED / "unit_torsion_trfe_chain1.json").read_text())
+    assert fit["base"] == "pvdf-dft-chain1-cfe" and list(fit["torsion_types"]) == ["CF2-CHF"]
+    base = {k: r["at_the_base"] for k, r in fit["rows"].items()}
+    # chain1's error is on the favourable sense (0.27), not on the other (0.08); the difference between the senses is right to 0.19 in 3.43
+    assert base["trfe2_h2"] - fav["energy"] == pytest.approx(-0.268, abs=0.005) and base["trfe2_h1"] - other["energy"] == pytest.approx(-0.080, abs=0.005)
+    assert (base["trfe2_h1"] - base["trfe2_h2"]) - (other["energy"] - fav["energy"]) == pytest.approx(+0.19, abs=0.01)
+    assert all(abs(r["polyfind"] - r["dft"]) < 0.05 for r in fit["rows"].values())
+    # on the five cells with a TrFE, none in the fit: the six-monomer cell comes right and the four-monomer cells go 0.05 to 0.13 low
+    with_term = json.loads((PRED / "margins_trfe_torsion_dft_rows.json").read_text())["rows"]
+    dft = {row: next(m["dft"] for k, m in _stored(row)["margins"].items() if k == "free")
+           for row in ("vdf3-trfe1-4", "vdf4-trfe2-6", "vdf2-trfe1-cfe1-4", "vdf2-trfe1-ctfe1-4", "vdf2-trfe1-tfe1-4")}
+    off = {row: with_term[row]["margin"] - dft[row] for row in dft}
+    assert off == pytest.approx({"vdf3-trfe1-4": -0.101, "vdf4-trfe2-6": +0.023, "vdf2-trfe1-cfe1-4": -0.090, "vdf2-trfe1-ctfe1-4": -0.045, "vdf2-trfe1-tfe1-4": -0.126}, abs=0.004)
+    without = {"vdf3-trfe1-4": +0.671, "vdf4-trfe2-6": +0.139, "vdf2-trfe1-cfe1-4": +0.690, "vdf2-trfe1-ctfe1-4": +0.400, "vdf2-trfe1-tfe1-4": -0.060}
+    rms = lambda errors: (sum(e * e for e in errors) / len(errors)) ** 0.5  # noqa: E731
+    assert rms(off.values()) == pytest.approx(0.086, abs=0.003) and rms([without[r] - dft[r] for r in dft]) == pytest.approx(0.091, abs=0.003)
+    # so it is not adopted: no preset carries it
+    from polyfind import fitting as F
+    assert F.parameters_of("pvdf-dft-chain1-cfe").torsion_types != F.parameters_of(str(PRED / "unit_torsion_trfe_chain1.json")).torsion_types

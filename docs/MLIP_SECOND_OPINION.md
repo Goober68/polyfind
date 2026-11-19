@@ -27,7 +27,9 @@ fourteen-monomer rows relaxed in the potential (3.14) agree with that preset on 
 and put every level a quarter of a kcal/mol lower. DFT on a six-monomer cell of the matrix's
 motif says the potential has the level (-0.044 in DFT, -0.096 in the potential, +0.139 in the
 preset): the preset's margins rest on two errors that cancel in the four-monomer cells and do
-not where a chain holds TrFE on both gauche senses (3.15).
+not in the six-monomer one (3.15). A TrFE term fitted to lone chains moves the error to the
+four-monomer cells and is not adopted; no evaluator is within 0.1 on every cell, and DFT at
+fourteen monomers needs more memory than this machine has (3.16).
 
 ## 1. The test
 
@@ -1215,13 +1217,13 @@ steps. So the cell has one margin and no choice of placement in it.
   higher, 2.7 kcal/mol per unit, a number DFT has not been asked for). Inside the chain chain1
   is 0.5 kcal/mol off per four monomers there and 2.4 per six here. A torsion term is even in
   the angle, so it cannot tell the two senses apart; the difference between them is carried by
-  the charges and walls inside the chain. Lone chains with a TrFE on each sense are with DFT to
-  test this directly (3.16 when done).
+  the charges and walls inside the chain. Lone chains with a TrFE on each sense were put to DFT
+  to test this directly, and they do not bear the suspicion out: 3.16.
 
 **What it does to the 25 rows of 3.13.** Their levels under `pvdf-dft-chain1-cfe` are not good to
-0.1 once a chain holds TrFE on both senses, which every row with more than one TrFE can. On the
-matrix the three evaluators, each corrected by its own error on this cell, come to the same
-place:
+0.1: the preset is right at one TrFE in four and 0.18 high at one in three, and the
+fourteen-monomer rows, at 29 mol%, are between the two. On the matrix the three evaluators,
+each corrected by its own error on this cell, come to the same place:
 
 | the fourteen-monomer rows, estimated | from `all_s1` (+0.05) | from chain1-cfe (-0.18) | from belt4 (-0.03) |
 |---|---:|---:|---:|
@@ -1235,8 +1237,8 @@ place:
   CFE's pin is what moves one to the other: +0.10 to +0.14 per monomer at one in fourteen,
   where the potential and chain1-cfe agree (3.14).
 - The differences a unit makes are the part of 3.13's table that stands. Its levels are to be
-  read as about 0.2 high wherever TrFE is at a quarter of the units or more, until chain1 has
-  the TrFE on both senses.
+  read as up to 0.2 high at 29 mol% TrFE and above; 3.16 says why a term for the TrFE alone
+  does not mend that.
 - Along the chain the all-trans cell is 10.0% longer than the helix cell as the potential relaxed
   them (DFT leaves 0.12 GPa along the chain on the helix cell); chain1 has 11.6% and belt4
   11.5%.
@@ -1250,3 +1252,61 @@ Files: `docs/predictions/row_cells_dft_vdf4-trfe2-6.json`,
 `chain_split_dft_vdf4-trfe2-6.json`, `mlip/row_cells_vdf4-trfe2-6_frames_pbe_d3bj.extxyz` (2
 frames), the row's entries in `margins_{chain1,belt4}_dft_rows.json` and
 `chain_split_polyfind_dft_rows.json`. Test: `tests/test_row_cells_dft.py`.
+
+### 3.16 Lone VDF-TrFE chains on each sense, a TrFE torsion term that is not adopted, and where the evaluators stand (2026-11-19)
+
+**The lone chains.** The chain of alternating VDF and TrFE, alone in a box, all-trans and its
+helix on each gauche sense of the CF2-CHF bond (`examples/chain_conformers.py`, chain `trfe2`;
+each settled in DFT to 0.004 eV/A; `docs/predictions/chain_conformers_trfe_pbe_d3bj.json`):
+
+| helix against all-trans, kcal/mol per monomer | DFT | chain1 | belt4 |
+|---|---:|---:|---:|
+| the CF2-CHF bond at -62 degrees (the favourable sense) | -2.802 | -3.071 | -3.741 |
+| at +49 degrees (the other sense) | +0.631 | +0.551 | +0.439 |
+| the difference between the senses | 3.43 | 3.62 | 4.18 |
+
+- The two senses are 3.4 kcal/mol per monomer apart, 6.9 per TrFE unit: a TrFE all but forbids
+  the helix on its wrong side.
+- **chain1 has that difference to 0.19, and the suspicion of 3.15 is wrong.** Its error is on
+  the favourable sense, the one the 25 mol% cell tested: the helix 0.27 too low there and 0.08
+  too low on the other. Both helices are too low, so an even term can raise them.
+
+**A torsion term for the CF2-CHF bond, fitted to those two rows** on `pvdf-dft-chain1-cfe`
+(`examples/unit_torsion_fit.py --type CF2-CHF`; from (+0.450, -0.522, +0.746) to (+0.079,
++0.400, +0.326); the lone chains then at -2.850 and +0.639), and tried on the five cells with a
+TrFE that DFT has, none of them in the fit:
+
+| all-trans minus helix against DFT | DFT | `all_s1` | belt4 | chain1-cfe | chain1-cfe with the TrFE term |
+|---|---:|---:|---:|---:|---:|
+| TrFE, VVRV | +0.678 | -0.07 | -0.04 | -0.01 | -0.10 |
+| TrFE, VVRVVR | -0.044 | -0.05 | +0.03 | +0.18 | +0.02 |
+| CFE, VRVC | +0.682 | +0.09 | +0.38 | +0.01 | -0.09 |
+| CTFE, VRVK | +0.315 | -0.11 | +0.42 | +0.09 | -0.05 |
+| TFE, VRVF | -0.076 | -0.36 | +0.30 | +0.02 | -0.13 |
+| the largest | | 0.36 | 0.42 | 0.18 | 0.13 |
+| root mean square | | 0.18 | 0.29 | 0.09 | 0.09 |
+
+- **The term puts the six-monomer cell right and every four-monomer cell 0.05 to 0.13 low.**
+  With the chain right, the error between chains (the all-trans cell 0.15 to 0.29 too strongly
+  bound, 3.15) is no longer cancelled. The root mean square is the same with it and without.
+  **It is not adopted**: no preset is registered, and the fit is kept as a record
+  (`unit_torsion_trfe_chain1.json`, `margins_trfe_torsion_dft_rows.json`).
+- What would have to change is between chains, in the walls and charges every unit shares, and
+  that is a refit of the preset and not a term for one unit.
+- **No evaluator is within 0.1 on all five.** The potential is within 0.11 on four and 0.36 off
+  on the TFE cell. chain1-cfe is within 0.09 on four and 0.18 off on the six-monomer cell.
+  Belt4 is within 0.04 on the two cells without a third unit and 0.3 to 0.4 off on the three
+  with one. On the cells of 3.12 and 3.13 the potential is within 0.08 (two nitrile cells,
+  CDFE) and polyfind is wrong in sign on the nitrile.
+- So the level of the fourteen-monomer matrix stays an estimate from evaluators that disagree by
+  more than the 0.1 that is needed: -0.024 in the potential, +0.222 in chain1-cfe. The
+  corrections of 3.15 bring them together at +0.03 to +0.04, but each is one cell's offset.
+
+**DFT at fourteen monomers does not fit this machine.** The leader's helix cell (170 atoms, 350
+bands, 6 k-points) asks for 15.7 GB at the recipe's cutoffs and the machine has 15; the run was
+stopped before it ran out. Two such cells for each of the leader, the matrix and the terpolymer
+are a job for a rented machine with more memory.
+
+Files: `docs/predictions/chain_conformers_trfe_pbe_d3bj.json`, `unit_torsion_trfe_chain1.json`,
+`margins_trfe_torsion_dft_rows.json`. Test: `tests/test_row_cells_dft.py`.
+

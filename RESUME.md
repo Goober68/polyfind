@@ -350,8 +350,9 @@ right": true at one registry, not along it).
         equal (VVRV +0.13/-0.22, VRVC +0.18/-0.15, VRVK +0.30/-0.15, VRVF +0.26/-0.29; VVRVVR +0.40/-0.28).
         WHAT IS NEW IN VVRVVR: each chain holds one TrFE on each gauche sense (DFT's helix: CF2-CHF bonds at +65
         and -56 degrees); VVRV's lowest helix, the only one DFT saw, has the favourable sense only. A torsion
-        term is even in the angle and cannot tell the senses apart. SO THE 25 ROWS' LEVELS UNDER chain1-cfe READ
-        ABOUT 0.2 HIGH wherever TrFE is a quarter of the units or more; the differences a unit makes stand.
+        term is even in the angle and cannot tell the senses apart (BUT SEE THE LONE CHAINS BELOW: the error is
+        not on the other sense). SO THE 25 ROWS' LEVELS UNDER chain1-cfe READ UP TO 0.2 HIGH at 29 mol% TrFE and
+        above (right at one TrFE in four, 0.18 high at one in three); the differences a unit makes stand.
         ESTIMATES (one cell's offsets carried to fourteen monomers, NO DFT there): matrix `vdf10-trfe4-14` +0.03
         (from the potential +0.05), +0.04 (from chain1-cfe -0.18), +0.03 (from belt4 -0.03): just under the
         window; CFE terpolymer `vdf9-trfe4-cfe1-14` +0.13 and +0.18: at the window's top. Command, for the
@@ -376,11 +377,29 @@ right": true at one registry, not along it).
         two hours a cell on four cores, 15 GB of memory here: NOT STARTED). (4) The nitrile alone (-0.118) is
         below zero over all of the bar but its last 0.02. (5) THE KINK ENERGIES ARE THE WEAKEST INPUT: belt4's,
         untested, and belt4 has the nitrile wrong in sign on the margin.
-        NEXT ON THIS (running since 15:45 UTC): lone VDF-TrFE chains on each sense, `chain_conformers.py settle
-        --frames /opt/dft/trfeconf --names trfe2_tt,trfe2_h1,trfe2_h2 --model
-        docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --np 3` (`trfe2`
-        is new in `chain_conformers.CHAINS`), then `collect --chains trfe2` and `polyfind --fit
-        chain1=pvdf-dft-chain1`: DOES chain1 HAVE THE DIFFERENCE BETWEEN THE TWO SENSES INSIDE THE CHAIN?
+        LONE VDF-TrFE CHAINS, DONE (16:12 UTC, docs 3.16, `chain_conformers_trfe_pbe_d3bj.json`; `trfe2` in
+        `chain_conformers.CHAINS`; `/opt/dft/trfeconf`): helix against all-trans per monomer, DFT -2.802 (CF2-CHF
+        at -62, favourable) and +0.631 (+49); chain1 -3.071 and +0.551; belt4 -3.741 and +0.439. chain1 HAS THE
+        DIFFERENCE BETWEEN THE SENSES (3.62 against 3.43); ITS ERROR IS ON THE FAVOURABLE ONE (0.27 too low), so
+        the suspicion that the other sense carried VVRVVR's error IS WRONG. A CF2-CHF TRIPLE FITTED TO THE TWO ROWS
+        (`unit_torsion_fit.py --base pvdf-dft-chain1-cfe --type CF2-CHF`, (+0.079, +0.400, +0.326),
+        `docs/predictions/unit_torsion_trfe_chain1.json`) AND TRIED ON FIVE CELLS (`rows_under_preset.py --preset
+        THAT_FILE --rows ... --polished docs/predictions/polished_margins_belt4_dft_rows.json --references
+        docs/predictions/dilute_kink_belt4_dft_rows.json`; `margins_trfe_torsion_dft_rows.json`): off against DFT
+        VVRV -0.10 (was -0.01), VVRVVR +0.02 (was +0.18), VRVC -0.09 (+0.01), VRVK -0.05 (+0.09), VRVF -0.13
+        (+0.02); root mean square 0.09 with it and 0.09 without. NOT ADOPTED, NO PRESET: with the chain right the
+        error between chains (all-trans 0.15 to 0.29 too strongly bound) is no longer cancelled, and that one is
+        in the walls and charges every unit shares: a refit of the preset, not a unit's term. SCORE ON THOSE FIVE
+        CELLS, largest and root mean square: the potential 0.36 (TFE) and 0.18; belt4 0.42 and 0.29; chain1-cfe
+        0.18 and 0.09. NO EVALUATOR IS WITHIN 0.1 ON ALL FIVE.
+        RUNNING (16:27 UTC, one core, ends by itself): the fourteen-monomer matrix and CFE terpolymer under the
+        fitted TrFE term, for a third estimate of their level: `rows_under_preset.py --preset
+        /opt/dft/unit_torsion_trfe_chain1.json --redo-failed --minutes 100 --rows
+        vdf10-trfe4-14,vdf9-trfe4-cfe1-14 --out /opt/dft/margins_trfe_torsion.json`.
+        DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
+        k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
+        before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE
+        AGAIN. It is a rented machine's job (more memory), which needs the PI's go.
         THE OTHER UNITS (TFE, CDFE, ethylene, VF, DFE): UNTESTED UNTIL THEIR CHECK. Rows by unit: AN in 7 of the
         35, CDFE 4, TFE 2, ethylene 2, VF 1, DFE 1 (15 rows in all); CFE 9, CTFE 3; 9 rows VDF, TrFE and reversed
         VDF only. `examples/unit_dft_check.py --row ROW --work /opt/dft/unit4 --model
