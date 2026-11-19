@@ -35,11 +35,16 @@ def backbone(atoms):
     """``(indices, unwrapped positions)`` of the carbons along the chain, one repeat and three more."""
     from ase.neighborlist import neighbor_list
 
+    pendant = set()
+    if "N" in atoms.symbols:  # a nitrile's carbon hangs off the chain: it is not a step of the walk
+        a, _ = neighbor_list("ij", atoms, {("C", "N"): 1.35})
+        pendant = {int(k) for k in a if atoms.symbols[k] == "C"}
     i, j, S = neighbor_list("ijS", atoms, {("C", "C"): 1.85})
     cell = atoms.cell.array
     nb = {}
     for p, q, s in zip(i, j, S):
-        nb.setdefault(int(p), []).append((int(q), s))
+        if int(p) not in pendant and int(q) not in pendant:
+            nb.setdefault(int(p), []).append((int(q), s))
     cur, off, order, pos = min(nb), np.zeros(3, dtype=int), [], []
     for _ in range(len(nb) + 3):
         order.append(cur)

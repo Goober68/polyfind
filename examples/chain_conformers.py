@@ -35,9 +35,17 @@ BOX = 16.0
 CHAINS = {
     "hh2": ("VI", {"tt": {}, "special": {"CF2-CF2": (60.0,), "other": (-60.0,)}, "plain": {"CF2-CH2": (60.0, -60.0)}}),
     "hh4": ("VIVI", {"ff": {"CF2-CF2": (60.0, -60.0)}, "hh": {"other": (60.0, -60.0)}}),
+    # a CFE unit: its two bonds at the CFCl carbon are the "other" ones (CH2-CFCl, then CFCl-CH2).  With every second unit a CFE
+    # the chain is its own mirror image about each CFCl, so the helix has one placement: the CFCl-CH2 bond gauche, the CH2-CFCl trans.
+    "cfe2": ("VC", {"tt": {}, "helix": {"CF2-CH2": (60.0, 180.0), "other": (180.0, -60.0)}, "special": {"other": (60.0, -60.0)}, "plain": {"CF2-CH2": (60.0, -60.0)}}),
+    # the same unit one in four, the helix as it is in a cell
+    "cfe4": ("VVVC", {"tt": {}, "helix": {"CF2-CH2": (60.0, 180.0, -60.0, 180.0, 60.0, 180.0), "other": (180.0, -60.0)}}),
 }
-REFERENCE = "hh2_tt"   # the zero of the energies
-TYPE_OF = {"CF2-CH2": "CF2-CH2", "CH2-CF2": "CF2-CH2", "CF2-CF2": "CF2-CF2", "CH2-CH2": "other"}
+ZERO = {"hh2": "hh2_tt", "hh4": "hh2_tt", "cfe2": "cfe2_tt", "cfe4": "cfe4_tt"}   # the zero of each chain's energies: a chain of the same composition
+REFERENCE = "hh2_tt"   # the zero of the head-to-head set, as written before the others were added
+DEFAULT_CHAINS = "hh2,hh4"
+TYPE_OF = {"CF2-CH2": "CF2-CH2", "CH2-CF2": "CF2-CH2", "CF2-CF2": "CF2-CF2", "CH2-CH2": "other", "CH2-CFCl": "other", "CFCl-CH2": "other"}
+ATOMS = ("C", "H", "F", "Cl", "N")
 
 
 def _load(name):
@@ -93,13 +101,14 @@ def frames(args):
     C = _load("candidate_screen")
     args.out.mkdir(parents=True, exist_ok=True)
     with PRESET_PARAMETERS["pvdf-dft-valence-belt4"].applied():
-        for chain, (letters, confs) in CHAINS.items():
+        for chain in [c for c in args.chains.split(",") if c]:
+            letters, confs = CHAINS[chain]
             polymer = C.make_polymer(chain, letters)
             types = chain_types(polymer, 2 * len(letters))
             for conf, pattern in confs.items():
                 tors = torsions_of(types, pattern)
                 ch = periodic_chain_from_torsions(polymer, conf, tors)
-                keep = [k for k, e in enumerate(ch.elements) if e in ("C", "H", "F")]
+                keep = [k for k, e in enumerate(ch.elements) if e in ATOMS]
                 a = Atoms(symbols=[ch.elements[k] for k in keep], positions=ch.coords[keep] + [BOX / 2, BOX / 2, 0.0], cell=[BOX, BOX, ch.c], pbc=True)
                 name = f"{chain}_{conf}"
                 a.info.update(frame=name, family="chain", n_monomers=len(letters), kmesh=f"1 1 {max(2, int(round(20.0 / ch.c)))}",
@@ -144,7 +153,8 @@ def collect(args):
 
     CS = _load("chain_split")
     rows = {}
-    for chain, (letters, confs) in CHAINS.items():
+    for chain in [c for c in args.chains.split(",") if c]:
+        letters, confs = CHAINS[chain]
         for conf in confs:
             name = f"{chain}_{conf}"
             steps = sorted(args.frames.glob(f"{name}_r*.dft.xyz"))
@@ -156,13 +166,14 @@ def collect(args):
                           "energy_eV_per_monomer": float(a.info["REF_energy"]) / n, "largest_force": float(np.abs(a.arrays["REF_forces"]).max()),
                           "predicted_minus_dft": (float(a.info["dft_predicted_eV_per_monomer"]) - float(a.info["REF_energy"]) / n) * EV if "dft_predicted_eV_per_monomer" in a.info else None,
                           **CS.backbone_torsions(a)}
-    zero = rows[REFERENCE]["energy_eV_per_monomer"]
     for name, r in rows.items():
-        r["energy"] = (r["energy_eV_per_monomer"] - zero) * EV
+        r["zero"] = ZERO[r["chain"]]
+        r["energy"] = (r["energy_eV_per_monomer"] - rows[r["zero"]]["energy_eV_per_monomer"]) * EV
         print(f"{name:14s} {r['energy']:+.3f} kcal/mol per monomer, repeat {r['repeat']:.4f} A, largest force {r['largest_force']:.3f} eV/A, {r['rounds']} rounds"
               + ("" if r["predicted_minus_dft"] is None else f", predicted {r['predicted_minus_dft']:+.3f}") + "; " + " ".join(f"{b}:{d:+.0f}" for b, d in zip(r["bonds"], r["dihedrals"])))
-    out = {"what": "lone chains of the polymer with every second unit reversed, in a 16 A box, each conformer settled in DFT (PBE-D3(BJ); examples/chain_conformers.py): "
-                   f"energy per monomer against {REFERENCE} (kcal/mol), backbone dihedrals (degrees) with the two groups each turns between", "conformers": rows}
+    zeros = sorted({r["zero"] for r in rows.values()})
+    out = {"what": f"lone chains ({args.chains}) in a 16 A box, each conformer settled in DFT (PBE-D3(BJ); examples/chain_conformers.py): "
+                   f"energy per monomer against {', '.join(zeros)} (kcal/mol), backbone dihedrals (degrees) with the two groups each turns between", "conformers": rows}
     args.out.write_text(json.dumps(out, indent=1))
     print(f"written {args.out}")
 
@@ -213,7 +224,7 @@ def polyfind(args):
     rows = json.loads(args.dft.read_text())["conformers"]
     for item in args.fit:
         name, path = item.split("=", 1)
-        prm = F.PRESET_PARAMETERS[path] if path in F.PRESET_PARAMETERS else CF.parameters(np.array(json.loads(Path(path).read_text())["x"], dtype=float))
+        prm = F.parameters_of(path)
         previous = SP.C.SITES_FOR
         SP.C.SITES_FOR = prm
         try:
@@ -221,9 +232,9 @@ def polyfind(args):
                 mine = polyfind_conformers(SP, SP.C, rows)
         finally:
             SP.C.SITES_FOR = previous
-        zero = mine[REFERENCE]["energy"]
         print(name)
         for k, r in rows.items():
+            zero = mine[r.get("zero", REFERENCE)]["energy"]
             print(f"   {k:14s} polyfind {mine[k]['energy'] - zero:+.3f}, DFT {r['energy']:+.3f}; repeat {mine[k]['repeat']:.3f} against {r['repeat']:.3f} A (closes to {mine[k]['closure']:.1e} deg)")
 
 
@@ -232,6 +243,7 @@ def main():
     sub = ap.add_subparsers(dest="step", required=True)
     s = sub.add_parser("frames")
     s.add_argument("--out", type=Path, required=True)
+    s.add_argument("--chains", default=DEFAULT_CHAINS, help=f"comma list of {sorted(CHAINS)}")
     s = sub.add_parser("settle")
     s.add_argument("--frames", type=Path, required=True)
     s.add_argument("--names", required=True)
@@ -249,6 +261,7 @@ def main():
     s = sub.add_parser("collect")
     s.add_argument("--frames", type=Path, required=True)
     s.add_argument("--out", type=Path, required=True)
+    s.add_argument("--chains", default=DEFAULT_CHAINS, help=f"comma list of {sorted(CHAINS)}; a chain's zero ({ZERO}) must be among them")
     s = sub.add_parser("polyfind")
     s.add_argument("--dft", type=Path, required=True)
     s.add_argument("--fit", action="append", default=[], help="name=crystal-stage result file, or name=preset")

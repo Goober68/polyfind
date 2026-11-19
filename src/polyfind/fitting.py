@@ -158,8 +158,8 @@ class FFParameters:
     # elements cannot.  Lattice side only, like the sites.  Empty: none (docs/CRYSTAL_STAGE.md 5.26).
     backbone_pull: tuple[tuple[str, float], ...] = ()
     # The lattice's torsion terms by bond type: (type of :data:`LATTICE_TORSION_TYPES`, V1, V2, V3) for the
-    # types that are not to take :attr:`torsion` ("other" is every bond the first three names leave,
-    # "CH2-CH2" that one bond alone, so that a triple fitted to it does not land on a CH2-CFCl bond).  Empty is what every earlier preset has: the one
+    # types that are not to take :attr:`torsion` ("other" is every bond the named types leave,
+    # "CH2-CH2" that one bond alone, so that a triple fitted to it does not land on a CH2-CFCl bond, which has its own name too).  Empty is what every earlier preset has: the one
     # triple, the CF2-CH2 type's, on every backbone bond of every chain, which is right for PVDF and
     # wrong for a CF2-CHF, a CF2-CF2 or a CH2-CH2 bond.  :meth:`applied` hands each packer one triple a
     # dihedral (:meth:`torsion_for`).  Lattice side only; the oligomer side has ``torsion_by_bond``.
@@ -176,8 +176,9 @@ class FFParameters:
         if unknown:
             raise ValueError(f"unknown torsion types {sorted(unknown)}: {LATTICE_TORSION_TYPES}")
         plain = tuple(float(v) for v in self.torsion)
-        # a CH2-CH2 bond takes its own triple if it has one, else the catch-all's, else the CF2-CH2 bond's
-        return np.array([own.get(t, own.get("other", plain) if t == "CH2-CH2" else plain) for t in polymer_lattice_torsion_types(polymer, n_dihedrals)])
+        # a bond named apart from the catch-all (CH2-CH2, CH2-CFCl, ...) takes its own triple if it has one, else the catch-all's, else the CF2-CH2 bond's
+        apart = set(_LATTICE_PAIR_NAMES.values())
+        return np.array([own.get(t, own.get("other", plain) if t in apart else plain) for t in polymer_lattice_torsion_types(polymer, n_dihedrals)])
 
     def polymer(self, polymer):
         """``polymer`` as this parameter set needs it built: with a charge site on every bond that
@@ -1319,20 +1320,27 @@ def torsion_types(frame: Frame) -> np.ndarray:
     return out
 
 
-# The lattice side's bond types: the reference set's, with the CH2-CH2 bond named apart from the
-# catch-all (a reversed unit makes one, and its triple is fitted to lone chains that have it).
-LATTICE_TORSION_TYPES: tuple[str, ...] = REF_TORSION_TYPES[:-1] + ("CH2-CH2", "other")
+# The lattice side's bond types: the reference set's, with the bonds a unit of its own makes named
+# apart from the catch-all, so that a triple fitted to lone chains that have the bond lands on that
+# bond and no other.  A reversed unit makes CH2-CH2; a CFE unit two CH2-CFCl bonds; CTFE a CF2-CFCl
+# and a CH2-CFCl; CDFE two CF2-CHCl; acrylonitrile two CH2-CH(CN); VF two CH2-CHF; DFE a CHF-CHF.
+# (Pendants by the element of the bonded atom, sorted: a nitrile's carbon counts as "C".)
+_LATTICE_PAIR_NAMES: dict[tuple[str, str], str] = {
+    ("HH", "HH"): "CH2-CH2", ("ClF", "HH"): "CH2-CFCl", ("ClF", "FF"): "CF2-CFCl", ("ClH", "FF"): "CF2-CHCl",
+    ("CH", "HH"): "CH2-CHCN", ("FH", "HH"): "CH2-CHF", ("FH", "FH"): "CHF-CHF"}
+LATTICE_TORSION_TYPES: tuple[str, ...] = REF_TORSION_TYPES[:-1] + tuple(_LATTICE_PAIR_NAMES.values()) + ("other",)
 
 
 def polymer_lattice_torsion_types(polymer, n_dihedrals: int) -> list[str]:
     """The name in :data:`LATTICE_TORSION_TYPES` of the bond each dihedral of a chain's repeat turns
-    (as :func:`polymer_torsion_types`, with a CH2-CH2 bond told from the other untyped ones)."""
+    (as :func:`polymer_torsion_types`, with the bonds of :data:`_LATTICE_PAIR_NAMES` told from the
+    other untyped ones)."""
     B = polymer.bonds_per_repeat
     cls = ["".join(sorted(polymer.backbone[k].substituents)) for k in range(B)]
     out = []
     for j in range(n_dihedrals):
         pair = tuple(sorted((cls[(j + 1) % B], cls[(j + 2) % B])))
-        out.append("CH2-CH2" if pair == ("HH", "HH") else REF_TORSION_TYPES[_CLASS_PAIR_TO_TYPE.get(pair, _NT - 1)])
+        out.append(_LATTICE_PAIR_NAMES.get(pair) or REF_TORSION_TYPES[_CLASS_PAIR_TO_TYPE.get(pair, _NT - 1)])
     return out
 
 
@@ -3071,3 +3079,29 @@ register_preset("pvdf-dft-valence-belt4", FITTED_VALENCE_BELT4)
 CRYSTAL13_CHAIN_FITTED_X = np.array([1.2018212576519955, 1.140470650630188, 1.0276100418925278, 1.114868802086814, 1.0416721973399545, 0.9816574992667221, 0.06458647915892268, -0.007108434218814634, 0.8921327628083221, 1.2606256990881148, -3.3899215940012106, 4.0000000004, 0.17427955821367863, 0.20175170370736645, -0.3292491948271106, 0.014907184310078156, 0.44949988150369585, -0.5215212534921436, 0.7455479179274106, 1.033996560081815, 1.4223361534997534, -1.4744068662622107, 2.0050212203521154, 0.16187957685560858, -0.41697322776350165, 0.6040291046581692, 1.038879428788623])
 FITTED_CHAIN1 = crystal_stage_parameters(CRYSTAL13_CHAIN_FITTED_X)
 register_preset("pvdf-dft-chain1", FITTED_CHAIN1, lattice_only=True)
+
+
+def typed_on(base: FFParameters, types: dict) -> FFParameters:
+    """``base`` with the torsion triples of ``types`` (``{bond type of LATTICE_TORSION_TYPES: (V1, V2, V3)}``)
+    added to its own, a type it already has replaced.  Lattice side only, as ``torsion_types`` is."""
+    own = {t: (float(a), float(b), float(c)) for t, a, b, c in base.torsion_types}
+    for t, triple in types.items():
+        if t not in LATTICE_TORSION_TYPES:
+            raise ValueError(f"unknown torsion type {t!r}: {LATTICE_TORSION_TYPES}")
+        own[t] = tuple(float(v) for v in triple)
+    return replace(base, torsion_types=tuple((t, *own[t]) for t in own))
+
+
+def parameters_of(spec) -> FFParameters:
+    """A parameter set from what a tool is given for one: a preset's name; a crystal-stage result
+    file (its ``x``); or a file naming a ``base`` (either of these again) and ``torsion_types`` to
+    put on it (examples/unit_torsion_fit.py)."""
+    import json
+    from pathlib import Path
+
+    if str(spec) in PRESET_PARAMETERS:
+        return PRESET_PARAMETERS[str(spec)]
+    data = json.loads(Path(spec).read_text())
+    if "torsion_types" in data and "base" in data:
+        return typed_on(parameters_of(data["base"]), data["torsion_types"])
+    return crystal_stage_parameters(np.array(data["x"], dtype=float))

@@ -133,3 +133,50 @@ def test_the_packer_and_the_mixed_cell_use_the_typed_terms(DK):
     same = replace(base, torsion_types=tuple((t,) + tuple(base.torsion) for t in ("CF2-CHF", "CF2-CF2", "other")))
     _, _, m2, _ = _cell(DK, same)
     assert m2.value_and_grad(x)[0] == pytest.approx(m0.value_and_grad(x)[0], abs=1e-10)
+
+
+def test_a_units_own_bonds_have_names_and_take_a_triple_put_on_a_preset():
+    """CH2-CFCl and the like are named apart from the catch-all; a triple put on a preset lands on those bonds only."""
+    import importlib.util
+    from pathlib import Path
+
+    import numpy as np
+
+    from polyfind import fitting as F
+
+    spec = importlib.util.spec_from_file_location("candidate_screen", Path(__file__).resolve().parents[1] / "examples" / "candidate_screen.py")
+    C = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(C)
+    base = F.PRESET_PARAMETERS["pvdf-dft-chain1"]
+    with base.applied():
+        names = {letters: F.polymer_lattice_torsion_types(C.make_polymer("t", letters), 4) for letters in ("VC", "VK", "VD", "VA", "VY", "VX", "VE", "VR")}
+        cfe = C.make_polymer("t", "VC")
+    assert names["VC"] == ["CF2-CH2", "CH2-CFCl", "CH2-CFCl", "CF2-CH2"]
+    assert names["VK"] == ["CF2-CF2", "CF2-CFCl", "CH2-CFCl", "CF2-CH2"]
+    assert names["VD"] == ["CF2-CHCl", "CF2-CHCl", "CF2-CH2", "CF2-CH2"]
+    assert names["VA"][1:3] == ["CH2-CHCN", "CH2-CHCN"] and names["VY"][1:3] == ["CH2-CHF", "CH2-CHF"] and names["VX"][1:3] == ["CHF-CHF", "CH2-CHF"]
+    assert names["VE"][1:3] == ["CH2-CH2", "CH2-CH2"] and names["VR"] == ["CF2-CHF", "CF2-CHF", "CF2-CH2", "CF2-CH2"]
+    assert set(sum(names.values(), [])) <= set(F.LATTICE_TORSION_TYPES)
+    # chain1 has no triple for a CH2-CFCl bond: it takes the CF2-CH2 bond's
+    plain = np.array(base.torsion)
+    assert np.allclose(base.torsion_for(cfe, 4), [plain] * 4)
+    typed = F.typed_on(base, {"CH2-CFCl": (0.1, -0.2, 0.3)})
+    assert np.allclose(typed.torsion_for(cfe, 4), [plain, (0.1, -0.2, 0.3), (0.1, -0.2, 0.3), plain])
+    assert dict((t, v) for t, *v in typed.torsion_types)["CF2-CF2"] == list(dict((t, v) for t, *v in base.torsion_types)["CF2-CF2"])
+    with pytest.raises(ValueError):
+        F.typed_on(base, {"CH2-CBr2": (0.0, 0.0, 0.0)})
+
+
+def test_a_parameter_set_is_read_from_a_name_or_a_file(tmp_path):
+    import json
+
+    from polyfind import fitting as F
+
+    assert F.parameters_of("pvdf-dft-chain1") is F.PRESET_PARAMETERS["pvdf-dft-chain1"]
+    f = tmp_path / "typed.json"
+    f.write_text(json.dumps({"base": "pvdf-dft-chain1", "torsion_types": {"CH2-CFCl": [0.1, -0.2, 0.3]}}))
+    prm = F.parameters_of(f)
+    assert ("CH2-CFCl", 0.1, -0.2, 0.3) in prm.torsion_types and prm.lj == F.PRESET_PARAMETERS["pvdf-dft-chain1"].lj
+    g = tmp_path / "stage.json"
+    g.write_text(json.dumps({"x": list(F.CRYSTAL13_CHAIN_FITTED_X)}))
+    assert F.parameters_of(g).torsion_types == F.PRESET_PARAMETERS["pvdf-dft-chain1"].torsion_types

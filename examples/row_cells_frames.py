@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-from polyfind.fitting import PRESET_PARAMETERS
+from polyfind.fitting import parameters_of
 
 SPEC = importlib.util.spec_from_file_location("shear_polish", Path(__file__).with_name("shear_polish.py"))
 SP = importlib.util.module_from_spec(SPEC)
@@ -51,11 +51,11 @@ def write_cells(args):
     disk = json.loads(Path(args.margins).read_text())
     entry = disk["rows"][args.row]
     preset = disk["preset"]
-    tag = args.tag or preset.split("-")[-1]
+    tag = args.tag or Path(preset).stem.split("-")[-1]
     pol, ref = json.load(open(disk.get("polished", SP.POLISHED))), json.load(open(disk.get("references", SP.REFERENCES)))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    prm = PRESET_PARAMETERS[preset]
+    prm = parameters_of(preset)
     SP.C.SITES_FOR = prm
     with prm.applied():
         polymer = SP.C.make_polymer(args.row, entry["letters"])

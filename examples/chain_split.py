@@ -109,8 +109,9 @@ def backbone_torsions(atoms) -> dict:
     d = atoms.get_all_distances(mic=True)
     kind = []
     for c in order:
-        near = [atoms.symbols[k] for k in np.flatnonzero(d[c] < 1.6) if atoms.symbols[k] != "C"]
-        kind.append("C" + "".join(f"{e}{near.count(e) if near.count(e) > 1 else ''}" for e in ("H", "F") if e in near))
+        near = [atoms.symbols[k] for k in np.flatnonzero(d[c] < 1.95) if atoms.symbols[k] != "C" and (d[c, k] < 1.6 or atoms.symbols[k] == "Cl")]  # a C-Cl bond is 1.8 A
+        kind.append("C" + "".join(f"{e}{near.count(e) if near.count(e) > 1 else ''}" for e in ("H", "F", "Cl") if e in near))
+    n = len(set(order))  # the backbone's carbons: a nitrile's carbon is not one of them
     return {"dihedrals": ST.dihedrals(atoms)[:n], "bonds": [f"{kind[k + 1]}-{kind[k + 2]}" for k in range(n)]}
 
 
@@ -268,7 +269,7 @@ def polyfind(args):
     sets = {}
     for item in args.fit:
         name, path = item.split("=", 1)
-        sets[name] = F.PRESET_PARAMETERS[path] if path in F.PRESET_PARAMETERS else C.parameters(np.array(json.loads(Path(path).read_text())["x"], dtype=float))
+        sets[name] = F.parameters_of(path)
     confs = [c for c in (args.confs or ("beta,alpha" if plain else "TG'TG,TTTT,GTG'T")).split(",") if c]
     for name, prm in sets.items():
         rows, frozen = {}, {}

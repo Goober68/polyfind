@@ -27,7 +27,7 @@ from pathlib import Path
 import numpy as np
 
 from polyfind import mixedcell as MC
-from polyfind.fitting import PRESET_PARAMETERS
+from polyfind.fitting import parameters_of
 
 SPEC = importlib.util.spec_from_file_location("candidate_acceptance", Path(__file__).with_name("candidate_acceptance.py"))
 CA = importlib.util.module_from_spec(SPEC)
@@ -183,7 +183,7 @@ def part_of(rows: list, part: str) -> list:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--preset", required=True)
+    ap.add_argument("--preset", required=True, help="a preset's name, or a file polyfind.fitting.parameters_of reads (a preset with torsion triples put on it)")
     ap.add_argument("--rows", default="", help="comma list; default every row of the polished table")
     ap.add_argument("--part", default="", help="K/N: every N-th of the rows starting at the K-th, for N runs side by side on one --out")
     ap.add_argument("--minutes", type=float, default=0.0, help="start no new cell after this long")
@@ -214,7 +214,7 @@ def main():
 
     disk = stored(out_path, begin)
     began = time.time()
-    prm = PRESET_PARAMETERS[args.preset]
+    prm = parameters_of(args.preset)
     SP.C.SITES_FOR = prm
     with prm.applied():
         for row in rows:
