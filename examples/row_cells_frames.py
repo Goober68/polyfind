@@ -142,6 +142,35 @@ def collect(args):
     print(f"written {args.out}")
 
 
+def potential(args):
+    """Rows' cells relaxed in a potential and never labelled (examples/mlip_train.py relax): the
+    potential's own energy of each, and all-trans minus each helix placement.  For cells too large
+    for DFT here; what the potential's own margin is worth is in docs/MLIP_SECOND_OPINION.md 3.13."""
+    from ase.io import read
+
+    out = {"what": f"cells relaxed in the potential {args.name} (examples/mlip_train.py relax) from a preset's cells, the potential's own energies: "
+                   "eV per monomer; margins kcal/mol per monomer, all-trans minus helix; no DFT on these cells", "potential": args.name, "rows": {}}
+    for row in args.rows:
+        cells = {}
+        for d in args.frames:
+            for f in sorted(Path(d).glob(f"row_{row}_*_in_{args.name}.start.xyz")):
+                a = read(f)
+                conf = a.info.get("conformation") or f.name[len(f"row_{row}_"):].split("_")[0].replace("p", "'")
+                cells[conf] = {"frame": f.name[:-len(".start.xyz")], "eV_per_monomer": float(a.info["potential_eV_per_monomer"]), "cell_A_deg": [float(v) for v in a.cell.cellpar()],
+                               "atoms": len(a), "n_monomers": int(a.info["n_monomers"]), "source": str(a.info.get("source", ""))}
+        if "TTTT" not in cells or len(cells) < 2:
+            print(f"{row}: {sorted(cells)} only, no margin")
+            continue
+        tt = cells["TTTT"]["eV_per_monomer"]
+        minus = {c: KCAL * (tt - v["eV_per_monomer"]) for c, v in cells.items() if c != "TTTT"}
+        low = max(minus, key=minus.get)
+        out["rows"][row] = {"cells": cells, "all_trans_minus_helix": minus, "margin": minus[low], "helix": low, "helix_placements": len(minus),
+                            "strain_along_chain": cells["TTTT"]["cell_A_deg"][2] / cells[low]["cell_A_deg"][2] - 1.0}
+        print(f"{row}: margin {minus[low]:+.3f} (helix {low}; " + ", ".join(f"{c} {v:+.3f}" for c, v in minus.items()) + ")")
+    Path(args.out).write_text(json.dumps(out, indent=1))
+    print(f"written {args.out}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -160,8 +189,13 @@ def main():
     s.add_argument("--margins", nargs="*", default=[], metavar="NAME=FILE", help="polyfind's margins of the row (examples/rows_under_preset.py)")
     s.add_argument("--out", required=True)
     s.add_argument("--extxyz", default="", help="store the labelled frames here")
+    s = sub.add_parser("potential", help="cells relaxed in a potential and not labelled: its own energies and margins")
+    s.add_argument("--frames", nargs="+", required=True, help="folders of NAME_in_POTENTIAL.start.xyz")
+    s.add_argument("--rows", nargs="+", required=True)
+    s.add_argument("--name", default="all_s1", help="the potential's name in the frames' names")
+    s.add_argument("--out", required=True)
     args = ap.parse_args()
-    {"write": write_cells, "collect": collect}[args.cmd](args)
+    {"write": write_cells, "collect": collect, "potential": potential}[args.cmd](args)
 
 
 if __name__ == "__main__":
