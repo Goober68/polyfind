@@ -1358,3 +1358,37 @@ Files: `docs/predictions/kink_dft_vdf4-trfe2-6.json`,
 `mlip/kink_vdf4-trfe2-6_frames_pbe_d3bj.extxyz` (4 frames). Test:
 `tests/test_row_cells_dft.py`.
 
+### 3.18 The kink sheets of four fourteen-monomer cells in the potential (2026-11-19)
+
+The kink sheet is the structure the rates are made of: a kink pair on every chain, in register,
+in a cell of its own. For each of the four cells of 3.14 the sheet at the site belt4 has
+cheapest (`examples/kink_site_scan.py`) was written as atoms (`examples/row_cells_frames.py kink
+--scan`), relaxed in the potential with the cell free, and set against the row's all-trans cell
+there (`sheets-potential`; `docs/predictions/sheets14_potential.json`). Every kink is still a
+kink after the relaxation (gauche bonds near -80 and +75 degrees). There is no DFT on these
+cells; on the one kink DFT has seen the potential is 0.6 high (3.17), and that is taken to be
+common.
+
+| kink sheet, kcal/mol per kink pair | `all_s1` | belt4 | against the cell of the film's composition: `all_s1` | belt4 |
+|---|---:|---:|---:|---:|
+| the 71/29 matrix | 4.54 | 4.66 | -0.05 | +1.24 |
+| the cell of the film's composition, 64/29/7 (CFE) | 4.59 | 3.42 | 0 | 0 |
+| the nitrile alone | 2.95 | 2.15 | -1.64 | -1.27 |
+| the leader (nitrile with reversed VDF, 21 mol% TrFE) | 2.49 | 1.39 | -2.10 | -2.02 |
+
+- **The leader's speed stands.** Its sheet is 2.10 below the film's cell in the potential and
+  2.02 in belt4: a factor of 34 and of 30 in the population at this site. The nitrile alone is
+  further ahead in the potential than in belt4 (1.64 against 1.27).
+- **The CFE's cut does not.** Belt4 has a CFE making the matrix's sheet 1.24 cheaper; the
+  potential has the two cells level, at this one site of each. Belt4's chlorine is the unit it
+  has 0.38 wrong on the margin (3.10). More sites of both cells are being relaxed to see whether
+  the site is the reason.
+- With each row's sites moved by its difference here, the rate model that sums over sites
+  gives the matrix 289 kHz where belt4's sheets gave 33, the nitrile alone 3.2 MHz for 1.8, the
+  leader 7.8 MHz for 6.9, all against the film's 364 kHz
+  (`docs/predictions/four_axes_potential_margins_sheets.json`; the table is at the head of
+  `docs/CANDIDATE_MATERIALS.md`).
+
+Files: `docs/predictions/sheets14_potential.json`,
+`four_axes_potential_margins_sheets.json`. Tests: `tests/test_four_axes_at_margins.py`.
+

@@ -417,19 +417,30 @@ right": true at one registry, not along it).
         /opt/dft/kink6`; `mlip_train.py relax ... --mask "0 0 0 0 0 0" --fmax 0.02` (atoms only);
         `mlip_frames.py label --frames /opt/dft/kink6 --names ... --np 3` (25 minutes a cell);
         `row_cells_frames.py kink-collect --pairs NAME=TT.dft.xyz,KINKED.dft.xyz ... --out JSON --extxyz FILE`.
-        RUNNING (18:10 UTC, three threads, ends by itself): THE FOUR FOURTEEN-MONOMER KINK SHEETS IN THE
-        POTENTIAL, cell free, each row's cheapest site of the scan (`row_cells_frames.py kink --scan
-        docs/predictions/kink_site_scan_belt4.json --key "ROW@0~" --sites N --kmesh "4 2 1" --out
-        /opt/dft/sheets14`: matrix site 12 belt4 4.66, CFE cell site 10 3.42, nitrile alone site 8 2.15, leader
-        site 8 1.39; `mlip_train.py relax --cells /opt/dft/sheets14/sheet_*.start.xyz --out /opt/dft/sheets14
-        --threads 3 --fmax 0.02 --steps 800`). The sheet's energy in the potential is the relaxed kinked cell
-        minus the row's all-trans cell in `docs/predictions/rows14_potential.json`, times 28 monomers over 2
-        chains; check each relaxed cell still holds its kink before reading it.
+        THE FOUR FOURTEEN-MONOMER KINK SHEETS IN THE POTENTIAL, DONE (19:13 UTC, docs 3.18,
+        `docs/predictions/sheets14_potential.json`; cell free, each row's cheapest site of belt4's scan; every
+        kink kept; NO DFT on these cells, and the potential is 0.6 high on the one kink DFT has seen). kcal/mol
+        per kink pair, the potential (belt4): matrix 4.54 (4.66), CFE cell 4.59 (3.42), nitrile alone 2.95
+        (2.15), leader 2.49 (1.39). AGAINST THE CFE CELL: leader -2.10 (-2.02): ITS SPEED STANDS; nitrile alone
+        -1.64 (-1.27); MATRIX -0.05 (+1.24): THE CFE's CUT OF THE KINK SHEET IS NOT THERE IN THE POTENTIAL at this
+        site. THE FOUR AXES WITH THOSE SHEETS (`four_axes_at_margins.py --sheet-shift ROW=POTENTIAL_MINUS_BELT4 ...
+        --out docs/predictions/four_axes_potential_margins_sheets.json`; second table at the head of
+        `docs/CANDIDATE_MATERIALS.md`): leader 7.8 MHz, tan delta 0.003, 0.165%, 9.0 pN/nm2 through the crystal
+        (if its margin is not below zero); nitrile alone 3.2 MHz, 0.006, 0.147%, 10.2; matrix 289 kHz (33 with
+        belt4's sheets), 0.066, 0.059%, 6.7; film as calibrated 364 kHz, 0.060, 0.066%, 6.5. How: `python
+        examples/row_cells_frames.py kink --scan docs/predictions/kink_site_scan_belt4.json --key "ROW@0~" --sites
+        N --kmesh "4 2 1" --out /opt/dft/sheets14`; `mlip_train.py relax --model
+        docs/predictions/mlip/models/all_s1.model --name all_s1 --cells /opt/dft/sheets14/sheet_*.start.xyz --out
+        /opt/dft/sheets14 --threads 3 --fmax 0.02 --steps 800` (15 minutes a cell); `row_cells_frames.py
+        sheets-potential --frames /opt/dft/sheets14 --out JSON`.
+        RUNNING (19:13 UTC, three threads, ends by itself): THREE MORE SITES, to see whether the CFE's missing cut
+        is the site: `/opt/dft/sheets14b` (matrix `@0` site 12, belt4 4.81; CFE cell `@0` site 0, 3.95; CFE cell
+        `@0~` site 8, 3.57); read them with `sheets-potential --frames /opt/dft/sheets14b`.
         MATRIX AND TERPOLYMER UNDER THE TrFE TERM (not adopted): +0.100 and +0.239
         (`docs/predictions/margins_trfe_torsion_rows14.json`; chain1-cfe +0.222 and +0.359, the potential -0.024
-        and +0.078). FIRST KINK SHEET IN THE POTENTIAL (18:26 UTC): the CFE cell's cheapest site +4.586 against
-        belt4's +3.418, kink kept; `python examples/row_cells_frames.py sheets-potential --frames
-        /opt/dft/sheets14 --out JSON` reads them all.
+        and +0.078).
+        THEN: the VF and DFE cells' DFT (`unit_dft_check.py --row vdf2-trfe1-{vf,dfe}1-4 ... --threads 3 --np
+        3`; polyfind's side and the potential's relaxations are done for both).
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE
