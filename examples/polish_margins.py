@@ -103,7 +103,13 @@ def main():
                         locked_update(ref_path, lambda disk, d=d: disk.setdefault("all_trans_references", {}).__setitem__(row, DK.as_json(d)))
                 else:
                     stored = (json.load(open(out_path)) if out_path.exists() else {}).get("references", {}).get(f"{row} {conf}")
-                    d = DK.refined_cell(polymer, row, C.conformation(conf, P), f"{row} {conf}", stored)
+                    try:
+                        d = DK.refined_cell(polymer, row, C.conformation(conf, P), f"{row} {conf}", stored)
+                    except ValueError as e:  # a placement whose ideal torsions put two atoms within a bond length of each other: not a cell, and said so
+                        entry.setdefault("not_built", {})[conf] = str(e)
+                        log(f"{row:24s} {conf:6s}: NOT BUILT ({e})")
+                        locked_update(out_path, lambda disk: disk.setdefault("rows", {}).__setitem__(row, entry))
+                        continue
                     if stored is None or "state" not in stored:
                         locked_update(out_path, lambda disk, d=d, conf=conf: disk.setdefault("references", {}).__setitem__(f"{row} {conf}", DK.as_json(d)))
                 model, x, ch = DK.make_model(polymer, d, 1, 1)
