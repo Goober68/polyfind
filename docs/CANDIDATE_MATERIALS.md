@@ -83,9 +83,10 @@ rate models of 5.6 (the sum over kink sites; one chain's move).
   +0.317 it had a thousandth of its cells polar at the bias and 0.004% of strain, seventeen
   times under the film it stands for. At the potential's +0.078 it has 0.081% against the film's
   0.066% and tan delta 0.088 against 0.060, and it stays within 0.055 to 0.081% and 0.03 to
-  0.09 over the whole error bar. Its frequency is the anchor, so that one is not a test. This
-  is the first time the crystal's margin and the film's measured channel agree, and it is on
-  the margin DFT's potential gives.
+  0.09 over the whole error bar. Its frequency is the anchor, so that one is not a test, and
+  the kink energies behind the loss are belt4's. With belt4's margin the cell and the film it
+  stands for were seventeen times apart in strain; with the potential's they are within a
+  quarter of each other.
 - **The loss model takes a margin below zero as zero** (`polyfind.loss`: the channel is then
   degenerate at no field, as the film's is calibrated). A cell with all-trans the lower one is a
   ferroelectric with a remanent polarization, which the model does not hold. So for the two
