@@ -340,13 +340,30 @@ right": true at one registry, not along it).
         1"` into `/opt/dft/rows14an` and `/opt/dft/rows14`; `mlip_train.py relax --model
         docs/predictions/mlip/models/all_s1.model --name all_s1 --cells ... --threads 4 --fmax 0.02 --steps 800`
         (five to ten minutes a cell); `row_cells_frames.py potential --frames DIRS --rows ROWS --out JSON`.
-        WHICH LEVEL IS RIGHT, RUNNING (14:00 UTC, background, four cores, ends by itself): `python
-        examples/unit_dft_check.py --row vdf4-trfe2-6 --work /opt/dft/unit4 --model
+        WHICH LEVEL IS RIGHT: ANSWERED BY DFT (2026-11-19 16:00 UTC, docs 3.15). `vdf4-trfe2-6`, VVRVVR, the
+        matrix's motif, 72 atoms, its four helix placements one cell by symmetry: DFT -0.044 (= +1.603 inside
+        a chain -1.647 between chains; 0.09 eV/A left), THE POTENTIAL -0.096, belt4 -0.014 (by two errors of 0.79
+        and 0.76 that cancel), chain1 +0.139 shear free (upright +0.078 = +2.004 -1.927). DFT IS WITH THE
+        POTENTIAL; chain1 IS 0.18 HIGH. The gap chain1 minus potential is 0.235 here and 0.246 on the
+        fourteen-monomer matrix. chain1's TWO PARTS ARE OFF ON EVERY CELL, the inside of the chain +0.13 to
+        +0.40 and between chains -0.15 to -0.29; its passes on the four-monomer cells are where the two are
+        equal (VVRV +0.13/-0.22, VRVC +0.18/-0.15, VRVK +0.30/-0.15, VRVF +0.26/-0.29; VVRVVR +0.40/-0.28).
+        WHAT IS NEW IN VVRVVR: each chain holds one TrFE on each gauche sense (DFT's helix: CF2-CHF bonds at +65
+        and -56 degrees); VVRV's lowest helix, the only one DFT saw, has the favourable sense only. A torsion
+        term is even in the angle and cannot tell the senses apart. SO THE 25 ROWS' LEVELS UNDER chain1-cfe READ
+        ABOUT 0.2 HIGH wherever TrFE is a quarter of the units or more; the differences a unit makes stand.
+        ESTIMATES (one cell's offsets carried to fourteen monomers, NO DFT there): matrix `vdf10-trfe4-14` +0.03
+        (from the potential +0.05), +0.04 (from chain1-cfe -0.18), +0.03 (from belt4 -0.03): just under the
+        window; CFE terpolymer `vdf9-trfe4-cfe1-14` +0.13 and +0.18: at the window's top. Command, for the
+        record: `python examples/unit_dft_check.py --row vdf4-trfe2-6 --work /opt/dft/unit4 --model
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
-        /opt/dft/chainsplit/check --threads 4 --np 4` (VVRVVR, the matrix's motif, 72 atoms: polyfind, the
-        potential and DFT on one cell; about two hours; run it again after a stop). IF DFT IS WITH THE POTENTIAL,
-        chain1 drifts with size or TrFE content and the 25 rows' levels are about 0.25 high; IF WITH chain1, the
-        potential's levels at fourteen monomers are not to be used and only its differences are.
+        /opt/dft/chainsplit/check --threads 4 --np 4` (1.9 hours). NOTE: "DFT" on a row's cell is a DFT single
+        point on the cell the potential relaxed (forces left are stored), as in docs 3.6 and 3.10.
+        NEXT ON THIS (running 16:10 UTC): lone VDF-TrFE chains on each sense, `chain_conformers.py settle
+        --frames /opt/dft/trfeconf --names trfe2_tt,trfe2_h1,trfe2_h2 --model
+        docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --np 3` (`trfe2`
+        is new in `chain_conformers.CHAINS`), then `collect --chains trfe2` and `polyfind --fit
+        chain1=pvdf-dft-chain1`: DOES chain1 HAVE THE DIFFERENCE BETWEEN THE TWO SENSES INSIDE THE CHAIN?
         THE OTHER UNITS (TFE, CDFE, ethylene, VF, DFE): UNTESTED UNTIL THEIR CHECK. Rows by unit: AN in 7 of the
         35, CDFE 4, TFE 2, ethylene 2, VF 1, DFE 1 (15 rows in all); CFE 9, CTFE 3; 9 rows VDF, TrFE and reversed
         VDF only. `examples/unit_dft_check.py --row ROW --work /opt/dft/unit4 --model

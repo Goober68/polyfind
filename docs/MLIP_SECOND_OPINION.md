@@ -24,7 +24,10 @@ other way round: DFT has all-trans below every helix (-0.386) where both presets
 lowest, and the error is between chains as well as inside (3.12). The 25 rows whose units are
 checked have their margins under the new preset in 3.13, with where each unit stands. Four
 fourteen-monomer rows relaxed in the potential (3.14) agree with that preset on what a CFE does
-and put every level a quarter of a kcal/mol lower; a six-monomer cell is with DFT to say which.
+and put every level a quarter of a kcal/mol lower. DFT on a six-monomer cell of the matrix's
+motif says the potential has the level (-0.044 in DFT, -0.096 in the potential, +0.139 in the
+preset): the preset's margins rest on two errors that cancel in the four-monomer cells and do
+not where a chain holds TrFE on both gauche senses (3.15).
 
 ## 1. The test
 
@@ -1156,9 +1159,92 @@ small cells, 0.36 off on the seventh.
   perfect crystals, so the match may be an accident.
 - **What decides it**: DFT on a cell of the matrix's own motif that is still affordable here,
   VVRVVR, six monomers and seventy-two atoms (`vdf4-trfe2-6`), with polyfind and the potential
-  on the same cell. Running.
+  on the same cell. Done: 3.15. DFT is with the potential.
 
 **What this reads on.** The margin only, and from a potential that has been 0.36 off once. No
 loss, rate or blocked stress.
 
 Files: `docs/predictions/rows14_potential.json`. Test: `tests/test_row_cells_dft.py`.
+
+### 3.15 The level, by DFT on a six-monomer cell of the matrix's motif: DFT is with the potential, and chain1 is 0.18 high (2026-11-19)
+
+The cell is `vdf4-trfe2-6`, VVRVVR: 33 mol% TrFE, one unit in three, two chains of six monomers,
+72 atoms. The check is the one every unit had (`examples/unit_dft_check.py`): polyfind's cells
+under both presets, the five cells relaxed in the potential, DFT on the all-trans cell and the
+helix cell as the potential leaves them (largest force left 0.09 eV/A), and each cell split into
+its chains alone and the rest.
+
+The four helix placements of this sequence are one cell: its constitution reads the same both
+ways about the CHF carbon, and one repeat of the sequence is half a turn of the helix's pattern.
+Polyfind's four cells have one energy to 1e-4 and the potential walks all four in the same 221
+steps. So the cell has one margin and no choice of placement in it.
+
+| all-trans minus helix, kcal/mol per monomer | cell | inside a chain | between chains |
+|---|---:|---:|---:|
+| DFT | **-0.044** | +1.603 | -1.647 |
+| `all_s1` alone | -0.096 | | |
+| belt4 (shear free -0.014; upright:) | -0.015 | +2.395 | -2.410 |
+| chain1 (shear free **+0.139**; upright:) | +0.078 | +2.004 | -1.927 |
+
+- **DFT is with the potential.** The potential is 0.05 low, belt4 0.03 high, chain1 0.18 high.
+  The potential and chain1 are 0.235 apart on this cell and 0.246 apart on the
+  fourteen-monomer matrix (3.14): the same gap, and here DFT says which side it is on.
+- **Belt4 is right again by two errors that cancel**: 0.79 inside the chain and 0.76 between
+  chains, as on the 25 mol% cell (0.7 and 0.7).
+- **chain1 has not lost what it had; the cancellation it also rests on is incomplete here.**
+  Its two parts against DFT's, cell by cell (polyfind's cell upright; the last column is the
+  margin with the shear free, the one compared with DFT throughout):
+
+| cell | inside a chain, off by | between chains, off by | margin, off by |
+|---|---:|---:|---:|
+| TrFE, VVRV | +0.13 | -0.22 | -0.01 |
+| CFE, VRVC (with the term of 3.11) | +0.18 | -0.15 | +0.01 |
+| CTFE, VRVK (with the term of 3.11) | +0.30 | -0.15 | +0.09 |
+| TFE, VRVF | +0.26 | -0.29 | +0.02 |
+| TrFE, VVRVVR | +0.40 | -0.28 | +0.18 |
+
+  On every cell chain1 has the all-trans chain too high against the helix chain and the
+  all-trans cell too strongly bound against the helix cell. Where the two are equal the margin
+  passes; on the six-monomer cell the first has grown to 0.40 and the second has not. The
+  passes of 3.10 to 3.13 are of the margin, and the margin is what a row is ranked on, but they
+  are not passes of the two parts, and this cell is where that shows.
+- **What is new in this cell is the TrFE on the other side of the fold.** In DFT's helix cell the
+  two CF2-CHF bonds of a chain that are gauche sit at +65 and -56 degrees: one TrFE on each
+  sense. The 25 mol% cell has one TrFE a chain, and its lowest helix, the only one DFT was asked
+  for, has it on the favourable sense (in chain1 the other placement is 0.67 per monomer
+  higher, 2.7 kcal/mol per unit, a number DFT has not been asked for). Inside the chain chain1
+  is 0.5 kcal/mol off per four monomers there and 2.4 per six here. A torsion term is even in
+  the angle, so it cannot tell the two senses apart; the difference between them is carried by
+  the charges and walls inside the chain. Lone chains with a TrFE on each sense are with DFT to
+  test this directly (3.16 when done).
+
+**What it does to the 25 rows of 3.13.** Their levels under `pvdf-dft-chain1-cfe` are not good to
+0.1 once a chain holds TrFE on both senses, which every row with more than one TrFE can. On the
+matrix the three evaluators, each corrected by its own error on this cell, come to the same
+place:
+
+| the fourteen-monomer rows, estimated | from `all_s1` (+0.05) | from chain1-cfe (-0.18) | from belt4 (-0.03) |
+|---|---:|---:|---:|
+| the TrFE matrix, `vdf10-trfe4-14` | +0.03 | +0.04 | +0.03 |
+| the CFE terpolymer, `vdf9-trfe4-cfe1-14` | +0.13 | +0.18 | not used: belt4 has the CFE 0.38 high |
+
+- These are estimates: one cell's offsets carried to a cell more than twice its size and to
+  29 mol% from 33. No fourteen-monomer cell has a DFT energy.
+- On them the copolymer sits just under the switching window (+0.07 to +0.15 at 55 V/um) and the
+  terpolymer at its top or just above. That is the order the materials are known in, and the
+  CFE's pin is what moves one to the other: +0.10 to +0.14 per monomer at one in fourteen,
+  where the potential and chain1-cfe agree (3.14).
+- The differences a unit makes are the part of 3.13's table that stands. Its levels are to be
+  read as about 0.2 high wherever TrFE is at a quarter of the units or more, until chain1 has
+  the TrFE on both senses.
+- Along the chain the all-trans cell is 10.0% longer than the helix cell as the potential relaxed
+  them (DFT leaves 0.12 GPa along the chain on the helix cell); chain1 has 11.6% and belt4
+  11.5%.
+
+**What this reads on.** The margin, which places a row on the strain axis, and the lattice strain
+of one cell. No loss, rate or blocked stress.
+
+Files: `docs/predictions/row_cells_dft_vdf4-trfe2-6.json`,
+`chain_split_dft_vdf4-trfe2-6.json`, `mlip/row_cells_vdf4-trfe2-6_frames_pbe_d3bj.extxyz` (2
+frames), the row's entries in `margins_{chain1,belt4}_dft_rows.json` and
+`chain_split_polyfind_dft_rows.json`. Test: `tests/test_row_cells_dft.py`.

@@ -333,3 +333,40 @@ def test_four_fourteen_monomer_rows_in_the_potential():
     assert belt4["vdf9-trfe4-an1-14"]["margin"] - belt4["vdf10-trfe4-14"]["margin"] == pytest.approx(+0.141, abs=0.003)
     assert belt4["vdf9-trfe3-an1-rvdf1-14"]["margin"] == pytest.approx(+0.037, abs=0.002)
     assert all(0.08 < r["strain_along_chain"] < 0.13 for r in rows.values())
+
+
+def test_the_six_monomer_matrix_cell_puts_dft_with_the_potential_and_chain1_high():
+    """VVRVVR, the matrix's motif in a cell DFT can do: the level question of the fourteen-monomer rows."""
+    stored = _stored("vdf4-trfe2-6")
+    m = stored["margins"]["free"]
+    assert stored["lines"][m["all_trans"]]["all_trans"] and m["largest_force_left_eV_per_A"] < 0.1
+    assert m["dft"] == pytest.approx(-0.044, abs=0.002) and m["potential"] == pytest.approx(-0.096, abs=0.002)
+    chain1, belt4 = stored["polyfind"]["chain1"], stored["polyfind"]["belt4"]
+    assert chain1["margin"] == pytest.approx(+0.139, abs=0.002) and chain1["margin_upright"] == pytest.approx(+0.078, abs=0.002)
+    assert belt4["margin"] == pytest.approx(-0.014, abs=0.002)
+    # DFT is with the potential (0.05) and with belt4 (0.03); chain1 is 0.18 high
+    assert abs(m["potential"] - m["dft"]) < 0.06 and abs(belt4["margin"] - m["dft"]) < 0.04
+    assert chain1["margin"] - m["dft"] == pytest.approx(+0.183, abs=0.003)
+    # the four helix placements are one cell: one energy in polyfind
+    for name in ("chain1", "belt4"):
+        cells = json.loads((PRED / f"margins_{name}_dft_rows.json").read_text())["rows"]["vdf4-trfe2-6"]["cells"]
+        helix = [v["sheared"] + v["tilt_sheared"] for c, v in cells.items() if c != "TTTT"]
+        assert len(helix) == 4 and max(helix) - min(helix) < 1e-3
+    # the split: belt4 by two errors that cancel, chain1 with the inside of the chain 0.40 off and the rest 0.28
+    dft = next(iter(json.loads((PRED / "chain_split_dft_vdf4-trfe2-6.json").read_text())["pairs"].values()))
+    assert (dft["inside_a_chain"], dft["between_chains"]) == pytest.approx((+1.603, -1.647), abs=0.002)
+    sets = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]
+    off = {}
+    for name in ("chain1", "belt4"):
+        q = sets[name]["vdf4-trfe2-6"]["pairs"]["TTTT minus G'TGT"]
+        off[name] = (q["inside_a_chain"] - dft["inside_a_chain"], q["between_chains"] - dft["between_chains"])
+    assert off["chain1"] == pytest.approx((+0.401, -0.280), abs=0.003)
+    assert off["belt4"] == pytest.approx((+0.791, -0.763), abs=0.003)
+    # the two gauche CF2-CHF bonds of a chain in DFT's helix cell are of opposite sense: one TrFE on each
+    cell = json.loads((PRED / "chain_split_dft_vdf4-trfe2-6.json").read_text())["cells"]["row_vdf4-trfe2-6_GpTGT_chain1_in_all_s1"]
+    gauche = [d for d, b in zip(cell["dihedrals"], cell["bonds"]) if b in ("CF2-CHF", "CHF-CF2") and abs(d) < 120]
+    assert len(gauche) == 2 and gauche[0] * gauche[1] < 0
+    # the gap between chain1 and the potential is the same here and on the fourteen-monomer matrix
+    rows14 = json.loads((PRED / "rows14_potential.json").read_text())["rows"]
+    under = json.loads((PRED / "margins_chain1-cfe.json").read_text())["rows"]
+    assert chain1["margin"] - m["potential"] == pytest.approx(under["vdf10-trfe4-14"]["margin"] - rows14["vdf10-trfe4-14"]["margin"], abs=0.02)

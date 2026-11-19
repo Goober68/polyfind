@@ -51,7 +51,7 @@ CHAINS = {
 # is also its own mirror image (ethylene, TFE) all four are one.
 H4 = {"h1": (60.0, 180.0, -60.0, 180.0), "h2": (-60.0, 180.0, 60.0, 180.0), "h3": (180.0, 60.0, 180.0, -60.0), "h4": (180.0, -60.0, 180.0, 60.0)}
 for _name, _letter, _helices in (("an2", "A", "h1 h2"), ("vf2", "Y", "h1 h2"), ("cdfe2", "D", "h1 h2"), ("e2", "E", "h1"), ("tfe2", "F", "h1"),
-                                 ("dfe2", "X", "h1 h2 h3 h4"), ("ctfe2", "K", "h1 h2 h3 h4")):
+                                 ("dfe2", "X", "h1 h2 h3 h4"), ("ctfe2", "K", "h1 h2 h3 h4"), ("trfe2", "R", "h1 h2")):
     CHAINS[_name] = ("V" + _letter, {"tt": {}, **{h: H4[h] for h in _helices.split()}})
 ZERO = {"hh2": "hh2_tt", "hh4": "hh2_tt", **{c: f"{c}_tt" for c in CHAINS if c not in ("hh2", "hh4")}}   # the zero of each chain's energies: a chain of the same composition
 REFERENCE = "hh2_tt"   # the zero of the head-to-head set, as written before the others were added

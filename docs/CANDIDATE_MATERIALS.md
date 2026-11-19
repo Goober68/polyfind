@@ -46,9 +46,18 @@ the smallest cell that holds it (four monomers a chain) and compare the margin w
   chains) and wrong on CFE by 0.38, CTFE by 0.42 and CDFE by 0.75 in those cells.
 - A newer preset, `pvdf-dft-chain1-cfe`, meets DFT on TrFE, reversed VDF, CFE, TFE and (at the
   edge) CTFE in four-monomer cells. On the fourteen-monomer matrix it and the potential are 0.25
-  apart (+0.222 against -0.024), with a DFT cell of six monomers running to say which is right. The 25 rows without a nitrile or an unchecked unit have their margins under it in 3.13.
-  They are margins only: the loss, the rate and the blocked stress of sections 5 and 8 have not
-  been redone under it.
+  apart (+0.222 against -0.024). DFT on a six-monomer cell of the matrix's motif (3.15) is with
+  the potential: -0.044 in DFT, -0.096 in the potential, -0.014 in belt4, +0.139 in the new
+  preset. The preset has the inside of the chain and the binding between chains each off by 0.1
+  to 0.4, opposite ways; its margins pass where the two are equal and are about 0.2 high where a
+  chain holds TrFE on both gauche senses, as every row below with more than one TrFE can.
+- **Where that leaves the two reference materials** (estimates: each evaluator corrected by its
+  own error on the six-monomer cell, no DFT at fourteen monomers): the TrFE matrix at about
+  +0.03, just under the switching window, and the CFE terpolymer at +0.13 to +0.18, at its top.
+  The 25 rows without a nitrile or an unchecked unit have their margins under the new preset in
+  3.13: read their levels with the 0.2, and the differences a unit makes as they are. They are
+  margins only: the loss, the rate and the blocked stress of sections 5 and 8 have not been
+  redone under it.
 
 Until those are redone, read every table below as belt4's, with the errors above.
 
