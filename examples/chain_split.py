@@ -271,6 +271,10 @@ def polyfind(args):
         name, path = item.split("=", 1)
         sets[name] = F.parameters_of(path)
     confs = [c for c in (args.confs or ("beta,alpha" if plain else "TG'TG,TTTT,GTG'T")).split(",") if c]
+    states = {}
+    for item in args.states:  # a set's cells as examples/rows_under_preset.py left them with the shear free, in place of the upright cells relaxed here
+        name, path = item.split("=", 1)
+        states[name] = json.loads(Path(path).read_text())["rows"][args.row]["cells"]
     for name, prm in sets.items():
         rows, frozen = {}, {}
         previous = SP.C.SITES_FOR
@@ -286,9 +290,15 @@ def polyfind(args):
                     else:
                         model, x0, ch = SP.sheared_model(polymer, SP.stored_cell(args.row, conf, pol, ref), check=False)
                         per = 2 * ch.n_monomers
-                    everything, _ = SP.free_sets(model)
-                    xu, _ = CA.relaxed(model, x0, np.setdiff1d(everything, model.index("shear")))
+                    if name in states:
+                        xu = np.asarray(states[name][conf]["state_sheared"], dtype=float)
+                    else:
+                        everything, _ = SP.free_sets(model)
+                        xu, _ = CA.relaxed(model, x0, np.setdiff1d(everything, model.index("shear")))
                     whole = polyfind_split(SP, model, xu, ch)
+                    if name in states and abs(whole["cell_tilted"] / per - states[name][conf]["sheared"] - states[name][conf].get("tilt_sheared", 0.0)) > 2e-3:
+                        raise RuntimeError(f"{name} {conf}: the stored cell is not this parameter set's ({whole['cell_tilted'] / per:.4f} here, "
+                                           f"{states[name][conf]['sheared'] + states[name][conf].get('tilt_sheared', 0.0):.4f} stored)")
                     frozen[conf] = {"x": [float(v) for v in xu], "tilts_deg": whole.pop("tilts_deg").tolist()}
                     rows[conf] = r = {k: v / per for k, v in whole.items()}
                     lone = polyfind_lone(SP, model, xu, ch)
@@ -337,6 +347,8 @@ def main():
     s.add_argument("--row", default="vdf5-rvdf1-6", help=f"a row with polished cells, or '{PLAIN}' for plain PVDF's beta and alpha")
     s.add_argument("--confs", default="", help="the first is the reference; default TG'TG,TTTT,GTG'T (for plain PVDF beta,alpha)")
     s.add_argument("--fit", action="append", default=[], help="name=crystal-stage result file, or name=preset")
+    s.add_argument("--states", action="append", default=[], help="name=FILE of examples/rows_under_preset.py made under that set: split its cells as they are there with "
+                                                                 "the shear free (as DFT's relaxed cells are), in place of relaxing them upright here")
     s.add_argument("--out", default="")
     s.add_argument("--freeze", default="", help="write the relaxed cells (variables and pendant tilts) of the last --fit here")
     s.add_argument("--polished", default="", help="another table of polished cells (examples/polish_margins.py --out)")

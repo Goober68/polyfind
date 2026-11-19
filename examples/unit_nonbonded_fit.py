@@ -110,12 +110,14 @@ def main():
         return {c: e["TTTT"] - e[c] for c in e if c != "TTTT"}, entry["margin"]
 
     def split_at(p, tag):
-        """Polyfind's upright cells split as DFT's are: ``({helix: between chains}, {helix: inside a chain})``, all-trans minus helix."""
-        spec, out = args.work / f"{tag}.json", args.work / f"{tag}.split.json"
-        spec.write_text(json.dumps(spec_of(p)))
+        """Polyfind's cells with the shear free (as DFT's relaxed cells are), split as DFT's:
+        ``({helix: between chains}, {helix: inside a chain})``, all-trans minus helix."""
+        spec, cells, out = args.work / f"{tag}.json", args.work / f"{tag}.margins.json", args.work / f"{tag}.split.json"
+        cells_at(p, tag)
         if not out.exists():
             subprocess.run([sys.executable, "-W", "ignore", str(HERE / "chain_split.py"), "polyfind", "--row", args.row, "--confs", ",".join(["TTTT", *target]), f"--fit=x={spec}",
-                            "--polished", str(args.polished), "--references", str(args.references), "--out", str(out)], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, check=True)
+                            f"--states=x={cells}", "--polished", str(args.polished), "--references", str(args.references), "--out", str(out)],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, check=True)
         pairs = json.loads(out.read_text())["sets"]["x"][args.row]["pairs"]
         return {c: -pairs[f"{c} minus TTTT"]["between_chains"] for c in target}, {c: -pairs[f"{c} minus TTTT"]["inside_a_chain"] for c in target}
 
@@ -149,13 +151,13 @@ def main():
     print(f"fitted:      {show(best)}; objective {best[0]:.2f} (ridge {best[4]:.2f}) after {len(history)} evaluations, {time.time() - t0:.0f} s")
     spec = spec_of(best[1])
     out = {**spec, "what": "non-bonded terms of a unit's own atoms to put on the base (charge increments in e; lj: the wall's distance in A and depth in kcal/mol), "
-                           f"fitted to DFT's all-trans-minus-helix energies of {args.row}" + (", the part between chains (polyfind's cells upright)" if args.between else "")
+                           f"fitted to DFT's all-trans-minus-helix energies of {args.row}" + (", the part between chains (polyfind's cells with the shear free)" if args.between else "")
                            + " (examples/unit_nonbonded_fit.py)",
            "row": args.row, "variables": names, "at_the_base_values": {n: float(np.exp(v) if k == "lnD" else v) for n, k, v in zip(names, kinds, home)},
            "fitted_to": "between_chains" if args.between else "margins",
            "objective": best[0], "objective_at_the_base": at_base[0], "ridge": best[4], "evaluations": len(history), "stopped": None if sol is None else str(sol.message),
            "rows": {c: {"polyfind": float(best[2][c]), "dft": target.get(c), "at_the_base": float(at_base[2][c]), "fitted": c in target} for c in best[2]}}
-    if args.between:  # what was not fitted, for the record: the part inside a chain (upright cells), and the energies themselves with the shear free
+    if args.between:  # what was not fitted, for the record: the part inside a chain, and the energies themselves
         out["inside_a_chain"] = {c: {"polyfind": float(best[3][c]), "dft": inside[c], "at_the_base": float(at_base[3][c])} for c in inside}
         free, margin = cells_at(best[1], "at_" + "_".join(f"{v:.5f}" for v in best[1]))
         out["margin"], out["energies_shear_free"] = margin, {c: {"polyfind": float(free[c]), "dft": margins.get(c)} for c in free}
