@@ -1,0 +1,46 @@
+{
+ "what": "a kink pair's energy (T G+ T G- T on every chain of the cell, in register), kcal/mol per kink pair: the kinked cell minus the all-trans cell of the same lattice, per kinked chain. DFT is a single point on the cell the potential relaxed with the lattice held (the force left is stored); polyfind is the preset's own relaxation at its own all-trans lattice (examples/dilute_kink.py, stage flexible_host)",
+ "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)",
+ "lattices": {
+  "vdf10": {
+   "all_trans": "sheet_vdf10_belt4_TT_in_all_s1",
+   "kinked": "sheet_vdf10_belt4_ref_in_all_s1",
+   "atoms": 120,
+   "n_monomers": 20,
+   "kinked_chains": 2,
+   "cell_A_deg": [
+    4.754582183748331,
+    8.485766951267555,
+    25.800030622616163,
+    89.99999999998008,
+    90.00000000048004,
+    90.0000000158124
+   ],
+   "volume_A3_per_monomer": 52.0467582823256,
+   "dft": 4.820454608807293,
+   "potential": 4.684601434538456,
+   "largest_force_left_eV_per_A": 0.16442179,
+   "potential_minus_dft_meV_per_monomer": {
+    "all_trans": -0.5718082770727051,
+    "kinked": -1.16092462008055
+   },
+   "kink_dihedrals_deg": [
+    [
+     80.53313985330647,
+     178.14268308121336,
+     -67.61911598379962
+    ],
+    [
+     80.53338499348126,
+     178.14267672139704,
+     -67.61931186285008
+    ]
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10@0, the kinked crystal, pendants as built",
+   "polyfind": 5.297951944114729
+  }
+ },
+ "polyfind_only": {
+  "belt4_with_tilts": 5.063
+ }
+}

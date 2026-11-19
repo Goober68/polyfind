@@ -156,14 +156,19 @@ def kink_collect(args):
     spec = importlib.util.spec_from_file_location("chain_split", Path(__file__).with_name("chain_split.py"))
     CS = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(CS)
-    out = {"what": "a kink pair's energy (T G+ T G- T on every chain of the cell, in register), kcal/mol per kink pair: the kinked cell minus the all-trans cell of the "
-                   "same lattice, per kinked chain. DFT is a single point on the cell the potential relaxed with the lattice held (the force left is stored); "
-                   "polyfind is the preset's own relaxation at its own all-trans lattice (examples/dilute_kink.py, stage flexible_host)",
+    out = {"what": "a kink pair's energy (T G+ T G- T on every chain of the cell, in register), kcal/mol per kink pair: the kinked cell minus the all-trans cell, per "
+                   "kinked chain. own_cells false: the two share a lattice (a kink at a held lattice); true: each was relaxed with its cell free (a kink sheet in its "
+                   "own cell). DFT is a single point on each cell as the potential relaxed it (the force and the stress left are stored); polyfind is the preset's "
+                   "own value for the structure in source. steps: the kinked cell relaxed on in the potential tilted to DFT's forces and stress "
+                   "(examples/mlip_train.py relax --dft-gradient) and labelled again; dft_predicted is what that step expected of DFT",
            "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)", "lattices": {}}
+    GPA = 160.21766
     frames = []
+    steps = {item.split("=")[0]: item.split("=")[1].split(",") for item in args.steps}
     for item in args.pairs:
         name, files = item.split("=")
         tt, kinked = (read(f) for f in files.split(","))
+        later = []
         n, chains = int(tt.info["n_monomers"]), int(kinked.info["kinked_chains"])
         per = lambda key: (float(kinked.info[key]) * (n if "per_monomer" in key else 1) - float(tt.info[key]) * (n if "per_monomer" in key else 1)) * KCAL / chains  # noqa: E731
         torsions = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(kinked, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(kinked)]
@@ -174,13 +179,33 @@ def kink_collect(args):
                "potential_minus_dft_meV_per_monomer": {"all_trans": 1e3 * (float(tt.info["potential_eV_per_monomer"]) - float(tt.info["REF_energy"]) / n),
                                                        "kinked": 1e3 * (float(kinked.info["potential_eV_per_monomer"]) - float(kinked.info["REF_energy"]) / n)},
                "kink_dihedrals_deg": [t[:3] for t in torsions], "source": str(kinked.info.get("source", ""))}
+        rec["own_cells"] = bool(np.abs(kinked.cell.array - tt.cell.array).max() > 1e-6)
+        if rec["own_cells"]:
+            rec["kinked_cell_A_deg"] = [float(v) for v in kinked.cell.cellpar()]
+        if "REF_stress" in tt.info and "REF_stress" in kinked.info:
+            rec["largest_stress_left_GPa"] = {"all_trans": float(np.abs(tt.info["REF_stress"]).max() * GPA), "kinked": float(np.abs(kinked.info["REF_stress"]).max() * GPA)}
         if "polyfind_kcal_per_kink_pair" in kinked.info and "carried to the lattice" not in rec["source"]:
             rec["polyfind"] = float(kinked.info["polyfind_kcal_per_kink_pair"])
+        for k, f in enumerate(steps.get(name, []), start=1):  # the kinked cell after each Newton step toward DFT's own minimum
+            b = read(f)
+            moved = (b.get_scaled_positions(wrap=False) - kinked.get_scaled_positions(wrap=False)) @ b.cell.array
+            turns = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(b, idx, P, T))["dihedrals"]][:3] for idx, P, T in CS.chains_of(b)]
+            rec.setdefault("steps", []).append({
+                "frame": str(b.info["frame"]), "from": str(b.info.get("start_frame", "")), "cell_A_deg": [float(v) for v in b.cell.cellpar()],
+                "dft": (float(b.info["REF_energy"]) - float(tt.info["REF_energy"])) * KCAL / chains,
+                "dft_predicted": (float(b.info["dft_predicted_eV_per_monomer"]) * n - float(tt.info["REF_energy"])) * KCAL / chains,
+                "largest_force_left_eV_per_A": float(np.abs(b.arrays["REF_forces"]).max()), "largest_stress_left_GPa": float(np.abs(b.info["REF_stress"]).max() * GPA),
+                "largest_move_from_the_first_cell_A": float(np.linalg.norm(moved, axis=1).max()), "kink_dihedrals_deg": turns})
+            later.append(b)
         out["lattices"][name] = rec
-        frames += [tt, kinked]
-        print(f"{name}: cell {np.round(rec['cell_A_deg'], 3).tolist()}, {rec['volume_A3_per_monomer']:.2f} A3 a monomer; kink pair DFT {rec['dft']:+.3f}, the potential {rec['potential']:+.3f}"
+        frames += [tt, kinked, *later]
+        print(f"{name}: cell {np.round(rec['cell_A_deg'], 3).tolist()}" + (f" (kinked {np.round(rec['kinked_cell_A_deg'], 3).tolist()})" if rec["own_cells"] else "")
+              + f", {rec['volume_A3_per_monomer']:.2f} A3 a monomer; kink pair DFT {rec['dft']:+.3f}, the potential {rec['potential']:+.3f}"
               + (f", polyfind {rec['polyfind']:+.3f}" if "polyfind" in rec else "") + f"; force left {rec['largest_force_left_eV_per_A']:.2f} eV/A; kink at "
               + ", ".join(f"{v:.0f}" for v in rec["kink_dihedrals_deg"][0]))
+        for k, st in enumerate(rec.get("steps", []), start=1):
+            print(f"  step {k}: DFT {st['dft']:+.3f} (expected {st['dft_predicted']:+.3f}); force left {st['largest_force_left_eV_per_A']:.2f} eV/A, "
+                  f"stress {st['largest_stress_left_GPa']:.2f} GPa; kink at " + ", ".join(f"{v:.0f}" for v in st["kink_dihedrals_deg"][0]))
     for item in args.also:  # numbers with no DFT of their own: NAME=polyfind kcal per kink pair, as chain1 at its own lattice
         name, value = item.split("=")
         out.setdefault("polyfind_only", {})[name] = float(value)
@@ -343,7 +368,9 @@ def main():
     s.add_argument("--all-trans", default="docs/predictions/rows14_potential.json", help="the rows' cells in the same potential")
     s.add_argument("--out", required=True)
     s = sub.add_parser("kink-collect", help="a kink's energy from labelled frames")
-    s.add_argument("--pairs", nargs="+", required=True, help="NAME=ALL_TRANS.dft.xyz,KINKED.dft.xyz, one lattice each")
+    s.add_argument("--pairs", nargs="+", required=True, help="NAME=ALL_TRANS.dft.xyz,KINKED.dft.xyz: one lattice for both, or each cell its own")
+    s.add_argument("--steps", nargs="*", default=[], help="NAME=KINKED_STEP1.dft.xyz[,STEP2...]: the pair's kinked cell relaxed on in the potential tilted to DFT's forces "
+                                                           "(examples/mlip_train.py relax --dft-gradient) and labelled, in order")
     s.add_argument("--also", nargs="*", default=[], help="NAME=VALUE: a polyfind number with no DFT of its own, kept beside the others")
     s.add_argument("--out", required=True)
     s.add_argument("--extxyz", default="", help="store the labelled frames here")

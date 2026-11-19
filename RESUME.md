@@ -479,9 +479,23 @@ right": true at one registry, not along it).
         /opt/dft/kink10/sheet_vdf10_belt4_{TT,ref}.start.xyz --out /opt/dft/kink10 --threads 4 --fmax 0.02`;
         `python -I examples/mlip_frames.py label --frames /opt/dft/kink10 --names
         sheet_vdf10_belt4_ref_in_all_s1,sheet_vdf10_belt4_TT_in_all_s1 --pw /opt/mm/qe/bin/pw.x --pseudo
-        /opt/pseudo --np 4 --pools 1` (the same command goes on after a stop). THEN `row_cells_frames.py
-        kink-collect --pairs vdf10=TT.dft.xyz,ref.dft.xyz --out docs/predictions/kink_dft_vdf10.json --extxyz
-        docs/predictions/mlip/kink_vdf10_frames_pbe_d3bj.extxyz`, docs 3.19, a test.
+        /opt/pseudo --np 4 --pools 1` (the same command goes on after a stop). DONE 23:49 UTC (33 minutes a
+        cell): DFT'S SINGLE POINTS ON THE TWO CELLS GIVE +4.820 (the potential +4.685 on the same cells, belt4
+        +5.298 in its own). BUT DFT LEAVES 0.16 eV/A AND 0.19 GPa ON THE KINKED CELL (0.01 and 0.08 on the
+        all-trans one), and one Newton step toward DFT's own minimum (`mlip_train.py relax --dft-gradient
+        --max-move 0.5 --cells /opt/dft/kink10/sheet_vdf10_belt4_{TT,ref}_in_all_s1.dft.xyz --out
+        /opt/dft/kink10/tilted`) moves atoms up to 0.57 A, shears the cell by 0.8 degrees and EXPECTS DFT AT
+        +4.03. That is too large a step to quote unchecked: DFT ON THE STEPPED CELL IS RUNNING (23:56 UTC, about
+        35 minutes; `mlip_frames.py label --frames /opt/dft/kink10/tilted --names
+        sheet_vdf10_belt4_ref_in_all_s1_in_all_s1 --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --np 4 --pools 1`,
+        the same command goes on after a stop). THEN `row_cells_frames.py kink-collect --pairs
+        vdf10=/opt/dft/kink10/sheet_vdf10_belt4_TT_in_all_s1.dft.xyz,/opt/dft/kink10/sheet_vdf10_belt4_ref_in_all_s1.dft.xyz
+        --steps vdf10=/opt/dft/kink10/tilted/sheet_vdf10_belt4_ref_in_all_s1_in_all_s1.dft.xyz --also
+        belt4_with_tilts=5.063 --out docs/predictions/kink_dft_vdf10.json --extxyz
+        docs/predictions/mlip/kink_vdf10_frames_pbe_d3bj.extxyz` (`--steps` is new: the kinked cell after each
+        Newton step, labelled), docs 3.19, a test. If DFT still leaves a force on the stepped cell, step and
+        label once more. The same step on the six-monomer kink of 3.17 (lattice held) expects DFT to drop by
+        only 0.04 to 0.05: those numbers stand as they are.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE
