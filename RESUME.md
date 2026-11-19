@@ -294,19 +294,42 @@ right": true at one registry, not along it).
         bonds of opposite sense side by side; the chains broke up); dropped, frames in `/opt/dft/cfeconf/broken`.
         Frames `cfe4_tt`, `cfe4_helix`, `cfe4_helix2` (the unit one in four, 24 atoms) are built in
         `/opt/dft/cfeconf` and NOT settled: a further test of the triple, after the unit checks.
-        THE OTHER UNITS (the nitrile, TFE, CDFE, ethylene, VF, DFE): UNTESTED UNTIL THEIR CHECK. Rows by unit: AN
-        in 7 of the 35, CDFE 4, TFE 2, ethylene 2, VF 1, DFE 1 (15 rows in all); CFE 9, CTFE 3; 9 rows VDF, TrFE and
-        reversed VDF only. `examples/unit_dft_check.py --row ROW --work /opt/dft/unit4 --model
+        THE NITRILE CELL IN DFT (2026-11-19 06:30 UTC): ALL-TRANS IS BELOW EVERY HELIX PLACEMENT, AND BOTH PRESETS
+        HAVE THE SIGN WRONG. VRVA (`vdf2-trfe1-an1-4`): all-trans minus helix -0.386 (TGTG'), -0.404 (TG'TG), -0.678
+        (G'TGT); chain1 margin +0.258, belt4 +0.354. Split: DFT -0.386 = +2.128 inside a chain - 2.514 between
+        chains; chain1 off by -0.144 inside and +0.590 BETWEEN CHAINS (belt4 -0.277, +0.365). So not a torsion: the
+        nitrile's own non-bonded terms. Nitrogen is at UFF (3.66 A, 0.069) in every preset, and the C-N charge
+        increment is 0.37 e (a group dipole near 2.1 D; a nitrile's is near 3.9), never a target. A scan
+        (scratch): with the increment at 0.75 the three placements go to -0.160, -0.279, -0.547; at 0.99 they
+        scatter (cells change basin). `fitting.with_terms(base, lj=, charge_increments=)` and a parameter file's
+        `lj` / `charge_increments` put such terms on a preset. RUNNING (06:50 UTC, background, one core):
+        `python examples/unit_nonbonded_fit.py --base pvdf-dft-chain1-cfe --row vdf2-trfe1-an1-4 --increment C-N
+        --element N --start C-N=0.75 --work /opt/dft/anfit --maxfev 6 --out
+        docs/predictions/unit_nonbonded_an_chain1.json` (log `/opt/dft/anfit_1.log`; two minutes a step; steps are
+        kept in the work folder by their parameters, so a rerun goes on). THE TEST IS A SECOND NITRILE CELL, VVVA
+        (`vdf3-an1-4`, declared in `candidate_screen.SEQUENCES`): its DFT check is first in the batch below;
+        then `rows_under_preset.py --preset docs/predictions/unit_nonbonded_an_chain1.json --rows vdf3-an1-4
+        --polished docs/predictions/polished_margins_belt4_dft_rows.json --references
+        docs/predictions/dilute_kink_belt4_dft_rows.json --out NEW.json` against DFT's margin, and the split
+        (`chain_split.py polyfind --fit new=THAT_FILE --row ... --confs "HELIX,TTTT"`). 7 OF THE 35 ROWS HOLD A
+        NITRILE; IF THE UNIT PINS ALL-TRANS AT ONE IN FOURTEEN AS IT DOES AT ONE IN FOUR, THOSE ROWS MOVE DOWN
+        TOWARD THE WINDOW, WHERE THE CFE ROWS MOVE UP (terpolymer +0.359 under chain1-cfe, matrix +0.222).
+        THE OTHER UNITS (TFE, CDFE, ethylene, VF, DFE): UNTESTED UNTIL THEIR CHECK. Rows by unit: AN in 7 of the
+        35, CDFE 4, TFE 2, ethylene 2, VF 1, DFE 1 (15 rows in all); CFE 9, CTFE 3; 9 rows VDF, TrFE and reversed
+        VDF only. `examples/unit_dft_check.py --row ROW --work /opt/dft/unit4 --model
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
-        /opt/dft/chainsplit/check --threads 3` runs the whole check for one small row and goes on from where it
-        stopped (about an hour a unit). Rows `vdf2-trfe1-{cdfe,an,tfe,vf,e,dfe,rvdf}1-4` are in
-        `candidate_screen.SEQUENCES`. RUNNING (04:47 UTC, background, ends by itself before two hours): the check
-        of `an`, then `tfe` with what time is left. THEN: cdfe, e, vf, dfe. A unit that fails gets lone-chain
-        conformers in `chain_conformers.CHAINS` (HELIX PLACEMENTS ONLY: a gauche bond next to one of the
-        opposite sense is not a conformer; add the unit's bonds to `TYPE_OF`), `settle`, `collect`, then
-        `unit_torsion_fit.py --base pvdf-dft-chain1-cfe --type ITS_BOND`, accepted on its four-monomer cell.
-        THE 35 ROWS, MARGINS UNDER `pvdf-dft-chain1-cfe`: RUNNING FOR THE 20 ROWS WHOSE UNITS ARE CHECKED (one
-        process beside the DFT: `python examples/rows_under_preset.py --preset pvdf-dft-chain1-cfe --redo-failed
+        /opt/dft/chainsplit/check --threads 3 --np 3` runs the whole check for one small row and goes on from
+        where it stopped (about an hour a unit). Rows `vdf2-trfe1-{cdfe,tfe,vf,e,dfe,rvdf}1-4` are in
+        `candidate_screen.SEQUENCES`. RUNNING (06:44 UTC, background, ends by itself before two hours): the
+        checks of `vdf3-an1-4`, then `vdf2-trfe1-cdfe1-4`, then `vdf2-trfe1-tfe1-4` (polyfind's side done: chain1
+        -0.060, belt4 +0.224; cells part-relaxed in the potential). THEN: e, vf, dfe. THE MACHINE HAS FOUR CORES:
+        DFT ON THREE (`--np 3`) AND ONE OTHER JOB, NO MORE (a fifth process doubled a DFT step's time). A unit
+        that fails INSIDE THE CHAIN gets lone-chain conformers (`chain_conformers.CHAINS` has an2, vf2, cdfe2,
+        e2, tfe2, dfe2, ctfe2: all-trans and the helix placements that differ; `frames`, `settle`, `collect`),
+        then `unit_torsion_fit.py --base pvdf-dft-chain1-cfe --type ITS_BOND`; one that fails BETWEEN CHAINS gets
+        `unit_nonbonded_fit.py`; either is accepted on a cell that was not in the fit.
+        THE 35 ROWS, MARGINS UNDER `pvdf-dft-chain1-cfe`: FOR THE 20 ROWS WHOSE UNITS ARE CHECKED (stopped by itself at 06:50 UTC
+        with 8 of the 20; run it again WHEN THE NITRILE FIT HAS FREED ITS CORE: `python examples/rows_under_preset.py --preset pvdf-dft-chain1-cfe --redo-failed
         --minutes 105 --rows vdf9-trfe4-cfe1-14,vdf7-trfe2-cfe1,vdf13-trfe6-cfe1-20,vdf6-trfe3-cfe1,vdf7-trfe2-cfe1-adj,vdf9-cfe1,vdf8-cfe2,vdf8-trfe4-cfe1-rvdf1-14,vdf9-trfe4-ctfe1-14,vdf7-trfe2-ctfe1,vdf8-trfe4-ctfe1-rvdf1-14,vdf5-trfe5,vdf9-trfe4-rvdf1-14,vdf12-rvdf2-14
         --out /opt/dft/margins_chain1-cfe.json`, log `/opt/dft/rows_cfe_1.log`; run it again after a stop). The
         checkpoint was seeded with the six rows of chain1's run that hold no CFCl carbon (the two presets are the
