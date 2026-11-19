@@ -1840,6 +1840,57 @@
     },
     "threshold_field_MV_m": 1632.4705568249442
    }
+  },
+  "vdf2-trfe1-e1-4": {
+   "letters": "VRVE",
+   "note": "one ethylene and one TrFE in four, for a DFT check of the unit",
+   "validated_chemistry": false,
+   "conformations": {
+    "TTTT": {
+     "energy_rigid_per_monomer_kcal": -2.0407930765819353,
+     "P_C_m2": [
+      -0.0984442608494867,
+      0.07124999559954073,
+      -0.00018031494107957502
+     ],
+     "P_abs_C_m2": 0.12152311253672829,
+     "c_per_monomer_A": 2.579466366147195,
+     "volume_per_monomer_A3": 54.01639602244785,
+     "cell": {
+      "a": 4.963876889689215,
+      "b": 8.439978527896523,
+      "gamma_deg": 88.5629616009942,
+      "c": 10.31786546458878,
+      "volume_A3": 432.1311681795828
+     },
+     "monomers_per_cell": 8,
+     "dipole_per_monomer_eA": 0.40970767101228445,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.10663372610437705,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 1.8054972515426249,
+       "wag": 1.1279735238917252,
+       "twist": 0.19185318159364032,
+       "n": 6
+      },
+      "FH": {
+       "rock": 0.45981459282892756,
+       "wag": 0.47513196283556486,
+       "twist": 0.8507560402642028,
+       "n": 2
+      },
+      "HH": {
+       "rock": 0.8846268957695063,
+       "wag": 0.35860721941660917,
+       "twist": 0.28264120432332385,
+       "n": 8
+      }
+     },
+     "energy_per_monomer_kcal": -2.1474268026863124,
+     "seconds": 25.504316329956055
+    }
+   },
+   "derived": {}
   }
  }
 }
