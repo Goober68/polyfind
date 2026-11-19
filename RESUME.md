@@ -469,6 +469,19 @@ right": true at one registry, not along it).
         is recomputed with the leader's shift -0.740 (= 0.655 - 1.395); this SUPERSEDES the 3.8 MHz row written
         at 20:00 UTC above. ONE RELAXATION FROM ONE STARTING CELL, NO DFT: the full scan and DFT on the lowest
         sheets are the pod's job.
+        A REAL KINK SHEET TO DFT, RUNNING (22:42 UTC, four cores, one pool, 6.6 GB by pw.x's estimate, ends by
+        itself): PVDF, ten monomers, 120 atoms, the kinked crystal in its own cell (the six-monomer cell holds
+        only one squeezed kink: its other five sites and the other hand all collapse under chain1). belt4 +5.298
+        kcal/mol per kink pair (5.063 with tilts); THE POTENTIAL +4.685, both cells relaxed with the cell free,
+        kink kept (81, 178, -68). `python examples/row_cells_frames.py kink --sheet-of "vdf10@0" --dilute
+        docs/predictions/dilute_kink_belt4.json --kmesh "4 2 1" --out /opt/dft/kink10` (new option: a stored
+        kinked crystal of `kink_migration_belt4.json` and its all-trans cell); `mlip_train.py relax ... --cells
+        /opt/dft/kink10/sheet_vdf10_belt4_{TT,ref}.start.xyz --out /opt/dft/kink10 --threads 4 --fmax 0.02`;
+        `python -I examples/mlip_frames.py label --frames /opt/dft/kink10 --names
+        sheet_vdf10_belt4_ref_in_all_s1,sheet_vdf10_belt4_TT_in_all_s1 --pw /opt/mm/qe/bin/pw.x --pseudo
+        /opt/pseudo --np 4 --pools 1` (the same command goes on after a stop). THEN `row_cells_frames.py
+        kink-collect --pairs vdf10=TT.dft.xyz,ref.dft.xyz --out docs/predictions/kink_dft_vdf10.json --extxyz
+        docs/predictions/mlip/kink_vdf10_frames_pbe_d3bj.extxyz`, docs 3.19, a test.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE
