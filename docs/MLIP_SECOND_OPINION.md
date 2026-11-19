@@ -19,7 +19,9 @@ frame is in the repository, and two copolymer margins have been taken that way: 
 cell, +0.678, which both of polyfind's presets meet to 0.04, and the same cell with a CFE
 unit, +0.682, which one preset puts 0.30 lower and the other 0.38 higher. The error is at the
 bonds of the CFCl carbon; with a torsion term of their own, fitted to DFT on lone chains, the
-new preset gives +0.690 on that cell and passes on a CTFE cell too (3.11).
+new preset gives +0.690 on that cell and passes on a CTFE cell too (3.11). A nitrile cell is the
+other way round: DFT has all-trans below every helix (-0.386) where both presets have a helix
+lowest, and the error is between chains as well as inside (3.12).
 
 ## 1. The test
 
@@ -860,3 +862,81 @@ preset), `row_cells_dft_vdf2-trfe1-ctfe1-4.json` and `chain_split_dft_vdf2-trfe1
 (the CTFE cell in DFT), `mlip/row_cells_vdf2-trfe1-ctfe1-4_frames_pbe_d3bj.extxyz` (2 frames),
 `chain_split_polyfind_dft_rows.json` (polyfind's splits, set `chain1-cfe`). Tests:
 `tests/test_row_cells_dft.py`.
+
+### 3.12 The nitrile: all-trans below every helix in DFT, and both presets have the sign wrong (2026-11-19)
+
+The same check for acrylonitrile (`examples/unit_dft_check.py --row vdf2-trfe1-an1-4`: VRVA, one
+nitrile and one TrFE in four, fifty atoms): chain1's cells relaxed in our potential, then one DFT
+single point on the all-trans cell and on each of the three helix placements the potential put
+within 0.15 of its lowest (0.10 to 0.15 eV/A left).
+
+| all-trans minus helix, kcal/mol per monomer | DFT | chain1 | belt4 | `all_s1` alone |
+|---|---:|---:|---:|---:|
+| helix TGTG' | **-0.386** | +0.258 | -0.224 | -0.466 |
+| helix TG'TG | -0.404 | -0.776 | -0.818 | -0.352 |
+| helix G'TGT | -0.678 | -0.360 | +0.354 | -0.383 |
+| the margin (against the lowest helix) | **-0.386** | +0.258 | +0.354 | -0.352 |
+
+- **In DFT the all-trans cell is the lowest, by 0.39 over the best helix placement.** With a
+  VDF in the nitrile's place (VVRV, 3.10) the margin is +0.678: one nitrile in four moves it by
+  -1.06 per monomer, -4.3 kcal/mol per nitrile unit. In this cell the nitrile pins all-trans.
+- **Both presets have a helix cell lowest**, each on a different placement, and are off on single
+  placements by up to 0.64 (chain1) and 1.03 (belt4). Seven of the 35 rows hold a nitrile.
+- The potential, which was never shown this cell, has the sign and the margin to 0.03; on single
+  placements it is off by 0.05 to 0.30.
+- **This is one cell, a dense one**, as the CFE cell was: a nitrile on every chain, one in four.
+  The rows have one in ten or fourteen. Whether the pin holds there is not known from this.
+
+Split by lone chains cut from each cell (one more DFT point a cell), against polyfind's cells
+held upright as in 3.10:
+
+| all-trans minus helix | cell | inside a chain | between chains |
+|---|---:|---:|---:|
+| TGTG': DFT | -0.386 | +2.128 | -2.514 |
+| chain1 | +0.060 | +1.984 | -1.924 |
+| belt4 | -0.298 | +1.852 | -2.149 |
+| TG'TG: DFT | -0.404 | +0.212 | -0.616 |
+| chain1 | -0.790 | -0.240 | -0.551 |
+| belt4 | -0.937 | -0.260 | -0.677 |
+| G'TGT: DFT | -0.678 | +1.090 | -1.767 |
+| chain1 | -0.355 | +0.748 | -1.103 |
+| belt4 | +0.344 | +1.935 | -1.591 |
+
+- **chain1 is wrong on both parts.** Between chains it is 0.59 and 0.66 short of DFT's binding of
+  the all-trans cell on two placements (0.07 on the third). Inside the chain it is 0.14 to 0.45
+  low. The CFE unit's error was inside the chain only.
+- DFT's cells here are sheared along the chains (the TGTG' cell by 15 degrees) and polyfind's
+  split holds its cells upright. With polyfind's own shear-free cells
+  (`chain_split.py polyfind --states`) chain1's errors between chains are +0.81, +0.04 and
+  +0.70, and inside -0.16, -0.41, -0.38. The fits below use the shear-free cells.
+- **Why between chains.** Nitrogen's wall is at its UFF values in every preset (3.66 A, 0.069
+  kcal/mol): the walls of H, C and F were refitted for chain1 and nitrogen's was not. The charge
+  the C-N bond moves is 0.37 e, a bond dipole of 2.1 D, and it was never a fitting target.
+
+The lone chains of the alternating VDF-AN polymer in DFT (`chain_conformers.py`, chain `an2`,
+0.01 eV/A left), which are what a torsion term for the nitrile's bonds is fitted to:
+
+| against the all-trans chain, kcal/mol per monomer | DFT | chain1 |
+|---|---:|---:|
+| helix, one placement (the CH-CH2 bond at -83 degrees) | -1.569 | -0.535 |
+| helix, the other (+56 degrees) | +0.367 | +1.286 |
+
+chain1 has both about 1.0 too high and their difference right (1.82 against 1.94).
+
+**A first fit, and why it is not the fix.** Fitting the C-N increment and nitrogen's wall to
+the three energies of the table (`examples/unit_nonbonded_fit.py`; 0.747 e, 3.70 A, 0.043)
+brings them to -0.380, -0.358 and -0.716, within 0.05 of DFT. Split, the lowest placement is
+then +0.50 too high inside the chain and 0.59 too low between chains: two errors that cancel,
+which is how belt4 was right on TrFE and wrong elsewhere. On the lone chains that charge takes
+the two placements 3.16 apart where DFT has 1.94. It is kept as
+`docs/predictions/unit_nonbonded_an_margins_chain1.json` and not used. The fit that replaces it
+takes the between-chains parts as its rows, leaves the inside to a torsion term fitted to the
+lone chains, and keeps the energies and a second cell (VVVA, no TrFE) as tests.
+
+**What this reads on.** The margin only: the strain axis. Nothing here is a loss, a rate or a
+blocked stress.
+
+Files: `docs/predictions/row_cells_dft_vdf2-trfe1-an1-4.json`,
+`chain_split_dft_vdf2-trfe1-an1-4.json`, `mlip/row_cells_vdf2-trfe1-an1-4_frames_pbe_d3bj.extxyz`
+(4 frames), `chain_conformers_an_pbe_d3bj.json`, `chain_split_polyfind_dft_rows.json` (sets
+`chain1`, `belt4`, `an-fitted-to-margins`). Tests: `tests/test_row_cells_dft.py`.
