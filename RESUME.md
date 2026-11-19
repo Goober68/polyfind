@@ -279,7 +279,9 @@ right": true at one registry, not along it).
         is right by two errors of 0.7 cancelling; chain1's are +0.13 and -0.22. THE POTENTIAL finds the geometry
         but its own margins are 0.07 to 0.10 from DFT's: relax in it, then ask DFT.
         EVERY OTHER UNIT IS UNTESTED IN THE SAME WAY (CTFE, CDFE, the nitrile, TFE, VF, ethylene, DFE): 15 of the
-        35 rows hold chlorine and 9 more hold one of the others. `examples/unit_dft_check.py --row ROW --work
+        35 rows hold chlorine and 11 more hold one of the others; 9 rows are VDF, TrFE and reversed VDF only, the
+        tested chemistry (6 of them have their chain1 margin; `vdf5-trfe5`, `vdf9-trfe4-rvdf1-14`, `vdf12-rvdf2-14`
+        do not yet). `examples/unit_dft_check.py --row ROW --work
         /opt/dft/unit4 --model docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo
         --check /opt/dft/chainsplit/check` runs the whole check for one small row and goes on from where it
         stopped (about an hour a unit: five relaxations in the potential, two or three DFT cells of 10 to 15
