@@ -278,3 +278,35 @@ def test_the_rows_under_chain1_cfe_are_the_24_without_a_nitrile_or_an_unchecked_
     assert sorted(k for k, v in m.items() if v < 0.0) == ["vdf12-rvdf2-14", "vdf5-rvdf1-6", "vdf7-trfe2-cdfe1", "vdf8-trfe4-cfe1-rvdf1-14", "vdf9-trfe4-rvdf1-14"]
     # a row's strain along the chain is stored beside its margin; the other three axes are not here
     assert all(0.08 < e["strain_along_chain"] < 0.13 for e in rows.values())
+
+
+def test_the_tfe_cell_is_met_by_chain1_and_missed_by_the_potential():
+    """VRVF, one TFE and one TrFE in four: all-trans the lower by a little.  The one cell so far on which the potential's own margin is far out."""
+    r = _stored("vdf2-trfe1-tfe1-4")
+    m = r["margins"]["free"]
+    assert m["dft"] == pytest.approx(-0.076, abs=0.002) and m["largest_force_left_eV_per_A"] < 0.08
+    assert r["polyfind"]["chain1"]["margin"] - m["dft"] == pytest.approx(+0.016, abs=0.003)
+    assert r["polyfind"]["belt4"]["margin"] - m["dft"] == pytest.approx(+0.300, abs=0.003)
+    assert m["potential"] - m["dft"] == pytest.approx(-0.358, abs=0.003)
+    split = next(iter(json.loads((PRED / "chain_split_dft_vdf2-trfe1-tfe1-4.json").read_text())["pairs"].values()))
+    assert split["inside_a_chain"] == pytest.approx(0.895, abs=0.003) and split["between_chains"] == pytest.approx(-0.971, abs=0.003)
+    own = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]["chain1"]
+    q, t = own["vdf2-trfe1-tfe1-4"]["pairs"]["TTTT minus TGTG'"], own["vdf3-trfe1-4"]["pairs"]["TTTT minus TG'TG"]
+    # chain1's two parts are 0.26 and 0.29 off, opposite ways: 0.12 and 0.08 more than its own errors on the TrFE cell (0.13, 0.22)
+    assert q["inside_a_chain"] - split["inside_a_chain"] == pytest.approx(+0.255, abs=0.005) and q["between_chains"] - split["between_chains"] == pytest.approx(-0.293, abs=0.005)
+    trfe = json.loads((PRED / "chain_split_dft_rows_pbe_d3bj.json").read_text())["pairs"]["row_vdf3-trfe1-4_TTTT_chain1_in_all_s1 minus row_vdf3-trfe1-4_TGpTG_chain1_upright_in_all_s1"]
+    assert (q["inside_a_chain"] - split["inside_a_chain"]) - (t["inside_a_chain"] - trfe["inside_a_chain"]) == pytest.approx(+0.121, abs=0.006)
+
+
+def test_the_potentials_own_margin_on_the_seven_small_cells():
+    """Within 0.11 kcal/mol per monomer of DFT on six of them and 0.36 off on the TFE cell: an indication, not a referee."""
+    off = {}
+    for row in ("vdf3-trfe1-4", "vdf2-trfe1-cfe1-4", "vdf2-trfe1-ctfe1-4", "vdf2-trfe1-an1-4", "vdf3-an1-4", "vdf2-trfe1-cdfe1-4", "vdf2-trfe1-tfe1-4"):
+        m = _stored(row)["margins"]["free"]
+        off[row] = m["potential"] - m["dft"]
+    assert max(abs(v) for k, v in off.items() if k != "vdf2-trfe1-tfe1-4") < 0.115
+    assert off["vdf2-trfe1-tfe1-4"] == pytest.approx(-0.358, abs=0.003)
+    # and it has the sign of every margin
+    for row in off:
+        m = _stored(row)["margins"]["free"]
+        assert m["potential"] * m["dft"] > 0

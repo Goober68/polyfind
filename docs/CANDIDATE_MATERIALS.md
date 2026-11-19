@@ -42,8 +42,8 @@ the smallest cell that holds it (four monomers a chain) and compare the margin w
   nitrile.
 - **Belt4 is right on TrFE by two errors that cancel** (0.7 inside the chain against 0.7 between
   chains) and wrong on CFE by 0.38, CTFE by 0.42 and CDFE by 0.75 in those cells.
-- A newer preset, `pvdf-dft-chain1-cfe`, meets DFT on TrFE, reversed VDF, CFE and (at the edge)
-  CTFE. The 24 rows without a nitrile or an unchecked unit have their margins under it in 3.13.
+- A newer preset, `pvdf-dft-chain1-cfe`, meets DFT on TrFE, reversed VDF, CFE, TFE and (at the
+  edge) CTFE. The 24 rows without a nitrile or an unchecked unit have their margins under it in 3.13.
   They are margins only: the loss, the rate and the blocked stress of sections 5 and 8 have not
   been redone under it.
 

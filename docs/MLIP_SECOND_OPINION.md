@@ -970,7 +970,8 @@ shear-free), then a torsion triple for the nitrile's bonds to the lone chains on
   increment cannot move. That is a refit of the charge model on nitrile cells and lone chains,
   not a term added on.
 - The potential has both nitrile cells' margins to 0.03 and 0.08 without having been shown
-  either. For the seven nitrile rows it is the only evaluator here that is right to about 0.1.
+  either. For the seven nitrile rows it is the best evidence here (on the seven small cells of
+  3.13 it is within 0.11 of DFT on six and 0.36 off on the TFE cell).
 - **What it does to the ranking.** The leader of `docs/CANDIDATE_MATERIALS.md` 5.6 is a nitrile
   row (`vdf9-trfe3-an1-rvdf1-14`, belt4 +0.037). In belt4's fourteen-monomer cells the nitrile
   is a pin for the helix, +2.0 kcal/mol per unit (`vdf9-trfe4-an1-14` +0.197 against the
@@ -1028,7 +1029,32 @@ build at its ideal torsions, and the polish now says so and goes on):
 | CTFE (VRVK) | 3 | +0.315 | +0.400 | passes at the edge; its CF2-CFCl bond is not tested |
 | CDFE (VRVD) | 4 | +0.968 | +0.975 | the margin by cancellation: not passed |
 | acrylonitrile (VRVA, VVVA) | 7 | -0.386, -0.091 | +0.258, -0.292 | fails; no term of this form fixes it (3.12) |
-| TFE, ethylene, VF, DFE | 2, 2, 1, 1 | | | not checked yet |
+| TFE (VRVF) | 2 | -0.076 | -0.060 | passes: the margin to 0.02, its parts 0.26 and 0.29 off, 0.1 more than on the TrFE cell |
+| ethylene, VF, DFE | 2, 1, 1 | | | not checked yet |
+
+**TFE** (`vdf2-trfe1-tfe1-4`, VRVF; 0.07 eV/A left): DFT -0.076 = +0.895 inside a chain - 0.971
+between chains, all-trans the lower by a little. chain1 -0.060 with the shear free; upright on the
+same helix -0.115 = +1.150 - 1.264. Belt4 +0.224. chain1's two parts are off by +0.26 and -0.29,
+which is its error on the TrFE cell (+0.13, -0.22) and about 0.1 more each way. It is counted as
+passing, on the same standing as TrFE itself.
+
+**The potential's own margins on the seven cells**, since it is what would be used where polyfind
+has no preset:
+
+| cell | DFT | `all_s1` alone | off |
+|---|---:|---:|---:|
+| TrFE (VVRV) | +0.678 | +0.606 | -0.07 |
+| CFE (VRVC) | +0.682 | +0.768 | +0.09 |
+| CTFE (VRVK) | +0.315 | +0.205 | -0.11 |
+| nitrile (VRVA) | -0.386 | -0.466 | -0.08 |
+| nitrile (VVVA) | -0.091 | -0.008 | +0.08 |
+| CDFE (VRVD) | +0.968 | +0.935 | -0.03 |
+| TFE (VRVF) | -0.076 | -0.435 | **-0.36** |
+
+It has the sign of all seven and is within 0.11 on six. On the TFE cell it is 0.36 off: its own
+margin is an indication and not a referee, as 3.6 found on a packing it had not been shown. (For
+the nitrile rows of 3.12 that still makes it the better evidence: both presets have the wrong sign
+there.)
 
 **The 24 rows that hold none of the unchecked units and no nitrile**, each polished cell relaxed
 again under `pvdf-dft-chain1-cfe` with the shear free and the pendants tilted
