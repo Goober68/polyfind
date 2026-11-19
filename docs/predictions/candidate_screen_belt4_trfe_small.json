@@ -2318,6 +2318,57 @@
     },
     "threshold_field_MV_m": 712.2459265264996
    }
+  },
+  "vdf4-trfe2-6": {
+   "letters": "VVRVVR",
+   "note": "33 mol% TrFE, one unit in three, six monomers a chain: the matrix's own motif in a cell DFT can still do (seventy-two atoms), to say whose level is right where the potential and chain1 part on the fourteen-monomer matrix",
+   "validated_chemistry": true,
+   "conformations": {
+    "TTTT": {
+     "energy_rigid_per_monomer_kcal": -7.354744010396435,
+     "P_C_m2": [
+      0.008615387619742676,
+      0.16521497533580234,
+      -2.1760341707724387e-08
+     ],
+     "P_abs_C_m2": 0.16543945411856467,
+     "c_per_monomer_A": 2.58502502694666,
+     "volume_per_monomer_A3": 53.695032617744374,
+     "cell": {
+      "a": 4.926813759115716,
+      "b": 8.437857620916164,
+      "gamma_deg": 92.12578771243815,
+      "c": 15.51015016167996,
+      "volume_A3": 644.3403914129325
+     },
+     "monomers_per_cell": 12,
+     "dipole_per_monomer_eA": 0.5544505328966216,
+     "pendant_tilt_relaxation_per_monomer_kcal": -0.039973858965263766,
+     "pendant_tilts_deg": {
+      "FF": {
+       "rock": 0.35688965938957723,
+       "wag": 1.4192943012125265,
+       "twist": 0.006386480578796558,
+       "n": 12
+      },
+      "FH": {
+       "rock": 8.390097091030486e-05,
+       "wag": 0.5146496743296742,
+       "twist": 1.0803812471697928e-05,
+       "n": 4
+      },
+      "HH": {
+       "rock": 0.6803116027147127,
+       "wag": 1.0301041707629424,
+       "twist": 0.2140245173648897,
+       "n": 8
+      }
+     },
+     "energy_per_monomer_kcal": -7.394717869361699,
+     "seconds": 47.98911905288696
+    }
+   },
+   "derived": {}
   }
  }
 }

@@ -327,48 +327,54 @@ right": true at one registry, not along it).
         THOSE ROWS MOVE DOWN TOWARD THE WINDOW, WHERE THE CFE ROWS MOVE UP (terpolymer +0.359 under chain1-cfe,
         matrix +0.222). THAT IS THE QUESTION THE POD RUN PUT TO THE PI WOULD ANSWER (all 35 rows' cells relaxed in
         the potential; no answer yet, NO POD WITHOUT IT).
-        THE LEADER OF THE belt4 RANKING IS A NITRILE ROW AND DOES NOT STAND AS WRITTEN (`vdf9-trfe3-an1-rvdf1-14`,
-        belt4 +0.037; caution at the head of `docs/CANDIDATE_MATERIALS.md`): belt4's nitrile is a helix pin of +2.0
-        per unit at one in fourteen, DFT's an all-trans pin of -3.3 to -4.3 at one in four; if DFT's held at one
-        in fourteen the leader would be near -0.35. THE CHECK, RUNNING LOCALLY (11:46 UTC, background, two
-        threads, ends by itself): the leader's five cells relaxed in the potential at its own dilution.
-        Starting cells: `/opt/dft/cells_chain1-cfe_an.json` (rows `vdf9-trfe3-an1-rvdf1-14`, `vdf9-trfe4-an1-14`
-        under chain1-cfe: GEOMETRIES ONLY, the preset does not have the nitrile); atoms in `/opt/dft/rows14an`
-        (`row_cells_frames.py write --margins THAT --row ROW --kmesh "4 2 1" --out /opt/dft/rows14an`, 170
-        atoms a cell); `mlip_train.py relax --model docs/predictions/mlip/models/all_s1.model --name all_s1
-        --cells /opt/dft/rows14an/row_vdf9-trfe3-an1-rvdf1-14_{TTTT,TGTGp,GTGpT,GpTGT,TGpTG}_cfe.start.xyz --out
-        /opt/dft/rows14an --threads 2 --fmax 0.02 --steps 800` (log `/opt/dft/rows14an_1.log`; a finished cell
-        is `NAME_in_all_s1.start.xyz` with `potential_eV_per_monomer` in its info; the relax skips nothing, so
-        give it only the cells still missing). THEN the same for `vdf9-trfe4-an1-14`, and for the matrix and the
-        CFE terpolymer (`/opt/dft/rows14`: both all-trans cells are relaxed, the helix cells are not). The
-        potential's own margins are good to about 0.1 (0.03 to 0.11 on the six small cells DFT has).
+        FOUR FOURTEEN-MONOMER ROWS IN THE POTENTIAL (2026-11-19 13:55 UTC, docs 3.14,
+        `docs/predictions/rows14_potential.json`; NO DFT AT THIS SIZE): matrix `vdf10-trfe4-14` -0.024 (chain1-cfe
+        +0.222, belt4 +0.056); CFE terpolymer `vdf9-trfe4-cfe1-14` +0.078 (+0.359, +0.317); nitrile alone
+        `vdf9-trfe4-an1-14` -0.118 (belt4 +0.197); THE belt4 LEADER `vdf9-trfe3-an1-rvdf1-14` -0.055 (belt4
+        +0.037): at the foot of the window, NOT CONFIRMED AND NOT THROWN OUT (the caution at the head of
+        `docs/CANDIDATE_MATERIALS.md` says so). The potential and chain1-cfe AGREE on what a CFE does (+0.10,
+        +0.14) and are 0.25 APART ON THE MATRIX'S LEVEL. The nitrile at one in fourteen: -1.3 kcal/mol per unit
+        (all-trans pin) in the potential; belt4 +2.0. THE POTENTIAL'S OWN MARGIN: within 0.11 of DFT on six small
+        cells, 0.36 OFF ON THE TFE CELL. How: cells from `rows_under_preset.py` (nitrile rows:
+        `/opt/dft/cells_chain1-cfe_an.json`, geometries only) written by `row_cells_frames.py write --kmesh "4 2
+        1"` into `/opt/dft/rows14an` and `/opt/dft/rows14`; `mlip_train.py relax --model
+        docs/predictions/mlip/models/all_s1.model --name all_s1 --cells ... --threads 4 --fmax 0.02 --steps 800`
+        (five to ten minutes a cell); `row_cells_frames.py potential --frames DIRS --rows ROWS --out JSON`.
+        WHICH LEVEL IS RIGHT, RUNNING (14:00 UTC, background, four cores, ends by itself): `python
+        examples/unit_dft_check.py --row vdf4-trfe2-6 --work /opt/dft/unit4 --model
+        docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
+        /opt/dft/chainsplit/check --threads 4 --np 4` (VVRVVR, the matrix's motif, 72 atoms: polyfind, the
+        potential and DFT on one cell; about two hours; run it again after a stop). IF DFT IS WITH THE POTENTIAL,
+        chain1 drifts with size or TrFE content and the 25 rows' levels are about 0.25 high; IF WITH chain1, the
+        potential's levels at fourteen monomers are not to be used and only its differences are.
         THE OTHER UNITS (TFE, CDFE, ethylene, VF, DFE): UNTESTED UNTIL THEIR CHECK. Rows by unit: AN in 7 of the
         35, CDFE 4, TFE 2, ethylene 2, VF 1, DFE 1 (15 rows in all); CFE 9, CTFE 3; 9 rows VDF, TrFE and reversed
         VDF only. `examples/unit_dft_check.py --row ROW --work /opt/dft/unit4 --model
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
         /opt/dft/chainsplit/check --threads 3 --np 3` runs the whole check for one small row and goes on from
         where it stopped (about an hour a unit). Rows `vdf2-trfe1-{cdfe,tfe,vf,e,dfe,rvdf}1-4` are in
-        `candidate_screen.SEQUENCES`. CDFE (2026-11-19 11:25 UTC, docs 3.13): VRVD DFT +0.968 = +2.394 inside
-        -1.426 between; chain1 +0.975 = +3.091 -2.117 shear-free: THE MARGIN TO 0.007 BY TWO ERRORS OF 0.7 THAT
-        CANCEL. The lone VDF-CDFE chains confirm it (`chain_conformers_cdfe_pbe_d3bj.json`: helix -2.843 and
-        +3.750; chain1 -3.418 and +1.467). NOT COUNTED AS PASSED; like the nitrile it needs both parts. One of its
-        helix placements does not build (the polish records `not_built` and goes on). RUNNING (10:47 UTC,
-        background, two cores, `--np 2`): the DFT check of `vdf2-trfe1-tfe1-4` (polyfind chain1 -0.060, belt4
-        +0.224; THE POTENTIAL ALONE HAS ALL-TRANS 0.44 BELOW THE HELIX, so expect a fail). `--no-dft` stops a check
-        after the cells are relaxed in the potential (one core). The check splits EVERY helix placement DFT has. THEN: e, vf, dfe. THE MACHINE HAS FOUR CORES:
+        `candidate_screen.SEQUENCES`. CDFE (docs 3.13): VRVD DFT +0.968 = +2.394 inside -1.426 between; chain1
+        +0.975 = +3.091 -2.117 shear-free: THE MARGIN TO 0.007 BY TWO ERRORS OF 0.7 THAT CANCEL, confirmed by the
+        lone VDF-CDFE chains (`chain_conformers_cdfe_pbe_d3bj.json`: helix -2.843 and +3.750; chain1 -3.418 and
+        +1.467). NOT COUNTED AS PASSED. TFE (docs 3.13): VRVF DFT -0.076, chain1 -0.060 (parts +0.26, -0.29 off):
+        PASSES; its row `vdf9-trfe4-tfe1-14` is +0.147 under chain1-cfe. ETHYLENE AND VF: polyfind's side done
+        (chain1 -0.232 and +0.479; belt4 +0.500 and +0.452), their cells relaxed in the potential (VF four of
+        five); DFE not started; NO DFT ON THE THREE YET (a container restart at about 13:00 UTC stopped it):
+        `unit_dft_check.py --row vdf2-trfe1-{e,vf,dfe}1-4 ...` goes on from there. `--no-dft` stops a check after
+        the potential's relaxations. THEN: e, vf, dfe. THE MACHINE HAS FOUR CORES:
         DFT ON THREE (`--np 3`) AND ONE OTHER JOB, NO MORE (a fifth process doubled a DFT step's time). A unit
         that fails INSIDE THE CHAIN gets lone-chain conformers (`chain_conformers.CHAINS` has an2, vf2, cdfe2,
         e2, tfe2, dfe2, ctfe2: all-trans and the helix placements that differ; `frames`, `settle`, `collect`),
         then `unit_torsion_fit.py --base pvdf-dft-chain1-cfe --type ITS_BOND`; one that fails BETWEEN CHAINS gets
         `unit_nonbonded_fit.py`; either is accepted on a cell that was not in the fit.
-        THE 35 ROWS, MARGINS UNDER `pvdf-dft-chain1-cfe`: DONE FOR 24 ROWS (2026-11-19 11:05 UTC):
+        THE 35 ROWS, MARGINS UNDER `pvdf-dft-chain1-cfe`: DONE FOR 25 ROWS (2026-11-19 12:50 UTC):
         `docs/predictions/margins_chain1-cfe.json`, table in docs 3.13. The 20 rows whose units pass (TrFE,
-        reversed VDF, CFE, CTFE at the edge) and the 4 CDFE rows (unit NOT passed: read them with that). In the
-        window of 55 V/um on this axis: `vdf8-trfe4-ctfe1-rvdf1-14` +0.061, `vdf6-trfe4` +0.083,
-        `vdf9-trfe4-cdfe1-14` +0.089. Below zero: `vdf5-rvdf1-6` -0.199, `vdf9-trfe4-rvdf1-14` -0.164,
+        reversed VDF, CFE, CTFE at the edge), the TFE row, and the 4 CDFE rows (unit NOT passed: read them with
+        that). In the window of 55 V/um on this axis: `vdf8-trfe4-ctfe1-rvdf1-14` +0.061, `vdf6-trfe4` +0.083,
+        `vdf9-trfe4-cdfe1-14` +0.089, `vdf9-trfe4-tfe1-14` +0.147. Below zero: `vdf5-rvdf1-6` -0.199, `vdf9-trfe4-rvdf1-14` -0.164,
         `vdf7-trfe2-cdfe1` -0.095, `vdf8-trfe4-cfe1-rvdf1-14` -0.070, `vdf12-rvdf2-14` -0.030. Matrix
-        `vdf10-trfe4-14` +0.222, terpolymer `vdf9-trfe4-cfe1-14` +0.359, `vdf13-trfe6-cfe1-20` +0.307. THE 11 ROWS
-        NOT RUN: 7 with a nitrile (no preset has it), and those with TFE, ethylene, VF, DFE (unchecked). MARGINS
+        `vdf10-trfe4-14` +0.222, terpolymer `vdf9-trfe4-cfe1-14` +0.359, `vdf13-trfe6-cfe1-20` +0.307. THE 10 ROWS
+        NOT RUN: 7 with a nitrile (no preset has it), and those with ethylene, VF, DFE (unchecked). MARGINS
         ARE THE STRAIN AXIS ONLY: tan delta, frequency and blocked stress per area are NOT redone under this
         preset (the kink tools `dilute_kink.py`, `kink_migration.py`, `kink_site_scan.py` take `--preset`; the
         CFCl bond's barrier is not fitted). How it was run: `python examples/rows_under_preset.py --preset
