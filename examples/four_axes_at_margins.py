@@ -44,8 +44,12 @@ def main():
     ap.add_argument("--margins-from", type=Path, default=PRED / "rows14_potential.json", help="rows -> margin, from the evaluator that replaces the tables' preset")
     ap.add_argument("--base", type=Path, default=PRED / "polished_margins_belt4.json", help="the tables' own margins file: everything but the margin is kept")
     ap.add_argument("--shifts", default="-0.1,0,0.05,0.1", help="kcal/mol per monomer added to every replaced margin, one table each")
+    ap.add_argument("--sheet-shift", nargs="*", default=[], help="ROW=DELTA, kcal/mol per kink pair: move every scanned kink site of ROW (both hands) by DELTA, the difference "
+                                                                  "between another evaluator's kink sheet and the tables' at one site, taken as common to the row's sites")
+    ap.add_argument("--sites", type=Path, default=PRED / "kink_site_scan_belt4.json", help="the tables' kink-site scans (examples/kink_site_scan.py)")
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
+    shifts = {item.split("=")[0]: float(item.split("=")[1]) for item in args.sheet_shift}
     theirs = {k: float(v["margin"]) for k, v in json.loads(args.margins_from.read_text())["rows"].items()}
     base = json.loads(args.base.read_text())
     out = {"what": "the four axes (examples/pin_design.py) with the margins of some rows replaced and everything else as the tables have it: dipole, switch strain, kink "
@@ -53,19 +57,31 @@ def main():
                    "strain at the heat budget at 34 kHz; blocked force is per area, pN/nm2 (= MPa)",
            "margins_from": str(args.margins_from.name), "base": str(args.base.name), "replaced": theirs, "belt4_margins": {k: base["rows"][k]["margin"] for k in theirs},
            "shifts": {}}
+    if shifts:
+        out["sheet_shifts_kcal_per_kink_pair"] = shifts
+        out["what"] += ". The kink sites of the rows in sheet_shifts are moved by those amounts (both hands, every site alike): only the rate model that sums over kink sites sees it"
     with tempfile.TemporaryDirectory() as tmp:
+        extra = []
+        if shifts:
+            scans = json.loads(args.sites.read_text())
+            for key, row in scans["rows"].items():
+                if key.split("@")[0] in shifts and "fixed cell" not in key:
+                    for site in row["sites"].values():
+                        site["formation"] += shifts[key.split("@")[0]]
+            (Path(tmp) / "sites.json").write_text(json.dumps(scans))
+            extra = ["--sites", str(Path(tmp) / "sites.json")]
         for shift in [float(x) for x in args.shifts.split(",")]:
             rows = json.loads(json.dumps(base))
             for k, m in theirs.items():
                 rows["rows"][k]["margin"] = m + shift
             margins, result = Path(tmp) / "margins.json", Path(tmp) / "out.json"
             margins.write_text(json.dumps(rows))
-            subprocess.run([sys.executable, "-W", "ignore", str(HERE / "pin_design.py"), "--margins", str(margins), "--out", str(result)], stdout=subprocess.DEVNULL, check=True)
+            subprocess.run([sys.executable, "-W", "ignore", str(HERE / "pin_design.py"), "--margins", str(margins), "--out", str(result), *extra], stdout=subprocess.DEVNULL, check=True)
             res = json.loads(result.read_text())
             entry = {"film_channel_as_calibrated": axes_of(res["three_axes"]["rows"]["calibrated_film"]), "rows": {}}
             for k, m in theirs.items():
                 rec = {"margin": m + shift, "all_trans_is_lower": m + shift < 0.0}
-                for model, key in (("by_the_sum_over_kink_sites", "sites"), ("by_one_chains_move", "moves")):
+                for model, key in (("by_the_sum_over_kink_sites", "sites"),) + (() if shifts else (("by_one_chains_move", "moves"),)):
                     if k in res.get(key, {}).get("rows", {}):
                         rec[model] = axes_of(res[key]["rows"][k]["three_axes"])
                 entry["rows"][k] = rec
