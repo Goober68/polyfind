@@ -106,3 +106,65 @@ def test_the_chlorine_error_of_both_presets_is_inside_the_chain():
     t4, tc = own["belt4"][0], own["chain1"][0]
     assert t4["inside_a_chain"] - trfe["inside_a_chain"] == pytest.approx(+0.729, abs=0.005) and t4["between_chains"] - trfe["between_chains"] == pytest.approx(-0.657, abs=0.005)
     assert tc["inside_a_chain"] - trfe["inside_a_chain"] == pytest.approx(+0.134, abs=0.005) and tc["between_chains"] - trfe["between_chains"] == pytest.approx(-0.218, abs=0.005)
+
+
+def test_the_ctfe_cell_is_outside_both_presets_too():
+    """VRVK, one CTFE and one TrFE in four: the unit's CFCl-CH2 bond is the CFE unit's, its CF2-CF2 bond the reversed unit's."""
+    r = _stored("vdf2-trfe1-ctfe1-4")
+    m = r["margins"]["free"]
+    assert m["dft"] == pytest.approx(0.315, abs=0.002) and m["largest_force_left_eV_per_A"] < 0.12
+    assert r["polyfind"]["chain1"]["margin"] - m["dft"] == pytest.approx(-0.181, abs=0.003)
+    assert r["polyfind"]["belt4"]["margin"] - m["dft"] == pytest.approx(+0.419, abs=0.003)
+    split = next(iter(json.loads((PRED / "chain_split_dft_vdf2-trfe1-ctfe1-4.json").read_text())["pairs"].values()))
+    # a third of the CFE cell's margin inside a chain, a third of it between chains: the unit folds the chain and parts the chains far less
+    assert split["inside_a_chain"] == pytest.approx(1.091, abs=0.003) and split["between_chains"] == pytest.approx(-0.776, abs=0.003)
+    assert split["cell"] == pytest.approx(m["dft"], abs=1e-4)
+
+
+def test_the_cfcl_bonds_triple_is_fitted_to_lone_chains():
+    """The alternating VDF-CFE chain in DFT: all-trans, and the helix in its two placements (chlorine on either side of the fold)."""
+    from polyfind import fitting as F
+
+    conf = json.loads((PRED / "chain_conformers_cfe_pbe_d3bj.json").read_text())["conformers"]
+    assert sorted(conf) == ["cfe2_helix", "cfe2_helix2", "cfe2_tt"]
+    assert all(c["largest_force"] < 0.01 and c["bonds"] == ["CF2-CH2", "CH2-CFCl", "CFCl-CH2", "CH2-CF2"] for c in conf.values())
+    assert conf["cfe2_helix"]["energy"] == pytest.approx(-2.475, abs=0.002) and conf["cfe2_helix2"]["energy"] == pytest.approx(-3.189, abs=0.002)
+    # the CFCl-CH2 bond is the gauche one in both, one way and the other; the CH2-CFCl bond stays trans
+    assert conf["cfe2_helix"]["dihedrals"][2] == pytest.approx(-60, abs=2) and conf["cfe2_helix2"]["dihedrals"][2] == pytest.approx(+50, abs=2)
+    assert all(abs(abs(c["dihedrals"][1]) - 180) < 5 for k, c in conf.items() if k != "cfe2_tt")
+    fit = json.loads((PRED / "unit_torsion_cfe_chain1.json").read_text())
+    assert fit["base"] == "pvdf-dft-chain1" and fit["fitted"] == ["cfe2_helix", "cfe2_helix2"]
+    rows = fit["rows"]
+    # chain1 has both helices too high, by 0.69 and 0.35 a monomer; the triple brings both inside 0.11
+    assert rows["cfe2_helix"]["at_the_base"] - rows["cfe2_helix"]["dft"] == pytest.approx(+0.692, abs=0.003)
+    assert rows["cfe2_helix2"]["at_the_base"] - rows["cfe2_helix2"]["dft"] == pytest.approx(+0.355, abs=0.003)
+    assert rows["cfe2_helix"]["polyfind"] - rows["cfe2_helix"]["dft"] == pytest.approx(+0.073, abs=0.003)
+    assert rows["cfe2_helix2"]["polyfind"] - rows["cfe2_helix2"]["dft"] == pytest.approx(-0.104, abs=0.003)
+    # the preset is chain1 with that triple on the CH2-CFCl bonds, nothing else changed
+    preset, base = F.PRESET_PARAMETERS["pvdf-dft-chain1-cfe"], F.PRESET_PARAMETERS["pvdf-dft-chain1"]
+    assert preset == F.parameters_of(PRED / "unit_torsion_cfe_chain1.json")
+    assert preset == F.typed_on(base, {"CH2-CFCl": F.UNIT_TORSION_CFCL}) and preset.torsion == base.torsion
+    assert dict((t, v) for t, *v in preset.torsion_types)["CH2-CFCl"] == pytest.approx(fit["torsion_types"]["CH2-CFCl"])
+    assert [t for t, *_ in preset.torsion_types] == [t for t, *_ in base.torsion_types] + ["CH2-CFCl"]
+
+
+def test_the_cfcl_triple_meets_dft_on_cells_it_was_not_fitted_to():
+    under = json.loads((PRED / "margins_chain1-cfe_dft_rows.json").read_text())
+    assert under["preset"] == "pvdf-dft-chain1-cfe"
+    rows = under["rows"]
+    cfe, ctfe, trfe = (_stored(k)["margins"]["free"]["dft"] for k in ("vdf2-trfe1-cfe1-4", "vdf2-trfe1-ctfe1-4", "vdf3-trfe1-4"))
+    # the CFE cell: +0.690 where DFT has +0.682 and chain1 +0.381, in DFT's helix placement
+    assert rows["vdf2-trfe1-cfe1-4"]["margin"] - cfe == pytest.approx(+0.008, abs=0.003)
+    assert rows["vdf2-trfe1-cfe1-4"]["helix_sheared"] == "G'TGT"
+    # the CTFE cell, whose CFCl-CH2 bond takes the same triple: +0.400 against +0.315, inside the needed 0.1 and not by much
+    assert rows["vdf2-trfe1-ctfe1-4"]["margin"] - ctfe == pytest.approx(+0.085, abs=0.003)
+    assert rows["vdf2-trfe1-ctfe1-4"]["helix_sheared"] == "G'TGT"
+    assert all(abs(rows[k]["margin"] - d) < NEEDED_KCAL for k, d in (("vdf2-trfe1-cfe1-4", cfe), ("vdf2-trfe1-ctfe1-4", ctfe), ("vdf3-trfe1-4", trfe)))
+    # a cell with no CFCl carbon is chain1's to the last digit
+    plain = json.loads((PRED / "margins_chain1_dft_rows.json").read_text())["rows"]["vdf3-trfe1-4"]
+    assert rows["vdf3-trfe1-4"]["margin"] == pytest.approx(plain["margin"], abs=1e-9)
+    # the split of the CFE cell: what the unit adds to the TrFE cell is now right inside the chain (0.05 off, from 0.25) and between chains (0.07)
+    trfe_s, cfe_s, own = _splits()
+    t, c = own["chain1-cfe"]
+    assert (c["inside_a_chain"] - t["inside_a_chain"]) - (cfe_s["inside_a_chain"] - trfe_s["inside_a_chain"]) == pytest.approx(+0.048, abs=0.005)
+    assert (c["between_chains"] - t["between_chains"]) - (cfe_s["between_chains"] - trfe_s["between_chains"]) == pytest.approx(+0.070, abs=0.005)

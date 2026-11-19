@@ -35,11 +35,15 @@ BOX = 16.0
 CHAINS = {
     "hh2": ("VI", {"tt": {}, "special": {"CF2-CF2": (60.0,), "other": (-60.0,)}, "plain": {"CF2-CH2": (60.0, -60.0)}}),
     "hh4": ("VIVI", {"ff": {"CF2-CF2": (60.0, -60.0)}, "hh": {"other": (60.0, -60.0)}}),
-    # a CFE unit: its two bonds at the CFCl carbon are the "other" ones (CH2-CFCl, then CFCl-CH2).  With every second unit a CFE
-    # the chain is its own mirror image about each CFCl, so the helix has one placement: the CFCl-CH2 bond gauche, the CH2-CFCl trans.
-    "cfe2": ("VC", {"tt": {}, "helix": {"CF2-CH2": (60.0, 180.0), "other": (180.0, -60.0)}, "special": {"other": (60.0, -60.0)}, "plain": {"CF2-CH2": (60.0, -60.0)}}),
+    # a CFE unit: its two bonds at the CFCl carbon are the "other" ones (CH2-CFCl, then CFCl-CH2).  The chain's constitution
+    # reads the same both ways, so turning the CH2-CFCl bond is the mirror image of turning the CFCl-CH2 bond: the helix has
+    # two placements that differ, the CFCl-CH2 bond gauche one way (helix) or the other (helix2), the chlorine on opposite
+    # sides of the fold.  A torsion term is even in the angle, so the two share it and their difference tests the rest.
+    # (Two gauche bonds of opposite sense next to each other are not a conformer: the groups two bonds on meet.)
+    "cfe2": ("VC", {"tt": {}, "helix": {"CF2-CH2": (60.0, 180.0), "other": (180.0, -60.0)}, "helix2": {"CF2-CH2": (-60.0, 180.0), "other": (180.0, 60.0)}}),
     # the same unit one in four, the helix as it is in a cell
-    "cfe4": ("VVVC", {"tt": {}, "helix": {"CF2-CH2": (60.0, 180.0, -60.0, 180.0, 60.0, 180.0), "other": (180.0, -60.0)}}),
+    "cfe4": ("VVVC", {"tt": {}, "helix": {"CF2-CH2": (60.0, 180.0, -60.0, 180.0, 60.0, 180.0), "other": (180.0, -60.0)},
+                      "helix2": {"CF2-CH2": (-60.0, 180.0, 60.0, 180.0, -60.0, 180.0), "other": (180.0, 60.0)}}),
 }
 ZERO = {"hh2": "hh2_tt", "hh4": "hh2_tt", "cfe2": "cfe2_tt", "cfe4": "cfe4_tt"}   # the zero of each chain's energies: a chain of the same composition
 REFERENCE = "hh2_tt"   # the zero of the head-to-head set, as written before the others were added

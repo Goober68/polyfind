@@ -3105,3 +3105,22 @@ def parameters_of(spec) -> FFParameters:
     if "torsion_types" in data and "base" in data:
         return typed_on(parameters_of(data["base"]), data["torsion_types"])
     return crystal_stage_parameters(np.array(data["x"], dtype=float))
+
+
+# pvdf-dft-chain1 with a torsion triple of their own for the two bonds at a CFCl carbon (a CFE
+# unit's two, a CTFE unit's one).  chain1 gives those bonds the CF2-CH2 triple, and DFT's margin of
+# the smallest cell with a CFE unit in it (VDF-TrFE-VDF-CFE, four monomers a chain) shows the
+# cost: +0.381 kcal/mol per monomer where DFT has +0.682, the error inside the chain
+# (docs/MLIP_SECOND_OPINION.md 3.10).  The triple is fitted to DFT's lone chains of the
+# alternating VDF-CFE polymer (examples/unit_torsion_fit.py; docs/predictions/
+# unit_torsion_cfe_chain1.json): the helix in its two placements against the all-trans chain,
+# -2.475 and -3.189 kcal/mol per monomer, which chain1 has at -1.783 and -2.835 and this at -2.403
+# and -3.293.  Two rows hold one combination of the three coefficients (the gauche well against
+# the trans one); a ridge holds the rest to chain1's triple, so the barrier between the wells is
+# NOT fitted.  Neither cell below was in the fit.  The CFE cell: +0.690 (DFT +0.682), the same
+# helix placement as DFT's.  The CTFE cell (VDF-TrFE-VDF-CTFE): +0.400 (DFT +0.315; chain1
+# +0.134), inside 0.1 and not by much: its CF2-CFCl bond has no triple of its own.  Cells without
+# a CFCl carbon are chain1's exactly.  Lattice side only, as chain1 is.
+UNIT_TORSION_CFCL = (0.4396706199951412, -2.1799020114232954, 1.5007261473644347)
+FITTED_CHAIN1_CFE = typed_on(FITTED_CHAIN1, {"CH2-CFCl": UNIT_TORSION_CFCL})
+register_preset("pvdf-dft-chain1-cfe", FITTED_CHAIN1_CFE, lattice_only=True)
