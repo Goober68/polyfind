@@ -355,7 +355,10 @@ right": true at one registry, not along it).
         above (right at one TrFE in four, 0.18 high at one in three); the differences a unit makes stand.
         ESTIMATES (one cell's offsets carried to fourteen monomers, NO DFT there): matrix `vdf10-trfe4-14` +0.03
         (from the potential +0.05), +0.04 (from chain1-cfe -0.18), +0.03 (from belt4 -0.03): just under the
-        window; CFE terpolymer `vdf9-trfe4-cfe1-14` +0.13 and +0.18: at the window's top. Command, for the
+        window; CFE terpolymer `vdf9-trfe4-cfe1-14` +0.13 and +0.18: at the window's top. A FOURTH (chain1-cfe
+        with the TrFE term: matrix +0.100, terpolymer +0.239, `margins_trfe_torsion_rows14.json`; corrected by
+        its errors on the two TrFE cells +0.08 to +0.20) WIDENS IT: THE MATRIX IS SOMEWHERE FROM +0.03 TO +0.2,
+        the terpolymer 0.10 to 0.14 above it. Only DFT on those cells narrows that. Command, for the
         record: `python examples/unit_dft_check.py --row vdf4-trfe2-6 --work /opt/dft/unit4 --model
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
         /opt/dft/chainsplit/check --threads 4 --np 4` (1.9 hours). NOTE: "DFT" on a row's cell is a DFT single
@@ -422,8 +425,11 @@ right": true at one registry, not along it).
         --threads 3 --fmax 0.02 --steps 800`). The sheet's energy in the potential is the relaxed kinked cell
         minus the row's all-trans cell in `docs/predictions/rows14_potential.json`, times 28 monomers over 2
         chains; check each relaxed cell still holds its kink before reading it.
-        MATRIX UNDER THE TrFE TERM (not adopted): `vdf10-trfe4-14` +0.100 (`/opt/dft/margins_trfe_torsion.json`;
-        chain1-cfe +0.222, the potential -0.024); the terpolymer's cells were still running at 18:10.
+        MATRIX AND TERPOLYMER UNDER THE TrFE TERM (not adopted): +0.100 and +0.239
+        (`docs/predictions/margins_trfe_torsion_rows14.json`; chain1-cfe +0.222 and +0.359, the potential -0.024
+        and +0.078). FIRST KINK SHEET IN THE POTENTIAL (18:26 UTC): the CFE cell's cheapest site +4.586 against
+        belt4's +3.418, kink kept; `python examples/row_cells_frames.py sheets-potential --frames
+        /opt/dft/sheets14 --out JSON` reads them all.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

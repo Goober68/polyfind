@@ -1232,9 +1232,11 @@ each corrected by its own error on this cell, come to the same place:
 | the CFE terpolymer, `vdf9-trfe4-cfe1-14` | +0.13 | +0.18 | not used: belt4 has the CFE 0.38 high |
 
 - These are estimates: one cell's offsets carried to a cell more than twice its size and to
-  29 mol% from 33. No fourteen-monomer cell has a DFT energy.
+  29 mol% from 33. No fourteen-monomer cell has a DFT energy. A fourth estimate, the preset
+  with a TrFE term (3.16), comes out at +0.08 to +0.20 for the matrix: the agreement of these
+  three is not the uncertainty.
 - On them the copolymer sits just under the switching window (+0.07 to +0.15 at 55 V/um) and the
-  terpolymer at its top or just above. That is the order the materials are known in, and the
+  terpolymer at its top or just above; on the fourth both are 0.1 higher. That is the order the materials are known in, and the
   CFE's pin is what moves one to the other: +0.10 to +0.14 per monomer at one in fourteen,
   where the potential and chain1-cfe agree (3.14).
 - The differences a unit makes are the part of 3.13's table that stands. Its levels are to be

@@ -53,8 +53,10 @@ the smallest cell that holds it (four monomers a chain) and compare the margin w
   0.18 high on the six-monomer cell (one in three). The rows below at 29 mol% are between. A
   term for the TrFE alone moves the error and does not remove it (3.16).
 - **Where that leaves the two reference materials** (estimates: each evaluator corrected by its
-  own error on the six-monomer cell, no DFT at fourteen monomers): the TrFE matrix at about
-  +0.03, just under the switching window, and the CFE terpolymer at +0.13 to +0.18, at its top.
+  own error on the small cells, no DFT at fourteen monomers): the TrFE matrix somewhere from
+  +0.03 to +0.2, three evaluators at the low end and one at the high, and the CFE terpolymer
+  0.10 to 0.14 above it. Under the window or in it for the matrix, in it or over it for the
+  terpolymer: the order is firm and the levels are not.
   The 25 rows without a nitrile or an unchecked unit have their margins under the new preset in
   3.13: read their levels as up to 0.2 high, and the differences a unit makes as they are. They are
   margins only: the loss, the rate and the blocked stress of sections 5 and 8 have not been
