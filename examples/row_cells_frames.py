@@ -175,6 +175,36 @@ def kink_collect(args):
     print(f"written {args.out}")
 
 
+def sheets_potential(args):
+    """Kink sheets relaxed in a potential and never labelled (``sheet_ROW_TAG_atSITE_in_NAME.start.xyz``), against each row's
+    all-trans cell in the same potential (``examples/row_cells_frames.py potential``): kcal/mol per kink pair."""
+    from ase.io import read
+
+    spec = importlib.util.spec_from_file_location("chain_split", Path(__file__).with_name("chain_split.py"))
+    CS = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(CS)
+    all_trans = json.loads(Path(args.all_trans).read_text())["rows"]
+    out = {"what": "the kink sheet (a kink pair on every chain, in register, at one site of the sequence) relaxed in the potential with the cell free, minus the row's all-trans "
+                   "cell there, kcal/mol per kink pair; polyfind is the tables' value for the same site (examples/kink_site_scan.py). No DFT on these cells. "
+                   "kink_kept: every chain still has two gauche bonds of opposite sense about a trans one", "potential": args.name, "all_trans": Path(args.all_trans).name, "rows": {}}
+    for f in sorted(Path(args.frames).glob(f"sheet_*_in_{args.name}.start.xyz")):
+        a = read(f)
+        row = str(a.info["frame"]).split("_")[1]
+        n, chains = int(a.info["n_monomers"]), int(a.info["kinked_chains"])
+        torsions = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(a, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(a)]
+        gauche = [[(k, t) for k, t in enumerate(ch) if abs(t) < 120.0] for ch in torsions]
+        kept = all(len(g) == 2 and g[0][1] * g[1][1] < 0 and (g[1][0] - g[0][0]) in (2, len(ch) - 2) for g, ch in zip(gauche, torsions))
+        rec = {"frame": str(a.info["frame"]), "atoms": len(a), "site": str(a.info["frame"]).split("_at")[1].split("_in_")[0],
+               "potential": (float(a.info["potential_eV_per_monomer"]) - float(all_trans[row]["cells"]["TTTT"]["eV_per_monomer"])) * n * KCAL / chains,
+               "polyfind": float(a.info["polyfind_kcal_per_kink_pair"]), "kink_kept": bool(kept), "gauche_bonds_deg": [[round(t, 1) for _, t in g] for g in gauche],
+               "cell_A_deg": [float(v) for v in a.cell.cellpar()], "source": str(a.info.get("source", ""))}
+        out["rows"][row] = rec
+        print(f"{row:26s} site {rec['site']:4s}: the potential {rec['potential']:+.3f}, polyfind {rec['polyfind']:+.3f} kcal/mol per kink pair; "
+              f"{'kink kept' if kept else 'KINK NOT KEPT'}, gauche bonds {rec['gauche_bonds_deg']}")
+    Path(args.out).write_text(json.dumps(out, indent=1))
+    print(f"written {args.out}")
+
+
 KCAL = 23.0605  # kcal/mol in one eV
 GPA = 160.21766  # GPa in one eV/A^3
 
@@ -285,6 +315,11 @@ def main():
     s.add_argument("--kmesh", required=True)
     s.add_argument("--tag", default="")
     s.add_argument("--out", required=True)
+    s = sub.add_parser("sheets-potential", help="kink sheets relaxed in a potential, against the rows' all-trans cells there")
+    s.add_argument("--frames", required=True, help="the folder of sheet_*_in_NAME.start.xyz")
+    s.add_argument("--name", default="all_s1")
+    s.add_argument("--all-trans", default="docs/predictions/rows14_potential.json", help="the rows' cells in the same potential")
+    s.add_argument("--out", required=True)
     s = sub.add_parser("kink-collect", help="a kink's energy from labelled frames")
     s.add_argument("--pairs", nargs="+", required=True, help="NAME=ALL_TRANS.dft.xyz,KINKED.dft.xyz, one lattice each")
     s.add_argument("--also", nargs="*", default=[], help="NAME=VALUE: a polyfind number with no DFT of its own, kept beside the others")
@@ -311,7 +346,7 @@ def main():
     s.add_argument("--name", default="all_s1", help="the potential's name in the frames' names")
     s.add_argument("--out", required=True)
     args = ap.parse_args()
-    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink, "kink-collect": kink_collect}[args.cmd](args)
+    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink, "kink-collect": kink_collect, "sheets-potential": sheets_potential}[args.cmd](args)
 
 
 if __name__ == "__main__":

@@ -1301,8 +1301,12 @@ TrFE that DFT has, none of them in the fit:
   with one. On the cells of 3.12 and 3.13 the potential is within 0.08 (two nitrile cells,
   CDFE) and polyfind is wrong in sign on the nitrile.
 - So the level of the fourteen-monomer matrix stays an estimate from evaluators that disagree by
-  more than the 0.1 that is needed: -0.024 in the potential, +0.222 in chain1-cfe. The
-  corrections of 3.15 bring them together at +0.03 to +0.04, but each is one cell's offset.
+  more than the 0.1 that is needed: -0.024 in the potential, +0.222 in chain1-cfe, and +0.100
+  in chain1-cfe with the TrFE term (the terpolymer +0.239 with it: a CFE still worth +0.14).
+  The corrections of 3.15 bring the first two together at +0.03 to +0.04, but each is one
+  cell's offset; the third, corrected by its own errors on the two TrFE cells (-0.10 at one in
+  four, +0.02 at one in three), is +0.08 to +0.20. The matrix is somewhere from +0.03 to +0.2,
+  and the terpolymer 0.10 to 0.14 above it. Only DFT on those cells narrows that.
 
 **DFT at fourteen monomers does not fit this machine.** The leader's helix cell (170 atoms, 350
 bands, 6 k-points) asks for 15.7 GB at the recipe's cutoffs and the machine has 15; the run was
@@ -1310,7 +1314,8 @@ stopped before it ran out. Two such cells for each of the leader, the matrix and
 are a job for a rented machine with more memory.
 
 Files: `docs/predictions/chain_conformers_trfe_pbe_d3bj.json`, `unit_torsion_trfe_chain1.json`,
-`margins_trfe_torsion_dft_rows.json`. Test: `tests/test_row_cells_dft.py`.
+`margins_trfe_torsion_dft_rows.json`, `margins_trfe_torsion_rows14.json` (the matrix and the
+terpolymer under the term). Test: `tests/test_row_cells_dft.py`.
 
 ### 3.17 A kink's energy against DFT, for the first time (2026-11-19)
 
