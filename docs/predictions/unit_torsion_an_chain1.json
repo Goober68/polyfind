@@ -1,0 +1,37 @@
+{
+ "base": "docs/predictions/unit_nonbonded_an_between_chain1.json",
+ "torsion_types": {
+  "CH2-CHCN": [
+   -2.6457297175095453,
+   0.30195089680947795,
+   3.2402173876337215
+  ]
+ },
+ "what": "torsion triples (V1, V2, V3; kcal/mol) to put on the base, fitted to DFT's lone-chain conformers (examples/unit_torsion_fit.py)",
+ "dft": [
+  "docs/predictions/chain_conformers_an_pbe_d3bj.json"
+ ],
+ "fitted": [
+  "an2_h1",
+  "an2_h2"
+ ],
+ "objective": 4.2739554759619685,
+ "objective_at_the_base": 576.1356198752333,
+ "ridge": 4.1204821040037025,
+ "evaluations": 17,
+ "stopped": "`gtol` termination condition is satisfied.",
+ "rows": {
+  "an2_h1": {
+   "polyfind": -1.5984837905738911,
+   "dft": -1.5693853811274787,
+   "at_the_base": -1.1815925860001024,
+   "fitted": true
+  },
+  "an2_h2": {
+   "polyfind": 0.3793025731580828,
+   "dft": 0.36673690131526904,
+   "at_the_base": 1.6256221649695033,
+   "fitted": true
+  }
+ }
+}

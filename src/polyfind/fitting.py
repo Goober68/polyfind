@@ -3092,14 +3092,21 @@ def typed_on(base: FFParameters, types: dict) -> FFParameters:
     return replace(base, torsion_types=tuple((t, *own[t]) for t in own))
 
 
-def with_terms(base: FFParameters, lj: dict | None = None, charge_increments: dict | None = None) -> FFParameters:
+def with_terms(base: FFParameters, lj: dict | None = None, charge_increments: dict | None = None, lj_pairs: dict | None = None) -> FFParameters:
     """``base`` with the non-bonded terms of single elements replaced or added: ``lj``
-    ``{element: (x, D)}`` (the wall's distance and depth, as :attr:`FFParameters.lj`) and
+    ``{element: (x, D)}`` (the wall's distance and depth, as :attr:`FFParameters.lj`),
     ``charge_increments`` ``{"C-N": q}`` (the charge a bond moves, as
-    :attr:`FFParameters.charge_increments`).  What a unit's own atoms need when its error is
-    between chains (the nitrile: nitrogen is at its UFF values in every preset and the C-N increment
-    was never a target)."""
+    :attr:`FFParameters.charge_increments`) and ``lj_pairs`` ``{"N-H": (x, D)}`` (a pair of
+    elements taken out of the mixing rule, as :attr:`FFParameters.lj_pairs`).  What a unit's own
+    atoms need when its error is between chains (the nitrile: nitrogen is at its UFF values in
+    every preset and the C-N increment was never a target)."""
     out = base
+    if lj_pairs:
+        own = {(a, b): (float(x), float(d)) for a, b, x, d in base.lj_pairs}
+        for pair, v in lj_pairs.items():
+            a, b = pair.split("-")
+            own[(b, a) if (b, a) in own else (a, b)] = (float(v[0]), float(v[1]))
+        out = replace(out, lj_pairs=tuple((a, b, *own[(a, b)]) for a, b in own))
     if lj:
         own = {e: (float(x), float(d)) for e, x, d in base.lj}
         own.update({e: (float(v[0]), float(v[1])) for e, v in lj.items()})
@@ -3117,8 +3124,8 @@ def with_terms(base: FFParameters, lj: dict | None = None, charge_increments: di
 def parameters_of(spec) -> FFParameters:
     """A parameter set from what a tool is given for one: a preset's name; a crystal-stage result
     file (its ``x``); or a file naming a ``base`` (either of these again) and what to put on it:
-    ``torsion_types`` (examples/unit_torsion_fit.py), ``lj`` and ``charge_increments``
-    (:func:`with_terms`)."""
+    ``torsion_types`` (examples/unit_torsion_fit.py), ``lj``, ``charge_increments`` and
+    ``lj_pairs`` (:func:`with_terms`)."""
     import json
     from pathlib import Path
 
@@ -3129,7 +3136,7 @@ def parameters_of(spec) -> FFParameters:
         prm = parameters_of(data["base"])
         if data.get("torsion_types"):
             prm = typed_on(prm, data["torsion_types"])
-        return with_terms(prm, lj=data.get("lj"), charge_increments=data.get("charge_increments"))
+        return with_terms(prm, lj=data.get("lj"), charge_increments=data.get("charge_increments"), lj_pairs=data.get("lj_pairs"))
     return crystal_stage_parameters(np.array(data["x"], dtype=float))
 
 

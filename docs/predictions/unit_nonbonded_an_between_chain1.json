@@ -1,0 +1,86 @@
+{
+ "base": "pvdf-dft-chain1-cfe",
+ "charge_increments": {
+  "C-N": 0.6317912273774878
+ },
+ "lj": {
+  "N": [
+   3.4450221851693517,
+   0.05193480750841743
+  ]
+ },
+ "what": "non-bonded terms of a unit's own atoms to put on the base (charge increments in e; lj: the wall's distance in A and depth in kcal/mol), fitted to DFT's all-trans-minus-helix energies of vdf2-trfe1-an1-4, the part between chains (polyfind's cells with the shear free) (examples/unit_nonbonded_fit.py)",
+ "row": "vdf2-trfe1-an1-4",
+ "variables": [
+  "C-N",
+  "x_N",
+  "D_N"
+ ],
+ "at_the_base_values": {
+  "C-N": 0.36992912294510616,
+  "x_N": 3.66,
+  "D_N": 0.069
+ },
+ "fitted_to": "between_chains",
+ "objective": 49.19178916879074,
+ "objective_at_the_base": 454.8888990307434,
+ "ridge": 0.525431961090082,
+ "evaluations": 17,
+ "stopped": "The maximum number of function evaluations is exceeded.",
+ "rows": {
+  "TGTG'": {
+   "polyfind": -2.8151189197260464,
+   "dft": -2.5139749245427083,
+   "at_the_base": -1.7086210520529193,
+   "fitted": true
+  },
+  "TG'TG": {
+   "polyfind": -0.6527403294851695,
+   "dft": -0.6162515125179198,
+   "at_the_base": -0.5769953515431041,
+   "fitted": true
+  },
+  "G'TGT": {
+   "polyfind": -1.5949952019850286,
+   "dft": -1.7671775280832662,
+   "at_the_base": -1.06926181578838,
+   "fitted": true
+  }
+ },
+ "inside_a_chain": {
+  "TGTG'": {
+   "polyfind": 2.6297754974928242,
+   "dft": 2.1282656679977663,
+   "at_the_base": 1.9670879784145325
+  },
+  "TG'TG": {
+   "polyfind": 0.22977296496102673,
+   "dft": 0.2120464157051174,
+   "at_the_base": -0.1986914731934215
+  },
+  "G'TGT": {
+   "polyfind": 0.9981347317264726,
+   "dft": 1.0895830474546528,
+   "at_the_base": 0.7092254161205815
+  }
+ },
+ "margin": -0.185343422233208,
+ "energies_shear_free": {
+  "TGTG'": {
+   "polyfind": -0.185343422233208,
+   "dft": -0.38570845369923557
+  },
+  "TG'TG": {
+   "polyfind": -0.42296736452409966,
+   "dft": -0.40420425547201955
+  },
+  "GTG'T": {
+   "polyfind": -0.5824065753753871,
+   "dft": null
+  },
+  "G'TGT": {
+   "polyfind": -0.5968604702583997,
+   "dft": -0.6775930702346554
+  }
+ }
+}

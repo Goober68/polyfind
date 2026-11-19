@@ -863,7 +863,7 @@ preset), `row_cells_dft_vdf2-trfe1-ctfe1-4.json` and `chain_split_dft_vdf2-trfe1
 `chain_split_polyfind_dft_rows.json` (polyfind's splits, set `chain1-cfe`). Tests:
 `tests/test_row_cells_dft.py`.
 
-### 3.12 The nitrile: all-trans below every helix in DFT, and both presets have the sign wrong (2026-11-19)
+### 3.12 The nitrile: all-trans below every helix in DFT, both presets wrong, and no simple term fixes it (2026-11-19)
 
 The same check for acrylonitrile (`examples/unit_dft_check.py --row vdf2-trfe1-an1-4`: VRVA, one
 nitrile and one TrFE in four, fifty atoms): chain1's cells relaxed in our potential, then one DFT
@@ -929,9 +929,47 @@ brings them to -0.380, -0.358 and -0.716, within 0.05 of DFT. Split, the lowest 
 then +0.50 too high inside the chain and 0.59 too low between chains: two errors that cancel,
 which is how belt4 was right on TrFE and wrong elsewhere. On the lone chains that charge takes
 the two placements 3.16 apart where DFT has 1.94. It is kept as
-`docs/predictions/unit_nonbonded_an_margins_chain1.json` and not used. The fit that replaces it
-takes the between-chains parts as its rows, leaves the inside to a torsion term fitted to the
-lone chains, and keeps the energies and a second cell (VVVA, no TrFE) as tests.
+`docs/predictions/unit_nonbonded_an_margins_chain1.json` and not used.
+
+**A second fit, in parts, with the energies held back as the test: it fails.** The charge and
+nitrogen's wall were fitted to the between-chains parts alone (`--between`, polyfind's cells
+shear-free), then a torsion triple for the nitrile's bonds to the lone chains on top of that.
+
+| | charge and wall | with the torsion triple | DFT |
+|---|---:|---:|---:|
+| C-N increment; nitrogen's wall | 0.632 e; 3.445 A, 0.052 | the same | |
+| between chains, three placements (fitted) | -2.815, -0.653, -1.595 | | -2.514, -0.616, -1.767 |
+| lone chains, two placements | -1.182, +1.626 | -1.598, +0.379 (fitted) | -1.569, +0.367 |
+| VRVA energies, three placements (**test**) | -0.185, -0.423, -0.597 | -0.018, +0.046, -0.237 | -0.386, -0.404, -0.678 |
+| VRVA margin (**test**) | -0.185 | +0.046 | -0.386 |
+| VVVA margin (**test**, the second cell) | -0.549 | +0.164 | -0.091 |
+
+- The between-chains parts stay 0.30 and 0.17 off: as the charge moves the cells change basin,
+  so one placement jumps by 0.19 for a change of 0.002 e, and a least-squares search has nothing
+  smooth to follow.
+- With the charge at 0.63 e the lone chains' two placements are 2.81 apart (DFT 1.94; chain1's
+  0.37 e has 1.82). The torsion triple that then meets both rows has coefficients of 3 kcal/mol
+  and does it through the 25 degrees between the two placements' angles. That is a fit of two
+  numbers, not a description of the bond.
+- **Both tests fail.** VRVA's margin is 0.20 high with the charge and wall alone and 0.43 high
+  with the torsion; VVVA's is 0.46 low and 0.26 high. Neither is registered.
+- A nitrogen-hydrogen contact term of its own (the kind chain1 needed for fluorine-hydrogen),
+  tried at three settings (3.0 and 2.8 A, 0.04 and 0.08 kcal/mol; a scan, not stored), moves the
+  between-chains parts by 0.15 at most where 0.7 to 0.8 is missing, and the G'TGT placement by
+  0.02. Of the terms tried only the charge moves them.
+- **The second nitrile cell in DFT** (VVVA, `vdf3-an1-4`, 0.19 eV/A left): all-trans minus helix
+  **-0.091** = +0.878 inside a chain - 0.969 between chains. All-trans is the lower again, by
+  less. chain1 has -0.292 on another helix placement and -0.751 on DFT's; belt4 +0.058. chain1's
+  errors on this cell (-0.53 inside, -0.15 between on DFT's placement) are not its errors on
+  VRVA (-0.16 to -0.41 inside, +0.04 to +0.81 between): there is no one correction to find
+  with this form.
+- **So polyfind does not have the nitrile, in any preset, and a bond charge with a wall and a
+  torsion term is not enough to give it one.** What the form lacks is most likely the charge
+  the nitrile draws from the carbon it sits on and that carbon's hydrogen, which one bond
+  increment cannot move. That is a refit of the charge model on nitrile cells and lone chains,
+  not a term added on.
+- The potential has both nitrile cells' margins to 0.03 and 0.08 without having been shown
+  either. For the seven nitrile rows it is the only evaluator here that is right to about 0.1.
 
 **What this reads on.** The margin only: the strain axis. Nothing here is a loss, a rate or a
 blocked stress.
@@ -939,4 +977,8 @@ blocked stress.
 Files: `docs/predictions/row_cells_dft_vdf2-trfe1-an1-4.json`,
 `chain_split_dft_vdf2-trfe1-an1-4.json`, `mlip/row_cells_vdf2-trfe1-an1-4_frames_pbe_d3bj.extxyz`
 (4 frames), `chain_conformers_an_pbe_d3bj.json`, `chain_split_polyfind_dft_rows.json` (sets
-`chain1`, `belt4`, `an-fitted-to-margins`). Tests: `tests/test_row_cells_dft.py`.
+`chain1`, `belt4`, `an-fitted-to-margins`); the second cell `row_cells_dft_vdf3-an1-4.json`,
+`chain_split_dft_vdf3-an1-4.json`, `mlip/row_cells_vdf3-an1-4_frames_pbe_d3bj.extxyz`; the fits
+`unit_nonbonded_an_margins_chain1.json`, `unit_nonbonded_an_between_chain1.json`,
+`unit_torsion_an_chain1.json` and their tests `margins_an_between_dft_rows.json`,
+`margins_an_between_torsion_dft_rows.json`. Tests: `tests/test_row_cells_dft.py`.

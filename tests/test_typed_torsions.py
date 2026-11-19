@@ -202,3 +202,19 @@ def test_a_units_own_wall_and_bond_charge_go_on_a_preset(tmp_path):
     g = tmp_path / "both.json"
     g.write_text(json.dumps({"base": str(f), "torsion_types": {"CH2-CHCN": [0.1, 0.2, 0.3]}}))
     assert F.parameters_of(g) == F.typed_on(prm, {"CH2-CHCN": (0.1, 0.2, 0.3)})
+
+
+def test_a_pair_of_elements_can_be_taken_out_of_the_mixing_rule_on_a_preset(tmp_path):
+    import json
+
+    from polyfind import fitting as F
+
+    base = F.PRESET_PARAMETERS["pvdf-dft-chain1-cfe"]
+    prm = F.with_terms(base, lj_pairs={"N-H": (3.0, 0.05)})
+    assert prm.lj_pairs[:-1] == base.lj_pairs and prm.lj_pairs[-1] == ("N", "H", 3.0, 0.05)
+    # a pair the preset already has is replaced under the order it has it in
+    again = F.with_terms(base, lj_pairs={"H-F": (2.9, 0.03)})
+    assert len(again.lj_pairs) == len(base.lj_pairs) and ("F", "H", 2.9, 0.03) in again.lj_pairs
+    f = tmp_path / "pair.json"
+    f.write_text(json.dumps({"base": "pvdf-dft-chain1-cfe", "lj_pairs": {"N-H": [3.0, 0.05]}}))
+    assert F.parameters_of(f) == prm

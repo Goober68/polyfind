@@ -190,3 +190,44 @@ def test_the_nitrile_cell_has_all_trans_below_every_helix_and_the_presets_miss_i
     # the error is between chains in both (0.59 and 0.37), where the CFE unit's was inside the chain: a torsion term does not reach it
     assert off["chain1"]["between_chains"] == pytest.approx(+0.590, abs=0.005) and off["chain1"]["inside_a_chain"] == pytest.approx(-0.144, abs=0.005)
     assert off["belt4"]["between_chains"] == pytest.approx(+0.365, abs=0.005) and off["belt4"]["inside_a_chain"] == pytest.approx(-0.277, abs=0.005)
+
+
+def test_the_second_nitrile_cell_and_the_nitrile_fits_that_do_not_pass_it():
+    """VVVA, one nitrile in four and no TrFE: the cell no nitrile fit has seen.  Two fits made on VRVA are stored and neither is a preset."""
+    from polyfind import fitting as F
+
+    r = _stored("vdf3-an1-4")
+    m = r["margins"]["free"]
+    assert m["dft"] == pytest.approx(-0.091, abs=0.002) and m["largest_force_left_eV_per_A"] < 0.2
+    assert m["potential"] - m["dft"] == pytest.approx(+0.083, abs=0.003)
+    # chain1 is 0.20 low and on another helix placement than DFT's (on DFT's it is 0.66 low); belt4 is 0.15 high
+    assert r["polyfind"]["chain1"]["margin"] - m["dft"] == pytest.approx(-0.201, abs=0.003) and r["polyfind"]["chain1"]["helix_sheared"] != "TG'TG"
+    assert r["polyfind"]["belt4"]["margin"] - m["dft"] == pytest.approx(+0.149, abs=0.003)
+    split = next(iter(json.loads((PRED / "chain_split_dft_vdf3-an1-4.json").read_text())["pairs"].values()))
+    assert split["inside_a_chain"] == pytest.approx(0.878, abs=0.003) and split["between_chains"] == pytest.approx(-0.969, abs=0.003)
+    first = _stored("vdf2-trfe1-an1-4")
+    dft = {first["lines"][v["helix"]]["conformation"]: v["dft"] for v in first["margins"].values()}
+    # 1. the charge and nitrogen's wall fitted to the three energies: within 0.05, by two errors of 0.5 that cancel
+    a = json.loads((PRED / "unit_nonbonded_an_margins_chain1.json").read_text())
+    assert max(abs(v["polyfind"] - v["dft"]) for v in a["rows"].values() if v["fitted"]) < 0.05
+    q = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]["an-fitted-to-margins"]["vdf2-trfe1-an1-4"]["pairs"]["TTTT minus TGTG'"]
+    s1 = next(iter(json.loads((PRED / "chain_split_dft_vdf2-trfe1-an1-4.json").read_text())["pairs"].values()))
+    assert q["inside_a_chain"] - s1["inside_a_chain"] == pytest.approx(+0.500, abs=0.005) and q["between_chains"] - s1["between_chains"] == pytest.approx(-0.593, abs=0.005)
+    # 2. fitted to the between-chains parts: 0.63 e, a smaller nitrogen; the parts stay 0.30 and 0.17 off (the cells change basin as the charge moves)
+    b = json.loads((PRED / "unit_nonbonded_an_between_chain1.json").read_text())
+    assert b["fitted_to"] == "between_chains" and b["charge_increments"]["C-N"] == pytest.approx(0.632, abs=0.001) and b["lj"]["N"] == pytest.approx([3.445, 0.0519], abs=0.001)
+    assert {c: round(v["polyfind"] - v["dft"], 2) for c, v in b["rows"].items()} == {"TGTG'": -0.30, "TG'TG": -0.04, "G'TGT": 0.17}
+    assert {c: round(v["polyfind"] - v["dft"], 2) for c, v in b["energies_shear_free"].items() if v["dft"] is not None} == {"TGTG'": 0.20, "TG'TG": -0.02, "G'TGT": 0.08}
+    # 3. with a torsion triple for the nitrile's bonds on top, fitted to the lone chains (to 0.03, with coefficients of 3): the cells' energies are the test
+    t = json.loads((PRED / "unit_torsion_an_chain1.json").read_text())
+    assert max(abs(v["polyfind"] - v["dft"]) for v in t["rows"].values()) < 0.03 and max(abs(v) for v in t["torsion_types"]["CH2-CHCN"]) > 3.0
+    both = json.loads((PRED / "margins_an_between_torsion_dft_rows.json").read_text())["rows"]
+    assert both["vdf2-trfe1-an1-4"]["margin"] - min(dft.values(), key=abs) == pytest.approx(+0.432, abs=0.004)
+    assert both["vdf3-an1-4"]["margin"] - m["dft"] == pytest.approx(+0.255, abs=0.004)
+    only = json.loads((PRED / "margins_an_between_dft_rows.json").read_text())["rows"]
+    assert only["vdf3-an1-4"]["margin"] - m["dft"] == pytest.approx(-0.458, abs=0.004)
+    # so neither is accepted: no preset has a term for the nitrile
+    for name in ("pvdf-dft-chain1", "pvdf-dft-chain1-cfe"):
+        prm = F.PRESET_PARAMETERS[name]
+        assert "N" not in {e for e, *_ in prm.lj} and "CH2-CHCN" not in {t for t, *_ in prm.torsion_types}
+        assert dict(((a, b), v) for a, b, v in prm.charge_increments)[("C", "N")] == pytest.approx(0.370, abs=0.001)
