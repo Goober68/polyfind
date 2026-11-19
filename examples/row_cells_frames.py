@@ -107,7 +107,8 @@ def collect(args):
             stress = np.asarray(a.info["REF_stress"], dtype=float).reshape(3, 3)
             rows.append({"frame": a.info["frame"], "eV_per_monomer": float(a.info["REF_energy"]) / n, "largest_force_eV_per_A": float(np.abs(a.arrays["REF_forces"]).max()),
                          "stress_GPa_xx_yy_zz_yz_xz_xy": [float(GPA * stress[i, j]) for i, j in ((0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1))],
-                         "cell_A_deg": [float(v) for v in a.cell.cellpar()], "volume_A3_per_monomer": float(a.get_volume()) / n})
+                         "cell_A_deg": [float(v) for v in a.cell.cellpar()], "volume_A3_per_monomer": float(a.get_volume()) / n,
+                         "potential_eV_per_monomer": a.info.get("potential_eV_per_monomer")})
         conf = steps[0].info.get("conformation", "")
         table[root] = {"all_trans": conf in ("TTTT", "TT"), "conformation": conf, "source": str(steps[0].info.get("source", steps[0].info.get("note", ""))), "steps": rows}
     out = {"row": args.row, "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)", "energy": "eV per monomer; margins kcal/mol per monomer, all-trans minus helix",
@@ -115,8 +116,12 @@ def collect(args):
     last = {root: t["steps"][-1] for root, t in table.items()}
     for pair in args.pairs:
         label, tt, tg = pair.split("=")[0], *pair.split("=")[1].split(",")
+        first = [table[k]["steps"][0] for k in (tt, tg)]
+        labelled_starts = first[0]["frame"] == tt and first[1]["frame"] == tg  # a line whose start was not labelled begins at its first relaxed cell
+        both = last[tt]["potential_eV_per_monomer"] is not None and last[tg]["potential_eV_per_monomer"] is not None
         out["margins"][label] = {"all_trans": tt, "helix": tg, "dft": KCAL * (last[tt]["eV_per_monomer"] - last[tg]["eV_per_monomer"]),
-                                 "dft_at_the_starts": KCAL * (table[tt]["steps"][0]["eV_per_monomer"] - table[tg]["steps"][0]["eV_per_monomer"]),
+                                 "potential": KCAL * (last[tt]["potential_eV_per_monomer"] - last[tg]["potential_eV_per_monomer"]) if both else None,
+                                 "dft_at_the_starts": KCAL * (first[0]["eV_per_monomer"] - first[1]["eV_per_monomer"]) if labelled_starts else None,
                                  "largest_force_left_eV_per_A": max(last[tt]["largest_force_eV_per_A"], last[tg]["largest_force_eV_per_A"])}
     for item in args.margins:
         name, path = item.split("=")
@@ -129,7 +134,9 @@ def collect(args):
     for root, t in table.items():
         print(f"{root} ({t['conformation']}): " + "; ".join(f"{s['eV_per_monomer']:.5f} eV, {s['largest_force_eV_per_A']:.2f} eV/A" for s in t["steps"]))
     for label, m in out["margins"].items():
-        print(f"  {label}: DFT {m['dft']:+.3f} kcal/mol per monomer (at the starts {m['dft_at_the_starts']:+.3f}; largest force left {m['largest_force_left_eV_per_A']:.2f} eV/A)")
+        starts = "the starts not labelled" if m["dft_at_the_starts"] is None else f"at the starts {m['dft_at_the_starts']:+.3f}"
+        own = "" if m["potential"] is None else f", the potential's own {m['potential']:+.3f}"
+        print(f"  {label}: DFT {m['dft']:+.3f} kcal/mol per monomer{own} ({starts}; largest force left {m['largest_force_left_eV_per_A']:.2f} eV/A)")
     for name, e in out["polyfind"].items():
         print(f"  polyfind {name}: margin {e['margin']:+.3f}, upright {e['margin_upright']:+.3f}; shear gain all-trans {e['all_trans_shear_gain']:+.3f}, helix {e['helix_shear_gain']:+.3f}")
     print(f"written {args.out}")

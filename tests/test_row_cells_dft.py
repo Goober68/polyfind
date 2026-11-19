@@ -35,6 +35,25 @@ def test_the_trfe_cells_margin_is_met_by_both_presets():
     last = {k: v["steps"][-1]["eV_per_monomer"] for k, v in r["lines"].items()}
     assert last["row_vdf3-trfe1-4_TTTT_chain1"] < last["units_24_0"] and last["row_vdf3-trfe1-4_TGpTG_chain1"] < last["units_25_0"]
     assert sampler["dft"] == pytest.approx(0.793, abs=0.002)
+    # our potential found the geometries (0.08 eV/A left); its own margins are 0.07 to 0.10 below DFT's, at the edge of the needed
+    for m in (free, upright, sampler):
+        assert -0.10 < m["potential"] - m["dft"] < -0.065
+
+
+def test_neither_preset_has_the_chlorine_cell():
+    """VRVC, one CFE and one TrFE in four, 48 atoms: both presets' cells relax to the same two cells in the potential."""
+    r = _stored("vdf2-trfe1-cfe1-4")
+    m = r["margins"]["free"]
+    assert m["dft"] == pytest.approx(0.682, abs=0.002) and m["largest_force_left_eV_per_A"] < 0.07
+    assert m["dft_at_the_starts"] is None  # polyfind's own cells were not labelled here, only the relaxed ones
+    assert r["polyfind"]["chain1"]["margin"] - m["dft"] == pytest.approx(-0.301, abs=0.003)
+    assert r["polyfind"]["belt4"]["margin"] - m["dft"] == pytest.approx(+0.375, abs=0.003)
+    assert m["potential"] - m["dft"] == pytest.approx(+0.086, abs=0.003)
+    # the unit's effect in this cell, against the TrFE cell with a VDF in its place: nothing in DFT, large and opposite in the presets
+    t = _stored("vdf3-trfe1-4")
+    assert m["dft"] - t["margins"]["free"]["dft"] == pytest.approx(0.004, abs=0.003)
+    assert r["polyfind"]["belt4"]["margin"] - t["polyfind"]["belt4"]["margin"] == pytest.approx(+0.416, abs=0.003)
+    assert r["polyfind"]["chain1"]["margin"] - t["polyfind"]["chain1"]["margin"] == pytest.approx(-0.289, abs=0.003)
 
 
 def test_a_relaxation_line_is_read_in_the_order_it_was_walked():
