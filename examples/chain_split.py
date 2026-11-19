@@ -21,7 +21,7 @@ import numpy as np
 
 BOX = 16.0     # A, the lateral edge of a lone chain's box (examples/chain_potential.py)
 EV = 23.060548
-BOND = {"C": 0.77, "H": 0.37, "F": 0.71}
+BOND = {"C": 0.77, "H": 0.37, "F": 0.71, "Cl": 0.99, "N": 0.75}
 
 
 def chains_of(atoms):
@@ -263,7 +263,7 @@ def polyfind(args):
         IF = _load("interchain_frames")
         table = json.loads((Path(__file__).resolve().parents[1] / "docs" / "predictions" / "interchain_belt4.json").read_text())["packings"]
     else:
-        pol, ref = json.load(open(SP.POLISHED)), json.load(open(SP.REFERENCES))
+        pol, ref = json.load(open(args.polished or SP.POLISHED)), json.load(open(args.references or SP.REFERENCES))
     out = json.loads(Path(args.out).read_text()) if args.out and Path(args.out).exists() else {"what": "polyfind's relaxed upright cells split as the DFT cells are (examples/chain_split.py); kcal/mol per monomer", "sets": {}}
     sets = {}
     for item in args.fit:
@@ -337,6 +337,8 @@ def main():
     s.add_argument("--fit", action="append", default=[], help="name=crystal-stage result file, or name=preset")
     s.add_argument("--out", default="")
     s.add_argument("--freeze", default="", help="write the relaxed cells (variables and pendant tilts) of the last --fit here")
+    s.add_argument("--polished", default="", help="another table of polished cells (examples/polish_margins.py --out)")
+    s.add_argument("--references", default="", help="its all-trans cells (examples/polish_margins.py --references)")
     args = ap.parse_args()
     {"frames": frames, "dft": dft, "polyfind": polyfind}[args.step](args)
 

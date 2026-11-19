@@ -719,6 +719,44 @@ DFT was asked for those (0.06 eV/A left on each).
 - The potential alone is 0.086 high here, on a chlorine-to-chlorine contact between chains
   that none of its frames has.
 
+**Where the chlorine error sits: inside the chain, in both presets.** One more DFT single
+point per relaxed cell, on a chain of it alone in a 16 A box (`examples/chain_split.py`, as in
+`docs/CRYSTAL_STAGE.md` 5.29), splits each margin into what is inside a chain and what is
+between chains. Polyfind's own cells are split the same way (upright cells).
+
+| all-trans minus helix | cell | inside a chain | between chains |
+|---|---:|---:|---:|
+| VVRV, helix upright: DFT | +0.505 | +2.935 | -2.430 |
+| chain1 | +0.421 | +3.069 | -2.648 |
+| belt4 | +0.577 | +3.664 | -3.087 |
+| VRVC: DFT | +0.682 | +2.979 | -2.298 |
+| chain1 | +0.408 | +2.864 | -2.457 |
+| belt4 | +1.060 | +3.992 | -2.932 |
+| the CFE's effect, VRVC less the upright VVRV: DFT | +0.177 | +0.044 | +0.133 |
+| chain1 | -0.013 | -0.204 | +0.191 |
+| belt4 | +0.483 | +0.328 | +0.155 |
+
+(The partner here is the VVRV helix held upright, the cell polyfind's split is made on; the
+VRVC cells do not shear in either preset or in the potential. Against the VVRV helix free to
+shear, which is 0.174 lower, the unit's effect on the cell is the +0.004 of the table before.)
+
+- **Between chains both presets have the CFE unit right**, to 0.06 (chain1) and 0.02 (belt4).
+  The wall and the charges, where chlorine meets the next chain, are not the problem.
+- **Inside the chain chain1 puts the unit 0.25 too low and belt4 0.28 too high**, per monomer
+  of a four-monomer cell: about -1.0 and +1.1 kcal/mol per CFE unit, all-trans against helix.
+  That is the bonds at the CFCl carbon: their torsion term is the shared triple that was
+  fitted to CF2-CH2 bonds, and nothing chlorine-specific. It is the kind of error 5.29 found
+  for the reversed unit, and the remedy there was a torsion triple of the unit's own bonds,
+  fitted to DFT on lone chains (five minutes a single point).
+- **If it is the unit's own bonds, the error goes with the unit and not with the density**: one
+  CFE in fourteen would carry a fourteenth of it, -0.07 per monomer in chain1 and +0.08 in
+  belt4. That would put the terpolymer cell's pin near +0.11 (chain1's +0.04 corrected) or
+  +0.18 (belt4's +0.26 corrected), in place of two numbers a factor of seven apart. An
+  inference from one cell, to be checked by the fit.
+- **On the TrFE cell alone belt4 is right by cancellation again**: +0.73 inside the chain and
+  -0.66 between chains, the same two errors as on the reversed-unit candidate. Chain1's are
+  +0.13 and -0.22. So chain1 is the preset to build the chlorine term on.
+
 **What this reads on.** The margin, which places a cell on the strain axis, and nothing else.
 The loss, the rate and the blocked stress of these cells are not computed here. For the ranking
 it says: rows that differ by a TrFE matrix alone can be compared in either preset; rows whose
@@ -729,5 +767,7 @@ Frames: `docs/predictions/mlip/row_cells_vdf3-trfe1-4_frames_pbe_d3bj.extxyz` (1
 `row_cells_vdf2-trfe1-cfe1-4_frames_pbe_d3bj.extxyz` (2). Tables:
 `docs/predictions/row_cells_dft_vdf3-trfe1-4.json`, `row_cells_dft_vdf2-trfe1-cfe1-4.json`
 (`examples/row_cells_frames.py collect`); polyfind's side `margins_chain1_dft_rows.json`,
-`margins_belt4_dft_rows.json`. Tests: `tests/test_row_cells_dft.py`,
+`margins_belt4_dft_rows.json`. The split: five lone-chain frames
+`docs/predictions/mlip/row_cells_lone_chain_frames_pbe_d3bj.extxyz`, DFT's
+`chain_split_dft_rows_pbe_d3bj.json`, polyfind's `chain_split_polyfind_dft_rows.json`. Tests: `tests/test_row_cells_dft.py`,
 `tests/test_mlip_own.py::test_the_fit_on_every_frame_holds_the_anchor_and_a_composition_it_never_saw`.

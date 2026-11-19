@@ -1,0 +1,162 @@
+{
+ "what": "DFT cells split into their chains alone (in a 16 A box) and the rest; kcal/mol per monomer, each cell against its reference. inside_a_chain / between_chains: the chain with its atoms where the cell has them. lone_chain / binding: the chain relaxed alone (examples/mlip_train.py relax --dft-gradient, then a single point), and the cell against that.",
+ "cells": {
+  "row_vdf3-trfe1-4_TTTT_chain1_in_all_s1": {
+   "cell": -47039.19286956892,
+   "chain": -47032.96803844379,
+   "between": -6.224831125131459,
+   "largest_force_on_the_lone_chain": 0.71203668,
+   "repeat": 10.306555278617834,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    -169.6713350131557,
+    -168.3073347525431,
+    -179.537848101153,
+    179.53783023013744,
+    168.30727494694048,
+    169.67133580740543,
+    -178.82689539490136,
+    178.82697114995645
+   ],
+   "bonds": [
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "row_vdf3-trfe1-4_TGpTG_chain1_in_all_s1": {
+   "cell": -47039.871185685384,
+   "chain": -47035.91679621499,
+   "between": -3.9543894703965634,
+   "largest_force_on_the_lone_chain": 0.48329926,
+   "repeat": 9.320934004778449,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    -176.03130928227623,
+    -55.74894539067935,
+    178.9354900284768,
+    55.8060656203116,
+    177.14091608272696,
+    -63.766732037168225,
+    179.35476049916247,
+    63.98340833110456
+   ],
+   "bonds": [
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "row_vdf3-trfe1-4_TGpTG_chain1_upright_in_all_s1": {
+   "cell": -47039.697509902166,
+   "chain": -47035.90313533483,
+   "between": -3.794374567332852,
+   "largest_force_on_the_lone_chain": 0.41950068,
+   "repeat": 9.33675175376491,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    -179.24984769761082,
+    -58.320530986968706,
+    -177.8190794484943,
+    55.65088398559298,
+    -177.2818860179136,
+    -61.70048303203198,
+    178.14125777157778,
+    62.63880465279694
+   ],
+   "bonds": [
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "row_vdf2-trfe1-cfe1-4_TTTT_chain1_in_all_s1": {
+   "cell": -45886.56770359422,
+   "chain": -45880.64524259126,
+   "between": -5.922461002963246,
+   "largest_force_on_the_lone_chain": 0.70447867,
+   "repeat": 10.26732745802831,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    172.09068960083138,
+    174.33735737091118,
+    -165.65372217515517,
+    -158.56922611432222,
+    160.9820446454989,
+    160.63926803737758,
+    -168.20179744151545,
+    -175.60554901485185
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF",
+    "CF-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "row_vdf2-trfe1-cfe1-4_GpTGT_chain1_in_all_s1": {
+   "cell": -45887.249382376816,
+   "chain": -45883.624570268425,
+   "between": -3.6248121083917795,
+   "largest_force_on_the_lone_chain": 0.30712316,
+   "repeat": 9.330702851024084,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    -57.43949971747116,
+    -178.59177248226797,
+    60.486109838702106,
+    174.3477611060437,
+    -56.314265440631644,
+    178.6793502311613,
+    55.34378964867022,
+    -178.9172757328609
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CF",
+    "CF-CH2",
+    "CH2-CF2"
+   ]
+  }
+ },
+ "pairs": {
+  "row_vdf3-trfe1-4_TTTT_chain1_in_all_s1 minus row_vdf3-trfe1-4_TGpTG_chain1_in_all_s1": {
+   "cell": 0.678316116463975,
+   "inside_a_chain": 2.9487577711988706,
+   "between_chains": -2.2704416547348956
+  },
+  "row_vdf3-trfe1-4_TTTT_chain1_in_all_s1 minus row_vdf3-trfe1-4_TGpTG_chain1_upright_in_all_s1": {
+   "cell": 0.5046403332453337,
+   "inside_a_chain": 2.9350968910439406,
+   "between_chains": -2.430456557798607
+  },
+  "row_vdf2-trfe1-cfe1-4_TTTT_chain1_in_all_s1 minus row_vdf2-trfe1-cfe1-4_GpTGT_chain1_in_all_s1": {
+   "cell": 0.6816787825955544,
+   "inside_a_chain": 2.9793276771670207,
+   "between_chains": -2.2976488945714664
+  }
+ }
+}

@@ -72,3 +72,37 @@ def test_a_relaxation_line_is_read_in_the_order_it_was_walked():
     assert [x.info["frame"] for x in lines["a"]] == ["a", "a_in_p", "a_in_p_in_p"]
     assert [x.info["frame"] for x in lines["b"]] == ["b", "b_in_p"]
     assert rcf.safe("TG'TG") == "TGpTG"
+
+
+def _splits():
+    dft = json.loads((PRED / "chain_split_dft_rows_pbe_d3bj.json").read_text())["pairs"]
+    poly = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]
+    t = "row_vdf3-trfe1-4_TTTT_chain1_in_all_s1 minus row_vdf3-trfe1-4_TGpTG_chain1_upright_in_all_s1"
+    c = "row_vdf2-trfe1-cfe1-4_TTTT_chain1_in_all_s1 minus row_vdf2-trfe1-cfe1-4_GpTGT_chain1_in_all_s1"
+    own = {name: (s["vdf3-trfe1-4"]["pairs"]["TTTT minus TG'TG"], s["vdf2-trfe1-cfe1-4"]["pairs"]["TTTT minus G'TGT"]) for name, s in poly.items()}
+    return dft[t], dft[c], own
+
+
+def test_the_two_cells_split_alike_in_dft():
+    """A lone chain cut from each relaxed cell: the margins are three inside a chain less two and a third between chains."""
+    trfe, cfe, _ = _splits()
+    assert trfe["inside_a_chain"] == pytest.approx(2.935, abs=0.003) and trfe["between_chains"] == pytest.approx(-2.430, abs=0.003)
+    assert cfe["inside_a_chain"] == pytest.approx(2.979, abs=0.003) and cfe["between_chains"] == pytest.approx(-2.298, abs=0.003)
+    # what the CFE unit does in DFT, against a VDF in its place: little inside the chain, little between chains
+    assert cfe["inside_a_chain"] - trfe["inside_a_chain"] == pytest.approx(+0.044, abs=0.004)
+    assert cfe["between_chains"] - trfe["between_chains"] == pytest.approx(+0.133, abs=0.004)
+
+
+def test_the_chlorine_error_of_both_presets_is_inside_the_chain():
+    trfe, cfe, own = _splits()
+    unit = {k: cfe[k] - trfe[k] for k in ("inside_a_chain", "between_chains")}
+    errors = {}
+    for name, (t, c) in own.items():
+        errors[name] = {k: (c[k] - t[k]) - unit[k] for k in unit}
+    # between chains the unit is right in both (0.06 and 0.02); inside the chain chain1 has it 0.25 too low and belt4 0.28 too high
+    assert errors["chain1"]["between_chains"] == pytest.approx(+0.059, abs=0.005) and errors["belt4"]["between_chains"] == pytest.approx(+0.022, abs=0.005)
+    assert errors["chain1"]["inside_a_chain"] == pytest.approx(-0.249, abs=0.005) and errors["belt4"]["inside_a_chain"] == pytest.approx(+0.284, abs=0.005)
+    # belt4 on the TrFE cell alone: two errors of 0.7 that cancel, as on the reversed-unit candidate; chain1's are 0.13 and 0.22
+    t4, tc = own["belt4"][0], own["chain1"][0]
+    assert t4["inside_a_chain"] - trfe["inside_a_chain"] == pytest.approx(+0.729, abs=0.005) and t4["between_chains"] - trfe["between_chains"] == pytest.approx(-0.657, abs=0.005)
+    assert tc["inside_a_chain"] - trfe["inside_a_chain"] == pytest.approx(+0.134, abs=0.005) and tc["between_chains"] - trfe["between_chains"] == pytest.approx(-0.218, abs=0.005)
