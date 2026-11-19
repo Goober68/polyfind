@@ -287,11 +287,23 @@ right": true at one registry, not along it).
         stopped (about an hour a unit: five relaxations in the potential, two or three DFT cells of 10 to 15
         minutes, two lone chains of 5). Rows `vdf2-trfe1-{ctfe,cdfe,an,tfe,vf,e,dfe,rvdf}1-4` are in
         `candidate_screen.SEQUENCES`; polyfind's side of all seven is in `margins_{chain1,belt4}_dft_rows.json`
-        (CTFE: chain1 +0.134, belt4 +0.734). RUNNING: the CTFE check; then an, tfe, cdfe, e, vf, dfe in that
-        order. DFT WANTS THE MACHINE TO ITSELF (a lone chain's run was killed for memory beside three relaxations).
-        THEN: a torsion triple for the bonds at each unit's own carbon where the split says the error is inside
-        the chain (a lattice torsion type as "CH2-CH2" is, `fitting.LATTICE_TORSION_TYPES`; lone-chain conformers
-        by `chain_conformers.py`, which needs chlorine in its atom lists; `stage13_subfit.py`).
+        (CTFE: chain1 +0.134, belt4 +0.734). RUNNING (03:41 UTC, one background command): the CTFE check, then the
+        CFE unit's lone-chain conformers in DFT (`chain_conformers.py settle --frames /opt/dft/cfeconf --names
+        cfe2_tt,cfe2_helix`, then `cfe2_special,cfe2_plain --fixed-repeat`, `collect --chains cfe2 --out
+        docs/predictions/chain_conformers_cfe_pbe_d3bj.json`; log `/opt/dft/cfeconf_1.log`; frames for cfe4_tt and
+        cfe4_helix, the unit one in four, are built there too and not yet settled). NEXT: the checks of an, tfe,
+        cdfe, e, vf, dfe in that order. DFT WANTS THE MACHINE TO ITSELF (a lone chain's run was killed for memory
+        beside three relaxations).
+        THE FIX FOR A UNIT WHOSE ERROR IS INSIDE THE CHAIN: its own bonds have names now
+        (`fitting.LATTICE_TORSION_TYPES`: CH2-CFCl, CF2-CFCl, CF2-CHCl, CH2-CHCN, CH2-CHF, CHF-CHF beside CH2-CH2;
+        no preset gives them a triple yet). `examples/unit_torsion_fit.py --base pvdf-dft-chain1 --type CH2-CFCl
+        --dft docs/predictions/chain_conformers_cfe_pbe_d3bj.json --out docs/predictions/unit_torsion_cfe_chain1.json`
+        fits a triple to the lone chains (3 s an evaluation); its output file is a parameter set every row tool
+        takes in place of a preset's name (`fitting.parameters_of`). ACCEPTANCE: `rows_under_preset.py --preset
+        THAT_FILE --rows vdf2-trfe1-cfe1-4 --polished docs/predictions/polished_margins_belt4_dft_rows.json
+        --references docs/predictions/dilute_kink_belt4_dft_rows.json --out NEW.json` must give DFT's +0.682
+        (chain1 alone: +0.381), and `chain_split.py polyfind --fit new=THAT_FILE` the split +2.979 / -2.298. Then
+        register it as a preset (`register_preset(..., lattice_only=True)` with `typed_on(FITTED_CHAIN1, ...)`).
         ALSO WAITING: `/opt/dft/rows14`: the fourteen-monomer matrix and CFE cells of chain1 as atoms; relaxed in
         the potential so far: the matrix's all-trans cell. The helix cells are slow (168 atoms, several seconds a
         step) and were paused for the DFT; `mlip_train.py relax --cells ... --out /opt/dft/rows14 --steps 600`.
