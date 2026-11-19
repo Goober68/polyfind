@@ -340,7 +340,7 @@ right": true at one registry, not along it).
         1"` into `/opt/dft/rows14an` and `/opt/dft/rows14`; `mlip_train.py relax --model
         docs/predictions/mlip/models/all_s1.model --name all_s1 --cells ... --threads 4 --fmax 0.02 --steps 800`
         (five to ten minutes a cell); `row_cells_frames.py potential --frames DIRS --rows ROWS --out JSON`.
-        WHICH LEVEL IS RIGHT: ANSWERED BY DFT (2026-11-19 16:00 UTC, docs 3.15). `vdf4-trfe2-6`, VVRVVR, the
+        WHICH LEVEL IS RIGHT: ANSWERED BY DFT (2026-11-19 15:40 UTC, docs 3.15). `vdf4-trfe2-6`, VVRVVR, the
         matrix's motif, 72 atoms, its four helix placements one cell by symmetry: DFT -0.044 (= +1.603 inside
         a chain -1.647 between chains; 0.09 eV/A left), THE POTENTIAL -0.096, belt4 -0.014 (by two errors of 0.79
         and 0.76 that cancel), chain1 +0.139 shear free (upright +0.078 = +2.004 -1.927). DFT IS WITH THE
@@ -359,7 +359,7 @@ right": true at one registry, not along it).
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
         /opt/dft/chainsplit/check --threads 4 --np 4` (1.9 hours). NOTE: "DFT" on a row's cell is a DFT single
         point on the cell the potential relaxed (forces left are stored), as in docs 3.6 and 3.10.
-        THE FOUR AXES AT THE POTENTIAL'S MARGINS (2026-11-19 16:40 UTC; `examples/four_axes_at_margins.py --out
+        THE FOUR AXES AT THE POTENTIAL'S MARGINS (2026-11-19 15:50 UTC; `examples/four_axes_at_margins.py --out
         docs/predictions/four_axes_potential_margins.json`; table at the head of `docs/CANDIDATE_MATERIALS.md`;
         test `tests/test_four_axes_at_margins.py`): the potential's margins of the four fourteen-monomer rows put
         through `pin_design.py`, EVERYTHING ELSE belt4's (dipole, switch strain, KINK ENERGIES, stiffness: no DFT
@@ -376,7 +376,7 @@ right": true at one registry, not along it).
         two hours a cell on four cores, 15 GB of memory here: NOT STARTED). (4) The nitrile alone (-0.118) is
         below zero over all of the bar but its last 0.02. (5) THE KINK ENERGIES ARE THE WEAKEST INPUT: belt4's,
         untested, and belt4 has the nitrile wrong in sign on the margin.
-        NEXT ON THIS (running 16:10 UTC): lone VDF-TrFE chains on each sense, `chain_conformers.py settle
+        NEXT ON THIS (running since 15:45 UTC): lone VDF-TrFE chains on each sense, `chain_conformers.py settle
         --frames /opt/dft/trfeconf --names trfe2_tt,trfe2_h1,trfe2_h2 --model
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --np 3` (`trfe2`
         is new in `chain_conformers.CHAINS`), then `collect --chains trfe2` and `polyfind --fit
