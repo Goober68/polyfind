@@ -174,6 +174,15 @@ SEQUENCES = {
     "vdf3-trfe1-4": ("VVRV", "25 mol% TrFE, one unit in four: the TrFE matrix in a cell small enough for DFT (the labelled cell VVRV|VRVV, forty-eight atoms)"),
     "vdf1-trfe1-2": ("VR", "50 mol% TrFE, alternating: the labelled cell VR|VR, twenty-four atoms"),
     "vdf2-trfe1-cfe1-4": ("VRVC", "one CFE and one TrFE in four: the chlorine pin in a cell small enough for DFT (forty-eight atoms; the labelled cell VRVC|VVRV has it on one chain of two)"),
+    # the same cell with each other unit in the CFE's place: one DFT check a unit (examples/unit_dft_check.py)
+    "vdf2-trfe1-ctfe1-4": ("VRVK", "one CTFE and one TrFE in four, for a DFT check of the unit"),
+    "vdf2-trfe1-cdfe1-4": ("VRVD", "one CDFE and one TrFE in four, for a DFT check of the unit"),
+    "vdf2-trfe1-an1-4": ("VRVA", "one acrylonitrile and one TrFE in four, for a DFT check of the unit"),
+    "vdf2-trfe1-tfe1-4": ("VRVF", "one TFE and one TrFE in four, for a DFT check of the unit"),
+    "vdf2-trfe1-vf1-4": ("VRVY", "one VF and one TrFE in four, for a DFT check of the unit"),
+    "vdf2-trfe1-e1-4": ("VRVE", "one ethylene and one TrFE in four, for a DFT check of the unit"),
+    "vdf2-trfe1-dfe1-4": ("VRVX", "one DFE (CHF-CHF) and one TrFE in four, for a DFT check of the unit"),
+    "vdf2-trfe1-rvdf1-4": ("VRVI", "one reversed VDF and one TrFE in four, for a DFT check of the unit beside TrFE"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 CONFORMATION_UNITS = {"TTTT": [T], "TGTG'": [T, GP, T, GM], "TG'TG": [T, GM, T, GP], "GTG'T": [GP, T, GM, T], "G'TGT": [GM, T, GP, T]}
