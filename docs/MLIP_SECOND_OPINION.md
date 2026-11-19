@@ -21,7 +21,7 @@ unit, +0.682, which one preset puts 0.30 lower and the other 0.38 higher. The er
 bonds of the CFCl carbon; with a torsion term of their own, fitted to DFT on lone chains, the
 new preset gives +0.690 on that cell and passes on a CTFE cell too (3.11). A nitrile cell is the
 other way round: DFT has all-trans below every helix (-0.386) where both presets have a helix
-lowest, and the error is between chains as well as inside (3.12). The 24 rows whose units are
+lowest, and the error is between chains as well as inside (3.12). The 25 rows whose units are
 checked have their margins under the new preset in 3.13, with where each unit stands.
 
 ## 1. The test
@@ -992,7 +992,7 @@ Files: `docs/predictions/row_cells_dft_vdf2-trfe1-an1-4.json`,
 `unit_torsion_an_chain1.json` and their tests `margins_an_between_dft_rows.json`,
 `margins_an_between_torsion_dft_rows.json`. Tests: `tests/test_row_cells_dft.py`.
 
-### 3.13 The CDFE cell: the margin met and its parts not; and 24 rows' margins under chain1-cfe (2026-11-19)
+### 3.13 The CDFE and TFE cells, where each unit stands, and 25 rows' margins under chain1-cfe (2026-11-19)
 
 **CDFE.** The same check (`vdf2-trfe1-cdfe1-4`, VRVD; one of its four helix placements does not
 build at its ideal torsions, and the polish now says so and goes on):
@@ -1056,7 +1056,7 @@ margin is an indication and not a referee, as 3.6 found on a packing it had not 
 the nitrile rows of 3.12 that still makes it the better evidence: both presets have the wrong sign
 there.)
 
-**The 24 rows that hold none of the unchecked units and no nitrile**, each polished cell relaxed
+**The 25 rows that hold none of the unchecked units and no nitrile**, each polished cell relaxed
 again under `pvdf-dft-chain1-cfe` with the shear free and the pendants tilted
 (`examples/rows_under_preset.py`; `docs/predictions/margins_chain1-cfe.json`). Margin is
 all-trans minus the lowest helix placement, kcal/mol per monomer; the strain is the all-trans
@@ -1073,6 +1073,7 @@ are chain1's own run carried over (the two presets are the same potential for th
 | `vdf8-trfe4-ctfe1-rvdf1-14` | 14 | +0.061 | +0.130 | +8.7% | +0.245 | CTFE: at the edge |
 | `vdf6-trfe4` | 10 | +0.083 | -0.044 | +11.9% | -0.199 | checked |
 | `vdf9-trfe4-cdfe1-14` | 14 | +0.089 | +0.068 | +11.3% | +0.685 | CDFE: not passed |
+| `vdf9-trfe4-tfe1-14` | 14 | +0.147 | +0.062 | +12.2% | -0.026 | TFE: checked |
 | `vdf10-trfe4-14` | 14 | +0.222 | +0.131 | +11.0% | +0.056 | checked |
 | `vdf9-trfe5-14` | 14 | +0.232 | +0.149 | +11.6% | +0.083 | checked |
 | `vdf9-trfe4-ctfe1-14` | 14 | +0.286 | +0.126 | +10.4% | +0.300 | CTFE: at the edge |
@@ -1094,9 +1095,10 @@ are chain1's own run carried over (the two presets are the same potential for th
   places a row on the strain axis: at 55 V/um a tenth of a cell is polar at +0.15 and half at
   +0.07 (section 1). The loss, the rate and the blocked stress have not been computed under this
   preset, so nothing in this table is a ranking.
-- On that one axis: three rows sit in the window (+0.06 to +0.09), and two of the three lean on
-  a unit that is not cleanly checked (CTFE at the edge, CDFE not passed). `vdf6-trfe4` (+0.083,
-  TrFE alone) is the one whose chemistry has passed.
+- On that one axis: four rows sit in the window (+0.06 to +0.15), and two of the four lean on a
+  unit that is not cleanly checked (CTFE at the edge, CDFE not passed). `vdf6-trfe4` (+0.083,
+  TrFE alone) and `vdf9-trfe4-tfe1-14` (+0.147, a TFE in the matrix) are the two whose chemistry
+  has passed.
 - Five rows are below zero, all-trans the lower cell with no field: every row with a reversed
   VDF in it but one, and a CDFE row.
 - The TrFE matrix is at +0.22 and the CFE terpolymer at +0.36 (+0.31 at one CFE in twenty):
@@ -1110,4 +1112,5 @@ are chain1's own run carried over (the two presets are the same potential for th
 Files: `docs/predictions/row_cells_dft_vdf2-trfe1-cdfe1-4.json`,
 `chain_split_dft_vdf2-trfe1-cdfe1-4.json`, `chain_conformers_cdfe_pbe_d3bj.json`,
 `mlip/row_cells_vdf2-trfe1-cdfe1-4_frames_pbe_d3bj.extxyz` (2 frames),
-`margins_chain1-cfe.json` (the 24 rows). Tests: `tests/test_row_cells_dft.py`.
+`margins_chain1-cfe.json` (the 25 rows), `row_cells_dft_vdf2-trfe1-tfe1-4.json`,
+`chain_split_dft_vdf2-trfe1-tfe1-4.json`. Tests: `tests/test_row_cells_dft.py`.
