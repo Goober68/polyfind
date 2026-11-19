@@ -178,6 +178,8 @@ SEQUENCES = {
     "vdf2-trfe1-ctfe1-4": ("VRVK", "one CTFE and one TrFE in four, for a DFT check of the unit"),
     "vdf2-trfe1-cdfe1-4": ("VRVD", "one CDFE and one TrFE in four, for a DFT check of the unit"),
     "vdf2-trfe1-an1-4": ("VRVA", "one acrylonitrile and one TrFE in four, for a DFT check of the unit"),
+    "vdf4-trfe2-6": ("VVRVVR", "33 mol% TrFE, one unit in three, six monomers a chain: the matrix's own motif in a cell DFT can still do (seventy-two atoms), "
+                               "to say whose level is right where the potential and chain1 part on the fourteen-monomer matrix"),
     "vdf3-an1-4": ("VVVA", "one acrylonitrile in four and no TrFE: a second nitrile cell, to test on it what was fitted to VRVA"),
     "vdf2-trfe1-tfe1-4": ("VRVF", "one TFE and one TrFE in four, for a DFT check of the unit"),
     "vdf2-trfe1-vf1-4": ("VRVY", "one VF and one TrFE in four, for a DFT check of the unit"),
