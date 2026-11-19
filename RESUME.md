@@ -266,6 +266,30 @@ right": true at one registry, not along it).
         geometries and +0.725 relaxed in the potential, against DFT's +0.726; volumes of alpha and beta to 0.0%;
         beta's stiffness C_11 23.0 (DFT 22.8), C_22 27.3 (24.5), C_12 7.5 (5.9), C_33 295 (303). The anchor's
         cells are among the frames, so this is the fit reproducing what it was shown, not a prediction.
+        THE PRESETS AGAINST DFT ON TrFE AND ON CHLORINE: RUNNING (2026-11-19). WHY: on the first 14 rows chain1
+        puts the TrFE matrix 0.17 higher than belt4 (`vdf10-trfe4-14` +0.222 against +0.056) and shrinks the CFE
+        pin from +0.26 to +0.04 per fourteen and the CDFE pin from +0.63 to -0.13; chain1 had been tested on the
+        reversed-unit candidate only. SMALL ROWS (in `candidate_screen.SEQUENCES`, their own tables
+        `polished_margins_belt4_dft_rows.json`, `dilute_kink_belt4_dft_rows.json`, `margins_{belt4,chain1}_dft_rows.json`,
+        all in `docs/predictions/`): `vdf3-trfe1-4` (VVRV) margin +0.641 belt4 / +0.671 chain1 (upright +0.577 /
+        +0.421: the presets agree on the margin and split it differently between the upright cell and the shear);
+        `vdf1-trfe1-2` (VR) +0.789 / +0.740; `vdf2-trfe1-cfe1-4` (VRVC) +1.057 belt4 / +0.381 chain1: THE ONE THAT
+        TELLS THEM APART. DFT SIDE: `examples/row_cells_frames.py write` puts a row's stored cells into a
+        directory as atoms; `mlip_train.py relax --model docs/predictions/mlip/models/all_s1.model --name all_s1
+        --cells ... --out DIR` relaxes them in the potential (48 atoms: 3 to 5 minutes a cell on four threads);
+        `mlip_frames.py label --frames DIR --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --np 4` gives the DFT
+        energy (10 minutes a 48-atom cell with 12 k-points); `row_cells_frames.py collect` tabulates.
+        `/opt/dft/trfe4` (VVRV): DFT on chain1's cells as they are: all-trans -2039.78865, helix TG'TG sheared
+        -2039.80765, upright -2039.79762 eV per monomer, forces 1.3 eV/A (so not margins); relaxed in the potential
+        (`*_in_all_s1.start.xyz`, also the two labelled sampler cells `units_24_0`, `units_25_0`), the potential's
+        own estimate of the margin is +0.68, upright +0.48, the helix's shear gain -0.20 (chain1 -0.25, belt4
+        -0.06). THEIR DFT SINGLE POINTS ARE RUNNING (log `/opt/dft/trfe4_label_2.log`; run the label command
+        again after a restart, it skips what is done). `/opt/dft/cfe4` (VRVC): the all-trans and the lowest helix
+        (G'TGT) cells of both presets written; their relaxation in the potential is running
+        (`/opt/dft/cfe4_relax_1.log`), then label them. A force left above 0.1 eV/A after that: one more step with
+        `relax --dft-gradient --max-move 0.4` from the labelled frame, and label again.
+        THE 35-ROW RUN IS PAUSED for this (75 cells, 14 rows with a margin at 00:10 UTC): if DFT sides with belt4
+        on chlorine, finishing it under chain1 is not worth the hours.
         THE 35 ROWS UNDER chain1, MARGINS: RUNNING IN PIECES, THREE SIDE BY SIDE (`for k in 1 2 3; do python
         examples/rows_under_preset.py --preset pvdf-dft-chain1 --redo-failed --minutes 105 --part $k/3 --out
         /opt/dft/margins_chain1.json > LOG_$k & done; wait`, one thread each; the --out file is the checkpoint,
