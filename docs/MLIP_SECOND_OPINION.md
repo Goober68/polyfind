@@ -22,7 +22,9 @@ bonds of the CFCl carbon; with a torsion term of their own, fitted to DFT on lon
 new preset gives +0.690 on that cell and passes on a CTFE cell too (3.11). A nitrile cell is the
 other way round: DFT has all-trans below every helix (-0.386) where both presets have a helix
 lowest, and the error is between chains as well as inside (3.12). The 25 rows whose units are
-checked have their margins under the new preset in 3.13, with where each unit stands.
+checked have their margins under the new preset in 3.13, with where each unit stands. Four
+fourteen-monomer rows relaxed in the potential (3.14) agree with that preset on what a CFE does
+and put every level a quarter of a kcal/mol lower; a six-monomer cell is with DFT to say which.
 
 ## 1. The test
 
@@ -976,9 +978,8 @@ shear-free), then a torsion triple for the nitrile's bonds to the lone chains on
   row (`vdf9-trfe3-an1-rvdf1-14`, belt4 +0.037). In belt4's fourteen-monomer cells the nitrile
   is a pin for the helix, +2.0 kcal/mol per unit (`vdf9-trfe4-an1-14` +0.197 against the
   matrix's +0.056); in DFT's four-monomer cells it is a pin for all-trans, -3.3 to -4.3 per
-  unit. If DFT's number held at one in fourteen the leader would sit near -0.35. That document
-  now says so at its head. The check that can be made here is the row's cells relaxed in the
-  potential at its own dilution.
+  unit. If DFT's number held at one in fourteen the leader would sit near -0.35. It does not
+  hold: the row's cells relaxed in the potential at its own dilution give -0.055 (3.14).
 
 **What this reads on.** The margin only: the strain axis. Nothing here is a loss, a rate or a
 blocked stress.
@@ -1114,3 +1115,50 @@ Files: `docs/predictions/row_cells_dft_vdf2-trfe1-cdfe1-4.json`,
 `mlip/row_cells_vdf2-trfe1-cdfe1-4_frames_pbe_d3bj.extxyz` (2 frames),
 `margins_chain1-cfe.json` (the 25 rows), `row_cells_dft_vdf2-trfe1-tfe1-4.json`,
 `chain_split_dft_vdf2-trfe1-tfe1-4.json`. Tests: `tests/test_row_cells_dft.py`.
+
+### 3.14 Four fourteen-monomer rows in the potential: the levels part from chain1's, the pins do not (2026-11-19)
+
+DFT cannot do a cell of 168 atoms on this machine, and the potential can relax one in ten
+minutes. So the four rows the ranking turns on were relaxed in it at their own dilution, each
+row's five cells from polyfind's (`examples/mlip_train.py relax`, to 0.02 eV/A; the cells move
+by 1.5% in volume at most), and its own energies collected
+(`examples/row_cells_frames.py potential`, `docs/predictions/rows14_potential.json`). There is no
+DFT on these cells. What the potential's own margin is worth is in 3.13: within 0.11 of DFT on six
+small cells, 0.36 off on the seventh.
+
+| all-trans minus the lowest helix, kcal/mol per monomer | `all_s1` | chain1-cfe | belt4 |
+|---|---:|---:|---:|
+| the TrFE matrix, `vdf10-trfe4-14` | -0.024 | +0.222 | +0.056 |
+| the CFE terpolymer, `vdf9-trfe4-cfe1-14` | +0.078 | +0.359 | +0.317 |
+| the nitrile alone, `vdf9-trfe4-an1-14` | -0.118 | no preset | +0.197 |
+| the leader of the belt4 ranking, `vdf9-trfe3-an1-rvdf1-14` | -0.055 | no preset | +0.037 |
+| what a CFE does at one in fourteen | +0.102 | +0.137 | +0.261 |
+| what a nitrile does at one in fourteen | -0.094 | | +0.141 |
+
+- **The potential and chain1-cfe agree on the CFE unit**: a pin for the helix of +0.10 and +0.14
+  per monomer (+1.4 and +1.9 kcal/mol per unit). Belt4 has twice that.
+- **The nitrile at one in fourteen is a pin for all-trans in the potential**, -0.09 per monomer,
+  -1.3 kcal/mol per unit: the sign DFT has at one in four and a third of the size (-3.3 to
+  -4.3). Belt4 has a pin for the helix of +2.0. So the per-unit number does not carry over
+  between the two dilutions, and belt4 is wrong in sign at both.
+- **The leader of the belt4 ranking comes out at -0.055**, all-trans the lower by a little: at
+  the foot of the window or just under it, 0.09 below belt4's +0.037 and nowhere near the -0.35
+  that DFT's per-unit number at one in four would have given. On this evidence it is neither
+  confirmed nor thrown out.
+- **The levels part.** The potential has the matrix 0.25 below chain1-cfe and the terpolymer
+  0.28 below. On the 25 mol% TrFE cell of four monomers the two were 0.07 apart and DFT was
+  with chain1 (3.10). One of them drifts between that cell and this one, and nothing here says
+  which.
+- An observation, not a test: the potential's levels are the ones the materials are known by.
+  The 71/29 copolymer is a ferroelectric, polar with no field, and the potential has its cell
+  at zero (-0.02); the CFE terpolymer is a relaxor, and the potential has it in the window
+  (+0.08). chain1-cfe has both above the window (+0.22, +0.36). These are zero-kelvin cells of
+  perfect crystals, so the match may be an accident.
+- **What decides it**: DFT on a cell of the matrix's own motif that is still affordable here,
+  VVRVVR, six monomers and seventy-two atoms (`vdf4-trfe2-6`), with polyfind and the potential
+  on the same cell. Running.
+
+**What this reads on.** The margin only, and from a potential that has been 0.36 off once. No
+loss, rate or blocked stress.
+
+Files: `docs/predictions/rows14_potential.json`. Test: `tests/test_row_cells_dft.py`.

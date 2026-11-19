@@ -36,14 +36,17 @@ the smallest cell that holds it (four monomers a chain) and compare the margin w
   with, has it at +0.354 and +0.058 in those cells, and in the fourteen-monomer cells below it
   makes the nitrile a pin for the helix (+2.0 per unit). Every row with a nitrile, **the leader
   of 5.6 among them** (the nitrile with a reversed VDF on 21 mol% TrFE, +0.037), rests on that
-  pin. If DFT's per-unit number held at one in fourteen the leader's margin would be near -0.35,
-  a cell that is polar with no field, not one on the window. Whether it holds at that dilution
-  is not known: no fourteen-monomer cell has been checked, and no polyfind preset has the
-  nitrile.
+  pin. DFT's per-unit number does not carry over to one in fourteen as it stands: our DFT-trained
+  potential, on the fourteen-monomer cells themselves (`docs/MLIP_SECOND_OPINION.md` 3.14; no DFT
+  at that size, and the potential has been 0.36 off on one small cell), has the nitrile as a pin
+  for all-trans of -1.3 per unit there and **the leader at -0.055**, all-trans the lower by a
+  little: at the foot of the window or just under it, not confirmed and not thrown out. No
+  polyfind preset has the nitrile.
 - **Belt4 is right on TrFE by two errors that cancel** (0.7 inside the chain against 0.7 between
   chains) and wrong on CFE by 0.38, CTFE by 0.42 and CDFE by 0.75 in those cells.
 - A newer preset, `pvdf-dft-chain1-cfe`, meets DFT on TrFE, reversed VDF, CFE, TFE and (at the
-  edge) CTFE. The 25 rows without a nitrile or an unchecked unit have their margins under it in 3.13.
+  edge) CTFE in four-monomer cells. On the fourteen-monomer matrix it and the potential are 0.25
+  apart (+0.222 against -0.024), with a DFT cell of six monomers running to say which is right. The 25 rows without a nitrile or an unchecked unit have their margins under it in 3.13.
   They are margins only: the loss, the rate and the blocked stress of sections 5 and 8 have not
   been redone under it.
 

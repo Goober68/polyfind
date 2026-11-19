@@ -312,3 +312,24 @@ def test_the_potentials_own_margin_on_the_seven_small_cells():
     for row in off:
         m = _stored(row)["margins"]["free"]
         assert m["potential"] * m["dft"] > 0
+
+
+def test_four_fourteen_monomer_rows_in_the_potential():
+    """The potential's own margins of cells too large for DFT here: an indication (0.11 on six small cells, 0.36 on the seventh)."""
+    stored = json.loads((PRED / "rows14_potential.json").read_text())
+    assert stored["potential"] == "all_s1"
+    rows = stored["rows"]
+    assert all(r["helix_placements"] == 4 and r["cells"]["TTTT"]["n_monomers"] == 28 for r in rows.values())
+    m = {k: r["margin"] for k, r in rows.items()}
+    assert m == pytest.approx({"vdf10-trfe4-14": -0.024, "vdf9-trfe4-cfe1-14": +0.078, "vdf9-trfe4-an1-14": -0.118, "vdf9-trfe3-an1-rvdf1-14": -0.055}, abs=0.002)
+    under = json.loads((PRED / "margins_chain1-cfe.json").read_text())["rows"]
+    # what a CFE does at one in fourteen: +0.10 in the potential, +0.14 in chain1-cfe; the levels are 0.25 and 0.28 apart
+    assert m["vdf9-trfe4-cfe1-14"] - m["vdf10-trfe4-14"] == pytest.approx(+0.102, abs=0.003)
+    assert under["vdf9-trfe4-cfe1-14"]["margin"] - under["vdf10-trfe4-14"]["margin"] == pytest.approx(+0.137, abs=0.003)
+    assert under["vdf10-trfe4-14"]["margin"] - m["vdf10-trfe4-14"] == pytest.approx(+0.246, abs=0.003)
+    # the nitrile at one in fourteen: a pin for all-trans, -0.09 a monomer, where belt4 has +0.14 for the helix
+    assert m["vdf9-trfe4-an1-14"] - m["vdf10-trfe4-14"] == pytest.approx(-0.094, abs=0.003)
+    belt4 = json.loads((PRED / "polished_margins_belt4.json").read_text())["rows"]
+    assert belt4["vdf9-trfe4-an1-14"]["margin"] - belt4["vdf10-trfe4-14"]["margin"] == pytest.approx(+0.141, abs=0.003)
+    assert belt4["vdf9-trfe3-an1-rvdf1-14"]["margin"] == pytest.approx(+0.037, abs=0.002)
+    assert all(0.08 < r["strain_along_chain"] < 0.13 for r in rows.values())
