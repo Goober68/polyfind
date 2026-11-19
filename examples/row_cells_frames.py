@@ -85,12 +85,32 @@ def write_kink(args):
     spec = importlib.util.spec_from_file_location("dilute_kink", Path(__file__).with_name("dilute_kink.py"))
     DK = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(DK)
+    arrays = lambda d: {k: (np.asarray(v, dtype=float) if isinstance(v, list) else v) for k, v in d.items()}  # noqa: E731
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    if args.scan:  # the kink sheet at chosen sites of examples/kink_site_scan.py: every chain kinked in register, in the cell the sheet carries
+        scan = json.loads(Path(args.scan).read_text())
+        row, sites = args.key.split("@")[0], scan["rows"][args.key]["sites"]
+        kinked = arrays(json.loads(Path(args.kinked_references).read_text())["kinked_references"][args.key])
+        tag = args.tag or Path(scan["preset"]).stem.split("-")[-1]
+        hand = "m" if args.key.endswith("~") else ""
+        with parameters_of(scan["preset"]).applied():
+            polymer = DK.C.make_polymer(row, scan["rows"][args.key]["letters"])
+            model, _, ch = DK.make_model(polymer, kinked, 1, 1)
+            for site in [s for s in args.sites.split(",") if s]:
+                a = atoms_of(model, np.asarray(sites[site]["state"], dtype=float))
+                name = f"sheet_{row}_{tag}_at{site}{hand}"
+                a.info.update(family="kinkcell", frame=name, n_monomers=model.nc * ch.n_monomers, kmesh=args.kmesh, conformation=f"kink sheet at bond {site}", kinked_chains=model.nc,
+                              source=f"polyfind {scan['preset']}, {args.key}, kink sheet at offset {site} (units {sites[site]['units']}), pendants as built",
+                              polyfind_kcal_per_kink_pair=float(sites[site]["formation"]))
+                write(out / f"{name}.start.xyz", a, format="extxyz")
+                print(f"{name}: {len(a)} atoms, cell {np.round(a.cell.cellpar(), 3).tolist()}, polyfind {sites[site]['formation']:+.3f} kcal/mol per kink pair")
+        print(f"written {out}")
+        return
     disk = json.loads(Path(args.dilute).read_text())
     entry = disk["rows"][args.key]
     row, (nx, ny), kinked = entry["row"], entry["supercell"], entry["kinked_chains"]
-    ref = {k: (np.asarray(v, dtype=float) if isinstance(v, list) else v) for k, v in disk["all_trans_references"][row].items()}
-    out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
+    ref = arrays(disk["all_trans_references"][row])
     tag = args.tag or Path(disk["preset"]).stem.split("-")[-1]
     with parameters_of(disk["preset"]).applied():
         polymer = DK.C.make_polymer(row, entry["letters"])
@@ -209,7 +229,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("kink", help="a dilute_kink.py run's all-trans and kinked cells as NAME.start.xyz")
-    s.add_argument("--dilute", required=True, help="the file examples/dilute_kink.py wrote")
+    s.add_argument("--dilute", default="", help="the file examples/dilute_kink.py wrote")
+    s.add_argument("--scan", default="", help="instead of --dilute: the file examples/kink_site_scan.py wrote (its key is ROW@0, or ROW@0~ for the other hand)")
+    s.add_argument("--kinked-references", default="docs/predictions/kink_migration_belt4.json", help="with --scan: the kinked crystals the scans started from")
+    s.add_argument("--sites", default="0", help="with --scan: comma list of the sites (bond offsets) whose cell is written")
     s.add_argument("--key", required=True, help="the run's key there, as 'vdf4-trfe2-6@0 1x1 kinked 0,1'")
     s.add_argument("--stages", default="flexible_host", help="comma list of the stages whose kinked cell is written")
     s.add_argument("--kmesh", required=True)
