@@ -1,0 +1,84 @@
+{
+ "what": "a kink pair's energy (T G+ T G- T on every chain of the cell, in register), kcal/mol per kink pair: the kinked cell minus the all-trans cell of the same lattice, per kinked chain. DFT is a single point on the cell the potential relaxed with the lattice held (the force left is stored); polyfind is the preset's own relaxation at its own all-trans lattice (examples/dilute_kink.py, stage flexible_host)",
+ "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)",
+ "lattices": {
+  "belt4_lattice": {
+   "all_trans": "kink_vdf4-trfe2-6_belt4_TT_in_all_s1",
+   "kinked": "kink_vdf4-trfe2-6_belt4_flexible_host_in_all_s1",
+   "atoms": 72,
+   "n_monomers": 12,
+   "kinked_chains": 2,
+   "cell_A_deg": [
+    4.884271916708363,
+    8.480445826158684,
+    15.505852304279427,
+    90.0,
+    90.0,
+    91.76671395096209
+   ],
+   "volume_A3_per_monomer": 53.49662937865355,
+   "dft": 6.0061374721646015,
+   "potential": 6.676650580906562,
+   "largest_force_left_eV_per_A": 0.06738193,
+   "potential_minus_dft_meV_per_monomer": {
+    "all_trans": -0.02318943643331295,
+    "kinked": 4.8228540058516955
+   },
+   "kink_dihedrals_deg": [
+    [
+     146.5471418733767,
+     170.7201565247013,
+     -133.9218248059872
+    ],
+    [
+     146.5471606983043,
+     170.7201527439721,
+     -133.9218322962423
+    ]
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf4-trfe2-6@0 1x1 kinked 0,1, stage flexible_host, pendants as built",
+   "polyfind": 6.595203964337379
+  },
+  "potential_lattice": {
+   "all_trans": "row_vdf4-trfe2-6_TTTT_chain1_in_all_s1",
+   "kinked": "kink_vdf4-trfe2-6_potlattice_flexible_host_in_all_s1",
+   "atoms": 72,
+   "n_monomers": 12,
+   "kinked_chains": 2,
+   "cell_A_deg": [
+    5.088127815498754,
+    8.785797766075412,
+    15.435848836717522,
+    89.99999961191021,
+    89.99999973127221,
+    90.15093051619084
+   ],
+   "volume_A3_per_monomer": 57.50253337736235,
+   "dft": 4.153819791306576,
+   "potential": 4.754272994966219,
+   "largest_force_left_eV_per_A": 0.08273347,
+   "potential_minus_dft_meV_per_monomer": {
+    "all_trans": 0.24170573260562378,
+    "kinked": 4.581400619827036
+   },
+   "kink_dihedrals_deg": [
+    [
+     155.38932364870962,
+     169.32641995879533,
+     -140.60985757244268
+    ],
+    [
+     155.3894360888443,
+     169.3262913145693,
+     -140.61014654621442
+    ]
+   ],
+   "source": "polyfind pvdf-dft-chain1, vdf4-trfe2-6@0 1x1 kinked 0,1, stage flexible_host, pendants as built, carried to the lattice of row_vdf4-trfe2-6_TTTT_chain1_in_all_s1"
+  }
+ },
+ "polyfind_only": {
+  "chain1_at_its_own_lattice": 3.66,
+  "belt4_repeat_free": 6.102,
+  "chain1_repeat_free": 3.286
+ }
+}

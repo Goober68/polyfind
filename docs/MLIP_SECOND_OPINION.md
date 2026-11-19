@@ -1312,3 +1312,42 @@ are a job for a rented machine with more memory.
 Files: `docs/predictions/chain_conformers_trfe_pbe_d3bj.json`, `unit_torsion_trfe_chain1.json`,
 `margins_trfe_torsion_dft_rows.json`. Test: `tests/test_row_cells_dft.py`.
 
+### 3.17 A kink's energy against DFT, for the first time (2026-11-19)
+
+The frequency and the loss of every cell in `docs/CANDIDATE_MATERIALS.md` come from the energies
+of kink pairs (T G+ T G- T), computed under belt4, and none had been put to DFT. This is the
+first: the six-monomer cell of 3.15 (`vdf4-trfe2-6`, 72 atoms) with a kink pair on both chains,
+in register, the lattice held at the all-trans cell's (`examples/dilute_kink.py`, stage
+`flexible_host`; `examples/row_cells_frames.py kink` writes the cells as atoms; the potential
+relaxes the atoms with the cell held; DFT is asked once for each relaxed cell). A kink pair
+does not fit a six-monomer repeat: its gauche bonds flatten to about 150 and -140 degrees, and it
+goes back to all-trans when the whole cell is freed. So this is a squeezed kink at a held
+lattice, the same structure in every evaluator, and not the kink sheet of the fourteen-monomer
+cells.
+
+| kcal/mol per kink pair | volume per monomer, A3 | DFT | `all_s1` | polyfind |
+|---|---:|---:|---:|---:|
+| at belt4's all-trans lattice | 53.5 | **6.01** | 6.68 | belt4 6.60 |
+| at the lattice the potential relaxes the all-trans cell to (DFT's stress on it under 0.12 GPa) | 57.5 | **4.15** | 4.75 | |
+| at chain1's all-trans lattice | 57.8 | not asked | 5.01 | chain1 3.66 |
+
+- **The lattice decides a third of it.** In DFT the same kink costs 6.0 in belt4's cell and
+  4.15 in the cell DFT is at rest in. Belt4's all-trans cell is 7% too dense (0.31 kcal/mol
+  per monomer above the potential's own), and a kink needs room.
+- **Belt4's kink is 10% dear at its own lattice and 59% dear against DFT at DFT's.** The first
+  is the evaluator, the second is what its tables use: 6.60 where DFT has 4.15.
+- **chain1, whose cell is right to half a per cent, is 12% cheap**: 3.66 against 4.15.
+- **The potential is 0.60 to 0.67 high at both lattices** (0.11 kcal/mol per monomer on the
+  kinked cell, 0.00 on the all-trans one): it was never shown a kink. It has the lattice's part
+  right, 1.92 against DFT's 1.85. The three labelled frames are in the repository for the next
+  fit.
+- **What this does not test.** The rates in the tables are ratios between cells: the kink
+  sheet's energy in one cell against another's. One cell cannot say whether belt4's 59%
+  applies to every cell alike (then every ratio is too wide by the same factor in the
+  exponent) or differently. The four fourteen-monomer sheets are being relaxed in the potential
+  for that.
+
+Files: `docs/predictions/kink_dft_vdf4-trfe2-6.json`,
+`mlip/kink_vdf4-trfe2-6_frames_pbe_d3bj.extxyz` (4 frames). Test:
+`tests/test_row_cells_dft.py`.
+

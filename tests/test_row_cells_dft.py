@@ -411,3 +411,25 @@ def test_the_ethylene_cell_is_met_at_the_edge_by_chain1_and_missed_in_sign_by_be
     q = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]["chain1"]["vdf2-trfe1-e1-4"]["pairs"]["TTTT minus G'TGT"]
     # chain1's error is between chains again: the all-trans cell 0.23 too strongly bound
     assert q["inside_a_chain"] - dft["inside_a_chain"] == pytest.approx(+0.041, abs=0.004) and q["between_chains"] - dft["between_chains"] == pytest.approx(-0.231, abs=0.004)
+
+
+def test_a_kinks_energy_against_dft_at_two_lattices():
+    """The squeezed kink pair of the six-monomer matrix cell, both chains kinked, lattice held: DFT, the potential, the presets."""
+    stored = json.loads((PRED / "kink_dft_vdf4-trfe2-6.json").read_text())
+    dense, rest = stored["lattices"]["belt4_lattice"], stored["lattices"]["potential_lattice"]
+    assert dense["atoms"] == rest["atoms"] == 72 and dense["kinked_chains"] == 2
+    assert all(v["largest_force_left_eV_per_A"] < 0.1 for v in (dense, rest))
+    # the kink is still a kink in the cells DFT was asked for: two flattened gauche bonds of opposite sense about a trans one
+    for v in (dense, rest):
+        g1, t, g2 = v["kink_dihedrals_deg"][0]
+        assert 140 < g1 < 160 and -145 < g2 < -130 and abs(t) > 165
+    assert (dense["dft"], dense["potential"], dense["polyfind"]) == pytest.approx((6.006, 6.677, 6.595), abs=0.005)
+    assert (rest["dft"], rest["potential"]) == pytest.approx((4.154, 4.754), abs=0.005) and "polyfind" not in rest
+    # belt4's cell is 7% denser than the one DFT is at rest in, and the kink is 1.85 dearer there
+    assert dense["volume_A3_per_monomer"] / rest["volume_A3_per_monomer"] == pytest.approx(0.930, abs=0.003)
+    assert dense["dft"] - rest["dft"] == pytest.approx(1.85, abs=0.01) and dense["potential"] - rest["potential"] == pytest.approx(1.92, abs=0.01)
+    # belt4 at its own lattice against DFT at DFT's: 59% dear; chain1 at its own: 12% cheap; the potential 0.6 high at both
+    assert dense["polyfind"] / rest["dft"] == pytest.approx(1.59, abs=0.01)
+    assert stored["polyfind_only"]["chain1_at_its_own_lattice"] / rest["dft"] == pytest.approx(0.88, abs=0.01)
+    assert 0.59 < dense["potential"] - dense["dft"] < 0.68 and 0.59 < rest["potential"] - rest["dft"] < 0.68
+    assert abs(dense["potential_minus_dft_meV_per_monomer"]["all_trans"]) < 0.5 and 4.0 < dense["potential_minus_dft_meV_per_monomer"]["kinked"] < 5.0

@@ -98,9 +98,14 @@ rate models of 5.6 (the sum over kink sites; one chain's move).
   frequency, a fifth to a twentieth of its loss, and 7.2 to 8.8 pN/nm2 through the crystal
   against 6.5. If it is below, it is a ferroelectric and not a candidate of this kind. Its
   speed and loss do not depend on which: they come from the kink energies.
-- **Those kink energies are the weakest input here.** They are belt4's, belt4 has the nitrile's
-  effect on the margin wrong in sign, and no kink sheet has been put to DFT or to the potential.
-  The frequency and tan delta of every nitrile row carry that.
+- **Those kink energies are the weakest input here.** They are belt4's, and belt4 has the
+  nitrile's effect on the margin wrong in sign. One kink has now been put to DFT
+  (`docs/MLIP_SECOND_OPINION.md` 3.17: a squeezed kink pair in a six-monomer cell of the
+  matrix's motif, lattice held): belt4's energy is 10% above DFT's at belt4's own lattice and
+  59% above DFT's at the lattice DFT is at rest in (6.60 against 4.15 kcal/mol per kink pair),
+  because belt4's cell is 7% too dense and a kink needs room. The rates below are ratios
+  between cells, and whether the 59% is common to all cells is not known. The frequency and tan
+  delta of every row carry that, the nitrile rows most.
 - **The nitrile alone is below zero over all of the potential's bar but its last 0.02.** On
   this evidence it is a ferroelectric.
 - The matrix is slow and lossy at any margin in the bar: its kink sheets are the dear ones, and

@@ -396,24 +396,34 @@ right": true at one registry, not along it).
         fitted TrFE term, for a third estimate of their level: `rows_under_preset.py --preset
         /opt/dft/unit_torsion_trfe_chain1.json --redo-failed --minutes 100 --rows
         vdf10-trfe4-14,vdf9-trfe4-cfe1-14 --out /opt/dft/margins_trfe_torsion.json`.
-        A KINK'S ENERGY AGAINST DFT, IN PROGRESS (16:40 UTC; the kink energies set frequency and tan delta and
-        had no test). The six-monomer matrix cell, both chains kinked (T G+ T G- T at bonds 0 to 2), lattice held
-        at the all-trans values: `python examples/dilute_kink.py --row vdf4-trfe2-6 --nx 1 --ny 1 --kinked all
-        --stages flexible_host,c_free,cell_free --out /opt/dft/kink6/dilute_kink_belt4.json` (14 s; the out file
-        was seeded with `docs/predictions/dilute_kink_belt4_dft_rows.json` for the all-trans reference): belt4
-        +6.595 kcal/mol per kink pair at the held lattice, +6.102 with the repeat free, AND THE KINK COLLAPSES
-        when the whole cell is free (a kink pair does not fit a six-monomer repeat: gauche bonds flattened to 142
-        and -135). `python examples/row_cells_frames.py kink --dilute THAT --key "vdf4-trfe2-6@0 1x1 kinked 0,1"
-        --stages flexible_host,c_free --kmesh "4 2 2" --out /opt/dft/kink6` (new subcommand) writes the cells as
-        atoms; `mlip_train.py relax --model docs/predictions/mlip/models/all_s1.model --name all_s1 --cells
-        ..._TT.start.xyz ..._flexible_host.start.xyz --out /opt/dft/kink6 --mask "0 0 0 0 0 0" --fmax 0.02`
-        (atoms only): THE POTENTIAL +6.677, the kink kept (147, 171, -134 degrees). belt4 AND THE POTENTIAL AGREE
-        TO 0.08 IN 6.6. DFT single points on the two relaxed cells are queued behind the ethylene check
-        (`mlip_frames.py label --frames /opt/dft/kink6 --names
-        kink_vdf4-trfe2-6_belt4_TT_in_all_s1,kink_vdf4-trfe2-6_belt4_flexible_host_in_all_s1 --np 3`; twenty
-        minutes a cell). THEN: chain1's number (`dilute_kink.py --preset pvdf-dft-chain1` with its own out file),
-        the write-up, and the fourteen-monomer sheets in the potential (their geometries are not stored in
-        `kink_formation_belt4_polished.json`; they have to be made again).
+        A KINK'S ENERGY AGAINST DFT, DONE FOR ONE CELL (18:10 UTC, docs 3.17,
+        `docs/predictions/kink_dft_vdf4-trfe2-6.json`, 4 labelled frames in
+        `mlip/kink_vdf4-trfe2-6_frames_pbe_d3bj.extxyz`; the kink energies set frequency and tan delta and had no
+        test). The six-monomer matrix cell, both chains kinked (T G+ T G- T at bonds 0 to 2), lattice held; a kink
+        pair does not fit a six-monomer repeat (gauche bonds flatten to about 150 and -140; IT COLLAPSES WHEN THE
+        CELL IS FREED), so this is a squeezed kink, the same structure in every evaluator. kcal/mol per kink pair:
+        AT belt4's ALL-TRANS LATTICE (53.5 A3 a monomer, 7% too dense) DFT 6.01, the potential 6.68, belt4 6.60;
+        AT THE LATTICE THE POTENTIAL RELAXES THE ALL-TRANS CELL TO (57.5 A3) DFT 4.15, the potential 4.75; chain1
+        at its own lattice (57.8 A3) 3.66 (the potential there 5.01, no DFT). SO: belt4's KINK IS 59% DEAR against
+        DFT at DFT's lattice (10% at its own); chain1 12% CHEAP; THE POTENTIAL 0.60 TO 0.67 HIGH AT BOTH (never
+        shown a kink) with the lattice's part right (1.92 against 1.85). NOT TESTED: the ratios between cells,
+        which are what the rates are. How: `python examples/dilute_kink.py --row vdf4-trfe2-6 --nx 1 --ny 1
+        --kinked all --stages flexible_host,c_free,cell_free [--preset pvdf-dft-chain1] --out
+        /opt/dft/kink6/dilute_kink_{belt4,chain1}.json`; `python examples/row_cells_frames.py kink --dilute THAT
+        --key "vdf4-trfe2-6@0 1x1 kinked 0,1" --stages flexible_host --kmesh "4 2 2" [--tag chain1] --out
+        /opt/dft/kink6`; `mlip_train.py relax ... --mask "0 0 0 0 0 0" --fmax 0.02` (atoms only);
+        `mlip_frames.py label --frames /opt/dft/kink6 --names ... --np 3` (25 minutes a cell);
+        `row_cells_frames.py kink-collect --pairs NAME=TT.dft.xyz,KINKED.dft.xyz ... --out JSON --extxyz FILE`.
+        RUNNING (18:10 UTC, three threads, ends by itself): THE FOUR FOURTEEN-MONOMER KINK SHEETS IN THE
+        POTENTIAL, cell free, each row's cheapest site of the scan (`row_cells_frames.py kink --scan
+        docs/predictions/kink_site_scan_belt4.json --key "ROW@0~" --sites N --kmesh "4 2 1" --out
+        /opt/dft/sheets14`: matrix site 12 belt4 4.66, CFE cell site 10 3.42, nitrile alone site 8 2.15, leader
+        site 8 1.39; `mlip_train.py relax --cells /opt/dft/sheets14/sheet_*.start.xyz --out /opt/dft/sheets14
+        --threads 3 --fmax 0.02 --steps 800`). The sheet's energy in the potential is the relaxed kinked cell
+        minus the row's all-trans cell in `docs/predictions/rows14_potential.json`, times 28 monomers over 2
+        chains; check each relaxed cell still holds its kink before reading it.
+        MATRIX UNDER THE TrFE TERM (not adopted): `vdf10-trfe4-14` +0.100 (`/opt/dft/margins_trfe_torsion.json`;
+        chain1-cfe +0.222, the potential -0.024); the terpolymer's cells were still running at 18:10.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

@@ -128,6 +128,53 @@ def write_kink(args):
     print(f"written {out}")
 
 
+def kink_collect(args):
+    """A kink's energy by DFT, by the potential that relaxed the cells and by polyfind: each ``--pairs NAME=ALL_TRANS,KINKED`` is
+    two labelled frames (``*.dft.xyz``, paths) of one lattice, the difference per kinked chain."""
+    from ase.io import read, write
+
+    spec = importlib.util.spec_from_file_location("chain_split", Path(__file__).with_name("chain_split.py"))
+    CS = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(CS)
+    out = {"what": "a kink pair's energy (T G+ T G- T on every chain of the cell, in register), kcal/mol per kink pair: the kinked cell minus the all-trans cell of the "
+                   "same lattice, per kinked chain. DFT is a single point on the cell the potential relaxed with the lattice held (the force left is stored); "
+                   "polyfind is the preset's own relaxation at its own all-trans lattice (examples/dilute_kink.py, stage flexible_host)",
+           "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)", "lattices": {}}
+    frames = []
+    for item in args.pairs:
+        name, files = item.split("=")
+        tt, kinked = (read(f) for f in files.split(","))
+        n, chains = int(tt.info["n_monomers"]), int(kinked.info["kinked_chains"])
+        per = lambda key: (float(kinked.info[key]) * (n if "per_monomer" in key else 1) - float(tt.info[key]) * (n if "per_monomer" in key else 1)) * KCAL / chains  # noqa: E731
+        torsions = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(kinked, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(kinked)]
+        rec = {"all_trans": str(tt.info["frame"]), "kinked": str(kinked.info["frame"]), "atoms": len(tt), "n_monomers": n, "kinked_chains": chains,
+               "cell_A_deg": [float(v) for v in tt.cell.cellpar()], "volume_A3_per_monomer": float(tt.get_volume() / n),
+               "dft": per("REF_energy"), "potential": per("potential_eV_per_monomer"),
+               "largest_force_left_eV_per_A": float(max(np.abs(tt.arrays["REF_forces"]).max(), np.abs(kinked.arrays["REF_forces"]).max())),
+               "potential_minus_dft_meV_per_monomer": {"all_trans": 1e3 * (float(tt.info["potential_eV_per_monomer"]) - float(tt.info["REF_energy"]) / n),
+                                                       "kinked": 1e3 * (float(kinked.info["potential_eV_per_monomer"]) - float(kinked.info["REF_energy"]) / n)},
+               "kink_dihedrals_deg": [t[:3] for t in torsions], "source": str(kinked.info.get("source", ""))}
+        if "polyfind_kcal_per_kink_pair" in kinked.info and "carried to the lattice" not in rec["source"]:
+            rec["polyfind"] = float(kinked.info["polyfind_kcal_per_kink_pair"])
+        out["lattices"][name] = rec
+        frames += [tt, kinked]
+        print(f"{name}: cell {np.round(rec['cell_A_deg'], 3).tolist()}, {rec['volume_A3_per_monomer']:.2f} A3 a monomer; kink pair DFT {rec['dft']:+.3f}, the potential {rec['potential']:+.3f}"
+              + (f", polyfind {rec['polyfind']:+.3f}" if "polyfind" in rec else "") + f"; force left {rec['largest_force_left_eV_per_A']:.2f} eV/A; kink at "
+              + ", ".join(f"{v:.0f}" for v in rec["kink_dihedrals_deg"][0]))
+    for item in args.also:  # numbers with no DFT of their own: NAME=polyfind kcal per kink pair, as chain1 at its own lattice
+        name, value = item.split("=")
+        out.setdefault("polyfind_only", {})[name] = float(value)
+    Path(args.out).write_text(json.dumps(out, indent=1))
+    if args.extxyz:
+        seen, keep = set(), []
+        for a in frames:
+            if a.info["frame"] not in seen:
+                seen.add(a.info["frame"])
+                keep.append(a)
+        write(args.extxyz, keep, format="extxyz")
+    print(f"written {args.out}")
+
+
 KCAL = 23.0605  # kcal/mol in one eV
 GPA = 160.21766  # GPa in one eV/A^3
 
@@ -238,6 +285,11 @@ def main():
     s.add_argument("--kmesh", required=True)
     s.add_argument("--tag", default="")
     s.add_argument("--out", required=True)
+    s = sub.add_parser("kink-collect", help="a kink's energy from labelled frames")
+    s.add_argument("--pairs", nargs="+", required=True, help="NAME=ALL_TRANS.dft.xyz,KINKED.dft.xyz, one lattice each")
+    s.add_argument("--also", nargs="*", default=[], help="NAME=VALUE: a polyfind number with no DFT of its own, kept beside the others")
+    s.add_argument("--out", required=True)
+    s.add_argument("--extxyz", default="", help="store the labelled frames here")
     s = sub.add_parser("write", help="a row's stored cells as NAME.start.xyz")
     s.add_argument("--margins", required=True, help="a file of examples/rows_under_preset.py")
     s.add_argument("--row", required=True)
@@ -259,7 +311,7 @@ def main():
     s.add_argument("--name", default="all_s1", help="the potential's name in the frames' names")
     s.add_argument("--out", required=True)
     args = ap.parse_args()
-    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink}[args.cmd](args)
+    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink, "kink-collect": kink_collect}[args.cmd](args)
 
 
 if __name__ == "__main__":
