@@ -74,6 +74,40 @@ def write_cells(args):
     print(f"written {out}; label with examples/mlip_frames.py label --frames {out}")
 
 
+def write_kink(args):
+    """One run of examples/dilute_kink.py as atoms: its all-trans supercell and the kinked cell at each of ``--stages``.
+
+    The kink's energy in another evaluator is then the difference of the two cells there, per kinked
+    chain.  A stage that holds the lattice (``flexible_host``) is compared at that lattice: relax the
+    atoms alone (``examples/mlip_train.py relax --mask "0 0 0 0 0 0"``), or the kink may leave."""
+    from ase.io import write
+
+    spec = importlib.util.spec_from_file_location("dilute_kink", Path(__file__).with_name("dilute_kink.py"))
+    DK = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(DK)
+    disk = json.loads(Path(args.dilute).read_text())
+    entry = disk["rows"][args.key]
+    row, (nx, ny), kinked = entry["row"], entry["supercell"], entry["kinked_chains"]
+    ref = {k: (np.asarray(v, dtype=float) if isinstance(v, list) else v) for k, v in disk["all_trans_references"][row].items()}
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    tag = args.tag or Path(disk["preset"]).stem.split("-")[-1]
+    with parameters_of(disk["preset"]).applied():
+        polymer = DK.C.make_polymer(row, entry["letters"])
+        model, x_tt, ch = DK.make_model(polymer, ref, nx, ny)
+        e_tt = model.physical_energy(x_tt)
+        for label, x in [("TT", x_tt)] + [(stage, np.asarray(entry["states"][stage], dtype=float)) for stage in args.stages.split(",") if stage]:
+            a = atoms_of(model, x)
+            formation = (model.physical_energy(x) - e_tt) / len(kinked)
+            name = f"kink_{row}_{tag}_{label}"
+            a.info.update(family="kinkcell", frame=name, n_monomers=model.nc * ch.n_monomers, kmesh=args.kmesh, conformation=label, kinked_chains=len(kinked),
+                          source=f"polyfind {disk['preset']}, {args.key}, {'the all-trans supercell' if label == 'TT' else 'stage ' + label}, pendants as built",
+                          polyfind_kcal_per_kink_pair=float(formation))
+            write(out / f"{name}.start.xyz", a, format="extxyz")
+            print(f"{name}: {len(a)} atoms, cell {np.round(a.cell.cellpar(), 3).tolist()}, polyfind {formation:+.3f} kcal/mol per kink pair")
+    print(f"written {out}")
+
+
 KCAL = 23.0605  # kcal/mol in one eV
 GPA = 160.21766  # GPa in one eV/A^3
 
@@ -174,6 +208,13 @@ def potential(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
+    s = sub.add_parser("kink", help="a dilute_kink.py run's all-trans and kinked cells as NAME.start.xyz")
+    s.add_argument("--dilute", required=True, help="the file examples/dilute_kink.py wrote")
+    s.add_argument("--key", required=True, help="the run's key there, as 'vdf4-trfe2-6@0 1x1 kinked 0,1'")
+    s.add_argument("--stages", default="flexible_host", help="comma list of the stages whose kinked cell is written")
+    s.add_argument("--kmesh", required=True)
+    s.add_argument("--tag", default="")
+    s.add_argument("--out", required=True)
     s = sub.add_parser("write", help="a row's stored cells as NAME.start.xyz")
     s.add_argument("--margins", required=True, help="a file of examples/rows_under_preset.py")
     s.add_argument("--row", required=True)
@@ -195,7 +236,7 @@ def main():
     s.add_argument("--name", default="all_s1", help="the potential's name in the frames' names")
     s.add_argument("--out", required=True)
     args = ap.parse_args()
-    {"write": write_cells, "collect": collect, "potential": potential}[args.cmd](args)
+    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink}[args.cmd](args)
 
 
 if __name__ == "__main__":
