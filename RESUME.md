@@ -278,40 +278,46 @@ right": true at one registry, not along it).
         kcal/mol per CFE unit): the bonds at the CFCl carbon take the shared torsion triple. On the TrFE cell belt4
         is right by two errors of 0.7 cancelling; chain1's are +0.13 and -0.22. THE POTENTIAL finds the geometry
         but its own margins are 0.07 to 0.10 from DFT's: relax in it, then ask DFT.
-        EVERY OTHER UNIT IS UNTESTED IN THE SAME WAY (CTFE, CDFE, the nitrile, TFE, VF, ethylene, DFE): 15 of the
-        35 rows hold chlorine and 11 more hold one of the others; 9 rows are VDF, TrFE and reversed VDF only, the
-        tested chemistry (6 of them have their chain1 margin; `vdf5-trfe5`, `vdf9-trfe4-rvdf1-14`, `vdf12-rvdf2-14`
-        do not yet). `examples/unit_dft_check.py --row ROW --work
-        /opt/dft/unit4 --model docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo
-        --check /opt/dft/chainsplit/check` runs the whole check for one small row and goes on from where it
-        stopped (about an hour a unit: five relaxations in the potential, two or three DFT cells of 10 to 15
-        minutes, two lone chains of 5). Rows `vdf2-trfe1-{ctfe,cdfe,an,tfe,vf,e,dfe,rvdf}1-4` are in
-        `candidate_screen.SEQUENCES`; polyfind's side of all seven is in `margins_{chain1,belt4}_dft_rows.json`
-        (CTFE: chain1 +0.134, belt4 +0.734). RUNNING (03:41 UTC, one background command): the CTFE check, then the
-        CFE unit's lone-chain conformers in DFT (`chain_conformers.py settle --frames /opt/dft/cfeconf --names
-        cfe2_tt,cfe2_helix`, then `cfe2_special,cfe2_plain --fixed-repeat`, `collect --chains cfe2 --out
-        docs/predictions/chain_conformers_cfe_pbe_d3bj.json`; log `/opt/dft/cfeconf_1.log`; frames for cfe4_tt and
-        cfe4_helix, the unit one in four, are built there too and not yet settled). NEXT: the checks of an, tfe,
-        cdfe, e, vf, dfe in that order. DFT WANTS THE MACHINE TO ITSELF (a lone chain's run was killed for memory
-        beside three relaxations).
-        THE FIX FOR A UNIT WHOSE ERROR IS INSIDE THE CHAIN: its own bonds have names now
-        (`fitting.LATTICE_TORSION_TYPES`: CH2-CFCl, CF2-CFCl, CF2-CHCl, CH2-CHCN, CH2-CHF, CHF-CHF beside CH2-CH2;
-        no preset gives them a triple yet). `examples/unit_torsion_fit.py --base pvdf-dft-chain1 --type CH2-CFCl
-        --dft docs/predictions/chain_conformers_cfe_pbe_d3bj.json --out docs/predictions/unit_torsion_cfe_chain1.json`
-        fits a triple to the lone chains (3 s an evaluation); its output file is a parameter set every row tool
-        takes in place of a preset's name (`fitting.parameters_of`). ACCEPTANCE: `rows_under_preset.py --preset
-        THAT_FILE --rows vdf2-trfe1-cfe1-4 --polished docs/predictions/polished_margins_belt4_dft_rows.json
-        --references docs/predictions/dilute_kink_belt4_dft_rows.json --out NEW.json` must give DFT's +0.682
-        (chain1 alone: +0.381), and `chain_split.py polyfind --fit new=THAT_FILE` the split +2.979 / -2.298. Then
-        register it as a preset (`register_preset(..., lattice_only=True)` with `typed_on(FITTED_CHAIN1, ...)`).
-        ALSO WAITING: `/opt/dft/rows14`: the fourteen-monomer matrix and CFE cells of chain1 as atoms; relaxed in
-        the potential so far: the matrix's all-trans cell. The helix cells are slow (168 atoms, several seconds a
-        step) and were paused for the DFT; `mlip_train.py relax --cells ... --out /opt/dft/rows14 --steps 600`.
-        And one more DFT cell for VRVC: its TGTG' helix placement is 0.015 below G'TGT in the potential
-        (`/opt/dft/cfe4/row_vdf2-trfe1-cfe1-4_TGTGp_chain1_in_all_s1.start.xyz`, not labelled yet).
-        THE 35-ROW RUN IS PAUSED (75 cells, 14 rows with a margin): rows whose unit fails its check would have to
-        be run again.
-        THE 35 ROWS UNDER chain1, MARGINS: RUNNING IN PIECES, THREE SIDE BY SIDE (`for k in 1 2 3; do python
+        THE CFCl BONDS HAVE THEIR OWN TORSION TRIPLE NOW: PRESET `pvdf-dft-chain1-cfe` (2026-11-19 05:00 UTC,
+        `docs/MLIP_SECOND_OPINION.md` 3.11). Lone chains of the alternating VDF-CFE polymer in DFT
+        (`docs/predictions/chain_conformers_cfe_pbe_d3bj.json`): the helix in its two placements -2.475 and -3.189
+        kcal/mol per monomer below all-trans; chain1 -1.783 and -2.835. `examples/unit_torsion_fit.py --base
+        pvdf-dft-chain1 --type CH2-CFCl --dft THAT --out docs/predictions/unit_torsion_cfe_chain1.json` (25 s) gives
+        (+0.4397, -2.1799, +1.5007) and -2.403 / -3.293. Two rows hold ONE combination of the three (the gauche
+        well against the trans one); the ridge holds the rest to chain1's triple, so THE BARRIER BETWEEN THE WELLS
+        IS NOT FITTED (it matters to the kink barriers, the rate axis). ACCEPTED ON CELLS NOT IN THE FIT
+        (`docs/predictions/margins_chain1-cfe_dft_rows.json`): VRVC +0.690 (DFT +0.682; chain1 +0.381), DFT's helix
+        placement; VRVK (CTFE) +0.400 (DFT +0.315; chain1 +0.134, belt4 +0.734): inside the 0.1 by 0.015, its
+        CF2-CFCl bond has no triple and is trans in both cells; VVRV unchanged +0.671. The CFE cell's split under it:
+        +0.715 = +3.161 - 2.445 upright (DFT +0.682 = +2.979 - 2.298), the unit's own part right to 0.05 inside
+        and 0.07 between. A MISTAKE CORRECTED: `cfe2_special` and `cfe2_plain` were not conformers (two gauche
+        bonds of opposite sense side by side; the chains broke up); dropped, frames in `/opt/dft/cfeconf/broken`.
+        Frames `cfe4_tt`, `cfe4_helix`, `cfe4_helix2` (the unit one in four, 24 atoms) are built in
+        `/opt/dft/cfeconf` and NOT settled: a further test of the triple, after the unit checks.
+        THE OTHER UNITS (the nitrile, TFE, CDFE, ethylene, VF, DFE): UNTESTED UNTIL THEIR CHECK. Rows by unit: AN
+        in 7 of the 35, CDFE 4, TFE 2, ethylene 2, VF 1, DFE 1 (15 rows in all); CFE 9, CTFE 3; 9 rows VDF, TrFE and
+        reversed VDF only. `examples/unit_dft_check.py --row ROW --work /opt/dft/unit4 --model
+        docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
+        /opt/dft/chainsplit/check --threads 3` runs the whole check for one small row and goes on from where it
+        stopped (about an hour a unit). Rows `vdf2-trfe1-{cdfe,an,tfe,vf,e,dfe,rvdf}1-4` are in
+        `candidate_screen.SEQUENCES`. RUNNING (04:47 UTC, background, ends by itself before two hours): the check
+        of `an`, then `tfe` with what time is left. THEN: cdfe, e, vf, dfe. A unit that fails gets lone-chain
+        conformers in `chain_conformers.CHAINS` (HELIX PLACEMENTS ONLY: a gauche bond next to one of the
+        opposite sense is not a conformer; add the unit's bonds to `TYPE_OF`), `settle`, `collect`, then
+        `unit_torsion_fit.py --base pvdf-dft-chain1-cfe --type ITS_BOND`, accepted on its four-monomer cell.
+        THE 35 ROWS, MARGINS UNDER `pvdf-dft-chain1-cfe`: RUNNING FOR THE 20 ROWS WHOSE UNITS ARE CHECKED (one
+        process beside the DFT: `python examples/rows_under_preset.py --preset pvdf-dft-chain1-cfe --redo-failed
+        --minutes 105 --rows vdf9-trfe4-cfe1-14,vdf7-trfe2-cfe1,vdf13-trfe6-cfe1-20,vdf6-trfe3-cfe1,vdf7-trfe2-cfe1-adj,vdf9-cfe1,vdf8-cfe2,vdf8-trfe4-cfe1-rvdf1-14,vdf9-trfe4-ctfe1-14,vdf7-trfe2-ctfe1,vdf8-trfe4-ctfe1-rvdf1-14,vdf5-trfe5,vdf9-trfe4-rvdf1-14,vdf12-rvdf2-14
+        --out /opt/dft/margins_chain1-cfe.json`, log `/opt/dft/rows_cfe_1.log`; run it again after a stop). The
+        checkpoint was seeded with the six rows of chain1's run that hold no CFCl carbon (the two presets are the
+        same potential for them; marked `carried_from`). chain1's own run (`/opt/dft/margins_chain1.json`, 14
+        rows) is kept for the comparison; its chlorine rows are superseded. The 15 rows with an unchecked unit
+        wait for their unit.
+        ALSO WAITING: one more DFT cell for VRVC: its TGTG' helix placement is 0.015 below G'TGT in the potential
+        and 0.217 above it in chain1-cfe (`/opt/dft/cfe4/row_vdf2-trfe1-cfe1-4_TGTGp_chain1_in_all_s1.start.xyz`,
+        not labelled). The fourteen-monomer cells in the potential (`/opt/dft/rows14`: both all-trans cells
+        relaxed, the helix cells not; 168 atoms, several seconds a step) were stopped for the DFT.
+        THE 35 ROWS UNDER chain1 ALONE (SUPERSEDED FOR THE CHLORINE ROWS; how it was run): three side by side (`for k in 1 2 3; do python
         examples/rows_under_preset.py --preset pvdf-dft-chain1 --redo-failed --minutes 105 --part $k/3 --out
         /opt/dft/margins_chain1.json > LOG_$k & done; wait`, one thread each; the --out file is the checkpoint,
         written under a lock so the parts share it; run the same command again after every stop or restart; about
