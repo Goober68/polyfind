@@ -333,23 +333,32 @@ right": true at one registry, not along it).
         docs/predictions/mlip/models/all_s1.model --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo --check
         /opt/dft/chainsplit/check --threads 3 --np 3` runs the whole check for one small row and goes on from
         where it stopped (about an hour a unit). Rows `vdf2-trfe1-{cdfe,tfe,vf,e,dfe,rvdf}1-4` are in
-        `candidate_screen.SEQUENCES`. THE DFT IS IDLE (08:30 UTC). NEXT FOR IT: `vdf2-trfe1-tfe1-4` (polyfind's side
-        done: chain1 -0.060, belt4 +0.224; cells part-relaxed in the potential), then e, vf, dfe. THE CDFE ROW
-        `vdf2-trfe1-cdfe1-4` FAILS IN polish_margins.py (one helix placement builds with an F two bonds deep:
-        "off-site charge asked for F atom 16, which has 2 neighbours"; log
-        `/opt/dft/unit4/vdf2-trfe1-cdfe1-4/steps.log`): the polish has to skip a placement that does not build
-        before that check can run. The check splits EVERY helix placement DFT has. THEN: e, vf, dfe. THE MACHINE HAS FOUR CORES:
+        `candidate_screen.SEQUENCES`. CDFE (2026-11-19 11:25 UTC, docs 3.13): VRVD DFT +0.968 = +2.394 inside
+        -1.426 between; chain1 +0.975 = +3.091 -2.117 shear-free: THE MARGIN TO 0.007 BY TWO ERRORS OF 0.7 THAT
+        CANCEL. The lone VDF-CDFE chains confirm it (`chain_conformers_cdfe_pbe_d3bj.json`: helix -2.843 and
+        +3.750; chain1 -3.418 and +1.467). NOT COUNTED AS PASSED; like the nitrile it needs both parts. One of its
+        helix placements does not build (the polish records `not_built` and goes on). RUNNING (10:47 UTC,
+        background, two cores, `--np 2`): the DFT check of `vdf2-trfe1-tfe1-4` (polyfind chain1 -0.060, belt4
+        +0.224; THE POTENTIAL ALONE HAS ALL-TRANS 0.44 BELOW THE HELIX, so expect a fail). `--no-dft` stops a check
+        after the cells are relaxed in the potential (one core). The check splits EVERY helix placement DFT has. THEN: e, vf, dfe. THE MACHINE HAS FOUR CORES:
         DFT ON THREE (`--np 3`) AND ONE OTHER JOB, NO MORE (a fifth process doubled a DFT step's time). A unit
         that fails INSIDE THE CHAIN gets lone-chain conformers (`chain_conformers.CHAINS` has an2, vf2, cdfe2,
         e2, tfe2, dfe2, ctfe2: all-trans and the helix placements that differ; `frames`, `settle`, `collect`),
         then `unit_torsion_fit.py --base pvdf-dft-chain1-cfe --type ITS_BOND`; one that fails BETWEEN CHAINS gets
         `unit_nonbonded_fit.py`; either is accepted on a cell that was not in the fit.
-        THE 35 ROWS, MARGINS UNDER `pvdf-dft-chain1-cfe`: FOR THE 20 ROWS WHOSE UNITS ARE CHECKED: 10 HAVE A MARGIN
-        (`vdf9-trfe4-cfe1-14` +0.359, `vdf7-trfe2-cfe1` +0.535, `vdf6-trfe3-cfe1` +0.492, `vdf7-trfe2-cfe1-adj`
-        +0.653, and the six carried rows). RUNNING FOR THE OTHER 10 (08:30 UTC, three side by side while the DFT
-        is idle, background): `R=vdf9-cfe1,vdf8-cfe2,vdf7-trfe2-ctfe1,vdf9-trfe4-ctfe1-14,vdf8-trfe4-cfe1-rvdf1-14,vdf5-trfe5,vdf8-trfe4-ctfe1-rvdf1-14,vdf9-trfe4-rvdf1-14,vdf12-rvdf2-14,vdf13-trfe6-cfe1-20;
-        for k in 1 2 3; do python examples/rows_under_preset.py --preset pvdf-dft-chain1-cfe --redo-failed
-        --minutes 100 --rows $R --part $k/3 --out /opt/dft/margins_chain1-cfe.json > /opt/dft/rows_cfe_3_$k.log & done; wait` (run it again after a stop). The
+        THE 35 ROWS, MARGINS UNDER `pvdf-dft-chain1-cfe`: DONE FOR 24 ROWS (2026-11-19 11:05 UTC):
+        `docs/predictions/margins_chain1-cfe.json`, table in docs 3.13. The 20 rows whose units pass (TrFE,
+        reversed VDF, CFE, CTFE at the edge) and the 4 CDFE rows (unit NOT passed: read them with that). In the
+        window of 55 V/um on this axis: `vdf8-trfe4-ctfe1-rvdf1-14` +0.061, `vdf6-trfe4` +0.083,
+        `vdf9-trfe4-cdfe1-14` +0.089. Below zero: `vdf5-rvdf1-6` -0.199, `vdf9-trfe4-rvdf1-14` -0.164,
+        `vdf7-trfe2-cdfe1` -0.095, `vdf8-trfe4-cfe1-rvdf1-14` -0.070, `vdf12-rvdf2-14` -0.030. Matrix
+        `vdf10-trfe4-14` +0.222, terpolymer `vdf9-trfe4-cfe1-14` +0.359, `vdf13-trfe6-cfe1-20` +0.307. THE 11 ROWS
+        NOT RUN: 7 with a nitrile (no preset has it), and those with TFE, ethylene, VF, DFE (unchecked). MARGINS
+        ARE THE STRAIN AXIS ONLY: tan delta, frequency and blocked stress per area are NOT redone under this
+        preset (the kink tools `dilute_kink.py`, `kink_migration.py`, `kink_site_scan.py` take `--preset`; the
+        CFCl bond's barrier is not fitted). How it was run: `python examples/rows_under_preset.py --preset
+        pvdf-dft-chain1-cfe --redo-failed --minutes 100 --rows ROW,... [--part K/N] --out
+        /opt/dft/margins_chain1-cfe.json` (the --out file is the checkpoint, shared under a lock). The
         checkpoint was seeded with the six rows of chain1's run that hold no CFCl carbon (the two presets are the
         same potential for them; marked `carried_from`). chain1's own run (`/opt/dft/margins_chain1.json`, 14
         rows) is kept for the comparison; its chlorine rows are superseded. The 15 rows with an unchecked unit

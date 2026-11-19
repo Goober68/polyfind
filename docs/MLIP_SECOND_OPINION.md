@@ -21,7 +21,8 @@ unit, +0.682, which one preset puts 0.30 lower and the other 0.38 higher. The er
 bonds of the CFCl carbon; with a torsion term of their own, fitted to DFT on lone chains, the
 new preset gives +0.690 on that cell and passes on a CTFE cell too (3.11). A nitrile cell is the
 other way round: DFT has all-trans below every helix (-0.386) where both presets have a helix
-lowest, and the error is between chains as well as inside (3.12).
+lowest, and the error is between chains as well as inside (3.12). The 24 rows whose units are
+checked have their margins under the new preset in 3.13, with where each unit stands.
 
 ## 1. The test
 
@@ -982,3 +983,98 @@ Files: `docs/predictions/row_cells_dft_vdf2-trfe1-an1-4.json`,
 `unit_nonbonded_an_margins_chain1.json`, `unit_nonbonded_an_between_chain1.json`,
 `unit_torsion_an_chain1.json` and their tests `margins_an_between_dft_rows.json`,
 `margins_an_between_torsion_dft_rows.json`. Tests: `tests/test_row_cells_dft.py`.
+
+### 3.13 The CDFE cell: the margin met and its parts not; and 24 rows' margins under chain1-cfe (2026-11-19)
+
+**CDFE.** The same check (`vdf2-trfe1-cdfe1-4`, VRVD; one of its four helix placements does not
+build at its ideal torsions, and the polish now says so and goes on):
+
+| all-trans minus helix | cell | inside a chain | between chains |
+|---|---:|---:|---:|
+| DFT (0.22 eV/A left) | **+0.968** | +2.394 | -1.426 |
+| chain1, its cells shear-free | +0.975 | +3.091 | -2.117 |
+| belt4 | +1.720 | | |
+
+- **chain1 has the margin to 0.007 and the two parts 0.70 and 0.69 off, opposite ways.** The
+  all-trans cell changes shape when it is relaxed in the potential (gamma from 94 to 105
+  degrees), so DFT's split and polyfind's are of cells that differ, and the parts of a sum need
+  not agree cell for cell. The lone chains settle it, because they have no cell:
+
+| VDF-CDFE chain alone, against all-trans, kcal/mol per monomer | DFT | chain1 |
+|---|---:|---:|
+| helix, the CF2-CHCl bond at -62 degrees | -2.843 | -3.418 |
+| helix, the other placement (+46 degrees) | +3.750 | +1.467 |
+
+- chain1 has the low helix 0.58 too low and the high one 2.28 too low: the inside of the chain
+  is wrong by itself, in the direction the cell's split shows. **So the margin of the cell is
+  met by two errors that cancel, and CDFE is not counted as passed.** A torsion term for the
+  CF2-CHCl bond would take about 0.3 off the cell's margin and leave it 0.3 low, with the error
+  between chains still there. Like the nitrile, the unit needs both parts.
+
+**Where the units stand** (one small cell each, all-trans minus helix against DFT):
+
+| unit | rows of the 35 that hold it | DFT | chain1-cfe | reading |
+|---|---:|---:|---:|---|
+| TrFE (VVRV) | 30 (6 with nothing else) | +0.678 | +0.671 | passes |
+| reversed VDF (the candidate of 3.8) | 7 | -0.261 | -0.199 | passes (`docs/CRYSTAL_STAGE.md` 5.29) |
+| CFE (VRVC) | 9 | +0.682 | +0.690 | passes, with the term of 3.11 |
+| CTFE (VRVK) | 3 | +0.315 | +0.400 | passes at the edge; its CF2-CFCl bond is not tested |
+| CDFE (VRVD) | 4 | +0.968 | +0.975 | the margin by cancellation: not passed |
+| acrylonitrile (VRVA, VVVA) | 7 | -0.386, -0.091 | +0.258, -0.292 | fails; no term of this form fixes it (3.12) |
+| TFE, ethylene, VF, DFE | 2, 2, 1, 1 | | | not checked yet |
+
+**The 24 rows that hold none of the unchecked units and no nitrile**, each polished cell relaxed
+again under `pvdf-dft-chain1-cfe` with the shear free and the pendants tilted
+(`examples/rows_under_preset.py`; `docs/predictions/margins_chain1-cfe.json`). Margin is
+all-trans minus the lowest helix placement, kcal/mol per monomer; the strain is the all-trans
+cell's length along the chain over the helix cell's. Eight of the rows that have no CFCl carbon
+are chain1's own run carried over (the two presets are the same potential for them).
+
+| row | monomers | margin | cell held upright | strain along the chain | belt4 (upright) | its units |
+|---|---:|---:|---:|---:|---:|---|
+| `vdf5-rvdf1-6` | 6 | -0.199 | +0.042 | +9.0% | +0.064 | checked |
+| `vdf9-trfe4-rvdf1-14` | 14 | -0.164 | -0.176 | +10.8% | -0.162 | checked |
+| `vdf7-trfe2-cdfe1` | 10 | -0.095 | -0.130 | +11.6% | +0.392 | CDFE: not passed |
+| `vdf8-trfe4-cfe1-rvdf1-14` | 14 | -0.070 | -0.060 | +11.7% | -0.044 | CFE: fitted term |
+| `vdf12-rvdf2-14` | 14 | -0.030 | +0.159 | +9.3% | +0.162 | checked |
+| `vdf8-trfe4-ctfe1-rvdf1-14` | 14 | +0.061 | +0.130 | +8.7% | +0.245 | CTFE: at the edge |
+| `vdf6-trfe4` | 10 | +0.083 | -0.044 | +11.9% | -0.199 | checked |
+| `vdf9-trfe4-cdfe1-14` | 14 | +0.089 | +0.068 | +11.3% | +0.685 | CDFE: not passed |
+| `vdf10-trfe4-14` | 14 | +0.222 | +0.131 | +11.0% | +0.056 | checked |
+| `vdf9-trfe5-14` | 14 | +0.232 | +0.149 | +11.6% | +0.083 | checked |
+| `vdf9-trfe4-ctfe1-14` | 14 | +0.286 | +0.126 | +10.4% | +0.300 | CTFE: at the edge |
+| `vdf13-trfe6-cfe1-20` | 20 | +0.307 | +0.199 | +11.0% | +0.258 | CFE: fitted term |
+| `vdf7-trfe3` | 10 | +0.354 | +0.222 | +10.9% | +0.213 | checked |
+| `vdf9-trfe4-cfe1-14` | 14 | +0.359 | +0.231 | +10.6% | +0.317 | CFE: fitted term |
+| `vdf8-trfe2` | 10 | +0.364 | +0.219 | +10.8% | +0.229 | checked |
+| `vdf6-trfe3-cdfe1` | 10 | +0.433 | +0.428 | +11.1% | +1.012 | CDFE: not passed |
+| `vdf8-trfe4-cfe1-cdfe1-14` | 14 | +0.448 | +0.319 | +11.2% | +0.807 | CDFE: not passed |
+| `vdf7-trfe2-ctfe1` | 10 | +0.478 | +0.449 | +10.9% | +0.900 | CTFE: at the edge |
+| `vdf6-trfe3-cfe1` | 10 | +0.492 | +0.361 | +11.4% | +0.454 | CFE: fitted term |
+| `vdf7-trfe2-cfe1` | 10 | +0.535 | +0.533 | +9.7% | +0.868 | CFE: fitted term |
+| `vdf8-cfe2` | 10 | +0.634 | +0.634 | +9.5% | +0.812 | CFE: fitted term |
+| `vdf7-trfe2-cfe1-adj` | 10 | +0.653 | +0.579 | +10.2% | +0.875 | CFE: fitted term |
+| `vdf5-trfe5` | 10 | +0.740 | +0.618 | +10.5% | +0.736 | checked |
+| `vdf9-cfe1` | 10 | +0.902 | +0.902 | +9.8% | +0.967 | CFE: fitted term |
+
+- **This is the first of four numbers a row is ranked on, and the only one here.** The margin
+  places a row on the strain axis: at 55 V/um a tenth of a cell is polar at +0.15 and half at
+  +0.07 (section 1). The loss, the rate and the blocked stress have not been computed under this
+  preset, so nothing in this table is a ranking.
+- On that one axis: three rows sit in the window (+0.06 to +0.09), and two of the three lean on
+  a unit that is not cleanly checked (CTFE at the edge, CDFE not passed). `vdf6-trfe4` (+0.083,
+  TrFE alone) is the one whose chemistry has passed.
+- Five rows are below zero, all-trans the lower cell with no field: every row with a reversed
+  VDF in it but one, and a CDFE row.
+- The TrFE matrix is at +0.22 and the CFE terpolymer at +0.36 (+0.31 at one CFE in twenty):
+  under this preset a CFE raises the margin by about 0.14 at one in fourteen. Belt4 had the
+  matrix at +0.06 and the terpolymer at +0.32.
+- None of these fourteen-monomer cells has a DFT energy of its own. What has been checked is
+  each unit in a four-monomer cell.
+- The CDFE rows have two or three helix placements in the polished table where the others have
+  four, so their lowest helix is the lowest of fewer.
+
+Files: `docs/predictions/row_cells_dft_vdf2-trfe1-cdfe1-4.json`,
+`chain_split_dft_vdf2-trfe1-cdfe1-4.json`, `chain_conformers_cdfe_pbe_d3bj.json`,
+`mlip/row_cells_vdf2-trfe1-cdfe1-4_frames_pbe_d3bj.extxyz` (2 frames),
+`margins_chain1-cfe.json` (the 24 rows). Tests: `tests/test_row_cells_dft.py`.

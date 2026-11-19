@@ -248,3 +248,33 @@ def test_chain1_has_the_cdfe_cells_margin_and_not_its_parts():
     # one helix placement of this small cell does not build at its ideal torsions, and the polish says so
     polished = json.loads((PRED / "polished_margins_belt4_dft_rows.json").read_text())["rows"]["vdf2-trfe1-cdfe1-4"]
     assert list(polished["not_built"]) == ["TG'TG"] and "TG'TG" not in polished["cells"]
+
+
+def test_the_cdfe_lone_chains_say_the_cells_margin_is_met_by_cancellation():
+    conf = json.loads((PRED / "chain_conformers_cdfe_pbe_d3bj.json").read_text())["conformers"]
+    assert all(c["largest_force"] < 0.01 for c in conf.values())
+    # the helix one way is 2.8 below the all-trans chain and the other way 3.8 above it
+    assert conf["cdfe2_h2"]["energy"] == pytest.approx(-2.843, abs=0.003) and conf["cdfe2_h1"]["energy"] == pytest.approx(+3.750, abs=0.003)
+    assert conf["cdfe2_h2"]["bonds"][0] == "CF2-CHCl" and conf["cdfe2_h2"]["dihedrals"][0] == pytest.approx(-62, abs=2)
+
+
+def test_the_rows_under_chain1_cfe_are_the_24_without_a_nitrile_or_an_unchecked_unit():
+    table = json.loads((PRED / "margins_chain1-cfe.json").read_text())
+    assert table["preset"] == "pvdf-dft-chain1-cfe"
+    rows = table["rows"]
+    assert len(rows) == 24 and all("margin" in e and "TTTT" in e["cells"] for e in rows.values())
+    # all four helix placements, but for the CDFE rows, whose polished table has two or three
+    assert all(len(e["cells"]) == 5 for e in rows.values() if "D" not in e["letters"])
+    assert sorted(len(e["cells"]) for e in rows.values() if "D" in e["letters"]) == [3, 3, 3, 4]
+    assert not any(set(e["letters"]) & set("AFEYX") for e in rows.values())
+    # carried from chain1's own run only where the two presets are the same potential: no CFE, no CTFE
+    carried = [k for k, e in rows.items() if e.get("carried_from")]
+    assert len(carried) == 8 and not any(set(rows[k]["letters"]) & set("CK") for k in carried)
+    m = {k: e["margin"] for k, e in rows.items()}
+    assert m["vdf10-trfe4-14"] == pytest.approx(0.222, abs=0.002) and m["vdf9-trfe4-cfe1-14"] == pytest.approx(0.359, abs=0.002)
+    assert m["vdf13-trfe6-cfe1-20"] == pytest.approx(0.307, abs=0.002)
+    # in the window of 55 V/um on this one axis: three rows, one of them of chemistry that has passed its check cleanly
+    assert sorted(k for k, v in m.items() if 0.0 < v < 0.15) == ["vdf6-trfe4", "vdf8-trfe4-ctfe1-rvdf1-14", "vdf9-trfe4-cdfe1-14"]
+    assert sorted(k for k, v in m.items() if v < 0.0) == ["vdf12-rvdf2-14", "vdf5-rvdf1-6", "vdf7-trfe2-cdfe1", "vdf8-trfe4-cfe1-rvdf1-14", "vdf9-trfe4-rvdf1-14"]
+    # a row's strain along the chain is stored beside its margin; the other three axes are not here
+    assert all(0.08 < e["strain_along_chain"] < 0.13 for e in rows.values())
