@@ -456,6 +456,12 @@ right": true at one registry, not along it).
         of the eight small rows, the lone chains, `kink_vdf4-trfe2-6_frames_pbe_d3bj.extxyz`) ARE NOT IN THE
         POTENTIAL'S TRAINING SET: a refit with them (2.85 hours on the A40 last time) comes before the potential
         is used on TFE or DFE rows or on kinks.
+        THE PRESET'S TABLE IS NOW 27 ROWS (22:05 UTC, `docs/predictions/margins_chain1-cfe.json`): added
+        `vdf9-trfe4-e1-14` -0.046 (ethylene -3.8 kcal/mol per unit: a pin for all-trans) and `vdf9-trfe4-dfe1-14`
+        +0.287 (DFE +0.9 per unit). Not in it: the seven nitrile rows and the VF row.
+        RUNNING (21:15 UTC, three threads, ends by itself): four more kink-sheet sites in the potential
+        (`/opt/dft/sheets14c`: leader `@0` 18 and `@0~` 18, nitrile alone `@0~` 10 and `@0` 0); read with
+        `row_cells_frames.py sheets-potential --frames /opt/dft/sheets14c --out JSON`.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

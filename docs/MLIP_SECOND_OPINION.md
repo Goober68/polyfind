@@ -22,7 +22,7 @@ bonds of the CFCl carbon; with a torsion term of their own, fitted to DFT on lon
 new preset gives +0.690 on that cell and passes on a CTFE cell too (3.11). A nitrile cell is the
 other way round: DFT has all-trans below every helix (-0.386) where both presets have a helix
 lowest, and the error is between chains as well as inside (3.12). The 25 rows whose units are
-checked have their margins under the new preset in 3.13, with where each unit stands. Four
+checked (27 once ethylene and DFE were) have their margins under the new preset in 3.13, with where each unit stands. Four
 fourteen-monomer rows relaxed in the potential (3.14) agree with that preset on what a CFE does
 and put every level a quarter of a kcal/mol lower. DFT on a six-monomer cell of the matrix's
 motif says the potential has the level (-0.044 in DFT, -0.096 in the potential, +0.139 in the
@@ -1098,6 +1098,9 @@ are chain1's own run carried over (the two presets are the same potential for th
 | `vdf7-trfe2-cfe1-adj` | 10 | +0.653 | +0.579 | +10.2% | +0.875 | CFE: fitted term |
 | `vdf5-trfe5` | 10 | +0.740 | +0.618 | +10.5% | +0.736 | checked |
 | `vdf9-cfe1` | 10 | +0.902 | +0.902 | +9.8% | +0.967 | CFE: fitted term |
+| added 22:05 UTC, their units checked after the table was made: | | | | | | |
+| `vdf9-trfe4-e1-14` | 14 | -0.046 | -0.046 | +10.2% | -0.045 | ethylene: at the edge |
+| `vdf9-trfe4-dfe1-14` | 14 | +0.287 | +0.261 | +11.1% | +0.263 | DFE: checked |
 
 - **This is the first of four numbers a row is ranked on, and the only one here.** The margin
   places a row on the strain axis: at 55 V/um a tenth of a cell is polar at +0.15 and half at
@@ -1116,11 +1119,15 @@ are chain1's own run carried over (the two presets are the same potential for th
   each unit in a four-monomer cell.
 - The CDFE rows have two or three helix placements in the polished table where the others have
   four, so their lowest helix is the lowest of fewer.
+- The two rows added later: an ethylene in the matrix takes 0.27 off the margin (-3.8 kcal/mol
+  per unit, a pin for all-trans) and a DFE adds 0.07 (+0.9 per unit). The levels carry what 3.15
+  found: up to 0.2 high at this TrFE content. The eight rows that are not here are the seven
+  with a nitrile, which no preset has, and the VF row, whose unit failed its check.
 
 Files: `docs/predictions/row_cells_dft_vdf2-trfe1-cdfe1-4.json`,
 `chain_split_dft_vdf2-trfe1-cdfe1-4.json`, `chain_conformers_cdfe_pbe_d3bj.json`,
 `mlip/row_cells_vdf2-trfe1-cdfe1-4_frames_pbe_d3bj.extxyz` (2 frames),
-`margins_chain1-cfe.json` (the 25 rows), `row_cells_dft_vdf2-trfe1-tfe1-4.json`,
+`margins_chain1-cfe.json` (the 25 rows, and the two added later), `row_cells_dft_vdf2-trfe1-tfe1-4.json`,
 `chain_split_dft_vdf2-trfe1-tfe1-4.json`. Tests: `tests/test_row_cells_dft.py`.
 
 ### 3.14 Four fourteen-monomer rows in the potential: the levels part from chain1's, the pins do not (2026-11-19)
