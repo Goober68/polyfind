@@ -26,6 +26,30 @@ were, and a margin was a lower bound): five margins moved, and with them the hea
 in 5.6, where the cell with CTFE and a reversed VDF unit went from +0.076, on the switching
 window, to +0.245, off it.***
 
+**Caution, 2026-11-19: DFT has now been asked about the units one by one, and the head of the
+ranking does not stand as written.** `docs/MLIP_SECOND_OPINION.md` 3.10 to 3.13 take each unit in
+the smallest cell that holds it (four monomers a chain) and compare the margin with DFT's.
+
+- **The nitrile is wrong in sign.** In DFT a nitrile makes the all-trans cell the lower one
+  (margins -0.386 and -0.091 in two cells, where the same cells without it have +0.678 and +0.726:
+  -3.3 to -4.3 kcal/mol per unit at one in four). Belt4, which this document's tables are made
+  with, has it at +0.354 and +0.058 in those cells, and in the fourteen-monomer cells below it
+  makes the nitrile a pin for the helix (+2.0 per unit). Every row with a nitrile, **the leader
+  of 5.6 among them** (the nitrile with a reversed VDF on 21 mol% TrFE, +0.037), rests on that
+  pin. If DFT's per-unit number held at one in fourteen the leader's margin would be near -0.35,
+  a cell that is polar with no field, not one on the window. Whether it holds at that dilution
+  is not known: no fourteen-monomer cell has been checked, and no polyfind preset has the
+  nitrile.
+- **Belt4 is right on TrFE by two errors that cancel** (0.7 inside the chain against 0.7 between
+  chains) and wrong on CFE by 0.38, CTFE by 0.42 and CDFE by 0.75 in those cells.
+- A newer preset, `pvdf-dft-chain1-cfe`, meets DFT on TrFE, reversed VDF, CFE and (at the edge)
+  CTFE. The 24 rows without a nitrile or an unchecked unit have their margins under it in 3.13.
+  They are margins only: the loss, the rate and the blocked stress of sections 5 and 8 have not
+  been redone under it.
+
+Until those are redone, read every table below as belt4's, with the errors above.
+
+
 ## 1. What "optimal tan delta, frequency and strain" means in the program's variables
 
 The giant strain of the relaxor fluoropolymers is a field-driven conformational switch, TGTG' or

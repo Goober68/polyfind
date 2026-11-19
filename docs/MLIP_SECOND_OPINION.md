@@ -971,6 +971,13 @@ shear-free), then a torsion triple for the nitrile's bonds to the lone chains on
   not a term added on.
 - The potential has both nitrile cells' margins to 0.03 and 0.08 without having been shown
   either. For the seven nitrile rows it is the only evaluator here that is right to about 0.1.
+- **What it does to the ranking.** The leader of `docs/CANDIDATE_MATERIALS.md` 5.6 is a nitrile
+  row (`vdf9-trfe3-an1-rvdf1-14`, belt4 +0.037). In belt4's fourteen-monomer cells the nitrile
+  is a pin for the helix, +2.0 kcal/mol per unit (`vdf9-trfe4-an1-14` +0.197 against the
+  matrix's +0.056); in DFT's four-monomer cells it is a pin for all-trans, -3.3 to -4.3 per
+  unit. If DFT's number held at one in fourteen the leader would sit near -0.35. That document
+  now says so at its head. The check that can be made here is the row's cells relaxed in the
+  potential at its own dilution.
 
 **What this reads on.** The margin only: the strain axis. Nothing here is a loss, a rate or a
 blocked stress.
