@@ -56,6 +56,62 @@
     "CH-CH2",
     "CH2-CF2"
    ]
+  },
+  "row_vdf2-trfe1-an1-4_TGpTG_chain1_in_all_s1": {
+   "cell": -42465.25953609158,
+   "chain": -42458.982412253004,
+   "between": -6.27712383857579,
+   "largest_force_on_the_lone_chain": 0.62455258,
+   "repeat": 9.342167080894843,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    -175.97187456849872,
+    -62.45091115674977,
+    -177.1573204134097,
+    65.035800522292,
+    -177.5278053055563,
+    -61.887168315574954,
+    179.23320170246282,
+    55.351758244471874
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CH",
+    "CH-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "row_vdf2-trfe1-an1-4_GpTGT_chain1_in_all_s1": {
+   "cell": -42464.986146707764,
+   "chain": -42459.859948884754,
+   "between": -5.126197823010443,
+   "largest_force_on_the_lone_chain": 0.48138893,
+   "repeat": 9.323851929011331,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    -62.84672360843669,
+    177.5992586179255,
+    63.197327137744814,
+    -178.1126550438155,
+    -58.5780107183031,
+    -179.88062087934077,
+    62.56958589860406,
+    170.74859582853932
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CH",
+    "CH-CH2",
+    "CH2-CF2"
+   ]
   }
  },
  "pairs": {
@@ -63,6 +119,16 @@
    "cell": -0.38570925654494204,
    "inside_a_chain": 2.1282656679977663,
    "between_chains": -2.5139749245427083
+  },
+  "row_vdf2-trfe1-an1-4_TTTT_chain1_in_all_s1 minus row_vdf2-trfe1-an1-4_TGpTG_chain1_in_all_s1": {
+   "cell": -0.40420509681280237,
+   "inside_a_chain": 0.2120464157051174,
+   "between_chains": -0.6162515125179198
+  },
+  "row_vdf2-trfe1-an1-4_TTTT_chain1_in_all_s1 minus row_vdf2-trfe1-an1-4_GpTGT_chain1_in_all_s1": {
+   "cell": -0.6775944806286134,
+   "inside_a_chain": 1.0895830474546528,
+   "between_chains": -1.7671775280832662
   }
  }
 }

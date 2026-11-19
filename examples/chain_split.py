@@ -308,7 +308,8 @@ def polyfind(args):
                                                      "binding": r["binding"] - base["binding"]}
             print(f"{name}: {conf} minus {confs[0]}: cell {q['cell']:+.3f} = inside a chain {q['inside_a_chain']:+.3f} + between chains {q['between_chains']:+.3f}"
                   f"; = the chains relaxed alone {q['lone_chain']:+.3f} + binding {q['binding']:+.3f}")
-        out["sets"].setdefault(name, {})[args.row] = {"cells": rows, "pairs": pairs}
+        entry = out["sets"].setdefault(name, {}).setdefault(args.row, {"cells": {}, "pairs": {}})  # a row's placements add up over calls
+        entry["cells"].update(rows), entry["pairs"].update(pairs)
         if args.freeze:  # the relaxed cells themselves, for rows evaluated on them as the parameters move (examples/stage13_rows.py)
             state = json.loads(Path(args.freeze).read_text()) if Path(args.freeze).exists() else {}
             state[args.row] = {"relaxed_under": name, "cells": frozen}

@@ -1,0 +1,57 @@
+{
+ "base": "pvdf-dft-chain1-cfe",
+ "charge_increments": {
+  "C-N": 0.7466259533440746
+ },
+ "lj": {
+  "N": [
+   3.7033348817607763,
+   0.04316388340023092
+  ]
+ },
+ "what": "non-bonded terms of a unit's own atoms to put on the base (charge increments in e; lj: the wall's distance in A and depth in kcal/mol), fitted to DFT's all-trans-minus-helix energies of vdf2-trfe1-an1-4 (examples/unit_nonbonded_fit.py)",
+ "row": "vdf2-trfe1-an1-4",
+ "variables": [
+  "C-N",
+  "x_N",
+  "D_N"
+ ],
+ "at_the_base_values": {
+  "C-N": 0.36992912294510616,
+  "x_N": 3.66,
+  "D_N": 0.069
+ },
+ "objective": 2.0757198030361415,
+ "objective_at_the_base": 261.52138342611227,
+ "ridge": 0.6116573773781716,
+ "evaluations": 22,
+ "stopped": "The maximum number of function evaluations is exceeded.",
+ "margin": -0.3579983602285992,
+ "margin_at_the_base": 0.25846692636159885,
+ "rows": {
+  "TGTG'": {
+   "polyfind": -0.379753619875423,
+   "dft": -0.38570845369923557,
+   "at_the_base": 0.25846692636159885,
+   "fitted": true
+  },
+  "TG'TG": {
+   "polyfind": -0.3579983602285992,
+   "dft": -0.40420425547201955,
+   "at_the_base": -0.7756868247363835,
+   "fitted": true
+  },
+  "GTG'T": {
+   "polyfind": -0.6672892660827117,
+   "dft": null,
+   "at_the_base": -0.5216128631151347,
+   "fitted": false
+  },
+  "G'TGT": {
+   "polyfind": -0.7161898481186935,
+   "dft": -0.6775930702346554,
+   "at_the_base": -0.36003639966779843,
+   "fitted": true
+  }
+ }
+}

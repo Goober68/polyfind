@@ -11,9 +11,9 @@ after a stop:
    potential (examples/row_cells_frames.py write, mlip_train.py relax);
 3. DFT single points on the relaxed all-trans cell and on the helix cells the potential puts
    within ``--window`` of its lowest (examples/mlip_frames.py label);
-4. a lone chain cut from the all-trans cell and from DFT's lowest helix cell, one DFT single
-   point each (examples/chain_split.py frames), which splits the margin into what is inside a
-   chain and what is between chains;
+4. a lone chain cut from the all-trans cell and from each helix cell DFT has, one DFT single
+   point each (examples/chain_split.py frames), which splits each all-trans-minus-helix energy
+   into what is inside a chain and what is between chains;
 5. the tables (examples/row_cells_frames.py collect, chain_split.py dft and polyfind).
 
     python examples/unit_dft_check.py --row vdf2-trfe1-ctfe1-4 --work /opt/dft/unit4 --model docs/predictions/mlip/models/all_s1.model \\
@@ -124,32 +124,37 @@ def main():
     print(f"{row}: DFT all-trans minus helix " + ", ".join(f"{c} {KCAL * (energy['TTTT'] - energy[c]):+.3f}" for c in kept)
           + f" kcal/mol per monomer; largest force left {max(abs(a.arrays['REF_forces']).max() for a in dft.values()):.2f} eV/A", flush=True)
 
-    # 4. lone chains of the all-trans cell and of DFT's lowest helix cell
+    # 4. lone chains of the all-trans cell and of every helix cell DFT has
     split = work / "split"
     split.mkdir(exist_ok=True)
     if not (split / "check").exists() and (work / "check").exists():
         shutil.copytree(work / "check", split / "check")
-    pair = [relaxed["TTTT"], relaxed[best]]
-    if not all((split / f"{n}_chain0.start.xyz").exists() for n in pair):
-        run([HERE / "chain_split.py", "frames", "--cells", *[work / f"{n}.dft.xyz" for n in pair], "--out", split], log, isolated=True)
-    if not all((split / f"{n}_chain0.dft.xyz").exists() for n in pair):
+    cut = [relaxed["TTTT"]] + [relaxed[c] for c in sorted(kept, key=lambda c: c != best)]
+    missing = [n for n in cut if not (split / f"{n}_chain0.start.xyz").exists()]
+    if missing:
+        run([HERE / "chain_split.py", "frames", "--cells", *[work / f"{n}.dft.xyz" for n in missing], "--out", split], log, isolated=True)
+    if not all((split / f"{n}_chain0.dft.xyz").exists() for n in cut):
         run([HERE / "mlip_frames.py", "label", "--frames", split, "--pw", args.pw, "--pseudo", args.pseudo, "--np", args.np, "--pools", 1], log, isolated=True)
 
     # 5. the tables
     pairs = [f"{'free' if c == best else safe(c)}={name_of['TTTT']},{name_of[c]}" for c in kept]
     run([HERE / "row_cells_frames.py", "collect", "--frames", work, "--row", row, "--pairs", *pairs, "--margins", *[f"{n}={p}" for n, p in margins.items()],
          "--out", PRED / f"row_cells_dft_{row}.json", "--extxyz", PRED / "mlip" / f"row_cells_{row}_frames_pbe_d3bj.extxyz"], log)
-    run([HERE / "chain_split.py", "dft", "--frames", split, "--pairs", f"{pair[0]}={pair[1]}", "--out", PRED / f"chain_split_dft_{row}.json"], log, isolated=True)
-    run([HERE / "chain_split.py", "polyfind", "--row", row, "--confs", f"{best},TTTT", *[f"--fit={n}={p}" for n, p in PRESETS.items()], *tables,
-         "--out", PRED / "chain_split_polyfind_dft_rows.json"], log)
+    run([HERE / "chain_split.py", "dft", "--frames", split, "--pairs", *[f"{cut[0]}={n}" for n in cut[1:]], "--out", PRED / f"chain_split_dft_{row}.json"], log, isolated=True)
     d = json.loads((PRED / f"chain_split_dft_{row}.json").read_text())["pairs"]
-    q = next(iter(d.values()))
-    print(f"{row}: DFT {q['cell']:+.3f} = inside a chain {q['inside_a_chain']:+.3f} + between chains {q['between_chains']:+.3f} (helix {best})", flush=True)
-    p = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]
-    for n in PRESETS:
-        r = p[n][row]["pairs"][f"TTTT minus {best}"]
-        print(f"{row}: {n} upright, the same helix: {r['cell']:+.3f} = {r['inside_a_chain']:+.3f} {r['between_chains']:+.3f}; off by {r['inside_a_chain'] - q['inside_a_chain']:+.3f} inside, "
-              f"{r['between_chains'] - q['between_chains']:+.3f} between", flush=True)
+    stored = PRED / "chain_split_polyfind_dft_rows.json"
+    for c in sorted(kept, key=lambda c: c != best):
+        have = json.loads(stored.read_text())["sets"] if stored.exists() else {}
+        todo = [n for n in PRESETS if f"TTTT minus {c}" not in have.get(n, {}).get(row, {}).get("pairs", {})]
+        if todo:
+            run([HERE / "chain_split.py", "polyfind", "--row", row, "--confs", f"{c},TTTT", *[f"--fit={n}={PRESETS[n]}" for n in todo], *tables, "--out", stored], log)
+        q = d[f"{cut[0]} minus {relaxed[c]}"]
+        print(f"{row}: DFT {q['cell']:+.3f} = inside a chain {q['inside_a_chain']:+.3f} + between chains {q['between_chains']:+.3f} (helix {c})", flush=True)
+        p = json.loads(stored.read_text())["sets"]
+        for n in PRESETS:
+            r = p[n][row]["pairs"][f"TTTT minus {c}"]
+            print(f"{row}: {n} upright, the same helix: {r['cell']:+.3f} = {r['inside_a_chain']:+.3f} {r['between_chains']:+.3f}; off by {r['inside_a_chain'] - q['inside_a_chain']:+.3f} inside, "
+                  f"{r['between_chains'] - q['between_chains']:+.3f} between", flush=True)
 
 
 if __name__ == "__main__":

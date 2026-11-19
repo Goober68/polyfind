@@ -79,7 +79,8 @@ def _splits():
     poly = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]
     t = "row_vdf3-trfe1-4_TTTT_chain1_in_all_s1 minus row_vdf3-trfe1-4_TGpTG_chain1_upright_in_all_s1"
     c = "row_vdf2-trfe1-cfe1-4_TTTT_chain1_in_all_s1 minus row_vdf2-trfe1-cfe1-4_GpTGT_chain1_in_all_s1"
-    own = {name: (s["vdf3-trfe1-4"]["pairs"]["TTTT minus TG'TG"], s["vdf2-trfe1-cfe1-4"]["pairs"]["TTTT minus G'TGT"]) for name, s in poly.items()}
+    own = {name: (s["vdf3-trfe1-4"]["pairs"]["TTTT minus TG'TG"], s["vdf2-trfe1-cfe1-4"]["pairs"]["TTTT minus G'TGT"]) for name, s in poly.items()
+           if "vdf3-trfe1-4" in s and "vdf2-trfe1-cfe1-4" in s}  # a set made for another unit holds that unit's rows only
     return dft[t], dft[c], own
 
 
