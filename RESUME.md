@@ -417,25 +417,28 @@ right": true at one registry, not along it).
         /opt/dft/kink6`; `mlip_train.py relax ... --mask "0 0 0 0 0 0" --fmax 0.02` (atoms only);
         `mlip_frames.py label --frames /opt/dft/kink6 --names ... --np 3` (25 minutes a cell);
         `row_cells_frames.py kink-collect --pairs NAME=TT.dft.xyz,KINKED.dft.xyz ... --out JSON --extxyz FILE`.
-        THE FOUR FOURTEEN-MONOMER KINK SHEETS IN THE POTENTIAL, DONE (19:13 UTC, docs 3.18,
-        `docs/predictions/sheets14_potential.json`; cell free, each row's cheapest site of belt4's scan; every
-        kink kept; NO DFT on these cells, and the potential is 0.6 high on the one kink DFT has seen). kcal/mol
-        per kink pair, the potential (belt4): matrix 4.54 (4.66), CFE cell 4.59 (3.42), nitrile alone 2.95
-        (2.15), leader 2.49 (1.39). AGAINST THE CFE CELL: leader -2.10 (-2.02): ITS SPEED STANDS; nitrile alone
-        -1.64 (-1.27); MATRIX -0.05 (+1.24): THE CFE's CUT OF THE KINK SHEET IS NOT THERE IN THE POTENTIAL at this
-        site. THE FOUR AXES WITH THOSE SHEETS (`four_axes_at_margins.py --sheet-shift ROW=POTENTIAL_MINUS_BELT4 ...
-        --out docs/predictions/four_axes_potential_margins_sheets.json`; second table at the head of
-        `docs/CANDIDATE_MATERIALS.md`): leader 7.8 MHz, tan delta 0.003, 0.165%, 9.0 pN/nm2 through the crystal
-        (if its margin is not below zero); nitrile alone 3.2 MHz, 0.006, 0.147%, 10.2; matrix 289 kHz (33 with
-        belt4's sheets), 0.066, 0.059%, 6.7; film as calibrated 364 kHz, 0.060, 0.066%, 6.5. How: `python
-        examples/row_cells_frames.py kink --scan docs/predictions/kink_site_scan_belt4.json --key "ROW@0~" --sites
-        N --kmesh "4 2 1" --out /opt/dft/sheets14`; `mlip_train.py relax --model
-        docs/predictions/mlip/models/all_s1.model --name all_s1 --cells /opt/dft/sheets14/sheet_*.start.xyz --out
-        /opt/dft/sheets14 --threads 3 --fmax 0.02 --steps 800` (15 minutes a cell); `row_cells_frames.py
-        sheets-potential --frames /opt/dft/sheets14 --out JSON`.
-        RUNNING (19:13 UTC, three threads, ends by itself): THREE MORE SITES, to see whether the CFE's missing cut
-        is the site: `/opt/dft/sheets14b` (matrix `@0` site 12, belt4 4.81; CFE cell `@0` site 0, 3.95; CFE cell
-        `@0~` site 8, 3.57); read them with `sheets-potential --frames /opt/dft/sheets14b`.
+        KINK SHEETS OF THE FOUR FOURTEEN-MONOMER CELLS IN THE POTENTIAL: SEVEN OF 112 SITES DONE (20:00 UTC, docs
+        3.18, `docs/predictions/sheets14_potential.json` and `sheets14_potential_more_sites.json`; cell free,
+        each from belt4's cell for that site, every kink kept; NO DFT on these cells; the potential is 0.6 high
+        on the one kink DFT has seen). kcal/mol per kink pair, the potential (belt4): matrix site 12~ 4.54 (4.66),
+        site 12 3.59 (4.81); CFE cell site 10~ 4.59 (3.42), site 0 4.16 (3.95), site 8~ 6.60 (3.57); nitrile alone
+        site 8~ 2.95 (2.15); leader site 8~ 2.49 (1.39). SITE BY SITE THE TWO DIFFER BY -1.2 TO +3.0: belt4's
+        PROFILE ALONG THE SEQUENCE IS NOT CONFIRMED (a first reading on four cells, "leader -2.10 against belt4's
+        -2.02, speed confirmed", was of one site each and WAS WITHDRAWN). WHAT STANDS: the order of the lowest
+        sheets found, leader 2.49 < nitrile alone 2.95 < matrix 3.59 < CFE cell 4.16; THE CFE's CUT OF THE KINK
+        SHEET (1.24 in belt4) IS NOT THERE. THE FOUR AXES WITH EACH CELL'S SITES FLOORED AT THE LOWEST FOUND
+        (`four_axes_at_margins.py --sheet-shift vdf10-trfe4-14=-1.067 vdf9-trfe4-cfe1-14=0.744
+        vdf9-trfe4-an1-14=0.803 vdf9-trfe3-an1-rvdf1-14=1.092 --out
+        docs/predictions/four_axes_potential_margins_sheets.json`; second table at the head of
+        `docs/CANDIDATE_MATERIALS.md`): leader 3.8 MHz, tan delta 0.006, 0.145%, 7.9 pN/nm2 through the crystal;
+        nitrile alone 1.6 MHz, 0.013, 0.123%, 8.5; matrix 697 kHz, 0.027, 0.086%, 9.8 (each IF ITS MARGIN IS NOT
+        BELOW ZERO); film as calibrated 364 kHz, 0.060, 0.066%, 6.5. PROVISIONAL: THE RATES NEED EVERY SITE IN
+        THE POTENTIAL (14 sites, two hands, four cells; a quarter of an hour each here: A JOB FOR THE POD). How:
+        `python examples/row_cells_frames.py kink --scan docs/predictions/kink_site_scan_belt4.json --key
+        "ROW@0~" --sites N --kmesh "4 2 1" --out DIR`; `mlip_train.py relax --model
+        docs/predictions/mlip/models/all_s1.model --name all_s1 --cells DIR/sheet_*.start.xyz --out DIR --threads
+        3 --fmax 0.02 --steps 800`; `row_cells_frames.py sheets-potential --frames DIR --out JSON` (cells in
+        `/opt/dft/sheets14` and `/opt/dft/sheets14b`).
         MATRIX AND TERPOLYMER UNDER THE TrFE TERM (not adopted): +0.100 and +0.239
         (`docs/predictions/margins_trfe_torsion_rows14.json`; chain1-cfe +0.222 and +0.359, the potential -0.024
         and +0.078).

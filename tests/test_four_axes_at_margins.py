@@ -60,21 +60,33 @@ def test_the_nitrile_cells_are_below_zero_in_the_potential_and_the_model_takes_t
             assert a["blocked_pn_nm2_through_the_crystal"] > film["blocked_pn_nm2_through_the_crystal"]
 
 
-def test_the_kink_sheets_in_the_potential_keep_the_leaders_speed_and_not_the_cfes_cut():
-    sheets = json.loads((PRED / "sheets14_potential.json").read_text())["rows"]
-    assert set(sheets) == {CFE, LEADER, AN, MATRIX} and all(r["kink_kept"] for r in sheets.values())
-    pot = {k: r["potential"] for k, r in sheets.items()}
-    b4 = {k: r["polyfind"] for k, r in sheets.items()}
-    assert pot == pytest.approx({MATRIX: 4.541, CFE: 4.586, AN: 2.951, LEADER: 2.487}, abs=0.005)
-    assert b4 == pytest.approx({MATRIX: 4.659, CFE: 3.418, AN: 2.148, LEADER: 1.395}, abs=0.005)
-    # against the film's cell: the leader 2.1 below in both; the matrix 1.24 above in belt4 and level in the potential
-    assert pot[LEADER] - pot[CFE] == pytest.approx(-2.10, abs=0.01) and b4[LEADER] - b4[CFE] == pytest.approx(-2.02, abs=0.01)
-    assert pot[MATRIX] - pot[CFE] == pytest.approx(-0.05, abs=0.01) and b4[MATRIX] - b4[CFE] == pytest.approx(+1.24, abs=0.01)
+def test_the_kink_sheets_in_the_potential_keep_the_order_and_not_belt4s_site_profile():
+    first = json.loads((PRED / "sheets14_potential.json").read_text())["rows"]
+    more = json.loads((PRED / "sheets14_potential_more_sites.json").read_text())["rows"]
+    assert set(first) == {CFE, LEADER, AN, MATRIX} and len(more) == 3
+    sheets = [dict(r, row=k.split("@")[0]) for k, r in list(first.items()) + list(more.items())]
+    assert all(r["kink_kept"] for r in sheets)
+    # site by site the potential and belt4 differ by -1.2 to +3.0: belt4's profile along the sequence is not confirmed
+    diff = sorted(r["potential"] - r["polyfind"] for r in sheets)
+    assert diff[0] == pytest.approx(-1.22, abs=0.01) and diff[-1] == pytest.approx(+3.03, abs=0.01)
+    # the lowest sheet found for each cell: leader < nitrile alone < matrix < the film's cell
+    low = {row: min(r["potential"] for r in sheets if r["row"] == row) for row in (LEADER, AN, MATRIX, CFE)}
+    assert low == pytest.approx({LEADER: 2.487, AN: 2.951, MATRIX: 3.592, CFE: 4.162}, abs=0.005)
+    belt4_low = {LEADER: 1.395, AN: 2.148, MATRIX: 4.659, CFE: 3.418}   # the lowest site of each cell's scan, both hands
+    scans = json.loads((PRED / "kink_site_scan_belt4.json").read_text())["rows"]
+    for row, e in belt4_low.items():
+        sites = [v["formation"] for key in (f"{row}@0", f"{row}@0~") for v in scans[key]["sites"].values() if v.get("converged", True) and v.get("kink_kept", True)]
+        assert min(sites) == pytest.approx(e, abs=0.002)
+    # the CFE's cut of the matrix's sheet (1.24 in belt4) is not there in the potential
+    assert belt4_low[MATRIX] - belt4_low[CFE] == pytest.approx(+1.24, abs=0.01) and low[MATRIX] - low[CFE] == pytest.approx(-0.57, abs=0.01)
     stored = json.loads((PRED / "four_axes_potential_margins_sheets.json").read_text())
-    assert stored["sheet_shifts_kcal_per_kink_pair"] == pytest.approx({k: pot[k] - b4[k] for k in pot}, abs=0.002)
+    assert stored["sheet_shifts_kcal_per_kink_pair"] == pytest.approx({k: low[k] - belt4_low[k] for k in low}, abs=0.002)
     at = stored["shifts"]["+0.00"]["rows"]
     khz = {k: at[k][SUM]["f_relax_hz"] / 1e3 for k in at}
-    assert khz == pytest.approx({MATRIX: 289, CFE: 364, AN: 3240, LEADER: 7813}, rel=0.01)
+    assert khz == pytest.approx({MATRIX: 697, CFE: 364, AN: 1590, LEADER: 3836}, rel=0.01)
     assert all(MOVE not in r for r in at.values())   # the other rate model does not see the sites
     before = _stored()["shifts"]["+0.00"]["rows"]
     assert before[MATRIX][SUM]["f_relax_hz"] / 1e3 == pytest.approx(33, abs=1) and before[LEADER][SUM]["f_relax_hz"] / 1e3 == pytest.approx(6877, rel=0.01)
+    # the leader is still the fastest and least lossy; through the crystal the matrix now holds more
+    assert at[LEADER][SUM]["tan_delta_34kHz"] < at[AN][SUM]["tan_delta_34kHz"] < at[MATRIX][SUM]["tan_delta_34kHz"] < at[CFE][SUM]["tan_delta_34kHz"]
+    assert at[MATRIX][SUM]["blocked_pn_nm2_through_the_crystal"] > at[AN][SUM]["blocked_pn_nm2_through_the_crystal"] > at[LEADER][SUM]["blocked_pn_nm2_through_the_crystal"]

@@ -113,27 +113,34 @@ rate models of 5.6 (the sum over kink sites; one chain's move).
 - The matrix is slow and lossy at any margin in the bar: its kink sheets are the dear ones, and
   that is what a pin is for.
 
-**The same four cells with the potential's kink sheets as well (2026-11-19, later).** The sheet
-at each cell's cheapest site was relaxed in the potential (`docs/MLIP_SECOND_OPINION.md` 3.18;
-no DFT on these cells), and each cell's kink sites moved by the difference
-(`four_axes_at_margins.py --sheet-shift`). Margins as above; the rate model is the sum over kink
-sites; dipole, switch strain and stiffness are still belt4's.
+**The same four cells with the potential's kink sheets as well (2026-11-19, later).** Seven
+kink sheets, one to three sites of each cell, were relaxed in the potential
+(`docs/MLIP_SECOND_OPINION.md` 3.18; no DFT on these cells). Site by site the potential and
+belt4 differ by -1.2 to +3.0 kcal/mol, so belt4's profile along the sequence is not confirmed.
+Here each cell's sites are moved so that belt4's lowest sits at the lowest sheet found in the
+potential (`four_axes_at_margins.py --sheet-shift`): a floor from one to three sites and belt4's
+profile above it. Margins as above; dipole, switch strain and stiffness are still belt4's.
 
-| cell | kink sheet: the potential (belt4) | relaxation frequency (with belt4's sheets) | tan delta, 34 kHz | AC strain at the heat budget | blocked force per area, pN/nm2: film's modulus; through the crystal |
+| cell | lowest kink sheet found: the potential (belt4's lowest) | relaxation frequency (with belt4's sheets) | tan delta, 34 kHz | AC strain at the heat budget | blocked force per area, pN/nm2: film's modulus; through the crystal |
 |---|---|---|---|---|---|
 | the measured film's channel as calibrated | - | 364 kHz | 0.060 | 0.066% | 0.13; 6.5 |
-| the cell of the film's composition, 64/29/7 | 4.59 (3.42) | 364 kHz, the anchor | 0.088 | 0.081% | 0.16; 7.4 |
-| the leader, if its margin is not below zero | 2.49 (1.39) | 7.8 MHz (6.9) | 0.003 | 0.165% | 0.33; 9.0 |
-| the nitrile alone, if its margin is not below zero | 2.95 (2.15) | 3.2 MHz (1.8) | 0.006 | 0.147% | 0.29; 10.2 |
-| the 71/29 matrix | 4.54 (4.66) | 289 kHz (33) | 0.066 (0.54) | 0.059% (0.021) | 0.12; 6.7 |
+| the cell of the film's composition, 64/29/7 | 4.16 (3.42) | 364 kHz, the anchor | 0.088 | 0.081% | 0.16; 7.4 |
+| the leader, if its margin is not below zero | 2.49 (1.39) | 3.8 MHz (6.9) | 0.006 | 0.145% | 0.29; 7.9 |
+| the nitrile alone, if its margin is not below zero | 2.95 (2.15) | 1.6 MHz (1.8) | 0.013 | 0.123% | 0.25; 8.5 |
+| the 71/29 matrix, if its margin is not below zero | 3.59 (4.66) | 697 kHz (33) | 0.027 (0.54) | 0.086% (0.021) | 0.17; 9.8 |
 
-- **The leader keeps its place on all four axes with the kink energies from the potential too**:
-  its sheet is 2.1 kcal/mol below the film's cell in both evaluators. What is left open is the
-  one question above, the sign of its margin.
-- **The matrix is no slower than the film in the potential.** Belt4 had a CFE cutting the kink
-  sheet by 1.24; the potential has none at the site compared. If that holds over the other
-  sites, what a CFE does for the film is the margin (it lifts the copolymer off the all-trans
-  side) and not the speed, and a pin is to be chosen for its margin first.
+- **The leader is still the fastest and the least lossy, by less.** Ten times the film's
+  frequency where belt4's sheets gave nineteen, a tenth of its loss, 2.2 times its strain. On
+  the blocked force through the crystal it is no longer first: 7.9 against the matrix's 9.8 and
+  the nitrile's 8.5, because its crystal is the softest and the others' kinks came out cheaper
+  than belt4 had them.
+- **The matrix is not slower than the film in the potential.** Belt4 had a CFE cutting the kink
+  sheet by 1.24; on the sites tried the potential has the film's cell 0.6 dearer. If that holds
+  over all sites, what a CFE does for the film is the margin (it lifts the copolymer off the
+  all-trans side, which the measured copolymer is on) and not the speed, and a pin is to be
+  chosen for its margin first.
+- **These rates are provisional in a way the margins are not**: a sum over sites needs every
+  site in the potential, and seven of 112 have been done.
 
 What would settle the leader: DFT on its all-trans cell and its lowest helix cell at their own
 size (170 atoms each), and a kink sheet in the potential or in DFT. The DFT does not fit this

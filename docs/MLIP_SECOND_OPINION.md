@@ -1361,34 +1361,47 @@ Files: `docs/predictions/kink_dft_vdf4-trfe2-6.json`,
 ### 3.18 The kink sheets of four fourteen-monomer cells in the potential (2026-11-19)
 
 The kink sheet is the structure the rates are made of: a kink pair on every chain, in register,
-in a cell of its own. For each of the four cells of 3.14 the sheet at the site belt4 has
-cheapest (`examples/kink_site_scan.py`) was written as atoms (`examples/row_cells_frames.py kink
---scan`), relaxed in the potential with the cell free, and set against the row's all-trans cell
-there (`sheets-potential`; `docs/predictions/sheets14_potential.json`). Every kink is still a
-kink after the relaxation (gauche bonds near -80 and +75 degrees). There is no DFT on these
-cells; on the one kink DFT has seen the potential is 0.6 high (3.17), and that is taken to be
-common.
+in a cell of its own, at one site of the sequence. Seven sheets, one to three sites of each of
+the four cells of 3.14 (the sites belt4 has cheapest, `examples/kink_site_scan.py`), were written
+as atoms (`examples/row_cells_frames.py kink --scan`), relaxed in the potential with the cell
+free, and set against the row's all-trans cell there (`sheets-potential`;
+`docs/predictions/sheets14_potential.json`, `sheets14_potential_more_sites.json`). Every kink is
+still a kink after the relaxation (gauche bonds near 80 and -70 degrees). There is no DFT on
+these cells; on the one kink DFT has seen the potential is 0.6 high (3.17), which is taken to be
+common. Each relaxation starts from belt4's cell for that site and stops at the nearest minimum,
+so a value is an upper bound on that site's sheet.
 
-| kink sheet, kcal/mol per kink pair | `all_s1` | belt4 | against the cell of the film's composition: `all_s1` | belt4 |
-|---|---:|---:|---:|---:|
-| the 71/29 matrix | 4.54 | 4.66 | -0.05 | +1.24 |
-| the cell of the film's composition, 64/29/7 (CFE) | 4.59 | 3.42 | 0 | 0 |
-| the nitrile alone | 2.95 | 2.15 | -1.64 | -1.27 |
-| the leader (nitrile with reversed VDF, 21 mol% TrFE) | 2.49 | 1.39 | -2.10 | -2.02 |
+| kink sheet, kcal/mol per kink pair | site (hand) | `all_s1` | belt4 | `all_s1` minus belt4 |
+|---|---|---:|---:|---:|
+| the 71/29 matrix | 12 (mirrored) | 4.54 | 4.66 | -0.12 |
+| | 12 | **3.59** | 4.81 | -1.22 |
+| the cell of the film's composition, 64/29/7 (CFE) | 10 (mirrored) | 4.59 | 3.42 | +1.17 |
+| | 0 | **4.16** | 3.95 | +0.21 |
+| | 8 (mirrored) | 6.60 | 3.57 | +3.03 |
+| the nitrile alone | 8 (mirrored) | **2.95** | 2.15 | +0.80 |
+| the leader (nitrile with reversed VDF, 21 mol% TrFE) | 8 (mirrored) | **2.49** | 1.39 | +1.09 |
 
-- **The leader's speed stands.** Its sheet is 2.10 below the film's cell in the potential and
-  2.02 in belt4: a factor of 34 and of 30 in the population at this site. The nitrile alone is
-  further ahead in the potential than in belt4 (1.64 against 1.27).
-- **The CFE's cut does not.** Belt4 has a CFE making the matrix's sheet 1.24 cheaper; the
-  potential has the two cells level, at this one site of each. Belt4's chlorine is the unit it
-  has 0.38 wrong on the margin (3.10). More sites of both cells are being relaxed to see whether
-  the site is the reason.
-- With each row's sites moved by its difference here, the rate model that sums over sites
-  gives the matrix 289 kHz where belt4's sheets gave 33, the nitrile alone 3.2 MHz for 1.8, the
-  leader 7.8 MHz for 6.9, all against the film's 364 kHz
+- **Site by site the two evaluators do not agree**: the difference runs from -1.2 to +3.0 within
+  two cells. Belt4's profile of a sheet along the sequence, which its sums over sites are made
+  of, is not confirmed. A first reading of this section, on the first four cells alone, had the
+  leader 2.10 below the film's cell in the potential against belt4's 2.02 and called its speed
+  confirmed to 0.1; that agreement was of one site each and does not survive the other three.
+- **What does survive is the order of the lowest sheets found**: the leader 2.49, the nitrile
+  alone 2.95, the matrix 3.59, the film's cell 4.16. The leader is 1.1 below the matrix and 1.7
+  below the film's cell (a factor of 6 and of 17 in the population), where belt4's lowest
+  sites had it 3.3 and 2.0 below.
+- **The CFE's cut of the kink sheet is not there.** Belt4 has a CFE making the matrix's lowest
+  sheet 1.24 cheaper; in the potential the film's cell is 0.6 dearer than the matrix on the
+  sites tried, three of one and two of the other. Belt4's chlorine is the unit it has 0.38
+  wrong on the margin (3.10).
+- With each cell's sites moved so that belt4's lowest sits at the lowest found here
+  (`four_axes_at_margins.py --sheet-shift`), the rate model that sums over sites gives the
+  matrix 697 kHz where belt4's sheets gave 33, the nitrile alone 1.6 MHz for 1.8, the leader
+  3.8 MHz for 6.9, all against the film's 364 kHz
   (`docs/predictions/four_axes_potential_margins_sheets.json`; the table is at the head of
-  `docs/CANDIDATE_MATERIALS.md`).
+  `docs/CANDIDATE_MATERIALS.md`). That keeps belt4's profile above the floor, which the first
+  bullet says is not to be trusted: the rates need every site of each cell in the potential,
+  112 relaxations of a quarter of an hour here.
 
-Files: `docs/predictions/sheets14_potential.json`,
+Files: `docs/predictions/sheets14_potential.json`, `sheets14_potential_more_sites.json`,
 `four_axes_potential_margins_sheets.json`. Tests: `tests/test_four_axes_at_margins.py`.
-
