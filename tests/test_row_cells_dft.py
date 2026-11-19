@@ -433,3 +433,12 @@ def test_a_kinks_energy_against_dft_at_two_lattices():
     assert stored["polyfind_only"]["chain1_at_its_own_lattice"] / rest["dft"] == pytest.approx(0.88, abs=0.01)
     assert 0.59 < dense["potential"] - dense["dft"] < 0.68 and 0.59 < rest["potential"] - rest["dft"] < 0.68
     assert abs(dense["potential_minus_dft_meV_per_monomer"]["all_trans"]) < 0.5 and 4.0 < dense["potential_minus_dft_meV_per_monomer"]["kinked"] < 5.0
+
+
+def test_the_vf_cell_is_missed_by_both_presets_and_met_by_the_potential():
+    stored = _stored("vdf2-trfe1-vf1-4")
+    m = stored["margins"]["free"]
+    assert m["dft"] == pytest.approx(+0.290, abs=0.002) and m["potential"] == pytest.approx(+0.274, abs=0.002)
+    assert 0.3 < m["largest_force_left_eV_per_A"] < 0.4   # the least settled pair of cells: every other pair is under 0.23
+    chain1, belt4 = stored["polyfind"]["chain1"]["margin"], stored["polyfind"]["belt4"]["margin"]
+    assert chain1 - m["dft"] == pytest.approx(+0.19, abs=0.01) and belt4 - m["dft"] == pytest.approx(+0.16, abs=0.01)

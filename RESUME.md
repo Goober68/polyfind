@@ -442,8 +442,12 @@ right": true at one registry, not along it).
         MATRIX AND TERPOLYMER UNDER THE TrFE TERM (not adopted): +0.100 and +0.239
         (`docs/predictions/margins_trfe_torsion_rows14.json`; chain1-cfe +0.222 and +0.359, the potential -0.024
         and +0.078).
-        THEN: the VF and DFE cells' DFT (`unit_dft_check.py --row vdf2-trfe1-{vf,dfe}1-4 ... --threads 3 --np
-        3`; polyfind's side and the potential's relaxations are done for both).
+        ETHYLENE (16:50 UTC): VRVE DFT -0.146 (= +1.007 -1.153), chain1 -0.232 (PASSES AT THE EDGE; parts +0.04,
+        -0.23), belt4 +0.500 (WRONG SIGN), the potential -0.082. VF (20:37 UTC): VRVY DFT +0.290 (= +2.081
+        -1.791; DFT LEAVES 0.32 AND 0.35 eV/A on the two cells, the most of any pair), chain1 +0.479 (FAILS BY
+        0.19; parts +0.13, +0.07), belt4 +0.452, the potential +0.274. DFE: RUNNING since 20:40 UTC
+        (`unit_dft_check.py --row vdf2-trfe1-dfe1-4 ... --threads 3 --np 3`; the same command goes on after a
+        stop). With DFE the unit checks of task 18 are complete.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

@@ -1,0 +1,68 @@
+{
+ "what": "DFT cells split into their chains alone (in a 16 A box) and the rest; kcal/mol per monomer, each cell against its reference. inside_a_chain / between_chains: the chain with its atoms where the cell has them. lone_chain / binding: the chain relaxed alone (examples/mlip_train.py relax --dft-gradient, then a single point), and the cell against that.",
+ "cells": {
+  "row_vdf2-trfe1-vf1-4_TTTT_chain1_in_all_s1": {
+   "cell": -43264.56773180206,
+   "chain": -43259.03799012029,
+   "between": -5.529741681770247,
+   "largest_force_on_the_lone_chain": 0.68470097,
+   "repeat": 10.245324143108798,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    -178.17812397333836,
+    -177.9019659328902,
+    168.09900255888655,
+    174.8910352391835,
+    177.26058787861888,
+    170.67487971263748,
+    -166.1229821228373,
+    -168.41638551554604
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CHF",
+    "CHF-CH2",
+    "CH2-CF2"
+   ]
+  },
+  "row_vdf2-trfe1-vf1-4_TGTGp_chain1_in_all_s1": {
+   "cell": -43264.858212189414,
+   "chain": -43261.11911414283,
+   "between": -3.7390980465861503,
+   "largest_force_on_the_lone_chain": 0.33495612,
+   "repeat": 9.333817848847415,
+   "monomers_in_a_chain": 4,
+   "dihedrals": [
+    -176.9843877834779,
+    67.77434627208991,
+    -178.34262458162152,
+    -63.592240105105354,
+    172.76372327012913,
+    64.58596316947201,
+    176.7485281740643,
+    -66.12211062417323
+   ],
+   "bonds": [
+    "CF2-CHF",
+    "CHF-CF2",
+    "CF2-CH2",
+    "CH2-CF2",
+    "CF2-CH2",
+    "CH2-CHF",
+    "CHF-CH2",
+    "CH2-CF2"
+   ]
+  }
+ },
+ "pairs": {
+  "row_vdf2-trfe1-vf1-4_TTTT_chain1_in_all_s1 minus row_vdf2-trfe1-vf1-4_TGTGp_chain1_in_all_s1": {
+   "cell": 0.2904803873534547,
+   "inside_a_chain": 2.0811240225375514,
+   "between_chains": -1.7906436351840966
+  }
+ }
+}
