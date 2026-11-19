@@ -1,7 +1,8 @@
 """Our own potential, fitted to the PVDF frames, against the DFT anchor.
 
 Reads the stored results only: torch, mace and ase are not dependencies of the package, and
-the model files are not in the repository. `examples/mlip_train.py` regenerates the results
+the model files of the PVDF-only fits are not in the repository (the fit on every frame is:
+`docs/predictions/mlip/models/all_s1.model`). `examples/mlip_train.py` regenerates the results
 from `docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz`.
 """
 
@@ -318,3 +319,24 @@ def test_held_upright_as_polyfinds_cell_is_dft_gives_polyfinds_margin():
     # the helix gains nothing from the same freedom: its shifted arrangements along b are within 1.5 meV
     shifts = r["other_helix_arrangements"]["cells"]
     assert all(abs(v["dft_against_the_helix_cell_meV_per_monomer"]) < 1.5 for k, v in shifts.items() if k.startswith("TG_b"))
+
+
+def test_the_fit_on_every_frame_holds_the_anchor_and_a_composition_it_never_saw():
+    """One fit of 240 epochs on all 558 frames (a rented card, 2026-11-18), a composition held out whole."""
+    r = _result("all_s1")
+    p = r["prepare"]
+    assert p["frames"] == 558 and p["train"] == 485 and p["test"] == 73 and p["held_out_whole"] == {"VAVF|VRVV": 8}
+    held = r["held_out"]
+    assert held["same_atoms_energy_rmse_meV_per_monomer"] == pytest.approx(1.73, abs=0.01)
+    by = held["same_atoms_energy_rmse_by_group_meV_per_monomer"]
+    assert by["C17H14F17N"] == pytest.approx(2.90, abs=0.01)  # the nitrile with TFE in a TrFE matrix: no frame of it in the fit
+    needed_mev = 1000 * NEEDED_KCAL / 23.0605  # 4.34 meV per monomer
+    assert sorted(g for g, v in by.items() if v > needed_mev) == ["C9H9F6N"]  # the nitrile pair alone is outside, at 0.104 kcal/mol
+    assert by["C9H9F6N"] == pytest.approx(4.50, abs=0.01) and by["C8H6ClF9"] == pytest.approx(3.45, abs=0.01)
+    assert held["force_rmse_meV_per_A"] / held["force_rms_of_the_labels_meV_per_A"] < 0.025 and held["stress_rmse_GPa"] < 0.08
+    for where in ("on_the_dft_geometries", "relaxed_in_the_potential"):
+        assert abs(r["margins"][where]["margin_error_kcal"]) < 0.002
+    e = r["beta_elastic_GPa"]
+    for key, tolerance in (("C_11", 0.02), ("C_22", 0.12), ("C_33", 0.03)):
+        assert e["ours"][key] / e["dft"][key] == pytest.approx(1.0, abs=tolerance), key
+    assert (ROOT / "docs" / "predictions" / "mlip" / "models" / "all_s1.model").stat().st_size == 14531734

@@ -253,15 +253,19 @@ right": true at one registry, not along it).
         40-line client was in the scratchpad as `runpod/mcp.py`). The key reads pods and capacity (`list-pods`,
         `get-pod`, `get-capacity` = stock and $/h) and creates and deletes pods; it does NOT read the catalog or
         billing (403, final). The old pod `wylsqwj1no08y4` is GONE (404; 0 pods, 0 volumes).
-        A POD IS RUNNING: `dwyejg77awqh50` (`polyfind-mlip-fit-all`, NVIDIA A40, Secure, CA-MTL-1, $0.59/h, created
-        2026-11-18 21:40:56 UTC; PI chose "Create, all 558" in the question dialog). It removes itself after 18000 s
-        (02:41 UTC at the latest: at most $2.95), 2400 s idle, or 3600 s after `stop`. Queue
-        `examples/gpu_jobs/queue_20261118_mlip.txt`: the timing fit ran (38 s an epoch on 437 frames; its closing
-        error is a ten-epoch artefact) and THE LONG FIT IS RUNNING SINCE 21:53:18 UTC as job 2 (`all`, 240 epochs,
-        about 2.5 h: it ends near 00:30 UTC, tests 2 minutes more). NOT YET PUSHED: the line `stop`. Results at
-        `https://dwyejg77awqh50-8000.proxy.runpod.net/<token>/` (STATUS, jobs/NN_mlip_fit/*.model); the token is in
-        the scratchpad only. WHEN DONE: fetch the model to `/opt/dft/gpu14/`, push `stop`, and CONFIRM BY A READ
-        (`list-pods`) that the pod is gone; if it is not, `delete-pod`.
+        THE SECOND POD IS GONE AND ITS FIT IS IN THE REPOSITORY (2026-11-19). Pod `dwyejg77awqh50` (NVIDIA A40,
+        Secure, $0.59/h) ran 21:40:56 to 00:32:04 UTC: 2.85 h, ABOUT $1.68 (the key cannot read billing; spend so
+        far about $17.9 of $46). Removed with `delete-pod` and CONFIRMED BY A READ (`list-pods`: none; `get-pod`:
+        404). The queue file never got its `stop` line; nothing reads it now.
+        THE FIT `all_s1` (all 558 frames, 485 in the fit, the composition `VAVF|VRVV` held out whole; 240 epochs,
+        154 minutes): `docs/predictions/mlip/models/all_s1.model` (14.5 MB, sha256 eabd2345...; saved on the card:
+        load with `mlip_second_opinion.file_calculator`, or `mlip_train.py relax --model`), results
+        `docs/predictions/mlip_own_all_s1.json`. Held out (69 frames): energy between frames of the same atoms
+        1.7 meV per monomer rms (PVDF 0.6 to 1.3, chlorine 3.4, the nitrile 4.5 which is 0.104 kcal/mol and the
+        one group outside the 0.1 needed, the composition it never saw 2.9), forces 28.8 meV/A rms (the labels' own rms 1229), stress 0.07 GPa. THE ANCHOR: +0.724 on DFT's
+        geometries and +0.725 relaxed in the potential, against DFT's +0.726; volumes of alpha and beta to 0.0%;
+        beta's stiffness C_11 23.0 (DFT 22.8), C_22 27.3 (24.5), C_12 7.5 (5.9), C_33 295 (303). The anchor's
+        cells are among the frames, so this is the fit reproducing what it was shown, not a prediction.
         THE 35 ROWS UNDER chain1, MARGINS: RUNNING IN PIECES, THREE SIDE BY SIDE (`for k in 1 2 3; do python
         examples/rows_under_preset.py --preset pvdf-dft-chain1 --redo-failed --minutes 105 --part $k/3 --out
         /opt/dft/margins_chain1.json > LOG_$k & done; wait`, one thread each; the --out file is the checkpoint,
