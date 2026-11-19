@@ -17,7 +17,9 @@ potential is used to relax a cell and DFT is asked once for its energy; the pote
 energy is trusted only where it has been checked. Since 2026-11-19 (3.10) one fit on every
 frame is in the repository, and two copolymer margins have been taken that way: a 25 mol% TrFE
 cell, +0.678, which both of polyfind's presets meet to 0.04, and the same cell with a CFE
-unit, +0.682, which one preset puts 0.30 lower and the other 0.38 higher.
+unit, +0.682, which one preset puts 0.30 lower and the other 0.38 higher. The error is at the
+bonds of the CFCl carbon; with a torsion term of their own, fitted to DFT on lone chains, the
+new preset gives +0.690 on that cell and passes on a CTFE cell too (3.11).
 
 ## 1. The test
 
@@ -771,3 +773,90 @@ Frames: `docs/predictions/mlip/row_cells_vdf3-trfe1-4_frames_pbe_d3bj.extxyz` (1
 `docs/predictions/mlip/row_cells_lone_chain_frames_pbe_d3bj.extxyz`, DFT's
 `chain_split_dft_rows_pbe_d3bj.json`, polyfind's `chain_split_polyfind_dft_rows.json`. Tests: `tests/test_row_cells_dft.py`,
 `tests/test_mlip_own.py::test_the_fit_on_every_frame_holds_the_anchor_and_a_composition_it_never_saw`.
+
+### 3.11 A torsion term for the bonds at a CFCl carbon, and the CTFE cell (2026-11-19)
+
+3.10 put chain1's chlorine error inside the chain, at the bonds of the CFCl carbon, which take
+the triple fitted to CF2-CH2 bonds. This section gives those bonds a triple of their own, fitted
+to DFT on lone chains, and tests it on two cells that were not in the fit.
+
+**The lone chains.** The polymer with a CFE at every second unit, twelve atoms a repeat, alone
+in a 16 A box, settled in DFT as the reversed unit's chains were (`docs/CRYSTAL_STAGE.md` 5.29;
+`examples/chain_conformers.py`, chain `cfe2`): all-trans, and the helix. The chain reads the same
+both ways, so the helix has two placements that differ: the CFCl-CH2 bond gauche one way or the
+other, the chlorine on opposite sides of the fold. Forces left: 0.005 eV/A.
+
+| against the all-trans chain, kcal/mol per monomer | DFT | chain1 | with the triple |
+|---|---:|---:|---:|
+| helix, CFCl-CH2 bond at -60 degrees | -2.475 | -1.783 | -2.403 |
+| helix, the other placement (+50 degrees) | -3.189 | -2.835 | -3.293 |
+| the second less the first | -0.714 | -1.052 | -0.890 |
+
+- **chain1 has both helices too high**, by 0.69 and 0.35 per monomer: the gauche well of a CFCl
+  bond is too shallow. That is the sign and the size 3.10 found in the cell (about 1 kcal/mol
+  per CFE unit).
+- **The triple** (`examples/unit_torsion_fit.py`, 25 s): (V1, V2, V3) = (+0.440, -2.180, +1.501)
+  kcal/mol where the shared one is (+0.450, -0.522, +0.746). It lowers a gauche CFCl bond by
+  about 1.25 kcal/mol against a trans one and leaves both rows within 0.11.
+- **What the two rows hold and what they do not.** A torsion term is even in the angle, so both
+  placements see the same one: the rows fix one combination of the three coefficients, the
+  depth of the gauche well against the trans one. A ridge holds the rest to chain1's triple.
+  **The barrier between the wells is not fitted.** It matters to how fast a kink passes a CFE
+  unit, which is the rate axis, and it needs a DFT point on the barrier before it is trusted.
+- What separates the two placements (0.71 in DFT) is not the torsion term but chlorine against
+  fluorine across the fold. chain1 has it at 1.05; with the triple 0.89.
+- A mistake, corrected: two of the four conformers I first built for this chain had two gauche
+  bonds of opposite sense next to each other. That is not a conformer (the groups two bonds on
+  meet); the chains broke up in the relaxation and the frames are discarded.
+
+**The test: cells that were not in the fit.** The preset is `pvdf-dft-chain1-cfe`: chain1 with
+that triple on the CH2-CFCl bonds and nothing else changed.
+
+| all-trans minus helix, kcal/mol per monomer | DFT | chain1 | chain1-cfe | belt4 |
+|---|---:|---:|---:|---:|
+| VVRV (TrFE only) | +0.678 | +0.671 | +0.671 | +0.641 |
+| VRVC (one CFE in four) | **+0.682** | +0.381 | **+0.690** | +1.057 |
+| VRVK (one CTFE in four) | **+0.315** | +0.134 | **+0.400** | +0.734 |
+
+- **The CFE cell passes**: 0.008 from DFT, where chain1 was 0.30 low, and in DFT's helix
+  placement (G'TGT).
+- **The CTFE cell passes, at the edge**: 0.085 high against a needed 0.1. CTFE is a new DFT
+  margin here (`examples/unit_dft_check.py`, the whole check for one small row): +0.315, less
+  than half the CFE cell's. Neither chain1 (0.18 low) nor belt4 (0.42 high) had it. The unit
+  brings two bonds of its own: a CFCl-CH2 bond, which takes the new triple, and a CF2-CFCl bond,
+  which has none and is trans in both cells, so this cell does not test it.
+- A cell with no CFCl carbon is chain1's to the last digit.
+
+The split into inside a chain and between chains, as in 3.10 (polyfind's cells upright, the same
+helix placement as DFT's):
+
+| all-trans minus helix | cell | inside a chain | between chains |
+|---|---:|---:|---:|
+| VRVC: DFT | +0.682 | +2.979 | -2.298 |
+| chain1-cfe | +0.715 | +3.161 | -2.445 |
+| VRVK: DFT | +0.315 | +1.091 | -0.776 |
+| chain1 | +0.152 | +1.075 | -0.923 |
+| chain1-cfe | +0.468 | +1.394 | -0.927 |
+| belt4 | +0.861 | +2.346 | -1.484 |
+
+- On the CFE cell the two parts are now off by +0.18 and -0.15, which are the two errors chain1
+  has on the TrFE cell (+0.13 and -0.22). What the CFE unit adds to them is 0.05 inside the
+  chain and 0.07 between chains.
+- On the CTFE cell the inside of the chain is 0.30 high, more than the TrFE cell's 0.13, and
+  the margin lands inside the 0.1 with help from the error between chains. That is a pass on
+  the number that was asked for and not a clean one. CTFE rows carry that caution.
+- The CTFE unit folds the chain and parts the chains far less than the CFE unit does in DFT
+  (+1.09 and -0.78 against +2.98 and -2.30): its helix cell is denser than the others.
+
+**What this reads on.** The margin, which places a cell on the strain axis, and nothing else.
+The loss, the rate and the blocked stress are not computed here, and the rate of a chlorine row
+will lean on the CFCl bond's barrier, which is not fitted. For the ranking: rows whose units are
+VDF, TrFE, reversed VDF, CFE and CTFE (20 of the 35) now have a preset that meets DFT on a small
+cell of each unit; the other 15 hold a unit that has not had its check.
+
+Files: `docs/predictions/chain_conformers_cfe_pbe_d3bj.json` (the lone chains),
+`unit_torsion_cfe_chain1.json` (the fit), `margins_chain1-cfe_dft_rows.json` (the cells under the
+preset), `row_cells_dft_vdf2-trfe1-ctfe1-4.json` and `chain_split_dft_vdf2-trfe1-ctfe1-4.json`
+(the CTFE cell in DFT), `mlip/row_cells_vdf2-trfe1-ctfe1-4_frames_pbe_d3bj.extxyz` (2 frames),
+`chain_split_polyfind_dft_rows.json` (polyfind's splits, set `chain1-cfe`). Tests:
+`tests/test_row_cells_dft.py`.
