@@ -1038,7 +1038,7 @@ build at its ideal torsions, and the polish now says so and goes on):
 | TFE (VRVF) | 2 | -0.076 | -0.060 | passes: the margin to 0.02, its parts 0.26 and 0.29 off, 0.1 more than on the TrFE cell |
 | ethylene (VRVE) | 2 | -0.146 | -0.232 | passes at the edge (added 16:50 UTC): its parts +0.04 and -0.23 off; belt4 +0.500, the wrong sign; the potential -0.082 |
 | VF (VRVY) | 1 | +0.290 | +0.479 | fails by 0.19 (added 20:40 UTC); belt4 +0.452, 0.16 high; the potential +0.274. DFT leaves 0.32 and 0.35 eV/A on the two cells, more than on any other pair, so its number is the least settled of the set |
-| DFE | 1 | | | not checked yet |
+| DFE (VRVX) | 1 | +0.961 | +0.955 | passes, and cleanly (added 21:10 UTC): its parts +0.04 and -0.07 off; belt4 +1.234, 0.27 high; **the potential +0.309, 0.65 low, its worst cell** (DFT leaves 0.29 eV/A on both cells) |
 
 **TFE** (`vdf2-trfe1-tfe1-4`, VRVF; 0.07 eV/A left): DFT -0.076 = +0.895 inside a chain - 0.971
 between chains, all-trans the lower by a little. chain1 -0.060 with the shear free; upright on the
@@ -1291,6 +1291,14 @@ TrFE that DFT has, none of them in the fit:
 | root mean square | | 0.18 | 0.29 | 0.09 | 0.09 |
 | ethylene, VRVE (added after the five; not run with the term) | -0.146 | +0.06 | +0.65 | -0.09 | |
 | VF, VRVY (added after the five; DFT's forces left 0.35 eV/A) | +0.290 | -0.02 | +0.16 | +0.19 | |
+| DFE, VRVX (added after the five; DFT's forces left 0.29 eV/A) | +0.961 | **-0.65** | +0.27 | -0.01 | |
+
+With the three cells added after the five, and the nitrile and CDFE cells of 3.12 and 3.13, every
+unit of the 35 rows has now been put to DFT in a small cell. The potential misses the two units
+it has fewest frames of, TFE by 0.36 and DFE by 0.65, and is within 0.11 on the other ten cells.
+chain1-cfe is within 0.09 on seven cells, 0.18 to 0.19 off on two (the six-monomer TrFE cell,
+VF), right by cancellation on CDFE and wrong on the two nitrile cells. Each is to be used where
+it has passed, and the labelled cells of today are frames for the potential's next fit.
 
 - **The term puts the six-monomer cell right and every four-monomer cell 0.05 to 0.13 low.**
   With the chain right, the error between chains (the all-trans cell 0.15 to 0.29 too strongly

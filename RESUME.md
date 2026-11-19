@@ -445,9 +445,17 @@ right": true at one registry, not along it).
         ETHYLENE (16:50 UTC): VRVE DFT -0.146 (= +1.007 -1.153), chain1 -0.232 (PASSES AT THE EDGE; parts +0.04,
         -0.23), belt4 +0.500 (WRONG SIGN), the potential -0.082. VF (20:37 UTC): VRVY DFT +0.290 (= +2.081
         -1.791; DFT LEAVES 0.32 AND 0.35 eV/A on the two cells, the most of any pair), chain1 +0.479 (FAILS BY
-        0.19; parts +0.13, +0.07), belt4 +0.452, the potential +0.274. DFE: RUNNING since 20:40 UTC
-        (`unit_dft_check.py --row vdf2-trfe1-dfe1-4 ... --threads 3 --np 3`; the same command goes on after a
-        stop). With DFE the unit checks of task 18 are complete.
+        0.19; parts +0.13, +0.07), belt4 +0.452, the potential +0.274. DFE (21:08 UTC): VRVX DFT +0.961 (=
+        +2.213 -1.251; 0.29 eV/A left on both cells), chain1 +0.955 (PASSES CLEANLY; parts +0.04, -0.07), belt4
+        +1.234, THE POTENTIAL +0.309: 0.65 LOW, ITS WORST CELL. THE UNIT CHECKS ARE COMPLETE: every unit of the 35
+        rows has a DFT cell. THE POTENTIAL MISSES TFE (0.36) AND DFE (0.65) and is within 0.11 on the other ten
+        cells; chain1-cfe is within 0.09 on seven, 0.18 to 0.19 off on VVRVVR and VF, right by cancellation on
+        CDFE, wrong on the nitrile. USE EACH WHERE IT HAS PASSED. Rows by evaluator: nitrile rows (7) the
+        potential; TFE (2) and DFE (1) rows chain1-cfe; VF (1) the potential; the rest either, with chain1-cfe's
+        levels up to 0.2 high at 29 mol% TrFE. TODAY'S LABELLED CELLS (the `row_cells_*_frames_pbe_d3bj.extxyz`
+        of the eight small rows, the lone chains, `kink_vdf4-trfe2-6_frames_pbe_d3bj.extxyz`) ARE NOT IN THE
+        POTENTIAL'S TRAINING SET: a refit with them (2.85 hours on the A40 last time) comes before the potential
+        is used on TFE or DFE rows or on kinks.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

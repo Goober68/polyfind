@@ -442,3 +442,15 @@ def test_the_vf_cell_is_missed_by_both_presets_and_met_by_the_potential():
     assert 0.3 < m["largest_force_left_eV_per_A"] < 0.4   # the least settled pair of cells: every other pair is under 0.23
     chain1, belt4 = stored["polyfind"]["chain1"]["margin"], stored["polyfind"]["belt4"]["margin"]
     assert chain1 - m["dft"] == pytest.approx(+0.19, abs=0.01) and belt4 - m["dft"] == pytest.approx(+0.16, abs=0.01)
+
+
+def test_the_dfe_cell_is_met_cleanly_by_chain1_and_missed_by_the_potential():
+    stored = _stored("vdf2-trfe1-dfe1-4")
+    m = stored["margins"]["free"]
+    assert m["dft"] == pytest.approx(+0.961, abs=0.002) and m["largest_force_left_eV_per_A"] < 0.3
+    chain1, belt4 = stored["polyfind"]["chain1"]["margin"], stored["polyfind"]["belt4"]["margin"]
+    assert abs(chain1 - m["dft"]) < 0.01 and belt4 - m["dft"] == pytest.approx(+0.27, abs=0.01)
+    assert m["potential"] - m["dft"] == pytest.approx(-0.65, abs=0.01)   # the potential's worst cell
+    dft = next(iter(json.loads((PRED / "chain_split_dft_vdf2-trfe1-dfe1-4.json").read_text())["pairs"].values()))
+    q = json.loads((PRED / "chain_split_polyfind_dft_rows.json").read_text())["sets"]["chain1"]["vdf2-trfe1-dfe1-4"]["pairs"]["TTTT minus TGTG'"]
+    assert abs(q["inside_a_chain"] - dft["inside_a_chain"]) < 0.05 and abs(q["between_chains"] - dft["between_chains"]) < 0.08
