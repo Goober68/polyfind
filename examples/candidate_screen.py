@@ -173,6 +173,7 @@ SEQUENCES = {
     # the TrFE matrix in cells small enough for DFT: the sequences of two labelled cells of docs/predictions/mlip/units_frames_pbe_d3bj.extxyz
     "vdf3-trfe1-4": ("VVRV", "25 mol% TrFE, one unit in four: the TrFE matrix in a cell small enough for DFT (the labelled cell VVRV|VRVV, forty-eight atoms)"),
     "vdf1-trfe1-2": ("VR", "50 mol% TrFE, alternating: the labelled cell VR|VR, twenty-four atoms"),
+    "vdf2-trfe1-cfe1-4": ("VRVC", "one CFE and one TrFE in four: the chlorine pin in a cell small enough for DFT (forty-eight atoms; the labelled cell VRVC|VVRV has it on one chain of two)"),
 }
 CONFORMATIONS = {"TTTT": [T] * 20, "TGTG'": [T, GP, T, GM] * 5}
 CONFORMATION_UNITS = {"TTTT": [T], "TGTG'": [T, GP, T, GM], "TG'TG": [T, GM, T, GP], "GTG'T": [GP, T, GM, T], "G'TGT": [GM, T, GP, T]}
