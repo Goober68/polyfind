@@ -459,9 +459,16 @@ right": true at one registry, not along it).
         THE PRESET'S TABLE IS NOW 27 ROWS (22:05 UTC, `docs/predictions/margins_chain1-cfe.json`): added
         `vdf9-trfe4-e1-14` -0.046 (ethylene -3.8 kcal/mol per unit: a pin for all-trans) and `vdf9-trfe4-dfe1-14`
         +0.287 (DFE +0.9 per unit). Not in it: the seven nitrile rows and the VF row.
-        RUNNING (21:15 UTC, three threads, ends by itself): four more kink-sheet sites in the potential
-        (`/opt/dft/sheets14c`: leader `@0` 18 and `@0~` 18, nitrile alone `@0~` 10 and `@0` 0); read with
-        `row_cells_frames.py sheets-potential --frames /opt/dft/sheets14c --out JSON`.
+        FOUR MORE KINK-SHEET SITES IN THE POTENTIAL (22:31 UTC, `docs/predictions/sheets14_potential_third_batch.json`,
+        cells in `/opt/dft/sheets14c`; ELEVEN OF 112 NOW): leader `@0` site 18 2.41 (belt4 1.86), LEADER `@0~`
+        SITE 18 0.65 (belt4 1.94; kink kept, gauche -72 and +61), nitrile alone `@0` site 0 3.40 (3.25), NITRILE
+        ALONE `@0~` SITE 10: THE KINK DOES NOT HOLD (back to all-trans; belt4 has a sheet there at 2.26). LOWEST
+        FOUND NOW: leader 0.65, nitrile alone 2.95, matrix 3.59, CFE cell 4.16. A sheet for 0.65 is a kink pair
+        for kT: outside the rate model's dilute range (the formula gives 83 MHz; on the leader's next site, 2.41,
+        4.4 MHz, tan delta 0.005, 0.149%, 8.1 pN/nm2 through the crystal). `four_axes_potential_margins_sheets.json`
+        is recomputed with the leader's shift -0.740 (= 0.655 - 1.395); this SUPERSEDES the 3.8 MHz row written
+        at 20:00 UTC above. ONE RELAXATION FROM ONE STARTING CELL, NO DFT: the full scan and DFT on the lowest
+        sheets are the pod's job.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

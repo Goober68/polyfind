@@ -1,0 +1,109 @@
+{
+ "what": "the kink sheet (a kink pair on every chain, in register, at one site of the sequence) relaxed in the potential with the cell free, minus the row's all-trans cell there, kcal/mol per kink pair; polyfind is the tables' value for the same site (examples/kink_site_scan.py). No DFT on these cells. kink_kept: every chain still has two gauche bonds of opposite sense about a trans one",
+ "potential": "all_s1",
+ "all_trans": "rows14_potential.json",
+ "rows": {
+  "vdf9-trfe3-an1-rvdf1-14": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_in_all_s1",
+   "atoms": 170,
+   "site": "18",
+   "potential": 2.411199881601442,
+   "polyfind": 1.8564042841516084,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     86.6,
+     -66.3
+    ],
+    [
+     86.6,
+     -66.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.560011635473693,
+    8.693996404612703,
+    35.07159118107536,
+    91.89979254908546,
+    91.01053259381342,
+    90.69249002578832
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 18 (units VV), pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@18m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_in_all_s1",
+   "atoms": 170,
+   "site": "18m",
+   "potential": 0.6546161605962973,
+   "polyfind": 1.934915802533581,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -71.5,
+     60.9
+    ],
+    [
+     -71.5,
+     60.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.489631984712378,
+    8.809391099856981,
+    35.15211213966776,
+    96.5471726157507,
+    95.02969604126844,
+    87.54520405545239
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 18 (units VV), pendants as built"
+  },
+  "vdf9-trfe4-an1-14": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at0_in_all_s1",
+   "atoms": 170,
+   "site": "0",
+   "potential": 3.400852004193039,
+   "polyfind": 3.2542191181149605,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     85.8,
+     -63.0
+    ],
+    [
+     85.8,
+     -63.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.610751838084706,
+    8.534145096315674,
+    35.20658414561854,
+    90.18451594679219,
+    90.18676403385177,
+    90.88107958439463
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 0 (units VV), pendants as built"
+  },
+  "vdf9-trfe4-an1-14@10m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at10m_in_all_s1",
+   "atoms": 170,
+   "site": "10m",
+   "potential": 1.5512701329663166,
+   "polyfind": 2.2616732745477606,
+   "kink_kept": false,
+   "gauche_bonds_deg": [
+    [],
+    []
+   ],
+   "cell_A_deg": [
+    5.105791814961327,
+    9.25557715113376,
+    35.972074080632304,
+    89.66344752023441,
+    90.42307412394169,
+    95.22389153354119
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 10 (units RV), pendants as built"
+  }
+ }
+}

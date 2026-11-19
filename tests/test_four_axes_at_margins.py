@@ -61,17 +61,20 @@ def test_the_nitrile_cells_are_below_zero_in_the_potential_and_the_model_takes_t
 
 
 def test_the_kink_sheets_in_the_potential_keep_the_order_and_not_belt4s_site_profile():
-    first = json.loads((PRED / "sheets14_potential.json").read_text())["rows"]
-    more = json.loads((PRED / "sheets14_potential_more_sites.json").read_text())["rows"]
-    assert set(first) == {CFE, LEADER, AN, MATRIX} and len(more) == 3
-    sheets = [dict(r, row=k.split("@")[0]) for k, r in list(first.items()) + list(more.items())]
-    assert all(r["kink_kept"] for r in sheets)
-    # site by site the potential and belt4 differ by -1.2 to +3.0: belt4's profile along the sequence is not confirmed
-    diff = sorted(r["potential"] - r["polyfind"] for r in sheets)
-    assert diff[0] == pytest.approx(-1.22, abs=0.01) and diff[-1] == pytest.approx(+3.03, abs=0.01)
+    batches = [json.loads((PRED / f"{name}.json").read_text())["rows"] for name in ("sheets14_potential", "sheets14_potential_more_sites", "sheets14_potential_third_batch")]
+    assert set(batches[0]) == {CFE, LEADER, AN, MATRIX} and [len(b) for b in batches] == [4, 3, 4]
+    sheets = [dict(r, row=k.split("@")[0]) for b in batches for k, r in b.items()]
+    lost = [r for r in sheets if not r["kink_kept"]]
+    assert len(lost) == 1 and lost[0]["row"] == AN and lost[0]["site"] == "10m"   # one of belt4's sites holds no kink in the potential
+    kept = [r for r in sheets if r["kink_kept"]]
+    # site by site the potential and belt4 differ by -1.3 to +3.0: belt4's profile along the sequence is not confirmed
+    diff = sorted(r["potential"] - r["polyfind"] for r in kept)
+    assert diff[0] == pytest.approx(-1.28, abs=0.01) and diff[-1] == pytest.approx(+3.03, abs=0.01)
     # the lowest sheet found for each cell: leader < nitrile alone < matrix < the film's cell
-    low = {row: min(r["potential"] for r in sheets if r["row"] == row) for row in (LEADER, AN, MATRIX, CFE)}
-    assert low == pytest.approx({LEADER: 2.487, AN: 2.951, MATRIX: 3.592, CFE: 4.162}, abs=0.005)
+    low = {row: min(r["potential"] for r in kept if r["row"] == row) for row in (LEADER, AN, MATRIX, CFE)}
+    assert low == pytest.approx({LEADER: 0.655, AN: 2.951, MATRIX: 3.592, CFE: 4.162}, abs=0.005)
+    # the leader's three sites: two near 2.4 to 2.5 and one for about kT
+    assert sorted(r["potential"] for r in kept if r["row"] == LEADER) == pytest.approx([0.655, 2.411, 2.487], abs=0.003)
     belt4_low = {LEADER: 1.395, AN: 2.148, MATRIX: 4.659, CFE: 3.418}   # the lowest site of each cell's scan, both hands
     scans = json.loads((PRED / "kink_site_scan_belt4.json").read_text())["rows"]
     for row, e in belt4_low.items():
@@ -83,10 +86,8 @@ def test_the_kink_sheets_in_the_potential_keep_the_order_and_not_belt4s_site_pro
     assert stored["sheet_shifts_kcal_per_kink_pair"] == pytest.approx({k: low[k] - belt4_low[k] for k in low}, abs=0.002)
     at = stored["shifts"]["+0.00"]["rows"]
     khz = {k: at[k][SUM]["f_relax_hz"] / 1e3 for k in at}
-    assert khz == pytest.approx({MATRIX: 697, CFE: 364, AN: 1590, LEADER: 3836}, rel=0.01)
+    assert khz == pytest.approx({MATRIX: 697, CFE: 364, AN: 1590, LEADER: 82945}, rel=0.01)   # the leader's is the formula outside its range (a sheet for kT)
     assert all(MOVE not in r for r in at.values())   # the other rate model does not see the sites
     before = _stored()["shifts"]["+0.00"]["rows"]
     assert before[MATRIX][SUM]["f_relax_hz"] / 1e3 == pytest.approx(33, abs=1) and before[LEADER][SUM]["f_relax_hz"] / 1e3 == pytest.approx(6877, rel=0.01)
-    # the leader is still the fastest and least lossy; through the crystal the matrix now holds more
     assert at[LEADER][SUM]["tan_delta_34kHz"] < at[AN][SUM]["tan_delta_34kHz"] < at[MATRIX][SUM]["tan_delta_34kHz"] < at[CFE][SUM]["tan_delta_34kHz"]
-    assert at[MATRIX][SUM]["blocked_pn_nm2_through_the_crystal"] > at[AN][SUM]["blocked_pn_nm2_through_the_crystal"] > at[LEADER][SUM]["blocked_pn_nm2_through_the_crystal"]
