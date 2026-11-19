@@ -189,15 +189,17 @@ def main():
     ap.add_argument("--minutes", type=float, default=0.0, help="start no new cell after this long")
     ap.add_argument("--no-tilts", action="store_true")
     ap.add_argument("--redo-failed", action="store_true", help="run again the stored cells one of whose starts failed")
+    ap.add_argument("--polished", default=str(SP.POLISHED), help="the table of polished cells (examples/polish_margins.py)")
+    ap.add_argument("--references", default=str(SP.REFERENCES), help="its all-trans cells (examples/polish_margins.py --references)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     out_path = Path(args.out)
-    pol, ref = json.load(open(SP.POLISHED)), json.load(open(SP.REFERENCES))
+    pol, ref = json.load(open(args.polished)), json.load(open(args.references))
     sheared = json.loads(SHEARED.read_text())["rows"] if SHEARED.exists() else {}
     rows = part_of([r for r in args.rows.split(",") if r] or list(pol["rows"]), args.part)
 
     def begin(disk):
-        disk.update(preset=args.preset, energy="kcal/mol per monomer; margin = all-trans minus the lowest helix placement, shear free, pendants tilted",
+        disk.update(preset=args.preset, polished=args.polished, references=args.references, energy="kcal/mol per monomer; margin = all-trans minus the lowest helix placement, shear free, pendants tilted",
                     what="each polished cell (polished_margins_belt4.json) relaxed again under the preset: upright, then free to shear along its chains from "
                          f"a kick, from where belt4's own sheared re-polish took the cell (if it moved it) and, for an all-trans cell, from {LINE} monomers; "
                          "pendant tilts of both (examples/rows_under_preset.py)")
