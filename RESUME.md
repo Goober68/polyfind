@@ -327,6 +327,21 @@ right": true at one registry, not along it).
         THOSE ROWS MOVE DOWN TOWARD THE WINDOW, WHERE THE CFE ROWS MOVE UP (terpolymer +0.359 under chain1-cfe,
         matrix +0.222). THAT IS THE QUESTION THE POD RUN PUT TO THE PI WOULD ANSWER (all 35 rows' cells relaxed in
         the potential; no answer yet, NO POD WITHOUT IT).
+        THE LEADER OF THE belt4 RANKING IS A NITRILE ROW AND DOES NOT STAND AS WRITTEN (`vdf9-trfe3-an1-rvdf1-14`,
+        belt4 +0.037; caution at the head of `docs/CANDIDATE_MATERIALS.md`): belt4's nitrile is a helix pin of +2.0
+        per unit at one in fourteen, DFT's an all-trans pin of -3.3 to -4.3 at one in four; if DFT's held at one
+        in fourteen the leader would be near -0.35. THE CHECK, RUNNING LOCALLY (11:46 UTC, background, two
+        threads, ends by itself): the leader's five cells relaxed in the potential at its own dilution.
+        Starting cells: `/opt/dft/cells_chain1-cfe_an.json` (rows `vdf9-trfe3-an1-rvdf1-14`, `vdf9-trfe4-an1-14`
+        under chain1-cfe: GEOMETRIES ONLY, the preset does not have the nitrile); atoms in `/opt/dft/rows14an`
+        (`row_cells_frames.py write --margins THAT --row ROW --kmesh "4 2 1" --out /opt/dft/rows14an`, 170
+        atoms a cell); `mlip_train.py relax --model docs/predictions/mlip/models/all_s1.model --name all_s1
+        --cells /opt/dft/rows14an/row_vdf9-trfe3-an1-rvdf1-14_{TTTT,TGTGp,GTGpT,GpTGT,TGpTG}_cfe.start.xyz --out
+        /opt/dft/rows14an --threads 2 --fmax 0.02 --steps 800` (log `/opt/dft/rows14an_1.log`; a finished cell
+        is `NAME_in_all_s1.start.xyz` with `potential_eV_per_monomer` in its info; the relax skips nothing, so
+        give it only the cells still missing). THEN the same for `vdf9-trfe4-an1-14`, and for the matrix and the
+        CFE terpolymer (`/opt/dft/rows14`: both all-trans cells are relaxed, the helix cells are not). The
+        potential's own margins are good to about 0.1 (0.03 to 0.11 on the six small cells DFT has).
         THE OTHER UNITS (TFE, CDFE, ethylene, VF, DFE): UNTESTED UNTIL THEIR CHECK. Rows by unit: AN in 7 of the
         35, CDFE 4, TFE 2, ethylene 2, VF 1, DFE 1 (15 rows in all); CFE 9, CTFE 3; 9 rows VDF, TrFE and reversed
         VDF only. `examples/unit_dft_check.py --row ROW --work /opt/dft/unit4 --model
