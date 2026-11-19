@@ -88,6 +88,26 @@ def write_kink(args):
     arrays = lambda d: {k: (np.asarray(v, dtype=float) if isinstance(v, list) else v) for k, v in d.items()}  # noqa: E731
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+    if args.sheet_of:  # a stored kinked crystal itself (the packing search's, polished) and the row's all-trans cell: for a row with no site scan (PVDF)
+        row = args.sheet_of.split("@")[0]
+        kinked = arrays(json.loads(Path(args.kinked_references).read_text())["kinked_references"][args.sheet_of])
+        store = json.loads(Path(args.dilute).read_text())
+        flat = arrays(store["all_trans_references"][row])
+        tag = args.tag or Path(store["preset"]).stem.split("-")[-1]
+        with parameters_of(store["preset"]).applied():
+            polymer = DK.C.make_polymer(row, DK.sequence(row)[0])
+            formation = (float(kinked["energy"]) - float(flat["energy"])) / 2.0
+            for label, d, e in (("TT", flat, 0.0), ("ref", kinked, formation)):
+                model, x, ch = DK.make_model(polymer, d, 1, 1)
+                a = atoms_of(model, x)
+                name = f"sheet_{row}_{tag}_{label}"
+                a.info.update(family="kinkcell", frame=name, n_monomers=model.nc * ch.n_monomers, kmesh=args.kmesh, conformation="all-trans" if label == "TT" else "kink sheet",
+                              kinked_chains=model.nc, source=f"polyfind {store['preset']}, {args.sheet_of}, " + ("the all-trans cell" if label == "TT" else "the kinked crystal") + ", pendants as built",
+                              polyfind_kcal_per_kink_pair=float(e))
+                write(out / f"{name}.start.xyz", a, format="extxyz")
+                print(f"{name}: {len(a)} atoms, cell {np.round(a.cell.cellpar(), 3).tolist()}, polyfind {e:+.3f} kcal/mol per kink pair")
+        print(f"written {out}")
+        return
     if args.scan:  # the kink sheet at chosen sites of examples/kink_site_scan.py: every chain kinked in register, in the cell the sheet carries
         scan = json.loads(Path(args.scan).read_text())
         row, sites = args.key.split("@")[0], scan["rows"][args.key]["sites"]
@@ -310,7 +330,9 @@ def main():
     s.add_argument("--scan", default="", help="instead of --dilute: the file examples/kink_site_scan.py wrote (its key is ROW@0, or ROW@0~ for the other hand)")
     s.add_argument("--kinked-references", default="docs/predictions/kink_migration_belt4.json", help="with --scan: the kinked crystals the scans started from")
     s.add_argument("--sites", default="0", help="with --scan: comma list of the sites (bond offsets) whose cell is written")
-    s.add_argument("--key", required=True, help="the run's key there, as 'vdf4-trfe2-6@0 1x1 kinked 0,1'")
+    s.add_argument("--sheet-of", default="", help="instead of --scan or --key: a key of --kinked-references (as vdf10@0); writes that kinked crystal and the row's all-trans cell "
+                                                  "(the all-trans references are read from --dilute)")
+    s.add_argument("--key", default="", help="the run's key there, as 'vdf4-trfe2-6@0 1x1 kinked 0,1'")
     s.add_argument("--stages", default="flexible_host", help="comma list of the stages whose kinked cell is written")
     s.add_argument("--kmesh", required=True)
     s.add_argument("--tag", default="")
