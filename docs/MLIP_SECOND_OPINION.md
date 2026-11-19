@@ -1,6 +1,6 @@
 # A machine-learned potential as a second opinion on the margins
 
-State as of 2026-11-16. The PI's direction, in order: "Go on 1" (a machine-learned interatomic
+State as of 2026-11-19. The PI's direction, in order: "Go on 1" (a machine-learned interatomic
 potential as a second opinion on polyfind's margins, tested before it is trusted), then, on
 seeing pretrained ones tested: "You're using ots solutions? Thought we would train our own?"
 
@@ -14,7 +14,10 @@ are off by 1.2 to 3.9 (3.3). Four long fits on a rented card, on 130 frames, are
 on the packings that have frames near them and off by 0.07 to 0.21 on a packing they were not
 shown; DFT single points on the cells they relax are right to 0.02 either way (3.6). So the
 potential is used to relax a cell and DFT is asked once for its energy; the potential's own
-energy is trusted only where it has been checked.
+energy is trusted only where it has been checked. Since 2026-11-19 (3.10) one fit on every
+frame is in the repository, and two copolymer margins have been taken that way: a 25 mol% TrFE
+cell, +0.678, which both of polyfind's presets meet to 0.04, and the same cell with a CFE
+unit, +0.682, which one preset puts 0.30 lower and the other 0.38 higher.
 
 ## 1. The test
 
@@ -626,3 +629,105 @@ frequency: both come from barriers of the kind above, overstated by an amount no
 Blocked force per area: unaffected where it is taken through the crystal across the chains,
 which is the constant DFT confirms.
 
+### 3.10 One fit on every frame, and two copolymer margins by DFT (2026-11-19; PI: "Create, all 558")
+
+**The fit.** One fit, `all_s1`, on all 558 labelled frames (the ten files of
+`docs/predictions/mlip/` as they stood: PVDF, the other units, the candidate's cells and its
+relaxation steps, the registry and shear sets, the chains pulled apart, the lone chains). 485 in
+the fit, 73 out, among them all eight frames of one composition (the nitrile with TFE in a TrFE
+matrix), which the fit never saw. On from MACE-MP-0b3 as before, 240 epochs, stress 1000 and
+energy 10000. One A40 on Runpod's Secure Cloud at $0.59 an hour: 2.85 hours with the timing
+run, about $1.68; the pod was removed and a read of the account confirmed it. Queue
+`examples/gpu_jobs/queue_20261118_mlip.txt`, results `docs/predictions/mlip_own_all_s1.json`.
+The model is in the repository this time, `docs/predictions/mlip/models/all_s1.model`
+(14.5 MB): the DFT work below starts from it.
+
+| test | DFT | `all_s1` |
+|---|---:|---:|
+| held out: energy between frames of the same atoms, meV per monomer rms | | 1.7 |
+| the same, PVDF groups / chlorine / the nitrile / the composition never seen | | 0.6 to 1.3 / 3.4 / 4.5 / 2.9 |
+| held out: force, meV/A (of 1229 rms) | | 28.8 |
+| held out: stress, GPa | | 0.07 |
+| beta minus alpha on the DFT geometries, kcal/mol | +0.726 | +0.724 |
+| the same, each cell relaxed in the potential | | +0.725 |
+| antipolar minus polar beta, meV | -1.11 | -0.31 |
+| C_11 / C_22 / C_12 / C_33 of beta, GPa | 22.8 / 24.5 / 5.9 / 303 | 23.0 / 27.3 / 7.5 / 295 |
+
+The anchor's cells are among the frames, so the two margin rows are the fit reproducing what it
+was shown. The needed 0.1 kcal/mol is 4.3 meV per monomer: the nitrile pair is just outside it
+(0.104), every other held-out group inside.
+
+**What it was not shown: the margin of a TrFE cell.** The project held two margins from DFT,
+PVDF and the reversed-unit candidate. Neither has a TrFE unit, and the leading rows are TrFE
+matrices with a pin. `vdf3-trfe1-4` is the smallest cell that holds one (VVRV, 25 mol% TrFE,
+48 atoms in two chains). Polyfind's cells for it, under `pvdf-dft-chain1` with the shear free
+(`examples/rows_under_preset.py`), were written out as atoms
+(`examples/row_cells_frames.py write`), relaxed in `all_s1` (`mlip_train.py relax`), and given
+one DFT single point each (`mlip_frames.py label`); the two labelled cells of the same sequence
+that the sampler had built for the frames went the same way.
+
+| cell | DFT as polyfind has it, eV per monomer (force, eV/A) | relaxed in the potential (force) |
+|---|---:|---:|
+| all-trans | -2039.78865 (1.31) | -2039.81245 (0.07) |
+| helix TG'TG, free to shear | -2039.80765 (1.27) | -2039.84186 (0.08) |
+| the same helix held upright | -2039.79762 (1.38) | -2039.83433 (0.05) |
+| the sampler's all-trans arrangement | -2039.77739 (0.56) | -2039.80482 (0.07) |
+| the sampler's helix arrangement | -2039.81395 (0.33) | -2039.83920 (0.04) |
+
+| all-trans minus helix, kcal/mol per monomer | DFT | chain1 | belt4 | `all_s1` alone |
+|---|---:|---:|---:|---:|
+| shear free | **+0.678** | +0.671 | +0.641 | +0.606 |
+| helix held upright | +0.505 | +0.421 | +0.577 | +0.435 |
+| the helix's gain from shearing | -0.174 | -0.250 | -0.064 | -0.171 |
+| the sampler's arrangement of the same chains | +0.793 | | | +0.696 |
+
+- **Both presets meet the first DFT margin of a TrFE cell**, by 0.007 (chain1) and 0.037
+  (belt4), on a chemistry neither was fitted to. They split it differently: belt4 has the
+  upright cells 0.07 too far apart and gives the helix a third of its gain from shearing;
+  chain1 has them 0.08 too close and gives it half as much again.
+- **Polyfind's arrangement of the chains is the lower one in DFT**, in both conformations (by
+  7.6 meV per monomer all-trans, 2.7 helix, against the sampler's). The search is doing its job.
+- **A DFT single point on polyfind's cell as it stands is again not a margin** (+0.438 with
+  1.3 eV/A on the atoms, +0.678 relaxed), as on the candidate (3.8).
+- **The potential finds the geometry; it is not the referee.** One relaxation in it leaves
+  0.04 to 0.08 eV/A in DFT. Its own margins are 0.07 to 0.10 below DFT's on these three pairs:
+  at the edge of the needed 0.1, on a composition it has 20 frames of. Its energy change along
+  a relaxation is DFT's to 0.1 to 0.3 meV per monomer on three cells and to 1.0 and 2.9 on the
+  other two.
+
+**A chlorine cell: neither preset has it.** `vdf2-trfe1-cfe1-4` (VRVC, one CFE and one TrFE in
+four, 48 atoms) is the cell above with a CFE in place of one VDF. The two presets disagree on
+it by 0.68, so both presets' all-trans cell and lowest helix cell (the same placement, G'TGT,
+in both) were relaxed in the potential; they arrive at the same two cells (0.06 meV apart), and
+DFT was asked for those (0.06 eV/A left on each).
+
+| all-trans minus helix, kcal/mol per monomer | DFT | chain1 | belt4 | `all_s1` alone |
+|---|---:|---:|---:|---:|
+| VRVC, shear free | **+0.682** | +0.381 | +1.057 | +0.768 |
+| the CFE's effect: VRVC less VVRV | +0.004 | -0.289 | +0.416 | +0.162 |
+
+- **chain1 is 0.30 low and belt4 0.38 high.** In this cell a CFE in place of a VDF leaves DFT's
+  margin where it was. Belt4 makes it a strong pin for the helix; chain1 makes it a pin for
+  all-trans. Neither preset's chlorine terms had a DFT energy of a chlorine cell among their
+  targets; chain1's wall and charges were refitted on H, C and F only.
+- **This is one cell, a dense one**: a CFE on every chain, one in four, where the leading rows
+  have one in fourteen or twenty. In polyfind the unit's effect per unit is not the same at
+  the two densities (belt4: +1.7 per unit here, +3.7 in `vdf9-trfe4-cfe1-14`; chain1: -1.2 and
+  +0.5), so the +0.004 does not carry over to the terpolymer cell as a number. What carries
+  over is that the presets' pins for chlorine are untested where they are right and wrong by
+  0.3 to 0.4 where they have been tested.
+- The potential alone is 0.086 high here, on a chlorine-to-chlorine contact between chains
+  that none of its frames has.
+
+**What this reads on.** The margin, which places a cell on the strain axis, and nothing else.
+The loss, the rate and the blocked stress of these cells are not computed here. For the ranking
+it says: rows that differ by a TrFE matrix alone can be compared in either preset; rows whose
+margin is set by a chlorine unit (CFE, CTFE, CDFE: 15 of the 35) cannot, in either, until the
+chlorine terms are fitted to DFT margins of cells like this one.
+
+Frames: `docs/predictions/mlip/row_cells_vdf3-trfe1-4_frames_pbe_d3bj.extxyz` (10),
+`row_cells_vdf2-trfe1-cfe1-4_frames_pbe_d3bj.extxyz` (2). Tables:
+`docs/predictions/row_cells_dft_vdf3-trfe1-4.json`, `row_cells_dft_vdf2-trfe1-cfe1-4.json`
+(`examples/row_cells_frames.py collect`); polyfind's side `margins_chain1_dft_rows.json`,
+`margins_belt4_dft_rows.json`. Tests: `tests/test_row_cells_dft.py`,
+`tests/test_mlip_own.py::test_the_fit_on_every_frame_holds_the_anchor_and_a_composition_it_never_saw`.
