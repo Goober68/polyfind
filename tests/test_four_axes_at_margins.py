@@ -1,6 +1,7 @@
 """The four axes at another evaluator's margins (examples/four_axes_at_margins.py): the stored table for the potential's."""
 
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -60,7 +61,8 @@ def test_the_nitrile_cells_are_below_zero_in_the_potential_and_the_model_takes_t
             assert a["blocked_pn_nm2_through_the_crystal"] > film["blocked_pn_nm2_through_the_crystal"]
 
 
-def test_the_kink_sheets_in_the_potential_keep_the_order_and_not_belt4s_site_profile():
+def test_the_kink_sheets_in_the_potential_were_stopped_loose_and_the_lowest_is_the_one_cell_that_sheared():
+    """The eleven sheets as stored (stop 0.02 eV/A).  Their ranking is withdrawn (docs/MLIP_SECOND_OPINION.md 3.19): the numbers below are what was found, not minima."""
     batches = [json.loads((PRED / f"{name}.json").read_text())["rows"] for name in ("sheets14_potential", "sheets14_potential_more_sites", "sheets14_potential_third_batch")]
     assert set(batches[0]) == {CFE, LEADER, AN, MATRIX} and [len(b) for b in batches] == [4, 3, 4]
     sheets = [dict(r, row=k.split("@")[0]) for b in batches for k, r in b.items()]
@@ -75,6 +77,10 @@ def test_the_kink_sheets_in_the_potential_keep_the_order_and_not_belt4s_site_pro
     assert low == pytest.approx({LEADER: 0.655, AN: 2.951, MATRIX: 3.592, CFE: 4.162}, abs=0.005)
     # the leader's three sites: two near 2.4 to 2.5 and one for about kT
     assert sorted(r["potential"] for r in kept if r["row"] == LEADER) == pytest.approx([0.655, 2.411, 2.487], abs=0.003)
+    # that one is the only cell whose third vector had tilted along the chains' neighbours (over 3 A along a and b); the other ten stopped within 1.2 A of upright
+    tilt = lambda r: max(abs(r["cell_A_deg"][2] * math.cos(math.radians(r["cell_A_deg"][k]))) for k in (3, 4))  # noqa: E731
+    far = [r for r in sheets if tilt(r) > 1.2]
+    assert len(far) == 1 and far[0]["row"] == LEADER and far[0]["potential"] == pytest.approx(0.655, abs=0.003) and tilt(far[0]) == pytest.approx(4.0, abs=0.1)
     belt4_low = {LEADER: 1.395, AN: 2.148, MATRIX: 4.659, CFE: 3.418}   # the lowest site of each cell's scan, both hands
     scans = json.loads((PRED / "kink_site_scan_belt4.json").read_text())["rows"]
     for row, e in belt4_low.items():

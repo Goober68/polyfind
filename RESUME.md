@@ -529,6 +529,28 @@ right": true at one registry, not along it).
         relaxed tight in every cell. RUNNING (01:31 UTC): the kinked cell carried on, `--cells
         /opt/dft/kink10/tight/sheet_vdf10_belt4_ref_tight.start.xyz --fmax 0.003 --steps 480 --frame
         sheet_vdf10_belt4_ref_tight2`. THEN DFT on that cell (35 minutes): is the drop DFT's too.
+        THE INCLINED SHEET IS BELOW ALL-TRANS, IN EVERY EVALUATOR (02:50 UTC). The potential converged
+        (480 more steps): cell [5.42, 8.87, 24.83, 102.5, 113.6, 83.1], which is a - c0 and b - c0 of the
+        all-trans lattice (each neighbour's kink one monomer along), 53.3 A3 a monomer, kink 60, 172, -58, the
+        rest of the chain exactly trans: -1.63 kcal/mol per kink pair against the all-trans cell (tight;
+        all-trans itself is at its minimum upright: a control from eight slides in the primitive cell,
+        `/opt/dft/kink10/tt_shear_potential.json`, finds nothing lower and returns the same crystal from the
+        one-monomer slide). DFT ON THAT CELL: SCF energy -2758.08253544 Ry at 6e-8 Ry accuracy against the
+        all-trans cell's -2758.07005033: -1.96 KCAL/MOL PER KINK PAIR. The run was cut by its own time limit
+        (60 minutes, it shared the cores) before forces: RE-RUNNING on three cores for the label (02:52 UTC,
+        about 50 minutes; `mlip_frames.py label --frames /opt/dft/kink10/tight --names
+        sheet_vdf10_belt4_ref_tight2 --np 3 --pools 1`). POLYFIND ITSELF, WITH THE SHEAR IT ALREADY HAS
+        (`examples/kink_sheet_shear.py`, new: a stored kink sheet in `MixedModel(shear=True)`, from the upright
+        cell and from starts a monomer along a and b): belt4 upright +5.298 (a local minimum: a kick returns
+        +5.276), INCLINED -1.172 at shear (-0.86, -0.84) monomer; other staggers +0.4 to +4.4; chain1 -0.781.
+        EVERY KINK CELL OF dilute_kink.py, kink_migration.py AND kink_site_scan.py IS UPRIGHT
+        (`MixedModel` without `shear=True`): the frequency and loss axes of every candidate are made of
+        upright sheets. Consistent with PVDF's margin: its helix is 0.73 kcal/mol per monomer below all-trans
+        and a kink pair is one turn of that helix, two monomers. RUNNING (02:52 UTC, one core): the same for
+        the leader's and the matrix's stored sites, `--key "vdf9-trfe3-an1-rvdf1-14@0~" --sites 18,8` and so
+        on into `docs/predictions/kink_sheet_shear_belt4.json` (log `/opt/dft/kink10/kink_sheet_shear_rows.log`);
+        the CFE and nitrile cells' sites when DFT frees the cores. THE 112-SITE SCAN WITH THE SHEAR FREE IS A
+        JOB FOR THIS MACHINE IN POLYFIND (a minute or two a start), not for a pod.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

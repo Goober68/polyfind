@@ -162,7 +162,6 @@ def kink_collect(args):
                    "own value for the structure in source. steps: the kinked cell relaxed on in the potential tilted to DFT's forces and stress "
                    "(examples/mlip_train.py relax --dft-gradient) and labelled again; dft_predicted is what that step expected of DFT",
            "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)", "lattices": {}}
-    GPA = 160.21766
     frames = []
     steps = {item.split("=")[0]: item.split("=")[1].split(",") for item in args.steps}
     for item in args.pairs:

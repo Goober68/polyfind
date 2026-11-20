@@ -69,15 +69,15 @@ def free_sets(model):
     return everything, rigid
 
 
-def relax_sheared(model, x0, starts=(), maxiter: int = 800, kick: float = 0.05):
+def relax_sheared(model, x0, starts=(), maxiter: int = 800, kick: float = 0.05, upright: bool = True):
     """The cell relaxed with the shear free from ``x0`` moved off the upright cell by ``kick`` A
     (``(1, 0.6) * kick`` in the two shears: off every symmetry that could hold it), and from each
     extra start ``(sa, sb)`` in A (rigid chains first there, then everything); returns
-    ``(x, info, tried)`` of the lowest."""
+    ``(x, info, tried)`` of the lowest.  ``upright=False`` runs the extra starts alone."""
     everything, rigid = free_sets(model)
     tried = []
     best = None
-    for k, start in enumerate([None] + list(starts)):
+    for k, start in enumerate(([None] if upright else []) + list(starts)):
         x = np.array(x0, dtype=float)
         if start is None:
             x[model.index("shear")] += np.array([1.0, 0.6]) * kick
