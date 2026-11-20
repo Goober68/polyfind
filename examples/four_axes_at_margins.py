@@ -46,7 +46,8 @@ def main():
     ap.add_argument("--shifts", default="-0.1,0,0.05,0.1", help="kcal/mol per monomer added to every replaced margin, one table each")
     ap.add_argument("--sheet-shift", nargs="*", default=[], help="ROW=DELTA, kcal/mol per kink pair: move every scanned kink site of ROW (both hands) by DELTA, the difference "
                                                                   "between another evaluator's kink sheet and the tables' at one site, taken as common to the row's sites")
-    ap.add_argument("--sites", type=Path, default=PRED / "kink_site_scan_belt4.json", help="the tables' kink-site scans (examples/kink_site_scan.py)")
+    ap.add_argument("--sites", type=Path, default=PRED / "kink_site_scan_belt4.json", help="the kink-site scans the rate model sums over: the tables' own (examples/kink_site_scan.py), "
+                                                                                             "or those with the shear free (examples/kink_sheet_shear.py --as-scan)")
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
     shifts = {item.split("=")[0]: float(item.split("=")[1]) for item in args.sheet_shift}
@@ -60,8 +61,12 @@ def main():
     if shifts:
         out["sheet_shifts_kcal_per_kink_pair"] = shifts
         out["what"] += ". The kink sites of the rows in sheet_shifts are moved by those amounts (both hands, every site alike): only the rate model that sums over kink sites sees it"
+    other_sites = args.sites.resolve() != (PRED / "kink_site_scan_belt4.json").resolve()
+    if other_sites:
+        out["sites_from"] = args.sites.name
+        out["what"] += f". The kink sites are those of {args.sites.name}: only the rate model that sums over kink sites sees them"
     with tempfile.TemporaryDirectory() as tmp:
-        extra = []
+        extra = ["--sites", str(args.sites)] if other_sites else []
         if shifts:
             scans = json.loads(args.sites.read_text())
             for key, row in scans["rows"].items():
@@ -81,7 +86,7 @@ def main():
             entry = {"film_channel_as_calibrated": axes_of(res["three_axes"]["rows"]["calibrated_film"]), "rows": {}}
             for k, m in theirs.items():
                 rec = {"margin": m + shift, "all_trans_is_lower": m + shift < 0.0}
-                for model, key in (("by_the_sum_over_kink_sites", "sites"),) + (() if shifts else (("by_one_chains_move", "moves"),)):
+                for model, key in (("by_the_sum_over_kink_sites", "sites"),) + (() if shifts or other_sites else (("by_one_chains_move", "moves"),)):
                     if k in res.get(key, {}).get("rows", {}):
                         rec[model] = axes_of(res[key]["rows"][k]["three_axes"])
                 entry["rows"][k] = rec
