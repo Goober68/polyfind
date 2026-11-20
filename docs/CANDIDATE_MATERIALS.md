@@ -74,6 +74,11 @@ lower phase, and a kink pair is one turn of that helix.
   leader's sheets upright, and it has the nitrile's margin wrong in sign (below). The table
   that put the leader at 3.8 MHz is withdrawn and this one does not replace it until an
   evaluator checked against DFT has relaxed the same sheets.
+- **The gap is not belt4's alone.** The cheapest sheet of the film cell and of the leader,
+  relaxed again under chain1-cfe and in the DFT-trained potential at a tight stop: film cell
+  -1.65 and **-3.60**, leader +1.66 and **+0.05** (belt4 -2.27 and +0.65). Three evaluators
+  with different errors put the leader's sheet 2.9 to 3.7 kcal/mol above the film cell's. The
+  two sites are belt4's choice of cheapest; no DFT has seen a cell of this size.
 - **A periodic cell puts every unit beside its like, and the leader's all-trans cell needs
   that.** A statistical copolymer has a reversed unit beside another about one time in
   fourteen. What the leader's all-trans phase costs out of register is open, and the margin of

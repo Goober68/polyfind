@@ -1567,6 +1567,11 @@ as built. About six minutes a site on one core, eleven core-hours in all.
   twelve starts sheared by whole monomers the upright all-trans cell is the lowest in all three
   cells tried: the others end 1.7 to 5.3 kcal/mol per cell higher in the film cell, 2.3 to 8.2
   in the matrix and 4.4 to 11.7 in the leader (`examples/shear_polish.py --starts`).
+- **The margins do not move.** Every margin cell of the film cell and the leader (all-trans and
+  four helix conformers) relaxed from the same twelve whole-monomer shears ends where the
+  upright start had taken it: rigid margins +0.251 and +0.163, as
+  `sheared_margins_belt4.json` has them. One helix conformer of the leader's that does not set
+  its margin found a cell 1 kcal/mol lower.
 - **Pendant tilts change little.** Relaxed on the sheet and on the all-trans cell
   (`polyfind.mixedcell.tilt_relaxation`), the film cell's -2.27 becomes -2.36, the leader's
   +0.65 becomes +0.50 and +1.36 becomes +1.05. The leader's all-trans cell sheared by two
@@ -1621,11 +1626,53 @@ On these sheets the leader is with the matrix: its relaxation is at or below the
 loses most of the field's work and follows little of it. The nitrile alone is level with the
 film. None of the four is better than the film on the four axes together.
 
+**The two cheapest sheets under two more evaluators (the same day).** belt4's cheapest sheet of
+the film cell (site 12, at the chlorine) and of the leader (site 10), relaxed again elsewhere,
+kcal/mol per kink pair against the same evaluator's all-trans cell:
+
+| | belt4 | chain1-cfe | the potential, 0.004 eV/A |
+|---|---:|---:|---:|
+| the film cell's sheet at V-CFE | -2.27 | -1.65 | **-3.60** |
+| the leader's sheet at TrFE-V | +0.65 | +1.66 | **+0.05** |
+| the leader's above the film cell's | 2.92 | 3.31 | 3.65 |
+
+- **chain1-cfe** (`examples/kink_sheet_shear.py --preset pvdf-dft-chain1-cfe --starts ""
+  --from-sheets ...`). Its own sheared starts slide back to the upright cell, because it charges
+  a third of belt4's price for sliding, so each site is started from the sheets belt4 found.
+  Nine sites of the film cell: eight are below all-trans (-0.36 to -1.65, and -4.50 at CFE-V of
+  the other hand, where belt4 has -1.17). The one site of the leader's is the +1.66; its
+  upright sheet loses the kink and two of its starts collapse (the preset has no nitrile term),
+  and the leader was stopped there. `docs/predictions/kink_sheet_shear_chain1cfe_sites.json`.
+- **The potential** (`examples/row_cells_frames.py kink --scan ... --sheared ...` writes the
+  sheet, `mlip_train.py relax --fmax 0.004` relaxes it, `row_cells_frames.py sheets-potential
+  --pairs` collects). 168 and 170 atoms, 560 and 370 steps from belt4's sheared cells; both
+  sheets keep their kinks. The leader's all-trans cell was relaxed again to the same stop: it
+  falls 1.15 kcal/mol per cell from where 3.14's stop of 0.02 eV/A left it, which is more than
+  the leader's sheet (against the old reference the sheet would have read -0.53).
+  `docs/predictions/sheets14_potential_sheared.json`, the four cells in
+  `mlip/sheets14_sheared_in_all_s1.extxyz`.
+
+So the gap does not belong to belt4: three evaluators with different errors put the leader's
+sheet 2.9 to 3.7 kcal/mol above the film cell's at these two sites. The sites are belt4's
+choice; the potential's own cheapest site of either cell is not known (one site each took two
+hours of this machine).
+
+**A loose stop costs the potential's fourteen-monomer cells more than their margins.** The
+leader's all-trans cell moved 0.04 kcal/mol per monomer between 0.02 and 0.004 eV/A; the same
+cell relaxed to 0.03 from belt4's denser cell stayed 0.14 per monomer above it. 3.14's margins
+for these four cells (-0.12 to +0.08) come from helix cells stopped at 0.02 and all-trans
+cells stopped at 0.02 or 0.005. In the potential the film cell's sheet (-3.6 per chain) is
+below its helix cell as 3.14 left it (-1.1 per chain), where both presets have the helix the
+lower. Either the potential has the film cell's ground state kinked, or its helix cell was not
+at rest. The helix cells of the film cell and the leader are being relaxed to 0.004 to tell.
+
 **What this is and is not.**
 
-- It is belt4's energy surface searched properly for the first time. It is not a result on the
-  materials: belt4's errors are largest exactly here (the paragraph above, the chlorine's
-  torsion of 3.11 at the film cell's cheapest site, and the nitrile's margin of 3.12).
+- It is belt4's energy surface searched properly for the first time, with two sites carried to
+  two more evaluators. It is not yet a result on the materials: no DFT has seen a
+  fourteen-monomer cell, and belt4's errors are large at these sites (the paragraph above on
+  sliding, the chlorine's torsion of 3.11 at the film cell's cheapest site, and the nitrile's
+  margin of 3.12).
 - Four sheared starts a site. The film cell's sheets were found by them; a sheet of the
   leader's at a shear they do not reach is possible, though its all-trans cell's cost at every
   shear tried says there is little room.
@@ -1638,4 +1685,5 @@ film. None of the four is better than the film on the four axes together.
 
 Files: `docs/predictions/kink_sheet_shear_belt4_sites.json` (every site's starts, with the
 relaxed states), `kink_site_scan_belt4_shear.json` (the scan with each site at its lowest
-sheet), `four_axes_potential_margins_shear.json`. Tests: `tests/test_four_axes_at_margins.py`.
+sheet), `four_axes_potential_margins_shear.json`, `kink_sheet_shear_chain1cfe_sites.json`,
+`sheets14_potential_sheared.json`. Tests: `tests/test_four_axes_at_margins.py`.

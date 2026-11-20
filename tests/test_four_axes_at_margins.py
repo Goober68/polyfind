@@ -147,3 +147,23 @@ def test_on_the_shear_free_sheets_the_leader_is_with_the_matrix_on_frequency_and
     zero = stored["shifts"]["+0.00"]["rows"]
     assert zero[LEADER][SUM]["f_relax_hz"] == pytest.approx(4.1e3, rel=0.03) and zero[LEADER][occupancy]["f_relax_hz"] == pytest.approx(30.4e3, rel=0.03)
     assert zero[AN][SUM]["f_relax_hz"] == pytest.approx(306e3, rel=0.02) and zero[AN][occupancy]["f_relax_hz"] == pytest.approx(335e3, rel=0.02)
+
+
+def test_three_evaluators_put_the_leaders_cheapest_sheet_three_kcal_above_the_film_cells():
+    """belt4's cheapest sheet of the film cell and of the leader, relaxed again under chain1-cfe and in the potential (tight stop)."""
+    belt4 = json.loads((PRED / "kink_sheet_shear_belt4_sites.json").read_text())["rows"]
+    chain1 = json.loads((PRED / "kink_sheet_shear_chain1cfe_sites.json").read_text())["rows"]
+    potential = json.loads((PRED / "sheets14_potential_sheared.json").read_text())["rows"]
+    film, leader = f"{CFE}@0 site 12", f"{LEADER}@0 site 10"
+    b = {k: belt4[f"{k} pvdf-dft-valence-belt4"]["lowest"] for k in (film, leader)}
+    c = {k: chain1[f"{k} pvdf-dft-chain1-cfe"]["lowest"] for k in (film, leader)}
+    p = {film: potential[f"{CFE}@12"], leader: potential[f"{LEADER}@10"]}
+    assert b == pytest.approx({film: -2.27, leader: 0.65}, abs=0.006) and c == pytest.approx({film: -1.65, leader: 1.66}, abs=0.006)
+    assert p[film]["potential"] == pytest.approx(-3.60, abs=0.006) and p[leader]["potential"] == pytest.approx(0.05, abs=0.006)
+    for rec in p.values():  # the kink is still there, the reference is all-trans, and both were relaxed to 0.005 eV/A or tighter
+        assert rec["kink_kept"] and rec["all_trans_is_all_trans"] and all(float(v.split(" to ")[1].split(" eV")[0]) <= 0.005 for v in rec["relaxed"].values())
+    gaps = [b[leader] - b[film], c[leader] - c[film], p[leader]["potential"] - p[film]["potential"]]
+    assert gaps == pytest.approx([2.92, 3.31, 3.65], abs=0.01)
+    # the film cell's sheets are below all-trans under chain1-cfe too: eight of the nine sites run
+    sites = [r["lowest"] for k, r in chain1.items() if k.startswith(CFE)]
+    assert len(sites) == 9 and sum(1 for v in sites if v < 0.0) == 8 and min(sites) == pytest.approx(-4.50, abs=0.006)

@@ -1,0 +1,93 @@
+{
+ "what": "the kink sheet (a kink pair on every chain, in register, at one site of the sequence) relaxed in the potential with the cell free, minus the all-trans cell named with it, relaxed there to the same stop, kcal/mol per kink pair; polyfind is the tables' value for the same site (examples/kink_site_scan.py). No DFT on these cells. kink_kept: every chain still has two gauche bonds of opposite sense about a trans one",
+ "potential": "all_s1",
+ "all_trans": "the first file of each pair",
+ "rows": {
+  "vdf9-trfe4-cfe1-14@12": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at12_sheared_r2",
+   "atoms": 168,
+   "site": "12",
+   "potential": -3.6013529887381206,
+   "polyfind": -2.272476756179998,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     66.7,
+     -68.2
+    ],
+    [
+     66.7,
+     -68.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.065484222307682,
+    10.396708859617387,
+    35.187336292478676,
+    115.79055825895966,
+    88.33910132890456,
+    88.13499726639257
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 12 (units VC), the cell free to shear: -0.02, -1.78 monomers along a, b, pendants as built",
+   "all_trans_frame": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+   "all_trans_eV_per_monomer": -2048.89502557521,
+   "sheet_eV_per_monomer": -2048.9061805588053,
+   "all_trans_cell_A_deg": [
+    5.281710979191954,
+    8.76767434529656,
+    35.95436515455373,
+    89.99999827377623,
+    89.99999960215713,
+    89.97589641958214
+   ],
+   "all_trans_is_all_trans": true,
+   "relaxed": {
+    "sheet": "all_s1 with D3 to 0.004 eV/A (258 steps)",
+    "all_trans": "all_s1 with D3 to 0.005 eV/A (229 steps)"
+   }
+  },
+  "vdf9-trfe3-an1-rvdf1-14@10": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at10_sheared_r2",
+   "atoms": 170,
+   "site": "10",
+   "potential": 0.047138507059379664,
+   "polyfind": 0.6479222334438788,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     53.9,
+     -51.8
+    ],
+    [
+     53.9,
+     -51.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.451836606995215,
+    9.885283008054156,
+    34.88001683564163,
+    116.06747125616938,
+    91.05489408624409,
+    90.09518157010237
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 10 (units RV), the cell free to shear: -0.04, -1.72 monomers along a, b, pendants as built",
+   "all_trans_frame": "tt_leader_from_rows14an_r1",
+   "all_trans_eV_per_monomer": -1959.772178083458,
+   "sheet_eV_per_monomer": -1959.7720320746455,
+   "all_trans_cell_A_deg": [
+    5.670543510998331,
+    8.460607283617158,
+    35.683754504348855,
+    93.0820880245774,
+    92.00003388587082,
+    89.87461060596405
+   ],
+   "all_trans_is_all_trans": true,
+   "relaxed": {
+    "sheet": "all_s1 with D3 to 0.004 eV/A (70 steps)",
+    "all_trans": "all_s1 with D3 to 0.004 eV/A (251 steps)"
+   }
+  }
+ }
+}

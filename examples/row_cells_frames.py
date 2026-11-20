@@ -238,18 +238,30 @@ def sheets_potential(args):
     out = {"what": "the kink sheet (a kink pair on every chain, in register, at one site of the sequence) relaxed in the potential with the cell free, minus the row's all-trans "
                    "cell there, kcal/mol per kink pair; polyfind is the tables' value for the same site (examples/kink_site_scan.py). No DFT on these cells. "
                    "kink_kept: every chain still has two gauche bonds of opposite sense about a trans one", "potential": args.name, "all_trans": Path(args.all_trans).name, "rows": {}}
-    for f in sorted(Path(args.frames).glob(f"sheet_*_in_{args.name}.start.xyz")):
+    # --pairs: each sheet against an all-trans cell named with it (both relaxed to the same stop), in place of the folder's sheets against the stored rows
+    pairs = [(item.split("=")[0], *item.split("=")[1].split(",")) for item in args.pairs]
+    if pairs:
+        out["what"] = out["what"].replace("minus the row's all-trans cell there", "minus the all-trans cell named with it, relaxed there to the same stop")
+        out["all_trans"] = "the first file of each pair"
+    for key, flat, f in pairs or [(None, None, f) for f in sorted(Path(args.frames).glob(f"sheet_*_in_{args.name}.start.xyz"))]:
         a = read(f)
         row = str(a.info["frame"]).split("_")[1]
         n, chains = int(a.info["n_monomers"]), int(a.info["kinked_chains"])
         torsions = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(a, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(a)]
         gauche = [[(k, t) for k, t in enumerate(ch) if abs(t) < 120.0] for ch in torsions]
         kept = all(len(g) == 2 and g[0][1] * g[1][1] < 0 and (g[1][0] - g[0][0]) in (2, len(ch) - 2) for g, ch in zip(gauche, torsions))
-        rec = {"frame": str(a.info["frame"]), "atoms": len(a), "site": str(a.info["frame"]).split("_at")[1].split("_in_")[0],
-               "potential": (float(a.info["potential_eV_per_monomer"]) - float(all_trans[row]["cells"]["TTTT"]["eV_per_monomer"])) * n * KCAL / chains,
+        e_flat = float(all_trans[row]["cells"]["TTTT"]["eV_per_monomer"]) if flat is None else float(read(flat).info["potential_eV_per_monomer"])
+        rec = {"frame": str(a.info["frame"]), "atoms": len(a), "site": str(a.info["frame"]).split("_at")[1].split("_in_")[0].split("_")[0],
+               "potential": (float(a.info["potential_eV_per_monomer"]) - e_flat) * n * KCAL / chains,
                "polyfind": float(a.info["polyfind_kcal_per_kink_pair"]), "kink_kept": bool(kept), "gauche_bonds_deg": [[round(t, 1) for _, t in g] for g in gauche],
                "cell_A_deg": [float(v) for v in a.cell.cellpar()], "source": str(a.info.get("source", ""))}
-        out["rows"][row if row not in out["rows"] else f"{row}@{rec['site']}"] = rec   # a row's second site is keyed with its site
+        if flat is not None:
+            b = read(flat)
+            flat_torsions = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(b, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(b)]
+            rec.update(all_trans_frame=str(b.info["frame"]), all_trans_eV_per_monomer=e_flat, sheet_eV_per_monomer=float(a.info["potential_eV_per_monomer"]),
+                       all_trans_cell_A_deg=[float(v) for v in b.cell.cellpar()], all_trans_is_all_trans=bool(all(abs(t) > 150.0 for ch in flat_torsions for t in ch)),
+                       relaxed={"sheet": str(a.info.get("note", "")).split(", relaxed in ")[-1], "all_trans": str(b.info.get("note", "")).split(", relaxed in ")[-1]})
+        out["rows"][key or (row if row not in out["rows"] else f"{row}@{rec['site']}")] = rec   # a row's second site is keyed with its site
         print(f"{row:26s} site {rec['site']:4s}: the potential {rec['potential']:+.3f}, polyfind {rec['polyfind']:+.3f} kcal/mol per kink pair; "
               f"{'kink kept' if kept else 'KINK NOT KEPT'}, gauche bonds {rec['gauche_bonds_deg']}")
     Path(args.out).write_text(json.dumps(out, indent=1))
@@ -371,7 +383,8 @@ def main():
     s.add_argument("--tag", default="")
     s.add_argument("--out", required=True)
     s = sub.add_parser("sheets-potential", help="kink sheets relaxed in a potential, against the rows' all-trans cells there")
-    s.add_argument("--frames", required=True, help="the folder of sheet_*_in_NAME.start.xyz")
+    s.add_argument("--frames", default="", help="the folder of sheet_*_in_NAME.start.xyz")
+    s.add_argument("--pairs", nargs="*", default=[], help="instead of --frames: KEY=ALL_TRANS.start.xyz,SHEET.start.xyz, both relaxed in the potential to the same stop")
     s.add_argument("--name", default="all_s1")
     s.add_argument("--all-trans", default="docs/predictions/rows14_potential.json", help="the rows' cells in the same potential")
     s.add_argument("--out", required=True)
