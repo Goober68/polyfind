@@ -55,10 +55,10 @@ def upright_minimum(model, x, maxiter):
     return x1
 
 
-def relax_sheet(model, x, e_flat, c0, starts, maxiter, t0, say=print):
-    """The sheet at ``x`` (upright) relaxed from the kicked upright cell and from each start ``(ma, mb)`` in monomers."""
+def relax_sheet(model, x, e_flat, c0, starts, maxiter, t0, say=print, upright=True):
+    """The sheet at ``x`` (upright) relaxed from the kicked upright cell (unless ``upright`` is off) and from each start ``(ma, mb)`` in monomers."""
     out = []
-    for start in [None] + list(starts):
+    for start in ([None] if upright else []) + list(starts):
         try:
             x1, info, (t,) = SP.relax_sheared(model, x, starts=() if start is None else ((start[0] * c0, start[1] * c0),), maxiter=maxiter, upright=start is None)
         except RuntimeError as err:  # a start the chains cannot be closed from: recorded, not a result
@@ -80,15 +80,33 @@ def relax_sheet(model, x, e_flat, c0, starts, maxiter, t0, say=print):
     return out
 
 
+def held_starts(rec) -> list:
+    """The starts of a record that ended in a sheet with its kink kept."""
+    return [s for s in rec["starts"] if s.get("kink_kept") and "failed" not in s]
+
+
+def gathered(files) -> dict:
+    """The site records of several result files; a site in more than one has its starts put together."""
+    done = {}
+    for f in files:
+        for key, rec in json.loads(Path(f).read_text())["rows"].items():
+            if " site " not in key:
+                continue
+            if key in done:
+                seen = {tuple(round(v, 2) for v in s["start_monomers"]) for s in done[key]["starts"]}
+                done[key]["starts"] += [s for s in rec["starts"] if tuple(round(v, 2) for v in s["start_monomers"]) not in seen]
+            else:
+                done[key] = rec
+            held = held_starts(done[key])
+            done[key]["lowest"] = min(s["formation"] for s in held) if held else None
+    return done
+
+
 def as_scan(args):
     """The scan of ``--scan`` with each site's energy replaced by the lowest sheet found here with the shear free: the file
     ``examples/pin_design.py --sites`` reads.  A site not run here keeps the scan's upright energy and is listed."""
     scan = json.loads(args.scan.read_text())
-    done = {}
-    for f in args.merge:
-        for key, rec in json.loads(Path(f).read_text())["rows"].items():
-            if " site " in key:
-                done[key] = rec
+    done = gathered(args.merge)
     rows, left = {}, []
     for key, row in scan["rows"].items():
         mine = {k.split(" site ")[1].split(" ")[0]: v for k, v in done.items() if k.split(" site ")[0] == key}
@@ -97,7 +115,7 @@ def as_scan(args):
         row = json.loads(json.dumps(row))
         for site, v in row["sites"].items():
             if site in mine and mine[site]["lowest"] is not None:
-                best = min((s for s in mine[site]["starts"] if s.get("kink_kept") and "failed" not in s), key=lambda s: s["formation"])
+                best = min(held_starts(mine[site]), key=lambda s: s["formation"])
                 v.update(upright_formation=v["formation"], formation=best["formation"], shear_monomers=best["shear_monomers"], kink_kept=True, converged=True)
                 v.pop("state", None)
             elif site in mine:
@@ -109,7 +127,8 @@ def as_scan(args):
            "shear_free": "each site's formation is the lowest kink sheet found with the cell free to shear along its chains (examples/kink_sheet_shear.py), against the "
                          "all-trans cell relaxed the same way; upright_formation is the scan's own", "sites_left_upright": left}
     args.as_scan.write_text(json.dumps(out, indent=1))
-    print(f"{len(rows)} rows, {sum(len(r['sites']) for r in rows.values()) - len(left)} sites with the shear free, {len(left)} left upright; written {args.as_scan}")
+    free = sum(1 for r in rows.values() for v in r["sites"].values() if "shear_monomers" in v)
+    print(f"{len(rows)} rows, {free} sites with the shear free, {len(left)} left upright; written {args.as_scan}")
 
 
 def main():
@@ -125,6 +144,7 @@ def main():
     ap.add_argument("--starts", default="-1:-1,1:1,-1:1,1:-1", help="starting shears in monomers along a and b, 'ma:mb,...'; the upright cell is always tried")
     ap.add_argument("--maxiter", type=int, default=800)
     ap.add_argument("--redo", action="store_true")
+    ap.add_argument("--no-upright", action="store_true", help="leave the kicked upright start out: more --starts for sites stored in another file (--merge puts one site's starts together)")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
     if args.as_scan:
@@ -174,8 +194,8 @@ def main():
                 raise RuntimeError(f"{key}: the upright sheet is {upright:+.4f} here and {stored:+.4f} in the store")
             say(f"{key} upright: {upright:+.3f} kcal/mol per kink pair" + ("" if own else f" (the store's preset: {stored:+.3f})"))
             rec = {"preset": preset, **more, "monomer_repeat_A": c0, "all_trans": {"upright": e_flat_upright, "shear_free": e_flat, "shear_monomers": flat_shear}, "upright": upright,
-                   "starts": relax_sheet(model, x, e_flat, c0, starts, args.maxiter, t0, say)}
-            held = [s for s in rec["starts"] if s.get("kink_kept") and "failed" not in s]
+                   "starts": relax_sheet(model, x, e_flat, c0, starts, args.maxiter, t0, say, upright=not args.no_upright)}
+            held = held_starts(rec)
             rec["lowest"] = min(s["formation"] for s in held) if held else None
             out = json.loads(args.out.read_text()) if args.out.exists() else out   # another run may have added to the file meanwhile
             out["rows"][key] = rec
