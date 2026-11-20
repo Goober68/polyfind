@@ -204,13 +204,20 @@ def test_in_the_potential_the_leader_has_a_sheet_below_all_trans_at_a_site_belt4
     sheets, control = stored["rows"], stored["all_trans_controls"][LEADER]
     first, second = sheets[f"{LEADER}@10"], sheets[f"{LEADER}@18m"]
     # belt4 has this site 1.3 above the leader's cheapest; the potential has it 1.4 below the site belt4 ranks cheapest
-    assert second["potential"] == pytest.approx(-1.34, abs=0.006) and second["polyfind"] == pytest.approx(1.99, abs=0.006)
-    assert second["potential"] < first["potential"] - 1.3 and first["polyfind"] < second["polyfind"] - 1.3
-    assert second["kink_kept"] and second["all_trans_is_all_trans"] and "0.004 eV/A" in second["relaxed"]["sheet"] and "NOT" not in second["relaxed"]["sheet"]
-    # the reference does not follow it: the leader's all-trans cell started at the sheet's tilt rests, still all-trans, within 0.05 of the upright one
+    assert second["potential"] == pytest.approx(-1.37, abs=0.006) and second["polyfind"] == pytest.approx(1.99, abs=0.006)
+    assert second["potential"] < first["potential"] - 1.4 and first["polyfind"] < second["polyfind"] - 1.3
+    # the plain sheet walking forward and two starts pushed four and eight times past it rest at one place: within 0.03 kcal/mol and 0.07 monomers of shear
+    three = [second, sheets[f"{LEADER}@18m from 4 times its slide"], sheets[f"{LEADER}@18m from 8 times its slide"]]
+    assert [r["potential"] for r in three] == pytest.approx([-1.37, -1.34, -1.35], abs=0.006)
+    for rec in three:
+        assert rec["kink_kept"] and rec["all_trans_is_all_trans"] and "0.004 eV/A" in rec["relaxed"]["sheet"] and "NOT" not in rec["relaxed"]["sheet"]
+        assert rec["shear_along_chains_monomers"] == pytest.approx([-0.5, -1.1], abs=0.04)
+    # the sheet at belt4's cheapest site sits at the shear belt4 gave it, none along a and 1.7 monomers along b: another registry
+    assert first["shear_along_chains_monomers"] == pytest.approx([0.0, -1.7], abs=0.05)
+    # the reference does not follow a small tilt: the leader's all-trans cell started tilted rests, still all-trans and still tilted, within 0.05 of the upright one
     assert control["is_all_trans"] and abs(control["potential"]) < 0.05 and "NOT" not in control["relaxed"]["this"]
-    assert control["against"] == second["all_trans_frame"] and control["cell_A_deg"][3] > control["against_cell_A_deg"][3] + 1.5  # it stayed tilted
-    # so the leader too has a kinked state below its all-trans cell and its helix, and the film cell's sheet is 2.3 below it, not 3.65
+    assert control["against"] == second["all_trans_frame"] and control["cell_A_deg"][3] > control["against_cell_A_deg"][3] + 1.5
+    # so the leader too has a kinked state below its all-trans cell and its helix, and the film cell's sheet is 2.2 below it, not 3.65
     tight = json.loads((PRED / "rows14_potential_tight.json").read_text())["rows"]
     assert second["potential"] < 0.0 < -14 * tight[LEADER]["margin"]
-    assert second["potential"] - sheets[f"{CFE}@12"]["potential"] == pytest.approx(2.26, abs=0.01)
+    assert second["potential"] - sheets[f"{CFE}@12"]["potential"] == pytest.approx(2.23, abs=0.01)

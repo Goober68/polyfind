@@ -1635,7 +1635,7 @@ kcal/mol per kink pair against the same evaluator's all-trans cell:
 | the film cell's sheet at V-CFE | -2.27 | -1.65 | **-3.60** |
 | the leader's sheet at TrFE-V | +0.65 | +1.66 | **+0.05** |
 | the leader's above the film cell's | 2.92 | 3.31 | 3.65 |
-| the leader's sheet at a second site (TrFE-V, the other hand; below) | +1.99 | not run | **-1.34** |
+| the leader's sheet at a second site (TrFE-V, the other hand; below) | +1.99 | not run | **-1.37** |
 | the nitrile cell's sheet at TrFE-V | -2.08 | not run | **+0.36** |
 | the matrix's sheet at V-TrFE | +0.94 | not run | **+3.13** |
 
@@ -1674,7 +1674,7 @@ above the film cell and three below the matrix, where belt4 had the nitrile cell
 and the leader with the matrix. What all three evaluators share, at the sites belt4 ranks
 cheapest, is the film cell first and the leader about three behind it.
 
-**The +0.05 is not the leader's floor in the potential: a second site rests at -1.34.** Site
+**The +0.05 is not the leader's floor in the potential: a second site rests at -1.37.** Site
 18 of the other hand (TrFE-V; belt4 +1.99 and upright, 1.3 above belt4's cheapest) was started
 in the potential from belt4's upright sheet. It does not come to rest there. Over eight legs
 (2,050 steps, the largest force 0.01 to 0.02 eV/A throughout, the kink kept) it reads +2.16,
@@ -1682,31 +1682,37 @@ in the potential from belt4's upright sheet. It does not come to rest there. Ove
 kcal/mol a leg while the chain axis tilts: the shear along the chains arriving through the
 third lattice vector instead of the second.
 
-- **Where the slide ends.** Two starts pushed on along it (`examples/cell_tilt.py push`: the
-  chain axis moved four and eight times further than it had moved in the last two legs) come
-  back. The nearer one converges at 0.004 eV/A after 590 steps at **-1.34**, with the kink kept
-  and the neighbours along a and b sitting 0.50 and 1.13 monomers along the chain. The plain
-  sheet was still walking toward it from the other side when this was written (-1.24 at 0.47
-  and 0.97), and the further start was coming back (-0.86 at 0.54 and 1.23).
-- **The reference does not follow.** The leader's all-trans cell started at the sheet's tilt
-  (`examples/cell_tilt.py like`) converges at 0.004 eV/A still tilted and all-trans, 0.04
-  kcal/mol per chain below the upright cell. The fall is the sheet's own.
+- **Where the slide ends.** Two starts pushed on along it (`examples/cell_tilt.py push`, four
+  and eight times the last two legs' slide further) come back, and the plain sheet walks on to
+  meet them. All three converge at 0.004 eV/A on one structure (atoms within 0.1 A, the kink
+  kept), with the neighbours along a and b sitting 0.5 and 1.1 monomers back along the chain:
+  **-1.37** (the plain sheet, 2,365 steps in all), -1.34 and -1.35 (the pushed starts, 590 and
+  830 steps). The sheet at belt4's cheapest site (+0.05) sits at the shear belt4 gave it, none
+  along a and 1.7 along b: another registry, which belt4's four starts a site did not offer
+  here.
+- **The reference, so far.** The leader's all-trans cell started tilted (0.2 and 0.5 monomers,
+  less than half the sheet's final shear) converges at 0.004 eV/A still tilted and all-trans,
+  0.04 kcal/mol per chain below the upright cell: a small tilt costs it nothing and gains it
+  nothing. The stricter control, the all-trans cell started at the sheet's own final shear
+  (`examples/cell_tilt.py like`), is running; until it is in, "the fall is the sheet's own"
+  rests on this and on belt4, where every shear of the leader's all-trans cell costs energy.
 - **What it changes.** In the potential the leader, like the film cell, has a kinked state
-  below both its all-trans cell (by 1.34) and its helix (+0.98 above all-trans, so by 2.3).
-  The film cell's sheet is 2.3 below the leader's, not 3.65. "The leader about three behind
-  the film cell" is a statement about the sites belt4 ranks cheapest: the potential's cheapest
-  site of the leader is one belt4 ranks 1.3 above its own cheapest, and nothing says the film
-  cell's -3.60 is its floor either.
+  below both its all-trans cell (by 1.37) and its helix (0.98 above all-trans). The film
+  cell's sheet is 2.2 below the leader's, not 3.65. "The leader about three behind the film
+  cell" is a statement about the sites belt4 ranks cheapest: the potential's cheapest site of
+  the leader is one belt4 ranks 1.3 above its own cheapest, and nothing says the film cell's
+  -3.60 is its floor either.
 - **What it does to the four axes.** belt4's row for the leader in the table above (4 to 30
   kHz, tan delta 0.65 to 0.85, 0.007 to 0.020%, 0.4 to 1.1 pN/nm2) rests on belt4 having every
-  sheet of the leader's above all-trans. In the potential one of the two sites tried is 1.3
+  sheet of the leader's above all-trans. In the potential one of the two sites tried is 1.4
   below. So that row is not supported, as the nitrile's was not, and the leader is not put
   with the matrix on frequency and loss. There is no row to put in its place: two sites of
   twenty-six, in an evaluator no DFT has checked at this size, and a rate model whose two
-  readings of a site at -3.6 against one at -1.3 are 44 to 1 and 1.1 to 1.
+  readings of a site at -3.6 against one at -1.4 are 42 to 1 and 1.1 to 1.
 
-`docs/predictions/sheets14_potential_sheared.json` (the pair `...@18m` and
-`all_trans_controls`), the two cells in `mlip/sheets14_sheared_in_all_s1.extxyz`.
+`docs/predictions/sheets14_potential_sheared.json` (the three pairs `...@18m...`, each with its
+shear along the chains, and `all_trans_controls`), the cells in
+`mlip/sheets14_sheared_in_all_s1.extxyz`.
 
 **A loose stop costs the potential's fourteen-monomer cells as much as their margins.** The
 leader's all-trans cell moved 0.04 kcal/mol per monomer between 0.02 and 0.004 eV/A; the same
@@ -1739,7 +1745,7 @@ monomers against all-trans, all at the tight stop:
 |---|---:|---:|
 | the film's composition | -1.81 | **-3.60** |
 | the matrix | -0.23 | +3.13 |
-| the leader | +0.98 | **-1.34** (at belt4's cheapest site +0.05) |
+| the leader | +0.98 | **-1.37** (at belt4's cheapest site +0.05) |
 | the nitrile alone | +1.53 | +0.36 |
 
 In the film cell one kink pair at the chlorine is worth twice the whole helix, and the leader's

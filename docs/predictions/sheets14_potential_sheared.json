@@ -28,6 +28,10 @@
     88.33910132890456,
     88.13499726639257
    ],
+   "shear_along_chains_monomers": [
+    0.05735095858977952,
+    -1.766964249195315
+   ],
    "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 12 (units VC), the cell free to shear: -0.02, -1.78 monomers along a, b, pendants as built",
    "all_trans_frame": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
    "all_trans_eV_per_monomer": -2048.89502557521,
@@ -70,6 +74,10 @@
     116.06747125616938,
     91.05489408624409,
     90.09518157010237
+   ],
+   "shear_along_chains_monomers": [
+    -0.03920708507109392,
+    -1.6968291336336396
    ],
    "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 10 (units RV), the cell free to shear: -0.04, -1.72 monomers along a, b, pendants as built",
    "all_trans_frame": "tt_leader_from_rows14an_r1",
@@ -114,6 +122,10 @@
     91.45054550008629,
     89.99834571627288
    ],
+   "shear_along_chains_monomers": [
+    -0.05497502715404768,
+    -1.8394794462103237
+   ],
    "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 10 (units RV), the cell free to shear: -0.05, -1.79 monomers along a, b, pendants as built",
    "all_trans_frame": "tt_nitrile_from_rows14an_r1",
    "all_trans_eV_per_monomer": -2006.5040419047561,
@@ -157,6 +169,10 @@
     114.23986799229512,
     86.65917383208955
    ],
+   "shear_along_chains_monomers": [
+    -0.9034141094556181,
+    -0.8612337038873242
+   ],
    "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 24 (units VR), the cell free to shear: -0.89, -0.97 monomers along a, b, pendants as built",
    "all_trans_frame": "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1",
    "all_trans_eV_per_monomer": -2063.1804583834587,
@@ -176,6 +192,53 @@
    }
   },
   "vdf9-trfe3-an1-rvdf1-14@18m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r9",
+   "atoms": 170,
+   "site": "18m",
+   "potential": -1.3670792203213253,
+   "polyfind": 1.9910788381145323,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -63.7,
+     57.5
+    ],
+    [
+     -63.8,
+     57.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.883216439704341,
+    8.853743274540879,
+    34.713273341523106,
+    108.06779462538162,
+    102.31899883574185,
+    84.42262188691774
+   ],
+   "shear_along_chains_monomers": [
+    -0.4903163478513836,
+    -1.0726244451116267
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 18 (units VV), the cell free to shear: -0.03, -0.04 monomers along a, b, pendants as built",
+   "all_trans_frame": "tt_leader_from_rows14an_r1",
+   "all_trans_eV_per_monomer": -1959.772178083458,
+   "sheet_eV_per_monomer": -1959.7764125326562,
+   "all_trans_cell_A_deg": [
+    5.670543510998331,
+    8.460607283617158,
+    35.683754504348855,
+    93.0820880245774,
+    92.00003388587082,
+    89.87461060596405
+   ],
+   "all_trans_is_all_trans": true,
+   "relaxed": {
+    "sheet": "all_s1 with D3 to 0.004 eV/A (315 steps)",
+    "all_trans": "all_s1 with D3 to 0.004 eV/A (251 steps)"
+   }
+  },
+  "vdf9-trfe3-an1-rvdf1-14@18m from 4 times its slide": {
    "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_slide4_r3",
    "atoms": 170,
    "site": "18m",
@@ -200,6 +263,10 @@
     102.6696551008682,
     84.20653933158734
    ],
+   "shear_along_chains_monomers": [
+    -0.502415850025371,
+    -1.1344577339561397
+   ],
    "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 18 (units VV), the cell free to shear: -0.03, -0.04 monomers along a, b, pendants as built; from sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r7, the chain axis pushed 4 times its last two legs' slide further",
    "all_trans_frame": "tt_leader_from_rows14an_r1",
    "all_trans_eV_per_monomer": -1959.772178083458,
@@ -215,6 +282,53 @@
    "all_trans_is_all_trans": true,
    "relaxed": {
     "sheet": "all_s1 with D3 to 0.004 eV/A (91 steps)",
+    "all_trans": "all_s1 with D3 to 0.004 eV/A (251 steps)"
+   }
+  },
+  "vdf9-trfe3-an1-rvdf1-14@18m from 8 times its slide": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_slide8_r3",
+   "atoms": 170,
+   "site": "18m",
+   "potential": -1.3544455563274187,
+   "polyfind": 1.9910788381145323,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -63.5,
+     57.6
+    ],
+    [
+     -63.4,
+     57.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.861646596469035,
+    8.887992357706212,
+    34.73815472623923,
+    108.84704775898693,
+    102.34190800618927,
+    84.5832766695439
+   ],
+   "shear_along_chains_monomers": [
+    -0.4894130817947458,
+    -1.1215636612159092
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 18 (units VV), the cell free to shear: -0.03, -0.04 monomers along a, b, pendants as built; from sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r7, the chain axis pushed 8 times its last two legs' slide further",
+   "all_trans_frame": "tt_leader_from_rows14an_r1",
+   "all_trans_eV_per_monomer": -1959.772178083458,
+   "sheet_eV_per_monomer": -1959.7763734006091,
+   "all_trans_cell_A_deg": [
+    5.670543510998331,
+    8.460607283617158,
+    35.683754504348855,
+    93.0820880245774,
+    92.00003388587082,
+    89.87461060596405
+   ],
+   "all_trans_is_all_trans": true,
+   "relaxed": {
+    "sheet": "all_s1 with D3 to 0.004 eV/A (327 steps)",
     "all_trans": "all_s1 with D3 to 0.004 eV/A (251 steps)"
    }
   }
@@ -241,6 +355,14 @@
     93.0820880245774,
     92.00003388587082,
     89.87461060596405
+   ],
+   "shear_along_chains_monomers": [
+    -0.202593773772127,
+    -0.29729009845141907
+   ],
+   "against_shear_along_chains_monomers": [
+    -0.07730565085679882,
+    -0.17769471375435322
    ],
    "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 TTTT, cell sheared, pendants as built; the chain axis tilted -0.433 a, -0.375 b to match sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r5",
    "relaxed": {

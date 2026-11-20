@@ -226,6 +226,14 @@ def kink_collect(args):
     print(f"written {args.out}")
 
 
+def shear_along_chains(atoms, monomer: float = 2.56) -> list:
+    """How far the neighbours along the first two lattice vectors sit along the chain axis (the third), in monomers: the same
+    number however the cell lies in space (examples/cell_tilt.py)."""
+    cell = atoms.cell.array
+    axis = cell[2] / float((cell[2] @ cell[2]) ** 0.5)
+    return [float(cell[0] @ axis) / monomer, float(cell[1] @ axis) / monomer]
+
+
 def sheets_potential(args):
     """Kink sheets relaxed in a potential and never labelled (``sheet_ROW_TAG_atSITE_in_NAME.start.xyz``), against each row's
     all-trans cell in the same potential (``examples/row_cells_frames.py potential``): kcal/mol per kink pair."""
@@ -254,7 +262,7 @@ def sheets_potential(args):
         rec = {"frame": str(a.info["frame"]), "atoms": len(a), "site": str(a.info["frame"]).split("_at")[1].split("_in_")[0].split("_")[0],
                "potential": (float(a.info["potential_eV_per_monomer"]) - e_flat) * n * KCAL / chains,
                "polyfind": float(a.info["polyfind_kcal_per_kink_pair"]), "kink_kept": bool(kept), "gauche_bonds_deg": [[round(t, 1) for _, t in g] for g in gauche],
-               "cell_A_deg": [float(v) for v in a.cell.cellpar()], "source": str(a.info.get("source", ""))}
+               "cell_A_deg": [float(v) for v in a.cell.cellpar()], "shear_along_chains_monomers": shear_along_chains(a), "source": str(a.info.get("source", ""))}
         if flat is not None:
             b = read(flat)
             flat_torsions = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(b, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(b)]
@@ -273,7 +281,8 @@ def sheets_potential(args):
         rec = {"frame": str(b.info["frame"]), "against": str(a.info["frame"]),
                "potential": (float(b.info["potential_eV_per_monomer"]) - float(a.info["potential_eV_per_monomer"])) * int(b.info["n_monomers"]) * KCAL / chains,
                "is_all_trans": bool(all(abs(t) > 150.0 for ch in torsions for t in ch)), "cell_A_deg": [float(v) for v in b.cell.cellpar()],
-               "against_cell_A_deg": [float(v) for v in a.cell.cellpar()], "source": str(b.info.get("source", "")),
+               "against_cell_A_deg": [float(v) for v in a.cell.cellpar()], "shear_along_chains_monomers": shear_along_chains(b),
+               "against_shear_along_chains_monomers": shear_along_chains(a), "source": str(b.info.get("source", "")),
                "relaxed": {"this": str(b.info.get("note", "")).split(", relaxed in ")[-1], "against": str(a.info.get("note", "")).split(", relaxed in ")[-1]}}
         out.setdefault("all_trans_controls", {"what": "an all-trans cell relaxed in the potential from another start, minus the all-trans cell the sheets "
                                                       "are read against, kcal/mol per chain (the unit of the sheets: one kink pair a chain)"})[key] = rec
