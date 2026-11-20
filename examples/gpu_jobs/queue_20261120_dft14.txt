@@ -16,3 +16,14 @@ card_check.sh
 # to -1.37 over nine legs on four processors, the first rests at +0.05.  The card should find
 # both, and this times a step.
 relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(18m|10)_sheared
+# The card returns the stored energies of the eighteen tight cells to 4e-9 meV per monomer, 0.47 s
+# an evaluation of a 168-atom cell (3.8 s on four processors).  At that rate the card has about
+# seventy thousand steps in the pod's life and the 108 sheets want more: the leader's and the film
+# cell's sheets first, four at a time and turn about, so that a cut leaves the two covered alike;
+# their helix cells (the other placements, from a loose stop) after the first round.
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(0m|2m|4m|6m)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(0|2|4|6)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz row_vdf9-trfe4-cfe1-14_.*
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz row_vdf9-trfe3-an1-rvdf1-14_.*
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(8m|10m|16m|20m)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(8|10|14|16)_sheared
