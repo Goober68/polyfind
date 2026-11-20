@@ -511,6 +511,24 @@ right": true at one registry, not along it).
         `tilted/sheet_vdf10_belt4_ref_in_all_s1_in_all_s1.start.xyz`). THEN DFT on the tight kinked cell (35
         minutes; and on the all-trans one if it moved), `kink-collect` again, docs 3.19. THE CONTAINER WAS
         RESTARTED AT 01:10 UTC: files kept, running jobs lost (only relaxations in the potential).
+        THE TIGHT STOP FINDS A DIFFERENT SHEET (01:29 UTC): in the plain potential the kinked cell keeps
+        shearing along the chains, beta 91 -> 111.4 and alpha 90.4 -> 97.9 degrees, a +10%, volume -0.9%,
+        the kink kept and sharper (62, 172, -59), and the sheet's energy falls from +4.685 to +0.846 kcal/mol
+        per kink pair, NOT CONVERGED after 420 steps (`/opt/dft/kink10/tight/sheet_vdf10_belt4_ref_tight`).
+        The all-trans cell does not move (29 steps, -0.1 meV per monomer). The shear is the chains next to
+        each other along a sliding along their axes, about 2.0 A, most of a monomer (2.49 A): the kinks of
+        neighbouring chains are no longer at one height, THE SHEET IS INCLINED. DFT's stress on both cells it
+        has seen points the same way, undiminished after the first step (xz +0.19, +0.18 GPa: about 0.25
+        kcal/mol per kink pair per degree of beta; the potential's own slope there is 0.40). BELT4'S KINK
+        SHEETS ARE ALL UPRIGHT (its scans start at alpha = beta = 90 and its kink cells have no shear along
+        the chains), AND TEN OF THE ELEVEN FOURTEEN-MONOMER SHEETS OF 3.18 STALLED NEAR UPRIGHT (c tilted
+        under 1.2 A). THE ELEVENTH IS THE LEADER'S 0.65: its cell had sheared 3.1 A along a and 4.0 A along b
+        (399 steps). SO 0.65 IS NOT THE LEADER'S PROPERTY, IT IS THE ONE RELAXATION THAT GOT PART WAY DOWN A
+        SLOPE EVERY SHEET IS LIKELY TO HAVE; the order of the lowest sheets in 3.18 and the frequencies made
+        from it (leader 83 MHz / 4.4 MHz, nitrile 1.6 MHz, matrix 697 kHz) ARE WITHDRAWN until the sheets are
+        relaxed tight in every cell. RUNNING (01:31 UTC): the kinked cell carried on, `--cells
+        /opt/dft/kink10/tight/sheet_vdf10_belt4_ref_tight.start.xyz --fmax 0.003 --steps 480 --frame
+        sheet_vdf10_belt4_ref_tight2`. THEN DFT on that cell (35 minutes): is the drop DFT's too.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE
