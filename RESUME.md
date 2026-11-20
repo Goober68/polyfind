@@ -651,11 +651,15 @@ right": true at one registry, not along it).
         a and b: -0.12 -0.10, -0.20 -0.20, -0.32 -0.28, -0.37 -0.31, -0.47 -0.39 of a and b), which is a shear
         along the chains of -0.4 and -0.7 monomers so far. SO +0.05 IS NOT THE LEADER'S FLOOR IN THE
         POTENTIAL, and the 3.65 gap to the film cell is an upper bound until this stops.
-        RUNNING since 14:10 UTC (restarted after a container restart three minutes in), two threads each, legs of 250 steps: (a) job `bswj919ja`, the same sheet's
-        legs `_r6` to `_r8`; (b) job `b43e5quir`, THE CONTROL: the leader's all-trans cell given the same tilt
-        of the chain axis (`/opt/dft/sheets14s/tt_leader_tilted_like_at18m`, legs `_r1` to `_r3`; built by the
-        scratch script `tt_tilted_like.py FLAT LIKE OUT FRAME`: c gets the other cell's tilt in units of a and
-        b, fractional coordinates kept). If the all-trans cell stays tilted and ends below -1959.77218 eV per
+        RUNNING since 14:50 UTC, job `bkzry216b`, ONE LEG AT A TIME ON FOUR CORES (250 steps, about 20 minutes a
+        leg), in turn: THE CONTROL, the leader's all-trans cell given the same tilt of the chain axis
+        (`/opt/dft/sheets14s/tt_leader_tilted_like_at18m`, legs `_r1` on; built by the scratch script
+        `tt_tilted_like.py FLAT LIKE OUT FRAME`: c gets the other cell's tilt in units of a and b, fractional
+        coordinates kept), and the sheet's legs `_r6` on; order control, sheet, control, sheet, control. Each
+        leg starts from that name's latest stored `_rN` (scratch script `legs.sh NAME ...`; a name whose log
+        says `converged True` is skipped). LOST 14:10 to 14:48: the two side by side on two cores each did not
+        finish 250 steps in the 38 minutes allowed and wrote nothing (the relaxer writes only at the end): DO
+        NOT RUN TWO AT ONCE HERE. If the all-trans cell stays tilted and ends below -1959.77218 eV per
         monomer, every sheet of the leader's in the potential is against a reference that is not its lowest.
         If either is cut, go on from its last `_rN` cell. Read a leg with `row_cells_frames.py
         sheets-potential --pairs "KEY=/opt/dft/sheets14s/tt_leader_from_rows14an_r1.start.xyz,LEG.start.xyz"
