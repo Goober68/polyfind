@@ -624,27 +624,30 @@ right": true at one registry, not along it).
         docs/predictions/sheets14_potential_sheared.json` (give every pair again: the file is written whole).
         All-trans references: film cell `/opt/dft/rows14/row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1`
         (0.005), leader `/opt/dft/sheets14s/tt_leader_from_rows14an_r1` (0.004).
-        THE NITRILE CELL'S CHEAPEST SHEET (site 10 `@0`) IN THE POTENTIAL: +0.36 (belt4 -2.08): the nitrile
-        row of the belt4 four-axis table (306 to 335 kHz) is belt4's nitrile error and is not supported.
-        THE POTENTIAL'S MARGINS AT A TIGHT STOP (10:42 UTC; `docs/predictions/rows14_potential_tight.json`,
-        made by `row_cells_frames.py potential --frames /opt/dft/rows14tight --rows ...` from cells copied
-        there under the names `row_ROW_CONF_TAG_in_all_s1.start.xyz`): FILM CELL +0.129 (3.14: +0.078),
-        LEADER -0.070 (-0.055); only the lowest helix placement of each was redone. At +0.129 the film cell's
-        row reads tan delta 0.061, 0.071%, 6.2 pN/nm2 (`four_axes_potential_tight_margins_shear.json`).
+        THE POTENTIAL AT 0.004 eV/A ON ALL FOUR CELLS (11:56 UTC 2026-11-20; `docs/predictions/
+        sheets14_potential_sheared.json`, `rows14_potential_tight.json`, twelve cells in `mlip/
+        sheets14_sheared_in_all_s1.extxyz`, `four_axes_potential_tight_margins_shear.json`; docs 3.20; tests
+        in `tests/test_four_axes_at_margins.py`). CHEAPEST SHEET (belt4's cheapest site, one a cell), kcal/mol
+        per kink pair: FILM CELL -3.60 (belt4 -2.27), LEADER +0.05 (+0.65), NITRILE ALONE +0.36 (-2.08),
+        MATRIX +3.13 (+0.94). So belt4's "nitrile cell with the film" and "leader with the matrix" do not hold
+        in the potential; "film cell first, leader three behind" holds in all three evaluators.
+        MARGINS (lowest helix placement only): MATRIX +0.016 (3.14: -0.024), FILM CELL +0.129 (+0.078),
+        NITRILE ALONE -0.109 (-0.118), LEADER -0.070 (-0.055). At +0.129 the film cell's row reads tan delta
+        0.061, 0.071%, 6.2 pN/nm2, on the measured film's channel.
         IN THE POTENTIAL THE FILM CELL'S LOWEST STATE IS THE KINKED ONE: per chain of fourteen against
-        all-trans, helix -1.81 and the sheet at the chlorine -3.60 (leader: helix +0.98, sheet +0.05; nitrile
-        cell: sheet +0.36). Both presets have the helix lower (belt4 -4.4 against -2.3; chain1-cfe -5.0
+        all-trans, helix -1.81 and the sheet at the chlorine -3.60 (matrix -0.23, +3.13; leader +0.98, +0.05;
+        nitrile +1.53, +0.36). Both presets have the helix lower (belt4 -4.4 against -2.3; chain1-cfe -5.0
         against -4.5). If the potential is right the margin as defined does not name the film cell's lowest
-        state. THE FIRST QUESTION FOR DFT AT THIS SIZE. Docs 3.20, tests in
-        `tests/test_four_axes_at_margins.py`.
-        RUNNING (two threads each, legs of 300 steps to 0.004, `/opt/dft/sheets14s`): job `b0jq0gncf` since
-        10:35: the matrix's cheapest sheet (`sheet_vdf10-trfe4-14_belt4_at24m_sheared`; its all-trans
-        reference `/opt/dft/rows14/row_vdf10-trfe4-14_TTTT_chain1_in_all_s1`, 0.005); job `b861414u2` since
-        10:44: `helix_nitrile_GpTGT`, `helix_matrix_GTGpT` (for the other two margins; the nitrile cell's
-        tight all-trans is `tt_nitrile_from_rows14an_r1`), then the leader's `@0~` site 18 from belt4's
-        upright sheet (`sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared`): is any sheet of the leader's
-        lower than +0.05 there.
-        THEN: all of it at scale is A POD'S JOB (108 sheets, 20 margin cells, tight), with DFT on the film
+        state. THE FIRST QUESTION FOR DFT AT THIS SIZE.
+        How the tight cells were made: copies in `/opt/dft/sheets14s` (`helix_ROW_CONF`, `tt_ROW_...`,
+        `sheet_..._sheared`), `mlip_train.py relax ... --fmax 0.004 --steps 300` in legs (`NAME_rN`); margins by
+        `row_cells_frames.py potential --frames /opt/dft/rows14tight --rows ...` from cells copied there
+        under the names `row_ROW_CONF_TAG_in_all_s1.start.xyz`; sheets by `sheets-potential --pairs` (every
+        pair given again).
+        RUNNING (job `b861414u2`, since 10:44, ends by 12:44): the leader's `@0~` site 18 from belt4's upright
+        sheet (`sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared`, legs `_rN`): is any sheet of the leader's
+        lower than +0.05 there. If cut, run the same `chain` again from its last `_rN` cell.
+        THEN: at scale it is A POD'S JOB (108 sheets, 16 more helix cells, tight), with DFT on the film
         cell's all-trans, helix and kinked cells first (168 atoms), then the leader's.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED

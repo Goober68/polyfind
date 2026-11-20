@@ -173,16 +173,25 @@ def test_three_evaluators_put_the_leaders_cheapest_sheet_three_kcal_above_the_fi
 
 
 def test_at_a_tight_stop_the_potentials_margins_move_and_the_film_cells_sheet_is_below_its_helix():
-    """The film cell's and the leader's all-trans and lowest helix cells in the potential at 0.005 eV/A or tighter (3.14 stopped at 0.02)."""
+    """The four cells' all-trans and lowest helix cells in the potential at 0.005 eV/A or tighter (3.14 stopped the helix cells at 0.02)."""
     tight = json.loads((PRED / "rows14_potential_tight.json").read_text())["rows"]
     loose = json.loads((PRED / "rows14_potential.json").read_text())["rows"]
     sheets = json.loads((PRED / "sheets14_potential_sheared.json").read_text())["rows"]
-    assert {r: tight[r]["margin"] for r in tight} == pytest.approx({CFE: 0.129, LEADER: -0.070}, abs=0.001)
-    assert {r: loose[r]["margin"] for r in tight} == pytest.approx({CFE: 0.078, LEADER: -0.055}, abs=0.001)
-    for row in tight:  # every cell fell, by up to 0.05 kcal/mol per monomer: the size of the margins themselves
+    assert {r: tight[r]["margin"] for r in tight} == pytest.approx({MATRIX: 0.016, CFE: 0.129, AN: -0.109, LEADER: -0.070}, abs=0.001)
+    assert {r: loose[r]["margin"] for r in tight} == pytest.approx({MATRIX: -0.024, CFE: 0.078, AN: -0.118, LEADER: -0.055}, abs=0.001)
+    for row in tight:  # every cell fell or stayed, by up to 0.05 kcal/mol per monomer: the size of the margins themselves
         for conf, cell in tight[row]["cells"].items():
             fall = (loose[row]["cells"][conf]["eV_per_monomer"] - cell["eV_per_monomer"]) * 23.0605
             assert 0.0 <= fall < 0.052
-    # per chain of fourteen against all-trans: the film cell's helix -1.8 and its sheet at the chlorine -3.6; the leader's helix +1.0 and its sheet +0.05
-    assert -14 * tight[CFE]["margin"] == pytest.approx(-1.81, abs=0.01) and sheets[f"{CFE}@12"]["potential"] < -14 * tight[CFE]["margin"] - 1.7
-    assert -14 * tight[LEADER]["margin"] == pytest.approx(0.98, abs=0.01) and 0.0 < sheets[f"{LEADER}@10"]["potential"] < 0.1
+    assert tight[MATRIX]["margin"] > 0.0 > loose[MATRIX]["margin"]  # the matrix changes sign: its helix is the lower by a little
+    # per chain of fourteen against all-trans, the lowest helix and the cheapest sheet tried: only the film cell has a sheet below all-trans, and it is below its helix
+    helix = {r: -14 * tight[r]["margin"] for r in tight}
+    sheet = {CFE: sheets[f"{CFE}@12"]["potential"], MATRIX: sheets[f"{MATRIX}@24m"]["potential"], AN: sheets[f"{AN}@10"]["potential"], LEADER: sheets[f"{LEADER}@10"]["potential"]}
+    assert helix == pytest.approx({MATRIX: -0.23, CFE: -1.81, AN: 1.53, LEADER: 0.98}, abs=0.01)
+    assert sheet == pytest.approx({MATRIX: 3.13, CFE: -3.60, AN: 0.36, LEADER: 0.05}, abs=0.006)
+    assert sheet[CFE] < helix[CFE] - 1.7 and all(rec["kink_kept"] and rec["all_trans_is_all_trans"] for rec in sheets.values())
+    # so in the potential the leader's sheet is three below the matrix's and three and a half above the film cell's: belt4 had it level with the matrix's
+    assert sheet[MATRIX] - sheet[LEADER] == pytest.approx(3.08, abs=0.01) and sheet[LEADER] - sheet[CFE] == pytest.approx(3.65, abs=0.01)
+    stored = json.loads((PRED / "four_axes_potential_tight_margins_shear.json").read_text())
+    film = stored["shifts"]["+0.00"]["rows"][CFE][SUM]  # at its tight margin the film cell's row is on the measured film's calibrated channel
+    assert film["tan_delta_34kHz"] == pytest.approx(0.061, abs=0.001) and film["strain_ac_at_the_heat_budget_34kHz"] == pytest.approx(0.00071, abs=0.00001)

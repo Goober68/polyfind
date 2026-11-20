@@ -79,13 +79,16 @@ lower phase, and a kink pair is one turn of that helix.
   -1.65 and **-3.60**, leader +1.66 and **+0.05** (belt4 -2.27 and +0.65). Three evaluators
   with different errors put the leader's sheet 2.9 to 3.7 kcal/mol above the film cell's. The
   two sites are belt4's choice of cheapest; no DFT has seen a cell of this size.
-- **The nitrile alone does not stay with the film in the potential**: its cheapest sheet is
-  +0.36 there, where belt4 has -2.08. The nitrile row of the table above is belt4's nitrile
-  error and is not supported.
-- **The potential's margins at a tight stop**: film cell +0.129 (3.14 had +0.078 from cells
-  stopped loosely), leader -0.070 (-0.055). At +0.129 the film cell's row reads tan delta
-  0.061, 0.071% and 6.2 pN/nm2, on the measured film's calibrated channel. The matrix's and
-  the nitrile cell's margins have not been redone.
+- **In the potential the order at these sites is film cell -3.60, leader +0.05, nitrile alone
+  +0.36, matrix +3.13** (belt4: -2.27, +0.65, -2.08, +0.94). So the nitrile row of the table
+  above (level with the film) is belt4's nitrile error and is not supported, and the leader is
+  not level with the matrix either: it is three and a half above the film cell and three below
+  the matrix. One site a cell, the one belt4 ranks cheapest.
+- **The potential's margins at a tight stop** (3.14 had stopped the helix cells loosely):
+  matrix +0.016 (was -0.024), film cell +0.129 (+0.078), nitrile alone -0.109 (-0.118), leader
+  -0.070 (-0.055). At +0.129 the film cell's row reads tan delta 0.061, 0.071% and 6.2 pN/nm2,
+  on the measured film's calibrated channel. Only the lowest helix placement of each cell was
+  redone.
 - **In the potential the film cell's lowest state is all-trans with a kink at each chlorine**
   (3.6 kcal/mol per chain below all-trans; its helix cell 1.8 below). Both presets have the
   helix lower. If the potential is right, the margin as defined here does not name the state

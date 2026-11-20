@@ -1636,6 +1636,7 @@ kcal/mol per kink pair against the same evaluator's all-trans cell:
 | the leader's sheet at TrFE-V | +0.65 | +1.66 | **+0.05** |
 | the leader's above the film cell's | 2.92 | 3.31 | 3.65 |
 | the nitrile cell's sheet at TrFE-V | -2.08 | not run | **+0.36** |
+| the matrix's sheet at V-TrFE | +0.94 | not run | **+3.13** |
 
 - **chain1-cfe** (`examples/kink_sheet_shear.py --preset pvdf-dft-chain1-cfe --starts ""
   --from-sheets ...`). Its own sheared starts slide back to the upright cell, because it charges
@@ -1663,27 +1664,37 @@ film cell's (-2.08); in the potential the same sheet, kink kept, is 0.36 above a
 is belt4's nitrile error again (3.12: it makes the nitrile a pin for the helix, and a sheet
 follows the margin). So the row of the four-axis table above that puts the nitrile cell at 306
 to 335 kHz is belt4's and is not supported: in the potential the film cell is the only one of
-the three with a sheet below all-trans.
+the four with a sheet below all-trans.
+
+**Nor is the leader level with the matrix there.** The matrix's cheapest sheet is 3.13 in the
+potential (belt4 0.94), so the potential's order at these four sites is the film cell (-3.60),
+the leader (+0.05), the nitrile alone (+0.36), the matrix (+3.13): the leader three and a half
+above the film cell and three below the matrix, where belt4 had the nitrile cell with the film
+and the leader with the matrix. What all three evaluators share is the film cell first and the
+leader about three behind it.
 
 **A loose stop costs the potential's fourteen-monomer cells as much as their margins.** The
 leader's all-trans cell moved 0.04 kcal/mol per monomer between 0.02 and 0.004 eV/A; the same
 cell relaxed to 0.03 from belt4's denser cell stayed 0.18 per monomer above the tight one.
 3.14's margins for these four cells (-0.12 to +0.08) came from helix cells stopped at 0.02 and
-all-trans cells stopped at 0.02 or 0.005. The film cell's and the leader's all-trans cell and
-lowest helix cell, relaxed again to 0.005 or tighter (`docs/predictions/
-rows14_potential_tight.json`; each helix is still a helix, the leader's with twelve of its
-fourteen gauche bonds):
+all-trans cells stopped at 0.02 or 0.005. Each cell's all-trans cell and lowest helix cell,
+relaxed again to 0.005 or tighter (`docs/predictions/rows14_potential_tight.json`; each helix
+is still a helix, the leader's with twelve of its fourteen gauche bonds):
 
 | cell | margin in 3.14 | margin at the tight stop |
 |---|---:|---:|
+| the matrix | -0.024 | **+0.016** |
 | the film's composition | +0.078 | **+0.129** |
+| the nitrile alone | -0.118 | **-0.109** |
 | the leader | -0.055 | **-0.070** |
 
-The film cell's row of the four-axis table at +0.129 reads 364 kHz, tan delta 0.061, 0.071%
-and 6.2 pN/nm2 (`four_axes_potential_tight_margins_shear.json`), on the measured film's
-calibrated channel (0.060, 0.066%, 6.5). The leader's margin stays below zero and its row does
-not change. The matrix's and the nitrile cell's margins of 3.14 have not been redone; the
-other three helix placements of each cell have not either.
+The matrix changes sign and the film cell gains 0.05: the helix cells were the ones not at
+rest (they fell 0.03 to 0.05, the all-trans cells 0 to 0.04). The film cell's row of the
+four-axis table at +0.129 reads 364 kHz, tan delta 0.061, 0.071% and 6.2 pN/nm2
+(`four_axes_potential_tight_margins_shear.json`), on the measured film's calibrated channel
+(0.060, 0.066%, 6.5). The leader's and the nitrile cell's margins stay below zero and their
+rows do not change; the matrix's row barely moves (5 to 34 kHz). The other three helix
+placements of each cell have not been redone.
 
 **In the potential the film cell's lowest state is the kinked one.** Per chain of fourteen
 monomers against all-trans, all at the tight stop:
@@ -1691,8 +1702,9 @@ monomers against all-trans, all at the tight stop:
 | cell | lowest helix cell | cheapest sheet tried (one kink pair a chain) |
 |---|---:|---:|
 | the film's composition | -1.81 | **-3.60** |
+| the matrix | -0.23 | +3.13 |
 | the leader | +0.98 | +0.05 |
-| the nitrile alone | not redone (+1.65 in 3.14) | +0.36 |
+| the nitrile alone | +1.53 | +0.36 |
 
 One kink pair at the chlorine is worth twice the whole helix. Both presets have it the other
 way (belt4: helix -4.4, sheet -2.3; chain1-cfe: helix -5.0, sheets to -4.5). If the potential
