@@ -462,7 +462,29 @@ def test_a_real_kink_sheet_against_dft_needs_dfts_own_geometry():
     assert v["potential"] - step["dft"] == pytest.approx(0.54, abs=0.01)
     assert v["polyfind"] - step["dft"] == pytest.approx(1.16, abs=0.01) and stored["polyfind_only"]["belt4_with_tilts"] - step["dft"] == pytest.approx(0.92, abs=0.01)
     frames = (PRED / "mlip" / "kink_vdf10_frames_pbe_d3bj.extxyz").read_text().splitlines()
-    assert sum(line == "120" for line in frames) == 3
+    assert sum(line == "120" for line in frames) == 4
+
+
+def test_the_inclined_kink_sheet_is_below_all_trans_in_dft():
+    """The same sheet relaxed to a tight stop: the cell shears until each chain's kink is a monomer along from its neighbour's."""
+    stored = json.loads((PRED / "kink_dft_vdf10.json").read_text())
+    flat, v = stored["lattices"]["vdf10"], stored["lattices"]["vdf10_inclined"]
+    assert v["all_trans"] == flat["all_trans"] and v["own_cells"] and "polyfind" not in v   # polyfind's stored number is the upright sheet's
+    # the cell is a0 - c0 and b0 - c0 of the all-trans lattice, c0 one monomer along the chain
+    a0, b0, c = flat["cell_A_deg"][:3]
+    c0 = c / 10
+    a, b = v["kinked_cell_A_deg"][:2]
+    assert a == pytest.approx(np.hypot(a0, c0), abs=0.01) and b == pytest.approx(np.hypot(b0, c0), abs=0.01)
+    # a sharper kink than the upright sheet's (81, 178, -68)
+    g1, t, g2 = v["kink_dihedrals_deg"][0]
+    assert g1 == pytest.approx(60, abs=1) and g2 == pytest.approx(-58, abs=1) and abs(t) > 170
+    # below all-trans, and DFT is at rest on the potential's cell: closure holds here as it did not on the upright sheet
+    assert (v["dft"], v["potential"]) == pytest.approx((-1.959, -1.655), abs=0.002)
+    assert v["largest_force_left_eV_per_A"] < 0.08 and v["largest_stress_left_GPa"]["kinked"] < 0.05
+    assert flat["dft"] - v["dft"] == pytest.approx(6.78, abs=0.01)   # what the upright sheet of the tables is above the sheet's own minimum, in DFT
+    # two monomers of ten at the helix's energy (the anchor, 0.726 a monomer) would be -1.45
+    assert -2.0 < v["dft"] < -1.45 < stored["polyfind_only"]["belt4_inclined"] < stored["polyfind_only"]["chain1_inclined"] < 0.0
+    assert stored["polyfind_only"]["belt4_inclined"] == pytest.approx(-1.172, abs=0.002)
 
 
 def test_the_vf_cell_is_missed_by_both_presets_and_met_by_the_potential():

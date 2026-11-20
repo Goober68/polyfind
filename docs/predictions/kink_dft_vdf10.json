@@ -82,9 +82,61 @@
      ]
     }
    ]
+  },
+  "vdf10_inclined": {
+   "all_trans": "sheet_vdf10_belt4_TT_in_all_s1",
+   "kinked": "sheet_vdf10_belt4_ref_tight2",
+   "atoms": 120,
+   "n_monomers": 20,
+   "kinked_chains": 2,
+   "cell_A_deg": [
+    4.754582183748331,
+    8.485766951267555,
+    25.800030622616163,
+    89.99999999998008,
+    90.00000000048004,
+    90.0000000158124
+   ],
+   "volume_A3_per_monomer": 52.0467582823256,
+   "dft": -1.95863010615876,
+   "potential": -1.6550790778218871,
+   "largest_force_left_eV_per_A": 0.07355309,
+   "potential_minus_dft_meV_per_monomer": {
+    "all_trans": -0.5718082770727051,
+    "kinked": 0.7445162966632779
+   },
+   "kink_dihedrals_deg": [
+    [
+     59.7852494026377,
+     172.5616963726383,
+     -58.165270786343555
+    ],
+    [
+     59.8246753536808,
+     172.48408164247058,
+     -58.09816286477835
+    ]
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10@0, the kinked crystal, pendants as built",
+   "own_cells": true,
+   "kinked_cell_A_deg": [
+    5.415348838062503,
+    8.86940319289518,
+    24.830940571154752,
+    102.50331045885513,
+    113.57504437482268,
+    83.07912107562835
+   ],
+   "largest_stress_left_GPa": {
+    "all_trans": 0.08355567670327198,
+    "kinked": 0.0366291610899907
+   }
   }
  },
  "polyfind_only": {
-  "belt4_with_tilts": 5.063
+  "belt4_with_tilts": 5.063,
+  "belt4_inclined": -1.172,
+  "chain1_upright": 5.285,
+  "chain1_inclined": -0.781
  }
 }

@@ -1484,12 +1484,12 @@ starts a monomer along a and b.
 | kcal/mol per kink pair, against all-trans | DFT | `all_s1` | belt4 | chain1 |
 |---|---:|---:|---:|---:|
 | the upright sheet | 4.82 falling (above) | 4.68 falling | 5.30 (5.28 after a kick: a local minimum) | 5.29 |
-| the inclined sheet | **-1.96** | -1.63 | -1.17 | -0.78 |
+| the inclined sheet | **-1.96** | -1.66 | -1.17 | -0.78 |
 
-- **All four have the inclined sheet below the all-trans crystal.** DFT's number is a single
-  point on the potential's cell (the energy of an SCF converged to 6e-8 Ry; that run was cut
-  before its forces and is being repeated for the stored frame, so the file below does not
-  hold it yet). The all-trans cell is at its own minimum upright: slid by the
+- **All four have the inclined sheet below the all-trans crystal**, 6.8 kcal/mol per kink pair
+  under the upright one in DFT. DFT's number is a single point on the potential's cell, and
+  here the potential's minimum is DFT's: 0.07 eV/A and 0.04 GPa are left, where the upright
+  cell had 0.16 and 0.19. The all-trans cell is at its own minimum upright: slid by the
   same monomer it is the same crystal at the same energy, and no other slide is lower (eight
   starts in the primitive cell, in the potential; polyfind's shear relaxation agrees).
 - **It is what PVDF's margin says it should be.** PVDF's helix is 0.73 kcal/mol per monomer
@@ -1518,5 +1518,6 @@ leader's 0.65 part way down this slope (the only cell whose third vector had til
 Its ranking is withdrawn there.
 
 Files: `docs/predictions/kink_dft_vdf10.json`, `mlip/kink_vdf10_frames_pbe_d3bj.extxyz`
-(the upright sheet and the step; the inclined sheet and polyfind's runs are being stored).
-Tests: `tests/test_row_cells_dft.py`, `tests/test_four_axes_at_margins.py`.
+(4 frames: all-trans, the upright sheet, the step, the inclined sheet),
+`kink_sheet_shear_belt4.json`. Tests: `tests/test_row_cells_dft.py`,
+`tests/test_four_axes_at_margins.py`.

@@ -183,7 +183,7 @@ def kink_collect(args):
             rec["kinked_cell_A_deg"] = [float(v) for v in kinked.cell.cellpar()]
         if "REF_stress" in tt.info and "REF_stress" in kinked.info:
             rec["largest_stress_left_GPa"] = {"all_trans": float(np.abs(tt.info["REF_stress"]).max() * GPA), "kinked": float(np.abs(kinked.info["REF_stress"]).max() * GPA)}
-        if "polyfind_kcal_per_kink_pair" in kinked.info and "carried to the lattice" not in rec["source"]:
+        if "polyfind_kcal_per_kink_pair" in kinked.info and "carried to the lattice" not in rec["source"] and name not in args.moved:
             rec["polyfind"] = float(kinked.info["polyfind_kcal_per_kink_pair"])
         for k, f in enumerate(steps.get(name, []), start=1):  # the kinked cell after each Newton step toward DFT's own minimum
             b = read(f)
@@ -371,6 +371,7 @@ def main():
     s.add_argument("--steps", nargs="*", default=[], help="NAME=KINKED_STEP1.dft.xyz[,STEP2...]: the pair's kinked cell relaxed on in the potential tilted to DFT's forces "
                                                            "(examples/mlip_train.py relax --dft-gradient) and labelled, in order")
     s.add_argument("--also", nargs="*", default=[], help="NAME=VALUE: a polyfind number with no DFT of its own, kept beside the others")
+    s.add_argument("--moved", nargs="*", default=[], help="pairs whose kinked cell relaxed into another structure than the one polyfind's stored number is of: that number is left out")
     s.add_argument("--out", required=True)
     s.add_argument("--extxyz", default="", help="store the labelled frames here")
     s = sub.add_parser("write", help="a row's stored cells as NAME.start.xyz")

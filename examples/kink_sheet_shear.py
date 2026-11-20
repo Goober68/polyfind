@@ -80,10 +80,44 @@ def relax_sheet(model, x, e_flat, c0, starts, maxiter, t0, say=print):
     return out
 
 
+def as_scan(args):
+    """The scan of ``--scan`` with each site's energy replaced by the lowest sheet found here with the shear free: the file
+    ``examples/pin_design.py --sites`` reads.  A site not run here keeps the scan's upright energy and is listed."""
+    scan = json.loads(args.scan.read_text())
+    done = {}
+    for f in args.merge:
+        for key, rec in json.loads(Path(f).read_text())["rows"].items():
+            if " site " in key:
+                done[key] = rec
+    rows, left = {}, []
+    for key, row in scan["rows"].items():
+        mine = {k.split(" site ")[1].split(" ")[0]: v for k, v in done.items() if k.split(" site ")[0] == key}
+        if not mine:
+            continue
+        row = json.loads(json.dumps(row))
+        for site, v in row["sites"].items():
+            if site in mine and mine[site]["lowest"] is not None:
+                best = min((s for s in mine[site]["starts"] if s.get("kink_kept") and "failed" not in s), key=lambda s: s["formation"])
+                v.update(upright_formation=v["formation"], formation=best["formation"], shear_monomers=best["shear_monomers"], kink_kept=True, converged=True)
+                v.pop("state", None)
+            elif site in mine:
+                v.update(upright_formation=v["formation"], kink_kept=False)
+            elif v.get("converged", True) and v.get("kink_kept", True):
+                left.append(f"{key} site {site}")
+        rows[key] = row
+    out = {**{k: v for k, v in scan.items() if k != "rows"}, "rows": rows,
+           "shear_free": "each site's formation is the lowest kink sheet found with the cell free to shear along its chains (examples/kink_sheet_shear.py), against the "
+                         "all-trans cell relaxed the same way; upright_formation is the scan's own", "sites_left_upright": left}
+    args.as_scan.write_text(json.dumps(out, indent=1))
+    print(f"{len(rows)} rows, {sum(len(r['sites']) for r in rows.values()) - len(left)} sites with the shear free, {len(left)} left upright; written {args.as_scan}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--key", required=True, help='a kinked crystal of --kinked-references, as "vdf10@0" (with --sites: the scan\'s row, as "vdf10-trfe4-14@0~")')
-    ap.add_argument("--sites", default="", help="comma list of sites of --scan (offsets in bonds); without it the kinked crystal itself")
+    ap.add_argument("--key", default="", help='a kinked crystal of --kinked-references, as "vdf10@0" (with --sites: the scan\'s row, as "vdf10-trfe4-14@0~")')
+    ap.add_argument("--merge", nargs="*", default=[], help="with --as-scan: result files of this script")
+    ap.add_argument("--as-scan", type=Path, default=None, help="write --scan again with the sites of --merge at their shear-free energies, and stop")
+    ap.add_argument("--sites", default="", help="comma list of sites of --scan (offsets in bonds), or 'all' (every site the scan kept a kink at); without it the kinked crystal itself")
     ap.add_argument("--scan", type=Path, default=PRED / "kink_site_scan_belt4.json")
     ap.add_argument("--kinked-references", type=Path, default=PRED / "kink_migration_belt4.json")
     ap.add_argument("--dilute", type=Path, default=PRED / "dilute_kink_belt4.json", help="the store with the row's all-trans cell and the preset")
@@ -91,8 +125,12 @@ def main():
     ap.add_argument("--starts", default="-1:-1,1:1,-1:1,1:-1", help="starting shears in monomers along a and b, 'ma:mb,...'; the upright cell is always tried")
     ap.add_argument("--maxiter", type=int, default=800)
     ap.add_argument("--redo", action="store_true")
-    ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
+    if args.as_scan:
+        return as_scan(args)
+    if not args.key or args.out is None:
+        ap.error("--key and --out are needed")
     row = args.key.split("@")[0]
     store = json.loads(args.dilute.read_text())
     flat = arrays(store["all_trans_references"][row])
@@ -117,8 +155,9 @@ def main():
         if args.sites:
             scan = json.loads(args.scan.read_text())["rows"][args.key]
             polymer = DK.C.make_polymer(row, scan["letters"])
+            wanted = [o for o, v in scan["sites"].items() if v.get("converged", True) and v.get("kink_kept", True)] if args.sites == "all" else [o for o in args.sites.split(",") if o]
             cells = [(f"{args.key} site {site} {preset}", np.concatenate([np.asarray(scan["sites"][site]["state"], dtype=float), np.zeros(2)]), float(scan["sites"][site]["formation"]),
-                      {"site": site, "units": scan["sites"][site]["units"]}) for site in args.sites.split(",") if site]
+                      {"site": site, "units": scan["sites"][site]["units"]}) for site in wanted]
         else:
             polymer = DK.C.make_polymer(row, DK.sequence(row)[0])
             cells = [(f"{args.key} {preset}", None, (float(kinked["energy"]) - float(flat["energy"])) / 2.0, {})]
