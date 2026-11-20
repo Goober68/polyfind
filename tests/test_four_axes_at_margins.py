@@ -184,14 +184,33 @@ def test_at_a_tight_stop_the_potentials_margins_move_and_the_film_cells_sheet_is
             fall = (loose[row]["cells"][conf]["eV_per_monomer"] - cell["eV_per_monomer"]) * 23.0605
             assert 0.0 <= fall < 0.052
     assert tight[MATRIX]["margin"] > 0.0 > loose[MATRIX]["margin"]  # the matrix changes sign: its helix is the lower by a little
-    # per chain of fourteen against all-trans, the lowest helix and the cheapest sheet tried: only the film cell has a sheet below all-trans, and it is below its helix
+    # per chain of fourteen against all-trans, the lowest helix and the sheet at belt4's cheapest site: of these four sheets only the film cell's is below all-trans,
+    # and it is below its helix (the leader's second site, in the test below, is below all-trans too)
     helix = {r: -14 * tight[r]["margin"] for r in tight}
     sheet = {CFE: sheets[f"{CFE}@12"]["potential"], MATRIX: sheets[f"{MATRIX}@24m"]["potential"], AN: sheets[f"{AN}@10"]["potential"], LEADER: sheets[f"{LEADER}@10"]["potential"]}
     assert helix == pytest.approx({MATRIX: -0.23, CFE: -1.81, AN: 1.53, LEADER: 0.98}, abs=0.01)
     assert sheet == pytest.approx({MATRIX: 3.13, CFE: -3.60, AN: 0.36, LEADER: 0.05}, abs=0.006)
     assert sheet[CFE] < helix[CFE] - 1.7 and all(rec["kink_kept"] and rec["all_trans_is_all_trans"] for rec in sheets.values())
-    # so in the potential the leader's sheet is three below the matrix's and three and a half above the film cell's: belt4 had it level with the matrix's
+    # so at belt4's cheapest sites the potential has the leader's sheet three below the matrix's and three and a half above the film cell's: belt4 had it level with the matrix's
     assert sheet[MATRIX] - sheet[LEADER] == pytest.approx(3.08, abs=0.01) and sheet[LEADER] - sheet[CFE] == pytest.approx(3.65, abs=0.01)
     stored = json.loads((PRED / "four_axes_potential_tight_margins_shear.json").read_text())
     film = stored["shifts"]["+0.00"]["rows"][CFE][SUM]  # at its tight margin the film cell's row is on the measured film's calibrated channel
     assert film["tan_delta_34kHz"] == pytest.approx(0.061, abs=0.001) and film["strain_ac_at_the_heat_budget_34kHz"] == pytest.approx(0.00071, abs=0.00001)
+
+
+def test_in_the_potential_the_leader_has_a_sheet_below_all_trans_at_a_site_belt4_ranks_low():
+    """The leader's second site in the potential: started from belt4's upright sheet it slides (the chain axis tilts) and rests below all-trans."""
+    stored = json.loads((PRED / "sheets14_potential_sheared.json").read_text())
+    sheets, control = stored["rows"], stored["all_trans_controls"][LEADER]
+    first, second = sheets[f"{LEADER}@10"], sheets[f"{LEADER}@18m"]
+    # belt4 has this site 1.3 above the leader's cheapest; the potential has it 1.4 below the site belt4 ranks cheapest
+    assert second["potential"] == pytest.approx(-1.34, abs=0.006) and second["polyfind"] == pytest.approx(1.99, abs=0.006)
+    assert second["potential"] < first["potential"] - 1.3 and first["polyfind"] < second["polyfind"] - 1.3
+    assert second["kink_kept"] and second["all_trans_is_all_trans"] and "0.004 eV/A" in second["relaxed"]["sheet"] and "NOT" not in second["relaxed"]["sheet"]
+    # the reference does not follow it: the leader's all-trans cell started at the sheet's tilt rests, still all-trans, within 0.05 of the upright one
+    assert control["is_all_trans"] and abs(control["potential"]) < 0.05 and "NOT" not in control["relaxed"]["this"]
+    assert control["against"] == second["all_trans_frame"] and control["cell_A_deg"][3] > control["against_cell_A_deg"][3] + 1.5  # it stayed tilted
+    # so the leader too has a kinked state below its all-trans cell and its helix, and the film cell's sheet is 2.3 below it, not 3.65
+    tight = json.loads((PRED / "rows14_potential_tight.json").read_text())["rows"]
+    assert second["potential"] < 0.0 < -14 * tight[LEADER]["margin"]
+    assert second["potential"] - sheets[f"{CFE}@12"]["potential"] == pytest.approx(2.26, abs=0.01)

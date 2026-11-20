@@ -84,22 +84,25 @@ lower phase, and a kink pair is one turn of that helix.
   above (level with the film) is belt4's nitrile error and is not supported, and the leader is
   not level with the matrix either: it is three and a half above the film cell and three below
   the matrix. One site a cell, the one belt4 ranks cheapest.
-- **The +0.05 is not the leader's floor in the potential (interim, the same day).** A second
-  site of the leader's, started from belt4's upright sheet, does not come to rest: after seven
-  legs it is at **-1.00** kcal/mol per kink pair and still sliding a third of a kcal/mol a leg
-  as the chain axis tilts. The leader's all-trans cell given the same tilt rests 0.04 from the
-  upright one, so the reference does not move. In the potential the leader too has a kinked
-  state below its all-trans cell and its helix; the gap to the film cell's sheet is under 2.6
-  and closing, and "three behind" belongs to belt4's choice of sites. Where it ends is being
-  found (`docs/MLIP_SECOND_OPINION.md` 3.20).
+- **The +0.05 is not the leader's floor in the potential: a second site rests at -1.34.**
+  Started from belt4's upright sheet at a site belt4 ranks 1.3 above its cheapest, the sheet
+  slides for two thousand steps as the chain axis tilts and comes to rest (0.004 eV/A, kink
+  kept) 1.34 kcal/mol per kink pair below all-trans. The leader's all-trans cell given the
+  same tilt rests 0.04 from the upright one, so the reference does not move. So in the
+  potential the leader too has a kinked state below its all-trans cell and its helix, the film
+  cell's sheet is 2.3 below the leader's rather than 3.65, and "three behind" belongs to
+  belt4's choice of sites. **The leader's row of the table above (4 to 30 kHz, with the
+  matrix) is therefore not supported either**, and there is no row to put in its place: two
+  sites of twenty-six, no DFT at this size (`docs/MLIP_SECOND_OPINION.md` 3.20).
 - **The potential's margins at a tight stop** (3.14 had stopped the helix cells loosely):
   matrix +0.016 (was -0.024), film cell +0.129 (+0.078), nitrile alone -0.109 (-0.118), leader
   -0.070 (-0.055). At +0.129 the film cell's row reads tan delta 0.061, 0.071% and 6.2 pN/nm2,
   on the measured film's calibrated channel. Only the lowest helix placement of each cell was
   redone.
 - **In the potential the film cell's lowest state is all-trans with a kink at each chlorine**
-  (3.6 kcal/mol per chain below all-trans; its helix cell 1.8 below). Both presets have the
-  helix lower. If the potential is right, the margin as defined here does not name the state
+  (3.6 kcal/mol per chain below all-trans; its helix cell 1.8 below), and the leader's lowest
+  state found is kinked as well (1.3 below all-trans; its helix 1.0 above). Both presets have
+  the helix lower. If the potential is right, the margin as defined here does not name the state
   the field converts in the film's own composition. DFT has to be asked.
 - **A periodic cell puts every unit beside its like, and the leader's all-trans cell needs
   that.** A statistical copolymer has a reversed unit beside another about one time in

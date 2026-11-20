@@ -1635,6 +1635,7 @@ kcal/mol per kink pair against the same evaluator's all-trans cell:
 | the film cell's sheet at V-CFE | -2.27 | -1.65 | **-3.60** |
 | the leader's sheet at TrFE-V | +0.65 | +1.66 | **+0.05** |
 | the leader's above the film cell's | 2.92 | 3.31 | 3.65 |
+| the leader's sheet at a second site (TrFE-V, the other hand; below) | +1.99 | not run | **-1.34** |
 | the nitrile cell's sheet at TrFE-V | -2.08 | not run | **+0.36** |
 | the matrix's sheet at V-TrFE | +0.94 | not run | **+3.13** |
 
@@ -1663,29 +1664,49 @@ hours of this machine).
 film cell's (-2.08); in the potential the same sheet, kink kept, is 0.36 above all-trans. That
 is belt4's nitrile error again (3.12: it makes the nitrile a pin for the helix, and a sheet
 follows the margin). So the row of the four-axis table above that puts the nitrile cell at 306
-to 335 kHz is belt4's and is not supported: in the potential the film cell is the only one of
-the four with a sheet below all-trans.
+to 335 kHz is belt4's and is not supported: of the four sheets at belt4's cheapest sites, the
+film cell's is the only one below all-trans in the potential.
 
 **Nor is the leader level with the matrix there.** The matrix's cheapest sheet is 3.13 in the
 potential (belt4 0.94), so the potential's order at these four sites is the film cell (-3.60),
 the leader (+0.05), the nitrile alone (+0.36), the matrix (+3.13): the leader three and a half
 above the film cell and three below the matrix, where belt4 had the nitrile cell with the film
-and the leader with the matrix. What all three evaluators share is the film cell first and the
-leader about three behind it.
+and the leader with the matrix. What all three evaluators share, at the sites belt4 ranks
+cheapest, is the film cell first and the leader about three behind it.
 
-**The +0.05 is not the leader's floor in the potential (later the same day; not finished).** A
-second site of the leader's, site 18 of the other hand (TrFE-V; belt4 +1.99, upright), was
-started in the potential from belt4's upright sheet. It does not come to rest: over seven legs
-(1,800 steps, the largest force 0.01 to 0.02 eV/A throughout, the kink kept) it reads +2.16,
-+1.01, +0.38, +0.07, -0.28, -0.67, **-1.00** kcal/mol per kink pair and is still falling a third
-of a kcal/mol a leg. The cell is sliding: the chain axis tilts leg by leg, which is the shear
-along the chains arriving by another route (-0.45 and -0.93 monomers along a and b so far). The
-control is the leader's all-trans cell started at the same tilt: it comes to rest still tilted
-(0.004 eV/A) and 0.04 kcal/mol per chain below the upright cell, so the reference does not
-move and the fall is the sheet's own. So in the potential the leader too has a kinked state
-below both its all-trans cell and its helix (+0.98), the gap to the film cell's sheet is under
-2.6 and closing, and "the leader about three behind" is a statement about belt4's choice of
-sites. Where the slide ends is being found; the numbers in this paragraph are interim.
+**The +0.05 is not the leader's floor in the potential: a second site rests at -1.34.** Site
+18 of the other hand (TrFE-V; belt4 +1.99 and upright, 1.3 above belt4's cheapest) was started
+in the potential from belt4's upright sheet. It does not come to rest there. Over eight legs
+(2,050 steps, the largest force 0.01 to 0.02 eV/A throughout, the kink kept) it reads +2.16,
++1.01, +0.38, +0.07, -0.28, -0.67, -1.00, -1.24 kcal/mol per kink pair, falling a third of a
+kcal/mol a leg while the chain axis tilts: the shear along the chains arriving through the
+third lattice vector instead of the second.
+
+- **Where the slide ends.** Two starts pushed on along it (`examples/cell_tilt.py push`: the
+  chain axis moved four and eight times further than it had moved in the last two legs) come
+  back. The nearer one converges at 0.004 eV/A after 590 steps at **-1.34**, with the kink kept
+  and the neighbours along a and b sitting 0.50 and 1.13 monomers along the chain. The plain
+  sheet was still walking toward it from the other side when this was written (-1.24 at 0.47
+  and 0.97), and the further start was coming back (-0.86 at 0.54 and 1.23).
+- **The reference does not follow.** The leader's all-trans cell started at the sheet's tilt
+  (`examples/cell_tilt.py like`) converges at 0.004 eV/A still tilted and all-trans, 0.04
+  kcal/mol per chain below the upright cell. The fall is the sheet's own.
+- **What it changes.** In the potential the leader, like the film cell, has a kinked state
+  below both its all-trans cell (by 1.34) and its helix (+0.98 above all-trans, so by 2.3).
+  The film cell's sheet is 2.3 below the leader's, not 3.65. "The leader about three behind
+  the film cell" is a statement about the sites belt4 ranks cheapest: the potential's cheapest
+  site of the leader is one belt4 ranks 1.3 above its own cheapest, and nothing says the film
+  cell's -3.60 is its floor either.
+- **What it does to the four axes.** belt4's row for the leader in the table above (4 to 30
+  kHz, tan delta 0.65 to 0.85, 0.007 to 0.020%, 0.4 to 1.1 pN/nm2) rests on belt4 having every
+  sheet of the leader's above all-trans. In the potential one of the two sites tried is 1.3
+  below. So that row is not supported, as the nitrile's was not, and the leader is not put
+  with the matrix on frequency and loss. There is no row to put in its place: two sites of
+  twenty-six, in an evaluator no DFT has checked at this size, and a rate model whose two
+  readings of a site at -3.6 against one at -1.3 are 44 to 1 and 1.1 to 1.
+
+`docs/predictions/sheets14_potential_sheared.json` (the pair `...@18m` and
+`all_trans_controls`), the two cells in `mlip/sheets14_sheared_in_all_s1.extxyz`.
 
 **A loose stop costs the potential's fourteen-monomer cells as much as their margins.** The
 leader's all-trans cell moved 0.04 kcal/mol per monomer between 0.02 and 0.004 eV/A; the same
@@ -1718,11 +1739,12 @@ monomers against all-trans, all at the tight stop:
 |---|---:|---:|
 | the film's composition | -1.81 | **-3.60** |
 | the matrix | -0.23 | +3.13 |
-| the leader | +0.98 | +0.05 |
+| the leader | +0.98 | **-1.34** (at belt4's cheapest site +0.05) |
 | the nitrile alone | +1.53 | +0.36 |
 
-One kink pair at the chlorine is worth twice the whole helix. Both presets have it the other
-way (belt4: helix -4.4, sheet -2.3; chain1-cfe: helix -5.0, sheets to -4.5). If the potential
+In the film cell one kink pair at the chlorine is worth twice the whole helix, and the leader's
+lowest state found is kinked as well, with its helix above all-trans. Both presets have the
+film cell the other way (belt4: helix -4.4, sheet -2.3; chain1-cfe: helix -5.0, sheets to -4.5). If the potential
 is right, the state the field has to convert in the film's composition is not the helix but
 all-trans chains with a kink held at each chlorine, and the margin as this project defines it
 (all-trans minus the lowest helix) does not name the film cell's lowest state. The potential
@@ -1738,8 +1760,8 @@ unit beside a kink. This is the first thing DFT should be asked at this size.
   sliding, the chlorine's torsion of 3.11 at the film cell's cheapest site, and the nitrile's
   margin of 3.12).
 - Four sheared starts a site. The film cell's sheets were found by them; a sheet of the
-  leader's at a shear they do not reach is possible, though its all-trans cell's cost at every
-  shear tried says there is little room.
+  leader's at a shear they do not reach is possible, and the potential has one (above): its
+  sheet below all-trans sits at half a monomer along a and one along b, between belt4's starts.
 - The rate model is one model. Its premise, that a kink sheet is a rare excitation whose
   population limits the rate, does not hold for a cell with sheets below all-trans; the share
   reading bounds the error and does not replace the premise.
@@ -1751,4 +1773,6 @@ Files: `docs/predictions/kink_sheet_shear_belt4_sites.json` (every site's starts
 relaxed states), `kink_site_scan_belt4_shear.json` (the scan with each site at its lowest
 sheet), `four_axes_potential_margins_shear.json`, `kink_sheet_shear_chain1cfe_sites.json`,
 `sheets14_potential_sheared.json`, `rows14_potential_tight.json`,
-`four_axes_potential_tight_margins_shear.json`. Tests: `tests/test_four_axes_at_margins.py`.
+`four_axes_potential_tight_margins_shear.json`. Tools: `examples/kink_sheet_shear.py`,
+`examples/row_cells_frames.py`, `examples/cell_tilt.py`. Tests:
+`tests/test_four_axes_at_margins.py`, `tests/test_cell_tilt.py`.

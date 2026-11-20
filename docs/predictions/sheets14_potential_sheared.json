@@ -174,6 +174,79 @@
     "sheet": "all_s1 with D3 to 0.004 eV/A (113 steps)",
     "all_trans": "all_s1 with D3 to 0.005 eV/A (150 steps)"
    }
+  },
+  "vdf9-trfe3-an1-rvdf1-14@18m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_slide4_r3",
+   "atoms": 170,
+   "site": "18m",
+   "potential": -1.3435844770064735,
+   "polyfind": 1.9910788381145323,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -63.2,
+     57.1
+    ],
+    [
+     -63.2,
+     57.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.864165571755674,
+    8.90419175867071,
+    34.73858855941842,
+    109.03600837616621,
+    102.6696551008682,
+    84.20653933158734
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 18 (units VV), the cell free to shear: -0.03, -0.04 monomers along a, b, pendants as built; from sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r7, the chain axis pushed 4 times its last two legs' slide further",
+   "all_trans_frame": "tt_leader_from_rows14an_r1",
+   "all_trans_eV_per_monomer": -1959.772178083458,
+   "sheet_eV_per_monomer": -1959.776339759041,
+   "all_trans_cell_A_deg": [
+    5.670543510998331,
+    8.460607283617158,
+    35.683754504348855,
+    93.0820880245774,
+    92.00003388587082,
+    89.87461060596405
+   ],
+   "all_trans_is_all_trans": true,
+   "relaxed": {
+    "sheet": "all_s1 with D3 to 0.004 eV/A (91 steps)",
+    "all_trans": "all_s1 with D3 to 0.004 eV/A (251 steps)"
+   }
+  }
+ },
+ "all_trans_controls": {
+  "what": "an all-trans cell relaxed in the potential from another start, minus the all-trans cell the sheets are read against, kcal/mol per chain (the unit of the sheets: one kink pair a chain)",
+  "vdf9-trfe3-an1-rvdf1-14": {
+   "frame": "tt_leader_tilted_like_at18m_r3",
+   "against": "tt_leader_from_rows14an_r1",
+   "potential": -0.0351600976530774,
+   "is_all_trans": true,
+   "cell_A_deg": [
+    5.645102304185132,
+    8.547529040732558,
+    35.627572043729444,
+    95.10831859511659,
+    95.27144582016994,
+    88.65142705270998
+   ],
+   "against_cell_A_deg": [
+    5.670543510998331,
+    8.460607283617158,
+    35.683754504348855,
+    93.0820880245774,
+    92.00003388587082,
+    89.87461060596405
+   ],
+   "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 TTTT, cell sheared, pendants as built; the chain axis tilted -0.433 a, -0.375 b to match sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r5",
+   "relaxed": {
+    "this": "all_s1 with D3 to 0.004 eV/A (39 steps)",
+    "against": "all_s1 with D3 to 0.004 eV/A (251 steps)"
+   }
   }
  }
 }

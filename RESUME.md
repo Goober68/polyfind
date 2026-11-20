@@ -644,35 +644,36 @@ right": true at one registry, not along it).
         `row_cells_frames.py potential --frames /opt/dft/rows14tight --rows ...` from cells copied there
         under the names `row_ROW_CONF_TAG_in_all_s1.start.xyz`; sheets by `sheets-potential --pairs` (every
         pair given again).
-        THE LEADER'S `@0~` SITE 18 IN THE POTENTIAL IS NOT AT REST AND IS ALREADY BELOW +0.05 (14:03 UTC):
-        from belt4's upright sheet (`sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared`, legs `_rN`), per
-        kink pair after legs 1 to 5 (1,300 steps, none converged, largest force 0.01 to 0.02 eV/A, kink
-        kept): +2.16, +1.01, +0.38, +0.07, -0.28. The cell is sliding: the chain axis tilts steadily (c along
-        a and b: -0.12 -0.10, -0.20 -0.20, -0.32 -0.28, -0.37 -0.31, -0.47 -0.39 of a and b), which is a shear
-        along the chains of -0.4 and -0.7 monomers so far. SO +0.05 IS NOT THE LEADER'S FLOOR IN THE
-        POTENTIAL, and the 3.65 gap to the film cell is an upper bound until this stops.
-        16:03 UTC: THE CONTROL IS IN AND THE REFERENCE DOES NOT MOVE. The leader's all-trans cell given the
-        sheet's tilt (`/opt/dft/sheets14s/tt_leader_tilted_like_at18m`, legs `_r1` to `_r3`; built by the
-        scratch script `tt_tilted_like.py FLAT LIKE OUT FRAME`) converged at 0.004 eV/A still tilted (c along
-        a, b: -0.42, -0.27) at -0.035 kcal/mol per chain of fourteen against the upright cell. THE SHEET after
-        legs 6 and 7: -0.67, -1.00, not converged, kink kept, tilt -0.55 -0.50, shear along the chains -0.45
-        -0.93 monomers. Interim paragraphs are in docs 3.20 and the head of CANDIDATE_MATERIALS; the stored
-        JSON, the extxyz and the tests still carry only site 10 (+0.05) and have to be extended when the
-        sheet has stopped.
-        17:36 UTC: THE SLIDE HAS AN END NEAR A SHEAR OF -0.5 AND -1.0 TO -1.1 MONOMERS. Starts pushed along
-        the slide (scratch script `slide_on.py PREV NOW OUT FRAME K`: the chain axis of NOW moved K times
-        further than it moved from PREV to NOW, repeat length and fractional coordinates kept; from legs 5 and
-        7) come BACK: `..._at18m_slide4` from shear -0.61 -1.33 to -0.51 -1.14 in two legs (-1.02, -1.32
-        kcal/mol per kink pair), `_slide8` from -0.75 -1.69 to -0.54 -1.23 (+1.89, -0.86), while the plain
-        sheet's leg 8 goes on forward to -0.47 -0.97 (-1.24). None converged; all three still falling about
-        0.3 a leg, kink kept in all. A leg of 250 steps takes 18 minutes on four cores (DO NOT RUN TWO AT ONCE
-        HERE: side by side on two cores each, neither finished a leg in 38 minutes and both wrote nothing).
-        RUNNING since 17:40 UTC, job `b0b2du9vx`: `_slide4` alone, three legs of 500 steps (`STEPS=500
-        TMO=2600 legs.sh NAME NAME NAME`: each leg from that name's latest stored `_rN`; a name whose log says
-        `converged True` is skipped), so the optimizer keeps its Hessian longer.
-        If either is cut, go on from its last `_rN` cell. Read a leg with `row_cells_frames.py
-        sheets-potential --pairs "KEY=/opt/dft/sheets14s/tt_leader_from_rows14an_r1.start.xyz,LEG.start.xyz"
-        --name all_s1 --all-trans docs/predictions/rows14_potential_tight.json --out SCRATCH.json`.
+        THE LEADER HAS A SHEET 1.34 BELOW ALL-TRANS IN THE POTENTIAL (17:43 UTC 2026-11-20; docs 3.20; pair
+        `vdf9-trfe3-an1-rvdf1-14@18m` and `all_trans_controls` in `docs/predictions/
+        sheets14_potential_sheared.json`; fourteen cells in `mlip/sheets14_sheared_in_all_s1.extxyz`; test
+        `test_in_the_potential_the_leader_has_a_sheet_below_all_trans_at_a_site_belt4_ranks_low`). Its `@0~`
+        site 18 (belt4 +1.99, upright) from belt4's upright sheet (`/opt/dft/sheets14s/
+        sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared`, legs `_rN`) never rests: +2.16, +1.01, +0.38,
+        +0.07, -0.28, -0.67, -1.00, -1.24 per kink pair over eight legs (2,050 steps, forces 0.01 to 0.02
+        eV/A, kink kept) as the chain axis tilts (c along a, b). Two starts pushed on along the slide
+        (`examples/cell_tilt.py push --prev LEG5 --now LEG7 --times 4` and `8`: `..._at18m_slide4`,
+        `_slide8`) come back; `_slide4_r3` CONVERGED at 0.004 eV/A at -1.344, shear along the chains -0.50
+        -1.13 monomers. THE CONTROL (`examples/cell_tilt.py like`: the leader's all-trans cell at the
+        sheet's tilt, `tt_leader_tilted_like_at18m_r3`) converged still tilted at -0.035 per chain: the
+        reference does not move. SO: +0.05 was belt4's choice of site, the film cell's sheet is 2.26 below the
+        leader's (not 3.65), the leader's lowest state found is kinked (helix +0.98), and belt4's four-axis
+        row for the leader (4 to 30 kHz, with the matrix) is NOT SUPPORTED; no row replaces it.
+        RUNNING since 17:45 UTC, job `bivo9umhg` (up to three legs of 500 steps, one at a time on four
+        cores): the other two cells, `_sheared` (from leg 8) and `_slide8` (from leg 2), to see that they rest
+        at the same place and energy. If one ends lower than -1.344, give the pairs again with it and change
+        the test's -1.34 and 2.26 and the docs. Legs are run by a loop that takes each name's latest stored
+        `_rN` as the start (`timeout 2600 python -I examples/mlip_train.py relax --model docs/predictions/
+        mlip/models/all_s1.model --name all_s1 --cells LAST.start.xyz --frame NAME_rN --out /opt/dft/sheets14s
+        --threads 4 --fmax 0.004 --steps 500 >> relax_NAME.log`); a leg of 250 steps takes 18 minutes on four
+        cores and the relaxer writes only at the end. DO NOT RUN TWO AT ONCE HERE: side by side on two cores
+        each, neither finished 250 steps in 38 minutes and both wrote nothing. Read a leg with
+        `row_cells_frames.py sheets-potential --pairs "KEY=/opt/dft/sheets14s/
+        tt_leader_from_rows14an_r1.start.xyz,LEG.start.xyz" --name all_s1 --all-trans docs/predictions/
+        rows14_potential_tight.json --out SCRATCH.json`. The stored file is written whole: give all five
+        pairs and `--controls "vdf9-trfe3-an1-rvdf1-14=.../tt_leader_from_rows14an_r1.start.xyz,.../
+        tt_leader_tilted_like_at18m_r3.start.xyz"` again (film and matrix all-trans cells in `/opt/dft/rows14`,
+        the rest in `/opt/dft/sheets14s`; frames are named in the stored file).
         THEN: at scale it is A POD'S JOB (108 sheets, 16 more helix cells, tight), with DFT on the film
         cell's all-trans, helix and kinked cells first (168 atoms), then the leader's.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6

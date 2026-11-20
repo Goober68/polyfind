@@ -264,6 +264,20 @@ def sheets_potential(args):
         out["rows"][key or (row if row not in out["rows"] else f"{row}@{rec['site']}")] = rec   # a row's second site is keyed with its site
         print(f"{row:26s} site {rec['site']:4s}: the potential {rec['potential']:+.3f}, polyfind {rec['polyfind']:+.3f} kcal/mol per kink pair; "
               f"{'kink kept' if kept else 'KINK NOT KEPT'}, gauche bonds {rec['gauche_bonds_deg']}")
+    # --controls: an all-trans cell relaxed from another start (a tilt of the chain axis, say) against the one the sheets are read
+    # against: whether the reference itself has a lower cell where a sheet went
+    for key, flat, other in [(item.split("=")[0], *item.split("=")[1].split(",")) for item in args.controls]:
+        a, b = read(flat), read(other)
+        torsions = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(b, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(b)]
+        chains = len(torsions)
+        rec = {"frame": str(b.info["frame"]), "against": str(a.info["frame"]),
+               "potential": (float(b.info["potential_eV_per_monomer"]) - float(a.info["potential_eV_per_monomer"])) * int(b.info["n_monomers"]) * KCAL / chains,
+               "is_all_trans": bool(all(abs(t) > 150.0 for ch in torsions for t in ch)), "cell_A_deg": [float(v) for v in b.cell.cellpar()],
+               "against_cell_A_deg": [float(v) for v in a.cell.cellpar()], "source": str(b.info.get("source", "")),
+               "relaxed": {"this": str(b.info.get("note", "")).split(", relaxed in ")[-1], "against": str(a.info.get("note", "")).split(", relaxed in ")[-1]}}
+        out.setdefault("all_trans_controls", {"what": "an all-trans cell relaxed in the potential from another start, minus the all-trans cell the sheets "
+                                                      "are read against, kcal/mol per chain (the unit of the sheets: one kink pair a chain)"})[key] = rec
+        print(f"control {key}: {rec['potential']:+.3f} kcal/mol per chain against {rec['against']}; {'all-trans' if rec['is_all_trans'] else 'NOT ALL-TRANS'}")
     Path(args.out).write_text(json.dumps(out, indent=1))
     print(f"written {args.out}")
 
@@ -385,6 +399,8 @@ def main():
     s = sub.add_parser("sheets-potential", help="kink sheets relaxed in a potential, against the rows' all-trans cells there")
     s.add_argument("--frames", default="", help="the folder of sheet_*_in_NAME.start.xyz")
     s.add_argument("--pairs", nargs="*", default=[], help="instead of --frames: KEY=ALL_TRANS.start.xyz,SHEET.start.xyz, both relaxed in the potential to the same stop")
+    s.add_argument("--controls", nargs="*", default=[], help="KEY=ALL_TRANS.start.xyz,OTHER_ALL_TRANS.start.xyz: the second all-trans cell (relaxed from "
+                                                           "another start, e.g. examples/cell_tilt.py like) against the first, kcal/mol per chain")
     s.add_argument("--name", default="all_s1")
     s.add_argument("--all-trans", default="docs/predictions/rows14_potential.json", help="the rows' cells in the same potential")
     s.add_argument("--out", required=True)
