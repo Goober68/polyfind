@@ -55,6 +55,49 @@ def upright_minimum(model, x, maxiter):
     return x1
 
 
+def relax_states(model, states, e_flat, c0, maxiter, t0, say=print):
+    """Each of ``states`` (full states of this cell, their shears with them) relaxed as it stands: sheets another preset found, asked of this one."""
+    everything, _ = SP.free_sets(model)
+    out = []
+    for x in states:
+        x = np.asarray(x, dtype=float)
+        start = [float(v) / c0 for v in model.state(x).shear]
+        try:
+            x1, info = model.relax(x, free=everything, closed=[0, 1], maxiter=maxiter, patience=60, patience_tol=1e-6)
+            if info["stalled"] or info["gradient_max"] > 1e-3:
+                x1, last = model.relax_on_surface(x1, free=everything, closed=[0, 1], gtol=1e-4, maxiter=300, patience=60)
+                info = {**info, "gradient_max": last["gradient_max"], "stalled": last["stalled"]}
+        except RuntimeError as err:
+            out.append({"start_monomers": start, "from_a_stored_sheet": True, "failed": str(err)})
+            say(f"  stored sheet at {start[0]:+.2f}, {start[1]:+.2f} monomer: FAILED, {err} ({time.time() - t0:.0f} s)")
+            continue
+        e1 = float(model.physical_energy(x1))
+        if abs(e1 - e_flat) > 1e3:
+            out.append({"start_monomers": start, "from_a_stored_sheet": True, "failed": "collapsed"})
+            say(f"  stored sheet at {start[0]:+.2f}, {start[1]:+.2f} monomer: FAILED, collapsed ({time.time() - t0:.0f} s)")
+            continue
+        s1 = model.state(x1)
+        tors = (np.asarray(s1.tors, dtype=float).reshape(model.nc, -1) + 180.0) % 360.0 - 180.0
+        out.append({"start_monomers": start, "from_a_stored_sheet": True, "shear_monomers": [float(v) / c0 for v in s1.shear], "formation": (e1 - e_flat) / 2.0,
+                    "kink_kept": bool(all(kink_kept(row) for row in tors)), "gauche_bonds_deg": [[round(float(v), 1) for v in row if abs(v) < 120.0] for row in tors],
+                    "gradient_max": float(info["gradient_max"]), "stalled": bool(info["stalled"]), "lattice": [float(v) for v in s1.lattice], "state": [float(v) for v in x1]})
+        st = out[-1]
+        say(f"  stored sheet at {start[0]:+.2f}, {start[1]:+.2f} monomer: ends {st['shear_monomers'][0]:+.2f}, {st['shear_monomers'][1]:+.2f}; "
+            f"{st['formation']:+.3f} kcal/mol per kink pair{'' if st['kink_kept'] else ', KINK NOT KEPT'} ({time.time() - t0:.0f} s)")
+    return out
+
+
+def stored_sheets(rec) -> list:
+    """The distinct sheets of a site's record that kept the kink (one per cell, cells told apart to half a monomer of shear), lowest first."""
+    seen, out = set(), []
+    for s in sorted(held_starts(rec), key=lambda s: s["formation"]):
+        cell = tuple(round(2.0 * v) for v in s["shear_monomers"])
+        if cell not in seen:
+            seen.add(cell)
+            out.append(s["state"])
+    return out
+
+
 def relax_sheet(model, x, e_flat, c0, starts, maxiter, t0, say=print, upright=True):
     """The sheet at ``x`` (upright) relaxed from the kicked upright cell (unless ``upright`` is off) and from each start ``(ma, mb)`` in monomers."""
     out = []
@@ -143,6 +186,8 @@ def main():
     ap.add_argument("--dilute", type=Path, default=PRED / "dilute_kink_belt4.json", help="the store with the row's all-trans cell and the preset")
     ap.add_argument("--preset", default="", help="evaluate under this preset instead of the store's (each stored cell is first relaxed upright under it)")
     ap.add_argument("--starts", default="-1:-1,1:1,-1:1,1:-1", help="starting shears in monomers along a and b, 'ma:mb,...'; the upright cell is always tried")
+    ap.add_argument("--from-sheets", type=Path, default=None, help="with --sites and --preset: a result file of this script under the store's preset; each site is also relaxed "
+                                                                   "from every distinct sheet stored for it there (a preset that slides a rigid start back does not find them itself)")
     ap.add_argument("--maxiter", type=int, default=800)
     ap.add_argument("--redo", action="store_true")
     ap.add_argument("--no-upright", action="store_true", help="leave the kicked upright start out: more --starts for sites stored in another file (--merge puts one site's starts together)")
@@ -166,6 +211,7 @@ def main():
     own = preset == store["preset"]
     starts = [tuple(float(v) for v in item.split(":")) for item in args.starts.split(",") if item]
     out = json.loads(args.out.read_text()) if args.out.exists() else {"what": WHAT, "rows": {}}
+    theirs = gathered([args.from_sheets]) if args.from_sheets else None
     t0 = time.time()
     say = lambda text: print(text, flush=True)  # noqa: E731
     with parameters_of(preset).applied():
@@ -202,6 +248,8 @@ def main():
             say(f"{key} upright: {upright:+.3f} kcal/mol per kink pair" + ("" if own else f" (the store's preset: {stored:+.3f})"))
             rec = {"preset": preset, **more, "monomer_repeat_A": c0, "all_trans": {"upright": e_flat_upright, "shear_free": e_flat, "shear_monomers": flat_shear}, "upright": upright,
                    "starts": relax_sheet(model, x, e_flat, c0, starts, args.maxiter, t0, say, upright=not args.no_upright)}
+            if theirs is not None and f"{key.rsplit(' ', 1)[0]} {store['preset']}" in theirs:
+                rec["starts"] += relax_states(model, stored_sheets(theirs[f"{key.rsplit(' ', 1)[0]} {store['preset']}"]), e_flat, c0, args.maxiter, t0, say)
             held = held_starts(rec)
             rec["lowest"] = min(s["formation"] for s in held) if held else None
             out = json.loads(args.out.read_text()) if args.out.exists() else out   # another run may have added to the file meanwhile
