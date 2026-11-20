@@ -334,7 +334,7 @@
   }
  },
  "all_trans_controls": {
-  "what": "an all-trans cell relaxed in the potential from another start, minus the all-trans cell the sheets are read against, kcal/mol per chain (the unit of the sheets: one kink pair a chain)",
+  "what": "an all-trans cell relaxed in the potential from another start, minus the all-trans cell the sheets are read against, kcal/mol per chain (the unit of the sheets: one kink pair a chain); legs_before: the cells it passed through on the way, in order",
   "vdf9-trfe3-an1-rvdf1-14": {
    "frame": "tt_leader_tilted_like_at18m_r3",
    "against": "tt_leader_from_rows14an_r1",
@@ -369,6 +369,73 @@
     "this": "all_s1 with D3 to 0.004 eV/A (39 steps)",
     "against": "all_s1 with D3 to 0.004 eV/A (251 steps)"
    }
+  },
+  "vdf9-trfe3-an1-rvdf1-14 from the sheet's shear": {
+   "frame": "tt_leader_sheared_like_at18m_r4",
+   "against": "tt_leader_from_rows14an_r1",
+   "potential": 0.023418471627825514,
+   "is_all_trans": true,
+   "cell_A_deg": [
+    5.728818314315801,
+    8.509539655462918,
+    35.55910930110884,
+    94.90808358515615,
+    96.8178206491729,
+    88.50970281790487
+   ],
+   "against_cell_A_deg": [
+    5.670543510998331,
+    8.460607283617158,
+    35.683754504348855,
+    93.0820880245774,
+    92.00003388587082,
+    89.87461060596405
+   ],
+   "shear_along_chains_monomers": [
+    -0.26565784518462277,
+    -0.28439643344628307
+   ],
+   "against_shear_along_chains_monomers": [
+    -0.07730565085679882,
+    -0.17769471375435322
+   ],
+   "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 TTTT, cell sheared, pendants as built; the chain axis turned to the shear along the chains of sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r9 (-0.49, -1.07 monomers)",
+   "relaxed": {
+    "this": "all_s1 with D3 to 0.004 eV/A (242 steps)",
+    "against": "all_s1 with D3 to 0.004 eV/A (251 steps)"
+   },
+   "legs_before": [
+    {
+     "frame": "tt_leader_sheared_like_at18m_r1",
+     "potential": 1.514917540810671,
+     "is_all_trans": true,
+     "shear_along_chains_monomers": [
+      -0.53144960212246,
+      -1.0437626479826638
+     ],
+     "relaxed": "all_s1 with D3 to 0.004 eV/A (500 steps, NOT converged)"
+    },
+    {
+     "frame": "tt_leader_sheared_like_at18m_r2",
+     "potential": 1.092674613204963,
+     "is_all_trans": true,
+     "shear_along_chains_monomers": [
+      -0.55118503089429,
+      -0.7232415041857014
+     ],
+     "relaxed": "all_s1 with D3 to 0.004 eV/A (500 steps, NOT converged)"
+    },
+    {
+     "frame": "tt_leader_sheared_like_at18m_r3",
+     "potential": 0.29025725245165407,
+     "is_all_trans": true,
+     "shear_along_chains_monomers": [
+      -0.2642417912360668,
+      -0.3040702421963334
+     ],
+     "relaxed": "all_s1 with D3 to 0.004 eV/A (500 steps, NOT converged)"
+    }
+   ]
   }
  }
 }

@@ -1517,7 +1517,7 @@ minus two margins plus what its faces cost), and the upright one's did not. The 
 sites of the four cells of 3.14 with the shear free, in belt4, already reorder them: the
 leader's three sheets do not incline (1.36 to 1.99, as upright), the matrix's lowest goes from
 4.66 to 1.14, and the film's-composition cell from 3.95 to -0.13 at one site (the scan of all
-112 is running). The strain and the
+112 is in 3.20). The strain and the
 blocked force do not use the sheets. The rate model itself assumes sheets that are rare, with
 an energy of several kT; a sheet near or below zero is not an excitation of the polar crystal
 but the start of the other phase, and the model has to be looked at again with the right
@@ -1690,12 +1690,17 @@ third lattice vector instead of the second.
   830 steps). The sheet at belt4's cheapest site (+0.05) sits at the shear belt4 gave it, none
   along a and 1.7 along b: another registry, which belt4's four starts a site did not offer
   here.
-- **The reference, so far.** The leader's all-trans cell started tilted (0.2 and 0.5 monomers,
-  less than half the sheet's final shear) converges at 0.004 eV/A still tilted and all-trans,
-  0.04 kcal/mol per chain below the upright cell: a small tilt costs it nothing and gains it
-  nothing. The stricter control, the all-trans cell started at the sheet's own final shear
-  (`examples/cell_tilt.py like`), is running; until it is in, "the fall is the sheet's own"
-  rests on this and on belt4, where every shear of the leader's all-trans cell costs energy.
+- **The reference.** Two controls on the leader's all-trans cell. Started tilted by less than
+  half the sheet's final shear (0.2 and 0.5 monomers), it converges at 0.004 eV/A still tilted
+  and all-trans, 0.04 kcal/mol per chain below the upright cell. Started at the sheet's own
+  final shear (0.5 and 1.1 monomers; `examples/cell_tilt.py like`), it stays all-trans and
+  comes back. After 500 steps it is still at that shear (forces down to 0.01 eV/A) and **1.52
+  above the upright cell**; it reads 1.09 and 0.29 after the next two legs and converges in the
+  fourth (1,742 steps in all) at 0.3 and 0.3 monomers, 0.02 above the upright cell. So the
+  all-trans cell has no lower cell where the sheet went: there it is 1.5 higher, 2.9 above the
+  sheet, and the fall is the sheet's own. Its three rest positions (upright and the two
+  controls, shears of 0.1 to 0.3 monomers) lie within 0.06 of one another: flat to a small
+  tilt, and no deeper than that.
 - **What it changes.** In the potential the leader, like the film cell, has a kinked state
   below both its all-trans cell (by 1.37) and its helix (0.98 above all-trans). The film
   cell's sheet is 2.2 below the leader's, not 3.65. "The leader about three behind the film
@@ -1711,8 +1716,8 @@ third lattice vector instead of the second.
   readings of a site at -3.6 against one at -1.4 are 42 to 1 and 1.1 to 1.
 
 `docs/predictions/sheets14_potential_sheared.json` (the three pairs `...@18m...`, each with its
-shear along the chains, and `all_trans_controls`), the cells in
-`mlip/sheets14_sheared_in_all_s1.extxyz`.
+shear along the chains, and `all_trans_controls`, the second with the legs it passed through),
+the cells in `mlip/sheets14_sheared_in_all_s1.extxyz`.
 
 **A loose stop costs the potential's fourteen-monomer cells as much as their margins.** The
 leader's all-trans cell moved 0.04 kcal/mol per monomer between 0.02 and 0.004 eV/A; the same

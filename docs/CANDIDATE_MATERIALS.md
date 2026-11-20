@@ -89,7 +89,8 @@ lower phase, and a kink pair is one turn of that helix.
   slides for two thousand steps as the chain axis tilts. It and two starts pushed past the
   slide's end come to rest on one structure (0.004 eV/A, kink kept) 1.34 to 1.37 kcal/mol per
   kink pair below all-trans. The leader's all-trans cell given a small tilt rests 0.04 from
-  the upright one; the same cell at the sheet's full shear is being run. So in the potential
+  the upright one; started at the sheet's full shear it is 1.5 above the upright one there and
+  comes back to rest 0.02 from it, so the fall is the sheet's own. So in the potential
   the leader too has a kinked state below its all-trans cell and its helix, the film cell's
   sheet is 2.2 below the leader's rather than 3.65, and "three behind" belongs to belt4's
   choice of sites. **The leader's row of the table above (4 to 30 kHz, with the matrix) is

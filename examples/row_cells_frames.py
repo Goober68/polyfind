@@ -277,17 +277,23 @@ def sheets_potential(args):
     # passed through on the way, in order: where the cell was and what it cost there, when the start is not where it rests
     for key, flat, other, *legs in [(item.split("=")[0], *item.split("=")[1].split(",")) for item in args.controls]:
         a, b = read(flat), read(other)
-        torsions = [[float(v) for v in CS.backbone_torsions(CS.lone_chain(b, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(b)]
-        chains = len(torsions)
+
+        def chain_torsions(cell):
+            return [[float(v) for v in CS.backbone_torsions(CS.lone_chain(cell, idx, P, T))["dihedrals"]] for idx, P, T in CS.chains_of(cell)]
+
+        def is_all_trans(cell):
+            return bool(all(abs(t) > 150.0 for ch in chain_torsions(cell) for t in ch))
+
+        chains = len(chain_torsions(b))
         rec = {"frame": str(b.info["frame"]), "against": str(a.info["frame"]),
                "potential": (float(b.info["potential_eV_per_monomer"]) - float(a.info["potential_eV_per_monomer"])) * int(b.info["n_monomers"]) * KCAL / chains,
-               "is_all_trans": bool(all(abs(t) > 150.0 for ch in torsions for t in ch)), "cell_A_deg": [float(v) for v in b.cell.cellpar()],
+               "is_all_trans": is_all_trans(b), "cell_A_deg": [float(v) for v in b.cell.cellpar()],
                "against_cell_A_deg": [float(v) for v in a.cell.cellpar()], "shear_along_chains_monomers": shear_along_chains(b),
                "against_shear_along_chains_monomers": shear_along_chains(a), "source": str(b.info.get("source", "")),
                "relaxed": {"this": str(b.info.get("note", "")).split(", relaxed in ")[-1], "against": str(a.info.get("note", "")).split(", relaxed in ")[-1]}}
         if legs:
             rec["legs_before"] = [{"frame": str(c.info["frame"]), "potential": (float(c.info["potential_eV_per_monomer"]) - float(a.info["potential_eV_per_monomer"]))
-                                   * int(c.info["n_monomers"]) * KCAL / chains, "shear_along_chains_monomers": shear_along_chains(c),
+                                   * int(c.info["n_monomers"]) * KCAL / chains, "is_all_trans": is_all_trans(c), "shear_along_chains_monomers": shear_along_chains(c),
                                    "relaxed": str(c.info.get("note", "")).split(", relaxed in ")[-1]} for c in map(read, legs)]
         out.setdefault("all_trans_controls", {"what": "an all-trans cell relaxed in the potential from another start, minus the all-trans cell the sheets "
                                                       "are read against, kcal/mol per chain (the unit of the sheets: one kink pair a chain); legs_before: "

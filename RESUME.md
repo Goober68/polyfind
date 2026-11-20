@@ -646,7 +646,7 @@ right": true at one registry, not along it).
         pair given again).
         THE LEADER HAS A SHEET 1.37 BELOW ALL-TRANS IN THE POTENTIAL (18:28 UTC 2026-11-20; docs 3.20; pairs
         `vdf9-trfe3-an1-rvdf1-14@18m`, `...@18m from 4 times its slide`, `...@18m from 8 times its slide` and
-        `all_trans_controls` in `docs/predictions/sheets14_potential_sheared.json`; sixteen cells in `mlip/
+        `all_trans_controls` in `docs/predictions/sheets14_potential_sheared.json`; eighteen cells in `mlip/
         sheets14_sheared_in_all_s1.extxyz`; test
         `test_in_the_potential_the_leader_has_a_sheet_below_all_trans_at_a_site_belt4_ranks_low`). Its `@0~`
         site 18 (belt4 +1.99, upright) from belt4's upright sheet (`/opt/dft/sheets14s/
@@ -660,22 +660,24 @@ right": true at one registry, not along it).
         is 2.23 below the leader's (not 3.65), the leader's lowest state found is kinked (helix +0.98), and
         belt4's four-axis row for the leader (4 to 30 kHz, with the matrix) is NOT SUPPORTED; no row replaces
         it.
-        THE REFERENCE: a first control (`tt_leader_tilted_like_at18m_r3`, the leader's all-trans cell started
-        at shear -0.23 -0.47, less than half the sheet's final shear; the upright cell itself reads -0.08
-        -0.18) converged still tilted (-0.2 -0.3) at -0.035 per chain. RUNNING since 18:35 UTC, job
-        `b7e2lv9dl` (up to three legs of 500 steps on four cores): THE STRICT CONTROL, the all-trans cell at
-        the sheet's final shear (`examples/cell_tilt.py like --flat .../tt_leader_from_rows14an_r1.start.xyz
-        --like .../sheet_..._at18m_sheared_r9.start.xyz --frame tt_leader_sheared_like_at18m`; its start has
-        C-C bonds squeezed to 1.25 A, so check the relaxed cell is all-trans and sane). When it is in: add it
-        to `--controls` (key e.g. `vdf9-trfe3-an1-rvdf1-14 at the sheet's shear`), the cell to the extxyz, the
-        test and the docs' "The reference, so far" bullet. If it rests BELOW the upright cell by more than a
-        few tenths, the leader's sheets are to be read against it and -1.37 shrinks by that much.
+        THE REFERENCE IS SETTLED (20:24 UTC 2026-11-20). Two controls on the leader's all-trans cell, both in
+        `all_trans_controls`: (1) `tt_leader_tilted_like_at18m_r3`, started at shear -0.23 -0.47 (less than
+        half the sheet's final shear; the upright cell itself reads -0.08 -0.18), converged still tilted
+        (-0.2 -0.3) at -0.035 per chain; (2) THE STRICT ONE, key `vdf9-trfe3-an1-rvdf1-14 from the sheet's
+        shear`, `tt_leader_sheared_like_at18m` (`examples/cell_tilt.py like --flat
+        .../tt_leader_from_rows14an_r1.start.xyz --like .../sheet_..._at18m_sheared_r9.start.xyz`), started
+        at the sheet's final shear -0.49 -1.07: all-trans throughout, +1.515 after 500 steps still at shear
+        -0.53 -1.04 (`_r1`), +1.093 at -0.55 -0.72 (`_r2`), +0.290 at -0.26 -0.30 (`_r3`), CONVERGED in leg 4
+        (`_r4`, 1,742 steps in all) at -0.27 -0.28, +0.023 per chain. SO the all-trans cell has no lower
+        cell where the sheet went (there it is 1.5 above upright, 2.9 above the sheet) and -1.37 STANDS as
+        read against the upright cell. `--controls KEY=FLAT,FINAL,LEG1,LEG2,...` stores the legs passed
+        through (`legs_before`).
         Legs are run by a loop that takes each name's latest stored `_rN` as the start (`timeout 2600 python
         -I examples/mlip_train.py relax --model docs/predictions/mlip/models/all_s1.model --name all_s1
         --cells LAST.start.xyz --frame NAME_rN --out /opt/dft/sheets14s --threads 4 --fmax 0.004 --steps 500
         >> relax_NAME.log`); 250 steps take 18 minutes on four cores and the relaxer writes only at the end.
         DO NOT RUN TWO AT ONCE HERE: side by side on two cores each, neither finished 250 steps in 38 minutes
-        and both wrote nothing. The stored file is written whole: give all seven pairs and the controls again
+        and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
         THEN: at scale it is A POD'S JOB (108 sheets, 16 more helix cells, tight), with DFT on the film

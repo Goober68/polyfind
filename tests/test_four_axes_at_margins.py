@@ -217,6 +217,15 @@ def test_in_the_potential_the_leader_has_a_sheet_below_all_trans_at_a_site_belt4
     # the reference does not follow a small tilt: the leader's all-trans cell started tilted rests, still all-trans and still tilted, within 0.05 of the upright one
     assert control["is_all_trans"] and abs(control["potential"]) < 0.05 and "NOT" not in control["relaxed"]["this"]
     assert control["against"] == second["all_trans_frame"] and control["cell_A_deg"][3] > control["against_cell_A_deg"][3] + 1.5
+    # nor has it a lower cell where the sheet went: started at the sheet's own shear it stays all-trans, is 1.5 above the upright cell while
+    # still there, and walks back to rest within 0.05 of the upright one
+    strict = stored["all_trans_controls"][f"{LEADER} from the sheet's shear"]
+    legs = strict["legs_before"]
+    assert legs[0]["shear_along_chains_monomers"] == pytest.approx(second["shear_along_chains_monomers"], abs=0.05)
+    assert [leg["potential"] for leg in legs] == pytest.approx([1.52, 1.09, 0.29], abs=0.006) and all(leg["is_all_trans"] for leg in legs)
+    assert strict["is_all_trans"] and abs(strict["potential"]) < 0.05 and "NOT" not in strict["relaxed"]["this"] and "0.004 eV/A" in strict["relaxed"]["this"]
+    assert strict["against"] == second["all_trans_frame"] and max(abs(v) for v in strict["shear_along_chains_monomers"]) < 0.35
+    assert legs[0]["potential"] - second["potential"] == pytest.approx(2.88, abs=0.01)
     # so the leader too has a kinked state below its all-trans cell and its helix, and the film cell's sheet is 2.2 below it, not 3.65
     tight = json.loads((PRED / "rows14_potential_tight.json").read_text())["rows"]
     assert second["potential"] < 0.0 < -14 * tight[LEADER]["margin"]
