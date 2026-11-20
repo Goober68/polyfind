@@ -548,9 +548,15 @@ right": true at one registry, not along it).
         upright sheets. Consistent with PVDF's margin: its helix is 0.73 kcal/mol per monomer below all-trans
         and a kink pair is one turn of that helix, two monomers. RUNNING (02:52 UTC, one core): the same for
         the leader's and the matrix's stored sites, `--key "vdf9-trfe3-an1-rvdf1-14@0~" --sites 18,8` and so
-        on into `docs/predictions/kink_sheet_shear_belt4.json` (log `/opt/dft/kink10/kink_sheet_shear_rows.log`);
+        on into `/opt/dft/kink10/shear_rows_belt4.json` (to be copied to
+        `docs/predictions/kink_sheet_shear_belt4.json` when done; log `/opt/dft/kink10/kink_sheet_shear_rows.log`);
         the CFE and nitrile cells' sites when DFT frees the cores. THE 112-SITE SCAN WITH THE SHEAR FREE IS A
         JOB FOR THIS MACHINE IN POLYFIND (a minute or two a start), not for a pod.
+        WRITTEN UP (02:55 UTC): docs 3.19 (draft: DFT's inclined number is from the cut run's SCF, the stored
+        frame is to come), notices in 3.17 and 3.18. STILL TO DO when the two jobs return: `kink-collect`
+        with a second pair `vdf10_inclined=/opt/dft/kink10/sheet_vdf10_belt4_TT_in_all_s1.dft.xyz,/opt/dft/kink10/tight/sheet_vdf10_belt4_ref_tight2.dft.xyz`,
+        the test, the head of `docs/CANDIDATE_MATERIALS.md` (its frequency and loss columns are upright
+        sheets'), the opening paragraph of the second-opinion document, the CFE and nitrile cells' sites.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

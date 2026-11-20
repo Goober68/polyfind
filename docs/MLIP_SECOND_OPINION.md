@@ -1371,11 +1371,25 @@ cells.
   exponent) or differently. The four fourteen-monomer sheets are being relaxed in the potential
   for that.
 
+- **Added 2026-11-20.** These are single points on the potential's geometry. A step toward
+  DFT's own minimum (the potential tilted to DFT's forces, lattice held) expects DFT to move by
+  0.04 to 0.05, so the numbers stand. What they are numbers of is an upright kink at a held
+  lattice: 3.19 finds that a kink sheet free to shape its cell is a different structure with
+  a different energy.
+
 Files: `docs/predictions/kink_dft_vdf4-trfe2-6.json`,
 `mlip/kink_vdf4-trfe2-6_frames_pbe_d3bj.extxyz` (4 frames). Test:
 `tests/test_row_cells_dft.py`.
 
 ### 3.18 The kink sheets of four fourteen-monomer cells in the potential (2026-11-19)
+
+**Withdrawn as a ranking, 2026-11-20 (3.19).** These eleven relaxations stopped at 0.02 eV/A,
+where a cell does not answer a stress under 0.35 GPa. Ten of them stopped within 1.2 A of an
+upright cell, which is not a minimum; the eleventh, the leader's 0.65, is the one whose cell
+had sheared 3 to 4 A along the chains on the way to the inclined sheet of 3.19. So the 0.65
+is not a property of the leader, the order of "lowest sheets" compares cells stopped at
+different points of one slope, and the frequencies made from it are not results. The numbers
+are left below as what was found.
 
 The kink sheet is the structure the rates are made of: a kink pair on every chain, in register,
 in a cell of its own, at one site of the sequence. Eleven sheets, two or three sites of each of
@@ -1431,3 +1445,78 @@ so a value is an upper bound on that site's sheet.
 
 Files: `docs/predictions/sheets14_potential.json`, `sheets14_potential_more_sites.json`,
 `sheets14_potential_third_batch.json`, `four_axes_potential_margins_sheets.json`. Tests: `tests/test_four_axes_at_margins.py`.
+
+### 3.19 A kink sheet in its own cell against DFT: the tables' upright sheet is not a minimum, and the inclined one is below all-trans (2026-11-20)
+
+The first DFT on a kink sheet as the rate model means it: PVDF, ten monomers, two chains each
+with one kink pair (120 atoms), the kinked crystal of belt4's packing search
+(`kink_migration_belt4.json`, `vdf10@0`; `examples/row_cells_frames.py kink --sheet-of`) and
+the all-trans cell, each relaxed in the potential with its cell free and given to DFT.
+
+**The upright sheet.** Belt4's sheet is upright: the kinks of all the chains are at one height
+and the cell has no shear along the chains.
+
+| kcal/mol per kink pair | DFT | `all_s1` | DFT leaves on the kinked cell |
+|---|---:|---:|---|
+| the cell the potential stops at from belt4's (stop 0.02 eV/A, as every cell of 3.14 and 3.18) | 4.82 | 4.68 | 0.16 eV/A, 0.19 GPa |
+| one step on, in the potential tilted to DFT's forces and stress there (0.57 A, 0.8 degrees of shear) | 4.14 (4.03 expected) | 4.43 | 0.06 eV/A, 0.18 GPa |
+
+Belt4 has it at 5.30 in its own cell (5.06 with the pendants tilted). DFT is not at rest on
+either cell, and the stress along the chains is as large after the step as before it: the
+energy is on a slope, about a quarter of a kcal/mol per kink pair for each degree of shear.
+The potential is on the same slope (0.29 GPa of its own stress on the cell it stopped at), and
+its 4.68 is not its minimum: it is 0.25 lower on the stepped cell. The stop is what hid this.
+The cell's share of a 0.02 eV/A stop is the stress times the volume over the number of atoms,
+so no stress under 0.35 GPa moves a cell, whatever its size. That is worth a few hundredths of
+a kcal/mol per monomer, which a margin survives; a kink pair's energy multiplies it by the ten
+to fourteen monomers of the chain.
+
+**The inclined sheet.** Relaxed to 0.003 eV/A the potential's cell goes on shearing and stops
+(900 steps) at a = a0 - c0 and b = b0 - c0 of the all-trans lattice, c0 one monomer along the
+chain: each chain's kink is one monomer along from the kink of its neighbour, in a and in b.
+The kink is sharper (60, 172, -58 degrees, where the upright one has 81, 178, -68), the rest
+of the chain is exactly trans, and the cell is denser (53.3 A3 a monomer; the upright sheet
+55.1, all-trans 52.3). Polyfind's cell has this freedom (`MixedModel(shear=True)`, which
+`examples/shear_polish.py` uses for the margins' cells) and its kink tools do not use it;
+`examples/kink_sheet_shear.py` relaxes a stored sheet with it, from the upright cell and from
+starts a monomer along a and b.
+
+| kcal/mol per kink pair, against all-trans | DFT | `all_s1` | belt4 | chain1 |
+|---|---:|---:|---:|---:|
+| the upright sheet | 4.82 falling (above) | 4.68 falling | 5.30 (5.28 after a kick: a local minimum) | 5.29 |
+| the inclined sheet | **-1.96** | -1.63 | -1.17 | -0.78 |
+
+- **All four have the inclined sheet below the all-trans crystal.** DFT's number is a single
+  point on the potential's cell (the energy of an SCF converged to 6e-8 Ry; that run was cut
+  before its forces and is being repeated for the stored frame, so the file below does not
+  hold it yet). The all-trans cell is at its own minimum upright: slid by the
+  same monomer it is the same crystal at the same energy, and no other slide is lower (eight
+  starts in the primitive cell, in the potential; polyfind's shear relaxation agrees).
+- **It is what PVDF's margin says it should be.** PVDF's helix is 0.73 kcal/mol per monomer
+  below all-trans (the anchor), and a kink pair T G+ T G- is one turn of that helix, two
+  monomers. Two in ten at the helix's energy is -1.45; the four numbers are -0.8 to -2.0. An
+  inclined kink sheet is a slab of the other phase one turn thick, and its faces cost little.
+- **In belt4 the upright sheet is a local minimum** (a kick of 0.05 A returns to 5.28), which
+  is why its scans never left it. In DFT and in the potential it is not one.
+- **Other staggers are dearer in belt4**: of nine starts a monomer or two along a and b,
+  two end in this inclined sheet, one returns to the upright one and six end in other sheets
+  at +0.4 to +4.4.
+
+**What this does to the tables.** Every kink cell of `examples/dilute_kink.py`,
+`kink_migration.py` and `kink_site_scan.py` is upright, so every kink-sheet energy in
+`docs/CANDIDATE_MATERIALS.md`, and the frequency and the loss made from them, is the energy of
+a structure 6 to 7 kcal/mol above the sheet's own minimum in PVDF. Whether the differences
+between candidates survive is not known: an inclined sheet's energy follows the margin (about
+minus two margins plus what its faces cost), and the upright one's did not. The strain and the
+blocked force do not use the sheets. The rate model itself assumes sheets that are rare, with
+an energy of several kT; a sheet near or below zero is not an excitation of the polar crystal
+but the start of the other phase, and the model has to be looked at again with the right
+energies in hand.
+
+**What 3.18 was.** Its eleven sheets were stopped at 0.02 eV/A: ten near upright, and the
+leader's 0.65 part way down this slope (the only cell whose third vector had tilted, 3 to 4 A).
+Its ranking is withdrawn there.
+
+Files: `docs/predictions/kink_dft_vdf10.json`, `mlip/kink_vdf10_frames_pbe_d3bj.extxyz`
+(the upright sheet and the step; the inclined sheet and polyfind's runs are being stored).
+Tests: `tests/test_row_cells_dft.py`, `tests/test_four_axes_at_margins.py`.
