@@ -651,8 +651,8 @@ right": true at one registry, not along it).
         a and b: -0.12 -0.10, -0.20 -0.20, -0.32 -0.28, -0.37 -0.31, -0.47 -0.39 of a and b), which is a shear
         along the chains of -0.4 and -0.7 monomers so far. SO +0.05 IS NOT THE LEADER'S FLOOR IN THE
         POTENTIAL, and the 3.65 gap to the film cell is an upper bound until this stops.
-        RUNNING since 14:10 UTC, two threads each, legs of 250 steps: (a) job `bpvxr8b3a`, the same sheet's
-        legs `_r6` to `_r8`; (b) job `byb3loyif`, THE CONTROL: the leader's all-trans cell given the same tilt
+        RUNNING since 14:10 UTC (restarted after a container restart three minutes in), two threads each, legs of 250 steps: (a) job `bswj919ja`, the same sheet's
+        legs `_r6` to `_r8`; (b) job `b43e5quir`, THE CONTROL: the leader's all-trans cell given the same tilt
         of the chain axis (`/opt/dft/sheets14s/tt_leader_tilted_like_at18m`, legs `_r1` to `_r3`; built by the
         scratch script `tt_tilted_like.py FLAT LIKE OUT FRAME`: c gets the other cell's tilt in units of a and
         b, fractional coordinates kept). If the all-trans cell stays tilted and ends below -1959.77218 eV per
