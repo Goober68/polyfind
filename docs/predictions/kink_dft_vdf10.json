@@ -1,5 +1,5 @@
 {
- "what": "a kink pair's energy (T G+ T G- T on every chain of the cell, in register), kcal/mol per kink pair: the kinked cell minus the all-trans cell of the same lattice, per kinked chain. DFT is a single point on the cell the potential relaxed with the lattice held (the force left is stored); polyfind is the preset's own relaxation at its own all-trans lattice (examples/dilute_kink.py, stage flexible_host)",
+ "what": "a kink pair's energy (T G+ T G- T on every chain of the cell, in register), kcal/mol per kink pair: the kinked cell minus the all-trans cell, per kinked chain. own_cells false: the two share a lattice (a kink at a held lattice); true: each was relaxed with its cell free (a kink sheet in its own cell). DFT is a single point on each cell as the potential relaxed it (the force and the stress left are stored); polyfind is the preset's own value for the structure in source. steps: the kinked cell relaxed on in the potential tilted to DFT's forces and stress (examples/mlip_train.py relax --dft-gradient) and labelled again; dft_predicted is what that step expected of DFT",
  "recipe": "PBE-D3(BJ), 90/360 Ry, the anchor's (examples/mlip_frames.py label)",
  "lattices": {
   "vdf10": {
@@ -37,7 +37,51 @@
     ]
    ],
    "source": "polyfind pvdf-dft-valence-belt4, vdf10@0, the kinked crystal, pendants as built",
-   "polyfind": 5.297951944114729
+   "own_cells": true,
+   "kinked_cell_A_deg": [
+    4.987870120525576,
+    8.772875935492504,
+    25.183127045326792,
+    90.4366530945042,
+    91.05401619839745,
+    89.29096176028634
+   ],
+   "largest_stress_left_GPa": {
+    "all_trans": 0.08355567670327198,
+    "kinked": 0.19035395361625693
+   },
+   "polyfind": 5.297951944114729,
+   "steps": [
+    {
+     "frame": "sheet_vdf10_belt4_ref_in_all_s1_in_all_s1",
+     "from": "sheet_vdf10_belt4_ref_in_all_s1",
+     "cell_A_deg": [
+      5.020814455215975,
+      8.774973380687188,
+      25.150561786775878,
+      90.74430068000106,
+      91.81915233269014,
+      89.15035488687603
+     ],
+     "dft": 4.143459632290824,
+     "dft_predicted": 4.026872192731975,
+     "largest_force_left_eV_per_A": 0.05511802,
+     "largest_stress_left_GPa": 0.18211606999762447,
+     "largest_move_from_the_first_cell_A": 0.5654498720828492,
+     "kink_dihedrals_deg": [
+      [
+       79.89944101083073,
+       -178.72728888253846,
+       -68.75901615354198
+      ],
+      [
+       79.90066766430796,
+       -178.72828161864354,
+       -68.7603242928907
+      ]
+     ]
+    }
+   ]
   }
  },
  "polyfind_only": {

@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -436,6 +437,32 @@ def test_a_kinks_energy_against_dft_at_two_lattices():
     assert stored["polyfind_only"]["chain1_at_its_own_lattice"] / rest["dft"] == pytest.approx(0.88, abs=0.01)
     assert 0.59 < dense["potential"] - dense["dft"] < 0.68 and 0.59 < rest["potential"] - rest["dft"] < 0.68
     assert abs(dense["potential_minus_dft_meV_per_monomer"]["all_trans"]) < 0.5 and 4.0 < dense["potential_minus_dft_meV_per_monomer"]["kinked"] < 5.0
+
+
+def test_a_real_kink_sheet_against_dft_needs_dfts_own_geometry():
+    """PVDF, ten monomers, the kink sheet in its own cell: DFT on the potential's cells, and on the kinked cell one step nearer DFT's minimum."""
+    stored = json.loads((PRED / "kink_dft_vdf10.json").read_text())
+    v = stored["lattices"]["vdf10"]
+    assert v["atoms"] == 120 and v["kinked_chains"] == 2 and v["own_cells"]
+    # the sheet's cell is 6% larger than the all-trans one and tilted along the chains
+    kinked = np.array(v["kinked_cell_A_deg"])
+    assert np.prod(kinked[:3]) / np.prod(v["cell_A_deg"][:3]) == pytest.approx(1.059, abs=0.003) and kinked[4] == pytest.approx(91.05, abs=0.02)
+    # single points on the cells the potential relaxed: DFT and the potential within 0.14, belt4 0.48 above
+    assert (v["dft"], v["potential"], v["polyfind"]) == pytest.approx((4.820, 4.685, 5.298), abs=0.002)
+    # but DFT is not at rest on the kinked cell
+    assert v["largest_force_left_eV_per_A"] == pytest.approx(0.164, abs=0.002) and v["largest_stress_left_GPa"]["kinked"] == pytest.approx(0.19, abs=0.005)
+    assert v["largest_stress_left_GPa"]["all_trans"] < 0.09
+    # one step in the potential tilted to DFT's forces: DFT confirms 0.68 of the 0.79 it expected, and the kink is still a kink
+    (step,) = v["steps"]
+    assert (step["dft"], step["dft_predicted"]) == pytest.approx((4.143, 4.027), abs=0.002)
+    assert step["largest_force_left_eV_per_A"] < 0.07 and 0.5 < step["largest_move_from_the_first_cell_A"] < 0.6
+    g1, t, g2 = step["kink_dihedrals_deg"][0]
+    assert 75 < g1 < 85 and -75 < g2 < -63 and abs(t) > 175
+    # against DFT nearer its own minimum: the potential 0.54 high (0.60 to 0.67 on the squeezed kink), belt4 1.16 (0.92 with its tilts)
+    assert v["potential"] - step["dft"] == pytest.approx(0.54, abs=0.01)
+    assert v["polyfind"] - step["dft"] == pytest.approx(1.16, abs=0.01) and stored["polyfind_only"]["belt4_with_tilts"] - step["dft"] == pytest.approx(0.92, abs=0.01)
+    frames = (PRED / "mlip" / "kink_vdf10_frames_pbe_d3bj.extxyz").read_text().splitlines()
+    assert sum(line == "120" for line in frames) == 3
 
 
 def test_the_vf_cell_is_missed_by_both_presets_and_met_by_the_potential():

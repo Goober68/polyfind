@@ -493,9 +493,24 @@ right": true at one registry, not along it).
         --steps vdf10=/opt/dft/kink10/tilted/sheet_vdf10_belt4_ref_in_all_s1_in_all_s1.dft.xyz --also
         belt4_with_tilts=5.063 --out docs/predictions/kink_dft_vdf10.json --extxyz
         docs/predictions/mlip/kink_vdf10_frames_pbe_d3bj.extxyz` (`--steps` is new: the kinked cell after each
-        Newton step, labelled), docs 3.19, a test. If DFT still leaves a force on the stepped cell, step and
-        label once more. The same step on the six-monomer kink of 3.17 (lattice held) expects DFT to drop by
-        only 0.04 to 0.05: those numbers stand as they are.
+        Newton step, labelled), docs 3.19, a test. The same step on the six-monomer kink of 3.17 (lattice
+        held) expects DFT to drop by only 0.04 to 0.05: those numbers stand as they are.
+        THE STEPPED CELL'S DFT IS IN (00:34 UTC): +4.143 (expected +4.027), 0.06 eV/A and 0.18 GPa left, the
+        kink kept (80, -179, -69). Collected with `--steps` into `docs/predictions/kink_dft_vdf10.json`; test
+        `test_a_real_kink_sheet_against_dft_needs_dfts_own_geometry`. THE CAUSE IS THE STOP, NOT ONLY THE
+        POTENTIAL (01:10 UTC): at `--fmax 0.02` a cell of 120 atoms does not answer a stress under 0.35 GPa
+        (the cell's share of the stop is the stress times the volume over the atom count), and the potential's
+        own stress on its "relaxed" kinked cell is 0.29 GPa (0.07 on the all-trans one). On DFT's stepped
+        cell the plain potential has the sheet at +4.431, BELOW its own +4.685: the cell it stopped at was not
+        its minimum. Same geometry, like for like: the potential 0.14 low on its loose cell, 0.29 high on the
+        stepped one. EVERY FOURTEEN-MONOMER SHEET AND ROW OF 3.14 AND 3.18 WAS STOPPED AT 0.02 TOO: upper
+        bounds by an amount not yet sized. A second tilted step at `--fmax 0.003` runs away along a soft
+        direction (a +8.4%): discarded (`/opt/dft/kink10/tilted2`). RUNNING (01:11 UTC, about 20 minutes a
+        cell): the plain potential to `--fmax 0.003 --steps 420` on both cells, `--out /opt/dft/kink10/tight
+        --frame sheet_vdf10_belt4_{ref,TT}_tight` (the kinked one from the stepped cell,
+        `tilted/sheet_vdf10_belt4_ref_in_all_s1_in_all_s1.start.xyz`). THEN DFT on the tight kinked cell (35
+        minutes; and on the all-trans one if it moved), `kink-collect` again, docs 3.19. THE CONTAINER WAS
+        RESTARTED AT 01:10 UTC: files kept, running jobs lost (only relaxations in the potential).
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE
