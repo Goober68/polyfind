@@ -644,11 +644,22 @@ right": true at one registry, not along it).
         `row_cells_frames.py potential --frames /opt/dft/rows14tight --rows ...` from cells copied there
         under the names `row_ROW_CONF_TAG_in_all_s1.start.xyz`; sheets by `sheets-potential --pairs` (every
         pair given again).
-        RUNNING (job `b02zl3muf`, since 12:44, four threads, legs of 250 steps): the leader's `@0~` site 18
-        from belt4's upright sheet (`sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared`, legs `_rN`): is any
-        sheet of the leader's lower than +0.05 there. After its first leg (300 steps, not converged) it is
-        at +2.16 with the kink kept and the cell starting to tilt; the earlier job was cut at its two-hour
-        limit during the second leg. If cut again, go on from its last `_rN` cell.
+        THE LEADER'S `@0~` SITE 18 IN THE POTENTIAL IS NOT AT REST AND IS ALREADY BELOW +0.05 (14:03 UTC):
+        from belt4's upright sheet (`sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared`, legs `_rN`), per
+        kink pair after legs 1 to 5 (1,300 steps, none converged, largest force 0.01 to 0.02 eV/A, kink
+        kept): +2.16, +1.01, +0.38, +0.07, -0.28. The cell is sliding: the chain axis tilts steadily (c along
+        a and b: -0.12 -0.10, -0.20 -0.20, -0.32 -0.28, -0.37 -0.31, -0.47 -0.39 of a and b), which is a shear
+        along the chains of -0.4 and -0.7 monomers so far. SO +0.05 IS NOT THE LEADER'S FLOOR IN THE
+        POTENTIAL, and the 3.65 gap to the film cell is an upper bound until this stops.
+        RUNNING since 14:10 UTC, two threads each, legs of 250 steps: (a) job `bpvxr8b3a`, the same sheet's
+        legs `_r6` to `_r8`; (b) job `byb3loyif`, THE CONTROL: the leader's all-trans cell given the same tilt
+        of the chain axis (`/opt/dft/sheets14s/tt_leader_tilted_like_at18m`, legs `_r1` to `_r3`; built by the
+        scratch script `tt_tilted_like.py FLAT LIKE OUT FRAME`: c gets the other cell's tilt in units of a and
+        b, fractional coordinates kept). If the all-trans cell stays tilted and ends below -1959.77218 eV per
+        monomer, every sheet of the leader's in the potential is against a reference that is not its lowest.
+        If either is cut, go on from its last `_rN` cell. Read a leg with `row_cells_frames.py
+        sheets-potential --pairs "KEY=/opt/dft/sheets14s/tt_leader_from_rows14an_r1.start.xyz,LEG.start.xyz"
+        --name all_s1 --all-trans docs/predictions/rows14_potential_tight.json --out SCRATCH.json`.
         THEN: at scale it is A POD'S JOB (108 sheets, 16 more helix cells, tight), with DFT on the film
         cell's all-trans, helix and kinked cells first (168 atoms), then the leader's.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
