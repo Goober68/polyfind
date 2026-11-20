@@ -680,6 +680,37 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
+        A POD IS RUNNING (PI 2026-11-20: "Go on the rented machine"). `pacbxm95k7f799`, name
+        `polyfind-dft14`, Runpod Secure Cloud CA-MTL-1, one NVIDIA A40 (9 vCPU, 50 GB), $0.59/h, CREATED
+        23:26:24 UTC 2026-11-20, confirmed by a read (`get-pod`: RUNNING). IT REMOVES ITSELF AT 9 HOURS
+        (`BENCH_LIMIT_S=32400`: 08:26 UTC 2026-11-21, at most $5.31), 40 minutes after a `stop` line, or 30
+        minutes idle plus 40. WHOEVER READS THIS AFTER 08:30 UTC: CONFIRM IT IS GONE (`python
+        scratchpad/runpod/mcp.py call list-pods '{}'`; if the scratchpad is lost, the client is 40 lines of
+        MCP over HTTP against `https://mcp.runpod.io/`, the proxy adds the key) AND DELETE IT IF NOT
+        (`delete-pod {"id": "pacbxm95k7f799"}`, then read again).
+        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261120_dft14.txt`, started at commit 23be22e; a job is
+        started by PUSHING A LINE, nothing is sent to the pod): (1) ON ITS PROCESSORS, `dft_cells.sh start 8 2
+        ...`: DFT single points, one after another, eight processes in two pools, on the tight cells of
+        `mlip/sheets14_sheared_in_all_s1.extxyz` in this order: film all-trans, film sheet (site 12), film
+        helix, leader all-trans, leader sheet at 18m (-1.37), leader helix, leader sheet at 10 (+0.05). The
+        line returns at once; `dft_cells.sh wait` as a later line holds the pod until the line of cells is
+        empty. NOT TIMED YET: 120 atoms took 33 minutes a cell on four cores here; expect an hour or more a
+        cell, so seven cells may not fit in nine hours: the order is the priority. (2) ON ITS CARD,
+        `card_check.sh` (the card must return the stored energies of the eighteen tight cells), then
+        `relax_card.sh FILE PATTERN` on `mlip/cells14_starts_for_all_s1.extxyz` (108 sheets of the belt4 scan
+        + 16 loose helix cells; frames whose name matches the pattern, to 0.004 eV/A or 3000 steps, stored
+        every 250 steps). FIRST LINE: the leader's two known sheets (`at(18m|10)`: must find -1.37 and +0.05).
+        THEN PUSH LINES: the rest of the leader's sheets, the film cell's, the helix cells (`row_.*`), the
+        nitrile cell's, the matrix's, and LAST `dft_cells.sh wait` and `stop`.
+        HOW TO READ IT: `scratchpad/runpod/pod_dft14.sh PATH` (token in `scratchpad/runpod/token_dft14.txt`,
+        NEVER shown or committed; every 32-hex string is scrubbed): `STATUS`, `jobs/NN_NAME/log.txt`,
+        `jobs/shared/dft/log.txt` (one line a labelled cell), `jobs/shared/dft/NAME.dft.xyz`, `.../work/NAME/
+        NAME.out` (a cell that is running), `jobs/NN_relax_card/relaxed/NAME_in_all_s1.start.xyz`. MIRROR
+        EVERYTHING BEFORE THE POD GOES: results exist nowhere else. If the token file is lost the results
+        cannot be read: delete the pod.
+        WHAT DOES NOT FIT THIS POD (said to the PI): the refit and the 35 rows. The processors are DFT's for
+        the pod's whole life and the refit needs the card for two and a half hours AFTER the new cells are
+        labelled; whether a refit is needed at all is what the DFT on these cells decides.
         THEN: at scale it is A POD'S JOB (108 sheets, 16 more helix cells, tight), with DFT on the film
         cell's all-trans, helix and kinked cells first (168 atoms), then the leader's.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
