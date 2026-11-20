@@ -1688,8 +1688,9 @@ is still a helix, the leader's with twelve of its fourteen gauche bonds):
 | the nitrile alone | -0.118 | **-0.109** |
 | the leader | -0.055 | **-0.070** |
 
-The matrix changes sign and the film cell gains 0.05: the helix cells were the ones not at
-rest (they fell 0.03 to 0.05, the all-trans cells 0 to 0.04). The film cell's row of the
+The matrix changes sign and the film cell gains 0.05. Every cell that had been stopped at 0.02
+fell 0.02 to 0.05 kcal/mol per monomer (the four helix cells and the two nitrile rows'
+all-trans cells); the two all-trans cells already at 0.005 did not move. The film cell's row of the
 four-axis table at +0.129 reads 364 kHz, tan delta 0.061, 0.071% and 6.2 pN/nm2
 (`four_axes_potential_tight_margins_shear.json`), on the measured film's calibrated channel
 (0.060, 0.066%, 6.5). The leader's and the nitrile cell's margins stay below zero and their
