@@ -591,19 +591,33 @@ right": true at one registry, not along it).
         sheared all-trans cell). chain1-cfe: film cell's all-trans at (0, +-2) +0.9 per cell, leader's (0, +2)
         +6.1, most other starts slide back upright. A PERIODIC CELL PUTS EVERY UNIT BESIDE ITS LIKE; a
         statistical copolymer cannot: what the leader's all-trans costs out of register is open.
-        RUNNING SINCE 06:04 UTC (background job `bdp3a2950`, ends inside two hours; same commands resume):
-        (1) `shear_polish.py --rows ROW --starts "0:-2,0:2,-1:-1,1:1,1:-1,-1:1,2:0,-2:0,0:-1,0:1,1:0,-1:0"
-        --out /opt/dft/kink10/registry_margins_ROW.json` for the film cell and the leader: do the HELIX cells
-        have a lower arrangement at another shear (the film cell's TG'TG does not: every start returns to
-        its known (-0.5, -0.24) minimum); (2) chain1-cfe: scratch `tt_registry.py ROW OUT STARTS
-        pvdf-dft-chain1-cfe` then `kink_sheet_shear.py --key "ROW@0" --sites all --preset
-        pvdf-dft-chain1-cfe --out /opt/dft/kink10/shear_scan_chain1cfe_ROW.json` for the same two cells.
-        (3) job `b8l894k0k`: the all-trans cells of the leader and the film cell at several shears relaxed in
-        the potential (`/opt/dft/registry14/tt_*.start.xyz`, `mlip_train.py relax --fmax 0.03 --steps 150
-        --threads 2`, log `relax.log`): does the DFT-trained potential also charge the leader 7 per cell.
-        THEN: the potential (tight, `--fmax 0.003`) on the cheapest sheets of the four cells from belt4's
-        sheared states (an hour each here; A POD'S JOB for all 108), and DFT on the leader's and the film
-        cell's (pod: 170 atoms).
+        THE MARGINS DO NOT MOVE (07:30 UTC): `shear_polish.py --rows ROW --starts "0:-2,0:2,-1:-1,1:1,1:-1,
+        -1:1,2:0,-2:0,0:-1,0:1,1:0,-1:0" --out /opt/dft/kink10/registry_margins_ROW.json` for the film cell
+        and the leader, every cell from twelve whole-monomer shears: rigid margins with the shear free +0.2511
+        and +0.1627, as `sheared_margins_belt4.json` has them; one helix conformer of the leader's that does
+        not set the margin (TG'TG) found a cell 1 kcal/mol lower. Matrix and nitrile cell: all-trans only.
+        chain1-cfe ON THE KINK SITES: its own sheared starts SLIDE BACK UPRIGHT (its sliding cost is a third
+        of belt4's), so `kink_sheet_shear.py --preset pvdf-dft-chain1-cfe --starts "" --from-sheets
+        /opt/dft/kink10/belt4_sites_copy.json` starts each site from the sheets belt4 found. Film cell `@0`:
+        site 12 (V-CFE) -1.65 (belt4 -2.27), 10: -0.94 (-1.12), 0: -0.53 (-0.13): ITS SHEETS ARE BELOW
+        ALL-TRANS THERE TOO. Leader `@0` site 10: +1.66 (belt4 +0.65), its upright sheet loses the kink and two
+        stored sheets collapse (chain1-cfe has no nitrile term): stopped after that site. RUNNING (job
+        `bb0ps4aqk`, since 07:00): the film cell's sites "12,10,0,4,16,6,22" of `@0` and "2,14,12,0" of `@0~`
+        into `/opt/dft/kink10/shear_from_belt4_chain1cfe_vdf9-trfe4-cfe1-14.json`.
+        THE POTENTIAL AT A LOOSE STOP IS NO USE HERE: the leader's upright all-trans cell relaxed to 0.03 eV/A
+        from belt4's cell is 3.9 kcal/mol per cell ABOVE the same phase relaxed from chain1-cfe's cell
+        (`/opt/dft/rows14an`, 0.02), and the film cell's 2.3 above its own at 0.005 (`/opt/dft/rows14`); so
+        the all-trans cells at other shears in `/opt/dft/registry14` (leader's (-1, +1) only 0.7 above its
+        upright one there) decide nothing. RUNNING (job `b5ay4wvzf`, since 07:34, two threads each, legs of
+        300 steps to 0.004 eV/A, `/opt/dft/sheets14s/relax_NAME.log`, cells `NAME_rN.start.xyz`): the leader's
+        cheapest sheet (`sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at10_sheared`, written by `row_cells_frames.py
+        kink --scan ... --key "ROW@0" --sites 10 --sheared docs/predictions/kink_sheet_shear_belt4_sites.json`),
+        then its all-trans cell from `/opt/dft/rows14an` (`tt_leader_from_rows14an`), and the film cell's
+        cheapest sheet (`sheet_vdf9-trfe4-cfe1-14_belt4_at12_sheared`; its all-trans reference is
+        `/opt/dft/rows14/row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1.start.xyz`, -2048.89503 eV per monomer
+        at 0.005). A sheet's energy there: (E_sheet - E_all-trans) * 28 monomers / 2, eV -> x 23.0605.
+        Also exported there: the nitrile cell's site 10, the matrix's site 24 of `@0~`, the leader's 8 and 18
+        of `@0~`. THEN: those; DFT on the leader's and the film cell's (pod: 170 atoms).
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE
