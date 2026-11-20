@@ -659,15 +659,17 @@ right": true at one registry, not along it).
         -0.93 monomers. Interim paragraphs are in docs 3.20 and the head of CANDIDATE_MATERIALS; the stored
         JSON, the extxyz and the tests still carry only site 10 (+0.05) and have to be extended when the
         sheet has stopped.
-        RUNNING since 16:20 UTC, job `ba2xuu4qi`, ONE LEG AT A TIME ON FOUR CORES (250 steps, about 20 to 35
-        minutes a leg; DO NOT RUN TWO AT ONCE HERE: side by side on two cores each, neither finished a leg in
-        38 minutes and both wrote nothing): starts pushed along the slide to find its end without walking it
-        (scratch script `slide_on.py PREV NOW OUT FRAME K`: the chain axis of NOW moved K times further than
-        it moved from PREV to NOW, repeat length and fractional coordinates kept; from legs 5 and 7):
-        `sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_slide4` (shear -0.61 -1.33 at the start) and `_slide8`
-        (-0.75 -1.69), with one more plain leg of `_sheared` between; order slide4, slide8, sheared, slide4,
-        slide8. Each leg starts from that name's latest stored `_rN` (scratch script `legs.sh NAME ...`; a
-        name whose log says `converged True` is skipped).
+        17:36 UTC: THE SLIDE HAS AN END NEAR A SHEAR OF -0.5 AND -1.0 TO -1.1 MONOMERS. Starts pushed along
+        the slide (scratch script `slide_on.py PREV NOW OUT FRAME K`: the chain axis of NOW moved K times
+        further than it moved from PREV to NOW, repeat length and fractional coordinates kept; from legs 5 and
+        7) come BACK: `..._at18m_slide4` from shear -0.61 -1.33 to -0.51 -1.14 in two legs (-1.02, -1.32
+        kcal/mol per kink pair), `_slide8` from -0.75 -1.69 to -0.54 -1.23 (+1.89, -0.86), while the plain
+        sheet's leg 8 goes on forward to -0.47 -0.97 (-1.24). None converged; all three still falling about
+        0.3 a leg, kink kept in all. A leg of 250 steps takes 18 minutes on four cores (DO NOT RUN TWO AT ONCE
+        HERE: side by side on two cores each, neither finished a leg in 38 minutes and both wrote nothing).
+        RUNNING since 17:40 UTC, job `b0b2du9vx`: `_slide4` alone, three legs of 500 steps (`STEPS=500
+        TMO=2600 legs.sh NAME NAME NAME`: each leg from that name's latest stored `_rN`; a name whose log says
+        `converged True` is skipped), so the optimizer keeps its Hessian longer.
         If either is cut, go on from its last `_rN` cell. Read a leg with `row_cells_frames.py
         sheets-potential --pairs "KEY=/opt/dft/sheets14s/tt_leader_from_rows14an_r1.start.xyz,LEG.start.xyz"
         --name all_s1 --all-trans docs/predictions/rows14_potential_tight.json --out SCRATCH.json`.
