@@ -1,0 +1,18 @@
+# The fourteen-monomer cells on one rented machine (PI 2026-11-20: "Go on the rented machine";
+# docs/MLIP_SECOND_OPINION.md 3.20).  Two things at once: DFT on the pod's processors, the
+# potential on its card.
+#
+# DFT single points (PBE-D3(BJ), the anchor's set-up) on cells relaxed in the potential to 0.004
+# eV/A: the film cell's all-trans cell, kinked sheet and helix (which is lowest: the potential
+# says the sheet, 3.6 kcal/mol per chain below all-trans, with the helix 1.8 below), then the
+# leader's all-trans cell, its sheet at the second site (the potential: -1.37), its helix and its
+# sheet at belt4's cheapest site (+0.05).  168 and 170 atoms, eight processes in two k-point
+# pools, one cell after another; the line returns at once and the cells go on underneath.
+dft_cells.sh start 8 2 docs/predictions/mlip/sheets14_sheared_in_all_s1.extxyz row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1 sheet_vdf9-trfe4-cfe1-14_belt4_at12_sheared_r2 helix_film_GpTGT_r2 tt_leader_from_rows14an_r1 sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r9 helix_leader_TGTGp_r1 sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at10_sheared_r2
+# The card must give the potential's stored energies on the eighteen tight cells before anything
+# relaxed on it is believed.
+card_check.sh
+# The leader's two known sheets from belt4's own starts, in one run each: the second site walked
+# to -1.37 over nine legs on four processors, the first rests at +0.05.  The card should find
+# both, and this times a step.
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(18m|10)_sheared

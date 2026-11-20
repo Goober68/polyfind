@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 import time
@@ -341,8 +342,17 @@ def relax(args):
     so = _second_opinion()
     calc = SumCalculator([so.file_calculator(args.model), so.d3_calculator()])
     args.out.mkdir(parents=True, exist_ok=True)
-    for f in args.cells:
-        start = read(f)
+    # --pick: each file of --cells holds many frames, and those whose name matches are relaxed, in the file's order
+    picked = [a for f in args.cells for a in read(f, index=":") if re.fullmatch(args.pick, str(a.info["frame"]))] if args.pick else None
+    if args.pick:
+        print(f"{len(picked)} frames match {args.pick}", flush=True)
+    for f in picked if args.pick else args.cells:
+        start = f if args.pick else read(f)
+        if args.skip_done and not args.frame and (args.out / f"{start.info['frame']}_in_{args.name}.start.xyz").exists():
+            had = read(args.out / f"{start.info['frame']}_in_{args.name}.start.xyz")
+            if "NOT converged" not in str(had.info.get("note", "NOT converged")):
+                print(f"{had.info['frame']}: stored and converged, left as it is", flush=True)
+                continue
         a = start.copy()
         a.calc = tilted_calculator(calc, start) if args.dft_gradient else calc
         at_start = a.get_potential_energy() / start.info["n_monomers"]
@@ -354,35 +364,82 @@ def relax(args):
         e0, f0 = a.get_potential_energy() / n, float(np.abs(a.get_forces()).max())
         mask = [int(v) for v in args.mask.split()] if args.mask else None
         opt = BFGS(FrechetCellFilter(a, mask=mask), logfile=None, maxstep=0.1)
+        frame = args.frame or f"{start.info['frame']}_in_{args.name}"
+
+        def store(done, held):
+            """The cell as it stands, with the potential's energy there (the optimiser has just evaluated it)."""
+            b = a.copy()
+            b.calc = None
+            b.info = {**start.info, "frame": frame, "family": "relaxed",
+                      "note": f"{start.info.get('source', start.info['frame'])}, relaxed in {args.name} with D3 "
+                              f"to {args.fmax} eV/A ({opt.get_number_of_steps()} steps"
+                              f"{'' if done else ', stopped when an atom had moved ' + str(args.max_move) + ' A' if held else ', NOT converged'})",
+                      "potential_eV_per_monomer": float(a.get_potential_energy() / n), "potential_start_eV_per_monomer": float(e0)}
+            for k in ("REF_energy", "REF_stress", "dft_energy_ry", "dft_d3_ry", "dft_kpoints", "dft_seconds", "dft_conv_thr_ry"):
+                b.info.pop(k, None)  # the start's labels are not this frame's
+            b.arrays.pop("REF_forces", None)
+            if args.dft_gradient:
+                b.info["note"] += "; the potential tilted to DFT's forces and stress at the start"
+                b.info["start_frame"] = start.info["frame"]
+                b.info["dft_predicted_eV_per_monomer"] = float(start.info["REF_energy"] / n + a.get_potential_energy() / n - at_start)
+            write(args.out / f"{frame}.start.xyz", b, format="extxyz")
+
         s_start, done, held = a.get_scaled_positions(wrap=False), False, False
         for done in opt.irun(fmax=args.fmax, steps=args.steps):
             # a tilted potential is only DFT's near where it was tilted: along a soft direction its linear term has no end
             if args.max_move and np.abs((a.get_scaled_positions(wrap=False) - s_start) @ a.cell.array).max() > args.max_move:
                 held = True
                 break
+            if args.every and not done and opt.get_number_of_steps() and opt.get_number_of_steps() % args.every == 0:
+                store(False, False)  # where a run that is cut had got to: marked NOT converged, written over at the end
         done = bool(done) and not held
         e1 = a.get_potential_energy() / n
-        b = a.copy()
-        b.calc = None
-        frame = args.frame or f"{start.info['frame']}_in_{args.name}"
-        b.info = {**start.info, "frame": frame, "family": "relaxed",
-                  "note": f"{start.info.get('source', start.info['frame'])}, relaxed in {args.name} with D3 "
-                          f"to {args.fmax} eV/A ({opt.get_number_of_steps()} steps"
-                          f"{'' if done else ', stopped when an atom had moved ' + str(args.max_move) + ' A' if held else ', NOT converged'})",
-                  "potential_eV_per_monomer": float(e1), "potential_start_eV_per_monomer": float(e0)}
-        for k in ("REF_energy", "REF_stress", "dft_energy_ry", "dft_d3_ry", "dft_kpoints", "dft_seconds", "dft_conv_thr_ry"):
-            b.info.pop(k, None)  # the start's labels are not this frame's
-        b.arrays.pop("REF_forces", None)
-        if args.dft_gradient:
-            b.info["note"] += "; the potential tilted to DFT's forces and stress at the start"
-            b.info["start_frame"] = start.info["frame"]
-            b.info["dft_predicted_eV_per_monomer"] = float(start.info["REF_energy"] / n + e1 - at_start)
-        write(args.out / f"{frame}.start.xyz", b, format="extxyz")
+        store(done, held)
         change = 100 * (a.cell.cellpar()[:3] / start.cell.cellpar()[:3] - 1)
         print(f"{frame}: {opt.get_number_of_steps()} steps, {'stopped at the largest move allowed' if held else 'converged ' + str(done)}; the potential's energy {1e3 * (e1 - e0):+.1f} meV "
               f"per monomer from the start (largest force there {f0:.2f} eV/A); lattice "
               + " ".join(f"{v:+.1f}%" for v in change) + f", volume {100 * (a.get_volume() / start.get_volume() - 1):+.1f}%",
               flush=True)
+
+
+def device_check(args):
+    """Stored cells evaluated where MLIP_DEVICE says, against the energy each carries: does a card give this machine's numbers?
+
+    Every frame of --cells with a stored ``potential_eV_per_monomer`` is evaluated once (energy, forces, stress). Written to
+    --out: the largest difference in meV per monomer, the largest force left on each cell, and the seconds an evaluation takes.
+    Exits 1 when a cell differs by more than --tol meV per monomer.
+    """
+    import torch
+    from ase.calculators.mixing import SumCalculator
+    from ase.io import read
+
+    warnings.filterwarnings("ignore")
+    torch.set_num_threads(args.threads)
+    so = _second_opinion()
+    calc = SumCalculator([so.file_calculator(args.model), so.d3_calculator()])
+    cells, seconds = {}, []
+    for a in read(args.cells, index=":"):
+        if "potential_eV_per_monomer" not in a.info:
+            continue
+        b = a.copy()
+        b.calc = calc
+        t0 = time.time()
+        e, f = b.get_potential_energy() / int(a.info["n_monomers"]), float(np.abs(b.get_forces()).max())
+        b.get_stress()
+        seconds.append(time.time() - t0)
+        cells[str(a.info["frame"])] = {"atoms": len(a), "stored_eV_per_monomer": float(a.info["potential_eV_per_monomer"]), "here_eV_per_monomer": float(e),
+                                       "difference_meV_per_monomer": 1e3 * (float(e) - float(a.info["potential_eV_per_monomer"])), "largest_force_eV_per_A": f}
+        print(f"{a.info['frame']}: {cells[str(a.info['frame'])]['difference_meV_per_monomer']:+.5f} meV per monomer from the stored energy, "
+              f"largest force {f:.4f} eV/A, {seconds[-1]:.2f} s", flush=True)
+    worst = max(abs(c["difference_meV_per_monomer"]) for c in cells.values())
+    out = {"what": "stored cells evaluated again in the potential with D3, against the energy each carries; seconds for energy, forces and stress of one cell",
+           "device": so.device(), "card": torch.cuda.get_device_name(0) if so.device() != "cpu" and torch.cuda.is_available() else None,
+           "largest_difference_meV_per_monomer": worst, "seconds_per_evaluation_after_the_first": float(np.median(seconds[1:])) if len(seconds) > 1 else None,
+           "seconds_first_evaluation": seconds[0], "cells": cells}
+    Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
+    print(f"{len(cells)} cells on {out['device']}: largest difference {worst:.5f} meV per monomer; {out['seconds_per_evaluation_after_the_first']} s an evaluation")
+    if worst > args.tol:
+        raise SystemExit(f"a cell differs by more than {args.tol} meV per monomer: the device does not give the stored numbers")
 
 
 def closure(args):
@@ -486,6 +543,9 @@ def main():
     s.add_argument("--mask", default="", help='which strains the lattice may take, xx yy zz yz xz xy, e.g. "1 1 1 0 0 1" '
                                               "keeps the chain axis upright (no shear along the chains)")
     s.add_argument("--steps", type=int, default=1500)
+    s.add_argument("--every", type=int, default=0, help="also store the cell every this many steps (marked NOT converged), so a run that is cut leaves it")
+    s.add_argument("--pick", default="", help="a regular expression: --cells are files of many frames, and the frames whose whole name matches are relaxed")
+    s.add_argument("--skip-done", action="store_true", help="leave a cell whose relaxed frame is already in --out and converged")
     s.add_argument("--threads", type=int, default=4)
     s.add_argument("--repeat", type=float, default=0.0, help="A: set the cell's third vector to this length before relaxing "
                                                              '(with --mask "0 0 0 0 0 0": a chain held at a repeat)')
@@ -495,6 +555,12 @@ def main():
     s.add_argument("--dft-gradient", action="store_true",
                    help="the cells are DFT-labelled frames: relax each in the potential tilted to DFT's forces and stress at its start "
                         "(a Newton step with the potential's curvature and DFT's gradient)")
+    s = sub.add_parser("device-check")
+    s.add_argument("--model", type=Path, required=True)
+    s.add_argument("--cells", type=Path, required=True, help="a file of frames that carry potential_eV_per_monomer")
+    s.add_argument("--out", type=Path, required=True)
+    s.add_argument("--tol", type=float, default=0.01, help="meV per monomer")
+    s.add_argument("--threads", type=int, default=4)
     s = sub.add_parser("closure")
     s.add_argument("--frames", type=Path, required=True, help="the labelled frames (for DFT's own minima)")
     s.add_argument("--probe", type=Path, required=True, help="the directory `evaluate --probe` wrote, labelled")
@@ -502,7 +568,7 @@ def main():
     s.add_argument("--name", required=True)
     s.add_argument("--threads", type=int, default=4)
     args = p.parse_args()
-    {"prepare": prepare, "train": train, "evaluate": evaluate, "relax": relax, "closure": closure}[args.step](args)
+    {"prepare": prepare, "train": train, "evaluate": evaluate, "relax": relax, "closure": closure, "device-check": device_check}[args.step](args)
 
 
 if __name__ == "__main__":

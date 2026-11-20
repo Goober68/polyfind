@@ -446,10 +446,13 @@ def check(args):
     out, seconds = run_pw(args.pw, args.np, text, work, "anchor_beta")
     r = read_pw(out)
     shutil.rmtree(work / "scratch", ignore_errors=True)
-    ok = r is not None and abs(r["energy_ry"] - ANCHOR_ENERGY_RY) < 2e-8 and abs(r["d3_ry"] - ANCHOR_D3_RY) < 2e-8
+    tol = getattr(args, "check_tol", 2e-8)
+    ok = r is not None and abs(r["energy_ry"] - ANCHOR_ENERGY_RY) < tol and abs(r["d3_ry"] - ANCHOR_D3_RY) < tol
     print(f"anchor beta-PVDF: {r and r['energy_ry']} Ry (the anchor: {ANCHOR_ENERGY_RY}), D3 {r and r['d3_ry']} "
-          f"(the anchor: {ANCHOR_D3_RY}), {seconds:.0f} s on {args.np} processes: {'reproduced' if ok else 'NOT REPRODUCED'}")
-    (work / "check.json").write_text(json.dumps({"reproduced": ok, "energy_ry": r and r["energy_ry"], "seconds": seconds}))
+          f"(the anchor: {ANCHOR_D3_RY}), {seconds:.0f} s on {args.np} processes: {'reproduced' if ok else 'NOT REPRODUCED'} "
+          f"to {tol:g} Ry" + (f" (off by {r['energy_ry'] - ANCHOR_ENERGY_RY:+.1e} Ry)" if r else ""), flush=True)
+    (work / "check.json").write_text(json.dumps({"reproduced": ok, "energy_ry": r and r["energy_ry"], "seconds": seconds, "tolerance_ry": tol,
+                                                 "off_by_ry": r and r["energy_ry"] - ANCHOR_ENERGY_RY}))
     return ok
 
 
@@ -701,6 +704,8 @@ def main():
                                                                  "do not fit in memory once a pool")
         if name == "label":
             s.add_argument("--conv-thr", type=float, default=1e-9)
+            s.add_argument("--check-tol", type=float, default=2e-8, help="Ry: how closely the anchor's energy must come back before a label is computed "
+                                                                         "(another machine's processor and libraries move the ninth decimal)")
             s.add_argument("--only", default="", help="families to label, comma-separated")
             s.add_argument("--names", default="", help="frames to label, comma-separated")
             s.add_argument("--minutes", type=float, default=0.0,

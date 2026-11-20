@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 import warnings
 from pathlib import Path
@@ -69,23 +70,29 @@ def dft_cells():
     return {k: (read(RELAXED / f), n) for k, (f, n) in CELLS.items()}
 
 
+def device() -> str:
+    """Where the potential is evaluated: the processor, or a card when MLIP_DEVICE names one (cuda)."""
+    return os.environ.get("MLIP_DEVICE", "cpu")
+
+
 def d3_calculator():
     import torch
     from ase import units
     from torch_dftd.torch_dftd3_calculator import TorchDFTD3Calculator
 
     return TorchDFTD3Calculator(
-        device="cpu", damping="bj", xc="pbe", dtype=torch.float64,
+        device=device(), damping="bj", xc="pbe", dtype=torch.float64,
         cutoff=40.0 * units.Bohr, cnthr=40.0 * units.Bohr, abc=False,
     )
 
 
 def file_calculator(path):
-    """A model file as a calculator on the processor, wherever it was saved.
+    """A model file as a calculator, wherever it was saved: on the processor, or on a card when MLIP_DEVICE names one.
 
     A model fitted on a card holds compiled parts saved on the card, and e3nn reloads those
     without saying where to put them, so on a machine without a card the load fails. They are
-    sent to the processor for the length of the load.
+    sent to the processor for the length of the load; the calculator then moves the model to
+    its device.
     """
     import torch
     from mace.calculators import MACECalculator
@@ -93,7 +100,7 @@ def file_calculator(path):
     load = torch.jit.load
     torch.jit.load = lambda f, *args, **kwargs: load(f, *args, **{**kwargs, "map_location": "cpu"})
     try:
-        return MACECalculator(model_paths=str(path), device="cpu", default_dtype="float64")
+        return MACECalculator(model_paths=str(path), device=device(), default_dtype="float64")
     finally:
         torch.jit.load = load
 
