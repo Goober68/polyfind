@@ -644,9 +644,11 @@ right": true at one registry, not along it).
         `row_cells_frames.py potential --frames /opt/dft/rows14tight --rows ...` from cells copied there
         under the names `row_ROW_CONF_TAG_in_all_s1.start.xyz`; sheets by `sheets-potential --pairs` (every
         pair given again).
-        RUNNING (job `b861414u2`, since 10:44, ends by 12:44): the leader's `@0~` site 18 from belt4's upright
-        sheet (`sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared`, legs `_rN`): is any sheet of the leader's
-        lower than +0.05 there. If cut, run the same `chain` again from its last `_rN` cell.
+        RUNNING (job `b02zl3muf`, since 12:44, four threads, legs of 250 steps): the leader's `@0~` site 18
+        from belt4's upright sheet (`sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared`, legs `_rN`): is any
+        sheet of the leader's lower than +0.05 there. After its first leg (300 steps, not converged) it is
+        at +2.16 with the kink kept and the cell starting to tilt; the earlier job was cut at its two-hour
+        limit during the second leg. If cut again, go on from its last `_rN` cell.
         THEN: at scale it is A POD'S JOB (108 sheets, 16 more helix cells, tight), with DFT on the film
         cell's all-trans, helix and kinked cells first (168 atoms), then the leader's.
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
