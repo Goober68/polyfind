@@ -1673,6 +1673,20 @@ above the film cell and three below the matrix, where belt4 had the nitrile cell
 and the leader with the matrix. What all three evaluators share is the film cell first and the
 leader about three behind it.
 
+**The +0.05 is not the leader's floor in the potential (later the same day; not finished).** A
+second site of the leader's, site 18 of the other hand (TrFE-V; belt4 +1.99, upright), was
+started in the potential from belt4's upright sheet. It does not come to rest: over seven legs
+(1,800 steps, the largest force 0.01 to 0.02 eV/A throughout, the kink kept) it reads +2.16,
++1.01, +0.38, +0.07, -0.28, -0.67, **-1.00** kcal/mol per kink pair and is still falling a third
+of a kcal/mol a leg. The cell is sliding: the chain axis tilts leg by leg, which is the shear
+along the chains arriving by another route (-0.45 and -0.93 monomers along a and b so far). The
+control is the leader's all-trans cell started at the same tilt: it comes to rest still tilted
+(0.004 eV/A) and 0.04 kcal/mol per chain below the upright cell, so the reference does not
+move and the fall is the sheet's own. So in the potential the leader too has a kinked state
+below both its all-trans cell and its helix (+0.98), the gap to the film cell's sheet is under
+2.6 and closing, and "the leader about three behind" is a statement about belt4's choice of
+sites. Where the slide ends is being found; the numbers in this paragraph are interim.
+
 **A loose stop costs the potential's fourteen-monomer cells as much as their margins.** The
 leader's all-trans cell moved 0.04 kcal/mol per monomer between 0.02 and 0.004 eV/A; the same
 cell relaxed to 0.03 from belt4's denser cell stayed 0.18 per monomer above the tight one.

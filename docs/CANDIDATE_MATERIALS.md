@@ -84,6 +84,14 @@ lower phase, and a kink pair is one turn of that helix.
   above (level with the film) is belt4's nitrile error and is not supported, and the leader is
   not level with the matrix either: it is three and a half above the film cell and three below
   the matrix. One site a cell, the one belt4 ranks cheapest.
+- **The +0.05 is not the leader's floor in the potential (interim, the same day).** A second
+  site of the leader's, started from belt4's upright sheet, does not come to rest: after seven
+  legs it is at **-1.00** kcal/mol per kink pair and still sliding a third of a kcal/mol a leg
+  as the chain axis tilts. The leader's all-trans cell given the same tilt rests 0.04 from the
+  upright one, so the reference does not move. In the potential the leader too has a kinked
+  state below its all-trans cell and its helix; the gap to the film cell's sheet is under 2.6
+  and closing, and "three behind" belongs to belt4's choice of sites. Where it ends is being
+  found (`docs/MLIP_SECOND_OPINION.md` 3.20).
 - **The potential's margins at a tight stop** (3.14 had stopped the helix cells loosely):
   matrix +0.016 (was -0.024), film cell +0.129 (+0.078), nitrile alone -0.109 (-0.118), leader
   -0.070 (-0.055). At +0.129 the film cell's row reads tan delta 0.061, 0.071% and 6.2 pN/nm2,

@@ -651,16 +651,23 @@ right": true at one registry, not along it).
         a and b: -0.12 -0.10, -0.20 -0.20, -0.32 -0.28, -0.37 -0.31, -0.47 -0.39 of a and b), which is a shear
         along the chains of -0.4 and -0.7 monomers so far. SO +0.05 IS NOT THE LEADER'S FLOOR IN THE
         POTENTIAL, and the 3.65 gap to the film cell is an upper bound until this stops.
-        RUNNING since 14:50 UTC, job `bkzry216b`, ONE LEG AT A TIME ON FOUR CORES (250 steps, about 20 minutes a
-        leg), in turn: THE CONTROL, the leader's all-trans cell given the same tilt of the chain axis
-        (`/opt/dft/sheets14s/tt_leader_tilted_like_at18m`, legs `_r1` on; built by the scratch script
-        `tt_tilted_like.py FLAT LIKE OUT FRAME`: c gets the other cell's tilt in units of a and b, fractional
-        coordinates kept), and the sheet's legs `_r6` on; order control, sheet, control, sheet, control. Each
-        leg starts from that name's latest stored `_rN` (scratch script `legs.sh NAME ...`; a name whose log
-        says `converged True` is skipped). LOST 14:10 to 14:48: the two side by side on two cores each did not
-        finish 250 steps in the 38 minutes allowed and wrote nothing (the relaxer writes only at the end): DO
-        NOT RUN TWO AT ONCE HERE. If the all-trans cell stays tilted and ends below -1959.77218 eV per
-        monomer, every sheet of the leader's in the potential is against a reference that is not its lowest.
+        16:03 UTC: THE CONTROL IS IN AND THE REFERENCE DOES NOT MOVE. The leader's all-trans cell given the
+        sheet's tilt (`/opt/dft/sheets14s/tt_leader_tilted_like_at18m`, legs `_r1` to `_r3`; built by the
+        scratch script `tt_tilted_like.py FLAT LIKE OUT FRAME`) converged at 0.004 eV/A still tilted (c along
+        a, b: -0.42, -0.27) at -0.035 kcal/mol per chain of fourteen against the upright cell. THE SHEET after
+        legs 6 and 7: -0.67, -1.00, not converged, kink kept, tilt -0.55 -0.50, shear along the chains -0.45
+        -0.93 monomers. Interim paragraphs are in docs 3.20 and the head of CANDIDATE_MATERIALS; the stored
+        JSON, the extxyz and the tests still carry only site 10 (+0.05) and have to be extended when the
+        sheet has stopped.
+        RUNNING since 16:20 UTC, job `ba2xuu4qi`, ONE LEG AT A TIME ON FOUR CORES (250 steps, about 20 to 35
+        minutes a leg; DO NOT RUN TWO AT ONCE HERE: side by side on two cores each, neither finished a leg in
+        38 minutes and both wrote nothing): starts pushed along the slide to find its end without walking it
+        (scratch script `slide_on.py PREV NOW OUT FRAME K`: the chain axis of NOW moved K times further than
+        it moved from PREV to NOW, repeat length and fractional coordinates kept; from legs 5 and 7):
+        `sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_slide4` (shear -0.61 -1.33 at the start) and `_slide8`
+        (-0.75 -1.69), with one more plain leg of `_sheared` between; order slide4, slide8, sheared, slide4,
+        slide8. Each leg starts from that name's latest stored `_rN` (scratch script `legs.sh NAME ...`; a
+        name whose log says `converged True` is skipped).
         If either is cut, go on from its last `_rN` cell. Read a leg with `row_cells_frames.py
         sheets-potential --pairs "KEY=/opt/dft/sheets14s/tt_leader_from_rows14an_r1.start.xyz,LEG.start.xyz"
         --name all_s1 --all-trans docs/predictions/rows14_potential_tight.json --out SCRATCH.json`.
