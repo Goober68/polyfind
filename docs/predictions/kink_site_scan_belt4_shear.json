@@ -1,0 +1,3208 @@
+{
+ "preset": "pvdf-dft-valence-belt4",
+ "energy": "kcal/mol per kink pair against the polished all-trans crystal, rigid pendants; the sheet moved along the sequence from the stored kinked crystal, cell relaxed at each position",
+ "rows": {
+  "vdf9-trfe4-cfe1-14@0": {
+   "letters": "VVRVVRVCVVRVVR",
+   "note": "64/29/7, the 63/30/7 film's composition in one regular cell: 29 mol% TrFE matrix with one CFE per fourteen",
+   "start_offset": 0,
+   "mirrored": false,
+   "sites": {
+    "0": {
+     "formation": -0.13088855814770284,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.40206959683958,
+      8.426395951902508,
+      92.66862116007682,
+      35.49584936204369
+     ],
+     "converged": true,
+     "upright_formation": 3.9520382488709487,
+     "shear_monomers": [
+      -0.02849217713650805,
+      -1.7815355488508429
+     ],
+     "kink_kept": true
+    },
+    "2": {
+     "formation": 3.449685963514966,
+     "relative": 1.3445348423034034,
+     "units": "VR",
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.315828132019306,
+      8.533065747216488,
+      92.44694324990625,
+      35.574803211280226
+     ],
+     "start_energy": 10.037055186224464,
+     "from_offset": 0,
+     "iterations": 218,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 223.691477060318,
+     "upright_formation": 5.296573091174352,
+     "shear_monomers": [
+      -0.03036330374726008,
+      -1.7831211029404541
+     ]
+    },
+    "26": {
+     "formation": 1.1242037290232787,
+     "relative": 0.5565952542580419,
+     "units": "RV",
+     "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.409358630703777,
+      8.5082572056486,
+      91.46187651219728,
+      35.487267871056794
+     ],
+     "start_energy": 59.117766009742745,
+     "from_offset": 0,
+     "iterations": 210,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 232.20308089256287,
+     "upright_formation": 4.508633503128991,
+     "shear_monomers": [
+      0.8858201247952758,
+      -0.8390872271945587
+     ]
+    },
+    "4": {
+     "formation": 1.0989574759323233,
+     "relative": 0.6065461907604828,
+     "units": "RV",
+     "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.4096694467300015,
+      8.507214349083464,
+      91.37972190599777,
+      35.49199592875853
+     ],
+     "start_energy": 8.446440335077014,
+     "from_offset": 2,
+     "iterations": 260,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 295.1353576183319,
+     "upright_formation": 4.5585844396314315,
+     "shear_monomers": [
+      0.8843797440799349,
+      -0.8391045885789925
+     ]
+    },
+    "24": {
+     "formation": 3.459436117938125,
+     "relative": 1.3781842612706185,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.316848021267076,
+      8.533003587840826,
+      92.5098681400452,
+      35.58352171769765
+     ],
+     "start_energy": 14.409249721321814,
+     "from_offset": 26,
+     "iterations": 193,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 285.91947507858276,
+     "upright_formation": 5.330222510141567,
+     "shear_monomers": [
+      -0.029270252624585658,
+      -1.7847861944006882
+     ]
+    },
+    "6": {
+     "formation": -0.28660663323859126,
+     "relative": 0.10972318163999262,
+     "units": "VV",
+     "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.402381237707218,
+      8.417929714104217,
+      92.4871100127388,
+      35.496938864350675
+     ],
+     "start_energy": 8.605476459249616,
+     "from_offset": 4,
+     "iterations": 105,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 125.8435571193695,
+     "upright_formation": 4.061761430510941,
+     "shear_monomers": [
+      -0.031241304581021007,
+      -1.7718962264202003
+     ]
+    },
+    "22": {
+     "formation": -0.15150921125780314,
+     "relative": 0.012152373698370411,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
+     "kink_kept": true,
+     "cell": [
+      5.402768265294425,
+      8.430194296138842,
+      92.71438522064898,
+      35.496253456807246
+     ],
+     "start_energy": 10.047269729719801,
+     "from_offset": 24,
+     "iterations": 115,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 174.00864934921265,
+     "upright_formation": 3.964190622569319,
+     "shear_monomers": [
+      -0.025624019235173677,
+      -1.7789783994496804
+     ]
+    },
+    "8": {
+     "formation": 3.1556021534238425,
+     "relative": 1.300863111057879,
+     "units": "VR",
+     "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.322138429629411,
+      8.534129282634504,
+      92.24623952108853,
+      35.5439798949476
+     ],
+     "start_energy": 13.525838859858112,
+     "from_offset": 6,
+     "iterations": 167,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 300.61963844299316,
+     "upright_formation": 5.252901359928828,
+     "shear_monomers": [
+      -0.033784130240062916,
+      -1.7730681411044398
+     ]
+    },
+    "20": {
+     "formation": 1.0177873419603714,
+     "relative": 0.5151761910162946,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.407180404407636,
+      8.511407572710379,
+      91.52086106934043,
+      35.48232264599854
+     ],
+     "start_energy": 22.968607523334626,
+     "from_offset": 22,
+     "iterations": 97,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 140.88159918785095,
+     "upright_formation": 4.467214439887243,
+     "shear_monomers": [
+      0.8925407251340478,
+      -0.8336210327278536
+     ]
+    },
+    "10": {
+     "formation": -1.1214050288644586,
+     "relative": 1.923857341333317,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.458790941051649,
+      8.463442959369686,
+      90.90841636776487,
+      35.51087639599602
+     ],
+     "start_energy": 12.66876944411004,
+     "from_offset": 8,
+     "iterations": 333,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 533.1582622528076,
+     "upright_formation": 5.875895590204266,
+     "shear_monomers": [
+      -0.030392732114897097,
+      -1.7920341419403576
+     ]
+    },
+    "18": {
+     "formation": 3.247594995336584,
+     "relative": 1.5010488474954826,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.313493713810688,
+      8.543537020649786,
+      92.44158127280738,
+      35.58378799727374
+     ],
+     "start_energy": 16.112470474120812,
+     "from_offset": 20,
+     "iterations": 174,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 203.14247798919678,
+     "upright_formation": 5.453087096366431,
+     "shear_monomers": [
+      -0.04529761427990204,
+      -1.7979219733333225
+     ]
+    },
+    "12": {
+     "formation": -2.272476756179998,
+     "relative": 8.15897954122427,
+     "units": "VC",
+     "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.110636462475099,
+      9.20281201063652,
+      89.45419309355012,
+      35.63482818884033
+     ],
+     "start_energy": 389.6210165345017,
+     "from_offset": 10,
+     "iterations": 178,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 157.15952038764954,
+     "upright_formation": 12.111017790095218,
+     "shear_monomers": [
+      -0.01669639298680965,
+      -1.7845334065718474
+     ]
+    },
+    "16": {
+     "formation": -0.40569220538310446,
+     "relative": 0.794288337396182,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.413093547845945,
+      8.449923537235389,
+      92.55043346408347,
+      35.52430096836155
+     ],
+     "start_energy": 17.497168537236448,
+     "from_offset": 18,
+     "iterations": 130,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 151.17550802230835,
+     "upright_formation": 4.746326586267131,
+     "shear_monomers": [
+      -0.028306544478063984,
+      -1.7855568703895524
+     ]
+    },
+    "14": {
+     "formation": 1.2110411127440983,
+     "relative": 7.45734762399745,
+     "units": "CV",
+     "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.462115840206189,
+      8.693301140890412,
+      91.34074050806186,
+      35.49410060469831
+     ],
+     "start_energy": 29.870432715968704,
+     "from_offset": 12,
+     "iterations": 1023,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 1841.6538798809052,
+     "upright_formation": 11.409385872868398,
+     "shear_monomers": [
+      -0.8871062417617861,
+      -0.9176522290872163
+     ]
+    }
+   }
+  },
+  "vdf10-trfe4-14@0": {
+   "letters": "VVRVVRVVVVRVVR",
+   "note": "the same cell with the CFE replaced by VDF (71/29): the matrix without the pin",
+   "start_offset": 0,
+   "mirrored": false,
+   "sites": {
+    "0": {
+     "formation": 2.8936516036904294,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.149540879339944,
+      8.548634407734797,
+      92.16179659517213,
+      35.52917539148609
+     ],
+     "converged": true,
+     "upright_formation": 7.0869603727945645,
+     "shear_monomers": [
+      0.9342769992130538,
+      -0.8583383946601776
+     ],
+     "kink_kept": true
+    },
+    "2": {
+     "formation": 6.3636625015818,
+     "relative": -0.5864232663295041,
+     "units": "VR",
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.970411314672181,
+      8.71167066010557,
+      91.82167972226334,
+      35.609410631771446
+     ],
+     "start_energy": 12.896544211095659,
+     "from_offset": 0,
+     "iterations": 134,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 134.8217957019806,
+     "upright_formation": 6.50053710646506,
+     "shear_monomers": [
+      -0.02199000072904057,
+      0.0640637678618589
+     ]
+    },
+    "26": {
+     "formation": 3.3688590969591985,
+     "relative": 0.123731234890883,
+     "units": "RV",
+     "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.064109216342166,
+      8.757809398786389,
+      90.6840869543706,
+      35.51199923580394
+     ],
+     "start_energy": 82.20895278009064,
+     "from_offset": 0,
+     "iterations": 269,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 351.4389774799347,
+     "upright_formation": 7.2106916076854475,
+     "shear_monomers": [
+      0.9050731165688433,
+      -0.8567694640384024
+     ]
+    },
+    "4": {
+     "formation": 3.373094593182117,
+     "relative": 0.11713626093903429,
+     "units": "RV",
+     "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.063905008663629,
+      8.758743535257024,
+      90.66226763173391,
+      35.51231729263528
+     ],
+     "start_energy": 15.234783797058782,
+     "from_offset": 2,
+     "iterations": 167,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 165.82941365242004,
+     "upright_formation": 7.204096633733599,
+     "shear_monomers": [
+      0.9052816062625633,
+      -0.8570935624002646
+     ]
+    },
+    "24": {
+     "formation": 6.366504386163143,
+     "relative": -0.5842881750664901,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
+     "kink_kept": true,
+     "cell": [
+      4.970294336765378,
+      8.711251288131518,
+      91.82299202930218,
+      35.61023065535815
+     ],
+     "start_energy": 20.859704788890355,
+     "from_offset": 26,
+     "iterations": 182,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 180.463440656662,
+     "upright_formation": 6.502672197728074,
+     "shear_monomers": [
+      -0.02190103869937308,
+      0.06418834299085434
+     ]
+    },
+    "6": {
+     "formation": 2.8831676277755065,
+     "relative": -0.041921572072809,
+     "units": "VV",
+     "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.149233465452242,
+      8.54966121248414,
+      92.12769727507354,
+      35.52510742485666
+     ],
+     "start_energy": 16.817732433843915,
+     "from_offset": 4,
+     "iterations": 156,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 154.11067032814026,
+     "upright_formation": 7.0450388007217555,
+     "shear_monomers": [
+      0.9353567392063601,
+      -0.8590832328209125
+     ]
+    },
+    "22": {
+     "formation": 2.888729035353407,
+     "relative": 0.004011496509050971,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
+     "kink_kept": true,
+     "cell": [
+      5.149590954603784,
+      8.548402054542175,
+      92.1585368097407,
+      35.530841508509134
+     ],
+     "start_energy": 11.818574613884266,
+     "from_offset": 24,
+     "iterations": 318,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 383.44339656829834,
+     "upright_formation": 7.0909718693036154,
+     "shear_monomers": [
+      0.9343389505120907,
+      -0.8582087461687901
+     ]
+    },
+    "8": {
+     "formation": 6.361702354659258,
+     "relative": -0.6121764233941462,
+     "units": "VR",
+     "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.970278843414102,
+      8.706490689149987,
+      91.82999490031605,
+      35.6112103984358
+     ],
+     "start_energy": 16.683380711534838,
+     "from_offset": 6,
+     "iterations": 113,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 114.21865177154541,
+     "upright_formation": 6.474783949400418,
+     "shear_monomers": [
+      -0.018631399098785462,
+      0.05881585636904193
+     ]
+    },
+    "20": {
+     "formation": 3.3512240052561424,
+     "relative": 0.11099723291458474,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.064116285805786,
+      8.756237690445372,
+      90.70876749302167,
+      35.51079569330737
+     ],
+     "start_energy": 33.43958527194815,
+     "from_offset": 22,
+     "iterations": 239,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 417.4689633846283,
+     "upright_formation": 7.197957605709149,
+     "shear_monomers": [
+      0.9061665727141258,
+      -0.8562804923998459
+     ]
+    },
+    "10": {
+     "formation": 3.5169995783273436,
+     "relative": -0.21956860904646192,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.067567668714925,
+      8.74999821658647,
+      90.47985743986109,
+      35.51641831008169
+     ],
+     "start_energy": 14.268198565907952,
+     "from_offset": 8,
+     "iterations": 109,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 113.79679250717163,
+     "upright_formation": 6.867391763748103,
+     "shear_monomers": [
+      0.9056403920036824,
+      -0.8531699413450012
+     ]
+    },
+    "18": {
+     "formation": 6.363748977223679,
+     "relative": -0.6192046556237187,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.96808382874371,
+      8.717543399881851,
+      91.75562724293589,
+      35.606766060388885
+     ],
+     "start_energy": 22.819613616038836,
+     "from_offset": 20,
+     "iterations": 186,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 172.77453422546387,
+     "upright_formation": 6.467755717170846,
+     "shear_monomers": [
+      -0.019106265397360524,
+      0.05786389632495413
+     ]
+    },
+    "12": {
+     "formation": 4.090689036814965,
+     "relative": -2.272101392316216,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.014370927490607,
+      8.666820179885033,
+      91.47626244093905,
+      35.505112715934786
+     ],
+     "start_energy": 8.970443306978396,
+     "from_offset": 10,
+     "iterations": 56,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 45.95512914657593,
+     "upright_formation": 4.814858980478348,
+     "shear_monomers": [
+      0.9161721585307436,
+      -0.8559375903158933
+     ]
+    },
+    "16": {
+     "formation": 2.862666990416301,
+     "relative": 0.004890464957071572,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.157537702099782,
+      8.54269534518479,
+      92.25639481182941,
+      35.537060016725924
+     ],
+     "start_energy": 11.843673049911047,
+     "from_offset": 18,
+     "iterations": 200,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 204.5018970966339,
+     "upright_formation": 7.091850837751636,
+     "shear_monomers": [
+      0.9394658594426826,
+      -0.8573798096650975
+     ]
+    },
+    "14": {
+     "formation": 4.00599663690636,
+     "relative": -1.9462451173485675,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.015822357742153,
+      8.671373356575545,
+      91.60236781081505,
+      35.505383497367404
+     ],
+     "start_energy": 7.139203012594962,
+     "from_offset": 12,
+     "iterations": 81,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 74.76510214805603,
+     "upright_formation": 5.140715255445997,
+     "shear_monomers": [
+      0.9209218788886354,
+      -0.8549030677187854
+     ]
+    }
+   }
+  },
+  "vdf9-trfe4-cfe1-14@0~": {
+   "letters": "VVRVVRVCVVRVVR",
+   "note": "64/29/7, the 63/30/7 film's composition in one regular cell: 29 mol% TrFE matrix with one CFE per fourteen",
+   "start_offset": 0,
+   "mirrored": true,
+   "sites": {
+    "0": {
+     "formation": 0.6347255835801775,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.003869691165015,
+      9.074875883083973,
+      93.87108480531094,
+      35.528501087057535
+     ],
+     "converged": true,
+     "upright_formation": 4.1778507272555885,
+     "shear_monomers": [
+      0.9158943698557711,
+      1.0206831464840107
+     ],
+     "kink_kept": true
+    },
+    "2": {
+     "formation": -1.2001369416813077,
+     "relative": 1.267814490041829,
+     "units": "VR",
+     "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.081633563097653,
+      9.162971885372444,
+      93.18723415528098,
+      35.363404108609934
+     ],
+     "start_energy": 14.906993069486006,
+     "from_offset": 0,
+     "iterations": 202,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 197.28193926811218,
+     "upright_formation": 5.445665217297417,
+     "shear_monomers": [
+      0.8871916893878643,
+      0.9818089895548332
+     ]
+    },
+    "26": {
+     "formation": 0.7150528176156286,
+     "relative": -0.3691291685070155,
+     "units": "RV",
+     "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
+     "kink_kept": true,
+     "cell": [
+      4.968837281968366,
+      9.101475887075809,
+      93.79743856363184,
+      35.56012616945705
+     ],
+     "start_energy": 7.457467950210059,
+     "from_offset": 0,
+     "iterations": 82,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 75.3766860961914,
+     "upright_formation": 3.808721558748573,
+     "shear_monomers": [
+      0.9188969706532044,
+      0.9776867661549389
+     ]
+    },
+    "4": {
+     "formation": 0.6910402292672302,
+     "relative": -0.4509484061408813,
+     "units": "RV",
+     "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.967727410817004,
+      9.100788204017793,
+      93.85131605568208,
+      35.564535000953974
+     ],
+     "start_energy": 16.03440043577035,
+     "from_offset": 2,
+     "iterations": 118,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 109.63283848762512,
+     "upright_formation": 3.726902321114707,
+     "shear_monomers": [
+      0.9182657891606244,
+      0.9773679818511938
+     ]
+    },
+    "24": {
+     "formation": 3.3568205533352966,
+     "relative": 0.18053118627921094,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
+     "kink_kept": true,
+     "cell": [
+      4.900280796239934,
+      9.384669320466696,
+      95.85236821621395,
+      35.59168754647352
+     ],
+     "start_energy": 17.73634686672473,
+     "from_offset": 26,
+     "iterations": 89,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 72.15135526657104,
+     "upright_formation": 4.358381913534799,
+     "shear_monomers": [
+      0.9858558341003059,
+      0.8105781579142057
+     ]
+    },
+    "6": {
+     "formation": 0.683185347295435,
+     "relative": -0.13213321604609973,
+     "units": "VV",
+     "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.003070202099682,
+      9.071696454694033,
+      93.97008211352883,
+      35.53998084015166
+     ],
+     "start_energy": 5.211886243862196,
+     "from_offset": 4,
+     "iterations": 68,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 64.92432856559753,
+     "upright_formation": 4.045717511209489,
+     "shear_monomers": [
+      0.9137847518059425,
+      1.0196657053441458
+     ]
+    },
+    "22": {
+     "formation": 0.6368505507420252,
+     "relative": 0.05508014043014953,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
+     "kink_kept": true,
+     "cell": [
+      4.998774071085207,
+      9.083954091223623,
+      93.8077925854763,
+      35.52797561257526
+     ],
+     "start_energy": 9.955842205569738,
+     "from_offset": 24,
+     "iterations": 74,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 71.4438898563385,
+     "upright_formation": 4.232930867685738,
+     "shear_monomers": [
+      0.9158929583926231,
+      1.0206984848050988
+     ]
+    },
+    "8": {
+     "formation": 2.727738571552649,
+     "relative": -0.6077892733236325,
+     "units": "VR",
+     "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.895931627552606,
+      9.382677278739452,
+      96.21451974250229,
+      35.57850235787406
+     ],
+     "start_energy": 17.82900951199403,
+     "from_offset": 6,
+     "iterations": 81,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 75.10127067565918,
+     "upright_formation": 3.570061453931956,
+     "shear_monomers": [
+      0.979511737151332,
+      0.8156533146358209
+     ]
+    },
+    "20": {
+     "formation": 0.6428635884320784,
+     "relative": -0.35141614642492414,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.9671318272543346,
+      9.104401962638631,
+      93.7570322670878,
+      35.55539969998639
+     ],
+     "start_energy": 6.49833751366549,
+     "from_offset": 22,
+     "iterations": 69,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 71.00018882751465,
+     "upright_formation": 3.8264345808306643,
+     "shear_monomers": [
+      0.9194380388980615,
+      0.9783506346660173
+     ]
+    },
+    "10": {
+     "formation": 0.7579545001857326,
+     "relative": -0.7602511614245344,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.945927213950116,
+      9.095088544484318,
+      94.27798998676805,
+      35.640293212964544
+     ],
+     "start_energy": 12.237150248511412,
+     "from_offset": 8,
+     "iterations": 128,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 134.22275233268738,
+     "upright_formation": 3.417599565831054,
+     "shear_monomers": [
+      0.9041138508063387,
+      0.9803422157518529
+     ]
+    },
+    "18": {
+     "formation": 2.8531607965626335,
+     "relative": 0.28167210994656955,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.903623431549747,
+      9.380593419994717,
+      95.88970726609149,
+      35.590373963752874
+     ],
+     "start_energy": 17.41241653479011,
+     "from_offset": 20,
+     "iterations": 70,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 77.95015597343445,
+     "upright_formation": 4.459522837202158,
+     "shear_monomers": [
+      0.7768404598817891,
+      -0.9286370911910782
+     ]
+    },
+    "12": {
+     "formation": -0.34253213895286194,
+     "relative": 3.8925328067533087,
+     "units": "VC",
+     "torsions": "T T T T T T T T T T T T G- T G+ T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.9836284981362375,
+      9.347507818571156,
+      86.76385912188285,
+      35.04720496955037
+     ],
+     "start_energy": 33.52834268853471,
+     "from_offset": 10,
+     "iterations": 185,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 188.80394792556763,
+     "upright_formation": 8.070383534008897,
+     "shear_monomers": [
+      0.9046352261669319,
+      0.8944012044250438
+     ]
+    },
+    "16": {
+     "formation": 0.511481600392699,
+     "relative": -0.04127290590888322,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.9830701445248335,
+      9.07838603359683,
+      93.50374920098612,
+      35.511807802325954
+     ],
+     "start_energy": 14.504480970824929,
+     "from_offset": 18,
+     "iterations": 96,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 101.94627451896667,
+     "upright_formation": 4.136577821346705,
+     "shear_monomers": [
+      0.9124648040399391,
+      1.0254957237538285
+     ]
+    },
+    "14": {
+     "formation": -1.166942578906017,
+     "relative": 4.104172077022611,
+     "units": "CV",
+     "torsions": "T T T T T T T T T T T T T T G- T G+ T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.141398319370571,
+      9.234206071126456,
+      94.88628415164948,
+      35.46427845366641
+     ],
+     "start_energy": 366.7627002694188,
+     "from_offset": 12,
+     "iterations": 227,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 240.18345665931702,
+     "upright_formation": 8.2820228042782,
+     "shear_monomers": [
+      0.8748522847700938,
+      -0.8511338456768672
+     ]
+    }
+   }
+  },
+  "vdf10-trfe4-14@0~": {
+   "letters": "VVRVVRVVVVRVVR",
+   "note": "the same cell with the CFE replaced by VDF (71/29): the matrix without the pin",
+   "start_offset": 0,
+   "mirrored": true,
+   "sites": {
+    "0": {
+     "formation": 2.3635823625306784,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      4.983612098239712,
+      8.71458109387618,
+      90.35217826504152,
+      35.526877184577835
+     ],
+     "converged": true,
+     "upright_formation": 5.793024471054366,
+     "shear_monomers": [
+      -0.9210089346444045,
+      -1.0129562692339167
+     ],
+     "kink_kept": true
+    },
+    "2": {
+     "formation": 0.9440840994627564,
+     "relative": 2.47566759064685,
+     "units": "VR",
+     "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.075137519620083,
+      8.870106198286235,
+      90.74068117065119,
+      35.38549668424393
+     ],
+     "start_energy": 19.32266695487587,
+     "from_offset": 0,
+     "iterations": 130,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 112.43367791175842,
+     "upright_formation": 8.268692061701216,
+     "shear_monomers": [
+      -0.8914668168727863,
+      -0.9719258058691636
+     ]
+    },
+    "26": {
+     "formation": 2.5853651008650473,
+     "relative": -0.37953984952949327,
+     "units": "RV",
+     "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
+     "kink_kept": true,
+     "cell": [
+      4.954765689187045,
+      8.73107350325713,
+      90.21809693322294,
+      35.54730807753574
+     ],
+     "start_energy": 8.615550469693375,
+     "from_offset": 0,
+     "iterations": 79,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 67.18318319320679,
+     "upright_formation": 5.413484621524873,
+     "shear_monomers": [
+      -0.921081533656804,
+      -0.9897034483611326
+     ]
+    },
+    "4": {
+     "formation": 2.5896234275305403,
+     "relative": -0.375143245351822,
+     "units": "RV",
+     "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.954505706134902,
+      8.73208409437381,
+      90.22632722926198,
+      35.54709644931098
+     ],
+     "start_energy": 17.329926810762984,
+     "from_offset": 2,
+     "iterations": 105,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 108.34080815315247,
+     "upright_formation": 5.417881225702544,
+     "shear_monomers": [
+      -0.9210016587559927,
+      -0.9893219349187546
+     ]
+    },
+    "24": {
+     "formation": 0.9434111857436278,
+     "relative": 2.4845802455020447,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.075200152739178,
+      8.868777076649545,
+      90.75669435852411,
+      35.388792437935784
+     ],
+     "start_energy": 23.611170877162976,
+     "from_offset": 26,
+     "iterations": 340,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 364.51493549346924,
+     "upright_formation": 8.27760471655641,
+     "shear_monomers": [
+      -0.8916283999500763,
+      -0.9716860986872882
+     ]
+    },
+    "6": {
+     "formation": 2.36647975332707,
+     "relative": 0.013853848001417646,
+     "units": "VV",
+     "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.983087543430214,
+      8.71667318793491,
+      90.36594148535984,
+      35.525210821510456
+     ],
+     "start_energy": 6.933901036014774,
+     "from_offset": 4,
+     "iterations": 57,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 56.25880694389343,
+     "upright_formation": 5.806878319055784,
+     "shear_monomers": [
+      -0.9209335246696686,
+      -1.0128049188975758
+     ]
+    },
+    "22": {
+     "formation": 2.36518071341186,
+     "relative": 0.0017202814917851583,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
+     "kink_kept": true,
+     "cell": [
+      4.9833892589708695,
+      8.714644770070054,
+      90.35427427937304,
+      35.527308945522265
+     ],
+     "start_energy": 17.3090434885235,
+     "from_offset": 24,
+     "iterations": 133,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 164.0483148097992,
+     "upright_formation": 5.794744752546151,
+     "shear_monomers": [
+      -0.9208723858301867,
+      -1.0134997028236932
+     ]
+    },
+    "8": {
+     "formation": 1.0694726149701097,
+     "relative": 2.4894066919655273,
+     "units": "VR",
+     "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.074109818271568,
+      8.877730944821467,
+      90.79429656662586,
+      35.37882636677824
+     ],
+     "start_energy": 22.979181889542744,
+     "from_offset": 6,
+     "iterations": 98,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 81.30138421058655,
+     "upright_formation": 8.282431163019893,
+     "shear_monomers": [
+      -0.893110070556541,
+      -0.9679827169378143
+     ]
+    },
+    "20": {
+     "formation": 2.58696217734213,
+     "relative": -0.3795646800113701,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.954442303768547,
+      8.73119135646101,
+      90.20909008637346,
+      35.54667792446348
+     ],
+     "start_energy": 7.547974787314473,
+     "from_offset": 22,
+     "iterations": 90,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 82.00469279289246,
+     "upright_formation": 5.413459791042996,
+     "shear_monomers": [
+      -0.9225316267740523,
+      -0.9901437617111779
+     ]
+    },
+    "10": {
+     "formation": 2.4867485548557227,
+     "relative": -0.7164070855075835,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.947968752123072,
+      8.75399759311621,
+      90.33798499757565,
+      35.52817582661631
+     ],
+     "start_energy": 16.93416522808488,
+     "from_offset": 8,
+     "iterations": 99,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 99.50619292259216,
+     "upright_formation": 5.076617385546783,
+     "shear_monomers": [
+      -0.9184871229894467,
+      -0.9887804756663825
+     ]
+    },
+    "18": {
+     "formation": 6.816646966116593,
+     "relative": 2.6025652342798082,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.874252871486371,
+      9.24415079180118,
+      95.46197351366294,
+      35.641243994598256
+     ],
+     "start_energy": 24.262051911226052,
+     "from_offset": 20,
+     "iterations": 193,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 180.50074076652527,
+     "upright_formation": 8.395589705334174,
+     "shear_monomers": [
+      -0.9826777051819359,
+      -0.7961896121538662
+     ]
+    },
+    "12": {
+     "formation": 1.1361732324370593,
+     "relative": -1.1343787947742214,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T G- T G+ T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.958424409801276,
+      8.770045645250413,
+      90.5714630511769,
+      35.518230276704124
+     ],
+     "start_energy": 6.184437916057007,
+     "from_offset": 10,
+     "iterations": 58,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 52.06515431404114,
+     "upright_formation": 4.658645676280145,
+     "shear_monomers": [
+      -0.9198917948695957,
+      -0.992623006524872
+     ]
+    },
+    "16": {
+     "formation": 2.3451554520047893,
+     "relative": -0.04939202646609431,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.980060525747392,
+      8.720097728261267,
+      90.40142086265622,
+      35.525282364650884
+     ],
+     "start_energy": 12.807214815712967,
+     "from_offset": 18,
+     "iterations": 86,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 89.31989908218384,
+     "upright_formation": 5.743632444588272,
+     "shear_monomers": [
+      -0.9202648489068732,
+      -1.0055360080765945
+     ]
+    },
+    "14": {
+     "formation": 1.4361783552185585,
+     "relative": -0.8181863614078395,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T G- T G+ T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.961389592026342,
+      8.755116833273158,
+      90.51788597041715,
+      35.53720710505095
+     ],
+     "start_energy": 6.564710119004431,
+     "from_offset": 12,
+     "iterations": 62,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 53.08690643310547,
+     "upright_formation": 4.974838109646527,
+     "shear_monomers": [
+      -0.9237328863493609,
+      -0.9811428314738105
+     ]
+    }
+   }
+  },
+  "vdf9-trfe4-an1-14@0": {
+   "letters": "VVRVVRVAVVRVVR",
+   "note": "the 64/29/7 cell with acrylonitrile in place of CFE: the nitrile pin at the film's dilution",
+   "start_offset": 0,
+   "mirrored": false,
+   "fixed_cell": false,
+   "sites": {
+    "0": {
+     "formation": 0.14310456106717595,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.5259721400099115,
+      8.380176846471782,
+      92.296574020419,
+      35.455493635474895
+     ],
+     "converged": true,
+     "upright_formation": 3.2542191181149605,
+     "shear_monomers": [
+      -0.04470712365761544,
+      -1.7936387421079287
+     ],
+     "kink_kept": true
+    },
+    "2": {
+     "formation": 3.8146037642287496,
+     "relative": 1.6701371677108483,
+     "units": "VR",
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.448215318754983,
+      8.517322481156102,
+      92.1323953729733,
+      35.50544169018853
+     ],
+     "start_energy": 9.585575770854703,
+     "from_offset": 0,
+     "iterations": 234,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 176.54119086265564,
+     "upright_formation": 4.924356285825809,
+     "shear_monomers": [
+      -0.04806621703901667,
+      -1.7914217219743729
+     ]
+    },
+    "26": {
+     "formation": -1.0625420523939937,
+     "relative": 0.35757301848995837,
+     "units": "RV",
+     "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.536681454202816,
+      8.468187868569128,
+      90.85121045982993,
+      35.447800552216904
+     ],
+     "start_energy": 51.12212055263273,
+     "from_offset": 0,
+     "iterations": 155,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 95.75496792793274,
+     "upright_formation": 3.611792136604919,
+     "shear_monomers": [
+      -0.06297779808712278,
+      -1.804933864434292
+     ]
+    },
+    "4": {
+     "formation": -1.1117369547687872,
+     "relative": 0.45130426629347653,
+     "units": "RV",
+     "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.537038595827211,
+      8.465355703358496,
+      90.68294957604998,
+      35.45218390766996
+     ],
+     "start_energy": 7.8493438963622,
+     "from_offset": 2,
+     "iterations": 250,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 167.41495895385742,
+     "upright_formation": 3.705523384408437,
+     "shear_monomers": [
+      -0.0666380458252507,
+      -1.7976109413718742
+     ]
+    },
+    "24": {
+     "formation": 3.8241047853981485,
+     "relative": 1.6773303495648264,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.446959262392033,
+      8.519168521944279,
+      92.0869364148047,
+      35.52032359453615
+     ],
+     "start_energy": 15.185521800616883,
+     "from_offset": 26,
+     "iterations": 165,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 84.44508385658264,
+     "upright_formation": 4.931549467679787,
+     "shear_monomers": [
+      -0.04447358492403009,
+      -1.7952045477186354
+     ]
+    },
+    "6": {
+     "formation": -0.04935286788688131,
+     "relative": 0.21249332337498572,
+     "units": "VV",
+     "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.528818868497632,
+      8.376812458009121,
+      92.09847338127733,
+      35.4514288515943
+     ],
+     "start_energy": 8.94815669359491,
+     "from_offset": 4,
+     "iterations": 113,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 50.3542959690094,
+     "upright_formation": 3.466712441489946,
+     "shear_monomers": [
+      -0.051266878308784666,
+      -1.7786470524587492
+     ]
+    },
+    "22": {
+     "formation": 0.13303177689830648,
+     "relative": 0.013818468451972876,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
+     "kink_kept": true,
+     "cell": [
+      5.5261899618396715,
+      8.382902321007448,
+      92.30768979353935,
+      35.466532440274364
+     ],
+     "start_energy": 11.513184235983545,
+     "from_offset": 24,
+     "iterations": 125,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 70.05182528495789,
+     "upright_formation": 3.2680375865669333,
+     "shear_monomers": [
+      -0.04412452199938987,
+      -1.79341431685663
+     ]
+    },
+    "8": {
+     "formation": 3.880594125495918,
+     "relative": 1.8975951343934838,
+     "units": "VR",
+     "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.4523124205632545,
+      8.513888374132254,
+      92.05995944333178,
+      35.47753731382557
+     ],
+     "start_energy": 15.412441427712892,
+     "from_offset": 6,
+     "iterations": 206,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 152.18662643432617,
+     "upright_formation": 5.151814252508444,
+     "shear_monomers": [
+      -0.0374777987151373,
+      -1.7607988667723564
+     ]
+    },
+    "20": {
+     "formation": -1.0592753996667312,
+     "relative": 0.23064589985663986,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.535311889304298,
+      8.476227613631773,
+      90.87111681343222,
+      35.444551669438056
+     ],
+     "start_energy": 20.087562625163272,
+     "from_offset": 22,
+     "iterations": 88,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 63.593623876571655,
+     "upright_formation": 3.4848650179716003,
+     "shear_monomers": [
+      -0.062331425406757734,
+      -1.8016955060948947
+     ]
+    },
+    "10": {
+     "formation": -2.0780795278830055,
+     "relative": 2.171474100022479,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.583145208140356,
+      8.509795508197815,
+      89.89650608216844,
+      35.369233111610896
+     ],
+     "start_energy": 21.433433224739588,
+     "from_offset": 8,
+     "iterations": 374,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 303.1335425376892,
+     "upright_formation": 5.4256932181374395,
+     "shear_monomers": [
+      -0.04669824261934688,
+      -1.7922316689352427
+     ]
+    },
+    "18": {
+     "formation": 4.055274226515195,
+     "relative": 1.7738459382169651,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.449572699892785,
+      8.513089261486742,
+      91.96105840261617,
+      35.57758785837348
+     ],
+     "start_energy": 16.63812845290903,
+     "from_offset": 20,
+     "iterations": 230,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 115.11915922164917,
+     "upright_formation": 5.028065056331926,
+     "shear_monomers": [
+      -0.023127817605237584,
+      -1.7982129693492752
+     ]
+    },
+    "12": {
+     "formation": 0.6251875904575144,
+     "relative": 12.832477157004774,
+     "units": "VA",
+     "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      7.614946152932484,
+      7.752077054495285,
+      84.90429056144632,
+      34.95827807240862
+     ],
+     "start_energy": 429.1705782517302,
+     "from_offset": 10,
+     "iterations": 282,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 135.7522521018982,
+     "upright_formation": 16.086696275119735,
+     "shear_monomers": [
+      0.9355761932032263,
+      -0.9306546475546057
+     ]
+    },
+    "16": {
+     "formation": 0.0030701777182713386,
+     "relative": 0.5092100408274831,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.56481909323242,
+      8.405760956690862,
+      92.04122001219588,
+      35.51558098238378
+     ],
+     "start_energy": 23.264577386541873,
+     "from_offset": 18,
+     "iterations": 106,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 53.27572321891785,
+     "upright_formation": 3.7634291589424436,
+     "shear_monomers": [
+      -0.045840873216189154,
+      -1.8095933728455538
+     ]
+    },
+    "14": {
+     "formation": 8.570918889482058,
+     "relative": 5.382319408762427,
+     "units": "AV",
+     "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      9.695419402017786,
+      5.094012570992482,
+      82.81028905023733,
+      35.37229739714481
+     ],
+     "start_energy": 192.48232179807246,
+     "from_offset": 12,
+     "iterations": 133,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 75.6014404296875,
+     "upright_formation": 8.636538526877388,
+     "shear_monomers": [
+      0.08727592982393909,
+      0.0021122262640976834
+     ]
+    }
+   }
+  },
+  "vdf9-trfe4-an1-14@0~": {
+   "letters": "VVRVVRVAVVRVVR",
+   "note": "the 64/29/7 cell with acrylonitrile in place of CFE: the nitrile pin at the film's dilution",
+   "start_offset": 0,
+   "mirrored": true,
+   "fixed_cell": false,
+   "sites": {
+    "0": {
+     "formation": 0.7630872116538114,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.081910245758046,
+      9.17729195565412,
+      95.47436157086514,
+      35.496716774694676
+     ],
+     "converged": true,
+     "upright_formation": 3.650032480434689,
+     "shear_monomers": [
+      0.9202816249576811,
+      1.0145741695282224
+     ],
+     "kink_kept": true
+    },
+    "2": {
+     "formation": -1.1497649067262898,
+     "relative": 0.9708625425006545,
+     "units": "VR",
+     "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.1401607064659105,
+      9.247706226190866,
+      94.35385090012608,
+      35.32826283674305
+     ],
+     "start_energy": 13.737840496646413,
+     "from_offset": 0,
+     "iterations": 159,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 65.40431642532349,
+     "upright_formation": 4.620895022935343,
+     "shear_monomers": [
+      0.8937451094417846,
+      0.9762716177806126
+     ]
+    },
+    "26": {
+     "formation": 0.81628932907023,
+     "relative": -0.2695521237702394,
+     "units": "RV",
+     "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.0274806116413036,
+      9.222112113495266,
+      95.35752256345216,
+      35.534769917434744
+     ],
+     "start_energy": 7.449675979981592,
+     "from_offset": 0,
+     "iterations": 94,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 72.51211190223694,
+     "upright_formation": 3.3804803566644495,
+     "shear_monomers": [
+      0.9288554884335319,
+      0.954543097384702
+     ]
+    },
+    "4": {
+     "formation": 0.8555618036417059,
+     "relative": -0.31880529570887006,
+     "units": "RV",
+     "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.017408807194042,
+      9.239235108674174,
+      95.34284707202096,
+      35.531515910725794
+     ],
+     "start_energy": 16.521509808554484,
+     "from_offset": 2,
+     "iterations": 159,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 102.15305542945862,
+     "upright_formation": 3.331227184725819,
+     "shear_monomers": [
+      0.9266946014956828,
+      0.9534599265068809
+     ]
+    },
+    "24": {
+     "formation": 2.7893602957964703,
+     "relative": -0.36654093771531393,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
+     "kink_kept": true,
+     "cell": [
+      4.929962899439995,
+      9.465637031001016,
+      97.00104311278795,
+      35.54203931784258
+     ],
+     "start_energy": 16.397554889716417,
+     "from_offset": 26,
+     "iterations": 98,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 46.04258847236633,
+     "upright_formation": 3.283491542719375,
+     "shear_monomers": [
+      0.9944645032637078,
+      0.8031831817412803
+     ]
+    },
+    "6": {
+     "formation": 0.9164544505165964,
+     "relative": -0.07944898077215612,
+     "units": "VV",
+     "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.069602383836241,
+      9.199019004085494,
+      95.4521310032426,
+      35.48483973907073
+     ],
+     "start_energy": 4.8923022511204834,
+     "from_offset": 4,
+     "iterations": 60,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 25.058433771133423,
+     "upright_formation": 3.5705834996625327,
+     "shear_monomers": [
+      0.9138205625093266,
+      1.013941717707846
+     ]
+    },
+    "22": {
+     "formation": 0.7604566252561682,
+     "relative": 0.020564025422032728,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
+     "kink_kept": true,
+     "cell": [
+      5.08022629282543,
+      9.178030482556599,
+      95.43474295646737,
+      35.494706355658344
+     ],
+     "start_energy": 9.717692711510367,
+     "from_offset": 24,
+     "iterations": 123,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 80.7233054637909,
+     "upright_formation": 3.6705965058567216,
+     "shear_monomers": [
+      0.920065510951266,
+      1.0147744325578025
+     ]
+    },
+    "8": {
+     "formation": 1.663724614990386,
+     "relative": -1.5016484067107285,
+     "units": "VR",
+     "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.924748021840128,
+      9.490476553455025,
+      96.97098794240394,
+      35.48496132571953
+     ],
+     "start_energy": 16.583165870074552,
+     "from_offset": 6,
+     "iterations": 115,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 77.87044548988342,
+     "upright_formation": 2.1483840737239603,
+     "shear_monomers": [
+      1.007213372962853,
+      0.7957398884262394
+     ]
+    },
+    "20": {
+     "formation": 0.7099542325149173,
+     "relative": -0.24151244463284627,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.027897335550383,
+      9.217019894856158,
+      95.32834558617208,
+      35.53346220371004
+     ],
+     "start_energy": 6.443655281884176,
+     "from_offset": 22,
+     "iterations": 76,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 50.64348006248474,
+     "upright_formation": 3.4085200358018426,
+     "shear_monomers": [
+      0.9334321663260737,
+      0.9611413428769484
+     ]
+    },
+    "10": {
+     "formation": 1.2815265705165046,
+     "relative": -1.3883592058869283,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.989289976844518,
+      9.236139341983684,
+      95.52414848617316,
+      35.5676783454366
+     ],
+     "start_energy": 20.92680002287146,
+     "from_offset": 8,
+     "iterations": 109,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 65.26800870895386,
+     "upright_formation": 2.2616732745477606,
+     "shear_monomers": [
+      0.9233191984017022,
+      1.049780729773713
+     ]
+    },
+    "18": {
+     "formation": 3.2824745483016216,
+     "relative": 0.1390671005410411,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.933297331282589,
+      9.464458473199766,
+      97.0608423554524,
+      35.57390757813319
+     ],
+     "start_energy": 18.331096168536007,
+     "from_offset": 20,
+     "iterations": 112,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 44.29894828796387,
+     "upright_formation": 3.78909958097573,
+     "shear_monomers": [
+      0.004534879188707661,
+      -0.18628181078356298
+     ]
+    },
+    "12": {
+     "formation": 3.632594612455293,
+     "relative": -0.01743786797939606,
+     "units": "VA",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": false,
+     "cell": [
+      5.4127476760590545,
+      8.455813940097372,
+      89.54693200399468,
+      36.11542620470462
+     ],
+     "start_energy": 74.95826966415606,
+     "from_offset": 10,
+     "iterations": 474,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 146.9208025932312,
+     "state": [
+      5.4127476760590545,
+      8.455813940097372,
+      89.54693200399468,
+      36.11542620470462,
+      3.297019165388656e-08,
+      -4.451038542072785e-09,
+      163.91653865879536,
+      -0.7702926524327081,
+      0.5,
+      0.5,
+      163.91653343668978,
+      35.345133640978055,
+      184.87787563141774,
+      187.72265146935794,
+      182.96672618007938,
+      177.01961476774972,
+      172.14620799506702,
+      175.3032198411749,
+      184.26451382671252,
+      187.75330976923397,
+      187.46753426096353,
+      186.0381365315697,
+      194.96072923765124,
+      204.57989975591823,
+      -167.0765943737527,
+      181.46982934876095,
+      178.53018458108804,
+      167.07658328610367,
+      155.4201097212439,
+      165.03929981609932,
+      173.96182456794818,
+      172.53248832812235,
+      172.2466867064766,
+      175.73543101259298,
+      184.69673549352558,
+      187.8537668410399,
+      182.9803975560422,
+      177.03334080553017,
+      172.2773705008316,
+      175.1221307302294,
+      115.37296321743398,
+      115.59071846607563,
+      115.37295729983022,
+      115.22519970794522,
+      115.70450989677143,
+      115.20976532310831,
+      115.39767864119646,
+      115.55335369255353,
+      115.42510020512427,
+      115.16957772208441,
+      115.68676147666305,
+      115.235306295558,
+      115.51794542671536,
+      115.20302476498257,
+      115.001047885184,
+      116.20973812250861,
+      115.00104909186737,
+      115.20305394861444,
+      115.51794657370931,
+      115.23531163612972,
+      115.68676173419286,
+      115.16956550449649,
+      115.42510554963893,
+      115.55335614414953,
+      115.39768707282967,
+      115.20978563062258,
+      115.70450053290371,
+      115.22522486846809,
+      184.87786465529663,
+      187.7226098273299,
+      182.96661484564476,
+      177.0195833888945,
+      172.14625167133948,
+      175.3032666406075,
+      184.26455257545027,
+      187.75332218866617,
+      187.4675389548044,
+      186.03812500790536,
+      194.9607116342351,
+      204.57989696840232,
+      -167.076603985107,
+      181.4698608984332,
+      178.53017988554186,
+      167.07660219108388,
+      155.4201417100178,
+      165.03926157053007,
+      173.9617636737745,
+      172.53248070901154,
+      172.2467116357673,
+      175.73546906795633,
+      184.69676363952834,
+      187.85376526088615,
+      182.98040409571541,
+      177.03336804030624,
+      172.27738930808874,
+      175.12210611098934,
+      115.37296263748823,
+      115.59071402059854,
+      115.37295848237908,
+      115.22521823506253,
+      115.70452727259922,
+      115.20979646854656,
+      115.39767830471494,
+      115.55334904858591,
+      115.42510376236339,
+      115.1695704096406,
+      115.6867759946977,
+      115.23529831672465,
+      115.51794885499783,
+      115.20304308284206,
+      115.00103983037896,
+      116.20972514234835,
+      115.00103175497041,
+      115.20303417432254,
+      115.5179564033858,
+      115.23531961613033,
+      115.68675723042844,
+      115.16957487496646,
+      115.4250892900108,
+      115.55332455437896,
+      115.39766605293502,
+      115.2097629113546,
+      115.70452400040271,
+      115.22523525443235
+     ]
+    },
+    "16": {
+     "formation": 1.4696277387852206,
+     "relative": 0.659355924987139,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.064287648059435,
+      9.1939741787286,
+      95.37209020984845,
+      35.497627242258126
+     ],
+     "start_energy": 59.193154873260696,
+     "from_offset": 18,
+     "iterations": 100,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 50.95309662818909,
+     "upright_formation": 4.309388405421828,
+     "shear_monomers": [
+      0.9268380244152102,
+      1.0144480660916382
+     ]
+    },
+    "14": {
+     "formation": 3.632594613176906,
+     "relative": -0.01743786725778307,
+     "units": "AV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": false,
+     "cell": [
+      5.412747367925517,
+      8.455814072342541,
+      89.54691125208996,
+      36.115426010707004
+     ],
+     "start_energy": 227.14685395252306,
+     "from_offset": 12,
+     "iterations": 122,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 44.01698708534241,
+     "state": [
+      5.412747367925517,
+      8.455814072342541,
+      89.54691125208996,
+      36.115426010707004,
+      -8.547767210347e-08,
+      -5.9310399591979427e-08,
+      163.91648826157564,
+      -0.7702920329295213,
+      0.5,
+      0.5,
+      163.91656574023617,
+      35.345133640978055,
+      184.8778696447887,
+      187.72258726582226,
+      182.96665330068024,
+      177.01967477529644,
+      172.14632300341344,
+      175.30323816970412,
+      184.26446778550755,
+      187.75321294569648,
+      187.46743015556493,
+      186.03793034000591,
+      194.9606034138121,
+      204.58002874324256,
+      192.9236243989017,
+      181.46998134787978,
+      -181.4698960153546,
+      167.07656332489404,
+      155.4202461781396,
+      165.03909775283344,
+      173.9617821337504,
+      172.53261154104484,
+      172.24653255470227,
+      175.73532651545722,
+      184.69697079322682,
+      187.8540156823522,
+      182.98041585023725,
+      177.03322420823784,
+      172.27732120232363,
+      175.12216435563806,
+      115.37297226832065,
+      115.59071726589747,
+      115.37296455043676,
+      115.22522320892526,
+      115.7044958369794,
+      115.20978696487222,
+      115.39765952901747,
+      115.55334491172778,
+      115.42510029561852,
+      115.16957717740146,
+      115.68676799831009,
+      115.23529403004994,
+      115.51796741295456,
+      115.20303699288436,
+      115.00103368617454,
+      116.20969051736336,
+      115.0010584268734,
+      115.20305228135477,
+      115.51794613409021,
+      115.23530098865952,
+      115.68674603303961,
+      115.16960147339755,
+      115.42508103826587,
+      115.55335530848427,
+      115.39767656815438,
+      115.20976512942963,
+      115.70454059687908,
+      115.22521685139344,
+      184.8779457640186,
+      187.72271384272653,
+      182.96673942754634,
+      177.0196344385069,
+      172.14608119051658,
+      175.30299022712853,
+      184.2647174254293,
+      187.75355462664157,
+      187.4673633778697,
+      186.03786125539574,
+      194.96064013750419,
+      204.57996836041144,
+      192.9235567721048,
+      181.46999089059005,
+      -181.46982514991518,
+      167.07669735860506,
+      155.4201426132777,
+      165.03919180830653,
+      173.96185038353477,
+      172.5325088522479,
+      172.2469643929004,
+      175.73567314199192,
+      184.69643032591736,
+      187.85340895845496,
+      182.98039412922222,
+      177.03340311267596,
+      172.27727972765618,
+      175.12212351216775,
+      115.37294434054964,
+      115.59072261884681,
+      115.37295628151679,
+      115.22521041141925,
+      115.70452999889541,
+      115.20977677905744,
+      115.3976790561535,
+      115.55334123365424,
+      115.42510347897989,
+      115.16956772416236,
+      115.68678048249075,
+      115.23530944989682,
+      115.51796340465224,
+      115.20302756818771,
+      115.00102270057977,
+      116.20971587320376,
+      115.0010468439631,
+      115.20304614808599,
+      115.51795156701127,
+      115.23527778249931,
+      115.68675965759597,
+      115.16957340590814,
+      115.42511080109085,
+      115.5533280208347,
+      115.39768135318054,
+      115.20979287031483,
+      115.7044895658944,
+      115.22524545974818
+     ]
+    }
+   }
+  },
+  "vdf9-trfe3-an1-rvdf1-14@0": {
+   "letters": "IVRVVRVAVVVVVR",
+   "note": "the same with three TrFE in place of four (21 mol%): the TrFE lever on the nitrile pair's margin",
+   "start_offset": 0,
+   "mirrored": false,
+   "fixed_cell": false,
+   "sites": {
+    "0": {
+     "formation": 2.6565396522204168,
+     "relative": 0.0,
+     "units": "IV",
+     "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.553800382083431,
+      8.364696525230501,
+      92.65725913277893,
+      35.47930960042799
+     ],
+     "converged": true,
+     "upright_formation": 2.6018331410158027,
+     "shear_monomers": [
+      0.005372836200411807,
+      0.02692512128108661
+     ],
+     "kink_kept": true
+    },
+    "2": {
+     "formation": 3.6052727406882354,
+     "relative": 0.9503575938638278,
+     "units": "VR",
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.480269989542832,
+      8.527285271203521,
+      92.3960314823819,
+      35.477877906745256
+     ],
+     "start_energy": 9.22184969719676,
+     "from_offset": 0,
+     "iterations": 67,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 61.41228628158569,
+     "upright_formation": 3.5521907348796304,
+     "shear_monomers": [
+      -0.014274674109366486,
+      -0.025507128685966666
+     ]
+    },
+    "26": {
+     "formation": 4.411221093015683,
+     "relative": 2.7459731880077953,
+     "units": "RI",
+     "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.5330467531235525,
+      8.461976474383087,
+      93.21183825225937,
+      35.33583490871511
+     ],
+     "start_energy": 17.868888083447843,
+     "from_offset": 0,
+     "iterations": 106,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 42.29987025260925,
+     "upright_formation": 5.347806329023598,
+     "shear_monomers": [
+      0.31605640238026944,
+      -0.2162797663406192
+     ]
+    },
+    "4": {
+     "formation": 1.3562635397855018,
+     "relative": 0.23804835741810848,
+     "units": "RV",
+     "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.587238486554417,
+      8.441916132287771,
+      91.27765253208264,
+      35.436387120353835
+     ],
+     "start_energy": 6.340451047461883,
+     "from_offset": 2,
+     "iterations": 64,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 28.826385974884033,
+     "upright_formation": 2.839881498433911,
+     "shear_monomers": [
+      -0.052960235482418565,
+      -1.7120136352166007
+     ]
+    },
+    "24": {
+     "formation": 4.246586404914041,
+     "relative": 2.08079888701819,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.508104803026805,
+      8.479150175697828,
+      92.22816190247032,
+      35.40419922251746
+     ],
+     "start_energy": 11.2331499724542,
+     "from_offset": 26,
+     "iterations": 148,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 59.416428565979004,
+     "upright_formation": 4.682632028033993,
+     "shear_monomers": [
+      -0.12768508106107834,
+      0.1018814258345823
+     ]
+    },
+    "6": {
+     "formation": 2.81719662222514,
+     "relative": 0.1393382468500448,
+     "units": "VV",
+     "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.561402088481709,
+      8.384654919513434,
+      92.6155898067549,
+      35.40853234592376
+     ],
+     "start_energy": 7.2396223164452636,
+     "from_offset": 4,
+     "iterations": 85,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 40.46629810333252,
+     "upright_formation": 2.7411713878658475,
+     "shear_monomers": [
+      0.007952069359405792,
+      -0.0005099379448699274
+     ]
+    },
+    "22": {
+     "formation": 2.514142006724825,
+     "relative": -0.056958585870376055,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
+     "kink_kept": true,
+     "cell": [
+      5.552205142510083,
+      8.408489269469579,
+      92.6950316585638,
+      35.45247834369729
+     ],
+     "start_energy": 28.280882187675076,
+     "from_offset": 24,
+     "iterations": 73,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 46.41885304450989,
+     "upright_formation": 2.5448745551454266,
+     "shear_monomers": [
+      -0.039783950364411395,
+      -1.6856462182768759
+     ]
+    },
+    "8": {
+     "formation": 4.3831405256024,
+     "relative": 1.7203985636860324,
+     "units": "VR",
+     "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.470639137733323,
+      8.553809958221446,
+      92.72297492213022,
+      35.37740995222325
+     ],
+     "start_energy": 12.808569633317632,
+     "from_offset": 6,
+     "iterations": 87,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 64.47983288764954,
+     "upright_formation": 4.322231704701835,
+     "shear_monomers": [
+      -0.010823561167883595,
+      -0.02649760697417626
+     ]
+    },
+    "20": {
+     "formation": 1.9222870461001662,
+     "relative": -0.7073068501345716,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.49103016102612,
+      8.479081361175426,
+      92.33597770529562,
+      35.385108473508886
+     ],
+     "start_energy": 16.229179766824203,
+     "from_offset": 22,
+     "iterations": 62,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 47.91634464263916,
+     "upright_formation": 1.894526290881231,
+     "shear_monomers": [
+      -0.0016711984796979355,
+      0.053175056531643304
+     ]
+    },
+    "10": {
+     "formation": 0.6479222334438788,
+     "relative": 2.1093831103028293,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.628665517430053,
+      8.491773828963714,
+      90.75767279353262,
+      35.31148235366426
+     ],
+     "start_energy": 19.636784553682702,
+     "from_offset": 8,
+     "iterations": 96,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 57.68873977661133,
+     "upright_formation": 4.711216251318632,
+     "shear_monomers": [
+      -0.03564959963052143,
+      -1.7195991258018624
+     ]
+    },
+    "18": {
+     "formation": 1.8952276318966739,
+     "relative": -0.7454288568641942,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.482349479330834,
+      8.50803679388832,
+      92.30721948731822,
+      35.37429924490588
+     ],
+     "start_energy": 15.559334642837797,
+     "from_offset": 20,
+     "iterations": 78,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 45.93762683868408,
+     "upright_formation": 1.8564042841516084,
+     "shear_monomers": [
+      0.028084236652245822,
+      0.024724586760984272
+     ]
+    },
+    "12": {
+     "formation": 4.1307308796178575,
+     "relative": 12.062077299166802,
+     "units": "VA",
+     "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      7.504446820584135,
+      7.765067671612955,
+      85.5888655978291,
+      34.91383850099211
+     ],
+     "start_energy": 360.7408404470951,
+     "from_offset": 10,
+     "iterations": 238,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 105.07644295692444,
+     "upright_formation": 14.663910440182605,
+     "shear_monomers": [
+      0.9578246106980155,
+      -0.9208585511454362
+     ]
+    },
+    "16": {
+     "formation": 2.017876972111793,
+     "relative": -0.24037839099347025,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.485118254540578,
+      8.558656940059551,
+      92.27229423962402,
+      35.350768665120334
+     ],
+     "start_energy": 13.982096301427816,
+     "from_offset": 18,
+     "iterations": 63,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 34.027438163757324,
+     "upright_formation": 2.3614547500223324,
+     "shear_monomers": [
+      -0.020141396364816537,
+      -1.7244210605557413
+     ]
+    },
+    "14": {
+     "formation": 4.737028239121528,
+     "relative": 3.4667018714513205,
+     "units": "AV",
+     "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      10.023469662554044,
+      4.983007786831972,
+      88.50546136192797,
+      32.863732387772814
+     ],
+     "start_energy": 100.19383513115442,
+     "from_offset": 12,
+     "iterations": 143,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 96.19456338882446,
+     "upright_formation": 6.068535012467123,
+     "shear_monomers": [
+      0.9678740021729568,
+      0.013322262925131008
+     ]
+    }
+   }
+  },
+  "vdf9-trfe3-an1-rvdf1-14@0~": {
+   "letters": "IVRVVRVAVVVVVR",
+   "note": "the same with three TrFE in place of four (21 mol%): the TrFE lever on the nitrile pair's margin",
+   "start_offset": 0,
+   "mirrored": true,
+   "fixed_cell": false,
+   "sites": {
+    "0": {
+     "formation": 3.20320642684554,
+     "relative": 0.0,
+     "units": "IV",
+     "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.4683567997875615,
+      8.456983832685825,
+      90.38437330699546,
+      35.487025985560344
+     ],
+     "converged": true,
+     "upright_formation": 3.169699806066305,
+     "shear_monomers": [
+      0.03625353076675778,
+      -0.011562322046582198
+     ],
+     "kink_kept": true
+    },
+    "2": {
+     "formation": 3.1782889465649333,
+     "relative": 0.6663775116484061,
+     "units": "VR",
+     "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.502958329702285,
+      8.699371165399818,
+      90.80250892534548,
+      35.310350862116806
+     ],
+     "start_energy": 13.535072541784743,
+     "from_offset": 0,
+     "iterations": 170,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 84.67104625701904,
+     "upright_formation": 3.836077317714711,
+     "shear_monomers": [
+      -0.09664028348924997,
+      -0.2603347581603984
+     ]
+    },
+    "26": {
+     "formation": 3.242942421280773,
+     "relative": 0.2386525545711038,
+     "units": "RI",
+     "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.582276541550716,
+      8.309975459129479,
+      91.84783076116646,
+      35.588339823609935
+     ],
+     "start_energy": 8.488512075228499,
+     "from_offset": 0,
+     "iterations": 66,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 28.565255403518677,
+     "upright_formation": 3.4083523606374087,
+     "shear_monomers": [
+      0.006651881137389756,
+      0.08691569021213455
+     ]
+    },
+    "4": {
+     "formation": 2.99976210289789,
+     "relative": -0.234998903636793,
+     "units": "RV",
+     "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.484532604159656,
+      8.464233452229287,
+      91.1824007460131,
+      35.493906064090545
+     ],
+     "start_energy": 15.713762102085681,
+     "from_offset": 2,
+     "iterations": 75,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 30.230588912963867,
+     "upright_formation": 2.934700902429512,
+     "shear_monomers": [
+      0.016064189065723038,
+      -0.01772921761353411
+     ]
+    },
+    "24": {
+     "formation": 3.2417090039766236,
+     "relative": 0.5304940152471005,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.624502524166297,
+      8.243842065433213,
+      91.59580762002426,
+      35.47088641473473
+     ],
+     "start_energy": 8.88953416991167,
+     "from_offset": 26,
+     "iterations": 89,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 32.62347388267517,
+     "upright_formation": 3.7001938213134054,
+     "shear_monomers": [
+      -0.10281157600557567,
+      0.10346069477752344
+     ]
+    },
+    "6": {
+     "formation": 3.1610274455712073,
+     "relative": -0.025517638364149775,
+     "units": "VV",
+     "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.484648738606651,
+      8.520930597198085,
+      90.16501108741255,
+      35.43393267656011
+     ],
+     "start_energy": 4.353920044722301,
+     "from_offset": 4,
+     "iterations": 59,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 23.89053726196289,
+     "upright_formation": 3.144182167702155,
+     "shear_monomers": [
+      -0.002188781871549268,
+      -0.06571565380635204
+     ]
+    },
+    "22": {
+     "formation": 4.430455141634056,
+     "relative": 1.3107238918226898,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
+     "kink_kept": true,
+     "cell": [
+      5.489074710523724,
+      8.521543829254883,
+      89.74138849679663,
+      35.396594140852315
+     ],
+     "start_energy": 10.599694772865135,
+     "from_offset": 24,
+     "iterations": 108,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 41.589149713516235,
+     "upright_formation": 4.480423697888995,
+     "shear_monomers": [
+      -0.08804559889406667,
+      -0.14559411464093172
+     ]
+    },
+    "8": {
+     "formation": 1.3583054983963478,
+     "relative": -1.7750873759780035,
+     "units": "VR",
+     "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.625002597449471,
+      8.323565131084337,
+      92.68240933602614,
+      35.395231310540794
+     ],
+     "start_energy": 13.890608567365376,
+     "from_offset": 6,
+     "iterations": 63,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 36.701194047927856,
+     "upright_formation": 1.3946124300883014,
+     "shear_monomers": [
+      -0.06699865971425426,
+      0.041164761101053216
+     ]
+    },
+    "20": {
+     "formation": 2.427353928608227,
+     "relative": -0.721482889725209,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.503258744639841,
+      8.481983335315885,
+      90.3897294842688,
+      35.412617658368575
+     ],
+     "start_energy": 4.89419696979887,
+     "from_offset": 22,
+     "iterations": 84,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 33.79493975639343,
+     "upright_formation": 2.448216916341096,
+     "shear_monomers": [
+      -0.05718294965765762,
+      -0.08743033458134099
+     ]
+    },
+    "10": {
+     "formation": 1.82199825634396,
+     "relative": -1.202017366753168,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.484417908302743,
+      8.416876923964699,
+      90.89157958679262,
+      35.53510042551074
+     ],
+     "start_energy": 35.52539686946682,
+     "from_offset": 8,
+     "iterations": 77,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 31.997931480407715,
+     "upright_formation": 1.967682439313137,
+     "shear_monomers": [
+      0.08690217591146601,
+      0.0034319341533714806
+     ]
+    },
+    "18": {
+     "formation": 1.9910788381145323,
+     "relative": -1.2347840035327238,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.481597947699401,
+      8.477126792075303,
+      90.80343336327513,
+      35.41676884072054
+     ],
+     "start_energy": 4.333600414809013,
+     "from_offset": 20,
+     "iterations": 93,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 32.2974967956543,
+     "upright_formation": 1.934915802533581,
+     "shear_monomers": [
+      -0.02616995026144801,
+      -0.039316279483617184
+     ]
+    },
+    "12": {
+     "formation": 9.039154262853415,
+     "relative": 5.8694544567871105,
+     "units": "VA",
+     "torsions": "T T T T T T T T T T T T T T G+ T T T T T T T T T T T T T",
+     "kink_kept": false,
+     "cell": [
+      5.239798187059738,
+      9.317146573826225,
+      97.31258965891975,
+      35.15704508033087
+     ],
+     "start_energy": 64.80668806767659,
+     "from_offset": 10,
+     "iterations": 327,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 117.87176537513733,
+     "state": [
+      5.239798187059738,
+      9.317146573826225,
+      97.31258965891975,
+      35.15704508033087,
+      -0.010461418270959238,
+      0.0009016963054426277,
+      44.13012031175944,
+      0.008368960763953898,
+      0.5,
+      0.5,
+      41.44338586602502,
+      1.5856097590472018e-07,
+      179.95201448937746,
+      180.6381474743122,
+      179.54812792648016,
+      176.49412921558996,
+      170.2292647934848,
+      170.39273840093838,
+      191.62945192585894,
+      191.6957683299846,
+      187.0952492929602,
+      186.03967463858982,
+      202.25964896232557,
+      192.60731459431153,
+      -144.5353719788985,
+      182.20799432149462,
+      81.23349227162333,
+      194.95153648759964,
+      183.30884729886702,
+      169.84857755666613,
+      180.47952781876484,
+      163.15106988967426,
+      183.26152999700938,
+      169.64521910629622,
+      196.41010419805838,
+      185.23664998135416,
+      190.29530207919373,
+      187.86701238386416,
+      177.14680083722544,
+      176.89177079523085,
+      114.54373301703099,
+      114.98755084919135,
+      114.3063887740154,
+      114.80584994088359,
+      116.32651075063505,
+      114.50631022065019,
+      115.86046975465386,
+      115.00477159208575,
+      115.82027141169276,
+      114.63780946229932,
+      116.08418239914643,
+      114.56815513591765,
+      116.56918323938197,
+      114.37960218385386,
+      115.31595188208543,
+      117.00860140645754,
+      118.60042878875461,
+      112.94347300095536,
+      117.29661419667204,
+      114.14275014342633,
+      116.72526947058493,
+      114.43099415265125,
+      116.53936595416937,
+      114.83531918584119,
+      115.78838854865629,
+      114.9572326751166,
+      115.28866003397023,
+      115.15361450035404,
+      180.06323771421359,
+      179.8191857653602,
+      179.7545244758411,
+      176.51238502664967,
+      171.11272199819143,
+      172.3269739402306,
+      188.2242196023513,
+      188.76198414740531,
+      183.27968554824366,
+      182.14013171871446,
+      194.85497600295724,
+      199.4759502184147,
+      -132.83562443249684,
+      182.16676084084725,
+      82.66557132969749,
+      193.01572207677737,
+      181.7212692920521,
+      169.3193786354689,
+      181.51699239931958,
+      165.07267003689535,
+      183.18641960661242,
+      168.97173362368153,
+      196.2878280256234,
+      184.62243358433184,
+      191.06054395074065,
+      187.83115448823776,
+      177.29713168259076,
+      176.32733857032935,
+      114.52843920391425,
+      114.90688930285332,
+      114.26654184581876,
+      114.74201930529647,
+      116.26617147310887,
+      114.46215716671577,
+      115.76160925436899,
+      114.99575721616283,
+      115.74453899808215,
+      114.63076971750662,
+      115.9825764948671,
+      114.6496557172511,
+      116.34132967846874,
+      114.42317591660384,
+      115.65916888715894,
+      116.75946948584854,
+      118.06842299180238,
+      113.35111459297727,
+      116.9912353292568,
+      114.2051042078563,
+      116.69690254097101,
+      114.36568622404093,
+      116.55783658102207,
+      114.72881529842775,
+      115.82805708065614,
+      114.85332478160755,
+      115.28186225309155,
+      115.08222261798464
+     ]
+    },
+    "16": {
+     "formation": 2.534259641478826,
+     "relative": -0.6914273142349003,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.481654453525724,
+      8.469352645540656,
+      90.99327880643017,
+      35.42615262176494
+     ],
+     "start_energy": 8.293223099555462,
+     "from_offset": 18,
+     "iterations": 93,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 38.2692437171936,
+     "upright_formation": 2.4782724918314045,
+     "shear_monomers": [
+      -0.019084989230189663,
+      0.020275605006163253
+     ]
+    },
+    "14": {
+     "formation": 7.09721418986399,
+     "relative": 3.9275143837976856,
+     "units": "AV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": false,
+     "cell": [
+      5.210782069279201,
+      9.761064207760365,
+      78.22136536464942,
+      35.37520585408824
+     ],
+     "start_energy": 890.8126493456494,
+     "from_offset": 12,
+     "iterations": 352,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 133.7955915927887,
+     "state": [
+      5.210782069279201,
+      9.761064207760365,
+      78.22136536464942,
+      35.37520585408824,
+      -0.21317835064564666,
+      -0.021944303331210575,
+      39.57476854041325,
+      -0.052823183926834376,
+      0.5,
+      0.5,
+      37.47828487844627,
+      1.5856097590472018e-07,
+      176.89142131273766,
+      181.75232188753432,
+      179.0173152773443,
+      176.2948053460952,
+      170.5869944718643,
+      173.31214090576827,
+      185.80592845252136,
+      190.73109494487676,
+      188.49020334184883,
+      187.16603524964364,
+      193.24621319336384,
+      194.73291413816446,
+      173.95603951503045,
+      167.90974164841452,
+      -156.51196295675774,
+      185.63479944473607,
+      66.98391158460045,
+      174.01183612769972,
+      266.6497795310582,
+      164.4416204629566,
+      166.90831239271722,
+      173.66580660658605,
+      184.51821089327103,
+      187.0276067011774,
+      185.49421399277708,
+      187.27622845209362,
+      174.57590645213915,
+      178.52698517812837,
+      114.45996459335785,
+      115.36258905622459,
+      114.07965416059389,
+      115.24476237724052,
+      116.04481182690691,
+      114.84689082260302,
+      115.80251279185724,
+      115.01231830789943,
+      116.00034423510971,
+      114.41323100298627,
+      116.21353952031029,
+      114.39478076552538,
+      116.16216135172402,
+      114.57720498541892,
+      115.17241740697861,
+      116.2911581553896,
+      114.53684012955154,
+      117.2448419119078,
+      117.63924607155955,
+      114.43058131856769,
+      117.41928629182,
+      113.82732000184339,
+      117.06479765188274,
+      114.41386396828835,
+      116.2488279731638,
+      114.75307624646591,
+      115.16644515344332,
+      115.4205796694444,
+      170.21397338082082,
+      178.01996360933742,
+      184.97038304251018,
+      175.11964702258058,
+      172.41212219551142,
+      175.47435211772378,
+      182.25815293165854,
+      185.39087723638215,
+      185.71243371862548,
+      175.70998748924342,
+      182.9133431068888,
+      186.34195986511747,
+      197.9820445986433,
+      194.36756175360372,
+      -101.64158337647666,
+      169.91713965612382,
+      70.20030118661852,
+      169.22789664056376,
+      182.936648642441,
+      171.56455853325792,
+      183.84167744874168,
+      175.48362026122643,
+      187.1209426165084,
+      182.74599715103025,
+      193.73767661662015,
+      188.2238678928814,
+      173.37381773341576,
+      181.447328318216,
+      114.41595560060163,
+      115.09923285017697,
+      114.05656939765224,
+      114.85869362240467,
+      116.24782597877036,
+      114.66230068705138,
+      115.6338796690576,
+      115.35445373038884,
+      115.43808909861684,
+      115.20338911292836,
+      115.59592910518246,
+      115.64293066593845,
+      114.88227366077899,
+      116.20715941282707,
+      115.29314063108215,
+      115.54921090986394,
+      115.27994265605675,
+      114.92830559492427,
+      116.6291792741936,
+      115.25115032896122,
+      116.19537942960062,
+      115.44770223305257,
+      115.9814721155164,
+      115.2701881632633,
+      115.82991547954303,
+      114.90783660468729,
+      115.32111453689626,
+      115.22267942839527
+     ]
+    }
+   }
+  }
+ },
+ "shear_free": "each site's formation is the lowest kink sheet found with the cell free to shear along its chains (examples/kink_sheet_shear.py), against the all-trans cell relaxed the same way; upright_formation is the scan's own",
+ "sites_left_upright": []
+}

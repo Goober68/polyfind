@@ -136,6 +136,7 @@ def main():
     ap.add_argument("--key", default="", help='a kinked crystal of --kinked-references, as "vdf10@0" (with --sites: the scan\'s row, as "vdf10-trfe4-14@0~")')
     ap.add_argument("--merge", nargs="*", default=[], help="with --as-scan: result files of this script")
     ap.add_argument("--as-scan", type=Path, default=None, help="write --scan again with the sites of --merge at their shear-free energies, and stop")
+    ap.add_argument("--gather", type=Path, default=None, help="write the site records of --merge as one result file (one site's starts put together), and stop")
     ap.add_argument("--sites", default="", help="comma list of sites of --scan (offsets in bonds), or 'all' (every site the scan kept a kink at); without it the kinked crystal itself")
     ap.add_argument("--scan", type=Path, default=PRED / "kink_site_scan_belt4.json")
     ap.add_argument("--kinked-references", type=Path, default=PRED / "kink_migration_belt4.json")
@@ -147,8 +148,14 @@ def main():
     ap.add_argument("--no-upright", action="store_true", help="leave the kicked upright start out: more --starts for sites stored in another file (--merge puts one site's starts together)")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
+    if args.gather:
+        rows = gathered(args.merge)
+        args.gather.write_text(json.dumps({"what": WHAT, "rows": {k: rows[k] for k in sorted(rows, key=lambda k: (k.split(" site ")[0], int(k.split(" site ")[1].split(" ")[0])))}}, indent=1))
+        print(f"{len(rows)} sites; written {args.gather}")
     if args.as_scan:
         return as_scan(args)
+    if args.gather:
+        return None
     if not args.key or args.out is None:
         ap.error("--key and --out are needed")
     row = args.key.split("@")[0]

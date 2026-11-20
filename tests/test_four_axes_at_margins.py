@@ -97,3 +97,53 @@ def test_the_kink_sheets_in_the_potential_were_stopped_loose_and_the_lowest_is_t
     before = _stored()["shifts"]["+0.00"]["rows"]
     assert before[MATRIX][SUM]["f_relax_hz"] / 1e3 == pytest.approx(33, abs=1) and before[LEADER][SUM]["f_relax_hz"] / 1e3 == pytest.approx(6877, rel=0.01)
     assert at[LEADER][SUM]["tan_delta_34kHz"] < at[AN][SUM]["tan_delta_34kHz"] < at[MATRIX][SUM]["tan_delta_34kHz"] < at[CFE][SUM]["tan_delta_34kHz"]
+
+
+def test_with_the_shear_free_the_films_sheets_fall_below_all_trans_and_the_leaders_stay_above():
+    """Every kink site of the four cells with the cell free to shear along its chains (examples/kink_sheet_shear.py, belt4)."""
+    scan = json.loads((PRED / "kink_site_scan_belt4_shear.json").read_text())
+    records = json.loads((PRED / "kink_sheet_shear_belt4_sites.json").read_text())["rows"]
+    assert scan["sites_left_upright"] == [] and len(records) == 108
+
+    def sites(row):
+        return [(v["formation"], v["upright_formation"], v["units"], v["shear_monomers"], f"{row}{h} site {o}") for h in ("@0", "@0~")
+                for o, v in scan["rows"][row + h]["sites"].items() if v.get("converged", True) and v.get("kink_kept", True)]
+
+    for row in (CFE, AN, LEADER, MATRIX):  # the scan's energy of a site is the lowest sheet of its record that kept its kink
+        for formation, _, _, _, key in sites(row):
+            rec = records[f"{key} pvdf-dft-valence-belt4"]
+            assert formation == pytest.approx(min(s["formation"] for s in rec["starts"] if s.get("kink_kept") and "failed" not in s)) == pytest.approx(rec["lowest"])
+    low = {row: min(sites(row)) for row in (CFE, AN, LEADER, MATRIX)}
+    assert [len(sites(row)) for row in (CFE, AN, LEADER, MATRIX)] == [28, 26, 26, 28]
+    # upright, the leader had the cheapest sheet of the four; with the shear free it has the second dearest
+    assert {row: min(s[1] for s in sites(row)) for row in low} == pytest.approx({CFE: 3.42, AN: 2.15, LEADER: 1.40, MATRIX: 4.66}, abs=0.006)
+    assert {row: low[row][0] for row in low} == pytest.approx({CFE: -2.27, AN: -2.08, LEADER: 0.65, MATRIX: 0.94}, abs=0.006)
+    assert low[CFE][2] == "VC" and low[CFE][3] == pytest.approx([0.0, -1.78], abs=0.03)  # at the chlorine, the cell sheared by nearly two monomers along b
+    assert {row: sum(1 for s in sites(row) if s[0] < 0.0) for row in low} == {CFE: 9, AN: 6, LEADER: 0, MATRIX: 0}
+    # how many sites end in a cell sheared by half a monomer or more, and what the sites fall by on average: the leader's sheets mostly stay upright
+    inclined = {row: sum(1 for s in sites(row) if max(abs(s[3][0]), abs(s[3][1])) > 0.5) for row in low}
+    assert inclined == {CFE: 28, AN: 24, LEADER: 6, MATRIX: 24}
+    fall = {row: sum(s[1] - s[0] for s in sites(row)) / len(sites(row)) for row in low}
+    assert fall[CFE] == pytest.approx(4.34, abs=0.02) and fall[LEADER] == pytest.approx(0.78, abs=0.02) and fall[MATRIX] == pytest.approx(3.19, abs=0.02)
+
+
+def test_on_the_shear_free_sheets_the_leader_is_with_the_matrix_on_frequency_and_loss():
+    """The four axes at the potential's margins with the rate by those sites: stored, belt4's sheets, one model of the rate in two readings."""
+    stored = json.loads((PRED / "four_axes_potential_margins_shear.json").read_text())
+    assert stored["sites_from"] == "kink_site_scan_belt4_shear.json"
+    occupancy = "by_the_occupancy_of_kink_sites"
+    for entry in stored["shifts"].values():
+        rows, film = entry["rows"], entry[FILM]
+        assert rows[CFE][SUM]["f_relax_hz"] == pytest.approx(film["f_relax_hz"]) == pytest.approx(rows[CFE][occupancy]["f_relax_hz"])  # the anchor
+        assert rows[CFE]["kink_sites"]["sites_below_all_trans"] == 9 and rows[LEADER]["kink_sites"]["sites_below_all_trans"] == 0
+        for row in (LEADER, MATRIX):  # two decades below the film by the sum, one by the occupancy: at or below the 34 kHz drive either way
+            assert rows[row]["kink_sites"]["sum_against_the_film_cell"] == pytest.approx(0.012, abs=0.002)
+            assert rows[row]["kink_sites"]["occupancy_against_the_film_cell"] == pytest.approx(0.09, abs=0.012)
+            assert rows[row][SUM]["f_relax_hz"] < 6e3 and 28e3 < rows[row][occupancy]["f_relax_hz"] < 36e3
+            for model in (SUM, occupancy):
+                assert rows[row][model]["tan_delta_34kHz"] > 0.5 and rows[row][model]["strain_ac_at_the_heat_budget_34kHz"] < 0.4 * film["strain_ac_at_the_heat_budget_34kHz"]
+        for model in (SUM, occupancy):  # the nitrile alone stays with the film
+            assert 0.8 < rows[AN][model]["f_relax_hz"] / film["f_relax_hz"] < 1.0 and rows[AN][model]["tan_delta_34kHz"] < 0.07
+    zero = stored["shifts"]["+0.00"]["rows"]
+    assert zero[LEADER][SUM]["f_relax_hz"] == pytest.approx(4.1e3, rel=0.03) and zero[LEADER][occupancy]["f_relax_hz"] == pytest.approx(30.4e3, rel=0.03)
+    assert zero[AN][SUM]["f_relax_hz"] == pytest.approx(306e3, rel=0.02) and zero[AN][occupancy]["f_relax_hz"] == pytest.approx(335e3, rel=0.02)
