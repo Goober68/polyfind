@@ -27,3 +27,28 @@ relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz row_vdf9-tr
 relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz row_vdf9-trfe3-an1-rvdf1-14_.*
 relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(8m|10m|16m|20m)_sheared
 relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(8|10|14|16)_sheared
+# The card takes 0.38 s a step and a sheet from belt4's start comes to rest in 300 to 1000 steps
+# (the leader's two known sheets came back: +0.05 in 326 steps, -1.32 in 972), so the whole set
+# may fit after all.  The rest, in the order of what a cut should leave: the leader's and the film
+# cell's sheets turn about, then the other two cells' helix cells, the nitrile cell's sheets, the
+# matrix's.  The last line holds the pod until the DFT cells are done.
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(22m|24m|26m|0|2)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(18|20|22|24)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(4|6|8|12)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(26|0m|2m|4m)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(14|16|18|20)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(6m|8m|10m|12m)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(22|24|26)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(14m|16m|18m|20m)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(22m|24m|26m|12)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz row_vdf9-trfe4-an1-14_.*
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz row_vdf10-trfe4-14_.*
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-an1-14_belt4_at(0|2|4|6|8|10|12)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-an1-14_belt4_at(14|16|18|20|22|24|26)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-an1-14_belt4_at(0m|2m|4m|6m|8m|10m)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-an1-14_belt4_at(16m|18m|20m|22m|24m|26m)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf10-trfe4-14_belt4_at(0|2|4|6|8|10|12)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf10-trfe4-14_belt4_at(14|16|18|20|22|24|26)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf10-trfe4-14_belt4_at(0m|2m|4m|6m|8m|10m|12m)_sheared
+relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf10-trfe4-14_belt4_at(14m|16m|18m|20m|22m|24m|26m)_sheared
+dft_cells.sh wait
