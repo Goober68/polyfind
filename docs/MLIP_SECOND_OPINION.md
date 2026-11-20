@@ -1,6 +1,6 @@
 # A machine-learned potential as a second opinion on the margins
 
-State as of 2026-11-19. The PI's direction, in order: "Go on 1" (a machine-learned interatomic
+State as of 2026-11-20. The PI's direction, in order: "Go on 1" (a machine-learned interatomic
 potential as a second opinion on polyfind's margins, tested before it is trusted), then, on
 seeing pretrained ones tested: "You're using ots solutions? Thought we would train our own?"
 
@@ -29,7 +29,13 @@ motif says the potential has the level (-0.044 in DFT, -0.096 in the potential, 
 preset): the preset's margins rest on two errors that cancel in the four-monomer cells and do
 not in the six-monomer one (3.15). A TrFE term fitted to lone chains moves the error to the
 four-monomer cells and is not adopted; no evaluator is within 0.1 on every cell, and DFT at
-fourteen monomers needs more memory than this machine has (3.16).
+fourteen monomers needs more memory than this machine has (3.16). Kinks have been put to DFT
+since (3.17 to 3.19), and the finding is about the structure before it is about any evaluator:
+the kink sheets of polyfind's tables are upright, the kinks of all chains at one height, and a
+sheet free to shape its cell inclines and ends 6.8 kcal/mol per kink pair lower in PVDF, below
+the all-trans crystal (-1.96 in DFT, -1.66 in the potential, -1.17 and -0.78 in polyfind's two
+presets). The frequencies and losses in `docs/CANDIDATE_MATERIALS.md` are made of the upright
+ones.
 
 ## 1. The test
 
@@ -1507,7 +1513,11 @@ starts a monomer along a and b.
 `docs/CANDIDATE_MATERIALS.md`, and the frequency and the loss made from them, is the energy of
 a structure 6 to 7 kcal/mol above the sheet's own minimum in PVDF. Whether the differences
 between candidates survive is not known: an inclined sheet's energy follows the margin (about
-minus two margins plus what its faces cost), and the upright one's did not. The strain and the
+minus two margins plus what its faces cost), and the upright one's did not. The first nine
+sites of the four cells of 3.14 with the shear free, in belt4, already reorder them: the
+leader's three sheets do not incline (1.36 to 1.99, as upright), the matrix's lowest goes from
+4.66 to 1.14, and the film's-composition cell from 3.95 to -0.13 at one site (the scan of all
+112 is running). The strain and the
 blocked force do not use the sheets. The rate model itself assumes sheets that are rare, with
 an energy of several kT; a sheet near or below zero is not an excitation of the polar crystal
 but the start of the other phase, and the model has to be looked at again with the right

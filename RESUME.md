@@ -552,11 +552,33 @@ right": true at one registry, not along it).
         `docs/predictions/kink_sheet_shear_belt4.json` when done; log `/opt/dft/kink10/kink_sheet_shear_rows.log`);
         the CFE and nitrile cells' sites when DFT frees the cores. THE 112-SITE SCAN WITH THE SHEAR FREE IS A
         JOB FOR THIS MACHINE IN POLYFIND (a minute or two a start), not for a pod.
-        WRITTEN UP (02:55 UTC): docs 3.19 (draft: DFT's inclined number is from the cut run's SCF, the stored
-        frame is to come), notices in 3.17 and 3.18. STILL TO DO when the two jobs return: `kink-collect`
-        with a second pair `vdf10_inclined=/opt/dft/kink10/sheet_vdf10_belt4_TT_in_all_s1.dft.xyz,/opt/dft/kink10/tight/sheet_vdf10_belt4_ref_tight2.dft.xyz`,
-        the test, the head of `docs/CANDIDATE_MATERIALS.md` (its frequency and loss columns are upright
-        sheets'), the opening paragraph of the second-opinion document, the CFE and nitrile cells' sites.
+        DFT'S LABEL OF THE INCLINED CELL IS IN (03:35 UTC): -1.959 kcal/mol per kink pair (the potential
+        -1.655 on the same pair), 0.07 eV/A and 0.04 GPa left: DFT is at rest on the potential's cell.
+        Stored: `docs/predictions/kink_dft_vdf10.json` (pairs `vdf10`, `vdf10_inclined`; `kink-collect
+        --moved vdf10_inclined` leaves polyfind's upright number off it), 4 frames in the extxyz, tests
+        `test_a_real_kink_sheet_against_dft_needs_dfts_own_geometry` and
+        `test_the_inclined_kink_sheet_is_below_all_trans_in_dft`; docs 3.19, notices in 3.17 and 3.18, the
+        head of `docs/CANDIDATE_MATERIALS.md` (caution of 2026-11-20; the table with the potential's sheets
+        marked withdrawn). PVDF's belt4 runs: `docs/predictions/kink_sheet_shear_belt4.json`.
+        FIRST CANDIDATE SITES WITH THE SHEAR FREE (belt4, nine of 112): leader `@0~` 18: 1.935 -> 1.991,
+        `@0~` 8: 1.395 -> 1.358, `@0` 18: 1.856 -> 1.895 (NONE INCLINES: every start returns upright); matrix
+        `@0` 12: 4.815 -> 4.091, `@0~` 12: 4.659 -> 1.136; film's cell `@0` 0: 3.952 -> -0.131, 2: 5.297 ->
+        3.450, 26: 4.509 -> 1.124, 4: 4.559 -> 1.099. THE ORDER OF THE CELLS REVERSES.
+        RUNNING (four processes, one a cell, about five minutes a site, 28 sites a cell; each ends by itself
+        inside two hours and the same command goes on, skipping what is stored):
+        `for hand in "@0" "@0~"; do OMP_NUM_THREADS=1 python examples/kink_sheet_shear.py --key "ROW$hand"
+        --sites all --out /opt/dft/kink10/shear_scan_ROW.json; done` for ROW in vdf9-trfe4-cfe1-14 (since
+        03:16), vdf10-trfe4-14, vdf9-trfe4-an1-14, vdf9-trfe3-an1-rvdf1-14 (since 03:36); logs beside them.
+        Also running: PVDF under chain1 again for the stored record (`--preset pvdf-dft-chain1 --out
+        /opt/dft/kink10/shear_pvdf_chain1.json`; -0.781 the first time, two of its starts collapse).
+        THEN: `kink_sheet_shear.py --merge /opt/dft/kink10/shear_scan_*.json --as-scan
+        docs/predictions/kink_site_scan_belt4_shear.json` (the scan with each site at its shear-free
+        energy); copy the four result files' rows into `docs/predictions/kink_sheet_shear_belt4.json`;
+        `four_axes_at_margins.py --sites docs/predictions/kink_site_scan_belt4_shear.json --out
+        docs/predictions/four_axes_potential_margins_shear.json`; the tables at the head of the candidate
+        document; a test. More starts ((+-1,0), (0,+-1), (0,+-2)) for the sites that decide a cell's
+        lowest, the leader's above all: its sheets may have an inclined minimum the four diagonal starts
+        do not reach (the film's cell's lowest is at (0, -1.8)).
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

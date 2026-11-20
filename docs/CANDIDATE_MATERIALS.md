@@ -26,6 +26,31 @@ were, and a margin was a lower bound): five margins moved, and with them the hea
 in 5.6, where the cell with CTFE and a reversed VDF unit went from +0.076, on the switching
 window, to +0.245, off it.***
 
+**Caution, 2026-11-20: every frequency and tan delta in this document is made of upright kink
+sheets, and an upright sheet is not the sheet's minimum.** In the kink cells of sections 5 and 8
+the kinks of all the chains sit at one height: the kink tools build the cell without its shear
+along the chains. `docs/MLIP_SECOND_OPINION.md` 3.19 puts PVDF's ten-monomer kink sheet to DFT.
+Left free, the cell shears until each chain's kink is one monomer along from its neighbour's,
+and the sheet goes from +4.8 kcal/mol per kink pair (DFT, not at rest there) to **-1.96, below
+the all-trans crystal**. The potential has -1.66 for the same sheet, belt4 -1.17 and chain1
+-0.78 once polyfind's cell is given the shear (`examples/kink_sheet_shear.py`); belt4's upright
+sheet, the one in the tables, is at +5.30. It is what PVDF's margin says: its helix is the
+lower phase, and a kink pair is one turn of that helix.
+
+- **What stands**: the margins, the strain and the blocked force. They do not use the sheets.
+- **What is not a result until it is redone**: every kink-sheet energy, the frequency and tan
+  delta made from them, and the ranking wherever it rests on speed or loss, "the leader is the
+  fastest" included. The differences between candidates may or may not survive: an inclined
+  sheet's energy follows the margin and the upright one's did not.
+- **First numbers with the shear free, in belt4, nine sites of 112** (the scan of every site
+  is running): the leader's three sites do not incline and stay at 1.36 to 1.99; the matrix's
+  lowest goes from 4.66 to 1.14; the film's-composition cell goes from 3.95 to -0.13 at one
+  site and to 1.1 at two more. In belt4's own terms the leader no longer has the cheapest
+  sheet. Belt4 has the nitrile's margin wrong in sign (below), so its leader numbers carry
+  that too.
+- **The rate model needs a second look as well.** It takes a sheet for a rare excitation
+  costing several kT. A sheet near zero or below it is the start of the other phase.
+
 **Caution, 2026-11-19: DFT has now been asked about the units one by one, and the head of the
 ranking does not stand as written.** `docs/MLIP_SECOND_OPINION.md` 3.10 to 3.13 take each unit in
 the smallest cell that holds it (four monomers a chain) and compare the margin with DFT's.
@@ -66,7 +91,9 @@ the smallest cell that holds it (four monomers a chain) and compare the margin w
 `examples/four_axes_at_margins.py` puts the potential's margins of 3.14 through the tables of 5.6
 (`examples/pin_design.py`) and changes nothing else: the dipole, the switch strain, the kink
 energies that set the rate and the loss, and the crystal stiffness are belt4's, and none of them
-has a DFT test. So this says what the corrected margin does to the four axes, and no more. The
+has a DFT test. So this says what the corrected margin does to the four axes, and no more
+(and since 2026-11-20 its frequency and tan delta columns are upright sheets': see the caution
+at the head). The
 brackets are the range as the margin is moved by -0.1 to +0.1, the potential's error on the
 small cells. Frequency is the relaxation frequency of the small-signal permittivity; the strain
 is the AC strain at the heat budget at 34 kHz; blocked force is per area, by the film's assumed
@@ -113,7 +140,11 @@ rate models of 5.6 (the sum over kink sites; one chain's move).
 - The matrix is slow and lossy at any margin in the bar: its kink sheets are the dear ones, and
   that is what a pin is for.
 
-**The same four cells with the potential's kink sheets as well (2026-11-19, later).** Eleven
+**The same four cells with the potential's kink sheets as well (2026-11-19, later).
+WITHDRAWN 2026-11-20:** the eleven relaxations were stopped too early to let a cell shear, ten
+of them near an upright cell and the leader's 0.65 part way to an inclined one, so the table
+compares sheets at different points of one slope (`docs/MLIP_SECOND_OPINION.md` 3.19). It is
+kept as what was found. Eleven
 kink sheets, two or three sites of each cell, were relaxed in the potential
 (`docs/MLIP_SECOND_OPINION.md` 3.18; no DFT on these cells). Site by site the potential and
 belt4 differ by -1.3 to +3.0 kcal/mol, and one of belt4's sites holds no kink in the potential,
@@ -146,7 +177,8 @@ dipole, switch strain and stiffness are still belt4's.
   site in the potential, and eleven of 112 have been done.
 
 What would settle the leader: DFT on its all-trans cell and its lowest helix cell at their own
-size (170 atoms each), and a kink sheet in the potential or in DFT. The DFT does not fit this
+size (170 atoms each), and its kink sheets with the cell free to shear (2026-11-20: running in
+polyfind; one of them in the potential or in DFT after that). The DFT does not fit this
 machine: the helix cell asks for 15.7 GB at the recipe's cutoffs where there are 15, and the run
 was stopped. It is a job for a rented machine with more memory. Files: `docs/predictions/four_axes_potential_margins.json`; test
 `tests/test_four_axes_at_margins.py`.
