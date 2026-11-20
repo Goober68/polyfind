@@ -1659,7 +1659,7 @@ hours of this machine).
 
 **A loose stop costs the potential's fourteen-monomer cells more than their margins.** The
 leader's all-trans cell moved 0.04 kcal/mol per monomer between 0.02 and 0.004 eV/A; the same
-cell relaxed to 0.03 from belt4's denser cell stayed 0.14 per monomer above it. 3.14's margins
+cell relaxed to 0.03 from belt4's denser cell stayed 0.18 per monomer above the tight one. 3.14's margins
 for these four cells (-0.12 to +0.08) come from helix cells stopped at 0.02 and all-trans
 cells stopped at 0.02 or 0.005. In the potential the film cell's sheet (-3.6 per chain) is
 below its helix cell as 3.14 left it (-1.1 per chain), where both presets have the helix the
