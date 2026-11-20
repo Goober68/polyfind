@@ -114,17 +114,24 @@ def write_kink(args):
         kinked = arrays(json.loads(Path(args.kinked_references).read_text())["kinked_references"][args.key])
         tag = args.tag or Path(scan["preset"]).stem.split("-")[-1]
         hand = "m" if args.key.endswith("~") else ""
+        # with --sheared: each site's lowest sheet of examples/kink_sheet_shear.py (the cell free to shear along its chains), in place of the scan's upright one
+        sheared = json.loads(Path(args.sheared).read_text())["rows"] if args.sheared else None
         with parameters_of(scan["preset"]).applied():
             polymer = DK.C.make_polymer(row, scan["rows"][args.key]["letters"])
-            model, _, ch = DK.make_model(polymer, kinked, 1, 1)
+            model, _, ch = SP.sheared_model(polymer, kinked, check=False) if sheared else DK.make_model(polymer, kinked, 1, 1)
             for site in [s for s in args.sites.split(",") if s]:
-                a = atoms_of(model, np.asarray(sites[site]["state"], dtype=float))
-                name = f"sheet_{row}_{tag}_at{site}{hand}"
+                state, formation, how, mark = sites[site]["state"], float(sites[site]["formation"]), "", ""
+                if sheared:
+                    best = min((t for t in sheared[f"{args.key} site {site} {scan['preset']}"]["starts"] if t.get("kink_kept") and "failed" not in t), key=lambda t: t["formation"])
+                    state, formation, mark = best["state"], float(best["formation"]), "_sheared"
+                    how = f", the cell free to shear: {best['shear_monomers'][0]:+.2f}, {best['shear_monomers'][1]:+.2f} monomers along a, b"
+                a = atoms_of(model, np.asarray(state, dtype=float))
+                name = f"sheet_{row}_{tag}_at{site}{hand}{mark}"
                 a.info.update(family="kinkcell", frame=name, n_monomers=model.nc * ch.n_monomers, kmesh=args.kmesh, conformation=f"kink sheet at bond {site}", kinked_chains=model.nc,
-                              source=f"polyfind {scan['preset']}, {args.key}, kink sheet at offset {site} (units {sites[site]['units']}), pendants as built",
-                              polyfind_kcal_per_kink_pair=float(sites[site]["formation"]))
+                              source=f"polyfind {scan['preset']}, {args.key}, kink sheet at offset {site} (units {sites[site]['units']}){how}, pendants as built",
+                              polyfind_kcal_per_kink_pair=formation)
                 write(out / f"{name}.start.xyz", a, format="extxyz")
-                print(f"{name}: {len(a)} atoms, cell {np.round(a.cell.cellpar(), 3).tolist()}, polyfind {sites[site]['formation']:+.3f} kcal/mol per kink pair")
+                print(f"{name}: {len(a)} atoms, cell {np.round(a.cell.cellpar(), 3).tolist()}, polyfind {formation:+.3f} kcal/mol per kink pair")
         print(f"written {out}")
         return
     disk = json.loads(Path(args.dilute).read_text())
@@ -354,6 +361,8 @@ def main():
     s.add_argument("--scan", default="", help="instead of --dilute: the file examples/kink_site_scan.py wrote (its key is ROW@0, or ROW@0~ for the other hand)")
     s.add_argument("--kinked-references", default="docs/predictions/kink_migration_belt4.json", help="with --scan: the kinked crystals the scans started from")
     s.add_argument("--sites", default="0", help="with --scan: comma list of the sites (bond offsets) whose cell is written")
+    s.add_argument("--sheared", default="", help="with --scan: a result file of examples/kink_sheet_shear.py; each site's lowest sheet there (the cell sheared along its chains) "
+                                                 "is written in place of the scan's upright one")
     s.add_argument("--sheet-of", default="", help="instead of --scan or --key: a key of --kinked-references (as vdf10@0); writes that kinked crystal and the row's all-trans cell "
                                                   "(the all-trans references are read from --dilute)")
     s.add_argument("--key", default="", help="the run's key there, as 'vdf4-trfe2-6@0 1x1 kinked 0,1'")
