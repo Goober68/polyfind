@@ -42,14 +42,46 @@ lower phase, and a kink pair is one turn of that helix.
   delta made from them, and the ranking wherever it rests on speed or loss, "the leader is the
   fastest" included. The differences between candidates may or may not survive: an inclined
   sheet's energy follows the margin and the upright one's did not.
-- **First numbers with the shear free, in belt4, nine sites of 112** (the scan of every site
-  is running): the leader's three sites do not incline and stay at 1.36 to 1.99; the matrix's
-  lowest goes from 4.66 to 1.14; the film's-composition cell goes from 3.95 to -0.13 at one
-  site and to 1.1 at two more. In belt4's own terms the leader no longer has the cheapest
-  sheet. Belt4 has the nitrile's margin wrong in sign (below), so its leader numbers carry
-  that too.
+- **Every kink site of the four cells with the shear free, in belt4** (108 sites,
+  `docs/MLIP_SECOND_OPINION.md` 3.20). Cheapest sheet per cell, kcal/mol per kink pair against
+  all-trans, upright and then free:
+
+  | cell | upright (the tables') | shear free | sites below all-trans |
+  |---|---:|---:|---:|
+  | the film's composition (64/29/7) | +3.42 | **-2.27** | 9 of 28 |
+  | the nitrile alone | +2.15 | **-2.08** | 6 of 26 |
+  | the leader (nitrile, reversed VDF, 21 mol% TrFE) | +1.40 | **+0.65** | 0 of 26 |
+  | the 71/29 matrix | +4.66 | **+0.94** | 0 of 28 |
+
+  The order reverses. The leader's sheets mostly stay upright (20 of 26): the arrangement of
+  units that the others' sheets shear into costs the leader's all-trans cell 7.4 kcal/mol per
+  cell, against 1.7 to 2.5 for the other three.
+- **The four axes on those sheets, at the potential's margins** (34 kHz, AC field at the heat
+  budget; frequency by the sum over sites and by the sites' share of time with a sheet):
+
+  | cell | frequency | tan delta | AC strain | blocked force per area through the crystal, pN/nm2 |
+  |---|---|---|---|---|
+  | the film's composition (the anchor) | 364 kHz | 0.088 | 0.081% | 7.4 |
+  | the nitrile alone | 306 to 335 kHz | 0.060 to 0.066 | 0.066 to 0.068% | 4.5 to 4.7 |
+  | the leader | 4 to 30 kHz | 0.65 to 0.85 | 0.007 to 0.020% | 0.4 to 1.1 |
+  | the matrix | 5 to 34 kHz | 0.53 to 1.12 | 0.008 to 0.021% | 0.9 to 2.4 |
+  | the measured film's channel as calibrated | 364 kHz | 0.060 | 0.066% | 6.5 |
+
+  **On these sheets the leader is with the matrix, at or below the drive frequency, and none of
+  the four is better than the film on the four axes together.** This is belt4's energy surface
+  searched properly, not yet a result on the materials: belt4 charges about three times DFT's
+  energy for sliding chains along each other (3.9), which is the kind of cost that holds the
+  leader's sheets upright, and it has the nitrile's margin wrong in sign (below). The table
+  that put the leader at 3.8 MHz is withdrawn and this one does not replace it until an
+  evaluator checked against DFT has relaxed the same sheets.
+- **A periodic cell puts every unit beside its like, and the leader's all-trans cell needs
+  that.** A statistical copolymer has a reversed unit beside another about one time in
+  fourteen. What the leader's all-trans phase costs out of register is open, and the margin of
+  every row with a reversed unit carries the question.
 - **The rate model needs a second look as well.** It takes a sheet for a rare excitation
-  costing several kT. A sheet near zero or below it is the start of the other phase.
+  costing several kT. A sheet below all-trans is the start of the other phase; the second
+  reading in the table (a site holds one sheet at most) bounds the error and is not a new
+  model.
 
 **Caution, 2026-11-19: DFT has now been asked about the units one by one, and the head of the
 ranking does not stand as written.** `docs/MLIP_SECOND_OPINION.md` 3.10 to 3.13 take each unit in
@@ -177,9 +209,10 @@ dipole, switch strain and stiffness are still belt4's.
   site in the potential, and eleven of 112 have been done.
 
 What would settle the leader: DFT on its all-trans cell and its lowest helix cell at their own
-size (170 atoms each), and its kink sheets with the cell free to shear (2026-11-20: running in
-polyfind; one of them in the potential or in DFT after that). The DFT does not fit this
-machine: the helix cell asks for 15.7 GB at the recipe's cutoffs where there are 15, and the run
+size (170 atoms each), and its kink sheets with the cell free to shear in an evaluator checked
+against DFT (2026-11-20: done in polyfind under belt4, where they stay upright; the caution at
+the head). Its all-trans cell with the reversed units out of register belongs with them. The
+DFT does not fit this machine: the helix cell asks for 15.7 GB at the recipe's cutoffs where there are 15, and the run
 was stopped. It is a job for a rented machine with more memory. Files: `docs/predictions/four_axes_potential_margins.json`; test
 `tests/test_four_axes_at_margins.py`.
 

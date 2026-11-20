@@ -564,21 +564,46 @@ right": true at one registry, not along it).
         `@0~` 8: 1.395 -> 1.358, `@0` 18: 1.856 -> 1.895 (NONE INCLINES: every start returns upright); matrix
         `@0` 12: 4.815 -> 4.091, `@0~` 12: 4.659 -> 1.136; film's cell `@0` 0: 3.952 -> -0.131, 2: 5.297 ->
         3.450, 26: 4.509 -> 1.124, 4: 4.559 -> 1.099. THE ORDER OF THE CELLS REVERSES.
-        RUNNING (four processes, one a cell, about five minutes a site, 28 sites a cell; each ends by itself
-        inside two hours and the same command goes on, skipping what is stored):
-        `for hand in "@0" "@0~"; do OMP_NUM_THREADS=1 python examples/kink_sheet_shear.py --key "ROW$hand"
-        --sites all --out /opt/dft/kink10/shear_scan_ROW.json; done` for ROW in vdf9-trfe4-cfe1-14 (since
-        03:16), vdf10-trfe4-14, vdf9-trfe4-an1-14, vdf9-trfe3-an1-rvdf1-14 (since 03:36); logs beside them.
-        Also running: PVDF under chain1 again for the stored record (`--preset pvdf-dft-chain1 --out
-        /opt/dft/kink10/shear_pvdf_chain1.json`; -0.781 the first time, two of its starts collapse).
-        THEN: `kink_sheet_shear.py --merge /opt/dft/kink10/shear_scan_*.json --as-scan
-        docs/predictions/kink_site_scan_belt4_shear.json` (the scan with each site at its shear-free
-        energy); copy the four result files' rows into `docs/predictions/kink_sheet_shear_belt4.json`;
-        `four_axes_at_margins.py --sites docs/predictions/kink_site_scan_belt4_shear.json --out
-        docs/predictions/four_axes_potential_margins_shear.json`; the tables at the head of the candidate
-        document; a test. More starts ((+-1,0), (0,+-1), (0,+-2)) for the sites that decide a cell's
-        lowest, the leader's above all: its sheets may have an inclined minimum the four diagonal starts
-        do not reach (the film's cell's lowest is at (0, -1.8)).
+        THE SCAN IS DONE (06:01 UTC 2026-11-20): ALL 108 VALID SITES OF THE FOUR CELLS, belt4, shear free, the
+        upright start and four starts a monomer along a and b. Stored: `docs/predictions/
+        kink_sheet_shear_belt4_sites.json` (every site's starts with states; `kink_sheet_shear.py --merge
+        /opt/dft/kink10/shear_scan_*.json --gather ...`), `kink_site_scan_belt4_shear.json` (`--as-scan`: the
+        scan with each site at its lowest sheet), `four_axes_potential_margins_shear.json`
+        (`four_axes_at_margins.py --sites docs/predictions/kink_site_scan_belt4_shear.json --out ...`); tests
+        in `tests/test_four_axes_at_margins.py`; docs 3.20 and the head of `docs/CANDIDATE_MATERIALS.md`.
+        CHEAPEST SHEET PER CELL, upright -> free, kcal/mol per kink pair: film cell +3.42 -> -2.27 (at V-CFE,
+        shear (0, -1.8) monomers; 9 of 28 sites below all-trans); nitrile cell +2.15 -> -2.08 (6 of 26);
+        LEADER +1.40 -> +0.65 (0 of 26; 20 of its 26 sites stay upright); matrix +4.66 -> +0.94 (0 of 28).
+        THE ORDER REVERSES. FOUR AXES AT THE POTENTIAL'S MARGINS ON THESE SHEETS (34 kHz, heat budget;
+        frequency by the sum of exp(-E/kT) and by the sites' share 1/(1+exp(E/kT)), both in
+        `pin_design.py` now): film cell 364 kHz, tan delta 0.088, 0.081%, 7.4 pN/nm2; nitrile alone 306 to
+        335 kHz, 0.060 to 0.066, 0.066 to 0.068%, 4.5 to 4.7; LEADER 4 to 30 kHz, 0.65 to 0.85, 0.007 to
+        0.020%, 0.4 to 1.1; matrix 5 to 34 kHz, 0.53 to 1.12, 0.008 to 0.021%, 0.9 to 2.4. THE LEADER IS WITH
+        THE MATRIX ON THESE SHEETS AND NONE OF THE FOUR BEATS THE FILM. NOT A RESULT ON THE MATERIALS YET.
+        WHY THE LEADER'S STAY UPRIGHT: the shear by two monomers along b that the others' sheets take costs
+        its ALL-TRANS cell 7.4 kcal/mol per cell (film cell 1.7, matrix 2.3, nitrile cell 2.5); its sheets at
+        that shear are 2.5 to 3.9 above the nitrile cell's at like sites, the same difference per chain. The
+        upright all-trans cell is the lowest in all four from twelve whole-monomer starts (film 1.7 to 5.3
+        above, matrix 2.3 to 8.2, leader 4.4 to 11.7; scratch `tt_registry.py` and `shear_polish.py --starts`
+        into `/opt/dft/kink10/tt_registry_*.json`, `registry_margins_ROW.json`). Pendant tilts change little
+        (film -2.27 -> -2.36; leader 0.65 -> 0.50; leader's sheared all-trans 7.4 -> 7.6). BELT4 IS WEAKEST
+        HERE (3.9: three times DFT's cost for sliding chains; wrong sign on the reversed-unit candidate's
+        sheared all-trans cell). chain1-cfe: film cell's all-trans at (0, +-2) +0.9 per cell, leader's (0, +2)
+        +6.1, most other starts slide back upright. A PERIODIC CELL PUTS EVERY UNIT BESIDE ITS LIKE; a
+        statistical copolymer cannot: what the leader's all-trans costs out of register is open.
+        RUNNING SINCE 06:04 UTC (background job `bdp3a2950`, ends inside two hours; same commands resume):
+        (1) `shear_polish.py --rows ROW --starts "0:-2,0:2,-1:-1,1:1,1:-1,-1:1,2:0,-2:0,0:-1,0:1,1:0,-1:0"
+        --out /opt/dft/kink10/registry_margins_ROW.json` for the film cell and the leader: do the HELIX cells
+        have a lower arrangement at another shear (the film cell's TG'TG does not: every start returns to
+        its known (-0.5, -0.24) minimum); (2) chain1-cfe: scratch `tt_registry.py ROW OUT STARTS
+        pvdf-dft-chain1-cfe` then `kink_sheet_shear.py --key "ROW@0" --sites all --preset
+        pvdf-dft-chain1-cfe --out /opt/dft/kink10/shear_scan_chain1cfe_ROW.json` for the same two cells.
+        (3) job `b8l894k0k`: the all-trans cells of the leader and the film cell at several shears relaxed in
+        the potential (`/opt/dft/registry14/tt_*.start.xyz`, `mlip_train.py relax --fmax 0.03 --steps 150
+        --threads 2`, log `relax.log`): does the DFT-trained potential also charge the leader 7 per cell.
+        THEN: the potential (tight, `--fmax 0.003`) on the cheapest sheets of the four cells from belt4's
+        sheared states (an hour each here; A POD'S JOB for all 108), and DFT on the leader's and the film
+        cell's (pod: 170 atoms).
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE

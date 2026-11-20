@@ -1531,3 +1531,111 @@ Files: `docs/predictions/kink_dft_vdf10.json`, `mlip/kink_vdf10_frames_pbe_d3bj.
 (4 frames: all-trans, the upright sheet, the step, the inclined sheet),
 `kink_sheet_shear_belt4.json`. Tests: `tests/test_row_cells_dft.py`,
 `tests/test_four_axes_at_margins.py`.
+
+### 3.20 Every kink site of the four cells with the shear free: the film cell's sheets fall below all-trans and the leader's stay upright (belt4, 2026-11-20)
+
+3.19 found on PVDF that the upright kink sheet of the tables is not the sheet's minimum. This is
+the same freedom given to every kink site of the four fourteen-monomer cells of 3.14, in
+polyfind under belt4 (`examples/kink_sheet_shear.py --key "ROW@0" --sites all`, and `"ROW@0~"`
+for the other hand of the kink pair). A site is one position of the kink pair along the
+fourteen monomers; the sheet has that kink on both chains of the cell. Each of the 108 sites at
+which the upright scan kept its kink was relaxed from the upright cell (kicked off it) and from
+four cells sheared by one monomer along a and along b (both signs of each), and the all-trans
+cell was relaxed the same way. Energies are kcal/mol per kink pair against all-trans, pendants
+as built. About six minutes a site on one core, eleven core-hours in all.
+
+| cell | sites | cheapest sheet upright | cheapest with the shear free (units, shear along a, b in monomers) | sites below all-trans | sites that end sheared | mean fall |
+|---|---:|---:|---|---:|---:|---:|
+| the film's composition, VVRVVRVCVVRVVR | 28 | +3.42 | **-2.27** (V-CFE; 0.0, -1.8) | 9 | 28 | 4.3 |
+| the nitrile alone, VVRVVRVAVVRVVR | 26 | +2.15 | **-2.08** (TrFE-V; 0.0, -1.8) | 6 | 24 | 3.2 |
+| the leader, IVRVVRVAVVVVVR | 26 | +1.40 | **+0.65** (TrFE-V; 0.0, -1.7) | 0 | 6 | 0.8 |
+| the matrix, VVRVVRVVVVRVVR | 28 | +4.66 | **+0.94** (V-TrFE; -0.9, -1.0) | 0 | 24 | 3.2 |
+
+- **The order of the four reverses.** Upright, the leader had the cheapest sheet and the film
+  cell the second dearest. With the shear free the film cell and the nitrile cell have sheets
+  2 kcal/mol below their all-trans crystals, and the leader and the matrix have none below.
+- **The sheets take three cells**: sheared by nearly two monomers along b (most sites of one
+  hand in the film cell, the nitrile cell and four of the leader's), by one monomer along each
+  of a and b (the other hand, and the matrix), or left upright (20 of the leader's 26).
+- **The fall follows belt4's margin**, as 3.19 said it should. belt4's margins of the four are
+  +0.32, +0.20, +0.04 and +0.06 kcal/mol per monomer (film cell, nitrile cell, leader, matrix:
+  the helix lower in all four), and the cheapest sheets are -2.27, -2.08, +0.65 and +0.94. A
+  sheet is a slab of the other phase; where the other phase is well below, so is the sheet.
+  The helix cell is still the lowest of the three in every case (4.4, 2.8, 0.5 and 0.8 below
+  all-trans per chain of fourteen), so no margin is displaced by a sheet.
+- **The all-trans cell does not gain from the same shears**, so the fall is the kink's. From
+  twelve starts sheared by whole monomers the upright all-trans cell is the lowest in all three
+  cells tried: the others end 1.7 to 5.3 kcal/mol per cell higher in the film cell, 2.3 to 8.2
+  in the matrix and 4.4 to 11.7 in the leader (`examples/shear_polish.py --starts`).
+- **Pendant tilts change little.** Relaxed on the sheet and on the all-trans cell
+  (`polyfind.mixedcell.tilt_relaxation`), the film cell's -2.27 becomes -2.36, the leader's
+  +0.65 becomes +0.50 and +1.36 becomes +1.05. The leader's all-trans cell sheared by two
+  monomers is 7.4 above the upright one rigid and 7.6 with tilts.
+
+**Why the leader's sheets stay upright.** A cell sheared by whole monomers has the same
+backbone packing and another arrangement of the units between chains: upright, each unit sits
+beside the same unit of the next chain; sheared, beside a different one. For the shear by two
+monomers along b, which the film cell's and the nitrile cell's cheapest sheets take, the
+all-trans cell pays 1.7 kcal/mol per cell in the film cell, 2.3 in the matrix, 2.5 in the
+nitrile cell and **7.4 in the leader**. The leader's sheets do exist at that shear (nine of
+one hand's fourteen sites reach it), and at the sites the two cells share they are 2.5 to 3.9
+kcal/mol per kink pair above the nitrile cell's: the difference between what the two all-trans
+cells pay, which is 2.5 per chain. So the leader's kinks gain what the others' gain and its
+cell pays more for the arrangement. The leader is the cell with the reversed unit, whose CF2
+and CH2 face the wrong neighbours unless the next chain's reversed unit is beside it.
+
+**This is where belt4 is weakest, by 3.9.** belt4 charges about three times DFT's energy for
+sliding plain PVDF chains along each other, and has the reversed-unit candidate's sheared
+all-trans cell 0.43 kcal/mol per monomer above the upright one where DFT has it 0.35 below.
+The cost that holds the leader's sheets upright is of that kind. Under chain1-cfe, whose wall
+was fitted with those energies, the film cell's all-trans cell sheared by two monomers along b
+is 0.9 kcal/mol per cell above the upright one (belt4 1.7) and the leader's 6.1 (belt4 8.7),
+and most other starts slide back to the upright cell. So the preference is weaker there and
+not gone. Neither preset has a DFT test on a fourteen-monomer cell.
+
+**A periodic cell puts every unit beside its like.** In a statistical copolymer a reversed unit
+has another reversed unit beside it about one time in fourteen. The upright cell is the
+arrangement such a material cannot have throughout, and for the leader it is the arrangement
+the all-trans cell needs. What the leader's all-trans phase costs when its reversed units are
+not in register is a question about the model cell that the margins of every row with a
+reversed unit carry, and it is open.
+
+**On the four axes** (`examples/four_axes_at_margins.py --sites
+docs/predictions/kink_site_scan_belt4_shear.json`; margins the potential's of 3.14, everything
+else belt4's; `docs/predictions/four_axes_potential_margins_shear.json`). The rate model takes
+the frequency as the film's measured 364 kHz times the ratio of the kink sites' populations to
+the film cell's. With sheets below all-trans the sum of exp(-E/kT) is no longer a population
+(a site cannot hold more than one sheet), so the table gives it two ways: the sum as before,
+and each site's share of time with a sheet, 1/(1 + exp(E/kT)), which is the same number where
+sheets are rare. 34 kHz drive, AC field at the heat budget:
+
+| cell | margin (the potential's) | frequency, by the sum; by the share | tan delta | AC strain | blocked force per area through the crystal, pN/nm2 |
+|---|---:|---|---|---|---|
+| the film's composition (the anchor) | +0.078 | 364 kHz | 0.088 | 0.081% | 7.4 |
+| the nitrile alone | -0.118 (taken as 0) | 306 kHz; 335 kHz | 0.066; 0.060 | 0.066%; 0.068% | 4.5; 4.7 |
+| the leader | -0.055 (taken as 0) | 4 kHz; 30 kHz | 0.85; 0.65 | 0.007%; 0.020% | 0.4; 1.1 |
+| the matrix | -0.024 (taken as 0) | 5 kHz; 34 kHz | 1.12; 0.53 | 0.008%; 0.021% | 0.9; 2.4 |
+| the measured film's channel as calibrated | | 364 kHz | 0.060 | 0.066% | 6.5 |
+
+On these sheets the leader is with the matrix: its relaxation is at or below the drive, so it
+loses most of the field's work and follows little of it. The nitrile alone is level with the
+film. None of the four is better than the film on the four axes together.
+
+**What this is and is not.**
+
+- It is belt4's energy surface searched properly for the first time. It is not a result on the
+  materials: belt4's errors are largest exactly here (the paragraph above, the chlorine's
+  torsion of 3.11 at the film cell's cheapest site, and the nitrile's margin of 3.12).
+- Four sheared starts a site. The film cell's sheets were found by them; a sheet of the
+  leader's at a shear they do not reach is possible, though its all-trans cell's cost at every
+  shear tried says there is little room.
+- The rate model is one model. Its premise, that a kink sheet is a rare excitation whose
+  population limits the rate, does not hold for a cell with sheets below all-trans; the share
+  reading bounds the error and does not replace the premise.
+- The leader's standing on frequency and loss in the tables before this (83 MHz, then 3.8 MHz)
+  came from upright sheets and is withdrawn (3.19). This table is not its replacement until
+  an evaluator checked against DFT has relaxed the same sheets.
+
+Files: `docs/predictions/kink_sheet_shear_belt4_sites.json` (every site's starts, with the
+relaxed states), `kink_site_scan_belt4_shear.json` (the scan with each site at its lowest
+sheet), `four_axes_potential_margins_shear.json`. Tests: `tests/test_four_axes_at_margins.py`.
