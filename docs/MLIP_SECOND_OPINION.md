@@ -1635,6 +1635,7 @@ kcal/mol per kink pair against the same evaluator's all-trans cell:
 | the film cell's sheet at V-CFE | -2.27 | -1.65 | **-3.60** |
 | the leader's sheet at TrFE-V | +0.65 | +1.66 | **+0.05** |
 | the leader's above the film cell's | 2.92 | 3.31 | 3.65 |
+| the nitrile cell's sheet at TrFE-V | -2.08 | not run | **+0.36** |
 
 - **chain1-cfe** (`examples/kink_sheet_shear.py --preset pvdf-dft-chain1-cfe --starts ""
   --from-sheets ...`). Its own sheared starts slide back to the upright cell, because it charges
@@ -1645,11 +1646,11 @@ kcal/mol per kink pair against the same evaluator's all-trans cell:
   and the leader was stopped there. `docs/predictions/kink_sheet_shear_chain1cfe_sites.json`.
 - **The potential** (`examples/row_cells_frames.py kink --scan ... --sheared ...` writes the
   sheet, `mlip_train.py relax --fmax 0.004` relaxes it, `row_cells_frames.py sheets-potential
-  --pairs` collects). 168 and 170 atoms, 560 and 370 steps from belt4's sheared cells; both
+  --pairs` collects). 168 and 170 atoms, 560 and 370 steps from belt4's sheared cells; the
   sheets keep their kinks. The leader's all-trans cell was relaxed again to the same stop: it
   falls 1.15 kcal/mol per cell from where 3.14's stop of 0.02 eV/A left it, which is more than
   the leader's sheet (against the old reference the sheet would have read -0.53).
-  `docs/predictions/sheets14_potential_sheared.json`, the four cells in
+  `docs/predictions/sheets14_potential_sheared.json`, the cells in
   `mlip/sheets14_sheared_in_all_s1.extxyz`.
 
 So the gap does not belong to belt4: three evaluators with different errors put the leader's
@@ -1657,14 +1658,50 @@ sheet 2.9 to 3.7 kcal/mol above the film cell's at these two sites. The sites ar
 choice; the potential's own cheapest site of either cell is not known (one site each took two
 hours of this machine).
 
-**A loose stop costs the potential's fourteen-monomer cells more than their margins.** The
+**The nitrile alone does not stay with the film.** belt4 had its cheapest sheet level with the
+film cell's (-2.08); in the potential the same sheet, kink kept, is 0.36 above all-trans. That
+is belt4's nitrile error again (3.12: it makes the nitrile a pin for the helix, and a sheet
+follows the margin). So the row of the four-axis table above that puts the nitrile cell at 306
+to 335 kHz is belt4's and is not supported: in the potential the film cell is the only one of
+the three with a sheet below all-trans.
+
+**A loose stop costs the potential's fourteen-monomer cells as much as their margins.** The
 leader's all-trans cell moved 0.04 kcal/mol per monomer between 0.02 and 0.004 eV/A; the same
-cell relaxed to 0.03 from belt4's denser cell stayed 0.18 per monomer above the tight one. 3.14's margins
-for these four cells (-0.12 to +0.08) come from helix cells stopped at 0.02 and all-trans
-cells stopped at 0.02 or 0.005. In the potential the film cell's sheet (-3.6 per chain) is
-below its helix cell as 3.14 left it (-1.1 per chain), where both presets have the helix the
-lower. Either the potential has the film cell's ground state kinked, or its helix cell was not
-at rest. The helix cells of the film cell and the leader are being relaxed to 0.004 to tell.
+cell relaxed to 0.03 from belt4's denser cell stayed 0.18 per monomer above the tight one.
+3.14's margins for these four cells (-0.12 to +0.08) came from helix cells stopped at 0.02 and
+all-trans cells stopped at 0.02 or 0.005. The film cell's and the leader's all-trans cell and
+lowest helix cell, relaxed again to 0.005 or tighter (`docs/predictions/
+rows14_potential_tight.json`; each helix is still a helix, the leader's with twelve of its
+fourteen gauche bonds):
+
+| cell | margin in 3.14 | margin at the tight stop |
+|---|---:|---:|
+| the film's composition | +0.078 | **+0.129** |
+| the leader | -0.055 | **-0.070** |
+
+The film cell's row of the four-axis table at +0.129 reads 364 kHz, tan delta 0.061, 0.071%
+and 6.2 pN/nm2 (`four_axes_potential_tight_margins_shear.json`), on the measured film's
+calibrated channel (0.060, 0.066%, 6.5). The leader's margin stays below zero and its row does
+not change. The matrix's and the nitrile cell's margins of 3.14 have not been redone; the
+other three helix placements of each cell have not either.
+
+**In the potential the film cell's lowest state is the kinked one.** Per chain of fourteen
+monomers against all-trans, all at the tight stop:
+
+| cell | lowest helix cell | cheapest sheet tried (one kink pair a chain) |
+|---|---:|---:|
+| the film's composition | -1.81 | **-3.60** |
+| the leader | +0.98 | +0.05 |
+| the nitrile alone | not redone (+1.65 in 3.14) | +0.36 |
+
+One kink pair at the chlorine is worth twice the whole helix. Both presets have it the other
+way (belt4: helix -4.4, sheet -2.3; chain1-cfe: helix -5.0, sheets to -4.5). If the potential
+is right, the state the field has to convert in the film's composition is not the helix but
+all-trans chains with a kink held at each chlorine, and the margin as this project defines it
+(all-trans minus the lowest helix) does not name the film cell's lowest state. The potential
+has been 0.3 kcal/mol off DFT on PVDF's sheet (3.19) and 0.05 per monomer off on a helix level
+(3.15), which is not enough to reverse 1.8 per chain; it has never been tested on a chlorine
+unit beside a kink. This is the first thing DFT should be asked at this size.
 
 **What this is and is not.**
 
@@ -1686,4 +1723,5 @@ at rest. The helix cells of the film cell and the leader are being relaxed to 0.
 Files: `docs/predictions/kink_sheet_shear_belt4_sites.json` (every site's starts, with the
 relaxed states), `kink_site_scan_belt4_shear.json` (the scan with each site at its lowest
 sheet), `four_axes_potential_margins_shear.json`, `kink_sheet_shear_chain1cfe_sites.json`,
-`sheets14_potential_sheared.json`. Tests: `tests/test_four_axes_at_margins.py`.
+`sheets14_potential_sheared.json`, `rows14_potential_tight.json`,
+`four_axes_potential_tight_margins_shear.json`. Tests: `tests/test_four_axes_at_margins.py`.

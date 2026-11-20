@@ -1,0 +1,105 @@
+{
+ "what": "the four axes (examples/pin_design.py) with the margins of some rows replaced and everything else as the tables have it: dipole, switch strain, kink energies and crystal stiffness are belt4's and have no DFT test. Frequency is the relaxation frequency of the small-signal permittivity; strain is the AC strain at the heat budget at 34 kHz; blocked force is per area, pN/nm2 (= MPa). The kink sites are those of kink_site_scan_belt4_shear.json: only the rate model that sums over kink sites sees them",
+ "margins_from": "rows14_potential_tight.json",
+ "base": "polished_margins_belt4.json",
+ "replaced": {
+  "vdf9-trfe4-cfe1-14": 0.12911399749285285,
+  "vdf9-trfe3-an1-rvdf1-14": -0.06982460586312664
+ },
+ "belt4_margins": {
+  "vdf9-trfe4-cfe1-14": 0.31749793708900764,
+  "vdf9-trfe3-an1-rvdf1-14": 0.03658928136722572
+ },
+ "shifts": {
+  "+0.00": {
+   "film_channel_as_calibrated": {
+    "margin_the_model_used": 0.0,
+    "polar_fraction_at_the_bias": 0.8358314956396972,
+    "f_relax_hz": 363984.70013235195,
+    "tan_delta_34kHz": 0.05951865652131868,
+    "strain_ac_at_the_heat_budget_34kHz": 0.0006604132338371202,
+    "field_ac_V_um": 1.4821245105267737,
+    "binds": "heat",
+    "blocked_pn_nm2_by_the_films_assumed_modulus": 0.13208264676742404,
+    "blocked_pn_nm2_through_the_crystal": 6.464650946507255
+   },
+   "rows": {
+    "vdf9-trfe4-cfe1-14": {
+     "margin": 0.12911399749285285,
+     "all_trans_is_lower": false,
+     "by_the_sum_over_kink_sites": {
+      "margin_the_model_used": 0.12911399749285285,
+      "polar_fraction_at_the_bias": 0.15657891309132443,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.06104333590179822,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0007135696569340226,
+      "field_ac_V_um": 1.2286626398518106,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.14271393138680452,
+      "blocked_pn_nm2_through_the_crystal": 6.20891580511853
+     },
+     "by_the_occupancy_of_kink_sites": {
+      "margin_the_model_used": 0.12911399749285285,
+      "polar_fraction_at_the_bias": 0.15657891309132443,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.06104333590179822,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0007135696569340226,
+      "field_ac_V_um": 1.2286626398518106,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.14271393138680452,
+      "blocked_pn_nm2_through_the_crystal": 6.20891580511853
+     },
+     "kink_sites": {
+      "cheapest_kcal_per_kink_pair": -2.272476756179998,
+      "cheapest_on_units": "VC",
+      "sites_below_all_trans": 9,
+      "sites_scanned": [
+       14,
+       14
+      ],
+      "sum_against_the_film_cell": 1.0,
+      "occupancy_against_the_film_cell": 1.0
+     }
+    },
+    "vdf9-trfe3-an1-rvdf1-14": {
+     "margin": -0.06982460586312664,
+     "all_trans_is_lower": true,
+     "by_the_sum_over_kink_sites": {
+      "margin_the_model_used": 0.0,
+      "polar_fraction_at_the_bias": 0.8354073897396963,
+      "f_relax_hz": 4140.90370482045,
+      "tan_delta_34kHz": 0.8490682994099596,
+      "strain_ac_at_the_heat_budget_34kHz": 7.245917944618002e-05,
+      "field_ac_V_um": 1.034389849070275,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.014491835889236004,
+      "blocked_pn_nm2_through_the_crystal": 0.3944971110070151
+     },
+     "by_the_occupancy_of_kink_sites": {
+      "margin_the_model_used": 0.0,
+      "polar_fraction_at_the_bias": 0.8354073897396963,
+      "f_relax_hz": 30355.322568127067,
+      "tan_delta_34kHz": 0.6515695852006474,
+      "strain_ac_at_the_heat_budget_34kHz": 0.00019526689323262844,
+      "field_ac_V_um": 0.5877742916450879,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.03905337864652569,
+      "blocked_pn_nm2_through_the_crystal": 1.0631120286533724
+     },
+     "kink_sites": {
+      "cheapest_kcal_per_kink_pair": 0.6479222334438788,
+      "cheapest_on_units": "RV",
+      "sites_below_all_trans": 0,
+      "sites_scanned": [
+       14,
+       14
+      ],
+      "sum_against_the_film_cell": 0.01137658726675801,
+      "occupancy_against_the_film_cell": 0.08339724872251301
+     }
+    }
+   }
+  }
+ },
+ "sites_from": "kink_site_scan_belt4_shear.json"
+}

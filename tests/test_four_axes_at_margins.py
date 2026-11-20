@@ -164,6 +164,25 @@ def test_three_evaluators_put_the_leaders_cheapest_sheet_three_kcal_above_the_fi
         assert rec["kink_kept"] and rec["all_trans_is_all_trans"] and all(float(v.split(" to ")[1].split(" eV")[0]) <= 0.005 for v in rec["relaxed"].values())
     gaps = [b[leader] - b[film], c[leader] - c[film], p[leader]["potential"] - p[film]["potential"]]
     assert gaps == pytest.approx([2.92, 3.31, 3.65], abs=0.01)
+    # the nitrile alone, level with the film cell in belt4 (-2.08), is above all-trans in the potential: belt4 has the nitrile wrong (3.12)
+    nitrile = potential[f"{AN}@10"]
+    assert nitrile["potential"] == pytest.approx(0.36, abs=0.006) and nitrile["polyfind"] == pytest.approx(-2.08, abs=0.006) and nitrile["kink_kept"]
     # the film cell's sheets are below all-trans under chain1-cfe too: eight of the nine sites run
     sites = [r["lowest"] for k, r in chain1.items() if k.startswith(CFE)]
     assert len(sites) == 9 and sum(1 for v in sites if v < 0.0) == 8 and min(sites) == pytest.approx(-4.50, abs=0.006)
+
+
+def test_at_a_tight_stop_the_potentials_margins_move_and_the_film_cells_sheet_is_below_its_helix():
+    """The film cell's and the leader's all-trans and lowest helix cells in the potential at 0.005 eV/A or tighter (3.14 stopped at 0.02)."""
+    tight = json.loads((PRED / "rows14_potential_tight.json").read_text())["rows"]
+    loose = json.loads((PRED / "rows14_potential.json").read_text())["rows"]
+    sheets = json.loads((PRED / "sheets14_potential_sheared.json").read_text())["rows"]
+    assert {r: tight[r]["margin"] for r in tight} == pytest.approx({CFE: 0.129, LEADER: -0.070}, abs=0.001)
+    assert {r: loose[r]["margin"] for r in tight} == pytest.approx({CFE: 0.078, LEADER: -0.055}, abs=0.001)
+    for row in tight:  # every cell fell, by up to 0.05 kcal/mol per monomer: the size of the margins themselves
+        for conf, cell in tight[row]["cells"].items():
+            fall = (loose[row]["cells"][conf]["eV_per_monomer"] - cell["eV_per_monomer"]) * 23.0605
+            assert 0.0 <= fall < 0.052
+    # per chain of fourteen against all-trans: the film cell's helix -1.8 and its sheet at the chlorine -3.6; the leader's helix +1.0 and its sheet +0.05
+    assert -14 * tight[CFE]["margin"] == pytest.approx(-1.81, abs=0.01) and sheets[f"{CFE}@12"]["potential"] < -14 * tight[CFE]["margin"] - 1.7
+    assert -14 * tight[LEADER]["margin"] == pytest.approx(0.98, abs=0.01) and 0.0 < sheets[f"{LEADER}@10"]["potential"] < 0.1

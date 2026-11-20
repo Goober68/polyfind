@@ -1,0 +1,88 @@
+{
+ "what": "cells relaxed in the potential all_s1 (examples/mlip_train.py relax) from a preset's cells, the potential's own energies: eV per monomer; margins kcal/mol per monomer, all-trans minus helix; no DFT on these cells",
+ "potential": "all_s1",
+ "rows": {
+  "vdf9-trfe4-cfe1-14": {
+   "cells": {
+    "G'TGT": {
+     "frame": "row_vdf9-trfe4-cfe1-14_GpTGT_chain1_in_all_s1",
+     "eV_per_monomer": -2048.9006244996694,
+     "cell_A_deg": [
+      5.253185574906804,
+      9.904356952640443,
+      32.71650236450555,
+      88.54805283433214,
+      84.41804212893047,
+      89.14905891593112
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf9-trfe4-cfe1-14 G'TGT, cell sheared, pendants as built"
+    },
+    "TTTT": {
+     "frame": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+     "eV_per_monomer": -2048.89502557521,
+     "cell_A_deg": [
+      5.281710979191954,
+      8.76767434529656,
+      35.95436515455373,
+      89.99999827377623,
+      89.99999960215713,
+      89.97589641958214
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf9-trfe4-cfe1-14 TTTT, cell sheared, pendants as built"
+    }
+   },
+   "all_trans_minus_helix": {
+    "G'TGT": 0.12911399749285285
+   },
+   "margin": 0.12911399749285285,
+   "helix": "G'TGT",
+   "helix_placements": 1,
+   "strain_along_chain": 0.09896726593735661
+  },
+  "vdf9-trfe3-an1-rvdf1-14": {
+   "cells": {
+    "TGTG'": {
+     "frame": "row_vdf9-trfe3-an1-rvdf1-14_TGTGp_cfe_in_all_s1",
+     "eV_per_monomer": -1959.7691501956904,
+     "cell_A_deg": [
+      5.239227852309902,
+      9.834033657904039,
+      32.9387616443336,
+      94.09876201109451,
+      90.0000022484629,
+      90.0000043342391
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 TGTG', cell sheared, pendants as built"
+    },
+    "TTTT": {
+     "frame": "row_vdf9-trfe3-an1-rvdf1-14_TTTT_cfe_in_all_s1",
+     "eV_per_monomer": -1959.772178083458,
+     "cell_A_deg": [
+      5.670543510998331,
+      8.460607283617158,
+      35.683754504348855,
+      93.0820880245774,
+      92.00003388587082,
+      89.87461060596405
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 TTTT, cell sheared, pendants as built"
+    }
+   },
+   "all_trans_minus_helix": {
+    "TGTG'": -0.06982460586312664
+   },
+   "margin": -0.06982460586312664,
+   "helix": "TGTG'",
+   "helix_placements": 1,
+   "strain_along_chain": 0.08333624954256491
+  }
+ }
+}

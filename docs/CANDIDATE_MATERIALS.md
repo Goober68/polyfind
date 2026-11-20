@@ -79,6 +79,17 @@ lower phase, and a kink pair is one turn of that helix.
   -1.65 and **-3.60**, leader +1.66 and **+0.05** (belt4 -2.27 and +0.65). Three evaluators
   with different errors put the leader's sheet 2.9 to 3.7 kcal/mol above the film cell's. The
   two sites are belt4's choice of cheapest; no DFT has seen a cell of this size.
+- **The nitrile alone does not stay with the film in the potential**: its cheapest sheet is
+  +0.36 there, where belt4 has -2.08. The nitrile row of the table above is belt4's nitrile
+  error and is not supported.
+- **The potential's margins at a tight stop**: film cell +0.129 (3.14 had +0.078 from cells
+  stopped loosely), leader -0.070 (-0.055). At +0.129 the film cell's row reads tan delta
+  0.061, 0.071% and 6.2 pN/nm2, on the measured film's calibrated channel. The matrix's and
+  the nitrile cell's margins have not been redone.
+- **In the potential the film cell's lowest state is all-trans with a kink at each chlorine**
+  (3.6 kcal/mol per chain below all-trans; its helix cell 1.8 below). Both presets have the
+  helix lower. If the potential is right, the margin as defined here does not name the state
+  the field converts in the film's own composition. DFT has to be asked.
 - **A periodic cell puts every unit beside its like, and the leader's all-trans cell needs
   that.** A statistical copolymer has a reversed unit beside another about one time in
   fourteen. What the leader's all-trans phase costs out of register is open, and the margin of

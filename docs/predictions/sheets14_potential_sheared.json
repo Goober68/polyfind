@@ -88,6 +88,49 @@
     "sheet": "all_s1 with D3 to 0.004 eV/A (70 steps)",
     "all_trans": "all_s1 with D3 to 0.004 eV/A (251 steps)"
    }
+  },
+  "vdf9-trfe4-an1-14@10": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at10_sheared_r2",
+   "atoms": 170,
+   "site": "10",
+   "potential": 0.3635049218217771,
+   "polyfind": -2.0780795278830055,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     53.9,
+     -51.4
+    ],
+    [
+     53.9,
+     -51.4
+    ]
+   ],
+   "cell_A_deg": [
+    5.559594132899618,
+    9.956383578163246,
+    34.85959211082831,
+    118.22723708355143,
+    91.45054550008629,
+    89.99834571627288
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 10 (units RV), the cell free to shear: -0.05, -1.79 monomers along a, b, pendants as built",
+   "all_trans_frame": "tt_nitrile_from_rows14an_r1",
+   "all_trans_eV_per_monomer": -2006.5040419047561,
+   "sheet_eV_per_monomer": -2006.5029159691835,
+   "all_trans_cell_A_deg": [
+    5.575965688945162,
+    8.4709234565858,
+    35.79861333124395,
+    89.99999987670085,
+    89.99999928416273,
+    89.90652901300186
+   ],
+   "all_trans_is_all_trans": true,
+   "relaxed": {
+    "sheet": "all_s1 with D3 to 0.004 eV/A (87 steps)",
+    "all_trans": "all_s1 with D3 to 0.004 eV/A (177 steps)"
+   }
   }
  }
 }
