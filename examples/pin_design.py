@@ -281,19 +281,25 @@ def main():
             hands = [scans[k] for k in (f"{row}@0", f"{row}@0~") if k in scans]
             if not hands:
                 return None
-            zs, low = [], None
+            zs, ps, low, below = [], [], None, 0
             for h in hands:
                 es = [(v["formation"], v["units"], int(o)) for o, v in h["sites"].items() if v.get("converged", True) and v.get("kink_kept", True)]
                 zs.append(float(sum(np.exp(-e / 0.596) for e, _, _ in es)) * (len(h["letters"]) * 1.0 / len(es)) / len(h["letters"]))  # per site, so that a half-scanned repeat compares
+                # the share of sites that hold a sheet at equilibrium, each site with or without one: exp(-E / kT) where sheets are rare, and never over one
+                ps.append(float(sum(1.0 / (1.0 + np.exp(e / 0.596)) for e, _, _ in es)) / len(es))
+                below += sum(1 for e, _, _ in es if e < 0.0)
                 best = min(es)
                 low = best if low is None or best < low else low
-            return {"z_per_site": float(np.mean(zs)), "hands_scanned": len(hands), "sites_scanned": [len(h["sites"]) for h in hands],
-                    "cheapest": {"energy": low[0], "units": low[1], "offset_bonds": low[2]}, "start_site": hands[0]["sites"]["0"]["formation"]}
+            return {"z_per_site": float(np.mean(zs)), "occupancy_per_site": float(np.mean(ps)), "sites_below_all_trans": below, "hands_scanned": len(hands),
+                    "sites_scanned": [len(h["sites"]) for h in hands], "cheapest": {"energy": low[0], "units": low[1], "offset_bonds": low[2]},
+                    "start_site": hands[0]["sites"]["0"]["formation"]}
 
         md_z = ["| cell | kink sheet at the start site | cheapest site scanned (the two units it sits on) | sites' sum against the 64/29/7 cell's | relaxation frequency by the sum | AC strain at "
                 f"{args.ac:g} V/um, 34 kHz | tan delta, 34 kHz | AC strain at the heat budget, 34 kHz | blocked force per area there, pN/nm2: by the film's assumed modulus; through the crystal across the chains |", "|---|---|---|---|---|---|---|---|---|"]
         out["sites"] = {"note": "kcal/mol per kink pair against all-trans, rigid pendants; the sum is over the scanned sites of the repeat and the scanned hands of the kink pair, "
-                                "per site; the frequency is the measured film's 364 kHz times the ratio of sums", "rows": {}}
+                                "per site; the frequency is the measured film's 364 kHz times the ratio of sums. The sum takes sheets to be rare (several kT above all-trans). "
+                                "by_occupancy is the same with each site's exp(-E / kT) replaced by its share of time with a sheet, 1 / (1 + exp(E / kT)): the two agree where "
+                                "sheets are rare, and a sheet below all-trans (sites_below_all_trans) counts as one site and no more", "rows": {}}
         z_ref = site_sum("vdf9-trfe4-cfe1-14")
         if z_ref is not None:
             cells_z = [("vdf9-trfe4-cfe1-14", "64/29/7 (one CFE per fourteen): the anchor", rows["vdf9-trfe4-cfe1-14"]["margin"]),
@@ -306,7 +312,9 @@ def main():
                     continue
                 ratio = z["z_per_site"] / z_ref["z_per_site"]
                 pt = point(margin, e_cfe - 0.596 * float(np.log(ratio)), loss[name]["mu_TT"], loss[name]["axial"], name)
-                out["sites"]["rows"][name] = dict(z, what=label, ratio_to_the_anchor=ratio, three_axes=pt)
+                occupied = z["occupancy_per_site"] / z_ref["occupancy_per_site"]
+                out["sites"]["rows"][name] = dict(z, what=label, ratio_to_the_anchor=ratio, three_axes=pt, by_occupancy={
+                    "ratio_to_the_anchor": occupied, "three_axes": point(margin, e_cfe - 0.596 * float(np.log(occupied)), loss[name]["mu_TT"], loss[name]["axial"], name)})
                 hb = pt["at_the_heat_budget"]
                 fr = pt["f_relax_hz"]
                 fr = f"{fr / 1e6:.1f} MHz" if fr >= 1e6 else (f"{fr / 1e3:.0f} kHz" if fr >= 1e3 else f"{fr:.0f} Hz")

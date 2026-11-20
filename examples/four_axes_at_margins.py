@@ -89,6 +89,12 @@ def main():
                 for model, key in (("by_the_sum_over_kink_sites", "sites"),) + (() if shifts or other_sites else (("by_one_chains_move", "moves"),)):
                     if k in res.get(key, {}).get("rows", {}):
                         rec[model] = axes_of(res[key]["rows"][k]["three_axes"])
+                site = res.get("sites", {}).get("rows", {}).get(k)
+                if site is not None:  # the same sites with a sheet below all-trans counted as one site that holds a sheet, and what the sites are
+                    rec["by_the_occupancy_of_kink_sites"] = axes_of(site["by_occupancy"]["three_axes"])
+                    rec["kink_sites"] = {"cheapest_kcal_per_kink_pair": site["cheapest"]["energy"], "cheapest_on_units": site["cheapest"]["units"],
+                                         "sites_below_all_trans": site["sites_below_all_trans"], "sites_scanned": site["sites_scanned"],
+                                         "sum_against_the_film_cell": site["ratio_to_the_anchor"], "occupancy_against_the_film_cell": site["by_occupancy"]["ratio_to_the_anchor"]}
                 entry["rows"][k] = rec
             out["shifts"][f"{shift:+.2f}"] = entry
     args.out.write_text(json.dumps(out, indent=1))
@@ -97,7 +103,11 @@ def main():
         print(f"\nmargins shifted by {shift}; the measured film's channel: {film['f_relax_hz'] / 1e3:.0f} kHz, tan delta {film['tan_delta_34kHz']:.3f}, "
               f"strain {100 * film['strain_ac_at_the_heat_budget_34kHz']:.3f}%, blocked {film['blocked_pn_nm2_by_the_films_assumed_modulus']:.2f}")
         for k, rec in entry["rows"].items():
-            for model in ("by_the_sum_over_kink_sites", "by_one_chains_move"):
+            if "kink_sites" in rec:
+                ks = rec["kink_sites"]
+                print(f"  {k:26s} kink sites: cheapest {ks['cheapest_kcal_per_kink_pair']:+.2f} ({ks['cheapest_on_units']}), {ks['sites_below_all_trans']} of {sum(ks['sites_scanned'])} below all-trans; "
+                      f"sum {ks['sum_against_the_film_cell']:.3g}, occupancy {ks['occupancy_against_the_film_cell']:.3g} of the film cell's")
+            for model in ("by_the_sum_over_kink_sites", "by_the_occupancy_of_kink_sites", "by_one_chains_move"):
                 if model not in rec:
                     continue
                 a = rec[model]
