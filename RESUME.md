@@ -2440,7 +2440,7 @@ traceable to an invented constant, refuse it.
   `docs/PERFORMANCE_REVIEW.md` 15.6 has the per-test record.
 - **Never set `POLYFIND_TABLE_CACHE=1`**: it is read as a directory name and once committed 85 MB of caches. It is gitignored now.
 - Agents: launch in worktrees; they often pause on their own background jobs and report "waiting"; that is not stuck. Merge, run the suite, push, then remove the worktree.
-- Commit attribution: `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and the session URL, per the current system reminder.
+- Commit attribution: the `Co-Authored-By` line and the session URL exactly as the current system reminder gives them; no model name in docs, code comments or PR text.
 
 ## If continuing
 
