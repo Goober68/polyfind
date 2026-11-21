@@ -3,9 +3,11 @@
 # fit against the DFT anchor (examples/mlip_train.py; docs/MLIP_SECOND_OPINION.md 3.3 and 3.5).
 # A job of examples/runpod_jobs_pod.sh.  Arguments:
 #
-#   mlip_fit.sh NAME EPOCHS SEED [SEED...] [frames FILE...] [train ARGUMENT...] [also ARGUMENT...]
+#   mlip_fit.sh NAME EPOCHS SEED [SEED...] [frames FILE...] [prepare ARGUMENT...] [train ARGUMENT...] [also ARGUMENT...]
 #
-# NAME_sSEED names each fit.  The frames default to the two PVDF files; what follows `train` is
+# NAME_sSEED names each fit.  The frames default to the two PVDF files; what follows `prepare` is
+# given to `mlip_train.py prepare` (e.g. `prepare --heavy REGEX --hold-out-frames NAME NAME`);
+# what follows `train` is
 # given to `mlip_train.py train` (e.g. `train --stress-weight 100`); what follows `also` is a
 # second set of arguments, fitted from the same seeds as NAMEb_sSEED.  The fits are made
 # side by side on the one card (a fit of cells this small does not fill it), then tested one
@@ -18,9 +20,10 @@
 # card; MLIP_SKIP_TEST=1 stops after the fits.
 set -euo pipefail
 NAME="$1"; EPOCHS="$2"; shift 2
-SEEDS=(); FRAMES=(); TRAIN=(); ALSO=(); SECOND=0
-while [ $# -gt 0 ] && [ "$1" != "frames" ] && [ "$1" != "train" ] && [ "$1" != "also" ]; do SEEDS+=("$1"); shift; done
-if [ "${1:-}" = "frames" ]; then shift; while [ $# -gt 0 ] && [ "$1" != "train" ] && [ "$1" != "also" ]; do FRAMES+=("$1"); shift; done; fi
+SEEDS=(); FRAMES=(); PREPARE=(); TRAIN=(); ALSO=(); SECOND=0
+while [ $# -gt 0 ] && [ "$1" != "frames" ] && [ "$1" != "prepare" ] && [ "$1" != "train" ] && [ "$1" != "also" ]; do SEEDS+=("$1"); shift; done
+if [ "${1:-}" = "frames" ]; then shift; while [ $# -gt 0 ] && [ "$1" != "prepare" ] && [ "$1" != "train" ] && [ "$1" != "also" ]; do FRAMES+=("$1"); shift; done; fi
+if [ "${1:-}" = "prepare" ]; then shift; while [ $# -gt 0 ] && [ "$1" != "train" ] && [ "$1" != "also" ]; do PREPARE+=("$1"); shift; done; fi
 if [ "${1:-}" = "train" ]; then shift; while [ $# -gt 0 ] && [ "$1" != "also" ]; do TRAIN+=("$1"); shift; done; fi
 if [ "${1:-}" = "also" ]; then shift; ALSO=("$@"); SECOND=1; fi
 [ ${#FRAMES[@]} -gt 0 ] || FRAMES=(docs/predictions/mlip/pvdf_frames_pbe_d3bj.extxyz docs/predictions/mlip/pvdf_near_frames_pbe_d3bj.extxyz)
@@ -60,7 +63,7 @@ PY
 
 # MLIP_HOLD_OUT: sources kept whole out of the fit, e.g. "VAVF|VRVV" (see mlip_train.py prepare)
 read -r -a HOLD <<< "${MLIP_HOLD_OUT:-}"
-"$PY" examples/mlip_train.py prepare --frames "${FRAMES[@]}" --data "$DATA" --hold-out "${HOLD[@]}"
+"$PY" examples/mlip_train.py prepare --frames "${FRAMES[@]}" --data "$DATA" --hold-out "${HOLD[@]}" "${PREPARE[@]}"
 t0=$(date +%s)
 FITS=()
 for seed in "${SEEDS[@]}"; do FITS+=("${NAME}_s${seed}"); done

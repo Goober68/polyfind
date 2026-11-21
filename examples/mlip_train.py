@@ -72,6 +72,10 @@ def prepare(args):
     d3 = _second_opinion().d3_calculator()
     frames = [a for f in args.frames for a in read(f, index=":")]
     tail, formula, train, test = [], [], [], []
+    held_by_name, n_heavy = [], 0
+    missing = sorted(set(args.hold_out_frames) - {str(a.info.get("frame", "")) for a in frames})
+    if missing:
+        raise SystemExit(f"--hold-out-frames names frames that are not in the files: {missing}")
     for i, a in enumerate(frames):
         b = a.copy()
         b.calc = d3
@@ -89,7 +93,14 @@ def prepare(args):
         out.arrays["REF_forces"] = a.arrays["REF_forces"] - f
         out.info["d3_energy"] = float(e)
         whole = any(k in str(a.info.get("source", "")) for k in args.hold_out)
-        (test if a.info["family"] == "end" or whole or i % 9 == 5 else train).append(out)
+        named = str(a.info.get("frame", "")) in args.hold_out_frames
+        heavy = bool(args.heavy) and re.fullmatch(args.heavy, str(a.info.get("frame", ""))) is not None
+        if heavy:
+            out.info["config_type"] = "heavy"   # `train --heavy-weight` weights these; the one-in-nine rule leaves them in the fit
+            n_heavy += 1
+        if named:
+            held_by_name.append(str(a.info["frame"]))
+        (test if named or (not heavy and (a.info["family"] == "end" or whole or i % 9 == 5)) else train).append(out)
     tail, formula = np.array(tail), np.array(formula)
     # the tail's size goes with the atoms' dispersion coefficients, so it is one number per
     # composition (1.01 for PVDF, up to 1.31 with chlorine): the same within each to 2%
@@ -105,6 +116,7 @@ def prepare(args):
         "frames": len(frames), "train": len(train), "test": len(test),
         "test_ends": sum(a.info["family"] == "end" for a in test),
         "held_out_whole": {k: sum(k in str(a.info.get("source", "")) for a in test) for k in args.hold_out},
+        "held_out_by_name": held_by_name, "heavy": n_heavy, "heavy_in_the_fit": sum(a.info.get("config_type") == "heavy" for a in train),
         "d3_addon_less_dft_program_far_tail_meV_A3_per_atom": [float(tail.mean()), float(tail.std())],
         "far_tail_by_composition_meV_A3_per_atom": {k: [float(v.mean()), float(v.std())] for k, v in by_composition.items()},
         "largest_force_eV_per_A": float(max(np.abs(a.arrays["REF_forces"]).max() for a in frames)),
@@ -137,6 +149,8 @@ def train(args):
         common += ["--energy_weight=1", "--forces_weight=100", f"--stress_weight={stress}",
                    "--swa", f"--start_swa={int(0.6 * args.epochs)}", f"--swa_energy_weight={energy}",
                    "--swa_forces_weight=100", f"--swa_stress_weight={stress}", f"--swa_lr={args.lr / 10}"]
+    if args.heavy_weight != 1.0:
+        common += ['--config_type_weights={"Default":1.0,"heavy":%s}' % args.heavy_weight]
     if args.start:
         pass  # the starting point and its reference energies are set above
     elif args.scratch:
@@ -402,6 +416,44 @@ def relax(args):
               flush=True)
 
 
+def score(args):
+    """Labelled frames with the potential's energy on each (and its forces against DFT's): the frames
+    go out again with ``potential_eV_per_monomer`` this potential's, so that the tables made from the
+    stored labels (``row_cells_frames.py states-dft``) can be made for another potential."""
+    import torch
+    from ase.calculators.mixing import SumCalculator
+    from ase.io import read, write
+
+    warnings.filterwarnings("ignore")
+    torch.set_num_threads(args.threads)
+    so = _second_opinion()
+    calc = SumCalculator([so.file_calculator(args.model), so.d3_calculator()])
+    held = set(args.held_out)
+    out, rows = [], {}
+    for a in (a for f in args.frames for a in read(f, index=":")):
+        b = a.copy()
+        b.calc = calc
+        n = int(a.info["n_monomers"])
+        e, f = b.get_potential_energy() / n, b.get_forces()
+        name = str(a.info["frame"])
+        rows[name] = {"potential_eV_per_monomer": float(e), "dft_eV_per_monomer": float(a.info["REF_energy"]) / n, "atoms": len(a),
+                      "force_rms_against_dft_eV_per_A": float(np.sqrt(np.mean((f - a.arrays["REF_forces"]) ** 2))),
+                      "largest_force_against_dft_eV_per_A": float(np.abs(f - a.arrays["REF_forces"]).max()),
+                      "largest_force_in_the_potential_eV_per_A": float(np.abs(f).max()), "in_the_fit": name not in held}
+        c = a.copy()
+        c.calc = None
+        c.info["potential_eV_per_monomer"] = float(e)
+        c.info["potential"] = args.name
+        out.append(c)
+        print(f"{name}: {1e3 * (e - rows[name]['dft_eV_per_monomer']):+.2f} meV per monomer from DFT (absolute), forces rms {rows[name]['force_rms_against_dft_eV_per_A']:.3f} eV/A"
+              f"{'' if name not in held else '  HELD OUT'}", flush=True)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    write(args.out.with_suffix(".extxyz"), out, format="extxyz")
+    args.out.write_text(json.dumps({"what": f"{args.name} with D3 on labelled frames: its energy per monomer beside DFT's, and its forces against DFT's",
+                                    "model": args.model.name, "held_out": sorted(held), "frames": rows}, indent=1) + "\n")
+    print(f"wrote {args.out} and {args.out.with_suffix('.extxyz')}")
+
+
 def device_check(args):
     """Stored cells evaluated where MLIP_DEVICE says, against the energy each carries: does a card give this machine's numbers?
 
@@ -506,6 +558,9 @@ def main():
     s = sub.add_parser("prepare")
     s.add_argument("--frames", type=Path, required=True, nargs="+", help="one or more files of labelled frames")
     s.add_argument("--data", type=Path, required=True, help="working directory, outside the repository")
+    s.add_argument("--hold-out-frames", nargs="*", default=[], metavar="NAME", help="frames kept out of the fit by name (they go to the test file)")
+    s.add_argument("--heavy", default="", metavar="REGEX", help="frames whose whole name matches are marked heavy: `train --heavy-weight` weights them, "
+                   "and they stay in the fit unless named by --hold-out-frames")
     s.add_argument("--hold-out", nargs="*", default=[], metavar="SOURCE",
                    help="keep every frame whose source holds this text out of the fit (a whole composition unseen)")
     s = sub.add_parser("train")
@@ -519,6 +574,7 @@ def main():
                         "energy at 0.4%% of what was minimised), 3e5 with --start")
     s.add_argument("--stress-weight", type=float, default=None,
                    help="default: 10 in both stages (the first fit; it left stress at 0.05%%), 1e4 with --start")
+    s.add_argument("--heavy-weight", type=float, default=1.0, help="the weight in the loss of the frames `prepare --heavy` marked (energy, forces and stress alike)")
     s.add_argument("--epochs", type=int, default=60)
     s.add_argument("--batch", type=int, default=4)
     s.add_argument("--lr", type=float, default=0.001,
@@ -561,6 +617,13 @@ def main():
     s.add_argument("--out", type=Path, required=True)
     s.add_argument("--tol", type=float, default=0.01, help="meV per monomer")
     s.add_argument("--threads", type=int, default=4)
+    s = sub.add_parser("score")
+    s.add_argument("--model", type=Path, required=True)
+    s.add_argument("--name", required=True)
+    s.add_argument("--frames", type=Path, nargs="+", required=True, help="files of DFT-labelled frames")
+    s.add_argument("--held-out", nargs="*", default=[], metavar="NAME", help="frames the fit did not see, marked so in the output")
+    s.add_argument("--out", type=Path, required=True, help="the table (JSON); the frames go beside it as .extxyz")
+    s.add_argument("--threads", type=int, default=4)
     s = sub.add_parser("closure")
     s.add_argument("--frames", type=Path, required=True, help="the labelled frames (for DFT's own minima)")
     s.add_argument("--probe", type=Path, required=True, help="the directory `evaluate --probe` wrote, labelled")
@@ -568,7 +631,7 @@ def main():
     s.add_argument("--name", required=True)
     s.add_argument("--threads", type=int, default=4)
     args = p.parse_args()
-    {"prepare": prepare, "train": train, "evaluate": evaluate, "relax": relax, "closure": closure, "device-check": device_check}[args.step](args)
+    {"prepare": prepare, "train": train, "evaluate": evaluate, "relax": relax, "closure": closure, "device-check": device_check, "score": score}[args.step](args)
 
 
 if __name__ == "__main__":
