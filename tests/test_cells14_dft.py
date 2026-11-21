@@ -47,6 +47,8 @@ def test_dft_has_the_film_cells_kinked_state_five_kcal_below_all_trans_and_three
     assert [s["dft"] for s in (on_the_chlorine, other, helix)] == pytest.approx([-5.03, -1.93, -1.72], abs=0.006)
     assert [s["potential"] for s in (on_the_chlorine, other, helix)] == pytest.approx([-5.26, -3.60, -2.28], abs=0.006)
     assert on_the_chlorine["dft"] < other["dft"] - 3.0 and on_the_chlorine["dft"] < helix["dft"] - 3.0
+    # stepped toward DFT's own minimum it is 5.24 and its step came to rest: the number is firm
+    assert on_the_chlorine["stepped"] == pytest.approx(-5.24, abs=0.006) and on_the_chlorine["stepped_settled"]
     # the other sheet and the helix are not told apart: 0.2 on single points, 0.07 at the stepped estimates, and the helix's step did not come to rest
     assert abs(other["dft"] - helix["dft"]) < 0.25 and abs(other["stepped"] - helix["stepped"]) < 0.1
     assert other["stepped_settled"] and not helix["stepped_settled"]

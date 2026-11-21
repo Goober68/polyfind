@@ -1804,7 +1804,7 @@ all-trans cell, kcal/mol per chain of fourteen (for a sheet: per kink pair):
 
 | cell, state | DFT | the potential | belt4 | DFT's own minimum, estimated |
 |---|---:|---:|---:|---:|
-| film's composition, sheet on the chlorine unit (site 14, other hand; G- T G+ on CV) | **-5.03** | -5.26 | -1.17 | |
+| film's composition, sheet on the chlorine unit (site 14, other hand; G- T G+ on CV) | **-5.03** | -5.26 | -1.17 | -5.24 |
 | film's composition, sheet at site 12 (G+ T G- on VC) | **-1.93** | -3.60 | -2.27 | -2.12 |
 | film's composition, lowest helix placement (TGTG') | **-1.72** | -2.28 | -4.4 | -2.05, not settled |
 | leader, lowest helix placement (TGTG') | **+0.65** | +0.98 | -0.5 | +0.74 |
@@ -1903,9 +1903,10 @@ energy at the three sites that have one:
   what the pin is worth when the neighbours cooperate: an upper bound for the film, not its
   number, and the measured film's response (calibrated at no margin) does not show a state 0.36
   per monomer below the polar one.
-- Seven single points. The film cell's sheet on the chlorine has no stepped estimate here yet;
-  the sheet at site 12 against the helix, and the sign of the leader's sheet, need a second DFT
-  calculation on the stepped cells (stored: `mlip/cells14_stepped_to_dft.extxyz`).
+- Seven single points. The film cell's sheet on the chlorine is firm under the step (5.03 on
+  single points, 5.24 at the estimated minima, its cell and shear unmoved); the sheet at site 12
+  against the helix, and the sign of the leader's sheet, need a second DFT calculation on the
+  stepped cells (stored: `mlip/cells14_stepped_to_dft.extxyz`).
 - The leader has 23 other sheets in the potential and DFT has seen one. With errors from -1.7 to
   +0.3 a site, one of them below all-trans in DFT is possible. Its sheets at 18, 16m and 20m
   are the ones to ask about.

@@ -113,7 +113,7 @@ lower phase, and a kink pair is one turn of that helix.
 
   | cell | lowest helix | kink sheets asked about |
   |---|---:|---|
-  | the film's composition | -1.72 (the potential -2.28) | on the chlorine unit **-5.03** (-5.26); beside it -1.93 (-3.60) |
+  | the film's composition | -1.72 (the potential -2.28) | on the chlorine unit **-5.03** (-5.26), -5.24 at DFT's estimated minimum; beside it -1.93 (-3.60) |
   | the leader | +0.65 (+0.98) | the potential's lowest, +0.34 (-1.37); -0.34 at DFT's estimated minimum |
 
   **The film composition's lowest state is all-trans chains with a kink pair on each chlorine

@@ -699,8 +699,9 @@ right": true at one registry, not along it).
         A NUMBER; its order of sites says where DFT should look.
         STEPPED TOWARD DFT'S OWN MINIMUM (`mlip_train.py relax --dft-gradient --max-move 0.5` on each label,
         here, 10 to 25 minutes each; `mlip/cells14_stepped_to_dft.extxyz`, working copies in
-        `/opt/dft/cells14_tilted`): film sheet 12 -2.12, film helix -2.05 (STOPPED AT THE MOVE ALLOWED, not
-        settled), leader helix +0.74, LEADER SHEET -0.34 (the correction, 0.67, is as large as the number:
+        `/opt/dft/cells14_tilted`): FILM SHEET ON THE CHLORINE -5.24 (settled, cell unmoved: firm), film sheet
+        12 -2.12, film helix -2.05 (STOPPED AT THE MOVE ALLOWED, not settled), leader helix +0.74, LEADER
+        SHEET -0.34 (the correction, 0.67, is as large as the number:
         its sign is open). These are estimates, not DFT.
         WHAT THE CARD DID (`relax_card.sh`, 0.42 s a step; `sheets14_potential_card.json`,
         `rows14_potential_card.json`, cells in `mlip/cells14_tight_in_all_s1.extxyz`, starts in `mlip/
