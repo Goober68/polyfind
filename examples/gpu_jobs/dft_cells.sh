@@ -13,8 +13,15 @@
 #   dft_cells.sh usepw PW NP POOLS
 #       every cell still waiting in line is run with the pw.x at PW on NP processes in POOLS pools
 #       (a build for the card, examples/gpu_jobs/qe_gpu_build.sh: one process, one pool)
+#   dft_cells.sh drop NAME [NAME...]
+#       take cells that are still waiting out of the line (another line has them)
 #   dft_cells.sh wait
 #       return when the line is empty (so that the pod does not count itself idle and leave)
+#
+# Before the mode, `in=NAME` names another line (its own folder <served>/jobs/shared/NAME/, its
+# own worker and log) and `pw=PATH` the pw.x that line's cells are run with: a second line for
+# the card beside the processors' one, as
+#   dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 FILE NAME [NAME...]
 #
 # The first start installs Quantum ESPRESSO 7.5 (conda-forge, as on the machine the frames were
 # made on) and fetches the five SSSP 1.3.0 PBE precision files, which must have the checksums of
@@ -28,9 +35,17 @@
 # DFT_QE and DFT_PSEUDO name an installation and the files already on the machine; DFT_DRY=1
 # writes the worker and does not start it (to try this script where nothing may be left running).
 set -euo pipefail
+SUBDIR="dft"; OWN_PW=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    in=*) SUBDIR="${1#in=}"; shift ;;
+    pw=*) OWN_PW="${1#pw=}"; shift ;;
+    *) break ;;
+  esac
+done
 MODE="$1"; shift
 SHARED="$(dirname "$JOB_OUT")/shared"
-DFT="$SHARED/dft"
+DFT="$SHARED/$SUBDIR"
 QE="${DFT_QE:-/opt/qe}"
 PSEUDO="${DFT_PSEUDO:-/opt/pseudo}"
 mkdir -p "$DFT"
@@ -49,6 +64,13 @@ if [ "$MODE" = "last" ]; then
     mv "$DFT/line.new" "$DFT/line.txt"
   done
   echo "the line is now:"; cat "$DFT/line.txt"
+  exit 0
+fi
+if [ "$MODE" = "drop" ]; then
+  for name in "$@"; do
+    if [ -f "$DFT/$name.dft.xyz" ] || grep -qx "$name" "$DFT/tried.txt" 2>/dev/null; then echo "$name: already started here, left in this line"
+    else echo "$name" >> "$DFT/tried.txt"; echo "$name: out of this line"; fi
+  done
   exit 0
 fi
 if [ "$MODE" = "usepw" ]; then
@@ -76,6 +98,8 @@ if [ ! -x "$QE/bin/pw.x" ]; then
   /opt/mm/bin/micromamba create -y -q -p "$QE" -c conda-forge "qe=7.5"
 fi
 [ -x "$QE/bin/pw.x" ] || { echo "no pw.x at $QE/bin: nothing is labelled"; exit 1; }
+DEFAULT_PW="${OWN_PW:-$QE/bin/pw.x}"
+[ -x "$DEFAULT_PW" ] || { echo "no pw.x at $DEFAULT_PW: nothing is labelled"; exit 1; }
 
 # name and sha256 of the files in use since 2026-11-16 (the first three are also in deliverables/polar_margin_dft/raw_stages.json)
 SUMS="ba6ca6af365222805e3ce85564616b50a2feb562106dfbf1d725170cc7afd7b8  F.oncvpsp.upf
@@ -134,7 +158,7 @@ while true; do
   done < "$DFT/line.txt"
   [ -n "\$next" ] || break
   read -r np pools name pw <<< "\$next"
-  pw="\${pw:-$QE/bin/pw.x}"   # a fourth word in the line: another pw.x for that cell (dft_cells.sh usepw)
+  pw="\${pw:-$DEFAULT_PW}"   # a fourth word in the line: another pw.x for that cell (dft_cells.sh usepw)
   echo "\$name" >> "$DFT/tried.txt"
   echo "\$(date -u +%FT%TZ) \$name: started on \$np processes in \$pools pools with \$pw" >> "$DFT/log.txt"
   "$PY" examples/mlip_frames.py label --frames "$DFT" --names "\$name" --pw "\$pw" --pseudo "$PSEUDO" \\
@@ -146,4 +170,4 @@ WORKER
 if [ "${DFT_DRY:-0}" = "1" ]; then echo "DFT_DRY=1: the worker is written and not started ($DFT/worker.sh)"; exit 0; fi
 setsid nohup bash "$DFT/worker.sh" > "$DFT/worker.out" 2>&1 < /dev/null &
 echo $! > "$DFT/worker.pid"
-echo "the worker is started (its log: jobs/shared/dft/log.txt): $# cells in line"
+echo "the worker is started (its log: jobs/shared/$SUBDIR/log.txt): $# cells in line"
