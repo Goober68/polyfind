@@ -1,0 +1,283 @@
+{
+ "what": "the four axes (examples/pin_design.py) with the margins of some rows replaced and everything else as the tables have it: dipole, switch strain, kink energies and crystal stiffness are belt4's and have no DFT test. Frequency is the relaxation frequency of the small-signal permittivity; strain is the AC strain at the heat budget at 34 kHz; blocked force is per area, pN/nm2 (= MPa). The kink sites are those of kink_site_scan_potential_card_at_dft_level.json: only the rate model that sums over kink sites sees them",
+ "margins_from": "cells14_states_dft.json",
+ "base": "polished_margins_belt4.json",
+ "replaced": {
+  "vdf9-trfe4-cfe1-14": 0.12306016873946965,
+  "vdf9-trfe3-an1-rvdf1-14": -0.046607156942515875
+ },
+ "belt4_margins": {
+  "vdf9-trfe4-cfe1-14": 0.31749793708900764,
+  "vdf9-trfe3-an1-rvdf1-14": 0.03658928136722572
+ },
+ "shifts": {
+  "-0.05": {
+   "film_channel_as_calibrated": {
+    "margin_the_model_used": 0.0,
+    "polar_fraction_at_the_bias": 0.8358314956396972,
+    "f_relax_hz": 363984.70013235195,
+    "tan_delta_34kHz": 0.05951865652131868,
+    "strain_ac_at_the_heat_budget_34kHz": 0.0006604132338371202,
+    "field_ac_V_um": 1.4821245105267737,
+    "binds": "heat",
+    "blocked_pn_nm2_by_the_films_assumed_modulus": 0.13208264676742404,
+    "blocked_pn_nm2_through_the_crystal": 6.464650946507255
+   },
+   "rows": {
+    "vdf9-trfe4-cfe1-14": {
+     "margin": 0.07306016873946965,
+     "all_trans_is_lower": false,
+     "by_the_sum_over_kink_sites": {
+      "margin_the_model_used": 0.07306016873946965,
+      "polar_fraction_at_the_bias": 0.4786410196471786,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.08807499016489433,
+      "strain_ac_at_the_heat_budget_34kHz": 0.000816093933087676,
+      "field_ac_V_um": 0.7451640193970618,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.1632187866175352,
+      "blocked_pn_nm2_through_the_crystal": 7.495882933777305
+     },
+     "by_the_occupancy_of_kink_sites": {
+      "margin_the_model_used": 0.07306016873946965,
+      "polar_fraction_at_the_bias": 0.4786410196471786,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.08807499016489433,
+      "strain_ac_at_the_heat_budget_34kHz": 0.000816093933087676,
+      "field_ac_V_um": 0.7451640193970618,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.1632187866175352,
+      "blocked_pn_nm2_through_the_crystal": 7.495882933777305
+     },
+     "kink_sites": {
+      "cheapest_kcal_per_kink_pair": -3.586836685882834,
+      "cheapest_on_units": "CV",
+      "sites_below_all_trans": 3,
+      "sites_scanned": [
+       14,
+       14
+      ],
+      "sum_against_the_film_cell": 1.0,
+      "occupancy_against_the_film_cell": 1.0
+     }
+    },
+    "vdf9-trfe3-an1-rvdf1-14": {
+     "margin": -0.09660715694251587,
+     "all_trans_is_lower": true,
+     "by_the_sum_over_kink_sites": {
+      "margin_the_model_used": 0.0,
+      "polar_fraction_at_the_bias": 0.8354073897396963,
+      "f_relax_hz": 2147.2812564638893,
+      "tan_delta_34kHz": 0.49962526220061554,
+      "strain_ac_at_the_heat_budget_34kHz": 5.220059908662183e-05,
+      "field_ac_V_um": 1.4229062247548536,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.010440119817324367,
+      "blocked_pn_nm2_through_the_crystal": 0.28420119700366525
+     },
+     "by_the_occupancy_of_kink_sites": {
+      "margin_the_model_used": 0.0,
+      "polar_fraction_at_the_bias": 0.8354073897396963,
+      "f_relax_hz": 244786.45692640293,
+      "tan_delta_34kHz": 0.08849015302995014,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0005354383526765545,
+      "field_ac_V_um": 1.2466861696691596,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.1070876705353109,
+      "blocked_pn_nm2_through_the_crystal": 2.915143186380532
+     },
+     "kink_sites": {
+      "cheapest_kcal_per_kink_pair": 0.37665378233147684,
+      "cheapest_on_units": "VV",
+      "sites_below_all_trans": 0,
+      "sites_scanned": [
+       14,
+       12
+      ],
+      "sum_against_the_film_cell": 0.0058993722969209825,
+      "occupancy_against_the_film_cell": 0.672518533986164
+     }
+    }
+   }
+  },
+  "+0.00": {
+   "film_channel_as_calibrated": {
+    "margin_the_model_used": 0.0,
+    "polar_fraction_at_the_bias": 0.8358314956396972,
+    "f_relax_hz": 363984.70013235195,
+    "tan_delta_34kHz": 0.05951865652131868,
+    "strain_ac_at_the_heat_budget_34kHz": 0.0006604132338371202,
+    "field_ac_V_um": 1.4821245105267737,
+    "binds": "heat",
+    "blocked_pn_nm2_by_the_films_assumed_modulus": 0.13208264676742404,
+    "blocked_pn_nm2_through_the_crystal": 6.464650946507255
+   },
+   "rows": {
+    "vdf9-trfe4-cfe1-14": {
+     "margin": 0.12306016873946965,
+     "all_trans_is_lower": false,
+     "by_the_sum_over_kink_sites": {
+      "margin_the_model_used": 0.12306016873946965,
+      "polar_fraction_at_the_bias": 0.18074967597947328,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.06534899577936404,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0007313632380925786,
+      "field_ac_V_um": 1.1233983654323094,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.14627264761851572,
+      "blocked_pn_nm2_through_the_crystal": 6.389001128847801
+     },
+     "by_the_occupancy_of_kink_sites": {
+      "margin_the_model_used": 0.12306016873946965,
+      "polar_fraction_at_the_bias": 0.18074967597947328,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.06534899577936404,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0007313632380925786,
+      "field_ac_V_um": 1.1233983654323094,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.14627264761851572,
+      "blocked_pn_nm2_through_the_crystal": 6.389001128847801
+     },
+     "kink_sites": {
+      "cheapest_kcal_per_kink_pair": -3.586836685882834,
+      "cheapest_on_units": "CV",
+      "sites_below_all_trans": 3,
+      "sites_scanned": [
+       14,
+       14
+      ],
+      "sum_against_the_film_cell": 1.0,
+      "occupancy_against_the_film_cell": 1.0
+     }
+    },
+    "vdf9-trfe3-an1-rvdf1-14": {
+     "margin": -0.046607156942515875,
+     "all_trans_is_lower": true,
+     "by_the_sum_over_kink_sites": {
+      "margin_the_model_used": 0.0,
+      "polar_fraction_at_the_bias": 0.8354073897396963,
+      "f_relax_hz": 2147.2812564638893,
+      "tan_delta_34kHz": 0.49962526220061554,
+      "strain_ac_at_the_heat_budget_34kHz": 5.220059908662183e-05,
+      "field_ac_V_um": 1.4229062247548536,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.010440119817324367,
+      "blocked_pn_nm2_through_the_crystal": 0.28420119700366525
+     },
+     "by_the_occupancy_of_kink_sites": {
+      "margin_the_model_used": 0.0,
+      "polar_fraction_at_the_bias": 0.8354073897396963,
+      "f_relax_hz": 244786.45692640293,
+      "tan_delta_34kHz": 0.08849015302995014,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0005354383526765545,
+      "field_ac_V_um": 1.2466861696691596,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.1070876705353109,
+      "blocked_pn_nm2_through_the_crystal": 2.915143186380532
+     },
+     "kink_sites": {
+      "cheapest_kcal_per_kink_pair": 0.37665378233147684,
+      "cheapest_on_units": "VV",
+      "sites_below_all_trans": 0,
+      "sites_scanned": [
+       14,
+       12
+      ],
+      "sum_against_the_film_cell": 0.0058993722969209825,
+      "occupancy_against_the_film_cell": 0.672518533986164
+     }
+    }
+   }
+  },
+  "+0.05": {
+   "film_channel_as_calibrated": {
+    "margin_the_model_used": 0.0,
+    "polar_fraction_at_the_bias": 0.8358314956396972,
+    "f_relax_hz": 363984.70013235195,
+    "tan_delta_34kHz": 0.05951865652131868,
+    "strain_ac_at_the_heat_budget_34kHz": 0.0006604132338371202,
+    "field_ac_V_um": 1.4821245105267737,
+    "binds": "heat",
+    "blocked_pn_nm2_by_the_films_assumed_modulus": 0.13208264676742404,
+    "blocked_pn_nm2_through_the_crystal": 6.464650946507255
+   },
+   "rows": {
+    "vdf9-trfe4-cfe1-14": {
+     "margin": 0.17306016873946967,
+     "all_trans_is_lower": false,
+     "by_the_sum_over_kink_sites": {
+      "margin_the_model_used": 0.17306016873946967,
+      "polar_fraction_at_the_bias": 0.05035141505234585,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.03121023425243362,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0005691479696435454,
+      "field_ac_V_um": 2.7026393768921584,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.11382959392870907,
+      "blocked_pn_nm2_through_the_crystal": 4.867693529801676
+     },
+     "by_the_occupancy_of_kink_sites": {
+      "margin_the_model_used": 0.17306016873946967,
+      "polar_fraction_at_the_bias": 0.05035141505234585,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.03121023425243362,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0005691479696435454,
+      "field_ac_V_um": 2.7026393768921584,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.11382959392870907,
+      "blocked_pn_nm2_through_the_crystal": 4.867693529801676
+     },
+     "kink_sites": {
+      "cheapest_kcal_per_kink_pair": -3.586836685882834,
+      "cheapest_on_units": "CV",
+      "sites_below_all_trans": 3,
+      "sites_scanned": [
+       14,
+       14
+      ],
+      "sum_against_the_film_cell": 1.0,
+      "occupancy_against_the_film_cell": 1.0
+     }
+    },
+    "vdf9-trfe3-an1-rvdf1-14": {
+     "margin": 0.003392843057484128,
+     "all_trans_is_lower": false,
+     "by_the_sum_over_kink_sites": {
+      "margin_the_model_used": 0.003392843057484128,
+      "polar_fraction_at_the_bias": 0.8216690437368978,
+      "f_relax_hz": 2147.2812564638893,
+      "tan_delta_34kHz": 0.5159847543914486,
+      "strain_ac_at_the_heat_budget_34kHz": 5.3036412252866635e-05,
+      "field_ac_V_um": 1.4001379208530822,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.010607282450573328,
+      "blocked_pn_nm2_through_the_crystal": 0.28804981326849377
+     },
+     "by_the_occupancy_of_kink_sites": {
+      "margin_the_model_used": 0.003392843057484128,
+      "polar_fraction_at_the_bias": 0.8216690437368978,
+      "f_relax_hz": 244786.45692640293,
+      "tan_delta_34kHz": 0.09213988483440982,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0005433464921887104,
+      "field_ac_V_um": 1.1875697089495036,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.10866929843774206,
+      "blocked_pn_nm2_through_the_crystal": 2.9510075996249094
+     },
+     "kink_sites": {
+      "cheapest_kcal_per_kink_pair": 0.37665378233147684,
+      "cheapest_on_units": "VV",
+      "sites_below_all_trans": 0,
+      "sites_scanned": [
+       14,
+       12
+      ],
+      "sum_against_the_film_cell": 0.0058993722969209825,
+      "occupancy_against_the_film_cell": 0.672518533986164
+     }
+    }
+   }
+  }
+ },
+ "sites_from": "kink_site_scan_potential_card_at_dft_level.json"
+}

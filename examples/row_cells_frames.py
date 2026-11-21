@@ -357,9 +357,44 @@ def states_dft(args):
             print(f"{row:26s} {label:22s} DFT {entry['dft']:+.3f}, the potential {entry['potential']:+.3f}"
                   + (f", stepped {entry['stepped']:+.3f}{'' if entry['stepped_settled'] else ' (not settled)'}" if "stepped" in entry else "")
                   + f"; DFT leaves {c['dft_largest_force_eV_per_A']:.2f} eV/A")
+        helix = {k: v for k, v in rec["states"].items() if k.startswith("helix")}
+        if helix:  # all-trans minus the lowest helix state, per monomer: what the tables call the margin
+            low = min(helix, key=lambda k: helix[k]["dft"])
+            rec.update(margin=helix[low]["margin_dft_per_monomer"], margin_potential=helix[low]["margin_potential_per_monomer"], margin_helix=low)
+            if "stepped" in helix[low]:
+                rec.update(margin_stepped=-helix[low]["stepped"] / per_chain, margin_stepped_settled=helix[low]["stepped_settled"])
         out["rows"][row] = rec
     Path(args.out).write_text(json.dumps(out, indent=1))
     print(f"written {args.out}")
+
+
+def sheets_as_scan(args):
+    """A kink-site scan (examples/kink_site_scan.py's file, which the rate model sums over) with each site's energy replaced by a
+    potential's sheet at that site (``sheets-potential``), each row moved by a constant where one is given: the potential's map of the
+    sites at another evaluator's level.  A site the potential has no sheet for is dropped; one whose kink it lost is marked so."""
+    scan = json.loads(Path(args.scan).read_text())
+    sheets = json.loads(Path(args.sheets).read_text())["rows"]
+    shifts = {item.split("=")[0]: float(item.split("=")[1]) for item in args.shift}
+    by_site = {(str(r["frame"]).split("_")[1], str(r["site"])): r for r in sheets.values()}
+    rows, kept = {}, 0
+    for key, row in scan["rows"].items():
+        name, hand = key.split("@")[0], "m" if key.endswith("~") else ""
+        sites = {}
+        for site, rec in row["sites"].items():
+            sheet = by_site.get((name, f"{site}{hand}"))
+            if sheet is None:
+                continue
+            sites[site] = dict(rec, formation=float(sheet["potential"]) + shifts.get(name, 0.0), kink_kept=bool(sheet["kink_kept"]), converged=True,
+                               potential=float(sheet["potential"]), tables_formation=float(rec["formation"]), shear_monomers=sheet["shear_along_chains_monomers"])
+            kept += 1
+        if sites:
+            rows[key] = dict(row, sites=sites)
+    out = {"what": f"the kink sites of {Path(args.scan).name}, each site's energy replaced by the sheet relaxed in the potential there ({Path(args.sheets).name}; "
+                   "kcal/mol per kink pair against the row's all-trans cell in the potential)" + (", each row moved by shift_kcal_per_kink_pair" if shifts else "")
+                   + "; potential: the sheet's own energy; tables_formation: the scan's",
+           "energy": "kcal/mol per kink pair", "sheets": Path(args.sheets).name, "scan": Path(args.scan).name, "shift_kcal_per_kink_pair": shifts, "rows": rows}
+    Path(args.out).write_text(json.dumps(out, indent=1))
+    print(f"{kept} sites of {len(rows)} hands written to {args.out}")
 
 
 KCAL = 23.0605  # kcal/mol in one eV
@@ -513,13 +548,18 @@ def main():
     s.add_argument("--stepped", nargs="*", default=[], help="files of the labelled cells stepped toward DFT's minimum (mlip_train.py relax --dft-gradient)")
     s.add_argument("--rows", nargs="+", required=True, help="ROW=ALL_TRANS_FRAME,LABEL:FRAME,LABEL:FRAME... (labels without spaces)")
     s.add_argument("--out", required=True)
+    s = sub.add_parser("sheets-as-scan", help="a kink-site scan with a potential's sheets in place of its energies")
+    s.add_argument("--scan", required=True, help="the scan whose sites, units and hands are kept (examples/kink_site_scan.py)")
+    s.add_argument("--sheets", required=True, help="the potential's sheets at those sites (sheets-potential)")
+    s.add_argument("--shift", nargs="*", default=[], help="ROW=DELTA, kcal/mol per kink pair added to every site of ROW (another evaluator minus the potential, measured at one site)")
+    s.add_argument("--out", required=True)
     s = sub.add_parser("potential", help="cells relaxed in a potential and not labelled: its own energies and margins")
     s.add_argument("--frames", nargs="+", required=True, help="folders of NAME_in_POTENTIAL.start.xyz")
     s.add_argument("--rows", nargs="+", required=True)
     s.add_argument("--name", default="all_s1", help="the potential's name in the frames' names")
     s.add_argument("--out", required=True)
     args = ap.parse_args()
-    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink, "kink-collect": kink_collect, "sheets-potential": sheets_potential, "states-dft": states_dft}[args.cmd](args)
+    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink, "kink-collect": kink_collect, "sheets-potential": sheets_potential, "states-dft": states_dft, "sheets-as-scan": sheets_as_scan}[args.cmd](args)
 
 
 if __name__ == "__main__":

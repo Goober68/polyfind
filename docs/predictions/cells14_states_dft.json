@@ -150,7 +150,12 @@
       "all_trans": -0.19452591724183094
      }
     }
-   }
+   },
+   "margin": 0.12306016873946965,
+   "margin_potential": 0.16292670582579377,
+   "margin_helix": "helix_TGTGp",
+   "margin_stepped": 0.14658639886780497,
+   "margin_stepped_settled": false
   },
   "vdf9-trfe3-an1-rvdf1-14": {
    "all_trans": {
@@ -295,7 +300,12 @@
       "all_trans": -0.49707469142525296
      }
     }
-   }
+   },
+   "margin": -0.046607156942515875,
+   "margin_potential": -0.06982460586312664,
+   "margin_helix": "helix_TGTGp",
+   "margin_stepped": -0.05279339587761843,
+   "margin_stepped_settled": true
   }
  }
 }
