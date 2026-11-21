@@ -1,0 +1,3351 @@
+{
+ "what": "the kink sheet (a kink pair on every chain, in register, at one site of the sequence) relaxed in the potential with the cell free, minus the row's all-trans cell there, kcal/mol per kink pair; polyfind is the tables' value for the same site (examples/kink_site_scan.py). No DFT on these cells. kink_kept: every chain still has two gauche bonds of opposite sense about a trans one",
+ "potential": "all_s1",
+ "all_trans": "rows14_potential_tight.json",
+ "rows": {
+  "vdf10-trfe4-14": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at0_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "0",
+   "potential": 2.274148670272833,
+   "polyfind": 2.8936516036904294,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     70.8,
+     -81.4
+    ],
+    [
+     70.7,
+     -81.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.955616883703554,
+    9.17473899055359,
+    35.17345656190144,
+    101.07025646637516,
+    61.55854118604422,
+    94.76762931445583
+   ],
+   "shear_along_chains_monomers": [
+    1.1079787586105474,
+    -0.6881503282431763
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 0 (units VV), the cell free to shear: +0.93, -0.86 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@0m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at0m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "0m",
+   "potential": 4.363125593925216,
+   "polyfind": 2.3635823625306784,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -64.3,
+     67.3
+    ],
+    [
+     -64.3,
+     67.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.690822476392751,
+    9.286122037491205,
+    35.2468712040644,
+    103.30570715930787,
+    114.63970041737761,
+    86.48534228555913
+   ],
+   "shear_along_chains_monomers": [
+    -0.926783128507783,
+    -0.8348320677295241
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 0 (units VV), the cell free to shear: -0.92, -1.01 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@10": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at10_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "10",
+   "potential": 3.0500989929302342,
+   "polyfind": 3.5169995783273436,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     69.6,
+     -82.9
+    ],
+    [
+     69.6,
+     -82.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.815420865027731,
+    9.241343753557736,
+    35.105308908399685,
+    102.23802096400112,
+    64.4224681058941,
+    94.99520276163413
+   ],
+   "shear_along_chains_monomers": [
+    0.9807436253807762,
+    -0.7652025911956801
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 10 (units RV), the cell free to shear: +0.91, -0.85 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@10m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at10m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "10m",
+   "potential": 3.561940811517132,
+   "polyfind": 2.4867485548557227,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -61.8,
+     53.5
+    ],
+    [
+     -61.8,
+     53.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.723859952920859,
+    9.2990534974718,
+    35.244193355044175,
+    102.90609850492787,
+    115.50404983466986,
+    86.87747163263798
+   ],
+   "shear_along_chains_monomers": [
+    -0.962714995108372,
+    -0.8113201411308403
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 10 (units RV), the cell free to shear: -0.92, -0.99 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@12": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at12_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "12",
+   "potential": 2.466033304012508,
+   "polyfind": 4.090689036814965,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     59.3,
+     -78.4
+    ],
+    [
+     59.3,
+     -78.4
+    ]
+   ],
+   "cell_A_deg": [
+    6.1066280225758005,
+    9.029351150539894,
+    34.86586953914297,
+    104.06387902991479,
+    64.58118303227701,
+    95.71494970103907
+   ],
+   "shear_along_chains_monomers": [
+    1.0238901669417733,
+    -0.8570953817811788
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 12 (units VV), the cell free to shear: +0.92, -0.86 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@12m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at12m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "12m",
+   "potential": 2.5677488116983533,
+   "polyfind": 1.1361732324370593,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -62.2,
+     60.8
+    ],
+    [
+     -62.2,
+     60.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.71138866377684,
+    9.294081238505733,
+    35.22002025849882,
+    101.79546934770177,
+    115.52357001292675,
+    87.64218453035535
+   ],
+   "shear_along_chains_monomers": [
+    -0.9613033714147786,
+    -0.7421419984982932
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 12 (units VV), the cell free to shear: -0.92, -0.99 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@14": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at14_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "14",
+   "potential": 1.503907899119162,
+   "polyfind": 4.00599663690636,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     62.2,
+     -79.6
+    ],
+    [
+     62.1,
+     -79.6
+    ]
+   ],
+   "cell_A_deg": [
+    6.201515858468857,
+    8.974683802831729,
+    34.988625285794136,
+    101.43455638185597,
+    61.46037239763442,
+    95.35172091689186
+   ],
+   "shear_along_chains_monomers": [
+    1.157373556501141,
+    -0.6950069743647554
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 14 (units VV), the cell free to shear: +0.92, -0.85 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@14m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at14m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "14m",
+   "potential": 3.3067452159247916,
+   "polyfind": 1.4361783552185585,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -67.1,
+     55.1
+    ],
+    [
+     -67.1,
+     55.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.675029882451366,
+    9.30309198375099,
+    35.23588395567766,
+    102.6280513121481,
+    115.1757705245096,
+    87.29311608193655
+   ],
+   "shear_along_chains_monomers": [
+    -0.9430228556992133,
+    -0.7944731974371816
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 14 (units VV), the cell free to shear: -0.92, -0.98 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@16": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at16_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "16",
+   "potential": 2.862911236398646,
+   "polyfind": 2.862666990416301,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     68.5,
+     -81.3
+    ],
+    [
+     68.4,
+     -81.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.951334334581148,
+    9.188098298689786,
+    35.150863625425444,
+    102.01246489758852,
+    61.9700507409234,
+    95.37328789408471
+   ],
+   "shear_along_chains_monomers": [
+    1.0924720931135492,
+    -0.7469797771915617
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 16 (units VV), the cell free to shear: +0.94, -0.86 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@16m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at16m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "16m",
+   "potential": 4.70730370639434,
+   "polyfind": 2.3451554520047893,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -64.6,
+     58.6
+    ],
+    [
+     -64.6,
+     58.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.712857351048907,
+    9.350309433281247,
+    35.173831800903045,
+    103.35919068977294,
+    114.85164709523059,
+    86.75617415382496
+   ],
+   "shear_along_chains_monomers": [
+    -0.937868618467996,
+    -0.8439201348186456
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 16 (units VV), the cell free to shear: -0.92, -1.01 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@18": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at18_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "18",
+   "potential": 6.845312111899279,
+   "polyfind": 6.363748977223679,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     70.5,
+     -67.2
+    ],
+    [
+     70.5,
+     -67.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.084982745469077,
+    9.234767176058588,
+    35.35828983060912,
+    91.29137304806335,
+    90.81085465686813,
+    90.168033200724
+   ],
+   "shear_along_chains_monomers": [
+    -0.028109647803502454,
+    -0.08129770776572477
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 18 (units VR), the cell free to shear: -0.02, +0.06 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@18m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at18m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "18m",
+   "potential": 1.2000299308393223,
+   "polyfind": 6.816646966116593,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -59.3,
+     60.7
+    ],
+    [
+     -59.4,
+     60.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.572368951405357,
+    9.542708803772149,
+    35.001127241309256,
+    75.11786884458878,
+    113.18879815816598,
+    95.69099171558521
+   ],
+   "shear_along_chains_monomers": [
+    -0.8571047942126123,
+    0.9573700121673695
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 18 (units VR), the cell free to shear: -0.98, -0.80 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@20": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at20_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "20",
+   "potential": 2.563805229290132,
+   "polyfind": 3.3512240052561424,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     71.4,
+     -75.5
+    ],
+    [
+     71.4,
+     -75.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.900696724922756,
+    9.218577379821136,
+    35.14104617762517,
+    101.39324011458464,
+    62.55020914845594,
+    94.9859312900649
+   ],
+   "shear_along_chains_monomers": [
+    1.0625198701748315,
+    -0.7113489466245065
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 20 (units RV), the cell free to shear: +0.91, -0.86 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@20m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at20m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "20m",
+   "potential": 3.8316897947135318,
+   "polyfind": 2.58696217734213,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -63.8,
+     54.7
+    ],
+    [
+     -63.8,
+     54.7
+    ]
+   ],
+   "cell_A_deg": [
+    5.707013372980545,
+    9.335731873713305,
+    35.27694712845206,
+    103.64454635863275,
+    115.53456174713594,
+    86.31730126436419
+   ],
+   "shear_along_chains_monomers": [
+    -0.9609528697537865,
+    -0.860264800680469
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 20 (units RV), the cell free to shear: -0.92, -0.99 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@22": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at22_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "22",
+   "potential": 2.215041552087957,
+   "polyfind": 2.888729035353407,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     70.1,
+     -81.4
+    ],
+    [
+     70.2,
+     -81.4
+    ]
+   ],
+   "cell_A_deg": [
+    6.018062363615777,
+    9.13791135181967,
+    35.1702458671521,
+    100.77990317735485,
+    61.015572084846006,
+    94.98960513307098
+   ],
+   "shear_along_chains_monomers": [
+    1.1391343285809137,
+    -0.6676270836511933
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 22 (units VV), the cell free to shear: +0.93, -0.86 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@22m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at22m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "22m",
+   "potential": 4.817584498708687,
+   "polyfind": 2.36518071341186,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -65.0,
+     60.8
+    ],
+    [
+     -65.0,
+     60.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.6950596000723275,
+    9.331121835137152,
+    35.1985103853056,
+    103.16346476537814,
+    114.88028039938061,
+    86.62473774580215
+   ],
+   "shear_along_chains_monomers": [
+    -0.935955480566124,
+    -0.8300689377685982
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 22 (units VV), the cell free to shear: -0.92, -1.01 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@24": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at24_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "24",
+   "potential": 7.746043313865279,
+   "polyfind": 6.366504386163143,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     71.2,
+     -67.2
+    ],
+    [
+     71.2,
+     -67.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.098950721519178,
+    9.143435494418565,
+    35.44325738748754,
+    90.75274479389174,
+    90.63680766566384,
+    90.14587931900559
+   ],
+   "shear_along_chains_monomers": [
+    -0.022136938487780134,
+    -0.04692260065756993
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 24 (units VR), the cell free to shear: -0.02, +0.06 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@24m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at24m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "24m",
+   "potential": 3.1076513335499687,
+   "polyfind": 0.9434111857436278,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -66.8,
+     55.5
+    ],
+    [
+     -66.8,
+     55.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.642679014370473,
+    9.314393500900003,
+    35.19314333957117,
+    103.2174214326429,
+    114.1695675926436,
+    86.95820074639217
+   ],
+   "shear_along_chains_monomers": [
+    -0.9024726848194844,
+    -0.831916828453115
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 24 (units VR), the cell free to shear: -0.89, -0.97 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@26": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at26_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "26",
+   "potential": 2.036032863827316,
+   "polyfind": 3.3688590969591985,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -79.2,
+     65.7
+    ],
+    [
+     -79.1,
+     65.7
+    ]
+   ],
+   "cell_A_deg": [
+    6.5684116886972586,
+    9.043995278089843,
+    35.07123054293232,
+    95.05492021980565,
+    54.537284483915464,
+    91.69323105610039
+   ],
+   "shear_along_chains_monomers": [
+    1.4885998022200988,
+    -0.3112780442676741
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 26 (units RV), the cell free to shear: +0.91, -0.86 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@26m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at26m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "26m",
+   "potential": 3.8213648978810264,
+   "polyfind": 2.5853651008650473,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     54.7,
+     -63.3
+    ],
+    [
+     54.7,
+     -63.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.695461032533427,
+    9.328716489012674,
+    35.26914851563848,
+    104.20943232545793,
+    115.17392240107048,
+    85.89748588873998
+   ],
+   "shear_along_chains_monomers": [
+    -0.9463529651988215,
+    -0.8944890006590733
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 26 (units RV), the cell free to shear: -0.92, -0.99 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@2": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at2_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "2",
+   "potential": 7.7981506542874275,
+   "polyfind": 6.3636625015818,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     71.3,
+     -67.6
+    ],
+    [
+     71.3,
+     -67.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.0978229855310175,
+    9.129294985001598,
+    35.45975496327937,
+    90.61034102588529,
+    90.5085887786308,
+    90.22209214306072
+   ],
+   "shear_along_chains_monomers": [
+    -0.0176759687044527,
+    -0.037987349473610404
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 2 (units VR), the cell free to shear: -0.02, +0.06 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@2m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at2m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "2m",
+   "potential": 2.9590940600681788,
+   "polyfind": 0.9440840994627564,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -64.2,
+     55.7
+    ],
+    [
+     -64.2,
+     55.7
+    ]
+   ],
+   "cell_A_deg": [
+    5.652022279565259,
+    9.273484731768464,
+    35.19102708063002,
+    102.81392876724186,
+    113.76595508769623,
+    87.15746544998669
+   ],
+   "shear_along_chains_monomers": [
+    -0.8897553888614262,
+    -0.8034081782382563
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 2 (units VR), the cell free to shear: -0.89, -0.97 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@4": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at4_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "4",
+   "potential": 2.5126658389766243,
+   "polyfind": 3.373094593182117,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     71.4,
+     -76.5
+    ],
+    [
+     71.4,
+     -76.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.970691556030526,
+    9.181297331819962,
+    35.1206066321788,
+    100.99094273122755,
+    61.603019450628594,
+    95.24601844466311
+   ],
+   "shear_along_chains_monomers": [
+    1.109190883660325,
+    -0.683769293851767
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 4 (units RV), the cell free to shear: +0.91, -0.86 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@4m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at4m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "4m",
+   "potential": 3.713846751536967,
+   "polyfind": 2.5896234275305403,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -63.6,
+     54.7
+    ],
+    [
+     -63.6,
+     54.7
+    ]
+   ],
+   "cell_A_deg": [
+    5.699194439533593,
+    9.321046276066545,
+    35.262024303964665,
+    104.08506360780558,
+    115.14509823591412,
+    85.98223030700079
+   ],
+   "shear_along_chains_monomers": [
+    -0.9459595861989243,
+    -0.8860898565801797
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 4 (units RV), the cell free to shear: -0.92, -0.99 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@6": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at6_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "6",
+   "potential": 2.38350115000719,
+   "polyfind": 2.8831676277755065,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     70.4,
+     -76.6
+    ],
+    [
+     70.4,
+     -76.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.845659396681513,
+    9.175667885569093,
+    35.19937450279475,
+    102.0229453250287,
+    63.64924400358642,
+    94.79638927169425
+   ],
+   "shear_along_chains_monomers": [
+    1.0135486901200121,
+    -0.7466104554383761
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 6 (units VV), the cell free to shear: +0.94, -0.86 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@6m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at6m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "6m",
+   "potential": 4.433541682731986,
+   "polyfind": 2.36647975332707,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -63.9,
+     65.8
+    ],
+    [
+     -63.9,
+     65.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.696655543337602,
+    9.317225394732851,
+    35.240553600044,
+    103.74905027659696,
+    114.63750812304185,
+    86.33443318035073
+   ],
+   "shear_along_chains_monomers": [
+    -0.9276556844768031,
+    -0.8650089910636602
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 6 (units VV), the cell free to shear: -0.92, -1.01 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@8": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at8_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "8",
+   "potential": 7.641972904757715,
+   "polyfind": 6.361702354659258,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     70.8,
+     -66.2
+    ],
+    [
+     70.8,
+     -66.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.0786437794031185,
+    9.171219579604784,
+    35.426027093654625,
+    91.34206295660289,
+    90.68454527356879,
+    89.88501180515411
+   ],
+   "shear_along_chains_monomers": [
+    -0.02370156364696096,
+    -0.08390689867902115
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0, kink sheet at offset 8 (units VR), the cell free to shear: -0.02, +0.06 monomers along a, b, pendants as built"
+  },
+  "vdf10-trfe4-14@8m": {
+   "frame": "sheet_vdf10-trfe4-14_belt4_at8m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "8m",
+   "potential": 2.9717556641263805,
+   "polyfind": 1.0694726149701097,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -64.3,
+     54.8
+    ],
+    [
+     -64.3,
+     54.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.652272222452133,
+    9.311117098495048,
+    35.17757385040086,
+    102.73616564240223,
+    114.07700528618105,
+    87.46177428013543
+   ],
+   "shear_along_chains_monomers": [
+    -0.9007515695056401,
+    -0.8018542266132326
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf10-trfe4-14@0~, kink sheet at offset 8 (units VR), the cell free to shear: -0.89, -0.97 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at0_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "0",
+   "potential": 1.7711688431500323,
+   "polyfind": 2.6565396522204168,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     73.4,
+     -59.8
+    ],
+    [
+     73.4,
+     -60.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.600938028001456,
+    8.703217420300287,
+    35.09962800218684,
+    92.73607100093535,
+    95.18343388204782,
+    89.60809682591598
+   ],
+   "shear_along_chains_monomers": [
+    -0.19766198866335288,
+    -0.16228542814635785
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 0 (units IV), the cell free to shear: +0.01, +0.03 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@0m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at0m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "0m",
+   "potential": 2.9434959754321235,
+   "polyfind": 3.20320642684554,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -74.9,
+     66.6
+    ],
+    [
+     -74.9,
+     66.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.485416043736265,
+    8.79328547870714,
+    35.14862625208743,
+    93.20189559366831,
+    92.63887474502427,
+    88.9914773825353
+   ],
+   "shear_along_chains_monomers": [
+    -0.0986534322256854,
+    -0.19185347481076587
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 0 (units IV), the cell free to shear: +0.04, -0.01 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@10": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at10_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "10",
+   "potential": 0.051982232586705326,
+   "polyfind": 0.6479222334438788,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     53.9,
+     -51.6
+    ],
+    [
+     53.9,
+     -51.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.4549118817741125,
+    9.890575380924773,
+    34.86286448101576,
+    116.03546000318502,
+    91.0615444519235,
+    90.0819635489735
+   ],
+   "shear_along_chains_monomers": [
+    -0.03947648535008238,
+    -1.6957983413299582
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 10 (units RV), the cell free to shear: -0.04, -1.72 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@10m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at10m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "10m",
+   "potential": 0.47567813485395233,
+   "polyfind": 1.82199825634396,
+   "kink_kept": false,
+   "gauche_bonds_deg": [
+    [],
+    []
+   ],
+   "cell_A_deg": [
+    5.569003702411677,
+    8.479451675085585,
+    35.78418916541822,
+    94.64010354165515,
+    90.41300967649684,
+    89.82633148417978
+   ],
+   "shear_along_chains_monomers": [
+    -0.015680914065639102,
+    -0.26795262347850657
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 10 (units RV), the cell free to shear: +0.09, +0.00 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@12": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at12_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "12",
+   "potential": 2.8435013169181382,
+   "polyfind": 4.1307308796178575,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     83.6,
+     -78.1
+    ],
+    [
+     83.6,
+     -78.1
+    ]
+   ],
+   "cell_A_deg": [
+    9.047586190387012,
+    5.922742016381691,
+    35.24529423181304,
+    113.29829484829767,
+    75.63091087322886,
+    94.37669630551785
+   ],
+   "shear_along_chains_monomers": [
+    0.8770761993813624,
+    -0.9150594052752938
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 12 (units VA), the cell free to shear: +0.96, -0.92 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@14": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at14_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "14",
+   "potential": 1.2490440366892646,
+   "polyfind": 4.737028239121528,
+   "kink_kept": false,
+   "gauche_bonds_deg": [
+    [
+     -73.5
+    ],
+    [
+     -73.5
+    ]
+   ],
+   "cell_A_deg": [
+    9.937752143374269,
+    5.238957706303209,
+    34.45516989477307,
+    93.34973774629027,
+    75.79335282304467,
+    101.46825289142744
+   ],
+   "shear_along_chains_monomers": [
+    0.9527037834300618,
+    -0.11957645335790101
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 14 (units AV), the cell free to shear: +0.97, +0.01 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@16": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at16_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "16",
+   "potential": -0.10209127699233272,
+   "polyfind": 2.017876972111793,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     56.8,
+     -63.4
+    ],
+    [
+     56.8,
+     -63.4
+    ]
+   ],
+   "cell_A_deg": [
+    5.478692251382393,
+    9.741377102217513,
+    35.114712717941046,
+    114.70932841165457,
+    93.89136290672418,
+    87.78368803515023
+   ],
+   "shear_along_chains_monomers": [
+    -0.14523861908542468,
+    -1.5906412468560591
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 16 (units VV), the cell free to shear: -0.02, -1.72 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@16m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at16m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "16m",
+   "potential": -1.2004311576618496,
+   "polyfind": 2.534259641478826,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -64.0,
+     55.5
+    ],
+    [
+     -63.9,
+     55.4
+    ]
+   ],
+   "cell_A_deg": [
+    5.935939128711742,
+    8.78116074175056,
+    34.76555837015785,
+    107.48901873567694,
+    104.00139781763717,
+    84.56985935995002
+   ],
+   "shear_along_chains_monomers": [
+    -0.5610055313872535,
+    -1.030836256429034
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 16 (units VV), the cell free to shear: -0.02, +0.02 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@18": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "18",
+   "potential": -1.2522858246763917,
+   "polyfind": 1.8952276318966739,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     60.8,
+     -64.6
+    ],
+    [
+     60.8,
+     -64.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.660379458723449,
+    9.190337983142781,
+    34.82660353884158,
+    107.33046012731985,
+    101.8449069226596,
+    86.63488686912373
+   ],
+   "shear_along_chains_monomers": [
+    -0.4538545303359491,
+    -1.0693906393632011
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 18 (units VV), the cell free to shear: +0.03, +0.02 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@18m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "18m",
+   "potential": -1.3233462176685231,
+   "polyfind": 1.9910788381145323,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -64.0,
+     57.1
+    ],
+    [
+     -64.0,
+     57.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.850655205240707,
+    8.89513440651075,
+    34.777469220217455,
+    108.21465813674756,
+    102.82287386397894,
+    84.58301604302389
+   ],
+   "shear_along_chains_monomers": [
+    -0.5072193150758232,
+    -1.0861026596944021
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 18 (units VV), the cell free to shear: -0.03, -0.04 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@20": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at20_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "20",
+   "potential": -0.581063231164357,
+   "polyfind": 1.9222870461001662,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     59.3,
+     -67.8
+    ],
+    [
+     59.4,
+     -67.7
+    ]
+   ],
+   "cell_A_deg": [
+    5.580772971110567,
+    9.349319681992853,
+    34.6576390360166,
+    107.75035617730092,
+    101.48368145501995,
+    87.06894360697743
+   ],
+   "shear_along_chains_monomers": [
+    -0.4340115510672344,
+    -1.1134098219432627
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 20 (units VV), the cell free to shear: -0.00, +0.05 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@20m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at20m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "20m",
+   "potential": -0.9335487366508437,
+   "polyfind": 2.427353928608227,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -62.2,
+     57.4
+    ],
+    [
+     -62.1,
+     57.4
+    ]
+   ],
+   "cell_A_deg": [
+    5.83772081437856,
+    8.809051379742892,
+    34.68913815184299,
+    103.46442225883688,
+    102.15383059857015,
+    84.9380905739228
+   ],
+   "shear_along_chains_monomers": [
+    -0.48010035851546656,
+    -0.801216005831158
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 20 (units VV), the cell free to shear: -0.06, -0.09 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@22": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at22_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "22",
+   "potential": 0.2465385348567493,
+   "polyfind": 2.514142006724825,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     58.3,
+     -63.1
+    ],
+    [
+     58.3,
+     -63.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.489473501161117,
+    9.783122061029976,
+    34.855929722089286,
+    114.79223767677856,
+    91.31436473586388,
+    88.98663452460912
+   ],
+   "shear_along_chains_monomers": [
+    -0.049186497978558896,
+    -1.6024795767647064
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 22 (units VV), the cell free to shear: -0.04, -1.69 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@22m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at22m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "22m",
+   "potential": 0.7464076401932621,
+   "polyfind": 4.430455141634056,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -57.9,
+     62.2
+    ],
+    [
+     -57.9,
+     62.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.821890824147325,
+    8.99513602907233,
+    34.66630841187223,
+    106.72776377048689,
+    103.8760321785219,
+    84.50040279206739
+   ],
+   "shear_along_chains_monomers": [
+    -0.5453973565241812,
+    -1.0113365569787873
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 22 (units VV), the cell free to shear: -0.09, -0.15 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@24": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at24_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "24",
+   "potential": 4.545967602938945,
+   "polyfind": 4.246586404914041,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     67.6,
+     -68.4
+    ],
+    [
+     67.6,
+     -68.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.399972648903388,
+    9.273854766389677,
+    34.812797532752995,
+    97.97946481803709,
+    97.60931648092442,
+    89.54173583939262
+   ],
+   "shear_along_chains_monomers": [
+    -0.27931688302987545,
+    -0.5028826483512611
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 24 (units VR), the cell free to shear: -0.13, +0.10 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@24m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at24m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "24m",
+   "potential": 3.7475794565426632,
+   "polyfind": 3.2417090039766236,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -73.2,
+     65.2
+    ],
+    [
+     -73.1,
+     65.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.950107175485046,
+    8.52937084530446,
+    34.90162714454874,
+    87.12046898880996,
+    103.43045081490007,
+    90.20027473584892
+   ],
+   "shear_along_chains_monomers": [
+    -0.5398440873598527,
+    0.16737605253466903
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 24 (units VR), the cell free to shear: -0.10, +0.10 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@26": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at26_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "26",
+   "potential": 4.751745925200363,
+   "polyfind": 4.411221093015683,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -98.2,
+     61.1
+    ],
+    [
+     -98.2,
+     61.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.594622858247078,
+    9.003715314330565,
+    33.97386139002253,
+    94.1024546067014,
+    83.94581969733363,
+    94.54158691179032
+   ],
+   "shear_along_chains_monomers": [
+    0.23049160142533737,
+    -0.2516122557063039
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 26 (units RI), the cell free to shear: +0.32, -0.22 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@26m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at26m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "26m",
+   "potential": 4.407032376717657,
+   "polyfind": 3.242942421280773,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     101.5,
+     -76.5
+    ],
+    [
+     101.5,
+     -76.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.872645815853511,
+    8.332898116628215,
+    35.14023339101868,
+    88.16103572565332,
+    89.8090416722845,
+    90.9055135901229
+   ],
+   "shear_along_chains_monomers": [
+    0.007645554879251658,
+    0.10445571327238326
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 26 (units RI), the cell free to shear: +0.01, +0.09 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@2": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at2_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "2",
+   "potential": 4.045327792812553,
+   "polyfind": 3.6052727406882354,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     69.9,
+     -65.9
+    ],
+    [
+     69.9,
+     -65.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.441307064579444,
+    8.929308937308083,
+    35.212299770519515,
+    94.72816310513208,
+    92.57478427919426,
+    91.69279827228084
+   ],
+   "shear_along_chains_monomers": [
+    -0.09548503293199051,
+    -0.2875111378134257
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 2 (units VR), the cell free to shear: -0.01, -0.03 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@2m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at2m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "2m",
+   "potential": 0.21772189524454577,
+   "polyfind": 3.1782889465649333,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -57.2,
+     57.6
+    ],
+    [
+     -57.2,
+     57.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.500619300695343,
+    8.93535396177929,
+    35.08979381184681,
+    97.10729082126923,
+    94.30014843199952,
+    89.07789833565143
+   ],
+   "shear_along_chains_monomers": [
+    -0.1611107976025566,
+    -0.43185594946670697
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 2 (units VR), the cell free to shear: -0.10, -0.26 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@4": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at4_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "4",
+   "potential": -0.7902707872029405,
+   "polyfind": 1.3562635397855018,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     58.2,
+     -65.9
+    ],
+    [
+     58.2,
+     -65.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.379311494548232,
+    9.805662485675605,
+    34.98926709370685,
+    114.37876663502756,
+    93.96513114371747,
+    88.57693657233061
+   ],
+   "shear_along_chains_monomers": [
+    -0.14530311899176657,
+    -1.58103632715938
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 4 (units RV), the cell free to shear: -0.05, -1.71 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@4m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at4m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "4m",
+   "potential": 1.297293456455203,
+   "polyfind": 2.99976210289789,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -70.4,
+     60.1
+    ],
+    [
+     -70.4,
+     60.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.63069133516778,
+    8.698913829421901,
+    35.16979744633057,
+    97.22502641991511,
+    94.19233959116467,
+    87.57761213171531
+   ],
+   "shear_along_chains_monomers": [
+    -0.16079331257595886,
+    -0.4273564694517204
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 4 (units RV), the cell free to shear: +0.02, -0.02 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@6": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at6_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "6",
+   "potential": 1.8528641214691226,
+   "polyfind": 2.81719662222514,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     67.5,
+     -61.0
+    ],
+    [
+     67.5,
+     -61.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.604612296100918,
+    8.86054897654662,
+    35.13478918329924,
+    99.80160339347901,
+    92.76751286498856,
+    88.40464342830388
+   ],
+   "shear_along_chains_monomers": [
+    -0.105706997461564,
+    -0.5892163839091931
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 6 (units VV), the cell free to shear: +0.01, -0.00 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@6m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at6m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "6m",
+   "potential": 1.0726276925722487,
+   "polyfind": 3.1610274455712073,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -63.0,
+     64.6
+    ],
+    [
+     -63.0,
+     64.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.691013239819835,
+    8.806839555948002,
+    35.087596676549644,
+    101.59122083967027,
+    96.89515188212462,
+    85.86929505901635
+   ],
+   "shear_along_chains_monomers": [
+    -0.26688370196578637,
+    -0.6912262111510682
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 6 (units VV), the cell free to shear: -0.00, -0.07 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@8": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at8_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "8",
+   "potential": 5.063264298256,
+   "polyfind": 4.3831405256024,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     72.8,
+     -66.4
+    ],
+    [
+     72.8,
+     -66.4
+    ]
+   ],
+   "cell_A_deg": [
+    5.320396249949835,
+    9.329697059172721,
+    34.86351908897903,
+    97.94082401718143,
+    95.01663956148032,
+    90.53790235639185
+   ],
+   "shear_along_chains_monomers": [
+    -0.18173527782332322,
+    -0.5034766005705925
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0, kink sheet at offset 8 (units VR), the cell free to shear: -0.01, -0.03 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe3-an1-rvdf1-14@8m": {
+   "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at8m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "8m",
+   "potential": 1.8249968829939462,
+   "polyfind": 1.3583054983963478,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -75.5,
+     80.2
+    ],
+    [
+     -75.5,
+     80.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.729884526863573,
+    8.572022834660766,
+    34.91641095209386,
+    91.85661266354231,
+    96.4738130903387,
+    90.18294596515838
+   ],
+   "shear_along_chains_monomers": [
+    -0.2523590931408979,
+    -0.10848408349683478
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe3-an1-rvdf1-14@0~, kink sheet at offset 8 (units VR), the cell free to shear: -0.07, +0.04 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at0_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "0",
+   "potential": 0.9904476235012654,
+   "polyfind": 0.14310456106717595,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     57.9,
+     -62.6
+    ],
+    [
+     57.9,
+     -62.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.5860487874421745,
+    9.866073942758693,
+    34.991107480334904,
+    117.2453574700883,
+    92.25635195820692,
+    89.18736948661352
+   ],
+   "shear_along_chains_monomers": [
+    -0.08590861376110169,
+    -1.7643387452126198
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 0 (units VV), the cell free to shear: -0.04, -1.79 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@0m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at0m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "0m",
+   "potential": 1.894588254574232,
+   "polyfind": 0.7630872116538114,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -65.0,
+     58.9
+    ],
+    [
+     -65.0,
+     58.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.747382659185094,
+    9.648523742694929,
+    35.091660186342104,
+    78.23938398298257,
+    64.6414110140047,
+    92.35406015398509
+   ],
+   "shear_along_chains_monomers": [
+    0.9615239361104383,
+    0.7682001944157479
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 0 (units VV), the cell free to shear: +0.92, +1.01 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@10": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at10_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "10",
+   "potential": 0.3644418039977304,
+   "polyfind": -2.0780795278830055,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     54.5,
+     -52.2
+    ],
+    [
+     54.5,
+     -52.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.562012474557496,
+    9.960462355152579,
+    34.86749722741217,
+    118.22664043705586,
+    91.46480938447499,
+    89.98423378813101
+   ],
+   "shear_along_chains_monomers": [
+    -0.05553965322463927,
+    -1.840197317158525
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 10 (units RV), the cell free to shear: -0.05, -1.79 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@10m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at10m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "10m",
+   "potential": 2.6512261133507637,
+   "polyfind": 1.2815265705165046,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -79.4,
+     77.0
+    ],
+    [
+     -79.4,
+     77.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.715663117345766,
+    9.834838866686688,
+    35.4378870810243,
+    73.37228653647983,
+    63.544219776410735,
+    89.28368401844043
+   ],
+   "shear_along_chains_monomers": [
+    0.9946749435249624,
+    1.0993193339780096
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 10 (units RV), the cell free to shear: +0.92, +1.05 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@12": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at12_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "12",
+   "potential": 2.1836913359948906,
+   "polyfind": 0.6251875904575144,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     83.8,
+     -78.4
+    ],
+    [
+     83.8,
+     -78.4
+    ]
+   ],
+   "cell_A_deg": [
+    9.10468220273911,
+    5.922221954474382,
+    35.29737251499489,
+    113.00198367450884,
+    75.0830750881118,
+    96.09999001035044
+   ],
+   "shear_along_chains_monomers": [
+    0.9155122320584073,
+    -0.9039785951947645
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 12 (units VA), the cell free to shear: +0.94, -0.93 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@14": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at14_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "14",
+   "potential": 5.843971016590115,
+   "polyfind": 8.570918889482058,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     92.3,
+     -64.8
+    ],
+    [
+     92.3,
+     -64.8
+    ]
+   ],
+   "cell_A_deg": [
+    9.60918777748439,
+    5.147471243923699,
+    35.19867685876941,
+    89.35619029208435,
+    88.57161915779886,
+    82.90269725689964
+   ],
+   "shear_along_chains_monomers": [
+    0.09356708775491024,
+    0.022593302305182777
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 14 (units AV), the cell free to shear: +0.09, +0.00 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@16": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at16_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "16",
+   "potential": 0.8959037263793048,
+   "polyfind": 0.0030701777182713386,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     56.6,
+     -62.7
+    ],
+    [
+     56.6,
+     -62.7
+    ]
+   ],
+   "cell_A_deg": [
+    5.598305217705146,
+    9.888526033244919,
+    35.057188608617,
+    117.88830710835282,
+    91.86536515318518,
+    89.42198001673043
+   ],
+   "shear_along_chains_monomers": [
+    -0.07118379048907982,
+    -1.8067783495546277
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 16 (units VV), the cell free to shear: -0.05, -1.81 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@16m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at16m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "16m",
+   "potential": 2.314574550807515,
+   "polyfind": 1.4696277387852206,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -68.7,
+     53.5
+    ],
+    [
+     -68.7,
+     53.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.779511995306525,
+    9.74336938309325,
+    35.043609636391665,
+    75.86619410527041,
+    64.98461428146913,
+    90.66452401119375
+   ],
+   "shear_along_chains_monomers": [
+    0.9546616395669307,
+    0.9293774439746461
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 16 (units VV), the cell free to shear: +0.93, +1.01 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@18": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at18_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "18",
+   "potential": 4.473187264560817,
+   "polyfind": 4.055274226515195,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     63.1,
+     -57.2
+    ],
+    [
+     63.1,
+     -57.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.533568130822182,
+    9.912715494724896,
+    35.174324998221195,
+    118.03724595538792,
+    91.34491963748414,
+    90.16004088725057
+   ],
+   "shear_along_chains_monomers": [
+    -0.050734001283600644,
+    -1.820088547443488
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 18 (units VR), the cell free to shear: -0.02, -1.80 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@18m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at18m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "18m",
+   "potential": -0.2805474475250753,
+   "polyfind": 3.2824745483016216,
+   "kink_kept": false,
+   "gauche_bonds_deg": [
+    [
+     87.7,
+     -54.1,
+     82.2
+    ],
+    [
+     87.5,
+     -54.2,
+     82.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.346356968436449,
+    10.700481442024419,
+    34.56983144400682,
+    118.01498597602453,
+    80.05727239689885,
+    100.29705029883375
+   ],
+   "shear_along_chains_monomers": [
+    0.36059441277960874,
+    -1.9632979422024972
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 18 (units VR), the cell free to shear: +0.00, -0.19 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@20": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at20_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "20",
+   "potential": 0.49685693085741356,
+   "polyfind": -1.0592753996667312,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     61.8,
+     -69.1
+    ],
+    [
+     61.8,
+     -69.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.551239875781938,
+    9.884438703879683,
+    35.09789005904738,
+    117.93342765480536,
+    92.5863735436765,
+    89.2286875336583
+   ],
+   "shear_along_chains_monomers": [
+    -0.09785232361652688,
+    -1.8087184701699721
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 20 (units RV), the cell free to shear: -0.06, -1.80 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@20m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at20m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "20m",
+   "potential": 1.4542490547351774,
+   "polyfind": 0.7099542325149173,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -58.8,
+     50.7
+    ],
+    [
+     -58.8,
+     50.7
+    ]
+   ],
+   "cell_A_deg": [
+    5.746863783311078,
+    9.70665677668707,
+    35.10865420044504,
+    76.34849751480192,
+    64.66914603854714,
+    90.74460387288126
+   ],
+   "shear_along_chains_monomers": [
+    0.9604550546190092,
+    0.8948919583236514
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 20 (units RV), the cell free to shear: +0.93, +0.96 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@22": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at22_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "22",
+   "potential": 1.0377816668931583,
+   "polyfind": 0.13303177689830648,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     58.8,
+     -64.5
+    ],
+    [
+     58.8,
+     -64.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.569966415223555,
+    9.86418652753178,
+    35.01001855003614,
+    117.48307928817727,
+    91.7801430978192,
+    89.5178358503705
+   ],
+   "shear_along_chains_monomers": [
+    -0.06758884425026433,
+    -1.7781993315445883
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 22 (units VV), the cell free to shear: -0.04, -1.79 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@22m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at22m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "22m",
+   "potential": 2.149101430765039,
+   "polyfind": 0.7604566252561682,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -64.5,
+     54.6
+    ],
+    [
+     -64.5,
+     54.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.7542883198379595,
+    9.73385473728944,
+    35.05909112796649,
+    76.28571448587383,
+    65.1678776921501,
+    91.09889345014179
+   ],
+   "shear_along_chains_monomers": [
+    0.9439751586098096,
+    0.9014476268395195
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 22 (units VV), the cell free to shear: +0.92, +1.01 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@24": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at24_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "24",
+   "potential": 4.506580323799942,
+   "polyfind": 3.8241047853981485,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     61.0,
+     -55.0
+    ],
+    [
+     61.0,
+     -55.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.540790330020465,
+    9.929542021829658,
+    35.14237303325784,
+    118.01790812048665,
+    92.93374421678982,
+    88.7806042460631
+   ],
+   "shear_along_chains_monomers": [
+    -0.11077495349460832,
+    -1.8220225161749253
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 24 (units VR), the cell free to shear: -0.04, -1.80 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@24m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at24m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "24m",
+   "potential": 4.546339541285666,
+   "polyfind": 2.7893602957964703,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -91.1,
+     58.6
+    ],
+    [
+     -91.2,
+     58.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.752247136581233,
+    9.897152447782085,
+    35.291086252682796,
+    80.5436207748976,
+    61.99634862392842,
+    92.08921895748588
+   ],
+   "shear_along_chains_monomers": [
+    1.055015671953163,
+    0.6351832891421579
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 24 (units VR), the cell free to shear: +0.99, +0.80 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@26": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at26_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "26",
+   "potential": 0.3327962770482575,
+   "polyfind": -1.0625420523939937,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -68.9,
+     62.5
+    ],
+    [
+     -68.9,
+     62.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.535450357583684,
+    9.889150356833625,
+    35.10373745283385,
+    117.57106831027444,
+    94.34914334226903,
+    87.9996704612796
+   ],
+   "shear_along_chains_monomers": [
+    -0.1639747386377455,
+    -1.787960256893699
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 26 (units RV), the cell free to shear: -0.06, -1.80 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@26m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at26m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "26m",
+   "potential": 1.507040291799496,
+   "polyfind": 0.81628932907023,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     51.1,
+     -58.9
+    ],
+    [
+     51.1,
+     -58.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.740314033858824,
+    9.686921061954068,
+    35.127535417629296,
+    76.62806782516856,
+    64.80550999321906,
+    90.68804583351721
+   ],
+   "shear_along_chains_monomers": [
+    0.9545341164469195,
+    0.8751199912204294
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 26 (units RV), the cell free to shear: +0.93, +0.95 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@2": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at2_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "2",
+   "potential": 4.428600312802452,
+   "polyfind": 3.8146037642287496,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     62.1,
+     -57.0
+    ],
+    [
+     62.1,
+     -57.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.557728093481033,
+    9.943041272906791,
+    35.107030837928505,
+    117.77209168420141,
+    93.30410290827852,
+    88.62528918702942
+   ],
+   "shear_along_chains_monomers": [
+    -0.12512598978191344,
+    -1.8097722198678996
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 2 (units VR), the cell free to shear: -0.05, -1.79 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@2m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at2m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "2m",
+   "potential": 0.9127390650136538,
+   "polyfind": -1.1497649067262898,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -68.3,
+     53.7
+    ],
+    [
+     -68.3,
+     53.7
+    ]
+   ],
+   "cell_A_deg": [
+    5.728182087138822,
+    9.636420204098773,
+    35.04226615509599,
+    77.10133353121181,
+    65.51996211609409,
+    90.84228132698547
+   ],
+   "shear_along_chains_monomers": [
+    0.9271961825741696,
+    0.8402786349942342
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 2 (units VR), the cell free to shear: +0.89, +0.98 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@4": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at4_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "4",
+   "potential": 0.19836008635856617,
+   "polyfind": -1.1117369547687872,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     59.7,
+     -68.2
+    ],
+    [
+     59.7,
+     -68.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.585319140590443,
+    9.887642466014666,
+    35.00863072226756,
+    117.51954867482105,
+    93.65270269911657,
+    88.51942680673646
+   ],
+   "shear_along_chains_monomers": [
+    -0.13899702311445797,
+    -1.784608323617822
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 4 (units RV), the cell free to shear: -0.07, -1.80 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@4m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at4m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "4m",
+   "potential": 1.4308018724173264,
+   "polyfind": 0.8555618036417059,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -59.0,
+     50.6
+    ],
+    [
+     -59.0,
+     50.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.739747706549135,
+    9.705296926213078,
+    35.145699827727576,
+    76.57226948660575,
+    64.74595469904256,
+    91.08871019266716
+   ],
+   "shear_along_chains_monomers": [
+    0.9565482301479867,
+    0.8803716124380588
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 4 (units RV), the cell free to shear: +0.93, +0.95 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@6": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at6_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "6",
+   "potential": 0.4519604723007315,
+   "polyfind": -0.04935286788688131,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     55.1,
+     -60.9
+    ],
+    [
+     55.1,
+     -60.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.612988531925701,
+    9.884298556069593,
+    34.83617208346371,
+    117.2209786288644,
+    92.280514599498,
+    89.08268787871076
+   ],
+   "shear_along_chains_monomers": [
+    -0.08724684619690765,
+    -1.766137094665601
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 6 (units VV), the cell free to shear: -0.05, -1.78 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@6m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at6m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "6m",
+   "potential": 1.3529859530219974,
+   "polyfind": 0.9164544505165964,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -65.9,
+     57.4
+    ],
+    [
+     -65.9,
+     57.4
+    ]
+   ],
+   "cell_A_deg": [
+    5.749091273092271,
+    9.75434505799137,
+    35.093239500621316,
+    76.00494016293388,
+    65.10206532967433,
+    91.21523832891516
+   ],
+   "shear_along_chains_monomers": [
+    0.9454630258662596,
+    0.9214740547967013
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 6 (units VV), the cell free to shear: +0.91, +1.01 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@8": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at8_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "8",
+   "potential": 4.2047473435426355,
+   "polyfind": 3.880594125495918,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     59.7,
+     -67.9
+    ],
+    [
+     59.7,
+     -67.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.61929764566714,
+    9.960281852111809,
+    35.09351191123442,
+    118.54912443255121,
+    92.05554555594621,
+    89.2248174051896
+   ],
+   "shear_along_chains_monomers": [
+    -0.07873237973762817,
+    -1.8594292558615333
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0, kink sheet at offset 8 (units VR), the cell free to shear: -0.04, -1.76 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-an1-14@8m": {
+   "frame": "sheet_vdf9-trfe4-an1-14_belt4_at8m_sheared_in_all_s1",
+   "atoms": 170,
+   "site": "8m",
+   "potential": 2.6037616780004904,
+   "polyfind": 1.663724614990386,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -76.0,
+     74.1
+    ],
+    [
+     -76.0,
+     74.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.777458307351537,
+    9.768997889478033,
+    35.18617855403306,
+    78.92428227943626,
+    61.6876101066645,
+    89.52057467879098
+   ],
+   "shear_along_chains_monomers": [
+    1.070361256295505,
+    0.733079613265244
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-an1-14@0~, kink sheet at offset 8 (units VR), the cell free to shear: +1.01, +0.80 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at0_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "0",
+   "potential": 0.16489820608686387,
+   "polyfind": -0.13088855814770284,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     58.7,
+     -60.4
+    ],
+    [
+     58.7,
+     -60.4
+    ]
+   ],
+   "cell_A_deg": [
+    5.4661037662559835,
+    10.000006468320448,
+    35.06103574189207,
+    117.22581128442047,
+    91.63056993626861,
+    89.58945735734417
+   ],
+   "shear_along_chains_monomers": [
+    -0.06075696627978282,
+    -1.7871048885037772
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 0 (units VV), the cell free to shear: -0.03, -1.78 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@0m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at0m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "0m",
+   "potential": 1.589511778885095,
+   "polyfind": 0.6347255835801775,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -65.1,
+     58.6
+    ],
+    [
+     -65.1,
+     58.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.7629774609671145,
+    9.59561993580842,
+    35.166241174526995,
+    75.68358688845899,
+    65.25106193517644,
+    89.17860214237051
+   ],
+   "shear_along_chains_monomers": [
+    0.9424334491161337,
+    0.9268641299340951
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 0 (units VV), the cell free to shear: +0.92, +1.02 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@10": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at10_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "10",
+   "potential": -0.789119048216247,
+   "polyfind": -1.1214050288644586,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     55.9,
+     -57.1
+    ],
+    [
+     55.9,
+     -57.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.465799931586841,
+    9.99947262170294,
+    35.016714729913815,
+    117.76436280245944,
+    92.02048747463851,
+    89.63149047052806
+   ],
+   "shear_along_chains_monomers": [
+    -0.07527612937500461,
+    -1.8195772874866667
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 10 (units RV), the cell free to shear: -0.03, -1.79 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@10m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at10m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "10m",
+   "potential": 1.201801230450935,
+   "polyfind": 0.7579545001857326,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -58.5,
+     56.0
+    ],
+    [
+     -58.5,
+     56.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.745148253485506,
+    9.622082925420946,
+    35.1639637526053,
+    75.88072026609495,
+    64.8859947436687,
+    88.90858260149223
+   ],
+   "shear_along_chains_monomers": [
+    0.9524844604604927,
+    0.9168843538684277
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 10 (units RV), the cell free to shear: +0.90, +0.98 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@12": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at12_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "12",
+   "potential": -3.560107104728209,
+   "polyfind": -2.272476756179998,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     67.4,
+     -67.5
+    ],
+    [
+     67.4,
+     -67.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.065690798753299,
+    10.364722736500912,
+    35.18593380343091,
+    115.4189037827025,
+    88.70908547345059,
+    87.95682866702076
+   ],
+   "shear_along_chains_monomers": [
+    0.0445796673550116,
+    -1.7378447629729505
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 12 (units VC), the cell free to shear: -0.02, -1.78 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@12m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at12m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "12m",
+   "potential": 1.5791908071200134,
+   "polyfind": -0.34253213895286194,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -62.7,
+     51.5
+    ],
+    [
+     -62.7,
+     51.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.770143994291623,
+    9.554136752233847,
+    35.09643014030861,
+    79.27156035429306,
+    64.33106481749356,
+    89.22922951562342
+   ],
+   "shear_along_chains_monomers": [
+    0.9763499988412565,
+    0.6947437118576825
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 12 (units VC), the cell free to shear: +0.90, +0.89 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@14": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at14_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "14",
+   "potential": -1.7537661651253826,
+   "polyfind": 1.2110411127440983,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     54.4,
+     -57.5
+    ],
+    [
+     54.4,
+     -57.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.795887031755995,
+    9.247042925915107,
+    35.06598612345149,
+    105.57180021799253,
+    113.51129876421929,
+    84.61899178514739
+   ],
+   "shear_along_chains_monomers": [
+    -0.9031846362400684,
+    -0.9696598740811907
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 14 (units CV), the cell free to shear: -0.89, -0.92 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@14m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "14m",
+   "potential": -5.256836685882834,
+   "polyfind": -1.166942578906017,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -63.9,
+     50.4
+    ],
+    [
+     -63.9,
+     50.4
+    ]
+   ],
+   "cell_A_deg": [
+    5.693510849993664,
+    9.46823485028311,
+    34.905251978938246,
+    104.61997407646903,
+    64.81534366196867,
+    100.15284138867246
+   ],
+   "shear_along_chains_monomers": [
+    0.946405989339043,
+    -0.9335335573370238
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 14 (units CV), the cell free to shear: +0.87, -0.85 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@16": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at16_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "16",
+   "potential": 0.24457923721492217,
+   "polyfind": -0.40569220538310446,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     56.3,
+     -65.9
+    ],
+    [
+     56.3,
+     -65.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.497887771259395,
+    10.004095528418263,
+    35.03933722823456,
+    117.42342976349904,
+    91.5794623285145,
+    89.5719545204139
+   ],
+   "shear_along_chains_monomers": [
+    -0.059195342507425225,
+    -1.7998102435590375
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 16 (units VV), the cell free to shear: -0.03, -1.79 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@16m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at16m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "16m",
+   "potential": 1.6031003335314973,
+   "polyfind": 0.511481600392699,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -68.6,
+     50.9
+    ],
+    [
+     -68.6,
+     50.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.780515651691705,
+    9.638426876617292,
+    35.04126634353697,
+    74.86110483882852,
+    65.75894583781425,
+    88.53572198620603
+   ],
+   "shear_along_chains_monomers": [
+    0.9270874328707049,
+    0.98326960846816
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 16 (units VV), the cell free to shear: +0.91, +1.03 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@18": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at18_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "18",
+   "potential": 3.412623238160965,
+   "polyfind": 3.247594995336584,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     60.8,
+     -55.6
+    ],
+    [
+     60.8,
+     -55.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.44479807663176,
+    10.044380952443985,
+    35.20936729653115,
+    118.03835128720608,
+    92.34411830606028,
+    89.49339465583165
+   ],
+   "shear_along_chains_monomers": [
+    -0.08699164507950673,
+    -1.8443306485672217
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 18 (units VR), the cell free to shear: -0.05, -1.80 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@18m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at18m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "18m",
+   "potential": 0.7359560373100908,
+   "polyfind": 2.8531607965626335,
+   "kink_kept": false,
+   "gauche_bonds_deg": [
+    [
+     96.4,
+     -56.6,
+     85.8
+    ],
+    [
+     96.4,
+     -56.6,
+     85.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.593710575354767,
+    9.582751076965398,
+    34.6217607957294,
+    104.87638980940744,
+    69.36989825192256,
+    97.48094341405853
+   ],
+   "shear_along_chains_monomers": [
+    0.7698636576185038,
+    -0.9610247260209573
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 18 (units VR), the cell free to shear: +0.78, -0.93 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@20": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at20_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "20",
+   "potential": 1.8271046914746871,
+   "polyfind": 1.0177873419603714,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     68.4,
+     -79.7
+    ],
+    [
+     68.4,
+     -79.7
+    ]
+   ],
+   "cell_A_deg": [
+    6.29657393915248,
+    9.000099055779668,
+    35.054974394299705,
+    102.062954346439,
+    62.3900653936516,
+    94.77761804123742
+   ],
+   "shear_along_chains_monomers": [
+    1.1399004805102604,
+    -0.7347256007023739
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 20 (units RV), the cell free to shear: +0.89, -0.83 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@20m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at20m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "20m",
+   "potential": 0.9679850774899456,
+   "polyfind": 0.6428635884320784,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -59.2,
+     50.8
+    ],
+    [
+     -59.2,
+     50.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.752030966042656,
+    9.613792856515417,
+    35.169347435919384,
+    75.89587752121889,
+    64.93087700432724,
+    88.93083313550605
+   ],
+   "shear_along_chains_monomers": [
+    0.9520315541529302,
+    0.9151309117976869
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 20 (units RV), the cell free to shear: +0.92, +0.98 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@22": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at22_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "22",
+   "potential": 0.12796497871452583,
+   "polyfind": -0.15150921125780314,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     58.6,
+     -60.8
+    ],
+    [
+     58.6,
+     -60.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.465851531498572,
+    9.997863522879024,
+    35.064740123063416,
+    117.24634874810666,
+    91.63827561533627,
+    89.59131127360234
+   ],
+   "shear_along_chains_monomers": [
+    -0.061041194044718014,
+    -1.787966596656604
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 22 (units VV), the cell free to shear: -0.03, -1.78 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@22m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at22m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "22m",
+   "potential": 1.6264076168887773,
+   "polyfind": 0.6368505507420252,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -65.7,
+     58.9
+    ],
+    [
+     -65.7,
+     58.9
+    ]
+   ],
+   "cell_A_deg": [
+    5.76698036955081,
+    9.594586057198901,
+    35.17414638705042,
+    75.6234988870806,
+    65.1869594969581,
+    89.2943523271912
+   ],
+   "shear_along_chains_monomers": [
+    0.9453763195224187,
+    0.9305722244208092
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 22 (units VV), the cell free to shear: +0.92, +1.02 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@24": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at24_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "24",
+   "potential": 3.4448031527999525,
+   "polyfind": 3.459436117938125,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     61.8,
+     -55.0
+    ],
+    [
+     61.8,
+     -55.0
+    ]
+   ],
+   "cell_A_deg": [
+    5.436359981141299,
+    10.078782690481962,
+    35.19283008699999,
+    117.97527783145095,
+    91.85041088244328,
+    89.35651754099162
+   ],
+   "shear_along_chains_monomers": [
+    -0.0685706528515682,
+    -1.8468209511930656
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 24 (units VR), the cell free to shear: -0.03, -1.78 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@24m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at24m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "24m",
+   "potential": 3.601967780116162,
+   "polyfind": 3.3568205533352966,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -76.0,
+     61.2
+    ],
+    [
+     -76.0,
+     61.2
+    ]
+   ],
+   "cell_A_deg": [
+    5.784542079962234,
+    9.588007035102379,
+    35.088676364215054,
+    81.7131903311116,
+    63.315976382842905,
+    87.93502191647369
+   ],
+   "shear_along_chains_monomers": [
+    1.0147123349428684,
+    0.5398062709353795
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 24 (units VR), the cell free to shear: +0.99, +0.81 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@26": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at26_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "26",
+   "potential": 1.8651250438979101,
+   "polyfind": 1.1242037290232787,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -80.2,
+     68.1
+    ],
+    [
+     -80.2,
+     68.1
+    ]
+   ],
+   "cell_A_deg": [
+    6.301306173819371,
+    8.99324756605234,
+    35.01557895462877,
+    102.54851425323604,
+    63.0118186096934,
+    94.83059137392239
+   ],
+   "shear_along_chains_monomers": [
+    1.1170214662416953,
+    -0.7632534035160846
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 26 (units RV), the cell free to shear: +0.89, -0.84 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@26m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at26m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "26m",
+   "potential": 0.8761875715527868,
+   "polyfind": 0.7150528176156286,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     50.9,
+     -58.7
+    ],
+    [
+     50.9,
+     -58.7
+    ]
+   ],
+   "cell_A_deg": [
+    5.75403460422888,
+    9.600463266659867,
+    35.17533153904208,
+    75.90210824931178,
+    64.84680815486004,
+    88.88853634396209
+   ],
+   "shear_along_chains_monomers": [
+    0.9553494349185114,
+    0.9134665451586982
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 26 (units RV), the cell free to shear: +0.92, +0.98 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@2": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at2_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "2",
+   "potential": 3.4373510531154703,
+   "polyfind": 3.449685963514966,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     61.9,
+     -55.1
+    ],
+    [
+     61.9,
+     -55.1
+    ]
+   ],
+   "cell_A_deg": [
+    5.435557596956115,
+    10.07859270020979,
+    35.17014357721227,
+    117.84243217111784,
+    91.76961571534007,
+    89.42634668449354
+   ],
+   "shear_along_chains_monomers": [
+    -0.06556792220317431,
+    -1.8387196191544326
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 2 (units VR), the cell free to shear: -0.03, -1.78 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@2m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at2m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "2m",
+   "potential": 0.338522518126596,
+   "polyfind": -1.2001369416813077,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -67.4,
+     54.6
+    ],
+    [
+     -67.4,
+     54.6
+    ]
+   ],
+   "cell_A_deg": [
+    5.7419805455649655,
+    9.5521692077335,
+    35.14135158255357,
+    75.58608022585643,
+    65.91215983674012,
+    88.81553729711683
+   ],
+   "shear_along_chains_monomers": [
+    0.9154348096349876,
+    0.9288185799857802
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 2 (units VR), the cell free to shear: +0.89, +0.98 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@4": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at4_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "4",
+   "potential": 1.4953217711861058,
+   "polyfind": 1.0989574759323233,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     65.9,
+     -80.0
+    ],
+    [
+     65.8,
+     -80.0
+    ]
+   ],
+   "cell_A_deg": [
+    6.252614164596981,
+    9.044678686065415,
+    34.919224184289476,
+    102.88113991498469,
+    64.11018255937371,
+    94.4149417343987
+   ],
+   "shear_along_chains_monomers": [
+    1.066466175307353,
+    -0.787626311134376
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 4 (units RV), the cell free to shear: +0.88, -0.84 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@4m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at4m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "4m",
+   "potential": 0.960321619494599,
+   "polyfind": 0.6910402292672302,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -58.5,
+     51.3
+    ],
+    [
+     -58.5,
+     51.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.7547926051509135,
+    9.600307449622909,
+    35.17733780157556,
+    76.01572627986162,
+    64.74821855550064,
+    88.95398938643129
+   ],
+   "shear_along_chains_monomers": [
+    0.9589751802821206,
+    0.9062373880519291
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 4 (units RV), the cell free to shear: +0.92, +0.98 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@6": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at6_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "6",
+   "potential": 0.25114851076375955,
+   "polyfind": -0.28660663323859126,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     57.6,
+     -59.5
+    ],
+    [
+     57.6,
+     -59.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.463293651071913,
+    9.978108954458488,
+    35.03983188547052,
+    117.20899813592825,
+    91.86542328640161,
+    89.68210826305628
+   ],
+   "shear_along_chains_monomers": [
+    -0.06946925025542178,
+    -1.7821744561165618
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 6 (units VV), the cell free to shear: -0.03, -1.77 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@6m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at6m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "6m",
+   "potential": 1.6078323733830622,
+   "polyfind": 0.683185347295435,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -66.8,
+     61.3
+    ],
+    [
+     -66.8,
+     61.3
+    ]
+   ],
+   "cell_A_deg": [
+    5.745631029529291,
+    9.602598420061968,
+    35.20552412419848,
+    75.91603153509429,
+    64.89925334709191,
+    89.33906031049186
+   ],
+   "shear_along_chains_monomers": [
+    0.9520942069636477,
+    0.9127856047570394
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 6 (units VV), the cell free to shear: +0.91, +1.02 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@8": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at8_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "8",
+   "potential": 3.579886423850897,
+   "polyfind": 3.1556021534238425,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     61.8,
+     -57.5
+    ],
+    [
+     61.8,
+     -57.5
+    ]
+   ],
+   "cell_A_deg": [
+    5.445944073642528,
+    10.06142357414244,
+    35.19945815627235,
+    118.13955446817279,
+    91.80459110359442,
+    89.32237107554649
+   ],
+   "shear_along_chains_monomers": [
+    -0.06699117350956449,
+    -1.853584427563133
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0, kink sheet at offset 8 (units VR), the cell free to shear: -0.03, -1.77 monomers along a, b, pendants as built"
+  },
+  "vdf9-trfe4-cfe1-14@8m": {
+   "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at8m_sheared_in_all_s1",
+   "atoms": 168,
+   "site": "8m",
+   "potential": 2.932707583559059,
+   "polyfind": 2.727738571552649,
+   "kink_kept": true,
+   "gauche_bonds_deg": [
+    [
+     -72.7,
+     69.8
+    ],
+    [
+     -72.7,
+     69.8
+    ]
+   ],
+   "cell_A_deg": [
+    5.836805209124863,
+    9.764508817597115,
+    35.239264636713315,
+    78.06708034125633,
+    61.372098368061245,
+    87.7271916837646
+   ],
+   "shear_along_chains_monomers": [
+    1.0923931093931458,
+    0.7886609160316111
+   ],
+   "source": "polyfind pvdf-dft-valence-belt4, vdf9-trfe4-cfe1-14@0~, kink sheet at offset 8 (units VR), the cell free to shear: +0.98, +0.82 monomers along a, b, pendants as built"
+  }
+ }
+}

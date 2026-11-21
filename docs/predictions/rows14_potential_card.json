@@ -1,0 +1,362 @@
+{
+ "what": "cells relaxed in the potential all_s1 (examples/mlip_train.py relax) from a preset's cells, the potential's own energies: eV per monomer; margins kcal/mol per monomer, all-trans minus helix; no DFT on these cells",
+ "potential": "all_s1",
+ "rows": {
+  "vdf10-trfe4-14": {
+   "cells": {
+    "GTG'T": {
+     "frame": "row_vdf10-trfe4-14_GTGpT_chain1_in_all_s1",
+     "eV_per_monomer": -2063.181241445568,
+     "cell_A_deg": [
+      5.150720957432017,
+      9.879034448649385,
+      32.73386479996816,
+      92.78299652629005,
+      97.4357116156186,
+      89.10391798632291
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf10-trfe4-14 GTG'T, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (55 steps)"
+    },
+    "G'TGT": {
+     "frame": "row_vdf10-trfe4-14_GpTGT_chain1_in_all_s1",
+     "eV_per_monomer": -2063.180816714904,
+     "cell_A_deg": [
+      5.160853493402399,
+      9.882166336352718,
+      32.743169669885496,
+      86.71302418645696,
+      81.85442976018864,
+      89.064710886141
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf10-trfe4-14 G'TGT, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (70 steps)"
+    },
+    "TGTG'": {
+     "frame": "row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1",
+     "eV_per_monomer": -2063.1812414477104,
+     "cell_A_deg": [
+      5.1507217119423725,
+      9.879023991233044,
+      32.7338681414565,
+      87.21711362568504,
+      82.56433124179576,
+      89.1039580495726
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf10-trfe4-14 TGTG', cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (55 steps)"
+    },
+    "TG'TG": {
+     "frame": "row_vdf10-trfe4-14_TGpTG_chain1_in_all_s1",
+     "eV_per_monomer": -2063.180816697478,
+     "cell_A_deg": [
+      5.160854997911906,
+      9.882171568598139,
+      32.74316539730949,
+      93.2869308211848,
+      98.14575194314287,
+      89.06468126355229
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf10-trfe4-14 TG'TG, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (70 steps)"
+    },
+    "TTTT": {
+     "frame": "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1",
+     "eV_per_monomer": -2063.1804583834587,
+     "cell_A_deg": [
+      5.079172802127799,
+      8.75998925818404,
+      36.001838306284235,
+      89.99999976522126,
+      89.99999977655315,
+      90.61620973366661
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf10-trfe4-14 TTTT, cell sheared, pendants as built"
+    }
+   },
+   "all_trans_minus_helix": {
+    "GTG'T": 0.01805780377264205,
+    "G'TGT": 0.008263302290038382,
+    "TGTG'": 0.0180578531754918,
+    "TG'TG": 0.008262900439645136
+   },
+   "margin": 0.0180578531754918,
+   "helix": "TGTG'",
+   "helix_placements": 4,
+   "strain_along_chain": 0.09983452461852349
+  },
+  "vdf9-trfe4-cfe1-14": {
+   "cells": {
+    "GTG'T": {
+     "frame": "row_vdf9-trfe4-cfe1-14_GTGpT_chain1_in_all_s1",
+     "eV_per_monomer": -2048.902087984746,
+     "cell_A_deg": [
+      5.135505388111613,
+      10.122715712098545,
+      32.789146677952694,
+      93.72880997944439,
+      96.81468236422884,
+      88.19272423743098
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf9-trfe4-cfe1-14 GTG'T, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (64 steps)"
+    },
+    "G'TGT": {
+     "frame": "row_vdf9-trfe4-cfe1-14_GpTGT_chain1_in_all_s1",
+     "eV_per_monomer": -2048.9006556376303,
+     "cell_A_deg": [
+      5.250219454703931,
+      9.920421887441297,
+      32.7003074965425,
+      88.43854142058031,
+      84.42978057572495,
+      89.12130242258934
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf9-trfe4-cfe1-14 G'TGT, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (142 steps)"
+    },
+    "TGTG'": {
+     "frame": "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1",
+     "eV_per_monomer": -2048.9020907605195,
+     "cell_A_deg": [
+      5.134802320052405,
+      10.124321141143273,
+      32.78844464267819,
+      86.26120238330509,
+      83.19579409102737,
+      88.18965147509142
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf9-trfe4-cfe1-14 TGTG', cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (64 steps)"
+    },
+    "TG'TG": {
+     "frame": "row_vdf9-trfe4-cfe1-14_TGpTG_chain1_in_all_s1",
+     "eV_per_monomer": -2048.900655637619,
+     "cell_A_deg": [
+      5.2502194970739815,
+      9.920421824626859,
+      32.70030747741017,
+      91.5614585567495,
+      95.57022129231257,
+      89.12130164125402
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf9-trfe4-cfe1-14 TG'TG, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (142 steps)"
+    },
+    "TTTT": {
+     "frame": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+     "eV_per_monomer": -2048.89502557521,
+     "cell_A_deg": [
+      5.281710979191954,
+      8.76767434529656,
+      35.95436515455373,
+      89.99999827377623,
+      89.99999960215713,
+      89.97589641958214
+     ],
+     "atoms": 168,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1, vdf9-trfe4-cfe1-14 TTTT, cell sheared, pendants as built"
+    }
+   },
+   "all_trans_minus_helix": {
+    "GTG'T": 0.16286269509552972,
+    "G'TGT": 0.1298320544386188,
+    "TGTG'": 0.16292670582579377,
+    "TG'TG": 0.12983205417645127
+   },
+   "margin": 0.16292670582579377,
+   "helix": "TGTG'",
+   "helix_placements": 4,
+   "strain_along_chain": 0.09655598325498782
+  },
+  "vdf9-trfe4-an1-14": {
+   "cells": {
+    "GTG'T": {
+     "frame": "row_vdf9-trfe4-an1-14_GTGpT_cfe_in_all_s1",
+     "eV_per_monomer": -2006.4929663244498,
+     "cell_A_deg": [
+      5.68164461267365,
+      9.424496136147013,
+      32.65787178247058,
+      79.44889329696396,
+      96.21729611913698,
+      87.4398341984254
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe4-an1-14 GTG'T, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (82 steps)"
+    },
+    "G'TGT": {
+     "frame": "row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1",
+     "eV_per_monomer": -2006.4992975430719,
+     "cell_A_deg": [
+      5.576198183227714,
+      9.753142375544025,
+      32.67288109789945,
+      89.99999198142287,
+      73.90886037250168,
+      89.99998591227497
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe4-an1-14 G'TGT, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (83 steps)"
+    },
+    "TGTG'": {
+     "frame": "row_vdf9-trfe4-an1-14_TGTGp_cfe_in_all_s1",
+     "eV_per_monomer": -2006.4929675152453,
+     "cell_A_deg": [
+      5.681766461639734,
+      9.424288994235072,
+      32.6583824686735,
+      100.54732104825936,
+      83.77849861370792,
+      87.4438613969483
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe4-an1-14 TGTG', cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (88 steps)"
+    },
+    "TG'TG": {
+     "frame": "row_vdf9-trfe4-an1-14_TGpTG_cfe_in_all_s1",
+     "eV_per_monomer": -2006.497693583068,
+     "cell_A_deg": [
+      5.660357899200461,
+      9.375449881589892,
+      32.59624960108368,
+      84.63484674782192,
+      94.11632383759544,
+      86.57439299550313
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe4-an1-14 TG'TG, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (89 steps)"
+    },
+    "TTTT": {
+     "frame": "row_vdf9-trfe4-an1-14_TTTT_cfe_in_all_s1",
+     "eV_per_monomer": -2006.5040419047561,
+     "cell_A_deg": [
+      5.575965688945162,
+      8.4709234565858,
+      35.79861333124395,
+      89.99999987670085,
+      89.99999928416273,
+      89.90652901300186
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe4-an1-14 TTTT, cell sheared, pendants as built"
+    }
+   },
+   "all_trans_minus_helix": {
+    "GTG'T": -0.2554084196556602,
+    "G'TGT": -0.10940735262053215,
+    "TGTG'": -0.2553809593160021,
+    "TG'TG": -0.14639547228992933
+   },
+   "margin": -0.10940735262053215,
+   "helix": "G'TGT",
+   "helix_placements": 4,
+   "strain_along_chain": 0.09566748105190692
+  },
+  "vdf9-trfe3-an1-rvdf1-14": {
+   "cells": {
+    "GTG'T": {
+     "frame": "row_vdf9-trfe3-an1-rvdf1-14_GTGpT_cfe_in_all_s1",
+     "eV_per_monomer": -1959.7585456147724,
+     "cell_A_deg": [
+      5.500560679511237,
+      9.883626345639778,
+      32.81176573228398,
+      74.57351595883152,
+      89.32113111154605,
+      81.92441828355186
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 GTG'T, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (201 steps)"
+    },
+    "G'TGT": {
+     "frame": "row_vdf9-trfe3-an1-rvdf1-14_GpTGT_cfe_in_all_s1",
+     "eV_per_monomer": -1959.7553052761539,
+     "cell_A_deg": [
+      5.658401244467582,
+      9.477948601617852,
+      32.48594319576761,
+      84.83804782350747,
+      92.15806250454688,
+      86.61300674341835
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 G'TGT, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (81 steps)"
+    },
+    "TGTG'": {
+     "frame": "row_vdf9-trfe3-an1-rvdf1-14_TGTGp_cfe_in_all_s1",
+     "eV_per_monomer": -1959.769150195691,
+     "cell_A_deg": [
+      5.239227852335139,
+      9.834033657869089,
+      32.93876164434399,
+      94.0987620108542,
+      90.00000224846562,
+      90.00000433425295
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 TGTG', cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (77 steps)"
+    },
+    "TG'TG": {
+     "frame": "row_vdf9-trfe3-an1-rvdf1-14_TGpTG_cfe_in_all_s1",
+     "eV_per_monomer": -1959.7433938526763,
+     "cell_A_deg": [
+      5.770485710296765,
+      9.320596422308581,
+      32.34949581363224,
+      86.37708017468749,
+      93.44098913127488,
+      92.94170974586086
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 TG'TG, cell sheared, pendants as built, relaxed in all_s1 with D3 to 0.02 eV/A (80 steps)"
+    },
+    "TTTT": {
+     "frame": "row_vdf9-trfe3-an1-rvdf1-14_TTTT_cfe_in_all_s1",
+     "eV_per_monomer": -1959.772178083458,
+     "cell_A_deg": [
+      5.670543510998331,
+      8.460607283617158,
+      35.683754504348855,
+      93.0820880245774,
+      92.00003388587082,
+      89.87461060596405
+     ],
+     "atoms": 170,
+     "n_monomers": 28,
+     "source": "polyfind pvdf-dft-chain1-cfe, vdf9-trfe3-an1-rvdf1-14 TTTT, cell sheared, pendants as built"
+    }
+   },
+   "all_trans_minus_helix": {
+    "GTG'T": -0.31437154412198426,
+    "G'TGT": -0.38909537283448303,
+    "TGTG'": -0.06982460584739658,
+    "TG'TG": -0.6637787539399874
+   },
+   "margin": -0.06982460584739658,
+   "helix": "TGTG'",
+   "helix_placements": 4,
+   "strain_along_chain": 0.08333624954222318
+  }
+ }
+}

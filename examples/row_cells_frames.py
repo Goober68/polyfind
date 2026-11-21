@@ -303,6 +303,65 @@ def sheets_potential(args):
     print(f"written {args.out}")
 
 
+def states_dft(args):
+    """States of a row's cell labelled by DFT on cells a potential relaxed, each against the row's all-trans cell: DFT's energy, the
+    potential's on the same cells, what DFT leaves on each cell, and DFT's own minimum as one step in the potential tilted to DFT's forces
+    and stress predicts it (``examples/mlip_train.py relax --dft-gradient``).  kcal/mol per chain (a sheet: per kink pair) and per monomer."""
+    from ase import units
+    from ase.io import read
+
+    labelled = {str(a.info["frame"]): a for f in args.frames for a in read(f, index=":")}
+    stepped = {str(a.info["start_frame"]): a for f in args.stepped for a in read(f, index=":")}
+
+    def cell(name):
+        a = labelled[name]
+        n, forces = int(a.info["n_monomers"]), a.arrays["REF_forces"]
+        rec = {"frame": name, "atoms": len(a), "n_monomers": n, "dft_eV_per_monomer": float(a.info["REF_energy"]) / n,
+               "potential_eV_per_monomer": float(a.info["potential_eV_per_monomer"]), "dft_largest_force_eV_per_A": float(np.abs(forces).max()),
+               "dft_stress_xx_yy_zz_GPa": [float(v) for v in np.diag(np.asarray(a.info["REF_stress"]).reshape(3, 3)) / units.GPa],
+               "dft_minutes": float(a.info["dft_seconds"]) / 60.0, "dft_kpoints": int(a.info["dft_kpoints"]), "cell_A_deg": [float(v) for v in a.cell.cellpar()],
+               "shear_along_chains_monomers": shear_along_chains(a), "relaxed": str(a.info.get("note", "")).split(", relaxed in ")[-1]}
+        if name in stepped:
+            b = stepped[name]
+            note = str(b.info.get("note", ""))
+            rec["stepped"] = {"frame": str(b.info["frame"]), "dft_predicted_eV_per_monomer": float(b.info["dft_predicted_eV_per_monomer"]),
+                              "came_to_rest": "NOT converged" not in note and "stopped when" not in note,
+                              "steps": note.split("(")[-1].split(")")[0], "shear_along_chains_monomers": shear_along_chains(b)}
+        return rec
+
+    out = {"what": "states of a fourteen-monomer cell labelled by DFT (PBE-D3(BJ), the anchor's set-up) on cells the potential relaxed, against the row's all-trans cell: "
+                   "kcal/mol per chain of the cell (for a kink sheet: per kink pair). dft: single points on the potential's cells. stepped: DFT's own minimum as one "
+                   "relaxation in the potential tilted to DFT's forces and stress at the label predicts it, both cells stepped; came_to_rest false: the step was stopped "
+                   "at the largest move allowed and the prediction is not settled. margin: all-trans minus the state, kcal/mol per monomer",
+           "frames": [Path(f).name for f in args.frames], "stepped": [Path(f).name for f in args.stepped], "rows": {}}
+    for item in args.rows:
+        row, rest = item.split("=", 1)
+        flat_name, *states = rest.split(",")
+        flat = cell(flat_name)
+        chains = 2  # the rows' cells hold two chains
+        per_chain = flat["n_monomers"] / chains
+        rec = {"all_trans": flat, "monomers_per_chain": per_chain, "states": {}}
+        for state in states:
+            label, name = state.split(":", 1)
+            c = cell(name)
+            entry = {"cell": c, "dft": (c["dft_eV_per_monomer"] - flat["dft_eV_per_monomer"]) * per_chain * KCAL,
+                     "potential": (c["potential_eV_per_monomer"] - flat["potential_eV_per_monomer"]) * per_chain * KCAL}
+            entry["potential_minus_dft"] = entry["potential"] - entry["dft"]
+            entry["margin_dft_per_monomer"], entry["margin_potential_per_monomer"] = -entry["dft"] / per_chain, -entry["potential"] / per_chain
+            if "stepped" in c and "stepped" in flat:
+                entry["stepped"] = (c["stepped"]["dft_predicted_eV_per_monomer"] - flat["stepped"]["dft_predicted_eV_per_monomer"]) * per_chain * KCAL
+                entry["stepped_settled"] = bool(c["stepped"]["came_to_rest"] and flat["stepped"]["came_to_rest"])
+                entry["fall_on_stepping"] = {"state": (c["stepped"]["dft_predicted_eV_per_monomer"] - c["dft_eV_per_monomer"]) * per_chain * KCAL,
+                                             "all_trans": (flat["stepped"]["dft_predicted_eV_per_monomer"] - flat["dft_eV_per_monomer"]) * per_chain * KCAL}
+            rec["states"][label] = entry
+            print(f"{row:26s} {label:22s} DFT {entry['dft']:+.3f}, the potential {entry['potential']:+.3f}"
+                  + (f", stepped {entry['stepped']:+.3f}{'' if entry['stepped_settled'] else ' (not settled)'}" if "stepped" in entry else "")
+                  + f"; DFT leaves {c['dft_largest_force_eV_per_A']:.2f} eV/A")
+        out["rows"][row] = rec
+    Path(args.out).write_text(json.dumps(out, indent=1))
+    print(f"written {args.out}")
+
+
 KCAL = 23.0605  # kcal/mol in one eV
 GPA = 160.21766  # GPa in one eV/A^3
 
@@ -449,13 +508,18 @@ def main():
     s.add_argument("--margins", nargs="*", default=[], metavar="NAME=FILE", help="polyfind's margins of the row (examples/rows_under_preset.py)")
     s.add_argument("--out", required=True)
     s.add_argument("--extxyz", default="", help="store the labelled frames here")
+    s = sub.add_parser("states-dft", help="DFT labels on a row's states (all-trans, helix, kink sheets) against its all-trans cell, beside the potential")
+    s.add_argument("--frames", nargs="+", required=True, help="files of labelled frames (each carries the potential's energy of the same cell)")
+    s.add_argument("--stepped", nargs="*", default=[], help="files of the labelled cells stepped toward DFT's minimum (mlip_train.py relax --dft-gradient)")
+    s.add_argument("--rows", nargs="+", required=True, help="ROW=ALL_TRANS_FRAME,LABEL:FRAME,LABEL:FRAME... (labels without spaces)")
+    s.add_argument("--out", required=True)
     s = sub.add_parser("potential", help="cells relaxed in a potential and not labelled: its own energies and margins")
     s.add_argument("--frames", nargs="+", required=True, help="folders of NAME_in_POTENTIAL.start.xyz")
     s.add_argument("--rows", nargs="+", required=True)
     s.add_argument("--name", default="all_s1", help="the potential's name in the frames' names")
     s.add_argument("--out", required=True)
     args = ap.parse_args()
-    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink, "kink-collect": kink_collect, "sheets-potential": sheets_potential}[args.cmd](args)
+    {"write": write_cells, "collect": collect, "potential": potential, "kink": write_kink, "kink-collect": kink_collect, "sheets-potential": sheets_potential, "states-dft": states_dft}[args.cmd](args)
 
 
 if __name__ == "__main__":
