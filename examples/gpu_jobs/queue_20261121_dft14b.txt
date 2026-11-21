@@ -37,3 +37,8 @@ dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip
 # card's line, where it starts when the matrix's sheet ends, a quarter of an hour sooner.
 dft_cells.sh drop row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1
 dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1
+# 15:12 UTC.  The processors' line is empty and the card has forty minutes of its last cell left.
+# One more cell for the processors meanwhile: the film cell's sheet on the chlorine unit, stepped
+# toward DFT's minimum (5.03 below all-trans on the single points, 5.24 predicted).  Its all-trans
+# cell is already labelled stepped, so this one cell puts the round's main number on corrected cells.
+dft_cells.sh start 8 2 docs/predictions/mlip/cells14_stepped_to_dft.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1
