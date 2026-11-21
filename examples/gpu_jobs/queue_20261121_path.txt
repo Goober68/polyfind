@@ -26,3 +26,10 @@ refit_score.sh docs/predictions/mlip/models/all_s1.model sheet_vdf9-trfe4-cfe1-1
 # no DFT at all, a kink at the nitrile unit itself (the nitrile cell's sheet on VA, 2.18 above
 # all-trans in the potential).  The paths' images come in line behind it.
 dft_cells.sh start 8 2 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz sheet_vdf9-trfe4-an1-14_belt4_at12_sheared_in_all_s1
+# 23:46 UTC.  The scores: on the four states held out, all_s1 is 1.06 kcal/mol per chain rms from
+# DFT, the two fits 1.14 and 1.18; on the twelve states in the fit 0.74 against 0.61 and 0.62.
+# Forty epochs at a low rate did not teach either fit these cells' energies, the ones it was
+# shown included (the leader's sheet at 18m: all_s1 -1.37, the fits -0.95 and -0.91, DFT +0.34).
+# Neither fit is better than all_s1 where it was not shown the answer, so the paths are scanned
+# in all_s1, as the rule set beforehand says.
+path_card.sh docs/predictions/mlip/models/all_s1.model 12 film:row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1:sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1 leader:tt_leader_from_rows14an_r1_in_all_s1:sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1
