@@ -1,0 +1,291 @@
+{
+ "what": "states of a fourteen-monomer cell labelled by DFT (PBE-D3(BJ), the anchor's set-up) on cells the potential relaxed, against the row's all-trans cell: kcal/mol per chain of the cell (for a kink sheet: per kink pair). dft: single points on the potential's cells. stepped: DFT's own minimum as one relaxation in the potential tilted to DFT's forces and stress at the label predicts it, both cells stepped; came_to_rest false: the step was stopped at the largest move allowed and the prediction is not settled. margin: all-trans minus the state, kcal/mol per monomer",
+ "frames": [
+  "cells14_frames_pbe_d3bj.extxyz"
+ ],
+ "stepped": [
+  "cells14_stepped_twice_to_dft.extxyz"
+ ],
+ "rows": {
+  "vdf9-trfe4-cfe1-14": {
+   "all_trans": {
+    "frame": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1",
+    "atoms": 168,
+    "n_monomers": 28,
+    "dft_eV_per_monomer": -2048.8956308676693,
+    "potential_eV_per_monomer": null,
+    "stepped_from": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+    "dft_largest_force_eV_per_A": 0.01055155,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.012651035721425582,
+     0.01765260798338453,
+     -0.004707362128902542
+    ],
+    "dft_minutes": 44.10666666666667,
+    "dft_kpoints": 6,
+    "cell_A_deg": [
+     5.266245570375631,
+     8.735116887514035,
+     35.94406778768628,
+     89.99969508748948,
+     89.9997112098828,
+     90.00728757943304
+    ],
+    "shear_along_chains_monomers": [
+     1.0368617082737818e-05,
+     1.8158558389340308e-05
+    ],
+    "relaxed": "all_s1 with D3 to 0.004 eV/A (141 steps); the potential tilted to DFT's forces and stress at the start"
+   },
+   "monomers_per_chain": 14.0,
+   "states": {
+    "helix_TGTGp": {
+     "cell": {
+      "frame": "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1_in_all_s1",
+      "atoms": 168,
+      "n_monomers": 28,
+      "dft_eV_per_monomer": -2048.900895570726,
+      "potential_eV_per_monomer": null,
+      "stepped_from": "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1",
+      "dft_largest_force_eV_per_A": 0.06967767,
+      "dft_stress_xx_yy_zz_GPa": [
+       -0.03618784636593829,
+       0.014563401586292237,
+       0.04957440742000489
+      ],
+      "dft_minutes": 48.67666666666666,
+      "dft_kpoints": 6,
+      "cell_A_deg": [
+       5.153502038353923,
+       10.091503604949914,
+       32.7617213234824,
+       86.77626075258348,
+       82.63800718580394,
+       88.10863998492222
+      ],
+      "shear_along_chains_monomers": [
+       0.25795238991119424,
+       0.22167872802226538
+      ],
+      "relaxed": "all_s1 with D3 to 0.004 eV/A (246 steps, stopped when an atom had moved 0.5 A); the potential tilted to DFT's forces and stress at the start"
+     },
+     "dft": -1.6996935877084003,
+     "potential": null,
+     "potential_minus_dft": null,
+     "margin_potential_per_monomer": null,
+     "margin_dft_per_monomer": 0.12140668483631431
+    },
+    "sheet_at_12": {
+     "cell": {
+      "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at12_sheared_r2_in_all_s1",
+      "atoms": 168,
+      "n_monomers": 28,
+      "dft_eV_per_monomer": -2048.901950206218,
+      "potential_eV_per_monomer": null,
+      "stepped_from": "sheet_vdf9-trfe4-cfe1-14_belt4_at12_sheared_r2",
+      "dft_largest_force_eV_per_A": 0.01987077,
+      "dft_stress_xx_yy_zz_GPa": [
+       0.00897340905822047,
+       -0.021330234646589643,
+       -0.05163387835139975
+      ],
+      "dft_minutes": 70.57,
+      "dft_kpoints": 6,
+      "cell_A_deg": [
+       5.085202460213177,
+       10.356814918463943,
+       35.18995395186606,
+       115.84069961296343,
+       87.45136535035111,
+       88.38671234218471
+      ],
+      "shear_along_chains_monomers": [
+       0.08833036086388031,
+       -1.763371228602762
+      ],
+      "relaxed": "all_s1 with D3 to 0.004 eV/A (251 steps); the potential tilted to DFT's forces and stress at the start"
+     },
+     "dft": -2.0401794923884684,
+     "potential": null,
+     "potential_minus_dft": null,
+     "margin_potential_per_monomer": null,
+     "margin_dft_per_monomer": 0.14572710659917631
+    },
+    "sheet_at_14m": {
+     "cell": {
+      "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1",
+      "atoms": 168,
+      "n_monomers": 28,
+      "dft_eV_per_monomer": -2048.9119453605413,
+      "potential_eV_per_monomer": null,
+      "stepped_from": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1",
+      "dft_largest_force_eV_per_A": 0.01629745,
+      "dft_stress_xx_yy_zz_GPa": [
+       0.017799713049912735,
+       0.004266046929317928,
+       0.014857611719348648
+      ],
+      "dft_minutes": 72.02,
+      "dft_kpoints": 6,
+      "cell_A_deg": [
+       5.680089762719947,
+       9.439921663419966,
+       34.911873130896154,
+       104.6930103274608,
+       65.31378399828593,
+       100.13066366017333
+      ],
+      "shear_along_chains_monomers": [
+       0.9266722454261295,
+       -0.9352895283575843
+      ],
+      "relaxed": "all_s1 with D3 to 0.004 eV/A (174 steps); the potential tilted to DFT's forces and stress at the start"
+     },
+     "dft": -5.267085080236992,
+     "potential": null,
+     "potential_minus_dft": null,
+     "margin_potential_per_monomer": null,
+     "margin_dft_per_monomer": 0.37622036287407085
+    }
+   },
+   "margin": 0.12140668483631431,
+   "margin_potential": null,
+   "margin_helix": "helix_TGTGp"
+  },
+  "vdf9-trfe3-an1-rvdf1-14": {
+   "all_trans": {
+    "frame": "tt_leader_from_rows14an_r1_in_all_s1",
+    "atoms": 170,
+    "n_monomers": 28,
+    "dft_eV_per_monomer": -1959.7703884986531,
+    "potential_eV_per_monomer": null,
+    "stepped_from": "tt_leader_from_rows14an_r1",
+    "dft_largest_force_eV_per_A": 0.02957103,
+    "dft_stress_xx_yy_zz_GPa": [
+     0.033834165301487015,
+     -0.029421013305640883,
+     -0.02883259303952807
+    ],
+    "dft_minutes": 72.635,
+    "dft_kpoints": 6,
+    "cell_A_deg": [
+     5.654979617197062,
+     8.494010586274499,
+     35.66668866277311,
+     93.03853011975411,
+     92.12967161540354,
+     89.86861026771011
+    ],
+    "shear_along_chains_monomers": [
+     -0.0820882658571022,
+     -0.17587744838720357
+    ],
+    "relaxed": "all_s1 with D3 to 0.004 eV/A (228 steps); the potential tilted to DFT's forces and stress at the start",
+    "stepped": {
+     "frame": "tt_leader_from_rows14an_r1_in_all_s1_in_all_s1",
+     "dft_predicted_eV_per_monomer": -1959.7705556697797,
+     "came_to_rest": true,
+     "steps": "87 steps",
+     "shear_along_chains_monomers": [
+      -0.08214781504523451,
+      -0.17435967503486674
+     ]
+    }
+   },
+   "monomers_per_chain": 14.0,
+   "states": {
+    "helix_TGTGp": {
+     "cell": {
+      "frame": "helix_leader_TGTGp_r1_in_all_s1",
+      "atoms": 170,
+      "n_monomers": 28,
+      "dft_eV_per_monomer": -1959.7682913270169,
+      "potential_eV_per_monomer": null,
+      "stepped_from": "helix_leader_TGTGp_r1",
+      "dft_largest_force_eV_per_A": 0.02284502,
+      "dft_stress_xx_yy_zz_GPa": [
+       -0.04192494396053826,
+       0.002353681064451271,
+       -0.05781229114558433
+      ],
+      "dft_minutes": 47.11666666666667,
+      "dft_kpoints": 6,
+      "cell_A_deg": [
+       5.250578296769308,
+       9.839210003158408,
+       32.87061635957926,
+       94.12113790435635,
+       89.99987414256367,
+       90.00062103439542
+      ],
+      "shear_along_chains_monomers": [
+       4.505296963123984e-06,
+       -0.2762105360864255
+      ],
+      "relaxed": "all_s1 with D3 to 0.004 eV/A (140 steps); the potential tilted to DFT's forces and stress at the start"
+     },
+     "dft": 0.6770655712487282,
+     "potential": null,
+     "potential_minus_dft": null,
+     "margin_potential_per_monomer": null,
+     "margin_dft_per_monomer": -0.048361826517766306
+    },
+    "sheet_at_18m": {
+     "cell": {
+      "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r9_in_all_s1",
+      "atoms": 170,
+      "n_monomers": 28,
+      "dft_eV_per_monomer": -1959.7701903074544,
+      "potential_eV_per_monomer": null,
+      "stepped_from": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r9",
+      "dft_largest_force_eV_per_A": 0.09319632,
+      "dft_stress_xx_yy_zz_GPa": [
+       0.05751808101252793,
+       0.032804429835789586,
+       -0.05163387835139975
+      ],
+      "dft_minutes": 70.65333333333334,
+      "dft_kpoints": 6,
+      "cell_A_deg": [
+       5.715153036260227,
+       9.071071366789253,
+       34.61913117031334,
+       106.40606407542052,
+       100.63412999993206,
+       86.22419724941687
+      ],
+      "shear_along_chains_monomers": [
+       -0.4119750959312001,
+       -1.0008048804901144
+      ],
+      "relaxed": "all_s1 with D3 to 0.004 eV/A (381 steps); the potential tilted to DFT's forces and stress at the start",
+      "stepped": {
+       "frame": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r9_in_all_s1_in_all_s1",
+       "dft_predicted_eV_per_monomer": -1959.7716224691217,
+       "came_to_rest": true,
+       "steps": "238 steps",
+       "shear_along_chains_monomers": [
+        -0.42538608835682185,
+        -1.0032438685537937
+       ]
+      }
+     },
+     "dft": 0.06398543392860348,
+     "potential": null,
+     "potential_minus_dft": null,
+     "margin_potential_per_monomer": null,
+     "margin_dft_per_monomer": -0.004570388137757391,
+     "stepped": -0.3444129671570472,
+     "stepped_settled": true,
+     "fall_on_stepping": {
+      "state": -0.4623690977877068,
+      "all_trans": -0.053970696702056106
+     }
+    }
+   },
+   "margin": -0.048361826517766306,
+   "margin_potential": null,
+   "margin_helix": "helix_TGTGp"
+  }
+ }
+}

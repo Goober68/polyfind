@@ -1,4 +1,4 @@
-"""DFT at fourteen monomers and every kink site of the four cells in the potential (docs/MLIP_SECOND_OPINION.md 3.21): the stored results."""
+"""DFT at fourteen monomers and every kink site of the four cells in the potential (docs/MLIP_SECOND_OPINION.md 3.21 and 3.22): the stored results."""
 
 import importlib.util
 import json
@@ -24,6 +24,11 @@ ROWS_OF_THE_STATES = [   # single points on the cells the potential relaxed
     f"{AN}=tt_nitrile_from_rows14an_r1,helix_GpTGT:row_{AN}_GpTGT_cfe_in_all_s1,sheet_at_4:sheet_{AN}_belt4_at4_sheared_in_all_s1",
     f"{MATRIX}=row_{MATRIX}_TTTT_chain1_in_all_s1,helix_TGTGp:row_{MATRIX}_TGTGp_chain1_in_all_s1,sheet_at_18m:sheet_{MATRIX}_belt4_at18m_sheared_in_all_s1",
 ]
+ROWS_OF_THE_STEPPED = [   # a second DFT calculation on cells stepped once toward DFT's minimum, against the stepped all-trans cells
+    f"{CFE}=row_{CFE}_TTTT_chain1_in_all_s1_in_all_s1,helix_TGTGp:row_{CFE}_TGTGp_chain1_in_all_s1_in_all_s1,"
+    f"sheet_at_12:sheet_{CFE}_belt4_at12_sheared_r2_in_all_s1,sheet_at_14m:sheet_{CFE}_belt4_at14m_sheared_in_all_s1_in_all_s1",
+    f"{LEADER}=tt_leader_from_rows14an_r1_in_all_s1,helix_TGTGp:helix_leader_TGTGp_r1_in_all_s1,sheet_at_18m:sheet_{LEADER}_belt4_at18m_sheared_r9_in_all_s1",
+]
 DFT_AT_THREE = [f"{CFE}@12=-1.930", f"{CFE}@14m=-5.034", f"{LEADER}@18m=0.338"]
 DFT_AT_EIGHT = DFT_AT_THREE + [f"{LEADER}@18=-0.715", f"{LEADER}@20m=-0.400", f"{LEADER}@16m=0.353", f"{AN}@4=-0.431", f"{MATRIX}@18m=0.899"]
 # the potential's mean error on a cell's sheets that DFT has, taken off its other sites of that cell: a second reading of the map
@@ -39,6 +44,10 @@ def _tool():
 
 def _states():
     return json.loads((PRED / "cells14_states_dft.json").read_text())["rows"]
+
+
+def _stepped():
+    return json.loads((PRED / "cells14_states_dft_stepped.json").read_text())["rows"]
 
 
 def _sheets():
@@ -63,7 +72,8 @@ def test_dft_has_the_film_cells_kinked_state_five_kcal_below_all_trans_and_three
     assert _states()[CFE]["margin"] == pytest.approx(0.123, abs=0.001) and on_the_chlorine["margin_dft_per_monomer"] == pytest.approx(0.360, abs=0.001)
 
 
-def test_dft_has_the_leaders_all_trans_cell_lowest_or_level_and_its_margin_below_zero():
+def test_dft_has_the_leaders_first_sheet_level_with_all_trans_and_its_margin_below_zero():
+    # the first round's one sheet; the second round found two of its four below all-trans (the test on the nitrile cells below)
     leader = _states()[LEADER]
     helix, sheet = leader["states"]["helix_TGTGp"], leader["states"]["sheet_at_18m"]
     assert helix["dft"] == pytest.approx(0.65, abs=0.006) and helix["stepped"] == pytest.approx(0.74, abs=0.006) and helix["stepped_settled"]
@@ -80,6 +90,8 @@ def test_the_potential_is_inside_a_tenth_on_the_margins_and_its_error_on_a_sheet
     states = _states()
     for row in (CFE, LEADER):  # margins: 0.04 and 0.02 kcal/mol per monomer off
         assert abs(states[row]["margin_potential"] - states[row]["margin"]) < 0.05
+    for row in (AN, MATRIX):   # the second round's two: 0.03 and 0.05
+        assert abs(states[row]["margin_potential"] - states[row]["margin"]) < 0.051
     off = [states[CFE]["states"]["sheet_at_12"]["potential_minus_dft"], states[LEADER]["states"]["sheet_at_18m"]["potential_minus_dft"],
            states[CFE]["states"]["sheet_at_14m"]["potential_minus_dft"]]
     assert off == pytest.approx([-1.67, -1.70, -0.22], abs=0.006)
@@ -111,12 +123,102 @@ def test_the_labels_are_single_points_in_the_anchors_set_up_and_the_first_seven_
     assert 0.07 < min(left) and max(left) < 0.30   # DFT's forces on the potential's cells
 
 
-def test_the_stored_table_is_what_the_tool_writes_from_the_stored_frames(tmp_path):
+def test_the_stored_tables_are_what_the_tool_writes_from_the_stored_frames(tmp_path):
     tool = _tool()
-    out = tmp_path / "states.json"
-    tool.states_dft(SimpleNamespace(frames=[str(MLIP / "cells14_frames_pbe_d3bj.extxyz")], stepped=[str(MLIP / "cells14_stepped_to_dft.extxyz")],
-                                    rows=ROWS_OF_THE_STATES, out=str(out)))
-    assert json.loads(out.read_text()) == json.loads((PRED / "cells14_states_dft.json").read_text())
+    for name, stepped, rows in (("cells14_states_dft.json", "cells14_stepped_to_dft.extxyz", ROWS_OF_THE_STATES),
+                                ("cells14_states_dft_stepped.json", "cells14_stepped_twice_to_dft.extxyz", ROWS_OF_THE_STEPPED)):
+        out = tmp_path / name
+        tool.states_dft(SimpleNamespace(frames=[str(MLIP / "cells14_frames_pbe_d3bj.extxyz")], stepped=[str(MLIP / stepped)], rows=rows, out=str(out)))
+        assert json.loads(out.read_text()) == json.loads((PRED / name).read_text())
+
+
+def test_all_four_cells_have_a_margin_in_dft_and_the_potential_has_their_order_and_signs():
+    states = _states()
+    rows = (CFE, MATRIX, LEADER, AN)
+    dft, potential = [states[r]["margin"] for r in rows], [states[r]["margin_potential"] for r in rows]
+    assert dft == pytest.approx([0.123, 0.068, -0.047, -0.083], abs=0.001) and potential == pytest.approx([0.163, 0.018, -0.070, -0.109], abs=0.001)
+    assert sorted(dft, reverse=True) == dft and sorted(potential, reverse=True) == potential
+    assert all(abs(p - d) < 0.051 and (p > 0) == (d > 0) for p, d in zip(potential, dft))
+    assert [states[r]["margin_helix"] for r in rows] == ["helix_TGTGp", "helix_TGTGp", "helix_TGTGp", "helix_GpTGT"]
+    belt4 = json.loads((PRED / "polished_margins_belt4.json").read_text())["rows"]
+    theirs = [belt4[r]["margin"] for r in rows]
+    assert theirs == pytest.approx([0.317, 0.056, 0.037, 0.197], abs=0.001)
+    assert theirs[3] - dft[3] > 0.27 and theirs[3] > theirs[1] > theirs[2]   # belt4 has the nitrile cell second of the four and DFT has it last
+    assert sum(abs(m) < 0.1 for m in dft) == 3                                # three of the four within the 0.1 asked of an evaluator: their signs are not firm
+    # one unit in fourteen, in cells that differ from the matrix's by that unit: the chlorine raises the margin, the nitrile lowers it
+    assert dft[0] - dft[1] == pytest.approx(0.055, abs=0.001) and dft[3] - dft[1] == pytest.approx(-0.151, abs=0.001)
+
+
+def test_both_nitrile_cells_have_shallow_kinked_states_below_all_trans_and_the_matrix_none_at_the_site_asked():
+    states = _states()
+    leader, nitrile, matrix = states[LEADER]["states"], states[AN]["states"], states[MATRIX]["states"]
+    sites = ("18", "20m", "18m", "16m")   # all four on the leader's run of five VDF units
+    assert [leader[f"sheet_at_{s}"]["dft"] for s in sites] == pytest.approx([-0.72, -0.40, 0.34, 0.35], abs=0.006)
+    assert [leader[f"sheet_at_{s}"]["potential"] for s in sites] == pytest.approx([-1.25, -0.93, -1.37, -1.20], abs=0.006)
+    # one site on the two hands of the kink: 1.05 apart in DFT, 0.12 in the potential
+    assert leader["sheet_at_18m"]["dft"] - leader["sheet_at_18"]["dft"] == pytest.approx(1.05, abs=0.006)
+    assert abs(leader["sheet_at_18m"]["potential"] - leader["sheet_at_18"]["potential"]) < 0.13
+    assert nitrile["sheet_at_4"]["dft"] == pytest.approx(-0.43, abs=0.006) and nitrile["sheet_at_4"]["potential"] == pytest.approx(0.20, abs=0.006)
+    assert nitrile["helix_GpTGT"]["dft"] == pytest.approx(1.16, abs=0.006) and leader["helix_TGTGp"]["dft"] == pytest.approx(0.65, abs=0.006)
+    assert matrix["helix_TGTGp"]["dft"] == pytest.approx(-0.95, abs=0.006) and matrix["sheet_at_18m"]["dft"] == pytest.approx(0.90, abs=0.006)
+    # the lowest state found, kcal/mol per monomer against all-trans: the film cell's is seven times the leader's
+    deepest = [min(s["dft"] for s in states[row]["states"].values()) / 14 for row in (CFE, LEADER, AN, MATRIX)]
+    assert deepest == pytest.approx([-0.360, -0.051, -0.031, -0.068], abs=0.001)
+    assert min(states[MATRIX]["states"], key=lambda k: matrix[k]["dft"]) == "helix_TGTGp"   # the matrix's lowest state is its helix
+    # the potential on the eight sheets DFT has: -1.71 to +0.63 per kink pair, rms 1.07, the sign against all-trans right at five
+    sheets = [s for row in states.values() for label, s in row["states"].items() if label.startswith("sheet_at_")]
+    off = [s["potential_minus_dft"] for s in sheets]
+    assert len(off) == 8 and min(off) == pytest.approx(-1.71, abs=0.006) and max(off) == pytest.approx(0.63, abs=0.006)
+    assert float(np.mean(off)) == pytest.approx(-0.66, abs=0.006) and float(np.sqrt(np.mean(np.square(off)))) == pytest.approx(1.07, abs=0.006)
+    assert sum((s["potential"] < 0) == (s["dft"] < 0) for s in sheets) == 5
+    # the helix cells: every one within 0.05 per monomer
+    helix = [s["potential_minus_dft"] / 14 for row in states.values() for label, s in row["states"].items() if label.startswith("helix")]
+    assert len(helix) == 4 and max(abs(v) for v in helix) < 0.051
+
+
+def test_dft_on_the_stepped_cells_holds_the_film_cells_states_and_both_margins_and_levels_the_leaders_sheet():
+    from ase.io import read
+
+    stepped, single = _stepped(), _states()
+    film, leader = stepped[CFE]["states"], stepped[LEADER]["states"]
+    assert [film[k]["dft"] for k in ("sheet_at_14m", "sheet_at_12", "helix_TGTGp")] == pytest.approx([-5.27, -2.04, -1.70], abs=0.006)
+    assert film["sheet_at_12"]["dft"] < film["helix_TGTGp"]["dft"] - 0.3           # told apart, in the single points' order (0.21 there)
+    assert leader["sheet_at_18m"]["dft"] == pytest.approx(0.06, abs=0.006) and leader["helix_TGTGp"]["dft"] == pytest.approx(0.68, abs=0.006)
+    assert stepped[CFE]["margin"] == pytest.approx(0.121, abs=0.001) and stepped[LEADER]["margin"] == pytest.approx(-0.048, abs=0.001)
+    for row in (CFE, LEADER):   # a margin moves by 0.002 at most when DFT is let move its two cells
+        assert abs(stepped[row]["margin"] - single[row]["margin"]) < 0.003
+    # a sheet falls 0.1 to 0.3 further than its all-trans cell
+    moved = [film["sheet_at_14m"]["dft"] - single[CFE]["states"]["sheet_at_14m"]["dft"], film["sheet_at_12"]["dft"] - single[CFE]["states"]["sheet_at_12"]["dft"],
+             leader["sheet_at_18m"]["dft"] - single[LEADER]["states"]["sheet_at_18m"]["dft"]]
+    assert moved == pytest.approx([-0.23, -0.11, -0.27], abs=0.006)
+    cells = [rec["all_trans"] for rec in stepped.values()] + [s["cell"] for rec in stepped.values() for s in rec["states"].values()]
+    assert len(cells) == 7 and all(c["stepped_from"] for c in cells) and max(c["dft_largest_force_eV_per_A"] for c in cells) < 0.10
+    assert max(abs(v) for c in cells for v in c["dft_stress_xx_yy_zz_GPa"]) < 0.06
+    # the step's predicted fall against the second calculation's: within 0.04 on four cells of seven, 0.10 to 0.42 too large on three
+    frames = {str(a.info["frame"]): a for a in read(MLIP / "cells14_frames_pbe_d3bj.extxyz", index=":")}
+    off = {}
+    for name, a in frames.items():
+        if "start_frame" in a.info:
+            before = frames[str(a.info["start_frame"])].info["REF_energy"] / 28
+            off[name] = (float(a.info["dft_predicted_eV_per_monomer"]) - a.info["REF_energy"] / 28) * 14 * KCAL
+            assert a.info["REF_energy"] / 28 < before
+    assert len(off) == 7 and sorted(abs(v) for v in off.values())[:4] == pytest.approx([0.001, 0.024, 0.025, 0.038], abs=0.002)
+    too_large = sorted(v for v in off.values() if abs(v) > 0.05)
+    assert too_large == pytest.approx([-0.423, -0.376, -0.099], abs=0.002)
+    assert off[f"sheet_{CFE}_belt4_at14m_sheared_in_all_s1_in_all_s1"] == pytest.approx(0.0, abs=0.002)   # exact on the round's main number
+
+
+def test_the_card_labels_what_the_processors_label():
+    check = json.loads((PRED / "qe_gpu_check_a40.json").read_text())
+    assert check["agrees"] and check["atoms"] == 168 and check["anchor"]["reproduced"]
+    assert abs(check["energy_difference_ry_per_cell"]) < 1e-7 and check["largest_force_difference_eV_per_A"] < 1e-5
+    assert check["seconds_on_the_card"] / 60 == pytest.approx(45, abs=1) and check["seconds_on_the_processors"] / 60 == pytest.approx(69, abs=1)
+    from ase.io import read
+
+    second = read(MLIP / "cells14_frames_pbe_d3bj.extxyz", index="7:")
+    minutes = {run: sorted(a.info["dft_seconds"] / 60 for a in second if a.info["dft_run"] == run) for run in ("processors", "card")}
+    assert len(minutes["processors"]) == 7 and len(minutes["card"]) == 9
+    assert 60 < minutes["processors"][0] and minutes["processors"][-1] < 75 and 42 < minutes["card"][0] and minutes["card"][-1] < 52
 
 
 def test_every_kink_site_of_the_four_cells_in_the_potential():
@@ -196,6 +298,37 @@ def test_the_four_axes_at_dfts_margins_give_the_film_cell_a_row_and_the_leader_n
     for r in readings:  # in no reading has the leader the film cell's strain or its blocked force
         assert r["strain_ac_at_the_heat_budget_34kHz"] < film["strain_ac_at_the_heat_budget_34kHz"]
         assert r["blocked_pn_nm2_through_the_crystal"] < 0.6 * film["blocked_pn_nm2_through_the_crystal"]
+
+
+def test_at_dfts_four_margins_only_the_film_cells_row_holds_under_both_readings_of_the_kink_sites():
+    states = _states()
+    tables = [json.loads((PRED / name).read_text()) for name in ("four_axes_dft_margins_four_cells.json", "four_axes_dft_margins_four_cells_moved.json")]
+    readings = ("by_the_sum_over_kink_sites", "by_the_occupancy_of_kink_sites")
+    strain, force = "strain_ac_at_the_heat_budget_34kHz", "blocked_pn_nm2_through_the_crystal"
+    for stored in tables:
+        assert stored["replaced"] == pytest.approx({row: states[row]["margin"] for row in (CFE, LEADER, AN, MATRIX)})
+        rows = stored["shifts"]["+0.00"]["rows"]
+        assert [rows[row]["all_trans_is_lower"] for row in (CFE, MATRIX, LEADER, AN)] == [False, False, True, True]
+        film = rows[CFE][readings[0]]
+        assert rows[CFE][readings[1]] == film                                  # the readings are calibrated on this cell
+        assert film["f_relax_hz"] == pytest.approx(364e3, rel=0.001) and film["tan_delta_34kHz"] == pytest.approx(0.065, abs=0.001)
+        assert film[strain] == pytest.approx(0.00073, abs=1e-5) and film[force] == pytest.approx(6.4, abs=0.05)
+        assert stored["shifts"]["+0.00"]["film_channel_as_calibrated"][strain] == pytest.approx(0.00066, abs=1e-5)
+        for row in (LEADER, AN, MATRIX):   # one map, two readings: 260 to 1,100 times apart in frequency
+            by_sum, by_share = rows[row][readings[0]], rows[row][readings[1]]
+            assert by_sum["f_relax_hz"] < 1500 and 250 < by_share["f_relax_hz"] / by_sum["f_relax_hz"] < 1200
+    # one corner of the twelve is ahead of the film cell on three axes: the nitrile cell by the sites' share of time, on the map moved by
+    # the potential's error at its one site in DFT.  Its margin is below zero: the model outside its domain.
+    film = tables[1]["shifts"]["+0.00"]["rows"][CFE][readings[0]]
+    corner = tables[1]["shifts"]["+0.00"]["rows"][AN][readings[1]]
+    assert corner["f_relax_hz"] == pytest.approx(534e3, rel=0.01) and corner["tan_delta_34kHz"] < film["tan_delta_34kHz"]
+    assert corner[strain] > film[strain] and corner[force] < film[force]
+    for i, stored in enumerate(tables):    # in the other eleven: slower, less strain and well under the film cell's blocked force
+        for row in (LEADER, AN, MATRIX):
+            for reading in readings:
+                if (i, row, reading) != (1, AN, readings[1]):
+                    r = stored["shifts"]["+0.00"]["rows"][row][reading]
+                    assert r["f_relax_hz"] < film["f_relax_hz"] and r[strain] < film[strain] and r[force] < 0.6 * film[force]
 
 
 def test_a_scan_with_the_potentials_sheets_keeps_the_scans_sites_and_takes_the_energies_given(tmp_path):
