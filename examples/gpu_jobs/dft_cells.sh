@@ -10,6 +10,9 @@
 #       the same, but the named frames go to the front of the line: they are the next cells run
 #   dft_cells.sh last NAME [NAME...]
 #       move cells already in line to its end
+#   dft_cells.sh usepw PW NP POOLS
+#       every cell still waiting in line is run with the pw.x at PW on NP processes in POOLS pools
+#       (a build for the card, examples/gpu_jobs/qe_gpu_build.sh: one process, one pool)
 #   dft_cells.sh wait
 #       return when the line is empty (so that the pod does not count itself idle and leave)
 #
@@ -48,7 +51,19 @@ if [ "$MODE" = "last" ]; then
   echo "the line is now:"; cat "$DFT/line.txt"
   exit 0
 fi
-[ "$MODE" = "start" ] || [ "$MODE" = "next" ] || { echo "dft_cells.sh start|next NP POOLS FILE NAME... | last NAME... | wait"; exit 2; }
+if [ "$MODE" = "usepw" ]; then
+  PW="$1"; NP="$2"; POOLS="$3"
+  [ -x "$PW" ] || { echo "no pw.x at $PW: the line is left as it is"; exit 1; }
+  : > "$DFT/line.new"
+  while read -r np pools name pw; do
+    if [ -f "$DFT/$name.dft.xyz" ] || grep -qx "$name" "$DFT/tried.txt" 2>/dev/null; then echo "$np $pools $name $pw" >> "$DFT/line.new"
+    else echo "$NP $POOLS $name $PW" >> "$DFT/line.new"; fi
+  done < "$DFT/line.txt"
+  mv "$DFT/line.new" "$DFT/line.txt"
+  echo "the line is now:"; cat "$DFT/line.txt"
+  exit 0
+fi
+[ "$MODE" = "start" ] || [ "$MODE" = "next" ] || { echo "dft_cells.sh start|next NP POOLS FILE NAME... | last NAME... | usepw PW NP POOLS | wait"; exit 2; }
 NP="$1"; POOLS="$2"; FILE="$3"; shift 3
 source "$(dirname "$0")/mlip_env.sh"
 
@@ -114,14 +129,15 @@ cd "$(pwd)"
 export OMPI_MCA_plm_rsh_agent="" PRTE_MCA_plm_ssh_agent="" OMPI_MCA_hwloc_base_binding_policy=none PRTE_MCA_hwloc_default_binding_policy=none
 while true; do
   next=""
-  while read -r np pools name; do
-    if [ ! -f "$DFT/\$name.dft.xyz" ] && ! grep -qx "\$name" "$DFT/tried.txt" 2>/dev/null; then next="\$np \$pools \$name"; break; fi
+  while read -r np pools name pw; do
+    if [ ! -f "$DFT/\$name.dft.xyz" ] && ! grep -qx "\$name" "$DFT/tried.txt" 2>/dev/null; then next="\$np \$pools \$name \$pw"; break; fi
   done < "$DFT/line.txt"
   [ -n "\$next" ] || break
-  read -r np pools name <<< "\$next"
+  read -r np pools name pw <<< "\$next"
+  pw="\${pw:-$QE/bin/pw.x}"   # a fourth word in the line: another pw.x for that cell (dft_cells.sh usepw)
   echo "\$name" >> "$DFT/tried.txt"
-  echo "\$(date -u +%FT%TZ) \$name: started on \$np processes in \$pools pools" >> "$DFT/log.txt"
-  "$PY" examples/mlip_frames.py label --frames "$DFT" --names "\$name" --pw "$QE/bin/pw.x" --pseudo "$PSEUDO" \\
+  echo "\$(date -u +%FT%TZ) \$name: started on \$np processes in \$pools pools with \$pw" >> "$DFT/log.txt"
+  "$PY" examples/mlip_frames.py label --frames "$DFT" --names "\$name" --pw "\$pw" --pseudo "$PSEUDO" \\
     --np "\$np" --pools "\$pools" --check-tol "${DFT_CHECK_TOL:-1e-6}" >> "$DFT/log.txt" 2>&1 \\
     || echo "\$(date -u +%FT%TZ) \$name: the labelling step failed" >> "$DFT/log.txt"
 done
