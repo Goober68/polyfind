@@ -711,6 +711,24 @@ right": true at one registry, not along it).
         mlip_own_refit_s1.json,refit_s1.model}`, `jobs/01_refit/data/refit_s1.train.log`,
         `jobs/0N_refit_score/cells14_in_*.json`, `jobs/0N_path_card/*`, `jobs/shared/dft*/log.txt`. If
         the token file is lost the results cannot be read: delete the pod.
+        AT 23:47 UTC: THE FITS ARE DONE AND NEITHER IS ADOPTED. Scored on the 23 cells (`docs/predictions/
+        mlip/refit/cells14_in_*.json`, `tests/test_refit_cells14.py`): the four states held out, rms from
+        DFT in kcal/mol per chain: `all_s1` 1.06, `refit_s1` 1.14, `refitb_s1` 1.18; the twelve states in the
+        fit 0.74, 0.61, 0.62. Both keep the anchor (+0.731, +0.677; DFT +0.726). 40 epochs at 5e-5 (112 s an
+        epoch side by side, 77 minutes) did not teach the cells' energies even where shown (leader sheet
+        18m: -1.37, -0.95, -0.91; DFT +0.34): a kcal/mol per chain is a quarter of a meV per atom, under the
+        fit's 0.4. The models are NOT in the repository (mirrored to `scratchpad/runpod/path/jobs/01_refit/`
+        while the scratchpad lasts). THE CARD'S DFT PROGRAM BUILT IN 12 MINUTES this time. THE PROCESSORS
+        WERE IDLE FOR 70 MINUTES (the queue runs a job at a time: put a DFT cell in line BEFORE a fit).
+        THE QUEUE NOW: job 5 put the nitrile cell's kink AT THE NITRILE UNIT on the processors (`sheet_
+        vdf9-trfe4-an1-14_belt4_at12_sheared_in_all_s1`, started 23:45:38, due 00:50); job 6 is
+        `path_card.sh docs/predictions/mlip/models/all_s1.model 12 film:... leader:...` (started 23:45:38):
+        four scans side by side, then DFT on the chosen images (tops to the card's line, the image before
+        each to the processors', the image after each behind the tops), a finer scan and a release check.
+        WHEN IT HAS CHOSEN: `python scratchpad/runpod/mirror_path.py`; `python -I examples/mlip_path.py
+        table --scans scratchpad/runpod/path/jobs/06_path_card/{film_f,film_r,leader_f,leader_r}.json
+        --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz --out ...`; store the scans under
+        `docs/predictions/mlip/paths/`; labels of images land in `jobs/shared/dft*/NAME.dft.xyz`.
         WHAT THE PATH IS AND IS NOT: a two-chain periodic cell, so every chain forms its kink in step with
         its neighbours: the barrier of the sheet forming as a whole, per chain. A nudged elastic band is
         not used (ase refuses images whose cells differ; the cell's shear is part of this path).
