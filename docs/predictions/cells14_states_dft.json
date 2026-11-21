@@ -14,6 +14,7 @@
     "n_monomers": 28,
     "dft_eV_per_monomer": -2048.895099958992,
     "potential_eV_per_monomer": -2048.89502557521,
+    "stepped_from": null,
     "dft_largest_force_eV_per_A": 0.07401075,
     "dft_stress_xx_yy_zz_GPa": [
      0.1165072126903379,
@@ -55,6 +56,7 @@
       "n_monomers": 28,
       "dft_eV_per_monomer": -2048.9004363640456,
       "potential_eV_per_monomer": -2048.9020907605195,
+      "stepped_from": null,
       "dft_largest_force_eV_per_A": 0.10720626,
       "dft_stress_xx_yy_zz_GPa": [
        -0.0005884202661128177,
@@ -90,8 +92,8 @@
      "dft": -1.722842362352575,
      "potential": -2.280973881561113,
      "potential_minus_dft": -0.5581315192085379,
-     "margin_dft_per_monomer": 0.12306016873946965,
      "margin_potential_per_monomer": 0.16292670582579377,
+     "margin_dft_per_monomer": 0.12306016873946965,
      "stepped": -2.05220958414927,
      "stepped_settled": false,
      "fall_on_stepping": {
@@ -106,6 +108,7 @@
       "n_monomers": 28,
       "dft_eV_per_monomer": -2048.9010770074865,
       "potential_eV_per_monomer": -2048.9061805588053,
+      "stepped_from": null,
       "dft_largest_force_eV_per_A": 0.08422214,
       "dft_stress_xx_yy_zz_GPa": [
        0.033834165301487015,
@@ -141,8 +144,8 @@
      "dft": -1.9296721753086028,
      "potential": -3.6013529887381206,
      "potential_minus_dft": -1.6716808134295178,
-     "margin_dft_per_monomer": 0.13783372680775735,
      "margin_potential_per_monomer": 0.25723949919558003,
+     "margin_dft_per_monomer": 0.13783372680775735,
      "stepped": -2.115656181709453,
      "stepped_settled": true,
      "fall_on_stepping": {
@@ -157,6 +160,7 @@
       "n_monomers": 28,
       "dft_eV_per_monomer": -2048.9106917952563,
       "potential_eV_per_monomer": -2048.9113083242705,
+      "stepped_from": null,
       "dft_largest_force_eV_per_A": 0.11661598,
       "dft_stress_xx_yy_zz_GPa": [
        0.04074810342831262,
@@ -192,8 +196,8 @@
      "dft": -5.03377756242711,
      "potential": -5.256836685882834,
      "potential_minus_dft": -0.22305912345572398,
-     "margin_dft_per_monomer": 0.359555540173365,
      "margin_potential_per_monomer": 0.3754883347059167,
+     "margin_dft_per_monomer": 0.359555540173365,
      "stepped": -5.243178634860292,
      "stepped_settled": true,
      "fall_on_stepping": {
@@ -215,6 +219,7 @@
     "n_monomers": 28,
     "dft_eV_per_monomer": -1959.7689253425428,
     "potential_eV_per_monomer": -1959.772178083458,
+    "stepped_from": null,
     "dft_largest_force_eV_per_A": 0.10622436,
     "dft_stress_xx_yy_zz_GPa": [
      0.02794996264035884,
@@ -256,6 +261,7 @@
       "n_monomers": 28,
       "dft_eV_per_monomer": -1959.7669042607388,
       "potential_eV_per_monomer": -1959.7691501956904,
+      "stepped_from": null,
       "dft_largest_force_eV_per_A": 0.28604808,
       "dft_stress_xx_yy_zz_GPa": [
        -0.10841643403128666,
@@ -291,8 +297,8 @@
      "dft": 0.6525001971952222,
      "potential": 0.977544482083773,
      "potential_minus_dft": 0.32504428488855075,
-     "margin_dft_per_monomer": -0.046607156942515875,
      "margin_potential_per_monomer": -0.06982460586312664,
+     "margin_dft_per_monomer": -0.046607156942515875,
      "stepped": 0.739107542286658,
      "stepped_settled": true,
      "fall_on_stepping": {
@@ -307,6 +313,7 @@
       "n_monomers": 28,
       "dft_eV_per_monomer": -1959.7678774467277,
       "potential_eV_per_monomer": -1959.7764125326562,
+      "stepped_from": null,
       "dft_largest_force_eV_per_A": 0.15969225,
       "dft_stress_xx_yy_zz_GPa": [
        0.05516439994807666,
@@ -342,8 +349,8 @@
      "dft": 0.33831002024687634,
      "potential": -1.3670792203213253,
      "potential_minus_dft": -1.7053892405682016,
-     "margin_dft_per_monomer": -0.024165001446205453,
      "margin_potential_per_monomer": 0.09764851573723753,
+     "margin_dft_per_monomer": -0.024165001446205453,
      "stepped": -0.33497594546079407,
      "stepped_settled": true,
      "fall_on_stepping": {

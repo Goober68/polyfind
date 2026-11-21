@@ -316,8 +316,10 @@ def states_dft(args):
     def cell(name):
         a = labelled[name]
         n, forces = int(a.info["n_monomers"]), a.arrays["REF_forces"]
+        # a cell stepped toward DFT's minimum carries the tilted potential's energy, which is not the potential's: none is given for it
         rec = {"frame": name, "atoms": len(a), "n_monomers": n, "dft_eV_per_monomer": float(a.info["REF_energy"]) / n,
-               "potential_eV_per_monomer": float(a.info["potential_eV_per_monomer"]), "dft_largest_force_eV_per_A": float(np.abs(forces).max()),
+               "potential_eV_per_monomer": None if "start_frame" in a.info else float(a.info["potential_eV_per_monomer"]),
+               "stepped_from": str(a.info["start_frame"]) if "start_frame" in a.info else None, "dft_largest_force_eV_per_A": float(np.abs(forces).max()),
                "dft_stress_xx_yy_zz_GPa": [float(v) for v in np.diag(np.asarray(a.info["REF_stress"]).reshape(3, 3)) / units.GPa],
                "dft_minutes": float(a.info["dft_seconds"]) / 60.0, "dft_kpoints": int(a.info["dft_kpoints"]), "cell_A_deg": [float(v) for v in a.cell.cellpar()],
                "shear_along_chains_monomers": shear_along_chains(a), "relaxed": str(a.info.get("note", "")).split(", relaxed in ")[-1]}
@@ -344,17 +346,20 @@ def states_dft(args):
         for state in states:
             label, name = state.split(":", 1)
             c = cell(name)
-            entry = {"cell": c, "dft": (c["dft_eV_per_monomer"] - flat["dft_eV_per_monomer"]) * per_chain * KCAL,
-                     "potential": (c["potential_eV_per_monomer"] - flat["potential_eV_per_monomer"]) * per_chain * KCAL}
-            entry["potential_minus_dft"] = entry["potential"] - entry["dft"]
-            entry["margin_dft_per_monomer"], entry["margin_potential_per_monomer"] = -entry["dft"] / per_chain, -entry["potential"] / per_chain
+            entry = {"cell": c, "dft": (c["dft_eV_per_monomer"] - flat["dft_eV_per_monomer"]) * per_chain * KCAL, "potential": None,
+                     "potential_minus_dft": None, "margin_potential_per_monomer": None}
+            entry["margin_dft_per_monomer"] = -entry["dft"] / per_chain
+            if c["potential_eV_per_monomer"] is not None and flat["potential_eV_per_monomer"] is not None:
+                entry["potential"] = (c["potential_eV_per_monomer"] - flat["potential_eV_per_monomer"]) * per_chain * KCAL
+                entry["potential_minus_dft"] = entry["potential"] - entry["dft"]
+                entry["margin_potential_per_monomer"] = -entry["potential"] / per_chain
             if "stepped" in c and "stepped" in flat:
                 entry["stepped"] = (c["stepped"]["dft_predicted_eV_per_monomer"] - flat["stepped"]["dft_predicted_eV_per_monomer"]) * per_chain * KCAL
                 entry["stepped_settled"] = bool(c["stepped"]["came_to_rest"] and flat["stepped"]["came_to_rest"])
                 entry["fall_on_stepping"] = {"state": (c["stepped"]["dft_predicted_eV_per_monomer"] - c["dft_eV_per_monomer"]) * per_chain * KCAL,
                                              "all_trans": (flat["stepped"]["dft_predicted_eV_per_monomer"] - flat["dft_eV_per_monomer"]) * per_chain * KCAL}
             rec["states"][label] = entry
-            print(f"{row:26s} {label:22s} DFT {entry['dft']:+.3f}, the potential {entry['potential']:+.3f}"
+            print(f"{row:26s} {label:22s} DFT {entry['dft']:+.3f}" + ("" if entry["potential"] is None else f", the potential {entry['potential']:+.3f}")
                   + (f", stepped {entry['stepped']:+.3f}{'' if entry['stepped_settled'] else ' (not settled)'}" if "stepped" in entry else "")
                   + f"; DFT leaves {c['dft_largest_force_eV_per_A']:.2f} eV/A")
         helix = {k: v for k, v in rec["states"].items() if k.startswith("helix")}
