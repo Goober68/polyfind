@@ -680,6 +680,32 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
+        A SECOND POD IS RUNNING (PI 2026-11-21: "Go on rented, mi100 not online yet"). `3lq6awm18u81pz`, name
+        `polyfind-dft14b`, Runpod Secure Cloud EU-SE-1, one NVIDIA A40 (9 vCPU, 50 GB), $0.59/h, CREATED
+        08:12:02 UTC 2026-11-21, confirmed by a read (`get-pod`: RUNNING). IT REMOVES ITSELF AT 9 HOURS
+        (`BENCH_LIMIT_S=32400`: 17:12 UTC 2026-11-21, at most $5.31) AND NOT BEFORE (its idle time is set to
+        the same nine hours, because the DFT runs underneath the queue): DELETE IT WHEN ITS CELLS ARE DONE.
+        WHOEVER READS THIS AFTER 17:15 UTC: CONFIRM IT IS GONE (`python scratchpad/runpod/mcp.py call
+        list-pods '{}'`) AND DELETE IT IF NOT (`delete-pod {"id": "3lq6awm18u81pz"}`, then read again).
+        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261121_dft14b.txt`, started at commit 6759c58): DFT
+        single points on its processors (eight processes, two pools, about an hour a cell), fourteen cells in
+        this order: (1) the first round's cells STEPPED toward DFT's minimum, from `mlip/
+        cells14_stepped_to_dft.extxyz`: leader all-trans, leader sheet 18m (the sign of the leader's sheet),
+        film all-trans, film sheet 12, film helix (which of the two is lower); (2) the leader's other low
+        sheets (18, 16m, 20m); (3) the nitrile cell's and the matrix's all-trans cell, lowest helix and
+        lowest sheet. NINE HOURS HOLD ABOUT NINE CELLS ON THE PROCESSORS. AND AN EXPERIMENT ON THE IDLE CARD:
+        `qe_gpu_build.sh` (NVIDIA's compiler nvhpc-25-7 and Quantum ESPRESSO 7.5 from source with CUDA; NEVER
+        RUN BEFORE, may fail) then `qe_gpu_check.sh` (the anchor, then the film cell's all-trans cell against
+        the processors' label of it: energy within 1e-5 Ry, forces within 0.005 eV/A). IF IT AGREES, PUSH A
+        LINE `dft_cells.sh usepw /opt/qe_gpu/bin/pw.x 1 1`: the cells still waiting go to the card. If it
+        fails, change nothing: the processors carry on.
+        HOW TO READ IT: `scratchpad/runpod/pod_dft14b.sh PATH` (token in `scratchpad/runpod/
+        token_dft14b.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_dft14b.py` (into
+        `scratchpad/runpod/dft14b/`): `STATUS`, `jobs/shared/dft/log.txt`, `.../NAME.dft.xyz`, `jobs/
+        NN_qe_gpu_build/{log.txt,versions.txt,configure.log,make.log}`, `jobs/NN_qe_gpu_check/
+        gpu_check.json`. MIRROR AND COMMIT EACH LABEL AS IT LANDS (`scratchpad/pod_labels.py` reads the first
+        pod's folder: point it at `dft14b`). If the token file is lost the results cannot be read: delete the
+        pod.
         THE POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (07:30 UTC 2026-11-21; PI 2026-11-20: "Go on the
         rented machine"). `pacbxm95k7f799`, Runpod Secure Cloud, one NVIDIA A40 (9 vCPU shown, 7.65 allotted,
         50 GB), $0.59/h, 23:26:24 to 07:30:11 UTC: 8.06 h, ABOUT $4.76 (spend so far about $22.7 of $46; the
