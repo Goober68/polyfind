@@ -1,0 +1,19 @@
+{
+ "what": "one cell labelled by the pw.x built for the card against the same cell labelled by the processors' pw.x",
+ "frame": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+ "atoms": 168,
+ "energy_difference_ry_per_cell": -2.0000697986688465e-08,
+ "energy_difference_meV_per_monomer": -9.71869131558151e-06,
+ "largest_force_difference_eV_per_A": 4.630000000000259e-06,
+ "largest_stress_difference_GPa": 0.0,
+ "seconds_on_the_card": 2690.6,
+ "seconds_on_the_processors": 4132.3,
+ "anchor": {
+  "reproduced": true,
+  "energy_ry": -275.80701219,
+  "seconds": 34.446651458740234,
+  "tolerance_ry": 1e-05,
+  "off_by_ry": 0.0
+ },
+ "agrees": true
+}

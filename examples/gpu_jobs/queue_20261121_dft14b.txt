@@ -22,3 +22,14 @@ dft_cells.sh start 8 2 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz row_
 # then); if it does not build or does not agree, nothing changes.
 qe_gpu_build.sh 3
 qe_gpu_check.sh docs/predictions/mlip/sheets14_sheared_in_all_s1.extxyz row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1 docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz
+# The card's pw.x built (39 minutes) and agrees with the processors': the anchor to the last digit,
+# and the film cell's all-trans cell to 2e-8 Ry per cell and 5e-6 eV/A in every force, in 45
+# minutes where the processors took 69.  It is not the several-fold gain hoped for, but the card
+# and the processors can each run a cell at once.  So a second line of cells, for the card: seven
+# of the twelve still waiting are taken out of the processors' line and put in it, alternating
+# down the order so that both lines reach the early questions first.
+dft_cells.sh drop row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1 row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1_in_all_s1 sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1 sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at20m_sheared_in_all_s1 row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1 row_vdf10-trfe4-14_TTTT_chain1_in_all_s1 sheet_vdf10-trfe4-14_belt4_at18m_sheared_in_all_s1
+dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/cells14_stepped_to_dft.extxyz row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1 row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1_in_all_s1
+dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1 sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at20m_sheared_in_all_s1 row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1
+dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/sheets14_sheared_in_all_s1.extxyz row_vdf10-trfe4-14_TTTT_chain1_in_all_s1
+dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz sheet_vdf10-trfe4-14_belt4_at18m_sheared_in_all_s1
