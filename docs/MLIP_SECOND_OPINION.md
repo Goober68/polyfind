@@ -1790,6 +1790,10 @@ sheet), `four_axes_potential_margins_shear.json`, `kink_sheet_shear_chain1cfe_si
 
 ### 3.21 DFT at fourteen monomers, and every kink site of the four cells in the potential on a card (2026-11-21; PI: "Go on the rented machine")
 
+*Read with 3.22, which labelled sixteen more cells: the column "DFT's own minimum, estimated"
+below is withdrawn where a second DFT calculation now stands (the leader's sheet is +0.06, not
+-0.34), and the leader does have two sheets below all-trans among four asked.*
+
 One rented machine (an A40 pod, 8.06 hours, about $4.76; removed and confirmed gone by a read) did
 two things at once. On its processors, DFT single points (PBE-D3(BJ), the anchor's set-up; 168
 and 170 atoms, 6 k-points, 57 to 80 minutes a cell on eight processes) on seven cells the
@@ -1927,3 +1931,205 @@ cells), `mlip/cells14_tight_in_all_s1.extxyz` (the 124 relaxed cells),
 `four_axes_dft_margins_card_sheets.json` and `..._lifted.json`. The pod's jobs:
 `examples/gpu_jobs/queue_20261120_dft14.txt`, `dft_cells.sh`, `relax_card.sh`, `card_check.sh`.
 Tests: `tests/test_cells14_dft.py`.
+
+### 3.22 The second round of DFT at fourteen monomers: all four cells have a margin, the nitrile cells' kinked states are shallow, and DFT runs on the card (2026-11-21; PI: "Go on rented, mi100 not online yet")
+
+A second rented machine of the same kind (one A40, 7.65 processors allotted, $0.59 an hour;
+`examples/gpu_jobs/queue_20261121_dft14b.txt`), 8.48 hours, about $5.00. Sixteen more DFT
+single points in 3.21's set-up, seven on the processors and nine on the card, the two lines
+side by side. 3.21 left four things open: the sign of the leader's sheet, which of the film
+composition's second sheet and helix is lower, the leader's other low sheets, and the two cells
+with no DFT. All four were asked.
+
+**DFT on the card.** Quantum ESPRESSO 7.5 was built on the pod from source with NVIDIA's
+compilers (`qe_gpu_build.sh`: nvhpc 25.7, CUDA 12.9, OpenMP, no ScaLAPACK; 39 minutes, 30 of
+them download and install and 8 the compile). `qe_gpu_check.sh` reproduces the anchor and then
+labels the film cell's all-trans cell a second time: the card's energy is 2.0e-8 Ry per cell
+from the processors' (1e-5 meV per monomer), the largest force difference 5e-6 eV/A, the stress
+the same to the digits printed (`qe_gpu_check_a40.json`). One process on the card takes 43 to
+51 minutes a cell; eight processes beside it take 61 to 74 (45 against 69 on the same cell).
+So the card is not several times faster than the processors, it is a second line: the pod
+labelled two cells at a time for one price. `dft_cells.sh in=SUBDIR pw=PATH` keeps a line for
+each executable.
+
+**Every state labelled so far, against its own cell's all-trans cell** (kcal/mol per chain of
+fourteen; for a sheet: per kink pair). DFT is single points on the cells the potential relaxed;
+the last column is a second DFT calculation on cells stepped once toward DFT's minimum, both
+cells of the difference stepped:
+
+| cell, state | DFT | the potential | belt4 | DFT, stepped cells |
+|---|---:|---:|---:|---:|
+| film's composition, sheet on the chlorine unit (14m, on CV) | **-5.03** | -5.26 | -1.17 | **-5.27** |
+| film's composition, sheet at 12 (on VC) | **-1.93** | -3.60 | -2.27 | -2.04 |
+| film's composition, helix TGTG' | **-1.72** | -2.28 | -4.4 | -1.70 |
+| matrix, helix TGTG' | **-0.95** | -0.25 | -0.8 | |
+| matrix, the potential's lowest sheet (18m, on VR) | **+0.90** | +1.20 | +6.82 | |
+| leader, sheet at 18 (on VV) | **-0.72** | -1.25 | +1.90 | |
+| leader, sheet at 20m (on VV) | **-0.40** | -0.93 | +2.43 | |
+| leader, sheet at 18m (on VV) | **+0.34** | -1.37 | +1.99 | +0.06 |
+| leader, sheet at 16m (on VV) | **+0.35** | -1.20 | +2.53 | |
+| leader, helix TGTG' | **+0.65** | +0.98 | -0.5 | +0.68 |
+| nitrile alone, sheet at 4 (on RV) | **-0.43** | +0.20 | -1.11 | |
+| nitrile alone, helix G'TGT | **+1.16** | +1.53 | -2.8 | |
+
+DFT leaves 0.07 to 0.29 eV/A and up to 0.21 GPa on the potential's cells, and 0.01 to 0.09 eV/A
+and up to 0.06 GPa on the stepped ones. belt4's helix values are the tables' polished margins
+times fourteen.
+
+- **Margins in DFT for all four cells** (all-trans minus the helix, kcal/mol per monomer):
+
+  | cell | DFT | the potential | belt4, the tables | 3.15's estimate |
+  |---|---:|---:|---:|---:|
+  | film's composition (64/29/7 with CFE) | **+0.123** | +0.163 | +0.317 | +0.13 to +0.18 |
+  | matrix (71/29) | **+0.068** | +0.018 | +0.056 | +0.03 |
+  | leader (nitrile, reversed VDF, 21 mol% TrFE) | **-0.047** | -0.070 | +0.037 | |
+  | nitrile alone | **-0.083** | -0.109 | +0.197 | |
+
+  The potential has DFT's order and DFT's signs and is within 0.05 on each of the four (0.040,
+  0.050, 0.023, 0.027). belt4 has the nitrile cell second and DFT has it last: 0.28 off there,
+  0.19 on the film's composition, 0.08 on the leader, 0.01 on the matrix. On the stepped cells
+  the film composition's margin is +0.121 and the leader's -0.048: neither moves by more than
+  0.002. Three of the four lie within 0.1 of zero, which is the accuracy this project asks of
+  an evaluator and no more than a static PBE-D3 energy can claim: the order of the four and the
+  film composition's lead are the result, the signs of the other three are not firm.
+- **The leader does have kinked states below all-trans, and they are shallow.** Four sheets on
+  its run of five VDF units: 0.72 and 0.40 below all-trans at 18 and 20m, 0.34 and 0.35 above at
+  18m and 16m. 3.21 had one of these (18m) and said all-trans was the leader's lowest state or
+  level with it. With four asked, the lowest state found is the sheet at 18, 0.05 per monomer
+  below all-trans, a seventh of the film composition's 5.0. Sites 18 and 18m are one site on the
+  two hands of the kink: 1.05 apart in DFT, 0.12 in the potential. 3.21 withdrew 3.20's
+  statement that the leader's lowest state found is kinked. It is kinked: on the other hand of
+  the site the potential named, and half as deep as the potential has it.
+- **The nitrile cell is the same picture.** Its helix is 1.16 above all-trans and its sheet at
+  site 4 is 0.43 below, 0.03 per monomer. The potential has that sheet 0.20 above: 0.63 too
+  high, where it is 0.2 to 1.7 too low on the six sheets of the other two cells.
+- **The matrix** has its helix lowest (0.95 below all-trans) and the one sheet asked about,
+  the potential's lowest of 28, 0.90 above.
+- **The chlorine holds a kink and nothing here says the nitrile does.** The film composition's
+  deep sheet sits on the chlorine unit. The nitrile cells' low sheets sit on fluorinated units
+  away from the nitrile (RV, VV), and are shallow. No sheet at the nitrile unit itself has been
+  put to DFT; in the potential a kink there costs 2.2 and 5.8 (nitrile alone) and 2.8 (leader),
+  against -5.3, -3.6, -1.8 and +1.6 at the four sites on the chlorine. And the two units move
+  the margin opposite ways from the matrix's +0.068, in cells that differ from the matrix's by
+  that one unit: one chlorine in fourteen to +0.123, one nitrile to -0.083.
+
+**The stepped cells: the second DFT calculation 3.21 asked for.** Each cell was relaxed once in
+the potential tilted to DFT's forces and stress at the label, and labelled again:
+
+| cell | fall the step predicted | fall in DFT | DFT leaves, before and after (eV/A) |
+|---|---:|---:|---|
+| leader, all-trans | -0.497 | -0.472 | 0.11, 0.03 |
+| film's composition, all-trans | -0.195 | -0.171 | 0.07, 0.01 |
+| film's composition, sheet at 12 | -0.381 | -0.282 | 0.08, 0.02 |
+| film's composition, helix | -0.524, not settled | -0.148 | 0.11, 0.07 |
+| leader, sheet at 18m | -1.170 | -0.747 | 0.16, 0.09 |
+| film's composition, sheet on the chlorine | -0.404 | -0.405 | 0.12, 0.02 |
+| leader, helix | -0.410 | -0.448 | 0.29, 0.02 |
+
+- **The film composition's sheet on the chlorine is 5.27 below all-trans on the stepped cells**
+  (5.03 on the single points). DFT leaves 0.02 eV/A and 0.02 GPa on that cell: it is at DFT's
+  minimum. Its other states hold too: helix -1.70 (single points -1.72),
+  sheet at 12: -2.04 (-1.93). The sheet at 12 is 0.34 below the helix on the stepped cells and
+  was 0.21 below on the single points: the two are told apart, in the single points' order.
+- **The leader's sheet at 18m is level with all-trans: +0.06**, from +0.34 on the single
+  points. 3.21's estimate was -0.34. A second step predicts -0.34 again
+  (`mlip/cells14_stepped_twice_to_dft.extxyz`, not labelled); the first step was 0.42 too large
+  on this cell, so that is not a number to lean on. DFT still leaves 0.09 eV/A on it, the most
+  of the seven.
+- **The leader's margin holds: -0.048 on the stepped cells**, -0.047 on the single points. Its
+  helix is the cell DFT left most force on (0.29 eV/A) and it is 0.68 above all-trans stepped,
+  0.65 before.
+- **The step's prediction is within 0.04 on four of the seven cells and too large on three**:
+  by 0.10 (the film composition's sheet at 12), 0.38 (its helix, whose step was stopped at the
+  move allowed) and 0.42 (the leader's sheet). On the sheet on the chlorine it is exact.
+  Nothing known beforehand separates the settled cells it has right from the two it has wrong,
+  so an estimated minimum does not stand in for the second calculation. 3.21's column "DFT's
+  own minimum, estimated" is withdrawn where it differs from this one: -0.34 for the leader's
+  sheet is +0.06, -2.05 for the film composition's helix is -1.70, +0.74 for the leader's helix
+  is +0.68.
+- What it says about the single points: a sheet falls 0.11 to 0.27 further than its all-trans
+  cell when DFT is let move it (three sheets), a helix cell 0.02 less (two). The sheets above
+  with no stepped value are probably 0.1 to 0.3 too high; a margin moves by 0.002.
+
+**The potential against DFT at this size, twelve states.** On the four helix cells it is within
+0.05 per monomer and has every sign. On the eight sheets its error runs from -1.71 to +0.63 per
+kink pair (mean -0.66, rms 1.07), it has the sign against all-trans at five of the eight, and
+the site it ranks lowest is DFT's lowest of those asked in the film's composition (14m) and
+not in the leader (it has 18m, DFT has 18). Margins pass the 0.1 this project asks; kink
+sheets do not. The 23 labels at this size (11,664 force components) are in the repository for a
+refit.
+
+**The four axes.** DFT's four margins put through the tables' model
+(`examples/four_axes_at_margins.py`), with the potential's map of the kink sites carrying DFT's
+own energy at the eight sites that have one. Dipole, switch strain and crystal stiffness are
+belt4's with no DFT test. Each range is over the model's two readings of the kink sites (the
+sum over sites, and the sites' share of time with a sheet) and over the map as it is and with
+each cell's other sites moved by the potential's mean error at the sites DFT has (+0.95 film's
+composition, +1.08 leader, -0.63 nitrile alone, -0.30 matrix):
+
+| cell | margin (DFT) | frequency | tan delta at 34 kHz | AC strain at the heat budget | blocked force per area through the crystal, pN/nm2 |
+|---|---:|---|---|---|---|
+| film's composition | +0.123 | 364 kHz (the anchor) | 0.065 | 0.073% | 6.4 |
+| the same for a margin 0.05 lower or higher | | 364 kHz | 0.088, 0.031 | 0.082%, 0.057% | 7.5, 4.9 |
+| matrix | +0.068 | 0.04 to 55 kHz | 0.02 to 1.2 | 0.001 to 0.033% | 0.1 to 3.5 |
+| leader | -0.047, taken as 0 | 0.7 to 363 kHz | 0.06 to 0.33 | 0.003 to 0.064% | 0.2 to 3.5 |
+| nitrile alone | -0.083, taken as 0 | 0.4 to 534 kHz | 0.04 to 0.26 | 0.003 to 0.083% | 0.2 to 5.7 |
+| the measured film's channel as calibrated | | 364 kHz | 0.060 | 0.066% | 6.5 |
+
+The same by reading, the map as it is and then moved:
+
+| cell | by the sum over sites | by the sites' share of time |
+|---|---|---|
+| matrix | 0.04, 0.05 kHz; tan delta 0.02, 0.03; 0.001%; 0.1 pN/nm2 | 23, 55 kHz; 1.2, 0.58; 0.022%, 0.033%; 2.3, 3.5 |
+| leader | 1.4, 0.7 kHz; 0.33, 0.16; 0.004%, 0.003%; 0.2 | 363, 350 kHz; 0.060, 0.062; 0.064%, 0.063%; 3.5, 3.4 |
+| nitrile alone | 0.4, 0.9 kHz; 0.12, 0.26; 0.003%, 0.004%; 0.2, 0.3 | 171, 534 kHz; 0.117, 0.038; 0.050%, 0.083%; 3.5, 5.7 |
+
+- **The film's composition is the only row that is a result.** It does not depend on the
+  reading of the kink sites (it is what the readings are calibrated on) and it is DFT's margin
+  and nothing else new. The blocked force uses the cell's own (belt4) stiffness, so it is an
+  axis of its own here; by the film's assumed modulus it is 0.15 pN/nm2 and is the strain again.
+- **The matrix has a margin the model holds and no frequency.** Its two readings are 600 to
+  1,100 times apart. In both it is slower than the film's composition, and its loss is either
+  small with no strain to speak of or above 0.5.
+- **The leader and the nitrile cell have no row.** Their margins are below zero in DFT:
+  all-trans is the lower state, a ferroelectric with a remanent polarization, which the loss
+  model does not hold (it takes the margin as zero). By the sum over sites both are 260 to 910
+  times slower than the film's composition. By the sites' share of time the leader is
+  level with it in frequency and loss (350 to 363 kHz, 0.060 to 0.062) with nine tenths of the
+  strain and half the blocked force, and the nitrile cell is behind on all four with the map as
+  it is and ahead on three with it moved (534 kHz, 0.038, 0.083%, and 5.7 against 6.4 pN/nm2).
+  That corner is one reading of four, on a map moved by the potential's error at one site, in a
+  model outside its domain. **Nothing here establishes that either outperforms the film's
+  composition, and nothing here rules it out: the readings disagree by two to three orders of
+  magnitude.**
+- **What stands between these cells and a ranking is the rate, not the margin.** The margins
+  are DFT's now. The two readings are two assumptions about what limits switching, fed the same
+  kink-sheet energies, and they agree only on the cell they were calibrated on. The quantity
+  neither has is a barrier: the path by which a kink sheet forms and moves.
+- The leader's readings in 3.21 spanned 0.2 to 415 kHz with one of its sites in DFT; with four
+  they span 0.7 to 363 kHz.
+
+**What this is and is not.**
+
+- Sixteen more single points, 23 at this size in all. Five states have a second DFT calculation
+  on stepped cells; the other seven are single points on the potential's cells, and the five
+  sheets among them are probably 0.1 to 0.3 too high against all-trans.
+- One helix placement of the four was labelled in each cell, the one the potential has lowest.
+  The potential has the placements up to 0.46 per chain apart (0.03 per monomer). A placement
+  lower in DFT would raise that cell's margin by about that.
+- Of 108 kink sites DFT has eight, chosen by the potential, whose sign is right at five of the
+  eight. A site it ranks high and DFT would rank low has not been looked for.
+- No kink at the nitrile unit has been put to DFT.
+- Regular cells, zero kelvin, static energies. A regular cell puts every chain's pin beside its
+  neighbours' (3.21): the film composition's 5.0 is an upper bound for a statistical terpolymer.
+- The refit and the 35 rows were not run.
+
+Files: `docs/predictions/cells14_states_dft.json` (the table, four cells) and
+`cells14_states_dft_stepped.json` (the stepped cells against the stepped all-trans cells; both
+by `row_cells_frames.py states-dft`), `mlip/cells14_frames_pbe_d3bj.extxyz` (the 23
+labels, each with `dft_run`: processors or card), `mlip/cells14_stepped_to_dft.extxyz` and
+`mlip/cells14_stepped_twice_to_dft.extxyz`, `kink_site_scan_potential_card_dft_at_eight.json`
+and `..._moved.json` (`row_cells_frames.py sheets-as-scan --set ... --shift ...`),
+`four_axes_dft_margins_four_cells.json` and `..._moved.json`, `qe_gpu_check_a40.json`. The
+pod's jobs: `examples/gpu_jobs/queue_20261121_dft14b.txt`, `dft_cells.sh`, `qe_gpu_build.sh`,
+`qe_gpu_check.sh`. Tests: `tests/test_cells14_dft.py`.
