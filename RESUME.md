@@ -680,6 +680,26 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
+        STATE OF THE SECOND POD AT 15:16 UTC 2026-11-21 (read this first; the block below it is how it was
+        started): 20 labels stored in `mlip/cells14_frames_pbe_d3bj.extxyz` (7 of the first round, 13 of
+        this one, each with `dft_run` = processors or card). THREE CELLS ARE STILL RUNNING, each the last of
+        its line: on the card `row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1` (the matrix's helix, due 15:50)
+        and then `helix_leader_TGTGp_r1_in_all_s1` (the leader's helix stepped, due 16:40); on the
+        processors `sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1` (the film cell's sheet
+        on the chlorine, stepped, due 16:20). WHEN ALL THREE ARE IN: mirror, `python -I scratchpad/
+        pod_labels.py docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz` (23 frames), DELETE THE POD AND
+        CONFIRM BY A READ, then `scratchpad/states_round2.sh full` (both states tables), the four axes, docs
+        3.22. THE CARD'S pw.x WAS BUILT AND AGREES with the processors' (-2.0e-8 Ry on a 168-atom cell;
+        `qe_gpu_check_a40.json`); a cell takes 43 to 51 minutes on it against 61 to 74 on the processors
+        beside it, so the pod ran two lines.
+        RESULTS SO FAR, DFT (the potential), kcal/mol per chain of fourteen against the cell's own all-trans
+        cell, single points on the potential's cells: LEADER sheets 18: -0.72 (-1.25), 20m: -0.40 (-0.93),
+        18m: +0.34 (-1.37), 16m: +0.35 (-1.20): TWO OF ITS FOUR ARE BELOW ALL-TRANS, shallow. NITRILE CELL
+        helix G'TGT +1.16 (+1.53), margin -0.083; sheet at 4: -0.43 (+0.20). MATRIX sheet 18m +0.90 (+1.20).
+        ON CELLS STEPPED ONCE TOWARD DFT'S MINIMUM (a second DFT calculation, both cells of each difference
+        stepped): film helix -1.70 (single points -1.72), film sheet 12: -2.04 (-1.93), leader sheet 18m
+        +0.06 (+0.34; the step had predicted -0.34). The step's prediction is good to 0.03 on an all-trans
+        cell and overshoots by a third or more on a sheet or helix.
         A SECOND POD IS RUNNING (PI 2026-11-21: "Go on rented, mi100 not online yet"). `3lq6awm18u81pz`, name
         `polyfind-dft14b`, Runpod Secure Cloud EU-SE-1, one NVIDIA A40 (9 vCPU, 50 GB), $0.59/h, CREATED
         08:12:02 UTC 2026-11-21, confirmed by a read (`get-pod`: RUNNING). IT REMOVES ITSELF AT 9 HOURS
