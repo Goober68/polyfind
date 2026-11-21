@@ -27,6 +27,13 @@ relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz row_vdf9-tr
 relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz row_vdf9-trfe3-an1-rvdf1-14_.*
 relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at(8m|10m|16m|20m)_sheared
 relax_card.sh docs/predictions/mlip/cells14_starts_for_all_s1.extxyz sheet_vdf9-trfe4-cfe1-14_belt4_at(8|10|14|16)_sheared
+# Put in at 00:41 UTC, while the pod was on the line two above this one (it counts lines, so a
+# line put in ahead of where it is runs in its turn; nothing behind it changes).  The card found
+# the film cell's helix lower at two other placements: TGTGp and GTGpT, 2.28 kcal/mol per chain
+# below all-trans, where GpTGT, the one in line for DFT, is at 1.82.  DFT goes to the lowest one
+# after the sheet, and the GpTGT cell to the end of the line.
+dft_cells.sh next 8 2 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1
+dft_cells.sh last helix_film_GpTGT_r2
 # The card takes 0.38 s a step and a sheet from belt4's start comes to rest in 300 to 1000 steps
 # (the leader's two known sheets came back: +0.05 in 326 steps, -1.32 in 972), so the whole set
 # may fit after all.  The rest, in the order of what a cut should leave: the leader's and the film

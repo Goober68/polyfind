@@ -6,6 +6,10 @@
 #   dft_cells.sh start NP POOLS FILE NAME [NAME...]
 #       put the named frames of FILE (a file of frames in the repository) in line, start the
 #       worker if it is not running, and return: the queue goes on
+#   dft_cells.sh next NP POOLS FILE NAME [NAME...]
+#       the same, but the named frames go to the front of the line: they are the next cells run
+#   dft_cells.sh last NAME [NAME...]
+#       move cells already in line to its end
 #   dft_cells.sh wait
 #       return when the line is empty (so that the pod does not count itself idle and leave)
 #
@@ -35,7 +39,16 @@ if [ "$MODE" = "wait" ]; then
   cat "$DFT/log.txt"
   exit 0
 fi
-[ "$MODE" = "start" ] || { echo "dft_cells.sh start NP POOLS FILE NAME... | wait"; exit 2; }
+if [ "$MODE" = "last" ]; then
+  for name in "$@"; do
+    awk -v n="$name" '$3 != n' "$DFT/line.txt" > "$DFT/line.new"
+    awk -v n="$name" '$3 == n' "$DFT/line.txt" >> "$DFT/line.new"
+    mv "$DFT/line.new" "$DFT/line.txt"
+  done
+  echo "the line is now:"; cat "$DFT/line.txt"
+  exit 0
+fi
+[ "$MODE" = "start" ] || [ "$MODE" = "next" ] || { echo "dft_cells.sh start|next NP POOLS FILE NAME... | last NAME... | wait"; exit 2; }
 NP="$1"; POOLS="$2"; FILE="$3"; shift 3
 source "$(dirname "$0")/mlip_env.sh"
 
@@ -80,7 +93,14 @@ for n in sys.argv[3:]:
     write(Path(sys.argv[2]) / f"{n}.start.xyz", frames[n], format="extxyz")
     print(f"{n}: {len(frames[n])} atoms, k-points {frames[n].info['kmesh']}")
 PY
-for name in "$@"; do echo "$NP $POOLS $name" >> "$DFT/line.txt"; done
+if [ "$MODE" = "next" ]; then   # in front of everything in line: the worker takes the first cell it has not tried
+  : > "$DFT/line.new"
+  for name in "$@"; do echo "$NP $POOLS $name" >> "$DFT/line.new"; done
+  cat "$DFT/line.txt" >> "$DFT/line.new" 2>/dev/null || true
+  mv "$DFT/line.new" "$DFT/line.txt"
+else
+  for name in "$@"; do echo "$NP $POOLS $name" >> "$DFT/line.txt"; done
+fi
 
 if running; then
   echo "the worker is running: $# cells added to its line"
