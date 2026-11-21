@@ -1,0 +1,136 @@
+{
+ "what": "stored cells evaluated again in the potential with D3, against the energy each carries; seconds for energy, forces and stress of one cell",
+ "device": "cuda",
+ "card": "NVIDIA A40",
+ "largest_difference_meV_per_monomer": 4.092726157978177e-09,
+ "seconds_per_evaluation_after_the_first": 0.47084951400756836,
+ "seconds_first_evaluation": 2.056414842605591,
+ "cells": {
+  "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1": {
+   "atoms": 168,
+   "stored_eV_per_monomer": -2048.89502557521,
+   "here_eV_per_monomer": -2048.8950255752106,
+   "difference_meV_per_monomer": -4.547473508864641e-10,
+   "largest_force_eV_per_A": 0.004565127783049623
+  },
+  "sheet_vdf9-trfe4-cfe1-14_belt4_at12_sheared_r2": {
+   "atoms": 168,
+   "stored_eV_per_monomer": -2048.9061805588053,
+   "here_eV_per_monomer": -2048.9061805588067,
+   "difference_meV_per_monomer": -1.3642420526593924e-09,
+   "largest_force_eV_per_A": 0.003883123732454492
+  },
+  "helix_film_GpTGT_r2": {
+   "atoms": 168,
+   "stored_eV_per_monomer": -2048.9006244996694,
+   "here_eV_per_monomer": -2048.9006244996717,
+   "difference_meV_per_monomer": -2.2737367544323206e-09,
+   "largest_force_eV_per_A": 0.0025767957280545296
+  },
+  "tt_leader_from_rows14an_r1": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.772178083458,
+   "here_eV_per_monomer": -1959.7721780834588,
+   "difference_meV_per_monomer": -9.094947017729282e-10,
+   "largest_force_eV_per_A": 0.003402959399782447
+  },
+  "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at10_sheared_r2": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.7720320746455,
+   "here_eV_per_monomer": -1959.7720320746419,
+   "difference_meV_per_monomer": 3.637978807091713e-09,
+   "largest_force_eV_per_A": 0.003481295202279434
+  },
+  "helix_leader_TGTGp_r1": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.7691501956904,
+   "here_eV_per_monomer": -1959.7691501956895,
+   "difference_meV_per_monomer": 9.094947017729282e-10,
+   "largest_force_eV_per_A": 0.003707173925951977
+  },
+  "tt_nitrile_from_rows14an_r1": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -2006.5040419047561,
+   "here_eV_per_monomer": -2006.5040419047575,
+   "difference_meV_per_monomer": -1.3642420526593924e-09,
+   "largest_force_eV_per_A": 0.0035799295838421542
+  },
+  "sheet_vdf9-trfe4-an1-14_belt4_at10_sheared_r2": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -2006.5029159691835,
+   "here_eV_per_monomer": -2006.5029159691842,
+   "difference_meV_per_monomer": -6.821210263296962e-10,
+   "largest_force_eV_per_A": 0.0035136211623179457
+  },
+  "helix_nitrile_GpTGT_r1": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -2006.499297543072,
+   "here_eV_per_monomer": -2006.4992975430698,
+   "difference_meV_per_monomer": 2.2737367544323206e-09,
+   "largest_force_eV_per_A": 0.0028975554268203287
+  },
+  "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1": {
+   "atoms": 168,
+   "stored_eV_per_monomer": -2063.1804583834587,
+   "here_eV_per_monomer": -2063.180458383463,
+   "difference_meV_per_monomer": -4.092726157978177e-09,
+   "largest_force_eV_per_A": 0.004298721738084476
+  },
+  "sheet_vdf10-trfe4-14_belt4_at24m_sheared_r2": {
+   "atoms": 168,
+   "stored_eV_per_monomer": -2063.1707612081395,
+   "here_eV_per_monomer": -2063.1707612081395,
+   "difference_meV_per_monomer": 0.0,
+   "largest_force_eV_per_A": 0.003425136794784356
+  },
+  "helix_matrix_GTGpT_r2": {
+   "atoms": 168,
+   "stored_eV_per_monomer": -2063.181159724422,
+   "here_eV_per_monomer": -2063.181159724424,
+   "difference_meV_per_monomer": -2.2737367544323206e-09,
+   "largest_force_eV_per_A": 0.0034182303676173857
+  },
+  "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_slide4_r3": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.776339759041,
+   "here_eV_per_monomer": -1959.7763397590413,
+   "difference_meV_per_monomer": -2.2737367544323206e-10,
+   "largest_force_eV_per_A": 0.003622802292149476
+  },
+  "tt_leader_tilted_like_at18m_r3": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.7722869898366,
+   "here_eV_per_monomer": -1959.7722869898373,
+   "difference_meV_per_monomer": -6.821210263296962e-10,
+   "largest_force_eV_per_A": 0.0035881703400783313
+  },
+  "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_sheared_r9": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.7764125326562,
+   "here_eV_per_monomer": -1959.7764125326573,
+   "difference_meV_per_monomer": -1.1368683772161603e-09,
+   "largest_force_eV_per_A": 0.003344898930415328
+  },
+  "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18m_slide8_r3": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.7763734006091,
+   "here_eV_per_monomer": -1959.7763734006087,
+   "difference_meV_per_monomer": 4.547473508864641e-10,
+   "largest_force_eV_per_A": 0.0035056991334635793
+  },
+  "tt_leader_sheared_like_at18m_r1": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.7674857135712,
+   "here_eV_per_monomer": -1959.7674857135717,
+   "difference_meV_per_monomer": -4.547473508864641e-10,
+   "largest_force_eV_per_A": 0.007829793596072164
+  },
+  "tt_leader_sheared_like_at18m_r4": {
+   "atoms": 170,
+   "stored_eV_per_monomer": -1959.77210554609,
+   "here_eV_per_monomer": -1959.7721055460909,
+   "difference_meV_per_monomer": -9.094947017729282e-10,
+   "largest_force_eV_per_A": 0.0035538418758917093
+  }
+ }
+}

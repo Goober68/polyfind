@@ -1,13 +1,18 @@
 {
- "what": "the kink sites of kink_site_scan_belt4_shear.json, each site's energy replaced by the sheet relaxed in the potential there (sheets14_potential_card.json; kcal/mol per kink pair against the row's all-trans cell in the potential), each row moved by shift_kcal_per_kink_pair; potential: the sheet's own energy; tables_formation: the scan's",
+ "what": "the kink sites of kink_site_scan_belt4_shear.json, each site's energy replaced by the sheet relaxed in the potential there (sheets14_potential_card.json; kcal/mol per kink pair against the row's all-trans cell in the potential), each row moved by shift_kcal_per_kink_pair, and the sites of set_kcal_per_kink_pair given another evaluator's own energy (set_from_outside); potential: the sheet's own energy; tables_formation: the scan's",
  "energy": "kcal/mol per kink pair",
  "sheets": "sheets14_potential_card.json",
  "scan": "kink_site_scan_belt4_shear.json",
  "shift_kcal_per_kink_pair": {
-  "vdf9-trfe4-cfe1-14": 1.67,
+  "vdf9-trfe4-cfe1-14": 1.7,
   "vdf9-trfe3-an1-rvdf1-14": 1.7,
-  "vdf9-trfe4-an1-14": 1.69,
-  "vdf10-trfe4-14": 1.69
+  "vdf9-trfe4-an1-14": 1.7,
+  "vdf10-trfe4-14": 1.7
+ },
+ "set_kcal_per_kink_pair": {
+  "vdf9-trfe4-cfe1-14@12": -1.93,
+  "vdf9-trfe4-cfe1-14@14m": -5.034,
+  "vdf9-trfe3-an1-rvdf1-14@18m": 0.338
  },
  "rows": {
   "vdf9-trfe4-cfe1-14@0": {
@@ -17,7 +22,7 @@
    "mirrored": false,
    "sites": {
     "0": {
-     "formation": 1.8348982060868637,
+     "formation": 1.8648982060868637,
      "relative": 0.0,
      "units": "VV",
      "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
@@ -38,7 +43,7 @@
      "tables_formation": -0.13088855814770284
     },
     "2": {
-     "formation": 5.107351053115471,
+     "formation": 5.13735105311547,
      "relative": 1.3445348423034034,
      "units": "VR",
      "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
@@ -64,7 +69,7 @@
      "tables_formation": 3.449685963514966
     },
     "26": {
-     "formation": 3.53512504389791,
+     "formation": 3.5651250438979103,
      "relative": 0.5565952542580419,
      "units": "RV",
      "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
@@ -90,7 +95,7 @@
      "tables_formation": 1.1242037290232787
     },
     "4": {
-     "formation": 3.1653217711861057,
+     "formation": 3.195321771186106,
      "relative": 0.6065461907604828,
      "units": "RV",
      "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
@@ -116,7 +121,7 @@
      "tables_formation": 1.0989574759323233
     },
     "24": {
-     "formation": 5.1148031527999525,
+     "formation": 5.144803152799953,
      "relative": 1.3781842612706185,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
@@ -142,7 +147,7 @@
      "tables_formation": 3.459436117938125
     },
     "6": {
-     "formation": 1.9211485107637594,
+     "formation": 1.9511485107637596,
      "relative": 0.10972318163999262,
      "units": "VV",
      "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
@@ -168,7 +173,7 @@
      "tables_formation": -0.28660663323859126
     },
     "22": {
-     "formation": 1.7979649787145258,
+     "formation": 1.8279649787145258,
      "relative": 0.012152373698370411,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
@@ -194,7 +199,7 @@
      "tables_formation": -0.15150921125780314
     },
     "8": {
-     "formation": 5.2498864238508975,
+     "formation": 5.279886423850897,
      "relative": 1.300863111057879,
      "units": "VR",
      "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
@@ -220,7 +225,7 @@
      "tables_formation": 3.1556021534238425
     },
     "20": {
-     "formation": 3.497104691474687,
+     "formation": 3.527104691474687,
      "relative": 0.5151761910162946,
      "units": "RV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
@@ -246,7 +251,7 @@
      "tables_formation": 1.0177873419603714
     },
     "10": {
-     "formation": 0.8808809517837529,
+     "formation": 0.910880951783753,
      "relative": 1.923857341333317,
      "units": "RV",
      "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
@@ -272,7 +277,7 @@
      "tables_formation": -1.1214050288644586
     },
     "18": {
-     "formation": 5.082623238160965,
+     "formation": 5.112623238160965,
      "relative": 1.5010488474954826,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
@@ -298,7 +303,7 @@
      "tables_formation": 3.247594995336584
     },
     "12": {
-     "formation": -1.8901071047282092,
+     "formation": -1.93,
      "relative": 8.15897954122427,
      "units": "VC",
      "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
@@ -321,10 +326,11 @@
       -1.7378447629729505
      ],
      "potential": -3.560107104728209,
-     "tables_formation": -2.272476756179998
+     "tables_formation": -2.272476756179998,
+     "set_from_outside": true
     },
     "16": {
-     "formation": 1.9145792372149222,
+     "formation": 1.9445792372149222,
      "relative": 0.794288337396182,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
@@ -350,7 +356,7 @@
      "tables_formation": -0.40569220538310446
     },
     "14": {
-     "formation": -0.08376616512538271,
+     "formation": -0.05376616512538268,
      "relative": 7.45734762399745,
      "units": "CV",
      "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
@@ -384,7 +390,7 @@
    "mirrored": false,
    "sites": {
     "0": {
-     "formation": 3.964148670272833,
+     "formation": 3.9741486702728333,
      "relative": 0.0,
      "units": "VV",
      "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
@@ -405,7 +411,7 @@
      "tables_formation": 2.8936516036904294
     },
     "2": {
-     "formation": 9.488150654287427,
+     "formation": 9.498150654287427,
      "relative": -0.5864232663295041,
      "units": "VR",
      "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
@@ -431,7 +437,7 @@
      "tables_formation": 6.3636625015818
     },
     "26": {
-     "formation": 3.726032863827316,
+     "formation": 3.736032863827316,
      "relative": 0.123731234890883,
      "units": "RV",
      "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
@@ -457,7 +463,7 @@
      "tables_formation": 3.3688590969591985
     },
     "4": {
-     "formation": 4.202665838976625,
+     "formation": 4.2126658389766245,
      "relative": 0.11713626093903429,
      "units": "RV",
      "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
@@ -483,7 +489,7 @@
      "tables_formation": 3.373094593182117
     },
     "24": {
-     "formation": 9.436043313865278,
+     "formation": 9.446043313865278,
      "relative": -0.5842881750664901,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
@@ -509,7 +515,7 @@
      "tables_formation": 6.366504386163143
     },
     "6": {
-     "formation": 4.07350115000719,
+     "formation": 4.08350115000719,
      "relative": -0.041921572072809,
      "units": "VV",
      "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
@@ -535,7 +541,7 @@
      "tables_formation": 2.8831676277755065
     },
     "22": {
-     "formation": 3.905041552087957,
+     "formation": 3.915041552087957,
      "relative": 0.004011496509050971,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
@@ -561,7 +567,7 @@
      "tables_formation": 2.888729035353407
     },
     "8": {
-     "formation": 9.331972904757714,
+     "formation": 9.341972904757714,
      "relative": -0.6121764233941462,
      "units": "VR",
      "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
@@ -587,7 +593,7 @@
      "tables_formation": 6.361702354659258
     },
     "20": {
-     "formation": 4.253805229290132,
+     "formation": 4.263805229290132,
      "relative": 0.11099723291458474,
      "units": "RV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
@@ -613,7 +619,7 @@
      "tables_formation": 3.3512240052561424
     },
     "10": {
-     "formation": 4.740098992930234,
+     "formation": 4.750098992930234,
      "relative": -0.21956860904646192,
      "units": "RV",
      "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
@@ -639,7 +645,7 @@
      "tables_formation": 3.5169995783273436
     },
     "18": {
-     "formation": 8.535312111899279,
+     "formation": 8.545312111899278,
      "relative": -0.6192046556237187,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
@@ -665,7 +671,7 @@
      "tables_formation": 6.363748977223679
     },
     "12": {
-     "formation": 4.156033304012508,
+     "formation": 4.166033304012508,
      "relative": -2.272101392316216,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
@@ -691,7 +697,7 @@
      "tables_formation": 4.090689036814965
     },
     "16": {
-     "formation": 4.552911236398646,
+     "formation": 4.562911236398646,
      "relative": 0.004890464957071572,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
@@ -717,7 +723,7 @@
      "tables_formation": 2.862666990416301
     },
     "14": {
-     "formation": 3.1939078991191616,
+     "formation": 3.203907899119162,
      "relative": -1.9462451173485675,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
@@ -751,7 +757,7 @@
    "mirrored": true,
    "sites": {
     "0": {
-     "formation": 3.259511778885095,
+     "formation": 3.289511778885095,
      "relative": 0.0,
      "units": "VV",
      "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
@@ -772,7 +778,7 @@
      "tables_formation": 0.6347255835801775
     },
     "2": {
-     "formation": 2.008522518126596,
+     "formation": 2.038522518126596,
      "relative": 1.267814490041829,
      "units": "VR",
      "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
@@ -798,7 +804,7 @@
      "tables_formation": -1.2001369416813077
     },
     "26": {
-     "formation": 2.5461875715527866,
+     "formation": 2.576187571552787,
      "relative": -0.3691291685070155,
      "units": "RV",
      "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
@@ -824,7 +830,7 @@
      "tables_formation": 0.7150528176156286
     },
     "4": {
-     "formation": 2.630321619494599,
+     "formation": 2.660321619494599,
      "relative": -0.4509484061408813,
      "units": "RV",
      "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
@@ -850,7 +856,7 @@
      "tables_formation": 0.6910402292672302
     },
     "24": {
-     "formation": 5.271967780116162,
+     "formation": 5.301967780116162,
      "relative": 0.18053118627921094,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
@@ -876,7 +882,7 @@
      "tables_formation": 3.3568205533352966
     },
     "6": {
-     "formation": 3.2778323733830623,
+     "formation": 3.307832373383062,
      "relative": -0.13213321604609973,
      "units": "VV",
      "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
@@ -902,7 +908,7 @@
      "tables_formation": 0.683185347295435
     },
     "22": {
-     "formation": 3.2964076168887773,
+     "formation": 3.326407616888777,
      "relative": 0.05508014043014953,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
@@ -928,7 +934,7 @@
      "tables_formation": 0.6368505507420252
     },
     "8": {
-     "formation": 4.602707583559059,
+     "formation": 4.632707583559059,
      "relative": -0.6077892733236325,
      "units": "VR",
      "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
@@ -954,7 +960,7 @@
      "tables_formation": 2.727738571552649
     },
     "20": {
-     "formation": 2.6379850774899456,
+     "formation": 2.6679850774899454,
      "relative": -0.35141614642492414,
      "units": "RV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
@@ -980,7 +986,7 @@
      "tables_formation": 0.6428635884320784
     },
     "10": {
-     "formation": 2.871801230450935,
+     "formation": 2.9018012304509346,
      "relative": -0.7602511614245344,
      "units": "RV",
      "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
@@ -1006,7 +1012,7 @@
      "tables_formation": 0.7579545001857326
     },
     "18": {
-     "formation": 2.405956037310091,
+     "formation": 2.435956037310091,
      "relative": 0.28167210994656955,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
@@ -1032,7 +1038,7 @@
      "tables_formation": 2.8531607965626335
     },
     "12": {
-     "formation": 3.249190807120013,
+     "formation": 3.2791908071200133,
      "relative": 3.8925328067533087,
      "units": "VC",
      "torsions": "T T T T T T T T T T T T G- T G+ T T T T T T T T T T T T T",
@@ -1058,7 +1064,7 @@
      "tables_formation": -0.34253213895286194
     },
     "16": {
-     "formation": 3.273100333531497,
+     "formation": 3.3031003335314972,
      "relative": -0.04127290590888322,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
@@ -1084,7 +1090,7 @@
      "tables_formation": 0.511481600392699
     },
     "14": {
-     "formation": -3.586836685882834,
+     "formation": -5.034,
      "relative": 4.104172077022611,
      "units": "CV",
      "torsions": "T T T T T T T T T T T T T T G- T G+ T T T T T T T T T T T",
@@ -1107,7 +1113,8 @@
       -0.9335335573370238
      ],
      "potential": -5.256836685882834,
-     "tables_formation": -1.166942578906017
+     "tables_formation": -1.166942578906017,
+     "set_from_outside": true
     }
    }
   },
@@ -1118,7 +1125,7 @@
    "mirrored": true,
    "sites": {
     "0": {
-     "formation": 6.053125593925216,
+     "formation": 6.063125593925216,
      "relative": 0.0,
      "units": "VV",
      "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
@@ -1139,7 +1146,7 @@
      "tables_formation": 2.3635823625306784
     },
     "2": {
-     "formation": 4.649094060068179,
+     "formation": 4.6590940600681785,
      "relative": 2.47566759064685,
      "units": "VR",
      "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
@@ -1165,7 +1172,7 @@
      "tables_formation": 0.9440840994627564
     },
     "26": {
-     "formation": 5.511364897881027,
+     "formation": 5.521364897881027,
      "relative": -0.37953984952949327,
      "units": "RV",
      "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
@@ -1191,7 +1198,7 @@
      "tables_formation": 2.5853651008650473
     },
     "4": {
-     "formation": 5.4038467515369675,
+     "formation": 5.413846751536967,
      "relative": -0.375143245351822,
      "units": "RV",
      "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
@@ -1217,7 +1224,7 @@
      "tables_formation": 2.5896234275305403
     },
     "24": {
-     "formation": 4.797651333549968,
+     "formation": 4.807651333549969,
      "relative": 2.4845802455020447,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
@@ -1243,7 +1250,7 @@
      "tables_formation": 0.9434111857436278
     },
     "6": {
-     "formation": 6.123541682731986,
+     "formation": 6.133541682731986,
      "relative": 0.013853848001417646,
      "units": "VV",
      "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
@@ -1269,7 +1276,7 @@
      "tables_formation": 2.36647975332707
     },
     "22": {
-     "formation": 6.507584498708686,
+     "formation": 6.517584498708687,
      "relative": 0.0017202814917851583,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
@@ -1295,7 +1302,7 @@
      "tables_formation": 2.36518071341186
     },
     "8": {
-     "formation": 4.66175566412638,
+     "formation": 4.671755664126381,
      "relative": 2.4894066919655273,
      "units": "VR",
      "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
@@ -1321,7 +1328,7 @@
      "tables_formation": 1.0694726149701097
     },
     "20": {
-     "formation": 5.521689794713532,
+     "formation": 5.5316897947135315,
      "relative": -0.3795646800113701,
      "units": "RV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
@@ -1347,7 +1354,7 @@
      "tables_formation": 2.58696217734213
     },
     "10": {
-     "formation": 5.251940811517132,
+     "formation": 5.261940811517132,
      "relative": -0.7164070855075835,
      "units": "RV",
      "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
@@ -1373,7 +1380,7 @@
      "tables_formation": 2.4867485548557227
     },
     "18": {
-     "formation": 2.8900299308393222,
+     "formation": 2.900029930839322,
      "relative": 2.6025652342798082,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
@@ -1399,7 +1406,7 @@
      "tables_formation": 6.816646966116593
     },
     "12": {
-     "formation": 4.257748811698353,
+     "formation": 4.267748811698353,
      "relative": -1.1343787947742214,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T G- T G+ T T T T T T T T T T T T T",
@@ -1425,7 +1432,7 @@
      "tables_formation": 1.1361732324370593
     },
     "16": {
-     "formation": 6.397303706394339,
+     "formation": 6.40730370639434,
      "relative": -0.04939202646609431,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
@@ -1451,7 +1458,7 @@
      "tables_formation": 2.3451554520047893
     },
     "14": {
-     "formation": 4.996745215924792,
+     "formation": 5.006745215924791,
      "relative": -0.8181863614078395,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T G- T G+ T T T T T T T T T T T",
@@ -1486,7 +1493,7 @@
    "fixed_cell": false,
    "sites": {
     "0": {
-     "formation": 2.6804476235012653,
+     "formation": 2.6904476235012655,
      "relative": 0.0,
      "units": "VV",
      "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
@@ -1507,7 +1514,7 @@
      "tables_formation": 0.14310456106717595
     },
     "2": {
-     "formation": 6.118600312802451,
+     "formation": 6.128600312802452,
      "relative": 1.6701371677108483,
      "units": "VR",
      "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
@@ -1533,7 +1540,7 @@
      "tables_formation": 3.8146037642287496
     },
     "26": {
-     "formation": 2.0227962770482573,
+     "formation": 2.0327962770482575,
      "relative": 0.35757301848995837,
      "units": "RV",
      "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
@@ -1559,7 +1566,7 @@
      "tables_formation": -1.0625420523939937
     },
     "4": {
-     "formation": 1.8883600863585661,
+     "formation": 1.8983600863585661,
      "relative": 0.45130426629347653,
      "units": "RV",
      "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
@@ -1585,7 +1592,7 @@
      "tables_formation": -1.1117369547687872
     },
     "24": {
-     "formation": 6.196580323799942,
+     "formation": 6.206580323799942,
      "relative": 1.6773303495648264,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
@@ -1611,7 +1618,7 @@
      "tables_formation": 3.8241047853981485
     },
     "6": {
-     "formation": 2.1419604723007315,
+     "formation": 2.1519604723007313,
      "relative": 0.21249332337498572,
      "units": "VV",
      "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
@@ -1637,7 +1644,7 @@
      "tables_formation": -0.04935286788688131
     },
     "22": {
-     "formation": 2.7277816668931583,
+     "formation": 2.7377816668931585,
      "relative": 0.013818468451972876,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
@@ -1663,7 +1670,7 @@
      "tables_formation": 0.13303177689830648
     },
     "8": {
-     "formation": 5.894747343542635,
+     "formation": 5.904747343542636,
      "relative": 1.8975951343934838,
      "units": "VR",
      "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
@@ -1689,7 +1696,7 @@
      "tables_formation": 3.880594125495918
     },
     "20": {
-     "formation": 2.1868569308574135,
+     "formation": 2.1968569308574137,
      "relative": 0.23064589985663986,
      "units": "RV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
@@ -1715,7 +1722,7 @@
      "tables_formation": -1.0592753996667312
     },
     "10": {
-     "formation": 2.0544418039977304,
+     "formation": 2.06444180399773,
      "relative": 2.171474100022479,
      "units": "RV",
      "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
@@ -1741,7 +1748,7 @@
      "tables_formation": -2.0780795278830055
     },
     "18": {
-     "formation": 6.163187264560817,
+     "formation": 6.173187264560817,
      "relative": 1.7738459382169651,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
@@ -1767,7 +1774,7 @@
      "tables_formation": 4.055274226515195
     },
     "12": {
-     "formation": 3.8736913359948906,
+     "formation": 3.8836913359948904,
      "relative": 12.832477157004774,
      "units": "VA",
      "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
@@ -1793,7 +1800,7 @@
      "tables_formation": 0.6251875904575144
     },
     "16": {
-     "formation": 2.5859037263793048,
+     "formation": 2.595903726379305,
      "relative": 0.5092100408274831,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
@@ -1819,7 +1826,7 @@
      "tables_formation": 0.0030701777182713386
     },
     "14": {
-     "formation": 7.533971016590115,
+     "formation": 7.543971016590115,
      "relative": 5.382319408762427,
      "units": "AV",
      "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
@@ -1854,7 +1861,7 @@
    "fixed_cell": false,
    "sites": {
     "0": {
-     "formation": 3.584588254574232,
+     "formation": 3.594588254574232,
      "relative": 0.0,
      "units": "VV",
      "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
@@ -1875,7 +1882,7 @@
      "tables_formation": 0.7630872116538114
     },
     "2": {
-     "formation": 2.6027390650136537,
+     "formation": 2.6127390650136535,
      "relative": 0.9708625425006545,
      "units": "VR",
      "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
@@ -1901,7 +1908,7 @@
      "tables_formation": -1.1497649067262898
     },
     "26": {
-     "formation": 3.197040291799496,
+     "formation": 3.207040291799496,
      "relative": -0.2695521237702394,
      "units": "RV",
      "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
@@ -1927,7 +1934,7 @@
      "tables_formation": 0.81628932907023
     },
     "4": {
-     "formation": 3.120801872417326,
+     "formation": 3.1308018724173263,
      "relative": -0.31880529570887006,
      "units": "RV",
      "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
@@ -1953,7 +1960,7 @@
      "tables_formation": 0.8555618036417059
     },
     "24": {
-     "formation": 6.236339541285666,
+     "formation": 6.246339541285666,
      "relative": -0.36654093771531393,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
@@ -1979,7 +1986,7 @@
      "tables_formation": 2.7893602957964703
     },
     "6": {
-     "formation": 3.042985953021997,
+     "formation": 3.0529859530219974,
      "relative": -0.07944898077215612,
      "units": "VV",
      "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
@@ -2005,7 +2012,7 @@
      "tables_formation": 0.9164544505165964
     },
     "22": {
-     "formation": 3.839101430765039,
+     "formation": 3.849101430765039,
      "relative": 0.020564025422032728,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
@@ -2031,7 +2038,7 @@
      "tables_formation": 0.7604566252561682
     },
     "8": {
-     "formation": 4.29376167800049,
+     "formation": 4.30376167800049,
      "relative": -1.5016484067107285,
      "units": "VR",
      "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
@@ -2057,7 +2064,7 @@
      "tables_formation": 1.663724614990386
     },
     "20": {
-     "formation": 3.1442490547351776,
+     "formation": 3.1542490547351774,
      "relative": -0.24151244463284627,
      "units": "RV",
      "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
@@ -2083,7 +2090,7 @@
      "tables_formation": 0.7099542325149173
     },
     "10": {
-     "formation": 4.341226113350764,
+     "formation": 4.351226113350764,
      "relative": -1.3883592058869283,
      "units": "RV",
      "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
@@ -2109,7 +2116,7 @@
      "tables_formation": 1.2815265705165046
     },
     "18": {
-     "formation": 1.4094525524749246,
+     "formation": 1.4194525524749246,
      "relative": 0.1390671005410411,
      "units": "VR",
      "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
@@ -2135,7 +2142,7 @@
      "tables_formation": 3.2824745483016216
     },
     "16": {
-     "formation": 4.004574550807515,
+     "formation": 4.014574550807515,
      "relative": 0.659355924987139,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
@@ -2793,7 +2800,7 @@
      "tables_formation": 1.82199825634396
     },
     "18": {
-     "formation": 0.37665378233147684,
+     "formation": 0.338,
      "relative": -1.2347840035327238,
      "units": "VV",
      "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
@@ -2816,7 +2823,8 @@
       -1.0861026596944021
      ],
      "potential": -1.3233462176685231,
-     "tables_formation": 1.9910788381145323
+     "tables_formation": 1.9910788381145323,
+     "set_from_outside": true
     },
     "16": {
      "formation": 0.49956884233815035,

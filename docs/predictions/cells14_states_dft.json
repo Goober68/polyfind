@@ -149,6 +149,41 @@
       "state": -0.3805099236426809,
       "all_trans": -0.19452591724183094
      }
+    },
+    "sheet_at_14m": {
+     "cell": {
+      "frame": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1",
+      "atoms": 168,
+      "n_monomers": 28,
+      "dft_eV_per_monomer": -2048.9106917952563,
+      "potential_eV_per_monomer": -2048.9113083242705,
+      "dft_largest_force_eV_per_A": 0.11661598,
+      "dft_stress_xx_yy_zz_GPa": [
+       0.04074810342831262,
+       0.05766518607905614,
+       0.08796882978386626
+      ],
+      "dft_minutes": 57.40833333333333,
+      "dft_kpoints": 6,
+      "cell_A_deg": [
+       5.693510849993664,
+       9.46823485028311,
+       34.905251978938246,
+       104.61997407646903,
+       64.81534366196867,
+       100.15284138867246
+      ],
+      "shear_along_chains_monomers": [
+       0.946405989339043,
+       -0.9335335573370238
+      ],
+      "relaxed": "all_s1 with D3 to 0.004 eV/A (374 steps)"
+     },
+     "dft": -5.03377756242711,
+     "potential": -5.256836685882834,
+     "potential_minus_dft": -0.22305912345572398,
+     "margin_dft_per_monomer": 0.359555540173365,
+     "margin_potential_per_monomer": 0.3754883347059167
     }
    },
    "margin": 0.12306016873946965,

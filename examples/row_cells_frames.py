@@ -375,6 +375,7 @@ def sheets_as_scan(args):
     scan = json.loads(Path(args.scan).read_text())
     sheets = json.loads(Path(args.sheets).read_text())["rows"]
     shifts = {item.split("=")[0]: float(item.split("=")[1]) for item in args.shift}
+    known = {tuple(item.split("=")[0].split("@")): float(item.split("=")[1]) for item in args.set}   # (row, site) -> another evaluator's own energy there
     by_site = {(str(r["frame"]).split("_")[1], str(r["site"])): r for r in sheets.values()}
     rows, kept = {}, 0
     for key, row in scan["rows"].items():
@@ -386,13 +387,17 @@ def sheets_as_scan(args):
                 continue
             sites[site] = dict(rec, formation=float(sheet["potential"]) + shifts.get(name, 0.0), kink_kept=bool(sheet["kink_kept"]), converged=True,
                                potential=float(sheet["potential"]), tables_formation=float(rec["formation"]), shear_monomers=sheet["shear_along_chains_monomers"])
+            if (name, f"{site}{hand}") in known:   # this site has the other evaluator's own number: no shift
+                sites[site].update(formation=known[(name, f"{site}{hand}")], set_from_outside=True)
             kept += 1
         if sites:
             rows[key] = dict(row, sites=sites)
     out = {"what": f"the kink sites of {Path(args.scan).name}, each site's energy replaced by the sheet relaxed in the potential there ({Path(args.sheets).name}; "
                    "kcal/mol per kink pair against the row's all-trans cell in the potential)" + (", each row moved by shift_kcal_per_kink_pair" if shifts else "")
+                   + (", and the sites of set_kcal_per_kink_pair given another evaluator's own energy (set_from_outside)" if known else "")
                    + "; potential: the sheet's own energy; tables_formation: the scan's",
-           "energy": "kcal/mol per kink pair", "sheets": Path(args.sheets).name, "scan": Path(args.scan).name, "shift_kcal_per_kink_pair": shifts, "rows": rows}
+           "energy": "kcal/mol per kink pair", "sheets": Path(args.sheets).name, "scan": Path(args.scan).name, "shift_kcal_per_kink_pair": shifts,
+           "set_kcal_per_kink_pair": {"@".join(k): v for k, v in known.items()}, "rows": rows}
     Path(args.out).write_text(json.dumps(out, indent=1))
     print(f"{kept} sites of {len(rows)} hands written to {args.out}")
 
@@ -552,6 +557,7 @@ def main():
     s.add_argument("--scan", required=True, help="the scan whose sites, units and hands are kept (examples/kink_site_scan.py)")
     s.add_argument("--sheets", required=True, help="the potential's sheets at those sites (sheets-potential)")
     s.add_argument("--shift", nargs="*", default=[], help="ROW=DELTA, kcal/mol per kink pair added to every site of ROW (another evaluator minus the potential, measured at one site)")
+    s.add_argument("--set", nargs="*", default=[], help="ROW@SITE=ENERGY (SITE as the sheets name it, 14m for the other hand): that site's energy from another evaluator, in place of the potential's")
     s.add_argument("--out", required=True)
     s = sub.add_parser("potential", help="cells relaxed in a potential and not labelled: its own energies and margins")
     s.add_argument("--frames", nargs="+", required=True, help="folders of NAME_in_POTENTIAL.start.xyz")

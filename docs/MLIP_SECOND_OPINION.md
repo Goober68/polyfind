@@ -1787,3 +1787,142 @@ sheet), `four_axes_potential_margins_shear.json`, `kink_sheet_shear_chain1cfe_si
 `four_axes_potential_tight_margins_shear.json`. Tools: `examples/kink_sheet_shear.py`,
 `examples/row_cells_frames.py`, `examples/cell_tilt.py`. Tests:
 `tests/test_four_axes_at_margins.py`, `tests/test_cell_tilt.py`.
+
+### 3.21 DFT at fourteen monomers, and every kink site of the four cells in the potential on a card (2026-11-21; PI: "Go on the rented machine")
+
+One rented machine (an A40 pod, 8.06 hours, about $4.76; removed and confirmed gone by a read) did
+two things at once. On its processors, DFT single points (PBE-D3(BJ), the anchor's set-up; 168
+and 170 atoms, 6 k-points, 57 to 80 minutes a cell on eight processes) on seven cells the
+potential had relaxed to 0.004 eV/A (the film cell's all-trans cell to 0.005). On its card, the
+potential: the 108 kink sheets of the belt4
+scan of 3.20 and the sixteen helix cells of the four cells, each relaxed to the same stop (56,800
+steps at 0.42 s; the card returns this machine's stored energies to 4e-9 meV per monomer).
+
+**The film cell's lowest state in DFT is the kinked one: a kink pair on the chlorine unit of
+every chain, 5.0 kcal/mol per chain below all-trans.** Each state against its own cell's
+all-trans cell, kcal/mol per chain of fourteen (for a sheet: per kink pair):
+
+| cell, state | DFT | the potential | belt4 | DFT's own minimum, estimated |
+|---|---:|---:|---:|---:|
+| film's composition, sheet on the chlorine unit (site 14, other hand; G- T G+ on CV) | **-5.03** | -5.26 | -1.17 | |
+| film's composition, sheet at site 12 (G+ T G- on VC) | **-1.93** | -3.60 | -2.27 | -2.12 |
+| film's composition, lowest helix placement (TGTG') | **-1.72** | -2.28 | -4.4 | -2.05, not settled |
+| leader, lowest helix placement (TGTG') | **+0.65** | +0.98 | -0.5 | +0.74 |
+| leader, the potential's lowest sheet (site 18, other hand; on VV) | **+0.34** | -1.37 | +1.99 | -0.34 |
+
+DFT is single points on the potential's cells; it leaves 0.07 to 0.29 eV/A and up to 0.17 GPa on
+them. The last column is one relaxation in the potential tilted to DFT's forces and stress at the
+label (`mlip_train.py relax --dft-gradient`), both cells of each difference stepped: an estimate,
+not a second DFT calculation. The film cell's helix was stopped at the half angstrom allowed
+while still falling. belt4's helix values are the tables' polished margins (+0.317 and +0.037
+per monomer) times fourteen.
+
+- **The film's composition.** All three states found are below all-trans, and the order is
+  sheet on the chlorine, then the other sheet and the helix together (0.2 apart on single
+  points, 0.07 at the estimated minima: not told apart). The two sheets differ only in which side
+  of the chlorine unit carries the kink and in its hand, and DFT has them 3.1 apart. The cell
+  with the kink on the chlorine is 1.3% denser than all-trans (58.7 against 59.5 A3 per
+  monomer); the other is not (59.5).
+- **The leader.** Its helix is above all-trans (0.65) and its lowest sheet in the potential is
+  level with all-trans: +0.34 on single points and -0.34 at the estimated minima, a correction
+  as large as the number, so the sign is open. What is not open is that it is not 1.4 below.
+  **3.20's statement that the leader's lowest state found is kinked is withdrawn: that was the
+  potential.** In DFT, of the three states labelled, all-trans is the lowest or level with it.
+- **Margins in DFT at this size, for the first time** (all-trans minus the lowest helix,
+  kcal/mol per monomer): film's composition **+0.123**, leader **-0.047** (-0.053 at the
+  estimated minima). The potential has +0.163 and -0.070. belt4 has +0.317 and +0.037 polished
+  and upright (the tables' margins) and +0.251 and +0.163 rigid with the shear free (3.9). The
+  potential has both signs and is 0.04 and 0.02 off. belt4 is 0.13 to 0.19 too high on the
+  film's composition and 0.08 to 0.21 too high on the leader, which puts the leader's on the
+  other side of zero either way. 3.15's estimate for the film's composition was +0.13 to +0.18.
+- **The margin does not name the film cell's lowest state.** The helix is 1.7 below all-trans
+  and the kinked cell 5.0 (0.36 per monomer). 3.20 asked DFT this; that is the answer.
+
+**The potential's error on a kink sheet is not a constant.** It is 1.67 too low on the film
+cell's sheet at site 12, 1.70 too low on the leader's, 0.22 too low on the film cell's sheet on
+the chlorine, and it was 0.30 too high on PVDF's (3.19). Two cells agreeing at 1.7 looked like
+an offset, and a guess made on it for the third (-3.5) was wrong by 1.5. So the potential's
+sheet energies cannot be corrected by one number, and its order of sites is a guide to where
+DFT should look: it found the film cell's lowest state, which belt4 ranks third of its sites,
+1.1 above its cheapest.
+On helix cells it is 0.56 too low (film) and 0.33 too high (leader) per chain, 0.04 and 0.02 per
+monomer, inside the 0.1 needed.
+
+**Every kink site of the four cells in the potential** (108 sheets from belt4's shear-free
+starts, 260 to 1,900 steps each, all converged at 0.004 eV/A; four lost their kink and are left
+out; kcal/mol per kink pair against each cell's tight all-trans cell):
+
+| cell | sheets below all-trans | lowest three (site: the potential, belt4) | belt4's cheapest site there |
+|---|---:|---|---:|
+| film's composition | 4 of 27 | 14m: -5.26, -1.17; 12: -3.56, -2.27; 14: -1.75, +1.21 | 12: -3.56 |
+| leader | 7 of 24 | 18m: -1.32, +1.99; 18: -1.25, +1.90; 16m: -1.20, +2.53 | 10: +0.05 |
+| nitrile alone | 0 of 25 | 4: +0.20, -1.11; 26: +0.33, -1.06; 10: +0.36, -2.08 | 10: +0.36 |
+| matrix | 0 of 28 | 18m: +1.20, +6.82; 14: +1.50, +4.01; 26: +2.04, +3.37 | 24m: +3.11 |
+
+The leader's two known sheets came back from belt4's own starts in one run each (+0.05 in 326
+steps, -1.32 in 972), and the film cell's (-3.56 against -3.60 on processors). The potential and
+belt4 differ by 1.2 to 2.1 rms over a cell's sites and agree on the cheapest site in none of the
+four. Three of these sites have DFT: -5.03, -1.93 and +0.34 above.
+
+**The four helix placements of each cell at the tight stop** move one margin: the film
+composition's lowest placement is TGTG' (with GTG'T), 2.28 below all-trans, not G'TGT at 1.82
+which the loose stop of 3.14 had lowest. The potential's margins are matrix +0.018, film's
+composition **+0.163** (3.20 gave +0.129), nitrile alone -0.109, leader -0.070.
+
+**The four axes.** With DFT's two margins put through the tables' model
+(`examples/four_axes_at_margins.py`), and for the kink sites the potential's map with DFT's own
+energy at the three sites that have one:
+
+| cell | margin (DFT) | frequency | tan delta at 34 kHz | AC strain at the heat budget | blocked force per area through the crystal, pN/nm2 |
+|---|---:|---|---|---|---|
+| film's composition | +0.123 | 364 kHz (the anchor) | 0.065 | 0.073% | 6.4 |
+| the same for a margin 0.05 lower or higher | | 364 kHz | 0.088, 0.031 | 0.082%, 0.057% | 7.5, 4.9 |
+| leader | -0.047, taken as 0 | 0.2 kHz to 415 kHz | 0.05 to 0.60 | 0.002 to 0.068% | 0.1 to 3.7 |
+| the measured film's channel as calibrated | | 364 kHz | 0.060 | 0.070% | 6.5 |
+
+- The film composition's row is DFT's margin and nothing else new: the frequency is the
+  anchor's by construction, and dipole, switch strain and crystal stiffness are belt4's with no
+  DFT test. The blocked force uses the cell's own (belt4) stiffness, so it is an axis of its
+  own here; by the film's assumed modulus it is 0.15 pN/nm2 and is the strain again.
+- **The leader has no row.** Its margin is below zero in DFT: all-trans is its lower state, a
+  ferroelectric with a remanent polarization, which the loss model does not hold (it takes the
+  margin as zero). The ranges are that model outside its domain, over its two readings of the
+  kink sites (the sum over sites and the sites' share of time with a sheet) and over the
+  potential's map as it is and lifted by 1.7 at the sites DFT has not seen. In one corner of
+  the four (the map as it is, by occupancy) the leader reads 415 kHz, tan delta 0.052, 0.068%
+  and 3.7 pN/nm2: a little faster and less lossy than the film's composition with less strain
+  and half the force. In the other three it is far behind. Nothing here says the leader
+  outperforms the film's composition, and nothing here is a prediction of what it does.
+- A table sent to the PI before the last label lifted the whole map by 1.7 and gave the leader
+  2 or 245 kHz. It is withdrawn with the offset it rested on.
+
+**What this is and is not.**
+
+- A regular cell puts every chain's chlorine beside its neighbours', so every chain can kink at
+  its chlorine in register. A statistical terpolymer has its chlorines at random. The 5.0 is
+  what the pin is worth when the neighbours cooperate: an upper bound for the film, not its
+  number, and the measured film's response (calibrated at no margin) does not show a state 0.36
+  per monomer below the polar one.
+- Seven single points. The film cell's sheet on the chlorine has no stepped estimate here yet;
+  the sheet at site 12 against the helix, and the sign of the leader's sheet, need a second DFT
+  calculation on the stepped cells (stored: `mlip/cells14_stepped_to_dft.extxyz`).
+- The leader has 23 other sheets in the potential and DFT has seen one. With errors from -1.7 to
+  +0.3 a site, one of them below all-trans in DFT is possible. Its sheets at 18, 16m and 20m
+  are the ones to ask about.
+- The nitrile cell and the matrix have no DFT at this size. The refit and the 35 rows were not
+  run: the processors were DFT's for the pod's whole life.
+- What DFT now says about the two cells: the film's composition has a deep kinked state at its
+  chlorine, and the leader has nothing like it at the one site asked. That is a difference in
+  the pin, which is what the terpolymer's relaxor behaviour is ascribed to; on these seven
+  cells the leader at this composition looks like a ferroelectric.
+
+Files: `docs/predictions/cells14_states_dft.json` (the table; `row_cells_frames.py states-dft`),
+`mlip/cells14_frames_pbe_d3bj.extxyz` (the seven labels), `mlip/cells14_stepped_to_dft.extxyz`,
+`sheets14_potential_card.json` (108 sheets), `rows14_potential_card.json` (sixteen helix
+cells), `mlip/cells14_tight_in_all_s1.extxyz` (the 124 relaxed cells),
+`mlip/cells14_starts_for_all_s1.extxyz` (their starts),
+`kink_site_scan_potential_card.json`, `kink_site_scan_potential_card_dft_at_three.json` and
+`..._lifted.json` (`row_cells_frames.py sheets-as-scan`),
+`four_axes_dft_margins_card_sheets.json` and `..._lifted.json`. The pod's jobs:
+`examples/gpu_jobs/queue_20261120_dft14.txt`, `dft_cells.sh`, `relax_card.sh`, `card_check.sh`.
+Tests: `tests/test_cells14_dft.py`.
