@@ -1,0 +1,2863 @@
+{
+ "what": "the kink sites of kink_site_scan_belt4_shear.json, each site's energy replaced by the sheet relaxed in the potential there (sheets14_potential_card.json; kcal/mol per kink pair against the row's all-trans cell in the potential), and the sites of set_kcal_per_kink_pair given another evaluator's own energy (set_from_outside); potential: the sheet's own energy; tables_formation: the scan's",
+ "energy": "kcal/mol per kink pair",
+ "sheets": "sheets14_potential_card.json",
+ "scan": "kink_site_scan_belt4_shear.json",
+ "shift_kcal_per_kink_pair": {},
+ "set_kcal_per_kink_pair": {
+  "vdf9-trfe4-cfe1-14@12": -1.93,
+  "vdf9-trfe4-cfe1-14@14m": -5.034,
+  "vdf9-trfe3-an1-rvdf1-14@18m": 0.338,
+  "vdf9-trfe3-an1-rvdf1-14@18": -0.715,
+  "vdf9-trfe3-an1-rvdf1-14@20m": -0.4,
+  "vdf9-trfe3-an1-rvdf1-14@16m": 0.353,
+  "vdf9-trfe4-an1-14@4": -0.431,
+  "vdf10-trfe4-14@18m": 0.899
+ },
+ "rows": {
+  "vdf9-trfe4-cfe1-14@0": {
+   "letters": "VVRVVRVCVVRVVR",
+   "note": "64/29/7, the 63/30/7 film's composition in one regular cell: 29 mol% TrFE matrix with one CFE per fourteen",
+   "start_offset": 0,
+   "mirrored": false,
+   "sites": {
+    "0": {
+     "formation": 0.16489820608686387,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.40206959683958,
+      8.426395951902508,
+      92.66862116007682,
+      35.49584936204369
+     ],
+     "converged": true,
+     "upright_formation": 3.9520382488709487,
+     "shear_monomers": [
+      -0.06075696627978282,
+      -1.7871048885037772
+     ],
+     "kink_kept": true,
+     "potential": 0.16489820608686387,
+     "tables_formation": -0.13088855814770284
+    },
+    "2": {
+     "formation": 3.4373510531154703,
+     "relative": 1.3445348423034034,
+     "units": "VR",
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.315828132019306,
+      8.533065747216488,
+      92.44694324990625,
+      35.574803211280226
+     ],
+     "start_energy": 10.037055186224464,
+     "from_offset": 0,
+     "iterations": 218,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 223.691477060318,
+     "upright_formation": 5.296573091174352,
+     "shear_monomers": [
+      -0.06556792220317431,
+      -1.8387196191544326
+     ],
+     "potential": 3.4373510531154703,
+     "tables_formation": 3.449685963514966
+    },
+    "26": {
+     "formation": 1.8651250438979101,
+     "relative": 0.5565952542580419,
+     "units": "RV",
+     "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.409358630703777,
+      8.5082572056486,
+      91.46187651219728,
+      35.487267871056794
+     ],
+     "start_energy": 59.117766009742745,
+     "from_offset": 0,
+     "iterations": 210,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 232.20308089256287,
+     "upright_formation": 4.508633503128991,
+     "shear_monomers": [
+      1.1170214662416953,
+      -0.7632534035160846
+     ],
+     "potential": 1.8651250438979101,
+     "tables_formation": 1.1242037290232787
+    },
+    "4": {
+     "formation": 1.4953217711861058,
+     "relative": 0.6065461907604828,
+     "units": "RV",
+     "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.4096694467300015,
+      8.507214349083464,
+      91.37972190599777,
+      35.49199592875853
+     ],
+     "start_energy": 8.446440335077014,
+     "from_offset": 2,
+     "iterations": 260,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 295.1353576183319,
+     "upright_formation": 4.5585844396314315,
+     "shear_monomers": [
+      1.066466175307353,
+      -0.787626311134376
+     ],
+     "potential": 1.4953217711861058,
+     "tables_formation": 1.0989574759323233
+    },
+    "24": {
+     "formation": 3.4448031527999525,
+     "relative": 1.3781842612706185,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.316848021267076,
+      8.533003587840826,
+      92.5098681400452,
+      35.58352171769765
+     ],
+     "start_energy": 14.409249721321814,
+     "from_offset": 26,
+     "iterations": 193,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 285.91947507858276,
+     "upright_formation": 5.330222510141567,
+     "shear_monomers": [
+      -0.0685706528515682,
+      -1.8468209511930656
+     ],
+     "potential": 3.4448031527999525,
+     "tables_formation": 3.459436117938125
+    },
+    "6": {
+     "formation": 0.25114851076375955,
+     "relative": 0.10972318163999262,
+     "units": "VV",
+     "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.402381237707218,
+      8.417929714104217,
+      92.4871100127388,
+      35.496938864350675
+     ],
+     "start_energy": 8.605476459249616,
+     "from_offset": 4,
+     "iterations": 105,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 125.8435571193695,
+     "upright_formation": 4.061761430510941,
+     "shear_monomers": [
+      -0.06946925025542178,
+      -1.7821744561165618
+     ],
+     "potential": 0.25114851076375955,
+     "tables_formation": -0.28660663323859126
+    },
+    "22": {
+     "formation": 0.12796497871452583,
+     "relative": 0.012152373698370411,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
+     "kink_kept": true,
+     "cell": [
+      5.402768265294425,
+      8.430194296138842,
+      92.71438522064898,
+      35.496253456807246
+     ],
+     "start_energy": 10.047269729719801,
+     "from_offset": 24,
+     "iterations": 115,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 174.00864934921265,
+     "upright_formation": 3.964190622569319,
+     "shear_monomers": [
+      -0.061041194044718014,
+      -1.787966596656604
+     ],
+     "potential": 0.12796497871452583,
+     "tables_formation": -0.15150921125780314
+    },
+    "8": {
+     "formation": 3.579886423850897,
+     "relative": 1.300863111057879,
+     "units": "VR",
+     "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.322138429629411,
+      8.534129282634504,
+      92.24623952108853,
+      35.5439798949476
+     ],
+     "start_energy": 13.525838859858112,
+     "from_offset": 6,
+     "iterations": 167,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 300.61963844299316,
+     "upright_formation": 5.252901359928828,
+     "shear_monomers": [
+      -0.06699117350956449,
+      -1.853584427563133
+     ],
+     "potential": 3.579886423850897,
+     "tables_formation": 3.1556021534238425
+    },
+    "20": {
+     "formation": 1.8271046914746871,
+     "relative": 0.5151761910162946,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.407180404407636,
+      8.511407572710379,
+      91.52086106934043,
+      35.48232264599854
+     ],
+     "start_energy": 22.968607523334626,
+     "from_offset": 22,
+     "iterations": 97,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 140.88159918785095,
+     "upright_formation": 4.467214439887243,
+     "shear_monomers": [
+      1.1399004805102604,
+      -0.7347256007023739
+     ],
+     "potential": 1.8271046914746871,
+     "tables_formation": 1.0177873419603714
+    },
+    "10": {
+     "formation": -0.789119048216247,
+     "relative": 1.923857341333317,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.458790941051649,
+      8.463442959369686,
+      90.90841636776487,
+      35.51087639599602
+     ],
+     "start_energy": 12.66876944411004,
+     "from_offset": 8,
+     "iterations": 333,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 533.1582622528076,
+     "upright_formation": 5.875895590204266,
+     "shear_monomers": [
+      -0.07527612937500461,
+      -1.8195772874866667
+     ],
+     "potential": -0.789119048216247,
+     "tables_formation": -1.1214050288644586
+    },
+    "18": {
+     "formation": 3.412623238160965,
+     "relative": 1.5010488474954826,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.313493713810688,
+      8.543537020649786,
+      92.44158127280738,
+      35.58378799727374
+     ],
+     "start_energy": 16.112470474120812,
+     "from_offset": 20,
+     "iterations": 174,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 203.14247798919678,
+     "upright_formation": 5.453087096366431,
+     "shear_monomers": [
+      -0.08699164507950673,
+      -1.8443306485672217
+     ],
+     "potential": 3.412623238160965,
+     "tables_formation": 3.247594995336584
+    },
+    "12": {
+     "formation": -1.93,
+     "relative": 8.15897954122427,
+     "units": "VC",
+     "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.110636462475099,
+      9.20281201063652,
+      89.45419309355012,
+      35.63482818884033
+     ],
+     "start_energy": 389.6210165345017,
+     "from_offset": 10,
+     "iterations": 178,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 157.15952038764954,
+     "upright_formation": 12.111017790095218,
+     "shear_monomers": [
+      0.0445796673550116,
+      -1.7378447629729505
+     ],
+     "potential": -3.560107104728209,
+     "tables_formation": -2.272476756179998,
+     "set_from_outside": true
+    },
+    "16": {
+     "formation": 0.24457923721492217,
+     "relative": 0.794288337396182,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.413093547845945,
+      8.449923537235389,
+      92.55043346408347,
+      35.52430096836155
+     ],
+     "start_energy": 17.497168537236448,
+     "from_offset": 18,
+     "iterations": 130,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 151.17550802230835,
+     "upright_formation": 4.746326586267131,
+     "shear_monomers": [
+      -0.059195342507425225,
+      -1.7998102435590375
+     ],
+     "potential": 0.24457923721492217,
+     "tables_formation": -0.40569220538310446
+    },
+    "14": {
+     "formation": -1.7537661651253826,
+     "relative": 7.45734762399745,
+     "units": "CV",
+     "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.462115840206189,
+      8.693301140890412,
+      91.34074050806186,
+      35.49410060469831
+     ],
+     "start_energy": 29.870432715968704,
+     "from_offset": 12,
+     "iterations": 1023,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 1841.6538798809052,
+     "upright_formation": 11.409385872868398,
+     "shear_monomers": [
+      -0.9031846362400684,
+      -0.9696598740811907
+     ],
+     "potential": -1.7537661651253826,
+     "tables_formation": 1.2110411127440983
+    }
+   }
+  },
+  "vdf10-trfe4-14@0": {
+   "letters": "VVRVVRVVVVRVVR",
+   "note": "the same cell with the CFE replaced by VDF (71/29): the matrix without the pin",
+   "start_offset": 0,
+   "mirrored": false,
+   "sites": {
+    "0": {
+     "formation": 2.274148670272833,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.149540879339944,
+      8.548634407734797,
+      92.16179659517213,
+      35.52917539148609
+     ],
+     "converged": true,
+     "upright_formation": 7.0869603727945645,
+     "shear_monomers": [
+      1.1079787586105474,
+      -0.6881503282431763
+     ],
+     "kink_kept": true,
+     "potential": 2.274148670272833,
+     "tables_formation": 2.8936516036904294
+    },
+    "2": {
+     "formation": 7.7981506542874275,
+     "relative": -0.5864232663295041,
+     "units": "VR",
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.970411314672181,
+      8.71167066010557,
+      91.82167972226334,
+      35.609410631771446
+     ],
+     "start_energy": 12.896544211095659,
+     "from_offset": 0,
+     "iterations": 134,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 134.8217957019806,
+     "upright_formation": 6.50053710646506,
+     "shear_monomers": [
+      -0.0176759687044527,
+      -0.037987349473610404
+     ],
+     "potential": 7.7981506542874275,
+     "tables_formation": 6.3636625015818
+    },
+    "26": {
+     "formation": 2.036032863827316,
+     "relative": 0.123731234890883,
+     "units": "RV",
+     "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.064109216342166,
+      8.757809398786389,
+      90.6840869543706,
+      35.51199923580394
+     ],
+     "start_energy": 82.20895278009064,
+     "from_offset": 0,
+     "iterations": 269,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 351.4389774799347,
+     "upright_formation": 7.2106916076854475,
+     "shear_monomers": [
+      1.4885998022200988,
+      -0.3112780442676741
+     ],
+     "potential": 2.036032863827316,
+     "tables_formation": 3.3688590969591985
+    },
+    "4": {
+     "formation": 2.5126658389766243,
+     "relative": 0.11713626093903429,
+     "units": "RV",
+     "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.063905008663629,
+      8.758743535257024,
+      90.66226763173391,
+      35.51231729263528
+     ],
+     "start_energy": 15.234783797058782,
+     "from_offset": 2,
+     "iterations": 167,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 165.82941365242004,
+     "upright_formation": 7.204096633733599,
+     "shear_monomers": [
+      1.109190883660325,
+      -0.683769293851767
+     ],
+     "potential": 2.5126658389766243,
+     "tables_formation": 3.373094593182117
+    },
+    "24": {
+     "formation": 7.746043313865279,
+     "relative": -0.5842881750664901,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
+     "kink_kept": true,
+     "cell": [
+      4.970294336765378,
+      8.711251288131518,
+      91.82299202930218,
+      35.61023065535815
+     ],
+     "start_energy": 20.859704788890355,
+     "from_offset": 26,
+     "iterations": 182,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 180.463440656662,
+     "upright_formation": 6.502672197728074,
+     "shear_monomers": [
+      -0.022136938487780134,
+      -0.04692260065756993
+     ],
+     "potential": 7.746043313865279,
+     "tables_formation": 6.366504386163143
+    },
+    "6": {
+     "formation": 2.38350115000719,
+     "relative": -0.041921572072809,
+     "units": "VV",
+     "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.149233465452242,
+      8.54966121248414,
+      92.12769727507354,
+      35.52510742485666
+     ],
+     "start_energy": 16.817732433843915,
+     "from_offset": 4,
+     "iterations": 156,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 154.11067032814026,
+     "upright_formation": 7.0450388007217555,
+     "shear_monomers": [
+      1.0135486901200121,
+      -0.7466104554383761
+     ],
+     "potential": 2.38350115000719,
+     "tables_formation": 2.8831676277755065
+    },
+    "22": {
+     "formation": 2.215041552087957,
+     "relative": 0.004011496509050971,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
+     "kink_kept": true,
+     "cell": [
+      5.149590954603784,
+      8.548402054542175,
+      92.1585368097407,
+      35.530841508509134
+     ],
+     "start_energy": 11.818574613884266,
+     "from_offset": 24,
+     "iterations": 318,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 383.44339656829834,
+     "upright_formation": 7.0909718693036154,
+     "shear_monomers": [
+      1.1391343285809137,
+      -0.6676270836511933
+     ],
+     "potential": 2.215041552087957,
+     "tables_formation": 2.888729035353407
+    },
+    "8": {
+     "formation": 7.641972904757715,
+     "relative": -0.6121764233941462,
+     "units": "VR",
+     "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.970278843414102,
+      8.706490689149987,
+      91.82999490031605,
+      35.6112103984358
+     ],
+     "start_energy": 16.683380711534838,
+     "from_offset": 6,
+     "iterations": 113,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 114.21865177154541,
+     "upright_formation": 6.474783949400418,
+     "shear_monomers": [
+      -0.02370156364696096,
+      -0.08390689867902115
+     ],
+     "potential": 7.641972904757715,
+     "tables_formation": 6.361702354659258
+    },
+    "20": {
+     "formation": 2.563805229290132,
+     "relative": 0.11099723291458474,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.064116285805786,
+      8.756237690445372,
+      90.70876749302167,
+      35.51079569330737
+     ],
+     "start_energy": 33.43958527194815,
+     "from_offset": 22,
+     "iterations": 239,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 417.4689633846283,
+     "upright_formation": 7.197957605709149,
+     "shear_monomers": [
+      1.0625198701748315,
+      -0.7113489466245065
+     ],
+     "potential": 2.563805229290132,
+     "tables_formation": 3.3512240052561424
+    },
+    "10": {
+     "formation": 3.0500989929302342,
+     "relative": -0.21956860904646192,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.067567668714925,
+      8.74999821658647,
+      90.47985743986109,
+      35.51641831008169
+     ],
+     "start_energy": 14.268198565907952,
+     "from_offset": 8,
+     "iterations": 109,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 113.79679250717163,
+     "upright_formation": 6.867391763748103,
+     "shear_monomers": [
+      0.9807436253807762,
+      -0.7652025911956801
+     ],
+     "potential": 3.0500989929302342,
+     "tables_formation": 3.5169995783273436
+    },
+    "18": {
+     "formation": 6.845312111899279,
+     "relative": -0.6192046556237187,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.96808382874371,
+      8.717543399881851,
+      91.75562724293589,
+      35.606766060388885
+     ],
+     "start_energy": 22.819613616038836,
+     "from_offset": 20,
+     "iterations": 186,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 172.77453422546387,
+     "upright_formation": 6.467755717170846,
+     "shear_monomers": [
+      -0.028109647803502454,
+      -0.08129770776572477
+     ],
+     "potential": 6.845312111899279,
+     "tables_formation": 6.363748977223679
+    },
+    "12": {
+     "formation": 2.466033304012508,
+     "relative": -2.272101392316216,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.014370927490607,
+      8.666820179885033,
+      91.47626244093905,
+      35.505112715934786
+     ],
+     "start_energy": 8.970443306978396,
+     "from_offset": 10,
+     "iterations": 56,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 45.95512914657593,
+     "upright_formation": 4.814858980478348,
+     "shear_monomers": [
+      1.0238901669417733,
+      -0.8570953817811788
+     ],
+     "potential": 2.466033304012508,
+     "tables_formation": 4.090689036814965
+    },
+    "16": {
+     "formation": 2.862911236398646,
+     "relative": 0.004890464957071572,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.157537702099782,
+      8.54269534518479,
+      92.25639481182941,
+      35.537060016725924
+     ],
+     "start_energy": 11.843673049911047,
+     "from_offset": 18,
+     "iterations": 200,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 204.5018970966339,
+     "upright_formation": 7.091850837751636,
+     "shear_monomers": [
+      1.0924720931135492,
+      -0.7469797771915617
+     ],
+     "potential": 2.862911236398646,
+     "tables_formation": 2.862666990416301
+    },
+    "14": {
+     "formation": 1.503907899119162,
+     "relative": -1.9462451173485675,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.015822357742153,
+      8.671373356575545,
+      91.60236781081505,
+      35.505383497367404
+     ],
+     "start_energy": 7.139203012594962,
+     "from_offset": 12,
+     "iterations": 81,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 74.76510214805603,
+     "upright_formation": 5.140715255445997,
+     "shear_monomers": [
+      1.157373556501141,
+      -0.6950069743647554
+     ],
+     "potential": 1.503907899119162,
+     "tables_formation": 4.00599663690636
+    }
+   }
+  },
+  "vdf9-trfe4-cfe1-14@0~": {
+   "letters": "VVRVVRVCVVRVVR",
+   "note": "64/29/7, the 63/30/7 film's composition in one regular cell: 29 mol% TrFE matrix with one CFE per fourteen",
+   "start_offset": 0,
+   "mirrored": true,
+   "sites": {
+    "0": {
+     "formation": 1.589511778885095,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.003869691165015,
+      9.074875883083973,
+      93.87108480531094,
+      35.528501087057535
+     ],
+     "converged": true,
+     "upright_formation": 4.1778507272555885,
+     "shear_monomers": [
+      0.9424334491161337,
+      0.9268641299340951
+     ],
+     "kink_kept": true,
+     "potential": 1.589511778885095,
+     "tables_formation": 0.6347255835801775
+    },
+    "2": {
+     "formation": 0.338522518126596,
+     "relative": 1.267814490041829,
+     "units": "VR",
+     "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.081633563097653,
+      9.162971885372444,
+      93.18723415528098,
+      35.363404108609934
+     ],
+     "start_energy": 14.906993069486006,
+     "from_offset": 0,
+     "iterations": 202,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 197.28193926811218,
+     "upright_formation": 5.445665217297417,
+     "shear_monomers": [
+      0.9154348096349876,
+      0.9288185799857802
+     ],
+     "potential": 0.338522518126596,
+     "tables_formation": -1.2001369416813077
+    },
+    "26": {
+     "formation": 0.8761875715527868,
+     "relative": -0.3691291685070155,
+     "units": "RV",
+     "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
+     "kink_kept": true,
+     "cell": [
+      4.968837281968366,
+      9.101475887075809,
+      93.79743856363184,
+      35.56012616945705
+     ],
+     "start_energy": 7.457467950210059,
+     "from_offset": 0,
+     "iterations": 82,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 75.3766860961914,
+     "upright_formation": 3.808721558748573,
+     "shear_monomers": [
+      0.9553494349185114,
+      0.9134665451586982
+     ],
+     "potential": 0.8761875715527868,
+     "tables_formation": 0.7150528176156286
+    },
+    "4": {
+     "formation": 0.960321619494599,
+     "relative": -0.4509484061408813,
+     "units": "RV",
+     "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.967727410817004,
+      9.100788204017793,
+      93.85131605568208,
+      35.564535000953974
+     ],
+     "start_energy": 16.03440043577035,
+     "from_offset": 2,
+     "iterations": 118,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 109.63283848762512,
+     "upright_formation": 3.726902321114707,
+     "shear_monomers": [
+      0.9589751802821206,
+      0.9062373880519291
+     ],
+     "potential": 0.960321619494599,
+     "tables_formation": 0.6910402292672302
+    },
+    "24": {
+     "formation": 3.601967780116162,
+     "relative": 0.18053118627921094,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
+     "kink_kept": true,
+     "cell": [
+      4.900280796239934,
+      9.384669320466696,
+      95.85236821621395,
+      35.59168754647352
+     ],
+     "start_energy": 17.73634686672473,
+     "from_offset": 26,
+     "iterations": 89,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 72.15135526657104,
+     "upright_formation": 4.358381913534799,
+     "shear_monomers": [
+      1.0147123349428684,
+      0.5398062709353795
+     ],
+     "potential": 3.601967780116162,
+     "tables_formation": 3.3568205533352966
+    },
+    "6": {
+     "formation": 1.6078323733830622,
+     "relative": -0.13213321604609973,
+     "units": "VV",
+     "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.003070202099682,
+      9.071696454694033,
+      93.97008211352883,
+      35.53998084015166
+     ],
+     "start_energy": 5.211886243862196,
+     "from_offset": 4,
+     "iterations": 68,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 64.92432856559753,
+     "upright_formation": 4.045717511209489,
+     "shear_monomers": [
+      0.9520942069636477,
+      0.9127856047570394
+     ],
+     "potential": 1.6078323733830622,
+     "tables_formation": 0.683185347295435
+    },
+    "22": {
+     "formation": 1.6264076168887773,
+     "relative": 0.05508014043014953,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
+     "kink_kept": true,
+     "cell": [
+      4.998774071085207,
+      9.083954091223623,
+      93.8077925854763,
+      35.52797561257526
+     ],
+     "start_energy": 9.955842205569738,
+     "from_offset": 24,
+     "iterations": 74,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 71.4438898563385,
+     "upright_formation": 4.232930867685738,
+     "shear_monomers": [
+      0.9453763195224187,
+      0.9305722244208092
+     ],
+     "potential": 1.6264076168887773,
+     "tables_formation": 0.6368505507420252
+    },
+    "8": {
+     "formation": 2.932707583559059,
+     "relative": -0.6077892733236325,
+     "units": "VR",
+     "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.895931627552606,
+      9.382677278739452,
+      96.21451974250229,
+      35.57850235787406
+     ],
+     "start_energy": 17.82900951199403,
+     "from_offset": 6,
+     "iterations": 81,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 75.10127067565918,
+     "upright_formation": 3.570061453931956,
+     "shear_monomers": [
+      1.0923931093931458,
+      0.7886609160316111
+     ],
+     "potential": 2.932707583559059,
+     "tables_formation": 2.727738571552649
+    },
+    "20": {
+     "formation": 0.9679850774899456,
+     "relative": -0.35141614642492414,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.9671318272543346,
+      9.104401962638631,
+      93.7570322670878,
+      35.55539969998639
+     ],
+     "start_energy": 6.49833751366549,
+     "from_offset": 22,
+     "iterations": 69,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 71.00018882751465,
+     "upright_formation": 3.8264345808306643,
+     "shear_monomers": [
+      0.9520315541529302,
+      0.9151309117976869
+     ],
+     "potential": 0.9679850774899456,
+     "tables_formation": 0.6428635884320784
+    },
+    "10": {
+     "formation": 1.201801230450935,
+     "relative": -0.7602511614245344,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.945927213950116,
+      9.095088544484318,
+      94.27798998676805,
+      35.640293212964544
+     ],
+     "start_energy": 12.237150248511412,
+     "from_offset": 8,
+     "iterations": 128,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 134.22275233268738,
+     "upright_formation": 3.417599565831054,
+     "shear_monomers": [
+      0.9524844604604927,
+      0.9168843538684277
+     ],
+     "potential": 1.201801230450935,
+     "tables_formation": 0.7579545001857326
+    },
+    "18": {
+     "formation": 0.7359560373100908,
+     "relative": 0.28167210994656955,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
+     "kink_kept": false,
+     "cell": [
+      4.903623431549747,
+      9.380593419994717,
+      95.88970726609149,
+      35.590373963752874
+     ],
+     "start_energy": 17.41241653479011,
+     "from_offset": 20,
+     "iterations": 70,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 77.95015597343445,
+     "upright_formation": 4.459522837202158,
+     "shear_monomers": [
+      0.7698636576185038,
+      -0.9610247260209573
+     ],
+     "potential": 0.7359560373100908,
+     "tables_formation": 2.8531607965626335
+    },
+    "12": {
+     "formation": 1.5791908071200134,
+     "relative": 3.8925328067533087,
+     "units": "VC",
+     "torsions": "T T T T T T T T T T T T G- T G+ T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.9836284981362375,
+      9.347507818571156,
+      86.76385912188285,
+      35.04720496955037
+     ],
+     "start_energy": 33.52834268853471,
+     "from_offset": 10,
+     "iterations": 185,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 188.80394792556763,
+     "upright_formation": 8.070383534008897,
+     "shear_monomers": [
+      0.9763499988412565,
+      0.6947437118576825
+     ],
+     "potential": 1.5791908071200134,
+     "tables_formation": -0.34253213895286194
+    },
+    "16": {
+     "formation": 1.6031003335314973,
+     "relative": -0.04127290590888322,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.9830701445248335,
+      9.07838603359683,
+      93.50374920098612,
+      35.511807802325954
+     ],
+     "start_energy": 14.504480970824929,
+     "from_offset": 18,
+     "iterations": 96,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 101.94627451896667,
+     "upright_formation": 4.136577821346705,
+     "shear_monomers": [
+      0.9270874328707049,
+      0.98326960846816
+     ],
+     "potential": 1.6031003335314973,
+     "tables_formation": 0.511481600392699
+    },
+    "14": {
+     "formation": -5.034,
+     "relative": 4.104172077022611,
+     "units": "CV",
+     "torsions": "T T T T T T T T T T T T T T G- T G+ T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.141398319370571,
+      9.234206071126456,
+      94.88628415164948,
+      35.46427845366641
+     ],
+     "start_energy": 366.7627002694188,
+     "from_offset": 12,
+     "iterations": 227,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 240.18345665931702,
+     "upright_formation": 8.2820228042782,
+     "shear_monomers": [
+      0.946405989339043,
+      -0.9335335573370238
+     ],
+     "potential": -5.256836685882834,
+     "tables_formation": -1.166942578906017,
+     "set_from_outside": true
+    }
+   }
+  },
+  "vdf10-trfe4-14@0~": {
+   "letters": "VVRVVRVVVVRVVR",
+   "note": "the same cell with the CFE replaced by VDF (71/29): the matrix without the pin",
+   "start_offset": 0,
+   "mirrored": true,
+   "sites": {
+    "0": {
+     "formation": 4.363125593925216,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      4.983612098239712,
+      8.71458109387618,
+      90.35217826504152,
+      35.526877184577835
+     ],
+     "converged": true,
+     "upright_formation": 5.793024471054366,
+     "shear_monomers": [
+      -0.926783128507783,
+      -0.8348320677295241
+     ],
+     "kink_kept": true,
+     "potential": 4.363125593925216,
+     "tables_formation": 2.3635823625306784
+    },
+    "2": {
+     "formation": 2.9590940600681788,
+     "relative": 2.47566759064685,
+     "units": "VR",
+     "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.075137519620083,
+      8.870106198286235,
+      90.74068117065119,
+      35.38549668424393
+     ],
+     "start_energy": 19.32266695487587,
+     "from_offset": 0,
+     "iterations": 130,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 112.43367791175842,
+     "upright_formation": 8.268692061701216,
+     "shear_monomers": [
+      -0.8897553888614262,
+      -0.8034081782382563
+     ],
+     "potential": 2.9590940600681788,
+     "tables_formation": 0.9440840994627564
+    },
+    "26": {
+     "formation": 3.8213648978810264,
+     "relative": -0.37953984952949327,
+     "units": "RV",
+     "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
+     "kink_kept": true,
+     "cell": [
+      4.954765689187045,
+      8.73107350325713,
+      90.21809693322294,
+      35.54730807753574
+     ],
+     "start_energy": 8.615550469693375,
+     "from_offset": 0,
+     "iterations": 79,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 67.18318319320679,
+     "upright_formation": 5.413484621524873,
+     "shear_monomers": [
+      -0.9463529651988215,
+      -0.8944890006590733
+     ],
+     "potential": 3.8213648978810264,
+     "tables_formation": 2.5853651008650473
+    },
+    "4": {
+     "formation": 3.713846751536967,
+     "relative": -0.375143245351822,
+     "units": "RV",
+     "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.954505706134902,
+      8.73208409437381,
+      90.22632722926198,
+      35.54709644931098
+     ],
+     "start_energy": 17.329926810762984,
+     "from_offset": 2,
+     "iterations": 105,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 108.34080815315247,
+     "upright_formation": 5.417881225702544,
+     "shear_monomers": [
+      -0.9459595861989243,
+      -0.8860898565801797
+     ],
+     "potential": 3.713846751536967,
+     "tables_formation": 2.5896234275305403
+    },
+    "24": {
+     "formation": 3.1076513335499687,
+     "relative": 2.4845802455020447,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.075200152739178,
+      8.868777076649545,
+      90.75669435852411,
+      35.388792437935784
+     ],
+     "start_energy": 23.611170877162976,
+     "from_offset": 26,
+     "iterations": 340,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 364.51493549346924,
+     "upright_formation": 8.27760471655641,
+     "shear_monomers": [
+      -0.9024726848194844,
+      -0.831916828453115
+     ],
+     "potential": 3.1076513335499687,
+     "tables_formation": 0.9434111857436278
+    },
+    "6": {
+     "formation": 4.433541682731986,
+     "relative": 0.013853848001417646,
+     "units": "VV",
+     "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.983087543430214,
+      8.71667318793491,
+      90.36594148535984,
+      35.525210821510456
+     ],
+     "start_energy": 6.933901036014774,
+     "from_offset": 4,
+     "iterations": 57,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 56.25880694389343,
+     "upright_formation": 5.806878319055784,
+     "shear_monomers": [
+      -0.9276556844768031,
+      -0.8650089910636602
+     ],
+     "potential": 4.433541682731986,
+     "tables_formation": 2.36647975332707
+    },
+    "22": {
+     "formation": 4.817584498708687,
+     "relative": 0.0017202814917851583,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
+     "kink_kept": true,
+     "cell": [
+      4.9833892589708695,
+      8.714644770070054,
+      90.35427427937304,
+      35.527308945522265
+     ],
+     "start_energy": 17.3090434885235,
+     "from_offset": 24,
+     "iterations": 133,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 164.0483148097992,
+     "upright_formation": 5.794744752546151,
+     "shear_monomers": [
+      -0.935955480566124,
+      -0.8300689377685982
+     ],
+     "potential": 4.817584498708687,
+     "tables_formation": 2.36518071341186
+    },
+    "8": {
+     "formation": 2.9717556641263805,
+     "relative": 2.4894066919655273,
+     "units": "VR",
+     "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.074109818271568,
+      8.877730944821467,
+      90.79429656662586,
+      35.37882636677824
+     ],
+     "start_energy": 22.979181889542744,
+     "from_offset": 6,
+     "iterations": 98,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 81.30138421058655,
+     "upright_formation": 8.282431163019893,
+     "shear_monomers": [
+      -0.9007515695056401,
+      -0.8018542266132326
+     ],
+     "potential": 2.9717556641263805,
+     "tables_formation": 1.0694726149701097
+    },
+    "20": {
+     "formation": 3.8316897947135318,
+     "relative": -0.3795646800113701,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.954442303768547,
+      8.73119135646101,
+      90.20909008637346,
+      35.54667792446348
+     ],
+     "start_energy": 7.547974787314473,
+     "from_offset": 22,
+     "iterations": 90,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 82.00469279289246,
+     "upright_formation": 5.413459791042996,
+     "shear_monomers": [
+      -0.9609528697537865,
+      -0.860264800680469
+     ],
+     "potential": 3.8316897947135318,
+     "tables_formation": 2.58696217734213
+    },
+    "10": {
+     "formation": 3.561940811517132,
+     "relative": -0.7164070855075835,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.947968752123072,
+      8.75399759311621,
+      90.33798499757565,
+      35.52817582661631
+     ],
+     "start_energy": 16.93416522808488,
+     "from_offset": 8,
+     "iterations": 99,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 99.50619292259216,
+     "upright_formation": 5.076617385546783,
+     "shear_monomers": [
+      -0.962714995108372,
+      -0.8113201411308403
+     ],
+     "potential": 3.561940811517132,
+     "tables_formation": 2.4867485548557227
+    },
+    "18": {
+     "formation": 0.899,
+     "relative": 2.6025652342798082,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.874252871486371,
+      9.24415079180118,
+      95.46197351366294,
+      35.641243994598256
+     ],
+     "start_energy": 24.262051911226052,
+     "from_offset": 20,
+     "iterations": 193,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 180.50074076652527,
+     "upright_formation": 8.395589705334174,
+     "shear_monomers": [
+      -0.8571047942126123,
+      0.9573700121673695
+     ],
+     "potential": 1.2000299308393223,
+     "tables_formation": 6.816646966116593,
+     "set_from_outside": true
+    },
+    "12": {
+     "formation": 2.5677488116983533,
+     "relative": -1.1343787947742214,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T G- T G+ T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.958424409801276,
+      8.770045645250413,
+      90.5714630511769,
+      35.518230276704124
+     ],
+     "start_energy": 6.184437916057007,
+     "from_offset": 10,
+     "iterations": 58,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 52.06515431404114,
+     "upright_formation": 4.658645676280145,
+     "shear_monomers": [
+      -0.9613033714147786,
+      -0.7421419984982932
+     ],
+     "potential": 2.5677488116983533,
+     "tables_formation": 1.1361732324370593
+    },
+    "16": {
+     "formation": 4.70730370639434,
+     "relative": -0.04939202646609431,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.980060525747392,
+      8.720097728261267,
+      90.40142086265622,
+      35.525282364650884
+     ],
+     "start_energy": 12.807214815712967,
+     "from_offset": 18,
+     "iterations": 86,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 89.31989908218384,
+     "upright_formation": 5.743632444588272,
+     "shear_monomers": [
+      -0.937868618467996,
+      -0.8439201348186456
+     ],
+     "potential": 4.70730370639434,
+     "tables_formation": 2.3451554520047893
+    },
+    "14": {
+     "formation": 3.3067452159247916,
+     "relative": -0.8181863614078395,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T G- T G+ T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.961389592026342,
+      8.755116833273158,
+      90.51788597041715,
+      35.53720710505095
+     ],
+     "start_energy": 6.564710119004431,
+     "from_offset": 12,
+     "iterations": 62,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 53.08690643310547,
+     "upright_formation": 4.974838109646527,
+     "shear_monomers": [
+      -0.9430228556992133,
+      -0.7944731974371816
+     ],
+     "potential": 3.3067452159247916,
+     "tables_formation": 1.4361783552185585
+    }
+   }
+  },
+  "vdf9-trfe4-an1-14@0": {
+   "letters": "VVRVVRVAVVRVVR",
+   "note": "the 64/29/7 cell with acrylonitrile in place of CFE: the nitrile pin at the film's dilution",
+   "start_offset": 0,
+   "mirrored": false,
+   "fixed_cell": false,
+   "sites": {
+    "0": {
+     "formation": 0.9904476235012654,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.5259721400099115,
+      8.380176846471782,
+      92.296574020419,
+      35.455493635474895
+     ],
+     "converged": true,
+     "upright_formation": 3.2542191181149605,
+     "shear_monomers": [
+      -0.08590861376110169,
+      -1.7643387452126198
+     ],
+     "kink_kept": true,
+     "potential": 0.9904476235012654,
+     "tables_formation": 0.14310456106717595
+    },
+    "2": {
+     "formation": 4.428600312802452,
+     "relative": 1.6701371677108483,
+     "units": "VR",
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.448215318754983,
+      8.517322481156102,
+      92.1323953729733,
+      35.50544169018853
+     ],
+     "start_energy": 9.585575770854703,
+     "from_offset": 0,
+     "iterations": 234,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 176.54119086265564,
+     "upright_formation": 4.924356285825809,
+     "shear_monomers": [
+      -0.12512598978191344,
+      -1.8097722198678996
+     ],
+     "potential": 4.428600312802452,
+     "tables_formation": 3.8146037642287496
+    },
+    "26": {
+     "formation": 0.3327962770482575,
+     "relative": 0.35757301848995837,
+     "units": "RV",
+     "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.536681454202816,
+      8.468187868569128,
+      90.85121045982993,
+      35.447800552216904
+     ],
+     "start_energy": 51.12212055263273,
+     "from_offset": 0,
+     "iterations": 155,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 95.75496792793274,
+     "upright_formation": 3.611792136604919,
+     "shear_monomers": [
+      -0.1639747386377455,
+      -1.787960256893699
+     ],
+     "potential": 0.3327962770482575,
+     "tables_formation": -1.0625420523939937
+    },
+    "4": {
+     "formation": -0.431,
+     "relative": 0.45130426629347653,
+     "units": "RV",
+     "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.537038595827211,
+      8.465355703358496,
+      90.68294957604998,
+      35.45218390766996
+     ],
+     "start_energy": 7.8493438963622,
+     "from_offset": 2,
+     "iterations": 250,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 167.41495895385742,
+     "upright_formation": 3.705523384408437,
+     "shear_monomers": [
+      -0.13899702311445797,
+      -1.784608323617822
+     ],
+     "potential": 0.19836008635856617,
+     "tables_formation": -1.1117369547687872,
+     "set_from_outside": true
+    },
+    "24": {
+     "formation": 4.506580323799942,
+     "relative": 1.6773303495648264,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.446959262392033,
+      8.519168521944279,
+      92.0869364148047,
+      35.52032359453615
+     ],
+     "start_energy": 15.185521800616883,
+     "from_offset": 26,
+     "iterations": 165,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 84.44508385658264,
+     "upright_formation": 4.931549467679787,
+     "shear_monomers": [
+      -0.11077495349460832,
+      -1.8220225161749253
+     ],
+     "potential": 4.506580323799942,
+     "tables_formation": 3.8241047853981485
+    },
+    "6": {
+     "formation": 0.4519604723007315,
+     "relative": 0.21249332337498572,
+     "units": "VV",
+     "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.528818868497632,
+      8.376812458009121,
+      92.09847338127733,
+      35.4514288515943
+     ],
+     "start_energy": 8.94815669359491,
+     "from_offset": 4,
+     "iterations": 113,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 50.3542959690094,
+     "upright_formation": 3.466712441489946,
+     "shear_monomers": [
+      -0.08724684619690765,
+      -1.766137094665601
+     ],
+     "potential": 0.4519604723007315,
+     "tables_formation": -0.04935286788688131
+    },
+    "22": {
+     "formation": 1.0377816668931583,
+     "relative": 0.013818468451972876,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
+     "kink_kept": true,
+     "cell": [
+      5.5261899618396715,
+      8.382902321007448,
+      92.30768979353935,
+      35.466532440274364
+     ],
+     "start_energy": 11.513184235983545,
+     "from_offset": 24,
+     "iterations": 125,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 70.05182528495789,
+     "upright_formation": 3.2680375865669333,
+     "shear_monomers": [
+      -0.06758884425026433,
+      -1.7781993315445883
+     ],
+     "potential": 1.0377816668931583,
+     "tables_formation": 0.13303177689830648
+    },
+    "8": {
+     "formation": 4.2047473435426355,
+     "relative": 1.8975951343934838,
+     "units": "VR",
+     "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.4523124205632545,
+      8.513888374132254,
+      92.05995944333178,
+      35.47753731382557
+     ],
+     "start_energy": 15.412441427712892,
+     "from_offset": 6,
+     "iterations": 206,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 152.18662643432617,
+     "upright_formation": 5.151814252508444,
+     "shear_monomers": [
+      -0.07873237973762817,
+      -1.8594292558615333
+     ],
+     "potential": 4.2047473435426355,
+     "tables_formation": 3.880594125495918
+    },
+    "20": {
+     "formation": 0.49685693085741356,
+     "relative": 0.23064589985663986,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.535311889304298,
+      8.476227613631773,
+      90.87111681343222,
+      35.444551669438056
+     ],
+     "start_energy": 20.087562625163272,
+     "from_offset": 22,
+     "iterations": 88,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 63.593623876571655,
+     "upright_formation": 3.4848650179716003,
+     "shear_monomers": [
+      -0.09785232361652688,
+      -1.8087184701699721
+     ],
+     "potential": 0.49685693085741356,
+     "tables_formation": -1.0592753996667312
+    },
+    "10": {
+     "formation": 0.3644418039977304,
+     "relative": 2.171474100022479,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.583145208140356,
+      8.509795508197815,
+      89.89650608216844,
+      35.369233111610896
+     ],
+     "start_energy": 21.433433224739588,
+     "from_offset": 8,
+     "iterations": 374,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 303.1335425376892,
+     "upright_formation": 5.4256932181374395,
+     "shear_monomers": [
+      -0.05553965322463927,
+      -1.840197317158525
+     ],
+     "potential": 0.3644418039977304,
+     "tables_formation": -2.0780795278830055
+    },
+    "18": {
+     "formation": 4.473187264560817,
+     "relative": 1.7738459382169651,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.449572699892785,
+      8.513089261486742,
+      91.96105840261617,
+      35.57758785837348
+     ],
+     "start_energy": 16.63812845290903,
+     "from_offset": 20,
+     "iterations": 230,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 115.11915922164917,
+     "upright_formation": 5.028065056331926,
+     "shear_monomers": [
+      -0.050734001283600644,
+      -1.820088547443488
+     ],
+     "potential": 4.473187264560817,
+     "tables_formation": 4.055274226515195
+    },
+    "12": {
+     "formation": 2.1836913359948906,
+     "relative": 12.832477157004774,
+     "units": "VA",
+     "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      7.614946152932484,
+      7.752077054495285,
+      84.90429056144632,
+      34.95827807240862
+     ],
+     "start_energy": 429.1705782517302,
+     "from_offset": 10,
+     "iterations": 282,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 135.7522521018982,
+     "upright_formation": 16.086696275119735,
+     "shear_monomers": [
+      0.9155122320584073,
+      -0.9039785951947645
+     ],
+     "potential": 2.1836913359948906,
+     "tables_formation": 0.6251875904575144
+    },
+    "16": {
+     "formation": 0.8959037263793048,
+     "relative": 0.5092100408274831,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.56481909323242,
+      8.405760956690862,
+      92.04122001219588,
+      35.51558098238378
+     ],
+     "start_energy": 23.264577386541873,
+     "from_offset": 18,
+     "iterations": 106,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 53.27572321891785,
+     "upright_formation": 3.7634291589424436,
+     "shear_monomers": [
+      -0.07118379048907982,
+      -1.8067783495546277
+     ],
+     "potential": 0.8959037263793048,
+     "tables_formation": 0.0030701777182713386
+    },
+    "14": {
+     "formation": 5.843971016590115,
+     "relative": 5.382319408762427,
+     "units": "AV",
+     "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      9.695419402017786,
+      5.094012570992482,
+      82.81028905023733,
+      35.37229739714481
+     ],
+     "start_energy": 192.48232179807246,
+     "from_offset": 12,
+     "iterations": 133,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 75.6014404296875,
+     "upright_formation": 8.636538526877388,
+     "shear_monomers": [
+      0.09356708775491024,
+      0.022593302305182777
+     ],
+     "potential": 5.843971016590115,
+     "tables_formation": 8.570918889482058
+    }
+   }
+  },
+  "vdf9-trfe4-an1-14@0~": {
+   "letters": "VVRVVRVAVVRVVR",
+   "note": "the 64/29/7 cell with acrylonitrile in place of CFE: the nitrile pin at the film's dilution",
+   "start_offset": 0,
+   "mirrored": true,
+   "fixed_cell": false,
+   "sites": {
+    "0": {
+     "formation": 1.894588254574232,
+     "relative": 0.0,
+     "units": "VV",
+     "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.081910245758046,
+      9.17729195565412,
+      95.47436157086514,
+      35.496716774694676
+     ],
+     "converged": true,
+     "upright_formation": 3.650032480434689,
+     "shear_monomers": [
+      0.9615239361104383,
+      0.7682001944157479
+     ],
+     "kink_kept": true,
+     "potential": 1.894588254574232,
+     "tables_formation": 0.7630872116538114
+    },
+    "2": {
+     "formation": 0.9127390650136538,
+     "relative": 0.9708625425006545,
+     "units": "VR",
+     "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.1401607064659105,
+      9.247706226190866,
+      94.35385090012608,
+      35.32826283674305
+     ],
+     "start_energy": 13.737840496646413,
+     "from_offset": 0,
+     "iterations": 159,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 65.40431642532349,
+     "upright_formation": 4.620895022935343,
+     "shear_monomers": [
+      0.9271961825741696,
+      0.8402786349942342
+     ],
+     "potential": 0.9127390650136538,
+     "tables_formation": -1.1497649067262898
+    },
+    "26": {
+     "formation": 1.507040291799496,
+     "relative": -0.2695521237702394,
+     "units": "RV",
+     "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.0274806116413036,
+      9.222112113495266,
+      95.35752256345216,
+      35.534769917434744
+     ],
+     "start_energy": 7.449675979981592,
+     "from_offset": 0,
+     "iterations": 94,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 72.51211190223694,
+     "upright_formation": 3.3804803566644495,
+     "shear_monomers": [
+      0.9545341164469195,
+      0.8751199912204294
+     ],
+     "potential": 1.507040291799496,
+     "tables_formation": 0.81628932907023
+    },
+    "4": {
+     "formation": 1.4308018724173264,
+     "relative": -0.31880529570887006,
+     "units": "RV",
+     "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.017408807194042,
+      9.239235108674174,
+      95.34284707202096,
+      35.531515910725794
+     ],
+     "start_energy": 16.521509808554484,
+     "from_offset": 2,
+     "iterations": 159,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 102.15305542945862,
+     "upright_formation": 3.331227184725819,
+     "shear_monomers": [
+      0.9565482301479867,
+      0.8803716124380588
+     ],
+     "potential": 1.4308018724173264,
+     "tables_formation": 0.8555618036417059
+    },
+    "24": {
+     "formation": 4.546339541285666,
+     "relative": -0.36654093771531393,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
+     "kink_kept": true,
+     "cell": [
+      4.929962899439995,
+      9.465637031001016,
+      97.00104311278795,
+      35.54203931784258
+     ],
+     "start_energy": 16.397554889716417,
+     "from_offset": 26,
+     "iterations": 98,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 46.04258847236633,
+     "upright_formation": 3.283491542719375,
+     "shear_monomers": [
+      1.055015671953163,
+      0.6351832891421579
+     ],
+     "potential": 4.546339541285666,
+     "tables_formation": 2.7893602957964703
+    },
+    "6": {
+     "formation": 1.3529859530219974,
+     "relative": -0.07944898077215612,
+     "units": "VV",
+     "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.069602383836241,
+      9.199019004085494,
+      95.4521310032426,
+      35.48483973907073
+     ],
+     "start_energy": 4.8923022511204834,
+     "from_offset": 4,
+     "iterations": 60,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 25.058433771133423,
+     "upright_formation": 3.5705834996625327,
+     "shear_monomers": [
+      0.9454630258662596,
+      0.9214740547967013
+     ],
+     "potential": 1.3529859530219974,
+     "tables_formation": 0.9164544505165964
+    },
+    "22": {
+     "formation": 2.149101430765039,
+     "relative": 0.020564025422032728,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
+     "kink_kept": true,
+     "cell": [
+      5.08022629282543,
+      9.178030482556599,
+      95.43474295646737,
+      35.494706355658344
+     ],
+     "start_energy": 9.717692711510367,
+     "from_offset": 24,
+     "iterations": 123,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 80.7233054637909,
+     "upright_formation": 3.6705965058567216,
+     "shear_monomers": [
+      0.9439751586098096,
+      0.9014476268395195
+     ],
+     "potential": 2.149101430765039,
+     "tables_formation": 0.7604566252561682
+    },
+    "8": {
+     "formation": 2.6037616780004904,
+     "relative": -1.5016484067107285,
+     "units": "VR",
+     "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.924748021840128,
+      9.490476553455025,
+      96.97098794240394,
+      35.48496132571953
+     ],
+     "start_energy": 16.583165870074552,
+     "from_offset": 6,
+     "iterations": 115,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 77.87044548988342,
+     "upright_formation": 2.1483840737239603,
+     "shear_monomers": [
+      1.070361256295505,
+      0.733079613265244
+     ],
+     "potential": 2.6037616780004904,
+     "tables_formation": 1.663724614990386
+    },
+    "20": {
+     "formation": 1.4542490547351774,
+     "relative": -0.24151244463284627,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.027897335550383,
+      9.217019894856158,
+      95.32834558617208,
+      35.53346220371004
+     ],
+     "start_energy": 6.443655281884176,
+     "from_offset": 22,
+     "iterations": 76,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 50.64348006248474,
+     "upright_formation": 3.4085200358018426,
+     "shear_monomers": [
+      0.9604550546190092,
+      0.8948919583236514
+     ],
+     "potential": 1.4542490547351774,
+     "tables_formation": 0.7099542325149173
+    },
+    "10": {
+     "formation": 2.6512261133507637,
+     "relative": -1.3883592058869283,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      4.989289976844518,
+      9.236139341983684,
+      95.52414848617316,
+      35.5676783454366
+     ],
+     "start_energy": 20.92680002287146,
+     "from_offset": 8,
+     "iterations": 109,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 65.26800870895386,
+     "upright_formation": 2.2616732745477606,
+     "shear_monomers": [
+      0.9946749435249624,
+      1.0993193339780096
+     ],
+     "potential": 2.6512261133507637,
+     "tables_formation": 1.2815265705165046
+    },
+    "18": {
+     "formation": -0.2805474475250753,
+     "relative": 0.1390671005410411,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
+     "kink_kept": false,
+     "cell": [
+      4.933297331282589,
+      9.464458473199766,
+      97.0608423554524,
+      35.57390757813319
+     ],
+     "start_energy": 18.331096168536007,
+     "from_offset": 20,
+     "iterations": 112,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 44.29894828796387,
+     "upright_formation": 3.78909958097573,
+     "shear_monomers": [
+      0.36059441277960874,
+      -1.9632979422024972
+     ],
+     "potential": -0.2805474475250753,
+     "tables_formation": 3.2824745483016216
+    },
+    "16": {
+     "formation": 2.314574550807515,
+     "relative": 0.659355924987139,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.064287648059435,
+      9.1939741787286,
+      95.37209020984845,
+      35.497627242258126
+     ],
+     "start_energy": 59.193154873260696,
+     "from_offset": 18,
+     "iterations": 100,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 50.95309662818909,
+     "upright_formation": 4.309388405421828,
+     "shear_monomers": [
+      0.9546616395669307,
+      0.9293774439746461
+     ],
+     "potential": 2.314574550807515,
+     "tables_formation": 1.4696277387852206
+    }
+   }
+  },
+  "vdf9-trfe3-an1-rvdf1-14@0": {
+   "letters": "IVRVVRVAVVVVVR",
+   "note": "the same with three TrFE in place of four (21 mol%): the TrFE lever on the nitrile pair's margin",
+   "start_offset": 0,
+   "mirrored": false,
+   "fixed_cell": false,
+   "sites": {
+    "0": {
+     "formation": 1.7711688431500323,
+     "relative": 0.0,
+     "units": "IV",
+     "torsions": "G+ T G- T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.553800382083431,
+      8.364696525230501,
+      92.65725913277893,
+      35.47930960042799
+     ],
+     "converged": true,
+     "upright_formation": 2.6018331410158027,
+     "shear_monomers": [
+      -0.19766198866335288,
+      -0.16228542814635785
+     ],
+     "kink_kept": true,
+     "potential": 1.7711688431500323,
+     "tables_formation": 2.6565396522204168
+    },
+    "2": {
+     "formation": 4.045327792812553,
+     "relative": 0.9503575938638278,
+     "units": "VR",
+     "torsions": "T T G+ T G- T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.480269989542832,
+      8.527285271203521,
+      92.3960314823819,
+      35.477877906745256
+     ],
+     "start_energy": 9.22184969719676,
+     "from_offset": 0,
+     "iterations": 67,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 61.41228628158569,
+     "upright_formation": 3.5521907348796304,
+     "shear_monomers": [
+      -0.09548503293199051,
+      -0.2875111378134257
+     ],
+     "potential": 4.045327792812553,
+     "tables_formation": 3.6052727406882354
+    },
+    "26": {
+     "formation": 4.751745925200363,
+     "relative": 2.7459731880077953,
+     "units": "RI",
+     "torsions": "G- T T T T T T T T T T T T T T T T T T T T T T T T T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.5330467531235525,
+      8.461976474383087,
+      93.21183825225937,
+      35.33583490871511
+     ],
+     "start_energy": 17.868888083447843,
+     "from_offset": 0,
+     "iterations": 106,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 42.29987025260925,
+     "upright_formation": 5.347806329023598,
+     "shear_monomers": [
+      0.23049160142533737,
+      -0.2516122557063039
+     ],
+     "potential": 4.751745925200363,
+     "tables_formation": 4.411221093015683
+    },
+    "4": {
+     "formation": -0.7902707872029405,
+     "relative": 0.23804835741810848,
+     "units": "RV",
+     "torsions": "T T T T G+ T G- T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.587238486554417,
+      8.441916132287771,
+      91.27765253208264,
+      35.436387120353835
+     ],
+     "start_energy": 6.340451047461883,
+     "from_offset": 2,
+     "iterations": 64,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 28.826385974884033,
+     "upright_formation": 2.839881498433911,
+     "shear_monomers": [
+      -0.14530311899176657,
+      -1.58103632715938
+     ],
+     "potential": -0.7902707872029405,
+     "tables_formation": 1.3562635397855018
+    },
+    "24": {
+     "formation": 4.545967602938945,
+     "relative": 2.08079888701819,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G+ T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.508104803026805,
+      8.479150175697828,
+      92.22816190247032,
+      35.40419922251746
+     ],
+     "start_energy": 11.2331499724542,
+     "from_offset": 26,
+     "iterations": 148,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 59.416428565979004,
+     "upright_formation": 4.682632028033993,
+     "shear_monomers": [
+      -0.27931688302987545,
+      -0.5028826483512611
+     ],
+     "potential": 4.545967602938945,
+     "tables_formation": 4.246586404914041
+    },
+    "6": {
+     "formation": 1.8528641214691226,
+     "relative": 0.1393382468500448,
+     "units": "VV",
+     "torsions": "T T T T T T G+ T G- T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.561402088481709,
+      8.384654919513434,
+      92.6155898067549,
+      35.40853234592376
+     ],
+     "start_energy": 7.2396223164452636,
+     "from_offset": 4,
+     "iterations": 85,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 40.46629810333252,
+     "upright_formation": 2.7411713878658475,
+     "shear_monomers": [
+      -0.105706997461564,
+      -0.5892163839091931
+     ],
+     "potential": 1.8528641214691226,
+     "tables_formation": 2.81719662222514
+    },
+    "22": {
+     "formation": 0.2465385348567493,
+     "relative": -0.056958585870376055,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G+ T G- T T T",
+     "kink_kept": true,
+     "cell": [
+      5.552205142510083,
+      8.408489269469579,
+      92.6950316585638,
+      35.45247834369729
+     ],
+     "start_energy": 28.280882187675076,
+     "from_offset": 24,
+     "iterations": 73,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 46.41885304450989,
+     "upright_formation": 2.5448745551454266,
+     "shear_monomers": [
+      -0.049186497978558896,
+      -1.6024795767647064
+     ],
+     "potential": 0.2465385348567493,
+     "tables_formation": 2.514142006724825
+    },
+    "8": {
+     "formation": 5.063264298256,
+     "relative": 1.7203985636860324,
+     "units": "VR",
+     "torsions": "T T T T T T T T G+ T G- T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.470639137733323,
+      8.553809958221446,
+      92.72297492213022,
+      35.37740995222325
+     ],
+     "start_energy": 12.808569633317632,
+     "from_offset": 6,
+     "iterations": 87,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 64.47983288764954,
+     "upright_formation": 4.322231704701835,
+     "shear_monomers": [
+      -0.18173527782332322,
+      -0.5034766005705925
+     ],
+     "potential": 5.063264298256,
+     "tables_formation": 4.3831405256024
+    },
+    "20": {
+     "formation": -0.581063231164357,
+     "relative": -0.7073068501345716,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G+ T G- T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.49103016102612,
+      8.479081361175426,
+      92.33597770529562,
+      35.385108473508886
+     ],
+     "start_energy": 16.229179766824203,
+     "from_offset": 22,
+     "iterations": 62,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 47.91634464263916,
+     "upright_formation": 1.894526290881231,
+     "shear_monomers": [
+      -0.4340115510672344,
+      -1.1134098219432627
+     ],
+     "potential": -0.581063231164357,
+     "tables_formation": 1.9222870461001662
+    },
+    "10": {
+     "formation": 0.051982232586705326,
+     "relative": 2.1093831103028293,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G+ T G- T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.628665517430053,
+      8.491773828963714,
+      90.75767279353262,
+      35.31148235366426
+     ],
+     "start_energy": 19.636784553682702,
+     "from_offset": 8,
+     "iterations": 96,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 57.68873977661133,
+     "upright_formation": 4.711216251318632,
+     "shear_monomers": [
+      -0.03947648535008238,
+      -1.6957983413299582
+     ],
+     "potential": 0.051982232586705326,
+     "tables_formation": 0.6479222334438788
+    },
+    "18": {
+     "formation": -0.715,
+     "relative": -0.7454288568641942,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T G+ T G- T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.482349479330834,
+      8.50803679388832,
+      92.30721948731822,
+      35.37429924490588
+     ],
+     "start_energy": 15.559334642837797,
+     "from_offset": 20,
+     "iterations": 78,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 45.93762683868408,
+     "upright_formation": 1.8564042841516084,
+     "shear_monomers": [
+      -0.4538545303359491,
+      -1.0693906393632011
+     ],
+     "potential": -1.2522858246763917,
+     "tables_formation": 1.8952276318966739,
+     "set_from_outside": true
+    },
+    "12": {
+     "formation": 2.8435013169181382,
+     "relative": 12.062077299166802,
+     "units": "VA",
+     "torsions": "T T T T T T T T T T T T G+ T G- T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      7.504446820584135,
+      7.765067671612955,
+      85.5888655978291,
+      34.91383850099211
+     ],
+     "start_energy": 360.7408404470951,
+     "from_offset": 10,
+     "iterations": 238,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 105.07644295692444,
+     "upright_formation": 14.663910440182605,
+     "shear_monomers": [
+      0.8770761993813624,
+      -0.9150594052752938
+     ],
+     "potential": 2.8435013169181382,
+     "tables_formation": 4.1307308796178575
+    },
+    "16": {
+     "formation": -0.10209127699233272,
+     "relative": -0.24037839099347025,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G+ T G- T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.485118254540578,
+      8.558656940059551,
+      92.27229423962402,
+      35.350768665120334
+     ],
+     "start_energy": 13.982096301427816,
+     "from_offset": 18,
+     "iterations": 63,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 34.027438163757324,
+     "upright_formation": 2.3614547500223324,
+     "shear_monomers": [
+      -0.14523861908542468,
+      -1.5906412468560591
+     ],
+     "potential": -0.10209127699233272,
+     "tables_formation": 2.017876972111793
+    },
+    "14": {
+     "formation": 1.2490440366892646,
+     "relative": 3.4667018714513205,
+     "units": "AV",
+     "torsions": "T T T T T T T T T T T T T T G+ T G- T T T T T T T T T T T",
+     "kink_kept": false,
+     "cell": [
+      10.023469662554044,
+      4.983007786831972,
+      88.50546136192797,
+      32.863732387772814
+     ],
+     "start_energy": 100.19383513115442,
+     "from_offset": 12,
+     "iterations": 143,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 96.19456338882446,
+     "upright_formation": 6.068535012467123,
+     "shear_monomers": [
+      0.9527037834300618,
+      -0.11957645335790101
+     ],
+     "potential": 1.2490440366892646,
+     "tables_formation": 4.737028239121528
+    }
+   }
+  },
+  "vdf9-trfe3-an1-rvdf1-14@0~": {
+   "letters": "IVRVVRVAVVVVVR",
+   "note": "the same with three TrFE in place of four (21 mol%): the TrFE lever on the nitrile pair's margin",
+   "start_offset": 0,
+   "mirrored": true,
+   "fixed_cell": false,
+   "sites": {
+    "0": {
+     "formation": 2.9434959754321235,
+     "relative": 0.0,
+     "units": "IV",
+     "torsions": "G- T G+ T T T T T T T T T T T T T T T T T T T T T T T T T",
+     "cell": [
+      5.4683567997875615,
+      8.456983832685825,
+      90.38437330699546,
+      35.487025985560344
+     ],
+     "converged": true,
+     "upright_formation": 3.169699806066305,
+     "shear_monomers": [
+      -0.0986534322256854,
+      -0.19185347481076587
+     ],
+     "kink_kept": true,
+     "potential": 2.9434959754321235,
+     "tables_formation": 3.20320642684554
+    },
+    "2": {
+     "formation": 0.21772189524454577,
+     "relative": 0.6663775116484061,
+     "units": "VR",
+     "torsions": "T T G- T G+ T T T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.502958329702285,
+      8.699371165399818,
+      90.80250892534548,
+      35.310350862116806
+     ],
+     "start_energy": 13.535072541784743,
+     "from_offset": 0,
+     "iterations": 170,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 84.67104625701904,
+     "upright_formation": 3.836077317714711,
+     "shear_monomers": [
+      -0.1611107976025566,
+      -0.43185594946670697
+     ],
+     "potential": 0.21772189524454577,
+     "tables_formation": 3.1782889465649333
+    },
+    "26": {
+     "formation": 4.407032376717657,
+     "relative": 0.2386525545711038,
+     "units": "RI",
+     "torsions": "G+ T T T T T T T T T T T T T T T T T T T T T T T T T G- T",
+     "kink_kept": true,
+     "cell": [
+      5.582276541550716,
+      8.309975459129479,
+      91.84783076116646,
+      35.588339823609935
+     ],
+     "start_energy": 8.488512075228499,
+     "from_offset": 0,
+     "iterations": 66,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 28.565255403518677,
+     "upright_formation": 3.4083523606374087,
+     "shear_monomers": [
+      0.007645554879251658,
+      0.10445571327238326
+     ],
+     "potential": 4.407032376717657,
+     "tables_formation": 3.242942421280773
+    },
+    "4": {
+     "formation": 1.297293456455203,
+     "relative": -0.234998903636793,
+     "units": "RV",
+     "torsions": "T T T T G- T G+ T T T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.484532604159656,
+      8.464233452229287,
+      91.1824007460131,
+      35.493906064090545
+     ],
+     "start_energy": 15.713762102085681,
+     "from_offset": 2,
+     "iterations": 75,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 30.230588912963867,
+     "upright_formation": 2.934700902429512,
+     "shear_monomers": [
+      -0.16079331257595886,
+      -0.4273564694517204
+     ],
+     "potential": 1.297293456455203,
+     "tables_formation": 2.99976210289789
+    },
+    "24": {
+     "formation": 3.7475794565426632,
+     "relative": 0.5304940152471005,
+     "units": "VR",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T T T G- T G+ T",
+     "kink_kept": true,
+     "cell": [
+      5.624502524166297,
+      8.243842065433213,
+      91.59580762002426,
+      35.47088641473473
+     ],
+     "start_energy": 8.88953416991167,
+     "from_offset": 26,
+     "iterations": 89,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 32.62347388267517,
+     "upright_formation": 3.7001938213134054,
+     "shear_monomers": [
+      -0.5398440873598527,
+      0.16737605253466903
+     ],
+     "potential": 3.7475794565426632,
+     "tables_formation": 3.2417090039766236
+    },
+    "6": {
+     "formation": 1.0726276925722487,
+     "relative": -0.025517638364149775,
+     "units": "VV",
+     "torsions": "T T T T T T G- T G+ T T T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.484648738606651,
+      8.520930597198085,
+      90.16501108741255,
+      35.43393267656011
+     ],
+     "start_energy": 4.353920044722301,
+     "from_offset": 4,
+     "iterations": 59,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 23.89053726196289,
+     "upright_formation": 3.144182167702155,
+     "shear_monomers": [
+      -0.26688370196578637,
+      -0.6912262111510682
+     ],
+     "potential": 1.0726276925722487,
+     "tables_formation": 3.1610274455712073
+    },
+    "22": {
+     "formation": 0.7464076401932621,
+     "relative": 1.3107238918226898,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T T T G- T G+ T T T",
+     "kink_kept": true,
+     "cell": [
+      5.489074710523724,
+      8.521543829254883,
+      89.74138849679663,
+      35.396594140852315
+     ],
+     "start_energy": 10.599694772865135,
+     "from_offset": 24,
+     "iterations": 108,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 41.589149713516235,
+     "upright_formation": 4.480423697888995,
+     "shear_monomers": [
+      -0.5453973565241812,
+      -1.0113365569787873
+     ],
+     "potential": 0.7464076401932621,
+     "tables_formation": 4.430455141634056
+    },
+    "8": {
+     "formation": 1.8249968829939462,
+     "relative": -1.7750873759780035,
+     "units": "VR",
+     "torsions": "T T T T T T T T G- T G+ T T T T T T T T T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.625002597449471,
+      8.323565131084337,
+      92.68240933602614,
+      35.395231310540794
+     ],
+     "start_energy": 13.890608567365376,
+     "from_offset": 6,
+     "iterations": 63,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 36.701194047927856,
+     "upright_formation": 1.3946124300883014,
+     "shear_monomers": [
+      -0.2523590931408979,
+      -0.10848408349683478
+     ],
+     "potential": 1.8249968829939462,
+     "tables_formation": 1.3583054983963478
+    },
+    "20": {
+     "formation": -0.4,
+     "relative": -0.721482889725209,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T T T G- T G+ T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.503258744639841,
+      8.481983335315885,
+      90.3897294842688,
+      35.412617658368575
+     ],
+     "start_energy": 4.89419696979887,
+     "from_offset": 22,
+     "iterations": 84,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 33.79493975639343,
+     "upright_formation": 2.448216916341096,
+     "shear_monomers": [
+      -0.48010035851546656,
+      -0.801216005831158
+     ],
+     "potential": -0.9335487366508437,
+     "tables_formation": 2.427353928608227,
+     "set_from_outside": true
+    },
+    "10": {
+     "formation": 0.47567813485395233,
+     "relative": -1.202017366753168,
+     "units": "RV",
+     "torsions": "T T T T T T T T T T G- T G+ T T T T T T T T T T T T T T T",
+     "kink_kept": false,
+     "cell": [
+      5.484417908302743,
+      8.416876923964699,
+      90.89157958679262,
+      35.53510042551074
+     ],
+     "start_energy": 35.52539686946682,
+     "from_offset": 8,
+     "iterations": 77,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 31.997931480407715,
+     "upright_formation": 1.967682439313137,
+     "shear_monomers": [
+      -0.015680914065639102,
+      -0.26795262347850657
+     ],
+     "potential": 0.47567813485395233,
+     "tables_formation": 1.82199825634396
+    },
+    "18": {
+     "formation": 0.338,
+     "relative": -1.2347840035327238,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T T T G- T G+ T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.481597947699401,
+      8.477126792075303,
+      90.80343336327513,
+      35.41676884072054
+     ],
+     "start_energy": 4.333600414809013,
+     "from_offset": 20,
+     "iterations": 93,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 32.2974967956543,
+     "upright_formation": 1.934915802533581,
+     "shear_monomers": [
+      -0.5072193150758232,
+      -1.0861026596944021
+     ],
+     "potential": -1.3233462176685231,
+     "tables_formation": 1.9910788381145323,
+     "set_from_outside": true
+    },
+    "16": {
+     "formation": 0.353,
+     "relative": -0.6914273142349003,
+     "units": "VV",
+     "torsions": "T T T T T T T T T T T T T T T T G- T G+ T T T T T T T T T",
+     "kink_kept": true,
+     "cell": [
+      5.481654453525724,
+      8.469352645540656,
+      90.99327880643017,
+      35.42615262176494
+     ],
+     "start_energy": 8.293223099555462,
+     "from_offset": 18,
+     "iterations": 93,
+     "message": "Optimization terminated successfully",
+     "converged": true,
+     "seconds": 38.2692437171936,
+     "upright_formation": 2.4782724918314045,
+     "shear_monomers": [
+      -0.5610055313872535,
+      -1.030836256429034
+     ],
+     "potential": -1.2004311576618496,
+     "tables_formation": 2.534259641478826,
+     "set_from_outside": true
+    }
+   }
+  }
+ }
+}

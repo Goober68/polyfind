@@ -15,12 +15,19 @@ PRED = ROOT / "docs" / "predictions"
 MLIP = PRED / "mlip"
 CFE, LEADER, AN, MATRIX = "vdf9-trfe4-cfe1-14", "vdf9-trfe3-an1-rvdf1-14", "vdf9-trfe4-an1-14", "vdf10-trfe4-14"
 KCAL = 23.0605
-ROWS_OF_THE_STATES = [
+ROWS_OF_THE_STATES = [   # single points on the cells the potential relaxed
     f"{CFE}=row_{CFE}_TTTT_chain1_in_all_s1,helix_TGTGp:row_{CFE}_TGTGp_chain1_in_all_s1,sheet_at_12:sheet_{CFE}_belt4_at12_sheared_r2,"
     f"sheet_at_14m:sheet_{CFE}_belt4_at14m_sheared_in_all_s1",
-    f"{LEADER}=tt_leader_from_rows14an_r1,helix_TGTGp:helix_leader_TGTGp_r1,sheet_at_18m:sheet_{LEADER}_belt4_at18m_sheared_r9",
+    f"{LEADER}=tt_leader_from_rows14an_r1,helix_TGTGp:helix_leader_TGTGp_r1,sheet_at_18m:sheet_{LEADER}_belt4_at18m_sheared_r9,"
+    f"sheet_at_18:sheet_{LEADER}_belt4_at18_sheared_in_all_s1,sheet_at_20m:sheet_{LEADER}_belt4_at20m_sheared_in_all_s1,"
+    f"sheet_at_16m:sheet_{LEADER}_belt4_at16m_sheared_in_all_s1",
+    f"{AN}=tt_nitrile_from_rows14an_r1,helix_GpTGT:row_{AN}_GpTGT_cfe_in_all_s1,sheet_at_4:sheet_{AN}_belt4_at4_sheared_in_all_s1",
+    f"{MATRIX}=row_{MATRIX}_TTTT_chain1_in_all_s1,helix_TGTGp:row_{MATRIX}_TGTGp_chain1_in_all_s1,sheet_at_18m:sheet_{MATRIX}_belt4_at18m_sheared_in_all_s1",
 ]
 DFT_AT_THREE = [f"{CFE}@12=-1.930", f"{CFE}@14m=-5.034", f"{LEADER}@18m=0.338"]
+DFT_AT_EIGHT = DFT_AT_THREE + [f"{LEADER}@18=-0.715", f"{LEADER}@20m=-0.400", f"{LEADER}@16m=0.353", f"{AN}@4=-0.431", f"{MATRIX}@18m=0.899"]
+# the potential's mean error on a cell's sheets that DFT has, taken off its other sites of that cell: a second reading of the map
+MOVED = [f"{CFE}=0.947", f"{LEADER}=1.082", f"{AN}=-0.630", f"{MATRIX}=-0.301"]
 
 
 def _tool():
@@ -214,15 +221,33 @@ def test_a_scan_with_the_potentials_sheets_keeps_the_scans_sites_and_takes_the_e
 
 def test_the_stored_scans_are_what_the_tool_writes(tmp_path):
     tool = _tool()
-    for name, shift in (("kink_site_scan_potential_card_dft_at_three.json", []),
-                        ("kink_site_scan_potential_card_dft_at_three_lifted.json", [f"{row}=1.7" for row in (CFE, LEADER, AN, MATRIX)])):
+    for name, shift, known in (("kink_site_scan_potential_card_dft_at_three.json", [], DFT_AT_THREE),
+                               ("kink_site_scan_potential_card_dft_at_three_lifted.json", [f"{row}=1.7" for row in (CFE, LEADER, AN, MATRIX)], DFT_AT_THREE),
+                               ("kink_site_scan_potential_card_dft_at_eight.json", [], DFT_AT_EIGHT),
+                               ("kink_site_scan_potential_card_dft_at_eight_moved.json", MOVED, DFT_AT_EIGHT)):
         out = tmp_path / name
         tool.sheets_as_scan(SimpleNamespace(scan=str(PRED / "kink_site_scan_belt4_shear.json"), sheets=str(PRED / "sheets14_potential_card.json"),
-                                            shift=shift, set=DFT_AT_THREE, out=str(out)))
+                                            shift=shift, set=known, out=str(out)))
         assert json.loads(out.read_text()) == json.loads((PRED / name).read_text())
         sites = json.loads(out.read_text())["rows"]
         assert sites[f"{CFE}@0~"]["sites"]["14"]["formation"] == -5.034 and sites[f"{LEADER}@0~"]["sites"]["18"]["formation"] == 0.338
     assert sum(len(row["sites"]) for row in sites.values()) == 108
+    assert sum(bool(s.get("set_from_outside")) for row in sites.values() for s in row["sites"].values()) == 8
+
+
+def test_the_sites_given_to_the_scans_are_the_stored_tables_and_the_shifts_are_the_potentials_mean_error():
+    states = _states()
+    given = {item.split("=")[0]: float(item.split("=")[1]) for item in DFT_AT_EIGHT}
+    errors = {}
+    for row, rec in states.items():
+        for label, state in rec["states"].items():
+            if label.startswith("sheet_at_"):
+                assert given[f"{row}@{label[len('sheet_at_'):]}"] == pytest.approx(state["dft"], abs=5e-4)
+                errors.setdefault(row, []).append(state["potential_minus_dft"])
+    assert sum(len(v) for v in errors.values()) == len(given) == 8
+    for item in MOVED:
+        row, shift = item.split("=")
+        assert float(shift) == pytest.approx(-np.mean(errors[row]), abs=2e-3)
 
 
 if __name__ == "__main__":
