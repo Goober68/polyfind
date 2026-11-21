@@ -680,6 +680,40 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
+        A THIRD POD IS RUNNING (PI 2026-11-21: "Go on 8 hour pod"). `vk7ocprcjh3cbq`, name `polyfind-path`,
+        Runpod Secure Cloud CA-MTL-1, one NVIDIA A40 (9 vCPU, 50 GB), $0.59/h, CREATED 22:17:45 UTC
+        2026-11-21, confirmed by a read (`list-pods`, `get-pod`). IT REMOVES ITSELF AT 8 HOURS
+        (`BENCH_LIMIT_S=28800`: 06:17 UTC 2026-11-22, at most $4.72) AND NOT BEFORE (its idle time is the
+        same eight hours: DFT runs underneath the queue): DELETE IT WHEN ITS WORK IS DONE. WHOEVER READS
+        THIS AFTER 06:20 UTC 2026-11-22: CONFIRM IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods
+        '{}'`) AND DELETE IT IF NOT (`delete-pod {"id": "vk7ocprcjh3cbq"}`, then read again). Spend before
+        it: about $27.7 of $46.
+        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261121_path.txt`, started at commit a66fcbb): (1)
+        `refit.sh`: TWO FITS SIDE BY SIDE ON THE CARD, continued from `all_s1` (`mlip_train.py train
+        --start`, 40 epochs, rate 5e-5), on 24 files of labelled frames (621 frames; all but
+        `row_cells_lone_chain`), the 23 fourteen-monomer cells marked heavy (weight 10), FIVE FRAMES HELD
+        OUT BY NAME (four states: film sheet 12 twice, leader sheet 20m, nitrile sheet 4, matrix helix):
+        `refit_s1` (energy weight 1e6, stress 1e4) and `refitb_s1` (1e5, 3e3); meanwhile the processors
+        build Quantum ESPRESSO for the card (`qe_gpu_build.sh`, 39 minutes last time). (2)
+        `refit_score.sh` three times: each fit and `all_s1` on the 23 labelled cells
+        (`cells14_in_FIT.json`). NOT YET IN THE QUEUE, TO ADD WHEN THE SCORES ARE READ: (3) `path_card.sh
+        FIT 12 film:row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1:sheet_vdf9-trfe4-cfe1-14_
+        belt4_at14m_sheared_in_all_s1_in_all_s1 leader:tt_leader_from_rows14an_r1_in_all_s1:sheet_vdf9-
+        trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1` with FIT the better fit on the held-out states
+        (or the path of the repository's `docs/predictions/mlip/models/all_s1.model` if neither is
+        better than `all_s1`): `examples/mlip_path.py scan` from both ends of each path (the kink pair's
+        torsions led by a restraint, everything else relaxed, cell included), `choose`, DFT single points
+        on the top image and its neighbours (the card's line and the processors'), a finer scan about the
+        top, the images beside it released.
+        HOW TO READ IT: `scratchpad/runpod/pod_path.sh PATH` (token in `scratchpad/runpod/token_path.txt`,
+        NEVER shown or committed), `python scratchpad/runpod/mirror_path.py` (into `scratchpad/runpod/
+        path/`): `STATUS`, `jobs/01_refit/{log.txt,qe_gpu_build.log,refit_s1.epochs.txt,
+        mlip_own_refit_s1.json,refit_s1.model}`, `jobs/01_refit/data/refit_s1.train.log`,
+        `jobs/0N_refit_score/cells14_in_*.json`, `jobs/0N_path_card/*`, `jobs/shared/dft*/log.txt`. If
+        the token file is lost the results cannot be read: delete the pod.
+        WHAT THE PATH IS AND IS NOT: a two-chain periodic cell, so every chain forms its kink in step with
+        its neighbours: the barrier of the sheet forming as a whole, per chain. A nudged elastic band is
+        not used (ase refuses images whose cells differ; the cell's shear is part of this path).
         THE SECOND POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (16:41 UTC 2026-11-21; PI 2026-11-21:
         "Go on rented, mi100 not online yet"). `3lq6awm18u81pz` (`polyfind-dft14b`, Runpod Secure Cloud
         EU-SE-1, one A40, $0.59/h), 08:12:02 to 16:41:00 UTC: 8.48 h, ABOUT $5.00 (spend so far about $27.7
