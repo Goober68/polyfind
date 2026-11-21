@@ -81,20 +81,26 @@ def test_the_potential_is_inside_a_tenth_on_the_margins_and_its_error_on_a_sheet
     assert max(abs(v) for v in off) / 14 > 0.1
 
 
-def test_the_seven_labels_are_single_points_in_the_anchors_set_up_and_carry_the_table():
+FIRST_ROUND = [f"row_{CFE}_TTTT_chain1_in_all_s1", f"sheet_{CFE}_belt4_at12_sheared_r2", f"row_{CFE}_TGTGp_chain1_in_all_s1", "tt_leader_from_rows14an_r1",
+               f"sheet_{LEADER}_belt4_at18m_sheared_r9", "helix_leader_TGTGp_r1", f"sheet_{CFE}_belt4_at14m_sheared_in_all_s1"]
+
+
+def test_the_labels_are_single_points_in_the_anchors_set_up_and_the_first_seven_carry_the_table():
     from ase.io import read
 
     frames = {str(a.info["frame"]): a for a in read(MLIP / "cells14_frames_pbe_d3bj.extxyz", index=":")}
-    assert len(frames) == 7 and sorted({len(a) for a in frames.values()}) == [168, 170]
+    assert list(frames)[:7] == FIRST_ROUND and sorted({len(a) for a in frames.values()}) == [168, 170]
     for a in frames.values():
         assert int(a.info["dft_kpoints"]) == 6 and float(a.info["dft_conv_thr_ry"]) == 1e-9 and "REF_forces" in a.arrays
         # each is a cell the potential brought to rest: 0.004 eV/A, the film cell's all-trans cell 0.005
         assert ("to 0.004 eV/A" in a.info["note"] or "to 0.005 eV/A" in a.info["note"]) and "NOT converged" not in a.info["note"]
-        assert 55 < a.info["dft_seconds"] / 60 < 85
+        assert 40 < a.info["dft_seconds"] / 60 < 100
+    first = [frames[name] for name in FIRST_ROUND]
+    assert all(55 < a.info["dft_seconds"] / 60 < 85 for a in first)
     flat, sheet = frames[f"row_{CFE}_TTTT_chain1_in_all_s1"], frames[f"sheet_{CFE}_belt4_at14m_sheared_in_all_s1"]
     per_kink_pair = (sheet.info["REF_energy"] - flat.info["REF_energy"]) / 28 * 14 * KCAL
     assert per_kink_pair == pytest.approx(_states()[CFE]["states"]["sheet_at_14m"]["dft"], abs=1e-6)
-    left = [float(np.abs(a.arrays["REF_forces"]).max()) for a in frames.values()]
+    left = [float(np.abs(a.arrays["REF_forces"]).max()) for a in first]
     assert 0.07 < min(left) and max(left) < 0.30   # DFT's forces on the potential's cells
 
 
