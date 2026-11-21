@@ -1878,7 +1878,7 @@ energy at the three sites that have one:
 | film's composition | +0.123 | 364 kHz (the anchor) | 0.065 | 0.073% | 6.4 |
 | the same for a margin 0.05 lower or higher | | 364 kHz | 0.088, 0.031 | 0.082%, 0.057% | 7.5, 4.9 |
 | leader | -0.047, taken as 0 | 0.2 kHz to 415 kHz | 0.05 to 0.60 | 0.002 to 0.068% | 0.1 to 3.7 |
-| the measured film's channel as calibrated | | 364 kHz | 0.060 | 0.070% | 6.5 |
+| the measured film's channel as calibrated | | 364 kHz | 0.060 | 0.066% | 6.5 |
 
 - The film composition's row is DFT's margin and nothing else new: the frequency is the
   anchor's by construction, and dipole, switch strain and crystal stiffness are belt4's with no

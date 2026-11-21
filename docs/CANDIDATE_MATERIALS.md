@@ -137,7 +137,7 @@ lower phase, and a kink pair is one turn of that helix.
   | the film's composition at +0.123 | 364 kHz (the anchor) | 0.065 | 0.073% | 6.4 |
   | the same for a margin 0.05 lower, higher | 364 kHz | 0.088, 0.031 | 0.082%, 0.057% | 7.5, 4.9 |
   | the leader, its margin taken as zero | 0.2 kHz to 415 kHz | 0.05 to 0.60 | 0.002 to 0.068% | 0.1 to 3.7 |
-  | the measured film's channel as calibrated | 364 kHz | 0.060 | 0.070% | 6.5 |
+  | the measured film's channel as calibrated | 364 kHz | 0.060 | 0.066% | 6.5 |
 
   **The leader has no row: the ranges are the model outside its domain.** They span its two
   readings of the kink sites and the potential's map as it is and lifted by 1.7. In one corner
