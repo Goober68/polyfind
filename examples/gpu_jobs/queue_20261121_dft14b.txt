@@ -33,3 +33,7 @@ dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip
 dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1 sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at20m_sheared_in_all_s1 row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1
 dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/sheets14_sheared_in_all_s1.extxyz row_vdf10-trfe4-14_TTTT_chain1_in_all_s1
 dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz sheet_vdf10-trfe4-14_belt4_at18m_sheared_in_all_s1
+# 14:19 UTC.  The card has one cell left and the processors two: the matrix's helix goes to the
+# card's line, where it starts when the matrix's sheet ends, a quarter of an hour sooner.
+dft_cells.sh drop row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1
+dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x start 1 1 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1
