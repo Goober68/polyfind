@@ -95,17 +95,61 @@ lower phase, and a kink pair is one turn of that helix.
   sheet is 2.2 below the leader's rather than 3.65, and "three behind" belongs to belt4's
   choice of sites. **The leader's row of the table above (4 to 30 kHz, with the matrix) is
   therefore not supported either**, and there is no row to put in its place: two sites of
-  twenty-six, no DFT at this size (`docs/MLIP_SECOND_OPINION.md` 3.20).
+  twenty-six, no DFT at this size (`docs/MLIP_SECOND_OPINION.md` 3.20). DFT has since put that sheet
+  level with all-trans, not 1.4 below (the bullets on DFT, below).
 - **The potential's margins at a tight stop** (3.14 had stopped the helix cells loosely):
   matrix +0.016 (was -0.024), film cell +0.129 (+0.078), nitrile alone -0.109 (-0.118), leader
   -0.070 (-0.055). At +0.129 the film cell's row reads tan delta 0.061, 0.071% and 6.2 pN/nm2,
   on the measured film's calibrated channel. Only the lowest helix placement of each cell was
-  redone.
+  redone. With all four placements at the tight stop (2026-11-21) the film cell's is **+0.163**: its
+  lowest placement is another one; the other three margins stand (+0.018, -0.109, -0.070).
 - **In the potential the film cell's lowest state is all-trans with a kink at each chlorine**
   (3.6 kcal/mol per chain below all-trans; its helix cell 1.8 below), and the leader's lowest
   state found is kinked as well (1.4 below all-trans; its helix 1.0 above). Both presets have
   the helix lower. If the potential is right, the margin as defined here does not name the state
   the field converts in the film's own composition. DFT has to be asked.
+- **DFT has been asked (2026-11-21; seven single points at 168 and 170 atoms on a rented
+  machine, `docs/MLIP_SECOND_OPINION.md` 3.21).** Per chain of fourteen against all-trans:
+
+  | cell | lowest helix | kink sheets asked about |
+  |---|---:|---|
+  | the film's composition | -1.72 (the potential -2.28) | on the chlorine unit **-5.03** (-5.26); beside it -1.93 (-3.60) |
+  | the leader | +0.65 (+0.98) | the potential's lowest, +0.34 (-1.37); -0.34 at DFT's estimated minimum |
+
+  **The film composition's lowest state is all-trans chains with a kink pair on each chlorine
+  unit, 5.0 below all-trans and 3.1 below its helix. The leader has nothing like it at the site
+  asked: its sheet is level with all-trans and its helix is above.** The line above that the
+  leader's lowest state found is kinked was the potential's and is withdrawn. The potential is
+  1.7 too low on two of the three sheets and 0.2 on the third, so its sheet energies cannot be
+  corrected by a constant; its order of sites is a guide to where DFT should look, and it found
+  the film cell's lowest state, which belt4 ranks third.
+- **Margins in DFT at fourteen monomers: the film's composition +0.123, the leader -0.047**
+  (the potential +0.163 and -0.070; belt4 +0.317 and +0.037 in the tables, +0.251 and +0.163
+  rigid with the shear free). The margin does not name the film composition's lowest state (the
+  helix is 1.7 below all-trans, the kinked cell 5.0), and the leader's is below zero: all-trans
+  is its lower state, a ferroelectric with a remanent polarization, which the loss model does
+  not hold.
+- **On the four axes at DFT's margins** (dipole, switch strain and stiffness still belt4's; the
+  kink sites are the potential's with DFT's energy at the three that have one):
+
+  | cell | frequency | tan delta | AC strain | blocked force per area through the crystal, pN/nm2 |
+  |---|---|---|---|---|
+  | the film's composition at +0.123 | 364 kHz (the anchor) | 0.065 | 0.073% | 6.4 |
+  | the same for a margin 0.05 lower, higher | 364 kHz | 0.088, 0.031 | 0.082%, 0.057% | 7.5, 4.9 |
+  | the leader, its margin taken as zero | 0.2 kHz to 415 kHz | 0.05 to 0.60 | 0.002 to 0.068% | 0.1 to 3.7 |
+  | the measured film's channel as calibrated | 364 kHz | 0.060 | 0.070% | 6.5 |
+
+  **The leader has no row: the ranges are the model outside its domain.** They span its two
+  readings of the kink sites and the potential's map as it is and lifted by 1.7. In one corner
+  of four the leader is a little faster and less lossy than the film's composition (415 kHz,
+  0.052) with less strain (0.068%) and half the force (3.7); in the other three it is far
+  behind. Nothing here says the leader outperforms the film's composition.
+- **What the 5.0 is not.** A regular cell lets every chain kink at its chlorine in register
+  with its neighbours; a statistical terpolymer has its chlorines at random. It is what the pin
+  is worth when the neighbours cooperate, an upper bound for the film. The nitrile cell and the
+  matrix have no DFT at this size, the leader's other 23 sheets have none, and two differences
+  (the film cell's other sheet against its helix; the sign of the leader's sheet) wait on a
+  second DFT calculation on cells already stepped.
 - **A periodic cell puts every unit beside its like, and the leader's all-trans cell needs
   that.** A statistical copolymer has a reversed unit beside another about one time in
   fourteen. What the leader's all-trans phase costs out of register is open, and the margin of

@@ -680,39 +680,62 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
-        A POD IS RUNNING (PI 2026-11-20: "Go on the rented machine"). `pacbxm95k7f799`, name
-        `polyfind-dft14`, Runpod Secure Cloud CA-MTL-1, one NVIDIA A40 (9 vCPU, 50 GB), $0.59/h, CREATED
-        23:26:24 UTC 2026-11-20, confirmed by a read (`get-pod`: RUNNING). IT REMOVES ITSELF AT 9 HOURS
-        (`BENCH_LIMIT_S=32400`: 08:26 UTC 2026-11-21, at most $5.31), 40 minutes after a `stop` line, or 30
-        minutes idle plus 40. WHOEVER READS THIS AFTER 08:30 UTC: CONFIRM IT IS GONE (`python
-        scratchpad/runpod/mcp.py call list-pods '{}'`; if the scratchpad is lost, the client is 40 lines of
-        MCP over HTTP against `https://mcp.runpod.io/`, the proxy adds the key) AND DELETE IT IF NOT
-        (`delete-pod {"id": "pacbxm95k7f799"}`, then read again).
-        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261120_dft14.txt`, started at commit 23be22e; a job is
-        started by PUSHING A LINE, nothing is sent to the pod): (1) ON ITS PROCESSORS, `dft_cells.sh start 8 2
-        ...`: DFT single points, one after another, eight processes in two pools, on the tight cells of
-        `mlip/sheets14_sheared_in_all_s1.extxyz` in this order: film all-trans, film sheet (site 12), film
-        helix, leader all-trans, leader sheet at 18m (-1.37), leader helix, leader sheet at 10 (+0.05). The
-        line returns at once; `dft_cells.sh wait` as a later line holds the pod until the line of cells is
-        empty. NOT TIMED YET: 120 atoms took 33 minutes a cell on four cores here; expect an hour or more a
-        cell, so seven cells may not fit in nine hours: the order is the priority. (2) ON ITS CARD,
-        `card_check.sh` (the card must return the stored energies of the eighteen tight cells), then
-        `relax_card.sh FILE PATTERN` on `mlip/cells14_starts_for_all_s1.extxyz` (108 sheets of the belt4 scan
-        + 16 loose helix cells; frames whose name matches the pattern, to 0.004 eV/A or 3000 steps, stored
-        every 250 steps). FIRST LINE: the leader's two known sheets (`at(18m|10)`: must find -1.37 and +0.05).
-        THEN PUSH LINES: the rest of the leader's sheets, the film cell's, the helix cells (`row_.*`), the
-        nitrile cell's, the matrix's, and LAST `dft_cells.sh wait` and `stop`.
-        HOW TO READ IT: `scratchpad/runpod/pod_dft14.sh PATH` (token in `scratchpad/runpod/token_dft14.txt`,
-        NEVER shown or committed; every 32-hex string is scrubbed): `STATUS`, `jobs/NN_NAME/log.txt`,
-        `jobs/shared/dft/log.txt` (one line a labelled cell), `jobs/shared/dft/NAME.dft.xyz`, `.../work/NAME/
-        NAME.out` (a cell that is running), `jobs/NN_relax_card/relaxed/NAME_in_all_s1.start.xyz`. MIRROR
-        EVERYTHING BEFORE THE POD GOES: results exist nowhere else. If the token file is lost the results
-        cannot be read: delete the pod.
-        WHAT DOES NOT FIT THIS POD (said to the PI): the refit and the 35 rows. The processors are DFT's for
-        the pod's whole life and the refit needs the card for two and a half hours AFTER the new cells are
-        labelled; whether a refit is needed at all is what the DFT on these cells decides.
-        THEN: at scale it is A POD'S JOB (108 sheets, 16 more helix cells, tight), with DFT on the film
-        cell's all-trans, helix and kinked cells first (168 atoms), then the leader's.
+        THE POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (07:30 UTC 2026-11-21; PI 2026-11-20: "Go on the
+        rented machine"). `pacbxm95k7f799`, Runpod Secure Cloud, one NVIDIA A40 (9 vCPU shown, 7.65 allotted,
+        50 GB), $0.59/h, 23:26:24 to 07:30:11 UTC: 8.06 h, ABOUT $4.76 (spend so far about $22.7 of $46; the
+        key cannot read billing). Deleted with `delete-pod` (204) and CONFIRMED BY A READ (`list-pods`: none;
+        `get-pod`: 404). NO POD IS RUNNING. Docs: `docs/MLIP_SECOND_OPINION.md` 3.21; tests
+        `tests/test_cells14_dft.py` (12).
+        WHAT DFT SAID (seven single points, 168 and 170 atoms, 6 k-points, 57 to 80 minutes each on eight
+        processes in two pools; `docs/predictions/cells14_states_dft.json`, labels in `mlip/
+        cells14_frames_pbe_d3bj.extxyz`), kcal/mol per chain of fourteen against the cell's own all-trans
+        cell, DFT (the potential): FILM CELL helix TGTG' -1.72 (-2.28), sheet at site 12 -1.93 (-3.60), SHEET
+        ON THE CHLORINE UNIT (site 14 of the other hand, `14m`) -5.03 (-5.26): ITS LOWEST STATE IS KINKED, by
+        3.1. LEADER helix +0.65 (+0.98), sheet at 18m +0.34 (-1.37): ALL-TRANS IS ITS LOWEST OR LEVEL; "the
+        leader's lowest state found is kinked" (3.20) WAS THE POTENTIAL AND IS WITHDRAWN. MARGINS IN DFT:
+        film cell +0.123, leader -0.047 (the potential +0.163, -0.070; belt4 +0.317, +0.037 polished, +0.251,
+        +0.163 rigid shear-free). THE POTENTIAL'S ERROR ON A SHEET IS NOT A CONSTANT: 1.67, 1.70 and 0.22 too
+        low (0.30 too high on PVDF). A guess made on "1.7 everywhere" was wrong by 1.5: DO NOT LIFT ITS MAP BY
+        A NUMBER; its order of sites says where DFT should look.
+        STEPPED TOWARD DFT'S OWN MINIMUM (`mlip_train.py relax --dft-gradient --max-move 0.5` on each label,
+        here, 10 to 25 minutes each; `mlip/cells14_stepped_to_dft.extxyz`, working copies in
+        `/opt/dft/cells14_tilted`): film sheet 12 -2.12, film helix -2.05 (STOPPED AT THE MOVE ALLOWED, not
+        settled), leader helix +0.74, LEADER SHEET -0.34 (the correction, 0.67, is as large as the number:
+        its sign is open). These are estimates, not DFT.
+        WHAT THE CARD DID (`relax_card.sh`, 0.42 s a step; `sheets14_potential_card.json`,
+        `rows14_potential_card.json`, cells in `mlip/cells14_tight_in_all_s1.extxyz`, starts in `mlip/
+        cells14_starts_for_all_s1.extxyz`): all 108 sheets of the belt4 scan and the sixteen helix cells to
+        0.004 eV/A. Below all-trans in the potential: film cell 4 of 27 (14m -5.26, 12 -3.56, 14 -1.75, 10
+        -0.79), leader 7 of 24 (18m -1.32, 18 -1.25, 16m -1.20, 20m -0.93, 4 -0.79, 20 -0.58, 16 -0.10),
+        nitrile cell 0 of 25 (lowest +0.20), matrix 0 of 28 (+1.20). Four sheets lost their kink. THE FILM
+        CELL'S MARGIN IN THE POTENTIAL IS +0.163, NOT +0.129: its lowest helix placement at the tight stop is
+        TGTG'/GTG'T, not G'TGT (`rows14_potential_tight.json` still holds the old one and tests read it).
+        FOUR AXES AT DFT'S MARGINS (`four_axes_dft_margins_card_sheets.json` and `..._lifted.json`; kink
+        sites `kink_site_scan_potential_card_dft_at_three*.json` by `row_cells_frames.py sheets-as-scan
+        --set`): film cell 364 kHz (the anchor), tan delta 0.065, 0.073%, 6.4 pN/nm2 through the crystal.
+        THE LEADER HAS NO ROW: its margin is below zero (a ferroelectric; the loss model takes it as zero)
+        and its readings span 0.2 to 415 kHz. A table sent to the PI at 07:07 UTC with the map lifted by 1.7
+        (leader 2 or 245 kHz) is WITHDRAWN.
+        HOW THE POD WAS RUN, FOR THE NEXT ONE: queue `examples/gpu_jobs/queue_20261120_dft14.txt`;
+        `dft_cells.sh start|next|last|wait` (DFT in line underneath, one cell after another), `card_check.sh`,
+        `relax_card.sh FILE PATTERN`. A line put into the queue AHEAD of where the pod is runs in its turn
+        (it counts lines): that is how the DFT line was reordered twice. Scratch helpers (may be gone):
+        `scratchpad/runpod/mcp.py`, `mirror_dft14.py`, `pod_dft14.sh`, `scratchpad/pod_table.py`,
+        `pod_labels.py`, `pod_dft_table.py`. A DFT cell took 69 minutes with the card busy and 57 with it
+        idle; with 7.65 processors allotted, eight DFT processes and one for the card were not throttled.
+        NEXT, IN ORDER OF WHAT IT SETTLES (none started; DFT at this size does not fit this machine, so each
+        needs the PI's MI100 machine, of which the core count and memory are not known yet, or another
+        rented one with the PI's go): (1) DFT on the STEPPED cells of the leader's all-trans cell and sheet
+        (the sign of the leader's sheet) and of the film cell's sheet 12 and helix (which is lower); (2) DFT
+        on the leader's other low sheets in the potential (18, 16m, 20m) with errors of -1.7 to +0.3 a site
+        one of them below all-trans is possible; (3) the nitrile cell's and the matrix's all-trans, helix
+        and lowest sheet; (4) only then the refit, with these labels in it, and the 35 rows. The MI100's
+        card can run the potential through PyTorch's ROCm build (untested); Quantum ESPRESSO's card support
+        is NVIDIA's only, so DFT there is processor work.
+        THE FILM CELL'S 5.0 IS A REGULAR CELL'S NUMBER: every chain kinks at its chlorine in register with
+        its neighbours. A statistical terpolymer has its chlorines at random. An upper bound for the film.
+        (Before the pod: at scale it was A POD'S JOB, 108 sheets, 16 more helix cells, tight, with DFT on the
+        film cell's all-trans, helix and kinked cells first, then the leader's. Done, above.)
         DFT AT FOURTEEN MONOMERS DOES NOT FIT THIS MACHINE: the leader's helix cell (170 atoms, 350 bands, 6
         k-points) asks for 15.7 GB (pw.x's own estimate at 3 processes, one pool) and there are 15; STOPPED
         before it ran out (`/opt/dft/rows14dft` holds the two cells and the anchor check). DO NOT START IT HERE
