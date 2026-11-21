@@ -1,0 +1,27 @@
+2026-11-21 22:21:49.219 INFO: Using heads: ['Default']
+2026-11-21 22:21:49.219 INFO: Default: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges', 'magmom': 'REF_magmom', 'magforces': 'REF_magforces'})
+2026-11-21 22:21:49.219 INFO: =============    Processing head Default     ===========
+2026-11-21 22:21:49.677 INFO: Total number of configurations: train=486, valid=53, tests=[Default_Default: 77, heavy_Default: 5],
+2026-11-21 22:21:49.680 INFO: Atomic Energies used (z: eV) for head Default: {1: 79.06242522802748, 6: -428.5924743970146, 7: 1.887588998155738, 9: -574.375383533502, 17: -376.27889477302375}
+2026-11-21 22:21:49.680 INFO: Processing datasets for head 'Default'
+2026-11-21 22:21:50.768 INFO: Combining 1 list datasets for head 'Default'
+2026-11-21 22:21:50.904 INFO: Head 'Default' training dataset size: 486
+2026-11-21 22:22:04.275 INFO: Initial: head: Default, loss=0.03226712, RMSE_E_per_atom=    0.51 meV, RMSE_F=   25.00 meV / A, RMSE_stress=    0.42 meV / A^3
+2026-11-21 22:24:08.434 INFO: Epoch 0: head: Default, loss=0.03110051, RMSE_E_per_atom=    0.56 meV, RMSE_F=   25.03 meV / A, RMSE_stress=    0.43 meV / A^3
+2026-11-21 22:33:30.137 INFO: Epoch 5: head: Default, loss=0.03083989, RMSE_E_per_atom=    0.57 meV, RMSE_F=   24.82 meV / A, RMSE_stress=    0.41 meV / A^3
+2026-11-21 22:42:49.734 INFO: Epoch 10: head: Default, loss=0.02790352, RMSE_E_per_atom=    0.51 meV, RMSE_F=   24.47 meV / A, RMSE_stress=    0.42 meV / A^3
+2026-11-21 22:52:08.515 INFO: Epoch 15: head: Default, loss=0.02683561, RMSE_E_per_atom=    0.54 meV, RMSE_F=   24.40 meV / A, RMSE_stress=    0.41 meV / A^3
+2026-11-21 23:01:29.098 INFO: Epoch 20: head: Default, loss=0.02602345, RMSE_E_per_atom=    0.42 meV, RMSE_F=   24.53 meV / A, RMSE_stress=    0.43 meV / A^3
+2026-11-21 23:10:48.751 INFO: Epoch 25: head: Default, loss=0.02574763, RMSE_E_per_atom=    0.40 meV, RMSE_F=   24.81 meV / A, RMSE_stress=    0.42 meV / A^3
+2026-11-21 23:20:06.247 INFO: Epoch 30: head: Default, loss=0.02568626, RMSE_E_per_atom=    0.53 meV, RMSE_F=   23.95 meV / A, RMSE_stress=    0.42 meV / A^3
+2026-11-21 23:29:25.329 INFO: Epoch 35: head: Default, loss=0.02450062, RMSE_E_per_atom=    0.48 meV, RMSE_F=   23.81 meV / A, RMSE_stress=    0.41 meV / A^3
+2026-11-21 23:36:49.651 INFO: Evaluating train_Default ...
+2026-11-21 23:37:27.824 INFO: Evaluating valid_Default ...
+2026-11-21 23:37:32.559 INFO: Error-table on TRAIN and VALID:
+| train_Default |            0.3      |         15.9     |          1.69     |                     0.4               |
+| valid_Default |            0.5      |         23.8     |          3.52     |                     0.4               |
+2026-11-21 23:37:32.559 INFO: Evaluating Default_Default_Default ...
+2026-11-21 23:37:37.498 INFO: Evaluating Default_heavy_Default ...
+2026-11-21 23:37:39.425 INFO: Error-table on TEST:
+| Default_Default_Default |            0.5      |         27.5     |          2.39     |                     0.5               |
+|  Default_heavy_Default  |            0.7      |         19.9     |         90.65     |                     0.3               |
