@@ -684,26 +684,40 @@ right": true at one registry, not along it).
         `bcuwk6j3g3crqp`, name `polyfind-registry`, Runpod Secure Cloud EU-SE-1, one NVIDIA A40, $0.59/h,
         CREATED 06:51:18 UTC 2026-11-22 after a read of stock (High) and price, confirmed by a read
         (`list-pods`). IT REMOVES ITSELF AT 4.5 HOURS (`BENCH_LIMIT_S=16200`: 11:21 UTC, at most $2.66) AND
-        NOT BEFORE: DELETE IT WHEN ITS WORK IS DONE. WHOEVER READS THIS AFTER 11:25 UTC 2026-11-22: CONFIRM
-        IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods '{}'`) AND DELETE IT IF NOT
-        (`delete-pod {"id": "bcuwk6j3g3crqp"}`, then read again). Spend before it: about $32.3 of $46.
-        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261122_registry.txt`): `registry_card.sh` relaxes
-        the 34 starts of `docs/predictions/mlip/registry_starts.extxyz` (`bash examples/registry_starts.sh`;
-        `examples/registry_cells.py`: each of the four cells' labelled all-trans and helix cell with its
-        neighbours whole monomers along the chains and/or every chain turned) in the potential on the
-        card, four side by side, to 0.004 eV/A, 600 steps a cell and 45 minutes at most; meanwhile the
-        processors build the card's DFT program and then label `leader_b2_i08` (the image after the
-        leader's second top, cut off on the third pod). Then it writes `registry_table.json`,
-        `registry_relaxed.extxyz` and `chosen.txt` (the lowest cell at rest of each composition and
-        conformation within 0.3 kcal/mol per chain of its labelled cell; the film's all-trans only if
-        below -1.0) and puts the chosen on the two DFT lines (card 46 minutes a cell, processors 66).
-        More cells by `registry_dft.sh card|processors start|next NAME...`.
+        NOT BEFORE: DELETE IT BY 11:15 UTC AFTER A LAST MIRROR. WHOEVER READS THIS AFTER 11:25 UTC
+        2026-11-22: CONFIRM IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods '{}'`) AND DELETE IT
+        IF NOT (`delete-pod {"id": "bcuwk6j3g3crqp"}`, then read again). Spend before it: about $32.3 of $46.
         HOW TO READ IT: `scratchpad/runpod/pod_registry.sh PATH` (token in `scratchpad/runpod/
         token_registry.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_registry.py`
-        (into `scratchpad/runpod/registry/`): `STATUS`, `jobs/01_registry_card/{log.txt,relax_N.log,
-        registry_table.json,chosen.txt,processors.log}`, `jobs/shared/dft*/log.txt`. If the token file is
-        lost the results cannot be read: delete the pod.
-        THEN: each cell's margin from its lowest all-trans and lowest helix cell in DFT; docs 3.24.
+        (into `scratchpad/runpod/registry/`), `scratchpad/runpod/dft_progress.sh`; labels into the
+        repository by `python -I scratchpad/registry_labels.py docs/predictions/mlip/
+        cells14_fourth_pod_frames_pbe_d3bj.extxyz`. If the token file is lost the results cannot be read:
+        delete the pod.
+        STATE AT 09:20 UTC (queue `examples/gpu_jobs/queue_20261122_registry.txt`, thirteen jobs done; all
+        of this is stored and tested, `tests/test_registry_cells.py`, and is the potential's unless DFT is
+        named; kcal/mol per chain against each composition's own upright cell):
+        (a) Upright chains with their neighbours moved whole monomers and/or turned: nothing below upright
+            (all-trans +0.45 to +2.30, helix two monomers along +1.40 to +5.75, helix one monomer along
+            +5.4 to +11.9 with seven of eight not at rest; `registry_shifted.json`, `registry_helix_one.json`).
+        (b) THE LOW CELL IS ITS CHAINS' TWISTS AND ITS REGISTRY TOGETHER: upright chains in the low cell's
+            lattice and registry +0.57; the low cell's chains moved back +0.18. Made of the film
+            composition's low cell atom by atom (`registry_cells.py derive`): MATRIX -1.50, NITRILE -1.51,
+            LEADER +1.02 (film itself -1.27; DFT -0.84). THE LEADER DOES NOT HAVE IT.
+        (c) The four helix cells shaken 1.5 ps at 350 K (`mlip_anneal.py`) come back to where they were.
+        (d) DFT: `leader_b2_i08` +7.41 above the leader's sheet (the potential's top there 7.08): THE
+            LEADER'S KINK IS REMOVED OVER 7.41 AND FORMS OVER 4.09, not 7.08 and 3.76; by removal 7.6 MHz,
+            tan delta 0.0029, 0.164%, 8.9 pN/nm2 (`kink_path_points.sh` rerun, stored).
+        ON THE DFT LINES NOW: card: the matrix's low cell (running), then the leader's low cell;
+        processors: `leader_r_released_tight` (running), then the nitrile composition's low cell (may not
+        finish), then `film_all_trans_turned_117_tight` (will not).
+        STILL TO DO ON IT: when the card is free of DFT (about 10:26), relax the seven unsettled helix
+        cells on (`registry_more.sh docs/predictions/mlip/registry_starts_helix_one.extxyz 2 1000 2400
+        NAME...`, a new line of the queue). Running here, not on the pod: the leader's low cell with its
+        neighbours moved back (`scratchpad/reg/leader_back/`).
+        THEN: `bash examples/registry_margins.sh` (each cell's margin from its lowest labelled all-trans
+        and helix cell; the kink sites move with the all-trans reference), docs 3.24 (draft in
+        `scratchpad/sec324.md`), the head of `docs/CANDIDATE_MATERIALS.md` (its "it is the registry and
+        not the turn" is half right: revise), this block, the full suite, the report on all four axes.
         THE THIRD POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (06:09:46 UTC 2026-11-22; PI 2026-11-21:
         "Go on 8 hour pod"). `vk7ocprcjh3cbq` (`polyfind-path`, Runpod Secure Cloud CA-MTL-1, one A40,
         $0.59/h), 22:17:45 to 06:09:46 UTC: 7.87 h, ABOUT $4.64 (spend so far about $32.3 of $46; the key
