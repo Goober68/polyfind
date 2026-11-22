@@ -1,0 +1,738 @@
+{
+ "what": "cells made from labelled cells by examples/registry_cells.py (neighbours moved whole monomers along the chains, chains turned about their axes) and relaxed in the potential: energy is kcal/mol per chain against the labelled cell each was made from, in the potential with D3",
+ "starts": "docs/predictions/mlip/registry_starts.extxyz",
+ "rows": {
+  "reg_matrix_tt_p1m1_tp117": {
+   "relaxed": true,
+   "frame": "reg_matrix_tt_p1m1_tp117_in_all_s1",
+   "label": "matrix",
+   "conformation": "tt",
+   "of": "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 117,
+   "converged": true,
+   "steps": 174,
+   "energy": 1.8737371957547158,
+   "shear_along_chains_monomers": [
+    0.9283592705918254,
+    -0.8555037321467893
+   ],
+   "shear_along_chains_monomers_labelled": [
+    7.702787893404374e-09,
+    1.395863886900793e-08
+   ],
+   "dipole_from_a_deg": -160.8016400850408,
+   "dipole_from_a_deg_labelled": 75.9151932185977,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.701583775220121,
+    9.07465133160315,
+    35.97906294863553
+   ]
+  },
+  "reg_leader_tt_p1m1_tm117": {
+   "relaxed": true,
+   "frame": "reg_leader_tt_p1m1_tm117_in_all_s1",
+   "label": "leader",
+   "conformation": "tt",
+   "of": "tt_leader_from_rows14an_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": -117,
+   "converged": false,
+   "steps": 600,
+   "energy": 5.379705774445714,
+   "shear_along_chains_monomers": [
+    0.8393194024254571,
+    -0.9097268393859383
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -0.07764414269720431,
+    -0.1784727708565495
+   ],
+   "dipole_from_a_deg": -47.04116155816336,
+   "dipole_from_a_deg_labelled": 79.34657205987806,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.60219699517054,
+    9.660299310913878,
+    35.71730112092826
+   ]
+  },
+  "reg_nitrile_tt_p1m1_tm117": {
+   "relaxed": true,
+   "frame": "reg_nitrile_tt_p1m1_tm117_in_all_s1",
+   "label": "nitrile",
+   "conformation": "tt",
+   "of": "tt_nitrile_from_rows14an_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": -117,
+   "converged": true,
+   "steps": 166,
+   "energy": 0.45020347587852305,
+   "shear_along_chains_monomers": [
+    0.9717864557747684,
+    -1.0893946242722203
+   ],
+   "shear_along_chains_monomers_labelled": [
+    2.7244171371745906e-08,
+    7.129023959921275e-09
+   ],
+   "dipole_from_a_deg": -46.45275279346346,
+   "dipole_from_a_deg_labelled": 83.48528498335087,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.637612661157902,
+    9.763558454862245,
+    35.89766840878062
+   ]
+  },
+  "reg_film_hx_p2m2_tz0": {
+   "relaxed": true,
+   "frame": "reg_film_hx_p2m2_tz0_in_all_s1",
+   "label": "film",
+   "conformation": "hx",
+   "of": "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1",
+   "shear_asked": [
+    2,
+    -2
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 514,
+   "energy": 3.149306408664999,
+   "shear_along_chains_monomers": [
+    2.231971447469677,
+    -1.8265750524307305
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.25975533661824735,
+    0.2818864496102081
+   ],
+   "dipole_from_a_deg": 18.990640310723588,
+   "dipole_from_a_deg_labelled": 16.19336285124008,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    7.362054473861333,
+    10.866966928990303,
+    32.88649432808852
+   ]
+  },
+  "reg_film_hx_m2p2_tz0": {
+   "relaxed": true,
+   "frame": "reg_film_hx_m2p2_tz0_in_all_s1",
+   "label": "film",
+   "conformation": "hx",
+   "of": "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1",
+   "shear_asked": [
+    -2,
+    2
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 533,
+   "energy": 2.111752479806751,
+   "shear_along_chains_monomers": [
+    -1.8210407972252587,
+    2.1400079629852566
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.25975533661824735,
+    0.2818864496102081
+   ],
+   "dipole_from_a_deg": 19.358642944881183,
+   "dipole_from_a_deg_labelled": 16.19336285124008,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.731118052291304,
+    11.105458302295299,
+    32.89389720673994
+   ]
+  },
+  "reg_matrix_hx_p2m2_tz0": {
+   "relaxed": true,
+   "frame": "reg_matrix_hx_p2m2_tz0_in_all_s1",
+   "label": "matrix",
+   "conformation": "hx",
+   "of": "row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1",
+   "shear_asked": [
+    2,
+    -2
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 320,
+   "energy": 2.740561721350383,
+   "shear_along_chains_monomers": [
+    2.270882506876067,
+    -1.8289435801275842
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.2850863623085027,
+    0.20513833138175105
+   ],
+   "dipole_from_a_deg": 15.674272994897976,
+   "dipole_from_a_deg_labelled": 14.207175129107275,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    7.392986623305145,
+    10.724138465113716,
+    32.82822783349875
+   ]
+  },
+  "reg_matrix_hx_m2p2_tz0": {
+   "relaxed": true,
+   "frame": "reg_matrix_hx_m2p2_tz0_in_all_s1",
+   "label": "matrix",
+   "conformation": "hx",
+   "of": "row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1",
+   "shear_asked": [
+    -2,
+    2
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 556,
+   "energy": 1.6623744859078893,
+   "shear_along_chains_monomers": [
+    -1.8176770979212917,
+    2.119474186772521
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.2850863623085027,
+    0.20513833138175105
+   ],
+   "dipole_from_a_deg": 16.286668476711466,
+   "dipole_from_a_deg_labelled": 14.207175129107275,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.690722322008097,
+    10.953334626047543,
+    32.84593437619463
+   ]
+  },
+  "reg_leader_hx_p2m2_tz0": {
+   "relaxed": true,
+   "frame": "reg_leader_hx_p2m2_tz0_in_all_s1",
+   "label": "leader",
+   "conformation": "hx",
+   "of": "helix_leader_TGTGp_r1",
+   "shear_asked": [
+    2,
+    -2
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 91,
+   "energy": 1.400272637652924,
+   "shear_along_chains_monomers": [
+    1.9190198497964381,
+    -2.0530654364409293
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -8.738786899104495e-08,
+    -0.29875284263108565
+   ],
+   "dipole_from_a_deg": -3.4632663776897985,
+   "dipole_from_a_deg_labelled": 3.8576872453428944e-05,
+   "gauche_torsions": 24,
+   "gauche_torsions_labelled": 24,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.963549634553319,
+    10.879352274234273,
+    33.00966047215048
+   ]
+  },
+  "reg_leader_hx_m2p2_tz0": {
+   "relaxed": true,
+   "frame": "reg_leader_hx_m2p2_tz0_in_all_s1",
+   "label": "leader",
+   "conformation": "hx",
+   "of": "helix_leader_TGTGp_r1",
+   "shear_asked": [
+    -2,
+    2
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 454,
+   "energy": 1.9273207671014627,
+   "shear_along_chains_monomers": [
+    -2.0368952394230684,
+    1.866204388444725
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -8.738786899104495e-08,
+    -0.29875284263108565
+   ],
+   "dipole_from_a_deg": 2.441842952898132,
+   "dipole_from_a_deg_labelled": 3.8576872453428944e-05,
+   "gauche_torsions": 24,
+   "gauche_torsions_labelled": 24,
+   "conformation_kept": true,
+   "cell_lengths": [
+    7.096754815313247,
+    10.948216196650334,
+    32.980794581916165
+   ]
+  },
+  "reg_nitrile_hx_p2m2_tz0": {
+   "relaxed": true,
+   "frame": "reg_nitrile_hx_p2m2_tz0_in_all_s1",
+   "label": "nitrile",
+   "conformation": "hx",
+   "of": "row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1",
+   "shear_asked": [
+    2,
+    -2
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 400,
+   "energy": 5.751357636609986,
+   "shear_along_chains_monomers": [
+    2.7038525223000756,
+    -1.9386284172079284
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.6622452803141593,
+    5.848706745435871e-07
+   ],
+   "dipole_from_a_deg": null,
+   "dipole_from_a_deg_labelled": null,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    8.273195555147273,
+    10.923950027029305,
+    32.752053878338174
+   ]
+  },
+  "reg_nitrile_hx_m2p2_tz0": {
+   "relaxed": true,
+   "frame": "reg_nitrile_hx_m2p2_tz0_in_all_s1",
+   "label": "nitrile",
+   "conformation": "hx",
+   "of": "row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1",
+   "shear_asked": [
+    -2,
+    2
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 600,
+   "energy": 2.678864392079843,
+   "shear_along_chains_monomers": [
+    -1.8258645842170749,
+    1.9196110518978016
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.6622452803141593,
+    5.848706745435871e-07
+   ],
+   "dipole_from_a_deg": null,
+   "dipole_from_a_deg_labelled": null,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.712183250517162,
+    11.075473858668184,
+    32.74298831690774
+   ]
+  },
+  "reg_matrix_tt_m1p1_tp117": {
+   "relaxed": true,
+   "frame": "reg_matrix_tt_m1p1_tp117_in_all_s1",
+   "label": "matrix",
+   "conformation": "tt",
+   "of": "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": 117,
+   "converged": true,
+   "steps": 174,
+   "energy": 1.8737332771470998,
+   "shear_along_chains_monomers": [
+    -0.9283593276295611,
+    0.8555037148463699
+   ],
+   "shear_along_chains_monomers_labelled": [
+    7.702787893404374e-09,
+    1.395863886900793e-08
+   ],
+   "dipole_from_a_deg": -160.8015932007032,
+   "dipole_from_a_deg_labelled": 75.9151932185977,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.701584121519397,
+    9.074651365977202,
+    35.979071258741854
+   ]
+  },
+  "reg_leader_tt_m1p1_tm117": {
+   "relaxed": true,
+   "frame": "reg_leader_tt_m1p1_tm117_in_all_s1",
+   "label": "leader",
+   "conformation": "tt",
+   "of": "tt_leader_from_rows14an_r1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": -117,
+   "converged": true,
+   "steps": 275,
+   "energy": 2.2998183051924324,
+   "shear_along_chains_monomers": [
+    -0.9112315022180634,
+    1.0804025228865213
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -0.07764414269720431,
+    -0.1784727708565495
+   ],
+   "dipole_from_a_deg": -33.329387273739805,
+   "dipole_from_a_deg_labelled": 79.34657205987806,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.72791211208351,
+    9.495979020626612,
+    35.80504975231842
+   ]
+  },
+  "reg_nitrile_tt_m1p1_tm117": {
+   "relaxed": true,
+   "frame": "reg_nitrile_tt_m1p1_tm117_in_all_s1",
+   "label": "nitrile",
+   "conformation": "tt",
+   "of": "tt_nitrile_from_rows14an_r1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": -117,
+   "converged": true,
+   "steps": 166,
+   "energy": 0.45020633625213896,
+   "shear_along_chains_monomers": [
+    -0.9717862177609771,
+    1.0893946149729605
+   ],
+   "shear_along_chains_monomers_labelled": [
+    2.7244171371745906e-08,
+    7.129023959921275e-09
+   ],
+   "dipole_from_a_deg": -46.4529856365565,
+   "dipole_from_a_deg_labelled": 83.48528498335087,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.637611618191932,
+    9.763562838603026,
+    35.897668072703816
+   ]
+  },
+  "reg_film_tt_m1p1_tp117": {
+   "relaxed": true,
+   "frame": "reg_film_tt_m1p1_tp117_in_all_s1",
+   "label": "film",
+   "conformation": "tt",
+   "of": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": 117,
+   "converged": true,
+   "steps": 427,
+   "energy": 1.8567599384421014,
+   "shear_along_chains_monomers": [
+    -0.9838830133170605,
+    1.02961001486819
+   ],
+   "shear_along_chains_monomers_labelled": [
+    1.4280387327521752e-08,
+    1.0285733897037413e-07
+   ],
+   "dipole_from_a_deg": -152.8518547877579,
+   "dipole_from_a_deg_labelled": 83.76859459327864,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.86090526778534,
+    9.307560230242341,
+    35.9437556197774
+   ]
+  },
+  "reg_film_tt_p1m1_tz0": {
+   "relaxed": true,
+   "frame": "reg_film_tt_p1m1_tz0_in_all_s1",
+   "label": "film",
+   "conformation": "tt",
+   "of": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 154,
+   "energy": 0.6341031475663631,
+   "shear_along_chains_monomers": [
+    1.2170696699808814,
+    -0.8558120047667492
+   ],
+   "shear_along_chains_monomers_labelled": [
+    1.4280387327521752e-08,
+    1.0285733897037413e-07
+   ],
+   "dipole_from_a_deg": 81.67935554560714,
+   "dipole_from_a_deg_labelled": 83.76859459327864,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.298459144494554,
+    8.883151351585594,
+    35.90498449581647
+   ]
+  },
+  "reg_film_tt_m1p1_tz0": {
+   "relaxed": true,
+   "frame": "reg_film_tt_m1p1_tz0_in_all_s1",
+   "label": "film",
+   "conformation": "tt",
+   "of": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 392,
+   "energy": 0.6245586824530269,
+   "shear_along_chains_monomers": [
+    -1.2398489688271064,
+    0.8811230909947823
+   ],
+   "shear_along_chains_monomers_labelled": [
+    1.4280387327521752e-08,
+    1.0285733897037413e-07
+   ],
+   "dipole_from_a_deg": 81.62487157253105,
+   "dipole_from_a_deg_labelled": 83.76859459327864,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.332785516186262,
+    8.90281754628863,
+    35.91223266973079
+   ]
+  },
+  "reg_matrix_tt_p1m1_tz0": {
+   "relaxed": true,
+   "frame": "reg_matrix_tt_p1m1_tz0_in_all_s1",
+   "label": "matrix",
+   "conformation": "tt",
+   "of": "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 65,
+   "energy": 1.2308643869801008,
+   "shear_along_chains_monomers": [
+    1.3513827807470702,
+    -0.6472224135986392
+   ],
+   "shear_along_chains_monomers_labelled": [
+    7.702787893404374e-09,
+    1.395863886900793e-08
+   ],
+   "dipole_from_a_deg": 78.91789494809676,
+   "dipole_from_a_deg_labelled": 75.9151932185977,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.279790713854724,
+    8.98118768236641,
+    35.96171626451418
+   ]
+  },
+  "reg_matrix_tt_m1p1_tz0": {
+   "relaxed": true,
+   "frame": "reg_matrix_tt_m1p1_tz0_in_all_s1",
+   "label": "matrix",
+   "conformation": "tt",
+   "of": "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 133,
+   "energy": 1.313994610122777,
+   "shear_along_chains_monomers": [
+    -1.1783419516461324,
+    0.8156680820404371
+   ],
+   "shear_along_chains_monomers_labelled": [
+    7.702787893404374e-09,
+    1.395863886900793e-08
+   ],
+   "dipole_from_a_deg": 78.83701386029479,
+   "dipole_from_a_deg_labelled": 75.9151932185977,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.99828411582233,
+    9.046030691990168,
+    35.98187045398685
+   ]
+  },
+  "reg_leader_tt_p1m1_tz0": {
+   "relaxed": true,
+   "frame": "reg_leader_tt_p1m1_tz0_in_all_s1",
+   "label": "leader",
+   "conformation": "tt",
+   "of": "tt_leader_from_rows14an_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 100,
+   "energy": 3.4946585064516222,
+   "shear_along_chains_monomers": [
+    0.8687875961082628,
+    -0.9818436801804042
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -0.07764414269720431,
+    -0.1784727708565495
+   ],
+   "dipole_from_a_deg": 72.25417703739997,
+   "dipole_from_a_deg_labelled": 79.34657205987806,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.079169236662258,
+    8.783476382500448,
+    35.813901587413284
+   ]
+  },
+  "reg_leader_tt_m1p1_tz0": {
+   "relaxed": false
+  },
+  "reg_nitrile_tt_p1m1_tz0": {
+   "relaxed": true,
+   "frame": "reg_nitrile_tt_p1m1_tz0_in_all_s1",
+   "label": "nitrile",
+   "conformation": "tt",
+   "of": "tt_nitrile_from_rows14an_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 316,
+   "energy": 2.2128156427548644,
+   "shear_along_chains_monomers": [
+    0.9836229954413724,
+    -0.830256352978975
+   ],
+   "shear_along_chains_monomers_labelled": [
+    2.7244171371745906e-08,
+    7.129023959921275e-09
+   ],
+   "dipole_from_a_deg": 75.17981368716701,
+   "dipole_from_a_deg_labelled": 83.48528498335087,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.145731953352758,
+    8.746979060639541,
+    35.75966903351495
+   ]
+  },
+  "reg_nitrile_tt_m1p1_tz0": {
+   "relaxed": false
+  },
+  "reg_matrix_tt_z0z0_tp117": {
+   "relaxed": false
+  },
+  "reg_leader_tt_z0z0_tm117": {
+   "relaxed": false
+  },
+  "reg_nitrile_tt_z0z0_tm117": {
+   "relaxed": false
+  },
+  "reg_film_hx_p1m1_tz0": {
+   "relaxed": false
+  },
+  "reg_film_hx_m1p1_tz0": {
+   "relaxed": false
+  },
+  "reg_matrix_hx_p1m1_tz0": {
+   "relaxed": false
+  },
+  "reg_matrix_hx_m1p1_tz0": {
+   "relaxed": false
+  },
+  "reg_leader_hx_p1m1_tz0": {
+   "relaxed": false
+  },
+  "reg_leader_hx_m1p1_tz0": {
+   "relaxed": false
+  },
+  "reg_nitrile_hx_p1m1_tz0": {
+   "relaxed": false
+  },
+  "reg_nitrile_hx_m1p1_tz0": {
+   "relaxed": false
+  }
+ }
+}

@@ -202,6 +202,35 @@ def test_the_matrix_is_the_film_compositions_low_cell_with_its_chlorine_made_flu
     assert [tool._ints(a.info["registry_shear"]) for a in two] == [[1, -1], [0, 0]] and all(str(a.info["registry_of"]) == CELLS["nitrile"][0] and tool.gauche(a, path) == 0 for a in two)
 
 
+def test_chains_with_the_upright_cells_twists_rest_higher_in_every_other_registry_tried(labelled):
+    """The first 34 starts on the fourth pod's card: 21 relaxed, 18 at rest, none below the cell it was made from."""
+    from ase.io import read
+
+    table = json.loads((ROOT / "docs" / "predictions" / "registry_shifted.json").read_text())["rows"]
+    names = [str(a.info["frame"]) for a in read(MLIP / "registry_starts.extxyz", index=":")]
+    assert list(table) == names
+    done = {k: v for k, v in table.items() if v["relaxed"]}
+    rest = {k: v for k, v in done.items() if v["converged"]}
+    assert (len(done), len(rest)) == (21, 18) and all(v["conformation_kept"] for v in done.values())
+    flat = sorted(v["energy"] for v in rest.values() if v["conformation"] == "tt")
+    helix = sorted(v["energy"] for v in rest.values() if v["conformation"] == "hx")
+    assert (len(flat), len(helix)) == (11, 7) and (flat[0], flat[-1]) == pytest.approx((0.45, 2.30), abs=0.006) and (helix[0], helix[-1]) == pytest.approx((1.40, 5.75), abs=0.006)
+    assert min(v["energy"] for v in done.values()) > 0.44                                   # the three not at rest are above too, so far
+    low = {c: min(v["energy"] for v in rest.values() if v["label"] == c and v["conformation"] == "tt") for c in ("film", "matrix", "leader", "nitrile")}
+    assert low == pytest.approx({"film": 0.62, "matrix": 1.23, "leader": 2.30, "nitrile": 0.45}, abs=0.006)
+    # the film composition's own low registry made from upright chains (the other hand of it was run here) rests 1.86 above, where 3.23's cell is 1.27 below
+    assert rest["reg_film_tt_m1p1_tp117"]["energy"] == pytest.approx(1.86, abs=0.006) and rest["reg_film_tt_m1p1_tp117"]["shear_along_chains_monomers"] == pytest.approx([-0.98, 1.03], abs=0.006)
+    # each cell kept the registry it was given, within a third of a monomer, and the stored frames are the table's
+    for v in done.values():
+        got = np.array(v["shear_along_chains_monomers"]) - np.array(v["shear_along_chains_monomers_labelled"])
+        assert np.abs(got - np.array(v["shear_asked"])).max() < 0.75
+    frames = read(MLIP / "registry_shifted_relaxed.extxyz", index=":")
+    assert [str(a.info["frame"]) for a in frames] == [v["frame"] for v in done.values()]
+    for a in frames:
+        ref = labelled[str(a.info["registry_of"])]
+        assert (float(a.info["potential_eV_per_monomer"]) - float(ref.info["potential_eV_per_monomer"])) * 14 * 23.0605 == pytest.approx(table[str(a.info["frame"])[:-len("_in_all_s1")]]["energy"], abs=1e-6)
+
+
 def test_the_choice_is_the_lowest_cell_at_rest_of_each_composition_and_conformation():
     tool = _load("registry_cells")
     row = lambda label, conformation, energy, converged=True, kept=True: {"relaxed": True, "frame": f"{label}_{conformation}_{energy}", "label": label, "conformation": conformation,
