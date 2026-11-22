@@ -273,10 +273,6 @@ def test_the_first_files_margins_in_the_potential_and_its_two_controls(sources):
     assert len(frames) == 48 and {str(a.info["frame"]) for a in frames} == {c["frame"] for r in stored.values() for c in r["cells"].values()}
 
 
-if __name__ == "__main__":
-    sys.exit(pytest.main([__file__, "-q"]))
-
-
 def test_the_fourth_file_gives_every_row_helix_cells_in_two_more_packings():
     """hx_ldr: made of the leader's own lowest helix cell; hx_an (six rows): of the nitrile composition's.  A nitrile made something else loses its nitrogen."""
     from ase.geometry import find_mic
@@ -303,3 +299,45 @@ def test_the_fourth_file_gives_every_row_helix_cells_in_two_more_packings():
         assert np.abs(find_mic(a.positions[backbone] - source.positions[was], a.cell, pbc=True)[0]).max() < 1e-8
     leader = cells[names.index("scr_vdf9-trfe3-an1-rvdf1-14_hx_ldr")]
     assert int(leader.info["screen_changed"]) == 0 and np.abs(find_mic(leader.positions - tight[froms["hx_ldr"]].positions, leader.cell, pbc=True)[0]).max() < 1e-8
+
+
+def test_the_second_files_margins_and_what_the_leader_as_a_control_says_of_them():
+    """File B at rest (the table of files A and B): margins from the film composition's two all-trans patterns and four helix cells.  The leader, whose own
+    cells the potential has, comes back 0.27 a monomer too low: 0.61 per chain on its all-trans side and 4.42 on its helix side."""
+    from ase.io import read
+
+    stored = json.loads((ROOT / "docs" / "predictions" / "screen14_potential_b.json").read_text())["rows"]
+    assert list(stored) == list(ROWS_A) + list(ROWS_B) and all(r["at_rest"] == 6 for r in stored.values())
+    margins = {k: round(r["margin"], 3) for k, r in stored.items() if k in ROWS_B}
+    assert margins == {"vdf9-trfe4-rvdf1-first-14": -0.178, "vdf10-trfe3-rvdf1-14": -0.091, "vdf11-trfe3-14": 0.243, "vdf9-trfe5-14": -0.102, "vdf9-trfe4-cdfe1-14": -0.110,
+                       "vdf8-trfe4-cfe1-cdfe1-14": 0.313, "vdf9-trfe4-rvdf1-14": -0.491, "vdf9-trfe4-e1-14": -0.249, "vdf9-trfe3-an1-rvdf1-14": -0.342}
+    # inside the window the pod asks DFT about (-0.06 to +0.14): two rows of file A and none of file B
+    assert [k for k, r in stored.items() if -0.06 <= r["margin"] <= 0.14 and k not in (FILM, "vdf10-trfe4-14")] == ["vdf8-trfe4-cfe1-rvdf1-14", "vdf9-trfe3-cfe1-rvdf1-14"]
+    own = {str(a.info["frame"]): a for a in read(MLIP / "cells14_frames_pbe_d3bj.extxyz", index=":")}
+    e = lambda a: float(a.info["potential_eV_per_monomer"])
+    tt, hx = e(own["tt_leader_from_rows14an_r1"]), e(own["helix_leader_TGTGp_r1"])
+    assert (tt - hx) * KCAL == pytest.approx(-0.070, abs=0.002)
+    leader, per_chain = stored["vdf9-trfe3-an1-rvdf1-14"], 14 * KCAL
+    made = {k: (c["eV_per_monomer"] - (tt if k.startswith("tt") else hx)) * per_chain for k, c in leader["cells"].items() if c.get("relaxed")}       # file C's were not yet
+    assert (made["tt_up"], made["tt_low"]) == pytest.approx((0.61, 1.02), abs=0.006)
+    assert [round(made[k], 2) for k in ("hx_GpTGT", "hx_GTGpT", "hx_TGTGp", "hx_TGpTG")] == [4.42, 4.87, 6.48, 9.32]
+    assert leader["margin"] == pytest.approx((tt - hx) * KCAL + (made["tt_up"] - made["hx_GpTGT"]) / 14, abs=1e-6)
+    frames = read(MLIP / "screen14_relaxed_b.extxyz", index=":")
+    assert len(frames) == 54 and {str(a.info["frame"]) for a in frames} == {c["frame"] for k, r in stored.items() if k in ROWS_B for c in r["cells"].values() if c.get("relaxed")}
+
+
+def test_the_film_compositions_chains_turned_without_their_registry_are_level_with_upright_in_dft():
+    """The fifth pod's first label: the film composition's all-trans cell with every chain turned 117 degrees and its neighbours where the upright cell has
+    them.  DFT has it level with the upright cell (the potential: -0.02), so the 0.84 of the low cell is not the turn's."""
+    from ase.io import read
+
+    cell = {str(a.info["frame"]): a for a in read(MLIP / "screen14_frames_pbe_d3bj.extxyz", index=":")}["film_all_trans_turned_117_tight"]
+    up = {str(a.info["frame"]): a for a in read(MLIP / "cells14_frames_pbe_d3bj.extxyz", index=":")}[f"row_{FILM}_TTTT_chain1_in_all_s1"]
+    dft = lambda a: float(a.info["REF_energy"]) / int(a.info["n_monomers"])
+    pot = lambda a: float(a.info["potential_eV_per_monomer"])
+    assert (dft(cell) - dft(up)) * 14 * KCAL == pytest.approx(0.00, abs=0.006) and (pot(cell) - pot(up)) * 14 * KCAL == pytest.approx(-0.02, abs=0.006)
+    assert np.abs(cell.arrays["REF_forces"]).max() < 0.1
+
+
+if __name__ == "__main__":
+    sys.exit(pytest.main([__file__, "-q"]))
