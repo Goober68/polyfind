@@ -224,6 +224,58 @@ def nitrile_for(atoms, group, hydrogen):
     return b
 
 
+LENGTH = {"H": 1.09, "F": 1.36, "Cl": 1.78, "C": 1.47}
+
+
+def morphed(atoms, target):
+    """`atoms` with its chains' substituents made `target`'s, backbone carbon by backbone carbon, where they stand: a
+    hydrogen, fluorine or chlorine made another (at its own bond length along the same bond), or a nitrile (C, then N 1.16 A
+    beyond).  The chains are lined up by the turn of the cycle that leaves the fewest carbons to change; a carbon with
+    two different substituents gets them on the hand `target` has.  Chains without a nitrile only (the film composition's)."""
+    from ase import Atoms
+
+    tool = _path_tool()
+    want = substituents(target)[0]
+    b = atoms.copy()
+    for k in list(b.arrays):
+        if k not in ("numbers", "positions"):
+            del b.arrays[k]
+    info = dict(b.info)
+    quads = tool.backbone_torsions(b)
+    half = len(quads) // CHAINS
+    added, changed = [], 0
+    for chain, have in enumerate(substituents(b)):
+        backbone = [q[0] for q in quads[chain * half:(chain + 1) * half]]
+        on = set(backbone)
+        turn = min(range(len(have)), key=lambda k: sum(x != y for x, y in zip(have, want[k:] + want[:k])))
+        aim = want[turn:] + want[:turn]
+        for i, c in enumerate(backbone):
+            if have[i] == aim[i]:
+                continue
+            changed += 1
+            near = [int(k) for k in np.flatnonzero(b.get_distances(c, range(len(b)), mic=True) < 2.05) if k not in on and b.get_distance(c, k, mic=True) < BONDS.get(("C", b.symbols[k]), 1.75)]
+            if len(near) != 2:
+                raise SystemExit("a backbone carbon without two single substituents: not a chain this can change")
+            kinds, hand = aim[i]
+            new = [kinds[:2], kinds[2:]] if kinds.startswith("Cl") else ([kinds[0], kinds[1:]] if len(kinds) == 2 or kinds[1:] == "Cl" else [kinds[:1], kinds[1:]])
+            prev, nxt = backbone[i - 1], backbone[(i + 1) % len(backbone)]
+            along = b.get_distance(prev, c, mic=True, vector=True) + b.get_distance(c, nxt, mic=True, vector=True)
+            v = [b.get_distance(c, k, mic=True, vector=True) for k in near]
+            if new[0] != new[1] and int(np.sign(along @ np.cross(v[0], v[1]))) != hand:
+                near, v = near[::-1], v[::-1]            # the first of the pair (in the alphabet) goes where the hand wants it
+            for k, vec, element in zip(near, v, new):
+                unit = vec / np.linalg.norm(vec)
+                b.positions[k] = b.positions[c] + LENGTH[element] * unit
+                b.symbols[k] = element
+                if element == "C":
+                    added.append(b.positions[c] + (LENGTH["C"] + 1.16) * unit)
+    if added:
+        b += Atoms("N" * len(added), positions=added)
+    b.info = info
+    b.wrap()
+    return b, changed
+
+
 def substituents(atoms):
     """Each chain as the cycle of its backbone carbons' substituents with a hand: for a carbon with two different
     substituents, the sign of (next - previous) . (first x second), the substituents in alphabetical order.  Two chains are
@@ -364,7 +416,8 @@ def build(args):
 def derive(args):
     """Cells made from stored cells by a few steps each, as starts: NAME=FRAME:LABEL:CONFORMATION:STEP:STEP..., the steps
     swap.OLD.NEW.BOND (an element changed where it stands), nitrile.Cl.F or nitrile.F.Cl (a CFE unit made an acrylonitrile
-    unit, the nitrile where the chlorine or the fluorine was), shear.SA.SB (neighbours moved whole monomers along) and
+    unit, the nitrile where the chlorine or the fluorine was), morph.FRAME (every backbone carbon's substituents made
+    those of FRAME's chains), shear.SA.SB (neighbours moved whole monomers along) and
     back.LOW.UPRIGHT (what takes the cell LOW to the cell UPRIGHT: turn, lattice and monomers along, the chains kept as
     they are).  Each start is measured against --cell's labelled cell of its LABEL and CONFORMATION, and must be the
     same molecules as that cell."""
@@ -393,6 +446,11 @@ def derive(args):
                 b = nitrile_for(b, group, hydrogen)
                 b.info = keep
                 said.append(f"every {group} made a nitrile and the {hydrogen} beside it a hydrogen")
+            elif kind == "morph":
+                keep = dict(b.info)
+                b, count = morphed(b, stored[rest[0]])
+                b.info = keep
+                said.append(f"its chains' substituents made those of {rest[0]} where they stand ({count} carbons)")
             elif kind == "shear":
                 sa, sb = (int(v) for v in rest[0].split("."))
                 b = sheared(b, sa, sb)

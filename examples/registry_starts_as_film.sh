@@ -11,12 +11,16 @@
 # is the hand the labelled nitrile cell has): the nitrile cell, in the film composition's low cell, and the same moved back
 # to the upright registry.
 #
-#   bash examples/registry_starts_as_film.sh [OUT [OUT2]]
-#       (default docs/predictions/mlip/registry_starts_as_film.extxyz and registry_starts_as_film_nitrile.extxyz)
+# and, in a third, the low cell with every backbone carbon's substituents made the leader's (a reversed VDF unit, the
+# nitrile, and a VDF unit where the film's composition has its fourth TrFE): the leader, in the film composition's low cell.
+#
+#   bash examples/registry_starts_as_film.sh [OUT [OUT2 [OUT3]]]
+#       (default docs/predictions/mlip/registry_starts_as_film.extxyz, ..._nitrile.extxyz and ..._leader.extxyz)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT="${1:-docs/predictions/mlip/registry_starts_as_film.extxyz}"
 OUT2="${2:-docs/predictions/mlip/registry_starts_as_film_nitrile.extxyz}"
+OUT3="${3:-docs/predictions/mlip/registry_starts_as_film_leader.extxyz}"
 UP=row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1
 python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz docs/predictions/mlip/paths/all_trans_tight.extxyz \
   --out "$OUT" --cell film:tt=$UP matrix:tt=row_vdf10-trfe4-14_TTTT_chain1_in_all_s1 --make \
@@ -28,3 +32,6 @@ python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells
   --out "$OUT2" --cell nitrile:tt=tt_nitrile_from_rows14an_r1 --make \
   reg_nitrile_tt_as_film_low=film_r_released_tight:nitrile:tt:nitrile.Cl.F \
   reg_nitrile_tt_as_film_low_registry_back=film_r_released_tight:nitrile:tt:nitrile.Cl.F:shear.-1.1
+python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz docs/predictions/mlip/paths/all_trans_tight.extxyz \
+  --out "$OUT3" --cell leader:tt=tt_leader_from_rows14an_r1 --make \
+  reg_leader_tt_as_film_low=film_r_released_tight:leader:tt:morph.tt_leader_from_rows14an_r1

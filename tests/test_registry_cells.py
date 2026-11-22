@@ -244,6 +244,32 @@ def test_upright_chains_in_the_low_cells_lattice_and_registry_do_not_find_the_lo
     assert not table["reg_nitrile_tt_like_film"]["converged"] and not table["reg_leader_tt_like_film"]["converged"]    # the nitrile groups meet in this setting: cut, not at rest
 
 
+def test_one_compositions_chains_made_anothers_carbon_by_carbon(labelled):
+    from ase.io import read
+
+    tool, path = _load("registry_cells"), _load("mlip_path")
+    low = read(MLIP / "paths" / "all_trans_tight.extxyz", index=0)
+    counts = {}
+    for label in ("matrix", "nitrile", "leader"):
+        target = labelled[CELLS[label][0]]
+        made, counts[label] = tool.morphed(low, target)
+        assert sorted(made.get_chemical_symbols()) == sorted(target.get_chemical_symbols())
+        assert all(any(tool.same_molecule(m, t) for t in tool.substituents(target)) for m in tool.substituents(made)) and tool.gauche(made, path) == 0
+    assert counts == {"matrix": 2, "nitrile": 2, "leader": 8}          # a chain: the CFE carbon; and for the leader the reversed unit's two carbons and a TrFE's as well
+    # the same cells as the swaps made: the nitrile's to the atom, the matrix's but for the other fluorine's bond length on the changed carbon
+    nitrile = read(MLIP / "registry_starts_as_film_nitrile.extxyz", index=0)
+    assert _same_places(nitrile.positions, tool.morphed(low, labelled[CELLS["nitrile"][0]])[0].positions, low.cell.array)
+    matrix = read(MLIP / "registry_starts_as_film.extxyz", index=0)
+    assert np.abs(matrix.positions - tool.morphed(low, labelled[CELLS["matrix"][0]])[0].positions).max() < 0.03
+    leader = read(MLIP / "registry_starts_as_film_leader.extxyz", index=":")
+    assert [str(a.info["frame"]) for a in leader] == ["reg_leader_tt_as_film_low"] and tool._ints(leader[0].info["registry_shear"]) == [1, -1]
+    assert str(leader[0].info["registry_of"]) == CELLS["leader"][0] and leader[0].get_chemical_formula() == labelled[CELLS["leader"][0]].get_chemical_formula()
+    # the leader's chain against the film composition's: a reversed VDF first, the nitrile for the chlorine, a VDF for the fourth TrFE
+    word = lambda a: " ".join(k + ("+" if h > 0 else "-" if h < 0 else "") for k, h in tool.substituents(a)[0])
+    assert word(labelled[CELLS["film"][0]]) == "HH FF HH FF FH+ FF HH FF HH FF FH+ FF HH FF HH ClF+ HH FF HH FF FH+ FF HH FF HH FF FH+ FF"
+    assert word(labelled[CELLS["leader"][0]]) == "FF HH HH FF FH+ FF HH FF HH FF FH+ FF HH FF HH CH+ HH FF HH FF HH FF HH FF HH FF FH+ FF"
+
+
 def test_the_low_cell_is_its_chains_and_its_registry_together_and_the_matrix_has_it_too(labelled):
     """The four cells made of the film composition's low cell, at rest in the potential on the fourth pod's card."""
     from ase.io import read
