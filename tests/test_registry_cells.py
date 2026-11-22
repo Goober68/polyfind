@@ -297,6 +297,24 @@ def test_the_low_cell_is_its_chains_and_its_registry_together_and_the_matrix_has
     assert np.abs(twists(matrix_low) - twists(low)).max() < 15 and np.abs(twists(matrix_low) - twists(matrix_up)).max() > 20
 
 
+def test_the_nitrile_composition_has_the_low_cell_too(labelled):
+    """The nitrile cell made of the film composition's low cell (the chlorine a nitrile), at rest in the potential on the fourth pod's card."""
+    from ase.io import read
+
+    tool, path = _load("registry_cells"), _load("mlip_path")
+    table = json.loads((ROOT / "docs" / "predictions" / "registry_as_film_nitrile.json").read_text())["rows"]
+    assert all(v["converged"] and v["conformation_kept"] for v in table.values()) and len(table) == 2
+    assert {k: v["energy"] for k, v in table.items()} == pytest.approx({"reg_nitrile_tt_as_film_low": -1.51, "reg_nitrile_tt_as_film_low_registry_back": -0.05}, abs=0.006)
+    assert table["reg_nitrile_tt_as_film_low"]["shear_along_chains_monomers"] == pytest.approx([1.12, -1.24], abs=0.006)
+    assert np.abs(table["reg_nitrile_tt_as_film_low_registry_back"]["shear_along_chains_monomers"]).max() < 0.05
+    frames = {str(a.info["frame"]): a for a in read(MLIP / "registry_as_film_nitrile_relaxed.extxyz", index=":")}
+    up = labelled[CELLS["nitrile"][0]]
+    for a in frames.values():
+        assert all(any(tool.same_molecule(m, t) for t in tool.substituents(up)) for m in tool.substituents(a)) and tool.gauche(a, path) == 0
+    # with its neighbours moved back it is level with the upright cell, its dipoles along the short edge and not the long one
+    assert abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg"]) - 180) < 30 and abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg_labelled"]) - 90) < 15
+
+
 def test_the_helix_cells_to_be_shaken_are_the_labelled_ones(labelled):
     from ase.io import read
 

@@ -1,0 +1,72 @@
+{
+ "what": "cells made from labelled cells by examples/registry_cells.py (neighbours moved whole monomers along the chains, chains turned about their axes) and relaxed in the potential: energy is kcal/mol per chain against the labelled cell each was made from, in the potential with D3",
+ "starts": "docs/predictions/mlip/registry_starts_as_film_nitrile.extxyz",
+ "rows": {
+  "reg_nitrile_tt_as_film_low": {
+   "relaxed": true,
+   "frame": "reg_nitrile_tt_as_film_low_in_all_s1",
+   "label": "nitrile",
+   "conformation": "tt",
+   "of": "tt_nitrile_from_rows14an_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 116,
+   "converged": true,
+   "steps": 644,
+   "energy": -1.5061954427282203,
+   "shear_along_chains_monomers": [
+    1.1209157909939969,
+    -1.236371688142647
+   ],
+   "shear_along_chains_monomers_labelled": [
+    2.7244171371745906e-08,
+    7.129023959921275e-09
+   ],
+   "dipole_from_a_deg": -161.8411003047012,
+   "dipole_from_a_deg_labelled": 83.48528498335087,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.76294629469652,
+    9.95644575643516,
+    35.820389876424315
+   ]
+  },
+  "reg_nitrile_tt_as_film_low_registry_back": {
+   "relaxed": true,
+   "frame": "reg_nitrile_tt_as_film_low_registry_back_in_all_s1",
+   "label": "nitrile",
+   "conformation": "tt",
+   "of": "tt_nitrile_from_rows14an_r1",
+   "shear_asked": [
+    0,
+    0
+   ],
+   "turn_asked": 116,
+   "converged": true,
+   "steps": 448,
+   "energy": -0.05105705022412849,
+   "shear_along_chains_monomers": [
+    0.010990063496871491,
+    -0.013610005667081737
+   ],
+   "shear_along_chains_monomers_labelled": [
+    2.7244171371745906e-08,
+    7.129023959921275e-09
+   ],
+   "dipole_from_a_deg": -152.3131018098798,
+   "dipole_from_a_deg_labelled": 83.48528498335087,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.1045323190408665,
+    9.251177925130856,
+    35.80039559221219
+   ]
+  }
+ }
+}
