@@ -48,6 +48,8 @@ def main():
                                                                   "between another evaluator's kink sheet and the tables' at one site, taken as common to the row's sites")
     ap.add_argument("--sites", type=Path, default=PRED / "kink_site_scan_belt4.json", help="the kink-site scans the rate model sums over: the tables' own (examples/kink_site_scan.py), "
                                                                                              "or those with the shear free (examples/kink_sheet_shear.py --as-scan)")
+    ap.add_argument("--barriers", nargs="*", default=[], metavar="ROW=KCAL", help="a barrier for each row, kcal/mol per chain (the film composition's row among them): the "
+                    "frequency is the measured film's times exp(-(barrier - the film composition's) / kT), in place of the kink sites")
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
     shifts = {item.split("=")[0]: float(item.split("=")[1]) for item in args.sheet_shift}
@@ -61,12 +63,22 @@ def main():
     if shifts:
         out["sheet_shifts_kcal_per_kink_pair"] = shifts
         out["what"] += ". The kink sites of the rows in sheet_shifts are moved by those amounts (both hands, every site alike): only the rate model that sums over kink sites sees it"
+    barriers = {item.split("=")[0]: float(item.split("=")[1]) for item in args.barriers}
     other_sites = args.sites.resolve() != (PRED / "kink_site_scan_belt4.json").resolve()
-    if other_sites:
+    if barriers:
+        out["barriers_kcal_per_chain"] = barriers
+        out["what"] += (". The frequency is by a barrier: the measured film's 364 kHz times exp(-(a row's barrier - the film composition's) / kT), kT 0.596 kcal/mol; "
+                        "the kink sites are not used")
+    elif other_sites:
         out["sites_from"] = args.sites.name
         out["what"] += f". The kink sites are those of {args.sites.name}: only the rate model that sums over kink sites sees them"
     with tempfile.TemporaryDirectory() as tmp:
         extra = ["--sites", str(args.sites)] if other_sites else []
+        if barriers:   # one site a row whose energy is the barrier: the model's sum over sites is then exp(-barrier / kT), and its ratio to the film composition's the rate
+            letters = {k.split("@")[0]: row["letters"] for k, row in json.loads(args.sites.read_text())["rows"].items()}
+            one = {"rows": {f"{k}@0": {"letters": letters[k], "sites": {"0": {"formation": b, "units": "--", "converged": True, "kink_kept": True}}} for k, b in barriers.items()}}
+            (Path(tmp) / "barriers.json").write_text(json.dumps(one))
+            extra = ["--sites", str(Path(tmp) / "barriers.json")]
         if shifts:
             scans = json.loads(args.sites.read_text())
             for key, row in scans["rows"].items():
@@ -86,6 +98,13 @@ def main():
             entry = {"film_channel_as_calibrated": axes_of(res["three_axes"]["rows"]["calibrated_film"]), "rows": {}}
             for k, m in theirs.items():
                 rec = {"margin": m + shift, "all_trans_is_lower": m + shift < 0.0}
+                if barriers:
+                    if k in res.get("sites", {}).get("rows", {}):
+                        rec["by_the_barrier"] = axes_of(res["sites"]["rows"][k]["three_axes"])
+                        rec["barrier_kcal_per_chain"] = barriers[k]
+                        rec["rate_against_the_film_cell"] = res["sites"]["rows"][k]["ratio_to_the_anchor"]
+                    entry["rows"][k] = rec
+                    continue
                 for model, key in (("by_the_sum_over_kink_sites", "sites"),) + (() if shifts or other_sites else (("by_one_chains_move", "moves"),)):
                     if k in res.get(key, {}).get("rows", {}):
                         rec[model] = axes_of(res[key]["rows"][k]["three_axes"])
@@ -107,7 +126,7 @@ def main():
                 ks = rec["kink_sites"]
                 print(f"  {k:26s} kink sites: cheapest {ks['cheapest_kcal_per_kink_pair']:+.2f} ({ks['cheapest_on_units']}), {ks['sites_below_all_trans']} of {sum(ks['sites_scanned'])} below all-trans; "
                       f"sum {ks['sum_against_the_film_cell']:.3g}, occupancy {ks['occupancy_against_the_film_cell']:.3g} of the film cell's")
-            for model in ("by_the_sum_over_kink_sites", "by_the_occupancy_of_kink_sites", "by_one_chains_move"):
+            for model in ("by_the_barrier", "by_the_sum_over_kink_sites", "by_the_occupancy_of_kink_sites", "by_one_chains_move"):
                 if model not in rec:
                     continue
                 a = rec[model]
