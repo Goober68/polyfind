@@ -70,3 +70,21 @@ shear_card.sh docs/predictions/mlip/models/all_s1.model 16 film_flat:row_vdf9-tr
 # the led scan is an upper bound.  Each torsion of the pair led first, then the rest, for both
 # cells, from the sheet to the all-trans cell it belongs to:
 steps_card.sh docs/predictions/mlip/models/all_s1.model 12 film:sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1:film_r_released leader:sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1:leader_r_released
+# 01:10 UTC.  The torsions one after the other (job 15, forty minutes; it slowed the DFT lines,
+# neither of which has finished a cell yet, so nothing more is scanned on this pod).  Leading
+# one torsion of the pair does not undo it: the other gauche bond moves a monomer along and the
+# kink is stretched (G T T T G'), 1.3 (film's composition) and 0.85 (leader) above the sheet,
+# over 7.5 and 5.7.  From there to the all-trans cell the leader tops 7.25 above its sheet,
+# where both torsions led together top 9.2; the film's composition does not go lower than the
+# 8.55 it has with both together.  DFT's five hours are for what the reading rests on, in
+# this order on the card: the all-trans cells the sheets belong to (the reference of every
+# barrier above all-trans), the leader's lower top, the tops from the upright cells; the
+# leader's top with both torsions together goes to the end.  On the processors: the image
+# before the film's top, the leader's first step's top, the upright kinked cells.
+path_dft.sh card next leader_b2 leader_b2_i07
+path_dft.sh card next leader_r leader_r_released
+path_dft.sh card next film_r film_r_released
+dft_cells.sh in=dft_card last leader_r_i04
+dft_cells.sh last leader_r_i03
+path_dft.sh processors next leader_b1 leader_b1_i08
+path_dft.sh processors next film_r film_r_i06
