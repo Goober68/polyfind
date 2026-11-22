@@ -263,6 +263,11 @@ def sheets(args):
     if not sources:
         raise SystemExit(f"no sheet of {args.of} in {args.frames}")
     order = sorted(sources, key=lambda site: (int(site.rstrip("m")), site.endswith("m")))
+    if args.sites:
+        missing = [site for site in args.sites if site not in sources]
+        if missing:
+            raise SystemExit(f"no sheet of {args.of} at {' '.join(missing)}")
+        order = list(args.sites)
     out = []
     for item in args.row:
         name, letters = item.split("=", 1)
@@ -271,7 +276,7 @@ def sheets(args):
             cell, changed = made(source, letters)
             if reg.gauche(cell, path) != reg.gauche(source, path):
                 raise SystemExit(f"{name} at {site}: the kink did not come through")
-            cell.info = {"n_monomers": int(source.info["n_monomers"]), "kmesh": str(source.info["kmesh"]).strip("[]"), "frame": f"scr_{name}_sheet_at{site}", "screen_row": name,
+            cell.info = {"n_monomers": int(source.info["n_monomers"]), "kmesh": str(source.info["kmesh"]).strip("[]"), "frame": f"scr_{name}_sheet{args.label}_at{site}", "screen_row": name,
                          "screen_letters": letters, "screen_kind": f"sheet_at{site}", "screen_site": site, "screen_from": str(source.info["frame"]), "screen_changed": changed,
                          "family": "relaxed", "conformation": "kink sheet",
                          "source": f"examples/screen14.py: {source.info['frame']} with its chains made {letters} where they stand ({changed} carbons a cell), a start, not relaxed"}
@@ -379,6 +384,8 @@ def main():
     s.add_argument("--frames", nargs="+", required=True, help="files that hold the relaxed sheets the rows' are made of")
     s.add_argument("--of", default="vdf9-trfe4-cfe1-14", help="the row whose sheets those are (the film's composition)")
     s.add_argument("--row", nargs="+", required=True, metavar="NAME=LETTERS")
+    s.add_argument("--sites", nargs="*", default=[], help="only these sites of the row's sheets, in this order (18m 18 16m ...); all of them if not given")
+    s.add_argument("--label", default="", help="put after `sheet` in the frames' names (scr_ROW_sheetLABEL_atSITE), to keep a row's sheets made of two rows' apart")
     s.add_argument("--out", required=True)
     s = sub.add_parser("sheets-table")
     s.add_argument("--starts", required=True)

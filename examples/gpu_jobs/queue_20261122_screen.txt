@@ -85,5 +85,16 @@ screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_1.extxyz 4 1000 2700
 # THE FRONT-OF-LINE JOB ABOVE FAILED (exit 1, no output: screen_front.sh read the card's line file, which does not
 # exist until that line is started, under `set -e`; corrected).  So the processors go on from the candidate's
 # helix in the film composition's packing (to about 21:20) to its third all-trans cell, and its lowest helix
-# cell, the one its margin needs, goes to the card's line here, after the sheets (about 48 minutes alone).
+# cell, the one its margin needs, goes to the card's line below (about 48 minutes with the card to itself).
+#
+# 20:52 UTC.  First, what file D says of the sheets running above: they are IVRVVRVCVVVVVR made of the FILM
+# composition's sheets, and a made cell keeps its source's packing.  The leader's own sheets are cheapest on its
+# run of VDF units (sites 18m, 18, 16m, 20m: -1.32 to -0.93 kcal/mol per chain against its upright all-trans
+# cell), the film composition's on its chlorine (14m -5.26, 12 -3.56).  So the same rows made of the LEADER's
+# sheets at its nine cheapest sites and the two beside its nitrile: IVRVVRVCVVVVVR (does the chlorine take the
+# kink, or the VDF run?) and IVRVVRVVVVVVVR, which file D put at +0.071.  16 sheets, the two rows in turn.
+# (This line stands where the card's DFT start stood for seven minutes: that job had not started.)
+screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_2.extxyz 4 1000 1800
 screen_dft.sh card start scr_vdf9-trfe3-cfe1-rvdf1-14_hx_ldr_in_all_s1
+# the card is DFT's alone until that cell is labelled: whatever follows waits for it
+dft_cells.sh in=dft_card wait

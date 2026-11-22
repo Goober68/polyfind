@@ -343,5 +343,29 @@ def test_the_film_compositions_chains_turned_without_their_registry_are_level_wi
     assert np.abs(cell.arrays["REF_forces"]).max() < 0.1
 
 
+def test_the_second_sheets_file_is_two_rows_made_of_the_leaders_own_sheets():
+    """IVRVVRVCVVVVVR and IVRVVRVVVVVVVR at the leader's cheapest kink sites (and, the first, the two beside the leader's nitrile), each made of the
+    leader's relaxed sheet there: the nitrile a chlorine unit's or a VDF's substituents, its nitrogen gone, the kink bond for bond."""
+    from ase.geometry import find_mic
+    from ase.io import read
+
+    scr, reg, path = _load("screen14"), _load("registry_cells"), _load("mlip_path")
+    cells = read(MLIP / "screen14_sheets_2.extxyz", index=":")
+    rows = {"vdf9-trfe3-cfe1-rvdf1-14": ("IVRVVRVCVVVVVR", ["18m", "18", "16m", "20m", "12", "14", "16", "20", "4"]),
+            "vdf10-trfe3-rvdf1-14": ("IVRVVRVVVVVVVR", ["18m", "18", "16m", "20m", "16", "20", "4"])}
+    names = [str(a.info["frame"]) for a in cells]
+    assert len(cells) == 16 and all([n for n in names if r in n] == [f"scr_{r}_sheetldr_at{s}" for s in sites] for r, (_, sites) in rows.items())
+    assert names[:4] == ["scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at18m", "scr_vdf10-trfe3-rvdf1-14_sheetldr_at18m", "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at18",
+                         "scr_vdf10-trfe3-rvdf1-14_sheetldr_at18"]                                    # the two rows in turn
+    tight = {str(a.info["frame"]): a for a in read(MLIP / "cells14_tight_in_all_s1.extxyz", index=":")}
+    for a in cells:
+        row, site = str(a.info["screen_row"]), str(a.info["screen_site"])
+        source = tight[f"sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at{site}_sheared_in_all_s1"]
+        assert str(a.info["screen_from"]) == str(source.info["frame"]) and int(a.info["screen_changed"]) == 2 and len(a) == 168 and int((a.numbers == 7).sum()) == 0
+        assert all(reg.same_molecule(chain, scr.cycle_of(rows[row][0])) for chain in reg.substituents(a)) and reg.gauche(a, path) == reg.gauche(source, path) > 0
+        backbone, was = sorted({q[0] for q in path.backbone_torsions(a)}), sorted({q[0] for q in path.backbone_torsions(source)})
+        assert np.abs(find_mic(a.positions[backbone] - source.positions[was], a.cell, pbc=True)[0]).max() < 1e-8
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
