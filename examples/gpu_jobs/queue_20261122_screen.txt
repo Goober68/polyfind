@@ -125,3 +125,11 @@ steps_card.sh docs/predictions/mlip/models/all_s1.model 12 nopin:scr_vdf10-trfe3
 # The last of the card's time: the same row's kink on its run of VDF units (in the leader's packing, -2.21
 # against the chlorine's -4.84), one path: does a fast hop survive beside the chlorine's?
 steps_card.sh docs/predictions/mlip/models/all_s1.model 12 lcfev:scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at16m_in_all_s1:scr_vdf9-trfe3-cfe1-rvdf1-14_tt_ldr_in_all_s1
+#
+# 23:20 UTC.  The two hops, kcal/mol per chain against each row's relaxed sheet, the lower of the two orders'
+# first legs: the no-pin row's kink at 18m moves over 7.55 (the other order 7.62), the chlorine's kink in
+# IVRVVRVCVVVVVR over 6.45 (7.28).  In the same potential the film composition's is 7.81 and the leader's 5.67.
+# SO THE NO-PIN ROW DOES NOT HAVE THE LEADER'S FAST HOP at its cheapest kink.  The leader's hop was scanned at
+# site 18, the other hand of the kink, which in the leader is level with 18m (-1.25, -1.32) and in the no-pin
+# row is 2.24 above it (+0.37, -1.87).  One more path while the pod lasts: the no-pin row at 18.
+steps_card.sh docs/predictions/mlip/models/all_s1.model 12 nopin18:scr_vdf10-trfe3-rvdf1-14_sheetldr_at18_in_all_s1:scr_vdf10-trfe3-rvdf1-14_tt_low_in_all_s1
