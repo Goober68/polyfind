@@ -13,9 +13,9 @@
 # it is built, start labelling the named frames of FILE on their own line (cells known before
 # this job, so that the processors do not wait for it).
 #
-# Then: registry_table.json (each cell against the labelled cell it was made from),
-# registry_relaxed.extxyz (the relaxed cells), chosen.txt (examples/registry_cells.py choose: the
-# card's line, then the processors'), and the chosen go to the two DFT lines.
+# Then examples/gpu_jobs/registry_finish.sh: registry_table.json (each cell against the labelled cell it
+# was made from), registry_relaxed.extxyz (the relaxed cells), chosen.txt (the card's line, then the
+# processors'), and the chosen go to the two DFT lines.
 #
 # REGISTRY_NO_DFT=1 puts nothing in line and builds nothing; MLIP_DEVICE=cpu tries it without a card.
 set -uo pipefail
@@ -58,20 +58,5 @@ for pid in "${PIDS[@]}"; do wait "$pid" || true; done
 echo "relaxed for $(( $(date +%s) - t0 )) s on $MLIP_DEVICE, $SIDE side by side" | tee "$JOB_OUT/seconds.txt"
 grep -h "steps, " "$JOB_OUT"/relax_*.log || true
 
-"$PY" examples/registry_cells.py table --starts "$STARTS" --relaxed "$JOB_OUT/relaxed" --labels "$LABELS" \
-  --out "$JOB_OUT/registry_table.json" --frames-out "$JOB_OUT/registry_relaxed.extxyz" || exit 1
-# the film composition's low all-trans cell is labelled already (3.23: 1.27 below its upright cell here): only a lower one is news
-"$PY" examples/registry_cells.py choose --table "$JOB_OUT/registry_table.json" --within "${REGISTRY_WITHIN:-0.3}" --below film:tt=-1.0 > "$JOB_OUT/chosen.txt" || exit 1
-echo "chosen (the card's line, then the processors'):"; cat "$JOB_OUT/chosen.txt"
-[ "${REGISTRY_NO_DFT:-0}" = "1" ] && exit 0
-
-wait "$PROCESSORS" || true
-cat "$JOB_OUT/processors.log" | tail -n 5
-CARD="$(sed -n 1p "$JOB_OUT/chosen.txt")"; REST="$(sed -n 2p "$JOB_OUT/chosen.txt")"
-if [ -x "$GPUPW" ]; then
-  [ -n "$CARD" ] && bash "$HERE/dft_cells.sh" in=dft_card pw="$GPUPW" start 1 1 "$JOB_OUT/registry_relaxed.extxyz" $CARD
-  [ -n "$REST" ] && bash "$HERE/dft_cells.sh" start 8 2 "$JOB_OUT/registry_relaxed.extxyz" $REST
-else
-  [ -n "$CARD$REST" ] && bash "$HERE/dft_cells.sh" start 8 2 "$JOB_OUT/registry_relaxed.extxyz" $CARD $REST
-fi
-exit 0
+if [ "${REGISTRY_NO_DFT:-0}" != "1" ]; then wait "$PROCESSORS" || true; tail -n 5 "$JOB_OUT/processors.log"; fi
+bash "$HERE/registry_finish.sh" "$STARTS" "$JOB_OUT/relaxed"

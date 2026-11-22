@@ -24,3 +24,11 @@ registry_card.sh docs/predictions/mlip/registry_starts.extxyz 4 600 2700 docs/pr
 # stand, the lowest first, 900 more steps each and 40 minutes in all; then the table and the choice
 # again (a cell not at rest is put to DFT only if it is already 0.3 below its labelled cell).
 registry_more.sh docs/predictions/mlip/registry_starts.extxyz 4 900 2400 auto:4.0
+#
+# 07:13 UTC.  Why the cells above are slow: the lattice.  The film composition's low cell is 5% narrower along
+# one cell edge and 5% wider along the other than its upright cell, and a start made in the upright lattice
+# takes hundreds of steps to get there.  So the film composition's low cell is given to the other three
+# compositions whole (examples/registry_starts_like.sh: the same turn of the chains, the same strain of the
+# lattice across them, the same monomers along), and to the film's composition itself as the control: its
+# cell must come back to the one 3.23 labelled, 1.27 below upright.  Four cells, one a process, ten minutes.
+registry_card.sh docs/predictions/mlip/registry_starts_like.extxyz 4 600 900

@@ -9,7 +9,7 @@ DFT.  This makes such cells on purpose, from a labelled cell:
   turned    every chain turned about its own axis by an angle, the cell kept
 
     python -I examples/registry_cells.py build --labels FILES --cell LABEL:tt=FRAME LABEL:hx=FRAME ... \\
-        --variant LABEL:tt:SA,SB,TURN ... --out STARTS.extxyz
+        --variant LABEL:tt:SA,SB,TURN ... [--like UPRIGHT LOW --variant LABEL:tt:like ...] --out STARTS.extxyz
     python -I examples/registry_cells.py table --starts STARTS.extxyz --relaxed DIR --labels FILES --out TABLE.json \\
         --frames-out RELAXED.extxyz
     python -I examples/registry_cells.py choose --table TABLE.json [--within 0.3] [--below LABEL:tt=KCAL ...] \
@@ -136,6 +136,45 @@ def spread(atoms, factor):
     return b
 
 
+def lateral(atoms):
+    """The first two cell vectors across the chains (their parts along the third taken out), and the unit vector along the chains."""
+    cell = atoms.cell.array
+    c = cell[2] / np.linalg.norm(cell[2])
+    return np.array([cell[i] - (cell[i] @ c) * c for i in (0, 1)]), c
+
+
+def like(atoms, upright, low):
+    """`atoms` (a composition's upright cell) given what takes another composition's `upright` cell to its `low` cell: every
+    chain turned by the same angle, the two cell vectors across the chains given the same combination of themselves (the
+    same strain of the lattice), and the same monomers along the chains; each chain carried whole with its centre."""
+    from ase.io import write  # noqa: F401  (ase is needed for the cells this takes)
+
+    turn = dipole_from_a(low) - dipole_from_a(upright)
+    b = turned(atoms, turn)
+    up, _ = lateral(upright)
+    lo, _ = lateral(low)
+    combination = lo @ np.linalg.pinv(up)                        # low's vectors across the chains as combinations of upright's
+    mine, c = lateral(b)
+    tool = _path_tool()
+    shear = np.array(tool._shear(atoms)) + np.array(tool._shear(low)) - np.array(tool._shear(upright))
+    monomer = np.linalg.norm(b.cell.array[2]) / (int(b.info["n_monomers"]) / CHAINS)
+    pos, members, _ = whole(b)
+    cell = b.cell.array
+    new = cell.copy()
+    new[:2] = combination @ mine + np.outer(shear * monomer, c)
+    for atoms_of in members:
+        centre = pos[atoms_of].mean(axis=0)
+        f = np.linalg.solve(cell.T, centre)
+        along = (centre @ c) * c                                  # the chain keeps its height: only its place across the chains follows the lattice
+        moved = f @ new
+        pos[atoms_of] += (moved - (moved @ c) * c) - (centre - along)
+    out = atoms.copy()
+    out.positions = pos
+    out.set_cell(new, scale_atoms=False)
+    out.wrap()
+    return out, float(turn)
+
+
 def closest_between_chains(atoms, reach=2.6):
     """The shortest distance between atoms of different chains, A (None when none is within `reach`)."""
     from ase.neighborlist import neighbor_list
@@ -199,14 +238,20 @@ def build(args):
     out = []
     for item in args.variant:
         label, conformation, spec = item.split(":")
-        sa, sb, turn = (int(v) for v in spec.split(","))
         start = cells[f"{label}:{conformation}"]
-        b = start.copy()
-        if turn:
-            b = turned(b, turn)
-        if sa or sb:
-            b = sheared(b, sa, sb)
-        name = name_of(label, conformation, sa, sb, turn)
+        if spec == "like":           # what takes --like's first cell to its second, given to this cell: turn, lattice and monomers along the chains
+            b, turn = like(start, labelled[args.like[0]], labelled[args.like[1]])
+            sa, sb = (int(round(v)) for v in np.array(_path_tool()._shear(b)) - np.array(_path_tool()._shear(start)))
+            turn = int(round((turn + 180) % 360 - 180))
+            name = f"reg_{label}_{conformation}_like_{args.like_name}"
+        else:
+            sa, sb, turn = (int(v) for v in spec.split(","))
+            b = start.copy()
+            if turn:
+                b = turned(b, turn)
+            if sa or sb:
+                b = sheared(b, sa, sb)
+            name = name_of(label, conformation, sa, sb, turn)
         room = 1.0
         while (closest_between_chains(b) or 9.0) < args.contact and room < 1.2:   # chains that touch after the move: widen the cell until they do not
             room += 0.02
@@ -214,7 +259,8 @@ def build(args):
         b.info = {k: start.info[k] for k in ("n_monomers", "kmesh") if k in start.info}
         b.info.update(frame=name, family="registry", conformation={"tt": "all-trans", "hx": "helix"}[conformation], registry_of=str(start.info["frame"]),
                       registry_label=label, registry_conformation=conformation, registry_shear=f"{sa} {sb}", registry_turn=turn, registry_widened=round(room, 2),
-                      source=f"examples/registry_cells.py: {start.info['frame']}" + (f", every chain turned {turn:+d} degrees about its axis" if turn else "")
+                      source=f"examples/registry_cells.py: {start.info['frame']}" + (f", given what takes {args.like[0]} to {args.like[1]}:" if spec == "like" else "")
+                             + (f", every chain turned {turn:+d} degrees about its axis" if turn else "")
                              + (f", its neighbours along the two cell edges {sa:+d} and {sb:+d} monomers along the chains" if sa or sb else "")
                              + (f", the cell widened across the chains by {room:.2f}" if room > 1.0 else ""),
                       note="a start, not relaxed")
@@ -360,7 +406,11 @@ def main():
     s = sub.add_parser("build")
     s.add_argument("--labels", nargs="+", required=True, help="files of labelled frames")
     s.add_argument("--cell", nargs="+", required=True, metavar="LABEL:tt|hx=FRAME", help="a composition's labelled all-trans (tt) or helix (hx) cell")
-    s.add_argument("--variant", nargs="+", required=True, metavar="LABEL:tt|hx:SA,SB,TURN", help="monomers along the chains for the two cell edges, and degrees every chain is turned")
+    s.add_argument("--variant", nargs="+", required=True, metavar="LABEL:tt|hx:SA,SB,TURN", help="monomers along the chains for the two cell edges, and degrees every chain "
+                   "is turned; or LABEL:tt:like, the cell given what takes --like's first cell to its second")
+    s.add_argument("--like", nargs=2, default=None, metavar="FRAME", help="a composition's upright cell and its low cell (frames of --labels): the turn, the lattice's strain and "
+                   "the monomers along the chains between them are what a `like` variant is given")
+    s.add_argument("--like-name", default="film", help="the name a `like` variant carries")
     s.add_argument("--contact", type=float, default=1.9, help="A: a start whose chains come closer than this is widened across the chains until they do not")
     s.add_argument("--out", required=True)
     s = sub.add_parser("table")

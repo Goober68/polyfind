@@ -8,7 +8,7 @@
 # processors').  A cell is chosen when it is the lowest of its composition and conformation, kept its
 # conformation, and is at rest within REGISTRY_WITHIN (0.3) kcal/mol per chain of its labelled cell, or
 # not at rest but already REGISTRY_UNSETTLED (-0.3) below it; the film composition's all-trans only below
-# -1.0 (3.23's cell is labelled).  Cells in a DFT line already are not chosen again.
+# -1.6 (3.23's cell, 1.27 below, is labelled).  Cells in a DFT line already are not chosen again.
 # REGISTRY_NO_DFT=1 puts nothing in line.
 set -uo pipefail
 STARTS="$1"; RELAXED="$2"
@@ -19,7 +19,7 @@ SHARED="$(dirname "$JOB_OUT")/shared"
 "$PY" examples/registry_cells.py table --starts "$STARTS" --relaxed "$RELAXED" --labels "$LABELS" \
   --out "$JOB_OUT/registry_table.json" --frames-out "$JOB_OUT/registry_relaxed.extxyz" || exit 1
 INLINE="$(cat "$SHARED"/dft/line.txt "$SHARED"/dft_card/line.txt 2>/dev/null | awk '{print $3}' | tr '\n' ' ')"
-"$PY" examples/registry_cells.py choose --table "$JOB_OUT/registry_table.json" --within "${REGISTRY_WITHIN:-0.3}" --below film:tt=-1.0 \
+"$PY" examples/registry_cells.py choose --table "$JOB_OUT/registry_table.json" --within "${REGISTRY_WITHIN:-0.3}" --below film:tt=-1.6 \
   --unsettled-below "${REGISTRY_UNSETTLED:--0.3}" --skip $INLINE > "$JOB_OUT/chosen.txt" || exit 1
 echo "chosen (the card's line, then the processors'):"; cat "$JOB_OUT/chosen.txt"
 [ "${REGISTRY_NO_DFT:-0}" = "1" ] && exit 0
