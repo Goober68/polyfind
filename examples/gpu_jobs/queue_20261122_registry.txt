@@ -105,7 +105,7 @@ registry_card.sh docs/predictions/mlip/registry_starts_helix_one.extxyz 4 800 10
 # not have the low cell.  The second start is the same cell with its neighbours moved back to the upright
 # registry, as the other three compositions had (film +0.18, matrix +0.83, nitrile -0.05).
 #
-# 08:53 UTC.  The four helix cells shaken for 1.5 ps at 350 K and relaxed again are back where they started
+# 08:51 UTC.  The four helix cells shaken for 1.5 ps at 350 K and relaxed again are back where they started
 # (0.00, -0.01, -0.01, 0.00 kcal/mol per chain): nothing lower, nothing chosen.  The DFT lines, with about
 # two hours of the pod left and room for one more cell on each: the card takes the leader's low cell next
 # (the potential has it 1.02 above upright, and has been 1.7 off on a state of the leader's before: it

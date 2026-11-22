@@ -316,6 +316,28 @@ def test_the_nitrile_composition_has_the_low_cell_too(labelled):
     assert abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg"]) - 180) < 30 and abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg_labelled"]) - 90) < 15
 
 
+def test_the_helix_cells_shaken_at_350_kelvin_come_back_to_where_they_started(labelled):
+    """The fourth pod's eighth job: 1.5 ps at 350 K in the potential in each helix cell's own cell, then relaxed with the cell free."""
+    from ase.io import read
+
+    tool, path = _load("registry_cells"), _load("mlip_path")
+    stored = json.loads((ROOT / "docs" / "predictions" / "registry_helix_annealed.json").read_text())
+    table, shaken = stored["rows"], stored["shaken"]
+    assert set(table) == set(shaken) == {f"reg_{c}_hx_annealed" for c in CELLS}
+    for name, row in table.items():
+        assert row["converged"] and row["conformation_kept"] and row["gauche_torsions"] == row["gauche_torsions_labelled"]
+        assert abs(row["energy"]) < 0.015                                                    # kcal/mol per chain against the labelled helix cell: level
+        assert row["shear_along_chains_monomers"] == pytest.approx(row["shear_along_chains_monomers_labelled"], abs=0.02)
+        heat = shaken[name]
+        assert (heat["md_steps"], heat["kelvin"]) == (1500, 350) and 380 < heat["hottest_kelvin"] < 420 and heat["converged"]
+        assert abs(heat["meV_per_monomer_from_the_start"]) * 1e-3 * 14 * 23.0605 == pytest.approx(abs(row["energy"]), abs=0.006)
+    frames = {str(a.info["frame"]): a for a in read(MLIP / "registry_helix_annealed_relaxed.extxyz", index=":")}
+    for c, (_, helix) in CELLS.items():
+        a, was = frames[f"reg_{c}_hx_annealed_in_all_s1"], labelled[helix]
+        off = np.abs(a.cell.cellpar() - was.cell.cellpar())
+        assert tool.gauche(a, path) == tool.gauche(was, path) and off[:3].max() < 0.03 and off[3:].max() < 0.3     # the same cell again, to 0.03 A and 0.3 degrees
+
+
 def test_the_leader_does_not_have_the_low_cell_in_the_potential(labelled):
     """The leader made of the film composition's low cell, at rest in the potential (relaxed on this machine's processors, 519 steps)."""
     from ase.io import read
