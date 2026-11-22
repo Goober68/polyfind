@@ -680,44 +680,61 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
-        A FOURTH POD IS RUNNING (PI 2026-11-22: "MI100 isn't online go on runpod", on the registry check).
-        `bcuwk6j3g3crqp`, name `polyfind-registry`, Runpod Secure Cloud EU-SE-1, one NVIDIA A40, $0.59/h,
-        CREATED 06:51:18 UTC 2026-11-22 after a read of stock (High) and price, confirmed by a read
-        (`list-pods`). IT REMOVES ITSELF AT 4.5 HOURS (`BENCH_LIMIT_S=16200`: 11:21 UTC, at most $2.66) AND
-        NOT BEFORE: DELETE IT BY 11:15 UTC AFTER A LAST MIRROR. WHOEVER READS THIS AFTER 11:25 UTC
-        2026-11-22: CONFIRM IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods '{}'`) AND DELETE IT
-        IF NOT (`delete-pod {"id": "bcuwk6j3g3crqp"}`, then read again). Spend before it: about $32.3 of $46.
-        HOW TO READ IT: `scratchpad/runpod/pod_registry.sh PATH` (token in `scratchpad/runpod/
-        token_registry.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_registry.py`
-        (into `scratchpad/runpod/registry/`), `scratchpad/runpod/dft_progress.sh`; labels into the
-        repository by `python -I scratchpad/registry_labels.py docs/predictions/mlip/
-        cells14_fourth_pod_frames_pbe_d3bj.extxyz`. If the token file is lost the results cannot be read:
-        delete the pod.
-        STATE AT 09:20 UTC (queue `examples/gpu_jobs/queue_20261122_registry.txt`, thirteen jobs done; all
-        of this is stored and tested, `tests/test_registry_cells.py`, and is the potential's unless DFT is
-        named; kcal/mol per chain against each composition's own upright cell):
-        (a) Upright chains with their neighbours moved whole monomers and/or turned: nothing below upright
-            (all-trans +0.45 to +2.30, helix two monomers along +1.40 to +5.75, helix one monomer along
-            +5.4 to +11.9 with seven of eight not at rest; `registry_shifted.json`, `registry_helix_one.json`).
-        (b) THE LOW CELL IS ITS CHAINS' TWISTS AND ITS REGISTRY TOGETHER: upright chains in the low cell's
-            lattice and registry +0.57; the low cell's chains moved back +0.18. Made of the film
-            composition's low cell atom by atom (`registry_cells.py derive`): MATRIX -1.50, NITRILE -1.51,
-            LEADER +1.02 (film itself -1.27; DFT -0.84). THE LEADER DOES NOT HAVE IT.
-        (c) The four helix cells shaken 1.5 ps at 350 K (`mlip_anneal.py`) come back to where they were.
-        (d) DFT: `leader_b2_i08` +7.41 above the leader's sheet (the potential's top there 7.08): THE
-            LEADER'S KINK IS REMOVED OVER 7.41 AND FORMS OVER 4.09, not 7.08 and 3.76; by removal 7.6 MHz,
-            tan delta 0.0029, 0.164%, 8.9 pN/nm2 (`kink_path_points.sh` rerun, stored).
-        ON THE DFT LINES NOW: card: the matrix's low cell (running), then the leader's low cell;
-        processors: `leader_r_released_tight` (running), then the nitrile composition's low cell (may not
-        finish), then `film_all_trans_turned_117_tight` (will not).
-        STILL TO DO ON IT: when the card is free of DFT (about 10:26), relax the seven unsettled helix
-        cells on (`registry_more.sh docs/predictions/mlip/registry_starts_helix_one.extxyz 2 1000 2400
-        NAME...`, a new line of the queue). Running here, not on the pod: the leader's low cell with its
-        neighbours moved back (`scratchpad/reg/leader_back/`).
-        THEN: `bash examples/registry_margins.sh` (each cell's margin from its lowest labelled all-trans
-        and helix cell; the kink sites move with the all-trans reference), docs 3.24 (draft in
-        `scratchpad/sec324.md`), the head of `docs/CANDIDATE_MATERIALS.md` (its "it is the registry and
-        not the turn" is half right: revise), this block, the full suite, the report on all four axes.
+        THE FOURTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (11:08:57 UTC 2026-11-22; PI
+        2026-11-22: "MI100 isn't online go on runpod", on the registry check). `bcuwk6j3g3crqp`
+        (`polyfind-registry`, Runpod Secure Cloud EU-SE-1, one A40, $0.59/h), 06:51:18 to 11:08:57 UTC:
+        4.29 h, ABOUT $2.53 (spend so far about $34.8 of $46; the key cannot read billing). Deleted with
+        `delete-pod` after a last mirror and CONFIRMED BY A READ (`list-pods`: none; `get-pod`: 404).
+        NO POD IS RUNNING. Docs: `docs/MLIP_SECOND_OPINION.md` 3.24, head of
+        `docs/CANDIDATE_MATERIALS.md`; tests `tests/test_registry_cells.py` (22),
+        `tests/test_mlip_path.py` (10). Kcal/mol per chain against each composition's own upright cell
+        unless said; "the potential" where no DFT is named.
+        (1) MOVING THE NEIGHBOURS OF UPRIGHT CHAINS FINDS NOTHING (`examples/registry_cells.py build`,
+            `examples/registry_starts.sh`, 34 starts, 32 relaxed, `docs/predictions/registry_shifted.json`):
+            all-trans a monomer along +0.45 to +2.30; the turn alone level (-0.02, -0.01, +0.02); helix two
+            monomers along +1.40 to +5.75; helix one monomer along slides to other registries, +0.76 to
+            +8.41 at rest. The control (upright chains in the film composition's low cell's lattice,
+            registry and turn) rests +0.57: THE LOW CELL IS ITS CHAINS' TWISTS (each backbone bond up to
+            23 degrees off trans, in another pattern than upright) AND ITS REGISTRY TOGETHER.
+        (2) THE OTHER COMPOSITIONS MADE OF THE FILM COMPOSITION'S LOW CELL ATOM BY ATOM
+            (`registry_cells.py derive`: `swap`, `nitrile`, `morph`, `shear`, `back`;
+            `examples/registry_starts_as_film.sh`) AND PUT TO DFT
+            (`mlip/cells14_fourth_pod_frames_pbe_d3bj.extxyz`, five labels): DFT (the potential): film's
+            composition -0.84 (-1.27), MATRIX -1.40 (-1.50), NITRILE ALONE +0.29 (-1.51), LEADER +2.34
+            (+1.02); the leader in its own sheet's registry +2.16 (+1.50). IN DFT THE LOW CELL BELONGS TO
+            THE TWO COMPOSITIONS WITHOUT A NITRILE. THE POTENTIAL IS 1.3 TO 1.8 TOO LOW ON CELLS WITH A
+            NITRILE MOVED OFF UPRIGHT AND HAS THE NITRILE COMPOSITION ON THE WRONG SIDE: DO NOT USE ITS
+            MARGINS FOR NITRILE CELLS UNLABELLED.
+        (3) HELIX: nothing lower than the labelled cells by three searches (two monomers along, one, and
+            1.5 ps at 350 K in a held cell, `examples/mlip_anneal.py`: back to the start). All three would
+            have missed the all-trans low cell too; no helix cell was made from another state's cell.
+        (4) MARGINS FROM EACH COMPOSITION'S LOWEST LABELLED CELLS, DFT, kcal/mol per monomer
+            (`bash examples/registry_margins.sh`, `cells14_margins_registries.json`; from upright cells in
+            brackets): FILM'S COMPOSITION +0.063 (+0.123), MATRIX -0.032 (+0.068), LEADER -0.047 (-0.047),
+            NITRILE ALONE -0.083 (-0.083). The matrix (a ferroelectric in fact) and the film's
+            composition (the relaxor) are on opposite sides of zero; the CFE unit adds 0.095. THE LEADER
+            AND THE NITRILE ALONE ARE ON THE MATRIX'S SIDE, FURTHER OUT.
+        (5) 3.23'S PATHS: `leader_b2_i08` is 7.41 above the leader's sheet in DFT, above the potential's
+            top (7.08): THE LEADER'S KINK IS REMOVED OVER 7.41 AND FORMS OVER 4.09, NOT 7.08 AND 3.76
+            (`bash examples/kink_path_points.sh` takes DFT's own top). The six barriers, each evaluator
+            over its own top: 0.31 rms.
+        (6) THE FOUR AXES (`four_axes_registries.json`, `four_axes_registries_by_barrier_{hop,removal}.json`,
+            `four_axes_by_barrier_forming.json`; a row's kink sites move up with its all-trans reference):
+            film's composition (anchor, +0.063) 364 kHz, tan delta 0.088, 0.081%, 7.6 pN/nm2; leader by
+            the hop 27 MHz, 0.0008, 0.184%, 10.0; by removal 7.6 MHz, 0.0029, 0.164%, 8.9; by forming
+            98 kHz, 0.22, 0.035%, 1.9; matrix no channel (0 to 4 kHz). BY THE TWO EVENTS THE FILM'S OWN
+            RATE ALLOWS THE LEADER IS STILL AHEAD ON ALL FOUR, BUT ITS ROWS TAKE ITS MARGIN AS ZERO AND
+            THE MATRIX, A FERROELECTRIC, STANDS BETWEEN THE LEADER'S MARGIN AND ZERO: nothing says the
+            leader switches as a relaxor does, and it has nothing in it that raises a margin as CFE does.
+        (7) NOT DONE: the other 31 rows; a search over an all-trans chain's twists (one low cell, found
+            by accident); a helix cell made from another state's cell; two all-trans starts not run and
+            seven cells not at rest when stopped (all above); DFT on the film composition's upright cell
+            with every chain turned. The three helix cells still moving were being relaxed on here in
+            `scratchpad/reg/helix_on/` (not stored unless they came to rest).
+        NEXT (a recommendation, no ruling yet): a candidate that keeps the leader's shallow, fast kink
+        and has a margin above zero from its lowest cells, i.e. the leader's backbone with a
+        margin-raising unit and without the nitrile's cost; the potential can screen cells without a
+        nitrile (0.1 to 0.4 from DFT here) and cannot screen ones with it.
         THE THIRD POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (06:09:46 UTC 2026-11-22; PI 2026-11-21:
         "Go on 8 hour pod"). `vk7ocprcjh3cbq` (`polyfind-path`, Runpod Secure Cloud CA-MTL-1, one A40,
         $0.59/h), 22:17:45 to 06:09:46 UTC: 7.87 h, ABOUT $4.64 (spend so far about $32.3 of $46; the key
@@ -745,13 +762,15 @@ right": true at one registry, not along it).
             3.31 (3.24), leader 3.76 (4.17); from that cell relaxed on: 5.03 (4.74), leader not labelled
             (4.50). Its END HOPS a monomer along: 7.70 (7.81), leader 5.13 (5.67). It is REMOVED: 9.22
             (8.72), leader 7.08 (7.25). THE POTENTIAL IS WITHIN 0.1 TO 0.5 OF DFT ON EVERY BARRIER (rms
-            0.36): it can be used to scan barriers.
+            0.36): it can be used to scan barriers. [CORRECTED BY THE FOURTH POD, ABOVE: over DFT's own
+            top the leader's kink forms over 4.09 and is removed over 7.41; rms 0.31.]
         (4) THE FILM'S MEASURED RATE (364 kHz = 2.3e6 /s; with its own Vogel-Fulcher prefactor an Arrhenius
             barrier of 7.9 kcal/mol at 300 K) IS AT THE SCALE OF THE HOP (7.70: 3.0e6 /s) AND THE REMOVAL
             (9.22: 2.4e5 /s), NOT OF THE FORMING (3.3 to 5.0: 3e8 to 5e9 /s).
         (5) THE FOUR AXES BY EACH EVENT (`docs/predictions/four_axes_by_barrier_{forming,hop,removal}.json`;
             `four_axes_at_margins.py --barriers`): leader by the hop 27 MHz, tan delta 0.0008, 0.184%,
-            10.0 pN/nm2; by removal 13 MHz, 0.0016, 0.175%, 9.5; by forming 171 kHz, 0.126, 0.045%, 2.5;
+            10.0 pN/nm2; by removal 13 MHz, 0.0016, 0.175%, 9.5; by forming 171 kHz, 0.126, 0.045%, 2.5
+            [NOW 7.6 MHz, 0.0029, 0.164%, 8.9 AND 98 kHz, 0.22, 0.035%, 1.9: the fourth pod, above];
             film's composition (anchor) 364 kHz, 0.065, 0.073%, 6.4. BY THE TWO EVENTS THE FILM'S OWN RATE
             ALLOWS THE LEADER IS AHEAD ON ALL FOUR AXES. NOT YET A ROW: the leader's margin is below zero
             in DFT (the loss model takes it as zero, outside its domain); one site a cell; every chain
@@ -761,7 +780,8 @@ right": true at one registry, not along it).
             all_trans_tight.extxyz`: every chain's neighbours a monomer along the chains, 1.06 and -1.05,
             dipoles 21 degrees from the short cell edge), is 0.84 kcal/mol per chain BELOW the upright
             all-trans cell in DFT (1.27 in the potential; as the scan left it DFT had it 0.88 ABOVE). IT IS
-            THE REGISTRY, NOT THE TURN: the upright cell with every chain turned 117 degrees
+            THE REGISTRY, NOT THE TURN [HALF RIGHT: the chains' twists and the registry together, the
+            fourth pod, above]: the upright cell with every chain turned 117 degrees
             (`examples/turn_chains.py`) rests level with the upright cell in the potential (-0.02). THE
             FILM COMPOSITION'S MARGIN FROM THE LOWER CELL IS +0.063, NOT +0.123 (if no helix cell has a
             lower registry of its own, NOT LOOKED FOR): level with the matrix's +0.068; its row there reads

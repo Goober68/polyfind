@@ -209,7 +209,7 @@ def test_the_matrix_is_the_film_compositions_low_cell_with_its_chlorine_made_flu
 
 
 def test_chains_with_the_upright_cells_twists_rest_higher_in_every_other_registry_tried(labelled):
-    """The 34 starts (the fourth pod's card, and five all-trans ones on this machine): 32 relaxed, none below the cell it was made from by more than 0.01."""
+    """The 34 starts (the fourth pod's card, and the three turned-alone all-trans ones on this machine): 32 relaxed, none below the cell it was made from by more than 0.01."""
     from ase.io import read
 
     table = json.loads((ROOT / "docs" / "predictions" / "registry_shifted.json").read_text())["rows"]

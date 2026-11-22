@@ -177,12 +177,14 @@ lower phase, and a kink pair is one turn of that helix.
 
   | what the kink does | the film's composition, on its chlorine | the leader, on its run of VDF units | the leader's rate over the film composition's |
   |---|---:|---:|---:|
-  | forms from all-trans | 3.31 (3.24) | 3.76 (4.17) | 0.47 |
+  | forms from all-trans | 3.31 (3.24) | 4.09 (4.17) | 0.27 |
   | its end moves a monomer along | 7.70 (7.81) | 5.13 (5.67) | 75 |
-  | is removed | 9.22 (8.72) | 7.08 (7.25) | 36 |
+  | is removed | 9.22 (8.72) | 7.41 (7.25) | 21 |
 
-  The potential is within 0.1 to 0.5 of DFT on each barrier: it can scan barriers, which had
-  not been tested. **The film's own measured rate (2.3e6 /s; a barrier of 7.9 with its
+  (The leader's first and third rows are over DFT's own top, one image after the potential's,
+  labelled on the fourth machine, 3.24; with the potential's top they read 3.76 and 7.08, 0.47
+  and 36.) The potential is within 0.1 to 0.5 of DFT on each barrier: it can scan barriers,
+  which had not been tested. **The film's own measured rate (2.3e6 /s; a barrier of 7.9 with its
   Vogel-Fulcher prefactor) is at the scale of the kink leaving its site (the hop 3.0e6 /s, the
   removal 2.4e5) and not of its forming (3e8 to 5e9).** Section 8.5's step on upright sheets
   was two orders too slow.
@@ -194,8 +196,8 @@ lower phase, and a kink pair is one turn of that helix.
   |---|---:|---:|---:|---:|
   | the film's composition (the anchor) | 364 kHz | 0.065 | 0.073% | 6.4 |
   | the leader, by the kink's end moving | 27 MHz | 0.0008 | 0.184% | 10.0 |
-  | the leader, by the kink's removal | 13 MHz | 0.0016 | 0.175% | 9.5 |
-  | the leader, by the kink's forming | 171 kHz | 0.126 | 0.045% | 2.5 |
+  | the leader, by the kink's removal | 7.6 MHz | 0.0029 | 0.164% | 8.9 |
+  | the leader, by the kink's forming | 98 kHz | 0.22 | 0.035% | 1.9 |
 
   **By the two events the film's own rate allows, the leader is ahead of the film's composition
   on all four axes; by the third it is behind on all four, and that one the film's rate
@@ -205,19 +207,64 @@ lower phase, and a kink pair is one turn of that helix.
   chain taking the step with its neighbours in a two-chain cell (one chain ahead of the rest
   costs more, 8.3); dipole, switch strain and stiffness are belt4's with no DFT test. The
   blocked force uses each cell's own stiffness and is an axis of its own; by the film's assumed
-  modulus it is 0.15, 0.37, 0.35 and 0.09 pN/nm2, the strain again.
+  modulus it is 0.15, 0.37, 0.33 and 0.07 pN/nm2, the strain again.
 - **The margins' all-trans cell is not the film composition's lowest all-trans cell, in DFT.**
   The all-trans cell its kink sheet's scan ends on, relaxed on (every chain's neighbours a
   monomer further along the chains, the dipoles 21 degrees from the short cell edge), is 0.84
   per chain below the upright all-trans cell in DFT, 1.27 in the potential. Turning the chains
-  alone is worth nothing in the potential (0.02): it is the registry, the pins a monomer along
-  from their neighbours' instead of side by side. **The film composition's margin measured from
+  alone is worth nothing in the potential (0.02), and neither is the registry alone (next
+  bullet): it is the chains' own twists and the registry together. **The film composition's margin measured from
   it is +0.063, not +0.123**, if no helix cell has a lower registry of its own, which has not
   been looked for: level with the matrix's +0.068. At +0.063 its row reads tan delta 0.088,
   0.081% and 7.6 pN/nm2 at the anchor's 364 kHz. "The film composition's lead" in the bullet on
   margins above is withdrawn until the other three cells' all-trans cells and every helix cell
   have been looked at with their neighbours a monomer along; every margin in this document was
   measured from an upright cell, and a statistical terpolymer has its pins at random.
+- **They have been looked at (2026-11-22, `docs/MLIP_SECOND_OPINION.md` 3.24; a fourth rented
+  machine): in DFT the matrix has the low cell, the two cells with a nitrile do not, and the
+  film's composition is the only one of the four with the helix the lower phase.** Upright
+  chains with their neighbours moved along and turned find nothing lower (34 starts, the
+  potential); the low cell is its chains' twists and its registry together. The other three
+  compositions were made of the film composition's low cell atom by atom and put to DFT, kcal/mol
+  per chain against each one's own upright all-trans cell: the film's composition -0.84, the
+  matrix **-1.40**, the nitrile alone **+0.29**, the leader **+2.34** (the potential: -1.27,
+  -1.50, -1.51, +1.02: it has the nitrile composition on the wrong side, and is 1.3 to 1.8 too
+  low on both cells with a nitrile). No helix cell lower than the labelled ones was found (two
+  monomers along, one, and shaken at 350 K), by searches that would also have missed the
+  all-trans low cell. Margins from each composition's lowest labelled cells, all-trans less
+  helix per monomer, DFT:
+
+  | | from the upright cells | from the lowest cells |
+  |---|---:|---:|
+  | the film's composition | +0.123 | **+0.063** |
+  | the 71/29 matrix | +0.068 | **-0.032** |
+  | the leader | -0.047 | **-0.047** |
+  | the nitrile alone | -0.083 | **-0.083** |
+
+  The matrix, a ferroelectric in fact, has all-trans the lower phase, and the film's
+  composition, the relaxor, the helix: the first DFT margins at this size that put the two
+  materials that exist on the sides of zero where they are found. Of the 0.095 the CFE unit
+  adds to the matrix's margin, 0.055 is there on upright cells and 0.040 is the low cell being
+  shallower with the chlorine in it. **The leader and the nitrile alone are on the matrix's
+  side, further out.** On the four axes (the film's composition at +0.063 the anchor; the
+  leader with its margin taken as zero):
+
+  | | frequency | tan delta | AC strain | blocked force per area, pN/nm2 |
+  |---|---:|---:|---:|---:|
+  | the film's composition (the anchor) | 364 kHz | 0.088 | 0.081% | 7.6 |
+  | the leader, by the kink's end moving | 27 MHz | 0.0008 | 0.184% | 10.0 |
+  | the leader, by the kink's removal | 7.6 MHz | 0.0029 | 0.164% | 8.9 |
+  | the leader, by the kink's forming | 98 kHz | 0.22 | 0.035% | 1.9 |
+  | the matrix, by its kink sites | 0 to 4 kHz | 0.005 to 1.0 | 0.000 to 0.007% | 0.0 to 0.8 |
+
+  By the two events the film's own rate allows the leader is still ahead of the film's
+  composition on all four axes. **What the margins add is a warning for the leader, not a
+  number**: its tan delta and strain assume it switches as a relaxor does, with the margin
+  taken as zero, and the matrix, which does not, stands between the leader's margin and zero.
+  The leader's barriers say that if it switches that way it is fast and low in loss; its margin
+  says it may not, and it has nothing in it that raises a margin as the CFE unit does. The
+  blocked force is through each cell's own stiffness; by the film's assumed modulus it is 0.16,
+  0.37, 0.33, 0.07 and 0.00 to 0.01 pN/nm2, the strain again.
 - **The nitrile unit does not hold a kink**: the nitrile cell's sheet at the nitrile unit
   itself is 3.64 above all-trans in DFT (the potential 2.18). The chlorine holds one 4.2 to
   5.0 deep.

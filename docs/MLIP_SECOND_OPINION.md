@@ -2143,6 +2143,13 @@ pod's jobs: `examples/gpu_jobs/queue_20261121_dft14b.txt`, `dft_cells.sh`, `qe_g
 
 ### 3.23 A refit that is not adopted, and a kink sheet's forming, stretching and removal in the film's composition and in the leader (2026-11-22; PI: "Go on 8 hour pod")
 
+*Read with 3.24: DFT's top on the leader's second path is one image later than the potential's,
+so the leader's kink is removed over 7.41 and forms over 4.09 where this section has 7.08 and
+3.76 (its rows by removal and by forming move; the hop's does not). The film composition's low
+all-trans cell is its chains' twists and their registry together, not "the registry and not
+the turn"; the matrix has it in DFT (margin -0.032 from it), and the leader and the nitrile
+composition do not.*
+
 A third rented machine of the same kind (one A40, $0.59 an hour;
 `examples/gpu_jobs/queue_20261121_path.txt`), 7.87 hours, about $4.64. Two things were asked of it: fit the potential on
 with the 23 labels at fourteen monomers, four states held out as a test; and the barrier of a
@@ -2416,3 +2423,251 @@ and `mlip_train.py relax`), `mlip/cells14_third_pod_frames_pbe_d3bj.extxyz`
 pod's jobs: `examples/gpu_jobs/queue_20261121_path.txt`, `refit.sh`, `refit_score.sh`,
 `path_card.sh`, `steps_card.sh`, `path_dft.sh`. Tests: `tests/test_mlip_path.py`,
 `tests/test_refit_cells14.py`.
+
+### 3.24 The low all-trans cell is its chains' twists and their registry together; in DFT the matrix has it and the two cells with a nitrile do not (2026-11-22; PI: "MI100 isn't online go on runpod")
+
+A fourth rented machine of the same kind (one A40, $0.59 an hour;
+`examples/gpu_jobs/queue_20261122_registry.txt`), 4.29 hours, about $2.53. 3.23 ended on an
+accident: the film composition's all-trans cell with its neighbours a monomer along is 0.84
+below the upright all-trans cell in DFT, which takes its margin from +0.123 to +0.063, and no
+other cell had been looked at that way. What was asked here: every one of the four cells'
+all-trans and helix cells in other registries, relaxed in the potential on the card, and the
+lowest put to DFT.
+
+**Moving the neighbours of the upright cells finds nothing.** `examples/registry_cells.py
+build` makes a start from a labelled cell by shearing the cell so that each chain's neighbours
+along the two cell edges sit whole monomers further along the chains, and by turning every
+chain about its own axis (`examples/registry_starts.sh`, 34 starts). All-trans: one monomer
+along each way (+1, -1 and -1, +1 along the two edges), with the chains turned 117 degrees
+(the film composition's low cell has them 123 from upright) and without, and the turn alone.
+Helix: two monomers along each way (a helix repeats in two), and one. Relaxed in the potential
+to 0.004 eV/A, 32 of the 34; kcal/mol per chain against the labelled cell each was made from
+(`registry_shifted.json`; "moving" is a cell not at rest when it was stopped):
+
+| all-trans | +1, -1 turned | -1, +1 turned | +1, -1 | -1, +1 | the turn alone |
+|---|---:|---:|---:|---:|---:|
+| the film's composition | the control below | +1.86 | +0.63 | +0.62 | -0.02 (3.23) |
+| the matrix | +1.87 | +1.87 | +1.23 | +1.31 | -0.01 |
+| the leader | +5.38 moving | +2.30 | +3.49 moving | not run | +0.47 moving |
+| the nitrile alone | +0.45 | +0.45 | +2.21 | not run | +0.02 |
+
+| helix | +2, -2 | -2, +2 | +1, -1 | -1, +1 |
+|---|---:|---:|---:|---:|
+| the film's composition | +3.15 | +2.11 | +8.41 | +0.76 |
+| the matrix | +2.74 | +1.66 | +3.74 | +7.79 |
+| the leader | +1.40 | +1.93 | +4.25 moving | +3.14 moving |
+| the nitrile alone | +5.75 | +2.68 moving | +3.60 moving | +1.41 |
+
+Nothing is below the cell it was made from by more than 0.01. The turn alone is level
+wherever it came to rest. A helix cell does not stay with its neighbours one monomer along:
+two of the eight rest where they were put (+8.41, +7.79) and the others slide, to two monomers
+along on one edge and none on the other (the film composition's +0.76, the matrix's +3.74) or
+most of the way back (the nitrile composition's +1.41, its neighbours 0.6 and 0.0 from where
+the labelled cell has them). The three still moving when they were stopped (the leader's two and the
+nitrile composition's +1, -1) were 3.1 to 4.3 above and falling.
+
+**Nor does it find the cell 3.23 found.** The control: the film composition's upright chains
+given the lattice, the registry and the turn of its own low cell (`build ... :like`,
+`registry_like_film.json`) come to rest 0.57 above the upright cell, 1.84 above the low cell
+they were aimed at, in its registry (1.03 and -1.04 monomers) and with the dipoles where it
+has them. The matrix's chains treated the same rest 1.40 above their upright cell. So the low
+cell is not reached from upright chains by moving them whole. What differs is inside the
+chain. An all-trans chain in these cells is not flat: its backbone bonds are turned up to 23
+degrees off trans (12 to 13 rms in both cells), in a pattern along the chain. The upright cell
+has one pattern (pairs of bonds near +14, 0 and -14) and the low cell another (pairs near -16,
++10 and +5 in turn), 18 degrees rms apart and 31 at one bond. A relaxation from upright chains
+keeps the upright pattern.
+
+**The low cell is its chains' twists and their registry together.** So the other compositions
+were made of the film composition's low cell itself, atom by atom (`registry_cells.py derive`:
+a substituent changed where it stands, its bond length set, nothing else moved; the result is
+checked to be the same molecules as the labelled cell it stands for;
+`examples/registry_starts_as_film.sh`), relaxed in the potential to rest at 0.004 eV/A, and
+the four put to DFT (PBE-D3(BJ) single points on the cells the potential relaxed,
+`mlip/cells14_fourth_pod_frames_pbe_d3bj.extxyz`). Against each composition's own upright
+all-trans cell, kcal/mol per chain (`registry_as_film.json`, `registry_as_film_nitrile.json`,
+`registry_as_film_leader.json`, `cells14_margins_registries.json`):
+
+| made of the film composition's low cell | the potential, in that cell | the potential, its neighbours moved back to the upright registry | DFT, in that cell | left on it in DFT, eV/A |
+|---|---:|---:|---:|---:|
+| the film's composition (3.23's cell itself) | -1.27 | +0.18 | **-0.84** | 0.09 |
+| the matrix (each chlorine a fluorine) | -1.50 | +0.83 | **-1.40** | 0.10 |
+| the nitrile alone (each CFE unit an acrylonitrile unit) | -1.51 | -0.05 | **+0.29** | 0.12 |
+| the leader (eight carbons a cell changed) | +1.02 | +0.36 | **+2.34** | 0.12 |
+| the leader in its own sheet's registry (3.23's other cell, relaxed on) | +1.50 | | **+2.16** | 0.11 |
+
+- Each half alone costs. The low cell's chains with their neighbours moved back to the upright
+  registry rest 0.18 above the upright cell, and put back in the upright cell's lattice, turn
+  and registry as well 0.54 above; upright chains in the low cell's lattice, registry and turn
+  0.57 above. Together they are 1.27 below.
+- **In DFT the low cell belongs to the two compositions without a nitrile.** The matrix is 1.40
+  below its upright cell in it, deeper than the film's composition (0.84): the chlorine makes
+  the low cell shallower, it does not make it. The nitrile composition is 0.29 above its
+  upright cell and the leader 2.34 above.
+- **The potential has the nitrile composition 1.51 below, the wrong side.** It is within 0.10
+  and 0.43 of DFT on the two cells without a nitrile and 1.80 and 1.32 too low on the two with
+  one (0.66 on the leader's other cell). It is the error 3.23 met at the nitrile unit's kink
+  (2.18 against DFT's 3.64) with the same sign: the potential undercharges a nitrile for being
+  moved off its upright cell. Every number here for a cell with a nitrile that has no DFT
+  beside it carries that.
+- The leader, in the potential: 1.02 above its upright cell in the low cell's registry (0.98
+  and -0.96 monomers), with one backbone bond a chain 44 and 46 degrees off trans (the other
+  three compositions: 23 to 29 at most); the pod's card and four processors here relaxed that
+  start to the same 1.0222 in the same 519 steps. With its neighbours moved back it is 0.36
+  above. It differs from the nitrile composition by a VDF unit turned head to head and by a VDF
+  where the other has a TrFE; DFT has it 2.05 further up than the nitrile composition, and
+  which of the two differences that is was not separated. It is the third time the leader's
+  all-trans cell refuses a neighbour's registry: belt4 had the arrangement the other cells'
+  sheets shear into cost it 7.4 per cell against 1.7 to 2.5 (3.20), and its all-trans cell in
+  its own sheet's registry is 2.16 above upright in DFT.
+
+**The helix cells: three searches, nothing lower, and what the three would miss.** All in the
+potential, against each composition's labelled helix cell:
+
+- Their neighbours two monomers along, each way: 1.40 to 5.75 above (the table).
+- Their neighbours one monomer along, each way: 0.76 to 8.41 above at rest, and sliding where
+  they can (the table).
+- Shaken: each labelled helix cell run 1.5 ps at 350 K in its own cell (Langevin, 1 fs; the
+  hottest moment 389 to 409 K) and relaxed again with the cell free
+  (`examples/mlip_anneal.py`, `registry_helix_annealed.json`). All four come back to the
+  labelled cell: 0.00, -0.01, -0.01 and 0.00 kcal/mol per chain, the same lattice to 0.03 A
+  and 0.3 degrees. The labelled helix cells are not shallow.
+
+None of the three would have found the all-trans cells' low cell either. Moving whole chains
+does not reach it (above), and a cell held while its chains are hot cannot change its registry.
+It was found from another state's cell, the kink sheet's, and no lower helix cell is known to
+start from. So "no helix cell is lower" is a statement about these searches. If one is, the
+margins below rise by what it is worth.
+
+**The margins from each composition's lowest labelled all-trans cell** (all-trans less helix,
+kcal/mol per monomer, DFT; the helix cell is the labelled one in every row;
+`examples/registry_margins.sh`, `cells14_margins_registries.json`):
+
+| | from the two upright cells (3.22) | from the lowest all-trans cell | which cell that is | the potential, the same two ways |
+|---|---:|---:|---|---:|
+| the film's composition | +0.123 | **+0.063** | the low cell | +0.163, +0.072 |
+| the 71/29 matrix | +0.068 | **-0.032** | the low cell | +0.018, -0.089 |
+| the leader | -0.047 | **-0.047** | its upright cell | -0.070, -0.070 |
+| the nitrile alone | -0.083 | **-0.083** | its upright cell | -0.109, -0.217 |
+
+- **The matrix and the film's composition are on opposite sides of zero.** From upright cells
+  DFT had both above zero and 0.055 apart; 3.23 had them level (+0.063 against +0.068), with
+  the film composition's low cell found and the matrix's not looked for. Each from its lowest
+  cell, the matrix has all-trans the lower phase by 0.032 and the film's composition the helix
+  by 0.063: 0.095 apart. The matrix is P(VDF-TrFE) 71/29, a ferroelectric, and the film's
+  composition is the relaxor: these are the first DFT margins at fourteen monomers that put the
+  two materials that exist on the sides of zero where they are found. Of the 0.095 the CFE unit
+  adds, 0.055 is there on the upright cells and 0.040 is the low cell being 0.56 per chain
+  shallower with the chlorine in it.
+- **The leader and the nitrile alone are on the matrix's side, further out.** -0.047 and
+  -0.083 against the matrix's -0.032: all-trans the lower phase in all three. Their margins do
+  not move, because DFT gives neither a low cell. 3.23 read the leader's rows of the four axes
+  with its margin taken as zero and said that this is outside the loss model's domain; the
+  matrix, a known ferroelectric, now stands between the leader and zero.
+- The potential would have moved the nitrile composition to -0.217 on a cell DFT has above its
+  upright one: for cells with a nitrile the potential's margins are not to be used unlabelled.
+- All of it with the labelled helix cells as the helix side.
+
+**Three points of 3.23's paths that it left without a label.**
+
+- The image after the leader's second top. Above the leader's sheet, DFT (the potential): the
+  potential's top 7.08 (7.25), the image after it **7.41** (7.16). DFT's top on that path is
+  one image later than the potential's and 0.33 higher than 3.23 had. Over DFT's own top the
+  leader's kink is removed over 7.41, not 7.08, and forms from the all-trans cell in the
+  sheet's registry over 4.09, not 3.76 (the potential over its own top: 7.25 and 4.17). The
+  six barriers of 3.23, each evaluator over its own top, are 0.31 rms apart (0.36 there).
+- The leader's all-trans cell in its sheet's registry, relaxed on: 2.87 above the sheet in DFT
+  (the potential 2.76), 0.45 below the same cell as the scan left it and 2.16 above the
+  leader's upright all-trans cell (1.50). From it the leader's kink forms over 4.54 (4.50); the
+  film composition's, from its own relaxed cell, over 5.03 (4.74).
+- The film composition's upright cell with every chain turned has no label: its place on the
+  processors went to the nitrile composition's low cell, which was the better use. The turn
+  alone stays the potential's.
+
+**The four axes** (`four_axes_registries.json` and
+`four_axes_registries_by_barrier_{hop,removal}.json` by `examples/registry_margins.sh`,
+`four_axes_by_barrier_forming.json`; 34 kHz, AC field at the heat budget; blocked force per
+area in pN/nm2, the same number as MPa, through each cell's own stiffness and so an axis of
+its own: by the film's assumed modulus it is the strain again, 0.16, 0.37, 0.33 and 0.07 down
+the first four rows). A kink site's energy is against its cell's all-trans cell, so where the
+low cell is the lower one every kink site of that row stands that much higher: 0.84 for the
+film's composition (its chlorine's kink 4.19 deep, not 5.03) and 1.40 for the matrix (its
+cheapest site 2.30 above all-trans, not 0.90).
+
+| | margin, DFT, lowest cells | frequency | tan delta | AC strain | blocked force per area, pN/nm2 |
+|---|---:|---:|---:|---:|---:|
+| the film's composition (the anchor) | +0.063 | 364 kHz | 0.088 | 0.081% | 7.6 |
+| the leader, by the kink's end moving (5.13 against 7.70) | -0.047, taken as 0 | 27 MHz | 0.0008 | 0.184% | 10.0 |
+| the leader, by the kink's removal (7.41 against 9.22) | -0.047, taken as 0 | 7.6 MHz | 0.0029 | 0.164% | 8.9 |
+| the leader, by the kink's forming (4.09 against 3.31) | -0.047, taken as 0 | 98 kHz | 0.22 | 0.035% | 1.9 |
+| the leader, by its kink sites (3.22's two readings) | -0.047, taken as 0 | 6 to 598 kHz | 1.0 to 0.036 | 0.008 to 0.079% | 0.5 to 4.3 |
+| the nitrile alone, by its kink sites | -0.083, taken as 0 | 2 to 282 kHz | 0.48 to 0.071 | 0.005 to 0.063% | 0.4 to 4.4 |
+| the matrix, by its kink sites | -0.032, taken as 0 | 0 to 4 kHz | 0.005 to 1.0 | 0.000 to 0.007% | 0.0 to 0.8 |
+
+- The leader's removal row is 3.23's with DFT's own top: 7.6 MHz, 0.0029, 0.164% and 8.9 where
+  3.23 has 13 MHz, 0.0016, 0.175% and 9.5. Its forming row: 98 kHz, 0.22, 0.035% and 1.9 where
+  3.23 has 171 kHz, 0.126, 0.045% and 2.5. The hop's row is unchanged. **By the two events the
+  film's own rate allows, the leader is still ahead of the film's composition on all four
+  axes**, by 21 and 75 times in rate.
+- The film composition's row is at +0.063, as 3.23 gave it; that margin now has both of its
+  sides looked at.
+- The matrix has no channel in this model: no kink site below its all-trans cell, and all-trans
+  the lower phase. That is what a ferroelectric is here.
+- **What the margins add to the leader's rows is a warning, not a number.** Its tan delta and
+  strain are the loss model with the margin taken as zero. The matrix, at -0.032, is a
+  ferroelectric in fact, with a remanent polarization and a hysteresis loop the loss model does
+  not hold, and the leader at -0.047 is further on that side than the matrix is. Nothing here
+  says the leader switches as a relaxor does. Its barriers say that if it does, it is fast and
+  low in loss; its margin says it may not. The CFE unit raises the matrix's margin by 0.095,
+  and the leader has nothing in it that does that.
+
+**What 3.23 said that this corrects.**
+
+- "It is the registry and not the turn" (3.23, and the head of
+  `docs/CANDIDATE_MATERIALS.md`): the turn alone is worth nothing, as said; the registry alone
+  is worth nothing either, for upright chains (+0.57). It is the chains' twists and the
+  registry together.
+- "The leader's kink is removed over 7.08 and forms over 3.76": over DFT's own top, 7.41 and
+  4.09.
+- 3.23 withdrew "the film composition's lead is the result" until the other cells had been
+  looked at. They have, and it stands in a stronger form: the film's composition is the only
+  one of the four with the helix the lower phase.
+
+**What this is and is not.**
+
+- One low cell, found by accident in 3.23, and the other three compositions made of it. It is
+  not a search over an all-trans chain's twists: a composition may have a lower all-trans cell
+  of its own that is not this one. The leader and the nitrile composition have been tried in
+  this one (and the leader in its own sheet's registry) and DFT has both above upright.
+- Regular cells of two chains and fourteen monomers, every chain's pins in one registry with
+  its neighbours'. A statistical copolymer has them at random. What the two all-trans cells
+  of a composition differ by, 0.06 to 0.10 kcal/mol per monomer in DFT where the low cell is
+  the lower, is the size of what a margin from one regular cell carries, and it is as large as
+  the margins.
+- DFT is a single point on a cell the potential relaxed (0.09 to 0.39 eV/A left on these).
+  Everything not marked DFT is the potential, which is 1.3 to 1.8 off on the two low cells
+  with a nitrile and has the sign of one wrong.
+- Static energies at zero kelvin. A margin says which phase is lower, not how the material
+  switches: the frequencies, tan delta and strain beside it come from the loss model of
+  `docs/CANDIDATE_MATERIALS.md`, which takes a margin below zero as zero and is outside its
+  domain there.
+- Not run: two all-trans starts (the leader's and the nitrile composition's -1, +1 without the
+  turn). Not at rest when stopped: seven of the 32 (marked moving), every one above the cell
+  it was made from. The other 31 rows were not looked at, and no helix cell was made from
+  another state's cell.
+
+Files: `docs/predictions/registry_shifted.json` and `mlip/registry_shifted_relaxed.extxyz`
+(the 34 starts; three all-trans ones (the turn alone) and the last sixteen steps of one helix cell relaxed on this machine),
+`registry_helix_one.json` (the eight helix starts as the pod left them),
+`registry_like_film.json`, `registry_as_film.json`, `registry_as_film_nitrile.json`,
+`registry_as_film_leader.json`, `registry_helix_annealed.json` (each with its relaxed cells
+under `mlip/`), `mlip/registry_starts*.extxyz` (every start), `mlip/cells14_fourth_pod_frames_pbe_d3bj.extxyz`
+(the five labels, each with `dft_run`), `cells14_margins_registries.json`,
+`four_axes_registries.json`, `four_axes_registries_by_barrier_{hop,removal}.json`,
+`kink_paths_leader.json` and `four_axes_by_barrier_{forming,removal}.json` (rewritten with the
+new labels). Tools: `examples/registry_cells.py` (`build`, `derive`, `table`, `choose`,
+`unsettled`, `margins`), `examples/registry_starts.sh`, `registry_starts_like.sh`,
+`registry_starts_as_film.sh`, `registry_margins.sh`, `examples/mlip_anneal.py`,
+`examples/turn_chains.py`. The pod's jobs: `examples/gpu_jobs/queue_20261122_registry.txt`,
+`registry_card.sh`, `registry_more.sh`, `registry_finish.sh`, `registry_dft.sh`,
+`anneal_card.sh`. Tests: `tests/test_registry_cells.py`, `tests/test_mlip_path.py`.
