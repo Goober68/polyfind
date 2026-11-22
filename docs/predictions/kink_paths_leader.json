@@ -121,8 +121,12 @@
   "the image after the top from the stretched kink": {
    "image": "leader_b2_i08",
    "potential": 7.162970808869921,
-   "dft": null,
-   "label": null
+   "dft": 7.413642886331783,
+   "label": "leader_b2_i08",
+   "potential_minus_dft": -0.2506720774618625,
+   "dft_largest_force_eV_per_A": 0.38767299,
+   "dft_minutes": 93.95666666666666,
+   "dft_run": "processors"
   }
  },
  "steps": {
@@ -174,6 +178,21 @@
     "forward": 5.996822505006333,
     "back": 4.120083111012644,
     "step": 1.8767393939936885
+   }
+  },
+  "the stretched kink forms, over the image after the potential's top": {
+   "from": "all-trans, the sheet's registry",
+   "top": "the image after the top from the stretched kink",
+   "to": "stretched kink",
+   "potential": {
+    "forward": 4.083077585574131,
+    "back": 6.317226154847774,
+    "step": -2.2341485692736445
+   },
+   "dft": {
+    "forward": 4.089999078224158,
+    "back": 7.098257306446701,
+    "step": -3.008258228222543
    }
   }
  }

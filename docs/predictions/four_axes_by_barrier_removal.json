@@ -51,16 +51,16 @@
      "by_the_barrier": {
       "margin_the_model_used": 0.0,
       "polar_fraction_at_the_bias": 0.8354073897396963,
-      "f_relax_hz": 13289942.708980648,
-      "tan_delta_34kHz": 0.001634071049469559,
-      "strain_ac_at_the_heat_budget_34kHz": 0.001750277976729257,
-      "field_ac_V_um": 4.0538155124471835,
+      "f_relax_hz": 7590826.264877964,
+      "tan_delta_34kHz": 0.002860478833026958,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0016417689690398642,
+      "field_ac_V_um": 3.8025121609828365,
       "binds": "heat",
-      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.35005559534585146,
-      "blocked_pn_nm2_through_the_crystal": 9.529221977896645
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.32835379380797286,
+      "blocked_pn_nm2_through_the_crystal": 8.938455005666459
      },
-     "barrier_kcal_per_chain": 7.0798,
-     "rate_against_the_film_cell": 36.51236632789279
+     "barrier_kcal_per_chain": 7.4136,
+     "rate_against_the_film_cell": 20.85479489142756
     },
     "vdf9-trfe4-an1-14": {
      "margin": -0.0828333126343689,
@@ -75,6 +75,6 @@
  },
  "barriers_kcal_per_chain": {
   "vdf9-trfe4-cfe1-14": 9.224,
-  "vdf9-trfe3-an1-rvdf1-14": 7.0798
+  "vdf9-trfe3-an1-rvdf1-14": 7.4136
  }
 }

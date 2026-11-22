@@ -36,8 +36,9 @@ python - "$OUT" <<'PY'
 import json, subprocess, sys
 out = sys.argv[1]
 film, leader = (json.load(open(f"docs/predictions/kink_paths_{c}.json"))["points"] for c in ("film", "leader"))
+top = max(leader["top: stretched kink to all-trans"]["dft"], leader["the image after the top from the stretched kink"].get("dft", -1e9))   # DFT's own top (3.24)
 events = {"hop": (film["top: sheet to stretched kink"]["dft"], leader["top: sheet to stretched kink"]["dft"]),
-          "removal": (film["top: both torsions together"]["dft"], leader["top: stretched kink to all-trans"]["dft"])}
+          "removal": (film["top: both torsions together"]["dft"], top)}
 for name, (f, l) in events.items():
     subprocess.run([sys.executable, "examples/four_axes_at_margins.py", "--margins-from", f"{out}/cells14_margins_registries.json", "--shifts=0", "--barriers",
                     f"vdf9-trfe4-cfe1-14={f:.4f}", f"vdf9-trfe3-an1-rvdf1-14={l:.4f}", "--out", f"{out}/four_axes_registries_by_barrier_{name}.json"], check=True)

@@ -55,7 +55,7 @@ python -I examples/mlip_path.py points --name "leader" --scans $P/leader_*.extxy
   "top: sheet to stretched kink=leader_b1_i08" \
   "top: stretched kink to all-trans=leader_b2_i07" \
   "the image after the top from the stretched kink=leader_b2_i08" \
-  --between "${STEPS[@]}"
+  --between "${STEPS[@]}" "the stretched kink forms, over the image after the potential's top=all-trans, the sheet's registry>the image after the top from the stretched kink>stretched kink"
 # the four axes by each event's barrier in DFT: the film composition's row is the anchor of each
 python - "$OUT" <<'PY'
 import json, subprocess, sys
@@ -63,10 +63,12 @@ out = sys.argv[1]
 film, leader = (json.load(open(f"{out}/kink_paths_{c}.json")) for c in ("film", "leader"))
 def dft(t, label):
     return t["points"][label]["dft"]
-events = {"forming": (film["steps"]["the kink forms, both torsions together"]["dft"]["forward"],
-                      dft(leader, "top: stretched kink to all-trans") - dft(leader, "all-trans, the sheet's registry")),
+# the leader's second top: DFT has the image after the potential's top higher than that top (7.41 against 7.08; labelled on the
+# fourth pod, 3.24), so DFT's barrier is taken over the higher of the two images DFT has there
+top = max(dft(leader, "top: stretched kink to all-trans"), leader["points"]["the image after the top from the stretched kink"].get("dft", -1e9))
+events = {"forming": (film["steps"]["the kink forms, both torsions together"]["dft"]["forward"], top - dft(leader, "all-trans, the sheet's registry")),
           "hop": (dft(film, "top: sheet to stretched kink"), dft(leader, "top: sheet to stretched kink")),
-          "removal": (dft(film, "top: both torsions together"), dft(leader, "top: stretched kink to all-trans"))}
+          "removal": (dft(film, "top: both torsions together"), top)}
 for name, (f, l) in events.items():
     print(f"== the kink's {name}: the film's composition {f:.2f}, the leader {l:.2f} kcal/mol per chain (DFT)")
     subprocess.run([sys.executable, "examples/four_axes_at_margins.py", "--margins-from", "docs/predictions/cells14_states_dft.json", "--shifts=0", "--barriers",
