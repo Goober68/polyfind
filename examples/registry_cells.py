@@ -13,12 +13,17 @@ DFT.  This makes such cells on purpose, from a labelled cell:
     python -I examples/registry_cells.py table --starts STARTS.extxyz --relaxed DIR --labels FILES --out TABLE.json \\
         --frames-out RELAXED.extxyz
     python -I examples/registry_cells.py choose --table TABLE.json [--within 0.3] [--below LABEL:tt=KCAL ...]
+    python -I examples/registry_cells.py margins --labels FILES --cell LABEL:tt=FRAME LABEL:hx=FRAME ... \
+        [--also LABEL:tt=FRAME ...] --row LABEL=ROW ... --out MARGINS.json
 
 `build` writes the starts in the order given (the order they are relaxed in).  `table` reads each start's relaxed cell
 (examples/mlip_train.py relax: NAME_in_POTENTIAL.start.xyz) and gives its energy against the labelled cell it was made from,
 kcal/mol per chain, with what it came to rest as.  `choose` prints two lines of names, the card's and the processors': the
 lowest cell of each composition and conformation that came to rest, kept its conformation and is within --within of its
-labelled cell (or below --below), the lowest first, dealt to the two lines in turn.
+labelled cell (or below --below), the lowest first, dealt to the two lines in turn.  `margins` takes every labelled cell
+of each composition (the two given, those of --also, and every labelled frame this tool made from them) and gives the
+margin, all-trans less helix per monomer, between the lowest all-trans cell and the lowest helix cell in DFT, beside the
+margin between the two cells given: the upright cells' margin.
 """
 
 import argparse
@@ -290,6 +295,53 @@ def choose(args):
         print(f"# {name}: {e:+.2f}", file=sys.stderr)
 
 
+def margins(args):
+    from ase.io import read
+
+    labelled = {}
+    for f in args.labels:
+        for a in read(f, index=":"):
+            labelled[str(a.info["frame"])] = a
+    groups = {}
+    for item in list(args.cell) + list(args.also):
+        key, frame = item.split("=", 1)
+        groups.setdefault(key, []).append(frame)
+    given = {item.split("=", 1)[0]: item.split("=", 1)[1] for item in args.cell}
+    for name, a in labelled.items():      # the cells this tool made, labelled since: each knows what it was made from
+        if "registry_label" in a.info:
+            groups.setdefault(f"{a.info['registry_label']}:{a.info['registry_conformation']}", []).append(name)
+    rows = dict(item.split("=", 1) for item in args.row)
+    out = {"what": "margins of fourteen-monomer cells, all-trans less helix in kcal/mol per monomer, in DFT (PBE-D3(BJ) single points on cells the potential relaxed): "
+                   "margin_upright between the two labelled cells the tables' search built, margin between the lowest labelled all-trans cell and the lowest labelled helix "
+                   "cell of any registry. cells: kcal/mol per chain against the upright cell of the same conformation, DFT and the potential",
+           "compositions": {}, "rows": {}}
+    for label, row in rows.items():
+        rec = {"row": row, "cells": {}}
+        low = {}
+        for conformation in ("tt", "hx"):
+            ref = labelled[given[f"{label}:{conformation}"]]
+            n = int(ref.info["n_monomers"]) / CHAINS
+            cells = {}
+            for frame in dict.fromkeys(groups[f"{label}:{conformation}"]):
+                a = labelled[frame]
+                cells[frame] = {"dft": (float(a.info["REF_energy"]) - float(ref.info["REF_energy"])) / CHAINS * KCAL,
+                                "potential": (float(a.info["potential_eV_per_monomer"]) - float(ref.info["potential_eV_per_monomer"])) * n * KCAL,
+                                "dft_eV_per_monomer": float(a.info["REF_energy"]) / int(a.info["n_monomers"]),
+                                "dft_largest_force_eV_per_A": float(np.abs(a.arrays["REF_forces"]).max()), "upright": frame == given[f"{label}:{conformation}"]}
+            rec["cells"][conformation] = cells
+            low[conformation] = min(cells, key=lambda k: cells[k]["dft"])
+            rec[f"lowest_{conformation}"] = low[conformation]
+        e = lambda conformation, frame: rec["cells"][conformation][frame]["dft_eV_per_monomer"]
+        rec["margin_upright"] = (e("tt", given[f"{label}:tt"]) - e("hx", given[f"{label}:hx"])) * KCAL
+        rec["margin"] = (e("tt", low["tt"]) - e("hx", low["hx"])) * KCAL
+        out["compositions"][label] = rec
+        out["rows"][row] = {"margin": rec["margin"], "margin_upright": rec["margin_upright"]}
+        print(f"{label:8s} margin {rec['margin']:+.3f} (upright cells {rec['margin_upright']:+.3f}); lowest all-trans {low['tt']} "
+              f"({rec['cells']['tt'][low['tt']]['dft']:+.2f} per chain), lowest helix {low['hx']} ({rec['cells']['hx'][low['hx']]['dft']:+.2f})")
+    Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
+    print(f"written {args.out}")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="step", required=True)
@@ -309,8 +361,14 @@ def main():
     s.add_argument("--table", required=True)
     s.add_argument("--within", type=float, default=0.3, help="kcal/mol per chain above its labelled cell a cell may be and still be asked of DFT")
     s.add_argument("--below", nargs="*", default=[], metavar="LABEL:tt|hx=KCAL", help="for this composition and conformation, only a cell below this")
+    s = sub.add_parser("margins")
+    s.add_argument("--labels", nargs="+", required=True, help="files of DFT-labelled frames")
+    s.add_argument("--cell", nargs="+", required=True, metavar="LABEL:tt|hx=FRAME", help="each composition's upright all-trans and helix cell")
+    s.add_argument("--also", nargs="*", default=[], metavar="LABEL:tt|hx=FRAME", help="other labelled cells of a composition and conformation that this tool did not make")
+    s.add_argument("--row", nargs="+", required=True, metavar="LABEL=ROW", help="the tables' row a composition is")
+    s.add_argument("--out", required=True)
     args = p.parse_args()
-    {"build": build, "table": table, "choose": choose}[args.step](args)
+    {"build": build, "table": table, "choose": choose, "margins": margins}[args.step](args)
 
 
 if __name__ == "__main__":
