@@ -122,7 +122,7 @@ def test_the_stored_starts_are_the_scripts_and_none_has_chains_that_touch(labell
     assert (ROOT / more[1][1]).samefile(MLIP / "registry_starts_like.extxyz") and more[1][2:] == ["4", "900", "1200", "auto:6.0"]
     jobs = [line.split()[0] for line in queue if line and not line.startswith("#")]
     assert jobs[:4] == ["registry_card.sh", "registry_more.sh", "registry_card.sh", "registry_more.sh"]
-    assert (ROOT / "examples" / "gpu_jobs" / "registry_more.cap").read_text().split() == ["02", "600"]     # the second job, cut to ten minutes
+    assert (ROOT / "examples" / "gpu_jobs" / "registry_more.cap").read_text().split() == ["02", "600", "04", "60"]     # the second job cut to ten minutes, the fourth to one
     for line in queue:
         if line and not line.startswith("#"):
             assert (ROOT / "examples" / "gpu_jobs" / line.split()[0]).exists() or line.split()[0] == "stop"
