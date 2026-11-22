@@ -13,6 +13,10 @@ through its bonds, so the path is made the way the molecule would go:
            potential's with D3 and without the restraint.  The last image is then released and
            relaxed, which says where the path arrived.
            ``--refine SCAN`` does the same in finer steps between the two images beside a scan's top.
+``shear``  the other part of the path: from one frame's cell to another's in equal steps (the cell
+           interpolated, the atoms carried with it and then relaxed in the cell held fixed), for
+           two frames of one conformation that differ in the cell's shear along the chains: the
+           all-trans cell brought to the sheet's shear, or the upright kinked cell to the sheet's.
 ``choose`` of a path's scans (one from each end), the one that arrives where it was led and has the
            lower top above the all-trans end: its top image and the two beside it, as the names of
            frames for a DFT single point each (``examples/gpu_jobs/dft_cells.sh``).
@@ -285,6 +289,66 @@ def scan(args):
           + (f"; arrived at {table['arrived']['energy']:+.3f} (the end frame itself {table['end_in_the_potential']:+.3f})" if table["arrived"] else ""), flush=True)
 
 
+def shear(args):
+    """From one frame's cell to another's in equal steps, the atoms relaxed in each cell held fixed: the cell's part of a
+    path, for two frames of one conformation.  The other strains go from the one cell's to the other's with the shear, so
+    the top is a little above what a scan with them free would give."""
+    import torch
+    from ase.io import write
+    from ase.optimize import BFGS
+
+    warnings.filterwarnings("ignore")
+    torch.set_num_threads(args.threads)
+    start, end = _frame(args.frames, args.start), _frame(args.frames, args.end)
+    if (start.numbers != end.numbers).any():
+        raise SystemExit("the two frames are not the same atoms in the same order")
+    quads = backbone_torsions(start)
+    base = _potential(args.model)
+    n = int(start.info["n_monomers"])
+    a = start.copy()
+    a.calc = base
+    e_start = a.get_potential_energy()
+    b = end.copy()
+    b.calc = base
+    e_end = b.get_potential_energy()
+    c0, c1 = start.cell.array.copy(), end.cell.array.copy()
+    gauche0 = int((np.abs(torsions_deg(start, quads)) < 120.0).sum())
+    rows, images = [], []
+    table = {"what": "from one labelled or relaxed cell to another of the same conformation in a potential with D3: the cell goes from the one's to the other's in equal "
+                     "steps, the atoms are carried with it and relaxed in each cell held fixed. energy: kcal/mol per chain against the first image",
+             "name": args.name, "potential": args.potential, "model": Path(args.model).name, "start": args.start, "end": args.end, "points": args.points,
+             "fmax_eV_per_A": args.fmax, "start_shear_along_chains_monomers": _shear(start), "end_shear_along_chains_monomers": _shear(end),
+             "end_in_the_potential": (e_end - e_start) / CHAINS * KCAL, "gauche_torsions_at_the_start": gauche0, "images": rows}
+    args.out.mkdir(parents=True, exist_ok=True)
+
+    def keep(label, lam, steps, done, note):
+        e = a.get_potential_energy()
+        now = torsions_deg(a, quads)
+        rows.append({"image": label, "lambda": lam, "energy": (e - e_start) / CHAINS * KCAL, "potential_eV_per_monomer": e / n, "steps": steps, "converged": bool(done),
+                     "gauche_torsions": int((np.abs(now) < 120.0).sum()), "largest_force_eV_per_A": float(np.abs(a.get_forces()).max()),
+                     "shear_along_chains_monomers": _shear(a), "cell_A_deg": [float(v) for v in a.cell.cellpar()], "volume_A3_per_monomer": float(a.get_volume() / n)})
+        images.append(_bare(a, start, f"{args.name}_{label}", note, potential_eV_per_monomer=e / n, path=args.name, path_lambda=lam, potential=args.potential))
+        write(args.out / f"{args.name}.extxyz", images, format="extxyz")
+        (args.out / f"{args.name}.json").write_text(json.dumps(table, indent=1) + "\n")
+        r = rows[-1]
+        print(f"{args.name}_{label}: {r['energy']:+.3f} kcal/mol per chain, shear {r['shear_along_chains_monomers'][0]:+.2f} {r['shear_along_chains_monomers'][1]:+.2f}, "
+              f"{r['gauche_torsions']} gauche torsions, {steps} steps{'' if done else ' NOT converged'}", flush=True)
+
+    keep("i00", 0.0, 0, True, f"{args.start}: the first image, as it is")
+    for point in range(1, args.points + 1):
+        lam = point / args.points
+        a.set_cell((1.0 - lam) * c0 + lam * c1, scale_atoms=True)
+        opt = BFGS(a, logfile=None, maxstep=args.maxstep)
+        done = opt.run(fmax=args.fmax, steps=args.steps)
+        keep(f"i{point:02d}", lam, opt.get_number_of_steps(), done,
+             f"{args.start} with its cell {100 * lam:.0f}% of the way to that of {args.end}, the atoms relaxed in {args.potential} with D3 in that cell")
+    top = max(range(len(rows)), key=lambda r: rows[r]["energy"])
+    table["top"] = {"image": rows[top]["image"], "energy": rows[top]["energy"], "index": top}
+    table["arrived"] = {"energy": rows[-1]["energy"], "end_in_the_potential": table["end_in_the_potential"], "gauche_torsions": rows[-1]["gauche_torsions"]}
+    (args.out / f"{args.name}.json").write_text(json.dumps(table, indent=1) + "\n")
+    print(f"{args.name}: top {rows[top]['energy']:+.3f} at {rows[top]['image']}; arrived at {rows[-1]['energy']:+.3f} (the end frame itself {table['end_in_the_potential']:+.3f})", flush=True)
+
+
 def _on_the_scan(table):
     return [r for r in table["images"] if r["image"] != "released"]
 
@@ -424,6 +488,19 @@ def main():
     s.add_argument("--release-steps", type=int, default=800)
     s.add_argument("--maxstep", type=float, default=0.1)
     s.add_argument("--threads", type=int, default=1)
+    s = sub.add_parser("shear")
+    s.add_argument("--model", type=Path, required=True)
+    s.add_argument("--potential", required=True)
+    s.add_argument("--frames", type=Path, nargs="+", required=True, help="files that hold the two frames")
+    s.add_argument("--start", required=True)
+    s.add_argument("--end", required=True, help="the frame whose cell it is taken to")
+    s.add_argument("--name", required=True)
+    s.add_argument("--out", type=Path, required=True)
+    s.add_argument("--points", type=int, default=10)
+    s.add_argument("--fmax", type=float, default=0.02)
+    s.add_argument("--steps", type=int, default=300)
+    s.add_argument("--maxstep", type=float, default=0.1)
+    s.add_argument("--threads", type=int, default=1)
     s = sub.add_parser("choose")
     s.add_argument("--scans", nargs="+", required=True, help="the .json of a path's scans, one from each end")
     s = sub.add_parser("release")
@@ -439,7 +516,7 @@ def main():
     s.add_argument("--labels", nargs="*", default=[], help="files of DFT-labelled frames: the paths' first images and whichever images were labelled")
     s.add_argument("--out", required=True)
     args = p.parse_args()
-    {"scan": scan, "choose": choose, "release": release, "table": table}[args.step](args)
+    {"scan": scan, "shear": shear, "choose": choose, "release": release, "table": table}[args.step](args)
 
 
 if __name__ == "__main__":

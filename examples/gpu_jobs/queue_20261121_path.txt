@@ -50,3 +50,10 @@ path_dft.sh card start leader_r leader_r_released
 dft_cells.sh in=dft_card last film_r_i08 leader_r_i05
 path_dft.sh processors start film_f film_f_released
 path_dft.sh processors start leader_f leader_f_released
+# 00:20 UTC.  The scans led the kink and left the cell where it was; the path has a second part,
+# the cell's shear along the chains (a monomer, between an upright cell and the sheet's).  Each
+# route from the upright all-trans cell to the sheet has one step of each kind: the kink first
+# and then the shear (the scans from all-trans, then the upright kinked cell sheared to the
+# sheet), or the shear first and then the kink (the all-trans cell sheared, then the scans from
+# the sheets backwards).  The shear steps, sixteen points each, the atoms relaxed in each cell:
+shear_card.sh docs/predictions/mlip/models/all_s1.model 16 film_flat:row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1:film_r_released film_kinked:film_f_released:sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1 leader_flat:tt_leader_from_rows14an_r1_in_all_s1:leader_r_released leader_kinked:leader_f_released:sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Images of a path scanned on this pod (examples/gpu_jobs/path_card.sh) put in line for a DFT
+# Images of a path scanned on this pod (examples/gpu_jobs/path_card.sh, shear_card.sh) put in line for a DFT
 # single point each, by the scan's name: the scan's file is under the pod's served directory,
 # which a queue line cannot name.  A job of examples/runpod_jobs_pod.sh:
 #
@@ -12,7 +12,7 @@
 set -euo pipefail
 LINE="$1"; MODE="$2"; SCAN="$3"; shift 3
 HERE="$(dirname "$0")"
-FILE="$(ls "$(dirname "$JOB_OUT")"/*_path_card/"$SCAN.extxyz" | tail -n 1)"
+FILE="$( (ls "$(dirname "$JOB_OUT")"/*_path_card/"$SCAN.extxyz" "$(dirname "$JOB_OUT")"/*_shear_card/"$SCAN.extxyz" 2>/dev/null || true) | tail -n 1)"
 [ -f "$FILE" ] || { echo "no scan $SCAN on this pod"; exit 1; }
 if [ "$LINE" = "card" ]; then
   bash "$HERE/dft_cells.sh" in=dft_card pw=/opt/qe_gpu/bin/pw.x "$MODE" 1 1 "$FILE" "$@"
