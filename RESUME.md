@@ -680,6 +680,35 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
+        A FIFTH POD IS RUNNING: THE SCREEN FOR CANDIDATES (PI 2026-11-22: "Screen for candidates", and
+        "Runpod, 8 hours" when asked which machine; the MI100 was not attached). `0naokkrqptuyi5`, name
+        `polyfind-screen`, Runpod Secure Cloud, one NVIDIA A40, $0.59/h, CREATED 16:03:00 UTC 2026-11-22
+        after a read of stock (Low, available) and price, confirmed by a read (`list-pods`). IT REMOVES
+        ITSELF AT 8 HOURS (`BENCH_LIMIT_S=28800`: 00:03 UTC 2026-11-23, at most $4.72): DELETE IT BY 23:57
+        UTC AFTER A LAST MIRROR, SOONER IF ITS WORK IS DONE. WHOEVER READS THIS AFTER 00:10 UTC 2026-11-23:
+        CONFIRM IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods '{}'`) AND DELETE IT IF NOT
+        (`delete-pod {"id": "0naokkrqptuyi5"}`, then read again). Spend before it: about $34.8 of $46.
+        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261122_screen.txt`; docs 3.25 to be written):
+        `examples/screen14.py` makes each of 17 fourteen-monomer rows (`examples/screen14_starts.sh`,
+        `docs/predictions/mlip/screen14_starts_{a,b}.extxyz`, 102 cells) out of the film composition's
+        potential-relaxed cells by changing substituents where they stand: the low all-trans cell, the
+        upright one, the four placements of the helix. Controls: the film's composition made of itself,
+        the matrix, the leader. Candidates: the leader's other two features (a reversed VDF first, a VDF
+        eleventh) on a chlorine unit (CFE, CTFE) in place of its nitrile, which the potential cannot do
+        (3.24); then no pin, more TrFE, CDFE, ethylene. `screen_card.sh` relaxes them on the card (four
+        side by side, 0.004 eV/A), `screen14.py table` gives each row's margin from its lowest all-trans
+        and helix cells, and the rows between -0.06 and +0.14 in the potential go to DFT (lowest all-trans,
+        lowest helix, other all-trans). Job 1 labels `film_all_trans_turned_117_tight` on the processors
+        meanwhile. STILL TO DESIGN ON IT: the kink sites and the hop barrier of the best row (its sheets
+        made by the same substituent changes from the film composition's and the leader's sheets, a scan
+        with `examples/mlip_path.py`, DFT at the top).
+        HOW TO READ IT: `scratchpad/runpod/pod_screen.sh PATH` (token in `scratchpad/runpod/
+        token_screen.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_screen.py` (into
+        `scratchpad/runpod/screen/`), `scratchpad/runpod/dft_progress_screen.sh`; labels into the
+        repository by `python -I scratchpad/screen_labels.py docs/predictions/mlip/
+        screen14_frames_pbe_d3bj.extxyz`; then `python -I examples/screen14.py dft --table TABLE --labels
+        FILE --out docs/predictions/screen14_dft.json`. If the token file is lost the results cannot be
+        read: delete the pod. Tests: `tests/test_screen14.py` (4).
         THE FOURTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (11:08:57 UTC 2026-11-22; PI
         2026-11-22: "MI100 isn't online go on runpod", on the registry check). `bcuwk6j3g3crqp`
         (`polyfind-registry`, Runpod Secure Cloud EU-SE-1, one A40, $0.59/h), 06:51:18 to 11:08:57 UTC:
