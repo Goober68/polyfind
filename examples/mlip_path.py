@@ -513,6 +513,19 @@ def points(args):
             row["dft_run"] = str(lab.info.get("dft_run", ""))
         out["points"][label] = row
         print(f"{args.name}: {label:58s} the potential {row['potential']:+7.2f}" + ("" if d is None else f"   DFT {row['dft']:+7.2f}   (the potential less DFT {row['potential_minus_dft']:+.2f})"))
+    if args.between:   # a step between two of the points over a third: the top above each end, and the step's own energy
+        out["steps"] = {}
+    for item in args.between:
+        label, spec = item.split("=", 1)
+        a, top, b = spec.split(">")
+        rec = {"from": a, "top": top, "to": b}
+        for ev in ("potential", "dft"):
+            e = [out["points"][x][ev] for x in (a, top, b)]
+            if None not in e:
+                rec[ev] = {"forward": e[1] - e[0], "back": e[1] - e[2], "step": e[2] - e[0]}
+        out["steps"][label] = rec
+        print(f"{args.name}: {label}: " + "; ".join(f"{'the potential' if ev == 'potential' else 'DFT'} {rec[ev]['forward']:.2f} forward, {rec[ev]['back']:.2f} back, the step {rec[ev]['step']:+.2f}"
+                                                      for ev in ("potential", "dft") if ev in rec))
     Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
     print(f"written {args.out}")
 
@@ -569,6 +582,8 @@ def main():
     s.add_argument("--labels", nargs="+", required=True, help="files of DFT-labelled frames")
     s.add_argument("--zero", required=True, help="IMAGE|LABEL: the image and the labelled frame everything is measured from")
     s.add_argument("--point", nargs="+", required=True, metavar="LABEL=IMAGE[|LABELLED]", help="what the image is, and the image")
+    s.add_argument("--between", nargs="*", default=[], metavar="LABEL=FROM>TOP>TO", help="a step from one point to another over a third, each named as in --point: "
+                   "the top above each end and the step's own energy, in the potential and in DFT where all three are labelled")
     s.add_argument("--out", required=True)
     s = sub.add_parser("table")
     s.add_argument("--scans", nargs="+", required=True, help="scans' .json files")
