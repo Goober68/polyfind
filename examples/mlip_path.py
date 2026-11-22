@@ -474,7 +474,9 @@ def table(args):
 def points(args):
     """Named images against one zero, kcal/mol per chain: the potential's energy (stored with each image of a scan) and
     DFT's where the image is labelled.  An image is IMAGE or IMAGE|LABEL when the labelled frame has another name (a scan's
-    first image is a labelled cell)."""
+    first image is a labelled cell).  A labelled cell that is no scan's image may be named too: the potential's energy is
+    then the one stored with the label, which is the potential's own only for a cell relaxed in it (a cell stepped toward
+    DFT's minimum carries the tilted potential's there: name it through the scan that starts from it)."""
     from ase.io import read
 
     stored, labelled = {}, {}
@@ -487,9 +489,11 @@ def points(args):
 
     def both(spec):
         image, _, label = spec.partition("|")
-        a = stored[image]
-        n = int(a.info["n_monomers"])
         lab = labelled.get(label or image)
+        a = stored.get(image, lab)
+        if a is None:
+            raise SystemExit(f"{image} is no image of the scans given and has no label")
+        n = int(a.info["n_monomers"])
         return (float(a.info["potential_eV_per_monomer"]) * n, None if lab is None else float(lab.info["REF_energy"]), lab, image, (label or image) if lab is not None else None)
 
     p0, d0, _, zero_image, zero_label = both(args.zero)
