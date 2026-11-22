@@ -111,3 +111,13 @@ path_dft.sh processors next leader_b1 leader_b1_released
 # line, ahead of the image after the leader's second top; the image after the film's top will
 # not start.
 path_dft.sh card next film_b1 film_b1_i07
+#
+# 04:34 UTC.  The last cell the card can start.  The all-trans cells the sheets belong to were
+# released at the scans' stop (0.02 eV/A).  Relaxed on here at 0.004 in the potential, the
+# leader's falls 0.32 kcal/mol per chain and stays 1.50 above its upright all-trans cell; the
+# film composition's falls 1.49 and comes to rest 1.27 BELOW its upright all-trans cell, the
+# one every margin is measured from.  In DFT the released cell was 0.89 above it.  If DFT has
+# the relaxed one lower as well, the film composition's all-trans reference moves, and its
+# margin with it: that cell goes to the front of the card's line, ahead of the image after the
+# leader's second top, which will not start.
+dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x next 1 1 docs/predictions/mlip/paths/all_trans_tight.extxyz film_r_released_tight
