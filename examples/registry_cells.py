@@ -409,7 +409,8 @@ def derive(args):
         if len(b) != len(ref) or sorted(b.get_chemical_symbols()) != sorted(ref.get_chemical_symbols()) or not all(any(same_molecule(m, t) for t in theirs) for m in mine):
             raise SystemExit(f"{name} is not the molecules of {ref.info['frame']}")
         shear = [int(round(v)) for v in np.array(tool._shear(b)) - np.array(tool._shear(ref))]
-        turn = int(round((dipole_from_a(b) - dipole_from_a(ref) + 180) % 360 - 180))
+        mine_at, ref_at = dipole_from_a(b), dipole_from_a(ref)
+        turn = 0 if mine_at is None or ref_at is None else int(round((mine_at - ref_at + 180) % 360 - 180))
         b.info.update(frame=name, family="registry", conformation={"tt": "all-trans", "hx": "helix"}[conformation], registry_of=str(ref.info["frame"]),
                       registry_label=label, registry_conformation=conformation, registry_shear=f"{shear[0]} {shear[1]}", registry_turn=turn, registry_widened=1.0,
                       source=f"examples/registry_cells.py: {frame}, " + ", ".join(said), note="a start, not relaxed")

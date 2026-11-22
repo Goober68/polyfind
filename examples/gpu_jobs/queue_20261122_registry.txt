@@ -71,3 +71,16 @@ registry_card.sh docs/predictions/mlip/registry_starts_as_film.extxyz 4 1000 150
 # (the nitrile where the chlorine was: the hand the labelled nitrile cell has), which is the nitrile cell,
 # sequence and all, in the film composition's low cell; and the same moved back to the upright registry.
 registry_card.sh docs/predictions/mlip/registry_starts_as_film_nitrile.extxyz 2 1000 1200
+#
+# 08:09 UTC.  The four cells made of the film composition's low cell are at rest (the count three comments up
+# should read 18 at rest, not 19).  In the potential, kcal/mol per chain against each composition's own
+# upright cell: THE MATRIX IN THE FILM COMPOSITION'S LOW CELL IS 1.50 BELOW ITS UPRIGHT CELL (the film
+# composition's own low cell: 1.27 below).  The low cell's chains with their neighbours moved back to the
+# upright registry rest 0.18 above upright, and in the upright lattice and turn 0.54 above; upright chains in
+# the low cell's lattice and registry rested 0.57 above.  So the low cell is its chains' twists AND its
+# registry together, neither alone, and it is not the chlorine's: the matrix has it too.  The job put the
+# matrix's cell on the card's DFT line itself.  What is left open is the other half of every margin: a helix
+# cell may have a lower state of the same hidden kind, and nothing so far could find one.  So the four
+# labelled helix cells are shaken (1.5 ps at 350 K in the potential, each in its own cell) and relaxed again;
+# one that comes to rest more than 0.3 below where it started goes to DFT.
+anneal_card.sh docs/predictions/mlip/registry_starts_helix_annealed.extxyz 4 1500 350 700 3000

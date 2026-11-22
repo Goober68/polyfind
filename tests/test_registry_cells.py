@@ -244,6 +244,20 @@ def test_upright_chains_in_the_low_cells_lattice_and_registry_do_not_find_the_lo
     assert not table["reg_nitrile_tt_like_film"]["converged"] and not table["reg_leader_tt_like_film"]["converged"]    # the nitrile groups meet in this setting: cut, not at rest
 
 
+def test_the_helix_cells_to_be_shaken_are_the_labelled_ones(labelled):
+    from ase.io import read
+
+    tool, path = _load("registry_cells"), _load("mlip_path")
+    starts = read(MLIP / "registry_starts_helix_annealed.extxyz", index=":")
+    assert [str(a.info["frame"]) for a in starts] == [f"reg_{c}_hx_annealed" for c in ("film", "matrix", "leader", "nitrile")]
+    for a in starts:
+        ref = labelled[CELLS[str(a.info["registry_label"])][1]]
+        assert str(a.info["registry_of"]) == str(ref.info["frame"]) and tool._ints(a.info["registry_shear"]) == [0, 0] and int(a.info["registry_turn"]) == 0
+        assert _same_places(ref.positions, a.positions, ref.cell.array) and a.cell.array == pytest.approx(ref.cell.array)
+    line = next(l.split() for l in (ROOT / "examples" / "gpu_jobs" / "queue_20261122_registry.txt").read_text().splitlines() if l.startswith("anneal_card.sh "))
+    assert (ROOT / line[1]).samefile(MLIP / "registry_starts_helix_annealed.extxyz") and line[2:] == ["4", "1500", "350", "700", "3000"]
+
+
 def test_the_choice_is_the_lowest_cell_at_rest_of_each_composition_and_conformation():
     tool = _load("registry_cells")
     row = lambda label, conformation, energy, converged=True, kept=True: {"relaxed": True, "frame": f"{label}_{conformation}_{energy}", "label": label, "conformation": conformation,
