@@ -1,0 +1,14 @@
+# The registry check (PI 2026-11-22: "MI100 isn't online go on runpod"; docs/MLIP_SECOND_OPINION.md 3.24).
+#
+# 3.23 found by accident that the film composition's all-trans cell with its neighbours a monomer along the
+# chains is 0.84 kcal/mol per chain below the upright cell in DFT, the cell every margin is measured from: its
+# margin is +0.063 from the one and +0.123 from the other.  Every other cell has been seen in one registry.
+# This pod makes the other registries on purpose (examples/registry_starts.sh: 34 starts from the four
+# cells' labelled all-trans and helix cells), relaxes them in the potential on the card, four side by side,
+# to 0.004 eV/A (400 steps at most, 45 minutes in all), and puts the lowest of each composition and
+# conformation to DFT on two lines: the card's (46 minutes a cell) and the processors' (66).  While the card
+# relaxes, the processors build the DFT program for the card and then label the image after the leader's
+# second top, which the last pod was deleted 45 minutes into.
+#
+# One job a line; the pod counts lines, so the file is only added to.
+registry_card.sh docs/predictions/mlip/registry_starts.extxyz 4 400 2700 docs/predictions/mlip/paths/leader_b2.extxyz leader_b2_i08
