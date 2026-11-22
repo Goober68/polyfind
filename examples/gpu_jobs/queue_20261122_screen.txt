@@ -103,3 +103,15 @@ screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_2.extxyz 4 1000 1800
 screen_card_or.sh scr_vdf9-trfe3-cfe1-rvdf1-14_hx_ldr_in_all_s1 -- scr_vdf10-trfe3-rvdf1-14_tt_low_in_all_s1 scr_vdf10-trfe3-rvdf1-14_hx_ldr_in_all_s1
 # the card is DFT's alone until its line is empty: whatever follows waits for it
 dft_cells.sh in=dft_card wait
+#
+# 22:01 UTC.  The sheets.  IVRVVRVCVVVVVR made of the film composition's sheets (25 of 28 relaxed): cheapest on
+# its chlorine, -4.84 kcal/mol per chain at site 12 (VC) and -4.21 at 14m (CV) against its lowest all-trans cell;
+# made of the leader's sheets its chlorine site is -2.92 and its run of VDF units -2.21 to -1.48.  The chlorine
+# takes the kink, as in the film's composition (-5.26, -3.56).  IVRVVRVVVVVVVR made of the leader's sheets:
+# cheapest on its run of VDF units, -1.87 at 18m, -1.72 at 20m, -1.60 at 16m (the leader's own: -1.32, -0.93,
+# -1.20).  DFT meanwhile has IVRVVRVCVVVVVR's upright all-trans cell 0.035 kcal/mol per monomer BELOW its helix
+# in the film composition's packing, where the potential has it 0.088 above: its helix in the leader's packing
+# (0.116 lower in the potential) is on the card now, alone, to about 22:45.
+# Then the two hops, each order with its two legs as in 3.23: the no-pin row's cheapest kink, and the
+# chlorine's kink in IVRVVRVCVVVVVR (is it as slow to move as the film composition's, 7.7?).
+steps_card.sh docs/predictions/mlip/models/all_s1.model 12 nopin:scr_vdf10-trfe3-rvdf1-14_sheetldr_at18m_in_all_s1:scr_vdf10-trfe3-rvdf1-14_tt_low_in_all_s1 lcfe:scr_vdf9-trfe3-cfe1-rvdf1-14_sheet_at12_in_all_s1:scr_vdf9-trfe3-cfe1-rvdf1-14_tt_ldr_in_all_s1

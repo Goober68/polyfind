@@ -1,0 +1,498 @@
+{
+ "what": "a row's kink sheets (a kink pair on every chain, in register, at one site of the sequence), each made of the film composition's potential-relaxed sheet at that site by changing substituents where they stand (examples/screen14.py sheets) and relaxed in the potential with the cell free: energy is kcal/mol per chain against the row's lowest all-trans cell in the potential; kink_kept: every chain still has two gauche bonds of opposite sense about a trans one; units: the two units the site lies on, by the film composition's numbering of sites. No DFT",
+ "starts": "docs/predictions/mlip/screen14_sheets_2.extxyz",
+ "rows": {
+  "vdf9-trfe3-cfe1-rvdf1-14": {
+   "letters": "IVRVVRVCVVVVVR",
+   "sites": {
+    "18m": {
+     "relaxed": true,
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at18m_in_all_s1",
+     "converged": true,
+     "energy": -2.0388476375118203,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        18,
+        -61.24795726028075
+       ],
+       [
+        20,
+        57.3804002441292
+       ]
+      ],
+      [
+       [
+        18,
+        -61.258516702425695
+       ],
+       [
+        20,
+        57.405314427078125
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.6009612147231465,
+      -1.0220516738838061
+     ]
+    },
+    "18": {
+     "relaxed": true,
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at18_in_all_s1",
+     "converged": true,
+     "energy": -1.4795610839336306,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        18,
+        62.041293903889326
+       ],
+       [
+        20,
+        -64.04033806182687
+       ]
+      ],
+      [
+       [
+        18,
+        62.08433487354875
+       ],
+       [
+        20,
+        -64.0501621847867
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.4702685824471183,
+      -1.087520946413222
+     ]
+    },
+    "16m": {
+     "relaxed": true,
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at16m_in_all_s1",
+     "converged": true,
+     "energy": -2.208631586580057,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        16,
+        -58.13219555248522
+       ],
+       [
+        18,
+        60.7212702485085
+       ]
+      ],
+      [
+       [
+        16,
+        -58.1415351758486
+       ],
+       [
+        18,
+        60.7202465894145
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.6163069748179624,
+      -1.1139000349938806
+     ]
+    },
+    "20m": {
+     "relaxed": true,
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at20m_in_all_s1",
+     "converged": true,
+     "energy": -1.7758310826474473,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        20,
+        -58.10911193141835
+       ],
+       [
+        22,
+        58.79874510357057
+       ]
+      ],
+      [
+       [
+        20,
+        -58.141253126020025
+       ],
+       [
+        22,
+        58.80900940590587
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.6217822417422584,
+      -0.9516183375469264
+     ]
+    },
+    "12": {
+     "relaxed": true,
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at12_in_all_s1",
+     "converged": true,
+     "energy": -2.9210500530026016,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        12,
+        66.06678825669631
+       ],
+       [
+        14,
+        -67.50543094107138
+       ]
+      ],
+      [
+       [
+        12,
+        66.06678482873508
+       ],
+       [
+        14,
+        -67.50506211949154
+       ]
+      ]
+     ],
+     "units": "VC",
+     "shear_along_chains_monomers": [
+      0.8898621146982773,
+      -0.925460864838462
+     ]
+    },
+    "14": {
+     "relaxed": true,
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at14_in_all_s1",
+     "converged": true,
+     "energy": 0.35819384379423175,
+     "kink_kept": false,
+     "gauche_bonds": [
+      [
+       [
+        16,
+        -78.03355284745852
+       ]
+      ],
+      [
+       [
+        16,
+        -78.02596281179636
+       ]
+      ]
+     ],
+     "units": "CV",
+     "shear_along_chains_monomers": [
+      0.8310465551247339,
+      -0.13042311408363294
+     ]
+    },
+    "16": {
+     "relaxed": true,
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at16_in_all_s1",
+     "converged": false,
+     "energy": -1.773614932616092,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        16,
+        53.26446842597138
+       ],
+       [
+        18,
+        -68.05392048029107
+       ]
+      ],
+      [
+       [
+        16,
+        53.2635037847231
+       ],
+       [
+        18,
+        -68.05949170602254
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.1416649332871745,
+      -1.6535500945471215
+     ]
+    },
+    "20": {
+     "relaxed": true,
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at20_in_all_s1",
+     "converged": false,
+     "energy": -0.4500467172595352,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        20,
+        60.44013384882679
+       ],
+       [
+        22,
+        -66.48612904145752
+       ]
+      ],
+      [
+       [
+        20,
+        60.35428423847864
+       ],
+       [
+        22,
+        -66.59256247692595
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.42257361018813777,
+      -1.1433016868456332
+     ]
+    },
+    "4": {
+     "relaxed": false
+    }
+   },
+   "all_trans": "tt_ldr",
+   "all_trans_eV_per_monomer": -2002.160796147503,
+   "cheapest": "12",
+   "below_all_trans": 7
+  },
+  "vdf10-trfe3-rvdf1-14": {
+   "letters": "IVRVVRVVVVVVVR",
+   "sites": {
+    "18m": {
+     "relaxed": true,
+     "frame": "scr_vdf10-trfe3-rvdf1-14_sheetldr_at18m_in_all_s1",
+     "converged": true,
+     "energy": -1.8680936085802926,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        18,
+        -55.1443142191872
+       ],
+       [
+        20,
+        59.787725657077914
+       ]
+      ],
+      [
+       [
+        18,
+        -55.178883081850636
+       ],
+       [
+        20,
+        59.847213410078346
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.7024227492345665,
+      -1.0335470787598655
+     ]
+    },
+    "18": {
+     "relaxed": true,
+     "frame": "scr_vdf10-trfe3-rvdf1-14_sheetldr_at18_in_all_s1",
+     "converged": true,
+     "energy": 0.36525236675720774,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        18,
+        63.77339610312849
+       ],
+       [
+        20,
+        -60.08869590335814
+       ]
+      ],
+      [
+       [
+        18,
+        63.7524172759415
+       ],
+       [
+        20,
+        -60.1120961980254
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.507939807374323,
+      -1.0998487995362982
+     ]
+    },
+    "16m": {
+     "relaxed": true,
+     "frame": "scr_vdf10-trfe3-rvdf1-14_sheetldr_at16m_in_all_s1",
+     "converged": true,
+     "energy": -1.5953125657806224,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        16,
+        -55.404658955638254
+       ],
+       [
+        18,
+        59.49977884072266
+       ]
+      ],
+      [
+       [
+        16,
+        -55.488355062218744
+       ],
+       [
+        18,
+        59.36931087301684
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.6526253877150336,
+      -1.0431653342014273
+     ]
+    },
+    "20m": {
+     "relaxed": true,
+     "frame": "scr_vdf10-trfe3-rvdf1-14_sheetldr_at20m_in_all_s1",
+     "converged": true,
+     "energy": -1.7200208650356483,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        20,
+        -54.08683377738761
+       ],
+       [
+        22,
+        58.699968770512996
+       ]
+      ],
+      [
+       [
+        20,
+        -54.01696259611398
+       ],
+       [
+        22,
+        58.71267484651621
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.7519929925758256,
+      -1.0063325477931464
+     ]
+    },
+    "16": {
+     "relaxed": true,
+     "frame": "scr_vdf10-trfe3-rvdf1-14_sheetldr_at16_in_all_s1",
+     "converged": false,
+     "energy": -0.397624674004424,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        16,
+        58.883451273298306
+       ],
+       [
+        18,
+        -59.9493880448484
+       ]
+      ],
+      [
+       [
+        16,
+        58.85345456316763
+       ],
+       [
+        18,
+        -59.94802236744741
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.12124637930447402,
+      -1.5711327345238684
+     ]
+    },
+    "20": {
+     "relaxed": true,
+     "frame": "scr_vdf10-trfe3-rvdf1-14_sheetldr_at20_in_all_s1",
+     "converged": false,
+     "energy": 1.0198525468896373,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        20,
+        62.61723239457312
+       ],
+       [
+        22,
+        -61.37574573729191
+       ]
+      ],
+      [
+       [
+        20,
+        62.61823245395508
+       ],
+       [
+        22,
+        -61.41168306244917
+       ]
+      ]
+     ],
+     "units": "VV",
+     "shear_along_chains_monomers": [
+      -0.4024433876206307,
+      -1.1162838736416378
+     ]
+    },
+    "4": {
+     "relaxed": false
+    }
+   },
+   "all_trans": "tt_low",
+   "all_trans_eV_per_monomer": -2016.4488555927471,
+   "cheapest": "18m",
+   "below_all_trans": 4
+  }
+ }
+}
