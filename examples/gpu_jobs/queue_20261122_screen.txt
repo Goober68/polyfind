@@ -115,3 +115,13 @@ dft_cells.sh in=dft_card wait
 # Then the two hops, each order with its two legs as in 3.23: the no-pin row's cheapest kink, and the
 # chlorine's kink in IVRVVRVCVVVVVR (is it as slow to move as the film composition's, 7.7?).
 steps_card.sh docs/predictions/mlip/models/all_s1.model 12 nopin:scr_vdf10-trfe3-rvdf1-14_sheetldr_at18m_in_all_s1:scr_vdf10-trfe3-rvdf1-14_tt_low_in_all_s1 lcfe:scr_vdf9-trfe3-cfe1-rvdf1-14_sheet_at12_in_all_s1:scr_vdf9-trfe3-cfe1-rvdf1-14_tt_ldr_in_all_s1
+#
+# 22:53 UTC.  DFT on IVRVVRVCVVVVVR's lowest cells: all-trans less helix +0.196 kcal/mol per monomer (the
+# potential +0.204 on the same two cells, +0.201 from its own lowest).  Its helix in the leader's packing is
+# 2.75 kcal/mol per chain below its upright all-trans cell in DFT (the potential 2.85), its helix in the film
+# composition's packing 0.49 ABOVE (the potential 1.23 below), its all-trans cell in the film composition's low
+# pattern 1.51 above (the potential 0.18).  The potential is right on the lowest cells and 0.12 a monomer off on
+# the pair that is not.  Four labels on the processors (80 to 97 minutes each), one on the card (49).
+# The last of the card's time: the same row's kink on its run of VDF units (in the leader's packing, -2.21
+# against the chlorine's -4.84), one path: does a fast hop survive beside the chlorine's?
+steps_card.sh docs/predictions/mlip/models/all_s1.model 12 lcfev:scr_vdf9-trfe3-cfe1-rvdf1-14_sheetldr_at16m_in_all_s1:scr_vdf9-trfe3-cfe1-rvdf1-14_tt_ldr_in_all_s1
