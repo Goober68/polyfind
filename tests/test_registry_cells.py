@@ -16,9 +16,11 @@ CELLS = {"film": (f"row_{FILM}_TTTT_chain1_in_all_s1", f"row_{FILM}_TGTGp_chain1
 
 
 # the helix cells with their neighbours one monomer along that were relaxed on here after the pod was gone, the ones the pod left unsettled, and the lowest of the eight
-HELIX_ONE_HERE = {"reg_film_hx_m1p1_tz0": 0.76}       # the pod left it at +0.77 after 1800 steps; sixteen more here and it is at rest
-HELIX_ONE_MOVING = {"reg_leader_hx_p1m1_tz0": 4.25, "reg_leader_hx_m1p1_tz0": 3.14, "reg_nitrile_hx_p1m1_tz0": 3.60}
-HELIX_ONE_FLOOR = 0.75
+# the film composition's: the pod left it at +0.77 after 1800 steps, sixteen more here and it is at rest; the leader's: left at +3.14 and
+# sliding back, it is the labelled cell again (its neighbours where that has them) after about 700 more steps here
+HELIX_ONE_HERE = {"reg_film_hx_m1p1_tz0": 0.76, "reg_leader_hx_m1p1_tz0": -0.04}
+HELIX_ONE_MOVING = {"reg_leader_hx_p1m1_tz0": 4.25, "reg_nitrile_hx_p1m1_tz0": 3.60}
+HELIX_ONE_FLOOR = -0.05
 
 
 def _load(name):
@@ -239,8 +241,9 @@ def test_chains_with_the_upright_cells_twists_rest_higher_in_every_other_registr
     assert len(two) == 8 and len(energies) == 7 and (energies[0], energies[-1]) == pytest.approx((1.40, 5.75), abs=0.006)
     for v in list(along.values()) + list(two.values()):
         assert np.abs(moved(v) - np.array(v["shear_asked"])).max() < 0.75
-    # nothing relaxed is below its labelled cell but the matrix's turned cell, by 0.01
-    assert min(v["energy"] for v in done.values()) == pytest.approx(-0.01, abs=0.006)
+    # nothing relaxed is below its labelled cell but two that are that cell again: the matrix's turned cell (-0.01) and the leader's helix
+    # cell that slid back to its labelled registry (-0.04)
+    assert sorted(round(v["energy"], 2) for v in done.values() if v["energy"] < 0) == [-0.04, -0.01]
     frames = read(MLIP / "registry_shifted_relaxed.extxyz", index=":")
     assert [str(a.info["frame"]) for a in frames] == [v["frame"] for v in done.values()]
     for a in frames:
@@ -268,6 +271,8 @@ def test_a_helix_cell_does_not_stay_with_its_neighbours_one_monomer_along():
     moved = lambda v: np.array(v["shear_along_chains_monomers"]) - np.array(v["shear_along_chains_monomers_labelled"])
     slid = [k for k, v in one.items() if np.abs(moved(v) - np.array(v["shear_asked"])).max() > 0.33]
     assert len(slid) >= 5 and "reg_film_hx_p1m1_tz0" not in slid and "reg_matrix_hx_m1p1_tz0" not in slid
+    # the leader's -1, +1 slid all the way back: its neighbours are where the labelled cell has them, and it is that cell again, to 0.04
+    assert np.abs(moved(one["reg_leader_hx_m1p1_tz0"])).max() < 0.01 and one["reg_leader_hx_m1p1_tz0"]["converged"]
 
 
 def test_upright_chains_in_the_low_cells_lattice_and_registry_do_not_find_the_low_cell():

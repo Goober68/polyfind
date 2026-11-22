@@ -2456,17 +2456,18 @@ to 0.004 eV/A, 32 of the 34; kcal/mol per chain against the labelled cell each w
 |---|---:|---:|---:|---:|
 | the film's composition | +3.15 | +2.11 | +8.41 | +0.76 |
 | the matrix | +2.74 | +1.66 | +3.74 | +7.79 |
-| the leader | +1.40 | +1.93 | +4.25 moving | +3.14 moving |
+| the leader | +1.40 | +1.93 | +4.25 moving | -0.04 |
 | the nitrile alone | +5.75 | +2.68 moving | +3.60 moving | +1.41 |
 
-Nothing is below the cell it was made from by more than 0.01. The turn alone is level
+Nothing is below the cell it was made from by more than 0.04. The turn alone is level
 wherever it came to rest. A helix cell does not stay with its neighbours one monomer along:
 two of the eight rest where they were put (+8.41, +7.79) and the others slide, to two monomers
-along on one edge and none on the other (the film composition's +0.76, the matrix's +3.74) or
+along on one edge and none on the other (the film composition's +0.76, the matrix's +3.74),
 most of the way back (the nitrile composition's +1.41, its neighbours 0.6 and 0.0 from where
-the labelled cell has them). The three still moving when the pod was deleted (the leader's two
-and the nitrile composition's +1, -1) were 3.1 to 4.3 above and falling; the leader's -1, +1,
-relaxed on here since, was 2.5 above and still falling when this was written.
+the labelled cell has them) or all of it: the leader's -1, +1, 3.14 above and moving when the
+pod was deleted and relaxed on here, ends with its neighbours where the labelled cell has them
+and is that cell again (-0.04). The two still moving when they were stopped (the leader's and
+the nitrile composition's +1, -1) were 4.3 and 3.6 above and falling.
 
 **Nor does it find the cell 3.23 found.** The control: the film composition's upright chains
 given the lattice, the registry and the turn of its own low cell (`build ... :like`,
@@ -2527,8 +2528,8 @@ all-trans cell, kcal/mol per chain (`registry_as_film.json`, `registry_as_film_n
 potential, against each composition's labelled helix cell:
 
 - Their neighbours two monomers along, each way: 1.40 to 5.75 above (the table).
-- Their neighbours one monomer along, each way: 0.76 to 8.41 above at rest, and sliding where
-  they can (the table).
+- Their neighbours one monomer along, each way: sliding where they can, one all the way back
+  to its labelled cell and the rest 0.76 to 8.41 above at rest (the table).
 - Shaken: each labelled helix cell run 1.5 ps at 350 K in its own cell (Langevin, 1 fs; the
   hottest moment 389 to 409 K) and relaxed again with the cell free
   (`examples/mlip_anneal.py`, `registry_helix_annealed.json`). All four come back to the
@@ -2654,7 +2655,7 @@ cheapest site 2.30 above all-trans, not 0.90).
   `docs/CANDIDATE_MATERIALS.md`, which takes a margin below zero as zero and is outside its
   domain there.
 - Not run: two all-trans starts (the leader's and the nitrile composition's -1, +1 without the
-  turn). Not at rest when stopped: seven of the 32 (marked moving), every one above the cell
+  turn). Not at rest when stopped: six of the 32 (marked moving), every one above the cell
   it was made from. The other 31 rows were not looked at, and no helix cell was made from
   another state's cell.
 

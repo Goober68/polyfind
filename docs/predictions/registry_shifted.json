@@ -976,26 +976,26 @@
     1
    ],
    "turn_asked": 0,
-   "converged": false,
-   "steps": 1000,
-   "energy": 3.1401425393624165,
+   "converged": true,
+   "steps": 527,
+   "energy": -0.03536609285517057,
    "shear_along_chains_monomers": [
-    -0.2750252196352961,
-    -0.466479122337156
+    -0.0034615026920834487,
+    -0.3004002030072122
    ],
    "shear_along_chains_monomers_labelled": [
     -8.738786899104495e-08,
     -0.29875284263108565
    ],
-   "dipole_from_a_deg": 1.9930440528245217,
+   "dipole_from_a_deg": 0.18179273363593243,
    "dipole_from_a_deg_labelled": 3.8576872453428944e-05,
    "gauche_torsions": 24,
    "gauche_torsions_labelled": 24,
    "conformation_kept": true,
    "cell_lengths": [
-    5.295324419240532,
-    10.213291237377932,
-    32.7555582585788
+    5.271759519079869,
+    9.748515062675077,
+    32.95382307663051
    ]
   },
   "reg_nitrile_hx_p1m1_tz0": {

@@ -694,7 +694,7 @@ right": true at one registry, not along it).
             `examples/registry_starts.sh`, 34 starts, 32 relaxed, `docs/predictions/registry_shifted.json`):
             all-trans a monomer along +0.45 to +2.30; the turn alone level (-0.02, -0.01, +0.02); helix two
             monomers along +1.40 to +5.75; helix one monomer along slides to other registries, +0.76 to
-            +8.41 at rest. The control (upright chains in the film composition's low cell's lattice,
+            +8.41 at rest, and the leader's -1, +1 all the way back to its labelled cell (-0.04). The control (upright chains in the film composition's low cell's lattice,
             registry and turn) rests +0.57: THE LOW CELL IS ITS CHAINS' TWISTS (each backbone bond up to
             23 degrees off trans, in another pattern than upright) AND ITS REGISTRY TOGETHER.
         (2) THE OTHER COMPOSITIONS MADE OF THE FILM COMPOSITION'S LOW CELL ATOM BY ATOM
@@ -729,9 +729,8 @@ right": true at one registry, not along it).
             leader switches as a relaxor does, and it has nothing in it that raises a margin as CFE does.
         (7) NOT DONE: the other 31 rows; a search over an all-trans chain's twists (one low cell, found
             by accident); a helix cell made from another state's cell; two all-trans starts not run and
-            seven cells not at rest when stopped (all above); DFT on the film composition's upright cell
-            with every chain turned. The three helix cells still moving were being relaxed on here in
-            `scratchpad/reg/helix_on/` (not stored unless they came to rest).
+            six cells not at rest when stopped (all above); DFT on the film composition's upright cell
+            with every chain turned.
         NEXT (a recommendation, no ruling yet): a candidate that keeps the leader's shallow, fast kink
         and has a margin above zero from its lowest cells, i.e. the leader's backbone with a
         margin-raising unit and without the nitrile's cost; the potential can screen cells without a
