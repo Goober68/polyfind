@@ -316,6 +316,30 @@ def test_the_nitrile_composition_has_the_low_cell_too(labelled):
     assert abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg"]) - 180) < 30 and abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg_labelled"]) - 90) < 15
 
 
+def _fourth():
+    from ase.io import read
+
+    return {str(a.info["frame"]): a for a in read(MLIP / "cells14_fourth_pod_frames_pbe_d3bj.extxyz", index=":")}
+
+
+def test_dft_has_the_matrix_in_the_low_cell_below_its_upright_cell(labelled):
+    """The fourth pod's DFT single point on the matrix made of the film composition's low cell, as the potential relaxed it."""
+    from ase.io import read
+
+    a, up = _fourth()["reg_matrix_tt_as_film_low_in_all_s1"], labelled[CELLS["matrix"][0]]
+    relaxed = read(MLIP / "registry_as_film_relaxed.extxyz", index=0)
+    assert str(relaxed.info["frame"]) == str(a.info["frame"]) and np.abs(a.positions - relaxed.positions).max() < 1e-9 and np.abs(a.cell.array - relaxed.cell.array).max() < 1e-9
+    kcal = 23.0605
+    dft = (float(a.info["REF_energy"]) - float(up.info["REF_energy"])) / 2 * kcal
+    potential = (float(a.info["potential_eV_per_monomer"]) - float(up.info["potential_eV_per_monomer"])) * 14 * kcal
+    assert (dft, potential) == pytest.approx((-1.40, -1.50), abs=0.006)
+    assert np.abs(a.arrays["REF_forces"]).max() == pytest.approx(0.10, abs=0.005) and str(a.info["dft_run"]) == "card" and int(a.info["dft_kpoints"]) == 6
+    # the matrix's margin from it: all-trans less helix per monomer, DFT; +0.068 between the two upright cells
+    helix = labelled[CELLS["matrix"][1]]
+    margin = lambda tt: (float(tt.info["REF_energy"]) - float(helix.info["REF_energy"])) / 28 * kcal
+    assert (margin(up), margin(a)) == pytest.approx((0.068, -0.032), abs=0.0006)
+
+
 def test_the_helix_cells_shaken_at_350_kelvin_come_back_to_where_they_started(labelled):
     """The fourth pod's eighth job: 1.5 ps at 350 K in the potential in each helix cell's own cell, then relaxed with the cell free."""
     from ase.io import read
