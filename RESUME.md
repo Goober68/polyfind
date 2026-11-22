@@ -680,77 +680,62 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
-        THE FIFTH POD IS GONE: `d590ilrkoi1fqt` DELETED 23:52:14 UTC 2026-11-22 (`delete-pod` 204) AND
-        CONFIRMED BY READS at 23:52:20 (`list-pods`: none; `get-pod`: 404; no network volumes). 7.43 h,
-        about $4.38, and $0.22 for the first pod of the go: $4.60 of the $4.72 approved; spend about
-        $39.4 of $46. NO POD IS RUNNING. What follows is the record of it, to be rewritten as a summary
-        when docs 3.25 is in. Last results fetched before the deletion: the hop scans (`nopin`,
-        `nopin18`, `lcfe`, `lcfev` under `docs/predictions/mlip/paths/`, summary
-        `docs/predictions/screen14_hops.json` by `examples/screen14.py hops`): the no-pin row's cheapest
-        kink (18m) hops over 7.55, its kink at the leader's site and hand (18, which is 2.23 above 18m)
-        over 5.58; the CFE row's kink on its chlorine over 6.45, its kink on its VDF run (16m, 2.63
-        above the chlorine's) over 4.87; in the same potential the film composition's 7.81, the leader's
-        5.67. The processors labelled the CFE row's lowest helix cell a second time: the card's energy
-        to the digit.
-        (THE RECORD:) THE SCREEN FOR CANDIDATES (PI 2026-11-22: "Screen for candidates", and
-        "Runpod, 8 hours" when asked which machine; the MI100 was not attached). `d590ilrkoi1fqt`, name
-        `polyfind-screen`, Runpod Secure Cloud EU-SE-1, one NVIDIA A40, $0.59/h, CREATED 16:26:36 UTC
-        2026-11-22 after a read of stock (Low, available) and price, confirmed by a read (`list-pods`).
-        IT REMOVES ITSELF AT 7.6 HOURS (`BENCH_LIMIT_S=27400`: 00:03 UTC 2026-11-23): DELETE IT BY 23:57
-        UTC AFTER A LAST MIRROR, SOONER IF ITS WORK IS DONE. WHOEVER READS THIS AFTER 00:10 UTC 2026-11-23:
-        CONFIRM IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods '{}'`) AND DELETE IT IF NOT
-        (`delete-pod {"id": "d590ilrkoi1fqt"}`, then read again). Spend before it: about $34.8 of $46,
-        and $0.22 for the first pod of this go, `0naokkrqptuyi5` (CA-MTL-1, 16:03:00 to 16:25:48 UTC), WHICH
-        NEVER STARTED: its host's GPU was faulty ("GPU requires reset" in `stream-pod-logs`, the container
-        never created), so its own time limit never ran; deleted and confirmed gone by reads. A POD WHOSE
-        STATUS FILE DOES NOT APPEAR WITHIN THREE MINUTES: READ `stream-pod-logs` (source system) AT ONCE.
-        The two pods together stay within the eight hours approved (at most $4.72).
-        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261122_screen.txt`; docs 3.25 to be written):
-        `examples/screen14.py` makes each of 17 fourteen-monomer rows (`examples/screen14_starts.sh`,
-        `docs/predictions/mlip/screen14_starts_{a,b}.extxyz`, 102 cells) out of the film composition's
-        potential-relaxed cells by changing substituents where they stand: the low all-trans cell, the
-        upright one, the four placements of the helix. Controls: the film's composition made of itself,
-        the matrix, the leader. Candidates: the leader's other two features (a reversed VDF first, a VDF
-        eleventh) on a chlorine unit (CFE, CTFE) in place of its nitrile, which the potential cannot do
-        (3.24); then no pin, more TrFE, CDFE, ethylene. `screen_card.sh` relaxes them on the card (four
-        side by side, 0.004 eV/A), `screen14.py table` gives each row's margin from its lowest all-trans
-        and helix cells, and the rows between -0.06 and +0.14 in the potential go to DFT (lowest all-trans,
-        lowest helix, other all-trans). Job 1 labels `film_all_trans_turned_117_tight` on the processors
-        meanwhile.
-        STATE AT 22:53 UTC (the queue file's comments have each step). IN THE POTENTIAL, all four files
-        of starts relaxed and stored (`docs/predictions/screen14_potential_{a,b,c,d}.json`, each the
-        table of every file so far, so `_d` is the final one; `mlip/screen14_relaxed_{a,b,c,d}.extxyz`):
-        the no-pin row IVRVVRVVVVVVVR (`vdf10-trfe3-rvdf1-14`) +0.071, the CFE row IVRVVRVCVVVVVR
-        (`vdf9-trfe3-cfe1-rvdf1-14`) +0.201, IVRVVRVCVVRVVR -0.033, the leader as a control -0.069 (its
-        own cells -0.070). A MADE CELL KEEPS ITS SOURCE'S PACKING: files A and B (the film
-        composition's cells) had the leader at -0.342 and these two rows at -0.091 and +0.088; the
-        rows with the leader's reversed unit first AND its VDF eleventh take the leader's own helix
-        packing (file D), the others do not. File D stopped at its 3000 s with 8 of 39 cells not run.
-        KINK SHEETS (`screen14_sheets_{1,2}.json`): the CFE row's cheapest are on its chlorine (-4.84,
-        -4.21 per chain against its lowest all-trans cell, made of the film composition's sheets), the
-        no-pin row's on its run of VDF units (-1.87 at 18m, made of the leader's sheets).
-        DFT (`mlip/screen14_frames_pbe_d3bj.extxyz`, five labels; `screen14_dft.json`): the CFE row's
-        margin from its lowest labelled cells +0.196 (the potential +0.204 on the same two); on its
-        upright all-trans cell and its helix in the film composition's packing DFT has -0.035 where
-        the potential has +0.088. The film composition's chains turned without their registry: 0.00
-        from upright. NO DFT ON THE NO-PIN ROW: there was time for one row's margin, not three.
-        ON THE POD NOW: job 12, the hop scans `nopin` (the no-pin row's sheet at 18m) and `lcfe` (the
-        CFE row's sheet on its chlorine, site 12), to about 23:25; job 13, `lcfev` (the CFE row's
-        sheet on its VDF run, 16m), to about 23:45. The processors are on a second copy of a cell
-        the card has labelled and will not finish. THEN: mirror, DELETE, CONFIRM BY A READ; the scans
-        into `docs/predictions/mlip/paths/`, `examples/mlip_path.py points` as
-        `examples/kink_path_points.sh` does for the film's composition and the leader (the hop is the
-        lower top of the two orders' first legs; in the potential the film composition's is 7.81 and
-        the leader's 5.67), and the four axes by `examples/four_axes_at_margins.py --barriers`.
-        A new row has no belt4 inputs (dipole, switch strain, stiffness): for the four axes take
-        `vdf8-trfe4-cfe1-rvdf1-14`'s and the leader's, and say which.
-        HOW TO READ IT: `scratchpad/runpod/pod_screen.sh PATH` (token in `scratchpad/runpod/
-        token_screen.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_screen.py` (into
-        `scratchpad/runpod/screen/`), `scratchpad/runpod/dft_progress_screen.sh`; labels into the
-        repository by `python -I scratchpad/screen_labels.py docs/predictions/mlip/
-        screen14_frames_pbe_d3bj.extxyz`; then `python -I examples/screen14.py dft --table TABLE --labels
-        FILE --out docs/predictions/screen14_dft.json`. If the token file is lost the results cannot be
-        read: delete the pod. Tests: `tests/test_screen14.py` (14).
+        THE FIFTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (PI 2026-11-22: "Screen for
+        candidates", and "Runpod, 8 hours" when asked which machine). `d590ilrkoi1fqt`, Runpod Secure
+        Cloud EU-SE-1, one A40, $0.59/h, 16:26:36 to 23:52:14 UTC 2026-11-22 (`delete-pod` 204),
+        CONFIRMED GONE BY READS at 23:52:20 (`list-pods`: none; `get-pod`: 404; no network volumes).
+        7.43 h, about $4.38, and $0.22 for the first pod of the go, `0naokkrqptuyi5`, which never
+        started (its host's GPU was faulty; deleted 16:25:48 and confirmed gone): $4.60 of the $4.72
+        approved. Spend about $39.4 of $46. NO POD IS RUNNING. A POD WHOSE STATUS FILE DOES NOT APPEAR
+        WITHIN THREE MINUTES: READ `stream-pod-logs` (source system) AT ONCE.
+        WHAT IT FOUND (docs `MLIP_SECOND_OPINION.md` 3.25, the head of `CANDIDATE_MATERIALS.md`):
+        seventeen fourteen-monomer rows without a nitrile, each made of relaxed cells by changing
+        substituents where they stand (`examples/screen14.py`), relaxed in the potential on the card.
+        NO ROW HAS BOTH THE LEADER'S HOP AND A MARGIN NEAR THE FILM COMPOSITION'S.
+        - A MADE CELL KEEPS ITS SOURCE'S PACKING. The leader as a control came back at -0.342 from
+          the film composition's cells and -0.069 (its own: -0.070) once given its own helix cell
+          and all-trans cell. Rows with its reversed unit first and its VDF eleventh take its helix
+          packing (1.6 to 2.7 kcal/mol per chain lower); the others do not.
+        - Margins in the potential, all four files (`docs/predictions/screen14_potential_d.json`):
+          IVRVVRVCVVVVVR (`vdf9-trfe3-cfe1-rvdf1-14`, "the CFE row") +0.201; IVRVVRVVVVVVVR
+          (`vdf10-trfe3-rvdf1-14`, "the no-pin row") +0.071; IVRVVRVCVVRVVR -0.033; controls: the
+          film's composition +0.072, the matrix -0.087. The features add: a VDF eleventh for the
+          fourth TrFE +0.23 to +0.34, a reversed unit first -0.09 to -0.21, a CFE eighth for a VDF
+          +0.13 to +0.17. File D stopped at its 3000 s: 8 of 39 cells not run.
+        - DFT (five labels, `mlip/screen14_frames_pbe_d3bj.extxyz`, `screen14_dft.json`): the CFE
+          row's margin from its lowest labelled cells +0.196 (the potential +0.204 on the same
+          two); on its upright all-trans cell and its helix in the film composition's packing DFT
+          has -0.035 where the potential has +0.088. The film composition's chains turned without
+          their registry: 0.00 from upright. ONE ROW'S MARGIN WHERE THREE WERE PLANNED; the no-pin
+          row has no DFT.
+        - Kinks (`screen14_sheets_{1,2}.json`, `screen14_hops.json`, scans under `mlip/paths/`): the
+          CFE row's cheapest kink is on its chlorine (-4.84 per chain against its lowest all-trans
+          cell) and hops over 6.45; the no-pin row's is on its run of VDF units (18m, -1.87) and
+          hops over 7.55; in the same potential the film composition's 7.81 and the leader's 5.67.
+          The no-pin row at the leader's site and hand (18) hops over 5.58, on a kink 2.23 above
+          its cheapest; the CFE row's kink on its VDF run (16m, 2.63 above its chlorine's) over
+          4.87. A hop is a first leg that arrives at a stretched kink (`screen14.py hops`).
+        - Four axes (`examples/screen14_axes.sh`, `four_axes_screen14_{a,b}.json`; each row on the
+          inputs of the two rows nearest it, since belt4 has not built it): the film's composition
+          364 kHz, tan delta 0.088, 0.081%, 7.6 pN/nm2; the CFE row 3.6 MHz, 0.0012 to 0.0013,
+          0.057 to 0.073%, 2.7 (the leader's stiffness), its strain 0.14% to 0.014% over 0.05 of
+          margin either way; the no-pin row 563 kHz, 0.054 to 0.057, 0.087 to 0.094%, 4.4 to 9.8.
+        NOT DONE, AND WHAT WOULD COME NEXT: a cell with one chain of each of IVRVVRVCVVVVVR and
+        IVRVVRVCVVRVVR (25 mol% TrFE, the same size: `registry_cells.morphed` makes every chain the
+        same sequence and would need a sequence per chain); DFT on the no-pin row's two cells
+        (`scr_vdf10-trfe3-rvdf1-14_tt_low_in_all_s1`, `..._hx_ldr_in_all_s1`, in
+        `mlip/screen14_relaxed_{a,d}.extxyz`) and at a hop's top (`lcfe_a1_i05`, `nopin_a1_i07` in
+        `mlip/paths/`); the no-pin row's other kink sites; the leader's hop at its other hand (18m);
+        belt4's own inputs for the two new rows.
+        TOOLS: `examples/screen14.py` (`starts`, `table`, `choose`, `dft`, `sheets`, `sheets-table`,
+        `hops`), `screen14_starts.sh`, `screen14_axes.sh`; the pod's jobs `examples/gpu_jobs/
+        queue_20261122_screen.txt` (its comments are the log of the night), `screen_card.sh`,
+        `screen_sheets_card.sh`, `screen_dft.sh`, `screen_front.sh`, `screen_card_or.sh`,
+        `steps_card.sh`. A LESSON FOR THE NEXT QUEUE: jobs run one after another, so a job that
+        changes a DFT line cannot run while a long job holds the queue; put it before the long job,
+        and try a new job script against a copy of the pod's files before it is queued
+        (`screen_front.sh` failed silently on its first run and cost the processors a turn).
+        Tests: `tests/test_screen14.py` (17).
         THE FOURTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (11:08:57 UTC 2026-11-22; PI
         2026-11-22: "MI100 isn't online go on runpod", on the registry check). `bcuwk6j3g3crqp`
         (`polyfind-registry`, Runpod Secure Cloud EU-SE-1, one A40, $0.59/h), 06:51:18 to 11:08:57 UTC:

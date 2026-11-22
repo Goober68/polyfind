@@ -2676,3 +2676,258 @@ new labels). Tools: `examples/registry_cells.py` (`build`, `derive`, `table`, `c
 `examples/turn_chains.py`. The pod's jobs: `examples/gpu_jobs/queue_20261122_registry.txt`,
 `registry_card.sh`, `registry_more.sh`, `registry_finish.sh`, `registry_dft.sh`,
 `anneal_card.sh`. Tests: `tests/test_registry_cells.py`, `tests/test_mlip_path.py`.
+
+### 3.25 A screen of seventeen rows: a made cell keeps its source's packing, the rows with the leader's reversed unit and its VDF eleventh take its helix packing, and neither new row has both the leader's hop and a margin near the film composition's (2026-11-22; PI: "Screen for candidates")
+
+A fifth rented machine of the same kind (one A40, $0.59 an hour;
+`examples/gpu_jobs/queue_20261122_screen.txt`), 7.43 hours, about $4.38, and $0.22 for a
+first pod whose host's card was at fault and which never started. 3.24 left the leader with a
+fast kink and a margin below zero (-0.047 in DFT, with the matrix, a ferroelectric, between it
+and zero), and the potential unable to do its nitrile. What was asked here: rows that keep the
+leader's other two features (a reversed VDF unit first, and a VDF eleventh where the film's
+composition has its fourth TrFE) with a chlorine unit or nothing in place of the nitrile,
+screened in the potential for a margin above zero from their lowest cells, and DFT on the best.
+
+**How a row's cells are made.** No row here was built from nothing. `examples/screen14.py
+starts` takes a cell the potential has relaxed and changes substituents where they stand
+(`registry_cells.morphed`: a hydrogen, fluorine or chlorine made another at its own bond
+length, a nitrile made or unmade, each chain checked afterwards to be the row's molecule), so
+a row starts from a packing that is at rest for a neighbour of it.
+`examples/gpu_jobs/screen_card.sh` relaxes the cells on the card four side by side to 0.004
+eV/A, and `screen14.py table` takes a row's margin as its lowest all-trans cell less its
+lowest helix cell, kcal/mol per monomer, a cell counted only if it is at rest and still the
+conformation it was made as. Seventeen rows (`examples/screen14_starts.sh`), three of them
+controls whose answer is known: the film's composition, the matrix and the leader.
+
+**A made cell keeps the packing of the cell it is made of, and that decided the screen.** The
+first two files gave every row the film composition's two all-trans cells (its low cell of 3.24
+and its upright one) and its four helix cells. Two controls came back right: the film's
+composition made of itself is itself (+0.072), and the matrix has its known margin (-0.087
+against -0.089 from its own cells). Two checks then said the cells were not enough.
+
+- The matrix's upright all-trans cell made of the film composition's upright cell rests 1.01
+  kcal/mol per chain above the matrix's own upright cell: the pattern of small twists of an
+  all-trans chain's backbone bonds (3.24) comes through from the source. A third file gave
+  every row the matrix's regular pattern and, nine rows, polyfind's own built cell of the row.
+  It lowered the all-trans side of no candidate (and of one row at all, the CTFE row with a
+  reversed unit, by 0.31 per chain, its cell still moving).
+- **The leader as a control came back at -0.342, and its own cells give -0.070.** 0.61 per
+  chain of the difference is its all-trans side and 4.42 is its helix side: the leader's own
+  lowest helix cell is a packing of its own (5.25 by 9.84 A, the chains at 94 degrees to the
+  long edge; the film composition's four are 5.14 to 5.25 by 9.9 to 10.1 A, leaning 3 to 8
+  degrees two ways), and the leader made of the film composition's four helix cells rests 4.4
+  to 9.3 above it. So a fourth file gave every row the leader's own helix cell and its own
+  upright all-trans cell (the nitrile made the row's unit, its nitrogen removed) and, six rows,
+  the nitrile composition's helix cell, a third packing. With those the leader comes back at
+  -0.069.
+
+**The table, in the potential.** All-trans less helix, kcal/mol per monomer, from each row's
+lowest cells at rest; the last column is the leader's helix packing against the row's best
+helix cell of the film composition's four, kcal/mol per chain
+(`docs/predictions/screen14_potential_d.json`; `_a` to `_c` are the table after each earlier
+file):
+
+| row | sequence | files A and B | **all four files** | its lowest all-trans, helix cell | the leader's helix packing against its best of the film composition's four |
+|---|---|---:|---:|---|---:|
+| the film's composition with a VDF eleventh | `VVRVVRVCVVVVVR` | +0.410 | **+0.410** | low, TGTGp | +1.04 |
+| CDFE first, and the CFE | `DVRVVRVCVVRVVR` | +0.313 | **+0.313** | low, GTGpT | not run |
+| no pin, a VDF eleventh | `VVRVVRVVVVVVVR` | +0.243 | **+0.243** | low, TGTGp | +0.56 |
+| **the leader with a CFE for its nitrile** | `IVRVVRVCVVVVVR` | +0.088 | **+0.201** | ldr, ldr | -1.62 |
+| the film's composition (control) | `VVRVVRVCVVRVVR` | +0.072 | **+0.072** | low, TGTGp | +1.84 |
+| **the leader with a VDF for its nitrile (no pin)** | `IVRVVRVVVVVVVR` | -0.091 | **+0.071** | low, ldr | -2.26 |
+| the film's composition with a reversed unit first | `IVRVVRVCVVRVVR` | -0.033 | **-0.033** | low, GTGpT | +1.85 |
+| the leader with a CTFE for its nitrile | `IVRVVRVKVVVVVR` | -0.246 | **-0.053** | low, ldr | -2.70 |
+| the leader (control) | `IVRVVRVAVVVVVR` | -0.342 | **-0.069** | own, ldr | -4.43 (its own cell) |
+| the matrix (control) | `VVRVVRVVVVRVVR` | -0.087 | **-0.087** | low, GTGpT | +1.66 |
+| a fifth TrFE for the CFE | `VVRVVRVRVVRVVR` | -0.102 | **-0.102** | low, GpTGT | +1.89 |
+| CDFE for the CFE | `VVRVVRVDVVRVVR` | -0.110 | **-0.110** | low, TGTGp | +0.78, moving |
+| the matrix with a reversed unit first | `IVRVVRVVVVRVVR` | -0.178 | **-0.178** | low, GTGpT | +1.90 |
+| ethylene for the CFE | `VVRVVRVEVVRVVR` | -0.249 | **-0.249** | low, GTGpT | +4.20, moving |
+| CTFE for the CFE | `VVRVVRVKVVRVVR` | -0.305 | **-0.305** | low, TGTGp | not run |
+| CTFE for the CFE, a reversed unit first | `IVRVVRVKVVRVVR` | -0.491 | **-0.459** | own, ldr | -0.75 |
+| a reversed unit for the CFE | `VVRVVRVIVVRVVR` | -0.491 | **-0.491** | low, GpTGT | not run |
+
+- **Three margins moved when the rows were given the leader's packings, and the two rows the
+  screen was for are among them.** `IVRVVRVCVVVVVR`, the leader with a CFE for its nitrile, went
+  from +0.088 to +0.201; `IVRVVRVVVVVVVR`, the leader with a VDF there and no pin at all, from
+  -0.091 to +0.071; the same with a CTFE from -0.246 to -0.053. These are the rows that have
+  both the leader's reversed unit first and its VDF eleventh: its helix packing is 1.6 to 2.7
+  kcal/mol per chain below their best of the film composition's four (4.43 for the leader
+  itself). Of the other rows only the CTFE row with a reversed unit takes it (0.75 lower);
+  for the rest it is 0.6 to 1.9 above their own helix cells, the two controls among them (the
+  film's composition 1.84, the matrix 1.66).
+- **The three features add.** A VDF eleventh in place of the fourth TrFE (21 against 29 mol%
+  TrFE) raises the margin by 0.23 to 0.34 (four pairs of rows); a reversed unit first lowers it
+  by 0.09 to 0.21 (four pairs); a CFE eighth in place of a VDF raises it by 0.13 to 0.17 (four
+  pairs). The no-pin row comes to the film composition's margin (+0.071 against +0.072) with
+  no chlorine in it: the matrix's -0.087, +0.33 for the VDF eleventh, -0.17 for the reversed
+  unit.
+- The CTFE rows are not believed: the CTFE row's low all-trans cell is 6.35 per chain below its
+  upright one, in another registry and with a bond 43 degrees off trans, and the composition is
+  a relaxor in fact while the potential has it at -0.305. They were not put to DFT.
+- Not complete: the fourth file stopped at its 3000 s with 8 of its 39 cells not run and 4 still
+  moving. Three rows never had the leader's helix packing (the CTFE row, the row with CDFE
+  first and a CFE, the row with a reversed unit eighth); none is near zero.
+
+**DFT on the CFE row: +0.196, the potential's number from its lowest cells, and 0.12 away
+from it on the cells that are not lowest.** Four cells of `IVRVVRVCVVVVVR` labelled
+(PBE-D3(BJ) single points on the potential's cells, largest force left 0.07 to 0.23 eV/A;
+three on the processors in 80 to 96 minutes each, its helix in the leader's packing on the
+card in 49). kcal/mol per chain against its upright all-trans cell
+(`docs/predictions/screen14_dft.json`, `mlip/screen14_frames_pbe_d3bj.extxyz`):
+
+| cell | DFT | the potential |
+|---|---:|---:|
+| all-trans, the film composition's upright pattern | 0 | 0 |
+| all-trans, the film composition's low pattern | +1.51 | +0.18 |
+| helix, the film composition's packing | +0.49 | -1.23 |
+| helix, the leader's packing | **-2.75** | -2.85 |
+
+- From its lowest labelled cells all-trans less helix is **+0.196** kcal/mol per monomer in DFT
+  and +0.204 in the potential on the same two cells (+0.201 from the potential's own lowest:
+  its all-trans cell in the leader's pattern is 0.03 per chain lower and was not labelled).
+- On the first pair labelled, the upright all-trans cell and the helix in the film composition's
+  packing, DFT has -0.035 where the potential has +0.088. Had the screen stopped at its first
+  two files the row would have read +0.088 in the potential, -0.035 in DFT, and both would have
+  been the wrong helix cell. DFT has the leader's packing 3.24 per chain below the other helix;
+  the potential has it 1.62.
+- The margin is three times the film composition's +0.063 from its lowest labelled cells
+  (3.24), and further from zero than any cell DFT has had at this size.
+- The processors labelled the helix cell in the leader's packing a second time (a line that was
+  not emptied in time): 2e-8 Ry from the card's energy and 2e-5 eV/A on the forces, as in 3.22.
+- The first label of the pod was left from 3.24: the film composition's all-trans cell with
+  every chain turned 117 degrees and its neighbours where the upright cell has them is 0.00 from
+  the upright cell in DFT (the potential -0.02). The 0.84 of its low cell is not the turn's.
+- **There was time for one row's margin, not the three the eight hours were chosen for.** The
+  first pod of the go never started, the two extra files of cells took the card for an hour and
+  a half, and a job of mine that was to put this row's lowest helix cell at the front of the
+  processors' line failed without output (it read a file that does not exist until the other
+  line is started, under `set -e`), which cost the processors their last turn. The no-pin row
+  has no DFT at all.
+
+**Where the kink sits: on the chlorine where there is one, on the run of VDF units where
+there is not.** A row's kink sheets were made the same way, of the film composition's relaxed
+sheets (all 28 sites of the CFE row) and of the leader's own (nine sites of the CFE row, seven
+of the no-pin row), and relaxed on the card; kcal/mol per chain against the row's lowest
+all-trans cell, sheets at rest with the kink kept (`screen14_sheets_1.json`,
+`screen14_sheets_2.json`):
+
+| | cheapest sites | for comparison (3.24, each against its upright all-trans cell) |
+|---|---|---|
+| `IVRVVRVCVVVVVR`, of the film composition's sheets (25 of 28 relaxed, 20 at rest) | **12 (VC) -4.84, 14m (CV) -4.21**; 10 (RV) -2.17, 16 (VV) -1.84, 18 (VV) -1.55 | the film's composition: 14m -5.26, 12 -3.56 (-3.99, -2.29 against its low all-trans cell) |
+| the same, of the leader's sheets (8 of 9, 6 at rest) | 12 (VC) -2.92; 16m -2.21, 18m -2.04, 20m -1.78, 18 -1.48 | |
+| `IVRVVRVVVVVVVR`, of the leader's sheets (6 of 7, 4 at rest) | **18m -1.87, 20m -1.72, 16m -1.60**; 18 +0.37 | the leader: 18m -1.32, 18 -1.25, 16m -1.20, 20m -0.93 |
+
+The chlorine takes the kink back: the CFE row's cheapest sheet is at its chlorine and as deep
+as the film composition's (its upright all-trans cell is 0.03 above its lowest, so the two
+columns compare). Its helix is 2.82 per chain below all-trans in the potential, so,
+as in the film's composition (3.21), a sheet kinked at the chlorine is the lowest cell the row
+has. The no-pin row's kink is where the leader's is, 0.5 deeper, but on one hand of the kink
+only: at site 18, where the leader's two hands are level (-1.25, -1.32), the no-pin row's are
+2.23 apart.
+
+**How it moves: neither row's cheapest kink hops as the leader's does.** Step scans in the
+potential as in 3.23 (`examples/gpu_jobs/steps_card.sh`, twelve points, each of the kink's two
+gauche bonds led to trans in turn with the other free), kcal/mol per chain against the relaxed
+sheet each started from. A first leg that arrives at a stretched kink has moved the led bond
+a monomer along: that is the hop (`examples/screen14.py hops`,
+`docs/predictions/screen14_hops.json`; the film composition's and the leader's stored scans
+are put through the same summary):
+
+| the kink | its sheet against the row's cheapest | first legs: top, where it arrives | the hop | the kink is removed over |
+|---|---:|---|---:|---:|
+| the film's composition, on its chlorine (3.23) | 0 | 7.70 to one gauche bond; 7.46 to a stretched kink | 7.81 from its relaxed sheet (7.46 from its scan's start; DFT 7.70) | 8.42 from its scan's start |
+| the leader, on its VDF run, site 18 (3.23) | +0.07 | 7.01 and 5.67, both to a stretched kink | **5.67** (DFT 5.13) | 7.25 |
+| `IVRVVRVCVVVVVR`, on its chlorine, site 12 | 0 | 6.45 and 7.28, both to a stretched kink | **6.45** | 10.39 |
+| the same, on its VDF run, site 16m | +2.63 | 4.60 to one gauche bond; 4.87 to a stretched kink | 4.87 | 4.60 |
+| `IVRVVRVVVVVVVR`, on its VDF run, site 18m | 0 | 7.55 to a stretched kink; 7.62 to one gauche bond | **7.55** | 7.69 |
+| the same at the leader's site and hand, 18 | +2.23 | 3.41 to all-trans; 5.58 to a stretched kink | 5.58 | 3.41 |
+
+- **The leader's hop is a property of that kink, not of the nitrile**: the no-pin row at the
+  leader's site and hand hops over 5.58 where the leader hops over 5.67. But in the no-pin row
+  that kink is 2.23 above the row's cheapest, is removed over 3.41, and the cheapest hops over
+  7.55, 0.26 below the film composition's 7.81. From the cheapest kink the
+  way through the fast one costs 2.23 + 5.58 = 7.81. What the leader has that this row has not
+  is its two hands level; whether its other hand (18m, not scanned) hops as slowly is not
+  known.
+- **The chlorine's kink in the CFE row hops over 6.45**, 1.36 below the film composition's:
+  ten times its rate by the reading of 3.23. A faster kink exists on its VDF run (4.87), 2.63
+  above the chlorine's: through it the way costs 7.50.
+- These are the potential's barriers. On the two cells DFT has been asked about, it was 0.11
+  high (the film's composition) and 0.54 high (the leader).
+
+**The four axes.** A new row has no dipole, switch strain or stiffness of its own (belt4 has
+not built it), so each row's margin and hop are put through the tables of
+`docs/CANDIDATE_MATERIALS.md` 5.6 on the inputs of the two rows nearest it
+(`examples/screen14_axes.sh`, `four_axes_screen14_{a,b}.json`). Frequency is the measured
+film's 364 kHz times exp(-(hop - 7.81) / kT), every hop the potential's; strain is the AC
+strain at the heat budget at 34 kHz; blocked force is per area, through the stand-in row's
+crystal stiffness:
+
+| | margin | frequency | tan delta | AC strain | blocked force, pN/nm2 |
+|---|---:|---:|---:|---:|---:|
+| the film's composition (the anchor) | +0.063, DFT | 364 kHz | 0.088 | 0.081% | 7.6 |
+| `IVRVVRVCVVVVVR` on the leader's inputs | +0.196, DFT | 3.6 MHz | 0.0012 | 0.057% | 2.7 |
+| the same on `IVRVVRVCVVRVVR`'s inputs | +0.196, DFT | 3.6 MHz | 0.0013 | 0.073% | no stiffness for that row |
+| `IVRVVRVVVVVVVR` on the leader's inputs | +0.071, the potential | 563 kHz | 0.054 | 0.087% | 4.4 |
+| the same on the matrix's inputs | +0.071, the potential | 563 kHz | 0.057 | 0.094% | 9.8 |
+| the leader (3.24: DFT's hops, 5.13 against 7.70), its margin taken as zero | -0.047, DFT | 27 MHz | 0.0008 | 0.184% | 10.0 |
+
+- **The CFE row is a faster, far less lossy and somewhat weaker film's composition**: ten
+  times the rate, a seventieth of the loss, seven to nine tenths of the strain, and about a
+  third of the blocked force on the one stiffness it can be given. A candidate with less strain
+  than the film's composition is not out for that (`CLAUDE.md`), and on rate and loss this row
+  is well ahead of it. **But its strain is not a number yet.** At +0.196 the model has 2% of
+  the material polar at the bias, and the strain runs from 0.13 to 0.14% at +0.146 to 0.014 to
+  0.018% at +0.246: nearly tenfold across 0.05 either way, which is what the potential and DFT
+  differ by on the controls' margins and less than a regular cell's margin carries (3.24). The
+  margin is DFT's on one regular cell; the hop is the potential's.
+- **The no-pin row is the film's composition again, without the chlorine**: 1.5 times the
+  rate, 0.6 of the loss, a tenth more strain, and a blocked force between 0.6 and 1.3 times
+  the anchor's depending on whose stiffness it is given. Its
+  margin is the potential's only, and the potential was 0.12 off on a pair of the CFE row's
+  cells.
+- **Neither is what was looked for.** The leader's two features carried onto a chlorine unit
+  bring back the film composition's kink, a little faster, and a margin three times too far
+  from zero; carried onto nothing they give the film composition's margin and the film
+  composition's hop. The margin can be tuned (one TrFE in fourteen is worth 0.23 to 0.34, and
+  the CFE row sits at +0.20 with three and -0.03 with four): a cell with one chain of each,
+  25 mol% TrFE, is the same size as these and was not made.
+- By the film's assumed modulus the blocked force is the strain again: 0.16 (the anchor), 0.11
+  to 0.15, and 0.17 to 0.19 pN/nm2.
+
+What this is and is not:
+
+- A screen in the potential, with DFT on four cells of one row. On that row the potential's
+  margin from its lowest cells is DFT's to 0.008 kcal/mol per monomer, and on a pair of its
+  cells that is not lowest it is 0.12 off; on the three controls it is within 0.06 (3.24).
+- Not a search. A row has the packings it was given: all-trans in the film composition's two
+  patterns, the matrix's and the leader's, and nine rows their own built cell; helix in the
+  film composition's four cells, the leader's, and six rows the nitrile composition's. The
+  leader's helix packing was found because the leader was a control. A row may have a lower
+  cell of its own that is none of these.
+- The no-pin row's kink was looked for at seven sites of the leader's sheets, all on or beside
+  its run of VDF units, six of them relaxed. Its other sites were not made.
+- The hops are step scans in the potential, twelve points, two orders, from one sheet a kink;
+  none has DFT. One image of one leg (the no-pin row at site 18, the leg that removes the kink)
+  was not at rest when the scan left it.
+- The four axes are the loss model of `docs/CANDIDATE_MATERIALS.md` on another row's dipole,
+  switch strain and stiffness, with the frequency read from the hop as 3.23 reads the film's.
+  They say what a margin and a hop do to a row like these, not what these rows are.
+- Regular cells of two chains and fourteen monomers, every chain's units in one registry with
+  its neighbours'; static energies at zero kelvin (3.24's list holds here unchanged).
+- DFT is a single point on a cell the potential relaxed.
+- Asked for and not done: DFT margins for three rows (one), and DFT at a hop's top (none).
+
+Files: `examples/screen14.py` (`starts`, `table`, `choose`, `dft`, `sheets`, `sheets-table`,
+`hops`), `examples/screen14_starts.sh`, `examples/screen14_axes.sh`;
+`docs/predictions/mlip/screen14_starts_{a,b,c,d}.extxyz` and `screen14_relaxed_{a,b,c,d}.extxyz`
+(166 starts, 158 relaxed), `docs/predictions/screen14_potential_{a,b,c,d}.json`;
+`mlip/screen14_sheets_{1,2}.extxyz`, `mlip/screen14_sheets_{1,2}_relaxed.extxyz`,
+`screen14_sheets_{1,2}.json`; `mlip/screen14_frames_pbe_d3bj.extxyz` (five labels, each with
+`dft_run`), `screen14_dft.json`; `mlip/paths/{nopin,nopin18,lcfe,lcfev}_{a,b}{1,2}.{json,extxyz}`,
+`screen14_hops.json`; `four_axes_screen14_{a,b}.json`. `examples/registry_cells.py`: `morphed`
+takes a cycle of substituents and a cell with a nitrile. The pod's jobs:
+`examples/gpu_jobs/queue_20261122_screen.txt`, `screen_card.sh`, `screen_sheets_card.sh`,
+`screen_dft.sh`, `screen_front.sh`, `screen_card_or.sh`, and `steps_card.sh`, which now reads
+the cells a screen relaxed. Tests: `tests/test_screen14.py`, `tests/test_registry_cells.py`.

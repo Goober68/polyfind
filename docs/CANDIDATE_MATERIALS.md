@@ -265,6 +265,41 @@ lower phase, and a kink pair is one turn of that helix.
   says it may not, and it has nothing in it that raises a margin as the CFE unit does. The
   blocked force is through each cell's own stiffness; by the film's assumed modulus it is 0.16,
   0.37, 0.33, 0.07 and 0.00 to 0.01 pN/nm2, the strain again.
+- **A screen for a row with the leader's fast kink and a margin above zero found none
+  (2026-11-22, `docs/MLIP_SECOND_OPINION.md` 3.25; a fifth rented machine).** Seventeen
+  fourteen-monomer rows without a nitrile, each made of relaxed cells by changing substituents
+  where they stand, relaxed in the potential; DFT on four cells of one row. The two rows that
+  carry the leader's other features (a reversed VDF unit first, a VDF eleventh):
+
+  | | all-trans less helix | where its cheapest kink sits | its hop (the potential) |
+  |---|---:|---|---:|
+  | the film's composition | +0.063, DFT | on its chlorine | 7.81 (DFT 7.70) |
+  | the leader | -0.047, DFT | on its run of VDF units | 5.67 (DFT 5.13) |
+  | `IVRVVRVCVVVVVR`, the leader with a CFE for its nitrile | **+0.196, DFT** (the potential +0.201) | on its chlorine, 4.84 below all-trans | **6.45** |
+  | `IVRVVRVVVVVVVR`, the leader with a VDF there, no pin | **+0.071**, the potential only | on its run of VDF units, 1.87 below | **7.55** |
+
+  The chlorine takes the kink back and puts the margin three times further from zero than the
+  film composition's; with no pin the margin is the film composition's and so is the hop. The
+  leader's hop is there in the no-pin row at the leader's own site and hand (5.58), on a kink
+  2.23 above that row's cheapest. On the four axes, each row on the dipole, switch strain and
+  stiffness of the two rows nearest it (it has none of its own), frequency by the hop:
+
+  | | frequency | tan delta | AC strain | blocked force per area, pN/nm2 |
+  |---|---:|---:|---:|---:|
+  | the film's composition (the anchor) | 364 kHz | 0.088 | 0.081% | 7.6 |
+  | `IVRVVRVCVVVVVR` | 3.6 MHz | 0.0012 to 0.0013 | 0.057 to 0.073% | 2.7 (the leader's stiffness) |
+  | `IVRVVRVVVVVVVR` | 563 kHz | 0.054 to 0.057 | 0.087 to 0.094% | 4.4 to 9.8 |
+
+  **The CFE row is a faster and far less lossy film's composition with less strain and a third
+  of the blocked force, and its strain is not settled**: it runs from 0.14% to 0.014% over 0.05
+  of margin either way. The no-pin row is the film's composition again without the chlorine,
+  on a margin DFT has not seen. The margin is tunable (one TrFE in fourteen is worth 0.23 to
+  0.34; the CFE row is at +0.20 with three and -0.03 with four), and a cell with one chain of
+  each, 25 mol% TrFE, was not made. **What the screen taught about the method: a cell made of
+  another keeps its packing.** The leader as a control came back 0.27 a monomer too low until it
+  was given its own helix packing, and the two rows above moved by 0.11 and 0.16 with it; on
+  the CFE row DFT agrees with the potential to 0.008 on the lowest cells and differs by 0.12
+  on the pair that is not. DFT covered one row's margin where three were planned.
 - **The nitrile unit does not hold a kink**: the nitrile cell's sheet at the nitrile unit
   itself is 3.64 above all-trans in DFT (the potential 2.18). The chlorine holds one 4.2 to
   5.0 deep.
