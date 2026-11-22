@@ -31,3 +31,17 @@ screen_card.sh docs/predictions/mlip/screen14_starts_a.extxyz 4 1000 5400 2 proc
 #
 # File B: 54 cells.  The card is free for DFT after it, so its chosen go to both lines.
 screen_card.sh docs/predictions/mlip/screen14_starts_b.extxyz 4 1000 6600 2
+#
+# 16:40 UTC.  (This pod is the second of the go: the first, 0naokkrqptuyi5, never started, its host's card at
+# fault, and was deleted after 23 minutes; this one's limit is shorter by that.)
+#
+# A check of the method made off the pod while the queue above was written: the matrix's upright all-trans cell
+# made of the film composition's upright cell comes to rest 1.01 kcal/mol per chain ABOVE the matrix's own upright
+# cell (its helix made the same way is within 0.13 of the matrix's own and falling).  A made cell keeps the pattern
+# of small twists of its backbone bonds that the cell it is made of has, and the film composition's upright pattern
+# is not the matrix's.  So a row's all-trans side is only as low as the patterns it was given: files A and B give
+# two (the film composition's low cell's and its upright cell's).  File C gives every row a third, the matrix's own
+# regular pattern, and nine rows their own upright cell (polyfind's cell of the row under chain1-cfe, as built; the
+# leader's labelled one).  From here on the table after each job is of all three files, and a row's all-trans energy
+# is the lowest of what it has.  25 cells.
+screen_card.sh docs/predictions/mlip/screen14_starts_c.extxyz 4 1000 2700 2

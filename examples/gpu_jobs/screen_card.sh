@@ -12,11 +12,12 @@
 # STARTS goes on where the earlier one stopped.  Meanwhile, on the first job, the processors build the DFT program for the
 # card (examples/gpu_jobs/qe_gpu_build.sh).
 #
-# Then into $JOB_OUT: screen_table.json (examples/screen14.py table), screen_relaxed.extxyz, chosen.txt.  The rows whose
+# Then into $JOB_OUT: screen_table.json (examples/screen14.py table, of every file of the screen's starts in the
+# repository with whatever of them is relaxed so far), screen_relaxed.extxyz, chosen.txt.  The rows whose
 # margin in the potential is between SCREEN_LOW and SCREEN_HIGH (-0.06 and +0.14 kcal/mol per monomer: the potential has
 # the film's composition 0.01 above DFT and the matrix 0.06 below, and the margins wanted are DFT's 0 to +0.12), MOST of
 # them at most (default 2), the ones with every cell at rest first, have their lowest all-trans cell, lowest helix cell
-# and other all-trans cell put on the two DFT lines (the card's line, then the processors').  Rows in SCREEN_SKIP (the
+# and next all-trans cell up put on the two DFT lines (the card's line, then the processors').  Rows in SCREEN_SKIP (the
 # controls: they have DFT) and cells in a DFT line already are left out.  WHERE is `both` (the default), `processors`
 # (every chosen cell on the processors' line: for a job that is followed by another on the card, where a DFT cell would
 # crawl beside the relaxations) or `none`.  SCREEN_NO_DFT=1 puts nothing in line and builds nothing.
@@ -59,7 +60,8 @@ echo "relaxed for $(( $(date +%s) - t0 )) s on $MLIP_DEVICE, $SIDE side by side"
 grep -h "steps, " "$JOB_OUT"/relax_*.log || true
 [ -n "${BUILD:-}" ] && { wait "$BUILD" || true; tail -n 2 "$JOB_OUT/processors.log"; }
 
-"$PY" examples/screen14.py table --starts "$STARTS" --relaxed "$RELAXED" --out "$JOB_OUT/screen_table.json" --frames-out "$JOB_OUT/screen_relaxed.extxyz" || exit 1
+# the table is of every file of the screen's starts, this job's among them: a row's cells are in more than one
+"$PY" examples/screen14.py table --starts docs/predictions/mlip/screen14_starts_*.extxyz --relaxed "$RELAXED" --out "$JOB_OUT/screen_table.json" --frames-out "$JOB_OUT/screen_relaxed.extxyz" || exit 1
 "$PY" examples/screen14.py choose --table "$JOB_OUT/screen_table.json" --window "${SCREEN_LOW:--0.06}" "${SCREEN_HIGH:-0.14}" --most "$MOST" \
   --skip ${SCREEN_SKIP:-vdf9-trfe4-cfe1-14 vdf10-trfe4-14 vdf9-trfe3-an1-rvdf1-14} > "$JOB_OUT/chosen_all.txt" || exit 1
 # cells in a DFT line already are not put there again

@@ -52,6 +52,39 @@ def starts():
     return read(MLIP / "screen14_starts_a.extxyz", index=":"), read(MLIP / "screen14_starts_b.extxyz", index=":")
 
 
+# the rows polyfind has a cell of under chain1-cfe, and the leader, whose own upright cell is labelled
+OWN = ("vdf8-trfe4-cfe1-rvdf1-14", "vdf8-trfe4-ctfe1-rvdf1-14", "vdf9-trfe4-ctfe1-14", "vdf9-trfe5-14", "vdf9-trfe4-cdfe1-14", "vdf8-trfe4-cfe1-cdfe1-14", "vdf9-trfe4-rvdf1-14",
+       "vdf9-trfe4-e1-14", "vdf9-trfe3-an1-rvdf1-14")
+
+
+def test_the_third_file_gives_every_row_all_trans_cells_in_more_patterns(sources):
+    """tt_reg: made of the matrix's own upright cell (the regular pattern of twists); tt_own: the row's own upright cell where there is one."""
+    from ase.geometry import find_mic
+    from ase.io import read
+
+    scr, reg, path = _load("screen14"), _load("registry_cells"), _load("mlip_path")
+    cells = read(MLIP / "screen14_starts_c.extxyz", index=":")
+    rows = dict(ROWS_A, **ROWS_B)
+    order = [r for r in list(ROWS_A) if r not in (FILM, "vdf10-trfe4-14")] + [FILM] + list(ROWS_B)       # the matrix made of its own cell is its own cell: not here
+    assert [str(a.info["frame"]) for a in cells] == [f"scr_{r}_{k}" for r in order for k in (("tt_own", "tt_reg") if r in OWN else ("tt_reg",))]
+    for a in cells:
+        row, kind = str(a.info["screen_row"]), str(a.info["screen_kind"])
+        assert all(reg.same_molecule(chain, scr.cycle_of(rows[row])) for chain in reg.substituents(a)) and reg.gauche(a, path) == 0
+        if kind == "tt_reg":
+            source = sources["matrix_tt"]
+            assert str(a.info["screen_from"]) == "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1" and np.abs(a.cell.array - source.cell.array).max() < 1e-12
+            backbone = sorted({q[0] for q in path.backbone_torsions(a)})
+            assert np.abs(find_mic(a.positions[backbone] - source.positions[backbone], a.cell, pbc=True)[0]).max() < 1e-8
+            assert int(a.info["screen_changed"]) == 2 * sum(x != y for x, y in zip(scr.cycle_of(rows[row]), scr.cycle_of("VVRVVRVVVVRVVR")))
+        else:
+            assert int(a.info["screen_changed"]) == 0 and str(a.info["screen_from"]) == ("tt_leader_from_rows14an_r1" if "an1" in row else f"row_{row}_TTTT_cfe")
+    leader = {str(a.info["frame"]): a for a in cells}["scr_vdf9-trfe3-an1-rvdf1-14_tt_own"]
+    assert np.abs(find_mic(leader.positions - sources["leader_tt"].positions, leader.cell, pbc=True)[0]).max() < 1e-8
+    # the two patterns the made cells start in are not one: the film composition's upright cell and the matrix's own differ by 16 degrees rms in their backbone twists
+    twists = lambda x: np.where(path.torsions_deg(x, path.backbone_torsions(x)) > 0, -180.0, 180.0) + path.torsions_deg(x, path.backbone_torsions(x))
+    assert np.sqrt(((twists(sources["tt_up"]) - twists(sources["matrix_tt"])) ** 2).mean()) == pytest.approx(15.8, abs=0.3)
+
+
 def test_a_sequences_letters_spell_the_chain_the_labelled_cells_have(sources):
     scr, reg = _load("screen14"), _load("registry_cells")
     for letters in list(ROWS_A.values()) + list(ROWS_B.values()) + ["XFEDKCARIV"]:
@@ -128,7 +161,8 @@ def test_the_table_gives_the_film_compositions_known_margins_from_its_own_cells(
     assert (row["margin"], row["margin_upright"], row["low_less_upright_per_chain"]) == pytest.approx((0.072, 0.163, -1.27), abs=0.006)
     # the four placements of the helix: two pairs, 0.46 per chain apart
     assert sorted(round(v, 2) for v in row["helix_placements_per_chain"].values()) == [0.0, 0.0, 0.46, 0.46]
-    # inside the window it is chosen with its lowest all-trans cell, its lowest helix cell and the other all-trans cell; a control is left out by name
+    assert {k: round(v, 2) for k, v in row["all_trans_per_chain"].items()} == {"tt_low": 0.0, "tt_up": 1.27}
+    # inside the window it is chosen with its lowest all-trans cell, its lowest helix cell and the next all-trans cell up; a control is left out by name
     assert scr.chosen(rows, -0.06, 0.14) == [(FILM, [f"scr_{FILM}_tt_low_in_all_s1", f"scr_{FILM}_hx_TGTGp_in_all_s1", f"scr_{FILM}_tt_up_in_all_s1"])]
     assert scr.chosen(rows, -0.06, 0.14, skip={FILM}) == [] and scr.chosen(rows, 0.10, 0.14) == []
     # a cell that leaves its conformation does not set a margin, and one not at rest makes the row incomplete
