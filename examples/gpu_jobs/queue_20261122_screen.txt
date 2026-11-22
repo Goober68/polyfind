@@ -60,13 +60,16 @@ screen_card.sh docs/predictions/mlip/screen14_starts_c.extxyz 4 1000 2700 2
 # cell is a packing of its own (5.25 by 9.84 A, the chain at 94 degrees to the long edge), and the leader made of
 # the film composition's four helix cells rests 4.4 to 9.3 above it.  So a row's helix side too is only as low as
 # the packings it was given, and a margin from the film composition's four alone can be too LOW by 0.3 a monomer.
-# File D: every row made of the leader's own lowest helix cell (hx_ldr), and six rows of the nitrile
-# composition's as well (hx_an, a third packing).  23 cells.  This line stands where the sheets' line stood: that
-# job had not started, and the pod takes the line by its number when it gets there.
-screen_card.sh docs/predictions/mlip/screen14_starts_d.extxyz 4 1000 2700 2 none
-# The row in the window's lowest helix cell after file D, in front of the processors' line if it is a new one
-# (the processors have its helix made of the film composition's cell from about 19:50 to 21:25).
-screen_front.sh processors hx vdf9-trfe3-cfe1-rvdf1-14
+# File D: every row made of the leader's own lowest helix cell (hx_ldr) and of its own upright all-trans cell
+# (tt_ldr), and six rows of the nitrile composition's helix cell as well (hx_an, a third packing).  39 cells, the
+# rows in the order they matter (the two in the window, the leader, the film's composition, the matrix, then the
+# rest); the job stops at 3000 s and what it has not relaxed is not run.  This line stands where the sheets' line
+# stood: that job had not started, and the pod takes the line by its number when it gets there.
+screen_card.sh docs/predictions/mlip/screen14_starts_d.extxyz 4 1000 3000 2 none
+# The row in the window's lowest helix cell and lowest all-trans cell after file D, in front of the processors'
+# line where they are new ones (the processors have its helix made of the film composition's cell from about
+# 19:50 to 21:25, and time for one more cell after it).
+screen_front.sh processors both vdf9-trfe3-cfe1-rvdf1-14
 #
 # The kink of the row in the window: its sheets at every site (28: fourteen sites and the kink's two hands), made
 # of the film composition's relaxed sheets the same way, against its lowest all-trans cell.  Where its kink sits

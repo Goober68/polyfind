@@ -25,7 +25,10 @@
 #   of the film composition's four helix cells rests 4.4 kcal/mol per chain above it at the least.  So: hx_ldr, every row
 #   made of the leader's lowest helix cell (the nitrile made a chlorine or what the row has there, its nitrogen removed),
 #   and for six rows hx_an, the same of the nitrile composition's lowest helix cell (a third packing: 5.58 by 9.75, the
-#   other angle 74).  The leader's hx_ldr is its own cell: nothing changes.
+#   other angle 74).  The leader's hx_ldr is its own cell: nothing changes.  And the all-trans side once more: the leader's
+#   own upright cell is 0.61 below the leader made of the film composition's, so tt_ldr, every other row made of the
+#   leader's own upright all-trans cell.  The rows come in the order they matter (the two in the window first): the
+#   pod's job stops at its budget.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT_A="${1:-docs/predictions/mlip/screen14_starts_a.extxyz}"
@@ -83,24 +86,28 @@ python -I examples/screen14.py starts --frames $FRAMES "$OWN"/*.start.xyz --sour
   vdf9-trfe4-e1-14=VVRVVRVEVVRVVR \
   vdf9-trfe3-an1-rvdf1-14=IVRVVRVAVVVVVR
 # file D
-python -I examples/screen14.py starts --frames $FRAMES --source hx_ldr=helix_leader_TGTGp_r1_in_all_s1 hx_an=row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1 --out "$OWN/d1.extxyz" --row \
+LDR="hx_ldr=helix_leader_TGTGp_r1_in_all_s1 tt_ldr=tt_leader_from_rows14an_r1"
+AN="hx_an=row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1"
+python -I examples/screen14.py starts --frames $FRAMES --source $LDR $AN --out "$OWN/d1.extxyz" --row \
   vdf9-trfe3-cfe1-rvdf1-14=IVRVVRVCVVVVVR \
-  vdf8-trfe4-cfe1-rvdf1-14=IVRVVRVCVVRVVR \
+  vdf8-trfe4-cfe1-rvdf1-14=IVRVVRVCVVRVVR
+python -I examples/screen14.py starts --frames $FRAMES --source hx_ldr=helix_leader_TGTGp_r1_in_all_s1 $AN --out "$OWN/d2.extxyz" --row \
+  vdf9-trfe3-an1-rvdf1-14=IVRVVRVAVVVVVR
+python -I examples/screen14.py starts --frames $FRAMES --source $LDR $AN --out "$OWN/d3.extxyz" --row \
   vdf9-trfe4-cfe1-14=VVRVVRVCVVRVVR \
-  vdf9-trfe3-an1-rvdf1-14=IVRVVRVAVVVVVR \
   vdf10-trfe4-14=VVRVVRVVVVRVVR \
   vdf10-trfe3-rvdf1-14=IVRVVRVVVVVVVR
-python -I examples/screen14.py starts --frames $FRAMES --source hx_ldr=helix_leader_TGTGp_r1_in_all_s1 --out "$OWN/d2.extxyz" --row \
+python -I examples/screen14.py starts --frames $FRAMES --source $LDR --out "$OWN/d4.extxyz" --row \
   vdf9-trfe4-rvdf1-first-14=IVRVVRVVVVRVVR \
-  vdf10-trfe3-cfe1-14=VVRVVRVCVVVVVR \
+  vdf9-trfe3-ctfe1-rvdf1-14=IVRVVRVKVVVVVR \
+  vdf8-trfe4-ctfe1-rvdf1-14=IVRVVRVKVVRVVR \
   vdf9-trfe5-14=VVRVVRVRVVRVVR \
   vdf9-trfe4-cdfe1-14=VVRVVRVDVVRVVR \
-  vdf9-trfe3-ctfe1-rvdf1-14=IVRVVRVKVVVVVR \
+  vdf10-trfe3-cfe1-14=VVRVVRVCVVVVVR \
   vdf9-trfe4-ctfe1-14=VVRVVRVKVVRVVR \
   vdf11-trfe3-14=VVRVVRVVVVVVVR \
   vdf8-trfe4-cfe1-cdfe1-14=DVRVVRVCVVRVVR \
-  vdf8-trfe4-ctfe1-rvdf1-14=IVRVVRVKVVRVVR \
   vdf9-trfe4-e1-14=VVRVVRVEVVRVVR \
   vdf9-trfe4-rvdf1-14=VVRVVRVIVVRVVR
-cat "$OWN/d1.extxyz" "$OWN/d2.extxyz" > "$OUT_D"
+cat "$OWN"/d[1234].extxyz > "$OUT_D"
 echo "file D: $(grep -c '^1[67][0-9]$' "$OUT_D") cells in $OUT_D"
