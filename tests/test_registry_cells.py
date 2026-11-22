@@ -345,7 +345,7 @@ def test_the_leader_does_not_have_the_low_cell_in_the_potential(labelled):
     tool, path = _load("registry_cells"), _load("mlip_path")
     table = json.loads((ROOT / "docs" / "predictions" / "registry_as_film_leader.json").read_text())["rows"]
     row = table["reg_leader_tt_as_film_low"]
-    assert len(table) == 1 and row["converged"] and row["conformation_kept"] and row["gauche_torsions"] == 0
+    assert len(table) == 1 and row["converged"] and row["conformation_kept"] and row["gauche_torsions"] == 0 and row["steps"] == 519     # the pod's card: the same 1.0222 in the same 519 steps
     assert row["energy"] == pytest.approx(1.02, abs=0.006) and row["shear_along_chains_monomers"] == pytest.approx([0.98, -0.96], abs=0.006)     # above its upright cell, in the low cell's registry
     a, up = read(MLIP / "registry_as_film_leader_relaxed.extxyz", index=0), labelled[CELLS["leader"][0]]
     assert str(a.info["frame"]) == "reg_leader_tt_as_film_low_in_all_s1" and all(any(tool.same_molecule(m, t) for t in tool.substituents(up)) for m in tool.substituents(a))

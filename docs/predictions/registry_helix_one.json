@@ -1,0 +1,270 @@
+{
+ "what": "cells made from labelled cells by examples/registry_cells.py (neighbours moved whole monomers along the chains, chains turned about their axes) and relaxed in the potential: energy is kcal/mol per chain against the labelled cell each was made from, in the potential with D3",
+ "starts": "docs/predictions/mlip/registry_starts_helix_one.extxyz",
+ "rows": {
+  "reg_film_hx_p1m1_tz0": {
+   "relaxed": true,
+   "frame": "reg_film_hx_p1m1_tz0_in_all_s1",
+   "label": "film",
+   "conformation": "hx",
+   "of": "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 800,
+   "energy": 8.41127015797108,
+   "shear_along_chains_monomers": [
+    1.2255802512663823,
+    -0.6828725432492198
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.25975533661824735,
+    0.2818864496102081
+   ],
+   "dipole_from_a_deg": 5.825786552992677,
+   "dipole_from_a_deg_labelled": 16.19336285124008,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.021662275095671,
+    10.790988090890435,
+    32.72633851451118
+   ]
+  },
+  "reg_film_hx_m1p1_tz0": {
+   "relaxed": true,
+   "frame": "reg_film_hx_m1p1_tz0_in_all_s1",
+   "label": "film",
+   "conformation": "hx",
+   "of": "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 800,
+   "energy": 7.678267531367893,
+   "shear_along_chains_monomers": [
+    -0.6190640714519836,
+    1.7037364317195174
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.25975533661824735,
+    0.2818864496102081
+   ],
+   "dipole_from_a_deg": 16.462009335350285,
+   "dipole_from_a_deg_labelled": 16.19336285124008,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.5182331505521685,
+    11.221727782460421,
+    32.43062019599824
+   ]
+  },
+  "reg_matrix_hx_p1m1_tz0": {
+   "relaxed": true,
+   "frame": "reg_matrix_hx_p1m1_tz0_in_all_s1",
+   "label": "matrix",
+   "conformation": "hx",
+   "of": "row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 800,
+   "energy": 8.769969105163215,
+   "shear_along_chains_monomers": [
+    1.0230885988931202,
+    -0.9242574022764756
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.2850863623085027,
+    0.20513833138175105
+   ],
+   "dipole_from_a_deg": 6.0976415978699885,
+   "dipole_from_a_deg_labelled": 14.207175129107275,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.7752082953558785,
+    10.65619162306912,
+    32.72289510963249
+   ]
+  },
+  "reg_matrix_hx_m1p1_tz0": {
+   "relaxed": true,
+   "frame": "reg_matrix_hx_m1p1_tz0_in_all_s1",
+   "label": "matrix",
+   "conformation": "hx",
+   "of": "row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": 0,
+   "converged": true,
+   "steps": 496,
+   "energy": 7.787381501777955,
+   "shear_along_chains_monomers": [
+    -0.790323160954065,
+    1.3898102282435367
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.2850863623085027,
+    0.20513833138175105
+   ],
+   "dipole_from_a_deg": 20.051172774560715,
+   "dipole_from_a_deg_labelled": 14.207175129107275,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.611159003048641,
+    10.71094384319252,
+    32.57843879094949
+   ]
+  },
+  "reg_leader_hx_p1m1_tz0": {
+   "relaxed": true,
+   "frame": "reg_leader_hx_p1m1_tz0_in_all_s1",
+   "label": "leader",
+   "conformation": "hx",
+   "of": "helix_leader_TGTGp_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 100,
+   "energy": 8.71686091828045,
+   "shear_along_chains_monomers": [
+    1.0070758401470479,
+    -1.3018396766901394
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -8.738786899104495e-08,
+    -0.29875284263108565
+   ],
+   "dipole_from_a_deg": -3.5523146563789,
+   "dipole_from_a_deg_labelled": 3.8576872453428944e-05,
+   "gauche_torsions": 24,
+   "gauche_torsions_labelled": 24,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.90067052920981,
+    10.519738642739355,
+    32.98834657114264
+   ]
+  },
+  "reg_leader_hx_m1p1_tz0": {
+   "relaxed": true,
+   "frame": "reg_leader_hx_m1p1_tz0_in_all_s1",
+   "label": "leader",
+   "conformation": "hx",
+   "of": "helix_leader_TGTGp_r1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 100,
+   "energy": 11.789622271268732,
+   "shear_along_chains_monomers": [
+    -0.993300257151831,
+    0.6877883850400536
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -8.738786899104495e-08,
+    -0.29875284263108565
+   ],
+   "dipole_from_a_deg": -2.3154785267688593,
+   "dipole_from_a_deg_labelled": 3.8576872453428944e-05,
+   "gauche_torsions": 24,
+   "gauche_torsions_labelled": 24,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.01962705380784,
+    10.552088982547792,
+    32.94159672844076
+   ]
+  },
+  "reg_nitrile_hx_p1m1_tz0": {
+   "relaxed": true,
+   "frame": "reg_nitrile_hx_p1m1_tz0_in_all_s1",
+   "label": "nitrile",
+   "conformation": "hx",
+   "of": "row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 100,
+   "energy": 11.859642452904854,
+   "shear_along_chains_monomers": [
+    1.6712662740073942,
+    -1.0048629032123975
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.6622452803141593,
+    5.848706745435871e-07
+   ],
+   "dipole_from_a_deg": null,
+   "dipole_from_a_deg_labelled": null,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    6.678993760710073,
+    10.122091857410116,
+    32.76479336823343
+   ]
+  },
+  "reg_nitrile_hx_m1p1_tz0": {
+   "relaxed": true,
+   "frame": "reg_nitrile_hx_m1p1_tz0_in_all_s1",
+   "label": "nitrile",
+   "conformation": "hx",
+   "of": "row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1",
+   "shear_asked": [
+    -1,
+    1
+   ],
+   "turn_asked": 0,
+   "converged": false,
+   "steps": 400,
+   "energy": 5.418987995818769,
+   "shear_along_chains_monomers": [
+    -0.17572388002427738,
+    0.6452461647043289
+   ],
+   "shear_along_chains_monomers_labelled": [
+    0.6622452803141593,
+    5.848706745435871e-07
+   ],
+   "dipole_from_a_deg": null,
+   "dipole_from_a_deg_labelled": null,
+   "gauche_torsions": 28,
+   "gauche_torsions_labelled": 28,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.474927327579896,
+    10.260977411249534,
+    32.40401838203997
+   ]
+  }
+ }
+}
