@@ -14,7 +14,9 @@ source "$HERE/mlip_env.sh"
 SHARED="$(dirname "$JOB_OUT")/shared"
 TABLE="$( (ls "$(dirname "$JOB_OUT")"/*_screen_card/screen_table.json 2>/dev/null || true) | sort | tail -n 1)"
 [ -n "$TABLE" ] || { echo "no screen job on this pod has a table"; exit 1; }
-INLINE="$(cat "$SHARED"/dft/line.txt "$SHARED"/dft_card/line.txt 2>/dev/null | awk '{print $3}' | tr '\n' ' ')"
+# (a line that has never been started has no file: cat fails on it, and under `set -e` with pipefail that ended the
+# first run of this script on the fifth pod without a word)
+INLINE="$( (cat "$SHARED"/dft/line.txt "$SHARED"/dft_card/line.txt 2>/dev/null || true) | awk '{print $3}' | tr '\n' ' ')"
 # last named is first run: `next` puts each in front of what is there
 NAMES="$("$PY" - "$TABLE" "$WHICH" "$@" <<'PY'
 import json, sys

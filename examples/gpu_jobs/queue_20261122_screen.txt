@@ -76,3 +76,14 @@ screen_front.sh processors both vdf9-trfe3-cfe1-rvdf1-14
 # and how deep says what holds it: 4.0 deep on the chlorine in the film's composition (the potential), whose end
 # moves over 7.7; 0.7 deep on a run of VDF units in the leader, whose end moves over 5.1.
 screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_1.extxyz 4 1000 2700
+#
+# 20:45 UTC.  File D is in (31 of its 39 cells, stopped at its 3000 s) and it moved margins, as the leader said it
+# would.  The leader itself now comes back at -0.069 (its own cells: -0.070).  IVRVVRVCVVVVVR: its helix in the
+# leader's packing is 1.62 kcal/mol per chain below its best before, margin +0.201 (was +0.088).  IVRVVRVVVVVVVR,
+# the leader with a VDF for its nitrile: +0.071 (was -0.091).  IVRVVRVKVVVVVR -0.053 (was -0.246).  The rows
+# with a TrFE eleventh do not take the leader's packing: IVRVVRVCVVRVVR stays at -0.033.
+# THE FRONT-OF-LINE JOB ABOVE FAILED (exit 1, no output: screen_front.sh read the card's line file, which does not
+# exist until that line is started, under `set -e`; corrected).  So the processors go on from the candidate's
+# helix in the film composition's packing (to about 21:20) to its third all-trans cell, and its lowest helix
+# cell, the one its margin needs, goes to the card's line here, after the sheets (about 48 minutes alone).
+screen_dft.sh card start scr_vdf9-trfe3-cfe1-rvdf1-14_hx_ldr_in_all_s1
