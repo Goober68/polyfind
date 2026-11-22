@@ -170,6 +170,57 @@ lower phase, and a kink pair is one turn of that helix.
   ranking is the rate, not the margin:** the two readings are two assumptions about what limits
   switching, and the quantity neither has is the barrier of the path by which a kink sheet forms
   and moves.
+- **A rate with DFT behind every energy in it (2026-11-22, `docs/MLIP_SECOND_OPINION.md` 3.23;
+  a third rented machine).** The path of a kink at each cell's lowest site was scanned in the
+  potential (the kink's torsions led, everything else relaxed) and its tops put to DFT. Per
+  chain of fourteen, DFT (the potential):
+
+  | what the kink does | the film's composition, on its chlorine | the leader, on its run of VDF units | the leader's rate over the film composition's |
+  |---|---:|---:|---:|
+  | forms from all-trans | 3.31 (3.24) | 3.76 (4.17) | 0.47 |
+  | its end moves a monomer along | 7.70 (7.81) | 5.13 (5.67) | 75 |
+  | is removed | 9.22 (8.72) | 7.08 (7.25) | 36 |
+
+  The potential is within 0.1 to 0.5 of DFT on each barrier: it can scan barriers, which had
+  not been tested. **The film's own measured rate (2.3e6 /s; a barrier of 7.9 with its
+  Vogel-Fulcher prefactor) is at the scale of the kink leaving its site (the hop 3.0e6 /s, the
+  removal 2.4e5) and not of its forming (3e8 to 5e9).** Section 8.5's step on upright sheets
+  was two orders too slow.
+- **On the four axes by each event** (frequency = the measured film's times the rate ratio;
+  tan delta at 34 kHz; AC strain at the heat budget; blocked force per area through the
+  crystal):
+
+  | | frequency | tan delta | AC strain | blocked force per area, pN/nm2 |
+  |---|---:|---:|---:|---:|
+  | the film's composition (the anchor) | 364 kHz | 0.065 | 0.073% | 6.4 |
+  | the leader, by the kink's end moving | 27 MHz | 0.0008 | 0.184% | 10.0 |
+  | the leader, by the kink's removal | 13 MHz | 0.0016 | 0.175% | 9.5 |
+  | the leader, by the kink's forming | 171 kHz | 0.126 | 0.045% | 2.5 |
+
+  **By the two events the film's own rate allows, the leader is ahead of the film's composition
+  on all four axes; by the third it is behind on all four, and that one the film's rate
+  excludes for the film.** It is the first reading of the leader with a barrier in it, and it
+  is not yet a row: the leader's margin is below zero in DFT, so its tan delta and strain are
+  the loss model with the margin taken as zero, outside its domain; one site a cell; every
+  chain taking the step with its neighbours in a two-chain cell (one chain ahead of the rest
+  costs more, 8.3); dipole, switch strain and stiffness are belt4's with no DFT test. The
+  blocked force uses each cell's own stiffness and is an axis of its own; by the film's assumed
+  modulus it is 0.15, 0.37, 0.35 and 0.09 pN/nm2, the strain again.
+- **The margins' all-trans cell is not the film composition's lowest all-trans cell, in DFT.**
+  The all-trans cell its kink sheet's scan ends on, relaxed on (every chain's neighbours a
+  monomer further along the chains, the dipoles 21 degrees from the short cell edge), is 0.84
+  per chain below the upright all-trans cell in DFT, 1.27 in the potential. Turning the chains
+  alone is worth nothing in the potential (0.02): it is the registry, the pins a monomer along
+  from their neighbours' instead of side by side. **The film composition's margin measured from
+  it is +0.063, not +0.123**, if no helix cell has a lower registry of its own, which has not
+  been looked for: level with the matrix's +0.068. At +0.063 its row reads tan delta 0.088,
+  0.081% and 7.6 pN/nm2 at the anchor's 364 kHz. "The film composition's lead" in the bullet on
+  margins above is withdrawn until the other three cells' all-trans cells and every helix cell
+  have been looked at with their neighbours a monomer along; every margin in this document was
+  measured from an upright cell, and a statistical terpolymer has its pins at random.
+- **The nitrile unit does not hold a kink**: the nitrile cell's sheet at the nitrile unit
+  itself is 3.64 above all-trans in DFT (the potential 2.18). The chlorine holds one 4.2 to
+  5.0 deep.
 - **What the 5.3 is not.** A regular cell lets every chain kink at its chlorine in register
   with its neighbours; a statistical terpolymer has its chlorines at random. It is what the pin
   is worth when the neighbours cooperate, an upper bound for the film. Of 108 kink sites DFT has
