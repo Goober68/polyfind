@@ -19,8 +19,18 @@ python -I examples/registry_cells.py margins --labels $LABELS --out "$OUT/cells1
   --also film:tt=film_r_released_tight film:tt=film_r_released leader:tt=leader_r_released \
   --row film=vdf9-trfe4-cfe1-14 matrix=vdf10-trfe4-14 leader=vdf9-trfe3-an1-rvdf1-14 nitrile=vdf9-trfe4-an1-14
 # the four axes at those margins: the kink sites as in 3.22 (the potential's map with DFT's energy at the eight sites that have one), and
-# the film's composition and the leader with the frequency read from the barriers of 3.23 (the kink's end moving, and its removal)
-python examples/four_axes_at_margins.py --margins-from "$OUT/cells14_margins_registries.json" --shifts=0 \
+# the film's composition and the leader with the frequency read from the barriers of 3.23 (the kink's end moving, and its removal).
+# A kink site's energy is against its cell's all-trans cell, the upright one: where a lower all-trans cell is labelled every site of that
+# row stands that much higher against it (--sheet-shift, DFT's difference between the two all-trans cells, per chain).
+SHIFTS="$(python -I - "$OUT/cells14_margins_registries.json" <<'PY'
+import json, sys
+for c in json.load(open(sys.argv[1]))["compositions"].values():
+    lower = -c["cells"]["tt"][c["lowest_tt"]]["dft"]
+    if lower > 0:
+        print(f"{c['row']}={lower:.4f}")
+PY
+)"
+python examples/four_axes_at_margins.py --margins-from "$OUT/cells14_margins_registries.json" --shifts=0 --sheet-shift $SHIFTS \
   --sites docs/predictions/kink_site_scan_potential_card_dft_at_eight.json --out "$OUT/four_axes_registries.json"
 python - "$OUT" <<'PY'
 import json, subprocess, sys

@@ -93,7 +93,7 @@ anneal_card.sh docs/predictions/mlip/registry_starts_helix_annealed.extxyz 4 150
 # CFE's carbon a nitrile's, a TrFE's a VDF's, a VDF turned head to head).  One cell alone on the card.
 registry_card.sh docs/predictions/mlip/registry_starts_as_film_leader.extxyz 1 1000 600
 #
-# 08:27 UTC.  Left undone by the first job, whose time ran out before them: the eight helix cells with their
+# 08:22 UTC.  Left undone by the first job, whose time ran out before them: the eight helix cells with their
 # neighbours ONE monomer along (the last eight of registry_starts.extxyz, the same starts in a file of their
 # own).  They are part of what was asked.  Four side by side while the card's DFT goes on beside them.
 registry_card.sh docs/predictions/mlip/registry_starts_helix_one.extxyz 4 800 1080
