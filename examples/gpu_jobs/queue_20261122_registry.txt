@@ -98,8 +98,19 @@ registry_card.sh docs/predictions/mlip/registry_starts_as_film_leader.extxyz 1 1
 # own).  They are part of what was asked.  Four side by side while the card's DFT goes on beside them.
 registry_card.sh docs/predictions/mlip/registry_starts_helix_one.extxyz 4 800 1080
 #
-# 08:50 UTC.  No new job: the leader's file two lines up now holds a second start, read when its job begins.
+# 08:50 UTC.  No new job: the leader's file two lines up now holds a second start.  (The pod's job on that file
+# began 18 seconds before this was pushed and has the first start alone; the second is relaxed off the pod.)
 # The first start, relaxed meanwhile on four processors off the pod, is at rest 1.02 ABOVE the leader's
 # upright cell (film -1.27, matrix -1.50, nitrile -1.51 in the same cell): in the potential the leader does
 # not have the low cell.  The second start is the same cell with its neighbours moved back to the upright
 # registry, as the other three compositions had (film +0.18, matrix +0.83, nitrile -0.05).
+#
+# 08:53 UTC.  The four helix cells shaken for 1.5 ps at 350 K and relaxed again are back where they started
+# (0.00, -0.01, -0.01, 0.00 kcal/mol per chain): nothing lower, nothing chosen.  The DFT lines, with about
+# two hours of the pod left and room for one more cell on each: the card takes the leader's low cell next
+# (the potential has it 1.02 above upright, and has been 1.7 off on a state of the leader's before: it
+# decides whether the leader's all-trans reference stays while the other three fall), the processors the
+# nitrile composition's low cell, taken off the card's line.
+dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x next 1 1 docs/predictions/mlip/registry_as_film_leader_relaxed.extxyz reg_leader_tt_as_film_low_in_all_s1
+dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x drop reg_nitrile_tt_as_film_low_in_all_s1
+dft_cells.sh next 8 2 docs/predictions/mlip/registry_as_film_nitrile_relaxed.extxyz reg_nitrile_tt_as_film_low_in_all_s1
