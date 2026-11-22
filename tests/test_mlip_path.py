@@ -200,5 +200,124 @@ def test_the_stored_scans_tops_and_where_each_arrived():
     assert [v["fell_to"] for v in _stored("leader_r_free")["images"].values()] == ["start", "neither"]
 
 
+PRED = ROOT / "docs" / "predictions"
+THIRD = ("sheet_vdf9-trfe4-an1-14_belt4_at12_sheared_in_all_s1", "film_r_i07", "film_r_i06", "film_r_released", "leader_b1_i08", "leader_r_released", "leader_b2_i07",
+         "film_f_released", "film_b1_i07", "film_r_released_tight")
+KCAL = 14 * 23.0605
+CARD, IMAGES, RANGE, RMS = 6, 11, (-0.94, 0.54), 0.45
+FILM_POINTS = {"all-trans, upright": (5.03, 5.26), "all-trans, upright, stepped toward DFT's minimum": (4.86, 5.37), "sheet, stepped toward DFT's minimum": (-0.40, 0.35),
+               "all-trans, the sheet's registry": (5.92, 5.48), "all-trans, the sheet's registry, relaxed on": (4.19, 3.99), "kinked, upright": (8.87, 7.93),
+               "stretched kink": (None, 1.66), "top: upright all-trans to upright kinked": (None, 15.68), "top: both torsions together": (9.22, 8.72),
+               "the image before that top": (8.94, 8.52), "the image after that top": (None, 8.31), "that top in finer steps": (None, 8.90),
+               "top: sheet to stretched kink": (7.70, 7.81), "top: stretched kink to all-trans": (None, 10.66)}
+LEADER_POINTS = {"all-trans, upright": (0.72, 1.25), "all-trans, upright, stepped toward DFT's minimum": (0.24, 1.63), "all-trans, the sheet's registry": (3.32, 3.08),
+                 "all-trans, the sheet's registry, relaxed on": (None, 2.76), "kinked, upright": (None, 3.13), "stretched kink": (None, 0.85),
+                 "top: upright all-trans to upright kinked": (None, 7.25), "top: both torsions together": (None, 8.68), "the image before that top": (None, 5.92),
+                 "the image after that top": (None, 7.92), "that top in finer steps": (None, 9.18), "top: sheet to stretched kink": (5.13, 5.67),
+                 "top: stretched kink to all-trans": (7.08, 7.25), "the image after the top from the stretched kink": (None, 7.16)}
+
+
+def _points(cell):
+    return json.loads((PRED / f"kink_paths_{cell}.json").read_text())
+
+
+def test_the_third_pods_labels_are_dft_on_the_potentials_own_images():
+    from ase.io import read
+
+    labels = read(MLIP / "cells14_third_pod_frames_pbe_d3bj.extxyz", index=":")
+    assert tuple(str(a.info["frame"]) for a in labels) == THIRD
+    images = {str(a.info["frame"]): a for f in sorted((MLIP / "paths").glob("*.extxyz")) for a in read(f, index=":")}
+    for a in labels[1:]:
+        image = images[str(a.info["frame"])]
+        assert np.abs(a.positions - image.positions).max() < 1e-9 and np.abs(a.cell.array - image.cell.array).max() < 1e-9
+        assert a.info["dft_run"] in ("card", "processors") and int(a.info["dft_kpoints"]) == 6 and len(a) == (168 if a.info["frame"].startswith("film") else 170)
+        assert 0.05 < np.abs(a.arrays["REF_forces"]).max() < 0.4
+    assert sorted(str(a.info["dft_run"]) for a in labels).count("card") == CARD
+    # the nitrile cell's sheet at the nitrile unit itself: 3.64 above its all-trans cell in DFT, 2.18 in the potential
+    flat = {str(a.info["frame"]): a for a in read(MLIP / "cells14_frames_pbe_d3bj.extxyz", index=":")}["tt_nitrile_from_rows14an_r1"]
+    sheet = labels[0]
+    assert (sheet.info["REF_energy"] - flat.info["REF_energy"]) / 28 * KCAL == pytest.approx(3.64, abs=0.006)
+    assert (float(sheet.info["potential_eV_per_monomer"]) - float(flat.info["potential_eV_per_monomer"])) * KCAL == pytest.approx(2.18, abs=0.006)
+
+
+def test_the_paths_points_and_steps_in_the_potential_and_in_dft():
+    film, leader = _points("film"), _points("leader")
+    # kcal/mol per chain above each cell's sheet as the potential relaxed it: (DFT, the potential)
+    for table, expected in ((film, FILM_POINTS), (leader, LEADER_POINTS)):
+        got = {k: (v["dft"], v["potential"]) for k, v in table["points"].items()}
+        assert got["sheet"] == (0.0, 0.0) and set(expected) <= set(got)
+        for k, (dft, potential) in expected.items():
+            assert got[k][1] == pytest.approx(potential, abs=0.006), k
+            assert (got[k][0] is None) if dft is None else got[k][0] == pytest.approx(dft, abs=0.006), k
+        assert {k for k, v in got.items() if v[0] is not None} == {k for k, v in expected.items() if v[0] is not None} | {"sheet"}
+    # the three things a kink does, DFT then the potential
+    f, l = film["steps"], leader["steps"]
+    assert (f["the kink forms, both torsions together"]["dft"]["forward"], f["the kink forms, both torsions together"]["potential"]["forward"]) == pytest.approx((3.31, 3.24), abs=0.006)
+    assert f["the kink forms, both torsions together"]["dft"]["back"] == pytest.approx(9.22, abs=0.006)                                  # removal
+    assert (film["points"]["top: sheet to stretched kink"]["dft"], leader["points"]["top: sheet to stretched kink"]["dft"]) == pytest.approx((7.70, 5.13), abs=0.006)   # the hop
+    top, flat = (leader["points"][k]["dft"] for k in ("top: stretched kink to all-trans", "all-trans, the sheet's registry"))
+    assert (top - flat, top) == pytest.approx((3.76, 7.08), abs=0.006)                                                                   # the leader forms and is removed by the stretched kink
+    assert l["the stretched kink forms"]["potential"]["forward"] == pytest.approx(4.17, abs=0.006)
+    assert (l["the second gauche bond moves a monomer along"]["potential"]["forward"], l["the second gauche bond moves a monomer along"]["potential"]["step"]) == pytest.approx(
+        (5.67, 0.85), abs=0.006)
+    # both torsions together is the lower way in the film's composition and the higher in the leader
+    assert film["points"]["top: both torsions together"]["potential"] < film["points"]["top: stretched kink to all-trans"]["potential"] - 1.9
+    assert leader["points"]["top: both torsions together"]["potential"] > leader["points"]["top: stretched kink to all-trans"]["potential"] + 1.4
+    # the potential against DFT on the labelled images (the sheets and the stepped cells apart), and on the six barriers
+    off = [v["potential_minus_dft"] for t in (film, leader) for k, v in t["points"].items() if v["dft"] is not None and k != "sheet" and "stepped" not in k]
+    assert len(off) == IMAGES and (min(off), max(off)) == pytest.approx(RANGE, abs=0.006) and float(np.sqrt(np.mean(np.square(off)))) == pytest.approx(RMS, abs=0.006)
+    barriers = [(3.24, 3.31), (4.17, 3.76), (7.81, 7.70), (5.67, 5.13), (8.72, 9.22), (7.25, 7.08)]
+    assert float(np.sqrt(np.mean([(a - b) ** 2 for a, b in barriers]))) == pytest.approx(0.36, abs=0.006)
+
+
+def test_the_film_compositions_upright_all_trans_cell_is_not_its_lowest_in_dft():
+    from ase.io import read
+
+    tight = {str(a.info["frame"]): a for a in read(MLIP / "paths" / "all_trans_tight.extxyz", index=":")}
+    tool = _tool()
+    fall = {n: (float(a.info["potential_eV_per_monomer"]) - float(a.info["potential_start_eV_per_monomer"])) * KCAL for n, a in tight.items()}
+    assert fall == pytest.approx({"film_r_released_tight": -1.50, "leader_r_released_tight": -0.32}, abs=0.006)
+    for a, shear in ((tight["film_r_released_tight"], (1.06, -1.05)), (tight["leader_r_released_tight"], (-0.48, -1.09))):
+        assert np.abs(tool.torsions_deg(a, tool.backbone_torsions(a))).min() > 145 and tool._shear(a) == pytest.approx(shear, abs=0.006)   # all-trans, still in the sheet's cell
+    film, leader = _points("film")["points"], _points("leader")["points"]
+    up, low = film["all-trans, upright"], film["all-trans, the sheet's registry, relaxed on"]
+    assert (up["dft"] - low["dft"], up["potential"] - low["potential"]) == pytest.approx((0.84, 1.27), abs=0.006)
+    assert low["dft_largest_force_eV_per_A"] == pytest.approx(0.09, abs=0.005) and low["dft"] == pytest.approx(4.19, abs=0.006)
+    # as the scan left it DFT had that cell 0.88 above the upright one: the scans' stop is loose for a cell that has far to go
+    assert film["all-trans, the sheet's registry"]["dft"] - up["dft"] == pytest.approx(0.88, abs=0.006)
+    # the film composition's margin measured from the lower cell: +0.063 in DFT, where it is +0.123 from the upright one
+    margin = json.loads((PRED / "cells14_states_dft.json").read_text())["rows"][CFE]["margin"]
+    assert (margin, margin - (up["dft"] - low["dft"]) / 14) == pytest.approx((0.123, 0.063), abs=0.0006)
+    # the leader's cell in its sheet's registry stays above its upright cell
+    assert leader["all-trans, the sheet's registry, relaxed on"]["potential"] - leader["all-trans, upright"]["potential"] == pytest.approx(1.50, abs=0.006)
+    assert leader["all-trans, the sheet's registry, relaxed on"]["dft"] is None
+
+
+def test_the_four_axes_by_each_events_barrier():
+    film, leader = _points("film"), _points("leader")
+    expected = {"forming": (171e3, 0.126, 0.00045, 2.5), "hop": (27.3e6, 0.0008, 0.00184, 10.0), "removal": (13.3e6, 0.0016, 0.00175, 9.5)}
+    given = {"forming": (film["steps"]["the kink forms, both torsions together"]["dft"]["forward"],
+                         leader["points"]["top: stretched kink to all-trans"]["dft"] - leader["points"]["all-trans, the sheet's registry"]["dft"]),
+             "hop": (film["points"]["top: sheet to stretched kink"]["dft"], leader["points"]["top: sheet to stretched kink"]["dft"]),
+             "removal": (film["points"]["top: both torsions together"]["dft"], leader["points"]["top: stretched kink to all-trans"]["dft"])}
+    for event, (hz, tan_delta, strain, blocked) in expected.items():
+        t = json.loads((PRED / f"four_axes_by_barrier_{event}.json").read_text())
+        assert (t["barriers_kcal_per_chain"][CFE], t["barriers_kcal_per_chain"][LEADER]) == pytest.approx(given[event], abs=1e-4)
+        rows = t["shifts"]["+0.00"]["rows"]
+        anchor, row = rows[CFE]["by_the_barrier"], rows[LEADER]["by_the_barrier"]
+        assert (anchor["f_relax_hz"], anchor["tan_delta_34kHz"], anchor["strain_ac_at_the_heat_budget_34kHz"], anchor["blocked_pn_nm2_through_the_crystal"]) == pytest.approx(
+            (364e3, 0.065, 0.00073, 6.4), rel=0.01)
+        assert rows[LEADER]["rate_against_the_film_cell"] == pytest.approx(np.exp(-(given[event][1] - given[event][0]) / (0.0019872041 * 300.0)), rel=2e-3)
+        assert row["f_relax_hz"] == pytest.approx(hz, rel=0.01) and row["tan_delta_34kHz"] == pytest.approx(tan_delta, abs=0.0006 if tan_delta > 0.01 else 6e-5)
+        assert row["strain_ac_at_the_heat_budget_34kHz"] == pytest.approx(strain, abs=6e-6) and row["blocked_pn_nm2_through_the_crystal"] == pytest.approx(blocked, abs=0.06)
+        assert rows[LEADER]["all_trans_is_lower"] and row["margin_the_model_used"] == 0.0     # the leader's margin is below zero in DFT: the model is outside its domain
+    # the measured film's rate, with its own Vogel-Fulcher prefactor, is a barrier of 7.9 at 300 K: the hop's scale, not the forming's
+    kT = 0.0019872041 * 300.0
+    tau = 8.08e-13 * np.exp(0.124 / (8.617333e-5 * (300.0 - 191.0)))
+    assert 1.0 / (2 * np.pi * tau) == pytest.approx(364e3, rel=0.005) and kT * np.log(tau / 8.08e-13) == pytest.approx(7.87, abs=0.01)
+    rate = {k: np.exp(-b / kT) / 8.08e-13 for k, b in (("forming", given["forming"][0]), ("hop", given["hop"][0]), ("removal", given["removal"][0]))}
+    assert rate["hop"] * tau == pytest.approx(1.3, abs=0.1) and rate["forming"] * tau > 2000 and rate["removal"] * tau == pytest.approx(0.10, abs=0.01)
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

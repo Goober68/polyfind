@@ -1,0 +1,187 @@
+{
+ "what": "images of scans in a potential (examples/mlip_path.py) against one zero, kcal/mol per chain of the two-chain cell: the potential's energy with D3, and DFT's (PBE-D3(BJ), single points on the potential's images) where the image is labelled",
+ "name": "film's composition",
+ "zero": {
+  "image": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1",
+  "label": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1"
+ },
+ "points": {
+  "sheet": {
+   "image": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1",
+   "potential": 0.0,
+   "dft": 0.0,
+   "label": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1",
+   "potential_minus_dft": 0.0,
+   "dft_largest_force_eV_per_A": 0.11661598,
+   "dft_minutes": 57.40833333333333,
+   "dft_run": "processors"
+  },
+  "sheet, stepped toward DFT's minimum": {
+   "image": "film_r_i00",
+   "potential": 0.3485858375556018,
+   "dft": -0.4047097916823004,
+   "label": "sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1",
+   "potential_minus_dft": 0.7532956292379023,
+   "dft_largest_force_eV_per_A": 0.01629745,
+   "dft_minutes": 72.02,
+   "dft_run": "processors"
+  },
+  "all-trans, upright": {
+   "image": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+   "potential": 5.256836685882834,
+   "dft": 5.033777562301269,
+   "label": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+   "potential_minus_dft": 0.22305912358156466,
+   "dft_largest_force_eV_per_A": 0.07401075,
+   "dft_minutes": 68.87166666666667,
+   "dft_run": "processors"
+  },
+  "all-trans, upright, stepped toward DFT's minimum": {
+   "image": "film_f_i00",
+   "potential": 5.374911474083843,
+   "dft": 4.862375288638585,
+   "label": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1",
+   "potential_minus_dft": 0.5125361854452581,
+   "dft_largest_force_eV_per_A": 0.01055155,
+   "dft_minutes": 44.10666666666667,
+   "dft_run": "card"
+  },
+  "all-trans, the sheet's registry": {
+   "image": "film_r_released",
+   "potential": 5.481023669707931,
+   "dft": 5.917017200658413,
+   "label": "film_r_released",
+   "potential_minus_dft": -0.43599353095048166,
+   "dft_largest_force_eV_per_A": 0.12942933,
+   "dft_minutes": 51.986666666666665,
+   "dft_run": "card"
+  },
+  "all-trans, the sheet's registry, relaxed on": {
+   "image": "film_r_released_tight",
+   "potential": 3.985027445762391,
+   "dft": 4.1890167217676115,
+   "label": "film_r_released_tight",
+   "potential_minus_dft": -0.20398927600522043,
+   "dft_largest_force_eV_per_A": 0.09332487,
+   "dft_minutes": 45.88166666666667,
+   "dft_run": "card"
+  },
+  "kinked, upright": {
+   "image": "film_f_released",
+   "potential": 7.930768588087898,
+   "dft": 8.868360442574067,
+   "label": "film_f_released",
+   "potential_minus_dft": -0.9375918544861692,
+   "dft_largest_force_eV_per_A": 0.17919741,
+   "dft_minutes": 62.39833333333333,
+   "dft_run": "processors"
+  },
+  "stretched kink": {
+   "image": "film_b1_released",
+   "potential": 1.6578176968090048,
+   "dft": null,
+   "label": null
+  },
+  "top: upright all-trans to upright kinked": {
+   "image": "film_f_i06",
+   "potential": 15.681979643248763,
+   "dft": null,
+   "label": null
+  },
+  "top: both torsions together": {
+   "image": "film_r_i07",
+   "potential": 8.723488641692565,
+   "dft": 9.224038318757739,
+   "label": "film_r_i07",
+   "potential_minus_dft": -0.5005496770651732,
+   "dft_largest_force_eV_per_A": 0.15327297,
+   "dft_minutes": 85.92833333333333,
+   "dft_run": "card"
+  },
+  "the image before that top": {
+   "image": "film_r_i06",
+   "potential": 8.518563613673676,
+   "dft": 8.938851566979409,
+   "label": "film_r_i06",
+   "potential_minus_dft": -0.4202879533057331,
+   "dft_largest_force_eV_per_A": 0.26348691,
+   "dft_minutes": 66.53333333333333,
+   "dft_run": "processors"
+  },
+  "the image after that top": {
+   "image": "film_r_i08",
+   "potential": 8.30658279863023,
+   "dft": null,
+   "label": null
+  },
+  "that top in finer steps": {
+   "image": "film_r_fine_i04",
+   "potential": 8.895853295284716,
+   "dft": null,
+   "label": null
+  },
+  "top: sheet to stretched kink": {
+   "image": "film_b1_i07",
+   "potential": 7.812839195231718,
+   "dft": 7.698170754641477,
+   "label": "film_b1_i07",
+   "potential_minus_dft": 0.11466844059024162,
+   "dft_largest_force_eV_per_A": 0.34983792,
+   "dft_minutes": 44.788333333333334,
+   "dft_run": "card"
+  },
+  "top: stretched kink to all-trans": {
+   "image": "film_b2_i07",
+   "potential": 10.660781478223262,
+   "dft": null,
+   "label": null
+  }
+ },
+ "steps": {
+  "the kink forms, both torsions together": {
+   "from": "all-trans, the sheet's registry",
+   "top": "top: both torsions together",
+   "to": "sheet",
+   "potential": {
+    "forward": 3.242464971984634,
+    "back": 8.723488641692565,
+    "step": -5.481023669707931
+   },
+   "dft": {
+    "forward": 3.3070211180993256,
+    "back": 9.224038318757739,
+    "step": -5.917017200658413
+   }
+  },
+  "the second gauche bond moves a monomer along": {
+   "from": "sheet",
+   "top": "top: sheet to stretched kink",
+   "to": "stretched kink",
+   "potential": {
+    "forward": 7.812839195231718,
+    "back": 6.155021498422713,
+    "step": 1.6578176968090048
+   }
+  },
+  "the stretched kink forms": {
+   "from": "all-trans, the sheet's registry",
+   "top": "top: stretched kink to all-trans",
+   "to": "stretched kink",
+   "potential": {
+    "forward": 5.179757808515331,
+    "back": 9.002963781414257,
+    "step": -3.8232059728989265
+   }
+  },
+  "upright, the kink forms": {
+   "from": "all-trans, upright",
+   "top": "top: upright all-trans to upright kinked",
+   "to": "kinked, upright",
+   "potential": {
+    "forward": 10.425142957365928,
+    "back": 7.751211055160865,
+    "step": 2.673931902205064
+   }
+  }
+ }
+}

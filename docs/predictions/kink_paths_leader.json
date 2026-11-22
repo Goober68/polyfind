@@ -1,0 +1,166 @@
+{
+ "what": "images of scans in a potential (examples/mlip_path.py) against one zero, kcal/mol per chain of the two-chain cell: the potential's energy with D3, and DFT's (PBE-D3(BJ), single points on the potential's images) where the image is labelled",
+ "name": "leader",
+ "zero": {
+  "image": "leader_r_i00",
+  "label": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1"
+ },
+ "points": {
+  "sheet": {
+   "image": "leader_r_i00",
+   "potential": 0.0,
+   "dft": 0.0,
+   "label": "sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1",
+   "potential_minus_dft": 0.0,
+   "dft_largest_force_eV_per_A": 0.14133148,
+   "dft_minutes": 42.79333333333333,
+   "dft_run": "card"
+  },
+  "all-trans, upright": {
+   "image": "tt_leader_from_rows14an_r1",
+   "potential": 1.2522858255992215,
+   "dft": 0.7152588527528606,
+   "label": "tt_leader_from_rows14an_r1",
+   "potential_minus_dft": 0.5370269728463609,
+   "dft_largest_force_eV_per_A": 0.10622436,
+   "dft_minutes": 68.02166666666668,
+   "dft_run": "processors"
+  },
+  "all-trans, upright, stepped toward DFT's minimum": {
+   "image": "leader_f_i00",
+   "potential": 1.6313759556987135,
+   "dft": 0.2428832919976012,
+   "label": "tt_leader_from_rows14an_r1_in_all_s1",
+   "potential_minus_dft": 1.3884926637011124,
+   "dft_largest_force_eV_per_A": 0.02957103,
+   "dft_minutes": 72.635,
+   "dft_run": "processors"
+  },
+  "all-trans, the sheet's registry": {
+   "image": "leader_r_released",
+   "potential": 3.0798932232957905,
+   "dft": 3.323643808107625,
+   "label": "leader_r_released",
+   "potential_minus_dft": -0.24375058481183443,
+   "dft_largest_force_eV_per_A": 0.131198,
+   "dft_minutes": 47.45333333333333,
+   "dft_run": "card"
+  },
+  "all-trans, the sheet's registry, relaxed on": {
+   "image": "leader_r_released_tight",
+   "potential": 2.7571442887362028,
+   "dft": null,
+   "label": null
+  },
+  "kinked, upright": {
+   "image": "leader_f_released",
+   "potential": 3.12902521959291,
+   "dft": null,
+   "label": null
+  },
+  "stretched kink": {
+   "image": "leader_b1_released",
+   "potential": 0.8457446540221463,
+   "dft": null,
+   "label": null
+  },
+  "top: upright all-trans to upright kinked": {
+   "image": "leader_f_i07",
+   "potential": 7.249108330605554,
+   "dft": null,
+   "label": null
+  },
+  "top: both torsions together": {
+   "image": "leader_r_i04",
+   "potential": 8.679703375281571,
+   "dft": null,
+   "label": null
+  },
+  "the image before that top": {
+   "image": "leader_r_i03",
+   "potential": 5.921976092145975,
+   "dft": null,
+   "label": null
+  },
+  "the image after that top": {
+   "image": "leader_r_i05",
+   "potential": 7.920786552758425,
+   "dft": null,
+   "label": null
+  },
+  "that top in finer steps": {
+   "image": "leader_r_fine_i05",
+   "potential": 9.180325459747268,
+   "dft": null,
+   "label": null
+  },
+  "top: sheet to stretched kink": {
+   "image": "leader_b1_i08",
+   "potential": 5.667589001843293,
+   "dft": 5.1258282967176205,
+   "label": "leader_b1_i08",
+   "potential_minus_dft": 0.5417607051256725,
+   "dft_largest_force_eV_per_A": 0.1473327,
+   "dft_minutes": 65.63666666666667,
+   "dft_run": "processors"
+  },
+  "top: stretched kink to all-trans": {
+   "image": "leader_b2_i07",
+   "potential": 7.25301880607835,
+   "dft": 7.079794448771845,
+   "label": "leader_b2_i07",
+   "potential_minus_dft": 0.17322435730650465,
+   "dft_largest_force_eV_per_A": 0.37906571,
+   "dft_minutes": 43.56166666666666,
+   "dft_run": "card"
+  },
+  "the image after the top from the stretched kink": {
+   "image": "leader_b2_i08",
+   "potential": 7.162970808869921,
+   "dft": null,
+   "label": null
+  }
+ },
+ "steps": {
+  "the kink forms, both torsions together": {
+   "from": "all-trans, the sheet's registry",
+   "top": "top: both torsions together",
+   "to": "sheet",
+   "potential": {
+    "forward": 5.59981015198578,
+    "back": 8.679703375281571,
+    "step": -3.0798932232957905
+   }
+  },
+  "the second gauche bond moves a monomer along": {
+   "from": "sheet",
+   "top": "top: sheet to stretched kink",
+   "to": "stretched kink",
+   "potential": {
+    "forward": 5.667589001843293,
+    "back": 4.821844347821147,
+    "step": 0.8457446540221463
+   }
+  },
+  "the stretched kink forms": {
+   "from": "all-trans, the sheet's registry",
+   "top": "top: stretched kink to all-trans",
+   "to": "stretched kink",
+   "potential": {
+    "forward": 4.173125582782559,
+    "back": 6.407274152056203,
+    "step": -2.2341485692736445
+   }
+  },
+  "upright, the kink forms": {
+   "from": "all-trans, upright",
+   "top": "top: upright all-trans to upright kinked",
+   "to": "kinked, upright",
+   "potential": {
+    "forward": 5.996822505006333,
+    "back": 4.120083111012644,
+    "step": 1.8767393939936885
+   }
+  }
+ }
+}
