@@ -244,6 +244,33 @@ def test_upright_chains_in_the_low_cells_lattice_and_registry_do_not_find_the_lo
     assert not table["reg_nitrile_tt_like_film"]["converged"] and not table["reg_leader_tt_like_film"]["converged"]    # the nitrile groups meet in this setting: cut, not at rest
 
 
+def test_the_low_cell_is_its_chains_and_its_registry_together_and_the_matrix_has_it_too(labelled):
+    """The four cells made of the film composition's low cell, at rest in the potential on the fourth pod's card."""
+    from ase.io import read
+
+    tool, path = _load("registry_cells"), _load("mlip_path")
+    table = json.loads((ROOT / "docs" / "predictions" / "registry_as_film.json").read_text())["rows"]
+    assert all(v["converged"] and v["conformation_kept"] for v in table.values()) and len(table) == 4
+    energy = {k: v["energy"] for k, v in table.items()}
+    assert energy == pytest.approx({"reg_matrix_tt_as_film_low": -1.50, "reg_film_tt_low_registry_back": 0.18, "reg_film_tt_low_chains_in_upright": 0.54,
+                                    "reg_matrix_tt_as_film_low_registry_back": 0.83}, abs=0.006)
+    # each kept the registry it was given
+    assert table["reg_matrix_tt_as_film_low"]["shear_along_chains_monomers"] == pytest.approx([1.06, -1.08], abs=0.006)
+    for k in ("reg_film_tt_low_registry_back", "reg_film_tt_low_chains_in_upright", "reg_matrix_tt_as_film_low_registry_back"):
+        assert np.abs(table[k]["shear_along_chains_monomers"]).max() < 0.05
+    # beside them: the film composition's own low cell 1.27 below upright, and upright chains in its lattice and registry 0.57 above
+    film = json.loads((ROOT / "docs" / "predictions" / "kink_paths_film.json").read_text())["points"]
+    assert film["all-trans, the sheet's registry, relaxed on"]["potential"] - film["all-trans, upright"]["potential"] == pytest.approx(-1.27, abs=0.006)
+    assert json.loads((ROOT / "docs" / "predictions" / "registry_like_film.json").read_text())["rows"]["reg_film_tt_like_film"]["energy"] == pytest.approx(0.57, abs=0.006)
+    # the relaxed matrix cell is still the matrix's own chains, and carries the low cell's twists, not the matrix's upright cell's
+    frames = {str(a.info["frame"]): a for a in read(MLIP / "registry_as_film_relaxed.extxyz", index=":")}
+    matrix_low, matrix_up = frames["reg_matrix_tt_as_film_low_in_all_s1"], labelled[CELLS["matrix"][0]]
+    assert all(any(tool.same_molecule(m, t) for t in tool.substituents(matrix_up)) for m in tool.substituents(matrix_low))
+    low = read(MLIP / "paths" / "all_trans_tight.extxyz", index=0)
+    twists = lambda a: np.where(path.torsions_deg(a, path.backbone_torsions(a)) > 0, -180.0, 180.0) + path.torsions_deg(a, path.backbone_torsions(a))
+    assert np.abs(twists(matrix_low) - twists(low)).max() < 15 and np.abs(twists(matrix_low) - twists(matrix_up)).max() > 20
+
+
 def test_the_helix_cells_to_be_shaken_are_the_labelled_ones(labelled):
     from ase.io import read
 
