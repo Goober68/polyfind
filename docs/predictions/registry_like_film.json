@@ -1,0 +1,138 @@
+{
+ "what": "cells made from labelled cells by examples/registry_cells.py (neighbours moved whole monomers along the chains, chains turned about their axes) and relaxed in the potential: energy is kcal/mol per chain against the labelled cell each was made from, in the potential with D3",
+ "starts": "docs/predictions/mlip/registry_starts_like.extxyz",
+ "rows": {
+  "reg_matrix_tt_like_film": {
+   "relaxed": true,
+   "frame": "reg_matrix_tt_like_film_in_all_s1",
+   "label": "matrix",
+   "conformation": "tt",
+   "of": "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 118,
+   "converged": true,
+   "steps": 323,
+   "energy": 1.4031415295533889,
+   "shear_along_chains_monomers": [
+    1.0368845783800211,
+    -1.0608689180693673
+   ],
+   "shear_along_chains_monomers_labelled": [
+    7.702787893404374e-09,
+    1.395863886900793e-08
+   ],
+   "dipole_from_a_deg": -164.7514719439537,
+   "dipole_from_a_deg_labelled": 75.9151932185977,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.637595241313119,
+    9.543776735244624,
+    35.98299417917715
+   ]
+  },
+  "reg_film_tt_like_film": {
+   "relaxed": true,
+   "frame": "reg_film_tt_like_film_in_all_s1",
+   "label": "film",
+   "conformation": "tt",
+   "of": "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 118,
+   "converged": true,
+   "steps": 540,
+   "energy": 0.5711883566353677,
+   "shear_along_chains_monomers": [
+    1.0260713096278375,
+    -1.0435691439125605
+   ],
+   "shear_along_chains_monomers_labelled": [
+    1.4280387327521752e-08,
+    1.0285733897037413e-07
+   ],
+   "dipole_from_a_deg": -157.07705015360708,
+   "dipole_from_a_deg_labelled": 83.76859459327864,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.710854407360648,
+    9.652621449886107,
+    35.941818321995115
+   ]
+  },
+  "reg_nitrile_tt_like_film": {
+   "relaxed": true,
+   "frame": "reg_nitrile_tt_like_film_in_all_s1",
+   "label": "nitrile",
+   "conformation": "tt",
+   "of": "tt_nitrile_from_rows14an_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 118,
+   "converged": false,
+   "steps": 600,
+   "energy": 6.227020926751766,
+   "shear_along_chains_monomers": [
+    1.016995280083296,
+    -1.0196174485693326
+   ],
+   "shear_along_chains_monomers_labelled": [
+    2.7244171371745906e-08,
+    7.129023959921275e-09
+   ],
+   "dipole_from_a_deg": -136.0497290380434,
+   "dipole_from_a_deg_labelled": 83.48528498335087,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.979502575268942,
+    9.771339028782474,
+    35.245574693238495
+   ]
+  },
+  "reg_leader_tt_like_film": {
+   "relaxed": true,
+   "frame": "reg_leader_tt_like_film_in_all_s1",
+   "label": "leader",
+   "conformation": "tt",
+   "of": "tt_leader_from_rows14an_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 118,
+   "converged": false,
+   "steps": 100,
+   "energy": 2.5522087966987628,
+   "shear_along_chains_monomers": [
+    0.9034709162770013,
+    -1.2064608232062617
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -0.07764414269720431,
+    -0.1784727708565495
+   ],
+   "dipole_from_a_deg": -149.5594348996258,
+   "dipole_from_a_deg_labelled": 79.34657205987806,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.698281875219446,
+    9.978542064352274,
+    35.25194640117821
+   ]
+  }
+ }
+}

@@ -231,6 +231,19 @@ def test_chains_with_the_upright_cells_twists_rest_higher_in_every_other_registr
         assert (float(a.info["potential_eV_per_monomer"]) - float(ref.info["potential_eV_per_monomer"])) * 14 * 23.0605 == pytest.approx(table[str(a.info["frame"])[:-len("_in_all_s1")]]["energy"], abs=1e-6)
 
 
+def test_upright_chains_in_the_low_cells_lattice_and_registry_do_not_find_the_low_cell():
+    """The control: the film composition's cell made like its own low cell, from upright chains, rests 0.57 above upright."""
+    table = json.loads((ROOT / "docs" / "predictions" / "registry_like_film.json").read_text())["rows"]
+    control = table["reg_film_tt_like_film"]
+    assert control["converged"] and control["energy"] == pytest.approx(0.57, abs=0.006) and control["shear_along_chains_monomers"] == pytest.approx([1.03, -1.04], abs=0.006)
+    assert abs(abs(control["dipole_from_a_deg"]) - 159) < 3                                   # the low cell's registry and turn, kept
+    low = json.loads((ROOT / "docs" / "predictions" / "kink_paths_film.json").read_text())["points"]
+    below = low["all-trans, the sheet's registry, relaxed on"]["potential"] - low["all-trans, upright"]["potential"]
+    assert below == pytest.approx(-1.27, abs=0.006) and control["energy"] - below == pytest.approx(1.84, abs=0.01)   # 1.84 above the cell it was made like
+    assert table["reg_matrix_tt_like_film"]["converged"] and table["reg_matrix_tt_like_film"]["energy"] == pytest.approx(1.40, abs=0.006)
+    assert not table["reg_nitrile_tt_like_film"]["converged"] and not table["reg_leader_tt_like_film"]["converged"]    # the nitrile groups meet in this setting: cut, not at rest
+
+
 def test_the_choice_is_the_lowest_cell_at_rest_of_each_composition_and_conformation():
     tool = _load("registry_cells")
     row = lambda label, conformation, energy, converged=True, kept=True: {"relaxed": True, "frame": f"{label}_{conformation}_{energy}", "label": label, "conformation": conformation,
