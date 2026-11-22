@@ -57,3 +57,16 @@ path_dft.sh processors start leader_f leader_f_released
 # sheet), or the shear first and then the kink (the all-trans cell sheared, then the scans from
 # the sheets backwards).  The shear steps, sixteen points each, the atoms relaxed in each cell:
 shear_card.sh docs/predictions/mlip/models/all_s1.model 16 film_flat:row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1:film_r_released film_kinked:film_f_released:sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1 leader_flat:tt_leader_from_rows14an_r1_in_all_s1:leader_r_released leader_kinked:leader_f_released:sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1
+# 00:27 UTC.  The shear scans did not connect, and why is in the cells: the sheet does not
+# belong to the upright all-trans cell sheared.  The scan from each sheet arrived at another
+# all-trans cell, in which neighbouring chains' sequences are offset by a monomer along the
+# chain (and, in the film's composition, the chains' dipoles are turned 120 degrees across the
+# chain: another setting of the same packing), 0.10 (film's composition) and 1.45 (leader) above
+# the upright one.  The sheet forms from that cell with no shear at all, so the scans from the
+# sheets are whole paths, not halves.  The job above carried the upright cell's atoms into the
+# other cell's shape, which is neither state.
+# What is left open on those paths is the leader's: its image after the top fell to a third
+# state (one torsion gauche, the other near -113), so its two torsions do not go together and
+# the led scan is an upper bound.  Each torsion of the pair led first, then the rest, for both
+# cells, from the sheet to the all-trans cell it belongs to:
+steps_card.sh docs/predictions/mlip/models/all_s1.model 12 film:sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1:film_r_released leader:sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1:leader_r_released

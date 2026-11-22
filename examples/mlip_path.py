@@ -209,6 +209,8 @@ def scan(args):
     a0, a1 = torsions_deg(start, quads), torsions_deg(end, quads)
     turn = arc(a0, a1)
     led = [q for q in range(len(quads)) if abs(turn[q]) > args.differ]
+    if args.only:   # some of them only (by their place among those that differ): the others are left free, to go or not
+        led = [led[k] for k in args.only]
     if not led:
         raise SystemExit(f"no backbone torsion differs by more than {args.differ} degrees between the two frames")
     print(f"{args.name}: {len(quads)} backbone torsions, {len(led)} led: " + "; ".join(f"{quads[q]} {a0[q]:+.0f} to {a1[q]:+.0f}" for q in led), flush=True)
@@ -253,7 +255,7 @@ def scan(args):
                      "everything else, the cell included, is relaxed at each step. energy: kcal/mol per chain against the first image, without the restraint. The last "
                      "image, released, says where the path arrived (end_in_the_potential is the end frame's own energy there, not relaxed)",
              "name": args.name, "potential": args.potential, "model": Path(args.model).name, "start": args.start, "end": args.end, "points": args.points,
-             "restraint_eV": args.k, "fmax_eV_per_A": args.fmax, "led_torsions": [list(quads[q]) for q in led], "start_torsions_deg": [float(a0[q]) for q in led],
+             "restraint_eV": args.k, "fmax_eV_per_A": args.fmax, "led_torsions": [list(quads[q]) for q in led], "only": list(args.only), "start_torsions_deg": [float(a0[q]) for q in led],
              "end_torsions_deg": [float(a1[q]) for q in led], "end_in_the_potential": (e_end - e_start) / CHAINS * KCAL,
              "end_shear_along_chains_monomers": _shear(end), "images": rows}
     args.out.mkdir(parents=True, exist_ok=True)
@@ -483,6 +485,8 @@ def main():
     s.add_argument("--points", type=int, default=12)
     s.add_argument("--k", type=float, default=10.0, help="the restraint, eV (per rad2 near its target)")
     s.add_argument("--differ", type=float, default=60.0, help="degrees: a torsion that differs by more between the two frames is led")
+    s.add_argument("--only", type=int, nargs="*", default=[], help="lead only these of the torsions that differ, by their place in the list (0 2: the first of each chain "
+                   "where each chain has two): a kink pair's two torsions one after the other")
     s.add_argument("--fmax", type=float, default=0.02)
     s.add_argument("--steps", type=int, default=400, help="the most steps at one point")
     s.add_argument("--release-steps", type=int, default=800)
