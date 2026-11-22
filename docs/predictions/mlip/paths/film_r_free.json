@@ -1,0 +1,57 @@
+{
+ "what": "images of a scan relaxed in the potential with no restraint: an image before the top should fall back to the scan's start and one after it on to its end. energy: kcal/mol per chain against the path's first image",
+ "scan": "film_r",
+ "start_torsions_deg": [
+  -63.664042578035726,
+  49.95239778646797,
+  -63.664065906236566,
+  49.9523981455092
+ ],
+ "end_torsions_deg": [
+  -163.45590780285454,
+  162.90735757463946,
+  -163.45590958658624,
+  162.9073755819196
+ ],
+ "top": {
+  "image": "i07",
+  "energy": 8.374902804136964,
+  "index": 7
+ },
+ "images": {
+  "i06": {
+   "from": 8.169977771252245,
+   "energy": -0.07583325490817697,
+   "steps": 110,
+   "converged": true,
+   "led_torsions_deg": [
+    -63.893223420806876,
+    50.848213947519085,
+    -63.89321732680489,
+    50.84821027805304
+   ],
+   "fell_to": "start",
+   "shear_along_chains_monomers": [
+    0.9550239914421147,
+    -0.9702589094131437
+   ]
+  },
+  "i08": {
+   "from": 7.957996954363138,
+   "energy": 5.1618937674908745,
+   "steps": 121,
+   "converged": true,
+   "led_torsions_deg": [
+    -158.9548634319418,
+    161.14561989297573,
+    -158.95485989416883,
+    161.14563098140036
+   ],
+   "fell_to": "end",
+   "shear_along_chains_monomers": [
+    0.9553725379114922,
+    -0.9601349553623737
+   ]
+  }
+ }
+}
