@@ -2223,5 +2223,186 @@ the leader it tops at 7.01 and then 7.26, and arrives at an all-trans cell 1.3 a
 the sheet belongs to. (The all-trans cells these scans rest on in the sheet's registry are not
 one cell: the two-step scans end 0.2 to 2.4 above the cell the both-together scan ends on.)
 
-THE POD IS STILL RUNNING AS THIS IS WRITTEN (03:55 UTC 2026-11-22): the DFT labels of the
-tops, the barriers, the four axes and what this is and is not follow when it is gone.
+**DFT on the scans' images** (PBE-D3(BJ) single points on cells the potential relaxed, eleven
+of them, six on the card and five on the processors; DFT leaves 0.09 to 0.38 eV/A on
+them, the most on the tops, which carry the restraint's force):
+
+| above the cell's sheet | film's composition: DFT | the potential | leader: DFT | the potential |
+|---|---:|---:|---:|---:|
+| all-trans, upright (the margins' cell) | **+5.03** | +5.26 | **+0.72** | +1.25 |
+| all-trans in the sheet's registry, as the scan left it (0.02 eV/A) | **+5.92** | +5.48 | **+3.32** | +3.08 |
+| that cell relaxed on to 0.004 eV/A | **+4.19** | +3.99 | | +2.76 |
+| the stretched kink, G T T T G' | | +1.66 | **+0.32** | +0.85 |
+| the upright kinked cell | **+8.87** | +7.93 | | +3.13 |
+| top, both torsions together | **+9.22** | +8.72 (8.90 refined) | | +8.68 (9.18 refined) |
+| the image before that top | +8.94 | +8.52 | | +5.92 |
+| top, sheet to stretched kink | **+7.70** | +7.81 | **+5.13** | +5.67 |
+| top, stretched kink to all-trans | | +10.66 | **+7.08** | +7.25 |
+| top, upright all-trans to upright kinked | | +15.68 | | +7.25 |
+
+**Three things a kink does at its site, and what each costs** (kcal/mol per chain; DFT, the
+potential in brackets; each cell's lowest sheet: on the chlorine unit in the film's
+composition, on the run of VDF units in the leader):
+
+| | film's composition | leader | the leader's rate over the film composition's at 300 K |
+|---|---:|---:|---:|
+| it forms, from all-trans in the sheet's registry as the scan left it | 3.31 (3.24) | 3.76 (4.17) | 0.47 |
+| it forms, from that cell relaxed on | 5.03 (4.74) | not labelled (4.50) | 1.5 in the potential |
+| its second gauche bond moves a monomer along, G T G' to G T T T G' | 7.70 (7.81) | 5.13 (5.67) | 75 |
+| it is removed, to all-trans in the sheet's registry | 9.22 (8.72) | 7.08 (7.25) | 36 |
+
+The film composition's kink forms and is removed with both torsions together; the leader's goes
+by the stretched kink, so its forming and its removal have the higher of the two steps' tops
+(the second). The rate column is exp(-(the difference in DFT) / kT), kT 0.596 kcal/mol.
+
+- **The potential holds on barriers, which had not been tested.** On twelve images it is -0.94
+  to +0.54 from DFT against the sheets (rms 0.46), and the six barriers with a DFT value are
+  -0.50 to +0.54 from DFT's (rms 0.36). It has the sign of every difference between the two
+  cells that DFT has (the hop -2.14 against -2.57, removal -1.47 against -2.14, forming from
+  the cells as the scans left them +0.93 against +0.45). Sheets against all-trans it has to
+  1.07 rms (3.22): a top is no worse for it than a minimum.
+- **Forming does not separate the two cells and the other two events do.** From the cells as
+  the scans left them the leader's kink forms 0.45 higher than the film composition's; from the
+  cells relaxed on, 0.25 lower in the potential. The hop and the removal are measured from the
+  sheet and do not depend on an all-trans cell: the leader's are 2.6 and 2.1 lower in DFT.
+- **The upright kink is not the way.** The upright kinked cell is 8.87 above the film
+  composition's sheet in DFT and 3.84 above its upright all-trans cell, behind a top 10.4
+  above all-trans in the potential. 3.19 found the same of PVDF's upright sheet.
+- **In the leader the kink and the stretched kink are level in DFT** (0.32 apart; the
+  potential 0.85): the hop goes over 5.13 one way and 4.81 the other. In the film's composition
+  the stretched kink is 1.66 above the kink on the chlorine in the potential (not labelled):
+  there the hop is the kink's end leaving the chlorine, and it comes back over 6.2.
+
+
+**The film's own measured rate says which of the three it is not.** The 364 kHz of the measured
+film (the small-signal loss peak of a 63/30/7 film at 300 K and zero bias,
+`docs/CANDIDATE_MATERIALS.md` 7) is a rate of 2.3e6 /s. With the prefactor of its own
+Vogel-Fulcher fit (1 / 8.08e-13 s) that is an Arrhenius barrier of 7.9 kcal/mol at 300 K, and
+8.4 with the 3e12 /s of 8.5 there. The film composition's kink forms over 3.3 to 5.0: 3e8 to
+1e10 /s over the two references and the two prefactors, a hundred to five thousand times the
+film's rate. Its end moves a monomer along over 7.70, 3.0e6 to 7.3e6 /s, and it is removed over
+9.2, 2e5 to 6e5 /s: either side of the measured 2.3e6. So the film's relaxation is at the
+scale of a kink leaving its site and not at the scale of a kink forming. That the hop comes
+within a third of the measured rate is closer than a static barrier and a borrowed prefactor
+can claim (0.5 kcal/mol is a factor of 2.3); the two orders and more between forming and the
+measurement are not. 8.5's step on belt4's upright sheets was 11.5 and two orders too slow.
+
+**The margins' all-trans cell is not the film composition's lowest all-trans cell, in DFT.**
+The all-trans cell a scan from the sheet ends on was released at the scans' stop, 0.02 eV/A.
+Relaxed on in the potential to 0.004 eV/A (`mlip/paths/all_trans_tight.extxyz`):
+
+- the leader's falls 0.32, keeps the sheet's registry and stays 1.50 above its upright
+  all-trans cell: a minimum of its own, and the scans' stop leaves about 0.3 in a released
+  cell;
+- the film composition's falls 1.50, stays all-trans in the sheet's registry, and comes to rest
+  **1.27 below its upright all-trans cell**. DFT was asked while the pod still ran: that cell
+  is **0.84 below the upright all-trans cell** (4.19 against 5.03 above the sheet), with 0.09
+  eV/A left on it (0.07 to 0.29 on the other cells the potential relaxed). As the scan left it
+  DFT had it 0.88 above.
+
+In that cell every chain's neighbours along the two cell edges sit a monomer further along the
+chains than in the upright cell (1.06 and -1.05 monomers), and its dipoles point 21 degrees
+from the short cell edge. Plain beta-PVDF has its dipoles along the short edge (3.2's beta
+cell: 4.76 by 8.53 A, dipole along the 4.76). The upright all-trans cells of all four rows
+have them along the long edge (76 to 84 degrees from the short one): they are the cells the
+tables' search built, relaxed where they stood by the potential and labelled there by DFT.
+What follows:
+
+- **The film composition's margin measured from its lower all-trans cell is +0.063 in DFT, not
+  +0.123** (the potential +0.072, not +0.163), if no helix cell has a lower registry of its
+  own, which was not looked for. That is level with the matrix's +0.068. 3.22's "the film
+  composition's lead is the result" is withdrawn until the other three cells' all-trans cells,
+  and every helix cell, have been looked at with their neighbours a monomer along. The
+  leader's cell in its sheet's registry (-0.48 and -1.09 monomers, its chains not turned) is
+  1.50 above its upright cell in the potential and 2.6 in DFT as the scan left it: one other
+  registry of that cell, not a search.
+- The kink on the chlorine is 4.19 below the film composition's lowest all-trans cell known,
+  not 5.0 or 5.9, and the helix 0.88 below it.
+- At +0.063 the film composition's row of the four axes reads tan delta 0.088, 0.081% and 7.6
+  pN/nm2 at the anchor's 364 kHz (at +0.123: 0.065, 0.073%, 6.4; the measured film's channel
+  as calibrated: 0.060, 0.066%, 6.5).
+- **It is the registry and not the turn.** The upright cell with every chain turned 117
+  degrees about its own axis and nothing else changed relaxes in the potential (0.004 eV/A)
+  to a cell with its dipoles 25 degrees from the short edge and no shear, 0.02 below the
+  upright cell: level. The 1.27 comes with the neighbours a monomer along. 3.9 said a pin's
+  registry with its neighbours' pins is worth about the switching window's width; for the
+  film's composition DFT now has a number, 0.060 per monomer, half the window, and the cell
+  with its pins side by side is not the lower one. A statistical terpolymer has its pins at
+  random: a margin from one regular cell carries this much either way.
+- The leader's upright cell turned the same way (117 and -117 degrees) had not come to rest in
+  600 steps here (0.5 above its upright cell and falling at -117): not a result.
+
+
+**The nitrile unit does not hold a kink.** 3.22 left it unasked. The nitrile cell's sheet at
+the nitrile unit itself (site 12, on VA) is **3.64 above** its all-trans cell in DFT (the
+potential 2.18), where its sheet on a fluorinated unit is 0.43 below and the film composition's
+on the chlorine 5.03 below. The chlorine holds a kink and the nitrile repels one.
+
+**The four axes by each event** (`examples/kink_path_points.sh`; `four_axes_at_margins.py
+--barriers`: the frequency is the measured film's 364 kHz times exp(-(a cell's barrier less the
+film composition's) / kT), barriers DFT's; margins DFT's from the upright cells; dipole, switch
+strain and stiffness belt4's):
+
+| | frequency | tan delta at 34 kHz | AC strain at the heat budget | blocked force per area through the crystal, pN/nm2 |
+|---|---:|---:|---:|---:|
+| film's composition (the anchor of each reading) | 364 kHz | 0.065 | 0.073% | 6.4 |
+| leader, by the kink's end moving | 27 MHz | 0.0008 | 0.184% | 10.0 |
+| leader, by the kink's removal | 13 MHz | 0.0016 | 0.175% | 9.5 |
+| leader, by the kink's forming (cells as the scans left them) | 171 kHz | 0.126 | 0.045% | 2.5 |
+| the measured film's channel as calibrated | 364 kHz | 0.060 | 0.066% | 6.5 |
+
+By the film's assumed modulus the blocked force is 0.15, 0.37, 0.35 and 0.09 pN/nm2: the
+strain again. Through the crystal it uses each cell's own stiffness (belt4's) and is an axis of
+its own.
+
+- **By the two events at the scale of the film's own rate, the leader is ahead of the film's
+  composition on all four axes**: 36 to 75 times faster, a fortieth to an eightieth of the
+  loss at 34 kHz, two and a half times the strain at the heat budget and half again the
+  blocked force. By the kink's forming it is behind on all four (half as fast), or level if
+  the cells are relaxed on (1.5 times in the potential), and forming is the event the film's
+  measured rate excludes for the film.
+- **This is the first reading of the leader's rate with DFT behind every energy in it, and it
+  is not yet a row.** The leader's margin is below zero in DFT (-0.047): the loss model takes
+  it as zero and is outside its domain, as in 3.22, so the leader's tan delta and strain are
+  the model's answer to a faster relaxation and not a prediction of that material. What the
+  barriers add is the first column, and a direction: by the events that fit the film's own
+  rate, nothing here makes the leader slower than the film's composition.
+- 3.22's two readings of the kink sites put the leader at 0.7 to 363 kHz, with no barrier in
+  either. The three events put it at 171 kHz to 27 MHz, and the two the film's rate allows at
+  13 to 27 MHz.
+
+**What this is and is not.**
+
+- One site in each cell, the lowest sheet DFT has there, and one path at it. A two-chain
+  periodic cell: every chain takes the step with its neighbours, and the barrier is per chain of
+  a sheet moving as a whole. One chain ahead of its neighbours costs more (`docs/CANDIDATE_MATERIALS.md`
+  8.3, in belt4: 11.6 for one chain in sixteen against 7.5 to 8.9 for the step itself), and a
+  real sheet moves by such steps.
+- Led scans in twelve steps: an upper bound on the potential's barrier along the path, with a
+  top between two images (the fine scans raise the two both-together tops by 0.18 and 0.50).
+  DFT is a single point on the potential's image, not DFT's own saddle. The scans stop at 0.02
+  eV/A, which leaves about 0.3 in a released cell and 1.5 in one that had further to go.
+- Static energies at zero kelvin with one prefactor for every event and both cells. The
+  measured film's time follows Vogel-Fulcher, not Arrhenius: the 7.9 is the barrier an
+  Arrhenius process with the fit's prefactor would need at 300 K, no more.
+- That the film's measured relaxation is this cell's kink process is the document's
+  assumption (`docs/CANDIDATE_MATERIALS.md` 7).
+- The part of a sheet's forming that is a slide of chains along their neighbours was not
+  computed. The all-trans cell in the sheet's registry is 2.6 above the upright one in the
+  leader (DFT, as the scan left it) and 0.84 below it in the film's composition (DFT, relaxed
+  on).
+- The matrix and the nitrile cell were not scanned. No cell's helix was looked at in another
+  registry, and only the film composition's all-trans cell was, by accident of its scan.
+- The refit did not help and the 35 rows were not run.
+
+Files: `docs/predictions/mlip/paths/` (the twelve scans, two fine scans and two release checks,
+each `.json` and `.extxyz`; `all_trans_tight.extxyz`), `mlip/cells14_third_pod_frames_pbe_d3bj.extxyz`
+(the eleven labels, each with `dft_run`), `kink_paths_film.json` and `kink_paths_leader.json`
+(every point and step in both evaluators), `four_axes_by_barrier_{forming,hop,removal}.json`
+(all three by `examples/kink_path_points.sh`), `mlip/refit/` (the two fits' scores and epochs),
+`mlip_own_refit_s1.json`, `mlip_own_refitb_s1.json`. Tools: `examples/mlip_path.py` (`scan`,
+`choose`, `release`, `points`), `examples/mlip_train.py` (`prepare --hold-out-frames --heavy`,
+`train --start --heavy-weight`, `score`), `examples/four_axes_at_margins.py --barriers`. The
+pod's jobs: `examples/gpu_jobs/queue_20261121_path.txt`, `refit.sh`, `refit_score.sh`,
+`path_card.sh`, `steps_card.sh`, `path_dft.sh`. Tests: `tests/test_mlip_path.py`,
+`tests/test_refit_cells14.py`.
