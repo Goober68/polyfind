@@ -32,7 +32,7 @@ screen_card.sh docs/predictions/mlip/screen14_starts_a.extxyz 4 1000 5400 2 proc
 # File B: 54 cells.  The card is free for DFT after it, so its chosen go to both lines.
 screen_card.sh docs/predictions/mlip/screen14_starts_b.extxyz 4 1000 6600 2
 #
-# 16:40 UTC.  (This pod is the second of the go: the first, 0naokkrqptuyi5, never started, its host's card at
+# 16:33 UTC.  (This pod is the second of the go: the first, 0naokkrqptuyi5, never started, its host's card at
 # fault, and was deleted after 23 minutes; this one's limit is shorter by that.)
 #
 # A check of the method made off the pod while the queue above was written: the matrix's upright all-trans cell
@@ -45,3 +45,17 @@ screen_card.sh docs/predictions/mlip/screen14_starts_b.extxyz 4 1000 6600 2
 # leader's labelled one).  From here on the table after each job is of all three files, and a row's all-trans energy
 # is the lowest of what it has.  25 cells.
 screen_card.sh docs/predictions/mlip/screen14_starts_c.extxyz 4 1000 2700 2
+#
+# 17:42 UTC.  File A, in the potential, all-trans less helix per monomer from the lowest of the two all-trans
+# cells so far (the film composition's low pattern and its upright one): the two controls come back as known
+# (the film's composition +0.072, the matrix -0.087); IVRVVRVCVVRVVR -0.033; IVRVVRVCVVVVVR, THE LEADER WITH A CFE
+# FOR ITS NITRILE, +0.088, inside the window; VVRVVRVCVVVVVR +0.410; the three CTFE rows -0.25 to -0.49 with the
+# CTFE row's low cell 6.35 kcal/mol per chain below its upright one, which for a composition that is a relaxor
+# in fact reads as the potential failing on CTFE, to be asked of DFT.  The job put the row in the window and
+# IVRVVRVCVVRVVR on the processors' line.
+#
+# The kink of the row in the window: its sheets at every site (28: fourteen sites and the kink's two hands), made
+# of the film composition's relaxed sheets the same way, against its lowest all-trans cell.  Where its kink sits
+# and how deep says what holds it: 4.0 deep on the chlorine in the film's composition (the potential), whose end
+# moves over 7.7; 0.7 deep on a run of VDF units in the leader, whose end moves over 5.1.
+screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_1.extxyz 4 1000 2700

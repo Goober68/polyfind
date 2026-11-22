@@ -240,5 +240,38 @@ def test_a_rows_kink_sheets_made_of_the_film_compositions_and_the_control_gives_
         assert v["energy"] - was["potential"] == pytest.approx(1.27, abs=0.006) and v["kink_kept"] == was["kink_kept"]
 
 
+def test_the_first_files_margins_in_the_potential_and_its_two_controls(sources):
+    """The fifth pod's card, file A, at rest at 0.004 eV/A: all-trans less helix per monomer from the lower of the two all-trans cells that file has."""
+    from ase.io import read
+
+    stored = json.loads((ROOT / "docs" / "predictions" / "screen14_potential_a.json").read_text())["rows"]
+    assert list(stored) == list(ROWS_A) and all(r["complete"] and r["at_rest"] == 6 for r in stored.values())
+    margins = {k: round(r["margin"], 3) for k, r in stored.items()}
+    assert margins == {"vdf9-trfe4-cfe1-14": 0.072, "vdf8-trfe4-cfe1-rvdf1-14": -0.033, "vdf9-trfe3-cfe1-rvdf1-14": 0.088, "vdf10-trfe3-cfe1-14": 0.410,
+                       "vdf10-trfe4-14": -0.087, "vdf8-trfe4-ctfe1-rvdf1-14": -0.491, "vdf9-trfe3-ctfe1-rvdf1-14": -0.246, "vdf9-trfe4-ctfe1-14": -0.305}
+    # the controls: the film's composition made of itself comes back as it is (+0.072 and +0.163 are its known margins; its upright cell
+    # relaxed sixty steps further here), and the matrix made of the film composition's cells has the matrix's known margin from its low cell (-0.089)
+    film, matrix = stored[FILM], stored["vdf10-trfe4-14"]
+    for kind, cell in film["cells"].items():
+        assert cell["eV_per_monomer"] == pytest.approx(float(sources[kind].info["potential_eV_per_monomer"]), abs=2e-4) and cell["steps"] <= 60
+    assert (film["lowest_tt"], film["lowest_hx"], matrix["lowest_tt"]) == ("tt_low", "hx_TGTGp", "tt_low")
+    e = lambda a: float(a.info["potential_eV_per_monomer"])
+    own = {str(a.info["frame"]): a for a in read(MLIP / "cells14_frames_pbe_d3bj.extxyz", index=":")}
+    own_tt, own_hx = e(own["row_vdf10-trfe4-14_TTTT_chain1_in_all_s1"]), e(own["row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1"])
+    per_chain = 14 * KCAL
+    made = {k: (c["eV_per_monomer"] - (own_tt if k.startswith("tt") else own_hx)) * per_chain for k, c in matrix["cells"].items()}
+    # against the matrix's own labelled cells: its low cell as 3.24 has it, its helix to 0.03, and the cell in the film composition's upright pattern 1.01 above
+    assert (made["tt_low"], made["tt_up"]) == pytest.approx((-1.50, 1.01), abs=0.006)
+    assert sorted(round(v, 2) for k, v in made.items() if k.startswith("hx")) == [-0.03, -0.03, 0.08, 0.08]      # the matrix's own four: 0.00, 0.00, 0.14, 0.14
+    # the row in the window: its lowest all-trans cell is the one in the upright pattern, the low cell 0.18 above it
+    row = stored["vdf9-trfe3-cfe1-rvdf1-14"]
+    assert (row["lowest_tt"], row["lowest_hx"]) == ("tt_up", "hx_GTGpT") and row["low_less_upright_per_chain"] == pytest.approx(0.18, abs=0.006)
+    # the CTFE row's low cell is 6.35 below its upright one in the potential, in another registry (2, -1) and with a bond 43 degrees off trans: not believed without DFT
+    ctfe = stored["vdf9-trfe4-ctfe1-14"]
+    assert ctfe["low_less_upright_per_chain"] == pytest.approx(-6.35, abs=0.006) and [round(x) for x in ctfe["cells"]["tt_low"]["shear_along_chains_monomers"]] == [2, -1]
+    frames = read(MLIP / "screen14_relaxed_a.extxyz", index=":")
+    assert len(frames) == 48 and {str(a.info["frame"]) for a in frames} == {c["frame"] for r in stored.values() for c in r["cells"].values()}
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
