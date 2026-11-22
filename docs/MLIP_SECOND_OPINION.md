@@ -2215,8 +2215,10 @@ the lower one (tops of 5.67 and then 7.25 above the sheet, against 8.68 with bot
 together, 9.18 refined). In the film's composition both together is the lower (8.72, 8.90
 refined, against 7.81 and then 10.66). The other order, the first torsion first, is no lower
 in either cell: in the film's composition its first step tops at 8.05 and rests 4.2 above the
-sheet, and its second does not reach all-trans; in the leader it tops at 7.01 and then 7.26,
-and arrives at an all-trans cell 1.3 above the one the sheet belongs to.
+sheet, and its second arrives at an all-trans cell 2.4 above the one the sheet belongs to; in
+the leader it tops at 7.01 and then 7.26, and arrives at an all-trans cell 1.3 above the one
+the sheet belongs to. (The all-trans cells these scans rest on in the sheet's registry are not
+one cell: the two-step scans end 0.2 to 2.4 above the cell the both-together scan ends on.)
 
 THE POD IS STILL RUNNING AS THIS IS WRITTEN (03:55 UTC 2026-11-22): the DFT labels of the
 tops, the barriers, the four axes and what this is and is not follow when it is gone.

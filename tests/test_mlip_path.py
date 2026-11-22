@@ -147,5 +147,58 @@ def test_the_queues_fit_line_names_files_and_frames_that_are_there(frames):
                 assert start in frames and end in frames
 
 
+SCANS = ("f", "r", "a1", "a2", "b1", "b2")
+# each scan: its top (image, kcal/mol per chain above its first image), where its released last image rests, and how far its led torsions rest from the end (degrees)
+STORED = {"film_f": ("i06", 10.31, 2.56, 9.4), "film_r": ("i07", 8.37, 5.13, 4.4), "film_a1": ("i07", 7.70, 3.86, 10.0), "film_a2": ("i11", 4.55, 3.66, 16.3),
+          "film_b1": ("i07", 7.46, 1.31, 15.5), "film_b2": ("i07", 9.00, 4.39, 0.2), "leader_f": ("i07", 5.62, 1.50, 10.6), "leader_r": ("i04", 8.68, 3.08, 7.5),
+          "leader_a1": ("i06", 7.01, 0.87, 4.9), "leader_a2": ("i06", 6.39, 3.53, 1.6), "leader_b1": ("i08", 5.67, 0.85, 10.9), "leader_b2": ("i07", 6.41, 2.41, 1.8)}
+ARRIVE_ALL_TRANS = ("film_r", "film_a2", "film_b2", "leader_r", "leader_a2", "leader_b2")   # every backbone torsion trans at rest
+
+
+def _stored(name):
+    return json.loads((MLIP / "paths" / f"{name}.json").read_text())
+
+
+def test_the_stored_scans_tops_and_where_each_arrived():
+    from ase.io import read
+
+    for name, (top, energy, rest, off) in STORED.items():
+        t = _stored(name)
+        assert t["potential"] == "all_s1" and t["restraint_eV"] == 10.0 and t["fmax_eV_per_A"] == 0.02
+        rows = t["images"]
+        assert [r["image"] for r in rows] == [f"i{i:02d}" for i in range(13)] + ["released"] and all(r["converged"] for r in rows)
+        assert rows[0]["energy"] == pytest.approx(0.0, abs=1e-9)                        # every energy is against the scan's first image, as labelled
+        assert (t["top"]["image"], t["top"]["energy"]) == (top, pytest.approx(energy, abs=0.006)) and energy == pytest.approx(max(r["energy"] for r in rows[:13]), abs=0.006)
+        assert t["arrived"]["energy"] == pytest.approx(rest, abs=0.006) and t["arrived"]["converged"]
+        assert np.abs(t["arrived"]["torsions_from_the_end_deg"]).max() == pytest.approx(off, abs=0.06)
+        frames = read(MLIP / "paths" / f"{name}.extxyz", index=":")
+        tool = _tool()
+        at_rest = tool.torsions_deg(frames[-1], tool.backbone_torsions(frames[-1]))
+        assert (np.abs(at_rest).min() > 150) == (name in ARRIVE_ALL_TRANS), name
+        assert [str(a.info["frame"]) for a in frames] == [f"{name}_{r['image']}" for r in rows]
+        e0 = float(frames[0].info["potential_eV_per_monomer"])
+        assert [(float(a.info["potential_eV_per_monomer"]) - e0) * 14 * 23.0605 for a in frames] == pytest.approx([r["energy"] for r in rows], abs=2e-3)
+    # from upright all-trans the kink's torsions arrive at a kinked cell that is still upright; from the sheet at an all-trans cell still sheared
+    for cell, back in (("film", (0.96, -0.96)), ("leader", (-0.47, -1.07))):
+        assert np.abs(_stored(f"{cell}_f")["arrived"]["shear_along_chains_monomers"]).max() < 0.21
+        assert _stored(f"{cell}_r")["arrived"]["shear_along_chains_monomers"] == pytest.approx(back, abs=0.006)
+    # one torsion of the pair led alone: the other gauche bond moves a monomer along and the kink is stretched, G T T T G'
+    for cell in ("film", "leader"):
+        one, rest = _stored(f"{cell}_b1"), _stored(f"{cell}_b2")
+        assert one["only"] == [1, 3] and len(one["led_torsions"]) == 2
+        first = [q[0] for q in rest["led_torsions"]]
+        a = np.array(rest["start_torsions_deg"])
+        gauche = [i for i in range(len(first) // 2) if abs(a[i]) < 75]
+        assert len(gauche) == 2 and np.sign(a[gauche[0]]) != np.sign(a[gauche[1]])
+        assert first[gauche[1]] - first[gauche[0]] == 12                                 # four backbone bonds apart (three atoms a backbone carbon here), where the kink's are two
+        kink = _stored(f"{cell}_r")["led_torsions"]
+        assert kink[1][0] - kink[0][0] == 6
+    # the fine scans start at the image before the top and find it higher: 8.55 and 9.18
+    assert [(_stored(f"{c}_r_fine")["top"]["energy"]) for c in ("film", "leader")] == pytest.approx([8.55, 9.18], abs=0.006)
+    # released with no restraint, the images beside the film composition's top fall to its two ends; the leader's image after its top falls to neither
+    assert [v["fell_to"] for v in _stored("film_r_free")["images"].values()] == ["start", "end"]
+    assert [v["fell_to"] for v in _stored("leader_r_free")["images"].values()] == ["start", "neither"]
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
