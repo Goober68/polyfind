@@ -1934,6 +1934,13 @@ Tests: `tests/test_cells14_dft.py`.
 
 ### 3.22 The second round of DFT at fourteen monomers: all four cells have a margin, the nitrile cells' kinked states are shallow, and DFT runs on the card (2026-11-21; PI: "Go on rented, mi100 not online yet")
 
+*Read with 3.23: every margin below is measured from an upright all-trans cell, and the film
+composition's all-trans cell with its neighbours a monomer along is 0.84 kcal/mol per chain
+lower in DFT. Measured from it the film composition's margin is +0.063, level with the matrix's:
+"the film composition's lead" below is withdrawn until the other cells have been looked at the
+same way. 3.23 also asks DFT about the kink at the nitrile unit (3.64 above all-trans) and puts
+a barrier where this section's two readings of the frequency had none.*
+
 A second rented machine of the same kind (one A40, 7.65 processors allotted, $0.59 an hour;
 `examples/gpu_jobs/queue_20261121_dft14b.txt`), 8.48 hours, about $5.00. Sixteen more DFT
 single points in 3.21's set-up, seven on the processors and nine on the card, the two lines
