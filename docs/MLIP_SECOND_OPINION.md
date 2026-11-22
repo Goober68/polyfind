@@ -2273,7 +2273,6 @@ by the stretched kink, so its forming and its removal have the higher of the two
   the stretched kink is 1.66 above the kink on the chlorine in the potential (not labelled):
   there the hop is the kink's end leaving the chlorine, and it comes back over 6.2.
 
-
 **The film's own measured rate says which of the three it is not.** The 364 kHz of the measured
 film (the small-signal loss peak of a 63/30/7 film at 300 K and zero bias,
 `docs/CANDIDATE_MATERIALS.md` 7) is a rate of 2.3e6 /s. With the prefactor of its own
@@ -2329,9 +2328,9 @@ What follows:
   film's composition DFT now has a number, 0.060 per monomer, half the window, and the cell
   with its pins side by side is not the lower one. A statistical terpolymer has its pins at
   random: a margin from one regular cell carries this much either way.
-- The leader's upright cell turned the same way (117 and -117 degrees) had not come to rest in
-  600 steps here (0.5 above its upright cell and falling at -117): not a result.
-
+- The leader's upright cell turned -117 degrees had not come to rest in 600 steps here (0.5
+  above its upright cell and still falling), and turned +117 it starts with a contact of 1.6 A
+  between chains and was not run out: not a result.
 
 **The nitrile unit does not hold a kink.** 3.22 left it unasked. The nitrile cell's sheet at
 the nitrile unit itself (site 12, on VA) is **3.64 above** its all-trans cell in DFT (the
@@ -2396,7 +2395,9 @@ its own.
 - The refit did not help and the 35 rows were not run.
 
 Files: `docs/predictions/mlip/paths/` (the twelve scans, two fine scans and two release checks,
-each `.json` and `.extxyz`; `all_trans_tight.extxyz`), `mlip/cells14_third_pod_frames_pbe_d3bj.extxyz`
+each `.json` and `.extxyz`; `all_trans_tight.extxyz`: the two released all-trans cells relaxed
+on, and the film composition's upright cell with its chains turned, by `examples/turn_chains.py`
+and `mlip_train.py relax`), `mlip/cells14_third_pod_frames_pbe_d3bj.extxyz`
 (the eleven labels, each with `dft_run`), `kink_paths_film.json` and `kink_paths_leader.json`
 (every point and step in both evaluators), `four_axes_by_barrier_{forming,hop,removal}.json`
 (all three by `examples/kink_path_points.sh`), `mlip/refit/` (the two fits' scores and epochs),
