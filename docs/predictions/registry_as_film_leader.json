@@ -34,6 +34,39 @@
     9.737023507509173,
     35.741561195188396
    ]
+  },
+  "reg_leader_tt_as_film_low_registry_back": {
+   "relaxed": true,
+   "frame": "reg_leader_tt_as_film_low_registry_back_in_all_s1",
+   "label": "leader",
+   "conformation": "tt",
+   "of": "tt_leader_from_rows14an_r1",
+   "shear_asked": [
+    0,
+    0
+   ],
+   "turn_asked": 116,
+   "converged": true,
+   "steps": 517,
+   "energy": 0.36384560680995837,
+   "shear_along_chains_monomers": [
+    0.1409094283878625,
+    -0.01716381829856841
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -0.07764414269720431,
+    -0.1784727708565495
+   ],
+   "dipole_from_a_deg": -162.9628128752361,
+   "dipole_from_a_deg_labelled": 79.34657205987806,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.11158279188299,
+    9.369105014819825,
+    35.72731572591607
+   ]
   }
  }
 }
