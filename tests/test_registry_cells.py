@@ -115,7 +115,7 @@ def test_the_stored_starts_are_the_scripts_and_none_has_chains_that_touch(labell
         assert 1.0 <= float(a.info["registry_widened"]) <= 1.08
     queue = (ROOT / "examples" / "gpu_jobs" / "queue_20261122_registry.txt").read_text().splitlines()
     first = next(line for line in queue if line and not line.startswith("#")).split()
-    assert first[0] == "registry_card.sh" and (ROOT / first[1]).samefile(MLIP / "registry_starts.extxyz") and [int(v) for v in first[2:5]] == [4, 400, 2700]
+    assert first[0] == "registry_card.sh" and (ROOT / first[1]).samefile(MLIP / "registry_starts.extxyz") and [int(v) for v in first[2:5]] == [4, 600, 2700]
     assert first[6] in {str(a.info["frame"]) for a in read(ROOT / first[5], index=":")}
     for line in queue:
         if line and not line.startswith("#"):
