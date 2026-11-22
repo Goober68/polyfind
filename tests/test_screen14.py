@@ -419,5 +419,24 @@ def test_where_the_kink_sits_in_the_two_rows_with_the_leaders_other_features():
     assert all(nopin["sites"][s]["units"] == "VV" for s in ("18m", "20m", "16m"))
 
 
+def test_the_candidates_margin_in_dft_is_the_potentials_on_its_lowest_cells_and_not_on_the_others():
+    """IVRVVRVCVVVVVR, four cells labelled on the fifth pod (PBE-D3(BJ) single points on the potential's cells).  From its lowest labelled cells DFT has
+    +0.196 and the potential +0.204; on its upright all-trans cell and its helix in the film composition's packing DFT has -0.035 and the potential +0.088."""
+    from ase.io import read
+
+    row = json.loads((ROOT / "docs" / "predictions" / "screen14_dft.json").read_text())["rows"]["vdf9-trfe3-cfe1-rvdf1-14"]
+    assert (row["lowest_tt"], row["lowest_hx"]) == ("tt_up", "hx_ldr") and sorted(row["cells"]) == ["hx_GTGpT", "hx_ldr", "tt_low", "tt_up"]
+    assert (row["margin"], row["margin_potential_same_cells"], row["margin_potential"]) == pytest.approx((0.196, 0.204, 0.201), abs=0.0006)
+    dft = {k: c["dft_eV_per_monomer"] for k, c in row["cells"].items()}
+    pot = {k: c["potential_eV_per_monomer"] for k, c in row["cells"].items()}
+    per_chain = lambda e, k: (e[k] - e["tt_up"]) * 14 * KCAL
+    assert [round(per_chain(dft, k), 2) for k in ("tt_low", "hx_GTGpT", "hx_ldr")] == [1.51, 0.49, -2.75]
+    assert [round(per_chain(pot, k), 2) for k in ("tt_low", "hx_GTGpT", "hx_ldr")] == [0.18, -1.23, -2.85]
+    assert (dft["tt_up"] - dft["hx_GTGpT"]) * KCAL == pytest.approx(-0.035, abs=0.0006) and (pot["tt_up"] - pot["hx_GTGpT"]) * KCAL == pytest.approx(0.088, abs=0.0006)
+    assert max(c["dft_largest_force_eV_per_A"] for c in row["cells"].values()) < 0.23
+    frames = read(MLIP / "screen14_frames_pbe_d3bj.extxyz", index=":")
+    assert [str(a.info["dft_run"]) for a in frames] == ["processors"] * 4 + ["card"] and str(frames[-1].info["frame"]) == "scr_vdf9-trfe3-cfe1-rvdf1-14_hx_ldr_in_all_s1"
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

@@ -1,0 +1,49 @@
+{
+ "what": "the screen's rows that have DFT labels (PBE-D3(BJ) single points on the cells the potential relaxed): margin, all-trans less helix in kcal/mol per monomer, between the lowest labelled all-trans cell and the lowest labelled helix cell, in DFT and in the potential on the same two cells; cells: eV per monomer",
+ "rows": {
+  "vdf9-trfe3-cfe1-rvdf1-14": {
+   "letters": "IVRVVRVCVVVVVR",
+   "lowest_tt": "tt_up",
+   "lowest_hx": "hx_ldr",
+   "margin": 0.1962845391866322,
+   "margin_potential_same_cells": 0.20380110143663333,
+   "margin_potential": 0.20131465459280037,
+   "cells": {
+    "tt_low": {
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_tt_low_in_all_s1",
+     "dft_eV_per_monomer": -2002.1540679526681,
+     "potential_eV_per_monomer": -2002.1601347480757,
+     "dft_largest_force_eV_per_A": 0.13375419
+    },
+    "tt_up": {
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_tt_up_in_all_s1",
+     "dft_eV_per_monomer": -2002.1587428538387,
+     "potential_eV_per_monomer": -2002.1606883247393,
+     "dft_largest_force_eV_per_A": 0.06581947
+    },
+    "hx_GTGpT": {
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_hx_GTGpT_in_all_s1",
+     "dft_eV_per_monomer": -2002.1572319125946,
+     "potential_eV_per_monomer": -2002.1644933870743,
+     "dft_largest_force_eV_per_A": 0.22694022
+    },
+    "hx_ldr": {
+     "frame": "scr_vdf9-trfe3-cfe1-rvdf1-14_hx_ldr_in_all_s1",
+     "dft_eV_per_monomer": -2002.1672545747115,
+     "potential_eV_per_monomer": -2002.1695259952771,
+     "dft_largest_force_eV_per_A": 0.07187287
+    }
+   },
+   "low_less_upright_per_chain": 1.5092778182163789,
+   "low_less_upright_per_chain_potential": 0.17872056511513576,
+   "all_trans_per_chain": {
+    "tt_low": 1.5092778182163789,
+    "tt_up": 0.0
+   },
+   "all_trans_per_chain_potential": {
+    "tt_low": 0.17872056511513576,
+    "tt_up": 0.0
+   }
+  }
+ }
+}
