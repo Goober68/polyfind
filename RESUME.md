@@ -729,6 +729,25 @@ right": true at one registry, not along it).
         table --scans scratchpad/runpod/path/jobs/06_path_card/{film_f,film_r,leader_f,leader_r}.json
         --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz --out ...`; store the scans under
         `docs/predictions/mlip/paths/`; labels of images land in `jobs/shared/dft*/NAME.dft.xyz`.
+        AT 00:07 UTC 2026-11-22: THE FOUR SCANS ARE DONE (15 minutes) AND STORED (`docs/predictions/mlip/
+        paths/{film,leader}_{f,r}.json/.extxyz`). In `all_s1`, kcal/mol per chain: FROM UPRIGHT ALL-TRANS the
+        scan tops at 10.3 (film's composition) and 5.6 (leader) and arrives at an UPRIGHT kinked cell (+2.6,
+        +1.5), not at the sheared sheet; FROM THE SHEET it tops 8.4 (8.55 refined) and 8.7 (9.2 refined)
+        above the sheet and arrives at an ALL-TRANS CELL STILL AT THE SHEET'S SHEAR (+5.1 and +3.1 above
+        the sheet: +0.10 and +1.45 above upright all-trans). So the kink costs 3.4 (film) and 6.1 (leader)
+        from an all-trans cell already sheared. THE PATH HAS TWO PARTS, KINK AND SHEAR, and the shear step
+        is being scanned on its own (job 14, `shear_card.sh`, `mlip_path.py shear`: film_flat, film_kinked,
+        leader_flat, leader_kinked). Release checks: the film's top separates its two ends; the leader's
+        image after the top falls to a THIRD state (one torsion gauche, one near -113, +3.6 above the
+        sheet): its two torsions do not go together, and the led scan is an upper bound.
+        DFT IN LINE (`path_dft.sh`, jobs 7 to 13). Card (45 minutes each, from 00:00): film_r_i07,
+        leader_r_i04, film_f_i06, leader_f_i07, film_r_released, leader_r_released, film_r_i08,
+        leader_r_i05. Processors (65 minutes each): the nitrile-unit kink (from 23:45), film_r_i06,
+        leader_r_i03, film_f_released, leader_f_released. Gather with `python scratchpad/runpod/
+        mirror_path.py` then `python -I scratchpad/path_labels.py docs/predictions/mlip/
+        cells14_third_pod_frames_pbe_d3bj.extxyz`; table with `examples/mlip_path.py table --scans
+        docs/predictions/mlip/paths/*.json --labels <the two label files>`. DELETE THE POD WHEN BOTH LINES
+        ARE EMPTY OR BY 06:00 UTC.
         WHAT THE PATH IS AND IS NOT: a two-chain periodic cell, so every chain forms its kink in step with
         its neighbours: the barrier of the sheet forming as a whole, per chain. A nudged elastic band is
         not used (ase refuses images whose cells differ; the cell's shear is part of this path).
