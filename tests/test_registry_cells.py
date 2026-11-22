@@ -117,8 +117,12 @@ def test_the_stored_starts_are_the_scripts_and_none_has_chains_that_touch(labell
     first = next(line for line in queue if line and not line.startswith("#")).split()
     assert first[0] == "registry_card.sh" and (ROOT / first[1]).samefile(MLIP / "registry_starts.extxyz") and [int(v) for v in first[2:5]] == [4, 600, 2700]
     assert first[6] in {str(a.info["frame"]) for a in read(ROOT / first[5], index=":")}
-    more = next(line for line in queue if line.startswith("registry_more.sh ")).split()
-    assert (ROOT / more[1]).samefile(MLIP / "registry_starts.extxyz") and more[2:] == ["4", "900", "2400", "auto:4.0"]
+    more = [line.split() for line in queue if line.startswith("registry_more.sh ")]
+    assert (ROOT / more[0][1]).samefile(MLIP / "registry_starts.extxyz") and more[0][2:] == ["4", "900", "2400", "auto:4.0"]
+    assert (ROOT / more[1][1]).samefile(MLIP / "registry_starts_like.extxyz") and more[1][2:] == ["4", "900", "1200", "auto:6.0"]
+    jobs = [line.split()[0] for line in queue if line and not line.startswith("#")]
+    assert jobs[:4] == ["registry_card.sh", "registry_more.sh", "registry_card.sh", "registry_more.sh"]
+    assert (ROOT / "examples" / "gpu_jobs" / "registry_more.cap").read_text().split() == ["02", "600"]     # the second job, cut to ten minutes
     for line in queue:
         if line and not line.startswith("#"):
             assert (ROOT / "examples" / "gpu_jobs" / line.split()[0]).exists() or line.split()[0] == "stop"

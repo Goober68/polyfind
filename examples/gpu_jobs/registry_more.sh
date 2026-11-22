@@ -14,6 +14,10 @@
 set -uo pipefail
 STARTS="$1"; SIDE="$2"; STEPS="$3"; BUDGET="$4"; shift 4
 HERE="$(dirname "$0")"
+# registry_more.cap (beside this script): lines "NN SECONDS".  A line of a pod's queue cannot be changed once it is
+# there; a job whose number is NN gets at most SECONDS, whatever its line says.
+CAP="$(awk -v n="$(basename "$JOB_OUT" | cut -c1-2)" '$1 == n {print $2}' "$HERE/registry_more.cap" 2>/dev/null | tail -n 1)"
+if [ -n "$CAP" ] && [ "$CAP" -lt "$BUDGET" ]; then echo "this job's time is cut from $BUDGET to $CAP s (registry_more.cap)"; BUDGET="$CAP"; fi
 source "$HERE/mlip_env.sh"
 export MLIP_DEVICE="${MLIP_DEVICE:-cuda}" OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 MODEL=docs/predictions/mlip/models/all_s1.model

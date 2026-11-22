@@ -32,3 +32,13 @@ registry_more.sh docs/predictions/mlip/registry_starts.extxyz 4 900 2400 auto:4.
 # lattice across them, the same monomers along), and to the film's composition itself as the control: its
 # cell must come back to the one 3.23 labelled, 1.27 below upright.  Four cells, one a process, ten minutes.
 registry_card.sh docs/predictions/mlip/registry_starts_like.extxyz 4 600 900
+#
+# 07:34 UTC.  The control, run here on four processors while the card works: the film composition's cell made
+# like its own low cell starts 13 above its upright cell (rigid upright chains in the low cell's lattice) and
+# is 0.7 above at 325 steps, still falling 0.4 a hundred steps toward the 1.27 below: these cells need about a
+# thousand steps whatever the start.  Of the first job's cells at rest so far, every helix cell with its
+# neighbours two monomers along is above its upright helix cell (1.7 to 5.8).  So the card's time goes to
+# the cells made like the film composition's low cell: the second job above is cut to ten minutes
+# (examples/gpu_jobs/registry_more.cap: a queue line cannot be changed), and after the third the like cells
+# are relaxed on, 900 more steps each, 20 minutes.
+registry_more.sh docs/predictions/mlip/registry_starts_like.extxyz 4 900 1200 auto:6.0
