@@ -49,8 +49,12 @@
   "all-trans, the sheet's registry, relaxed on": {
    "image": "leader_r_released_tight",
    "potential": 2.7571442887362028,
-   "dft": null,
-   "label": null
+   "dft": 2.873450659280847,
+   "label": "leader_r_released_tight",
+   "potential_minus_dft": -0.1163063705446441,
+   "dft_largest_force_eV_per_A": 0.11175403,
+   "dft_minutes": 77.28333333333333,
+   "dft_run": "processors"
   },
   "kinked, upright": {
    "image": "leader_f_released",

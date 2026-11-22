@@ -204,7 +204,7 @@ PRED = ROOT / "docs" / "predictions"
 THIRD = ("sheet_vdf9-trfe4-an1-14_belt4_at12_sheared_in_all_s1", "film_r_i07", "film_r_i06", "film_r_released", "leader_b1_i08", "leader_r_released", "leader_b2_i07",
          "film_f_released", "film_b1_i07", "film_r_released_tight", "leader_b1_released")
 KCAL = 14 * 23.0605
-CARD, IMAGES, RANGE, RMS = 6, 13, (-0.94, 0.54), 0.45
+CARD, IMAGES, RANGE, RMS = 6, 14, (-0.94, 0.54), 0.43
 FILM_POINTS = {"all-trans, upright": (5.03, 5.26), "all-trans, upright, stepped toward DFT's minimum": (4.86, 5.37), "sheet, stepped toward DFT's minimum": (-0.40, 0.35),
                "all-trans, the sheet's registry": (5.92, 5.48), "all-trans, the sheet's registry, relaxed on": (4.19, 3.99), "kinked, upright": (8.87, 7.93),
                "all-trans, upright, every chain turned": (None, 5.23),
@@ -212,7 +212,7 @@ FILM_POINTS = {"all-trans, upright": (5.03, 5.26), "all-trans, upright, stepped 
                "the image before that top": (8.94, 8.52), "the image after that top": (None, 8.31), "that top in finer steps": (None, 8.90),
                "top: sheet to stretched kink": (7.70, 7.81), "top: stretched kink to all-trans": (None, 10.66)}
 LEADER_POINTS = {"all-trans, upright": (0.72, 1.25), "all-trans, upright, stepped toward DFT's minimum": (0.24, 1.63), "all-trans, the sheet's registry": (3.32, 3.08),
-                 "all-trans, the sheet's registry, relaxed on": (None, 2.76), "kinked, upright": (None, 3.13), "stretched kink": (0.32, 0.85),
+                 "all-trans, the sheet's registry, relaxed on": (2.87, 2.76), "kinked, upright": (None, 3.13), "stretched kink": (0.32, 0.85),
                  "top: upright all-trans to upright kinked": (None, 7.25), "top: both torsions together": (None, 8.68), "the image before that top": (None, 5.92),
                  "the image after that top": (None, 7.92), "that top in finer steps": (None, 9.18), "top: sheet to stretched kink": (5.13, 5.67),
                  "top: stretched kink to all-trans": (7.08, 7.25), "the image after the top from the stretched kink": (7.41, 7.16)}     # the last labelled on the fourth pod (3.24)
@@ -298,9 +298,13 @@ def test_the_film_compositions_upright_all_trans_cell_is_not_its_lowest_in_dft()
     turned = tight["film_all_trans_turned_117_tight"]
     assert film["all-trans, upright, every chain turned"]["potential"] - up["potential"] == pytest.approx(-0.02, abs=0.006)
     assert np.abs(tool._shear(turned)).max() < 0.01 and np.abs(tool.torsions_deg(turned, tool.backbone_torsions(turned))).min() > 155
-    # the leader's cell in its sheet's registry stays above its upright cell
-    assert leader["all-trans, the sheet's registry, relaxed on"]["potential"] - leader["all-trans, upright"]["potential"] == pytest.approx(1.50, abs=0.006)
-    assert leader["all-trans, the sheet's registry, relaxed on"]["dft"] is None
+    # the leader's cell in its sheet's registry stays above its upright cell: 1.50 in the potential, 2.16 in DFT (labelled on the fourth pod, 3.24)
+    on, flat = leader["all-trans, the sheet's registry, relaxed on"], leader["all-trans, upright"]
+    assert (on["potential"] - flat["potential"], on["dft"] - flat["dft"]) == pytest.approx((1.50, 2.16), abs=0.006) and on["dft_largest_force_eV_per_A"] == pytest.approx(0.11, abs=0.005)
+    # and the leader's kink forms from that cell over 4.54 in DFT (its own top), 4.50 in the potential (its own); the film composition's 5.03 and 4.74
+    assert leader["the image after the top from the stretched kink"]["dft"] - on["dft"] == pytest.approx(4.54, abs=0.006)
+    assert leader["top: stretched kink to all-trans"]["potential"] - on["potential"] == pytest.approx(4.50, abs=0.006)
+    assert film["top: both torsions together"]["dft"] - low["dft"] == pytest.approx(5.03, abs=0.006) and film["top: both torsions together"]["potential"] - low["potential"] == pytest.approx(4.74, abs=0.006)
 
 
 def test_the_four_axes_by_each_events_barrier():
