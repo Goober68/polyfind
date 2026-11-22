@@ -12,6 +12,8 @@ cd "$(dirname "$0")/.."
 OUT="${1:-docs/predictions}"
 P=docs/predictions/mlip/paths
 L="docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz docs/predictions/mlip/cells14_third_pod_frames_pbe_d3bj.extxyz"
+# the fourth pod labelled three of these points that the third left without DFT (3.24)
+[ -f docs/predictions/mlip/cells14_fourth_pod_frames_pbe_d3bj.extxyz ] && L="$L docs/predictions/mlip/cells14_fourth_pod_frames_pbe_d3bj.extxyz"
 CFE=vdf9-trfe4-cfe1-14; LEADER=vdf9-trfe3-an1-rvdf1-14
 STEPS=("the kink forms, both torsions together=all-trans, the sheet's registry>top: both torsions together>sheet"
   "the second gauche bond moves a monomer along=sheet>top: sheet to stretched kink>stretched kink"
