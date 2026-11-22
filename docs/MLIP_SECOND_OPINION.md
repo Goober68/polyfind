@@ -2195,7 +2195,9 @@ cells, not two.** Both of each cell's labelled ends were scanned from.
   cell: its neighbours along the two cell edges sit further along the chains than in the
   upright cell (by 0.96 and -0.96 monomers in the film's composition, -0.47 and -1.07 in the
   leader), and in the film's composition every chain's dipole is turned 123 degrees about its
-  axis (11 in the leader). The scan's last image, relaxed with no restraint, stays there.
+  axis (11 in the leader). The scan's last image, relaxed with no restraint, stays there, at
+  the scans' stop of 0.02 eV/A and at 0.004 (below: the film composition's then falls a long
+  way without leaving).
 
 So a kink sheet's forming has two parts: the kink, and the registry of the chains with their
 neighbours. In a regular cell whose pins sit side by side the second is every chain sliding
@@ -2204,7 +2206,8 @@ other with the atoms relaxed at each step, and those scans do not connect (the f
 composition's ends 5.0 above its target in the target's own cell): they are not paths and are
 not stored. The barriers below are the kink's, from the all-trans cell that has the sheet's
 registry, and the upright all-trans cell, the reference of the margins and of 3.21 and 3.22, is
-beside it in the table.
+beside it in the table. A statistical terpolymer has no register of pins to leave: the kink's
+part is the part that carries over to a film.
 
 **One torsion at a time, a kink is not undone: it is stretched.** Leading only the second
 torsion of each chain's pair back to trans does not arrive at half a kink. The gauche bond
