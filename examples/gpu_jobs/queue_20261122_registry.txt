@@ -84,3 +84,11 @@ registry_card.sh docs/predictions/mlip/registry_starts_as_film_nitrile.extxyz 2 
 # labelled helix cells are shaken (1.5 ps at 350 K in the potential, each in its own cell) and relaxed again;
 # one that comes to rest more than 0.3 below where it started goes to DFT.
 anneal_card.sh docs/predictions/mlip/registry_starts_helix_annealed.extxyz 4 1500 350 700 3000
+#
+# 08:21 UTC.  The nitrile composition in the film composition's low cell: 1.51 BELOW ITS UPRIGHT CELL in the
+# potential, at rest (with its neighbours moved back: -0.05, level).  The job put it on the card's DFT line
+# behind the matrix's.  Three compositions have the low cell now (film -1.27, matrix -1.50, nitrile -1.51).
+# The fourth: the leader made of the film composition's low cell (examples/registry_cells.py derive morph:
+# every backbone carbon's substituents changed where they stand to the leader's, eight carbons a cell: the
+# CFE's carbon a nitrile's, a TrFE's a VDF's, a VDF turned head to head).  One cell alone on the card.
+registry_card.sh docs/predictions/mlip/registry_starts_as_film_leader.extxyz 1 1000 600
