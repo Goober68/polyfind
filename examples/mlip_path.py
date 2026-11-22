@@ -23,6 +23,8 @@ through its bonds, so the path is made the way the molecule would go:
 ``release`` images of a scan relaxed with no restraint: an image before the top should fall back
            to the start and one after it on to the end, or the top is not what separates them.
 ``table``  scans (and the DFT labels of their images, where there are any) as one table.
+``points`` named images of several scans against one zero (a cell's sheet), in the potential and in
+           DFT where the image is labelled: the states and the tops of a cell's paths in one list.
 
 A nudged elastic band is not used: ase's refuses images whose cells differ, and here the cell's
 shear is part of the path.
@@ -469,6 +471,48 @@ def table(args):
     print(f"written {args.out}")
 
 
+def points(args):
+    """Named images against one zero, kcal/mol per chain: the potential's energy (stored with each image of a scan) and
+    DFT's where the image is labelled.  An image is IMAGE or IMAGE|LABEL when the labelled frame has another name (a scan's
+    first image is a labelled cell)."""
+    from ase.io import read
+
+    stored, labelled = {}, {}
+    for f in args.scans:
+        for a in read(f, index=":"):
+            stored[str(a.info["frame"])] = a
+    for f in args.labels:
+        for a in read(f, index=":"):
+            labelled[str(a.info["frame"])] = a
+
+    def both(spec):
+        image, _, label = spec.partition("|")
+        a = stored[image]
+        n = int(a.info["n_monomers"])
+        lab = labelled.get(label or image)
+        return (float(a.info["potential_eV_per_monomer"]) * n, None if lab is None else float(lab.info["REF_energy"]), lab, image, (label or image) if lab is not None else None)
+
+    p0, d0, _, zero_image, zero_label = both(args.zero)
+    if d0 is None:
+        raise SystemExit(f"the zero {args.zero} has no DFT label")
+    out = {"what": "images of scans in a potential (examples/mlip_path.py) against one zero, kcal/mol per chain of the two-chain cell: the potential's energy with D3, and "
+                   "DFT's (PBE-D3(BJ), single points on the potential's images) where the image is labelled",
+           "name": args.name, "zero": {"image": zero_image, "label": zero_label}, "points": {}}
+    for item in args.point:
+        label, spec = item.split("=", 1)
+        e, d, lab, image, name = both(spec)
+        row = {"image": image, "potential": (e - p0) / CHAINS * KCAL, "dft": None if d is None else (d - d0) / CHAINS * KCAL, "label": name}
+        if d is not None:
+            row["potential_minus_dft"] = row["potential"] - row["dft"]
+            row["dft_largest_force_eV_per_A"] = float(np.abs(lab.arrays["REF_forces"]).max())
+            row["dft_minutes"] = float(lab.info["dft_seconds"]) / 60.0
+            row["dft_run"] = str(lab.info.get("dft_run", ""))
+        out["points"][label] = row
+        print(f"{args.name}: {label:58s} the potential {row['potential']:+7.2f}" + ("" if d is None else f"   DFT {row['dft']:+7.2f}   (the potential less DFT {row['potential_minus_dft']:+.2f})"))
+    Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
+    print(f"written {args.out}")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="step", required=True)
@@ -515,12 +559,19 @@ def main():
     s.add_argument("--fmax", type=float, default=0.02)
     s.add_argument("--steps", type=int, default=600)
     s.add_argument("--threads", type=int, default=1)
+    s = sub.add_parser("points")
+    s.add_argument("--name", required=True)
+    s.add_argument("--scans", nargs="+", required=True, help="scans' .extxyz files")
+    s.add_argument("--labels", nargs="+", required=True, help="files of DFT-labelled frames")
+    s.add_argument("--zero", required=True, help="IMAGE|LABEL: the image and the labelled frame everything is measured from")
+    s.add_argument("--point", nargs="+", required=True, metavar="LABEL=IMAGE[|LABELLED]", help="what the image is, and the image")
+    s.add_argument("--out", required=True)
     s = sub.add_parser("table")
     s.add_argument("--scans", nargs="+", required=True, help="scans' .json files")
     s.add_argument("--labels", nargs="*", default=[], help="files of DFT-labelled frames: the paths' first images and whichever images were labelled")
     s.add_argument("--out", required=True)
     args = p.parse_args()
-    {"scan": scan, "shear": shear, "choose": choose, "release": release, "table": table}[args.step](args)
+    {"scan": scan, "shear": shear, "choose": choose, "release": release, "table": table, "points": points}[args.step](args)
 
 
 if __name__ == "__main__":
