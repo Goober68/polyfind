@@ -33,3 +33,20 @@ dft_cells.sh start 8 2 docs/predictions/mlip/cells14_tight_in_all_s1.extxyz shee
 # Neither fit is better than all_s1 where it was not shown the answer, so the paths are scanned
 # in all_s1, as the rule set beforehand says.
 path_card.sh docs/predictions/mlip/models/all_s1.model 12 film:row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1:sheet_vdf9-trfe4-cfe1-14_belt4_at14m_sheared_in_all_s1_in_all_s1 leader:tt_leader_from_rows14an_r1_in_all_s1:sheet_vdf9-trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1
+# 00:05 UTC 2026-11-22.  The four scans took fifteen minutes.  From the upright all-trans cell
+# each arrives at an upright kinked cell (film's composition: top 10.3, arriving at +2.6;
+# leader: top 5.6, arriving at +1.5), not at the sheared sheet; from the sheet each arrives at
+# an all-trans cell still at the sheet's shear (film's composition: top 8.4 above the sheet,
+# 3.2 above where it arrives; leader: 8.7 and 5.6).  The job took the scans from the sheets
+# and put their tops and the images beside them in line.  The pod has six hours left, so DFT
+# is also asked about the other tops (the scans from all-trans) and about where the scans
+# arrived, which no label has: the all-trans cells at the sheets' shear (the reference the
+# scans from the sheets need) and then the upright kinked cells.  The images after the tops
+# go to the end of the card's line.
+path_dft.sh card start film_f film_f_i06
+path_dft.sh card start leader_f leader_f_i07
+path_dft.sh card start film_r film_r_released
+path_dft.sh card start leader_r leader_r_released
+dft_cells.sh in=dft_card last film_r_i08 leader_r_i05
+path_dft.sh processors start film_f film_f_released
+path_dft.sh processors start leader_f leader_f_released
