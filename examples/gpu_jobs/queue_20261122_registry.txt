@@ -97,3 +97,9 @@ registry_card.sh docs/predictions/mlip/registry_starts_as_film_leader.extxyz 1 1
 # neighbours ONE monomer along (the last eight of registry_starts.extxyz, the same starts in a file of their
 # own).  They are part of what was asked.  Four side by side while the card's DFT goes on beside them.
 registry_card.sh docs/predictions/mlip/registry_starts_helix_one.extxyz 4 800 1080
+#
+# 08:50 UTC.  No new job: the leader's file two lines up now holds a second start, read when its job begins.
+# The first start, relaxed meanwhile on four processors off the pod, is at rest 1.02 ABOVE the leader's
+# upright cell (film -1.27, matrix -1.50, nitrile -1.51 in the same cell): in the potential the leader does
+# not have the low cell.  The second start is the same cell with its neighbours moved back to the upright
+# registry, as the other three compositions had (film +0.18, matrix +0.83, nitrile -0.05).

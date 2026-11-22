@@ -12,7 +12,8 @@
 # to the upright registry.
 #
 # and, in a third, the low cell with every backbone carbon's substituents made the leader's (a reversed VDF unit, the
-# nitrile, and a VDF unit where the film's composition has its fourth TrFE): the leader, in the film composition's low cell.
+# nitrile, and a VDF unit where the film's composition has its fourth TrFE): the leader, in the film composition's low cell,
+# and the same moved back to the upright registry.
 #
 #   bash examples/registry_starts_as_film.sh [OUT [OUT2 [OUT3]]]
 #       (default docs/predictions/mlip/registry_starts_as_film.extxyz, ..._nitrile.extxyz and ..._leader.extxyz)
@@ -34,4 +35,5 @@ python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells
   reg_nitrile_tt_as_film_low_registry_back=film_r_released_tight:nitrile:tt:nitrile.Cl.F:shear.-1.1
 python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz docs/predictions/mlip/paths/all_trans_tight.extxyz \
   --out "$OUT3" --cell leader:tt=tt_leader_from_rows14an_r1 --make \
-  reg_leader_tt_as_film_low=film_r_released_tight:leader:tt:morph.tt_leader_from_rows14an_r1
+  reg_leader_tt_as_film_low=film_r_released_tight:leader:tt:morph.tt_leader_from_rows14an_r1 \
+  reg_leader_tt_as_film_low_registry_back=film_r_released_tight:leader:tt:morph.tt_leader_from_rows14an_r1:shear.-1.1

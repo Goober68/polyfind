@@ -262,7 +262,8 @@ def test_one_compositions_chains_made_anothers_carbon_by_carbon(labelled):
     matrix = read(MLIP / "registry_starts_as_film.extxyz", index=0)
     assert np.abs(matrix.positions - tool.morphed(low, labelled[CELLS["matrix"][0]])[0].positions).max() < 0.03
     leader = read(MLIP / "registry_starts_as_film_leader.extxyz", index=":")
-    assert [str(a.info["frame"]) for a in leader] == ["reg_leader_tt_as_film_low"] and tool._ints(leader[0].info["registry_shear"]) == [1, -1]
+    assert [str(a.info["frame"]) for a in leader] == ["reg_leader_tt_as_film_low", "reg_leader_tt_as_film_low_registry_back"]
+    assert tool._ints(leader[0].info["registry_shear"]) == [1, -1] and tool._ints(leader[1].info["registry_shear"]) == [0, 0]
     assert str(leader[0].info["registry_of"]) == CELLS["leader"][0] and leader[0].get_chemical_formula() == labelled[CELLS["leader"][0]].get_chemical_formula()
     # the leader's chain against the film composition's: a reversed VDF first, the nitrile for the chlorine, a VDF for the fourth TrFE
     word = lambda a: " ".join(k + ("+" if h > 0 else "-" if h < 0 else "") for k, h in tool.substituents(a)[0])
