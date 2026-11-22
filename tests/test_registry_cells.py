@@ -315,6 +315,17 @@ def test_the_nitrile_composition_has_the_low_cell_too(labelled):
     assert abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg"]) - 180) < 30 and abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg_labelled"]) - 90) < 15
 
 
+def test_the_helix_starts_one_monomer_along_are_the_last_eight_of_the_first_file():
+    from ase.io import read
+
+    first = {str(a.info["frame"]): a for a in read(MLIP / "registry_starts.extxyz", index=":")}
+    own = read(MLIP / "registry_starts_helix_one.extxyz", index=":")
+    assert [str(a.info["frame"]) for a in own] == list(first)[-8:] and all("_hx_" in str(a.info["frame"]) and str(a.info["frame"]).endswith("1_tz0") for a in own)
+    for a in own:
+        b = first[str(a.info["frame"])]
+        assert np.allclose(a.positions, b.positions) and np.allclose(a.cell.array, b.cell.array) and a.get_chemical_symbols() == b.get_chemical_symbols()
+
+
 def test_the_helix_cells_to_be_shaken_are_the_labelled_ones(labelled):
     from ase.io import read
 
