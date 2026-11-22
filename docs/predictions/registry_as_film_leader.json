@@ -1,0 +1,39 @@
+{
+ "what": "cells made from labelled cells by examples/registry_cells.py (neighbours moved whole monomers along the chains, chains turned about their axes) and relaxed in the potential: energy is kcal/mol per chain against the labelled cell each was made from, in the potential with D3",
+ "starts": "docs/predictions/mlip/registry_starts_as_film_leader.extxyz",
+ "rows": {
+  "reg_leader_tt_as_film_low": {
+   "relaxed": true,
+   "frame": "reg_leader_tt_as_film_low_in_all_s1",
+   "label": "leader",
+   "conformation": "tt",
+   "of": "tt_leader_from_rows14an_r1",
+   "shear_asked": [
+    1,
+    -1
+   ],
+   "turn_asked": 116,
+   "converged": true,
+   "steps": 519,
+   "energy": 1.0221649749269968,
+   "shear_along_chains_monomers": [
+    0.9815562298933114,
+    -0.9643745954512574
+   ],
+   "shear_along_chains_monomers_labelled": [
+    -0.07764414269720431,
+    -0.1784727708565495
+   ],
+   "dipole_from_a_deg": -159.81564861651904,
+   "dipole_from_a_deg_labelled": 79.34657205987806,
+   "gauche_torsions": 0,
+   "gauche_torsions_labelled": 0,
+   "conformation_kept": true,
+   "cell_lengths": [
+    5.643123628543646,
+    9.737023507509173,
+    35.741561195188396
+   ]
+  }
+ }
+}

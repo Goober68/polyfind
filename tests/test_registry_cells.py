@@ -315,6 +315,28 @@ def test_the_nitrile_composition_has_the_low_cell_too(labelled):
     assert abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg"]) - 180) < 30 and abs(abs(table["reg_nitrile_tt_as_film_low_registry_back"]["dipole_from_a_deg_labelled"]) - 90) < 15
 
 
+def test_the_leader_does_not_have_the_low_cell_in_the_potential(labelled):
+    """The leader made of the film composition's low cell, at rest in the potential (relaxed on this machine's processors, 519 steps)."""
+    from ase.io import read
+
+    tool, path = _load("registry_cells"), _load("mlip_path")
+    table = json.loads((ROOT / "docs" / "predictions" / "registry_as_film_leader.json").read_text())["rows"]
+    row = table["reg_leader_tt_as_film_low"]
+    assert len(table) == 1 and row["converged"] and row["conformation_kept"] and row["gauche_torsions"] == 0
+    assert row["energy"] == pytest.approx(1.02, abs=0.006) and row["shear_along_chains_monomers"] == pytest.approx([0.98, -0.96], abs=0.006)     # above its upright cell, in the low cell's registry
+    a, up = read(MLIP / "registry_as_film_leader_relaxed.extxyz", index=0), labelled[CELLS["leader"][0]]
+    assert str(a.info["frame"]) == "reg_leader_tt_as_film_low_in_all_s1" and all(any(tool.same_molecule(m, t) for t in tool.substituents(up)) for m in tool.substituents(a))
+    # the other three compositions rest below their upright cells in the same cell
+    others = {"film": json.loads((ROOT / "docs" / "predictions" / "kink_paths_film.json").read_text())["points"],
+              "matrix": json.loads((ROOT / "docs" / "predictions" / "registry_as_film.json").read_text())["rows"]["reg_matrix_tt_as_film_low"]["energy"],
+              "nitrile": json.loads((ROOT / "docs" / "predictions" / "registry_as_film_nitrile.json").read_text())["rows"]["reg_nitrile_tt_as_film_low"]["energy"]}
+    film = others["film"]["all-trans, the sheet's registry, relaxed on"]["potential"] - others["film"]["all-trans, upright"]["potential"]
+    assert (film, others["matrix"], others["nitrile"]) == pytest.approx((-1.27, -1.50, -1.51), abs=0.006)
+    # one backbone bond a chain of the leader's cell is 44 and 46 degrees off trans there (the others' largest: 23 to 29)
+    off = lambda x: np.abs(np.where(path.torsions_deg(x, path.backbone_torsions(x)) > 0, -180.0, 180.0) + path.torsions_deg(x, path.backbone_torsions(x))).max()
+    assert off(a) == pytest.approx(46, abs=1.5) and off(read(MLIP / "registry_as_film_nitrile_relaxed.extxyz", index=0)) < 30 and off(read(MLIP / "paths" / "all_trans_tight.extxyz", index=0)) < 24
+
+
 def test_the_helix_starts_one_monomer_along_are_the_last_eight_of_the_first_file():
     from ase.io import read
 
