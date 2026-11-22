@@ -131,5 +131,5 @@ steps_card.sh docs/predictions/mlip/models/all_s1.model 12 lcfev:scr_vdf9-trfe3-
 # IVRVVRVCVVVVVR over 6.45 (7.28).  In the same potential the film composition's is 7.81 and the leader's 5.67.
 # SO THE NO-PIN ROW DOES NOT HAVE THE LEADER'S FAST HOP at its cheapest kink.  The leader's hop was scanned at
 # site 18, the other hand of the kink, which in the leader is level with 18m (-1.25, -1.32) and in the no-pin
-# row is 2.24 above it (+0.37, -1.87).  One more path while the pod lasts: the no-pin row at 18.
+# row is 2.23 above it (+0.37, -1.87).  One more path while the pod lasts: the no-pin row at 18.
 steps_card.sh docs/predictions/mlip/models/all_s1.model 12 nopin18:scr_vdf10-trfe3-rvdf1-14_sheetldr_at18_in_all_s1:scr_vdf10-trfe3-rvdf1-14_tt_low_in_all_s1

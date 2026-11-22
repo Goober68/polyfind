@@ -438,5 +438,61 @@ def test_the_candidates_margin_in_dft_is_the_potentials_on_its_lowest_cells_and_
     assert [str(a.info["dft_run"]) for a in frames] == ["processors"] * 4 + ["card"] and str(frames[-1].info["frame"]) == "scr_vdf9-trfe3-cfe1-rvdf1-14_hx_ldr_in_all_s1"
 
 
+def test_what_a_cells_chains_are_from_their_gauche_bonds():
+    scr = _load("screen14")
+    assert scr._state([[], []], 28) == "all-trans" and scr._state([[(18, -76.0)], [(18, -76.0)]], 28) == "one gauche bond"
+    assert scr._state([[(16, -55.0), (18, 60.0)]] * 2, 28) == "kink" and scr._state([[(16, -55.0), (20, 57.0)]] * 2, 28) == "stretched kink"
+    assert scr._state([[(0, 60.0), (26, -60.0)]] * 2, 28) == "kink" and scr._state([[(0, 60.0), (24, -60.0)]] * 2, 28) == "stretched kink"      # round the end of the chain
+    assert scr._state([[(16, 55.0), (20, 57.0)]] * 2, 28) == "other" and scr._state([[], [(18, 60.0)]], 28) == "mixed"
+
+
+def test_neither_rows_cheapest_kink_moves_as_the_leaders_does():
+    """Step scans on the fifth pod's card, kcal/mol per chain against each relaxed sheet.  A hop is a first leg that arrives at a stretched kink.  The stored
+    scans of the film's composition and the leader (3.23) go through the same summary: 7.46 from its scan's start (7.81 from its relaxed sheet) and 5.67."""
+    paths = json.loads((ROOT / "docs" / "predictions" / "screen14_hops.json").read_text())["paths"]
+    hop = {k: round(v["hop"], 2) for k, v in paths.items()}
+    assert hop == {"nopin": 7.55, "nopin18": 5.58, "lcfe": 6.45, "lcfev": 4.87, "film": 7.46, "leader": 5.67}
+    arrives = {k: {o: (round(v["first_leg"]["top"], 2), v["first_leg"]["arrives_as"], round(v["first_leg"]["arrived"], 2)) for o, v in p["orders"].items()} for k, p in paths.items()}
+    assert arrives["nopin"] == {"a": (7.55, "stretched kink", 0.68), "b": (7.62, "one gauche bond", 6.22)}
+    assert arrives["nopin18"] == {"a": (3.41, "all-trans", 1.09), "b": (5.58, "stretched kink", 0.79)}          # at the leader's site and hand: the leader's hop, and a kink that is barely held
+    assert arrives["lcfe"] == {"a": (6.45, "stretched kink", 0.26), "b": (7.28, "stretched kink", 1.66)}
+    assert arrives["lcfev"] == {"a": (4.60, "one gauche bond", 2.87), "b": (4.87, "stretched kink", -0.34)}
+    assert arrives["leader"] == {"a": (7.01, "stretched kink", 0.87), "b": (5.67, "stretched kink", 0.85)}
+    assert {k: round(v["removed_over"], 2) for k, v in paths.items()} == {"nopin": 7.69, "nopin18": 3.41, "lcfe": 10.39, "lcfev": 4.60, "film": 8.42, "leader": 7.25}
+    assert paths["nopin"]["sheet"] == "scr_vdf10-trfe3-rvdf1-14_sheetldr_at18m_in_all_s1" and paths["lcfe"]["sheet"] == "scr_vdf9-trfe3-cfe1-rvdf1-14_sheet_at12_in_all_s1"
+    assert paths["nopin18"]["orders"]["a"]["first_leg"]["not_converged"] == ["i12"] and all(not o["first_leg"]["not_converged"] for k in ("nopin", "lcfe", "lcfev") for o in paths[k]["orders"].values())
+    # where each scanned sheet stands against the row's cheapest: the no-pin row's other hand 2.23 above, the CFE row's VDF run 2.63 above its chlorine
+    two = json.loads((ROOT / "docs" / "predictions" / "screen14_sheets_2.json").read_text())["rows"]
+    one = json.loads((ROOT / "docs" / "predictions" / "screen14_sheets_1.json").read_text())["rows"]["vdf9-trfe3-cfe1-rvdf1-14"]
+    nopin = two["vdf10-trfe3-rvdf1-14"]["sites"]
+    assert nopin["18"]["energy"] - nopin["18m"]["energy"] == pytest.approx(2.23, abs=0.006)
+    assert two["vdf9-trfe3-cfe1-rvdf1-14"]["sites"]["16m"]["energy"] - one["sites"]["12"]["energy"] == pytest.approx(2.63, abs=0.006)
+
+
+def test_the_two_rows_on_the_four_axes():
+    """Each row's margin and hop on the inputs of the two rows nearest it (examples/screen14_axes.sh): the CFE row is ten times the film composition's
+    rate at a seventieth of its loss and seven to nine tenths of its strain, and its strain moves eightfold over 0.05 of margin either way; the no-pin row is
+    the film's composition again."""
+    out = {}
+    for which in "ab":
+        d = json.loads((ROOT / "docs" / "predictions" / f"four_axes_screen14_{which}.json").read_text())
+        assert d["barriers_kcal_per_chain"]["vdf9-trfe4-cfe1-14"] == 7.81
+        for shift, table in d["shifts"].items():
+            for name, r in table["rows"].items():
+                b = r["by_the_barrier"]
+                through = b["blocked_pn_nm2_through_the_crystal"]
+                out[(d["stands_in"].get(name, "film"), shift)] = (round(r["margin"], 3), round(b["f_relax_hz"] / 1e3), round(b["tan_delta_34kHz"], 4),
+                                                                  round(b["strain_ac_at_the_heat_budget_34kHz"] * 100, 3), None if through is None else round(through, 1))
+    assert out[("film", "+0.00")] == (0.063, 364, 0.0877, 0.081, 7.6)
+    assert out[("IVRVVRVCVVVVVR on IVRVVRVCVVRVVR's inputs", "+0.00")] == (0.196, 3569, 0.0013, 0.073, None)
+    assert out[("IVRVVRVCVVVVVR on the leader's inputs", "+0.00")] == (0.196, 3569, 0.0012, 0.057, 2.7)
+    assert out[("IVRVVRVVVVVVVR on the leader's inputs", "+0.00")] == (0.071, 563, 0.0542, 0.087, 4.4)
+    assert out[("IVRVVRVVVVVVVR on the matrix's inputs", "+0.00")] == (0.071, 563, 0.0571, 0.094, 9.8)
+    strain = lambda who, shift: out[(who, shift)][3]
+    assert (strain("IVRVVRVCVVVVVR on the leader's inputs", "-0.05"), strain("IVRVVRVCVVVVVR on the leader's inputs", "+0.05")) == (0.131, 0.014)
+    assert (strain("IVRVVRVCVVVVVR on IVRVVRVCVVRVVR's inputs", "-0.05"), strain("IVRVVRVCVVVVVR on IVRVVRVCVVRVVR's inputs", "+0.05")) == (0.143, 0.018)
+    assert (strain("IVRVVRVVVVVVVR on the leader's inputs", "-0.05"), strain("IVRVVRVVVVVVVR on the leader's inputs", "+0.05")) == (0.083, 0.075)
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

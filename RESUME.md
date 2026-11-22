@@ -687,7 +687,7 @@ right": true at one registry, not along it).
         when docs 3.25 is in. Last results fetched before the deletion: the hop scans (`nopin`,
         `nopin18`, `lcfe`, `lcfev` under `docs/predictions/mlip/paths/`, summary
         `docs/predictions/screen14_hops.json` by `examples/screen14.py hops`): the no-pin row's cheapest
-        kink (18m) hops over 7.55, its kink at the leader's site and hand (18, which is 2.24 above 18m)
+        kink (18m) hops over 7.55, its kink at the leader's site and hand (18, which is 2.23 above 18m)
         over 5.58; the CFE row's kink on its chlorine over 6.45, its kink on its VDF run (16m, 2.63
         above the chlorine's) over 4.87; in the same potential the film composition's 7.81, the leader's
         5.67. The processors labelled the CFE row's lowest helix cell a second time: the card's energy

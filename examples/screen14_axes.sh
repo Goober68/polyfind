@@ -42,7 +42,7 @@ import json, sys
 out = sys.argv[1]
 names = {"a": {"vdf8-trfe4-cfe1-rvdf1-14": "IVRVVRVCVVVVVR on IVRVVRVCVVRVVR's inputs", "vdf9-trfe3-an1-rvdf1-14": "IVRVVRVVVVVVVR on the leader's inputs"},
          "b": {"vdf9-trfe3-an1-rvdf1-14": "IVRVVRVCVVVVVR on the leader's inputs", "vdf10-trfe4-14": "IVRVVRVVVVVVVR on the matrix's inputs"}}
-for which, stands in in names.items():
+for which, stands_in in names.items():
     p = f"{out}/four_axes_screen14_{which}.json"
     d = json.load(open(p))
     d["stands_in"] = stands_in
