@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# The film composition's low all-trans cell of 3.23 itself as the start (docs/MLIP_SECOND_OPINION.md 3.24): its
+# chains do not have the upright cell's conformation (the small twists of an all-trans chain's bonds fall in another
+# pattern), and a cell built from upright chains does not find it.  Four cells:
+#   the low cell with its chlorine made fluorine: the matrix, in the film composition's low cell;
+#   the low cell with its neighbours moved back to the upright registry (the chains and the turn kept): is it the registry?
+#   the low cell given back the upright cell's turn, lattice and registry (the chains kept): is it the chains?
+#   the matrix made of the low cell, moved back to the upright registry.
+#
+#   bash examples/registry_starts_as_film.sh [OUT]      (default docs/predictions/mlip/registry_starts_as_film.extxyz)
+set -euo pipefail
+cd "$(dirname "$0")/.."
+OUT="${1:-docs/predictions/mlip/registry_starts_as_film.extxyz}"
+UP=row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1
+python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz docs/predictions/mlip/paths/all_trans_tight.extxyz \
+  --out "$OUT" --cell film:tt=$UP matrix:tt=row_vdf10-trfe4-14_TTTT_chain1_in_all_s1 --make \
+  reg_matrix_tt_as_film_low=film_r_released_tight:matrix:tt:swap.Cl.F.1.36 \
+  reg_film_tt_low_registry_back=film_r_released_tight:film:tt:shear.-1.1 \
+  reg_film_tt_low_chains_in_upright=film_r_released_tight:film:tt:back.film_r_released_tight.$UP \
+  reg_matrix_tt_as_film_low_registry_back=film_r_released_tight:matrix:tt:swap.Cl.F.1.36:shear.-1.1

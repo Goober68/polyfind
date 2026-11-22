@@ -49,3 +49,17 @@ registry_more.sh docs/predictions/mlip/registry_starts_like.extxyz 4 900 1200 au
 # the film composition's upright cell with its chains turned and nothing else (level with upright in the
 # potential, which is the whole of the claim that the 0.84 is the registry and not the turn).
 dft_cells.sh start 8 2 docs/predictions/mlip/paths/all_trans_tight.extxyz leader_r_released_tight film_all_trans_turned_117_tight
+#
+# 07:44 UTC.  What the control showed, and what follows from it.  The film composition's cell made like its
+# own low cell (the same turn, lattice and registry, from upright chains) stopped falling 0.6 above its
+# upright cell at 450 steps, 1.9 above the low cell it was made like.  The two differ in the chains
+# themselves: an all-trans chain's bonds are each twisted 5 to 20 degrees off trans, and the pattern of those
+# twists along the chain is another one in the low cell (which got it on the way back from a kink) than in
+# the upright cell.  So a registry is not found by moving upright chains, and the cells of the third job
+# above are of little use (the fourth is cut to a minute).  The low cell itself is the start now
+# (examples/registry_starts_as_film.sh): with its chlorine made fluorine it is the matrix, sequence and all,
+# in the film composition's low cell (1.6 above the matrix's upright cell before any relaxing); with its
+# neighbours moved back a monomer, and with the upright cell's whole lattice given back, it says whether the
+# 0.84 is the registry or the chains (7.7 and 8.6 above upright before relaxing: the twists fit the registry
+# they are in).  Four cells, one a process, 1000 steps at most, 25 minutes.
+registry_card.sh docs/predictions/mlip/registry_starts_as_film.extxyz 4 1000 1500

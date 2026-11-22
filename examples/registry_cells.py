@@ -10,6 +10,7 @@ DFT.  This makes such cells on purpose, from a labelled cell:
 
     python -I examples/registry_cells.py build --labels FILES --cell LABEL:tt=FRAME LABEL:hx=FRAME ... \\
         --variant LABEL:tt:SA,SB,TURN ... [--like UPRIGHT LOW --variant LABEL:tt:like ...] --out STARTS.extxyz
+    python -I examples/registry_cells.py derive --labels FILES --cell LABEL:tt=FRAME ... --make NAME=FRAME:LABEL:tt:STEP... --out STARTS.extxyz
     python -I examples/registry_cells.py table --starts STARTS.extxyz --relaxed DIR --labels FILES --out TABLE.json \\
         --frames-out RELAXED.extxyz
     python -I examples/registry_cells.py choose --table TABLE.json [--within 0.3] [--below LABEL:tt=KCAL ...] \
@@ -175,6 +176,53 @@ def like(atoms, upright, low):
     return out, float(turn)
 
 
+def swapped(atoms, old, new, bond):
+    """Every `old` atom made a `new` one, at `bond` A from the carbon it is on, along the same bond: a chlorine made a
+    fluorine turns a CFE unit into a VDF unit where it stands."""
+    b = atoms.copy()
+    carbons = [k for k in range(len(b)) if b.symbols[k] == "C"]
+    for k in [k for k in range(len(b)) if b.symbols[k] == old]:
+        d = np.array([b.get_distance(c, k, mic=True) for c in carbons])
+        c = carbons[int(d.argmin())]
+        v = b.get_distance(c, k, mic=True, vector=True)
+        b.positions[k] = b.positions[c] + v / np.linalg.norm(v) * bond
+        b.symbols[k] = new
+    b.wrap()
+    return b
+
+
+def substituents(atoms):
+    """Each chain as the cycle of its backbone carbons' substituents with a hand: for a carbon with two different
+    substituents, the sign of (next - previous) . (first x second), the substituents in alphabetical order.  Two chains are
+    the same molecule when one's cycle is a rotation of the other's (read the same way along the chain)."""
+    tool = _path_tool()
+    quads = tool.backbone_torsions(atoms)
+    half = len(quads) // CHAINS
+    out = []
+    for chain in range(CHAINS):
+        backbone = [q[0] for q in quads[chain * half:(chain + 1) * half]]
+        on = set(backbone)
+        cycle = []
+        for i, c in enumerate(backbone):
+            prev, nxt = backbone[i - 1], backbone[(i + 1) % len(backbone)]
+            near = [k for k in range(len(atoms)) if k not in on and atoms.get_distance(c, k, mic=True) < BONDS.get(("C", atoms.symbols[k]), 1.75)]
+            near.sort(key=lambda k: atoms.symbols[k])
+            kinds = "".join(atoms.symbols[k] for k in near)
+            hand = 0
+            if len(near) == 2 and atoms.symbols[near[0]] != atoms.symbols[near[1]]:
+                along = atoms.get_distance(prev, c, mic=True, vector=True) + atoms.get_distance(c, nxt, mic=True, vector=True)
+                first, second = (atoms.get_distance(c, k, mic=True, vector=True) for k in near)
+                hand = int(np.sign(along @ np.cross(first, second)))
+            cycle.append((kinds, hand))
+        out.append(cycle)
+    return out
+
+
+def same_molecule(one, other):
+    """Whether two cycles of substituents (one chain each) are rotations of each other."""
+    return len(one) == len(other) and any(one[k:] + one[:k] == other for k in range(len(one)))
+
+
 def closest_between_chains(atoms, reach=2.6):
     """The shortest distance between atoms of different chains, A (None when none is within `reach`)."""
     from ase.neighborlist import neighbor_list
@@ -275,6 +323,63 @@ def build(args):
     names = [str(a.info["frame"]) for a in out]
     if len(set(names)) != len(names):
         raise SystemExit("a variant is given twice")
+    write(args.out, out, format="extxyz")
+    print(f"{len(out)} starts written to {args.out}")
+
+
+def derive(args):
+    """Cells made from stored cells by a few steps each, as starts: NAME=FRAME:LABEL:CONFORMATION:STEP:STEP..., the steps
+    swap.OLD.NEW.BOND (an element changed where it stands), shear.SA.SB (neighbours moved whole monomers along) and
+    back.LOW.UPRIGHT (what takes the cell LOW to the cell UPRIGHT: turn, lattice and monomers along, the chains kept as
+    they are).  Each start is measured against --cell's labelled cell of its LABEL and CONFORMATION, and must be the
+    same molecules as that cell."""
+    from ase.io import read, write
+
+    stored = {str(a.info["frame"]): a for f in args.labels for a in read(f, index=":")}
+    cells = {item.split("=", 1)[0]: stored[item.split("=", 1)[1]] for item in args.cell}
+    tool = _path_tool()
+    out = []
+    for item in args.make:
+        name, spec = item.split("=", 1)
+        frame, label, conformation, *steps = spec.split(":")
+        ref = cells[f"{label}:{conformation}"]
+        b = stored[frame].copy()
+        b.info = {k: stored[frame].info[k] for k in ("n_monomers", "kmesh") if k in stored[frame].info}
+        said = []
+        for step in steps:
+            kind, *rest = step.split(".", 1)
+            if kind == "swap":
+                old, new, bond = rest[0].split(".", 2)
+                b = swapped(b, old, new, float(bond))
+                said.append(f"every {old} made {new}")
+            elif kind == "shear":
+                sa, sb = (int(v) for v in rest[0].split("."))
+                b = sheared(b, sa, sb)
+                said.append(f"its neighbours along the two cell edges {sa:+d} and {sb:+d} monomers along the chains")
+            elif kind == "back":
+                low, upright = rest[0].split(".")
+                info = dict(b.info)
+                b, _ = like(b, stored[low], stored[upright])
+                b.info = info
+                said.append(f"given what takes {low} to {upright}, its chains kept as they are")
+            else:
+                raise SystemExit(f"no step {step}")
+        mine, theirs = substituents(b), substituents(ref)
+        if len(b) != len(ref) or sorted(b.get_chemical_symbols()) != sorted(ref.get_chemical_symbols()) or not all(any(same_molecule(m, t) for t in theirs) for m in mine):
+            raise SystemExit(f"{name} is not the molecules of {ref.info['frame']}")
+        shear = [int(round(v)) for v in np.array(tool._shear(b)) - np.array(tool._shear(ref))]
+        turn = int(round((dipole_from_a(b) - dipole_from_a(ref) + 180) % 360 - 180))
+        b.info.update(frame=name, family="registry", conformation={"tt": "all-trans", "hx": "helix"}[conformation], registry_of=str(ref.info["frame"]),
+                      registry_label=label, registry_conformation=conformation, registry_shear=f"{shear[0]} {shear[1]}", registry_turn=turn, registry_widened=1.0,
+                      source=f"examples/registry_cells.py: {frame}, " + ", ".join(said), note="a start, not relaxed")
+        for k in list(b.arrays):
+            if k not in ("numbers", "positions"):
+                del b.arrays[k]
+        b.calc = None
+        out.append(b)
+        close = closest_between_chains(b)
+        print(f"{name}: from {frame}, {'; '.join(said)}; against {ref.info['frame']}; shear {shear}, turned {turn}; closest contact between chains "
+              f"{'beyond 2.6' if close is None else f'{close:.2f}'} A")
     write(args.out, out, format="extxyz")
     print(f"{len(out)} starts written to {args.out}")
 
@@ -413,6 +518,11 @@ def main():
     s.add_argument("--like-name", default="film", help="the name a `like` variant carries")
     s.add_argument("--contact", type=float, default=1.9, help="A: a start whose chains come closer than this is widened across the chains until they do not")
     s.add_argument("--out", required=True)
+    s = sub.add_parser("derive")
+    s.add_argument("--labels", nargs="+", required=True, help="files of stored frames")
+    s.add_argument("--cell", nargs="+", required=True, metavar="LABEL:tt|hx=FRAME", help="each composition's labelled cell, which a start is measured against")
+    s.add_argument("--make", nargs="+", required=True, metavar="NAME=FRAME:LABEL:tt|hx:STEP...", help="a start: a stored frame and the steps that make it")
+    s.add_argument("--out", required=True)
     s = sub.add_parser("table")
     s.add_argument("--starts", required=True)
     s.add_argument("--relaxed", required=True, help="the directory of examples/mlip_train.py relax")
@@ -435,7 +545,7 @@ def main():
     s.add_argument("--row", nargs="+", required=True, metavar="LABEL=ROW", help="the tables' row a composition is")
     s.add_argument("--out", required=True)
     args = p.parse_args()
-    {"build": build, "table": table, "choose": choose, "unsettled": unsettled, "margins": margins}[args.step](args)
+    {"build": build, "derive": derive, "table": table, "choose": choose, "unsettled": unsettled, "margins": margins}[args.step](args)
 
 
 if __name__ == "__main__":

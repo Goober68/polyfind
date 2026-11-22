@@ -150,7 +150,43 @@ def test_a_cell_made_like_the_film_compositions_low_cell_has_its_lattice_turn_an
         assert str(a.info["registry_of"]) == CELLS[label][0] and tool._ints(a.info["registry_shear"]) == [1, -1] and int(a.info["registry_turn"]) == 118
         assert tool.gauche(a, path) == 0 and float(a.info["registry_widened"]) == (1.2 if label in ("nitrile", "leader") else 1.0)   # the nitrile groups meet in this setting
     queue = [line.split() for line in (ROOT / "examples" / "gpu_jobs" / "queue_20261122_registry.txt").read_text().splitlines() if line.startswith("registry_card.sh ")]
-    assert len(queue) == 2 and (ROOT / queue[1][1]).samefile(MLIP / "registry_starts_like.extxyz") and queue[1][2:] == ["4", "600", "900"]
+    assert len(queue) >= 2 and (ROOT / queue[1][1]).samefile(MLIP / "registry_starts_like.extxyz") and queue[1][2:] == ["4", "600", "900"]
+
+
+def test_the_matrix_is_the_film_compositions_low_cell_with_its_chlorine_made_fluorine(labelled):
+    from ase.io import read
+
+    tool, path = _load("registry_cells"), _load("mlip_path")
+    low = read(MLIP / "paths" / "all_trans_tight.extxyz", index=0)
+    film, matrix = labelled[CELLS["film"][0]], labelled[CELLS["matrix"][0]]
+    # a chain as the cycle of its backbone carbons' substituents, each with a hand: the low cell's chains are the film composition's own
+    mine, theirs = tool.substituents(low), tool.substituents(film)
+    assert all(len(c) == 28 for c in mine) and sum(k == "ClF" for k, _ in mine[0]) == 1 and sum(h != 0 for _, h in mine[0]) == 5     # one CFCl and four CHF carbons a chain
+    assert all(any(tool.same_molecule(m, t) for t in theirs) for m in mine)
+    assert not tool.same_molecule(mine[0], [(k, -h) for k, h in mine[0]])                                                    # its mirror image is another chain
+    swapped = tool.swapped(low, "Cl", "F", 1.36)
+    assert sorted(swapped.get_chemical_symbols()) == sorted(matrix.get_chemical_symbols()) and "Cl" not in swapped.get_chemical_symbols()
+    assert all(any(tool.same_molecule(m, t) for t in tool.substituents(matrix)) for m in tool.substituents(swapped))             # the matrix's own chains, sequence and hands
+    moved = np.linalg.norm(swapped.positions - low.positions, axis=1)
+    d = np.linalg.solve(low.cell.array.T, (swapped.positions - low.positions).T).T
+    assert sum(np.abs(row - np.round(row)).max() > 1e-8 for row in d) == 2                                                     # two atoms moved: the two chlorines
+    starts = read(MLIP / "registry_starts_as_film.extxyz", index=":")
+    names = [str(a.info["frame"]) for a in starts]
+    assert names == ["reg_matrix_tt_as_film_low", "reg_film_tt_low_registry_back", "reg_film_tt_low_chains_in_upright", "reg_matrix_tt_as_film_low_registry_back"]
+    expected = {names[0]: ("matrix", [1, -1]), names[1]: ("film", [0, 0]), names[2]: ("film", [0, 0]), names[3]: ("matrix", [0, 0])}
+    for a in starts:
+        label, shear = expected[str(a.info["frame"])]
+        ref = labelled[CELLS[label][0]]
+        assert str(a.info["registry_of"]) == CELLS[label][0] and tool._ints(a.info["registry_shear"]) == shear and tool.gauche(a, path) == 0
+        assert all(any(tool.same_molecule(m, t) for t in tool.substituents(ref)) for m in tool.substituents(a))
+        assert np.array(path._shear(a)) - np.array(path._shear(ref)) == pytest.approx(shear, abs=0.07)
+    # the chains of the low cell are kept in all four: the pattern of the twists off trans is the low cell's, not the upright cell's
+    twists = lambda a: np.where(path.torsions_deg(a, path.backbone_torsions(a)) > 0, -180.0, 180.0) + path.torsions_deg(a, path.backbone_torsions(a))
+    assert np.abs(twists(low)).max() < 25 and np.abs(twists(film)).max() < 25
+    for a in starts:
+        assert np.abs(twists(a) - twists(low)).max() < 1.0 and np.abs(twists(a) - twists(film)).max() > 15
+    line = next(l.split() for l in (ROOT / "examples" / "gpu_jobs" / "queue_20261122_registry.txt").read_text().splitlines() if "registry_starts_as_film" in l and not l.startswith("#"))
+    assert line[0] == "registry_card.sh" and line[2:] == ["4", "1000", "1500"]
 
 
 def test_the_choice_is_the_lowest_cell_at_rest_of_each_composition_and_conformation():
