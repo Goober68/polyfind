@@ -6,7 +6,8 @@
 #   steps_card.sh MODEL POINTS NAME:START:END [NAME:START:END...]
 #
 # MODEL is a model file of the repository; START and END are frames of the labelled
-# fourteen-monomer cells or of the scans stored under docs/predictions/mlip/paths/.  For each
+# fourteen-monomer cells, of the scans stored under docs/predictions/mlip/paths/, or of the cells a
+# screen relaxed on this pod (scr_ROW_sheet_at14m_in_all_s1, scr_ROW_tt_low_in_all_s1).  For each
 # path and each order (a: the first torsion of each chain first; b: the second first) there are
 # two legs: NAME_a1 leads that torsion all the way with the other free and is released;
 # NAME_a2 goes on from where that arrived, leading whatever still differs from END.  The two
@@ -17,6 +18,8 @@ source "$(dirname "$0")/mlip_env.sh"
 export MLIP_DEVICE="${MLIP_DEVICE:-cuda}" OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 POT="$(basename "$MODEL" .model)"
 FILES=(docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz docs/predictions/mlip/paths/*.extxyz)
+# and the cells a screen relaxed on this pod (examples/gpu_jobs/screen_card.sh, screen_sheets_card.sh), one a file
+for f in "$(dirname "$JOB_OUT")"/shared/screen/relaxed/*.start.xyz; do [ -f "$f" ] && FILES+=("$f"); done
 STEPS="${PATH_STEPS:-300}"
 t0=$(date +%s)
 one() {  # NAME START END ORDER FIRST...
