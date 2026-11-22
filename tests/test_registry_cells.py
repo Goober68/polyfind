@@ -15,6 +15,12 @@ CELLS = {"film": (f"row_{FILM}_TTTT_chain1_in_all_s1", f"row_{FILM}_TGTGp_chain1
          "leader": ("tt_leader_from_rows14an_r1", "helix_leader_TGTGp_r1"), "nitrile": ("tt_nitrile_from_rows14an_r1", f"row_{NITRILE}_GpTGT_cfe_in_all_s1")}
 
 
+# the helix cells with their neighbours one monomer along that were relaxed on here after the pod was gone, the ones the pod left unsettled, and the lowest of the eight
+HELIX_ONE_HERE = {"reg_film_hx_m1p1_tz0": 0.76}       # the pod left it at +0.77 after 1800 steps; sixteen more here and it is at rest
+HELIX_ONE_MOVING = {"reg_leader_hx_p1m1_tz0": 4.25, "reg_leader_hx_m1p1_tz0": 3.14, "reg_nitrile_hx_p1m1_tz0": 3.60}
+HELIX_ONE_FLOOR = 0.75
+
+
 def _load(name):
     spec = importlib.util.spec_from_file_location(name, ROOT / "examples" / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
@@ -203,7 +209,7 @@ def test_the_matrix_is_the_film_compositions_low_cell_with_its_chlorine_made_flu
 
 
 def test_chains_with_the_upright_cells_twists_rest_higher_in_every_other_registry_tried(labelled):
-    """The first 34 starts on the fourth pod's card: 21 relaxed, 18 at rest, none below the cell it was made from."""
+    """The 34 starts (the fourth pod's card, and five all-trans ones on this machine): 32 relaxed, none below the cell it was made from by more than 0.01."""
     from ase.io import read
 
     table = json.loads((ROOT / "docs" / "predictions" / "registry_shifted.json").read_text())["rows"]
@@ -211,24 +217,57 @@ def test_chains_with_the_upright_cells_twists_rest_higher_in_every_other_registr
     assert list(table) == names
     done = {k: v for k, v in table.items() if v["relaxed"]}
     rest = {k: v for k, v in done.items() if v["converged"]}
-    assert (len(done), len(rest)) == (21, 18) and all(v["conformation_kept"] for v in done.values())
-    flat = sorted(v["energy"] for v in rest.values() if v["conformation"] == "tt")
-    helix = sorted(v["energy"] for v in rest.values() if v["conformation"] == "hx")
-    assert (len(flat), len(helix)) == (11, 7) and (flat[0], flat[-1]) == pytest.approx((0.45, 2.30), abs=0.006) and (helix[0], helix[-1]) == pytest.approx((1.40, 5.75), abs=0.006)
-    assert min(v["energy"] for v in done.values()) > 0.44                                   # the three not at rest are above too, so far
-    low = {c: min(v["energy"] for v in rest.values() if v["label"] == c and v["conformation"] == "tt") for c in ("film", "matrix", "leader", "nitrile")}
+    assert len(done) == 32 and all(v["conformation_kept"] for v in done.values())
+    assert sorted(k for k, v in table.items() if not v["relaxed"]) == ["reg_leader_tt_m1p1_tz0", "reg_nitrile_tt_m1p1_tz0"]
+    moved = lambda v: np.array(v["shear_along_chains_monomers"]) - np.array(v["shear_along_chains_monomers_labelled"])
+    # all-trans with the neighbours a monomer along (turned or not): 0.45 to 2.30 above, eleven at rest
+    along = {k: v for k, v in rest.items() if v["conformation"] == "tt" and "z0z0" not in k}
+    flat = sorted(v["energy"] for v in along.values())
+    assert len(flat) == 11 and (flat[0], flat[-1]) == pytest.approx((0.45, 2.30), abs=0.006)
+    low = {c: min(v["energy"] for v in along.values() if v["label"] == c) for c in ("film", "matrix", "leader", "nitrile")}
     assert low == pytest.approx({"film": 0.62, "matrix": 1.23, "leader": 2.30, "nitrile": 0.45}, abs=0.006)
     # the film composition's own low registry made from upright chains (the other hand of it was run here) rests 1.86 above, where 3.23's cell is 1.27 below
     assert rest["reg_film_tt_m1p1_tp117"]["energy"] == pytest.approx(1.86, abs=0.006) and rest["reg_film_tt_m1p1_tp117"]["shear_along_chains_monomers"] == pytest.approx([-0.98, 1.03], abs=0.006)
-    # each cell kept the registry it was given, within a third of a monomer, and the stored frames are the table's
-    for v in done.values():
-        got = np.array(v["shear_along_chains_monomers"]) - np.array(v["shear_along_chains_monomers_labelled"])
-        assert np.abs(got - np.array(v["shear_asked"])).max() < 0.75
+    # the turn alone is worth nothing: level with upright in the matrix and the nitrile composition (the film composition's: -0.02, in all_trans_tight.extxyz);
+    # the leader's was not at rest after 600 steps
+    turn = {k: v for k, v in done.items() if "z0z0" in k}
+    assert {k: round(v["energy"], 2) for k, v in turn.items() if v["converged"]} == {"reg_matrix_tt_z0z0_tp117": -0.01, "reg_nitrile_tt_z0z0_tm117": 0.02}
+    assert not turn["reg_leader_tt_z0z0_tm117"]["converged"] and turn["reg_leader_tt_z0z0_tm117"]["energy"] == pytest.approx(0.47, abs=0.006)
+    # helix, the neighbours two monomers along: 1.40 to 5.75 above, seven at rest, each in the registry it was given
+    two = {k: v for k, v in done.items() if v["conformation"] == "hx" and ("p2m2" in k or "m2p2" in k)}
+    energies = sorted(v["energy"] for v in two.values() if v["converged"])
+    assert len(two) == 8 and len(energies) == 7 and (energies[0], energies[-1]) == pytest.approx((1.40, 5.75), abs=0.006)
+    for v in list(along.values()) + list(two.values()):
+        assert np.abs(moved(v) - np.array(v["shear_asked"])).max() < 0.75
+    # nothing relaxed is below its labelled cell but the matrix's turned cell, by 0.01
+    assert min(v["energy"] for v in done.values()) == pytest.approx(-0.01, abs=0.006)
     frames = read(MLIP / "registry_shifted_relaxed.extxyz", index=":")
     assert [str(a.info["frame"]) for a in frames] == [v["frame"] for v in done.values()]
     for a in frames:
         ref = labelled[str(a.info["registry_of"])]
         assert (float(a.info["potential_eV_per_monomer"]) - float(ref.info["potential_eV_per_monomer"])) * 14 * 23.0605 == pytest.approx(table[str(a.info["frame"])[:-len("_in_all_s1")]]["energy"], abs=1e-6)
+
+
+def test_a_helix_cell_does_not_stay_with_its_neighbours_one_monomer_along():
+    """The eight helix starts with their neighbours one monomer along, relaxed on the fourth pod's card in two jobs: every one above its labelled cell."""
+    table = json.loads((ROOT / "docs" / "predictions" / "registry_shifted.json").read_text())["rows"]
+    own = json.loads((ROOT / "docs" / "predictions" / "registry_helix_one.json").read_text())["rows"]
+    one = {k: v for k, v in table.items() if k.endswith("1_tz0") and "_hx_" in k}
+    assert len(one) == 8 and set(own) == set(one)
+    for k, v in one.items():
+        assert v["conformation_kept"] and v["gauche_torsions"] == v["gauche_torsions_labelled"]
+        if k not in HELIX_ONE_HERE:      # the others are the pod's rows as they are
+            assert v["energy"] == pytest.approx(own[k]["energy"], abs=1e-9)
+    at_rest = {k: round(v["energy"], 2) for k, v in one.items() if v["converged"]}
+    assert {k: e for k, e in at_rest.items() if k not in HELIX_ONE_HERE} == {"reg_film_hx_p1m1_tz0": 8.41, "reg_matrix_hx_p1m1_tz0": 3.74, "reg_matrix_hx_m1p1_tz0": 7.79, "reg_nitrile_hx_m1p1_tz0": 1.41}
+    moving = {k: round(v["energy"], 2) for k, v in one.items() if not v["converged"] and k not in HELIX_ONE_HERE}
+    assert moving == HELIX_ONE_MOVING
+    assert {k: round(one[k]["energy"], 2) for k in HELIX_ONE_HERE if one[k]["converged"]} == HELIX_ONE_HERE
+    assert min(v["energy"] for v in one.values()) > HELIX_ONE_FLOOR
+    # they slide: the neighbours of five of the eight are no longer within a third of a monomer of where they were put
+    moved = lambda v: np.array(v["shear_along_chains_monomers"]) - np.array(v["shear_along_chains_monomers_labelled"])
+    slid = [k for k, v in one.items() if np.abs(moved(v) - np.array(v["shear_asked"])).max() > 0.33]
+    assert len(slid) >= 5 and "reg_film_hx_p1m1_tz0" not in slid and "reg_matrix_hx_m1p1_tz0" not in slid
 
 
 def test_upright_chains_in_the_low_cells_lattice_and_registry_do_not_find_the_low_cell():
@@ -338,6 +377,64 @@ def test_dft_has_the_matrix_in_the_low_cell_below_its_upright_cell(labelled):
     helix = labelled[CELLS["matrix"][1]]
     margin = lambda tt: (float(tt.info["REF_energy"]) - float(helix.info["REF_energy"])) / 28 * kcal
     assert (margin(up), margin(a)) == pytest.approx((0.068, -0.032), abs=0.0006)
+
+
+def test_dft_does_not_have_the_nitrile_composition_in_the_low_cell(labelled):
+    """The fourth pod's last label: the potential has the nitrile composition 1.51 below its upright cell in the film composition's low cell, DFT 0.29 above."""
+    from ase.io import read
+
+    a, up = _fourth()["reg_nitrile_tt_as_film_low_in_all_s1"], labelled[CELLS["nitrile"][0]]
+    relaxed = read(MLIP / "registry_as_film_nitrile_relaxed.extxyz", index=0)
+    assert str(relaxed.info["frame"]) == str(a.info["frame"]) and np.abs(a.positions - relaxed.positions).max() < 1e-9 and np.abs(a.cell.array - relaxed.cell.array).max() < 1e-9
+    kcal = 23.0605
+    dft = (float(a.info["REF_energy"]) - float(up.info["REF_energy"])) / 2 * kcal
+    potential = (float(a.info["potential_eV_per_monomer"]) - float(up.info["potential_eV_per_monomer"])) * 14 * kcal
+    assert (dft, potential) == pytest.approx((0.29, -1.51), abs=0.006)
+    assert np.abs(a.arrays["REF_forces"]).max() == pytest.approx(0.12, abs=0.005) and str(a.info["dft_run"]) == "processors"
+
+
+def test_the_fourth_pods_labels_and_the_margins_from_the_lowest_cells(labelled):
+    labels = _fourth()
+    assert list(labels) == ["leader_b2_i08", "reg_matrix_tt_as_film_low_in_all_s1", "leader_r_released_tight", "reg_leader_tt_as_film_low_in_all_s1", "reg_nitrile_tt_as_film_low_in_all_s1"]
+    assert sorted(str(a.info["dft_run"]) for a in labels.values()) == ["card", "card", "processors", "processors", "processors"]
+    assert all(int(a.info["dft_kpoints"]) == 6 and 0.09 < np.abs(a.arrays["REF_forces"]).max() < 0.40 for a in labels.values())
+    stored = json.loads((ROOT / "docs" / "predictions" / "cells14_margins_registries.json").read_text())
+    c = stored["compositions"]
+    # DFT (the potential), kcal/mol per chain against each composition's own upright all-trans cell
+    low = {"film": "film_r_released_tight", "matrix": "reg_matrix_tt_as_film_low_in_all_s1", "leader": "reg_leader_tt_as_film_low_in_all_s1", "nitrile": "reg_nitrile_tt_as_film_low_in_all_s1"}
+    got = {k: (c[k]["cells"]["tt"][f]["dft"], c[k]["cells"]["tt"][f]["potential"]) for k, f in low.items()}
+    for k, expected in {"film": (-0.84, -1.27), "matrix": (-1.40, -1.50), "leader": (2.34, 1.02), "nitrile": (0.29, -1.51)}.items():
+        assert got[k] == pytest.approx(expected, abs=0.006), k
+    assert c["leader"]["cells"]["tt"]["leader_r_released_tight"]["dft"] == pytest.approx(2.16, abs=0.006)
+    # the low cell is the lowest all-trans cell of the two compositions without a nitrile, and of neither with one
+    assert {k: c[k]["lowest_tt"] for k in c} == {"film": low["film"], "matrix": low["matrix"], "leader": CELLS["leader"][0], "nitrile": CELLS["nitrile"][0]}
+    assert {k: c[k]["lowest_hx"] for k in c} == {k: CELLS[k][1] for k in c}
+    margins = {k: (round(c[k]["margin_upright"], 3), round(c[k]["margin"], 3)) for k in c}
+    assert margins == {"film": (0.123, 0.063), "matrix": (0.068, -0.032), "leader": (-0.047, -0.047), "nitrile": (-0.083, -0.083)}
+    assert {r: round(v["margin"], 3) for r, v in stored["rows"].items()} == {FILM: 0.063, MATRIX: -0.032, LEADER: -0.047, NITRILE: -0.083}
+
+
+def test_the_four_axes_at_the_margins_from_the_lowest_cells():
+    pred = ROOT / "docs" / "predictions"
+    sites = json.loads((pred / "four_axes_registries.json").read_text())
+    # a row's kink sites stand higher against a lower all-trans cell by DFT's difference between the two all-trans cells
+    assert {k: round(v, 2) for k, v in sites["sheet_shifts_kcal_per_kink_pair"].items()} == {FILM: 0.84, MATRIX: 1.40}
+    rows = sites["shifts"]["+0.00"]["rows"]
+    anchor = rows[FILM]["by_the_sum_over_kink_sites"]
+    assert (anchor["f_relax_hz"], anchor["tan_delta_34kHz"], anchor["strain_ac_at_the_heat_budget_34kHz"], anchor["blocked_pn_nm2_through_the_crystal"]) == pytest.approx(
+        (364e3, 0.088, 0.00081, 7.6), rel=0.01)
+    # the matrix: all-trans the lower phase and no kink site below it; its channel is nothing in the model
+    assert rows[MATRIX]["all_trans_is_lower"] and all(rows[MATRIX][m]["f_relax_hz"] < 5e3 for m in ("by_the_sum_over_kink_sites", "by_the_occupancy_of_kink_sites"))
+    assert rows[LEADER]["all_trans_is_lower"] and rows[NITRILE]["all_trans_is_lower"] and not rows[FILM]["all_trans_is_lower"]
+    expected = {"hop": (27.3e6, 0.0008, 0.00184, 10.0), "removal": (7.59e6, 0.0029, 0.00164, 8.9)}
+    for event, (hz, tan_delta, strain, blocked) in expected.items():
+        t = json.loads((pred / f"four_axes_registries_by_barrier_{event}.json").read_text())["shifts"]["+0.00"]["rows"]
+        film, leader = t[FILM]["by_the_barrier"], t[LEADER]["by_the_barrier"]
+        assert (film["f_relax_hz"], film["tan_delta_34kHz"], film["strain_ac_at_the_heat_budget_34kHz"], film["blocked_pn_nm2_through_the_crystal"]) == pytest.approx(
+            (364e3, 0.088, 0.00081, 7.6), rel=0.01)
+        assert leader["f_relax_hz"] == pytest.approx(hz, rel=0.01) and leader["tan_delta_34kHz"] == pytest.approx(tan_delta, abs=6e-5)
+        assert leader["strain_ac_at_the_heat_budget_34kHz"] == pytest.approx(strain, abs=6e-6) and leader["blocked_pn_nm2_through_the_crystal"] == pytest.approx(blocked, abs=0.06)
+        assert leader["margin_the_model_used"] == 0.0
 
 
 def test_dft_has_the_leader_in_the_low_cell_above_its_upright_cell(labelled):

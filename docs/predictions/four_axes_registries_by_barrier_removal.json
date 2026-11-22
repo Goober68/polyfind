@@ -1,0 +1,80 @@
+{
+ "what": "the four axes (examples/pin_design.py) with the margins of some rows replaced and everything else as the tables have it: dipole, switch strain, kink energies and crystal stiffness are belt4's and have no DFT test. Frequency is the relaxation frequency of the small-signal permittivity; strain is the AC strain at the heat budget at 34 kHz; blocked force is per area, pN/nm2 (= MPa). The frequency is by a barrier: the measured film's 364 kHz times exp(-(a row's barrier - the film composition's) / kT), kT 0.596 kcal/mol; the kink sites are not used",
+ "margins_from": "cells14_margins_registries.json",
+ "base": "polished_margins_belt4.json",
+ "replaced": {
+  "vdf9-trfe4-cfe1-14": 0.06272010869835504,
+  "vdf10-trfe4-14": -0.032312073795294965,
+  "vdf9-trfe3-an1-rvdf1-14": -0.046607156942515875,
+  "vdf9-trfe4-an1-14": -0.0828333126343689
+ },
+ "belt4_margins": {
+  "vdf9-trfe4-cfe1-14": 0.31749793708900764,
+  "vdf10-trfe4-14": 0.056119764202634315,
+  "vdf9-trfe3-an1-rvdf1-14": 0.03658928136722572,
+  "vdf9-trfe4-an1-14": 0.19658876021101257
+ },
+ "shifts": {
+  "+0.00": {
+   "film_channel_as_calibrated": {
+    "margin_the_model_used": 0.0,
+    "polar_fraction_at_the_bias": 0.8358314956396972,
+    "f_relax_hz": 363984.70013235195,
+    "tan_delta_34kHz": 0.05951865652131868,
+    "strain_ac_at_the_heat_budget_34kHz": 0.0006604132338371202,
+    "field_ac_V_um": 1.4821245105267737,
+    "binds": "heat",
+    "blocked_pn_nm2_by_the_films_assumed_modulus": 0.13208264676742404,
+    "blocked_pn_nm2_through_the_crystal": 6.464650946507255
+   },
+   "rows": {
+    "vdf9-trfe4-cfe1-14": {
+     "margin": 0.06272010869835504,
+     "all_trans_is_lower": false,
+     "by_the_barrier": {
+      "margin_the_model_used": 0.06272010869835504,
+      "polar_fraction_at_the_bias": 0.5521513521659465,
+      "f_relax_hz": 363984.70013235195,
+      "tan_delta_34kHz": 0.0876298883254633,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0008145662856462089,
+      "field_ac_V_um": 0.7505480773106233,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.16291325712924176,
+      "blocked_pn_nm2_through_the_crystal": 7.578037796895409
+     },
+     "barrier_kcal_per_chain": 9.224,
+     "rate_against_the_film_cell": 1.0
+    },
+    "vdf10-trfe4-14": {
+     "margin": -0.032312073795294965,
+     "all_trans_is_lower": true
+    },
+    "vdf9-trfe3-an1-rvdf1-14": {
+     "margin": -0.046607156942515875,
+     "all_trans_is_lower": true,
+     "by_the_barrier": {
+      "margin_the_model_used": 0.0,
+      "polar_fraction_at_the_bias": 0.8354073897396963,
+      "f_relax_hz": 7590826.264877964,
+      "tan_delta_34kHz": 0.002860478833026958,
+      "strain_ac_at_the_heat_budget_34kHz": 0.0016417689690398642,
+      "field_ac_V_um": 3.8025121609828365,
+      "binds": "heat",
+      "blocked_pn_nm2_by_the_films_assumed_modulus": 0.32835379380797286,
+      "blocked_pn_nm2_through_the_crystal": 8.938455005666459
+     },
+     "barrier_kcal_per_chain": 7.4136,
+     "rate_against_the_film_cell": 20.85479489142756
+    },
+    "vdf9-trfe4-an1-14": {
+     "margin": -0.0828333126343689,
+     "all_trans_is_lower": true
+    }
+   }
+  }
+ },
+ "barriers_kcal_per_chain": {
+  "vdf9-trfe4-cfe1-14": 9.224,
+  "vdf9-trfe3-an1-rvdf1-14": 7.4136
+ }
+}

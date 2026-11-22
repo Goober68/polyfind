@@ -1,0 +1,180 @@
+{
+ "what": "margins of fourteen-monomer cells, all-trans less helix in kcal/mol per monomer, in DFT (PBE-D3(BJ) single points on cells the potential relaxed): margin_upright between the two labelled cells the tables' search built, margin between the lowest labelled all-trans cell and the lowest labelled helix cell of any registry. cells: kcal/mol per chain against the upright cell of the same conformation, DFT and the potential",
+ "compositions": {
+  "film": {
+   "row": "vdf9-trfe4-cfe1-14",
+   "cells": {
+    "tt": {
+     "row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1": {
+      "dft": 0.0,
+      "potential": 0.0,
+      "dft_eV_per_monomer": -2048.895099958992,
+      "dft_largest_force_eV_per_A": 0.07401075,
+      "upright": true
+     },
+     "film_r_released_tight": {
+      "dft": -0.8447608405336577,
+      "potential": -1.271809240120443,
+      "dft_eV_per_monomer": -2048.8977165570727,
+      "dft_largest_force_eV_per_A": 0.09332487,
+      "upright": false
+     },
+     "film_r_released": {
+      "dft": 0.8832396383571431,
+      "potential": 0.22418698376217663,
+      "dft_eV_per_monomer": -2048.8923641750503,
+      "dft_largest_force_eV_per_A": 0.12942933,
+      "upright": false
+     }
+    },
+    "hx": {
+     "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1": {
+      "dft": 0.0,
+      "potential": 0.0,
+      "dft_eV_per_monomer": -2048.9004363640456,
+      "dft_largest_force_eV_per_A": 0.10720626,
+      "upright": true
+     }
+    }
+   },
+   "lowest_tt": "film_r_released_tight",
+   "lowest_hx": "row_vdf9-trfe4-cfe1-14_TGTGp_chain1_in_all_s1",
+   "margin_upright": 0.12306016873946965,
+   "margin": 0.06272010869835504
+  },
+  "matrix": {
+   "row": "vdf10-trfe4-14",
+   "cells": {
+    "tt": {
+     "row_vdf10-trfe4-14_TTTT_chain1_in_all_s1": {
+      "dft": 0.0,
+      "potential": 0.0,
+      "dft_eV_per_monomer": -2063.1805873735075,
+      "dft_largest_force_eV_per_A": 0.07334123,
+      "upright": true
+     },
+     "reg_matrix_tt_as_film_low_in_all_s1": {
+      "dft": -1.4021512010129664,
+      "potential": -1.501033035860278,
+      "dft_eV_per_monomer": -2063.184930456147,
+      "dft_largest_force_eV_per_A": 0.09782379,
+      "upright": false
+     }
+    },
+    "hx": {
+     "row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1": {
+      "dft": 0.0,
+      "potential": 0.0,
+      "dft_eV_per_monomer": -2063.1835292691044,
+      "dft_largest_force_eV_per_A": 0.097958,
+      "upright": true
+     }
+    }
+   },
+   "lowest_tt": "reg_matrix_tt_as_film_low_in_all_s1",
+   "lowest_hx": "row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1",
+   "margin_upright": 0.06784158341242642,
+   "margin": -0.032312073795294965
+  },
+  "leader": {
+   "row": "vdf9-trfe3-an1-rvdf1-14",
+   "cells": {
+    "tt": {
+     "tt_leader_from_rows14an_r1": {
+      "dft": 0.0,
+      "potential": 0.0,
+      "dft_eV_per_monomer": -1959.7689253425428,
+      "dft_largest_force_eV_per_A": 0.10622436,
+      "upright": true
+     },
+     "leader_r_released": {
+      "dft": 2.6083849553547642,
+      "potential": 1.8276073976965692,
+      "dft_eV_per_monomer": -1959.7608460202775,
+      "dft_largest_force_eV_per_A": 0.131198,
+      "upright": false
+     },
+     "leader_r_released_tight": {
+      "dft": 2.158191806527986,
+      "potential": 1.5048584631684414,
+      "dft_eV_per_monomer": -1959.7622404676438,
+      "dft_largest_force_eV_per_A": 0.11175403,
+      "upright": false
+     },
+     "reg_leader_tt_as_film_low_in_all_s1": {
+      "dft": 2.338666278746052,
+      "potential": 1.0221649749269968,
+      "dft_eV_per_monomer": -1959.761681458354,
+      "dft_largest_force_eV_per_A": 0.12117018,
+      "upright": false
+     }
+    },
+    "hx": {
+     "helix_leader_TGTGp_r1": {
+      "dft": 0.0,
+      "potential": 0.0,
+      "dft_eV_per_monomer": -1959.7669042607388,
+      "dft_largest_force_eV_per_A": 0.28604808,
+      "upright": true
+     }
+    }
+   },
+   "lowest_tt": "tt_leader_from_rows14an_r1",
+   "lowest_hx": "helix_leader_TGTGp_r1",
+   "margin_upright": -0.046607156942515875,
+   "margin": -0.046607156942515875
+  },
+  "nitrile": {
+   "row": "vdf9-trfe4-an1-14",
+   "cells": {
+    "tt": {
+     "tt_nitrile_from_rows14an_r1": {
+      "dft": 0.0,
+      "potential": 0.0,
+      "dft_eV_per_monomer": -2006.5047715588237,
+      "dft_largest_force_eV_per_A": 0.11471388,
+      "upright": true
+     },
+     "reg_nitrile_tt_as_film_low_in_all_s1": {
+      "dft": 0.2928360756928178,
+      "potential": -1.5061954427282203,
+      "dft_eV_per_monomer": -2006.5038645159343,
+      "dft_largest_force_eV_per_A": 0.11841833,
+      "upright": false
+     }
+    },
+    "hx": {
+     "row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1": {
+      "dft": 0.0,
+      "potential": 0.0,
+      "dft_eV_per_monomer": -2006.5011795589696,
+      "dft_largest_force_eV_per_A": 0.12315276,
+      "upright": true
+     }
+    }
+   },
+   "lowest_tt": "tt_nitrile_from_rows14an_r1",
+   "lowest_hx": "row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1",
+   "margin_upright": -0.0828333126343689,
+   "margin": -0.0828333126343689
+  }
+ },
+ "rows": {
+  "vdf9-trfe4-cfe1-14": {
+   "margin": 0.06272010869835504,
+   "margin_upright": 0.12306016873946965
+  },
+  "vdf10-trfe4-14": {
+   "margin": -0.032312073795294965,
+   "margin_upright": 0.06784158341242642
+  },
+  "vdf9-trfe3-an1-rvdf1-14": {
+   "margin": -0.046607156942515875,
+   "margin_upright": -0.046607156942515875
+  },
+  "vdf9-trfe4-an1-14": {
+   "margin": -0.0828333126343689,
+   "margin_upright": -0.0828333126343689
+  }
+ }
+}
