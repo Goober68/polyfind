@@ -102,3 +102,12 @@ path_dft.sh processors next film_r film_r_i06
 path_dft.sh card next film_r film_r_i08
 path_dft.sh card next leader_b2 leader_b2_i08
 path_dft.sh processors next leader_b1 leader_b1_released
+#
+# 03:48 UTC.  One more change of order.  The measured film's relaxation (364 kHz at 300 K, its
+# own Vogel-Fulcher prefactor 8.08e-13 s) is an effective barrier of 7.9 kcal/mol.  In the
+# potential the film composition's kink leaves its chlorine by its second gauche bond moving a
+# monomer along over 7.8 (film_b1_i07), where forming the kink costs 3.3 and removing it 9.2 in
+# DFT.  That top has no DFT and the leader's has (5.13): it goes to the front of the card's
+# line, ahead of the image after the leader's second top; the image after the film's top will
+# not start.
+path_dft.sh card next film_b1 film_b1_i07
