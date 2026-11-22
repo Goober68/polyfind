@@ -50,7 +50,7 @@ path_dft.sh card start leader_r leader_r_released
 dft_cells.sh in=dft_card last film_r_i08 leader_r_i05
 path_dft.sh processors start film_f film_f_released
 path_dft.sh processors start leader_f leader_f_released
-# 00:20 UTC.  The scans led the kink and left the cell where it was; the path has a second part,
+# 00:05 UTC.  The scans led the kink and left the cell where it was; the path has a second part,
 # the cell's shear along the chains (a monomer, between an upright cell and the sheet's).  Each
 # route from the upright all-trans cell to the sheet has one step of each kind: the kink first
 # and then the shear (the scans from all-trans, then the upright kinked cell sheared to the
