@@ -367,5 +367,57 @@ def test_the_second_sheets_file_is_two_rows_made_of_the_leaders_own_sheets():
         assert np.abs(find_mic(a.positions[backbone] - source.positions[was], a.cell, pbc=True)[0]).max() < 1e-8
 
 
+def test_the_fourth_files_table_the_leader_comes_back_and_three_rows_move():
+    """Every row given the leader's own packings too (file D, 31 of its 39 cells relaxed before the job's 3000 s).  The leader as a control now has its
+    known margin; the rows with its reversed unit first and its VDF eleventh take its helix packing, the others do not."""
+    from ase.io import read
+
+    stored = json.loads((ROOT / "docs" / "predictions" / "screen14_potential_d.json").read_text())["rows"]
+    margins = {k: round(r["margin"], 3) for k, r in stored.items()}
+    assert margins == {"vdf9-trfe4-cfe1-14": 0.072, "vdf8-trfe4-cfe1-rvdf1-14": -0.033, "vdf9-trfe3-cfe1-rvdf1-14": 0.201, "vdf10-trfe3-cfe1-14": 0.410, "vdf10-trfe4-14": -0.087,
+                       "vdf8-trfe4-ctfe1-rvdf1-14": -0.459, "vdf9-trfe3-ctfe1-rvdf1-14": -0.053, "vdf9-trfe4-ctfe1-14": -0.305, "vdf9-trfe4-rvdf1-first-14": -0.178,
+                       "vdf10-trfe3-rvdf1-14": 0.071, "vdf11-trfe3-14": 0.243, "vdf9-trfe5-14": -0.102, "vdf9-trfe4-cdfe1-14": -0.110, "vdf8-trfe4-cfe1-cdfe1-14": 0.313,
+                       "vdf9-trfe4-rvdf1-14": -0.491, "vdf9-trfe4-e1-14": -0.249, "vdf9-trfe3-an1-rvdf1-14": -0.069}
+    before = {k: round(r["margin"], 3) for k, r in json.loads((ROOT / "docs" / "predictions" / "screen14_potential_c.json").read_text())["rows"].items()}
+    assert {k: (before[k], v) for k, v in margins.items() if abs(v - before[k]) > 0.02} == {
+        "vdf9-trfe3-cfe1-rvdf1-14": (0.088, 0.201), "vdf8-trfe4-ctfe1-rvdf1-14": (-0.513, -0.459), "vdf9-trfe3-ctfe1-rvdf1-14": (-0.246, -0.053),
+        "vdf10-trfe3-rvdf1-14": (-0.091, 0.071), "vdf9-trfe3-an1-rvdf1-14": (-0.386, -0.069)}
+    # the leader: its own cells in this potential give -0.070
+    own = {str(a.info["frame"]): a for a in read(MLIP / "cells14_frames_pbe_d3bj.extxyz", index=":")}
+    e = lambda a: float(a.info["potential_eV_per_monomer"])
+    assert (e(own["tt_leader_from_rows14an_r1"]) - e(own["helix_leader_TGTGp_r1"])) * KCAL == pytest.approx(-0.070, abs=0.002)
+    leader = stored["vdf9-trfe3-an1-rvdf1-14"]
+    assert (leader["lowest_tt"], leader["lowest_hx"]) == ("tt_own", "hx_ldr")
+    # the leader's helix packing against each row's lowest helix cell of the film composition's four, kcal/mol per chain
+    def packing(row):
+        hx = stored[row]["helix_placements_per_chain"]
+        return round(hx["hx_ldr"] - min(v for k, v in hx.items() if k not in ("hx_ldr", "hx_an")), 2)
+    assert {r: packing(r) for r in ("vdf9-trfe3-an1-rvdf1-14", "vdf9-trfe3-cfe1-rvdf1-14", "vdf10-trfe3-rvdf1-14", "vdf9-trfe3-ctfe1-rvdf1-14", "vdf8-trfe4-ctfe1-rvdf1-14")} == {
+        "vdf9-trfe3-an1-rvdf1-14": -4.43, "vdf9-trfe3-cfe1-rvdf1-14": -1.62, "vdf10-trfe3-rvdf1-14": -2.26, "vdf9-trfe3-ctfe1-rvdf1-14": -2.70, "vdf8-trfe4-ctfe1-rvdf1-14": -0.75}
+    assert {r: packing(r) for r in (FILM, "vdf10-trfe4-14", "vdf8-trfe4-cfe1-rvdf1-14", "vdf9-trfe4-rvdf1-first-14")} == {
+        FILM: 1.84, "vdf10-trfe4-14": 1.66, "vdf8-trfe4-cfe1-rvdf1-14": 1.85, "vdf9-trfe4-rvdf1-first-14": 1.90}
+    # the rows file D did not reach with the leader's helix packing, and the cells it left moving
+    waiting = {k: sorted(c for c, v in r["cells"].items() if not v.get("relaxed")) for k, r in stored.items()}
+    assert {k: v for k, v in waiting.items() if "hx_ldr" in v} == {"vdf9-trfe4-ctfe1-14": ["hx_ldr"], "vdf8-trfe4-cfe1-cdfe1-14": ["hx_ldr", "tt_ldr"], "vdf9-trfe4-rvdf1-14": ["hx_ldr", "tt_ldr"]}
+    frames = read(MLIP / "screen14_relaxed_d.extxyz", index=":")
+    assert len(frames) == 31 and sum(len(v) for v in waiting.values()) == 8
+
+
+def test_where_the_kink_sits_in_the_two_rows_with_the_leaders_other_features():
+    """The kink sheets relaxed on the card, kcal/mol per chain against each row's lowest all-trans cell: with a chlorine unit the kink is cheapest on the
+    chlorine, as in the film's composition; without a pin it is cheapest on the run of VDF units, as in the leader."""
+    one = json.loads((ROOT / "docs" / "predictions" / "screen14_sheets_1.json").read_text())["rows"]["vdf9-trfe3-cfe1-rvdf1-14"]
+    two = json.loads((ROOT / "docs" / "predictions" / "screen14_sheets_2.json").read_text())["rows"]
+    kept = lambda row: {k: round(v["energy"], 2) for k, v in row["sites"].items() if v.get("relaxed") and v["kink_kept"] and v["converged"]}
+    assert one["all_trans"] == "tt_ldr" and one["cheapest"] == "12" and sum(bool(v.get("relaxed")) for v in one["sites"].values()) == 25
+    k1 = kept(one)
+    assert (k1["12"], k1["14m"], k1["16"], k1["18"]) == (-4.84, -4.21, -1.84, -1.55) and one["sites"]["12"]["units"] == "VC" and one["sites"]["14m"]["units"] == "CV"
+    cfe, nopin = two["vdf9-trfe3-cfe1-rvdf1-14"], two["vdf10-trfe3-rvdf1-14"]
+    k2, k3 = kept(cfe), kept(nopin)
+    assert (k2["12"], k2["16m"], k2["18m"], k2["20m"]) == (-2.92, -2.21, -2.04, -1.78)                  # the same row in the leader's packing: the chlorine site still the cheapest
+    assert nopin["all_trans"] == "tt_low" and nopin["cheapest"] == "18m" and (k3["18m"], k3["20m"], k3["16m"]) == (-1.87, -1.72, -1.60)
+    assert all(nopin["sites"][s]["units"] == "VV" for s in ("18m", "20m", "16m"))
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
