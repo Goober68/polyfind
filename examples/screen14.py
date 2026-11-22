@@ -306,12 +306,10 @@ def sheets_table(args):
         row = rows.setdefault(name, {"letters": str(start.info["screen_letters"]), "sites": {}})
         if "all_trans" not in row and not row.get("no_all_trans"):       # the row's lowest all-trans cell at rest in the same folder
             flat = {}
-            for kind in ("tt_low", "tt_up"):
-                found = sorted(Path(args.relaxed).glob(f"scr_{name}_{kind}_in_*.start.xyz"))
-                if found:
-                    a = read(found[0])
-                    if "NOT converged" not in str(a.info.get("note", "")) and not kink_of(a, path)[0][0]:
-                        flat[kind] = float(a.info["potential_eV_per_monomer"])
+            for found in sorted(Path(args.relaxed).glob(f"scr_{name}_tt_*_in_*.start.xyz")):      # every pattern the row has been given (tt_low, tt_up, tt_reg, ...)
+                a = read(found)
+                if "NOT converged" not in str(a.info.get("note", "")) and not any(kink_of(a, path)[0]):
+                    flat[str(a.info["screen_kind"])] = float(a.info["potential_eV_per_monomer"])
             if not flat:
                 row["no_all_trans"] = True
                 print(f"{name}: no all-trans cell at rest in {args.relaxed}: its sheets are left out")
