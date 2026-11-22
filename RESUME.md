@@ -687,8 +687,9 @@ right": true at one registry, not along it).
         `delete-pod` after a last mirror and CONFIRMED BY A READ (`list-pods`: none; `get-pod`: 404).
         NO POD IS RUNNING. Docs: `docs/MLIP_SECOND_OPINION.md` 3.24, head of
         `docs/CANDIDATE_MATERIALS.md`; tests `tests/test_registry_cells.py` (22),
-        `tests/test_mlip_path.py` (10). Kcal/mol per chain against each composition's own upright cell
-        unless said; "the potential" where no DFT is named.
+        `tests/test_mlip_path.py` (10); the full suite at the write-up's commit: 1114 passed, 15
+        skipped. Kcal/mol per chain against each composition's own upright cell unless said; "the
+        potential" where no DFT is named.
         (1) MOVING THE NEIGHBOURS OF UPRIGHT CHAINS FINDS NOTHING (`examples/registry_cells.py build`,
             `examples/registry_starts.sh`, 34 starts, 32 relaxed, `docs/predictions/registry_shifted.json`):
             all-trans a monomer along +0.45 to +2.30; the turn alone level (-0.02, -0.01, +0.02); helix two

@@ -2439,7 +2439,8 @@ build` makes a start from a labelled cell by shearing the cell so that each chai
 along the two cell edges sit whole monomers further along the chains, and by turning every
 chain about its own axis (`examples/registry_starts.sh`, 34 starts). All-trans: one monomer
 along each way (+1, -1 and -1, +1 along the two edges), with the chains turned 117 degrees
-(the film composition's low cell has them 123 from upright) and without, and the turn alone.
+(the film composition's low cell has them 123 from upright; the two cells with a nitrile were
+turned the other way, where the nitrile groups do not meet) and without, and the turn alone.
 Helix: two monomers along each way (a helix repeats in two), and one. Relaxed in the potential
 to 0.004 eV/A, 32 of the 34; kcal/mol per chain against the labelled cell each was made from
 (`registry_shifted.json`; "moving" is a cell not at rest when it was stopped):
@@ -2463,8 +2464,9 @@ wherever it came to rest. A helix cell does not stay with its neighbours one mon
 two of the eight rest where they were put (+8.41, +7.79) and the others slide, to two monomers
 along on one edge and none on the other (the film composition's +0.76, the matrix's +3.74) or
 most of the way back (the nitrile composition's +1.41, its neighbours 0.6 and 0.0 from where
-the labelled cell has them). The three still moving when they were stopped (the leader's two and the
-nitrile composition's +1, -1) were 3.1 to 4.3 above and falling.
+the labelled cell has them). The three still moving when the pod was deleted (the leader's two
+and the nitrile composition's +1, -1) were 3.1 to 4.3 above and falling; the leader's -1, +1,
+relaxed on here since, was 2.5 above and still falling when this was written.
 
 **Nor does it find the cell 3.23 found.** The control: the film composition's upright chains
 given the lattice, the registry and the turn of its own low cell (`build ... :like`,
@@ -2657,12 +2659,14 @@ cheapest site 2.30 above all-trans, not 0.90).
   another state's cell.
 
 Files: `docs/predictions/registry_shifted.json` and `mlip/registry_shifted_relaxed.extxyz`
-(the 34 starts; three all-trans ones (the turn alone) and the last sixteen steps of one helix cell relaxed on this machine),
+(the 34 starts; three all-trans ones, the turn alone, and the last steps of the helix cells
+the pod left moving were relaxed on this machine),
 `registry_helix_one.json` (the eight helix starts as the pod left them),
 `registry_like_film.json`, `registry_as_film.json`, `registry_as_film_nitrile.json`,
 `registry_as_film_leader.json`, `registry_helix_annealed.json` (each with its relaxed cells
-under `mlip/`), `mlip/registry_starts*.extxyz` (every start), `mlip/cells14_fourth_pod_frames_pbe_d3bj.extxyz`
-(the five labels, each with `dft_run`), `cells14_margins_registries.json`,
+under `mlip/`), `mlip/registry_starts*.extxyz` (every start),
+`mlip/cells14_fourth_pod_frames_pbe_d3bj.extxyz` (the five labels, each with `dft_run`),
+`cells14_margins_registries.json`,
 `four_axes_registries.json`, `four_axes_registries_by_barrier_{hop,removal}.json`,
 `kink_paths_leader.json` and `four_axes_by_barrier_{forming,removal}.json` (rewritten with the
 new labels). Tools: `examples/registry_cells.py` (`build`, `derive`, `table`, `choose`,
