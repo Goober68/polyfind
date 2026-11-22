@@ -13,3 +13,14 @@
 #
 # One job a line; the pod counts lines, so the file is only added to.
 registry_card.sh docs/predictions/mlip/registry_starts.extxyz 4 600 2700 docs/predictions/mlip/paths/leader_b2.extxyz leader_b2_i08
+#
+# 07:08 UTC.  The first cells of the job above: nine minutes a cell at 600 steps, and three of the first
+# four are not at rest (the matrix's all-trans cell in the film's registry +2.06 kcal/mol per chain above
+# its upright cell, the nitrile cell's +0.54, the leader's +5.38; the film composition's helix with its
+# neighbours two monomers along at rest, +3.15).  A cell that is not at rest says little: the film
+# composition's own low registry, built the same way and relaxed here on four processors, is still 2.1
+# above its upright cell at 250 steps on its way to 1.27 below.  So when the job above ends, the cells
+# that are not at rest and are less than 4 above their labelled cells are relaxed on from where they
+# stand, the lowest first, 900 more steps each and 40 minutes in all; then the table and the choice
+# again (a cell not at rest is put to DFT only if it is already 0.3 below its labelled cell).
+registry_more.sh docs/predictions/mlip/registry_starts.extxyz 4 900 2400 auto:4.0

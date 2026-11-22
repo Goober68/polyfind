@@ -117,6 +117,8 @@ def test_the_stored_starts_are_the_scripts_and_none_has_chains_that_touch(labell
     first = next(line for line in queue if line and not line.startswith("#")).split()
     assert first[0] == "registry_card.sh" and (ROOT / first[1]).samefile(MLIP / "registry_starts.extxyz") and [int(v) for v in first[2:5]] == [4, 600, 2700]
     assert first[6] in {str(a.info["frame"]) for a in read(ROOT / first[5], index=":")}
+    more = next(line for line in queue if line.startswith("registry_more.sh ")).split()
+    assert (ROOT / more[1]).samefile(MLIP / "registry_starts.extxyz") and more[2:] == ["4", "900", "2400", "auto:4.0"]
     for line in queue:
         if line and not line.startswith("#"):
             assert (ROOT / "examples" / "gpu_jobs" / line.split()[0]).exists() or line.split()[0] == "stop"
@@ -132,6 +134,10 @@ def test_the_choice_is_the_lowest_cell_at_rest_of_each_composition_and_conformat
     picked = tool.chosen(rows, 0.3, {"film:tt": -1.0})
     assert picked == [("film_tt_-1.1", -1.1), ("matrix_tt_-0.9", -0.9), ("nitrile_hx_-0.1", -0.1), ("matrix_hx_0.2", 0.2)]
     assert tool.chosen(rows, 0.3, {"film:tt": -1.2})[0] == ("matrix_tt_-0.9", -0.9)
+    # a cell that is not at rest counts only when it is already well below its labelled cell; a cell in a DFT line already is not chosen again
+    assert tool.chosen(rows, 0.3, {"film:tt": -1.0}, unsettled_below=-0.3)[0] == ("matrix_tt_-2.0", -2.0)
+    assert tool.chosen(rows, 0.3, {"film:tt": -1.0}, unsettled_below=-2.5)[1] == ("matrix_tt_-0.9", -0.9)
+    assert [n for n, _ in tool.chosen(rows, 0.3, {"film:tt": -1.0}, skip={"matrix_tt_-0.9", "film_tt_-1.1"})] == ["matrix_tt_-0.4", "nitrile_hx_-0.1", "matrix_hx_0.2"]
     assert tool.name_of("film", "tt", 1, -1, 117) == "reg_film_tt_p1m1_tp117" and tool.name_of("leader", "hx", -2, 2, 0) == "reg_leader_hx_m2p2_tz0"
     assert tool._ints("1 -1") == [1, -1] and tool._ints(np.array([2, -2])) == [2, -2]
 

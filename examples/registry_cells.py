@@ -12,7 +12,9 @@ DFT.  This makes such cells on purpose, from a labelled cell:
         --variant LABEL:tt:SA,SB,TURN ... --out STARTS.extxyz
     python -I examples/registry_cells.py table --starts STARTS.extxyz --relaxed DIR --labels FILES --out TABLE.json \\
         --frames-out RELAXED.extxyz
-    python -I examples/registry_cells.py choose --table TABLE.json [--within 0.3] [--below LABEL:tt=KCAL ...]
+    python -I examples/registry_cells.py choose --table TABLE.json [--within 0.3] [--below LABEL:tt=KCAL ...] \
+        [--unsettled-below KCAL] [--skip FRAME ...]
+    python -I examples/registry_cells.py unsettled --table TABLE.json --below KCAL
     python -I examples/registry_cells.py margins --labels FILES --cell LABEL:tt=FRAME LABEL:hx=FRAME ... \
         [--also LABEL:tt=FRAME ...] --row LABEL=ROW ... --out MARGINS.json
 
@@ -271,11 +273,14 @@ def table(args):
     print(f"{sum(r['relaxed'] for r in rows.values())} of {len(rows)} relaxed; written {args.out}")
 
 
-def chosen(rows, within, below):
-    """The lowest cell of each composition and conformation that is worth a DFT label, the lowest first."""
+def chosen(rows, within, below, unsettled_below=None, skip=()):
+    """The lowest cell of each composition and conformation that is worth a DFT label, the lowest first.  A cell that has
+    not come to rest counts only when it is already below `unsettled_below` (its energy can only fall further)."""
     best = {}
     for name, r in rows.items():
-        if not (r.get("relaxed") and r["converged"] and r["conformation_kept"]):
+        if not (r.get("relaxed") and r["conformation_kept"]) or r["frame"] in skip:
+            continue
+        if not r["converged"] and (unsettled_below is None or r["energy"] > unsettled_below):
             continue
         key = f"{r['label']}:{r['conformation']}"
         if r["energy"] > below.get(key, within):
@@ -288,11 +293,18 @@ def chosen(rows, within, below):
 def choose(args):
     rows = json.loads(Path(args.table).read_text())["rows"]
     below = {item.split("=")[0]: float(item.split("=")[1]) for item in args.below}
-    picked = chosen(rows, args.within, below)
+    picked = chosen(rows, args.within, below, args.unsettled_below, set(args.skip))
     print(" ".join(name for name, _ in picked[0::2]))
     print(" ".join(name for name, _ in picked[1::2]))
     for name, e in picked:
         print(f"# {name}: {e:+.2f}", file=sys.stderr)
+
+
+def unsettled(args):
+    """The starts whose cells have not come to rest and are below --below, the lowest first: the ones worth relaxing on."""
+    rows = json.loads(Path(args.table).read_text())["rows"]
+    left = sorted((r["energy"], name) for name, r in rows.items() if r.get("relaxed") and not r["converged"] and r["conformation_kept"] and r["energy"] < args.below)
+    print(" ".join(name for _, name in left))
 
 
 def margins(args):
@@ -361,6 +373,11 @@ def main():
     s.add_argument("--table", required=True)
     s.add_argument("--within", type=float, default=0.3, help="kcal/mol per chain above its labelled cell a cell may be and still be asked of DFT")
     s.add_argument("--below", nargs="*", default=[], metavar="LABEL:tt|hx=KCAL", help="for this composition and conformation, only a cell below this")
+    s.add_argument("--unsettled-below", type=float, default=None, help="a cell that has not come to rest is taken too when it is already below this (default: never)")
+    s.add_argument("--skip", nargs="*", default=[], help="relaxed frames not to choose (in a DFT line already)")
+    s = sub.add_parser("unsettled")
+    s.add_argument("--table", required=True)
+    s.add_argument("--below", type=float, required=True)
     s = sub.add_parser("margins")
     s.add_argument("--labels", nargs="+", required=True, help="files of DFT-labelled frames")
     s.add_argument("--cell", nargs="+", required=True, metavar="LABEL:tt|hx=FRAME", help="each composition's upright all-trans and helix cell")
@@ -368,7 +385,7 @@ def main():
     s.add_argument("--row", nargs="+", required=True, metavar="LABEL=ROW", help="the tables' row a composition is")
     s.add_argument("--out", required=True)
     args = p.parse_args()
-    {"build": build, "table": table, "choose": choose, "margins": margins}[args.step](args)
+    {"build": build, "table": table, "choose": choose, "unsettled": unsettled, "margins": margins}[args.step](args)
 
 
 if __name__ == "__main__":
