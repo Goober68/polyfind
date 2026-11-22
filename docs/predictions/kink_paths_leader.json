@@ -61,8 +61,12 @@
   "stretched kink": {
    "image": "leader_b1_released",
    "potential": 0.8457446540221463,
-   "dft": null,
-   "label": null
+   "dft": 0.3153855798850818,
+   "label": "leader_b1_released",
+   "potential_minus_dft": 0.5303590741370645,
+   "dft_largest_force_eV_per_A": 0.13090155,
+   "dft_minutes": 67.49333333333333,
+   "dft_run": "processors"
   },
   "top: upright all-trans to upright kinked": {
    "image": "leader_f_i07",
@@ -140,6 +144,11 @@
     "forward": 5.667589001843293,
     "back": 4.821844347821147,
     "step": 0.8457446540221463
+   },
+   "dft": {
+    "forward": 5.1258282967176205,
+    "back": 4.810442716832538,
+    "step": 0.3153855798850818
    }
   },
   "the stretched kink forms": {
@@ -150,6 +159,11 @@
     "forward": 4.173125582782559,
     "back": 6.407274152056203,
     "step": -2.2341485692736445
+   },
+   "dft": {
+    "forward": 3.75615064066422,
+    "back": 6.764408868886763,
+    "step": -3.008258228222543
    }
   },
   "upright, the kink forms": {
