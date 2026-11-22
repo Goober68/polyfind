@@ -231,7 +231,7 @@ def morphed(atoms, target):
     """`atoms` with its chains' substituents made `target`'s, backbone carbon by backbone carbon, where they stand: a
     hydrogen, fluorine or chlorine made another (at its own bond length along the same bond), or a nitrile (C, then N 1.16 A
     beyond).  The chains are lined up by the turn of the cycle that leaves the fewest carbons to change; a carbon with
-    two different substituents gets them on the hand `target` has.  Chains without a nitrile only (the film composition's).
+    two different substituents gets them on the hand `target` has.  A nitrile made something else loses its nitrogen.
     `target` is a cell, or a chain's cycle of substituents itself (as `substituents` gives it: examples/screen14.py makes
     one from a sequence's letters)."""
     from ase import Atoms
@@ -245,7 +245,7 @@ def morphed(atoms, target):
     info = dict(b.info)
     quads = tool.backbone_torsions(b)
     half = len(quads) // CHAINS
-    added, changed = [], 0
+    added, removed, changed = [], [], 0
     for chain, have in enumerate(substituents(b)):
         backbone = [q[0] for q in quads[chain * half:(chain + 1) * half]]
         on = set(backbone)
@@ -267,10 +267,17 @@ def morphed(atoms, target):
                 near, v = near[::-1], v[::-1]            # the first of the pair (in the alphabet) goes where the hand wants it
             for k, vec, element in zip(near, v, new):
                 unit = vec / np.linalg.norm(vec)
+                if b.symbols[k] == "C":                  # a nitrile's carbon: its nitrogen goes with it
+                    its = [int(j) for j in np.flatnonzero(b.get_distances(k, range(len(b)), mic=True) < 1.35) if b.symbols[j] == "N"]
+                    if len(its) != 1:
+                        raise SystemExit("a carbon substituent that is not a nitrile: not a chain this can change")
+                    removed.append(its[0])
                 b.positions[k] = b.positions[c] + LENGTH[element] * unit
                 b.symbols[k] = element
                 if element == "C":
                     added.append(b.positions[c] + (LENGTH["C"] + 1.16) * unit)
+    if removed:
+        del b[sorted(set(removed))]
     if added:
         b += Atoms("N" * len(added), positions=added)
     b.info = info

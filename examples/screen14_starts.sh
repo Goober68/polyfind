@@ -2,8 +2,8 @@
 # The starts of the screen of docs/MLIP_SECOND_OPINION.md 3.25: fourteen-monomer compositions, each made of the film
 # composition's potential-relaxed cells (examples/screen14.py), six cells a row.
 #
-#   bash examples/screen14_starts.sh [OUT_A [OUT_B [OUT_C]]]
-#       (default docs/predictions/mlip/screen14_starts_a.extxyz, screen14_starts_b.extxyz and screen14_starts_c.extxyz)
+#   bash examples/screen14_starts.sh [OUT_A [OUT_B [OUT_C [OUT_D]]]]
+#       (default docs/predictions/mlip/screen14_starts_a.extxyz, screen14_starts_b.extxyz, ..._c.extxyz and ..._d.extxyz)
 #
 # File A: two controls, then the rows that put a chlorine unit and a reversed VDF unit together and the steps between them
 #   and the leader.  The film's composition made of itself (nothing changes: every cell must come back as it is), and the
@@ -19,11 +19,19 @@
 #   low cell's and its upright cell's).  Here: tt_reg, made of the matrix's own upright cell (the regular pattern of a chain
 #   with no pin), and tt_own, the row's own upright cell where there is one: polyfind's cell of it under chain1-cfe
 #   (examples/row_cells_frames.py write, the cell free to shear, as built), or the labelled one (the leader's).
+# File D: more helix cells for every row.  The same holds on the helix side: the leader's own lowest helix cell is a
+#   packing of its own (5.25 by 9.84 A with the angle between the chain and the long edge 94 degrees; the film
+#   composition's four are 5.14 to 5.25 by 9.9 to 10.1 with the cell leaning 3 to 8 degrees two ways), and the leader made
+#   of the film composition's four helix cells rests 4.4 kcal/mol per chain above it at the least.  So: hx_ldr, every row
+#   made of the leader's lowest helix cell (the nitrile made a chlorine or what the row has there, its nitrogen removed),
+#   and for six rows hx_an, the same of the nitrile composition's lowest helix cell (a third packing: 5.58 by 9.75, the
+#   other angle 74).  The leader's hx_ldr is its own cell: nothing changes.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT_A="${1:-docs/predictions/mlip/screen14_starts_a.extxyz}"
 OUT_B="${2:-docs/predictions/mlip/screen14_starts_b.extxyz}"
 OUT_C="${3:-docs/predictions/mlip/screen14_starts_c.extxyz}"
+OUT_D="${4:-docs/predictions/mlip/screen14_starts_d.extxyz}"
 M=docs/predictions/mlip
 FILM=vdf9-trfe4-cfe1-14
 FRAMES="$M/cells14_tight_in_all_s1.extxyz $M/paths/all_trans_tight.extxyz $M/cells14_frames_pbe_d3bj.extxyz"
@@ -74,3 +82,25 @@ python -I examples/screen14.py starts --frames $FRAMES "$OWN"/*.start.xyz --sour
   vdf9-trfe4-rvdf1-14=VVRVVRVIVVRVVR \
   vdf9-trfe4-e1-14=VVRVVRVEVVRVVR \
   vdf9-trfe3-an1-rvdf1-14=IVRVVRVAVVVVVR
+# file D
+python -I examples/screen14.py starts --frames $FRAMES --source hx_ldr=helix_leader_TGTGp_r1_in_all_s1 hx_an=row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1 --out "$OWN/d1.extxyz" --row \
+  vdf9-trfe3-cfe1-rvdf1-14=IVRVVRVCVVVVVR \
+  vdf8-trfe4-cfe1-rvdf1-14=IVRVVRVCVVRVVR \
+  vdf9-trfe4-cfe1-14=VVRVVRVCVVRVVR \
+  vdf9-trfe3-an1-rvdf1-14=IVRVVRVAVVVVVR \
+  vdf10-trfe4-14=VVRVVRVVVVRVVR \
+  vdf10-trfe3-rvdf1-14=IVRVVRVVVVVVVR
+python -I examples/screen14.py starts --frames $FRAMES --source hx_ldr=helix_leader_TGTGp_r1_in_all_s1 --out "$OWN/d2.extxyz" --row \
+  vdf9-trfe4-rvdf1-first-14=IVRVVRVVVVRVVR \
+  vdf10-trfe3-cfe1-14=VVRVVRVCVVVVVR \
+  vdf9-trfe5-14=VVRVVRVRVVRVVR \
+  vdf9-trfe4-cdfe1-14=VVRVVRVDVVRVVR \
+  vdf9-trfe3-ctfe1-rvdf1-14=IVRVVRVKVVVVVR \
+  vdf9-trfe4-ctfe1-14=VVRVVRVKVVRVVR \
+  vdf11-trfe3-14=VVRVVRVVVVVVVR \
+  vdf8-trfe4-cfe1-cdfe1-14=DVRVVRVCVVRVVR \
+  vdf8-trfe4-ctfe1-rvdf1-14=IVRVVRVKVVRVVR \
+  vdf9-trfe4-e1-14=VVRVVRVEVVRVVR \
+  vdf9-trfe4-rvdf1-14=VVRVVRVIVVRVVR
+cat "$OWN/d1.extxyz" "$OWN/d2.extxyz" > "$OUT_D"
+echo "file D: $(grep -c '^1[67][0-9]$' "$OUT_D") cells in $OUT_D"

@@ -275,3 +275,31 @@ def test_the_first_files_margins_in_the_potential_and_its_two_controls(sources):
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_the_fourth_file_gives_every_row_helix_cells_in_two_more_packings():
+    """hx_ldr: made of the leader's own lowest helix cell; hx_an (six rows): of the nitrile composition's.  A nitrile made something else loses its nitrogen."""
+    from ase.geometry import find_mic
+    from ase.io import read
+
+    scr, reg, path = _load("screen14"), _load("registry_cells"), _load("mlip_path")
+    cells = read(MLIP / "screen14_starts_d.extxyz", index=":")
+    rows = dict(ROWS_A, **ROWS_B)
+    both = ["vdf9-trfe3-cfe1-rvdf1-14", "vdf8-trfe4-cfe1-rvdf1-14", FILM, "vdf9-trfe3-an1-rvdf1-14", "vdf10-trfe4-14", "vdf10-trfe3-rvdf1-14"]
+    names = [str(a.info["frame"]) for a in cells]
+    assert names[:12] == [f"scr_{r}_{k}" for r in both for k in ("hx_ldr", "hx_an")] and len(cells) == 23
+    assert sorted(str(a.info["screen_row"]) for a in cells[12:]) == sorted(r for r in rows if r not in both) and all(str(a.info["screen_kind"]) == "hx_ldr" for a in cells[12:])
+    tight = {str(a.info["frame"]): a for f in ("cells14_tight_in_all_s1.extxyz", "cells14_frames_pbe_d3bj.extxyz") for a in read(MLIP / f, index=":")}
+    froms = {"hx_ldr": "helix_leader_TGTGp_r1_in_all_s1", "hx_an": "row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1"}
+    for a in cells:
+        row, kind = str(a.info["screen_row"]), str(a.info["screen_kind"])
+        source = tight[froms[kind]]
+        assert str(a.info["screen_from"]) == froms[kind] and np.abs(a.cell.array - source.cell.array).max() < 1e-12
+        assert all(reg.same_molecule(chain, scr.cycle_of(rows[row])) for chain in reg.substituents(a))
+        assert reg.gauche(a, path) == reg.gauche(source, path) > 0                       # the helix it was made of, bond for bond
+        nitrogens = int((a.numbers == 7).sum())
+        assert nitrogens == (2 if "A" in rows[row] else 0) and len(a) == (170 if "A" in rows[row] else 168)
+        backbone, was = sorted({q[0] for q in path.backbone_torsions(a)}), sorted({q[0] for q in path.backbone_torsions(source)})
+        assert np.abs(find_mic(a.positions[backbone] - source.positions[was], a.cell, pbc=True)[0]).max() < 1e-8
+    leader = cells[names.index("scr_vdf9-trfe3-an1-rvdf1-14_hx_ldr")]
+    assert int(leader.info["screen_changed"]) == 0 and np.abs(find_mic(leader.positions - tight[froms["hx_ldr"]].positions, leader.cell, pbc=True)[0]).max() < 1e-8

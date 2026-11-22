@@ -551,3 +551,19 @@ def test_the_choice_is_the_lowest_cell_at_rest_of_each_composition_and_conformat
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_a_nitrile_made_something_else_loses_its_nitrogen(labelled):
+    """The leader's helix cell made the film's composition: 168 atoms, no nitrogen, the film composition's chains, every backbone carbon where it stood."""
+    from ase.geometry import find_mic
+
+    tool = _load("registry_cells")
+    path = tool._path_tool()
+    source, film = labelled[CELLS["leader"][1]], labelled[CELLS["film"][0]]
+    cell, changed = tool.morphed(source, film)
+    assert len(source) == 170 and len(cell) == 168 and int((cell.numbers == 7).sum()) == 0 and changed == 8
+    assert all(any(tool.same_molecule(m, t) for t in tool.substituents(film)) for m in tool.substituents(cell))
+    was, now = sorted({q[0] for q in path.backbone_torsions(source)}), sorted({q[0] for q in path.backbone_torsions(cell)})
+    assert np.abs(find_mic(cell.positions[now] - source.positions[was], cell.cell, pbc=True)[0]).max() < 1e-8
+    back, n = tool.morphed(cell, source)                                                # and back: the nitrile and its nitrogen again
+    assert len(back) == 170 and n == 8 and all(any(tool.same_molecule(m, t) for t in tool.substituents(source)) for m in tool.substituents(back))
