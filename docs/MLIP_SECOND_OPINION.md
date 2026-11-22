@@ -2133,3 +2133,90 @@ and `..._moved.json` (`row_cells_frames.py sheets-as-scan --set ... --shift ...`
 `four_axes_dft_margins_four_cells.json` and `..._moved.json`, `qe_gpu_check_a40.json`. The
 pod's jobs: `examples/gpu_jobs/queue_20261121_dft14b.txt`, `dft_cells.sh`, `qe_gpu_build.sh`,
 `qe_gpu_check.sh`. Tests: `tests/test_cells14_dft.py`.
+
+### 3.23 A refit that is not adopted, and a kink sheet's forming, stretching and removal in the film's composition and in the leader (2026-11-22; PI: "Go on 8 hour pod")
+
+A third rented machine of the same kind (one A40, $0.59 an hour;
+`examples/gpu_jobs/queue_20261121_path.txt`). Two things were asked of it: fit the potential on
+with the 23 labels at fourteen monomers, four states held out as a test; and the barrier of a
+kink sheet forming in the film's composition and in the leader, with DFT single points at the
+top of each path. 3.22 ended on the second: the margins are DFT's, and what stands between the
+cells and a ranking is a rate.
+
+**The refit is not adopted.** Two fits continued from `all_s1` (`mlip_train.py train --start`,
+40 epochs at a rate of 5e-5, side by side on the card, 77 minutes) on 621 labelled frames: the
+558 of `all_s1`, 40 labelled since, and the 23 cells at fourteen monomers, those weighted
+tenfold. Five of the 23 (four states: the film composition's sheet at 12 on both its cells, the
+leader's sheet at 20m, the nitrile cell's sheet at 4, the matrix's helix) were held out by
+name. The lone chains in a box were left out: the check that the fit's D3 add-on differs from
+the DFT program's D3 by a far tail alone fails on them. `refit_s1` has the energy and stress
+weights of `all_s1`'s last stage (1e6, 1e4), `refitb_s1` a tenth and a third of them.
+
+| every state against its cell's all-trans cell, rms from DFT, kcal/mol per chain | `all_s1` | `refit_s1` | `refitb_s1` |
+|---|---:|---:|---:|
+| the five held out | 1.06 | 1.14 | 1.18 |
+| the twelve in the fit | 0.74 | 0.61 | 0.62 |
+| the anchor (DFT +0.726) | +0.724 | +0.731 | +0.677 |
+
+The rule was set before the scores: the paths are scanned in whichever fit is better on the
+states held out, and in `all_s1` if neither is. Neither is. Being shown a state did not teach
+it either: the leader's sheet at 18m, in both fits at ten times the weight, is -1.37 in
+`all_s1` and -0.95 and -0.91 after (DFT +0.34). The reason is one of size. The fits did bring
+the cells' absolute energies nearer DFT's (3.4 meV per monomer rms to 2.5 and 2.6), and a
+kcal/mol per chain is 3.1 meV per monomer, a quarter of a meV per atom: the differences this
+project needs lie under what a fit of total energies holds, with eighteen cells of this size
+among 539 frames. More epochs on these frames is not the remedy. The two models are not in the
+repository; their scores are (`mlip/refit/`, `tests/test_refit_cells14.py`).
+
+**The path, and how it is found.** `examples/mlip_path.py scan`: the backbone torsions that
+differ between two labelled cells are led from one cell's values to the other's in twelve
+equal steps by a restraint (10 eV on 1 - cos of each torsion's distance from its target, with
+its forces and its stress), and at each step everything else is relaxed in the potential, the
+cell included. The image of highest energy is the top; `--refine` scans again in eight steps
+between the images beside it; `release` relaxes an image with no restraint to see which end it
+falls to. A nudged elastic band was not used: the kinked cell and the all-trans cell differ by
+a shear of a monomer along the chains, and ase's band refuses images whose cells differ. A led
+scan drags the cell past the saddle before it lets go (five of the twelve scans fall by 2 to
+3.4 between two neighbouring images), so its top is an upper bound on the potential's barrier
+along that path. The twelve scans, two fine scans and the releases took an hour of the card.
+
+Energies below are kcal/mol per chain of fourteen (the cell's energy over its two chains)
+against the cell's sheet as the potential relaxed it; DFT is a single point on the potential's
+image.
+
+**A led scan does not join the labelled all-trans cell to the labelled sheet: there are four
+cells, not two.** Both of each cell's labelled ends were scanned from.
+
+- From the upright all-trans cell, leading each chain's two torsions to the kink's values
+  arrives at a kinked cell that is still upright: 2.67 (film's composition) and 1.88 (leader)
+  above upright all-trans in the potential, over tops of 10.4 and 6.0. It is not the sheet,
+  which is inclined (3.19) and 5.26 and 1.25 below upright all-trans.
+- From the sheet, leading them back arrives at an all-trans cell that is still in the sheet's
+  cell: its neighbours along the two cell edges sit further along the chains than in the
+  upright cell (by 0.96 and -0.96 monomers in the film's composition, -0.47 and -1.07 in the
+  leader), and in the film's composition every chain's dipole is turned 123 degrees about its
+  axis (11 in the leader). The scan's last image, relaxed with no restraint, stays there.
+
+So a kink sheet's forming has two parts: the kink, and the registry of the chains with their
+neighbours. In a regular cell whose pins sit side by side the second is every chain sliding
+along its neighbours. It was tried as a scan of its own, the cell led from one shape to the
+other with the atoms relaxed at each step, and those scans do not connect (the film
+composition's ends 5.0 above its target in the target's own cell): they are not paths and are
+not stored. The barriers below are the kink's, from the all-trans cell that has the sheet's
+registry, and the upright all-trans cell, the reference of the margins and of 3.21 and 3.22, is
+beside it in the table.
+
+**One torsion at a time, a kink is not undone: it is stretched.** Leading only the second
+torsion of each chain's pair back to trans does not arrive at half a kink. The gauche bond
+moves a monomer along the chain and the kink G T G' becomes G T T T G', which rests 1.66
+(film's composition) and 0.85 (leader) above the sheet in the potential. From there the
+remaining gauche bonds were led to trans together. In the leader that way out of the sheet is
+the lower one (tops of 5.67 and then 7.25 above the sheet, against 8.68 with both torsions
+together, 9.18 refined). In the film's composition both together is the lower (8.72, 8.90
+refined, against 7.81 and then 10.66). The other order, the first torsion first, is no lower
+in either cell: in the film's composition its first step tops at 8.05 and rests 4.2 above the
+sheet, and its second does not reach all-trans; in the leader it tops at 7.01 and then 7.26,
+and arrives at an all-trans cell 1.3 above the one the sheet belongs to.
+
+THE POD IS STILL RUNNING AS THIS IS WRITTEN (03:55 UTC 2026-11-22): the DFT labels of the
+tops, the barriers, the four axes and what this is and is not follow when it is gone.
