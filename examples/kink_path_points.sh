@@ -25,6 +25,7 @@ python -I examples/mlip_path.py points --name "film's composition" --scans $P/fi
   "all-trans, upright, stepped toward DFT's minimum=film_f_i00|row_${CFE}_TTTT_chain1_in_all_s1_in_all_s1" \
   "all-trans, the sheet's registry=film_r_released" \
   "all-trans, the sheet's registry, relaxed on=film_r_released_tight" \
+  "all-trans, upright, every chain turned=film_all_trans_turned_117_tight" \
   "kinked, upright=film_f_released" \
   "stretched kink=film_b1_released" \
   "top: upright all-trans to upright kinked=film_f_i06" \

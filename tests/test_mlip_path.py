@@ -207,6 +207,7 @@ KCAL = 14 * 23.0605
 CARD, IMAGES, RANGE, RMS = 6, 12, (-0.94, 0.54), 0.46
 FILM_POINTS = {"all-trans, upright": (5.03, 5.26), "all-trans, upright, stepped toward DFT's minimum": (4.86, 5.37), "sheet, stepped toward DFT's minimum": (-0.40, 0.35),
                "all-trans, the sheet's registry": (5.92, 5.48), "all-trans, the sheet's registry, relaxed on": (4.19, 3.99), "kinked, upright": (8.87, 7.93),
+               "all-trans, upright, every chain turned": (None, 5.23),
                "stretched kink": (None, 1.66), "top: upright all-trans to upright kinked": (None, 15.68), "top: both torsions together": (9.22, 8.72),
                "the image before that top": (8.94, 8.52), "the image after that top": (None, 8.31), "that top in finer steps": (None, 8.90),
                "top: sheet to stretched kink": (7.70, 7.81), "top: stretched kink to all-trans": (None, 10.66)}
@@ -276,7 +277,8 @@ def test_the_film_compositions_upright_all_trans_cell_is_not_its_lowest_in_dft()
 
     tight = {str(a.info["frame"]): a for a in read(MLIP / "paths" / "all_trans_tight.extxyz", index=":")}
     tool = _tool()
-    fall = {n: (float(a.info["potential_eV_per_monomer"]) - float(a.info["potential_start_eV_per_monomer"])) * KCAL for n, a in tight.items()}
+    assert list(tight) == ["film_r_released_tight", "leader_r_released_tight", "film_all_trans_turned_117_tight"]
+    fall = {n: (float(a.info["potential_eV_per_monomer"]) - float(a.info["potential_start_eV_per_monomer"])) * KCAL for n, a in tight.items() if "released" in n}
     assert fall == pytest.approx({"film_r_released_tight": -1.50, "leader_r_released_tight": -0.32}, abs=0.006)
     for a, shear in ((tight["film_r_released_tight"], (1.06, -1.05)), (tight["leader_r_released_tight"], (-0.48, -1.09))):
         assert np.abs(tool.torsions_deg(a, tool.backbone_torsions(a))).min() > 145 and tool._shear(a) == pytest.approx(shear, abs=0.006)   # all-trans, still in the sheet's cell
@@ -289,6 +291,10 @@ def test_the_film_compositions_upright_all_trans_cell_is_not_its_lowest_in_dft()
     # the film composition's margin measured from the lower cell: +0.063 in DFT, where it is +0.123 from the upright one
     margin = json.loads((PRED / "cells14_states_dft.json").read_text())["rows"][CFE]["margin"]
     assert (margin, margin - (up["dft"] - low["dft"]) / 14) == pytest.approx((0.123, 0.063), abs=0.0006)
+    # the turn alone is worth nothing in the potential: the upright cell with every chain turned 117 degrees rests level with it, unsheared
+    turned = tight["film_all_trans_turned_117_tight"]
+    assert film["all-trans, upright, every chain turned"]["potential"] - up["potential"] == pytest.approx(-0.02, abs=0.006)
+    assert np.abs(tool._shear(turned)).max() < 0.01 and np.abs(tool.torsions_deg(turned, tool.backbone_torsions(turned))).min() > 155
     # the leader's cell in its sheet's registry stays above its upright cell
     assert leader["all-trans, the sheet's registry, relaxed on"]["potential"] - leader["all-trans, upright"]["potential"] == pytest.approx(1.50, abs=0.006)
     assert leader["all-trans, the sheet's registry, relaxed on"]["dft"] is None

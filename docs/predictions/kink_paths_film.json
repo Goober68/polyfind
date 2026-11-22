@@ -66,6 +66,12 @@
    "dft_minutes": 45.88166666666667,
    "dft_run": "card"
   },
+  "all-trans, upright, every chain turned": {
+   "image": "film_all_trans_turned_117_tight",
+   "potential": 5.23326641625471,
+   "dft": null,
+   "label": null
+  },
   "kinked, upright": {
    "image": "film_f_released",
    "potential": 7.930768588087898,
