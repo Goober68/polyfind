@@ -704,16 +704,38 @@ right": true at one registry, not along it).
         side by side, 0.004 eV/A), `screen14.py table` gives each row's margin from its lowest all-trans
         and helix cells, and the rows between -0.06 and +0.14 in the potential go to DFT (lowest all-trans,
         lowest helix, other all-trans). Job 1 labels `film_all_trans_turned_117_tight` on the processors
-        meanwhile. STILL TO DESIGN ON IT: the kink sites and the hop barrier of the best row (its sheets
-        made by the same substituent changes from the film composition's and the leader's sheets, a scan
-        with `examples/mlip_path.py`, DFT at the top).
+        meanwhile.
+        STATE AT 19:56 UTC (the queue file's comments have each step): files A, B, C relaxed and stored
+        (`docs/predictions/screen14_potential_{a,b,c}.json`, `mlip/screen14_relaxed_{a,b,c}.extxyz`; each
+        table is of every file so far). In the window in the potential: IVRVVRVCVVVVVR
+        (`vdf9-trfe3-cfe1-rvdf1-14`, the leader with a CFE for its nitrile) +0.088 and IVRVVRVCVVRVVR
+        (`vdf8-trfe4-cfe1-rvdf1-14`) -0.033; file C lowered no candidate's all-trans side. BUT THE LEADER
+        AS A CONTROL COMES BACK 0.27 A MONOMER TOO LOW (-0.342, then -0.386 with its own all-trans cell,
+        where its own cells give -0.070): its made helix cells rest 4.4 kcal/mol per chain above its own
+        helix cell, a packing of its own. SO NO MARGIN OF FILES A TO C IS SAFE UNTIL FILE D IS IN: job 5
+        (started 19:51:49, stops at 3000 s) gives every row the leader's own helix packing (hx_ldr), its
+        own all-trans pattern (tt_ldr) and, six rows, the nitrile composition's helix (hx_an); 39 cells in
+        the order they matter. Job 6 (`screen_front.sh`) then puts IVRVVRVCVVVVVR's lowest helix and
+        all-trans cells at the front of the processors' DFT line where they are new. Job 7: its 28 kink
+        sheets (`screen14_sheets_1.extxyz`, `screen_sheets_card.sh`; table by `screen14.py sheets-table`).
+        THEN, BY HAND: the hop scan of its cheapest kept sheet (`steps_card.sh
+        docs/predictions/mlip/models/all_s1.model 12 NAME:scr_ROW_sheet_at<SITE>_in_all_s1:scr_ROW_<lowest
+        tt>_in_all_s1`), and the card's DFT line (`screen_dft.sh card start NAME`; start it only when no
+        relaxation shares the card: about 48 minutes a cell alone, five times that shared).
+        DFT SO FAR (processors, 96 minutes a cell): `film_all_trans_turned_117_tight` (0.00 from the film
+        composition's upright cell; the potential -0.02) and `scr_vdf9-trfe3-cfe1-rvdf1-14_tt_up_in_all_s1`;
+        running from 19:43:35: `..._hx_GTGpT_in_all_s1` (to about 21:20); the processors have time for ONE
+        more cell after it, the card for about two after its relaxations. So DFT will give ONE row's
+        margin, not the three rows' the eight hours were chosen for: say so in the report.
+        A new row has no belt4 inputs (dipole, switch strain, stiffness): for the four axes take
+        `vdf8-trfe4-cfe1-rvdf1-14`'s and the leader's, and say which.
         HOW TO READ IT: `scratchpad/runpod/pod_screen.sh PATH` (token in `scratchpad/runpod/
         token_screen.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_screen.py` (into
         `scratchpad/runpod/screen/`), `scratchpad/runpod/dft_progress_screen.sh`; labels into the
         repository by `python -I scratchpad/screen_labels.py docs/predictions/mlip/
         screen14_frames_pbe_d3bj.extxyz`; then `python -I examples/screen14.py dft --table TABLE --labels
         FILE --out docs/predictions/screen14_dft.json`. If the token file is lost the results cannot be
-        read: delete the pod. Tests: `tests/test_screen14.py` (4).
+        read: delete the pod. Tests: `tests/test_screen14.py` (10).
         THE FOURTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (11:08:57 UTC 2026-11-22; PI
         2026-11-22: "MI100 isn't online go on runpod", on the registry check). `bcuwk6j3g3crqp`
         (`polyfind-registry`, Runpod Secure Cloud EU-SE-1, one A40, $0.59/h), 06:51:18 to 11:08:57 UTC:
