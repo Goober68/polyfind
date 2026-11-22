@@ -42,3 +42,10 @@ registry_card.sh docs/predictions/mlip/registry_starts_like.extxyz 4 600 900
 # (examples/gpu_jobs/registry_more.cap: a queue line cannot be changed), and after the third the like cells
 # are relaxed on, 900 more steps each, 20 minutes.
 registry_more.sh docs/predictions/mlip/registry_starts_like.extxyz 4 900 1200 auto:6.0
+#
+# 07:34 UTC.  So that the processors' line does not stand idle when the image after the leader's second top
+# is done: two cells of 3.23 that are relaxed and have no label.  The leader's all-trans cell in its
+# sheet's registry (1.50 above its upright cell in the potential; DFT has it only as the scan left it), and
+# the film composition's upright cell with its chains turned and nothing else (level with upright in the
+# potential, which is the whole of the claim that the 0.84 is the registry and not the turn).
+dft_cells.sh start 8 2 docs/predictions/mlip/paths/all_trans_tight.extxyz leader_r_released_tight film_all_trans_turned_117_tight
