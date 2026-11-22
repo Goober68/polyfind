@@ -340,6 +340,23 @@ def test_dft_has_the_matrix_in_the_low_cell_below_its_upright_cell(labelled):
     assert (margin(up), margin(a)) == pytest.approx((0.068, -0.032), abs=0.0006)
 
 
+def test_dft_has_the_leader_in_the_low_cell_above_its_upright_cell(labelled):
+    """The fourth pod's DFT single point on the leader made of the film composition's low cell: the leader does not have it, in DFT either."""
+    from ase.io import read
+
+    a, up = _fourth()["reg_leader_tt_as_film_low_in_all_s1"], labelled[CELLS["leader"][0]]
+    relaxed = read(MLIP / "registry_as_film_leader_relaxed.extxyz", index=0)
+    assert str(relaxed.info["frame"]) == str(a.info["frame"]) and np.abs(a.positions - relaxed.positions).max() < 1e-9 and np.abs(a.cell.array - relaxed.cell.array).max() < 1e-9
+    kcal = 23.0605
+    dft = (float(a.info["REF_energy"]) - float(up.info["REF_energy"])) / 2 * kcal
+    potential = (float(a.info["potential_eV_per_monomer"]) - float(up.info["potential_eV_per_monomer"])) * 14 * kcal
+    assert (dft, potential) == pytest.approx((2.34, 1.02), abs=0.006)
+    assert np.abs(a.arrays["REF_forces"]).max() == pytest.approx(0.12, abs=0.005) and str(a.info["dft_run"]) == "card"
+    # so the leader's margin is still the one between its two upright cells
+    helix = labelled[CELLS["leader"][1]]
+    assert (float(up.info["REF_energy"]) - float(helix.info["REF_energy"])) / 28 * kcal == pytest.approx(-0.047, abs=0.0006)
+
+
 def test_the_helix_cells_shaken_at_350_kelvin_come_back_to_where_they_started(labelled):
     """The fourth pod's eighth job: 1.5 ps at 350 K in the potential in each helix cell's own cell, then relaxed with the cell free."""
     from ase.io import read
