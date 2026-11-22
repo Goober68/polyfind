@@ -570,6 +570,10 @@ def margins(args):
         key, frame = item.split("=", 1)
         groups.setdefault(key, []).append(frame)
     given = {item.split("=", 1)[0]: item.split("=", 1)[1] for item in args.cell}
+    for key, frames in groups.items():    # a cell named with --also that has no label yet is left out, and said
+        for frame in [f for f in frames if f not in labelled]:
+            print(f"{frame}: no label in --labels, left out of {key}")
+        groups[key] = [f for f in frames if f in labelled]
     for name, a in labelled.items():      # the cells this tool made, labelled since: each knows what it was made from
         if "registry_label" in a.info:
             groups.setdefault(f"{a.info['registry_label']}:{a.info['registry_conformation']}", []).append(name)

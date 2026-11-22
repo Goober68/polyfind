@@ -16,7 +16,7 @@ python -I examples/registry_cells.py margins --labels $LABELS --out "$OUT/cells1
   matrix:tt=row_vdf10-trfe4-14_TTTT_chain1_in_all_s1 matrix:hx=row_vdf10-trfe4-14_TGTGp_chain1_in_all_s1 \
   leader:tt=tt_leader_from_rows14an_r1 leader:hx=helix_leader_TGTGp_r1 \
   nitrile:tt=tt_nitrile_from_rows14an_r1 nitrile:hx=row_vdf9-trfe4-an1-14_GpTGT_cfe_in_all_s1 \
-  --also film:tt=film_r_released_tight film:tt=film_r_released leader:tt=leader_r_released \
+  --also film:tt=film_r_released_tight film:tt=film_r_released film:tt=film_all_trans_turned_117_tight leader:tt=leader_r_released leader:tt=leader_r_released_tight \
   --row film=vdf9-trfe4-cfe1-14 matrix=vdf10-trfe4-14 leader=vdf9-trfe3-an1-rvdf1-14 nitrile=vdf9-trfe4-an1-14
 # the four axes at those margins: the kink sites as in 3.22 (the potential's map with DFT's energy at the eight sites that have one), and
 # the film's composition and the leader with the frequency read from the barriers of 3.23 (the kink's end moving, and its removal).
