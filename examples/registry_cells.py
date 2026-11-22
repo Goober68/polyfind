@@ -231,11 +231,13 @@ def morphed(atoms, target):
     """`atoms` with its chains' substituents made `target`'s, backbone carbon by backbone carbon, where they stand: a
     hydrogen, fluorine or chlorine made another (at its own bond length along the same bond), or a nitrile (C, then N 1.16 A
     beyond).  The chains are lined up by the turn of the cycle that leaves the fewest carbons to change; a carbon with
-    two different substituents gets them on the hand `target` has.  Chains without a nitrile only (the film composition's)."""
+    two different substituents gets them on the hand `target` has.  Chains without a nitrile only (the film composition's).
+    `target` is a cell, or a chain's cycle of substituents itself (as `substituents` gives it: examples/screen14.py makes
+    one from a sequence's letters)."""
     from ase import Atoms
 
     tool = _path_tool()
-    want = substituents(target)[0]
+    want = list(target) if isinstance(target, (list, tuple)) else substituents(target)[0]
     b = atoms.copy()
     for k in list(b.arrays):
         if k not in ("numbers", "positions"):

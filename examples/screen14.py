@@ -1,0 +1,240 @@
+"""A screen of fourteen-monomer compositions in the potential, each made of the film composition's own relaxed cells
+(docs/MLIP_SECOND_OPINION.md 3.25).
+
+3.24 left two things: a composition's margin has to be taken from its lowest all-trans cell, which is not the upright one
+for the two compositions without a nitrile, and that low cell is not reached from upright chains.  So a candidate's cells
+are not built afresh here.  Each is made of a cell of the film's composition (VVRVVRVCVVRVVR) that the potential has
+already relaxed, by changing substituents where they stand (examples/registry_cells.py `morphed`): the upright all-trans
+cell, the low all-trans cell, and the four placements of the helix along the chain.  A sequence is a word of unit letters,
+one a monomer, read along the chain as polyfind builds it (every hand as its builder has it):
+
+    V CH2-CF2   I CF2-CH2 (a VDF unit turned round)   R CHF-CF2   C CH2-CFCl   K CF2-CFCl   D CHCl-CF2
+    E CH2-CH2   F CF2-CF2   X CHF-CHF   A CH2-CH(CN)
+
+    python -I examples/screen14.py starts --frames FILES --source KIND=FRAME ... --row NAME=LETTERS ... --out STARTS.extxyz
+    python -I examples/screen14.py table --starts STARTS.extxyz --relaxed DIR --out TABLE.json [--frames-out RELAXED.extxyz]
+    python -I examples/screen14.py choose --table TABLE.json --window LO HI [--most N] [--skip ROW ...]
+    python -I examples/screen14.py dft --table TABLE.json --labels FILES --out MARGINS.json
+
+`starts` writes six cells a row, row after row in the order given: tt_low, tt_up, then the helix placements.  `table`
+reads each start's relaxed cell (examples/mlip_train.py relax: NAME_in_POTENTIAL.start.xyz) and gives each row's margin,
+all-trans less helix in kcal/mol per monomer, between its lowest all-trans cell and its lowest helix cell, beside the
+margin from the upright all-trans cell and what the low cell is worth per chain.  `choose` prints the cells DFT is asked
+about for the rows whose margin is inside a window: each one's lowest all-trans cell, its lowest helix cell and its other
+all-trans cell, in two lines (the card's and the processors').  `dft` takes the margins again from the labelled cells.
+
+The potential's own numbers: it is within 0.1 to 0.4 kcal/mol per chain of DFT on the low cells of the two compositions
+without a nitrile and 1.3 to 1.8 off, with a sign wrong, on those with one (3.24).  Rows with an A are controls here, not
+candidates.
+"""
+
+import argparse
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+
+KCAL = 23.0605
+CHAINS = 2
+# a unit's two backbone carbons in the order the chain is built: each one's substituents (in the alphabet) and their hand
+UNITS = {"V": (("HH", 0), ("FF", 0)), "I": (("FF", 0), ("HH", 0)), "R": (("FH", 1), ("FF", 0)), "C": (("HH", 0), ("ClF", 1)), "K": (("FF", 0), ("ClF", 1)),
+         "D": (("ClH", 1), ("FF", 0)), "E": (("HH", 0), ("HH", 0)), "F": (("FF", 0), ("FF", 0)), "X": (("FH", 1), ("FH", 1)), "A": (("HH", 0), ("CH", 1))}
+KINDS = ("tt_low", "tt_up", "hx_TGTGp", "hx_GpTGT", "hx_GTGpT", "hx_TGpTG")
+
+
+def _tool(name):
+    if name not in sys.modules:
+        spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(f"{name}.py"))
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+    return sys.modules[name]
+
+
+def cycle_of(letters):
+    """A chain's cycle of substituents for a sequence of unit letters (as registry_cells.substituents reads one off a cell)."""
+    return [pair for letter in letters for pair in UNITS[letter]]
+
+
+def letters_of(cycle):
+    """The sequence a cycle of substituents spells, read from its first carbon (None when it is not a whole number of known units)."""
+    back = {pair: letter for letter, pair in UNITS.items()}
+    pairs = [tuple(cycle[k:k + 2]) for k in range(0, len(cycle), 2)]
+    return "".join(back[p] for p in pairs) if len(cycle) % 2 == 0 and all(p in back for p in pairs) else None
+
+
+def made(source, letters):
+    """The cell `source` with its chains made the sequence `letters`, and how many backbone carbons that changed."""
+    reg = _tool("registry_cells")
+    want = cycle_of(letters)
+    if len(want) != len(reg.substituents(source)[0]):
+        raise SystemExit(f"{letters}: {len(letters)} units, the cell's chains have {len(reg.substituents(source)[0]) // 2}")
+    cell, changed = reg.morphed(source, want)
+    for chain in reg.substituents(cell):
+        if not reg.same_molecule(chain, want):
+            raise SystemExit(f"{letters}: the cell made is not that chain")
+    return cell, changed
+
+
+def starts(args):
+    from ase.io import read, write
+
+    reg, path = _tool("registry_cells"), _tool("mlip_path")
+    frames = {str(a.info["frame"]): a for f in args.frames for a in read(f, index=":")}
+    sources = dict(item.split("=", 1) for item in args.source)
+    if tuple(sources) != KINDS:
+        raise SystemExit(f"--source wants the kinds {' '.join(KINDS)} in that order")
+    out = []
+    for item in args.row:
+        name, letters = item.split("=", 1)
+        for kind in KINDS:
+            source = frames[sources[kind]]
+            cell, changed = made(source, letters)
+            before, after = reg.gauche(source, path), reg.gauche(cell, path)
+            if before != after:
+                raise SystemExit(f"{name} {kind}: {after} gauche torsions, the cell it was made of has {before}")
+            cell.info = {"n_monomers": int(source.info["n_monomers"]), "kmesh": str(source.info["kmesh"]).strip("[]"), "frame": f"scr_{name}_{kind}", "screen_row": name,
+                         "screen_letters": letters, "screen_kind": kind, "screen_from": sources[kind], "screen_changed": changed, "family": "relaxed",
+                         "conformation": "all-trans" if kind.startswith("tt") else "helix",
+                         "source": f"examples/screen14.py: {sources[kind]} with its chains made {letters} where they stand ({changed} carbons a cell), a start, not relaxed"}
+            out.append(cell)
+        print(f"{name:28s} {letters}  {cell.get_chemical_formula()}  {' '.join(str(a.info['screen_changed']) for a in out[-len(KINDS):])} carbons changed")
+    write(args.out, out, format="extxyz")
+    print(f"{len(out)} starts written to {args.out}")
+
+
+def table(args):
+    from ase.io import read, write
+
+    reg, path = _tool("registry_cells"), _tool("mlip_path")
+    rows, frames = {}, []
+    for start in read(args.starts, index=":"):
+        name, kind = str(start.info["screen_row"]), str(start.info["screen_kind"])
+        row = rows.setdefault(name, {"letters": str(start.info["screen_letters"]), "cells": {}})
+        found = sorted(Path(args.relaxed).glob(f"{start.info['frame']}_in_*.start.xyz"))
+        if not found:
+            row["cells"][kind] = {"relaxed": False}
+            continue
+        a = read(found[0])
+        note = str(a.info.get("note", ""))
+        g, g0 = reg.gauche(a, path), reg.gauche(start, path)
+        row["cells"][kind] = {"relaxed": True, "frame": str(a.info["frame"]), "converged": "NOT converged" not in note,
+                              "steps": int(note.split("(")[-1].split(" steps")[0]) if " steps" in note else None,
+                              "eV_per_monomer": float(a.info["potential_eV_per_monomer"]), "gauche_torsions": g, "gauche_torsions_start": g0,
+                              "kept": g == 0 if kind.startswith("tt") else abs(g - g0) <= 2, "carbons_changed": int(start.info["screen_changed"]),
+                              "shear_along_chains_monomers": path._shear(a), "cell": [float(v) for v in a.cell.cellpar()]}
+        frames.append(a)
+    for name, row in rows.items():
+        ok = {k: c for k, c in row["cells"].items() if c.get("relaxed") and c["kept"]}
+        flat, helix = {k: c for k, c in ok.items() if k.startswith("tt")}, {k: c for k, c in ok.items() if k.startswith("hx")}
+        row["at_rest"] = sum(bool(c.get("converged")) for c in row["cells"].values())
+        row["complete"] = row["at_rest"] == len(KINDS) and len(ok) == len(KINDS)
+        if not flat or not helix:
+            print(f"{name:28s} {row['letters']}  no margin: {len(flat)} all-trans and {len(helix)} helix cells that kept their conformation")
+            continue
+        energy = lambda c: c["eV_per_monomer"]
+        row["lowest_tt"], row["lowest_hx"] = min(flat, key=lambda k: energy(flat[k])), min(helix, key=lambda k: energy(helix[k]))
+        floor = energy(helix[row["lowest_hx"]])
+        row["margin"] = (energy(flat[row["lowest_tt"]]) - floor) * KCAL
+        if "tt_up" in flat:
+            row["margin_upright"] = (energy(flat["tt_up"]) - floor) * KCAL
+        if len(flat) == 2:
+            row["low_less_upright_per_chain"] = (energy(flat["tt_low"]) - energy(flat["tt_up"])) * int(read(args.starts, index=0).info["n_monomers"]) / CHAINS * KCAL
+        row["helix_placements_per_chain"] = {k: (energy(c) - floor) * int(read(args.starts, index=0).info["n_monomers"]) / CHAINS * KCAL for k, c in helix.items()}
+        moving = [k for k, c in row["cells"].items() if c.get("relaxed") and not c["converged"]]
+        print(f"{name:28s} {row['letters']}  margin {row['margin']:+.3f}" + (f" (upright {row['margin_upright']:+.3f})" if "margin_upright" in row else "")
+              + (f", low cell {row['low_less_upright_per_chain']:+.2f} per chain" if "low_less_upright_per_chain" in row else "")
+              + f", helix {row['lowest_hx'][3:]}; {row['at_rest']} of {len(KINDS)} at rest" + (f", moving: {' '.join(moving)}" if moving else "")
+              + ("" if len(ok) == sum(bool(c.get('relaxed')) for c in row['cells'].values()) else "; a cell left its conformation"))
+    out = {"what": "fourteen-monomer compositions, each made of the film composition's potential-relaxed cells by changing substituents where they stand "
+                   "(examples/screen14.py) and relaxed in the potential: margin is all-trans less helix in kcal/mol per monomer between the lowest all-trans cell "
+                   "and the lowest helix cell, margin_upright from the upright all-trans cell; the potential's own energies with D3, no DFT",
+           "starts": str(args.starts), "rows": rows}
+    Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
+    if args.frames_out:
+        write(args.frames_out, frames, format="extxyz")
+    print(f"{len(frames)} cells of {len(rows)} rows; written {args.out}")
+
+
+def chosen(rows, low, high, most=None, skip=()):
+    """The rows whose margin is inside [low, high], complete ones first and then by how near the middle of the window, and for
+    each the cells DFT is asked about: lowest all-trans, lowest helix, the other all-trans cell."""
+    inside = [(not r.get("complete", False), abs(r["margin"] - 0.5 * (low + high)), name) for name, r in rows.items() if "margin" in r and low <= r["margin"] <= high and name not in skip]
+    picked = []
+    for _, _, name in sorted(inside)[:most]:
+        r = rows[name]
+        other = [k for k in ("tt_low", "tt_up") if k != r["lowest_tt"] and r["cells"].get(k, {}).get("relaxed") and r["cells"][k]["kept"]]
+        picked.append((name, [r["cells"][k]["frame"] for k in [r["lowest_tt"], r["lowest_hx"]] + other]))
+    return picked
+
+
+def choose(args):
+    rows = json.loads(Path(args.table).read_text())["rows"]
+    picked = chosen(rows, args.window[0], args.window[1], args.most, set(args.skip))
+    cells = [frame for _, frames in picked for frame in frames]
+    print(" ".join(cells[0::2]))
+    print(" ".join(cells[1::2]))
+    for name, frames in picked:
+        print(f"# {name}: margin {rows[name]['margin']:+.3f} in the potential; {' '.join(frames)}", file=sys.stderr)
+
+
+def dft(args):
+    from ase.io import read
+
+    stored = json.loads(Path(args.table).read_text())["rows"]
+    labelled = {str(a.info["frame"]): a for f in args.labels for a in read(f, index=":")}
+    out = {"what": "the screen's rows that have DFT labels (PBE-D3(BJ) single points on the cells the potential relaxed): margin, all-trans less helix in kcal/mol per "
+                   "monomer, between the lowest labelled all-trans cell and the lowest labelled helix cell, in DFT and in the potential on the same two cells; "
+                   "cells: eV per monomer", "rows": {}}
+    for name, row in stored.items():
+        have = {k: labelled[c["frame"]] for k, c in row["cells"].items() if c.get("relaxed") and c["frame"] in labelled}
+        flat, helix = {k: a for k, a in have.items() if k.startswith("tt")}, {k: a for k, a in have.items() if k.startswith("hx")}
+        if not flat or not helix:
+            continue
+        e = lambda a: float(a.info["REF_energy"]) / int(a.info["n_monomers"])
+        low_tt, low_hx = min(flat, key=lambda k: e(flat[k])), min(helix, key=lambda k: e(helix[k]))
+        per_chain = int(flat[low_tt].info["n_monomers"]) / CHAINS * KCAL
+        rec = {"letters": row["letters"], "lowest_tt": low_tt, "lowest_hx": low_hx, "margin": (e(flat[low_tt]) - e(helix[low_hx])) * KCAL,
+               "margin_potential_same_cells": (row["cells"][low_tt]["eV_per_monomer"] - row["cells"][low_hx]["eV_per_monomer"]) * KCAL, "margin_potential": row.get("margin"),
+               "cells": {k: {"frame": str(a.info["frame"]), "dft_eV_per_monomer": e(a), "potential_eV_per_monomer": row["cells"][k]["eV_per_monomer"],
+                             "dft_largest_force_eV_per_A": float(np.abs(a.arrays["REF_forces"]).max())} for k, a in have.items()}}
+        if len(flat) == 2:
+            rec["low_less_upright_per_chain"] = (e(flat["tt_low"]) - e(flat["tt_up"])) * per_chain
+            rec["low_less_upright_per_chain_potential"] = (row["cells"]["tt_low"]["eV_per_monomer"] - row["cells"]["tt_up"]["eV_per_monomer"]) * per_chain
+        out["rows"][name] = rec
+        print(f"{name:28s} {row['letters']}  DFT margin {rec['margin']:+.3f} (the potential on the same cells {rec['margin_potential_same_cells']:+.3f})"
+              + (f"; low cell {rec['low_less_upright_per_chain']:+.2f} per chain ({rec['low_less_upright_per_chain_potential']:+.2f})" if len(flat) == 2 else ""))
+    Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
+    print(f"{len(out['rows'])} rows with a DFT margin; written {args.out}")
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = p.add_subparsers(dest="step", required=True)
+    s = sub.add_parser("starts")
+    s.add_argument("--frames", nargs="+", required=True, help="files that hold the film composition's relaxed cells")
+    s.add_argument("--source", nargs="+", required=True, metavar="KIND=FRAME", help="the film composition's cell each kind is made of: " + " ".join(KINDS))
+    s.add_argument("--row", nargs="+", required=True, metavar="NAME=LETTERS")
+    s.add_argument("--out", required=True)
+    s = sub.add_parser("table")
+    s.add_argument("--starts", required=True)
+    s.add_argument("--relaxed", required=True, help="the folder of NAME_in_POTENTIAL.start.xyz")
+    s.add_argument("--out", required=True)
+    s.add_argument("--frames-out", default="")
+    s = sub.add_parser("choose")
+    s.add_argument("--table", required=True)
+    s.add_argument("--window", nargs=2, type=float, required=True, metavar=("LOW", "HIGH"), help="kcal/mol per monomer: the margins DFT is asked about")
+    s.add_argument("--most", type=int, default=None, help="at most this many rows")
+    s.add_argument("--skip", nargs="*", default=[], help="rows not to choose (they have DFT already)")
+    s = sub.add_parser("dft")
+    s.add_argument("--table", required=True)
+    s.add_argument("--labels", nargs="+", required=True)
+    s.add_argument("--out", required=True)
+    args = p.parse_args()
+    {"starts": starts, "table": table, "choose": choose, "dft": dft}[args.step](args)
+
+
+if __name__ == "__main__":
+    main()
