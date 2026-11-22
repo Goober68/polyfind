@@ -93,8 +93,13 @@ screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_1.extxyz 4 1000 2700
 # cell), the film composition's on its chlorine (14m -5.26, 12 -3.56).  So the same rows made of the LEADER's
 # sheets at its nine cheapest sites and the two beside its nitrile: IVRVVRVCVVVVVR (does the chlorine take the
 # kink, or the VDF run?) and IVRVVRVVVVVVVR, which file D put at +0.071.  16 sheets, the two rows in turn.
-# (This line stands where the card's DFT start stood for seven minutes: that job had not started.)
+# (These lines stand where the card's DFT start stood for a few minutes: that job had not started.)
+# The front-of-line job once more, corrected, for the candidate's lowest helix cell: if the sheets above end
+# before the processors finish the cell they are on (about 21:20), the processors take it next.
+screen_front.sh processors hx vdf9-trfe3-cfe1-rvdf1-14
 screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_2.extxyz 4 1000 1800
-screen_dft.sh card start scr_vdf9-trfe3-cfe1-rvdf1-14_hx_ldr_in_all_s1
-# the card is DFT's alone until that cell is labelled: whatever follows waits for it
+# The card's DFT line: the candidate's lowest helix cell if the processors did not get it; if they did, the
+# two cells of IVRVVRVVVVVVVR's margin (its low all-trans cell and its helix in the leader's packing).
+screen_card_or.sh scr_vdf9-trfe3-cfe1-rvdf1-14_hx_ldr_in_all_s1 -- scr_vdf10-trfe3-rvdf1-14_tt_low_in_all_s1 scr_vdf10-trfe3-rvdf1-14_hx_ldr_in_all_s1
+# the card is DFT's alone until its line is empty: whatever follows waits for it
 dft_cells.sh in=dft_card wait
