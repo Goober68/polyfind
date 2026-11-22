@@ -301,6 +301,84 @@ def kink_of(atoms, path):
     return out, bool(kept)
 
 
+def _state(gauche, half):
+    """What a cell's chains are, from each chain's gauche backbone bonds (kink_of): all-trans, a kink (two of opposite sense about one trans bond), a
+    stretched kink (about three), one gauche bond, or something else."""
+    kinds = set()
+    for g in gauche:
+        if not g:
+            kinds.add("all-trans")
+        elif len(g) == 1:
+            kinds.add("one gauche bond")
+        elif len(g) == 2 and g[0][1] * g[1][1] < 0 and (g[1][0] - g[0][0]) % half in (2, half - 2):
+            kinds.add("kink")
+        elif len(g) == 2 and g[0][1] * g[1][1] < 0 and (g[1][0] - g[0][0]) % half in (4, half - 4):
+            kinds.add("stretched kink")
+        else:
+            kinds.add("other")
+    return kinds.pop() if len(kinds) == 1 else "mixed"
+
+
+def hops(args):
+    """The step scans of a row's kink (examples/gpu_jobs/steps_card.sh: NAME_a1, NAME_a2, NAME_b1, NAME_b2), kcal/mol per chain against the sheet each
+    started from.  A first leg leads one of the kink's two gauche bonds to trans with the other free.  Where it arrives at a stretched kink the led bond
+    has moved a monomer along: that is a hop, and the row's hop is the lower such top.  A first leg may instead leave one gauche bond, or none (the kink is
+    gone).  The kink is removed over the lower, of the two orders, of the higher of its two tops (the second leg's top stands on where the first arrived)."""
+    from ase.io import read
+
+    path = _tool("mlip_path")
+    out = {"what": "step scans of kink sheets in the potential with D3, kcal/mol per chain against the relaxed sheet each started from; order a leads the first gauche bond "
+                   "of each chain's kink to trans and then whatever still differs from all-trans, order b the second first; hop: the lower top of the first legs that "
+                   "arrive at a stretched kink (arrives_as); removed_over: the lower, of the two orders, of the higher of its two tops", "paths": {}}
+    for item in args.path:
+        name, row = item.split("=", 1)
+        rec = {"row": row, "orders": {}}
+        for order in "ab":
+            legs = []
+            for leg in "12":
+                f = Path(args.legs) / f"{name}_{order}{leg}.json"
+                if not f.exists():
+                    break
+                j = json.loads(f.read_text())
+                e = [r["energy"] for r in j["images"]]
+                top = max(range(len(e) - 1), key=lambda i: e[i])
+                released = {str(a.info["frame"]): a for a in read(f.with_suffix(".extxyz"), index=":")}[f"{name}_{order}{leg}_released"]
+                gauche, kept = kink_of(released, path)
+                legs.append({"start": j["start"], "top": e[top], "top_image": f"{name}_{order}{leg}_{j['images'][top]['image']}", "arrived": e[-1], "energies": e,
+                             "arrived_gauche_bonds": gauche, "arrives_as": _state(gauche, len(path.backbone_torsions(released)) // CHAINS),
+                             "not_converged": [r["image"] for r in j["images"] if not r["converged"]]})
+            if not legs:
+                continue
+            o = {"first_leg": legs[0]}
+            if len(legs) == 2:
+                o["second_leg"] = legs[1]
+                o["second_top_against_the_sheet"] = legs[0]["arrived"] + legs[1]["top"]
+                o["all_trans_against_the_sheet"] = legs[0]["arrived"] + legs[1]["arrived"]
+                o["higher_top"] = max(legs[0]["top"], o["second_top_against_the_sheet"])
+            rec["orders"][order] = o
+        if not rec["orders"]:
+            continue
+        rec["sheet"] = next(iter(rec["orders"].values()))["first_leg"]["start"]
+        # a hop is a first leg that arrives at a stretched kink: the gauche bond that was led has moved a monomer along
+        moved = {k: o["first_leg"] for k, o in rec["orders"].items() if o["first_leg"]["arrives_as"] == "stretched kink"}
+        line = f"{name:10s} {row:28s} "
+        if moved:
+            best = min(moved, key=lambda k: moved[k]["top"])
+            rec["hop"], rec["hop_order"], rec["hop_arrives_at"] = moved[best]["top"], best, moved[best]["arrived"]
+            line += f"hop {rec['hop']:.2f} (order {best}), arrives at {rec['hop_arrives_at']:+.2f}"
+        else:
+            line += "no first leg arrives at a stretched kink"
+        line += "; " + "; ".join(f"order {k}: {o['first_leg']['top']:.2f} to {o['first_leg']['arrives_as']} at {o['first_leg']['arrived']:+.2f}" for k, o in rec["orders"].items())
+        whole = {k: o["higher_top"] for k, o in rec["orders"].items() if "higher_top" in o}
+        if whole:
+            rec["removed_over"], rec["removed_order"] = min(whole.values()), min(whole, key=whole.get)
+            line += f"; removed over {rec['removed_over']:.2f} (order {rec['removed_order']})"
+        out["paths"][name] = rec
+        print(line)
+    Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
+    print(f"written {args.out}")
+
+
 def sheets_table(args):
     from ase.io import read, write
 
@@ -392,8 +470,12 @@ def main():
     s.add_argument("--relaxed", required=True, help="the folder of NAME_in_POTENTIAL.start.xyz, the rows' all-trans cells among them")
     s.add_argument("--out", required=True)
     s.add_argument("--frames-out", default="")
+    s = sub.add_parser("hops")
+    s.add_argument("--legs", required=True, help="the folder of the scans' NAME_a1.json, NAME_a1.extxyz, ...")
+    s.add_argument("--path", nargs="+", required=True, metavar="NAME=ROW")
+    s.add_argument("--out", required=True)
     args = p.parse_args()
-    {"starts": starts, "table": table, "choose": choose, "dft": dft, "sheets": sheets, "sheets-table": sheets_table}[args.step](args)
+    {"starts": starts, "table": table, "choose": choose, "dft": dft, "sheets": sheets, "sheets-table": sheets_table, "hops": hops}[args.step](args)
 
 
 if __name__ == "__main__":

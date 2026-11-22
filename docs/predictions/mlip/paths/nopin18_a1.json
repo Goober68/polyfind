@@ -1,0 +1,454 @@
+{
+ "what": "a scan from one labelled cell to another in a potential with D3: the backbone torsions that differ are led by a restraint in equal steps and everything else, the cell included, is relaxed at each step. energy: kcal/mol per chain against the first image, without the restraint. The last image, released, says where the path arrived (end_in_the_potential is the end frame's own energy there, not relaxed)",
+ "name": "nopin18_a1",
+ "potential": "all_s1",
+ "model": "all_s1.model",
+ "start": "scr_vdf10-trfe3-rvdf1-14_sheetldr_at18_in_all_s1",
+ "end": "scr_vdf10-trfe3-rvdf1-14_tt_low_in_all_s1",
+ "points": 12,
+ "restraint_eV": 10.0,
+ "fmax_eV_per_A": 0.02,
+ "led_torsions": [
+  [
+   54,
+   57,
+   60,
+   63
+  ],
+  [
+   138,
+   141,
+   144,
+   147
+  ]
+ ],
+ "only": [
+  0,
+  2
+ ],
+ "start_torsions_deg": [
+  63.77339610312849,
+  63.7524172759415
+ ],
+ "end_torsions_deg": [
+  -172.7819262038049,
+  -172.78202858242506
+ ],
+ "end_in_the_potential": -0.36525236633773966,
+ "end_shear_along_chains_monomers": [
+  0.9630645512315139,
+  -0.8940980415655051
+ ],
+ "images": [
+  {
+   "image": "i00",
+   "lambda": 0.0,
+   "energy": 8.389361028093845e-11,
+   "potential_eV_per_monomer": -2016.4477242445653,
+   "steps": 0,
+   "converged": true,
+   "restraint_energy": 0.0,
+   "led_torsions_deg": [
+    63.77339610312849,
+    63.7524172759415
+   ],
+   "largest_other_torsion_from_trans_deg": 119.91130409664186,
+   "largest_force_eV_per_A": 0.0032479559409310287,
+   "shear_along_chains_monomers": [
+    -0.507939807374323,
+    -1.0998487995362982
+   ],
+   "cell_A_deg": [
+    5.299002169342811,
+    9.400700506893205,
+    35.144131798304414,
+    107.07934082751801,
+    103.92350288895355,
+    88.13516855148025
+   ],
+   "volume_A3_per_monomer": 57.96186261941575
+  },
+  {
+   "image": "i01",
+   "lambda": 0.08333333333333333,
+   "energy": 0.4246641189373477,
+   "potential_eV_per_monomer": -2016.4464088719,
+   "steps": 35,
+   "converged": true,
+   "restraint_energy": 0.06644823581447086,
+   "led_torsions_deg": [
+    72.68422783096473,
+    72.66647133498958
+   ],
+   "largest_other_torsion_from_trans_deg": 116.15369290274977,
+   "largest_force_eV_per_A": 0.2572586085461695,
+   "shear_along_chains_monomers": [
+    -0.5081070172008536,
+    -1.0994670587821713
+   ],
+   "cell_A_deg": [
+    5.299354949916829,
+    9.400345157022398,
+    35.15413750907748,
+    107.07890637986576,
+    103.93127811829139,
+    88.13573734577743
+   ],
+   "volume_A3_per_monomer": 57.978093066305114
+  },
+  {
+   "image": "i02",
+   "lambda": 0.16666666666666666,
+   "energy": 1.5794484784999387,
+   "potential_eV_per_monomer": -2016.4428319938138,
+   "steps": 56,
+   "converged": true,
+   "restraint_energy": 0.20136605830943535,
+   "led_torsions_deg": [
+    81.95553118639177,
+    81.93284506452359
+   ],
+   "largest_other_torsion_from_trans_deg": 112.6959457574719,
+   "largest_force_eV_per_A": 0.41629199760504737,
+   "shear_along_chains_monomers": [
+    -0.5086200344201431,
+    -1.0981612477035687
+   ],
+   "cell_A_deg": [
+    5.3016877993828615,
+    9.399919105999402,
+    35.21427967003271,
+    107.08887815089611,
+    103.96369884416208,
+    88.13149768896814
+   ],
+   "volume_A3_per_monomer": 58.08859555919656
+  },
+  {
+   "image": "i03",
+   "lambda": 0.25,
+   "energy": 3.351305189910032,
+   "potential_eV_per_monomer": -2016.4373437696352,
+   "steps": 61,
+   "converged": true,
+   "restraint_energy": 0.23234624517216448,
+   "led_torsions_deg": [
+    92.05962669148624,
+    92.04931392171929
+   ],
+   "largest_other_torsion_from_trans_deg": 109.88050780440416,
+   "largest_force_eV_per_A": 0.42960415489764553,
+   "shear_along_chains_monomers": [
+    -0.509597556693944,
+    -1.0958134265385628
+   ],
+   "cell_A_deg": [
+    5.308247774046313,
+    9.399288209135603,
+    35.28806076088402,
+    107.0892284333559,
+    104.00331379343525,
+    88.13093838113656
+   ],
+   "volume_A3_per_monomer": 58.26776487856896
+  },
+  {
+   "image": "i04",
+   "lambda": 0.3333333333333333,
+   "energy": 3.1593092765606436,
+   "potential_eV_per_monomer": -2016.4379384659258,
+   "steps": 226,
+   "converged": true,
+   "restraint_energy": 0.010636813562775113,
+   "led_torsions_deg": [
+    104.37177069517209,
+    104.35682529914892
+   ],
+   "largest_other_torsion_from_trans_deg": 117.53057355471148,
+   "largest_force_eV_per_A": 0.10715293346081656,
+   "shear_along_chains_monomers": [
+    -0.5504084183405354,
+    -1.0324987969405344
+   ],
+   "cell_A_deg": [
+    5.382668897233169,
+    9.396153736393705,
+    34.93879348600512,
+    105.9162959106799,
+    104.7849698048036,
+    87.81518316654324
+   ],
+   "volume_A3_per_monomer": 58.64660447802843
+  },
+  {
+   "image": "i05",
+   "lambda": 0.4166666666666667,
+   "energy": 3.405588233827828,
+   "potential_eV_per_monomer": -2016.4371756310309,
+   "steps": 53,
+   "converged": true,
+   "restraint_energy": 0.002915243465906674,
+   "led_torsions_deg": [
+    114.92081612376357,
+    114.90806351932986
+   ],
+   "largest_other_torsion_from_trans_deg": 115.32888445727,
+   "largest_force_eV_per_A": 0.041117610713873265,
+   "shear_along_chains_monomers": [
+    -0.5517859962005949,
+    -1.0289184778474356
+   ],
+   "cell_A_deg": [
+    5.384073732460802,
+    9.39174484240092,
+    34.95606147582864,
+    105.87533790106764,
+    104.82635686065959,
+    87.80885436878845
+   ],
+   "volume_A3_per_monomer": 58.66431212819477
+  },
+  {
+   "image": "i06",
+   "lambda": 0.5,
+   "energy": 2.635449117673325,
+   "potential_eV_per_monomer": -2016.4395610926153,
+   "steps": 121,
+   "converged": true,
+   "restraint_energy": 0.006132121041900039,
+   "led_torsions_deg": [
+    125.91334763526464,
+    125.90326072878194
+   ],
+   "largest_other_torsion_from_trans_deg": 113.65251338890357,
+   "largest_force_eV_per_A": 0.05804989750221016,
+   "shear_along_chains_monomers": [
+    -0.5696625080968568,
+    -0.9912439527063217
+   ],
+   "cell_A_deg": [
+    5.404386926058018,
+    9.341647945799481,
+    34.9980946027366,
+    105.38246265524666,
+    105.2780919921619,
+    87.83922097449792
+   ],
+   "volume_A3_per_monomer": 58.65784107287322
+  },
+  {
+   "image": "i07",
+   "lambda": 0.5833333333333334,
+   "energy": 2.3638676744728913,
+   "potential_eV_per_monomer": -2016.440402300504,
+   "steps": 48,
+   "converged": true,
+   "restraint_energy": 0.00048240789650044557,
+   "led_torsions_deg": [
+    135.8997535380468,
+    135.89141873952894
+   ],
+   "largest_other_torsion_from_trans_deg": 110.04441626560879,
+   "largest_force_eV_per_A": 0.02278576496337643,
+   "shear_along_chains_monomers": [
+    -0.5712915831574271,
+    -0.9885728146958431
+   ],
+   "cell_A_deg": [
+    5.4061297139563615,
+    9.340449922324932,
+    34.99815693122699,
+    105.34203378710134,
+    105.31782080067757,
+    87.82570994392069
+   ],
+   "volume_A3_per_monomer": 58.67010090019537
+  },
+  {
+   "image": "i08",
+   "lambda": 0.6666666666666666,
+   "energy": 2.2867992942094806,
+   "potential_eV_per_monomer": -2016.4406410153758,
+   "steps": 57,
+   "converged": true,
+   "restraint_energy": 0.0004898847457847889,
+   "led_torsions_deg": [
+    145.95153665096595,
+    145.94489810748294
+   ],
+   "largest_other_torsion_from_trans_deg": 105.05906974514498,
+   "largest_force_eV_per_A": 0.024642461761907673,
+   "shear_along_chains_monomers": [
+    -0.5741453471715682,
+    -0.9841909555894955
+   ],
+   "cell_A_deg": [
+    5.410852684405105,
+    9.340042402458526,
+    34.980238143645266,
+    105.2650408011462,
+    105.37438713288003,
+    87.81326869485908
+   ],
+   "volume_A3_per_monomer": 58.69508426234746
+  },
+  {
+   "image": "i09",
+   "lambda": 0.75,
+   "energy": 2.337857641659532,
+   "potential_eV_per_monomer": -2016.4404828650836,
+   "steps": 61,
+   "converged": true,
+   "restraint_energy": 0.0046349926837645095,
+   "led_torsions_deg": [
+    155.99340755684568,
+    155.9885415298447
+   ],
+   "largest_other_torsion_from_trans_deg": 97.30376337650925,
+   "largest_force_eV_per_A": 0.046911621644671844,
+   "shear_along_chains_monomers": [
+    -0.5779680710569054,
+    -0.9787187266381173
+   ],
+   "cell_A_deg": [
+    5.419826217152282,
+    9.342882866871577,
+    34.93296038033292,
+    105.1523907941486,
+    105.43163206263816,
+    87.8479646578939
+   ],
+   "volume_A3_per_monomer": 58.74530055344409
+  },
+  {
+   "image": "i10",
+   "lambda": 0.8333333333333334,
+   "energy": 2.2086064539944563,
+   "potential_eV_per_monomer": -2016.4408832131978,
+   "steps": 120,
+   "converged": true,
+   "restraint_energy": 0.04539700595879435,
+   "led_torsions_deg": [
+    165.50687552405665,
+    165.5036553319262
+   ],
+   "largest_other_torsion_from_trans_deg": 93.52589492536201,
+   "largest_force_eV_per_A": 0.13740450282010128,
+   "shear_along_chains_monomers": [
+    -0.5987950193708409,
+    -0.9491193219695002
+   ],
+   "cell_A_deg": [
+    5.4687856423085455,
+    9.361549408616616,
+    34.744325452196534,
+    104.57283955696217,
+    105.76744420920883,
+    88.35936425339706
+   ],
+   "volume_A3_per_monomer": 59.11673987812485
+  },
+  {
+   "image": "i11",
+   "lambda": 0.9166666666666666,
+   "energy": 3.1974618659095504,
+   "potential_eV_per_monomer": -2016.437820290476,
+   "steps": 48,
+   "converged": true,
+   "restraint_energy": 0.1586069814479134,
+   "led_torsions_deg": [
+    174.8057939645202,
+    174.8041012804458
+   ],
+   "largest_other_torsion_from_trans_deg": 85.88897356682922,
+   "largest_force_eV_per_A": 0.2738772119791374,
+   "shear_along_chains_monomers": [
+    -0.6001320601191761,
+    -0.9468527024077724
+   ],
+   "cell_A_deg": [
+    5.4705263462899,
+    9.362887044253876,
+    34.74684261812439,
+    104.53622383026865,
+    105.79958523777775,
+    88.38149895707198
+   ],
+   "volume_A3_per_monomer": 59.147763204268834
+  },
+  {
+   "image": "i12",
+   "lambda": 1.0,
+   "energy": 1.214167762581732,
+   "potential_eV_per_monomer": -2016.4439634298064,
+   "steps": 300,
+   "converged": false,
+   "restraint_energy": 0.005895552577435915,
+   "led_torsions_deg": [
+    -173.19154747832567,
+    -173.19180821751146
+   ],
+   "largest_other_torsion_from_trans_deg": 19.201953354918032,
+   "largest_force_eV_per_A": 0.07601400836217917,
+   "shear_along_chains_monomers": [
+    -0.6490500504162493,
+    -0.9267777789614685
+   ],
+   "cell_A_deg": [
+    5.484163988468385,
+    9.217581269017604,
+    35.62894044768883,
+    104.82563658578789,
+    107.52917791041325,
+    87.45973334335194
+   ],
+   "volume_A3_per_monomer": 59.25752983898742
+  },
+  {
+   "image": "released",
+   "lambda": 1.0,
+   "energy": 1.087529338219716,
+   "potential_eV_per_monomer": -2016.4443556850367,
+   "steps": 20,
+   "converged": true,
+   "restraint_energy": 0.0,
+   "led_torsions_deg": [
+    -175.1640847920809,
+    -175.16419529047104
+   ],
+   "largest_other_torsion_from_trans_deg": 19.67420838412562,
+   "largest_force_eV_per_A": 0.019223297449509735,
+   "shear_along_chains_monomers": [
+    -0.6497727227460803,
+    -0.9272856392935949
+   ],
+   "cell_A_deg": [
+    5.484795504649544,
+    9.217662280646488,
+    35.625046134852695,
+    104.83215533418183,
+    107.54526270334821,
+    87.439856207896
+   ],
+   "volume_A3_per_monomer": 59.251904040898616
+  }
+ ],
+ "arrived": {
+  "energy": 1.087529338219716,
+  "end_in_the_potential": -0.36525236633773966,
+  "converged": true,
+  "torsions_from_the_end_deg": [
+   -2.3821585882760132,
+   -2.382166708045986
+  ],
+  "shear_along_chains_monomers": [
+   -0.6497727227460803,
+   -0.9272856392935949
+  ]
+ },
+ "top": {
+  "image": "i05",
+  "energy": 3.405588233827828,
+  "index": 5
+ }
+}
