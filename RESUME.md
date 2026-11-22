@@ -680,77 +680,67 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
-        A THIRD POD IS RUNNING (PI 2026-11-21: "Go on 8 hour pod"). `vk7ocprcjh3cbq`, name `polyfind-path`,
-        Runpod Secure Cloud CA-MTL-1, one NVIDIA A40 (9 vCPU, 50 GB), $0.59/h, CREATED 22:17:45 UTC
-        2026-11-21, confirmed by a read (`list-pods`, `get-pod`). IT REMOVES ITSELF AT 8 HOURS
-        (`BENCH_LIMIT_S=28800`: 06:17 UTC 2026-11-22, at most $4.72) AND NOT BEFORE (its idle time is the
-        same eight hours: DFT runs underneath the queue): DELETE IT WHEN ITS WORK IS DONE. WHOEVER READS
-        THIS AFTER 06:20 UTC 2026-11-22: CONFIRM IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods
-        '{}'`) AND DELETE IT IF NOT (`delete-pod {"id": "vk7ocprcjh3cbq"}`, then read again). Spend before
-        it: about $27.7 of $46.
-        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261121_path.txt`, started at commit a66fcbb): (1)
-        `refit.sh`: TWO FITS SIDE BY SIDE ON THE CARD, continued from `all_s1` (`mlip_train.py train
-        --start`, 40 epochs, rate 5e-5), on 24 files of labelled frames (621 frames; all but
-        `row_cells_lone_chain`), the 23 fourteen-monomer cells marked heavy (weight 10), FIVE FRAMES HELD
-        OUT BY NAME (four states: film sheet 12 twice, leader sheet 20m, nitrile sheet 4, matrix helix):
-        `refit_s1` (energy weight 1e6, stress 1e4) and `refitb_s1` (1e5, 3e3); meanwhile the processors
-        build Quantum ESPRESSO for the card (`qe_gpu_build.sh`, 39 minutes last time). (2)
-        `refit_score.sh` three times: each fit and `all_s1` on the 23 labelled cells
-        (`cells14_in_FIT.json`). NOT YET IN THE QUEUE, TO ADD WHEN THE SCORES ARE READ: (3) `path_card.sh
-        FIT 12 film:row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1_in_all_s1:sheet_vdf9-trfe4-cfe1-14_
-        belt4_at14m_sheared_in_all_s1_in_all_s1 leader:tt_leader_from_rows14an_r1_in_all_s1:sheet_vdf9-
-        trfe3-an1-rvdf1-14_belt4_at18_sheared_in_all_s1` with FIT the better fit on the held-out states
-        (or the path of the repository's `docs/predictions/mlip/models/all_s1.model` if neither is
-        better than `all_s1`): `examples/mlip_path.py scan` from both ends of each path (the kink pair's
-        torsions led by a restraint, everything else relaxed, cell included), `choose`, DFT single points
-        on the top image and its neighbours (the card's line and the processors'), a finer scan about the
-        top, the images beside it released.
-        HOW TO READ IT: `scratchpad/runpod/pod_path.sh PATH` (token in `scratchpad/runpod/token_path.txt`,
-        NEVER shown or committed), `python scratchpad/runpod/mirror_path.py` (into `scratchpad/runpod/
-        path/`): `STATUS`, `jobs/01_refit/{log.txt,qe_gpu_build.log,refit_s1.epochs.txt,
-        mlip_own_refit_s1.json,refit_s1.model}`, `jobs/01_refit/data/refit_s1.train.log`,
-        `jobs/0N_refit_score/cells14_in_*.json`, `jobs/0N_path_card/*`, `jobs/shared/dft*/log.txt`. If
-        the token file is lost the results cannot be read: delete the pod.
-        AT 23:47 UTC: THE FITS ARE DONE AND NEITHER IS ADOPTED. Scored on the 23 cells (`docs/predictions/
-        mlip/refit/cells14_in_*.json`, `tests/test_refit_cells14.py`): the four states held out, rms from
-        DFT in kcal/mol per chain: `all_s1` 1.06, `refit_s1` 1.14, `refitb_s1` 1.18; the twelve states in the
-        fit 0.74, 0.61, 0.62. Both keep the anchor (+0.731, +0.677; DFT +0.726). 40 epochs at 5e-5 (112 s an
-        epoch side by side, 77 minutes) did not teach the cells' energies even where shown (leader sheet
-        18m: -1.37, -0.95, -0.91; DFT +0.34): a kcal/mol per chain is a quarter of a meV per atom, under the
-        fit's 0.4. The models are NOT in the repository (mirrored to `scratchpad/runpod/path/jobs/01_refit/`
-        while the scratchpad lasts). THE CARD'S DFT PROGRAM BUILT IN 12 MINUTES this time. THE PROCESSORS
-        WERE IDLE FOR 70 MINUTES (the queue runs a job at a time: put a DFT cell in line BEFORE a fit).
-        THE QUEUE NOW: job 5 put the nitrile cell's kink AT THE NITRILE UNIT on the processors (`sheet_
-        vdf9-trfe4-an1-14_belt4_at12_sheared_in_all_s1`, started 23:45:38, due 00:50); job 6 is
-        `path_card.sh docs/predictions/mlip/models/all_s1.model 12 film:... leader:...` (started 23:45:38):
-        four scans side by side, then DFT on the chosen images (tops to the card's line, the image before
-        each to the processors', the image after each behind the tops), a finer scan and a release check.
-        WHEN IT HAS CHOSEN: `python scratchpad/runpod/mirror_path.py`; `python -I examples/mlip_path.py
-        table --scans scratchpad/runpod/path/jobs/06_path_card/{film_f,film_r,leader_f,leader_r}.json
-        --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz --out ...`; store the scans under
-        `docs/predictions/mlip/paths/`; labels of images land in `jobs/shared/dft*/NAME.dft.xyz`.
-        AT 00:07 UTC 2026-11-22: THE FOUR SCANS ARE DONE (15 minutes) AND STORED (`docs/predictions/mlip/
-        paths/{film,leader}_{f,r}.json/.extxyz`). In `all_s1`, kcal/mol per chain: FROM UPRIGHT ALL-TRANS the
-        scan tops at 10.3 (film's composition) and 5.6 (leader) and arrives at an UPRIGHT kinked cell (+2.6,
-        +1.5), not at the sheared sheet; FROM THE SHEET it tops 8.4 (8.55 refined) and 8.7 (9.2 refined)
-        above the sheet and arrives at an ALL-TRANS CELL STILL AT THE SHEET'S SHEAR (+5.1 and +3.1 above
-        the sheet: +0.10 and +1.45 above upright all-trans). So the kink costs 3.4 (film) and 6.1 (leader)
-        from an all-trans cell already sheared. THE PATH HAS TWO PARTS, KINK AND SHEAR, and the shear step
-        is being scanned on its own (job 14, `shear_card.sh`, `mlip_path.py shear`: film_flat, film_kinked,
-        leader_flat, leader_kinked). Release checks: the film's top separates its two ends; the leader's
-        image after the top falls to a THIRD state (one torsion gauche, one near -113, +3.6 above the
-        sheet): its two torsions do not go together, and the led scan is an upper bound.
-        DFT IN LINE (`path_dft.sh`, jobs 7 to 13). Card (45 minutes each, from 00:00): film_r_i07,
-        leader_r_i04, film_f_i06, leader_f_i07, film_r_released, leader_r_released, film_r_i08,
-        leader_r_i05. Processors (65 minutes each): the nitrile-unit kink (from 23:45), film_r_i06,
-        leader_r_i03, film_f_released, leader_f_released. Gather with `python scratchpad/runpod/
-        mirror_path.py` then `python -I scratchpad/path_labels.py docs/predictions/mlip/
-        cells14_third_pod_frames_pbe_d3bj.extxyz`; table with `examples/mlip_path.py table --scans
-        docs/predictions/mlip/paths/*.json --labels <the two label files>`. DELETE THE POD WHEN BOTH LINES
-        ARE EMPTY OR BY 06:00 UTC.
-        WHAT THE PATH IS AND IS NOT: a two-chain periodic cell, so every chain forms its kink in step with
-        its neighbours: the barrier of the sheet forming as a whole, per chain. A nudged elastic band is
-        not used (ase refuses images whose cells differ; the cell's shear is part of this path).
+        THE THIRD POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (06:09:46 UTC 2026-11-22; PI 2026-11-21:
+        "Go on 8 hour pod"). `vk7ocprcjh3cbq` (`polyfind-path`, Runpod Secure Cloud CA-MTL-1, one A40,
+        $0.59/h), 22:17:45 to 06:09:46 UTC: 7.87 h, ABOUT $4.64 (spend so far about $32.3 of $46; the key
+        cannot read billing). Deleted with `delete-pod` and CONFIRMED BY A READ (`list-pods`: none;
+        `get-pod`: 404). NO POD IS RUNNING. Docs: `docs/MLIP_SECOND_OPINION.md` 3.23, head of
+        `docs/CANDIDATE_MATERIALS.md`; tests `tests/test_mlip_path.py` (10), `tests/test_refit_cells14.py`
+        (3).
+        (1) THE REFIT IS NOT ADOPTED. Two fits continued from `all_s1` (`mlip_train.py train --start`, 40
+            epochs at 5e-5; 621 frames, the 23 fourteen-monomer cells weighted ten, five frames = four
+            states held out by name): held-out rms from DFT, kcal/mol per chain: `all_s1` 1.06, `refit_s1`
+            1.14, `refitb_s1` 1.18 (in the fit 0.74, 0.61, 0.62; anchors +0.731, +0.677). A kcal/mol per
+            chain is a quarter of a meV per atom: under what a fit of total energies holds. `all_s1` stays
+            the potential. The two models are NOT in the repository.
+        (2) THE PATH TOOL: `examples/mlip_path.py scan` (the torsions that differ between two labelled cells
+            led by a restraint in twelve steps, everything else relaxed, cell included; `--only` leads a
+            subset; `--refine`; `release`; `choose`; `points --between`). No nudged band (ase refuses
+            images whose cells differ). A LED SCAN FROM UPRIGHT ALL-TRANS ARRIVES AT AN UPRIGHT KINKED CELL
+            (8.87 above the film cell's sheet in DFT), AND FROM THE SHEET AT AN ALL-TRANS CELL STILL IN THE
+            SHEET'S REGISTRY: four cells, not two. One torsion led alone STRETCHES the kink (G T G' to
+            G T T T G'). The scans stop at 0.02 eV/A: a released cell holds 0.3 to 1.5 kcal/mol per chain
+            more (RELAX ON AT 0.004 BEFORE TRUSTING A REFERENCE).
+        (3) BARRIERS, DFT (the potential), kcal/mol per chain, each cell's lowest sheet
+            (`docs/predictions/kink_paths_{film,leader}.json`, by `bash examples/kink_path_points.sh`):
+            the kink FORMS from all-trans in the sheet's registry as the scan left it: film's composition
+            3.31 (3.24), leader 3.76 (4.17); from that cell relaxed on: 5.03 (4.74), leader not labelled
+            (4.50). Its END HOPS a monomer along: 7.70 (7.81), leader 5.13 (5.67). It is REMOVED: 9.22
+            (8.72), leader 7.08 (7.25). THE POTENTIAL IS WITHIN 0.1 TO 0.5 OF DFT ON EVERY BARRIER (rms
+            0.36): it can be used to scan barriers.
+        (4) THE FILM'S MEASURED RATE (364 kHz = 2.3e6 /s; with its own Vogel-Fulcher prefactor an Arrhenius
+            barrier of 7.9 kcal/mol at 300 K) IS AT THE SCALE OF THE HOP (7.70: 3.0e6 /s) AND THE REMOVAL
+            (9.22: 2.4e5 /s), NOT OF THE FORMING (3.3 to 5.0: 3e8 to 5e9 /s).
+        (5) THE FOUR AXES BY EACH EVENT (`docs/predictions/four_axes_by_barrier_{forming,hop,removal}.json`;
+            `four_axes_at_margins.py --barriers`): leader by the hop 27 MHz, tan delta 0.0008, 0.184%,
+            10.0 pN/nm2; by removal 13 MHz, 0.0016, 0.175%, 9.5; by forming 171 kHz, 0.126, 0.045%, 2.5;
+            film's composition (anchor) 364 kHz, 0.065, 0.073%, 6.4. BY THE TWO EVENTS THE FILM'S OWN RATE
+            ALLOWS THE LEADER IS AHEAD ON ALL FOUR AXES. NOT YET A ROW: the leader's margin is below zero
+            in DFT (the loss model takes it as zero, outside its domain); one site a cell; every chain
+            moving in step in a two-chain cell; dipole, switch strain, stiffness are belt4's.
+        (6) THE MARGINS' ALL-TRANS CELL IS NOT THE FILM COMPOSITION'S LOWEST ALL-TRANS CELL, IN DFT. The
+            all-trans cell its sheet's scan ends on, relaxed on at 0.004 (`mlip/paths/
+            all_trans_tight.extxyz`: every chain's neighbours a monomer along the chains, 1.06 and -1.05,
+            dipoles 21 degrees from the short cell edge), is 0.84 kcal/mol per chain BELOW the upright
+            all-trans cell in DFT (1.27 in the potential; as the scan left it DFT had it 0.88 ABOVE). IT IS
+            THE REGISTRY, NOT THE TURN: the upright cell with every chain turned 117 degrees
+            (`examples/turn_chains.py`) rests level with the upright cell in the potential (-0.02). THE
+            FILM COMPOSITION'S MARGIN FROM THE LOWER CELL IS +0.063, NOT +0.123 (if no helix cell has a
+            lower registry of its own, NOT LOOKED FOR): level with the matrix's +0.068; its row there reads
+            tan delta 0.088, 0.081%, 7.6 pN/nm2. 3.22's "the film composition's lead is the result" IS
+            WITHDRAWN until the other three cells' all-trans cells and every helix cell are looked at with
+            their neighbours a monomer along. The leader's cell in its sheet's registry (-0.48, -1.09,
+            chains not turned) is 1.50 above its upright cell in the potential; its turned starts did not
+            come to rest in 600 steps here (no result).
+        (7) THE NITRILE UNIT DOES NOT HOLD A KINK: the nitrile cell's sheet at the nitrile unit is 3.64
+            above all-trans in DFT (the potential 2.18).
+        NEXT (not started, the PI's to rule on): (a) every cell's all-trans cell AND helix cell with its
+            neighbours a monomer along (both settings), in the potential here at 0.004 and then DFT (about
+            eight cells: one more pod of about four hours, or the PI's MI100 machine when it is on line),
+            because every margin rests on it; (b) the hop and the removal at the matrix's and the nitrile cell's lowest sites, and
+            at a second site of the film's composition and of the leader, in the potential (checked now
+            to 0.5 on barriers), DFT at the tops; (c) one chain ahead of its neighbours in a sixteen-chain
+            cell in the potential, which is the event a real sheet moves by.
         THE SECOND POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (16:41 UTC 2026-11-21; PI 2026-11-21:
         "Go on rented, mi100 not online yet"). `3lq6awm18u81pz` (`polyfind-dft14b`, Runpod Secure Cloud
         EU-SE-1, one A40, $0.59/h), 08:12:02 to 16:41:00 UTC: 8.48 h, ABOUT $5.00 (spend so far about $27.7

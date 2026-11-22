@@ -2137,7 +2137,7 @@ pod's jobs: `examples/gpu_jobs/queue_20261121_dft14b.txt`, `dft_cells.sh`, `qe_g
 ### 3.23 A refit that is not adopted, and a kink sheet's forming, stretching and removal in the film's composition and in the leader (2026-11-22; PI: "Go on 8 hour pod")
 
 A third rented machine of the same kind (one A40, $0.59 an hour;
-`examples/gpu_jobs/queue_20261121_path.txt`). Two things were asked of it: fit the potential on
+`examples/gpu_jobs/queue_20261121_path.txt`), 7.87 hours, about $4.64. Two things were asked of it: fit the potential on
 with the 23 labels at fourteen monomers, four states held out as a test; and the barrier of a
 kink sheet forming in the film's composition and in the leader, with DFT single points at the
 top of each path. 3.22 ended on the second: the margins are DFT's, and what stands between the
@@ -2392,6 +2392,8 @@ its own.
   on).
 - The matrix and the nitrile cell were not scanned. No cell's helix was looked at in another
   registry, and only the film composition's all-trans cell was, by accident of its scan.
+- The image after the leader's second top (0.09 below it in the potential) was still running
+  when the pod was deleted and has no label: DFT's top there may be a little above 7.08.
 - The refit did not help and the 35 rows were not run.
 
 Files: `docs/predictions/mlip/paths/` (the twelve scans, two fine scans and two release checks,
