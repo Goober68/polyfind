@@ -7,10 +7,16 @@
 #   the low cell given back the upright cell's turn, lattice and registry (the chains kept): is it the chains?
 #   the matrix made of the low cell, moved back to the upright registry.
 #
-#   bash examples/registry_starts_as_film.sh [OUT]      (default docs/predictions/mlip/registry_starts_as_film.extxyz)
+# and, in a second file, the low cell with its CFE unit made an acrylonitrile unit (the nitrile where the chlorine was, which
+# is the hand the labelled nitrile cell has): the nitrile cell, in the film composition's low cell, and the same moved back
+# to the upright registry.
+#
+#   bash examples/registry_starts_as_film.sh [OUT [OUT2]]
+#       (default docs/predictions/mlip/registry_starts_as_film.extxyz and registry_starts_as_film_nitrile.extxyz)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT="${1:-docs/predictions/mlip/registry_starts_as_film.extxyz}"
+OUT2="${2:-docs/predictions/mlip/registry_starts_as_film_nitrile.extxyz}"
 UP=row_vdf9-trfe4-cfe1-14_TTTT_chain1_in_all_s1
 python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz docs/predictions/mlip/paths/all_trans_tight.extxyz \
   --out "$OUT" --cell film:tt=$UP matrix:tt=row_vdf10-trfe4-14_TTTT_chain1_in_all_s1 --make \
@@ -18,3 +24,7 @@ python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells
   reg_film_tt_low_registry_back=film_r_released_tight:film:tt:shear.-1.1 \
   reg_film_tt_low_chains_in_upright=film_r_released_tight:film:tt:back.film_r_released_tight.$UP \
   reg_matrix_tt_as_film_low_registry_back=film_r_released_tight:matrix:tt:swap.Cl.F.1.36:shear.-1.1
+python -I examples/registry_cells.py derive --labels docs/predictions/mlip/cells14_frames_pbe_d3bj.extxyz docs/predictions/mlip/paths/all_trans_tight.extxyz \
+  --out "$OUT2" --cell nitrile:tt=tt_nitrile_from_rows14an_r1 --make \
+  reg_nitrile_tt_as_film_low=film_r_released_tight:nitrile:tt:nitrile.Cl.F \
+  reg_nitrile_tt_as_film_low_registry_back=film_r_released_tight:nitrile:tt:nitrile.Cl.F:shear.-1.1

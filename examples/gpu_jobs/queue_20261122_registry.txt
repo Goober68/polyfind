@@ -63,3 +63,11 @@ dft_cells.sh start 8 2 docs/predictions/mlip/paths/all_trans_tight.extxyz leader
 # 0.84 is the registry or the chains (7.7 and 8.6 above upright before relaxing: the twists fit the registry
 # they are in).  Four cells, one a process, 1000 steps at most, 25 minutes.
 registry_card.sh docs/predictions/mlip/registry_starts_as_film.extxyz 4 1000 1500
+#
+# 07:51 UTC.  Of the first 34 starts, 19 are at rest now, every one above its upright cell: the all-trans
+# cells with their neighbours a monomer along 0.45 to 2.3 above (the nitrile cell's nearest), the helix cells
+# with theirs two monomers along 1.4 to 5.8 above.  Chains with the upright cell's twists do not like another
+# registry.  One more cell made of the film composition's low cell: its CFE unit made an acrylonitrile unit
+# (the nitrile where the chlorine was: the hand the labelled nitrile cell has), which is the nitrile cell,
+# sequence and all, in the film composition's low cell; and the same moved back to the upright registry.
+registry_card.sh docs/predictions/mlip/registry_starts_as_film_nitrile.extxyz 2 1000 1200

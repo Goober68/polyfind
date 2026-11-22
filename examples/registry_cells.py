@@ -191,6 +191,39 @@ def swapped(atoms, old, new, bond):
     return b
 
 
+def nitrile_for(atoms, group, hydrogen):
+    """On every carbon that carries a `group` atom and a `hydrogen` atom (the chlorine and the fluorine of a CFE unit, in
+    one order or the other), the first made a nitrile (C at 1.47 A along its bond, N 1.16 A beyond) and the second a
+    hydrogen (1.09 A along its bond): a CFE unit made an acrylonitrile unit where it stands, on one hand or the other."""
+    from ase import Atoms
+
+    b = atoms.copy()
+    info = dict(b.info)
+    for k in list(b.arrays):
+        if k not in ("numbers", "positions"):
+            del b.arrays[k]
+    carbons = [k for k in range(len(b)) if b.symbols[k] == "C"]
+    added = []
+    for k in [k for k in range(len(b)) if b.symbols[k] == "Cl"]:
+        d = np.array([b.get_distance(c, k, mic=True) for c in carbons])
+        c = carbons[int(d.argmin())]
+        fluorine = next(m for m in range(len(b)) if b.symbols[m] == "F" and b.get_distance(c, m, mic=True) < BONDS[("C", "F")])
+        first, second = (k, fluorine) if group == "Cl" else (fluorine, k)
+        v = b.get_distance(c, first, mic=True, vector=True)
+        v /= np.linalg.norm(v)
+        w = b.get_distance(c, second, mic=True, vector=True)
+        w /= np.linalg.norm(w)
+        b.positions[first] = b.positions[c] + 1.47 * v
+        b.symbols[first] = "C"
+        added.append(b.positions[c] + (1.47 + 1.16) * v)
+        b.positions[second] = b.positions[c] + 1.09 * w
+        b.symbols[second] = "H"
+    b += Atoms("N" * len(added), positions=added)
+    b.info = info
+    b.wrap()
+    return b
+
+
 def substituents(atoms):
     """Each chain as the cycle of its backbone carbons' substituents with a hand: for a carbon with two different
     substituents, the sign of (next - previous) . (first x second), the substituents in alphabetical order.  Two chains are
@@ -205,7 +238,8 @@ def substituents(atoms):
         cycle = []
         for i, c in enumerate(backbone):
             prev, nxt = backbone[i - 1], backbone[(i + 1) % len(backbone)]
-            near = [k for k in range(len(atoms)) if k not in on and atoms.get_distance(c, k, mic=True) < BONDS.get(("C", atoms.symbols[k]), 1.75)]
+            others = np.flatnonzero(atoms.get_distances(c, range(len(atoms)), mic=True) < 2.05)
+            near = [int(k) for k in others if k not in on and atoms.get_distance(c, k, mic=True) < BONDS.get(("C", atoms.symbols[k]), 1.75)]
             near.sort(key=lambda k: atoms.symbols[k])
             kinds = "".join(atoms.symbols[k] for k in near)
             hand = 0
@@ -329,7 +363,8 @@ def build(args):
 
 def derive(args):
     """Cells made from stored cells by a few steps each, as starts: NAME=FRAME:LABEL:CONFORMATION:STEP:STEP..., the steps
-    swap.OLD.NEW.BOND (an element changed where it stands), shear.SA.SB (neighbours moved whole monomers along) and
+    swap.OLD.NEW.BOND (an element changed where it stands), nitrile.Cl.F or nitrile.F.Cl (a CFE unit made an acrylonitrile
+    unit, the nitrile where the chlorine or the fluorine was), shear.SA.SB (neighbours moved whole monomers along) and
     back.LOW.UPRIGHT (what takes the cell LOW to the cell UPRIGHT: turn, lattice and monomers along, the chains kept as
     they are).  Each start is measured against --cell's labelled cell of its LABEL and CONFORMATION, and must be the
     same molecules as that cell."""
@@ -352,6 +387,12 @@ def derive(args):
                 old, new, bond = rest[0].split(".", 2)
                 b = swapped(b, old, new, float(bond))
                 said.append(f"every {old} made {new}")
+            elif kind == "nitrile":
+                group, hydrogen = rest[0].split(".")
+                keep = dict(b.info)
+                b = nitrile_for(b, group, hydrogen)
+                b.info = keep
+                said.append(f"every {group} made a nitrile and the {hydrogen} beside it a hydrogen")
             elif kind == "shear":
                 sa, sb = (int(v) for v in rest[0].split("."))
                 b = sheared(b, sa, sb)

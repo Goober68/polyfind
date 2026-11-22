@@ -185,8 +185,21 @@ def test_the_matrix_is_the_film_compositions_low_cell_with_its_chlorine_made_flu
     assert np.abs(twists(low)).max() < 25 and np.abs(twists(film)).max() < 25
     for a in starts:
         assert np.abs(twists(a) - twists(low)).max() < 1.0 and np.abs(twists(a) - twists(film)).max() > 15
-    line = next(l.split() for l in (ROOT / "examples" / "gpu_jobs" / "queue_20261122_registry.txt").read_text().splitlines() if "registry_starts_as_film" in l and not l.startswith("#"))
-    assert line[0] == "registry_card.sh" and line[2:] == ["4", "1000", "1500"]
+    lines = [l.split() for l in (ROOT / "examples" / "gpu_jobs" / "queue_20261122_registry.txt").read_text().splitlines() if "registry_starts_as_film" in l and not l.startswith("#")]
+    assert lines[0][0] == "registry_card.sh" and lines[0][2:] == ["4", "1000", "1500"] and lines[1][1].endswith("registry_starts_as_film_nitrile.extxyz") and lines[1][2:] == ["2", "1000", "1200"]
+    # the nitrile cell likewise: the CFE unit made an acrylonitrile unit, the nitrile where the chlorine was; the other hand is another molecule
+    nitrile = labelled[CELLS["nitrile"][0]]
+    made = tool.nitrile_for(low, "Cl", "F")
+    assert sorted(made.get_chemical_symbols()) == sorted(nitrile.get_chemical_symbols()) and len(made) == 170
+    assert all(any(tool.same_molecule(m, t) for t in tool.substituents(nitrile)) for m in tool.substituents(made))
+    assert not all(any(tool.same_molecule(m, t) for t in tool.substituents(nitrile)) for m in tool.substituents(tool.nitrile_for(low, "F", "Cl")))
+    from ase.neighborlist import neighbor_list
+    i, j, d = neighbor_list("ijd", made, 1.3)
+    cn = sorted(float(x) for a, b, x in zip(i, j, d) if made.symbols[a] == "N" and made.symbols[b] == "C")
+    assert cn == pytest.approx([1.16, 1.16], abs=1e-6)
+    two = read(MLIP / "registry_starts_as_film_nitrile.extxyz", index=":")
+    assert [str(a.info["frame"]) for a in two] == ["reg_nitrile_tt_as_film_low", "reg_nitrile_tt_as_film_low_registry_back"]
+    assert [tool._ints(a.info["registry_shear"]) for a in two] == [[1, -1], [0, 0]] and all(str(a.info["registry_of"]) == CELLS["nitrile"][0] and tool.gauche(a, path) == 0 for a in two)
 
 
 def test_the_choice_is_the_lowest_cell_at_rest_of_each_composition_and_conformation():
