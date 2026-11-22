@@ -680,6 +680,30 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
+        A FOURTH POD IS RUNNING (PI 2026-11-22: "MI100 isn't online go on runpod", on the registry check).
+        `bcuwk6j3g3crqp`, name `polyfind-registry`, Runpod Secure Cloud EU-SE-1, one NVIDIA A40, $0.59/h,
+        CREATED 06:51:18 UTC 2026-11-22 after a read of stock (High) and price, confirmed by a read
+        (`list-pods`). IT REMOVES ITSELF AT 4.5 HOURS (`BENCH_LIMIT_S=16200`: 11:21 UTC, at most $2.66) AND
+        NOT BEFORE: DELETE IT WHEN ITS WORK IS DONE. WHOEVER READS THIS AFTER 11:25 UTC 2026-11-22: CONFIRM
+        IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods '{}'`) AND DELETE IT IF NOT
+        (`delete-pod {"id": "bcuwk6j3g3crqp"}`, then read again). Spend before it: about $32.3 of $46.
+        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261122_registry.txt`): `registry_card.sh` relaxes
+        the 34 starts of `docs/predictions/mlip/registry_starts.extxyz` (`bash examples/registry_starts.sh`;
+        `examples/registry_cells.py`: each of the four cells' labelled all-trans and helix cell with its
+        neighbours whole monomers along the chains and/or every chain turned) in the potential on the
+        card, four side by side, to 0.004 eV/A, 600 steps a cell and 45 minutes at most; meanwhile the
+        processors build the card's DFT program and then label `leader_b2_i08` (the image after the
+        leader's second top, cut off on the third pod). Then it writes `registry_table.json`,
+        `registry_relaxed.extxyz` and `chosen.txt` (the lowest cell at rest of each composition and
+        conformation within 0.3 kcal/mol per chain of its labelled cell; the film's all-trans only if
+        below -1.0) and puts the chosen on the two DFT lines (card 46 minutes a cell, processors 66).
+        More cells by `registry_dft.sh card|processors start|next NAME...`.
+        HOW TO READ IT: `scratchpad/runpod/pod_registry.sh PATH` (token in `scratchpad/runpod/
+        token_registry.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_registry.py`
+        (into `scratchpad/runpod/registry/`): `STATUS`, `jobs/01_registry_card/{log.txt,relax_N.log,
+        registry_table.json,chosen.txt,processors.log}`, `jobs/shared/dft*/log.txt`. If the token file is
+        lost the results cannot be read: delete the pod.
+        THEN: each cell's margin from its lowest all-trans and lowest helix cell in DFT; docs 3.24.
         THE THIRD POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (06:09:46 UTC 2026-11-22; PI 2026-11-21:
         "Go on 8 hour pod"). `vk7ocprcjh3cbq` (`polyfind-path`, Runpod Secure Cloud CA-MTL-1, one A40,
         $0.59/h), 22:17:45 to 06:09:46 UTC: 7.87 h, ABOUT $4.64 (spend so far about $32.3 of $46; the key
