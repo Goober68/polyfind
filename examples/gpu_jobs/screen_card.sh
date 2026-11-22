@@ -3,7 +3,7 @@
 # the potential, each row's margin from its lowest all-trans and helix cells, and the rows whose margin is inside a window
 # put to DFT.  A job of examples/runpod_jobs_pod.sh:
 #
-#   screen_card.sh STARTS SIDE STEPS BUDGET [MOST]
+#   screen_card.sh STARTS SIDE STEPS BUDGET [MOST [WHERE]]
 #
 # STARTS is a file of starts in the repository (six cells a row, row after row).  They are dealt in turn to SIDE processes
 # side by side on the card, each relaxing its cells one after another to 0.004 eV/A or STEPS steps; after BUDGET seconds
@@ -17,9 +17,11 @@
 # the film's composition 0.01 above DFT and the matrix 0.06 below, and the margins wanted are DFT's 0 to +0.12), MOST of
 # them at most (default 2), the ones with every cell at rest first, have their lowest all-trans cell, lowest helix cell
 # and other all-trans cell put on the two DFT lines (the card's line, then the processors').  Rows in SCREEN_SKIP (the
-# controls: they have DFT) and cells in a DFT line already are left out.  SCREEN_NO_DFT=1 puts nothing in line.
+# controls: they have DFT) and cells in a DFT line already are left out.  WHERE is `both` (the default), `processors`
+# (every chosen cell on the processors' line: for a job that is followed by another on the card, where a DFT cell would
+# crawl beside the relaxations) or `none`.  SCREEN_NO_DFT=1 puts nothing in line and builds nothing.
 set -uo pipefail
-STARTS="$1"; SIDE="$2"; STEPS="$3"; BUDGET="$4"; MOST="${5:-2}"
+STARTS="$1"; SIDE="$2"; STEPS="$3"; BUDGET="$4"; MOST="${5:-2}"; WHERE="${6:-both}"
 HERE="$(dirname "$0")"
 source "$HERE/mlip_env.sh"
 export MLIP_DEVICE="${MLIP_DEVICE:-cuda}" OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
@@ -70,9 +72,16 @@ for n in 1 2; do
   echo "$LINE" | sed 's/^ //' >> "$JOB_OUT/chosen.txt"
 done
 echo "chosen (the card's line, then the processors'):"; cat "$JOB_OUT/chosen.txt"
-[ "${SCREEN_NO_DFT:-0}" = "1" ] && exit 0
+{ [ "${SCREEN_NO_DFT:-0}" = "1" ] || [ "$WHERE" = "none" ]; } && exit 0
 CARD="$(sed -n 1p "$JOB_OUT/chosen.txt")"; REST="$(sed -n 2p "$JOB_OUT/chosen.txt")"
-if [ -x "$GPUPW" ]; then
+if [ "$WHERE" = "processors" ]; then
+  # in the order chosen: a row's lowest all-trans cell, its lowest helix cell, its other all-trans cell, then the next row's
+  ALL="$("$PY" -c "
+import sys
+a, b = sys.argv[1].split(), sys.argv[2].split()
+print(' '.join(x for pair in zip(a, b + [''] * len(a)) for x in pair if x))" "$CARD" "$REST")"
+  [ -n "$ALL" ] && bash "$HERE/dft_cells.sh" start 8 2 "$JOB_OUT/screen_relaxed.extxyz" $ALL
+elif [ -x "$GPUPW" ]; then
   [ -n "$CARD" ] && bash "$HERE/dft_cells.sh" in=dft_card pw="$GPUPW" start 1 1 "$JOB_OUT/screen_relaxed.extxyz" $CARD
   [ -n "$REST" ] && bash "$HERE/dft_cells.sh" start 8 2 "$JOB_OUT/screen_relaxed.extxyz" $REST
 else

@@ -1,0 +1,33 @@
+# The screen for candidates (PI 2026-11-22: "Screen for candidates", and "Runpod, 8 hours" to which machine;
+# docs/MLIP_SECOND_OPINION.md 3.25).
+#
+# 3.24: from each composition's lowest labelled cells DFT has the film's composition at +0.063 kcal/mol per monomer
+# (the helix the lower phase: the relaxor), the 71/29 matrix at -0.032 (a ferroelectric, as it is), and the leader
+# at -0.047, on the matrix's side.  The leader's kink is fast (its end moves over 5.13 kcal/mol per chain, the film
+# composition's over 7.70) and its margin says it may not switch as a relaxor does.  Looked for here: a composition
+# with a margin above zero from its lowest cells and a kink that is not pinned deep.
+#
+# Seventeen fourteen-monomer rows (examples/screen14_starts.sh), six cells a row: the low all-trans cell, the upright
+# one and the four placements of the helix, each made of the film composition's potential-relaxed cell by changing
+# substituents where they stand (examples/screen14.py), relaxed in the potential on the card to 0.004 eV/A, four side
+# by side.  File A first: the film's composition made of itself and the matrix as controls (their margins are known
+# in the potential and in DFT), and six rows that put the leader's other two features (a reversed VDF unit first, a
+# VDF unit eleventh) on a chlorine unit, CFE or CTFE, in place of its nitrile, which the potential cannot do (3.24).
+# Then file B: the same features with no pin, more TrFE, the rows' other units, and the leader as a control.
+# After each file the rows whose margin in the potential is between -0.06 and +0.14 (DFT's 0 to +0.12, by what the
+# potential is off on the two controls) have their lowest all-trans cell, lowest helix cell and other all-trans
+# cell put to DFT: two rows a file at most, the complete ones first.
+#
+# One job a line; the pod counts lines, so the file is only added to.
+#
+# The processors have nothing of the screen's to label for the first hour and a half.  Until then: the film
+# composition's upright cell with every chain turned, the one cell of 3.23 and 3.24 that never had a DFT slot (the
+# potential has the turn alone worth nothing, -0.02).  This line also installs the processors' DFT program.
+dft_cells.sh start 8 2 docs/predictions/mlip/paths/all_trans_tight.extxyz film_all_trans_turned_117_tight
+#
+# File A: 48 cells (six of them the control that must come back as it is).  The chosen go to the processors' line
+# alone: the card goes straight on to file B, and a DFT cell crawls beside four relaxations (3.24).
+screen_card.sh docs/predictions/mlip/screen14_starts_a.extxyz 4 1000 5400 2 processors
+#
+# File B: 54 cells.  The card is free for DFT after it, so its chosen go to both lines.
+screen_card.sh docs/predictions/mlip/screen14_starts_b.extxyz 4 1000 6600 2
