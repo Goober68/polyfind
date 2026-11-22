@@ -114,3 +114,10 @@ registry_card.sh docs/predictions/mlip/registry_starts_helix_one.extxyz 4 800 10
 dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x next 1 1 docs/predictions/mlip/registry_as_film_leader_relaxed.extxyz reg_leader_tt_as_film_low_in_all_s1
 dft_cells.sh in=dft_card pw=/opt/qe_gpu/bin/pw.x drop reg_nitrile_tt_as_film_low_in_all_s1
 dft_cells.sh next 8 2 docs/predictions/mlip/registry_as_film_nitrile_relaxed.extxyz reg_nitrile_tt_as_film_low_in_all_s1
+#
+# 10:31 UTC.  The card is free of DFT: its three cells are labelled (the matrix's low cell 1.40 below its upright
+# cell in DFT, the potential 1.50; the leader's low cell labelled at 10:30).  The seven helix cells with their
+# neighbours one monomer along that were not at rest when their job's time ran out (5.4 to 11.9 above their
+# labelled cells; the eighth is at rest at +7.79) are relaxed on from where they stood, one at a time so that
+# the processors' DFT on the nitrile composition's low cell keeps its pace.  The pod is deleted by 11:15.
+registry_more.sh docs/predictions/mlip/registry_starts_helix_one.extxyz 1 1000 2100 reg_nitrile_hx_m1p1_tz0 reg_film_hx_m1p1_tz0 reg_film_hx_p1m1_tz0 reg_matrix_hx_p1m1_tz0 reg_leader_hx_p1m1_tz0 reg_leader_hx_m1p1_tz0 reg_nitrile_hx_p1m1_tz0
