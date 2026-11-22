@@ -88,3 +88,17 @@ dft_cells.sh in=dft_card last leader_r_i04
 dft_cells.sh last leader_r_i03
 path_dft.sh processors next leader_b1 leader_b1_i08
 path_dft.sh processors next film_r film_r_i06
+#
+# 03:41 UTC 2026-11-22.  Six labels are in.  On one footing (the sheet as the potential relaxed
+# it, DFT single points): the film composition's all-trans cell in the sheet's registry is at
+# +5.92 and its top at +9.22 (the kink forms over 3.30; the potential 3.24); the leader's
+# all-trans cell in the sheet's registry is at +3.32 and its first step's top at +5.13.  Two
+# and a half hours are left: three cells can still start.  They go to what the two barriers
+# rest on, not to the upright cells' tops (a path 10 above all-trans in the potential, which is
+# not the low one): the image after each top (in the potential the leader's is 0.09 below its
+# top, so DFT's top may be there), and the leader's stretched kink, 0.85 above its sheet in the
+# potential, which DFT may have below it.  The upright tops and the leader's upright kinked
+# cell fall behind them and will not start.
+path_dft.sh card next film_r film_r_i08
+path_dft.sh card next leader_b2 leader_b2_i08
+path_dft.sh processors next leader_b1 leader_b1_released
