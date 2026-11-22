@@ -705,28 +705,31 @@ right": true at one registry, not along it).
         and helix cells, and the rows between -0.06 and +0.14 in the potential go to DFT (lowest all-trans,
         lowest helix, other all-trans). Job 1 labels `film_all_trans_turned_117_tight` on the processors
         meanwhile.
-        STATE AT 19:56 UTC (the queue file's comments have each step): files A, B, C relaxed and stored
-        (`docs/predictions/screen14_potential_{a,b,c}.json`, `mlip/screen14_relaxed_{a,b,c}.extxyz`; each
-        table is of every file so far). In the window in the potential: IVRVVRVCVVVVVR
-        (`vdf9-trfe3-cfe1-rvdf1-14`, the leader with a CFE for its nitrile) +0.088 and IVRVVRVCVVRVVR
-        (`vdf8-trfe4-cfe1-rvdf1-14`) -0.033; file C lowered no candidate's all-trans side. BUT THE LEADER
-        AS A CONTROL COMES BACK 0.27 A MONOMER TOO LOW (-0.342, then -0.386 with its own all-trans cell,
-        where its own cells give -0.070): its made helix cells rest 4.4 kcal/mol per chain above its own
-        helix cell, a packing of its own. SO NO MARGIN OF FILES A TO C IS SAFE UNTIL FILE D IS IN: job 5
-        (started 19:51:49, stops at 3000 s) gives every row the leader's own helix packing (hx_ldr), its
-        own all-trans pattern (tt_ldr) and, six rows, the nitrile composition's helix (hx_an); 39 cells in
-        the order they matter. Job 6 (`screen_front.sh`) then puts IVRVVRVCVVVVVR's lowest helix and
-        all-trans cells at the front of the processors' DFT line where they are new. Job 7: its 28 kink
-        sheets (`screen14_sheets_1.extxyz`, `screen_sheets_card.sh`; table by `screen14.py sheets-table`).
-        THEN, BY HAND: the hop scan of its cheapest kept sheet (`steps_card.sh
-        docs/predictions/mlip/models/all_s1.model 12 NAME:scr_ROW_sheet_at<SITE>_in_all_s1:scr_ROW_<lowest
-        tt>_in_all_s1`), and the card's DFT line (`screen_dft.sh card start NAME`; start it only when no
-        relaxation shares the card: about 48 minutes a cell alone, five times that shared).
-        DFT SO FAR (processors, 96 minutes a cell): `film_all_trans_turned_117_tight` (0.00 from the film
-        composition's upright cell; the potential -0.02) and `scr_vdf9-trfe3-cfe1-rvdf1-14_tt_up_in_all_s1`;
-        running from 19:43:35: `..._hx_GTGpT_in_all_s1` (to about 21:20); the processors have time for ONE
-        more cell after it, the card for about two after its relaxations. So DFT will give ONE row's
-        margin, not the three rows' the eight hours were chosen for: say so in the report.
+        STATE AT 22:53 UTC (the queue file's comments have each step). IN THE POTENTIAL, all four files
+        of starts relaxed and stored (`docs/predictions/screen14_potential_{a,b,c,d}.json`, each the
+        table of every file so far, so `_d` is the final one; `mlip/screen14_relaxed_{a,b,c,d}.extxyz`):
+        the no-pin row IVRVVRVVVVVVVR (`vdf10-trfe3-rvdf1-14`) +0.071, the CFE row IVRVVRVCVVVVVR
+        (`vdf9-trfe3-cfe1-rvdf1-14`) +0.201, IVRVVRVCVVRVVR -0.033, the leader as a control -0.069 (its
+        own cells -0.070). A MADE CELL KEEPS ITS SOURCE'S PACKING: files A and B (the film
+        composition's cells) had the leader at -0.342 and these two rows at -0.091 and +0.088; the
+        rows with the leader's reversed unit first AND its VDF eleventh take the leader's own helix
+        packing (file D), the others do not. File D stopped at its 3000 s with 8 of 39 cells not run.
+        KINK SHEETS (`screen14_sheets_{1,2}.json`): the CFE row's cheapest are on its chlorine (-4.84,
+        -4.21 per chain against its lowest all-trans cell, made of the film composition's sheets), the
+        no-pin row's on its run of VDF units (-1.87 at 18m, made of the leader's sheets).
+        DFT (`mlip/screen14_frames_pbe_d3bj.extxyz`, five labels; `screen14_dft.json`): the CFE row's
+        margin from its lowest labelled cells +0.196 (the potential +0.204 on the same two); on its
+        upright all-trans cell and its helix in the film composition's packing DFT has -0.035 where
+        the potential has +0.088. The film composition's chains turned without their registry: 0.00
+        from upright. NO DFT ON THE NO-PIN ROW: there was time for one row's margin, not three.
+        ON THE POD NOW: job 12, the hop scans `nopin` (the no-pin row's sheet at 18m) and `lcfe` (the
+        CFE row's sheet on its chlorine, site 12), to about 23:25; job 13, `lcfev` (the CFE row's
+        sheet on its VDF run, 16m), to about 23:45. The processors are on a second copy of a cell
+        the card has labelled and will not finish. THEN: mirror, DELETE, CONFIRM BY A READ; the scans
+        into `docs/predictions/mlip/paths/`, `examples/mlip_path.py points` as
+        `examples/kink_path_points.sh` does for the film's composition and the leader (the hop is the
+        lower top of the two orders' first legs; in the potential the film composition's is 7.81 and
+        the leader's 5.67), and the four axes by `examples/four_axes_at_margins.py --barriers`.
         A new row has no belt4 inputs (dipole, switch strain, stiffness): for the four axes take
         `vdf8-trfe4-cfe1-rvdf1-14`'s and the leader's, and say which.
         HOW TO READ IT: `scratchpad/runpod/pod_screen.sh PATH` (token in `scratchpad/runpod/
@@ -735,7 +738,7 @@ right": true at one registry, not along it).
         repository by `python -I scratchpad/screen_labels.py docs/predictions/mlip/
         screen14_frames_pbe_d3bj.extxyz`; then `python -I examples/screen14.py dft --table TABLE --labels
         FILE --out docs/predictions/screen14_dft.json`. If the token file is lost the results cannot be
-        read: delete the pod. Tests: `tests/test_screen14.py` (10).
+        read: delete the pod. Tests: `tests/test_screen14.py` (14).
         THE FOURTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (11:08:57 UTC 2026-11-22; PI
         2026-11-22: "MI100 isn't online go on runpod", on the registry check). `bcuwk6j3g3crqp`
         (`polyfind-registry`, Runpod Secure Cloud EU-SE-1, one A40, $0.59/h), 06:51:18 to 11:08:57 UTC:
