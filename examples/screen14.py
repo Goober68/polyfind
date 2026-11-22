@@ -15,6 +15,8 @@ one a monomer, read along the chain as polyfind builds it (every hand as its bui
     python -I examples/screen14.py table --starts STARTS.extxyz --relaxed DIR --out TABLE.json [--frames-out RELAXED.extxyz]
     python -I examples/screen14.py choose --table TABLE.json --window LO HI [--most N] [--skip ROW ...]
     python -I examples/screen14.py dft --table TABLE.json --labels FILES --out MARGINS.json
+    python -I examples/screen14.py sheets --frames FILES --of ROW_OF_THE_SHEETS --row NAME=LETTERS ... --out SHEETS.extxyz
+    python -I examples/screen14.py sheets-table --starts SHEETS.extxyz --relaxed DIR --out SHEETS.json [--frames-out RELAXED.extxyz]
 
 `starts` writes six cells a row, row after row in the order given: tt_low, tt_up, then the helix placements.  `table`
 reads each start's relaxed cell (examples/mlip_train.py relax: NAME_in_POTENTIAL.start.xyz) and gives each row's margin,
@@ -22,6 +24,13 @@ all-trans less helix in kcal/mol per monomer, between its lowest all-trans cell 
 margin from the upright all-trans cell and what the low cell is worth per chain.  `choose` prints the cells DFT is asked
 about for the rows whose margin is inside a window: each one's lowest all-trans cell, its lowest helix cell and its other
 all-trans cell, in two lines (the card's and the processors').  `dft` takes the margins again from the labelled cells.
+
+`sheets` makes a row's kink sheets (a kink pair on every chain, in register) at every site of the sequence the same way:
+out of the film composition's potential-relaxed sheets (docs/predictions/mlip/cells14_tight_in_all_s1.extxyz, 28 of
+them: fourteen sites and the kink's two hands).  `sheets-table` gives each relaxed sheet against the row's lowest
+all-trans cell in the same folder, kcal/mol per chain, with whether the kink is still one: where a row's kink sits and
+how deep, which is what holds it (3.23: the film composition's sits 4.2 deep on its chlorine and its end moves over 7.70;
+the leader's 0.7 deep on a run of VDF units and moves over 5.13).
 
 The potential's own numbers: it is within 0.1 to 0.4 kcal/mol per chain of DFT on the low cells of the two compositions
 without a nitrile and 1.3 to 1.8 off, with a sign wrong, on those with one (3.24).  Rows with an A are controls here, not
@@ -210,6 +219,113 @@ def dft(args):
     print(f"{len(out['rows'])} rows with a DFT margin; written {args.out}")
 
 
+def sheets(args):
+    import re
+
+    from ase.io import read, write
+
+    reg, path = _tool("registry_cells"), _tool("mlip_path")
+    pattern = re.compile(rf"sheet_{re.escape(args.of)}_belt4_at(\d+m?)_sheared_in_all_s1")
+    sources = {}
+    for f in args.frames:
+        for a in read(f, index=":"):
+            m = pattern.fullmatch(str(a.info["frame"]))
+            if m:
+                sources[m.group(1)] = a
+    if not sources:
+        raise SystemExit(f"no sheet of {args.of} in {args.frames}")
+    order = sorted(sources, key=lambda site: (int(site.rstrip("m")), site.endswith("m")))
+    out = []
+    for item in args.row:
+        name, letters = item.split("=", 1)
+        for site in order:
+            source = sources[site]
+            cell, changed = made(source, letters)
+            if reg.gauche(cell, path) != reg.gauche(source, path):
+                raise SystemExit(f"{name} at {site}: the kink did not come through")
+            cell.info = {"n_monomers": int(source.info["n_monomers"]), "kmesh": str(source.info["kmesh"]).strip("[]"), "frame": f"scr_{name}_sheet_at{site}", "screen_row": name,
+                         "screen_letters": letters, "screen_kind": f"sheet_at{site}", "screen_site": site, "screen_from": str(source.info["frame"]), "screen_changed": changed,
+                         "family": "relaxed", "conformation": "kink sheet",
+                         "source": f"examples/screen14.py: {source.info['frame']} with its chains made {letters} where they stand ({changed} carbons a cell), a start, not relaxed"}
+            out.append(cell)
+        print(f"{name:28s} {letters}  {len(order)} sheets, sites {' '.join(order)}")
+    write(args.out, out, format="extxyz")
+    print(f"{len(out)} starts written to {args.out}")
+
+
+def kink_of(atoms, path):
+    """Each chain's gauche bonds as (place along the chain, torsion in degrees), and whether every chain holds one kink:
+    two gauche bonds of opposite sense about a trans one."""
+    quads = path.backbone_torsions(atoms)
+    torsions = path.torsions_deg(atoms, quads)
+    half = len(quads) // CHAINS
+    out, kept = [], True
+    for chain in range(CHAINS):
+        t = torsions[chain * half:(chain + 1) * half]
+        g = [int(k) for k in np.flatnonzero(np.abs(t) < 120.0)]
+        out.append([(k, float(t[k])) for k in g])
+        kept = kept and len(g) == 2 and (g[1] - g[0]) % half in (2, half - 2) and t[g[0]] * t[g[1]] < 0
+    return out, bool(kept)
+
+
+def sheets_table(args):
+    from ase.io import read, write
+
+    path = _tool("mlip_path")
+    rows, frames = {}, []
+    for start in read(args.starts, index=":"):
+        name, site = str(start.info["screen_row"]), str(start.info["screen_site"])
+        row = rows.setdefault(name, {"letters": str(start.info["screen_letters"]), "sites": {}})
+        if "all_trans" not in row and not row.get("no_all_trans"):       # the row's lowest all-trans cell at rest in the same folder
+            flat = {}
+            for kind in ("tt_low", "tt_up"):
+                found = sorted(Path(args.relaxed).glob(f"scr_{name}_{kind}_in_*.start.xyz"))
+                if found:
+                    a = read(found[0])
+                    if "NOT converged" not in str(a.info.get("note", "")) and not kink_of(a, path)[0][0]:
+                        flat[kind] = float(a.info["potential_eV_per_monomer"])
+            if not flat:
+                row["no_all_trans"] = True
+                print(f"{name}: no all-trans cell at rest in {args.relaxed}: its sheets are left out")
+            else:
+                row["all_trans"] = min(flat, key=flat.get)
+                row["all_trans_eV_per_monomer"] = flat[row["all_trans"]]
+        if row.get("no_all_trans"):
+            continue
+        found = sorted(Path(args.relaxed).glob(f"{start.info['frame']}_in_*.start.xyz"))
+        if not found:
+            row["sites"][site] = {"relaxed": False}
+            continue
+        a = read(found[0])
+        note = str(a.info.get("note", ""))
+        gauche, kept = kink_of(a, path)
+        per_chain = int(a.info["n_monomers"]) / CHAINS * KCAL
+        row["sites"][site] = {"relaxed": True, "frame": str(a.info["frame"]), "converged": "NOT converged" not in note,
+                              "energy": (float(a.info["potential_eV_per_monomer"]) - row["all_trans_eV_per_monomer"]) * per_chain, "kink_kept": kept,
+                              "gauche_bonds": gauche, "units": str(start.info["screen_letters"])[(int(site.rstrip("m")) // 2) % len(str(start.info["screen_letters"]))]
+                              + str(start.info["screen_letters"])[(int(site.rstrip("m")) // 2 + 1) % len(str(start.info["screen_letters"]))],
+                              "shear_along_chains_monomers": path._shear(a)}
+        frames.append(a)
+    for name, row in rows.items():
+        held = {k: v for k, v in row["sites"].items() if v.get("relaxed") and v["kink_kept"]}
+        if held:
+            row["cheapest"] = min(held, key=lambda k: held[k]["energy"])
+            row["below_all_trans"] = sum(v["energy"] < 0 for v in held.values())
+            c = held[row["cheapest"]]
+            print(f"{name:28s} {row['letters']}  cheapest sheet {c['energy']:+.2f} per chain at {row['cheapest']} ({c['units']}), {row['below_all_trans']} of {len(held)} kept sheets "
+                  f"below all-trans ({row['all_trans']}); {sum(bool(v.get('converged')) for v in row['sites'].values())} of {len(row['sites'])} at rest")
+            for site, v in sorted(held.items(), key=lambda kv: kv[1]["energy"])[:6]:
+                print(f"    at {site:4s} {v['units']}  {v['energy']:+6.2f}{'' if v['converged'] else '  NOT at rest'}")
+    out = {"what": "a row's kink sheets (a kink pair on every chain, in register, at one site of the sequence), each made of the film composition's potential-relaxed sheet "
+                   "at that site by changing substituents where they stand (examples/screen14.py sheets) and relaxed in the potential with the cell free: energy is "
+                   "kcal/mol per chain against the row's lowest all-trans cell in the potential; kink_kept: every chain still has two gauche bonds of opposite sense about "
+                   "a trans one; units: the two units the site lies on, by the film composition's numbering of sites. No DFT", "starts": str(args.starts), "rows": rows}
+    Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
+    if args.frames_out:
+        write(args.frames_out, frames, format="extxyz")
+    print(f"{len(frames)} sheets of {len(rows)} rows; written {args.out}")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="step", required=True)
@@ -232,8 +348,18 @@ def main():
     s.add_argument("--table", required=True)
     s.add_argument("--labels", nargs="+", required=True)
     s.add_argument("--out", required=True)
+    s = sub.add_parser("sheets")
+    s.add_argument("--frames", nargs="+", required=True, help="files that hold the relaxed sheets the rows' are made of")
+    s.add_argument("--of", default="vdf9-trfe4-cfe1-14", help="the row whose sheets those are (the film's composition)")
+    s.add_argument("--row", nargs="+", required=True, metavar="NAME=LETTERS")
+    s.add_argument("--out", required=True)
+    s = sub.add_parser("sheets-table")
+    s.add_argument("--starts", required=True)
+    s.add_argument("--relaxed", required=True, help="the folder of NAME_in_POTENTIAL.start.xyz, the rows' all-trans cells among them")
+    s.add_argument("--out", required=True)
+    s.add_argument("--frames-out", default="")
     args = p.parse_args()
-    {"starts": starts, "table": table, "choose": choose, "dft": dft}[args.step](args)
+    {"starts": starts, "table": table, "choose": choose, "dft": dft, "sheets": sheets, "sheets-table": sheets_table}[args.step](args)
 
 
 if __name__ == "__main__":

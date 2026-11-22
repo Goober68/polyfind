@@ -168,5 +168,43 @@ def test_the_margins_taken_again_from_labelled_cells_are_dfts(starts, sources, t
     assert (r["low_less_upright_per_chain"], r["low_less_upright_per_chain_potential"]) == pytest.approx((-0.84, -1.27), abs=0.006)
 
 
+def test_a_rows_kink_sheets_made_of_the_film_compositions_and_the_control_gives_its_known_sites(starts, sources, tmp_path):
+    """The film composition's 28 relaxed sheets made of themselves, with the energies they have in the potential: each site as the card's table has it,
+    1.27 per chain higher because it is measured from the low all-trans cell and not the upright one; the cheapest 3.99 deep on the chlorine."""
+    from ase.geometry import find_mic
+    from ase.io import read
+
+    scr, reg, path = _load("screen14"), _load("registry_cells"), _load("mlip_path")
+    run = [sys.executable, "-I", str(ROOT / "examples" / "screen14.py")]
+    subprocess.run(run + ["sheets", "--frames", str(MLIP / "cells14_tight_in_all_s1.extxyz"), "--row", f"{FILM}=VVRVVRVCVVRVVR", "vdf9-trfe3-cfe1-rvdf1-14=IVRVVRVCVVVVVR",
+                          "--out", str(tmp_path / "sheets.extxyz")], check=True, capture_output=True, cwd=ROOT)
+    made = read(tmp_path / "sheets.extxyz", index=":")
+    stored = {str(a.info["frame"]): a for a in read(MLIP / "cells14_tight_in_all_s1.extxyz", index=":")}
+    sites = [f"{k}{m}" for k in range(0, 28, 2) for m in ("", "m")]
+    assert [str(a.info["frame"]) for a in made] == [f"scr_{row}_sheet_at{site}" for row in (FILM, "vdf9-trfe3-cfe1-rvdf1-14") for site in sites]
+    for a in made:
+        source = stored[str(a.info["screen_from"])]
+        assert str(a.info["screen_from"]) == f"sheet_{FILM}_belt4_at{a.info['screen_site']}_sheared_in_all_s1" and reg.gauche(a, path) == reg.gauche(source, path)
+        assert all(reg.same_molecule(chain, scr.cycle_of(str(a.info["screen_letters"]))) for chain in reg.substituents(a))
+    for a in made[:28]:
+        assert np.abs(find_mic(a.positions - stored[str(a.info["screen_from"])].positions, a.cell, pbc=True)[0]).max() < 1e-8
+    # the control's table: the film composition's sheets and its two all-trans cells as the relaxer would leave them
+    energies = {str(a.info["frame"]): float(stored[str(a.info["screen_from"])].info["potential_eV_per_monomer"]) for a in made[:28]}
+    _relaxed(tmp_path / "relaxed", made[:28], energies)
+    flat = starts[0][:2]
+    _relaxed(tmp_path / "relaxed", flat, {str(c.info["frame"]): float(sources[str(c.info["screen_kind"])].info["potential_eV_per_monomer"]) for c in flat})
+    subprocess.run(run + ["sheets-table", "--starts", str(tmp_path / "sheets.extxyz"), "--relaxed", str(tmp_path / "relaxed"), "--out", str(tmp_path / "sheets.json")],
+                   check=True, capture_output=True, cwd=ROOT)
+    rows = json.loads((tmp_path / "sheets.json").read_text())["rows"]
+    assert rows["vdf9-trfe3-cfe1-rvdf1-14"].get("no_all_trans") and "cheapest" not in rows["vdf9-trfe3-cfe1-rvdf1-14"]     # nothing of that row is relaxed here
+    film = rows[FILM]
+    assert (film["all_trans"], film["cheapest"], film["below_all_trans"]) == ("tt_low", "14m", 3)
+    assert (film["sites"]["14m"]["energy"], film["sites"]["14m"]["units"], film["sites"]["12"]["units"]) == (pytest.approx(-3.99, abs=0.006), "CV", "VC")
+    card = json.loads((ROOT / "docs" / "predictions" / "sheets14_potential_card.json").read_text())["rows"]
+    for site, v in film["sites"].items():
+        was = card[FILM + ("" if site == "0" else "@" + site)]
+        assert v["energy"] - was["potential"] == pytest.approx(1.27, abs=0.006) and v["kink_kept"] == was["kink_kept"]
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
