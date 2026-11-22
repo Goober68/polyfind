@@ -680,14 +680,19 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
-        A FIFTH POD IS RUNNING: THE SCREEN FOR CANDIDATES (PI 2026-11-22: "Screen for candidates", and
-        "Runpod, 8 hours" when asked which machine; the MI100 was not attached). `0naokkrqptuyi5`, name
-        `polyfind-screen`, Runpod Secure Cloud, one NVIDIA A40, $0.59/h, CREATED 16:03:00 UTC 2026-11-22
-        after a read of stock (Low, available) and price, confirmed by a read (`list-pods`). IT REMOVES
-        ITSELF AT 8 HOURS (`BENCH_LIMIT_S=28800`: 00:03 UTC 2026-11-23, at most $4.72): DELETE IT BY 23:57
+        A POD IS RUNNING: THE SCREEN FOR CANDIDATES (PI 2026-11-22: "Screen for candidates", and
+        "Runpod, 8 hours" when asked which machine; the MI100 was not attached). `d590ilrkoi1fqt`, name
+        `polyfind-screen`, Runpod Secure Cloud EU-SE-1, one NVIDIA A40, $0.59/h, CREATED 16:26:36 UTC
+        2026-11-22 after a read of stock (Low, available) and price, confirmed by a read (`list-pods`).
+        IT REMOVES ITSELF AT 7.6 HOURS (`BENCH_LIMIT_S=27400`: 00:03 UTC 2026-11-23): DELETE IT BY 23:57
         UTC AFTER A LAST MIRROR, SOONER IF ITS WORK IS DONE. WHOEVER READS THIS AFTER 00:10 UTC 2026-11-23:
         CONFIRM IT IS GONE (`python scratchpad/runpod/mcp.py call list-pods '{}'`) AND DELETE IT IF NOT
-        (`delete-pod {"id": "0naokkrqptuyi5"}`, then read again). Spend before it: about $34.8 of $46.
+        (`delete-pod {"id": "d590ilrkoi1fqt"}`, then read again). Spend before it: about $34.8 of $46,
+        and $0.22 for the first pod of this go, `0naokkrqptuyi5` (CA-MTL-1, 16:03:00 to 16:25:48 UTC), WHICH
+        NEVER STARTED: its host's GPU was faulty ("GPU requires reset" in `stream-pod-logs`, the container
+        never created), so its own time limit never ran; deleted and confirmed gone by reads. A POD WHOSE
+        STATUS FILE DOES NOT APPEAR WITHIN THREE MINUTES: READ `stream-pod-logs` (source system) AT ONCE.
+        The two pods together stay within the eight hours approved (at most $4.72).
         WHAT IT DOES (queue `examples/gpu_jobs/queue_20261122_screen.txt`; docs 3.25 to be written):
         `examples/screen14.py` makes each of 17 fourteen-monomer rows (`examples/screen14_starts.sh`,
         `docs/predictions/mlip/screen14_starts_{a,b}.extxyz`, 102 cells) out of the film composition's
