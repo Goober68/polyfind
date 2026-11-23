@@ -332,6 +332,18 @@ lower phase, and a kink pair is one turn of that helix.
   (the low all-trans pattern, the helix in the film composition's packing, by 1.2 to 1.7
   kcal/mol per chain) are the ones with the most force left; the four-TrFE parent's -0.107
   stands on one of them and the potential's own lowest pair gives it -0.033.
+- **Chains that are not PVDF's, a first read (2026-11-23, section 6.1; DFT on this machine, no
+  rented one).** The PI asked whether a realistic stab at other chains can be taken. It can, to
+  the depth of small cells in DFT: `examples/chain_triage.py` makes any chain from its repeat
+  unit and gives its aligned crystal's polarisation and what a strain along it gives back. PVDF's
+  all-trans crystal is the check and passes (the known cell from a random start, 0.194 C/m2,
+  `e` -0.328 C/m2). Two hydrogen-bonded chains taken as the far end of dipole to volume:
+  nylon-3, 0.269 C/m2 across the chains and `e` -0.778; a one-carbon urea chain, 0.367 and
+  -0.990. That is 2.4 and 3.0 times PVDF's force to the area per volt on an axis 3.6 and 3.7
+  times as stiff, so 0.65 and 0.81 of its strain per volt; against the film as modelled, 3.6 to
+  11 times its force per volt and 28 to 44 times less stroke per volt. **A partial result: no
+  loss and no rate are beside it**, the cells are polar by construction, the crystals are
+  perfect and cold, and neither chain is an easy film.
 - **The nitrile unit does not hold a kink**: the nitrile cell's sheet at the nitrile unit
   itself is 3.64 above all-trans in DFT (the potential 2.18). The chlorine holds one 4.2 to
   5.0 deep.
@@ -1620,6 +1632,84 @@ tilts are not treated), so its sign is not known; its chemistry is the least tes
 cyclopropyl need sulfur, nitro, epoxide and sp2 backbone parameters polyfind does not have; for
 those Dipole's single-chain and GFN1 numbers are the only ones, and the barrier column above is
 the one that matters for this programme's objective.
+
+### 6.1 Chains that are not PVDF's, by DFT: the aligned crystals of an amide and a urea chain (2026-11-23)
+
+*The PI, 2026-11-23: "Nothing more to be done on pvdf until we have better numbers, but can we take
+a realistic stab at other chains?" On this machine, at no cost; no rented machine.*
+
+**What carries over to another chain, and what was built.** polyfind's presets and the trained
+potential are of the PVDF family and say nothing of an amide. DFT does, and a chain alone in a box
+or one chain to a cell of a crystal is small enough for four processors. `examples/chain_triage.py`
+makes a periodic chain from its repeat unit (a SMILES string and the backbone's torsions, RDKit),
+settles it and searches cells of one chain in a pretrained potential (Egret-1; for starts only),
+and then asks DFT (the anchor's settings: PBE, D3(BJ) two-body, 90/360 Ry) for the rise a repeat,
+the dipole across the chain (the charge density's own moment), the force that stretches it, and,
+for a crystal cell, the polarisation by the Berry phase and the cell's answer to a strain of 1%
+along that polarisation with the cell held across it. That last gives three numbers: `c`, the
+stiffness on that axis; `e`, the polarisation lost per strain, which is also the stress the
+held crystal makes per field (1 C/m2 is 1 pN/nm2 per V/um); and `d = e / c`, the strain per field.
+
+**The check, on PVDF, where the answers are known.**
+
+- The lone all-trans chain: rise 2.590 A a monomer, 1.842 D a monomer across the chain, and 59.8 nN
+  per unit strain by the energy and by the stress alike (284 GPa over the crystal's 21.1 A2 a
+  chain). The lone TGTG' chain: 2.325 A a monomer and 0.866 D, so the switch to all-trans is
+  +11.4% along the chain, the +11% of `docs/ELECTROSTRICTION_RESEARCH.md` 3.
+- The crystal: from a random lattice the search and DFT arrive at the known all-trans cell,
+  8.52 x 4.76 x 2.58 A (measured 8.58 x 4.91 x 2.56), with a polarisation of 0.194 C/m2 (published
+  calculations 0.18 to 0.19) and `e` of -0.328 C/m2 (published -0.27 to -0.34). This is the
+  polar column of `docs/ELECTROMECHANICS.md` 5.13 by a direct strain: the provider's was
+  estimated there at -0.340 and polyfind's is -0.239.
+- **The program's Berry phase is wrong with the project's carbon file.** On the lone chain, where
+  the density's moment over the box is (0.0066, 0.0102) C/m2, pw.x 7.5 is a third of a quantum off
+  with the PAW carbon and with an ultrasoft one, and gives (0.0066, 0.0102) with a norm-conserving
+  one. Polarisations here are run with norm-conserving files on the geometry the usual files
+  relaxed: the suite's carbon and an oxygen made for this by `examples/chain_triage_oxygen.in`
+  (water's dipole 1.826 D with it, 1.831 D with the PAW oxygen). Each crystal's value is the
+  smallest of its branches, the next one more than twice as large.
+
+**The table.** One chain to a cell, every dipole the same way; the axis is the polarisation across
+the chains, the direction a field through a film of lying chains has.
+
+| crystal | A3 a repeat | polarisation across the chains, C/m2 | `e`, pN/nm2 per V/um | `c`, GPa | `d`, pm/V |
+|---|---|---|---|---|---|
+| PVDF, all-trans (the check) | 52.4 | 0.194 | -0.328 | 20.8 | -15.8 |
+| nylon-3, -NH-CH2-CH2-CO- | 79.8 | 0.269 (and 0.085 along the chain) | -0.778 | 75.2 | -10.3 |
+| polyurea-1, -NH-CO-NH-CH2- | 71.4 | 0.367 | -0.990 | 77.6 | -12.8 |
+
+**What it says.** The two hydrogen-bonded chains hold 1.4 and 1.9 times PVDF's dipole to the
+volume, and they lose more of it when their hydrogen bonds are stretched (`e` is 2.9 and 2.7 times
+the polarisation; PVDF's is 1.7 times), so the force to the area per volt is 2.4 and 3.0 times
+PVDF's. The same hydrogen bonds make the axis 3.6 and 3.7 times as stiff, so the strain per volt is
+0.65 and 0.81 of PVDF's. Against the film as the loss model has it (0.081% on 1.8 V/um at a bias of 55,
+so 450 pm/V, and 0.09 pN/nm2 per V/um at the modulus of 0.2 GPa that is assumed for every candidate
+and not measured): these crystals are 3.6 to 11 times the film in force per volt and 28 to 44 times
+below it in stroke per volt, which at 34 kHz is 0.35 to 0.54 mm/s per mm for each V/um of drive
+against the film's 15. They are another way of working, not a better film: the film is a switch,
+and these are the linear answer of a poled lattice, in which nothing hops and nothing relaxes at
+the drive frequency.
+
+**What it is not.**
+
+- **A partial result, by the standing rule.** It reads on force and stroke per volt. No loss and
+  no rate are beside it, and how hard such a lattice may be driven is the loss.
+- The cells are polar by construction. Whether a chain packs so, can be poled, and stays poled is
+  a margin this did not ask. (The literature has odd nylons and odd polyureas poled, nylon-5 at
+  0.125 to 0.13 C/m2 remanent with a coercive field near 100 V/um, rising with the dipoles'
+  density.)
+- Perfect crystals at no temperature. Poled films of the PVDF family reach a third to a half of
+  the crystal's `e`; the same or worse is to be expected of these.
+- The two chains are the far end of dipole to volume, chosen to find the ceiling. Neither is an
+  easy film: nylon-3 does not melt or dissolve readily and the one-carbon urea chain is known as
+  an oligomer. The makeable ones (nylon-5, -7, -11; polyureas of three carbons and more) will
+  fall between these rows and PVDF's.
+- One packing a chain, found in a pretrained potential and relaxed in DFT; not shown to be the
+  lowest polar one. `d` is with the cell held across the axis; a free film's is larger.
+
+Files: `examples/chain_triage.py`, `examples/chain_triage_oxygen.in`, `tests/test_chain_triage.py`;
+`docs/predictions/chain_triage.json` (every record, with the Berry parts and the two strained
+cells of each crystal) and `docs/predictions/chain_triage_cells.extxyz` (the relaxed cells).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
