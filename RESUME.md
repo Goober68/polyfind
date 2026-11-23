@@ -720,7 +720,10 @@ right": true at one registry, not along it).
         DFT is asked about); `examples/screen14_mixed_starts.sh`; `gpu_jobs/screen_pick_dft.sh` and
         `screen_hop_card.sh` choose from the pod's own tables, so a queue can be written whole before
         the pod is made (this one was: `queue_20261123_mixed.txt`). Tests: `tests/test_screen14.py`
-        (23).
+        (23). Full suite after it, 2026-11-23 05:51 UTC: 1138 passed, 15 skipped.
+        PAUSED BY THE PI (2026-11-23, after the report of 3.26: "Pause your efforts after whatever u
+        have in flight"). Nothing is running, here or rented. Do not start the next step (DFT at the
+        hop's top, DFT relaxation steps, belt4 inputs) or rent a machine until the PI says so.
         THE FIFTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (PI 2026-11-22: "Screen for
         candidates", and "Runpod, 8 hours" when asked which machine). `d590ilrkoi1fqt`, Runpod Secure
         Cloud EU-SE-1, one A40, $0.59/h, 16:26:36 to 23:52:14 UTC 2026-11-22 (`delete-pod` 204),
