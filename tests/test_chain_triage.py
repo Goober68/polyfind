@@ -132,3 +132,32 @@ def test_turning_by_nothing_and_by_half_a_turn_are_the_two_ends():
     assert np.allclose(np.linalg.norm(d0, axis=1), np.linalg.norm(d1, axis=1))  # a rigid turn
     assert np.allclose(d0[:, 2], d1[:, 2])  # about the chain's own axis
     assert np.allclose((d0[:, :2] * d1[:, :2]).sum(axis=1), 0.0)  # by a quarter
+
+
+def test_rebased_puts_the_hydrogen_bond_along_the_first_edge_and_keeps_the_crystal():
+    """A chain of one N-H and one O whose bond runs along the cell's diagonal: afterwards it runs
+    along the first edge, with the same volume and the same atoms in the same places."""
+    from ase import Atoms
+
+    cell = np.array([[4.0, 0.0, 0.0], [0.0, 4.0, 0.0], [0.0, 0.0, 3.0]])
+    a = Atoms("NHO", positions=[[1.0, 1.0, 0.0], [1.7, 0.3, 0.0], [-1.03, 3.03, 0.0]], cell=cell, pbc=True)
+    a.info.update(triage_chain="x", triage_state="tt", triage_repeats=1, triage_kind="crystal", kmesh="5 5 7")
+    # the H at (1.7, 0.3) is 1.8 A from the O of the image one cell along x and one back along y, at (2.97, -0.97)
+    assert CT.bond_step(a) == (1, -1)
+    b = CT.rebased(a)
+    assert CT.bond_step(b) == (1, 0)
+    assert np.isclose(abs(np.linalg.det(b.cell.array)), abs(np.linalg.det(cell)))
+    assert np.allclose(b.positions, a.positions) and np.allclose(b.cell.array[0], cell[0] - cell[1])
+    plain = Atoms("CH", positions=[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], cell=cell, pbc=True)
+    assert CT.bond_step(plain) is None and CT.rebased(plain) is plain
+
+
+def test_spun_turns_one_chain_of_a_row_and_leaves_the_rest():
+    from ase import Atoms
+
+    row = Atoms("CHCH", positions=[[0.0, 0.0, 0.0], [1.0, 0.2, 0.3], [4.0, 0.0, 0.0], [5.0, 0.2, 0.3]], cell=[8.0, 5.0, 2.5], pbc=True)
+    before = row.positions.copy()
+    CT.spun(row, 2, 1, np.pi, np.array([0.0, 0.0, 1.0]))
+    assert np.allclose(row.positions[:2], before[:2])
+    assert np.allclose(row.positions[2:].mean(axis=0), before[2:].mean(axis=0))
+    assert np.allclose(row.positions[3] - row.positions[2], [-1.0, -0.2, 0.3])

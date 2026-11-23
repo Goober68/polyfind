@@ -262,12 +262,62 @@ def pack(args):
             print(f"{name}_x{rank}: {e - kept[0][0]:+.4f} eV above the lowest, {a.get_volume() / a.info['triage_repeats']:.1f} A3 a repeat, k {a.info['kmesh']}", flush=True)
 
 
+def bond_step(atoms):
+    """The lattice step across the chains of the shortest hydrogen bond between chains, or None.
+
+    ``(s1, s2)``: the acceptor (O or N) is in the image ``s1`` cells along the first edge and ``s2``
+    along the second from the hydrogen that points at it."""
+    from ase.neighborlist import neighbor_list
+
+    symbols = atoms.get_chemical_symbols()
+    i, j, d, shift = neighbor_list("ijdS", atoms, 2.5)
+    found = [(dd, int(ss[0]), int(ss[1])) for ii, jj, dd, ss in zip(i, j, d, shift)
+             if symbols[ii] == "H" and symbols[jj] in ("O", "N") and (ss[0] or ss[1])]
+    if not found:
+        return None
+    _, s1, s2 = min(found)
+    return (s1, s2) if (s1, s2) > (0, 0) or (s1 == 0 and s2 > 0) else (-s1, -s2)
+
+
+def rebased(atoms):
+    """The same crystal with its first edge along the hydrogen bonds between chains.
+
+    Chains bonded in a row then follow each other along the first edge and rows are stacked along
+    the second, whatever pair of edges the packing search happened to end on.  A cell without
+    hydrogen bonds between its chains is returned as it is."""
+    step = bond_step(atoms)
+    if step is None or step == (1, 0):
+        return atoms
+    s1, s2 = step
+    x, y, g = 1, 0, s1  # the extended Euclid: s1 x + s2 y = gcd
+    x1, y1, r = 0, 1, s2
+    while r:
+        q = g // r
+        x, x1, y, y1, g, r = x1, x - q * x1, y1, y - q * y1, r, g - q * r
+    if abs(g) != 1:
+        raise ValueError(f"the hydrogen bond's step {step} is not one row")
+    x, y = x * g, y * g
+    cell = atoms.cell.array
+    first, second = s1 * cell[0] + s2 * cell[1], -y * cell[0] + x * cell[1]
+    second = second - np.round(second @ first / (first @ first)) * first  # the least skewed second edge
+    b = atoms.copy()
+    b.info.update(atoms.info)
+    # the atoms stay where they are, one whole chain: wrapped one by one into the new cell they would
+    # be pieces of different images, and a step between chains could no longer be read off them
+    b.set_cell([first, second, cell[2]], scale_atoms=False)
+    b.info["kmesh"] = kmesh(b)
+    return b
+
+
 def turned(atoms, edge: int):
     """The cell doubled along one edge across the chain, its second chain turned half round its own axis.
 
     The chain keeps its sense and its period; what it carries across itself is reversed, so the two
-    chains' polarisation across the chains cancels.  A sheet of hydrogen-bonded chains doubled along
-    the bonds loses them; doubled along the other edge it is a stack of sheets facing opposite ways."""
+    chains' polarisation across the chains cancels.  The cell is first put with its first edge along
+    the hydrogen bonds (``rebased``): doubled along that edge (0) every second chain of a bonded row
+    is turned and the row loses its bonds; doubled along the other (1) whole rows face opposite ways
+    and keep them."""
+    atoms = rebased(atoms)
     n = len(atoms)
     b = atoms.repeat([2 if edge == k else 1 for k in range(3)])
     along = atoms.cell.array[2] / np.linalg.norm(atoms.cell.array[2])
@@ -311,6 +361,7 @@ def opposed(args):
 
 def turned_by(atoms, edge: int, angle: float):
     """``turned`` with the second chain turned by ``angle`` (radians) instead of half round."""
+    atoms = rebased(atoms)
     n = len(atoms)
     b = turned(atoms, edge)
     start = atoms.repeat([2 if edge == k else 1 for k in range(3)]).positions[n:]
@@ -318,6 +369,67 @@ def turned_by(atoms, edge: int, angle: float):
     d = start - start.mean(axis=0)
     b.positions[n:] = start.mean(axis=0) + d * np.cos(angle) + np.cross(along, d) * np.sin(angle) + np.outer(d @ along, along) * (1 - np.cos(angle))
     return b
+
+
+def spun(row, per_chain: int, chain: int, angle: float, along):
+    """A row cell with one of its chains turned by ``angle`` about its own axis, in place."""
+    part = slice(chain * per_chain, (chain + 1) * per_chain)
+    d = row.positions[part] - row.positions[part].mean(axis=0)
+    row.positions[part] = row.positions[part].mean(axis=0) + d * np.cos(angle) + np.cross(along, d) * np.sin(angle) + np.outer(d @ along, along) * (1 - np.cos(angle))
+    return row
+
+
+def band(images, calc, fmax: float, steps: int):
+    """Relax the two ends and settle the images between them as a band, the cell held: in a pretrained potential."""
+    from ase.mep import NEB
+    from ase.optimize import FIRE, LBFGS
+
+    for im in images:
+        im.calc = calc
+    for end in (images[0], images[-1]):
+        LBFGS(end, logfile=None).run(fmax=0.03, steps=300)
+    neb = NEB(images, climb=True, method="improvedtangent", allow_shared_calculator=True)
+    opt = FIRE(neb, logfile=None)
+    opt.run(fmax=fmax, steps=steps)
+    return [float(im.get_potential_energy()) for im in images], int(opt.nsteps)
+
+
+def wall(args):
+    """The smallest move of a row of bonded chains: a wall between its two senses stepping one chain on.
+
+    Four chains of a row to a cell (the first edge, along the hydrogen bonds, taken four times),
+    two facing one way and two turned: two walls.  The third chain is turned back, which moves one
+    wall by a chain and leaves as many bonds made as before.  The top of that path is what one chain
+    pays to change sides with a wall beside it; the two ends differ only by how near the walls are."""
+    from ase.io import read, write
+
+    calc = model(args.model)
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        a = rebased(read(src / f"{name}.relaxed.xyz"))
+        n = len(a)
+        along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+        mesh = mesh_of(a)
+        mesh[0] = max(1, round(mesh[0] / 4))
+        images = []
+        for t in np.linspace(np.pi, 0.0, args.images):
+            row = a.repeat([4, 1, 1])
+            spun(row, n, 3, np.pi, along)
+            spun(row, n, 2, t, along)
+            row.info.update(a.info)
+            row.info.update(triage_repeats=4 * int(a.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh))
+            images.append(row)
+        energies, nsteps = band(images, calc, args.fmax, args.steps)
+        reps = int(a.info["triage_repeats"])
+        out = []
+        for k, im in enumerate(images):
+            c = im.copy()
+            c.info.update(images[0].info)
+            c.info.update(triage_turn_of=name, triage_turn_edge=1, triage_turn_image=k, triage_turn_ev=energies[k] - energies[0], triage_turning_repeats=reps)
+            out.append(c)
+        write(src / f"{name}_wall.path.xyz", out, format="extxyz")
+        print(f"{name}_wall: {len(images)} images of {len(images[0])} atoms, {nsteps} steps, top {(max(energies) - energies[0]) * KCAL / reps:.2f} kcal/mol a repeat of the chain that turns "
+              f"in the potential, end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
 
 
 def turn(args):
@@ -329,8 +441,6 @@ def turn(args):
     path, for each repeat of the chain that turns, is what it costs to turn a whole row of chains at
     once: an upper mark for the smallest move, which in a real crystal is a twist that travels."""
     from ase.io import read, write
-    from ase.mep import NEB
-    from ase.optimize import FIRE, LBFGS
 
     calc = model(args.model)
     src = Path(args.frames)
@@ -339,24 +449,17 @@ def turn(args):
         edge = int(edge) - 1
         a = read(src / f"{name}.relaxed.xyz")
         images = [turned_by(a, edge, t) for t in np.linspace(0.0, np.pi, args.images)]
-        for im in images:
-            im.calc = calc
-        for end in (images[0], images[-1]):
-            LBFGS(end, logfile=None).run(fmax=0.03, steps=300)
-        band = NEB(images, climb=True, method="improvedtangent", allow_shared_calculator=True)
-        opt = FIRE(band, logfile=None)
-        opt.run(fmax=args.fmax, steps=args.steps)
-        energies = [float(im.get_potential_energy()) for im in images]
+        energies, nsteps = band(images, calc, args.fmax, args.steps)
         reps = int(a.info["triage_repeats"])
         out = []
         for k, im in enumerate(images):
             c = im.copy()
             c.info.update(images[0].info)
-            c.info.update(triage_turn_of=name, triage_turn_edge=edge + 1, triage_turn_image=k, triage_turn_ev=energies[k] - energies[0])
+            c.info.update(triage_turn_of=name, triage_turn_edge=edge + 1, triage_turn_image=k, triage_turn_ev=energies[k] - energies[0], triage_turning_repeats=reps)
             out.append(c)
         write(src / f"{name}_turn{edge + 1}.path.xyz", out, format="extxyz")
         top = max(energies) - energies[0]
-        print(f"{name}_turn{edge + 1}: {len(images)} images, {opt.nsteps} steps, top {top * KCAL / reps:.2f} kcal/mol a repeat of the turning chain in the potential, "
+        print(f"{name}_turn{edge + 1}: {len(images)} images, {nsteps} steps, top {top * KCAL / reps:.2f} kcal/mol a repeat of the turning chain in the potential, "
               f"end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
 
 
@@ -368,7 +471,7 @@ def points(args):
     for name in args.names.split(","):
         images = read(src / f"{name}.path.xyz", index=":")
         work = src / "work" / name
-        reps = int(images[0].info["triage_repeats"]) // 2  # of the chain that turns
+        reps = int(images[0].info.get("triage_turning_repeats", int(images[0].info["triage_repeats"]) // 2))  # of the chain that turns
         energies = []
         t0 = time.time()
         for k, im in enumerate(images):
@@ -794,6 +897,14 @@ def main():
     u.add_argument("--fmax", type=float, default=0.08)
     u.add_argument("--steps", type=int, default=300)
     u.set_defaults(run=turn)
+    v = sub.add_parser("wall")
+    v.add_argument("--frames", type=Path, required=True)
+    v.add_argument("--names", required=True)
+    v.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    v.add_argument("--images", type=int, default=7)
+    v.add_argument("--fmax", type=float, default=0.08)
+    v.add_argument("--steps", type=int, default=300)
+    v.set_defaults(run=wall)
     w = sub.add_parser("points")
     w.add_argument("--frames", type=Path, required=True)
     w.add_argument("--names", required=True)
