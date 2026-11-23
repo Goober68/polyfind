@@ -735,7 +735,7 @@ right": true at one registry, not along it).
         changes a DFT line cannot run while a long job holds the queue; put it before the long job,
         and try a new job script against a copy of the pod's files before it is queued
         (`screen_front.sh` failed silently on its first run and cost the processors a turn).
-        Tests: `tests/test_screen14.py` (17).
+        Tests: `tests/test_screen14.py` (17). Full suite after it, 2026-11-23 00:10 UTC: 1132 passed, 15 skipped.
         THE FOURTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (11:08:57 UTC 2026-11-22; PI
         2026-11-22: "MI100 isn't online go on runpod", on the registry check). `bcuwk6j3g3crqp`
         (`polyfind-registry`, Runpod Secure Cloud EU-SE-1, one A40, $0.59/h), 06:51:18 to 11:08:57 UTC:
