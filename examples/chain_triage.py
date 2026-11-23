@@ -379,18 +379,25 @@ def spun(row, per_chain: int, chain: int, angle: float, along):
     return row
 
 
-def band(images, calc, fmax: float, steps: int):
-    """Relax the two ends and settle the images between them as a band, the cell held: in a pretrained potential."""
+def band(images, calc, fmax: float, steps: int, end_steps: int = 150):
+    """Relax the two ends and settle the images between them as a band, the cell held: in a pretrained potential.
+
+    A loose band on purpose (it is the start of a DFT reading of each image, not the reading), and
+    it says where it has got to: on one processor a band of 36 atoms takes tens of minutes."""
     from ase.mep import NEB
     from ase.optimize import FIRE, LBFGS
 
+    t0 = time.time()
     for im in images:
         im.calc = calc
     for end in (images[0], images[-1]):
-        LBFGS(end, logfile=None).run(fmax=0.03, steps=300)
+        LBFGS(end, logfile=None).run(fmax=0.05, steps=end_steps)
+    print(f"  ends relaxed, {time.time() - t0:.0f} s", flush=True)
     neb = NEB(images, climb=True, method="improvedtangent", allow_shared_calculator=True)
     opt = FIRE(neb, logfile=None)
-    opt.run(fmax=fmax, steps=steps)
+    for _ in opt.irun(fmax=fmax, steps=steps):
+        if opt.nsteps and opt.nsteps % 20 == 0:
+            print(f"  band step {opt.nsteps}, {time.time() - t0:.0f} s", flush=True)
     return [float(im.get_potential_energy()) for im in images], int(opt.nsteps)
 
 
@@ -975,27 +982,27 @@ def main():
     u.add_argument("--frames", type=Path, required=True)
     u.add_argument("--names", required=True, help="NAME:EDGE, the polar cell and the edge (1 or 2) it is doubled along")
     u.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
-    u.add_argument("--images", type=int, default=7)
-    u.add_argument("--fmax", type=float, default=0.08)
-    u.add_argument("--steps", type=int, default=300)
+    u.add_argument("--images", type=int, default=5)
+    u.add_argument("--fmax", type=float, default=0.15)
+    u.add_argument("--steps", type=int, default=80)
     u.set_defaults(run=turn)
     v = sub.add_parser("wall")
     v.add_argument("--frames", type=Path, required=True)
     v.add_argument("--names", required=True)
     v.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
-    v.add_argument("--images", type=int, default=7)
-    v.add_argument("--fmax", type=float, default=0.08)
-    v.add_argument("--steps", type=int, default=300)
+    v.add_argument("--images", type=int, default=5)
+    v.add_argument("--fmax", type=float, default=0.15)
+    v.add_argument("--steps", type=int, default=80)
     v.set_defaults(run=wall)
     x = sub.add_parser("nucleus")
     x.add_argument("--frames", type=Path, required=True)
     x.add_argument("--names", required=True)
     x.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
     x.add_argument("--methyl", action="store_true", help="make the N-H that holds the turning chain an N-CH3 first")
-    x.add_argument("--images", type=int, default=7)
-    x.add_argument("--fmax", type=float, default=0.08)
-    x.add_argument("--steps", type=int, default=300)
-    x.add_argument("--settle", type=int, default=300)
+    x.add_argument("--images", type=int, default=5)
+    x.add_argument("--fmax", type=float, default=0.15)
+    x.add_argument("--steps", type=int, default=80)
+    x.add_argument("--settle", type=int, default=150)
     x.set_defaults(run=nucleus)
     w = sub.add_parser("points")
     w.add_argument("--frames", type=Path, required=True)
