@@ -590,7 +590,14 @@ def dft(args):
         t0 = time.time()
         out = work / "relax.out"
         if not finished(out):
-            run(args.pw, args.np, pw_input(a, args.pseudo, work / "scratch", "vc-relax", free), work, "relax")
+            begin = a
+            if out.exists() and out.read_text(errors="replace").count("\n!") > 1:
+                # a run that was stopped: go on from where it had got to, not from the start
+                begin = read(out, format="espresso-out", index=-1)
+                begin.info.update(a.info)
+                begin.calc = None
+                out.rename(work / f"relax.stopped{len(list(work.glob('relax.stopped*')))}.out")
+            run(args.pw, args.np, pw_input(begin, args.pseudo, work / "scratch", "vc-relax", free), work, "relax")
         if not finished(out):
             print(f"{name}: the relaxation did not finish ({out})", flush=True)
             continue
