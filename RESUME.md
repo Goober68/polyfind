@@ -795,6 +795,28 @@ right": true at one registry, not along it).
         the amide and urea chains: the balance of the polar cell against the opposed one (cells
         `*_o1`, `*_o2` built, DFT not yet run), the smallest move that turns a chain in its sheet
         and its barrier, and what a defect (N-methyl, a spacer of another length) does to both.
+        THE TARGET, AND WHAT IS RUNNING FOR IT (PI 2026-11-23, in `CLAUDE.md` verbatim: an over
+        centre cam once a defect is in; "strong action low qctivation, easy -ish return"). Three
+        numbers a chain: the spring (6.1's perfect crystal: done for PVDF, nylon-3, urea chain), the
+        activation (how level its two states, how high the hump) and the return. BUILT FOR THE LAST
+        TWO in `chain_triage.py`: `rebased` (first edge along the hydrogen bonds; nylon-3's run along
+        its found cell's diagonal, so ITS FIRST OPPOSED CELLS AND TURNING PATHS WERE MISLABELLED AND
+        ARE DISCARDED), `opposed` (rows facing opposite ways, edge 2; or every second chain of a row
+        turned, edge 1), `turn` (the path that turns every second row: the spring's own hump),
+        `wall` (four chains of a row, two turned; one wall steps a chain on: the smallest move, the
+        counterpart of PVDF's kink hop), `points` (DFT on every image of a path). Paths are found
+        in the pretrained potential, the cell held, and DFT scores them: an upper mark, not a DFT
+        path. FOUND SO FAR: binding of a chain into its crystal, lone chain to cell, 7.4 kcal/mol a
+        repeat PVDF, 18.4 nylon-3, 24.1 the urea chain; the made oxygen file checked on both lone
+        chains (Berry equals the density's moment). Nylon-3's rows are staggered 1.27 A a chain
+        along the chains, so a row turned round in a held cell cannot remake its bonds straight (it
+        needs the stagger reversed, a shear); the urea chain's rows are not staggered. RUNNING
+        13:20 UTC: paths `urea1_tt_x1_wall`, `urea1_tt_x1_turn2`, `nylon3_tt_x1_wall`, `_turn2` in
+        the potential; DFT on nylon-5 and urea-3 one-chain cells (stage C; relaunch it if the
+        two-hour limit stops it). NEXT: `points` on each path; DFT on the opposed cells
+        (`pvdf_tt_x1_o1`, `urea1_tt_x1_o2`, nylon-3's rebuilt `_o2`); then a cell WITH a defect
+        (an N-methyl in a nylon-3 or urea row) and the same wall path beside it. NOT DONE: PVDF's
+        own turning path in DFT (`pvdf_tt_x1_turn1.path.xyz` exists, potential only).
         TRAPS FOUND. (1) `/usr/bin/pw.x` (6.7, the system package) aborts in a relaxation; use
         `/opt/mm/qe/bin/pw.x` (7.5) as every earlier run here did. (2) THE BERRY PHASE OF pw.x 7.5
         IS WRONG WITH PAW AND ULTRASOFT FILES: on the lone PVDF chain, where the density's moment
