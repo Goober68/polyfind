@@ -497,6 +497,9 @@ def berry(args):
         parts = berry_parts(args, a, src / "work" / name, "berry")
         p = total(parts)
         got["berry"] = {"parts": parts, "polarisation_c_per_m2": p.tolist(), "magnitude_c_per_m2": float(np.linalg.norm(p))}
+        if a.info.get("triage_kind") != "chain":
+            along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+            got["berry"].update(along_chain_c_per_m2=float(p @ along), across_chain_c_per_m2=float(np.linalg.norm(p - (p @ along) * along)))
         store.write_text(json.dumps(got, indent=1))
         note = ""
         if across(got) is not None:
@@ -520,8 +523,12 @@ def piezo(args):
         got = json.loads(store.read_text())
         a = read(src / f"{name}.relaxed.xyz")
         work = src / "work" / name
+        # the axis is the polarisation across the chains, the direction a field through a film of lying
+        # chains has; along the chain a directed chain (an amide's N to C) has a part of its own
         p0 = np.array(got["berry"]["polarisation_c_per_m2"])
-        axis = p0 / np.linalg.norm(p0)
+        along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+        p_across = p0 - (p0 @ along) * along
+        axis = p_across / np.linalg.norm(p_across)
         t0 = time.time()
         rows = []
         for strain in (-args.strain, args.strain):
@@ -545,9 +552,10 @@ def piezo(args):
         c_along = (rows[1]["stress_along_ev_a3"] - rows[0]["stress_along_ev_a3"]) / (2 * args.strain) * 160.21766
         e_along = (rows[1]["polarisation_along_c_per_m2"] - rows[0]["polarisation_along_c_per_m2"]) / (2 * args.strain)
         got["piezo"] = {"axis": axis.tolist(), "strain": args.strain, "rows": rows, "c_along_gpa": c_along, "e_along_c_per_m2": e_along,
-                        "d_clamped_pm_per_v": e_along / c_along * 1000.0, "polarisation_c_per_m2": float(np.linalg.norm(p0))}
+                        "d_clamped_pm_per_v": e_along / c_along * 1000.0, "polarisation_across_c_per_m2": float(np.linalg.norm(p_across)),
+                        "polarisation_along_chain_c_per_m2": float(p0 @ along)}
         store.write_text(json.dumps(got, indent=1))
-        print(f"{name}: P {np.linalg.norm(p0):.4f} C/m2, e {e_along:+.4f} C/m2, c {c_along:.1f} GPa, d (clamped across) {e_along / c_along * 1000:+.1f} pm/V, "
+        print(f"{name}: P across the chains {np.linalg.norm(p_across):.4f} C/m2, e {e_along:+.4f} C/m2, c {c_along:.1f} GPa, d (cell held across the axis) {e_along / c_along * 1000:+.1f} pm/V, "
               f"{time.time() - t0:.0f} s", flush=True)
 
 
