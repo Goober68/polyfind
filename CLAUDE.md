@@ -92,11 +92,17 @@ The PI's words, on a ranking that put every candidate at 34 kHz: "Why the fuck d
 Asked what frequency the device runs at or needs, the PI's words: "There is no device so its
 whatever freq it needs, within switching constraints"
 
+Told that the ranking turns on how fast the drive can switch (films ahead below about 1 MHz, poled
+crystals above), the PI's words: "Assume 10s of mhz"
+
 Scope: every table, ranking and speed number of a candidate.
 
 How it is applied (an interpretation, not the PI's words; "switching constraints" is read here as
 whatever does the switching, the material's own switching step and the drive that switches the
-field, and the PI has not said which or given a ceiling):
+field, and "10s of mhz" as the drive's ceiling):
+
+- Candidates are compared at tens of MHz (10 to 30 MHz unless told otherwise). One that cannot
+  follow there is reported at its own limit and said to fall short of the band.
 
 - Frequency is free. There is no device, so no drive frequency, no cross-section and no length is
   given; each candidate is taken at the frequency that suits it.
