@@ -1674,11 +1674,22 @@ held crystal makes per field (1 C/m2 is 1 pN/nm2 per V/um); and `d = e / c`, the
 **The table.** One chain to a cell, every dipole the same way; the axis is the polarisation across
 the chains, the direction a field through a film of lying chains has.
 
-| crystal | A3 a repeat | polarisation across the chains, C/m2 | `e`, pN/nm2 per V/um | `c`, GPa | `d`, pm/V |
-|---|---|---|---|---|---|
-| PVDF, all-trans (the check) | 52.4 | 0.194 | -0.328 | 20.8 | -15.8 |
-| nylon-3, -NH-CH2-CH2-CO- | 79.8 | 0.269 (and 0.085 along the chain) | -0.778 | 75.2 | -10.3 |
-| polyurea-1, -NH-CO-NH-CH2- | 71.4 | 0.367 | -0.990 | 77.6 | -12.8 |
+| crystal | A3 a repeat | polarisation across the chains, C/m2 | `e`, pN/nm2 per V/um | `c`, GPa | `d`, pm/V | lone chain's dipole across, D a repeat | binding into the crystal, kcal/mol a repeat |
+|---|---|---|---|---|---|---|---|
+| PVDF, all-trans (the check) | 52.4 | 0.194 | -0.328 | 20.8 | -15.8 | 1.84 | 7.4 |
+| nylon-5, -NH-(CH2)4-CO- | 122.4 | 0.175 | -0.495 | 54.8 | -9.0 | not run | not run |
+| nylon-3, -NH-CH2-CH2-CO- | 79.8 | 0.269 (and 0.085 along the chain) | -0.778 | 75.2 | -10.3 | 3.28 | 18.4 |
+| polyurea-1, -NH-CO-NH-CH2- | 71.4 | 0.367 | -0.990 | 77.6 | -12.8 | 3.70 | 24.1 |
+
+The last two columns: the dipole of a repeat of the chain alone in a box, across the chain (in the
+crystal the neighbours raise it by 1.66 times for PVDF, 1.96 for nylon-3 and 2.12 for the urea
+chain; PBE is known to overdo this along rows of hydrogen bonds, so the two amide and urea rows are
+upper marks), and the crystal's energy below the lone chain's. Nylon-5 was added as the makeable
+relative of nylon-3: its polarisation and its `e` are nylon-3's times the ratio of the volumes
+(0.65), two more CH2 and nothing else, and published nylon-5 films hold 0.125 to 0.13 C/m2. The
+lone nylon-3 chain stretches at 63.4 nN per unit strain (PVDF's 59.8); the urea chain buckles
+under 1% of compression and has no such number. On both lone chains the Berry phase with the made
+oxygen file equals the moment of the charge density from the PAW run, to the digits printed.
 
 **What it says.** The two hydrogen-bonded chains hold 1.4 and 1.9 times PVDF's dipole to the
 volume, and they lose more of it when their hydrogen bonds are stretched (`e` is 2.9 and 2.7 times
@@ -1704,6 +1715,19 @@ four-axes strains are each at the AC field the heat budget allows that row (0.75
 `field_ac_V_um` in `docs/predictions/four_axes_*.json`). It also set the crystals' speed at 34
 kHz, which is the programme optimiser's band and no property of theirs (the PI: no candidate is
 pinned to it).
+
+**The defects are the function (the PI, 2026-11-23, `CLAUDE.md`).** The film beside which these
+crystals were first set is PVDF with its defects; the row that belongs beside them is PVDF's own
+crystal. By the numbers above, the defects take PVDF from 15.8 pm/V to 432 to 1080 (27 to 68
+times), at 0.27 to 0.66 of the crystal's force per volt (at the assumed 0.2 GPa), and give it a
+ceiling in frequency, the relaxation of the switch they make (364 kHz to 27 MHz). The dipole a
+chain holds is the ceiling on what there is to move; the hydrogen-bonded chains hold more and are
+bound two and a half to three times as hard, and their strain per volt is lower than PVDF's
+crystal's. What the PI asks of a chain is "strong action low activation, easy-ish return": the
+spring is this table, and the activation and the return are a chain WITH its defect, which this
+section does not have. Nylons have been made relaxor-like in the laboratory by the same means
+(nylon-11 and nylon-12 copolymerised, with N-methylated units; Zhang, Litt and Zhu, Macromolecules
+50, 9360, 2017; read here in summaries only).
 
 **What it is not.**
 
