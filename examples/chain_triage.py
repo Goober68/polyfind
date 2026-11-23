@@ -581,7 +581,9 @@ def points(args):
     src = Path(args.frames)
     for name in args.names.split(","):
         images = read(src / f"{name}.path.xyz", index=":")
-        work = src / "work" / name
+        if args.ends:  # the two relaxed ends only: a band's middle images are not always structures
+            images = [images[0], images[-1]]
+        work = src / "work" / (name + ("_ends" if args.ends else ""))
         reps = int(images[0].info.get("triage_turning_repeats", int(images[0].info["triage_repeats"]) // 2))  # of the chain that turns
         energies = []
         t0 = time.time()
@@ -596,6 +598,7 @@ def points(args):
         record = {"name": name, "kind": "path", "of": images[0].info["triage_turn_of"], "edge": int(images[0].info["triage_turn_edge"]),
                   "turning_repeats": reps, "energy_ev": energies, "kcal_per_turning_repeat": rel, "top_kcal_per_turning_repeat": float(np.nanmax(rel)),
                   "potential_kcal_per_turning_repeat": [float(im.info["triage_turn_ev"]) * KCAL / reps for im in images]}
+        record["ends_only"] = bool(args.ends)
         (src / f"{name}.path.json").write_text(json.dumps(record, indent=1))
         print(f"{name}: DFT on {len(images)} images, top {np.nanmax(rel):.2f} kcal/mol a repeat of the turning chain, end {rel[-1]:+.2f}; "
               f"profile {' '.join(f'{v:.2f}' for v in rel)}, {time.time() - t0:.0f} s", flush=True)
@@ -1040,6 +1043,7 @@ def main():
     w.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
     w.add_argument("--pseudo", default="/opt/pseudo")
     w.add_argument("--np", type=int, default=4)
+    w.add_argument("--ends", action="store_true", help="the first and the last image only")
     w.set_defaults(run=points)
     t = sub.add_parser("table")
     t.add_argument("--frames", type=Path, required=True)
