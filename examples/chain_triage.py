@@ -137,15 +137,18 @@ def periodic(chain: dict, state: str, box: float = 14.0, n: int = 8):
     return a
 
 
-def model(path):
-    """A MACE-architecture model file on the processor (the pretrained ones are for starts only)."""
+def model(path, dtype: str = "float64"):
+    """A MACE-architecture model file on the processor (the pretrained ones are for starts only).
+
+    ``float32`` is the precision the pretrained files were made in and about twice as fast: enough
+    for a band whose images DFT then reads, where one energy of 36 atoms takes five seconds."""
     import torch
     from mace.calculators import MACECalculator
 
     load = torch.jit.load
     torch.jit.load = lambda f, *args, **kwargs: load(f, *args, **{**kwargs, "map_location": "cpu"})
     try:
-        return MACECalculator(model_paths=str(path), device="cpu", default_dtype="float64")
+        return MACECalculator(model_paths=str(path), device="cpu", default_dtype=dtype)
     finally:
         torch.jit.load = load
 
@@ -410,7 +413,7 @@ def wall(args):
     pays to change sides with a wall beside it; the two ends differ only by how near the walls are."""
     from ase.io import read, write
 
-    calc = model(args.model)
+    calc = model(args.model, dtype="float32")
     src = Path(args.frames)
     for name in args.names.split(","):
         a = rebased(read(src / f"{name}.relaxed.xyz"))
@@ -480,7 +483,7 @@ def nucleus(args):
     hop.  The end of the path is how far from level the turned chain sits; the top is the hump."""
     from ase.io import read, write
 
-    calc = model(args.model)
+    calc = model(args.model, dtype="float32")
     src = Path(args.frames)
     for name in args.names.split(","):
         a = rebased(read(src / f"{name}.relaxed.xyz"))
@@ -524,7 +527,7 @@ def turn(args):
     once: an upper mark for the smallest move, which in a real crystal is a twist that travels."""
     from ase.io import read, write
 
-    calc = model(args.model)
+    calc = model(args.model, dtype="float32")
     src = Path(args.frames)
     for item in args.names.split(","):
         name, edge = item.rsplit(":", 1)
