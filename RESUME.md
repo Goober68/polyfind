@@ -765,6 +765,16 @@ right": true at one registry, not along it).
         mechanical loss per candidate (it is one constant for all today, and the same kink that sets
         the dielectric relaxation is an anelastic one too) is the piece that would let a screen look
         for a step up.
+        WAITING ON A MEASUREMENT (PI 2026-11-23): the film's tan delta at its drive frequency is not
+        measured yet and "will be this week" (the PI is "moving back to the sarco" after another
+        proof of concept). The model's film is calibrated at tan delta 0.060 at 34 kHz, a 62% round
+        trip by 2 pi tan delta lost a cycle; the PI's own figure for the free cycle is "maybe 80%"
+        (tan delta near 0.03). WHEN IT ARRIVES: ask for the bias field, AC amplitude, temperature
+        and whether the drive electronics are in it; recalibrate the film's channel to it; then
+        rebuild the loss model on the PI's two regimes (free: store and return, loss 2 pi tan delta
+        a cycle, dielectric and mechanical apart; loaded: conversion to work, which needs the
+        electromechanical coupling, never reported here) before any force density, speed or
+        efficiency is ranked again.
         PAUSED BY THE PI (2026-11-23, after the report of 3.26: "Pause your efforts after whatever u
         have in flight"). Nothing is running, here or rented. Do not start the next step (DFT at the
         hop's top, DFT relaxation steps, belt4 inputs) or rent a machine until the PI says so.
