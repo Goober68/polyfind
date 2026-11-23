@@ -771,6 +771,15 @@ right": true at one registry, not along it).
         0.0028%, 0.59, 0.97, 0.6. The crystals lead on force and trail on speed; power goes as the
         drive squared, so the urea crystal passes the film's 4.5 W/cm3 at 3.2 V/um and the mixed
         cell's 17 at 6.2 V/um, if its loss allows that drive, which is not known.
+        THE PI ON THAT RANKING (2026-11-23, in `CLAUDE.md` verbatim): no candidate is to be pinned to
+        34 kHz. 34 and 66 kHz are the programme optimiser's band, hard-coded in
+        `examples/pin_design.py` (lines 211 to 216). ANSWER GIVEN for the crystals of 6.1: nothing in
+        them switches, so the material sets no operating frequency in what was computed; the answer
+        is flat up to the part's own resonance (sound along the polar axis 3.2 km/s PVDF, 7.1 nylon-3,
+        6.8 the urea chain, so a 10 um film's thickness resonance is 160, 357 and 340 MHz and a 1 mm
+        part's 1.6, 3.6 and 3.4 MHz) and what stops it below that is heat, not computed. Speed per
+        V/um per MHz: 15.8, 10.3, 12.8 mm/s per mm. ASKED OF THE PI, NOT ANSWERED: what frequency
+        the device runs at or needs.
         TRAPS FOUND. (1) `/usr/bin/pw.x` (6.7, the system package) aborts in a relaxation; use
         `/opt/mm/qe/bin/pw.x` (7.5) as every earlier run here did. (2) THE BERRY PHASE OF pw.x 7.5
         IS WRONG WITH PAW AND ULTRASOFT FILES: on the lone PVDF chain, where the density's moment

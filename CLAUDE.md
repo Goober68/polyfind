@@ -84,6 +84,25 @@ How it is applied (an interpretation, not the PI's words):
   assumed, the same for every candidate, and not measured or computed here. Say so wherever a
   force density or a speed is given, until the PI supplies measured ones.
 
+## No candidate is pinned to 34 kHz (PI, 2026-11-23)
+
+The PI's words, on a ranking that put every candidate at 34 kHz: "Why the fuck do i care about
+34khz - what is the operating frequency of these new ones"
+
+Scope: every table, ranking and speed number of a candidate.
+
+How it is applied (an interpretation, not the PI's words; the PI was asked what frequency the
+device needs and has not said):
+
+- 34 and 66 kHz are the band the programme's own optimiser assumed, carried into
+  `examples/pin_design.py` on 2026-11-04. They are not a requirement the PI gave here, and a
+  candidate is not ranked at them as if they were.
+- A candidate is reported at the frequency it can run at, with what sets that frequency: a
+  switch's relaxation, or, for a lattice that only answers linearly, the part's own mechanical
+  resonance and its heat. Say which, and say when the limit is not computed.
+- Speed is given so that it can be read at any frequency (per MHz, or at the candidate's own
+  limit), not at one borrowed drive.
+
 ## Free motion stores and returns energy; work and heat begin at the blocking force (PI, 2026-11-23)
 
 The PI's words: "the energy dissipated depends on the work done not your theoretical numbers - the
