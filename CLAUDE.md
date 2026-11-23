@@ -89,10 +89,17 @@ How it is applied (an interpretation, not the PI's words):
 The PI's words, on a ranking that put every candidate at 34 kHz: "Why the fuck do i care about
 34khz - what is the operating frequency of these new ones"
 
+Asked what frequency the device runs at or needs, the PI's words: "There is no device so its
+whatever freq it needs, within switching constraints"
+
 Scope: every table, ranking and speed number of a candidate.
 
-How it is applied (an interpretation, not the PI's words; the PI was asked what frequency the
-device needs and has not said):
+How it is applied (an interpretation, not the PI's words; "switching constraints" is read here as
+whatever does the switching, the material's own switching step and the drive that switches the
+field, and the PI has not said which or given a ceiling):
+
+- Frequency is free. There is no device, so no drive frequency, no cross-section and no length is
+  given; each candidate is taken at the frequency that suits it.
 
 - 34 and 66 kHz are the band the programme's own optimiser assumed, carried into
   `examples/pin_design.py` on 2026-11-04. They are not a requirement the PI gave here, and a

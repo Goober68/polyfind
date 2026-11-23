@@ -340,8 +340,10 @@ lower phase, and a kink pair is one turn of that helix.
   `e` -0.328 C/m2). Two hydrogen-bonded chains taken as the far end of dipole to volume:
   nylon-3, 0.269 C/m2 across the chains and `e` -0.778; a one-carbon urea chain, 0.367 and
   -0.990. That is 2.4 and 3.0 times PVDF's force to the area per volt on an axis 3.6 and 3.7
-  times as stiff, so 0.65 and 0.81 of its strain per volt; against the film as modelled, 3.6 to
-  11 times its force per volt and 28 to 44 times less stroke per volt. **A partial result: no
+  times as stiff, so 0.65 and 0.81 of its strain per volt; against the film's channel as
+  calibrated (445 pm/V), 3.7 to 11 times its force per volt and 28 to 43 times less stroke per
+  volt. Nothing in them hops, so they have no relaxation to cap their frequency: they answer up
+  to the part's resonance (MHz for a millimetre, hundreds of MHz for 10 um). **A partial result: no
   loss and no rate are beside it**, the cells are polar by construction, the crystals are
   perfect and cold, and neither chain is an easy film.
 - **The nitrile unit does not hold a kink**: the nitrile cell's sheet at the nitrile unit
@@ -1682,13 +1684,26 @@ the chains, the direction a field through a film of lying chains has.
 volume, and they lose more of it when their hydrogen bonds are stretched (`e` is 2.9 and 2.7 times
 the polarisation; PVDF's is 1.7 times), so the force to the area per volt is 2.4 and 3.0 times
 PVDF's. The same hydrogen bonds make the axis 3.6 and 3.7 times as stiff, so the strain per volt is
-0.65 and 0.81 of PVDF's. Against the film as the loss model has it (0.081% on 1.8 V/um at a bias of 55,
-so 450 pm/V, and 0.09 pN/nm2 per V/um at the modulus of 0.2 GPa that is assumed for every candidate
-and not measured): these crystals are 3.6 to 11 times the film in force per volt and 28 to 44 times
-below it in stroke per volt, which at 34 kHz is 0.35 to 0.54 mm/s per mm for each V/um of drive
-against the film's 15. They are another way of working, not a better film: the film is a switch,
-and these are the linear answer of a poled lattice, in which nothing hops and nothing relaxes at
-the drive frequency.
+0.65 and 0.81 of PVDF's. Against the film as the loss model has it, per volt (the film's channel as
+calibrated, 0.066% on the 1.48 V/um of AC its heat budget allows at a bias of 55: 445 pm/V, and
+0.089 pN/nm2 per V/um at the modulus of 0.2 GPa that is assumed for every candidate and not
+measured; the row of the film's composition, 0.081% on 0.75 V/um: 1080 pm/V and 0.22): these
+crystals are 3.7 to 11 times the calibrated film in force per volt (1.5 to 4.6 times its
+composition's row) and 28 to 43 times below it in stroke per volt (68 to 105 times). They are
+another way of working, not a better film: the film is a switch that follows up to its relaxation,
+364 kHz, and these are the linear answer of a poled lattice, in which nothing hops. Nothing in
+what was computed gives them a frequency of their own; they answer flat up to the part's own
+resonance (sound along the polar axis 3.2, 7.1 and 6.8 km/s, so 1.6, 3.6 and 3.4 MHz for a part
+1 mm thick and a hundred times that for 10 um), and their speed is their strain per volt times
+the frequency: 15.8, 10.3 and 12.8 mm/s per mm for each V/um and each MHz. What stops them below
+resonance is heat, which is their loss, and that is not computed.
+
+*Corrected 2026-11-23, the day it was written.* The first form of this paragraph took the film's
+0.081% as its strain on 1.8 V/um; 1.8 is `pin_design.py`'s default for another column, and the
+four-axes strains are each at the AC field the heat budget allows that row (0.75 to 10 V/um;
+`field_ac_V_um` in `docs/predictions/four_axes_*.json`). It also set the crystals' speed at 34
+kHz, which is the programme optimiser's band and no property of theirs (the PI: no candidate is
+pinned to it).
 
 **What it is not.**
 

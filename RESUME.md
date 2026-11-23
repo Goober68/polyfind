@@ -757,20 +757,22 @@ right": true at one registry, not along it).
         harness: how much one contact shifts all-trans against the helix, and so how many donors
         per chain tip the field's 0.06 kcal/mol a monomer; then a kink's hop beside a bonded site.
         THE RANKING GIVEN TO THE PI, 2026-11-23 ("So what are the 4 or 5 characteristics we care
-        about and how do these candidates rank?"). The five of `CLAUDE.md` (frequency followed, tan
-        delta, strain, force per area, speed per length), every row at ONE drive, 1.8 V/um of AC at 34
-        kHz, and ONE modulus for the films, the assumed 0.2 GPa (so NOT the "through the crystal"
-        column of the docs). Films by the loss model on stand-in inputs (frequency, tan delta, strain
-        %, pN/nm2, mm/s per mm, and their product in W/cm3): leader 27 MHz, 0.0008, 0.184, 0.37, 63,
-        23 (its margin is below zero and is taken as zero); mixed cell of 3.26 4.0 MHz, 0.0068, 0.152
-        to 0.161, 0.30 to 0.32, 52 to 55, 16 to 18; no-pin row 563 kHz, 0.054 to 0.057, 0.087 to
-        0.094, 0.17 to 0.19, 30 to 32, 5 to 6; the film's composition 364 kHz, 0.088, 0.081, 0.16,
-        27.5, 4.5; CFE row 3.6 MHz, 0.0012, 0.057 to 0.073, 0.11 to 0.15, 19 to 25, 2 to 4. Poled
-        crystals of 6.1 (no loss, no rate computed; e and d times the same 1.8 V/um): urea chain
-        0.0023%, 1.78 pN/nm2, 0.78 mm/s per mm, 1.4 W/cm3; nylon-3 0.0019%, 1.40, 0.63, 0.9; PVDF
-        0.0028%, 0.59, 0.97, 0.6. The crystals lead on force and trail on speed; power goes as the
-        drive squared, so the urea crystal passes the film's 4.5 W/cm3 at 3.2 V/um and the mixed
-        cell's 17 at 6.2 V/um, if its loss allows that drive, which is not known.
+        about and how do these candidates rank?") WAS WRONG IN ITS DRIVE AND IS REPLACED HERE. It
+        said every row was at 1.8 V/um of AC. The film rows' strains are each at the AC field the
+        heat budget allows that row at 34 kHz (`field_ac_V_um` in `four_axes_*.json`), and 1.8 is
+        `pin_design.py`'s default for another column. PER VOLT, which is what a row may be compared
+        on (loss model on stand-in inputs; force at the assumed 0.2 GPa, NOT "through the crystal"):
+          film channel as calibrated   0.066% on 1.48 V/um   445 pm/V    0.089 pN/nm2 per V/um   relaxes at 364 kHz, tan delta 0.060 at 34 kHz
+          the film's composition       0.081% on 0.75        1080        0.22                    364 kHz, 0.088
+          mixed cell of 3.26           0.152 to 0.161% on 2.44 to 2.18   620 to 740   0.12 to 0.15   4.0 MHz, 0.0068
+          nitrile leader (margin taken as zero)  0.184% on 4.26   432    0.086                   27 MHz, 0.0008
+          no-pin row                   0.087 to 0.094% on 1.15 to 0.87   755 to 1075  0.15 to 0.21   563 kHz, 0.054 to 0.057
+          CFE row                      0.057 to 0.073% on 10 (the field cap binds)   57 to 73   0.011 to 0.015   3.6 MHz, 0.0012
+          poled crystals of 6.1        PVDF 15.8 pm/V, 0.33; nylon-3 10.3, 0.78; urea chain 12.8, 0.99; no relaxation, loss not computed
+        Speed per V/um is pm/V times MHz, in mm/s per mm. In the model a switch's tan delta is 0.6
+        to 0.9 of (frequency over relaxation frequency), so its free cycle returns the PI's 80%
+        (tan delta 0.032) only up to about 3 to 5% of its relaxation: 18 kHz the calibrated film,
+        160 kHz the mixed cell, 1.4 MHz the leader.
         THE PI ON THAT RANKING (2026-11-23, in `CLAUDE.md` verbatim): no candidate is to be pinned to
         34 kHz. 34 and 66 kHz are the programme optimiser's band, hard-coded in
         `examples/pin_design.py` (lines 211 to 216). ANSWER GIVEN for the crystals of 6.1: nothing in
