@@ -1750,6 +1750,72 @@ Files: `examples/chain_triage.py`, `examples/chain_triage_oxygen.in`, `tests/tes
 `docs/predictions/chain_triage.json` (every record, with the Berry parts and the two strained
 cells of each crystal) and `docs/predictions/chain_triage_cells.extxyz` (the relaxed cells).
 
+### 6.2 The urea chain as a cam: its positions, its first moves, and a first defect (2026-11-23)
+
+*The PI, 2026-11-23, on chains that hydrogen bonds hold three times as hard as PVDF's: "Held
+stronger until u introduce a defect, then its like a over center cam, it snaps back and forth",
+and "Thats what we want, strong action low qctivation, easy -ish return". The spring is 6.1. This
+section is what was got of the activation and the return on this machine in the hours after, for
+the one-carbon urea chain. It is a first read and most of it is an upper mark.*
+
+**How the cells are made.** A crystal cell is first put with its first edge along the hydrogen
+bonds between chains (`rebased`; nylon-3's bonds run along the diagonal of the cell its packing
+search ended on, and its first opposed cells, made before this, were of the wrong kind and are
+not used). Then: `opposed` doubles the cell and turns the second chain half round its own axis
+(along the second edge whole bonded rows face opposite ways and keep their bonds); `wall` takes
+four chains of a row, two turned, and turns the third back, which moves one wall between the row's
+two senses by a chain; `nucleus` takes four chains at rest and turns the third alone, with
+`--methyl` after the N-H that holds it has been made N-CH3. Ends are relaxed and paths settled in
+the pretrained potential (Egret-1), the cell held; `points` has DFT read the images.
+
+**The three positions (DFT, each cell relaxed whole).** Polarised one way and the other are
+mirror images and level. The cell with every second bonded row turned keeps its hydrogen bonds
+(1.89 to 1.95 A), sits **0.99 kcal/mol a repeat above** the polar cell, and is **3.4% larger**
+(73.8 against 71.4 A3 a repeat: the rows 4.7% further apart, the cell 1.3% shorter along the
+bonds). So the chain is a latch with about 3% of stroke on the way over, against the roughly 10%
+of PVDF's change of conformation. The field's hold on one repeat at 55 V/um is 0.21 kcal/mol
+(7.9 D in the crystal; PBE overdoes dipoles along rows of hydrogen bonds, so an upper mark)
+against 0.08 on a PVDF monomer.
+
+**The pretrained potential against DFT, on a row with bonds broken and remade.** The `wall` path's
+five images, kcal/mol a repeat of the chain that turns:
+
+| image | DFT | the potential |
+|---|---|---|
+| start: two chains each way, sharp walls | 0 | 0 |
+| the chain a quarter turn out | 15.79 | 18.24 |
+| turned, the wall a chain on | 4.30 | 4.77 |
+| next | -2.68 | -1.31 |
+| end: the chain at the wall 40 degrees off | -5.22 | -5.99 |
+
+The potential follows DFT to 2.5. Two readings. Sharp walls are not what a row holds: the end, in
+which the chain at the wall has tilted, is 5.2 lower. And 15.8 is not the hump of the real move:
+the cell is one repeat long, so the chain turns as a rod along its whole length; a real chain
+turns by a twist that travels, and that needs cells about four repeats long (144 atoms).
+
+**First moves, ends only (the potential; DFT on the ends was running when this was written).**
+
+| row of four urea chains | one chain turned round alone, above the row at rest, kcal/mol a repeat |
+|---|---|
+| no defect | 17.3 |
+| an N-methyl on every repeat of the neighbour that holds it | 28.3 |
+
+A perfect row does not start to turn anywhere: about 80 times the field's hold. And this defect,
+placed this way, raises the cost: it takes a bond away and puts a methyl where the turned chain's
+N-H groups come to face it. That is one placement of one defect, on every repeat of a chain
+(the cell being one repeat long), in the potential; it is not the verdict on the cam. What the
+picture asks for is a defect that weakens the hold without standing in the way (a spacer of
+another length that leaves a bond dangling, the other defect of the nylon papers; sulfur for
+oxygen), tried in cells several repeats long.
+
+**What was thrown away.** The middle images of the two `nucleus` bands (atoms left overlapping:
+345 kcal/mol in one, and the first cell with a methyl folded up altogether, because the methyl was
+put 1.4 A from the next chain's oxygen; room is now made for it first and a cell with two atoms
+under 0.85 A apart is refused). PVDF's own turning path scored in DFT tops at 16.3 kcal/mol a
+monomer and ends 7.05 up: a move PVDF does not make, kept only as the like-for-like mark.
+
+Files: `docs/predictions/chain_triage.json` (`paths`), `docs/predictions/chain_triage_paths/`.
+
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
 *Rewritten 2026-11-10. The first form of this section (kept below as 8.7) took the formation
