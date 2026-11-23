@@ -25,4 +25,22 @@ screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_3.extxyz 4 1000 1500
 screen_hop_card.sh vdf17-trfe7-cfe2-rvdf2-28 mix
 # DFT on the card, alone from here: its lowest helix cell, its lowest all-trans cell, then the lowest of each in
 # another packing (the order of two packings is DFT's to say).  About 49 minutes a cell.
-screen_pick_dft.sh card start vdf17-trfe7-cfe2-rvdf2-28
+#
+# 01:34 UTC.  The mixed cell is relaxed (16 of 16 at rest in 24 minutes; the two ways round are the same cell to
+# the last digit, so its two chains are equivalent in every packing given).  All-trans less helix +0.011 kcal/mol
+# per monomer in the potential, where its parents have +0.201 and -0.033.  Per chain: all-trans in the film
+# composition's low pattern 0, its upright one +0.47, the matrix's +1.79, the leader's +2.20; helix in the film
+# composition's packing (GTGpT) 0, THE LEADER'S +0.20, the other two +3.2 and +3.8.
+# The four cells screen14.py pick names are the ones wanted (hx_GTGpT, tt_lowx, hx_ldr, tt_up), but not in that
+# order.  On the parent with three TrFE DFT had the leader's helix packing 1.62 per chain lower against the film
+# composition's than the potential had, and the low all-trans pattern 1.33 higher against the upright one (3.25;
+# the low pattern 0.43 and 0.10 higher on the film's composition and the matrix, 3.24).  If DFT does the same
+# here its lowest pair is the helix in the leader's packing and the upright all-trans cell, not the potential's.
+# So those two first, then the potential's two (this line stands where the pick's stood: it had not started):
+screen_dft.sh card start scr_vdf17-trfe7-cfe2-rvdf2-28_hx_ldr_in_all_s1 scr_vdf17-trfe7-cfe2-rvdf2-28_tt_up_in_all_s1 scr_vdf17-trfe7-cfe2-rvdf2-28_hx_GTGpT_in_all_s1 scr_vdf17-trfe7-cfe2-rvdf2-28_tt_lowx_in_all_s1
+# The same reading for the parent on the processors: its upright all-trans cell (+0.42 in the potential) is likelier
+# to be DFT's lowest than its helix in the leader's packing (+1.85) is.  The processors have time for three cells:
+# its low all-trans cell (running), its lowest helix cell, then the upright all-trans cell; the helix in the
+# leader's packing goes to the end of the line.
+dft_cells.sh start 8 2 docs/predictions/mlip/screen14_relaxed_a.extxyz scr_vdf8-trfe4-cfe1-rvdf1-14_tt_up_in_all_s1
+dft_cells.sh last scr_vdf8-trfe4-cfe1-rvdf1-14_hx_ldr_in_all_s1
