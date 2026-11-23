@@ -99,3 +99,21 @@ def test_a_lattice_start_keeps_the_chain_and_its_period():
     assert a.get_volume() < chain.get_volume()
     assert CT.closest(a) > 0.0
     assert CT.kmesh(a).split()[2] == "8" and CT.kmesh(chain) == "1 1 8"
+
+
+def test_a_turned_cell_cancels_what_the_chain_carries_across_itself():
+    """Doubled along an edge with the second chain half round: twice the atoms, the same chain axis,
+    and a set of point charges whose moment across the chain is zero while the one along it doubles."""
+    from ase import Atoms
+
+    a = Atoms("CHF", positions=[[0.0, 0.0, 0.0], [0.9, 0.3, 0.4], [-0.8, 0.6, 1.1]], cell=[[4.0, 0.0, 0.3], [1.0, 4.5, -0.2], [0.0, 0.0, 2.5]], pbc=True)
+    a.info.update(triage_chain="x", triage_state="tt", triage_repeats=1, triage_kind="crystal", kmesh="4 5 8")
+    q = np.array([0.1, 0.4, -0.5])
+    for edge, mesh in ((0, "2 5 8"), (1, "4 3 8")):
+        b = CT.turned(a, edge)
+        assert len(b) == 6 and b.info["triage_repeats"] == 2 and b.info["kmesh"] == mesh
+        assert np.allclose(b.cell.array[edge], 2 * a.cell.array[edge]) and np.allclose(b.cell.array[2], a.cell.array[2])
+        first = (q[:, None] * (b.positions[:3] - b.positions[:3].mean(axis=0))).sum(axis=0)
+        second = (q[:, None] * (b.positions[3:] - b.positions[3:].mean(axis=0))).sum(axis=0)
+        assert np.allclose((first + second)[:2], 0.0) and np.isclose((first + second)[2], 2 * first[2])
+        assert np.allclose(b.positions[:3], a.positions)

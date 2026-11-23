@@ -262,6 +262,53 @@ def pack(args):
             print(f"{name}_x{rank}: {e - kept[0][0]:+.4f} eV above the lowest, {a.get_volume() / a.info['triage_repeats']:.1f} A3 a repeat, k {a.info['kmesh']}", flush=True)
 
 
+def turned(atoms, edge: int):
+    """The cell doubled along one edge across the chain, its second chain turned half round its own axis.
+
+    The chain keeps its sense and its period; what it carries across itself is reversed, so the two
+    chains' polarisation across the chains cancels.  A sheet of hydrogen-bonded chains doubled along
+    the bonds loses them; doubled along the other edge it is a stack of sheets facing opposite ways."""
+    n = len(atoms)
+    b = atoms.repeat([2 if edge == k else 1 for k in range(3)])
+    along = atoms.cell.array[2] / np.linalg.norm(atoms.cell.array[2])
+    d = b.positions[n:] - b.positions[n:].mean(axis=0)
+    b.positions[n:] = b.positions[n:].mean(axis=0) + 2 * np.outer(d @ along, along) - d
+    mesh = mesh_of(atoms)
+    mesh[edge] = max(1, (mesh[edge] + 1) // 2)
+    b.info.update(atoms.info)
+    b.info.update(triage_repeats=2 * int(atoms.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh))
+    return b
+
+
+def opposed(args):
+    """Each relaxed one-chain cell against the same chains with every second one turned round.
+
+    Writes ``NAME_o1`` and ``NAME_o2`` (doubled along the first and the second edge), settled in the
+    pretrained potential; ``dft`` relaxes them, and ``table`` gives each one's energy a repeat above
+    its polar cell: below zero, the chain would rather not be polar."""
+    from ase.io import read, write
+
+    calc = model(args.model)
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        a = read(src / f"{name}.relaxed.xyz")
+        for edge in (0, 1):
+            b = turned(a, edge)
+            mesh = b.info["kmesh"]
+            try:
+                c = settle(b, calc, fmax=0.05, steps=args.steps, free=(1, 1, 1, 1, 1, 1))
+            except (RuntimeError, ValueError, FloatingPointError) as err:
+                print(f"{name}_o{edge + 1}: the start fell apart in the potential ({type(err).__name__})", flush=True)
+                continue
+            c.calc = calc
+            energy = float(c.get_potential_energy()) / c.info["triage_repeats"]
+            c.calc = None
+            c.info.update(kmesh=mesh, triage_opposed_of=name, triage_start_ev_a_repeat=energy)
+            write(src / f"{name}_o{edge + 1}.start.xyz", c, format="extxyz")
+            print(f"{name}_o{edge + 1}: {len(c)} atoms, {energy:.4f} eV a repeat in the potential, {c.get_volume() / c.info['triage_repeats']:.1f} A3 a repeat "
+                  f"(the polar cell {a.get_volume() / a.info['triage_repeats']:.1f}), closest {closest(c):.2f} A, k {mesh}", flush=True)
+
+
 def pw_input(atoms, pseudo_dir, outdir, calculation: str, free: str = "z", conv_thr: float = 1e-9, ecut=(90, 360), files=None):
     """The anchor's settings (PBE, D3(BJ) two-body, 90/360 Ry) for a relaxation of this cell."""
     files = files or PSEUDO
@@ -370,6 +417,8 @@ def dft(args):
         b.info.update(a.info)
         write(src / f"{name}.relaxed.xyz", b, format="extxyz")
         reps = int(a.info["triage_repeats"])
+        if "triage_opposed_of" in a.info:
+            got["opposed_of"] = a.info["triage_opposed_of"]
         got.update(name=name, chain=a.info["triage_chain"], state=a.info["triage_state"], kind=a.info["triage_kind"], repeats=reps,
                    atoms=len(b), energy_ev=energy, cell=b.cell.array.tolist(),
                    kmesh=" ".join(str(int(v)) for v in np.atleast_1d(a.info["kmesh"])) if not isinstance(a.info["kmesh"], str) else a.info["kmesh"],
@@ -592,6 +641,13 @@ def table(args):
               f"dipole across {np.hypot(*mu) * E_ANGSTROM_TO_DEBYE:.3f} D  stretch {k.get('force_per_strain_nn_by_stress', float('nan')):.1f} nN  "
               f"P across {y.get('across_chain_c_per_m2', y.get('magnitude_c_per_m2', float('nan'))):.4f}  "
               f"e {z.get('e_along_c_per_m2', float('nan')):+.4f}  c {z.get('c_along_gpa', float('nan')):.1f}  d {z.get('d_clamped_pm_per_v', float('nan')):+.1f}")
+    by_name = {r["name"]: r for r in rows}
+    for r in rows:
+        if r.get("opposed_of") in by_name:
+            polar = by_name[r["opposed_of"]]
+            r["above_polar_kcal_per_repeat"] = (r["energy_ev"] / r["repeats"] - polar["energy_ev"] / polar["repeats"]) * KCAL
+            print(f"{r['name']:14s} dipoles opposed: {r['above_polar_kcal_per_repeat']:+.3f} kcal/mol a repeat above {polar['name']} "
+                  f"({r['above_polar_kcal_per_repeat'] / KCAL * 1000:+.2f} meV), {r['volume_a3']:.1f} against {polar['volume_a3']:.1f} A3")
     if args.out:
         args.out.write_text(json.dumps(out, indent=1) + "\n")
 
@@ -642,6 +698,12 @@ def main():
     z.add_argument("--string", type=int, default=6)
     z.add_argument("--strain", type=float, default=0.01)
     z.set_defaults(run=piezo)
+    o = sub.add_parser("opposed")
+    o.add_argument("--frames", type=Path, required=True)
+    o.add_argument("--names", required=True)
+    o.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    o.add_argument("--steps", type=int, default=200)
+    o.set_defaults(run=opposed)
     t = sub.add_parser("table")
     t.add_argument("--frames", type=Path, required=True)
     t.add_argument("--out", type=Path, default=None)
