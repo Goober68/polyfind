@@ -735,6 +735,23 @@ right": true at one registry, not along it).
         `*.relaxed.xyz` to `docs/predictions` before the session ends. QUEUED 2026-11-23 09:10 UTC:
         lone chains `pvdf_tgtg`, `nylon3_tt`, `urea1_tt`; then one-chain cells `pvdf_tt_x1`,
         `nylon3_tt_x1`, `urea1_tt_x1` (vc-relax), then `berry` on all; `piezo` after.
+        THE PI'S QUESTION WHILE THESE RAN (2026-11-23): "Like the 14% strain from the nitrile nano
+        dots - where does that point us?" The paper is Nature Communications 2026, doi
+        10.1038/s41467-026-70165-0 (the "hydrogen-bonding polymer dots" of
+        `docs/ELECTROSTRICTION_RESEARCH.md` 2). READ FROM ITS ABSTRACT ONLY (the full text is behind
+        a login from here; ask the PI for the PDF): the host is P(VDF-TrFE-CFE); the dots are made
+        from citric acid and ethylenediamine, an ordered core with a hydrogen-bond-rich surface
+        (not nitrile) that bonds to the chain's fluorines and favours all-trans; 14.4% at 100 MV/m
+        and 1 Hz, 13.1% at 10 Hz, 3.2% for the same film without dots. Not read: modulus, loss,
+        anything above 10 Hz. An earlier paper of the line (ACS Appl. Polym. Mater. 7(23) 15867)
+        gives -6.19% and 0.422 J/cm3 at 100 MV/m, which is a modulus of 0.22 GPa if the energy is
+        half modulus times strain squared. ANSWER GIVEN: it is our chain and our switch, and the
+        4.5 times came from a neighbour of the chain, not from another chain; it reads on strain
+        only (10 Hz times 13.1% is 1.3 mm/s per mm; nothing at the film's 34 kHz). RECOMMENDED, NOT
+        STARTED (PVDF work is paused; needs the PI's go): the margin of a PVDF chain with a
+        hydrogen-bond donor (amide N-H, amine, hydroxyl) against its fluorines, in DFT with this
+        harness: how much one contact shifts all-trans against the helix, and so how many donors
+        per chain tip the field's 0.06 kcal/mol a monomer; then a kink's hop beside a bonded site.
         TRAPS FOUND. (1) `/usr/bin/pw.x` (6.7, the system package) aborts in a relaxation; use
         `/opt/mm/qe/bin/pw.x` (7.5) as every earlier run here did. (2) THE BERRY PHASE OF pw.x 7.5
         IS WRONG WITH PAW AND ULTRASOFT FILES: on the lone PVDF chain, where the density's moment
