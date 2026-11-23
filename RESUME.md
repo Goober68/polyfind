@@ -721,6 +721,35 @@ right": true at one registry, not along it).
         `screen_hop_card.sh` choose from the pod's own tables, so a queue can be written whole before
         the pod is made (this one was: `queue_20261123_mixed.txt`). Tests: `tests/test_screen14.py`
         (23). Full suite after it, 2026-11-23 05:51 UTC: 1138 passed, 15 skipped.
+        THE AIM CHANGED AFTER 3.26 (PI 2026-11-23, in `CLAUDE.md` verbatim): "Looking for a step up in
+        force density and speed", and a speed is to be reported beside the force ("we need a mm/s or
+        cm/s number to go along with our pN/nm2"). WHAT WAS FOUND IN ANSWERING, NOT YET IN ANY DOC:
+        (1) SPEED from the stored tables, the model's stroke rate (AC strain per cycle times 34 kHz),
+            mm/s per mm of active length: the film's composition 27.5, the mixed cell 52 to 55, the
+            leader 63, IVRVVRVCVVVVVR 19 to 25, the no-pin row 30 to 32.
+        (2) A CEILING NO CHEMISTRY MOVES. In `polyfind.loss` the heat at a drive frequency f is
+            f (pi eps0 eps'' E^2 + pi Y tan_m S^2), and `examples/pin_design.py` runs every row with
+            the heat budget 4 MW/m3, Y = 0.2 GPa and tan_m = 0.05 (all three assumed, one value for
+            every candidate). With no dielectric loss at all the heat budget still caps the strain at
+            sqrt(Q / (pi f Y tan_m)) = 0.19% at 34 kHz: speed 66 mm/s per mm, force density 0.39
+            pN/nm2, and force density times speed = Q / (pi tan_m) = 25 W/cm3 whatever Y and f are.
+            The film's composition is at 4.5 of that 25 (18% of its heat is mechanical), the mixed cell
+            at 16 to 18 (62 to 69%), the leader at 23 (90%). THE SCREENS OPTIMISED THE DIELECTRIC TERM,
+            AND THE BEST ROWS HAVE NEARLY USED IT UP. A step up in force density AND speed needs a
+            lower mechanical loss tangent or a larger heat budget; stiffness and drive frequency only
+            trade one for the other (force as sqrt(Y / f), speed as sqrt(f / Y)).
+        (3) THE "BLOCKED FORCE THROUGH THE CRYSTAL" COLUMN OVERSTATES (3.20 to 3.26, the head of
+            `CANDIDATE_MATERIALS.md`, and the 210 and 420 W/cm3 said to the PI on 2026-11-23): it
+            multiplies the strain the heat budget allows a 0.2 GPa film by a crystal's stiffness. A
+            film as stiff as that (9.4 GPa effective) would put 8 times the heat budget into
+            mechanical loss at the film row's strain. On one modulus the force densities are 0.16
+            (the film's composition), 0.30 to 0.32 (the mixed cell), 0.37 (the leader) pN/nm2. THE
+            DOCS STILL CARRY THE OLD COLUMN: correct them when work resumes (the PI has been told).
+        NEXT, WHEN THE PI SAYS GO: ask for measured values of the three assumed numbers; report force
+        density, speed and their product against the ceiling in every table; a model of the
+        mechanical loss per candidate (it is one constant for all today, and the same kink that sets
+        the dielectric relaxation is an anelastic one too) is the piece that would let a screen look
+        for a step up.
         PAUSED BY THE PI (2026-11-23, after the report of 3.26: "Pause your efforts after whatever u
         have in flight"). Nothing is running, here or rented. Do not start the next step (DFT at the
         hop's top, DFT relaxation steps, belt4 inputs) or rent a machine until the PI says so.
