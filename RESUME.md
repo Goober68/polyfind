@@ -756,6 +756,21 @@ right": true at one registry, not along it).
         hydrogen-bond donor (amide N-H, amine, hydroxyl) against its fluorines, in DFT with this
         harness: how much one contact shifts all-trans against the helix, and so how many donors
         per chain tip the field's 0.06 kcal/mol a monomer; then a kink's hop beside a bonded site.
+        THE RANKING GIVEN TO THE PI, 2026-11-23 ("So what are the 4 or 5 characteristics we care
+        about and how do these candidates rank?"). The five of `CLAUDE.md` (frequency followed, tan
+        delta, strain, force per area, speed per length), every row at ONE drive, 1.8 V/um of AC at 34
+        kHz, and ONE modulus for the films, the assumed 0.2 GPa (so NOT the "through the crystal"
+        column of the docs). Films by the loss model on stand-in inputs (frequency, tan delta, strain
+        %, pN/nm2, mm/s per mm, and their product in W/cm3): leader 27 MHz, 0.0008, 0.184, 0.37, 63,
+        23 (its margin is below zero and is taken as zero); mixed cell of 3.26 4.0 MHz, 0.0068, 0.152
+        to 0.161, 0.30 to 0.32, 52 to 55, 16 to 18; no-pin row 563 kHz, 0.054 to 0.057, 0.087 to
+        0.094, 0.17 to 0.19, 30 to 32, 5 to 6; the film's composition 364 kHz, 0.088, 0.081, 0.16,
+        27.5, 4.5; CFE row 3.6 MHz, 0.0012, 0.057 to 0.073, 0.11 to 0.15, 19 to 25, 2 to 4. Poled
+        crystals of 6.1 (no loss, no rate computed; e and d times the same 1.8 V/um): urea chain
+        0.0023%, 1.78 pN/nm2, 0.78 mm/s per mm, 1.4 W/cm3; nylon-3 0.0019%, 1.40, 0.63, 0.9; PVDF
+        0.0028%, 0.59, 0.97, 0.6. The crystals lead on force and trail on speed; power goes as the
+        drive squared, so the urea crystal passes the film's 4.5 W/cm3 at 3.2 V/um and the mixed
+        cell's 17 at 6.2 V/um, if its loss allows that drive, which is not known.
         TRAPS FOUND. (1) `/usr/bin/pw.x` (6.7, the system package) aborts in a relaxation; use
         `/opt/mm/qe/bin/pw.x` (7.5) as every earlier run here did. (2) THE BERRY PHASE OF pw.x 7.5
         IS WRONG WITH PAW AND ULTRASOFT FILES: on the lone PVDF chain, where the density's moment
