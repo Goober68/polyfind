@@ -10,6 +10,90 @@
  },
  "rows": [
   {
+   "name": "nylon3_tt",
+   "chain": "nylon3",
+   "state": "tt",
+   "kind": "chain",
+   "repeats": 1,
+   "atoms": 10,
+   "energy_ev": -1682.3071428235226,
+   "cell": [
+    [
+     14.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     14.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     4.927867799
+    ]
+   ],
+   "kmesh": "1 1 4",
+   "rise_a": 4.927867799,
+   "volume_a3": 965.8620886039998,
+   "relax_s": 661,
+   "dipole_across_e_a": [
+    -0.6818265502341774,
+    0.023869636728278465
+   ],
+   "electrons": 28.000000510109206,
+   "ion_charge": 28.0,
+   "stretch": {
+    "rows": [
+     {
+      "strain": -0.01,
+      "energy_ev": -1682.2968982808288,
+      "tension_ev_per_a": -0.4126457748037826
+     },
+     {
+      "strain": 0.01,
+      "energy_ev": -1682.2979091838276,
+      "tension_ev_per_a": 0.37881350020146637
+     }
+    ],
+    "strain": 0.01,
+    "force_per_strain_nn_by_energy": 63.328583412558,
+    "force_per_strain_nn_by_stress": 63.402877858799506
+   },
+   "seconds": 1929,
+   "berry": {
+    "parts": [
+     {
+      "gdir": 1,
+      "c_per_m2": -0.011288700000000013,
+      "quantum_c_per_m2": 0.2322327,
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "gdir": 2,
+      "c_per_m2": 0.0003953,
+      "quantum_c_per_m2": 0.2322327,
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    ],
+    "polarisation_c_per_m2": [
+     -0.011288700000000013,
+     0.0003953,
+     0.0
+    ],
+    "magnitude_c_per_m2": 0.01129561905253538
+   }
+  },
+  {
    "name": "nylon3_tt_x1",
    "chain": "nylon3",
    "state": "tt",
@@ -459,6 +543,73 @@
    }
   },
   {
+   "name": "urea1_tt",
+   "chain": "urea1",
+   "state": "tt",
+   "kind": "chain",
+   "repeats": 1,
+   "atoms": 9,
+   "energy_ev": -1697.380093893276,
+   "cell": [
+    [
+     14.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     14.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     4.77915441
+    ]
+   ],
+   "kmesh": "1 1 4",
+   "rise_a": 4.77915441,
+   "volume_a3": 936.7142643599999,
+   "relax_s": 0,
+   "dipole_across_e_a": [
+    0.23997527586271872,
+    0.7315786362905783
+   ],
+   "electrons": 28.000000575850517,
+   "ion_charge": 28.0,
+   "seconds": 7,
+   "berry": {
+    "parts": [
+     {
+      "gdir": 1,
+      "c_per_m2": 0.0040897,
+      "quantum_c_per_m2": 0.2394591,
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "gdir": 2,
+      "c_per_m2": 0.0124786,
+      "quantum_c_per_m2": 0.2394591,
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    ],
+    "polarisation_c_per_m2": [
+     0.0040897,
+     0.0124786,
+     0.0
+    ],
+    "magnitude_c_per_m2": 0.013131683214653024
+   }
+  },
+  {
    "name": "urea1_tt_x1",
    "chain": "urea1",
    "state": "tt",
@@ -622,5 +773,6 @@
     "polarisation_along_chain_c_per_m2": 0.0029145832452481756
    }
   }
- ]
+ ],
+ "paths": []
 }
