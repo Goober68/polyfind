@@ -2695,8 +2695,8 @@ length, a nitrile made or unmade, each chain checked afterwards to be the row's 
 a row starts from a packing that is at rest for a neighbour of it.
 `examples/gpu_jobs/screen_card.sh` relaxes the cells on the card four side by side to 0.004
 eV/A, and `screen14.py table` takes a row's margin as its lowest all-trans cell less its
-lowest helix cell, kcal/mol per monomer, a cell counted only if it is at rest and still the
-conformation it was made as. Seventeen rows (`examples/screen14_starts.sh`), three of them
+lowest helix cell, kcal/mol per monomer, a cell counted if it is still the conformation it was
+made as, at rest or not (the table says which are not). Seventeen rows (`examples/screen14_starts.sh`), three of them
 controls whose answer is known: the film's composition, the matrix and the leader.
 
 **A made cell keeps the packing of the cell it is made of, and that decided the screen.** The
@@ -2709,8 +2709,8 @@ against -0.089 from its own cells). Two checks then said the cells were not enou
   kcal/mol per chain above the matrix's own upright cell: the pattern of small twists of an
   all-trans chain's backbone bonds (3.24) comes through from the source. A third file gave
   every row the matrix's regular pattern and, nine rows, polyfind's own built cell of the row.
-  It lowered the all-trans side of no candidate (and of one row at all, the CTFE row with a
-  reversed unit, by 0.31 per chain, its cell still moving).
+  It lowered the all-trans side of no candidate: of one row besides the leader, the CTFE row
+  with a reversed unit, by 0.31 per chain, its cell still moving.
 - **The leader as a control came back at -0.342, and its own cells give -0.070.** 0.61 per
   chain of the difference is its all-trans side and 4.42 is its helix side: the leader's own
   lowest helix cell is a packing of its own (5.25 by 9.84 A, the chains at 94 degrees to the
@@ -2747,6 +2747,10 @@ file):
 | CTFE for the CFE, a reversed unit first | `IVRVVRVKVVRVVR` | -0.491 | **-0.459** | own, ldr | -0.75 |
 | a reversed unit for the CFE | `VVRVVRVIVVRVVR` | -0.491 | **-0.491** | low, GpTGT | not run |
 
+Cells: all-trans in the film composition's low pattern (low) and its upright one (up), the
+matrix's (reg), the leader's (ldr), the row's own built cell (own); helix in the film
+composition's four placements, by name, and in the leader's packing (ldr).
+
 - **Three margins moved when the rows were given the leader's packings, and the two rows the
   screen was for are among them.** `IVRVVRVCVVVVVR`, the leader with a CFE for its nitrile, went
   from +0.088 to +0.201; `IVRVVRVVVVVVVR`, the leader with a VDF there and no pin at all, from
@@ -2767,7 +2771,10 @@ file):
   a relaxor in fact while the potential has it at -0.305. They were not put to DFT.
 - Not complete: the fourth file stopped at its 3000 s with 8 of its 39 cells not run and 4 still
   moving. Three rows never had the leader's helix packing (the CTFE row, the row with CDFE
-  first and a CFE, the row with a reversed unit eighth); none is near zero.
+  first and a CFE, the row with a reversed unit eighth); none is near zero. One margin stands
+  on a cell that was still moving, the CTFE row with a reversed unit (its own all-trans cell:
+  -0.459 is an upper bound), and one moving cell could still change its row's (the CDFE row's
+  helix in the leader's packing, 0.78 above its best and falling).
 
 **DFT on the CFE row: +0.196, the potential's number from its lowest cells, and 0.12 away
 from it on the cells that are not lowest.** Four cells of `IVRVVRVCVVVVVR` labelled
