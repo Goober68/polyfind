@@ -732,9 +732,13 @@ right": true at one registry, not along it).
         all-trans chain: rise 2.590 A, 1.84 D a monomer, 59.8 nN per unit strain by energy and by
         stress alike (284 GPa over the crystal's 21.1 A2 a chain). Working files are in
         `/opt/dft/triage` ON THIS CONTAINER, NOT IN THE REPOSITORY: copy the `*.json` and
-        `*.relaxed.xyz` to `docs/predictions` before the session ends. QUEUED 2026-11-23 09:10 UTC:
-        lone chains `pvdf_tgtg`, `nylon3_tt`, `urea1_tt`; then one-chain cells `pvdf_tt_x1`,
-        `nylon3_tt_x1`, `urea1_tt_x1` (vc-relax), then `berry` on all; `piezo` after.
+        `*.relaxed.xyz` to `docs/predictions` before the session ends. REORDERED 2026-11-23 09:40 UTC
+        (the helix chain's stretch crept for 27 steps on its soft torsions and was stopped; a stretch
+        is now run for an extended chain only, and the force tolerance is 5e-4 Ry/bohr): stage A is
+        the one-chain cells `pvdf_tt_x1`, `nylon3_tt_x1`, `urea1_tt_x1` (vc-relax) and their Berry
+        polarisation; stage B, not yet started, the lone chains `nylon3_tt`, `urea1_tt`, their Berry
+        phase against the density's moment (the check of the made oxygen file on an amide), and
+        `piezo` on the three cells.
         THE PI'S QUESTION WHILE THESE RAN (2026-11-23): "Like the 14% strain from the nitrile nano
         dots - where does that point us?" The paper is Nature Communications 2026, doi
         10.1038/s41467-026-70165-0 (the "hydrogen-bonding polymer dots" of

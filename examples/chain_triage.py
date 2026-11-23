@@ -270,7 +270,7 @@ def pw_input(atoms, pseudo_dir, outdir, calculation: str, free: str = "z", conv_
     lines = [
         "&CONTROL", f"  calculation = '{calculation}'", "  prefix = 'frame'", f"  pseudo_dir = '{pseudo_dir}'",
         f"  outdir = '{outdir}'", "  tstress = .true.", "  tprnfor = .true.", "  disk_io = 'low'", "  nstep = 200",
-        "  forc_conv_thr = 2.0d-4", "  etot_conv_thr = 1.0d-6", "/", "",
+        "  forc_conv_thr = 5.0d-4", "  etot_conv_thr = 1.0d-5", "/", "",
         "&SYSTEM", "  ibrav = 0", f"  nat = {len(atoms)}", f"  ntyp = {len(species)}", "  input_dft = 'PBE'",
         "  occupations = 'fixed'", f"  ecutwfc = {ecut[0]}", f"  ecutrho = {ecut[1]}", "  vdw_corr = 'grimme-d3'",
         "  dftd3_version = 4", "  dftd3_threebody = .false.", "/", "",
@@ -389,7 +389,9 @@ def dft(args):
                 got.update(dipole_across_e_a=(mu[:2] / reps).tolist(), electrons=electrons, ion_charge=ions)
                 cube.unlink()
                 (work / "rho.dat").unlink(missing_ok=True)
-        if chain and "stretch" not in got and not args.no_stretch:
+        # an extended chain only: a helix held 1% off its length creeps for tens of steps along its soft
+        # torsions (PVDF's TGTG', 27 steps and still moving), and its stiffness is not what is asked
+        if chain and a.info["triage_state"] == "tt" and "stretch" not in got and not args.no_stretch:
             rows = []
             for strain in (-args.strain, args.strain):
                 c = b.copy()
