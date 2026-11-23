@@ -680,6 +680,28 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
+        A POD IS RUNNING: THE MIXED CELL (PI 2026-11-23: "Go" to the recommendation that closed the
+        screen's report: a cell with one chain of each of IVRVVRVCVVVVVR and IVRVVRVCVVRVVR, 25 mol%
+        TrFE, "a few hours of a rented machine"). `kkktr47qhm7e5l`, name `polyfind-mixed`, Runpod
+        Secure Cloud EU-SE-1, one NVIDIA A40, $0.59/h (read before creating: stock Medium, no pods on
+        the account), CREATED 01:03:00 UTC 2026-11-23, confirmed by a read; its status file was there
+        in three seconds. IT REMOVES ITSELF AT 5 HOURS (`BENCH_LIMIT_S=18000`: 06:03 UTC): DELETE IT
+        BY 05:57 UTC AFTER A LAST MIRROR, SOONER IF ITS WORK IS DONE, AND CONFIRM BY A READ
+        (`python scratchpad/runpod/mcp.py call delete-pod '{"id":"kkktr47qhm7e5l"}'`, then `list-pods`
+        none and `get-pod` 404). At most $2.95; spend before it about $39.4 of $46.
+        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261123_mixed.txt`; docs 3.26 to be written):
+        processors, from the start: DFT on the parent IVRVVRVCVVRVVR's lowest all-trans cell, lowest
+        helix cell and helix in the leader's packing (it has no DFT; about 90 minutes a cell). Card:
+        the mixed row `vdf17-trfe7-cfe2-rvdf2-28` relaxed in eight packings, both ways round (16 cells,
+        `mlip/screen14_starts_e.extxyz`, `examples/screen14_mixed_starts.sh`; a kind ending in x has
+        the chains the other way round); its 8 kink sheets (`screen14_sheets_3.extxyz`); the hop of
+        its cheapest kink (`screen_hop_card.sh`, scans `mix_{a,b}{1,2}`); then DFT on the card on the
+        four cells `screen14.py pick` names (lowest helix, lowest all-trans, the lowest of each in
+        another packing; about 49 minutes a cell). Nothing in the queue waits for a person.
+        HOW TO READ IT: `scratchpad/runpod/pod_mixed.sh PATH` (token in `scratchpad/runpod/
+        token_mixed.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_mixed.py` (into
+        `scratchpad/runpod/mixed/`), `scratchpad/runpod/dft_progress_mixed.sh`. If the token file is
+        lost the results cannot be read: delete the pod.
         THE FIFTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (PI 2026-11-22: "Screen for
         candidates", and "Runpod, 8 hours" when asked which machine). `d590ilrkoi1fqt`, Runpod Secure
         Cloud EU-SE-1, one A40, $0.59/h, 16:26:36 to 23:52:14 UTC 2026-11-22 (`delete-pod` 204),
