@@ -680,38 +680,47 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
-        THE SIXTH POD IS GONE: `kkktr47qhm7e5l` DELETED 05:35:10 UTC 2026-11-23 (`delete-pod` 204) AND
-        CONFIRMED BY READS at 05:35:17 (`list-pods`: none; `get-pod`: 404; no network volumes). 4.54 h,
-        about $2.68 of the $2.95 cap; spend about $42.1 of $46. NO POD IS RUNNING. Every job of its
-        queue ran and all eight DFT labels landed; what follows is the record of it, to be rewritten as
-        a summary when docs 3.26 is in. RESULTS SO FAR: the mixed cell's margin +0.011 in the potential
-        and +0.023 in DFT from its lowest labelled cells (upright all-trans, helix in the leader's
-        packing); the four-TrFE parent IVRVVRVCVVRVVR -0.107 in DFT (upright all-trans, helix in the
-        film composition's packing; the potential -0.033 from its own lowest pair); the mixed cell's
-        kink on its chlorine (-4.16), hop 6.38; on the four axes 4.0 MHz, tan delta 0.0068, 0.15 to
-        0.16%, 8.1 pN/nm2 (`four_axes_screen14_mixed.json`).
-        (THE RECORD:) THE MIXED CELL (PI 2026-11-23: "Go" to the recommendation that closed the
-        screen's report: a cell with one chain of each of IVRVVRVCVVVVVR and IVRVVRVCVVRVVR, 25 mol%
-        TrFE, "a few hours of a rented machine"). `kkktr47qhm7e5l`, name `polyfind-mixed`, Runpod
-        Secure Cloud EU-SE-1, one NVIDIA A40, $0.59/h (read before creating: stock Medium, no pods on
-        the account), CREATED 01:03:00 UTC 2026-11-23, confirmed by a read; its status file was there
-        in three seconds. IT REMOVES ITSELF AT 5 HOURS (`BENCH_LIMIT_S=18000`: 06:03 UTC): DELETE IT
-        BY 05:57 UTC AFTER A LAST MIRROR, SOONER IF ITS WORK IS DONE, AND CONFIRM BY A READ
-        (`python scratchpad/runpod/mcp.py call delete-pod '{"id":"kkktr47qhm7e5l"}'`, then `list-pods`
-        none and `get-pod` 404). At most $2.95; spend before it about $39.4 of $46.
-        WHAT IT DOES (queue `examples/gpu_jobs/queue_20261123_mixed.txt`; docs 3.26 to be written):
-        processors, from the start: DFT on the parent IVRVVRVCVVRVVR's lowest all-trans cell, lowest
-        helix cell and helix in the leader's packing (it has no DFT; about 90 minutes a cell). Card:
-        the mixed row `vdf17-trfe7-cfe2-rvdf2-28` relaxed in eight packings, both ways round (16 cells,
-        `mlip/screen14_starts_e.extxyz`, `examples/screen14_mixed_starts.sh`; a kind ending in x has
-        the chains the other way round); its 8 kink sheets (`screen14_sheets_3.extxyz`); the hop of
-        its cheapest kink (`screen_hop_card.sh`, scans `mix_{a,b}{1,2}`); then DFT on the card on the
-        four cells `screen14.py pick` names (lowest helix, lowest all-trans, the lowest of each in
-        another packing; about 49 minutes a cell). Nothing in the queue waits for a person.
-        HOW TO READ IT: `scratchpad/runpod/pod_mixed.sh PATH` (token in `scratchpad/runpod/
-        token_mixed.txt`, NEVER shown or committed), `python scratchpad/runpod/mirror_mixed.py` (into
-        `scratchpad/runpod/mixed/`), `scratchpad/runpod/dft_progress_mixed.sh`. If the token file is
-        lost the results cannot be read: delete the pod.
+        THE SIXTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (PI 2026-11-23: "Go" to the
+        recommendation that closed the screen's report: a cell with one chain of each of
+        IVRVVRVCVVVVVR and IVRVVRVCVVRVVR, 25 mol% TrFE, "a few hours of a rented machine").
+        `kkktr47qhm7e5l`, Runpod Secure Cloud, one A40, $0.59/h (stock and price read before
+        creating), 01:03:00 to 05:35:10 UTC 2026-11-23 (`delete-pod` 204), CONFIRMED GONE BY READS at
+        05:35:17 (`list-pods`: none; `get-pod`: 404; no network volumes). 4.54 h, about $2.68 of a
+        $2.95 cap. Spend about $42.1 of $46. NO POD IS RUNNING. Every job of its queue ran without a
+        hand on it and all eight DFT labels landed.
+        WHAT IT FOUND (docs `MLIP_SECOND_OPINION.md` 3.26, the head of `CANDIDATE_MATERIALS.md`):
+        - THE MIXED CELL (`vdf17-trfe7-cfe2-rvdf2-28`, letters `IVRVVRVCVVVVVR+IVRVVRVCVVRVVR`):
+          all-trans less helix +0.011 in the potential (`screen14_potential_e.json`; 16 cells, the two
+          ways round the same cell) and **+0.023 IN DFT** from its lowest labelled cells (its upright
+          all-trans cell and its helix in the leader's packing; the potential +0.030 on those two).
+        - THE MARGIN RUNS WITH THE TrFE IN DFT: IVRVVRVCVVVVVR (21 mol%) +0.196, the mixed cell
+          (25) +0.023, IVRVVRVCVVRVVR (29) -0.107; zero near 26 mol%
+          (`screen14_dft.json`, `screen14_mixed_dft.json`, labels in
+          `mlip/screen14_mixed_frames_pbe_d3bj.extxyz`). In all three DFT's lowest all-trans cell is
+          the upright one, and DFT has the low all-trans pattern and the helix in the film
+          composition's packing 1.2 to 1.7 kcal/mol per chain higher against it than the potential
+          has; THOSE ARE ALSO THE CELLS WITH THE MOST FORCE LEFT (0.11 to 0.23 eV/A against 0.06 to
+          0.09), and no cell was relaxed in DFT. The four-TrFE parent's -0.107 stands on one of them
+          (the potential's own lowest pair: -0.033, and DFT on that pair -0.036).
+        - ITS KINK is on its chlorine (-4.16 per chain against its lowest all-trans cell in the
+          potential) and HOPS OVER 6.38 (`screen14_sheets_3.json`, `screen14_mixed_hops.json`, scans
+          `mlip/paths/mix_*`): the three-TrFE parent's 6.45; the film's composition 7.81.
+        - FOUR AXES (`examples/screen14_mixed_axes.sh`, `four_axes_screen14_mixed.json`; on its
+          parent's and the leader's inputs): 4.0 MHz, tan delta 0.0068, 0.152 to 0.161%, 8.1 pN/nm2
+          (the leader's stiffness); the film's composition 364 kHz, 0.088, 0.081%, 7.6. THE FIRST
+          CELL THAT READS AHEAD OF THE FILM'S COMPOSITION ON ALL FOUR WITH A MARGIN ABOVE ZERO; it
+          rests on +0.023 from one regular cell, a hop without DFT, and another row's inputs.
+        NOT DONE, AND WHAT WOULD COME NEXT: DFT at the hop's top and its sheet
+        (`mix_a1_i06`, `scr_vdf17-trfe7-cfe2-rvdf2-28_sheetf_at12_in_all_s1`; two cells, about 100
+        minutes of a card); a few DFT relaxation steps on the cells with force left, to see how much
+        of the 1.2 to 1.7 is the single point; belt4's own inputs for the mixed cell (polyfind does
+        not build a cell of two different chains); a cell with the chains in different helix
+        placements; other ratios (two of one sequence to one of the other needs three chains).
+        TOOLS ADDED: `screen14.py` takes `A+B` letters (a sequence a chain) and has `pick` (the cells
+        DFT is asked about); `examples/screen14_mixed_starts.sh`; `gpu_jobs/screen_pick_dft.sh` and
+        `screen_hop_card.sh` choose from the pod's own tables, so a queue can be written whole before
+        the pod is made (this one was: `queue_20261123_mixed.txt`). Tests: `tests/test_screen14.py`
+        (23).
         THE FIFTH POD IS GONE AND ITS RESULTS ARE IN THE REPOSITORY (PI 2026-11-22: "Screen for
         candidates", and "Runpod, 8 hours" when asked which machine). `d590ilrkoi1fqt`, Runpod Secure
         Cloud EU-SE-1, one A40, $0.59/h, 16:26:36 to 23:52:14 UTC 2026-11-22 (`delete-pod` 204),

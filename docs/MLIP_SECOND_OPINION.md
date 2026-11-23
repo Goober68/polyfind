@@ -2938,3 +2938,136 @@ takes a cycle of substituents and a cell with a nitrile. The pod's jobs:
 `examples/gpu_jobs/queue_20261122_screen.txt`, `screen_card.sh`, `screen_sheets_card.sh`,
 `screen_dft.sh`, `screen_front.sh`, `screen_card_or.sh`, and `steps_card.sh`, which now reads
 the cells a screen relaxed. Tests: `tests/test_screen14.py`, `tests/test_registry_cells.py`.
+
+### 3.26 A cell of two different chains at 25 mol% TrFE: all-trans less helix +0.023 in DFT between its parents' +0.196 and -0.107, with the three-TrFE parent's hop (2026-11-23; PI: "Go")
+
+A sixth rented machine of the same kind (one A40, $0.59 an hour;
+`examples/gpu_jobs/queue_20261123_mixed.txt`), 4.54 hours, about $2.68. 3.25 ended on two rows
+one TrFE in fourteen apart, `IVRVVRVCVVVVVR` at +0.196 in DFT and `IVRVVRVCVVRVVR` at -0.033 in
+the potential, both with the kink on the chlorine and the first hopping over 6.45 where the
+film's composition hops over 7.81, and on a cell that was not made: one chain of each, 25 mol%
+TrFE, the same size as theirs. What was asked here: that cell, its margin in the potential and
+in DFT, and its kink.
+
+**How it is made.** `examples/screen14.py` now takes a sequence for each chain
+(`IVRVVRVCVVVVVR+IVRVVRVCVVRVVR`: `registry_cells.morphed` makes each chain its own and each
+is checked against its own). The cell was given every packing 3.25 learned a row must be
+given: all-trans in the film composition's low pattern, its upright one, the matrix's and the
+leader's; helix in the film composition's three lower placements and in the leader's packing
+(`examples/screen14_mixed_starts.sh`, row `vdf17-trfe7-cfe2-rvdf2-28`). A cell of two chains
+has two ways of holding two different chains, and both were made: sixteen cells, all at rest on
+the card in 24 minutes. **The two ways round are the same cell to the last digit in all eight
+packings**: the two chains are equivalent in every cell it was given.
+
+**In the potential: +0.011.** kcal/mol per chain: all-trans in the low pattern 0, upright
++0.47, the matrix's +1.79, the leader's +2.20; helix in the film composition's packing
+(GTGpT) 0, **the leader's +0.20**, the other two placements +3.16 and +3.79
+(`docs/predictions/screen14_potential_e.json`). All-trans less helix +0.011 kcal/mol per
+monomer, below the middle of its parents' +0.201 and -0.033. Two helix packings 0.20 apart is
+where 3.25 found the potential cannot be trusted, so DFT was asked about four cells, not two
+(`screen14.py pick`: the lowest helix and all-trans cells and the lowest of each in another
+packing), and about the same four of the four-TrFE parent, which had no DFT.
+
+**In DFT the margin runs with the TrFE, and the mixed cell is above zero.** Eight labels
+(PBE-D3(BJ) single points on the potential's cells; the mixed cell's four on the card in 46 to
+51 minutes each, the parent's four on the processors in 56 to 85), and 3.25's four for the
+three-TrFE parent beside them. kcal/mol per chain against each row's upright all-trans cell,
+DFT (the potential), and all-trans less helix per monomer from the lowest labelled cells
+(`screen14_mixed_dft.json`, `screen14_dft.json`, `mlip/screen14_mixed_frames_pbe_d3bj.extxyz`):
+
+| | `IVRVVRVCVVVVVR`, 21 mol% TrFE | one chain of each, 25 mol% | `IVRVVRVCVVRVVR`, 29 mol% | largest force left, eV/A |
+|---|---:|---:|---:|---:|
+| all-trans, upright | 0 | 0 | 0 | 0.06 to 0.07 |
+| all-trans, the low pattern | +1.51 (+0.18) | +0.68 (-0.47) | +1.00 (-0.42) | 0.11 to 0.13 |
+| helix, the film composition's packing | +0.49 (-1.23) | +0.99 (-0.63) | **+1.50** (+0.04) | 0.22 to 0.23 |
+| helix, the leader's packing | **-2.75** (-2.85) | **-0.32** (-0.42) | +2.17 (+1.89) | 0.07 to 0.09 |
+| **all-trans less helix, DFT** | **+0.196** | **+0.023** | **-0.107** | |
+| the potential on the same two cells | +0.204 | +0.030 | -0.003 | |
+| the potential from its own lowest two | +0.201 | +0.011 | -0.033 | |
+
+- **+0.196, +0.023, -0.107**: 0.17 and 0.13 for each step of one TrFE in twenty-eight, and the
+  mixed cell 0.02 below the middle of its parents. On that line zero is near 26 mol% TrFE and
+  the film composition's +0.063 near 24.
+- **The mixed cell's margin stands on its two cells with the least force left** (the upright
+  all-trans cell and the helix in the leader's packing, 0.07 and 0.09 eV/A), and the potential
+  is 0.007 from DFT on them. Its helix in the film composition's packing, which the potential
+  had 0.20 lower, is 1.31 per chain higher in DFT.
+- **The same three things in all three rows.** DFT's lowest all-trans cell is the upright one.
+  Against it DFT has the low all-trans pattern 1.33, 1.15 and 1.42 per chain higher than the
+  potential has, and the helix in the film composition's packing 1.72, 1.62 and 1.46 higher;
+  the helix in the leader's packing 0.11, 0.11 and 0.28. In the film's composition itself,
+  which has no reversed unit, the low pattern is DFT's lower one by 0.84 (3.24): with the
+  reversed unit first it is not.
+- **Those two cells are also the ones with the most force left in DFT** (0.11 to 0.13 and 0.22
+  to 0.23 eV/A against 0.06 to 0.09). A single point on a cell that is further from DFT's own
+  minimum reads high, so part of the 1.2 to 1.7 may be that and not the potential's error;
+  none of these cells was relaxed in DFT. It matters most for the four-TrFE parent, whose
+  lowest helix cell is the one at 0.22 eV/A: its -0.107 would move toward zero by whatever
+  that cell has left to fall, and the potential's own lowest pair gives it -0.033 (DFT on that
+  pair: -0.036).
+- The four-TrFE parent is the film's composition with one VDF unit reversed. The film's
+  composition is at +0.063 in DFT from its lowest labelled cells: the reversed unit costs 0.17
+  where the potential said 0.11.
+
+**Its kink is on the chlorine and hops as the three-TrFE parent's does.** Eight sheets, made
+of the film composition's and the leader's as in 3.25, both ways round, all at rest with the
+kink kept; kcal/mol per chain against the cell's lowest all-trans cell in the potential
+(`screen14_sheets_3.json`): at the chlorine -4.16 (site 12) and -4.08 (14m) made of the film
+composition's sheets, -2.43 made of the leader's; on the run of VDF units -1.05. The hop of
+the cheapest (`examples/gpu_jobs/screen_hop_card.sh` took the pair from the pod's own tables;
+`screen14_mixed_hops.json`): **6.38** to a stretched kink at +0.35, the other order 7.47; the
+kink is removed over 11.64. The three-TrFE parent hops over 6.45, the film's composition over
+7.81, the leader over 5.67, all in the potential.
+
+**On the four axes.** As in 3.25 the cell has no dipole, switch strain or stiffness of its own
+(belt4 has not built it), so its DFT margin and its hop go through the tables on its
+four-TrFE parent's inputs and on the leader's (`examples/screen14_mixed_axes.sh`,
+`four_axes_screen14_mixed.json`); blocked force is through the stand-in's crystal stiffness:
+
+| | margin | frequency | tan delta | AC strain | blocked force, pN/nm2 |
+|---|---:|---:|---:|---:|---:|
+| the film's composition (the anchor) | +0.063, DFT | 364 kHz | 0.088 | 0.081% | 7.6 |
+| the mixed cell on the leader's inputs | +0.023, DFT | 4.0 MHz | 0.0068 | 0.152% | 8.1 |
+| the same on `IVRVVRVCVVRVVR`'s inputs | +0.023, DFT | 4.0 MHz | 0.0068 | 0.161% | no stiffness for that row |
+| `IVRVVRVCVVVVVR` (3.25) | +0.196, DFT | 3.6 MHz | 0.0012 to 0.0013 | 0.057 to 0.073% | 2.7 |
+
+- **Eleven times the film composition's rate, a thirteenth of its loss, about twice its strain,
+  and the same blocked force**, on a margin above zero. With the margin moved 0.05 either way
+  the strain stays between 0.147 and 0.163% and tan delta between 0.0054 and 0.0077; at the
+  lower end the margin is below zero and the model takes it as zero, which is the leader's
+  caveat of 3.24 (a cell with all-trans the lower one is a ferroelectric, which the model does
+  not hold).
+- By the film's assumed modulus the blocked force is the strain again: 0.30 to 0.32 pN/nm2
+  against the anchor's 0.16.
+- **This is the first cell here that reads ahead of the film's composition on all four axes
+  with a margin on the film composition's side of zero.** What it rests on: one regular cell's
+  margin of +0.023, which is smaller than what a regular cell's two all-trans patterns differ
+  by; a hop that is the potential's; and three inputs that are another row's.
+
+What this is and is not:
+
+- One regular cell of two chains, one of each sequence, every chain's units in one registry
+  with its neighbours'. A statistical terpolymer at 25 mol% TrFE has every chain different. The
+  cell says the margin of this family runs with the TrFE and crosses zero near there; it does
+  not say a film of that composition has this margin.
+- Not a search. Eight packings, both chains in the same helix placement; a cell with the two
+  chains in different placements was not made.
+- DFT is a single point on a cell the potential relaxed, and the cells differ in how much force
+  they have left (0.06 to 0.23 eV/A). The mixed cell's margin is from its two best cells; the
+  four-TrFE parent's is not.
+- The hop is a step scan in the potential from one sheet, twelve points, two orders. No DFT at
+  its top. On the film's composition and the leader the potential's hop was 0.11 and 0.54
+  high.
+- The four axes are the loss model on another row's dipole, switch strain and stiffness, with
+  the frequency read from the hop as 3.23 reads the film's.
+- Static energies at zero kelvin (3.24's list holds).
+
+Files: `examples/screen14_mixed_starts.sh`, `examples/screen14_mixed_axes.sh`,
+`examples/screen14.py` (`A+B` letters, `pick`); `docs/predictions/mlip/screen14_starts_e.extxyz`,
+`screen14_relaxed_e.extxyz`, `docs/predictions/screen14_potential_e.json`;
+`mlip/screen14_sheets_3.extxyz`, `mlip/screen14_sheets_3_relaxed.extxyz`, `screen14_sheets_3.json`;
+`mlip/paths/mix_{a,b}{1,2}.{json,extxyz}`, `screen14_mixed_hops.json`;
+`mlip/screen14_mixed_frames_pbe_d3bj.extxyz` (eight labels, each with `dft_run`),
+`screen14_mixed_dft.json`, `screen14_dft.json` (now with the four-TrFE parent);
+`four_axes_screen14_mixed.json`. The pod's jobs: `examples/gpu_jobs/queue_20261123_mixed.txt`,
+`screen_pick_dft.sh`, `screen_hop_card.sh`. Tests: `tests/test_screen14.py`.

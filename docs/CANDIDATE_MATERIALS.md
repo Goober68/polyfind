@@ -295,11 +295,43 @@ lower phase, and a kink pair is one turn of that helix.
   of margin either way. The no-pin row is the film's composition again without the chlorine,
   on a margin DFT has not seen. The margin is tunable (one TrFE in fourteen is worth 0.23 to
   0.34; the CFE row is at +0.20 with three and -0.03 with four), and a cell with one chain of
-  each, 25 mol% TrFE, was not made. **What the screen taught about the method: a cell made of
+  each, 25 mol% TrFE, was not made (it is the next bullet). **What the screen taught about the method: a cell made of
   another keeps its packing.** The leader as a control came back 0.27 a monomer too low until it
   was given its own helix packing, and the two rows above moved by 0.11 and 0.16 with it; on
   the CFE row DFT agrees with the potential to 0.008 on the lowest cells and differs by 0.12
   on the pair that is not. DFT covered one row's margin where three were planned.
+- **That cell reads ahead of the film's composition on all four axes, on a margin just above
+  zero (2026-11-23, `docs/MLIP_SECOND_OPINION.md` 3.26; a sixth rented machine).** One chain of
+  `IVRVVRVCVVVVVR` and one of `IVRVVRVCVVRVVR` in a cell: a CFE terpolymer with one reversed VDF
+  unit in fourteen and 25 mol% TrFE. All-trans less helix from each row's lowest labelled
+  cells, DFT, kcal/mol per monomer:
+
+  | | TrFE | DFT | the potential on the same two cells |
+  |---|---:|---:|---:|
+  | `IVRVVRVCVVVVVR` | 21 mol% | +0.196 | +0.204 |
+  | **one chain of each** | **25 mol%** | **+0.023** | +0.030 |
+  | `IVRVVRVCVVRVVR` | 29 mol% | -0.107 | -0.003 |
+
+  The margin runs with the TrFE, 0.13 to 0.17 for one unit in twenty-eight, and crosses zero
+  near 26 mol%. The mixed cell's kink is on its chlorine (4.16 kcal/mol per chain below
+  all-trans) and hops over **6.38**, the three-TrFE parent's 6.45 (the film's composition
+  7.81, the leader 5.67, all in the potential). On the four axes, on its parent's and the
+  leader's dipole, switch strain and stiffness, frequency by the hop:
+
+  | | frequency | tan delta | AC strain | blocked force per area, pN/nm2 |
+  |---|---:|---:|---:|---:|
+  | the film's composition (the anchor) | 364 kHz | 0.088 | 0.081% | 7.6 |
+  | **the mixed cell** | **4.0 MHz** | **0.0068** | **0.15 to 0.16%** | **8.1** (the leader's stiffness) |
+
+  Eleven times the rate, a thirteenth of the loss, about twice the strain, the same blocked
+  force; with the margin moved 0.05 either way the strain stays between 0.147 and 0.163%.
+  **What it rests on**: a margin of +0.023 from one regular cell, smaller than what such a
+  cell's two all-trans patterns differ by; a hop that is the potential's and has no DFT at its
+  top; inputs for the other three axes that are another row's. DFT is a single point on the
+  potential's cells, and in all three rows the cells it rates higher than the potential does
+  (the low all-trans pattern, the helix in the film composition's packing, by 1.2 to 1.7
+  kcal/mol per chain) are the ones with the most force left; the four-TrFE parent's -0.107
+  stands on one of them and the potential's own lowest pair gives it -0.033.
 - **The nitrile unit does not hold a kink**: the nitrile cell's sheet at the nitrile unit
   itself is 3.64 above all-trans in DFT (the potential 2.18). The chlorine holds one 4.2 to
   5.0 deep.
