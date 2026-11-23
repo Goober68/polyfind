@@ -680,7 +680,17 @@ right": true at one registry, not along it).
         and both wrote nothing. The stored file is written whole: give all seven pairs and both controls again
         (film and matrix all-trans cells in `/opt/dft/rows14`, the rest in `/opt/dft/sheets14s`; frames are
         named in the stored file).
-        A POD IS RUNNING: THE MIXED CELL (PI 2026-11-23: "Go" to the recommendation that closed the
+        THE SIXTH POD IS GONE: `kkktr47qhm7e5l` DELETED 05:35:10 UTC 2026-11-23 (`delete-pod` 204) AND
+        CONFIRMED BY READS at 05:35:17 (`list-pods`: none; `get-pod`: 404; no network volumes). 4.54 h,
+        about $2.68 of the $2.95 cap; spend about $42.1 of $46. NO POD IS RUNNING. Every job of its
+        queue ran and all eight DFT labels landed; what follows is the record of it, to be rewritten as
+        a summary when docs 3.26 is in. RESULTS SO FAR: the mixed cell's margin +0.011 in the potential
+        and +0.023 in DFT from its lowest labelled cells (upright all-trans, helix in the leader's
+        packing); the four-TrFE parent IVRVVRVCVVRVVR -0.107 in DFT (upright all-trans, helix in the
+        film composition's packing; the potential -0.033 from its own lowest pair); the mixed cell's
+        kink on its chlorine (-4.16), hop 6.38; on the four axes 4.0 MHz, tan delta 0.0068, 0.15 to
+        0.16%, 8.1 pN/nm2 (`four_axes_screen14_mixed.json`).
+        (THE RECORD:) THE MIXED CELL (PI 2026-11-23: "Go" to the recommendation that closed the
         screen's report: a cell with one chain of each of IVRVVRVCVVVVVR and IVRVVRVCVVRVVR, 25 mol%
         TrFE, "a few hours of a rented machine"). `kkktr47qhm7e5l`, name `polyfind-mixed`, Runpod
         Secure Cloud EU-SE-1, one NVIDIA A40, $0.59/h (read before creating: stock Medium, no pods on
