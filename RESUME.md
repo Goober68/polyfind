@@ -782,6 +782,19 @@ right": true at one registry, not along it).
         part's 1.6, 3.6 and 3.4 MHz) and what stops it below that is heat, not computed. Speed per
         V/um per MHz: 15.8, 10.3, 12.8 mm/s per mm. ASKED OF THE PI, NOT ANSWERED: what frequency
         the device runs at or needs.
+        THE PI ON THE CRYSTALS (2026-11-23, in `CLAUDE.md` verbatim): the defects are what give PVDF
+        its strain; 6.1's crystals are defect-free and were set beside the film with its defects.
+        ON EQUAL FOOTING the row beside them is PVDF's own crystal (15.8 pm/V, 0.33). What the
+        defects buy PVDF by our numbers: 27 to 68 times the crystal's stroke per volt (432 to 1080
+        pm/V against 15.8), 0.27 to 0.66 of its force per volt at the assumed 0.2 GPa, and a ceiling,
+        the switch's relaxation (364 kHz to 27 MHz). LITERATURE (search summaries, not read in
+        full): nylons have been made relaxor-like the same way, nylon-11/nylon-12 random copolymers
+        with N-methylated nylon-11 units, slim loops at raised temperature (Zhang, Litt, Zhu,
+        Macromolecules 50, 9360, 2017); no strain or rate found for them. DIRECTION FROM HERE: the
+        broad screen of more perfect crystals announced to the PI is NOT queued. Asked instead of
+        the amide and urea chains: the balance of the polar cell against the opposed one (cells
+        `*_o1`, `*_o2` built, DFT not yet run), the smallest move that turns a chain in its sheet
+        and its barrier, and what a defect (N-methyl, a spacer of another length) does to both.
         TRAPS FOUND. (1) `/usr/bin/pw.x` (6.7, the system package) aborts in a relaxation; use
         `/opt/mm/qe/bin/pw.x` (7.5) as every earlier run here did. (2) THE BERRY PHASE OF pw.x 7.5
         IS WRONG WITH PAW AND ULTRASOFT FILES: on the lone PVDF chain, where the density's moment

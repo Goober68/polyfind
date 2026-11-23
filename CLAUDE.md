@@ -116,6 +116,23 @@ field, and "10s of mhz" as the drive's ceiling):
 - Speed is given so that it can be read at any frequency (per MHz, or at the candidate's own
   limit), not at one borrowed drive.
 
+## The defects are the function; a perfect crystal is not the candidate (PI, 2026-11-23)
+
+The PI's words, on a table that set perfect crystals of an amide and a urea chain beside the film:
+"Aren't you forgetting the fact that it's the defects in PVDF that give it its strain and
+functionality?"
+
+Scope: every comparison of a chain with the film, and every screen of chains.
+
+How it is applied (an interpretation, not the PI's words):
+
+- The film is PVDF with its defects (TrFE, CFE): they are what brings its two states into balance
+  and gives the strain. A defect-free crystal of another chain stands beside PVDF's defect-free
+  crystal, never beside the film, and the write-up says so in those words.
+- Of every chain the question is the one asked of PVDF: what its two states are, how far apart,
+  what the smallest move between them costs, and which defects bring the balance within the
+  field's reach. A chain's perfect crystal is the baseline for that, not the result.
+
 ## Free motion stores and returns energy; work and heat begin at the blocking force (PI, 2026-11-23)
 
 The PI's words: "the energy dissipated depends on the work done not your theoretical numbers - the
