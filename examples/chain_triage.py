@@ -309,6 +309,84 @@ def opposed(args):
                   f"(the polar cell {a.get_volume() / a.info['triage_repeats']:.1f}), closest {closest(c):.2f} A, k {mesh}", flush=True)
 
 
+def turned_by(atoms, edge: int, angle: float):
+    """``turned`` with the second chain turned by ``angle`` (radians) instead of half round."""
+    n = len(atoms)
+    b = turned(atoms, edge)
+    start = atoms.repeat([2 if edge == k else 1 for k in range(3)]).positions[n:]
+    along = atoms.cell.array[2] / np.linalg.norm(atoms.cell.array[2])
+    d = start - start.mean(axis=0)
+    b.positions[n:] = start.mean(axis=0) + d * np.cos(angle) + np.cross(along, d) * np.sin(angle) + np.outer(d @ along, along) * (1 - np.cos(angle))
+    return b
+
+
+def turn(args):
+    """How locked a chain is: the way from the polar cell to the one with every second chain turned.
+
+    The cell is the polar one doubled and is held; the second chain is turned about its own axis in
+    equal steps, the two ends are relaxed and the path between them settled as a band, all in the
+    pretrained potential.  ``points`` then asks DFT for the energy of every image.  The top of the
+    path, for each repeat of the chain that turns, is what it costs to turn a whole row of chains at
+    once: an upper mark for the smallest move, which in a real crystal is a twist that travels."""
+    from ase.io import read, write
+    from ase.mep import NEB
+    from ase.optimize import FIRE, LBFGS
+
+    calc = model(args.model)
+    src = Path(args.frames)
+    for item in args.names.split(","):
+        name, edge = item.rsplit(":", 1)
+        edge = int(edge) - 1
+        a = read(src / f"{name}.relaxed.xyz")
+        images = [turned_by(a, edge, t) for t in np.linspace(0.0, np.pi, args.images)]
+        for im in images:
+            im.calc = calc
+        for end in (images[0], images[-1]):
+            LBFGS(end, logfile=None).run(fmax=0.03, steps=300)
+        band = NEB(images, climb=True, method="improvedtangent", allow_shared_calculator=True)
+        opt = FIRE(band, logfile=None)
+        opt.run(fmax=args.fmax, steps=args.steps)
+        energies = [float(im.get_potential_energy()) for im in images]
+        reps = int(a.info["triage_repeats"])
+        out = []
+        for k, im in enumerate(images):
+            c = im.copy()
+            c.info.update(images[0].info)
+            c.info.update(triage_turn_of=name, triage_turn_edge=edge + 1, triage_turn_image=k, triage_turn_ev=energies[k] - energies[0])
+            out.append(c)
+        write(src / f"{name}_turn{edge + 1}.path.xyz", out, format="extxyz")
+        top = max(energies) - energies[0]
+        print(f"{name}_turn{edge + 1}: {len(images)} images, {opt.nsteps} steps, top {top * KCAL / reps:.2f} kcal/mol a repeat of the turning chain in the potential, "
+              f"end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
+
+
+def points(args):
+    """DFT's energy of every image of a path ``turn`` made (the cell and the atoms as they are)."""
+    from ase.io import read
+
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        images = read(src / f"{name}.path.xyz", index=":")
+        work = src / "work" / name
+        reps = int(images[0].info["triage_repeats"]) // 2  # of the chain that turns
+        energies = []
+        t0 = time.time()
+        for k, im in enumerate(images):
+            out = work / f"image_{k}.out"
+            if not (out.exists() and "JOB DONE" in out.read_text(errors="replace")):
+                run(args.pw, args.np, pw_input(im, args.pseudo, work / f"scratch_{k}", "scf"), work, f"image_{k}")
+            text = out.read_text(errors="replace")
+            ry = [float(line.split("=")[1].split()[0]) for line in text.splitlines() if line.startswith("!")]
+            energies.append(ry[-1] * 13.605693123 if ry else float("nan"))
+        rel = [(e - energies[0]) * KCAL / reps for e in energies]
+        record = {"name": name, "kind": "path", "of": images[0].info["triage_turn_of"], "edge": int(images[0].info["triage_turn_edge"]),
+                  "turning_repeats": reps, "energy_ev": energies, "kcal_per_turning_repeat": rel, "top_kcal_per_turning_repeat": float(np.nanmax(rel)),
+                  "potential_kcal_per_turning_repeat": [float(im.info["triage_turn_ev"]) * KCAL / reps for im in images]}
+        (src / f"{name}.path.json").write_text(json.dumps(record, indent=1))
+        print(f"{name}: DFT on {len(images)} images, top {np.nanmax(rel):.2f} kcal/mol a repeat of the turning chain, end {rel[-1]:+.2f}; "
+              f"profile {' '.join(f'{v:.2f}' for v in rel)}, {time.time() - t0:.0f} s", flush=True)
+
+
 def pw_input(atoms, pseudo_dir, outdir, calculation: str, free: str = "z", conv_thr: float = 1e-9, ecut=(90, 360), files=None):
     """The anchor's settings (PBE, D3(BJ) two-body, 90/360 Ry) for a relaxation of this cell."""
     files = files or PSEUDO
@@ -613,13 +691,17 @@ def table(args):
     from ase.io import read, write
 
     src = Path(args.frames)
-    rows = [json.loads(p.read_text()) for p in sorted(src.glob("*.json"))]
+    rows = [json.loads(p.read_text()) for p in sorted(src.glob("*.json")) if not p.name.endswith(".path.json")]
+    paths = [json.loads(p.read_text()) for p in sorted(src.glob("*.path.json"))]
     out = {"what": "chains alone in a box and one chain to a cell, PBE-D3(BJ) at 90/360 Ry (examples/chain_triage.py); "
                    "polarisation by the Berry phase with norm-conserving files on the same geometry",
            "units": {"rise_a": "A a repeat along the chain", "volume_a3": "A3 a repeat (a lone chain's is its box)",
                      "dipole_across_e_a": "e A a repeat, across the chain, from the charge density",
                      "stretch": "nN per unit strain of the chain", "berry": "C/m2", "piezo": "c GPa, e C/m2 (pN/nm2 per V/um), d pm/V"},
-           "rows": rows}
+           "rows": rows, "paths": paths}
+    for q in paths:
+        print(f"{q['name']:20s} turning every second chain of {q['of']}: top {q['top_kcal_per_turning_repeat']:.2f} kcal/mol a repeat that turns, "
+              f"end {q['kcal_per_turning_repeat'][-1]:+.2f} (DFT on the potential's path)")
     if args.cells:
         cells = []
         for r in rows:
@@ -704,6 +786,21 @@ def main():
     o.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
     o.add_argument("--steps", type=int, default=200)
     o.set_defaults(run=opposed)
+    u = sub.add_parser("turn")
+    u.add_argument("--frames", type=Path, required=True)
+    u.add_argument("--names", required=True, help="NAME:EDGE, the polar cell and the edge (1 or 2) it is doubled along")
+    u.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    u.add_argument("--images", type=int, default=7)
+    u.add_argument("--fmax", type=float, default=0.08)
+    u.add_argument("--steps", type=int, default=300)
+    u.set_defaults(run=turn)
+    w = sub.add_parser("points")
+    w.add_argument("--frames", type=Path, required=True)
+    w.add_argument("--names", required=True)
+    w.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
+    w.add_argument("--pseudo", default="/opt/pseudo")
+    w.add_argument("--np", type=int, default=4)
+    w.set_defaults(run=points)
     t = sub.add_parser("table")
     t.add_argument("--frames", type=Path, required=True)
     t.add_argument("--out", type=Path, default=None)

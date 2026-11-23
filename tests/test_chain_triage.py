@@ -117,3 +117,18 @@ def test_a_turned_cell_cancels_what_the_chain_carries_across_itself():
         second = (q[:, None] * (b.positions[3:] - b.positions[3:].mean(axis=0))).sum(axis=0)
         assert np.allclose((first + second)[:2], 0.0) and np.isclose((first + second)[2], 2 * first[2])
         assert np.allclose(b.positions[:3], a.positions)
+
+
+def test_turning_by_nothing_and_by_half_a_turn_are_the_two_ends():
+    from ase import Atoms
+
+    a = Atoms("CHF", positions=[[0.0, 0.0, 0.0], [0.9, 0.3, 0.4], [-0.8, 0.6, 1.1]], cell=[[4.0, 0.0, 0.3], [1.0, 4.5, -0.2], [0.0, 0.0, 2.5]], pbc=True)
+    a.info.update(triage_chain="x", triage_state="tt", triage_repeats=1, triage_kind="crystal", kmesh="4 5 8")
+    assert np.allclose(CT.turned_by(a, 1, 0.0).positions, a.repeat([1, 2, 1]).positions)
+    assert np.allclose(CT.turned_by(a, 1, np.pi).positions, CT.turned(a, 1).positions)
+    quarter = CT.turned_by(a, 0, np.pi / 2)
+    d0 = a.positions - a.positions.mean(axis=0)
+    d1 = quarter.positions[3:] - quarter.positions[3:].mean(axis=0)
+    assert np.allclose(np.linalg.norm(d0, axis=1), np.linalg.norm(d1, axis=1))  # a rigid turn
+    assert np.allclose(d0[:, 2], d1[:, 2])  # about the chain's own axis
+    assert np.allclose((d0[:, :2] * d1[:, :2]).sum(axis=1), 0.0)  # by a quarter
