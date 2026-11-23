@@ -560,17 +560,40 @@ def piezo(args):
 
 
 def table(args):
+    """Every record of a folder in one file, and the relaxed cells beside it."""
+    from ase.io import read, write
+
     src = Path(args.frames)
     rows = [json.loads(p.read_text()) for p in sorted(src.glob("*.json"))]
-    out = {"what": "chains alone in a box and one chain to a cell, PBE-D3(BJ) at 90/360 Ry (examples/chain_triage.py)", "rows": rows}
-    if args.out:
-        args.out.write_text(json.dumps(out, indent=1) + "\n")
+    out = {"what": "chains alone in a box and one chain to a cell, PBE-D3(BJ) at 90/360 Ry (examples/chain_triage.py); "
+                   "polarisation by the Berry phase with norm-conserving files on the same geometry",
+           "units": {"rise_a": "A a repeat along the chain", "volume_a3": "A3 a repeat (a lone chain's is its box)",
+                     "dipole_across_e_a": "e A a repeat, across the chain, from the charge density",
+                     "stretch": "nN per unit strain of the chain", "berry": "C/m2", "piezo": "c GPa, e C/m2 (pN/nm2 per V/um), d pm/V"},
+           "rows": rows}
+    if args.cells:
+        cells = []
+        for r in rows:
+            c = read(src / f"{r['name']}.relaxed.xyz")
+            c.info = {"name": r["name"], "kind": r["kind"], "repeats": r["repeats"], "energy_ev": r["energy_ev"]}
+            c.calc = None
+            cells.append(c)
+        write(args.cells, cells, format="extxyz")
     for r in rows:
         mu = across(r) if across(r) is not None else [np.nan] * 2
         k = r.get("stretch", {})
-        p = r.get("berry", {}).get("magnitude_c_per_m2", float("nan"))
-        print(f"{r['name']:16s} {r['kind']:7s} rise {r['rise_a']:.4f} A  {r['volume_a3']:7.1f} A3  E {r['energy_ev'] / r['repeats']:.5f} eV a repeat  "
-              f"dipole across {np.hypot(*mu) * E_ANGSTROM_TO_DEBYE:.3f} D  stretch {k.get('force_per_strain_nn_by_stress', float('nan')):.1f} nN  P {p:.4f} C/m2")
+        y = dict(r.get("berry", {}))
+        if "polarisation_c_per_m2" in y and r["kind"] != "chain":  # a record made before the two parts were stored
+            pol, along = np.array(y["polarisation_c_per_m2"]), np.array(r["cell"][2]) / np.linalg.norm(r["cell"][2])
+            y.update(along_chain_c_per_m2=float(pol @ along), across_chain_c_per_m2=float(np.linalg.norm(pol - (pol @ along) * along)))
+            r["berry"] = y
+        z = r.get("piezo", {})
+        print(f"{r['name']:14s} {r['kind']:7s} rise {r['rise_a']:.4f} A  {r['volume_a3']:6.1f} A3  E {r['energy_ev'] / r['repeats']:.5f} eV a repeat  "
+              f"dipole across {np.hypot(*mu) * E_ANGSTROM_TO_DEBYE:.3f} D  stretch {k.get('force_per_strain_nn_by_stress', float('nan')):.1f} nN  "
+              f"P across {y.get('across_chain_c_per_m2', y.get('magnitude_c_per_m2', float('nan'))):.4f}  "
+              f"e {z.get('e_along_c_per_m2', float('nan')):+.4f}  c {z.get('c_along_gpa', float('nan')):.1f}  d {z.get('d_clamped_pm_per_v', float('nan')):+.1f}")
+    if args.out:
+        args.out.write_text(json.dumps(out, indent=1) + "\n")
 
 
 def main():
@@ -622,6 +645,7 @@ def main():
     t = sub.add_parser("table")
     t.add_argument("--frames", type=Path, required=True)
     t.add_argument("--out", type=Path, default=None)
+    t.add_argument("--cells", type=Path, default=None, help="write every relaxed cell to this extxyz file")
     t.set_defaults(run=table)
     args = p.parse_args()
     args.run(args)
