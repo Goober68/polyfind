@@ -142,6 +142,27 @@ How it is applied (an interpretation, not the PI's words):
   loses doing it, not on the dipole it holds. Dipole to the volume is the ceiling on what there is
   to move; it is reported as that and never as the rank.
 
+## The target: strong action, low activation, easy-ish return (PI, 2026-11-23)
+
+The PI's words, on chains that hydrogen bonds hold three times as hard as PVDF's are held: "Held
+stronger until u introduce a defect, then its like a over center cam, it snaps back and forth".
+And then: "Thats what we want, strong action low qctivation, easy -ish return"
+
+Scope: what a candidate is looked for, in any family of chains. It says what the five numbers
+above are wanted for.
+
+How it is applied (an interpretation, not the PI's words):
+
+- Strong action: what the chain does once it goes, the force to the area and the stroke, which a
+  strongly held chain has more of.
+- Low activation: how little it takes to tip it, which is two numbers beside the defect: how level
+  its two states are (against the field's 0.06 kcal/mol a monomer at 55 V/um) and how high the
+  hump between them.
+- Easy-ish return: it comes back without slamming, so the hump is low both ways and what a cycle
+  loses is small (the PI's 80% returned).
+- A candidate is a chain WITH its defect. The perfect crystal gives the spring; the cell with a
+  defect in it gives the activation and the return, and both are reported.
+
 ## Free motion stores and returns energy; work and heat begin at the blocking force (PI, 2026-11-23)
 
 The PI's words: "the energy dissipated depends on the work done not your theoretical numbers - the
