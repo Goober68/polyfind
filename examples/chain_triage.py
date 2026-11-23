@@ -211,6 +211,14 @@ def lattice_start(chain, rng, sides=(3.9, 6.2), angles=(60.0, 120.0)):
     return out
 
 
+def nearest(atoms) -> float:
+    """The shortest distance between any two atoms of the cell, images counted (a collapse reads below 0.85 A)."""
+    from ase.neighborlist import neighbor_list
+
+    d = neighbor_list("d", atoms, 1.5)
+    return float(d.min()) if len(d) else 9.9
+
+
 def closest(atoms) -> float:
     """The shortest distance between atoms of different chains (images across the chain)."""
     from ase.neighborlist import neighbor_list
@@ -500,7 +508,19 @@ def nucleus(args):
         tag = "nuc"
         if args.methyl:
             tag = "nucm"
-            base = settle(methylated(base, n, 1), calc, fmax=0.05, steps=args.settle, free=(1, 1, 1, 1, 1, 1))
+            # room for the methyl before anything is relaxed: it is put where the next chain's oxygen
+            # is held (C to O 1.4 A), and from that start the potential does not part the chains, it
+            # folds the cell up (17.5 x 3.3 x 3.8 A with atoms 0.1 A apart, the first time).  The two
+            # chains beyond the methyl are moved along the row and the row's edge grows by as much.
+            base = methylated(base, n, 1)
+            cell = base.cell.array.copy()
+            shift = args.gap * cell[0] / np.linalg.norm(cell[0])
+            base.positions[2 * n:4 * n] += shift
+            cell[0] += shift
+            base.set_cell(cell, scale_atoms=False)
+            base = settle(base, model(args.model), fmax=0.05, steps=args.settle, free=(1, 1, 1, 1, 1, 1))
+            if nearest(base) < 0.85:
+                raise ValueError(f"the cell with the methyl did not settle: two atoms {nearest(base):.2f} A apart")
             along = base.cell.array[2] / np.linalg.norm(base.cell.array[2])
         images = []
         for t in np.linspace(0.0, np.pi, args.images):
@@ -508,6 +528,9 @@ def nucleus(args):
             row.info.update(base.info)
             images.append(spun(row, n, 2, t, along))
         energies, nsteps = band(images, calc, args.fmax, args.steps)
+        for which, im in (("start", images[0]), ("end", images[-1])):
+            if nearest(im) < 0.85:
+                raise ValueError(f"the {which} of the path has two atoms {nearest(im):.2f} A apart: not a structure")
         reps = int(a.info["triage_repeats"])
         out = []
         for k, im in enumerate(images):
@@ -1009,6 +1032,7 @@ def main():
     x.add_argument("--fmax", type=float, default=0.15)
     x.add_argument("--steps", type=int, default=80)
     x.add_argument("--settle", type=int, default=150)
+    x.add_argument("--gap", type=float, default=1.6, help="A of room made along the row for the methyl before the cell is settled")
     x.set_defaults(run=nucleus)
     w = sub.add_parser("points")
     w.add_argument("--frames", type=Path, required=True)

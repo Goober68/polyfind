@@ -177,3 +177,12 @@ def test_methylated_swaps_one_n_h_for_n_ch3_and_keeps_the_chains_in_place():
         assert np.isclose(np.linalg.norm(h - carbon), 1.09)
         to_h, to_n = h - carbon, out.positions[3] - carbon
         assert np.isclose(np.degrees(np.arccos(to_h @ to_n / 1.09 / 1.46)), 109.47, atol=0.05)
+
+
+def test_nearest_reads_a_collapse_across_the_cell_face():
+    from ase import Atoms
+
+    a = Atoms("HH", positions=[[0.1, 0.0, 0.0], [3.9, 0.0, 0.0]], cell=[4.0, 5.0, 5.0], pbc=True)
+    assert CT.nearest(a) == pytest.approx(0.2)
+    b = Atoms("HH", positions=[[1.0, 0.0, 0.0], [3.0, 0.0, 0.0]], cell=[4.0, 5.0, 5.0], pbc=True)
+    assert CT.nearest(b) > 1.5
