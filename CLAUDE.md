@@ -133,6 +133,15 @@ How it is applied (an interpretation, not the PI's words):
   what the smallest move between them costs, and which defects bring the balance within the
   field's reach. A chain's perfect crystal is the baseline for that, not the result.
 
+The PI's words after that: "So it's not just about the polarity or the dipole of the molecules.
+It's about how active it can be."
+
+How it is applied (an interpretation, not the PI's words):
+
+- A chain is ranked on what it does per volt (stroke and force), how fast it can do it and what it
+  loses doing it, not on the dipole it holds. Dipole to the volume is the ceiling on what there is
+  to move; it is reported as that and never as the rank.
+
 ## Free motion stores and returns energy; work and heat begin at the blocking force (PI, 2026-11-23)
 
 The PI's words: "the energy dissipated depends on the work done not your theoretical numbers - the
