@@ -79,14 +79,25 @@ def letters_of(cycle):
     return "".join(back[p] for p in pairs) if len(cycle) % 2 == 0 and all(p in back for p in pairs) else None
 
 
-def made(source, letters):
-    """The cell `source` with its chains made the sequence `letters`, and how many backbone carbons that changed."""
+def cycles_of(letters):
+    """A cycle for each chain of a cell.  `letters` is one sequence for every chain, or the chains' sequences joined by + in the order the cell has its
+    chains (IVRVVRVCVVVVVR+IVRVVRVCVVRVVR: a cell of two different chains)."""
     reg = _tool("registry_cells")
-    want = cycle_of(letters)
-    if len(want) != len(reg.substituents(source)[0]):
-        raise SystemExit(f"{letters}: {len(letters)} units, the cell's chains have {len(reg.substituents(source)[0]) // 2}")
-    cell, changed = reg.morphed(source, want)
-    for chain in reg.substituents(cell):
+    parts = letters.split("+")
+    if len(parts) not in (1, reg.CHAINS):
+        raise SystemExit(f"{letters}: one sequence, or {reg.CHAINS} joined by +")
+    return [cycle_of(part) for part in (parts if len(parts) > 1 else parts * reg.CHAINS)]
+
+
+def made(source, letters):
+    """The cell `source` with its chains made the sequence `letters` (or the sequences, A+B, a chain each), and how many backbone carbons that changed."""
+    reg = _tool("registry_cells")
+    wants = cycles_of(letters)
+    have = reg.substituents(source)
+    if any(len(want) != len(chain) for want, chain in zip(wants, have)):
+        raise SystemExit(f"{letters}: {[len(w) // 2 for w in wants]} units, the cell's chains have {[len(c) // 2 for c in have]}")
+    cell, changed = reg.morphed(source, wants if "+" in letters else wants[0])
+    for chain, want in zip(reg.substituents(cell), wants):
         if not reg.same_molecule(chain, want):
             raise SystemExit(f"{letters}: the cell made is not that chain")
     return cell, changed
@@ -110,7 +121,7 @@ def starts(args):
         first = len(out)
         for kind, frame in own.get(name, []):
             source = frames[frame]
-            if not all(reg.same_molecule(chain, cycle_of(letters)) for chain in reg.substituents(source)):
+            if not all(reg.same_molecule(chain, want) for chain, want in zip(reg.substituents(source), cycles_of(letters))):
                 raise SystemExit(f"{frame} is not a cell of {letters}")
             cell = source.copy()
             for k in list(cell.arrays):
@@ -215,6 +226,41 @@ def choose(args):
         print(f"# {name}: margin {rows[name]['margin']:+.3f} in the potential; {' '.join(frames)}", file=sys.stderr)
 
 
+def _family(kind):
+    """The packing a cell was given, as far as DFT needs telling apart: all-trans in the film composition's low pattern or in an upright one (the film
+    composition's, the matrix's, the leader's, the row's own); helix in the leader's packing, the nitrile composition's, or the film composition's."""
+    if kind.startswith("tt_"):
+        return "low" if kind.startswith("tt_low") else "upright"
+    return "ldr" if kind.startswith("hx_ldr") else "an" if kind.startswith("hx_an") else "film"
+
+
+def picked(row):
+    """The cells of a row DFT is asked about, in order: its lowest helix cell, its lowest all-trans cell, then the lowest helix cell and the lowest
+    all-trans cell of another packing than those (the potential is right on a row's lowest cells and has been 0.12 kcal/mol per monomer off on a pair that
+    is not, 3.25: the order of two packings is DFT's to say).  Cells at rest that kept their conformation."""
+    ok = {k: c for k, c in row["cells"].items() if c.get("relaxed") and c.get("kept") and c.get("converged")}
+    out = []
+    for prefix in ("hx_", "tt_"):
+        cells = sorted((k for k in ok if k.startswith(prefix)), key=lambda k: ok[k]["eV_per_monomer"])
+        if cells:
+            out.append(cells[0])
+    for first in list(out):
+        others = sorted((k for k in ok if k[:3] == first[:3] and _family(k) != _family(first)), key=lambda k: ok[k]["eV_per_monomer"])
+        if others:
+            out.append(others[0])
+    return out
+
+
+def pick(args):
+    row = json.loads(Path(args.table).read_text())["rows"][args.row]
+    kinds = picked(row)
+    floor = {p: min((row["cells"][k]["eV_per_monomer"] for k in kinds if k.startswith(p)), default=None) for p in ("hx_", "tt_")}
+    for k in kinds:
+        per_chain = (row["cells"][k]["eV_per_monomer"] - floor[k[:3]]) * 14 * KCAL
+        print(f"# {args.row}: {k} ({_family(k)}), {per_chain:+.2f} kcal/mol per chain against the lowest of its conformation", file=sys.stderr)
+    print(" ".join(row["cells"][k]["frame"] for k in kinds))
+
+
 def dft(args):
     from ase.io import read
 
@@ -277,9 +323,11 @@ def sheets(args):
             if reg.gauche(cell, path) != reg.gauche(source, path):
                 raise SystemExit(f"{name} at {site}: the kink did not come through")
             cell.info = {"n_monomers": int(source.info["n_monomers"]), "kmesh": str(source.info["kmesh"]).strip("[]"), "frame": f"scr_{name}_sheet{args.label}_at{site}", "screen_row": name,
-                         "screen_letters": letters, "screen_kind": f"sheet_at{site}", "screen_site": site, "screen_from": str(source.info["frame"]), "screen_changed": changed,
-                         "family": "relaxed", "conformation": "kink sheet",
+                         "screen_letters": letters, "screen_kind": f"sheet_at{site}", "screen_site": site, "screen_from": str(source.info["frame"]),
+                         "screen_changed": changed, "family": "relaxed", "conformation": "kink sheet",
                          "source": f"examples/screen14.py: {source.info['frame']} with its chains made {letters} where they stand ({changed} carbons a cell), a start, not relaxed"}
+            if args.label:                               # (an empty value does not come back from an extxyz file)
+                cell.info["screen_label"] = args.label
             out.append(cell)
         print(f"{name:28s} {letters}  {len(order)} sheets, sites {' '.join(order)}")
     write(args.out, out, format="extxyz")
@@ -379,13 +427,22 @@ def hops(args):
     print(f"written {args.out}")
 
 
+def _units(letters, site):
+    """The two units a kink at `site` sits between (VC); for a cell of two different chains, both chains' where they differ (VV/VR)."""
+    k = int(site.rstrip("m")) // 2
+    pairs = [part[k % len(part)] + part[(k + 1) % len(part)] for part in letters.split("+")]
+    return pairs[0] if len(set(pairs)) == 1 else "/".join(pairs)
+
+
 def sheets_table(args):
     from ase.io import read, write
 
     path = _tool("mlip_path")
     rows, frames = {}, []
     for start in read(args.starts, index=":"):
-        name, site = str(start.info["screen_row"]), str(start.info["screen_site"])
+        name, place = str(start.info["screen_row"]), str(start.info["screen_site"])
+        # a row's sheets made of more than one row's, or with its chains the other way round, are kept apart by their label (SITE:LABEL)
+        site = place + (":" + str(start.info["screen_label"]) if str(start.info.get("screen_label", "")) else "")
         row = rows.setdefault(name, {"letters": str(start.info["screen_letters"]), "sites": {}})
         if "all_trans" not in row and not row.get("no_all_trans"):       # the row's lowest all-trans cell at rest in the same folder
             flat = {}
@@ -411,8 +468,7 @@ def sheets_table(args):
         per_chain = int(a.info["n_monomers"]) / CHAINS * KCAL
         row["sites"][site] = {"relaxed": True, "frame": str(a.info["frame"]), "converged": "NOT converged" not in note,
                               "energy": (float(a.info["potential_eV_per_monomer"]) - row["all_trans_eV_per_monomer"]) * per_chain, "kink_kept": kept,
-                              "gauche_bonds": gauche, "units": str(start.info["screen_letters"])[(int(site.rstrip("m")) // 2) % len(str(start.info["screen_letters"]))]
-                              + str(start.info["screen_letters"])[(int(site.rstrip("m")) // 2 + 1) % len(str(start.info["screen_letters"]))],
+                              "gauche_bonds": gauche, "units": _units(str(start.info["screen_letters"]), place), "site": place,
                               "shear_along_chains_monomers": path._shear(a)}
         frames.append(a)
     for name, row in rows.items():
@@ -470,12 +526,15 @@ def main():
     s.add_argument("--relaxed", required=True, help="the folder of NAME_in_POTENTIAL.start.xyz, the rows' all-trans cells among them")
     s.add_argument("--out", required=True)
     s.add_argument("--frames-out", default="")
+    s = sub.add_parser("pick")
+    s.add_argument("--table", required=True)
+    s.add_argument("--row", required=True)
     s = sub.add_parser("hops")
     s.add_argument("--legs", required=True, help="the folder of the scans' NAME_a1.json, NAME_a1.extxyz, ...")
     s.add_argument("--path", nargs="+", required=True, metavar="NAME=ROW")
     s.add_argument("--out", required=True)
     args = p.parse_args()
-    {"starts": starts, "table": table, "choose": choose, "dft": dft, "sheets": sheets, "sheets-table": sheets_table, "hops": hops}[args.step](args)
+    {"starts": starts, "table": table, "choose": choose, "dft": dft, "sheets": sheets, "sheets-table": sheets_table, "hops": hops, "pick": pick}[args.step](args)
 
 
 if __name__ == "__main__":

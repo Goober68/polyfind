@@ -494,5 +494,74 @@ def test_the_two_rows_on_the_four_axes():
     assert (strain("IVRVVRVVVVVVVR on the leader's inputs", "-0.05"), strain("IVRVVRVVVVVVVR on the leader's inputs", "+0.05")) == (0.083, 0.075)
 
 
+MIXED = "vdf17-trfe7-cfe2-rvdf2-28"
+
+
+def _spell(scr, reg, cell):
+    """Each chain's sequence, read from its reversed unit."""
+    out = []
+    for cycle in reg.substituents(cell):
+        out.append(next(word for k in range(0, len(cycle), 2) for word in [scr.letters_of(cycle[k:] + cycle[:k])] if word and word.startswith("I")))
+    return "+".join(out)
+
+
+def test_a_cell_of_two_different_chains(sources):
+    """A sequence for each chain, joined by +, in the order the cell has its chains: each chain is made its own and checked against its own."""
+    scr, reg = _load("screen14"), _load("registry_cells")
+    a, b = "IVRVVRVCVVVVVR", "IVRVVRVCVVRVVR"
+    assert scr.cycles_of(a) == [scr.cycle_of(a)] * 2 and scr.cycles_of(f"{a}+{b}") == [scr.cycle_of(a), scr.cycle_of(b)]
+    with pytest.raises(SystemExit):
+        scr.cycles_of(f"{a}+{b}+{a}")
+    one, n1 = scr.made(sources["tt_up"], f"{a}+{b}")
+    other, n2 = scr.made(sources["tt_up"], f"{b}+{a}")
+    assert (_spell(scr, reg, one), _spell(scr, reg, other)) == (f"{a}+{b}", f"{b}+{a}") and n1 == n2 == 5        # the reversed unit twice (two carbons each), one TrFE made a VDF
+    assert one.get_chemical_formula() == other.get_chemical_formula() == "C56H49Cl2F61" and (one.numbers != other.numbers).any()
+    same, n = scr.made(sources["tt_up"], a)
+    both, m = scr.made(sources["tt_up"], f"{a}+{a}")
+    assert n == m == 6 and (same.numbers == both.numbers).all() and np.abs(same.positions - both.positions).max() < 1e-12
+    with pytest.raises(SystemExit):
+        reg.morphed(sources["tt_up"], [scr.cycle_of(a)] * 3)
+
+
+def test_which_cells_dft_is_asked_about():
+    """The lowest helix cell, the lowest all-trans cell, then the lowest of each in another packing; cells at rest that kept their conformation."""
+    scr = _load("screen14")
+    assert [scr._family(k) for k in ("tt_low", "tt_lowx", "tt_up", "tt_ldrx", "tt_reg", "tt_own")] == ["low", "low", "upright", "upright", "upright", "upright"]
+    assert [scr._family(k) for k in ("hx_ldr", "hx_ldrx", "hx_an", "hx_GTGpT", "hx_TGTGpx")] == ["ldr", "ldr", "an", "film", "film"]
+    stored = json.loads((ROOT / "docs" / "predictions" / "screen14_potential_d.json").read_text())["rows"]
+    assert scr.picked(stored["vdf9-trfe3-cfe1-rvdf1-14"]) == ["hx_ldr", "tt_ldr", "hx_GTGpT", "tt_low"]           # the four the fifth pod labelled, but for tt_up (0.03 above tt_ldr)
+    assert scr.picked(stored["vdf8-trfe4-cfe1-rvdf1-14"]) == ["hx_GTGpT", "tt_low", "hx_ldr", "tt_up"]
+    cell = lambda e, kept=True, converged=True: {"relaxed": True, "kept": kept, "converged": converged, "eV_per_monomer": e, "frame": "f"}
+    row = {"cells": {"hx_ldr": cell(-1.0, converged=False), "hx_ldrx": cell(-0.9), "hx_GTGpT": cell(-0.95), "tt_low": cell(-0.5, kept=False), "tt_up": cell(-0.4), "tt_reg": cell(-0.45),
+                     "hx_an": {"relaxed": False}}}
+    assert scr.picked(row) == ["hx_GTGpT", "tt_reg", "hx_ldrx"]                                              # a moving cell and one that lost its conformation are not asked about
+
+
+def test_the_mixed_cells_starts_and_sheets():
+    """One chain of IVRVVRVCVVVVVR and one of IVRVVRVCVVRVVR (25 mol% TrFE) in eight packings, both ways round, and its kink sheets; a sheet pairs for a
+    scan with the all-trans cells that have its chains the same way round."""
+    from ase.io import read
+
+    scr, reg, path = _load("screen14"), _load("registry_cells"), _load("mlip_path")
+    a, b = "IVRVVRVCVVVVVR", "IVRVVRVCVVRVVR"
+    cells = read(MLIP / "screen14_starts_e.extxyz", index=":")
+    kinds = ["hx_ldr", "hx_GTGpT", "tt_low", "tt_up", "tt_ldr", "hx_TGTGp", "hx_GpTGT", "tt_reg"]
+    assert [str(c.info["screen_kind"]) for c in cells] == [k + x for k in kinds for x in ("", "x")] and all(str(c.info["screen_row"]) == MIXED for c in cells)
+    for c in cells:
+        swapped = str(c.info["screen_kind"]).endswith("x")
+        assert _spell(scr, reg, c) == (f"{b}+{a}" if swapped else f"{a}+{b}") == str(c.info["screen_letters"]) and len(c) == 168 and c.get_chemical_formula() == "C56H49Cl2F61"
+        assert (reg.gauche(c, path) == 0) == str(c.info["screen_kind"]).startswith("tt")
+    sheets = read(MLIP / "screen14_sheets_3.extxyz", index=":")
+    assert [str(s.info["frame"]).replace(f"scr_{MIXED}_", "") for s in sheets] == ["sheetf_at12", "sheetfx_at12", "sheetl_at12", "sheetlx_at12", "sheetf_at14m", "sheetfx_at14m",
+                                                                                 "sheetl_at16m", "sheetlx_at16m"]
+    for s in sheets:
+        label = str(s.info["screen_label"])
+        assert _spell(scr, reg, s) == (f"{b}+{a}" if label.endswith("x") else f"{a}+{b}") and scr.kink_of(s, path)[1]
+        pairs = sorted(str(c.info["screen_kind"]) for c in cells if str(c.info["screen_kind"]).startswith("tt") and (c.numbers == s.numbers).all()
+                       and path.backbone_torsions(c) == path.backbone_torsions(s))
+        assert pairs == sorted(k + ("x" if label.endswith("x") else "") for k in ("tt_low", "tt_up", "tt_ldr", "tt_reg"))
+    assert scr._units(f"{a}+{b}", "12") == "VC" and scr._units(f"{a}+{b}", "20") == "VV/RV" and scr._units(a, "14m") == "CV"
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

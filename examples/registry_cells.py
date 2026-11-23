@@ -233,11 +233,17 @@ def morphed(atoms, target):
     beyond).  The chains are lined up by the turn of the cycle that leaves the fewest carbons to change; a carbon with
     two different substituents gets them on the hand `target` has.  A nitrile made something else loses its nitrogen.
     `target` is a cell, or a chain's cycle of substituents itself (as `substituents` gives it: examples/screen14.py makes
-    one from a sequence's letters)."""
+    one from a sequence's letters), or one cycle for each chain of the cell, in the order `substituents` has the chains
+    (a cell of two different chains)."""
     from ase import Atoms
 
     tool = _path_tool()
-    want = list(target) if isinstance(target, (list, tuple)) else substituents(target)[0]
+    if isinstance(target, (list, tuple)) and target and isinstance(target[0], (list, tuple)) and target[0] and not isinstance(target[0][0], str):
+        wants = [list(cycle) for cycle in target]                      # a cycle a chain
+        if len(wants) != CHAINS:
+            raise SystemExit(f"{len(wants)} cycles for a cell of {CHAINS} chains")
+    else:
+        wants = [list(target) if isinstance(target, (list, tuple)) else substituents(target)[0]] * CHAINS
     b = atoms.copy()
     for k in list(b.arrays):
         if k not in ("numbers", "positions"):
@@ -249,6 +255,7 @@ def morphed(atoms, target):
     for chain, have in enumerate(substituents(b)):
         backbone = [q[0] for q in quads[chain * half:(chain + 1) * half]]
         on = set(backbone)
+        want = wants[chain]
         turn = min(range(len(have)), key=lambda k: sum(x != y for x, y in zip(have, want[k:] + want[:k])))
         aim = want[turn:] + want[:turn]
         for i, c in enumerate(backbone):

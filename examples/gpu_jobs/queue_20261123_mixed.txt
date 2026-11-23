@@ -1,0 +1,28 @@
+# The sixth pod (PI 2026-11-23: "Go" to the cell of two different chains that closed the screen's report): one chain
+# of IVRVVRVCVVVVVR and one of IVRVVRVCVVRVVR in a cell, 25 mol% TrFE.  docs/MLIP_SECOND_OPINION.md 3.26.
+# One job a line, run one after another; the pod takes a line by its number when it gets there.
+#
+# The screen (3.25) has those two rows at +0.201 (DFT +0.196) and -0.033 all-trans less helix, one TrFE in fourteen
+# apart, both with the kink on the chlorine, the first hopping over 6.45 where the film's composition hops over
+# 7.81.  Between them the margin would be near the film composition's +0.063 and the loss model has such a row at
+# more strain than the film's composition at ten times its rate, IF the margin lands there and the hop stays.
+# A cell of the screen's size holds one chain of each.
+#
+# The processors first, with the cells they can have before anything is relaxed here: the parent with four TrFE,
+# IVRVVRVCVVRVVR, which has no DFT.  Its lowest all-trans cell, its lowest helix cell, and its helix in the leader's
+# packing: the potential has that 1.85 kcal/mol per chain above its lowest, and on the other parent DFT had the
+# leader's packing 1.62 lower against the same cell than the potential did (3.25).  About 90 minutes a cell.
+dft_cells.sh start 8 2 docs/predictions/mlip/screen14_relaxed_a.extxyz scr_vdf8-trfe4-cfe1-rvdf1-14_tt_low_in_all_s1 scr_vdf8-trfe4-cfe1-rvdf1-14_hx_GTGpT_in_all_s1
+dft_cells.sh start 8 2 docs/predictions/mlip/screen14_relaxed_d.extxyz scr_vdf8-trfe4-cfe1-rvdf1-14_hx_ldr_in_all_s1
+#
+# The card: the mixed cell in every packing the screen learned a row must be given, both ways round (a kind ending
+# in x has the chains the other way round).  16 cells, the ones that matter first.  No DFT is chosen by this job.
+screen_card.sh docs/predictions/mlip/screen14_starts_e.extxyz 4 1000 2700 2 none
+# Its kink: on the chlorine (sites 12 and 14m of the film composition's sheets, 12 of the leader's) and on the run
+# of VDF units (16m of the leader's), both ways round.  8 sheets.
+screen_sheets_card.sh docs/predictions/mlip/screen14_sheets_3.extxyz 4 1000 1500
+# The hop of its cheapest kink at rest, toward its lowest all-trans cell with the chains the same way round.
+screen_hop_card.sh vdf17-trfe7-cfe2-rvdf2-28 mix
+# DFT on the card, alone from here: its lowest helix cell, its lowest all-trans cell, then the lowest of each in
+# another packing (the order of two packings is DFT's to say).  About 49 minutes a cell.
+screen_pick_dft.sh card start vdf17-trfe7-cfe2-rvdf2-28
