@@ -1008,6 +1008,48 @@
    ]
   },
   {
+   "name": "urea1_tt_x1_nuc",
+   "kind": "path",
+   "of": "urea1_tt_x1",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -6793.542742687619,
+    -6792.194047335821
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    31.101653897507454
+   ],
+   "top_kcal_per_turning_repeat": 31.101653897507454,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    17.2503708671875
+   ],
+   "ends_only": true
+  },
+  {
+   "name": "urea1_tt_x1_nucm",
+   "kind": "path",
+   "of": "urea1_tt_x1",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -7076.020014795822,
+    -7074.5552862834775
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    33.77744216589271
+   ],
+   "top_kcal_per_turning_repeat": 33.77744216589271,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    28.28520340625
+   ],
+   "ends_only": true
+  },
+  {
    "name": "urea1_tt_x1_wall",
    "kind": "path",
    "of": "urea1_tt_x1",

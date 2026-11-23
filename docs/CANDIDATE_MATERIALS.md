@@ -1788,22 +1788,32 @@ five images, kcal/mol a repeat of the chain that turns:
 | next | -2.68 | -1.31 |
 | end: the chain at the wall 40 degrees off | -5.22 | -5.99 |
 
-The potential follows DFT to 2.5. Two readings. Sharp walls are not what a row holds: the end, in
-which the chain at the wall has tilted, is 5.2 lower. And 15.8 is not the hump of the real move:
-the cell is one repeat long, so the chain turns as a rod along its whole length; a real chain
-turns by a twist that travels, and that needs cells about four repeats long (144 atoms).
+Between states that all have walls the potential follows DFT to 2.5. Two readings. Sharp walls are
+not what a row holds: the end, in which the chain at the wall has tilted, is 5.2 lower. And 15.8 is
+not the hump of the real move: the cell is one repeat long, so the chain turns as a rod along its
+whole length; a real chain turns by a twist that travels, and that needs cells about four repeats
+long (144 atoms).
 
-**First moves, ends only (the potential; DFT on the ends was running when this was written).**
+**First moves: the two ends, relaxed in the potential and read in DFT.**
 
-| row of four urea chains | one chain turned round alone, above the row at rest, kcal/mol a repeat |
-|---|---|
-| no defect | 17.3 |
-| an N-methyl on every repeat of the neighbour that holds it | 28.3 |
+| row of four urea chains | one chain turned round alone, above the row at rest, kcal/mol a repeat: DFT | the potential |
+|---|---|---|
+| no defect | 31.1 | 17.3 |
+| an N-methyl on every repeat of the neighbour that holds it | 33.8 | 28.3 |
 
-A perfect row does not start to turn anywhere: about 80 times the field's hold. And this defect,
-placed this way, raises the cost: it takes a bond away and puts a methyl where the turned chain's
-N-H groups come to face it. That is one placement of one defect, on every repeat of a chain
-(the cell being one repeat long), in the potential; it is not the verdict on the cam. What the
+**A pair of walls costs about 31 kcal/mol for each repeat of chain length, and the potential has
+it at 17.** DFT gives the same 31.1 by two routes (the chain turned alone, and the wall path's
+end, 36.3 for the sharp two-and-two row less its 5.2), so the number is the walls', not one
+relaxation's; it is at the potential's geometries and so an upper mark, and PBE is known to bind
+rows of hydrogen bonds too well. The potential, good to 2.5 between states that all have walls, is
+14 low on making them: it is not to be used alone for what a wall costs.
+
+A perfect row does not start to turn anywhere. The field's hold on a turned repeat is 0.42
+kcal/mol at 55 V/um (twice 0.21), so a turned stretch of a row would have to be some seventy
+chains wide before the field paid for its two walls. And this defect, placed this way, does not
+help: 33.8 against 31.1. It takes a bond away and puts a methyl where the turned chain's N-H
+groups come to face it. That is one placement of one defect, on every repeat of a chain (the cell
+being one repeat long); it is not the verdict on the cam. What the
 picture asks for is a defect that weakens the hold without standing in the way (a spacer of
 another length that leaves a bond dangling, the other defect of the nylon papers; sulfur for
 oxygen), tried in cells several repeats long.
