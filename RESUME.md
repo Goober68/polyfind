@@ -721,6 +721,33 @@ right": true at one registry, not along it).
         `screen_hop_card.sh` choose from the pod's own tables, so a queue can be written whole before
         the pod is made (this one was: `queue_20261123_mixed.txt`). Tests: `tests/test_screen14.py`
         (23). Full suite after it, 2026-11-23 05:51 UTC: 1138 passed, 15 skipped.
+        OTHER CHAINS BY DFT ON THIS MACHINE, IN FLIGHT (PI 2026-11-23: "Nothing more to be done on
+        pvdf until we have better numbers, but can we take a realistic stab at other chains?").
+        No rented machine. `examples/chain_triage.py` (tests `tests/test_chain_triage.py`, 6): a
+        chain from its repeat unit as a SMILES string and its backbone torsions (RDKit, `pip install
+        rdkit`); settled, and its one-chain cells searched, in a pretrained potential (Egret-1,
+        starts only); then DFT for the rise a repeat, the dipole across the chain (the charge
+        density's own moment, `pp.x`), the force that stretches it, and for a crystal cell the
+        polarisation (Berry phase) and, strained along it, e and c (`piezo`). CHECK PASSED on PVDF's
+        all-trans chain: rise 2.590 A, 1.84 D a monomer, 59.8 nN per unit strain by energy and by
+        stress alike (284 GPa over the crystal's 21.1 A2 a chain). Working files are in
+        `/opt/dft/triage` ON THIS CONTAINER, NOT IN THE REPOSITORY: copy the `*.json` and
+        `*.relaxed.xyz` to `docs/predictions` before the session ends. QUEUED 2026-11-23 09:10 UTC:
+        lone chains `pvdf_tgtg`, `nylon3_tt`, `urea1_tt`; then one-chain cells `pvdf_tt_x1`,
+        `nylon3_tt_x1`, `urea1_tt_x1` (vc-relax), then `berry` on all; `piezo` after.
+        TRAPS FOUND. (1) `/usr/bin/pw.x` (6.7, the system package) aborts in a relaxation; use
+        `/opt/mm/qe/bin/pw.x` (7.5) as every earlier run here did. (2) THE BERRY PHASE OF pw.x 7.5
+        IS WRONG WITH PAW AND ULTRASOFT FILES: on the lone PVDF chain, where the density's moment
+        over the box is 0.0066 C/m2, it is a third of a quantum off with the project's PAW carbon and
+        with an ultrasoft carbon, and 0.0066 with a norm-conserving one. Polarisation runs take
+        `/opt/pseudo_nc` (`PSEUDO_BERRY`): the suite's `C.pbe-mt_gipaw.UPF` and an oxygen made with
+        `ld1.x` from `examples/chain_triage_oxygen.in` (water's dipole 1.826 D with it, 1.831 D with
+        the PAW oxygen). No norm-conserving chlorine or sulfur here. (3) The oxygen for relaxations,
+        `O.pbe-kjpaw.UPF`, is from `apt-get install quantum-espresso-data` (`/usr/share/espresso/
+        pseudo`), copied to `/opt/pseudo`. (4) A foreground command moved to the background at 600 s
+        is stopped at 30 minutes: start long ones with `run_in_background` and a `timeout`. (5) A
+        planar all-trans amide chain is an arc, not a line (its bond angles turn it 8 to 13 degrees a
+        repeat); the builder cuts a period from it and the potential straightens it.
         THE AIM CHANGED AFTER 3.26 (PI 2026-11-23, in `CLAUDE.md` verbatim): "Looking for a step up in
         force density and speed", and a speed is to be reported beside the force ("we need a mm/s or
         cm/s number to go along with our pN/nm2"). WHAT WAS FOUND IN ANSWERING, NOT YET IN ANY DOC:

@@ -1,0 +1,621 @@
+"""A first read of a chain that is not PVDF's: what DFT can say of it from small cells.
+
+The PI, 2026-11-23: "Nothing more to be done on pvdf until we have better numbers, but can we
+take a realistic stab at other chains?"  polyfind's presets and the trained potential are of the
+PVDF family and say nothing of an amide or a urea.  DFT does, and a chain alone in a box, or one
+chain to a cell of a crystal, is small enough for this machine.  This script makes such cells for
+any chain written as a repeat unit, relaxes them in DFT and reads from each:
+
+    the length of a repeat along the chain (a state's stroke against another state's),
+    the dipole of a repeat across the chain (the charge density's moment; the field's grip),
+    the force that stretches the chain (stiffness without an assumed cross-section),
+    and, for a cell of a crystal, the volume of a repeat (so grip per volume, C/m2).
+
+What it does not give: a margin between two states to the few hundredths of a kcal/mol a field
+of 55 V/um can tip, a rate in a packed cell, or a loss.  Those took a potential of the chain's own
+and weeks on PVDF.
+
+    python examples/chain_triage.py build --chains pvdf,nylon3 --out /opt/dft/triage
+    python examples/chain_triage.py dft --frames /opt/dft/triage --pw /opt/mm/qe/bin/pw.x --pseudo /opt/pseudo
+    python examples/chain_triage.py table --frames /opt/dft/triage --out docs/predictions/chain_triage.json
+
+A chain is its repeat unit as a SMILES string whose first atom and atom ``tail`` are the two ends
+of the backbone within the repeat (``m`` heavy atoms a repeat), and a state is the backbone's
+torsion angles, a pattern repeated along the bonds, with the number of repeats in one period.
+"""
+import argparse
+import json
+import os
+import subprocess
+import time
+from pathlib import Path
+
+import numpy as np
+
+E_ANGSTROM_TO_DEBYE = 4.803204712
+E_PER_A2_TO_C_PER_M2 = 16.02176634
+EV_PER_A_TO_NN = 1.602176634
+RY_BOHR3_TO_EV_A3 = 13.605693123 / 0.529177210903**3
+KCAL = 23.060548
+
+# element: (file, mass, valence charge of the pseudopotential)
+PSEUDO = {
+    "H": ("H_ONCV_PBE-1.0.oncvpsp.upf", 1.00794, 1),
+    "C": ("C.pbe-n-kjpaw_psl.1.0.0.UPF", 12.0107, 4),
+    "F": ("F.oncvpsp.upf", 18.998403163, 7),
+    "N": ("N.oncvpsp.upf", 14.0067, 5),
+    "O": ("O.pbe-kjpaw.UPF", 15.9994, 6),
+    "Cl": ("Cl.pbe-n-rrkjus_psl.1.0.0.UPF", 35.453, 7),
+}
+
+# The Berry phase of this program (pw.x 7.5, lberry) is right only with norm-conserving files: on
+# the lone PVDF chain, where the charge density's own moment is 0.0066 C/m2 over the box, it gives
+# 0.0066 with a norm-conserving carbon and is a third of a quantum off with the PAW carbon above and
+# with an ultrasoft one.  So polarisation runs take these instead, on the geometry the files above
+# relaxed.  The carbon is the DFT suite's own (C.pbe-mt_gipaw.UPF); no norm-conserving PBE oxygen
+# comes with it, and examples/chain_triage_oxygen.in makes one with the suite's generator (ld1.x).
+# A water molecule's dipole with it is 1.826 D against 1.831 D with the PAW oxygen.
+PSEUDO_BERRY = {**PSEUDO, "C": ("C.pbe-mt_gipaw.UPF", 12.0107, 4), "O": ("O.pbe-tm-triage.UPF", 15.9994, 6)}
+NOT_NORM_CONSERVING = ("Cl",)
+
+T, G, GM = 180.0, 60.0, -60.0
+CHAINS = {
+    # the check: both shapes of PVDF's chain, whose rise and dipole are known
+    "pvdf": {"repeat": "CC(F)(F)", "m": 4, "tail": 1, "what": "poly(vinylidene fluoride), the check",
+             "states": {"tt": ([T], 1), "tgtg": ([T, G, T, GM], 2)}},
+    # an amide every third backbone atom after the nitrogen: all its dipoles one way when extended
+    "nylon3": {"repeat": "NCCC(=O)", "m": 5, "tail": 3, "what": "nylon-3, poly(beta-alanine)",
+               "states": {"tt": ([T], 1)}},
+    "nylon5": {"repeat": "NCCCCC(=O)", "m": 7, "tail": 5, "what": "nylon-5",
+               "states": {"tt": ([T], 1)}},
+    # a urea and one, or three, methylenes: the largest dipole to the least volume of the three kinds
+    "urea1": {"repeat": "NC(=O)NC", "m": 5, "tail": 4, "what": "polyurea-1, poly(methylene urea)",
+              "states": {"tt": ([T], 1)}},
+    "urea3": {"repeat": "NC(=O)NCCC", "m": 7, "tail": 6, "what": "polyurea-3",
+              "states": {"tt": ([T], 1)}},
+}
+
+
+def oligomer(chain: dict, n: int, torsions, seed: int = 7):
+    """``(symbols, positions, backbone, bonds)`` of ``n`` repeats with the backbone torsions set."""
+    from rdkit import Chem
+    from rdkit.Chem import AllChem, rdMolTransforms
+
+    mol = Chem.AddHs(Chem.MolFromSmiles(chain["repeat"] * n))
+    if AllChem.EmbedMolecule(mol, randomSeed=seed) != 0:
+        AllChem.EmbedMolecule(mol, randomSeed=seed, useRandomCoords=True)
+    path = list(Chem.GetShortestPath(mol, 0, (n - 1) * chain["m"] + chain["tail"]))
+    conf = mol.GetConformer()
+    # the embedded bond angles are rough (104 to 122 degrees along one chain).  A force field with
+    # every backbone torsion held trans makes the repeats alike; the state's torsions are then set
+    # rigidly, so that a period can be cut out (a force field does not move a crowded helix)
+    quads = [(path[i - 1], path[i], path[i + 1], path[i + 2]) for i in range(1, len(path) - 2)]  # bond i joins path[i], path[i + 1]
+    for q in quads:
+        rdMolTransforms.SetDihedralDeg(conf, *q, 180.0)
+    props = AllChem.MMFFGetMoleculeProperties(mol)
+    field = AllChem.MMFFGetMoleculeForceField(mol, props) if props is not None else AllChem.UFFGetMoleculeForceField(mol)
+    hold = field.MMFFAddTorsionConstraint if props is not None else field.UFFAddTorsionConstraint
+    for q in quads:
+        hold(*q, False, 180.0, 180.0, 1.0e4)
+    for _ in range(20):
+        if field.Minimize(maxIts=2000) == 0:
+            break
+    for i, q in enumerate(quads, start=1):
+        rdMolTransforms.SetDihedralDeg(conf, *q, float(torsions[i % len(torsions)]))
+    symbols = [a.GetSymbol() for a in mol.GetAtoms()]
+    bonds = [(b.GetBeginAtomIdx(), b.GetEndAtomIdx()) for b in mol.GetBonds()]
+    return symbols, np.array(conf.GetPositions()), path, bonds
+
+
+def periodic(chain: dict, state: str, box: float = 14.0, n: int = 8):
+    """One period of the chain along z in a box ``box`` wide, cut from the middle of an oligomer."""
+    from ase import Atoms
+
+    torsions, period = chain["states"][state]
+    m = chain["m"]
+    symbols, pos, path, bonds = oligomer(chain, n, torsions)
+    first = (n - period) // 2
+    heavy = list(range(first * m, (first + period) * m))
+    # backbone atoms only: two fluorines on one carbon may be numbered the other way round a period on
+    step = np.array([pos[j + period * m] - pos[j] for j in heavy if j in path])
+    t = step.mean(axis=0)
+    spread = float(np.abs(step - t).max())
+    # a planar zigzag whose bond angles differ along the repeat is an arc, not a line (an amide's turn
+    # it 8 to 13 degrees a repeat): a period cut from it is a little off, and the potential settles it
+    if spread > 1.2:
+        raise ValueError(f"{period} repeats of this state are not a period of the chain (the repeats differ by {spread:.2f} A)")
+    keep = heavy + [b if symbols[b] == "H" else a for a, b in bonds
+                    if (a in heavy and symbols[b] == "H") or (b in heavy and symbols[a] == "H")]
+    z = t / np.linalg.norm(t)
+    x = np.cross(z, [0.0, 0.0, 1.0] if abs(z[2]) < 0.9 else [1.0, 0.0, 0.0])
+    x /= np.linalg.norm(x)
+    frame = np.array([x, np.cross(z, x), z])
+    p = pos[keep] @ frame.T
+    p[:, :2] += box / 2 - p[:, :2].mean(axis=0)
+    a = Atoms([symbols[k] for k in keep], positions=p, cell=[box, box, float(np.linalg.norm(t))], pbc=True)
+    a.info.update(triage_chain="", triage_state=state, triage_repeats=period, triage_kind="chain")
+    return a
+
+
+def model(path):
+    """A MACE-architecture model file on the processor (the pretrained ones are for starts only)."""
+    import torch
+    from mace.calculators import MACECalculator
+
+    load = torch.jit.load
+    torch.jit.load = lambda f, *args, **kwargs: load(f, *args, **{**kwargs, "map_location": "cpu"})
+    try:
+        return MACECalculator(model_paths=str(path), device="cpu", default_dtype="float64")
+    finally:
+        torch.jit.load = load
+
+
+def settle(atoms, calc, fmax: float = 0.03, steps: int = 400, free=(0, 0, 1, 0, 0, 0)):
+    """Relax the atoms and the cell's free strains in a pretrained potential: a start for DFT."""
+    from ase.filters import FrechetCellFilter
+    from ase.optimize import LBFGS
+
+    a = atoms.copy()
+    a.calc = calc
+    opt = LBFGS(FrechetCellFilter(a, mask=list(free)), logfile=None)
+    opt.run(fmax=fmax, steps=steps)
+    a.info.update(atoms.info)
+    a.info["triage_start_steps"] = int(opt.nsteps)
+    a.calc = None
+    return a
+
+
+def kmesh(atoms) -> str:
+    """About 20 A of sampling along a periodic edge, one point across a box's vacuum."""
+    lengths = atoms.cell.lengths()
+    vacuum = atoms.info.get("triage_kind") == "chain"
+    return " ".join(str(1 if (vacuum and k < 2) else max(2, round(20.0 / lengths[k]))) for k in range(3))
+
+
+def build(args):
+    from ase.io import write
+
+    calc = model(args.model)
+    args.out.mkdir(parents=True, exist_ok=True)
+    for name in args.chains.split(","):
+        chain = CHAINS[name]
+        for state in chain["states"]:
+            a = periodic(chain, state, box=args.box)
+            made = a.cell.lengths()[2] / a.info["triage_repeats"]
+            a = settle(a, calc)
+            a.info["triage_chain"] = name
+            a.info["kmesh"] = kmesh(a)
+            write(args.out / f"{name}_{state}.start.xyz", a, format="extxyz")
+            print(f"{name}_{state}: {len(a)} atoms, {a.info['triage_repeats']} repeat(s), rise a repeat {made:.3f} A as made, "
+                  f"{a.cell.lengths()[2] / a.info['triage_repeats']:.3f} A settled ({a.info['triage_start_steps']} steps), k {a.info['kmesh']}", flush=True)
+
+
+def lattice_start(chain, rng, sides=(3.9, 6.2), angles=(60.0, 120.0)):
+    """One chain to a cell: a random pair of edges across the chain, each with a shift along it."""
+    from ase import Atoms
+
+    c = chain.cell.lengths()[2]
+    a, b = rng.uniform(*sides, size=2)
+    gamma = np.radians(rng.uniform(*angles))
+    turn = rng.uniform(0.0, 2 * np.pi)
+    rot = np.array([[np.cos(turn), -np.sin(turn), 0.0], [np.sin(turn), np.cos(turn), 0.0], [0.0, 0.0, 1.0]])
+    pos = chain.positions.copy()
+    pos[:, :2] -= pos[:, :2].mean(axis=0)
+    cell = np.array([[a, 0.0, rng.uniform(-c / 2, c / 2)], [b * np.cos(gamma), b * np.sin(gamma), rng.uniform(-c / 2, c / 2)], [0.0, 0.0, c]])
+    out = Atoms(chain.get_chemical_symbols(), positions=pos @ rot.T, cell=cell, pbc=True)
+    out.info.update(chain.info)
+    out.info["triage_kind"] = "crystal"
+    return out
+
+
+def closest(atoms) -> float:
+    """The shortest distance between atoms of different chains (images across the chain)."""
+    from ase.neighborlist import neighbor_list
+
+    d, shift = neighbor_list("dS", atoms, 3.0)
+    across = (shift[:, 0] != 0) | (shift[:, 1] != 0)
+    return float(d[across].min()) if across.any() else 9.9
+
+
+def pack(args):
+    """Cells of one chain each, every chain's dipole the same way: found in a pretrained potential.
+
+    Random lattices, each relaxed whole (atoms and cell); the lowest few go on to DFT.  A cell of
+    one chain is the polar packing by construction: whether the chain would rather pack with its
+    neighbours turned round is a margin this does not ask."""
+    from ase.io import read, write
+
+    calc = model(args.model)
+    rng = np.random.default_rng(args.seed)
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        relaxed = src / f"{name}.relaxed.xyz"
+        chain = read(relaxed if relaxed.exists() else src / f"{name}.start.xyz")
+        found = []
+        tried = 0
+        while len(found) < args.starts and tried < 40 * args.starts:
+            tried += 1
+            start = lattice_start(chain, rng)
+            if closest(start) < 1.7:
+                continue
+            try:
+                a = settle(start, calc, fmax=0.05, steps=args.steps, free=(1, 1, 1, 1, 1, 1))
+            except (RuntimeError, ValueError, FloatingPointError) as err:  # a start that falls apart in the potential
+                print(f"{name}: a start failed ({type(err).__name__})", flush=True)
+                continue
+            a.calc = calc
+            e = float(a.get_potential_energy())
+            a.calc = None
+            found.append((e, a))
+            print(f"{name}: start {len(found)}: {e:.4f} eV, {a.get_volume() / a.info['triage_repeats']:.1f} A3 a repeat, "
+                  f"edges {' '.join(f'{v:.2f}' for v in a.cell.lengths())}, closest {closest(a):.2f} A", flush=True)
+        found.sort(key=lambda r: r[0])
+        kept = []
+        for e, a in found:  # one of each: cells within 2 meV and 1% in volume are the same packing
+            if all(abs(e - e2) > 0.002 or abs(a.get_volume() / a2.get_volume() - 1) > 0.01 for e2, a2 in kept):
+                kept.append((e, a))
+        for rank, (e, a) in enumerate(kept[:args.keep], start=1):
+            a.info["triage_packing_rank"] = rank
+            a.info["triage_packing_ev_above"] = e - kept[0][0]
+            a.info["kmesh"] = kmesh(a)
+            write(src / f"{name}_x{rank}.start.xyz", a, format="extxyz")
+            print(f"{name}_x{rank}: {e - kept[0][0]:+.4f} eV above the lowest, {a.get_volume() / a.info['triage_repeats']:.1f} A3 a repeat, k {a.info['kmesh']}", flush=True)
+
+
+def pw_input(atoms, pseudo_dir, outdir, calculation: str, free: str = "z", conv_thr: float = 1e-9, ecut=(90, 360), files=None):
+    """The anchor's settings (PBE, D3(BJ) two-body, 90/360 Ry) for a relaxation of this cell."""
+    files = files or PSEUDO
+    symbols = atoms.get_chemical_symbols()
+    species = sorted(set(symbols), key=lambda s: -symbols.count(s))
+    lines = [
+        "&CONTROL", f"  calculation = '{calculation}'", "  prefix = 'frame'", f"  pseudo_dir = '{pseudo_dir}'",
+        f"  outdir = '{outdir}'", "  tstress = .true.", "  tprnfor = .true.", "  disk_io = 'low'", "  nstep = 200",
+        "  forc_conv_thr = 2.0d-4", "  etot_conv_thr = 1.0d-6", "/", "",
+        "&SYSTEM", "  ibrav = 0", f"  nat = {len(atoms)}", f"  ntyp = {len(species)}", "  input_dft = 'PBE'",
+        "  occupations = 'fixed'", f"  ecutwfc = {ecut[0]}", f"  ecutrho = {ecut[1]}", "  vdw_corr = 'grimme-d3'",
+        "  dftd3_version = 4", "  dftd3_threebody = .false.", "/", "",
+        "&ELECTRONS", f"  conv_thr = {conv_thr:.1e}".replace("e", "d"), "  electron_maxstep = 200",
+        "  mixing_mode = 'plain'", "  mixing_beta = 0.3", "/", "",
+    ]
+    if calculation in ("relax", "vc-relax"):
+        lines += ["&IONS", "  ion_dynamics = 'bfgs'", "/", ""]
+    if calculation == "vc-relax":
+        # a chain's box: 0.05 kbar over 14 A squared is 0.02 nN along the chain; a crystal: 0.2 kbar is 0.2% of strain
+        lines += ["&CELL", "  cell_dynamics = 'bfgs'", f"  cell_dofree = '{free}'", f"  press_conv_thr = {0.05 if free == 'z' else 0.2}", "/", ""]
+    lines += ["ATOMIC_SPECIES"] + [f"{s} {files[s][1]} {files[s][0]}" for s in species]
+    lines += ["", "CELL_PARAMETERS angstrom"] + [" ".join(f"{v:.10f}" for v in row) for row in atoms.cell.array]
+    lines += ["", "ATOMIC_POSITIONS angstrom"]
+    lines += [f"{s} {p[0]:.10f} {p[1]:.10f} {p[2]:.10f}" for s, p in zip(symbols, atoms.positions)]
+    mesh = atoms.info["kmesh"]  # a string when made, an array once read back from the file
+    mesh = mesh.split() if isinstance(mesh, str) else np.atleast_1d(mesh)
+    lines += ["", "K_POINTS automatic", " ".join(str(int(v)) for v in mesh) + " 0 0 0", ""]
+    return "\n".join(lines)
+
+
+def run(binary, np_, text, work, name, pools=None):
+    work.mkdir(parents=True, exist_ok=True)
+    (work / f"{name}.in").write_text(text)
+    mpirun = Path(binary).with_name("mpirun")  # the launcher beside the program, as examples/mlip_frames.py takes it
+    cmd = [str(mpirun if mpirun.exists() else "mpirun"), "--allow-run-as-root", "--oversubscribe", "-np", str(np_), str(binary)]
+    cmd += (["-nk", str(pools)] if pools else []) + ["-in", f"{name}.in"]
+    env = {**os.environ, "OMP_NUM_THREADS": "1", "PATH": f"{Path(binary).parent}:{os.environ.get('PATH', '/usr/bin:/bin')}"}
+    with open(work / f"{name}.out", "w") as out:
+        subprocess.run(cmd, cwd=work, stdout=out, stderr=subprocess.STDOUT, check=False, env=env)
+    return work / f"{name}.out"
+
+
+def finished(out: Path) -> bool:
+    if not out.exists():
+        return False
+    text = out.read_text(errors="replace")
+    return "JOB DONE" in text and ("bfgs converged" in text or "calculation = 'scf'" in text or "End of self-consistent" in text) \
+        and "convergence NOT achieved" not in text.split("!")[-1]
+
+
+def read_final(out: Path):
+    """The last geometry of a finished run with its energy (eV) and stress (eV/A3, tension positive)."""
+    from ase.io import read
+
+    a = read(out, format="espresso-out", index=-1)
+    text = out.read_text(errors="replace")
+    ry = [float(l.split("=")[1].split()[0]) for l in text.splitlines() if l.startswith("!")]
+    block = text.rsplit("total   stress", 1)[1].splitlines()[1:4]
+    # the code prints the stress pressure-signed (a cell that wants to grow reads positive), Ry/bohr3 first
+    pressure = np.array([[float(v) for v in row.split()[:3]] for row in block]) * RY_BOHR3_TO_EV_A3
+    return a, ry[-1] * 13.605693123, -pressure
+
+
+def moment(cube: Path, atoms):
+    """The cell's dipole (e A) from the valence charge density and the ions' valence charges.
+
+    Meaningful only along an edge the density does not cross: across the box of a chain."""
+    from ase.io.cube import read_cube_data
+
+    rho, _ = read_cube_data(str(cube))  # electrons per bohr3 on a grid over the cell
+    n = np.array(rho.shape)
+    cell = atoms.cell.array
+    dv = abs(np.linalg.det(cell)) / n.prod() / 0.529177210903**3
+    frac = [np.arange(n[k]) / n[k] for k in range(3)]
+    electrons = float(rho.sum() * dv)
+    mu = np.zeros(3)
+    for k in range(3):
+        weight = rho.sum(axis=tuple(j for j in range(3) if j != k)) * dv
+        mu -= (weight * frac[k]).sum() * cell[k]
+    scaled = atoms.get_scaled_positions(wrap=True)
+    z = np.array([PSEUDO[s][2] for s in atoms.get_chemical_symbols()])
+    mu += (z[:, None] * scaled).sum(axis=0) @ cell
+    return mu, electrons, float(z.sum())
+
+
+def dft(args):
+    from ase.io import read, write
+
+    src = Path(args.frames)
+    names = args.names.split(",") if args.names else [p.name[:-len(".start.xyz")] for p in sorted(src.glob("*.start.xyz"))]
+    for name in names:
+        store = src / f"{name}.json"
+        got = json.loads(store.read_text()) if store.exists() else {}
+        a = read(src / f"{name}.start.xyz")
+        work = src / "work" / name
+        chain = a.info.get("triage_kind") == "chain"
+        free = "z" if chain else "all"
+        t0 = time.time()
+        out = work / "relax.out"
+        if not finished(out):
+            run(args.pw, args.np, pw_input(a, args.pseudo, work / "scratch", "vc-relax", free), work, "relax")
+        if not finished(out):
+            print(f"{name}: the relaxation did not finish ({out})", flush=True)
+            continue
+        b, energy, _ = read_final(out)
+        b.info.update(a.info)
+        write(src / f"{name}.relaxed.xyz", b, format="extxyz")
+        reps = int(a.info["triage_repeats"])
+        got.update(name=name, chain=a.info["triage_chain"], state=a.info["triage_state"], kind=a.info["triage_kind"], repeats=reps,
+                   atoms=len(b), energy_ev=energy, cell=b.cell.array.tolist(),
+                   kmesh=" ".join(str(int(v)) for v in np.atleast_1d(a.info["kmesh"])) if not isinstance(a.info["kmesh"], str) else a.info["kmesh"],
+                   rise_a=float(b.cell.lengths()[2] / reps), volume_a3=float(b.get_volume() / reps),
+                   relax_s=got.get("relax_s", round(time.time() - t0)))
+        if chain and "dipole_across_e_a" not in got:
+            cube = work / "rho.cube"
+            (work / "pp.in").write_text("\n".join([
+                "&INPUTPP", "  prefix = 'frame'", f"  outdir = '{work / 'scratch'}'", f"  filplot = '{work / 'rho.dat'}'", "  plot_num = 0", "/",
+                "&PLOT", "  iflag = 3", "  output_format = 6", f"  fileout = '{cube}'", "/", ""]))
+            with open(work / "pp.out", "w") as fh:
+                subprocess.run([str(Path(args.pw).with_name("pp.x")), "-in", "pp.in"], cwd=work, stdout=fh, stderr=subprocess.STDOUT,
+                               check=False, env={**os.environ, "OMP_NUM_THREADS": "1", "PATH": f"{Path(args.pw).parent}:{os.environ.get('PATH', '/usr/bin:/bin')}"})
+            if cube.exists():
+                mu, electrons, ions = moment(cube, b)
+                # across the chain only: along it the density crosses the cell's faces and the moment means nothing
+                got.update(dipole_across_e_a=(mu[:2] / reps).tolist(), electrons=electrons, ion_charge=ions)
+                cube.unlink()
+                (work / "rho.dat").unlink(missing_ok=True)
+        if chain and "stretch" not in got and not args.no_stretch:
+            rows = []
+            for strain in (-args.strain, args.strain):
+                c = b.copy()
+                c.info.update(a.info)
+                cell = c.cell.array.copy()
+                cell[2] *= 1 + strain
+                c.set_cell(cell, scale_atoms=True)
+                tag = f"stretch_{'m' if strain < 0 else 'p'}"
+                if not finished(work / f"{tag}.out"):
+                    run(args.pw, args.np, pw_input(c, args.pseudo, work / f"scratch_{tag}", "relax"), work, tag)
+                if finished(work / f"{tag}.out"):
+                    d, e, s = read_final(work / f"{tag}.out")
+                    area = float(np.linalg.norm(np.cross(d.cell[0], d.cell[1])))
+                    rows.append({"strain": strain, "energy_ev": e, "tension_ev_per_a": float(s[2, 2] * area)})
+            if len(rows) == 2:
+                c0 = b.cell.lengths()[2]
+                by_energy = (rows[0]["energy_ev"] + rows[1]["energy_ev"] - 2 * energy) / args.strain**2 / c0
+                by_stress = (rows[1]["tension_ev_per_a"] - rows[0]["tension_ev_per_a"]) / (2 * args.strain)
+                got["stretch"] = {"rows": rows, "strain": args.strain, "force_per_strain_nn_by_energy": by_energy * EV_PER_A_TO_NN,
+                                  "force_per_strain_nn_by_stress": by_stress * EV_PER_A_TO_NN}
+        got["seconds"] = got.get("seconds", 0) + round(time.time() - t0)
+        store.write_text(json.dumps(got, indent=1))
+        debye = float(np.hypot(*got.get("dipole_across_e_a", [np.nan] * 2)) * E_ANGSTROM_TO_DEBYE)
+        k = got.get("stretch", {})
+        print(f"{name}: rise {got['rise_a']:.4f} A, {got['volume_a3']:.1f} A3 a repeat, dipole across {debye:.3f} D a repeat, "
+              f"stretch {k.get('force_per_strain_nn_by_stress', float('nan')):.1f} nN (by energy {k.get('force_per_strain_nn_by_energy', float('nan')):.1f}), "
+              f"{time.time() - t0:.0f} s", flush=True)
+
+
+def read_berry(out: Path):
+    """``(value, modulus, direction)`` in C/m2 of one Berry-phase run: its part of the polarisation."""
+    text = out.read_text(errors="replace")
+    line = [l for l in text.splitlines() if "C/m^2" in l and "mod" in l][-1]
+    value = float(line.split("=")[1].split()[0])
+    modulus = float(line.split("mod")[1].split(")")[0])
+    where = [l for l in text.splitlines() if "polarization direction is" in l][-1]
+    direction = np.array([float(v) for v in where.split("(")[1].split(")")[0].split(",")])
+    return value, modulus, direction
+
+
+def across(got: dict):
+    """The lone chain's dipole across itself (e A a repeat), under either name it has been stored."""
+    if "dipole_across_e_a" in got:
+        return np.array(got["dipole_across_e_a"])
+    return np.array(got["dipole_e_a"][:2]) if "dipole_e_a" in got else None
+
+
+def mesh_of(atoms):
+    m = atoms.info["kmesh"]
+    return [int(v) for v in (m.split() if isinstance(m, str) else np.atleast_1d(m))]
+
+
+def berry_parts(args, atoms, work: Path, tag: str, near=None):
+    """The Berry-phase parts of a cell's polarisation, one for each periodic edge (C/m2).
+
+    Each is known up to a whole number of its quantum.  It is taken on the branch nearest zero, or
+    nearest ``near``'s part when a strained cell follows an unstrained one."""
+    a = atoms.copy()
+    a.info.update(atoms.info)
+    if any(s in NOT_NORM_CONSERVING for s in a.get_chemical_symbols()):
+        raise ValueError("no norm-conserving file for an element of this cell: its Berry phase would be wrong")
+    mesh = mesh_of(a)
+    chain = a.info.get("triage_kind") == "chain"
+    a.info["kmesh"] = " ".join(str(v) for v in mesh)
+    scratch = work / f"scratch_{tag}"
+    scf = work / f"{tag}_scf.out"
+    if not (scf.exists() and "JOB DONE" in scf.read_text(errors="replace")):
+        run(args.pw, args.np, pw_input(a, args.pseudo_berry, scratch, "scf", conv_thr=1e-10, files=PSEUDO_BERRY), work, f"{tag}_scf")
+    parts = []
+    for g in ((1, 2) if chain else (1, 2, 3)):
+        along = list(mesh)
+        along[g - 1] = max(args.string, mesh[g - 1])
+        a.info["kmesh"] = " ".join(str(v) for v in along)
+        text = pw_input(a, args.pseudo_berry, scratch, "nscf", conv_thr=1e-10, files=PSEUDO_BERRY)
+        text = text.replace("  prefix = 'frame'", f"  prefix = 'frame'\n  lberry = .true.\n  gdir = {g}\n  nppstr = {along[g - 1]}")
+        out = work / f"{tag}_{g}.out"
+        if not (out.exists() and "JOB DONE" in out.read_text(errors="replace")):
+            run(args.pw, args.np, text, work, f"{tag}_{g}")
+        value, modulus, direction = read_berry(out)
+        centre = 0.0 if near is None else near[len(parts)]["c_per_m2"]
+        value -= modulus * np.round((value - centre) / modulus)
+        parts.append({"gdir": g, "c_per_m2": value, "quantum_c_per_m2": modulus, "direction": direction.tolist()})
+    return parts
+
+
+def total(parts) -> np.ndarray:
+    return sum(np.array(r["direction"]) * r["c_per_m2"] for r in parts)
+
+
+def berry(args):
+    """The polarisation of a relaxed cell by the Berry phase.
+
+    The branch nearest zero is right while a part is below half its quantum (about 0.4 C/m2 for
+    these cells); the lone chain's own moment over the cell's volume is printed beside it."""
+    from ase.io import read
+
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        store = src / f"{name}.json"
+        got = json.loads(store.read_text())
+        a = read(src / f"{name}.relaxed.xyz")
+        t0 = time.time()
+        parts = berry_parts(args, a, src / "work" / name, "berry")
+        p = total(parts)
+        got["berry"] = {"parts": parts, "polarisation_c_per_m2": p.tolist(), "magnitude_c_per_m2": float(np.linalg.norm(p))}
+        store.write_text(json.dumps(got, indent=1))
+        note = ""
+        if across(got) is not None:
+            rigid = across(got) * got["repeats"] / a.get_volume() * E_PER_A2_TO_C_PER_M2
+            note = f"; the density's moment over the cell {rigid[0]:+.4f} {rigid[1]:+.4f}"
+        print(f"{name}: Berry polarisation {p[0]:+.4f} {p[1]:+.4f} {p[2]:+.4f} C/m2 (magnitude {np.linalg.norm(p):.4f}){note}, {time.time() - t0:.0f} s", flush=True)
+
+
+def piezo(args):
+    """A crystal strained along its own polarisation, the cell held across it: what it gives back.
+
+    ``c``: the stress along the axis per strain (GPa).  ``e``: the polarisation along the axis per
+    strain (C/m2), which is the stress the clamped crystal makes per field, pN/nm2 per V/um.  For
+    dipoles that do not change, e is minus the polarisation (the same moment in more volume).
+    ``d = e / c``: strain per field with the faces across the axis held, pm/V."""
+    from ase.io import read
+
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        store = src / f"{name}.json"
+        got = json.loads(store.read_text())
+        a = read(src / f"{name}.relaxed.xyz")
+        work = src / "work" / name
+        p0 = np.array(got["berry"]["polarisation_c_per_m2"])
+        axis = p0 / np.linalg.norm(p0)
+        t0 = time.time()
+        rows = []
+        for strain in (-args.strain, args.strain):
+            tag = f"strain_{'m' if strain < 0 else 'p'}"
+            b = a.copy()
+            b.info.update(a.info)
+            b.info["kmesh"] = " ".join(str(v) for v in mesh_of(a))
+            b.set_cell(a.cell.array @ (np.eye(3) + strain * np.outer(axis, axis)).T, scale_atoms=True)
+            if not finished(work / f"{tag}.out"):
+                run(args.pw, args.np, pw_input(b, args.pseudo, work / f"scratch_{tag}_relax", "relax"), work, tag)
+            if not finished(work / f"{tag}.out"):
+                print(f"{name}: {tag} did not finish", flush=True)
+                break
+            c, energy, stress = read_final(work / f"{tag}.out")
+            c.info.update(b.info)
+            parts = berry_parts(args, c, work, f"{tag}_berry", near=got["berry"]["parts"])
+            rows.append({"strain": strain, "energy_ev": energy, "stress_along_ev_a3": float(axis @ stress @ axis),
+                         "polarisation_along_c_per_m2": float(total(parts) @ axis), "parts": parts})
+        if len(rows) != 2:
+            continue
+        c_along = (rows[1]["stress_along_ev_a3"] - rows[0]["stress_along_ev_a3"]) / (2 * args.strain) * 160.21766
+        e_along = (rows[1]["polarisation_along_c_per_m2"] - rows[0]["polarisation_along_c_per_m2"]) / (2 * args.strain)
+        got["piezo"] = {"axis": axis.tolist(), "strain": args.strain, "rows": rows, "c_along_gpa": c_along, "e_along_c_per_m2": e_along,
+                        "d_clamped_pm_per_v": e_along / c_along * 1000.0, "polarisation_c_per_m2": float(np.linalg.norm(p0))}
+        store.write_text(json.dumps(got, indent=1))
+        print(f"{name}: P {np.linalg.norm(p0):.4f} C/m2, e {e_along:+.4f} C/m2, c {c_along:.1f} GPa, d (clamped across) {e_along / c_along * 1000:+.1f} pm/V, "
+              f"{time.time() - t0:.0f} s", flush=True)
+
+
+def table(args):
+    src = Path(args.frames)
+    rows = [json.loads(p.read_text()) for p in sorted(src.glob("*.json"))]
+    out = {"what": "chains alone in a box and one chain to a cell, PBE-D3(BJ) at 90/360 Ry (examples/chain_triage.py)", "rows": rows}
+    if args.out:
+        args.out.write_text(json.dumps(out, indent=1) + "\n")
+    for r in rows:
+        mu = across(r) if across(r) is not None else [np.nan] * 2
+        k = r.get("stretch", {})
+        p = r.get("berry", {}).get("magnitude_c_per_m2", float("nan"))
+        print(f"{r['name']:16s} {r['kind']:7s} rise {r['rise_a']:.4f} A  {r['volume_a3']:7.1f} A3  E {r['energy_ev'] / r['repeats']:.5f} eV a repeat  "
+              f"dipole across {np.hypot(*mu) * E_ANGSTROM_TO_DEBYE:.3f} D  stretch {k.get('force_per_strain_nn_by_stress', float('nan')):.1f} nN  P {p:.4f} C/m2")
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = p.add_subparsers(dest="command", required=True)
+    b = sub.add_parser("build")
+    b.add_argument("--chains", required=True)
+    b.add_argument("--out", type=Path, required=True)
+    b.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    b.add_argument("--box", type=float, default=14.0)
+    b.set_defaults(run=build)
+    d = sub.add_parser("dft")
+    d.add_argument("--frames", type=Path, required=True)
+    d.add_argument("--names", default="")
+    d.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
+    d.add_argument("--pseudo", default="/opt/pseudo")
+    d.add_argument("--np", type=int, default=4)
+    d.add_argument("--strain", type=float, default=0.01)
+    d.add_argument("--no-stretch", action="store_true")
+    d.set_defaults(run=dft)
+    k = sub.add_parser("pack")
+    k.add_argument("--frames", type=Path, required=True)
+    k.add_argument("--names", required=True)
+    k.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    k.add_argument("--starts", type=int, default=24)
+    k.add_argument("--steps", type=int, default=300)
+    k.add_argument("--keep", type=int, default=2)
+    k.add_argument("--seed", type=int, default=11)
+    k.set_defaults(run=pack)
+    y = sub.add_parser("berry")
+    y.add_argument("--frames", type=Path, required=True)
+    y.add_argument("--names", required=True)
+    y.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
+    y.add_argument("--pseudo", default="/opt/pseudo")
+    y.add_argument("--pseudo-berry", default="/opt/pseudo_nc", help="norm-conserving files, for the Berry phase")
+    y.add_argument("--np", type=int, default=4)
+    y.add_argument("--string", type=int, default=6)
+    y.set_defaults(run=berry)
+    z = sub.add_parser("piezo")
+    z.add_argument("--frames", type=Path, required=True)
+    z.add_argument("--names", required=True)
+    z.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
+    z.add_argument("--pseudo", default="/opt/pseudo")
+    z.add_argument("--pseudo-berry", default="/opt/pseudo_nc", help="norm-conserving files, for the Berry phase")
+    z.add_argument("--np", type=int, default=4)
+    z.add_argument("--string", type=int, default=6)
+    z.add_argument("--strain", type=float, default=0.01)
+    z.set_defaults(run=piezo)
+    t = sub.add_parser("table")
+    t.add_argument("--frames", type=Path, required=True)
+    t.add_argument("--out", type=Path, default=None)
+    t.set_defaults(run=table)
+    args = p.parse_args()
+    args.run(args)
+
+
+if __name__ == "__main__":
+    main()

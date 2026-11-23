@@ -1,0 +1,19 @@
+ &input
+   title='O'
+   prefix='o_nc'
+   zed=8.0
+   rel=0
+   config='[He] 2s2 2p4'
+   iswitch=3
+   dft='PBE'
+ /
+ &inputp
+   pseudotype=1
+   file_pseudopw='O.pbe-tm-triage.UPF'
+   author='ld1.x, examples/chain_triage.py'
+   lloc=1
+   tm=.true.
+ /
+2
+2S  1  0  2.00  0.00  1.35  1.35
+2P  2  1  4.00  0.00  1.35  1.35
