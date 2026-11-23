@@ -843,6 +843,23 @@ right": true at one registry, not along it).
         own command line and never ends; `rise_a` of a doubled cell is printed per chain-repeat
         counted twice (cosmetic, not fixed).
         OFFERED TO THE PI, NOT ANSWERED: the last $3.9 on a card for the cam test in DFT.
+        THE CAM TEST AT THE END OF 2026-11-23 (text: `docs/CANDIDATE_MATERIALS.md` 6.2; READ THIS
+        BEFORE THE 17:20 BLOCK BELOW, WHICH IT CORRECTS). DFT on the relaxed ends of the urea row's
+        first-move paths: one chain turned alone in a row at rest is 31.1 kcal/mol a repeat above it
+        (the potential said 17.3); with an N-methyl on every repeat of the neighbour that holds it,
+        33.8 (28.3). The wall path gives the same 31.1 another way (36.3 for the sharp two-and-two
+        row, less 5.2). SO: (1) a pair of walls in a urea row costs about 31 kcal/mol for each
+        repeat of chain length, an upper mark (the potential's geometries; PBE binds hydrogen-bonded
+        rows too well); the field's 0.42 kcal/mol a turned repeat at 55 V/um would need a turned
+        stretch some seventy chains wide to pay for it. (2) THE N-METHYL, PLACED SO, DOES NOT HELP.
+        (3) THE PRETRAINED POTENTIAL is good to 2.5 between states that all have walls and 14 LOW on
+        making walls: not to be used alone for what a wall costs. (4) The humps are not known: the
+        only DFT figure is a chain turning as a rod, 15.8. NOTHING IS RUNNING. NOT RUN: urea-3's
+        crystal, nylon-3's rebuilt opposed cells and paths, any cell longer than one repeat along
+        the chain, any other defect (a dangling bond from a spacer of another length; sulfur for
+        oxygen, which needs a sulfur file made as the oxygen was). The first cell with a methyl
+        folded up in the potential (the methyl was put 1.4 A from the next chain's oxygen): room is
+        now made first and a cell with atoms under 0.85 A apart is refused.
         TRAPS FOUND. (1) `/usr/bin/pw.x` (6.7, the system package) aborts in a relaxation; use
         `/opt/mm/qe/bin/pw.x` (7.5) as every earlier run here did. (2) THE BERRY PHASE OF pw.x 7.5
         IS WRONG WITH PAW AND ULTRASOFT FILES: on the lone PVDF chain, where the density's moment
