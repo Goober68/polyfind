@@ -563,5 +563,33 @@ def test_the_mixed_cells_starts_and_sheets():
     assert scr._units(f"{a}+{b}", "12") == "VC" and scr._units(f"{a}+{b}", "20") == "VV/RV" and scr._units(a, "14m") == "CV"
 
 
+def test_the_mixed_cell_in_the_potential_and_its_kink():
+    """The sixth pod's card.  All-trans less helix +0.011 kcal/mol per monomer, its parents +0.201 and -0.033; its two helix packings 0.20 per chain apart;
+    the two ways round the same cell.  Its kink is on its chlorine and hops as the three-TrFE parent's does."""
+    from ase.io import read
+
+    row = json.loads((ROOT / "docs" / "predictions" / "screen14_potential_e.json").read_text())["rows"][MIXED]
+    assert row["complete"] and row["at_rest"] == 16 and row["margin"] == pytest.approx(0.011, abs=0.0006) and row["lowest_hx"].rstrip("x") == "hx_GTGpT" and row["lowest_tt"].rstrip("x") == "tt_low"
+    parents = json.loads((ROOT / "docs" / "predictions" / "screen14_potential_d.json").read_text())["rows"]
+    assert parents["vdf8-trfe4-cfe1-rvdf1-14"]["margin"] < row["margin"] < 0.5 * (parents["vdf8-trfe4-cfe1-rvdf1-14"]["margin"] + parents["vdf9-trfe3-cfe1-rvdf1-14"]["margin"])
+    e = {k: c["eV_per_monomer"] for k, c in row["cells"].items()}
+    assert all(abs(e[k] - e[k + "x"]) * 14 * KCAL < 0.005 for k in e if not k.endswith("x"))                    # the chains the other way round: the same cell
+    per_chain = lambda k, zero: round((e[k] - e[zero]) * 14 * KCAL, 2)
+    assert [per_chain(k, "tt_low") for k in ("tt_up", "tt_reg", "tt_ldr")] == [0.47, 1.79, 2.20]
+    assert [per_chain(k, "hx_GTGpT") for k in ("hx_ldr", "hx_TGTGp", "hx_GpTGT")] == [0.20, 3.16, 3.79]
+    scr = _load("screen14")
+    assert [k.rstrip("x") for k in scr.picked(row)] == ["hx_GTGpT", "tt_low", "hx_ldr", "tt_up"]
+    assert len(read(MLIP / "screen14_relaxed_e.extxyz", index=":")) == 16
+    sheets = json.loads((ROOT / "docs" / "predictions" / "screen14_sheets_3.json").read_text())["rows"][MIXED]
+    kept = {k: round(v["energy"], 2) for k, v in sheets["sites"].items() if v["kink_kept"] and v["converged"]}
+    assert kept == {"12:f": -4.16, "12:fx": -4.16, "14m:f": -4.08, "14m:fx": -4.08, "12:l": -2.43, "12:lx": -2.42, "16m:l": -1.05, "16m:lx": -1.05}
+    assert sheets["sites"]["12:f"]["units"] == "VC" and sheets["sites"]["12:f"]["site"] == "12" and sheets["cheapest"].startswith("12:f")
+    hop = json.loads((ROOT / "docs" / "predictions" / "screen14_mixed_hops.json").read_text())["paths"]["mix"]
+    assert hop["sheet"] == f"scr_{MIXED}_sheetf_at12_in_all_s1" and (round(hop["hop"], 2), hop["hop_order"], round(hop["hop_arrives_at"], 2)) == (6.38, "a", 0.35)
+    assert (round(hop["orders"]["b"]["first_leg"]["top"], 2), hop["orders"]["b"]["first_leg"]["arrives_as"]) == (7.47, "stretched kink") and round(hop["removed_over"], 2) == 11.64
+    other = json.loads((ROOT / "docs" / "predictions" / "screen14_hops.json").read_text())["paths"]
+    assert abs(hop["hop"] - other["lcfe"]["hop"]) < 0.1 and other["film"]["hop"] - hop["hop"] > 1.0
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
