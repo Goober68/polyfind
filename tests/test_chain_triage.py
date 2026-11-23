@@ -161,3 +161,19 @@ def test_spun_turns_one_chain_of_a_row_and_leaves_the_rest():
     assert np.allclose(row.positions[:2], before[:2])
     assert np.allclose(row.positions[2:].mean(axis=0), before[2:].mean(axis=0))
     assert np.allclose(row.positions[3] - row.positions[2], [-1.0, -0.2, 0.3])
+
+
+def test_methylated_swaps_one_n_h_for_n_ch3_and_keeps_the_chains_in_place():
+    from ase import Atoms
+
+    row = Atoms("NHCNHC", positions=[[0.0, 0.0, 0.0], [1.02, 0.0, 0.0], [-1.3, 0.0, 0.6], [5.0, 0.0, 0.0], [6.02, 0.0, 0.0], [3.7, 0.0, 0.6]],
+                cell=[10.0, 6.0, 4.0], pbc=True)
+    out = CT.methylated(row, 3, 1)
+    assert len(out) == 9 and out.get_chemical_symbols() == ["N", "H", "C", "N", "C", "C", "H", "H", "H"]
+    assert np.allclose(out.positions[:4], row.positions[:4]) and np.allclose(out.positions[5], row.positions[5])
+    carbon = out.positions[4]
+    assert np.isclose(np.linalg.norm(carbon - out.positions[3]), 1.46)
+    for h in out.positions[6:]:
+        assert np.isclose(np.linalg.norm(h - carbon), 1.09)
+        to_h, to_n = h - carbon, out.positions[3] - carbon
+        assert np.isclose(np.degrees(np.arccos(to_h @ to_n / 1.09 / 1.46)), 109.47, atol=0.05)

@@ -432,6 +432,81 @@ def wall(args):
               f"in the potential, end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
 
 
+def methylated(row, per_chain: int, chain: int):
+    """A row cell with the first N-H of one chain made N-CH3: that chain gives one hydrogen bond fewer.
+
+    The hydrogen is replaced where it stands by a carbon at 1.46 A, with three hydrogens round it;
+    the new atoms go at the end of the cell, so the chains' atoms keep their places in the list."""
+    from ase import Atoms
+
+    symbols = row.get_chemical_symbols()
+    part = range(chain * per_chain, (chain + 1) * per_chain)
+    pos = row.positions
+    for n_at in part:
+        if symbols[n_at] != "N":
+            continue
+        near = [h for h in part if symbols[h] == "H" and np.linalg.norm(pos[h] - pos[n_at]) < 1.2]
+        if near:
+            break
+    else:
+        raise ValueError("no N-H on this chain")
+    h_at = near[0]
+    u = (pos[h_at] - pos[n_at]) / np.linalg.norm(pos[h_at] - pos[n_at])
+    carbon = pos[n_at] + 1.46 * u
+    w = np.cross(u, [0.0, 0.0, 1.0] if abs(u[2]) < 0.9 else [1.0, 0.0, 0.0])
+    w /= np.linalg.norm(w)
+    hydrogens = [carbon + 1.09 * (u / 3 + np.sqrt(8) / 3 * (np.cos(t) * w + np.sin(t) * np.cross(u, w))) for t in (0.0, 2 * np.pi / 3, 4 * np.pi / 3)]
+    out = row.copy()
+    out.info.update(row.info)
+    out.symbols[h_at] = "C"
+    out.positions[h_at] = carbon
+    out += Atoms("HHH", positions=hydrogens)
+    return out
+
+
+def nucleus(args):
+    """The first move of a row at rest: one chain of four turning round, alone, and what a defect does to it.
+
+    All four chains face one way; the third is turned, which makes two walls where there were none.
+    With ``--methyl`` the second chain, whose N-H holds the third, has that N-H made N-CH3 first and
+    the cell is let settle with it.  Beside the PVDF numbers: this is a kink forming, ``wall`` is its
+    hop.  The end of the path is how far from level the turned chain sits; the top is the hump."""
+    from ase.io import read, write
+
+    calc = model(args.model)
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        a = rebased(read(src / f"{name}.relaxed.xyz"))
+        n = len(a)
+        along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+        mesh = mesh_of(a)
+        mesh[0] = max(1, round(mesh[0] / 4))
+        base = a.repeat([4, 1, 1])
+        base.info.update(a.info)
+        base.info.update(triage_repeats=4 * int(a.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh))
+        tag = "nuc"
+        if args.methyl:
+            tag = "nucm"
+            base = settle(methylated(base, n, 1), calc, fmax=0.05, steps=args.settle, free=(1, 1, 1, 1, 1, 1))
+            along = base.cell.array[2] / np.linalg.norm(base.cell.array[2])
+        images = []
+        for t in np.linspace(0.0, np.pi, args.images):
+            row = base.copy()
+            row.info.update(base.info)
+            images.append(spun(row, n, 2, t, along))
+        energies, nsteps = band(images, calc, args.fmax, args.steps)
+        reps = int(a.info["triage_repeats"])
+        out = []
+        for k, im in enumerate(images):
+            c = im.copy()
+            c.info.update(base.info)
+            c.info.update(triage_turn_of=name, triage_turn_edge=1, triage_turn_image=k, triage_turn_ev=energies[k] - energies[0], triage_turning_repeats=reps)
+            out.append(c)
+        write(src / f"{name}_{tag}.path.xyz", out, format="extxyz")
+        print(f"{name}_{tag}: {len(images)} images of {len(images[0])} atoms, {nsteps} steps, top {(max(energies) - energies[0]) * KCAL / reps:.2f} kcal/mol a repeat of the chain that turns "
+              f"in the potential, end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
+
+
 def turn(args):
     """How locked a chain is: the way from the polar cell to the one with every second chain turned.
 
@@ -912,6 +987,16 @@ def main():
     v.add_argument("--fmax", type=float, default=0.08)
     v.add_argument("--steps", type=int, default=300)
     v.set_defaults(run=wall)
+    x = sub.add_parser("nucleus")
+    x.add_argument("--frames", type=Path, required=True)
+    x.add_argument("--names", required=True)
+    x.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    x.add_argument("--methyl", action="store_true", help="make the N-H that holds the turning chain an N-CH3 first")
+    x.add_argument("--images", type=int, default=7)
+    x.add_argument("--fmax", type=float, default=0.08)
+    x.add_argument("--steps", type=int, default=300)
+    x.add_argument("--settle", type=int, default=300)
+    x.set_defaults(run=nucleus)
     w = sub.add_parser("points")
     w.add_argument("--frames", type=Path, required=True)
     w.add_argument("--names", required=True)
