@@ -387,6 +387,7 @@ def band(images, calc, fmax: float, steps: int, end_steps: int = 150):
 
     A loose band on purpose (it is the start of a DFT reading of each image, not the reading), and
     it says where it has got to: on one processor a band of 36 atoms takes tens of minutes."""
+    from ase.calculators.singlepoint import SinglePointCalculator
     from ase.mep import NEB
     from ase.optimize import FIRE, LBFGS
 
@@ -395,6 +396,8 @@ def band(images, calc, fmax: float, steps: int, end_steps: int = 150):
         im.calc = calc
     for end in (images[0], images[-1]):
         LBFGS(end, logfile=None).run(fmax=0.05, steps=end_steps)
+        # an end does not move again: keep its energy, or the band asks the potential for it at every step
+        end.calc = SinglePointCalculator(end, energy=float(end.get_potential_energy()), forces=end.get_forces())
     print(f"  ends relaxed, {time.time() - t0:.0f} s", flush=True)
     neb = NEB(images, climb=True, method="improvedtangent", allow_shared_calculator=True)
     opt = FIRE(neb, logfile=None)
