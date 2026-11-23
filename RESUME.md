@@ -727,7 +727,22 @@ right": true at one registry, not along it).
         (1) SPEED from the stored tables, the model's stroke rate (AC strain per cycle times 34 kHz),
             mm/s per mm of active length: the film's composition 27.5, the mixed cell 52 to 55, the
             leader 63, IVRVVRVCVVVVVR 19 to 25, the no-pin row 30 to 32.
-        (2) A CEILING NO CHEMISTRY MOVES. In `polyfind.loss` the heat at a drive frequency f is
+        (2) WITHDRAWN AS A LIMIT, 2026-11-23 (the PI: "the energy dissipated depends on the work done
+            not your theoretical numbers"; "non blocked motion is like charging a battery, the
+            potential is stored and released with a cycle efficiency of maybe 80%. When blocking
+            force is encountered, then energy starts being converted into work/heat"; verbatim in
+            `CLAUDE.md`). What follows is the loss model's BOOKKEEPING, not a property of any
+            material: `operating_point` charges the mechanical loss at the full free strain whatever
+            the load and credits Y S^2 / 4 of work a cycle, so heat per unit work is at least
+            4 pi tan_m and its "efficiency" tops out at 61% (the film's composition 22%, the mixed
+            cell 50 to 52%, the leader 59%). Counted at the strain a matched load leaves the film
+            (half the free strain) the same assumption gives 86%. The model has no free regime and
+            no loaded one. TO REBUILD ON THE PI'S TWO REGIMES before any force density, speed or
+            power is ranked again. Also to settle: an 80% round trip is about 20% of the cycled
+            energy lost a cycle, a loss tangent near 0.03, and the model has the film's composition
+            at 0.088 dielectric and 0.05 mechanical, a much worse round trip: either the model's
+            film is too lossy or the 80% measures something else (the PI has been asked).
+            A CEILING NO CHEMISTRY MOVES (as first written). In `polyfind.loss` the heat at a drive frequency f is
             f (pi eps0 eps'' E^2 + pi Y tan_m S^2), and `examples/pin_design.py` runs every row with
             the heat budget 4 MW/m3, Y = 0.2 GPa and tan_m = 0.05 (all three assumed, one value for
             every candidate). With no dielectric loss at all the heat budget still caps the strain at

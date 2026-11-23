@@ -77,11 +77,35 @@ How it is applied (an interpretation, not the PI's words):
   heat budget allows a soft film is not multiplied by a crystal's stiffness: a film that stiff
   would not be allowed that strain. (The "blocked force through the crystal" of 3.20 to 3.26 does
   this and overstates; see RESUME.)
-- Both are read against the ceiling the heat budget sets whatever the chemistry: force density
-  times speed is at most the heat budget over pi times the mechanical loss tangent. With the
-  tables' settings (4 MW/m3, tan delta mechanical 0.05) that is 25 W/cm3. Stiffness and drive
-  frequency trade force for speed along it; only the heat budget and the mechanical loss move it.
+- (WITHDRAWN 2026-11-23, the same day it was written: a "ceiling" of heat budget over pi times
+  the mechanical loss tangent on force density times speed. It was this file's interpretation,
+  not the PI's, and the PI's next two messages showed what it rests on: see the next section.)
 - The modulus (0.2 GPa), the mechanical loss tangent (0.05) and the heat budget (4 MW/m3) are
   assumed, the same for every candidate, and not measured or computed here. Say so wherever a
   force density or a speed is given, until the PI supplies measured ones.
+
+## Free motion stores and returns energy; work and heat begin at the blocking force (PI, 2026-11-23)
+
+The PI's words: "the energy dissipated depends on the work done not your theoretical numbers - the
+heat bidget you have assumes some efficiency level?  What is it?" and then: "The reason i make the
+point about work done is because non blocked motion is like charging a battery, the potential is
+stored and released with a cycle efficiency of maybe 80%.  When blocking force is encountered, then
+energy starts being converted into work/heat."
+
+Scope: how dissipation, efficiency, heat and work are reckoned for any candidate, and so every
+force density, speed and power number.
+
+How it is applied (an interpretation, not the PI's words):
+
+- Two regimes, kept apart. Free (unblocked) motion: energy is stored and returned each cycle, and
+  what is lost is the round trip's shortfall (the PI's figure: about 80% returned). Motion against
+  a force: stored energy is converted to work and heat.
+- `polyfind.loss.operating_point` does NOT do this. It charges the mechanical loss at the full
+  free strain whether or not work is being done, and credits `Y S^2 / 4` of work a cycle as if
+  always at a matched load. An efficiency, a heat-limited strain or a "ceiling" taken from it
+  pairs loaded work with unloaded loss. Until the model is rebuilt on the two regimes, say this
+  beside any such number and do not present it as a limit of the material.
+- The mechanical loss tangent (0.05), the film modulus (0.2 GPa) and the heat budget (4 MW/m3) are
+  assumed. The PI's 80% round trip is the only figure of this kind that comes from the device; ask
+  what it was measured on before using it as a number.
 
