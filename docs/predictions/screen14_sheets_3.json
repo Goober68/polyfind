@@ -1,0 +1,295 @@
+{
+ "what": "a row's kink sheets (a kink pair on every chain, in register, at one site of the sequence), each made of the film composition's potential-relaxed sheet at that site by changing substituents where they stand (examples/screen14.py sheets) and relaxed in the potential with the cell free: energy is kcal/mol per chain against the row's lowest all-trans cell in the potential; kink_kept: every chain still has two gauche bonds of opposite sense about a trans one; units: the two units the site lies on, by the film composition's numbering of sites. No DFT",
+ "starts": "docs/predictions/mlip/screen14_sheets_3.extxyz",
+ "rows": {
+  "vdf17-trfe7-cfe2-rvdf2-28": {
+   "letters": "IVRVVRVCVVVVVR+IVRVVRVCVVRVVR",
+   "sites": {
+    "12:f": {
+     "relaxed": true,
+     "frame": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetf_at12_in_all_s1",
+     "converged": true,
+     "energy": -4.159949091538271,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        12,
+        67.34346325245365
+       ],
+       [
+        14,
+        -69.05878139400193
+       ]
+      ],
+      [
+       [
+        12,
+        67.36655829685532
+       ],
+       [
+        14,
+        -67.70309754489698
+       ]
+      ]
+     ],
+     "units": "VC",
+     "site": "12",
+     "shear_along_chains_monomers": [
+      0.0016686972658451367,
+      -1.7280352398671117
+     ]
+    },
+    "12:fx": {
+     "relaxed": true,
+     "frame": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetfx_at12_in_all_s1",
+     "converged": true,
+     "energy": -4.159949083683732,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        12,
+        67.3665450605895
+       ],
+       [
+        14,
+        -67.70309970792263
+       ]
+      ],
+      [
+       [
+        12,
+        67.34346100327664
+       ],
+       [
+        14,
+        -69.05877312402467
+       ]
+      ]
+     ],
+     "units": "VC",
+     "site": "12",
+     "shear_along_chains_monomers": [
+      0.0016687243763685452,
+      -1.7280352470666718
+     ]
+    },
+    "12:l": {
+     "relaxed": true,
+     "frame": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetl_at12_in_all_s1",
+     "converged": true,
+     "energy": -2.433154903622036,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        12,
+        65.32491595437928
+       ],
+       [
+        14,
+        -67.56471406396541
+       ]
+      ],
+      [
+       [
+        12,
+        65.9979044760222
+       ],
+       [
+        14,
+        -64.84752840229437
+       ]
+      ]
+     ],
+     "units": "VC",
+     "site": "12",
+     "shear_along_chains_monomers": [
+      0.8809217707400856,
+      -0.9095107804008095
+     ]
+    },
+    "12:lx": {
+     "relaxed": true,
+     "frame": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetlx_at12_in_all_s1",
+     "converged": true,
+     "energy": -2.4156115461745586,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        12,
+        65.6997395401028
+       ],
+       [
+        14,
+        -64.82019022087648
+       ]
+      ],
+      [
+       [
+        12,
+        65.37880798855366
+       ],
+       [
+        14,
+        -67.65879190170011
+       ]
+      ]
+     ],
+     "units": "VC",
+     "site": "12",
+     "shear_along_chains_monomers": [
+      0.8859694400057995,
+      -0.9128541488646891
+     ]
+    },
+    "14m:f": {
+     "relaxed": true,
+     "frame": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetf_at14m_in_all_s1",
+     "converged": true,
+     "energy": -4.0815241468776025,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        14,
+        -63.700519868148845
+       ],
+       [
+        16,
+        57.71439888156347
+       ]
+      ],
+      [
+       [
+        14,
+        -64.27100244032835
+       ],
+       [
+        16,
+        52.22083420430311
+       ]
+      ]
+     ],
+     "units": "CV",
+     "site": "14m",
+     "shear_along_chains_monomers": [
+      0.8829941403747235,
+      -0.7154418786410591
+     ]
+    },
+    "14m:fx": {
+     "relaxed": true,
+     "frame": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetfx_at14m_in_all_s1",
+     "converged": true,
+     "energy": -4.0815236100528764,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        14,
+        -64.27091694586917
+       ],
+       [
+        16,
+        52.22106479112728
+       ]
+      ],
+      [
+       [
+        14,
+        -63.70062450099749
+       ],
+       [
+        16,
+        57.714549401788005
+       ]
+      ]
+     ],
+     "units": "CV",
+     "site": "14m",
+     "shear_along_chains_monomers": [
+      0.8829932822108449,
+      -0.7154391515159477
+     ]
+    },
+    "16m:l": {
+     "relaxed": true,
+     "frame": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetl_at16m_in_all_s1",
+     "converged": true,
+     "energy": -1.053180463002547,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        16,
+        -59.516381547982284
+       ],
+       [
+        18,
+        59.94639889885945
+       ]
+      ],
+      [
+       [
+        16,
+        -58.3483135725827
+       ],
+       [
+        18,
+        61.852467129703115
+       ]
+      ]
+     ],
+     "units": "VV",
+     "site": "16m",
+     "shear_along_chains_monomers": [
+      -0.6065639455276831,
+      -1.1014014715466889
+     ]
+    },
+    "16m:lx": {
+     "relaxed": true,
+     "frame": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetlx_at16m_in_all_s1",
+     "converged": true,
+     "energy": -1.0531909536573185,
+     "kink_kept": true,
+     "gauche_bonds": [
+      [
+       [
+        16,
+        -58.34833977116629
+       ],
+       [
+        18,
+        61.85490110530157
+       ]
+      ],
+      [
+       [
+        16,
+        -59.516131569792485
+       ],
+       [
+        18,
+        59.94405526212229
+       ]
+      ]
+     ],
+     "units": "VV",
+     "site": "16m",
+     "shear_along_chains_monomers": [
+      -0.6065605496831386,
+      -1.1013986022028592
+     ]
+    }
+   },
+   "all_trans": "tt_lowx",
+   "all_trans_eV_per_monomer": -2025.526739332847,
+   "cheapest": "12:f",
+   "below_all_trans": 8
+  }
+ }
+}

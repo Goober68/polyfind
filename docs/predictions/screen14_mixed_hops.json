@@ -1,0 +1,189 @@
+{
+ "what": "step scans of kink sheets in the potential with D3, kcal/mol per chain against the relaxed sheet each started from; order a leads the first gauche bond of each chain's kink to trans and then whatever still differs from all-trans, order b the second first; hop: the lower top of the first legs that arrive at a stretched kink (arrives_as); removed_over: the lower, of the two orders, of the higher of its two tops",
+ "paths": {
+  "mix": {
+   "row": "vdf17-trfe7-cfe2-rvdf2-28",
+   "orders": {
+    "a": {
+     "first_leg": {
+      "start": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetf_at12_in_all_s1",
+      "top": 6.383164346009428,
+      "top_image": "mix_a1_i06",
+      "arrived": 0.34663969866849403,
+      "energies": [
+       0.0,
+       0.3488799104149748,
+       1.2865713667510137,
+       2.708777569364811,
+       4.414829115684181,
+       5.779590014473484,
+       6.383164346009428,
+       6.134449141286534,
+       5.355133094632511,
+       4.137468218684644,
+       2.6373037329940834,
+       1.6448076628932813,
+       0.5319484601444947,
+       0.34663969866849403
+      ],
+      "arrived_gauche_bonds": [
+       [
+        [
+         10,
+         58.11780164763615
+        ],
+        [
+         14,
+         -68.6860370517102
+        ]
+       ],
+       [
+        [
+         10,
+         58.08748943867882
+        ],
+        [
+         14,
+         -67.5507768868802
+        ]
+       ]
+      ],
+      "arrives_as": "stretched kink",
+      "not_converged": []
+     },
+     "second_leg": {
+      "start": "mix_a1_released",
+      "top": 11.29566477726219,
+      "top_image": "mix_a2_i06",
+      "arrived": 6.193341723732003,
+      "energies": [
+       -8.389361028093845e-11,
+       0.6580419980245442,
+       2.3842324592700246,
+       4.891407432384626,
+       7.323467475618847,
+       9.543043053470024,
+       11.29566477726219,
+       11.118839537408483,
+       10.8365521141534,
+       10.347697338158252,
+       9.225536840518703,
+       9.725068771143476,
+       10.336574930524423,
+       6.193341723732003
+      ],
+      "arrived_gauche_bonds": [
+       [
+        [
+         12,
+         78.61151432418569
+        ]
+       ],
+       []
+      ],
+      "arrives_as": "mixed",
+      "not_converged": []
+     },
+     "second_top_against_the_sheet": 11.642304475930683,
+     "all_trans_against_the_sheet": 6.539981422400498,
+     "higher_top": 11.642304475930683
+    },
+    "b": {
+     "first_leg": {
+      "start": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetf_at12_in_all_s1",
+      "top": 7.471588316209202,
+      "top_image": "mix_b1_i06",
+      "arrived": 1.9933151907973026,
+      "energies": [
+       0.0,
+       0.2665586276342201,
+       1.0480709876125276,
+       2.27019243324757,
+       3.8595274562656963,
+       5.681266750624115,
+       7.471588316209202,
+       6.416793654395093,
+       6.503708279790375,
+       5.560944588846902,
+       5.221556871974479,
+       4.024890439916686,
+       2.7196896959027055,
+       1.9933151907973026
+      ],
+      "arrived_gauche_bonds": [
+       [
+        [
+         12,
+         60.82262398842306
+        ],
+        [
+         16,
+         -71.34359406904603
+        ]
+       ],
+       [
+        [
+         12,
+         61.151495999692095
+        ],
+        [
+         16,
+         -66.68209445953033
+        ]
+       ]
+      ],
+      "arrives_as": "stretched kink",
+      "not_converged": []
+     },
+     "second_leg": {
+      "start": "mix_b1_released",
+      "top": 10.425966141436684,
+      "top_image": "mix_b2_i08",
+      "arrived": 3.0825359733631212,
+      "energies": [
+       8.389361028093845e-11,
+       0.7750530137371061,
+       2.6673217955387627,
+       5.387712563412737,
+       8.09875493810367,
+       9.764717486671307,
+       10.394354182764086,
+       10.28412823946294,
+       10.425966141436684,
+       5.673832258950026,
+       6.608337702581489,
+       9.012650061062429,
+       9.087039992178312,
+       3.0825359733631212
+      ],
+      "arrived_gauche_bonds": [
+       [
+        [
+         10,
+         59.06482564748377
+        ]
+       ],
+       [
+        [
+         10,
+         57.68120261832775
+        ]
+       ]
+      ],
+      "arrives_as": "one gauche bond",
+      "not_converged": []
+     },
+     "second_top_against_the_sheet": 12.419281332233986,
+     "all_trans_against_the_sheet": 5.075851164160424,
+     "higher_top": 12.419281332233986
+    }
+   },
+   "sheet": "scr_vdf17-trfe7-cfe2-rvdf2-28_sheetf_at12_in_all_s1",
+   "hop": 6.383164346009428,
+   "hop_order": "a",
+   "hop_arrives_at": 0.34663969866849403,
+   "removed_over": 11.642304475930683,
+   "removed_order": "a"
+  }
+ }
+}
