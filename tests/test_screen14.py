@@ -591,5 +591,56 @@ def test_the_mixed_cell_in_the_potential_and_its_kink():
     assert abs(hop["hop"] - other["lcfe"]["hop"]) < 0.1 and other["film"]["hop"] - hop["hop"] > 1.0
 
 
+def test_the_margin_in_dft_runs_with_the_trfe_and_the_mixed_cell_is_above_zero():
+    """The sixth pod's eight labels.  All-trans less helix from each row's lowest labelled cells: three TrFE +0.196, one chain of each +0.023, four TrFE
+    -0.107.  In all three DFT's lowest all-trans cell is the upright one, and DFT has the low all-trans pattern and the helix in the film composition's
+    packing higher against it than the potential has, by 1.2 to 1.7 kcal/mol per chain; those are the cells with the larger forces left."""
+    from ase.io import read
+
+    mixed = json.loads((ROOT / "docs" / "predictions" / "screen14_mixed_dft.json").read_text())["rows"][MIXED]
+    both = json.loads((ROOT / "docs" / "predictions" / "screen14_dft.json").read_text())["rows"]
+    three, four = both["vdf9-trfe3-cfe1-rvdf1-14"], both["vdf8-trfe4-cfe1-rvdf1-14"]
+    assert [round(r["margin"], 3) for r in (three, mixed, four)] == [0.196, 0.023, -0.107]
+    assert [(r["lowest_tt"], r["lowest_hx"]) for r in (three, mixed, four)] == [("tt_up", "hx_ldr"), ("tt_up", "hx_ldr"), ("tt_up", "hx_GTGpT")]
+    assert [round(r["margin_potential_same_cells"], 3) for r in (three, mixed, four)] == [0.204, 0.030, -0.003]
+    assert [round(r["margin_potential"], 3) for r in (three, mixed, four)] == [0.201, 0.011, -0.033]
+    # the mixed cell's margin is near the middle of its parents' in DFT (+0.044), nearer than in the potential (+0.084 against +0.011)
+    assert mixed["margin"] - 0.5 * (three["margin"] + four["margin"]) == pytest.approx(-0.022, abs=0.002)
+    def gap(row, kind, what):
+        low = "tt_low" if "tt_low" in row["cells"] else "tt_lowx"
+        k = low if kind == "tt_low" else kind
+        return (row["cells"][k][what] - row["cells"]["tt_up"][what]) * 14 * KCAL
+    shift = lambda row, kind: round(gap(row, kind, "dft_eV_per_monomer") - gap(row, kind, "potential_eV_per_monomer"), 2)
+    assert [shift(r, "tt_low") for r in (three, mixed, four)] == [1.33, 1.15, 1.42]
+    assert [shift(r, "hx_GTGpT") for r in (three, mixed, four)] == [1.72, 1.62, 1.46]
+    assert [shift(r, "hx_ldr") for r in (three, mixed, four)] == [0.11, 0.11, 0.28]
+    force = lambda row, kind: row["cells"][kind if kind in row["cells"] else kind + "x"]["dft_largest_force_eV_per_A"]
+    for r in (three, mixed, four):
+        assert force(r, "hx_GTGpT") > 0.2 and 0.1 < force(r, "tt_low") < 0.14 and force(r, "tt_up") < 0.08 and force(r, "hx_ldr") < 0.1
+    frames = read(MLIP / "screen14_mixed_frames_pbe_d3bj.extxyz", index=":")
+    assert len(frames) == 8 and sorted(str(a.info["dft_run"]) for a in frames) == ["card"] * 4 + ["processors"] * 4
+    assert {str(a.info["frame"]) for a in frames if str(a.info["dft_run"]) == "card"} == {f"scr_{MIXED}_{k}_in_all_s1" for k in ("hx_ldr", "tt_up", "hx_GTGpT", "tt_lowx")}
+
+
+def test_the_mixed_cell_on_the_four_axes():
+    """Its DFT margin and its hop on its parent's inputs and on the leader's: eleven times the film composition's rate, a thirteenth of its loss, about
+    twice its strain, and the strain does not move with the margin over 0.05 either way."""
+    d = json.loads((ROOT / "docs" / "predictions" / "four_axes_screen14_mixed.json").read_text())
+    assert d["barriers_kcal_per_chain"]["vdf9-trfe4-cfe1-14"] == 7.81 and d["barriers_kcal_per_chain"]["vdf8-trfe4-cfe1-rvdf1-14"] == pytest.approx(6.38, abs=0.006)
+    out = {}
+    for shift, table in d["shifts"].items():
+        for name, r in table["rows"].items():
+            b = r["by_the_barrier"]
+            through = b["blocked_pn_nm2_through_the_crystal"]
+            out[(name, shift)] = (round(r["margin"], 3), round(b["f_relax_hz"] / 1e3), round(b["tan_delta_34kHz"], 4), round(b["strain_ac_at_the_heat_budget_34kHz"] * 100, 3),
+                                  None if through is None else round(through, 1))
+    film, parent, leader = "vdf9-trfe4-cfe1-14", "vdf8-trfe4-cfe1-rvdf1-14", "vdf9-trfe3-an1-rvdf1-14"
+    assert out[(film, "+0.00")] == (0.063, 364, 0.0877, 0.081, 7.6)
+    assert out[(parent, "+0.00")] == (0.023, 3988, 0.0068, 0.161, None) and out[(leader, "+0.00")] == (0.023, 3988, 0.0068, 0.152, 8.1)
+    strains = sorted(out[(n, s)][3] for n in (parent, leader) for s in ("-0.05", "+0.00", "+0.05"))
+    assert (strains[0], strains[-1]) == (0.147, 0.163)
+    assert d["shifts"]["-0.05"]["rows"][parent]["all_trans_is_lower"] and not d["shifts"]["+0.00"]["rows"][parent]["all_trans_is_lower"]
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
