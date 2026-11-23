@@ -1,0 +1,626 @@
+{
+ "what": "chains alone in a box and one chain to a cell, PBE-D3(BJ) at 90/360 Ry (examples/chain_triage.py); polarisation by the Berry phase with norm-conserving files on the same geometry",
+ "units": {
+  "rise_a": "A a repeat along the chain",
+  "volume_a3": "A3 a repeat (a lone chain's is its box)",
+  "dipole_across_e_a": "e A a repeat, across the chain, from the charge density",
+  "stretch": "nN per unit strain of the chain",
+  "berry": "C/m2",
+  "piezo": "c GPa, e C/m2 (pN/nm2 per V/um), d pm/V"
+ },
+ "rows": [
+  {
+   "name": "nylon3_tt_x1",
+   "chain": "nylon3",
+   "state": "tt",
+   "kind": "crystal",
+   "repeats": 1,
+   "atoms": 10,
+   "energy_ev": -1683.1037754759584,
+   "cell": [
+    [
+     4.904384329,
+     -0.364846003,
+     0.563223782
+    ],
+    [
+     1.25308034,
+     3.663776888,
+     -1.909080633
+    ],
+    [
+     0.900195608,
+     -0.683297097,
+     4.770361377
+    ]
+   ],
+   "kmesh": "4 5 4",
+   "rise_a": 4.902407033550403,
+   "volume_a3": 79.7870542265544,
+   "relax_s": 1031,
+   "seconds": 1031,
+   "berry": {
+    "parts": [
+     {
+      "gdir": 1,
+      "c_per_m2": -0.286125,
+      "quantum_c_per_m2": 0.9940092,
+      "direction": [
+       0.99077,
+       -0.07371,
+       0.11378
+      ]
+     },
+     {
+      "gdir": 2,
+      "c_per_m2": 0.2345296,
+      "quantum_c_per_m2": 0.8669186,
+      "direction": [
+       0.29025,
+       0.84865,
+       -0.44221
+      ]
+     },
+     {
+      "gdir": 3,
+      "c_per_m2": 0.2876876,
+      "quantum_c_per_m2": 0.9844356,
+      "direction": [
+       0.18362,
+       -0.13938,
+       0.97307
+      ]
+     }
+    ],
+    "polarisation_c_per_m2": [
+     -0.16258665273800005,
+     0.180025921102,
+     0.14367353601599997
+    ],
+    "magnitude_c_per_m2": 0.28193232675326785,
+    "along_chain_c_per_m2": 0.08485703130581382,
+    "across_chain_c_per_m2": 0.26885892417116364
+   },
+   "piezo": {
+    "axis": [
+     -0.6626834943023348,
+     0.7135834820208062,
+     0.22726460473709792
+    ],
+    "strain": 0.01,
+    "rows": [
+     {
+      "strain": -0.01,
+      "energy_ev": -1683.1015516254174,
+      "stress_along_ev_a3": -0.005247623250441729,
+      "polarisation_along_c_per_m2": 0.27681218213594966,
+      "parts": [
+       {
+        "gdir": 1,
+        "c_per_m2": -0.2962999,
+        "quantum_c_per_m2": 0.9993734,
+        "direction": [
+         0.99085,
+         -0.06915,
+         0.11587
+        ]
+       },
+       {
+        "gdir": 2,
+        "c_per_m2": 0.2434139,
+        "quantum_c_per_m2": 0.874822,
+        "direction": [
+         0.29261,
+         0.84724,
+         -0.44335
+        ]
+       },
+       {
+        "gdir": 3,
+        "c_per_m2": 0.2975791,
+        "quantum_c_per_m2": 0.9943786,
+        "direction": [
+         0.18362,
+         -0.13938,
+         0.97307
+        ]
+       }
+      ]
+     },
+     {
+      "strain": 0.01,
+      "energy_ev": -1683.10223694418,
+      "stress_along_ev_a3": 0.0041439204374842525,
+      "polarisation_along_c_per_m2": 0.2612624958916873,
+      "parts": [
+       {
+        "gdir": 1,
+        "c_per_m2": -0.2766472,
+        "quantum_c_per_m2": 0.9887744,
+        "direction": [
+         0.99066,
+         -0.07821,
+         0.1117
+        ]
+       },
+       {
+        "gdir": 2,
+        "c_per_m2": 0.22572000000000003,
+        "quantum_c_per_m2": 0.8591777,
+        "direction": [
+         0.2879,
+         0.85005,
+         -0.44106
+        ]
+       },
+       {
+        "gdir": 3,
+        "c_per_m2": 0.278437,
+        "quantum_c_per_m2": 0.974688,
+        "direction": [
+         0.18362,
+         -0.13938,
+         0.97307
+        ]
+       }
+      ]
+     }
+    ],
+    "c_along_gpa": 75.23455767336355,
+    "e_along_c_per_m2": -0.777484312213117,
+    "d_clamped_pm_per_v": -10.334138144183994,
+    "polarisation_across_c_per_m2": 0.26885892417116364,
+    "polarisation_along_chain_c_per_m2": 0.08485703130581382
+   }
+  },
+  {
+   "name": "pvdf_tgtg",
+   "chain": "pvdf",
+   "state": "tgtg",
+   "kind": "chain",
+   "repeats": 2,
+   "atoms": 12,
+   "energy_ev": -3752.195727882242,
+   "cell": [
+    [
+     14.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     14.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     4.649296935
+    ]
+   ],
+   "kmesh": "1 1 4",
+   "rise_a": 2.3246484675,
+   "volume_a3": 455.63109962999994,
+   "relax_s": 0,
+   "dipole_across_e_a": [
+    0.1802062269609337,
+    0.003045163391107053
+   ],
+   "electrons": 47.99999706940851,
+   "ion_charge": 48.0,
+   "seconds": 6
+  },
+  {
+   "name": "pvdf_tt",
+   "chain": "pvdf",
+   "state": "tt",
+   "kind": "chain",
+   "repeats": 1,
+   "atoms": 6,
+   "energy_ev": -1875.951349402043,
+   "cell": [
+    [
+     14.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     14.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     2.590519127
+    ]
+   ],
+   "kmesh": "1 1 8",
+   "rise_a": 2.590519127,
+   "volume_a3": 507.7417488919999,
+   "relax_s": 355,
+   "electrons": 23.999997859976396,
+   "ion_charge": 24.0,
+   "stretch": {
+    "rows": [
+     {
+      "strain": -0.01,
+      "energy_ev": -1875.9463129826197,
+      "tension_ev_per_a": -0.3883513222968002
+     },
+     {
+      "strain": 0.01,
+      "energy_ev": -1875.9467227860964,
+      "tension_ev_per_a": 0.35847814365858477
+     }
+    ],
+    "strain": 0.01,
+    "force_per_strain_nn_by_energy": 59.76365633465452,
+    "force_per_strain_nn_by_stress": 59.82763599682082
+   },
+   "seconds": 1032,
+   "dipole_across_e_a": [
+    0.20864172514879442,
+    0.32174419670693055
+   ],
+   "berry": {
+    "parts": [
+     {
+      "gdir": 1,
+      "c_per_m2": 0.00661860000000003,
+      "quantum_c_per_m2": 0.4417693,
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "gdir": 2,
+      "c_per_m2": 0.010198600000000002,
+      "quantum_c_per_m2": 0.4417693,
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    ],
+    "polarisation_c_per_m2": [
+     0.00661860000000003,
+     0.010198600000000002,
+     0.0
+    ],
+    "magnitude_c_per_m2": 0.012158014143765439
+   }
+  },
+  {
+   "name": "pvdf_tt_x1",
+   "chain": "pvdf",
+   "state": "tt",
+   "kind": "crystal",
+   "repeats": 1,
+   "atoms": 6,
+   "energy_ev": -1876.2728701621684,
+   "cell": [
+    [
+     4.860938575,
+     0.044015704,
+     0.405835963
+    ],
+    [
+     -2.577111334,
+     4.131725529,
+     -0.38622832
+    ],
+    [
+     -0.20438298,
+     0.103569744,
+     2.570581256
+    ]
+   ],
+   "kmesh": "4 4 8",
+   "rise_a": 2.5807725758160958,
+   "volume_a3": 52.35161583865077,
+   "relax_s": 779,
+   "seconds": 779,
+   "berry": {
+    "parts": [
+     {
+      "gdir": 1,
+      "c_per_m2": 0.19983410000000013,
+      "quantum_c_per_m2": 1.4928854,
+      "direction": [
+       0.99649,
+       0.00902,
+       0.0832
+      ]
+     },
+     {
+      "gdir": 2,
+      "c_per_m2": 0.1987508,
+      "quantum_c_per_m2": 1.494969,
+      "direction": [
+       -0.52757,
+       0.84582,
+       -0.07907
+      ]
+     },
+     {
+      "gdir": 3,
+      "c_per_m2": -0.0003732,
+      "quantum_c_per_m2": 0.7898235,
+      "direction": [
+       -0.07919,
+       0.04013,
+       0.99605
+      ]
+     }
+    ],
+    "polarisation_c_per_m2": [
+     0.09430727646100014,
+     0.16989492872200002,
+     0.0005392455040000071
+    ],
+    "magnitude_c_per_m2": 0.19431531073144637,
+    "along_chain_c_per_m2": -0.00011339764763659457,
+    "across_chain_c_per_m2": 0.19431527764340115
+   },
+   "piezo": {
+    "axis": [
+     0.4852850333500327,
+     0.874349570331638,
+     0.0033563771149357977
+    ],
+    "strain": 0.01,
+    "rows": [
+     {
+      "strain": -0.01,
+      "energy_ev": -1876.2724719235307,
+      "stress_along_ev_a3": -0.0013820205662783704,
+      "polarisation_along_c_per_m2": 0.1976319995437952,
+      "parts": [
+       {
+        "gdir": 1,
+        "c_per_m2": 0.2047543999999999,
+        "quantum_c_per_m2": 1.5043307,
+        "direction": [
+         0.99651,
+         0.00473,
+         0.08338
+        ]
+       },
+       {
+        "gdir": 2,
+        "c_per_m2": 0.2037582,
+        "quantum_c_per_m2": 1.506555,
+        "direction": [
+         -0.53115,
+         0.84356,
+         -0.07927
+        ]
+       },
+       {
+        "gdir": 3,
+        "c_per_m2": -0.0002783,
+        "quantum_c_per_m2": 0.7978008,
+        "direction": [
+         -0.0792,
+         0.04013,
+         0.99605
+        ]
+       }
+      ]
+     },
+     {
+      "strain": 0.01,
+      "energy_ev": -1876.2725241693922,
+      "stress_along_ev_a3": 0.0012157399020888606,
+      "polarisation_along_c_per_m2": 0.19107283578539902,
+      "parts": [
+       {
+        "gdir": 1,
+        "c_per_m2": 0.19498020000000005,
+        "quantum_c_per_m2": 1.4816915,
+        "direction": [
+         0.99646,
+         0.01329,
+         0.08301
+        ]
+       },
+       {
+        "gdir": 2,
+        "c_per_m2": 0.1939982,
+        "quantum_c_per_m2": 1.4836371,
+        "direction": [
+         -0.524,
+         0.84806,
+         -0.07887
+        ]
+       },
+       {
+        "gdir": 3,
+        "c_per_m2": -0.0002622,
+        "quantum_c_per_m2": 0.7820029,
+        "direction": [
+         -0.07919,
+         0.04013,
+         0.99605
+        ]
+       }
+      ]
+     }
+    ],
+    "c_along_gpa": 20.810355174115088,
+    "e_along_c_per_m2": -0.3279581879198093,
+    "d_clamped_pm_per_v": -15.759374848524416,
+    "polarisation_across_c_per_m2": 0.19431527764340115,
+    "polarisation_along_chain_c_per_m2": -0.00011339764763659457
+   }
+  },
+  {
+   "name": "urea1_tt_x1",
+   "chain": "urea1",
+   "state": "tt",
+   "kind": "crystal",
+   "repeats": 1,
+   "atoms": 9,
+   "energy_ev": -1698.4254874604383,
+   "cell": [
+    [
+     4.59314248,
+     0.190560105,
+     0.326828073
+    ],
+    [
+     1.590125456,
+     3.34795971,
+     -0.063441487
+    ],
+    [
+     -0.345211212,
+     0.113610876,
+     4.704896931
+    ]
+   ],
+   "kmesh": "4 6 4",
+   "rise_a": 4.718912305115366,
+   "volume_a3": 71.39868952683275,
+   "relax_s": 1210,
+   "seconds": 1210,
+   "berry": {
+    "parts": [
+     {
+      "gdir": 1,
+      "c_per_m2": 0.3167459,
+      "quantum_c_per_m2": 1.0341852,
+      "direction": [
+       0.99662,
+       0.04135,
+       0.07092
+      ]
+     },
+     {
+      "gdir": 2,
+      "c_per_m2": 0.08947850000000002,
+      "quantum_c_per_m2": 0.8318308,
+      "direction": [
+       0.42896,
+       0.90316,
+       -0.01711
+      ]
+     },
+     {
+      "gdir": 3,
+      "c_per_m2": 0.005684200000000139,
+      "quantum_c_per_m2": 1.0589173,
+      "direction": [
+       -0.07315,
+       0.02408,
+       0.99703
+      ]
+     }
+    ],
+    "polarisation_c_per_m2": [
+     0.353642196988,
+     0.09404772056100001,
+     0.02659996001900014
+    ],
+    "magnitude_c_per_m2": 0.3668996253830627,
+    "along_chain_c_per_m2": 0.0029145832452481756,
+    "across_chain_c_per_m2": 0.36688804874339837
+   },
+   "piezo": {
+    "axis": [
+     0.9644778946390848,
+     0.25614775515277566,
+     0.06458109849446697
+    ],
+    "strain": 0.01,
+    "rows": [
+     {
+      "strain": -0.01,
+      "energy_ev": -1698.4235183084727,
+      "stress_along_ev_a3": -0.005182155189818655,
+      "polarisation_along_c_per_m2": 0.3769640228796306,
+      "parts": [
+       {
+        "gdir": 1,
+        "c_per_m2": 0.3273250999999999,
+        "quantum_c_per_m2": 1.0346753,
+        "direction": [
+         0.99671,
+         0.03922,
+         0.07096
+        ]
+       },
+       {
+        "gdir": 2,
+        "c_per_m2": 0.08984670000000006,
+        "quantum_c_per_m2": 0.8367594,
+        "direction": [
+         0.4245,
+         0.90525,
+         -0.0176
+        ]
+       },
+       {
+        "gdir": 3,
+        "c_per_m2": 0.005665000000000031,
+        "quantum_c_per_m2": 1.0696132,
+        "direction": [
+         -0.07315,
+         0.02408,
+         0.99703
+        ]
+       }
+      ]
+     },
+     {
+      "strain": 0.01,
+      "energy_ev": -1698.4239029414173,
+      "stress_along_ev_a3": 0.004500359679591938,
+      "polarisation_along_c_per_m2": 0.35715534957025097,
+      "parts": [
+       {
+        "gdir": 1,
+        "c_per_m2": 0.30648600000000004,
+        "quantum_c_per_m2": 1.0337102,
+        "direction": [
+         0.99654,
+         0.04344,
+         0.07087
+        ]
+       },
+       {
+        "gdir": 2,
+        "c_per_m2": 0.08918570000000003,
+        "quantum_c_per_m2": 0.8270207,
+        "direction": [
+         0.43337,
+         0.90106,
+         -0.01663
+        ]
+       },
+       {
+        "gdir": 3,
+        "c_per_m2": 0.005546499999999899,
+        "quantum_c_per_m2": 1.0484342,
+        "direction": [
+         -0.07316,
+         0.02408,
+         0.99703
+        ]
+       }
+      ]
+     }
+    ],
+    "c_along_gpa": 77.56549376460852,
+    "e_along_c_per_m2": -0.9904336654689816,
+    "d_clamped_pm_per_v": -12.768998396048312,
+    "polarisation_across_c_per_m2": 0.36688804874339837,
+    "polarisation_along_chain_c_per_m2": 0.0029145832452481756
+   }
+  }
+ ]
+}
