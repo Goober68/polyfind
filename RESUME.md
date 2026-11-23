@@ -817,6 +817,32 @@ right": true at one registry, not along it).
         (`pvdf_tt_x1_o1`, `urea1_tt_x1_o2`, nylon-3's rebuilt `_o2`); then a cell WITH a defect
         (an N-methyl in a nylon-3 or urea row) and the same wall path beside it. NOT DONE: PVDF's
         own turning path in DFT (`pvdf_tt_x1_turn1.path.xyz` exists, potential only).
+        THE CAM TEST SO FAR (2026-11-23 17:20 UTC). (a) NYLON-5's crystal: 0.175 C/m2 across the
+        chains, e -0.495, c 54.8 GPa, d -9.0 pm/V: nylon-3's diluted by the volume. (b) THE UREA
+        CHAIN'S THREE POSITIONS, DFT, both cells relaxed: polarised either way is level by symmetry;
+        every second bonded row turned (`urea1_tt_x1_o2`, bonds whole) is +0.99 kcal/mol a repeat
+        and 3.4% larger (rows 4.7% further apart, 1.3% shorter along the bonds): a latch, with about
+        3% of stroke over centre. The field's grip on a urea repeat at 55 V/um is 0.21 kcal/mol
+        (7.9 D in the crystal) against PVDF's 0.08. (c) THE HUMP IS NOT KNOWN. Paths found in the
+        pretrained potential on a loose band, the cell held, cells one repeat long: PVDF's turning
+        path scored in DFT tops at 16.3 kcal/mol a monomer and ends +7.05 (a move PVDF does not
+        make); the urea chain's wall hop tops at 18.2 in the potential, and its end fell 6.0 below
+        its start by tilting the chain at the wall 40 degrees (walls here are gradual, not sharp).
+        BOTH ARE A WHOLE CHAIN TURNING AS A ROD; the real move is a twist travelling along the
+        chain, which needs cells about four repeats long (144 atoms), too large for DFT here.
+        PLAN: check the potential against DFT on what exists (the wall path's five images are being
+        scored now, `points --names urea1_tt_x1_wall`; the opposed cell's +0.99 is a second check),
+        then use it for the long cells. RUNNING: `nucleus` and `nucleus --methyl` for the urea chain
+        in the potential (log `/opt/dft/triage/log_turn.txt`). NOT RUN: urea-3's crystal (start
+        built), nylon-3's rebuilt opposed cells and paths, PVDF's opposed cell (stopped at the time
+        limit, 45 steps, not converged; its answer is known from `docs/POLAR_MARGIN_DFT.md`).
+        MACHINE LESSONS: five processes on four cores made DFT ten times slower (run DFT with
+        `--np 3` beside a potential job); a band re-asked the potential for its two fixed ends at
+        every step (fixed: ends keep their energies, single precision; a 36-atom band of 80 steps is
+        now about 45 minutes on one core); a wait written as `while pgrep -f PATTERN` matches its
+        own command line and never ends; `rise_a` of a doubled cell is printed per chain-repeat
+        counted twice (cosmetic, not fixed).
+        OFFERED TO THE PI, NOT ANSWERED: the last $3.9 on a card for the cam test in DFT.
         TRAPS FOUND. (1) `/usr/bin/pw.x` (6.7, the system package) aborts in a relaxation; use
         `/opt/mm/qe/bin/pw.x` (7.5) as every earlier run here did. (2) THE BERRY PHASE OF pw.x 7.5
         IS WRONG WITH PAW AND ULTRASOFT FILES: on the lone PVDF chain, where the density's moment
