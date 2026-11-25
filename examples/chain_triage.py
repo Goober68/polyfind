@@ -512,7 +512,8 @@ def band(images, calc, fmax: float, steps: int, end_steps: int = 150):
     for im in images:
         im.calc = calc
     for end in (images[0], images[-1]):
-        LBFGS(end, logfile=None).run(fmax=0.05, steps=end_steps)
+        if end_steps:
+            LBFGS(end, logfile=None).run(fmax=0.05, steps=end_steps)
         # an end does not move again: keep its energy, or the band asks the potential for it at every step
         end.calc = SinglePointCalculator(end, energy=float(end.get_potential_energy()), forces=end.get_forces())
     print(f"  ends relaxed, {time.time() - t0:.0f} s", flush=True)
@@ -694,6 +695,53 @@ def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0, side: int
     return row
 
 
+def kink_series(name: str, args):
+    """``(ether, tag)`` of a series of ``kink`` states: the N-H groups made O and the name its files carry."""
+    ether = [tuple(int(v) for v in item.split(":")) for item in args.ether.split(",")] if args.ether else []
+    tag = f"{name}_kink{args.long}" + ("" if args.side == 1 else f"s{args.side}") + ("_e" + "-".join(f"{r}{k}" for r, k in ether) if ether else "")
+    return ether, tag
+
+
+def hop(args):
+    """The hump between two states of a ``kink`` series: the band from one to the other, in the pretrained potential.
+
+    The states differ by how many repeats of the moving chain are turned; between two that differ
+    by one repeat the band's top is what one repeat pays to change sides with its chain-mates
+    already part of the way, which is the wall's step in a long chain if a pair of twists is cheap.
+    The images start from an interpolation that keeps distances (IDPP), the band is loose (it is
+    the start of a DFT reading, ``points``), and every image's energy is taken in double precision."""
+    from ase.io import read, write
+    from ase.mep import NEB
+
+    calc = model(args.model, dtype="float32", device=args.device)
+    exact = model(args.model, device=args.device)
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        _, tag = kink_series(name, args)
+        first, last = (int(v) for v in args.between.split(","))
+        ends = [read(src / "work" / tag / f"turned_{k}.xyz") for k in (first, last)]
+        images = [ends[0].copy() for _ in range(args.images - 1)] + [ends[1].copy()]
+        NEB(images).interpolate(method="idpp", mic=True)
+        for im in images:
+            im.info.update(ends[0].info)
+        energies, nsteps = band(images, calc, args.fmax, args.steps, end_steps=0)
+        out = []
+        for index, im in enumerate(images):
+            c = im.copy()
+            c.calc = exact
+            energies[index] = float(c.get_potential_energy())
+            c.calc = None
+            c.info = {k: v for k, v in ends[0].info.items() if not k.startswith("triage_kink")}
+            out.append(c)
+        for index, c in enumerate(out):
+            c.info.update(triage_turn_of=tag, triage_turn_edge=1, triage_turn_image=index, triage_turn_ev=energies[index] - energies[0],
+                          triage_turning_repeats=1, triage_path_unit="for the cell")
+        write(src / f"{tag}_hop{first}-{last}.path.xyz", out, format="extxyz")
+        rel = [(e - energies[0]) * KCAL for e in energies]
+        print(f"{tag}_hop{first}-{last}: {len(images)} images of {len(images[0])} atoms, {nsteps} steps, top {max(rel):.2f} kcal/mol for the cell above the first state "
+              f"in the potential, end {rel[-1]:+.2f}; profile {' '.join(f'{v:.2f}' for v in rel)}", flush=True)
+
+
 def kink(args):
     """The smallest move of a bonded row in a chain that is long: a wall stepping on by a twist that travels.
 
@@ -714,8 +762,7 @@ def kink(args):
         a = rebased(read(src / f"{name}.relaxed.xyz"))
         n = len(a)
         along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
-        ether = [tuple(int(v) for v in item.split(":")) for item in args.ether.split(",")] if args.ether else []
-        tag = f"{name}_kink{args.long}" + ("" if args.side == 1 else f"s{args.side}") + ("_e" + "-".join(f"{r}{k}" for r, k in ether) if ether else "")
+        ether, tag = kink_series(name, args)
         work = src / "work" / tag
         work.mkdir(parents=True, exist_ok=True)
         counts = sorted({int(v) for v in args.turned.split(",")} | {0, args.long}, reverse=True) if args.turned else [args.long, args.long // 2, 0]
@@ -1363,6 +1410,20 @@ def main():
     j.add_argument("--steps", type=int, default=300)
     j.add_argument("--more", type=int, default=0, help="steps more for a state already made that stopped above --fmax")
     j.set_defaults(run=kink)
+    h = sub.add_parser("hop")
+    h.add_argument("--frames", type=Path, required=True)
+    h.add_argument("--names", required=True)
+    h.add_argument("--between", required=True, help="two states of the kink series by their repeats turned, e.g. 2,1")
+    h.add_argument("--model", type=Path, default=MODEL_DEFAULT)
+    h.add_argument("--device", default="cpu")
+    h.add_argument("--rows", type=int, default=4)
+    h.add_argument("--long", type=int, default=4)
+    h.add_argument("--side", type=int, default=1, choices=(1, 2))
+    h.add_argument("--ether", default="")
+    h.add_argument("--images", type=int, default=7)
+    h.add_argument("--fmax", type=float, default=0.1)
+    h.add_argument("--steps", type=int, default=120)
+    h.set_defaults(run=hop)
     w = sub.add_parser("points")
     w.add_argument("--frames", type=Path, required=True)
     w.add_argument("--names", required=True)
