@@ -448,29 +448,50 @@ def hinge(atoms, along) -> float:
     return 0.0
 
 
-def facing(row, part, along, reference=None):
-    """Which way each carbonyl of a chain faces, in degrees about the chain's axis: its C=O against ``reference``.
+def carbonyls(row, part):
+    """The carbonyls of a chain as pairs ``(oxygen, carbon)`` of places in the cell, in order along the chain.
 
-    ``part`` is the chain's atoms (a slice or their indices, in order along the chain); the
-    reference is a vector across the chain (None: the first carbonyl's own).  A carbonyl is an
-    oxygen with one neighbour that is not hydrogen (within 1.75 A), so an ether oxygen put in an
-    N-H's place, which has two, is not counted.  A chain with none returns an empty list.  It is how
-    a relaxed cell says which of its repeats are still turned."""
+    ``part`` is the chain's atoms (a slice or their indices, in order along the chain).  A carbonyl
+    is an oxygen with one neighbour that is not hydrogen (within 1.75 A), so an ether oxygen put in
+    an N-H's place, which has two, is not counted."""
+    index = np.arange(len(row))[part]
     symbols = np.array(row.get_chemical_symbols())[part]
     pos = row.positions[part]
     heavy = [i for i in range(len(pos)) if symbols[i] != "H"]
     out = []
     for o in (i for i in range(len(pos)) if symbols[i] == "O"):
         bonded = [i for i in heavy if i != o and np.linalg.norm(pos[i] - pos[o]) < 1.75]
-        if len(bonded) != 1 or symbols[bonded[0]] != "C":
-            continue
-        v = pos[o] - pos[bonded[0]]
+        if len(bonded) == 1 and symbols[bonded[0]] == "C":
+            out.append((int(index[o]), int(index[bonded[0]])))
+    return out
+
+
+def facing(row, part, along, reference=None):
+    """Which way each carbonyl of a chain faces, in degrees about the chain's axis: its C=O against ``reference``.
+
+    ``part`` is the chain's atoms (a slice or their indices, in order along the chain); the
+    reference is a vector across the chain (None: the first carbonyl's own).  The carbonyls are
+    ``carbonyls``'; a chain with none returns an empty list.  It is how a relaxed cell says which
+    of its repeats are still turned."""
+    out = []
+    for o, c in carbonyls(row, part):
+        v = row.positions[o] - row.positions[c]
         v = v - (v @ along) * along
         if reference is None:
             reference = v
         ref = reference - (reference @ along) * along
         out.append(float(np.degrees(np.arctan2(np.cross(ref, v) @ along, ref @ v))))
     return out
+
+
+def polar_facing(a):
+    """The way a chain's first carbonyl faces in its polar cell, C to O: what ``facing`` is counted from (None without one)."""
+    symbols = a.get_chemical_symbols()
+    if "O" not in symbols:
+        return None
+    o = symbols.index("O")
+    c = min((i for i in range(len(a)) if symbols[i] == "C"), key=lambda i: np.linalg.norm(a.positions[i] - a.positions[o]))
+    return a.positions[o] - a.positions[c]
 
 
 def etherified(row, part, per_repeat: int, which):
@@ -498,6 +519,51 @@ def etherified(row, part, per_repeat: int, which):
         gone.append(near[0])
     del row[sorted(gone)]
     return row
+
+
+def held(calc, o: int, c: int, along, reference, target: float, stiff: float = 40.0):
+    """The potential with a spring on which way one carbonyl faces about the chain's axis.
+
+    ``o`` and ``c`` are the carbonyl's oxygen and carbon, ``target`` the facing asked for in degrees
+    (counted as ``facing`` counts, from ``reference``), ``stiff`` the spring in eV a radian squared.
+    The spring pulls the oxygen round the axis and the carbon the other way and nothing else: every
+    other atom goes where the potential puts it.  A cell relaxed in it is a point of a way from one
+    facing to another; its energy is then taken without the spring."""
+    from ase.calculators.calculator import Calculator, all_changes
+
+    ref = np.asarray(reference, dtype=float)
+    ref = ref - (ref @ along) * along
+
+    class Held(Calculator):
+        implemented_properties = ["energy", "forces"]
+
+        def calculate(self, atoms=None, properties=("energy", "forces"), system_changes=all_changes):
+            super().calculate(atoms, properties, system_changes)
+            calc.calculate(self.atoms, ["energy", "forces"], all_changes)
+            forces = np.array(calc.results["forces"], dtype=float)
+            v = self.atoms.positions[o] - self.atoms.positions[c]
+            v = v - (v @ along) * along
+            off = np.arctan2(np.cross(ref, v) @ along, ref @ v) - np.radians(target)
+            off = (off + np.pi) % (2.0 * np.pi) - np.pi
+            pull = -stiff * off * np.cross(along, v) / (v @ v)
+            forces[o] += pull
+            forces[c] -= pull
+            self.results = {"energy": float(calc.results["energy"]) + 0.5 * stiff * off * off, "forces": forces}
+
+    return Held()
+
+
+def urea_of(row, part, c: int):
+    """The atoms that turn with a carbonyl: its carbon, what is bonded to the carbon, and the hydrogens on those.
+
+    For a urea the carbon, the oxygen, the two nitrogens and their two hydrogens; for an amide the
+    carbon beside it comes too, with its hydrogens."""
+    index = np.arange(len(row))[part]
+    symbols = row.get_chemical_symbols()
+    pos = row.positions
+    first = [int(i) for i in index if i != c and symbols[i] != "H" and np.linalg.norm(pos[i] - pos[c]) < 1.75]
+    hydrogens = [int(h) for h in index if symbols[h] == "H" and any(np.linalg.norm(pos[h] - pos[i]) < 1.25 for i in first)]
+    return [int(c)] + first + hydrogens
 
 
 def remembering(calc):
@@ -779,6 +845,113 @@ def hop(args):
               f"in the potential, end {rel[-1]:+.2f}; profile {' '.join(f'{v:.2f}' for v in rel)}", flush=True)
 
 
+def swing(args):
+    """The hump between two states of a ``kink`` series by turning the one carbonyl that changes sides, a step at a time.
+
+    A band between the two states (``hop``) put the whole of a urea's half turn between two of its
+    images and broke the one in the middle.  Here the carbonyl whose facing differs most between the
+    two states is held at facings between its two (``held``), each cell relaxed in the pretrained
+    potential from the one before with everything but that facing free, the cell held.  There are
+    two ways round (``--way``: p the facing counted up, m counted down) and each is its own path.
+    The last held cell is then let go: if it comes to the second state the way is whole, and if not
+    the path says by how much it misses.  Every energy is taken in double precision without the
+    spring.  What it gives is the potential's way and a mark from above on the hump (the top of a
+    way made by one coordinate is at or above the saddle); ``points`` reads its images in DFT."""
+    from ase.io import read, write
+    from ase.optimize import LBFGS
+
+    calc = model(args.model, dtype="float32", device=args.device)
+    exact = model(args.model, device=args.device)
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        a = rebased(read(src / f"{name}.relaxed.xyz"))
+        along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+        reference = polar_facing(a)
+        _, tag = kink_series(name, args)
+        work = src / "work" / tag
+        first, last = (int(v) for v in args.between.split(","))
+        ends = [read(work / f"turned_{k}.xyz") for k in (first, last)]
+        mover = args.rows // 2 if args.side == 1 else args.rows - 1
+        chains = ends[0].arrays["chain"] if "chain" in ends[0].arrays else np.repeat(np.arange(args.rows), len(ends[0]) // args.rows)
+        part = np.where(chains == mover)[0]
+        pairs = carbonyls(ends[0], part)
+        faces = [facing(end, part, along, reference) for end in ends]
+        if len(faces[0]) != len(faces[1]) or len(faces[0]) != len(pairs):
+            raise ValueError(f"{tag}: the two states do not have the same carbonyls")
+        short = [(b - f + 180.0) % 360.0 - 180.0 for f, b in zip(*faces)]
+        which = int(np.argmax(np.abs(short)))
+        o, c = pairs[which]
+        group = urea_of(ends[0], part, c)
+        for way in args.way.split(","):
+            total = short[which] if (short[which] > 0) == (way == "p") else short[which] - np.sign(short[which]) * 360.0
+            label = f"{tag}_swing{first}-{last}{way}"
+            print(f"{label}: carbonyl {which} of the moving chain from {faces[0][which]:+.0f} to {faces[1][which]:+.0f} degrees by {total:+.0f}, "
+                  f"{args.images - 2} facings held between; the other carbonyls move by {' '.join(f'{v:+.0f}' for i, v in enumerate(short) if i != which)}", flush=True)
+            images = [ends[0].copy()]
+            for j in range(1, args.images - 1):
+                target = faces[0][which] + total * j / (args.images - 1)
+                store = work / f"swing{first}-{last}{way}_{args.images}_{j}.xyz"
+                if store.exists():
+                    images.append(read(store))
+                    continue
+                t0 = time.time()
+                row = images[-1].copy()
+                # the group is put at the facing asked for before the spring is: a spring let go from a step away throws it
+                turn_by = np.radians((target - facing(row, part, along, reference)[which] + 180.0) % 360.0 - 180.0)
+                d = row.positions[group] - row.positions[c]
+                row.positions[group] = row.positions[c] + d * np.cos(turn_by) + np.cross(along, d) * np.sin(turn_by) + np.outer(d @ along, along) * (1 - np.cos(turn_by))
+                row.calc = held(calc, o, c, along, reference, target, args.stiff)
+                opt = LBFGS(row, logfile=None)
+                opt.run(fmax=args.fmax, steps=args.steps)
+                force = float(np.linalg.norm(row.get_forces(), axis=1).max())
+                row.calc = None
+                row.info = dict(ends[0].info)
+                row.info.update(triage_swing_target=float((target + 180.0) % 360.0 - 180.0), triage_swing_steps=int(opt.nsteps), triage_swing_force=force)
+                write(store, row, format="extxyz")
+                images.append(row)
+                print(f"  {label}: facing {(target + 180.0) % 360.0 - 180.0:+.0f} held, {int(opt.nsteps)} steps to {force:.3f} eV/A, closest atoms {nearest(row):.2f} A, "
+                      f"the chain's carbonyls face {' '.join(f'{v:+.0f}' for v in facing(row, part, along, reference))}, {time.time() - t0:.0f} s", flush=True)
+            # let go of the last held cell: does it come to the second state?
+            store = work / f"swing{first}-{last}{way}_{args.images}_free.xyz"
+            if store.exists():
+                free = read(store)
+            else:
+                t0 = time.time()
+                free = images[-1].copy()
+                free.calc = calc
+                opt = LBFGS(free, logfile=None)
+                opt.run(fmax=args.fmax, steps=args.steps)
+                free.calc = None
+                free.info = dict(ends[0].info)
+                write(store, free, format="extxyz")
+                print(f"  {label}: the last held cell let go, {int(opt.nsteps)} steps, {time.time() - t0:.0f} s", flush=True)
+            images.append(ends[1].copy())
+            energies = []
+            for im in images + [free]:
+                im.calc = exact
+                energies.append(float(im.get_potential_energy()))
+                im.calc = None
+            let_go = energies.pop()
+            apart = free.positions - ends[1].positions
+            apart -= np.round(apart @ np.linalg.inv(free.cell.array)) @ free.cell.array
+            out = []
+            for index, im in enumerate(images):
+                keep = {k: v for k, v in ends[0].info.items() if not k.startswith("triage_kink")}
+                keep.update({k: v for k, v in im.info.items() if k.startswith("triage_swing")})
+                im.info = keep
+                im.info.update(triage_turn_of=tag, triage_turn_edge=1, triage_turn_image=index, triage_turn_ev=energies[index] - energies[0],
+                               triage_turning_repeats=1, triage_path_unit="for the cell", triage_swing_way=way,
+                               triage_swing_facing=float(facing(im, part, along, reference)[which]),
+                               triage_swing_let_go_ev=let_go - energies[-1], triage_swing_let_go_a=float(np.linalg.norm(apart, axis=1).max()))
+                out.append(im)
+            write(src / f"{label}.path.xyz", out, format="extxyz")
+            rel = [(e - energies[0]) * KCAL for e in energies]
+            went = [float(im.info["triage_swing_facing"]) for im in out]
+            print(f"{label}: {len(images)} images of {len(images[0])} atoms, top {max(rel):.2f} kcal/mol for the cell above the first state in the potential, "
+                  f"end {rel[-1]:+.2f}; profile {' '.join(f'{v:.2f}' for v in rel)}; facings {' '.join(f'{v:+.0f}' for v in went)}; "
+                  f"let go, the last held cell rests {(let_go - energies[-1]) * KCAL:+.2f} from the second state, its atoms within {np.linalg.norm(apart, axis=1).max():.2f} A of it", flush=True)
+
+
 def kink(args):
     """The smallest move of a bonded row in a chain that is long: a wall stepping on by a twist that travels.
 
@@ -804,11 +977,7 @@ def kink(args):
         work.mkdir(parents=True, exist_ok=True)
         counts = sorted({int(v) for v in args.turned.split(",")} | {0, args.long}, reverse=True) if args.turned else [args.long, args.long // 2, 0]
         mover_chain = args.rows // 2 if args.side == 1 else args.rows - 1
-        reference = None  # the way the chain faces in the polar cell: its C=O across the chain
-        if "O" in a.get_chemical_symbols():
-            o = a.get_chemical_symbols().index("O")
-            c = min((i for i in range(n) if a.symbols[i] == "C"), key=lambda i: np.linalg.norm(a.positions[i] - a.positions[o]))
-            reference = a.positions[o] - a.positions[c]
+        reference = polar_facing(a)  # the way the chain faces in the polar cell: its C=O across the chain
         states = []
         for k in counts:
             store = work / f"turned_{k}.xyz"
@@ -1466,6 +1635,22 @@ def main():
     h.add_argument("--fmax", type=float, default=0.1)
     h.add_argument("--steps", type=int, default=120)
     h.set_defaults(run=hop)
+    g = sub.add_parser("swing")
+    g.add_argument("--frames", type=Path, required=True)
+    g.add_argument("--names", required=True)
+    g.add_argument("--between", required=True, help="two states of the kink series by their repeats turned, e.g. 4,3")
+    g.add_argument("--model", type=Path, default=MODEL_DEFAULT)
+    g.add_argument("--device", default="cpu")
+    g.add_argument("--rows", type=int, default=4)
+    g.add_argument("--long", type=int, default=4)
+    g.add_argument("--side", type=int, default=1, choices=(1, 2))
+    g.add_argument("--ether", default="")
+    g.add_argument("--way", default="p,m", help="which way round the carbonyl is taken: p (facing counted up), m (down), or both")
+    g.add_argument("--images", type=int, default=9, help="images of the path, its two ends among them")
+    g.add_argument("--stiff", type=float, default=40.0, help="the spring on the facing, eV a radian squared")
+    g.add_argument("--fmax", type=float, default=0.1)
+    g.add_argument("--steps", type=int, default=150)
+    g.set_defaults(run=swing)
     w = sub.add_parser("points")
     w.add_argument("--frames", type=Path, required=True)
     w.add_argument("--names", required=True)

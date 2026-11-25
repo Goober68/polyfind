@@ -275,3 +275,57 @@ def test_nearest_reads_a_collapse_across_the_cell_face():
     assert CT.nearest(a) == pytest.approx(0.2)
     b = Atoms("HH", positions=[[1.0, 0.0, 0.0], [3.0, 0.0, 0.0]], cell=[4.0, 5.0, 5.0], pbc=True)
     assert CT.nearest(b) > 1.5
+
+
+def test_a_held_carbonyl_is_pulled_round_the_axis_to_the_facing_asked_for():
+    """The spring's energy is half the stiffness times the angle off, squared; its forces are that energy's slope."""
+    from ase import Atoms
+    from ase.calculators.calculator import Calculator, all_changes
+    from ase.optimize import BFGS
+
+    class Flat(Calculator):
+        implemented_properties = ["energy", "forces"]
+
+        def calculate(self, atoms=None, properties=("energy", "forces"), system_changes=all_changes):
+            super().calculate(atoms, properties, system_changes)
+            self.results = {"energy": 0.0, "forces": np.zeros((len(self.atoms), 3))}
+
+    along, reference = np.array([0.0, 0.0, 1.0]), np.array([1.0, 0.0, 0.3])  # what the reference has along the chain does not count
+    at = np.radians(50.0)
+    pair = Atoms("CO", positions=[[5.0, 5.0, 5.0], [5.0 + 1.2 * np.cos(at), 5.0 + 1.2 * np.sin(at), 5.4]], cell=[10.0] * 3, pbc=True)
+    pair.calc = CT.held(Flat(), 1, 0, along, reference, 30.0, stiff=40.0)
+    assert pair.get_potential_energy() == pytest.approx(0.5 * 40.0 * np.radians(20.0) ** 2)
+    forces, slope = pair.get_forces(), np.zeros((2, 3))
+    for i in range(2):
+        for k in range(3):
+            e = []
+            for d in (1e-5, -1e-5):
+                moved = pair.copy()
+                moved.positions[i, k] += d
+                moved.calc = CT.held(Flat(), 1, 0, along, reference, 30.0, stiff=40.0)
+                e.append(moved.get_potential_energy())
+            slope[i, k] = -(e[0] - e[1]) / 2e-5
+    assert slope == pytest.approx(forces, abs=1e-6)
+    assert pair.get_forces().sum(axis=0) == pytest.approx(np.zeros(3), abs=1e-12)
+    # a target the other side of half round is reached the short way
+    pair.calc = CT.held(Flat(), 1, 0, along, reference, -170.0, stiff=40.0)
+    pair.positions[1] = [5.0 + 1.2 * np.cos(np.radians(175.0)), 5.0 + 1.2 * np.sin(np.radians(175.0)), 5.4]
+    assert pair.get_potential_energy() == pytest.approx(0.5 * 40.0 * np.radians(15.0) ** 2)
+    BFGS(pair, logfile=None).run(fmax=1e-4, steps=200)
+    assert CT.facing(pair, slice(0, 2), along, reference)[0] == pytest.approx(-170.0, abs=0.05)
+
+
+def test_the_atoms_that_turn_with_a_urea_carbonyl_are_its_six():
+    """Carbon, oxygen, two nitrogens and their two hydrogens; the methylene beside it stays."""
+    from ase import Atoms
+
+    #        O
+    #        |
+    #  C(H2)-N(H)-C-N(H)-C(H2), along z
+    z = np.array([0.0, 0.0, 1.0])
+    pos = {"Ca": [0, 0, 0.0], "Ha1": [0.9, 0.5, 0.0], "Ha2": [-0.9, 0.5, 0.0], "N1": [0, 0, 1.45], "H1": [-1.0, 0, 1.45], "C": [0, 0, 2.8],
+           "O": [1.23, 0, 2.8], "N2": [0, 0, 4.15], "H2": [-1.0, 0, 4.15], "Cb": [0, 0, 5.6], "Hb1": [0.9, 0.5, 5.6], "Hb2": [-0.9, 0.5, 5.6]}
+    chain = Atoms("CHHNHCONHCHH", positions=[np.array(v, dtype=float) + 5.0 for v in pos.values()], cell=[12.0] * 3, pbc=True)
+    assert CT.carbonyls(chain, slice(0, len(chain))) == [(6, 5)]
+    assert sorted(CT.urea_of(chain, slice(0, len(chain)), 5)) == [3, 4, 5, 6, 7, 8]
+    assert CT.facing(chain, slice(0, len(chain)), z, np.array([0.0, 1.0, 0.0])) == pytest.approx([-90.0])
