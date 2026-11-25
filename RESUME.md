@@ -890,21 +890,38 @@ right": true at one registry, not along it).
         the whole states is 5.2 a repeat, the narrow row's (every chain of a four-chain row is
         beside a wall), not a property of a wall. A PARTIAL RESULT: activation only, nothing on
         strain, loss, frequency, blocked force or speed.
-        (4) NEXT, IN THIS ORDER: `hop --long 4 --between 4,3` (the band for the first urea to go
-        over, about an hour in the potential; log `/opt/dft/triage/log_hop43.txt`; IN FLIGHT WHEN
-        THIS WAS WRITTEN), then `points --names urea1_tt_x1_kink4_hop4-3` (30 minutes an image;
-        to spare an hour first copy `work/urea1_tt_x1_kink4/image_t4.out` and `image_t3.out` to
-        `work/urea1_tt_x1_kink4_hop4-3/` as `image_0.out` and `image_6.out`). `points` keys a kink
-        state's DFT output by its repeats turned (`image_t3.out`) and removes a finished single
-        point's scratch (1.5 GB a state). THEN: the other wall (`--side 2`), a defect in the
-        moving chain (`--ether 1:0`), a wider row (`--rows 6`: its files carry `r6`).
+        (4) THE HUMP BETWEEN THE ROW AT REST AND THE FIRST UREA OVER. THE BAND FAILED TWICE AND IS
+        NOT A PATH. `hop --long 4 --between 4,3` (seven images, 120 steps): the first run was
+        stopped at the two-hour limit of a background job with nothing kept (every image was being
+        worked out three times a step; fixed, and the band now writes itself every ten steps);
+        the second ran to its end and did not settle: its middle image has two hydrogens 0.89 A
+        apart and a carbonyl pulled open, 327 kcal/mol up, and the urea's whole half turn lies
+        between that image's two neighbours (a climbing image started on an unsettled band runs
+        up a clash). Its file `urea1_tt_x1_kink4_hop4-3.path.xyz` is on the container only and is
+        not to be read in DFT. IN ITS PLACE: `swing --long 4 --between 4,3 --images 9 --way p,m`
+        holds the one carbonyl that changes sides at seven facings between its two with a spring
+        on its angle about the chain's axis, relaxes everything else at each from the cell
+        before, goes both ways round (p: -159 up to +11 by +170; m: down by -190) and lets the
+        last held cell go to see whether the way arrives. Every held cell is kept
+        (`work/urea1_tt_x1_kink4/swing4-3{p,m}_9_{j}.xyz`), so a stopped run goes on when the same
+        command is given again; log `/opt/dft/triage/log_swing43.txt`. THEN `points --names
+        urea1_tt_x1_kink4_swing4-3p` (and `...m`): 30 minutes an image; to spare an hour first
+        copy `work/urea1_tt_x1_kink4/image_t4.out` and `image_t3.out` to the swing's work folder
+        as `image_0.out` and `image_8.out`. The top of a way made by one coordinate is at or
+        above the saddle, and the cells are the potential's: an upper mark on the hump. `points`
+        keys a kink state's DFT output by its repeats turned (`image_t3.out`) and removes a
+        finished single point's scratch (1.5 GB a state). AFTER THAT: the other wall (`--side 2`),
+        a defect in the moving chain (`--ether 1:0`), a wider row (`--rows 6`: its files carry
+        `r6`).
         (5) THE PI AND THE MI100 SINCE: "I just got it on the network. 192.168.1.150" (a private
         address: not reachable from a cloud session and not to be probed from one), "You are local,
         right?" (no), "Whats the apt for claude?", "Claude is installed on the MI100". The PI was
         told to clone the repository there, check out this branch, start `claude remote-control`
         (or `claude`) in it and have that session run `bash examples/mi100_runner.sh` and NOT push
         to this branch (the runner pushes to `mi100-results`). No `mi100-results` branch existed
-        when this was written and the list of the PI's folders was still empty (six reads).
+        when this was written and the list of the PI's folders was still empty (eight reads).
+        "Are you using local machine CPUs?" (answered: no, four cores of a cloud container; to use
+        the MI100 a session has to run on it).
         THE CAM TEST AT THE END OF 2026-11-23 (text: `docs/CANDIDATE_MATERIALS.md` 6.2; READ THIS
         BEFORE THE 17:20 BLOCK BELOW, WHICH IT CORRECTS). DFT on the relaxed ends of the urea row's
         first-move paths: one chain turned alone in a row at rest is 31.1 kcal/mol a repeat above it

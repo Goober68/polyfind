@@ -1859,8 +1859,9 @@ Above the line between the two whole states the three part-turned states have +5
    whole length at once and paid 15.8 a repeat, which is 63 for four repeats. In DFT no state on
    the way is more than 0.12 above the row at rest.
 2. *The unit that changes sides is one repeat, not a chain.* In every part-turned state each of the
-   chain's ureas is bonded to the neighbour on one side or on the other, 120 degrees round, and
-   the methylene between two ureas is the hinge (its torsions go from 165 degrees to between 120
+   chain's ureas is bonded to the neighbour on one side or on the other, 120 degrees round (140
+   with one urea over, where the three that stay spread 50 degrees among themselves), and the
+   methylene between two ureas is the hinge (its torsions go from 165 degrees to between 120
    and 147). So each urea beside a wall chooses its neighbour by itself.
 3. *The first urea to go over is level with the row at rest in DFT (+0.12), and the second falls
    17.5.* What is paid for the first one, then, is whatever hump lies between two level states; the
