@@ -1155,6 +1155,13 @@ def points(args):
                   "turning_repeats": reps, "energy_ev": energies, "kcal_per_turning_repeat": rel, "top_kcal_per_turning_repeat": float(np.nanmax(rel)),
                   "potential_kcal_per_turning_repeat": [float(im.info["triage_turn_ev"]) * KCAL / reps for im in images]}
         record["ends_only"] = bool(args.ends)
+        if args.images:
+            record["images"] = [int(v) for v in args.images.split(",")]
+        if "triage_swing_facing" in images[0].info:
+            # a carbonyl taken round by held facings (``swing``): where each image has it, and which image was let go
+            record["way"] = str(images[0].info["triage_swing_way"])
+            record["facing_degrees"] = [float(im.info["triage_swing_facing"]) for im in images]
+            record["let_go"] = [bool(im.info.get("triage_swing_let_go", 0)) for im in images]
         unit = str(images[0].info.get("triage_path_unit", "a repeat of the turning chain"))
         record["unit"] = "kcal/mol " + unit
         if "triage_kink_turned" in images[0].info:
@@ -1496,6 +1503,11 @@ def table(args):
             print(f"{q['name']:20s} a wall of {q['of']} part of the way over, repeats turned {' '.join(str(k) for k in q['turned_repeats'])}: "
                   f"{' '.join(f'{v:+.2f}' for v in q['kcal_per_turning_repeat'])} kcal/mol for the cell, of which the pair of twists "
                   f"{' '.join(f'{v:+.2f}' for v in q['pair_of_twists_kcal'])} (DFT on the potential's states)")
+            continue
+        if "facing_degrees" in q:
+            print(f"{q['name']:20s} one carbonyl of {q['of']} taken round, facing {' '.join(f'{v:+.0f}' for v in q['facing_degrees'])} degrees: "
+                  f"{' '.join(f'{v:+.2f}' for v in q['kcal_per_turning_repeat'])} kcal/mol for the cell (DFT on the potential's cells; "
+                  f"the potential {' '.join(f'{v:+.2f}' for v in q['potential_kcal_per_turning_repeat'])})")
             continue
         print(f"{q['name']:20s} turning every second chain of {q['of']}: top {q['top_kcal_per_turning_repeat']:.2f} kcal/mol a repeat that turns, "
               f"end {q['kcal_per_turning_repeat'][-1]:+.2f} (DFT on the potential's path)")
