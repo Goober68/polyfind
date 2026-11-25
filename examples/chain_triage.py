@@ -26,6 +26,7 @@ torsion angles, a pattern repeated along the bonds, with the number of repeats i
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -906,6 +907,9 @@ def points(args):
         t0 = time.time()
         for k, im in enumerate(images):
             k = int(args.images.split(",")[k]) if args.images else k
+            # a state of a kink series is known by how many repeats it has turned, not by its place in
+            # the file: the series grows (3 of 4 turned is added between 4 and 2) and a place moves
+            k = f"t{int(im.info['triage_kink_turned'])}" if "triage_kink_turned" in im.info else k
             out = work / f"image_{k}.out"
             if args.relax:
                 if not finished(out):
@@ -928,6 +932,8 @@ def points(args):
                 continue
             if not (out.exists() and "JOB DONE" in out.read_text(errors="replace")):
                 run(args.pw, args.np, pw_input(im, args.pseudo, work / f"scratch_{k}", "scf"), work, f"image_{k}", pools=args.pools)
+                # the energy is in the output; a 144-atom state's wavefunctions are 1.5 GB a state
+                shutil.rmtree(work / f"scratch_{k}", ignore_errors=True)
             text = out.read_text(errors="replace")
             ry = [float(line.split("=")[1].split()[0]) for line in text.splitlines() if line.startswith("!")]
             energies.append(ry[-1] * 13.605693123 if ry else float("nan"))
