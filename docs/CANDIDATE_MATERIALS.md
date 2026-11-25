@@ -2045,11 +2045,11 @@ potential's.
 | facing held | the potential | DFT |
 |---|---|---|
 | +140 (the row at rest) | 0 | 0 |
-| +127 | +1.72 | |
-| +114 | +5.08 | |
+| +127 | +1.72 | +1.52 |
+| +114 | +5.08 | +5.31 |
 | +99 | +6.52 | +7.11 |
-| +85 | +3.76 | |
-| +72 | +4.24 | |
+| +85 | +3.76 | +5.32 |
+| +72 | +4.24 | +5.70 |
 | +58 | +5.22 | |
 | +44, held and let go | +5.48, +5.40 | +5.93 (let go) |
 | +31 | +5.92 | +6.00 |
@@ -2059,16 +2059,17 @@ potential's.
 | -23, -37, -51 (held past where it comes to rest) | +5.47, +7.24, +10.54 | |
 | let go from -51: rests at -18 | +1.71 | -4.20 |
 
-14. *DFT's top at the cells read is 7.11, where the plain row's is 23.6.* It is at +99. The mark
-    for tens of MHz is 7.6 and the film's own hop is 7.70. The potential has 6.52 there, 0.6
-    BELOW DFT, where at the plain row's squeezed tops it was 7.6 and 8.5 above. One cell at the
-    top has been read: the top of a way made by holding one angle is neither bound, and the
-    cells beside it (+114 and +85) are being read.
+14. *DFT's top at the cells read is 7.11, where the plain row's is 23.6.* It is at +99, with
+    the cells 15 degrees either side of it 1.8 lower (5.31 and 5.32). The mark for tens of MHz
+    is 7.6 and the film's own hop is 7.70. The potential has 6.52 there, 0.6 BELOW DFT, where
+    at the plain row's squeezed tops it was 7.6 and 8.5 above. The top of a way made by holding
+    one angle is neither bound: the saddle can lie under it, and between cells 13 to 15 degrees
+    apart the way can rise above the highest cell read.
 15. *What is left of the hump is the urea letting go of its two bonds, with nothing squeezed.*
     Its two bonds from the next chain are 2.27 A at rest, 2.46 at +127 and gone by +114. From
     there to +31 it is bonded to nothing (one hydrogen 2.45 A from its oxygen at +44), and DFT
-    has the cell 5.9 to 6.0 up at the two cells read there (+44 and +31): a shelf across the
-    middle, not a second rest. Nothing on the way is nearer than 1.9 A to anything in another
+    has the cell 5.3 to 6.0 up at the five cells read there (+114, +85, +72, +44, +31), with
+    the top 1.8 above them at +99: a shelf across the middle, not a second rest. Nothing on the way is nearer than 1.9 A to anything in another
     chain or sheet (two hydrogens 1.91 to 1.94 A apart across the sheets at the top), where the
     plain row's top had a hydrogen 1.60 A from an oxygen.
 16. *The far side is 4.20 BELOW the row at rest in DFT, where the potential has it 1.71 above.*
@@ -2086,11 +2087,11 @@ potential's.
     12. The chain's other two ureas have turned from +140 to +122, and its methyls lean from
     2.12 A off the sheet to 1.22 to 1.52. DFT has this cell 4.2 below a row with every bond
     made but long; what DFT's own far side is, and its own row at rest, is not known.
-18. *The potential is right to 0.6 on the near half and 5 to 6 off on the far half.* +99, +44
-    and +31: 0.6, 0.5 and 0.1 below DFT. -11 and the far side: 4.8 and 5.9 above. So it cannot
-    read the level in a wider row either, and a row six chains wide is 216 atoms, beyond DFT on
-    this machine.
-19. *On the target's terms.* Low activation is two numbers. The hump, at the one cell read, is
+18. *The potential is right to 0.6 up to the top and 1.5 to 6 off past it.* +127, +114, +99:
+    0.2 above, 0.2 below and 0.6 below DFT. +85 and +72: 1.6 and 1.5 below. +44 and +31: 0.5
+    and 0.1 below. -11 and the far side: 4.8 and 5.9 ABOVE. So it cannot read the level in a
+    wider row either, and a row six chains wide is 216 atoms, beyond DFT on this machine.
+19. *On the target's terms.* Low activation is two numbers. The hump, at the cells read, is
     at the mark, which the plain chain's was three times over. The level is not there in this
     row (4.2 against the field's 0.06 a monomer), and this row cannot say whether that is the
     chain. Easy-ish return: 11.3 back as it stands. Strong action is not computed for this
@@ -2100,8 +2101,8 @@ potential's.
     together; the cell held; one hand of the chain; DFT on the potential's structures. It is
     activation only, a partial result: no strain, loss, frequency, blocked force or speed.
 
-**Not done.** For the one-methyl row: DFT on the rest of its cells (the ones beside the top
-first); the two ends relaxed in DFT (`points --relax`, hours a cell here); the whole wall chain
+**Not done.** For the one-methyl row: DFT on the four cells not read (+58, +17, +4 and the
+held +44); the two ends relaxed in DFT (`points --relax`, hours a cell here); the whole wall chain
 turned, for how much of the far side's fall is the narrow row; the long way round; the second
 urea's step; the plain row three repeats long, for a like comparison; the chain's dipole and
 stiffness (section 6.1's numbers); the chain with two methyls. DFT on the rest of the spread
