@@ -877,24 +877,27 @@ right": true at one registry, not along it).
         (15 GB) get one of them killed by the kernel with nothing in its log.
         (3) THE RESULT SO FAR (text: `docs/CANDIDATE_MATERIALS.md` 6.3; record `urea1_tt_x1_kink4`
         in `docs/predictions/chain_triage.json`). kcal/mol for the 144-atom cell above the row at
-        rest, DFT single points at the potential's structures (the potential): 2 of 4 repeats turned
-        -17.41 (-10.93), none turned -20.83 (-23.81). ABOVE THE LINE BETWEEN THE TWO WHOLE STATES
-        THE PART-TURNED STATE HAS -7.0 IN DFT, +1.0 IN THE POTENTIAL: no hump by either, and the
-        potential cannot settle the sign (6.5 off on that state). In the part-turned state two of
-        the chain's ureas are bonded to the neighbour on one side and two to the neighbour on the
-        other, 120 degrees round, the methylene the hinge: THE UNIT THAT CHANGES SIDES IS ONE
-        REPEAT, NOT A CHAIN, and the cam's number is the hump for one urea to swing across. The
-        20.8 between the whole states is 5.2 a repeat, the narrow row's (every chain of a
-        four-chain row is beside a wall), not a property of a wall. A PARTIAL RESULT: activation
-        only, nothing on strain, loss, frequency, blocked force or speed.
-        (4) NEXT, IN THIS ORDER: `kink --long 4 --turned 4,3,2,1,0` (the states with 3 and 1
-        turned; the potential, 20 minutes each); `hop --between 4,3` (the band for the first repeat
-        to go over, about an hour); `points` on the new states and on the band's images (30 minutes
-        an image; `points` now keys a kink state's DFT output by its repeats turned, `image_t3.out`,
-        and removes a finished single point's scratch, 1.5 GB a state). To spare an hour, copy
-        `work/urea1_tt_x1_kink4/image_t4.out` and `image_t3.out` to the hop's work folder as its
-        `image_0.out` and its last image's before `points` on the hop. THEN: the other wall
-        (`--side 2`), a defect in the moving chain (`--ether 1:0`), a wider row in the potential.
+        rest, DFT single points at the potential's structures (the potential), by repeats of the
+        wall chain turned: 4: 0 (0); 3: +0.12 (+12.88); 2: -17.41 (-10.93); 1: -16.03 (-15.81);
+        0: -20.83 (-23.81). IN DFT THE FIRST UREA TO GO OVER IS LEVEL WITH THE ROW AT REST AND THE
+        SECOND FALLS 17.5; no state on the way is above the row at rest by more than 0.12. In
+        every part-turned state each urea of the chain is bonded to one neighbour or the other,
+        120 degrees round, the methylene the hinge: THE UNIT THAT CHANGES SIDES IS ONE REPEAT, NOT
+        A CHAIN, and the cam's number is the hump for one urea to swing across (mark: 7.6 kcal/mol
+        for tens of MHz; the film's hop is 7.7). THE POTENTIAL IS NOT AN EVALUATOR FOR THESE
+        STATES (12.8, 6.5, 0.2, 3.0 off): it makes structures and paths, DFT reads them, and the
+        structures being the potential's and not DFT's is the standing caveat. The 20.8 between
+        the whole states is 5.2 a repeat, the narrow row's (every chain of a four-chain row is
+        beside a wall), not a property of a wall. A PARTIAL RESULT: activation only, nothing on
+        strain, loss, frequency, blocked force or speed.
+        (4) NEXT, IN THIS ORDER: `hop --long 4 --between 4,3` (the band for the first urea to go
+        over, about an hour in the potential; log `/opt/dft/triage/log_hop43.txt`; IN FLIGHT WHEN
+        THIS WAS WRITTEN), then `points --names urea1_tt_x1_kink4_hop4-3` (30 minutes an image;
+        to spare an hour first copy `work/urea1_tt_x1_kink4/image_t4.out` and `image_t3.out` to
+        `work/urea1_tt_x1_kink4_hop4-3/` as `image_0.out` and `image_6.out`). `points` keys a kink
+        state's DFT output by its repeats turned (`image_t3.out`) and removes a finished single
+        point's scratch (1.5 GB a state). THEN: the other wall (`--side 2`), a defect in the
+        moving chain (`--ether 1:0`), a wider row (`--rows 6`: its files carry `r6`).
         (5) THE PI AND THE MI100 SINCE: "I just got it on the network. 192.168.1.150" (a private
         address: not reachable from a cloud session and not to be probed from one), "You are local,
         right?" (no), "Whats the apt for claude?", "Claude is installed on the MI100". The PI was

@@ -1837,46 +1837,55 @@ has.*
 **How the cell is made** (`chain_triage.py kink`). Four chains of a bonded row, each four repeats
 long, in the polar crystal's cell repeated and held. Two chains face each way, so the row has two
 walls: one where N-H meets N-H and one where the oxygens meet. The chain beside the N-H wall is
-turned over 4, 2 or 0 of its 4 repeats, with a twist at each end of the turned part started at a
-methylene. 4 turned is the row at rest, two and two; 0 turned is the same row with that wall one
-chain on, three and one. Each state is relaxed in the pretrained potential (to 0.05 eV/A) and read
-in DFT as it stands (a single point, 27 to 31 minutes on four processors).
+turned over 4, 3, 2, 1 or 0 of its 4 repeats, with a twist at each end of the turned part started
+at a methylene. 4 turned is the row at rest, two and two; 0 turned is the same row with that wall
+one chain on, three and one. Each state is relaxed in the pretrained potential (to 0.05 eV/A) and
+read in DFT as it stands (a single point, 27 to 31 minutes on four processors).
 
 | repeats of the chain turned | DFT, kcal/mol for the cell | the potential | its repeats face, degrees | N-H..O under 2.3 A in the cell |
 |---|---|---|---|---|
 | 4 (the row at rest, two and two) | 0 | 0 | -159 -159 -159 -159 | 8, at 2.25 |
+| 3 (one urea gone over) | +0.12 | +12.88 | +11 +152 -157 +152 | 12, at 2.00 to 2.28 |
 | 2 | -17.41 | -10.93 | +15 +135 +136 +17 | 14, at 2.06 to 2.24 |
+| 1 | -16.03 | -15.81 | +15 +134 +16 +21 | 15, at 2.01 to 2.27 |
 | 0 (the wall a chain on, three and one) | -20.83 | -23.81 | -38 -38 -38 -38 | 16, at 1.97 to 2.04 |
 
-Above the line between the two whole states the part-turned state has **-7.0 in DFT and +1.0 in
-the potential**: no hump by either.
+Above the line between the two whole states the three part-turned states have +5.3, -7.0 and
+-0.4 in DFT (+18.8, +1.0 and +2.1 in the potential).
 
 **What it says.**
 
 1. *A long chain does not turn as a rod.* The one-repeat cell of 6.2 made the chain turn along its
-   whole length at once and paid 15.8 a repeat, which is 63 for four repeats. A chain turned over
-   half its length is not above the two whole states at all.
-2. *The unit that changes sides is one repeat, not a chain.* In the part-turned state two of the
-   chain's ureas are bonded to the neighbour on one side (N-H..O 2.1 A) and two to the neighbour on
-   the other, 120 degrees round. The methylene between two ureas is the hinge: its torsions go
-   from 165 degrees to between 120 and 147, and that costs little. So each urea beside a wall
-   chooses its neighbour by itself, and the number the cam needs is the hump for ONE urea to swing
-   from one neighbour to the other. That hump is not in this table.
-3. *The two whole states are not level, and that is the row's width.* 20.8 for four repeats is
+   whole length at once and paid 15.8 a repeat, which is 63 for four repeats. In DFT no state on
+   the way is more than 0.12 above the row at rest.
+2. *The unit that changes sides is one repeat, not a chain.* In every part-turned state each of the
+   chain's ureas is bonded to the neighbour on one side or on the other, 120 degrees round, and
+   the methylene between two ureas is the hinge (its torsions go from 165 degrees to between 120
+   and 147). So each urea beside a wall chooses its neighbour by itself.
+3. *The first urea to go over is level with the row at rest in DFT (+0.12), and the second falls
+   17.5.* What is paid for the first one, then, is whatever hump lies between two level states; the
+   states say nothing about it and it is not in this table (the band is the next run). The mark
+   for it: 7.6 kcal/mol is the hump that lets a move follow tens of MHz at room temperature at
+   10^13 tries a second, and the film's own hop is 7.7 in DFT (3.23).
+4. *The pretrained potential is not an evaluator for these states.* It is 12.8 from DFT on the
+   state with one urea over, 6.5 on the next, 0.2 and 3.0 on the last two: it would have called
+   the first step a 13 kcal/mol climb. It is used here to make structures and paths, and DFT reads
+   them. That cuts both ways: the structures are the potential's rest states, not DFT's, and a
+   state relaxed in DFT could move by kcal/mol (hours a state on four processors; a job for the
+   MI100).
+5. *The two whole states are not level, and that is the row's width.* 20.8 for four repeats is
    5.2 a repeat, the fall the one-repeat path of 6.2 ended on (-5.22). In a row four chains wide
    every chain is beside a wall. The two-and-two row holds its chains 21 to 27 degrees off the way
    they face in the polar crystal, with bonds of 2.25 A; three and one has bonds of 2.0 A. A wall
    far from any other steps between two states that are the same state a chain along, level by
    symmetry; that needs a wider row (216 atoms and up), which the potential can do here and DFT
-   cannot (an estimated 13 GB of this machine's 15).
-4. *The potential cannot settle the sign.* It is 6.5 from DFT on the part-turned state and 3.0 on
-   the end, in 144 atoms. Both readings are at the potential's structures; the same states relaxed
-   in DFT take hours each on four processors and are a job for the MI100.
+   cannot (an estimated 13 GB of this machine's 15), and by 4 the potential's word on it is not
+   worth much.
 
-**Not done.** The hump for one repeat to change sides (the states with 3 and 1 turned and the band
-between two of them). The other wall, where the oxygens meet. Any of it with a defect in the
-chain. The cell is held at the polar crystal's, and a row with walls wants 3.4% more room (6.2),
-so every state here is squeezed.
+**Not done.** The hump for one repeat to change sides (the band between the states with 4 and 3
+turned). The other wall, where the oxygens meet. Any of it with a defect in the chain. The cell is
+held at the polar crystal's, and a row with walls wants 3.4% more room (6.2), so every state here
+is squeezed.
 
 Files: `docs/predictions/chain_triage.json` (`paths`, `urea1_tt_x1_kink4`),
 `docs/predictions/chain_triage_paths/urea1_tt_x1_kink4.path.xyz`.
