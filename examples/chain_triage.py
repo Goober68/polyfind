@@ -845,6 +845,45 @@ def hop(args):
               f"in the potential, end {rel[-1]:+.2f}; profile {' '.join(f'{v:.2f}' for v in rel)}", flush=True)
 
 
+def sheet_gap(atoms) -> float:
+    """How far apart a crystal's sheets are: the second edge's height above the plane of the first and the third."""
+    cell = atoms.cell.array
+    normal = np.cross(cell[0], cell[2])
+    return float(abs(cell[1] @ normal) / np.linalg.norm(normal))
+
+
+def spread_cell(atoms, by: float):
+    """The same crystal with its sheets ``by`` times as far apart and nothing else changed.
+
+    The first edge is along the hydrogen bonds (``rebased``) and the third along the chain, so a
+    sheet is the plane of those two; the second edge is lengthened straight across it and the atoms
+    stay where they are.  It is the room a side group on the chain would make between sheets, taken
+    by itself: no side group is there, and the other two edges are not let go."""
+    b = rebased(atoms).copy()
+    b.info.update(atoms.info)
+    cell = b.cell.array.copy()
+    normal = np.cross(cell[0], cell[2])
+    normal /= np.linalg.norm(normal)
+    height = cell[1] @ normal
+    cell[1] = cell[1] + (by - 1.0) * height * normal
+    b.set_cell(cell, scale_atoms=False)
+    b.info["kmesh"] = kmesh(b)
+    return b
+
+
+def spread(args):
+    """Write a relaxed cell again with its sheets moved apart (``spread_cell``), as ``NAME_g<percent>``."""
+    from ase.io import read, write
+
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        a = read(src / f"{name}.relaxed.xyz")
+        b = spread_cell(a, args.by)
+        out = f"{name}_g{round(args.by * 100)}"
+        write(src / f"{out}.relaxed.xyz", b, format="extxyz")
+        print(f"{out}: sheets {sheet_gap(rebased(a)):.3f} A apart made {sheet_gap(b):.3f}, {b.get_volume() / len(b) * len(a) / a.get_volume():.3f} times the volume", flush=True)
+
+
 def swing(args):
     """The hump for one carbonyl of the moving chain to change sides, by turning it a step at a time.
 
@@ -1005,7 +1044,7 @@ def kink(args):
         ether, tag = kink_series(name, args)
         work = src / "work" / tag
         work.mkdir(parents=True, exist_ok=True)
-        counts = sorted({int(v) for v in args.turned.split(",")} | {0, args.long}, reverse=True) if args.turned else [args.long, args.long // 2, 0]
+        counts = sorted({int(v) for v in args.turned.split(",")} | (set() if args.only else {0, args.long}), reverse=True) if args.turned else [args.long, args.long // 2, 0]
         mover_chain = args.rows // 2 if args.side == 1 else args.rows - 1
         reference = polar_facing(a)  # the way the chain faces in the polar cell: its C=O across the chain
         states = []
@@ -1042,6 +1081,8 @@ def kink(args):
             print(f"{tag}: {k} of {args.long} repeats turned, {len(row)} atoms, {int(row.info['triage_kink_steps'])} steps to {float(row.info['triage_kink_force']):.3f} eV/A, "
                   f"the chain's repeats face {' '.join(f'{v:+.0f}' for v in faces)} degrees", flush=True)
         e = {int(s.info["triage_kink_turned"]): float(s.info["triage_kink_ev"]) for s in states}
+        if 0 not in e or args.long not in e:  # --only: the states asked for and no path of the series
+            continue
         whole, none = e[args.long], e[0]
         out = []
         for index, s in enumerate(states):
@@ -1662,6 +1703,7 @@ def main():
     j.add_argument("--fmax", type=float, default=0.05)
     j.add_argument("--steps", type=int, default=300)
     j.add_argument("--more", type=int, default=0, help="steps more for a state already made that stopped above --fmax")
+    j.add_argument("--only", action="store_true", help="make the states of --turned and no others (the two whole states are otherwise always made)")
     j.set_defaults(run=kink)
     h = sub.add_parser("hop")
     h.add_argument("--frames", type=Path, required=True)
@@ -1677,6 +1719,11 @@ def main():
     h.add_argument("--fmax", type=float, default=0.1)
     h.add_argument("--steps", type=int, default=120)
     h.set_defaults(run=hop)
+    sp = sub.add_parser("spread")
+    sp.add_argument("--frames", type=Path, required=True)
+    sp.add_argument("--names", required=True)
+    sp.add_argument("--by", type=float, required=True, help="how many times as far apart the sheets are made, e.g. 1.2")
+    sp.set_defaults(run=spread)
     g = sub.add_parser("swing")
     g.add_argument("--frames", type=Path, required=True)
     g.add_argument("--names", required=True)

@@ -329,3 +329,19 @@ def test_the_atoms_that_turn_with_a_urea_carbonyl_are_its_six():
     assert CT.carbonyls(chain, slice(0, len(chain))) == [(6, 5)]
     assert sorted(CT.urea_of(chain, slice(0, len(chain)), 5)) == [3, 4, 5, 6, 7, 8]
     assert CT.facing(chain, slice(0, len(chain)), z, np.array([0.0, 1.0, 0.0])) == pytest.approx([-90.0])
+
+
+def test_a_spread_cell_has_its_sheets_further_apart_and_its_atoms_where_they_were():
+    from ase import Atoms
+
+    cell = np.array([[4.6, 0.0, 0.0], [1.7, 3.3, 0.2], [0.1, 0.0, 4.7]])
+    a = Atoms("CO", positions=[[1.0, 1.0, 1.0], [2.2, 1.0, 1.0]], cell=cell, pbc=True)
+    a.info["triage_repeats"] = 1
+    b = CT.spread_cell(a, 1.2)
+    assert CT.sheet_gap(b) == pytest.approx(1.2 * CT.sheet_gap(a))
+    assert b.get_volume() == pytest.approx(1.2 * a.get_volume())
+    assert b.positions == pytest.approx(a.positions)
+    assert b.cell.array[0] == pytest.approx(cell[0]) and b.cell.array[2] == pytest.approx(cell[2])
+    # what the second edge has along the sheet is kept: the sheets move apart and do not slide
+    normal = np.cross(cell[0], cell[2]) / np.linalg.norm(np.cross(cell[0], cell[2]))
+    assert (b.cell.array[1] - cell[1]) == pytest.approx(0.2 * (cell[1] @ normal) * normal)
