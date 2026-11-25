@@ -1032,11 +1032,28 @@ right": true at one registry, not along it).
         turned half round). The chain beside the N-H wall on the far side from the mover is
         the one turned a long way off flat (-64, then +116 on the other side): the wall has
         a structure three chains wide and all three move when it steps.
-        RUNNING WHEN THIS WAS WRITTEN: (i) `swing --frames /opt/dft/triage --names
-        urea1m_tt_x1 --rows 5 --long 3 --start turned_3 --carbonyl 0 --by 110 --way m --images
-        9` (log `log_urea1m_r5_swing3m.txt`; the mover goes from -169 down through +90, the
-        way the four-chain row's went), THEN the same again `--start
-        swing_turned_3_c0m_9_free`, as in the four-chain row. NOTHING BESIDE A DFT JOB.
+        THE FIRST UREA'S STEP IN THE FIVE-CHAIN ROW, IN THE POTENTIAL (22:35 UTC), two scans
+        end to end as in the four-chain row, kcal/mol for the 180-atom cell above the row at
+        rest: `swing --frames /opt/dft/triage --names urea1m_tt_x1 --rows 5 --long 3 --start
+        turned_3 --carbonyl 0 --by 110 --way m --images 9` (path
+        `urea1m_tt_x1_kink3r5_swing_turned_3_c0m`): facings -169 +178 +165 +150 +136 +123 +109
+        +95: 0.00 0.93 3.64 3.40 1.88 4.14 5.97 5.86, let go stays at +95 (+5.86, 0 steps);
+        then `--start swing_turned_3_c0m_9_free` (path
+        `urea1m_tt_x1_kink3r5_swing_swing_turned_3_c0m_9_free_c0m`, its zero the +95 cell):
+        +81 +68 +54 +40 +26 +13 0: +6.32 +7.02 +6.81 +8.37 +8.92 +11.02 +13.23 above the row
+        at rest, LET GO RESTS AT +17, +9.75 ABOVE THE ROW AT REST (the cells at +13 and 0 are
+        past where it rests). SO IN THE LEVEL CELL THE POTENTIAL HAS THE FIRST UREA OVER 9.8
+        UP, uphill all the way (the four-chain row's line said about 10). The turned urea
+        there has NO hydrogen bond (nothing under 2.6 A) and its methyls have not moved
+        (+2.15 +1.88 +2.14 A off their face): the chain beside it (facing -60) would have to
+        come flat (-29 in the whole state) to bond to it. The potential was 5 to 6 ABOVE DFT
+        on the four-chain row's far half, so this 9.8 is not a number until DFT reads it.
+        RUNNING WHEN THIS WAS WRITTEN: `points --frames /opt/dft/triage --names
+        urea1m_tt_x1_kink3r5_swing_turned_3_c0m --images 0,6 --np 4` (the row at rest and
+        +109; 180 atoms, 255 bands, 3 k-points, 8.5 GB estimated; log
+        `log_urea1m_r5_swing3m_dft.txt`). THEN `points --names
+        urea1m_tt_x1_kink3r5_swing_swing_turned_3_c0m_9_free_c0m --images 8,5` (the far side
+        and +26; join by raw energies). NOTHING BESIDE A DFT JOB.
         (ii) one DFT single point
         on the row at rest to see that 180 atoms fit (`points --names <path> --images 0`);
         (iii) DFT on the top and the far side; (iv) the second urea's step from the far side
