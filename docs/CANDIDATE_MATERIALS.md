@@ -1826,6 +1826,61 @@ monomer and ends 7.05 up: a move PVDF does not make, kept only as the like-for-l
 
 Files: `docs/predictions/chain_triage.json` (`paths`), `docs/predictions/chain_triage_paths/`.
 
+### 6.3 The urea row four repeats long: a wall part of the way over (2026-11-25)
+
+*The PI, 2026-11-25: "Go on the card -- we have an MI100 now". The MI100 could not be reached
+from the session that did this work, so the cell that fits four processors was run on them: four
+chains by four repeats, 144 atoms. This section is the activation half of the cam and no more: it
+has no strain, loss, frequency, blocked force or speed in it, and is a partial result until it
+has.*
+
+**How the cell is made** (`chain_triage.py kink`). Four chains of a bonded row, each four repeats
+long, in the polar crystal's cell repeated and held. Two chains face each way, so the row has two
+walls: one where N-H meets N-H and one where the oxygens meet. The chain beside the N-H wall is
+turned over 4, 2 or 0 of its 4 repeats, with a twist at each end of the turned part started at a
+methylene. 4 turned is the row at rest, two and two; 0 turned is the same row with that wall one
+chain on, three and one. Each state is relaxed in the pretrained potential (to 0.05 eV/A) and read
+in DFT as it stands (a single point, 27 to 31 minutes on four processors).
+
+| repeats of the chain turned | DFT, kcal/mol for the cell | the potential | its repeats face, degrees | N-H..O under 2.3 A in the cell |
+|---|---|---|---|---|
+| 4 (the row at rest, two and two) | 0 | 0 | -159 -159 -159 -159 | 8, at 2.25 |
+| 2 | -17.41 | -10.93 | +15 +135 +136 +17 | 14, at 2.06 to 2.24 |
+| 0 (the wall a chain on, three and one) | -20.83 | -23.81 | -38 -38 -38 -38 | 16, at 1.97 to 2.04 |
+
+Above the line between the two whole states the part-turned state has **-7.0 in DFT and +1.0 in
+the potential**: no hump by either.
+
+**What it says.**
+
+1. *A long chain does not turn as a rod.* The one-repeat cell of 6.2 made the chain turn along its
+   whole length at once and paid 15.8 a repeat, which is 63 for four repeats. A chain turned over
+   half its length is not above the two whole states at all.
+2. *The unit that changes sides is one repeat, not a chain.* In the part-turned state two of the
+   chain's ureas are bonded to the neighbour on one side (N-H..O 2.1 A) and two to the neighbour on
+   the other, 120 degrees round. The methylene between two ureas is the hinge: its torsions go
+   from 165 degrees to between 120 and 147, and that costs little. So each urea beside a wall
+   chooses its neighbour by itself, and the number the cam needs is the hump for ONE urea to swing
+   from one neighbour to the other. That hump is not in this table.
+3. *The two whole states are not level, and that is the row's width.* 20.8 for four repeats is
+   5.2 a repeat, the fall the one-repeat path of 6.2 ended on (-5.22). In a row four chains wide
+   every chain is beside a wall. The two-and-two row holds its chains 21 to 27 degrees off the way
+   they face in the polar crystal, with bonds of 2.25 A; three and one has bonds of 2.0 A. A wall
+   far from any other steps between two states that are the same state a chain along, level by
+   symmetry; that needs a wider row (216 atoms and up), which the potential can do here and DFT
+   cannot (an estimated 13 GB of this machine's 15).
+4. *The potential cannot settle the sign.* It is 6.5 from DFT on the part-turned state and 3.0 on
+   the end, in 144 atoms. Both readings are at the potential's structures; the same states relaxed
+   in DFT take hours each on four processors and are a job for the MI100.
+
+**Not done.** The hump for one repeat to change sides (the states with 3 and 1 turned and the band
+between two of them). The other wall, where the oxygens meet. Any of it with a defect in the
+chain. The cell is held at the polar crystal's, and a row with walls wants 3.4% more room (6.2),
+so every state here is squeezed.
+
+Files: `docs/predictions/chain_triage.json` (`paths`, `urea1_tt_x1_kink4`),
+`docs/predictions/chain_triage_paths/urea1_tt_x1_kink4.path.xyz`.
+
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
 *Rewritten 2026-11-10. The first form of this section (kept below as 8.7) took the formation
