@@ -500,29 +500,57 @@ def etherified(row, part, per_repeat: int, which):
     return row
 
 
-def band(images, calc, fmax: float, steps: int, end_steps: int = 150):
+def remembering(calc):
+    """A calculator of one image's own that asks a shared potential and remembers what it said.
+
+    A band's images share one potential (one copy of its weights), and a shared calculator
+    remembers only the cell it was asked about last.  The optimiser asks the band for its forces
+    three times a step, so every image was worked out three times: 94 s a step at 144 atoms where
+    30 do."""
+    from ase.calculators.calculator import Calculator, all_changes
+
+    class Remembering(Calculator):
+        implemented_properties = ["energy", "forces"]
+
+        def calculate(self, atoms=None, properties=("energy", "forces"), system_changes=all_changes):
+            super().calculate(atoms, properties, system_changes)
+            calc.calculate(self.atoms, ["energy", "forces"], all_changes)
+            self.results = {"energy": float(calc.results["energy"]), "forces": np.array(calc.results["forces"], dtype=float)}
+
+    return Remembering()
+
+
+def band(images, calc, fmax: float, steps: int, end_steps: int = 150, store=None):
     """Relax the two ends and settle the images between them as a band, the cell held: in a pretrained potential.
 
     A loose band on purpose (it is the start of a DFT reading of each image, not the reading), and
-    it says where it has got to: on one processor a band of 36 atoms takes tens of minutes."""
+    it says where it has got to: on one processor a band of 36 atoms takes tens of minutes.
+    ``store``: a file the band is written to every ten steps, so that a run that is stopped can go
+    on from it (the caller reads it back as the images to start from)."""
     from ase.calculators.singlepoint import SinglePointCalculator
+    from ase.io import write
     from ase.mep import NEB
     from ase.optimize import FIRE, LBFGS
 
     t0 = time.time()
     for im in images:
-        im.calc = calc
+        im.calc = remembering(calc)
     for end in (images[0], images[-1]):
         if end_steps:
             LBFGS(end, logfile=None).run(fmax=0.05, steps=end_steps)
         # an end does not move again: keep its energy, or the band asks the potential for it at every step
         end.calc = SinglePointCalculator(end, energy=float(end.get_potential_energy()), forces=end.get_forces())
     print(f"  ends relaxed, {time.time() - t0:.0f} s", flush=True)
-    neb = NEB(images, climb=True, method="improvedtangent", allow_shared_calculator=True)
+    neb = NEB(images, climb=True, method="improvedtangent")
     opt = FIRE(neb, logfile=None)
     for _ in opt.irun(fmax=fmax, steps=steps):
-        if opt.nsteps and opt.nsteps % 20 == 0:
-            print(f"  band step {opt.nsteps}, {time.time() - t0:.0f} s", flush=True)
+        if opt.nsteps and opt.nsteps % 10 == 0:
+            if store is not None:
+                write(store, [im.copy() for im in images], format="extxyz")
+            if opt.nsteps % 20 == 0:
+                print(f"  band step {opt.nsteps}, largest force on the band {np.linalg.norm(neb.get_forces().reshape(-1, 3), axis=1).max():.3f} eV/A, {time.time() - t0:.0f} s", flush=True)
+    if store is not None:
+        write(store, [im.copy() for im in images], format="extxyz")
     return [float(im.get_potential_energy()) for im in images], int(opt.nsteps)
 
 
@@ -723,11 +751,17 @@ def hop(args):
         _, tag = kink_series(name, args)
         first, last = (int(v) for v in args.between.split(","))
         ends = [read(src / "work" / tag / f"turned_{k}.xyz") for k in (first, last)]
-        images = [ends[0].copy() for _ in range(args.images - 1)] + [ends[1].copy()]
-        NEB(images).interpolate(method="idpp", mic=True)
+        store = src / "work" / tag / f"hop{first}-{last}.band.xyz"
+        if store.exists() and len(read(store, index=":")) == args.images:
+            # a band that was stopped goes on from where it was last written
+            images = read(store, index=":")
+            print(f"  {tag}_hop{first}-{last}: going on from {store.name}", flush=True)
+        else:
+            images = [ends[0].copy() for _ in range(args.images - 1)] + [ends[1].copy()]
+            NEB(images).interpolate(method="idpp", mic=True)
         for im in images:
             im.info.update(ends[0].info)
-        energies, nsteps = band(images, calc, args.fmax, args.steps, end_steps=0)
+        energies, nsteps = band(images, calc, args.fmax, args.steps, end_steps=0, store=store)
         out = []
         for index, im in enumerate(images):
             c = im.copy()
