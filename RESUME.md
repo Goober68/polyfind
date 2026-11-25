@@ -956,7 +956,7 @@ right": true at one registry, not along it).
         (4d) TWO SHEETS THICK: `kink` and `swing` take `--sheets 2` (288 atoms; only the first
         sheet's chain moves, the one above stays as in the row at rest; files carry `t2`, as
         `urea1_tt_x1_kink4t2`). It is the check on (e) and has NOT been run anywhere. It is
-        jobs 8 and 9 of the MI100's queue (`examples/gpu_jobs/queue_mi100.txt`, part 5). Here:
+        jobs 7 and 8 of the MI100's queue (`examples/gpu_jobs/queue_mi100.txt`, part 5). Here:
         the potential only, about twice 6.5 s a step, and whether 288 atoms fit this machine's
         15 GB has not been tried (two 144-atom jobs at once do not); DFT at 288 atoms does not.
         (5) THE PI AND THE MI100 SINCE: "I just got it on the network. 192.168.1.150" (a private
