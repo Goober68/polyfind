@@ -247,6 +247,41 @@ def test_a_kink_row_has_its_walls_and_its_part_turned_chain():
     assert faces(CT.kink_row(a, 4, long, 2, 0.5, side=2)) == [[0] * 4, [0] * 4, [180] * 4, [0, 180, 180, 0]]
 
 
+def test_a_row_two_sheets_thick_moves_the_chain_of_its_first_sheet_only():
+    """Stacked twice, the row at rest is the one-sheet row and its copy a sheet up; a part-turned
+    state has the part turned in the first sheet and the chain above it as it is at rest."""
+    a = _zigzag()
+    n, long = len(a), 4
+    along = np.array([0.0, 0.0, 1.0])
+    reference = np.array([-1.0, 0.0, 0.0])
+    one = CT.kink_row(a, 4, long, long)
+    rest = CT.kink_row(a, 4, long, long, sheets=2)
+    assert len(rest) == 2 * len(one) and rest.info["triage_repeats"] == 32 and rest.info["kmesh"] == "1 2 2"
+    assert np.allclose(rest.cell.array[1], 2 * one.cell.array[1]) and np.allclose(rest.cell.array[[0, 2]], one.cell.array[[0, 2]])
+
+    def sheet(row, k):
+        return row.positions[row.arrays["sheet"] == k], row.arrays["chain"][row.arrays["sheet"] == k]
+
+    for k in (0, 1):
+        pos, chains = sheet(rest, k)
+        assert np.allclose(pos, one.positions + k * one.cell.array[1]) and np.array_equal(chains, one.arrays["chain"])
+    part = CT.kink_row(a, 4, long, 2, 0.5, sheets=2)
+    mine = CT.moving_chain(part, 4)
+    assert len(mine) == n * long and set(part.arrays["sheet"][mine]) == {0} and set(part.arrays["chain"][mine]) == {2}
+    assert [abs(round(v)) for v in CT.facing(part, mine, along, reference)] == [0, 180, 180, 0]
+    above = np.where((part.arrays["chain"] == 2) & (part.arrays["sheet"] == 1))[0]
+    assert [abs(round(v)) for v in CT.facing(part, above, along, reference)] == [180] * 4
+    still = np.ones(len(part), dtype=bool)
+    still[mine] = False
+    assert np.allclose(part.positions[still], rest.positions[still])
+    # one sheet thick, the moving chain is the whole of its chain, array or none
+    assert np.array_equal(CT.moving_chain(one, 4), np.where(one.arrays["chain"] == 2)[0])
+    bare = one.copy()
+    del bare.arrays["chain"]
+    assert np.array_equal(CT.moving_chain(bare, 4), np.where(one.arrays["chain"] == 2)[0])
+    assert np.array_equal(CT.moving_chain(one, 4, side=2), np.where(one.arrays["chain"] == 3)[0])
+
+
 def test_an_etherified_chain_loses_a_hydrogen_and_keeps_its_carbonyls():
     """The N-H of the second repeat of the moving chain made O: an atom fewer, the same four C=O, and
     the chains after it still found by the cell's own array."""

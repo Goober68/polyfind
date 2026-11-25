@@ -748,7 +748,7 @@ def nucleus(args):
               f"in the potential, end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
 
 
-def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0, side: int = 1, ether=()):
+def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0, side: int = 1, ether=(), sheets: int = 1):
     """A row of ``rows`` chains ``long`` repeats long with a wall each side of its turned half.
 
     The chains of the second half of the row are turned whole, but for one of them, the chain
@@ -761,41 +761,64 @@ def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0, side: int
     meet and one where their N-H meet.  ``side`` 1 moves the first chain of the turned half (the
     wall before it), 2 the last (the wall after it): the row at rest is the same cell for both.
     ``ether``: pairs ``(repeat, k)`` of the moving chain whose N-H is made O (``etherified``), the
-    same in every state of a series.  The cell's ``chain`` array says which chain an atom is of."""
+    same in every state of a series.  The cell's ``chain`` array says which chain an atom is of.
+
+    ``sheets``: the row stacked that many times along the cell's second edge.  With one sheet the
+    chain above the moving one is its own copy and does whatever it does; with more, the moving
+    chain is the one in the first sheet (the cell's ``sheet`` array, 0) and the chains above and
+    below it stay as they are in the row at rest."""
     a = rebased(a)
     n = len(a)
     per_chain = n * long
     along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
     mesh = mesh_of(a)
     mesh[0] = max(1, round(mesh[0] / rows))
+    mesh[1] = max(1, round(mesh[1] / sheets))
     mesh[2] = max(1, round(mesh[2] / long))
-    row = a.repeat([rows, 1, long])
-    row.set_array("chain", np.repeat(np.arange(rows), per_chain))
+    row = a.repeat([rows, sheets, long])
+    block = np.repeat(np.arange(rows * sheets), per_chain)  # a chain of one sheet is a run of atoms
+    row.set_array("chain", block // sheets)
+    if sheets > 1:
+        row.set_array("sheet", block % sheets)
     mover = rows // 2 if side == 1 else rows - 1
     for chain in range(rows // 2, rows):
-        if chain != mover:
-            spun(row, per_chain, chain, np.pi, along)
+        for sheet in range(sheets):
+            if chain != mover or sheet:
+                spun(row, per_chain, chain * sheets + sheet, np.pi, along)
+    first = mover * sheets
     if turned >= long:
-        spun(row, per_chain, mover, np.pi, along)
+        spun(row, per_chain, first, np.pi, along)
     elif turned > 0:
         if turned < width or long - turned < width:
             raise ValueError(f"{turned} of {long} repeats turned leaves no room for two twists {width} repeat(s) wide")
         h = hinge(a, along)
-        twisted(row, slice(mover * per_chain, (mover + 1) * per_chain), along, h / long, (turned + h) / long, width / long)
+        twisted(row, slice(first * per_chain, (first + 1) * per_chain), along, h / long, (turned + h) / long, width / long)
     if ether:
-        etherified(row, slice(mover * per_chain, (mover + 1) * per_chain), n, ether)
+        etherified(row, slice(first * per_chain, (first + 1) * per_chain), n, ether)
     row.info.update(a.info)
-    row.info.update(triage_repeats=rows * long * int(a.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh),
+    row.info.update(triage_repeats=rows * sheets * long * int(a.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh),
                     triage_kink_mover=mover)
     return row
+
+
+def moving_chain(row, rows: int, side: int = 1):
+    """The atoms of a ``kink_row``'s moving chain, in order along it: the chain beside the wall, in the first sheet."""
+    mover = rows // 2 if side == 1 else rows - 1
+    # a state made before cells carried the array has its chains in equal runs
+    chains = row.arrays["chain"] if "chain" in row.arrays else np.repeat(np.arange(rows), len(row) // rows)
+    mine = chains == mover
+    if "sheet" in row.arrays:
+        mine &= row.arrays["sheet"] == 0
+    return np.where(mine)[0]
 
 
 def kink_series(name: str, args):
     """``(ether, tag)`` of a series of ``kink`` states: the N-H groups made O and the name its files carry."""
     ether = [tuple(int(v) for v in item.split(":")) for item in args.ether.split(",")] if args.ether else []
     # a row of four chains carries no mark of its width: the first series were made so
-    tag = (f"{name}_kink{args.long}" + ("" if args.rows == 4 else f"r{args.rows}") + ("" if args.side == 1 else f"s{args.side}")
-           + ("_e" + "-".join(f"{r}{k}" for r, k in ether) if ether else ""))
+    sheets = getattr(args, "sheets", 1)
+    tag = (f"{name}_kink{args.long}" + ("" if args.rows == 4 else f"r{args.rows}") + ("" if sheets == 1 else f"t{sheets}")
+           + ("" if args.side == 1 else f"s{args.side}") + ("_e" + "-".join(f"{r}{k}" for r, k in ether) if ether else ""))
     return ether, tag
 
 
@@ -903,8 +926,9 @@ def swing(args):
     much; the path ends on the cell let go.
 
     Every energy is taken in double precision without the spring.  What it gives is the potential's
-    way and a mark from above on the hump (the top of a way made by one coordinate is at or above
-    the saddle); ``points`` reads its images in DFT."""
+    way and a mark on the hump that is neither bound: the top of a way made by one coordinate is at
+    or above the saddle, and the highest cell read is at or below that way's top.  ``points`` reads
+    its images in DFT."""
     from ase.io import read, write
     from ase.optimize import LBFGS
 
@@ -922,9 +946,7 @@ def swing(args):
         else:
             k_first, k_last = (int(v) for v in args.between.split(","))
             first, second, stem = read(work / f"turned_{k_first}.xyz"), read(work / f"turned_{k_last}.xyz"), f"swing{k_first}-{k_last}"
-        mover = args.rows // 2 if args.side == 1 else args.rows - 1
-        chains = first.arrays["chain"] if "chain" in first.arrays else np.repeat(np.arange(args.rows), len(first) // args.rows)
-        part = np.where(chains == mover)[0]
+        part = moving_chain(first, args.rows, args.side)
         pairs = carbonyls(first, part)
         begin = facing(first, part, along, reference)
         if second is None:
@@ -1039,13 +1061,11 @@ def kink(args):
     src = Path(args.frames)
     for name in args.names.split(","):
         a = rebased(read(src / f"{name}.relaxed.xyz"))
-        n = len(a)
         along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
         ether, tag = kink_series(name, args)
         work = src / "work" / tag
         work.mkdir(parents=True, exist_ok=True)
         counts = sorted({int(v) for v in args.turned.split(",")} | (set() if args.only else {0, args.long}), reverse=True) if args.turned else [args.long, args.long // 2, 0]
-        mover_chain = args.rows // 2 if args.side == 1 else args.rows - 1
         reference = polar_facing(a)  # the way the chain faces in the polar cell: its C=O across the chain
         states = []
         for k in counts:
@@ -1056,7 +1076,7 @@ def kink(args):
                 t0 = time.time()
                 before = int(row.info["triage_kink_steps"]) if row is not None else 0
                 if row is None:
-                    row = kink_row(a, args.rows, args.long, k, args.width, args.side, ether)
+                    row = kink_row(a, args.rows, args.long, k, args.width, args.side, ether, args.sheets)
                 info = dict(row.info)
                 if nearest(row) < 0.6:
                     raise ValueError(f"{tag}: the start with {k} repeats turned has two atoms {nearest(row):.2f} A apart")
@@ -1074,9 +1094,7 @@ def kink(args):
                 write(store, row, format="extxyz")
             if nearest(row) < 0.85:
                 raise ValueError(f"{tag}: the state with {k} repeats turned has two atoms {nearest(row):.2f} A apart: not a structure")
-            # a state made before cells carried the array has its chains in equal runs
-            chains = row.arrays["chain"] if "chain" in row.arrays else np.repeat(np.arange(args.rows), n * args.long)
-            faces = facing(row, np.where(chains == mover_chain)[0], along, reference)
+            faces = facing(row, moving_chain(row, args.rows, args.side), along, reference)
             states.append(row)
             print(f"{tag}: {k} of {args.long} repeats turned, {len(row)} atoms, {int(row.info['triage_kink_steps'])} steps to {float(row.info['triage_kink_force']):.3f} eV/A, "
                   f"the chain's repeats face {' '.join(f'{v:+.0f}' for v in faces)} degrees", flush=True)
@@ -1696,6 +1714,7 @@ def main():
     j.add_argument("--device", default="cpu", help="cpu, or cuda for a card (an AMD card under PyTorch's ROCm build too)")
     j.add_argument("--rows", type=int, default=4, help="chains in the row: half face one way, half the other")
     j.add_argument("--long", type=int, default=4, help="repeats along the chain")
+    j.add_argument("--sheets", type=int, default=1, help="sheets in the cell: with more than one only the first sheet's chain moves")
     j.add_argument("--turned", default="", help="how many repeats of the chain beside the wall are turned, e.g. 2,3 (the two whole states are always made)")
     j.add_argument("--width", type=float, default=1.0, help="repeats over which each twist is started")
     j.add_argument("--side", type=int, default=1, choices=(1, 2), help="which wall steps: the one before the turned half (1) or the one after it (2)")
@@ -1735,6 +1754,7 @@ def main():
     g.add_argument("--device", default="cpu")
     g.add_argument("--rows", type=int, default=4)
     g.add_argument("--long", type=int, default=4)
+    g.add_argument("--sheets", type=int, default=1)
     g.add_argument("--side", type=int, default=1, choices=(1, 2))
     g.add_argument("--ether", default="")
     g.add_argument("--way", default="p,m", help="which way round the carbonyl is taken: p (facing counted up), m (down), or both")
