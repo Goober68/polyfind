@@ -1290,6 +1290,88 @@
     -1.3061638515625,
     -5.9903376640625
    ]
+  },
+  {
+   "name": "urea1m_tt_x1_kink3_swing_swing_turned_3_c0m_9_free_c0m",
+   "kind": "path",
+   "of": "urea1m_tt_x1_kink3",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -23775.126029377243,
+    -23775.123104969563,
+    -23775.444441780717,
+    -23775.565495169914
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    0.06743844366535623,
+    -7.342764514112448,
+    -10.134322006256845
+   ],
+   "top_kcal_per_turning_repeat": 0.06743844366535623,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    0.5233378857174533,
+    -1.993909344952041,
+    -3.6936359091846196
+   ],
+   "ends_only": false,
+   "images": [
+    0,
+    1,
+    4,
+    8
+   ],
+   "way": "m",
+   "facing_degrees": [
+    44.17884072069158,
+    30.792152617532405,
+    -10.676948556650292,
+    -17.595783398711102
+   ],
+   "let_go": [
+    false,
+    false,
+    false,
+    true
+   ],
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1m_tt_x1_kink3_swing_turned_3_c0m",
+   "kind": "path",
+   "of": "urea1m_tt_x1_kink3",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -23775.38319194353,
+    -23775.074905849277
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    7.109246274236604
+   ],
+   "top_kcal_per_turning_repeat": 7.109246274236604,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    6.5247471941198745
+   ],
+   "ends_only": false,
+   "images": [
+    0,
+    3
+   ],
+   "way": "m",
+   "facing_degrees": [
+    139.77385816811744,
+    98.91694513978238
+   ],
+   "let_go": [
+    false,
+    false
+   ],
+   "unit": "kcal/mol for the cell"
   }
  ]
 }

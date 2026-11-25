@@ -2028,15 +2028,90 @@ a kcal/mol; the number stands, and the cell is to be run again so that the recor
     in pieces (the period cut from a bent oligomer; `build` now checks every chain it writes),
     and it is rebuilt whole.
 
-**Not done.** DFT on the rest of the spread row's path (the cells at -130 and -110, the one let
-go, and -89 again for the record), and its other way round. The methyl chains: their crystals in
-DFT, the first urea's step in their rows, and everything of section 6.1 that the plain chain
-has (dipole, stiffness, what it does per volt). An ether in the turning urea. The cell at +106
-let go. DFT on the cells between the ones read. The second urea's step from the state with one
-over. The other wall, where the oxygens meet. Two sheets thick, and rows wider than four chains,
-which is where the level of the two sides can be read. Everything in DFT's own structures. The
-cell is held at the polar crystal's, and a row with walls wants 3.4% more room (6.2), so every
-state here is squeezed.
+**The one-methyl chain's row, and its first urea's step** (`kink --long 3`, `swing`, `points`).
+The row is four chains by three repeats, 144 atoms, in the cell of the chain's DFT crystal, one
+sheet thick, the sheets 4.77 A apart. It is three repeats long and not four because four is 192
+atoms, more than DFT has room for on this machine; so it is not like for like with the plain
+row, whose numbers above are at four. The row is made and let rest in the potential. At rest
+its four chains' ureas face +18, -40, +140 and -162 (the crystal's own facing is 0), its twelve
+hydrogen bonds are 2.27 to 2.29 A long (1.90 in the crystal in DFT) and the wall chain's
+methyls stand 2.12 A off the sheet. The wall chain's first urea is then stepped down from +140
+through +90, in two scans end to end: seven facings held to +44 and that cell let go (it stays
+at +44, a flat place and not a rest), then seven more from there and the last let go. Energies
+are kcal/mol for the 144-atom cell above the row at rest; DFT is single points on the
+potential's cells, and the two scans are joined in DFT by their own energies, not by the
+potential's.
+
+| facing held | the potential | DFT |
+|---|---|---|
+| +140 (the row at rest) | 0 | 0 |
+| +127 | +1.72 | |
+| +114 | +5.08 | |
+| +99 | +6.52 | +7.11 |
+| +85 | +3.76 | |
+| +72 | +4.24 | |
+| +58 | +5.22 | |
+| +44, held and let go | +5.48, +5.40 | +5.93 (let go) |
+| +31 | +5.92 | +6.00 |
+| +17 | +3.86 | |
+| +4 | +4.30 | |
+| -11 | +3.41 | -1.41 |
+| -23, -37, -51 (held past where it comes to rest) | +5.47, +7.24, +10.54 | |
+| let go from -51: rests at -18 | +1.71 | -4.20 |
+
+14. *DFT's top at the cells read is 7.11, where the plain row's is 23.6.* It is at +99. The mark
+    for tens of MHz is 7.6 and the film's own hop is 7.70. The potential has 6.52 there, 0.6
+    BELOW DFT, where at the plain row's squeezed tops it was 7.6 and 8.5 above. One cell at the
+    top has been read: the top of a way made by holding one angle is neither bound, and the
+    cells beside it (+114 and +85) are being read.
+15. *What is left of the hump is the urea letting go of its two bonds, with nothing squeezed.*
+    Its two bonds from the next chain are 2.27 A at rest, 2.46 at +127 and gone by +114. From
+    there to +31 it is bonded to nothing (one hydrogen 2.45 A from its oxygen at +44), and DFT
+    has the cell 5.9 to 6.0 up at the two cells read there (+44 and +31): a shelf across the
+    middle, not a second rest. Nothing on the way is nearer than 1.9 A to anything in another
+    chain or sheet (two hydrogens 1.91 to 1.94 A apart across the sheets at the top), where the
+    plain row's top had a hydrogen 1.60 A from an oxygen.
+16. *The far side is 4.20 BELOW the row at rest in DFT, where the potential has it 1.71 above.*
+    So at the cells read it is 7.1 over and 11.3 back: at 10^13 tries a second, 66 MHz one way
+    and 58 kHz the other. The two sides are not level in this row, and the return is the slow
+    one. It is less far from level than the plain row, whose first urea fell 11.0 behind 23.6
+    and had 34.6 back. Whether 4.2 is the chain or the row is not known: every chain of a
+    four-chain row is beside a wall, and the plain row's two whole states are 5.2 a repeat
+    apart for that reason alone (reading 5). The whole wall chain turned in this row would say
+    how much of the 4.2 is the row; it has not been run.
+17. *The far side is not a bonded state in the potential's cell.* The turned urea faces -18
+    beside neighbours at -38, with no hydrogen within 2.6 A of its oxygen; the nearest things
+    to it are a nitrogen of the chain on the other side, 2.05 A from one of its hydrogens, and
+    hydrogens at 2.23. The cell has 10 N-H..O contacts under 2.6 A where the row at rest has
+    12. The chain's other two ureas have turned from +140 to +122, and its methyls lean from
+    2.12 A off the sheet to 1.22 to 1.52. DFT has this cell 4.2 below a row with every bond
+    made but long; what DFT's own far side is, and its own row at rest, is not known.
+18. *The potential is right to 0.6 on the near half and 5 to 6 off on the far half.* +99, +44
+    and +31: 0.6, 0.5 and 0.1 below DFT. -11 and the far side: 4.8 and 5.9 above. So it cannot
+    read the level in a wider row either, and a row six chains wide is 216 atoms, beyond DFT on
+    this machine.
+19. *On the target's terms.* Low activation is two numbers. The hump, at the one cell read, is
+    at the mark, which the plain chain's was three times over. The level is not there in this
+    row (4.2 against the field's 0.06 a monomer), and this row cannot say whether that is the
+    chain. Easy-ish return: 11.3 back as it stands. Strong action is not computed for this
+    chain: the urea's dipole is in 1.44 times the plain chain's volume (reading 13) and the
+    stiffness has not been run. This is a perfect row with a wall in it, the baseline for this
+    chain and not a film; three repeats long; one sheet thick, so a column of ureas turns
+    together; the cell held; one hand of the chain; DFT on the potential's structures. It is
+    activation only, a partial result: no strain, loss, frequency, blocked force or speed.
+
+**Not done.** For the one-methyl row: DFT on the rest of its cells (the ones beside the top
+first); the two ends relaxed in DFT (`points --relax`, hours a cell here); the whole wall chain
+turned, for how much of the far side's fall is the narrow row; the long way round; the second
+urea's step; the plain row three repeats long, for a like comparison; the chain's dipole and
+stiffness (section 6.1's numbers); the chain with two methyls. DFT on the rest of the spread
+row's path (the cells at -130 and -110, the one let go, and -89 again for the record), and its
+other way round. An ether in the turning urea. The plain row's cell at +106 let go, DFT on the
+cells between the ones read, and its second urea's step from the state with one over. The other
+wall, where the oxygens meet. Two sheets thick, and rows wider than four chains, which is where
+the level of the two sides can be read. Everything in DFT's own structures. The cell is held at
+the polar crystal's, and a row with walls wants 3.4% more room (6.2), so every state here is
+squeezed.
 
 Files: `docs/predictions/chain_triage.json` (`paths`: `urea1_tt_x1_kink4`,
 `urea1_tt_x1_kink4_swing4-3p`, `urea1_tt_x1_kink4_swing4-3m`),
@@ -2044,7 +2119,12 @@ Files: `docs/predictions/chain_triage.json` (`paths`: `urea1_tt_x1_kink4`,
 `..._swing4-3{p,m}.path.xyz`, ten cells each: the row at rest, seven held, the last let go, the
 twisted state; `urea1_tt_x1_g120_kink4_swing_turned_4_c0p.path.xyz`, the spread row's nine: at
 rest, seven held, the last let go, with the potential's energies; its two DFT energies are in
-this section only until the job is run to its end).
+this section only until the job is run to its end;
+`urea1m_tt_x1_kink3_swing_turned_3_c0m.path.xyz` and
+`urea1m_tt_x1_kink3_swing_swing_turned_3_c0m_9_free_c0m.path.xyz`, the one-methyl row's two
+scans, nine cells each, the second starting from the first's last; their records in
+`chain_triage.json` carry the DFT energies in eV, and the second's zero is its own first cell,
+5.93 above the row at rest).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
