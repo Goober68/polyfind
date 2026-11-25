@@ -58,6 +58,14 @@ PSEUDO = {
 PSEUDO_BERRY = {**PSEUDO, "C": ("C.pbe-mt_gipaw.UPF", 12.0107, 4), "O": ("O.pbe-tm-triage.UPF", 15.9994, 6)}
 NOT_NORM_CONSERVING = ("Cl",)
 
+# where this machine keeps the DFT program, its files and the pretrained potential: the defaults are
+# the container's this was written on, and another machine names its own (examples/mi100_setup.sh)
+PW_DEFAULT = os.environ.get("TRIAGE_PW", "/opt/mm/qe/bin/pw.x")
+PSEUDO_DEFAULT = os.environ.get("TRIAGE_PSEUDO", "/opt/pseudo")
+PSEUDO_NC_DEFAULT = os.environ.get("TRIAGE_PSEUDO_NC", "/opt/pseudo_nc")
+MODEL_DEFAULT = Path(os.environ.get("TRIAGE_MODEL", "/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+NP_DEFAULT = int(os.environ.get("TRIAGE_NP", "4"))
+
 T, G, GM = 180.0, 60.0, -60.0
 CHAINS = {
     # the check: both shapes of PVDF's chain, whose rise and dipole are known
@@ -137,18 +145,20 @@ def periodic(chain: dict, state: str, box: float = 14.0, n: int = 8):
     return a
 
 
-def model(path, dtype: str = "float64"):
-    """A MACE-architecture model file on the processor (the pretrained ones are for starts only).
+def model(path, dtype: str = "float64", device: str = "cpu"):
+    """A MACE-architecture model file on the processor or a card (the pretrained ones are for starts only).
 
     ``float32`` is the precision the pretrained files were made in and about twice as fast: enough
-    for a band whose images DFT then reads, where one energy of 36 atoms takes five seconds."""
+    for a band whose images DFT then reads, where one energy of 36 atoms takes five seconds.
+    ``device``: ``cpu``, or ``cuda`` for a card (PyTorch's name for it whoever made the card: an AMD
+    one under the ROCm build answers to it too)."""
     import torch
     from mace.calculators import MACECalculator
 
     load = torch.jit.load
-    torch.jit.load = lambda f, *args, **kwargs: load(f, *args, **{**kwargs, "map_location": "cpu"})
+    torch.jit.load = lambda f, *args, **kwargs: load(f, *args, **{**kwargs, "map_location": device})
     try:
-        return MACECalculator(model_paths=str(path), device="cpu", default_dtype=dtype)
+        return MACECalculator(model_paths=str(path), device=device, default_dtype=dtype)
     finally:
         torch.jit.load = load
 
@@ -390,6 +400,75 @@ def spun(row, per_chain: int, chain: int, angle: float, along):
     return row
 
 
+def stretch_of(u, lo: float, hi: float, width: float):
+    """1 on the stretch from ``lo`` to ``hi`` of a ring of length 1, 0 off it, coming on over ``width`` at each end.
+
+    ``u`` is where an atom stands round the ring; the two ramps are centred on ``lo`` and ``hi``."""
+    def step(x):  # 0 below -1/2, 1 above 1/2, smooth between
+        t = np.clip(x + 0.5, 0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+
+    u = np.asarray(u, dtype=float)
+    return np.max([step((u + k - lo) / width) * step((hi - u - k) / width) for k in (-1.0, 0.0, 1.0)], axis=0)
+
+
+def twisted(row, part: slice, along, lo: float, hi: float, width: float, angle: float = np.pi):
+    """A row cell with a stretch of one chain turned about the chain's own axis, in place.
+
+    ``part`` is the chain's atoms, the first of them where the chain's length is counted from; ``lo``,
+    ``hi`` and ``width`` are fractions of the cell's edge along the chain.  Each atom is turned by where
+    it stands along the chain, so the stretch is joined to the rest by two twists of opposite hands and
+    the chain stays whole: a twist and its opposite, which is what a chain can make without being cut.
+    A start for a relaxation, not a structure (a twist a repeat wide bends the backbone's bonds)."""
+    pos = row.positions[part]
+    length = float(np.linalg.norm(row.cell.array[2]))
+    u = ((pos - pos[0]) @ along / length) % 1.0
+    theta = angle * stretch_of(u, lo, hi, width)
+    centre = pos.mean(axis=0)
+    d = pos - centre
+    cos, sin = np.cos(theta)[:, None], np.sin(theta)[:, None]
+    row.positions[part] = centre + d * cos + np.cross(along, d) * sin + np.outer(d @ along, along) * (1.0 - cos)
+    return row
+
+
+def hinge(atoms, along) -> float:
+    """Where along a repeat its soft link stands, as a fraction of the repeat: the first carbon with two hydrogens.
+
+    An amide's or a urea's own bonds do not turn (15 to 20 kcal/mol); the methylene between them does,
+    so a twist is started there.  A chain without one gets its twist at the first atom."""
+    symbols = atoms.get_chemical_symbols()
+    pos = atoms.positions
+    length = float(np.linalg.norm(atoms.cell.array[2])) / int(atoms.info.get("triage_repeats", 1))
+    for c in range(len(atoms)):
+        if symbols[c] == "C" and sum(1 for h in range(len(atoms)) if symbols[h] == "H" and np.linalg.norm(pos[h] - pos[c]) < 1.25) >= 2:
+            return float(((pos[c] - pos[0]) @ along / length) % 1.0)
+    return 0.0
+
+
+def facing(row, part: slice, per_repeat: int, along, reference=None):
+    """Which way each repeat of a chain faces, in degrees about the chain's axis: its C=O against ``reference``.
+
+    The reference is a vector across the chain (None: the first repeat's own C=O).  A chain with no
+    oxygen returns an empty list.  It is how a relaxed cell says which of its repeats are still turned."""
+    symbols = row.get_chemical_symbols()[part]
+    pos = row.positions[part]
+    out = []
+    for r in range(len(pos) // per_repeat):
+        block = range(r * per_repeat, (r + 1) * per_repeat)
+        oxygens = [i for i in block if symbols[i] == "O"]
+        if not oxygens:
+            return []
+        o = oxygens[0]
+        c = min((i for i in range(len(pos)) if symbols[i] == "C"), key=lambda i: np.linalg.norm(pos[i] - pos[o]))
+        v = pos[o] - pos[c]
+        v = v - (v @ along) * along
+        if reference is None:
+            reference = v
+        ref = reference - (reference @ along) * along
+        out.append(float(np.degrees(np.arctan2(np.cross(ref, v) @ along, ref @ v))))
+    return out
+
+
 def band(images, calc, fmax: float, steps: int, end_steps: int = 150):
     """Relax the two ends and settle the images between them as a band, the cell held: in a pretrained potential.
 
@@ -543,6 +622,114 @@ def nucleus(args):
               f"in the potential, end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
 
 
+def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0):
+    """A row of ``rows`` chains ``long`` repeats long with a wall each side of its turned half.
+
+    The chains of the second half of the row are turned whole, but for the first of them, which is
+    the chain beside the wall: of that one ``turned`` repeats are turned and the rest are not, the
+    stretch running from one repeat's soft link to another's, each end a twist ``width`` repeats
+    wide.  ``turned = long`` is the row at rest with its two walls, ``turned = 0`` the same row with
+    one wall a chain further on, and anything between is a wall part of the way over."""
+    a = rebased(a)
+    n = len(a)
+    per_chain = n * long
+    along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+    mesh = mesh_of(a)
+    mesh[0] = max(1, round(mesh[0] / rows))
+    mesh[2] = max(1, round(mesh[2] / long))
+    row = a.repeat([rows, 1, long])
+    mover = rows // 2
+    for chain in range(mover + 1, rows):
+        spun(row, per_chain, chain, np.pi, along)
+    if turned >= long:
+        spun(row, per_chain, mover, np.pi, along)
+    elif turned > 0:
+        if turned < width or long - turned < width:
+            raise ValueError(f"{turned} of {long} repeats turned leaves no room for two twists {width} repeat(s) wide")
+        h = hinge(a, along)
+        twisted(row, slice(mover * per_chain, (mover + 1) * per_chain), along, h / long, (turned + h) / long, width / long)
+    row.info.update(a.info)
+    row.info.update(triage_repeats=rows * long * int(a.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh))
+    return row
+
+
+def kink(args):
+    """The smallest move of a bonded row in a chain that is long: a wall stepping on by a twist that travels.
+
+    ``wall`` turns a whole chain at once, which a chain one repeat long must and a real one does not:
+    its top grows with the chain's length.  Here the cell is ``--long`` repeats long and the chain
+    beside the wall is turned over a part of its length, so that what is paid is the two twists at
+    the ends of the part and not the length.  Every state is relaxed in the pretrained potential with
+    the cell held and its energy taken in double precision; ``points`` then asks DFT for the same
+    states.  With the wall's step read off the two whole states (none turned, all turned), what a
+    state part of the way has above the line between them is its pair of twists."""
+    from ase.io import read, write
+    from ase.optimize import LBFGS
+
+    calc = model(args.model, dtype="float32", device=args.device)
+    exact = model(args.model, device=args.device)
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        a = rebased(read(src / f"{name}.relaxed.xyz"))
+        n = len(a)
+        along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+        tag = f"{name}_kink{args.long}"
+        work = src / "work" / tag
+        work.mkdir(parents=True, exist_ok=True)
+        counts = sorted({int(v) for v in args.turned.split(",")} | {0, args.long}, reverse=True) if args.turned else [args.long, args.long // 2, 0]
+        mover = slice((args.rows // 2) * n * args.long, (args.rows // 2 + 1) * n * args.long)
+        reference = None  # the way the chain faces in the polar cell: its C=O across the chain
+        if "O" in a.get_chemical_symbols():
+            o = a.get_chemical_symbols().index("O")
+            c = min((i for i in range(n) if a.symbols[i] == "C"), key=lambda i: np.linalg.norm(a.positions[i] - a.positions[o]))
+            reference = a.positions[o] - a.positions[c]
+        states = []
+        for k in counts:
+            store = work / f"turned_{k}.xyz"
+            row = read(store) if store.exists() else None
+            # a state that stopped short of the force asked for is taken further, from where it stopped
+            if row is None or (args.more and float(row.info["triage_kink_force"]) > args.fmax):
+                t0 = time.time()
+                before = int(row.info["triage_kink_steps"]) if row is not None else 0
+                if row is None:
+                    row = kink_row(a, args.rows, args.long, k, args.width)
+                info = dict(row.info)
+                if nearest(row) < 0.6:
+                    raise ValueError(f"{tag}: the start with {k} repeats turned has two atoms {nearest(row):.2f} A apart")
+                row.calc = calc
+                opt = LBFGS(row, logfile=None)
+                for _ in opt.irun(fmax=args.fmax, steps=args.more if before else args.steps):
+                    if opt.nsteps and opt.nsteps % 25 == 0:
+                        print(f"  {tag}, {k} turned: step {before + opt.nsteps}, largest force {np.linalg.norm(row.get_forces(), axis=1).max():.3f} eV/A, {time.time() - t0:.0f} s", flush=True)
+                force = float(np.linalg.norm(row.get_forces(), axis=1).max())
+                row.calc = exact
+                energy = float(row.get_potential_energy())
+                row.calc = None
+                row.info.update(info)
+                row.info.update(triage_kink_turned=k, triage_kink_long=args.long, triage_kink_ev=energy, triage_kink_steps=before + int(opt.nsteps), triage_kink_force=force)
+                write(store, row, format="extxyz")
+            if nearest(row) < 0.85:
+                raise ValueError(f"{tag}: the state with {k} repeats turned has two atoms {nearest(row):.2f} A apart: not a structure")
+            faces = facing(row, mover, n, along, reference)
+            states.append(row)
+            print(f"{tag}: {k} of {args.long} repeats turned, {len(row)} atoms, {int(row.info['triage_kink_steps'])} steps to {float(row.info['triage_kink_force']):.3f} eV/A, "
+                  f"the chain's repeats face {' '.join(f'{v:+.0f}' for v in faces)} degrees", flush=True)
+        e = {int(s.info["triage_kink_turned"]): float(s.info["triage_kink_ev"]) for s in states}
+        whole, none = e[args.long], e[0]
+        out = []
+        for index, s in enumerate(states):
+            k = int(s.info["triage_kink_turned"])
+            c = s.copy()
+            c.info.update(s.info)
+            c.info.update(triage_turn_of=name, triage_turn_edge=1, triage_turn_image=index, triage_turn_ev=e[k] - whole, triage_turning_repeats=1,
+                          triage_path_unit="for the cell")
+            out.append(c)
+            line = whole + (1 - k / args.long) * (none - whole)
+            print(f"{tag}: {k} turned: {(e[k] - whole) * KCAL:+.2f} kcal/mol for the cell above the row at rest in the potential"
+                  + ("" if k in (0, args.long) else f", {(e[k] - line) * KCAL:+.2f} above the line between the two whole states (its pair of twists)"), flush=True)
+        write(src / f"{tag}.path.xyz", out, format="extxyz")
+
+
 def turn(args):
     """How locked a chain is: the way from the polar cell to the one with every second chain turned.
 
@@ -574,33 +761,108 @@ def turn(args):
               f"end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
 
 
+def seed(args):
+    """A folder of frames made again from what the repository keeps: the relaxed cells, their records, the paths.
+
+    The working folder of the machine this was written on is not in the repository; its relaxed
+    cells are (``table --cells``), with the record of each (``table --out``).  On another machine
+    this puts them back where the other subcommands look, and nothing that is there is overwritten."""
+    import shutil
+
+    from ase.io import read, write
+
+    rows = {r["name"]: r for r in json.loads(Path(args.table).read_text())["rows"]}
+    args.frames.mkdir(parents=True, exist_ok=True)
+    made = []
+    for c in read(args.cells, index=":"):
+        r = rows.get(str(c.info.get("name")))
+        if r is None or (args.frames / f"{r['name']}.relaxed.xyz").exists():
+            continue
+        c.calc = None
+        c.info = {"triage_chain": r["chain"], "triage_state": r["state"], "triage_repeats": int(r["repeats"]), "triage_kind": r["kind"], "kmesh": r["kmesh"]}
+        if "opposed_of" in r:
+            c.info["triage_opposed_of"] = r["opposed_of"]
+        write(args.frames / f"{r['name']}.relaxed.xyz", c, format="extxyz")
+        (args.frames / f"{r['name']}.json").write_text(json.dumps(r, indent=1))
+        made.append(r["name"])
+    if args.paths:
+        for p in sorted(Path(args.paths).glob("*.path.xyz")):
+            if not (args.frames / p.name).exists():
+                shutil.copy(p, args.frames / p.name)
+                made.append(p.name[:-len(".xyz")])
+    print(f"{args.frames}: {len(made)} put back ({' '.join(made)})", flush=True)
+
+
 def points(args):
-    """DFT's energy of every image of a path ``turn`` made (the cell and the atoms as they are)."""
-    from ase.io import read
+    """DFT's energy of every image of a path ``turn`` made (the cell and the atoms as they are).
+
+    With ``--relax`` each image's atoms are relaxed in DFT first, the cell held (a state the
+    potential relaxed is DFT's start, not DFT's state); a relaxation that was stopped goes on from
+    where it had got to, and the relaxed images are written beside the path."""
+    from ase.io import read, write
 
     src = Path(args.frames)
     for name in args.names.split(","):
         images = read(src / f"{name}.path.xyz", index=":")
         if args.ends:  # the two relaxed ends only: a band's middle images are not always structures
             images = [images[0], images[-1]]
-        work = src / "work" / (name + ("_ends" if args.ends else ""))
+        if args.images:
+            images = [images[int(v)] for v in args.images.split(",")]
+        work = src / "work" / (name + ("_ends" if args.ends else "") + ("_relax" if args.relax else ""))
         reps = int(images[0].info.get("triage_turning_repeats", int(images[0].info["triage_repeats"]) // 2))  # of the chain that turns
         energies = []
+        relaxed = []
         t0 = time.time()
         for k, im in enumerate(images):
+            k = int(args.images.split(",")[k]) if args.images else k
             out = work / f"image_{k}.out"
+            if args.relax:
+                if not finished(out):
+                    begin = im
+                    if out.exists() and out.read_text(errors="replace").count("\n!") > 1:
+                        begin = read(out, format="espresso-out", index=-1)
+                        begin.info.update(im.info)
+                        begin.calc = None
+                        out.rename(work / f"image_{k}.stopped{len(list(work.glob(f'image_{k}.stopped*')))}.out")
+                    run(args.pw, args.np, pw_input(begin, args.pseudo, work / f"scratch_{k}", "relax"), work, f"image_{k}", pools=args.pools)
+                if not finished(out):
+                    print(f"{name}: image {k} did not finish relaxing ({out})", flush=True)
+                    energies.append(float("nan"))
+                    continue
+                b, energy, _ = read_final(out)
+                b.info.update(im.info)
+                b.info["triage_dft_ev"] = energy
+                relaxed.append(b)
+                energies.append(energy)
+                continue
             if not (out.exists() and "JOB DONE" in out.read_text(errors="replace")):
-                run(args.pw, args.np, pw_input(im, args.pseudo, work / f"scratch_{k}", "scf"), work, f"image_{k}")
+                run(args.pw, args.np, pw_input(im, args.pseudo, work / f"scratch_{k}", "scf"), work, f"image_{k}", pools=args.pools)
             text = out.read_text(errors="replace")
             ry = [float(line.split("=")[1].split()[0]) for line in text.splitlines() if line.startswith("!")]
             energies.append(ry[-1] * 13.605693123 if ry else float("nan"))
+        if args.relax:
+            if relaxed:
+                write(src / f"{name}.dft.path.xyz", relaxed, format="extxyz")
+            name = f"{name}.dft"
         rel = [(e - energies[0]) * KCAL / reps for e in energies]
         record = {"name": name, "kind": "path", "of": images[0].info["triage_turn_of"], "edge": int(images[0].info["triage_turn_edge"]),
                   "turning_repeats": reps, "energy_ev": energies, "kcal_per_turning_repeat": rel, "top_kcal_per_turning_repeat": float(np.nanmax(rel)),
                   "potential_kcal_per_turning_repeat": [float(im.info["triage_turn_ev"]) * KCAL / reps for im in images]}
         record["ends_only"] = bool(args.ends)
+        unit = str(images[0].info.get("triage_path_unit", "a repeat of the turning chain"))
+        record["unit"] = "kcal/mol " + unit
+        if "triage_kink_turned" in images[0].info:
+            # states of a wall part of the way over: what each has above the line between the two whole ones
+            turned = [int(im.info["triage_kink_turned"]) for im in images]
+            long = int(images[0].info.get("triage_kink_long", max(turned)))
+            record["turned_repeats"] = turned
+            if 0 in turned and long in turned:  # both whole states are among the images read
+                whole, none = rel[turned.index(long)], rel[turned.index(0)]
+                record["pair_of_twists_kcal"] = [float(v - whole - (1 - k / long) * (none - whole)) for v, k in zip(rel, turned)]
+                print(f"{name}: DFT, repeats turned {' '.join(str(k) for k in turned)}: above the line between the two whole states "
+                      f"{' '.join(f'{v:+.2f}' for v in record['pair_of_twists_kcal'])} kcal/mol for the cell", flush=True)
         (src / f"{name}.path.json").write_text(json.dumps(record, indent=1))
-        print(f"{name}: DFT on {len(images)} images, top {np.nanmax(rel):.2f} kcal/mol a repeat of the turning chain, end {rel[-1]:+.2f}; "
+        print(f"{name}: DFT on {len(images)} images, top {np.nanmax(rel):.2f} kcal/mol {unit}, end {rel[-1]:+.2f}; "
               f"profile {' '.join(f'{v:.2f}' for v in rel)}, {time.time() - t0:.0f} s", flush=True)
 
 
@@ -924,6 +1186,11 @@ def table(args):
                      "stretch": "nN per unit strain of the chain", "berry": "C/m2", "piezo": "c GPa, e C/m2 (pN/nm2 per V/um), d pm/V"},
            "rows": rows, "paths": paths}
     for q in paths:
+        if "pair_of_twists_kcal" in q:
+            print(f"{q['name']:20s} a wall of {q['of']} part of the way over, repeats turned {' '.join(str(k) for k in q['turned_repeats'])}: "
+                  f"{' '.join(f'{v:+.2f}' for v in q['kcal_per_turning_repeat'])} kcal/mol for the cell, of which the pair of twists "
+                  f"{' '.join(f'{v:+.2f}' for v in q['pair_of_twists_kcal'])} (DFT on the potential's states)")
+            continue
         print(f"{q['name']:20s} turning every second chain of {q['of']}: top {q['top_kcal_per_turning_repeat']:.2f} kcal/mol a repeat that turns, "
               f"end {q['kcal_per_turning_repeat'][-1]:+.2f} (DFT on the potential's path)")
     if args.cells:
@@ -964,22 +1231,22 @@ def main():
     b = sub.add_parser("build")
     b.add_argument("--chains", required=True)
     b.add_argument("--out", type=Path, required=True)
-    b.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    b.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     b.add_argument("--box", type=float, default=14.0)
     b.set_defaults(run=build)
     d = sub.add_parser("dft")
     d.add_argument("--frames", type=Path, required=True)
     d.add_argument("--names", default="")
-    d.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
-    d.add_argument("--pseudo", default="/opt/pseudo")
-    d.add_argument("--np", type=int, default=4)
+    d.add_argument("--pw", default=PW_DEFAULT)
+    d.add_argument("--pseudo", default=PSEUDO_DEFAULT)
+    d.add_argument("--np", type=int, default=NP_DEFAULT)
     d.add_argument("--strain", type=float, default=0.01)
     d.add_argument("--no-stretch", action="store_true")
     d.set_defaults(run=dft)
     k = sub.add_parser("pack")
     k.add_argument("--frames", type=Path, required=True)
     k.add_argument("--names", required=True)
-    k.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    k.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     k.add_argument("--starts", type=int, default=24)
     k.add_argument("--steps", type=int, default=300)
     k.add_argument("--keep", type=int, default=2)
@@ -988,32 +1255,32 @@ def main():
     y = sub.add_parser("berry")
     y.add_argument("--frames", type=Path, required=True)
     y.add_argument("--names", required=True)
-    y.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
-    y.add_argument("--pseudo", default="/opt/pseudo")
-    y.add_argument("--pseudo-berry", default="/opt/pseudo_nc", help="norm-conserving files, for the Berry phase")
-    y.add_argument("--np", type=int, default=4)
+    y.add_argument("--pw", default=PW_DEFAULT)
+    y.add_argument("--pseudo", default=PSEUDO_DEFAULT)
+    y.add_argument("--pseudo-berry", default=PSEUDO_NC_DEFAULT, help="norm-conserving files, for the Berry phase")
+    y.add_argument("--np", type=int, default=NP_DEFAULT)
     y.add_argument("--string", type=int, default=6)
     y.set_defaults(run=berry)
     z = sub.add_parser("piezo")
     z.add_argument("--frames", type=Path, required=True)
     z.add_argument("--names", required=True)
-    z.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
-    z.add_argument("--pseudo", default="/opt/pseudo")
-    z.add_argument("--pseudo-berry", default="/opt/pseudo_nc", help="norm-conserving files, for the Berry phase")
-    z.add_argument("--np", type=int, default=4)
+    z.add_argument("--pw", default=PW_DEFAULT)
+    z.add_argument("--pseudo", default=PSEUDO_DEFAULT)
+    z.add_argument("--pseudo-berry", default=PSEUDO_NC_DEFAULT, help="norm-conserving files, for the Berry phase")
+    z.add_argument("--np", type=int, default=NP_DEFAULT)
     z.add_argument("--string", type=int, default=6)
     z.add_argument("--strain", type=float, default=0.01)
     z.set_defaults(run=piezo)
     o = sub.add_parser("opposed")
     o.add_argument("--frames", type=Path, required=True)
     o.add_argument("--names", required=True)
-    o.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    o.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     o.add_argument("--steps", type=int, default=200)
     o.set_defaults(run=opposed)
     u = sub.add_parser("turn")
     u.add_argument("--frames", type=Path, required=True)
     u.add_argument("--names", required=True, help="NAME:EDGE, the polar cell and the edge (1 or 2) it is doubled along")
-    u.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    u.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     u.add_argument("--images", type=int, default=5)
     u.add_argument("--fmax", type=float, default=0.15)
     u.add_argument("--steps", type=int, default=80)
@@ -1021,7 +1288,7 @@ def main():
     v = sub.add_parser("wall")
     v.add_argument("--frames", type=Path, required=True)
     v.add_argument("--names", required=True)
-    v.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    v.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     v.add_argument("--images", type=int, default=5)
     v.add_argument("--fmax", type=float, default=0.15)
     v.add_argument("--steps", type=int, default=80)
@@ -1029,7 +1296,7 @@ def main():
     x = sub.add_parser("nucleus")
     x.add_argument("--frames", type=Path, required=True)
     x.add_argument("--names", required=True)
-    x.add_argument("--model", type=Path, default=Path("/home/user/rowansci/egret-public/compiled_models/EGRET_1.model"))
+    x.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     x.add_argument("--methyl", action="store_true", help="make the N-H that holds the turning chain an N-CH3 first")
     x.add_argument("--images", type=int, default=5)
     x.add_argument("--fmax", type=float, default=0.15)
@@ -1037,14 +1304,36 @@ def main():
     x.add_argument("--settle", type=int, default=150)
     x.add_argument("--gap", type=float, default=1.6, help="A of room made along the row for the methyl before the cell is settled")
     x.set_defaults(run=nucleus)
+    j = sub.add_parser("kink")
+    j.add_argument("--frames", type=Path, required=True)
+    j.add_argument("--names", required=True)
+    j.add_argument("--model", type=Path, default=MODEL_DEFAULT)
+    j.add_argument("--device", default="cpu", help="cpu, or cuda for a card (an AMD card under PyTorch's ROCm build too)")
+    j.add_argument("--rows", type=int, default=4, help="chains in the row: half face one way, half the other")
+    j.add_argument("--long", type=int, default=4, help="repeats along the chain")
+    j.add_argument("--turned", default="", help="how many repeats of the chain beside the wall are turned, e.g. 2,3 (the two whole states are always made)")
+    j.add_argument("--width", type=float, default=1.0, help="repeats over which each twist is started")
+    j.add_argument("--fmax", type=float, default=0.05)
+    j.add_argument("--steps", type=int, default=300)
+    j.add_argument("--more", type=int, default=0, help="steps more for a state already made that stopped above --fmax")
+    j.set_defaults(run=kink)
     w = sub.add_parser("points")
     w.add_argument("--frames", type=Path, required=True)
     w.add_argument("--names", required=True)
-    w.add_argument("--pw", default="/opt/mm/qe/bin/pw.x")
-    w.add_argument("--pseudo", default="/opt/pseudo")
-    w.add_argument("--np", type=int, default=4)
+    w.add_argument("--pw", default=PW_DEFAULT)
+    w.add_argument("--pseudo", default=PSEUDO_DEFAULT)
+    w.add_argument("--np", type=int, default=NP_DEFAULT)
     w.add_argument("--ends", action="store_true", help="the first and the last image only")
+    w.add_argument("--images", default="", help="these images only, e.g. 0,2")
+    w.add_argument("--relax", action="store_true", help="relax each image's atoms in DFT first, the cell held")
+    w.add_argument("--pools", type=int, default=None, help="k-point pools the processes are split into")
     w.set_defaults(run=points)
+    s0 = sub.add_parser("seed")
+    s0.add_argument("--frames", type=Path, required=True)
+    s0.add_argument("--cells", type=Path, default=Path("docs/predictions/chain_triage_cells.extxyz"))
+    s0.add_argument("--table", type=Path, default=Path("docs/predictions/chain_triage.json"))
+    s0.add_argument("--paths", type=Path, default=Path("docs/predictions/chain_triage_paths"))
+    s0.set_defaults(run=seed)
     t = sub.add_parser("table")
     t.add_argument("--frames", type=Path, required=True)
     t.add_argument("--out", type=Path, default=None)

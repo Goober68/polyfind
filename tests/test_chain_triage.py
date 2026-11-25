@@ -179,6 +179,68 @@ def test_methylated_swaps_one_n_h_for_n_ch3_and_keeps_the_chains_in_place():
         assert np.isclose(np.degrees(np.arccos(to_h @ to_n / 1.09 / 1.46)), 109.47, atol=0.05)
 
 
+def test_a_stretch_is_one_inside_none_outside_and_goes_round_the_ring():
+    s = CT.stretch_of([0.0, 0.2, 0.3, 0.5, 0.7, 0.8, 0.95], 0.2, 0.7, 0.2)
+    assert np.allclose(s, [0.0, 0.5, 1.0, 1.0, 0.5, 0.0, 0.0])
+    round_the_end = CT.stretch_of([0.0, 0.05, 0.3, 0.5, 0.8, 0.9, 0.99], 0.8, 1.1, 0.1)
+    assert np.allclose(round_the_end, [1.0, 1.0, 0.0, 0.0, 0.5, 1.0, 1.0])
+    ramp = CT.stretch_of(np.linspace(0.1, 0.3, 21), 0.2, 0.7, 0.2)
+    assert np.all(np.diff(ramp) >= 0) and ramp[0] == 0.0 and ramp[-1] == 1.0
+
+
+def _zigzag(repeats: int = 4):
+    """A chain of N-H, C=O and CH2 along z, one to a cell 6 A square across: a repeat of 3.75 A."""
+    from ase import Atoms
+
+    unit = [("N", [0.4, 0.0, 0.0]), ("H", [1.4, 0.0, 0.0]), ("C", [-0.4, 0.0, 1.25]), ("O", [-1.6, 0.0, 1.25]),
+            ("C", [0.4, 0.0, 2.5]), ("H", [1.0, 0.9, 2.5]), ("H", [1.0, -0.9, 2.5])]
+    a = Atoms([s for s, _ in unit], positions=[p for _, p in unit], cell=[6.0, 6.0, 3.75], pbc=True)
+    a.info.update(triage_chain="x", triage_state="tt", triage_repeats=1, triage_kind="crystal", kmesh="4 4 6")
+    return a
+
+
+def test_a_twisted_stretch_is_half_round_and_the_rest_is_where_it_was():
+    a = _zigzag()
+    row = a.repeat([1, 1, 4])
+    before = row.positions.copy()
+    along = np.array([0.0, 0.0, 1.0])
+    # from the methylene of the first repeat to that of the third, each twist half a repeat wide
+    h = CT.hinge(a, along)
+    assert h == pytest.approx(2.5 / 3.75)
+    CT.twisted(row, slice(0, len(row)), along, h / 4, (2 + h) / 4, 0.5 / 4)
+    centre = before.mean(axis=0)
+    z = before[:, 2]
+    inside = (z > 2.5 + 0.95) & (z < 10.0 - 0.95)
+    outside = (z < 2.5 - 0.95) | (z > 10.0 + 0.95)
+    assert inside.sum() >= 8 and outside.sum() >= 8
+    assert np.allclose(row.positions[outside], before[outside])
+    assert np.allclose(row.positions[inside][:, :2] - centre[:2], -(before[inside][:, :2] - centre[:2]))
+    assert np.allclose(row.positions[:, 2], before[:, 2])  # nothing moves along the chain
+    assert np.allclose(np.linalg.norm(row.positions[:, :2] - centre[:2], axis=1), np.linalg.norm(before[:, :2] - centre[:2], axis=1))
+    assert CT.facing(row, slice(0, len(row)), len(a), along) == pytest.approx([0.0, 180.0, 180.0, 0.0], abs=1e-6)
+
+
+def test_a_kink_row_has_its_walls_and_its_part_turned_chain():
+    a = _zigzag()
+    n, long = len(a), 4
+    along = np.array([0.0, 0.0, 1.0])
+    reference = np.array([-1.0, 0.0, 0.0])  # the C=O of the chain as made
+
+    def faces(row):
+        return [[abs(round(v)) for v in CT.facing(row, slice(c * n * long, (c + 1) * n * long), n, along, reference)] for c in range(4)]
+
+    rest = CT.kink_row(a, 4, long, long)
+    assert len(rest) == 4 * long * n and rest.info["triage_repeats"] == 16 and rest.info["kmesh"] == "1 4 2"
+    assert faces(rest) == [[0] * 4, [0] * 4, [180] * 4, [180] * 4]
+    assert faces(CT.kink_row(a, 4, long, 0)) == [[0] * 4, [0] * 4, [0] * 4, [180] * 4]
+    part = CT.kink_row(a, 4, long, 2, 0.5)
+    assert faces(part) == [[0] * 4, [0] * 4, [0, 180, 180, 0], [180] * 4]
+    assert np.allclose(part.positions[:2 * n * long], rest.positions[:2 * n * long])  # the chains that do not move
+    assert np.allclose(part.positions[3 * n * long:], rest.positions[3 * n * long:])
+    with pytest.raises(ValueError):
+        CT.kink_row(a, 4, long, 1, 1.5)
+
+
 def test_nearest_reads_a_collapse_across_the_cell_face():
     from ase import Atoms
 

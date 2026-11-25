@@ -1,0 +1,13 @@
+# The queue of the PI's MI100 machine (examples/mi100_runner.sh): one job a line, run in order,
+# append-only (the runner counts lines).  A line is a script of this folder and its arguments.
+#
+# 1. What the machine is, and whether the card, the potential and DFT give the stored numbers on it.
+mi100_check.sh
+# 2. The urea row's wall stepping on by a travelling twist, in the potential on the card, in cells
+#    six and eight repeats long (216 and 288 atoms): how the pair of twists' cost depends on how
+#    far apart the two are.  The four-repeat cell was done on the other machine's processors.
+triage.sh kink --names urea1_tt_x1 --device cuda --long 6 --turned 2,3,4
+triage.sh kink --names urea1_tt_x1 --device cuda --long 8 --turned 2,3,4,5,6
+# 3. The four-repeat states relaxed in DFT on the processors, the cell held (144 atoms a state):
+#    the pair of twists by DFT's own structures and not the potential's.
+triage.sh points --names urea1_tt_x1_kink4 --relax
