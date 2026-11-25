@@ -1024,14 +1024,20 @@ right": true at one registry, not along it).
         chains one way and three the other becomes three and two, the same row turned half
         round about the chains, so the two whole states are level by symmetry. 180 atoms at
         three repeats; DFT by scaling about 9 GB and 40 minutes a cell, NOT YET TRIED.
-        RUNNING WHEN THIS WAS WRITTEN: `kink --frames /opt/dft/triage --names urea1m_tt_x1
-        --rows 5 --long 3 --turned 3,0 --only` (the two whole states in the potential; log
-        `log_urea1m_kink3r5.txt`; work folder `work/urea1m_tt_x1_kink3r5/`). CHECK FIRST that
-        the two come out level in the potential (to about 0.1 kcal/mol): if not, the
-        relaxations found different resting places and the lower one's mirror is the other
-        state. THEN, NOTHING BESIDE A DFT JOB: (i) `swing --frames /opt/dft/triage --names
+        THE FIVE-CHAIN ROW'S TWO WHOLE STATES (21:46 UTC; `kink --frames /opt/dft/triage
+        --names urea1m_tt_x1 --rows 5 --long 3 --turned 3,0 --only`, 168 and 166 steps, 7.5 s
+        a step; work folder `work/urea1m_tt_x1_kink3r5/`): LEVEL IN THE POTENTIAL, 0.12
+        kcal/mol apart, AND MIRROR IMAGES to a degree: at rest the five chains face +24 -64
+        -169 +152 -167, turned +13 -29 +11 +116 -156 (the first list read backwards and
+        turned half round). The chain beside the N-H wall on the far side from the mover is
+        the one turned a long way off flat (-64, then +116 on the other side): the wall has
+        a structure three chains wide and all three move when it steps.
+        RUNNING WHEN THIS WAS WRITTEN: (i) `swing --frames /opt/dft/triage --names
         urea1m_tt_x1 --rows 5 --long 3 --start turned_3 --carbonyl 0 --by 110 --way m --images
-        9`, and again from its last cell, as in the four-chain row; (ii) one DFT single point
+        9` (log `log_urea1m_r5_swing3m.txt`; the mover goes from -169 down through +90, the
+        way the four-chain row's went), THEN the same again `--start
+        swing_turned_3_c0m_9_free`, as in the four-chain row. NOTHING BESIDE A DFT JOB.
+        (ii) one DFT single point
         on the row at rest to see that 180 atoms fit (`points --names <path> --images 0`);
         (iii) DFT on the top and the far side; (iv) the second urea's step from the far side
         (`--carbonyl 1`), where the methyl between the two turned ureas has to cross the
