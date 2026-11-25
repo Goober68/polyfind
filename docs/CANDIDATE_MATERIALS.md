@@ -2078,8 +2078,8 @@ potential's.
     one. It is less far from level than the plain row, whose first urea fell 11.0 behind 23.6
     and had 34.6 back. Whether 4.2 is the chain or the row is not known: every chain of a
     four-chain row is beside a wall, and the plain row's two whole states are 5.2 a repeat
-    apart for that reason alone (reading 5). The whole wall chain turned in this row would say
-    how much of the 4.2 is the row; it has not been run.
+    apart for that reason alone (reading 5). The whole wall chain turned in this row says how
+    much is the row (reading 20): more than all of it.
 17. *The far side is not a bonded state in the potential's cell.* The turned urea faces -18
     beside neighbours at -38, with no hydrogen within 2.6 A of its oxygen; the nearest things
     to it are a nitrogen of the chain on the other side, 2.05 A from one of its hydrogens, and
@@ -2091,21 +2091,49 @@ potential's.
     0.2 above, 0.2 below and 0.6 below DFT. +85 and +72: 1.6 and 1.5 below. +44 and +31: 0.5
     and 0.1 below. -11 and the far side: 4.8 and 5.9 ABOVE. So it cannot read the level in a
     wider row either, and a row six chains wide is 216 atoms, beyond DFT on this machine.
-19. *On the target's terms.* Low activation is two numbers. The hump, at the cells read, is
-    at the mark, which the plain chain's was three times over. The level is not there in this
-    row (4.2 against the field's 0.06 a monomer), and this row cannot say whether that is the
-    chain. Easy-ish return: 11.3 back as it stands. Strong action is not computed for this
-    chain: the urea's dipole is in 1.44 times the plain chain's volume (reading 13) and the
-    stiffness has not been run. This is a perfect row with a wall in it, the baseline for this
-    chain and not a film; three repeats long; one sheet thick, so a column of ureas turns
-    together; the cell held; one hand of the chain; DFT on the potential's structures. It is
-    activation only, a partial result: no strain, loss, frequency, blocked force or speed.
+19. *On the target's terms, as far as this cell can say.* Low activation is two numbers, the
+    hump and the level, and this cell gives neither for the chain: its 7.1 and its -4.2 are
+    read in a cell that leans 14.3 a repeat toward the far side (reading 20). What stands is
+    what the hump is made of: nothing is squeezed on the way, where the plain row's top was a
+    hydrogen 1.60 A from an oxygen. Easy-ish return: not known for the same reason. Strong
+    action is not computed for this chain: the urea's dipole is in 1.44 times the plain
+    chain's volume (reading 13) and the stiffness has not been run. This is a perfect row with
+    a wall in it, the baseline for this chain and not a film; three repeats long; one sheet
+    thick, so a column of ureas turns together; the cell held; one hand of the chain; DFT on
+    the potential's structures. It is activation only, a partial result: no strain, loss,
+    frequency, blocked force or speed.
+20. *The four-chain cell itself pulls this step over: with the whole wall chain turned the row
+    is 43.0 BELOW the row at rest in DFT (24.3 in the potential).* That is 14.3 a repeat, where
+    the plain row's two whole states are 5.2 a repeat apart. (`kink --long 3 --turned 3,0
+    --only`, then `points`; raw -1747.59548256 Ry.) In the turned row three chains lie bonded
+    side by side (facing +10, -12, +6; twelve bonds 2.07 to 2.24 A) and the fourth lies alone
+    between the two walls with no bond. The row at rest has the same twelve bonds, 2.27 to
+    2.29 A long, with its chains turned 18 to 40 degrees off flat. Three things follow.
+    (a) Against the line between this cell's two whole states the first urea over is 10.1
+    ABOVE (-4.2 against -14.3), where the plain row's was 5.8 below its line. If the lean were
+    shared evenly among the three ureas, the first urea over in a level row would lie about 10
+    above the row at rest and not 4 below; the plain row shows the lean need not be shared
+    evenly, so that is a size and not a number.
+    (b) A lean lowers the hump of a step taken down it. So 7.1 is this cell's hump and not the
+    chain's, it cannot be set beside the 7.6 mark, and the fall from the plain row's 23.6 is
+    part the room between the sheets and part the lean, in shares this cell cannot give.
+    (c) The first urea over has not taken its methyls across. They lean (1.22 to 1.52 A off
+    the sheet, from 2.12) on the face they were on. The whole chain turned has them on the
+    other face (1.91 A off it), as the chain's hand requires (reading 13). So two thirds of
+    the wall's step, with the methyls' crossing of the sheet in it, has not been walked, and
+    its hump is not known.
+    What reads the chain is a row whose two whole states are level, and one five chains wide
+    is: two chains one way and three the other becomes three and two when the wall chain
+    turns, which is the same row turned half round about the chains' direction (the cell's
+    third edge is square to the other two). At three repeats long it is 180 atoms, by scaling
+    about 9 GB and 40 minutes a cell in DFT on this machine, not yet tried.
 
 **Not done.** For the one-methyl row: DFT on the four cells not read (+58, +17, +4 and the
-held +44); the two ends relaxed in DFT (`points --relax`, hours a cell here); the whole wall chain
-turned, for how much of the far side's fall is the narrow row; the long way round; the second
-urea's step; the plain row three repeats long, for a like comparison; the chain's dipole and
-stiffness (section 6.1's numbers); the chain with two methyls. DFT on the rest of the spread
+held +44); the five-chain row, level by symmetry (reading 20), and in it the whole of the
+wall's step: the first urea, the second with the methyls' crossing, and the plain chain's the
+same way for a like comparison; the long way round; the ends relaxed in DFT (`points --relax`,
+hours a cell here); the chain's dipole and stiffness (section 6.1's numbers); the chain with
+two methyls. DFT on the rest of the spread
 row's path (the cells at -130 and -110, the one let go, and -89 again for the record), and its
 other way round. An ether in the turning urea. The plain row's cell at +106 let go, DFT on the
 cells between the ones read, and its second urea's step from the state with one over. The other
@@ -2125,7 +2153,8 @@ this section only until the job is run to its end;
 `urea1m_tt_x1_kink3_swing_swing_turned_3_c0m_9_free_c0m.path.xyz`, the one-methyl row's two
 scans, nine cells each, the second starting from the first's last; their records in
 `chain_triage.json` carry the DFT energies in eV, and the second's zero is its own first cell,
-5.93 above the row at rest).
+5.93 above the row at rest; `urea1m_tt_x1_kink3.path.xyz`, the one-methyl row at rest and with
+its whole wall chain turned).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 

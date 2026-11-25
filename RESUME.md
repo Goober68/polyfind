@@ -1006,25 +1006,42 @@ right": true at one registry, not along it).
         structures are (the potential's row at rest has its bonds 2.27 to 2.29 A long, DFT's
         crystal 1.90). The second path's record has its own zero (its first cell, the +44
         cell). A PARTIAL RESULT: activation only.
-        RUNNING WHEN THIS WAS WRITTEN: `points --frames /opt/dft/triage --names
-        urea1m_tt_x1_kink3_swing_turned_3_c0m --images 0,3,2,4,1,5 --np 4` (the cells beside
-        the top, +114 +85 +127 +72; log `log_urea1m_swing3m_dft2.txt`; finished cells are
-        kept, so give the same command again if it was stopped, then `table --frames
-        /opt/dft/triage --out docs/predictions/chain_triage.json --cells
-        docs/predictions/chain_triage_cells.extxyz` and fill the table in 6.3). NEXT, IN THIS
-        ORDER, NOTHING BESIDE A DFT JOB: (i) the whole wall chain turned, `kink --frames
-        /opt/dft/triage --names urea1m_tt_x1 --long 3 --turned 0 --only` in the potential (10
-        minutes), then one DFT single point on it: a third of it is the row's share of the
-        4.2; (ii) the two ends in DFT's own structures, `points --names
-        urea1m_tt_x1_kink3_swing_turned_3_c0m --images 0 --relax` and `points --names
-        urea1m_tt_x1_kink3_swing_swing_turned_3_c0m_9_free_c0m --images 8 --relax` (the cell
-        held; hours each; a stopped relaxation goes on when the command is given again; work
-        folders end `_relax`; join by raw energies); (iii) the rest of both scans' cells;
-        (iv) the long way round (`swing --start turned_3 --by 250 --way p`), the plain row
-        three repeats long for a like comparison, the second urea's step, and what Section
-        6.1 has for the plain chain (dipole, stiffness: `berry`, `piezo`). Scratch readers,
-        run from the repository: `mpath.py` and `allfacing.py` (facings, methyl heights,
-        bonds, contacts).
+        THE CELLS BESIDE THE TOP (20:28 UTC): +127 +1.52, +114 +5.31, +85 +5.32, +72 +5.70
+        (the potential 1.72, 5.08, 3.76, 4.24): the top stays at +99, 1.8 above its
+        neighbours. Not read: +58, +17, +4, the held +44.
+        THE WHOLE WALL CHAIN TURNED (21:01 UTC; 6.3 READING 20): `kink --frames /opt/dft/triage
+        --names urea1m_tt_x1 --long 3 --turned 3,0 --only` then `points --names
+        urea1m_tt_x1_kink3` (image_t3.out is a copy of the swing's image_0.out, the same
+        cell): 43.0 BELOW THE ROW AT REST IN DFT (-1747.59548256 Ry; the potential -24.28),
+        14.3 A REPEAT, where the plain row's whole states are 5.2 a repeat apart. THE
+        FOUR-CHAIN CELL PULLS THIS STEP OVER, SO 7.1 AND -4.2 ARE THE CELL'S NUMBERS AND NOT
+        THE CHAIN'S: the first urea over is 10.1 above the line between the whole states; the
+        7.1 cannot be set beside the 7.6 mark; and the first urea over has NOT taken its
+        methyls across the sheet (they lean, 1.2 to 1.5 A off the face they were on; the whole
+        chain turned has them 1.91 A off the other face), so two thirds of the wall's step is
+        not walked. THE PI WAS TOLD 7.1 "at the mark" BEFORE THIS WAS KNOWN AND THEN TOLD THIS.
+        WHAT READS THE CHAIN: A ROW FIVE CHAINS WIDE (`--rows 5`, files carry `r5`): two
+        chains one way and three the other becomes three and two, the same row turned half
+        round about the chains, so the two whole states are level by symmetry. 180 atoms at
+        three repeats; DFT by scaling about 9 GB and 40 minutes a cell, NOT YET TRIED.
+        RUNNING WHEN THIS WAS WRITTEN: `kink --frames /opt/dft/triage --names urea1m_tt_x1
+        --rows 5 --long 3 --turned 3,0 --only` (the two whole states in the potential; log
+        `log_urea1m_kink3r5.txt`; work folder `work/urea1m_tt_x1_kink3r5/`). CHECK FIRST that
+        the two come out level in the potential (to about 0.1 kcal/mol): if not, the
+        relaxations found different resting places and the lower one's mirror is the other
+        state. THEN, NOTHING BESIDE A DFT JOB: (i) `swing --frames /opt/dft/triage --names
+        urea1m_tt_x1 --rows 5 --long 3 --start turned_3 --carbonyl 0 --by 110 --way m --images
+        9`, and again from its last cell, as in the four-chain row; (ii) one DFT single point
+        on the row at rest to see that 180 atoms fit (`points --names <path> --images 0`);
+        (iii) DFT on the top and the far side; (iv) the second urea's step from the far side
+        (`--carbonyl 1`), where the methyl between the two turned ureas has to cross the
+        sheet; the third is the first's mirror. (v) The plain chain the same way (`--names
+        urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
+        long way round, the ends in DFT's own structures (`points --relax`; a stopped
+        relaxation goes on when the command is given again; work folders end `_relax`), and
+        what Section 6.1 has for the plain chain (dipole, stiffness: `berry`, `piezo`).
+        Scratch readers, run from the repository: `mpath.py` and `allfacing.py` (facings,
+        methyl heights, bonds, contacts).
         `urea1mm` WAS BUILT IN PIECES the first time (two methyls bend the oligomer and the
         period cut from it was not one; its packing was void and its files are deleted). `build`
         now checks every chain it writes (`whole`) and makes this one from the one-methyl
