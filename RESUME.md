@@ -914,7 +914,7 @@ right": true at one registry, not along it).
         finished single point's scratch (1.5 GB a state). AFTER THAT: the other wall (`--side 2`),
         a defect in the moving chain (`--ether 1:0`), a wider row (`--rows 6`: its files carry
         `r6`).
-        (4b) WHAT THE SCAN AND DFT SAY (2026-11-25, 13:00 UTC; IN 6.3 OF THE CANDIDATES DOCUMENT,
+        (4b) WHAT THE SCAN AND DFT SAY (2026-11-25, 12:20 UTC; IN 6.3 OF THE CANDIDATES DOCUMENT,
         REWRITTEN, AND IN `docs/predictions/chain_triage.json` AS `urea1_tt_x1_kink4_swing4-3p`
         AND `...m`, PATHS IN `docs/predictions/chain_triage_paths/`). kcal/mol for the 144-atom
         cell above the row at rest, DFT single points on the potential's cells (the potential).
@@ -938,7 +938,7 @@ right": true at one registry, not along it).
         sheets, 288 atoms, potential only here. (f) The potential is 0.9 to 12.8 above DFT on
         the seven cells read, not one offset. This is the perfect row, the baseline, and
         activation only: a partial result.
-        (4c) RUNNING WHEN THIS WAS WRITTEN (started 12:20 UTC): THE SAME STEP WITH THE SHEETS 1.2
+        (4c) RUNNING WHEN THIS WAS WRITTEN (started 12:16 UTC): THE SAME STEP WITH THE SHEETS 1.2
         TIMES AS FAR APART, as a test of (c) and of a side group as the defect. `spread --names
         urea1_tt_x1 --by 1.2` wrote `urea1_tt_x1_g120.relaxed.xyz` (sheets 3.283 A made 3.940,
         nothing else moved); then `kink --names urea1_tt_x1_g120 --long 4 --turned 4 --only`
@@ -953,6 +953,12 @@ right": true at one registry, not along it).
         (`kink --ether 0:0 --turned 4 --only`, `swing --ether 0:0 --start turned_4 --carbonyl 0
         --by 171`), the quarter-turned cell let go, the second urea's step (`swing --start
         swing4-3p_9_free --carbonyl K`), the other wall (`--side 2`).
+        (4d) TWO SHEETS THICK: `kink` and `swing` take `--sheets 2` (288 atoms; only the first
+        sheet's chain moves, the one above stays as in the row at rest; files carry `t2`, as
+        `urea1_tt_x1_kink4t2`). It is the check on (e) and has NOT been run anywhere. It is
+        jobs 8 and 9 of the MI100's queue (`examples/gpu_jobs/queue_mi100.txt`, part 5). Here:
+        the potential only, about twice 6.5 s a step, and whether 288 atoms fit this machine's
+        15 GB has not been tried (two 144-atom jobs at once do not); DFT at 288 atoms does not.
         (5) THE PI AND THE MI100 SINCE: "I just got it on the network. 192.168.1.150" (a private
         address: not reachable from a cloud session and not to be probed from one), "You are local,
         right?" (no), "Whats the apt for claude?", "Claude is installed on the MI100". The PI was

@@ -18,3 +18,12 @@ triage.sh points --names urea1_tt_x1_kink4 --relax
 #    repeats turned, in the potential on the card.
 triage.sh kink --names urea1_tt_x1 --device cuda --rows 6 --long 4 --turned 4,3,2,1,0
 triage.sh kink --names urea1_tt_x1 --device cuda --rows 8 --long 4 --turned 4,3,2,1,0
+# 5. (added 2026-11-25, after the hump for the first urea to change sides was read in DFT both
+#    ways round in the cell one sheet thick: 23.6 and 24.7 kcal/mol, at a contact between the
+#    turning urea and its own copy in the next sheet.)  The same step in a row two sheets thick
+#    (288 atoms), where the urea above stays as it is: the row at rest, then one carbonyl taken
+#    round both ways, in the potential on the card.  (Job 3's states with 3, 2 and 1 turned were
+#    made by twisting and are upper marks: the state with one urea turned where it stands is 11
+#    lower in DFT.  Its relaxations are still worth having for the two whole states.)
+triage.sh kink --names urea1_tt_x1 --device cuda --sheets 2 --long 4 --turned 4 --only
+triage.sh swing --names urea1_tt_x1 --device cuda --sheets 2 --long 4 --start turned_4 --carbonyl 0 --by 171 --way p,m --images 9
