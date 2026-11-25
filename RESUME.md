@@ -913,6 +913,29 @@ right": true at one registry, not along it).
         finished single point's scratch (1.5 GB a state). AFTER THAT: the other wall (`--side 2`),
         a defect in the moving chain (`--ether 1:0`), a wider row (`--rows 6`: its files carry
         `r6`).
+        (4b) WHAT THE SCAN AND DFT SAY SO FAR (2026-11-25, 10:30 UTC; NOT YET IN 6.3 OF THE
+        CANDIDATES DOCUMENT, WHICH STILL SAYS "THE FIRST UREA OVER IS LEVEL": THAT IS OVERTURNED).
+        kcal/mol for the 144-atom cell above the row at rest, DFT single points on the potential's
+        cells (the potential). Way p, the urea's facing counted up from -159: at -120, +23.58
+        (+31.16); at -93, +17.55 (+25.79); the last held cell (-11) let go rests at facing -26
+        with the chain's other three ureas where they were (-162 -157 -161): -11.01 (-0.12). SO
+        THE FIRST UREA OVER FALLS 11.0, NOT +0.12: the state `kink` made by twisting (+0.12, the
+        others turned 49 degrees) is a higher resting place, and the states with 2 and 1 turned
+        made the same way are upper marks too. THE HUMP ON WAY p IS AT LEAST 23.6 FROM THE ROW AT
+        REST AND 34.6 BACK (the mark for tens of MHz is 7.6): at 10^13 tries a second, one step
+        in hours. Way m (down, through +90): the potential has 13.0 at +155, a dip to 1.7 at
+        +106, 33.3 at +57; DFT on those three was running when this was written
+        (`/opt/dft/triage/log_swing43m_dft.txt`; rerun the same `points --names
+        urea1_tt_x1_kink4_swing4-3m --images 0,6,4,2,9` if it was stopped). At both tops the
+        turning urea's two N-H hydrogens are 1.6 A from the oxygen of its own copy in the sheet
+        above: THE CELL IS ONE SHEET THICK, SO THE UREAS ABOVE AND BELOW TURN WITH IT. The
+        potential is 8 to 13 above DFT on every cell with a urea over, measured from the row at
+        rest, and within 3.3 measured from the cell let go: its error is mostly the row at rest.
+        `swing --start STEM --carbonyl K --by DEG` starts from any kept cell (the next urea's
+        step from `swing4-3p_9_free`; a defect series needs only its row at rest). NEXT: 6.3
+        rewritten with both ways; then the same step with a defect in the turning urea (`kink
+        --ether 0:0 --turned 4` makes the row at rest, `swing --ether 0:0 --start turned_4
+        --carbonyl 0 --by 171 --way p`), since this is the perfect row and the baseline.
         (5) THE PI AND THE MI100 SINCE: "I just got it on the network. 192.168.1.150" (a private
         address: not reachable from a cloud session and not to be probed from one), "You are local,
         right?" (no), "Whats the apt for claude?", "Claude is installed on the MI100". The PI was

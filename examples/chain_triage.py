@@ -846,17 +846,26 @@ def hop(args):
 
 
 def swing(args):
-    """The hump between two states of a ``kink`` series by turning the one carbonyl that changes sides, a step at a time.
+    """The hump for one carbonyl of the moving chain to change sides, by turning it a step at a time.
 
-    A band between the two states (``hop``) put the whole of a urea's half turn between two of its
-    images and broke the one in the middle.  Here the carbonyl whose facing differs most between the
-    two states is held at facings between its two (``held``), each cell relaxed in the pretrained
-    potential from the one before with everything but that facing free, the cell held.  There are
-    two ways round (``--way``: p the facing counted up, m counted down) and each is its own path.
-    The last held cell is then let go: if it comes to the second state the way is whole, and if not
-    the path says by how much it misses; the cell let go is an image of the path, before the second
-    state.  Every energy is taken in double precision without the spring.  What it gives is the potential's way and a mark from above on the hump (the top of a
-    way made by one coordinate is at or above the saddle); ``points`` reads its images in DFT."""
+    A band between two states of a ``kink`` series (``hop``) put the whole of a urea's half turn
+    between two of its images and broke the one in the middle.  Here one carbonyl is held at
+    facings on the way (``held``), each cell relaxed in the pretrained potential from the one
+    before with everything but that facing free, the cell held.  There are two ways round
+    (``--way``: p the facing counted up, m counted down) and each is its own path.  The last held
+    cell is then let go and is the path's next image: where the cell rests with that carbonyl over.
+
+    ``--between A,B``: from the state with A repeats turned towards the one with B, the carbonyl
+    being the one whose facing differs most between the two; the path ends on the second state and
+    says how far from it the cell let go came to rest (a state made by twisting a stretch of the
+    chain is one resting place of several, and the way need not arrive at it).
+    ``--start STEM --carbonyl K --by DEGREES``: from any cell kept in the series' folder
+    (``turned_4``, or a cell an earlier ``swing`` let go), carbonyl K of the moving chain by that
+    much; the path ends on the cell let go.
+
+    Every energy is taken in double precision without the spring.  What it gives is the potential's
+    way and a mark from above on the hump (the top of a way made by one coordinate is at or above
+    the saddle); ``points`` reads its images in DFT."""
     from ase.io import read, write
     from ase.optimize import LBFGS
 
@@ -869,28 +878,40 @@ def swing(args):
         reference = polar_facing(a)
         _, tag = kink_series(name, args)
         work = src / "work" / tag
-        first, last = (int(v) for v in args.between.split(","))
-        ends = [read(work / f"turned_{k}.xyz") for k in (first, last)]
+        if args.start:
+            first, second, stem = read(work / f"{args.start}.xyz"), None, f"swing_{args.start}_c{args.carbonyl}"
+        else:
+            k_first, k_last = (int(v) for v in args.between.split(","))
+            first, second, stem = read(work / f"turned_{k_first}.xyz"), read(work / f"turned_{k_last}.xyz"), f"swing{k_first}-{k_last}"
         mover = args.rows // 2 if args.side == 1 else args.rows - 1
-        chains = ends[0].arrays["chain"] if "chain" in ends[0].arrays else np.repeat(np.arange(args.rows), len(ends[0]) // args.rows)
+        chains = first.arrays["chain"] if "chain" in first.arrays else np.repeat(np.arange(args.rows), len(first) // args.rows)
         part = np.where(chains == mover)[0]
-        pairs = carbonyls(ends[0], part)
-        faces = [facing(end, part, along, reference) for end in ends]
-        if len(faces[0]) != len(faces[1]) or len(faces[0]) != len(pairs):
-            raise ValueError(f"{tag}: the two states do not have the same carbonyls")
-        short = [(b - f + 180.0) % 360.0 - 180.0 for f, b in zip(*faces)]
-        which = int(np.argmax(np.abs(short)))
+        pairs = carbonyls(first, part)
+        begin = facing(first, part, along, reference)
+        if second is None:
+            which, short = args.carbonyl, abs(args.by)
+        else:
+            end = facing(second, part, along, reference)
+            if len(begin) != len(end) or len(begin) != len(pairs):
+                raise ValueError(f"{tag}: the two states do not have the same carbonyls")
+            moved = [(b - f + 180.0) % 360.0 - 180.0 for f, b in zip(begin, end)]
+            which = int(np.argmax(np.abs(moved)))
+            short = moved[which]
         o, c = pairs[which]
-        group = urea_of(ends[0], part, c)
+        group = urea_of(first, part, c)
+        info = {k: v for k, v in first.info.items() if not k.startswith("triage_swing") and not k.startswith("triage_turn")}
         for way in args.way.split(","):
-            total = short[which] if (short[which] > 0) == (way == "p") else short[which] - np.sign(short[which]) * 360.0
-            label = f"{tag}_swing{first}-{last}{way}"
-            print(f"{label}: carbonyl {which} of the moving chain from {faces[0][which]:+.0f} to {faces[1][which]:+.0f} degrees by {total:+.0f}, "
-                  f"{args.images - 2} facings held between; the other carbonyls move by {' '.join(f'{v:+.0f}' for i, v in enumerate(short) if i != which)}", flush=True)
-            images = [ends[0].copy()]
+            if second is None:
+                total = short if way == "p" else -short
+            else:
+                total = short if (short > 0) == (way == "p") else short - np.sign(short) * 360.0
+            label = f"{tag}_{stem}{way}"
+            print(f"{label}: carbonyl {which} of the moving chain from {begin[which]:+.0f} degrees by {total:+.0f}, {args.images - 2} facings held on the way"
+                  + ("" if second is None else f"; in the second state the other carbonyls have moved by {' '.join(f'{v:+.0f}' for i, v in enumerate(moved) if i != which)}"), flush=True)
+            images = [first.copy()]
             for j in range(1, args.images - 1):
-                target = faces[0][which] + total * j / (args.images - 1)
-                store = work / f"swing{first}-{last}{way}_{args.images}_{j}.xyz"
+                target = begin[which] + total * j / (args.images - 1)
+                store = work / f"{stem}{way}_{args.images}_{j}.xyz"
                 if store.exists():
                     images.append(read(store))
                     continue
@@ -905,14 +926,14 @@ def swing(args):
                 opt.run(fmax=args.fmax, steps=args.steps)
                 force = float(np.linalg.norm(row.get_forces(), axis=1).max())
                 row.calc = None
-                row.info = dict(ends[0].info)
+                row.info = dict(info)
                 row.info.update(triage_swing_target=float((target + 180.0) % 360.0 - 180.0), triage_swing_steps=int(opt.nsteps), triage_swing_force=force)
                 write(store, row, format="extxyz")
                 images.append(row)
                 print(f"  {label}: facing {(target + 180.0) % 360.0 - 180.0:+.0f} held, {int(opt.nsteps)} steps to {force:.3f} eV/A, closest atoms {nearest(row):.2f} A, "
                       f"the chain's carbonyls face {' '.join(f'{v:+.0f}' for v in facing(row, part, along, reference))}, {time.time() - t0:.0f} s", flush=True)
-            # let go of the last held cell: does it come to the second state?
-            store = work / f"swing{first}-{last}{way}_{args.images}_free.xyz"
+            # let go of the last held cell: where does it rest?
+            store = work / f"{stem}{way}_{args.images}_free.xyz"
             if store.exists():
                 free = read(store)
             else:
@@ -922,38 +943,43 @@ def swing(args):
                 opt = LBFGS(free, logfile=None)
                 opt.run(fmax=args.fmax, steps=args.steps)
                 free.calc = None
-                free.info = dict(ends[0].info)
+                free.info = dict(info)
                 write(store, free, format="extxyz")
                 print(f"  {label}: the last held cell let go, {int(opt.nsteps)} steps, {time.time() - t0:.0f} s", flush=True)
-            # the path: the first state, the held cells, the last of them let go, the second state
+            # the path: the first state, the held cells, the last of them let go, and the second state if one was named
             free.info["triage_swing_let_go"] = 1
-            images += [free, ends[1].copy()]
+            images += [free] + ([] if second is None else [second.copy()])
             energies = []
             for im in images:
                 im.calc = exact
                 energies.append(float(im.get_potential_energy()))
                 im.calc = None
-            apart = free.positions - ends[1].positions
-            apart -= np.round(apart @ np.linalg.inv(free.cell.array)) @ free.cell.array
             out = []
             for index, im in enumerate(images):
-                keep = {k: v for k, v in ends[0].info.items() if not k.startswith("triage_kink")}
+                keep = {k: v for k, v in info.items() if not k.startswith("triage_kink")}
                 keep.update({k: v for k, v in im.info.items() if k.startswith("triage_swing")})
                 im.info = keep
                 im.info.update(triage_turn_of=tag, triage_turn_edge=1, triage_turn_image=index, triage_turn_ev=energies[index] - energies[0],
                                triage_turning_repeats=1, triage_path_unit="for the cell", triage_swing_way=way,
                                triage_swing_facing=float(facing(im, part, along, reference)[which]),
-                               triage_swing_others=" ".join(f"{v:+.0f}" for i, v in enumerate(facing(im, part, along, reference)) if i != which),
-                               triage_swing_let_go_ev=energies[-2] - energies[-1], triage_swing_let_go_a=float(np.linalg.norm(apart, axis=1).max()))
+                               triage_swing_others=" ".join(f"{v:+.0f}" for i, v in enumerate(facing(im, part, along, reference)) if i != which))
                 out.append(im)
-            write(src / f"{label}.path.xyz", out, format="extxyz")
             rel = [(e - energies[0]) * KCAL for e in energies]
             went = [float(im.info["triage_swing_facing"]) for im in out]
-            print(f"{label}: {len(images)} images of {len(images[0])} atoms (the first state, {args.images - 2} held, the last of them let go, the second state), "
-                  f"top {max(rel):.2f} kcal/mol for the cell above the first state in the potential; profile {' '.join(f'{v:.2f}' for v in rel)}; "
-                  f"facings {' '.join(f'{v:+.0f}' for v in went)}; let go, the last held cell rests {(energies[-2] - energies[-1]) * KCAL:+.2f} from the second state, "
-                  f"its atoms within {np.linalg.norm(apart, axis=1).max():.2f} A of it and the chain's other carbonyls facing {out[-2].info['triage_swing_others']} "
-                  f"(in the second state {out[-1].info['triage_swing_others']})", flush=True)
+            let_go = len(images) - (1 if second is None else 2)
+            line = (f"{label}: {len(images)} images of {len(images[0])} atoms (the first state, {args.images - 2} held, the last of them let go"
+                    + ("" if second is None else ", the second state") + f"), top {max(rel):.2f} kcal/mol for the cell above the first state in the potential; "
+                    f"profile {' '.join(f'{v:.2f}' for v in rel)}; facings {' '.join(f'{v:+.0f}' for v in went)}; let go, the cell rests at {rel[let_go]:+.2f} "
+                    f"with the chain's other carbonyls facing {out[let_go].info['triage_swing_others']}")
+            if second is not None:
+                apart = free.positions - second.positions
+                apart -= np.round(apart @ np.linalg.inv(free.cell.array)) @ free.cell.array
+                for im in out:
+                    im.info.update(triage_swing_let_go_ev=energies[-2] - energies[-1], triage_swing_let_go_a=float(np.linalg.norm(apart, axis=1).max()))
+                line += (f", {(energies[-2] - energies[-1]) * KCAL:+.2f} from the second state and its atoms within {np.linalg.norm(apart, axis=1).max():.2f} A of it "
+                         f"(the second state's other carbonyls face {out[-1].info['triage_swing_others']})")
+            write(src / f"{label}.path.xyz", out, format="extxyz")
+            print(line, flush=True)
 
 
 def kink(args):
@@ -1654,7 +1680,10 @@ def main():
     g = sub.add_parser("swing")
     g.add_argument("--frames", type=Path, required=True)
     g.add_argument("--names", required=True)
-    g.add_argument("--between", required=True, help="two states of the kink series by their repeats turned, e.g. 4,3")
+    g.add_argument("--between", default="", help="two states of the kink series by their repeats turned, e.g. 4,3")
+    g.add_argument("--start", default="", help="instead of --between: a cell of the series' folder to start from, e.g. turned_4 or swing4-3p_9_free")
+    g.add_argument("--carbonyl", type=int, default=0, help="with --start: which carbonyl of the moving chain is turned, counted along the chain from 0")
+    g.add_argument("--by", type=float, default=170.0, help="with --start: degrees it is turned by")
     g.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     g.add_argument("--device", default="cpu")
     g.add_argument("--rows", type=int, default=4)
