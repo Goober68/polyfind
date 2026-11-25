@@ -1826,13 +1826,14 @@ monomer and ends 7.05 up: a move PVDF does not make, kept only as the like-for-l
 
 Files: `docs/predictions/chain_triage.json` (`paths`), `docs/predictions/chain_triage_paths/`.
 
-### 6.3 The urea row four repeats long: a wall part of the way over (2026-11-25)
+### 6.3 The urea row four repeats long: a wall part of the way over, and the hump for its first urea (2026-11-25)
 
 *The PI, 2026-11-25: "Go on the card -- we have an MI100 now". The MI100 could not be reached
 from the session that did this work, so the cell that fits four processors was run on them: four
 chains by four repeats, 144 atoms. This section is the activation half of the cam and no more: it
 has no strain, loss, frequency, blocked force or speed in it, and is a partial result until it
-has.*
+has. It is also the perfect row, with no defect in it: the baseline a defect is to be measured
+against, not a candidate.*
 
 **How the cell is made** (`chain_triage.py kink`). Four chains of a bonded row, each four repeats
 long, in the polar crystal's cell repeated and held. Two chains face each way, so the row has two
@@ -1840,40 +1841,48 @@ walls: one where N-H meets N-H and one where the oxygens meet. The chain beside 
 turned over 4, 3, 2, 1 or 0 of its 4 repeats, with a twist at each end of the turned part started
 at a methylene. 4 turned is the row at rest, two and two; 0 turned is the same row with that wall
 one chain on, three and one. Each state is relaxed in the pretrained potential (to 0.05 eV/A) and
-read in DFT as it stands (a single point, 27 to 31 minutes on four processors).
+read in DFT as it stands (a single point, 27 to 36 minutes on four processors). The state with
+one urea over was made a second way as well: that urea alone turned round the chain where it
+stands and the cell then let go (`chain_triage.py swing`, below).
 
-| repeats of the chain turned | DFT, kcal/mol for the cell | the potential | its repeats face, degrees | N-H..O under 2.3 A in the cell |
+| repeats of the chain turned | DFT, kcal/mol for the cell | the potential | its repeats face, degrees | N-H..O under 2.3 A within the sheet |
 |---|---|---|---|---|
 | 4 (the row at rest, two and two) | 0 | 0 | -159 -159 -159 -159 | 8, at 2.25 |
-| 3 (one urea gone over) | +0.12 | +12.88 | +11 +152 -157 +152 | 12, at 2.00 to 2.28 |
+| 3, the urea turned where it stands | -11.01 | -0.12 | -26 -162 -157 -161 | 11, at 1.96 to 2.29 |
+| 3, made by twisting the chain's end over | +0.12 | +12.88 | +11 +152 -157 +152 | 12, at 2.00 to 2.28 |
 | 2 | -17.41 | -10.93 | +15 +135 +136 +17 | 14, at 2.06 to 2.24 |
 | 1 | -16.03 | -15.81 | +15 +134 +16 +21 | 15, at 2.01 to 2.27 |
 | 0 (the wall a chain on, three and one) | -20.83 | -23.81 | -38 -38 -38 -38 | 16, at 1.97 to 2.04 |
 
-Above the line between the two whole states the three part-turned states have +5.3, -7.0 and
--0.4 in DFT (+18.8, +1.0 and +2.1 in the potential).
+Above the line between the two whole states the part-turned states have -5.8 (one urea turned
+where it stands; +5.3 as twisted), -7.0 and -0.4 in DFT.
 
-**What it says.**
+**What the states say.**
 
 1. *A long chain does not turn as a rod.* The one-repeat cell of 6.2 made the chain turn along its
-   whole length at once and paid 15.8 a repeat, which is 63 for four repeats. In DFT no state on
-   the way is more than 0.12 above the row at rest.
+   whole length at once and paid 15.8 a repeat, which is 63 for four repeats. Here no resting
+   place found on the way is more than 0.12 above the row at rest in DFT, and the lower of the
+   two with one urea over is 11.0 below it. That is the resting places; the humps between them
+   are the next part.
 2. *The unit that changes sides is one repeat, not a chain.* In every part-turned state each of the
-   chain's ureas is bonded to the neighbour on one side or on the other, 120 degrees round (140
-   with one urea over, where the three that stay spread 50 degrees among themselves), and the
-   methylene between two ureas is the hinge (its torsions go from 165 degrees to between 120
-   and 147). So each urea beside a wall chooses its neighbour by itself.
-3. *The first urea to go over is level with the row at rest in DFT (+0.12), and the second falls
-   17.5.* What is paid for the first one, then, is whatever hump lies between two level states; the
-   states say nothing about it and it is not in this table (the band is the next run). The mark
-   for it: 7.6 kcal/mol is the hump that lets a move follow tens of MHz at room temperature at
-   10^13 tries a second, and the film's own hop is 7.7 in DFT (3.23).
-4. *The pretrained potential is not an evaluator for these states.* It is 12.8 from DFT on the
-   state with one urea over, 6.5 on the next, 0.2 and 3.0 on the last two: it would have called
-   the first step a 13 kcal/mol climb. It is used here to make structures and paths, and DFT reads
-   them. That cuts both ways: the structures are the potential's rest states, not DFT's, and a
-   state relaxed in DFT could move by kcal/mol (hours a state on four processors; a job for the
-   MI100).
+   chain's ureas is bonded to the neighbour on one side or on the other, and the methylene
+   between two ureas is the hinge. With one urea turned where it stands the other three do not
+   move at all (they face -162 -157 -161 against -159 at rest). So each urea beside a wall chooses
+   its neighbour by itself.
+3. *The first urea to go over falls 11.0 in DFT, and the second 6.4 more.* An earlier form of
+   this section had the first one level with the row at rest (+0.12). That was the state the
+   twist made, in which the three ureas that stay are dragged 49 degrees round; it is a resting
+   place of the same count 11.1 higher, and the atoms of the two are within 3.3 A of each other.
+   The states with 2 and 1 turned were made by the same twist and are upper marks in the same
+   way. So the two sides of the first step are not level: the field's 0.06 kcal/mol a monomer
+   does not tip a step that falls 11.
+4. *The pretrained potential is not an evaluator for these states.* On the seven cells with one
+   urea over or part over that DFT has read, it is above DFT by 0.9 to 12.8 measured from the row
+   at rest (12.8 and 10.9 on the two states with one urea over, 7.6 to 8.5 at and beside the tops
+   below, 5.1 and 0.9 at a quarter and an eighth of a turn), and by 6.5, 0.2 and -3.0 on the
+   states with 2, 1 and 0 turned. It is not one offset. It is used here to make structures and paths, and DFT reads them. That
+   cuts both ways: the structures are the potential's rest states, not DFT's, and a state relaxed
+   in DFT could move by kcal/mol (hours a state on four processors; a job for the MI100).
 5. *The two whole states are not level, and that is the row's width.* 20.8 for four repeats is
    5.2 a repeat, the fall the one-repeat path of 6.2 ended on (-5.22). In a row four chains wide
    every chain is beside a wall. The two-and-two row holds its chains 21 to 27 degrees off the way
@@ -1883,13 +1892,94 @@ Above the line between the two whole states the three part-turned states have +5
    cannot (an estimated 13 GB of this machine's 15), and by 4 the potential's word on it is not
    worth much.
 
-**Not done.** The hump for one repeat to change sides (the band between the states with 4 and 3
-turned). The other wall, where the oxygens meet. Any of it with a defect in the chain. The cell is
-held at the polar crystal's, and a row with walls wants 3.4% more room (6.2), so every state here
-is squeezed.
+**The hump for the first urea** (`chain_triage.py swing`). A band between the states with 4 and 3
+turned was tried first and is no path (its middle image ran up a clash, two hydrogens 0.89 A
+apart; it is discarded and was not read in DFT). In its place one urea's carbonyl is held at a
+facing round the chain's axis by a spring on that one angle, everything else in the cell is
+relaxed in the potential (to 0.1 eV/A), and the facing is stepped from the row at rest to the
+other side, both ways round. The last held cell is then let go. DFT reads the cells that matter
+as they stand. Energies are kcal/mol for the 144-atom cell above the row at rest; the facing is
+the carbonyl's, counted from the way it points in the polar crystal.
 
-Files: `docs/predictions/chain_triage.json` (`paths`, `urea1_tt_x1_kink4`),
-`docs/predictions/chain_triage_paths/urea1_tt_x1_kink4.path.xyz`.
+The way that passes -90 degrees:
+
+| facing held | the potential | DFT |
+|---|---|---|
+| -159 (the row at rest) | 0 | 0 |
+| -141 | +7.24 | |
+| -120 | +31.16 | +23.58 |
+| -93 | +25.79 | +17.55 |
+| -73 | +7.66 | |
+| -53 | +7.10 | |
+| -31 | +0.28 | |
+| -11 | +3.02 | |
+| let go: rests at -26 | -0.12 | -11.01 |
+
+The way that passes +90 degrees:
+
+| facing held | the potential | DFT |
+|---|---|---|
+| -159 (the row at rest) | 0 | 0 |
+| +179 | +4.99 | |
+| +155 | +12.98 | +12.07 |
+| +129 | +5.70 | |
+| +106 | +1.73 | -3.38 |
+| +87 | +13.34 | |
+| +57 | +33.27 | +24.74 |
+| +34 | +18.13 | |
+| let go from +34: at +29 after 6 steps, not arrived | +17.18 | |
+
+6. *Both ways go over the same top, 23.6 and 24.7 in DFT, and it is a contact between sheets.*
+   The two tops are at -120 and +57 degrees, the two ends of one line through the chain. At
+   both, each of the urea's two N-H hydrogens is 1.60 to 1.61 A from the oxygen of the urea in
+   the next sheet, and its own oxygen is as close to the two hydrogens of the urea on its other
+   side. That is the bond that joins the row, both hydrogens to one oxygen, made along the stack
+   instead: there the sheets are 3.28 A apart and the bond is squeezed 0.4 A short of the 2.0 it
+   has in the row. The potential's energy follows that distance on both ways: +7 with it at 2.05
+   A, +13 at 1.92, +31 and +33 at 1.61. So the hump is not what it costs the urea to leave its
+   neighbour in the row: on the +90 way, 95 degrees round with no hydrogen bond shorter than 2.4
+   A, the cell is 3.4 BELOW the row at rest.
+7. *Against the mark, the perfect row fails by a factor of three.* 7.6 kcal/mol is the hump that
+   lets a move follow tens of MHz at room temperature at 10^13 tries a second, and the film's
+   own hop is 7.7 in DFT (3.23). 23.6 is one step in about four hours. The return, from 11.0
+   below, is over 34.6. In the PI's terms: the activation is not low and the return is not easy.
+   The action (stroke and force) is not in this section.
+8. *There is a resting place a quarter of the way round, behind a lower hump.* On the +90 way the
+   cell at +106 is 3.4 below the row at rest in DFT, between cells at +12.1 and +24.7. The hump to
+   it is 12.1 (the cell at +155): a step about 16 000 times a second, and 15.5 back. It has not
+   been let go, so where it rests and how deep is not known, and a quarter turn of one urea moves
+   about a third of the dipole along the polar direction that a whole turn does.
+9. *What these numbers are and are not.* They are the highest cells read on a path made by
+   holding one angle. The steps are 18 to 30 degrees, so the path's own top can be above the
+   highest cell read; and one held angle is not the lowest way over, so the true hump can be
+   below this path's. Neither is a bound. The cells are the potential's, read once in DFT. And
+   the cell is ONE SHEET THICK: the urea above the turning one is its own copy and turns with it,
+   and the contact at the top is with that copy. So this is a whole column of ureas turning
+   together, each paying this. One urea turning under a still one does not meet that oxygen
+   (the still urea's points along the row) and has not been computed; it needs a cell two sheets
+   thick, 288 atoms, which DFT cannot do on this machine.
+
+**What the baseline says about the defect.** The hump is a hydrogen bond squeezed between sheets
+that lie too close for it. So the defects to try are the ones that act there: room between the
+sheets (a side group on the chain props them apart, as alanine's methyl holds protein sheets 5.3
+A apart where glycine's lie at 3.4), or a turning urea with a hydrogen less (an ether in place of
+an N-H). With room enough the same contact is a bond and not a squeeze, and the quarter-turned
+urea may then be a state of its own, joined up the stack instead of along the row. The first is
+being tested as a mechanism, not yet as a molecule: the same row with its sheets 1.2 times as far
+apart and nothing else changed (`chain_triage.py spread`).
+
+**Not done.** The same step in a row with room between its sheets, and with an ether in the
+turning urea. The cell at +106 let go. DFT on the cells between the ones read. The second
+urea's step from the state with one over. The other wall, where the oxygens meet. Two sheets
+thick, and rows wider than four chains. Everything in DFT's own structures. The cell is held at
+the polar crystal's, and a row with walls wants 3.4% more room (6.2), so every state here is
+squeezed.
+
+Files: `docs/predictions/chain_triage.json` (`paths`: `urea1_tt_x1_kink4`,
+`urea1_tt_x1_kink4_swing4-3p`, `urea1_tt_x1_kink4_swing4-3m`),
+`docs/predictions/chain_triage_paths/` (`urea1_tt_x1_kink4.path.xyz` and the two
+`..._swing4-3{p,m}.path.xyz`, ten cells each: the row at rest, seven held, the last let go, the
+twisted state).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 

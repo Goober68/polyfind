@@ -907,35 +907,52 @@ right": true at one registry, not along it).
         command is given again; log `/opt/dft/triage/log_swing43.txt`. THEN `points --names
         urea1_tt_x1_kink4_swing4-3p` (and `...m`): 30 minutes an image; to spare an hour first
         copy `work/urea1_tt_x1_kink4/image_t4.out` and `image_t3.out` to the swing's work folder
-        as `image_0.out` and `image_8.out`. The top of a way made by one coordinate is at or
-        above the saddle, and the cells are the potential's: an upper mark on the hump. `points`
+        as `image_0.out` and `image_9.out`. The top of a way made by one coordinate is at or
+        above the saddle, the highest cell READ is at or below that way's top (steps of 18 to 30
+        degrees), and the cells are the potential's: the number is neither bound. `points`
         keys a kink state's DFT output by its repeats turned (`image_t3.out`) and removes a
         finished single point's scratch (1.5 GB a state). AFTER THAT: the other wall (`--side 2`),
         a defect in the moving chain (`--ether 1:0`), a wider row (`--rows 6`: its files carry
         `r6`).
-        (4b) WHAT THE SCAN AND DFT SAY SO FAR (2026-11-25, 10:30 UTC; NOT YET IN 6.3 OF THE
-        CANDIDATES DOCUMENT, WHICH STILL SAYS "THE FIRST UREA OVER IS LEVEL": THAT IS OVERTURNED).
-        kcal/mol for the 144-atom cell above the row at rest, DFT single points on the potential's
-        cells (the potential). Way p, the urea's facing counted up from -159: at -120, +23.58
-        (+31.16); at -93, +17.55 (+25.79); the last held cell (-11) let go rests at facing -26
-        with the chain's other three ureas where they were (-162 -157 -161): -11.01 (-0.12). SO
-        THE FIRST UREA OVER FALLS 11.0, NOT +0.12: the state `kink` made by twisting (+0.12, the
-        others turned 49 degrees) is a higher resting place, and the states with 2 and 1 turned
-        made the same way are upper marks too. THE HUMP ON WAY p IS AT LEAST 23.6 FROM THE ROW AT
-        REST AND 34.6 BACK (the mark for tens of MHz is 7.6): at 10^13 tries a second, one step
-        in hours. Way m (down, through +90): the potential has 13.0 at +155, a dip to 1.7 at
-        +106, 33.3 at +57; DFT on those three was running when this was written
-        (`/opt/dft/triage/log_swing43m_dft.txt`; rerun the same `points --names
-        urea1_tt_x1_kink4_swing4-3m --images 0,6,4,2,9` if it was stopped). At both tops the
-        turning urea's two N-H hydrogens are 1.6 A from the oxygen of its own copy in the sheet
-        above: THE CELL IS ONE SHEET THICK, SO THE UREAS ABOVE AND BELOW TURN WITH IT. The
-        potential is 8 to 13 above DFT on every cell with a urea over, measured from the row at
-        rest, and within 3.3 measured from the cell let go: its error is mostly the row at rest.
-        `swing --start STEM --carbonyl K --by DEG` starts from any kept cell (the next urea's
-        step from `swing4-3p_9_free`; a defect series needs only its row at rest). NEXT: 6.3
-        rewritten with both ways; then the same step with a defect in the turning urea (`kink
-        --ether 0:0 --turned 4` makes the row at rest, `swing --ether 0:0 --start turned_4
-        --carbonyl 0 --by 171 --way p`), since this is the perfect row and the baseline.
+        (4b) WHAT THE SCAN AND DFT SAY (2026-11-25, 13:00 UTC; IN 6.3 OF THE CANDIDATES DOCUMENT,
+        REWRITTEN, AND IN `docs/predictions/chain_triage.json` AS `urea1_tt_x1_kink4_swing4-3p`
+        AND `...m`, PATHS IN `docs/predictions/chain_triage_paths/`). kcal/mol for the 144-atom
+        cell above the row at rest, DFT single points on the potential's cells (the potential).
+        Way p (through -90): at -120, +23.58 (+31.16); at -93, +17.55 (+25.79); the last held
+        cell let go rests at facing -26 with the chain's other three ureas where they were:
+        -11.01 (-0.12). Way m (through +90): at +155, +12.07 (+12.98); at +106, -3.38 (+1.73);
+        at +57, +24.74 (+33.27); its last held cell let go did not arrive (hydrogens 1.7 A
+        apart, +17 in the potential, no DFT). SO: (a) THE FIRST UREA OVER FALLS 11.0, NOT +0.12:
+        the state `kink` made by twisting (+0.12, the others dragged 49 degrees) is a higher
+        resting place, and the states with 2 and 1 turned made the same way are upper marks.
+        (b) BOTH WAYS GO OVER THE SAME TOP, 23.6 AND 24.7, at the two ends of one line (-120,
+        +57); the mark for tens of MHz is 7.6; one step in about four hours; 34.6 back. (c) THE
+        TOP IS A CONTACT BETWEEN SHEETS: both N-H hydrogens of the turning urea 1.60 A from the
+        oxygen of the urea in the next sheet, the row's own bond made along the stack and
+        squeezed 0.4 A short because the sheets are 3.28 A apart; the potential's energy follows
+        that distance (+7 at 2.05 A, +13 at 1.92, +31 to +33 at 1.61). (d) A QUARTER TURN ROUND
+        ON WAY m (+106, no hydrogen bond under 2.4 A) THE CELL IS 3.4 BELOW THE ROW AT REST,
+        behind 12.1 (16 kHz at 10^13 tries a second; 15.5 back); not let go. (e) THE CELL IS ONE
+        SHEET THICK, SO THE UREA ABOVE IS THE TURNING ONE'S COPY AND THE CONTACT AT THE TOP IS
+        WITH THAT COPY: this is a column turning together; one urea under a still one needs two
+        sheets, 288 atoms, potential only here. (f) The potential is 0.9 to 12.8 above DFT on
+        the seven cells read, not one offset. This is the perfect row, the baseline, and
+        activation only: a partial result.
+        (4c) RUNNING WHEN THIS WAS WRITTEN (started 12:20 UTC): THE SAME STEP WITH THE SHEETS 1.2
+        TIMES AS FAR APART, as a test of (c) and of a side group as the defect. `spread --names
+        urea1_tt_x1 --by 1.2` wrote `urea1_tt_x1_g120.relaxed.xyz` (sheets 3.283 A made 3.940,
+        nothing else moved); then `kink --names urea1_tt_x1_g120 --long 4 --turned 4 --only`
+        (the row at rest in it) and `swing --names urea1_tt_x1_g120 --long 4 --start turned_4
+        --carbonyl 0 --by 171 --way p --images 9`; log `/opt/dft/triage/log_g120.txt`; the same
+        commands given again go on from the cells kept. THEN way m (`--way m`), DFT on the row at
+        rest, the tops, the quarter-turned cell and the cell let go (`points --names
+        urea1_tt_x1_g120_kink4_swing_turned_4_c0p --images ...`, 35 minutes a cell), and the
+        comparison with (4b). A spread cell is a mechanism test and not a molecule: its energy
+        against the unspread row means nothing (the sheets are held apart by the cell), only
+        its hump against its own row at rest does. AFTER THAT: the ether in the turning urea
+        (`kink --ether 0:0 --turned 4 --only`, `swing --ether 0:0 --start turned_4 --carbonyl 0
+        --by 171`), the quarter-turned cell let go, the second urea's step (`swing --start
+        swing4-3p_9_free --carbonyl K`), the other wall (`--side 2`).
         (5) THE PI AND THE MI100 SINCE: "I just got it on the network. 192.168.1.150" (a private
         address: not reachable from a cloud session and not to be probed from one), "You are local,
         right?" (no), "Whats the apt for claude?", "Claude is installed on the MI100". The PI was
