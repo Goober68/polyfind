@@ -938,21 +938,35 @@ right": true at one registry, not along it).
         sheets, 288 atoms, potential only here. (f) The potential is 0.9 to 12.8 above DFT on
         the seven cells read, not one offset. This is the perfect row, the baseline, and
         activation only: a partial result.
-        (4c) RUNNING WHEN THIS WAS WRITTEN (started 12:16 UTC): THE SAME STEP WITH THE SHEETS 1.2
-        TIMES AS FAR APART, as a test of (c) and of a side group as the defect. `spread --names
-        urea1_tt_x1 --by 1.2` wrote `urea1_tt_x1_g120.relaxed.xyz` (sheets 3.283 A made 3.940,
-        nothing else moved); then `kink --names urea1_tt_x1_g120 --long 4 --turned 4 --only`
-        (the row at rest in it) and `swing --names urea1_tt_x1_g120 --long 4 --start turned_4
-        --carbonyl 0 --by 171 --way p --images 9`; log `/opt/dft/triage/log_g120.txt`; the same
-        commands given again go on from the cells kept. THEN way m (`--way m`), DFT on the row at
-        rest, the tops, the quarter-turned cell and the cell let go (`points --names
-        urea1_tt_x1_g120_kink4_swing_turned_4_c0p --images ...`, 35 minutes a cell), and the
-        comparison with (4b). A spread cell is a mechanism test and not a molecule: its energy
-        against the unspread row means nothing (the sheets are held apart by the cell), only
-        its hump against its own row at rest does. AFTER THAT: the ether in the turning urea
-        (`kink --ether 0:0 --turned 4 --only`, `swing --ether 0:0 --start turned_4 --carbonyl 0
-        --by 171`), the quarter-turned cell let go, the second urea's step (`swing --start
-        swing4-3p_9_free --carbonyl K`), the other wall (`--side 2`).
+        (4c) THE SAME STEP WITH THE SHEETS 1.2 TIMES AS FAR APART (a test of (c) and of a side
+        group as the defect; 2026-11-25, 13:20 UTC). `spread --names urea1_tt_x1 --by 1.2` wrote
+        `urea1_tt_x1_g120.relaxed.xyz` (sheets 3.283 A made 3.940, nothing else moved); `kink
+        --names urea1_tt_x1_g120 --long 4 --turned 4 --only` its row at rest (128 steps, the
+        wall chain's ureas at -151); `swing --names urea1_tt_x1_g120 --long 4 --start turned_4
+        --carbonyl 0 --by 171 --way p --images 9` the step. IN THE POTENTIAL, kcal/mol for the
+        cell above its own row at rest, facings -151 -130 -110 -89 -65 -46 -23 -2, let go -2:
+        0.00 -0.68 +1.48 +5.58 -4.70 -5.95 -5.30 -4.91, let go -4.95. THE TOP IS 5.6 WHERE THE
+        UNSPREAD ROW'S IS 31.2 (23.6 in DFT), and it has moved to -89; at -130 the hydrogens
+        are 1.90 to 1.97 A from the next sheet's oxygen and the cell is BELOW its row at rest.
+        NOT YET DFT: the potential was 8 high on the unspread tops and 11 high on the urea over.
+        DFT WAS RUNNING WHEN THIS WAS WRITTEN: `points --names
+        urea1_tt_x1_g120_kink4_swing_turned_4_c0p --images 0,3` (the row at rest and the top;
+        log `/opt/dft/triage/log_g120p_dft.txt`; 35 to 45 minutes a cell; give the same command
+        again if it was stopped, a finished cell is kept, an unfinished one starts over), THEN
+        `--images 0,3,8,1` for the cell let go and the one at -130. THE CONTAINER WAS RESTARTED
+        ONCE AT 13:15 UTC AND KILLED BOTH BACKGROUND JOBS (files kept): keep DFT jobs to two
+        cells each. A spread cell is a mechanism test and not a molecule: its energy against
+        the unspread row means nothing (the sheets are held apart by the cell), only its hump
+        against its own row at rest does. THE MOLECULE FOR IT: `CHAINS` has `urea1m` (one
+        methyl on the carbon between ureas, one hand) and `urea1mm` (two); `build` made their
+        chains (`urea1m_tt.start.xyz`, `urea1mm_tt.start.xyz`), `pack --names
+        urea1m_tt,urea1mm_tt --starts 16` was running at one thread beside DFT (log
+        `log_urea1m_pack.txt`), then `dft` relaxes the crystals it keeps (`..._x1`), then their
+        sheet spacing, then `kink --turned 4 --only` and `swing` on them. AFTER THAT: way m on
+        the spread row (`--way m`), a sweep of the spread (1.1, 1.3, 1.4) in the potential, the
+        ether in the turning urea (`kink --ether 0:0 --turned 4 --only`, `swing --ether 0:0
+        --start turned_4 --carbonyl 0 --by 171`), the quarter-turned cell let go, the second
+        urea's step (`swing --start swing4-3p_9_free --carbonyl K`), the other wall (`--side 2`).
         (4d) TWO SHEETS THICK: `kink` and `swing` take `--sheets 2` (288 atoms; only the first
         sheet's chain moves, the one above stays as in the row at rest; files carry `t2`, as
         `urea1_tt_x1_kink4t2`). It is the check on (e) and has NOT been run anywhere. It is
