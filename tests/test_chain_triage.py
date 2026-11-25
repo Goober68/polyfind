@@ -188,13 +188,15 @@ def test_a_stretch_is_one_inside_none_outside_and_goes_round_the_ring():
     assert np.all(np.diff(ramp) >= 0) and ramp[0] == 0.0 and ramp[-1] == 1.0
 
 
-def _zigzag(repeats: int = 4):
-    """A chain of N-H, C=O and CH2 along z, one to a cell 6 A square across: a repeat of 3.75 A."""
+def _zigzag():
+    """A chain of N-H, C=O and CH2 along z, one to a cell 6 A square across: a repeat of 4 A.
+
+    Its methylene is 1.4 A from the next nitrogen (a single bond) and its carbonyl 1.2 A long."""
     from ase import Atoms
 
     unit = [("N", [0.4, 0.0, 0.0]), ("H", [1.4, 0.0, 0.0]), ("C", [-0.4, 0.0, 1.25]), ("O", [-1.6, 0.0, 1.25]),
-            ("C", [0.4, 0.0, 2.5]), ("H", [1.0, 0.9, 2.5]), ("H", [1.0, -0.9, 2.5])]
-    a = Atoms([s for s, _ in unit], positions=[p for _, p in unit], cell=[6.0, 6.0, 3.75], pbc=True)
+            ("C", [0.4, 0.0, 2.6]), ("H", [1.0, 0.9, 2.6]), ("H", [1.0, -0.9, 2.6])]
+    a = Atoms([s for s, _ in unit], positions=[p for _, p in unit], cell=[6.0, 6.0, 4.0], pbc=True)
     a.info.update(triage_chain="x", triage_state="tt", triage_repeats=1, triage_kind="crystal", kmesh="4 4 6")
     return a
 
@@ -206,18 +208,18 @@ def test_a_twisted_stretch_is_half_round_and_the_rest_is_where_it_was():
     along = np.array([0.0, 0.0, 1.0])
     # from the methylene of the first repeat to that of the third, each twist half a repeat wide
     h = CT.hinge(a, along)
-    assert h == pytest.approx(2.5 / 3.75)
+    assert h == pytest.approx(2.6 / 4.0)
     CT.twisted(row, slice(0, len(row)), along, h / 4, (2 + h) / 4, 0.5 / 4)
     centre = before.mean(axis=0)
     z = before[:, 2]
-    inside = (z > 2.5 + 0.95) & (z < 10.0 - 0.95)
-    outside = (z < 2.5 - 0.95) | (z > 10.0 + 0.95)
+    inside = (z > 2.6 + 1.01) & (z < 10.6 - 1.01)  # each twist is half a repeat wide, 1 A each side of its methylene
+    outside = (z < 2.6 - 1.01) | (z > 10.6 + 1.01)
     assert inside.sum() >= 8 and outside.sum() >= 8
     assert np.allclose(row.positions[outside], before[outside])
     assert np.allclose(row.positions[inside][:, :2] - centre[:2], -(before[inside][:, :2] - centre[:2]))
     assert np.allclose(row.positions[:, 2], before[:, 2])  # nothing moves along the chain
     assert np.allclose(np.linalg.norm(row.positions[:, :2] - centre[:2], axis=1), np.linalg.norm(before[:, :2] - centre[:2], axis=1))
-    assert CT.facing(row, slice(0, len(row)), len(a), along) == pytest.approx([0.0, 180.0, 180.0, 0.0], abs=1e-6)
+    assert CT.facing(row, slice(0, len(row)), along) == pytest.approx([0.0, 180.0, 180.0, 0.0], abs=1e-6)
 
 
 def test_a_kink_row_has_its_walls_and_its_part_turned_chain():
@@ -227,7 +229,7 @@ def test_a_kink_row_has_its_walls_and_its_part_turned_chain():
     reference = np.array([-1.0, 0.0, 0.0])  # the C=O of the chain as made
 
     def faces(row):
-        return [[abs(round(v)) for v in CT.facing(row, slice(c * n * long, (c + 1) * n * long), n, along, reference)] for c in range(4)]
+        return [[abs(round(v)) for v in CT.facing(row, np.where(row.arrays["chain"] == c)[0], along, reference)] for c in range(4)]
 
     rest = CT.kink_row(a, 4, long, long)
     assert len(rest) == 4 * long * n and rest.info["triage_repeats"] == 16 and rest.info["kmesh"] == "1 4 2"
@@ -239,6 +241,31 @@ def test_a_kink_row_has_its_walls_and_its_part_turned_chain():
     assert np.allclose(part.positions[3 * n * long:], rest.positions[3 * n * long:])
     with pytest.raises(ValueError):
         CT.kink_row(a, 4, long, 1, 1.5)
+    # the other wall: the last chain of the turned half is the one that moves, and the row at rest is the same cell
+    assert np.allclose(CT.kink_row(a, 4, long, long, side=2).positions, rest.positions)
+    assert faces(CT.kink_row(a, 4, long, 0, side=2)) == [[0] * 4, [0] * 4, [180] * 4, [0] * 4]
+    assert faces(CT.kink_row(a, 4, long, 2, 0.5, side=2)) == [[0] * 4, [0] * 4, [180] * 4, [0, 180, 180, 0]]
+
+
+def test_an_etherified_chain_loses_a_hydrogen_and_keeps_its_carbonyls():
+    """The N-H of the second repeat of the moving chain made O: an atom fewer, the same four C=O, and
+    the chains after it still found by the cell's own array."""
+    a = _zigzag()
+    n, long = len(a), 4
+    along = np.array([0.0, 0.0, 1.0])
+    plain = CT.kink_row(a, 4, long, 2, 0.5)
+    made = CT.kink_row(a, 4, long, 2, 0.5, ether=[(1, 0)])
+    assert len(made) == len(plain) - 1
+    assert made.get_chemical_symbols().count("O") == plain.get_chemical_symbols().count("O") + 1
+    assert made.get_chemical_symbols().count("N") == plain.get_chemical_symbols().count("N") - 1
+    assert [int(v) for v in np.bincount(made.arrays["chain"])] == [n * long, n * long, n * long - 1, n * long]
+    mover = np.where(made.arrays["chain"] == 2)[0]
+    reference = np.array([-1.0, 0.0, 0.0])
+    assert [abs(round(v)) for v in CT.facing(made, mover, along, reference)] == [0, 180, 180, 0]
+    last = np.where(made.arrays["chain"] == 3)[0]
+    assert np.allclose(made.positions[last], plain.positions[3 * n * long:])
+    with pytest.raises(ValueError):
+        CT.kink_row(a, 4, long, 2, 0.5, ether=[(1, 1)])  # this toy chain has one nitrogen a repeat
 
 
 def test_nearest_reads_a_collapse_across_the_cell_face():

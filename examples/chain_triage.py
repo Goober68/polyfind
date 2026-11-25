@@ -447,28 +447,56 @@ def hinge(atoms, along) -> float:
     return 0.0
 
 
-def facing(row, part: slice, per_repeat: int, along, reference=None):
-    """Which way each repeat of a chain faces, in degrees about the chain's axis: its C=O against ``reference``.
+def facing(row, part, along, reference=None):
+    """Which way each carbonyl of a chain faces, in degrees about the chain's axis: its C=O against ``reference``.
 
-    The reference is a vector across the chain (None: the first repeat's own C=O).  A chain with no
-    oxygen returns an empty list.  It is how a relaxed cell says which of its repeats are still turned."""
-    symbols = row.get_chemical_symbols()[part]
+    ``part`` is the chain's atoms (a slice or their indices, in order along the chain); the
+    reference is a vector across the chain (None: the first carbonyl's own).  A carbonyl is an
+    oxygen with one neighbour that is not hydrogen (within 1.75 A), so an ether oxygen put in an
+    N-H's place, which has two, is not counted.  A chain with none returns an empty list.  It is how
+    a relaxed cell says which of its repeats are still turned."""
+    symbols = np.array(row.get_chemical_symbols())[part]
     pos = row.positions[part]
+    heavy = [i for i in range(len(pos)) if symbols[i] != "H"]
     out = []
-    for r in range(len(pos) // per_repeat):
-        block = range(r * per_repeat, (r + 1) * per_repeat)
-        oxygens = [i for i in block if symbols[i] == "O"]
-        if not oxygens:
-            return []
-        o = oxygens[0]
-        c = min((i for i in range(len(pos)) if symbols[i] == "C"), key=lambda i: np.linalg.norm(pos[i] - pos[o]))
-        v = pos[o] - pos[c]
+    for o in (i for i in range(len(pos)) if symbols[i] == "O"):
+        bonded = [i for i in heavy if i != o and np.linalg.norm(pos[i] - pos[o]) < 1.75]
+        if len(bonded) != 1 or symbols[bonded[0]] != "C":
+            continue
+        v = pos[o] - pos[bonded[0]]
         v = v - (v @ along) * along
         if reference is None:
             reference = v
         ref = reference - (reference @ along) * along
         out.append(float(np.degrees(np.arctan2(np.cross(ref, v) @ along, ref @ v))))
     return out
+
+
+def etherified(row, part, per_repeat: int, which):
+    """A row cell with chosen N-H groups of one chain made O: each gives one hydrogen bond fewer and takes no room.
+
+    ``part`` is the chain's atoms in order along it, ``per_repeat`` of them a repeat; ``which`` is
+    pairs ``(repeat, k)``, the ``k``-th nitrogen of that repeat.  The nitrogen becomes the oxygen
+    where it stands and its hydrogen is taken out (a urea with one such is a urethane, with two a
+    carbonate).  Atoms after the hydrogen move up the list: chains are found afterwards by the
+    cell's ``chain`` array, not by counting."""
+    index = np.arange(len(row))[part]
+    symbols = row.get_chemical_symbols()
+    pos = row.positions
+    gone = []
+    for r, k in which:
+        block = index[r * per_repeat:(r + 1) * per_repeat]
+        nitrogens = [i for i in block if symbols[i] == "N"]
+        if k >= len(nitrogens):
+            raise ValueError(f"repeat {r} of this chain has no nitrogen {k}")
+        n_at = nitrogens[k]
+        near = [h for h in index if symbols[h] == "H" and np.linalg.norm(pos[h] - pos[n_at]) < 1.2]
+        if len(near) != 1:
+            raise ValueError(f"nitrogen {k} of repeat {r} has {len(near)} hydrogens, not one")
+        row.symbols[n_at] = "O"
+        gone.append(near[0])
+    del row[sorted(gone)]
+    return row
 
 
 def band(images, calc, fmax: float, steps: int, end_steps: int = 150):
@@ -624,14 +652,20 @@ def nucleus(args):
               f"in the potential, end {(energies[-1] - energies[0]) * KCAL / reps:+.2f}; profile {' '.join(f'{(e - energies[0]) * KCAL / reps:.2f}' for e in energies)}", flush=True)
 
 
-def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0):
+def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0, side: int = 1, ether=()):
     """A row of ``rows`` chains ``long`` repeats long with a wall each side of its turned half.
 
-    The chains of the second half of the row are turned whole, but for the first of them, which is
-    the chain beside the wall: of that one ``turned`` repeats are turned and the rest are not, the
-    stretch running from one repeat's soft link to another's, each end a twist ``width`` repeats
-    wide.  ``turned = long`` is the row at rest with its two walls, ``turned = 0`` the same row with
-    one wall a chain further on, and anything between is a wall part of the way over."""
+    The chains of the second half of the row are turned whole, but for one of them, the chain
+    beside a wall: of that one ``turned`` repeats are turned and the rest are not, the stretch
+    running from one repeat's soft link to another's, each end a twist ``width`` repeats wide.
+    ``turned = long`` is the row at rest with its two walls, ``turned = 0`` the same row with one
+    wall a chain further on, and anything between is a wall part of the way over.
+
+    A row of chains that all point one way has two kinds of wall, one where the chains' oxygens
+    meet and one where their N-H meet.  ``side`` 1 moves the first chain of the turned half (the
+    wall before it), 2 the last (the wall after it): the row at rest is the same cell for both.
+    ``ether``: pairs ``(repeat, k)`` of the moving chain whose N-H is made O (``etherified``), the
+    same in every state of a series.  The cell's ``chain`` array says which chain an atom is of."""
     a = rebased(a)
     n = len(a)
     per_chain = n * long
@@ -640,9 +674,11 @@ def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0):
     mesh[0] = max(1, round(mesh[0] / rows))
     mesh[2] = max(1, round(mesh[2] / long))
     row = a.repeat([rows, 1, long])
-    mover = rows // 2
-    for chain in range(mover + 1, rows):
-        spun(row, per_chain, chain, np.pi, along)
+    row.set_array("chain", np.repeat(np.arange(rows), per_chain))
+    mover = rows // 2 if side == 1 else rows - 1
+    for chain in range(rows // 2, rows):
+        if chain != mover:
+            spun(row, per_chain, chain, np.pi, along)
     if turned >= long:
         spun(row, per_chain, mover, np.pi, along)
     elif turned > 0:
@@ -650,8 +686,11 @@ def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0):
             raise ValueError(f"{turned} of {long} repeats turned leaves no room for two twists {width} repeat(s) wide")
         h = hinge(a, along)
         twisted(row, slice(mover * per_chain, (mover + 1) * per_chain), along, h / long, (turned + h) / long, width / long)
+    if ether:
+        etherified(row, slice(mover * per_chain, (mover + 1) * per_chain), n, ether)
     row.info.update(a.info)
-    row.info.update(triage_repeats=rows * long * int(a.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh))
+    row.info.update(triage_repeats=rows * long * int(a.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh),
+                    triage_kink_mover=mover)
     return row
 
 
@@ -675,11 +714,12 @@ def kink(args):
         a = rebased(read(src / f"{name}.relaxed.xyz"))
         n = len(a)
         along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
-        tag = f"{name}_kink{args.long}"
+        ether = [tuple(int(v) for v in item.split(":")) for item in args.ether.split(",")] if args.ether else []
+        tag = f"{name}_kink{args.long}" + ("" if args.side == 1 else f"s{args.side}") + ("_e" + "-".join(f"{r}{k}" for r, k in ether) if ether else "")
         work = src / "work" / tag
         work.mkdir(parents=True, exist_ok=True)
         counts = sorted({int(v) for v in args.turned.split(",")} | {0, args.long}, reverse=True) if args.turned else [args.long, args.long // 2, 0]
-        mover = slice((args.rows // 2) * n * args.long, (args.rows // 2 + 1) * n * args.long)
+        mover_chain = args.rows // 2 if args.side == 1 else args.rows - 1
         reference = None  # the way the chain faces in the polar cell: its C=O across the chain
         if "O" in a.get_chemical_symbols():
             o = a.get_chemical_symbols().index("O")
@@ -694,7 +734,7 @@ def kink(args):
                 t0 = time.time()
                 before = int(row.info["triage_kink_steps"]) if row is not None else 0
                 if row is None:
-                    row = kink_row(a, args.rows, args.long, k, args.width)
+                    row = kink_row(a, args.rows, args.long, k, args.width, args.side, ether)
                 info = dict(row.info)
                 if nearest(row) < 0.6:
                     raise ValueError(f"{tag}: the start with {k} repeats turned has two atoms {nearest(row):.2f} A apart")
@@ -712,7 +752,9 @@ def kink(args):
                 write(store, row, format="extxyz")
             if nearest(row) < 0.85:
                 raise ValueError(f"{tag}: the state with {k} repeats turned has two atoms {nearest(row):.2f} A apart: not a structure")
-            faces = facing(row, mover, n, along, reference)
+            # a state made before cells carried the array has its chains in equal runs
+            chains = row.arrays["chain"] if "chain" in row.arrays else np.repeat(np.arange(args.rows), n * args.long)
+            faces = facing(row, np.where(chains == mover_chain)[0], along, reference)
             states.append(row)
             print(f"{tag}: {k} of {args.long} repeats turned, {len(row)} atoms, {int(row.info['triage_kink_steps'])} steps to {float(row.info['triage_kink_force']):.3f} eV/A, "
                   f"the chain's repeats face {' '.join(f'{v:+.0f}' for v in faces)} degrees", flush=True)
@@ -1315,6 +1357,8 @@ def main():
     j.add_argument("--long", type=int, default=4, help="repeats along the chain")
     j.add_argument("--turned", default="", help="how many repeats of the chain beside the wall are turned, e.g. 2,3 (the two whole states are always made)")
     j.add_argument("--width", type=float, default=1.0, help="repeats over which each twist is started")
+    j.add_argument("--side", type=int, default=1, choices=(1, 2), help="which wall steps: the one before the turned half (1) or the one after it (2)")
+    j.add_argument("--ether", default="", help="N-H groups of the moving chain made O, as REPEAT:K pairs, e.g. 0:1,1:0 (the two beside the first repeat's methylene)")
     j.add_argument("--fmax", type=float, default=0.05)
     j.add_argument("--steps", type=int, default=300)
     j.add_argument("--more", type=int, default=0, help="steps more for a state already made that stopped above --fmax")
