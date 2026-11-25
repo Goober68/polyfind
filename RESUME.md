@@ -843,6 +843,39 @@ right": true at one registry, not along it).
         own command line and never ends; `rise_a` of a doubled cell is printed per chain-repeat
         counted twice (cosmetic, not fixed).
         OFFERED TO THE PI, NOT ANSWERED: the last $3.9 on a card for the cam test in DFT.
+        THE MI100 AND THE LONG CELLS (2026-11-25; PI: "Go on the card -- we have an MI100 now", then
+        "Try again"). THE MI100 CANNOT BE REACHED FROM THIS CLOUD SESSION: the list of the PI's
+        computer folders came back empty three times, so there is nothing to ask for. NOTHING WAS
+        RENTED (about $3.9 of the $46 is left). What was done instead:
+        (1) A KIT FOR THE MI100, tried whole on this container (a processor build of PyTorch, a local
+        copy of the repository, nothing pushed). One command there, `examples/mi100_runner.sh` (its
+        header says what it does to the machine), sets up under ~/polyfind_mi100 without root
+        (`examples/mi100_setup.sh`: QE 7.5 from conda-forge, a Python 3.12 with PyTorch 2.9.1's
+        ROCm 6.4 build and mace-torch 0.3.17, the pretrained potential, eight pseudopotential files by
+        checksum, three of them now kept in `examples/pseudo/`), runs the lines of
+        `examples/gpu_jobs/queue_mi100.txt` in order and pushes small results to the branch
+        `mi100-results` (to read them: `git fetch origin mi100-results`, then STATUS and
+        jobs/*/log.txt). Its first job, `mi100_check.sh`, reports the processors, the memory, the
+        card, the potential on the card against the processors and two stored DFT points again.
+        With MI100_FOLLOW=1 it keeps following the branch, so a push starts a job: that is remote
+        control of the PI's machine by whoever can push to the branch, and the PI was told so in
+        those words. NOT KNOWN UNTIL THE CHECK RUNS THERE: whether PyTorch's ROCm build sees the card
+        (the wheel carries its own ROCm and needs /dev/kfd; `MI100_TORCH` and `MI100_TORCH_INDEX`
+        name another build), how many cores, how much memory. The runner keeps the machine's name,
+        the home path and the user's git identity out of what it pushes (the repository is public).
+        (2) THE LONG-CELL TEST WAS STARTED HERE, NOT LEFT FOR THE MI100. A 36-atom DFT single point
+        takes 3 minutes on four free cores (15 with a potential job beside it), so four repeats of a
+        four-chain row, 144 atoms, fit this container: "beyond this machine" in the blocks below was
+        wrong for that size. `chain_triage.py kink --long 4` makes the row with its two walls and the
+        chain beside a wall turned over 4, 2 and 0 of its 4 repeats (a twist at each end of the
+        turned part, started at a methylene), relaxes each in the pretrained potential with the cell
+        held (6 s a step on four cores; states kept in `/opt/dft/triage/work/urea1_tt_x1_kink4/`)
+        and writes `urea1_tt_x1_kink4.path.xyz`; `points --names urea1_tt_x1_kink4` then asks DFT
+        (about 25 minutes a state expected). What the part-turned state has above the line between
+        the two whole ones is its pair of twists: the hump a wall's step needs in a long chain, where
+        the rod's 15.8 a repeat grows with the length. IN FLIGHT WHEN THIS WAS WRITTEN; results go
+        in `docs/CANDIDATE_MATERIALS.md` 6.3. TRAP: two potential jobs at once on this container
+        (15 GB) get one of them killed by the kernel with nothing in its log.
         THE CAM TEST AT THE END OF 2026-11-23 (text: `docs/CANDIDATE_MATERIALS.md` 6.2; READ THIS
         BEFORE THE 17:20 BLOCK BELOW, WHICH IT CORRECTS). DFT on the relaxed ends of the urea row's
         first-move paths: one chain turned alone in a row at rest is 31.1 kcal/mol a repeat above it
