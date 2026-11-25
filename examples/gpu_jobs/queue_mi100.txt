@@ -11,3 +11,10 @@ triage.sh kink --names urea1_tt_x1 --device cuda --long 8 --turned 2,3,4,5,6
 # 3. The four-repeat states relaxed in DFT on the processors, the cell held (144 atoms a state):
 #    the pair of twists by DFT's own structures and not the potential's.
 triage.sh points --names urea1_tt_x1_kink4 --relax
+# 4. (added 2026-11-25, after the four-repeat states were read in DFT on the other machine: the
+#    part-turned state is no hump, the unit that changes sides is one repeat, and what the two
+#    whole states differ by is the row's width.)  Wider rows, so that a wall steps with no other
+#    wall beside it: six and eight chains, four repeats long (216 and 288 atoms), every count of
+#    repeats turned, in the potential on the card.
+triage.sh kink --names urea1_tt_x1 --device cuda --rows 6 --long 4 --turned 4,3,2,1,0
+triage.sh kink --names urea1_tt_x1 --device cuda --rows 8 --long 4 --turned 4,3,2,1,0

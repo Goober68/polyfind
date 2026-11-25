@@ -699,7 +699,9 @@ def kink_row(a, rows: int, long: int, turned: int, width: float = 1.0, side: int
 def kink_series(name: str, args):
     """``(ether, tag)`` of a series of ``kink`` states: the N-H groups made O and the name its files carry."""
     ether = [tuple(int(v) for v in item.split(":")) for item in args.ether.split(",")] if args.ether else []
-    tag = f"{name}_kink{args.long}" + ("" if args.side == 1 else f"s{args.side}") + ("_e" + "-".join(f"{r}{k}" for r, k in ether) if ether else "")
+    # a row of four chains carries no mark of its width: the first series were made so
+    tag = (f"{name}_kink{args.long}" + ("" if args.rows == 4 else f"r{args.rows}") + ("" if args.side == 1 else f"s{args.side}")
+           + ("_e" + "-".join(f"{r}{k}" for r, k in ether) if ether else ""))
     return ether, tag
 
 
