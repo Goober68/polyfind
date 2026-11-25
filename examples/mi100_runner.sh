@@ -99,7 +99,9 @@ say() { echo "$(date -u +%FT%TZ) $*" | tee -a "$STATUS"; }
 publish() {  # commit the results folder and push it; a refusal is said once a state, not hidden
   ( cd "$RESULTS" || exit 0
     # the repository is public: the home folder's name (a user's name) is taken out of what is committed
-    find . -path ./.git -prune -o -type f \( -name '*.txt' -o -name STATUS \) -size -20M -print0 | xargs -0 -r sed -i "s|$HOME|~|g"
+    # (only where a path starts with it, not where another path happens to hold the same letters)
+    find . -path ./.git -prune -o -type f \( -name '*.txt' -o -name STATUS \) -size -20M -print0 \
+      | xargs -0 -r sed -i "s#\\(^\\|[^A-Za-z0-9_./-]\\)$HOME#\\1~#g"
     find . -path ./.git -prune -o -type f -size +20M -print | sed 's|^\./||' > .git/info/exclude
     git add -A >/dev/null 2>&1
     git diff --cached --quiet && exit 0

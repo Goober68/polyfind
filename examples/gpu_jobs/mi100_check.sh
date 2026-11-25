@@ -10,7 +10,8 @@
 #      PyTorch's ROCm build sees; a product of two matrices on it against the processors'
 #   3. the potential: the stored long-cell states of the urea row (relaxed on the other machine's
 #      processors, energies in double precision) evaluated again on the processors and on the card,
-#      with timings at 144 and 576 atoms
+#      with timings at 144 atoms, and at 576 on the card (on processors 576 atoms in double
+#      precision take more memory than a small machine has: it was stopped for that at 15 GB)
 #   4. DFT: two stored single points of 36 atoms run again, against the energies stored for them
 #
 # MI100_CHECK_SKIP_DFT=1 leaves part 4 out (it takes minutes).
@@ -119,6 +120,8 @@ for rows, long in ((4, 4), (8, 8)):
     row = ct.kink_row(a, rows, long, long)
     reference = None
     for (device, dtype), calc in calcs.items():
+        if device == "cpu" and len(row) > 200:
+            continue
         try:
             row.calc = calc
             t0 = time.time()
@@ -136,6 +139,7 @@ for rows, long in ((4, 4), (8, 8)):
         except Exception as err:
             print(f"THE POTENTIAL FAILED on {device} in {dtype} at {len(row)} atoms:", type(err).__name__, str(err)[:300])
 EOF
+[ "${PIPESTATUS[0]}" -eq 0 ] || echo "THIS PART WAS STOPPED BEFORE ITS END (exit ${PIPESTATUS[0]}): a process killed for lack of memory ends so"
 
 echo
 echo "== 4. DFT"

@@ -155,6 +155,8 @@ def model(path, dtype: str = "float64", device: str = "cpu"):
     import torch
     from mace.calculators import MACECalculator
 
+    if device != "cpu" and not torch.cuda.is_available():
+        raise SystemExit(f"--device {device}: this build of PyTorch ({torch.__version__}) sees no card on this machine")
     load = torch.jit.load
     torch.jit.load = lambda f, *args, **kwargs: load(f, *args, **{**kwargs, "map_location": device})
     try:
