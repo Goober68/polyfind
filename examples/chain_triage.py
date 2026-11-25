@@ -82,6 +82,13 @@ CHAINS = {
               "states": {"tt": ([T], 1)}},
     "urea3": {"repeat": "NC(=O)NCCC", "m": 7, "tail": 6, "what": "polyurea-3",
               "states": {"tt": ([T], 1)}},
+    # polyurea-1 with a side group on its one carbon, to hold its sheets apart (6.3 of the candidates
+    # document: the hump for a urea to change sides is a contact with the next sheet).  One methyl, the
+    # same hand on every repeat, so all on one face of a sheet; or two, one on each face and no hand
+    "urea1m": {"repeat": "NC(=O)N[C@H](C)", "m": 6, "tail": 4, "what": "poly(ethylidene urea), every methyl of one hand",
+               "states": {"tt": ([T], 1)}},
+    "urea1mm": {"repeat": "NC(=O)NC(C)(C)", "m": 7, "tail": 4, "what": "poly(isopropylidene urea)",
+                "states": {"tt": ([T], 1)}},
 }
 
 
