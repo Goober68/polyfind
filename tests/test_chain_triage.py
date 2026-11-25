@@ -380,3 +380,36 @@ def test_a_spread_cell_has_its_sheets_further_apart_and_its_atoms_where_they_wer
     # what the second edge has along the sheet is kept: the sheets move apart and do not slide
     normal = np.cross(cell[0], cell[2]) / np.linalg.norm(np.cross(cell[0], cell[2]))
     assert (b.cell.array[1] - cell[1]) == pytest.approx(0.2 * (cell[1] @ normal) * normal)
+
+
+def test_a_cell_is_whole_only_while_it_is_bonded_as_the_repeat_is():
+    """A chain whose bond across the period has been pulled apart is no longer the chain, and is told from it."""
+    pytest.importorskip("rdkit")
+    chain = CT.CHAINS["pvdf"]
+    a = CT.periodic(chain, "tt")
+    assert CT.repeat_bonding(chain) == ["C:CCFF", "C:CCHH", "F:C", "F:C", "H:C", "H:C"]
+    assert CT.whole(a, chain)
+    cell = a.cell.array.copy()
+    cell[2, 2] += 0.9  # the atoms stay: the carbon at the top no longer reaches the next period's
+    a.set_cell(cell, scale_atoms=False)
+    assert not CT.whole(a, chain)
+    # two repeats are counted as two
+    assert CT.repeat_bonding(chain, 2) == sorted(CT.repeat_bonding(chain) * 2)
+
+
+def test_a_methyl_takes_the_place_of_the_lone_hydrogen_on_a_carbon():
+    """The two-methyl urea chain is made from the one-methyl chain's period, heavy atoms in the repeat's order."""
+    pytest.importorskip("rdkit")
+    a = CT.periodic(CT.CHAINS["urea1m"], "tt")
+    assert CT.CHAINS["urea1mm"]["methyl_on"] == "urea1m"
+    b = CT.methyl_for_hydrogen(a)
+    assert len(b) == len(a) + 3
+    assert b.get_chemical_symbols() == list("NCONCCC") + ["H"] * 8
+    assert np.allclose(b.positions[:6], a.positions[:6]) and np.allclose(b.cell.array, a.cell.array)
+    assert b.get_distance(4, 6) == pytest.approx(1.53, abs=1e-6)  # on the carbon that carried the hydrogen
+    assert sorted(round(float(b.get_distance(6, k)), 2) for k in (12, 13, 14)) == [1.09, 1.09, 1.09]
+    assert CT.cell_bonding(b).count("C:CHHH") == 2
+    # a period with no such carbon, or with two, is refused
+    with pytest.raises(ValueError):
+        CT.methyl_for_hydrogen(b)
+

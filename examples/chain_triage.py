@@ -85,10 +85,11 @@ CHAINS = {
     # polyurea-1 with a side group on its one carbon, to hold its sheets apart (6.3 of the candidates
     # document: the hump for a urea to change sides is a contact with the next sheet).  One methyl, the
     # same hand on every repeat, so all on one face of a sheet; or two, one on each face and no hand
+    # (made from the one-methyl chain's period, ``methyl_on``: its own oligomer is too bent to cut)
     "urea1m": {"repeat": "NC(=O)N[C@H](C)", "m": 6, "tail": 4, "what": "poly(ethylidene urea), every methyl of one hand",
                "states": {"tt": ([T], 1)}},
     "urea1mm": {"repeat": "NC(=O)NC(C)(C)", "m": 7, "tail": 4, "what": "poly(isopropylidene urea)",
-                "states": {"tt": ([T], 1)}},
+                "states": {"tt": ([T], 1)}, "methyl_on": "urea1m"},
 }
 
 
@@ -153,6 +154,36 @@ def periodic(chain: dict, state: str, box: float = 14.0, n: int = 8):
     return a
 
 
+def repeat_bonding(chain: dict, period: int = 1) -> list:
+    """What each atom of ``period`` repeats inside a long chain is bonded to, sorted: ``C:HHN``, ``H:N``..."""
+    from rdkit import Chem
+
+    mol = Chem.AddHs(Chem.MolFromSmiles(chain["repeat"] * (period + 2)))
+    heavy = set(range(chain["m"], (period + 1) * chain["m"]))
+    return sorted(atom.GetSymbol() + ":" + "".join(sorted(n.GetSymbol() for n in atom.GetNeighbors())) for atom in mol.GetAtoms()
+                  if atom.GetIdx() in heavy or (atom.GetSymbol() == "H" and atom.GetNeighbors()[0].GetIdx() in heavy))
+
+
+def cell_bonding(atoms, mult: float = 1.2) -> list:
+    """The same list read off a periodic cell by distance (bonded: nearer than ``mult`` times the covalent radii)."""
+    from ase.neighborlist import natural_cutoffs, neighbor_list
+
+    symbols = atoms.get_chemical_symbols()
+    near = [[] for _ in symbols]
+    for i, j in zip(*neighbor_list("ij", atoms, natural_cutoffs(atoms, mult=mult))):
+        near[i].append(symbols[j])
+    return sorted(s + ":" + "".join(sorted(n)) for s, n in zip(symbols, near))
+
+
+def whole(atoms, chain: dict) -> bool:
+    """Whether a cell of one chain is still the chain: every atom bonded to what the repeat bonds it to.
+
+    A period cut from an oligomer that is not straight (two methyls on one carbon bend it) can leave
+    the bond across the period too long to be one, and the potential then settles the pieces without
+    complaint.  Nothing downstream would notice: a packing search packs whatever it is given."""
+    return cell_bonding(atoms) == repeat_bonding(chain, atoms.info.get("triage_repeats", 1))
+
+
 def model(path, dtype: str = "float64", device: str = "cpu"):
     """A MACE-architecture model file on the processor or a card (the pretrained ones are for starts only).
 
@@ -195,19 +226,63 @@ def kmesh(atoms) -> str:
     return " ".join(str(1 if (vacuum and k < 2) else max(2, round(20.0 / lengths[k]))) for k in range(3))
 
 
+def methyl_for_hydrogen(atoms):
+    """A chain's period with the lone hydrogen of its one C-H carbon exchanged for a methyl.
+
+    The heavy atoms keep their order and the new carbon follows them, as the repeat's own numbering
+    has it; the new methyl's hydrogens come last."""
+    from ase import Atoms
+    from ase.neighborlist import neighbor_list
+
+    symbols = atoms.get_chemical_symbols()
+    carried = {}
+    for i, j, d in zip(*neighbor_list("ijD", atoms, 1.25)):
+        if symbols[i] == "C" and symbols[j] == "H":
+            carried.setdefault(int(i), []).append((int(j), d))
+    lone = [(c, hs[0]) for c, hs in carried.items() if len(hs) == 1]
+    if len(lone) != 1:
+        raise ValueError(f"{len(lone)} carbons carry one hydrogen: the exchange needs exactly one")
+    carbon, (hydrogen, bond) = lone[0]
+    u = bond / np.linalg.norm(bond)
+    p = np.cross(u, [0.0, 0.0, 1.0] if abs(u[2]) < 0.9 else [1.0, 0.0, 0.0])
+    p /= np.linalg.norm(p)
+    q = np.cross(u, p)
+    pos = atoms.get_positions()
+    methyl = pos[carbon] + 1.53 * u
+    tilt = np.radians(70.5)  # a tetrahedral H-C-C angle, seen from the new carbon
+    hydrogens = [methyl + 1.09 * (np.cos(tilt) * u + np.sin(tilt) * (np.cos(t) * p + np.sin(t) * q)) for t in np.radians([30.0, 150.0, 270.0])]
+    heavy = [k for k, s in enumerate(symbols) if s != "H"]
+    rest = [k for k, s in enumerate(symbols) if s == "H" and k != hydrogen]
+    b = Atoms([symbols[k] for k in heavy] + ["C"] + ["H"] * (len(rest) + 3),
+              positions=np.vstack([pos[heavy], [methyl], pos[rest], hydrogens]), cell=atoms.cell, pbc=True)
+    b.info.update(atoms.info)
+    return b
+
+
 def build(args):
-    from ase.io import write
+    from ase.io import read, write
 
     calc = model(args.model)
     args.out.mkdir(parents=True, exist_ok=True)
     for name in args.chains.split(","):
         chain = CHAINS[name]
         for state in chain["states"]:
-            a = periodic(chain, state, box=args.box)
+            if "methyl_on" in chain:
+                # two methyls on one carbon bend the oligomer, and a period cut from it is in pieces
+                source = args.out / f"{chain['methyl_on']}_{state}.start.xyz"
+                if not source.exists():
+                    raise SystemExit(f"{name}_{state} is made from {source.name}: build {chain['methyl_on']} first")
+                a = methyl_for_hydrogen(read(source))
+            else:
+                a = periodic(chain, state, box=args.box)
             made = a.cell.lengths()[2] / a.info["triage_repeats"]
             a = settle(a, calc)
             a.info["triage_chain"] = name
             a.info["kmesh"] = kmesh(a)
+            if not whole(a, chain):
+                print(f"{name}_{state}: NOT WRITTEN: the settled cell is not bonded as the repeat is (rise {made:.3f} A as made, "
+                      f"{a.cell.lengths()[2] / a.info['triage_repeats']:.3f} A settled); what it was settled from was not one period of the chain", flush=True)
+                continue
             write(args.out / f"{name}_{state}.start.xyz", a, format="extxyz")
             print(f"{name}_{state}: {len(a)} atoms, {a.info['triage_repeats']} repeat(s), rise a repeat {made:.3f} A as made, "
                   f"{a.cell.lengths()[2] / a.info['triage_repeats']:.3f} A settled ({a.info['triage_start_steps']} steps), k {a.info['kmesh']}", flush=True)
