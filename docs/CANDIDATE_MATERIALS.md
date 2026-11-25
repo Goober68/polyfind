@@ -1965,21 +1965,79 @@ sheets (a side group on the chain props them apart, as alanine's methyl holds pr
 A apart where glycine's lie at 3.4), or a turning urea with a hydrogen less (an ether in place of
 an N-H). With room enough the same contact is a bond and not a squeeze, and the quarter-turned
 urea may then be a state of its own, joined up the stack instead of along the row. The first is
-being tested as a mechanism, not yet as a molecule: the same row with its sheets 1.2 times as far
-apart and nothing else changed (`chain_triage.py spread`).
+tested next as a mechanism, not yet as a molecule.
 
-**Not done.** The same step in a row with room between its sheets, and with an ether in the
-turning urea. The cell at +106 let go. DFT on the cells between the ones read. The second
-urea's step from the state with one over. The other wall, where the oxygens meet. Two sheets
-thick, and rows wider than four chains. Everything in DFT's own structures. The cell is held at
-the polar crystal's, and a row with walls wants 3.4% more room (6.2), so every state here is
-squeezed.
+**The same step with room between the sheets** (`chain_triage.py spread`). This is a test of what
+the hump is, on a cell no molecule makes: the polar crystal's cell with its second edge lengthened
+until the sheets are 3.940 A apart where they were 3.283 (1.2 times, and 1.2 times the volume),
+and nothing else changed. The row is made in it and let rest in the potential (the wall chain's
+ureas then face -151), and the first urea is stepped the way that passes -90 as before. Energies
+are kcal/mol for the 144-atom cell above THIS cell's row at rest. Against the unspread row a
+spread cell's energy means nothing: the cell holds its sheets apart and nothing pays for it.
+
+| facing held | the potential | DFT |
+|---|---|---|
+| -151 (the spread row at rest) | 0 | 0 |
+| -130 | -0.68 | |
+| -110 | +1.48 | |
+| -89 | +5.58 | -1.26 |
+| -65 | -4.70 | |
+| -46 | -5.95 | |
+| -23 | -5.30 | |
+| -2 | -4.91 | |
+| let go: rests at -2 | -4.95 | |
+
+The DFT cell at -89 was stopped by this machine's two-hour limit on a job during its 17th
+iteration, one or two short of the end. Its energy had been the same to 1e-8 Ry for three
+iterations and its estimated error was 2.8e-9 Ry against the 1e-9 asked, which is a millionth of
+a kcal/mol; the number stands, and the cell is to be run again so that the record has it.
+
+10. *In the potential the top is 5.6 where the unspread row's is 31.2.* It has also moved, from
+    -120 to -89. At -130, where the unspread row was climbing (+7.2 at -141, +31.2 at -120), the
+    urea's two hydrogens are 1.90 to 1.97 A from the oxygen in the next sheet, which is the
+    length of the bond in the row, and the cell is 0.7 BELOW its row at rest. At the new top the
+    same two are 1.99 to 2.00 A from it and two hydrogens are 1.94 to 1.98 A from each other.
+11. *In DFT the cell at the potential's top is 1.26 below the row at rest.* The potential is 6.8
+    above DFT there, as it was 7.6 and 8.5 above it at the unspread tops. So 0.66 A more between
+    the sheets takes away the 23.6: the hump was the squeeze, and reading 6 holds. Whether any
+    hump is left on this path in DFT is not known. One cell of it has been read; the cells at
+    -130 and -110 have not, and DFT's top need not be where the potential's is.
+12. *It is the hump only, and a step with no hump that falls is not a switch.* The urea let go
+    rests 5.0 below the row at rest in the potential, where the unspread row's was -0.12 in the
+    potential and -11.0 in DFT; DFT has not read this one. A urea that goes over with nothing in
+    its way and lies lower there stays there. How level the two sides are is the other half of
+    the activation, and this cell cannot say: in a row four chains wide every chain is beside a
+    wall and the two whole states are 20.8 apart (reading 5). This part is a partial result: one
+    half of the activation, on a cell that is not a molecule, with no action, loss, frequency,
+    blocked force or speed in it.
+13. *What a molecule has to do is hold the sheets 3.9 A apart or more, and a methyl may.* The
+    chain with one methyl on the carbon between its ureas, the same hand on every repeat
+    (poly(ethylidene urea), `urea1m`), packs in the potential into the same bonded row (both
+    hydrogens on one oxygen, 1.89 and 1.91 A) with its sheets 4.59 A apart, 1.40 times the plain
+    chain's. That is a packing search in the potential (16 starts, the lowest; a second packing
+    0.2 kcal/mol a repeat above it has each urea's two hydrogens on two different oxygens), not
+    yet relaxed in DFT, and the methyls themselves lie in the room they make: whether the urea
+    can turn past them is the row's own step, which has not been run. The chain with two methyls
+    (`urea1mm`) has no packing yet: its first build was in pieces (the period cut from a bent
+    oligomer; `build` now checks every chain it writes), and it is rebuilt whole.
+
+**Not done.** DFT on the rest of the spread row's path (the cells at -130 and -110, the one let
+go, and -89 again for the record), and its other way round. The methyl chains: their crystals in
+DFT, the first urea's step in their rows, and everything of section 6.1 that the plain chain
+has (dipole, stiffness, what it does per volt). An ether in the turning urea. The cell at +106
+let go. DFT on the cells between the ones read. The second urea's step from the state with one
+over. The other wall, where the oxygens meet. Two sheets thick, and rows wider than four chains,
+which is where the level of the two sides can be read. Everything in DFT's own structures. The
+cell is held at the polar crystal's, and a row with walls wants 3.4% more room (6.2), so every
+state here is squeezed.
 
 Files: `docs/predictions/chain_triage.json` (`paths`: `urea1_tt_x1_kink4`,
 `urea1_tt_x1_kink4_swing4-3p`, `urea1_tt_x1_kink4_swing4-3m`),
 `docs/predictions/chain_triage_paths/` (`urea1_tt_x1_kink4.path.xyz` and the two
 `..._swing4-3{p,m}.path.xyz`, ten cells each: the row at rest, seven held, the last let go, the
-twisted state).
+twisted state; `urea1_tt_x1_g120_kink4_swing_turned_4_c0p.path.xyz`, the spread row's nine: at
+rest, seven held, the last let go, with the potential's energies; its two DFT energies are in
+this section only until the job is run to its end).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 

@@ -939,34 +939,57 @@ right": true at one registry, not along it).
         the seven cells read, not one offset. This is the perfect row, the baseline, and
         activation only: a partial result.
         (4c) THE SAME STEP WITH THE SHEETS 1.2 TIMES AS FAR APART (a test of (c) and of a side
-        group as the defect; 2026-11-25, 13:20 UTC). `spread --names urea1_tt_x1 --by 1.2` wrote
-        `urea1_tt_x1_g120.relaxed.xyz` (sheets 3.283 A made 3.940, nothing else moved); `kink
-        --names urea1_tt_x1_g120 --long 4 --turned 4 --only` its row at rest (128 steps, the
-        wall chain's ureas at -151); `swing --names urea1_tt_x1_g120 --long 4 --start turned_4
-        --carbonyl 0 --by 171 --way p --images 9` the step. IN THE POTENTIAL, kcal/mol for the
-        cell above its own row at rest, facings -151 -130 -110 -89 -65 -46 -23 -2, let go -2:
-        0.00 -0.68 +1.48 +5.58 -4.70 -5.95 -5.30 -4.91, let go -4.95. THE TOP IS 5.6 WHERE THE
-        UNSPREAD ROW'S IS 31.2 (23.6 in DFT), and it has moved to -89; at -130 the hydrogens
-        are 1.90 to 1.97 A from the next sheet's oxygen and the cell is BELOW its row at rest.
-        NOT YET DFT: the potential was 8 high on the unspread tops and 11 high on the urea over.
-        DFT WAS RUNNING WHEN THIS WAS WRITTEN: `points --names
-        urea1_tt_x1_g120_kink4_swing_turned_4_c0p --images 0,3` (the row at rest and the top;
-        log `/opt/dft/triage/log_g120p_dft.txt`; 35 to 45 minutes a cell; give the same command
-        again if it was stopped, a finished cell is kept, an unfinished one starts over), THEN
-        `--images 0,3,8,1` for the cell let go and the one at -130. THE CONTAINER WAS RESTARTED
-        ONCE AT 13:15 UTC AND KILLED BOTH BACKGROUND JOBS (files kept): keep DFT jobs to two
-        cells each. A spread cell is a mechanism test and not a molecule: its energy against
-        the unspread row means nothing (the sheets are held apart by the cell), only its hump
-        against its own row at rest does. THE MOLECULE FOR IT: `CHAINS` has `urea1m` (one
-        methyl on the carbon between ureas, one hand) and `urea1mm` (two); `build` made their
-        chains (`urea1m_tt.start.xyz`, `urea1mm_tt.start.xyz`), `pack --names
-        urea1m_tt,urea1mm_tt --starts 16` was running at one thread beside DFT (log
-        `log_urea1m_pack.txt`), then `dft` relaxes the crystals it keeps (`..._x1`), then their
-        sheet spacing, then `kink --turned 4 --only` and `swing` on them. AFTER THAT: way m on
-        the spread row (`--way m`), a sweep of the spread (1.1, 1.3, 1.4) in the potential, the
-        ether in the turning urea (`kink --ether 0:0 --turned 4 --only`, `swing --ether 0:0
-        --start turned_4 --carbonyl 0 --by 171`), the quarter-turned cell let go, the second
-        urea's step (`swing --start swing4-3p_9_free --carbonyl K`), the other wall (`--side 2`).
+        group as the defect; 2026-11-25, 15:30 UTC; IN 6.3, READINGS 10 TO 13). `spread --names
+        urea1_tt_x1 --by 1.2` wrote `urea1_tt_x1_g120.relaxed.xyz` (sheets 3.283 A made 3.940,
+        nothing else moved); `kink --names urea1_tt_x1_g120 --long 4 --turned 4 --only` its row
+        at rest (128 steps, the wall chain's ureas at -151); `swing --names urea1_tt_x1_g120
+        --long 4 --start turned_4 --carbonyl 0 --by 171 --way p --images 9` the step. IN THE
+        POTENTIAL, kcal/mol for the cell above its own row at rest, facings -151 -130 -110 -89
+        -65 -46 -23 -2, let go -2: 0.00 -0.68 +1.48 +5.58 -4.70 -5.95 -5.30 -4.91, let go -4.95.
+        IN DFT THE CELL AT THE POTENTIAL'S TOP (-89, image 3) IS 1.26 BELOW THE ROW AT REST
+        (image 0 -1996.96689046 Ry, image 3 -1996.97089353 Ry), where the unspread row's top is
+        +23.6: THE HUMP WAS THE SQUEEZE BETWEEN SHEETS. Image 3's job was STOPPED BY THE
+        TWO-HOUR LIMIT in its 17th iteration (energy the same to 1e-8 Ry for three iterations,
+        estimated error 2.8e-9 Ry against 1e-9): the number stands but `points` has no record
+        of it (no `.path.json`, so nothing of this path is in `chain_triage.json`). THE JOB TOOK
+        TWO HOURS BECAUSE A ONE-THREAD PACKING SEARCH RAN BESIDE IT (image 0 took 70 minutes,
+        not 35 to 45): RUN NOTHING BESIDE A DFT JOB, and keep DFT jobs to two cells each (the
+        container was also restarted once, at 13:15 UTC, and killed both background jobs). TO
+        RUN, two jobs: `points --frames /opt/dft/triage --names
+        urea1_tt_x1_g120_kink4_swing_turned_4_c0p --images 0,3,2 --np 4` (image 0 is kept;
+        -89 again for the record and -110), then `--images 0,1,8` (-130 and the cell let go),
+        then once more with `--images 0,1,2,3,8` to write the record in path order, then
+        `table`. Whether DFT has any hump left on this path is NOT known (one cell read), and
+        the step FALLS (-5.0 let go in the potential), which is not a switch: how level the two
+        sides are cannot be read in a row four chains wide ((b), reading 5). A spread cell is a
+        mechanism test and not a molecule: its energy against the unspread row means nothing,
+        only its hump against its own row at rest does.
+        THE MOLECULE FOR IT: `CHAINS` has `urea1m` (one methyl on the carbon between ureas, one
+        hand) and `urea1mm` (two). `pack --names urea1m_tt --starts 16` IN THE POTENTIAL:
+        `urea1m_tt_x1` is the same bonded row as the plain chain's (both hydrogens on one
+        oxygen, 1.89 and 1.91 A) with SHEETS 4.59 A APART (1.40 times 3.283); `urea1m_tt_x2`,
+        0.008 eV a repeat above it, has the two hydrogens on two oxygens. DFT RELAXATION OF BOTH
+        WAS RUNNING WHEN THIS WAS WRITTEN (`dft --frames /opt/dft/triage --names
+        urea1m_tt_x1,urea1m_tt_x2 --np 4`, log `log_urea1m_dft.txt`; a stopped relaxation goes
+        on from where it had got to when the command is given again). THEN, on the one DFT
+        keeps lowest: its sheet spacing (`sheet_gap(rebased(...))`), `kink --names NAME --long 4
+        --turned 4 --only` (192 atoms: about 9 s a step in the potential), `swing --names NAME
+        --long 4 --start turned_4 --carbonyl 0 --by 171 --way p,m --images 9` (the two ways are
+        NOT alike here: the methyls are all on one face of a sheet), then DFT on its top (192
+        atoms: an estimated 11 to 12 GB of this machine's 15 and twice the time; NOT tried).
+        `urea1mm` WAS BUILT IN PIECES the first time (two methyls bend the oligomer and the
+        period cut from it was not one; its packing was void and its files are deleted). `build`
+        now checks every chain it writes (`whole`) and makes this one from the one-methyl
+        chain's settled period (`methyl_on`, `methyl_for_hydrogen`): `urea1mm_tt.start.xyz` is
+        whole, rise 4.803 A. ITS PACKING HAS NOT BEEN RUN AGAIN (`pack --names urea1mm_tt
+        --starts 16`, about an hour at one thread, NOT beside DFT). All 33 other cells in the
+        frames folder were checked whole.
+        AFTER THAT: way m on the spread row (`--way m`), a sweep of the spread (1.1, 1.3, 1.4)
+        in the potential, the ether in the turning urea (`kink --ether 0:0 --turned 4 --only`,
+        `swing --ether 0:0 --start turned_4 --carbonyl 0 --by 171`), the quarter-turned cell
+        let go, the second urea's step (`swing --start swing4-3p_9_free --carbonyl K`), the
+        other wall (`--side 2`), and a row six chains wide in the potential for the level of
+        the two sides (`--rows 6`, 216 atoms).
         (4d) TWO SHEETS THICK: `kink` and `swing` take `--sheets 2` (288 atoms; only the first
         sheet's chain moves, the one above stays as in the row at rest; files carry `t2`, as
         `urea1_tt_x1_kink4t2`). It is the check on (e) and has NOT been run anywhere. It is
