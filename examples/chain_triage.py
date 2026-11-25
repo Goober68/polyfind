@@ -854,8 +854,8 @@ def swing(args):
     potential from the one before with everything but that facing free, the cell held.  There are
     two ways round (``--way``: p the facing counted up, m counted down) and each is its own path.
     The last held cell is then let go: if it comes to the second state the way is whole, and if not
-    the path says by how much it misses.  Every energy is taken in double precision without the
-    spring.  What it gives is the potential's way and a mark from above on the hump (the top of a
+    the path says by how much it misses; the cell let go is an image of the path, before the second
+    state.  Every energy is taken in double precision without the spring.  What it gives is the potential's way and a mark from above on the hump (the top of a
     way made by one coordinate is at or above the saddle); ``points`` reads its images in DFT."""
     from ase.io import read, write
     from ase.optimize import LBFGS
@@ -925,13 +925,14 @@ def swing(args):
                 free.info = dict(ends[0].info)
                 write(store, free, format="extxyz")
                 print(f"  {label}: the last held cell let go, {int(opt.nsteps)} steps, {time.time() - t0:.0f} s", flush=True)
-            images.append(ends[1].copy())
+            # the path: the first state, the held cells, the last of them let go, the second state
+            free.info["triage_swing_let_go"] = 1
+            images += [free, ends[1].copy()]
             energies = []
-            for im in images + [free]:
+            for im in images:
                 im.calc = exact
                 energies.append(float(im.get_potential_energy()))
                 im.calc = None
-            let_go = energies.pop()
             apart = free.positions - ends[1].positions
             apart -= np.round(apart @ np.linalg.inv(free.cell.array)) @ free.cell.array
             out = []
@@ -942,14 +943,17 @@ def swing(args):
                 im.info.update(triage_turn_of=tag, triage_turn_edge=1, triage_turn_image=index, triage_turn_ev=energies[index] - energies[0],
                                triage_turning_repeats=1, triage_path_unit="for the cell", triage_swing_way=way,
                                triage_swing_facing=float(facing(im, part, along, reference)[which]),
-                               triage_swing_let_go_ev=let_go - energies[-1], triage_swing_let_go_a=float(np.linalg.norm(apart, axis=1).max()))
+                               triage_swing_others=" ".join(f"{v:+.0f}" for i, v in enumerate(facing(im, part, along, reference)) if i != which),
+                               triage_swing_let_go_ev=energies[-2] - energies[-1], triage_swing_let_go_a=float(np.linalg.norm(apart, axis=1).max()))
                 out.append(im)
             write(src / f"{label}.path.xyz", out, format="extxyz")
             rel = [(e - energies[0]) * KCAL for e in energies]
             went = [float(im.info["triage_swing_facing"]) for im in out]
-            print(f"{label}: {len(images)} images of {len(images[0])} atoms, top {max(rel):.2f} kcal/mol for the cell above the first state in the potential, "
-                  f"end {rel[-1]:+.2f}; profile {' '.join(f'{v:.2f}' for v in rel)}; facings {' '.join(f'{v:+.0f}' for v in went)}; "
-                  f"let go, the last held cell rests {(let_go - energies[-1]) * KCAL:+.2f} from the second state, its atoms within {np.linalg.norm(apart, axis=1).max():.2f} A of it", flush=True)
+            print(f"{label}: {len(images)} images of {len(images[0])} atoms (the first state, {args.images - 2} held, the last of them let go, the second state), "
+                  f"top {max(rel):.2f} kcal/mol for the cell above the first state in the potential; profile {' '.join(f'{v:.2f}' for v in rel)}; "
+                  f"facings {' '.join(f'{v:+.0f}' for v in went)}; let go, the last held cell rests {(energies[-2] - energies[-1]) * KCAL:+.2f} from the second state, "
+                  f"its atoms within {np.linalg.norm(apart, axis=1).max():.2f} A of it and the chain's other carbonyls facing {out[-2].info['triage_swing_others']} "
+                  f"(in the second state {out[-1].info['triage_swing_others']})", flush=True)
 
 
 def kink(args):
