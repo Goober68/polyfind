@@ -965,18 +965,27 @@ right": true at one registry, not along it).
         mechanism test and not a molecule: its energy against the unspread row means nothing,
         only its hump against its own row at rest does.
         THE MOLECULE FOR IT: `CHAINS` has `urea1m` (one methyl on the carbon between ureas, one
-        hand) and `urea1mm` (two). `pack --names urea1m_tt --starts 16` IN THE POTENTIAL:
-        `urea1m_tt_x1` is the same bonded row as the plain chain's (both hydrogens on one
-        oxygen, 1.89 and 1.91 A) with SHEETS 4.59 A APART (1.40 times 3.283); `urea1m_tt_x2`,
-        0.008 eV a repeat above it, has the two hydrogens on two oxygens. DFT RELAXATION OF BOTH
-        WAS RUNNING WHEN THIS WAS WRITTEN (`dft --frames /opt/dft/triage --names
-        urea1m_tt_x1,urea1m_tt_x2 --np 4`, log `log_urea1m_dft.txt`; a stopped relaxation goes
-        on from where it had got to when the command is given again). THEN, on the one DFT
-        keeps lowest: its sheet spacing (`sheet_gap(rebased(...))`), `kink --names NAME --long 4
-        --turned 4 --only` (192 atoms: about 9 s a step in the potential), `swing --names NAME
-        --long 4 --start turned_4 --carbonyl 0 --by 171 --way p,m --images 9` (the two ways are
-        NOT alike here: the methyls are all on one face of a sheet), then DFT on its top (192
-        atoms: an estimated 11 to 12 GB of this machine's 15 and twice the time; NOT tried).
+        hand) and `urea1mm` (two). `pack --names urea1m_tt --starts 16` in the potential kept
+        two crystals and `dft` RELAXED BOTH (16:00 UTC, 13 and 29 minutes): `urea1m_tt_x1` is
+        the plain chain's bonded row (both hydrogens on one oxygen, 1.90 A) with SHEETS 4.770 A
+        APART (1.45 times 3.283), 103.0 A3 a repeat, rise 4.723 A; `urea1m_tt_x2` (two
+        hydrogens on two oxygens) is 0.97 kcal/mol a repeat ABOVE it. The methyl stands 1.93 A
+        straight off one face; its carbon's hydrogen lies in the sheet. THE CHAIN HAS A HAND:
+        its ureas the other way is the chain turned half round, methyls on the other face (in
+        the row at rest the two halves have their methyls on opposite faces). ITS ROW IS RUN
+        THREE REPEATS LONG, NOT FOUR (144 atoms, so that DFT can read it: at four it is 192
+        atoms, an estimated 12 GB of this machine's 15): `kink --names urea1m_tt_x1 --long 3
+        --turned 3 --only` made the row at rest (108 steps; the wall chain's ureas face +140,
+        its methyls 2.12 A off the sheet). THE FIRST UREA'S STEP WAS RUNNING WHEN THIS WAS
+        WRITTEN (16:17 UTC): `swing --frames /opt/dft/triage --names urea1m_tt_x1 --long 3
+        --start turned_3 --carbonyl 0 --by 110 --way m --images 9` (log
+        `log_urea1m_swing3m.txt`; the short way, down through +90, on the guess that the other
+        side rests near +40 as the plain row's two sides are mirror images about -90; held
+        cells are stored and kept if it is stopped, so give the same command again). THEN: read
+        where it rests and where its methyls went (scratch `mpath.py`), DFT on its row at rest
+        and its top (`points --names urea1m_tt_x1_kink3_swing_turned_3_c0m --images 0,K`), the
+        long way round (`--by 250 --way p`), and the plain row three repeats long for a like
+        comparison.
         `urea1mm` WAS BUILT IN PIECES the first time (two methyls bend the oligomer and the
         period cut from it was not one; its packing was void and its files are deleted). `build`
         now checks every chain it writes (`whole`) and makes this one from the one-methyl

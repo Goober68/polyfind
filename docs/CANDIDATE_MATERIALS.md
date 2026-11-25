@@ -2010,16 +2010,23 @@ a kcal/mol; the number stands, and the cell is to be run again so that the recor
     wall and the two whole states are 20.8 apart (reading 5). This part is a partial result: one
     half of the activation, on a cell that is not a molecule, with no action, loss, frequency,
     blocked force or speed in it.
-13. *What a molecule has to do is hold the sheets 3.9 A apart or more, and a methyl may.* The
-    chain with one methyl on the carbon between its ureas, the same hand on every repeat
-    (poly(ethylidene urea), `urea1m`), packs in the potential into the same bonded row (both
-    hydrogens on one oxygen, 1.89 and 1.91 A) with its sheets 4.59 A apart, 1.40 times the plain
-    chain's. That is a packing search in the potential (16 starts, the lowest; a second packing
-    0.2 kcal/mol a repeat above it has each urea's two hydrogens on two different oxygens), not
-    yet relaxed in DFT, and the methyls themselves lie in the room they make: whether the urea
-    can turn past them is the row's own step, which has not been run. The chain with two methyls
-    (`urea1mm`) has no packing yet: its first build was in pieces (the period cut from a bent
-    oligomer; `build` now checks every chain it writes), and it is rebuilt whole.
+13. *What a molecule has to do is hold the sheets 3.9 A apart or more, and in its perfect crystal
+    a methyl does.* The chain with one methyl on the carbon between its ureas, the same hand on
+    every repeat (poly(ethylidene urea), `urea1m`): a packing search in the potential (16
+    starts) kept two crystals and DFT relaxed both. The lower is the plain chain's bonded row
+    (both hydrogens on one oxygen, 1.90 and 1.90 A) with its sheets 4.77 A apart, 1.45 times the
+    plain chain's 3.28, at 103.0 A3 a repeat against 71.4. The other, with each urea's two
+    hydrogens on two different oxygens, is 0.97 kcal/mol a repeat above it. The methyl stands
+    straight off one face of the sheet, 1.93 A out, and its carbon's one hydrogen lies in the
+    sheet. Two things come with the methyl. The urea's dipole is in 1.44 times the volume, so
+    what there is to move to the volume is about 0.69 of the plain chain's if the dipole is the
+    same (it has not been computed for this chain; and it is the ceiling, not the rank). And
+    the chain has a hand: the chain with its ureas the other way is the same chain turned half
+    round, with its methyls on the other face of the sheet, so a urea that goes over takes the
+    carbons beside it part of the way round with their methyls. Whether it can is the row's own
+    step, below. The chain with two methyls (`urea1mm`) has no packing yet: its first build was
+    in pieces (the period cut from a bent oligomer; `build` now checks every chain it writes),
+    and it is rebuilt whole.
 
 **Not done.** DFT on the rest of the spread row's path (the cells at -130 and -110, the one let
 go, and -89 again for the record), and its other way round. The methyl chains: their crystals in
