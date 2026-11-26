@@ -1104,19 +1104,34 @@ right": true at one registry, not along it).
         1.41 5.05, LET GO RESTS ACROSS AT -51, ONLY +0.93 (carbonyls +42 -167 +114). Same
         height of crossing (9.4 against 8.8), a far lower state after: methyl 2 is the one to
         cross first. The 15.4 stands as the least the step costs. NO DFT on these two.
-        RUNNING WHEN THIS WAS WRITTEN: (a)'s first command below (log
-        `log_urea1_kink3r5.txt`). NEXT, IN THIS ORDER: (a) THE PLAIN CHAIN IN A FIVE-CHAIN
-        ROW, its own number and the like comparison (the 23.6 is a leaning four-chain row's):
-        `kink --frames /opt/dft/triage --names urea1_tt_x1 --rows 5 --long 3 --turned 3,0
-        --only`, check the two are level, then `swing ... --rows 5 --long 3 --start turned_3
-        --carbonyl 0 --by 110 --way m` and its second half, both ways if time, then `points`
-        (135 atoms, about 15 minutes a cell expected). (b) ROOM FROM SOMETHING THAT DOES NOT
-        TURN: the plain crystal's sheets lie urea over urea (second edge 1.72 A along the row,
-        -0.10 A along the chain, 3.283 A across); a stacking half a repeat along the chain
-        (urea over methylene) has not been tried: make the cell with its second edge moved by
-        half the third, relax it in DFT (9 atoms, minutes), compare the energies, then its row
-        and its first urea's step. An idea of this session's, NOT the PI's, not computed.
-        (v) The plain chain the same way (`--names
+        THE PLAIN CHAIN IN A FIVE-CHAIN ROW (135 atoms; 2026-11-26, 08:39 UTC; POTENTIAL ONLY SO
+        FAR): `kink --frames /opt/dft/triage --names urea1_tt_x1 --rows 5 --long 3 --turned 3,0
+        --only`: the two whole states 0.15 apart and mirror images (chains face +25 +21 -161
+        -159 -162 at rest, +18 +21 +20 -159 -155 turned). `swing ... --names urea1_tt_x1 --rows
+        5 --long 3 --start turned_3 --carbonyl 0 --by 180 --way p,m --images 13` (paths
+        `urea1_tt_x1_kink3r5_swing_turned_3_c0p` and `...c0m`), above the row at rest. WAY p,
+        facings -148 -135 -120 -99 -83 -69 -55 -42 -27 -12 +3: 2.98 14.66 34.22 39.28 20.83
+        11.05 4.83 4.83 8.22 12.50 17.07, let go rests at -38, +5.38. WAY m, -175 +171 +155
+        +141 +123 +109 +97 +84 +65 +47 +34: 1.83 6.21 11.04 17.41 7.06 4.44 8.40 19.66 38.78
+        31.21 24.84, let go stays at +31, +24.53 (does not arrive). SO THE SQUEEZE IS THERE IN
+        THE LEVEL ROW TOO: tops 39.3 and 38.8 in the potential (the four-chain row's were 31.2
+        and 33.3 where DFT had 23.6 and 24.7). TO READ IN DFT (about 15 minutes a cell
+        expected, NOTHING BESIDE IT): `points --frames /opt/dft/triage --names
+        urea1_tt_x1_kink3r5_swing_turned_3_c0p --images 0,4,3,12 --np 4` (rest, the top, the
+        cell before it, the far side), then copy that work folder's image_0.out into
+        `work/urea1_tt_x1_kink3r5_swing_turned_3_c0m/` and `points --names ...c0m --images
+        0,9,6`.
+        ROOM FROM SOMETHING THAT DOES NOT TURN (this session's idea, NOT the PI's): `slide`
+        (commit ed2eab8, 24 tests pass) writes a crystal with each sheet a fraction of a
+        repeat along the chain against the one below. `slide --frames /opt/dft/triage --names
+        urea1_tt_x1 --along 0.5` wrote `urea1_tt_x1_s50.start.xyz` (urea over methylene;
+        sheets 3.283 A apart as before). RUNNING WHEN THIS WAS WRITTEN: `dft --frames
+        /opt/dft/triage --names urea1_tt_x1_s50 --np 4` (9 atoms, cell free; log
+        `log_urea1_s50_dft.txt`). READ: its energy a repeat against `urea1_tt_x1`
+        (-1698.42549 eV), and WHERE ITS SECOND EDGE ENDS UP ALONG THE CHAIN (if it slides back
+        to 0 the shifted stacking is not a resting place). If it holds within about 1 kcal/mol
+        a repeat: `kink --names urea1_tt_x1_s50 --rows 5 --long 3 --turned 3,0 --only`, then
+        the swing both ways, then DFT on the tops. (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped
         relaxation goes on when the command is given again; work folders end `_relax`), and
