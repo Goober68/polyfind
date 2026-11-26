@@ -1291,14 +1291,15 @@ right": true at one registry, not along it).
         --faces=0,0,m-41,m-41,m-41 --stem rrddd --fmax 0.015 --steps 400` (and `rrrdd`,
         `rrrrr`): the potential has them at 0.00, +0.03, +2.86 for the cell, as the long cell
         has. `hop --frames /opt/dft/triage --names urea1_tt_x1_g109 --rows 5 --long 1 --stems
-        rrddd,rrrdd --images 9 --fmax 0.05 --steps 300` RUNNING WHEN THIS WAS WRITTEN (22:10
-        UTC, step 120 of at most 300, forces 0.075 eV/A): the band as it stood, in the
-        potential, kcal/mol for the cell, which is one repeat of the wall chain: 0.00 0.28
-        1.49 4.04 6.20 4.83 1.50 0.29 0.03, the wall chain's carbonyl going -21 to +10 and its
-        methylene carbon +0.47 to -0.50 A off its ureas' plane, in the plane at the top. SO
-        THE WALL'S STEP COSTS ABOUT WHAT THE CRYSTAL MOVING WHOLE DOES A REPEAT (6.7 in the
-        potential, 5.50 in DFT). THEN: `points --frames /opt/dft/triage --names
-        urea1_tt_x1_g109_kink1r5_hop_rrddd-rrrdd --np 4` (45 atoms, minutes a cell).
+        rrddd,rrrdd --images 9 --fmax 0.05 --steps 300` (136 steps), then `points --frames
+        /opt/dft/triage --names urea1_tt_x1_g109_kink1r5_hop_rrddd-rrrdd --np 4` (48 minutes;
+        log `log_urea1_g109_kink1r5_points.txt`). READINGS 55 TO 57, PUSHED (267ad95). Kcal/mol
+        for the cell, which is one repeat of the wall chain: the potential 0.00 0.26 1.44 4.03
+        5.92 4.59 1.39 0.26 0.03; DFT 0.00 -0.09 0.30 1.98 3.70 3.23 0.65 -0.02 -0.12. THE
+        WALL'S STEP IS 3.70 A REPEAT IN DFT (the crystal moving whole: 5.50), the wall chain's
+        carbonyl going -21 to +10 and its methylene carbon +0.47 to -0.50 A off its ureas'
+        plane, in the plane at the top. It is for a chain going over all along its length at
+        once; what a kink along the chain costs is not read.
         THE CRYSTAL'S OWN TWIN, BUILT AND NOT RUN (b78c3ad; `twin_row`, `twin_step`,
         `half_turn_across`; tests pass, 36): the second orientation is the crystal turned half
         a turn about the normal of the plane of its second and third edges, and the two join
