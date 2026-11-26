@@ -1072,6 +1072,19 @@ def principal(tensor):
     return [(float(v), float(np.degrees(np.arctan2(vectors[1, k], vectors[0, k])) % 180.0)) for k, v in enumerate(values)]
 
 
+def stretches(cell_from, cell_to):
+    """What takes one cell into another, edge for edge: its principal stretches (0.05 is 5% longer), each
+    with its axis in the first cell's row frame, the lowest first.
+
+    The turn that goes with the change of shape is left out (the stretch is the one before it), so
+    two cells that are the same crystal lying differently give zeros."""
+    a, b = np.asarray(cell_from, dtype=float), np.asarray(cell_to, dtype=float)
+    f = b.T @ np.linalg.inv(a.T)  # takes each edge of the first cell to the same edge of the second
+    values, vectors = np.linalg.eigh(f.T @ f)
+    frame = row_frame(a)
+    return [(float(np.sqrt(v) - 1.0), (frame @ vectors[:, k]).tolist()) for k, v in enumerate(values)]
+
+
 def hydrogen_bonds(atoms, within: float = 2.6):
     """Every H..O closer than ``within`` that is not a bond: its length, and how many of the cell's
     first and second edges away the oxygen is.  In a cell of one chain that says which edge a
@@ -1165,6 +1178,16 @@ def facings(args):
             print(f"{tag} from {angle:+.0f}: the rigid turn {(first - zero) * KCAL:+.2f} kcal/mol above the lowest resting place, rests facing "
                   f"{s['rest_facing_degrees']:+.0f} at {(energy - zero) * KCAL:+.2f}, H..O {s['hydrogen_bonds']}, whole {s['whole']}", flush=True)
         told(record)
+        if args.let_go is not None and record["states"]:
+            # the resting place nearest the facing asked for, written for ``dft`` to relax with its cell free
+            place = min(resting_places(record["states"]), key=lambda q: abs((q["rest_facing_degrees"] - args.let_go + 180.0) % 360.0 - 180.0))
+            c = read(work / (f"t{round(place['start_degrees']):+04d}".replace("+", "p").replace("-", "m") + ".xyz"))
+            c.info = {**{k: v for k, v in a.info.items() if k.startswith("triage_")}, "kmesh": kmesh(c), "triage_let_go_of": name,
+                      "triage_let_go_cell": rebased(a).cell.array.ravel().tolist(), "triage_let_go_facing": place["rest_facing_degrees"]}
+            c.calc = None
+            out = f"{tag}_f" + f"{round(place['rest_facing_degrees']):+04d}".replace("+", "p").replace("-", "m")
+            write(src / f"{out}.start.xyz", c, format="extxyz")
+            print(f"{out}: the resting place facing {place['rest_facing_degrees']:+.0f}, for dft to let its cell go", flush=True)
 
 
 def told(record):
@@ -1454,9 +1477,14 @@ def seed(args):
 
     from ase.io import read, write
 
-    rows = {r["name"]: r for r in json.loads(Path(args.table).read_text())["rows"]}
+    kept = json.loads(Path(args.table).read_text())
+    rows = {r["name"]: r for r in kept["rows"]}
     args.frames.mkdir(parents=True, exist_ok=True)
     made = []
+    for q in kept.get("facings", []):
+        if not (args.frames / f"{q['name']}.facings.json").exists():
+            (args.frames / f"{q['name']}.facings.json").write_text(json.dumps(q, indent=1))
+            made.append(f"{q['name']}.facings")
     for c in read(args.cells, index=":"):
         r = rows.get(str(c.info.get("name")))
         if r is None or (args.frames / f"{r['name']}.relaxed.xyz").exists():
@@ -1679,6 +1707,9 @@ def dft(args):
         reps = int(a.info["triage_repeats"])
         if "triage_opposed_of" in a.info:
             got["opposed_of"] = a.info["triage_opposed_of"]
+        if "triage_let_go_of" in a.info:
+            got.update(let_go_of=a.info["triage_let_go_of"], let_go_facing=float(a.info["triage_let_go_facing"]),
+                       let_go_cell=np.asarray(a.info["triage_let_go_cell"], dtype=float).reshape(3, 3).tolist())
         got.update(name=name, chain=a.info["triage_chain"], state=a.info["triage_state"], kind=a.info["triage_kind"], repeats=reps,
                    atoms=len(b), energy_ev=energy, cell=b.cell.array.tolist(),
                    kmesh=" ".join(str(int(v)) for v in np.atleast_1d(a.info["kmesh"])) if not isinstance(a.info["kmesh"], str) else a.info["kmesh"],
@@ -1925,6 +1956,16 @@ def table(args):
             r["above_polar_kcal_per_repeat"] = (r["energy_ev"] / r["repeats"] - polar["energy_ev"] / polar["repeats"]) * KCAL
             print(f"{r['name']:14s} dipoles opposed: {r['above_polar_kcal_per_repeat']:+.3f} kcal/mol a repeat above {polar['name']} "
                   f"({r['above_polar_kcal_per_repeat'] / KCAL * 1000:+.2f} meV), {r['volume_a3']:.1f} against {polar['volume_a3']:.1f} A3")
+    for r in rows:
+        if r.get("let_go_of") in by_name:
+            parent = by_name[r["let_go_of"]]
+            r["above_parent_kcal_per_repeat"] = (r["energy_ev"] / r["repeats"] - parent["energy_ev"] / parent["repeats"]) * KCAL
+            r["stretch_from_parent"] = [{"stretch": v, "axis_in_row_frame": axis} for v, axis in stretches(r["let_go_cell"], r["cell"])]
+            print(f"{r['name']:14s} a resting place of {parent['name']} facing {r['let_go_facing']:+.0f}, its cell let go: "
+                  f"{r['above_parent_kcal_per_repeat']:+.3f} kcal/mol a repeat above it, {r['volume_a3']:.1f} against {parent['volume_a3']:.1f} A3; "
+                  "the cell against the parent's, edge for edge: "
+                  + ", ".join(f"{q['stretch'] * 100:+.1f}% along ({q['axis_in_row_frame'][0]:+.2f} {q['axis_in_row_frame'][1]:+.2f} {q['axis_in_row_frame'][2]:+.2f})"
+                              for q in r["stretch_from_parent"]))
     if args.out:
         args.out.write_text(json.dumps(out, indent=1) + "\n")
 
@@ -2054,6 +2095,7 @@ def main():
     fa.add_argument("--names", required=True)
     fa.add_argument("--by", type=float, default=1.0, help="how many times as far apart the sheets are made first, e.g. 1.2")
     fa.add_argument("--angles", required=True, help="the facings the chain is started at, degrees from the crystal's, e.g. 0,60,120")
+    fa.add_argument("--let-go", type=float, default=None, help="write the resting place nearest this facing as a start for dft, which relaxes it with the cell free")
     fa.add_argument("--pw", default=PW_DEFAULT)
     fa.add_argument("--pseudo", default=PSEUDO_DEFAULT)
     fa.add_argument("--np", type=int, default=NP_DEFAULT)

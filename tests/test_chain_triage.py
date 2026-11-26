@@ -432,6 +432,24 @@ def test_principal_values_come_with_their_axes_from_the_row():
     assert (lo, hi) == pytest.approx((1.0, 3.0)) and hi_at == pytest.approx(90.0) and lo_at % 180.0 == pytest.approx(0.0)
 
 
+def test_stretches_take_one_cell_into_another_edge_for_edge_and_leave_a_turn_out():
+    cell = np.array([[4.6, 0.0, 0.0], [1.7, 3.3, 0.0], [0.0, 0.0, 4.7]])
+    # the same crystal turned about the chain: no stretch
+    t = np.radians(40.0)
+    turn = np.array([[np.cos(t), -np.sin(t), 0.0], [np.sin(t), np.cos(t), 0.0], [0.0, 0.0, 1.0]])
+    assert [v for v, _ in CT.stretches(cell, cell @ turn.T)] == pytest.approx([0.0, 0.0, 0.0], abs=1e-12)
+    # 10% longer across the row, 5% shorter along the chain, then turned: the stretches and their axes in the row's frame
+    grown = cell * np.array([1.0, 1.1, 0.95])
+    got = CT.stretches(cell, grown @ turn.T)
+    assert [v for v, _ in got] == pytest.approx([-0.05, 0.0, 0.1])
+    assert np.abs(got[0][1]) == pytest.approx([0.0, 0.0, 1.0], abs=1e-9) and np.abs(got[2][1]) == pytest.approx([0.0, 1.0, 0.0], abs=1e-9)
+    # the sheets slid along the row: a shear, one way longer and the other shorter by nearly as much
+    slid = cell.copy()
+    slid[1, 0] -= 0.33
+    lo, mid, hi = (v for v, _ in CT.stretches(cell, slid))
+    assert lo == pytest.approx(-hi / (1 + hi)) and mid == pytest.approx(0.0, abs=1e-12) and hi == pytest.approx(0.0513, abs=2e-4)
+
+
 def test_a_hydrogen_bond_is_told_with_the_edge_it_lies_along():
     from ase import Atoms
 
