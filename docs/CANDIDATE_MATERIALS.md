@@ -2254,8 +2254,61 @@ row at rest in DFT and 9.75 in the potential.
     least the step costs; the second methyl is the better one to cross first, since the state
     after it is as low as the state before. DFT has not read these two scans.
 
-**Not done.** For the one-methyl chain: the rest of the second step, and DFT on the second
-methyl's crossing; DFT on the ten cells of the first step not read;
+**The plain chain in a level row, and a stacking that does not help** (`kink --rows 5 --long
+3`, `swing`, `points`, `slide`, `dft`; 2026-11-26). The plain chain's 23.6 above was read in a
+four-chain row, which leans (its two whole states are 5.2 a repeat apart). Five chains by three
+repeats is 135 atoms, 25 minutes a DFT cell here. In the potential its two whole states are
+0.15 apart and mirror images (the chains face +25, +21, -161, -159, -162 and +18, +21, +20,
+-159, -155). The wall chain's first urea was taken round both ways, eleven facings held each
+way. Energies are kcal/mol for the 135-atom cell above the row at rest.
+
+| way | facing held | the potential | DFT |
+|---|---|---|---|
+| through -90 | -148, -135 | +2.98, +14.66 | |
+| | -120 | +34.22 | +28.49 |
+| | -99 | +39.28 | +31.03 |
+| | -83, -69, -55, -42 | +20.83, +11.05, +4.83, +4.83 | |
+| | -27, -12, +3 (held past where it comes to rest) | +8.22, +12.50, +17.07 | |
+| | let go: rests at -38 | +5.38 | -4.82 |
+| through +90 | -175, +171, +155, +141 | +1.83, +6.21, +11.04, +17.41 | |
+| | +123, +109, +97 | +7.06, +4.44, +8.40 | |
+| | +84, +65, +47, +34 | +19.66, +38.78, +31.21, +24.84 | |
+| | let go: stays at +31 | +24.53 | |
+
+31. *In the level row the plain chain's top is 31.0 in DFT, not 23.6.* The leaning row had
+    lowered it, as a lean does (reading 20). The potential is 8.3 above DFT there, as it was
+    7.6 and 8.5 at the four-chain row's tops, and has the same height the other way round
+    (38.8), which DFT has not read. This is the plain chain's own number for one urea of a
+    wall chain three repeats long: four times the mark.
+32. *The urea that has gone over lies 4.8 BELOW the row at rest in DFT, in a row whose whole
+    states are level.* The potential has it 5.4 above. So the row the potential lets rest is
+    not DFT's resting row: a wall whose chain has a urea turned out of the sheet (it rests at
+    -38) is lower in DFT than the wall with every urea flat. What DFT's own wall is, is not
+    known, and every number in this section is counted from the potential's.
+33. *Sliding the sheets along the chain does not make room.* The plain crystal stacks urea
+    over urea (its second edge is 0.10 A along the chain). `slide` put each sheet half a
+    repeat along against the one below, urea over methylene, and DFT relaxed it with the cell
+    free: it is a resting place of its own, 0.99 kcal/mol a repeat above the crystal at the
+    same volume, with the sheets 3.33 A apart (3.28) and a third of a repeat along from one
+    another (it neither stayed at half nor slid back). Its five-chain row is level in the
+    potential (0.05) and the first urea's step in it tops at 33.4 and 30.4 the two ways,
+    against the in-register row's 39.3 and 38.8, with the far side 16 to 19 up. The potential
+    only; if DFT is 8 below it here as it is on the in-register tops, that is 22 to 25, three
+    times the mark. Sheets 3.3 A apart are too close whatever lies over the urea.
+34. *Where that leaves the urea chain.* Three things have been tried for room between the
+    sheets. Sheets held apart by hand, which is not a molecule: the hump goes (DFT 1.26 below
+    the row at rest at the potential's top, one cell, a leaning row). A methyl on the carbon
+    the chain turns on: the urea turns at 6.7 and the methyls' crossing puts the step at 15.4
+    or more. Sheets slid along the chain: no room. What has not been tried is room from
+    something that does not turn with the chain and is not on its hinge. All of it is
+    activation only, in perfect rows with a wall, the baseline and not a film: a partial
+    result.
+
+**Not done.** DFT on the plain level row's other way round and on the slid row. What room
+costs (the plain crystal with its sheets held apart, in DFT; running). The step in a level row
+with room (the spread cell five chains wide), and the quarter-turned urea there, which the
+four-chain spread row could not level. For the one-methyl chain: the rest of the second step,
+and DFT on the second methyl's crossing; DFT on the ten cells of the first step not read;
 the ends relaxed in DFT (`points --relax`, hours a cell here); the chain's dipole and stiffness
 (section 6.1's numbers). The chain with two methyls is not worth its packing search on this
 showing: both its methyls would have to cross. The plain chain in a five-chain row the same
@@ -2291,7 +2344,10 @@ the last cell of the one before: `..._free_c1m` (the second urea by its carbonyl
 only), `..._free_m0m` (the methyl across; the zero of its DFT record is the cell with the
 methyl at +26, 15.38 above the row at rest) and `..._m0m_11_free_c1m` (the second urea with
 that methyl across, potential only), and `..._free_m0p` and `..._free_m2m` (the same methyl
-the other way round, and the other methyl; potential only)).
+the other way round, and the other methyl; potential only); `urea1_tt_x1_kink3r5.path.xyz` and
+`urea1_tt_x1_kink3r5_swing_turned_3_c0{p,m}.path.xyz`, the plain chain's five-chain row, and
+the same three with `urea1_tt_x1_s50` for the slid crystal's (potential only); the slid
+crystal itself is `urea1_tt_x1_s50` in `chain_triage.json` and `chain_triage_cells.extxyz`).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
