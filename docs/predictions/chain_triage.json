@@ -1428,6 +1428,48 @@
    "unit": "kcal/mol for the cell"
   },
   {
+   "name": "urea1m_tt_x1_kink3r5_swing_swing_swing_turned_3_c0m_9_free_c0m_9_free_m0m",
+   "kind": "path",
+   "of": "urea1m_tt_x1_kink3r5",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -29719.163353412678,
+    -29719.32349187651,
+    -29719.24816545316
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    -3.6928807318132604,
+    -1.955812130484416
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    8.826179393013875,
+    5.465956332952122,
+    7.398631269063227
+   ],
+   "ends_only": false,
+   "images": [
+    3,
+    5,
+    10
+   ],
+   "way": "m",
+   "what": "methyl",
+   "facing_degrees": [
+    26.372742401904258,
+    -4.904651861312544,
+    -52.710385377382096
+   ],
+   "let_go": [
+    false,
+    false,
+    true
+   ],
+   "unit": "kcal/mol for the cell"
+  },
+  {
    "name": "urea1m_tt_x1_kink3r5_swing_swing_turned_3_c0m_9_free_c0m",
    "kind": "path",
    "of": "urea1m_tt_x1_kink3r5",

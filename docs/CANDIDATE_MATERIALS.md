@@ -2189,12 +2189,72 @@ to end. Energies are kcal/mol for the 180-atom cell above the row at rest.
     turns together; the cell held; one hand of the chain; DFT on the potential's structures.
     Activation only, a partial result: no strain, loss, frequency, blocked force or speed.
 
-**Not done.** For the one-methyl chain: the second urea's step in the five-chain row (the
-methyl's crossing), and DFT on it; DFT on the ten cells of the first step not read; the plain
-chain in a five-chain row the same way, for a like comparison (135 atoms at three repeats);
-the long way round; the ends relaxed in DFT (`points --relax`, hours a cell here); the chain's
-dipole and stiffness (section 6.1's numbers); the chain with two methyls. In the four-chain
-row, the four cells not read (+58, +17, +4 and the held +44). DFT on the rest of the spread
+**The rest of the wall's step: the methyls have to cross the sheet** (`swing --carbonyl 1`,
+`swing --methyl`, `points`; 2026-11-26). From the state with one urea over, the second urea was
+first taken round by its carbonyl as the first was. In the potential the cell climbs 1.2, 3.7,
+4.2, 6.3, 9.2, 13.9 and 19.7 above the one-over state as that carbonyl goes from -169 to +96,
+and let go it falls back to +150. The methyl between the two ureas stays on its face
+throughout. It cannot stay there in the turned chain. The chain has a hand (reading 13), so
+its half turn is the same chain only with every methyl on the other face: about the chain's
+axis the wall chain's methyls stand at +98 in the row at rest and at -82 with the whole chain
+turned, and at +72, +98 and +73 with one urea over. The mirror of the one-over state, which is
+where the second step has to arrive (reading 23), has all three of them across. `swing
+--methyl` takes one methyl round the chain with the carbon it is on, everything else free. The
+methyl beside the turned urea was taken from +72 down through 0, the way it already leans.
+Energies are kcal/mol for the 180-atom cell above the ONE-OVER state, which is 6.19 above the
+row at rest in DFT and 9.75 in the potential.
+
+| the methyl stands at | the potential | DFT |
+|---|---|---|
+| +72 (one urea over) | 0 | 0 |
+| +58 | +2.77 | |
+| +42 | +6.67 | |
+| +26 | +8.83 | +9.19 |
+| +10 | +8.37 | |
+| -5 | +5.47 | +5.49 |
+| -20 | +7.45 | |
+| -36 | +8.48 | |
+| -51 | +9.91 | |
+| -66 (held past where it comes to rest) | +11.38 | |
+| let go: rests at -53 | +7.40 | +7.23 |
+
+26. *In DFT the methyl passing through the sheet's plane is 9.19 above the one-over state,
+    15.4 above the row at rest.* Across, it rests 7.23 above the one-over state, 13.4 above the
+    row at rest, with the second urea drawn half way round after it (+111) and the first at
+    +35. The potential is within 0.4 of DFT on all three cells measured from the one-over
+    state: its 3.6 is all in that state.
+27. *Nothing is squeezed at the top.* With the methyl in the plane, nothing of the turning
+    carbon's group is nearer than 2.11 A to anything in another chain or sheet. The 9.2 is the
+    chain's own: a backbone carbon turned a quarter round between a urea that has gone over
+    and one that has not, with a methyl on it. A carbon with two hydrogens is the hinge the
+    plain chain turns on; a carbon with a methyl is a stiffer hinge, as alanine's is beside
+    glycine's. That is a reading of the structure and not a calculation of the two hinges.
+28. *The step does not end there.* With that methyl across, the second urea taken the rest
+    of the way (from +111 towards +17) climbs 4.3 in the potential and let go falls back to
+    +70: the other two methyls are still on the first face. Three crossings and a urea lie
+    between the one-over state and its mirror, and one crossing has been walked. So the
+    wall's step in this chain costs at least 15.4 at the cells read, which at 10^13 tries a
+    second is some 60 a second; the mark for tens of MHz is 7.6.
+29. *On the target's terms: this chain does not have low activation for the move that
+    counts.* The methyl bought the room that takes the squeeze away (a urea's own turn falls
+    from the plain row's 23.6 to 6.7) and it has to be carried across the sheet for the chain
+    to arrive anywhere level, at 9.2 a crossing on top. What it teaches is where the room may
+    not come from: a group on the carbon the chain turns on. It has to come from something
+    that does not turn with the chain, or that is the same after a half turn. The limits
+    are reading 25's; the crossing was taken one way round of two and at one methyl of the
+    two beside the turned urea (the other way and the other methyl are in the potential now).
+    Activation only, a partial result: no strain, loss, frequency, blocked force or speed.
+
+**Not done.** For the one-methyl chain: the methyl's crossing the other way round and at the
+other methyl; the rest of the second step; DFT on the ten cells of the first step not read;
+the ends relaxed in DFT (`points --relax`, hours a cell here); the chain's dipole and stiffness
+(section 6.1's numbers). The chain with two methyls is not worth its packing search on this
+showing: both its methyls would have to cross. The plain chain in a five-chain row the same
+way (135 atoms at three repeats), which is the like comparison and the plain chain's own
+number, the 23.6 being a leaning four-chain row's. Room between the plain chain's sheets from
+something that does not turn: its sheets lie urea over urea (the second edge is 0.10 A along
+the chain), and a stacking half a repeat along has not been tried. In the four-chain row, the
+four cells not read (+58, +17, +4 and the held +44). DFT on the rest of the spread
 row's path (the cells at -130 and -110, the one let go, and -89 again for the record), and its
 other way round. An ether in the turning urea. The plain row's cell at +106 let go, DFT on the
 cells between the ones read, and its second urea's step from the state with one over. The other
@@ -2217,7 +2277,11 @@ scans, nine cells each, the second starting from the first's last; their records
 5.93 above the row at rest; `urea1m_tt_x1_kink3.path.xyz`, the one-methyl row at rest and with
 its whole wall chain turned; the same three files with `kink3r5` in their names for the
 five-chain row; the zero of its second scan's DFT record is the first cell read, the one at
-+54, 4.64 above the row at rest).
++54, 4.64 above the row at rest; and for the rest of the step three more, each starting from
+the last cell of the one before: `..._free_c1m` (the second urea by its carbonyl, potential
+only), `..._free_m0m` (the methyl across; the zero of its DFT record is the cell with the
+methyl at +26, 15.38 above the row at rest) and `..._m0m_11_free_c1m` (the second urea with
+that methyl across, potential only)).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
