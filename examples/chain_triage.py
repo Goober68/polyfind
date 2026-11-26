@@ -1234,6 +1234,23 @@ def resting_places(states, within: float = 10.0):
     return sorted(places, key=lambda p: p["rest_facing_degrees"])
 
 
+def mirrored_chain(atoms, edge, along):
+    """A cell of one chain with the chain's mirror image in its place: every atom reflected through the
+    plane that holds the chain's axis (through the atoms' middle) and ``edge``'s direction across it.
+
+    A chain turned about its axis is the same chain facing another way; its mirror image faces
+    another way AND has the other hand, if packing has given it one (a pleat, a twist).  In a cell
+    that is its own mirror image across that plane the two are the same crystal."""
+    b = atoms.copy()
+    b.calc = None
+    e = np.asarray(edge, dtype=float) - (np.asarray(edge, dtype=float) @ along) * along
+    e /= np.linalg.norm(e)
+    normal = np.cross(along, e)
+    d = b.positions - b.positions.mean(axis=0)
+    b.positions = b.positions.mean(axis=0) + d - 2.0 * np.outer(d @ normal, normal)
+    return b
+
+
 def facings(args):
     """Which ways a chain can face in its crystal, every chain turned together, in DFT (a cell of one chain).
 
@@ -1246,6 +1263,9 @@ def facings(args):
     does to a cell that may not change shape: its blocked stress, for a crystal that switches
     whole.  A rigid turn of every chain at once lies above the lowest way between two resting
     places; it says nothing of what one chain needs beside a wall.
+
+    ``--mirrored``: a start that is the mirror image of a finished start's resting place
+    (``mirrored_chain``), for a cell whose second edge is a mirror line of its lattice.
 
     ``--by``: the sheets are first moved apart that many times (``spread_cell``), which is room no
     molecule has been shown to make.  A finished angle is kept (``NAME[_g<percent>].facings.json``,
@@ -1268,14 +1288,28 @@ def facings(args):
             "name": tag, "of": name, "sheets_apart_times": args.by, "sheet_gap_a": sheet_gap(base), "cell": base.cell.array.tolist(),
             "what": "every chain turned together about its axis and relaxed in DFT with the cell held; energies in eV for the cell, "
                     "stress in GPa in the row's frame (x the row, y across it, z the chain), tension positive", "states": []}
-        done = {s["start_degrees"] for s in record["states"]}
-        for angle in [float(v) for v in str(args.angles).split(",")]:
-            if angle in done:
+        def run_of(angle, mirrored=False):
+            return ("x" if mirrored else "t") + f"{round(angle):+04d}".replace("+", "p").replace("-", "m")
+
+        done = {s.get("run", run_of(s["start_degrees"])) for s in record["states"]}
+        starts = [(float(v), False) for v in str(args.angles).split(",") if v != ""] + [(float(v), True) for v in str(args.mirrored).split(",") if v != ""]
+        for asked, mirrored in starts:
+            run_tag = run_of(asked, mirrored)
+            if run_tag in done:
                 continue
-            b = base.copy()
-            b.info.update(base.info)
-            spun(b, len(b), 0, np.radians(angle), along)
-            run_tag = f"t{round(angle):+04d}".replace("+", "p").replace("-", "m")
+            if mirrored:
+                # the mirror image of where the start at this angle came to rest, across the plane of the chain's axis and the second edge
+                if not (work / f"{run_of(asked)}.xyz").exists():
+                    print(f"{tag}: no resting place from {asked:+.0f} to mirror yet", flush=True)
+                    continue
+                b = mirrored_chain(read(work / f"{run_of(asked)}.xyz"), base.cell.array[1], along)
+                b.info.update(base.info)
+                angle = [float(v) for v in facing(b, slice(0, len(b)), along, reference)][0]
+            else:
+                angle = asked
+                b = base.copy()
+                b.info.update(base.info)
+                spun(b, len(b), 0, np.radians(angle), along)
             out = work / f"{run_tag}.out"
             if not finished(out):
                 run(args.pw, args.np, pw_input(b, args.pseudo, work / f"scratch_{run_tag}", "relax"), work, run_tag)
@@ -1288,20 +1322,21 @@ def facings(args):
             c.calc = None
             write(work / f"{run_tag}.xyz", c, format="extxyz")
             record["states"].append({
-                "start_degrees": angle, "rigid_ev": first, "rest_ev": energy,
+                "start_degrees": angle, "run": run_tag, **({"mirror_image_of_the_rest_from": asked} if mirrored else {}), "rigid_ev": first, "rest_ev": energy,
                 "rest_facing_degrees": [float(v) for v in facing(c, slice(0, len(c)), along, reference)][0],
                 "hydrogen_bonds": hydrogen_bonds(c), "stress_gpa": (frame @ stress @ frame.T * 160.21766).tolist(),
                 "whole": bool(whole(c, CHAINS[str(a.info["triage_chain"])]))})
             store.write_text(json.dumps(record, indent=1))
             zero = min(s["rest_ev"] for s in record["states"])
             s = record["states"][-1]
-            print(f"{tag} from {angle:+.0f}: the rigid turn {(first - zero) * KCAL:+.2f} kcal/mol above the lowest resting place, rests facing "
+            print(f"{tag} from {angle:+.0f}" + (f" (the mirror image of the rest from {asked:+.0f})" if mirrored else "")
+                  + f": the {'start' if mirrored else 'rigid turn'} {(first - zero) * KCAL:+.2f} kcal/mol above the lowest resting place, rests facing "
                   f"{s['rest_facing_degrees']:+.0f} at {(energy - zero) * KCAL:+.2f}, H..O {s['hydrogen_bonds']}, whole {s['whole']}", flush=True)
         told(record)
         if args.let_go is not None and record["states"]:
             # the resting place nearest the facing asked for, written for ``dft`` to relax with its cell free
             place = min(resting_places(record["states"]), key=lambda q: abs((q["rest_facing_degrees"] - args.let_go + 180.0) % 360.0 - 180.0))
-            c = read(work / (f"t{round(place['start_degrees']):+04d}".replace("+", "p").replace("-", "m") + ".xyz"))
+            c = read(work / (place.get("run", run_of(place["start_degrees"])) + ".xyz"))
             c.info = {**{k: v for k, v in a.info.items() if k.startswith("triage_")}, "kmesh": kmesh(c), "triage_let_go_of": name,
                       "triage_let_go_cell": rebased(a).cell.array.ravel().tolist(), "triage_let_go_facing": place["rest_facing_degrees"]}
             c.calc = None
@@ -2230,7 +2265,8 @@ def main():
     fa.add_argument("--frames", type=Path, required=True)
     fa.add_argument("--names", required=True)
     fa.add_argument("--by", type=float, default=1.0, help="how many times as far apart the sheets are made first, e.g. 1.2")
-    fa.add_argument("--angles", required=True, help="the facings the chain is started at, degrees from the crystal's, e.g. 0,60,120")
+    fa.add_argument("--angles", default="", help="the facings the chain is started at, degrees from the crystal's, e.g. 0,60,120")
+    fa.add_argument("--mirrored", default="", help="starts that are the mirror image, across the second edge, of where these angles' starts came to rest, e.g. 0")
     fa.add_argument("--let-go", type=float, default=None, help="write the resting place nearest this facing as a start for dft, which relaxes it with the cell free")
     fa.add_argument("--pw", default=PW_DEFAULT)
     fa.add_argument("--pseudo", default=PSEUDO_DEFAULT)

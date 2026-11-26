@@ -451,6 +451,24 @@ def test_a_row_of_domains_turns_each_chain_whole_by_its_own_angle():
     assert CT.joined(row, within=2.0) == {(1, 0): 2}
 
 
+def test_a_mirrored_chain_faces_the_other_way_about_the_edge_and_has_the_other_hand():
+    from ase import Atoms
+
+    z = np.array([0.0, 0.0, 1.0])
+    edge = np.array([1.0, 1.0, 0.3])  # 45 degrees across the chain; what it has along the chain does not count
+    # C=O along x, and a hydrogen off the plane of the carbonyl and the axis, which gives the chain a hand
+    a = Atoms("COH", positions=[[0.0, 0.0, 0.0], [1.2, 0.0, 0.0], [0.3, 0.9, 0.5]], cell=np.diag([6.0, 6.0, 4.7]), pbc=True)
+    b = CT.mirrored_chain(a, edge, z)
+    co = b.positions[1] - b.positions[0]
+    assert co == pytest.approx([0.0, 1.2, 0.0], abs=1e-12)  # x and y change places across the line at 45 degrees
+    assert b.positions.mean(axis=0) == pytest.approx(a.positions.mean(axis=0))
+    assert b.positions[:, 2] == pytest.approx(a.positions[:, 2])  # nothing moves along the chain
+    hand = lambda q: float(np.cross(q.positions[1] - q.positions[0], q.positions[2] - q.positions[0]) @ z)
+    assert hand(b) == pytest.approx(-hand(a))
+    # twice is the chain itself
+    assert CT.mirrored_chain(b, edge, z).positions == pytest.approx(a.positions)
+
+
 def test_the_row_frame_is_square_with_the_chain_and_the_row_for_axes():
     cell = np.array([[4.6, 0.0, 0.3], [1.7, 3.3, 0.2], [0.0, 0.0, 4.7]])
     frame = CT.row_frame(cell)
