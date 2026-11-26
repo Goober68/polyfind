@@ -2394,10 +2394,97 @@ above the lowest resting place; the rigid turn is the first energy of each run.
     candidate: a perfect crystal, one chain to the cell, no defect, with room held open by hand.
     A partial result: no strain, loss, frequency, blocked force or speed of a material is in it.
 
-**Not done.** For the three facings: the step of one chain beside a wall between a part bonded
-along the row and a part bonded along the diagonal, which is the activation and needs a long
-cell; the same map in the potential, to know how far it may be trusted there; the dipole of
-each state (`berry`); two chains to the cell, so that not every chain turns at once. DFT on the
+**Where the two edges are equal the row state and the diagonal state are level, once the chain
+takes its other hand** (`facings --by 1.0935 --angles 0,139 --mirrored 0`; 2026-11-26). How level
+two facings are is a matter of the cell's shape. With the sheets 1.0935 times as far apart
+(3.590 A; the row state in that cell is 0.47 kcal/mol a repeat above the crystal) the row's edge
+and the diagonal are the same length, 4.609 A, and the lattice across the chain is its own mirror
+image about the second edge. Along the chain it is not quite: the neighbour along the row stands
+0.01 A along the chain and the neighbour along the diagonal 0.09. Kcal/mol a repeat above the
+row state, in DFT, the cell held:
+
+| the start | its energy before any atom moved | came to rest facing | at | H..O, A |
+|---|---|---|---|---|
+| the crystal's chain | +0.02 | -1 | 0.00 | 1.90, 1.91 along the row |
+| the same chain turned rigidly to +139 | +2.19 | +132 | +1.19 | 1.88, 1.96 along the diagonal |
+| the mirror image of the row state about the second edge | +0.04 | +138 | +0.03 | 1.87, 1.95 along the diagonal |
+
+41. *The chain has a hand in its crystal.* Its methylene carbon lies 0.56 A off the plane of
+    its ureas, to one face of the sheet, with one of its hydrogens straight out of that face
+    (1.65 A off the plane) and the other near the plane; the backbone's torsions are 152 to 156
+    degrees where a flat chain's are 180. A turn about the axis carries the pleat round with
+    it. The mirror image has it on the other face, and which face a chain wants is set by its
+    neighbours.
+42. *The first map turned the chain and kept its hand, so its diagonal state was the wrong
+    one.* Turned rigidly, the chain rests bonded along the diagonal 1.19 above the row state.
+    Its mirror image rests there 0.03 above it, and was 0.04 above before any atom had moved:
+    in this cell the two are the same crystal seen in a mirror, but for the 0.08 A along the
+    chain. So reading 36's +1.27 for the diagonal state with the sheets 3.94 A apart is the
+    wrong hand's too, and the right one there has not been run.
+43. *Two fully bonded states 0.03 apart: that is within a field's reach.* Reading 39 has the
+    field's work on such a turn at 0.08 to 0.18 kcal/mol a repeat at 55 V/um. Between the two
+    the carbonyl turns 41 degrees with the methylene carbon crossing the ureas' plane, or 139
+    degrees the other way with the carbon staying where it is (the two ends are the same state
+    half a turn apart, which this lattice cannot tell apart; a field can).
+44. *They pull on the cell differently by about 0.3 GPa.* The mirror state's stress on the held
+    cell less the row state's is +0.25 GPa along an axis 25 degrees from the row and -0.34
+    across it: a shear, as two mirror images' must be, each state pulling its own sheets
+    together where the cell holds them 9% apart. That is 250 to 340 pN/nm2 between two states
+    that ARE level, against the film's 7.6 to 10, and with reading 38's cautions: a perfect
+    crystal switching whole, held rigidly, in a cell with room no molecule has been shown to
+    make; the film's is an AC number at an assumed modulus under an assumed heat budget.
+45. *The potential has the level and not the hand.* In the same cell it has the mirror state
+    0.035 above the row state, as DFT has, and the wrong hand 0.17 above where DFT has 1.19.
+    Whatever it says of a way that changes the hand has to be read in DFT.
+
+*The way between the two, every chain at once* (`domains --rows 1 --long 1 --by 1.0935 --faces 0
+--stem r` and `--faces=m-41 --stem da`, `hop --stems r,da --images 9`, `points`). The two states
+in the cell of one chain, a band of nine cells between them in the potential, and DFT on each
+cell. The carbonyl turns 49 degrees in the potential's cells (41 in DFT's own ends). Kcal/mol a
+repeat above the first cell:
+
+| cell | facing | methylene carbon off the ureas' plane, A | the urea's two H..O, A | the potential | DFT |
+|---|---|---|---|---|---|
+| 0, the row state | +3 | -0.42 | 1.98, 1.98 to the row's oxygen | 0.00 | 0.00 |
+| 1 | +3 | -0.43 | 1.98, 1.98 | 0.00 | -0.04 |
+| 2 | -6 | -0.34 | 1.99, 2.05 | +0.99 | +0.86 |
+| 3 | -14 | -0.19 | 2.08, 2.42 | +4.89 | +4.47 |
+| 4, the top | -22 | -0.01 | 2.31 to the row's, 2.25 to the diagonal's | +6.69 | +5.50 |
+| 5 | -30 | +0.17 | 2.03, 2.44 to the diagonal's | +4.89 | +4.42 |
+| 6 | -38 | +0.33 | 1.95, 2.09 | +1.02 | +0.89 |
+| 7 | -46 | +0.42 | 1.94, 2.02 | +0.04 | 0.00 |
+| 8, the diagonal state | -46 | +0.42 | 1.94, 2.03 | +0.03 | +0.04 |
+
+46. *The hump is 5.5 kcal/mol a repeat in DFT, the same from either side.* At the top the urea
+    has one hydrogen on each oxygen, the row's at 2.31 A and the diagonal's at 2.25, and the
+    methylene carbon is in the ureas' plane: it lets go of one neighbour as it takes hold of the
+    other, and never has none. The half turn through the sheet was 31.0 for one urea. The mark
+    for tens of MHz is 7.6, and at 10^13 tries a second 5.5 is about 10^9 a second.
+47. *What that number is and is not.* It is every chain of a perfect crystal moving together,
+    counted for one repeat, in DFT on the potential's cells (DFT's own ends are 1.3 below the
+    potential's and its own top is not found; the potential was 1.2 above DFT at the top). A
+    real step is one urea of one chain beside a wall, which has neighbours that have not moved:
+    that is the long cell's question and it is not answered. A band finds a way, not the lowest
+    way; the other way round (139 degrees, the carbon staying) did not make a band.
+48. *On the target's terms.* Strong action: about 0.3 GPa between the two states on a held
+    cell (reading 44), and a change of the cell's shape if it is let go, which has not been
+    run. Low activation: the two states are level to 0.03 (the field's work is 0.08 to 0.18)
+    and the hump between them is 5.5 a repeat for the crystal moving whole. Easy return: the
+    hump is the same both ways; what a cycle loses is not computed. NOT A CANDIDATE YET, and
+    by the standing rules a partial result: it is a perfect crystal, no defect is in it, the
+    sheets are held 9% further apart than the crystal has them by nothing (0.47 kcal/mol a
+    repeat), and there is no strain, loss, frequency, blocked force or speed of a material
+    here. What it says is where to look: a urea or amide chain packed with its row and
+    diagonal spacings equal, which is the loosely packed form in which nylons are known to
+    switch (search summaries only: nylon-11 is ferroelectric in its pseudohexagonal form with
+    disordered hydrogen bonds and not in its tightly bonded sheets).
+
+**Not done.** For the level pair: the step of one urea of one chain beside a wall between a part
+bonded along the row and a part bonded along the diagonal, which is the activation that counts
+and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`); the diagonal
+state with its cell let go, which is the stroke (`facings --let-go`, `dft`); the top in DFT's own
+structures; the right-handed diagonal and stack states with the sheets 3.94 A apart; the dipole
+of each state (`berry`); what holds the sheets apart, and the same in a chain that can be made. DFT on the
 plain level row's other way round and on the slid row. The step in the spread five-chain row,
 whose halves turned out bonded along different edges (reading 36): its first urea has not been
 taken round. For the one-methyl chain: the rest of the second step,
@@ -2442,7 +2529,9 @@ the other way round, and the other methyl; potential only); `urea1_tt_x1_kink3r5
 the same three with `urea1_tt_x1_s50` for the slid crystal's (potential only); the slid
 crystal itself is `urea1_tt_x1_s50` in `chain_triage.json` and `chain_triage_cells.extxyz`;
 the maps of the facings are under `facings` in `chain_triage.json`, one record a cell
-(`urea1_tt_x1_g120`: sheets 1.2 times as far apart), every start with its rigid and resting
+(`urea1_tt_x1_g120`: sheets 1.2 times as far apart; `urea1_tt_x1_g109`: 1.0935 times, where a
+start with `mirror_image_of_the_rest_from` is the mirror image of another start's resting
+place; `urea1_tt_x1_g109_kink1r1_hop_r-da.path.xyz` is the band between its two level states), every start with its rigid and resting
 energies in eV, its resting facing, its hydrogen bonds and its stress in GPa; and
 `urea1_tt_x1_g120_kink3r5.path.xyz` is the spread five-chain row's two whole states).
 

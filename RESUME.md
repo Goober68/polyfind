@@ -1197,33 +1197,52 @@ right": true at one registry, not along it).
         molecule makes). The field's work on a 50 degree turn at 55 V/um is 0.08 to 0.18
         kcal/mol a repeat (arithmetic on 6.1), so in this cell the two states (1.27 apart)
         are not within its reach. A PARTIAL RESULT: the spring, not the activation.
-        WHAT IS THOUGHT AND NOT YET SHOWN (mine): how level the row and diagonal states are
-        is the cell's shape. With the sheets 1.0935 times as far apart (3.590 A) the row's
-        edge and the diagonal are the same length (4.609 A) and the cell is its own mirror
-        image across the second edge, so the two should be level and the midpoint between
-        them (start +158) the top by symmetry. And in a crystal free to change shape the
-        diagonal state should become the crystal itself with its bonds along the other edge
-        (mirror image): level exactly, the cell differing by -6.7% and +7.2% (arithmetic on
-        the crystal's cell; the stack state -22% and +28%).
-        RUNNING WHEN THIS WAS WRITTEN (started 17:40 UTC): `facings --frames /opt/dft/triage
-        --names urea1_tt_x1 --by 1.0935 --angles 0,139,158,60` (log
-        `log_urea1_facings_g109.txt`, record `urea1_tt_x1_g109.facings.json`). READ: are the
-        row and diagonal states level; where does the start at +158 sit and which way does
-        it fall (its energy while it is still near +158 is the top for every chain at once).
-        THEN THE DIAGONAL STATE WITH ITS CELL LET GO: `facings ... --by 1.2 --angles 120
-        --let-go 128` writes `urea1_tt_x1_g120_fp128.start.xyz`; `dft --frames
-        /opt/dft/triage --names urea1_tt_x1_g120_fp128` relaxes it with the cell free (9
-        atoms, 20 to 40 minutes); `table` then prints its energy above the crystal and its
-        cell against the crystal's edge for edge (`stretches`): THE STROKE.
-        THEN THE ACTIVATION, which needs a long cell: a wall between a part bonded along the
-        row and a part bonded along the diagonal, and one chain's turn of 50 degrees beside
-        it. NOT BUILT: `kink` makes halves a half turn apart along the row's edge; this wants
-        columns of chains along the diagonal (a cell whose second edge is the diagonal, the
-        same lattice) with some columns turned 50 degrees (`spun`). In the potential first,
-        then DFT on its cells (135 atoms, 25 minutes each).
-        The spread five-chain row's first urea (`swing ... --names urea1_tt_x1_g120 --rows 5
-        --long 3 --start turned_3 --carbonyl 0 --by 180 --way p,m --images 13`) has NOT been
-        run: its halves are bonded along different edges and it is no longer the question.
+        THE LEVEL PAIR (18:30 UTC; 6.3 READINGS 41 TO 48). With the sheets 1.0935 times as far
+        apart (3.590 A; the row state there is 0.47 kcal/mol a repeat above the crystal) the
+        row's edge and the diagonal are the same length (4.609 A) and the lattice across the
+        chain is its own mirror image about the second edge. `facings --frames /opt/dft/triage
+        --names urea1_tt_x1 --by 1.0935 --angles 0,139 --mirrored 0` (record
+        `urea1_tt_x1_g109.facings.json`, log `log_urea1_facings_g109.txt`), DFT, kcal/mol a
+        repeat: the row state 0.00; the chain TURNED RIGIDLY to the diagonal +1.19; the MIRROR
+        IMAGE of the row state +0.03 (0.04 before any atom moved). THE CHAIN HAS A HAND: its
+        methylene carbon lies 0.56 A off its ureas' plane to one face (torsions 152 to 156),
+        a turn keeps it and the mirror state has the other. So the first map's diagonal state
+        (+1.27 at 1.2) was the wrong hand's. Stress on the held cell, mirror state less row
+        state: +0.25 GPa at 25 degrees from the row, -0.34 across it (about 300 pN/nm2 between
+        two LEVEL states). The potential has the level (+0.035) and NOT the hand (wrong hand
+        +0.17 where DFT has 1.19).
+        THE WAY BETWEEN THEM, EVERY CHAIN AT ONCE: `domains --frames /opt/dft/triage --names
+        urea1_tt_x1 --by 1.0935 --rows 1 --long 1 --faces 0 --stem r` and `--faces=m-41 --stem
+        da` (m: the chain's other hand; states in `work/urea1_tt_x1_g109_kink1r1/`), `hop
+        --names urea1_tt_x1_g109 --rows 1 --long 1 --stems r,da --images 9`, `points --names
+        urea1_tt_x1_g109_kink1r1_hop_r-da` (9 atoms, 6 minutes for the nine). DFT on the
+        potential's band: 0.00 -0.04 0.86 4.47 5.50 4.42 0.89 0.00 0.04 (the potential 6.69 at
+        the top). THE HUMP IS 5.5 A REPEAT, the same both ways; at the top the urea has one
+        hydrogen on the row's oxygen (2.31 A) and one on the diagonal's (2.25) and the
+        methylene carbon is in the ureas' plane. The mark for tens of MHz is 7.6. The other
+        way round (`--faces m139`, 139 degrees) did not make a band. NOT A CANDIDATE: a
+        perfect crystal moving whole, room held by hand, no defect, no loss or strain.
+        NOT RUN from the stopped queue: the mirror of the wrong-handed state, the midpoint
+        start (+158; its first nine steps are in `work/urea1_tt_x1_g109_facings/stopped/`)
+        and the stack start (+60).
+        NEXT, IN ORDER (nothing beside a DFT job):
+        (i) THE STROKE: `facings --frames /opt/dft/triage --names urea1_tt_x1 --by 1.0935
+        --mirrored 0 --let-go 138` writes `urea1_tt_x1_g109_fp138.start.xyz`; `dft --frames
+        /opt/dft/triage --names urea1_tt_x1_g109_fp138` relaxes it with the cell free (9
+        atoms, 20 to 40 minutes); `table` prints its energy above the crystal (expected 0:
+        the crystal in mirror image) and its cell against the crystal's edge for edge
+        (`stretches`; arithmetic on the crystal's cell says -6.7% and +7.2%).
+        (ii) THE ACTIVATION THAT COUNTS, one urea of one chain beside a wall: `domains
+        --frames /opt/dft/triage --names urea1_tt_x1 --by 1.0935 --second -1 --rows 5 --long 3
+        --faces=0,0,m-41,m-41,m-41 --stem rrddd` and `--faces=0,0,0,m-41,m-41 --stem rrrdd`
+        (135 atoms, the cell's second edge the diagonal so a diagonal chain's copies lie along
+        its own bonds; about 25 minutes a state in the potential); then `hop --names
+        urea1_tt_x1_g109_em1 --rows 5 --long 3 --stems rrddd,rrrdd` (the wall chain whole) and
+        `swing --names urea1_tt_x1_g109_em1 --rows 5 --long 3 --start rrddd --carbonyl 0 --by
+        45 --way p --images 7` (its first urea); then `points` on the cells (25 minutes each).
+        The potential does not know the hand's energy: read every cell that matters in DFT.
+        (iii) the same pair with the sheets as the crystal has them and the cell sheared to
+        equal edges instead of spread (no room paid for): not built.
         (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped

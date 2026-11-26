@@ -1,0 +1,99 @@
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=0 triage_turn_ev=0.0 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.69529559       0.12512591      15.47830197        0
+C       -1.49529871       0.14079574      16.58403170        0
+O       -2.72612157       0.10955375      16.49627962        0
+N       -0.86399917       0.17930259      17.79314896        0
+C       -1.65270064       0.61952154      18.92664605        0
+H        0.27563691       0.36101161      15.64282654        0
+H        0.12370314       0.40149683      17.76159741        0
+H       -1.82030210       1.70133698      18.88873195        0
+H       -2.62391172       0.13942312      18.86647173        0
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=1 triage_turn_ev=4.601581622409867e-05 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.70372601      -0.06563946      15.48213234        0
+C       -1.50409454      -0.04301662      16.58762437        0
+O       -2.73488086      -0.06563030      16.49953151        0
+N       -0.87217077      -0.00686432      17.79685203        0
+C       -1.65574715       0.44014669      18.93096600        0
+H        0.26908320       0.16163447      15.64846937        0
+H        0.11585886       0.21325475      17.76409673        0
+H       -1.80849630       1.52424997      18.89635969        0
+H       -2.63324980      -0.02629921      18.86813977        0
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=2 triage_turn_ev=0.04287180086521403 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.70691217      -0.19651310      15.48386528        0
+C       -1.50773319      -0.10681911      16.58578019        0
+O       -2.72962110       0.04890958      16.49052070        0
+N       -0.90162934      -0.20571879      17.79959663        0
+C       -1.65850693       0.29214391      18.93156943        0
+H        0.27530142      -0.00162203      15.64295328        0
+H        0.10836069      -0.14744419      17.80348583        0
+H       -1.79487154       1.37686591      18.86487853        0
+H       -2.64832773      -0.15107189      18.89837750        0
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=3 triage_turn_ev=0.211842508691916 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.68725759      -0.17194540      15.47776799        0
+C       -1.47183254       0.01346395      16.57835857        0
+O       -2.66596122       0.35053962      16.47277303        0
+N       -0.91858375      -0.18987836      17.78762399        0
+C       -1.66578454       0.27703227      18.93230904        0
+H        0.30991040      -0.01965189      15.61972246        0
+H        0.03043197      -0.52131177      17.85602073        0
+H       -1.84668871       1.35342540      18.84561145        0
+H       -2.64841833      -0.19112678      18.93101974        0
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=4 triage_turn_ev=0.2902748662936574 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.67559536      -0.13119114      15.48783082        0
+C       -1.41315829       0.15238291      16.58984857        0
+O       -2.55298540       0.65555366      16.49024493        0
+N       -0.87408962      -0.12967348      17.79618879        0
+C       -1.66699340       0.26000421      18.93546989        0
+H        0.33367927      -0.10687299      15.59127376        0
+H       -0.18000191      -0.86911821      17.84046635        0
+H       -1.90345091       1.32261673      18.83563541        0
+H       -2.63158892      -0.25316079      18.93424849        0
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=5 triage_turn_ev=0.21208044904506096 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.66592814      -0.05460305      15.49588953        0
+C       -1.34889964       0.29524182      16.60199720        0
+O       -2.40573846       0.94687293      16.51206823        0
+N       -0.84475873      -0.07980347      17.81013619        0
+C       -1.68221598       0.24655635      18.93658605        0
+H        0.23041679      -0.50551472      15.57807821        0
+H       -0.25778682      -0.91268545      17.80847642        0
+H       -1.97406621       1.29065498      18.83320573        0
+H       -2.61520742      -0.32618512      18.92476975        0
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=6 triage_turn_ev=0.044368342007146566 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.63409106      -0.04238528      15.48741126        0
+C       -1.28286726       0.40814379      16.59580165        0
+O       -2.23049575       1.19547069      16.50198172        0
+N       -0.83453423      -0.04014481      17.80286893        0
+C       -1.68873560       0.22554443      18.93714135        0
+H        0.00101068      -0.81798318      15.62090917        0
+H       -0.28391195      -0.89143926      17.77833905        0
+H       -2.02467116       1.25486427      18.86305844        0
+H       -2.58620088      -0.40200350      18.91392557        0
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=7 triage_turn_ev=0.001574163219629554 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.66463043      -0.23638229      15.48981489        0
+C       -1.23516038       0.32476494      16.59744457        0
+O       -2.06381815       1.23461736      16.50429659        0
+N       -0.83157354      -0.16418620      17.80435254        0
+C       -1.70248085       0.07544392      18.93673046        0
+H       -0.17674714      -1.10885135      15.65106466        0
+H       -0.29800212      -1.02463691      17.76947111        0
+H       -2.03365556       1.10783372      18.89678896        0
+H       -2.59538413      -0.55633677      18.87865256        0
+9
+Lattice="4.59314248 0.190560105 0.326828073 1.577995056161455 3.654568007297132 -0.07173531104064917 -0.345211212 0.113610876 4.704896931" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=urea1 triage_state=tt triage_repeats=1 triage_kind=crystal triage_start_steps=88 kmesh="4 5 4" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces=0 triage_turn_of=urea1_tt_x1_g109_kink1r1 triage_turn_edge=1 triage_turn_image=8 triage_turn_ev=0.0015167115461736103 triage_turning_repeats=1 triage_path_unit="for the cell" pbc="T T T"
+N       -0.67543632      -0.42793243      15.49403269        0
+C       -1.23801639       0.13977971      16.60180348        0
+O       -2.05843012       1.05737396      16.50887292        0
+N       -0.83739897      -0.35043679      17.80917899        0
+C       -1.70800695      -0.10367588      18.94042295        0
+H       -0.18919434      -1.30169756      15.65275364        0
+H       -0.30966600      -1.21440217      17.77563218        0
+H       -2.02571412       0.93316798      18.90380159        0
+H       -2.60867217      -0.72395991      18.87821648        0

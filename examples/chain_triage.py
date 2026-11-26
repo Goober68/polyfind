@@ -1287,16 +1287,17 @@ def hydrogen_bonds(atoms, within: float = 2.6):
                   if symbols[a] == "H" and symbols[b] == "O" and r > 1.3)
 
 
-def resting_places(states, within: float = 10.0):
-    """The states of a ``facings`` record gathered by the facing each came to rest at.
+def resting_places(states, within: float = 10.0, alike_ev: float = 0.01):
+    """The states of a ``facings`` record gathered by where each came to rest.
 
-    Starts that end within ``within`` degrees of one another (the circle closed) are one resting
-    place; each is given by its lowest state, with every start that arrived at it and the highest
-    rigid turn among them.  In order of the facing."""
+    Starts that end within ``within`` degrees of one another (the circle closed) and within
+    ``alike_ev`` in energy are one resting place; each is given by its lowest state, with every
+    start that arrived at it.  Two that face alike and differ in energy are two places: a chain
+    and its other hand can face the same way.  In order of the facing."""
     places = []
     for s in sorted(states, key=lambda s: s["rest_ev"]):
         for p in places:
-            if abs((s["rest_facing_degrees"] - p["rest_facing_degrees"] + 180.0) % 360.0 - 180.0) < within:
+            if abs((s["rest_facing_degrees"] - p["rest_facing_degrees"] + 180.0) % 360.0 - 180.0) < within and abs(s["rest_ev"] - p["rest_ev"]) < alike_ev:
                 p["starts"].append(s["start_degrees"])
                 break
         else:
@@ -2150,6 +2151,10 @@ def table(args):
             print(f"{q['name']:20s} one {q.get('what', 'carbonyl')} of {q['of']} taken round, facing {' '.join(f'{v:+.0f}' for v in q['facing_degrees'])} degrees: "
                   f"{' '.join(f'{v:+.2f}' for v in q['kcal_per_turning_repeat'])} kcal/mol for the cell (DFT on the potential's cells; "
                   f"the potential {' '.join(f'{v:+.2f}' for v in q['potential_kcal_per_turning_repeat'])})")
+            continue
+        if q.get("unit") == "kcal/mol for the cell":
+            print(f"{q['name']:20s} a band between two states of {q['of']}: top {q['top_kcal_per_turning_repeat']:.2f} kcal/mol for the cell, "
+                  f"end {q['kcal_per_turning_repeat'][-1]:+.2f} (DFT on the potential's band)")
             continue
         print(f"{q['name']:20s} turning every second chain of {q['of']}: top {q['top_kcal_per_turning_repeat']:.2f} kcal/mol a repeat that turns, "
               f"end {q['kcal_per_turning_repeat'][-1]:+.2f} (DFT on the potential's path)")

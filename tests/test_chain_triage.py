@@ -553,12 +553,15 @@ def test_resting_places_gather_the_starts_that_end_alike_and_close_the_circle():
     def state(start, rest, energy, rigid):
         return {"start_degrees": start, "rest_facing_degrees": rest, "rest_ev": energy, "rigid_ev": rigid, "hydrogen_bonds": [], "stress_gpa": np.zeros((3, 3)).tolist()}
 
-    states = [state(0.0, -2.0, -10.00, -10.00), state(15.0, -1.9, -10.01, -9.9), state(60.0, 55.0, -9.9, -9.8), state(170.0, 178.0, -10.0, -9.95),
+    states = [state(0.0, -2.0, -10.00, -10.00), state(15.0, -1.9, -10.01, -9.9), state(60.0, 55.0, -9.9, -9.8), state(170.0, 178.0, -10.015, -9.95),
               state(185.0, -178.0, -10.02, -9.9)]
     places = CT.resting_places(states)
     assert [round(p["rest_facing_degrees"]) for p in places] == [-178, -2, 55]
     assert [sorted(p["starts"]) for p in places] == [[170.0, 185.0], [0.0, 15.0], [60.0]]
     assert [p["rest_ev"] for p in places] == [-10.02, -10.01, -9.9]  # each place by its lowest state
+    # two that face alike and are not alike in energy are two places: a chain and its other hand
+    more = CT.resting_places(states + [state(139.0, 57.0, -9.85, -9.7)])
+    assert [round(p["rest_facing_degrees"]) for p in more] == [-178, -2, 55, 57] and [p["starts"] for p in more][2:] == [[60.0], [139.0]]
 
 
 def test_a_cell_is_whole_only_while_it_is_bonded_as_the_repeat_is():
