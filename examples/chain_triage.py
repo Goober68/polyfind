@@ -1282,6 +1282,35 @@ def domains(args):
               + " ".join(f"{d}>{k}:{n}" for (d, k), n in sorted(bonds.items())), flush=True)
 
 
+def gather(args):
+    """States of one series' folder (``domains``) put in one file, as a path's images, for ``points`` to read in DFT.
+
+    They are states, not a way from one to the next: the file is how DFT is asked for each one's
+    energy, counted from the first named.  ``NAME_states_<stems>``."""
+    from ase.io import read, write
+
+    src = Path(args.frames)
+    args.ether, args.sheets = "", 1
+    for name in args.names.split(","):
+        _, tag = kink_series(name, args)
+        stems = args.stems.split(",")
+        states = [read(src / "work" / tag / f"{v}.xyz") for v in stems]
+        for s in states[1:]:
+            numbered_alike(states[0], s)
+        zero = float(states[0].info["triage_kink_ev"])
+        out = []
+        for index, (stem, s) in enumerate(zip(stems, states)):
+            c = s.copy()
+            c.info = {k: v for k, v in s.info.items() if not k.startswith("triage_kink")}
+            c.info.update(triage_turn_of=tag, triage_turn_edge=1, triage_turn_image=index, triage_turn_ev=float(s.info["triage_kink_ev"]) - zero,
+                          triage_turning_repeats=1, triage_path_unit="for the cell", triage_state_stem=stem)
+            out.append(c)
+        label = f"{tag}_states_{'-'.join(stems)}"
+        write(src / f"{label}.path.xyz", out, format="extxyz")
+        print(f"{label}: {len(out)} states of {len(out[0])} atoms; in the potential, kcal/mol for the cell above the first: "
+              + " ".join(f"{stem} {float(c.info['triage_turn_ev']) * KCAL:+.2f}" for stem, c in zip(stems, out)), flush=True)
+
+
 def row_frame(cell):
     """The axes a crystal's stress is told in: x along its first edge (the hydrogen bonds' row) with any
     part along the chain taken out, z along the chain (the third edge), y across both."""
@@ -2377,6 +2406,14 @@ def main():
     do.add_argument("--steps", type=int, default=300)
     do.add_argument("--more", type=int, default=0, help="steps more for a state already made that stopped above --fmax")
     do.set_defaults(run=domains)
+    ga = sub.add_parser("gather")
+    ga.add_argument("--frames", type=Path, required=True)
+    ga.add_argument("--names", required=True)
+    ga.add_argument("--rows", type=int, default=5)
+    ga.add_argument("--long", type=int, default=3)
+    ga.add_argument("--side", type=int, default=1, choices=(1, 2))
+    ga.add_argument("--stems", required=True, help="the states to put in one file, the first the zero, e.g. rrddd,rrrdd,rrrrr")
+    ga.set_defaults(run=gather)
     fa = sub.add_parser("facings")
     fa.add_argument("--frames", type=Path, required=True)
     fa.add_argument("--names", required=True)
