@@ -2304,10 +2304,17 @@ way. Energies are kcal/mol for the 135-atom cell above the row at rest.
     activation only, in perfect rows with a wall, the baseline and not a film: a partial
     result.
 
-**Not done.** DFT on the plain level row's other way round and on the slid row. What room
-costs (the plain crystal with its sheets held apart, in DFT; running). The step in a level row
-with room (the spread cell five chains wide), and the quarter-turned urea there, which the
-four-chain spread row could not level. For the one-methyl chain: the rest of the second step,
+35. *What room costs, in DFT.* The plain crystal with its sheets held apart and its atoms
+    relaxed in DFT, the cell held (`spread_cell`; 9 atoms), kcal/mol a repeat above the
+    crystal: 3.61 A apart, +0.53; 3.94 A, +1.56; 4.27 A, +2.58; 4.76 A, +3.81. So the 3.94 A
+    at which the squeeze went (reading 11) costs 1.6 a repeat, and the 4.77 A the methyl
+    chain's sheets lie at would cost a plain chain 3.8. That is what anything that holds the
+    sheets apart has to pay for each repeat it holds; it is the crystal's own cohesion
+    between sheets and says nothing of what could pay it.
+
+**Not done.** DFT on the plain level row's other way round and on the slid row. The step in a
+level row with room (the spread cell five chains wide; its row is being made), and the
+quarter-turned urea there, which the four-chain spread row could not level. For the one-methyl chain: the rest of the second step,
 and DFT on the second methyl's crossing; DFT on the ten cells of the first step not read;
 the ends relaxed in DFT (`points --relax`, hours a cell here); the chain's dipole and stiffness
 (section 6.1's numbers). The chain with two methyls is not worth its packing search on this

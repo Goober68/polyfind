@@ -1150,12 +1150,28 @@ right": true at one registry, not along it).
         too close whatever lies over the urea. THIS IDEA IS CLOSED unless DFT differs much
         from the potential here (one cell: `points --names
         urea1_tt_x1_s50_kink3r5_swing_turned_3_c0m --images 0,8`).
-        RUNNING WHEN THIS WAS WRITTEN: the plain in-register row in DFT, `points ... --names
-        urea1_tt_x1_kink3r5_swing_turned_3_c0p --images 0,4,3,12 --np 4` (log
-        `log_urea1_r5_swing_p_dft.txt`). THEN: the c0m path's 0 (copy), 9, 6; the s50 cell
-        above; and WHAT ROOM COSTS: DFT on the plain crystal with its sheets held 1.1, 1.2 and
-        1.3 times as far apart (9 atoms, `spread`, atoms relaxed, the cell held), the energy
-        a repeat above the crystal's being what a defect has to pay to hold the sheets there.
+        THE PLAIN LEVEL ROW IN DFT (12:54 UTC; 6.3 READINGS 31 TO 34; 135 atoms, 25 MINUTES A
+        CELL), above the row at rest (the potential): -120, +28.49 (+34.22); -99, THE TOP,
+        +31.03 (+39.28); the far side at -38, -4.82 (+5.38). Raw: rest -1872.01520841 Ry,
+        -1871.92439750, -1871.91631224, -1872.03057076. SO THE PLAIN CHAIN'S OWN TOP IS 31.0
+        (the four-chain row's 23.6 was lowered by its lean), AND DFT'S RESTING WALL IS NOT
+        THE POTENTIAL'S: a wall chain with a urea turned out of the sheet lies 4.8 below the
+        flat wall in a level cell. Not read: the other way round (`points --names ...c0m
+        --images 0,9,6` after copying image_0.out from the c0p work folder), the slid row.
+        WHAT ROOM COSTS (13:17 UTC; reading 35; `/opt/dft/triage/room_cost.py urea1_tt_x1 1.0
+        1.1 1.2 1.3 1.45`, run from the repository; 9 atoms, atoms relaxed in DFT, cell held;
+        results `work/urea1_tt_x1_room/room.json`), kcal/mol a repeat above the crystal by the
+        distance between sheets: 3.611 A +0.53, 3.940 A +1.56, 4.268 A +2.58, 4.760 A +3.81.
+        RUNNING WHEN THIS WAS WRITTEN: THE STEP WHERE THERE IS ROOM, IN A LEVEL ROW: `kink
+        --frames /opt/dft/triage --names urea1_tt_x1_g120 --rows 5 --long 3 --turned 3,0
+        --only` (log `log_urea1_g120_kink3r5.txt`); check the two whole states are level;
+        THEN `swing ... --names urea1_tt_x1_g120 --rows 5 --long 3 --start turned_3 --carbonyl
+        0 --by 180 --way p,m --images 13`; THEN DFT (25 minutes a cell): rest, the potential's
+        top each way, the quarter-turned cells (where the urea's hydrogens are bonded up the
+        stack) and the far side. THE QUESTION IT ANSWERS: with room, is the hump under the
+        mark in a level cell, and is the quarter-turned urea a state of its own (a turn of
+        90 degrees changes which edge of the cell the bonds lie along, which a half turn
+        does not: it is the move that could carry strain). A spread cell is not a molecule.
         (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped
