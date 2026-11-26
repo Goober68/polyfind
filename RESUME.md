@@ -1318,6 +1318,30 @@ right": true at one registry, not along it).
         over the 14% shear that is 184 MPa (pN/nm2) a field could hold a free wall against.
         A PERFECT CRYSTAL'S BOUND, NOT A MATERIAL'S BLOCKED FORCE; not in 6.3 until the twin
         cell has been read.
+        THE TWIN CELL IN THE POTENTIAL, AND A DOUBT ABOUT THE ONE-CHAIN CRYSTAL (23:20 UTC;
+        logs `log_urea1_twin_kink1r5.txt`, `log_urea1_alt.txt`; NOT IN 6.3). Cell held, eV in
+        the potential, 45 atoms: all rows `rrrrr` -35862.62214 (chains at +4); two crystal and
+        three twin `t3` -35862.78388 (-8 +10 / -32 -57 -58); `t2` -35862.78492; the same two in
+        the cell between (`urea1_tt_x1_w2h`) -35862.78460 and -35862.78546. THE TWINNED CELL IS
+        3.7 kcal/mol BELOW THE PLAIN CRYSTAL FOR ITS FIVE REPEATS. And the plain crystal is not
+        the potential's lowest even without a twin: two chains facing alternately (`domains
+        --rows 2 --long 1 --faces=-8,8 --stem alt`: rests at -9, +13) are 0.32 a repeat below
+        the uniform two (`--faces=0,0 --stem rr`), and four started -8,8,8,-8 rest at +10 +9
+        +11 -19, 0.42 below. THE DFT CRYSTAL WAS RELAXED WITH ONE CHAIN TO THE CELL AND CANNOT
+        SHOW THIS. The potential overdid the wall in the equal-edged cell fourfold (8.60
+        against DFT's 1.94), so none of it is believed until DFT has read it.
+        RUNNING WHEN THIS WAS WRITTEN (started 23:22 UTC; about 30 minutes; log
+        `log_urea1_twin_states_points.txt`): `gather` then `points` on
+        `urea1_tt_x1_kink1r2_states_rr-alt` (18 atoms), `urea1_tt_x1_kink1r5_states_rrrrr`,
+        `urea1_tt_x1_w3_kink1r5_states_t3`, `urea1_tt_x1_w2_kink1r5_states_t2` (45 atoms) and
+        `urea1_tt_x1_kink1_states_alt-pairs` (36 atoms). Each `.path.json` has `energy_ev`;
+        compare a repeat (the two-chain and five-chain uniform cells should agree: that is
+        the k-mesh's error). THEN, by what DFT says: the two-chain cells relaxed in DFT
+        (`points --relax` on `urea1_tt_x1_kink1r2_states_rr-alt`, 18 atoms); a wall at every
+        chain (`domains --rows 2 --long 1 --twin 1 --stem t1`) and every second chain (`--rows
+        4 --twin 2 --stem t2`); the band in the cell between (`hop --frames /opt/dft/triage
+        --names urea1_tt_x1_w2h --rows 5 --long 1 --stems t3,t2 --images 9 --fmax 0.05 --steps
+        300`, then `points`).
         AFTER IT: PVDF's crystal by the same map, the like baseline (`facings --names
         pvdf_tt_x1 --angles 0,15,30,45,60,-30,-60`; 6 atoms, minutes an angle; its dipole lies
         along the 4.76 A direction of a lattice of 4.88, 4.76, 4.89).
