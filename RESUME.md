@@ -1048,17 +1048,25 @@ right": true at one registry, not along it).
         (+2.15 +1.88 +2.14 A off their face): the chain beside it (facing -60) would have to
         come flat (-29 in the whole state) to bond to it. The potential was 5 to 6 ABOVE DFT
         on the four-chain row's far half, so this 9.8 is not a number until DFT reads it.
-        RUNNING WHEN THIS WAS WRITTEN: `points --frames /opt/dft/triage --names
-        urea1m_tt_x1_kink3r5_swing_turned_3_c0m --images 0,6 --np 4` (the row at rest and
-        +109; 180 atoms, 255 bands, 3 k-points, 8.5 GB estimated; log
-        `log_urea1m_r5_swing3m_dft.txt`). THEN `points --names
-        urea1m_tt_x1_kink3r5_swing_swing_turned_3_c0m_9_free_c0m --images 8,5` (the far side
-        and +26; join by raw energies). NOTHING BESIDE A DFT JOB.
-        (ii) one DFT single point
-        on the row at rest to see that 180 atoms fit (`points --names <path> --images 0`);
-        (iii) DFT on the top and the far side; (iv) the second urea's step from the far side
-        (`--carbonyl 1`), where the methyl between the two turned ureas has to cross the
-        sheet; the third is the first's mirror. (v) The plain chain the same way (`--names
+        IN DFT (2026-11-26, 01:23 UTC; 6.3 READINGS 21 TO 25; 180 atoms, 255 bands, 3
+        k-points, 8.5 GB, 33 to 35 MINUTES A CELL), above the row at rest (the potential):
+        +109, +6.10 (+5.97); +54, +4.64 (+6.81); +26, +6.72 (+8.92); THE FIRST UREA OVER, AT
+        +17: +6.19 (+9.75). Raw: rest -2184.36722230 Ry, +109 -2184.34776522, +54
+        -2184.35244397, +26 -2184.34578961, far side -2184.34749774. SO IN THE LEVEL ROW ONE
+        UREA OVER IS 6.2 UP, THE TOP AT THE CELLS READ 6.7, 0.5 BACK: the end of a shelf, hardly
+        a state. By symmetry two over is 6.2 again and the third step is the first backwards,
+        so THE WALL'S STEP COSTS AT LEAST 6.7 AND MORE BY WHAT THE SECOND UREA'S STEP HAS ABOVE
+        6.2 (the methyl's crossing; mark 7.6). The potential is 2.2 to 3.6 above DFT past
+        +109. The second scan's DFT record has its zero at the first cell read (+54).
+        RUNNING WHEN THIS WAS WRITTEN: THE SECOND UREA'S STEP in the potential, `swing --frames
+        /opt/dft/triage --names urea1m_tt_x1 --rows 5 --long 3 --start
+        swing_swing_turned_3_c0m_9_free_c0m_9_free --carbonyl 1 --by 110 --way m --images 9`
+        (log `log_urea1m_r5_swing_c1.txt`), THEN the same again from its own last cell
+        (`--start` the name of the `..._9_free.xyz` it wrote in `work/urea1m_tt_x1_kink3r5/`,
+        less `.xyz`), THEN DFT on its top and its end (`points`, 35 minutes a cell, three
+        cells to a two-hour job; join by raw energies to the rest above). Its end should be
+        6.2 again by symmetry: if it is not, the two are different resting places. NOTHING
+        BESIDE A DFT JOB. After it: DFT on the first step's ten unread cells. (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped
         relaxation goes on when the command is given again; work folders end `_relax`), and

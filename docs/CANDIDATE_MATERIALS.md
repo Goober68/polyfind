@@ -2128,12 +2128,73 @@ potential's.
     third edge is square to the other two). At three repeats long it is 180 atoms, by scaling
     about 9 GB and 40 minutes a cell in DFT on this machine, not yet tried.
 
-**Not done.** For the one-methyl row: DFT on the four cells not read (+58, +17, +4 and the
-held +44); the five-chain row, level by symmetry (reading 20), and in it the whole of the
-wall's step: the first urea, the second with the methyls' crossing, and the plain chain's the
-same way for a like comparison; the long way round; the ends relaxed in DFT (`points --relax`,
-hours a cell here); the chain's dipole and stiffness (section 6.1's numbers); the chain with
-two methyls. DFT on the rest of the spread
+**The same chain in a row five chains wide, where the two whole states are level** (`kink
+--rows 5 --long 3`, `swing --rows 5`, `points`; 2026-11-26). Five chains by three repeats is 180
+atoms; a DFT single point on it takes 33 to 35 minutes here and 8.5 GB of the machine's 15. In
+the potential the row at rest (two chains one way, three the other) and the row with the wall
+chain turned (three and two) come out 0.12 kcal/mol apart and mirror images to a degree: the
+chains face +24, -64, -169, +152, -167 at rest and +13, -29, +11, +116, -156 turned, which is
+the first list read backwards and turned half round. DFT has read the row at rest only; the
+other is the same cell by symmetry and has not been checked in DFT. The wall where the N-H meet
+is three chains wide: the chain beside it on the side away from the wall chain lies 64 degrees
+off flat, and when the wall steps that chain comes flat and the one on the other side goes 64
+off. The first urea of the wall chain is stepped as before, down through +90 in two scans end
+to end. Energies are kcal/mol for the 180-atom cell above the row at rest.
+
+| facing held | the potential | DFT |
+|---|---|---|
+| -169 (the row at rest) | 0 | 0 |
+| +178 | +0.93 | |
+| +165 | +3.64 | |
+| +150 | +3.40 | |
+| +136 | +1.88 | |
+| +123 | +4.14 | |
+| +109 | +5.97 | +6.10 |
+| +95, held and let go | +5.86, +5.86 | |
+| +81 | +6.32 | |
+| +68 | +7.02 | |
+| +54 | +6.81 | +4.64 |
+| +40 | +8.37 | |
+| +26 | +8.92 | +6.72 |
+| +13, 0 (held past where it comes to rest) | +11.02, +13.23 | |
+| let go from 0: rests at +17 | +9.75 | +6.19 |
+
+21. *In the level row the first urea over lies 6.19 ABOVE the row at rest in DFT, not 4.2
+    below.* The four-chain row's 4.2 was its lean (reading 20). The cells read on the way are
+    6.10 (+109), 4.64 (+54) and 6.72 (+26), so the top at the cells read is 6.7 and the urea
+    comes back from the far side over 0.5. One urea over is hardly a state of its own here: it
+    is the end of a shelf 4.6 to 6.7 high that begins by +109. Ten of the fifteen cells are
+    not read in DFT, and the top of a way made by holding one angle is neither bound.
+22. *What the 6.2 pays for is two hydrogen bonds given up and none made.* The turned urea has
+    nothing within 2.6 A of its oxygen; its own hydrogens are 2.24 to 2.35 A from hydrogens
+    and a nitrogen of the chain it used to accept from. The chain it should now accept from is
+    the one lying 64 degrees off flat, and one urea turning does not bring it flat. The
+    methyls have not moved (2.15, 1.88 and 2.14 A off the face they were on).
+23. *The wall's step is three ureas, and this is the first.* By the cell's symmetry the state
+    with two over is the mirror of the state with one over, 6.2 again, and the third urea's
+    step is the first's run backwards. So the wall's step costs at least the 6.7 read here,
+    and more by whatever the second urea's step has above 6.2. That step has the crossing of
+    a methyl from one face of the sheet to the other in it, and the other two chains of the
+    wall changing places; it has not been walked. The mark for tens of MHz is 7.6.
+24. *The potential again: right before the bonds are let go, high after.* 5.97 against 6.10 at
+    +109; 2.2 above DFT at +54 and +26 and 3.6 above at the far side.
+25. *On the target's terms.* Low activation: the two whole states are level here by
+    construction, as the two senses of any wall's step are in a wide row, so the level is not
+    in question and the hump is the whole of it. A third of the hump is read: 6.7, under the
+    mark. The other two thirds are not. Easy-ish return: the same hump the other way, by
+    symmetry. Strong action: not computed for this chain. The limits are the four-chain
+    row's, less the lean: a perfect row with a wall in it, the baseline for this chain and
+    not a film; three repeats long, so the two ends of the turned stretch are one repeat
+    apart and what they cost each other is in the 6.2; one sheet thick, so a column of ureas
+    turns together; the cell held; one hand of the chain; DFT on the potential's structures.
+    Activation only, a partial result: no strain, loss, frequency, blocked force or speed.
+
+**Not done.** For the one-methyl chain: the second urea's step in the five-chain row (the
+methyl's crossing), and DFT on it; DFT on the ten cells of the first step not read; the plain
+chain in a five-chain row the same way, for a like comparison (135 atoms at three repeats);
+the long way round; the ends relaxed in DFT (`points --relax`, hours a cell here); the chain's
+dipole and stiffness (section 6.1's numbers); the chain with two methyls. In the four-chain
+row, the four cells not read (+58, +17, +4 and the held +44). DFT on the rest of the spread
 row's path (the cells at -130 and -110, the one let go, and -89 again for the record), and its
 other way round. An ether in the turning urea. The plain row's cell at +106 let go, DFT on the
 cells between the ones read, and its second urea's step from the state with one over. The other
@@ -2154,7 +2215,9 @@ this section only until the job is run to its end;
 scans, nine cells each, the second starting from the first's last; their records in
 `chain_triage.json` carry the DFT energies in eV, and the second's zero is its own first cell,
 5.93 above the row at rest; `urea1m_tt_x1_kink3.path.xyz`, the one-methyl row at rest and with
-its whole wall chain turned).
+its whole wall chain turned; the same three files with `kink3r5` in their names for the
+five-chain row; the zero of its second scan's DFT record is the first cell read, the one at
++54, 4.64 above the row at rest).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
