@@ -1257,15 +1257,26 @@ right": true at one registry, not along it).
         crystal it divides, by 1.4 a repeat of wall. A five-image band between the two wall
         states did not converge (set aside as `hop_rrddd-rrrdd.broken.*` in the work folder;
         its 189 at the middle is not a result). NOT IN 6.3 YET.
-        RUNNING WHEN THIS WAS WRITTEN (started 20:14 UTC; 75 minutes; log
-        `log_urea1_g109_kink3r5_states_points.txt`): DFT on the three states (`gather --names
-        urea1_tt_x1_g109 --rows 5 --long 3 --stems rrddd,rrrdd,rrrrr` made
-        `urea1_tt_x1_g109_kink3r5_states_rrddd-rrrdd-rrrrr.path.xyz`; `points --names` that;
-        a finished cell is kept and the command can be given again). READ: is the wall below
-        the crystal in DFT too, and are the two wall states level. THEN one urea of the wall
-        chain: `swing --frames /opt/dft/triage --names urea1_tt_x1_g109 --rows 5 --long 3
-        --start rrddd --carbonyl 0 --by 32 --way p --images 7` (the wall chain is chain 2,
-        at -21, and goes to +11), about an hour in the potential, then `points` on its cells.
+        DFT ON THE THREE STATES (21:17 UTC; 63 minutes; log
+        `log_urea1_g109_kink3r5_states_points.txt`; `gather --names urea1_tt_x1_g109 --rows 5
+        --long 3 --stems rrddd,rrrdd,rrrrr` made
+        `urea1_tt_x1_g109_kink3r5_states_rrddd-rrrdd-rrrrr.path.xyz`; `points --names` that):
+        kcal/mol for the cell of 15 repeats, DFT on the potential's structures: `rrddd` 0.00,
+        `rrrdd` -0.32, `rrrrr` +1.94 (the potential: 0.00, +0.05, +8.60). SO IN DFT TOO THE
+        WALL MOVES ON BY ONE CHAIN FOR NEXT TO NOTHING (0.02 a repeat of the cell) AND THE
+        CELL WITH WALLS IS NOT ABOVE THE ALL-ROWS CELL (0.13 a repeat below; the potential
+        had 0.57). The cell has two walls (it is periodic), each three repeats long. These
+        are single points on the potential's structures, whose own error is of the order of
+        a kcal/mol a repeat and cancels only as far as the states are alike: read it as "the
+        wall costs nothing to a few tenths a repeat", not as a wall the crystal wants. NOT
+        IN 6.3 YET.
+        RUNNING WHEN THIS WAS WRITTEN (started 21:20 UTC; about an hour; log
+        `log_urea1_g109_kink3r5_swing_rrddd_c0.txt`): one urea of the wall chain: `swing
+        --frames /opt/dft/triage --names urea1_tt_x1_g109 --rows 5 --long 3 --start rrddd
+        --carbonyl 0 --by 32 --way p --images 7` (the wall chain is chain 2, at -21, and goes
+        to +11). THEN `points --frames /opt/dft/triage --names
+        urea1_tt_x1_g109_kink3r5_swing_rrddd_c0p --np 4` (21 minutes a cell; the command can
+        be given again, a finished cell is kept; two hours is the longest one job may run).
         AFTER IT: PVDF's crystal by the same map, the like baseline (`facings --names
         pvdf_tt_x1 --angles 0,15,30,45,60,-30,-60`; 6 atoms, minutes an angle; its dipole lies
         along the 4.76 A direction of a lattice of 4.88, 4.76, 4.89).
