@@ -415,6 +415,42 @@ def test_a_slid_cell_has_its_sheets_as_far_apart_and_moved_along_the_chain():
     assert np.linalg.solve(cell.T, c.cell.array[1]) == pytest.approx([0.0, 1.0, 1.0])
 
 
+def test_a_cell_told_with_another_second_edge_is_the_same_crystal():
+    from ase import Atoms
+
+    cell = np.array([[4.6, 0.0, 0.0], [1.7, 3.3, 0.2], [0.1, 0.0, 4.7]])
+    a = Atoms("CO", positions=[[1.0, 1.0, 1.0], [2.2, 1.0, 1.0]], cell=cell, pbc=True)
+    a.info["triage_repeats"] = 1
+    b = CT.edged_cell(a, -1)
+    assert b.cell.array[1] == pytest.approx(cell[1] - cell[0]) and b.cell.array[0] == pytest.approx(cell[0])
+    assert b.positions == pytest.approx(a.positions) and b.get_volume() == pytest.approx(a.get_volume())
+    assert CT.sheet_gap(b) == pytest.approx(CT.sheet_gap(a))
+    assert CT.edged_cell(a, 0).cell.array == pytest.approx(cell)
+
+
+def test_a_row_of_domains_turns_each_chain_whole_by_its_own_angle():
+    from ase import Atoms
+
+    cell = np.array([[4.6, 0.0, 0.0], [-2.9, 3.6, 0.0], [0.0, 0.0, 4.7]])
+    # a stand-in chain: C=O across the chain (along the row) with an N-H behind it
+    a = Atoms("COHN", positions=[[1.0, 1.0, 1.0], [2.2, 1.0, 1.0], [-0.8, 1.0, 1.0], [0.2, 1.0, 1.0]], cell=cell, pbc=True)
+    a.info.update(triage_repeats=1, kmesh="6 6 6", triage_chain="x", triage_state="tt")
+    row = CT.domain_row(a, 3, 2, [0, 0, 90])
+    assert len(row) == 24 and list(row.arrays["chain"]) == [0] * 8 + [1] * 8 + [2] * 8
+    assert row.info["triage_repeats"] == 6 and row.info["kmesh"] == "2 6 3" and row.info["triage_kink_mover"] == 1
+    assert row.cell.array == pytest.approx(cell * np.array([[3.0], [1.0], [2.0]]))
+    z = np.array([0.0, 0.0, 1.0])
+    for k, angle in enumerate((0.0, 0.0, 90.0)):
+        part = np.where(row.arrays["chain"] == k)[0]
+        assert CT.facing(row, part, z, np.array([1.0, 0.0, 0.0])) == pytest.approx([angle, angle])
+        # a chain turns about its own axis: its middle stays where the untouched row has it
+        assert row.positions[part].mean(axis=0) == pytest.approx(a.positions.mean(axis=0) + k * cell[0] + 0.5 * cell[2])
+    with pytest.raises(ValueError):
+        CT.domain_row(a, 3, 2, [0, 0])
+    # the first two chains are bonded along the row, O of one to H of the next; the turned one is bonded to neither
+    assert CT.joined(row, within=2.0) == {(1, 0): 2}
+
+
 def test_the_row_frame_is_square_with_the_chain_and_the_row_for_axes():
     cell = np.array([[4.6, 0.0, 0.3], [1.7, 3.3, 0.2], [0.0, 0.0, 4.7]])
     frame = CT.row_frame(cell)

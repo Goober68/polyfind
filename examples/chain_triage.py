@@ -1055,6 +1055,126 @@ def spread(args):
         print(f"{out}: sheets {sheet_gap(rebased(a)):.3f} A apart made {sheet_gap(b):.3f}, {b.get_volume() / len(b) * len(a) / a.get_volume():.3f} times the volume", flush=True)
 
 
+def edged_cell(atoms, steps: int):
+    """The same crystal told with another second edge: the one it has and ``steps`` of the first.
+
+    Nothing moves and the lattice is the same.  A row built on it (``domain_row``) has each
+    chain's copies along that edge, so with ``steps`` -1 a chain's copies lie along the diagonal
+    between the row and the stack, which is the edge a chain facing that way is bonded along."""
+    b = rebased(atoms).copy()
+    b.info.update(atoms.info)
+    cell = b.cell.array.copy()
+    cell[1] = cell[1] + steps * cell[0]
+    b.set_cell(cell, scale_atoms=False)
+    b.info["kmesh"] = kmesh(b)
+    return b
+
+
+def domain_row(a, rows: int, long: int, faces):
+    """A row of ``rows`` chains ``long`` repeats long, chain k turned whole by ``faces[k]`` degrees about its axis.
+
+    The cell given is used as it stands (``spread_cell``, ``edged_cell``): the chains follow one
+    another along its first edge and each chain's copies along its second.  It sets a part of a
+    crystal bonded along one edge beside a part bonded along another, with a wall each side.  The
+    chain that ``swing`` then moves is chain ``rows // 2`` (``moving_chain``)."""
+    faces = [float(v) for v in faces]
+    if len(faces) != rows:
+        raise ValueError(f"{len(faces)} facings for {rows} chains")
+    per_chain = len(a) * long
+    along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
+    mesh = mesh_of(a)
+    mesh[0] = max(1, round(mesh[0] / rows))
+    mesh[2] = max(1, round(mesh[2] / long))
+    row = a.repeat([rows, 1, long])
+    row.set_array("chain", np.repeat(np.arange(rows), per_chain))  # a chain is a run of atoms
+    for chain, angle in enumerate(faces):
+        if angle:
+            spun(row, per_chain, chain, np.radians(angle), along)
+    row.info.update(a.info)
+    row.info.update(triage_repeats=rows * long * int(a.info["triage_repeats"]), triage_kind="crystal", kmesh=" ".join(str(v) for v in mesh),
+                    triage_kink_mover=rows // 2)
+    return row
+
+
+def joined(row, within: float = 2.25):
+    """How many hydrogen bonds of a row cell go from each chain to each chain: ``{(donor, acceptor): count}``.
+
+    A chain bonded to its own copies counts under ``(k, k)``."""
+    from ase.neighborlist import neighbor_list
+
+    symbols = row.get_chemical_symbols()
+    chains = row.arrays["chain"]
+    i, j, d = neighbor_list("ijd", row, within)
+    out = {}
+    for a, b, r in zip(i, j, d):
+        if symbols[a] == "H" and symbols[b] == "O" and r > 1.3:
+            key = (int(chains[a]), int(chains[b]))
+            out[key] = out.get(key, 0) + 1
+    return out
+
+
+def domains(args):
+    """Parts of a crystal bonded along different edges, side by side in a long cell, settled in the pretrained potential.
+
+    ``facings`` finds the ways a chain can face with every chain turned together.  Here chain k of
+    a row is turned whole by ``--faces``' k-th angle, so that some chains are bonded along the row
+    and others along another edge, and the cell is relaxed in the potential with its shape held.
+    ``--by`` moves the sheets apart first (``spread_cell``) and ``--second`` tells the cell with
+    another second edge (``edged_cell``; -1, the diagonal).  The crystal so told is written as
+    ``NAME[_g<percent>][_e<steps>]`` and the state as ``--stem`` in its series' folder, where
+    ``swing --names that --rows R --long L --start STEM`` takes one carbonyl of the chain beside
+    the wall round and ``points`` reads the cells in DFT."""
+    from ase.io import read, write
+    from ase.optimize import LBFGS
+
+    calc = model(args.model, dtype="float32", device=args.device)
+    exact = model(args.model, device=args.device)
+    src = Path(args.frames)
+    args.ether, args.sheets = "", 1
+    for name in args.names.split(","):
+        a = read(src / f"{name}.relaxed.xyz")
+        base = edged_cell(spread_cell(a, args.by) if args.by != 1.0 else a, args.second)
+        told_as = (name + ("" if args.by == 1.0 else f"_g{round(args.by * 100)}")
+                   + ("" if not args.second else f"_e{args.second:+d}".replace("+", "p").replace("-", "m")))
+        if told_as != name and not (src / f"{told_as}.relaxed.xyz").exists():
+            write(src / f"{told_as}.relaxed.xyz", base, format="extxyz")
+        along = base.cell.array[2] / np.linalg.norm(base.cell.array[2])
+        reference = polar_facing(rebased(a))
+        _, tag = kink_series(told_as, args)
+        work = src / "work" / tag
+        work.mkdir(parents=True, exist_ok=True)
+        store = work / f"{args.stem}.xyz"
+        row = read(store) if store.exists() else None
+        if row is None or (args.more and float(row.info["triage_kink_force"]) > args.fmax):
+            t0 = time.time()
+            before = int(row.info["triage_kink_steps"]) if row is not None else 0
+            if row is None:
+                row = domain_row(base, args.rows, args.long, args.faces.split(","))
+            info = dict(row.info)
+            if nearest(row) < 0.6:
+                raise ValueError(f"{tag} {args.stem}: the start has two atoms {nearest(row):.2f} A apart")
+            row.calc = calc
+            opt = LBFGS(row, logfile=None)
+            for _ in opt.irun(fmax=args.fmax, steps=args.more if before else args.steps):
+                if opt.nsteps and opt.nsteps % 25 == 0:
+                    print(f"  {tag} {args.stem}: step {before + opt.nsteps}, largest force {np.linalg.norm(row.get_forces(), axis=1).max():.3f} eV/A, {time.time() - t0:.0f} s", flush=True)
+            force = float(np.linalg.norm(row.get_forces(), axis=1).max())
+            row.calc = exact
+            energy = float(row.get_potential_energy())
+            row.calc = None
+            row.info.update(info)
+            row.info.update(triage_kink_ev=energy, triage_kink_steps=before + int(opt.nsteps), triage_kink_force=force, triage_domain_faces=args.faces)
+            write(store, row, format="extxyz")
+        if nearest(row) < 0.85:
+            raise ValueError(f"{tag} {args.stem}: two atoms {nearest(row):.2f} A apart: not a structure")
+        chains = row.arrays["chain"]
+        faces = ["(" + " ".join(f"{v:+.0f}" for v in facing(row, np.where(chains == k)[0], along, reference)) + ")" for k in range(args.rows)]
+        bonds = joined(row)
+        print(f"{tag} {args.stem}: {len(row)} atoms, {int(row.info['triage_kink_steps'])} steps to {float(row.info['triage_kink_force']):.3f} eV/A, "
+              f"{float(row.info['triage_kink_ev']):.5f} eV in the potential; the chains' carbonyls face {' '.join(faces)} degrees; hydrogen bonds from chain to chain "
+              + " ".join(f"{d}>{k}:{n}" for (d, k), n in sorted(bonds.items())), flush=True)
+
+
 def row_frame(cell):
     """The axes a crystal's stress is told in: x along its first edge (the hydrogen bonds' row) with any
     part along the chain taken out, z along the chain (the third edge), y across both."""
@@ -2090,6 +2210,22 @@ def main():
     sl.add_argument("--names", required=True)
     sl.add_argument("--along", type=float, required=True, help="how far each sheet is moved against the one below, in repeats of the cell along the chain, e.g. 0.5")
     sl.set_defaults(run=slide)
+    do = sub.add_parser("domains")
+    do.add_argument("--frames", type=Path, required=True)
+    do.add_argument("--names", required=True)
+    do.add_argument("--by", type=float, default=1.0, help="how many times as far apart the sheets are made first")
+    do.add_argument("--second", type=int, default=0, help="the cell's second edge is told with this many of the first added: -1, the diagonal")
+    do.add_argument("--rows", type=int, default=5)
+    do.add_argument("--long", type=int, default=3)
+    do.add_argument("--side", type=int, default=1, choices=(1, 2))
+    do.add_argument("--faces", required=True, help="degrees each chain of the row is turned by, e.g. 0,0,-41,-41,-41 (give it as --faces=... when the first is negative)")
+    do.add_argument("--stem", required=True, help="the name the state is kept under in its series' folder, e.g. rrddd")
+    do.add_argument("--model", type=Path, default=MODEL_DEFAULT)
+    do.add_argument("--device", default="cpu")
+    do.add_argument("--fmax", type=float, default=0.05)
+    do.add_argument("--steps", type=int, default=300)
+    do.add_argument("--more", type=int, default=0, help="steps more for a state already made that stopped above --fmax")
+    do.set_defaults(run=domains)
     fa = sub.add_parser("facings")
     fa.add_argument("--frames", type=Path, required=True)
     fa.add_argument("--names", required=True)
