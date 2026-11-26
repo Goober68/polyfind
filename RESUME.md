@@ -1235,18 +1235,31 @@ right": true at one registry, not along it).
         SO THE ROW AND DIAGONAL STATES ARE ONE CRYSTAL IN TWO ORIENTATIONS, LEVEL BY SYMMETRY,
         6 TO 7% OF SHEAR APART WHEN FREE AND 0.3 GPa APART WHEN HELD, WITH 5.5 A REPEAT
         BETWEEN THEM FOR THE CRYSTAL MOVING WHOLE. The spring of the target; not a candidate.
-        RUNNING WHEN THIS WAS WRITTEN (started 18:41 UTC; log
-        `log_urea1_g109_em1_kink3r5.txt`): step (ii)'s two `domains` states, in the potential.
+        THE WALL ALONG THE DIAGONAL IS A COSTLY ONE (19:08 UTC; the potential only; log
+        `log_urea1_g109_em1_kink3r5.txt`; states in `work/urea1_tt_x1_g109_em1_kink3r5/`).
+        Step (ii)'s two states as first planned, the cell's second edge the diagonal: `rrddd`
+        (two row chains, three diagonal) rests with chains facing +4 +12 | -33 -38 -40 and the
+        wall chain's oxygens taking the row's hydrogens as well as its own column's; `rrrdd`
+        did NOT stay: its two diagonal chains turned back and the cell is all rows (+15 -14
+        +13 -5 -5), 42.9 kcal/mol BELOW `rrddd`. So two such walls cost about 43 for a cell
+        three repeats long, some 7 a repeat of wall: the rows end on that wall with their
+        bonds unmet. NOT WRITTEN INTO 6.3 YET.
+        RUNNING WHEN THIS WAS WRITTEN (started 19:10 UTC; log `log_urea1_g109_kink3r5.txt`;
+        states in `work/urea1_tt_x1_g109_kink3r5/`): the same two states with the second edge
+        KEPT (`domains ... --by 1.0935 --rows 5 --long 3 --faces=0,0,m-41,m-41,m-41 --stem
+        rrddd`, then `--faces=0,0,0,m-41,m-41 --stem rrrdd`): the wall then runs along the
+        mirror line and each row meets a diagonal end to end (a bend of 51 degrees, no bond
+        unmet). IF BOTH STAY: `hop --names urea1_tt_x1_g109 --rows 5 --long 3 --stems
+        rrddd,rrrdd` and `swing --names urea1_tt_x1_g109 --rows 5 --long 3 --start rrddd
+        --carbonyl 0 --by 45 --way p --images 7`, then `points`. If the two-chain part
+        collapses again, seven chains (`--rows 7`, 189 atoms).
+        AFTER IT: PVDF's crystal by the same map, the like baseline (`facings --names
+        pvdf_tt_x1 --angles 0,15,30,45,60,-30,-60`; 6 atoms, minutes an angle; its dipole lies
+        along the 4.76 A direction of a lattice of 4.88, 4.76, 4.89).
         NEXT, IN ORDER (nothing beside a DFT job):
-        (ii) THE ACTIVATION THAT COUNTS, one urea of one chain beside a wall: `domains
-        --frames /opt/dft/triage --names urea1_tt_x1 --by 1.0935 --second -1 --rows 5 --long 3
-        --faces=0,0,m-41,m-41,m-41 --stem rrddd` and `--faces=0,0,0,m-41,m-41 --stem rrrdd`
-        (135 atoms, the cell's second edge the diagonal so a diagonal chain's copies lie along
-        its own bonds; about 25 minutes a state in the potential); then `hop --names
-        urea1_tt_x1_g109_em1 --rows 5 --long 3 --stems rrddd,rrrdd` (the wall chain whole) and
-        `swing --names urea1_tt_x1_g109_em1 --rows 5 --long 3 --start rrddd --carbonyl 0 --by
-        45 --way p --images 7` (its first urea); then `points` on the cells (25 minutes each).
-        The potential does not know the hand's energy: read every cell that matters in DFT.
+        (ii) THE ACTIVATION THAT COUNTS, one urea of one chain beside a wall: as above; then
+        `points` on the cells (135 atoms, 25 minutes each). The potential does not know the
+        hand's energy: read every cell that matters in DFT.
         (iii) the same pair with the sheets as the crystal has them and the cell sheared to
         equal edges instead of spread (no room paid for): not built.
         (v) The plain chain the same way (`--names
