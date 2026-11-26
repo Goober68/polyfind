@@ -1172,6 +1172,24 @@ right": true at one registry, not along it).
         mark in a level cell, and is the quarter-turned urea a state of its own (a turn of
         90 degrees changes which edge of the cell the bonds lie along, which a half turn
         does not: it is the move that could carry strain). A spread cell is not a molecule.
+        THE SPREAD ROW'S WHOLE STATES (14:04 UTC; potential): level (0.04 apart), mirror
+        images, AND NOT WHAT WAS EXPECTED: the two-chain half of the row rests A THIRD OF A
+        TURN ROUND, BONDED UP THE STACK to its own copies in the next sheet (chains face +58
+        +61 | +167 -158 -164; 24 N-H..O of 1.75 to 1.98 A, where an unspread row has 15 under
+        2.3 A; `allfacing.py` prints `0>0 stack 6`). With the sheets 3.94 A apart the cell is
+        nearly a lattice of three like directions: along the row 4.61 A at 0 degrees, to the
+        next sheet 4.30 A at 66, and the other diagonal 4.89 A at 126. So WITH ROOM THE CHAIN
+        HAS MORE THAN TWO WAYS TO FACE, each bonded, a sixth to a third of a turn apart.
+        RUNNING WHEN THIS WAS WRITTEN: THE MAP OF THOSE WAYS IN DFT ON THE 9-ATOM CELL (all
+        chains turned together, a rigid turn then the atoms relaxed, the cell held):
+        `/opt/dft/triage/orient_map.py urea1_tt_x1 1.2 0 15 30 ... 180`, run from the
+        repository; log `log_urea1_orient_g120.txt`; results
+        `work/urea1_tt_x1_orient_g120/orient.json` (rigid energy, resting energy and facing,
+        H..O bonds; finished angles are kept). READ: which facings are resting places, how
+        far apart in energy a repeat, and the rigid turn's hump between them (an upper mark,
+        for every chain at once). THEN the same at 1.1 and 1.3, THEN the spread row's first
+        urea (`swing ... --names urea1_tt_x1_g120 --rows 5 --long 3 --start turned_3
+        --carbonyl 0 --by 180 --way p,m --images 13`) and DFT on it.
         (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped
