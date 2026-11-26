@@ -985,7 +985,7 @@ def hop(args):
     The images start from an interpolation that keeps distances (IDPP), the band is loose (it is
     the start of a DFT reading, ``points``), and every image's energy is taken in double precision."""
     from ase.io import read, write
-    from ase.mep import NEB
+    from ase.mep.neb import idpp_interpolate, interpolate
 
     calc = model(args.model, dtype="float32", device=args.device)
     exact = model(args.model, device=args.device)
@@ -1007,8 +1007,12 @@ def hop(args):
             images = read(store, index=":")
             print(f"  {tag}_hop{first}-{last}: going on from {store.name}", flush=True)
         else:
+            # each chain's atoms go together (``carried``): filled in atom by atom to the nearest copy,
+            # a chain that moves half a thin cell's thickness is pulled apart on the way
+            ends[1].positions = ends[0].positions + carried(ends[0], ends[1])
             images = [ends[0].copy() for _ in range(args.images - 1)] + [ends[1].copy()]
-            NEB(images).interpolate(method="idpp", mic=True)
+            interpolate(images, mic=False)
+            idpp_interpolate(images, traj=None, log=None, mic=True)
         for im in images:
             im.info.update(ends[0].info)
         energies, nsteps = band(images, calc, args.fmax, args.steps, end_steps=0, store=store)
@@ -1144,16 +1148,59 @@ def numbered_alike(first, last):
     """``last`` with each methylene's two hydrogens numbered as in ``first``, in place: whichever way round moves them less.
 
     Two states of one cell that were made in different ways (one by a reflection) can have a
-    methylene's hydrogens exchanged, and a band between them would carry each through the other."""
-    from ase.geometry import find_mic
+    methylene's hydrogens exchanged, and a band between them would carry each through the other.
+    How far a hydrogen moves is counted from its own carbon (the bond's change), which a cell
+    thinner than the move cannot confuse: the nearest copy of a hydrogen 3 A away across a cell
+    4 A thick is another one."""
+    symbols = first.get_chemical_symbols()
+    carbons = [i for i, s in enumerate(symbols) if s == "C"]
 
-    def moved(i, j):
-        return float((find_mic(last.positions[j] - first.positions[i], first.cell.array)[0] ** 2).sum())
+    def bond(atoms, c, h):
+        return atoms.get_distance(c, h, mic=True, vector=True)
 
     for h1, h2 in methylene_pairs(first):
-        if moved(h1, h2) + moved(h2, h1) < moved(h1, h1) + moved(h2, h2):
+        c = min(carbons, key=lambda i: first.get_distance(i, h1, mic=True))
+        as_is = ((bond(last, c, h1) - bond(first, c, h1)) ** 2).sum() + ((bond(last, c, h2) - bond(first, c, h2)) ** 2).sum()
+        exchanged = ((bond(last, c, h2) - bond(first, c, h1)) ** 2).sum() + ((bond(last, c, h1) - bond(first, c, h2)) ** 2).sum()
+        if exchanged < as_is:
             last.positions[[h1, h2]] = last.positions[[h2, h1]]
     return last
+
+
+def carried(first, last, within: float = 1.75):
+    """How far each atom of ``last`` is from where ``first`` has it, the atoms of a molecule going together.
+
+    The nearest copy of each atom taken by itself splits a chain when the chain has moved about
+    half the thickness of a thin cell: some atoms are sent one way and their neighbours the other,
+    and a path filled in between the two states pulls the bonds apart.  Here one atom of each
+    bonded set (the one whose nearest copy is nearest) goes to its nearest copy and every other
+    atom goes with the atom it is bonded to: its move is that atom's and the change of the bond
+    between them.  The bonds are ``first``'s, and both states must have them."""
+    from ase.geometry import find_mic
+    from ase.neighborlist import neighbor_list
+
+    n = len(first)
+    i, j, D = neighbor_list("ijD", first, within)
+    near = [[] for _ in range(n)]
+    for p, q, d in zip(i, j, D):
+        near[int(p)].append((int(q), d))
+    alone = find_mic(last.positions - first.positions, first.cell.array)[0]
+    order = np.argsort(np.linalg.norm(alone, axis=1))
+    moved, done = np.zeros((n, 3)), np.zeros(n, dtype=bool)
+    for root in order:
+        if done[root]:
+            continue
+        moved[root], done[root] = alone[root], True
+        queue = [int(root)]
+        while queue:
+            p = queue.pop()
+            for q, d in near[p]:
+                if not done[q]:
+                    # the bond in the second state is the one nearest the bond in the first
+                    after = find_mic((last.positions[q] - last.positions[p] - d)[None, :], last.cell.array)[0][0] + d
+                    moved[q], done[q] = moved[p] + after - d, True
+                    queue.append(q)
+    return moved
 
 
 def other_hand(row, part, along):
@@ -1203,6 +1250,77 @@ def domain_row(a, rows: int, long: int, faces):
     return row
 
 
+def half_turn_across(cell):
+    """Half a turn about the normal of the plane of a cell's second and third edges, as a matrix.
+
+    It takes those two edges to their opposites, so the lattice turned has the same points in that
+    plane as the lattice it was and the two can be joined along it: a twin, the plane its wall."""
+    cell = np.asarray(cell, dtype=float)
+    normal = np.cross(cell[1], cell[2])
+    normal /= np.linalg.norm(normal)
+    return 2.0 * np.outer(normal, normal) - np.eye(3)
+
+
+def twin_step(cell):
+    """The step from chain to chain in a crystal's twin (``half_turn_across``): the first edge's image.
+
+    It is told with whichever number of second edges puts it nearest the first edge, so that a
+    chain of the twin is nearest where the crystal had it.  The difference of the two steps lies
+    along the wall: a chain going from the crystal to its twin shears the cell by that much."""
+    cell = np.asarray(cell, dtype=float)
+    image = half_turn_across(cell) @ cell[0]
+    return image + np.round((cell[0] - image) @ cell[1] / (cell[1] @ cell[1])) * cell[1]
+
+
+def twin_row(a, rows: int, long: int, twin: int, told_for=None):
+    """A row of ``rows`` chains whose last ``twin`` are the crystal's twin, in the cell that the two together make.
+
+    The twin is the crystal turned half a turn about the normal of the plane of its second and
+    third edges (``half_turn_across``).  Nothing is held apart and nothing is strained: each part
+    is the crystal as it packs, the plane between them is the wall, and every chain has a
+    neighbour to bond to on each side.  The chains of the twin follow one another by ``twin_step``
+    and the cell's first edge is the sum of the steps, so a cell with one more chain in the twin
+    is another shape.  ``told_for`` gives the cell the shape it would have with that many chains
+    in the twin (2.5: half way between two states a band is to join), the atoms carried with it.
+
+    A twin chain is set down as ``domain_row`` sets a chain of the other hand, reflected through
+    its own plane and turned about its axis to where the half turn has its carbonyl.  That keeps
+    each atom near where the chain's own move from the crystal would bring it; the half turn
+    itself would also turn the chain end for end and number it backwards.  The relaxation that
+    follows makes up the difference."""
+    if not 0 <= twin <= rows:
+        raise ValueError(f"{twin} chains in the twin of a row of {rows}")
+    cell = a.cell.array.copy()
+    along = cell[2] / np.linalg.norm(cell[2])
+    step = twin_step(cell)
+    o, c = carbonyls(a, np.arange(len(a)))[0]
+    v = a.get_distance(c, o, mic=True, vector=True)
+    v = v - (v @ along) * along
+    w = half_turn_across(cell) @ v
+    angle = float(np.degrees(np.arctan2(np.cross(v, w) @ along, v @ w)))
+    first = rows - twin
+    row = domain_row(a, rows, long, ["0"] * first + [f"m{angle:.4f}"] * twin)
+    per_chain = len(a) * long
+    for k in range(first, rows):
+        row.positions[k * per_chain:(k + 1) * per_chain] += (k - first) * (step - cell[0])
+    new = row.cell.array.copy()
+    new[0] = first * cell[0] + twin * step
+    row.set_cell(new, scale_atoms=False)
+    if told_for is not None and float(told_for) != twin:
+        new[0] = (rows - float(told_for)) * cell[0] + float(told_for) * step
+        row.set_cell(new, scale_atoms=True)
+    row.info.update(triage_twin_chains=int(twin), triage_twin_told_for=float(twin if told_for is None else told_for),
+                    triage_twin_turned_degrees=angle, kmesh=kmesh_like(a, row))
+    return row
+
+
+def kmesh_like(a, row) -> str:
+    """A mesh for a cell built of many of ``a``'s: as fine along each edge as ``a``'s own mesh is along its."""
+    mesh = mesh_of(a)
+    small, big = np.linalg.norm(a.cell.array, axis=1), np.linalg.norm(row.cell.array, axis=1)
+    return " ".join(str(max(1, int(round(m * s / b)))) for m, s, b in zip(mesh, small, big))
+
+
 def joined(row, within: float = 2.25):
     """How many hydrogen bonds of a row cell go from each chain to each chain: ``{(donor, acceptor): count}``.
 
@@ -1230,7 +1348,12 @@ def domains(args):
     another second edge (``edged_cell``; -1, the diagonal).  The crystal so told is written as
     ``NAME[_g<percent>][_e<steps>]`` and the state as ``--stem`` in its series' folder, where
     ``swing --names that --rows R --long L --start STEM`` takes one carbonyl of the chain beside
-    the wall round and ``points`` reads the cells in DFT."""
+    the wall round and ``points`` reads the cells in DFT.
+
+    ``--twin M`` instead of ``--faces``: the row's last M chains are the crystal's twin and the
+    cell is the one the two make (``twin_row``), the crystal as it packs with nothing held apart.
+    Its series is ``NAME_w<M>``; ``--told-for 2.5`` gives the cell the shape between two states
+    (``NAME_w2h``) so that ``hop --stems`` can join them in one cell."""
     from ase.io import read, write
     from ase.optimize import LBFGS
 
@@ -1238,12 +1361,22 @@ def domains(args):
     exact = model(args.model, device=args.device)
     src = Path(args.frames)
     args.ether, args.sheets = "", 1
+    twin = args.twin
+    if twin is None and not args.faces:
+        raise SystemExit("one of --faces and --twin")
+    if twin is not None and (args.faces or args.by != 1.0 or args.second):
+        raise SystemExit("--twin is the crystal as it packs: not with --faces, --by or --second")
     for name in args.names.split(","):
         a = read(src / f"{name}.relaxed.xyz")
         base = edged_cell(spread_cell(a, args.by) if args.by != 1.0 else a, args.second)
         told_as = (name + ("" if args.by == 1.0 else f"_g{round(args.by * 100)}")
                    + ("" if not args.second else f"_e{args.second:+d}".replace("+", "p").replace("-", "m")))
-        if told_as != name and not (src / f"{told_as}.relaxed.xyz").exists():
+        if twin is not None:
+            told_for = float(twin if args.told_for is None else args.told_for)
+            if told_for * 2 != round(told_for * 2):
+                raise SystemExit("--told-for is a number of chains or half way between two")
+            told_as = name + f"_w{int(told_for)}" + ("" if told_for == int(told_for) else "h")
+        elif told_as != name and not (src / f"{told_as}.relaxed.xyz").exists():
             write(src / f"{told_as}.relaxed.xyz", base, format="extxyz")
         along = base.cell.array[2] / np.linalg.norm(base.cell.array[2])
         reference = polar_facing(rebased(a))
@@ -1256,7 +1389,8 @@ def domains(args):
             t0 = time.time()
             before = int(row.info["triage_kink_steps"]) if row is not None else 0
             if row is None:
-                row = domain_row(base, args.rows, args.long, args.faces.split(","))
+                row = (domain_row(base, args.rows, args.long, args.faces.split(",")) if twin is None
+                       else twin_row(base, args.rows, args.long, twin, told_for))
             info = dict(row.info)
             if nearest(row) < 0.6:
                 raise ValueError(f"{tag} {args.stem}: the start has two atoms {nearest(row):.2f} A apart")
@@ -1270,7 +1404,8 @@ def domains(args):
             energy = float(row.get_potential_energy())
             row.calc = None
             row.info.update(info)
-            row.info.update(triage_kink_ev=energy, triage_kink_steps=before + int(opt.nsteps), triage_kink_force=force, triage_domain_faces=args.faces)
+            row.info.update(triage_kink_ev=energy, triage_kink_steps=before + int(opt.nsteps), triage_kink_force=force,
+                            triage_domain_faces=args.faces if twin is None else f"twin {twin}")
             write(store, row, format="extxyz")
         if nearest(row) < 0.85:
             raise ValueError(f"{tag} {args.stem}: two atoms {nearest(row):.2f} A apart: not a structure")
@@ -2397,8 +2532,10 @@ def main():
     do.add_argument("--rows", type=int, default=5)
     do.add_argument("--long", type=int, default=3)
     do.add_argument("--side", type=int, default=1, choices=(1, 2))
-    do.add_argument("--faces", required=True, help="degrees each chain of the row is turned by, e.g. 0,0,-41,-41,-41 (give it as --faces=... when the first is negative); "
+    do.add_argument("--faces", default="", help="degrees each chain of the row is turned by, e.g. 0,0,-41,-41,-41 (give it as --faces=... when the first is negative); "
                     "m before an angle takes the chain's other hand first, e.g. 0,0,m139,m139,m139")
+    do.add_argument("--twin", type=int, default=None, help="instead of --faces: this many chains at the row's end are the crystal's twin, in the cell the two make")
+    do.add_argument("--told-for", type=float, default=None, help="with --twin: the cell has the shape it would have with this many chains in the twin, e.g. 2.5")
     do.add_argument("--stem", required=True, help="the name the state is kept under in its series' folder, e.g. rrddd")
     do.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     do.add_argument("--device", default="cpu")

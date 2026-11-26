@@ -497,6 +497,82 @@ def test_two_states_are_numbered_alike_by_what_moves_their_methylene_hydrogens_l
     kept = last.positions.copy()
     CT.numbered_alike(first, last)  # already alike: nothing changes
     assert last.positions == pytest.approx(kept)
+    # a cell thinner than the move: the carbon has gone 1.9 A across a cell 4 A thick with its hydrogens,
+    # and the nearest copy of each hydrogen taken by itself would be the other one's
+    thin = Atoms("CHH", positions=[[0.0, 0.0, 0.0], [0.6, -0.9, 0.0], [0.6, 0.9, 0.0]], cell=np.diag([8.0, 4.0, 8.0]), pbc=True)
+    moved = thin.copy()
+    moved.positions += [0.0, 1.9, 0.0]
+    kept = moved.positions.copy()
+    CT.numbered_alike(thin, moved)
+    assert moved.positions == pytest.approx(kept)
+
+
+def test_carried_sends_the_atoms_of_a_molecule_the_same_way_in_a_thin_cell():
+    from ase import Atoms
+    from ase.geometry import find_mic
+
+    # two molecules in a cell 4 A thick; the first goes 2.1 A across it and turns a little, the second stays
+    first = Atoms("CHHOH", positions=[[1.0, 0.5, 1.0], [1.6, -0.4, 1.0], [1.6, 1.4, 1.0], [5.0, 1.0, 1.0], [5.9, 1.0, 1.0]],
+                  cell=np.diag([8.0, 4.0, 8.0]), pbc=True)
+    way = np.array([[0.0, 2.1, 0.0], [0.1, 2.3, 0.0], [-0.1, 1.9, 0.0], [0.0, 0.0, 0.0], [0.0, 0.1, 0.0]])
+    last = first.copy()
+    last.positions += way
+    last.wrap()
+    alone = find_mic(last.positions - first.positions, first.cell.array)[0]
+    assert alone[1, 1] == pytest.approx(-1.7) and alone[2, 1] == pytest.approx(1.9)  # one hydrogen each way: the bond would be pulled apart
+    got = CT.carried(first, last)
+    # the molecule goes together, the way its atom that moved least by itself went: the hydrogen 1.7 A from its nearest copy
+    assert got[:3] == pytest.approx(way[:3] - [0.0, 4.0, 0.0]) and got[3:] == pytest.approx(way[3:])
+    # filled in half way the bonds are still bonds; atom by atom to the nearest copy, one hydrogen is 2 A from its carbon
+    mid, apart = first.copy(), first.copy()
+    mid.positions += 0.5 * got
+    apart.positions += 0.5 * alone
+    assert max(mid.get_distance(0, 1), mid.get_distance(0, 2)) < 1.15
+    assert apart.get_distance(0, 2) > 1.9
+
+
+def test_a_twin_has_the_lattice_points_of_the_wall_and_a_row_of_it_is_the_crystal_sheared_along_the_wall():
+    from ase import Atoms
+
+    cell = np.array([[4.6, 0.2, 0.3], [1.6, 3.3, -0.1], [-0.3, 0.1, 4.7]])
+    turn = CT.half_turn_across(cell)
+    assert turn @ cell[1] == pytest.approx(-cell[1]) and turn @ cell[2] == pytest.approx(-cell[2])
+    assert turn @ turn == pytest.approx(np.eye(3)) and np.linalg.det(turn) == pytest.approx(1.0)
+    step = CT.twin_step(cell)
+    # the step is the first edge's image and a whole number of second edges, and the change of step lies in the wall
+    assert np.linalg.solve(cell.T, turn @ cell[0] - step) == pytest.approx([0.0, -1.0, 0.0], abs=1e-9)
+    normal = np.cross(cell[1], cell[2])
+    assert (cell[0] - step) @ normal == pytest.approx(0.0, abs=1e-9)
+    assert np.linalg.norm(step) == pytest.approx(np.linalg.norm(cell[0] - cell[1]))  # the crystal's diagonal is the twin's row
+
+    # a stand-in chain: C=O across the chain with an N-H behind it and a hydrogen off their plane
+    a = Atoms("COHNH", positions=[[1.0, 1.0, 1.0], [2.2, 1.0, 1.0], [-0.8, 1.0, 1.0], [0.2, 1.0, 1.0], [1.0, 1.5, 3.0]], cell=cell, pbc=True)
+    a.info.update(triage_repeats=1, kmesh="6 6 6", triage_chain="x", triage_state="tt")
+    along = cell[2] / np.linalg.norm(cell[2])
+    for twin in (0, 2, 3):
+        row = CT.twin_row(a, 5, 1, twin)
+        assert row.cell.array[0] == pytest.approx((5 - twin) * cell[0] + twin * step)
+        assert row.cell.array[1:] == pytest.approx(cell[1:])
+        assert row.get_volume() == pytest.approx(5 * a.get_volume())  # a shear along the wall keeps the volume
+        assert row.info["triage_twin_chains"] == twin and row.info["kmesh"] == "1 6 6"
+        v = a.positions[1] - a.positions[0]
+        v = v - (v @ along) * along
+        for k in range(5):
+            part = np.where(row.arrays["chain"] == k)[0]
+            co = row.positions[part[1]] - row.positions[part[0]]
+            co = co - (co @ along) * along
+            # a twin chain's carbonyl is where the half turn has it; the others are as the crystal has them
+            assert co == pytest.approx(turn @ v if k >= 5 - twin else v, abs=1e-6)
+            # the chains follow one another by the crystal's step, then by the twin's
+            site = min(k, 5 - twin) * cell[0] + max(0, k - (5 - twin)) * step
+            assert row.positions[part].mean(axis=0) - (a.positions.mean(axis=0) + site) == pytest.approx(np.zeros(3), abs=0.35)
+    # the cell told for half a chain more in the twin: the first edge between the two, the atoms carried with it
+    mid2, mid3 = CT.twin_row(a, 5, 1, 2, 2.5), CT.twin_row(a, 5, 1, 3, 2.5)
+    assert mid2.cell.array == pytest.approx(mid3.cell.array)
+    assert mid2.cell.array[0] == pytest.approx(2.5 * cell[0] + 2.5 * step)
+    assert mid2.get_scaled_positions() == pytest.approx(CT.twin_row(a, 5, 1, 2).get_scaled_positions(), abs=1e-9)
+    with pytest.raises(ValueError):
+        CT.twin_row(a, 5, 1, 6)
 
 
 def test_a_chain_without_a_carbonyl_faces_from_its_hydrogens_to_its_fluorines():
