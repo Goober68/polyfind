@@ -1076,6 +1076,32 @@ def edged_cell(atoms, steps: int):
     return b
 
 
+def methylene_pairs(atoms, index=None):
+    """The two hydrogens of every carbon that carries exactly two, as pairs of places in the cell."""
+    index = np.arange(len(atoms)) if index is None else np.asarray(index)
+    symbols = atoms.get_chemical_symbols()
+    hydrogens = [int(i) for i in index if symbols[i] == "H"]
+    out = []
+    for c in (int(i) for i in index if symbols[i] == "C"):
+        mine = [h for h in hydrogens if atoms.get_distance(c, h, mic=True) < 1.25]
+        if len(mine) == 2:
+            out.append((mine[0], mine[1]))
+    return out
+
+
+def renamed_after_mirror(atoms, index=None):
+    """After a chain has been reflected: its methylene hydrogens change names, in place.
+
+    A reflection through the chain's plane puts the hydrogen that stood out of one face out of
+    the other.  The chain gets to that shape by its carbon crossing the plane, which leaves each
+    hydrogen near where it was: the one that stood out lies near the plane and the other stands
+    out of the far face.  With the two exchanged the reflected chain is numbered as the chain that
+    moved there, and a band between the two (``hop``) does not carry hydrogens through the chain."""
+    for h1, h2 in methylene_pairs(atoms, index):
+        atoms.positions[[h1, h2]] = atoms.positions[[h2, h1]]
+    return atoms
+
+
 def other_hand(row, part, along):
     """A row cell with one chain reflected through its own plane, in place: the plane of its axis and its first carbonyl.
 
@@ -1089,7 +1115,7 @@ def other_hand(row, part, along):
     normal = np.cross(along, v / np.linalg.norm(v))
     d = row.positions[index] - row.positions[c]
     row.positions[index] = row.positions[c] + d - 2.0 * np.outer(d @ normal, normal)
-    return row
+    return renamed_after_mirror(row, index)
 
 
 def domain_row(a, rows: int, long: int, faces):
@@ -1275,7 +1301,7 @@ def mirrored_chain(atoms, edge, along):
     normal = np.cross(along, e)
     d = b.positions - b.positions.mean(axis=0)
     b.positions = b.positions.mean(axis=0) + d - 2.0 * np.outer(d @ normal, normal)
-    return b
+    return renamed_after_mirror(b)
 
 
 def facings(args):

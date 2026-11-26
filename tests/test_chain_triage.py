@@ -478,6 +478,12 @@ def test_a_mirrored_chain_faces_the_other_way_about_the_edge_and_has_the_other_h
     assert hand(b) == pytest.approx(-hand(a))
     # twice is the chain itself
     assert CT.mirrored_chain(b, edge, z).positions == pytest.approx(a.positions)
+    # a methylene's two hydrogens change names with the reflection: each stays near where it was
+    m = Atoms("COHH", positions=[[0.0, 0.0, 0.0], [5.0, 0.0, 0.0], [0.3, -1.0, 0.0], [0.9, -0.2, 0.3]], cell=np.diag([12.0, 12.0, 4.7]), pbc=True)
+    assert CT.methylene_pairs(m) == [(2, 3)]
+    n = CT.mirrored_chain(m, np.array([1.0, 0.0, 0.0]), z)  # through the plane y = the middle's
+    shift = n.positions[0] - m.positions[0] * np.array([1.0, -1.0, 1.0])
+    assert n.positions[2] - shift == pytest.approx([0.9, 0.2, 0.3]) and n.positions[3] - shift == pytest.approx([0.3, 1.0, 0.0])
 
 
 def test_the_row_frame_is_square_with_the_chain_and_the_row_for_axes():
