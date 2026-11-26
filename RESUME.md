@@ -1137,9 +1137,26 @@ right": true at one registry, not along it).
         /opt/dft/triage --names urea1_tt_x1_s50 --rows 5 --long 3 --turned 3,0 --only` (log
         `log_urea1_s50_kink3r5.txt`; NOTE its cell's third edge is not square to the second,
         so the half turn about the chain is NOT a symmetry of this cell and the two whole
-        states need not be level: read what the potential says). THEN the DFT on the plain
-        row above, THEN `swing ... --names urea1_tt_x1_s50 --rows 5 --long 3 --start turned_3
-        --carbonyl 0 --by 180 --way p,m --images 13`, then DFT on its tops. (v) The plain chain the same way (`--names
+        states need not be level: read what the potential says). THEY ARE LEVEL IN THE
+        POTENTIAL (0.05 apart; chains face +19 +14 -169 -167 -167 and +13 +13 +11 -166 -161).
+        ITS FIRST UREA'S STEP (11:12 UTC; potential only): `swing ... --names urea1_tt_x1_s50
+        --rows 5 --long 3 --start turned_3 --carbonyl 0 --by 180 --way p,m --images 13`. WAY
+        p, -155 -141 -128 -111 -94 -79 -63 -49 -35 -20 -4: 1.65 6.33 15.60 29.16 33.36 29.33
+        23.87 22.10 22.63 24.93 19.27, let go rests at 0, +18.84. WAY m, +177 +162 +147 +133
+        +116 +103 +88 +73 +55 +41 +26: 1.72 5.31 8.21 12.20 7.82 11.85 19.85 30.36 26.06
+        22.21 16.70, let go rests at +20, +15.92. SO THE SHIFTED STACKING DOES NOT TAKE THE
+        SQUEEZE AWAY: tops 33.4 and 30.4 against the in-register row's 39.3 and 38.8, and the
+        far side 16 to 19 up where the in-register row's was 5.4. Sheets 3.33 A apart are
+        too close whatever lies over the urea. THIS IDEA IS CLOSED unless DFT differs much
+        from the potential here (one cell: `points --names
+        urea1_tt_x1_s50_kink3r5_swing_turned_3_c0m --images 0,8`).
+        RUNNING WHEN THIS WAS WRITTEN: the plain in-register row in DFT, `points ... --names
+        urea1_tt_x1_kink3r5_swing_turned_3_c0p --images 0,4,3,12 --np 4` (log
+        `log_urea1_r5_swing_p_dft.txt`). THEN: the c0m path's 0 (copy), 9, 6; the s50 cell
+        above; and WHAT ROOM COSTS: DFT on the plain crystal with its sheets held 1.1, 1.2 and
+        1.3 times as far apart (9 atoms, `spread`, atoms relaxed, the cell held), the energy
+        a repeat above the crystal's being what a defect has to pay to hold the sheets there.
+        (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped
         relaxation goes on when the command is given again; work folders end `_relax`), and
