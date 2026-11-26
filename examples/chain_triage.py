@@ -548,6 +548,48 @@ def carbonyls(row, part):
     return out
 
 
+def methyls(row, part):
+    """The methyls of a chain as pairs ``(methyl carbon, the carbon it is on)`` of places in the cell, in order along the chain.
+
+    A methyl is a carbon with three hydrogens (within 1.25 A) and one other neighbour, a carbon
+    (within 1.75 A).  ``part`` as for ``carbonyls``."""
+    index = np.arange(len(row))[part]
+    symbols = np.array(row.get_chemical_symbols())[part]
+    pos = row.positions[part]
+    out = []
+    for m in (i for i in range(len(pos)) if symbols[i] == "C"):
+        d = np.linalg.norm(pos - pos[m], axis=1)
+        heavy = [i for i in range(len(pos)) if i != m and symbols[i] != "H" and d[i] < 1.75]
+        if int(((symbols == "H") & (d < 1.25)).sum()) == 3 and len(heavy) == 1 and symbols[heavy[0]] == "C":
+            out.append((int(index[m]), int(index[heavy[0]])))
+    return out
+
+
+def side_of(row, part, base: int):
+    """The atoms that turn with a backbone carbon's side groups: the carbon, its methyls, and the hydrogens on them and on it."""
+    index = np.arange(len(row))[part]
+    symbols = row.get_chemical_symbols()
+    pos = row.positions
+    mine = [m for m, c in methyls(row, part) if c == base]
+    hydrogens = [int(h) for h in index if symbols[h] == "H" and any(np.linalg.norm(pos[h] - pos[i]) < 1.25 for i in [base] + mine)]
+    return [int(base)] + mine + hydrogens
+
+
+def about(row, pairs, along, reference=None):
+    """Which way the first atom of each pair lies from its second, in degrees about the chain's axis, against ``reference``.
+
+    The reference is a vector across the chain (None: the first pair's own)."""
+    out = []
+    for tip, base in pairs:
+        v = row.positions[tip] - row.positions[base]
+        v = v - (v @ along) * along
+        if reference is None:
+            reference = v
+        ref = reference - (reference @ along) * along
+        out.append(float(np.degrees(np.arctan2(np.cross(ref, v) @ along, ref @ v))))
+    return out
+
+
 def facing(row, part, along, reference=None):
     """Which way each carbonyl of a chain faces, in degrees about the chain's axis: its C=O against ``reference``.
 
@@ -555,15 +597,7 @@ def facing(row, part, along, reference=None):
     reference is a vector across the chain (None: the first carbonyl's own).  The carbonyls are
     ``carbonyls``'; a chain with none returns an empty list.  It is how a relaxed cell says which
     of its repeats are still turned."""
-    out = []
-    for o, c in carbonyls(row, part):
-        v = row.positions[o] - row.positions[c]
-        v = v - (v @ along) * along
-        if reference is None:
-            reference = v
-        ref = reference - (reference @ along) * along
-        out.append(float(np.degrees(np.arctan2(np.cross(ref, v) @ along, ref @ v))))
-    return out
+    return about(row, carbonyls(row, part), along, reference)
 
 
 def polar_facing(a):
@@ -606,7 +640,8 @@ def etherified(row, part, per_repeat: int, which):
 def held(calc, o: int, c: int, along, reference, target: float, stiff: float = 40.0):
     """The potential with a spring on which way one carbonyl faces about the chain's axis.
 
-    ``o`` and ``c`` are the carbonyl's oxygen and carbon, ``target`` the facing asked for in degrees
+    ``o`` and ``c`` are the carbonyl's oxygen and carbon (or any pair of atoms: a methyl's carbon
+    and the carbon it is on, ``about``), ``target`` the facing asked for in degrees
     (counted as ``facing`` counts, from ``reference``), ``stiff`` the spring in eV a radian squared.
     The spring pulls the oxygen round the axis and the carbon the other way and nothing else: every
     other atom goes where the potential puts it.  A cell relaxed in it is a point of a way from one
@@ -990,7 +1025,7 @@ def spread(args):
 
 
 def swing(args):
-    """The hump for one carbonyl of the moving chain to change sides, by turning it a step at a time.
+    """The hump for one carbonyl (or one methyl) of the moving chain to change sides, by turning it a step at a time.
 
     A band between two states of a ``kink`` series (``hop``) put the whole of a urea's half turn
     between two of its images and broke the one in the middle.  Here one carbonyl is held at
@@ -1006,6 +1041,10 @@ def swing(args):
     ``--start STEM --carbonyl K --by DEGREES``: from any cell kept in the series' folder
     (``turned_4``, or a cell an earlier ``swing`` let go), carbonyl K of the moving chain by that
     much; the path ends on the cell let go.
+    ``--start STEM --methyl K --by DEGREES``: the same with methyl K of the moving chain taken
+    round the chain's axis instead of a carbonyl (the carbon it is on turns with it, ``side_of``).
+    A chain with one methyl to a backbone carbon has a hand, and its half turn puts its methyls
+    on the other face of the sheet: a carbonyl taken round does not take them with it.
 
     Every energy is taken in double precision without the spring.  What it gives is the potential's
     way and a mark on the hump that is neither bound: the top of a way made by one coordinate is at
@@ -1023,25 +1062,36 @@ def swing(args):
         reference = polar_facing(a)
         _, tag = kink_series(name, args)
         work = src / "work" / tag
+        what = "carbonyl" if args.methyl is None else "methyl"
+        if what == "methyl" and not args.start:
+            raise SystemExit("--methyl goes with --start")
         if args.start:
-            first, second, stem = read(work / f"{args.start}.xyz"), None, f"swing_{args.start}_c{args.carbonyl}"
+            first, second, stem = read(work / f"{args.start}.xyz"), None, f"swing_{args.start}_" + (f"c{args.carbonyl}" if what == "carbonyl" else f"m{args.methyl}")
         else:
             k_first, k_last = (int(v) for v in args.between.split(","))
             first, second, stem = read(work / f"turned_{k_first}.xyz"), read(work / f"turned_{k_last}.xyz"), f"swing{k_first}-{k_last}"
         part = moving_chain(first, args.rows, args.side)
-        pairs = carbonyls(first, part)
-        begin = facing(first, part, along, reference)
+        # the pairs are places in the cell, and every cell of a path has its atoms in the first's order
+        pairs = carbonyls(first, part) if what == "carbonyl" else methyls(first, part)
+
+        def turned(row):
+            return about(row, pairs, along, reference)
+
+        def carbonyls_face(row, but=None):
+            return " ".join(f"{v:+.0f}" for i, v in enumerate(facing(row, part, along, reference)) if i != but)
+
+        begin = turned(first)
         if second is None:
-            which, short = args.carbonyl, abs(args.by)
+            which, short = (args.carbonyl if what == "carbonyl" else args.methyl), abs(args.by)
         else:
-            end = facing(second, part, along, reference)
+            end = turned(second)
             if len(begin) != len(end) or len(begin) != len(pairs):
                 raise ValueError(f"{tag}: the two states do not have the same carbonyls")
             moved = [(b - f + 180.0) % 360.0 - 180.0 for f, b in zip(begin, end)]
             which = int(np.argmax(np.abs(moved)))
             short = moved[which]
-        o, c = pairs[which]
-        group = urea_of(first, part, c)
+        o, c = pairs[which]  # the atom taken round the chain's axis and the atom it is on
+        group = urea_of(first, part, c) if what == "carbonyl" else side_of(first, part, c)
         info = {k: v for k, v in first.info.items() if not k.startswith("triage_swing") and not k.startswith("triage_turn")}
         for way in args.way.split(","):
             if second is None:
@@ -1049,7 +1099,7 @@ def swing(args):
             else:
                 total = short if (short > 0) == (way == "p") else short - np.sign(short) * 360.0
             label = f"{tag}_{stem}{way}"
-            print(f"{label}: carbonyl {which} of the moving chain from {begin[which]:+.0f} degrees by {total:+.0f}, {args.images - 2} facings held on the way"
+            print(f"{label}: {what} {which} of the moving chain from {begin[which]:+.0f} degrees by {total:+.0f}, {args.images - 2} facings held on the way"
                   + ("" if second is None else f"; in the second state the other carbonyls have moved by {' '.join(f'{v:+.0f}' for i, v in enumerate(moved) if i != which)}"), flush=True)
             images = [first.copy()]
             for j in range(1, args.images - 1):
@@ -1061,7 +1111,7 @@ def swing(args):
                 t0 = time.time()
                 row = images[-1].copy()
                 # the group is put at the facing asked for before the spring is: a spring let go from a step away throws it
-                turn_by = np.radians((target - facing(row, part, along, reference)[which] + 180.0) % 360.0 - 180.0)
+                turn_by = np.radians((target - turned(row)[which] + 180.0) % 360.0 - 180.0)
                 d = row.positions[group] - row.positions[c]
                 row.positions[group] = row.positions[c] + d * np.cos(turn_by) + np.cross(along, d) * np.sin(turn_by) + np.outer(d @ along, along) * (1 - np.cos(turn_by))
                 row.calc = held(calc, o, c, along, reference, target, args.stiff)
@@ -1074,7 +1124,8 @@ def swing(args):
                 write(store, row, format="extxyz")
                 images.append(row)
                 print(f"  {label}: facing {(target + 180.0) % 360.0 - 180.0:+.0f} held, {int(opt.nsteps)} steps to {force:.3f} eV/A, closest atoms {nearest(row):.2f} A, "
-                      f"the chain's carbonyls face {' '.join(f'{v:+.0f}' for v in facing(row, part, along, reference))}, {time.time() - t0:.0f} s", flush=True)
+                      f"the chain's carbonyls face {carbonyls_face(row)}"
+                      + ("" if what == "carbonyl" else f" and its methyls stand at {' '.join(f'{v:+.0f}' for v in turned(row))}") + f", {time.time() - t0:.0f} s", flush=True)
             # let go of the last held cell: where does it rest?
             store = work / f"{stem}{way}_{args.images}_free.xyz"
             if store.exists():
@@ -1103,9 +1154,9 @@ def swing(args):
                 keep.update({k: v for k, v in im.info.items() if k.startswith("triage_swing")})
                 im.info = keep
                 im.info.update(triage_turn_of=tag, triage_turn_edge=1, triage_turn_image=index, triage_turn_ev=energies[index] - energies[0],
-                               triage_turning_repeats=1, triage_path_unit="for the cell", triage_swing_way=way,
-                               triage_swing_facing=float(facing(im, part, along, reference)[which]),
-                               triage_swing_others=" ".join(f"{v:+.0f}" for i, v in enumerate(facing(im, part, along, reference)) if i != which))
+                               triage_turning_repeats=1, triage_path_unit="for the cell", triage_swing_way=way, triage_swing_what=what,
+                               triage_swing_facing=float(turned(im)[which]),
+                               triage_swing_others=carbonyls_face(im, which if what == "carbonyl" else None))
                 out.append(im)
             rel = [(e - energies[0]) * KCAL for e in energies]
             went = [float(im.info["triage_swing_facing"]) for im in out]
@@ -1113,7 +1164,7 @@ def swing(args):
             line = (f"{label}: {len(images)} images of {len(images[0])} atoms (the first state, {args.images - 2} held, the last of them let go"
                     + ("" if second is None else ", the second state") + f"), top {max(rel):.2f} kcal/mol for the cell above the first state in the potential; "
                     f"profile {' '.join(f'{v:.2f}' for v in rel)}; facings {' '.join(f'{v:+.0f}' for v in went)}; let go, the cell rests at {rel[let_go]:+.2f} "
-                    f"with the chain's other carbonyls facing {out[let_go].info['triage_swing_others']}")
+                    f"with the chain's {'other ' if what == 'carbonyl' else ''}carbonyls facing {out[let_go].info['triage_swing_others']}")
             if second is not None:
                 apart = free.positions - second.positions
                 apart -= np.round(apart @ np.linalg.inv(free.cell.array)) @ free.cell.array
@@ -1327,6 +1378,7 @@ def points(args):
         if "triage_swing_facing" in images[0].info:
             # a carbonyl taken round by held facings (``swing``): where each image has it, and which image was let go
             record["way"] = str(images[0].info["triage_swing_way"])
+            record["what"] = str(images[0].info.get("triage_swing_what", "carbonyl"))
             record["facing_degrees"] = [float(im.info["triage_swing_facing"]) for im in images]
             record["let_go"] = [bool(im.info.get("triage_swing_let_go", 0)) for im in images]
         unit = str(images[0].info.get("triage_path_unit", "a repeat of the turning chain"))
@@ -1672,7 +1724,7 @@ def table(args):
                   f"{' '.join(f'{v:+.2f}' for v in q['pair_of_twists_kcal'])} (DFT on the potential's states)")
             continue
         if "facing_degrees" in q:
-            print(f"{q['name']:20s} one carbonyl of {q['of']} taken round, facing {' '.join(f'{v:+.0f}' for v in q['facing_degrees'])} degrees: "
+            print(f"{q['name']:20s} one {q.get('what', 'carbonyl')} of {q['of']} taken round, facing {' '.join(f'{v:+.0f}' for v in q['facing_degrees'])} degrees: "
                   f"{' '.join(f'{v:+.2f}' for v in q['kcal_per_turning_repeat'])} kcal/mol for the cell (DFT on the potential's cells; "
                   f"the potential {' '.join(f'{v:+.2f}' for v in q['potential_kcal_per_turning_repeat'])})")
             continue
@@ -1831,6 +1883,7 @@ def main():
     g.add_argument("--between", default="", help="two states of the kink series by their repeats turned, e.g. 4,3")
     g.add_argument("--start", default="", help="instead of --between: a cell of the series' folder to start from, e.g. turned_4 or swing4-3p_9_free")
     g.add_argument("--carbonyl", type=int, default=0, help="with --start: which carbonyl of the moving chain is turned, counted along the chain from 0")
+    g.add_argument("--methyl", type=int, default=None, help="with --start, instead of --carbonyl: which methyl of the moving chain is taken round, counted along the chain from 0")
     g.add_argument("--by", type=float, default=170.0, help="with --start: degrees it is turned by")
     g.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     g.add_argument("--device", default="cpu")

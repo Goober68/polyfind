@@ -366,6 +366,23 @@ def test_the_atoms_that_turn_with_a_urea_carbonyl_are_its_six():
     assert CT.facing(chain, slice(0, len(chain)), z, np.array([0.0, 1.0, 0.0])) == pytest.approx([-90.0])
 
 
+def test_a_methyl_is_found_with_the_carbon_it_is_on_and_what_turns_with_it():
+    """The methyl's carbon and the backbone carbon; with them turn the hydrogens on both, and nothing of the nitrogens."""
+    from ase import Atoms
+
+    #  N - C(H)(CH3) - N(H) along z; the methyl straight up (y), the carbon's own hydrogen along x
+    z = np.array([0.0, 0.0, 1.0])
+    pos = {"N1": [0, 0, -1.45], "Ca": [0, 0, 0], "Ha": [1.09, 0, 0], "Cm": [0, 1.53, 0], "Hm1": [1.03, 1.89, 0], "Hm2": [-0.51, 1.89, 0.89],
+           "Hm3": [-0.51, 1.89, -0.89], "N2": [0, 0, 1.45], "H2": [-1.0, 0, 1.45]}
+    chain = Atoms("NCHCHHHNH", positions=[np.array(v, dtype=float) + 5.0 for v in pos.values()], cell=[12.0] * 3, pbc=True)
+    part = slice(0, len(chain))
+    assert CT.methyls(chain, part) == [(3, 1)]
+    assert sorted(CT.side_of(chain, part, 1)) == [1, 2, 3, 4, 5, 6]
+    assert CT.about(chain, CT.methyls(chain, part), z, np.array([1.0, 0.0, 0.0])) == pytest.approx([90.0])
+    assert CT.about(chain, [(2, 1)], z, np.array([1.0, 0.0, 0.4])) == pytest.approx([0.0])  # the reference's part along the chain does not count
+    assert CT.carbonyls(chain, part) == [] and CT.facing(chain, part, z) == []
+
+
 def test_a_spread_cell_has_its_sheets_further_apart_and_its_atoms_where_they_were():
     from ase import Atoms
 
