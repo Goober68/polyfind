@@ -1125,13 +1125,21 @@ right": true at one registry, not along it).
         (commit ed2eab8, 24 tests pass) writes a crystal with each sheet a fraction of a
         repeat along the chain against the one below. `slide --frames /opt/dft/triage --names
         urea1_tt_x1 --along 0.5` wrote `urea1_tt_x1_s50.start.xyz` (urea over methylene;
-        sheets 3.283 A apart as before). RUNNING WHEN THIS WAS WRITTEN: `dft --frames
-        /opt/dft/triage --names urea1_tt_x1_s50 --np 4` (9 atoms, cell free; log
-        `log_urea1_s50_dft.txt`). READ: its energy a repeat against `urea1_tt_x1`
-        (-1698.42549 eV), and WHERE ITS SECOND EDGE ENDS UP ALONG THE CHAIN (if it slides back
-        to 0 the shifted stacking is not a resting place). If it holds within about 1 kcal/mol
-        a repeat: `kink --names urea1_tt_x1_s50 --rows 5 --long 3 --turned 3,0 --only`, then
-        the swing both ways, then DFT on the tops. (v) The plain chain the same way (`--names
+        sheets 3.283 A apart as before). `dft --frames /opt/dft/triage --names urea1_tt_x1_s50
+        --np 4` RELAXED IT (09:13 UTC, 34 minutes, cell free): IT IS A RESTING PLACE OF ITS
+        OWN, 0.99 kcal/mol A REPEAT ABOVE the in-register crystal (-1698.38271 against
+        -1698.42549 eV), same volume (71.39 A3), sheets 3.331 A apart (3.283), each sheet
+        1.554 A along the chain against the one below (a third of the 4.745 A rise; it was
+        started at half and neither stayed there nor slid back), 1.28 A along the row; one
+        N-H..O to the next sheet at 2.42 A; edges 4.517 3.898 4.745, angles 66.5 90.5 70.8.
+        So a stacking fault of this kind costs about 1 a repeat. WHETHER THE UREA TURNS MORE
+        EASILY IN IT IS NOT KNOWN. RUNNING WHEN THIS WAS WRITTEN: `kink --frames
+        /opt/dft/triage --names urea1_tt_x1_s50 --rows 5 --long 3 --turned 3,0 --only` (log
+        `log_urea1_s50_kink3r5.txt`; NOTE its cell's third edge is not square to the second,
+        so the half turn about the chain is NOT a symmetry of this cell and the two whole
+        states need not be level: read what the potential says). THEN the DFT on the plain
+        row above, THEN `swing ... --names urea1_tt_x1_s50 --rows 5 --long 3 --start turned_3
+        --carbonyl 0 --by 180 --way p,m --images 13`, then DFT on its tops. (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped
         relaxation goes on when the command is given again; work folders end `_relax`), and
