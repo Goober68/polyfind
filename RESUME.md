@@ -1096,11 +1096,16 @@ right": true at one registry, not along it).
         second at 10^13 tries; mark 7.6): THE CHAIN FAILS LOW ACTIVATION FOR WHOLE-CHAIN
         TURNING. The room between sheets cannot come from a group on the carbon the chain
         turns on. `urea1mm` (two methyls, both would cross) is not worth its packing search.
-        RUNNING WHEN THIS WAS WRITTEN (potential, one job, log
-        `log_urea1m_r5_swing_m0p_m2m.txt`): the same methyl the other way round (`--methyl 0
-        --by 206 --way p --images 13`), then the other methyl beside the turned urea
-        (`--methyl 2 --by 155 --way m --images 11`). If either is well under 8.8, read its top
-        in DFT (35 minutes a cell). NEXT, IN THIS ORDER: (a) THE PLAIN CHAIN IN A FIVE-CHAIN
+        THE OTHER WAYS ARE NO LOWER (06:57 UTC; potential only; 6.3 reading 30; log
+        `log_urea1m_r5_swing_m0p_m2m.txt`), above the one-over state: `--methyl 0 --by 206
+        --way p --images 13` climbs to 22.65 and takes the turned urea back with it (rests at
+        +10.04, carbonyls +178 -146 -153): not a way on. `--methyl 2 --by 155 --way m --images
+        11`: methyl at +59 +43 +27 +11 -4 -19 -35 -50 -65: 2.31 5.52 7.51 7.62 9.39 8.46 5.87
+        1.41 5.05, LET GO RESTS ACROSS AT -51, ONLY +0.93 (carbonyls +42 -167 +114). Same
+        height of crossing (9.4 against 8.8), a far lower state after: methyl 2 is the one to
+        cross first. The 15.4 stands as the least the step costs. NO DFT on these two.
+        RUNNING WHEN THIS WAS WRITTEN: (a)'s first command below (log
+        `log_urea1_kink3r5.txt`). NEXT, IN THIS ORDER: (a) THE PLAIN CHAIN IN A FIVE-CHAIN
         ROW, its own number and the like comparison (the 23.6 is a leaning four-chain row's):
         `kink --frames /opt/dft/triage --names urea1_tt_x1 --rows 5 --long 3 --turned 3,0
         --only`, check the two are level, then `swing ... --rows 5 --long 3 --start turned_3

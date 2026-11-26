@@ -2241,12 +2241,21 @@ row at rest in DFT and 9.75 in the potential.
     to arrive anywhere level, at 9.2 a crossing on top. What it teaches is where the room may
     not come from: a group on the carbon the chain turns on. It has to come from something
     that does not turn with the chain, or that is the same after a half turn. The limits
-    are reading 25's; the crossing was taken one way round of two and at one methyl of the
-    two beside the turned urea (the other way and the other methyl are in the potential now).
-    Activation only, a partial result: no strain, loss, frequency, blocked force or speed.
+    are reading 25's. Activation only, a partial result: no strain, loss, frequency, blocked
+    force or speed.
+30. *The other ways for a methyl to cross are no lower (the potential only).* The same methyl
+    taken the other way round (up through 180) climbs to 22.7 above the one-over state and
+    takes the turned urea back with it (its carbonyl goes from +17 to +178): it is the first
+    step undone, not a way on. The other methyl beside the turned urea, taken down through 0
+    as the first was, tops at 9.39 above the one-over state with the methyl at -4, where the
+    first topped at 8.83, and comes to rest across only 0.93 above the one-over state where
+    the first rested 7.40 above it, with the urea on its far side drawn half way round
+    (+114). So the crossing is the same height by either methyl, and the 15.4 stands as the
+    least the step costs; the second methyl is the better one to cross first, since the state
+    after it is as low as the state before. DFT has not read these two scans.
 
-**Not done.** For the one-methyl chain: the methyl's crossing the other way round and at the
-other methyl; the rest of the second step; DFT on the ten cells of the first step not read;
+**Not done.** For the one-methyl chain: the rest of the second step, and DFT on the second
+methyl's crossing; DFT on the ten cells of the first step not read;
 the ends relaxed in DFT (`points --relax`, hours a cell here); the chain's dipole and stiffness
 (section 6.1's numbers). The chain with two methyls is not worth its packing search on this
 showing: both its methyls would have to cross. The plain chain in a five-chain row the same
@@ -2281,7 +2290,8 @@ five-chain row; the zero of its second scan's DFT record is the first cell read,
 the last cell of the one before: `..._free_c1m` (the second urea by its carbonyl, potential
 only), `..._free_m0m` (the methyl across; the zero of its DFT record is the cell with the
 methyl at +26, 15.38 above the row at rest) and `..._m0m_11_free_c1m` (the second urea with
-that methyl across, potential only)).
+that methyl across, potential only), and `..._free_m0p` and `..._free_m2m` (the same methyl
+the other way round, and the other methyl; potential only)).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 
