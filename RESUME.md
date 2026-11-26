@@ -1058,15 +1058,38 @@ right": true at one registry, not along it).
         so THE WALL'S STEP COSTS AT LEAST 6.7 AND MORE BY WHAT THE SECOND UREA'S STEP HAS ABOVE
         6.2 (the methyl's crossing; mark 7.6). The potential is 2.2 to 3.6 above DFT past
         +109. The second scan's DFT record has its zero at the first cell read (+54).
-        RUNNING WHEN THIS WAS WRITTEN: THE SECOND UREA'S STEP in the potential, `swing --frames
-        /opt/dft/triage --names urea1m_tt_x1 --rows 5 --long 3 --start
-        swing_swing_turned_3_c0m_9_free_c0m_9_free --carbonyl 1 --by 110 --way m --images 9`
-        (log `log_urea1m_r5_swing_c1.txt`), THEN the same again from its own last cell
-        (`--start` the name of the `..._9_free.xyz` it wrote in `work/urea1m_tt_x1_kink3r5/`,
-        less `.xyz`), THEN DFT on its top and its end (`points`, 35 minutes a cell, three
-        cells to a two-hour job; join by raw energies to the rest above). Its end should be
-        6.2 again by symmetry: if it is not, the two are different resting places. NOTHING
-        BESIDE A DFT JOB. After it: DFT on the first step's ten unread cells. (v) The plain chain the same way (`--names
+        THE SECOND UREA DRIVEN BY ITS CARBONYL DOES NOT GO (01:52 UTC; potential only):
+        `swing ... --rows 5 --long 3 --start swing_swing_turned_3_c0m_9_free_c0m_9_free
+        --carbonyl 1 --by 110 --way m --images 9`: above the one-over state, facings -169 +178
+        +165 +150 +137 +124 +110 +96: 0.00 1.21 3.72 4.17 6.34 9.24 13.85 19.66, and let go it
+        FALLS BACK to +150 (+5.11). The methyl between the two ureas stays on its face
+        throughout. THE CHAIN'S HAND MAKES THE CROSSING NECESSARY: a half-turned chain is the
+        same chain only with its methyls on the other face (the mover's methyls stand at +98
+        about the chain at rest, -82 in the whole chain turned; `about`), and rotating units
+        about the chain can never give the chain end for end.
+        `swing --methyl K` (commit afe66e1; `methyls`, `side_of`, `about`; 23 tests pass) takes
+        a methyl round the chain with the carbon it is on. THE CONTAINER WAS RESTARTED at
+        about 02:10 UTC in the middle of it; held cells are kept and the same command goes on.
+        THE METHYL'S CROSSING IN THE POTENTIAL (02:53 UTC): `swing ... --start
+        swing_swing_turned_3_c0m_9_free_c0m_9_free --methyl 0 --by 155 --way m --images 11`
+        (path `urea1m_tt_x1_kink3r5_swing_swing_swing_turned_3_c0m_9_free_c0m_9_free_m0m`),
+        above the one-over state, the methyl standing at +72 +58 +42 +26 +10 -5 -20 -36 -51
+        -66: 0.00 2.77 6.67 8.83 8.37 5.47 7.45 8.48 9.91 11.38; LET GO IT RESTS ACROSS, at
+        -53, +7.40, with the chain's carbonyls at +35 +111 -166 (the second urea has followed
+        it half way). So in the potential, above the ROW AT REST: one over 9.75, the methyl in
+        the sheet's plane 18.6, across 17.2. DFT has the one-over state at 6.19 and has been 2
+        to 6 below the potential past the first top, so these are not numbers yet.
+        RUNNING WHEN THIS WAS WRITTEN: the second urea the rest of the way, `swing ... --start
+        swing_swing_swing_turned_3_c0m_9_free_c0m_9_free_m0m_11_free --carbonyl 1 --by 95
+        --way m --images 9` (log `log_urea1m_r5_swing_m0_c1.txt`). IT SHOULD COME DOWN TO THE
+        MIRROR OF THE ONE-OVER STATE (9.75 above the row at rest in the potential): if it does
+        not, this is not the wall's step. THEN DFT, 35 minutes a cell, three cells to a
+        two-hour job, NOTHING BESIDE IT: `points --frames /opt/dft/triage --names
+        urea1m_tt_x1_kink3r5_swing_swing_swing_turned_3_c0m_9_free_c0m_9_free_m0m --images
+        3,10,5 --np 4` (the methyl in the plane, across, and the dip between; join by raw
+        energies to the rest above), then the top of the last scan. After it: the other way
+        round for the methyl (`--way p`), the other methyl beside the turned urea (`--methyl
+        2`), DFT on the first step's ten unread cells. (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped
         relaxation goes on when the command is given again; work folders end `_relax`), and
