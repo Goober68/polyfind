@@ -960,6 +960,7 @@ def hop(args):
             first, last = (f"_{v}" for v in args.stems.split(","))
             first, last = first, last[1:]
             ends = [read(src / "work" / tag / f"{v}.xyz") for v in args.stems.split(",")]
+            numbered_alike(ends[0], ends[1])
         else:
             first, last = (int(v) for v in args.between.split(","))
             ends = [read(src / "work" / tag / f"turned_{k}.xyz") for k in (first, last)]
@@ -1100,6 +1101,22 @@ def renamed_after_mirror(atoms, index=None):
     for h1, h2 in methylene_pairs(atoms, index):
         atoms.positions[[h1, h2]] = atoms.positions[[h2, h1]]
     return atoms
+
+
+def numbered_alike(first, last):
+    """``last`` with each methylene's two hydrogens numbered as in ``first``, in place: whichever way round moves them less.
+
+    Two states of one cell that were made in different ways (one by a reflection) can have a
+    methylene's hydrogens exchanged, and a band between them would carry each through the other."""
+    from ase.geometry import find_mic
+
+    def moved(i, j):
+        return float((find_mic(last.positions[j] - first.positions[i], first.cell.array)[0] ** 2).sum())
+
+    for h1, h2 in methylene_pairs(first):
+        if moved(h1, h2) + moved(h2, h1) < moved(h1, h1) + moved(h2, h2):
+            last.positions[[h1, h2]] = last.positions[[h2, h1]]
+    return last
 
 
 def other_hand(row, part, along):

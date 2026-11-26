@@ -486,6 +486,19 @@ def test_a_mirrored_chain_faces_the_other_way_about_the_edge_and_has_the_other_h
     assert n.positions[2] - shift == pytest.approx([0.9, 0.2, 0.3]) and n.positions[3] - shift == pytest.approx([0.3, 1.0, 0.0])
 
 
+def test_two_states_are_numbered_alike_by_what_moves_their_methylene_hydrogens_least():
+    from ase import Atoms
+
+    first = Atoms("CHH", positions=[[0.0, 0.0, 0.0], [0.6, -0.9, 0.0], [0.6, 0.9, 0.0]], cell=np.diag([8.0, 8.0, 8.0]), pbc=True)
+    last = first.copy()
+    last.positions[[1, 2]] = last.positions[[2, 1]] + [0.05, 0.0, 0.0]  # the same shape with the two exchanged, a little moved
+    CT.numbered_alike(first, last)
+    assert last.positions[1] == pytest.approx([0.65, -0.9, 0.0]) and last.positions[2] == pytest.approx([0.65, 0.9, 0.0])
+    kept = last.positions.copy()
+    CT.numbered_alike(first, last)  # already alike: nothing changes
+    assert last.positions == pytest.approx(kept)
+
+
 def test_the_row_frame_is_square_with_the_chain_and_the_row_for_axes():
     cell = np.array([[4.6, 0.0, 0.3], [1.7, 3.3, 0.2], [0.0, 0.0, 4.7]])
     frame = CT.row_frame(cell)
