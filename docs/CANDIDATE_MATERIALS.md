@@ -2504,6 +2504,50 @@ level diagonal state was relaxed in DFT with its cell free.
     cycle; a frequency; and a force and a speed on one modulus under one heat budget. None of
     those is here. A partial result.
 
+*The two orientations side by side in one cell: a wall* (`domains --by 1.0935 --rows 5 --long 3`,
+`gather`, `points`). Five chains along the row and three repeats long (135 atoms) in the
+equal-edged cell, some chains started as the row state and the rest as its mirror image turned
+to the diagonal (`--faces=0,0,m-41,m-41,m-41`), relaxed in the potential with the cell held, and
+each state then read once in DFT at the potential's structure. The cell repeats, so a cell with
+both orientations has two walls, each three repeats long. Kcal/mol for the cell (15 repeats):
+
+| the wall lies along | state | chains' carbonyls face, the wall marked | hydrogen bonds | the potential | DFT |
+|---|---|---|---|---|---|
+| the diagonal (`--second -1`) | two chains row-bonded, three diagonal | +4 +12 / -33 -38 -40 | the rows end at the wall | 42.9 above the next | not read |
+| the diagonal | three row-bonded, two diagonal | did not stay: all rows (+15 -14 +13 -5 -5) | all along the row | 0.00 | not read |
+| the mirror line (the second edge) | two row-bonded, three diagonal | -7 +7 / -21 -56 -55 | six from every chain to the next | 0.00 | 0.00 |
+| the mirror line | three row-bonded, two diagonal | -20 +13 +11 / -36 -50 | six from every chain to the next | +0.05 | -0.32 |
+| none | all row-bonded | +3 each | six from every chain to the next | +8.60 | +1.94 |
+
+51. *A wall that lies along the diagonal costs about 7 kcal/mol a repeat of wall (the potential
+    only).* The rows end on it: the first row chain's oxygen has no hydrogen coming to it, and
+    the last one's hydrogens go to an oxygen its own column has already taken. The state with
+    the wall one chain on did not hold and went back to all rows, 42.9 below.
+52. *A wall that lies along the mirror line costs nothing these readings can see.* Each row
+    carries on into a diagonal through a bend of 51 degrees at the wall and no chain is left
+    without a neighbour to bond to; the chains beside the wall face part of the way between the
+    two orientations. In DFT the wall one chain on is 0.32 from where it was, for the cell: 0.02
+    a repeat. The cell with its two walls is 1.94 BELOW the all-rows cell in DFT (0.13 a repeat
+    of the cell; the potential has 8.60). That is not a wall the crystal wants: every state here
+    is in a cell held 9% open, 0.47 a repeat above the crystal, and chains beside a wall can use
+    that room where chains in a row cannot. And these are single points on the potential's
+    structures, whose own error is of the order of a kcal/mol a repeat (reading 47) and cancels
+    only as far as the states are alike. Read it as: nothing to a few tenths a repeat.
+53. *The wall is neutral, and a field along it favours one side.* The second orientation is the
+    first turned half a turn about the wall's normal, so the polarisation's part across the wall
+    is the same on both sides and its part in the wall changes sign: no charge sits on the wall.
+    Section 6.1's Berry-phase polarisation of the crystal (0.367 C/m2, 12 degrees from the row)
+    has 0.281 across this wall and 0.236 in it, along the second edge, so the two orientations
+    differ by 0.47 C/m2 along that edge. A field of 55 V/um along it does 26 MJ/m3 between the
+    two, 0.27 kcal/mol a repeat (my arithmetic on PBE's polarisation, which is an upper mark;
+    reading 39's 0.08 to 0.18 took the dipole to lie along the carbonyl, which it does not
+    quite).
+54. *One urea turned alone does not carry the wall on (the potential only).* `swing --start
+    rrddd --carbonyl 0 --by 32`: one of the wall chain's three ureas turned towards where the
+    next state has it, the rest free. It climbs to 2.66 for the cell at 25 degrees and, let go,
+    comes back to within 8 degrees of where it was (+0.22). The step is the methylene's
+    crossing of its ureas' plane, and that takes the ureas on both its sides.
+
 **Not done.** For the level pair: the step of one urea of one chain beside a wall between a part
 bonded along the row and a part bonded along the diagonal, which is the activation that counts
 and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`; its two states
