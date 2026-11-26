@@ -1055,6 +1055,139 @@ def spread(args):
         print(f"{out}: sheets {sheet_gap(rebased(a)):.3f} A apart made {sheet_gap(b):.3f}, {b.get_volume() / len(b) * len(a) / a.get_volume():.3f} times the volume", flush=True)
 
 
+def row_frame(cell):
+    """The axes a crystal's stress is told in: x along its first edge (the hydrogen bonds' row) with any
+    part along the chain taken out, z along the chain (the third edge), y across both."""
+    cell = np.asarray(cell, dtype=float)
+    z = cell[2] / np.linalg.norm(cell[2])
+    x = cell[0] - (cell[0] @ z) * z
+    x /= np.linalg.norm(x)
+    return np.array([x, np.cross(z, x), z])
+
+
+def principal(tensor):
+    """The two principal values of what a symmetric tensor has across the chain, each with its axis in
+    degrees from the row (0 to 180), the lower value first."""
+    values, vectors = np.linalg.eigh(np.asarray(tensor, dtype=float)[:2, :2])
+    return [(float(v), float(np.degrees(np.arctan2(vectors[1, k], vectors[0, k])) % 180.0)) for k, v in enumerate(values)]
+
+
+def hydrogen_bonds(atoms, within: float = 2.6):
+    """Every H..O closer than ``within`` that is not a bond: its length, and how many of the cell's
+    first and second edges away the oxygen is.  In a cell of one chain that says which edge a
+    hydrogen bond lies along: [1, 0] the row, [0, 1] the stack, [-1, 1] the diagonal between them."""
+    from ase.neighborlist import neighbor_list
+
+    symbols = atoms.get_chemical_symbols()
+    i, j, d, shift = neighbor_list("ijdS", atoms, within)
+    return sorted((round(float(r), 2), [int(v) for v in s[:2]]) for a, b, r, s in zip(i, j, d, shift)
+                  if symbols[a] == "H" and symbols[b] == "O" and r > 1.3)
+
+
+def resting_places(states, within: float = 10.0):
+    """The states of a ``facings`` record gathered by the facing each came to rest at.
+
+    Starts that end within ``within`` degrees of one another (the circle closed) are one resting
+    place; each is given by its lowest state, with every start that arrived at it and the highest
+    rigid turn among them.  In order of the facing."""
+    places = []
+    for s in sorted(states, key=lambda s: s["rest_ev"]):
+        for p in places:
+            if abs((s["rest_facing_degrees"] - p["rest_facing_degrees"] + 180.0) % 360.0 - 180.0) < within:
+                p["starts"].append(s["start_degrees"])
+                break
+        else:
+            places.append({**s, "starts": [s["start_degrees"]]})
+    return sorted(places, key=lambda p: p["rest_facing_degrees"])
+
+
+def facings(args):
+    """Which ways a chain can face in its crystal, every chain turned together, in DFT (a cell of one chain).
+
+    The chain is turned rigidly about its own axis to each of ``--angles`` (degrees from where it
+    faces in the cell given) and its atoms are relaxed in DFT with the cell held.  The first energy
+    of a run is the rigid turn's and the last is where it came to rest.  With them are kept the
+    facing it rests at, the hydrogen bonds it rests with and the edge each lies along
+    (``hydrogen_bonds``), and the stress it leaves on the held cell (``row_frame``, tension
+    positive).  The stress of one resting place less another's is what the switch between them
+    does to a cell that may not change shape: its blocked stress, for a crystal that switches
+    whole.  A rigid turn of every chain at once lies above the lowest way between two resting
+    places; it says nothing of what one chain needs beside a wall.
+
+    ``--by``: the sheets are first moved apart that many times (``spread_cell``), which is room no
+    molecule has been shown to make.  A finished angle is kept (``NAME[_g<percent>].facings.json``,
+    its runs under ``work``); a rerun does the others, and an angle that was stopped starts again."""
+    from ase.io import read, write
+
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        a = read(src / f"{name}.relaxed.xyz")
+        base = spread_cell(a, args.by) if args.by != 1.0 else rebased(a)
+        base.info.update(a.info)
+        base.info["kmesh"] = kmesh(base)
+        along = base.cell.array[2] / np.linalg.norm(base.cell.array[2])
+        reference = polar_facing(rebased(a))
+        frame = row_frame(base.cell.array)
+        tag = name if args.by == 1.0 else f"{name}_g{round(args.by * 100)}"
+        work = src / "work" / f"{tag}_facings"
+        store = src / f"{tag}.facings.json"
+        record = json.loads(store.read_text()) if store.exists() else {
+            "name": tag, "of": name, "sheets_apart_times": args.by, "sheet_gap_a": sheet_gap(base), "cell": base.cell.array.tolist(),
+            "what": "every chain turned together about its axis and relaxed in DFT with the cell held; energies in eV for the cell, "
+                    "stress in GPa in the row's frame (x the row, y across it, z the chain), tension positive", "states": []}
+        done = {s["start_degrees"] for s in record["states"]}
+        for angle in [float(v) for v in str(args.angles).split(",")]:
+            if angle in done:
+                continue
+            b = base.copy()
+            b.info.update(base.info)
+            spun(b, len(b), 0, np.radians(angle), along)
+            run_tag = f"t{round(angle):+04d}".replace("+", "p").replace("-", "m")
+            out = work / f"{run_tag}.out"
+            if not finished(out):
+                run(args.pw, args.np, pw_input(b, args.pseudo, work / f"scratch_{run_tag}", "relax"), work, run_tag)
+            if not finished(out):
+                print(f"{tag} from {angle:+.0f}: the relaxation did not finish ({out})", flush=True)
+                continue
+            c, energy, stress = read_final(out)
+            first = [float(l.split("=")[1].split()[0]) for l in out.read_text(errors="replace").splitlines() if l.startswith("!")][0] * 13.605693123
+            c.info.update(base.info)
+            c.calc = None
+            write(work / f"{run_tag}.xyz", c, format="extxyz")
+            record["states"].append({
+                "start_degrees": angle, "rigid_ev": first, "rest_ev": energy,
+                "rest_facing_degrees": [float(v) for v in facing(c, slice(0, len(c)), along, reference)][0],
+                "hydrogen_bonds": hydrogen_bonds(c), "stress_gpa": (frame @ stress @ frame.T * 160.21766).tolist(),
+                "whole": bool(whole(c, CHAINS[str(a.info["triage_chain"])]))})
+            store.write_text(json.dumps(record, indent=1))
+            zero = min(s["rest_ev"] for s in record["states"])
+            s = record["states"][-1]
+            print(f"{tag} from {angle:+.0f}: the rigid turn {(first - zero) * KCAL:+.2f} kcal/mol above the lowest resting place, rests facing "
+                  f"{s['rest_facing_degrees']:+.0f} at {(energy - zero) * KCAL:+.2f}, H..O {s['hydrogen_bonds']}, whole {s['whole']}", flush=True)
+        told(record)
+
+
+def told(record):
+    """Print a ``facings`` record: its resting places, and each one's stress on the held cell less the lowest one's."""
+    states = record["states"]
+    if not states:
+        return
+    places = resting_places(states)
+    lowest = min(places, key=lambda p: p["rest_ev"])
+    print(f"{record['name']}: sheets {record['sheet_gap_a']:.3f} A apart, {len(states)} starts, {len(places)} resting places "
+          f"(kcal/mol for the cell above the lowest)")
+    for p in places:
+        edges = sorted({tuple(e) for d, e in p["hydrogen_bonds"] if d < 2.25})
+        line = (f"  facing {p['rest_facing_degrees']:+6.1f}: {(p['rest_ev'] - lowest['rest_ev']) * KCAL:+.2f}, bonded along "
+                f"{' '.join(str(list(e)) for e in edges) or 'nothing'}, reached from {' '.join(f'{v:+.0f}' for v in sorted(p['starts']))}")
+        if p is not lowest:
+            (lo, lo_at), (hi, hi_at) = principal(np.array(p["stress_gpa"]) - np.array(lowest["stress_gpa"]))
+            line += f"; stress on the held cell less the lowest's: {lo:+.2f} GPa at {lo_at:.0f} and {hi:+.2f} GPa at {hi_at:.0f} degrees from the row"
+        print(line)
+    print("  rigid turns, start and kcal/mol above the lowest resting place: "
+          + " ".join(f"{s['start_degrees']:+.0f}:{(s['rigid_ev'] - lowest['rest_ev']) * KCAL:+.2f}" for s in sorted(states, key=lambda s: s["start_degrees"])), flush=True)
+
+
 def swing(args):
     """The hump for one carbonyl (or one methyl) of the moving chain to change sides, by turning it a step at a time.
 
@@ -1740,14 +1873,17 @@ def table(args):
     from ase.io import read, write
 
     src = Path(args.frames)
-    rows = [json.loads(p.read_text()) for p in sorted(src.glob("*.json")) if not p.name.endswith(".path.json")]
+    rows = [json.loads(p.read_text()) for p in sorted(src.glob("*.json")) if not p.name.endswith((".path.json", ".facings.json"))]
     paths = [json.loads(p.read_text()) for p in sorted(src.glob("*.path.json"))]
+    turned = [json.loads(p.read_text()) for p in sorted(src.glob("*.facings.json"))]
     out = {"what": "chains alone in a box and one chain to a cell, PBE-D3(BJ) at 90/360 Ry (examples/chain_triage.py); "
                    "polarisation by the Berry phase with norm-conserving files on the same geometry",
            "units": {"rise_a": "A a repeat along the chain", "volume_a3": "A3 a repeat (a lone chain's is its box)",
                      "dipole_across_e_a": "e A a repeat, across the chain, from the charge density",
                      "stretch": "nN per unit strain of the chain", "berry": "C/m2", "piezo": "c GPa, e C/m2 (pN/nm2 per V/um), d pm/V"},
-           "rows": rows, "paths": paths}
+           "rows": rows, "paths": paths, "facings": turned}
+    for q in turned:
+        told(q)
     for q in paths:
         if "pair_of_twists_kcal" in q:
             print(f"{q['name']:20s} a wall of {q['of']} part of the way over, repeats turned {' '.join(str(k) for k in q['turned_repeats'])}: "
@@ -1913,6 +2049,15 @@ def main():
     sl.add_argument("--names", required=True)
     sl.add_argument("--along", type=float, required=True, help="how far each sheet is moved against the one below, in repeats of the cell along the chain, e.g. 0.5")
     sl.set_defaults(run=slide)
+    fa = sub.add_parser("facings")
+    fa.add_argument("--frames", type=Path, required=True)
+    fa.add_argument("--names", required=True)
+    fa.add_argument("--by", type=float, default=1.0, help="how many times as far apart the sheets are made first, e.g. 1.2")
+    fa.add_argument("--angles", required=True, help="the facings the chain is started at, degrees from the crystal's, e.g. 0,60,120")
+    fa.add_argument("--pw", default=PW_DEFAULT)
+    fa.add_argument("--pseudo", default=PSEUDO_DEFAULT)
+    fa.add_argument("--np", type=int, default=NP_DEFAULT)
+    fa.set_defaults(run=facings)
     g = sub.add_parser("swing")
     g.add_argument("--frames", type=Path, required=True)
     g.add_argument("--names", required=True)

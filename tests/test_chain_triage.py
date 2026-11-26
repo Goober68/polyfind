@@ -415,6 +415,50 @@ def test_a_slid_cell_has_its_sheets_as_far_apart_and_moved_along_the_chain():
     assert np.linalg.solve(cell.T, c.cell.array[1]) == pytest.approx([0.0, 1.0, 1.0])
 
 
+def test_the_row_frame_is_square_with_the_chain_and_the_row_for_axes():
+    cell = np.array([[4.6, 0.0, 0.3], [1.7, 3.3, 0.2], [0.0, 0.0, 4.7]])
+    frame = CT.row_frame(cell)
+    assert frame @ frame.T == pytest.approx(np.eye(3))
+    assert frame[2] == pytest.approx([0.0, 0.0, 1.0])  # the chain
+    assert frame[0] == pytest.approx([1.0, 0.0, 0.0])  # the row, without what it has along the chain
+    assert np.linalg.det(frame) == pytest.approx(1.0)
+
+
+def test_principal_values_come_with_their_axes_from_the_row():
+    (lo, lo_at), (hi, hi_at) = CT.principal([[0.0, 2.0, 9.0], [2.0, 0.0, 9.0], [9.0, 9.0, 9.0]])  # a shear across the chain; the rest is not looked at
+    assert (lo, hi) == pytest.approx((-2.0, 2.0))
+    assert (lo_at, hi_at) == pytest.approx((135.0, 45.0))
+    (lo, lo_at), (hi, hi_at) = CT.principal([[1.0, 0.0], [0.0, 3.0]])
+    assert (lo, hi) == pytest.approx((1.0, 3.0)) and hi_at == pytest.approx(90.0) and lo_at % 180.0 == pytest.approx(0.0)
+
+
+def test_a_hydrogen_bond_is_told_with_the_edge_it_lies_along():
+    from ase import Atoms
+
+    cell = np.array([[4.6, 0.0, 0.0], [1.7, 3.9, 0.0], [0.0, 0.0, 4.7]])
+    # N-H pointing along the row at the oxygen of the next cell over, 1.9 A from it; its own nitrogen is no bond of this kind
+    a = Atoms("ONH", positions=[[0.5, 1.0, 1.0], [2.2, 1.0, 1.0], [3.2, 1.0, 1.0]], cell=cell, pbc=True)
+    assert CT.hydrogen_bonds(a) == [(1.9, [1, 0])]
+    # the same hydrogen turned to face up the stack
+    b = a.copy()
+    b.positions[2] = b.positions[0] + cell[1] - 1.8 * cell[1] / np.linalg.norm(cell[1])
+    assert CT.hydrogen_bonds(b, within=2.2) == [(1.8, [0, 1])]
+    # further out the oxygen of its own cell is in reach as well, the shorter first
+    assert CT.hydrogen_bonds(b) == [(1.8, [0, 1]), (2.45, [0, 0])]
+
+
+def test_resting_places_gather_the_starts_that_end_alike_and_close_the_circle():
+    def state(start, rest, energy, rigid):
+        return {"start_degrees": start, "rest_facing_degrees": rest, "rest_ev": energy, "rigid_ev": rigid, "hydrogen_bonds": [], "stress_gpa": np.zeros((3, 3)).tolist()}
+
+    states = [state(0.0, -2.0, -10.00, -10.00), state(15.0, -1.9, -10.01, -9.9), state(60.0, 55.0, -9.9, -9.8), state(170.0, 178.0, -10.0, -9.95),
+              state(185.0, -178.0, -10.02, -9.9)]
+    places = CT.resting_places(states)
+    assert [round(p["rest_facing_degrees"]) for p in places] == [-178, -2, 55]
+    assert [sorted(p["starts"]) for p in places] == [[170.0, 185.0], [0.0, 15.0], [60.0]]
+    assert [p["rest_ev"] for p in places] == [-10.02, -10.01, -9.9]  # each place by its lowest state
+
+
 def test_a_cell_is_whole_only_while_it_is_bonded_as_the_repeat_is():
     """A chain whose bond across the period has been pulled apart is no longer the chain, and is told from it."""
     pytest.importorskip("rdkit")
