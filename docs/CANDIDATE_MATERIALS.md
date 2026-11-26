@@ -2426,7 +2426,7 @@ row state, in DFT, the cell held:
     the carbonyl turns 41 degrees with the methylene carbon crossing the ureas' plane, or 139
     degrees the other way with the carbon staying where it is (the two ends are the same state
     half a turn apart, which this lattice cannot tell apart; a field can).
-44. *They pull on the cell differently by about 0.3 GPa.* The mirror state's stress on the held
+44. *Held, they pull on the cell differently by about 0.3 GPa.* The mirror state's stress on the held
     cell less the row state's is +0.25 GPa along an axis 25 degrees from the row and -0.34
     across it: a shear, as two mirror images' must be, each state pulling its own sheets
     together where the cell holds them 9% apart. That is 250 to 340 pN/nm2 between two states
@@ -2467,8 +2467,7 @@ repeat above the first cell:
     that is the long cell's question and it is not answered. A band finds a way, not the lowest
     way; the other way round (139 degrees, the carbon staying) did not make a band.
 48. *On the target's terms.* Strong action: about 0.3 GPa between the two states on a held
-    cell (reading 44), and a change of the cell's shape if it is let go, which has not been
-    run. Low activation: the two states are level to 0.03 (the field's work is 0.08 to 0.18)
+    cell (reading 44), and 6 to 7% of shear between them if the cell is let go (reading 49). Low activation: the two states are level to 0.03 (the field's work is 0.08 to 0.18)
     and the hump between them is 5.5 a repeat for the crystal moving whole. Easy return: the
     hump is the same both ways; what a cycle loses is not computed. NOT A CANDIDATE YET, and
     by the standing rules a partial result: it is a perfect crystal, no defect is in it, the
@@ -2479,11 +2478,37 @@ repeat above the first cell:
     switch (search summaries only: nylon-11 is ferroelectric in its pseudohexagonal form with
     disordered hydrogen bonds and not in its tightly bonded sheets).
 
+*The stroke* (`facings --by 1.0935 --mirrored 0 --let-go 138`, `dft`; `table` prints it). The
+level diagonal state was relaxed in DFT with its cell free.
+
+49. *Let go, the diagonal state is the crystal again, lying the other way, and the cell is 6 to
+    7% another shape.* It comes to rest 0.010 kcal/mol a repeat from the crystal (below it, by
+    less than the relaxations' stopping marks) at 71.7 A3 a repeat against 71.4. Its cell
+    against the crystal's, edge for edge: 6.0% shorter along an axis 20 degrees from the row,
+    7.1% longer across that, 0.1% shorter along the chain. So in a crystal free to change shape
+    the row state and the diagonal state are one crystal in two orientations: level exactly, by
+    symmetry, with a shear of 6 to 7% between them. (Arithmetic on the crystal's own cell had
+    said -6.7% and +7.2%.) For scale only: the film's strain in this project's tables is 0.08
+    to 0.18% at the AC field its assumed heat budget allows. The two are not like quantities.
+    This one is a whole perfect crystal going from one orientation to the other, which no field
+    has been shown to do, and going whole it has to pass the equal-edged cell (0.47 a repeat
+    above the crystal) and the hump of reading 46 (5.5).
+50. *What the pieces add up to, and what is still missing.* A chain whose crystal has two
+    orientations of its hydrogen bonds a 41 degree turn apart; level by symmetry; 6 to 7% of
+    shear between them when free and about 0.3 GPa between them when held; a hump of 5.5 a
+    repeat on the way for the crystal moving whole. That is the SPRING of the target, read in
+    DFT on the smallest cell. What a material would need on top of it is everything the
+    standing rules ask of a candidate: the step of one chain beside a wall; a defect that lets
+    a wall exist and move in a field (in a perfect crystal the two orientations are separate
+    grains, and a grain held by its neighbours cannot change shape by 7%); the loss of a
+    cycle; a frequency; and a force and a speed on one modulus under one heat budget. None of
+    those is here. A partial result.
+
 **Not done.** For the level pair: the step of one urea of one chain beside a wall between a part
 bonded along the row and a part bonded along the diagonal, which is the activation that counts
-and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`); the diagonal
-state with its cell let go, which is the stroke (`facings --let-go`, `dft`); the top in DFT's own
-structures; the right-handed diagonal and stack states with the sheets 3.94 A apart; the dipole
+and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`; its two states
+are being settled in the potential); the top in DFT's own structures; the same pair in a cell
+sheared to equal edges and not spread; the right-handed diagonal and stack states with the sheets 3.94 A apart; the dipole
 of each state (`berry`); what holds the sheets apart, and the same in a chain that can be made. DFT on the
 plain level row's other way round and on the slid row. The step in the spread five-chain row,
 whose halves turned out bonded along different edges (reading 36): its first urea has not been
@@ -2531,7 +2556,9 @@ crystal itself is `urea1_tt_x1_s50` in `chain_triage.json` and `chain_triage_cel
 the maps of the facings are under `facings` in `chain_triage.json`, one record a cell
 (`urea1_tt_x1_g120`: sheets 1.2 times as far apart; `urea1_tt_x1_g109`: 1.0935 times, where a
 start with `mirror_image_of_the_rest_from` is the mirror image of another start's resting
-place; `urea1_tt_x1_g109_kink1r1_hop_r-da.path.xyz` is the band between its two level states), every start with its rigid and resting
+place; `urea1_tt_x1_g109_kink1r1_hop_r-da.path.xyz` is the band between its two level states;
+`urea1_tt_x1_g109_fp138` in `chain_triage.json` and `chain_triage_cells.extxyz` is the level
+diagonal state with its cell let go, with `stretch_from_parent`), every start with its rigid and resting
 energies in eV, its resting facing, its hydrogen bonds and its stress in GPa; and
 `urea1_tt_x1_g120_kink3r5.path.xyz` is the spread five-chain row's two whole states).
 

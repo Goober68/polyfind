@@ -1225,13 +1225,19 @@ right": true at one registry, not along it).
         NOT RUN from the stopped queue: the mirror of the wrong-handed state, the midpoint
         start (+158; its first nine steps are in `work/urea1_tt_x1_g109_facings/stopped/`)
         and the stack start (+60).
+        THE STROKE (18:40 UTC; READINGS 49, 50): `facings --frames /opt/dft/triage --names
+        urea1_tt_x1 --by 1.0935 --mirrored 0 --let-go 138` wrote
+        `urea1_tt_x1_g109_fp138.start.xyz` and `dft --names urea1_tt_x1_g109_fp138` relaxed
+        it with the cell free (12 minutes). It is the crystal again lying the other way:
+        0.010 kcal/mol a repeat from it, 71.7 against 71.4 A3, and its cell against the
+        crystal's edge for edge is -6.0% along an axis 20 degrees from the row, +7.1% across
+        that, -0.1% along the chain (`table` prints it; `stretch_from_parent` in the record).
+        SO THE ROW AND DIAGONAL STATES ARE ONE CRYSTAL IN TWO ORIENTATIONS, LEVEL BY SYMMETRY,
+        6 TO 7% OF SHEAR APART WHEN FREE AND 0.3 GPa APART WHEN HELD, WITH 5.5 A REPEAT
+        BETWEEN THEM FOR THE CRYSTAL MOVING WHOLE. The spring of the target; not a candidate.
+        RUNNING WHEN THIS WAS WRITTEN (started 18:41 UTC; log
+        `log_urea1_g109_em1_kink3r5.txt`): step (ii)'s two `domains` states, in the potential.
         NEXT, IN ORDER (nothing beside a DFT job):
-        (i) THE STROKE: `facings --frames /opt/dft/triage --names urea1_tt_x1 --by 1.0935
-        --mirrored 0 --let-go 138` writes `urea1_tt_x1_g109_fp138.start.xyz`; `dft --frames
-        /opt/dft/triage --names urea1_tt_x1_g109_fp138` relaxes it with the cell free (9
-        atoms, 20 to 40 minutes); `table` prints its energy above the crystal (expected 0:
-        the crystal in mirror image) and its cell against the crystal's edge for edge
-        (`stretches`; arithmetic on the crystal's cell says -6.7% and +7.2%).
         (ii) THE ACTIVATION THAT COUNTS, one urea of one chain beside a wall: `domains
         --frames /opt/dft/triage --names urea1_tt_x1 --by 1.0935 --second -1 --rows 5 --long 3
         --faces=0,0,m-41,m-41,m-41 --stem rrddd` and `--faces=0,0,0,m-41,m-41 --stem rrrdd`
