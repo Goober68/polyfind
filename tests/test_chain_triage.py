@@ -447,6 +447,17 @@ def test_a_row_of_domains_turns_each_chain_whole_by_its_own_angle():
         assert row.positions[part].mean(axis=0) == pytest.approx(a.positions.mean(axis=0) + k * cell[0] + 0.5 * cell[2])
     with pytest.raises(ValueError):
         CT.domain_row(a, 3, 2, [0, 0])
+    # the other hand: a hydrogen off the plane of the carbonyl and the axis goes to the other face, and the carbonyl faces as it did
+    b = a.copy()
+    b.info.update(a.info)
+    b.positions[2] += [0.0, 0.5, 0.0]
+    plain, other = CT.domain_row(b, 2, 1, ["0", "0"]), CT.domain_row(b, 2, 1, ["0", "m0"])
+    assert other.positions[:4] == pytest.approx(plain.positions[:4])
+    off = lambda q: q.positions[6, 1] - q.positions[4, 1]
+    assert off(plain) == pytest.approx(0.5) and off(other) == pytest.approx(-0.5)
+    assert CT.facing(other, np.arange(4, 8), z, np.array([1.0, 0.0, 0.0])) == pytest.approx([0.0])
+    turned = CT.domain_row(b, 2, 1, ["0", "m90"])
+    assert CT.facing(turned, np.arange(4, 8), z, np.array([1.0, 0.0, 0.0])) == pytest.approx([90.0])
     # the first two chains are bonded along the row, O of one to H of the next; the turned one is bonded to neither
     assert CT.joined(row, within=2.0) == {(1, 0): 2}
 

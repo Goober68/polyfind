@@ -955,8 +955,14 @@ def hop(args):
     src = Path(args.frames)
     for name in args.names.split(","):
         _, tag = kink_series(name, args)
-        first, last = (int(v) for v in args.between.split(","))
-        ends = [read(src / "work" / tag / f"turned_{k}.xyz") for k in (first, last)]
+        if args.stems:
+            # two states kept under their own names (``domains``), the band's files named after them
+            first, last = (f"_{v}" for v in args.stems.split(","))
+            first, last = first, last[1:]
+            ends = [read(src / "work" / tag / f"{v}.xyz") for v in args.stems.split(",")]
+        else:
+            first, last = (int(v) for v in args.between.split(","))
+            ends = [read(src / "work" / tag / f"turned_{k}.xyz") for k in (first, last)]
         store = src / "work" / tag / f"hop{first}-{last}.band.xyz"
         if store.exists() and len(read(store, index=":")) == args.images:
             # a band that was stopped goes on from where it was last written
@@ -1070,16 +1076,35 @@ def edged_cell(atoms, steps: int):
     return b
 
 
+def other_hand(row, part, along):
+    """A row cell with one chain reflected through its own plane, in place: the plane of its axis and its first carbonyl.
+
+    The carbonyl faces as it did and whatever stood off that plane to one side stands off it to
+    the other.  A chain that packing has pleated (the urea chain's methylene carbon lies 0.56 A
+    off its ureas' plane, to one face) has a hand, and a turn about the axis does not change it."""
+    index = np.arange(len(row))[part]
+    o, c = carbonyls(row, index)[0]
+    v = row.positions[o] - row.positions[c]
+    v = v - (v @ along) * along
+    normal = np.cross(along, v / np.linalg.norm(v))
+    d = row.positions[index] - row.positions[c]
+    row.positions[index] = row.positions[c] + d - 2.0 * np.outer(d @ normal, normal)
+    return row
+
+
 def domain_row(a, rows: int, long: int, faces):
     """A row of ``rows`` chains ``long`` repeats long, chain k turned whole by ``faces[k]`` degrees about its axis.
 
     The cell given is used as it stands (``spread_cell``, ``edged_cell``): the chains follow one
     another along its first edge and each chain's copies along its second.  It sets a part of a
     crystal bonded along one edge beside a part bonded along another, with a wall each side.  The
-    chain that ``swing`` then moves is chain ``rows // 2`` (``moving_chain``)."""
-    faces = [float(v) for v in faces]
+    chain that ``swing`` then moves is chain ``rows // 2`` (``moving_chain``).  An angle written
+    with ``m`` before it (``m139``) is for the chain's other hand (``other_hand``), then turned."""
+    faces = [str(v) for v in faces]
     if len(faces) != rows:
         raise ValueError(f"{len(faces)} facings for {rows} chains")
+    hands = [v.startswith("m") for v in faces]
+    faces = [float(v.lstrip("m")) for v in faces]
     per_chain = len(a) * long
     along = a.cell.array[2] / np.linalg.norm(a.cell.array[2])
     mesh = mesh_of(a)
@@ -1088,6 +1113,8 @@ def domain_row(a, rows: int, long: int, faces):
     row = a.repeat([rows, 1, long])
     row.set_array("chain", np.repeat(np.arange(rows), per_chain))  # a chain is a run of atoms
     for chain, angle in enumerate(faces):
+        if hands[chain]:
+            other_hand(row, slice(chain * per_chain, (chain + 1) * per_chain), along)
         if angle:
             spun(row, per_chain, chain, np.radians(angle), along)
     row.info.update(a.info)
@@ -2224,7 +2251,8 @@ def main():
     h = sub.add_parser("hop")
     h.add_argument("--frames", type=Path, required=True)
     h.add_argument("--names", required=True)
-    h.add_argument("--between", required=True, help="two states of the kink series by their repeats turned, e.g. 2,1")
+    h.add_argument("--between", default="", help="two states of the kink series by their repeats turned, e.g. 2,1")
+    h.add_argument("--stems", default="", help="instead of --between: two states of the series' folder by name, e.g. r,d (domains)")
     h.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     h.add_argument("--device", default="cpu")
     h.add_argument("--rows", type=int, default=4)
@@ -2253,7 +2281,8 @@ def main():
     do.add_argument("--rows", type=int, default=5)
     do.add_argument("--long", type=int, default=3)
     do.add_argument("--side", type=int, default=1, choices=(1, 2))
-    do.add_argument("--faces", required=True, help="degrees each chain of the row is turned by, e.g. 0,0,-41,-41,-41 (give it as --faces=... when the first is negative)")
+    do.add_argument("--faces", required=True, help="degrees each chain of the row is turned by, e.g. 0,0,-41,-41,-41 (give it as --faces=... when the first is negative); "
+                    "m before an angle takes the chain's other hand first, e.g. 0,0,m139,m139,m139")
     do.add_argument("--stem", required=True, help="the name the state is kept under in its series' folder, e.g. rrddd")
     do.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     do.add_argument("--device", default="cpu")
