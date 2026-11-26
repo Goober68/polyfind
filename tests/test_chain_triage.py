@@ -399,6 +399,22 @@ def test_a_spread_cell_has_its_sheets_further_apart_and_its_atoms_where_they_wer
     assert (b.cell.array[1] - cell[1]) == pytest.approx(0.2 * (cell[1] @ normal) * normal)
 
 
+def test_a_slid_cell_has_its_sheets_as_far_apart_and_moved_along_the_chain():
+    from ase import Atoms
+
+    cell = np.array([[4.6, 0.0, 0.0], [1.7, 3.3, 0.2], [0.1, 0.0, 4.7]])
+    a = Atoms("CO", positions=[[1.0, 1.0, 1.0], [2.2, 1.0, 1.0]], cell=cell, pbc=True)
+    a.info["triage_repeats"] = 1
+    b = CT.slid_cell(a, 0.5)
+    assert CT.sheet_gap(b) == pytest.approx(CT.sheet_gap(a)) and b.get_volume() == pytest.approx(a.get_volume())
+    assert b.positions == pytest.approx(a.positions)
+    assert b.cell.array[0] == pytest.approx(cell[0]) and b.cell.array[2] == pytest.approx(cell[2])
+    assert (b.cell.array[1] - cell[1]) == pytest.approx(0.5 * cell[2])
+    # a whole repeat along is the same crystal
+    c = CT.slid_cell(a, 1.0)
+    assert np.linalg.solve(cell.T, c.cell.array[1]) == pytest.approx([0.0, 1.0, 1.0])
+
+
 def test_a_cell_is_whole_only_while_it_is_bonded_as_the_repeat_is():
     """A chain whose bond across the period has been pulled apart is no longer the chain, and is told from it."""
     pytest.importorskip("rdkit")

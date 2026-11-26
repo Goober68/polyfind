@@ -1011,6 +1011,37 @@ def spread_cell(atoms, by: float):
     return b
 
 
+def slid_cell(atoms, along: float):
+    """The same crystal with each sheet moved ``along`` of the cell's third edge against the sheet below.
+
+    The first edge is along the hydrogen bonds (``rebased``) and the third along the chain.  The
+    second edge takes ``along`` of the third and the atoms stay where they are, so every sheet is
+    what it was and only where it lies on the next has changed.  In a cell one repeat long,
+    ``along`` 0.5 puts each urea over the next sheet's methylene where it was over its urea."""
+    b = rebased(atoms).copy()
+    b.info.update(atoms.info)
+    cell = b.cell.array.copy()
+    cell[1] = cell[1] + along * cell[2]
+    b.set_cell(cell, scale_atoms=False)
+    b.info["kmesh"] = kmesh(b)
+    return b
+
+
+def slide(args):
+    """Write a relaxed cell again with its sheets slid along the chain (``slid_cell``), as the start ``NAME_s<percent>`` for ``dft``."""
+    from ase.io import read, write
+
+    src = Path(args.frames)
+    for name in args.names.split(","):
+        a = read(src / f"{name}.relaxed.xyz")
+        b = slid_cell(a, args.along)
+        out = f"{name}_s{round(args.along * 100)}"
+        write(src / f"{out}.start.xyz", b, format="extxyz")
+        rise = float(np.linalg.norm(b.cell.array[2]))
+        print(f"{out}: every sheet {args.along * rise:.3f} A along the chain against the one below ({args.along:g} of {rise:.3f}), "
+              f"sheets {sheet_gap(b):.3f} A apart as before, closest atoms {nearest(b):.2f} A", flush=True)
+
+
 def spread(args):
     """Write a relaxed cell again with its sheets moved apart (``spread_cell``), as ``NAME_g<percent>``."""
     from ase.io import read, write
@@ -1877,6 +1908,11 @@ def main():
     sp.add_argument("--names", required=True)
     sp.add_argument("--by", type=float, required=True, help="how many times as far apart the sheets are made, e.g. 1.2")
     sp.set_defaults(run=spread)
+    sl = sub.add_parser("slide")
+    sl.add_argument("--frames", type=Path, required=True)
+    sl.add_argument("--names", required=True)
+    sl.add_argument("--along", type=float, required=True, help="how far each sheet is moved against the one below, in repeats of the cell along the chain, e.g. 0.5")
+    sl.set_defaults(run=slide)
     g = sub.add_parser("swing")
     g.add_argument("--frames", type=Path, required=True)
     g.add_argument("--names", required=True)
