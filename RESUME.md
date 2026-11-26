@@ -1270,13 +1270,54 @@ right": true at one registry, not along it).
         a kcal/mol a repeat and cancels only as far as the states are alike: read it as "the
         wall costs nothing to a few tenths a repeat", not as a wall the crystal wants. NOT
         IN 6.3 YET.
-        RUNNING WHEN THIS WAS WRITTEN (started 21:20 UTC; about an hour; log
-        `log_urea1_g109_kink3r5_swing_rrddd_c0.txt`): one urea of the wall chain: `swing
-        --frames /opt/dft/triage --names urea1_tt_x1_g109 --rows 5 --long 3 --start rrddd
-        --carbonyl 0 --by 32 --way p --images 7` (the wall chain is chain 2, at -21, and goes
-        to +11). THEN `points --frames /opt/dft/triage --names
-        urea1_tt_x1_g109_kink3r5_swing_rrddd_c0p --np 4` (21 minutes a cell; the command can
-        be given again, a finished cell is kept; two hours is the longest one job may run).
+        IN 6.3 AS READINGS 51 TO 54 (pushed 957016c).
+        ONE UREA ALONE DOES NOT CARRY THE WALL ON (21:25 UTC; the potential only; log
+        `log_urea1_g109_kink3r5_swing_rrddd_c0.txt`; reading 54): `swing --frames
+        /opt/dft/triage --names urea1_tt_x1_g109 --rows 5 --long 3 --start rrddd --carbonyl 0
+        --by 32 --way p --images 7` climbs to 2.66 for the cell at 25 degrees and, let go,
+        comes back (+0.22, facing -13 from -21). Not read in DFT: it is a slope, not a hump.
+        The step is the methylene crossing its ureas' plane.
+        BANDS IN THIN CELLS WERE BEING PULLED APART, FIXED (b78c3ad): `hop` filled a path in
+        atom by atom to the nearest copy, and in a cell 4 A thick a chain that moves 2 A is
+        split (a C-H of 2.2 A at the middle, 154 kcal/mol at the start). `carried()` sends
+        each bonded set together; `numbered_alike()` counts a methylene hydrogen from its own
+        carbon. THE 135-ATOM BAND'S 189 AND THE "DID NOT MAKE A BAND" OF READING 47 (the
+        139-degree way, `hop_r-db`) WERE THIS; neither has been run again. A band that was
+        stopped leaves `hop_A-B.band.xyz` and `hop` GOES ON FROM IT: set a broken one aside
+        before running again (done for `work/urea1_tt_x1_g109_kink1r5/`).
+        THE WALL CHAIN GOING OVER WHOLE (cell one repeat long, 45 atoms; log
+        `log_urea1_g109_kink1r5.txt`; states in `work/urea1_tt_x1_g109_kink1r5/`): `domains
+        --frames /opt/dft/triage --names urea1_tt_x1 --by 1.0935 --rows 5 --long 1
+        --faces=0,0,m-41,m-41,m-41 --stem rrddd --fmax 0.015 --steps 400` (and `rrrdd`,
+        `rrrrr`): the potential has them at 0.00, +0.03, +2.86 for the cell, as the long cell
+        has. `hop --frames /opt/dft/triage --names urea1_tt_x1_g109 --rows 5 --long 1 --stems
+        rrddd,rrrdd --images 9 --fmax 0.05 --steps 300` RUNNING WHEN THIS WAS WRITTEN (22:10
+        UTC, step 120 of at most 300, forces 0.075 eV/A): the band as it stood, in the
+        potential, kcal/mol for the cell, which is one repeat of the wall chain: 0.00 0.28
+        1.49 4.04 6.20 4.83 1.50 0.29 0.03, the wall chain's carbonyl going -21 to +10 and its
+        methylene carbon +0.47 to -0.50 A off its ureas' plane, in the plane at the top. SO
+        THE WALL'S STEP COSTS ABOUT WHAT THE CRYSTAL MOVING WHOLE DOES A REPEAT (6.7 in the
+        potential, 5.50 in DFT). THEN: `points --frames /opt/dft/triage --names
+        urea1_tt_x1_g109_kink1r5_hop_rrddd-rrrdd --np 4` (45 atoms, minutes a cell).
+        THE CRYSTAL'S OWN TWIN, BUILT AND NOT RUN (b78c3ad; `twin_row`, `twin_step`,
+        `half_turn_across`; tests pass, 36): the second orientation is the crystal turned half
+        a turn about the normal of the plane of its second and third edges, and the two join
+        along that plane with NOTHING HELD APART. The twin's chain-to-chain step is 4.375 A
+        (the crystal's diagonal) and differs from the first edge by 0.576 A along the wall: a
+        chain going over shears the cell 14% (0.576 over 4.083). `domains --frames
+        /opt/dft/triage --names urea1_tt_x1 --rows 5 --long 1 --twin 3 --stem t3` (series
+        `urea1_tt_x1_w3`), `--twin 2 --stem t2` (`urea1_tt_x1_w2`), and for a band both in the
+        cell between: `--twin 3 --told-for 2.5 --stem t3`, `--twin 2 --told-for 2.5 --stem t2`
+        (`urea1_tt_x1_w2h`), then `hop --names urea1_tt_x1_w2h --rows 5 --long 1 --stems
+        t3,t2`. The all-rows cell to count from: `domains --names urea1_tt_x1 --rows 5 --long 1
+        --faces=0,0,0,0,0 --stem rrrrr`. `gather` one state at a time and `points` gives each
+        its DFT energy in eV (`energy_ev` in the `.path.json`).
+        ARITHMETIC ON 6.1'S BERRY-PHASE POLARISATION (mine; reading 53): of 0.367 C/m2, 0.281
+        is across the wall and 0.236 in it; the two orientations differ by 0.47 C/m2 along the
+        second edge; at 55 V/um the field does 26 MJ/m3 between them, 0.27 kcal/mol a repeat;
+        over the 14% shear that is 184 MPa (pN/nm2) a field could hold a free wall against.
+        A PERFECT CRYSTAL'S BOUND, NOT A MATERIAL'S BLOCKED FORCE; not in 6.3 until the twin
+        cell has been read.
         AFTER IT: PVDF's crystal by the same map, the like baseline (`facings --names
         pvdf_tt_x1 --angles 0,15,30,45,60,-30,-60`; 6 atoms, minutes an angle; its dipole lies
         along the 4.76 A direction of a lattice of 4.88, 4.76, 4.89).
