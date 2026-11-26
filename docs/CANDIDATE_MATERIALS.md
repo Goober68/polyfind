@@ -2548,6 +2548,46 @@ both orientations has two walls, each three repeats long. Kcal/mol for the cell 
     comes back to within 8 degrees of where it was (+0.22). The step is the methylene's
     crossing of its ureas' plane, and that takes the ureas on both its sides.
 
+*The wall's step, the wall chain going over whole* (`domains --by 1.0935 --rows 5 --long 1`,
+`hop --stems rrddd,rrrdd --images 9`, `points`). The same five chains in a cell one repeat long
+(45 atoms), the two wall states, a band of nine cells between them in the potential and DFT on
+each cell. Only the chain beside the wall changes its bonding, so the energies are for one
+repeat of that chain, kcal/mol above the first cell:
+
+| cell | the wall chain's carbonyl faces | its methylene carbon off its ureas' plane, A | its hydrogens to the next chain's oxygen, A | the potential | DFT |
+|---|---|---|---|---|---|
+| 0, the wall before it | -21 | +0.47 | 1.92, 1.97 | 0.00 | 0.00 |
+| 1 | -20 | +0.44 | 1.95, 2.01 | +0.26 | -0.09 |
+| 2 | -17 | +0.36 | 1.99, 2.09 | +1.44 | +0.30 |
+| 3 | -10 | +0.21 | 2.12, 2.36 | +4.03 | +1.98 |
+| 4, the top | -1 | +0.03 | 2.42, 2.59 | +5.92 | +3.70 |
+| 5 | +3 | -0.11 | 2.30, 2.38 | +4.59 | +3.23 |
+| 6 | +8 | -0.31 | 2.09, 2.10 | +1.39 | +0.65 |
+| 7 | +11 | -0.43 | 2.02, 2.04 | +0.26 | -0.02 |
+| 8, the wall behind it | +10 | -0.50 | 1.99, 2.02 | +0.03 | -0.12 |
+
+55. *The wall's step is 3.7 kcal/mol a repeat in DFT, against 5.5 for the crystal moving whole.*
+    The chain keeps the hydrogens of the row chain before it (2.0 A throughout) and swings its
+    own from the next chain's oxygen up the diagonal to the same chain's oxygen along the row,
+    2.4 and 2.6 A from it at the top, where its methylene carbon is in its ureas' plane. The
+    chain after it turns part of the way with it (-57 to -42 at the top, -37 at the end). The
+    wall one chain on is 0.12 below where it was, as in the long cell (0.32 for three repeats).
+56. *What that number is and is not.* It is for a chain that goes over all along its length at
+    once, counted for one repeat: n repeats going as one pay n times it. At 10^13 tries a second
+    3.7 is 2 x 10^10 a second, and two repeats together (7.4) are at the mark for tens of MHz
+    (7.6). A longer chain has to go a piece at a time, a kink running along it, and what a kink
+    costs has not been read: reading 54's one urea is not it. It is DFT on the potential's
+    cells; the potential is 2.2 above DFT at the top (1.2 for the crystal moving whole) and
+    DFT's own top is not found. And it is in the cell held 9% open.
+57. *A fault in the bands, found here.* `hop` filled a path in atom by atom, each to its nearest
+    copy. In a cell one sheet thick (4 A) a chain that moves 2 A is split that way, some atoms
+    sent one way and their neighbours the other, and the path pulls a C-H bond to 2.2 A at its
+    middle (154 kcal/mol at the start of this band, 189 for the long cell's). Each bonded set
+    now goes together (`carried`). The long cell's band and reading 47's "did not make a band"
+    for the 139 degree way were this fault and are not results either way; neither has been
+    run again. The nine-cell band of reading 46 was not affected: no bond changes by more than
+    0.02 A in any of its cells (0.03 in this band's).
+
 **Not done.** For the level pair: the step of one urea of one chain beside a wall between a part
 bonded along the row and a part bonded along the diagonal, which is the activation that counts
 and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`; its two states
