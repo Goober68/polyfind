@@ -1244,15 +1244,28 @@ right": true at one registry, not along it).
         +13 -5 -5), 42.9 kcal/mol BELOW `rrddd`. So two such walls cost about 43 for a cell
         three repeats long, some 7 a repeat of wall: the rows end on that wall with their
         bonds unmet. NOT WRITTEN INTO 6.3 YET.
-        RUNNING WHEN THIS WAS WRITTEN (started 19:10 UTC; log `log_urea1_g109_kink3r5.txt`;
-        states in `work/urea1_tt_x1_g109_kink3r5/`): the same two states with the second edge
-        KEPT (`domains ... --by 1.0935 --rows 5 --long 3 --faces=0,0,m-41,m-41,m-41 --stem
-        rrddd`, then `--faces=0,0,0,m-41,m-41 --stem rrrdd`): the wall then runs along the
-        mirror line and each row meets a diagonal end to end (a bend of 51 degrees, no bond
-        unmet). IF BOTH STAY: `hop --names urea1_tt_x1_g109 --rows 5 --long 3 --stems
-        rrddd,rrrdd` and `swing --names urea1_tt_x1_g109 --rows 5 --long 3 --start rrddd
-        --carbonyl 0 --by 45 --way p --images 7`, then `points`. If the two-chain part
-        collapses again, seven chains (`--rows 7`, 189 atoms).
+        THE WALL ALONG THE MIRROR LINE (20:13 UTC; the potential only; log
+        `log_urea1_g109_kink3r5.txt`; states in `work/urea1_tt_x1_g109_kink3r5/`): the same
+        two states with the cell's second edge KEPT (`domains --frames /opt/dft/triage --names
+        urea1_tt_x1 --by 1.0935 --rows 5 --long 3 --faces=0,0,m-41,m-41,m-41 --stem rrddd`,
+        `--faces=0,0,0,m-41,m-41 --stem rrrdd`, `--faces=0,0,0,0,0 --stem rrrrr`, each then
+        taken on with `--fmax 0.015 --more 300`). EVERY CHAIN STAYS FULLY BONDED (six bonds
+        from each chain to the next). `rrddd`: chains face -7 +7 | -21 -56 -55, hands - - | +
+        + +; `rrrdd`: -20 +13 +11 | -36 -50, 0.05 kcal/mol for the cell above it: THE WALL
+        MOVED ON BY ONE CHAIN AT NO COST. `rrrrr` (all rows, the crystal in this cell): 8.60
+        ABOVE both for its 15 repeats. So in this cell the potential has a wall BELOW the
+        crystal it divides, by 1.4 a repeat of wall. A five-image band between the two wall
+        states did not converge (set aside as `hop_rrddd-rrrdd.broken.*` in the work folder;
+        its 189 at the middle is not a result). NOT IN 6.3 YET.
+        RUNNING WHEN THIS WAS WRITTEN (started 20:14 UTC; 75 minutes; log
+        `log_urea1_g109_kink3r5_states_points.txt`): DFT on the three states (`gather --names
+        urea1_tt_x1_g109 --rows 5 --long 3 --stems rrddd,rrrdd,rrrrr` made
+        `urea1_tt_x1_g109_kink3r5_states_rrddd-rrrdd-rrrrr.path.xyz`; `points --names` that;
+        a finished cell is kept and the command can be given again). READ: is the wall below
+        the crystal in DFT too, and are the two wall states level. THEN one urea of the wall
+        chain: `swing --frames /opt/dft/triage --names urea1_tt_x1_g109 --rows 5 --long 3
+        --start rrddd --carbonyl 0 --by 32 --way p --images 7` (the wall chain is chain 2,
+        at -21, and goes to +11), about an hour in the potential, then `points` on its cells.
         AFTER IT: PVDF's crystal by the same map, the like baseline (`facings --names
         pvdf_tt_x1 --angles 0,15,30,45,60,-30,-60`; 6 atoms, minutes an angle; its dipole lies
         along the 4.76 A direction of a lattice of 4.88, 4.76, 4.89).
