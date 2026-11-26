@@ -2312,9 +2312,95 @@ way. Energies are kcal/mol for the 135-atom cell above the row at rest.
     sheets apart has to pay for each repeat it holds; it is the crystal's own cohesion
     between sheets and says nothing of what could pay it.
 
-**Not done.** DFT on the plain level row's other way round and on the slid row. The step in a
-level row with room (the spread cell five chains wide; its row is being made), and the
-quarter-turned urea there, which the four-chain spread row could not level. For the one-methyl chain: the rest of the second step,
+**With room the chain has three bonded ways to face, and the turn between two of them is not the
+half turn** (`kink --rows 5 --long 3`, `facings`; 2026-11-26). Every step above is a half turn:
+the urea ends bonded along the same row, facing the other way, and the cell is the shape it was.
+The spread cell showed another kind of resting place before any step was taken in it.
+
+*The row, in the potential.* The cell with its sheets 3.94 A apart, five chains wide and three
+repeats long (135 atoms). Its two whole states are level (0.04 apart) and mirror images, as a
+five-chain row's are. They are not two halves of a row facing each other across a wall. The
+three-chain half is bonded along the row (its chains face +167, -158, -164) and the two-chain half
+has turned a third of the way round (+58, +61) and is bonded up the stack, each chain to its own
+copy in the next sheet: 24 N-H..O of 1.75 to 1.98 A in the cell, where a row that is not spread
+has 15 under 2.3 A.
+
+*The crystal, in DFT* (`facings --names urea1_tt_x1 --by 1.2 --angles 0,15,...,165`). With the
+sheets 3.94 A apart the cell of one chain is close to a lattice of three like directions across
+the chain: the row's edge, 4.61 A; the edge to the next sheet, 4.30 A at 66 degrees from it; and
+the diagonal between them, 4.89 A at 126 degrees (the crystal's own are 4.61, 3.71 at 62 and 4.37
+at 131). The chain is turned rigidly about its axis to a starting angle, every chain together
+since the cell holds one, and its atoms are relaxed in DFT with the cell held. Kcal/mol a repeat
+above the lowest resting place; the rigid turn is the first energy of each run.
+
+| started at | the rigid turn | came to rest facing | at | bonded along | H..O, A |
+|---|---|---|---|---|---|
+| 0 | +0.07 | -2 | 0.00 | the row | 1.91, 1.91 |
+| +15 | +3.31 | -2 | +0.01 | the row | 1.90, 1.92 |
+| +30 | +6.83 | -2 | 0.00 | the row | 1.91, 1.91 |
+| +45 | +5.85 | +55 | +2.88 | the stack | 1.76, 1.78 |
+| +60 | +3.79 | +55 | +2.87 | the stack | 1.75, 1.80 |
+| +75 | +6.03 | +56 | +2.87 | the stack | 1.74, 1.79 |
+| +90 | +8.67 | +56 | +2.87 | the stack | 1.75, 1.79 |
+| +120 | +2.34 | +128 | +1.27 | the diagonal | 2.10, 2.18 |
+| +135 | +1.96 | +128 | +1.27 | the diagonal | 2.09, 2.18 |
+| +150 | +4.27 | +128 | +1.27 | the diagonal | 2.10, 2.18 |
+| +165 | +2.32 | +178 | 0.00 | the row, the other way | 1.91, 1.92 |
+
+36. *Three resting places, each the row's own bond made along another edge of the cell.* Bonded
+    along the row (facing -2, 0.00), along the diagonal (+128, +1.27 a repeat) and up the stack
+    (+55, +2.87). Every start came to one of them, and the potential had found the third unasked.
+    Their order is how well each edge's length suits the bond: the row's 4.61 A gives H..O of
+    1.91 A, the stack's 4.30 A squeezes it to 1.75 to 1.80 and the diagonal's 4.89 A stretches
+    it to 2.09 to 2.18. Each has its opposite half a turn on (the start at +165 came to +178 at
+    the same energy and the same stress to 0.06 GPa: the lattice is the same turned half round),
+    so there are six facings round the circle, at -2, +55, +128, +178, -125 and -52. The cell
+    at -130 of the four-chain spread row, which lay below its row at rest with its hydrogens
+    1.90 to 1.97 A from the oxygen in the next sheet (reading 10), was the wall chain's urea in
+    the fifth of these.
+37. *Between two of them the chain turns a seventh to a fifth of the way round and does not
+    pass through the sheet.* 50 degrees between the diagonal and the row facing the other way, 57
+    between the row and the stack, 73 between the stack and the diagonal. The rigid turn's
+    energies bracket where the watersheds are (between +30 and +45, +90 and +120, +150 and
+    +165) and are highest there at 6.8, 8.7 and 4.3 a repeat above the row state. THESE ARE NOT
+    THE HUMP. A rigid turn of every chain at once lies above the lowest way between two resting
+    places, and it is for a repeat of every chain, where the half turn's 31.0 is for the cell
+    when one urea of one chain turns beside a wall. What one chain needs beside a wall between
+    a part bonded along the row and a part bonded along the diagonal has not been computed.
+38. *The states pull differently on the cell, and the difference is of the order of GPa.*
+    `facings` keeps the stress each resting place leaves on the held cell. The diagonal state
+    less the row state: +2.42 GPa (pulling in) along an axis 138 degrees from the row and -0.29
+    across it. The stack state less the row state: -5.40 GPa (pushing out) at 67 degrees and
+    +0.24 across it. It is the row's stiffness along its bonds (77.6 GPa, 6.1) times how far
+    the edge is from the length the bond wants: the diagonal is 6.0% long (4.7 GPa if the bond
+    stayed as stiff as it is at rest; a bond stretched that far has softened) and the stack
+    6.7% short (5.2). In the project's unit that is 2400 and 5400 pN/nm2, where the film's rows
+    have 7.6 to 10. The two are not the same quantity, and this is not a candidate's blocked
+    force. It is a perfect crystal changing its bonds' direction whole against a clamp that does
+    not give, in a cell with room no molecule has been shown to make; the film's is an AC number
+    at an assumed modulus (0.2 GPa) under an assumed heat budget. It is the size of the spring:
+    what the action is if the switch can be made.
+39. *What a field could hold through such a switch is far less (arithmetic on 6.1's numbers,
+    not a computation).* The crystal's polarisation is 0.367 C/m2, 7.85 D a repeat (PBE, an
+    upper mark, 6.1); the lone chain's dipole is 3.70 D. Turning it 50 degrees changes it by
+    0.85 of itself, and at 55 V/um the field's work on that is 0.08 to 0.18 kcal/mol a repeat
+    (the like figure this project uses for PVDF is 0.06 a monomer). The two states here are 1.27
+    apart, seven to sixteen times that: in THIS cell a field does not tip it. How level they are is a
+    matter of the cell's shape (reading 36), which the next part takes up.
+40. *On the target's terms, so far.* Strong action: the spring is there, in GPa, and the move
+    changes which edge of the cell the bonds lie along, which a half turn does not. Low
+    activation: not shown. The two states are not level in this cell, and the only hump read is
+    a rigid turn of every chain at once. Easy return: not read. And it is the baseline, not a
+    candidate: a perfect crystal, one chain to the cell, no defect, with room held open by hand.
+    A partial result: no strain, loss, frequency, blocked force or speed of a material is in it.
+
+**Not done.** For the three facings: the step of one chain beside a wall between a part bonded
+along the row and a part bonded along the diagonal, which is the activation and needs a long
+cell; the same map in the potential, to know how far it may be trusted there; the dipole of
+each state (`berry`); two chains to the cell, so that not every chain turns at once. DFT on the
+plain level row's other way round and on the slid row. The step in the spread five-chain row,
+whose halves turned out bonded along different edges (reading 36): its first urea has not been
+taken round. For the one-methyl chain: the rest of the second step,
 and DFT on the second methyl's crossing; DFT on the ten cells of the first step not read;
 the ends relaxed in DFT (`points --relax`, hours a cell here); the chain's dipole and stiffness
 (section 6.1's numbers). The chain with two methyls is not worth its packing search on this
@@ -2354,7 +2440,11 @@ that methyl across, potential only), and `..._free_m0p` and `..._free_m2m` (the 
 the other way round, and the other methyl; potential only); `urea1_tt_x1_kink3r5.path.xyz` and
 `urea1_tt_x1_kink3r5_swing_turned_3_c0{p,m}.path.xyz`, the plain chain's five-chain row, and
 the same three with `urea1_tt_x1_s50` for the slid crystal's (potential only); the slid
-crystal itself is `urea1_tt_x1_s50` in `chain_triage.json` and `chain_triage_cells.extxyz`).
+crystal itself is `urea1_tt_x1_s50` in `chain_triage.json` and `chain_triage_cells.extxyz`;
+the maps of the facings are under `facings` in `chain_triage.json`, one record a cell
+(`urea1_tt_x1_g120`: sheets 1.2 times as far apart), every start with its rigid and resting
+energies in eV, its resting facing, its hydrogen bonds and its stress in GPa; and
+`urea1_tt_x1_g120_kink3r5.path.xyz` is the spread five-chain row's two whole states).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 

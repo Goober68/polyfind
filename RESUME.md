@@ -1180,16 +1180,50 @@ right": true at one registry, not along it).
         nearly a lattice of three like directions: along the row 4.61 A at 0 degrees, to the
         next sheet 4.30 A at 66, and the other diagonal 4.89 A at 126. So WITH ROOM THE CHAIN
         HAS MORE THAN TWO WAYS TO FACE, each bonded, a sixth to a third of a turn apart.
-        RUNNING WHEN THIS WAS WRITTEN: THE MAP OF THOSE WAYS IN DFT ON THE 9-ATOM CELL (all
-        chains turned together, a rigid turn then the atoms relaxed, the cell held):
-        `/opt/dft/triage/orient_map.py urea1_tt_x1 1.2 0 15 30 ... 180`, run from the
-        repository; log `log_urea1_orient_g120.txt`; results
-        `work/urea1_tt_x1_orient_g120/orient.json` (rigid energy, resting energy and facing,
-        H..O bonds; finished angles are kept). READ: which facings are resting places, how
-        far apart in energy a repeat, and the rigid turn's hump between them (an upper mark,
-        for every chain at once). THEN the same at 1.1 and 1.3, THEN the spread row's first
-        urea (`swing ... --names urea1_tt_x1_g120 --rows 5 --long 3 --start turned_3
-        --carbonyl 0 --by 180 --way p,m --images 13`) and DFT on it.
+        THE MAP OF THOSE WAYS IN DFT (17:45 UTC; 6.3 READINGS 36 TO 40; 9-atom cell, sheets
+        3.94 A apart, every chain turned together, a rigid turn then the atoms relaxed, the
+        cell held). NOW A COMMAND: `chain_triage.py facings --frames /opt/dft/triage --names
+        urea1_tt_x1 --by 1.2 --angles 0,15,30,45,60,75,90,120,135,150,165` (record
+        `urea1_tt_x1_g120.facings.json`, runs in `work/urea1_tt_x1_g120_facings/`, 15 minutes
+        an angle, an angle on a ridge up to 30; finished angles are kept; `table` gathers the
+        records under `facings`; `orient_map.py` is superseded). THREE RESTING PLACES, kcal/mol
+        a repeat: bonded along the row (facing -2) 0.00; along the diagonal (+128) +1.27; up
+        the stack (+55) +2.87; each has its opposite half a turn on (the start at +165 came
+        to +178 at 0.00). Rigid turns (every chain at once, upper marks, above the row
+        state): 6.8 at +30, 8.7 at +90, 4.3 at +150. STRESS LEFT ON THE HELD CELL, less the
+        row state's: the diagonal state +2.42 GPa at 138 degrees from the row, the stack
+        state -5.40 GPa at 67 (2400 and 5400 pN/nm2; the film's rows have 7.6 to 10; NOT the
+        same quantity: a perfect crystal switching whole against a clamp, in a cell no
+        molecule makes). The field's work on a 50 degree turn at 55 V/um is 0.08 to 0.18
+        kcal/mol a repeat (arithmetic on 6.1), so in this cell the two states (1.27 apart)
+        are not within its reach. A PARTIAL RESULT: the spring, not the activation.
+        WHAT IS THOUGHT AND NOT YET SHOWN (mine): how level the row and diagonal states are
+        is the cell's shape. With the sheets 1.0935 times as far apart (3.590 A) the row's
+        edge and the diagonal are the same length (4.609 A) and the cell is its own mirror
+        image across the second edge, so the two should be level and the midpoint between
+        them (start +158) the top by symmetry. And in a crystal free to change shape the
+        diagonal state should become the crystal itself with its bonds along the other edge
+        (mirror image): level exactly, the cell differing by -6.7% and +7.2% (arithmetic on
+        the crystal's cell; the stack state -22% and +28%).
+        RUNNING WHEN THIS WAS WRITTEN (started 17:40 UTC): `facings --frames /opt/dft/triage
+        --names urea1_tt_x1 --by 1.0935 --angles 0,139,158,60` (log
+        `log_urea1_facings_g109.txt`, record `urea1_tt_x1_g109.facings.json`). READ: are the
+        row and diagonal states level; where does the start at +158 sit and which way does
+        it fall (its energy while it is still near +158 is the top for every chain at once).
+        THEN THE DIAGONAL STATE WITH ITS CELL LET GO: `facings ... --by 1.2 --angles 120
+        --let-go 128` writes `urea1_tt_x1_g120_fp128.start.xyz`; `dft --frames
+        /opt/dft/triage --names urea1_tt_x1_g120_fp128` relaxes it with the cell free (9
+        atoms, 20 to 40 minutes); `table` then prints its energy above the crystal and its
+        cell against the crystal's edge for edge (`stretches`): THE STROKE.
+        THEN THE ACTIVATION, which needs a long cell: a wall between a part bonded along the
+        row and a part bonded along the diagonal, and one chain's turn of 50 degrees beside
+        it. NOT BUILT: `kink` makes halves a half turn apart along the row's edge; this wants
+        columns of chains along the diagonal (a cell whose second edge is the diagonal, the
+        same lattice) with some columns turned 50 degrees (`spun`). In the potential first,
+        then DFT on its cells (135 atoms, 25 minutes each).
+        The spread five-chain row's first urea (`swing ... --names urea1_tt_x1_g120 --rows 5
+        --long 3 --start turned_3 --carbonyl 0 --by 180 --way p,m --images 13`) has NOT been
+        run: its halves are bonded along different edges and it is no longer the question.
         (v) The plain chain the same way (`--names
         urea1_tt_x1 --rows 5 --long 3`, 135 atoms) for a like comparison. After those: the
         long way round, the ends in DFT's own structures (`points --relax`; a stopped
