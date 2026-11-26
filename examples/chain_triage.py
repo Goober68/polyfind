@@ -610,6 +610,43 @@ def polar_facing(a):
     return a.positions[o] - a.positions[c]
 
 
+def way_across(a):
+    """The way a cell's one chain points across its axis: its first carbonyl, C to O, or, in a chain
+    without one, from the middle of its hydrogens to the middle of its fluorines (None with neither).
+
+    It is what a chain's facing is counted from and with (``faces_at``) where the chain has no
+    carbonyl: PVDF's dipole lies along it."""
+    symbols = np.array(a.get_chemical_symbols())
+    if "O" in symbols:
+        return polar_facing(a)
+    if "F" in symbols and "H" in symbols:
+        from ase.geometry import find_mic
+
+        d = find_mic(a.positions - a.positions[0], a.cell.array)[0]  # the chain whole, whichever copies the file has
+        return d[symbols == "F"].mean(axis=0) - d[symbols == "H"].mean(axis=0)
+    return None
+
+
+def faces_at(a, along, reference):
+    """Which way a cell's one chain faces, in degrees about its axis, counted from ``reference`` (``way_across``)."""
+    v = way_across(a)
+    v = v - (v @ along) * along
+    ref = reference - (reference @ along) * along
+    return float(np.degrees(np.arctan2(np.cross(ref, v) @ along, ref @ v)))
+
+
+def whole_in_place(a):
+    """A cell of one chain with every atom moved to the copy nearest the first, so that the chain is in one piece across its axis.
+
+    A turn about the chain's own axis (``spun``) needs it so; along the chain a period's atoms may still be either side of the first."""
+    from ase.geometry import find_mic
+
+    b = a.copy()
+    b.info.update(a.info)
+    b.positions = b.positions[0] + find_mic(b.positions - b.positions[0], b.cell.array)[0]
+    return b
+
+
 def etherified(row, part, per_repeat: int, which):
     """A row cell with chosen N-H groups of one chain made O: each gives one hydrogen bond fewer and takes no room.
 
@@ -1350,7 +1387,9 @@ def facings(args):
         base.info.update(a.info)
         base.info["kmesh"] = kmesh(base)
         along = base.cell.array[2] / np.linalg.norm(base.cell.array[2])
-        reference = polar_facing(rebased(a))
+        reference = way_across(rebased(a))
+        if "O" not in a.get_chemical_symbols():
+            base = whole_in_place(base)  # a chain without hydrogen bonds was never rebased, and may lie across the cell's faces
         frame = row_frame(base.cell.array)
         tag = name if args.by == 1.0 else f"{name}_g{round(args.by * 100)}"
         work = src / "work" / f"{tag}_facings"
@@ -1375,7 +1414,7 @@ def facings(args):
                     continue
                 b = mirrored_chain(read(work / f"{run_of(asked)}.xyz"), base.cell.array[1], along)
                 b.info.update(base.info)
-                angle = [float(v) for v in facing(b, slice(0, len(b)), along, reference)][0]
+                angle = faces_at(b, along, reference)
             else:
                 angle = asked
                 b = base.copy()
@@ -1394,7 +1433,7 @@ def facings(args):
             write(work / f"{run_tag}.xyz", c, format="extxyz")
             record["states"].append({
                 "start_degrees": angle, "run": run_tag, **({"mirror_image_of_the_rest_from": asked} if mirrored else {}), "rigid_ev": first, "rest_ev": energy,
-                "rest_facing_degrees": [float(v) for v in facing(c, slice(0, len(c)), along, reference)][0],
+                "rest_facing_degrees": faces_at(c, along, reference),
                 "hydrogen_bonds": hydrogen_bonds(c), "stress_gpa": (frame @ stress @ frame.T * 160.21766).tolist(),
                 "whole": bool(whole(c, CHAINS[str(a.info["triage_chain"])]))})
             store.write_text(json.dumps(record, indent=1))

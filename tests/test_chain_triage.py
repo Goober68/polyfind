@@ -499,6 +499,25 @@ def test_two_states_are_numbered_alike_by_what_moves_their_methylene_hydrogens_l
     assert last.positions == pytest.approx(kept)
 
 
+def test_a_chain_without_a_carbonyl_faces_from_its_hydrogens_to_its_fluorines():
+    from ase import Atoms
+
+    z = np.array([0.0, 0.0, 1.0])
+    cell = np.diag([5.0, 5.0, 2.6])
+    # fluorines on +x, hydrogens on -x; one fluorine written a cell away, as a packing search may leave it
+    a = Atoms("CCFFHH", positions=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.2], [1.1, 0.8, 0.0], [1.1 - 5.0, -0.8, 0.0], [-0.6, 0.7, 1.2], [-0.6, -0.7, 1.2]], cell=cell, pbc=True)
+    way = CT.way_across(a)
+    assert way[:2] == pytest.approx([1.7, 0.0])
+    assert CT.faces_at(a, z, np.array([1.0, 0.0, 0.0])) == pytest.approx(0.0)
+    w = CT.whole_in_place(a)
+    assert w.positions[3] == pytest.approx([1.1, -0.8, 0.0]) and w.positions[[0, 1, 2, 4, 5]] == pytest.approx(a.positions[[0, 1, 2, 4, 5]])
+    CT.spun(w, len(w), 0, np.radians(60.0), z)
+    assert CT.faces_at(w, z, np.array([1.0, 0.0, 0.0])) == pytest.approx(60.0)
+    # with a carbonyl it is the carbonyl
+    b = Atoms("COH", positions=[[0.0, 0.0, 0.0], [0.0, 1.2, 0.0], [0.5, -0.9, 0.0]], cell=cell, pbc=True)
+    assert CT.way_across(b) == pytest.approx([0.0, 1.2, 0.0]) and CT.faces_at(b, z, np.array([1.0, 0.0, 0.0])) == pytest.approx(90.0)
+
+
 def test_the_row_frame_is_square_with_the_chain_and_the_row_for_axes():
     cell = np.array([[4.6, 0.0, 0.3], [1.7, 3.3, 0.2], [0.0, 0.0, 4.7]])
     frame = CT.row_frame(cell)
