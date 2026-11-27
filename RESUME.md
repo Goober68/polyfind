@@ -1471,6 +1471,27 @@ right": true at one registry, not along it).
         t3,k1,k2,t2`, `points` on the four (21 minutes each in DFT): k1 above t3 is the pair
         of kinks. Then `hop --stems k1,k2` for a kink moving one repeat. That gives the
         rate a long chain's step has, which nothing so far does.
+        07:10 UTC: PVDF'S WALL STEP IN DFT IS 2.32 kcal/mol A MONOMER (0.00 0.02 0.79 1.79
+        2.32 2.00 0.97 0.06 0.00; the potential 2.94): 0.90 an angstrom of chain against the
+        urea chain's 0.61. READINGS 69 AND 70 (the two crystals side by side) WRITTEN,
+        `table` RUN, PATH FILES COPIED, PUSHED (ebfddf8); the PI has the side-by-side.
+        RUNNING, TWO JOBS SHARING THE CORES (both go on from where they stopped when given
+        again): (1) DFT `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2a --np 4`
+        (step 6 at 07:02; `log_urea1_twin_free.txt`, last line `w1r2a exit`; then `table`
+        tells it against the crystal: that is the wall's cost with its own room, to go into
+        reading 64/65 in place of "an upper mark"). (2) the potential, two threads: `over
+        --frames /opt/dft/triage --names urea1_tt_x1_w2h --rows 5 --long 3 --stems t3,t2
+        --repeats 0 --stem k1 --of urea1_tt_x1 --fmax 0.05 --steps 400`, then `--repeats
+        0,1 --stem k2` (`log_urea1_twin_over.txt`, last line `over exit`). The long states
+        are built (`log_urea1_twin_long.txt`): t3 -107588.33482 eV, t2 -107588.32377 (0.25
+        kcal/mol apart for the cell; they are one structure, so that is the stop's slack).
+        WHEN `over` ENDS: `gather --frames /opt/dft/triage --names urea1_tt_x1_w2h --rows 5
+        --long 3 --stems t3,k1,k2,t2`, then (alone on the machine) `points --frames
+        /opt/dft/triage --names urea1_tt_x1_w2h_kink3r5_states_t3-k1-k2-t2 --np 4` (135
+        atoms, 21 minutes each). k1 above t3 is the pair of kinks one repeat apart, k2 the
+        same two repeats apart by the other side. THEN `hop --names urea1_tt_x1_w2h --rows
+        5 --long 3 --stems k1,k2 --images 9` (a kink moving one repeat; about 45 s a step
+        alone on the machine) and `points` on it (9 x 21 minutes).
         THE QUEUE AS IT WAS FIRST SET (03:30 UTC), kept for the commands:
         (2) NOW: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
         wall-at-every-chain cell with its cell let go; start file by the new `release
