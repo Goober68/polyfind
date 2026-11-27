@@ -1400,8 +1400,47 @@ right": true at one registry, not along it).
         kcal/mol for one monomer of the wall chain (`pvdf_tt_x1_w2h_kink1r5_hop_t3-t2`).
         THE QUEUE WAS GIVEN AGAIN AT 04:08 UTC as two background jobs with the commands
         below (the second waits for `relax12 exit` in `log_pvdf_twin_dft.txt`).
-        RUNNING WHEN THIS WAS WRITTEN (03:30 UTC), background jobs, each waits for the one
-        before by its log's last line:
+        04:50 UTC, WHERE IT STANDS (this replaces the queue described below):
+        (i) THE FULLY FREE CELL IS NOT THE WALL'S COST AND IS PARKED. `dft --names
+        urea1_tt_x1_w1r2` was followed 67 steps (two legs, `relax.stopped0.out` and
+        `relax.out` in `work/urea1_tt_x1_w1r2`), stopped by me at -249.659821 Ry, +0.65 a
+        repeat and still falling 0.02 in ten steps: the second edge leans along the third
+        (91.5 to 101.0 degrees, the sheets sliding along the chains), which a wall between
+        thick parts cannot do. It is a question about a two-chain packing. Goes on with the
+        same command (it starts from the last structure). READINGS 64 AND 65 WRITTEN AND
+        PUSHED (4fae332): 64 says this; 65 is the target's terms with a wall that costs
+        (the field makes no walls under 7 to 8 chains thick; the defect that makes or holds
+        a wall is NOT LOOKED FOR YET). Reading 62 points at 65.
+        (ii) THE WALL'S OWN ROOM: `release --free epitaxial_bc` (1572b01) frees the first
+        edge only (this build's `cell_dofree = 'epitaxial_bc'`: "fix axis 2 and 3 while
+        allowing axis 1 to move"). Start files written: `urea1_tt_x1_w1r2a` (18 atoms),
+        `urea1_tt_x1_w2r4a` (36 atoms). NOT RUN YET: `dft --frames /opt/dft/triage --names
+        urea1_tt_x1_w1r2a --np 4`, then `table`. Check in the output that the second and
+        third edges did not move.
+        (iii) PVDF'S CRYSTAL TURNED THROUGH ITS FACINGS, DFT, DONE (04:46 UTC,
+        `pvdf_tt_x1.facings.json`, `table` run and pushed): kcal/mol a monomer, cell held:
+        0 0.00, 30 3.12, 60 +0.12, 90 3.14, 120 +0.11, 150 3.13, 180 0.00. Resting places
+        every 60 degrees, the hump for every chain going together 3.1 (the tops are kept by
+        symmetry). The 60 place leaves 0.3 to 0.7 GPa on the held cell. Its start with the
+        cell free is written (`pvdf_tt_x1_fp060.start.xyz`, `facings --let-go 60`): NOT RUN
+        YET, `dft --frames /opt/dft/triage --names pvdf_tt_x1_fp060 --np 4` (6 atoms, minutes).
+        (iv) RUNNING (one background job, ends by itself): `points --frames /opt/dft/triage
+        --names pvdf_tt_x1_kink1r2_states_rr,pvdf_tt_x1_w1_kink1r2_states_t1 --relax --np 4`
+        (PVDF's plain two-chain cell and a wall at every chain, 12 atoms each; log
+        `log_pvdf_twin_dft.txt`, last line `relax12 exit`).
+        (v) THEN, IN THIS ORDER, each by hand when the one before ends (a background job
+        lives two hours at most, counted from its start, so do not chain them behind
+        waits): `dft --names pvdf_tt_x1_fp060`; `points --names
+        pvdf_tt_x1_w2h_kink1r5_hop_t3-t2 --np 4` (PVDF's wall step, nine cells of 30 atoms);
+        `dft --names urea1_tt_x1_w1r2a`; `points --names pvdf_tt_x1_w2_kink1_states_t2
+        --relax` (24 atoms); `dft --names urea1_tt_x1_w2r4a`; the parked run of (i).
+        (vi) THEN WRITE PVDF BESIDE THE UREA CHAIN AS READINGS 66 ON (the twin's shear 5.7%
+        against 14%, 0.19 against 0.47 C/m2, the same bound on stress 182 against 184
+        pN/nm2; every chain together 3.1 a monomer against 5.5 a repeat; the wall's step
+        2.94 in the potential against the urea's 4.99 potential and 2.90 DFT; the wall's
+        cost when DFT has it), run `table`, copy the new path files to
+        `docs/predictions/chain_triage_paths/`, and report to the PI.
+        THE QUEUE AS IT WAS FIRST SET (03:30 UTC), kept for the commands:
         (2) NOW: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
         wall-at-every-chain cell with its cell let go; start file by the new `release
         --name urea1_tt_x1_w1_kink1r2_states_t1 --out urea1_tt_x1_w1r2 --of urea1_tt_x1`;
