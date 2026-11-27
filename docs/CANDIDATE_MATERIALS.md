@@ -2752,6 +2752,61 @@ is left with in the wall's frame, kbar, positive where the cell wants to grow:
     walls. Still a partial result, for reading 62's reasons, and now also because the defect
     that would make the wall is not identified.
 
+*PVDF's own crystal by the same readings, the like baseline* (`facings --names pvdf_tt_x1`,
+`domains --names pvdf_tt_x1 --twin`, `gather`, `points --relax`, `hop`; 2026-11-27). The standing
+rule sets a defect-free crystal of another chain beside PVDF's defect-free crystal and never
+beside the film. PVDF's one-chain cell of 6.1 has edges 4.878 and 4.885 A at 121.6 degrees with
+the dipole (0.194 C/m2) along their sum, 4.760 A: 3.4% off hexagonal in PBE-D3. Every chain
+turned together about its axis and relaxed in DFT with the cell held, kcal/mol a monomer:
+
+| every chain turned by, degrees | 0 | 30 | 60 | 90 | 120 | 150 | 180 |
+|---|---|---|---|---|---|---|---|
+| rests at | 0.00 | 3.12 | +0.12 | 3.14 | +0.11 | 3.13 | 0.00 |
+
+The places at 30, 90 and 150 are the tops between resting places, kept there by symmetry (a
+start on a mirror line does not leave it). And PVDF's twinned cells, DFT's own relaxation with
+the cell held, as reading 63's:
+
+| cell (one monomer long) | the potential | DFT on the potential's structure | DFT's own atoms, the cell held | for a monomer of one wall | stress left: across the wall, along it, along the chains, kbar |
+|---|---|---|---|---|---|
+| plain, two chains (the control) | 0.00 | 0.00 | 0.00 against the one-chain crystal | | 0.0, 0.0, -0.1 |
+| a wall at every chain, two chains | -1.00 | +0.44 | +0.21 | 0.21 | +2.0, +2.5, +0.1 |
+
+66. *PVDF's crystal has the same kind of twin, with 0.4 of the shear and of the polarisation,
+    and the same bound on stress.* It rests every 60 degrees, and the crystal with its chains
+    turned 60 is the crystal's twin: half a turn about the normal of the plane of the second
+    and third edges, as for the urea chain. Chains follow one another by 4.760 A in the twin
+    against 4.878, 0.235 A different along the wall with the chains 4.153 A apart across it:
+    5.7% of shear for each chain that goes over (the urea chain 14%), the dipole turned 58
+    degrees, and 0.19 C/m2 between the two sides along the wall (0.47). A field of 55 V/um
+    along the wall does 10 MJ/m3 between them, 0.08 kcal/mol a monomer (26, and 0.27 a
+    repeat), and over the shear that is 182 pN/nm2 against the urea twin's 184: THE SAME
+    BOUND ON STRESS, AND 2.5 TIMES THE STROKE AND THE WORK IN THE UREA CHAIN. Both are my
+    arithmetic on perfect crystals in PBE-D3's lattices and neither is a material's blocked
+    force. Measured PVDF is nearer hexagonal than PBE-D3 has it (from memory and not checked:
+    a 8.58, b 4.91 A, 0.9% off, which would be 1.5% of shear), so the real crystal's twin
+    shears less than 5.7%; the urea chain's cell has no measurement to be set against.
+67. *Every chain going over together: 3.1 a monomer in PVDF, 5.5 a repeat in the urea chain
+    (reading 46).* A monomer is 2.58 A of chain and a repeat 4.72, so for a length of chain
+    the two are alike (1.2 kcal/mol an angstrom each); for a volume the urea chain's is a
+    third higher. PVDF's turned place is 0.12 above in a cell held to the plain crystal's,
+    the price of its 3.4%, and leaves 0.3 to 0.7 GPa on that cell.
+68. *PVDF's wall costs a quarter of the urea chain's.* The control rests on the one-chain
+    crystal (0.0001 a monomer). With a wall at every chain the cell stays twinned (the chains
+    62 degrees apart) and rests 0.21 a monomer above the crystal: 0.21 for a monomer of wall,
+    11 mJ/m2 against the urea chain's 36 to 42. The potential had this cell 1.00 BELOW the
+    crystal and DFT on the potential's structure 0.44 above: for PVDF the potential has the
+    sign of a wall wrong outright, as it had the urea chain's. A slab of twin n chains thick
+    gains 0.08 n a monomer at 55 V/um and pays 0.41 for its two walls, so it breaks even five
+    or six chains thick, where the urea chain's needs seven or eight (reading 65): alike.
+    The urea chain's wall is held four times as hard for its area, which is the hydrogen
+    bonds, and the field's work on it is 2.5 times as much.
+69. *PVDF's wall step: 2.94 a monomer in the potential; DFT on its nine cells is running.* The
+    band between a wall and the same wall one chain on, five chains wide in the cell between
+    the two (`hop --names pvdf_tt_x1_w2h --rows 5 --long 1 --stems t3,t2 --images 9`): 0.00
+    0.45 1.48 2.47 2.94 2.57 1.48 0.41 0.00. The urea chain's was 4.99 in the potential and
+    2.90 in DFT, so the potential's number is not to be set beside a DFT one.
+
 **Not done.** For the twin: the wall's cost with the first edge free (`release --free
 epitaxial_bc`, queued; reading 64); the fully free two-chain cell to its end, which is a
 question about another packing; a defect in the chain that makes or holds a wall (reading 65);
@@ -2760,8 +2815,9 @@ the wall chain, the step of a long chain (135 atoms at three repeats: the band b
 cell's two wall states, now that bands keep a chain whole, or a state with one repeat over put
 together from the two); the hump's top in DFT's own structures; the twinned cell's polarisation
 by Berry phase in place of reading 53's arithmetic; walls further apart than three chains; the
-same wall in the amide chain of 6.1; and PVDF's crystal by the same readings (`facings --names
-pvdf_tt_x1`, then its twin). For the level pair: the step of one urea of one chain beside a wall between a part
+same wall in the amide chain of 6.1; and for PVDF's crystal, DFT on its wall's step (running),
+its 60-degree place with the cell let go (`pvdf_tt_x1_fp060`, running), walls further apart, the
+120 and 180 degree walls, and a kink along its wall chain. For the level pair: the step of one urea of one chain beside a wall between a part
 bonded along the row and a part bonded along the diagonal, which is the activation that counts
 and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`; its two states
 are being settled in the potential); the top in DFT's own structures; the same pair in a cell
