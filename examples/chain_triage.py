@@ -2355,6 +2355,14 @@ def table(args):
                   f"{' '.join(f'{v:+.2f}' for v in q['kcal_per_turning_repeat'])} kcal/mol for the cell (DFT on the potential's cells; "
                   f"the potential {' '.join(f'{v:+.2f}' for v in q['potential_kcal_per_turning_repeat'])})")
             continue
+        if q.get("unit") == "kcal/mol for the cell" and "_states_" in q["name"]:
+            # states put in one file to be read (``gather``): not a way from one to the next
+            stems = q["name"].split("_states_")[1].replace(".dft", "").split("-")
+            print(f"{q['name']:20s} states of {q['of']}, each read in DFT: "
+                  + " ".join(f"{s} {e:.5f} eV" for s, e in zip(stems, q["energy_ev"]))
+                  + (f"; kcal/mol for the cell above the first {' '.join(f'{v:+.2f}' for v in q['kcal_per_turning_repeat'])}" if len(stems) > 1 else "")
+                  + (" (DFT's own relaxation of each)" if q["name"].endswith(".dft") else " (DFT on the potential's states)"))
+            continue
         if q.get("unit") == "kcal/mol for the cell":
             print(f"{q['name']:20s} a band between two states of {q['of']}: top {q['top_kcal_per_turning_repeat']:.2f} kcal/mol for the cell, "
                   f"end {q['kcal_per_turning_repeat'][-1]:+.2f} (DFT on the potential's band)")

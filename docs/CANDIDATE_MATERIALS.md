@@ -2588,7 +2588,115 @@ repeat of that chain, kcal/mol above the first cell:
     run again. The nine-cell band of reading 46 was not affected: no bond changes by more than
     0.02 A in any of its cells (0.03 in this band's).
 
-**Not done.** For the level pair: the step of one urea of one chain beside a wall between a part
+*The crystal's own twin, with nothing held apart* (`domains --twin`, `gather`, `hop`, `points`;
+2026-11-27). Everything from reading 41 to here is in a cell whose sheets are held 9% further
+apart than the crystal has them, because only there do the two orientations fit one lattice. They
+do not have to fit one lattice. The second orientation is the crystal turned half a turn about
+the normal of the plane of its second and third edges; that half turn takes those two edges to
+their opposites, so the turned lattice has the same points in that plane and the two meet along
+it with no misfit. The plane is the wall and each side is the crystal as it packs. Cells of two
+to five chains, some crystal and the rest twin, relaxed in the potential with the cell held and
+each read once in DFT at the potential's structure. Kcal/mol a repeat against the plain
+five-chain cell:
+
+| cell (one repeat long) | chains' carbonyls face, a wall marked | the potential | DFT |
+|---|---|---|---|
+| plain, five chains | +4 each | 0.00 | 0.00 |
+| plain, two chains (a check on the k mesh) | +4 +4 | 0.00 | +0.01 |
+| no wall, chains facing alternately, two | -9 +13 | -0.32 | +0.09 |
+| no wall, four started -8 8 8 -8 | +10 +9 +11 -19 | -0.42 | +0.25 |
+| a wall at every chain, two chains | +1 / -48 | -0.12 | -0.09 |
+| two crystal and two twin | +1 +6 / -50 -52 | -0.76 | -0.50 |
+| two crystal and three twin | -8 +10 / -32 -57 -58 | -0.75 | -0.16 |
+| three crystal and two twin | -14 +10 +10 / -41 -56 | -0.75 | -0.21 |
+
+58. *The twin's geometry, and the shear a chain makes by going over.* Chains follow one
+    another by 4.609 A in the crystal and by 4.375 A in the twin (the crystal's diagonal), and
+    the two steps differ by 0.576 A along the wall. The chains are 4.083 A apart across the
+    wall, so each chain that goes over shears the cell by 0.576 in 4.083, 14%, with no change of
+    volume: reading 49's two stretches (6.0 and 7.1%) are that shear. The twin's carbonyl is
+    47 degrees from the crystal's.
+59. *No twinned cell is above the plain crystal in DFT.* Four cells, 0.09 to 0.50 a repeat
+    below it; for the five-chain cells that is 0.8 and 1.0 for the cell, 0.4 and 0.5 for a
+    repeat of each of its two walls. It is not the potential's taste for uneven facings coming
+    through: the two cells without a wall that the potential puts below the plain crystal, DFT
+    puts above it. But these are single points on the potential's structures, and the
+    potential's structure of the plain crystal is itself 1.59 a repeat above DFT's own crystal
+    (the two-and-two cell as read is still 1.09 above it). The two readings do not even order
+    the cells alike (the potential has two-and-two level with the five-chain cells, DFT has it
+    0.3 below them). And the last two rows are one structure: two crystal and three twin IS
+    three crystal and two twin seen from the other side, so the 0.23 for the cell between them
+    in DFT (0.02 in the potential) is this reading's own scatter, and so is the "wall one chain
+    on" of readings 52 and 55, whose two states are mirror images in that cell's lattice. So: a
+    wall in the crystal as it packs costs nothing to a few tenths a repeat, as in the open cell
+    (reading 52), and where it stands costs nothing at all. Whether the crystal WANTS walls, which would make
+    section 6.1's one-chain crystal not this chain's ground state, is open until DFT has relaxed
+    a twinned cell itself.
+
+*The wall's step in the crystal as it packs* (`domains --twin 3 --told-for 2.5 --stem t3`,
+`--twin 2 --told-for 2.5 --stem t2`, `hop --names urea1_tt_x1_w2h --stems t3,t2 --images 9`,
+`points`). A wall one chain on is a cell of another shape (reading 58), so the two states are
+set in the cell half way between, each 0.7% of shear from its own. Nine cells of 45 atoms, DFT on
+each, kcal/mol for one repeat of the wall chain:
+
+| cell | the wall chain's carbonyl faces | its methylene carbon off its ureas' plane, A | its hydrogens to the next chain's oxygen, A | the potential | DFT |
+|---|---|---|---|---|---|
+| 0, the wall before it | -31 | +0.46 | 1.94, 1.96 | 0.00 | 0.00 |
+| 1 | -27 | +0.42 | 1.96, 1.98 | +0.37 | +0.11 |
+| 2 | -21 | +0.35 | 2.00, 2.05 | +1.45 | +0.69 |
+| 3 | -14 | +0.24 | 2.10, 2.31 | +3.77 | +1.98 |
+| 4, the top | -6 | +0.10 | 2.29, 2.35 | +4.99 | +2.90 |
+| 5 | -2 | -0.10 | 2.14, 2.28 | +4.15 | +2.71 |
+| 6 | +4 | -0.31 | 2.04, 2.08 | +1.49 | +0.65 |
+| 7 | +8 | -0.44 | 1.99, 2.01 | +0.28 | -0.13 |
+| 8, the wall behind it | +9 | -0.51 | 1.97, 1.97 | -0.02 | -0.22 |
+
+60. *The wall's step is 2.9 kcal/mol a repeat in DFT in the crystal as it packs.* Lower than in
+    the cell held open (3.70) and about half of what the crystal pays a repeat to go over whole
+    (5.50). The room held open by hand was what let a whole crystal's two orientations share a
+    lattice; a wall does not need it. The wall chain turns 40 degrees with its methylene carbon
+    crossing its ureas' plane, never further than 2.35 A from the oxygen it is taking hold of,
+    and the chain after it turns 15 degrees as it becomes the chain beside the wall. At 10^13 tries a second 2.9 is 8 x 10^10 a
+    second for one repeat; two repeats going as one (5.8) are 6 x 10^8, and the mark for tens of
+    MHz (7.6) is between two and three.
+61. *What that number is and is not.* As reading 56: a chain going over all along its length at
+    once, counted for one repeat; DFT on the potential's cells (the potential is 2.1 above DFT
+    at the top) and DFT's own top not found; five chains wide, so the two walls are two and
+    three chains apart and each feels the other. What a kink along the wall chain costs, which
+    is what a long chain's step would be, has not been read.
+62. *On the target's terms.* A chain WITH its defect, the defect being a wall between the
+    crystal and its twin. Strong action: 14% of shear from each chain the wall passes, and
+    0.47 C/m2 between the two sides along the wall (reading 53), so a field of 55 V/um along
+    the wall does 26 MJ/m3 between them, 0.27 kcal/mol a repeat; a stress against that shear
+    undoes the same work at 26/0.14 = 184 MPa, 184 pN/nm2, which is the most stress a field of
+    that size could move a free wall against (my arithmetic on PBE's polarisation, an upper
+    mark). Low activation: the two sides are the same crystal, level by symmetry and not by a
+    balance of unlike states, and a wall one chain on is the same wall; the hump is 2.9 a
+    repeat of the chain that steps (3.1 from the other side, which by symmetry is the same
+    hump: the difference is the reading's scatter). Easy return: the hump is
+    the same both ways, and nothing brings a wall back by itself, since level sides do not
+    pull: it comes back when the field is turned round or by what it was working against.
+    NOT A CANDIDATE YET, and by the standing rules a partial result. There is no loss, no
+    frequency, and no force or speed on one modulus under one heat budget; the 184 is a
+    perfect crystal's bound from the field's work, not a stiffness times a strain, and it is
+    not to be set beside the film's 7.6 to 10, which is an AC number on an assumed modulus
+    under an assumed heat budget. The kink is not read, so no rate is. The field has to lie
+    along the wall, across the chains and 62 degrees from the hydrogen bonds' row. A crystal
+    that shears 14% has to be let, by what is round it. PVDF's own crystal has not been put
+    through the same readings, and until it has this stands beside nothing: the like
+    comparison is PVDF's defect-free crystal and its twins, not the film. And whether the
+    chain can be had as a crystal at all is not looked into here (it is the linear chain of
+    urea and formaldehyde; from memory and not checked, its short oligomers crystallise and
+    the resin is branched).
+
+**Not done.** For the twin: DFT's own relaxation of a twinned cell, which decides whether the
+crystal wants walls (reading 59; the two smallest are running, `points --relax`); a kink along
+the wall chain, the step of a long chain (135 atoms at three repeats: the band between the long
+cell's two wall states, now that bands keep a chain whole, or a state with one repeat over put
+together from the two); the hump's top in DFT's own structures; the twinned cell's polarisation
+by Berry phase in place of reading 53's arithmetic; walls further apart than three chains; the
+same wall in the amide chain of 6.1; and PVDF's crystal by the same readings (`facings --names
+pvdf_tt_x1`, then its twin). For the level pair: the step of one urea of one chain beside a wall between a part
 bonded along the row and a part bonded along the diagonal, which is the activation that counts
 and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`; its two states
 are being settled in the potential); the top in DFT's own structures; the same pair in a cell
@@ -2644,7 +2752,20 @@ place; `urea1_tt_x1_g109_kink1r1_hop_r-da.path.xyz` is the band between its two 
 `urea1_tt_x1_g109_fp138` in `chain_triage.json` and `chain_triage_cells.extxyz` is the level
 diagonal state with its cell let go, with `stretch_from_parent`), every start with its rigid and resting
 energies in eV, its resting facing, its hydrogen bonds and its stress in GPa; and
-`urea1_tt_x1_g120_kink3r5.path.xyz` is the spread five-chain row's two whole states).
+`urea1_tt_x1_g120_kink3r5.path.xyz` is the spread five-chain row's two whole states). For the
+wall (readings 51 to 62), all in `chain_triage_paths/` with their DFT energies under `paths` in
+`chain_triage.json`: `urea1_tt_x1_g109_kink3r5_states_rrddd-rrrdd-rrrrr` (the long open cell's
+two wall states and its all-rows state; a file named `..._states_...` is states put together to
+be read, not a way from one to the next, and `table` prints each one's energy in eV);
+`urea1_tt_x1_g109_kink3r5_swing_rrddd_c0p` (one urea turned alone, the potential only);
+`urea1_tt_x1_g109_kink1r5_hop_rrddd-rrrdd` (the wall's step in the open cell, nine cells);
+`urea1_tt_x1_kink1r5_states_rrrrr`, `urea1_tt_x1_kink1r2_states_rr-alt` and
+`urea1_tt_x1_kink1_states_alt-pairs` (the plain crystal as five and as two chains, and the two
+uneven cells without a wall); `urea1_tt_x1_w1_kink1r2_states_t1`,
+`urea1_tt_x1_w2_kink1_states_t2`, `urea1_tt_x1_w3_kink1r5_states_t3` and
+`urea1_tt_x1_w2_kink1r5_states_t2` (the twinned cells: `_w<M>` is M chains in the twin, each in
+the cell its own count makes); and `urea1_tt_x1_w2h_kink1r5_hop_t3-t2` (the wall's step in the
+crystal as it packs, nine cells in the cell half way between two and three twin chains).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 

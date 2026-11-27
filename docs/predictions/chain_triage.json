@@ -1221,6 +1221,137 @@
    "unit": "kcal/mol for the cell"
   },
   {
+   "name": "urea1_tt_x1_g109_kink1r5_hop_rrddd-rrrdd",
+   "kind": "path",
+   "of": "urea1_tt_x1_g109_kink1r5",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -8491.779747215858,
+    -8491.78379899127,
+    -8491.766729696848,
+    -8491.694011756985,
+    -8491.619113504797,
+    -8491.63966218312,
+    -8491.75134546752,
+    -8491.780446412426,
+    -8491.784874113138
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    -0.09343616136041377,
+    0.3001911219649326,
+    1.9771066646517659,
+    3.7043014043323566,
+    3.230437621519177,
+    0.6549598808156181,
+    -0.016123856004857124,
+    -0.11822906082126734
+   ],
+   "top_kcal_per_turning_repeat": 3.7043014043323566,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    0.2598562174653066,
+    1.440447782151776,
+    4.032860548411738,
+    5.9155038466787815,
+    4.588590186901746,
+    1.3882170673969418,
+    0.2578666825644502,
+    0.026093206901388853
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_g109_kink3r5_states_rrddd-rrrdd-rrrrr",
+   "kind": "path",
+   "of": "urea1_tt_x1_g109_kink3r5",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -25475.295233216824,
+    -25475.309202181954,
+    -25475.211276294154
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    -0.3221319908816206,
+    1.9360926451647575
+   ],
+   "top_kcal_per_turning_repeat": 1.9360926451647575,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    0.0480431823206406,
+    8.59760459072217
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_kink1_states_alt-pairs",
+   "kind": "path",
+   "of": "urea1_tt_x1_kink1",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -6793.409705539976,
+    -6793.382191427059
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    0.6344905215960533
+   ],
+   "top_kcal_per_turning_repeat": 0.6344905215960533,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    -0.37699716335424927
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_kink1r2_states_rr-alt",
+   "kind": "path",
+   "of": "urea1_tt_x1_kink1r2",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -3396.7120700459623,
+    -3396.705147741415
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    0.1596321362781133
+   ],
+   "top_kcal_per_turning_repeat": 0.1596321362781133,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    -0.6444038566543516
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_kink1r5_states_rrrrr",
+   "kind": "path",
+   "of": "urea1_tt_x1_kink1r5",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -8491.78241787736
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
    "name": "urea1_tt_x1_kink3r5_swing_turned_3_c0p",
    "kind": "path",
    "of": "urea1_tt_x1_kink3r5",
@@ -1460,6 +1591,125 @@
     28.28520340625
    ],
    "ends_only": true
+  },
+  {
+   "name": "urea1_tt_x1_w1_kink1r2_states_t1",
+   "kind": "path",
+   "of": "urea1_tt_x1_w1_kink1r2",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -3396.720777553504
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_w2_kink1_states_t2",
+   "kind": "path",
+   "of": "urea1_tt_x1_w2_kink1",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -6793.512856830274
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_w2_kink1r5_states_t2",
+   "kind": "path",
+   "of": "urea1_tt_x1_w2_kink1r5",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -8491.826986590551
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_w2h_kink1r5_hop_t3-t2",
+   "kind": "path",
+   "of": "urea1_tt_x1_w2h_kink1r5",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -8491.816846267466,
+    -8491.81210386707,
+    -8491.787066126359,
+    -8491.730948764787,
+    -8491.690993061851,
+    -8491.699535668393,
+    -8491.788485200152,
+    -8491.822478480191,
+    -8491.826343449437
+   ],
+   "kcal_per_turning_repeat": [
+    0.0,
+    0.10936235194680116,
+    0.6867463734456581,
+    1.980843483599128,
+    2.9022438890264906,
+    2.7052467008289045,
+    0.6540217541282272,
+    -0.1298819119068988,
+    -0.21901022070238504
+   ],
+   "top_kcal_per_turning_repeat": 2.9022438890264906,
+   "potential_kcal_per_turning_repeat": [
+    0.0,
+    0.37375747548596805,
+    1.451313973464856,
+    3.772785940994595,
+    4.9894519925879415,
+    4.151919132563449,
+    1.4852362822679595,
+    0.28147152295888184,
+    -0.01975774390575112
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_w3_kink1r5_states_t3",
+   "kind": "path",
+   "of": "urea1_tt_x1_w3_kink1r5",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -8491.817130626452
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
   },
   {
    "name": "urea1_tt_x1_wall",
