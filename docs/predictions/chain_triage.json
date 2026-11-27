@@ -1311,6 +1311,28 @@
    "unit": "kcal/mol for the cell"
   },
   {
+   "name": "urea1_tt_x1_kink1r2_states_rr-alt.dft",
+   "kind": "path",
+   "of": "urea1_tt_x1_kink1r2",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -3396.8510862154467
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "images": [
+    0
+   ],
+   "unit": "kcal/mol for the cell"
+  },
+  {
    "name": "urea1_tt_x1_kink1r2_states_rr-alt",
    "kind": "path",
    "of": "urea1_tt_x1_kink1r2",
@@ -1593,6 +1615,25 @@
    "ends_only": true
   },
   {
+   "name": "urea1_tt_x1_w1_kink1r2_states_t1.dft",
+   "kind": "path",
+   "of": "urea1_tt_x1_w1_kink1r2",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -3396.7597799055243
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
    "name": "urea1_tt_x1_w1_kink1r2_states_t1",
    "kind": "path",
    "of": "urea1_tt_x1_w1_kink1r2",
@@ -1600,6 +1641,25 @@
    "turning_repeats": 1,
    "energy_ev": [
     -3396.720777553504
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
+   "name": "urea1_tt_x1_w2_kink1_states_t2.dft",
+   "kind": "path",
+   "of": "urea1_tt_x1_w2_kink1",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -6793.622604704827
    ],
    "kcal_per_turning_repeat": [
     0.0
@@ -1996,6 +2056,214 @@
   }
  ],
  "facings": [
+  {
+   "name": "pvdf_tt_x1",
+   "of": "pvdf_tt_x1",
+   "sheets_apart_times": 1.0,
+   "sheet_gap_a": 4.158514487463253,
+   "cell": [
+    [
+     4.860938575,
+     0.044015704,
+     0.405835963
+    ],
+    [
+     -2.577111334,
+     4.131725529,
+     -0.38622832
+    ],
+    [
+     -0.20438298,
+     0.103569744,
+     2.570581256
+    ]
+   ],
+   "what": "every chain turned together about its axis and relaxed in DFT with the cell held; energies in eV for the cell, stress in GPa in the row's frame (x the row, y across it, z the chain), tension positive",
+   "states": [
+    {
+     "start_degrees": 0.0,
+     "run": "tp000",
+     "rigid_ev": -1876.2728701621684,
+     "rest_ev": -1876.2728701621684,
+     "rest_facing_degrees": -1.5225760981471133e-06,
+     "hydrogen_bonds": [],
+     "stress_gpa": [
+      [
+       -0.010633886907404473,
+       0.0007233584928561497,
+       -0.005181234172773288
+      ],
+      [
+       0.0007233584928561496,
+       0.010993744334864759,
+       -0.005053822489379484
+      ],
+      [
+       -0.005181234172773288,
+       -0.005053822489379484,
+       0.008319342018835118
+      ]
+     ],
+     "whole": true
+    },
+    {
+     "start_degrees": 30.0,
+     "run": "tp030",
+     "rigid_ev": -1876.1343523692233,
+     "rest_ev": -1876.1375390946666,
+     "rest_facing_degrees": 29.99732066130472,
+     "hydrogen_bonds": [],
+     "stress_gpa": [
+      [
+       -3.053009961768788,
+       -0.4549491854512306,
+       0.007429633288613598
+      ],
+      [
+       -0.4549491854512306,
+       -3.769012686160398,
+       -0.010127194871638137
+      ],
+      [
+       0.007429633288613582,
+       -0.010127194871638146,
+       -0.9349750809284944
+      ]
+     ],
+     "whole": true
+    },
+    {
+     "start_degrees": 60.0,
+     "run": "tp060",
+     "rigid_ev": -1876.2676843522345,
+     "rest_ev": -1876.2677770070045,
+     "rest_facing_degrees": 60.02234903665184,
+     "hydrogen_bonds": [],
+     "stress_gpa": [
+      [
+       -0.19507996385424392,
+       -0.49658829880915667,
+       0.011019212024145126
+      ],
+      [
+       -0.49658829880915667,
+       -0.20946229710050654,
+       -0.008572087377002529
+      ],
+      [
+       0.011019212024145126,
+       -0.00857208737700253,
+       -0.007646160206600939
+      ]
+     ],
+     "whole": true
+    },
+    {
+     "start_degrees": 90.0,
+     "run": "tp090",
+     "rigid_ev": -1876.1333666367564,
+     "rest_ev": -1876.1366306425366,
+     "rest_facing_degrees": 89.99330128090611,
+     "hydrogen_bonds": [],
+     "stress_gpa": [
+      [
+       -2.935102414793581,
+       -0.5832308724087693,
+       0.05283155105506779
+      ],
+      [
+       -0.5832308724087693,
+       -3.594300738161775,
+       -0.032085781703930075
+      ],
+      [
+       0.05283155105506779,
+       -0.03208578170393008,
+       -0.711255761385428
+      ]
+     ],
+     "whole": true
+    },
+    {
+     "start_degrees": 120.0,
+     "run": "tp120",
+     "rigid_ev": -1876.268063270788,
+     "rest_ev": -1876.2681510275086,
+     "rest_facing_degrees": 119.98475032712699,
+     "hydrogen_bonds": [],
+     "stress_gpa": [
+      [
+       0.22988977019675944,
+       -0.23099490597033734,
+       0.01790170139667571
+      ],
+      [
+       -0.2309949059703374,
+       -0.5952987516046053,
+       -0.010025008688105757
+      ],
+      [
+       0.017901701396675712,
+       -0.010025008688105757,
+       -0.004413178049555028
+      ]
+     ],
+     "whole": true
+    },
+    {
+     "start_degrees": 150.0,
+     "run": "tp150",
+     "rigid_ev": -1876.1339003880976,
+     "rest_ev": -1876.1371058893974,
+     "rest_facing_degrees": 149.99252276879932,
+     "hydrogen_bonds": [],
+     "stress_gpa": [
+      [
+       -3.1928833102611724,
+       -0.5735319056642642,
+       0.05110558696728752
+      ],
+      [
+       -0.5735319056642642,
+       -3.658703418671247,
+       0.020440741656627213
+      ],
+      [
+       0.051105586967287515,
+       0.02044074165662722,
+       -0.9482185768552945
+      ]
+     ],
+     "whole": true
+    },
+    {
+     "start_degrees": 180.0,
+     "run": "tp180",
+     "rigid_ev": -1876.2728741078195,
+     "rest_ev": -1876.2728741078195,
+     "rest_facing_degrees": -179.999997885953,
+     "hydrogen_bonds": [],
+     "stress_gpa": [
+      [
+       -0.012522214926985712,
+       0.0007869716314931443,
+       0.025801278801904408
+      ],
+      [
+       0.0007869716314931442,
+       0.009097286419683442,
+       0.0017712616865522548
+      ],
+      [
+       0.025801278801904415,
+       0.0017712616865522548,
+       0.007690975692769501
+      ]
+     ],
+     "whole": true
+    }
+   ]
+  },
   {
    "name": "urea1_tt_x1_g109",
    "of": "urea1_tt_x1",
