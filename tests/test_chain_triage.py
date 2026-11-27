@@ -575,6 +575,26 @@ def test_a_twin_has_the_lattice_points_of_the_wall_and_a_row_of_it_is_the_crysta
         CT.twin_row(a, 5, 1, 6)
 
 
+def test_a_state_let_go_keeps_its_mesh_and_is_told_against_the_crystal_it_was_made_of():
+    from ase import Atoms
+
+    cell = np.array([[4.6, 0.2, 0.3], [1.6, 3.3, -0.1], [-0.3, 0.1, 4.7]])
+    parent = Atoms("CO", positions=[[1.0, 1.0, 1.0], [2.2, 1.0, 1.0]], cell=cell, pbc=True)
+    # two chains across and three repeats along, as a states file DFT relaxed has it (the mesh read back as numbers)
+    state = parent.repeat((2, 1, 3))
+    state.info.update(triage_chain="x", triage_state="tt", triage_kind="crystal", triage_repeats=6, kmesh=np.array([2, 5, 1]),
+                      triage_domain_faces="twin 1", triage_turn_of="x_w1", triage_turn_ev=0.0, triage_path_unit="for the cell",
+                      triage_state_stem="t1", triage_dft_ev=-1.0)
+    c = CT.let_go_start(state, parent, "x_tt_x1")
+    assert c.info["kmesh"] == "2 5 1" and c.info["triage_let_go_of"] == "x_tt_x1" and c.info["triage_repeats_along"] == 3
+    assert np.asarray(c.info["triage_let_go_cell"]).reshape(3, 3) == pytest.approx(state.cell.array)
+    assert c.info["triage_state"] == "tt" and c.info["triage_repeats"] == 6 and c.info["triage_domain_faces"] == "twin 1"
+    assert not [k for k in c.info if k.startswith(("triage_turn", "triage_path", "triage_dft", "triage_state_stem"))]
+    assert c.positions == pytest.approx(state.positions) and c.calc is None
+    # what dft writes with it is a relaxation of every edge
+    assert "calculation = 'vc-relax'" in CT.pw_input(c, "/p", "/o", "vc-relax", "all") and "cell_dofree = 'all'" in CT.pw_input(c, "/p", "/o", "vc-relax", "all")
+
+
 def test_a_chain_without_a_carbonyl_faces_from_its_hydrogens_to_its_fluorines():
     from ase import Atoms
 

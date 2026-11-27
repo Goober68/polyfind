@@ -1933,6 +1933,38 @@ def seed(args):
     print(f"{args.frames}: {len(made)} put back ({' '.join(made)})", flush=True)
 
 
+def let_go_start(state, parent, of: str):
+    """A state DFT relaxed with its cell held, as the start of ``dft``'s relaxation with the cell free.
+
+    The mesh is the state's own, so the energy stands beside the held cell's; ``dft`` tells the
+    result against ``of``, a repeat for a repeat, and the cell against the one it was let go from."""
+    c = state.copy()
+    c.calc = None
+    mesh = state.info["kmesh"]
+    dropped = ("triage_turn", "triage_path", "triage_dft", "triage_state_stem")
+    c.info = {**{k: v for k, v in state.info.items() if k.startswith("triage_") and not k.startswith(dropped)},
+              "kmesh": mesh if isinstance(mesh, str) else " ".join(str(int(v)) for v in np.atleast_1d(mesh)),
+              "triage_let_go_of": of, "triage_let_go_cell": state.cell.array.ravel().tolist(),
+              "triage_repeats_along": int(round(state.cell.lengths()[2] / parent.cell.lengths()[2]))}
+    return c
+
+
+def release(args):
+    """States DFT relaxed with the cell held (``points --relax``), each written for ``dft`` to relax with its cell let go.
+
+    A cell made by rule (a twin's, ``domains --twin``) is the crystal's lattice on both sides of a
+    wall and gives the wall no room of its own: the stress DFT leaves on it says how much it wants."""
+    from ase.io import read, write
+
+    src = Path(args.frames)
+    parent = read(src / f"{args.of}.relaxed.xyz")
+    states = read(src / f"{args.name}.dft.path.xyz", index=":")
+    for image, out in zip((int(v) for v in args.images.split(",")), args.out.split(",")):
+        c = let_go_start(states[image], parent, args.of)
+        write(src / f"{out}.start.xyz", c, format="extxyz")
+        print(f"{out}: image {image} of {args.name}.dft ({len(c)} atoms, k {c.info['kmesh']}), for dft to let its cell go; told against {args.of}", flush=True)
+
+
 def points(args):
     """DFT's energy of every image of a path ``turn`` made (the cell and the atoms as they are).
 
@@ -2137,12 +2169,15 @@ def dft(args):
         if "triage_opposed_of" in a.info:
             got["opposed_of"] = a.info["triage_opposed_of"]
         if "triage_let_go_of" in a.info:
-            got.update(let_go_of=a.info["triage_let_go_of"], let_go_facing=float(a.info["triage_let_go_facing"]),
-                       let_go_cell=np.asarray(a.info["triage_let_go_cell"], dtype=float).reshape(3, 3).tolist())
+            got.update(let_go_of=a.info["triage_let_go_of"], let_go_cell=np.asarray(a.info["triage_let_go_cell"], dtype=float).reshape(3, 3).tolist())
+            if "triage_let_go_facing" in a.info:  # a resting place of ``facings``; a cell made by rule has none
+                got["let_go_facing"] = float(a.info["triage_let_go_facing"])
+            if "triage_domain_faces" in a.info:
+                got["domain_faces"] = str(a.info["triage_domain_faces"])
         got.update(name=name, chain=a.info["triage_chain"], state=a.info["triage_state"], kind=a.info["triage_kind"], repeats=reps,
                    atoms=len(b), energy_ev=energy, cell=b.cell.array.tolist(),
                    kmesh=" ".join(str(int(v)) for v in np.atleast_1d(a.info["kmesh"])) if not isinstance(a.info["kmesh"], str) else a.info["kmesh"],
-                   rise_a=float(b.cell.lengths()[2] / reps), volume_a3=float(b.get_volume() / reps),
+                   rise_a=float(b.cell.lengths()[2] / int(a.info.get("triage_repeats_along", reps))), volume_a3=float(b.get_volume() / reps),
                    relax_s=got.get("relax_s", round(time.time() - t0)))
         if chain and "dipole_across_e_a" not in got:
             cube = work / "rho.cube"
@@ -2402,9 +2437,11 @@ def table(args):
             parent = by_name[r["let_go_of"]]
             r["above_parent_kcal_per_repeat"] = (r["energy_ev"] / r["repeats"] - parent["energy_ev"] / parent["repeats"]) * KCAL
             r["stretch_from_parent"] = [{"stretch": v, "axis_in_row_frame": axis} for v, axis in stretches(r["let_go_cell"], r["cell"])]
-            print(f"{r['name']:14s} a resting place of {parent['name']} facing {r['let_go_facing']:+.0f}, its cell let go: "
+            what = f"a resting place of {parent['name']} facing {r['let_go_facing']:+.0f}" if "let_go_facing" in r \
+                else f"a cell of {parent['name']} ({r.get('domain_faces', 'made by rule')}) that DFT relaxed held"
+            print(f"{r['name']:14s} {what}, its cell let go: "
                   f"{r['above_parent_kcal_per_repeat']:+.3f} kcal/mol a repeat above it, {r['volume_a3']:.1f} against {parent['volume_a3']:.1f} A3; "
-                  "the cell against the parent's, edge for edge: "
+                  "the cell against the one it was let go from, edge for edge: "
                   + ", ".join(f"{q['stretch'] * 100:+.1f}% along ({q['axis_in_row_frame'][0]:+.2f} {q['axis_in_row_frame'][1]:+.2f} {q['axis_in_row_frame'][2]:+.2f})"
                               for q in r["stretch_from_parent"]))
     if args.out:
@@ -2602,6 +2639,13 @@ def main():
     w.add_argument("--relax", action="store_true", help="relax each image's atoms in DFT first, the cell held")
     w.add_argument("--pools", type=int, default=None, help="k-point pools the processes are split into")
     w.set_defaults(run=points)
+    re_ = sub.add_parser("release")
+    re_.add_argument("--frames", type=Path, required=True)
+    re_.add_argument("--name", required=True, help="the states file DFT relaxed, without .dft.path.xyz, e.g. urea1_tt_x1_w1_kink1r2_states_t1")
+    re_.add_argument("--images", default="0", help="which of its states, e.g. 0,2")
+    re_.add_argument("--out", required=True, help="the name each is given for dft, e.g. urea1_tt_x1_w1r2")
+    re_.add_argument("--of", required=True, help="the crystal the result is told against, e.g. urea1_tt_x1")
+    re_.set_defaults(run=release)
     s0 = sub.add_parser("seed")
     s0.add_argument("--frames", type=Path, required=True)
     s0.add_argument("--cells", type=Path, default=Path("docs/predictions/chain_triage_cells.extxyz"))
