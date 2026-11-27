@@ -1492,6 +1492,27 @@ right": true at one registry, not along it).
         same two repeats apart by the other side. THEN `hop --names urea1_tt_x1_w2h --rows
         5 --long 3 --stems k1,k2 --images 9` (a kink moving one repeat; about 45 s a step
         alone on the machine) and `points` on it (9 x 21 minutes).
+        07:45 UTC: BOTH KINKED STATES ARE BUILT IN THE POTENTIAL (`log_urea1_twin_over.txt`):
+        kcal/mol for the cell of 135 atoms above t3: k1 -0.50, k2 -1.19, t2 +0.25. Facings of
+        the wall chain's three ureas: t3 -29 -29 -29, k1 -12 -32 -33, k2 -19 +4 -34, t2 +7 +7
+        +7; the chain after it follows repeat for repeat (t3 -58 -58 -58, k1 -41 -57 -55, k2
+        -45 -44 -57, t2 -37 -37 -37). In the potential a wall always has one chain at a
+        facing between the two sides (DFT's own relaxed two-and-two cell has none: its wall
+        is sharp), and a wall stepped part of the way along the chain is BELOW the straight
+        one. NOT TO BE BELIEVED UNTIL DFT: the potential has had the sign of a wall wrong in
+        both chains. RUNNING NOW, ALONE ON THE MACHINE (job limit 09:20 UTC; the same command
+        goes on with the states not yet read): `points --frames /opt/dft/triage --names
+        urea1_tt_x1_w2h_kink3r5_states_t3-k1-k2-t2 --np 4` (`log_urea1_twin_kink_points.txt`,
+        last line `kink points exit`). If the differences come out under 1 for the cell,
+        single points on the potential's structures cannot give their sign (reading 63's
+        lesson) and the answer is "a kink costs under about 1": say so, and what would settle
+        it is DFT's own relaxation of 135 atoms, an MI100 job.
+        THE WALL'S OWN ROOM, PAUSED BY ME AT 07:41 UTC TO GIVE THE MACHINE TO THE ABOVE: `dft
+        --names urea1_tt_x1_w1r2a` after 21 steps (two legs) is at -249.658444 Ry, +0.86 a
+        repeat against the control, the first edge 2.2% longer (8.950 to 9.148 A), the second
+        and third unmoved as they should be, still falling about 0.03 in ten steps. GIVE IT
+        AGAIN AFTER THE KINK'S POINTS: `dft --frames /opt/dft/triage --names
+        urea1_tt_x1_w1r2a --np 4`.
         THE QUEUE AS IT WAS FIRST SET (03:30 UTC), kept for the commands:
         (2) NOW: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
         wall-at-every-chain cell with its cell let go; start file by the new `release
