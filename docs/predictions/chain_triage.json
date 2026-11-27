@@ -707,6 +707,84 @@
    }
   },
   {
+   "let_go_of": "pvdf_tt_x1",
+   "let_go_cell": [
+    [
+     4.860938575,
+     0.044015704,
+     0.405835963
+    ],
+    [
+     -2.577111334,
+     4.131725529,
+     -0.38622832
+    ],
+    [
+     -0.20438298,
+     0.103569744,
+     2.570581256
+    ]
+   ],
+   "let_go_facing": 60.02234903665184,
+   "cell_free": "all",
+   "name": "pvdf_tt_x1_fp060",
+   "chain": "pvdf",
+   "state": "tt",
+   "kind": "crystal",
+   "repeats": 1,
+   "atoms": 6,
+   "energy_ev": -1876.2728966932698,
+   "cell": [
+    [
+     4.859553246,
+     0.191147689,
+     0.395019443
+    ],
+    [
+     -2.450779458,
+     4.058421474,
+     -0.370777934
+    ],
+    [
+     -0.206930067,
+     0.10349468,
+     2.570433128
+    ]
+   ],
+   "kmesh": "4 4 8",
+   "rise_a": 2.580824997348094,
+   "volume_a3": 52.33121700656357,
+   "relax_s": 382,
+   "seconds": 382,
+   "above_parent_kcal_per_repeat": -0.0006118217376001357,
+   "stretch_from_parent": [
+    {
+     "stretch": -0.030030355663315245,
+     "axis_in_row_frame": [
+      -0.7122478874738586,
+      0.7015553592020327,
+      -0.02286973467122868
+     ]
+    },
+    {
+     "stretch": 1.939738683587322e-05,
+     "axis_in_row_frame": [
+      -0.0001423468157821416,
+      0.032436946702846726,
+      0.9994737736559076
+     ]
+    },
+    {
+     "stretch": 0.030538394584467943,
+     "axis_in_row_frame": [
+      -0.7019280066548204,
+      -0.7118763393058544,
+      0.02300328259372743
+     ]
+    }
+   ]
+  },
+  {
    "name": "urea1_tt",
    "chain": "urea1",
    "state": "tt",
@@ -1143,6 +1221,25 @@
  ],
  "paths": [
   {
+   "name": "pvdf_tt_x1_kink1r2_states_rr.dft",
+   "kind": "path",
+   "of": "pvdf_tt_x1_kink1r2",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -3752.5457314806363
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
+  },
+  {
    "name": "pvdf_tt_x1_turn1",
    "kind": "path",
    "of": "pvdf_tt_x1",
@@ -1176,6 +1273,25 @@
     9.896739954082909,
     -1.1554454169793253
    ]
+  },
+  {
+   "name": "pvdf_tt_x1_w1_kink1r2_states_t1.dft",
+   "kind": "path",
+   "of": "pvdf_tt_x1_w1_kink1r2",
+   "edge": 1,
+   "turning_repeats": 1,
+   "energy_ev": [
+    -3752.5278801309737
+   ],
+   "kcal_per_turning_repeat": [
+    0.0
+   ],
+   "top_kcal_per_turning_repeat": 0.0,
+   "potential_kcal_per_turning_repeat": [
+    0.0
+   ],
+   "ends_only": false,
+   "unit": "kcal/mol for the cell"
   },
   {
    "name": "urea1_tt_x1_g109_kink1r1_hop_r-da",

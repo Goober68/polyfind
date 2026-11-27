@@ -2778,7 +2778,10 @@ the cell held, as reading 63's:
     and third edges, as for the urea chain. Chains follow one another by 4.760 A in the twin
     against 4.878, 0.235 A different along the wall with the chains 4.153 A apart across it:
     5.7% of shear for each chain that goes over (the urea chain 14%), the dipole turned 58
-    degrees, and 0.19 C/m2 between the two sides along the wall (0.47). A field of 55 V/um
+    degrees, and 0.19 C/m2 between the two sides along the wall (0.47). Let go in DFT, the
+    place at 60 is the crystal again (0.001 a monomer from it) in a cell 3.0% shorter one way
+    and 3.1% longer the other with no change of volume (`facings --let-go 60`, `dft`; the
+    urea chain's 6.0 and 7.1 of reading 49). A field of 55 V/um
     along the wall does 10 MJ/m3 between them, 0.08 kcal/mol a monomer (26, and 0.27 a
     repeat), and over the shear that is 182 pN/nm2 against the urea twin's 184: THE SAME
     BOUND ON STRESS, AND 2.5 TIMES THE STROKE AND THE WORK IN THE UREA CHAIN. Both are my
@@ -2816,7 +2819,7 @@ cell's two wall states, now that bands keep a chain whole, or a state with one r
 together from the two); the hump's top in DFT's own structures; the twinned cell's polarisation
 by Berry phase in place of reading 53's arithmetic; walls further apart than three chains; the
 same wall in the amide chain of 6.1; and for PVDF's crystal, DFT on its wall's step (running),
-its 60-degree place with the cell let go (`pvdf_tt_x1_fp060`, running), walls further apart, the
+walls further apart, the
 120 and 180 degree walls, and a kink along its wall chain. For the level pair: the step of one urea of one chain beside a wall between a part
 bonded along the row and a part bonded along the diagonal, which is the activation that counts
 and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`; its two states
