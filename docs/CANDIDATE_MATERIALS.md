@@ -2668,7 +2668,8 @@ each, kcal/mol for one repeat of the wall chain:
     at the top) and DFT's own top not found; five chains wide, so the two walls are two and
     three chains apart and each feels the other. What a kink along the wall chain costs, which
     is what a long chain's step would be, has not been read.
-62. *On the target's terms.* A chain WITH its defect, the defect being a wall between the
+62. *On the target's terms.* (READ WITH READING 65: a wall costs about 1 a repeat of its
+    area, which this reading did not know.) A chain WITH its defect, the defect being a wall between the
     crystal and its twin. Strong action: 14% of shear from each chain the wall passes, and
     0.47 C/m2 between the two sides along the wall (reading 53), so a field of 55 V/um along
     the wall does 26 MJ/m3 between them, 0.27 kcal/mol a repeat; a stress against that shear
@@ -2719,8 +2720,42 @@ is left with in the wall's frame, kbar, positive where the cell wants to grow:
     as much as a wall costs. Single points on the potential's structures are good for a hump
     of several kcal/mol and not for a difference under 1.
 
-**Not done.** For the twin: DFT's own relaxation of a twinned cell, which decides whether the
-crystal wants walls (reading 59; the two smallest are running, `points --relax`); a kink along
+64. *With every edge free, the cell that is all wall leaves the twin; that is not the wall's
+    cost.* (`release`, then `dft`, which relaxes cell and atoms together.) The cell with a wall
+    at every chain was followed for 67 steps and stopped unfinished at +0.65 a repeat, still
+    falling by about 0.02 in ten steps. The pressure was gone by the second step. What went on
+    after that was the second edge leaning along the third, their angle from 91.5 to 101.0
+    degrees: the sheets sliding along the chains, with 2.4% more volume, the carbonyls closing
+    from 47 to 34 degrees apart and the contacts up the stack lengthening (H..O 2.37 to 2.39 A
+    becoming 2.36 to 2.53). A wall between thick parts cannot do that, since its plane is the
+    crystal's own lattice on both sides. So the run says something else: two chains to the
+    cell facing two ways alternately may have a packing of their own, above the crystal as far
+    as it was followed. It is parked and goes on with the same command. The room a wall can
+    take is the first edge alone, with the second and third held (`release --free
+    epitaxial_bc`: room across the wall, and a slide of one side against the other); the held
+    cells are left wanting it (reading 63's table), and that run is queued. Until it is read,
+    the cost is the held cells': 0.9 to 1.05 for a repeat of wall, an upper mark.
+65. *On the target's terms, corrected (reading 62 said the wall is there for nothing).* The
+    defect is the wall and the wall costs: the crystal at rest has none. Three things follow.
+    (a) Low activation still reads as it did: the two sides are level by symmetry, and a wall
+    that steps one chain on keeps its area, so the wall's cost is not in the step. The hump,
+    2.9 a repeat, is DFT on the potential's band, the kind of reading that got reading 59
+    wrong by 1; a hump of 2.9 is outside that error but its top in DFT's own structures is
+    not known. (b) A field does not make walls out of the plain crystal cheaply. A slab of
+    twin n chains thick gains 0.27 n a repeat at 55 V/um along the wall (reading 53) and pays
+    for two walls, 1.8 to 2.1: it breaks even seven or eight chains thick, 3 nm, before any
+    edge of the slab is counted. So the walls have to be there already, from how the crystal
+    grew, or be made and held by something in the chain that sits at a wall and pays for it.
+    That is the PI's "held stronger until u introduce a defect", and which defect does it is
+    NOT YET LOOKED FOR: so far the wall has been put in by hand. (c) A twinned crystal left to
+    itself is 36 to 42 mJ/m2 of wall above the plain one and has that much reason to lose its
+    walls. Still a partial result, for reading 62's reasons, and now also because the defect
+    that would make the wall is not identified.
+
+**Not done.** For the twin: the wall's cost with the first edge free (`release --free
+epitaxial_bc`, queued; reading 64); the fully free two-chain cell to its end, which is a
+question about another packing; a defect in the chain that makes or holds a wall (reading 65);
+a kink along
 the wall chain, the step of a long chain (135 atoms at three repeats: the band between the long
 cell's two wall states, now that bands keep a chain whole, or a state with one repeat over put
 together from the two); the hump's top in DFT's own structures; the twinned cell's polarisation
