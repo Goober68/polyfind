@@ -2804,11 +2804,48 @@ the cell held, as reading 63's:
     or six chains thick, where the urea chain's needs seven or eight (reading 65): alike.
     The urea chain's wall is held four times as hard for its area, which is the hydrogen
     bonds, and the field's work on it is 2.5 times as much.
-69. *PVDF's wall step: 2.94 a monomer in the potential; DFT on its nine cells is running.* The
-    band between a wall and the same wall one chain on, five chains wide in the cell between
-    the two (`hop --names pvdf_tt_x1_w2h --rows 5 --long 1 --stems t3,t2 --images 9`): 0.00
-    0.45 1.48 2.47 2.94 2.57 1.48 0.41 0.00. The urea chain's was 4.99 in the potential and
-    2.90 in DFT, so the potential's number is not to be set beside a DFT one.
+69. *PVDF's wall step is 2.3 kcal/mol a monomer in DFT; the urea chain's is 2.9 a repeat,
+    which is less for the same length of chain.* The band between a wall and the same wall
+    one chain on, five chains wide in the cell between the two (`hop --names pvdf_tt_x1_w2h
+    --rows 5 --long 1 --stems t3,t2 --images 9`, `points`), kcal/mol for one monomer of the
+    wall chain:
+
+    | cell | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+    |---|---|---|---|---|---|---|---|---|---|
+    | the wall chain faces, degrees | -65 | -57 | -48 | -39 | -31 | -22 | -13 | -5 | +4 |
+    | the potential | 0.00 | 0.45 | 1.48 | 2.47 | 2.94 | 2.57 | 1.48 | 0.41 | 0.00 |
+    | DFT | 0.00 | 0.02 | 0.79 | 1.79 | 2.32 | 2.00 | 0.97 | 0.06 | 0.00 |
+
+    The wall chain turns 69 degrees and no other chain more than 6, and the two ends
+    are level in DFT as symmetry has them. A monomer is 2.58 A of chain and the urea chain's
+    repeat 4.72, so for a length of chain PVDF's wall pays 0.90 kcal/mol an angstrom to step
+    and the urea chain's 0.61: the urea chain's wall is held four times as hard for its area
+    (reading 68) and steps a third more easily for its length. At 10^13 tries a second 2.3
+    is 2 x 10^11 a second for one monomer; ten angstroms of chain going as one are 9.0 in
+    PVDF and 6.1 in the urea chain. As reading 61: DFT on the potential's band, the top in
+    DFT's own structures not found, and a chain going over all along its length at once; the
+    kink is read in neither.
+70. *The two crystals side by side, defect-free, by the same readings.*
+
+    | | the urea chain (-NH-CO-NH-CH2-) | PVDF |
+    |---|---|---|
+    | shear for each chain a wall passes | 14% | 5.7% (PBE-D3's lattice; the measured one less) |
+    | polarisation between the two sides, along the wall | 0.47 C/m2 | 0.19 C/m2 |
+    | a field of 55 V/um along the wall does | 26 MJ/m3, 0.27 kcal/mol a repeat | 10 MJ/m3, 0.08 a monomer |
+    | that work over the shear, the most stress such a field could move a free wall against | 184 pN/nm2 | 182 pN/nm2 |
+    | the two sides | level by symmetry | level by symmetry |
+    | every chain going over together, cell held | 5.5 a repeat (cell held 9% open) | 3.1 a monomer |
+    | a wall's step, DFT on the potential's band | 2.9 a repeat, 0.61 an angstrom of chain | 2.3 a monomer, 0.90 an angstrom |
+    | a wall's cost, DFT's own relaxation, cell held | 0.9 to 1.05 a repeat of wall, 36 to 42 mJ/m2 | 0.21 a monomer of wall, 11 mJ/m2 |
+    | a slab of twin pays for its walls at 55 V/um when | 7 to 8 chains thick | 5 to 6 chains thick |
+
+    On the target's terms the urea chain's crystal has 2.5 times PVDF's action at the same
+    bound on stress, a step that is easier for its length, and a wall that is dearer to make.
+    That is a comparison of two perfect crystals with a wall put in by hand, a partial result
+    in the standing rules' words: no loss, no frequency, no force or speed on one modulus
+    under one heat budget, no kink, and for neither chain the defect that would put the wall
+    there. PVDF's is known to exist (TrFE and CFE, the film); the urea chain's is not looked
+    for yet. Neither column is the film.
 
 **Not done.** For the twin: the wall's cost with the first edge free (`release --free
 epitaxial_bc`, queued; reading 64); the fully free two-chain cell to its end, which is a
@@ -2818,8 +2855,8 @@ the wall chain, the step of a long chain (135 atoms at three repeats: the band b
 cell's two wall states, now that bands keep a chain whole, or a state with one repeat over put
 together from the two); the hump's top in DFT's own structures; the twinned cell's polarisation
 by Berry phase in place of reading 53's arithmetic; walls further apart than three chains; the
-same wall in the amide chain of 6.1; and for PVDF's crystal, DFT on its wall's step (running),
-walls further apart, the
+same wall in the amide chain of 6.1; and for PVDF's crystal, walls further apart (the
+two-and-two cell is built and gathered, not relaxed in DFT), the
 120 and 180 degree walls, and a kink along its wall chain. For the level pair: the step of one urea of one chain beside a wall between a part
 bonded along the row and a part bonded along the diagonal, which is the activation that counts
 and needs a long cell (`domains --second -1 --rows 5 --long 3`, `swing`, `points`; its two states
@@ -2889,7 +2926,15 @@ uneven cells without a wall); `urea1_tt_x1_w1_kink1r2_states_t1`,
 `urea1_tt_x1_w2_kink1_states_t2`, `urea1_tt_x1_w3_kink1r5_states_t3` and
 `urea1_tt_x1_w2_kink1r5_states_t2` (the twinned cells: `_w<M>` is M chains in the twin, each in
 the cell its own count makes); and `urea1_tt_x1_w2h_kink1r5_hop_t3-t2` (the wall's step in the
-crystal as it packs, nine cells in the cell half way between two and three twin chains).
+crystal as it packs, nine cells in the cell half way between two and three twin chains). For
+readings 63 to 70: a file `NAME.dft.path.xyz` is the states of `NAME.path.xyz` after DFT's own
+relaxation with the cell held, its record in `chain_triage.json` under the name `NAME.dft`
+(`urea1_tt_x1_kink1r2_states_rr-alt.dft`, the control; `urea1_tt_x1_w1_kink1r2_states_t1.dft`
+and `urea1_tt_x1_w2_kink1_states_t2.dft`); for PVDF `pvdf_tt_x1` under `facings`,
+`pvdf_tt_x1_fp060` under `rows` and in `chain_triage_cells.extxyz` (the 60-degree place with
+its cell let go), `pvdf_tt_x1_kink1r2_states_rr` and `pvdf_tt_x1_w1_kink1r2_states_t1` with
+their `.dft` files, `pvdf_tt_x1_w2_kink1_states_t2` (the two-and-two cell, the potential's
+structure only) and `pvdf_tt_x1_w2h_kink1r5_hop_t3-t2` (its wall's step, nine cells).
 
 ## 8. Frequency and loss: what a kink pair is in the lattice, and what moves
 

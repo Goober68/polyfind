@@ -1,0 +1,14 @@
+12
+Lattice="9.72187715 0.088031408 0.811671926 -2.577111334 4.131725529 -0.38622832 -0.20438298 0.103569744 2.570581256" Properties=species:S:1:pos:R:3:chain:I:1 triage_chain=pvdf triage_state=tt triage_repeats=2 triage_kind=crystal triage_start_steps=45 kmesh="2 4 8" triage_packing_rank=1 triage_packing_ev_above=0.0 triage_domain_faces="0 0" triage_turn_of=pvdf_tt_x1_kink1r2 triage_turn_edge=1 triage_turn_image=0 triage_turn_ev=0.0 triage_turning_repeats=1 triage_path_unit="for the cell" triage_state_stem=rr pbc="T T T"
+C        0.11335042       0.47615239       1.47218531        0
+C       -0.39163604      -0.20172045       2.75483718        0
+F       -1.73975852      -0.38546593       2.65499504        0
+F        0.17063399      -1.44109349       2.84946317        0
+H        1.18968060       0.60647269       1.55237168        0
+H       -0.35040922       1.45652254       1.39578741        0
+C        4.97428902       0.52016814       1.87802135        1
+C        4.46930259      -0.15770483       3.16067304        1
+F        3.12118006      -0.34145021       3.06083101        1
+F        5.03157252      -1.39707774       3.25529922        1
+H        6.05061912       0.65048841       1.95820762        1
+H        4.51052937       1.50053821       1.80162336        1
