@@ -1438,9 +1438,10 @@ def domains(args):
         faces = ["(" + " ".join(f"{v:+.0f}" for v in chain_facing(row, np.where(chains == k)[0], along, reference)) + ")" for k in range(args.rows)]
         bonds = joined(row)
         print(f"{tag} {args.stem}: {len(row)} atoms, {int(row.info['triage_kink_steps'])} steps to {float(row.info['triage_kink_force']):.3f} eV/A, "
-              f"{float(row.info['triage_kink_ev']):.5f} eV in the potential; the chains' carbonyls face {' '.join(faces)} degrees"
-              + ("; hydrogen bonds from chain to chain " + " ".join(f"{d}>{k}:{n}" for (d, k), n in sorted(bonds.items())) if bonds
-                 else " (a chain without a carbonyl: its fluorines from its hydrogens)"), flush=True)
+              f"{float(row.info['triage_kink_ev']):.5f} eV in the potential; "
+              + ("the chains' carbonyls face" if "O" in row.get_chemical_symbols() else "the chains face, their fluorines from their hydrogens,")
+              + f" {' '.join(faces)} degrees"
+              + ("; hydrogen bonds from chain to chain " + " ".join(f"{d}>{k}:{n}" for (d, k), n in sorted(bonds.items())) if bonds else ""), flush=True)
 
 
 def gather(args):

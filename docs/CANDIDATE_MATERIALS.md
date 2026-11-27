@@ -2616,7 +2616,8 @@ five-chain cell:
     wall, so each chain that goes over shears the cell by 0.576 in 4.083, 14%, with no change of
     volume: reading 49's two stretches (6.0 and 7.1%) are that shear. The twin's carbonyl is
     47 degrees from the crystal's.
-59. *No twinned cell is above the plain crystal in DFT.* Four cells, 0.09 to 0.50 a repeat
+59. *No twinned cell is above the plain crystal in DFT on the potential's structures. WRONG AS
+    A READING OF THE WALL: DFT's own relaxation has every one above it (reading 63).* Four cells, 0.09 to 0.50 a repeat
     below it; for the five-chain cells that is 0.8 and 1.0 for the cell, 0.4 and 0.5 for a
     repeat of each of its two walls. It is not the potential's taste for uneven facings coming
     through: the two cells without a wall that the potential puts below the plain crystal, DFT
@@ -2627,11 +2628,14 @@ five-chain cell:
     0.3 below them). And the last two rows are one structure: two crystal and three twin IS
     three crystal and two twin seen from the other side, so the 0.23 for the cell between them
     in DFT (0.02 in the potential) is this reading's own scatter, and so is the "wall one chain
-    on" of readings 52 and 55, whose two states are mirror images in that cell's lattice. So: a
+    on" of readings 52 and 55, whose two states are mirror images in that cell's lattice. So,
+    as it was written before reading 63: a
     wall in the crystal as it packs costs nothing to a few tenths a repeat, as in the open cell
     (reading 52), and where it stands costs nothing at all. Whether the crystal WANTS walls, which would make
     section 6.1's one-chain crystal not this chain's ground state, is open until DFT has relaxed
-    a twinned cell itself.
+    a twinned cell itself. IT HAS (reading 63): the crystal does not want walls and a wall
+    costs about 1 a repeat; "a few tenths" was the wrong allowance for single points on the
+    potential's structures. That where the wall stands costs nothing is symmetry and stands.
 
 *The wall's step in the crystal as it packs* (`domains --twin 3 --told-for 2.5 --stem t3`,
 `--twin 2 --told-for 2.5 --stem t2`, `hop --names urea1_tt_x1_w2h --stems t3,t2 --images 9`,
@@ -2688,6 +2692,32 @@ each, kcal/mol for one repeat of the wall chain:
     chain can be had as a crystal at all is not looked into here (it is the linear chain of
     urea and formaldehyde; from memory and not checked, its short oligomers crystallise and
     the resin is branched).
+
+*DFT's own relaxation of the twinned cells* (`points --relax`, the cell held; 2026-11-27). The
+two smallest twinned cells and, by the same route and on the same mesh, the plain two-chain cell
+as a control, each started from the potential's structure. Kcal/mol a repeat against DFT's own
+crystal of section 6.1 (-1698.425487 eV a repeat, cell and atoms relaxed), and the stress each
+is left with in the wall's frame, kbar, positive where the cell wants to grow:
+
+| cell (one repeat long) | DFT on the potential's structure | DFT's own atoms, the cell held | for a repeat of one wall | stress across the wall | along the wall | along the chains |
+|---|---|---|---|---|---|---|
+| plain, two chains (the control) | +1.60 | 0.00 | | +0.4 | +0.2 | +0.5 |
+| a wall at every chain, two chains | +1.50 | +1.05 | 1.05 | +11.8 | -1.9 | +7.3 |
+| two crystal and two twin, four chains | +1.09 | +0.46 | 0.91 | +5.8 | -0.3 | +3.8 |
+
+63. *A wall costs about 1 kcal/mol for each repeat of its area, and the single points had its
+    sign wrong.* The control comes to rest on the crystal (0.001 a repeat from it, under half a
+    kbar), so the route and the mesh are sound. Both twinned cells stay twinned (carbonyls 47
+    degrees apart across the wall, as built) with every hydrogen bond as short as the
+    crystal's (H..O 1.88 to 1.92 A against 1.90), and both rest ABOVE the crystal: 1.05 a
+    repeat with a wall at every chain and 0.46 with walls two chains apart, which is 1.05 and
+    0.91 for a repeat of one wall (17.5 A2 of wall: 42 and 36 mJ/m2). The one-chain crystal of
+    6.1 stands as this chain's ground state, and the crystal does not want walls. Reading 59
+    said the opposite because DFT's relaxation takes 1.60 a repeat off the potential's
+    structure of the plain crystal and only 0.45 and 0.63 off its twinned ones: the
+    potential's structure is further from DFT's for the crystal than for the twin, by about
+    as much as a wall costs. Single points on the potential's structures are good for a hump
+    of several kcal/mol and not for a difference under 1.
 
 **Not done.** For the twin: DFT's own relaxation of a twinned cell, which decides whether the
 crystal wants walls (reading 59; the two smallest are running, `points --relax`); a kink along
