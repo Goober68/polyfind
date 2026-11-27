@@ -1351,12 +1351,42 @@ right": true at one registry, not along it).
         --rows 5 --long 1 --stems t3,t2 --images 9 --fmax 0.05 --steps 300`: 148 steps, 0.00
         0.37 1.45 3.77 4.99 4.15 1.49 0.28 -0.02: TOP 4.99 A REPEAT, BELOW THE OPEN CELL'S
         5.92. The wall chain's carbonyl goes -31 to +9, its methylene carbon +0.46 to -0.51 A.
-        RUNNING WHEN THIS WAS WRITTEN (started 00:23 UTC; about an hour; log
-        `log_urea1_twin_hop_points.txt`): `points --names urea1_tt_x1_w2h_kink1r5_hop_t3-t2`
-        (nine cells, 5 minutes each), then `gather` and `points` for
-        `urea1_tt_x1_w1_kink1r2_states_t1` and `urea1_tt_x1_w2_kink1_states_t2`. A finished
-        cell is kept: give the same command again if it was stopped. THEN write 6.3 (the
-        twin, its wall, its step, the target's terms), `table`, copy the path files, push.
+        THE WALL'S STEP IN THE TIGHT CRYSTAL, DFT (01:11 UTC; log
+        `log_urea1_twin_hop_points.txt`; `points --names urea1_tt_x1_w2h_kink1r5_hop_t3-t2`):
+        0.00 0.11 0.69 1.98 2.90 2.71 0.65 -0.13 -0.22. TOP 2.90 kcal/mol A REPEAT OF THE CHAIN
+        THAT STEPS, WITH NOTHING HELD APART (open cell 3.70; crystal going over whole 5.50).
+        And two more twinned cells, a repeat against the plain five-chain cell: a wall at
+        every chain -0.09, two and two -0.50. `t3` and `t2` are ONE structure seen from two
+        sides, so their 0.23 apart for the cell is the single points' scatter.
+        ALL OF IT IS IN 6.3 AS READINGS 58 TO 62, WITH `table` RUN AND THE PATH FILES COPIED
+        (pushed 7522509). Reading 62 is the target's terms: a chain with its defect; 14%
+        shear a chain; 0.47 C/m2 along the wall; 26 MJ/m3 and 0.27 kcal/mol a repeat at 55
+        V/um; 184 pN/nm2 the most a field of that size could move a free wall against (a
+        perfect crystal's bound, my arithmetic); hump 2.9; A PARTIAL RESULT.
+        RUNNING WHEN THIS WAS WRITTEN (started 01:12 UTC; up to two hours; log
+        `log_urea1_twin_relax.txt`): DFT's own relaxation, cell held, of the two smallest
+        twinned cells: `points --frames /opt/dft/triage --names
+        urea1_tt_x1_w1_kink1r2_states_t1 --relax --np 4` (18 atoms) then `--names
+        urea1_tt_x1_w2_kink1_states_t2 --relax` (36 atoms). A relaxation that was stopped
+        goes on when the same command is given again. READ: each one's `energy_ev` in
+        `NAME.dft.path.json` a repeat against DFT's own crystal, -1698.425487 eV a repeat
+        (9 atoms, cell and atoms relaxed). BELOW IT: the one-chain crystal of 6.1 is not this
+        chain's ground state and the crystal wants walls; ABOVE IT: a wall costs that much.
+        Write it as reading 63 and correct reading 59 and its "Not done" line.
+        NEXT, IN ORDER (nothing beside a DFT job):
+        (a) PVDF's crystal by the same readings, the like baseline the standing rule asks
+        for: `facings --frames /opt/dft/triage --names pvdf_tt_x1
+        --angles=0,15,30,45,60,-30,-60` (6 atoms, minutes an angle), `--let-go` for its
+        stroke, then its own twin (`domains --names pvdf_tt_x1 --twin`: check what plane its
+        two orientations share first; `twin_row` takes the plane of the second and third
+        edges and `way_across` for a chain without a carbonyl).
+        (b) A kink along the wall chain, the step of a long chain: three repeats long (135
+        atoms): `domains --names urea1_tt_x1 --rows 5 --long 3 --twin 3 --told-for 2.5 --stem
+        t3` and `--twin 2 ... --stem t2`, `hop --names urea1_tt_x1_w2h --rows 5 --long 3
+        --stems t3,t2 --images 9` (the potential, 30 to 40 s a step), and a state with one
+        repeat of the wall chain over put together from the two. DFT is 21 minutes a cell.
+        (c) The twinned cell's polarisation by Berry phase (`berry`), in place of reading
+        53's arithmetic; the same wall in the amide chain (nylon-3) of 6.1.
         AFTER IT: PVDF's crystal by the same map, the like baseline (`facings --names
         pvdf_tt_x1 --angles 0,15,30,45,60,-30,-60`; 6 atoms, minutes an angle; its dipole lies
         along the 4.76 A direction of a lattice of 4.88, 4.76, 4.89).
