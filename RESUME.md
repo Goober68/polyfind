@@ -1331,18 +1331,32 @@ right": true at one registry, not along it).
         +11 -19, 0.42 below. THE DFT CRYSTAL WAS RELAXED WITH ONE CHAIN TO THE CELL AND CANNOT
         SHOW THIS. The potential overdid the wall in the equal-edged cell fourfold (8.60
         against DFT's 1.94), so none of it is believed until DFT has read it.
-        RUNNING WHEN THIS WAS WRITTEN (started 23:22 UTC; about 30 minutes; log
-        `log_urea1_twin_states_points.txt`): `gather` then `points` on
-        `urea1_tt_x1_kink1r2_states_rr-alt` (18 atoms), `urea1_tt_x1_kink1r5_states_rrrrr`,
-        `urea1_tt_x1_w3_kink1r5_states_t3`, `urea1_tt_x1_w2_kink1r5_states_t2` (45 atoms) and
-        `urea1_tt_x1_kink1_states_alt-pairs` (36 atoms). Each `.path.json` has `energy_ev`;
-        compare a repeat (the two-chain and five-chain uniform cells should agree: that is
-        the k-mesh's error). THEN, by what DFT says: the two-chain cells relaxed in DFT
-        (`points --relax` on `urea1_tt_x1_kink1r2_states_rr-alt`, 18 atoms); a wall at every
-        chain (`domains --rows 2 --long 1 --twin 1 --stem t1`) and every second chain (`--rows
-        4 --twin 2 --stem t2`); the band in the cell between (`hop --frames /opt/dft/triage
-        --names urea1_tt_x1_w2h --rows 5 --long 1 --stems t3,t2 --images 9 --fmax 0.05 --steps
-        300`, then `points`).
+        DFT ON THOSE STATES (23:41 UTC; log `log_urea1_twin_states_points.txt`; `gather` then
+        `points`; each `.path.json` has `energy_ev`; NOT IN 6.3 YET). Single points on the
+        potential's structures, kcal/mol A REPEAT against the plain five-chain cell (the
+        potential's number in brackets): plain two-chain cell +0.01 (the k mesh's error);
+        chains facing alternately +0.09 (-0.32); four started -8 8 8 -8, +0.25 (-0.42); `t3`
+        -0.16 (-0.75); `t2` -0.21 (-0.75). SO DFT DOES NOT HAVE THE POTENTIAL'S ALTERNATING
+        CRYSTAL (the one-chain crystal stands), AND IT DOES HAVE THE TWINNED CELL BELOW THE
+        PLAIN ONE: 0.8 TO 1.0 kcal/mol FOR FIVE REPEATS AND TWO WALLS, 0.4 TO 0.5 A REPEAT OF
+        WALL. The potential's structure of the plain crystal is 1.59 a repeat above DFT's own
+        crystal, so a difference of a few tenths between unlike states is within what single
+        points can get wrong: THE WALL COSTS NOTHING TO A FEW TENTHS; ITS SIGN NEEDS DFT'S OWN
+        RELAXATIONS (45 atoms, hours a state here; the two-chain cells are 18 atoms).
+        MORE STATES IN THE POTENTIAL (23:53 UTC): a wall at every chain (`domains --rows 2
+        --long 1 --twin 1 --stem t1`, series `urea1_tt_x1_w1`) -0.12 a repeat; two and two
+        (`--rows 4 --twin 2 --stem t2`, series `urea1_tt_x1_w2`, folder `..._w2_kink1`) -0.76.
+        THE WALL'S STEP IN THE TIGHT CRYSTAL, THE POTENTIAL (00:22 UTC 2026-11-27; log
+        `log_urea1_twin_hop.txt`): `hop --frames /opt/dft/triage --names urea1_tt_x1_w2h
+        --rows 5 --long 1 --stems t3,t2 --images 9 --fmax 0.05 --steps 300`: 148 steps, 0.00
+        0.37 1.45 3.77 4.99 4.15 1.49 0.28 -0.02: TOP 4.99 A REPEAT, BELOW THE OPEN CELL'S
+        5.92. The wall chain's carbonyl goes -31 to +9, its methylene carbon +0.46 to -0.51 A.
+        RUNNING WHEN THIS WAS WRITTEN (started 00:23 UTC; about an hour; log
+        `log_urea1_twin_hop_points.txt`): `points --names urea1_tt_x1_w2h_kink1r5_hop_t3-t2`
+        (nine cells, 5 minutes each), then `gather` and `points` for
+        `urea1_tt_x1_w1_kink1r2_states_t1` and `urea1_tt_x1_w2_kink1_states_t2`. A finished
+        cell is kept: give the same command again if it was stopped. THEN write 6.3 (the
+        twin, its wall, its step, the target's terms), `table`, copy the path files, push.
         AFTER IT: PVDF's crystal by the same map, the like baseline (`facings --names
         pvdf_tt_x1 --angles 0,15,30,45,60,-30,-60`; 6 atoms, minutes an angle; its dipole lies
         along the 4.76 A direction of a lattice of 4.88, 4.76, 4.89).
