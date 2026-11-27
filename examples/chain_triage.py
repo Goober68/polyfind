@@ -1960,18 +1960,24 @@ def seed(args):
     print(f"{args.frames}: {len(made)} put back ({' '.join(made)})", flush=True)
 
 
-def let_go_start(state, parent, of: str):
+def let_go_start(state, parent, of: str, free: str = "all"):
     """A state DFT relaxed with its cell held, as the start of ``dft``'s relaxation with the cell free.
 
     The mesh is the state's own, so the energy stands beside the held cell's; ``dft`` tells the
-    result against ``of``, a repeat for a repeat, and the cell against the one it was let go from."""
+    result against ``of``, a repeat for a repeat, and the cell against the one it was let go from.
+    ``free`` is what of the cell may move, in the DFT program's words: ``all``, or
+    ``epitaxial_bc``, the first edge only with the second and third held.  A twinned cell's
+    second and third edges are its wall's plane and the crystal's own on both sides, so the first
+    edge alone is the room a wall between thick parts can take: across itself, and a slide of one
+    side against the other.  With every edge free a cell that is all wall changes its lattice in
+    the wall's plane too, which a wall between thick parts cannot."""
     c = state.copy()
     c.calc = None
     mesh = state.info["kmesh"]
     dropped = ("triage_turn", "triage_path", "triage_dft", "triage_state_stem")
     c.info = {**{k: v for k, v in state.info.items() if k.startswith("triage_") and not k.startswith(dropped)},
               "kmesh": mesh if isinstance(mesh, str) else " ".join(str(int(v)) for v in np.atleast_1d(mesh)),
-              "triage_let_go_of": of, "triage_let_go_cell": state.cell.array.ravel().tolist(),
+              "triage_let_go_of": of, "triage_let_go_cell": state.cell.array.ravel().tolist(), "triage_cell_free": free,
               "triage_repeats_along": int(round(state.cell.lengths()[2] / parent.cell.lengths()[2]))}
     return c
 
@@ -1987,9 +1993,9 @@ def release(args):
     parent = read(src / f"{args.of}.relaxed.xyz")
     states = read(src / f"{args.name}.dft.path.xyz", index=":")
     for image, out in zip((int(v) for v in args.images.split(",")), args.out.split(",")):
-        c = let_go_start(states[image], parent, args.of)
+        c = let_go_start(states[image], parent, args.of, args.free)
         write(src / f"{out}.start.xyz", c, format="extxyz")
-        print(f"{out}: image {image} of {args.name}.dft ({len(c)} atoms, k {c.info['kmesh']}), for dft to let its cell go; told against {args.of}", flush=True)
+        print(f"{out}: image {image} of {args.name}.dft ({len(c)} atoms, k {c.info['kmesh']}), for dft to let its cell go ({args.free}); told against {args.of}", flush=True)
 
 
 def points(args):
@@ -2174,7 +2180,7 @@ def dft(args):
         a = read(src / f"{name}.start.xyz")
         work = src / "work" / name
         chain = a.info.get("triage_kind") == "chain"
-        free = "z" if chain else "all"
+        free = "z" if chain else str(a.info.get("triage_cell_free", "all"))
         t0 = time.time()
         out = work / "relax.out"
         if not finished(out):
@@ -2201,6 +2207,7 @@ def dft(args):
                 got["let_go_facing"] = float(a.info["triage_let_go_facing"])
             if "triage_domain_faces" in a.info:
                 got["domain_faces"] = str(a.info["triage_domain_faces"])
+            got["cell_free"] = free
         got.update(name=name, chain=a.info["triage_chain"], state=a.info["triage_state"], kind=a.info["triage_kind"], repeats=reps,
                    atoms=len(b), energy_ev=energy, cell=b.cell.array.tolist(),
                    kmesh=" ".join(str(int(v)) for v in np.atleast_1d(a.info["kmesh"])) if not isinstance(a.info["kmesh"], str) else a.info["kmesh"],
@@ -2466,7 +2473,8 @@ def table(args):
             r["stretch_from_parent"] = [{"stretch": v, "axis_in_row_frame": axis} for v, axis in stretches(r["let_go_cell"], r["cell"])]
             what = f"a resting place of {parent['name']} facing {r['let_go_facing']:+.0f}" if "let_go_facing" in r \
                 else f"a cell of {parent['name']} ({r.get('domain_faces', 'made by rule')}) that DFT relaxed held"
-            print(f"{r['name']:14s} {what}, its cell let go: "
+            how = {"all": "its cell let go", "epitaxial_bc": "its first edge let go, the second and third held"}.get(r.get("cell_free", "all"), f"its cell let go ({r.get('cell_free')})")
+            print(f"{r['name']:14s} {what}, {how}: "
                   f"{r['above_parent_kcal_per_repeat']:+.3f} kcal/mol a repeat above it, {r['volume_a3']:.1f} against {parent['volume_a3']:.1f} A3; "
                   "the cell against the one it was let go from, edge for edge: "
                   + ", ".join(f"{q['stretch'] * 100:+.1f}% along ({q['axis_in_row_frame'][0]:+.2f} {q['axis_in_row_frame'][1]:+.2f} {q['axis_in_row_frame'][2]:+.2f})"
@@ -2672,6 +2680,8 @@ def main():
     re_.add_argument("--images", default="0", help="which of its states, e.g. 0,2")
     re_.add_argument("--out", required=True, help="the name each is given for dft, e.g. urea1_tt_x1_w1r2")
     re_.add_argument("--of", required=True, help="the crystal the result is told against, e.g. urea1_tt_x1")
+    re_.add_argument("--free", default="all", choices=("all", "epitaxial_bc"),
+                     help="what of the cell may move: all, or epitaxial_bc, the first edge only (a wall's own room)")
     re_.set_defaults(run=release)
     s0 = sub.add_parser("seed")
     s0.add_argument("--frames", type=Path, required=True)

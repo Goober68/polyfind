@@ -624,7 +624,12 @@ def test_a_state_let_go_keeps_its_mesh_and_is_told_against_the_crystal_it_was_ma
     assert not [k for k in c.info if k.startswith(("triage_turn", "triage_path", "triage_dft", "triage_state_stem"))]
     assert c.positions == pytest.approx(state.positions) and c.calc is None
     # what dft writes with it is a relaxation of every edge
+    assert c.info["triage_cell_free"] == "all"
     assert "calculation = 'vc-relax'" in CT.pw_input(c, "/p", "/o", "vc-relax", "all") and "cell_dofree = 'all'" in CT.pw_input(c, "/p", "/o", "vc-relax", "all")
+    # or of the first edge only, the wall's plane held
+    w = CT.let_go_start(state, parent, "x_tt_x1", "epitaxial_bc")
+    assert w.info["triage_cell_free"] == "epitaxial_bc"
+    assert "cell_dofree = 'epitaxial_bc'" in CT.pw_input(w, "/p", "/o", "vc-relax", w.info["triage_cell_free"])
 
 
 def test_a_chain_without_a_carbonyl_faces_from_its_hydrogens_to_its_fluorines():
