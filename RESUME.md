@@ -1513,6 +1513,22 @@ right": true at one registry, not along it).
         and third unmoved as they should be, still falling about 0.03 in ten steps. GIVE IT
         AGAIN AFTER THE KINK'S POINTS: `dft --frames /opt/dft/triage --names
         urea1_tt_x1_w1r2a --np 4`.
+        PAUSED BY THE PI (2026-11-27, 07:41 UTC; the PI's words: "Pause work"). EVERYTHING
+        WAS STOPPED AND NOTHING IS RUNNING. DO NOT START ANY OF THE RUNS BELOW UNTIL THE PI
+        SAYS TO GO ON. What was stopped, each restartable by its command when told:
+        (a) DFT on the four long states (`points --frames /opt/dft/triage --names
+        urea1_tt_x1_w2h_kink3r5_states_t3-k1-k2-t2 --np 4`): stopped in its first state,
+        nothing read, nothing kept (the path file and the four states under
+        `work/urea1_tt_x1_w2h_kink3r5` are there).
+        (b) the urea wall's own room (`dft --frames /opt/dft/triage --names
+        urea1_tt_x1_w1r2a --np 4`): 21 steps, +0.86 a repeat and still falling; it goes on
+        from its last structure.
+        (c) parked earlier and still parked: the fully free two-chain cell
+        (`urea1_tt_x1_w1r2`), PVDF's two-and-two cell (`points --names
+        pvdf_tt_x1_w2_kink1_states_t2 --relax`), the urea two-and-two cell with its first
+        edge free (`urea1_tt_x1_w2r4a`).
+        Not started: the band for a kink moving one repeat, and the methyl-chain cells.
+        Everything read so far is in 6.3 as readings 63 to 70 and pushed.
         THE QUEUE AS IT WAS FIRST SET (03:30 UTC), kept for the commands:
         (2) NOW: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
         wall-at-every-chain cell with its cell let go; start file by the new `release
