@@ -575,6 +575,41 @@ def test_a_twin_has_the_lattice_points_of_the_wall_and_a_row_of_it_is_the_crysta
         CT.twin_row(a, 5, 1, 6)
 
 
+def test_a_methyl_on_every_methylene_of_one_chain_keeps_the_ureas_and_the_other_chains():
+    from ase import Atoms
+
+    # two stand-in chains two repeats long: N-H, C=O and a methylene to a repeat
+    cell = np.diag([9.0, 6.0, 10.0])
+    one = [("N", [0.0, 0.0, 0.0]), ("H", [0.0, 1.0, 0.0]), ("C", [0.0, -0.6, 1.2]), ("O", [0.0, -1.8, 1.2]),
+           ("C", [0.0, 0.3, 1.9]), ("H", [0.9, 0.9, 1.9]), ("H", [-0.9, 0.9, 1.9])]
+    symbols, pos = [], []
+    for k in range(2):
+        for r in range(2):
+            for sym, xyz in one:
+                symbols.append(sym)
+                pos.append(np.array(xyz) + [4.5 * k, 0.0, 5.0 * r])
+    row = Atoms(symbols, positions=pos, cell=cell, pbc=True)
+    row.set_array("chain", np.repeat([0, 1], 14))
+    out = CT.c_methylated(row, 14, 1, 0)
+    assert len(out) == len(row) + 6 and out.get_chemical_symbols().count("C") == row.get_chemical_symbols().count("C") + 2
+    assert list(out.arrays["chain"][len(row):]) == [1] * 6 and list(out.arrays["chain"][:len(row)]) == list(row.arrays["chain"])
+    # the first chain is as it was; of the second, each methylene keeps one hydrogen and gains a carbon 1.53 A off
+    assert out.positions[:14] == pytest.approx(row.positions[:14])
+    for r in range(2):
+        c_at, h0, h1 = 14 + 7 * r + 4, 14 + 7 * r + 5, 14 + 7 * r + 6
+        assert out.symbols[h0] == "C" and out.symbols[h1] == "H"
+        assert np.linalg.norm(out.positions[h0] - out.positions[c_at]) == pytest.approx(1.53)
+        mine = out.positions[len(row) + 3 * r:len(row) + 3 * r + 3]
+        assert np.linalg.norm(mine - out.positions[h0], axis=1) == pytest.approx([1.09] * 3)
+    # the other face
+    other = CT.c_methylated(row, 14, 1, 1)
+    assert other.symbols[14 + 6] == "C" and other.symbols[14 + 5] == "H"
+    # the N-H and the carbonyl are untouched
+    assert CT.carbonyls(out, np.where(out.arrays["chain"] == 1)[0]) == CT.carbonyls(row, slice(14, 28))
+    with pytest.raises(ValueError):
+        CT.c_methylated(Atoms("CO", positions=[[0, 0, 0], [0, 1.2, 0]], cell=cell, pbc=True), 2, 0)
+
+
 def test_a_twin_of_a_chain_without_a_carbonyl_is_the_chain_turned_and_not_reflected():
     from ase import Atoms
 

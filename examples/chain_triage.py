@@ -860,6 +860,47 @@ def methylated(row, per_chain: int, chain: int):
     return out
 
 
+def c_methylated(row, per_chain: int, chain: int, which: int = 0):
+    """A row cell with one hydrogen of every methylene of one chain made a methyl: that chain is poly(ethylidene urea)'s.
+
+    ``which`` (0 or 1) says which of a methylene's two hydrogens, the lower or the higher numbered;
+    the two are the chain's two faces, and the same one is taken on every repeat so that the methyls
+    are all on one face (``urea1m``'s one hand).  The hydrogen is replaced where it stands by a
+    carbon at 1.53 A with three hydrogens round it.  The new hydrogens go at the end of the cell and
+    carry the chain's number, so the chains' atoms keep their places in the list.  It keeps both
+    N-H of every urea: a side group that takes room and gives up no hydrogen bond."""
+    from ase import Atoms
+
+    symbols = row.get_chemical_symbols()
+    part = list(range(chain * per_chain, (chain + 1) * per_chain))
+    pos = row.positions
+    out = row.copy()
+    out.info.update(row.info)
+    added = []
+    for c_at in part:
+        if symbols[c_at] != "C":
+            continue
+        hs = sorted(h for h in part if symbols[h] == "H" and np.linalg.norm(pos[h] - pos[c_at]) < 1.25)
+        if len(hs) != 2:
+            continue
+        h_at = hs[which]
+        u = (pos[h_at] - pos[c_at]) / np.linalg.norm(pos[h_at] - pos[c_at])
+        carbon = pos[c_at] + 1.53 * u
+        w = np.cross(u, [0.0, 0.0, 1.0] if abs(u[2]) < 0.9 else [1.0, 0.0, 0.0])
+        w /= np.linalg.norm(w)
+        out.symbols[h_at] = "C"
+        out.positions[h_at] = carbon
+        added += [carbon + 1.09 * (u / 3 + np.sqrt(8) / 3 * (np.cos(t) * w + np.sin(t) * np.cross(u, w))) for t in (0.0, 2 * np.pi / 3, 4 * np.pi / 3)]
+    if not added:
+        raise ValueError("no methylene on this chain")
+    extra = Atoms("H" * len(added), positions=added)
+    for name, values in row.arrays.items():
+        if name not in ("numbers", "positions"):
+            extra.set_array(name, np.full(len(added), chain if name == "chain" else 0, dtype=values.dtype))
+    out += extra
+    return out
+
+
 def nucleus(args):
     """The first move of a row at rest: one chain of four turning round, alone, and what a defect does to it.
 
@@ -1378,7 +1419,12 @@ def domains(args):
     ``--twin M`` instead of ``--faces``: the row's last M chains are the crystal's twin and the
     cell is the one the two make (``twin_row``), the crystal as it packs with nothing held apart.
     Its series is ``NAME_w<M>``; ``--told-for 2.5`` gives the cell the shape between two states
-    (``NAME_w2h``) so that ``hop --stems`` can join them in one cell."""
+    (``NAME_w2h``) so that ``hop --stems`` can join them in one cell.
+
+    ``--methyl K:H`` makes chain K a chain with a methyl on every methylene (``c_methylated``): a
+    defect chain, set beside a wall or in the plain crystal, to ask whether it would sit at a wall
+    and pay for it.  Cells with a methyl are other stuff than cells without: only cells with the
+    same chains methylated are compared, energy for energy."""
     from ase.io import read, write
     from ase.optimize import LBFGS
 
@@ -1416,6 +1462,11 @@ def domains(args):
             if row is None:
                 row = (domain_row(base, args.rows, args.long, args.faces.split(",")) if twin is None
                        else twin_row(base, args.rows, args.long, twin, told_for))
+                for item in (args.methyl.split(",") if args.methyl else []):
+                    k, which = (int(v) for v in item.split(":"))
+                    row = c_methylated(row, len(base) * args.long, k, which)
+                if args.methyl:
+                    row.info["triage_methyl_on"] = args.methyl
             info = dict(row.info)
             if nearest(row) < 0.6:
                 raise ValueError(f"{tag} {args.stem}: the start has two atoms {nearest(row):.2f} A apart")
@@ -2617,6 +2668,7 @@ def main():
     do.add_argument("--twin", type=int, default=None, help="instead of --faces: this many chains at the row's end are the crystal's twin, in the cell the two make")
     do.add_argument("--told-for", type=float, default=None, help="with --twin: the cell has the shape it would have with this many chains in the twin, e.g. 2.5")
     do.add_argument("--stem", required=True, help="the name the state is kept under in its series' folder, e.g. rrddd")
+    do.add_argument("--methyl", default="", help="chains given a methyl on every methylene, each as chain:hydrogen (0 or 1, the chain's two faces), e.g. 2:0")
     do.add_argument("--model", type=Path, default=MODEL_DEFAULT)
     do.add_argument("--device", default="cpu")
     do.add_argument("--fmax", type=float, default=0.05)
