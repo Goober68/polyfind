@@ -575,6 +575,32 @@ def test_a_twin_has_the_lattice_points_of_the_wall_and_a_row_of_it_is_the_crysta
         CT.twin_row(a, 5, 1, 6)
 
 
+def test_part_of_a_chain_set_over_moves_those_repeats_whole_and_nothing_else():
+    from ase import Atoms
+
+    # two chains of bonded atoms three repeats long (two atoms a repeat); in the second state the second chain is turned
+    cell = np.diag([8.0, 4.0, 7.5])
+    pos = []
+    for k in range(2):
+        for r in range(3):
+            pos += [[4.0 * k + 0.5, 1.0, 2.5 * r], [4.0 * k + 0.5, 1.9, 2.5 * r + 1.25]]
+    first = Atoms("CN" * 6, positions=pos, cell=cell, pbc=True)
+    first.set_array("chain", np.repeat([0, 1], 6))
+    last = first.copy()
+    centre = np.array([4.5, 1.45, 0.0])
+    t = np.radians(50.0)
+    spin = np.array([[np.cos(t), -np.sin(t), 0.0], [np.sin(t), np.cos(t), 0.0], [0.0, 0.0, 1.0]])
+    d = last.positions[6:] - centre
+    last.positions[6:] = centre + np.column_stack([(d[:, :2] @ spin[:2, :2].T), d[:, 2]])
+    out = CT.part_over(first, last, 1, [1], 2, 6)
+    assert out.positions[8:10] == pytest.approx(last.positions[8:10])  # the middle repeat of the second chain, as the second state has it
+    keep = [i for i in range(12) if i not in (8, 9)]
+    assert out.positions[keep] == pytest.approx(first.positions[keep])
+    assert CT.part_over(first, last, 1, [0, 1, 2], 2, 6).positions == pytest.approx(last.positions)
+    with pytest.raises(ValueError):
+        CT.part_over(first, last, 1, [3], 2, 6)
+
+
 def test_a_methyl_on_every_methylene_of_one_chain_keeps_the_ureas_and_the_other_chains():
     from ase import Atoms
 

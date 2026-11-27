@@ -1495,6 +1495,85 @@ def domains(args):
               + ("; hydrogen bonds from chain to chain " + " ".join(f"{d}>{k}:{n}" for (d, k), n in sorted(bonds.items())) if bonds else ""), flush=True)
 
 
+def part_over(first, last, chain: int, repeats, per_repeat: int, per_chain: int):
+    """A state between two: ``first`` with some repeats of one chain set where ``last`` has them.
+
+    The two states are a wall and the same wall one chain on, so the chain between them faces one
+    way in the first and the other way in the second.  Here the repeats named (0 is the chain's
+    first) are moved to where the second state has them and everything else stays: the chain is
+    part of the way over, with a twist at each end of the part, a pair of kinks.  Each atom is
+    moved by what ``carried`` says takes its chain from the one state to the other, so a repeat
+    goes whole.  The bonds at the two ends of the part are left as they fall: the relaxation that
+    follows makes them."""
+    out = first.copy()
+    out.info.update(first.info)
+    move = carried(first, last)
+    for r in repeats:
+        if not 0 <= r < per_chain // per_repeat:
+            raise ValueError(f"repeat {r} of a chain {per_chain // per_repeat} long")
+        part = slice(chain * per_chain + r * per_repeat, chain * per_chain + (r + 1) * per_repeat)
+        out.positions[part] += move[part]
+    return out
+
+
+def over(args):
+    """Some repeats of the chain beside a wall gone over, the rest not: a state between two of ``domains``', settled in the potential.
+
+    ``--stems A,B`` are a wall and the same wall one chain on in one cell (``domains --twin ...
+    --told-for``); ``--repeats`` are the repeats of the chain between them that are set as B has
+    them (``part_over``), and the state is kept as ``--stem`` in the same folder for ``gather``,
+    ``hop --stems`` and ``points``.  Its energy above A's is what a pair of kinks along the wall
+    chain costs, that far apart: the step of a long chain starts by making one."""
+    from ase.io import read, write
+    from ase.optimize import LBFGS
+
+    calc = model(args.model, dtype="float32", device=args.device)
+    exact = model(args.model, device=args.device)
+    src = Path(args.frames)
+    args.ether, args.sheets = "", 1
+    for name in args.names.split(","):
+        _, tag = kink_series(name, args)
+        work = src / "work" / tag
+        a, b = (read(work / f"{v}.xyz") for v in args.stems.split(","))
+        numbered_alike(a, b)
+        per_chain = len(a) // args.rows
+        per_repeat = per_chain // args.long
+        moved = np.linalg.norm(carried(a, b), axis=1)
+        chain = int(np.argmax([moved[k * per_chain:(k + 1) * per_chain].mean() for k in range(args.rows)])) if args.chain is None else args.chain
+        repeats = [int(v) for v in args.repeats.split(",")]
+        store = work / f"{args.stem}.xyz"
+        row = read(store) if store.exists() else None
+        if row is None or (args.more and float(row.info["triage_kink_force"]) > args.fmax):
+            t0 = time.time()
+            before = int(row.info["triage_kink_steps"]) if row is not None else 0
+            if row is None:
+                row = part_over(a, b, chain, repeats, per_repeat, per_chain)
+            info = dict(row.info)
+            if nearest(row) < 0.6:
+                raise ValueError(f"{tag} {args.stem}: the start has two atoms {nearest(row):.2f} A apart")
+            row.calc = calc
+            opt = LBFGS(row, logfile=None)
+            for _ in opt.irun(fmax=args.fmax, steps=args.more if before else args.steps):
+                if opt.nsteps and opt.nsteps % 25 == 0:
+                    print(f"  {tag} {args.stem}: step {before + opt.nsteps}, largest force {np.linalg.norm(row.get_forces(), axis=1).max():.3f} eV/A, {time.time() - t0:.0f} s", flush=True)
+            force = float(np.linalg.norm(row.get_forces(), axis=1).max())
+            row.calc = exact
+            energy = float(row.get_potential_energy())
+            row.calc = None
+            row.info.update(info)
+            row.info.update(triage_kink_ev=energy, triage_kink_steps=before + int(opt.nsteps), triage_kink_force=force,
+                            triage_over_chain=chain, triage_over_repeats=args.repeats, triage_over_between=args.stems)
+            write(store, row, format="extxyz")
+        along = row.cell.array[2] / np.linalg.norm(row.cell.array[2])
+        reference = way_across(rebased(read(src / f"{args.of}.relaxed.xyz"))) if args.of else None
+        chains = row.arrays["chain"]
+        faces = " ".join(f"{v:+.0f}" for v in chain_facing(row, np.where(chains == int(row.info["triage_over_chain"]))[0], along, reference))
+        zero = float(a.info["triage_kink_ev"])
+        print(f"{tag} {args.stem}: repeats {row.info['triage_over_repeats']} of chain {int(row.info['triage_over_chain'])} set as {args.stems.split(',')[1]} has them; "
+              f"{int(row.info['triage_kink_steps'])} steps to {float(row.info['triage_kink_force']):.3f} eV/A; {(float(row.info['triage_kink_ev']) - zero) * KCAL:+.2f} kcal/mol for the cell "
+              f"above {args.stems.split(',')[0]} in the potential (the other state {(float(b.info['triage_kink_ev']) - zero) * KCAL:+.2f}); that chain's carbonyls face {faces}", flush=True)
+
+
 def gather(args):
     """States of one series' folder (``domains``) put in one file, as a path's images, for ``points`` to read in DFT.
 
@@ -2675,6 +2754,23 @@ def main():
     do.add_argument("--steps", type=int, default=300)
     do.add_argument("--more", type=int, default=0, help="steps more for a state already made that stopped above --fmax")
     do.set_defaults(run=domains)
+    ov = sub.add_parser("over")
+    ov.add_argument("--frames", type=Path, required=True)
+    ov.add_argument("--names", required=True, help="the series the two states are of, e.g. urea1_tt_x1_w2h")
+    ov.add_argument("--rows", type=int, default=5)
+    ov.add_argument("--long", type=int, default=3)
+    ov.add_argument("--side", type=int, default=1, choices=(1, 2))
+    ov.add_argument("--stems", required=True, help="the two states, e.g. t3,t2")
+    ov.add_argument("--repeats", required=True, help="the repeats of the chain between them set as the second state has them, e.g. 0 or 0,1")
+    ov.add_argument("--chain", type=int, default=None, help="which chain (default: the one that moves most from the one state to the other)")
+    ov.add_argument("--stem", required=True, help="the name the state is kept under, e.g. k1")
+    ov.add_argument("--of", default="", help="the crystal the facings are counted from, e.g. urea1_tt_x1")
+    ov.add_argument("--model", type=Path, default=MODEL_DEFAULT)
+    ov.add_argument("--device", default="cpu")
+    ov.add_argument("--fmax", type=float, default=0.05)
+    ov.add_argument("--steps", type=int, default=300)
+    ov.add_argument("--more", type=int, default=0)
+    ov.set_defaults(run=over)
     ga = sub.add_parser("gather")
     ga.add_argument("--frames", type=Path, required=True)
     ga.add_argument("--names", required=True)
