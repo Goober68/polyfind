@@ -1440,6 +1440,37 @@ right": true at one registry, not along it).
         2.94 in the potential against the urea's 4.99 potential and 2.90 DFT; the wall's
         cost when DFT has it), run `table`, copy the new path files to
         `docs/predictions/chain_triage_paths/`, and report to the PI.
+        05:45 UTC, RESULTS SINCE (all in 6.3 as readings 66 to 69, pushed; the PI was sent
+        the correction and PVDF's table at 04:50 UTC):
+        PVDF'S WALL COSTS 0.21 kcal/mol A MONOMER, 11 mJ/m2 (DFT's own relaxation, cell
+        held; the control rests on the crystal to 0.0001; chains 62 degrees apart; the
+        potential had the cell 1.00 BELOW the crystal), against the urea chain's 0.9 to
+        1.05 a repeat, 36 to 42 mJ/m2. PVDF's 60-degree place let go is the crystal again
+        (-0.001) in a cell -3.0 and +3.1% another shape (`pvdf_tt_x1_fp060`).
+        RUNNING (one background job, started 05:20 UTC, ends by itself or at 07:20):
+        `points --names pvdf_tt_x1_w2h_kink1r5_hop_t3-t2 --np 4` (PVDF's wall step, nine
+        cells of 30 atoms, 4 minutes each; `log_pvdf_twin_dft.txt`, last line `hop points
+        exit`), then `dft --names urea1_tt_x1_w1r2a --np 4` (the urea wall, first edge
+        free; `log_urea1_twin_free.txt`, last line `w1r2a exit`). When the step is read:
+        finish reading 69, `table`, copy `pvdf_tt_x1_w2h_kink1r5_hop_t3-t2.path.xyz` and the
+        new `_states_` files to `docs/predictions/chain_triage_paths/`.
+        TWO NEW TOOLS, TESTED, NOT YET USED ON A REAL CELL (40 tests pass):
+        `domains --methyl K:H` (a971d55): chain K of a row gets a methyl on every methylene
+        (poly(ethylidene urea)'s chain, both N-H kept), H is which face. FOR THE QUESTION
+        OF READING 65, WHICH DEFECT MAKES OR HOLDS A WALL. By geometry a methyl has no room
+        in the plain or the twinned four-chain cell (H..H 1.1 to 1.7 A): the cell has to be
+        let go, and a cell one chain thick along the stack makes the defect a whole PLANE
+        of methylated chains. The honest dilute version is two chains thick (72+ atoms,
+        hours a relaxation here): AN MI100 OR POD JOB, NOT STARTED.
+        `over --names urea1_tt_x1_w2h --rows 5 --long 3 --stems t3,t2 --repeats 0 --stem k1
+        --of urea1_tt_x1` (c8765df): the wall chain with one of three repeats over, a pair
+        of kinks. THE NEXT READING, AFTER THE DFT ABOVE: first `domains --names urea1_tt_x1
+        --rows 5 --long 3 --twin 3 --told-for 2.5 --stem t3` and `--twin 2 ... --stem t2`
+        (135 atoms, 5 s a step in the potential), then `over` for k1 (`--repeats 0`) and k2
+        (`--repeats 0,1`), `gather --names urea1_tt_x1_w2h --rows 5 --long 3 --stems
+        t3,k1,k2,t2`, `points` on the four (21 minutes each in DFT): k1 above t3 is the pair
+        of kinks. Then `hop --stems k1,k2` for a kink moving one repeat. That gives the
+        rate a long chain's step has, which nothing so far does.
         THE QUEUE AS IT WAS FIRST SET (03:30 UTC), kept for the commands:
         (2) NOW: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
         wall-at-every-chain cell with its cell let go; start file by the new `release
