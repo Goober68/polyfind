@@ -2767,10 +2767,10 @@ The places at 30, 90 and 150 are the tops between resting places, kept there by 
 start on a mirror line does not leave it). And PVDF's twinned cells, DFT's own relaxation with
 the cell held, as reading 63's:
 
-| cell (one monomer long) | the potential | DFT on the potential's structure | DFT's own atoms, the cell held | for a monomer of one wall | stress left: across the wall, along it, along the chains, kbar |
+| cell (one monomer long) | the potential, against its plain cell | DFT on the potential's structure, against DFT's crystal | DFT's own atoms, the cell held, against DFT's crystal | for a monomer of one wall | stress left: across the wall, along it, along the chains, kbar |
 |---|---|---|---|---|---|
-| plain, two chains (the control) | 0.00 | 0.00 | 0.00 against the one-chain crystal | | 0.0, 0.0, -0.1 |
-| a wall at every chain, two chains | -1.00 | +0.44 | +0.21 | 0.21 | +2.0, +2.5, +0.1 |
+| plain, two chains (the control) | 0.00 | +0.50 | 0.00 | | 0.0, 0.0, -0.1 |
+| a wall at every chain, two chains | -1.00 | +0.94 | +0.21 | 0.21 | +2.0, +2.5, +0.1 |
 
 66. *PVDF's crystal has the same kind of twin, with 0.4 of the shear and of the polarisation,
     and the same bound on stress.* It rests every 60 degrees, and the crystal with its chains
@@ -2795,7 +2795,7 @@ the cell held, as reading 63's:
     crystal (0.0001 a monomer). With a wall at every chain the cell stays twinned (the chains
     62 degrees apart) and rests 0.21 a monomer above the crystal: 0.21 for a monomer of wall,
     11 mJ/m2 against the urea chain's 36 to 42. The potential had this cell 1.00 BELOW the
-    crystal and DFT on the potential's structure 0.44 above: for PVDF the potential has the
+    crystal and DFT on the potential's structures has it 0.44 above the plain cell: for PVDF the potential has the
     sign of a wall wrong outright, as it had the urea chain's. A slab of twin n chains thick
     gains 0.08 n a monomer at 55 V/um and pays 0.41 for its two walls, so it breaks even five
     or six chains thick, where the urea chain's needs seven or eight (reading 65): alike.
