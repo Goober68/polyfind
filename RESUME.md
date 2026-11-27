@@ -1373,13 +1373,45 @@ right": true at one registry, not along it).
         (9 atoms, cell and atoms relaxed). BELOW IT: the one-chain crystal of 6.1 is not this
         chain's ground state and the crystal wants walls; ABOVE IT: a wall costs that much.
         Write it as reading 63 and correct reading 59 and its "Not done" line.
+        IT ENDED (02:42 UTC 2026-11-27; both converged, both still twinned, carbonyls 47
+        degrees apart, every H..O 1.88 to 1.92 as in the crystal): A WALL COSTS. A repeat
+        above DFT's own crystal: a wall at every chain -1698.379890 eV, +1.05 kcal/mol; two
+        and two -1698.405651, +0.46. That is 1.05 and 0.91 for a repeat of one wall (17.5
+        A2: 42 and 36 mJ/m2). THE SINGLE POINTS OF READING 59 HAD THE SIGN WRONG: DFT's
+        relaxation takes 1.59 a repeat off the plain cell's potential structure and only 0.45
+        and 0.63 off the twinned ones. THE ONE-CHAIN CRYSTAL OF 6.1 STANDS AS THE GROUND
+        STATE. BUT the held cells are left under stress (a wall at every chain: 9.3 kbar
+        along the first edge, 7.4 along the chain, 5.2 of shear; two and two: half that), so
+        the cost with the cell free is lower: not yet known.
+        RUNNING WHEN THIS WAS WRITTEN (02:50 UTC), two background jobs, one after the other:
+        (1) the control, the plain two-chain cell by the same route: `points --frames
+        /opt/dft/triage --names urea1_tt_x1_kink1r2_states_rr-alt --images 0 --relax --np 4`
+        (log `log_urea1_plain_relax.txt`; expect -1698.4255 a repeat and no stress, which
+        checks the 2 5 4 mesh against the crystal's 4 6 4).
+        (2) when it ends: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
+        wall-at-every-chain cell with its cell let go; start file by the new `release
+        --name urea1_tt_x1_w1_kink1r2_states_t1 --out urea1_tt_x1_w1r2 --of urea1_tt_x1`;
+        log `log_urea1_twin_free.txt`; `table` tells it against the crystal), then `facings
+        --frames /opt/dft/triage --names pvdf_tt_x1 --angles=0,30,60,90,120,150,180 --np 4`
+        (PVDF's crystal, the like baseline; log `log_pvdf_facings.txt`). Both go on from
+        where they stopped when given again. The two-and-two cell's start file is written
+        too (`urea1_tt_x1_w2r4.start.xyz`, 36 atoms): run it only if the first one's sign
+        turns.
+        PVDF'S TWIN, GEOMETRY ONLY (from `pvdf_tt_x1.json`, my arithmetic): its dipole lies
+        along a+b (4.760 A) of edges 4.878 and 4.885 at 121.6 degrees; the cell is 3.4% off
+        hexagonal. A neutral wall along either edge (half turn about its normal) turns the
+        dipole 59 degrees with 6.0% of shear and 0.19 C/m2 along the wall; along 2a+b, 120
+        degrees, 5.6%, 0.34 C/m2; along a-b, 180 degrees, no shear, 0.39. At 55 V/um the
+        60-degree wall is 10.5 MJ/m3 over 6.0% = 176 pN/nm2, the urea twin 26 over 14% = 184:
+        THE SAME BOUND ON STRESS, 2.4 TIMES THE STROKE AND THE WORK. Neither is a material's
+        number. (Measured PVDF is nearer hexagonal than PBE-D3 has it, so its real shear is
+        smaller: from memory a 8.58, b 4.91, 0.9% off, 1.5% of shear; not checked.)
         NEXT, IN ORDER (nothing beside a DFT job):
         (a) PVDF's crystal by the same readings, the like baseline the standing rule asks
-        for: `facings --frames /opt/dft/triage --names pvdf_tt_x1
-        --angles=0,15,30,45,60,-30,-60` (6 atoms, minutes an angle), `--let-go` for its
-        stroke, then its own twin (`domains --names pvdf_tt_x1 --twin`: check what plane its
-        two orientations share first; `twin_row` takes the plane of the second and third
-        edges and `way_across` for a chain without a carbonyl).
+        for: the `facings` above, `--let-go 60` for its stroke, then its own twin (`domains
+        --names pvdf_tt_x1 --twin`: `twin_row` takes the plane of the second and third
+        edges, which for PVDF is the 60-degree wall along b, and `way_across` for a chain
+        without a carbonyl; not yet tried on PVDF), the wall's cost and the wall's step.
         (b) A kink along the wall chain, the step of a long chain: three repeats long (135
         atoms): `domains --names urea1_tt_x1 --rows 5 --long 3 --twin 3 --told-for 2.5 --stem
         t3` and `--twin 2 ... --stem t2`, `hop --names urea1_tt_x1_w2h --rows 5 --long 3
