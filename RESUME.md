@@ -1383,12 +1383,18 @@ right": true at one registry, not along it).
         STATE. BUT the held cells are left under stress (a wall at every chain: 9.3 kbar
         along the first edge, 7.4 along the chain, 5.2 of shear; two and two: half that), so
         the cost with the cell free is lower: not yet known.
-        RUNNING WHEN THIS WAS WRITTEN (02:50 UTC), two background jobs, one after the other:
-        (1) the control, the plain two-chain cell by the same route: `points --frames
-        /opt/dft/triage --names urea1_tt_x1_kink1r2_states_rr-alt --images 0 --relax --np 4`
-        (log `log_urea1_plain_relax.txt`; expect -1698.4255 a repeat and no stress, which
-        checks the 2 5 4 mesh against the crystal's 4 6 4).
-        (2) when it ends: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
+        THE CONTROL ENDED (03:18 UTC): the plain two-chain cell by the same route (`points
+        --names urea1_tt_x1_kink1r2_states_rr-alt --images 0 --relax`) rests at -1698.425543
+        eV a repeat, 0.001 kcal/mol from the crystal, under half a kbar: THE ROUTE AND THE
+        2 5 4 MESH ARE SOUND AND THE WALL'S COST STANDS, +1.05 AND +0.46 A REPEAT. In the
+        wall's frame the held twinned cells are left wanting room ACROSS THE WALL (+11.8 kbar
+        with a wall at every chain, +5.8 two and two) and along the chains (+7.3, +3.8), no
+        shear. WRITTEN AS READING 63, READING 59 CORRECTED (pushed 12f3269). NOT YET
+        CORRECTED: reading 62 and the "Not done" paragraph (they wait for the cell-free
+        number), and THE PI HAS BEEN TOLD "a wall that costs nothing": TELL THEM IT COSTS 1.
+        RUNNING WHEN THIS WAS WRITTEN (03:30 UTC), background jobs, each waits for the one
+        before by its log's last line:
+        (2) NOW: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
         wall-at-every-chain cell with its cell let go; start file by the new `release
         --name urea1_tt_x1_w1_kink1r2_states_t1 --out urea1_tt_x1_w1r2 --of urea1_tt_x1`;
         log `log_urea1_twin_free.txt`; `table` tells it against the crystal), then `facings
@@ -1396,7 +1402,25 @@ right": true at one registry, not along it).
         (PVDF's crystal, the like baseline; log `log_pvdf_facings.txt`). Both go on from
         where they stopped when given again. The two-and-two cell's start file is written
         too (`urea1_tt_x1_w2r4.start.xyz`, 36 atoms): run it only if the first one's sign
-        turns.
+        turns. (Its first cell step took 0.04 kcal/mol off the cell and the pressure to
+        nothing: the cell-free cost will be near 1.0.)
+        (3) AFTER THE FACINGS, PVDF'S TWIN IN DFT (log `log_pvdf_twin_dft.txt`, lines
+        `relax12 exit`, `hop points exit`, `relax24 exit`): `points --names
+        pvdf_tt_x1_kink1r2_states_rr,pvdf_tt_x1_w1_kink1r2_states_t1 --relax --np 4` (the
+        plain two-chain cell and a wall at every chain, 12 atoms each), `points --names
+        pvdf_tt_x1_w2h_kink1r5_hop_t3-t2 --np 4` (the wall's step, nine cells of 30 atoms),
+        `points --names pvdf_tt_x1_w2_kink1_states_t2 --relax --np 4` (two and two, 24
+        atoms). All restartable by the same command.
+        PVDF'S TWIN IN THE POTENTIAL (03:25 UTC, log `log_pvdf_twin.txt`; `twin_row` now
+        takes a chain without a carbonyl, turned and not reflected, 9550fb1): `domains
+        --names pvdf_tt_x1 --rows 2 --long 1 --faces=0,0 --stem rr` -15091.05314 eV; `--twin
+        1 --stem t1` -15091.13957 (1.0 kcal/mol a repeat BELOW the plain cell, chains at +10
+        and -68); `--rows 4 --twin 2 --stem t2` -30182.19031 (0.48 a repeat below); `--rows
+        5 --twin 3 --told-for 2.5 --stem t3` and `--twin 2 ... --stem t2` level to 0.002.
+        The potential put the urea's twinned cells below its crystal too and DFT's relaxation
+        turned that round: WAIT FOR DFT. The band between t3 and t2 is running in the
+        potential on one core (`hop --names pvdf_tt_x1_w2h --rows 5 --long 1 --stems t3,t2
+        --images 9`, log `log_pvdf_twin_hop.txt`).
         PVDF'S TWIN, GEOMETRY ONLY (from `pvdf_tt_x1.json`, my arithmetic): its dipole lies
         along a+b (4.760 A) of edges 4.878 and 4.885 at 121.6 degrees; the cell is 3.4% off
         hexagonal. A neutral wall along either edge (half turn about its normal) turns the
