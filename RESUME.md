@@ -1392,6 +1392,14 @@ right": true at one registry, not along it).
         shear. WRITTEN AS READING 63, READING 59 CORRECTED (pushed 12f3269). NOT YET
         CORRECTED: reading 62 and the "Not done" paragraph (they wait for the cell-free
         number), and THE PI HAS BEEN TOLD "a wall that costs nothing": TELL THEM IT COSTS 1.
+        THE CONTAINER WAS RESTARTED AT 04:07 UTC: files kept, running jobs lost. The
+        cell-free run had done 32 steps (-249.659266 Ry for the cell, which is +0.74 kcal/mol
+        a repeat above the crystal and still falling a little; pressure near nothing) and
+        goes on from there. PVDF's band in the potential had finished: THE WALL'S STEP IN
+        PVDF'S CRYSTAL, THE POTENTIAL: 0.00 0.45 1.48 2.47 2.94 2.57 1.48 0.41 0.00, TOP 2.94
+        kcal/mol for one monomer of the wall chain (`pvdf_tt_x1_w2h_kink1r5_hop_t3-t2`).
+        THE QUEUE WAS GIVEN AGAIN AT 04:08 UTC as two background jobs with the commands
+        below (the second waits for `relax12 exit` in `log_pvdf_twin_dft.txt`).
         RUNNING WHEN THIS WAS WRITTEN (03:30 UTC), background jobs, each waits for the one
         before by its log's last line:
         (2) NOW: `dft --frames /opt/dft/triage --names urea1_tt_x1_w1r2 --np 4` (the
