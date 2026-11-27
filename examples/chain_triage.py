@@ -600,6 +600,22 @@ def facing(row, part, along, reference=None):
     return about(row, carbonyls(row, part), along, reference)
 
 
+def chain_facing(row, part, along, reference):
+    """``facing`` for any chain of a row: each carbonyl's, or, for a chain without one, the one way its
+    fluorines lie from its hydrogens (as ``way_across`` has it for a cell of one chain)."""
+    index = np.arange(len(row))[part]
+    symbols = np.array(row.get_chemical_symbols())[index]
+    if "O" in symbols:
+        return facing(row, part, along, reference)
+    from ase.geometry import find_mic
+
+    d = find_mic(row.positions[index] - row.positions[index[0]], row.cell.array)[0]  # the chain whole
+    v = d[symbols == "F"].mean(axis=0) - d[symbols == "H"].mean(axis=0)
+    v = v - (v @ along) * along
+    ref = reference - (reference @ along) * along
+    return [float(np.degrees(np.arctan2(np.cross(ref, v) @ along, ref @ v)))]
+
+
 def polar_facing(a):
     """The way a chain's first carbonyl faces in its polar cell, C to O: what ``facing`` is counted from (None without one)."""
     symbols = a.get_chemical_symbols()
@@ -1287,19 +1303,28 @@ def twin_row(a, rows: int, long: int, twin: int, told_for=None):
     its own plane and turned about its axis to where the half turn has its carbonyl.  That keeps
     each atom near where the chain's own move from the crystal would bring it; the half turn
     itself would also turn the chain end for end and number it backwards.  The relaxation that
-    follows makes up the difference."""
+    follows makes up the difference.  A chain without a carbonyl is turned to where the half turn
+    has the way its fluorines lie from its hydrogens (``way_across``), and not reflected."""
     if not 0 <= twin <= rows:
         raise ValueError(f"{twin} chains in the twin of a row of {rows}")
     cell = a.cell.array.copy()
     along = cell[2] / np.linalg.norm(cell[2])
     step = twin_step(cell)
-    o, c = carbonyls(a, np.arange(len(a)))[0]
-    v = a.get_distance(c, o, mic=True, vector=True)
+    if "O" in a.get_chemical_symbols():
+        o, c = carbonyls(a, np.arange(len(a)))[0]
+        v = a.get_distance(c, o, mic=True, vector=True)
+        hand = "m"
+    else:
+        # a chain without a carbonyl (PVDF's): the way its fluorines lie from its hydrogens.  All-trans it is
+        # flat and its own mirror image through the plane of that way and its axis, so it is turned only
+        a = whole_in_place(a)
+        v = way_across(a)
+        hand = ""
     v = v - (v @ along) * along
     w = half_turn_across(cell) @ v
     angle = float(np.degrees(np.arctan2(np.cross(v, w) @ along, v @ w)))
     first = rows - twin
-    row = domain_row(a, rows, long, ["0"] * first + [f"m{angle:.4f}"] * twin)
+    row = domain_row(a, rows, long, ["0"] * first + [f"{hand}{angle:.4f}"] * twin)
     per_chain = len(a) * long
     for k in range(first, rows):
         row.positions[k * per_chain:(k + 1) * per_chain] += (k - first) * (step - cell[0])
@@ -1379,7 +1404,7 @@ def domains(args):
         elif told_as != name and not (src / f"{told_as}.relaxed.xyz").exists():
             write(src / f"{told_as}.relaxed.xyz", base, format="extxyz")
         along = base.cell.array[2] / np.linalg.norm(base.cell.array[2])
-        reference = polar_facing(rebased(a))
+        reference = way_across(rebased(a))
         _, tag = kink_series(told_as, args)
         work = src / "work" / tag
         work.mkdir(parents=True, exist_ok=True)
@@ -1410,11 +1435,12 @@ def domains(args):
         if nearest(row) < 0.85:
             raise ValueError(f"{tag} {args.stem}: two atoms {nearest(row):.2f} A apart: not a structure")
         chains = row.arrays["chain"]
-        faces = ["(" + " ".join(f"{v:+.0f}" for v in facing(row, np.where(chains == k)[0], along, reference)) + ")" for k in range(args.rows)]
+        faces = ["(" + " ".join(f"{v:+.0f}" for v in chain_facing(row, np.where(chains == k)[0], along, reference)) + ")" for k in range(args.rows)]
         bonds = joined(row)
         print(f"{tag} {args.stem}: {len(row)} atoms, {int(row.info['triage_kink_steps'])} steps to {float(row.info['triage_kink_force']):.3f} eV/A, "
-              f"{float(row.info['triage_kink_ev']):.5f} eV in the potential; the chains' carbonyls face {' '.join(faces)} degrees; hydrogen bonds from chain to chain "
-              + " ".join(f"{d}>{k}:{n}" for (d, k), n in sorted(bonds.items())), flush=True)
+              f"{float(row.info['triage_kink_ev']):.5f} eV in the potential; the chains' carbonyls face {' '.join(faces)} degrees"
+              + ("; hydrogen bonds from chain to chain " + " ".join(f"{d}>{k}:{n}" for (d, k), n in sorted(bonds.items())) if bonds
+                 else " (a chain without a carbonyl: its fluorines from its hydrogens)"), flush=True)
 
 
 def gather(args):

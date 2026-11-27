@@ -575,6 +575,38 @@ def test_a_twin_has_the_lattice_points_of_the_wall_and_a_row_of_it_is_the_crysta
         CT.twin_row(a, 5, 1, 6)
 
 
+def test_a_twin_of_a_chain_without_a_carbonyl_is_the_chain_turned_and_not_reflected():
+    from ase import Atoms
+
+    # a stand-in for PVDF all-trans in a cell a little off hexagonal: fluorines one side, hydrogens the other,
+    # one fluorine written a cell away as a packing search may leave it
+    cell = np.array([[4.88, 0.0, 0.0], [-2.56, 4.16, 0.0], [0.0, 0.0, 2.58]])
+    pos = np.array([[0.0, 0.0, 0.0], [0.0, 0.85, 1.29], [1.1, -0.75, 0.0], [-1.1, -0.75, 0.0], [0.9, 1.45, 1.29], [-0.9, 1.45, 1.29]])
+    turn = np.radians(-20.0)  # the chain's dipole not along an edge
+    spin = np.array([[np.cos(turn), -np.sin(turn), 0.0], [np.sin(turn), np.cos(turn), 0.0], [0.0, 0.0, 1.0]])
+    a = Atoms("CCFFHH", positions=pos @ spin.T, cell=cell, pbc=True)
+    a.positions[3] += cell[0]
+    a.info.update(triage_repeats=1, kmesh="4 4 8", triage_chain="pvdf", triage_state="tt")
+    along = np.array([0.0, 0.0, 1.0])
+    v = CT.way_across(a)
+    v = v - (v @ along) * along  # the fluorines and the hydrogens are half a repeat apart along the chain
+    w = CT.half_turn_across(cell) @ v
+    row = CT.twin_row(a, 4, 1, 2)
+    assert row.info["triage_twin_chains"] == 2 and row.get_volume() == pytest.approx(4 * a.get_volume())
+    whole = CT.whole_in_place(a)
+    for k in range(4):
+        part = np.where(row.arrays["chain"] == k)[0]
+        got = CT.chain_facing(row, part, along, v)
+        want = np.degrees(np.arctan2(np.cross(v, w) @ along, v @ w)) if k >= 2 else 0.0
+        assert got == pytest.approx([want], abs=1e-3)  # the turn is handed on to four places
+        # turned about its own axis and not reflected: every bond as long as it was
+        d = row.positions[part] - row.positions[part[0]]
+        assert np.linalg.norm(d, axis=1) == pytest.approx(np.linalg.norm(whole.positions - whole.positions[0], axis=1), abs=1e-9)
+    # with a carbonyl the facing is the carbonyl's, as before
+    b = Atoms("COH", positions=[[0.0, 0.0, 0.0], [0.0, 1.2, 0.0], [0.5, -0.9, 0.0]], cell=np.diag([5.0, 5.0, 2.6]), pbc=True)
+    assert CT.chain_facing(b, slice(None), along, np.array([1.0, 0.0, 0.0])) == pytest.approx([90.0])
+
+
 def test_a_state_let_go_keeps_its_mesh_and_is_told_against_the_crystal_it_was_made_of():
     from ase import Atoms
 
